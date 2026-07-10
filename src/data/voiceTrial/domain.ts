@@ -26,6 +26,31 @@ export interface SubmitVoiceTrialRequest {
 
 export type SubmitVoiceTrialRequestResponse = string
 
+export enum VoiceTrialRequestStatus {
+  Pending = 0,
+  Done = 1,
+  Rejected = 2,
+}
+
+export interface VoiceTrialRequestDetailDto {
+  id: string
+  shopName: string
+  ownerName: string
+  phoneNumber: string
+  email: string
+  cityArea: string | null
+  services: string[]
+  openingDays: string[]
+  serviceHoursFrom: string
+  serviceHoursTo: string
+  biggestProblem: string
+  referralCode: string | null
+  status: VoiceTrialRequestStatus
+  rejectionNote: string | null
+  createdAt: string
+  lastModified: string | null
+}
+
 export function mapDayKeysToApiOpeningDays(dayKeys: Iterable<string>): string[] {
   return [...dayKeys]
     .map((key) => VOICE_TRIAL_DAY_KEY_TO_API[key as VoiceTrialDayKey])

@@ -100,6 +100,7 @@ export const errorCodeToI18nKey = {
   VOICE_TRIAL_OWNER_NAME_REQUIRED: 'errors.voice_trial_owner_name_required',
   VOICE_TRIAL_PHONE_NUMBER_REQUIRED: 'errors.voice_trial_phone_number_required',
   VOICE_TRIAL_PHONE_NUMBER_ALREADY_EXISTS: 'errors.voice_trial_phone_number_already_exists',
+  VOICE_TRIAL_REQUEST_ALREADY_EXISTS: 'errors.voice_trial_phone_number_already_exists',
   VOICE_TRIAL_EMAIL_REQUIRED: 'errors.voice_trial_email_required',
   VOICE_TRIAL_EMAIL_INVALID_FORMAT: 'errors.voice_trial_email_invalid_format',
   VOICE_TRIAL_SERVICES_REQUIRED: 'errors.voice_trial_services_required',

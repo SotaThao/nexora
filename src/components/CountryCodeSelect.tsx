@@ -208,6 +208,8 @@ export const formatNationalNumber = (nationalNumber, dialCode) => {
   return formatter.input(digits)
 }
 
+export const PHONE_NATIONAL_PLACEHOLDER = '123 456 7890'
+
 export const isPhoneValid = isValidPhone
 
 export default function CountryCodeSelect({

@@ -1,5 +1,6 @@
 import React, { useState } from 'react'
 import { useTranslation } from '../../../contexts/LanguageContext'
+import { useMyVoiceTrialRequest } from '../../../data/hooks/useMyVoiceTrialRequest'
 import BookingTrialModal from './BookingTrialModal'
 
 const TK = 'components.dashboard.views.BookingHubView.plans'
@@ -17,14 +18,20 @@ function PlanFeature({ included, children }: { included: boolean; children: Reac
 
 export default function BookingPlansPanel() {
   const { t } = useTranslation()
+  const { data: myTrialRequest, isLoading: isTrialRequestLoading } = useMyVoiceTrialRequest()
   const [selectedPlan, setSelectedPlan] = useState<PlanId | null>(null)
   const [trialOpen, setTrialOpen] = useState(false)
+
+  const hasExistingTrialRequest = myTrialRequest != null
 
   const selectServicePlan = (plan: PlanId) => {
     setSelectedPlan(plan)
   }
 
   const getPlanButtonLabel = (plan: PlanId) => {
+    if (plan === 'Pro' && hasExistingTrialRequest) {
+      return t(`${TK}.trialRequestSubmitted`)
+    }
     if (selectedPlan === plan) {
       return t(`${TK}.planSelected`, { plan })
     }
@@ -42,6 +49,7 @@ export default function BookingPlansPanel() {
 
   const handlePlanClick = (plan: PlanId, opensTrial = false) => {
     if (opensTrial) {
+      if (hasExistingTrialRequest || isTrialRequestLoading) return
       setTrialOpen(true)
       return
     }
@@ -91,6 +99,7 @@ export default function BookingPlansPanel() {
             <button
               className={`plan-select-button ${isPlanButtonPrimary('Pro') ? 'is-primary' : ''}`}
               type="button"
+              disabled={hasExistingTrialRequest || isTrialRequestLoading}
               onClick={() => handlePlanClick('Pro', true)}
             >
               {getPlanButtonLabel('Pro')}

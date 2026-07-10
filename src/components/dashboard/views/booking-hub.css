@@ -1653,6 +1653,13 @@
   transform: translateY(-1px);
 }
 
+.booking-hub-view .plan-select-button:disabled {
+  cursor: not-allowed;
+  opacity: 0.6;
+  transform: none;
+  box-shadow: none;
+}
+
 .booking-hub-view .roi-panel,
 .booking-hub-view .guarantee-panel {
   position: relative;
@@ -2853,6 +2860,7 @@
   display: grid;
   grid-template-columns: 1fr;
   gap: 8px;
+  align-items: start;
 }
 
 .booking-hub-view .trial-span-2 {
@@ -2862,6 +2870,8 @@
 .booking-hub-view .trial-field {
   display: grid;
   gap: 4px;
+  position: relative;
+  padding-bottom: 18px;
 }
 
 .booking-hub-view .trial-label {
@@ -2924,13 +2934,13 @@
 }
 
 .booking-hub-view .trial-field-error-slot {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
   display: block;
-  margin-top: 2px;
+  min-height: 16px;
   line-height: 14px;
-}
-
-.booking-hub-view .trial-field-error-slot:empty {
-  display: none;
 }
 
 .booking-hub-view .trial-field-error {

@@ -5,6 +5,7 @@ import CountryCodeSelect, {
   isValidPhoneE164,
   normalizePhoneE164,
   parsePhone,
+  PHONE_NATIONAL_PLACEHOLDER,
 } from '../../CountryCodeSelect'
 import { useTranslation } from '../../../contexts/LanguageContext'
 import { useNotification } from '../../../contexts/NotificationContext'
@@ -107,11 +108,9 @@ function createInitialTrialForm(): TrialFormState {
 }
 
 function TrialFieldError({ message }: { message?: string }) {
-  if (!message) return null
-
   return (
     <span className="trial-field-error-slot" aria-live="polite">
-      <span className="trial-field-error">{message}</span>
+      {message ? <span className="trial-field-error">{message}</span> : null}
     </span>
   )
 }
@@ -159,13 +158,32 @@ export default function BookingTrialModal({ open, onClose }: BookingTrialModalPr
   const { t, currentLanguage } = useTranslation()
   const { showToast } = useNotification()
   const submitTrial = useSubmitVoiceTrialRequest()
-  const defaultDialCode = getDefaultDialCode(currentLanguage)
-  const [step, setStep] = useState<'form' | 'email'>('form')
   const [form, setForm] = useState<TrialFormState>(createInitialTrialForm)
-  const [emailStatus, setEmailStatus] = useState<'default' | 'activated'>('default')
   const [errors, setErrors] = useState<TrialFormErrors>({})
+  const [phoneTouched, setPhoneTouched] = useState(false)
 
   const phoneParsed = useMemo(() => parsePhone(form.phone), [form.phone])
+
+  const getPhoneFieldError = (phoneValue: string, dialCode: string): string | undefined => {
+    const parsed = parsePhone(phoneValue)
+    if (!parsed.nationalNumber.trim()) {
+      return t(`${TK}.validationPhoneRequired`)
+    }
+    if (!isValidPhoneE164(phoneValue, dialCode)) {
+      return t(`${TK}.validationPhoneInvalid`)
+    }
+    return undefined
+  }
+
+  const applyPhoneFieldError = (phoneValue: string, dialCode: string) => {
+    const phoneError = getPhoneFieldError(phoneValue, dialCode)
+    setErrors((prev) => {
+      const next = { ...prev }
+      if (phoneError) next.phone = phoneError
+      else delete next.phone
+      return next
+    })
+  }
 
   const clearFieldError = (field: TrialFieldKey) => {
     setErrors((prev) => {
@@ -190,10 +208,9 @@ export default function BookingTrialModal({ open, onClose }: BookingTrialModalPr
   }
 
   const resetForm = () => {
-    setStep('form')
-    setEmailStatus('default')
     setForm(createInitialTrialForm())
     setErrors({})
+    setPhoneTouched(false)
   }
 
   const serviceChips = [...SERVICE_CHIPS, ...form.customServices]
@@ -254,11 +271,8 @@ export default function BookingTrialModal({ open, onClose }: BookingTrialModalPr
 
     if (!shopName) nextErrors.salon = t(`${TK}.validationSalonRequired`)
     if (!ownerName) nextErrors.owner = t(`${TK}.validationOwnerRequired`)
-    if (!phoneParsed.nationalNumber.trim()) {
-      nextErrors.phone = t(`${TK}.validationPhoneRequired`)
-    } else if (!isValidPhoneE164(form.phone, defaultDialCode)) {
-      nextErrors.phone = t(`${TK}.validationPhoneInvalid`)
-    }
+    const phoneError = getPhoneFieldError(form.phone, phoneParsed.countryCode)
+    if (phoneError) nextErrors.phone = phoneError
     if (!emailValue) nextErrors.email = t(`${TK}.validationEmailRequired`)
     else if (!emailValue.includes('@')) nextErrors.email = t(`${TK}.validationEmailInvalid`)
     if (services.length === 0) nextErrors.services = t(`${TK}.validationServicesRequired`)
@@ -282,7 +296,7 @@ export default function BookingTrialModal({ open, onClose }: BookingTrialModalPr
 
     const shopName = form.salon.trim()
     const ownerName = form.owner.trim()
-    const phoneNumber = normalizePhoneE164(form.phone, defaultDialCode)
+    const phoneNumber = normalizePhoneE164(form.phone, phoneParsed.countryCode)
     const emailValue = form.email.trim()
     const services = [...form.activeServices]
     const openingDays = mapDayKeysToApiOpeningDays(form.activeDays)
@@ -306,21 +320,39 @@ export default function BookingTrialModal({ open, onClose }: BookingTrialModalPr
   }
 
   const handleSubmit = async () => {
+    setPhoneTouched(true)
     const payload = buildPayload()
     if (!payload) return
 
     try {
       await submitTrial.mutateAsync(payload)
       showToast(t(`${TK}.submitSuccess`), 'success')
-      setStep('email')
+      handleClose()
     } catch (error) {
       showToast(t(getErrorI18nKey(getApiErrorCode(error))), 'error')
     }
   }
 
-  const handleActivate = () => {
-    setEmailStatus('activated')
+  const handlePhoneBlur = () => {
+    setPhoneTouched(true)
+    applyPhoneFieldError(form.phone, phoneParsed.countryCode)
   }
+
+  useEffect(() => {
+    if (!phoneTouched) return
+    applyPhoneFieldError(form.phone, phoneParsed.countryCode)
+  }, [form.phone, phoneParsed.countryCode, phoneTouched])
+
+  useEffect(() => {
+    if (!open) return
+    const defaultDialCode = getDefaultDialCode(currentLanguage)
+    setForm((prev) => {
+      if (prev.phone.trim()) return prev
+      return { ...prev, phone: defaultDialCode }
+    })
+    setPhoneTouched(false)
+    setErrors({})
+  }, [open, currentLanguage])
 
   useEffect(() => {
     if (!open) {
@@ -328,8 +360,6 @@ export default function BookingTrialModal({ open, onClose }: BookingTrialModalPr
       return undefined
     }
     document.body.style.overflow = 'hidden'
-    setStep('form')
-    setEmailStatus('default')
     return () => {
       document.body.style.overflow = ''
     }
@@ -353,8 +383,7 @@ export default function BookingTrialModal({ open, onClose }: BookingTrialModalPr
           <CloseIcon />
         </button>
 
-        {step === 'form' ? (
-          <div className="trial-step">
+        <div className="trial-step">
             <div className="trial-head">
               <div className="trial-brand"><GiftIcon /> {t(`${TK}.brandBadge`)}</div>
               <h2 className="trial-title" id="trial-modal-title">
@@ -404,7 +433,13 @@ export default function BookingTrialModal({ open, onClose }: BookingTrialModalPr
                       embedded
                       onChange={(nextCode) => {
                         const formatted = formatNationalNumber(phoneParsed.nationalNumber, nextCode)
-                        patchFormField('phone', `${nextCode} ${formatted}`.trim(), 'phone')
+                        const nextPhone = `${nextCode} ${formatted}`.trim()
+                        patchForm('phone', nextPhone)
+                        if (phoneTouched) {
+                          applyPhoneFieldError(nextPhone, nextCode)
+                        } else {
+                          clearFieldError('phone')
+                        }
                       }}
                     />
                     <input
@@ -413,9 +448,10 @@ export default function BookingTrialModal({ open, onClose }: BookingTrialModalPr
                       type="tel"
                       value={formatNationalNumber(phoneParsed.nationalNumber, phoneParsed.countryCode)}
                       aria-invalid={Boolean(errors.phone)}
-                      placeholder={t(`${TK}.phonePlaceholder`)}
+                      placeholder={PHONE_NATIONAL_PLACEHOLDER}
                       inputMode="numeric"
                       autoComplete="tel-national"
+                      onBlur={handlePhoneBlur}
                       onChange={(event) => {
                         const formatted = formatNationalNumber(event.target.value, phoneParsed.countryCode)
                         patchFormField('phone', `${phoneParsed.countryCode} ${formatted}`.trim(), 'phone')
@@ -590,44 +626,6 @@ export default function BookingTrialModal({ open, onClose }: BookingTrialModalPr
               <a href="https://nexoratouch.com" target="_blank" rel="noreferrer">nexoratouch.com</a>
             </div>
           </div>
-        ) : (
-          <div className="trial-step">
-            <div className="trial-head">
-              <div className="trial-brand">NEXORA TOUCH</div>
-              <h2 className="trial-title">{t(`${TK}.emailTitle`)}</h2>
-              <p className="trial-subtitle">
-                {t(`${TK}.emailSubtitlePrefix`)}{' '}
-                <strong className="trial-email-highlight">{form.email}</strong>.{' '}
-                {t(`${TK}.emailSubtitleSuffix`)}
-              </p>
-            </div>
-
-            <div className="trial-body">
-              <div className="trial-email-preview">
-                <div className="trial-email-from">
-                  <span className="trial-email-avatar">N</span>
-                  <div>
-                    <div className="trial-email-sender">NEXORA TOUCH</div>
-                    <div className="trial-email-meta">no-reply@nexoratouch.com · {t(`${TK}.emailNow`)}</div>
-                  </div>
-                </div>
-                <div className="trial-email-subject">{t(`${TK}.emailPreviewSubject`)}</div>
-                <div className="trial-email-body">{t(`${TK}.emailPreviewBody`)}</div>
-              </div>
-
-              <button className="trial-submit trial-submit-spaced" type="button" onClick={handleActivate}>
-                {t(`${TK}.activate`)}
-              </button>
-              <div className="trial-footer">
-                {emailStatus === 'activated' ? (
-                  <span className="trial-status-success">{t(`${TK}.activatedStatus`)}</span>
-                ) : (
-                  t(`${TK}.emailStatus`)
-                )}
-              </div>
-            </div>
-          </div>
-        )}
       </div>
     </div>
   )
