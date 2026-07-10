@@ -17,7 +17,6 @@ export interface DeductionCategoryApiDto {
   applicableRole: string
   riskLevel: string
   requiresBusinessUsePercent: boolean
-  smartFieldSchema?: string | null
   displayOrder: number
   isActive: boolean
 }

@@ -244,15 +244,13 @@ export default function AddDeductionWizard({
         {lockedNotice && (
           <div className="mb-4 flex flex-col gap-2 rounded-lg border border-rose-200 bg-rose-50 p-3 text-xs font-semibold text-rose-700">
             <span>{t(isStaff ? 'taxiq.deductionCenter.errors.lockedMessageStaff' : 'taxiq.deductionCenter.errors.lockedMessage')}</span>
-            {!isStaff && (
-              <button
-                type="button"
-                onClick={() => navigate('/dashboard/taxiq/export')}
-                className="self-start rounded-lg bg-rose-600 px-3 py-1.5 text-[11px] font-bold text-white"
-              >
-                {t('taxiq.deductionCenter.errors.lockedAction')}
-              </button>
-            )}
+            <button
+              type="button"
+              onClick={() => navigate(isStaff ? '/staff/taxiq/export' : '/dashboard/taxiq/export')}
+              className="self-start rounded-lg bg-rose-600 px-3 py-1.5 text-[11px] font-bold text-white"
+            >
+              {t('taxiq.deductionCenter.errors.lockedAction')}
+            </button>
           </div>
         )}
 

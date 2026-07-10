@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { useNavigate } from 'react-router-dom'
 import { useTranslation } from '../../../../contexts/LanguageContext'
 import MileageLogTab from './tabs/MileageLogTab'
 import CashTipLogTab from './tabs/CashTipLogTab'
@@ -13,6 +14,7 @@ export default function LogsView({
   staffTaxYearStatus: string
 }) {
   const { t } = useTranslation()
+  const navigate = useNavigate()
   const [activeTab, setActiveTab] = useState<TabId>('mileage')
   const [lockedNoticeVisible, setLockedNoticeVisible] = useState(false)
 
@@ -31,8 +33,15 @@ export default function LogsView({
       </div>
 
       {isLocked && (
-        <div className="rounded-lg border border-rose-200 bg-rose-50 p-3 text-xs font-semibold text-rose-700 dark:border-rose-500/20 dark:bg-rose-500/10 dark:text-rose-400">
-          {t('taxiq.staffLogs.errors.lockedMessage')}
+        <div className="flex flex-col gap-2 rounded-lg border border-rose-200 bg-rose-50 p-3 text-xs font-semibold text-rose-700 dark:border-rose-500/20 dark:bg-rose-500/10 dark:text-rose-400">
+          <span>{t('taxiq.staffLogs.errors.lockedMessage')}</span>
+          <button
+            type="button"
+            onClick={() => navigate('/staff/taxiq/export')}
+            className="self-start rounded-lg bg-rose-600 px-3 py-1.5 text-[11px] font-bold text-white"
+          >
+            {t('taxiq.deductionCenter.errors.lockedAction')}
+          </button>
         </div>
       )}
 

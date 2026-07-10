@@ -35,7 +35,8 @@ export interface CreateAdjustmentParams {
 
 export interface AdjustmentRecordApiDto {
   id: string
-  ownerTaxYearId: string
+  ownerTaxYearId: string | null
+  staffTaxYearId: string | null
   entityType: string
   entityId: string
   fieldName: string
@@ -55,7 +56,8 @@ interface AdjustmentRecordListApiDto {
 
 export interface AdjustmentRecord {
   id: string
-  ownerTaxYearId: string
+  ownerTaxYearId: string | null
+  staffTaxYearId: string | null
   entityType: string
   entityId: string
   fieldName: string
@@ -69,10 +71,11 @@ export interface AdjustmentRecord {
   createdAt: string
 }
 
-function normalizeAdjustment(dto: AdjustmentRecordApiDto): AdjustmentRecord {
+export function normalizeAdjustment(dto: AdjustmentRecordApiDto): AdjustmentRecord {
   return {
     id: dto.id,
-    ownerTaxYearId: dto.ownerTaxYearId,
+    ownerTaxYearId: dto.ownerTaxYearId ?? null,
+    staffTaxYearId: dto.staffTaxYearId ?? null,
     entityType: dto.entityType,
     entityId: dto.entityId,
     fieldName: dto.fieldName,

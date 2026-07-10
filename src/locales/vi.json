@@ -3922,7 +3922,10 @@
         "payoutRecord": "Payout",
         "equipmentAsset": "Equipment / Asset",
         "giftCardLiability": "Gift Card Liability",
-        "membershipCredit": "Membership Credit"
+        "membershipCredit": "Membership Credit",
+        "mileageLog": "Nhật Ký Di Chuyển",
+        "cashTipLog": "Tiền Boa Mặt",
+        "selfReportedIncome": "Thu Nhập Tự Khai"
       },
       "columns": {
         "entity": "Đối tượng",

@@ -202,6 +202,9 @@ export const qk = {
   // Tax IQ — Owner Adjustment History (US-06, post-Lock only)
   taxiqOwnerAdjustments: (ownerTaxYearId?: string) => ['taxiqOwnerAdjustments', ownerTaxYearId ?? 'unknown'],
 
+  // Tax IQ — Staff Adjustment History (US-013, post-Lock only)
+  taxiqStaffAdjustments: (staffTaxYearId?: string) => ['taxiqStaffAdjustments', staffTaxYearId ?? 'unknown'],
+
   // Tax IQ — Owner Tax Payment Reminders (US-08)
   taxiqTaxReminders: (ownerTaxYearId?: string) => ['taxiqTaxReminders', ownerTaxYearId ?? 'unknown'],
 

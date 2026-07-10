@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react'
+import { useNavigate } from 'react-router-dom'
 import { Loader2, X } from 'lucide-react'
 import { useTranslation } from '../../../../contexts/LanguageContext'
 import { useNotification } from '../../../../contexts/NotificationContext'
@@ -59,6 +60,7 @@ export default function SelfReportedIncomeWizard({
 }) {
   const { t } = useTranslation()
   const { showToast } = useNotification()
+  const navigate = useNavigate()
 
   const isEditing = !!editingId
   const detailQuery = useTaxiqSelfReportedIncomeDetail(editingId ?? undefined)
@@ -204,8 +206,15 @@ export default function SelfReportedIncomeWizard({
         </div>
 
         {lockedNotice && (
-          <div className="mb-4 rounded-lg border border-rose-200 bg-rose-50 p-3 text-xs font-semibold text-rose-700 dark:border-rose-500/20 dark:bg-rose-500/10 dark:text-rose-400">
-            {t('taxiq.selfReportedIncome.lockedNotice')}
+          <div className="mb-4 flex flex-col gap-2 rounded-lg border border-rose-200 bg-rose-50 p-3 text-xs font-semibold text-rose-700 dark:border-rose-500/20 dark:bg-rose-500/10 dark:text-rose-400">
+            <span>{t('taxiq.selfReportedIncome.lockedNotice')}</span>
+            <button
+              type="button"
+              onClick={() => navigate('/staff/taxiq/export')}
+              className="self-start rounded-lg bg-rose-600 px-3 py-1.5 text-[11px] font-bold text-white"
+            >
+              {t('taxiq.deductionCenter.errors.lockedAction')}
+            </button>
           </div>
         )}
 

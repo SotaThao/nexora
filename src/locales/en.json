@@ -3923,7 +3923,10 @@
         "payoutRecord": "Payout",
         "equipmentAsset": "Equipment / Asset",
         "giftCardLiability": "Gift Card Liability",
-        "membershipCredit": "Membership Credit"
+        "membershipCredit": "Membership Credit",
+        "mileageLog": "Mileage Log",
+        "cashTipLog": "Cash Tip Log",
+        "selfReportedIncome": "Self-Reported Income"
       },
       "columns": {
         "entity": "Entity",

@@ -1,17 +1,21 @@
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { AlertTriangle, CheckCircle2, Download, FilePlus2, Loader2, Lock } from 'lucide-react'
+import { AlertTriangle, CheckCircle2, Download, FilePlus2, Loader2, Lock, PlusCircle } from 'lucide-react'
 import { useTranslation } from '../../../../contexts/LanguageContext'
 import { useNotification } from '../../../../contexts/NotificationContext'
 import { useTaxiqReadinessScore } from '../../../../data/hooks/useTaxiqReadinessScore'
 import { useGenerateStaffDraftExport, useGenerateStaffFinalExport } from '../../../../data/hooks/useTaxiqStaffExport'
 import type { StaffFinalExportResult } from '../../../../data/hooks/useTaxiqStaffExport'
+import { useStaffAdjustments } from '../../../../data/hooks/useTaxiqStaffAdjustments'
 import type { CpaPackageType, ExportPackage } from '../../../../data/repositories/taxiqStaffExport'
 import type { StaffTaxYear } from '../../../../data/repositories/taxiqStaffTaxYear'
 import { isApiError } from '../../../../types/domain'
 import { getErrorI18nKey } from '../../../../data/errorCodes'
 import TaxReadinessScoreWidget, { getReadinessItemLabel, READINESS_ITEM_ROUTES } from '../../../dashboard/views/taxiq/shared/TaxReadinessScoreWidget'
+import CreateAdjustmentModal from '../../../dashboard/views/taxiq/modals/CreateAdjustmentModal'
+import { SkeletonList } from '../../../ui/skeleton'
 import Tooltip from '../../../ui/Tooltip'
+import { formatTransactionDateTime } from '../../../dashboard/utils'
 
 // Draft is watermarked "NOT FINAL" regardless of tier — ticket only specifies a
 // package picker for Final Export, so Draft always requests Full (most detail)
@@ -79,11 +83,14 @@ export default function StaffYearEndExportView({
 }: {
   staffTaxYear: StaffTaxYear
 }) {
-  const { t } = useTranslation()
+  const { t, currentLanguage } = useTranslation()
   const { showToast } = useNotification()
   const navigate = useNavigate()
 
   const isLocked = staffTaxYear.status === 'Locked'
+  // Staff never reaches an `Exported` status (no separate Lock step like Owner) — `Locked`
+  // is the only state Staff Adjustment can gate on. See US-18 (BE) design notes.
+  const canCreateAdjustment = isLocked
 
   const readinessQuery = useTaxiqReadinessScore('staff', staffTaxYear.id)
   const highPriorityItems = readinessQuery.data?.highPriorityItems ?? []
@@ -92,9 +99,11 @@ export default function StaffYearEndExportView({
   const [consentConfirmed, setConsentConfirmed] = useState(false)
   const [draftResult, setDraftResult] = useState<ExportPackage | null>(null)
   const [finalResult, setFinalResult] = useState<StaffFinalExportResult | null>(null)
+  const [isAdjustmentModalOpen, setIsAdjustmentModalOpen] = useState(false)
 
   const generateDraft = useGenerateStaffDraftExport()
   const generateFinal = useGenerateStaffFinalExport()
+  const adjustmentsQuery = useStaffAdjustments(staffTaxYear.id)
 
   const requiresConsent = selectedPackageType === 'Full' || selectedPackageType === 'CPAReview'
 
@@ -287,6 +296,62 @@ export default function StaffYearEndExportView({
           )}
         </div>
       )}
+
+      {canCreateAdjustment && (
+        <div className="nexora-card p-6">
+          <div className="flex flex-wrap items-center justify-between gap-3">
+            <div>
+              <h3 className="text-sm font-extrabold text-nexoraText">{t('taxiq.createAdjustment.historyTitle')}</h3>
+              <p className="mt-1 text-xs text-nexoraMuted">{t('taxiq.createAdjustment.historySubtitle')}</p>
+            </div>
+            <button
+              type="button"
+              onClick={() => setIsAdjustmentModalOpen(true)}
+              className="inline-flex items-center gap-1.5 rounded-lg border border-nexoraBorder px-4 py-2 text-xs font-bold text-nexoraText"
+            >
+              <PlusCircle className="h-3.5 w-3.5" />
+              {t('taxiq.createAdjustment.addButton')}
+            </button>
+          </div>
+
+          <div className="mt-4 overflow-x-auto rounded-xl border border-nexoraBorder bg-white">
+            <table className="w-full min-w-[720px] text-left text-xs">
+              <thead className="bg-nexoraCanvas text-[10px] font-extrabold uppercase text-nexoraMuted">
+                <tr>
+                  <th className="px-4 py-3">{t('taxiq.createAdjustment.columns.entity')}</th>
+                  <th className="px-4 py-3">{t('taxiq.createAdjustment.columns.change')}</th>
+                  <th className="px-4 py-3">{t('taxiq.createAdjustment.columns.reason')}</th>
+                  <th className="px-4 py-3">{t('taxiq.createAdjustment.columns.createdBy')}</th>
+                  <th className="px-4 py-3">{t('taxiq.createAdjustment.columns.createdAt')}</th>
+                </tr>
+              </thead>
+              <tbody>
+                {adjustmentsQuery.isPending ? (
+                  <tr><td colSpan={5} className="p-4"><SkeletonList count={3} lines={1} /></td></tr>
+                ) : (adjustmentsQuery.data ?? []).length === 0 ? (
+                  <tr><td colSpan={5} className="px-4 py-8 text-center font-medium text-nexoraMuted">{t('taxiq.createAdjustment.emptyState')}</td></tr>
+                ) : (
+                  (adjustmentsQuery.data ?? []).map((record) => (
+                    <tr key={record.id} className="border-t border-nexoraRule">
+                      <td className="px-4 py-3 font-bold text-nexoraText">{record.entityType} · {record.fieldName}</td>
+                      <td className="px-4 py-3 text-nexoraText">{record.oldValue} → {record.newValue}</td>
+                      <td className="px-4 py-3 text-nexoraMuted">{record.reason}</td>
+                      <td className="px-4 py-3 text-nexoraMuted">{record.createdByUserName}</td>
+                      <td className="px-4 py-3 text-nexoraMuted">{formatTransactionDateTime(record.createdAt, currentLanguage)}</td>
+                    </tr>
+                  ))
+                )}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      )}
+
+      <CreateAdjustmentModal
+        open={isAdjustmentModalOpen}
+        onClose={() => setIsAdjustmentModalOpen(false)}
+        staffTaxYearId={staffTaxYear.id}
+      />
     </div>
   )
 }

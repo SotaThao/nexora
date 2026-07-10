@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { useNavigate } from 'react-router-dom'
 import { Lock, Pencil, Plus, Trash2 } from 'lucide-react'
 import { useTranslation } from '../../../../contexts/LanguageContext'
 import { useNotification } from '../../../../contexts/NotificationContext'
@@ -62,6 +63,7 @@ export default function IncomeSummaryListView({
 }) {
   const { t } = useTranslation()
   const { showToast } = useNotification()
+  const navigate = useNavigate()
   const listQuery = useTaxiqSelfReportedIncomeList(staffTaxYearId)
   const deleteIncome = useDeleteSelfReportedIncome()
 
@@ -118,9 +120,16 @@ export default function IncomeSummaryListView({
       </div>
 
       {isLocked && (
-        <div className="flex items-center gap-2 rounded-lg border border-nexoraBorder bg-nexoraCanvas px-3 py-2 text-xs font-semibold text-nexoraMuted">
+        <div className="flex flex-wrap items-center gap-2 rounded-lg border border-nexoraBorder bg-nexoraCanvas px-3 py-2 text-xs font-semibold text-nexoraMuted">
           <Lock className="h-3.5 w-3.5 shrink-0" />
-          {t('taxiq.selfReportedIncome.lockedNotice')}
+          <span>{t('taxiq.selfReportedIncome.lockedNotice')}</span>
+          <button
+            type="button"
+            onClick={() => navigate('/staff/taxiq/export')}
+            className="ml-auto shrink-0 rounded-lg bg-nexoraBrand px-3 py-1.5 text-[11px] font-bold text-white"
+          >
+            {t('taxiq.deductionCenter.errors.lockedAction')}
+          </button>
         </div>
       )}
 

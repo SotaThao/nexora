@@ -18,7 +18,6 @@ export interface CpaDeductionApiDto {
   date: string
   vendorName?: string | null
   businessUsePercent?: number | null
-  smartFieldValues?: string | null
   recordStatus: string
   aiDeductionStatus?: string | null
   aiExplanation?: string | null
@@ -36,7 +35,6 @@ export interface CpaDeduction {
   date: string
   vendorName: string | null
   businessUsePercent: number | null
-  smartFieldValues: string | null
   recordStatus: string
   aiDeductionStatus: string | null
   aiExplanation: string | null
@@ -55,7 +53,6 @@ function normalizeCpaDeduction(dto: CpaDeductionApiDto): CpaDeduction {
     date: dto.date,
     vendorName: dto.vendorName ?? null,
     businessUsePercent: dto.businessUsePercent ?? null,
-    smartFieldValues: dto.smartFieldValues ?? null,
     recordStatus: dto.recordStatus,
     aiDeductionStatus: dto.aiDeductionStatus ?? null,
     aiExplanation: dto.aiExplanation ?? null,

@@ -20,7 +20,6 @@ export interface StaffDeductionApiDto {
   date: string
   vendorName?: string | null
   businessUsePercent?: number | null
-  smartFieldValues?: string | null
   recordStatus: string
   aiDeductionStatus?: string | null
   aiExplanation?: string | null

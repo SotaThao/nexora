@@ -5,8 +5,10 @@ import Tooltip from '../../../../ui/Tooltip'
 import { useTranslation } from '../../../../../contexts/LanguageContext'
 import { useNotification } from '../../../../../contexts/NotificationContext'
 import { useCreateOwnerAdjustment } from '../../../../../data/hooks/useTaxiqOwnerTaxYearLock'
+import { useCreateStaffAdjustment } from '../../../../../data/hooks/useTaxiqStaffAdjustments'
 import { useTaxiqReceipts } from '../../../../../data/hooks/useTaxiqReceipts'
 import { ADJUSTMENT_ENTITY_FIELD_MAP } from '../../../../../data/repositories/taxiqOwnerAdjustments'
+import { STAFF_ADJUSTMENT_ENTITY_FIELD_MAP } from '../../../../../data/repositories/taxiqStaffAdjustments'
 import { isApiError } from '../../../../../types/domain'
 import { getErrorI18nKey } from '../../../../../data/errorCodes'
 
@@ -16,6 +18,9 @@ const ENTITY_TYPE_LABEL_KEYS: Record<string, string> = {
   EquipmentAsset: 'taxiq.createAdjustment.entityTypes.equipmentAsset',
   GiftCardLiability: 'taxiq.createAdjustment.entityTypes.giftCardLiability',
   MembershipCredit: 'taxiq.createAdjustment.entityTypes.membershipCredit',
+  MileageLog: 'taxiq.createAdjustment.entityTypes.mileageLog',
+  CashTipLog: 'taxiq.createAdjustment.entityTypes.cashTipLog',
+  SelfReportedIncome: 'taxiq.createAdjustment.entityTypes.selfReportedIncome',
 }
 
 // Fields whose OldValue/NewValue are numeric (JSON-encoded as a number on submit).
@@ -23,10 +28,8 @@ const ENTITY_TYPE_LABEL_KEYS: Record<string, string> = {
 // combinations enforced server-side in CreateAdjustmentRecordCommand's switch.
 const NUMERIC_FIELDS = new Set([
   'Amount', 'BusinessUsePercent', 'ServicePayout', 'Tip', 'Bonus', 'Reimbursement',
-  'TotalSold', 'TotalRedeemed', 'CreditsIssued', 'CreditsUsed', 'CreditsExpired',
+  'TotalSold', 'TotalRedeemed', 'CreditsIssued', 'CreditsUsed', 'CreditsExpired', 'Miles',
 ])
-
-const ENTITY_TYPES = Object.keys(ADJUSTMENT_ENTITY_FIELD_MAP)
 
 export interface CreateAdjustmentPrefill {
   entityType?: string
@@ -41,22 +44,29 @@ export default function CreateAdjustmentModal({
   open,
   onClose,
   ownerTaxYearId,
+  staffTaxYearId,
   prefill,
 }: {
   open: boolean
   onClose: () => void
-  ownerTaxYearId: string
+  ownerTaxYearId?: string
+  staffTaxYearId?: string
   prefill?: CreateAdjustmentPrefill | null
 }) {
   const { t } = useTranslation()
   const { showToast } = useNotification()
-  const createAdjustment = useCreateOwnerAdjustment()
-  const receiptsQuery = useTaxiqReceipts(open ? { ownerTaxYearId } : undefined)
+  const isStaff = !!staffTaxYearId
+  const fieldMap = isStaff ? STAFF_ADJUSTMENT_ENTITY_FIELD_MAP : ADJUSTMENT_ENTITY_FIELD_MAP
+  const entityTypes = Object.keys(fieldMap)
+  const createOwnerAdjustment = useCreateOwnerAdjustment()
+  const createStaffAdjustment = useCreateStaffAdjustment()
+  const createAdjustment = isStaff ? createStaffAdjustment : createOwnerAdjustment
+  const receiptsQuery = useTaxiqReceipts(open ? { ownerTaxYearId, staffTaxYearId } : undefined)
   const receipts = receiptsQuery.data ?? []
 
-  const [entityType, setEntityType] = useState(ENTITY_TYPES[0])
+  const [entityType, setEntityType] = useState(entityTypes[0])
   const [entityId, setEntityId] = useState('')
-  const [fieldName, setFieldName] = useState(ADJUSTMENT_ENTITY_FIELD_MAP[ENTITY_TYPES[0]][0])
+  const [fieldName, setFieldName] = useState(fieldMap[entityTypes[0]][0])
   const [currentValues, setCurrentValues] = useState<Record<string, string | number>>({})
   const [oldValue, setOldValue] = useState('')
   const [newValue, setNewValue] = useState('')
@@ -70,10 +80,10 @@ export default function CreateAdjustmentModal({
 
   useEffect(() => {
     if (!open) return
-    const initialEntityType = prefill?.entityType && ADJUSTMENT_ENTITY_FIELD_MAP[prefill.entityType]
+    const initialEntityType = prefill?.entityType && fieldMap[prefill.entityType]
       ? prefill.entityType
-      : ENTITY_TYPES[0]
-    const initialFieldName = ADJUSTMENT_ENTITY_FIELD_MAP[initialEntityType][0]
+      : entityTypes[0]
+    const initialFieldName = fieldMap[initialEntityType][0]
     const values = prefill?.currentValues ?? {}
     setEntityType(initialEntityType)
     setEntityId(prefill?.entityId ?? '')
@@ -85,16 +95,16 @@ export default function CreateAdjustmentModal({
     setCpaNotes('')
     setReceiptId('')
     setError('')
-  }, [open, prefill])
+  }, [open, prefill, isStaff])
 
   if (!open) return null
 
-  const fieldOptions = ADJUSTMENT_ENTITY_FIELD_MAP[entityType] ?? []
+  const fieldOptions = fieldMap[entityType] ?? []
   const isNumericField = NUMERIC_FIELDS.has(fieldName)
 
   const handleEntityTypeChange = (value: string) => {
     setEntityType(value)
-    const nextFieldName = ADJUSTMENT_ENTITY_FIELD_MAP[value][0]
+    const nextFieldName = fieldMap[value][0]
     setFieldName(nextFieldName)
     setCurrentValues({})
     setOldValue('')
@@ -116,8 +126,7 @@ export default function CreateAdjustmentModal({
     setError('')
     try {
       const encode = (raw: string) => (isNumericField ? JSON.stringify(Number(raw)) : JSON.stringify(raw))
-      await createAdjustment.mutateAsync({
-        ownerTaxYearId,
+      const params = {
         entityType,
         entityId: entityId.trim(),
         fieldName,
@@ -126,7 +135,12 @@ export default function CreateAdjustmentModal({
         reason: reason.trim(),
         cpaNotes: cpaNotes.trim() || undefined,
         receiptId: receiptId.trim() || undefined,
-      })
+      }
+      if (isStaff) {
+        await createStaffAdjustment.mutateAsync({ staffTaxYearId: staffTaxYearId as string, ...params })
+      } else {
+        await createOwnerAdjustment.mutateAsync({ ownerTaxYearId: ownerTaxYearId as string, ...params })
+      }
       showToast(t('taxiq.createAdjustment.success'), 'success')
       onClose()
     } catch (err) {
@@ -167,7 +181,7 @@ export default function CreateAdjustmentModal({
                 onChange={(e) => handleEntityTypeChange(e.target.value)}
                 className="w-full rounded-lg border border-nexoraBorder px-3 py-2 text-xs font-semibold"
               >
-                {ENTITY_TYPES.map((key) => (
+                {entityTypes.map((key) => (
                   <option key={key} value={key}>{t(ENTITY_TYPE_LABEL_KEYS[key] ?? key)}</option>
                 ))}
               </select>
