@@ -4,7 +4,7 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { qk } from '../queryKeys'
 import taxiqOwnerAdjustmentsRepository from '../repositories/taxiqOwnerAdjustments'
-import type { AdjustmentRecord, CreateAdjustmentParams, LockTaxYearParams } from '../repositories/taxiqOwnerAdjustments'
+import type { AdjustmentRecord, CreateAdjustmentParams, LockTaxYearParams, UnlockTaxYearParams } from '../repositories/taxiqOwnerAdjustments'
 
 export function useLockOwnerTaxYear() {
   const queryClient = useQueryClient()
@@ -13,6 +13,17 @@ export function useLockOwnerTaxYear() {
     onSuccess: (_data, variables) => {
       // Lock endpoint returns 204 with no body — refetch OwnerTaxYear so
       // status/lockedAt propagate to every screen reading it (DoD requirement).
+      queryClient.invalidateQueries({ queryKey: qk.taxiqOwnerTaxYear() })
+      queryClient.invalidateQueries({ queryKey: qk.taxiqOwnerTaxYearById(variables.ownerTaxYearId) })
+    },
+  })
+}
+
+export function useUnlockOwnerTaxYear() {
+  const queryClient = useQueryClient()
+  return useMutation<void, Error, { ownerTaxYearId: string } & UnlockTaxYearParams>({
+    mutationFn: ({ ownerTaxYearId, ...params }) => taxiqOwnerAdjustmentsRepository.unlock(ownerTaxYearId, params),
+    onSuccess: (_data, variables) => {
       queryClient.invalidateQueries({ queryKey: qk.taxiqOwnerTaxYear() })
       queryClient.invalidateQueries({ queryKey: qk.taxiqOwnerTaxYearById(variables.ownerTaxYearId) })
     },

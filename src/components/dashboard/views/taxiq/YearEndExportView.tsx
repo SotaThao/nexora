@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import { useLocation, useNavigate } from 'react-router-dom'
-import { CheckCircle2, Download, FilePlus2, Loader2, Lock, PlusCircle } from 'lucide-react'
+import { CheckCircle2, Download, FilePlus2, Loader2, Lock, Unlock, PlusCircle } from 'lucide-react'
 import { useTranslation } from '../../../../contexts/LanguageContext'
 import { useNotification } from '../../../../contexts/NotificationContext'
 import { useTaxiqReadinessScore } from '../../../../data/hooks/useTaxiqReadinessScore'
@@ -16,6 +16,7 @@ import Tooltip from '../../../ui/Tooltip'
 import { formatTransactionDateTime } from '../../utils'
 import TaxReadinessScoreWidget, { getReadinessItemLabel, navigateToReadinessItem, READINESS_ITEM_ROUTES } from './shared/TaxReadinessScoreWidget'
 import LockTaxYearModal from './modals/LockTaxYearModal'
+import UnlockTaxYearModal from './modals/UnlockTaxYearModal'
 import CreateAdjustmentModal, { type CreateAdjustmentPrefill } from './modals/CreateAdjustmentModal'
 
 // Source screens (Deduction Center, Payout Center, Assets Tracker) navigate here with this
@@ -99,8 +100,13 @@ export default function YearEndExportView({
 
   const isLockedOrExported = ownerTaxYear.status === 'Locked' || ownerTaxYear.status === 'Exported'
   const canCreateAdjustment = isLockedOrExported
+  // Only a Locked-not-yet-Exported year is eligible — once Exported a Final export
+  // already exists, and unlocking is otherwise blocked server-side if a CpaAccessGrant
+  // was ever issued (TAXIQ_OWNER_TAX_YEAR_UNLOCK_BLOCKED_BY_CPA_ACCESS).
+  const canUnlock = ownerTaxYear.status === 'Locked'
 
   const [isLockModalOpen, setIsLockModalOpen] = useState(false)
+  const [isUnlockModalOpen, setIsUnlockModalOpen] = useState(false)
   const [isAdjustmentModalOpen, setIsAdjustmentModalOpen] = useState(false)
   const [adjustmentPrefill, setAdjustmentPrefill] = useState<CreateAdjustmentPrefill | null>(null)
   const [draftResult, setDraftResult] = useState<ExportPackage | null>(null)
@@ -241,11 +247,23 @@ export default function YearEndExportView({
         </h3>
 
         {isLockedOrExported ? (
-          <div className="mt-3 flex items-center gap-2 rounded-lg border border-emerald-200 bg-emerald-50 px-3 py-2 text-xs font-bold text-emerald-700 dark:border-emerald-500/30 dark:bg-emerald-500/10 dark:text-emerald-400">
-            <Lock className="h-3.5 w-3.5" />
-            {t('taxiq.yearEndExport.lockedBanner', {
-              date: ownerTaxYear.lockedAt ? formatTransactionDateTime(ownerTaxYear.lockedAt, currentLanguage) : '—',
-            })}
+          <div className="mt-3 space-y-2">
+            <div className="flex items-center gap-2 rounded-lg border border-emerald-200 bg-emerald-50 px-3 py-2 text-xs font-bold text-emerald-700 dark:border-emerald-500/30 dark:bg-emerald-500/10 dark:text-emerald-400">
+              <Lock className="h-3.5 w-3.5" />
+              {t('taxiq.yearEndExport.lockedBanner', {
+                date: ownerTaxYear.lockedAt ? formatTransactionDateTime(ownerTaxYear.lockedAt, currentLanguage) : '—',
+              })}
+            </div>
+            {canUnlock && (
+              <button
+                type="button"
+                onClick={() => setIsUnlockModalOpen(true)}
+                className="inline-flex items-center gap-1.5 rounded-lg border border-nexoraBorder px-4 py-2 text-xs font-bold text-nexoraText"
+              >
+                <Unlock className="h-3.5 w-3.5" />
+                {t('taxiq.yearEndExport.unlockButton')}
+              </button>
+            )}
           </div>
         ) : (
           <div className="mt-3 space-y-3">
@@ -384,6 +402,12 @@ export default function YearEndExportView({
         onClose={() => setIsLockModalOpen(false)}
         ownerTaxYearId={ownerTaxYear.id}
         requireOverrideNote={onlyDisputeRemaining}
+      />
+
+      <UnlockTaxYearModal
+        open={isUnlockModalOpen}
+        onClose={() => setIsUnlockModalOpen(false)}
+        ownerTaxYearId={ownerTaxYear.id}
       />
 
       <CreateAdjustmentModal

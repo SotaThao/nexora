@@ -1841,6 +1841,7 @@
     "taxiq_owner_tax_year_locked": "This tax year is already locked.",
     "taxiq_staff_tax_year_locked": "Your tax year is locked — this record can no longer be edited.",
     "taxiq_owner_tax_year_not_locked": "Adjustments can only be created after the tax year is locked.",
+    "taxiq_owner_tax_year_unlock_blocked_by_cpa_access": "This tax year has already been shared with a CPA and can no longer be unlocked.",
     "taxiq_unsupported_adjustment_field": "This field is not supported for adjustments on the selected entity type.",
     "taxiq_adjustment_entity_not_found": "The record you're trying to adjust could not be found.",
     "taxiq_tax_payment_reminder_not_found": "This reminder could not be found.",
@@ -3106,7 +3107,7 @@
       },
       "step2": {
         "title": "Employee types",
-        "titleTooltip": "How you pay each person decides which tax forms apply (W-2, 1099-NEC, or none). Enter how many of each type work at your salon.",
+        "titleTooltip": "How you pay each person decides which tax forms apply (W-2, 1099-NEC, or none). Select which types work at your salon.",
         "w2Label": "W2 employees",
         "contractor1099Label": "1099 contractors",
         "boothRenterLabel": "Booth renters"
@@ -3844,6 +3845,7 @@
         "draftReport": "Preview export, available anytime, watermarked \"NOT FINAL\" and listing everything still missing.",
         "finalExport": "The official CPA-ready package, no watermark. Requires every High Priority item resolved and the tax year locked.",
         "lockTaxYear": "Freezes all records as read-only. Later changes must go through an Adjustment and produce an Amended export — the original export is always preserved.",
+        "unlockTaxYear": "Reopens direct editing. Only available while Locked (not yet Exported) and before this tax year has ever been shared with a CPA.",
         "adjustment": "A tracked change made after locking: old value, new value, reason, and proof. Appears in Amended Export v2/v3."
       },
       "draftTitle": "Draft Report",
@@ -3856,6 +3858,7 @@
       "lockTitle": "Lock & Final Export",
       "lockedBanner": "Tax year locked — {{date}}",
       "lockButton": "Lock Tax Year",
+      "unlockButton": "Unlock Tax Year",
       "resolveLink": "Resolve",
       "finalTitle": "Final Export",
       "finalDescription": "Requires the tax year to be locked and all High Priority items resolved.",
@@ -3926,6 +3929,17 @@
         "generic": "Unable to lock this tax year. Please try again."
       }
     },
+    "unlockTaxYear": {
+      "modalTitle": "Unlock Tax Year",
+      "warning": "This reopens direct editing of all records — only do this if you locked by mistake or need to fix something before ever sharing this tax year with a CPA. Once shared, unlocking is no longer allowed.",
+      "reasonLabel": "Reason",
+      "reasonPlaceholder": "Explain why you're unlocking this tax year...",
+      "confirmButton": "Confirm Unlock",
+      "success": "Tax year unlocked.",
+      "errors": {
+        "generic": "Unable to unlock this tax year. Please try again."
+      }
+    },
     "createAdjustment": {
       "modalTitle": "Create Adjustment",
       "historyTitle": "Adjustment History",
@@ -3956,7 +3970,9 @@
         "membershipCredit": "Membership Credit",
         "mileageLog": "Mileage Log",
         "cashTipLog": "Cash Tip Log",
-        "selfReportedIncome": "Self-Reported Income"
+        "selfReportedIncome": "Self-Reported Income",
+        "taxPaymentReminder": "Tax Payment Reminder",
+        "staffW9Status": "Staff W-9 Status"
       },
       "columns": {
         "entity": "Entity",

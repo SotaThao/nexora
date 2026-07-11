@@ -21,6 +21,8 @@ const ENTITY_TYPE_LABEL_KEYS: Record<string, string> = {
   MileageLog: 'taxiq.createAdjustment.entityTypes.mileageLog',
   CashTipLog: 'taxiq.createAdjustment.entityTypes.cashTipLog',
   SelfReportedIncome: 'taxiq.createAdjustment.entityTypes.selfReportedIncome',
+  TaxPaymentReminder: 'taxiq.createAdjustment.entityTypes.taxPaymentReminder',
+  StaffW9Status: 'taxiq.createAdjustment.entityTypes.staffW9Status',
 }
 
 // Fields whose OldValue/NewValue are numeric (JSON-encoded as a number on submit).

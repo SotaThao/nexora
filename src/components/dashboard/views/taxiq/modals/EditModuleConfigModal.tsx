@@ -69,22 +69,21 @@ export default function EditModuleConfigModal({
 
         <div className="space-y-3">
           {([
-            ['w2Count', 'taxiq.onboarding.step2.w2Label'],
-            ['contractor1099Count', 'taxiq.onboarding.step2.contractor1099Label'],
-            ['boothRenterCount', 'taxiq.onboarding.step2.boothRenterLabel'],
+            ['hasW2', 'taxiq.onboarding.step2.w2Label'],
+            ['hasContractor1099', 'taxiq.onboarding.step2.contractor1099Label'],
+            ['hasBoothRenter', 'taxiq.onboarding.step2.boothRenterLabel'],
           ] as const).map(([field, labelKey]) => (
-            <div key={field} className="flex items-center justify-between">
-              <label className="text-xs font-bold text-nexoraMuted">{t(labelKey)}</label>
+            <label key={field} className="flex items-center gap-2.5 text-sm font-semibold text-nexoraText">
               <input
-                type="number"
-                min={0}
-                value={employeeTypeConfig[field] ?? 0}
+                type="checkbox"
+                checked={employeeTypeConfig[field] ?? false}
                 onChange={(e) =>
-                  setEmployeeTypeConfig((prev) => ({ ...prev, [field]: Number(e.target.value) }))
+                  setEmployeeTypeConfig((prev) => ({ ...prev, [field]: e.target.checked }))
                 }
-                className="w-24 rounded-lg border border-nexoraBorder px-3 py-2 text-sm"
+                className="h-4 w-4 rounded border-nexoraBorder"
               />
-            </div>
+              {t(labelKey)}
+            </label>
           ))}
 
           <div className="pt-2 space-y-2">

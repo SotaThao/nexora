@@ -89,6 +89,7 @@ export const errorCodeToI18nKey = {
   TAXIQ_OWNER_TAX_YEAR_LOCKED: 'errors.taxiq_owner_tax_year_locked',
   TAXIQ_STAFF_TAX_YEAR_LOCKED: 'errors.taxiq_staff_tax_year_locked',
   TAXIQ_OWNER_TAX_YEAR_NOT_LOCKED: 'errors.taxiq_owner_tax_year_not_locked',
+  TAXIQ_OWNER_TAX_YEAR_UNLOCK_BLOCKED_BY_CPA_ACCESS: 'errors.taxiq_owner_tax_year_unlock_blocked_by_cpa_access',
   TAXIQ_UNSUPPORTED_ADJUSTMENT_FIELD: 'errors.taxiq_unsupported_adjustment_field',
   TAXIQ_ADJUSTMENT_ENTITY_NOT_FOUND: 'errors.taxiq_adjustment_entity_not_found',
 

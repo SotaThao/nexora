@@ -7,9 +7,9 @@ import httpClient from '../../lib/httpClient'
 type HttpClient = typeof httpClient
 
 export interface OwnerTaxYearEmployeeTypeConfig {
-  w2Count?: number
-  contractor1099Count?: number
-  boothRenterCount?: number
+  hasW2?: boolean
+  hasContractor1099?: boolean
+  hasBoothRenter?: boolean
 }
 
 export interface OwnerTaxYearApiDto {

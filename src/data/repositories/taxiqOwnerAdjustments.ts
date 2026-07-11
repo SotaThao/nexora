@@ -5,6 +5,11 @@
  * EntityType/FieldName are free-text on the BE (validated by a switch in
  * CreateAdjustmentRecordCommand, not a real enum) — ADJUSTMENT_ENTITY_FIELD_MAP
  * below mirrors that switch exactly and must be kept in sync if BE adds cases.
+ *
+ * unlock() reopens a Locked (not yet Exported) tax year for direct editing — BE only allows
+ * this when no CpaAccessGrant has ever been issued for it (TAXIQ_OWNER_TAX_YEAR_UNLOCK_BLOCKED_BY_CPA_ACCESS
+ * otherwise), so it's a narrow "undo before anyone external has seen the locked data" escape
+ * hatch, not a general reopen.
  */
 import httpClient from '../../lib/httpClient'
 
@@ -16,10 +21,16 @@ export const ADJUSTMENT_ENTITY_FIELD_MAP: Record<string, string[]> = {
   EquipmentAsset: ['Amount', 'BusinessUsePercent', 'AssetName'],
   GiftCardLiability: ['TotalSold', 'TotalRedeemed'],
   MembershipCredit: ['CreditsIssued', 'CreditsUsed', 'CreditsExpired'],
+  TaxPaymentReminder: ['DueDate', 'TaxType'],
+  StaffW9Status: ['W9Status'],
 }
 
 export interface LockTaxYearParams {
   overrideNote?: string
+}
+
+export interface UnlockTaxYearParams {
+  reason: string
 }
 
 export interface CreateAdjustmentParams {
@@ -95,6 +106,12 @@ export function createTaxiqOwnerAdjustmentsRepository(client: HttpClient = httpC
     async lock(ownerTaxYearId: string, params: LockTaxYearParams): Promise<void> {
       await client.post(`/api/v1/taxiq/owner/tax-years/${encodeURIComponent(ownerTaxYearId)}/lock`, {
         overrideNote: params.overrideNote,
+      })
+    },
+
+    async unlock(ownerTaxYearId: string, params: UnlockTaxYearParams): Promise<void> {
+      await client.post(`/api/v1/taxiq/owner/tax-years/${encodeURIComponent(ownerTaxYearId)}/unlock`, {
+        reason: params.reason,
       })
     },
 

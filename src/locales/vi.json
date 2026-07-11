@@ -1841,6 +1841,7 @@
     "taxiq_owner_tax_year_locked": "Năm thuế này đã được khóa.",
     "taxiq_staff_tax_year_locked": "Năm thuế của bạn đã bị khóa — không thể sửa bản ghi này nữa.",
     "taxiq_owner_tax_year_not_locked": "Chỉ có thể tạo Adjustment sau khi năm thuế đã được khóa.",
+    "taxiq_owner_tax_year_unlock_blocked_by_cpa_access": "Năm thuế này đã được chia sẻ với CPA nên không thể mở khóa nữa.",
     "taxiq_unsupported_adjustment_field": "Trường này không được hỗ trợ để tạo Adjustment cho loại đối tượng đã chọn.",
     "taxiq_adjustment_entity_not_found": "Không tìm thấy bản ghi bạn đang muốn điều chỉnh.",
     "taxiq_tax_payment_reminder_not_found": "Không tìm thấy reminder này.",
@@ -3105,7 +3106,7 @@
       },
       "step2": {
         "title": "Loại nhân viên",
-        "titleTooltip": "Cách bạn trả tiền cho mỗi người quyết định loại giấy tờ thuế áp dụng (W-2, 1099-NEC hoặc không có). Nhập số lượng từng loại đang làm tại tiệm.",
+        "titleTooltip": "Cách bạn trả tiền cho mỗi người quyết định loại giấy tờ thuế áp dụng (W-2, 1099-NEC hoặc không có). Chọn những loại nhân viên đang làm tại tiệm.",
         "w2Label": "Nhân viên W2",
         "contractor1099Label": "Thợ hợp đồng 1099",
         "boothRenterLabel": "Thợ thuê ghế"
@@ -3843,6 +3844,7 @@
         "draftReport": "Bản xuất xem trước, tạo lúc nào cũng được, đóng dấu \"NOT FINAL\" kèm danh sách mục còn thiếu.",
         "finalExport": "Bộ hồ sơ chính thức gửi CPA, không watermark. Yêu cầu xử lý hết High Priority và khóa năm thuế.",
         "lockTaxYear": "Đóng băng toàn bộ dữ liệu (chỉ đọc). Muốn sửa sau đó phải tạo Adjustment và xuất bản Amended — bản xuất gốc luôn được giữ nguyên.",
+        "unlockTaxYear": "Mở khóa để sửa trực tiếp trở lại. Chỉ khả dụng khi đang Locked (chưa Exported) và năm thuế này chưa từng được chia sẻ với CPA.",
         "adjustment": "Bản ghi sửa đổi sau khi khóa năm thuế: giá trị cũ, giá trị mới, lý do và chứng từ. Xuất hiện trong Amended Export v2/v3."
       },
       "draftTitle": "Draft Report",
@@ -3855,6 +3857,7 @@
       "lockTitle": "Khóa & Xuất Hồ Sơ Cuối Cùng",
       "lockedBanner": "Năm thuế đã khóa — {{date}}",
       "lockButton": "Khóa Năm Thuế",
+      "unlockButton": "Mở Khóa Năm Thuế",
       "resolveLink": "Xử lý",
       "finalTitle": "Final Export",
       "finalDescription": "Yêu cầu năm thuế đã khóa và không còn mục High Priority nào.",
@@ -3925,6 +3928,17 @@
         "generic": "Không thể khóa năm thuế này. Vui lòng thử lại."
       }
     },
+    "unlockTaxYear": {
+      "modalTitle": "Mở Khóa Năm Thuế",
+      "warning": "Thao tác này sẽ mở lại chỉnh sửa trực tiếp cho toàn bộ bản ghi — chỉ nên dùng khi lỡ khóa nhầm hoặc cần sửa trước khi năm thuế này từng được chia sẻ với CPA. Sau khi đã chia sẻ, không thể mở khóa nữa.",
+      "reasonLabel": "Lý do",
+      "reasonPlaceholder": "Giải thích lý do mở khóa năm thuế này...",
+      "confirmButton": "Xác nhận Mở Khóa",
+      "success": "Đã mở khóa năm thuế.",
+      "errors": {
+        "generic": "Không thể mở khóa năm thuế này. Vui lòng thử lại."
+      }
+    },
     "createAdjustment": {
       "modalTitle": "Tạo Adjustment",
       "historyTitle": "Lịch Sử Adjustment",
@@ -3955,7 +3969,9 @@
         "membershipCredit": "Membership Credit",
         "mileageLog": "Nhật Ký Di Chuyển",
         "cashTipLog": "Tiền Boa Mặt",
-        "selfReportedIncome": "Thu Nhập Tự Khai"
+        "selfReportedIncome": "Thu Nhập Tự Khai",
+        "taxPaymentReminder": "Nhắc Nộp Thuế",
+        "staffW9Status": "Trạng Thái W-9 Của Thợ"
       },
       "columns": {
         "entity": "Đối tượng",

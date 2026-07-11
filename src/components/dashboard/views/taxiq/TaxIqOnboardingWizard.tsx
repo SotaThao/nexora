@@ -40,9 +40,9 @@ export default function TaxIqOnboardingWizard({
   const [taxYear, setTaxYear] = useState<number>(defaultTaxYear)
   const [taxYearError, setTaxYearError] = useState('')
   const [employeeTypeConfig, setEmployeeTypeConfig] = useState<OwnerTaxYearEmployeeTypeConfig>({
-    w2Count: 0,
-    contractor1099Count: 0,
-    boothRenterCount: 0,
+    hasW2: false,
+    hasContractor1099: false,
+    hasBoothRenter: false,
   })
   const [enabledModules, setEnabledModules] = useState<string[]>([])
 
@@ -141,27 +141,22 @@ export default function TaxIqOnboardingWizard({
               </span>
             </h3>
             {([
-              ['w2Count', 'taxiq.onboarding.step2.w2Label', 'taxiq.tooltips.w2'],
-              ['contractor1099Count', 'taxiq.onboarding.step2.contractor1099Label', 'taxiq.tooltips.contractor1099'],
-              ['boothRenterCount', 'taxiq.onboarding.step2.boothRenterLabel', 'taxiq.tooltips.boothRenter'],
+              ['hasW2', 'taxiq.onboarding.step2.w2Label', 'taxiq.tooltips.w2'],
+              ['hasContractor1099', 'taxiq.onboarding.step2.contractor1099Label', 'taxiq.tooltips.contractor1099'],
+              ['hasBoothRenter', 'taxiq.onboarding.step2.boothRenterLabel', 'taxiq.tooltips.boothRenter'],
             ] as const).map(([field, labelKey, tooltipKey]) => (
-              <div key={field} className="flex items-center justify-between">
-                <label className="text-xs font-bold text-nexoraMuted">
-                  <span className="inline-flex items-center gap-1">
-                    {t(labelKey)}
-                    <Tooltip content={t(tooltipKey)} />
-                  </span>
-                </label>
+              <label key={field} className="flex items-center gap-2.5 text-sm font-semibold text-nexoraText">
                 <input
-                  type="number"
-                  min={0}
-                  value={employeeTypeConfig[field] ?? 0}
+                  type="checkbox"
+                  checked={employeeTypeConfig[field] ?? false}
                   onChange={(e) =>
-                    setEmployeeTypeConfig((prev) => ({ ...prev, [field]: Number(e.target.value) }))
+                    setEmployeeTypeConfig((prev) => ({ ...prev, [field]: e.target.checked }))
                   }
-                  className="w-24 rounded-lg border border-nexoraBorder px-3 py-2 text-sm"
+                  className="h-4 w-4 rounded border-nexoraBorder"
                 />
-              </div>
+                {t(labelKey)}
+                <Tooltip content={t(tooltipKey)} />
+              </label>
             ))}
           </div>
         )}
