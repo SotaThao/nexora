@@ -258,8 +258,8 @@ function AddStaffModal({
   const activeSearchPaymentMethods = (searchResult?.paymentMethods ?? []).filter((method) => method.isActive)
 
   return (
-    <div className="fixed inset-0 z-50 flex items-start justify-center overflow-y-auto bg-nexoraText/70 p-4 py-6 backdrop-blur-sm sm:items-center">
-      <div className="w-full max-w-4xl max-h-[95dvh] overflow-y-auto rounded-xl bg-white p-6 shadow-2xl transition-all">
+    <div className="fixed inset-0 z-50 flex items-start justify-center overflow-y-auto bg-nexoraText/70 modal-overlay-safe backdrop-blur-sm sm:items-center">
+      <div className="w-full max-w-2xl rounded-xl bg-white p-6 shadow-2xl transition-all">
         <div className="flex items-center justify-between border-b border-nexoraRule pb-4">
           <h2 className="text-lg font-extrabold text-nexoraText">
             {t('components.dashboard.modals.AddStaffModal.title')}
@@ -438,7 +438,7 @@ function AddStaffModal({
               <button
                 type="submit"
                 disabled={isInviting}
-                className="inline-flex items-center gap-2 rounded-lg bg-gradient-to-r from-amber-400 to-orange-500 px-4 py-2.5 text-xs font-bold text-white transition hover:opacity-95 disabled:cursor-not-allowed disabled:opacity-60"
+                className="inline-flex items-center gap-2 rounded-lg bg-nexoraBrand px-4 py-2.5 text-xs font-bold text-white transition hover:bg-opacity-95 disabled:cursor-not-allowed disabled:opacity-60"
               >
                 {isInviting && <Loader2 className="h-3.5 w-3.5 animate-spin" />}
                 {t('components.dashboard.modals.AddStaffModal.send_setup_link')}

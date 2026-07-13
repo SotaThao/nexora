@@ -6,22 +6,13 @@ import type { AuthSession } from '../../types/auth'
 
 type AuthStatus = 'loading' | 'authenticated' | 'anonymous'
 
+/** @deprecated Header auth UI is React-driven in HomePageHeaderSection. */
 export function syncHomePageAuthHeader(
-  session: AuthSession | null,
-  status: AuthStatus,
-  navigate: (path: string) => void,
+  _session: AuthSession | null,
+  _status: AuthStatus,
+  _navigate: (path: string) => void,
 ) {
-  if (status === 'loading' || status === 'authenticated') return
-
-  const authGroup = document.getElementById('header-auth-group')
-  const userBadge = document.getElementById('header-user-badge')
-  const userNameEl = document.getElementById('header-user-name')
-
-  authGroup?.classList.remove('hidden')
-  userNameEl?.classList.remove('hidden')
-  userBadge?.classList.add('hidden')
-  userBadge?.style.removeProperty('display')
-  document.getElementById('_nx_dashboard_link')?.remove()
+  // no-op — logged-in header is rendered by React
 }
 
 export function navigateHomePagePlanCta(

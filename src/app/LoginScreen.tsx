@@ -3,7 +3,7 @@ import { Lock, Mail, Eye, EyeOff, Loader2 } from 'lucide-react'
 import { useNavigate, useLocation } from 'react-router-dom'
 import AuthGraphicPanel from '../components/auth/AuthGraphicPanel'
 import SecondaryButton from '../components/ui/SecondaryButton'
-import BackToHomeButton from '../components/ui/BackToHomeButton'
+import HomepageLink from '../components/ui/HomepageLink'
 import { useAuth } from '../auth/useAuth'
 import { useTranslation } from '../contexts/LanguageContext'
 import { getErrorI18nKey } from '../data/errorCodes'
@@ -132,10 +132,7 @@ export default function LoginScreen() {
 
   return (
     <div className="min-h-dvh flex items-center justify-center bg-nexoraCanvas relative overflow-x-hidden overflow-y-auto text-nexoraText px-4 pt-[max(1.5rem,env(safe-area-inset-top,0px))] pb-[max(1.5rem,env(safe-area-inset-bottom,0px))] sm:pt-10 sm:pb-10 selection:bg-nexoraBrandSoft selection:text-nexoraBrand">
-      <div className="absolute top-[max(1rem,env(safe-area-inset-top,0px))] left-[max(1rem,env(safe-area-inset-left,0px))] z-50">
-        <BackToHomeButton disabled={isLoading} />
-      </div>
-
+      <HomepageLink />
       {/* Language Switcher */}
       <div className="absolute top-[max(1rem,env(safe-area-inset-top,0px))] right-[max(1rem,env(safe-area-inset-right,0px))] z-50 flex items-center gap-2 bg-white/80 backdrop-blur-md px-3 py-1.5 rounded-full border border-nexoraBorder shadow-sm">
         <button

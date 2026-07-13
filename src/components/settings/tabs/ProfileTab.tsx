@@ -1,6 +1,7 @@
 import React, { useMemo, useState } from 'react'
 import { createPortal } from 'react-dom'
 import { useTranslation } from '../../../contexts/LanguageContext'
+import { useNotification } from '../../../contexts/NotificationContext'
 import { buildAffiliateReferralUrl, getProfileReferralCode } from '../../../utils/affiliateReferral'
 import { buildGoogleMapsEmbedUrl, formatAddressForMap } from '../../../utils/mapUrl'
 import {
@@ -23,8 +24,10 @@ import {
   FolderOpen,
   AlertTriangle,
   X,
-  QrCode
+  QrCode,
 } from 'lucide-react'
+import ToggleSwitch from '../../ui/ToggleSwitch'
+import { isValidEmail, isValidPhone } from '../../../utils/validation'
 import { validatePayoutAccount } from '../../payout/validatePayoutAccount'
 import CountryCodeSelect, { formatNationalNumber, parsePhone } from '../../CountryCodeSelect'
 import CameraCapture from '../../ui/CameraCapture'
@@ -105,7 +108,7 @@ export default function ProfileTab({
   verificationStatus = 'basic',
   canEditProfile = true,
   currentLanguage,
-  showToast,
+  showToast: providedShowToast,
   handleCopy,
   startEditBasic,
   saveBasic,
@@ -118,9 +121,13 @@ export default function ProfileTab({
   handleAvatarChange,
   formatDOB,
   onShowQr,
+  focusPayoutMethods = false,
+  hidePayoutMethods = false,
 }) {
   const canEditKybFields = canEditProfile
   const { t } = useTranslation()
+  const { showToast: notifyToast } = useNotification()
+  const showToast = providedShowToast ?? notifyToast
   const referralCode = useMemo(() => getProfileReferralCode(profile), [profile])
   const referralUrl = useMemo(
     () => buildAffiliateReferralUrl({ referralCode }),
@@ -285,16 +292,17 @@ export default function ProfileTab({
     setEditQrFile(null)
     setEditQrCode(null)
   }
+ 
 
   return (
     <>
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 animate-fadeIn">
+      <div className={`grid grid-cols-1 gap-6 animate-fadeIn ${focusPayoutMethods ? '' : 'lg:grid-cols-3'}`}>
 
         {/* Left Column (Owner Profile + Payout Methods) */}
-        <div className="lg:col-span-1 space-y-6">
+        <div className={`${focusPayoutMethods ? '' : 'lg:col-span-1'} space-y-6`}>
 
           {/* Owner Profile Card */}
-          <div className="rounded-xl border border-nexoraBorder bg-white shadow-sm p-6 flex flex-col items-center text-center relative">
+          <div className={`rounded-xl border border-nexoraBorder bg-white shadow-sm p-6 flex flex-col items-center text-center relative ${focusPayoutMethods ? 'hidden' : ''}`}>
             {/* Avatar Section */}
             <div className="relative group">
               {profile.avatar && !profile.avatar.includes('unsplash.com') ? (
@@ -373,6 +381,7 @@ export default function ProfileTab({
           </div>
 
           {/* Payout Methods & Direct Payment QR */}
+          {!hidePayoutMethods ? (
           <div className="rounded-xl border border-nexoraBorder bg-white shadow-sm p-6 relative">
             <div className="border-b border-slate-100 pb-3 mb-4 space-y-3">
               <h4 className="text-xs font-black uppercase text-nexoraText tracking-wider flex items-center gap-2">
@@ -437,21 +446,13 @@ export default function ProfileTab({
                   className="flex items-center justify-between rounded-xl border border-nexoraBorder bg-white px-3 py-2.5 shadow-sm"
                 >
                   <div className="flex items-center gap-3 min-w-0">
-                    {/* Toggle Switch */}
-                    <button
-                      type="button"
-                      onClick={() => handleToggleMethod(uiKey, method.isActive)}
-                      aria-label={`Toggle ${label}`}
-                      className={`relative inline-flex h-5 w-9 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none ${
-                        method.isActive ? 'bg-amber-600' : 'bg-slate-200'
-                      }`}
-                    >
-                      <span
-                        className={`pointer-events-none inline-block h-4 w-4 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out ${
-                          method.isActive ? 'translate-x-4' : 'translate-x-0'
-                        }`}
-                      />
-                    </button>
+                    <ToggleSwitch
+                      checked={!!method.isActive}
+                      onChange={() => handleToggleMethod(uiKey, !!method.isActive)}
+                      ariaLabel={`Toggle ${label}`}
+                      activeColor="bg-amber-600"
+                      inactiveColor="bg-slate-200"
+                    />
 
                     {/* Logo and Label */}
                     <div className="flex items-center gap-2.5 min-w-0">
@@ -489,11 +490,12 @@ export default function ProfileTab({
             )}
 
           </div>
+          ) : null}
 
         </div>
 
         {/* Right Column (Basic Info + Address Details + Business Info + Map/Sponsor Grid) */}
-        <div className="lg:col-span-2 grid grid-cols-1 md:grid-cols-2 gap-6 content-start">
+        <div className={`lg:col-span-2 grid grid-cols-1 md:grid-cols-2 gap-6 content-start ${focusPayoutMethods ? 'hidden' : ''}`}>
 
           {/* Basic Information */}
           <div className="rounded-xl border border-nexoraBorder bg-white shadow-sm p-6 relative">
@@ -946,14 +948,14 @@ export default function ProfileTab({
 
           {/* Nested Location Map and Sponsor Information Grid */}
             {/* Location Map */}
-            <div className="rounded-xl border border-nexoraBorder bg-white shadow-sm p-6 relative overflow-hidden flex flex-col justify-between">
+            <div className="rounded-xl border border-nexoraBorder bg-white shadow-sm p-6 relative overflow-hidden flex flex-col">
               <div className="flex justify-between items-center border-b border-nexoraRule pb-3 mb-4">
                 <h4 className="text-xs font-black uppercase text-nexoraText tracking-wider flex items-center gap-2">
                   <MapPin className="h-4 w-4 text-sky-500" />
                   {t('components.settings.tabs.ProfileTab.locationMap')}
                 </h4>
               </div>
-              <div className="h-[220px] w-full rounded-lg border border-slate-200 overflow-hidden bg-slate-100">
+              <div className="min-h-[220px] flex-1 w-full rounded-lg border border-slate-200 overflow-hidden bg-slate-100">
                 {locationMapEmbedUrl ? (
                   <iframe
                     key={locationMapQuery}

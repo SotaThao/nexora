@@ -78,6 +78,12 @@ const StaffNotifications = lazyWithRetry(
 const StaffTransactions = lazyWithRetry(
   () => import("../components/staff-dashboard/views/StaffTransactions"),
 );
+const StaffMyEarnings = lazyWithRetry(
+  () => import("../components/staff-dashboard/views/StaffMyEarnings"),
+);
+const StaffMySalons = lazyWithRetry(
+  () => import("../components/staff-dashboard/views/StaffMySalons"),
+);
 const ForgotPassword = lazyWithRetry(
   () => import("../components/ForgotPassword"),
 );
@@ -180,6 +186,7 @@ export default function AppRouter() {
           />
           <Route path="/pay/staff/:staffProfileId" element={<StaffDirectPaymentFlow />} />
           <Route path="/pay/:businessId" element={<DirectPaymentFlow />} />
+          <Route path="/merchant/payments/:paymentId" element={<PaymentsRedirect />} />
           <Route path="/qr/:code" element={<QrRedirectPage />} />
           <Route path="/help/qr/:code" element={<HelpQrPage />} />
           <Route path="/privacy-policy" element={<PrivacyPolicyPage />} />
@@ -259,6 +266,8 @@ export default function AppRouter() {
             <Route path="pay" element={<StaffPay />} />
             <Route path="payments" element={<StaffTransactions />} />
             <Route path="payments/:paymentId" element={<StaffTransactions />} />
+            <Route path="earnings" element={<StaffMyEarnings />} />
+            <Route path="salons" element={<StaffMySalons />} />
             <Route path="profile" element={<StaffProfile />} />
             <Route path="notifications" element={<StaffNotifications />} />
             <Route path="*" element={<StaffFallbackRoute />} />

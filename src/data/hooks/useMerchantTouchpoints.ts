@@ -56,6 +56,7 @@ export function useTouchpoints(
     queryKey: [...qk.merchantTouchpoints(), params],
     queryFn: () => merchantTouchpointsRepository.getTouchpoints(params),
     enabled: isOwner && enabled,
+    refetchOnMount: true,
   })
 }
 
