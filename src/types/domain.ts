@@ -380,6 +380,19 @@ export interface StaffDashboardSummary {
   totalReviews: number
 }
 
+export interface StaffStatisticsCategory {
+  category: string
+  amount: number
+  percentageOfTotal: number
+}
+
+export interface StaffDashboardStatistics {
+  availableBalance: number
+  pending: number
+  lifetimeEarnings: number
+  categories: StaffStatisticsCategory[]
+}
+
 export interface StaffReviewDistribution {
   star1: number
   star2: number

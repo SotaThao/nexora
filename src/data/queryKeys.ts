@@ -114,6 +114,7 @@ export const qk = {
   staffProfile:        ()      => ['staffProfile'],
   staffBusinesses:     ()      => ['staffBusinesses'],
   staffDashboardSummary: ()    => ['staffDashboardSummary'],
+  staffDashboardStatistics: () => ['staffDashboardStatistics'],
   staffReviews:          (filters = EMPTY) => ['staffReviews', filters],
   staffTips:             (filters = EMPTY) => ['staffTips', filters],
   staffTransactionsPaginated: (filters = EMPTY) => ['staffTransactions', 'paginated', filters],

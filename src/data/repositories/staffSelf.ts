@@ -7,6 +7,7 @@ import { normalizeTipStatus } from '../../constants/tipStatus'
 import { isApiError } from '../../types/domain'
 import type {
   StaffBusinessLink,
+  StaffDashboardStatistics,
   StaffDashboardSummary,
   StaffProfile,
   StaffReviewDistribution,
@@ -141,6 +142,34 @@ function normalizeDashboardSummary(dto: StaffDashboardSummaryApiDto): StaffDashb
     pendingTips: normalizeTipCountAmount(dto.pendingTips),
     averageRating: Number(dto.averageRating) || 0,
     totalReviews: Number(dto.totalReviews) || 0,
+  }
+}
+
+interface StatisticsOverviewCategoryApiDto {
+  category?: string
+  amount?: number
+  percentageOfTotal?: number
+}
+
+interface StatisticsOverviewApiDto {
+  availableBalance?: number
+  pending?: number
+  lifetimeEarnings?: number
+  categories?: StatisticsOverviewCategoryApiDto[]
+}
+
+function normalizeStaffDashboardStatistics(dto: StatisticsOverviewApiDto): StaffDashboardStatistics {
+  return {
+    availableBalance: Number(dto.availableBalance) || 0,
+    pending: Number(dto.pending) || 0,
+    lifetimeEarnings: Number(dto.lifetimeEarnings) || 0,
+    categories: Array.isArray(dto.categories)
+      ? dto.categories.map((c) => ({
+          category: c.category ?? '',
+          amount: Number(c.amount) || 0,
+          percentageOfTotal: Number(c.percentageOfTotal) || 0,
+        }))
+      : [],
   }
 }
 
@@ -346,6 +375,11 @@ export function createStaffSelfRepository(client: HttpClient = httpClient) {
     async getDashboardSummary(): Promise<StaffDashboardSummary> {
       const res = await client.get<StaffDashboardSummaryApiDto>('/api/v1/staff/dashboard/summary')
       return normalizeDashboardSummary(res)
+    },
+
+    async getDashboardStatistics(): Promise<StaffDashboardStatistics> {
+      const res = await client.get<StatisticsOverviewApiDto>('/api/v1/staff/dashboard/statistics')
+      return normalizeStaffDashboardStatistics(res)
     },
 
     async getReviews({
