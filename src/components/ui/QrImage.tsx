@@ -49,6 +49,22 @@ export function QrImage({
     setHasError(true)
   }, [])
 
+  // A remounted <img> (new `key` per src) whose resource is already in the
+  // browser cache can finish loading synchronously, before this ref/listener
+  // attaches — the browser never re-fires `load` for an already-complete
+  // image, so `onLoad` alone leaves isLoading stuck forever. Check `.complete`
+  // as soon as the node mounts to catch that case.
+  const checkAlreadyComplete = useCallback((img: HTMLImageElement | null) => {
+    if (!img || !img.complete) return
+    if (img.naturalWidth > 0) {
+      setIsLoading(false)
+      setHasError(false)
+    } else {
+      setIsLoading(false)
+      setHasError(true)
+    }
+  }, [])
+
   const handleReload = useCallback(
     (event: MouseEvent<HTMLButtonElement>) => {
       event.preventDefault()
@@ -104,6 +120,7 @@ export function QrImage({
 
       <img
         key={effectiveSrc}
+        ref={checkAlreadyComplete}
         src={effectiveSrc}
         alt={alt}
         className={`h-full w-full object-contain ${imgClassName} ${
