@@ -323,6 +323,10 @@ export function createTaxiqOwnerPayoutsRepository(client: HttpClient = httpClien
       })
     },
 
+    async remove(payoutRecordId: string): Promise<void> {
+      await client.del(`/api/v1/taxiq/owner/payouts/${encodeURIComponent(payoutRecordId)}`)
+    },
+
     async listDisputed(ownerTaxYearId: string): Promise<DisputedPayout[]> {
       const data = await client.get<{ items: DisputedPayoutApiDto[] }>(
         `/api/v1/taxiq/owner/payouts/disputed?ownerTaxYearId=${encodeURIComponent(ownerTaxYearId)}`,

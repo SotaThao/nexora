@@ -1,13 +1,15 @@
 import { useState } from 'react'
-import { Loader2, Plus, X } from 'lucide-react'
+import { Loader2, Plus, Trash2, X } from 'lucide-react'
 import { useTranslation } from '../../../../../contexts/LanguageContext'
 import { useNotification } from '../../../../../contexts/NotificationContext'
-import { useLogCashTip, useTaxiqStaffCashTipLogs } from '../../../../../data/hooks/useTaxiqStaffLogs'
+import { useDeleteCashTipLog, useLogCashTip, useTaxiqStaffCashTipLogs } from '../../../../../data/hooks/useTaxiqStaffLogs'
+import type { CashTipLogRecord } from '../../../../../data/repositories/taxiqStaffLogs'
 import { isApiError } from '../../../../../types/domain'
 import { getErrorI18nKey } from '../../../../../data/errorCodes'
 import { SkeletonList } from '../../../../ui/skeleton'
 import IconButton from '../../../../ui/IconButton'
 import Tooltip from '../../../../ui/Tooltip'
+import ConfirmModal from '../../../../dashboard/views/taxiq/modals/ConfirmModal'
 
 const LOCKED_ERROR_CODE = 'TAXIQ_STAFF_TAX_YEAR_LOCKED'
 
@@ -33,6 +35,7 @@ export default function CashTipLogTab({
   const { showToast } = useNotification()
   const listQuery = useTaxiqStaffCashTipLogs(staffTaxYearId)
   const logCashTip = useLogCashTip()
+  const deleteCashTipLog = useDeleteCashTipLog()
 
   const [isModalOpen, setIsModalOpen] = useState(false)
   const [date, setDate] = useState(() => new Date().toISOString().split('T')[0])
@@ -40,6 +43,7 @@ export default function CashTipLogTab({
   const [note, setNote] = useState('')
   const [errors, setErrors] = useState<FormErrors>({})
   const [isSubmitting, setIsSubmitting] = useState(false)
+  const [deletingItem, setDeletingItem] = useState<CashTipLogRecord | null>(null)
 
   const items = [...(listQuery.data ?? [])].sort((a, b) => (a.date < b.date ? 1 : a.date > b.date ? -1 : 0))
   const total = items.reduce((sum, item) => sum + item.amount, 0)
@@ -89,6 +93,23 @@ export default function CashTipLogTab({
     }
   }
 
+  const handleDelete = async () => {
+    if (!deletingItem) return
+    try {
+      await deleteCashTipLog.mutateAsync({ id: deletingItem.id, staffTaxYearId })
+      showToast(t('taxiq.staffLogs.cashTip.deleteSuccess'), 'success')
+      setDeletingItem(null)
+    } catch (err) {
+      if (isApiError(err) && err.errorCode === LOCKED_ERROR_CODE) {
+        onLockedError()
+        setDeletingItem(null)
+        return
+      }
+      const i18nKey = isApiError(err) ? getErrorI18nKey(err.errorCode) : 'taxiq.staffLogs.errors.generic'
+      showToast(t(i18nKey), 'error')
+    }
+  }
+
   return (
     <div className="space-y-4">
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
@@ -115,18 +136,19 @@ export default function CashTipLogTab({
               <th className="px-4 py-3">{t('taxiq.staffLogs.cashTip.columns.date')}</th>
               <th className="px-4 py-3">{t('taxiq.staffLogs.cashTip.columns.amount')}</th>
               <th className="px-4 py-3">{t('taxiq.staffLogs.cashTip.columns.note')}</th>
+              <th className="px-4 py-3 text-right">{t('taxiq.staffLogs.mileage.columns.actions')}</th>
             </tr>
           </thead>
           <tbody>
             {listQuery.isPending ? (
               <tr>
-                <td colSpan={3} className="p-4">
+                <td colSpan={4} className="p-4">
                   <SkeletonList count={4} lines={1} />
                 </td>
               </tr>
             ) : items.length === 0 ? (
               <tr>
-                <td colSpan={3} className="px-4 py-8 text-center font-medium text-nexoraMuted">
+                <td colSpan={4} className="px-4 py-8 text-center font-medium text-nexoraMuted">
                   {t('taxiq.staffLogs.cashTip.emptyState')}
                 </td>
               </tr>
@@ -136,6 +158,17 @@ export default function CashTipLogTab({
                   <td className="px-4 py-3 font-bold text-nexoraText">{item.date}</td>
                   <td className="px-4 py-3 text-nexoraText">{formatCurrency(item.amount)}</td>
                   <td className="px-4 py-3 text-nexoraMuted">{item.note || '—'}</td>
+                  <td className="px-4 py-3 text-right">
+                    <button
+                      type="button"
+                      onClick={() => setDeletingItem(item)}
+                      disabled={isLocked}
+                      className="inline-flex items-center gap-1 rounded-lg border border-rose-200 px-3 py-1 text-[11px] font-bold text-rose-600 disabled:opacity-60 dark:border-rose-500/30"
+                    >
+                      <Trash2 className="h-3 w-3" />
+                      {t('taxiq.staffLogs.cashTip.delete')}
+                    </button>
+                  </td>
                 </tr>
               ))
             )}
@@ -206,6 +239,17 @@ export default function CashTipLogTab({
           </div>
         </div>
       )}
+
+      <ConfirmModal
+        open={!!deletingItem}
+        onClose={() => setDeletingItem(null)}
+        onConfirm={handleDelete}
+        title={t('taxiq.staffLogs.cashTip.delete')}
+        message={t('taxiq.staffLogs.cashTip.deleteConfirm')}
+        confirmLabel={t('taxiq.staffLogs.cashTip.delete')}
+        isDangerous
+        isPending={deleteCashTipLog.isPending}
+      />
     </div>
   )
 }

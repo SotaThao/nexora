@@ -58,3 +58,23 @@ export function useLogCashTip() {
     },
   })
 }
+
+export function useDeleteMileageLog() {
+  const queryClient = useQueryClient()
+  return useMutation<void, Error, { id: string; staffTaxYearId: string }>({
+    mutationFn: ({ id }) => taxiqStaffLogsRepository.deleteMileageLog(id),
+    onSuccess: (_data, variables) => {
+      queryClient.invalidateQueries({ queryKey: qk.taxiqStaffMileageLogs(variables.staffTaxYearId) })
+    },
+  })
+}
+
+export function useDeleteCashTipLog() {
+  const queryClient = useQueryClient()
+  return useMutation<void, Error, { id: string; staffTaxYearId: string }>({
+    mutationFn: ({ id }) => taxiqStaffLogsRepository.deleteCashTipLog(id),
+    onSuccess: (_data, variables) => {
+      queryClient.invalidateQueries({ queryKey: qk.taxiqStaffCashTipLogs(variables.staffTaxYearId) })
+    },
+  })
+}

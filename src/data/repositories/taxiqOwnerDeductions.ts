@@ -195,6 +195,10 @@ export function createTaxiqOwnerDeductionsRepository(client: HttpClient = httpCl
       await client.post(`/api/v1/taxiq/owner/deductions/${encodeURIComponent(id)}/submit`)
     },
 
+    async remove(id: string): Promise<void> {
+      await client.del(`/api/v1/taxiq/owner/deductions/${encodeURIComponent(id)}`)
+    },
+
     async reanalyze(id: string): Promise<void> {
       await client.post(`/api/v1/taxiq/owner/deductions/${encodeURIComponent(id)}/reanalyze`)
     },

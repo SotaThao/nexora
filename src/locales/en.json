@@ -1860,7 +1860,10 @@
     "taxiq_cpa_access_unauthorized": "You don't have permission to manage this CPA access grant.",
     "taxiq_cpa_consent_required": "Staff consent is required before sharing Full or CPA Review data.",
     "taxiq_deduction_not_in_grant_scope": "This record is outside the scope of your CPA access.",
-    "taxiq_self_reported_income_not_found": "This self-reported income record could not be found."
+    "taxiq_self_reported_income_not_found": "This self-reported income record could not be found.",
+    "taxiq_deduction_record_has_receipts": "Remove attached receipts before deleting this deduction.",
+    "taxiq_payout_record_has_receipts": "Remove attached receipts before deleting this payout record.",
+    "taxiq_receipt_not_found": "This receipt could not be found."
   },
   "components": {
     "payout": {
@@ -3358,6 +3361,9 @@
         "approve": "Approve",
         "attachReceipt": "Attach existing receipt"
       },
+      "delete": "Delete",
+      "deleteConfirm": "Delete this deduction? This cannot be undone.",
+      "deleteSuccess": "Deduction deleted.",
       "aiDisclaimerFallback": "Tax IQ only assists with preparation — it does not replace a CPA.",
       "errors": {
         "generic": "Something went wrong. Please try again.",
@@ -3493,6 +3499,12 @@
       },
       "actions": {
         "resolveDuplicate": "Resolve duplicate"
+      },
+      "delete": "Delete",
+      "deleteConfirm": "Delete this receipt? If it's attached to a deduction, payout, or income record, that record will be marked as missing a receipt again. This cannot be undone.",
+      "deleteSuccess": "Receipt deleted.",
+      "errors": {
+        "generic": "Could not delete receipt. Please try again."
       },
       "duplicateModal": {
         "title": "Resolve duplicate",
@@ -3690,6 +3702,9 @@
       "mileage": {
         "addButton": "Add Mileage",
         "editButton": "Edit",
+        "delete": "Delete",
+        "deleteConfirm": "Delete this mileage log? This cannot be undone.",
+        "deleteSuccess": "Mileage log deleted.",
         "addSuccess": "Mileage log added.",
         "updateSuccess": "Mileage log updated.",
         "emptyState": "No mileage logged yet. Add your first trip to get started.",
@@ -3723,6 +3738,9 @@
       },
       "cashTip": {
         "addButton": "Log Cash Tip",
+        "delete": "Delete",
+        "deleteConfirm": "Delete this cash tip log? This cannot be undone.",
+        "deleteSuccess": "Cash tip log deleted.",
         "addSuccess": "Cash tip logged.",
         "emptyState": "No cash tips logged yet.",
         "totalLabel": "total cash tips logged",
@@ -4116,6 +4134,12 @@
       },
       "actions": {
         "edit": "Edit"
+      },
+      "delete": "Delete",
+      "deleteConfirm": "Delete this payout record? This cannot be undone.",
+      "deleteSuccess": "Payout record deleted.",
+      "errors": {
+        "generic": "Unable to delete this payout. Please try again."
       },
       "payPeriods": {
         "Weekly": "Weekly",

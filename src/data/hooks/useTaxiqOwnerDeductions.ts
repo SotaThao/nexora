@@ -51,6 +51,14 @@ export function useSubmitOwnerDeduction() {
   })
 }
 
+export function useDeleteOwnerDeduction() {
+  const queryClient = useQueryClient()
+  return useMutation<void, Error, string>({
+    mutationFn: (id) => taxiqOwnerDeductionsRepository.remove(id),
+    onSuccess: () => invalidateDeductionList(queryClient),
+  })
+}
+
 export function useReanalyzeOwnerDeduction() {
   const queryClient = useQueryClient()
   return useMutation<void, Error, string>({

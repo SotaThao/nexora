@@ -1,17 +1,20 @@
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { Camera, CheckCircle2, Loader2, Lock, Paperclip, Pencil, Plus, RefreshCw, Wrench } from 'lucide-react'
+import { Camera, CheckCircle2, Loader2, Lock, Paperclip, Pencil, Plus, RefreshCw, Trash2, Wrench } from 'lucide-react'
 import { useTranslation } from '../../../../contexts/LanguageContext'
 import { useNotification } from '../../../../contexts/NotificationContext'
 import { useTaxiqDeductionCategories } from '../../../../data/hooks/useTaxiqDeductionCategories'
 import {
   useApproveCpaReviewDeduction,
+  useDeleteOwnerDeduction,
   useReanalyzeOwnerDeduction,
   useTaxiqOwnerDeductions,
 } from '../../../../data/hooks/useTaxiqOwnerDeductions'
-import { useTaxiqStaffDeductions } from '../../../../data/hooks/useTaxiqStaffDeductions'
+import { useDeleteStaffDeduction, useTaxiqStaffDeductions } from '../../../../data/hooks/useTaxiqStaffDeductions'
 import type { DeductionRecord } from '../../../../data/repositories/taxiqOwnerDeductions'
 import type { StaffDeductionRecord } from '../../../../data/repositories/taxiqStaffDeductions'
+import { isApiError } from '../../../../types/domain'
+import { getErrorI18nKey } from '../../../../data/errorCodes'
 import { SkeletonList } from '../../../ui/skeleton'
 import Tooltip from '../../../ui/Tooltip'
 import { formatCurrency } from '../../utils'
@@ -20,6 +23,7 @@ import AddDeductionFromReceiptWizard from './AddDeductionFromReceiptWizard'
 import DeductionStatusBadge from './shared/DeductionStatusBadge'
 import AiDeductionStatusBadge from './shared/AiDeductionStatusBadge'
 import AttachExistingReceiptModal from './modals/AttachExistingReceiptModal'
+import ConfirmModal from './modals/ConfirmModal'
 
 const EDITABLE_STATUSES = new Set(['Draft', 'MissingReceipt', 'MissingInfo'])
 
@@ -45,6 +49,7 @@ export default function DeductionCenterView({
 
   const isStaff = scope === 'staff'
   const canAdjust = !isStaff && (ownerTaxYearStatus === 'Locked' || ownerTaxYearStatus === 'Exported')
+  const LOCKED_ERROR_CODE = isStaff ? 'TAXIQ_STAFF_TAX_YEAR_LOCKED' : 'TAXIQ_OWNER_TAX_YEAR_LOCKED'
 
   const [statusFilter, setStatusFilter] = useState('all')
   const [categoryFilter, setCategoryFilter] = useState('all')
@@ -53,6 +58,7 @@ export default function DeductionCenterView({
   const [editingDeduction, setEditingDeduction] = useState<DeductionRecord | StaffDeductionRecord | null>(null)
   const [busyRowId, setBusyRowId] = useState<string | null>(null)
   const [attachingReceiptToId, setAttachingReceiptToId] = useState<string | null>(null)
+  const [deletingRecord, setDeletingRecord] = useState<DeductionRecord | StaffDeductionRecord | null>(null)
 
   const categoriesQuery = useTaxiqDeductionCategories(isStaff ? 'Staff' : 'Owner')
   const categories = categoriesQuery.data ?? []
@@ -71,6 +77,9 @@ export default function DeductionCenterView({
 
   const reanalyze = useReanalyzeOwnerDeduction()
   const approve = useApproveCpaReviewDeduction()
+  const deleteOwnerDeduction = useDeleteOwnerDeduction()
+  const deleteStaffDeduction = useDeleteStaffDeduction()
+  const deleteDeduction = isStaff ? deleteStaffDeduction : deleteOwnerDeduction
 
   const items = listQuery.data?.items ?? []
   const totalDeductibleAmount = listQuery.data?.totalDeductibleAmount ?? 0
@@ -109,6 +118,23 @@ export default function DeductionCenterView({
       showToast(t('taxiq.deductionCenter.errors.generic'), 'error')
     } finally {
       setBusyRowId(null)
+    }
+  }
+
+  const handleDelete = async () => {
+    if (!deletingRecord) return
+    try {
+      await deleteDeduction.mutateAsync(deletingRecord.id)
+      showToast(t('taxiq.deductionCenter.deleteSuccess'), 'success')
+      setDeletingRecord(null)
+    } catch (err) {
+      if (isApiError(err) && err.errorCode === LOCKED_ERROR_CODE) {
+        showToast(t(isStaff ? 'taxiq.deductionCenter.errors.lockedMessageStaff' : 'taxiq.deductionCenter.errors.lockedMessage'), 'error')
+        setDeletingRecord(null)
+        return
+      }
+      const i18nKey = isApiError(err) ? getErrorI18nKey(err.errorCode) : 'taxiq.deductionCenter.errors.generic'
+      showToast(t(i18nKey), 'error')
     }
   }
 
@@ -306,6 +332,16 @@ export default function DeductionCenterView({
                             {t('taxiq.createAdjustment.rowActionLabel')}
                           </button>
                         )}
+                        {!canAdjust && (
+                          <button
+                            type="button"
+                            onClick={() => setDeletingRecord(record)}
+                            className="inline-flex items-center gap-1 text-[11px] font-bold text-rose-600 hover:underline"
+                          >
+                            <Trash2 className="h-3 w-3" />
+                            {t('taxiq.deductionCenter.delete')}
+                          </button>
+                        )}
                       </div>
                     </td>
                   </tr>
@@ -342,6 +378,17 @@ export default function DeductionCenterView({
           deductionRecordId={attachingReceiptToId}
         />
       )}
+
+      <ConfirmModal
+        open={!!deletingRecord}
+        onClose={() => setDeletingRecord(null)}
+        onConfirm={handleDelete}
+        title={t('taxiq.deductionCenter.delete')}
+        message={t('taxiq.deductionCenter.deleteConfirm')}
+        confirmLabel={t('taxiq.deductionCenter.delete')}
+        isDangerous
+        isPending={deleteDeduction.isPending}
+      />
     </div>
   )
 }

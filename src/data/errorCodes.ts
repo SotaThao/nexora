@@ -109,6 +109,13 @@ export const errorCodeToI18nKey = {
   // Tax IQ — Staff Self-Reported Income (US-13)
   TAXIQ_SELF_REPORTED_INCOME_NOT_FOUND: 'errors.taxiq_self_reported_income_not_found',
 
+  // Tax IQ — Delete Record (Deduction, Mileage/Cash Tip Log, Payout)
+  TAXIQ_DEDUCTION_RECORD_HAS_RECEIPTS: 'errors.taxiq_deduction_record_has_receipts',
+  TAXIQ_PAYOUT_RECORD_HAS_RECEIPTS: 'errors.taxiq_payout_record_has_receipts',
+
+  // Tax IQ — Receipt Vault delete
+  TAXIQ_RECEIPT_NOT_FOUND: 'errors.taxiq_receipt_not_found',
+
   // Tax IQ — CPA Access Grant (US-10)
   TAXIQ_CPA_ACCESS_GRANT_NOT_FOUND: 'errors.taxiq_cpa_access_grant_not_found',
   TAXIQ_CPA_ACCESS_TOKEN_INVALID: 'errors.taxiq_cpa_access_token_invalid',

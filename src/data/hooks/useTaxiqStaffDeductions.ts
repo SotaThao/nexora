@@ -46,3 +46,11 @@ export function useSubmitStaffDeduction() {
     onSuccess: () => invalidateStaffDeductionList(queryClient),
   })
 }
+
+export function useDeleteStaffDeduction() {
+  const queryClient = useQueryClient()
+  return useMutation<void, Error, string>({
+    mutationFn: (id) => taxiqStaffDeductionsRepository.remove(id),
+    onSuccess: () => invalidateStaffDeductionList(queryClient),
+  })
+}

@@ -1,13 +1,19 @@
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { Pencil, Plus, Wrench } from 'lucide-react'
+import { Pencil, Plus, Trash2, Wrench } from 'lucide-react'
 import { useTranslation } from '../../../../../contexts/LanguageContext'
-import { useTaxiqOwnerPayouts, useTaxiqOwnerStaffList } from '../../../../../data/hooks/useTaxiqOwnerPayouts'
+import { useNotification } from '../../../../../contexts/NotificationContext'
+import { useDeletePayoutRecord, useTaxiqOwnerPayouts, useTaxiqOwnerStaffList } from '../../../../../data/hooks/useTaxiqOwnerPayouts'
 import { PAYOUT_STATUSES, type PayoutRecord, type PayoutStatus } from '../../../../../data/repositories/taxiqOwnerPayouts'
+import { isApiError } from '../../../../../types/domain'
+import { getErrorI18nKey } from '../../../../../data/errorCodes'
 import { SkeletonList } from '../../../../ui/skeleton'
 import { formatCurrency } from '../../../utils'
 import PayoutStatusBadge from '../shared/PayoutStatusBadge'
 import AddPayoutModal from '../modals/AddPayoutModal'
+import ConfirmModal from '../modals/ConfirmModal'
+
+const LOCKED_ERROR_CODE = 'TAXIQ_OWNER_TAX_YEAR_LOCKED'
 
 const EDITABLE_STATUS: PayoutStatus = 'PendingConfirmation'
 
@@ -21,12 +27,14 @@ export default function PayoutsTab({
   canAdjust: boolean
 }) {
   const { t } = useTranslation()
+  const { showToast } = useNotification()
   const navigate = useNavigate()
 
   const [staffFilter, setStaffFilter] = useState('all')
   const [statusFilter, setStatusFilter] = useState('all')
   const [isModalOpen, setIsModalOpen] = useState(false)
   const [editingRecord, setEditingRecord] = useState<PayoutRecord | null>(null)
+  const [deletingRecord, setDeletingRecord] = useState<PayoutRecord | null>(null)
 
   const staffListQuery = useTaxiqOwnerStaffList(ownerTaxYearId)
   const staffList = staffListQuery.data ?? []
@@ -37,6 +45,7 @@ export default function PayoutsTab({
     status: statusFilter !== 'all' ? (statusFilter as PayoutStatus) : undefined,
   })
   const items = listQuery.data ?? []
+  const deletePayoutRecord = useDeletePayoutRecord(ownerTaxYearId)
 
   const openAddModal = () => {
     setEditingRecord(null)
@@ -51,6 +60,23 @@ export default function PayoutsTab({
   const closeModal = () => {
     setIsModalOpen(false)
     setEditingRecord(null)
+  }
+
+  const handleDelete = async () => {
+    if (!deletingRecord) return
+    try {
+      await deletePayoutRecord.mutateAsync(deletingRecord.id)
+      showToast(t('taxiq.payoutCenter.deleteSuccess'), 'success')
+      setDeletingRecord(null)
+    } catch (err) {
+      if (isApiError(err) && err.errorCode === LOCKED_ERROR_CODE) {
+        showToast(t('taxiq.deductionCenter.errors.lockedMessage'), 'error')
+        setDeletingRecord(null)
+        return
+      }
+      const i18nKey = isApiError(err) ? getErrorI18nKey(err.errorCode) : 'taxiq.payoutCenter.errors.generic'
+      showToast(t(i18nKey), 'error')
+    }
   }
 
   return (
@@ -139,6 +165,16 @@ export default function PayoutsTab({
                           {t('taxiq.payoutCenter.actions.edit')}
                         </button>
                       )}
+                      {record.status === EDITABLE_STATUS && !isLocked && (
+                        <button
+                          type="button"
+                          onClick={() => setDeletingRecord(record)}
+                          className="inline-flex items-center gap-1 text-[11px] font-bold text-rose-600 hover:underline"
+                        >
+                          <Trash2 className="h-3 w-3" />
+                          {t('taxiq.payoutCenter.delete')}
+                        </button>
+                      )}
                       {canAdjust && (
                         <button
                           type="button"
@@ -178,6 +214,17 @@ export default function PayoutsTab({
           editingRecord={editingRecord}
         />
       )}
+
+      <ConfirmModal
+        open={!!deletingRecord}
+        onClose={() => setDeletingRecord(null)}
+        onConfirm={handleDelete}
+        title={t('taxiq.payoutCenter.delete')}
+        message={t('taxiq.payoutCenter.deleteConfirm')}
+        confirmLabel={t('taxiq.payoutCenter.delete')}
+        isDangerous
+        isPending={deletePayoutRecord.isPending}
+      />
     </div>
   )
 }

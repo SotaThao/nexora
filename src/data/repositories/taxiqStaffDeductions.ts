@@ -150,6 +150,10 @@ export function createTaxiqStaffDeductionsRepository(client: HttpClient = httpCl
     async submit(id: string): Promise<void> {
       await client.post(`/api/v1/taxiq/staff/deductions/${encodeURIComponent(id)}/submit`)
     },
+
+    async remove(id: string): Promise<void> {
+      await client.del(`/api/v1/taxiq/staff/deductions/${encodeURIComponent(id)}`)
+    },
   }
 }
 

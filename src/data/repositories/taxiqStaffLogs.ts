@@ -158,6 +158,14 @@ export function createTaxiqStaffLogsRepository(client: HttpClient = httpClient) 
         note: params.note ?? null,
       })
     },
+
+    async deleteMileageLog(id: string): Promise<void> {
+      await client.del(`/api/v1/taxiq/staff/mileage/${encodeURIComponent(id)}`)
+    },
+
+    async deleteCashTipLog(id: string): Promise<void> {
+      await client.del(`/api/v1/taxiq/staff/cash-tips/${encodeURIComponent(id)}`)
+    },
   }
 }
 

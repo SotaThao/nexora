@@ -1,9 +1,10 @@
 import { useState } from 'react'
-import { Loader2, Plus, X } from 'lucide-react'
+import { Loader2, Plus, Trash2, X } from 'lucide-react'
 import { useTranslation } from '../../../../../contexts/LanguageContext'
 import { useNotification } from '../../../../../contexts/NotificationContext'
 import {
   useCreateMileageLog,
+  useDeleteMileageLog,
   useTaxiqStaffMileageLogs,
   useUpdateMileageLog,
 } from '../../../../../data/hooks/useTaxiqStaffLogs'
@@ -13,6 +14,7 @@ import { getErrorI18nKey } from '../../../../../data/errorCodes'
 import { SkeletonList } from '../../../../ui/skeleton'
 import IconButton from '../../../../ui/IconButton'
 import Tooltip from '../../../../ui/Tooltip'
+import ConfirmModal from '../../../../dashboard/views/taxiq/modals/ConfirmModal'
 
 const LOCKED_ERROR_CODE = 'TAXIQ_STAFF_TAX_YEAR_LOCKED'
 
@@ -61,12 +63,14 @@ export default function MileageLogTab({
   const listQuery = useTaxiqStaffMileageLogs(staffTaxYearId)
   const createMileageLog = useCreateMileageLog()
   const updateMileageLog = useUpdateMileageLog()
+  const deleteMileageLog = useDeleteMileageLog()
 
   const [isModalOpen, setIsModalOpen] = useState(false)
   const [editingId, setEditingId] = useState<string | null>(null)
   const [form, setForm] = useState<FormState>(EMPTY_FORM)
   const [errors, setErrors] = useState<FormErrors>({})
   const [isSubmitting, setIsSubmitting] = useState(false)
+  const [deletingItem, setDeletingItem] = useState<MileageLogRecord | null>(null)
 
   const items = [...(listQuery.data ?? [])].sort((a, b) => (a.date < b.date ? 1 : a.date > b.date ? -1 : 0))
   const cpaReviewCount = items.filter((item) => item.status === 'CPAReview').length
@@ -135,6 +139,23 @@ export default function MileageLogTab({
       showToast(t(i18nKey), 'error')
     } finally {
       setIsSubmitting(false)
+    }
+  }
+
+  const handleDelete = async () => {
+    if (!deletingItem) return
+    try {
+      await deleteMileageLog.mutateAsync({ id: deletingItem.id, staffTaxYearId })
+      showToast(t('taxiq.staffLogs.mileage.deleteSuccess'), 'success')
+      setDeletingItem(null)
+    } catch (err) {
+      if (isApiError(err) && err.errorCode === LOCKED_ERROR_CODE) {
+        onLockedError()
+        setDeletingItem(null)
+        return
+      }
+      const i18nKey = isApiError(err) ? getErrorI18nKey(err.errorCode) : 'taxiq.staffLogs.errors.generic'
+      showToast(t(i18nKey), 'error')
     }
   }
 
@@ -208,14 +229,25 @@ export default function MileageLogTab({
                     </div>
                   </td>
                   <td className="px-4 py-3">
-                    <button
-                      type="button"
-                      onClick={() => openEditModal(item)}
-                      disabled={isLocked}
-                      className="rounded-lg border border-nexoraBorder px-3 py-1 text-[11px] font-bold text-nexoraText disabled:opacity-60"
-                    >
-                      {t('taxiq.staffLogs.mileage.editButton')}
-                    </button>
+                    <div className="flex items-center gap-2">
+                      <button
+                        type="button"
+                        onClick={() => openEditModal(item)}
+                        disabled={isLocked}
+                        className="rounded-lg border border-nexoraBorder px-3 py-1 text-[11px] font-bold text-nexoraText disabled:opacity-60"
+                      >
+                        {t('taxiq.staffLogs.mileage.editButton')}
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setDeletingItem(item)}
+                        disabled={isLocked}
+                        className="inline-flex items-center gap-1 rounded-lg border border-rose-200 px-3 py-1 text-[11px] font-bold text-rose-600 disabled:opacity-60 dark:border-rose-500/30"
+                      >
+                        <Trash2 className="h-3 w-3" />
+                        {t('taxiq.staffLogs.mileage.delete')}
+                      </button>
+                    </div>
                   </td>
                 </tr>
               ))
@@ -312,6 +344,17 @@ export default function MileageLogTab({
           </div>
         </div>
       )}
+
+      <ConfirmModal
+        open={!!deletingItem}
+        onClose={() => setDeletingItem(null)}
+        onConfirm={handleDelete}
+        title={t('taxiq.staffLogs.mileage.delete')}
+        message={t('taxiq.staffLogs.mileage.deleteConfirm')}
+        confirmLabel={t('taxiq.staffLogs.mileage.delete')}
+        isDangerous
+        isPending={deleteMileageLog.isPending}
+      />
     </div>
   )
 }

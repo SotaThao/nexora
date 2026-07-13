@@ -16,6 +16,10 @@ function invalidateReceiptRelatedCaches(queryClient: ReturnType<typeof useQueryC
   queryClient.invalidateQueries({ queryKey: qk.taxiqReceipts() })
   queryClient.invalidateQueries({ queryKey: qk.taxiqOwnerDeductions() })
   queryClient.invalidateQueries({ queryKey: qk.taxiqStaffDeductions() })
+  // qk.taxiqSelfReportedIncome() pads with a literal 'unknown' fallback rather than acting
+  // as a broad prefix (unlike the deductions key builders above) — invalidate by the raw
+  // 'taxiqSelfReportedIncome' prefix instead so it matches every cached staffTaxYearId.
+  queryClient.invalidateQueries({ queryKey: ['taxiqSelfReportedIncome'] })
 }
 
 export function useTaxiqReceipts(params: ReceiptVaultListParams | undefined) {
@@ -52,6 +56,14 @@ export function useResolveTaxiqReceiptDuplicate() {
   >({
     mutationFn: ({ receiptId, resolution, mergeTargetReceiptId }) =>
       taxiqReceiptsRepository.resolveDuplicate(receiptId, resolution, mergeTargetReceiptId),
+    onSuccess: () => invalidateReceiptRelatedCaches(queryClient),
+  })
+}
+
+export function useDeleteTaxiqReceipt() {
+  const queryClient = useQueryClient()
+  return useMutation<void, Error, string>({
+    mutationFn: (receiptId) => taxiqReceiptsRepository.remove(receiptId),
     onSuccess: () => invalidateReceiptRelatedCaches(queryClient),
   })
 }

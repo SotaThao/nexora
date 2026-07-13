@@ -1,14 +1,17 @@
 import { useRef, useState } from 'react'
-import { AlertTriangle, Loader2, Lock, Upload } from 'lucide-react'
+import { AlertTriangle, Loader2, Lock, Trash2, Upload } from 'lucide-react'
 import { useTranslation } from '../../../../contexts/LanguageContext'
 import { useNotification } from '../../../../contexts/NotificationContext'
-import { useTaxiqReceipts, useUploadTaxiqReceipt } from '../../../../data/hooks/useTaxiqReceipts'
+import { useDeleteTaxiqReceipt, useTaxiqReceipts, useUploadTaxiqReceipt } from '../../../../data/hooks/useTaxiqReceipts'
 import type { ReceiptLinkedEntityType, ReceiptQualityStatus, ReceiptVaultItem } from '../../../../data/repositories/taxiqReceipts'
+import { isApiError } from '../../../../types/domain'
+import { getErrorI18nKey } from '../../../../data/errorCodes'
 import { SkeletonList } from '../../../ui/skeleton'
 import Tooltip from '../../../ui/Tooltip'
 import { formatCurrency } from '../../utils'
 import ReceiptQualityStatusBadge from './shared/ReceiptQualityStatusBadge'
 import DuplicateResolveModal from './modals/DuplicateResolveModal'
+import ConfirmModal from './modals/ConfirmModal'
 
 const LINK_TYPE_LABEL_KEYS: Record<ReceiptLinkedEntityType, string> = {
   Standalone: 'taxiq.receiptVault.linkType.standalone',
@@ -31,14 +34,17 @@ export default function ReceiptVaultView({
   const { t } = useTranslation()
   const { showToast } = useNotification()
   const isStaff = scope === 'staff'
+  const LOCKED_ERROR_CODE = isStaff ? 'TAXIQ_STAFF_TAX_YEAR_LOCKED' : 'TAXIQ_OWNER_TAX_YEAR_LOCKED'
 
   const [qualityFilter, setQualityFilter] = useState('all')
   const [linkTypeFilter, setLinkTypeFilter] = useState('all')
   const [resolvingReceipt, setResolvingReceipt] = useState<ReceiptVaultItem | null>(null)
+  const [deletingReceipt, setDeletingReceipt] = useState<ReceiptVaultItem | null>(null)
   const inputRef = useRef<HTMLInputElement>(null)
 
   const listQuery = useTaxiqReceipts({ ownerTaxYearId, staffTaxYearId })
   const uploadReceipt = useUploadTaxiqReceipt()
+  const deleteReceipt = useDeleteTaxiqReceipt()
 
   const allItems = listQuery.data ?? []
   const items = allItems.filter((item) => {
@@ -57,6 +63,23 @@ export default function ReceiptVaultView({
       showToast(t('taxiq.receiptVault.uploadSuccess'), 'success')
     } catch {
       showToast(t('taxiq.receiptVault.uploadError'), 'error')
+    }
+  }
+
+  const handleDelete = async () => {
+    if (!deletingReceipt) return
+    try {
+      await deleteReceipt.mutateAsync(deletingReceipt.id)
+      showToast(t('taxiq.receiptVault.deleteSuccess'), 'success')
+      setDeletingReceipt(null)
+    } catch (err) {
+      if (isApiError(err) && err.errorCode === LOCKED_ERROR_CODE) {
+        showToast(t('taxiq.deductionCenter.errors.lockedMessage'), 'error')
+        setDeletingReceipt(null)
+        return
+      }
+      const i18nKey = isApiError(err) ? getErrorI18nKey(err.errorCode) : 'taxiq.receiptVault.errors.generic'
+      showToast(t(i18nKey), 'error')
     }
   }
 
@@ -199,6 +222,14 @@ export default function ReceiptVaultView({
                             {t('taxiq.receiptVault.actions.resolveDuplicate')}
                           </button>
                         )}
+                        <button
+                          type="button"
+                          onClick={() => setDeletingReceipt(item)}
+                          className="inline-flex items-center gap-1 text-[11px] font-bold text-rose-600 hover:underline"
+                        >
+                          <Trash2 className="h-3 w-3" />
+                          {t('taxiq.receiptVault.delete')}
+                        </button>
                       </div>
                     </td>
                   </tr>
@@ -217,6 +248,17 @@ export default function ReceiptVaultView({
           otherReceipts={allItems.filter((i) => i.id !== resolvingReceipt.id)}
         />
       )}
+
+      <ConfirmModal
+        open={!!deletingReceipt}
+        onClose={() => setDeletingReceipt(null)}
+        onConfirm={handleDelete}
+        title={t('taxiq.receiptVault.delete')}
+        message={t('taxiq.receiptVault.deleteConfirm')}
+        confirmLabel={t('taxiq.receiptVault.delete')}
+        isDangerous
+        isPending={deleteReceipt.isPending}
+      />
     </div>
   )
 }

@@ -1860,7 +1860,10 @@
     "taxiq_cpa_access_unauthorized": "Bạn không có quyền quản lý quyền truy cập CPA này.",
     "taxiq_cpa_consent_required": "Cần có sự đồng ý của Thợ trước khi chia sẻ dữ liệu Full hoặc CPA Review.",
     "taxiq_deduction_not_in_grant_scope": "Bản ghi này nằm ngoài phạm vi quyền truy cập CPA của bạn.",
-    "taxiq_self_reported_income_not_found": "Không tìm thấy bản ghi thu nhập tự khai này."
+    "taxiq_self_reported_income_not_found": "Không tìm thấy bản ghi thu nhập tự khai này.",
+    "taxiq_deduction_record_has_receipts": "Hãy gỡ các hóa đơn đính kèm trước khi xóa khoản khấu trừ này.",
+    "taxiq_payout_record_has_receipts": "Hãy gỡ các hóa đơn đính kèm trước khi xóa payout này.",
+    "taxiq_receipt_not_found": "Không tìm thấy hóa đơn này."
   },
   "components": {
     "payout": {
@@ -3357,6 +3360,9 @@
         "approve": "Duyệt",
         "attachReceipt": "Đính kèm hóa đơn có sẵn"
       },
+      "delete": "Xóa",
+      "deleteConfirm": "Xóa khoản khấu trừ này? Không thể hoàn tác.",
+      "deleteSuccess": "Đã xóa khoản khấu trừ.",
       "aiDisclaimerFallback": "Tax IQ chỉ hỗ trợ chuẩn bị, không thay thế CPA.",
       "errors": {
         "generic": "Đã xảy ra lỗi. Vui lòng thử lại.",
@@ -3492,6 +3498,12 @@
       },
       "actions": {
         "resolveDuplicate": "Xử lý trùng lặp"
+      },
+      "delete": "Xóa",
+      "deleteConfirm": "Xóa hóa đơn này? Nếu đang gắn với khấu trừ, payout hoặc thu nhập, bản ghi đó sẽ chuyển lại trạng thái thiếu hóa đơn. Không thể hoàn tác.",
+      "deleteSuccess": "Đã xóa hóa đơn.",
+      "errors": {
+        "generic": "Không thể xóa hóa đơn. Vui lòng thử lại."
       },
       "duplicateModal": {
         "title": "Xử lý trùng lặp",
@@ -3689,6 +3701,9 @@
       "mileage": {
         "addButton": "Thêm Mileage",
         "editButton": "Sửa",
+        "delete": "Xóa",
+        "deleteConfirm": "Xóa nhật ký mileage này? Không thể hoàn tác.",
+        "deleteSuccess": "Đã xóa nhật ký mileage.",
         "addSuccess": "Đã thêm nhật ký mileage.",
         "updateSuccess": "Đã cập nhật nhật ký mileage.",
         "emptyState": "Chưa có nhật ký mileage nào. Thêm chuyến đi đầu tiên để bắt đầu.",
@@ -3722,6 +3737,9 @@
       },
       "cashTip": {
         "addButton": "Ghi Cash Tip",
+        "delete": "Xóa",
+        "deleteConfirm": "Xóa nhật ký cash tip này? Không thể hoàn tác.",
+        "deleteSuccess": "Đã xóa nhật ký cash tip.",
         "addSuccess": "Đã ghi cash tip.",
         "emptyState": "Chưa có cash tip nào được ghi.",
         "totalLabel": "tổng cash tip đã ghi",
@@ -4115,6 +4133,12 @@
       },
       "actions": {
         "edit": "Sửa"
+      },
+      "delete": "Xóa",
+      "deleteConfirm": "Xóa payout này? Không thể hoàn tác.",
+      "deleteSuccess": "Đã xóa payout.",
+      "errors": {
+        "generic": "Không thể xóa payout này. Vui lòng thử lại."
       },
       "payPeriods": {
         "Weekly": "Hàng tuần",

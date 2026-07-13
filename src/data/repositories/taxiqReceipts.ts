@@ -111,6 +111,10 @@ export function createTaxiqReceiptsRepository(client: HttpClient = httpClient) {
         mergeTargetReceiptId: mergeTargetReceiptId ?? null,
       })
     },
+
+    async remove(receiptId: string): Promise<void> {
+      await client.del(`/api/v1/taxiq/receipts/${encodeURIComponent(receiptId)}`)
+    },
   }
 }
 

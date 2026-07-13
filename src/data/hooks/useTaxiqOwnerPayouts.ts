@@ -95,6 +95,16 @@ export function useUpdatePayoutRecord(ownerTaxYearId: string | undefined) {
   })
 }
 
+export function useDeletePayoutRecord(ownerTaxYearId: string | undefined) {
+  const queryClient = useQueryClient()
+  return useMutation<void, Error, string>({
+    mutationFn: (payoutRecordId) => taxiqOwnerPayoutsRepository.remove(payoutRecordId),
+    onSuccess: () => {
+      if (ownerTaxYearId) invalidatePayoutQueries(queryClient, ownerTaxYearId)
+    },
+  })
+}
+
 export function useTaxiqOwnerDisputedPayouts(ownerTaxYearId: string | undefined) {
   return useQuery<DisputedPayout[]>({
     queryKey: qk.taxiqOwnerPayoutsDisputed(ownerTaxYearId),
