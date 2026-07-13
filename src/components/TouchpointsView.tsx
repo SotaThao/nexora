@@ -30,6 +30,7 @@ import {
 import { usePagination } from '../hooks/usePagination'
 import { DEFAULT_PAGE_SIZE, STAFF_FILTER_LIST_PAGE_SIZE } from '../constants/pagination'
 import { buildQrImageUrl, slugify, toLocalCustomerTouchUrl } from '../utils/staffTipUrl'
+import { QR_IMAGE_SIZES } from '../utils/qrUtils'
 import { getWebUrlOrigin } from '../utils/webUrlBase'
 import ToggleSwitch from './ui/ToggleSwitch'
 import { formatCurrency, formatTransactionDateTime } from './dashboard/utils'
@@ -409,7 +410,7 @@ export default function TouchpointsView({
 
               const scans = point.scans ?? 0
               const revenue = point.revenue ?? 0
-              const qrImageSrc = buildQrImageUrl(qrUrl, 150, point.qrImageUrl)
+              const qrImageSrc = buildQrImageUrl(qrUrl, QR_IMAGE_SIZES.panel, point.qrImageUrl)
 
               return (
                 <Panel key={point.id} className="p-3.5 flex flex-col sm:flex-row gap-3 sm:gap-4 hover:shadow-premium transition-all duration-300 group border border-nexoraBorder relative overflow-visible min-h-0 sm:min-h-[160px]">
