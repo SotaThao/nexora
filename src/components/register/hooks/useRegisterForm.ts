@@ -5,6 +5,7 @@ import { parsePhone, formatNationalNumber } from '../../CountryCodeSelect'
 import { serializeBankWireAccount } from '../../payout/bankWireAccount'
 import { captureQrImage } from '../../../utils/qrCode'
 import { getPayoutValidationMessage } from '../../payout/validatePayoutAccount'
+import { isValidLeg } from '../../../utils/affiliateReferral'
 
 const normalizePhone = (raw) => {
   if (!raw) return ''
@@ -278,7 +279,7 @@ export function useRegisterForm({ ssoEmail, onBackToLogin, onRegisterSuccess, on
         // profileType enum per signup API docs is "Merchant" | "User" (not "Personal").
         profileType: role === 'business' ? 'Merchant' : 'User',
         ...(trimmedReferralCode ? { referralCode: trimmedReferralCode } : {}),
-        ...(trimmedReferralCode && leg ? { leg } : {}),
+        ...(trimmedReferralCode && isValidLeg(leg) ? { leg } : {}),
       })
       const signupOtp = getSignupOtp(signupResponse)
 
@@ -307,8 +308,8 @@ export function useRegisterForm({ ssoEmail, onBackToLogin, onRegisterSuccess, on
         errorsMap.confirmEmail = 'register.errors.email_mismatch'
       } else if (code === 'USER_INVALID_REFERRAL_CODE') {
         errorsMap.referralCode = i18nKey || 'errors.unknown_error'
-      } else if (code === 'USER_INVALID_POSITION') {
-        errorsMap.leg = i18nKey || 'errors.unknown_error'
+      } else if (code === 'USER_INVALID_POSITION' || code === 'USER_POSITION_REQUIRES_REFERRAL_CODE') {
+        errorsMap.referralCode = i18nKey || 'errors.unknown_error'
       } else {
         errorsMap.email = i18nKey || 'errors.unknown_error'
       }

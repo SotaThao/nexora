@@ -3,6 +3,7 @@ import httpClient from '../../lib/httpClient'
 import { clearAuthQueryCache, seedAuthQueryCache } from '../../data/seedAuthQueryCache'
 import profileSettingsRepository from '../../data/repositories/profileSettings'
 import { logger } from '../../utils/logger'
+import { isValidLeg, legToApiValue } from '../../utils/affiliateReferral'
 
 import type {
   AuthSession,
@@ -410,7 +411,7 @@ export const apiAuthAdapter = {
         lastName,
         type: type || profileType,
         ...(trimmedReferralCode ? { referralCode: trimmedReferralCode } : {}),
-        ...(trimmedReferralCode && leg ? { position: leg === 'left' ? 'Left' : 'Right' } : {}),
+        ...(trimmedReferralCode && isValidLeg(leg) ? { position: legToApiValue(leg) } : {}),
       },
       { anonymous: true },
     )

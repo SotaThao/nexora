@@ -5,6 +5,23 @@ const REF_CODE_KEY = 'referral_ref_code'
 const STAFF_SHARE_CODE_KEY = 'referral_staff_share_code'
 const LEG_KEY = 'referral_leg'
 
+/** Which side of the binary referral tree an account gets placed under. */
+export type Leg = 'left' | 'right'
+export const LEG_VALUES: readonly Leg[] = ['left', 'right']
+
+/** Narrows and validates a possibly-untrusted value (URL param, storage, user input) to a Leg. */
+export function isValidLeg(value: unknown): value is Leg {
+  return typeof value === 'string' && (LEG_VALUES as readonly string[]).includes(value)
+}
+
+/** Maps a Leg to the PascalCase string VlinkPay's signup API expects. */
+export function legToApiValue(leg: Leg): 'Left' | 'Right' {
+  return leg === 'left' ? 'Left' : 'Right'
+}
+
+/** Used where a leg is needed but there's no picker UI (e.g. the merchant's own referral link). */
+export const DEFAULT_LEG: Leg = 'left'
+
 export function saveRefCode(code: string) {
   const trimmed = code.trim()
   if (trimmed) {
@@ -19,7 +36,7 @@ export function getSavedRefCode(): string {
 /** Persist the chosen binary tree side ('left' | 'right') from a referral link's ?leg= param. */
 export function saveLeg(leg: string) {
   const trimmed = leg.trim().toLowerCase()
-  if (trimmed === 'left' || trimmed === 'right') {
+  if (isValidLeg(trimmed)) {
     storage.setItem(LEG_KEY, trimmed)
   }
 }
@@ -85,8 +102,8 @@ export function buildStaffShareUrl({
   const params = new URLSearchParams()
   const ref = String(referralCode || '').trim()
   if (ref) params.set('ref', ref)
-  const trimmedLeg = String(leg || '').trim()
-  if (trimmedLeg) params.set('leg', trimmedLeg)
+  const trimmedLeg = String(leg || '').trim().toLowerCase()
+  if (isValidLeg(trimmedLeg)) params.set('leg', trimmedLeg)
   params.set('staff', staff)
   return `${origin}/?${params.toString()}`
 }

@@ -6,7 +6,7 @@ import { useNavigate, useSearchParams } from 'react-router-dom'
 import { useTranslation } from '../../../contexts/LanguageContext'
 import { useStaffAccount } from '../../../contexts/StaffAccountContext'
 import { useProfileSettings } from '../../../data/hooks/useProfileSettings'
-import { buildStaffShareUrl, getProfileReferralCode, splitStaffShareUrlDisplay, splitUrlQueryParamDisplay, splitUrlPathTailDisplay } from '../../../utils/affiliateReferral'
+import { buildStaffShareUrl, getProfileReferralCode, splitStaffShareUrlDisplay, splitUrlQueryParamDisplay, splitUrlPathTailDisplay, LEG_VALUES, DEFAULT_LEG, type Leg } from '../../../utils/affiliateReferral'
 import { shareQrImage, downloadQrCode, QR_IMAGE_SIZES } from '../../../utils/qrUtils'
 import { useStaffBusinessTipQrs } from '../../../data/hooks/useStaffSelf'
 import { useNotifications, useMarkNotificationRead } from '../../../data/hooks/useNotifications'
@@ -26,6 +26,11 @@ import { SkeletonLayout } from '../../ui/skeleton'
 import QrImage from '../../ui/QrImage'
 
 type LooseObject = Record<string, any>
+
+const LEG_I18N_KEY: Record<Leg, string> = {
+  left: 'staff_dashboard.qr.left_leg',
+  right: 'staff_dashboard.qr.right_leg',
+}
 
 const panel = 'rounded-2xl border border-nexoraBorder bg-nexoraSurface p-4 shadow-sm'
 const compactPanel = 'rounded-lg border border-[#EEE9FF] bg-white p-2.5 shadow-[0_8px_18px_rgba(70,72,212,0.08)]'
@@ -311,7 +316,7 @@ export default function StaffMyQR() {
     data: staffPaymentMethods = [],
     isLoading: isPaymentMethodsLoading,
   } = useStaffPaymentMethods({ enabled: activeTab === 'payment' })
-  const [selectedLeg, setSelectedLeg] = useState<'left' | 'right'>('left')
+  const [selectedLeg, setSelectedLeg] = useState<Leg>(DEFAULT_LEG)
   const [showScanner, setShowScanner] = useState(false)
   const [scannerCameraState, setScannerCameraState] = useState<ScannerCameraState>('loading')
   const [isSubmittingScan, setIsSubmittingScan] = useState(false)
@@ -881,7 +886,7 @@ export default function StaffMyQR() {
                   {t('staff_dashboard.qr.select_placement_leg')}
                 </span>
                 <div className="mt-2 flex justify-center gap-6">
-                  {(['left', 'right'] as const).map((leg) => (
+                  {LEG_VALUES.map((leg) => (
                     <label
                       key={leg}
                       className="flex cursor-pointer items-center gap-2 text-xs font-bold text-nexoraText"
@@ -904,7 +909,7 @@ export default function StaffMyQR() {
                         {selectedLeg === leg && <span className="h-1.5 w-1.5 rounded-full bg-nexoraBrand" />}
                       </span>
                       <span className={selectedLeg === leg ? 'font-black text-nexoraBrand' : 'text-nexoraMuted'}>
-                        {t(leg === 'left' ? 'staff_dashboard.qr.left_leg' : 'staff_dashboard.qr.right_leg')}
+                        {t(LEG_I18N_KEY[leg])}
                       </span>
                     </label>
                   ))}

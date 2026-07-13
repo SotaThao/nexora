@@ -1,3 +1,5 @@
+import type { Leg } from '../utils/affiliateReferral'
+
 export type AuthStatus = 'loading' | 'authenticated' | 'anonymous'
 
 export type AccountType = 'personal' | 'business'
@@ -44,7 +46,7 @@ export interface SignupCredentials {
   type?: string
   profileType?: string
   referralCode?: string
-  leg?: 'left' | 'right'
+  leg?: Leg
 }
 
 export interface SignupResponse {
