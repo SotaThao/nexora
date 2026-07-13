@@ -21,7 +21,7 @@ export default function ReceiptPreviewModal({
   if (!open) return null
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-nexoraText/70 p-4 backdrop-blur-sm">
+    <div className="fixed inset-0 z-[60] flex items-center justify-center bg-nexoraText/70 p-4 backdrop-blur-sm">
       <div className="nexora-modal-card max-w-2xl">
         <div className="mb-4 flex items-center justify-between">
           <h2 className="truncate text-sm font-extrabold text-nexoraText">{receipt.fileName}</h2>

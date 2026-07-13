@@ -78,6 +78,7 @@ function normalizeReceiptVaultItem(dto: ReceiptVaultItemApiDto): ReceiptVaultIte
 export interface ReceiptVaultListParams {
   ownerTaxYearId?: string
   staffTaxYearId?: string
+  deductionRecordId?: string
 }
 
 export function createTaxiqReceiptsRepository(client: HttpClient = httpClient) {
@@ -98,7 +99,11 @@ export function createTaxiqReceiptsRepository(client: HttpClient = httpClient) {
 
     async list(params: ReceiptVaultListParams): Promise<ReceiptVaultItem[]> {
       const dtos = await client.get<ReceiptVaultItemApiDto[]>('/api/v1/taxiq/receipts', {
-        params: { ownerTaxYearId: params.ownerTaxYearId, staffTaxYearId: params.staffTaxYearId },
+        params: {
+          ownerTaxYearId: params.ownerTaxYearId,
+          staffTaxYearId: params.staffTaxYearId,
+          deductionRecordId: params.deductionRecordId,
+        },
       })
       return (dtos ?? []).map(normalizeReceiptVaultItem)
     },
@@ -117,6 +122,10 @@ export function createTaxiqReceiptsRepository(client: HttpClient = httpClient) {
 
     async remove(receiptId: string): Promise<void> {
       await client.del(`/api/v1/taxiq/receipts/${encodeURIComponent(receiptId)}`)
+    },
+
+    async unlinkFromDeduction(receiptId: string): Promise<void> {
+      await client.post(`/api/v1/taxiq/receipts/${encodeURIComponent(receiptId)}/unlink-deduction`)
     },
   }
 }

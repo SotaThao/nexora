@@ -1863,7 +1863,8 @@
     "taxiq_self_reported_income_not_found": "This self-reported income record could not be found.",
     "taxiq_deduction_record_has_receipts": "Remove attached receipts before deleting this deduction.",
     "taxiq_payout_record_has_receipts": "Remove attached receipts before deleting this payout record.",
-    "taxiq_receipt_not_found": "This receipt could not be found."
+    "taxiq_receipt_not_found": "This receipt could not be found.",
+    "taxiq_receipt_not_linked_to_deduction": "This receipt is not linked to a deduction."
   },
   "components": {
     "payout": {
@@ -3372,7 +3373,18 @@
         "submit": "Submit",
         "reanalyze": "Re-analyze with AI",
         "approve": "Approve",
-        "attachReceipt": "Attach existing receipt"
+        "attachReceipt": "Attach existing receipt",
+        "viewReceipts": "View receipts ({{count}})"
+      },
+      "linkedReceiptsModal": {
+        "title": "Linked receipts",
+        "emptyState": "No receipts linked to this deduction.",
+        "unlink": "Unlink",
+        "unlinkConfirm": "Unlink this receipt from the deduction? The receipt itself won't be deleted — it becomes standalone again in the Receipt Vault.",
+        "unlinkSuccess": "Receipt unlinked.",
+        "errors": {
+          "generic": "Could not unlink receipt. Please try again."
+        }
       },
       "delete": "Delete",
       "deleteConfirm": "Delete this deduction? This cannot be undone.",

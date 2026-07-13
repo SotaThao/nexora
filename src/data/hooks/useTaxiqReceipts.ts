@@ -24,7 +24,7 @@ function invalidateReceiptRelatedCaches(queryClient: ReturnType<typeof useQueryC
 
 export function useTaxiqReceipts(params: ReceiptVaultListParams | undefined) {
   return useQuery<ReceiptVaultItem[]>({
-    queryKey: qk.taxiqReceipts(params?.ownerTaxYearId, params?.staffTaxYearId),
+    queryKey: qk.taxiqReceipts(params?.ownerTaxYearId, params?.staffTaxYearId, params?.deductionRecordId),
     queryFn: () => taxiqReceiptsRepository.list(params as ReceiptVaultListParams),
     enabled: !!(params?.ownerTaxYearId || params?.staffTaxYearId),
   })
@@ -64,6 +64,14 @@ export function useDeleteTaxiqReceipt() {
   const queryClient = useQueryClient()
   return useMutation<void, Error, string>({
     mutationFn: (receiptId) => taxiqReceiptsRepository.remove(receiptId),
+    onSuccess: () => invalidateReceiptRelatedCaches(queryClient),
+  })
+}
+
+export function useUnlinkTaxiqReceiptFromDeduction() {
+  const queryClient = useQueryClient()
+  return useMutation<void, Error, string>({
+    mutationFn: (receiptId) => taxiqReceiptsRepository.unlinkFromDeduction(receiptId),
     onSuccess: () => invalidateReceiptRelatedCaches(queryClient),
   })
 }

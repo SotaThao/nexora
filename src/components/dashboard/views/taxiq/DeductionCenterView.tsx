@@ -25,6 +25,7 @@ import AiDeductionStatusBadge from './shared/AiDeductionStatusBadge'
 import AttachExistingReceiptModal from './modals/AttachExistingReceiptModal'
 import ConfirmModal from './modals/ConfirmModal'
 import DeductionStatusGuideModal from './modals/DeductionStatusGuideModal'
+import LinkedReceiptsModal from './modals/LinkedReceiptsModal'
 
 const EDITABLE_STATUSES = new Set(['Draft', 'MissingReceipt', 'MissingInfo'])
 
@@ -61,6 +62,7 @@ export default function DeductionCenterView({
   const [attachingReceiptToId, setAttachingReceiptToId] = useState<string | null>(null)
   const [deletingRecord, setDeletingRecord] = useState<DeductionRecord | StaffDeductionRecord | null>(null)
   const [isStatusGuideOpen, setIsStatusGuideOpen] = useState(false)
+  const [viewingReceiptsRecord, setViewingReceiptsRecord] = useState<DeductionRecord | StaffDeductionRecord | null>(null)
 
   const categoriesQuery = useTaxiqDeductionCategories(isStaff ? 'Staff' : 'Owner')
   const categories = categoriesQuery.data ?? []
@@ -302,6 +304,16 @@ export default function DeductionCenterView({
                             {t('taxiq.deductionCenter.actions.attachReceipt')}
                           </button>
                         )}
+                        {record.receiptCount > 0 && (
+                          <button
+                            type="button"
+                            onClick={() => setViewingReceiptsRecord(record)}
+                            className="inline-flex items-center gap-1 text-[11px] font-bold text-nexoraBrand hover:underline"
+                          >
+                            <Paperclip className="h-3 w-3" />
+                            {t('taxiq.deductionCenter.actions.viewReceipts', { count: record.receiptCount })}
+                          </button>
+                        )}
                         {!isStaff && record.recordStatus !== 'Draft' && (
                           <button
                             type="button"
@@ -405,6 +417,16 @@ export default function DeductionCenterView({
       />
 
       <DeductionStatusGuideModal open={isStatusGuideOpen} onClose={() => setIsStatusGuideOpen(false)} />
+
+      {viewingReceiptsRecord && (
+        <LinkedReceiptsModal
+          open={!!viewingReceiptsRecord}
+          onClose={() => setViewingReceiptsRecord(null)}
+          ownerTaxYearId={ownerTaxYearId}
+          staffTaxYearId={staffTaxYearId}
+          deductionRecordId={viewingReceiptsRecord.id}
+        />
+      )}
     </div>
   )
 }

@@ -160,14 +160,16 @@ export const qk = {
     return key
   },
 
-  // Tax IQ — Receipt Vault (US-05). No status/link-type filters in the key — BE has no
-  // server-side filter params for GET /receipts, filtering happens client-side. Calling
-  // with no args yields ['taxiqReceipts'] (broad invalidation target), same convention
-  // as taxiqOwnerDeductions/taxiqStaffDeductions above.
-  taxiqReceipts: (ownerTaxYearId?: string, staffTaxYearId?: string) => {
+  // Tax IQ — Receipt Vault (US-05). Calling with no args yields ['taxiqReceipts'] (broad
+  // invalidation target), same convention as taxiqOwnerDeductions/taxiqStaffDeductions above.
+  // deductionRecordId scopes the key so the "linked receipts for one deduction" query
+  // (server-filtered via GET /receipts?deductionRecordId=...) never collides with the
+  // full-vault query cached under the same tax year ids.
+  taxiqReceipts: (ownerTaxYearId?: string, staffTaxYearId?: string, deductionRecordId?: string) => {
     const key: unknown[] = ['taxiqReceipts']
     if (ownerTaxYearId) key.push(ownerTaxYearId)
     if (staffTaxYearId) key.push(staffTaxYearId)
+    if (deductionRecordId) key.push(deductionRecordId)
     return key
   },
 

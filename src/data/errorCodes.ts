@@ -113,8 +113,9 @@ export const errorCodeToI18nKey = {
   TAXIQ_DEDUCTION_RECORD_HAS_RECEIPTS: 'errors.taxiq_deduction_record_has_receipts',
   TAXIQ_PAYOUT_RECORD_HAS_RECEIPTS: 'errors.taxiq_payout_record_has_receipts',
 
-  // Tax IQ — Receipt Vault delete
+  // Tax IQ — Receipt Vault delete / unlink
   TAXIQ_RECEIPT_NOT_FOUND: 'errors.taxiq_receipt_not_found',
+  TAXIQ_RECEIPT_NOT_LINKED_TO_DEDUCTION: 'errors.taxiq_receipt_not_linked_to_deduction',
 
   // Tax IQ — CPA Access Grant (US-10)
   TAXIQ_CPA_ACCESS_GRANT_NOT_FOUND: 'errors.taxiq_cpa_access_grant_not_found',

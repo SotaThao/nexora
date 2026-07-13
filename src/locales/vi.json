@@ -1863,7 +1863,8 @@
     "taxiq_self_reported_income_not_found": "Không tìm thấy bản ghi thu nhập tự khai này.",
     "taxiq_deduction_record_has_receipts": "Hãy gỡ các hóa đơn đính kèm trước khi xóa khoản khấu trừ này.",
     "taxiq_payout_record_has_receipts": "Hãy gỡ các hóa đơn đính kèm trước khi xóa payout này.",
-    "taxiq_receipt_not_found": "Không tìm thấy hóa đơn này."
+    "taxiq_receipt_not_found": "Không tìm thấy hóa đơn này.",
+    "taxiq_receipt_not_linked_to_deduction": "Hóa đơn này chưa được liên kết với khoản khấu trừ nào."
   },
   "components": {
     "payout": {
@@ -3371,7 +3372,18 @@
         "submit": "Nộp",
         "reanalyze": "Phân tích lại với AI",
         "approve": "Duyệt",
-        "attachReceipt": "Đính kèm hóa đơn có sẵn"
+        "attachReceipt": "Đính kèm hóa đơn có sẵn",
+        "viewReceipts": "Xem hóa đơn ({{count}})"
+      },
+      "linkedReceiptsModal": {
+        "title": "Hóa đơn đã liên kết",
+        "emptyState": "Chưa có hóa đơn nào liên kết với khoản khấu trừ này.",
+        "unlink": "Gỡ liên kết",
+        "unlinkConfirm": "Gỡ liên kết hóa đơn này khỏi khoản khấu trừ? Hóa đơn sẽ không bị xóa — sẽ quay lại trạng thái độc lập trong Receipt Vault.",
+        "unlinkSuccess": "Đã gỡ liên kết hóa đơn.",
+        "errors": {
+          "generic": "Không thể gỡ liên kết hóa đơn. Vui lòng thử lại."
+        }
       },
       "delete": "Xóa",
       "deleteConfirm": "Xóa khoản khấu trừ này? Không thể hoàn tác.",
