@@ -283,7 +283,7 @@
       "title": "Tài khoản cá nhân",
       "screen_title": "Hồ sơ",
       "nexora_id": "Nexora ID: {id}",
-      "member_since": "Thành viên từ Apr 2024",
+      "member_since": "Thành viên từ {date}",
       "edit_profile": "Chỉnh sửa hồ sơ",
       "menu_personal_information": "Thông tin cá nhân",
       "menu_verification": "Xác minh",
