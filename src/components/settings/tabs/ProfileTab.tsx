@@ -948,14 +948,14 @@ export default function ProfileTab({
 
           {/* Nested Location Map and Sponsor Information Grid */}
             {/* Location Map */}
-            <div className="rounded-xl border border-nexoraBorder bg-white shadow-sm p-6 relative overflow-hidden flex flex-col justify-between">
+            <div className="rounded-xl border border-nexoraBorder bg-white shadow-sm p-6 relative overflow-hidden flex flex-col">
               <div className="flex justify-between items-center border-b border-nexoraRule pb-3 mb-4">
                 <h4 className="text-xs font-black uppercase text-nexoraText tracking-wider flex items-center gap-2">
                   <MapPin className="h-4 w-4 text-sky-500" />
                   {t('components.settings.tabs.ProfileTab.locationMap')}
                 </h4>
               </div>
-              <div className="h-[220px] w-full rounded-lg border border-slate-200 overflow-hidden bg-slate-100">
+              <div className="min-h-[220px] flex-1 w-full rounded-lg border border-slate-200 overflow-hidden bg-slate-100">
                 {locationMapEmbedUrl ? (
                   <iframe
                     key={locationMapQuery}

@@ -868,7 +868,6 @@ export default function StaffMyQR() {
           <section className={`${compactPanel} text-center`}>
             <div className="mb-2 flex items-center justify-between gap-2 text-left">
               <div>
-                <p className="text-[10px] font-semibold uppercase text-nexoraBrand">{t('staff_dashboard.qr.tab_invite_refer')}</p>
                 <h3 className="text-sm font-semibold text-nexoraText">{t('staff_dashboard.qr.staff_invite_link')}</h3>
               </div>
               <span className="grid h-8 w-8 place-items-center rounded-lg bg-rose-50 text-rose-500">
@@ -944,13 +943,17 @@ export default function StaffMyQR() {
               <section className="rounded-2xl border border-[#DDD8FF] bg-white p-3 shadow-[0_10px_22px_rgba(70,72,212,0.10)]">
                 <div className="mb-3 flex items-center justify-between gap-2">
                   <div>
-                    <p className="text-[10px] font-semibold uppercase text-nexoraBrand">{t('staff_dashboard.qr.tab_accept_payments')}</p>
                     <h4 className="text-sm font-semibold text-nexoraText">
-                      Payment & Tip QR
+                      {t('staff_dashboard.qr.business_title')}
                     </h4>
                   </div>
                   <span className="rounded-full bg-[#F4F2FF] px-3 py-1.5 text-[10px] font-semibold text-nexoraBrandDark">
-                    {activeTipQrs.length} salons
+                    {t(
+                      activeTipQrs.length === 1
+                        ? 'staff_dashboard.qr.salons_count_one'
+                        : 'staff_dashboard.qr.salons_count_other',
+                      { count: activeTipQrs.length },
+                    )}
                   </span>
                 </div>
 
@@ -991,7 +994,7 @@ export default function StaffMyQR() {
                           {biz.businessName}
                         </div>
                         <div className="truncate text-[10px] font-medium leading-3 text-nexoraMuted">
-                          {t('staff_dashboard.qr.customer_payments_tips')}
+                          {t('staff_dashboard.qr.business_sub')}
                         </div>
                         {biz.tipUrl && (
                           <div className="mt-1 truncate font-mono text-[9px] font-semibold text-nexoraBrandDark">
@@ -1012,7 +1015,7 @@ export default function StaffMyQR() {
                             })
                           }
                           className="grid h-8 w-8 place-items-center rounded-full border border-[#EEE9FF] bg-white text-nexoraBrandDark shadow-sm disabled:opacity-50"
-                          aria-label={t('staff_dashboard.qr.payment_preview')}
+                          aria-label={t('components.staff_dashboard.views.StaffMyQR.clickToEnlargeTipping')}
                         >
                           <Eye className="h-4 w-4" />
                         </button>
@@ -1078,9 +1081,7 @@ export default function StaffMyQR() {
             <section className={`${compactPanel} text-center`}>
               <div className="mb-2 flex items-center justify-between gap-2 text-left">
                 <div>
-                  <p className="text-[10px] font-semibold uppercase text-nexoraBrand">{t('staff_dashboard.qr.tab_accept_payments')}</p>
                   <h3 className="text-sm font-semibold text-nexoraText">{t('staff_dashboard.qr.payment_title')}</h3>
-                  <p className="text-[11px] text-nexoraMuted">{t('staff_dashboard.qr.payment_sub')}</p>
                 </div>
                 <span className="grid h-8 w-8 place-items-center rounded-lg bg-indigo-50 text-indigo-600">
                   <CreditCard className="h-4 w-4" />
@@ -1360,9 +1361,6 @@ export default function StaffMyQR() {
                   <h3 className="text-sm font-black uppercase tracking-wider text-slate-800">
                     {t('staff_dashboard.qr.payment_title')}
                   </h3>
-                  <p className="text-center text-[10px] font-medium leading-normal text-slate-500">
-                    {t('staff_dashboard.qr.payment_sub')}
-                  </p>
                 </div>
 
                 <div className="relative mx-auto flex h-56 w-56 items-center justify-center rounded-2xl border-2 border-slate-100 bg-white p-4 shadow-md">

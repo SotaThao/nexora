@@ -14,6 +14,7 @@ export interface MerchantBusinessInfo {
   phone?: string
   website?: string
   logo?: string | null
+  createdAt?: string | null
   [key: string]: unknown
 }
 
@@ -560,6 +561,7 @@ export interface UserProfile {
   hasCompletedOnboarding?: boolean
   referralCode?: string
   subscription?: UserSubscription | null
+  createdAt?: string | null
   [key: string]: unknown
 }
 
@@ -575,6 +577,7 @@ export interface StaffProfile {
   lastName?: string
   phone?: string
   isProfileComplete?: boolean
+  createdAt?: string | null
   [key: string]: unknown
 }
 

@@ -34,6 +34,7 @@ import {
 } from '../data/hooks/useNotifications'
 import { formatNotificationDateTime } from './dashboard/utils'
 import QrImage from './ui/QrImage'
+import { formatMemberSinceDate } from '../utils/localDate'
 
 const compactPanel =
   'rounded-lg border border-[#EEE9FF] bg-white p-2.5 shadow-[0_8px_18px_rgba(70,72,212,0.08)]'
@@ -251,6 +252,7 @@ export default function SettingsView({
   const merchantName = form.profile.businessName || form.profile.fullName || userEmail || 'Merchant'
   const merchantInitial = merchantName.trim().charAt(0).toUpperCase() || 'M'
   const merchantId = form.profile.referralId || (form.profile as any).id || form.profile.email || '—'
+  const memberSinceDate = formatMemberSinceDate(form.profile.createdAt, currentLanguage)
   const isKybVerified = ['kyb_approved', 'verified_pro', 'verified_lite'].includes(form.effectiveVerificationStatus)
   const kybStatusLabel = isKybVerified
     ? t('staff_dashboard.profile.menu_verified')
@@ -294,7 +296,7 @@ export default function SettingsView({
   }
 
   return (
-    <div className="w-full space-y-6 animate-fadeIn pb-24 select-none">
+    <div className="w-full space-y-6 animate-fadeIn pb-24 lg:pb-0 select-none">
       {/* Content Area */}
       <div className="space-y-6">
 
@@ -318,7 +320,9 @@ export default function SettingsView({
                     {t('staff_dashboard.profile.nexora_id', { id: merchantId })}
                   </p>
                   <p className="mt-0.5 text-[11px] font-medium text-nexoraMuted">
-                    {t('staff_dashboard.profile.member_since')}
+                    {memberSinceDate
+                      ? t('staff_dashboard.profile.member_since', { date: memberSinceDate })
+                      : null}
                   </p>
                   <button
                     type="button"
