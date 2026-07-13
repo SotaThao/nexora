@@ -1,11 +1,11 @@
 import React, { useEffect, useMemo, useState } from 'react'
 import CountryCodeSelect, {
   formatNationalNumber,
-  getDefaultDialCode,
+  getNationalPhonePlaceholder,
   isValidPhoneE164,
   normalizePhoneE164,
   parsePhone,
-  PHONE_NATIONAL_PLACEHOLDER,
+  PhoneDialCode,
 } from '../../CountryCodeSelect'
 import { useTranslation } from '../../../contexts/LanguageContext'
 import { useNotification } from '../../../contexts/NotificationContext'
@@ -37,17 +37,6 @@ const DEFAULT_ACTIVE_SERVICES = new Set(['Gel Manicure', 'Acrylic Full Set', 'Pe
 const DAY_KEYS = ['sun', 'mon', 'tue', 'wed', 'thu', 'fri', 'sat'] as const
 const DEFAULT_ACTIVE_DAYS = new Set(['mon', 'tue', 'wed', 'thu', 'fri', 'sat'])
 
-function buildTwentyFourHourOptions(stepMinutes = 30): string[] {
-  const options: string[] = []
-  for (let total = 0; total < 24 * 60; total += stepMinutes) {
-    const hours = Math.floor(total / 60)
-    const minutes = total % 60
-    options.push(`${String(hours).padStart(2, '0')}:${String(minutes).padStart(2, '0')}`)
-  }
-  return options
-}
-
-const SERVICE_HOUR_OPTIONS = buildTwentyFourHourOptions()
 const DEFAULT_OPEN_TIME = '09:00'
 const DEFAULT_CLOSE_TIME = '19:00'
 
@@ -155,7 +144,7 @@ interface BookingTrialModalProps {
 }
 
 export default function BookingTrialModal({ open, onClose }: BookingTrialModalProps) {
-  const { t, currentLanguage } = useTranslation()
+  const { t } = useTranslation()
   const { showToast } = useNotification()
   const submitTrial = useSubmitVoiceTrialRequest()
   const [form, setForm] = useState<TrialFormState>(createInitialTrialForm)
@@ -345,14 +334,13 @@ export default function BookingTrialModal({ open, onClose }: BookingTrialModalPr
 
   useEffect(() => {
     if (!open) return
-    const defaultDialCode = getDefaultDialCode(currentLanguage)
     setForm((prev) => {
       if (prev.phone.trim()) return prev
-      return { ...prev, phone: defaultDialCode }
+      return { ...prev, phone: PhoneDialCode.US }
     })
     setPhoneTouched(false)
     setErrors({})
-  }, [open, currentLanguage])
+  }, [open])
 
   useEffect(() => {
     if (!open) {
@@ -439,7 +427,7 @@ export default function BookingTrialModal({ open, onClose }: BookingTrialModalPr
                       type="tel"
                       value={formatNationalNumber(phoneParsed.nationalNumber, phoneParsed.countryCode)}
                       aria-invalid={Boolean(errors.phone)}
-                      placeholder={PHONE_NATIONAL_PLACEHOLDER}
+                      placeholder={getNationalPhonePlaceholder(phoneParsed.countryCode)}
                       inputMode="numeric"
                       autoComplete="tel-national"
                       onBlur={handlePhoneBlur}
@@ -541,25 +529,27 @@ export default function BookingTrialModal({ open, onClose }: BookingTrialModalPr
                 </div>
                 <div className={`trial-field trial-span-2 ${errors.serviceHours ? 'has-error' : ''}`}>
                   <div className="trial-label">{t(`${TK}.hoursLabel`)}</div>
-                  <div className="trial-time-row">
-                    <select
-                      className={`trial-select ${errors.serviceHours ? 'has-error' : ''}`}
-                      aria-label={t(`${TK}.openTimeLabel`)}
+                  <span className="tech-schedule-time trial-service-hours" lang="en-US-u-hc-h12">
+                    <input
+                      type="time"
                       value={form.openTime}
+                      lang="en-US-u-hc-h12"
+                      step={60}
+                      aria-label={t(`${TK}.openTimeLabel`)}
+                      aria-invalid={Boolean(errors.serviceHours)}
                       onChange={(e) => patchFormField('openTime', e.target.value, 'serviceHours')}
-                    >
-                      {SERVICE_HOUR_OPTIONS.map((time) => <option key={`open-${time}`} value={time}>{time}</option>)}
-                    </select>
-                    <span className="trial-time-separator">→</span>
-                    <select
-                      className={`trial-select ${errors.serviceHours ? 'has-error' : ''}`}
-                      aria-label={t(`${TK}.closeTimeLabel`)}
+                    />
+                    <span>{t(`${TK}.scheduleTo`)}</span>
+                    <input
+                      type="time"
                       value={form.closeTime}
+                      lang="en-US-u-hc-h12"
+                      step={60}
+                      aria-label={t(`${TK}.closeTimeLabel`)}
+                      aria-invalid={Boolean(errors.serviceHours)}
                       onChange={(e) => patchFormField('closeTime', e.target.value, 'serviceHours')}
-                    >
-                      {SERVICE_HOUR_OPTIONS.map((time) => <option key={`close-${time}`} value={time}>{time}</option>)}
-                    </select>
-                  </div>
+                    />
+                  </span>
                   <TrialFieldError message={errors.serviceHours} />
                 </div>
                 <div className={`trial-field trial-span-2 ${errors.painPoint ? 'has-error' : ''}`}>
