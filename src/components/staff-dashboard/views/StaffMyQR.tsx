@@ -7,7 +7,7 @@ import { useTranslation } from '../../../contexts/LanguageContext'
 import { useStaffAccount } from '../../../contexts/StaffAccountContext'
 import { useProfileSettings } from '../../../data/hooks/useProfileSettings'
 import { buildStaffShareUrl, getProfileReferralCode, splitStaffShareUrlDisplay, splitUrlQueryParamDisplay, splitUrlPathTailDisplay } from '../../../utils/affiliateReferral'
-import { shareQrImage, downloadQrCode } from '../../../utils/qrUtils'
+import { shareQrImage, downloadQrCode, QR_IMAGE_SIZES } from '../../../utils/qrUtils'
 import { useStaffBusinessTipQrs } from '../../../data/hooks/useStaffSelf'
 import { useNotifications, useMarkNotificationRead } from '../../../data/hooks/useNotifications'
 import { useNotification } from '../../../contexts/NotificationContext'
@@ -343,7 +343,7 @@ export default function StaffMyQR() {
     [staffShareUrl],
   )
   const personalQrImageSrc = useMemo(
-    () => (staffShareUrl ? buildQrImageUrl(staffShareUrl, 200) : ''),
+    () => (staffShareUrl ? buildQrImageUrl(staffShareUrl, QR_IMAGE_SIZES.panel) : ''),
     [staffShareUrl],
   )
 
@@ -365,7 +365,7 @@ export default function StaffMyQR() {
   )
 
   const staffPaymentQrImageSrc = useMemo(
-    () => (staffPaymentPageUrl ? buildQrImageUrl(staffPaymentPageUrl, 200) : ''),
+    () => (staffPaymentPageUrl ? buildQrImageUrl(staffPaymentPageUrl, QR_IMAGE_SIZES.panel) : ''),
     [staffPaymentPageUrl],
   )
 
@@ -483,7 +483,7 @@ export default function StaffMyQR() {
   const handleShareTipQr = useCallback(
     async (biz: StaffBusinessTipQr) => {
       if (!biz.tipUrl) return
-      const qrImageUrl = buildQrImageUrl(biz.tipUrl, 512, biz.qrImageUrl)
+      const qrImageUrl = buildQrImageUrl(biz.tipUrl, QR_IMAGE_SIZES.zoom, biz.qrImageUrl)
       const safeName = (biz.businessName || 'salon').replace(/[^\w.-]+/g, '-').slice(0, 40)
       const ownerName =
         biz.displayName || staffMember.nickname || staffMember.fullName || ''
@@ -511,7 +511,7 @@ export default function StaffMyQR() {
 
     setIsSavingQr(true)
     try {
-      const qrImageUrl = buildQrImageUrl(zoomedQr.url, 600)
+      const qrImageUrl = buildQrImageUrl(zoomedQr.url, QR_IMAGE_SIZES.zoom)
       const safeName = (zoomedQr.title || 'tipping-qr').replace(/\s+/g, '-').toLowerCase()
       const result = await downloadQrCode(qrImageUrl, `${safeName}-qr.png`)
       if (result !== 'cancelled') {
@@ -977,7 +977,7 @@ export default function StaffMyQR() {
                       >
                         {biz.tipUrl ? (
                           <QrImage
-                            src={buildQrImageUrl(biz.tipUrl, 96, biz.qrImageUrl)}
+                            src={buildQrImageUrl(biz.tipUrl, QR_IMAGE_SIZES.thumb, biz.qrImageUrl)}
                             alt={`${biz.businessName} QR`}
                             className="h-full w-full"
                           />
@@ -1284,7 +1284,7 @@ export default function StaffMyQR() {
                   <p className="mt-2 text-[9px] font-bold text-white/55">{t('staff_dashboard.qr.poster_tagline')}</p>
 
                   <div className="mx-auto mt-5 w-[224px] rounded-[24px] border border-cyan-300/80 bg-white p-3 shadow-[0_0_28px_rgba(34,211,238,0.55)]">
-                    <QrImage src={buildQrImageUrl(zoomedQr.url, 420)} alt={t('staff_dashboard.qr.tipping_qr_alt')} className="h-full w-full rounded-xl" />
+                    <QrImage src={buildQrImageUrl(zoomedQr.url, QR_IMAGE_SIZES.panel)} alt={t('staff_dashboard.qr.tipping_qr_alt')} className="h-full w-full rounded-xl" />
                   </div>
 
                   <div className="mt-5 grid grid-cols-[1fr_auto_1fr_auto_1fr] items-start gap-2 text-center">
@@ -1364,7 +1364,7 @@ export default function StaffMyQR() {
                 </div>
 
                 <div className="relative mx-auto flex h-56 w-56 items-center justify-center rounded-2xl border-2 border-slate-100 bg-white p-4 shadow-md">
-                  <QrImage src={buildQrImageUrl(zoomedQr.url, 300)} alt={t('staff_dashboard.qr.payment_qr_alt')} className="h-full w-full" />
+                  <QrImage src={buildQrImageUrl(zoomedQr.url, QR_IMAGE_SIZES.panel)} alt={t('staff_dashboard.qr.payment_qr_alt')} className="h-full w-full" />
                 </div>
 
                 <div className="space-y-2 text-left">
