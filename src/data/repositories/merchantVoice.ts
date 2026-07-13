@@ -82,6 +82,7 @@ export interface MerchantVoiceBookingDto {
   source: MerchantVoiceLeadSource
   customerPhone: string | null
   customerName: string | null
+  customerEmail: string | null
   service: string | null
   preferredTime: string | null
   notes: string | null
