@@ -357,12 +357,11 @@ export default function BookingTodayPanel() {
     (bookingResponse?.items ?? []).map((item) => toBookingItem(item, statusOverrides[item.id]))
   ), [bookingResponse?.items, statusOverrides])
 
-  const stats = useMemo(() => {
-    const todayCount = statistics?.allBookings ?? filteredBookings.filter((item) => item.date === TODAY_ISO).length
-    const done = statistics?.doneBookings ?? filteredBookings.filter((item) => item.status === BookingUiStatus.Done).length
-    const noShow = statistics?.noShowBookings ?? filteredBookings.filter((item) => item.status === BookingUiStatus.NoShow).length
-    return { todayCount, done, noShow }
-  }, [filteredBookings, statistics])
+  const stats = useMemo(() => ({
+    todayCount: statistics?.allBookings ?? 0,
+    done: statistics?.doneBookings ?? 0,
+    noShow: statistics?.noShowBookings ?? 0,
+  }), [statistics])
 
   const handleAction = async (id: string, action: 'send-sms' | 'done' | 'noshow' | 'detail') => {
     const booking = filteredBookings.find((item) => item.id === id)
@@ -475,20 +474,29 @@ export default function BookingTodayPanel() {
 
   useEffect(() => {
     const timer = window.setTimeout(() => {
-      setDebouncedFilters({
+      const nextFilters = {
         searchField,
         searchKeyword,
         dateFrom,
         dateTo,
+      }
+
+      let filtersChanged = false
+      setDebouncedFilters((prev) => {
+        filtersChanged = prev.searchField !== nextFilters.searchField
+          || prev.searchKeyword !== nextFilters.searchKeyword
+          || prev.dateFrom !== nextFilters.dateFrom
+          || prev.dateTo !== nextFilters.dateTo
+        return nextFilters
       })
+
+      if (filtersChanged) {
+        resetPage()
+      }
     }, 350)
 
     return () => window.clearTimeout(timer)
-  }, [searchField, searchKeyword, dateFrom, dateTo])
-
-  useEffect(() => {
-    resetPage()
-  }, [debouncedFilters, resetPage])
+  }, [searchField, searchKeyword, dateFrom, dateTo, resetPage])
 
   useEffect(() => {
     if (typeof window === 'undefined') return undefined
