@@ -160,15 +160,14 @@ export function BookingTeamGridSkeleton({ count = 3 }: { count?: number }) {
               <Skeleton width="72%" height={14} borderRadius={6} />
               <Skeleton width="54%" height={12} borderRadius={6} />
             </BookingSkeletonStack>
-            <Skeleton width={42} height={24} borderRadius={999} />
+            <div className="tech-top-actions">
+              <Skeleton width={30} height={30} borderRadius={8} />
+              <Skeleton width={42} height={24} borderRadius={999} />
+            </div>
           </div>
           <div className="booking-skeleton-chip-row">
             <Skeleton width={68} height={22} borderRadius={999} />
             <Skeleton width={80} height={22} borderRadius={999} />
-          </div>
-          <div className="tech-card-footer">
-            <Skeleton width={88} height={28} borderRadius={6} />
-            <Skeleton width={34} height={34} borderRadius={8} />
           </div>
         </article>
       ))}

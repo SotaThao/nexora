@@ -127,18 +127,18 @@ export default function BookingHubView() {
           <BookingHubTabsSkeleton />
         ) : (
           <div className="page-tabs" role="tablist" aria-label={t(`${TK}.ariaSections`)}>
-            <button
-              className={`page-tab ${activeMainTab === BookingHubMainTab.Booking ? 'is-active' : ''}`}
-              type="button"
-              role="tab"
-              aria-selected={activeMainTab === BookingHubMainTab.Booking}
-              aria-disabled={!hasVoiceTenant}
-              disabled={!hasVoiceTenant}
-              onClick={() => updateQueryTabs(BookingHubMainTab.Booking)}
-            >
-              <span className="page-tab-icon"><CalendarTabIcon /></span>
-              <span>{t(`${TK}.tabs.booking`)}</span>
-            </button>
+            {hasVoiceTenant && (
+              <button
+                className={`page-tab ${activeMainTab === BookingHubMainTab.Booking ? 'is-active' : ''}`}
+                type="button"
+                role="tab"
+                aria-selected={activeMainTab === BookingHubMainTab.Booking}
+                onClick={() => updateQueryTabs(BookingHubMainTab.Booking)}
+              >
+                <span className="page-tab-icon"><CalendarTabIcon /></span>
+                <span>{t(`${TK}.tabs.booking`)}</span>
+              </button>
+            )}
             <button
               className={`page-tab ${activeMainTab === BookingHubMainTab.Plans ? 'is-active' : ''}`}
               type="button"
@@ -149,18 +149,18 @@ export default function BookingHubView() {
               <span className="page-tab-icon"><TagsTabIcon /></span>
               <span>{t(`${TK}.tabs.plans`)}</span>
             </button>
-            <button
-              className={`page-tab ${activeMainTab === BookingHubMainTab.Settings ? 'is-active' : ''}`}
-              type="button"
-              role="tab"
-              aria-selected={activeMainTab === BookingHubMainTab.Settings}
-              aria-disabled={!hasVoiceTenant}
-              disabled={!hasVoiceTenant}
-              onClick={() => updateQueryTabs(BookingHubMainTab.Settings)}
-            >
-              <span className="page-tab-icon"><SlidersTabIcon /></span>
-              <span>{t(`${TK}.tabs.settings`)}</span>
-            </button>
+            {hasVoiceTenant && (
+              <button
+                className={`page-tab ${activeMainTab === BookingHubMainTab.Settings ? 'is-active' : ''}`}
+                type="button"
+                role="tab"
+                aria-selected={activeMainTab === BookingHubMainTab.Settings}
+                onClick={() => updateQueryTabs(BookingHubMainTab.Settings)}
+              >
+                <span className="page-tab-icon"><SlidersTabIcon /></span>
+                <span>{t(`${TK}.tabs.settings`)}</span>
+              </button>
+            )}
           </div>
         )}
       </div>

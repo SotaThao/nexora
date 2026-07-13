@@ -796,37 +796,25 @@ export default function BookingTeamPanel() {
               </div>
             ) : null}
             {!isStaffLoading ? members.map((member) => (
-              <article className="tech-card" key={member.id} data-tech-id={member.id}>
+              <article
+                className="tech-card tech-card-interactive"
+                key={member.id}
+                data-tech-id={member.id}
+                onClick={() => openModal(member.id, 'edit')}
+              >
                 <div className="tech-top">
                   <div className="tech-avatar" style={member.avatarStyle}>{member.avatar}</div>
                   <div className="tech-profile">
                     <div className="tech-name">{member.name}</div>
                     <div className="tech-phone">{formatPhoneDisplay(member.phone)}</div>
                   </div>
-                  <button
-                    className={`toggle-pill ${member.smsEnabled ? 'is-on' : ''}`}
-                    type="button"
-                    aria-label={t(`${TK}.toggleSms`, { name: member.name })}
-                    aria-pressed={member.smsEnabled}
-                    disabled={pendingToggleIds[member.id]}
-                    onClick={() => toggleSms(member.id)}
-                  />
-                </div>
-                <div className="tech-services">
-                  {member.services.map((service) => (
-                    <span className="badge badge-plan" key={service}>{service}</span>
-                  ))}
-                </div>
-                <div className="tech-card-footer">
-                  <div className="tech-stats">
-                    <div className="tech-stat">
-                      <strong>{member.customers}</strong>
-                      <span>{t(`${TK}.clientsToday`)}</span>
-                    </div>
-                  </div>
-                  <div className="tech-card-actions">
+                  <div
+                    className="tech-top-actions"
+                    onClick={(event) => event.stopPropagation()}
+                    onKeyDown={(event) => event.stopPropagation()}
+                  >
                     <button
-                      className="booking-secondary-button icon-only"
+                      className="booking-secondary-button icon-only tech-view-button"
                       type="button"
                       aria-label={t(`${TK}.viewDetails`)}
                       title={t(`${TK}.viewDetails`)}
@@ -835,7 +823,20 @@ export default function BookingTeamPanel() {
                       <EyeIcon />
                       <span className="sr-only">{t(`${TK}.viewDetails`)}</span>
                     </button>
+                    <button
+                      className={`toggle-pill ${member.smsEnabled ? 'is-on' : ''}`}
+                      type="button"
+                      aria-label={t(`${TK}.toggleSms`, { name: member.name })}
+                      aria-pressed={member.smsEnabled}
+                      disabled={pendingToggleIds[member.id]}
+                      onClick={() => toggleSms(member.id)}
+                    />
                   </div>
+                </div>
+                <div className="tech-services">
+                  {member.services.map((service) => (
+                    <span className="badge badge-plan" key={service}>{service}</span>
+                  ))}
                 </div>
               </article>
             )) : null}

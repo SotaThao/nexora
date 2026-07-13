@@ -575,12 +575,39 @@
   box-shadow: var(--nexora-card-shadow);
 }
 
+.booking-hub-view .tech-card.tech-card-interactive {
+  cursor: pointer;
+  transition: border-color 0.2s, box-shadow 0.2s, transform 0.2s;
+}
+
+.booking-hub-view .tech-card.tech-card-interactive:hover {
+  border-color: color-mix(in srgb, var(--nexora-brand) 35%, var(--nexora-border));
+  box-shadow: 0 10px 24px rgba(70, 72, 216, 0.12);
+  transform: translateY(-1px);
+}
+
 .booking-hub-view .tech-top {
   display: grid;
   grid-template-columns: 40px minmax(0, 1fr) auto;
   align-items: center;
   gap: 10px;
   margin-bottom: 0;
+}
+
+.booking-hub-view .tech-top-actions {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-shrink: 0;
+}
+
+.booking-hub-view .tech-top-actions .tech-view-button {
+  width: 30px;
+  min-width: 30px;
+  height: 30px;
+  min-height: 30px;
+  padding: 0;
+  border-radius: 8px;
 }
 
 .booking-hub-view .tech-avatar {
@@ -653,7 +680,7 @@
 .booking-hub-view .tech-card-footer {
   display: flex;
   align-items: center;
-  justify-content: space-between;
+  justify-content: flex-end;
   gap: 8px;
   margin-top: 2px;
   border-radius: 10px;
