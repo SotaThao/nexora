@@ -636,7 +636,15 @@
       "ecosystem": "Hệ sinh thái",
       "ecosystem_loading": "Đang tải hệ sinh thái...",
       "no_ecosystem": "Không có hệ sinh thái nào",
-      "coming_soon_badge": "Sắp ra mắt"
+      "coming_soon_badge": "Sắp ra mắt",
+      "search_group_staff": "Kỹ thuật viên",
+      "search_group_transactions": "Giao dịch",
+      "search_group_reviews": "Đánh giá",
+      "search_group_touchpoints": "Điểm chạm",
+      "search_view_detail": "Xem chi tiết ›",
+      "search_view_transaction": "Xem GD ›",
+      "search_view": "Xem ›",
+      "search_no_results": "Không tìm thấy kết quả nào trùng khớp."
     },
     "back_to_dashboard": "Quay lại Bảng Điều Khiển",
     "footer": {
