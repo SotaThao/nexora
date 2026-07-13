@@ -1,15 +1,19 @@
 import React, { useEffect, useState } from 'react'
+import { useQueryClient } from '@tanstack/react-query'
 import { useSearchParams } from 'react-router-dom'
 import { useTranslation } from '../../../contexts/LanguageContext'
+import { useMerchantVoiceTenantStatus } from '../../../data/hooks/useMerchantVoiceBookings'
 import BookingTeamPanel from './BookingTeamPanel'
 import BookingTodayPanel from './BookingTodayPanel'
 import BookingPlansPanel from './BookingPlansPanel'
 import BookingSettingsPanel from './BookingSettingsPanel'
+import { BookingHubVoiceProvider } from './BookingHubVoiceContext'
 import {
   CalendarTabIcon,
   SlidersTabIcon,
   TagsTabIcon,
 } from './BookingHubIcons'
+import { BookingHubTabsSkeleton } from './BookingHubSkeletons'
 import {
   BookingHubMainTab,
   BookingHubSubTab,
@@ -47,22 +51,62 @@ function TeamIcon() {
 
 export default function BookingHubView() {
   const { t } = useTranslation()
+  const queryClient = useQueryClient()
   const [searchParams, setSearchParams] = useSearchParams()
-  const [activeMainTab, setActiveMainTab] = useState<BookingHubMainTab>(BookingHubMainTab.Booking)
+  const { data: tenantStatus, isLoading: isTenantStatusLoading } = useMerchantVoiceTenantStatus()
+  const hasVoiceTenant = tenantStatus?.hasVoiceTenant === true
+  const voiceFeaturesEnabled = hasVoiceTenant && !isTenantStatusLoading
+  const [activeMainTab, setActiveMainTab] = useState<BookingHubMainTab>(BookingHubMainTab.Plans)
   const [activeSubtab, setActiveSubtab] = useState<BookingHubSubTab>(BookingHubSubTab.Today)
 
   useEffect(() => {
+    if (isTenantStatusLoading) return
+
     const mainTab = searchParams.get('tab')
     const subTab = searchParams.get('view')
+    const parsedMainTab = parseBookingHubMainTab(mainTab)
+    const parsedSubTab = parseBookingHubSubTab(subTab)
 
-    setActiveMainTab(parseBookingHubMainTab(mainTab))
-    setActiveSubtab(parseBookingHubSubTab(subTab))
-  }, [searchParams])
+    if (
+      !hasVoiceTenant
+      && (parsedMainTab === BookingHubMainTab.Booking || parsedMainTab === BookingHubMainTab.Settings)
+    ) {
+      setActiveMainTab(BookingHubMainTab.Plans)
+      setActiveSubtab(BookingHubSubTab.Today)
+
+      const nextParams = new URLSearchParams(searchParams)
+      nextParams.set('tab', BookingHubMainTab.Plans)
+      nextParams.delete('view')
+      setSearchParams(nextParams, { replace: true })
+      return
+    }
+
+    setActiveMainTab(parsedMainTab)
+    setActiveSubtab(parsedSubTab)
+  }, [hasVoiceTenant, isTenantStatusLoading, searchParams, setSearchParams])
+
+  useEffect(() => {
+    if (isTenantStatusLoading || hasVoiceTenant) return
+
+    void queryClient.removeQueries({
+      predicate: (query) => {
+        const [root, scope] = query.queryKey
+        return root === 'merchantVoice' && scope !== 'tenant'
+      },
+    })
+  }, [hasVoiceTenant, isTenantStatusLoading, queryClient])
 
   const updateQueryTabs = (
     mainTab: BookingHubMainTab,
     subTab: BookingHubSubTab = activeSubtab,
   ) => {
+    if (
+      !hasVoiceTenant
+      && (mainTab === BookingHubMainTab.Booking || mainTab === BookingHubMainTab.Settings)
+    ) {
+      return
+    }
+
     const nextParams = new URLSearchParams(searchParams)
     nextParams.set('tab', mainTab)
     if (mainTab === BookingHubMainTab.Booking) {
@@ -74,45 +118,54 @@ export default function BookingHubView() {
   }
 
   return (
+    <BookingHubVoiceProvider enabled={voiceFeaturesEnabled}>
     <section className="booking-hub-view">
       <div className="page-heading">
         <h1 className="page-title">{t(`${TK}.title`)}</h1>
         <p className="page-description">{t(`${TK}.description`)}</p>
-        <div className="page-tabs" role="tablist" aria-label={t(`${TK}.ariaSections`)}>
-          <button
-            className={`page-tab ${activeMainTab === BookingHubMainTab.Booking ? 'is-active' : ''}`}
-            type="button"
-            role="tab"
-            aria-selected={activeMainTab === BookingHubMainTab.Booking}
-            onClick={() => updateQueryTabs(BookingHubMainTab.Booking)}
-          >
-            <span className="page-tab-icon"><CalendarTabIcon /></span>
-            <span>{t(`${TK}.tabs.booking`)}</span>
-          </button>
-          <button
-            className={`page-tab ${activeMainTab === BookingHubMainTab.Plans ? 'is-active' : ''}`}
-            type="button"
-            role="tab"
-            aria-selected={activeMainTab === BookingHubMainTab.Plans}
-            onClick={() => updateQueryTabs(BookingHubMainTab.Plans)}
-          >
-            <span className="page-tab-icon"><TagsTabIcon /></span>
-            <span>{t(`${TK}.tabs.plans`)}</span>
-          </button>
-          <button
-            className={`page-tab ${activeMainTab === BookingHubMainTab.Settings ? 'is-active' : ''}`}
-            type="button"
-            role="tab"
-            aria-selected={activeMainTab === BookingHubMainTab.Settings}
-            onClick={() => updateQueryTabs(BookingHubMainTab.Settings)}
-          >
-            <span className="page-tab-icon"><SlidersTabIcon /></span>
-            <span>{t(`${TK}.tabs.settings`)}</span>
-          </button>
-        </div>
+        {isTenantStatusLoading ? (
+          <BookingHubTabsSkeleton />
+        ) : (
+          <div className="page-tabs" role="tablist" aria-label={t(`${TK}.ariaSections`)}>
+            {hasVoiceTenant && (
+              <button
+                className={`page-tab ${activeMainTab === BookingHubMainTab.Booking ? 'is-active' : ''}`}
+                type="button"
+                role="tab"
+                aria-selected={activeMainTab === BookingHubMainTab.Booking}
+                onClick={() => updateQueryTabs(BookingHubMainTab.Booking)}
+              >
+                <span className="page-tab-icon"><CalendarTabIcon /></span>
+                <span>{t(`${TK}.tabs.booking`)}</span>
+              </button>
+            )}
+            <button
+              className={`page-tab ${activeMainTab === BookingHubMainTab.Plans ? 'is-active' : ''}`}
+              type="button"
+              role="tab"
+              aria-selected={activeMainTab === BookingHubMainTab.Plans}
+              onClick={() => updateQueryTabs(BookingHubMainTab.Plans)}
+            >
+              <span className="page-tab-icon"><TagsTabIcon /></span>
+              <span>{t(`${TK}.tabs.plans`)}</span>
+            </button>
+            {hasVoiceTenant && (
+              <button
+                className={`page-tab ${activeMainTab === BookingHubMainTab.Settings ? 'is-active' : ''}`}
+                type="button"
+                role="tab"
+                aria-selected={activeMainTab === BookingHubMainTab.Settings}
+                onClick={() => updateQueryTabs(BookingHubMainTab.Settings)}
+              >
+                <span className="page-tab-icon"><SlidersTabIcon /></span>
+                <span>{t(`${TK}.tabs.settings`)}</span>
+              </button>
+            )}
+          </div>
+        )}
       </div>
 
-      {activeMainTab === BookingHubMainTab.Booking && (
+      {!isTenantStatusLoading && voiceFeaturesEnabled && activeMainTab === BookingHubMainTab.Booking && (
       <section className="tab-panel is-active" aria-label={t(`${TK}.ariaPanel`)}>
         <div className="booking-toolbar">
           <div className="booking-subtabs" role="tablist" aria-label={t(`${TK}.ariaViews`)}>
@@ -144,17 +197,18 @@ export default function BookingHubView() {
       </section>
       )}
 
-      {activeMainTab === BookingHubMainTab.Plans && (
+      {!isTenantStatusLoading && activeMainTab === BookingHubMainTab.Plans && (
         <section className="tab-panel is-active" aria-label={t(`${TK}.ariaPlansPanel`)}>
           <BookingPlansPanel />
         </section>
       )}
 
-      {activeMainTab === BookingHubMainTab.Settings && (
+      {!isTenantStatusLoading && voiceFeaturesEnabled && activeMainTab === BookingHubMainTab.Settings && (
         <section className="tab-panel is-active" aria-label={t(`${TK}.ariaSettingsPanel`)}>
           <BookingSettingsPanel />
         </section>
       )}
     </section>
+    </BookingHubVoiceProvider>
   )
 }

@@ -15,9 +15,18 @@ import {
   type MerchantVoiceBookingStatisticsDto,
   type MerchantVoiceStaffFilter,
   type MerchantVoiceStaffResponse,
+  type MerchantVoiceTenantStatusDto,
 } from '../repositories/merchantVoice'
 
 const EMPTY_FILTERS: MerchantVoiceBookingsFilter = {}
+
+export function useMerchantVoiceTenantStatus({ enabled = true } = {}) {
+  return useQuery<MerchantVoiceTenantStatusDto>({
+    queryKey: qk.merchantVoiceTenantStatus(),
+    queryFn: () => merchantVoiceRepository.getTenantStatus(),
+    enabled,
+  })
+}
 
 export function useMerchantVoiceBookingStatistics({ enabled = true } = {}) {
   return useQuery<MerchantVoiceBookingStatisticsDto>({

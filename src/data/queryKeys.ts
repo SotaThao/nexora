@@ -126,6 +126,7 @@ export const qk = {
   merchantVoiceStaffById: (id?: string | null) => ['merchantVoice', 'staff', 'detail', id ?? ''],
   merchantVoiceBusinessStaff: (filters = EMPTY) => ['merchantVoice', 'staff', 'businessStaff', filters],
   merchantVoiceConfig: () => ['merchantVoice', 'config'],
+  merchantVoiceTenantStatus: () => ['merchantVoice', 'tenant', 'status'],
 
   // Nexora Voice trial (merchant)
   voiceTrialRequestMe: () => ['nexora-voice', 'trial-request', 'me'],

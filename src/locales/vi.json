@@ -2716,6 +2716,7 @@
             "phone": "Số điện thoại",
             "email": "Email",
             "services": "Dịch vụ",
+            "checkAllServices": "Chọn tất cả",
             "weeklySchedule": "Lịch làm việc hằng tuần",
             "dayOff": "Day off",
             "scheduleTo": "to",

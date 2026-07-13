@@ -22,6 +22,9 @@ import {
   normalizeMerchantVoiceDayOfWeek,
   type MerchantVoiceStaffDto,
 } from '../../../data/repositories/merchantVoice'
+import Pagination from '../../ui/Pagination'
+import { usePagination } from '../../../hooks/usePagination'
+import { BOOKING_HUB_PAGE_SIZE } from '../../../constants/pagination'
 import { EyeIcon, SpinnerIcon } from './BookingHubIcons'
 import {
   BookingTeamGridSkeleton,
@@ -30,6 +33,7 @@ import {
   BookingTechServicesSkeleton,
   BookingTechStaffListSkeleton,
 } from './BookingHubSkeletons'
+import { useBookingHubVoiceEnabled } from './BookingHubVoiceContext'
 
 const TK = 'components.dashboard.views.BookingHubView.team'
 
@@ -339,6 +343,7 @@ function CheckIcon() {
 export default function BookingTeamPanel() {
   const { t } = useTranslation()
   const { showToast } = useNotification()
+  const voiceEnabled = useBookingHubVoiceEnabled()
   const [modalOpen, setModalOpen] = useState(false)
   const [modalMode, setModalMode] = useState<ModalMode>('edit')
   const [selectedId, setSelectedId] = useState('')
@@ -358,16 +363,18 @@ export default function BookingTeamPanel() {
   }>({})
   const [showScheduleValidation, setShowScheduleValidation] = useState(false)
   const comboboxRef = useRef<HTMLDivElement>(null)
-  const { data: staffResponse, isLoading: isStaffLoading } = useMerchantVoiceStaff({
-    pageNumber: 1,
-    pageSize: 200,
-  })
+  const checkAllServicesRef = useRef<HTMLInputElement>(null)
+  const { pageNumber, pageSize, setPage } = usePagination({ pageSize: BOOKING_HUB_PAGE_SIZE })
+  const { data: staffResponse, isLoading: isStaffLoading, isFetching: isStaffFetching } = useMerchantVoiceStaff({
+    pageNumber,
+    pageSize,
+  }, { enabled: voiceEnabled })
   const { data: businessStaffResponse, isLoading: isBusinessStaffLoading } = useMerchantVoiceBusinessStaff(
     { searchTerm: debouncedSearchQuery },
-    { enabled: modalOpen },
+    { enabled: voiceEnabled && modalOpen },
   )
   const { data: configResponse, isLoading: isConfigLoading } = useMerchantVoiceConfig({
-    enabled: modalOpen,
+    enabled: voiceEnabled && modalOpen,
   })
   const [members, setMembers] = useState<TeamMember[]>(INITIAL_TEAM_MEMBERS)
   const createStaffMutation = useCreateMerchantVoiceStaff()
@@ -375,7 +382,7 @@ export default function BookingTeamPanel() {
   const toggleStaffStatusMutation = useToggleMerchantVoiceStaffStatus()
   const [pendingToggleIds, setPendingToggleIds] = useState<Record<string, boolean>>({})
   const { data: staffDetail, isLoading: isStaffDetailLoading } = useMerchantVoiceStaffById(selectedId, {
-    enabled: modalOpen && !!selectedId && modalMode !== 'create',
+    enabled: voiceEnabled && modalOpen && !!selectedId && modalMode !== 'create',
   })
 
   const businessStaffOptions = useMemo<BusinessStaffOption[]>(() => (
@@ -448,7 +455,7 @@ export default function BookingTeamPanel() {
     const target = members.find((member) => member.id === memberId)
     setModalMode(mode)
     setSelectedId(memberId)
-    setSearchQuery(mode === 'detail' ? '' : (target?.name ?? ''))
+    setSearchQuery('')
     setComboboxOpen(false)
     fillDraftFromMember(target, mode === 'create' ? 'create' : 'edit')
     setModalOpen(true)
@@ -474,7 +481,7 @@ export default function BookingTeamPanel() {
       setSelectedId(matchedMember.id)
       fillDraftFromMember(matchedMember, 'edit')
       setComboboxOpen(false)
-      setSearchQuery(matchedMember.name)
+      setSearchQuery('')
       return
     }
 
@@ -486,7 +493,7 @@ export default function BookingTeamPanel() {
     setDraftServices([])
     setDraftSchedule(emptySchedule())
     setComboboxOpen(false)
-    setSearchQuery(staff.name)
+    setSearchQuery('')
   }
 
   const startCreate = () => {
@@ -501,7 +508,26 @@ export default function BookingTeamPanel() {
     setDraftServices((prev) => (
       prev.includes(service) ? prev.filter((item) => item !== service) : [...prev, service]
     ))
+    setFormErrors((prev) => ({ ...prev, services: '' }))
   }
+
+  const allServicesSelected = useMemo(() => (
+    serviceOptions.length > 0
+    && serviceOptions.every((service) => draftServices.includes(service))
+  ), [draftServices, serviceOptions])
+
+  const someServicesSelected = draftServices.length > 0 && !allServicesSelected
+
+  const toggleAllServices = () => {
+    setDraftServices(allServicesSelected ? [] : [...serviceOptions])
+    setFormErrors((prev) => ({ ...prev, services: '' }))
+  }
+
+  useEffect(() => {
+    if (checkAllServicesRef.current) {
+      checkAllServicesRef.current.indeterminate = someServicesSelected
+    }
+  }, [someServicesSelected, allServicesSelected])
 
   const toggleDayOff = (day: DayKey, dayOff: boolean) => {
     setDraftSchedule((prev) => ({
@@ -696,10 +722,8 @@ export default function BookingTeamPanel() {
 
   useEffect(() => {
     const mapped = (staffResponse?.items ?? []).map(toTeamMember)
-    if (mapped.length) {
-      setMembers(mapped)
-      setSelectedId((prev) => prev || mapped[0]?.id || '')
-    }
+    setMembers(mapped)
+    setSelectedId((prev) => prev || mapped[0]?.id || '')
   }, [staffResponse?.items])
 
   useEffect(() => {
@@ -752,67 +776,85 @@ export default function BookingTeamPanel() {
         </button>
       </div>
 
-      <div className="tech-grid">
-        {isStaffLoading ? (
-          <BookingTeamGridSkeleton count={3} />
-        ) : null}
-        {!isStaffLoading && members.length === 0 ? (
-          <div className="tech-grid-empty">
-            <div className="tech-grid-empty-icon" aria-hidden="true">
-              <PeopleIcon />
-            </div>
-            <div className="tech-grid-empty-title">{t(`${TK}.emptyTitle`)}</div>
-            <p className="tech-grid-empty-description">{t(`${TK}.emptyDescription`)}</p>
-            <button className="booking-primary-button" type="button" onClick={() => openModal()}>
-              <PlusIcon />
-              <span>{t(`${TK}.emptyCta`)}</span>
-            </button>
-          </div>
-        ) : null}
-        {!isStaffLoading ? members.map((member) => (
-          <article className="tech-card" key={member.id} data-tech-id={member.id}>
-            <div className="tech-top">
-              <div className="tech-avatar" style={member.avatarStyle}>{member.avatar}</div>
-              <div className="tech-profile">
-                <div className="tech-name">{member.name}</div>
-                <div className="tech-phone">{formatPhoneDisplay(member.phone)}</div>
-              </div>
-              <button
-                className={`toggle-pill ${member.smsEnabled ? 'is-on' : ''}`}
-                type="button"
-                aria-label={t(`${TK}.toggleSms`, { name: member.name })}
-                aria-pressed={member.smsEnabled}
-                disabled={pendingToggleIds[member.id]}
-                onClick={() => toggleSms(member.id)}
-              />
-            </div>
-            <div className="tech-services">
-              {member.services.map((service) => (
-                <span className="badge badge-plan" key={service}>{service}</span>
-              ))}
-            </div>
-            <div className="tech-card-footer">
-              <div className="tech-stats">
-                <div className="tech-stat">
-                  <strong>{member.customers}</strong>
-                  <span>{t(`${TK}.clientsToday`)}</span>
+      <div className="booking-grid">
+        <article className="overview-card overview-card-pad">
+          <div className="tech-grid">
+            {isStaffLoading ? (
+              <BookingTeamGridSkeleton count={3} />
+            ) : null}
+            {!isStaffLoading && members.length === 0 ? (
+              <div className="tech-grid-empty">
+                <div className="tech-grid-empty-icon" aria-hidden="true">
+                  <PeopleIcon />
                 </div>
-              </div>
-              <div className="tech-card-actions">
-                <button
-                  className="booking-secondary-button icon-only"
-                  type="button"
-                  aria-label={t(`${TK}.viewDetails`)}
-                  title={t(`${TK}.viewDetails`)}
-                  onClick={() => openModal(member.id, 'edit')}
-                >
-                  <EyeIcon />
-                  <span className="sr-only">{t(`${TK}.viewDetails`)}</span>
+                <div className="tech-grid-empty-title">{t(`${TK}.emptyTitle`)}</div>
+                <p className="tech-grid-empty-description">{t(`${TK}.emptyDescription`)}</p>
+                <button className="booking-primary-button" type="button" onClick={() => openModal()}>
+                  <PlusIcon />
+                  <span>{t(`${TK}.emptyCta`)}</span>
                 </button>
               </div>
-            </div>
-          </article>
-        )) : null}
+            ) : null}
+            {!isStaffLoading ? members.map((member) => (
+              <article
+                className="tech-card tech-card-interactive"
+                key={member.id}
+                data-tech-id={member.id}
+                onClick={() => openModal(member.id, 'edit')}
+              >
+                <div className="tech-top">
+                  <div className="tech-avatar" style={member.avatarStyle}>{member.avatar}</div>
+                  <div className="tech-profile">
+                    <div className="tech-name">{member.name}</div>
+                    <div className="tech-phone">{formatPhoneDisplay(member.phone)}</div>
+                  </div>
+                  <div
+                    className="tech-top-actions"
+                    onClick={(event) => event.stopPropagation()}
+                    onKeyDown={(event) => event.stopPropagation()}
+                  >
+                    <button
+                      className="booking-secondary-button icon-only tech-view-button"
+                      type="button"
+                      aria-label={t(`${TK}.viewDetails`)}
+                      title={t(`${TK}.viewDetails`)}
+                      onClick={() => openModal(member.id, 'edit')}
+                    >
+                      <EyeIcon />
+                      <span className="sr-only">{t(`${TK}.viewDetails`)}</span>
+                    </button>
+                    <button
+                      className={`toggle-pill ${member.smsEnabled ? 'is-on' : ''}`}
+                      type="button"
+                      aria-label={t(`${TK}.toggleSms`, { name: member.name })}
+                      aria-pressed={member.smsEnabled}
+                      disabled={pendingToggleIds[member.id]}
+                      onClick={() => toggleSms(member.id)}
+                    />
+                  </div>
+                </div>
+                <div className="tech-services">
+                  {member.services.map((service) => (
+                    <span className="badge badge-plan" key={service}>{service}</span>
+                  ))}
+                </div>
+              </article>
+            )) : null}
+          </div>
+
+          {!isStaffLoading && (staffResponse?.totalCount ?? 0) > 0 ? (
+            <Pagination
+              pageNumber={pageNumber}
+              pageSize={pageSize}
+              totalPages={staffResponse?.totalPages ?? 1}
+              totalCount={staffResponse?.totalCount ?? 0}
+              hasNextPage={staffResponse?.hasNextPage}
+              hasPreviousPage={staffResponse?.hasPreviousPage}
+              onPageChange={setPage}
+              isLoading={isStaffFetching}
+            />
+          ) : null}
+        </article>
       </div>
 
       {modalOpen ? (
@@ -997,7 +1039,20 @@ export default function BookingTeamPanel() {
                     </span>
                   </div>
                   <div className="settings-field">
-                    <span className="settings-label">{t(`${TK}.services`)}</span>
+                    <div className="tech-services-field-head">
+                      <span className="settings-label">{t(`${TK}.services`)}</span>
+                      {!isConfigLoading && serviceOptions.length > 0 ? (
+                        <label className="tech-service-check-all-toggle">
+                          <input
+                            ref={checkAllServicesRef}
+                            type="checkbox"
+                            checked={allServicesSelected}
+                            onChange={toggleAllServices}
+                          />
+                          <span>{t(`${TK}.checkAllServices`)}</span>
+                        </label>
+                      ) : null}
+                    </div>
                     {isConfigLoading ? (
                       <BookingTechServicesSkeleton count={4} />
                     ) : serviceOptions.length > 0 ? (

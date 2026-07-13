@@ -39,6 +39,10 @@ import {
   XLgIcon,
   XKpiIcon,
 } from './BookingHubIcons'
+import { useBookingHubVoiceEnabled } from './BookingHubVoiceContext'
+import Pagination from '../../ui/Pagination'
+import { usePagination } from '../../../hooks/usePagination'
+import { BOOKING_HUB_PAGE_SIZE } from '../../../constants/pagination'
 import {
   BookingKpiSkeleton,
   BookingTodayListSkeleton,
@@ -292,6 +296,7 @@ function BookingActions({
 export default function BookingTodayPanel() {
   const { t } = useTranslation()
   const { showToast } = useNotification()
+  const voiceEnabled = useBookingHubVoiceEnabled()
   const [viewMode, setViewMode] = useState<ViewMode>(() => (
     typeof window !== 'undefined' && window.innerWidth < 768 ? 'card' : 'table'
   ))
@@ -308,6 +313,9 @@ export default function BookingTodayPanel() {
   const [statusOverrides, setStatusOverrides] = useState<Record<string, BookingStatus>>({})
   const [pendingStatusUpdates, setPendingStatusUpdates] = useState<Record<string, boolean>>({})
   const [detailBooking, setDetailBooking] = useState<BookingItem | null>(null)
+  const { pageNumber, pageSize, setPage, reset: resetPage } = usePagination({
+    pageSize: BOOKING_HUB_PAGE_SIZE,
+  })
 
   const apiSearchField = BOOKING_UI_SEARCH_FIELD_TO_API[debouncedFilters.searchField]
 
@@ -333,15 +341,15 @@ export default function BookingTodayPanel() {
           ? t(`${TK}.today.keywordPlaceholderService`)
           : t(`${TK}.today.keywordPlaceholderAll`)
 
-  const { data: statistics, isLoading: isStatisticsLoading } = useMerchantVoiceBookingStatistics()
+  const { data: statistics, isLoading: isStatisticsLoading } = useMerchantVoiceBookingStatistics({ enabled: voiceEnabled })
   const { data: bookingResponse, isLoading: isBookingsLoading, isFetching: isBookingsFetching } = useMerchantVoiceBookings({
-    pageNumber: 1,
-    pageSize: 200,
+    pageNumber,
+    pageSize,
     searchBy: apiSearchField,
     keyword: apiKeyword,
     dateFrom: dateFromApi,
     dateTo: dateToApi,
-  })
+  }, { enabled: voiceEnabled })
   const updateBookingStatusMutation = useUpdateMerchantVoiceBookingStatus()
   const sendConfirmationSmsMutation = useSendMerchantVoiceBookingConfirmationSms()
 
@@ -351,12 +359,11 @@ export default function BookingTodayPanel() {
     (bookingResponse?.items ?? []).map((item) => toBookingItem(item, statusOverrides[item.id]))
   ), [bookingResponse?.items, statusOverrides])
 
-  const stats = useMemo(() => {
-    const todayCount = statistics?.allBookings ?? filteredBookings.filter((item) => item.date === TODAY_ISO).length
-    const done = statistics?.doneBookings ?? filteredBookings.filter((item) => item.status === BookingUiStatus.Done).length
-    const noShow = statistics?.noShowBookings ?? filteredBookings.filter((item) => item.status === BookingUiStatus.NoShow).length
-    return { todayCount, done, noShow }
-  }, [filteredBookings, statistics])
+  const stats = useMemo(() => ({
+    todayCount: statistics?.allBookings ?? 0,
+    done: statistics?.doneBookings ?? 0,
+    noShow: statistics?.noShowBookings ?? 0,
+  }), [statistics])
 
   const handleAction = async (id: string, action: 'send-sms' | 'done' | 'noshow' | 'detail') => {
     const booking = filteredBookings.find((item) => item.id === id)
@@ -469,16 +476,29 @@ export default function BookingTodayPanel() {
 
   useEffect(() => {
     const timer = window.setTimeout(() => {
-      setDebouncedFilters({
+      const nextFilters = {
         searchField,
         searchKeyword,
         dateFrom,
         dateTo,
+      }
+
+      let filtersChanged = false
+      setDebouncedFilters((prev) => {
+        filtersChanged = prev.searchField !== nextFilters.searchField
+          || prev.searchKeyword !== nextFilters.searchKeyword
+          || prev.dateFrom !== nextFilters.dateFrom
+          || prev.dateTo !== nextFilters.dateTo
+        return nextFilters
       })
+
+      if (filtersChanged) {
+        resetPage()
+      }
     }, 350)
 
     return () => window.clearTimeout(timer)
-  }, [searchField, searchKeyword, dateFrom, dateTo])
+  }, [searchField, searchKeyword, dateFrom, dateTo, resetPage])
 
   useEffect(() => {
     if (typeof window === 'undefined') return undefined
@@ -741,6 +761,19 @@ export default function BookingTodayPanel() {
               </div>
             </div>
           )}
+
+          {!isListLoading && (bookingResponse?.totalCount ?? 0) > 0 ? (
+            <Pagination
+              pageNumber={pageNumber}
+              pageSize={pageSize}
+              totalPages={bookingResponse?.totalPages ?? 1}
+              totalCount={bookingResponse?.totalCount ?? 0}
+              hasNextPage={bookingResponse?.hasNextPage}
+              hasPreviousPage={bookingResponse?.hasPreviousPage}
+              onPageChange={setPage}
+              isLoading={isBookingsFetching}
+            />
+          ) : null}
 
           {!isListLoading && filteredBookings.length === 0 ? (
             <div className="booking-list-empty">

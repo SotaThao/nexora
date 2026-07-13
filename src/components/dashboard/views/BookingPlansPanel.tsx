@@ -7,6 +7,10 @@ const TK = 'components.dashboard.views.BookingHubView.plans'
 
 type PlanId = 'Starter' | 'Pro' | 'Elite'
 
+function isPlanSelectable(plan: PlanId) {
+  return plan === 'Pro'
+}
+
 function PlanFeature({ included, children }: { included: boolean; children: React.ReactNode }) {
   return (
     <div className="plan-feature">
@@ -25,6 +29,7 @@ export default function BookingPlansPanel() {
   const hasExistingTrialRequest = myTrialRequest != null
 
   const selectServicePlan = (plan: PlanId) => {
+    if (!isPlanSelectable(plan)) return
     setSelectedPlan(plan)
   }
 
@@ -41,11 +46,12 @@ export default function BookingPlansPanel() {
   }
 
   const isPlanButtonPrimary = (plan: PlanId) => {
+    if (!isPlanSelectable(plan)) return false
     if (selectedPlan) return selectedPlan === plan
     return plan === 'Pro'
   }
 
-  const isPlanCardSelected = (plan: PlanId) => selectedPlan === plan
+  const isPlanCardSelected = (plan: PlanId) => isPlanSelectable(plan) && selectedPlan === plan
 
   const handlePlanClick = (plan: PlanId, opensTrial = false) => {
     if (opensTrial) {
@@ -53,6 +59,7 @@ export default function BookingPlansPanel() {
       setTrialOpen(true)
       return
     }
+    if (!isPlanSelectable(plan)) return
     selectServicePlan(plan)
   }
 
@@ -77,6 +84,7 @@ export default function BookingPlansPanel() {
             <button
               className={`plan-select-button ${isPlanButtonPrimary('Starter') ? 'is-primary' : ''}`}
               type="button"
+              disabled
               onClick={() => handlePlanClick('Starter')}
             >
               {getPlanButtonLabel('Starter')}
@@ -121,6 +129,7 @@ export default function BookingPlansPanel() {
             <button
               className={`plan-select-button ${isPlanButtonPrimary('Elite') ? 'is-primary' : ''}`}
               type="button"
+              disabled
               onClick={() => handlePlanClick('Elite')}
             >
               {getPlanButtonLabel('Elite')}

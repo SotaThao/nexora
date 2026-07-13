@@ -27,6 +27,7 @@ import {
   StarsIcon,
 } from './BookingHubIcons'
 import { BookingSettingsSkeleton } from './BookingHubSkeletons'
+import { useBookingHubVoiceEnabled } from './BookingHubVoiceContext'
 
 const TK = 'components.dashboard.views.BookingHubView.settings'
 
@@ -196,7 +197,8 @@ function SettingsCard({
 export default function BookingSettingsPanel() {
   const { t } = useTranslation()
   const { showToast } = useNotification()
-  const { data: configData, isLoading: isConfigLoading } = useMerchantVoiceConfig()
+  const voiceEnabled = useBookingHubVoiceEnabled()
+  const { data: configData, isLoading: isConfigLoading } = useMerchantVoiceConfig({ enabled: voiceEnabled })
   const updateConfigMutation = useUpdateMerchantVoiceConfig()
   const [collapsedCards, setCollapsedCards] = useState<Record<string, boolean>>({})
   const [hours, setHours] = useState(INITIAL_HOURS)
