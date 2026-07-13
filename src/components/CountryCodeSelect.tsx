@@ -208,6 +208,8 @@ export const formatNationalNumber = (nationalNumber, dialCode) => {
   return formatter.input(digits)
 }
 
+export const PHONE_NATIONAL_PLACEHOLDER = '123 456 7890'
+
 export const isPhoneValid = isValidPhone
 
 export default function CountryCodeSelect({
@@ -215,11 +217,13 @@ export default function CountryCodeSelect({
   onChange = (_code: string) => {},
   disabled = false,
   showSearch = true,
+  embedded = false,
 }: {
   value: string
   onChange?: (code: string) => void
   disabled?: boolean
   showSearch?: boolean
+  embedded?: boolean
 }) {
   const { t } = useTranslation()
   const [isOpen, setIsOpen] = useState(false)
@@ -257,12 +261,16 @@ export default function CountryCodeSelect({
     : COUNTRY_CODES
 
   return (
-    <div className="relative shrink-0 flex" ref={dropdownRef}>
+    <div className={`relative shrink-0 flex ${embedded ? 'h-full self-stretch' : ''}`} ref={dropdownRef}>
       <button
         type="button"
         disabled={disabled}
         onClick={() => !disabled && setIsOpen(!isOpen)}
-        className={`h-10 flex items-center gap-1.5 px-3 border border-nexoraBorder border-r-0 rounded-l-lg text-xs font-bold text-nexoraText transition-colors focus:outline-none select-none
+        className={embedded
+          ? `h-full min-h-0 flex items-center gap-1.5 px-3 border-0 border-r border-nexoraBorder rounded-none rounded-l-[9px] text-xs font-bold text-nexoraText transition-colors focus:outline-none select-none ${
+            disabled ? 'bg-slate-100 text-nexoraSubtle cursor-not-allowed' : 'bg-transparent hover:bg-slate-50 cursor-pointer'
+          }`
+          : `h-10 flex items-center gap-1.5 px-3 border border-nexoraBorder border-r-0 rounded-l-lg text-xs font-bold text-nexoraText transition-colors focus:outline-none select-none
           ${disabled ? 'bg-slate-100 text-nexoraSubtle cursor-not-allowed border-slate-200' : 'bg-slate-50 hover:bg-slate-100 cursor-pointer'}`}
       >
         <span className="text-xs font-bold leading-none">{selectedCountry.code}</span>
@@ -274,9 +282,11 @@ export default function CountryCodeSelect({
       </button>
 
       {isOpen && (
-        <div className="absolute left-0 mt-11 z-50 w-64 bg-white border border-nexoraBorder rounded-lg shadow-premium flex flex-col overflow-hidden animate-fadeIn">
+        <div className={`country-code-dropdown absolute left-0 z-[200] w-64 bg-white rounded-lg shadow-premium flex flex-col overflow-hidden animate-fadeIn ${
+          embedded ? 'top-full mt-1' : 'mt-11'
+        }`}>
           {showSearch ? (
-            <div className="p-2 bg-slate-50 flex items-center gap-1.5">
+            <div className="country-code-search-wrap p-2 bg-slate-50 flex items-center gap-1.5">
               <Search className="w-3.5 h-3.5 text-nexoraSubtle shrink-0" />
               <input
                 type="text"
@@ -288,7 +298,7 @@ export default function CountryCodeSelect({
               />
             </div>
           ) : null}
-          <div className="max-h-48 overflow-y-auto divide-y divide-slate-100 py-1">
+          <div className="country-code-list max-h-48 overflow-y-auto py-1">
             {filteredCountries.length === 0 ? (
               <div className="p-3 text-[10px] text-nexoraSubtle text-center font-medium">No countries found</div>
             ) : (

@@ -11,6 +11,7 @@ import {
   Settings,
   HelpCircle,
   Wallet,
+  Calendar,
 } from 'lucide-react'
 
 export const WalletLogos = {
@@ -66,6 +67,7 @@ export const MENU_ITEMS = [
   { id: 'reviews', label: 'Reviews', icon: Star },
   { id: 'reports', label: 'Transactions', icon: ReceiptText },
   { id: 'touchpoints', label: 'Touch Points', icon: QrCode },
+  { id: 'booking-hub', label: 'Booking Hub', icon: Calendar },
   { id: 'analytics', label: 'Analytics', icon: BarChart3 },
   { id: 'settings', label: 'Settings', icon: Settings },
   { id: 'support', label: 'Support', icon: HelpCircle }

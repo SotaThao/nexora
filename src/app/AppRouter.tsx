@@ -12,6 +12,7 @@ import { scrollToPageTop } from "../utils/scrollToPageTop";
 import { useAuth } from "../auth/useAuth";
 import {
   AnalyticsRoute,
+  BookingHubRoute,
   FallbackRoute,
   OverviewRoute,
   ReportsRoute,
@@ -234,6 +235,7 @@ export default function AppRouter() {
             <Route path="payments/:paymentId" element={<PaymentsRedirect />} />
             <Route path="reviews" element={<ReviewsRoute />} />
             <Route path="reports" element={<ReportsRoute />} />
+            <Route path="booking-hub" element={<BookingHubRoute />} />
             <Route path="touchpoints" element={<TouchpointsRoute />} />
             <Route path="analytics" element={<AnalyticsRoute />} />
             <Route path="settings" element={<SettingsRoute />} />
