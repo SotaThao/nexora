@@ -1977,6 +1977,8 @@
     "voice_trial_service_hours_from_required": "Vui lòng chọn giờ mở cửa.",
     "voice_trial_service_hours_to_required": "Vui lòng chọn giờ đóng cửa.",
     "voice_trial_biggest_problem_required": "Vui lòng chọn vấn đề lớn nhất của tiệm.",
+    "voice_tenant_staff_phone_number_required": "Vui lòng nhập số điện thoại cho profile thợ.",
+    "voice_tenant_staff_phone_number_already_exists": "Số điện thoại này đã được dùng cho profile thợ khác.",
     "payment_not_found": "Không tìm thấy giao dịch thanh toán.",
     "payment_invalid_status": "Giao dịch không ở trạng thái phù hợp để thực hiện thao tác này.",
     "payment_amount_too_low": "Số tiền tối thiểu là $1.00.",
