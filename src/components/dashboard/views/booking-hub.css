@@ -3131,6 +3131,16 @@
   align-items: center;
 }
 
+.booking-hub-view .trial-service-hours {
+  width: 100%;
+}
+
+.booking-hub-view .trial-service-hours input {
+  height: 42px;
+  border-radius: 10px;
+  font-size: 13px;
+}
+
 .booking-hub-view .trial-time-separator {
   color: var(--nexora-subtle);
   font-weight: 800;
