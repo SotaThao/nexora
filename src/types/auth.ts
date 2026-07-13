@@ -44,6 +44,7 @@ export interface SignupCredentials {
   type?: string
   profileType?: string
   referralCode?: string
+  leg?: 'left' | 'right'
 }
 
 export interface SignupResponse {

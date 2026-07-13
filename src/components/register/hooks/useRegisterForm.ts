@@ -26,7 +26,7 @@ import { useCreateStaffProfile, useProfileSettings } from '../../../data/hooks/u
 import { buildUpdateStaffProfileDto } from '../../../utils/mapStaffProfileView'
 import { getRequiredFieldError } from '../../../utils/onboardingFieldValidation'
 
-export function useRegisterForm({ ssoEmail, onBackToLogin, onRegisterSuccess, onRegisterAndLogin, onGoToLogin, onKybSuccess = () => {}, isRedirectedFromSession, initialStep = 0, initialRole = 'personal', resumeOtpVerification = false, autoSendVerificationOnResume = false, resumeEmail = '', resumePassword = '', resumeRole = null, initialRefCode = '' }) {
+export function useRegisterForm({ ssoEmail, onBackToLogin, onRegisterSuccess, onRegisterAndLogin, onGoToLogin, onKybSuccess = () => {}, isRedirectedFromSession, initialStep = 0, initialRole = 'personal', resumeOtpVerification = false, autoSendVerificationOnResume = false, resumeEmail = '', resumePassword = '', resumeRole = null, initialRefCode = '', initialLeg = '' }) {
   const { t, currentLanguage, setLanguage, renderLabel } = useTranslation()
   const replaceAllPendingAccountsMutation = useReplaceAllPendingAccounts()
   const pendingAccountsQuery = usePendingAccounts()
@@ -47,6 +47,7 @@ export function useRegisterForm({ ssoEmail, onBackToLogin, onRegisterSuccess, on
   const [password, setPassword] = useState(resumePassword || '')
   const [showPassword, setShowPassword] = useState(false)
   const [referralCode, setReferralCode] = useState(initialRefCode)
+  const [leg, setLeg] = useState(initialLeg)
   const [fullName, setFullName] = useState('')
   const [nickname, setNickname] = useState('')
   const [position, setPosition] = useState('Nail Technician')
@@ -277,6 +278,7 @@ export function useRegisterForm({ ssoEmail, onBackToLogin, onRegisterSuccess, on
         // profileType enum per signup API docs is "Merchant" | "User" (not "Personal").
         profileType: role === 'business' ? 'Merchant' : 'User',
         ...(trimmedReferralCode ? { referralCode: trimmedReferralCode } : {}),
+        ...(trimmedReferralCode && leg ? { leg } : {}),
       })
       const signupOtp = getSignupOtp(signupResponse)
 
@@ -305,6 +307,8 @@ export function useRegisterForm({ ssoEmail, onBackToLogin, onRegisterSuccess, on
         errorsMap.confirmEmail = 'register.errors.email_mismatch'
       } else if (code === 'USER_INVALID_REFERRAL_CODE') {
         errorsMap.referralCode = i18nKey || 'errors.unknown_error'
+      } else if (code === 'USER_INVALID_POSITION') {
+        errorsMap.leg = i18nKey || 'errors.unknown_error'
       } else {
         errorsMap.email = i18nKey || 'errors.unknown_error'
       }
@@ -759,6 +763,8 @@ export function useRegisterForm({ ssoEmail, onBackToLogin, onRegisterSuccess, on
     referralCode,
     setReferralCode,
     initialRefCode,
+    leg,
+    setLeg,
     fullName,
     setFullName,
     fullNameLocked,

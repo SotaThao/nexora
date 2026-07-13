@@ -130,7 +130,9 @@ export default function ProfileTab({
   const showToast = providedShowToast ?? notifyToast
   const referralCode = useMemo(() => getProfileReferralCode(profile), [profile])
   const referralUrl = useMemo(
-    () => buildAffiliateReferralUrl({ referralCode }),
+    // Default new signups from this link to the left leg — merchants have no leg
+    // picker UI (unlike staff's My QR page), so left is the sensible default.
+    () => buildAffiliateReferralUrl({ referralCode, leg: 'left' }),
     [referralCode],
   )
   const referralDisplay = useMemo(() => {
@@ -339,19 +341,18 @@ export default function ProfileTab({
                 <span className="text-nexoraText font-extrabold truncate" title={profile.email}>{profile.email}</span>
               </div>
 
-              <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center py-2 sm:py-1 border-t border-slate-50 gap-1">
+              <div className="flex flex-col py-2 sm:py-1 border-t border-slate-50 gap-1.5">
                 <span className="text-nexoraMuted font-bold">{t('components.settings.tabs.ProfileTab.referralLink')}:</span>
-                <div className="flex items-center gap-1 self-end sm:self-auto min-w-0">
-                  <span className="text-nexoraText font-extrabold" title={referralUrl || referralDisplay}>
-                    {referralDisplay}
-                  </span>
-                  
+                <span className="text-nexoraText font-extrabold break-all" title={referralUrl || referralDisplay}>
+                  {referralDisplay}
+                </span>
+                <div className="flex items-center justify-center gap-4">
                   {/* Copy Button */}
                   <button
                     type="button"
                     disabled={!referralUrl}
                     onClick={() => handleCopy(referralUrl, 'ref')}
-                    className="text-blue-500 hover:text-blue-600 font-bold text-[10px] uppercase hover:underline ml-2 flex items-center gap-1 shrink-0 disabled:cursor-not-allowed disabled:opacity-50"
+                    className="text-blue-500 hover:text-blue-600 font-bold text-[10px] uppercase hover:underline flex items-center gap-1 shrink-0 disabled:cursor-not-allowed disabled:opacity-50"
                   >
                     {copiedId === 'ref' ? (
                       <>
@@ -370,7 +371,7 @@ export default function ProfileTab({
                   <button
                     type="button"
                     onClick={onShowQr}
-                    className="text-blue-500 hover:text-blue-600 font-bold text-[10px] uppercase hover:underline ml-2 flex items-center gap-1 shrink-0"
+                    className="text-blue-500 hover:text-blue-600 font-bold text-[10px] uppercase hover:underline flex items-center gap-1 shrink-0"
                   >
                     <QrCode className="h-3 w-3" />
                     <span>{t('components.settings.tabs.ProfileTab.showQr')}</span>

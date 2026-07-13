@@ -311,6 +311,7 @@ export default function StaffMyQR() {
     data: staffPaymentMethods = [],
     isLoading: isPaymentMethodsLoading,
   } = useStaffPaymentMethods({ enabled: activeTab === 'payment' })
+  const [selectedLeg, setSelectedLeg] = useState<'left' | 'right'>('left')
   const [showScanner, setShowScanner] = useState(false)
   const [scannerCameraState, setScannerCameraState] = useState<ScannerCameraState>('loading')
   const [isSubmittingScan, setIsSubmittingScan] = useState(false)
@@ -335,8 +336,8 @@ export default function StaffMyQR() {
   const staffCode = (account.staffCode || staffMember.id || '').trim()
   const referralCode = useMemo(() => getProfileReferralCode(profile || {}), [profile])
   const staffShareUrl = useMemo(
-    () => buildStaffShareUrl({ referralCode, staffCode }),
-    [referralCode, staffCode],
+    () => buildStaffShareUrl({ referralCode, staffCode, leg: selectedLeg }),
+    [referralCode, staffCode, selectedLeg],
   )
   const staffShareUrlDisplay = useMemo(
     () => splitStaffShareUrlDisplay(staffShareUrl),
@@ -874,6 +875,42 @@ export default function StaffMyQR() {
                 <Gift className="h-4 w-4" />
               </span>
             </div>
+            {staffCode && (
+              <div className="rounded-xl border border-[#EEE9FF] bg-slate-50 p-3 text-left">
+                <span className="mb-2 block text-[10px] font-extrabold uppercase tracking-wider text-nexoraMuted">
+                  {t('staff_dashboard.qr.select_placement_leg')}
+                </span>
+                <div className="mt-2 flex justify-center gap-6">
+                  {(['left', 'right'] as const).map((leg) => (
+                    <label
+                      key={leg}
+                      className="flex cursor-pointer items-center gap-2 text-xs font-bold text-nexoraText"
+                    >
+                      <input
+                        type="radio"
+                        name="staffPlacementLeg"
+                        value={leg}
+                        checked={selectedLeg === leg}
+                        onChange={() => setSelectedLeg(leg)}
+                        className="sr-only"
+                      />
+                      <span
+                        className={`flex h-4 w-4 items-center justify-center rounded-full border transition-all ${
+                          selectedLeg === leg
+                            ? 'border-nexoraBrand bg-nexoraBrand/10'
+                            : 'border-slate-300 bg-white'
+                        }`}
+                      >
+                        {selectedLeg === leg && <span className="h-1.5 w-1.5 rounded-full bg-nexoraBrand" />}
+                      </span>
+                      <span className={selectedLeg === leg ? 'font-black text-nexoraBrand' : 'text-nexoraMuted'}>
+                        {t(leg === 'left' ? 'staff_dashboard.qr.left_leg' : 'staff_dashboard.qr.right_leg')}
+                      </span>
+                    </label>
+                  ))}
+                </div>
+              </div>
+            )}
             {staffCode && staffShareUrl ? (
               <>
                 <div className="mx-auto my-3 flex h-40 w-40 shrink-0 items-center justify-center overflow-hidden rounded-xl border border-[#EEE9FF] bg-white p-3 shadow-sm select-none">

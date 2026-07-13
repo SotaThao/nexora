@@ -396,7 +396,7 @@ export const apiAuthAdapter = {
   },
 
   async signup(credentials: SignupCredentials): Promise<SignupResponse | null> {
-    const { email, confirmEmail, password, confirmPassword, firstName, lastName, type, profileType, referralCode } =
+    const { email, confirmEmail, password, confirmPassword, firstName, lastName, type, profileType, referralCode, leg } =
       credentials
     const trimmedReferralCode = referralCode?.trim()
     return httpClient.post<SignupResponse>(
@@ -410,6 +410,7 @@ export const apiAuthAdapter = {
         lastName,
         type: type || profileType,
         ...(trimmedReferralCode ? { referralCode: trimmedReferralCode } : {}),
+        ...(trimmedReferralCode && leg ? { position: leg === 'left' ? 'Left' : 'Right' } : {}),
       },
       { anonymous: true },
     )
