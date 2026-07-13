@@ -1,4 +1,5 @@
 import httpClient from '../../lib/httpClient'
+import { BOOKING_HUB_PAGE_SIZE } from '../../constants/pagination'
 import {
   mapStaffStatusToActivityApi,
   MerchantVoiceBookingSearchField,
@@ -462,7 +463,7 @@ export function createMerchantVoiceRepository(client: HttpClient = httpClient) {
           headers: MERCHANT_VOICE_HEADERS,
           params: {
             pageNumber: filters.pageNumber ?? 1,
-            pageSize: filters.pageSize ?? 200,
+            pageSize: filters.pageSize ?? BOOKING_HUB_PAGE_SIZE,
             searchBy: filters.searchBy,
             keyword: filters.keyword,
             dateFrom: filters.dateFrom,
@@ -496,7 +497,7 @@ export function createMerchantVoiceRepository(client: HttpClient = httpClient) {
           headers: MERCHANT_VOICE_HEADERS,
           params: {
             pageNumber: filters.pageNumber ?? 1,
-            pageSize: filters.pageSize ?? 200,
+            pageSize: filters.pageSize ?? BOOKING_HUB_PAGE_SIZE,
             status: filters.status,
             searchTerm: filters.searchTerm,
           },

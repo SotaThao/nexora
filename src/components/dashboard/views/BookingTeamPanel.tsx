@@ -22,6 +22,9 @@ import {
   normalizeMerchantVoiceDayOfWeek,
   type MerchantVoiceStaffDto,
 } from '../../../data/repositories/merchantVoice'
+import Pagination from '../../ui/Pagination'
+import { usePagination } from '../../../hooks/usePagination'
+import { BOOKING_HUB_PAGE_SIZE } from '../../../constants/pagination'
 import { EyeIcon, SpinnerIcon } from './BookingHubIcons'
 import {
   BookingTeamGridSkeleton,
@@ -358,9 +361,10 @@ export default function BookingTeamPanel() {
   }>({})
   const [showScheduleValidation, setShowScheduleValidation] = useState(false)
   const comboboxRef = useRef<HTMLDivElement>(null)
-  const { data: staffResponse, isLoading: isStaffLoading } = useMerchantVoiceStaff({
-    pageNumber: 1,
-    pageSize: 200,
+  const { pageNumber, pageSize, setPage } = usePagination({ pageSize: BOOKING_HUB_PAGE_SIZE })
+  const { data: staffResponse, isLoading: isStaffLoading, isFetching: isStaffFetching } = useMerchantVoiceStaff({
+    pageNumber,
+    pageSize,
   })
   const { data: businessStaffResponse, isLoading: isBusinessStaffLoading } = useMerchantVoiceBusinessStaff(
     { searchTerm: debouncedSearchQuery },
@@ -696,10 +700,8 @@ export default function BookingTeamPanel() {
 
   useEffect(() => {
     const mapped = (staffResponse?.items ?? []).map(toTeamMember)
-    if (mapped.length) {
-      setMembers(mapped)
-      setSelectedId((prev) => prev || mapped[0]?.id || '')
-    }
+    setMembers(mapped)
+    setSelectedId((prev) => prev || mapped[0]?.id || '')
   }, [staffResponse?.items])
 
   useEffect(() => {
@@ -752,67 +754,84 @@ export default function BookingTeamPanel() {
         </button>
       </div>
 
-      <div className="tech-grid">
-        {isStaffLoading ? (
-          <BookingTeamGridSkeleton count={3} />
-        ) : null}
-        {!isStaffLoading && members.length === 0 ? (
-          <div className="tech-grid-empty">
-            <div className="tech-grid-empty-icon" aria-hidden="true">
-              <PeopleIcon />
-            </div>
-            <div className="tech-grid-empty-title">{t(`${TK}.emptyTitle`)}</div>
-            <p className="tech-grid-empty-description">{t(`${TK}.emptyDescription`)}</p>
-            <button className="booking-primary-button" type="button" onClick={() => openModal()}>
-              <PlusIcon />
-              <span>{t(`${TK}.emptyCta`)}</span>
-            </button>
-          </div>
-        ) : null}
-        {!isStaffLoading ? members.map((member) => (
-          <article className="tech-card" key={member.id} data-tech-id={member.id}>
-            <div className="tech-top">
-              <div className="tech-avatar" style={member.avatarStyle}>{member.avatar}</div>
-              <div className="tech-profile">
-                <div className="tech-name">{member.name}</div>
-                <div className="tech-phone">{formatPhoneDisplay(member.phone)}</div>
-              </div>
-              <button
-                className={`toggle-pill ${member.smsEnabled ? 'is-on' : ''}`}
-                type="button"
-                aria-label={t(`${TK}.toggleSms`, { name: member.name })}
-                aria-pressed={member.smsEnabled}
-                disabled={pendingToggleIds[member.id]}
-                onClick={() => toggleSms(member.id)}
-              />
-            </div>
-            <div className="tech-services">
-              {member.services.map((service) => (
-                <span className="badge badge-plan" key={service}>{service}</span>
-              ))}
-            </div>
-            <div className="tech-card-footer">
-              <div className="tech-stats">
-                <div className="tech-stat">
-                  <strong>{member.customers}</strong>
-                  <span>{t(`${TK}.clientsToday`)}</span>
+      <div className="booking-grid">
+        <article className="overview-card overview-card-pad">
+          <div className="tech-grid">
+            {isStaffLoading ? (
+              <BookingTeamGridSkeleton count={3} />
+            ) : null}
+            {!isStaffLoading && members.length === 0 ? (
+              <div className="tech-grid-empty">
+                <div className="tech-grid-empty-icon" aria-hidden="true">
+                  <PeopleIcon />
                 </div>
-              </div>
-              <div className="tech-card-actions">
-                <button
-                  className="booking-secondary-button icon-only"
-                  type="button"
-                  aria-label={t(`${TK}.viewDetails`)}
-                  title={t(`${TK}.viewDetails`)}
-                  onClick={() => openModal(member.id, 'edit')}
-                >
-                  <EyeIcon />
-                  <span className="sr-only">{t(`${TK}.viewDetails`)}</span>
+                <div className="tech-grid-empty-title">{t(`${TK}.emptyTitle`)}</div>
+                <p className="tech-grid-empty-description">{t(`${TK}.emptyDescription`)}</p>
+                <button className="booking-primary-button" type="button" onClick={() => openModal()}>
+                  <PlusIcon />
+                  <span>{t(`${TK}.emptyCta`)}</span>
                 </button>
               </div>
-            </div>
-          </article>
-        )) : null}
+            ) : null}
+            {!isStaffLoading ? members.map((member) => (
+              <article className="tech-card" key={member.id} data-tech-id={member.id}>
+                <div className="tech-top">
+                  <div className="tech-avatar" style={member.avatarStyle}>{member.avatar}</div>
+                  <div className="tech-profile">
+                    <div className="tech-name">{member.name}</div>
+                    <div className="tech-phone">{formatPhoneDisplay(member.phone)}</div>
+                  </div>
+                  <button
+                    className={`toggle-pill ${member.smsEnabled ? 'is-on' : ''}`}
+                    type="button"
+                    aria-label={t(`${TK}.toggleSms`, { name: member.name })}
+                    aria-pressed={member.smsEnabled}
+                    disabled={pendingToggleIds[member.id]}
+                    onClick={() => toggleSms(member.id)}
+                  />
+                </div>
+                <div className="tech-services">
+                  {member.services.map((service) => (
+                    <span className="badge badge-plan" key={service}>{service}</span>
+                  ))}
+                </div>
+                <div className="tech-card-footer">
+                  <div className="tech-stats">
+                    <div className="tech-stat">
+                      <strong>{member.customers}</strong>
+                      <span>{t(`${TK}.clientsToday`)}</span>
+                    </div>
+                  </div>
+                  <div className="tech-card-actions">
+                    <button
+                      className="booking-secondary-button icon-only"
+                      type="button"
+                      aria-label={t(`${TK}.viewDetails`)}
+                      title={t(`${TK}.viewDetails`)}
+                      onClick={() => openModal(member.id, 'edit')}
+                    >
+                      <EyeIcon />
+                      <span className="sr-only">{t(`${TK}.viewDetails`)}</span>
+                    </button>
+                  </div>
+                </div>
+              </article>
+            )) : null}
+          </div>
+
+          {!isStaffLoading && (staffResponse?.totalCount ?? 0) > 0 ? (
+            <Pagination
+              pageNumber={pageNumber}
+              pageSize={pageSize}
+              totalPages={staffResponse?.totalPages ?? 1}
+              totalCount={staffResponse?.totalCount ?? 0}
+              hasNextPage={staffResponse?.hasNextPage}
+              hasPreviousPage={staffResponse?.hasPreviousPage}
+              onPageChange={setPage}
+              isLoading={isStaffFetching}
+            />
+          ) : null}
+        </article>
       </div>
 
       {modalOpen ? (

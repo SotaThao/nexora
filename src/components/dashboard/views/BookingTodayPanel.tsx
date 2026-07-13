@@ -39,6 +39,9 @@ import {
   XLgIcon,
   XKpiIcon,
 } from './BookingHubIcons'
+import Pagination from '../../ui/Pagination'
+import { usePagination } from '../../../hooks/usePagination'
+import { BOOKING_HUB_PAGE_SIZE } from '../../../constants/pagination'
 import {
   BookingKpiSkeleton,
   BookingTodayListSkeleton,
@@ -308,6 +311,9 @@ export default function BookingTodayPanel() {
   const [statusOverrides, setStatusOverrides] = useState<Record<string, BookingStatus>>({})
   const [pendingStatusUpdates, setPendingStatusUpdates] = useState<Record<string, boolean>>({})
   const [detailBooking, setDetailBooking] = useState<BookingItem | null>(null)
+  const { pageNumber, pageSize, setPage, reset: resetPage } = usePagination({
+    pageSize: BOOKING_HUB_PAGE_SIZE,
+  })
 
   const apiSearchField = BOOKING_UI_SEARCH_FIELD_TO_API[debouncedFilters.searchField]
 
@@ -335,8 +341,8 @@ export default function BookingTodayPanel() {
 
   const { data: statistics, isLoading: isStatisticsLoading } = useMerchantVoiceBookingStatistics()
   const { data: bookingResponse, isLoading: isBookingsLoading, isFetching: isBookingsFetching } = useMerchantVoiceBookings({
-    pageNumber: 1,
-    pageSize: 200,
+    pageNumber,
+    pageSize,
     searchBy: apiSearchField,
     keyword: apiKeyword,
     dateFrom: dateFromApi,
@@ -479,6 +485,10 @@ export default function BookingTodayPanel() {
 
     return () => window.clearTimeout(timer)
   }, [searchField, searchKeyword, dateFrom, dateTo])
+
+  useEffect(() => {
+    resetPage()
+  }, [debouncedFilters, resetPage])
 
   useEffect(() => {
     if (typeof window === 'undefined') return undefined
@@ -741,6 +751,19 @@ export default function BookingTodayPanel() {
               </div>
             </div>
           )}
+
+          {!isListLoading && (bookingResponse?.totalCount ?? 0) > 0 ? (
+            <Pagination
+              pageNumber={pageNumber}
+              pageSize={pageSize}
+              totalPages={bookingResponse?.totalPages ?? 1}
+              totalCount={bookingResponse?.totalCount ?? 0}
+              hasNextPage={bookingResponse?.hasNextPage}
+              hasPreviousPage={bookingResponse?.hasPreviousPage}
+              onPageChange={setPage}
+              isLoading={isBookingsFetching}
+            />
+          ) : null}
 
           {!isListLoading && filteredBookings.length === 0 ? (
             <div className="booking-list-empty">
