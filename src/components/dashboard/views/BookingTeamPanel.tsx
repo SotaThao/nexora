@@ -1,5 +1,10 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react'
-import CountryCodeSelect, { formatNationalNumber, parsePhone } from '../../CountryCodeSelect'
+import CountryCodeSelect, {
+  formatNationalNumber,
+  getNationalPhonePlaceholder,
+  normalizePhoneE164,
+  parsePhone,
+} from '../../CountryCodeSelect'
 import { useTranslation } from '../../../contexts/LanguageContext'
 import { useNotification } from '../../../contexts/NotificationContext'
 import { getErrorI18nKey } from '../../../data/errorCodes'
@@ -586,6 +591,10 @@ export default function BookingTeamPanel() {
     }
   }
 
+  const handleStaffSaveError = (error: unknown) => {
+    showToast(t(getErrorI18nKey(getApiErrorCode(error))), 'error')
+  }
+
   const saveModal = () => {
     const nextErrors: {
       name?: string
@@ -594,16 +603,14 @@ export default function BookingTeamPanel() {
       services?: string
     } = {}
     const trimmedName = draftName.trim()
-    const normalizedPhone = `${draftPhoneParsed.countryCode} ${formatNationalNumber(draftPhoneParsed.nationalNumber, draftPhoneParsed.countryCode)}`.trim()
     const trimmedEmail = draftEmail.trim()
+    const hasPhoneInput = Boolean(draftPhoneParsed.nationalNumber.replace(/\D/g, '').trim())
+    const phoneForApi = hasPhoneInput
+      ? normalizePhoneE164(draftPhone, draftPhoneParsed.countryCode)
+      : null
 
     if (!trimmedName) nextErrors.name = t(`${TK}.requiredField`)
-    if (!draftPhoneParsed.nationalNumber.trim()) {
-      nextErrors.phone = t(`${TK}.requiredField`)
-    }
-    if (!trimmedEmail) {
-      nextErrors.email = t(`${TK}.requiredField`)
-    } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(trimmedEmail)) {
+    if (trimmedEmail && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(trimmedEmail)) {
       nextErrors.email = t(`${TK}.invalidEmail`)
     }
     if (!draftServices.length) nextErrors.services = t(`${TK}.requiredField`)
@@ -631,8 +638,8 @@ export default function BookingTeamPanel() {
 
     const payload = {
       name: trimmedName,
-      phone: normalizedPhone,
-      email: trimmedEmail,
+      phone: phoneForApi,
+      email: trimmedEmail || null,
       services: draftServices,
       schedule: serializeSchedule(draftSchedule),
     }
@@ -659,7 +666,7 @@ export default function BookingTeamPanel() {
       createStaffMutation.mutate({
         fullName: payload.name,
         phoneNumber: payload.phone,
-        email: payload.email || null,
+        email: payload.email,
         skills: payload.services.join(', '),
         schedules,
       }, {
@@ -668,9 +675,7 @@ export default function BookingTeamPanel() {
           showToast(t(`${TK}.saveSuccess`), 'success')
           closeModal()
         },
-        onError: (error) => {
-          showToast(t(getErrorI18nKey(getApiErrorCode(error))), 'error')
-        },
+        onError: handleStaffSaveError,
       })
       return
     }
@@ -711,9 +716,7 @@ export default function BookingTeamPanel() {
         showToast(t(`${TK}.saveSuccess`), 'success')
         closeModal()
       },
-      onError: (error) => {
-        showToast(t(getErrorI18nKey(getApiErrorCode(error))), 'error')
-      },
+      onError: handleStaffSaveError,
     })
   }
 
@@ -1017,7 +1020,7 @@ export default function BookingTeamPanel() {
                         type="tel"
                         value={formatNationalNumber(draftPhoneParsed.nationalNumber, draftPhoneParsed.countryCode)}
                         aria-invalid={Boolean(formErrors.phone)}
-                        placeholder={t(`${TK}.placeholderPhoneMask`)}
+                        placeholder={getNationalPhonePlaceholder(draftPhoneParsed.countryCode)}
                         inputMode="numeric"
                         autoComplete="tel-national"
                         onChange={(event) => {

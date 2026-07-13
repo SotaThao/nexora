@@ -1978,6 +1978,8 @@
     "voice_trial_service_hours_from_required": "Opening time is required.",
     "voice_trial_service_hours_to_required": "Closing time is required.",
     "voice_trial_biggest_problem_required": "Please select your biggest challenge.",
+    "voice_tenant_staff_phone_number_required": "Phone number is required for tech profiles.",
+    "voice_tenant_staff_phone_number_already_exists": "This phone number is already used by another tech profile.",
     "payment_not_found": "This payment could not be found.",
     "payment_invalid_status": "This payment is not in the correct status for this action.",
     "payment_amount_too_low": "Minimum payment is $1.00.",
