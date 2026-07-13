@@ -17,6 +17,7 @@ export interface StaffProfileView {
   avatar: string | null
   isProfileComplete: boolean | null
   isKYCVerified: boolean
+  createdAt: string | null
 }
 
 function resolveUserFullName(userProfile: UserProfile | null | undefined): string {
@@ -134,5 +135,6 @@ export function mapStaffProfileView(
     isProfileComplete:
       typeof staffProfile?.isProfileComplete === 'boolean' ? staffProfile.isProfileComplete : null,
     isKYCVerified: resolveIsKycVerified(userProfile),
+    createdAt: userProfile?.createdAt || staffProfile?.createdAt || null,
   }
 }

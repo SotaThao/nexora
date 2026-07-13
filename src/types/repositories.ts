@@ -38,6 +38,7 @@ export interface BusinessApiDto {
   feedbackEmail?: string
   isPublic?: boolean
   onboardingStep?: number
+  createdAt?: string | null
 }
 
 export interface TipsSummaryApiDto {

@@ -284,7 +284,7 @@
       "title": "Personal Account",
       "screen_title": "Profile",
       "nexora_id": "Nexora ID: {id}",
-      "member_since": "Member since Apr 2024",
+      "member_since": "Member since {date}",
       "edit_profile": "Edit Profile",
       "menu_personal_information": "Personal Information",
       "menu_verification": "Verification",
