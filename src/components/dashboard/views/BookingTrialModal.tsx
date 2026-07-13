@@ -365,20 +365,11 @@ export default function BookingTrialModal({ open, onClose }: BookingTrialModalPr
     }
   }, [open])
 
-  useEffect(() => {
-    if (!open) return undefined
-    const onKeyDown = (event: KeyboardEvent) => {
-      if (event.key === 'Escape') handleClose()
-    }
-    document.addEventListener('keydown', onKeyDown)
-    return () => document.removeEventListener('keydown', onKeyDown)
-  }, [open])
-
   if (!open) return null
 
   return (
-    <div className="trial-modal" role="dialog" aria-modal="true" aria-labelledby="trial-modal-title" onClick={handleClose}>
-      <div className="trial-dialog" onClick={(event) => event.stopPropagation()}>
+    <div className="trial-modal" role="dialog" aria-modal="true" aria-labelledby="trial-modal-title">
+      <div className="trial-dialog">
         <button className="trial-close" type="button" aria-label={t(`${TK}.close`)} onClick={handleClose}>
           <CloseIcon />
         </button>
