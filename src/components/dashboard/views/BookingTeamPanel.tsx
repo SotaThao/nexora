@@ -39,6 +39,9 @@ const TK = 'components.dashboard.views.BookingHubView.team'
 
 const DAY_KEYS = ['mon', 'tue', 'wed', 'thu', 'fri', 'sat', 'sun'] as const
 
+const DEFAULT_SCHEDULE_START = '09:00'
+const DEFAULT_SCHEDULE_END = '19:00'
+
 type DayKey = typeof DAY_KEYS[number]
 type ModalMode = 'create' | 'edit' | 'detail'
 
@@ -114,11 +117,19 @@ function normalizeScheduleTime(value: string | null | undefined): string {
   return `${String(hour).padStart(2, '0')}:${minute}`
 }
 
+function createDaySchedule(dayOff = false): DaySchedule {
+  return {
+    dayOff,
+    start: DEFAULT_SCHEDULE_START,
+    end: DEFAULT_SCHEDULE_END,
+  }
+}
+
 function schedulesToWeeklySchedule(schedules: MerchantVoiceStaffDto['schedules'] | undefined): WeeklySchedule {
   const schedule = emptySchedule()
 
   DAY_KEYS.forEach((key) => {
-    schedule[key] = { dayOff: true, start: '', end: '' }
+    schedule[key] = createDaySchedule(true)
   })
 
   for (const item of schedules ?? []) {
@@ -126,14 +137,14 @@ function schedulesToWeeklySchedule(schedules: MerchantVoiceStaffDto['schedules']
     if (!day) continue
 
     if (item.isDayOff) {
-      schedule[day] = { dayOff: true, start: '', end: '' }
+      schedule[day] = createDaySchedule(true)
       continue
     }
 
     schedule[day] = {
       dayOff: false,
-      start: normalizeScheduleTime(item.startTime),
-      end: normalizeScheduleTime(item.endTime),
+      start: normalizeScheduleTime(item.startTime) || DEFAULT_SCHEDULE_START,
+      end: normalizeScheduleTime(item.endTime) || DEFAULT_SCHEDULE_END,
     }
   }
 
@@ -142,7 +153,7 @@ function schedulesToWeeklySchedule(schedules: MerchantVoiceStaffDto['schedules']
 
 function emptySchedule(): WeeklySchedule {
   return DAY_KEYS.reduce((acc, key) => {
-    acc[key] = { dayOff: false, start: '', end: '' }
+    acc[key] = createDaySchedule(false)
     return acc
   }, {} as WeeklySchedule)
 }
@@ -151,13 +162,13 @@ function parseSchedule(raw?: string): WeeklySchedule {
   const schedule = emptySchedule()
   if (!raw) {
     return DAY_KEYS.reduce((acc, key) => {
-      acc[key] = { dayOff: true, start: '', end: '' }
+      acc[key] = createDaySchedule(true)
       return acc
     }, {} as WeeklySchedule)
   }
 
   DAY_KEYS.forEach((key) => {
-    schedule[key] = { dayOff: true, start: '', end: '' }
+    schedule[key] = createDaySchedule(true)
   })
 
   raw.split(';').forEach((part) => {
@@ -166,8 +177,8 @@ function parseSchedule(raw?: string): WeeklySchedule {
     const [start, end] = times.split('-')
     schedule[dayPart as DayKey] = {
       dayOff: false,
-      start: start || '',
-      end: end || '',
+      start: start || DEFAULT_SCHEDULE_START,
+      end: end || DEFAULT_SCHEDULE_END,
     }
   })
 
@@ -533,10 +544,9 @@ export default function BookingTeamPanel() {
     setDraftSchedule((prev) => ({
       ...prev,
       [day]: {
-        ...prev[day],
         dayOff,
-        start: dayOff ? '' : prev[day].start,
-        end: dayOff ? '' : prev[day].end,
+        start: dayOff ? DEFAULT_SCHEDULE_START : (prev[day].start || DEFAULT_SCHEDULE_START),
+        end: dayOff ? DEFAULT_SCHEDULE_END : (prev[day].end || DEFAULT_SCHEDULE_END),
       },
     }))
     setShowScheduleValidation(false)
