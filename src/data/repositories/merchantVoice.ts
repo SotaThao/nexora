@@ -200,6 +200,12 @@ export interface MerchantVoiceOperatingHourDto {
   closeTime: string | null
 }
 
+export interface MerchantVoiceTenantStatusDto {
+  hasVoiceTenant: boolean
+  voiceTenantId: string | null
+  isActive: boolean
+}
+
 export interface MerchantVoiceConfigDto {
   id: string
   name: string
@@ -301,6 +307,18 @@ function normalizeBusinessStaffResponse(response: unknown): MerchantVoiceBusines
   }
 
   return []
+}
+
+function normalizeTenantStatusResponse(response: unknown): MerchantVoiceTenantStatusDto {
+  const data = response && typeof response === 'object'
+    ? response as Record<string, unknown>
+    : {}
+
+  return {
+    hasVoiceTenant: data.hasVoiceTenant === true,
+    voiceTenantId: typeof data.voiceTenantId === 'string' ? data.voiceTenantId : null,
+    isActive: data.isActive === true,
+  }
 }
 
 function normalizeConfigResponse(response: unknown): MerchantVoiceConfigDto {
@@ -540,6 +558,14 @@ export function createMerchantVoiceRepository(client: HttpClient = httpClient) {
         },
       )
       return normalizeBusinessStaffResponse(response)
+    },
+
+    async getTenantStatus(): Promise<MerchantVoiceTenantStatusDto> {
+      const response = await client.get<unknown>(
+        `${MERCHANT_VOICE_BASE}/tenant/status`,
+        { headers: MERCHANT_VOICE_HEADERS },
+      )
+      return normalizeTenantStatusResponse(response)
     },
 
     async getConfig(): Promise<MerchantVoiceConfigDto> {

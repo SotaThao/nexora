@@ -39,6 +39,7 @@ import {
   XLgIcon,
   XKpiIcon,
 } from './BookingHubIcons'
+import { useBookingHubVoiceEnabled } from './BookingHubVoiceContext'
 import Pagination from '../../ui/Pagination'
 import { usePagination } from '../../../hooks/usePagination'
 import { BOOKING_HUB_PAGE_SIZE } from '../../../constants/pagination'
@@ -295,6 +296,7 @@ function BookingActions({
 export default function BookingTodayPanel() {
   const { t } = useTranslation()
   const { showToast } = useNotification()
+  const voiceEnabled = useBookingHubVoiceEnabled()
   const [viewMode, setViewMode] = useState<ViewMode>(() => (
     typeof window !== 'undefined' && window.innerWidth < 768 ? 'card' : 'table'
   ))
@@ -339,7 +341,7 @@ export default function BookingTodayPanel() {
           ? t(`${TK}.today.keywordPlaceholderService`)
           : t(`${TK}.today.keywordPlaceholderAll`)
 
-  const { data: statistics, isLoading: isStatisticsLoading } = useMerchantVoiceBookingStatistics()
+  const { data: statistics, isLoading: isStatisticsLoading } = useMerchantVoiceBookingStatistics({ enabled: voiceEnabled })
   const { data: bookingResponse, isLoading: isBookingsLoading, isFetching: isBookingsFetching } = useMerchantVoiceBookings({
     pageNumber,
     pageSize,
@@ -347,7 +349,7 @@ export default function BookingTodayPanel() {
     keyword: apiKeyword,
     dateFrom: dateFromApi,
     dateTo: dateToApi,
-  })
+  }, { enabled: voiceEnabled })
   const updateBookingStatusMutation = useUpdateMerchantVoiceBookingStatus()
   const sendConfirmationSmsMutation = useSendMerchantVoiceBookingConfirmationSms()
 

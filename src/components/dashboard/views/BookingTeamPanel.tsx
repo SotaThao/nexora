@@ -33,6 +33,7 @@ import {
   BookingTechServicesSkeleton,
   BookingTechStaffListSkeleton,
 } from './BookingHubSkeletons'
+import { useBookingHubVoiceEnabled } from './BookingHubVoiceContext'
 
 const TK = 'components.dashboard.views.BookingHubView.team'
 
@@ -342,6 +343,7 @@ function CheckIcon() {
 export default function BookingTeamPanel() {
   const { t } = useTranslation()
   const { showToast } = useNotification()
+  const voiceEnabled = useBookingHubVoiceEnabled()
   const [modalOpen, setModalOpen] = useState(false)
   const [modalMode, setModalMode] = useState<ModalMode>('edit')
   const [selectedId, setSelectedId] = useState('')
@@ -366,13 +368,13 @@ export default function BookingTeamPanel() {
   const { data: staffResponse, isLoading: isStaffLoading, isFetching: isStaffFetching } = useMerchantVoiceStaff({
     pageNumber,
     pageSize,
-  })
+  }, { enabled: voiceEnabled })
   const { data: businessStaffResponse, isLoading: isBusinessStaffLoading } = useMerchantVoiceBusinessStaff(
     { searchTerm: debouncedSearchQuery },
-    { enabled: modalOpen },
+    { enabled: voiceEnabled && modalOpen },
   )
   const { data: configResponse, isLoading: isConfigLoading } = useMerchantVoiceConfig({
-    enabled: modalOpen,
+    enabled: voiceEnabled && modalOpen,
   })
   const [members, setMembers] = useState<TeamMember[]>(INITIAL_TEAM_MEMBERS)
   const createStaffMutation = useCreateMerchantVoiceStaff()
@@ -380,7 +382,7 @@ export default function BookingTeamPanel() {
   const toggleStaffStatusMutation = useToggleMerchantVoiceStaffStatus()
   const [pendingToggleIds, setPendingToggleIds] = useState<Record<string, boolean>>({})
   const { data: staffDetail, isLoading: isStaffDetailLoading } = useMerchantVoiceStaffById(selectedId, {
-    enabled: modalOpen && !!selectedId && modalMode !== 'create',
+    enabled: voiceEnabled && modalOpen && !!selectedId && modalMode !== 'create',
   })
 
   const businessStaffOptions = useMemo<BusinessStaffOption[]>(() => (

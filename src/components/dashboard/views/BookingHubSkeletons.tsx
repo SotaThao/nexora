@@ -294,3 +294,13 @@ export function BookingSettingsSkeleton() {
     </div>
   )
 }
+
+export function BookingHubTabsSkeleton() {
+  return (
+    <div className="page-tabs booking-skeleton-tabs" aria-busy="true" aria-hidden="true">
+      {Array.from({ length: 3 }).map((_, index) => (
+        <Skeleton key={index} width={132} height={40} borderRadius={10} />
+      ))}
+    </div>
+  )
+}
