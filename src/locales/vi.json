@@ -3353,6 +3353,19 @@
       },
       "cpaReviewExplanation": "Danh mục rủi ro cao được nộp mà không có hóa đơn — cần CPA xem xét trước khi tính vào tổng.",
       "notDeductibleNotice": "Không được khấu trừ — không tính vào tổng và không xuất trong Year-End Export.",
+      "statusGuide": {
+        "trigger": "Ý nghĩa các trạng thái",
+        "title": "Ý nghĩa và luồng trạng thái khấu trừ",
+        "subtitle": "Mỗi khoản chi sẽ đi qua các trạng thái sau khi bạn hoàn thiện thông tin và theo tiến trình năm thuế.",
+        "triggers": {
+          "draft": "Nộp (Submit) khoản khấu trừ để chuyển sang bước tiếp theo.",
+          "missingReceipt": "Tải lên hóa đơn để chuyển thành Ready.",
+          "missingInfo": "Bổ sung trường còn thiếu (VD: tỷ lệ sử dụng cho kinh doanh) để chuyển thành Ready.",
+          "ready": "Được tính vào tổng khấu trừ. Có thể chuyển sang CPA Review nếu AI gắn cờ rủi ro cao mà không có hóa đơn.",
+          "cpaReview": "Cần CPA duyệt trước khi được tính lại vào tổng.",
+          "locked": "Năm thuế đã bị khóa. Mọi thay đổi tiếp theo phải thực hiện qua Adjustment Record."
+        }
+      },
       "actions": {
         "edit": "Sửa",
         "submit": "Nộp",
@@ -3497,7 +3510,12 @@
         "linkType": "Hóa đơn này đang gắn với bản ghi nào. \"Độc lập\" = đã tải lên nhưng chưa gắn vào khấu trừ, payout hay thu nhập nào."
       },
       "actions": {
-        "resolveDuplicate": "Xử lý trùng lặp"
+        "resolveDuplicate": "Xử lý trùng lặp",
+        "view": "Xem"
+      },
+      "previewModal": {
+        "pdfNotice": "Hóa đơn này là file PDF, không thể xem trực tiếp trong trang.",
+        "openPdf": "Mở PDF"
       },
       "delete": "Xóa",
       "deleteConfirm": "Xóa hóa đơn này? Nếu đang gắn với khấu trừ, payout hoặc thu nhập, bản ghi đó sẽ chuyển lại trạng thái thiếu hóa đơn. Không thể hoàn tác.",

@@ -22,6 +22,7 @@ export type DuplicateResolution = 'Kept' | 'Merged' | 'Deleted'
 export interface ReceiptVaultItemApiDto {
   id: string
   fileName: string
+  url: string
   qualityStatus: string
   isDuplicate: boolean
   duplicateResolution?: string | null
@@ -39,6 +40,7 @@ export interface ReceiptVaultItemApiDto {
 export interface ReceiptVaultItem {
   id: string
   fileName: string
+  url: string
   qualityStatus: ReceiptQualityStatus
   isDuplicate: boolean
   duplicateResolution: DuplicateResolution | null
@@ -57,6 +59,7 @@ function normalizeReceiptVaultItem(dto: ReceiptVaultItemApiDto): ReceiptVaultIte
   return {
     id: dto.id,
     fileName: dto.fileName,
+    url: dto.url ?? '',
     qualityStatus: dto.qualityStatus as ReceiptQualityStatus,
     isDuplicate: dto.isDuplicate,
     duplicateResolution: (dto.duplicateResolution as DuplicateResolution | null) ?? null,

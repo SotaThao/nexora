@@ -3354,6 +3354,19 @@
       },
       "cpaReviewExplanation": "High-risk category submitted without a receipt — requires CPA review before it counts toward your total.",
       "notDeductibleNotice": "Not deductible — excluded from your total and Year-End Export.",
+      "statusGuide": {
+        "trigger": "How statuses work",
+        "title": "How deduction statuses work",
+        "subtitle": "Each expense moves through these statuses as you complete it and as your tax year progresses.",
+        "triggers": {
+          "draft": "Submit the deduction to move it forward.",
+          "missingReceipt": "Upload a receipt to become Ready.",
+          "missingInfo": "Fill in the missing field (e.g. business-use %) to become Ready.",
+          "ready": "Counted toward your deductible total. May move to CPA Review if AI flags it as high-risk without a receipt.",
+          "cpaReview": "A CPA must approve it before it counts toward your total again.",
+          "locked": "The tax year is locked. Any further change must go through an Adjustment record."
+        }
+      },
       "actions": {
         "edit": "Edit",
         "submit": "Submit",
@@ -3498,7 +3511,12 @@
         "linkType": "What this receipt is attached to. Standalone = uploaded but not attached to any deduction, payout, or income record yet."
       },
       "actions": {
-        "resolveDuplicate": "Resolve duplicate"
+        "resolveDuplicate": "Resolve duplicate",
+        "view": "View"
+      },
+      "previewModal": {
+        "pdfNotice": "This receipt is a PDF file and can't be previewed inline.",
+        "openPdf": "Open PDF"
       },
       "delete": "Delete",
       "deleteConfirm": "Delete this receipt? If it's attached to a deduction, payout, or income record, that record will be marked as missing a receipt again. This cannot be undone.",

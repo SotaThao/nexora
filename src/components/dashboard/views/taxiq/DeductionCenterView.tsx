@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { Camera, CheckCircle2, Loader2, Lock, Paperclip, Pencil, Plus, RefreshCw, Trash2, Wrench } from 'lucide-react'
+import { Camera, CheckCircle2, HelpCircle, Loader2, Lock, Paperclip, Pencil, Plus, RefreshCw, Trash2, Wrench } from 'lucide-react'
 import { useTranslation } from '../../../../contexts/LanguageContext'
 import { useNotification } from '../../../../contexts/NotificationContext'
 import { useTaxiqDeductionCategories } from '../../../../data/hooks/useTaxiqDeductionCategories'
@@ -24,6 +24,7 @@ import DeductionStatusBadge from './shared/DeductionStatusBadge'
 import AiDeductionStatusBadge from './shared/AiDeductionStatusBadge'
 import AttachExistingReceiptModal from './modals/AttachExistingReceiptModal'
 import ConfirmModal from './modals/ConfirmModal'
+import DeductionStatusGuideModal from './modals/DeductionStatusGuideModal'
 
 const EDITABLE_STATUSES = new Set(['Draft', 'MissingReceipt', 'MissingInfo'])
 
@@ -59,6 +60,7 @@ export default function DeductionCenterView({
   const [busyRowId, setBusyRowId] = useState<string | null>(null)
   const [attachingReceiptToId, setAttachingReceiptToId] = useState<string | null>(null)
   const [deletingRecord, setDeletingRecord] = useState<DeductionRecord | StaffDeductionRecord | null>(null)
+  const [isStatusGuideOpen, setIsStatusGuideOpen] = useState(false)
 
   const categoriesQuery = useTaxiqDeductionCategories(isStaff ? 'Staff' : 'Owner')
   const categories = categoriesQuery.data ?? []
@@ -224,7 +226,19 @@ export default function DeductionCenterView({
                 </span>
               </th>
               <th className="px-4 py-3">{t('taxiq.deductionCenter.columns.date')}</th>
-              <th className="px-4 py-3">{t('taxiq.deductionCenter.columns.status')}</th>
+              <th className="px-4 py-3">
+                <span className="inline-flex items-center gap-1">
+                  {t('taxiq.deductionCenter.columns.status')}
+                  <button
+                    type="button"
+                    onClick={() => setIsStatusGuideOpen(true)}
+                    title={t('taxiq.deductionCenter.statusGuide.trigger')}
+                    className="inline-flex items-center rounded-full text-nexoraMuted hover:text-nexoraBrand"
+                  >
+                    <HelpCircle className="h-3.5 w-3.5" />
+                  </button>
+                </span>
+              </th>
               <th className="px-4 py-3 text-right">{t('taxiq.deductionCenter.columns.actions')}</th>
             </tr>
           </thead>
@@ -389,6 +403,8 @@ export default function DeductionCenterView({
         isDangerous
         isPending={deleteDeduction.isPending}
       />
+
+      <DeductionStatusGuideModal open={isStatusGuideOpen} onClose={() => setIsStatusGuideOpen(false)} />
     </div>
   )
 }

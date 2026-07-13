@@ -1,5 +1,5 @@
 import { useRef, useState } from 'react'
-import { AlertTriangle, Loader2, Lock, Trash2, Upload } from 'lucide-react'
+import { AlertTriangle, Eye, Loader2, Lock, Trash2, Upload } from 'lucide-react'
 import { useTranslation } from '../../../../contexts/LanguageContext'
 import { useNotification } from '../../../../contexts/NotificationContext'
 import { useDeleteTaxiqReceipt, useTaxiqReceipts, useUploadTaxiqReceipt } from '../../../../data/hooks/useTaxiqReceipts'
@@ -12,6 +12,7 @@ import { formatCurrency } from '../../utils'
 import ReceiptQualityStatusBadge from './shared/ReceiptQualityStatusBadge'
 import DuplicateResolveModal from './modals/DuplicateResolveModal'
 import ConfirmModal from './modals/ConfirmModal'
+import ReceiptPreviewModal from './modals/ReceiptPreviewModal'
 
 const LINK_TYPE_LABEL_KEYS: Record<ReceiptLinkedEntityType, string> = {
   Standalone: 'taxiq.receiptVault.linkType.standalone',
@@ -40,6 +41,7 @@ export default function ReceiptVaultView({
   const [linkTypeFilter, setLinkTypeFilter] = useState('all')
   const [resolvingReceipt, setResolvingReceipt] = useState<ReceiptVaultItem | null>(null)
   const [deletingReceipt, setDeletingReceipt] = useState<ReceiptVaultItem | null>(null)
+  const [previewingReceipt, setPreviewingReceipt] = useState<ReceiptVaultItem | null>(null)
   const inputRef = useRef<HTMLInputElement>(null)
 
   const listQuery = useTaxiqReceipts({ ownerTaxYearId, staffTaxYearId })
@@ -213,6 +215,14 @@ export default function ReceiptVaultView({
                     <td className="px-4 py-3 text-nexoraMuted">{item.createdAt.slice(0, 10)}</td>
                     <td className="px-4 py-3">
                       <div className="flex items-center justify-end gap-2">
+                        <button
+                          type="button"
+                          onClick={() => setPreviewingReceipt(item)}
+                          className="inline-flex items-center gap-1 text-[11px] font-bold text-nexoraBrand hover:underline"
+                        >
+                          <Eye className="h-3 w-3" />
+                          {t('taxiq.receiptVault.actions.view')}
+                        </button>
                         {needsResolution && (
                           <button
                             type="button"
@@ -239,6 +249,14 @@ export default function ReceiptVaultView({
           </tbody>
         </table>
       </div>
+
+      {previewingReceipt && (
+        <ReceiptPreviewModal
+          open={!!previewingReceipt}
+          onClose={() => setPreviewingReceipt(null)}
+          receipt={previewingReceipt}
+        />
+      )}
 
       {resolvingReceipt && (
         <DuplicateResolveModal
