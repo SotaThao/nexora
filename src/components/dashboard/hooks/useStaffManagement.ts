@@ -169,7 +169,7 @@ export function useStaffManagement({
   }
 
   const getStaffLinkId = (member: { staffLinkId?: string | null; linkId?: string | null; id?: string | null }) =>
-    member.staffLinkId || member.linkId || member.id || null
+    member.linkId || member.staffLinkId || member.id || null
 
   // Staff comes from the API query (useMerchantStaff) passed in as staffData.
   // No more local setStaff — the query cache is the source of truth.

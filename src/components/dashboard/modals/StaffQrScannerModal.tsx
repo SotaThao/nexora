@@ -166,7 +166,7 @@ function StaffQrScannerModal({
         : ''
 
   return (
-    <div className="fixed inset-0 z-[70] flex items-center justify-center bg-slate-900/60 p-4 backdrop-blur-sm">
+    <div className="fixed inset-0 z-[70] flex items-center justify-center bg-slate-900/60 modal-overlay-safe backdrop-blur-sm">
       <style>{`
         @keyframes scannerLaser {
           0% { top: 0%; opacity: 0.8; }
@@ -182,8 +182,9 @@ function StaffQrScannerModal({
         <button
           type="button"
           onClick={onClose}
-          className="absolute right-4 top-4 rounded-full p-1.5 text-slate-400 transition hover:bg-slate-100 hover:text-slate-700"
+          className="modal-close-btn absolute right-2 top-2 rounded-full text-slate-400 transition hover:bg-slate-100 hover:text-slate-700"
           title="Close Scanner"
+          aria-label="Close Scanner"
         >
           <X className="h-4 w-4" />
         </button>

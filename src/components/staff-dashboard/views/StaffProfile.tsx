@@ -1,9 +1,17 @@
 // StaffProfile — personal profile (staff-owned: display name + bio) and
 // per-business display names. Identity basics come from the merchant record.
 import {
+  ArrowLeft,
   Camera,
+  Bell,
+  ChevronRight,
+  FileText,
+  Languages,
+  Lock,
   Loader2,
   LogOut,
+  ShieldCheck,
+  UserCircle,
 } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import { useNavigate, useOutletContext, useSearchParams } from "react-router-dom";
@@ -16,11 +24,11 @@ import { logger } from "../../../utils/logger";
 import CountryCodeSelect, {
   formatNationalNumber,
   getDefaultDialCode,
-  isValidPhoneE164,
   parsePhone,
 } from "../../CountryCodeSelect";
 import Tooltip from "../../ui/Tooltip";
 import { useStaffLinkedBusinesses } from "../hooks/useStaffLinkedBusinesses";
+import StaffNotifications from "./StaffNotifications";
 
 const panel =
   "rounded-2xl border border-nexoraBorder bg-nexoraSurface p-4 shadow-sm";
@@ -30,8 +38,104 @@ const inputCls =
   "w-full rounded-xl border border-nexoraBorder bg-nexoraSurface px-3 py-2.5 text-sm text-nexoraText outline-none focus:border-nexoraBrand transition-all";
 const readOnlyCls =
   "w-full rounded-xl border border-nexoraBorder bg-nexoraCanvas px-3 py-2.5 text-sm font-medium text-nexoraMuted select-text";
+
+const compactPanel =
+  "rounded-lg border border-[#EEE9FF] bg-white p-2.5 shadow-[0_8px_18px_rgba(70,72,212,0.08)]";
+const profileSections = [
+  "personal",
+  "verification",
+  "tax",
+  "notifications",
+  "language",
+  "privacy",
+];
+
+function ProfileMenuItem({ icon: Icon, label, sub = null, onClick = null }: any) {
+  return (
+    <button
+      type="button"
+      onClick={onClick || undefined}
+      className="flex min-h-[44px] w-full items-center gap-3 rounded-lg px-2 text-left transition hover:bg-[#F8F7FF] active:scale-[0.99]"
+    >
+      <span className="grid h-8 w-8 shrink-0 place-items-center rounded-lg bg-[#F4F2FF] text-nexoraBrandDark">
+        <Icon className="h-4 w-4" />
+      </span>
+      <span className="min-w-0 flex-1">
+        <span className="block truncate text-[13px] font-semibold text-nexoraText">{label}</span>
+        {sub ? <span className="block truncate text-[10px] font-medium text-nexoraMuted">{sub}</span> : null}
+      </span>
+      <ChevronRight className="h-4 w-4 shrink-0 text-nexoraSubtle" />
+    </button>
+  );
+}
+
+function VerificationMenuItem({ label, status, verified, onClick }: any) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      className="flex min-h-[48px] w-full items-center gap-3 rounded-lg px-2 text-left transition hover:bg-[#F8F7FF] active:scale-[0.99]"
+    >
+      <span className="grid h-7 w-7 shrink-0 place-items-center rounded-full border border-slate-300 bg-white text-slate-500">
+        <ShieldCheck className="h-4 w-4" />
+      </span>
+      <span className="min-w-0 flex-1 truncate text-[13px] font-semibold text-nexoraText">
+        {label}
+      </span>
+      <span
+        className={`shrink-0 rounded-full px-3 py-1 text-[10px] font-extrabold ${
+          verified ? "bg-emerald-50 text-emerald-500" : "bg-amber-50 text-amber-600"
+        }`}
+      >
+        {status}
+      </span>
+      <ChevronRight className="h-4 w-4 shrink-0 text-nexoraSubtle" />
+    </button>
+  );
+}
+
+function LanguageMenuItem({ label, value, onClick }: any) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      className="flex min-h-[48px] w-full items-center gap-3 rounded-lg px-2 text-left transition hover:bg-[#F8F7FF] active:scale-[0.99]"
+    >
+      <span className="grid h-7 w-7 shrink-0 place-items-center rounded-full bg-white text-slate-500">
+        <Languages className="h-4 w-4" />
+      </span>
+      <span className="min-w-0 flex-1 truncate text-[13px] font-semibold text-nexoraText">
+        {label}
+      </span>
+      <span className="shrink-0 text-[11px] font-semibold text-slate-500">
+        {value}
+      </span>
+      <ChevronRight className="h-4 w-4 shrink-0 text-nexoraSubtle" />
+    </button>
+  );
+}
+
+function ProfileSectionHeader({ title, onBack }: { title: string; onBack: () => void }) {
+  return (
+    <div className="flex items-center gap-3">
+      <button
+        type="button"
+        onClick={onBack}
+        className="grid h-9 w-9 shrink-0 place-items-center rounded-full border border-[#EEE9FF] bg-white text-nexoraText shadow-sm transition active:scale-95"
+        aria-label="Back"
+      >
+        <ArrowLeft className="h-4 w-4" />
+      </button>
+      <h1 className="min-w-0 truncate text-base font-semibold text-nexoraText">
+        {title}
+      </h1>
+    </div>
+  );
+}
+
 export default function StaffProfile() {
-  const { currentLanguage, t } = useTranslation();
+  const { currentLanguage, setLanguage, t } = useTranslation();
+  const navigate = useNavigate();
   const { showToast: notify } = useNotification();
   const { staffMember, saveProfile, setBusinessDisplayName } =
     useStaffAccount();
@@ -39,14 +143,17 @@ export default function StaffProfile() {
   const { data: profileView, isLoading: isProfileLoading } =
     useStaffProfileView();
   const { onLogout } = useOutletContext<LooseObject>() || {};
-  const navigate = useNavigate();
   const [searchParams] = useSearchParams();
 
   const tabFromUrl = searchParams.get("tab");
+  const sectionFromUrl = searchParams.get("section") || "";
+  const activeSection = profileSections.includes(sectionFromUrl)
+    ? sectionFromUrl
+    : "";
 
   useEffect(() => {
     if (tabFromUrl === "kyc") {
-      navigate("/staff/profile", { replace: true });
+      navigate("/staff/profile?section=verification", { replace: true });
     }
   }, [tabFromUrl, navigate]);
 
@@ -107,6 +214,19 @@ export default function StaffProfile() {
   };
 
   const fullPhone = `${dialCode} ${phone}`.trim();
+  const profileName = displayName || fullName || staffMember.fullName || "Staff";
+  const profileInitial = profileName.trim().charAt(0).toUpperCase() || "S";
+  const nexoraId = profileView.staffCode || staffMember.id || "—";
+  const isKYCVerified = profileView.isKYCVerified === true;
+  const kycStatusLabel = isKYCVerified
+    ? t("staff_dashboard.profile.menu_verified")
+    : t("staff_dashboard.profile.menu_not_verified");
+  const openProfileSection = (section: string) => {
+    navigate(`/staff/profile?section=${section}`);
+  };
+  const closeProfileSection = () => {
+    navigate("/staff/profile");
+  };
 
   const validate = () => {
     const errs: Record<string, string> = {};
@@ -116,10 +236,11 @@ export default function StaffProfile() {
       errs.displayName = t(
         "staff_dashboard.profile.error_display_name_required",
       );
+    // Phone only needs a value here, not format validation — same as
+    // onboarding: a phone prefilled and locked from the profile must never
+    // fail submission just because it doesn't match E.164 formatting.
     if (!phone.trim())
       errs.phone = t("staff_dashboard.profile.error_phone_required");
-    else if (!isValidPhoneE164(fullPhone, dialCode))
-      errs.phone = t("staff_dashboard.profile.error_phone_invalid");
     if (bio.length > 300)
       errs.bio = t("staff_dashboard.profile.error_bio_too_long");
     return errs;
@@ -191,23 +312,6 @@ export default function StaffProfile() {
 
   return (
     <div className="space-y-4">
-      <div className="flex gap-2 pb-2">
-        <button
-          type="button"
-          className="px-4 py-2 rounded-lg text-xs font-extrabold uppercase transition cursor-pointer bg-nexoraBrand text-white shadow-sm"
-        >
-          {t("components.staff_dashboard.views.StaffProfile.account")}
-        </button>
-        <button
-          type="button"
-          disabled
-          aria-disabled="true"
-          className="px-4 py-2 rounded-lg text-xs font-extrabold uppercase cursor-not-allowed bg-nexoraSurfaceMuted text-nexoraMuted opacity-60"
-        >
-          {t("components.staff_dashboard.views.StaffProfile.kyc")}
-        </button>
-      </div>
-
       {isProfileLoading ? (
             <section className={panel}>
               <div className="animate-pulse space-y-4">
@@ -219,6 +323,86 @@ export default function StaffProfile() {
             </section>
           ) : (
             <>
+              {!activeSection ? (
+                <>
+              <section className="space-y-2 px-0.5">
+                <h1 className="text-base font-semibold leading-tight text-nexoraText">
+                  {t("staff_dashboard.profile.screen_title")}
+                </h1>
+                <div className={`${compactPanel} flex items-center gap-4 rounded-2xl p-3`}>
+                  <div className="grid h-[60px] w-[60px] shrink-0 place-items-center overflow-hidden rounded-full border-4 border-white bg-[#EDEBFF] text-xl font-semibold text-nexoraBrandDark shadow-sm">
+                    {displayAvatar ? (
+                      <img src={displayAvatar} alt={profileName} className="h-full w-full object-cover" />
+                    ) : (
+                      profileInitial
+                    )}
+                  </div>
+                  <div className="min-w-0 flex-1 text-left">
+                    <h2 className="truncate text-base font-semibold leading-tight text-nexoraText">{profileName}</h2>
+                    <p className="mt-1 truncate text-[11px] font-medium text-nexoraMuted">
+                      {t("staff_dashboard.profile.nexora_id", { id: nexoraId })}
+                    </p>
+                    <p className="mt-0.5 text-[11px] font-medium text-nexoraMuted">
+                      {t("staff_dashboard.profile.member_since")}
+                    </p>
+                    <button
+                      type="button"
+                      onClick={() => openProfileSection("personal")}
+                      className="mt-2 inline-flex h-7 min-w-[88px] items-center justify-center rounded-lg bg-[#EEE9FF] px-4 text-[12px] font-semibold text-nexoraBrandDark transition active:scale-95"
+                    >
+                      {t("staff_dashboard.profile.edit_profile")}
+                    </button>
+                  </div>
+                </div>
+              </section>
+
+              <section className={`${compactPanel} divide-y divide-[#EEE9FF]`}>
+                <ProfileMenuItem
+                  icon={UserCircle}
+                  label={t("staff_dashboard.profile.menu_personal_information")}
+                  onClick={() => openProfileSection("personal")}
+                />
+                <VerificationMenuItem
+                  label={t("staff_dashboard.profile.menu_verification")}
+                  status={kycStatusLabel}
+                  verified={isKYCVerified}
+                  onClick={() => openProfileSection("verification")}
+                />
+                <ProfileMenuItem
+                  icon={Bell}
+                  label={t("staff_dashboard.profile.menu_notification_preferences")}
+                  onClick={() => openProfileSection("notifications")}
+                />
+                <LanguageMenuItem
+                  label={t("staff_dashboard.profile.menu_language")}
+                  value={currentLanguage === "vi" ? "Tiếng Việt" : "English"}
+                  onClick={() => openProfileSection("language")}
+                />
+                <ProfileMenuItem
+                  icon={Lock}
+                  label={t("staff_dashboard.profile.menu_privacy_security")}
+                  onClick={() => openProfileSection("privacy")}
+                />
+              </section>
+
+              <button
+                type="button"
+                onClick={onLogout}
+                className="flex min-h-[44px] w-full items-center justify-center gap-2 rounded-xl border border-amber-200 bg-amber-50 px-2 text-xs font-extrabold text-amber-700 transition hover:bg-amber-100 cursor-pointer"
+              >
+                <LogOut className="h-4.5 w-4.5 shrink-0" />
+                <span className="truncate">{t("staff_dashboard.sign_out")}</span>
+              </button>
+                </>
+              ) : null}
+
+              {activeSection === "personal" ? (
+                <>
+              <ProfileSectionHeader
+                title={t("staff_dashboard.profile.menu_personal_information")}
+                onBack={closeProfileSection}
+              />
+
               <section className={panel}>
                 <h3 className="mb-4 flex items-center gap-1.5 text-base font-extrabold text-nexoraText">
                   {t("staff_dashboard.profile.title")}
@@ -278,10 +462,16 @@ export default function StaffProfile() {
                     </label>
                     <input
                       type="text"
-                      className={`${inputCls} ${errors.fullName ? "border-rose-500 focus:border-rose-500" : ""}`}
+                      disabled={isKYCVerified}
+                      className={`${
+                        isKYCVerified
+                          ? "w-full rounded-xl border border-nexoraBorder bg-nexoraCanvas px-3 py-2.5 text-sm text-nexoraMuted cursor-not-allowed"
+                          : `${inputCls} ${errors.fullName ? "border-rose-500 focus:border-rose-500" : ""}`
+                      }`}
                       value={fullName}
                       placeholder={t("staff_dashboard.profile.ph_full_name")}
                       onChange={(e) => {
+                        if (isKYCVerified) return;
                         setFullName(e.target.value);
                         setSaved(false);
                         setErrors((p) => {
@@ -332,7 +522,9 @@ export default function StaffProfile() {
                       <div className="flex rounded-lg shadow-sm">
                         <CountryCodeSelect
                           value={dialCode}
+                          disabled={isKYCVerified}
                           onChange={(newCode) => {
+                            if (isKYCVerified) return;
                             const digits = phone.replace(/\D/g, "");
                             setDialCode(newCode);
                             setPhone(formatNationalNumber(digits, newCode));
@@ -345,10 +537,16 @@ export default function StaffProfile() {
                         />
                         <input
                           type="text"
-                          className={`h-10 w-full min-w-0 rounded-r-lg border border-l-0 bg-nexoraSurface px-3.5 text-sm text-nexoraText outline-none focus:border-nexoraBrand transition-all ${errors.phone ? "border-rose-500 focus:border-rose-500 focus:ring-2 focus:ring-rose-500/15" : "border-nexoraBorder"}`}
+                          disabled={isKYCVerified}
+                          className={`h-10 w-full min-w-0 rounded-r-lg border border-l-0 px-3.5 text-sm outline-none transition-all ${
+                            isKYCVerified
+                              ? "bg-nexoraCanvas text-nexoraMuted cursor-not-allowed border-nexoraBorder"
+                              : `bg-nexoraSurface text-nexoraText focus:border-nexoraBrand ${errors.phone ? "border-rose-500 focus:border-rose-500 focus:ring-2 focus:ring-rose-500/15" : "border-nexoraBorder"}`
+                          }`}
                           value={phone}
                           placeholder={t("staff_dashboard.profile.ph_phone")}
                           onChange={(e) => {
+                            if (isKYCVerified) return;
                             const formatted = formatNationalNumber(
                               e.target.value,
                               dialCode,
@@ -470,27 +668,113 @@ export default function StaffProfile() {
                   </div>
                 </section>
               ) : null}
+                </>
+              ) : null}
 
-              <section className={panel}>
-                <h3 className="mb-3 text-base font-extrabold text-nexoraDangerDark dark:text-red-400">
-                  {t(
-                    "components.staff_dashboard.views.StaffProfile.signOutAccount",
-                  )}
-                </h3>
-                <p className="mb-4 text-xs text-nexoraSubtle">
-                  {t(
-                    "components.staff_dashboard.views.StaffProfile.signOutFromThe",
-                  )}
-                </p>
-                <button
-                  type="button"
-                  onClick={onLogout}
-                  className="flex w-full items-center justify-center gap-2 rounded-xl border border-red-200 bg-red-50 py-3 text-sm font-extrabold text-red-600 transition hover:bg-red-100 cursor-pointer"
-                >
-                  <LogOut className="h-4.5 w-4.5" />
-                  {t("staff_dashboard.sign_out")}
-                </button>
-              </section>
+              {activeSection === "verification" ? (
+                <>
+                  <ProfileSectionHeader
+                    title={t("staff_dashboard.profile.menu_verification")}
+                    onBack={closeProfileSection}
+                  />
+                  <section className={panel}>
+                    <div className="flex items-start gap-3">
+                      <span
+                        className={`grid h-10 w-10 shrink-0 place-items-center rounded-xl ${
+                          isKYCVerified
+                            ? "bg-emerald-50 text-emerald-600"
+                            : "bg-amber-50 text-amber-600"
+                        }`}
+                      >
+                        <ShieldCheck className="h-5 w-5" />
+                      </span>
+                      <div>
+                        <h3 className="text-sm font-extrabold text-nexoraText">
+                          {kycStatusLabel}
+                        </h3>
+                        <p className="mt-1 text-xs leading-5 text-nexoraMuted">
+                          {isKYCVerified
+                            ? t("staff_dashboard.profile.verification_body")
+                            : t("staff_dashboard.profile.verification_unverified_body")}
+                        </p>
+                      </div>
+                    </div>
+                  </section>
+                </>
+              ) : null}
+
+              {activeSection === "notifications" ? (
+                <>
+                  <ProfileSectionHeader
+                    title={t("staff_dashboard.profile.menu_notification_preferences")}
+                    onBack={closeProfileSection}
+                  />
+                  <StaffNotifications showPushPreferences={false} />
+                </>
+              ) : null}
+
+              {activeSection === "language" ? (
+                <>
+                  <ProfileSectionHeader
+                    title={t("staff_dashboard.profile.menu_language")}
+                    onBack={closeProfileSection}
+                  />
+                  <section className={`${compactPanel} divide-y divide-[#EEE9FF]`}>
+                    <button
+                      type="button"
+                      onClick={() => setLanguage("en")}
+                      className="flex min-h-[44px] w-full items-center justify-between rounded-lg px-2 text-left transition hover:bg-[#F8F7FF]"
+                    >
+                      <span className="text-[13px] font-semibold text-nexoraText">English</span>
+                      <span className="text-[11px] font-bold text-nexoraMuted">
+                        {currentLanguage === "en" ? t("staff_dashboard.profile.current_language") : ""}
+                      </span>
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setLanguage("vi")}
+                      className="flex min-h-[44px] w-full items-center justify-between rounded-lg px-2 text-left transition hover:bg-[#F8F7FF]"
+                    >
+                      <span className="text-[13px] font-semibold text-nexoraText">Tiếng Việt</span>
+                      <span className="text-[11px] font-bold text-nexoraMuted">
+                        {currentLanguage === "vi" ? t("staff_dashboard.profile.current_language") : ""}
+                      </span>
+                    </button>
+                  </section>
+                </>
+              ) : null}
+
+              {activeSection === "privacy" ? (
+                <>
+                  <ProfileSectionHeader
+                    title={t("staff_dashboard.profile.menu_privacy_security")}
+                    onBack={closeProfileSection}
+                  />
+
+                  <section className={`${compactPanel} divide-y divide-[#EEE9FF]`}>
+                    <ProfileMenuItem
+                      icon={FileText}
+                      label={t("staff_dashboard.profile.terms_title")}
+                      sub={t("staff_dashboard.profile.terms_subtitle")}
+                      onClick={() =>
+                        navigate(
+                          `/terms-of-service?returnTo=${encodeURIComponent("/staff/profile?section=privacy")}`,
+                        )
+                      }
+                    />
+                    <ProfileMenuItem
+                      icon={Lock}
+                      label={t("staff_dashboard.profile.privacy_policy_title")}
+                      sub={t("staff_dashboard.profile.privacy_subtitle")}
+                      onClick={() =>
+                        navigate(
+                          `/privacy-policy?returnTo=${encodeURIComponent("/staff/profile?section=privacy")}`,
+                        )
+                      }
+                    />
+                  </section>
+                </>
+              ) : null}
             </>
           )}
     </div>

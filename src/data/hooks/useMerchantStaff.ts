@@ -13,15 +13,12 @@ import type {
   StaffStatsDateParams,
 } from '../../types/repositories'
 import type { StaffInviteParams, StaffLinkRequestParams, StaffReorderItem, UpdateStaffStatusVars } from '../../types/hooks'
+import { staffMemberMatchesAnyId } from '../../utils/merchantStaffPending'
 
 export { StatusFilter }
 
 function staffMemberMatchesLinkId(member: StaffMember, staffLinkId: string): boolean {
-  return (
-    member.id === staffLinkId ||
-    member.staffLinkId === staffLinkId ||
-    member.linkId === staffLinkId
-  )
+  return staffMemberMatchesAnyId(member, staffLinkId)
 }
 
 function patchStaffStatusInCache(
@@ -43,6 +40,22 @@ function patchStaffStatusInCache(
             ? { ...item, status: nextStatus, isActive, showInTipsFlow: isActive }
             : item,
         ),
+      }
+    },
+  )
+}
+
+function removeStaffLinkFromCache(queryClient: QueryClient, staffLinkId: string) {
+  queryClient.setQueriesData<StaffListPage>(
+    { queryKey: ['merchantStaff'] },
+    (current) => {
+      if (!current?.items?.length) return current
+      const items = current.items.filter((item) => !staffMemberMatchesLinkId(item, staffLinkId))
+      if (items.length === current.items.length) return current
+      return {
+        ...current,
+        items,
+        totalCount: Math.max(0, (current.totalCount ?? current.items.length) - 1),
       }
     },
   )
@@ -71,6 +84,7 @@ export function useMerchantStaff({
     queryFn: () => merchantStaffRepository.list(statusFilter, pageNumber, pageSize, trimmedKeyword),
     enabled,
     placeholderData: keepPreviousData,
+    refetchOnMount: true,
   })
 }
 
@@ -194,10 +208,21 @@ export function useUpdateMerchantStaffStatus() {
 
 export function useApproveMerchantStaffLink() {
   const queryClient = useQueryClient()
-  return useMutation<void, Error, string>({
+  return useMutation<void, Error, string, { previousQueries: ReturnType<typeof snapshotMerchantStaffQueries> }>({
     mutationFn: (linkId) => merchantStaffRepository.approveLink(linkId),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: qk.merchantStaff() })
+    onMutate: async (linkId) => {
+      await queryClient.cancelQueries({ queryKey: qk.merchantStaff() })
+      const previousQueries = snapshotMerchantStaffQueries(queryClient)
+      removeStaffLinkFromCache(queryClient, linkId)
+      return { previousQueries }
+    },
+    onError: (_err, _linkId, context) => {
+      context?.previousQueries?.forEach(([queryKey, data]) => {
+        queryClient.setQueryData(queryKey, data)
+      })
+    },
+    onSettled: () => {
+      void queryClient.invalidateQueries({ queryKey: qk.merchantStaff() })
     },
   })
 }

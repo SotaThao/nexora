@@ -23,6 +23,7 @@ import {
 } from '../../utils/merchantBusinessId'
 import { downloadQrCode } from '../../utils/qrUtils'
 import { payoutTypeToUiKey, getPaymentMethodDisplayName } from '../../data/paymentMethodTypes'
+import QrImage from '../ui/QrImage'
 
 function isReadyForCustomerPayment(method) {
   return Boolean(method?.isActive && method?.accountInfo?.trim())
@@ -247,10 +248,10 @@ export default function SettingsTipQrPanel({
             className="mx-auto flex h-28 w-28 shrink-0 items-center justify-center rounded-lg border border-nexoraBorder/80 bg-white p-2 shadow-sm relative overflow-hidden cursor-pointer hover:border-nexoraBrand transition select-none group md:mx-0 md:self-start"
           >
             {qrPreviewUrl ? (
-              <img
+              <QrImage
                 src={qrPreviewUrl}
                 alt={t('components.settings.SettingsTipQrPanel.qrAlt')}
-                className="h-full w-full object-contain group-hover:scale-105 transition duration-200"
+                className="h-full w-full transition duration-200 group-hover:scale-105"
               />
             ) : (
               <QrCode className="h-12 w-12 text-slate-300" />
@@ -311,10 +312,10 @@ export default function SettingsTipQrPanel({
               title={t('components.settings.SettingsTipQrPanel.previewQr')}
             >
               {qrPreviewUrl ? (
-                <img
+                <QrImage
                   src={qrPreviewUrl}
                   alt={t('components.settings.SettingsTipQrPanel.qrAlt')}
-                  className="h-full w-full object-contain"
+                  className="h-full w-full"
                 />
               ) : (
                 <QrCode className="h-12 w-12 text-slate-300" />
@@ -418,10 +419,10 @@ export default function SettingsTipQrPanel({
         <div className="flex flex-col items-center gap-4 rounded-xl border border-slate-100 bg-slate-50/80 p-4">
           <div className="flex h-44 w-44 items-center justify-center rounded-2xl border-2 border-nexoraBorder bg-white p-3 shadow-sm">
             {qrPreviewUrl ? (
-              <img
+              <QrImage
                 src={qrPreviewUrl}
                 alt={t('components.settings.SettingsTipQrPanel.qrAlt')}
-                className="h-full w-full object-contain"
+                className="h-full w-full"
               />
             ) : (
               <QrCode className="h-16 w-16 text-slate-300" />

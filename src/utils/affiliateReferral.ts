@@ -1,3 +1,4 @@
+import { getWebUrlOrigin } from './webUrlBase'
 import { storage } from './storage'
 
 const REF_CODE_KEY = 'referral_ref_code'
@@ -37,7 +38,7 @@ export function getProfileReferralCode(profile: ReferralProfile = {}) {
 }
 
 export function buildAffiliateReferralUrl({
-  origin = typeof window !== 'undefined' ? window.location.origin : '',
+  origin = getWebUrlOrigin(),
   referralCode,
   leg,
 }: {
@@ -55,7 +56,7 @@ export function buildAffiliateReferralUrl({
 
 /** Combined staff link + affiliate ref: /?ref=CODE&staff=STAFF_ID */
 export function buildStaffShareUrl({
-  origin = typeof window !== 'undefined' ? window.location.origin : '',
+  origin = getWebUrlOrigin(),
   referralCode,
   staffCode,
 }: {
