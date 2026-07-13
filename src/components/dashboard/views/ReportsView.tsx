@@ -1,4 +1,4 @@
-import { useState, useMemo, useEffect, useCallback } from 'react'
+import { useState, useMemo, useEffect, useCallback, useRef } from 'react'
 import { useSearchParams } from 'react-router-dom'
 import { CreditCard, Coins, CheckCircle, Clock, XCircle, AlertCircle, Eye } from 'lucide-react'
 import { useTranslation } from '../../../contexts/LanguageContext'
@@ -142,6 +142,13 @@ function ReportsView({
       : REPORTS_TAB_TIPS
   const selectedPaymentId = searchParams.get('paymentId')
 
+  // Deep-link from a "TipReceived" notification click (issue #419): the
+  // Tips API has no get-by-id endpoint, so we narrow the date filter to the
+  // notification's day and match the transaction client-side once loaded.
+  const deepLinkTransactionId =
+    !isStaffAudience && activeTab === REPORTS_TAB_TIPS ? searchParams.get('transactionId') : null
+  const deepLinkDate = deepLinkTransactionId ? searchParams.get('date') : null
+
   const setActiveTab = useCallback((tab: string) => {
     const next = new URLSearchParams(searchParams)
     next.set('tab', tab)
@@ -177,9 +184,9 @@ function ReportsView({
   }, [searchParams])
 
   // Filter States
-  const [dateRangePreset, setDateRangePreset] = useState('all')
-  const [startDate, setStartDate] = useState('')
-  const [endDate, setEndDate] = useState('')
+  const [dateRangePreset, setDateRangePreset] = useState(deepLinkDate ? 'custom' : 'all')
+  const [startDate, setStartDate] = useState(deepLinkDate || '')
+  const [endDate, setEndDate] = useState(deepLinkDate || '')
   const [minAmount, setMinAmount] = useState('')
   const [maxAmount, setMaxAmount] = useState('')
   const [selectedStaff, setSelectedStaff] = useState('all')
@@ -189,7 +196,11 @@ function ReportsView({
   const [searchQuery, setSearchQuery] = useState('')
   const [debouncedSearch, setDebouncedSearch] = useState('')
   const [selectedTx, setSelectedTx] = useState<any | null>(null)
-  const { pageNumber, pageSize, setPage, reset: resetPage } = usePagination({ pageSize: DEFAULT_PAGE_SIZE })
+  const { pageNumber, pageSize, setPage, reset: resetPage } = usePagination({
+    // Widen the page when deep-linking a specific tip so it's more likely to
+    // be on page 1 alongside the date-narrowed filter above.
+    pageSize: deepLinkTransactionId ? 100 : DEFAULT_PAGE_SIZE,
+  })
 
   // Awaiting-confirmation is driven by the visible Status filter, not a
   // separate toggle, so the criteria is transparent and clears via Reset.
@@ -343,6 +354,25 @@ function ReportsView({
   const totalPages = Math.max(1, transactionsPage?.totalPages ?? 1)
   const hasNextPage = transactionsPage?.hasNextPage ?? false
   const hasPreviousPage = transactionsPage?.hasPreviousPage ?? false
+
+  // Auto-open the TransactionDetailModal for a tip deep-linked from a
+  // notification click (issue #419), once the matching tip is loaded.
+  // Runs once per deep link — if the tip isn't on this (date-narrowed) page,
+  // we still land correctly on the Tips tab, just without the modal.
+  const attemptedDeepLinkRef = useRef<string | null>(null)
+  useEffect(() => {
+    if (!deepLinkTransactionId || isPending) return
+    if (attemptedDeepLinkRef.current === deepLinkTransactionId) return
+    attemptedDeepLinkRef.current = deepLinkTransactionId
+
+    const match = transactions.find((tx) => tx.id === deepLinkTransactionId)
+    if (match) setSelectedTx(match)
+
+    const next = new URLSearchParams(searchParams)
+    next.delete('transactionId')
+    next.delete('date')
+    setSearchParams(next, { replace: true })
+  }, [deepLinkTransactionId, isPending, transactions, searchParams, setSearchParams])
 
   // Amount filter only — not supported by tips API
   // For the awaiting-confirmation filter, also refine client-side to the exact eligibility predicate
