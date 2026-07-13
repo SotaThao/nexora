@@ -4,6 +4,8 @@ export const errorCodeToI18nKey = {
   USER_ACCOUNT_INACTIVE: 'errors.user_account_inactive',
   USER_ACCOUNT_INCOMPLETE: 'errors.user_account_incomplete',
   USER_EMAIL_ALREADY_EXISTS: 'errors.user_email_already_exists',
+  USER_EMAIL_ALREADY_EXIST: 'errors.user_email_already_exists',
+  USER_EMAIL_ALREADY_EXISTS_IN_SSO: 'errors.user_email_already_exists',
   USER_INVALID_REFERRAL_CODE: 'errors.user_invalid_referral_code',
   USER_SIGNUP_FAILED: 'errors.user_signup_failed',
   AUTH_PASSWORDS_DO_NOT_MATCH: 'errors.auth_passwords_do_not_match',

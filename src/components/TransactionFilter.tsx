@@ -27,8 +27,6 @@ export default function TransactionFilter({
   resetFilters,
   staffOptions = [],
   touchpointOptions = [],
-  paymentOptions,
-  statusOptions,
   variant = 'merchant',
   defaultCollapsed = false,
 }) {
@@ -37,22 +35,19 @@ export default function TransactionFilter({
   const isCollapsible = defaultCollapsed
   const [isExpanded, setIsExpanded] = useState(!defaultCollapsed)
 
-  const resolvedPaymentOptions = paymentOptions ?? [
+  const paymentOptions = [
     { value: 'all', label: t('dashboard.activity_log.all_payments') },
-    { value: 'CashApp', label: 'Cash App' },
     { value: 'Venmo', label: 'Venmo' },
+    { value: 'CashApp', label: 'Cash App' },
     { value: 'Zelle', label: 'Zelle' },
-    { value: 'PayPal', label: 'PayPal' },
-    { value: 'AppleCash', label: 'Apple Cash' },
-    { value: 'Other', label: 'Other' },
+    { value: 'VLINKPAY', label: 'VLINKPAY' }
   ]
 
-  const resolvedStatusOptions = statusOptions ?? [
+  const statusOptions = [
     { value: 'all', label: t('dashboard.activity_log.all_statuses') },
-    { value: 'Initiated', label: 'Initiated' },
-    { value: 'Confirmed', label: 'Confirmed' },
-    { value: 'Skipped', label: 'Skipped' },
-    { value: 'Completed', label: 'Completed' },
+    { value: 'Success', label: 'Success' },
+    { value: 'Pending', label: 'Pending' },
+    { value: 'Failed', label: 'Failed' }
   ]
 
   const datePresetOptions = [
@@ -212,7 +207,7 @@ export default function TransactionFilter({
             size="sm"
             value={selectedPayment}
             onChange={(e) => setSelectedPayment(e.target.value)}
-            options={resolvedPaymentOptions}
+            options={paymentOptions}
           />
         </div>
 
@@ -225,7 +220,7 @@ export default function TransactionFilter({
             size="sm"
             value={selectedStatus}
             onChange={(e) => setSelectedStatus(e.target.value)}
-            options={resolvedStatusOptions}
+            options={statusOptions}
           />
         </div>
       </div>

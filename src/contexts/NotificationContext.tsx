@@ -70,7 +70,10 @@ export function NotificationProvider({ children }: NotificationProviderProps) {
       {children}
 
       {/* Sleek Premium Toast Overlay */}
-      <div className="pointer-events-none fixed left-1/2 top-[max(0.75rem,env(safe-area-inset-top))] z-[99999] flex w-[calc(100%-1rem)] max-w-sm -translate-x-1/2 flex-col gap-3 sm:left-auto sm:right-5 sm:top-[max(1.25rem,env(safe-area-inset-top))] sm:w-full sm:translate-x-0">
+      <div
+        className="fixed inset-x-0 z-[99999] flex flex-col gap-3 px-3 pointer-events-none sm:inset-x-auto sm:right-5 sm:w-full sm:max-w-sm sm:px-0"
+        style={{ top: 'calc(var(--app-safe-area-top) + 0.75rem)' }}
+      >
         {toasts.map((toast) => {
           const Icon =
             {

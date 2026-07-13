@@ -11,10 +11,12 @@ import Step1BusinessInfo from './setup-wizard/steps/Step1BusinessInfo'
 import Step2StaffTouchpoints from './setup-wizard/steps/Step2StaffTouchpoints'
 import Step3Download from './setup-wizard/steps/Step3Download'
 import PayoutSetupModal from './setup-wizard/PayoutSetupModal'
+import { getCustomerAppBaseUrl } from '../utils/webUrlBase'
 import PersonalSetupWizard from './setup-wizard/PersonalSetupWizard'
 import usePersonalSetupWizard from './setup-wizard/hooks/usePersonalSetupWizard'
 import { buildPublicQrImageUrl } from '../data/repositories/publicQr'
 import LanguageSwitcher from './ui/LanguageSwitcher'
+import QrImage from './ui/QrImage'
 
 export { renderTextWithGoldStars, getTouchpointIcon } from './setup-wizard/constants'
 
@@ -60,7 +62,9 @@ export default function SetupWizard() {
 
   const {
     currentLanguage, setLanguage, t,
-    currentStep, setCurrentStep, isSsoLocked, isStepSaving,
+    currentStep, setCurrentStep, isSsoLocked,
+    isNameLocked, isAddressLocked, isPhoneLocked, isWebsiteLocked, isFeedbackEmailLocked,
+    isStepSaving,
     businessInfo, setBusinessInfo,
     merchantPaymentMethods,
     reviewLinks, setReviewLinks,
@@ -114,7 +118,10 @@ export default function SetupWizard() {
       <div className="absolute bottom-1/4 right-1/4 h-64 w-64 bg-[radial-gradient(circle_at_center,_var(--tw-gradient-stops))] from-[rgba(43,89,255,0.02)] via-transparent to-transparent blur-3xl pointer-events-none sm:h-[450px] sm:w-[450px] no-print"></div>
 
       {/* Main Container */}
-      <div className="max-w-6xl mx-auto px-4 py-6 sm:py-8 relative z-10 flex flex-col min-h-dvh justify-between no-print">
+      <div
+        className="max-w-6xl mx-auto px-4 pb-6 sm:pb-8 relative z-10 flex flex-col min-h-dvh justify-between no-print"
+        style={{ paddingTop: 'calc(env(safe-area-inset-top, 0px) + 1.5rem)' }}
+      >
 
         {/* Header */}
         <header className="flex flex-col md:flex-row md:items-center justify-between border-b border-nexoraBorder pb-6 mb-8 gap-4">
@@ -195,6 +202,11 @@ export default function SetupWizard() {
                 t={t}
                 currentLanguage={currentLanguage}
                 isSsoLocked={isSsoLocked}
+                isNameLocked={isNameLocked}
+                isAddressLocked={isAddressLocked}
+                isPhoneLocked={isPhoneLocked}
+                isWebsiteLocked={isWebsiteLocked}
+                isFeedbackEmailLocked={isFeedbackEmailLocked}
                 businessInfo={businessInfo}
                 setBusinessInfo={setBusinessInfo}
                 reviewLinks={reviewLinks}
@@ -315,12 +327,13 @@ export default function SetupWizard() {
 
       {/* Zoom QR Code Preview Modal */}
       {previewingTp && (
-        <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/60 p-4 backdrop-blur-sm">
-          <div className="w-full max-w-sm rounded-2xl bg-white p-6 shadow-2xl animate-scaleUp relative">
+        <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/60 modal-overlay-safe backdrop-blur-sm">
+          <div className="w-full max-w-md overflow-x-hidden overflow-y-auto rounded-2xl bg-white p-6 shadow-2xl animate-scaleUp relative max-h-[min(92dvh,calc(100dvh-var(--app-safe-area-top)-var(--app-safe-area-bottom)-1.5rem))]">
             <button
               onClick={() => setPreviewingTp(null)}
-              className="absolute right-4 top-4 rounded-lg p-1 text-slate-400 hover:bg-slate-100 hover:text-slate-600 transition"
+              className="modal-close-btn absolute right-2 top-2 rounded-lg text-slate-400 hover:bg-slate-100 hover:text-slate-600 transition"
               title={t('setup.close')}
+              aria-label={t('setup.close')}
             >
               <X className="h-5 w-5" />
             </button>
@@ -329,8 +342,8 @@ export default function SetupWizard() {
               {t('dashboard.touchpoints.tabs.stations')} - {previewingTp.name}
             </h3>
 
-            <div className="flex flex-col items-center">
-              <div className="mx-auto flex aspect-[2/3] w-48 flex-col items-center justify-between rounded-2xl bg-nexoraCanvas border border-nexoraBorder/80 p-4 text-nexoraText shadow-md qr-print-card">
+            <div className="flex w-full flex-col items-center">
+              <div className="mx-auto flex aspect-[2/3] w-full max-w-sm min-w-0 flex-col items-center justify-between rounded-2xl bg-nexoraCanvas border border-nexoraBorder/80 p-4 text-nexoraText shadow-md qr-print-card">
                 <div className="flex items-center gap-1 justify-center qr-print-brand-header">
                   <img src="/assets/nexora-logo.png" alt="Nexora Logo" className="h-3.5 w-3.5 object-contain qr-print-brand-logo" />
                   <span className="text-[8px] font-black tracking-wider text-slate-800 qr-print-brand-text">NEXORA</span>
@@ -345,14 +358,14 @@ export default function SetupWizard() {
                   </div>
                 </div>
 
-                <div className="h-28 w-28 rounded-lg bg-white border border-nexoraBorder/60 p-2 flex items-center justify-center shadow-inner qr-print-qr-wrapper">
-                  <img
+                <div className="flex aspect-square w-full max-w-full min-w-0 items-center justify-center overflow-hidden rounded-lg border border-nexoraBorder/60 bg-white p-2 shadow-inner qr-print-qr-wrapper">
+                  <QrImage
                     src={buildPublicQrImageUrl(
-                      `${window.location.origin}${window.location.pathname}?flow=customer&merchant=${encodeURIComponent(businessInfo.name || 'Your Business')}&tech=tp/${previewingTp.id}`,
-                      150,
+                      `${getCustomerAppBaseUrl()}?flow=customer&merchant=${encodeURIComponent(businessInfo.name || 'Your Business')}&tech=tp/${previewingTp.id}`,
+                      300,
                     )}
                     alt="QR Preview"
-                    className="h-full w-full object-contain qr-print-qr-image"
+                    className="h-full w-full max-h-full max-w-full qr-print-qr-image"
                   />
                 </div>
 
@@ -368,7 +381,7 @@ export default function SetupWizard() {
 
               <div className="mt-4 w-full text-center">
                 <p className="text-[10px] font-mono text-slate-400 select-all truncate bg-slate-50 px-2 py-1.5 rounded border border-slate-100">
-                  {`${window.location.origin}${window.location.pathname}?flow=customer&merchant=${encodeURIComponent(businessInfo.name || 'Your Business')}&tech=tp/${previewingTp.id}`}
+                  {`${getCustomerAppBaseUrl()}?flow=customer&merchant=${encodeURIComponent(businessInfo.name || 'Your Business')}&tech=tp/${previewingTp.id}`}
                 </p>
               </div>
 
@@ -403,9 +416,9 @@ export default function SetupWizard() {
             </div>
 
             <div className="qr-print-qr-wrapper">
-              <img
+              <QrImage
                 src={buildPublicQrImageUrl(
-                  `${window.location.origin}${window.location.pathname}?flow=customer&merchant=${encodeURIComponent(businessInfo.name || 'Your Business')}`,
+                  `${getCustomerAppBaseUrl()}?flow=customer&merchant=${encodeURIComponent(businessInfo.name || 'Your Business')}`,
                   150,
                 )}
                 alt="Scan QR code to tip and review"

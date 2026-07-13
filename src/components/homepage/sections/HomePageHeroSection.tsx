@@ -1,11 +1,14 @@
 /** Homepage section component */
+import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useHomePageBridge } from '../context/HomePageBridgeContext'
 import LucideIcon from '../ui/LucideIcon'
+import ToggleSwitch from '../../ui/ToggleSwitch'
 
 export default function HomePageHeroSection() {
   const navigate = useNavigate()
   const { hp, planCta, onLogout } = useHomePageBridge()
+  const [chloeOnline, setChloeOnline] = useState(true)
 
   return (
     <>
@@ -25,7 +28,7 @@ export default function HomePageHeroSection() {
                   <span data-i18n="hero-title-2">Review Faster.</span><br />
                   <span className="text-grad" data-i18n="hero-title-grad">Grow Stronger.</span>
                 </h2>
-                <p className="text-base sm:text-lg text-slate-600 leading-relaxed max-w-2xl mx-auto lg:mx-0" data-i18n="hero-desc">One QR code for your whole salon. Guests tip their nail tech, leave a Google review in one tap, and earn rewards that bring them back. Staff keep every dollar of their tips. You stay in control from one simple dashboard.</p>
+                <p className="text-base sm:text-lg text-slate-600 leading-relaxed max-w-2xl mx-auto lg:mx-0" data-i18n="hero-desc">One smart QR code. Your customers tip your staff directly — no card fees. They leave Google reviews automatically. And they earn rewards to come back.</p>
                 <div className="flex flex-row gap-4 justify-center lg:justify-start flex-wrap">
                   <a className="inline-flex items-center justify-center gap-2 rounded-full bg-navy text-white px-7 py-4 text-base font-bold shadow-lg hover:bg-slate-800 transition-all hover:scale-[1.02] ds-control ds-button nx-hero-btn" href="#simulator">
                     <span data-i18n="hero-btn-primary">Try the Live Demo</span>
@@ -38,15 +41,15 @@ export default function HomePageHeroSection() {
                   <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
                     <div className="bg-white border border-slate-200/60 shadow-sm rounded-xl p-3 flex items-center gap-2 ds-surface ds-elevate">
                       <LucideIcon name="check" className="w-4 h-4 text-green flex-shrink-0" />
-                      <span className="text-xs font-bold text-slate-700" data-i18n="badge-1">Direct Staff Tips</span>
+                      <span className="text-xs font-bold text-slate-700" data-i18n="badge-1">Zero-Fee Tips</span>
                     </div>
                     <div className="bg-white border border-slate-200/60 shadow-sm rounded-xl p-3 flex items-center gap-2 ds-surface ds-elevate">
                       <LucideIcon name="check" className="w-4 h-4 text-green flex-shrink-0" />
-                      <span className="text-xs font-bold text-slate-700" data-i18n="badge-2">Google Reviews</span>
+                      <span className="text-xs font-bold text-slate-700" data-i18n="badge-2">Auto Google Reviews</span>
                     </div>
                     <div className="bg-white border border-slate-200/60 shadow-sm rounded-xl p-3 flex items-center gap-2 ds-surface ds-elevate">
                       <LucideIcon name="check" className="w-4 h-4 text-green flex-shrink-0" />
-                      <span className="text-xs font-bold text-slate-700" data-i18n="badge-3">One QR Code</span>
+                      <span className="text-xs font-bold text-slate-700" data-i18n="badge-3">One QR for Everything</span>
                     </div>
                     <div className="bg-white border border-slate-200/60 shadow-sm rounded-xl p-3 flex items-center gap-2 ds-surface ds-elevate">
                       <LucideIcon name="check" className="w-4 h-4 text-green flex-shrink-0" />
@@ -322,12 +325,18 @@ export default function HomePageHeroSection() {
                             <span className="text-[9px] text-muted font-bold" data-i18n="staff-role">LEAD NAIL ART SPECIALIST</span>
                           </div>
                         </div>
-                        <label className="relative inline-flex items-center cursor-pointer">
-                          <input defaultChecked className="sr-only peer ds-field" id="staff-active-toggle" onChange={(e) => hp.toggleStaffStatus('Chloe', e.currentTarget.checked)} type="checkbox" />
-                          <div className="w-7 h-4 bg-slate-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:bg-green after:content-[''] after:absolute after:top-0.5 after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-3 after:w-3 after:transition-all">
-                          </div>
+                        <div className="flex items-center">
+                          <ToggleSwitch
+                            checked={chloeOnline}
+                            onChange={() => {
+                              const next = !chloeOnline
+                              setChloeOnline(next)
+                              hp.toggleStaffStatus('Chloe', next)
+                            }}
+                            activeColor="bg-emerald-500"
+                          />
                           <span className="ml-1 text-[9px] font-extrabold text-slate-500 uppercase">ONLINE</span>
-                        </label>
+                        </div>
                       </div>
                       
                       <div className="bg-gradient-to-r from-purple to-indigo-600 text-white p-4 rounded-2xl shadow-md space-y-2">

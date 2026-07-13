@@ -11,14 +11,16 @@ import {
 } from '../../../data/hooks/useNotifications'
 import type { NotificationRecord } from '../../../types/domain'
 import { SkeletonLayout } from '../../ui/skeleton'
+import ToggleSwitch from '../../ui/ToggleSwitch'
 import { STAFF_NOTIFICATIONS_SKELETON } from '../skeletons/staffDashboardSkeletons'
 import { formatNotificationDateTime } from '../../dashboard/utils'
-import { navigateStaffNotification } from '../constants'
+import { navigateStaffNotification, resolveStaffNotificationActionUrl } from '../constants'
 
 const panel =
   "rounded-2xl border border-nexoraBorder bg-nexoraSurface p-4 shadow-sm sm:p-5";
 const notificationRowBase =
   "flex w-full items-start gap-3 px-3 py-3 text-left transition";
+const listRowBase = "py-2.5";
 
 function notificationRowClass(read: boolean, hasAction = false) {
   if (read) {
@@ -42,24 +44,12 @@ function notificationIcon(type: string) {
   return TYPE_ICON[type] || Bell;
 }
 
-function Toggle({ on, onChange }) {
-  return (
-    <button
-      type="button"
-      onClick={() => onChange(!on)}
-      className={`relative h-6 w-11 shrink-0 rounded-full transition ${on ? 'bg-emerald-500' : 'bg-nexoraBorder'}`}
-      aria-pressed={on}
-    >
-      <span className={`absolute top-0.5 h-5 w-5 rounded-full bg-white transition-all ${on ? 'left-[22px]' : 'left-0.5'}`} />
-    </button>
-  )
-}
-
 const PREF_KEYS = ['tipConfirmations', 'reviews', 'businessInvites']
 
-export default function StaffNotifications() {
+export default function StaffNotifications({ showPushPreferences = true } = {}) {
   const { t, currentLanguage } = useTranslation();
   const navigate = useNavigate();
+  const { account, setPushPreference } = useStaffAccount();
   const { data: notifications = [], isPending } = useNotifications();
   const { data: unreadCount = 0 } = useUnreadCount();
   const markReadMutation = useMarkNotificationRead();
@@ -158,6 +148,26 @@ export default function StaffNotifications() {
           </div>
         )}
       </section>
+
+      {showPushPreferences ? (
+      <section className={panel}>
+        <h3 className="mb-3 text-base font-extrabold text-nexoraText">{t('staff_dashboard.notifications.push_prefs')}</h3>
+        <div className="space-y-1">
+          {PREF_KEYS.map((key) => (
+            <div key={key} className={`flex items-center justify-between gap-3 ${listRowBase}`}>
+              <span className="text-sm font-bold text-nexoraText">{t(`staff_dashboard.notifications.pref.${key}`)}</span>
+              <ToggleSwitch
+                checked={!!account.pushPreferences?.[key]}
+                onChange={() => setPushPreference(key, !account.pushPreferences?.[key])}
+                size="md"
+                activeColor="bg-emerald-500"
+                inactiveColor="bg-nexoraBorder"
+              />
+            </div>
+          ))}
+        </div>
+      </section>
+      ) : null}
     </div>
   );
 }
