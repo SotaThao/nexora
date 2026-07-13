@@ -1307,10 +1307,67 @@
   line-height: 1.4;
 }
 
+.booking-hub-view .tech-services-field-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+  margin-bottom: 4px;
+}
+
+.booking-hub-view .tech-services-field-head .settings-label {
+  margin: 0;
+}
+
+.booking-hub-view .tech-service-check-all-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  flex-shrink: 0;
+  margin-left: 12px;
+  border: 1px solid rgba(70, 72, 216, 0.34);
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--nexora-brand) 9%, white);
+  padding: 7px 14px;
+  color: var(--nexora-brand);
+  font-size: 12px;
+  font-weight: 800;
+  line-height: 1.2;
+  cursor: pointer;
+  transition: background 0.15s ease, border-color 0.15s ease, color 0.15s ease, box-shadow 0.15s ease;
+}
+
+.booking-hub-view .tech-service-check-all-toggle:hover {
+  border-color: rgba(70, 72, 216, 0.5);
+  background: color-mix(in srgb, var(--nexora-brand) 14%, white);
+  box-shadow: 0 4px 12px rgba(70, 72, 216, 0.12);
+}
+
+.booking-hub-view .tech-service-check-all-toggle:has(input:checked) {
+  border-color: var(--nexora-brand);
+  background: var(--nexora-brand);
+  color: #fff;
+}
+
+.booking-hub-view .tech-service-check-all-toggle:has(input:indeterminate) {
+  border-color: var(--nexora-brand);
+  background: color-mix(in srgb, var(--nexora-brand) 16%, white);
+  color: var(--nexora-brand);
+  box-shadow: 0 4px 12px rgba(70, 72, 216, 0.1);
+}
+
+.booking-hub-view .tech-service-check-all-toggle input {
+  width: 16px;
+  height: 16px;
+  margin: 0;
+  accent-color: currentColor;
+}
+
 .booking-hub-view .tech-service-checks {
   display: flex;
   flex-wrap: wrap;
   gap: 6px;
+  margin-top: 8px;
 }
 
 .booking-hub-view .tech-service-check {

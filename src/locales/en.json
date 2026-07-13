@@ -2717,6 +2717,7 @@
             "phone": "Phone",
             "email": "Email",
             "services": "Services",
+            "checkAllServices": "Check all",
             "weeklySchedule": "Weekly schedule",
             "dayOff": "Day off",
             "scheduleTo": "to",

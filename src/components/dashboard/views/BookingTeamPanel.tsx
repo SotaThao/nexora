@@ -361,6 +361,7 @@ export default function BookingTeamPanel() {
   }>({})
   const [showScheduleValidation, setShowScheduleValidation] = useState(false)
   const comboboxRef = useRef<HTMLDivElement>(null)
+  const checkAllServicesRef = useRef<HTMLInputElement>(null)
   const { pageNumber, pageSize, setPage } = usePagination({ pageSize: BOOKING_HUB_PAGE_SIZE })
   const { data: staffResponse, isLoading: isStaffLoading, isFetching: isStaffFetching } = useMerchantVoiceStaff({
     pageNumber,
@@ -452,7 +453,7 @@ export default function BookingTeamPanel() {
     const target = members.find((member) => member.id === memberId)
     setModalMode(mode)
     setSelectedId(memberId)
-    setSearchQuery(mode === 'detail' ? '' : (target?.name ?? ''))
+    setSearchQuery('')
     setComboboxOpen(false)
     fillDraftFromMember(target, mode === 'create' ? 'create' : 'edit')
     setModalOpen(true)
@@ -478,7 +479,7 @@ export default function BookingTeamPanel() {
       setSelectedId(matchedMember.id)
       fillDraftFromMember(matchedMember, 'edit')
       setComboboxOpen(false)
-      setSearchQuery(matchedMember.name)
+      setSearchQuery('')
       return
     }
 
@@ -490,7 +491,7 @@ export default function BookingTeamPanel() {
     setDraftServices([])
     setDraftSchedule(emptySchedule())
     setComboboxOpen(false)
-    setSearchQuery(staff.name)
+    setSearchQuery('')
   }
 
   const startCreate = () => {
@@ -505,7 +506,26 @@ export default function BookingTeamPanel() {
     setDraftServices((prev) => (
       prev.includes(service) ? prev.filter((item) => item !== service) : [...prev, service]
     ))
+    setFormErrors((prev) => ({ ...prev, services: '' }))
   }
+
+  const allServicesSelected = useMemo(() => (
+    serviceOptions.length > 0
+    && serviceOptions.every((service) => draftServices.includes(service))
+  ), [draftServices, serviceOptions])
+
+  const someServicesSelected = draftServices.length > 0 && !allServicesSelected
+
+  const toggleAllServices = () => {
+    setDraftServices(allServicesSelected ? [] : [...serviceOptions])
+    setFormErrors((prev) => ({ ...prev, services: '' }))
+  }
+
+  useEffect(() => {
+    if (checkAllServicesRef.current) {
+      checkAllServicesRef.current.indeterminate = someServicesSelected
+    }
+  }, [someServicesSelected, allServicesSelected])
 
   const toggleDayOff = (day: DayKey, dayOff: boolean) => {
     setDraftSchedule((prev) => ({
@@ -1016,7 +1036,20 @@ export default function BookingTeamPanel() {
                     </span>
                   </div>
                   <div className="settings-field">
-                    <span className="settings-label">{t(`${TK}.services`)}</span>
+                    <div className="tech-services-field-head">
+                      <span className="settings-label">{t(`${TK}.services`)}</span>
+                      {!isConfigLoading && serviceOptions.length > 0 ? (
+                        <label className="tech-service-check-all-toggle">
+                          <input
+                            ref={checkAllServicesRef}
+                            type="checkbox"
+                            checked={allServicesSelected}
+                            onChange={toggleAllServices}
+                          />
+                          <span>{t(`${TK}.checkAllServices`)}</span>
+                        </label>
+                      ) : null}
+                    </div>
                     {isConfigLoading ? (
                       <BookingTechServicesSkeleton count={4} />
                     ) : serviceOptions.length > 0 ? (
