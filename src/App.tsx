@@ -18,8 +18,8 @@ export default function App() {
       <div
         className={
           isPublicHome
-            ? 'min-h-dvh'
-            : 'min-h-dvh bg-nexoraCanvas text-inkBlue font-sans antialiased'
+            ? 'min-h-dvh w-full min-w-0 overflow-x-hidden'
+            : 'min-h-dvh w-full min-w-0 overflow-x-hidden bg-nexoraCanvas text-inkBlue font-sans antialiased'
         }
       >
         <AppRouter />

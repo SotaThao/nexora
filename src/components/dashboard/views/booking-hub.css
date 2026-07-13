@@ -21,6 +21,9 @@
   min-width: 0;
   max-width: 100%;
   overflow-x: hidden;
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
   box-sizing: border-box;
 }
 
@@ -43,13 +46,44 @@
 .booking-hub-view .settings-card,
 .booking-hub-view .booking-controls,
 .booking-hub-view .booking-date-range,
-.booking-hub-view .booking-table-wrap,
 .booking-hub-view .booking-card-panel,
 .booking-hub-view .plans-stack,
 .booking-hub-view .plans-grid {
   width: 100%;
   min-width: 0;
   max-width: 100%;
+  align-self: stretch;
+}
+
+.booking-hub-view .booking-sub-panel,
+.booking-hub-view .overview-card,
+.booking-hub-view .overview-card-pad,
+.booking-hub-view .booking-grid {
+  overflow-x: clip;
+}
+
+.booking-hub-view .booking-table-wrap {
+  display: block;
+  width: 100%;
+  min-width: 0;
+  max-width: 100%;
+  align-self: stretch;
+  overflow: hidden;
+  border: 1px solid var(--nexora-border);
+  border-radius: 10px;
+  background: #fff;
+}
+
+.booking-hub-view .booking-table-scroller {
+  display: block;
+  width: 100%;
+  max-width: 100%;
+  min-width: 0;
+  overflow-x: auto;
+  overflow-y: hidden;
+  -webkit-overflow-scrolling: touch;
+  overscroll-behavior-x: contain;
+  touch-action: pan-x;
 }
 
 .booking-hub-view .page-heading {
@@ -1500,6 +1534,18 @@
 }
 
 @media (max-width: 767px) {
+  .booking-hub-view .overview-kpis {
+    padding-left: 0;
+    padding-right: 0;
+  }
+
+  .booking-hub-view .overview-card-pad {
+    padding: 12px;
+    border-left: 1px solid var(--nexora-border);
+    border-right: 1px solid var(--nexora-border);
+    border-radius: 12px;
+  }
+
   .booking-hub-view .page-heading {
     margin-bottom: 10px;
   }
@@ -1540,6 +1586,17 @@
   .booking-hub-view .booking-subtab {
     justify-content: center;
     padding: 0 8px;
+  }
+
+  .booking-hub-view .tech-intro {
+    align-items: stretch;
+    gap: 10px;
+  }
+
+  .booking-hub-view .tech-intro .booking-primary-button {
+    align-self: flex-start;
+    min-height: 40px;
+    padding: 10px 16px;
   }
 
   .booking-hub-view .tech-grid {
@@ -3687,23 +3744,8 @@
   white-space: nowrap;
 }
 
-.booking-hub-view .booking-table-wrap {
-  display: block;
-  width: 100%;
-  max-width: 100%;
-  min-width: 0;
-  overflow-x: auto;
-  overflow-y: hidden;
-  -webkit-overflow-scrolling: touch;
-  overscroll-behavior-x: contain;
-  touch-action: pan-x;
-  border: 1px solid var(--nexora-border);
-  border-radius: 10px;
-  background: #fff;
-  isolation: isolate;
-}
-
 .booking-hub-view .booking-table {
+  display: table;
   width: 100%;
   min-width: 0;
   border-collapse: collapse;
@@ -3738,6 +3780,75 @@
 .booking-hub-view .booking-card-panel {
   min-width: 0;
   max-width: 100%;
+}
+
+.booking-hub-view .booking-table-mobile-list {
+  display: grid;
+  gap: 0;
+  overflow: hidden;
+  border: 1px solid var(--nexora-border);
+  border-radius: 10px;
+  background: #fff;
+}
+
+.booking-hub-view .booking-table-mobile-row {
+  display: grid;
+  gap: 10px;
+  padding: 12px 14px;
+  border-top: 1px solid var(--nexora-rule);
+}
+
+.booking-hub-view .booking-table-mobile-row:first-child {
+  border-top: 0;
+}
+
+.booking-hub-view .booking-table-mobile-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.booking-hub-view .booking-table-mobile-customer {
+  display: grid;
+  gap: 4px;
+  min-width: 0;
+}
+
+.booking-hub-view .booking-table-mobile-meta {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px 8px;
+}
+
+.booking-hub-view .booking-table-mobile-time {
+  flex: 1 1 100%;
+  color: var(--nexora-muted);
+  font-size: 11px;
+  font-weight: 600;
+  line-height: 1.4;
+}
+
+.booking-hub-view .booking-table-mobile-actions {
+  display: flex;
+  justify-content: flex-end;
+}
+
+.booking-hub-view .booking-table-mobile-row.is-new {
+  background: rgba(245, 158, 11, 0.035);
+}
+
+.booking-hub-view .booking-table-mobile-row.is-sms-sent {
+  background: rgba(50, 215, 255, 0.035);
+}
+
+.booking-hub-view .booking-table-mobile-row.is-done {
+  background: rgba(0, 184, 115, 0.04);
+}
+
+.booking-hub-view .booking-table-mobile-row.is-noshow {
+  background: rgba(239, 68, 68, 0.04);
 }
 
 .booking-hub-view .booking-table th {
@@ -4305,16 +4416,6 @@
 @media (max-width: 1023px) {
   .booking-hub-view .overview-card-pad {
     padding: 12px;
-  }
-
-  .booking-hub-view .booking-table-wrap {
-    width: 100%;
-    max-width: 100%;
-  }
-
-  .booking-hub-view .booking-table {
-    min-width: 720px;
-    table-layout: auto;
   }
 
   .booking-hub-view .booking-daybar {

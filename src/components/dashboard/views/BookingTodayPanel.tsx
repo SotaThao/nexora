@@ -43,6 +43,7 @@ import {
 import { useBookingHubVoiceEnabled } from './BookingHubVoiceContext'
 import Pagination from '../../ui/Pagination'
 import { usePagination } from '../../../hooks/usePagination'
+import { useIsMobileUI } from '../../../hooks/useIsMobileUI'
 import { BOOKING_HUB_PAGE_SIZE } from '../../../constants/pagination'
 import {
   BookingKpiSkeleton,
@@ -308,10 +309,75 @@ function BookingActions({
   )
 }
 
+function BookingTableMobileList({
+  bookings,
+  statusLabel,
+  pendingStatusUpdates,
+  onAction,
+  t,
+}: {
+  bookings: BookingItem[]
+  statusLabel: (status: BookingStatus) => string
+  pendingStatusUpdates: Record<string, boolean>
+  onAction: (id: string, action: 'send-sms' | 'done' | 'noshow' | 'detail') => void
+  t: (key: string) => string
+}) {
+  return (
+    <div className="booking-table-mobile-list">
+      {bookings.map((booking) => (
+        <article
+          className={`booking-table-mobile-row ${rowClassForStatus(booking.status)}`}
+          key={booking.id}
+        >
+          <div className="booking-table-mobile-head">
+            <div className="booking-table-mobile-customer">
+              <div className="booking-customer-name">
+                {booking.name}{' '}
+                <span className={`badge ${booking.sourceClass}`}>
+                  {t(`${TK}.${SOURCE_KEY_MAP[booking.source]}`)}
+                </span>
+                {booking.request ? (
+                  <span className="badge badge-warning">{t(`${TK}.booking.request`)}</span>
+                ) : null}
+              </div>
+              {booking.contactDisplay ? (
+                <div className="booking-customer-meta">{booking.contactDisplay}</div>
+              ) : null}
+            </div>
+            <span className={`badge booking-status ${statusBadgeClass(booking.status)}`}>
+              {statusLabel(booking.status)}
+            </span>
+          </div>
+          <div className="booking-table-mobile-meta">
+            <span className="booking-service-list">
+              {booking.services.map((service) => (
+                <span className="booking-service-chip" key={service}>{service}</span>
+              ))}
+            </span>
+            <span className="booking-tech-name">{booking.tech}</span>
+            <span className="booking-table-mobile-time">
+              {booking.timeMain}
+            </span>
+          </div>
+          <div className="booking-table-mobile-actions">
+            <BookingActions
+              booking={booking}
+              onAction={pendingStatusUpdates[booking.id] ? () => undefined : onAction}
+              isPending={Boolean(pendingStatusUpdates[booking.id])}
+              t={t}
+            />
+          </div>
+        </article>
+      ))}
+    </div>
+  )
+}
+
 export default function BookingTodayPanel() {
   const { t } = useTranslation()
   const { showToast } = useNotification()
   const voiceEnabled = useBookingHubVoiceEnabled()
+  const isMobileUI = useIsMobileUI()
   const [viewMode, setViewMode] = useState<ViewMode>('table')
   const [searchField, setSearchField] = useState<SearchField>(BookingUiSearchField.All)
   const [searchKeyword, setSearchKeyword] = useState('')
@@ -631,9 +697,18 @@ export default function BookingTodayPanel() {
           </div>
 
           {isListLoading ? (
-            <BookingTodayListSkeleton viewMode={viewMode} />
+            <BookingTodayListSkeleton viewMode={viewMode} isMobileUI={isMobileUI} />
+          ) : viewMode === 'table' && isMobileUI ? (
+            <BookingTableMobileList
+              bookings={filteredBookings}
+              statusLabel={statusLabel}
+              pendingStatusUpdates={pendingStatusUpdates}
+              onAction={handleAction}
+              t={t}
+            />
           ) : viewMode === 'table' ? (
             <div className="booking-table-wrap">
+              <div className="booking-table-scroller">
               <table className="booking-table">
                 <colgroup>
                   <col className="booking-col-customer" />
@@ -714,6 +789,7 @@ export default function BookingTodayPanel() {
                   ))}
                 </tbody>
               </table>
+              </div>
             </div>
           ) : (
             <div className="booking-card-panel">

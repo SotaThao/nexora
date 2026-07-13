@@ -796,7 +796,7 @@ export default function Dashboard({
           onOpenMobileMenu={() => setIsMobileMenuOpen(true)}
         />
 
-        <main className="w-full min-w-0 flex-1 overflow-x-clip p-4 pb-6 sm:p-6 sm:pb-8 lg:p-7 lg:pb-7">
+        <main className="w-full min-w-0 flex-1 overflow-x-hidden p-4 pb-6 sm:p-6 sm:pb-8 lg:p-7 lg:pb-7">
           {activeMenu !== 'overview' && (
             <button
               onClick={() => handleNavigateMenu('overview')}
