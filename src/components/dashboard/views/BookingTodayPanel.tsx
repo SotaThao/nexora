@@ -312,9 +312,7 @@ export default function BookingTodayPanel() {
   const { t } = useTranslation()
   const { showToast } = useNotification()
   const voiceEnabled = useBookingHubVoiceEnabled()
-  const [viewMode, setViewMode] = useState<ViewMode>(() => (
-    typeof window !== 'undefined' && window.innerWidth < 768 ? 'card' : 'table'
-  ))
+  const [viewMode, setViewMode] = useState<ViewMode>('table')
   const [searchField, setSearchField] = useState<SearchField>(BookingUiSearchField.All)
   const [searchKeyword, setSearchKeyword] = useState('')
   const [dateFrom, setDateFrom] = useState('')
@@ -515,20 +513,6 @@ export default function BookingTodayPanel() {
     return () => window.clearTimeout(timer)
   }, [searchField, searchKeyword, dateFrom, dateTo, resetPage])
 
-  useEffect(() => {
-    if (typeof window === 'undefined') return undefined
-
-    const syncViewModeByViewport = () => {
-      if (window.innerWidth < 768) {
-        setViewMode('card')
-      }
-    }
-
-    syncViewModeByViewport()
-    window.addEventListener('resize', syncViewModeByViewport)
-    return () => window.removeEventListener('resize', syncViewModeByViewport)
-  }, [])
-
   return (
     <div className="booking-sub-panel is-active" aria-busy={isStatisticsLoading || isListLoading}>
       {isStatisticsLoading ? (
@@ -621,24 +605,26 @@ export default function BookingTodayPanel() {
                 onChange={(event) => setSearchKeyword(event.target.value)}
               />
             </label>
-            <label className="booking-control-field">
-              <span className="booking-control-label">{t(`${TK}.today.dateFrom`)}</span>
-              <input
-                className="booking-input"
-                type="date"
-                value={dateFrom}
-                onChange={(event) => setDateFrom(event.target.value)}
-              />
-            </label>
-            <label className="booking-control-field">
-              <span className="booking-control-label">{t(`${TK}.today.dateTo`)}</span>
-              <input
-                className="booking-input"
-                type="date"
-                value={dateTo}
-                onChange={(event) => setDateTo(event.target.value)}
-              />
-            </label>
+            <div className="booking-date-range">
+              <label className="booking-control-field">
+                <span className="booking-control-label">{t(`${TK}.today.dateFrom`)}</span>
+                <input
+                  className="booking-input booking-input-date"
+                  type="date"
+                  value={dateFrom}
+                  onChange={(event) => setDateFrom(event.target.value)}
+                />
+              </label>
+              <label className="booking-control-field">
+                <span className="booking-control-label">{t(`${TK}.today.dateTo`)}</span>
+                <input
+                  className="booking-input booking-input-date"
+                  type="date"
+                  value={dateTo}
+                  onChange={(event) => setDateTo(event.target.value)}
+                />
+              </label>
+            </div>
             <button className="booking-mini-button booking-clear-button" type="button" onClick={clearFilters}>
               {t(`${TK}.today.clear`)}
             </button>
@@ -649,6 +635,14 @@ export default function BookingTodayPanel() {
           ) : viewMode === 'table' ? (
             <div className="booking-table-wrap">
               <table className="booking-table">
+                <colgroup>
+                  <col className="booking-col-customer" />
+                  <col className="booking-col-service" />
+                  <col className="booking-col-tech" />
+                  <col className="booking-col-time" />
+                  <col className="booking-col-status" />
+                  <col className="booking-col-action" />
+                </colgroup>
                 <thead>
                   <tr>
                     <th scope="col">{t(`${TK}.today.colCustomer`)}</th>

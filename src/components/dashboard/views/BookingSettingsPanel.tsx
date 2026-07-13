@@ -17,6 +17,7 @@ import {
 } from '../../../data/repositories/merchantVoice'
 import { getApiErrorCode } from '../../../types/domain'
 import { loadSpeechVoices, speakBookingPreview, stopBookingPreview } from '../../../utils/bookingVoicePreview'
+import { formatWholeNumberInputValue, parseWholeNumberInput } from '../../../utils/numericInput'
 import {
   ClockHistoryIcon,
   CurrencyDollarIcon,
@@ -423,8 +424,8 @@ export default function BookingSettingsPanel() {
     setServices((prev) => prev.map((service) => {
       if (service.id !== id) return service
       if (field === 'name') return { ...service, name: value }
-      if (field === 'price') return { ...service, price: Number(value) || 0 }
-      return { ...service, duration: Number(value) || 0 }
+      if (field === 'price') return { ...service, price: parseWholeNumberInput(value) }
+      return { ...service, duration: parseWholeNumberInput(value) }
     }))
   }
 
@@ -702,62 +703,68 @@ export default function BookingSettingsPanel() {
                     <input type="checkbox" checked={row.open} onChange={() => toggleHour(day)} />
                     <span>{t(`${TK}.days.${day}`)}</span>
                   </label>
-                  <div
-                    className="settings-time-box"
-                    onClick={(event) => {
-                      const input = event.currentTarget.querySelector('input')
-                      if (input instanceof HTMLInputElement) openTimePicker(input)
-                    }}
-                    onKeyDown={(event) => {
-                      if (event.key === 'Enter' || event.key === ' ') {
-                        event.preventDefault()
-                        openTimePicker(event.currentTarget.querySelector('input'))
-                      }
-                    }}
-                    role="button"
-                    tabIndex={row.open ? 0 : -1}
-                    aria-label={t(`${TK}.openTimeAria`, { day: t(`${TK}.days.${day}`) })}
-                  >
-                    <input
-                      className="settings-hour-input"
-                      type="time"
-                      value={row.openTime}
-                      disabled={!row.open}
-                      aria-invalid={Boolean(rowError)}
+                  <div className="settings-hour-times">
+                    <div
+                      className="settings-time-box"
+                      onClick={(event) => {
+                        const input = event.currentTarget.querySelector('input')
+                        if (input instanceof HTMLInputElement) openTimePicker(input)
+                      }}
+                      onKeyDown={(event) => {
+                        if (event.key === 'Enter' || event.key === ' ') {
+                          event.preventDefault()
+                          openTimePicker(event.currentTarget.querySelector('input'))
+                        }
+                      }}
+                      role="button"
+                      tabIndex={row.open ? 0 : -1}
                       aria-label={t(`${TK}.openTimeAria`, { day: t(`${TK}.days.${day}`) })}
-                      onChange={(event) => updateHourTime(day, 'openTime', event.target.value)}
-                      onClick={(event) => event.stopPropagation()}
-                    />
-                    <ClockIcon />
-                  </div>
-                  <span className="settings-hour-to">{t(`${TK}.hoursTo`)}</span>
-                  <div
-                    className="settings-time-box"
-                    onClick={(event) => {
-                      const input = event.currentTarget.querySelector('input')
-                      if (input instanceof HTMLInputElement) openTimePicker(input)
-                    }}
-                    onKeyDown={(event) => {
-                      if (event.key === 'Enter' || event.key === ' ') {
-                        event.preventDefault()
-                        openTimePicker(event.currentTarget.querySelector('input'))
-                      }
-                    }}
-                    role="button"
-                    tabIndex={row.open ? 0 : -1}
-                    aria-label={t(`${TK}.closeTimeAria`, { day: t(`${TK}.days.${day}`) })}
-                  >
-                    <input
-                      className="settings-hour-input"
-                      type="time"
-                      value={row.closeTime}
-                      disabled={!row.open}
-                      aria-invalid={Boolean(rowError)}
+                    >
+                      <input
+                        className="settings-hour-input"
+                        type="time"
+                        lang="en-US-u-hc-h12"
+                        step={60}
+                        value={row.openTime}
+                        disabled={!row.open}
+                        aria-invalid={Boolean(rowError)}
+                        aria-label={t(`${TK}.openTimeAria`, { day: t(`${TK}.days.${day}`) })}
+                        onChange={(event) => updateHourTime(day, 'openTime', event.target.value)}
+                        onClick={(event) => event.stopPropagation()}
+                      />
+                      <ClockIcon />
+                    </div>
+                    <span className="settings-hour-to">{t(`${TK}.hoursTo`)}</span>
+                    <div
+                      className="settings-time-box"
+                      onClick={(event) => {
+                        const input = event.currentTarget.querySelector('input')
+                        if (input instanceof HTMLInputElement) openTimePicker(input)
+                      }}
+                      onKeyDown={(event) => {
+                        if (event.key === 'Enter' || event.key === ' ') {
+                          event.preventDefault()
+                          openTimePicker(event.currentTarget.querySelector('input'))
+                        }
+                      }}
+                      role="button"
+                      tabIndex={row.open ? 0 : -1}
                       aria-label={t(`${TK}.closeTimeAria`, { day: t(`${TK}.days.${day}`) })}
-                      onChange={(event) => updateHourTime(day, 'closeTime', event.target.value)}
-                      onClick={(event) => event.stopPropagation()}
-                    />
-                    <ClockIcon />
+                    >
+                      <input
+                        className="settings-hour-input"
+                        type="time"
+                        lang="en-US-u-hc-h12"
+                        step={60}
+                        value={row.closeTime}
+                        disabled={!row.open}
+                        aria-invalid={Boolean(rowError)}
+                        aria-label={t(`${TK}.closeTimeAria`, { day: t(`${TK}.days.${day}`) })}
+                        onChange={(event) => updateHourTime(day, 'closeTime', event.target.value)}
+                        onClick={(event) => event.stopPropagation()}
+                      />
+                      <ClockIcon />
+                    </div>
                   </div>
                   {rowError ? <span className="settings-hour-error">{rowError}</span> : null}
                 </div>
@@ -861,9 +868,10 @@ export default function BookingSettingsPanel() {
                         <span className="settings-service-prefix">$</span>
                         <input
                           className="settings-service-input price"
-                          type="number"
-                          inputMode="decimal"
-                          value={service.price}
+                          type="text"
+                          inputMode="numeric"
+                          pattern="[0-9]*"
+                          value={formatWholeNumberInputValue(service.price)}
                           aria-label={t(`${TK}.servicePriceAria`)}
                           onChange={(event) => updateService(service.id, 'price', event.target.value)}
                         />
@@ -874,9 +882,10 @@ export default function BookingSettingsPanel() {
                       <div className="settings-service-input-wrap">
                         <input
                           className="settings-service-input duration"
-                          type="number"
+                          type="text"
                           inputMode="numeric"
-                          value={service.duration}
+                          pattern="[0-9]*"
+                          value={formatWholeNumberInputValue(service.duration)}
                           aria-label={t(`${TK}.serviceDurationAria`)}
                           onChange={(event) => updateService(service.id, 'duration', event.target.value)}
                         />
