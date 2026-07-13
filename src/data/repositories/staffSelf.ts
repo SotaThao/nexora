@@ -158,12 +158,14 @@ interface StatisticsOverviewApiDto {
   categories?: StatisticsOverviewCategoryApiDto[]
 }
 
-function normalizeStaffDashboardStatistics(dto: StatisticsOverviewApiDto): StaffDashboardStatistics {
+function normalizeStaffDashboardStatistics(
+  dto?: StatisticsOverviewApiDto | null,
+): StaffDashboardStatistics {
   return {
-    availableBalance: Number(dto.availableBalance) || 0,
-    pending: Number(dto.pending) || 0,
-    lifetimeEarnings: Number(dto.lifetimeEarnings) || 0,
-    categories: Array.isArray(dto.categories)
+    availableBalance: Number(dto?.availableBalance) || 0,
+    pending: Number(dto?.pending) || 0,
+    lifetimeEarnings: Number(dto?.lifetimeEarnings) || 0,
+    categories: Array.isArray(dto?.categories)
       ? dto.categories.map((c) => ({
           category: c.category ?? '',
           amount: Number(c.amount) || 0,
