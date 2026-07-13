@@ -7,6 +7,23 @@ export { buildPublicQrImageUrl } from '../data/repositories/publicQr'
 
 import merchantTouchpointsRepository from '../data/repositories/merchantTouchpoints'
 
+/**
+ * Standard QR image request sizes (px), anchored on the mobile poster QR
+ * (~200px box requested at 420px ≈ 2x device pixel ratio). Every surface must
+ * pick a tier instead of an ad-hoc size so QR sharpness stays consistent and
+ * identical URLs can share the browser cache.
+ */
+export const QR_IMAGE_SIZES = {
+  /** List thumbnails rendered at ≤ ~80px */
+  thumb: 150,
+  /** Cards, panels and posters rendered at ~80–220px */
+  panel: 420,
+  /** Zoomed previews rendered above ~220px and share images */
+  zoom: 600,
+  /** Print cards (2.1–2.35in ≈ 300dpi) and high-res downloads */
+  print: 1000,
+} as const
+
 async function fetchQrBlob(qrUrl: string): Promise<Blob> {
   const response = await fetch(qrUrl)
 

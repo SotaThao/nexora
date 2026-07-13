@@ -24,6 +24,7 @@ import { useConfirmStaffTipsReceipt, useStaffBusinessTipQrs } from '../../../dat
 import { useStaffHomeData } from '../hooks/useStaffHomeData'
 import { buildStaffShareUrl, getProfileReferralCode } from '../../../utils/affiliateReferral'
 import { buildQrImageUrl } from '../../../utils/staffTipUrl'
+import { QR_IMAGE_SIZES } from '../../../utils/qrUtils'
 import { SkeletonLayout } from '../../ui/skeleton'
 import Tooltip from '../../ui/Tooltip'
 import QrImage from '../../ui/QrImage'
@@ -162,7 +163,7 @@ export default function StaffHome() {
     [businessTipQrs],
   )
   const tipQrImageSrc = useMemo(
-    () => (activeTipQr?.tipUrl ? buildQrImageUrl(activeTipQr.tipUrl, 150, activeTipQr.qrImageUrl) : ''),
+    () => (activeTipQr?.tipUrl ? buildQrImageUrl(activeTipQr.tipUrl, QR_IMAGE_SIZES.thumb, activeTipQr.qrImageUrl) : ''),
     [activeTipQr?.qrImageUrl, activeTipQr?.tipUrl],
   )
   const referralCode = useMemo(() => getProfileReferralCode(profile || {}), [profile])
@@ -172,7 +173,7 @@ export default function StaffHome() {
     [referralCode, staffCode],
   )
   const referralQrImageSrc = useMemo(
-    () => (staffShareUrl ? buildQrImageUrl(staffShareUrl, 150) : ''),
+    () => (staffShareUrl ? buildQrImageUrl(staffShareUrl, QR_IMAGE_SIZES.thumb) : ''),
     [staffShareUrl],
   )
 

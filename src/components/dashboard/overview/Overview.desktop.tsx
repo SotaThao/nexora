@@ -4,7 +4,7 @@ import { Calendar, QrCode, Star, Hourglass } from 'lucide-react'
 import { useTranslation } from '../../../contexts/LanguageContext'
 import { useNotification } from '../../../contexts/NotificationContext'
 import { useDownloadTouchpointQr } from '../../../data/hooks/useMerchantTouchpoints'
-import { downloadQrCode } from '../../../utils/qrUtils'
+import { downloadQrCode, QR_IMAGE_SIZES } from '../../../utils/qrUtils'
 import { buildQrImageUrl, toLocalCustomerTouchUrl } from '../../../utils/staffTipUrl'
 import { getWebUrlOrigin } from '../../../utils/webUrlBase'
 import { buildMasterQrTarget, formatCurrency, isAwaitingShopConfirmation, resolveMasterTouchpoint } from '../utils'
@@ -175,7 +175,7 @@ function Overview({
   }, [masterTouchpoint, businessName])
 
   const masterQrPreviewUrl = useMemo(
-    () => buildQrImageUrl(masterQrLink, 150, masterTouchpoint?.qrImageUrl),
+    () => buildQrImageUrl(masterQrLink, QR_IMAGE_SIZES.panel, masterTouchpoint?.qrImageUrl),
     [masterQrLink, masterTouchpoint?.qrImageUrl],
   )
 
@@ -190,7 +190,7 @@ function Overview({
           format: 'png',
         })
       } else {
-        await downloadQrCode(buildQrImageUrl(masterQrLink, 1000), 'master-qr.png')
+        await downloadQrCode(buildQrImageUrl(masterQrLink, QR_IMAGE_SIZES.print), 'master-qr.png')
       }
       showToast(t('components.SettingsView.qrCodeDownloaded'), 'success')
     } catch {

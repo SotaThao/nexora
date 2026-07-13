@@ -6,7 +6,7 @@ import { useTranslation } from '../../../contexts/LanguageContext'
 import { useNotification } from '../../../contexts/NotificationContext'
 import { toLocalCustomerTouchUrl, buildQrImageUrl } from '../../../utils/staffTipUrl'
 import { getWebUrlOrigin } from '../../../utils/webUrlBase'
-import { downloadQrCode, downloadTouchpointQrFile } from '../../../utils/qrUtils'
+import { downloadQrCode, downloadTouchpointQrFile, QR_IMAGE_SIZES } from '../../../utils/qrUtils'
 import QrImage from '../../ui/QrImage'
 
 const slugify = (str = '') => str.toLowerCase().trim().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '')
@@ -124,7 +124,7 @@ function QrModal({ target, businessName, onClose }) {
     qrUrl = `${getWebUrlOrigin()}/touch/${businessSlug}/${target.slug}`
   }
 
-  const qrImageSrcHighRes = buildQrImageUrl(qrUrl, 1000, target.qrImageUrl)
+  const qrImageSrcHighRes = buildQrImageUrl(qrUrl, QR_IMAGE_SIZES.print, target.qrImageUrl)
 
   const isStaff = Boolean(
     target.isStaffQr ||
@@ -151,7 +151,7 @@ function QrModal({ target, businessName, onClose }) {
       if (touchpointDownloadId) {
         await downloadTouchpointQrFile(touchpointDownloadId, `${safeName}-qr.pdf`, 'pdf')
       } else {
-        const qrImageUrl = buildQrImageUrl(qrUrl, 600, target.qrImageUrl)
+        const qrImageUrl = buildQrImageUrl(qrUrl, QR_IMAGE_SIZES.print, target.qrImageUrl)
         await downloadQrCode(qrImageUrl, `${safeName}-qr.png`)
       }
       showToast(t('components.SettingsView.qrCodeDownloaded'), 'success')
@@ -234,7 +234,7 @@ function QrModal({ target, businessName, onClose }) {
 
             <div className="flex aspect-square w-full max-w-full min-w-0 items-center justify-center overflow-hidden rounded-lg border border-nexoraBorder/60 bg-white p-2 shadow-inner qr-print-qr-wrapper">
               <QrImage
-                src={buildQrImageUrl(qrUrl, 300, target.qrImageUrl)}
+                src={buildQrImageUrl(qrUrl, QR_IMAGE_SIZES.print, target.qrImageUrl)}
                 alt="Scan QR code to tip and review"
                 className="h-full w-full max-h-full max-w-full qr-print-qr-image"
               />

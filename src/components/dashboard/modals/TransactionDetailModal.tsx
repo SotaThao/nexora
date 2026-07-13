@@ -14,6 +14,7 @@ import { WalletLogos } from '../constants'
 import { isInitiatedLikeTipStatus, isTipStatus, TipStatus } from '../../../constants/tipStatus'
 import { logger } from '../../../utils/logger'
 import { buildQrImageUrl, slugify, toLocalCustomerTouchUrl } from '../../../utils/staffTipUrl'
+import { QR_IMAGE_SIZES } from '../../../utils/qrUtils'
 import { getWebUrlOrigin } from '../../../utils/webUrlBase'
 import { useConfirmMerchantTipsReceipt } from '../../../data/hooks/useTransactions'
 import { useConfirmStaffTipsReceipt } from '../../../data/hooks/useStaffSelf'
@@ -239,7 +240,7 @@ export default function TransactionDetailModal({
     }
   }
 
-  const renderQrThumb = (size = 80) => {
+  const renderQrThumb = (size = QR_IMAGE_SIZES.thumb) => {
     if (!touchPointQrUrl) return null
     const qrImageSrc = buildQrImageUrl(touchPointQrUrl, size, touchpoint?.qrImageUrl)
 
@@ -519,7 +520,7 @@ export default function TransactionDetailModal({
 
             {touchPointQrUrl ? (
               <div className="flex gap-4 p-4 bg-slate-50 rounded-xl border border-slate-100 items-center">
-                {renderQrThumb(160)}
+                {renderQrThumb()}
                 <div className="flex flex-col text-left min-w-0">
                   <span className="text-[9px] font-black uppercase text-nexoraMuted tracking-widest">
                     {t('components.dashboard.modals.TransactionDetailModal.tippingQrCode')}

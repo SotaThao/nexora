@@ -16,6 +16,7 @@ import {
 } from '../../../data/paymentMethodTypes'
 import type { PaymentMethodDto } from '../../../types/domain'
 import { buildPublicQrImageUrl } from '../../../data/repositories/publicQr'
+import { QR_IMAGE_SIZES } from '../../../utils/qrUtils'
 import QrImage from '../../ui/QrImage'
 
 export default function Step2StaffTouchpoints({
@@ -187,7 +188,7 @@ export default function Step2StaffTouchpoints({
             <div className="space-y-2 overflow-y-auto pr-1 max-h-[220px] lg:max-h-[440px]">
               {touchPoints.map((tp) => {
                 const qrUrl = `${getCustomerAppBaseUrl()}?flow=customer&merchant=${encodeURIComponent(businessInfo.name || 'Your Business')}&tech=tp/${tp.id}`
-                const qrCodeSrc = buildPublicQrImageUrl(qrUrl, 150)
+                const qrCodeSrc = buildPublicQrImageUrl(qrUrl, QR_IMAGE_SIZES.thumb)
 
                 if (tp.id === editingTpId) {
                   return (

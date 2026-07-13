@@ -26,6 +26,7 @@ import DirectPaymentQrPreviewModal from '../../settings/DirectPaymentQrPreviewMo
 import { useProfileSettings } from '../../../data/hooks/useProfileSettings'
 import { useMerchantPaymentQr } from '../../../data/hooks/useMerchantPayments'
 import { buildPublicQrImageUrl } from '../../../data/repositories/publicQr'
+import { QR_IMAGE_SIZES } from '../../../utils/qrUtils'
 import { resolveDirectPaymentPageUrl, resolveMerchantBusinessIdFromProfile } from '../../../utils/merchantBusinessId'
 import { buildQrImageUrl, toLocalCustomerTouchUrl } from '../../../utils/staffTipUrl'
 import { getWebUrlOrigin } from '../../../utils/webUrlBase'
@@ -239,7 +240,7 @@ function Overview({
     return `${getWebUrlOrigin()}/touch/${businessSlug}/${touchSlug}`
   }, [masterTouchpoint, businessName])
   const masterQrPreviewUrl = useMemo(
-    () => buildQrImageUrl(masterQrLink, 150, masterTouchpoint?.qrImageUrl),
+    () => buildQrImageUrl(masterQrLink, QR_IMAGE_SIZES.thumb, masterTouchpoint?.qrImageUrl),
     [masterQrLink, masterTouchpoint?.qrImageUrl],
   )
   const paymentBusinessId = useMemo(
@@ -255,11 +256,11 @@ function Overview({
     [paymentBusinessId, paymentQr?.paymentUrl],
   )
   const paymentQrPreviewUrl = useMemo(
-    () => (paymentPageUrl ? buildPublicQrImageUrl(paymentPageUrl, 150) : ''),
+    () => (paymentPageUrl ? buildPublicQrImageUrl(paymentPageUrl, QR_IMAGE_SIZES.thumb) : ''),
     [paymentPageUrl],
   )
   const paymentQrModalUrl = useMemo(
-    () => (paymentPageUrl ? buildPublicQrImageUrl(paymentPageUrl, 280) : ''),
+    () => (paymentPageUrl ? buildPublicQrImageUrl(paymentPageUrl, QR_IMAGE_SIZES.panel) : ''),
     [paymentPageUrl],
   )
 

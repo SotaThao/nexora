@@ -1,4 +1,5 @@
 import React, { useMemo, useState } from 'react'
+import { createPortal } from 'react-dom'
 import { useNavigate, useSearchParams } from 'react-router-dom'
 import {
   ArrowLeft,
@@ -23,7 +24,7 @@ import {
 import useSettingsForm from './settings/hooks/useSettingsForm'
 import ProfileTab from './settings/tabs/ProfileTab'
 import useAuth from '../auth/useAuth'
-import { downloadQrCode, buildPublicQrImageUrl } from '../utils/qrUtils'
+import { downloadQrCode, buildPublicQrImageUrl, QR_IMAGE_SIZES } from '../utils/qrUtils'
 import { buildAffiliateReferralUrl, getProfileReferralCode } from '../utils/affiliateReferral'
 import { useTranslation } from '../contexts/LanguageContext'
 import {
@@ -268,7 +269,7 @@ export default function SettingsView({
     () => buildAffiliateReferralUrl({ referralCode, leg: selectedLeg }),
     [referralCode, selectedLeg],
   )
-  const qrCodeUrl = (url: string) => (url ? buildPublicQrImageUrl(url, 250) : '')
+  const qrCodeUrl = (url: string) => (url ? buildPublicQrImageUrl(url, QR_IMAGE_SIZES.print) : '')
 
   const handleSaveQr = async (qrUrl) => {
     try {
@@ -569,7 +570,7 @@ export default function SettingsView({
                 <div className="bg-slate-50 p-4 border border-slate-200 rounded-2xl flex items-center justify-center h-[240px] w-[240px] shadow-sm hover:shadow-md transition">
                   {baseReferralUrl ? (
                     <QrImage
-                      src={buildPublicQrImageUrl(baseReferralUrl, 220)}
+                      src={buildPublicQrImageUrl(baseReferralUrl, QR_IMAGE_SIZES.panel)}
                       alt="Referral Link QR Code"
                       className="h-full w-full rounded-lg"
                     />
@@ -636,10 +637,11 @@ export default function SettingsView({
 
       </div>
 
-      {/* Show QR Code Modal Popup */}
-      {showQrModal && (
-        <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 flex items-center justify-center modal-overlay-safe">
-          <div className="bg-white rounded-3xl border border-slate-100 max-w-lg w-full shadow-2xl p-6 relative overflow-hidden animate-scaleIn text-center text-slate-800 space-y-4">
+      {/* Show QR Code Modal Popup — portaled to body so the backdrop escapes any
+          transformed ancestor and covers the full viewport (incl. header) */}
+      {showQrModal && createPortal(
+        <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-[100] flex items-center justify-center modal-overlay-safe">
+          <div className="bg-white rounded-3xl border border-slate-100 max-w-md w-full max-h-[92dvh] overflow-y-auto shadow-2xl p-6 relative animate-scaleIn text-center text-slate-800 space-y-4">
             
             {/* Close Button */}
             <button
@@ -676,15 +678,15 @@ export default function SettingsView({
                     className="sr-only"
                   />
                   <span className={`w-4 h-4 rounded-full border flex items-center justify-center transition-all ${
-                    selectedLeg === 'left' 
-                      ? 'border-nexoraWarning bg-nexoraWarning/10' 
+                    selectedLeg === 'left'
+                      ? 'border-nexoraBrand bg-nexoraBrand/10'
                       : 'border-slate-300 bg-white'
                   }`}>
                     {selectedLeg === 'left' && (
-                      <span className="w-1.5 h-1.5 rounded-full bg-nexoraWarning" />
+                      <span className="w-1.5 h-1.5 rounded-full bg-nexoraBrand" />
                     )}
                   </span>
-                  <span className={selectedLeg === 'left' ? 'text-nexoraWarning font-black' : 'text-slate-500'}>
+                  <span className={selectedLeg === 'left' ? 'text-nexoraBrand font-black' : 'text-slate-500'}>
                     {t('components.SettingsView.leftLeg')}
                   </span>
                 </label>
@@ -699,15 +701,15 @@ export default function SettingsView({
                     className="sr-only"
                   />
                   <span className={`w-4 h-4 rounded-full border flex items-center justify-center transition-all ${
-                    selectedLeg === 'right' 
-                      ? 'border-nexoraWarning bg-nexoraWarning/10' 
+                    selectedLeg === 'right'
+                      ? 'border-nexoraBrand bg-nexoraBrand/10'
                       : 'border-slate-300 bg-white'
                   }`}>
                     {selectedLeg === 'right' && (
-                      <span className="w-1.5 h-1.5 rounded-full bg-nexoraWarning" />
+                      <span className="w-1.5 h-1.5 rounded-full bg-nexoraBrand" />
                     )}
                   </span>
-                  <span className={selectedLeg === 'right' ? 'text-nexoraWarning font-black' : 'text-slate-500'}>
+                  <span className={selectedLeg === 'right' ? 'text-nexoraBrand font-black' : 'text-slate-500'}>
                     {t('components.SettingsView.rightLeg')}
                   </span>
                 </label>
@@ -716,10 +718,10 @@ export default function SettingsView({
 
             {/* QR Code Display */}
             <div className="w-full">
-              <div className="aspect-square w-full max-w-full min-w-0 overflow-hidden rounded-2xl border border-slate-200 bg-white p-3 shadow-inner sm:p-4">
+              <div className="mx-auto aspect-square w-full max-w-[15rem] min-w-0 overflow-hidden rounded-2xl border border-slate-200 bg-white p-3 shadow-inner sm:p-4">
                 {referralUrl ? (
                   <QrImage
-                    src={buildPublicQrImageUrl(referralUrl, 440)}
+                    src={buildPublicQrImageUrl(referralUrl, QR_IMAGE_SIZES.zoom)}
                     alt="Referral Link QR Code"
                     className="h-full w-full max-h-full max-w-full rounded"
                   />
@@ -736,13 +738,14 @@ export default function SettingsView({
               type="button"
               disabled={!referralUrl}
               onClick={() => handleSaveQr(qrCodeUrl(referralUrl))}
-              className="w-full bg-nexoraWarning hover:bg-nexoraWarning text-black font-extrabold text-xs uppercase tracking-wider py-3.5 rounded-xl transition active:scale-[0.98] shadow-md shadow-amber-500/10 disabled:cursor-not-allowed disabled:opacity-50"
+              className="w-full bg-nexoraBrand hover:bg-nexoraBrandDark text-white font-extrabold text-xs uppercase tracking-wider py-3.5 rounded-xl transition active:scale-[0.98] shadow-md shadow-nexoraBrand/20 disabled:cursor-not-allowed disabled:opacity-50"
             >
               Save QR
             </button>
 
           </div>
-        </div>
+        </div>,
+        document.body,
       )}
     </div>
   )

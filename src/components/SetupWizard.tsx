@@ -15,6 +15,7 @@ import { getCustomerAppBaseUrl } from '../utils/webUrlBase'
 import PersonalSetupWizard from './setup-wizard/PersonalSetupWizard'
 import usePersonalSetupWizard from './setup-wizard/hooks/usePersonalSetupWizard'
 import { buildPublicQrImageUrl } from '../data/repositories/publicQr'
+import { QR_IMAGE_SIZES } from '../utils/qrUtils'
 import LanguageSwitcher from './ui/LanguageSwitcher'
 import QrImage from './ui/QrImage'
 
@@ -355,7 +356,7 @@ export default function SetupWizard() {
                   <QrImage
                     src={buildPublicQrImageUrl(
                       `${getCustomerAppBaseUrl()}?flow=customer&merchant=${encodeURIComponent(businessInfo.name || 'Your Business')}&tech=tp/${previewingTp.id}`,
-                      300,
+                      QR_IMAGE_SIZES.zoom,
                     )}
                     alt="QR Preview"
                     className="h-full w-full max-h-full max-w-full qr-print-qr-image"
@@ -412,7 +413,7 @@ export default function SetupWizard() {
               <QrImage
                 src={buildPublicQrImageUrl(
                   `${getCustomerAppBaseUrl()}?flow=customer&merchant=${encodeURIComponent(businessInfo.name || 'Your Business')}`,
-                  150,
+                  QR_IMAGE_SIZES.print,
                 )}
                 alt="Scan QR code to tip and review"
                 className="qr-print-qr-image"
