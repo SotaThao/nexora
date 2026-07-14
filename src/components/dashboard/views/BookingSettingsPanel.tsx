@@ -1,5 +1,10 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react'
-import CountryCodeSelect, { formatNationalNumber, normalizePhoneForApi, parsePhone } from '../../CountryCodeSelect'
+import CountryCodeSelect, {
+  formatNationalNumber,
+  getNationalPhonePlaceholder,
+  normalizePhoneForApi,
+  parsePhone,
+} from '../../CountryCodeSelect'
 import { useTranslation } from '../../../contexts/LanguageContext'
 import { useNotification } from '../../../contexts/NotificationContext'
 import { getErrorI18nKey } from '../../../data/errorCodes'
@@ -601,6 +606,7 @@ export default function BookingSettingsPanel() {
                 className="settings-input"
                 type="text"
                 value={salonName}
+                placeholder={t(`${TK}.placeholderSalonName`)}
                 aria-invalid={Boolean(formErrors.salonName)}
                 onChange={(event) => {
                   setSalonName(event.target.value)
@@ -625,6 +631,7 @@ export default function BookingSettingsPanel() {
                   className="settings-input phone-mask-input"
                   type="tel"
                   value={formatNationalNumber(salonPhoneParsed.nationalNumber, salonPhoneParsed.countryCode)}
+                  placeholder={getNationalPhonePlaceholder(salonPhoneParsed.countryCode)}
                   aria-invalid={Boolean(formErrors.salonPhone)}
                   inputMode="numeric"
                   autoComplete="tel-national"
@@ -659,6 +666,7 @@ export default function BookingSettingsPanel() {
                   className="settings-input phone-mask-input"
                   type="tel"
                   value={formatNationalNumber(bookingNotifyPhoneParsed.nationalNumber, bookingNotifyPhoneParsed.countryCode)}
+                  placeholder={getNationalPhonePlaceholder(bookingNotifyPhoneParsed.countryCode)}
                   aria-invalid={Boolean(formErrors.bookingNotifyPhone)}
                   inputMode="numeric"
                   autoComplete="tel-national"
@@ -678,6 +686,7 @@ export default function BookingSettingsPanel() {
                 className="settings-input"
                 type="text"
                 value={address}
+                placeholder={t(`${TK}.placeholderAddress`)}
                 aria-invalid={Boolean(formErrors.address)}
                 onChange={(event) => {
                   setAddress(event.target.value)
@@ -688,7 +697,13 @@ export default function BookingSettingsPanel() {
             </label>
             <label className="settings-field settings-span-full">
               <span className="settings-label">{t(`${TK}.googleReviewLink`)}</span>
-              <input className="settings-input" type="text" value={googleReviewUrl} onChange={(event) => setGoogleReviewUrl(event.target.value)} />
+              <input
+                className="settings-input"
+                type="text"
+                value={googleReviewUrl}
+                placeholder={t(`${TK}.placeholderGoogleReviewLink`)}
+                onChange={(event) => setGoogleReviewUrl(event.target.value)}
+              />
             </label>
           </div>
         </SettingsCard>
@@ -864,6 +879,7 @@ export default function BookingSettingsPanel() {
                       className="settings-service-input"
                       type="text"
                       value={service.name}
+                      placeholder={t(`${TK}.placeholderServiceName`)}
                       aria-label={t(`${TK}.serviceNameAria`)}
                       onChange={(event) => updateService(service.id, 'name', event.target.value)}
                     />
@@ -879,6 +895,7 @@ export default function BookingSettingsPanel() {
                           inputMode="numeric"
                           pattern="[0-9]*"
                           value={formatWholeNumberInputValue(service.price)}
+                          placeholder={t(`${TK}.placeholderServicePrice`)}
                           aria-label={t(`${TK}.servicePriceAria`)}
                           onChange={(event) => updateService(service.id, 'price', event.target.value)}
                           onBlur={() => commitServiceNumberOnBlur(service.id, 'price')}
@@ -894,6 +911,7 @@ export default function BookingSettingsPanel() {
                           inputMode="numeric"
                           pattern="[0-9]*"
                           value={formatWholeNumberInputValue(service.duration)}
+                          placeholder={t(`${TK}.placeholderServiceDuration`)}
                           aria-label={t(`${TK}.serviceDurationAria`)}
                           onChange={(event) => updateService(service.id, 'duration', event.target.value)}
                           onBlur={() => commitServiceNumberOnBlur(service.id, 'duration')}
@@ -953,6 +971,7 @@ export default function BookingSettingsPanel() {
               <textarea
                 className="settings-textarea"
                 value={greeting}
+                placeholder={t(`${TK}.placeholderGreeting`)}
                 aria-invalid={Boolean(formErrors.greeting)}
                 onChange={(event) => {
                   setGreeting(event.target.value)

@@ -2517,6 +2517,20 @@
   border-radius: 10px;
 }
 
+.booking-hub-view .settings-business-grid .phone-input-shell {
+  height: 46px;
+  min-height: 46px;
+}
+
+.booking-hub-view .settings-business-grid .phone-input-shell .settings-input,
+.booking-hub-view .settings-business-grid .phone-input-shell .phone-mask-input {
+  height: 100%;
+  min-height: 0;
+  line-height: normal;
+  padding-top: 0;
+  padding-bottom: 0;
+}
+
 .booking-hub-view .settings-business-grid .settings-help {
   min-height: 0;
 }
