@@ -744,7 +744,7 @@ export default function Dashboard({
   }
 
   return (
-    <div className="min-h-dvh bg-nexoraCanvas font-sans text-nexoraText">
+    <div className="min-h-dvh w-full overflow-x-hidden bg-nexoraCanvas font-sans text-nexoraText">
       <DashboardSidebar
         activeMenu={activeMenu}
         setActiveMenu={handleNavigateMenu}
@@ -762,7 +762,7 @@ export default function Dashboard({
         userRole={userRole}
       />
 
-      <div className="flex min-h-dvh flex-col lg:pl-72">
+      <div className="flex min-h-dvh w-full min-w-0 flex-col lg:pl-72">
         <DashboardHeader
           searchQuery={searchQuery}
           setSearchQuery={setSearchQuery}
@@ -796,7 +796,7 @@ export default function Dashboard({
           onOpenMobileMenu={() => setIsMobileMenuOpen(true)}
         />
 
-        <main className="flex-1 p-4 pb-6 sm:p-6 sm:pb-8 lg:p-7 lg:pb-7">
+        <main className="w-full min-w-0 flex-1 overflow-x-hidden p-4 pb-6 sm:p-6 sm:pb-8 lg:p-7 lg:pb-7">
           {activeMenu !== 'overview' && (
             <button
               onClick={() => handleNavigateMenu('overview')}

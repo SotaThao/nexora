@@ -23,6 +23,7 @@ import {
   type MerchantVoiceBookingDto,
 } from '../../../data/repositories/merchantVoice'
 import { getApiErrorCode } from '../../../types/domain'
+import { parseApiDateTime } from '../utils'
 import {
   BroadcastIcon,
   CalendarKpiIcon,
@@ -43,6 +44,7 @@ import {
 import { useBookingHubVoiceEnabled } from './BookingHubVoiceContext'
 import Pagination from '../../ui/Pagination'
 import { usePagination } from '../../../hooks/usePagination'
+import { useMediaQuery } from '../../../hooks/useMediaQuery'
 import { BOOKING_HUB_PAGE_SIZE } from '../../../constants/pagination'
 import {
   BookingKpiSkeleton,
@@ -50,7 +52,6 @@ import {
 } from './BookingHubSkeletons'
 
 const TK = 'components.dashboard.views.BookingHubView'
-const TODAY_ISO = new Date().toISOString().slice(0, 10)
 
 const KPI_ACCENT_ELECTRIC = { '--kpi-accent': 'var(--nexora-electric)' } as React.CSSProperties
 const KPI_ACCENT_SUCCESS = { '--kpi-accent': 'var(--nexora-success)' } as React.CSSProperties
@@ -135,21 +136,60 @@ function serviceList(service: string | null | undefined) {
     .filter(Boolean)
 }
 
-function formatTimeBlock(startAt: string | null, fallback: string | null) {
+function toLocalDateIso(date: Date) {
+  const year = date.getFullYear()
+  const month = String(date.getMonth() + 1).padStart(2, '0')
+  const day = String(date.getDate()).padStart(2, '0')
+  return `${year}-${month}-${day}`
+}
+
+function formatTimeBlock(
+  startAt: string | null,
+  fallback: string | null,
+  todayLabel: string,
+  language: string = 'en',
+) {
   if (!startAt) {
     return {
       timeMain: fallback || 'Pending schedule',
       timeDate: fallback || 'Pending date',
-      dateIso: TODAY_ISO,
+      dateIso: toLocalDateIso(new Date()),
     }
   }
-  const date = new Date(startAt)
-  const dateIso = date.toISOString().slice(0, 10)
-  const today = new Date().toISOString().slice(0, 10)
-  const time = new Intl.DateTimeFormat('en-US', { hour: 'numeric', minute: '2-digit' }).format(date)
-  const dateText = new Intl.DateTimeFormat('en-US', { month: 'long', day: 'numeric', year: 'numeric' }).format(date)
+
+  // BE returns UTC (often without trailing Z). Parse as UTC, then format in end-user TZ.
+  const start = parseApiDateTime(startAt)
+  if (!start) {
+    return {
+      timeMain: fallback || startAt,
+      timeDate: fallback || '',
+      dateIso: toLocalDateIso(new Date()),
+    }
+  }
+
+  const dateLocale = language === 'vi' ? 'vi-VN' : 'en-US'
+  const timeZone = Intl.DateTimeFormat().resolvedOptions().timeZone
+  const dateIso = toLocalDateIso(start)
+  const todayIso = toLocalDateIso(new Date())
+  // Keep en-US + 12h intentionally — matches booking hub hours elsewhere.
+  const timeFormatter = new Intl.DateTimeFormat('en-US', {
+    hour: 'numeric',
+    minute: '2-digit',
+    hour12: true,
+    timeZone,
+  })
+  const dateFormatter = new Intl.DateTimeFormat(dateLocale, {
+    month: 'short',
+    day: 'numeric',
+    year: 'numeric',
+    timeZone,
+  })
+
+  const startTime = timeFormatter.format(start)
+  const dateText = dateFormatter.format(start)
+
   return {
-    timeMain: `${dateIso === today ? 'Today' : dateText} ${time}`,
+    timeMain: dateIso === todayIso ? `${todayLabel} · ${startTime}` : startTime,
     timeDate: dateText,
     dateIso,
   }
@@ -162,9 +202,19 @@ function resolveBookingStatus(item: MerchantVoiceBookingDto, statusOverride?: Bo
   return mapped
 }
 
-function toBookingItem(item: MerchantVoiceBookingDto, statusOverride?: BookingStatus): BookingItem {
+function toBookingItem(
+  item: MerchantVoiceBookingDto,
+  statusOverride: BookingStatus | undefined,
+  todayLabel: string,
+  language: string = 'en',
+): BookingItem {
   const source = mapSource(item.source)
-  const time = formatTimeBlock(item.requestedStartAtUtc, item.preferredTime)
+  const time = formatTimeBlock(
+    item.requestedStartAtUtc,
+    item.preferredTime,
+    todayLabel,
+    language,
+  )
   const status = resolveBookingStatus(item, statusOverride)
   return {
     id: item.id,
@@ -308,13 +358,82 @@ function BookingActions({
   )
 }
 
+function BookingTableMobileList({
+  bookings,
+  statusLabel,
+  pendingStatusUpdates,
+  onAction,
+  t,
+}: {
+  bookings: BookingItem[]
+  statusLabel: (status: BookingStatus) => string
+  pendingStatusUpdates: Record<string, boolean>
+  onAction: (id: string, action: 'send-sms' | 'done' | 'noshow' | 'detail') => void
+  t: (key: string) => string
+}) {
+  return (
+    <div className="booking-table-mobile-list">
+      {bookings.map((booking) => (
+        <article
+          className={`booking-table-mobile-row ${rowClassForStatus(booking.status)}`}
+          key={booking.id}
+        >
+          <div className="booking-table-mobile-head">
+            <div className="booking-table-mobile-customer">
+              <div className="booking-customer-name">
+                {booking.name}{' '}
+                <span className={`badge ${booking.sourceClass}`}>
+                  {t(`${TK}.${SOURCE_KEY_MAP[booking.source]}`)}
+                </span>
+                {booking.request ? (
+                  <span className="badge badge-warning">{t(`${TK}.booking.request`)}</span>
+                ) : null}
+              </div>
+              {booking.contactDisplay ? (
+                <div className="booking-customer-meta">{booking.contactDisplay}</div>
+              ) : null}
+            </div>
+            <span className={`badge booking-status ${statusBadgeClass(booking.status)}`}>
+              {statusLabel(booking.status)}
+            </span>
+          </div>
+          <div className="booking-table-mobile-meta">
+            <span className="booking-service-list">
+              {booking.services.map((service) => (
+                <span className="booking-service-chip" key={service}>{service}</span>
+              ))}
+            </span>
+            <span className="booking-tech-name">{booking.tech}</span>
+          </div>
+          <div className="booking-table-mobile-footer">
+            <span className="booking-table-mobile-time">
+              {booking.timeMain}
+              {booking.timeDate && !booking.timeMain.includes(booking.timeDate)
+                ? ` · ${booking.timeDate}`
+                : ''}
+            </span>
+            <div className="booking-table-mobile-actions">
+              <BookingActions
+                booking={booking}
+                onAction={pendingStatusUpdates[booking.id] ? () => undefined : onAction}
+                isPending={Boolean(pendingStatusUpdates[booking.id])}
+                t={t}
+              />
+            </div>
+          </div>
+        </article>
+      ))}
+    </div>
+  )
+}
+
 export default function BookingTodayPanel() {
-  const { t } = useTranslation()
+  const { t, currentLanguage } = useTranslation()
   const { showToast } = useNotification()
   const voiceEnabled = useBookingHubVoiceEnabled()
-  const [viewMode, setViewMode] = useState<ViewMode>(() => (
-    typeof window !== 'undefined' && window.innerWidth < 768 ? 'card' : 'table'
-  ))
+  // iPad Pro (1024+) still shows desktop chrome, but content pane is too narrow for 6-col table.
+  const useCompactTableList = useMediaQuery('(max-width: 1366px)')
+  const [viewMode, setViewMode] = useState<ViewMode>('table')
   const [searchField, setSearchField] = useState<SearchField>(BookingUiSearchField.All)
   const [searchKeyword, setSearchKeyword] = useState('')
   const [dateFrom, setDateFrom] = useState('')
@@ -371,8 +490,10 @@ export default function BookingTodayPanel() {
   const isListLoading = isBookingsLoading || isBookingsFetching
 
   const filteredBookings = useMemo(() => (
-    (bookingResponse?.items ?? []).map((item) => toBookingItem(item, statusOverrides[item.id]))
-  ), [bookingResponse?.items, statusOverrides])
+    (bookingResponse?.items ?? []).map((item) =>
+      toBookingItem(item, statusOverrides[item.id], t(`${TK}.today.todayLabel`), currentLanguage),
+    )
+  ), [bookingResponse?.items, statusOverrides, t, currentLanguage])
 
   const stats = useMemo(() => ({
     todayCount: statistics?.allBookings ?? 0,
@@ -515,20 +636,6 @@ export default function BookingTodayPanel() {
     return () => window.clearTimeout(timer)
   }, [searchField, searchKeyword, dateFrom, dateTo, resetPage])
 
-  useEffect(() => {
-    if (typeof window === 'undefined') return undefined
-
-    const syncViewModeByViewport = () => {
-      if (window.innerWidth < 768) {
-        setViewMode('card')
-      }
-    }
-
-    syncViewModeByViewport()
-    window.addEventListener('resize', syncViewModeByViewport)
-    return () => window.removeEventListener('resize', syncViewModeByViewport)
-  }, [])
-
   return (
     <div className="booking-sub-panel is-active" aria-busy={isStatisticsLoading || isListLoading}>
       {isStatisticsLoading ? (
@@ -621,34 +728,69 @@ export default function BookingTodayPanel() {
                 onChange={(event) => setSearchKeyword(event.target.value)}
               />
             </label>
-            <label className="booking-control-field">
-              <span className="booking-control-label">{t(`${TK}.today.dateFrom`)}</span>
-              <input
-                className="booking-input"
-                type="date"
-                value={dateFrom}
-                onChange={(event) => setDateFrom(event.target.value)}
-              />
-            </label>
-            <label className="booking-control-field">
-              <span className="booking-control-label">{t(`${TK}.today.dateTo`)}</span>
-              <input
-                className="booking-input"
-                type="date"
-                value={dateTo}
-                onChange={(event) => setDateTo(event.target.value)}
-              />
-            </label>
+            <div className="booking-date-range">
+              <label className="booking-control-field">
+                <span className="booking-control-label">{t(`${TK}.today.dateFrom`)}</span>
+                <span className={`booking-date-input-shell ${dateFrom ? 'has-value' : 'is-empty'}`}>
+                  <input
+                    className={`booking-input booking-input-date ${dateFrom ? 'has-value' : 'is-empty'}`}
+                    type="date"
+                    value={dateFrom}
+                    aria-label={t(`${TK}.today.dateFrom`)}
+                    onChange={(event) => setDateFrom(event.target.value)}
+                  />
+                  {!dateFrom ? (
+                    <span className="booking-date-placeholder" aria-hidden="true">
+                      {t(`${TK}.today.dateFromPlaceholder`)}
+                    </span>
+                  ) : null}
+                </span>
+              </label>
+              <label className="booking-control-field">
+                <span className="booking-control-label">{t(`${TK}.today.dateTo`)}</span>
+                <span className={`booking-date-input-shell ${dateTo ? 'has-value' : 'is-empty'}`}>
+                  <input
+                    className={`booking-input booking-input-date ${dateTo ? 'has-value' : 'is-empty'}`}
+                    type="date"
+                    value={dateTo}
+                    aria-label={t(`${TK}.today.dateTo`)}
+                    onChange={(event) => setDateTo(event.target.value)}
+                  />
+                  {!dateTo ? (
+                    <span className="booking-date-placeholder" aria-hidden="true">
+                      {t(`${TK}.today.dateToPlaceholder`)}
+                    </span>
+                  ) : null}
+                </span>
+              </label>
+            </div>
             <button className="booking-mini-button booking-clear-button" type="button" onClick={clearFilters}>
               {t(`${TK}.today.clear`)}
             </button>
           </div>
 
           {isListLoading ? (
-            <BookingTodayListSkeleton viewMode={viewMode} />
+            <BookingTodayListSkeleton viewMode={viewMode} isMobileUI={useCompactTableList} />
+          ) : viewMode === 'table' && useCompactTableList ? (
+            <BookingTableMobileList
+              bookings={filteredBookings}
+              statusLabel={statusLabel}
+              pendingStatusUpdates={pendingStatusUpdates}
+              onAction={handleAction}
+              t={t}
+            />
           ) : viewMode === 'table' ? (
             <div className="booking-table-wrap">
+              <div className="booking-table-scroller">
               <table className="booking-table">
+                <colgroup>
+                  <col className="booking-col-customer" />
+                  <col className="booking-col-service" />
+                  <col className="booking-col-tech" />
+                  <col className="booking-col-time" />
+                  <col className="booking-col-status" />
+                  <col className="booking-col-action" />
+                </colgroup>
                 <thead>
                   <tr>
                     <th scope="col">{t(`${TK}.today.colCustomer`)}</th>
@@ -720,6 +862,7 @@ export default function BookingTodayPanel() {
                   ))}
                 </tbody>
               </table>
+              </div>
             </div>
           ) : (
             <div className="booking-card-panel">
@@ -762,9 +905,14 @@ export default function BookingTodayPanel() {
                         <span className="booking-card-label">{t(`${TK}.today.colTech`)}</span>
                         <span className="booking-card-value">{booking.tech}</span>
                       </div>
-                      <div className="booking-card-info-row">
+                      <div className="booking-card-info-row is-span-full">
                         <span className="booking-card-label">{t(`${TK}.today.colTime`)}</span>
-                        <span className="booking-card-value">{booking.timeMain} · {booking.timeDate}</span>
+                        <span className="booking-card-value booking-card-time">
+                          <span className="booking-card-time-main">{booking.timeMain}</span>
+                          {booking.timeDate && !booking.timeMain.includes(booking.timeDate) ? (
+                            <span className="booking-card-time-date">{booking.timeDate}</span>
+                          ) : null}
+                        </span>
                       </div>
                     </div>
                     <div className="booking-card-actions">
@@ -890,7 +1038,10 @@ export default function BookingTodayPanel() {
                   <div>
                     <div className="booking-detail-label">{t(`${TK}.today.colTime`)}</div>
                     <div className="booking-detail-value">
-                      {detailBooking.timeMain} · {detailBooking.timeDate}
+                      {detailBooking.timeMain}
+                      {detailBooking.timeDate && !detailBooking.timeMain.includes(detailBooking.timeDate)
+                        ? ` · ${detailBooking.timeDate}`
+                        : ''}
                     </div>
                   </div>
                 </div>

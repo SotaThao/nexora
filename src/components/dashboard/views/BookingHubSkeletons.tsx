@@ -84,10 +84,47 @@ export function BookingCardListSkeleton({ count = 4 }: { count?: number }) {
   )
 }
 
-export function BookingTodayListSkeleton({ viewMode }: { viewMode: 'table' | 'card' }) {
+export function BookingTableMobileListSkeleton({ count = 4 }: { count?: number }) {
+  return (
+    <div className="booking-table-mobile-list" aria-busy="true" aria-hidden="true">
+      {Array.from({ length: count }).map((_, index) => (
+        <article className="booking-table-mobile-row booking-skeleton-card" key={index}>
+          <div className="booking-table-mobile-head">
+            <BookingSkeletonStack className="booking-skeleton-stack-grow">
+              <Skeleton width="68%" height={16} borderRadius={6} />
+              <Skeleton width="84%" height={12} borderRadius={6} />
+            </BookingSkeletonStack>
+            <Skeleton width={72} height={22} borderRadius={999} />
+          </div>
+          <div className="booking-table-mobile-meta">
+            <Skeleton width={88} height={22} borderRadius={999} />
+            <Skeleton width={72} height={22} borderRadius={999} />
+          </div>
+          <div className="booking-table-mobile-footer">
+            <Skeleton width="42%" height={14} borderRadius={6} />
+            <Skeleton width={96} height={30} borderRadius={8} />
+          </div>
+        </article>
+      ))}
+    </div>
+  )
+}
+
+export function BookingTodayListSkeleton({
+  viewMode,
+  isMobileUI = false,
+}: {
+  viewMode: 'table' | 'card'
+  isMobileUI?: boolean
+}) {
+  if (viewMode === 'table' && isMobileUI) {
+    return <BookingTableMobileListSkeleton count={4} />
+  }
+
   if (viewMode === 'table') {
     return (
       <div className="booking-table-wrap" aria-busy="true" aria-hidden="true">
+        <div className="booking-table-scroller">
         <table className="booking-table">
           <thead>
             <tr>
@@ -102,6 +139,7 @@ export function BookingTodayListSkeleton({ viewMode }: { viewMode: 'table' | 'ca
             <BookingTableSkeleton rows={6} />
           </tbody>
         </table>
+        </div>
       </div>
     )
   }
