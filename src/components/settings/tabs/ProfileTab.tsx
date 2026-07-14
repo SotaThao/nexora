@@ -2,7 +2,7 @@ import React, { useMemo, useState } from 'react'
 import { createPortal } from 'react-dom'
 import { useTranslation } from '../../../contexts/LanguageContext'
 import { useNotification } from '../../../contexts/NotificationContext'
-import { buildAffiliateReferralUrl, getProfileReferralCode, DEFAULT_LEG } from '../../../utils/affiliateReferral'
+import { buildAffiliateReferralUrl, getProfileReferralCode } from '../../../utils/affiliateReferral'
 import { buildGoogleMapsEmbedUrl, formatAddressForMap } from '../../../utils/mapUrl'
 import {
   useMerchantPaymentMethods,
@@ -130,9 +130,9 @@ export default function ProfileTab({
   const showToast = providedShowToast ?? notifyToast
   const referralCode = useMemo(() => getProfileReferralCode(profile), [profile])
   const referralUrl = useMemo(
-    // Default new signups from this link to the left leg — merchants have no leg
-    // picker UI (unlike staff's My QR page), so left is the sensible default.
-    () => buildAffiliateReferralUrl({ referralCode, leg: DEFAULT_LEG }),
+    // No leg picker on this page (unlike staff's My QR page) — omit `leg` entirely
+    // until the merchant actually picks a side, rather than silently defaulting.
+    () => buildAffiliateReferralUrl({ referralCode }),
     [referralCode],
   )
   const referralDisplay = useMemo(() => {
