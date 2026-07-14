@@ -8,6 +8,9 @@ import { downloadQrCode, QR_IMAGE_SIZES } from '../../../utils/qrUtils'
 import { copyTextToClipboard } from '../../../utils/clipboard'
 import ReferralQrModal from '../modals/ReferralQrModal'
 
+const slugify = (value = '') =>
+  value.toLowerCase().trim().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '') || 'referral'
+
 const gatewayCardClass = 'rounded-xl border border-nexoraBorder bg-nexoraCanvas p-5'
 
 const gatewayActionBtnClass = 'flex h-9 flex-1 min-w-0 items-center justify-center gap-1 rounded-lg px-2 text-xs font-bold transition cursor-pointer'
@@ -45,7 +48,7 @@ export default function ReferralGatewayPanel({ t, showToast }) {
     if (!qrDownloadUrl || isDownloading) return
     setIsDownloading(true)
     try {
-      await downloadQrCode(qrDownloadUrl, `${referralCode || 'referral'}-qr.png`)
+      await downloadQrCode(qrDownloadUrl, `${slugify(referralCode)}-qr.png`)
       showToast(t('components.SettingsView.qrCodeDownloaded'), 'success')
     } catch {
       showToast(t('common.error'), 'error')

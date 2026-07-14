@@ -81,8 +81,8 @@ export default function ReferralQrModal({ open, onClose }: ReferralQrModalProps)
           type="button"
           onClick={onClose}
           className="no-print modal-close-btn absolute right-2 top-2 rounded-full text-slate-400 transition hover:bg-slate-100 hover:text-slate-600"
-          title="Close"
-          aria-label="Close"
+          title={t('common.close')}
+          aria-label={t('common.close')}
         >
           <X className="h-5 w-5" />
         </button>
@@ -130,7 +130,8 @@ export default function ReferralQrModal({ open, onClose }: ReferralQrModalProps)
             <button
               type="button"
               onClick={() => void handleCopy()}
-              className="flex shrink-0 items-center gap-1.5 rounded-full px-2 py-1 text-xs font-extrabold uppercase tracking-wide text-nexoraBrand transition hover:opacity-80"
+              disabled={!referralUrl}
+              className="flex shrink-0 items-center gap-1.5 rounded-full px-2 py-1 text-xs font-extrabold uppercase tracking-wide text-nexoraBrand transition hover:opacity-80 disabled:cursor-not-allowed disabled:opacity-40"
             >
               <Copy className="h-3.5 w-3.5" />
               <span>{t('common.copy')}</span>

@@ -480,6 +480,7 @@ function Overview({
             <>
               <Skeleton height={196} borderRadius={12} />
               <Skeleton height={196} borderRadius={12} />
+              <Skeleton height={196} borderRadius={12} />
             </>
           ) : !hasMasterGateway ? (
             <div className="md:col-span-2 xl:col-span-3">
