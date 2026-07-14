@@ -1,10 +1,6 @@
 import { useMemo, useRef, useState } from 'react'
-import { useStaffDashboardSummary, useStaffTips } from '../../../data/hooks/useStaffSelf'
-import { useStaffPaymentStats } from '../../../data/hooks/useStaffPayments'
-import { useStaffPayoutStats, useStaffPayoutsList } from '../../../data/hooks/useStaffPayouts'
-import { PayoutStatus, PayoutType, hasPayoutType } from '../../../data/payoutConstants'
+import { useStaffDashboardStatistics, useStaffTips } from '../../../data/hooks/useStaffSelf'
 import { formatLocalDateIso } from '../../../utils/localDate'
-import { toApiDateTime } from '../../../utils/directPaymentDateRange'
 import {
   buildLastNDayBuckets,
   buildSvgMetrics,
@@ -12,14 +8,17 @@ import {
   sumBucketValues,
 } from '../utils/staffEarningsChart'
 import type { EarningsChartPoint } from '../utils/staffEarningsChart'
+import type { StaffStatisticsCategory } from '../../../types/domain'
 
-function getMonthToDateRange() {
-  const now = new Date()
-  const start = new Date(now.getFullYear(), now.getMonth(), 1)
-  return {
-    from: toApiDateTime(formatLocalDateIso(start))!,
-    to: toApiDateTime(formatLocalDateIso(now), true)!,
-  }
+const BREAKDOWN_ROWS = [
+  { id: 'tips', category: 'Tips' },
+  { id: 'payments', category: 'Payments' },
+  { id: 'referral', category: 'ReferralRewards' },
+  { id: 'bonuses', category: 'Bonuses' },
+] as const
+
+function findCategory(categories: StaffStatisticsCategory[], categoryName: string) {
+  return categories.find((c) => c.category === categoryName)
 }
 
 function getRollingDateRange(dayCount: number) {
@@ -36,22 +35,14 @@ export function useStaffEarningsData(currentLanguage: string) {
   const chartRef = useRef<HTMLDivElement>(null)
   const [hoverIndex, setHoverIndex] = useState<number | null>(null)
 
-  const monthRange = useMemo(() => getMonthToDateRange(), [])
   const chartTipRange = useMemo(() => getRollingDateRange(14), [])
 
-  const { data: summary, isPending: isSummaryPending } = useStaffDashboardSummary()
-  const { data: payoutStats, isPending: isPayoutStatsPending } = useStaffPayoutStats()
-  const { data: monthPaymentStats, isPending: isPaymentStatsPending } = useStaffPaymentStats(monthRange)
+  const { data: statistics, isPending: isStatisticsPending } = useStaffDashboardStatistics()
   const { data: chartTipsPage, isPending: isChartTipsPending } = useStaffTips({
     pageNumber: 1,
     pageSize: 200,
     dateFrom: chartTipRange.dateFrom,
     dateTo: chartTipRange.dateTo,
-  })
-  const { data: payoutsPage, isPending: isPayoutsListPending } = useStaffPayoutsList({
-    page: 1,
-    pageSize: 100,
-    status: PayoutStatus.Confirmed,
   })
 
   const chartTips = chartTipsPage?.items ?? []
@@ -92,47 +83,25 @@ export function useStaffEarningsData(currentLanguage: string) {
   const lastWeekTotal = sumBucketValues(lastWeekBuckets)
   const weekChangePct = computeWeekOverWeekChange(thisWeekTotal, lastWeekTotal)
 
-  const tipsAmount = summary?.thisMonthTips.totalAmount ?? 0
-  const paymentsAmount = monthPaymentStats?.byStatus.completed.totalAmount
-    ?? monthPaymentStats?.totalAmount
-    ?? 0
-  const bonusesAmount = useMemo(() => {
-    const payouts = payoutsPage?.items ?? []
-    return payouts.reduce((sum, payout) => {
-      if (!hasPayoutType(payout.payoutTypes, PayoutType.Bonus)) return sum
-      return sum + (Number(payout.amount) || 0)
-    }, 0)
-  }, [payoutsPage?.items])
-  const referralAmount = 0
-
-  const breakdownTotal = tipsAmount + paymentsAmount + bonusesAmount + referralAmount
+  const categories = statistics?.categories ?? []
   const breakdownRows = useMemo(
-    () => [
-      { id: 'tips', amount: tipsAmount },
-      { id: 'payments', amount: paymentsAmount },
-      { id: 'referral', amount: referralAmount },
-      { id: 'bonuses', amount: bonusesAmount },
-    ].map((row) => ({
-      ...row,
-      percent: breakdownTotal > 0 ? Math.round((row.amount / breakdownTotal) * 100) : 0,
-    })),
-    [tipsAmount, paymentsAmount, bonusesAmount, referralAmount, breakdownTotal],
+    () =>
+      BREAKDOWN_ROWS.map((row) => {
+        const match = findCategory(categories, row.category)
+        return {
+          id: row.id,
+          amount: match?.amount ?? 0,
+          percent: Math.round(match?.percentageOfTotal ?? 0),
+        }
+      }),
+    [categories],
   )
 
-  const availableBalance = payoutStats?.currentDebtBalance ?? 0
-  const pendingAmount =
-    (payoutStats?.totalPendingAmount ?? 0) + (summary?.pendingTips.totalAmount ?? 0)
-  const lifetimeEarnings =
-    (payoutStats?.totalReceivedAllTime ?? 0)
-    + paymentsAmount
-    + tipsAmount
+  const availableBalance = statistics?.availableBalance ?? 0
+  const pendingAmount = statistics?.pending ?? 0
+  const lifetimeEarnings = statistics?.lifetimeEarnings ?? 0
 
-  const isLoading =
-    isSummaryPending
-    || isPayoutStatsPending
-    || isPaymentStatsPending
-    || isChartTipsPending
-    || isPayoutsListPending
+  const isLoading = isStatisticsPending || isChartTipsPending
 
   return {
     isLoading,
