@@ -1,4 +1,5 @@
 import React, { useEffect, useMemo, useState } from 'react'
+import { formatNationalNumber, isValidPhoneE164, parsePhone } from '../../CountryCodeSelect'
 import { useTranslation } from '../../../contexts/LanguageContext'
 import { useNotification } from '../../../contexts/NotificationContext'
 import { getErrorI18nKey } from '../../../data/errorCodes'
@@ -65,9 +66,7 @@ type ViewMode = 'table' | 'card'
 interface BookingItem {
   id: string
   name: string
-  phone: string
-  phoneDisplay: string
-  email: string
+  contactDisplay: string | null
   services: string[]
   tech: string
   date: string
@@ -93,12 +92,30 @@ function mapStatus(status: MerchantVoiceBookingDto['status']): BookingStatus {
   return mapLeadStatusToUiStatus(status)
 }
 
-function formatPhone(phone: string | null | undefined) {
-  const digits = (phone || '').replace(/\D/g, '')
-  if (digits.length === 10) {
-    return `(${digits.slice(0, 3)}) ${digits.slice(3, 6)}-${digits.slice(6)}`
+function formatCustomerPhoneDisplay(phone: string | null | undefined): string | null {
+  const raw = phone?.trim()
+  if (!raw) return null
+
+  const parsed = parsePhone(raw)
+  if (isValidPhoneE164(raw, parsed.countryCode)) {
+    const national = formatNationalNumber(parsed.nationalNumber, parsed.countryCode)
+    if (national.replace(/\D/g, '')) {
+      return `${parsed.countryCode} ${national}`.trim()
+    }
   }
-  return phone || '—'
+
+  return raw
+}
+
+function resolveCustomerContactDisplay(
+  phone: string | null | undefined,
+  email: string | null | undefined,
+): string | null {
+  const phoneDisplay = formatCustomerPhoneDisplay(phone)
+  if (phoneDisplay) return phoneDisplay
+
+  const trimmedEmail = email?.trim()
+  return trimmedEmail || null
 }
 
 function formatServiceLabel(value: string) {
@@ -152,9 +169,7 @@ function toBookingItem(item: MerchantVoiceBookingDto, statusOverride?: BookingSt
   return {
     id: item.id,
     name: item.customerName || 'Unknown customer',
-    phone: (item.customerPhone || '').replace(/\D/g, ''),
-    phoneDisplay: formatPhone(item.customerPhone),
-    email: item.assignedStaffEmail || 'N/A',
+    contactDisplay: resolveCustomerContactDisplay(item.customerPhone, item.customerEmail),
     services: serviceList(item.service),
     tech: item.assignedStaffName || 'Unassigned',
     date: time.dateIso,
@@ -661,9 +676,11 @@ export default function BookingTodayPanel() {
                               <span className="badge badge-warning">{t(`${TK}.booking.request`)}</span>
                             ) : null}
                           </div>
-                          <div className="booking-customer-meta">
-                            {booking.phoneDisplay} · {booking.email}
-                          </div>
+                          {booking.contactDisplay ? (
+                            <div className="booking-customer-meta">
+                              {booking.contactDisplay}
+                            </div>
+                          ) : null}
                         </div>
                       </td>
                       <td>
@@ -720,9 +737,11 @@ export default function BookingTodayPanel() {
                             <span className="badge badge-warning">{t(`${TK}.booking.request`)}</span>
                           ) : null}
                         </div>
-                        <div className="booking-card-contact">
-                          {booking.phoneDisplay} · {booking.email}
-                        </div>
+                        {booking.contactDisplay ? (
+                          <div className="booking-card-contact">
+                            {booking.contactDisplay}
+                          </div>
+                        ) : null}
                       </div>
                       <span className={`badge booking-status ${statusBadgeClass(booking.status)}`}>
                         {statusLabel(booking.status)}
@@ -835,10 +854,11 @@ export default function BookingTodayPanel() {
                 <div className="booking-detail-avatar">{getInitials(detailBooking.name)}</div>
                 <div>
                   <div className="booking-detail-name">{detailBooking.name}</div>
-                  <div className="booking-detail-hero-sub">
-                    <span>{detailBooking.phoneDisplay}</span>
-                    <span>{detailBooking.email}</span>
-                  </div>
+                  {detailBooking.contactDisplay ? (
+                    <div className="booking-detail-hero-sub">
+                      <span>{detailBooking.contactDisplay}</span>
+                    </div>
+                  ) : null}
                 </div>
                 <div className={`booking-detail-status-pill booking-status ${statusBadgeClass(detailBooking.status)}`}>
                   {statusLabel(detailBooking.status)}

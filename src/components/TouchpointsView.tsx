@@ -288,18 +288,13 @@ export default function TouchpointsView({
   return (
     <div className="space-y-4 sm:space-y-6">
       {/* Tab Header & Title */}
-      <div className="flex flex-col gap-3 border-b border-nexoraBorder pb-4 sm:gap-4 sm:flex-row sm:items-center sm:justify-between sm:pb-5">
-        <div className="min-w-0">
-          <h2 className="text-lg font-extrabold text-nexoraText sm:text-xl">
-            {t('dashboard.menu.touchpoints')}
-          </h2>
-          <p className="mt-0.5 line-clamp-2 text-[11px] text-nexoraMuted sm:mt-1 sm:text-xs">
-            {t('setup.qr_touchpoints_desc')}
-          </p>
-        </div>
+      <div className="border-b border-nexoraBorder pb-4 sm:pb-5">
+        <h2 className="text-lg font-extrabold text-nexoraText sm:text-xl">
+          {t('dashboard.menu.touchpoints')}
+        </h2>
         {/* Navigation Tabs */}
         {touchpointTabs.length > 1 ? (
-        <div className="flex w-full gap-1 rounded-xl border border-nexoraBorder bg-nexoraSurfaceMuted p-1 dark:border-luxuryGold/10 dark:bg-luxuryCoal sm:w-auto">
+        <div className="mt-3 flex w-full gap-1 rounded-xl border border-nexoraBorder bg-nexoraSurfaceMuted p-1 dark:border-luxuryGold/10 dark:bg-luxuryCoal sm:w-fit">
           {touchpointTabs.map(tab => (
             <button
               key={tab.id}
