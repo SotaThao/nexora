@@ -29,7 +29,7 @@ export function formatCurrency(value) {
   }).format(value)
 }
 
-function parseApiDateTime(value) {
+export function parseApiDateTime(value) {
   const raw = String(value).trim()
   if (!raw) return null
 
