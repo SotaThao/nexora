@@ -110,6 +110,10 @@ export const errorCodeToI18nKey = {
   VOICE_TRIAL_SERVICE_HOURS_FROM_REQUIRED: 'errors.voice_trial_service_hours_from_required',
   VOICE_TRIAL_SERVICE_HOURS_TO_REQUIRED: 'errors.voice_trial_service_hours_to_required',
   VOICE_TRIAL_BIGGEST_PROBLEM_REQUIRED: 'errors.voice_trial_biggest_problem_required',
+
+  // Nexora Voice tenant staff
+  VOICE_TENANT_STAFF_PHONE_NUMBER_REQUIRED: 'errors.voice_tenant_staff_phone_number_required',
+  VOICE_TENANT_STAFF_PHONE_NUMBER_ALREADY_EXISTS: 'errors.voice_tenant_staff_phone_number_already_exists',
 }
 
 /**

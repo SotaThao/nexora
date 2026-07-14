@@ -53,11 +53,17 @@ function normalizeSubscription(raw: LooseObject | null | undefined): UserSubscri
 function normalizeUserProfile(response: UserProfile): UserProfile {
   const subscription = normalizeSubscription(response as LooseObject)
   const profileImageUrl = getUserProfileImageUrl(response)
+  const raw = response as LooseObject
+  const createdAt =
+    (typeof raw.createdAt === 'string' && raw.createdAt) ||
+    (typeof raw.CreatedAt === 'string' && raw.CreatedAt) ||
+    null
 
   return {
     ...response,
     ...(subscription ? { subscription } : {}),
     ...(profileImageUrl ? { profileImageUrl } : {}),
+    createdAt,
   }
 }
 

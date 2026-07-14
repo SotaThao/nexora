@@ -21,6 +21,7 @@ import { useStaffAccount } from "../../../contexts/StaffAccountContext";
 import { useUploadImage } from "../../../data/hooks/useMerchantSetup";
 import { useStaffProfileView } from "../../../data/hooks/useStaffProfileView";
 import { logger } from "../../../utils/logger";
+import { formatMemberSinceDate } from "../../../utils/localDate";
 import CountryCodeSelect, {
   formatNationalNumber,
   getDefaultDialCode,
@@ -217,6 +218,7 @@ export default function StaffProfile() {
   const profileName = displayName || fullName || staffMember.fullName || "Staff";
   const profileInitial = profileName.trim().charAt(0).toUpperCase() || "S";
   const nexoraId = profileView.staffCode || staffMember.id || "—";
+  const memberSinceDate = formatMemberSinceDate(profileView.createdAt, currentLanguage);
   const isKYCVerified = profileView.isKYCVerified === true;
   const kycStatusLabel = isKYCVerified
     ? t("staff_dashboard.profile.menu_verified")
@@ -343,7 +345,11 @@ export default function StaffProfile() {
                       {t("staff_dashboard.profile.nexora_id", { id: nexoraId })}
                     </p>
                     <p className="mt-0.5 text-[11px] font-medium text-nexoraMuted">
-                      {t("staff_dashboard.profile.member_since")}
+                      {memberSinceDate
+                        ? t("staff_dashboard.profile.member_since", {
+                            date: memberSinceDate,
+                          })
+                        : null}
                     </p>
                     <button
                       type="button"

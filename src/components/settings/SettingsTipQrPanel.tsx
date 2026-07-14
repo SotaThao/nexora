@@ -21,7 +21,7 @@ import {
   resolveDirectPaymentPageUrl,
   resolveMerchantBusinessIdFromProfile,
 } from '../../utils/merchantBusinessId'
-import { downloadQrCode } from '../../utils/qrUtils'
+import { downloadQrCode, QR_IMAGE_SIZES } from '../../utils/qrUtils'
 import { payoutTypeToUiKey, getPaymentMethodDisplayName } from '../../data/paymentMethodTypes'
 import QrImage from '../ui/QrImage'
 
@@ -81,24 +81,19 @@ export default function SettingsTipQrPanel({
     [businessId, paymentQr?.paymentUrl],
   )
 
-  const qrPreviewSize = isGateway ? 112 : isCompact ? 150 : 200
-
   const qrPreviewUrl = useMemo(
-    () => (paymentPageUrl ? buildPublicQrImageUrl(paymentPageUrl, qrPreviewSize) : ''),
-    [paymentPageUrl, qrPreviewSize],
-  )
-
-  const previewQrUrl = useMemo(
-    () => (paymentPageUrl ? buildPublicQrImageUrl(paymentPageUrl, 280) : ''),
+    () => (paymentPageUrl ? buildPublicQrImageUrl(paymentPageUrl, QR_IMAGE_SIZES.panel) : ''),
     [paymentPageUrl],
   )
+
+  const previewQrUrl = qrPreviewUrl
 
   const handleDownloadQr = useCallback(async () => {
     if (!paymentPageUrl) return
 
     setIsDownloading(true)
     try {
-      await downloadQrCode(buildPublicQrImageUrl(paymentPageUrl, 1000), 'direct-payment-qr.png')
+      await downloadQrCode(buildPublicQrImageUrl(paymentPageUrl, QR_IMAGE_SIZES.print), 'direct-payment-qr.png')
       showToast(t('components.SettingsView.qrCodeDownloaded'), 'success')
     } catch {
       showToast(t('components.dashboard.overview.Overview.qr_download_failed'), 'error')

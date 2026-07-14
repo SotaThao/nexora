@@ -3,14 +3,27 @@ import { ChevronDown, Search } from 'lucide-react'
 import { useTranslation } from '../contexts/LanguageContext'
 import { isValidPhone } from '../utils/validation'
 import { AsYouType, isPossiblePhoneNumber, validatePhoneNumberLength } from 'libphonenumber-js'
+import {
+  PhoneDialCode,
+  PhoneFormatSeparator,
+  PhoneNationalGroupPattern,
+  PhoneNationalGroupPatternWithTrunk,
+  PhoneNationalLimits,
+  PhoneNationalPlaceholderPattern,
+  PHONE_NATIONAL_PLACEHOLDER_DEFAULT,
+  buildPhonePlaceholderFromMaxDigits,
+  isKnownPhoneDialCode,
+} from '../constants/phone'
 
 /** Narrow gap between phone digit groups in inputs (thinner than a normal space). */
-export const PHONE_GROUP_SEP = '\u2009'
+export const PHONE_GROUP_SEP = PhoneFormatSeparator.GroupThin
+
+export { PhoneDialCode } from '../constants/phone'
 
 export const COUNTRY_CODES = [
-  { name: 'United States', code: 'US', dialCode: '+1', flag: '🇺🇸' },
-  { name: 'Canada', code: 'CA', dialCode: '+1', flag: '🇨🇦' },
-  { name: 'Vietnam', code: 'VN', dialCode: '+84', flag: '🇻🇳' },
+  { name: 'United States', code: 'US', dialCode: PhoneDialCode.US, flag: '🇺🇸' },
+  { name: 'Canada', code: 'CA', dialCode: PhoneDialCode.US, flag: '🇨🇦' },
+  { name: 'Vietnam', code: 'VN', dialCode: PhoneDialCode.Vietnam, flag: '🇻🇳' },
   { name: 'United Kingdom', code: 'GB', dialCode: '+44', flag: '🇬🇧' },
   { name: 'Australia', code: 'AU', dialCode: '+61', flag: '🇦🇺' },
   { name: 'Singapore', code: 'SG', dialCode: '+65', flag: '🇸🇬' },
@@ -31,7 +44,7 @@ export const COUNTRY_CODES = [
 ]
 
 export const parsePhone = (phoneStr) => {
-  if (!phoneStr) return { countryCode: '+1', nationalNumber: '' }
+  if (!phoneStr) return { countryCode: PhoneDialCode.US, nationalNumber: '' }
   const normalized = String(phoneStr).trim()
   
   // Sort country codes by dialCode length descending to match longest prefix first
@@ -53,11 +66,15 @@ export const parsePhone = (phoneStr) => {
   const digits = normalized.replace(/\D/g, '')
   // API can return VN local numbers (e.g. 0385478857) without +84.
   // For +84 UI, show national number without trunk '0' to avoid duplication.
-  if (digits.startsWith('0') && digits.length >= 9 && digits.length <= 11) {
-    return { countryCode: '+84', nationalNumber: digits.slice(1) }
+  if (
+    digits.startsWith(PhoneNationalLimits.VnLocalTrunkDigit)
+    && digits.length >= PhoneNationalLimits.VnLocalMinDigits
+    && digits.length <= PhoneNationalLimits.VnLocalMaxDigits
+  ) {
+    return { countryCode: PhoneDialCode.Vietnam, nationalNumber: digits.slice(1) }
   }
 
-  return { countryCode: '+1', nationalNumber: normalized }
+  return { countryCode: PhoneDialCode.US, nationalNumber: normalized }
 }
 
 export const getCountryByDialCode = (dialCode) => {
@@ -65,8 +82,8 @@ export const getCountryByDialCode = (dialCode) => {
 }
 
 export const getDefaultDialCode = (appLanguage) => {
-  if (appLanguage === 'vi') return '+84'
-  if (typeof navigator === 'undefined') return '+1'
+  if (appLanguage === 'vi') return PhoneDialCode.Vietnam
+  if (typeof navigator === 'undefined') return PhoneDialCode.US
 
   const locale = (navigator.language || 'en-US').toLowerCase()
   const region = locale.split('-')[1]?.toUpperCase()
@@ -74,9 +91,9 @@ export const getDefaultDialCode = (appLanguage) => {
     const matched = COUNTRY_CODES.find((country) => country.code === region)
     if (matched) return matched.dialCode
   }
-  if (locale.startsWith('vi')) return '+84'
+  if (locale.startsWith('vi')) return PhoneDialCode.Vietnam
 
-  return '+1'
+  return PhoneDialCode.US
 }
 
 export const getMaxNationalDigits = (dialCode: string) => {
@@ -108,14 +125,14 @@ export const getMaxNationalDigits = (dialCode: string) => {
 }
 
 export const getE164MaxNationalDigits = (dialCode: string) => {
-  if (dialCode === '+84') return 9
+  if (dialCode === PhoneDialCode.Vietnam) return PhoneNationalLimits.VnE164NationalMaxDigits
   return getMaxNationalDigits(dialCode)
 }
 
 /** Strip domestic trunk prefix (e.g. leading 0 for +84) before E.164 payload. */
 export const stripTrunkPrefixNational = (nationalDigits: string, dialCode: string) => {
   const digits = nationalDigits.replace(/\D/g, '')
-  if (dialCode === '+84' && digits.startsWith('0')) {
+  if (dialCode === PhoneDialCode.Vietnam && digits.startsWith(PhoneNationalLimits.VnLocalTrunkDigit)) {
     return digits.slice(1)
   }
   return digits
@@ -145,16 +162,18 @@ export const normalizePhoneForApi = (value: string, fallbackDialCode: string) =>
   const { countryCode, nationalNumber } = parsePhone(e164)
   const nationalDigits = stripTrunkPrefixNational(nationalNumber, countryCode)
 
-  if (countryCode === '+84') {
-    return `0${nationalDigits}`
+  if (countryCode === PhoneDialCode.Vietnam) {
+    return `${PhoneNationalLimits.VnLocalTrunkDigit}${nationalDigits}`
   }
 
   return e164
 }
 
 export const getDisplayMaxNationalDigits = (dialCode: string, nationalDigits = '') => {
-  if (dialCode === '+84') {
-    return nationalDigits.replace(/\D/g, '').startsWith('0') ? 10 : 9
+  if (dialCode === PhoneDialCode.Vietnam) {
+    return nationalDigits.replace(/\D/g, '').startsWith(PhoneNationalLimits.VnLocalTrunkDigit)
+      ? PhoneNationalLimits.VnNationalWithTrunkMaxDigits
+      : PhoneNationalLimits.VnE164NationalMaxDigits
   }
   return getMaxNationalDigits(dialCode)
 }
@@ -178,28 +197,39 @@ export const isValidPhoneE164 = (value: string, fallbackDialCode: string) => {
 
 export const formatNationalNumber = (nationalNumber, dialCode) => {
   let digits = nationalNumber.replace(/\D/g, '')
+  const usGroups = PhoneNationalGroupPattern[PhoneDialCode.US]
+  const vnGroups = PhoneNationalGroupPattern[PhoneDialCode.Vietnam]
+  const vnTrunkGroups = PhoneNationalGroupPatternWithTrunk[PhoneDialCode.Vietnam]
 
-  if (dialCode === '+1') {
-    digits = digits.slice(0, getMaxNationalDigits(dialCode))
-    if (digits.length <= 3) return digits
-    if (digits.length <= 6) return `${digits.slice(0, 3)}-${digits.slice(3)}`
-    return `${digits.slice(0, 3)}-${digits.slice(3, 6)}-${digits.slice(6, 10)}`
+  if (dialCode === PhoneDialCode.US) {
+    digits = digits.slice(0, PhoneNationalLimits.UsNationalMaxDigits)
+    if (digits.length <= usGroups[0]) return digits
+    if (digits.length <= usGroups[0] + usGroups[1]) {
+      return `${digits.slice(0, usGroups[0])}${PhoneFormatSeparator.UsSegment}${digits.slice(usGroups[0])}`
+    }
+    return `${digits.slice(0, usGroups[0])}${PhoneFormatSeparator.UsSegment}${digits.slice(usGroups[0], usGroups[0] + usGroups[1])}${PhoneFormatSeparator.UsSegment}${digits.slice(usGroups[0] + usGroups[1], PhoneNationalLimits.UsNationalMaxDigits)}`
   }
 
-  if (dialCode === '+84') {
-    const hasTrunkZero = digits.startsWith('0')
-    const maxDigits = hasTrunkZero ? 10 : 9
+  if (dialCode === PhoneDialCode.Vietnam) {
+    const hasTrunkZero = digits.startsWith(PhoneNationalLimits.VnLocalTrunkDigit)
+    const maxDigits = hasTrunkZero
+      ? PhoneNationalLimits.VnNationalWithTrunkMaxDigits
+      : PhoneNationalLimits.VnE164NationalMaxDigits
     digits = digits.slice(0, maxDigits)
 
     if (hasTrunkZero) {
-      if (digits.length <= 4) return digits
-      if (digits.length <= 7) return `${digits.slice(0, 4)}${PHONE_GROUP_SEP}${digits.slice(4)}`
-      return `${digits.slice(0, 4)}${PHONE_GROUP_SEP}${digits.slice(4, 7)}${PHONE_GROUP_SEP}${digits.slice(7, 10)}`
+      if (digits.length <= vnTrunkGroups[0]) return digits
+      if (digits.length <= vnTrunkGroups[0] + vnTrunkGroups[1]) {
+        return `${digits.slice(0, vnTrunkGroups[0])}${PHONE_GROUP_SEP}${digits.slice(vnTrunkGroups[0])}`
+      }
+      return `${digits.slice(0, vnTrunkGroups[0])}${PHONE_GROUP_SEP}${digits.slice(vnTrunkGroups[0], vnTrunkGroups[0] + vnTrunkGroups[1])}${PHONE_GROUP_SEP}${digits.slice(vnTrunkGroups[0] + vnTrunkGroups[1], PhoneNationalLimits.VnNationalWithTrunkMaxDigits)}`
     }
 
-    if (digits.length <= 3) return digits
-    if (digits.length <= 6) return `${digits.slice(0, 3)}${PHONE_GROUP_SEP}${digits.slice(3)}`
-    return `${digits.slice(0, 3)}${PHONE_GROUP_SEP}${digits.slice(3, 6)}${PHONE_GROUP_SEP}${digits.slice(6, 9)}`
+    if (digits.length <= vnGroups[0]) return digits
+    if (digits.length <= vnGroups[0] + vnGroups[1]) {
+      return `${digits.slice(0, vnGroups[0])}${PHONE_GROUP_SEP}${digits.slice(vnGroups[0])}`
+    }
+    return `${digits.slice(0, vnGroups[0])}${PHONE_GROUP_SEP}${digits.slice(vnGroups[0], vnGroups[0] + vnGroups[1])}${PHONE_GROUP_SEP}${digits.slice(vnGroups[0] + vnGroups[1], PhoneNationalLimits.VnE164NationalMaxDigits)}`
   }
 
   digits = digits.slice(0, getMaxNationalDigits(dialCode))
@@ -208,7 +238,16 @@ export const formatNationalNumber = (nationalNumber, dialCode) => {
   return formatter.input(digits)
 }
 
-export const PHONE_NATIONAL_PLACEHOLDER = '123 456 7890'
+/** Placeholder pattern matching `formatNationalNumber` grouping for the dial code. */
+export const getNationalPhonePlaceholder = (dialCode: string) => {
+  if (isKnownPhoneDialCode(dialCode)) {
+    return PhoneNationalPlaceholderPattern[dialCode]
+  }
+
+  return buildPhonePlaceholderFromMaxDigits(getMaxNationalDigits(dialCode))
+}
+
+export const PHONE_NATIONAL_PLACEHOLDER = PHONE_NATIONAL_PLACEHOLDER_DEFAULT
 
 export const isPhoneValid = isValidPhone
 
