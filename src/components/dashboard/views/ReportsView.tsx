@@ -25,6 +25,7 @@ import type { TransactionsListQuery } from '../../../data/repositories/transacti
 import ReportsTableSkeleton from './ReportsTableSkeleton'
 import CopyableTransactionId from '../../ui/CopyableTransactionId'
 import ReportsDirectPaymentsTab from './ReportsDirectPaymentsTab'
+import PaymentsPayoutsHeader from '../PaymentsPayoutsHeader'
 
 // Confirm-receipt ownership follows US-024/US-025: staff owns direct-to-staff
 // tips, and the owner owns shop-account / multi-staff tips. Force-completing
@@ -141,16 +142,6 @@ function ReportsView({
       ? REPORTS_TAB_DIRECT_PAYMENTS
       : REPORTS_TAB_TIPS
   const selectedPaymentId = searchParams.get('paymentId')
-
-  const setActiveTab = useCallback((tab: string) => {
-    const next = new URLSearchParams(searchParams)
-    next.set('tab', tab)
-    if (tab !== REPORTS_TAB_DIRECT_PAYMENTS) {
-      next.delete('paymentId')
-      next.delete('status')
-    }
-    setSearchParams(next, { replace: true })
-  }, [searchParams, setSearchParams])
 
   const openDirectPayment = useCallback((paymentId: string) => {
     const next = new URLSearchParams(searchParams)
@@ -479,40 +470,7 @@ function ReportsView({
 
   return (
     <div className="space-y-5">
-      {showPageHeader ? (
-        <div className="flex flex-col gap-4 border-b border-nexoraBorder pb-5 sm:flex-row sm:items-center sm:justify-between">
-          <div>
-            <h2 className="text-xl font-extrabold text-nexoraText">{t('dashboard.menu.transactions')}</h2>
-            <p className="mt-1 max-w-[22rem] text-xs leading-relaxed text-nexoraMuted">
-              {!isStaffAudience && activeTab === REPORTS_TAB_DIRECT_PAYMENTS
-                ? t('merchant_payments.description')
-                : t('dashboard.activity_log.title')}
-            </p>
-          </div>
-
-          {!isStaffAudience ? (
-            <div className="flex w-full gap-1 rounded-xl border border-nexoraBorder bg-nexoraSurfaceMuted p-1 sm:w-auto">
-              {[
-                { id: REPORTS_TAB_TIPS, label: t('dashboard.reports.tabs.tips') },
-                { id: REPORTS_TAB_DIRECT_PAYMENTS, label: t('dashboard.reports.tabs.direct_payments') },
-              ].map((tab) => (
-                <button
-                  key={tab.id}
-                  type="button"
-                  onClick={() => setActiveTab(tab.id)}
-                  className={`h-9 min-w-0 flex-1 rounded-lg px-2 text-[10px] font-bold transition-all sm:flex-none sm:px-4 sm:text-xs ${
-                    activeTab === tab.id
-                      ? 'bg-white text-nexoraBrand shadow-sm font-black'
-                      : 'text-nexoraMuted hover:text-nexoraText'
-                  }`}
-                >
-                  {tab.label}
-                </button>
-              ))}
-            </div>
-          ) : null}
-        </div>
-      ) : null}
+      {showPageHeader && !isStaffAudience ? <PaymentsPayoutsHeader /> : null}
 
       {!isStaffAudience && activeTab === REPORTS_TAB_DIRECT_PAYMENTS ? (
         <ReportsDirectPaymentsTab
