@@ -22,14 +22,15 @@ function StaffReviewsDetailModal({
   if (!open) return null
 
   return (
-    <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-[80] flex items-center justify-center p-4">
+    <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-[80] flex items-center justify-center modal-overlay-safe">
       <div className="bg-white border border-slate-100 rounded-3xl max-w-lg w-full shadow-2xl p-6 relative overflow-hidden animate-scaleUp space-y-4">
         {/* Close Button */}
         <button
           type="button"
           onClick={onClose}
-          className="absolute right-4 top-4 text-slate-400 hover:text-slate-700 transition p-1.5 rounded-full hover:bg-slate-100"
+          className="modal-close-btn absolute right-2 top-2 text-slate-400 hover:text-slate-700 transition rounded-full hover:bg-slate-100"
           title="Close"
+          aria-label="Close"
         >
           <X className="h-4 w-4" />
         </button>

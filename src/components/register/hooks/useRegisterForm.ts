@@ -22,11 +22,11 @@ import { getSignupOtp } from '../../../auth/signupOtp'
 import { savePendingRegistration, clearPendingRegistration } from '../../../auth/pendingRegistration'
 import { getErrorI18nKey } from '../../../data/errorCodes'
 import { useCompletePersonalOnboarding } from '../../../data/hooks/usePersonalOnboarding'
-import { useCreateStaffProfile } from '../../../data/hooks/useProfileSettings'
+import { useCreateStaffProfile, useProfileSettings } from '../../../data/hooks/useProfileSettings'
 import { buildUpdateStaffProfileDto } from '../../../utils/mapStaffProfileView'
-import { getPhoneFieldError, getRequiredFieldError } from '../../../utils/onboardingFieldValidation'
+import { getRequiredFieldError } from '../../../utils/onboardingFieldValidation'
 
-export function useRegisterForm({ ssoEmail, onBackToLogin, onRegisterSuccess, onRegisterAndLogin, onKybSuccess = () => {}, isRedirectedFromSession, initialStep = 0, initialRole = 'personal', resumeOtpVerification = false, autoSendVerificationOnResume = false, resumeEmail = '', resumePassword = '', resumeRole = null, initialRefCode = '' }) {
+export function useRegisterForm({ ssoEmail, onBackToLogin, onRegisterSuccess, onRegisterAndLogin, onGoToLogin, onKybSuccess = () => {}, isRedirectedFromSession, initialStep = 0, initialRole = 'personal', resumeOtpVerification = false, autoSendVerificationOnResume = false, resumeEmail = '', resumePassword = '', resumeRole = null, initialRefCode = '' }) {
   const { t, currentLanguage, setLanguage, renderLabel } = useTranslation()
   const replaceAllPendingAccountsMutation = useReplaceAllPendingAccounts()
   const pendingAccountsQuery = usePendingAccounts()
@@ -37,6 +37,7 @@ export function useRegisterForm({ ssoEmail, onBackToLogin, onRegisterSuccess, on
   const addNotificationMutation = useAddNotification()
   const completePersonalOnboardingMutation = useCompletePersonalOnboarding()
   const createStaffProfileMutation = useCreateStaffProfile()
+  const { data: sessionUserProfile } = useProfileSettings({ enabled: !!isRedirectedFromSession })
   const [currentStep, setCurrentStep] = useState(resumeOtpVerification ? 2 : initialStep)
   const [role, setRole] = useState(resumeRole || initialRole)
 
@@ -53,6 +54,8 @@ export function useRegisterForm({ ssoEmail, onBackToLogin, onRegisterSuccess, on
   const [bio, setBio] = useState('')
   const [vlinkpayId, setVlinkpayId] = useState('')
   const [avatar, setAvatar] = useState('')
+  const [fullNameLocked, setFullNameLocked] = useState(false)
+  const [phoneLocked, setPhoneLocked] = useState(false)
   const [payouts, setPayouts] = useState({
     zelle: { enabled: false, value: '', qrCode: '', accountName: '' },
     bankwire: { enabled: false, value: '', qrCode: '', accountName: '' },
@@ -69,6 +72,21 @@ export function useRegisterForm({ ssoEmail, onBackToLogin, onRegisterSuccess, on
   const [simToken, setSimToken] = useState('sim-token-123')
   const [verifySuccess, setVerifySuccess] = useState(false)
   const [resendMessage, setResendMessage] = useState('')
+
+  useEffect(() => {
+    if (!isRedirectedFromSession || !sessionUserProfile) return
+    if (sessionUserProfile.firstName) {
+      const knownFullName = `${sessionUserProfile.firstName} ${sessionUserProfile.lastName || ''}`.trim()
+      setFullName(knownFullName)
+      setFullNameLocked(true)
+      setNickname((current) => current || `${knownFullName.split(' ')[0]}.`)
+    }
+    const knownPhone = normalizePhone((sessionUserProfile.phoneNumber || sessionUserProfile.phone) as string)
+    if (knownPhone) {
+      setPhone(knownPhone)
+      setPhoneLocked(true)
+    }
+  }, [isRedirectedFromSession, sessionUserProfile])
 
   // Step 2 states
   const [generatedStaffId, setGeneratedStaffId] = useState('')
@@ -93,6 +111,7 @@ export function useRegisterForm({ ssoEmail, onBackToLogin, onRegisterSuccess, on
   // Validation errors
   const [errors, setErrors] = useState<LooseObject>({})
   const [isSubmitting, setIsSubmitting] = useState(false)
+  const [showEmailExistsModal, setShowEmailExistsModal] = useState(false)
   const resumeVerificationSentRef = useRef(false)
 
   const AVATAR_MAX_SIZE = 5 * 1024 * 1024
@@ -275,7 +294,14 @@ export function useRegisterForm({ ssoEmail, onBackToLogin, onRegisterSuccess, on
       const errorsMap: LooseObject = {}
       const code = getApiErrorCode(err, 'HTTP_ERROR')
       const i18nKey = getErrorI18nKey(code)
-      if (code === 'AUTH_PASSWORDS_DO_NOT_MATCH') {
+      const emailAlreadyExistsCodes = [
+        'USER_EMAIL_ALREADY_EXISTS',
+        'USER_EMAIL_ALREADY_EXIST',
+        'USER_EMAIL_ALREADY_EXISTS_IN_SSO',
+      ]
+      if (emailAlreadyExistsCodes.includes(code)) {
+        setShowEmailExistsModal(true)
+      } else if (code === 'AUTH_PASSWORDS_DO_NOT_MATCH') {
         errorsMap.confirmEmail = 'register.errors.email_mismatch'
       } else if (code === 'USER_INVALID_REFERRAL_CODE') {
         errorsMap.referralCode = i18nKey || 'errors.unknown_error'
@@ -286,6 +312,13 @@ export function useRegisterForm({ ssoEmail, onBackToLogin, onRegisterSuccess, on
     } finally {
       setIsSubmitting(false)
     }
+  }
+
+  const handleCloseEmailExistsModal = () => setShowEmailExistsModal(false)
+
+  const handleGoToLoginFromEmailExists = () => {
+    setShowEmailExistsModal(false)
+    onGoToLogin?.()
   }
 
   const handleVerifyOtp = async (e) => {
@@ -492,8 +525,12 @@ export function useRegisterForm({ ssoEmail, onBackToLogin, onRegisterSuccess, on
     const nicknameError = getRequiredFieldError(nickname, 'setup.errors.staff_nickname_required')
     if (nicknameError) fieldErrors.nickname = nicknameError
 
-    const phoneError = getPhoneFieldError(phone, { requireValue: true })
-    if (phoneError) fieldErrors.phone = phoneError
+    const phoneError = getRequiredFieldError(phone, 'setup.errors.phone_required')
+    if (phoneError) {
+      fieldErrors.phone = phoneError
+    } else if (!phoneLocked && phoneParsed?.nationalNumber?.replace(/\D/g, '').length < 7) {
+      fieldErrors.phone = 'setup.errors.staff_phone_invalid'
+    }
 
     if (Object.keys(fieldErrors).length > 0) {
       setErrors(fieldErrors)
@@ -724,12 +761,14 @@ export function useRegisterForm({ ssoEmail, onBackToLogin, onRegisterSuccess, on
     initialRefCode,
     fullName,
     setFullName,
+    fullNameLocked,
     nickname,
     setNickname,
     position,
     setPosition,
     phone,
     setPhone,
+    phoneLocked,
     phoneParsed,
     bio,
     setBio,
@@ -787,6 +826,9 @@ export function useRegisterForm({ ssoEmail, onBackToLogin, onRegisterSuccess, on
     errors,
     setErrors,
     isSubmitting,
+    showEmailExistsModal,
+    handleCloseEmailExistsModal,
+    handleGoToLoginFromEmailExists,
     // handlers
     handleStep1Next,
     handleVerifyOtp,

@@ -13,6 +13,7 @@ import {
   ToggleRight
 } from 'lucide-react'
 import { useTranslation } from '../contexts/LanguageContext'
+import ToggleSwitch from './ui/ToggleSwitch'
 
 function Panel({ children, className = '', id }: { children: React.ReactNode; className?: string; id?: string }) {
   return (
@@ -268,19 +269,12 @@ export default function DevicesView({
                 </span>
 
                 <div className="flex items-center gap-2">
-                  <button
-                    type="button"
-                    onClick={() => onToggleDeviceStatus && onToggleDeviceStatus(device.id)}
-                    className={`relative inline-flex h-5 w-9 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none ${
-                      isActive ? 'bg-nexoraBrand' : 'bg-nexoraBorder'
-                    }`}
-                  >
-                    <span
-                      className={`pointer-events-none inline-block h-4 w-4 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out ${
-                        isActive ? 'translate-x-4' : 'translate-x-0'
-                      }`}
-                    />
-                  </button>
+                  <ToggleSwitch
+                    checked={isActive}
+                    onChange={() => onToggleDeviceStatus && onToggleDeviceStatus(device.id)}
+                    activeColor="bg-nexoraBrand"
+                    inactiveColor="bg-nexoraBorder"
+                  />
                   <span className={`text-[10px] font-extrabold uppercase tracking-wider ${isActive ? 'text-nexoraSuccess' : 'text-nexoraSubtle'}`}>
                     {isActive ? t('common.active') : t('common.inactive')}
                   </span>
@@ -303,7 +297,7 @@ export default function DevicesView({
 
       {/* Mock Add Device Modal Dialog */}
       {isAddModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4 backdrop-blur-sm">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 modal-overlay-safe backdrop-blur-sm">
           <form
             onSubmit={handleAddSubmit}
             className="w-full max-w-md rounded-2xl bg-white p-6 shadow-2xl animate-scaleUp space-y-4"
@@ -402,7 +396,7 @@ export default function DevicesView({
 
       {/* Delete Confirmation Modal */}
       {deleteConfirmId && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4 backdrop-blur-sm">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 modal-overlay-safe backdrop-blur-sm">
           <div className="w-full max-w-sm rounded-2xl bg-white p-6 shadow-2xl animate-scaleUp">
             <h3 className="text-base font-extrabold text-nexoraText">
               {t('dashboard.touchpoint_stats.delete_confirm_title')}

@@ -157,7 +157,7 @@ export default function useDirectPaymentFlow() {
   )
 
   const handleConfirmPayment = useCallback(async () => {
-    if (!currentPaymentId) return
+    if (!currentPaymentId || confirmPaymentMutation.isPending) return
 
     try {
       await confirmPaymentMutation.mutateAsync(currentPaymentId)

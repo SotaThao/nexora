@@ -7,7 +7,7 @@ import { parsePhone } from '../../CountryCodeSelect'
 import { captureQrImage } from '../../../utils/qrCode'
 import { getPayoutValidationMessage } from '../../payout/validatePayoutAccount'
 import { useUploadImage } from '../../../data/hooks/useMerchantSetup'
-import { getPhoneFieldError, getRequiredFieldError } from '../../../utils/onboardingFieldValidation'
+import { getRequiredFieldError } from '../../../utils/onboardingFieldValidation'
 
 export default function usePersonalSetupWizard({ onBackToLogin }) {
   const { t, currentLanguage, setLanguage, renderLabel } = useTranslation()
@@ -26,7 +26,9 @@ export default function usePersonalSetupWizard({ onBackToLogin }) {
   // Step 1: Profile
   const [nickname, setNickname] = useState('')
   const [fullName, setFullName] = useState('')
+  const [fullNameLocked, setFullNameLocked] = useState(false)
   const [phone, setPhone] = useState('')
+  const [phoneLocked, setPhoneLocked] = useState(false)
   const [bio, setBio] = useState('')
   const [avatar, setAvatar] = useState<string | null>(null)
   const [position, setPosition] = useState('Nail Technician')
@@ -54,9 +56,17 @@ export default function usePersonalSetupWizard({ onBackToLogin }) {
 
   useEffect(() => {
     if (userProfile) {
-      if (userProfile.firstName) setFullName(`${userProfile.firstName} ${userProfile.lastName || ''}`.trim())
+      if (userProfile.firstName) {
+        const knownFullName = `${userProfile.firstName} ${userProfile.lastName || ''}`.trim()
+        setFullName(knownFullName)
+        setFullNameLocked(true)
+        if (!userProfile.nickname) setNickname((current) => current || `${knownFullName.split(' ')[0]}.`)
+      }
       if (userProfile.nickname) setNickname(userProfile.nickname)
-      if (userProfile.phoneNumber) setPhone(userProfile.phoneNumber)
+      if (userProfile.phoneNumber) {
+        setPhone(userProfile.phoneNumber)
+        setPhoneLocked(true)
+      }
       if (userProfile.profileImageUrl || userProfile.avatarUrl) setAvatar((userProfile.avatarUrl as string) || userProfile.profileImageUrl || null)
     }
   }, [userProfile])
@@ -70,9 +80,11 @@ export default function usePersonalSetupWizard({ onBackToLogin }) {
     if (!nickname.trim()) {
       fieldErrors.nickname = getRequiredFieldError(nickname, 'setup.errors.staff_nickname_required')
     }
-    const phoneError = getPhoneFieldError(phone, { requireValue: true })
+    const phoneError = getRequiredFieldError(phone, 'setup.errors.phone_required')
     if (phoneError) {
       fieldErrors.phone = phoneError
+    } else if (!phoneLocked && phoneParsed?.nationalNumber?.replace(/\D/g, '').length < 7) {
+      fieldErrors.phone = 'setup.errors.staff_phone_invalid'
     }
 
     if (Object.keys(fieldErrors).length > 0) {
@@ -242,8 +254,8 @@ export default function usePersonalSetupWizard({ onBackToLogin }) {
     currentStep, setCurrentStep,
     errors, setErrors,
     nickname, setNickname,
-    fullName, setFullName,
-    phone, setPhone, phoneParsed,
+    fullName, setFullName, fullNameLocked,
+    phone, setPhone, phoneLocked, phoneParsed,
     bio, setBio,
     avatar, setAvatar,
     position, setPosition,

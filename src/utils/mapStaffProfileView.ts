@@ -16,6 +16,8 @@ export interface StaffProfileView {
   position: string | null
   avatar: string | null
   isProfileComplete: boolean | null
+  isKYCVerified: boolean
+  createdAt: string | null
 }
 
 function resolveUserFullName(userProfile: UserProfile | null | undefined): string {
@@ -40,6 +42,11 @@ function resolveStaffIdentityNames(staffProfile: StaffProfile | null | undefined
   const lastName = String(staffProfile?.lastName || '').trim()
   const fullName = `${firstName} ${lastName}`.trim()
   return { firstName, lastName, fullName }
+}
+
+function resolveIsKycVerified(userProfile: UserProfile | null | undefined): boolean {
+  if (!userProfile) return false
+  return userProfile.isKYCVerified === true || userProfile.isKycVerified === true
 }
 
 export function buildUpdateStaffProfileDto(
@@ -127,5 +134,7 @@ export function mapStaffProfileView(
     avatar: userAvatar || staffPhoto,
     isProfileComplete:
       typeof staffProfile?.isProfileComplete === 'boolean' ? staffProfile.isProfileComplete : null,
+    isKYCVerified: resolveIsKycVerified(userProfile),
+    createdAt: userProfile?.createdAt || staffProfile?.createdAt || null,
   }
 }

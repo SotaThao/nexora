@@ -1,10 +1,14 @@
 import { useState, useEffect, useMemo } from 'react'
+import { createPortal } from 'react-dom'
 import { X, QrCode, Send, Copy } from 'lucide-react'
 import IconButton from '../../ui/IconButton'
 import { useTranslation } from '../../../contexts/LanguageContext'
 import { useNotification } from '../../../contexts/NotificationContext'
 import { buildPublicInviteLink } from '../../../utils/inviteRef'
+import { getWebUrlOrigin } from '../../../utils/webUrlBase'
 import { buildPublicQrImageUrl } from '../../../data/repositories/publicQr'
+import { QR_IMAGE_SIZES } from '../../../utils/qrUtils'
+import QrImage from '../../ui/QrImage'
 
 function InviteShareModal({
   open,
@@ -43,7 +47,7 @@ function InviteShareModal({
   const publicJoinLink = useMemo(
     () => publicInviteEnabled
       ? buildPublicInviteLink({
-        origin: window.location.origin,
+        origin: getWebUrlOrigin(),
         businessName,
         businessSlug,
         referralCode: inviteLinkSetting?.referralCode ?? '',
@@ -54,11 +58,11 @@ function InviteShareModal({
     [businessName, businessSlug, inviteLinkSetting?.referralCode, publicInviteEnabled],
   )
   const publicJoinQrSmallUrl = useMemo(
-    () => (publicInviteEnabled && publicJoinLink ? buildPublicQrImageUrl(publicJoinLink, 150) : ''),
+    () => (publicInviteEnabled && publicJoinLink ? buildPublicQrImageUrl(publicJoinLink, QR_IMAGE_SIZES.panel) : ''),
     [publicInviteEnabled, publicJoinLink],
   )
   const publicJoinQrLargeUrl = useMemo(
-    () => (publicInviteEnabled && publicJoinLink ? buildPublicQrImageUrl(publicJoinLink, 300) : ''),
+    () => (publicInviteEnabled && publicJoinLink ? buildPublicQrImageUrl(publicJoinLink, QR_IMAGE_SIZES.zoom) : ''),
     [publicInviteEnabled, publicJoinLink],
   )
   const publicInviteUnavailableText = isInviteLinkSettingLoading
@@ -86,7 +90,7 @@ function InviteShareModal({
   }
 
   return (
-    <div className="fixed inset-0 z-50 flex items-start justify-center overflow-y-auto bg-nexoraText/70 p-4 py-6 backdrop-blur-sm sm:items-center">
+    <div className="fixed inset-0 z-50 flex items-start justify-center overflow-y-auto bg-nexoraText/70 modal-overlay-safe backdrop-blur-sm sm:items-center">
       <div className="w-full max-w-md rounded-xl bg-white p-6 shadow-2xl transition-all relative">
         <div className="flex items-center justify-between border-b border-nexoraRule pb-4">
           <h2 className="text-sm font-extrabold text-nexoraText uppercase tracking-wider font-sans">
@@ -109,10 +113,10 @@ function InviteShareModal({
               title={t('components.dashboard.modals.InviteShareModal.clickToEnlarge')}
             >
               {publicInviteEnabled ? (
-                <img
+                <QrImage
                   src={publicJoinQrSmallUrl}
                   alt={t('components.dashboard.modals.InviteShareModal.joinQrAlt')}
-                  className="h-full w-full object-contain"
+                  className="h-full w-full"
                 />
               ) : (
                 <QrCode className="h-10 w-10 text-slate-300" />
@@ -259,14 +263,15 @@ function InviteShareModal({
         </div>
       </div>
 
-      {/* Large Join QR Modal inside InviteShareModal */}
-      {largeQrOpen && publicInviteEnabled && (
+      {/* Large Join QR Modal inside InviteShareModal — portaled to body so the
+          backdrop escapes any transformed ancestor and covers the full viewport */}
+      {largeQrOpen && publicInviteEnabled && createPortal(
         <div
-          className="fixed inset-0 z-[100] flex items-center justify-center bg-black/60 backdrop-blur-sm p-4 cursor-zoom-out animate-fadeIn"
+          className="fixed inset-0 z-[100] flex items-center justify-center bg-black/60 backdrop-blur-sm modal-overlay-safe cursor-zoom-out animate-fadeIn"
           onClick={() => setLargeQrOpen(false)}
         >
           <div
-            className="w-full max-w-sm rounded-2xl bg-white p-6 shadow-2xl border border-slate-100 flex flex-col items-center cursor-default animate-scaleUp"
+            className="w-full max-w-md rounded-2xl bg-white p-6 shadow-2xl border border-slate-100 flex flex-col items-center cursor-default animate-scaleUp"
             onClick={(e) => e.stopPropagation()}
           >
             <div className="w-full flex justify-between items-center mb-4">
@@ -282,12 +287,14 @@ function InviteShareModal({
               </button>
             </div>
 
-            <div className="h-64 w-64 rounded-2xl bg-slate-50 border border-slate-200 p-4 flex items-center justify-center shadow-inner bg-white mb-4">
-              <img
+            <div className="mb-4 w-full">
+              <div className="mx-auto aspect-square w-full max-w-[15rem] min-w-0 overflow-hidden rounded-2xl border border-slate-200 bg-white p-3 shadow-inner sm:p-4">
+              <QrImage
                 src={publicJoinQrLargeUrl}
                 alt={t('components.dashboard.modals.InviteShareModal.scanToJoinAlt')}
-                className="h-full w-full object-contain"
+                className="h-full w-full max-h-full max-w-full"
               />
+              </div>
             </div>
 
             <p className="text-[11px] text-slate-500 font-medium text-center leading-relaxed max-w-xs mb-4 font-sans">
@@ -311,7 +318,8 @@ function InviteShareModal({
               </button>
             </div>
           </div>
-        </div>
+        </div>,
+        document.body,
       )}
     </div>
   )

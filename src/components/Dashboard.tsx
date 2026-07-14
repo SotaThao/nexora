@@ -7,9 +7,10 @@ import { Filter, Settings, ShieldAlert, Check, Link } from 'lucide-react'
 // 3. Internal — utils → contexts → data/constants → hooks → layout → views → modals → ui
 import { logger } from '../utils/logger'
 import { resolveMerchantStaffTipQr, toLocalCustomerTouchUrl } from '../utils/staffTipUrl'
+import { resolveAssignedStaffProfileId } from '../utils/touchpointTypes'
 import { useTranslation } from '../contexts/LanguageContext'
 import { useNotification } from '../contexts/NotificationContext'
-import { DEFAULT_PAYOUT_CONFIGS, MENU_ITEMS } from './dashboard/constants'
+import { DEFAULT_PAYOUT_CONFIGS, MENU_ITEMS, MERCHANT_SIDEBAR_MENU_ITEMS } from './dashboard/constants'
 import {
   DEFAULT_TOUCHPOINT_TYPE,
   MASTER_TOUCHPOINT_API_TYPE,
@@ -24,6 +25,11 @@ import { useKybGate } from '../contexts/KybGateContext'
 import { useStaffManagement } from './dashboard/hooks/useStaffManagement'
 import { useTouchpoints, useCreateTouchpoint, useDeleteTouchpoint, useToggleTouchpoint, useDownloadTouchpointQr } from '../data/hooks/useMerchantTouchpoints'
 import { useMerchantStaff, StatusFilter } from '../data/hooks/useMerchantStaff'
+import { useRefetchMerchantMenuQueries } from '../data/hooks/useRefetchOnMenuChange'
+import {
+  isMerchantConfirmablePending,
+  isPendingStaffMember,
+} from '../utils/merchantStaffPending'
 import { useChartDateRange } from '../hooks/useChartDateRange'
 import { useTransactions } from '../data/hooks/useTransactions'
 import { useDashboardOverview, useDashboardTipsChart, useDashboardOverviewCurrentMonth, useDashboardOverviewCurrentYear, useDashboardReviewsSummary } from '../data/hooks/useDashboard'
@@ -37,6 +43,7 @@ import DashboardHeader from './dashboard/layout/DashboardHeader'
 import DashboardSidebar from './dashboard/layout/DashboardSidebar'
 import MobileMenuDrawer from './dashboard/layout/MobileMenuDrawer'
 import MobileBottomNav from './dashboard/layout/MobileBottomNav'
+import AppDownloadLinks from './ui/AppDownloadLinks'
 import Overview from './dashboard/overview/Overview'
 import StaffView from './dashboard/views/StaffView'
 import ReviewsView from './dashboard/views/ReviewsView'
@@ -76,9 +83,7 @@ export default function Dashboard({
   const {
     activeMenu,
     isMobileMenuOpen, setIsMobileMenuOpen,
-    tipsTab, setTipsTab,
-    isTipsMobileExpanded, setIsTipsMobileExpanded,
-    touchpointsTab, setTouchpointsTab,
+    isPaymentsPayoutsMobileExpanded, setIsPaymentsPayoutsMobileExpanded,
     isTouchpointsMobileExpanded, setIsTouchpointsMobileExpanded,
     isTaxIqMobileExpanded, setIsTaxIqMobileExpanded,
     settingsTab, setSettingsTab,
@@ -97,15 +102,19 @@ export default function Dashboard({
   const [processingFee, setProcessingFee] = useState(3.0)
   const [isNotiDropdownOpen, setIsNotiDropdownOpen] = useState(false)
   const [searchQuery, setSearchQuery] = useState('')
+  const [isAddTouchpointModalOpen, setIsAddTouchpointModalOpen] = useState(false)
   const [reviewsPageNumber, setReviewsPageNumber] = useState(1)
 
   const hasSearchQuery = Boolean(searchQuery.trim())
   const needsMerchantStaffList =
     hasSearchQuery ||
-    ['staff', 'reviews', 'reports', 'tips', 'analytics'].includes(activeMenu)
+    isAddTouchpointModalOpen ||
+    ['overview', 'staff', 'reviews', 'reports', 'tips', 'analytics', 'touchpoints'].includes(activeMenu)
+  const needsPendingStaffList = activeMenu === 'overview' || activeMenu === 'staff'
   const needsNotificationsList = isNotiDropdownOpen
   const needsTransactions =
     hasSearchQuery ||
+    activeMenu === 'overview' ||
     ['tips', 'reports', 'analytics'].includes(activeMenu)
   const needsDashboardReviews =
     activeMenu === 'overview' ||
@@ -116,6 +125,7 @@ export default function Dashboard({
   const isStaffTab = activeMenu === 'staff'
   const isReviewsTab = activeMenu === 'reviews'
   const isTouchpointsTab = activeMenu === 'touchpoints'
+  useRefetchMerchantMenuQueries(activeMenu)
   const staffPagination = usePagination({ pageSize: DEFAULT_PAGE_SIZE })
   const reviewsPagination = usePagination({ pageSize: DEFAULT_PAGE_SIZE })
 
@@ -192,8 +202,14 @@ export default function Dashboard({
     pageNumber: isStaffTab ? staffPagination.pageNumber : 1,
     pageSize: isStaffTab ? staffPagination.pageSize : STAFF_FILTER_LIST_PAGE_SIZE,
   })
-  const { data: pendingStaffPage } = useMerchantStaff({
-    enabled: isStaffTab,
+  const { data: pendingStatusPage } = useMerchantStaff({
+    enabled: needsPendingStaffList,
+    statusFilter: StatusFilter.Pending,
+    pageNumber: 1,
+    pageSize: 50,
+  })
+  const { data: waitingStaffPage } = useMerchantStaff({
+    enabled: needsPendingStaffList && activeMenu === 'staff',
     statusFilter: StatusFilter.WaitingStaffAcceptance,
     pageNumber: 1,
     pageSize: 50,
@@ -308,7 +324,6 @@ export default function Dashboard({
     reviewsPagination.setPage(1)
   }, [reviewsPagination.setPage])
   const [newTouchpoint, setNewTouchpoint] = useState({ name: '', type: DEFAULT_TOUCHPOINT_TYPE })
-  const [isAddTouchpointModalOpen, setIsAddTouchpointModalOpen] = useState(false)
   const [addTouchpointPrefill, setAddTouchpointPrefill] = useState<any | null>(null)
   const [activeKpi, setActiveKpi] = useState('tips')
   const { chartRange, chartStartDate, chartEndDate, setChartStartDate, setChartEndDate, handleChartRangeChange } = useChartDateRange(transactions)
@@ -343,6 +358,8 @@ export default function Dashboard({
     errors, setErrors,
     editingStaffId, setEditingStaffId,
     isStaffViewOnly,
+    isStaffDetailLoading,
+    fetchStaffStatsInModal,
     isStaffModalOpen, setIsStaffModalOpen,
     isAddStaffModalOpen,
     isApproveModalOpen, setIsApproveModalOpen,
@@ -351,13 +368,15 @@ export default function Dashboard({
     inviteShareDefaultName, setInviteShareDefaultName,
     inviteShareDefaultContact, setInviteShareDefaultContact,
     resetStaffForm, openAddStaff, closeAddStaffModal, openApproveStaff, openEditStaff, openViewStaff, closeStaffModal,
-    saveStaff, sendSetupLinkFromModal, handleLinkStaff, handleInviteStaff,
+    saveStaff, sendSetupLinkFromModal, handleLinkStaff, handleInviteStaff, handleSaveManualStaff,
     handleResendInvite,
     handleAcceptJoinRequest, handleDeclineJoinRequest, deleteStaff, toggleStaff, toggleStaffTipsFlow,
     handleAcceptUnlinkRequest, handleDeclineUnlinkRequest,
     inviteStaffMutation,
     linkRequestMutation,
     updateStatusMutation,
+    createLocalStaffMutation,
+    updateLocalStaffMutation,
   } = useStaffManagement({ staffData: merchantStaffData, isStaffLoading, businessName })
 
   // Sync touchpoints removed (now handled by React Query cache)
@@ -399,39 +418,45 @@ export default function Dashboard({
         { id: 'overview', label: t('components.dashboardRoot.myDashboard'), icon: MENU_ITEMS.find(i => i.id === 'overview')?.icon, image: MENU_ITEMS.find(i => i.id === 'overview')?.image },
         { id: 'support', label: t('dashboard.menu.support'), icon: MENU_ITEMS.find(i => i.id === 'support')?.icon, image: MENU_ITEMS.find(i => i.id === 'support')?.image }
       ]
-    : MENU_ITEMS
+    : MERCHANT_SIDEBAR_MENU_ITEMS
 
   // Filter lists based on searchQuery
   const filteredStaff = useMemo(() => {
-    const isPendingRequest = (member) => 
+    const isPendingRequest = (member) =>
       (
         member.status === 'Pending Acceptance' ||
         member.status === 'Pending' ||
         member.status === 'WaitingStaffAcceptance'
-      ) && 
+      ) &&
       (member.itemType === 'link' || member.itemType === 'invite')
-      
-    const visibleStaff = staff.filter(member => !isPendingRequest(member))
-    
+
+    const visibleStaff = staff.filter((member) => !isPendingRequest(member))
+
     if (!searchQuery) return visibleStaff
     const query = searchQuery.toLowerCase().trim()
-    return visibleStaff.filter(member =>
+    return visibleStaff.filter((member) =>
       member.fullName?.toLowerCase().includes(query) ||
       (member.nickname && member.nickname.toLowerCase().includes(query)) ||
-      member.position?.toLowerCase().includes(query)
+      member.position?.toLowerCase().includes(query),
     )
   }, [staff, searchQuery])
 
+  const overviewPendingStaff = useMemo(() => {
+    if (!needsPendingStaffList) return []
+    return (pendingStatusPage?.items ?? []).filter(isMerchantConfirmablePending)
+  }, [needsPendingStaffList, pendingStatusPage])
+
   const pendingStaff = useMemo(() => {
-    const statusSet = new Set([
-      'Pending Acceptance',
-      'Pending',
-      'Pending Setup',
-      'WaitingStaffAcceptance',
-    ])
-    const mergedSource = isStaffTab
-      ? [...(pendingStaffPage?.items ?? []), ...staff]
-      : staff
+    if (!needsPendingStaffList) return []
+
+    const mergedSource =
+      activeMenu === 'overview'
+        ? overviewPendingStaff
+        : [
+            ...(pendingStatusPage?.items ?? []),
+            ...(waitingStaffPage?.items ?? []),
+          ]
+
     const deduped = mergedSource.filter((member, index, arr) => {
       const memberId = member.id || member.linkId || member.staffLinkId || member.inviteId
       if (!memberId) return true
@@ -441,12 +466,14 @@ export default function Dashboard({
       }) === index
     })
 
-    return deduped.filter(
-      (member) =>
-        statusSet.has(member.status) &&
-        (member.itemType === 'link' || member.itemType === 'invite'),
-    )
-  }, [isStaffTab, pendingStaffPage, staff])
+    return deduped.filter(isPendingStaffMember)
+  }, [
+    activeMenu,
+    needsPendingStaffList,
+    overviewPendingStaff,
+    pendingStatusPage,
+    waitingStaffPage,
+  ])
 
   const filteredTouchpoints = touchpoints
 
@@ -532,17 +559,26 @@ export default function Dashboard({
   }), [metrics.previousPeriodComparison]);
 
 
-  const addTouchpoint = async (name, type, deviceId) => {
+  const addTouchpoint = async (name, type, deviceId, assignedStaffProfileId) => {
     const finalType = typeof type === 'string' ? type : (newTouchpoint.type || DEFAULT_TOUCHPOINT_TYPE)
     const finalName = (typeof name === 'string' ? name.trim() : (newTouchpoint.name || '').trim()) || finalType
     const finalDeviceId = typeof deviceId === 'string' ? deviceId.trim() : ''
 
     if (!finalType) return
 
+    const apiType = getTouchpointApiType(finalType)
+    const resolvedAssignedStaffProfileId = resolveAssignedStaffProfileId(
+      apiType,
+      assignedStaffProfileId,
+    )
+
     await createTouchpointMutation.mutateAsync({
       name: finalName,
-      type: getTouchpointApiType(finalType),
+      type: apiType,
       // If we supported hardware linkage, we would map finalDeviceId here.
+      ...(resolvedAssignedStaffProfileId
+        ? { assignedStaffProfileId: resolvedAssignedStaffProfileId }
+        : {}),
     })
 
     setNewTouchpoint({ name: '', type: DEFAULT_TOUCHPOINT_TYPE })
@@ -682,6 +718,7 @@ export default function Dashboard({
     handleLinkStaff, handleInviteStaff, handleResendInvite, handleAcceptJoinRequest, handleDeclineJoinRequest, handleAcceptUnlinkRequest, handleDeclineUnlinkRequest,
     setInviteShareDefaultName, setInviteShareDefaultContact, setIsInviteShareOpen,
     filteredTouchpoints, setAddTouchpointPrefill, setIsAddTouchpointModalOpen, deleteTouchpoint, toggleTouchpointStatus, togglingTouchpointId: toggleTouchpointMutation.isPending ? toggleTouchpointMutation.variables : null, linkDevice, devices, handleAddDevice, handleDeleteDevice, handleToggleDeviceStatus,
+    activeStaffList: staff,
     reviews, filteredReviews, reviewsSummary, reviewFilterStaff, setReviewFilterStaff: handleReviewFilterStaffChange, setupData: setupData ?? merchantSetupData,
     activeReviewsPage: reviewsPagination.pageNumber,
     activeReviewsPageSize: reviewsPagination.pageSize,
@@ -691,7 +728,7 @@ export default function Dashboard({
     activeReviewsHasPrev: reviewsPage?.hasPreviousPage ?? false,
     setActiveReviewsPage: reviewsPagination.setPage,
     reviewsListFetching: isReviewsFetching,
-    tipsTab, setTipsTab, processingFee, setProcessingFee,
+    processingFee, setProcessingFee,
     filteredTransactions, touchpoints,
     verificationStatus, requireKyb, userEmail, onKybSuccess, settingsTab, setSettingsTab,
     currentStaffId,
@@ -723,14 +760,10 @@ export default function Dashboard({
         verificationStatus={verificationStatus}
         onBlockedFeatureClick={requireKyb}
         onLogout={onLogout}
-        tipsTab={tipsTab}
-        setTipsTab={setTipsTab}
-        touchpointsTab={touchpointsTab}
-        setTouchpointsTab={setTouchpointsTab}
         userRole={userRole}
       />
 
-      <div className="lg:pl-72">
+      <div className="flex min-h-dvh flex-col lg:pl-72">
         <DashboardHeader
           searchQuery={searchQuery}
           setSearchQuery={setSearchQuery}
@@ -764,7 +797,7 @@ export default function Dashboard({
           onOpenMobileMenu={() => setIsMobileMenuOpen(true)}
         />
 
-        <main className="min-h-dvh p-4 pb-24 sm:p-6 sm:pb-24 lg:p-7 lg:pb-7">
+        <main className="flex-1 p-4 pb-6 sm:p-6 sm:pb-8 lg:p-7 lg:pb-7">
           {activeMenu !== 'overview' && (
             <button
               onClick={() => handleNavigateMenu('overview')}
@@ -775,6 +808,12 @@ export default function Dashboard({
           )}
           <Outlet context={dashboardCtx} />
         </main>
+        <footer className="mb-20 border-t border-nexoraBorder bg-white px-3 py-3 sm:px-6 lg:mb-0 lg:px-7 lg:py-4">
+          <div className="flex flex-wrap items-center justify-between gap-2 text-left">
+            <p className="shrink-0 text-xs font-medium text-slate-700 sm:text-sm">{t('dashboard.footer.copyright')}</p>
+            <AppDownloadLinks />
+          </div>
+        </footer>
       </div>
 
       <MobileBottomNav activeMenu={activeMenu} onNavigate={handleNavigateMenu} />
@@ -791,12 +830,8 @@ export default function Dashboard({
         setSettingsTab={setSettingsTab}
         isProfileExpanded={isProfileExpanded}
         setIsProfileExpanded={setIsProfileExpanded}
-        tipsTab={tipsTab}
-        setTipsTab={setTipsTab}
-        touchpointsTab={touchpointsTab}
-        setTouchpointsTab={setTouchpointsTab}
-        isTipsMobileExpanded={isTipsMobileExpanded}
-        setIsTipsMobileExpanded={setIsTipsMobileExpanded}
+        isPaymentsPayoutsMobileExpanded={isPaymentsPayoutsMobileExpanded}
+        setIsPaymentsPayoutsMobileExpanded={setIsPaymentsPayoutsMobileExpanded}
         isTouchpointsMobileExpanded={isTouchpointsMobileExpanded}
         setIsTouchpointsMobileExpanded={setIsTouchpointsMobileExpanded}
         isTaxIqMobileExpanded={isTaxIqMobileExpanded}
@@ -813,8 +848,10 @@ export default function Dashboard({
         onClose={closeAddStaffModal}
         onLinkStaff={handleLinkStaff}
         onInviteStaff={handleInviteStaff}
+        onSaveManualStaff={handleSaveManualStaff}
         isLinking={linkRequestMutation.isPending}
         isInviting={inviteStaffMutation.isPending}
+        isSavingManual={createLocalStaffMutation.isPending}
       />
 
       <StaffModal
@@ -838,6 +875,9 @@ export default function Dashboard({
           setInviteShareDefaultContact(formDetails.email || formDetails.phone || '')
           setIsInviteShareOpen(true)
         }}
+        isSavingLocal={updateLocalStaffMutation.isPending}
+        isLoadingDetail={isStaffDetailLoading}
+        fetchStaffStats={fetchStaffStatsInModal}
         reviews={reviews}
         merchantSetupData={merchantSetupData}
       />
@@ -868,6 +908,7 @@ export default function Dashboard({
           setIsApproveModalOpen(false)
         }}
         onOpenInviteShare={() => {}}
+        isLoadingDetail={isStaffDetailLoading}
         reviews={reviews}
         merchantSetupData={merchantSetupData}
       />
@@ -876,11 +917,11 @@ export default function Dashboard({
       <AddTouchpointModal
         open={isAddTouchpointModalOpen}
         initialValues={addTouchpointPrefill}
+        activeStaff={staff}
         onClose={() => setIsAddTouchpointModalOpen(false)}
-        onAdd={async (name, type, deviceId) => {
-          await addTouchpoint(name, type, deviceId)
-          handleNavigateMenu('touchpoints')
-          setTouchpointsTab('stations')
+        onAdd={async (name, type, deviceId, assignedStaffProfileId) => {
+          await addTouchpoint(name, type, deviceId, assignedStaffProfileId)
+          handleNavigateMenu('touchpoints', 'stations')
         }}
       />
 

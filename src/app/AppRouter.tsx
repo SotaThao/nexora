@@ -12,6 +12,7 @@ import { scrollToPageTop } from "../utils/scrollToPageTop";
 import { useAuth } from "../auth/useAuth";
 import {
   AnalyticsRoute,
+  BookingHubRoute,
   FallbackRoute,
   OverviewRoute,
   ReportsRoute,
@@ -88,6 +89,12 @@ const StaffTaxIqIncomeRoute = lazyWithRetry(() => import('../components/staff-da
 const StaffTaxIqPayoutsRoute = lazyWithRetry(() => import('../components/staff-dashboard/views/taxiq/StaffTaxIqPayoutsRoute'))
 const StaffTaxIqExportRoute = lazyWithRetry(() => import('../components/staff-dashboard/views/taxiq/StaffTaxIqExportRoute'))
 const CpaViewerPage = lazyWithRetry(() => import('../components/taxiq/CpaViewer/CpaViewerPage'))
+const StaffMyEarnings = lazyWithRetry(
+  () => import("../components/staff-dashboard/views/StaffMyEarnings"),
+);
+const StaffMySalons = lazyWithRetry(
+  () => import("../components/staff-dashboard/views/StaffMySalons"),
+);
 const ForgotPassword = lazyWithRetry(
   () => import("../components/ForgotPassword"),
 );
@@ -190,6 +197,7 @@ export default function AppRouter() {
           />
           <Route path="/pay/staff/:staffProfileId" element={<StaffDirectPaymentFlow />} />
           <Route path="/pay/:businessId" element={<DirectPaymentFlow />} />
+          <Route path="/merchant/payments/:paymentId" element={<PaymentsRedirect />} />
           <Route path="/qr/:code" element={<QrRedirectPage />} />
           <Route path="/help/qr/:code" element={<HelpQrPage />} />
 	  <Route path="/cpa/access" element={<CpaViewerPage />} />
@@ -239,6 +247,7 @@ export default function AppRouter() {
             <Route path="payments/:paymentId" element={<PaymentsRedirect />} />
             <Route path="reviews" element={<ReviewsRoute />} />
             <Route path="reports" element={<ReportsRoute />} />
+            <Route path="booking-hub" element={<BookingHubRoute />} />
             <Route path="touchpoints" element={<TouchpointsRoute />} />
 	    <Route path="taxiq" element={<TaxIqOverviewRoute />} />
           <Route path="taxiq/deductions" element={<TaxIqDeductionsRoute />} />
@@ -277,7 +286,7 @@ export default function AppRouter() {
             <Route path="pay" element={<StaffPay />} />
             <Route path="payments" element={<StaffTransactions />} />
             <Route path="payments/:paymentId" element={<StaffTransactions />} />
-          <Route path="taxiq" element={<StaffTaxIqOverviewRoute />} />
+	    <Route path="taxiq" element={<StaffTaxIqOverviewRoute />} />
           <Route path="taxiq/deductions" element={<StaffTaxIqDeductionsRoute />} />
           <Route path="taxiq/receipts" element={<StaffTaxIqReceiptsRoute />} />
           <Route path="taxiq/logs" element={<StaffTaxIqLogsRoute />} />
@@ -285,6 +294,8 @@ export default function AppRouter() {
           <Route path="taxiq/payouts" element={<StaffTaxIqPayoutsRoute />} />
           <Route path="taxiq/export" element={<StaffTaxIqExportRoute />} />
           <Route path="taxiq/cpa-access" element={<StaffTaxIqCpaAccessRoute />} />
+            <Route path="earnings" element={<StaffMyEarnings />} />
+            <Route path="salons" element={<StaffMySalons />} />
             <Route path="profile" element={<StaffProfile />} />
             <Route path="notifications" element={<StaffNotifications />} />
             <Route path="*" element={<StaffFallbackRoute />} />

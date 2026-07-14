@@ -17,10 +17,10 @@ export default function HomePageCtaSection() {
               <div className="absolute -top-32 -left-32 w-64 h-64 bg-white/5 rounded-full blur-2xl"></div>
               <div className="relative z-10 max-w-2xl mx-auto space-y-6">
                 <h2 className="text-2xl sm:text-3xl lg:text-4xl font-black tracking-tight leading-tight" data-i18n="cta-title">Ready to Stop Paying Tip Processing Fees?</h2>
-                <p className="text-indigo-100 text-sm sm:text-base leading-relaxed" data-i18n="cta-desc">Empower your technical workforce, collect valuable validated reviews on major search maps, and expand your community reach today.</p>
+                <p className="text-indigo-100 text-sm sm:text-base leading-relaxed" data-i18n="cta-desc">Join salons already saving thousands per year with Nexora Touch.</p>
                 <div className="pt-4 flex flex-row flex-wrap justify-center gap-4">
-                  <button className="bg-white hover:bg-slate-100 text-purple font-black text-sm px-8 py-4 rounded-full shadow-lg transition-all active:scale-95 ds-control ds-button nx-hero-btn" data-i18n="btn-cta-1" onClick={planCta}>Request Custom Consulting</button>
-                  <a className="bg-[rgba(255,255,255,0.10)] hover:bg-[rgba(255,255,255,0.20)] text-white hover:text-white font-extrabold text-sm px-8 py-4 rounded-full border border-white/10 transition-all text-center ds-control ds-button nx-hero-btn" data-i18n="btn-cta-2" href="#simulator">Interact With Live Simulator</a>
+                  <button className="bg-white hover:bg-slate-100 text-purple font-black text-sm px-8 py-4 rounded-full shadow-lg transition-all active:scale-95 ds-control ds-button nx-hero-btn" data-i18n="btn-cta-1" onClick={planCta}>Get Started Free</button>
+                  <a className="bg-[rgba(255,255,255,0.10)] hover:bg-[rgba(255,255,255,0.20)] text-white hover:text-white font-extrabold text-sm px-8 py-4 rounded-full border border-white/10 transition-all text-center ds-control ds-button nx-hero-btn" data-i18n="btn-cta-2" href="#simulator">Schedule a Demo</a>
                 </div>
               </div>
             </div>

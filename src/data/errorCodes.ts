@@ -4,6 +4,8 @@ export const errorCodeToI18nKey = {
   USER_ACCOUNT_INACTIVE: 'errors.user_account_inactive',
   USER_ACCOUNT_INCOMPLETE: 'errors.user_account_incomplete',
   USER_EMAIL_ALREADY_EXISTS: 'errors.user_email_already_exists',
+  USER_EMAIL_ALREADY_EXIST: 'errors.user_email_already_exists',
+  USER_EMAIL_ALREADY_EXISTS_IN_SSO: 'errors.user_email_already_exists',
   USER_INVALID_REFERRAL_CODE: 'errors.user_invalid_referral_code',
   USER_SIGNUP_FAILED: 'errors.user_signup_failed',
   AUTH_PASSWORDS_DO_NOT_MATCH: 'errors.auth_passwords_do_not_match',
@@ -68,6 +70,12 @@ export const errorCodeToI18nKey = {
   STAFF_DISPLAY_NAME_REQUIRED: 'errors.staff_display_name_required',
   STAFF_DISPLAY_NAME_TOO_SHORT: 'errors.staff_display_name_too_short',
   STAFF_DISPLAY_NAME_TOO_LONG: 'errors.staff_display_name_too_long',
+  STAFF_LIMIT_REACHED: 'errors.staff_limit_reached',
+  LOCAL_STAFF_NOT_FOUND: 'errors.local_staff_not_found',
+  LOCAL_STAFF_NOT_OWNED: 'errors.local_staff_not_owned',
+  STAFF_LINK_HAS_OUTSTANDING_DEBT: 'errors.staff_link_has_outstanding_debt',
+  STAFF_PAYMENT_METHOD_NOT_FOUND: 'errors.staff_payment_method_not_found',
+  STAFF_PAYMENT_METHOD_ACCESS_DENIED: 'errors.staff_payment_method_access_denied',
 
   // Physical cards (QR/NFC hardware)
   PHYSICAL_CARD_NOT_FOUND: 'errors.physical_card_not_found',
@@ -133,6 +141,22 @@ export const errorCodeToI18nKey = {
   COMMON_FORBIDDEN: 'errors.common_forbidden',
   COMMON_RATE_LIMIT_EXCEEDED: 'errors.common_rate_limit_exceeded',
   COMMON_INTERNAL_SERVER_ERROR: 'errors.common_internal_server_error',
+
+  VOICE_LEAD_CONFIRMATION_SMS_ALREADY_SENT: 'errors.voice_lead_confirmation_sms_already_sent',
+
+  // Nexora Voice trial requests
+  VOICE_TRIAL_SHOP_NAME_REQUIRED: 'errors.voice_trial_shop_name_required',
+  VOICE_TRIAL_OWNER_NAME_REQUIRED: 'errors.voice_trial_owner_name_required',
+  VOICE_TRIAL_PHONE_NUMBER_REQUIRED: 'errors.voice_trial_phone_number_required',
+  VOICE_TRIAL_PHONE_NUMBER_ALREADY_EXISTS: 'errors.voice_trial_phone_number_already_exists',
+  VOICE_TRIAL_REQUEST_ALREADY_EXISTS: 'errors.voice_trial_phone_number_already_exists',
+  VOICE_TRIAL_EMAIL_REQUIRED: 'errors.voice_trial_email_required',
+  VOICE_TRIAL_EMAIL_INVALID_FORMAT: 'errors.voice_trial_email_invalid_format',
+  VOICE_TRIAL_SERVICES_REQUIRED: 'errors.voice_trial_services_required',
+  VOICE_TRIAL_OPENING_DAYS_REQUIRED: 'errors.voice_trial_opening_days_required',
+  VOICE_TRIAL_SERVICE_HOURS_FROM_REQUIRED: 'errors.voice_trial_service_hours_from_required',
+  VOICE_TRIAL_SERVICE_HOURS_TO_REQUIRED: 'errors.voice_trial_service_hours_to_required',
+  VOICE_TRIAL_BIGGEST_PROBLEM_REQUIRED: 'errors.voice_trial_biggest_problem_required',
 }
 
 /**

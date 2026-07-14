@@ -9,7 +9,9 @@ import { useNotification } from '../../contexts/NotificationContext'
 import { useProfileSettings } from '../../data/hooks/useProfileSettings'
 import { getProfileReferralCode, buildAffiliateReferralUrl } from '../../utils/affiliateReferral'
 import { buildQrImageUrl } from '../../utils/staffTipUrl'
+import { QR_IMAGE_SIZES } from '../../utils/qrUtils'
 import { shareUrl } from '../../utils/shareUrl'
+import QrImage from '../ui/QrImage'
 
 const panel = 'rounded-2xl border border-nexoraBorder bg-nexoraSurface p-4 shadow-sm'
 
@@ -31,7 +33,7 @@ export default function ReferralShare({ showExplainer = true, className = '' }: 
     [referralCode],
   )
   const qrImageSrc = useMemo(
-    () => (referralUrl ? buildQrImageUrl(referralUrl, 200) : ''),
+    () => (referralUrl ? buildQrImageUrl(referralUrl, QR_IMAGE_SIZES.panel) : ''),
     [referralUrl],
   )
 
@@ -89,7 +91,7 @@ export default function ReferralShare({ showExplainer = true, className = '' }: 
           )}
 
           <div className="mx-auto my-4 flex h-44 w-44 shrink-0 items-center justify-center overflow-hidden rounded-xl border border-nexoraBorder/60 bg-white p-3.5 shadow-sm select-none">
-            <img src={qrImageSrc} alt="Referral QR" className="h-full w-full object-contain" />
+            <QrImage src={qrImageSrc} alt="Referral QR" className="h-full w-full" />
           </div>
 
           <div className="flex items-center justify-center gap-2 text-sm font-bold text-nexoraText">

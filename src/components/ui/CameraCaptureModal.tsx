@@ -130,14 +130,14 @@ export default function CameraCaptureModal({ open, onClose, onCapture }: CameraC
 
   return (
     <div
-      className="fixed inset-0 z-[80] flex items-center justify-center bg-slate-900/70 backdrop-blur-sm p-4"
+      className="fixed inset-0 z-[80] flex items-center justify-center bg-slate-900/70 backdrop-blur-sm modal-overlay-safe"
       data-testid="camera-capture-modal"
     >
       <div className="relative w-full max-w-sm overflow-hidden rounded-3xl border border-slate-100 bg-white shadow-2xl">
         <button
           type="button"
           onClick={handleClose}
-          className="absolute right-3 top-3 z-10 rounded-full p-1.5 text-white/90 transition hover:bg-white/10"
+          className="modal-close-btn absolute right-2 top-2 z-10 rounded-full text-white/90 transition hover:bg-white/10"
           aria-label={t('common.cancel')}
         >
           <X className="h-5 w-5" />

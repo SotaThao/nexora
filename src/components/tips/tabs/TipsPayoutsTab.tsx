@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react'
-import { Calendar, Download, FileClock, List, Plus, Search, User } from 'lucide-react'
+import { Calendar, ChevronDown, ChevronUp, Download, FileClock, List, Plus, Search, SlidersHorizontal, User } from 'lucide-react'
 import { useTranslation } from '../../../contexts/LanguageContext'
 import { PayoutStatus, PayoutType } from '../../../data/payoutConstants'
 import {
@@ -67,6 +67,7 @@ export default function TipsPayoutsTab({ staff = [] }: { staff?: StaffMember[] }
   const [editingPayout, setEditingPayout] = useState<PayoutRecord | null>(null)
   const [preferredStaffProfileId, setPreferredStaffProfileId] = useState<string | null>(null)
   const [historyStaffProfile, setHistoryStaffProfile] = useState<UnpaidTipDebtRecord | null>(null)
+  const [isFiltersExpanded, setIsFiltersExpanded] = useState(false)
 
   const { pageNumber, pageSize, setPage, reset: resetPage } = usePagination({ pageSize: DEFAULT_PAGE_SIZE })
 
@@ -142,6 +143,15 @@ export default function TipsPayoutsTab({ staff = [] }: { staff?: StaffMember[] }
   const statusOptions = STATUS_FILTER_OPTIONS.map((opt) => ({ value: opt.value, label: t(opt.labelKey) }))
   const typeOptions = TYPE_FILTER_OPTIONS.map((opt) => ({ value: opt.value, label: t(opt.labelKey) }))
 
+  const activeFilterCount = useMemo(() => {
+    let count = 0
+    if (statusFilter !== 'all') count += 1
+    if (typeFilter !== 'all') count += 1
+    if (staffFilter !== 'all') count += 1
+    if (periodFilter !== 'all') count += 1
+    return count
+  }, [statusFilter, typeFilter, staffFilter, periodFilter])
+
   useEffect(() => {
     resetPage()
   }, [
@@ -191,102 +201,136 @@ export default function TipsPayoutsTab({ staff = [] }: { staff?: StaffMember[] }
     <div className="space-y-6">
       <PayoutStatsCards stats={stats} isLoading={isStatsPending} />
 
-      <div className="flex flex-col gap-3 2xl:flex-row 2xl:items-center 2xl:justify-between">
-        <div className="flex min-w-0 flex-1 flex-wrap items-center gap-2">
-          <div className="relative w-full sm:w-[280px] lg:w-[340px]">
-            <Search className="pointer-events-none absolute left-3 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-[#687381]" />
-            <input
-              type="search"
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-              placeholder={t('dashboard.tips.payouts_manager.search_placeholder')}
-              className="h-9 w-full rounded-lg border border-[#dde5ef] bg-white pl-9 pr-3 text-xs text-[#0b1220] placeholder:text-[#687381] shadow-sm outline-none focus:border-nexoraBrand focus:ring-1 focus:ring-nexoraBrand/20"
-            />
-          </div>
-
-          <div className="grid w-full grid-cols-2 gap-2 sm:grid-cols-2 lg:grid-cols-4 2xl:flex 2xl:w-auto 2xl:flex-wrap 2xl:items-center">
-            <PayoutToolbarSelect
-              icon={Calendar}
-              label={t('dashboard.tips.payouts_manager.filter_period_label')}
-              value={periodFilter}
-              onChange={setPeriodFilter}
-              options={[
-                { value: 'all', label: t('dashboard.tips.payouts_manager.filter_all_period') },
-                { value: 'month', label: t('dashboard.tips.payouts_manager.filter_this_month') },
-                { value: 'custom', label: t('dashboard.tips.payouts_manager.filter_custom_period') },
-              ]}
-            />
-
-            <PayoutToolbarSelect
-              icon={User}
-              label={t('dashboard.tips.payouts_manager.filter_staff_label')}
-              value={staffFilter}
-              onChange={setStaffFilter}
-              options={staffOptions}
-              menuMinWidth={220}
-            />
-
-            <PayoutToolbarSelect
-              icon={List}
-              label={t('dashboard.tips.payouts_manager.filter_type_label')}
-              value={typeFilter}
-              onChange={setTypeFilter}
-              options={typeOptions}
-            />
-
-            <PayoutToolbarSelect
-              label={t('dashboard.tips.payouts_manager.filter_status_label')}
-              value={statusFilter}
-              onChange={setStatusFilter}
-              options={statusOptions}
-            />
-          </div>
-
-          {periodFilter === 'custom' ? (
-            <div className="grid w-full grid-cols-[1fr_auto_1fr] items-center gap-1.5 sm:flex sm:w-auto">
+      <div className="flex flex-col gap-3">
+        <div className="flex flex-col gap-3 xl:flex-row xl:items-center xl:justify-between">
+          <div className="flex min-w-0 flex-1 flex-wrap items-center gap-2">
+            <div className="relative w-full min-w-[200px] flex-1 sm:max-w-[340px]">
+              <Search className="pointer-events-none absolute left-3 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-[#687381]" />
               <input
-                type="date"
-                className="h-9 rounded-lg border border-[#dde5ef] bg-white px-2 text-xs font-semibold text-[#0b1220] shadow-sm"
-                value={periodFrom}
-                onChange={(e) => setPeriodFrom(e.target.value)}
-              />
-              <span className="text-xs text-[#687381]">–</span>
-              <input
-                type="date"
-                className="h-9 rounded-lg border border-[#dde5ef] bg-white px-2 text-xs font-semibold text-[#0b1220] shadow-sm"
-                value={periodTo}
-                onChange={(e) => setPeriodTo(e.target.value)}
+                type="search"
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+                placeholder={t('dashboard.tips.payouts_manager.search_placeholder')}
+                className="h-9 w-full rounded-lg border border-[#dde5ef] bg-white pl-9 pr-3 text-xs text-[#0b1220] placeholder:text-[#687381] shadow-sm outline-none focus:border-nexoraBrand focus:ring-1 focus:ring-nexoraBrand/20"
               />
             </div>
-          ) : null}
+
+            <button
+              type="button"
+              onClick={() => setIsFiltersExpanded((prev) => !prev)}
+              aria-expanded={isFiltersExpanded}
+              className="inline-flex h-9 shrink-0 items-center gap-1.5 rounded-lg border border-[#dde5ef] bg-white px-3 text-xs font-bold text-[#0b1220] shadow-sm transition hover:border-nexoraBrand/30 hover:bg-nexoraSurfaceMuted"
+            >
+              <SlidersHorizontal className="h-3.5 w-3.5 text-nexoraBrand" />
+              <span>
+                {isFiltersExpanded
+                  ? t('dashboard.tips.payouts_manager.hide_filters')
+                  : t('dashboard.tips.payouts_manager.show_filters')}
+              </span>
+              {!isFiltersExpanded && activeFilterCount > 0 ? (
+                <span className="inline-flex h-4 min-w-4 items-center justify-center rounded-full bg-nexoraBrand px-1 text-[10px] font-extrabold text-white">
+                  {activeFilterCount}
+                </span>
+              ) : null}
+              {isFiltersExpanded ? (
+                <ChevronUp className="h-3.5 w-3.5 text-[#687381]" />
+              ) : (
+                <ChevronDown className="h-3.5 w-3.5 text-[#687381]" />
+              )}
+            </button>
+          </div>
+
+          <div className="flex flex-wrap items-center gap-2">
+            <button
+              type="button"
+              onClick={() => setIsUnpaidDialogOpen(true)}
+              className="inline-flex h-9 shrink-0 items-center justify-center gap-1.5 whitespace-nowrap rounded-lg border border-amber-200 bg-amber-50/60 px-3.5 text-xs font-bold text-amber-900 shadow-sm transition hover:border-amber-300 hover:bg-amber-50"
+            >
+              <FileClock className="h-3.5 w-3.5 shrink-0 text-amber-600" strokeWidth={2.25} />
+              <span>{t('dashboard.tips.payouts_manager.unpaid_button', { count: unpaidDebts.length })}</span>
+            </button>
+            <button
+              type="button"
+              onClick={() => setIsExportOpen(true)}
+              className="inline-flex h-9 shrink-0 items-center justify-center gap-1.5 whitespace-nowrap rounded-lg border border-sky-200 bg-sky-50/60 px-3.5 text-xs font-bold text-sky-900 shadow-sm transition hover:border-sky-300 hover:bg-sky-50"
+            >
+              <Download className="h-3.5 w-3.5 shrink-0 text-sky-600" strokeWidth={2.25} />
+              <span>{t('dashboard.tips.payouts_manager.export_btn')}</span>
+            </button>
+            <button
+              type="button"
+              onClick={openCreate}
+              className="inline-flex h-9 shrink-0 items-center justify-center gap-1.5 whitespace-nowrap rounded-lg bg-nexoraBrand px-4 text-xs font-bold text-white shadow-sm transition hover:bg-[#393bc8]"
+            >
+              <Plus className="h-3.5 w-3.5 shrink-0" strokeWidth={2.5} />
+              <span>{t('dashboard.tips.payouts_manager.create_btn')}</span>
+            </button>
+          </div>
         </div>
 
-        <div className="grid w-full grid-cols-3 items-center gap-2 lg:w-auto lg:grid-cols-3 2xl:flex 2xl:w-auto 2xl:flex-wrap">
-          <button
-            type="button"
-            onClick={() => setIsUnpaidDialogOpen(true)}
-            className="inline-flex h-9 w-full items-center justify-center gap-1.5 rounded-lg border border-amber-200 bg-amber-50/60 px-3.5 text-xs font-bold text-amber-900 shadow-sm transition hover:border-amber-300 hover:bg-amber-50 sm:w-auto"
-          >
-            <FileClock className="h-3.5 w-3.5 text-amber-600" strokeWidth={2.25} />
-            {t('dashboard.tips.payouts_manager.unpaid_button', { count: unpaidDebts.length })}
-          </button>
-          <button
-            type="button"
-            onClick={() => setIsExportOpen(true)}
-            className="inline-flex h-9 w-full items-center justify-center gap-1.5 rounded-lg border border-sky-200 bg-sky-50/60 px-3.5 text-xs font-bold text-sky-900 shadow-sm transition hover:border-sky-300 hover:bg-sky-50 sm:w-auto"
-          >
-            <Download className="h-3.5 w-3.5 text-sky-600" strokeWidth={2.25} />
-            {t('dashboard.tips.payouts_manager.export_btn')}
-          </button>
-          <button
-            type="button"
-            onClick={openCreate}
-            className="inline-flex h-9 w-full items-center justify-center gap-1.5 rounded-lg bg-nexoraBrand px-4 text-xs font-bold text-white shadow-sm transition hover:bg-[#393bc8] sm:w-auto"
-          >
-            <Plus className="h-3.5 w-3.5" strokeWidth={2.5} />
-            {t('dashboard.tips.payouts_manager.create_btn')}
-          </button>
-        </div>
+        {isFiltersExpanded ? (
+          <div className="flex flex-col gap-2 rounded-xl border border-[#dde5ef] bg-white p-3 shadow-sm">
+            <div className="grid w-full grid-cols-1 gap-2 sm:grid-cols-2 lg:grid-cols-4">
+              <PayoutToolbarSelect
+                icon={Calendar}
+                label={t('dashboard.tips.payouts_manager.filter_period_label')}
+                value={periodFilter}
+                onChange={setPeriodFilter}
+                options={[
+                  { value: 'all', label: t('dashboard.tips.payouts_manager.filter_all_period') },
+                  { value: 'month', label: t('dashboard.tips.payouts_manager.filter_this_month') },
+                  { value: 'custom', label: t('dashboard.tips.payouts_manager.filter_custom_period') },
+                ]}
+                fullWidth
+              />
+
+              <PayoutToolbarSelect
+                icon={User}
+                label={t('dashboard.tips.payouts_manager.filter_staff_label')}
+                value={staffFilter}
+                onChange={setStaffFilter}
+                options={staffOptions}
+                menuMinWidth={220}
+                fullWidth
+              />
+
+              <PayoutToolbarSelect
+                icon={List}
+                label={t('dashboard.tips.payouts_manager.filter_type_label')}
+                value={typeFilter}
+                onChange={setTypeFilter}
+                options={typeOptions}
+                fullWidth
+              />
+
+              <PayoutToolbarSelect
+                label={t('dashboard.tips.payouts_manager.filter_status_label')}
+                value={statusFilter}
+                onChange={setStatusFilter}
+                options={statusOptions}
+                fullWidth
+              />
+            </div>
+
+            {periodFilter === 'custom' ? (
+              <div className="flex flex-wrap items-center gap-2">
+                <input
+                  type="date"
+                  className="h-9 rounded-lg border border-[#dde5ef] bg-white px-2 text-xs font-semibold text-[#0b1220] shadow-sm"
+                  value={periodFrom}
+                  onChange={(e) => setPeriodFrom(e.target.value)}
+                />
+                <span className="text-xs text-[#687381]">–</span>
+                <input
+                  type="date"
+                  className="h-9 rounded-lg border border-[#dde5ef] bg-white px-2 text-xs font-semibold text-[#0b1220] shadow-sm"
+                  value={periodTo}
+                  onChange={(e) => setPeriodTo(e.target.value)}
+                />
+              </div>
+            ) : null}
+          </div>
+        ) : null}
       </div>
 
       <div className="overflow-hidden rounded-xl border border-nexoraBorder bg-white">

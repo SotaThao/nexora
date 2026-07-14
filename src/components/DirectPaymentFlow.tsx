@@ -36,6 +36,7 @@ export default function DirectPaymentFlow() {
     activePaymentMethod,
     handleSelectWallet,
     handleConfirmPayment,
+    isConfirming,
   } = flow
 
   const disablePaymentSelection =
@@ -149,6 +150,7 @@ export default function DirectPaymentFlow() {
                   showToast={showToast}
                   handlePay={() => {}}
                   handleConfirmTip={handleConfirmPayment}
+                  isConfirming={isConfirming}
                   isApiMode
                   setStep={setStep}
                   backStep="review"

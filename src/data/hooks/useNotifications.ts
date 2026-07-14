@@ -84,8 +84,7 @@ export function useNotifications({ enabled: callerEnabled = true } = {}) {
     queryKey: qk.notifications(),
     queryFn: () => notificationsRepository.list(),
     enabled: callerEnabled,
-    staleTime: 30_000,
-    refetchOnMount: false,
+    refetchOnMount: true,
     refetchOnWindowFocus: false,
   })
 }

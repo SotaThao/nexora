@@ -5,6 +5,25 @@
  */
 export { buildPublicQrImageUrl } from '../data/repositories/publicQr'
 
+import merchantTouchpointsRepository from '../data/repositories/merchantTouchpoints'
+
+/**
+ * Standard QR image request sizes (px), anchored on the mobile poster QR
+ * (~200px box requested at 420px ≈ 2x device pixel ratio). Every surface must
+ * pick a tier instead of an ad-hoc size so QR sharpness stays consistent and
+ * identical URLs can share the browser cache.
+ */
+export const QR_IMAGE_SIZES = {
+  /** List thumbnails rendered at ≤ ~80px */
+  thumb: 150,
+  /** Cards, panels and posters rendered at ~80–220px */
+  panel: 420,
+  /** Zoomed previews rendered above ~220px and share images */
+  zoom: 600,
+  /** Print cards (2.1–2.35in ≈ 300dpi) and high-res downloads */
+  print: 1000,
+} as const
+
 async function fetchQrBlob(qrUrl: string): Promise<Blob> {
   const response = await fetch(qrUrl)
 
@@ -15,7 +34,7 @@ async function fetchQrBlob(qrUrl: string): Promise<Blob> {
   return response.blob()
 }
 
-async function downloadBlob(blob: Blob, filename = 'qr-code.png') {
+async function downloadBlob(blob: Blob, filename: string) {
   const blobUrl = URL.createObjectURL(blob)
 
   try {
@@ -28,6 +47,24 @@ async function downloadBlob(blob: Blob, filename = 'qr-code.png') {
   } finally {
     URL.revokeObjectURL(blobUrl)
   }
+}
+
+/**
+ * Downloads a QR code image from a remote URL and triggers a browser
+ * "Save As" prompt.
+ */
+export async function downloadQrCode(qrUrl: string, filename = 'qr-code.png') {
+  const blob = await fetchQrBlob(qrUrl)
+  await downloadBlob(blob, filename)
+}
+
+export async function downloadTouchpointQrFile(
+  touchpointId: string,
+  filename: string,
+  format: 'png' | 'pdf' = 'png',
+) {
+  const blob = await merchantTouchpointsRepository.downloadQr(touchpointId, format)
+  await downloadBlob(blob, filename)
 }
 
 function loadImageFromBlob(blob: Blob): Promise<HTMLImageElement> {
@@ -116,15 +153,6 @@ export async function buildLabeledQrImageBlob(
       else reject(new Error('Failed to export labeled QR image'))
     }, 'image/png')
   })
-}
-
-/**
- * Downloads a QR code image from a remote URL and triggers a browser
- * "Save As" prompt.
- */
-export async function downloadQrCode(qrUrl: string, filename = 'qr-code.png') {
-  const blob = await fetchQrBlob(qrUrl)
-  await downloadBlob(blob, filename)
 }
 
 type ShareQrImageOptions = {

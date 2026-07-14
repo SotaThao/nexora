@@ -22,7 +22,7 @@ import {
 } from '../constants'
 import { getApiErrorCode } from '../../../types/domain'
 import { getErrorI18nKey } from '../../../data/errorCodes'
-import { getDefaultDialCode } from '../../CountryCodeSelect'
+import { getDefaultDialCode, parsePhone } from '../../CountryCodeSelect'
 import { isValidEmail, isValidHttpUrl } from '../../../utils/validation'
 
 export default function useSetupWizard({
@@ -117,16 +117,36 @@ export default function useSetupWizard({
   useEffect(() => {
     const existing = merchantSetupQuery.data?.businessInfo
     if (!existing?.businessId) return
-    setBusinessInfo((prev) =>
-      prev.businessId
-        ? prev
-        : {
-            ...prev,
-            businessId: existing.businessId,
-            customSlug: existing.slug || prev.customSlug,
-          },
-    )
+    setBusinessInfo((prev) => {
+      const hasRealPhone = Boolean(parsePhone(prev.phone).nationalNumber)
+      return {
+        ...prev,
+        businessId: prev.businessId || existing.businessId,
+        customSlug: existing.slug || prev.customSlug,
+        name: prev.name || existing.name || prev.name,
+        address: prev.address || existing.address || prev.address,
+        phone: hasRealPhone ? prev.phone : (existing.phone || prev.phone),
+        website: prev.website || existing.website || prev.website,
+      }
+    })
   }, [merchantSetupQuery.data])
+
+  useEffect(() => {
+    const existingFeedbackEmail = merchantSetupQuery.data?.reviewLinks?.feedbackEmail
+    if (!existingFeedbackEmail) return
+    setReviewLinks((prev) => ({
+      ...prev,
+      feedbackEmail: prev.feedbackEmail || existingFeedbackEmail,
+    }))
+  }, [merchantSetupQuery.data])
+
+  const existingBusiness = merchantSetupQuery.data?.businessInfo
+  const existingFeedbackEmail = merchantSetupQuery.data?.reviewLinks?.feedbackEmail
+  const isNameLocked = isSsoLocked || Boolean(initialBusinessInfo?.name) || Boolean(existingBusiness?.name)
+  const isAddressLocked = isSsoLocked || Boolean(initialBusinessInfo?.address) || Boolean(existingBusiness?.address)
+  const isPhoneLocked = isSsoLocked || Boolean(initialBusinessInfo?.phone) || Boolean(existingBusiness?.phone)
+  const isWebsiteLocked = isSsoLocked || Boolean(existingBusiness?.website)
+  const isFeedbackEmailLocked = isSsoLocked || Boolean(existingFeedbackEmail)
 
   // Payment methods are pre-seeded after the business exists (created at step 1 → 2).
   const merchantPaymentMethodsQuery = useMerchantPaymentMethods({
@@ -609,6 +629,11 @@ export default function useSetupWizard({
     currentStep,
     setCurrentStep,
     isSsoLocked,
+    isNameLocked,
+    isAddressLocked,
+    isPhoneLocked,
+    isWebsiteLocked,
+    isFeedbackEmailLocked,
     isStepSaving,
     // business
     businessInfo,

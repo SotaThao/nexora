@@ -15,7 +15,7 @@ export default function QrScannerModal({
   if (!showScanner) return null
 
   return (
-    <div className="fixed inset-0 bg-nexoraText/60 backdrop-blur-sm z-[70] flex items-center justify-center p-4">
+    <div className="fixed inset-0 bg-nexoraText/60 backdrop-blur-sm z-[70] flex items-center justify-center modal-overlay-safe">
       <style>{`
         @keyframes scannerLaser {
           0% { top: 0%; opacity: 0.8; }
@@ -35,8 +35,9 @@ export default function QrScannerModal({
             setShowScanner(false)
             setScanTarget(null)
           }}
-          className="absolute right-4 top-4 text-nexoraSubtle hover:text-nexoraText transition p-1.5 rounded-full hover:bg-nexoraSurfaceMuted"
+          className="modal-close-btn absolute right-2 top-2 text-nexoraSubtle hover:text-nexoraText transition rounded-full hover:bg-nexoraSurfaceMuted"
           title="Close Scanner"
+          aria-label="Close Scanner"
         >
           <X className="h-4 w-4" />
         </button>

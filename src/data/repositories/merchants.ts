@@ -21,6 +21,7 @@ export function mapBusinessApiDtoToSetup(res: BusinessApiDto): MerchantSetup {
       phone: res.phone || '',
       website: res.website || '',
       logo: res.logoUrl || null,
+      createdAt: res.createdAt ?? null,
       paymentAccounts: {
         venmo: '',
         cashapp: '',

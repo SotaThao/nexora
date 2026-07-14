@@ -2,7 +2,7 @@ import React, { useState, useRef, useEffect } from 'react'
 import { ChevronDown, Search } from 'lucide-react'
 import { useTranslation } from '../contexts/LanguageContext'
 import { isValidPhone } from '../utils/validation'
-import { AsYouType, isPossiblePhoneNumber, isValidPhoneNumber } from 'libphonenumber-js'
+import { AsYouType, isPossiblePhoneNumber, validatePhoneNumberLength } from 'libphonenumber-js'
 
 /** Narrow gap between phone digit groups in inputs (thinner than a normal space). */
 export const PHONE_GROUP_SEP = '\u2009'
@@ -32,23 +32,32 @@ export const COUNTRY_CODES = [
 
 export const parsePhone = (phoneStr) => {
   if (!phoneStr) return { countryCode: '+1', nationalNumber: '' }
+  const normalized = String(phoneStr).trim()
   
   // Sort country codes by dialCode length descending to match longest prefix first
   const sortedList = [...COUNTRY_CODES].sort((a, b) => b.dialCode.length - a.dialCode.length)
   for (const item of sortedList) {
-    if (phoneStr.startsWith(item.dialCode)) {
-      return { countryCode: item.dialCode, nationalNumber: phoneStr.slice(item.dialCode.length).trim() }
+    if (normalized.startsWith(item.dialCode)) {
+      return { countryCode: item.dialCode, nationalNumber: normalized.slice(item.dialCode.length).trim() }
     }
   }
   
   // Fallback: if it starts with +, try to parse it
-  if (phoneStr.startsWith('+')) {
-    const match = phoneStr.match(/^(\+\d+)\s*(.*)$/)
+  if (normalized.startsWith('+')) {
+    const match = normalized.match(/^(\+\d+)\s*(.*)$/)
     if (match) {
       return { countryCode: match[1], nationalNumber: match[2] }
     }
   }
-  return { countryCode: '+1', nationalNumber: phoneStr }
+
+  const digits = normalized.replace(/\D/g, '')
+  // API can return VN local numbers (e.g. 0385478857) without +84.
+  // For +84 UI, show national number without trunk '0' to avoid duplication.
+  if (digits.startsWith('0') && digits.length >= 9 && digits.length <= 11) {
+    return { countryCode: '+84', nationalNumber: digits.slice(1) }
+  }
+
+  return { countryCode: '+1', nationalNumber: normalized }
 }
 
 export const getCountryByDialCode = (dialCode) => {
@@ -71,9 +80,31 @@ export const getDefaultDialCode = (appLanguage) => {
 }
 
 export const getMaxNationalDigits = (dialCode: string) => {
-  if (dialCode === '+1' || dialCode === '+84') return 10
-  const codeDigits = dialCode.replace(/\D/g, '').length
-  return Math.max(4, Math.min(12, 15 - codeDigits))
+  const fallback = () => {
+    const codeDigits = dialCode.replace(/\D/g, '').length
+    return Math.max(4, Math.min(12, 15 - codeDigits))
+  }
+
+  const country = getCountryByDialCode(dialCode)
+  if (!country?.code) return fallback()
+
+  // Derive the maximum possible national digits from libphonenumber metadata
+  // instead of maintaining a hardcoded per-country switch.
+  let maxDigits = 0
+  for (let length = 4; length <= 15; length += 1) {
+    const probe = `${dialCode}${'9'.repeat(length)}`
+    const result = validatePhoneNumberLength(
+      probe,
+      country.code as import('libphonenumber-js').CountryCode,
+    )
+
+    if (result === 'TOO_LONG') break
+    if (result !== 'INVALID_COUNTRY') {
+      maxDigits = length
+    }
+  }
+
+  return maxDigits > 0 ? maxDigits : fallback()
 }
 
 export const getE164MaxNationalDigits = (dialCode: string) => {
@@ -135,13 +166,13 @@ export const isValidPhoneE164 = (value: string, fallbackDialCode: string) => {
   const { countryCode, nationalNumber } = parsePhone(e164)
   const nationalDigits = stripTrunkPrefixNational(nationalNumber, countryCode)
 
-  if (countryCode === '+84' && nationalDigits.length !== 9) return false
-  if (countryCode === '+1' && nationalDigits.length !== 10) return false
+  const maxDigits = getE164MaxNationalDigits(countryCode)
+  if (nationalDigits.length !== maxDigits) return false
 
   try {
     return isPossiblePhoneNumber(e164)
   } catch {
-    return false
+    return nationalDigits.length === maxDigits
   }
 }
 
@@ -177,16 +208,22 @@ export const formatNationalNumber = (nationalNumber, dialCode) => {
   return formatter.input(digits)
 }
 
+export const PHONE_NATIONAL_PLACEHOLDER = '123 456 7890'
+
 export const isPhoneValid = isValidPhone
 
 export default function CountryCodeSelect({
   value,
   onChange = (_code: string) => {},
   disabled = false,
+  showSearch = true,
+  embedded = false,
 }: {
   value: string
   onChange?: (code: string) => void
   disabled?: boolean
+  showSearch?: boolean
+  embedded?: boolean
 }) {
   const { t } = useTranslation()
   const [isOpen, setIsOpen] = useState(false)
@@ -207,21 +244,33 @@ export default function CountryCodeSelect({
     }
   }, [isOpen])
 
+  useEffect(() => {
+    if (!showSearch) {
+      setSearch('')
+    }
+  }, [showSearch, isOpen])
+
   const selectedCountry = COUNTRY_CODES.find(c => c.dialCode === value) || COUNTRY_CODES[0]
 
-  const filteredCountries = COUNTRY_CODES.filter(c => 
-    c.name.toLowerCase().includes(search.toLowerCase()) || 
-    c.dialCode.includes(search) || 
-    c.code.toLowerCase().includes(search.toLowerCase())
-  )
+  const filteredCountries = showSearch
+    ? COUNTRY_CODES.filter(c =>
+        c.name.toLowerCase().includes(search.toLowerCase()) ||
+        c.dialCode.includes(search) ||
+        c.code.toLowerCase().includes(search.toLowerCase())
+      )
+    : COUNTRY_CODES
 
   return (
-    <div className="relative shrink-0 flex" ref={dropdownRef}>
+    <div className={`relative shrink-0 flex ${embedded ? 'h-full self-stretch' : ''}`} ref={dropdownRef}>
       <button
         type="button"
         disabled={disabled}
         onClick={() => !disabled && setIsOpen(!isOpen)}
-        className={`h-10 flex items-center gap-1.5 px-3 border border-nexoraBorder border-r-0 rounded-l-lg text-xs font-bold text-nexoraText transition-colors focus:outline-none select-none
+        className={embedded
+          ? `h-full min-h-0 flex items-center gap-1.5 px-3 border-0 border-r border-nexoraBorder rounded-none rounded-l-[9px] text-xs font-bold text-nexoraText transition-colors focus:outline-none select-none ${
+            disabled ? 'bg-slate-100 text-nexoraSubtle cursor-not-allowed' : 'bg-transparent hover:bg-slate-50 cursor-pointer'
+          }`
+          : `h-10 flex items-center gap-1.5 px-3 border border-nexoraBorder border-r-0 rounded-l-lg text-xs font-bold text-nexoraText transition-colors focus:outline-none select-none
           ${disabled ? 'bg-slate-100 text-nexoraSubtle cursor-not-allowed border-slate-200' : 'bg-slate-50 hover:bg-slate-100 cursor-pointer'}`}
       >
         <span className="text-xs font-bold leading-none">{selectedCountry.code}</span>
@@ -233,19 +282,23 @@ export default function CountryCodeSelect({
       </button>
 
       {isOpen && (
-        <div className="absolute left-0 mt-11 z-50 w-64 bg-white border border-nexoraBorder rounded-lg shadow-premium flex flex-col overflow-hidden animate-fadeIn">
-          <div className="p-2 border-b border-nexoraRule bg-slate-50 flex items-center gap-1.5">
-            <Search className="w-3.5 h-3.5 text-nexoraSubtle shrink-0" />
-            <input
-              type="text"
-              autoFocus
-              placeholder={t('components.CountryCodeSelect.phSearch')}
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-              className="w-full text-xs bg-transparent border-0 outline-none p-0 focus:ring-0 text-nexoraText placeholder-nexoraSubtle"
-            />
-          </div>
-          <div className="max-h-48 overflow-y-auto divide-y divide-slate-100 py-1">
+        <div className={`country-code-dropdown absolute left-0 z-[200] w-64 bg-white rounded-lg shadow-premium flex flex-col overflow-hidden animate-fadeIn ${
+          embedded ? 'top-full mt-1' : 'mt-11'
+        }`}>
+          {showSearch ? (
+            <div className="country-code-search-wrap p-2 bg-slate-50 flex items-center gap-1.5">
+              <Search className="w-3.5 h-3.5 text-nexoraSubtle shrink-0" />
+              <input
+                type="text"
+                autoFocus
+                placeholder={t('components.CountryCodeSelect.phSearch')}
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+                className="country-code-search-input w-full text-xs bg-transparent border-0 outline-none p-0 shadow-none focus:ring-0 focus:outline-none text-nexoraText placeholder-nexoraSubtle"
+              />
+            </div>
+          ) : null}
+          <div className="country-code-list max-h-48 overflow-y-auto py-1">
             {filteredCountries.length === 0 ? (
               <div className="p-3 text-[10px] text-nexoraSubtle text-center font-medium">No countries found</div>
             ) : (
@@ -263,7 +316,6 @@ export default function CountryCodeSelect({
                       ${isSelected ? 'bg-nexoraBrandSoft text-nexoraBrand font-bold' : 'text-nexoraText'}`}
                   >
                     <div className="flex items-center gap-2 min-w-0">
-                      <span className="text-sm shrink-0">{country.flag}</span>
                       <span className="truncate font-medium">{country.name}</span>
                     </div>
                     <span className="text-nexoraMuted shrink-0 font-mono font-bold">{country.dialCode}</span>

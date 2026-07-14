@@ -65,6 +65,8 @@ export const qk = {
   merchantStaffByCode:  (staffCode)       => ['merchantStaff', 'byCode', staffCode],
   merchantStaffStats:   (staffProfileId, filters = EMPTY) =>
     ['merchantStaff', 'stats', staffProfileId, filters],
+  localStaffPaymentMethods: (staffProfileId?: string | null) =>
+    ['merchantStaff', 'localStaffPaymentMethods', staffProfileId ?? ''],
   staffInvite:         (token)   => ['staffInvite', token],
   publicMerchantInvite: (ref)    => ['publicMerchantInvite', ref],
   merchantInviteLink:  ()      => ['merchantSettings', 'inviteLink'],
@@ -235,6 +237,18 @@ export const qk = {
   taxiqCpaAccessGrants: (ownerTaxYearId?: string, staffTaxYearId?: string) =>
     ['taxiqCpaAccessGrants', ownerTaxYearId ?? 'none', staffTaxYearId ?? 'none'],
   taxiqCpaViewerPackage: (token?: string) => ['taxiqCpaViewerPackage', token ?? 'unknown'],
+
+  // Merchant Nexora Voice
+  merchantVoiceBookings: (filters = EMPTY) => ['merchantVoice', 'bookings', filters],
+  merchantVoiceBookingStatistics: () => ['merchantVoice', 'bookings', 'statistics'],
+  merchantVoiceStaff: (filters = EMPTY) => ['merchantVoice', 'staff', filters],
+  merchantVoiceStaffById: (id?: string | null) => ['merchantVoice', 'staff', 'detail', id ?? ''],
+  merchantVoiceBusinessStaff: (filters = EMPTY) => ['merchantVoice', 'staff', 'businessStaff', filters],
+  merchantVoiceConfig: () => ['merchantVoice', 'config'],
+  merchantVoiceTenantStatus: () => ['merchantVoice', 'tenant', 'status'],
+
+  // Nexora Voice trial (merchant)
+  voiceTrialRequestMe: () => ['nexora-voice', 'trial-request', 'me'],
 
   // Public Customer Touch
   customerTouch: (businessSlug, touchPointSlug, sessionId) => ['customerTouch', businessSlug, touchPointSlug, sessionId],

@@ -14,6 +14,7 @@ export interface MerchantBusinessInfo {
   phone?: string
   website?: string
   logo?: string | null
+  createdAt?: string | null
   [key: string]: unknown
 }
 
@@ -509,6 +510,7 @@ export interface TransactionRecord extends DomainEntity {
   staffConfirmedAt?: string | null
   merchantConfirmedAt?: string | null
   isMultiStaff?: boolean
+  isLocalStaff?: boolean
   tipItems?: unknown[]
   [key: string]: unknown
 }
@@ -559,6 +561,7 @@ export interface UserProfile {
   hasCompletedOnboarding?: boolean
   referralCode?: string
   subscription?: UserSubscription | null
+  createdAt?: string | null
   [key: string]: unknown
 }
 
@@ -574,6 +577,7 @@ export interface StaffProfile {
   lastName?: string
   phone?: string
   isProfileComplete?: boolean
+  createdAt?: string | null
   [key: string]: unknown
 }
 

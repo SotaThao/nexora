@@ -88,10 +88,8 @@ export function HomePageBridgeProvider({ children }: HomePageBridgeProviderProps
       },
       onLogout: () => {
         hp.handleLogout()
-        const { logout: doLogout, navigate: nav } = authRef.current
-        void doLogout().then(() => {
-          syncHomePageAuthHeader(null, 'anonymous', nav)
-        })
+        const { logout: doLogout } = authRef.current
+        void doLogout()
       },
     }),
     [hp, session, status, navigate],
