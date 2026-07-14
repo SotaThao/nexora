@@ -66,18 +66,18 @@ const STAFF_NOTIFICATION_TYPES = new Set([
  * top-level 'tips' screen (`/dashboard/tips`, the "My Tips" earnings
  * summary), which is a different page with no transaction list/modal.
  * `TYPE_TO_REPORTS_TAB` below picks which sub-tab opens within Reports.
+ *
+ * Keys must be pre-normalized (lowercase, no `_`/`-`/space) since they're
+ * looked up via `typeLower` below — `normalizeNotificationType()` strips
+ * those separators, so a key like `tip_success` could never match and
+ * would silently be dead code.
  */
 const TYPE_TO_LINK_TAB: Record<string, string> = {
   tipreceived: 'reports', // TipReceived
-  tip_success: 'reports',
   tip: 'reports',
-  review_good: 'reviews',
   review: 'reviews',
   reviewreply: 'reviews', // ReviewReply
-  feedback_alert: 'reviews',
-  payment_received: 'reports',
   paymentreceived: 'reports',
-  direct_payment: 'reports',
   directpayment: 'reports',
   directpaymentreceived: 'reports', // DirectPaymentReceived
   payment: 'reports',
@@ -85,15 +85,13 @@ const TYPE_TO_LINK_TAB: Record<string, string> = {
 
 /**
  * When linkTab === 'reports', which sub-tab (Reports "Tips" vs "Direct
- * Payments") the notification should open.
+ * Payments") the notification should open. Keys must be pre-normalized —
+ * see `TYPE_TO_LINK_TAB` above.
  */
 const TYPE_TO_REPORTS_TAB: Record<string, string> = {
   tipreceived: 'tips',
-  tip_success: 'tips',
   tip: 'tips',
-  payment_received: 'direct_payments',
   paymentreceived: 'direct_payments',
-  direct_payment: 'direct_payments',
   directpayment: 'direct_payments',
   directpaymentreceived: 'direct_payments',
   payment: 'direct_payments',
