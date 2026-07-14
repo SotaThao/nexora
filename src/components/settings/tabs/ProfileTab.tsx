@@ -121,6 +121,7 @@ export default function ProfileTab({
   handleAvatarChange,
   formatDOB,
   onShowQr,
+  inlineReferral = false,
   focusPayoutMethods = false,
   hidePayoutMethods = false,
 }) {
@@ -341,43 +342,87 @@ export default function ProfileTab({
                 <span className="text-nexoraText font-extrabold truncate" title={profile.email}>{profile.email}</span>
               </div>
 
-              <div className="flex flex-col py-2 sm:py-1 border-t border-slate-50 gap-1.5">
-                <span className="text-nexoraMuted font-bold">{t('components.settings.tabs.ProfileTab.referralLink')}:</span>
-                <span className="text-nexoraText font-extrabold break-all" title={referralUrl || referralDisplay}>
-                  {referralDisplay}
-                </span>
-                <div className="flex items-center justify-center gap-4">
-                  {/* Copy Button */}
-                  <button
-                    type="button"
-                    disabled={!referralUrl}
-                    onClick={() => handleCopy(referralUrl, 'ref')}
-                    className="text-blue-500 hover:text-blue-600 font-bold text-[10px] uppercase hover:underline flex items-center gap-1 shrink-0 disabled:cursor-not-allowed disabled:opacity-50"
-                  >
-                    {copiedId === 'ref' ? (
-                      <>
-                        <Check className="h-3 w-3 text-emerald-600" />
-                        <span className="text-emerald-500">{t('components.settings.tabs.ProfileTab.copied')}</span>
-                      </>
-                    ) : (
-                      <>
-                        <Copy className="h-3 w-3" />
-                        <span>{t('components.settings.tabs.ProfileTab.copy')}</span>
-                      </>
-                    )}
-                  </button>
-
-                  {/* Show QR Button */}
-                  <button
-                    type="button"
-                    onClick={onShowQr}
-                    className="text-blue-500 hover:text-blue-600 font-bold text-[10px] uppercase hover:underline flex items-center gap-1 shrink-0"
-                  >
-                    <QrCode className="h-3 w-3" />
-                    <span>{t('components.settings.tabs.ProfileTab.showQr')}</span>
-                  </button>
+              {inlineReferral ? (
+                <div className="flex flex-col py-2 sm:py-1 border-t border-slate-50 gap-1.5">
+                  <span className="text-nexoraMuted font-bold">{t('components.settings.tabs.ProfileTab.referralLink')}:</span>
+                  <div className="flex items-center gap-3 min-w-0">
+                    {/* Link — truncates from the domain side so the ref code stays visible */}
+                    <span
+                      dir="rtl"
+                      className="min-w-0 flex-1 truncate text-left text-nexoraText font-extrabold"
+                      title={referralUrl || referralDisplay}
+                    >
+                      {referralUrl ? referralUrl.replace(/^https?:\/\//, '') : referralDisplay}
+                    </span>
+                    {/* Copy Button — text above icon */}
+                    <button
+                      type="button"
+                      disabled={!referralUrl}
+                      onClick={() => handleCopy(referralUrl, 'ref')}
+                      className="text-blue-500 hover:text-blue-600 font-bold text-[10px] uppercase hover:underline flex flex-col items-center gap-0.5 shrink-0 disabled:cursor-not-allowed disabled:opacity-50"
+                    >
+                      {copiedId === 'ref' ? (
+                        <>
+                          <span className="text-emerald-500">{t('components.settings.tabs.ProfileTab.copied')}</span>
+                          <Check className="h-3 w-3 text-emerald-600" />
+                        </>
+                      ) : (
+                        <>
+                          <span>{t('components.settings.tabs.ProfileTab.copy')}</span>
+                          <Copy className="h-3 w-3" />
+                        </>
+                      )}
+                    </button>
+                    {/* Show QR Button — text above icon */}
+                    <button
+                      type="button"
+                      onClick={onShowQr}
+                      className="text-blue-500 hover:text-blue-600 font-bold text-[10px] uppercase hover:underline flex flex-col items-center gap-0.5 shrink-0"
+                    >
+                      <span>{t('components.settings.tabs.ProfileTab.showQr')}</span>
+                      <QrCode className="h-3 w-3" />
+                    </button>
+                  </div>
                 </div>
-              </div>
+              ) : (
+                <div className="flex flex-col py-2 sm:py-1 border-t border-slate-50 gap-1.5">
+                  <span className="text-nexoraMuted font-bold">{t('components.settings.tabs.ProfileTab.referralLink')}:</span>
+                  <span className="text-nexoraText font-extrabold break-all" title={referralUrl || referralDisplay}>
+                    {referralDisplay}
+                  </span>
+                  <div className="flex items-center justify-center gap-4">
+                    {/* Copy Button */}
+                    <button
+                      type="button"
+                      disabled={!referralUrl}
+                      onClick={() => handleCopy(referralUrl, 'ref')}
+                      className="text-blue-500 hover:text-blue-600 font-bold text-[10px] uppercase hover:underline flex items-center gap-1 shrink-0 disabled:cursor-not-allowed disabled:opacity-50"
+                    >
+                      {copiedId === 'ref' ? (
+                        <>
+                          <Check className="h-3 w-3 text-emerald-600" />
+                          <span className="text-emerald-500">{t('components.settings.tabs.ProfileTab.copied')}</span>
+                        </>
+                      ) : (
+                        <>
+                          <Copy className="h-3 w-3" />
+                          <span>{t('components.settings.tabs.ProfileTab.copy')}</span>
+                        </>
+                      )}
+                    </button>
+
+                    {/* Show QR Button */}
+                    <button
+                      type="button"
+                      onClick={onShowQr}
+                      className="text-blue-500 hover:text-blue-600 font-bold text-[10px] uppercase hover:underline flex items-center gap-1 shrink-0"
+                    >
+                      <QrCode className="h-3 w-3" />
+                      <span>{t('components.settings.tabs.ProfileTab.showQr')}</span>
+                    </button>
+                  </div>
+                </div>
+              )}
             </div>
           </div>
 
