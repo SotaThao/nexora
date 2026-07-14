@@ -68,7 +68,6 @@ const TYPE_ICON: Record<number, any> = {
 const CREATE_STATUS_OPTIONS: PayoutStatusValue[] = [
   PayoutStatus.Pending,
   PayoutStatus.Confirmed,
-  PayoutStatus.Cancelled,
 ]
 
 function defaultPeriodDates() {

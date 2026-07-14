@@ -148,6 +148,7 @@ const DEFAULT_PROFILE = {
   },
   googleReview: "",
   yelpReview: "",
+  createdAt: "",
 };
 
 const KYB_EDITABLE_STATUSES = new Set(['basic', 'kyb_rejected', 'rejected'])
@@ -327,6 +328,7 @@ export default function useSettingsForm({
           street: (d.address as string) || (d.street as string) || next.street || '',
           dob: (d.dateOfBirth as string) || (d.dob as string) || next.dob || '',
           referralId: (d.referralCode as string) || (d.referralId as string) || next.referralId || '',
+          createdAt: (d.createdAt as string) || next.createdAt || '',
         };
       }
       if (setupData) {

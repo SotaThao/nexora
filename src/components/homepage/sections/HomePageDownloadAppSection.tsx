@@ -1,5 +1,5 @@
 import { useTranslation } from '../../../contexts/LanguageContext'
-import { buildPublicQrImageUrl } from '../../../utils/qrUtils'
+import { buildPublicQrImageUrl, QR_IMAGE_SIZES } from '../../../utils/qrUtils'
 import AppDownloadLinks, {
   APP_STORE_URL,
   GOOGLE_PLAY_URL,
@@ -71,7 +71,7 @@ export default function HomePageDownloadAppSection() {
                 className="rounded-2xl bg-white p-3 shadow-lg ring-1 ring-black/10 transition hover:-translate-y-0.5 hover:shadow-xl"
               >
                 <img
-                  src={buildPublicQrImageUrl(item.href, 240)}
+                  src={buildPublicQrImageUrl(item.href, QR_IMAGE_SIZES.panel)}
                   alt={copy(item.altKey)}
                   className="h-32 w-32 object-contain sm:h-40 sm:w-40"
                   loading="lazy"

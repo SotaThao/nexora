@@ -132,6 +132,8 @@ export enum MerchantVoiceUiLanguage {
 
 export enum MerchantVoiceErrorCode {
   ConfirmationSmsAlreadySent = 'VOICE_LEAD_CONFIRMATION_SMS_ALREADY_SENT',
+  StaffPhoneNumberRequired = 'VOICE_TENANT_STAFF_PHONE_NUMBER_REQUIRED',
+  StaffPhoneNumberAlreadyExists = 'VOICE_TENANT_STAFF_PHONE_NUMBER_ALREADY_EXISTS',
 }
 
 const LEAD_STATUS_API_TO_ENUM: Record<string, MerchantVoiceLeadStatus> = {

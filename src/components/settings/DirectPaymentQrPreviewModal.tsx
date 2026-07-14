@@ -4,7 +4,7 @@ import { Download, Loader2, Printer, ShieldCheck, X } from 'lucide-react'
 import { useTranslation } from '../../contexts/LanguageContext'
 import { useNotification } from '../../contexts/NotificationContext'
 import { buildPublicQrImageUrl } from '../../data/repositories/publicQr'
-import { downloadQrCode } from '../../utils/qrUtils'
+import { downloadQrCode, QR_IMAGE_SIZES } from '../../utils/qrUtils'
 import QrImage from '../ui/QrImage'
 
 const slugify = (value = '') =>
@@ -27,7 +27,7 @@ export default function DirectPaymentQrPreviewModal({
   if (!open || !previewQrUrl || typeof document === 'undefined') return null
 
   const displayUrl = paymentPageUrl?.replace(/^https?:\/\//, '') ?? ''
-  const qrImageSrc = paymentPageUrl ? buildPublicQrImageUrl(paymentPageUrl, 1000) : previewQrUrl
+  const qrImageSrc = paymentPageUrl ? buildPublicQrImageUrl(paymentPageUrl, QR_IMAGE_SIZES.print) : previewQrUrl
 
   const handleDownload = async () => {
     if (isSaving) return

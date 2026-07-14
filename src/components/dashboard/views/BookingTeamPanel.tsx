@@ -1,5 +1,10 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react'
-import CountryCodeSelect, { formatNationalNumber, parsePhone } from '../../CountryCodeSelect'
+import CountryCodeSelect, {
+  formatNationalNumber,
+  getNationalPhonePlaceholder,
+  normalizePhoneE164,
+  parsePhone,
+} from '../../CountryCodeSelect'
 import { useTranslation } from '../../../contexts/LanguageContext'
 import { useNotification } from '../../../contexts/NotificationContext'
 import { getErrorI18nKey } from '../../../data/errorCodes'
@@ -38,6 +43,9 @@ import { useBookingHubVoiceEnabled } from './BookingHubVoiceContext'
 const TK = 'components.dashboard.views.BookingHubView.team'
 
 const DAY_KEYS = ['mon', 'tue', 'wed', 'thu', 'fri', 'sat', 'sun'] as const
+
+const DEFAULT_SCHEDULE_START = '09:00'
+const DEFAULT_SCHEDULE_END = '19:00'
 
 type DayKey = typeof DAY_KEYS[number]
 type ModalMode = 'create' | 'edit' | 'detail'
@@ -114,11 +122,19 @@ function normalizeScheduleTime(value: string | null | undefined): string {
   return `${String(hour).padStart(2, '0')}:${minute}`
 }
 
+function createDaySchedule(dayOff = false): DaySchedule {
+  return {
+    dayOff,
+    start: DEFAULT_SCHEDULE_START,
+    end: DEFAULT_SCHEDULE_END,
+  }
+}
+
 function schedulesToWeeklySchedule(schedules: MerchantVoiceStaffDto['schedules'] | undefined): WeeklySchedule {
   const schedule = emptySchedule()
 
   DAY_KEYS.forEach((key) => {
-    schedule[key] = { dayOff: true, start: '', end: '' }
+    schedule[key] = createDaySchedule(true)
   })
 
   for (const item of schedules ?? []) {
@@ -126,14 +142,14 @@ function schedulesToWeeklySchedule(schedules: MerchantVoiceStaffDto['schedules']
     if (!day) continue
 
     if (item.isDayOff) {
-      schedule[day] = { dayOff: true, start: '', end: '' }
+      schedule[day] = createDaySchedule(true)
       continue
     }
 
     schedule[day] = {
       dayOff: false,
-      start: normalizeScheduleTime(item.startTime),
-      end: normalizeScheduleTime(item.endTime),
+      start: normalizeScheduleTime(item.startTime) || DEFAULT_SCHEDULE_START,
+      end: normalizeScheduleTime(item.endTime) || DEFAULT_SCHEDULE_END,
     }
   }
 
@@ -142,7 +158,7 @@ function schedulesToWeeklySchedule(schedules: MerchantVoiceStaffDto['schedules']
 
 function emptySchedule(): WeeklySchedule {
   return DAY_KEYS.reduce((acc, key) => {
-    acc[key] = { dayOff: false, start: '', end: '' }
+    acc[key] = createDaySchedule(false)
     return acc
   }, {} as WeeklySchedule)
 }
@@ -151,13 +167,13 @@ function parseSchedule(raw?: string): WeeklySchedule {
   const schedule = emptySchedule()
   if (!raw) {
     return DAY_KEYS.reduce((acc, key) => {
-      acc[key] = { dayOff: true, start: '', end: '' }
+      acc[key] = createDaySchedule(true)
       return acc
     }, {} as WeeklySchedule)
   }
 
   DAY_KEYS.forEach((key) => {
-    schedule[key] = { dayOff: true, start: '', end: '' }
+    schedule[key] = createDaySchedule(true)
   })
 
   raw.split(';').forEach((part) => {
@@ -166,8 +182,8 @@ function parseSchedule(raw?: string): WeeklySchedule {
     const [start, end] = times.split('-')
     schedule[dayPart as DayKey] = {
       dayOff: false,
-      start: start || '',
-      end: end || '',
+      start: start || DEFAULT_SCHEDULE_START,
+      end: end || DEFAULT_SCHEDULE_END,
     }
   })
 
@@ -533,10 +549,9 @@ export default function BookingTeamPanel() {
     setDraftSchedule((prev) => ({
       ...prev,
       [day]: {
-        ...prev[day],
         dayOff,
-        start: dayOff ? '' : prev[day].start,
-        end: dayOff ? '' : prev[day].end,
+        start: dayOff ? DEFAULT_SCHEDULE_START : (prev[day].start || DEFAULT_SCHEDULE_START),
+        end: dayOff ? DEFAULT_SCHEDULE_END : (prev[day].end || DEFAULT_SCHEDULE_END),
       },
     }))
     setShowScheduleValidation(false)
@@ -576,6 +591,10 @@ export default function BookingTeamPanel() {
     }
   }
 
+  const handleStaffSaveError = (error: unknown) => {
+    showToast(t(getErrorI18nKey(getApiErrorCode(error))), 'error')
+  }
+
   const saveModal = () => {
     const nextErrors: {
       name?: string
@@ -584,16 +603,14 @@ export default function BookingTeamPanel() {
       services?: string
     } = {}
     const trimmedName = draftName.trim()
-    const normalizedPhone = `${draftPhoneParsed.countryCode} ${formatNationalNumber(draftPhoneParsed.nationalNumber, draftPhoneParsed.countryCode)}`.trim()
     const trimmedEmail = draftEmail.trim()
+    const hasPhoneInput = Boolean(draftPhoneParsed.nationalNumber.replace(/\D/g, '').trim())
+    const phoneForApi = hasPhoneInput
+      ? normalizePhoneE164(draftPhone, draftPhoneParsed.countryCode)
+      : null
 
     if (!trimmedName) nextErrors.name = t(`${TK}.requiredField`)
-    if (!draftPhoneParsed.nationalNumber.trim()) {
-      nextErrors.phone = t(`${TK}.requiredField`)
-    }
-    if (!trimmedEmail) {
-      nextErrors.email = t(`${TK}.requiredField`)
-    } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(trimmedEmail)) {
+    if (trimmedEmail && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(trimmedEmail)) {
       nextErrors.email = t(`${TK}.invalidEmail`)
     }
     if (!draftServices.length) nextErrors.services = t(`${TK}.requiredField`)
@@ -621,8 +638,8 @@ export default function BookingTeamPanel() {
 
     const payload = {
       name: trimmedName,
-      phone: normalizedPhone,
-      email: trimmedEmail,
+      phone: phoneForApi,
+      email: trimmedEmail || null,
       services: draftServices,
       schedule: serializeSchedule(draftSchedule),
     }
@@ -649,7 +666,7 @@ export default function BookingTeamPanel() {
       createStaffMutation.mutate({
         fullName: payload.name,
         phoneNumber: payload.phone,
-        email: payload.email || null,
+        email: payload.email,
         skills: payload.services.join(', '),
         schedules,
       }, {
@@ -658,9 +675,7 @@ export default function BookingTeamPanel() {
           showToast(t(`${TK}.saveSuccess`), 'success')
           closeModal()
         },
-        onError: (error) => {
-          showToast(t(getErrorI18nKey(getApiErrorCode(error))), 'error')
-        },
+        onError: handleStaffSaveError,
       })
       return
     }
@@ -701,9 +716,7 @@ export default function BookingTeamPanel() {
         showToast(t(`${TK}.saveSuccess`), 'success')
         closeModal()
       },
-      onError: (error) => {
-        showToast(t(getErrorI18nKey(getApiErrorCode(error))), 'error')
-      },
+      onError: handleStaffSaveError,
     })
   }
 
@@ -1007,7 +1020,7 @@ export default function BookingTeamPanel() {
                         type="tel"
                         value={formatNationalNumber(draftPhoneParsed.nationalNumber, draftPhoneParsed.countryCode)}
                         aria-invalid={Boolean(formErrors.phone)}
-                        placeholder={t(`${TK}.placeholderPhoneMask`)}
+                        placeholder={getNationalPhonePlaceholder(draftPhoneParsed.countryCode)}
                         inputMode="numeric"
                         autoComplete="tel-national"
                         onChange={(event) => {
