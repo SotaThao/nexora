@@ -644,6 +644,9 @@
       "taxiq_cpa_access": "CPA Access",
       "taxiq_export": "Year-End Export",
       "analytics": "Analytics",
+      "pos": "POS",
+      "pos_settings": "General Settings",
+      "pos_business_hours": "Business Hours",
       "settings": "Settings",
       "business_setting": "Setting",
       "scan": "Scan",
@@ -2448,6 +2451,14 @@
           "manage_preview_customer": "Preview Customer View",
           "manage_remove_staff": "Remove Staff"
         },
+        "pos": {
+          "PosGeneralSettingsView": {
+            "description": "View and update your salon's business information from inside POS."
+          },
+          "PosBusinessHoursView": {
+            "description": "Set your salon's weekly opening hours — used as the default schedule for new staff."
+          }
+        },
         "BookingHubView": {
           "title": "Booking Hub",
           "description": "Manage bookings, appointments, and client schedules in one place.",
@@ -3008,6 +3019,24 @@
           "enterTheLegalOr": "Enter the legal or public name of your store/salon as it will appear on customer payment screens.",
           "businessName": "Business Name",
           "phone": "Phone",
+          "bookingNotificationPhone": "Booking Notification Phone",
+          "bookingNotificationPhoneHint": "Dedicated phone number for booking alerts (new, changed, or cancelled), separate from your main business phone.",
+          "businessLogo": "Business Logo",
+          "businessLogoHint": "Shown to customers on tip and booking pages. Click to upload a new image.",
+          "uploading": "Uploading...",
+          "businessHours": {
+            "title": "Business Hours",
+            "closed": "Closed",
+            "days": {
+              "sunday": "Sunday",
+              "monday": "Monday",
+              "tuesday": "Tuesday",
+              "wednesday": "Wednesday",
+              "thursday": "Thursday",
+              "friday": "Friday",
+              "saturday": "Saturday"
+            }
+          },
           "locationMap": "Location Map",
           "locationMapEmpty": "Add your address to display your business location on the map.",
           "reviewLinks": "Review Links",
@@ -3038,7 +3067,8 @@
             "url": "Enter a complete URL starting with http:// or https://.",
             "postalCode": "Please enter a valid ZIP or postal code.",
             "venmo": "Enter a valid Venmo username starting with @.",
-            "cashapp": "Enter a valid Cash App cashtag starting with $."
+            "cashapp": "Enter a valid Cash App cashtag starting with $.",
+            "invalidRange": "Close time must be after open time."
           }
         },
         "KybTab": {

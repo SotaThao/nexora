@@ -25,7 +25,8 @@ import {
   TipsRoute,
   TouchpointsRoute,
   TaxIqOverviewRoute, TaxIqDeductionsRoute, TaxIqReceiptsRoute, TaxIqEquipmentRoute,
-  TaxIqPayrollRoute, TaxIqRemindersRoute, TaxIqCpaAccessRoute, TaxIqExportRoute
+  TaxIqPayrollRoute, TaxIqRemindersRoute, TaxIqCpaAccessRoute, TaxIqExportRoute,
+  PosGeneralSettingsRoute, PosBusinessHoursRoute
 } from "../components/dashboard/routes";
 import ErrorBoundary from "../components/ui/ErrorBoundary";
 import { isDemoToolsEnabled } from "./demoTools";
@@ -258,6 +259,8 @@ export default function AppRouter() {
           <Route path="taxiq/cpa-access" element={<TaxIqCpaAccessRoute />} />
           <Route path="taxiq/export" element={<TaxIqExportRoute />} />
             <Route path="analytics" element={<AnalyticsRoute />} />
+            <Route path="pos" element={<PosGeneralSettingsRoute />} />
+            <Route path="pos/business-hours" element={<PosBusinessHoursRoute />} />
             <Route path="settings" element={<SettingsRoute />} />
             <Route path="settings/:tab" element={<SettingsRoute />} />
             <Route path="subscriptions" element={<SubscriptionsRoute />} />

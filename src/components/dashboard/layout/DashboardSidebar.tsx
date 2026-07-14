@@ -4,7 +4,7 @@ import React, { useState, useEffect } from 'react'
 import { useNavigate, useSearchParams, useLocation } from 'react-router-dom'
 import { ChevronUp, ChevronDown, LogOut } from 'lucide-react'
 import { useTranslation } from '../../../contexts/LanguageContext'
-import { visibleMenuItems, MERCHANT_SIDEBAR_MENU_ITEMS, isPaymentsPayoutsRouteActive, VISIBLE_TOUCHPOINTS_SUBMENU, TAXIQ_SUBMENU, TAXIQ_MENU_CHILD_MODULE } from '../constants'
+import { visibleMenuItems, MERCHANT_SIDEBAR_MENU_ITEMS, isPaymentsPayoutsRouteActive, VISIBLE_TOUCHPOINTS_SUBMENU, TAXIQ_SUBMENU, TAXIQ_MENU_CHILD_MODULE, POS_SUBMENU } from '../constants'
 import MenuIcon from '../../ui/MenuIcon'
 import HomepageLink from '../../ui/HomepageLink'
 import SidebarPlanCard from '../../ui/SidebarPlanCard'
@@ -50,10 +50,14 @@ export default function DashboardSidebar({
   const activeSubTab = searchParams.get('tab')
   // Tax IQ sub-items are real routes (/dashboard/taxiq/<id>), not a ?tab= param.
   const activeTaxIqSubTab = location.pathname.split('/')[3] || null
+  // POS sub-items are real routes too (/dashboard/pos/<id>); the bare /dashboard/pos
+  // route is "General Settings" (no extra segment), mirroring Tax IQ's "onboarding".
+  const activePosSubTab = location.pathname.split('/')[3] || null
   const isPaymentsPayoutsActive = isPaymentsPayoutsRouteActive(activeMenu, activeSubTab)
   const [isPaymentsPayoutsExpanded, setIsPaymentsPayoutsExpanded] = useState(isPaymentsPayoutsActive)
   const [isTouchpointsExpanded, setIsTouchpointsExpanded] = useState(activeMenu === 'touchpoints')
   const [isTaxIqExpanded, setIsTaxIqExpanded] = useState(activeMenu === 'taxiq')
+  const [isPosExpanded, setIsPosExpanded] = useState(activeMenu === 'pos')
   // Module-gated Tax IQ sub-items: shares the TanStack Query cache with the
   // /dashboard/taxiq route itself, so this fires no extra network request.
   const { data: merchantSetupData } = useMerchantSetup({ enabled: userRole !== 'staff' })
@@ -67,6 +71,7 @@ export default function DashboardSidebar({
     }
     setIsTouchpointsExpanded(activeMenu === 'touchpoints')
     setIsTaxIqExpanded(activeMenu === 'taxiq')
+    setIsPosExpanded(activeMenu === 'pos')
   }, [activeMenu, isPaymentsPayoutsActive])
 
   const handlePaymentsPayoutsToggle = () => {
@@ -90,6 +95,7 @@ export default function DashboardSidebar({
         setIsTouchpointsExpanded(true)
         setIsPaymentsPayoutsExpanded(false)
         setIsTaxIqExpanded(false)
+        setIsPosExpanded(false)
       }
       return
     }
@@ -102,6 +108,20 @@ export default function DashboardSidebar({
         setIsTaxIqExpanded(true)
         setIsPaymentsPayoutsExpanded(false)
         setIsTouchpointsExpanded(false)
+        setIsPosExpanded(false)
+      }
+      return
+    }
+
+    if (id === 'pos') {
+      if (activeMenu === 'pos') {
+        setIsPosExpanded((prev) => !prev)
+      } else {
+        setActiveMenu('pos')
+        setIsPosExpanded(true)
+        setIsPaymentsPayoutsExpanded(false)
+        setIsTouchpointsExpanded(false)
+        setIsTaxIqExpanded(false)
       }
       return
     }
@@ -110,6 +130,7 @@ export default function DashboardSidebar({
     setIsPaymentsPayoutsExpanded(false)
     setIsTouchpointsExpanded(false)
     setIsTaxIqExpanded(false)
+    setIsPosExpanded(false)
   }
 
   const subscriptionCopy = getSubscriptionSidebarCopy(
@@ -202,6 +223,7 @@ export default function DashboardSidebar({
             devices: t('dashboard.menu.qr_nfc'),
             taxiq: t('dashboard.menu.tax_iq'),
             analytics: t('dashboard.menu.analytics'),
+            pos: t('dashboard.menu.pos'),
             support: t('dashboard.menu.support')
           }[id] || label
 
@@ -216,9 +238,9 @@ export default function DashboardSidebar({
                   <MenuIcon item={item} active={isActive} />
                   <span className="truncate">{localizedLabel}</span>
                 </div>
-                {(id === 'touchpoints' || id === 'taxiq') && (
+                {(id === 'touchpoints' || id === 'taxiq' || id === 'pos') && (
                   <div className="text-white/50 shrink-0">
-                    {(id === 'touchpoints' ? isTouchpointsExpanded : isTaxIqExpanded)
+                    {(id === 'touchpoints' ? isTouchpointsExpanded : id === 'taxiq' ? isTaxIqExpanded : isPosExpanded)
                       ? <ChevronUp className="h-4 w-4" />
                       : <ChevronDown className="h-4 w-4" />}
                   </div>
@@ -280,6 +302,30 @@ export default function DashboardSidebar({
                       >
                         <div className={`h-1.5 w-1.5 rounded-full ${isSubActive ? 'bg-brandCyan shadow-sm' : 'bg-white/30'}`} />
                         <span>{t(`dashboard.menu.taxiq_${sub.id.replace('-', '_')}`)}</span>
+                      </button>
+                    )
+                  })}
+                </div>
+              )}
+
+              {id === 'pos' && isPosExpanded && (
+                <div className={SIDEBAR_SUBMENU_WRAP_CLASS}>
+                  {POS_SUBMENU.map((sub) => {
+                    // 'settings' (General Settings) lives at /dashboard/pos itself (no
+                    // extra segment), so it's active whenever there's no deeper sub-route.
+                    const isSubActive = activeMenu === 'pos' &&
+                      (sub.id === 'settings' ? !activePosSubTab : activePosSubTab === sub.id)
+                    return (
+                      <button
+                        key={sub.id}
+                        type="button"
+                        onClick={() => {
+                          navigate(sub.id === 'settings' ? '/dashboard/pos' : `/dashboard/pos/${sub.id}`)
+                        }}
+                        className={sidebarSubmenuItemClass(isSubActive)}
+                      >
+                        <div className={`h-1.5 w-1.5 rounded-full ${isSubActive ? 'bg-brandCyan shadow-sm' : 'bg-white/30'}`} />
+                        <span>{t(`dashboard.menu.pos_${sub.id.replace('-', '_')}`)}</span>
                       </button>
                     )
                   })}

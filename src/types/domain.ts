@@ -14,8 +14,19 @@ export interface MerchantBusinessInfo {
   phone?: string
   website?: string
   logo?: string | null
+  bookingNotificationPhone?: string
   createdAt?: string | null
   [key: string]: unknown
+}
+
+// POS Owner Setup — Business Hours (US-014). dayOfWeek/openTime/closeTime mirror
+// the API shape 1:1 (string enum "Sunday".."Saturday", "HH:mm:ss" time strings) —
+// no normalization needed at the repository boundary for this simple shape.
+export interface BusinessHourEntry {
+  dayOfWeek: string
+  isOpen: boolean
+  openTime?: string | null
+  closeTime?: string | null
 }
 
 export interface StaffMember {

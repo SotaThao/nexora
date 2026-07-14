@@ -643,6 +643,9 @@
       "taxiq_cpa_access": "Truy Cập CPA",
       "taxiq_export": "Xuất Hồ Sơ Cuối Năm",
       "analytics": "Phân Tích",
+      "pos": "POS",
+      "pos_settings": "Cài Đặt Chung",
+      "pos_business_hours": "Giờ Mở Cửa",
       "settings": "Cài Đặt",
       "business_setting": "Cài đặt",
       "scan": "Quét QR",
@@ -2447,6 +2450,14 @@
           "manage_preview_customer": "Xem trước góc nhìn khách hàng",
           "manage_remove_staff": "Xóa nhân viên"
         },
+        "pos": {
+          "PosGeneralSettingsView": {
+            "description": "Xem và cập nhật thông tin doanh nghiệp của salon ngay trong POS."
+          },
+          "PosBusinessHoursView": {
+            "description": "Thiết lập giờ mở cửa hàng tuần của salon — dùng làm mặc định khi tạo lịch làm việc cho thợ mới."
+          }
+        },
         "BookingHubView": {
           "title": "Trung tâm đặt lịch",
           "description": "Quản lý lịch hẹn, đặt chỗ và lịch khách hàng ngay tại đây.",
@@ -3001,6 +3012,24 @@
           "enterTheLegalOr": "Nhập tên hợp pháp hoặc tên công khai của cửa hàng/salon của bạn sẽ hiển thị trên màn hình thanh toán của khách hàng.",
           "businessName": "Tên doanh nghiệp",
           "phone": "Số điện thoại",
+          "bookingNotificationPhone": "SĐT nhận thông báo đặt lịch",
+          "bookingNotificationPhoneHint": "Số điện thoại riêng để nhận thông báo đặt lịch (mới, thay đổi, hoặc hủy), tách biệt với số điện thoại chính của doanh nghiệp.",
+          "businessLogo": "Logo doanh nghiệp",
+          "businessLogoHint": "Hiển thị cho khách hàng trên trang tip và đặt lịch. Nhấn để tải ảnh mới.",
+          "uploading": "Đang tải lên...",
+          "businessHours": {
+            "title": "Giờ mở cửa",
+            "closed": "Đóng cửa",
+            "days": {
+              "sunday": "Chủ Nhật",
+              "monday": "Thứ Hai",
+              "tuesday": "Thứ Ba",
+              "wednesday": "Thứ Tư",
+              "thursday": "Thứ Năm",
+              "friday": "Thứ Sáu",
+              "saturday": "Thứ Bảy"
+            }
+          },
           "locationMap": "Bản đồ vị trí",
           "locationMapEmpty": "Thêm địa chỉ để hiển thị vị trí cửa hàng trên bản đồ.",
           "reviewLinks": "Liên kết đánh giá",
@@ -3031,7 +3060,8 @@
             "url": "Nhập URL đầy đủ, bắt đầu bằng http:// hoặc https://.",
             "postalCode": "Vui lòng nhập mã bưu chính hợp lệ.",
             "venmo": "Nhập tên Venmo hợp lệ, bắt đầu bằng @.",
-            "cashapp": "Nhập Cashtag hợp lệ, bắt đầu bằng $."
+            "cashapp": "Nhập Cashtag hợp lệ, bắt đầu bằng $.",
+            "invalidRange": "Giờ đóng cửa phải sau giờ mở cửa."
           }
         },
         "KybTab": {

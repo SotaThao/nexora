@@ -402,6 +402,9 @@ export default function SettingsView({
             setAddressForm={form.setAddressForm}
             addressErrors={form.addressErrors}
             setAddressErrors={form.setAddressErrors}
+            logoUrl={form.logoUrl}
+            handleLogoChange={form.handleLogoChange}
+            isUploadingLogo={form.isUploadingLogo}
             isEditingBusiness={form.isEditingBusiness}
             setIsEditingBusiness={form.setIsEditingBusiness}
             businessForm={form.businessForm}
@@ -457,6 +460,9 @@ export default function SettingsView({
               setAddressForm={form.setAddressForm}
               addressErrors={form.addressErrors}
               setAddressErrors={form.setAddressErrors}
+              logoUrl={form.logoUrl}
+              handleLogoChange={form.handleLogoChange}
+              isUploadingLogo={form.isUploadingLogo}
               isEditingBusiness={form.isEditingBusiness}
               setIsEditingBusiness={form.setIsEditingBusiness}
               businessForm={form.businessForm}

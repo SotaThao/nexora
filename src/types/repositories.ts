@@ -32,6 +32,7 @@ export interface BusinessApiDto {
   phone?: string
   website?: string
   logoUrl?: string | null
+  bookingNotificationPhone?: string
   googleReviewUrl?: string
   yelpUrl?: string
   facebookUrl?: string
@@ -39,6 +40,14 @@ export interface BusinessApiDto {
   isPublic?: boolean
   onboardingStep?: number
   createdAt?: string | null
+}
+
+// POS Owner Setup — Business Hours (US-014)
+export interface PosBusinessOperatingHourApiDto {
+  dayOfWeek: string
+  isOpen: boolean
+  openTime?: string | null
+  closeTime?: string | null
 }
 
 export interface TipsSummaryApiDto {

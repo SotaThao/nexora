@@ -15,6 +15,7 @@ import {
   HelpCircle,
   Wallet,
   Calendar,
+  Store,
 } from 'lucide-react'
 
 export const WalletLogos = {
@@ -88,6 +89,15 @@ export const MENU_ITEMS = [
   },
   { id: 'booking-hub', label: 'Booking Hub', icon: Calendar },
   { id: 'analytics', label: 'Analytics', icon: BarChart3 },
+  {
+    id: 'pos',
+    label: 'POS',
+    icon: Store,
+    children: [
+      { id: 'settings', label: 'General Settings' },
+      { id: 'business-hours', label: 'Business Hours' }
+    ]
+  },
   { id: 'settings', label: 'Settings', icon: Settings },
   { id: 'support', label: 'Support', icon: HelpCircle }
 ]
@@ -109,6 +119,13 @@ export const VISIBLE_TOUCHPOINTS_SUBMENU = SHOW_HARDWARE_DEVICES
 export const TAXIQ_SUBMENU: { id: string; label: string }[] =
   MENU_ITEMS.find((item): item is typeof item & { children: { id: string; label: string }[] } =>
     item.id === 'taxiq' && 'children' in item,
+  )?.children ?? []
+
+// POS Owner Setup — sidebar group (US-014 relocated Business Hours here; more
+// sub-items are added as later POS Owner Setup tickets ship their own screens).
+export const POS_SUBMENU: { id: string; label: string }[] =
+  MENU_ITEMS.find((item): item is typeof item & { children: { id: string; label: string }[] } =>
+    item.id === 'pos' && 'children' in item,
   )?.children ?? []
 
 export const MERCHANT_SIDEBAR_MENU_ITEMS = MENU_ITEMS.filter(

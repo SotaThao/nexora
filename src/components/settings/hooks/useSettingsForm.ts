@@ -4,11 +4,8 @@ import { useNotification } from "../../../contexts/NotificationContext";
 import { useQueryClient } from "@tanstack/react-query";
 import { useTranslation } from "../../../contexts/LanguageContext";
 import { resolveEffectiveKybStatus } from "../../../utils/kybStatus";
-import {
-  useUpdateBusiness,
-  useUpdateBusinessInfo,
-  useUpdateReviewLinks,
-} from "../../../data/hooks/useMerchantSetup";
+import { useUpdateBusiness, useUpdateReviewLinks } from "../../../data/hooks/useMerchantSetup";
+import useBusinessInfoForm from "./useBusinessInfoForm";
 import {
   useProfileSettings,
   useUpdateAddress,
@@ -21,11 +18,7 @@ import { qk } from "../../../data/queryKeys";
 import { logger } from "../../../utils/logger";
 import { buildPublicQrImageUrl } from "../../../data/repositories/publicQr";
 import { getUserProfileImageUrl } from "../../../utils/userProfileImage";
-import {
-  isValidEmail,
-  isValidHttpUrl,
-  isValidPhone,
-} from "../../../utils/validation";
+import { isValidHttpUrl, isValidPhone } from "../../../utils/validation";
 
 type SettingsFormErrors = Record<string, string>;
 
@@ -79,20 +72,6 @@ const validateAddressForm = (form: LooseObject): SettingsFormErrors => {
   return errors;
 };
 
-const validateBusinessForm = (form: LooseObject): SettingsFormErrors => {
-  const errors: SettingsFormErrors = {};
-  if (!formValue(form.businessName)) errors.businessName = "required";
-  else if (formValue(form.businessName).length < 2) errors.businessName = "invalid";
-  if (!formValue(form.businessPhone)) errors.businessPhone = "required";
-  else if (!isValidPhone(form.businessPhone)) errors.businessPhone = "phone";
-  if (!formValue(form.businessEmail)) errors.businessEmail = "required";
-  else if (!isValidEmail(form.businessEmail)) errors.businessEmail = "email";
-  if (formValue(form.businessWebsite) && !isValidHttpUrl(form.businessWebsite)) {
-    errors.businessWebsite = "url";
-  }
-  return errors;
-};
-
 const validateReviewsForm = (form: LooseObject): SettingsFormErrors => {
   const errors: SettingsFormErrors = {};
   if (formValue(form.googleReview) && !isValidHttpUrl(form.googleReview)) errors.googleReview = "url";
@@ -121,6 +100,7 @@ const DEFAULT_PROFILE = {
   businessPhone: "",
   businessEmail: "",
   businessWebsite: "",
+  bookingNotificationPhone: "",
   paymentAccounts: {
     zelle: "",
     bankwire: "",
@@ -179,9 +159,9 @@ export default function useSettingsForm({
   const updateAddressMutation = useUpdateAddress();
   const updateAvatarMutation = useUpdateAvatar();
   const updateBusinessMutation = useUpdateBusiness();
-  const updateBusinessInfoMutation = useUpdateBusinessInfo();
   const updateReviewLinksMutation = useUpdateReviewLinks();
   const { data: verifiedStatusData } = useVerifiedStatus();
+  const businessInfoForm = useBusinessInfoForm({ setupData, verificationStatus });
 
   const [activeTab, setActiveTab] = useState(() => normalizeSettingsTab(initialTab))
 
@@ -278,10 +258,6 @@ export default function useSettingsForm({
   const [addressForm, setAddressForm] = useState<LooseObject>({});
   const [addressErrors, setAddressErrors] = useState<SettingsFormErrors>({});
 
-  const [isEditingBusiness, setIsEditingBusiness] = useState(false);
-  const [businessForm, setBusinessForm] = useState<LooseObject>({});
-  const [businessErrors, setBusinessErrors] = useState<SettingsFormErrors>({});
-
   const [isEditingReviews, setIsEditingReviews] = useState(false);
   const [reviewsForm, setReviewsForm] = useState({
     googleReview: "",
@@ -299,7 +275,7 @@ export default function useSettingsForm({
     if (canEditProfile) return;
     setIsEditingBasic(false);
     setIsEditingAddress(false);
-    setIsEditingBusiness(false);
+    businessInfoForm.setIsEditingBusiness(false);
   }, [canEditProfile]);
 
   // Load profile settings + business profile into the form.
@@ -339,6 +315,7 @@ export default function useSettingsForm({
           businessName: setupData.businessInfo?.name || "",
           businessPhone: setupData.businessInfo?.phone || "",
           businessWebsite: setupData.businessInfo?.website || "",
+          bookingNotificationPhone: setupData.businessInfo?.bookingNotificationPhone || "",
           businessEmail:
             setupData.reviewLinks?.feedbackEmail || next.businessEmail || "",
           street: next.street || setupData.businessInfo?.address || "",
@@ -476,50 +453,15 @@ export default function useSettingsForm({
     });
   };
 
-  const startEditBusiness = () => {
-    if (!canEditProfile) return;
-    setBusinessErrors({});
-    setBusinessForm({
-      businessName: profile.businessName,
-      businessPhone: profile.businessPhone,
-      businessEmail: profile.businessEmail,
-      businessWebsite: profile.businessWebsite,
-    });
-    setIsEditingBusiness(true);
-  };
-
+  // Business Information card's edit state/save mutation is owned by
+  // useBusinessInfoForm (shared with POS > General Settings) — wrap saveBusiness
+  // only to keep the Owner-Profile-header's `profile.businessName` mirror
+  // (used outside the Business Information card, e.g. the sidebar/profile card)
+  // in sync immediately, matching the previous optimistic-update behavior.
   const saveBusiness = (e) => {
-    e.preventDefault();
-    if (!canEditProfile) return;
-    const errors = validateBusinessForm(businessForm);
-    setBusinessErrors(errors);
-    if (Object.keys(errors).length > 0) return;
-
-    const businessName = String(businessForm.businessName || "").trim();
-    const businessPhone = String(businessForm.businessPhone || "").trim();
-    const businessEmail = String(businessForm.businessEmail || "").trim();
-    const businessWebsite = String(businessForm.businessWebsite || "").trim();
-    updateBusinessInfoMutation.mutate(
-      {
-        name: businessName,
-        phone: businessPhone || undefined,
-        feedbackEmail: businessEmail || undefined,
-        website: businessWebsite || undefined,
-      },
-      {
-        onSuccess: () => {
-          saveProfile({
-            ...profile,
-            businessName,
-            businessPhone,
-            businessEmail,
-            businessWebsite,
-          });
-          showToast(t("components.settings.hooks.useSettingsForm.settingsUpdatedSuccessfully"));
-          setIsEditingBusiness(false);
-        },
-      },
-    );
+    businessInfoForm.saveBusiness(e, (next) => {
+      saveProfile({ ...profile, ...next });
+    });
   };
 
   const startEditReviews = () => {
@@ -836,12 +778,15 @@ export default function useSettingsForm({
     setAddressForm,
     addressErrors,
     setAddressErrors,
-    isEditingBusiness,
-    setIsEditingBusiness,
-    businessForm,
-    setBusinessForm,
-    businessErrors,
-    setBusinessErrors,
+    logoUrl: businessInfoForm.logoUrl,
+    handleLogoChange: businessInfoForm.handleLogoChange,
+    isUploadingLogo: businessInfoForm.isUploadingLogo,
+    isEditingBusiness: businessInfoForm.isEditingBusiness,
+    setIsEditingBusiness: businessInfoForm.setIsEditingBusiness,
+    businessForm: businessInfoForm.businessForm,
+    setBusinessForm: businessInfoForm.setBusinessForm,
+    businessErrors: businessInfoForm.businessErrors,
+    setBusinessErrors: businessInfoForm.setBusinessErrors,
     isEditingReviews,
     setIsEditingReviews,
     reviewsForm,
@@ -865,7 +810,7 @@ export default function useSettingsForm({
     saveBasic,
     startEditAddress,
     saveAddress,
-    startEditBusiness,
+    startEditBusiness: businessInfoForm.startEditBusiness,
     saveBusiness,
     startEditReviews,
     saveReviews,

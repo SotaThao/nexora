@@ -70,6 +70,8 @@ export const qk = {
   staffInvite:         (token)   => ['staffInvite', token],
   publicMerchantInvite: (ref)    => ['publicMerchantInvite', ref],
   merchantInviteLink:  ()      => ['merchantSettings', 'inviteLink'],
+  // POS Owner Setup — Business Hours (US-014)
+  merchantBusinessHours: ()    => ['merchantSettings', 'businessHours'],
 
   // Merchant Touchpoints
   merchantTouchpoints: ()      => ['merchantTouchpoints'],
