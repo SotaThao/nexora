@@ -2446,6 +2446,7 @@
             "badgeNew": "New",
             "badgeSmsActive": "SMS activated",
             "badgeNoShow": "No-show",
+            "todayLabel": "Today",
             "kpiTodayTrend": "Total appointments today",
             "kpiDoneTrend": "Review SMS ready",
             "kpiNoReview": "No review sent",

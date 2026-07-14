@@ -146,6 +146,7 @@ function formatTimeBlock(
   startAt: string | null,
   endAt: string | null,
   fallback: string | null,
+  todayLabel: string,
 ) {
   if (!startAt) {
     return {
@@ -168,6 +169,7 @@ function formatTimeBlock(
   const timeZone = Intl.DateTimeFormat().resolvedOptions().timeZone
   const dateIso = toLocalDateIso(start)
   const todayIso = toLocalDateIso(new Date())
+  // Keep en-US + 12h intentionally — matches booking hub hours elsewhere.
   const timeFormatter = new Intl.DateTimeFormat('en-US', {
     hour: 'numeric',
     minute: '2-digit',
@@ -189,15 +191,15 @@ function formatTimeBlock(
   const endDateIso = hasValidEnd ? toLocalDateIso(end) : null
   const sameLocalDay = !endDateIso || endDateIso === dateIso
 
-  const timeRange = endTime && sameLocalDay
-    ? `${startTime} – ${endTime}`
-    : endTime
-      ? `${startTime} – ${dateFormatter.format(end)} ${endTime}`
-      : startTime
+  // Keep times-only in timeMain so mobile nowrap rows don't blow up on overnight bookings.
+  const timeRange = endTime ? `${startTime} – ${endTime}` : startTime
+  const timeDate = sameLocalDay || !hasValidEnd
+    ? dateText
+    : `${dateText} – ${dateFormatter.format(end)}`
 
   return {
-    timeMain: dateIso === todayIso ? `Today · ${timeRange}` : timeRange,
-    timeDate: dateText,
+    timeMain: dateIso === todayIso ? `${todayLabel} · ${timeRange}` : timeRange,
+    timeDate,
     dateIso,
   }
 }
@@ -209,9 +211,18 @@ function resolveBookingStatus(item: MerchantVoiceBookingDto, statusOverride?: Bo
   return mapped
 }
 
-function toBookingItem(item: MerchantVoiceBookingDto, statusOverride?: BookingStatus): BookingItem {
+function toBookingItem(
+  item: MerchantVoiceBookingDto,
+  statusOverride: BookingStatus | undefined,
+  todayLabel: string,
+): BookingItem {
   const source = mapSource(item.source)
-  const time = formatTimeBlock(item.requestedStartAtUtc, item.requestedEndAtUtc, item.preferredTime)
+  const time = formatTimeBlock(
+    item.requestedStartAtUtc,
+    item.requestedEndAtUtc,
+    item.preferredTime,
+    todayLabel,
+  )
   const status = resolveBookingStatus(item, statusOverride)
   return {
     id: item.id,
@@ -487,8 +498,10 @@ export default function BookingTodayPanel() {
   const isListLoading = isBookingsLoading || isBookingsFetching
 
   const filteredBookings = useMemo(() => (
-    (bookingResponse?.items ?? []).map((item) => toBookingItem(item, statusOverrides[item.id]))
-  ), [bookingResponse?.items, statusOverrides])
+    (bookingResponse?.items ?? []).map((item) =>
+      toBookingItem(item, statusOverrides[item.id], t(`${TK}.today.todayLabel`)),
+    )
+  ), [bookingResponse?.items, statusOverrides, t])
 
   const stats = useMemo(() => ({
     todayCount: statistics?.allBookings ?? 0,
