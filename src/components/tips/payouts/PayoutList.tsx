@@ -6,6 +6,7 @@ import {
   getPayoutTypeI18nKeys,
   staffInitials,
 } from '../../../utils/payoutDisplay'
+import Tooltip from '../../ui/Tooltip'
 import PayoutMethodBadge from './PayoutMethodBadge'
 import PayoutStatusBadge from './PayoutStatusBadge'
 
@@ -121,7 +122,18 @@ export default function PayoutList({
         <table className="w-full text-left text-sm">
           <thead className="bg-slate-50 text-[10px] font-black uppercase tracking-wider text-mutedGrey">
             <tr>
-              <th className="px-4 py-3">{t('dashboard.tips.payouts_manager.col_code')}</th>
+              <th className="px-4 py-3">
+                <span className="inline-flex items-center gap-1">
+                  {t('dashboard.tips.payouts_manager.col_code')}
+                  <Tooltip
+                    content={t('dashboard.tips.payouts_manager.col_code_tooltip')}
+                    ariaLabel={t('dashboard.tips.payouts_manager.col_code_tooltip')}
+                    align="start"
+                    placement="bottom"
+                    className="normal-case tracking-normal"
+                  />
+                </span>
+              </th>
               <th className="px-4 py-3">{t('dashboard.tips.payouts_manager.col_date')}</th>
               <th className="px-4 py-3">{t('dashboard.tips.payouts_manager.col_staff')}</th>
               <th className="px-4 py-3">{t('dashboard.tips.payouts_manager.col_amount')}</th>

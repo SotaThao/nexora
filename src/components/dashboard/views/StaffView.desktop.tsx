@@ -7,7 +7,7 @@ import { buildPublicInviteLink } from '../../../utils/inviteRef'
 import { getWebUrlOrigin } from '../../../utils/webUrlBase'
 import { buildPublicQrImageUrl } from '../../../data/repositories/publicQr'
 import { QR_IMAGE_SIZES } from '../../../utils/qrUtils'
-import { PAYOUT_UI_DISPLAY_ORDER, PAYOUT_UI_LABELS } from '../../../data/paymentMethodTypes'
+import { orderedPayoutUiKeysFromMethods, PAYOUT_UI_LABELS } from '../../../data/paymentMethodTypes'
 import { formatJoinedDate } from '../../../utils/localDate'
 import IconButton from '../../ui/IconButton'
 import CustomSelect from '../../CustomSelect'
@@ -146,17 +146,16 @@ function StaffView({
     }
   }
 
-  // Helper to extract wallet labels
+  // Helper to extract wallet labels — preserve staff API paymentMethods order.
   const getWalletBadges = (member) => {
     const accounts = member?.paymentAccounts || {}
-    return Object.entries(accounts)
-      .filter(([, value]) => Boolean(value))
-      .map(([key]) => key.toLowerCase())
-      .sort((a, b) => {
-        const ai = PAYOUT_UI_DISPLAY_ORDER.indexOf(a)
-        const bi = PAYOUT_UI_DISPLAY_ORDER.indexOf(b)
-        return (ai === -1 ? 99 : ai) - (bi === -1 ? 99 : bi)
-      })
+    const methods = Array.isArray(member?.paymentMethods) ? member.paymentMethods : null
+    const orderedKeys = methods?.length
+      ? orderedPayoutUiKeysFromMethods(methods)
+      : Object.keys(accounts)
+
+    return orderedKeys
+      .filter((key) => Boolean(accounts[key]))
       .map((key) => PAYMENT_ACCOUNT_LABELS[key] || key)
   }
 

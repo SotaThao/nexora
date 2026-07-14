@@ -1,23 +1,24 @@
 import { useEffect, useMemo, useState } from 'react'
-import { HelpCircle, Loader2, Plus, Upload } from 'lucide-react'
+import { HelpCircle, Loader2, Pencil, Plus, Upload } from 'lucide-react'
 import CountryCodeSelect, {
   formatNationalNumber,
-  getDefaultDialCode,
   isValidPhoneE164,
   normalizePhoneE164,
   parsePhone,
+  PhoneDialCode,
 } from '../../CountryCodeSelect'
 import { useTranslation, renderLabel } from '../../../contexts/LanguageContext'
 import { WalletLogos } from '../constants'
-import { PAYOUT_UI_DISPLAY_ORDER, PAYOUT_UI_LABELS } from '../../../data/paymentMethodTypes'
+import {
+  orderedPayoutUiKeysFromMethods,
+  PAYOUT_UI_LABELS,
+  STAFF_CONFIGURABLE_PAYOUT_UI_KEYS,
+} from '../../../data/paymentMethodTypes'
+import { useMerchantPaymentMethods } from '../../../data/hooks/useMerchantPaymentMethods'
 import { getErrorI18nKey } from '../../../data/errorCodes'
 import { getStaffDisplayNameErrorCode } from '../../../utils/staffDisplayName'
 import { isValidEmail } from '../../../utils/validation'
 import PayoutSetupModal from './PayoutSetupModal'
-
-const MANUAL_STAFF_PAYOUT_KEYS = PAYOUT_UI_DISPLAY_ORDER.filter((key) =>
-  ['zelle', 'paypal', 'venmo', 'cashapp', 'applecash', 'vlinkpay'].includes(key),
-)
 
 type PayoutConfig = {
   enabled: boolean
@@ -48,9 +49,9 @@ type AddManualStaffTabProps = {
   isSaving?: boolean
 }
 
-function createEmptyPayoutConfigs(): PayoutConfigMap {
+function createEmptyPayoutConfigs(keys: readonly string[]): PayoutConfigMap {
   return Object.fromEntries(
-    MANUAL_STAFF_PAYOUT_KEYS.map((key) => [
+    keys.map((key) => [
       key,
       { enabled: false, value: '', qrCode: '', accountName: '' },
     ]),
@@ -66,7 +67,13 @@ function AddManualStaffTab({
   isSaving = false,
 }: AddManualStaffTabProps) {
   const { t } = useTranslation()
-  const defaultDialCode = useMemo(() => getDefaultDialCode(undefined), [])
+  const defaultDialCode = PhoneDialCode.US
+  const { data: merchantPaymentMethods = [] } = useMerchantPaymentMethods({ enabled: open })
+
+  const manualStaffPayoutKeys = useMemo(
+    () => orderedPayoutUiKeysFromMethods(merchantPaymentMethods, STAFF_CONFIGURABLE_PAYOUT_UI_KEYS),
+    [merchantPaymentMethods],
+  )
 
   const [fullName, setFullName] = useState('')
   const [displayNickname, setDisplayNickname] = useState('')
@@ -76,7 +83,9 @@ function AddManualStaffTab({
   const [dialCode, setDialCode] = useState(defaultDialCode)
   const [avatarPreview, setAvatarPreview] = useState<string | null>(null)
   const [avatarFile, setAvatarFile] = useState<File | null>(null)
-  const [payoutConfigs, setPayoutConfigs] = useState<PayoutConfigMap>(createEmptyPayoutConfigs)
+  const [payoutConfigs, setPayoutConfigs] = useState<PayoutConfigMap>(() =>
+    createEmptyPayoutConfigs(STAFF_CONFIGURABLE_PAYOUT_UI_KEYS),
+  )
   const [errors, setErrors] = useState<Record<string, string>>({})
   const [editingWalletKey, setEditingWalletKey] = useState<string | null>(null)
 
@@ -94,10 +103,27 @@ function AddManualStaffTab({
     setDialCode(defaultDialCode)
     setAvatarPreview(null)
     setAvatarFile(null)
-    setPayoutConfigs(createEmptyPayoutConfigs())
+    setPayoutConfigs(createEmptyPayoutConfigs(manualStaffPayoutKeys))
     setErrors({})
     setEditingWalletKey(null)
+    // Only reset when the modal opens — not when payment-method order arrives from API.
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- intentional: avoid wiping form when keys update
   }, [open, defaultDialCode])
+
+  useEffect(() => {
+    if (!open) return
+    setPayoutConfigs((prev) => {
+      const next = { ...prev }
+      let changed = false
+      for (const key of manualStaffPayoutKeys) {
+        if (!next[key]) {
+          next[key] = { enabled: false, value: '', qrCode: '', accountName: '' }
+          changed = true
+        }
+      }
+      return changed ? next : prev
+    })
+  }, [open, manualStaffPayoutKeys])
 
   useEffect(() => {
     return () => {
@@ -107,13 +133,13 @@ function AddManualStaffTab({
     }
   }, [avatarPreview])
 
-  const fieldLabelClass = 'block text-[10px] font-extrabold uppercase text-nexoraMuted leading-snug mb-1'
-  const fieldErrorClass = 'mt-1 text-xs font-semibold leading-snug text-nexoraDanger'
+  const fieldLabelClass = 'text-[10px] font-extrabold uppercase text-nexoraMuted'
+  const fieldErrorClass = 'mt-1 text-[10px] font-bold text-nexoraDanger'
   const inputClass = (hasError: boolean, extra = '') =>
-    `${extra} h-10 w-full border bg-white text-sm font-semibold text-nexoraText outline-none transition ${
+    `mt-1 h-10 w-full rounded-lg border px-3 text-sm font-semibold text-nexoraText outline-none transition ${extra} ${
       hasError
         ? 'border-nexoraDanger focus:border-nexoraDanger focus:ring-2 focus:ring-nexoraDanger/20'
-        : 'border-nexoraBorder focus:border-nexoraBrand focus:ring-2 focus:ring-nexoraBrand/20'
+        : 'border-nexoraBorder bg-white focus:border-nexoraBrand focus:ring-2 focus:ring-nexoraBrand/20'
     }`
 
   const clearError = (field: string) => {
@@ -214,42 +240,45 @@ function AddManualStaffTab({
   return (
     <>
       <form className="mt-5" onSubmit={handleSave}>
-        <div className="grid grid-cols-1 gap-8 lg:grid-cols-2">
+        <div className="grid grid-cols-1 items-start gap-6 md:grid-cols-[minmax(0,1.2fr)_minmax(0,0.8fr)]">
           <div className="space-y-4">
-            <div className="flex items-center gap-4">
-              {avatarPreview ? (
-                <img
-                  src={avatarPreview}
-                  alt=""
-                  className="h-16 w-16 shrink-0 rounded-full border border-nexoraBorder object-cover"
-                />
-              ) : (
-                <div className="flex h-16 w-16 shrink-0 items-center justify-center rounded-full border border-nexoraBorder bg-nexoraCanvas text-lg font-extrabold text-nexoraMuted">
-                  {avatarInitial}
-                </div>
-              )}
-              <label className="inline-flex cursor-pointer items-center gap-2 rounded-lg border border-nexoraBorder bg-white px-3 py-2 text-xs font-bold text-nexoraText transition hover:bg-nexoraCanvas">
-                <Upload className="h-3.5 w-3.5" />
-                <span>{t('common.upload_photo')}</span>
-                <input
-                  type="file"
-                  accept="image/*"
-                  className="hidden"
-                  onChange={(event) => {
-                    const file = event.target.files?.[0]
-                    if (file) handleAvatarPick(file)
-                    event.target.value = ''
-                  }}
-                />
-              </label>
+            <div>
+              <label className={fieldLabelClass}>Avatar</label>
+              <div className="mt-2 flex items-center gap-4">
+                {avatarPreview ? (
+                  <img
+                    src={avatarPreview}
+                    alt=""
+                    className="h-16 w-16 rounded-full object-cover ring-1 ring-nexoraBorder"
+                  />
+                ) : (
+                  <div className="flex h-16 w-16 items-center justify-center rounded-full bg-nexoraCanvas text-lg font-extrabold text-nexoraBrand ring-1 ring-nexoraBorder">
+                    {avatarInitial}
+                  </div>
+                )}
+                <label className="inline-flex h-9 cursor-pointer items-center gap-2 rounded-lg border border-nexoraBorder px-3 text-xs font-bold text-nexoraText transition hover:bg-nexoraCanvas">
+                  <Upload className="h-4 w-4 text-nexoraBrand" />
+                  {t('common.upload_photo')}
+                  <input
+                    type="file"
+                    accept="image/*"
+                    className="hidden"
+                    onChange={(event) => {
+                      const file = event.target.files?.[0]
+                      if (file) handleAvatarPick(file)
+                      event.target.value = ''
+                    }}
+                  />
+                </label>
+              </div>
             </div>
 
             <div>
               <label className={fieldLabelClass}>
-                {renderLabel(t('components.dashboard.modals.AddStaffModal.manual_full_name'))}
+                {renderLabel(t('setup.staff_fullname'))}
               </label>
               <input
-                className={`rounded-lg px-3 ${inputClass(Boolean(errors.fullName))}`}
+                className={inputClass(Boolean(errors.fullName))}
                 value={fullName}
                 onChange={(event) => {
                   const nextValue = event.target.value
@@ -265,16 +294,20 @@ function AddManualStaffTab({
               {errors.fullName && <p className={fieldErrorClass}>{errors.fullName}</p>}
             </div>
 
-            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+            <div className="grid grid-cols-1 gap-4 sm:grid-cols-[minmax(0,1fr)_minmax(0,1fr)]">
               <div className="min-w-0">
-                <label className={`${fieldLabelClass} flex items-center gap-1.5`}>
-                  {renderLabel(t('components.dashboard.modals.AddStaffModal.manual_display_nickname'))}
-                  <span className="inline-flex h-[18px] w-[18px] shrink-0 items-center justify-center rounded-full bg-indigo-50 text-[10px] font-black text-indigo-600">
-                    <HelpCircle className="h-3 w-3" />
-                  </span>
+                <label className={`flex h-4 items-center gap-1 ${fieldLabelClass}`}>
+                  <span>{renderLabel(t('setup.staff_displayname'))}</span>
+                  <div className="group relative inline-block font-normal normal-case text-nexoraSubtle">
+                    <HelpCircle className="h-3.5 w-3.5 cursor-help transition-colors hover:text-nexoraBrand" />
+                    <div className="absolute bottom-full left-1/2 z-50 mb-2 hidden w-48 -translate-x-1/2 rounded-lg bg-black p-2.5 text-center text-[10px] leading-normal text-white shadow-xl group-hover:block">
+                      {t('setup.nickname_tooltip')}
+                      <div className="absolute left-1/2 top-full -mt-1.5 -translate-x-1/2 border-4 border-transparent border-t-black" />
+                    </div>
+                  </div>
                 </label>
                 <input
-                  className={`rounded-lg px-3 ${inputClass(Boolean(errors.displayNickname))}`}
+                  className={`min-w-0 ${inputClass(Boolean(errors.displayNickname))}`}
                   value={displayNickname}
                   onChange={(event) => {
                     setDisplayNickname(event.target.value)
@@ -286,11 +319,11 @@ function AddManualStaffTab({
               </div>
 
               <div className="min-w-0">
-                <label className={fieldLabelClass}>
-                  {t('components.dashboard.modals.AddStaffModal.role')}
+                <label className={`flex h-4 items-center ${fieldLabelClass}`}>
+                  {t('setup.staff_position')}
                 </label>
                 <input
-                  className={`rounded-lg px-3 ${inputClass(false)}`}
+                  className={`min-w-0 ${inputClass(false)}`}
                   value={position}
                   onChange={(event) => setPosition(event.target.value)}
                   placeholder={t('components.dashboard.modals.AddStaffModal.manual_position_placeholder')}
@@ -300,12 +333,13 @@ function AddManualStaffTab({
 
             <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
               <div className="min-w-0">
-                <label className={fieldLabelClass}>
-                  {t('components.dashboard.modals.AddStaffModal.manual_phone')}
+                <label className={`flex h-4 items-center ${fieldLabelClass}`}>
+                  {t('setup.staff_phone')}
                 </label>
-                <div className="flex h-10 w-full rounded-lg">
+                <div className="relative z-20 mt-1 flex h-10 w-full overflow-visible rounded-lg shadow-sm">
                   <CountryCodeSelect
                     value={dialCode}
+                    showSearch={false}
                     onChange={(nextCode) => {
                       const formatted = formatNationalNumber(phoneParsed.nationalNumber, nextCode)
                       setDialCode(nextCode)
@@ -315,13 +349,17 @@ function AddManualStaffTab({
                   />
                   <input
                     type="tel"
-                    className={`rounded-r-lg px-3 ${inputClass(Boolean(errors.phone), 'border-l-0')}`}
+                    className={`h-10 w-full min-w-0 rounded-r-lg border border-l-0 px-3 text-sm font-semibold text-nexoraText outline-none transition ${
+                      errors.phone
+                        ? 'border-nexoraDanger focus:border-nexoraDanger focus:ring-2 focus:ring-nexoraDanger/20'
+                        : 'border-nexoraBorder bg-white focus:border-nexoraBrand focus:ring-2 focus:ring-nexoraBrand/20'
+                    }`}
                     value={formatNationalNumber(phoneParsed.nationalNumber, dialCode)}
                     onChange={(event) => {
                       setPhone(formatNationalNumber(event.target.value, dialCode))
                       clearError('phone')
                     }}
-                    placeholder={t('components.dashboard.modals.AddStaffModal.manual_phone_placeholder')}
+                    placeholder={t('setup.staff_phone_placeholder')}
                     autoComplete="off"
                   />
                 </div>
@@ -329,82 +367,94 @@ function AddManualStaffTab({
               </div>
 
               <div className="min-w-0">
-                <label className={fieldLabelClass}>
-                  {t('components.dashboard.modals.AddStaffModal.staff_email')}
+                <label className={`flex h-4 items-center ${fieldLabelClass}`}>
+                  {t('setup.staff_email')}
                 </label>
                 <input
                   type="email"
                   inputMode="email"
                   autoComplete="email"
-                  className={`rounded-lg px-3 ${inputClass(Boolean(errors.email))}`}
+                  className={inputClass(Boolean(errors.email))}
                   value={email}
                   onChange={(event) => {
                     setEmail(event.target.value)
                     clearError('email')
                   }}
-                  placeholder={t('components.dashboard.modals.AddStaffModal.manual_email_placeholder')}
+                  placeholder={t('setup.staff_email_placeholder')}
                 />
                 {errors.email && <p className={fieldErrorClass}>{errors.email}</p>}
               </div>
             </div>
           </div>
 
-          <div className="space-y-3">
-            <label className={fieldLabelClass}>
-              {t('setup.payout_methods')}
-            </label>
-            <div className="divide-y divide-nexoraRule rounded-xl border border-nexoraBorder bg-white px-4">
-              {MANUAL_STAFF_PAYOUT_KEYS.map((walletKey) => {
-                const config = payoutConfigs[walletKey] || {
-                  enabled: false,
-                  value: '',
-                  qrCode: '',
-                  accountName: '',
-                }
-                const label = PAYOUT_UI_LABELS[walletKey] || walletKey
+          <div className="space-y-4">
+            <div>
+              <label className={fieldLabelClass}>{t('setup.payout_methods')}</label>
+              <div className="mt-2 space-y-4">
+                <div className="divide-y divide-nexoraRule rounded-xl border border-nexoraBorder bg-white px-4">
+                  {manualStaffPayoutKeys.map((walletKey) => {
+                    const config = payoutConfigs[walletKey] || {
+                      enabled: false,
+                      value: '',
+                      qrCode: '',
+                      accountName: '',
+                    }
+                    const label = PAYOUT_UI_LABELS[walletKey] || walletKey
 
-                return (
-                  <div key={walletKey} className="flex items-center justify-between gap-3 py-3">
-                    <div className="flex min-w-0 items-center gap-3">
-                      <button
-                        type="button"
-                        onClick={() => handleToggleWallet(walletKey)}
-                        aria-label={`Toggle ${label}`}
-                        className={`relative inline-flex h-5 w-9 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none ${
-                          config.enabled ? 'bg-nexoraBrand' : 'bg-slate-200'
-                        }`}
-                      >
-                        <span
-                          className={`pointer-events-none inline-block h-4 w-4 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out ${
-                            config.enabled ? 'translate-x-4' : 'translate-x-0'
-                          }`}
-                        />
-                      </button>
-                      <div className="flex min-w-0 items-center gap-2.5">
-                        <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg border border-nexoraBorder bg-nexoraCanvas">
-                          {WalletLogos[walletKey]}
-                        </span>
-                        <div className="min-w-0">
-                          <div className="text-xs font-bold text-nexoraText">{label}</div>
-                          {config.value ? (
-                            <div className="mt-0.5 truncate text-[10px] font-mono text-nexoraMuted">
-                              {config.value}
+                    return (
+                      <div key={walletKey} className="flex items-center justify-between py-3">
+                        <div className="flex min-w-0 items-center gap-3">
+                          <button
+                            type="button"
+                            role="switch"
+                            aria-checked={config.enabled}
+                            aria-label={`${label} — ${t('setup.payout_methods')}`}
+                            onClick={() => handleToggleWallet(walletKey)}
+                            className={`relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus-visible:ring-2 focus-visible:ring-nexoraBrand/40 focus-visible:ring-offset-1 ${
+                              config.enabled ? 'bg-nexoraBrand' : 'bg-nexoraBorder'
+                            }`}
+                          >
+                            <span
+                              className={`pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out ${
+                                config.enabled ? 'translate-x-5' : 'translate-x-0'
+                              }`}
+                            />
+                          </button>
+                          <div className="flex min-w-0 items-center gap-2">
+                            <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-nexoraCanvas">
+                              {WalletLogos[walletKey]}
+                            </span>
+                            <div className="min-w-0">
+                              <span className="text-xs font-bold text-nexoraText">{label}</span>
+                              {config.value ? (
+                                <div className="mt-0.5 truncate text-[10px] font-mono text-nexoraMuted">
+                                  {config.value}
+                                </div>
+                              ) : null}
                             </div>
-                          ) : null}
+                          </div>
                         </div>
+                        <button
+                          type="button"
+                          onClick={() => setEditingWalletKey(walletKey)}
+                          className="inline-flex shrink-0 items-center gap-1 text-[11px] font-bold text-nexoraBrand transition hover:text-nexoraBrandDark"
+                        >
+                          {config.value ? (
+                            <Pencil className="h-3 w-3 stroke-[2.5]" />
+                          ) : (
+                            <Plus className="h-3 w-3 stroke-[2.5]" />
+                          )}
+                          <span>
+                            {config.value
+                              ? t('components.dashboard.modals.StaffModal.editAccount')
+                              : t('components.dashboard.modals.AddStaffModal.manual_add_account')}
+                          </span>
+                        </button>
                       </div>
-                    </div>
-                    <button
-                      type="button"
-                      onClick={() => setEditingWalletKey(walletKey)}
-                      className="inline-flex shrink-0 items-center gap-1 text-[11px] font-bold text-nexoraBrand transition hover:text-nexoraBrandDark"
-                    >
-                      <Plus className="h-3 w-3 stroke-[2.5]" />
-                      <span>{t('components.dashboard.modals.AddStaffModal.manual_add_account')}</span>
-                    </button>
-                  </div>
-                )
-              })}
+                    )
+                  })}
+                </div>
+              </div>
             </div>
           </div>
         </div>
@@ -413,14 +463,14 @@ function AddManualStaffTab({
           <button
             type="button"
             onClick={onCancel}
-            className="rounded-lg border border-nexoraBorder bg-white px-4 py-2.5 text-xs font-bold text-nexoraMuted transition hover:bg-nexoraCanvas"
+            className="rounded-lg border border-nexoraBorder px-4 py-2 text-xs font-bold text-nexoraMuted"
           >
             {t('common.cancel')}
           </button>
           <button
             type="submit"
             disabled={isSaving}
-            className="inline-flex items-center gap-2 rounded-lg bg-nexoraBrand px-4 py-2.5 text-xs font-bold text-white transition hover:bg-opacity-95 disabled:cursor-not-allowed disabled:opacity-60"
+            className="inline-flex items-center gap-2 rounded-lg bg-nexoraBrand px-5 py-2 text-xs font-bold text-white disabled:cursor-not-allowed disabled:opacity-60"
           >
             {isSaving && <Loader2 className="h-3.5 w-3.5 animate-spin" />}
             {t('common.save')}

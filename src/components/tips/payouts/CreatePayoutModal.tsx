@@ -207,7 +207,6 @@ export default function CreatePayoutModal({
   const [evidenceError, setEvidenceError] = useState<string | null>(null)
   const [payoutStatus, setPayoutStatus] = useState<PayoutStatusValue>(PayoutStatus.Confirmed)
   const fileInputRef = useRef<HTMLInputElement>(null)
-  const amountPrefillKeyRef = useRef('')
 
   const selectedStaff = isEditing
     ? editingStaffMember
@@ -252,7 +251,6 @@ export default function CreatePayoutModal({
       setEvidencePreviews(editingPayout.evidenceUrls ?? [])
       setEvidenceError(null)
       setIsDragOver(false)
-      amountPrefillKeyRef.current = ''
       return
     }
     const defaults = defaultPeriodDates()
@@ -283,7 +281,6 @@ export default function CreatePayoutModal({
     setEvidenceError(null)
     setIsDragOver(false)
     setPayoutStatus(PayoutStatus.Confirmed)
-    amountPrefillKeyRef.current = ''
   }, [isOpen, editingPayout, editingStaffMember, staffList, unpaidDebts, initialStaffProfileId])
 
   useEffect(() => {
@@ -295,39 +292,6 @@ export default function CreatePayoutModal({
       return availablePayoutMethods[0] ?? PayoutMethodType.Zelle
     })
   }, [isOpen, isEditing, selectedStaff, availablePayoutMethods])
-
-  useEffect(() => {
-    if (!isOpen || isEditing || !staffProfileId || !isDebtLookupReady || isStaffDebtLoading) return
-    if (!hasPayoutType(payoutTypesMask, PayoutType.TipDebt)) return
-
-    const prefillKey = `${staffProfileId}:${payoutTypesMask}:${displayedDebtBalance}`
-    if (amountPrefillKeyRef.current === prefillKey) return
-    amountPrefillKeyRef.current = prefillKey
-
-    if (displayedDebtBalance > 0) {
-      setAmount(formatUsdInputAmount(displayedDebtBalance))
-      setAmountError(null)
-    } else {
-      setAmount('')
-      setAmountError(null)
-    }
-  }, [
-    isOpen,
-    isEditing,
-    staffProfileId,
-    payoutTypesMask,
-    isDebtLookupReady,
-    isStaffDebtLoading,
-    displayedDebtBalance,
-  ])
-
-  useEffect(() => {
-    if (!isOpen || isEditing) return
-    if (hasPayoutType(payoutTypesMask, PayoutType.TipDebt)) return
-    setAmount('0.00')
-    setAmountError(null)
-    amountPrefillKeyRef.current = ''
-  }, [isOpen, isEditing, payoutTypesMask])
 
   useEffect(() => {
     if (isOpen) return
@@ -359,6 +323,11 @@ export default function CreatePayoutModal({
     if (isEditing && normalizePayoutMethodType(editingPayout?.payoutMethodType) === method) {
       return true
     }
+    // Before a staff member is chosen, show every create-payout method as selectable.
+    // Availability is filtered to that staff's wallets once they are selected.
+    if (!selectedStaff) {
+      return method !== PayoutMethodType.Other
+    }
     return isStaffPayoutMethodAvailable(selectedStaff, method as PayoutMethodTypeValue)
   }
 
@@ -367,7 +336,6 @@ export default function CreatePayoutModal({
     setStaffProfileId(staff.staffProfileId)
     setSelectedStaffMember(staff)
     setStaffProfileError(null)
-    amountPrefillKeyRef.current = ''
   }
 
   const handleCopyAccount = async () => {
@@ -640,11 +608,7 @@ export default function CreatePayoutModal({
                     )
                   })}
                 </div>
-                {!staffProfileId ? (
-                  <p className="mt-1.5 text-xs text-mutedGrey">
-                    {t('dashboard.tips.payouts_manager.method_select_staff_first')}
-                  </p>
-                ) : availablePayoutMethods.length === 0 ? (
+                {staffProfileId && availablePayoutMethods.length === 0 ? (
                   <p className="mt-1.5 text-xs font-semibold text-amber-700">
                     {t('dashboard.tips.payouts_manager.method_staff_none')}
                   </p>

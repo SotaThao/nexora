@@ -21,6 +21,7 @@ import { buildChartPoints, getBezierPath } from './dashboard/overview/chartUtils
 import { useMerchantStaffStats } from '../data/hooks/useMerchantStaff'
 import { staffRecordMatchesMember } from '../utils/staffRecordMatch'
 import { formatJoinedDate } from '../utils/localDate'
+import { orderedPayoutUiKeysFromMethods, PAYOUT_UI_LABELS } from '../data/paymentMethodTypes'
 
 const RANGE_DAY_OFFSETS = {
   '7 Days': 6,
@@ -752,18 +753,13 @@ export default function StaffDetailView({
           </div>
 
           <div className="space-y-3">
-            {Object.entries(staffMember.paymentAccounts || {})
-              .filter(([key]) => key !== 'bankwire')
-              .map(([key, value]) => {
-              const label = {
-                venmo: 'Venmo',
-                cashapp: 'Cash App',
-                zelle: 'Zelle',
-                vlinkpay: 'VLINKPAY',
-                paypal: 'PayPal',
-                bankwire: 'Bank Wire',
-                applecash: 'Apple Cash'
-              }[key] || key
+            {orderedPayoutUiKeysFromMethods(
+              Array.isArray(staffMember.paymentMethods) ? staffMember.paymentMethods : null,
+            )
+              .filter((key) => key !== 'bankwire')
+              .map((key) => {
+              const value = staffMember.paymentAccounts?.[key] || ''
+              const label = PAYOUT_UI_LABELS[key] || key
               const isConfigured = Boolean(value)
               const isCopied = copiedWallet === key
 

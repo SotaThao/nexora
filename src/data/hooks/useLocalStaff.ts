@@ -141,6 +141,20 @@ function invalidateLocalStaffCaches(
   queryClient.invalidateQueries({ queryKey: qk.merchantStaff() })
 }
 
+async function resolveLocalStaffPaymentMethodId(
+  staffProfileId: string,
+  paymentMethodId?: string | null,
+  uiKey?: string | null,
+): Promise<string> {
+  if (paymentMethodId) return paymentMethodId
+  if (!uiKey) throw new Error('PAYMENT_METHOD_REQUIRED')
+
+  const methods = await localStaffRepository.getPaymentMethods(staffProfileId)
+  const match = methods.find((method) => (method.uiKey || payoutTypeToUiKey(method.type || '')) === uiKey)
+  if (!match?.id) throw new Error('PAYMENT_METHOD_NOT_FOUND')
+  return match.id
+}
+
 export function useUpdateLocalStaffPaymentMethod() {
   const queryClient = useQueryClient()
 
@@ -148,18 +162,21 @@ export function useUpdateLocalStaffPaymentMethod() {
     mutationFn: async ({
       staffProfileId,
       paymentMethodId,
+      uiKey,
       accountInfo,
       imageUrl,
       imageFile,
     }: {
       staffProfileId: string
-      paymentMethodId: string
+      paymentMethodId?: string
+      uiKey?: string
       accountInfo?: string | null
       imageUrl?: string | null
       imageFile?: File | null
     }) => {
+      const methodId = await resolveLocalStaffPaymentMethodId(staffProfileId, paymentMethodId, uiKey)
       const resolvedImageUrl = await resolvePaymentMethodImageUrl({ imageFile, imageUrl })
-      return localStaffRepository.updatePaymentMethod(staffProfileId, paymentMethodId, {
+      return localStaffRepository.updatePaymentMethod(staffProfileId, methodId, {
         accountInfo,
         imageUrl: resolvedImageUrl,
       })
@@ -174,13 +191,18 @@ export function useToggleLocalStaffPaymentMethod() {
   const queryClient = useQueryClient()
 
   return useMutation({
-    mutationFn: ({
+    mutationFn: async ({
       staffProfileId,
       paymentMethodId,
+      uiKey,
     }: {
       staffProfileId: string
-      paymentMethodId: string
-    }) => localStaffRepository.togglePaymentMethod(staffProfileId, paymentMethodId),
+      paymentMethodId?: string
+      uiKey?: string
+    }) => {
+      const methodId = await resolveLocalStaffPaymentMethodId(staffProfileId, paymentMethodId, uiKey)
+      return localStaffRepository.togglePaymentMethod(staffProfileId, methodId)
+    },
     onSuccess: (_data, vars) => {
       invalidateLocalStaffCaches(queryClient, vars.staffProfileId)
     },

@@ -2,7 +2,7 @@ import { useState, useEffect, useMemo } from 'react'
 import { X, Upload, Eye, AlertTriangle, QrCode, Loader2, CheckCircle2, XCircle, Star, HelpCircle, Plus, Pencil } from 'lucide-react'
 import IconButton from '../../ui/IconButton'
 import ImageFileInput from '../../ui/ImageFileInput'
-import CountryCodeSelect, { getDefaultDialCode, normalizePhoneE164, parsePhone, formatNationalNumber } from '../../CountryCodeSelect'
+import CountryCodeSelect, { normalizePhoneE164, parsePhone, formatNationalNumber, PhoneDialCode } from '../../CountryCodeSelect'
 import { WalletLogos, DEFAULT_PAYOUT_CONFIGS } from '../constants'
 import { useTranslation, renderLabel } from '../../../contexts/LanguageContext'
 import { useNotification } from '../../../contexts/NotificationContext'
@@ -12,18 +12,13 @@ import StaffQrScannerModal from './StaffQrScannerModal'
 import ToggleSwitch from '../../ui/ToggleSwitch'
 import { useSearchMerchantStaff, useMerchantStaffStats } from '../../../data/hooks/useMerchantStaff'
 import {
-  useLocalStaffPaymentMethods,
   useToggleLocalStaffPaymentMethod,
   useUpdateLocalStaffPaymentMethod,
 } from '../../../data/hooks/useLocalStaff'
-import { PAYOUT_UI_DISPLAY_ORDER, PAYOUT_UI_LABELS, payoutTypeToUiKey } from '../../../data/paymentMethodTypes'
+import { PAYOUT_UI_LABELS, orderedPayoutUiKeysFromMethods } from '../../../data/paymentMethodTypes'
 import { getApiErrorCode } from '../../../types/domain'
 import { getErrorI18nKey } from '../../../data/errorCodes'
 import { buildStaffReviewSummary } from './staffModalReviewUtils'
-
-const STAFF_MODAL_PAYOUT_KEYS = PAYOUT_UI_DISPLAY_ORDER.filter((key) =>
-  ['zelle', 'paypal', 'venmo', 'cashapp', 'applecash', 'vlinkpay'].includes(key),
-)
 
 function StaffModal({
   open,
@@ -49,7 +44,7 @@ function StaffModal({
   isLoadingDetail = false,
   fetchStaffStats = true,
 }) {
-  const { t, currentLanguage } = useTranslation()
+  const { t } = useTranslation()
   const { showToast } = useNotification()
   const [payoutSetupOpen, setPayoutSetupOpen] = useState(false)
   const [payoutSetupWallet, setPayoutSetupWallet] = useState('venmo')
@@ -98,7 +93,7 @@ function StaffModal({
   const [reviewFilterRating, setReviewFilterRating] = useState('all')
   const [reviewFilterSource, setReviewFilterSource] = useState('all')
   const [reviewFilterOnlyCommented, setReviewFilterOnlyCommented] = useState(false)
-  const fallbackDialCode = useMemo(() => getDefaultDialCode(currentLanguage), [currentLanguage])
+  const fallbackDialCode = PhoneDialCode.US
 
   const searchResultsQuery = useSearchMerchantStaff(searchQuery, {
     enabled: open && !editing && !isReviewOnly && searchQuery.trim().length > 0,
@@ -108,22 +103,19 @@ function StaffModal({
   const { data: staffStats } = useMerchantStaffStats(staffProfileId, {}, {
     enabled: open && !!staffProfileId && fetchStaffStats,
   })
-  const { data: localPaymentMethods = [] } = useLocalStaffPaymentMethods(staffProfileId, {
-    enabled: open && isLocalStaff && !!staffProfileId,
-  })
   const updateLocalPaymentMutation = useUpdateLocalStaffPaymentMethod()
   const toggleLocalPaymentMutation = useToggleLocalStaffPaymentMethod()
   const isLocalPaymentSaving =
     updateLocalPaymentMutation.isPending || toggleLocalPaymentMutation.isPending
 
-  const localPaymentMethodsByKey = useMemo(() => {
-    const map = new Map<string, (typeof localPaymentMethods)[number]>()
-    for (const method of localPaymentMethods) {
-      const key = method.uiKey || payoutTypeToUiKey(method.type || '')
-      if (key) map.set(key, method)
-    }
-    return map
-  }, [localPaymentMethods])
+  // Order + display from GET /merchant/staff paymentMethods (no local-staff payment-methods fetch on open).
+  const staffPayoutKeys = useMemo(() => {
+    const formMethods = Array.isArray(form?.paymentMethods) ? form.paymentMethods : []
+    return orderedPayoutUiKeysFromMethods(formMethods)
+  }, [form?.paymentMethods])
+
+  const getFormPayoutConfig = (walletKey: string) =>
+    (form.payoutConfigs && form.payoutConfigs[walletKey]) || { enabled: false, value: '', qrCode: '' }
 
   const showLocalPaymentError = (err: unknown) => {
     showToast(t(getErrorI18nKey(getApiErrorCode(err))), 'error')
@@ -187,15 +179,20 @@ function StaffModal({
     const parsedPhone = parsePhone(rawPhone)
 
     // Preserve legacy local trunk-zero values (e.g. 0385...) so edit mode
-    // keeps the same grouping users saw previously, without hardcoding dial code.
+    // keeps VN grouping; trunk-zero is a Vietnam dialing pattern.
     if (!rawPhone.startsWith('+')) {
       const digits = rawPhone.replace(/\D/g, '')
       if (digits.startsWith('0') && digits.length >= 9 && digits.length <= 11) {
         return {
-          countryCode: fallbackDialCode,
+          countryCode: PhoneDialCode.Vietnam,
           nationalNumber: digits,
         }
       }
+    }
+
+    // Empty / unrecognized phone defaults to US (+1) for add & edit staff.
+    if (!rawPhone) {
+      return { countryCode: fallbackDialCode, nationalNumber: '' }
     }
 
     return parsedPhone
@@ -239,46 +236,67 @@ function StaffModal({
   }
 
   const openPayoutSetup = (walletKey: string) => {
-    if (isLocalStaff) {
-      const method = localPaymentMethodsByKey.get(walletKey)
-      setTempPayoutValues({
-        value: method?.accountInfo || '',
-        qrCode: method?.imageUrl || '',
-        accountName: form.fullName || '',
-      })
-    } else {
-      const configs = form.payoutConfigs || DEFAULT_PAYOUT_CONFIGS
-      const config = configs[walletKey] || { enabled: false, value: '', qrCode: '' }
-      setTempPayoutValues({
-        value: config.value || '',
-        qrCode: config.qrCode || '',
-        accountName: config.accountName || form.fullName || '',
-      })
-    }
+    const configs = form.payoutConfigs || DEFAULT_PAYOUT_CONFIGS
+    const config = configs[walletKey] || { enabled: false, value: '', qrCode: '' }
+    setTempPayoutValues({
+      value: config.value || '',
+      qrCode: config.qrCode || '',
+      accountName: config.accountName || form.fullName || '',
+    })
     setPayoutSetupWallet(walletKey)
     setPayoutSetupOpen(true)
   }
 
   const handlePayoutSubmit = (value: string, qrCode: string, accountName: string, qrFile?: File | null) => {
     if (isLocalStaff) {
-      const method = localPaymentMethodsByKey.get(payoutSetupWallet)
-      if (!method?.id || !staffProfileId) return
+      if (!staffProfileId) return
 
+      const trimmed = value.trim()
       updateLocalPaymentMutation.mutate(
         {
           staffProfileId,
-          paymentMethodId: method.id,
-          accountInfo: value.trim(),
+          uiKey: payoutSetupWallet,
+          accountInfo: trimmed,
           imageUrl: qrCode || null,
           imageFile: qrFile,
         },
         {
           onSuccess: (updated) => {
+            setForm((prev) => {
+              const configs = prev.payoutConfigs || DEFAULT_PAYOUT_CONFIGS
+              return {
+                ...prev,
+                payoutConfigs: {
+                  ...configs,
+                  [payoutSetupWallet]: {
+                    enabled: updated.isActive || Boolean(trimmed),
+                    value: trimmed,
+                    qrCode: updated.imageUrl || qrCode || '',
+                    accountName: accountName.trim() || prev.fullName || '',
+                  },
+                },
+              }
+            })
             setPayoutSetupOpen(false)
-            if (!updated.isActive && value.trim()) {
+            if (!updated.isActive && trimmed) {
               toggleLocalPaymentMutation.mutate(
-                { staffProfileId, paymentMethodId: method.id },
-                { onError: showLocalPaymentError },
+                { staffProfileId, uiKey: payoutSetupWallet },
+                {
+                  onSuccess: () => {
+                    setForm((prev) => {
+                      const configs = prev.payoutConfigs || DEFAULT_PAYOUT_CONFIGS
+                      const current = configs[payoutSetupWallet] || { enabled: false, value: '', qrCode: '' }
+                      return {
+                        ...prev,
+                        payoutConfigs: {
+                          ...configs,
+                          [payoutSetupWallet]: { ...current, enabled: true },
+                        },
+                      }
+                    })
+                  },
+                  onError: showLocalPaymentError,
+                },
               )
             }
           },
@@ -306,16 +324,35 @@ function StaffModal({
 
   const handleToggleLocalPayment = (walletKey: string) => {
     if (!canManageLocalPayouts || !staffProfileId || isLocalPaymentSaving) return
-    const method = localPaymentMethodsByKey.get(walletKey)
-    if (!method?.id) return
+    const config = getFormPayoutConfig(walletKey)
     // Enabling a method without account info is meaningless — send them to setup first.
-    if (!method.isActive && !method.accountInfo) {
+    if (!config.enabled && !config.value) {
       openPayoutSetup(walletKey)
       return
     }
     toggleLocalPaymentMutation.mutate(
-      { staffProfileId, paymentMethodId: method.id },
-      { onError: showLocalPaymentError },
+      { staffProfileId, uiKey: walletKey },
+      {
+        onSuccess: (updated) => {
+          setForm((prev) => {
+            const configs = prev.payoutConfigs || DEFAULT_PAYOUT_CONFIGS
+            const current = configs[walletKey] || { enabled: false, value: '', qrCode: '' }
+            return {
+              ...prev,
+              payoutConfigs: {
+                ...configs,
+                [walletKey]: {
+                  ...current,
+                  enabled: Boolean(updated.isActive),
+                  value: updated.accountInfo || current.value || '',
+                  qrCode: updated.imageUrl || current.qrCode || '',
+                },
+              },
+            }
+          })
+        },
+        onError: showLocalPaymentError,
+      },
     )
   }
 
@@ -402,7 +439,7 @@ function StaffModal({
             <X className="h-4 w-4" />
           </IconButton>
         </div>
-        <div className="mt-5 grid grid-cols-1 md:grid-cols-2 gap-6 items-start">
+        <div className="mt-5 grid grid-cols-1 items-start gap-6 md:grid-cols-[minmax(0,1.2fr)_minmax(0,0.8fr)]">
           {/* Left Column: Basic Info & ID Verification */}
           <div className="space-y-4">
             {/* Staff ID / VLINKPAY ID Section */}
@@ -604,7 +641,7 @@ function StaffModal({
             <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
               <div className="min-w-0">
                 <label className="flex h-4 items-center text-[10px] font-extrabold uppercase text-nexoraMuted">{t('setup.staff_phone')}</label>
-                <div className={`mt-1 flex h-10 w-full overflow-hidden rounded-lg shadow-sm ${isReviewOnly ? 'opacity-70 pointer-events-none' : ''}`}>
+                <div className={`relative z-20 mt-1 flex h-10 w-full overflow-visible rounded-lg shadow-sm ${isReviewOnly ? 'opacity-70 pointer-events-none' : ''}`}>
                   <CountryCodeSelect
                     value={phoneParsed.countryCode}
                     disabled={isReviewOnly}
@@ -664,16 +701,9 @@ function StaffModal({
               <label className="text-[10px] font-extrabold uppercase text-nexoraMuted">{t('setup.payout_methods')}</label>
               <div className="mt-2 space-y-4">
                 <div className="divide-y divide-nexoraRule rounded-xl border border-nexoraBorder bg-white px-4">
-                  {STAFF_MODAL_PAYOUT_KEYS.map((walletKey) => {
+                  {staffPayoutKeys.map((walletKey) => {
                     const walletName = PAYOUT_UI_LABELS[walletKey] || walletKey
-                    const localMethod = isLocalStaff ? localPaymentMethodsByKey.get(walletKey) : null
-                    const config = isLocalStaff
-                      ? {
-                          enabled: Boolean(localMethod?.isActive),
-                          value: localMethod?.accountInfo || '',
-                          qrCode: localMethod?.imageUrl || '',
-                        }
-                      : ((form.payoutConfigs && form.payoutConfigs[walletKey]) || { enabled: false, value: '', qrCode: '' })
+                    const config = getFormPayoutConfig(walletKey)
 
                     return (
                       <div key={walletKey} className="flex items-center justify-between py-3">
