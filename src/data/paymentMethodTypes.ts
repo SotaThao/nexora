@@ -32,6 +32,47 @@ export const PAYOUT_UI_DISPLAY_ORDER = [
   'crypto',
 ] as const
 
+/** Staff create/edit surfaces — excludes bankwire/crypto (not configured on staff wallets). */
+export const STAFF_CONFIGURABLE_PAYOUT_UI_KEYS = [
+  'zelle',
+  'paypal',
+  'venmo',
+  'cashapp',
+  'applecash',
+  'vlinkpay',
+] as const
+
+export type StaffConfigurablePayoutUiKey = (typeof STAFF_CONFIGURABLE_PAYOUT_UI_KEYS)[number]
+
+/**
+ * Preserve API array order for payout UI keys. Known methods missing from the
+ * response are appended in fallback order so the form still shows a full list.
+ */
+export function orderedPayoutUiKeysFromMethods(
+  methods: Array<{ type?: string; uiKey?: string }> | null | undefined,
+  allowedKeys: readonly string[] = STAFF_CONFIGURABLE_PAYOUT_UI_KEYS,
+  fallbackOrder: readonly string[] = allowedKeys,
+): string[] {
+  const allowed = new Set(allowedKeys)
+  const seen = new Set<string>()
+  const ordered: string[] = []
+
+  for (const method of methods ?? []) {
+    const key = method.uiKey || payoutTypeToUiKey(method.type || '')
+    if (!key || !allowed.has(key) || seen.has(key)) continue
+    seen.add(key)
+    ordered.push(key)
+  }
+
+  for (const key of fallbackOrder) {
+    if (!allowed.has(key) || seen.has(key)) continue
+    seen.add(key)
+    ordered.push(key)
+  }
+
+  return ordered
+}
+
 export function payoutTypeToUiKey(type = ''): string {
   return PAYOUT_TYPE_TO_UI_KEY[type] || type.toLowerCase().replace(/\s+/g, '')
 }

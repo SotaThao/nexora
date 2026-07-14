@@ -56,13 +56,24 @@ export function normalizePaymentMethods(
     cashapp: { enabled: false, value: '', qrCode: '', accountName: '' },
     applecash: { enabled: false, value: '', qrCode: '', accountName: '' },
   }
+  // Build account map in API array order (object key insertion order).
   const paymentAccounts: Record<string, string> = {}
+  const normalizedMethods: PaymentMethodDto[] = []
 
   for (const method of paymentMethods ?? []) {
-    const key = PAYOUT_TYPE_TO_KEY[method?.type ?? '']
+    const type = method?.type ?? ''
+    const key = PAYOUT_TYPE_TO_KEY[type]
     if (!key) continue
     const value = method.accountInfo ?? ''
     paymentAccounts[key] = value
+    normalizedMethods.push({
+      type,
+      uiKey: key,
+      accountInfo: value || null,
+      imageUrl: method.imageUrl ?? null,
+      isActive: !!method.isActive,
+      isConfigured: Boolean(value.trim() || method.imageUrl),
+    })
     if (key === 'vlinkpay') continue
     payoutConfigs[key] = {
       enabled: !!method.isActive,
@@ -72,7 +83,7 @@ export function normalizePaymentMethods(
     }
   }
 
-  return { payoutConfigs, paymentAccounts }
+  return { payoutConfigs, paymentAccounts, paymentMethods: normalizedMethods }
 }
 
 export function normalizeStaffListItem(dto: StaffListItemApiDto): StaffMember {
@@ -82,7 +93,7 @@ export function normalizeStaffListItem(dto: StaffListItemApiDto): StaffMember {
     isWaitingStaffAcceptance
   const isActive = dto.status === 'Active' || dto.status === 'Accepted'
   const displayName = dto.displayName ?? ''
-  const { payoutConfigs, paymentAccounts } = normalizePaymentMethods(dto.paymentMethods, displayName)
+  const { payoutConfigs, paymentAccounts, paymentMethods } = normalizePaymentMethods(dto.paymentMethods, displayName)
   const itemType =
     dto.itemType ??
     (dto.inviteId ? 'invite' : undefined) ??
@@ -137,6 +148,7 @@ export function normalizeStaffListItem(dto: StaffListItemApiDto): StaffMember {
     joinedDate: normalizeDateTime(dto.joinDate),
     payoutConfigs,
     paymentAccounts,
+    paymentMethods,
     isLocalStaff: dto.isLocalStaff ?? false,
   }
 }
@@ -161,7 +173,7 @@ export function normalizeStaffInvite(
 
 /** Map invite list DTO to StaffMember shape for roster/pending UI. */
 export function normalizeInviteToStaffMember(invite: MerchantStaffInvite): StaffMember {
-  const { payoutConfigs, paymentAccounts } = normalizePaymentMethods([], invite.invitedName)
+  const { payoutConfigs, paymentAccounts, paymentMethods } = normalizePaymentMethods([], invite.invitedName)
   return {
     id: invite.inviteId ?? undefined,
     inviteId: invite.inviteId,
@@ -176,9 +188,10 @@ export function normalizeInviteToStaffMember(invite: MerchantStaffInvite): Staff
     isActive: false,
     showInTipsFlow: false,
     flowType: 'Invite',
-    joinedDate: normalizeDateOnly(invite.invitedAt),
+    joinedDate: normalizeDateTime(invite.invitedAt),
     paymentAccounts,
     payoutConfigs,
+    paymentMethods,
   }
 }
 
