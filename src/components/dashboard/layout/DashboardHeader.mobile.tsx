@@ -97,11 +97,21 @@ export default function DashboardHeader({
       if (member && typeof onApproveStaff === 'function') {
         onApproveStaff(member)
       }
-    } else if (item.paymentId) {
-      const params = new URLSearchParams({
-        tab: 'direct_payments',
-        paymentId: String(item.paymentId),
-      })
+    } else if (item.linkTab === 'reports') {
+      // Both Tips and Direct Payments notifications land on the Reports
+      // screen; reportsTab picks the sub-tab, transactionId/paymentId let
+      // that tab auto-open the matching transaction's detail modal.
+      const params = new URLSearchParams({ tab: item.reportsTab || 'direct_payments' })
+      if (item.transactionId) {
+        params.set('transactionId', String(item.transactionId))
+        // ReportsView narrows its date filter to this day to find the tip
+        // (the tips API has no get-by-id/lookup-by-id endpoint).
+        const createdAt = item.createdAt ? new Date(item.createdAt) : null
+        if (createdAt && !Number.isNaN(createdAt.getTime())) {
+          params.set('date', createdAt.toISOString().slice(0, 10))
+        }
+      }
+      if (item.paymentId) params.set('paymentId', String(item.paymentId))
       navigate(`/dashboard/reports?${params.toString()}`)
     } else if (item.linkTab) {
       onNavigateMenu(item.linkTab)

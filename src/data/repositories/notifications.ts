@@ -32,33 +32,69 @@ interface UnreadCountResponse {
 /**
  * Notification types that should navigate to the staff tab and open
  * the approve/review modal. Matched case-insensitively.
+ *
+ * Real backend values (see NotificationType enum in the live Swagger spec,
+ * https://test-api.nexoratouch.com/api/specification.json) are PascalCase,
+ * e.g. `StaffLinkApproved`, `StaffLinkRequestAccepted`. Older snake_case
+ * entries are kept as harmless aliases in case of legacy/mocked data.
  */
 const STAFF_NOTIFICATION_TYPES = new Set([
   'staff_accepted_invite',
   'staffacceptedinvite',
-  'staffinviteaccepted',
-  'stafflinkrequest',
+  'staffinviteaccepted', // StaffInviteAccepted
+  'stafflinkrequest', // StaffLinkRequest
   'staff_link_request',
-  'staffpublicjoinrequest',
+  'staffpublicjoinrequest', // StaffPublicJoinRequest
   'staff_joined',
   'staffjoined',
+  'stafflinkapproved', // StaffLinkApproved
+  'stafflinkrejected', // StaffLinkRejected
+  'stafflinkrequestaccepted', // StaffLinkRequestAccepted
+  'stafflinkrequestrejected', // StaffLinkRequestRejected
 ])
 
 /**
  * Notification types that map to a specific dashboard tab (linkTab).
  * Add new mappings here as the API introduces new notification types.
+ *
+ * `tipreceived` / `directpaymentreceived` are the real backend enum values
+ * (TipReceived / DirectPaymentReceived) — without them, tip and direct
+ * payment notifications fell through with no linkTab and never navigated.
+ *
+ * Both tip and direct-payment notifications land on the 'reports' screen
+ * (the actual Transactions list, `/dashboard/reports`) — NOT the legacy
+ * top-level 'tips' screen (`/dashboard/tips`, the "My Tips" earnings
+ * summary), which is a different page with no transaction list/modal.
+ * `TYPE_TO_REPORTS_TAB` below picks which sub-tab opens within Reports.
+ *
+ * Keys must be pre-normalized (lowercase, no `_`/`-`/space) since they're
+ * looked up via `typeLower` below — `normalizeNotificationType()` strips
+ * those separators, so a key like `tip_success` could never match and
+ * would silently be dead code.
  */
 const TYPE_TO_LINK_TAB: Record<string, string> = {
-  tip_success: 'tips',
-  tip: 'tips',
-  review_good: 'reviews',
+  tipreceived: 'reports', // TipReceived
+  tip: 'reports',
   review: 'reviews',
-  feedback_alert: 'reviews',
-  payment_received: 'reports',
+  reviewreply: 'reviews', // ReviewReply
   paymentreceived: 'reports',
-  direct_payment: 'reports',
   directpayment: 'reports',
+  directpaymentreceived: 'reports', // DirectPaymentReceived
   payment: 'reports',
+}
+
+/**
+ * When linkTab === 'reports', which sub-tab (Reports "Tips" vs "Direct
+ * Payments") the notification should open. Keys must be pre-normalized —
+ * see `TYPE_TO_LINK_TAB` above.
+ */
+const TYPE_TO_REPORTS_TAB: Record<string, string> = {
+  tipreceived: 'tips',
+  tip: 'tips',
+  paymentreceived: 'direct_payments',
+  directpayment: 'direct_payments',
+  directpaymentreceived: 'direct_payments',
+  payment: 'direct_payments',
 }
 
 /**
@@ -95,6 +131,8 @@ function normalizeNotification(item: NotificationApiDto): NotificationRecord {
   let linkTab: string | undefined
   let staffId: string | undefined
   let paymentId: string | undefined
+  let transactionId: string | undefined
+  let reportsTab: string | undefined
 
   const paymentIdFromUrl = extractPaymentIdFromUrl(item.actionUrl)
 
@@ -103,6 +141,9 @@ function normalizeNotification(item: NotificationApiDto): NotificationRecord {
     staffId = item.referenceId || extractStaffIdFromUrl(item.actionUrl) || undefined
   } else if (TYPE_TO_LINK_TAB[typeLower]) {
     linkTab = TYPE_TO_LINK_TAB[typeLower]
+    if (linkTab === 'reports') {
+      reportsTab = TYPE_TO_REPORTS_TAB[typeLower] || 'tips'
+    }
   } else if (paymentIdFromUrl) {
     linkTab = 'reports'
   } else if (item.actionUrl) {
@@ -112,9 +153,15 @@ function normalizeNotification(item: NotificationApiDto): NotificationRecord {
     if (item.actionUrl.includes('/merchant/staff')) linkTab = 'staff'
   }
 
-  if (paymentIdFromUrl) {
-    paymentId = paymentIdFromUrl
-    linkTab = linkTab || 'reports'
+  if (linkTab === 'reports') {
+    reportsTab = reportsTab || 'direct_payments'
+    if (reportsTab === 'tips') {
+      // No single-tip-by-id endpoint exists yet, so the Reports "Tips" tab
+      // matches this against its currently loaded list client-side.
+      transactionId = item.referenceId || undefined
+    } else {
+      paymentId = paymentIdFromUrl || item.referenceId || undefined
+    }
   }
 
   return {
@@ -129,8 +176,10 @@ function normalizeNotification(item: NotificationApiDto): NotificationRecord {
     createdAt: createdAt || undefined,
     time: createdAt,
     ...(linkTab ? { linkTab } : {}),
+    ...(reportsTab ? { reportsTab } : {}),
     ...(staffId ? { staffId } : {}),
     ...(paymentId ? { paymentId } : {}),
+    ...(transactionId ? { transactionId } : {}),
   }
 }
 

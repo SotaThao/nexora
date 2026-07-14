@@ -1,4 +1,4 @@
-import { useState, useMemo, useEffect, useCallback } from 'react'
+import { useState, useMemo, useEffect, useCallback, useRef } from 'react'
 import { useSearchParams } from 'react-router-dom'
 import { CreditCard, Coins, CheckCircle, Clock, XCircle, AlertCircle, Eye } from 'lucide-react'
 import { useTranslation } from '../../../contexts/LanguageContext'
@@ -143,6 +143,23 @@ function ReportsView({
       : REPORTS_TAB_TIPS
   const selectedPaymentId = searchParams.get('paymentId')
 
+  // Deep-link from a "TipReceived" notification click (issue #419): the
+  // Tips API has no get-by-id endpoint, so we narrow the date filter to the
+  // notification's day and match the transaction client-side once loaded.
+  const deepLinkTransactionId =
+    !isStaffAudience && activeTab === REPORTS_TAB_TIPS ? searchParams.get('transactionId') : null
+  const deepLinkDate = deepLinkTransactionId ? searchParams.get('date') : null
+
+  const setActiveTab = useCallback((tab: string) => {
+    const next = new URLSearchParams(searchParams)
+    next.set('tab', tab)
+    if (tab !== REPORTS_TAB_DIRECT_PAYMENTS) {
+      next.delete('paymentId')
+      next.delete('status')
+    }
+    setSearchParams(next, { replace: true })
+  }, [searchParams, setSearchParams])
+
   const openDirectPayment = useCallback((paymentId: string) => {
     const next = new URLSearchParams(searchParams)
     next.set('tab', REPORTS_TAB_DIRECT_PAYMENTS)
@@ -168,9 +185,23 @@ function ReportsView({
   }, [searchParams])
 
   // Filter States
-  const [dateRangePreset, setDateRangePreset] = useState('all')
-  const [startDate, setStartDate] = useState('')
-  const [endDate, setEndDate] = useState('')
+  const [dateRangePreset, setDateRangePreset] = useState(deepLinkDate ? 'custom' : 'all')
+  const [startDate, setStartDate] = useState(deepLinkDate || '')
+  const [endDate, setEndDate] = useState(deepLinkDate || '')
+
+  // The lazy useState initializers above only apply on first mount. If a tip
+  // notification is clicked while already on this route (no remount, just a
+  // searchParams change), re-sync the date filter to the new deep link.
+  const syncedDeepLinkRef = useRef<string | null>(deepLinkTransactionId)
+  useEffect(() => {
+    if (!deepLinkTransactionId || syncedDeepLinkRef.current === deepLinkTransactionId) return
+    syncedDeepLinkRef.current = deepLinkTransactionId
+    if (deepLinkDate) {
+      setDateRangePreset('custom')
+      setStartDate(deepLinkDate)
+      setEndDate(deepLinkDate)
+    }
+  }, [deepLinkTransactionId, deepLinkDate])
   const [minAmount, setMinAmount] = useState('')
   const [maxAmount, setMaxAmount] = useState('')
   const [selectedStaff, setSelectedStaff] = useState('all')
@@ -180,7 +211,11 @@ function ReportsView({
   const [searchQuery, setSearchQuery] = useState('')
   const [debouncedSearch, setDebouncedSearch] = useState('')
   const [selectedTx, setSelectedTx] = useState<any | null>(null)
-  const { pageNumber, pageSize, setPage, reset: resetPage } = usePagination({ pageSize: DEFAULT_PAGE_SIZE })
+  const { pageNumber, pageSize, setPage, reset: resetPage } = usePagination({
+    // Widen the page when deep-linking a specific tip so it's more likely to
+    // be on page 1 alongside the date-narrowed filter above.
+    pageSize: deepLinkTransactionId ? 100 : DEFAULT_PAGE_SIZE,
+  })
 
   // Awaiting-confirmation is driven by the visible Status filter, not a
   // separate toggle, so the criteria is transparent and clears via Reset.
@@ -334,6 +369,45 @@ function ReportsView({
   const totalPages = Math.max(1, transactionsPage?.totalPages ?? 1)
   const hasNextPage = transactionsPage?.hasNextPage ?? false
   const hasPreviousPage = transactionsPage?.hasPreviousPage ?? false
+
+  // Auto-open the TransactionDetailModal for a tip deep-linked from a
+  // notification click (issue #419), once the matching tip is loaded.
+  // Runs once per deep link — if the tip isn't on this (date-narrowed) page,
+  // we still land correctly on the Tips tab, just without the modal.
+  //
+  // Waits on `isFetching` (not just `isPending`) so it settles after the
+  // date-narrowed refetch, instead of firing against the broader
+  // pre-narrowing result set (placeholderData keeps `isPending` false during
+  // that refetch). Also waits for the local filter state to actually reflect
+  // deepLinkDate: on the same-route re-navigation case (already viewing
+  // Reports, click another tip notification), this effect and the sync
+  // effect above both run against the same, not-yet-updated render before
+  // the date filter state change propagates — without this guard we'd check
+  // `transactions` from the still-stale (pre-narrowing) query.
+  const attemptedDeepLinkRef = useRef<string | null>(null)
+  useEffect(() => {
+    if (!deepLinkTransactionId || isFetching) return
+    if (deepLinkDate && (dateRangePreset !== 'custom' || startDate !== deepLinkDate)) return
+    if (attemptedDeepLinkRef.current === deepLinkTransactionId) return
+    attemptedDeepLinkRef.current = deepLinkTransactionId
+
+    const match = transactions.find((tx) => tx.id === deepLinkTransactionId)
+    if (match) setSelectedTx(match)
+
+    const next = new URLSearchParams(searchParams)
+    next.delete('transactionId')
+    next.delete('date')
+    setSearchParams(next, { replace: true })
+  }, [
+    deepLinkTransactionId,
+    deepLinkDate,
+    dateRangePreset,
+    startDate,
+    isFetching,
+    transactions,
+    searchParams,
+    setSearchParams,
+  ])
 
   // Amount filter only — not supported by tips API
   // For the awaiting-confirmation filter, also refine client-side to the exact eligibility predicate

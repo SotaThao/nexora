@@ -168,15 +168,25 @@ export function resolveStaffNotificationActionUrl(
 // Link notifications (incoming requests + approved/accepted/joined) all land on the
 // Salon Link & Tips screen ('qr') — that page hosts the Accept/Decline CTAs for
 // pending requests and the linked-business list for everything else.
+//
+// Real backend values (NotificationType enum, live Swagger spec) are PascalCase,
+// e.g. `TipReceived`, `StaffLinkRequestAccepted`. `tipreceived` was missing here,
+// so tip notifications fell through to the default 'notifications' screen instead
+// of navigating to Payments/Tips.
 const STAFF_NOTIFICATION_SCREEN: Record<string, string> = {
   tip: 'payments',
   tipsuccess: 'payments',
+  tipreceived: 'payments', // TipReceived
   review: 'reviews',
   reviewgood: 'reviews',
+  reviewreply: 'reviews', // ReviewReply
   feedbackalert: 'reviews',
   stafflinkrequest: 'qr',
   stafflinkapproved: 'qr',
+  stafflinkrejected: 'qr', // StaffLinkRejected
   stafflinkaccepted: 'qr',
+  stafflinkrequestaccepted: 'qr', // StaffLinkRequestAccepted
+  stafflinkrequestrejected: 'qr', // StaffLinkRequestRejected
   staffinviteaccepted: 'qr',
   staffacceptedinvite: 'qr',
   staffjoined: 'qr',
