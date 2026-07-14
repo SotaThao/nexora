@@ -23,6 +23,7 @@ import {
   type MerchantVoiceBookingDto,
 } from '../../../data/repositories/merchantVoice'
 import { getApiErrorCode } from '../../../types/domain'
+import { parseApiDateTime } from '../utils'
 import {
   BroadcastIcon,
   CalendarKpiIcon,
@@ -144,9 +145,9 @@ function toLocalDateIso(date: Date) {
 
 function formatTimeBlock(
   startAt: string | null,
-  endAt: string | null,
   fallback: string | null,
   todayLabel: string,
+  language: string = 'en',
 ) {
   if (!startAt) {
     return {
@@ -156,8 +157,9 @@ function formatTimeBlock(
     }
   }
 
-  const start = new Date(startAt)
-  if (Number.isNaN(start.getTime())) {
+  // BE returns UTC (often without trailing Z). Parse as UTC, then format in end-user TZ.
+  const start = parseApiDateTime(startAt)
+  if (!start) {
     return {
       timeMain: fallback || startAt,
       timeDate: fallback || '',
@@ -165,7 +167,7 @@ function formatTimeBlock(
     }
   }
 
-  const locale = undefined
+  const dateLocale = language === 'vi' ? 'vi-VN' : 'en-US'
   const timeZone = Intl.DateTimeFormat().resolvedOptions().timeZone
   const dateIso = toLocalDateIso(start)
   const todayIso = toLocalDateIso(new Date())
@@ -176,7 +178,7 @@ function formatTimeBlock(
     hour12: true,
     timeZone,
   })
-  const dateFormatter = new Intl.DateTimeFormat(locale, {
+  const dateFormatter = new Intl.DateTimeFormat(dateLocale, {
     month: 'short',
     day: 'numeric',
     year: 'numeric',
@@ -185,21 +187,10 @@ function formatTimeBlock(
 
   const startTime = timeFormatter.format(start)
   const dateText = dateFormatter.format(start)
-  const end = endAt ? new Date(endAt) : null
-  const hasValidEnd = Boolean(end && !Number.isNaN(end.getTime()))
-  const endTime = hasValidEnd ? timeFormatter.format(end) : null
-  const endDateIso = hasValidEnd ? toLocalDateIso(end) : null
-  const sameLocalDay = !endDateIso || endDateIso === dateIso
-
-  // Keep times-only in timeMain so mobile nowrap rows don't blow up on overnight bookings.
-  const timeRange = endTime ? `${startTime} – ${endTime}` : startTime
-  const timeDate = sameLocalDay || !hasValidEnd
-    ? dateText
-    : `${dateText} – ${dateFormatter.format(end)}`
 
   return {
-    timeMain: dateIso === todayIso ? `${todayLabel} · ${timeRange}` : timeRange,
-    timeDate,
+    timeMain: dateIso === todayIso ? `${todayLabel} · ${startTime}` : startTime,
+    timeDate: dateText,
     dateIso,
   }
 }
@@ -215,13 +206,14 @@ function toBookingItem(
   item: MerchantVoiceBookingDto,
   statusOverride: BookingStatus | undefined,
   todayLabel: string,
+  language: string = 'en',
 ): BookingItem {
   const source = mapSource(item.source)
   const time = formatTimeBlock(
     item.requestedStartAtUtc,
-    item.requestedEndAtUtc,
     item.preferredTime,
     todayLabel,
+    language,
   )
   const status = resolveBookingStatus(item, statusOverride)
   return {
@@ -436,7 +428,7 @@ function BookingTableMobileList({
 }
 
 export default function BookingTodayPanel() {
-  const { t } = useTranslation()
+  const { t, currentLanguage } = useTranslation()
   const { showToast } = useNotification()
   const voiceEnabled = useBookingHubVoiceEnabled()
   // iPad Pro (1024+) still shows desktop chrome, but content pane is too narrow for 6-col table.
@@ -499,9 +491,9 @@ export default function BookingTodayPanel() {
 
   const filteredBookings = useMemo(() => (
     (bookingResponse?.items ?? []).map((item) =>
-      toBookingItem(item, statusOverrides[item.id], t(`${TK}.today.todayLabel`)),
+      toBookingItem(item, statusOverrides[item.id], t(`${TK}.today.todayLabel`), currentLanguage),
     )
-  ), [bookingResponse?.items, statusOverrides, t])
+  ), [bookingResponse?.items, statusOverrides, t, currentLanguage])
 
   const stats = useMemo(() => ({
     todayCount: statistics?.allBookings ?? 0,
@@ -913,7 +905,7 @@ export default function BookingTodayPanel() {
                         <span className="booking-card-label">{t(`${TK}.today.colTech`)}</span>
                         <span className="booking-card-value">{booking.tech}</span>
                       </div>
-                      <div className="booking-card-info-row">
+                      <div className="booking-card-info-row is-span-full">
                         <span className="booking-card-label">{t(`${TK}.today.colTime`)}</span>
                         <span className="booking-card-value booking-card-time">
                           <span className="booking-card-time-main">{booking.timeMain}</span>

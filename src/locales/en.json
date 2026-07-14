@@ -2712,6 +2712,8 @@
             "suggestHidden": "Industry suggestions hidden.",
             "languageSelected": "AI language set to {language}.",
             "saveSuccess": "Configuration saved. AI Voice, SMS, LP, Schema, and Booking Hub are synced.",
+            "saveValidationError": "Please complete all required fields.",
+            "invalidPhone": "Please enter a valid phone number.",
             "hourRequired": "Open and close times are required.",
             "hourInvalid": "Open time must be earlier than close time.",
             "hourValidationSummary": "Please fix operating hours before saving."
