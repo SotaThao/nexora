@@ -105,7 +105,7 @@ export default function SettingsTipQrPanel({
   const isLoading = isProfileLoading || isQrLoading || isMethodsLoading
 
   const gatewayCardClass = 'rounded-xl border border-nexoraBorder bg-nexoraCanvas p-5'
-  const gatewayActionBtnClass = 'flex h-9 w-full min-w-0 items-center justify-center gap-1 rounded-lg px-2 text-xs font-bold transition cursor-pointer'
+  const gatewayActionBtnClass = 'flex h-9 flex-1 min-w-0 items-center justify-center gap-1 rounded-lg px-2 text-xs font-bold transition cursor-pointer'
 
   if (isLoading) {
     return (
@@ -190,76 +190,74 @@ export default function SettingsTipQrPanel({
           <Download className="h-4 w-4 shrink-0" />
           <span className="truncate">{t('dashboard.master_gateway.btn_download')}</span>
         </button>
-        <button
-          type="button"
-          disabled={!paymentPageUrl}
-          onClick={() => handleCopy(paymentPageUrl, 'direct-payment-url')}
-          className={`${gatewayActionBtnClass} bg-white border border-nexoraBorder text-nexoraText hover:bg-nexoraSurfaceMuted disabled:cursor-not-allowed disabled:opacity-60`}
-        >
-          {copiedId === 'direct-payment-url' ? (
-            <>
-              <Check className="h-4 w-4 shrink-0 text-emerald-600" />
-              <span className="truncate text-emerald-600">{t('components.settings.tabs.ProfileTab.copied')}</span>
-            </>
-          ) : (
-            <>
-              <Copy className="h-4 w-4 shrink-0" />
-              <span className="truncate">{t('dashboard.master_gateway.btn_copy_link')}</span>
-            </>
-          )}
-        </button>
       </>
     )
 
     return (
       <>
-        <div className={`${gatewayCardClass} flex flex-col gap-5 md:flex-row md:justify-between`}>
-          <div className="flex flex-col justify-between md:flex-grow md:min-w-0">
-            <div>
+        <div className={`${gatewayCardClass} flex flex-col gap-5`}>
+          <div className="flex flex-col gap-5 md:flex-row md:justify-between">
+            <div className="md:min-w-0 md:flex-grow">
               <div className="flex items-center gap-2">
-                <span className="flex h-9 w-9 items-center justify-center rounded-lg bg-emerald-50 text-emerald-600">
+                <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-emerald-50 text-emerald-600">
                   <Wallet className="h-5 w-5" />
                 </span>
-                <div>
-                  <h3 className="text-sm font-extrabold text-nexoraText">
-                    {t('dashboard.master_gateway.payment_title')}
-                  </h3>
-                </div>
+                <h3 className="text-sm font-extrabold text-nexoraText">
+                  {t('dashboard.master_gateway.payment_title')}
+                </h3>
               </div>
               <p className="mt-4 text-xs leading-normal text-nexoraMuted">
                 {t('dashboard.master_gateway.payment_body')}
               </p>
+
+              <div className="mt-3 flex items-center justify-between gap-2 rounded-lg border border-nexoraBorder bg-white py-1.5 pl-4 pr-1.5">
+                <input
+                  type="text"
+                  readOnly
+                  value={paymentPageUrl ? paymentPageUrl.replace(/^https?:\/\//, '') : ''}
+                  className="min-w-0 flex-1 truncate bg-transparent text-xs font-semibold text-nexoraBrand"
+                />
+                <button
+                  type="button"
+                  disabled={!paymentPageUrl}
+                  onClick={() => handleCopy(paymentPageUrl, 'direct-payment-url')}
+                  aria-label={t('dashboard.master_gateway.btn_copy_link')}
+                  className="flex h-7 w-7 shrink-0 items-center justify-center rounded-md text-nexoraMuted transition hover:bg-nexoraSurfaceMuted hover:text-nexoraBrand disabled:cursor-not-allowed disabled:opacity-40"
+                >
+                  {copiedId === 'direct-payment-url' ? (
+                    <Check className="h-4 w-4 text-emerald-600" />
+                  ) : (
+                    <Copy className="h-4 w-4" />
+                  )}
+                </button>
+              </div>
             </div>
 
-            <div className="mt-6 hidden w-full grid-cols-3 gap-2 md:grid">
-              {gatewayActionButtons}
-            </div>
+            <button
+              type="button"
+              onClick={() => paymentPageUrl && setShowPreview(true)}
+              aria-label={t('components.settings.SettingsTipQrPanel.previewQr')}
+              className="mx-auto flex h-28 w-28 shrink-0 items-center justify-center rounded-lg border border-nexoraBorder/80 bg-white p-2 shadow-sm relative overflow-hidden cursor-pointer hover:border-nexoraBrand transition select-none group md:mx-0 md:self-start"
+            >
+              {qrPreviewUrl ? (
+                <QrImage
+                  src={qrPreviewUrl}
+                  alt={t('components.settings.SettingsTipQrPanel.qrAlt')}
+                  className="h-full w-full transition duration-200 group-hover:scale-105"
+                />
+              ) : (
+                <QrCode className="h-12 w-12 text-slate-300" />
+              )}
+              <div className="absolute inset-0 bg-nexoraBrand/80 opacity-0 group-hover:opacity-100 transition flex flex-col items-center justify-center gap-1 text-white select-none">
+                <QrCode className="h-5 w-5" />
+                <span className="text-[9px] font-black uppercase tracking-wider">
+                  {t('components.dashboard.views.StaffView.preview')}
+                </span>
+              </div>
+            </button>
           </div>
 
-          <button
-            type="button"
-            onClick={() => paymentPageUrl && setShowPreview(true)}
-            aria-label={t('components.settings.SettingsTipQrPanel.previewQr')}
-            className="mx-auto flex h-28 w-28 shrink-0 items-center justify-center rounded-lg border border-nexoraBorder/80 bg-white p-2 shadow-sm relative overflow-hidden cursor-pointer hover:border-nexoraBrand transition select-none group md:mx-0 md:self-start"
-          >
-            {qrPreviewUrl ? (
-              <QrImage
-                src={qrPreviewUrl}
-                alt={t('components.settings.SettingsTipQrPanel.qrAlt')}
-                className="h-full w-full transition duration-200 group-hover:scale-105"
-              />
-            ) : (
-              <QrCode className="h-12 w-12 text-slate-300" />
-            )}
-            <div className="absolute inset-0 bg-nexoraBrand/80 opacity-0 group-hover:opacity-100 transition flex flex-col items-center justify-center gap-1 text-white select-none">
-              <QrCode className="h-5 w-5" />
-              <span className="text-[9px] font-black uppercase tracking-wider">
-                {t('components.dashboard.views.StaffView.preview')}
-              </span>
-            </div>
-          </button>
-
-          <div className="grid w-full grid-cols-3 gap-2 md:hidden">
+          <div className="flex w-full gap-2">
             {gatewayActionButtons}
           </div>
         </div>
