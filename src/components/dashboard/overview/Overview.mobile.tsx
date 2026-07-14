@@ -11,7 +11,6 @@ import {
   TrendingUp,
   UserPlus,
   QrCode,
-  BarChart3,
   CreditCard,
 } from 'lucide-react'
 import { useNavigate } from 'react-router-dom'
@@ -58,17 +57,15 @@ function clampPct(n) {
 const QUICK_ACTION_ACCENTS = {
   staff: 'border-[#DDD8FF] bg-[#F4F2FF]',
   qr: 'border-emerald-200 bg-emerald-50',
-  reports: 'border-orange-200 bg-orange-50',
   reviews: 'border-rose-200 bg-rose-50',
-  referral: 'border-[#E3DDFF] bg-[#F5F3FF]',
+  referral: 'border-orange-200 bg-orange-50',
 }
 
 const QUICK_ACTION_ICON_COLORS = {
   staff: 'text-nexoraBrandDark',
   qr: 'text-nexoraSuccess',
-  reports: 'text-orange-500',
   reviews: 'text-rose-500',
-  referral: 'text-[#5B4FE9]',
+  referral: 'text-orange-500',
 }
 
 /* ─── KPI Card (top row style: icon+label left, arrow top-right, value, trend badge) ── */
@@ -426,7 +423,7 @@ function Overview({
 
       {/* ── Quick Actions ────────────────────────────────────────────────── */}
       <Panel title={k('quick_actions')} action={k('manage')} onAction={() => onNavigateMenu?.('touchpoints')}>
-        <div className="grid grid-cols-5 gap-2">
+        <div className="grid grid-cols-4 gap-2">
           <QuickAction
             icon={<UserPlus className={`h-4 w-4 ${QUICK_ACTION_ICON_COLORS.staff}`} />}
             label={k('quick_staff')}
@@ -440,22 +437,16 @@ function Overview({
             onClick={() => navigate('/dashboard/tips?tab=payouts')}
           />
           <QuickAction
-            icon={<BarChart3 className={`h-4 w-4 ${QUICK_ACTION_ICON_COLORS.reports}`} />}
-            label={k('quick_reports')}
-            accent={QUICK_ACTION_ACCENTS.reports}
-            onClick={() => onNavigateMenu?.('reports')}
+            icon={<QrCode className={`h-4 w-4 ${QUICK_ACTION_ICON_COLORS.referral}`} />}
+            label={k('quick_referral_qr')}
+            accent={QUICK_ACTION_ACCENTS.referral}
+            onClick={() => setIsReferralQrOpen(true)}
           />
           <QuickAction
             icon={<Star className={`h-4 w-4 ${QUICK_ACTION_ICON_COLORS.reviews}`} />}
             label={k('quick_reviews')}
             accent={QUICK_ACTION_ACCENTS.reviews}
             onClick={() => onOpenReviews?.()}
-          />
-          <QuickAction
-            icon={<QrCode className={`h-4 w-4 ${QUICK_ACTION_ICON_COLORS.referral}`} />}
-            label={k('quick_referral_qr')}
-            accent={QUICK_ACTION_ACCENTS.referral}
-            onClick={() => setIsReferralQrOpen(true)}
           />
         </div>
       </Panel>

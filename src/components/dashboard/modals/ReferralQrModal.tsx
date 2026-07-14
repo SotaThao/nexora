@@ -7,6 +7,7 @@ import { useProfileSettings } from '../../../data/hooks/useProfileSettings'
 import { getProfileReferralCode, buildAffiliateReferralUrl } from '../../../utils/affiliateReferral'
 import { buildQrImageUrl } from '../../../utils/staffTipUrl'
 import { downloadQrCode, QR_IMAGE_SIZES } from '../../../utils/qrUtils'
+import { copyTextToClipboard } from '../../../utils/clipboard'
 import QrImage from '../../ui/QrImage'
 
 const TOAST_KEY = 'components.staff_dashboard.views.StaffMyQR'
@@ -47,7 +48,7 @@ export default function ReferralQrModal({ open, onClose }: ReferralQrModalProps)
       return
     }
     try {
-      await navigator.clipboard.writeText(referralUrl)
+      await copyTextToClipboard(referralUrl)
       showToast(t(`${TOAST_KEY}.referralLinkCopied`), 'success')
     } catch {
       showToast(t(`${TOAST_KEY}.copyFailed`), 'error')
