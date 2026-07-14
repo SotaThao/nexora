@@ -106,6 +106,11 @@ export const VISIBLE_TOUCHPOINTS_SUBMENU = SHOW_HARDWARE_DEVICES
   ? TOUCHPOINTS_SUBMENU
   : TOUCHPOINTS_SUBMENU.filter((item) => item.id !== 'devices')
 
+export const TAXIQ_SUBMENU: { id: string; label: string }[] =
+  MENU_ITEMS.find((item): item is typeof item & { children: { id: string; label: string }[] } =>
+    item.id === 'taxiq' && 'children' in item,
+  )?.children ?? []
+
 export const MERCHANT_SIDEBAR_MENU_ITEMS = MENU_ITEMS.filter(
   (item) => !MERCHANT_SIDEBAR_HIDDEN_MENU_IDS.includes(item.id),
 )
