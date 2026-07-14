@@ -147,11 +147,19 @@ async function resolveLocalStaffPaymentMethodId(
   uiKey?: string | null,
 ): Promise<string> {
   if (paymentMethodId) return paymentMethodId
-  if (!uiKey) throw new Error('PAYMENT_METHOD_REQUIRED')
+  if (!uiKey) {
+    const err = new Error('STAFF_PAYMENT_METHOD_NOT_FOUND') as Error & { errorCode?: string }
+    err.errorCode = 'STAFF_PAYMENT_METHOD_NOT_FOUND'
+    throw err
+  }
 
   const methods = await localStaffRepository.getPaymentMethods(staffProfileId)
   const match = methods.find((method) => (method.uiKey || payoutTypeToUiKey(method.type || '')) === uiKey)
-  if (!match?.id) throw new Error('PAYMENT_METHOD_NOT_FOUND')
+  if (!match?.id) {
+    const err = new Error('STAFF_PAYMENT_METHOD_NOT_FOUND') as Error & { errorCode?: string }
+    err.errorCode = 'STAFF_PAYMENT_METHOD_NOT_FOUND'
+    throw err
+  }
   return match.id
 }
 

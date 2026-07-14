@@ -1,4 +1,4 @@
-import { useRef, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { Copy, Edit2, Loader2, Trash2, Upload, X } from 'lucide-react'
 import { useTranslation } from '../../../contexts/LanguageContext'
 import { useNotification } from '../../../contexts/NotificationContext'
@@ -52,7 +52,12 @@ export default function PayoutDetailModal({
   const cancelMutation = useCancelMerchantPayout()
   const updateMutation = useUpdateMerchantPayout()
   const fileInputRef = useRef<HTMLInputElement>(null)
+  const latestEvidenceUrlsRef = useRef<string[]>(payout?.evidenceUrls ?? [])
   const [isUploadingEvidence, setIsUploadingEvidence] = useState(false)
+
+  useEffect(() => {
+    latestEvidenceUrlsRef.current = payout?.evidenceUrls ?? []
+  }, [payout?.id, payout?.evidenceUrls])
 
   const canManage = payout ? isPayoutEditable(payout.status) : false
   const isCompleted = payout?.status === PayoutStatus.Confirmed
@@ -125,7 +130,8 @@ export default function PayoutDetailModal({
       showToast(t('dashboard.tips.payouts_manager.evidence_image_only'), 'error')
     }
 
-    const remaining = maxEvidenceCount - currentEvidenceCount
+    const knownUrls = latestEvidenceUrlsRef.current
+    const remaining = maxEvidenceCount - knownUrls.length
     if (remaining <= 0) {
       showToast(t('dashboard.tips.payouts_manager.evidence_max', { max: maxEvidenceCount }), 'error')
       return
@@ -138,7 +144,7 @@ export default function PayoutDetailModal({
       for (const file of uploads) {
         uploadedUrls.push(await imagesRepository.uploadAndGetUrl(file))
       }
-      const evidenceUrls = [...(payout.evidenceUrls ?? []), ...uploadedUrls]
+      const evidenceUrls = [...knownUrls, ...uploadedUrls]
       await updateMutation.mutateAsync({
         payoutId: payout.id,
         payload: {
@@ -150,6 +156,7 @@ export default function PayoutDetailModal({
           notes: payout.notes ?? null,
         },
       })
+      latestEvidenceUrlsRef.current = evidenceUrls
       showToast(t('dashboard.tips.payouts_manager.evidence_upload_success'), 'success')
     } catch (err) {
       showToast(t(getErrorI18nKey(getApiErrorCode(err))), 'error')
