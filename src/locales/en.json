@@ -498,6 +498,7 @@
     "nickname_tooltip": "This nickname is visible to customers at the salon when they scan and tip.",
     "staff_position": "Position / Role",
     "staff_position_placeholder": "e.g., Gel-X Artist...",
+    "staff_avatar": "Avatar",
     "staff_phone": "Phone Number",
     "staff_phone_placeholder": "e.g., 407-555-0123",
     "staff_email": "Email Address",

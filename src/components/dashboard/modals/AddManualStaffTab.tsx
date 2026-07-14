@@ -243,7 +243,7 @@ function AddManualStaffTab({
         <div className="grid grid-cols-1 items-start gap-6 md:grid-cols-[minmax(0,1.2fr)_minmax(0,0.8fr)]">
           <div className="space-y-4">
             <div>
-              <label className={fieldLabelClass}>Avatar</label>
+              <label className={fieldLabelClass}>{t('setup.staff_avatar')}</label>
               <div className="mt-2 flex items-center gap-4">
                 {avatarPreview ? (
                   <img

@@ -541,7 +541,7 @@ function StaffModal({
 
             {/* Avatar */}
             <div>
-              <label className="text-[10px] font-extrabold uppercase text-nexoraMuted">Avatar</label>
+              <label className="text-[10px] font-extrabold uppercase text-nexoraMuted">{t('setup.staff_avatar')}</label>
               <div className="mt-2 flex items-center gap-4">
                 <div className="relative">
                   {form.avatar ? (
