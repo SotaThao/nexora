@@ -99,9 +99,11 @@ export function BookingTableMobileListSkeleton({ count = 4 }: { count?: number }
           <div className="booking-table-mobile-meta">
             <Skeleton width={88} height={22} borderRadius={999} />
             <Skeleton width={72} height={22} borderRadius={999} />
-            <Skeleton width="56%" height={12} borderRadius={6} />
           </div>
-          <Skeleton width="42%" height={30} borderRadius={8} />
+          <div className="booking-table-mobile-footer">
+            <Skeleton width="42%" height={14} borderRadius={6} />
+            <Skeleton width={96} height={30} borderRadius={8} />
+          </div>
         </article>
       ))}
     </div>

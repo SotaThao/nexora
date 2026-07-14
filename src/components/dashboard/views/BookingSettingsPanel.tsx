@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from 'react'
+import React, { useEffect, useMemo, useRef, useState } from 'react'
 import CountryCodeSelect, { formatNationalNumber, normalizePhoneForApi, parsePhone } from '../../CountryCodeSelect'
 import { useTranslation } from '../../../contexts/LanguageContext'
 import { useNotification } from '../../../contexts/NotificationContext'
@@ -135,30 +135,6 @@ function ChevronIcon({ collapsed }: { collapsed: boolean }) {
   )
 }
 
-function SettingsCollapseButton({
-  collapsed,
-  expandLabel,
-  collapseLabel,
-  onClick,
-}: {
-  collapsed: boolean
-  expandLabel: string
-  collapseLabel: string
-  onClick: () => void
-}) {
-  return (
-    <button
-      className="settings-collapse-button"
-      type="button"
-      aria-expanded={!collapsed}
-      aria-label={collapsed ? expandLabel : collapseLabel}
-      onClick={onClick}
-    >
-      <ChevronIcon collapsed={collapsed} />
-    </button>
-  )
-}
-
 function SettingsCard({
   cardId,
   collapsed,
@@ -175,22 +151,45 @@ function SettingsCard({
   children: React.ReactNode
 }) {
   const { t } = useTranslation()
+  const bodyRef = useRef<HTMLDivElement>(null)
+  const expandLabel = t(`${TK}.expandSection`)
+  const collapseLabel = t(`${TK}.collapseSection`)
+
+  useEffect(() => {
+    const body = bodyRef.current
+    if (!body) return
+    if (collapsed) body.setAttribute('inert', '')
+    else body.removeAttribute('inert')
+  }, [collapsed])
 
   return (
     <article className={`settings-card ${collapsed ? 'is-collapsed' : ''}`} data-settings-card={cardId}>
-      <div className="settings-card-head">
+      <button
+        className="settings-card-head"
+        type="button"
+        aria-expanded={!collapsed}
+        aria-controls={`settings-card-body-${cardId}`}
+        aria-label={collapsed ? expandLabel : collapseLabel}
+        onClick={() => onToggle(cardId)}
+      >
         <div>
           <div className="settings-card-title">{title}</div>
-          <div className="settings-card-sub">{subtitle}</div>
+          {!collapsed ? <div className="settings-card-sub">{subtitle}</div> : null}
         </div>
-        <SettingsCollapseButton
-          collapsed={collapsed}
-          expandLabel={t(`${TK}.expandSection`)}
-          collapseLabel={t(`${TK}.collapseSection`)}
-          onClick={() => onToggle(cardId)}
-        />
+        <span className="settings-collapse-button" aria-hidden="true">
+          <ChevronIcon collapsed={collapsed} />
+        </span>
+      </button>
+      <div
+        ref={bodyRef}
+        className="settings-card-body"
+        id={`settings-card-body-${cardId}`}
+        aria-hidden={collapsed}
+      >
+        <div className="settings-card-body-inner">
+          {children}
+        </div>
       </div>
-      {children}
     </article>
   )
 }
@@ -426,6 +425,14 @@ export default function BookingSettingsPanel() {
       if (field === 'name') return { ...service, name: value }
       if (field === 'price') return { ...service, price: parseWholeNumberInput(value) }
       return { ...service, duration: parseWholeNumberInput(value) }
+    }))
+  }
+
+  const commitServiceNumberOnBlur = (id: string, field: 'price' | 'duration') => {
+    setServices((prev) => prev.map((service) => {
+      if (service.id !== id) return service
+      if (Number.isFinite(service[field])) return service
+      return { ...service, [field]: 0 }
     }))
   }
 
@@ -874,6 +881,7 @@ export default function BookingSettingsPanel() {
                           value={formatWholeNumberInputValue(service.price)}
                           aria-label={t(`${TK}.servicePriceAria`)}
                           onChange={(event) => updateService(service.id, 'price', event.target.value)}
+                          onBlur={() => commitServiceNumberOnBlur(service.id, 'price')}
                         />
                       </div>
                     </label>
@@ -888,6 +896,7 @@ export default function BookingSettingsPanel() {
                           value={formatWholeNumberInputValue(service.duration)}
                           aria-label={t(`${TK}.serviceDurationAria`)}
                           onChange={(event) => updateService(service.id, 'duration', event.target.value)}
+                          onBlur={() => commitServiceNumberOnBlur(service.id, 'duration')}
                         />
                         <span className="settings-service-suffix">min</span>
                       </div>

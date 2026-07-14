@@ -2468,6 +2468,8 @@
             "keywordPlaceholderAll": "Nhập từ khóa",
             "dateFrom": "Date from",
             "dateTo": "Date to",
+            "dateFromPlaceholder": "Chọn ngày bắt đầu",
+            "dateToPlaceholder": "Chọn ngày kết thúc",
             "clear": "Clear",
             "colCustomer": "Khách hàng",
             "colService": "Dịch vụ",

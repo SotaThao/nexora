@@ -2469,6 +2469,8 @@
             "keywordPlaceholderAll": "Enter keyword",
             "dateFrom": "Date from",
             "dateTo": "Date to",
+            "dateFromPlaceholder": "Select start date",
+            "dateToPlaceholder": "Select end date",
             "clear": "Clear",
             "colCustomer": "Customer",
             "colService": "Service",

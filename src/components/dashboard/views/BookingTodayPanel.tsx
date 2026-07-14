@@ -43,7 +43,7 @@ import {
 import { useBookingHubVoiceEnabled } from './BookingHubVoiceContext'
 import Pagination from '../../ui/Pagination'
 import { usePagination } from '../../../hooks/usePagination'
-import { useIsMobileUI } from '../../../hooks/useIsMobileUI'
+import { useMediaQuery } from '../../../hooks/useMediaQuery'
 import { BOOKING_HUB_PAGE_SIZE } from '../../../constants/pagination'
 import {
   BookingKpiSkeleton,
@@ -51,7 +51,6 @@ import {
 } from './BookingHubSkeletons'
 
 const TK = 'components.dashboard.views.BookingHubView'
-const TODAY_ISO = new Date().toISOString().slice(0, 10)
 
 const KPI_ACCENT_ELECTRIC = { '--kpi-accent': 'var(--nexora-electric)' } as React.CSSProperties
 const KPI_ACCENT_SUCCESS = { '--kpi-accent': 'var(--nexora-success)' } as React.CSSProperties
@@ -136,21 +135,68 @@ function serviceList(service: string | null | undefined) {
     .filter(Boolean)
 }
 
-function formatTimeBlock(startAt: string | null, fallback: string | null) {
+function toLocalDateIso(date: Date) {
+  const year = date.getFullYear()
+  const month = String(date.getMonth() + 1).padStart(2, '0')
+  const day = String(date.getDate()).padStart(2, '0')
+  return `${year}-${month}-${day}`
+}
+
+function formatTimeBlock(
+  startAt: string | null,
+  endAt: string | null,
+  fallback: string | null,
+) {
   if (!startAt) {
     return {
       timeMain: fallback || 'Pending schedule',
       timeDate: fallback || 'Pending date',
-      dateIso: TODAY_ISO,
+      dateIso: toLocalDateIso(new Date()),
     }
   }
-  const date = new Date(startAt)
-  const dateIso = date.toISOString().slice(0, 10)
-  const today = new Date().toISOString().slice(0, 10)
-  const time = new Intl.DateTimeFormat('en-US', { hour: 'numeric', minute: '2-digit' }).format(date)
-  const dateText = new Intl.DateTimeFormat('en-US', { month: 'long', day: 'numeric', year: 'numeric' }).format(date)
+
+  const start = new Date(startAt)
+  if (Number.isNaN(start.getTime())) {
+    return {
+      timeMain: fallback || startAt,
+      timeDate: fallback || '',
+      dateIso: toLocalDateIso(new Date()),
+    }
+  }
+
+  const locale = undefined
+  const timeZone = Intl.DateTimeFormat().resolvedOptions().timeZone
+  const dateIso = toLocalDateIso(start)
+  const todayIso = toLocalDateIso(new Date())
+  const timeFormatter = new Intl.DateTimeFormat('en-US', {
+    hour: 'numeric',
+    minute: '2-digit',
+    hour12: true,
+    timeZone,
+  })
+  const dateFormatter = new Intl.DateTimeFormat(locale, {
+    month: 'short',
+    day: 'numeric',
+    year: 'numeric',
+    timeZone,
+  })
+
+  const startTime = timeFormatter.format(start)
+  const dateText = dateFormatter.format(start)
+  const end = endAt ? new Date(endAt) : null
+  const hasValidEnd = Boolean(end && !Number.isNaN(end.getTime()))
+  const endTime = hasValidEnd ? timeFormatter.format(end) : null
+  const endDateIso = hasValidEnd ? toLocalDateIso(end) : null
+  const sameLocalDay = !endDateIso || endDateIso === dateIso
+
+  const timeRange = endTime && sameLocalDay
+    ? `${startTime} – ${endTime}`
+    : endTime
+      ? `${startTime} – ${dateFormatter.format(end)} ${endTime}`
+      : startTime
+
   return {
-    timeMain: `${dateIso === today ? 'Today' : dateText} ${time}`,
+    timeMain: dateIso === todayIso ? `Today · ${timeRange}` : timeRange,
     timeDate: dateText,
     dateIso,
   }
@@ -165,7 +211,7 @@ function resolveBookingStatus(item: MerchantVoiceBookingDto, statusOverride?: Bo
 
 function toBookingItem(item: MerchantVoiceBookingDto, statusOverride?: BookingStatus): BookingItem {
   const source = mapSource(item.source)
-  const time = formatTimeBlock(item.requestedStartAtUtc, item.preferredTime)
+  const time = formatTimeBlock(item.requestedStartAtUtc, item.requestedEndAtUtc, item.preferredTime)
   const status = resolveBookingStatus(item, statusOverride)
   return {
     id: item.id,
@@ -355,17 +401,22 @@ function BookingTableMobileList({
               ))}
             </span>
             <span className="booking-tech-name">{booking.tech}</span>
+          </div>
+          <div className="booking-table-mobile-footer">
             <span className="booking-table-mobile-time">
               {booking.timeMain}
+              {booking.timeDate && !booking.timeMain.includes(booking.timeDate)
+                ? ` · ${booking.timeDate}`
+                : ''}
             </span>
-          </div>
-          <div className="booking-table-mobile-actions">
-            <BookingActions
-              booking={booking}
-              onAction={pendingStatusUpdates[booking.id] ? () => undefined : onAction}
-              isPending={Boolean(pendingStatusUpdates[booking.id])}
-              t={t}
-            />
+            <div className="booking-table-mobile-actions">
+              <BookingActions
+                booking={booking}
+                onAction={pendingStatusUpdates[booking.id] ? () => undefined : onAction}
+                isPending={Boolean(pendingStatusUpdates[booking.id])}
+                t={t}
+              />
+            </div>
           </div>
         </article>
       ))}
@@ -377,7 +428,8 @@ export default function BookingTodayPanel() {
   const { t } = useTranslation()
   const { showToast } = useNotification()
   const voiceEnabled = useBookingHubVoiceEnabled()
-  const isMobileUI = useIsMobileUI()
+  // iPad Pro (1024+) still shows desktop chrome, but content pane is too narrow for 6-col table.
+  const useCompactTableList = useMediaQuery('(max-width: 1366px)')
   const [viewMode, setViewMode] = useState<ViewMode>('table')
   const [searchField, setSearchField] = useState<SearchField>(BookingUiSearchField.All)
   const [searchKeyword, setSearchKeyword] = useState('')
@@ -674,21 +726,37 @@ export default function BookingTodayPanel() {
             <div className="booking-date-range">
               <label className="booking-control-field">
                 <span className="booking-control-label">{t(`${TK}.today.dateFrom`)}</span>
-                <input
-                  className="booking-input booking-input-date"
-                  type="date"
-                  value={dateFrom}
-                  onChange={(event) => setDateFrom(event.target.value)}
-                />
+                <span className={`booking-date-input-shell ${dateFrom ? 'has-value' : 'is-empty'}`}>
+                  <input
+                    className={`booking-input booking-input-date ${dateFrom ? 'has-value' : 'is-empty'}`}
+                    type="date"
+                    value={dateFrom}
+                    aria-label={t(`${TK}.today.dateFrom`)}
+                    onChange={(event) => setDateFrom(event.target.value)}
+                  />
+                  {!dateFrom ? (
+                    <span className="booking-date-placeholder" aria-hidden="true">
+                      {t(`${TK}.today.dateFromPlaceholder`)}
+                    </span>
+                  ) : null}
+                </span>
               </label>
               <label className="booking-control-field">
                 <span className="booking-control-label">{t(`${TK}.today.dateTo`)}</span>
-                <input
-                  className="booking-input booking-input-date"
-                  type="date"
-                  value={dateTo}
-                  onChange={(event) => setDateTo(event.target.value)}
-                />
+                <span className={`booking-date-input-shell ${dateTo ? 'has-value' : 'is-empty'}`}>
+                  <input
+                    className={`booking-input booking-input-date ${dateTo ? 'has-value' : 'is-empty'}`}
+                    type="date"
+                    value={dateTo}
+                    aria-label={t(`${TK}.today.dateTo`)}
+                    onChange={(event) => setDateTo(event.target.value)}
+                  />
+                  {!dateTo ? (
+                    <span className="booking-date-placeholder" aria-hidden="true">
+                      {t(`${TK}.today.dateToPlaceholder`)}
+                    </span>
+                  ) : null}
+                </span>
               </label>
             </div>
             <button className="booking-mini-button booking-clear-button" type="button" onClick={clearFilters}>
@@ -697,8 +765,8 @@ export default function BookingTodayPanel() {
           </div>
 
           {isListLoading ? (
-            <BookingTodayListSkeleton viewMode={viewMode} isMobileUI={isMobileUI} />
-          ) : viewMode === 'table' && isMobileUI ? (
+            <BookingTodayListSkeleton viewMode={viewMode} isMobileUI={useCompactTableList} />
+          ) : viewMode === 'table' && useCompactTableList ? (
             <BookingTableMobileList
               bookings={filteredBookings}
               statusLabel={statusLabel}
@@ -834,7 +902,12 @@ export default function BookingTodayPanel() {
                       </div>
                       <div className="booking-card-info-row">
                         <span className="booking-card-label">{t(`${TK}.today.colTime`)}</span>
-                        <span className="booking-card-value">{booking.timeMain} · {booking.timeDate}</span>
+                        <span className="booking-card-value booking-card-time">
+                          <span className="booking-card-time-main">{booking.timeMain}</span>
+                          {booking.timeDate && !booking.timeMain.includes(booking.timeDate) ? (
+                            <span className="booking-card-time-date">{booking.timeDate}</span>
+                          ) : null}
+                        </span>
                       </div>
                     </div>
                     <div className="booking-card-actions">
@@ -960,7 +1033,10 @@ export default function BookingTodayPanel() {
                   <div>
                     <div className="booking-detail-label">{t(`${TK}.today.colTime`)}</div>
                     <div className="booking-detail-value">
-                      {detailBooking.timeMain} · {detailBooking.timeDate}
+                      {detailBooking.timeMain}
+                      {detailBooking.timeDate && !detailBooking.timeMain.includes(detailBooking.timeDate)
+                        ? ` · ${detailBooking.timeDate}`
+                        : ''}
                     </div>
                   </div>
                 </div>
