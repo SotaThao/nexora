@@ -356,37 +356,6 @@ export default function BookingSettingsPanel() {
   const [address, setAddress] = useState('')
   const [googleReviewUrl, setGoogleReviewUrl] = useState('')
   const [statusMessage, setStatusMessage] = useState('')
-  const { t } = useTranslation();
-  const { showToast } = useNotification();
-  const voiceEnabled = useBookingHubVoiceEnabled();
-  const { data: configData, isLoading: isConfigLoading } =
-    useMerchantVoiceConfig({ enabled: voiceEnabled });
-  const updateConfigMutation = useUpdateMerchantVoiceConfig();
-  const [collapsedCards, setCollapsedCards] = useState<Record<string, boolean>>(
-    {},
-  );
-  const [hours, setHours] = useState(INITIAL_HOURS);
-  const [services, setServices] = useState(INITIAL_SERVICES);
-  const [suggestOpen, setSuggestOpen] = useState(false);
-  const [usedSuggests, setUsedSuggests] = useState<Set<string>>(
-    () => new Set(),
-  );
-  const [pressingSuggest, setPressingSuggest] = useState<string | null>(null);
-  const [highlightServiceId, setHighlightServiceId] = useState<string | null>(
-    null,
-  );
-  const [isPreviewPlaying, setIsPreviewPlaying] = useState(false);
-  const [language, setLanguage] = useState<Language>(
-    MerchantVoiceUiLanguage.En,
-  );
-  const [greeting, setGreeting] = useState(() => t(`${TK}.greetingEn`));
-  const [salonName, setSalonName] = useState("");
-  const [salonPhone, setSalonPhone] = useState("");
-  const [aiPhone, setAiPhone] = useState("");
-  const [bookingNotifyPhone, setBookingNotifyPhone] = useState("");
-  const [address, setAddress] = useState("");
-  const [googleReviewUrl, setGoogleReviewUrl] = useState("");
-  const [statusMessage, setStatusMessage] = useState("");
   const [formErrors, setFormErrors] = useState<{
     salonName?: string;
     salonPhone?: string;
@@ -1438,14 +1407,15 @@ export default function BookingSettingsPanel() {
                 {t(`${TK}.languageStatus.${language}`)}
               </div>
             </div>
-            <label className="settings-field settings-span-full">
-              <span className="settings-label">
+            <div className="settings-field settings-span-full">
+              <span className="settings-label" id="settings-greeting-label">
                 {t(`${TK}.greetingScript`)}
               </span>
               <textarea
                 className="settings-textarea"
                 value={greeting}
                 placeholder={t(`${TK}.placeholderGreeting`)}
+                aria-labelledby="settings-greeting-label"
                 aria-invalid={Boolean(formErrors.greeting)}
                 onChange={(event) => {
                   setGreeting(event.target.value);
@@ -1460,7 +1430,17 @@ export default function BookingSettingsPanel() {
                   </span>
                 ) : null}
               </span>
-            </label>
+              <button
+                className={`booking-secondary-button settings-preview-button ${isPreviewPlaying ? "is-playing" : ""}`}
+                type="button"
+                aria-pressed={isPreviewPlaying}
+                onClick={handlePreview}
+              >
+                {isPreviewPlaying
+                  ? t(`${TK}.previewVoiceStop`)
+                  : t(`${TK}.previewVoice`)}
+              </button>
+            </div>
             <label className="settings-field settings-span-full">
               <span className="settings-label">{t(`${TK}.promoLabel`)}</span>
               <textarea
@@ -1490,16 +1470,6 @@ export default function BookingSettingsPanel() {
               </div>
             </label>
           </div>
-          <button
-            className={`booking-secondary-button settings-preview-button ${isPreviewPlaying ? "is-playing" : ""}`}
-            type="button"
-            aria-pressed={isPreviewPlaying}
-            onClick={handlePreview}
-          >
-            {isPreviewPlaying
-              ? t(`${TK}.previewVoiceStop`)
-              : t(`${TK}.previewVoice`)}
-          </button>
         </SettingsCard>
       </div>
 

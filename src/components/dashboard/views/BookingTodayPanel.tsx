@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from 'react'
+import React, { useEffect, useMemo, useRef, useState } from 'react'
 import { formatNationalNumber, isValidPhoneE164, parsePhone } from '../../CountryCodeSelect'
 import { useTranslation } from '../../../contexts/LanguageContext'
 import { useNotification } from '../../../contexts/NotificationContext'
@@ -422,12 +422,21 @@ function BookingTableMobileList({
   )
 }
 
+/** Below this content-pane width, stacked rows beat a cramped 6-col table. */
+const COMPACT_TABLE_PANEL_MAX = 720
+
 export default function BookingTodayPanel() {
   const { t, currentLanguage } = useTranslation()
   const { showToast } = useNotification()
   const voiceEnabled = useBookingHubVoiceEnabled()
-  // iPad Pro (1024+) still shows desktop chrome, but content pane is too narrow for 6-col table.
-  const useCompactTableList = useMediaQuery('(max-width: 1366px)')
+  const listPanelRef = useRef<HTMLElement>(null)
+  const [panelWidth, setPanelWidth] = useState<number | null>(null)
+  // Viewport fallback only until ResizeObserver measures the real content pane
+  // (sidebar can leave a narrow panel on a wide desktop viewport).
+  const narrowViewportFallback = useMediaQuery('(max-width: 767px)')
+  const useCompactTableList = panelWidth != null
+    ? panelWidth < COMPACT_TABLE_PANEL_MAX
+    : narrowViewportFallback
   const [viewMode, setViewMode] = useState<ViewMode>('table')
   const [searchField, setSearchField] = useState<SearchField>(BookingUiSearchField.All)
   const [searchKeyword, setSearchKeyword] = useState('')
@@ -631,6 +640,28 @@ export default function BookingTodayPanel() {
     return () => window.clearTimeout(timer)
   }, [searchField, searchKeyword, dateFrom, dateTo, resetPage])
 
+  useEffect(() => {
+    const el = listPanelRef.current
+    if (!el || typeof ResizeObserver === 'undefined') {
+      return undefined
+    }
+
+    const updateWidth = (width: number) => {
+      setPanelWidth((prev) => (prev === width ? prev : width))
+    }
+
+    updateWidth(el.getBoundingClientRect().width)
+
+    const observer = new ResizeObserver((entries) => {
+      const width = entries[0]?.contentRect.width
+      if (typeof width === 'number') {
+        updateWidth(width)
+      }
+    })
+    observer.observe(el)
+    return () => observer.disconnect()
+  }, [])
+
   return (
     <div className="booking-sub-panel is-active" aria-busy={isStatisticsLoading || isListLoading}>
       {isStatisticsLoading ? (
@@ -670,7 +701,7 @@ export default function BookingTodayPanel() {
       )}
 
       <div className="booking-grid">
-        <article className="overview-card overview-card-pad">
+        <article className="overview-card overview-card-pad" ref={listPanelRef}>
           <div className="booking-daybar">
             <div className="booking-date">
               <span className="booking-action-icon"><CalendarIcon /></span>
