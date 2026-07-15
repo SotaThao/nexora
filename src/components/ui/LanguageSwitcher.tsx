@@ -4,8 +4,8 @@ import { Check, ChevronDown, Globe } from 'lucide-react'
 import { useTranslation } from '../../contexts/LanguageContext'
 
 const LANGUAGE_OPTIONS = [
-  { code: 'en', label: 'English', flag: '🇺🇸' },
-  { code: 'vi', label: 'Tiếng Việt', flag: '🇻🇳' },
+  { code: 'en', label: 'English' },
+  { code: 'vi', label: 'Tiếng Việt' },
 ] as const
 
 export default function LanguageSwitcher({ className = '', variant = 'header' }) {
@@ -84,7 +84,6 @@ export default function LanguageSwitcher({ className = '', variant = 'header' })
                     : 'text-nexoraText hover:bg-nexoraSurfaceMuted dark:text-white/75 dark:hover:bg-white/5'
                 }`}
               >
-                <span className="text-base">{lang.flag}</span>
                 <span className="flex-1">{lang.label}</span>
                 {isSelected && <Check className="h-4 w-4 text-nexoraBrand dark:text-brandCyan" />}
               </button>

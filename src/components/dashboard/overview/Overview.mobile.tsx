@@ -336,20 +336,13 @@ function Overview({
                 {k('money_saved_subtitle')}
               </p>
             </div>
-            <div className="grid grid-cols-2 gap-2">
+            <div className="flex justify-end">
               <button
                 type="button"
                 onClick={() => navigate('/dashboard/tips?tab=savings')}
-                className="inline-flex h-7 w-full items-center justify-center rounded-full bg-nexoraBrand px-3 text-[10px] font-semibold text-white transition active:scale-95"
+                className="inline-flex h-7 min-w-[72px] items-center justify-center rounded-full bg-nexoraBrand px-4 text-[10px] font-semibold text-white transition active:scale-95"
               >
                 {k('view_btn')}
-              </button>
-              <button
-                type="button"
-                onClick={() => navigate('/dashboard/tips?tab=savings')}
-                className="inline-flex h-7 w-full items-center justify-center rounded-full border border-[#EEE9FF] bg-white px-3 text-[10px] font-semibold text-nexoraBrandDark shadow-[0_2px_8px_rgba(15,23,42,0.04)] transition active:scale-95"
-              >
-                {k('export_btn')}
               </button>
             </div>
           </div>
