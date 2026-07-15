@@ -10,7 +10,6 @@ import {
 import {
   mapConfigLanguageToUiLanguage,
   mapUiLanguageToConfigLanguage,
-  MerchantVoiceConfigLanguage,
   MerchantVoiceDayOfWeek,
   MerchantVoiceUiLanguage,
   normalizeMerchantVoiceDayOfWeek,
@@ -104,6 +103,40 @@ const SUGGEST_SERVICES = [
   { name: 'Eyebrow Wax', price: 12, duration: 15 },
   { name: 'Lash Fill', price: 45, duration: 60 },
 ]
+
+const AI_LANGUAGE_OPTIONS = [
+  MerchantVoiceUiLanguage.Vi,
+  MerchantVoiceUiLanguage.En,
+] as const
+
+const PROMO_MAX_LENGTH = 1000
+
+const PROMO_TEMPLATES = {
+  'reward-yourself': {
+    labelKey: 'promoTemplateRewardLabel',
+    text: [
+      'Promotion 1: Reward Yourself',
+      'Offer: Free $25 e-gift card.',
+      'Eligibility: Book any pedicure service of $55 or more.',
+      'Availability: Monday–Saturday, by appointment only.',
+      'Rules: One free $25 e-gift card per qualifying visit. For future services only, not redeemable for cash, and cannot be used for gratuity. Cannot combine with other promotions, discounts, coupons, rewards, or special offers. One promotional offer per customer per visit.',
+      'General rule: The salon may modify or end any promotion at any time.',
+    ].join('\n'),
+  },
+} as const
+
+function greetingI18nKey(language: Language) {
+  return language === MerchantVoiceUiLanguage.Vi ? 'greetingVi' : 'greetingEn'
+}
+
+function languageButtonLabel(language: Language) {
+  return language === MerchantVoiceUiLanguage.Vi ? '🇻🇳 VI' : '🇺🇸 EN'
+}
+
+function resolveUiLanguage(language: Language): Language {
+  if (language === MerchantVoiceUiLanguage.Vi) return MerchantVoiceUiLanguage.Vi
+  return MerchantVoiceUiLanguage.En
+}
 
 function openTimePicker(input: HTMLInputElement | null) {
   if (!input || input.disabled) return
@@ -210,6 +243,7 @@ export default function BookingSettingsPanel() {
   const [isPreviewPlaying, setIsPreviewPlaying] = useState(false)
   const [language, setLanguage] = useState<Language>(MerchantVoiceUiLanguage.En)
   const [greeting, setGreeting] = useState(() => t(`${TK}.greetingEn`))
+  const [promotion, setPromotion] = useState('')
   const [salonName, setSalonName] = useState('')
   const [salonPhone, setSalonPhone] = useState('')
   const [aiPhone, setAiPhone] = useState('')
@@ -342,9 +376,10 @@ export default function BookingSettingsPanel() {
     setBookingNotifyPhone(formatPhoneInput(configData.bookingNotifyPhone || ''))
     setAddress(configData.address || '')
     setGoogleReviewUrl(configData.googleReviewUrl || '')
-    const resolvedLang = mapConfigLanguageToUiLanguage(configData.language)
+    setPromotion((configData.promotion || '').slice(0, PROMO_MAX_LENGTH))
+    const resolvedLang = resolveUiLanguage(mapConfigLanguageToUiLanguage(configData.language))
     setLanguage(resolvedLang)
-    setGreeting(configData.welcomeGreeting || t(`${TK}.greeting${resolvedLang === MerchantVoiceUiLanguage.Vi ? 'Vi' : 'En'}`))
+    setGreeting(configData.welcomeGreeting || t(`${TK}.${greetingI18nKey(resolvedLang)}`))
 
     const nextHours = { ...INITIAL_HOURS }
     configData.operatingHours.forEach((item) => {
@@ -441,9 +476,21 @@ export default function BookingSettingsPanel() {
   }
 
   const handleLanguageSelect = (next: Language) => {
-    setLanguage(next)
-    setGreeting(t(`${TK}.greeting${next === MerchantVoiceUiLanguage.Vi ? 'Vi' : 'En'}`))
-    setStatus(t(`${TK}.languageSelected`, { language: t(`${TK}.languageLabels.${next}`) }))
+    const resolved = resolveUiLanguage(next)
+    setLanguage(resolved)
+    setGreeting(t(`${TK}.${greetingI18nKey(resolved)}`))
+    setStatus(t(`${TK}.languageSelected`, { language: t(`${TK}.languageLabels.${resolved}`) }))
+  }
+
+  const handlePromoChange = (value: string) => {
+    setPromotion(value.slice(0, PROMO_MAX_LENGTH))
+  }
+
+  const handlePromoSuggest = (key: keyof typeof PROMO_TEMPLATES) => {
+    const template = PROMO_TEMPLATES[key]
+    if (!template) return
+    setPromotion(template.text.slice(0, PROMO_MAX_LENGTH))
+    setStatus(t(`${TK}.promoFilled`, { name: t(`${TK}.${template.labelKey}`) }))
   }
 
   const handlePreview = async () => {
@@ -454,7 +501,7 @@ export default function BookingSettingsPanel() {
       return
     }
 
-    const text = greeting.trim() || t(`${TK}.greetingEn`)
+    const text = greeting.trim() || t(`${TK}.${greetingI18nKey(language)}`)
 
     try {
       await speakBookingPreview({
@@ -522,6 +569,7 @@ export default function BookingSettingsPanel() {
         bookingNotifyPhone: bookingNotifyPhonePayload,
         address: address.trim(),
         googleReviewUrl: googleReviewUrl.trim(),
+        promotion: promotion.trim().slice(0, PROMO_MAX_LENGTH) || null,
         language: mapUiLanguageToConfigLanguage(language),
         welcomeGreeting: greeting.trim(),
         operatingHours: DAY_KEYS.map((day) => {
@@ -916,7 +964,7 @@ export default function BookingSettingsPanel() {
             <div className="settings-field settings-span-full">
               <span className="settings-label">{t(`${TK}.aiLanguage`)}</span>
               <div className="settings-language-grid" role="group" aria-label={t(`${TK}.aiLanguage`)}>
-                {([MerchantVoiceUiLanguage.Vi, MerchantVoiceUiLanguage.En] as const).map((lang) => (
+                {AI_LANGUAGE_OPTIONS.map((lang) => (
                   <button
                     key={lang}
                     className={`settings-language-card ${language === lang ? 'is-active' : ''}`}
@@ -924,17 +972,28 @@ export default function BookingSettingsPanel() {
                     aria-pressed={language === lang}
                     onClick={() => handleLanguageSelect(lang)}
                   >
-                    {lang === MerchantVoiceUiLanguage.Vi ? '🇻🇳 VI' : '🇺🇸 EN'}
+                    {languageButtonLabel(lang)}
                   </button>
                 ))}
               </div>
               <div className="settings-language-status">{t(`${TK}.languageStatus.${language}`)}</div>
             </div>
-            <label className="settings-field settings-span-full">
-              <span className="settings-label">{t(`${TK}.greetingScript`)}</span>
+            <div className="settings-field settings-span-full">
+              <div className="settings-greeting-head">
+                <span className="settings-label">{t(`${TK}.greetingScript`)}</span>
+                <button
+                  className={`booking-secondary-button settings-preview-button ${isPreviewPlaying ? 'is-playing' : ''}`}
+                  type="button"
+                  aria-pressed={isPreviewPlaying}
+                  onClick={handlePreview}
+                >
+                  {isPreviewPlaying ? t(`${TK}.previewVoiceStop`) : t(`${TK}.previewVoice`)}
+                </button>
+              </div>
               <textarea
                 className="settings-textarea"
                 value={greeting}
+                aria-label={t(`${TK}.greetingScript`)}
                 aria-invalid={Boolean(formErrors.greeting)}
                 onChange={(event) => {
                   setGreeting(event.target.value)
@@ -942,16 +1001,36 @@ export default function BookingSettingsPanel() {
                 }}
               />
               <span className="settings-field-error-slot">{formErrors.greeting ? <span className="settings-field-error">{formErrors.greeting}</span> : null}</span>
+            </div>
+            <label className="settings-field settings-span-full">
+              <span className="settings-label">{t(`${TK}.promoLabel`)}</span>
+              <textarea
+                className="settings-textarea settings-textarea-promo"
+                value={promotion}
+                maxLength={PROMO_MAX_LENGTH}
+                placeholder={t(`${TK}.promoPlaceholder`)}
+                aria-describedby="settings-promo-count"
+                onChange={(event) => handlePromoChange(event.target.value.slice(0, PROMO_MAX_LENGTH))}
+              />
+              <div
+                id="settings-promo-count"
+                className={`settings-promo-count ${promotion.length >= PROMO_MAX_LENGTH ? 'is-max' : ''}`}
+              >
+                <span>{promotion.length}</span>/{PROMO_MAX_LENGTH}
+              </div>
+              <div className="settings-language-status">{t(`${TK}.promoHelp`)}</div>
+              <div className="settings-promo-suggest-row">
+                <button
+                  className="settings-promo-suggest"
+                  type="button"
+                  onClick={() => handlePromoSuggest('reward-yourself')}
+                >
+                  <StarsIcon className="settings-promo-suggest-icon" />
+                  {t(`${TK}.promoSuggestReward`)}
+                </button>
+              </div>
             </label>
           </div>
-          <button
-            className={`booking-secondary-button settings-preview-button ${isPreviewPlaying ? 'is-playing' : ''}`}
-            type="button"
-            aria-pressed={isPreviewPlaying}
-            onClick={handlePreview}
-          >
-            {isPreviewPlaying ? t(`${TK}.previewVoiceStop`) : t(`${TK}.previewVoice`)}
-          </button>
         </SettingsCard>
       </div>
 

@@ -395,12 +395,45 @@
   height: 34px;
   padding: 0;
   gap: 0;
+  flex: 0 0 34px;
 }
 
 .booking-hub-view .booking-mini-button.icon-only svg,
 .booking-hub-view .booking-secondary-button.icon-only svg {
   width: 16px;
   height: 16px;
+}
+
+.booking-hub-view .booking-action-button {
+  box-sizing: border-box;
+  flex: 0 0 auto;
+  height: 34px;
+  min-height: 34px;
+  max-height: 34px;
+  padding: 0 10px;
+  gap: 6px;
+  border-width: 1px;
+  border-style: solid;
+  line-height: 1;
+  white-space: nowrap;
+}
+
+.booking-hub-view .booking-action-button span {
+  display: inline-flex;
+  align-items: center;
+  line-height: 1;
+}
+
+.booking-hub-view .booking-action-button svg {
+  width: 14px;
+  height: 14px;
+  flex-shrink: 0;
+}
+
+.booking-hub-view .booking-action-button.primary,
+.booking-hub-view .booking-action-button.booking-sms-action,
+.booking-hub-view .booking-action-button.booking-noshow-action {
+  border-color: transparent;
 }
 
 .booking-hub-view .booking-list {
@@ -450,8 +483,8 @@
 
 .booking-hub-view .booking-actions {
   grid-column: 1 / -1;
-  display: flex;
-  flex-wrap: wrap;
+  display: inline-flex;
+  flex-wrap: nowrap;
   gap: 7px;
 }
 
@@ -2775,23 +2808,28 @@
 }
 
 .booking-hub-view .settings-language-grid {
-  display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
+  display: flex;
+  flex-wrap: wrap;
   gap: 8px;
 }
 
 .booking-hub-view .settings-language-card {
+  min-height: 32px;
+  min-width: 72px;
   border: 1px solid var(--nexora-border);
-  border-radius: 10px;
+  border-radius: 8px;
   background: #fff;
-  padding: 8px 6px;
+  padding: 5px 12px;
   color: var(--nexora-muted);
-  font-size: 12px;
-  font-weight: 600;
+  font-size: 11px;
+  font-weight: 700;
+  line-height: 1.2;
+  transition: border-color 0.16s ease, box-shadow 0.16s ease, color 0.16s ease;
 }
 
 .booking-hub-view .settings-language-card.is-active {
-  border-color: rgba(70, 72, 216, 0.35);
+  border-color: rgba(70, 72, 216, 0.46);
+  box-shadow: 0 0 0 2px rgba(70, 72, 216, 0.1);
   background: rgba(70, 72, 216, 0.08);
   color: var(--nexora-brand);
 }
@@ -2804,8 +2842,73 @@
   margin-top: 8px;
 }
 
+.booking-hub-view .settings-textarea-promo {
+  min-height: 220px;
+  white-space: pre-wrap;
+}
+
+.booking-hub-view .settings-promo-count {
+  margin-top: 6px;
+  text-align: right;
+  color: var(--nexora-muted);
+  font-size: 10.5px;
+  font-weight: 700;
+}
+
+.booking-hub-view .settings-promo-count.is-max {
+  color: var(--nexora-warning);
+}
+
+.booking-hub-view .settings-promo-suggest-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 8px;
+}
+
+.booking-hub-view .settings-promo-suggest {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  border: 1px dashed rgba(70, 72, 216, 0.42);
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--nexora-brand) 6%, white);
+  padding: 7px 13px;
+  color: var(--nexora-brand);
+  font-size: 11px;
+  font-weight: 800;
+  cursor: pointer;
+  transition: background 0.15s ease, border-color 0.15s ease;
+}
+
+.booking-hub-view .settings-promo-suggest:hover {
+  border-style: solid;
+  background: color-mix(in srgb, var(--nexora-brand) 12%, white);
+}
+
+.booking-hub-view .settings-promo-suggest-icon {
+  width: 12px;
+  height: 12px;
+  flex-shrink: 0;
+}
+
+.booking-hub-view .settings-greeting-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.booking-hub-view .settings-greeting-head .settings-label {
+  margin: 0;
+}
+
 .booking-hub-view .settings-preview-button {
-  margin-top: 10px;
+  margin: 0;
+  flex-shrink: 0;
+  min-height: 30px;
+  padding: 4px 10px;
+  font-size: 11px;
 }
 
 .booking-hub-view .settings-save-bar {
@@ -3667,11 +3770,22 @@
 }
 
 .booking-hub-view .booking-actions {
-  display: flex;
+  display: inline-flex;
   flex-wrap: wrap;
   justify-content: flex-end;
-  gap: 7px;
-  min-width: 78px;
+  align-items: stretch;
+  gap: 6px;
+  width: max-content;
+  max-width: 100%;
+}
+
+.booking-hub-view .booking-actions .booking-action-button {
+  align-self: center;
+}
+
+.booking-hub-view .booking-table td:last-child {
+  width: 1%;
+  white-space: nowrap;
 }
 
 .booking-hub-view .booking-empty {
@@ -3874,6 +3988,7 @@
   display: inline-flex;
   width: 34px;
   height: 34px;
+  flex: 0 0 34px;
   align-items: center;
   justify-content: center;
   border: 1px solid var(--nexora-border);

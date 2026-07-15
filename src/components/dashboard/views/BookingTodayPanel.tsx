@@ -214,17 +214,20 @@ function BookingActions({
   isPending: boolean
   t: (key: string) => string
 }) {
+  const viewLabel = t(`${TK}.today.view`)
+  const doneLabel = t(`${TK}.today.done`)
+  const noShowLabel = t(`${TK}.today.noShow`)
+  const sendSmsLabel = t(`${TK}.today.sendSms`)
+
   const viewBtn = (
     <button
-      className="booking-mini-button icon-only"
+      className="booking-mini-button booking-action-button"
       type="button"
-      aria-label={t(`${TK}.today.view`)}
-      title={t(`${TK}.today.view`)}
       disabled={isPending}
       onClick={() => onAction(booking.id, 'detail')}
     >
       {isPending ? <SpinnerIcon className="booking-inline-spinner" /> : <EyeIcon />}
-      <span className="sr-only">{t(`${TK}.today.view`)}</span>
+      <span>{viewLabel}</span>
     </button>
   )
 
@@ -238,26 +241,22 @@ function BookingActions({
     return (
       <div className="booking-actions">
         <button
-          className="booking-mini-button icon-only primary booking-done-action"
+          className="booking-mini-button booking-action-button primary booking-done-action"
           type="button"
-          aria-label={t(`${TK}.today.done`)}
-          title={t(`${TK}.today.done`)}
           disabled={isPending}
           onClick={() => onAction(booking.id, 'done')}
         >
           {isPending ? <SpinnerIcon className="booking-inline-spinner" /> : <CheckLgIcon />}
-          <span className="sr-only">{t(`${TK}.today.done`)}</span>
+          <span>{doneLabel}</span>
         </button>
         <button
-          className="booking-mini-button icon-only booking-noshow-action"
+          className="booking-mini-button booking-action-button booking-noshow-action"
           type="button"
-          aria-label={t(`${TK}.today.noShow`)}
-          title={t(`${TK}.today.noShow`)}
           disabled={isPending}
           onClick={() => onAction(booking.id, 'noshow')}
         >
           {isPending ? <SpinnerIcon className="booking-inline-spinner" /> : <XLgIcon />}
-          <span className="sr-only">{t(`${TK}.today.noShow`)}</span>
+          <span>{noShowLabel}</span>
         </button>
         {viewBtn}
       </div>
@@ -267,26 +266,22 @@ function BookingActions({
   return (
     <div className="booking-actions">
       <button
-        className="booking-mini-button icon-only primary booking-sms-action"
+        className="booking-mini-button booking-action-button primary booking-sms-action"
         type="button"
-        aria-label={t(`${TK}.today.sendSms`)}
-        title={t(`${TK}.today.sendSms`)}
         disabled={isPending}
         onClick={() => onAction(booking.id, 'send-sms')}
       >
         {isPending ? <SpinnerIcon className="booking-inline-spinner" /> : <SendIcon />}
-        <span className="sr-only">{t(`${TK}.today.sendSms`)}</span>
+        <span>{sendSmsLabel}</span>
       </button>
       <button
-        className="booking-mini-button icon-only booking-noshow-action"
+        className="booking-mini-button booking-action-button booking-noshow-action"
         type="button"
-        aria-label={t(`${TK}.today.noShow`)}
-        title={t(`${TK}.today.noShow`)}
         disabled={isPending}
         onClick={() => onAction(booking.id, 'noshow')}
       >
         {isPending ? <SpinnerIcon className="booking-inline-spinner" /> : <XLgIcon />}
-        <span className="sr-only">{t(`${TK}.today.noShow`)}</span>
+        <span>{noShowLabel}</span>
       </button>
       {viewBtn}
     </div>
@@ -825,6 +820,7 @@ export default function BookingTodayPanel() {
                 className="booking-detail-close"
                 type="button"
                 aria-label={t(`${TK}.today.closeDetail`)}
+                title={t(`${TK}.today.closeDetail`)}
                 onClick={() => setDetailBooking(null)}
               >
                 <XLgIcon />

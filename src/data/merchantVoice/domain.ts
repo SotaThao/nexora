@@ -121,11 +121,13 @@ export type MerchantVoiceStaffActivityStatusApiValue =
   typeof MerchantVoiceStaffActivityStatusApi[keyof typeof MerchantVoiceStaffActivityStatusApi]
 
 export enum MerchantVoiceConfigLanguage {
+  Auto = 'auto',
   ViVN = 'vi-VN',
   EnUS = 'en-US',
 }
 
 export enum MerchantVoiceUiLanguage {
+  Auto = 'auto',
   Vi = 'vi',
   En = 'en',
 }
@@ -277,9 +279,16 @@ export function mapDayOfWeekToApiName(day: MerchantVoiceDayOfWeek): MerchantVoic
 }
 
 export function mapConfigLanguageToUiLanguage(language: string | null | undefined): MerchantVoiceUiLanguage {
-  return language === MerchantVoiceConfigLanguage.ViVN
-    ? MerchantVoiceUiLanguage.Vi
-    : MerchantVoiceUiLanguage.En
+  const normalized = String(language ?? '').trim().toLowerCase()
+  if (
+    normalized === MerchantVoiceConfigLanguage.ViVN.toLowerCase()
+    || normalized === MerchantVoiceUiLanguage.Vi
+    || normalized.startsWith('vi')
+  ) {
+    return MerchantVoiceUiLanguage.Vi
+  }
+  // Treat auto / unknown as English — UI only exposes VI + EN.
+  return MerchantVoiceUiLanguage.En
 }
 
 export function mapUiLanguageToConfigLanguage(language: MerchantVoiceUiLanguage): MerchantVoiceConfigLanguage {
