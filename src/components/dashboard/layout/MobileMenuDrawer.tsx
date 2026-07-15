@@ -4,6 +4,7 @@ import { ChevronLeft, ChevronUp, ChevronDown, LogOut } from 'lucide-react'
 import { useTranslation } from '../../../contexts/LanguageContext'
 import MenuIcon from '../../ui/MenuIcon'
 import HomepageLink from '../../ui/HomepageLink'
+import LanguageSwitcher from '../../ui/LanguageSwitcher'
 import SidebarPlanCard from '../../ui/SidebarPlanCard'
 import { getSubscriptionSidebarCopy } from '../../../utils/subscriptionDisplay'
 import {
@@ -134,7 +135,7 @@ export default function MobileMenuDrawer({
                   setSettingsTab('profile')
                   onClose()
                 }}
-                className={`flex h-8 w-full items-center gap-2.5 rounded-lg px-2 text-left text-xs font-bold transition ${
+                className={`flex h-9 w-full items-center gap-2.5 rounded-lg px-3 text-left text-xs font-bold transition ${
                   activeMenu === 'settings' && settingsTab === 'profile'
                     ? 'text-brandCyan font-extrabold'
                     : 'text-white/75 hover:bg-white/5 hover:text-white'
@@ -147,11 +148,12 @@ export default function MobileMenuDrawer({
                 type="button"
                 disabled
                 aria-disabled="true"
-                className="flex h-8 w-full cursor-not-allowed items-center gap-2.5 rounded-lg px-2 text-left text-xs font-bold text-white/40 opacity-60"
+                className="flex h-9 w-full cursor-not-allowed items-center gap-2.5 rounded-lg px-3 text-left text-xs font-bold text-white/40 opacity-60"
               >
                 <div className="h-1.5 w-1.5 rounded-full bg-white/20" />
                 <span>{t('dashboard.menu.kyb')} ({t('common.coming_soon')})</span>
               </button>
+              <LanguageSwitcher variant="sidebar" className="w-full" />
             </div>
           )}
         </div>
