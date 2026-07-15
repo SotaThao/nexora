@@ -613,6 +613,7 @@
       "expires_on": "Hết hạn: {{date}}",
       "trial_ends": "Dùng thử đến {{date}}",
       "manage_plan": "Quản lý gói",
+      "manage_plan_short": "Quản lý",
       "google_play_badge_eyebrow": "Get it on",
       "google_play_badge_title": "Google Play",
       "app_store_badge_eyebrow": "Download on the",
