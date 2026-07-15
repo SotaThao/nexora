@@ -94,8 +94,6 @@ export default function StaffHeader({ activeScreen, onNavigate, onOpenMobileMenu
         </div>
 
         <div className="flex items-center justify-end gap-2">
-          <LanguageSwitcher />
-          <HeaderEcosystem />
           <div ref={notiMobileRef} className="relative">
             <button
               type="button"
@@ -191,21 +189,8 @@ export default function StaffHeader({ activeScreen, onNavigate, onOpenMobileMenu
             )}
           </div>
 
-          <button
-            type="button"
-            onClick={() => onNavigate('profile')}
-            aria-label={t('staff_dashboard.titles.profile')}
-            className="relative flex h-10 w-10 items-center justify-center overflow-hidden rounded-full border-2 border-white shadow-sm transition hover:opacity-90"
-          >
-            {account.avatar ? (
-              <img src={account.avatar} alt="" className="h-full w-full object-cover" />
-            ) : (
-              <div className="flex h-full w-full items-center justify-center bg-gradient-to-br from-nexoraElectric to-nexoraViolet text-sm font-bold text-white">
-                {displayName.charAt(0)}
-              </div>
-            )}
-            <span className="absolute bottom-0 right-0 h-2.5 w-2.5 rounded-full border-2 border-white bg-emerald-500" />
-          </button>
+          <LanguageSwitcher variant="header-plain" />
+          <HeaderEcosystem plain />
         </div>
       </div>
 
