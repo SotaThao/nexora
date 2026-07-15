@@ -19,7 +19,7 @@ export default function UnpaidTipDebtsPanel({
   isLoading?: boolean
   currentLanguage: string
   t: (key: string, params?: Record<string, unknown>) => string
-  onCreatePayout: (staffProfileId: string) => void
+  onCreatePayout: (staff: UnpaidTipDebtRecord) => void
   onViewHistory: (staff: UnpaidTipDebtRecord) => void
 }) {
   if (!isOpen) return null
@@ -89,7 +89,7 @@ export default function UnpaidTipDebtsPanel({
                     </button>
                     <button
                       type="button"
-                      onClick={() => onCreatePayout(row.staffProfileId)}
+                      onClick={() => onCreatePayout(row)}
                       className="inline-flex h-9 items-center justify-center gap-1 rounded-lg bg-nexoraBrand px-2 text-xs font-bold text-white"
                     >
                       <PlusCircle className="h-3.5 w-3.5" />
@@ -146,7 +146,7 @@ export default function UnpaidTipDebtsPanel({
                           </button>
                           <button
                             type="button"
-                            onClick={() => onCreatePayout(row.staffProfileId)}
+                            onClick={() => onCreatePayout(row)}
                             className="inline-flex h-8 items-center gap-1 rounded-lg bg-nexoraBrand px-2.5 text-[11px] font-bold text-white"
                           >
                             <PlusCircle className="h-3.5 w-3.5" />

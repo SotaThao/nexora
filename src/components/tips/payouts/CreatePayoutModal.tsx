@@ -148,6 +148,7 @@ export default function CreatePayoutModal({
   staffList,
   unpaidDebts,
   initialStaffProfileId,
+  initialAmount = null,
   editingPayout = null,
 }: {
   isOpen: boolean
@@ -155,6 +156,7 @@ export default function CreatePayoutModal({
   staffList: StaffMember[]
   unpaidDebts: UnpaidTipDebtRecord[]
   initialStaffProfileId?: string | null
+  initialAmount?: number | null
   editingPayout?: PayoutRecord | null
 }) {
   const { t } = useTranslation()
@@ -208,6 +210,7 @@ export default function CreatePayoutModal({
   const [evidenceError, setEvidenceError] = useState<string | null>(null)
   const [payoutStatus, setPayoutStatus] = useState<PayoutStatusValue>(PayoutStatus.Confirmed)
   const fileInputRef = useRef<HTMLInputElement>(null)
+  const formInitKeyRef = useRef('')
 
   const selectedStaff = isEditing
     ? editingStaffMember
@@ -232,7 +235,17 @@ export default function CreatePayoutModal({
   const canAddEvidence = evidenceUrls.length < maxEvidenceCount && !isUploading
 
   useEffect(() => {
-    if (!isOpen) return
+    if (!isOpen) {
+      formInitKeyRef.current = ''
+      return
+    }
+
+    const initKey = editingPayout?.id
+      ? `edit:${editingPayout.id}`
+      : `create:${initialStaffProfileId ?? ''}:${initialAmount ?? ''}`
+    if (formInitKeyRef.current === initKey) return
+    formInitKeyRef.current = initKey
+
     if (editingPayout) {
       const resolvedStaffProfileId = resolvePayoutStaffProfileId(editingPayout, staffList)
       setStaffProfileId(resolvedStaffProfileId)
@@ -258,7 +271,7 @@ export default function CreatePayoutModal({
     setStaffProfileId('')
     setSelectedStaffMember(null)
     setStaffProfileError(null)
-    let initialAmount = ''
+    let seedAmount = ''
     if (initialStaffProfileId) {
       const fromList = staffList.find((staff) => staff.staffProfileId === initialStaffProfileId)
       const fromDebt = unpaidDebts.find((debt) => debt.staffProfileId === initialStaffProfileId)
@@ -269,12 +282,15 @@ export default function CreatePayoutModal({
         setStaffProfileId(fromDebt.staffProfileId)
         setSelectedStaffMember(staffMemberFromDebt(fromDebt))
       }
-      if (fromDebt && fromDebt.balance > 0) {
-        initialAmount = formatUsdInputAmount(fromDebt.balance)
+      const seededBalance =
+        (typeof initialAmount === 'number' && initialAmount > 0 ? initialAmount : null)
+        ?? (fromDebt && fromDebt.balance > 0 ? fromDebt.balance : null)
+      if (seededBalance != null) {
+        seedAmount = formatUsdInputAmount(seededBalance)
       }
     }
     setPayoutMethodType(PayoutMethodType.Zelle)
-    setAmount(initialAmount)
+    setAmount(seedAmount)
     setAmountError(null)
     setPeriodError(null)
     // Opening from unpaid tip balance should pre-select Unpaid tip.
@@ -287,7 +303,7 @@ export default function CreatePayoutModal({
     setEvidenceError(null)
     setIsDragOver(false)
     setPayoutStatus(PayoutStatus.Confirmed)
-  }, [isOpen, editingPayout, editingStaffMember, staffList, unpaidDebts, initialStaffProfileId])
+  }, [isOpen, editingPayout, editingStaffMember, staffList, unpaidDebts, initialStaffProfileId, initialAmount])
 
   useEffect(() => {
     if (!isOpen || isEditing || !selectedStaff) return
@@ -315,6 +331,19 @@ export default function CreatePayoutModal({
     [unpaidDebts],
   )
   const isUnpaidTipsTypeDisabled = !isEditing && isDebtLookupReady && displayedDebtBalance <= 0
+
+  // Keep Amount paid in sync with unpaid tip balance while that type is selected and
+  // the user has not typed a different amount yet.
+  const unpaidBalanceInput =
+    !isEditing && includesUnpaidTipsType && displayedDebtBalance > 0
+      ? formatUsdInputAmount(displayedDebtBalance)
+      : ''
+  const amountInputValue = amount.trim() ? amount : unpaidBalanceInput
+
+  useEffect(() => {
+    if (!unpaidBalanceInput) return
+    setAmount((current) => (current.trim() ? current : unpaidBalanceInput))
+  }, [unpaidBalanceInput])
 
   useEffect(() => {
     if (isEditing || !isUnpaidTipsTypeDisabled) return
@@ -447,8 +476,8 @@ export default function CreatePayoutModal({
   }
 
   const handleAmountBlur = () => {
-    if (!amount.trim()) return
-    setAmountError(validatePayoutAmount(amount, t))
+    if (!amountInputValue.trim()) return
+    setAmountError(validatePayoutAmount(amountInputValue, t))
   }
 
   const handlePeriodStartChange = (value: string) => {
@@ -474,7 +503,7 @@ export default function CreatePayoutModal({
     const nextStaffError = !staffProfileId
       ? t('dashboard.tips.payouts_manager.staff_required')
       : null
-    const nextAmountError = validatePayoutAmount(amount, t)
+    const nextAmountError = validatePayoutAmount(amountInputValue, t)
     const nextPeriodError = validatePayoutPeriod(periodStart, periodEnd, t)
 
     setStaffProfileError(nextStaffError)
@@ -485,7 +514,7 @@ export default function CreatePayoutModal({
       return
     }
 
-    const parsedAmount = parseDirectPaymentAmountInput(amount)
+    const parsedAmount = parseDirectPaymentAmountInput(amountInputValue)
     if (!isPayoutTypesMaskValid(payoutTypesMask)) {
       showToast(t(getErrorI18nKey('PAYOUT_TYPES_REQUIRED')), 'error')
       return
@@ -636,7 +665,7 @@ export default function CreatePayoutModal({
                         ? 'border-red-400 focus:border-red-500 focus:ring-1 focus:ring-red-200'
                         : 'border-nexoraBorder focus:border-nexoraBrand focus:ring-1 focus:ring-nexoraBrand/20'
                     } outline-none`}
-                    value={amount}
+                    value={amountInputValue}
                     onChange={(e) => handleAmountChange(e.target.value)}
                     onBlur={handleAmountBlur}
                     placeholder={includesUnpaidTipsType && hasNoTipDebt ? '—' : '0.00'}
