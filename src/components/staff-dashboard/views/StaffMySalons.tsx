@@ -11,7 +11,10 @@ import {
   getSalonInitials,
   sortSalonBusinesses,
 } from '../utils/staffSalonDisplay'
-import { resolveStaffBusinessLinkStatusLabel } from '../../../utils/staffBusinessLinkStatus'
+import {
+  resolveStaffBusinessLinkStatusLabel,
+  STAFF_BUSINESS_LINK_STATUS,
+} from '../../../utils/staffBusinessLinkStatus'
 import Tooltip from '../../ui/Tooltip'
 
 function getSalonStatusHelp(
@@ -20,18 +23,34 @@ function getSalonStatusHelp(
 ) {
   const normalized = statusLabel.trim().toLowerCase()
 
-  if (normalized.includes('pending unlink')) return t('staff_salons.status_help.pending_unlink')
-  if (normalized.includes('pending approval')) return t('staff_salons.status_help.pending_approval')
-  if (normalized === 'pending' || normalized.includes('pending link')) {
+  if (normalized.includes(STAFF_BUSINESS_LINK_STATUS.pendingUnlink)) {
+    return t('staff_salons.status_help.pending_unlink')
+  }
+  if (normalized.includes(STAFF_BUSINESS_LINK_STATUS.pendingApproval)) {
+    return t('staff_salons.status_help.pending_approval')
+  }
+  if (
+    normalized === STAFF_BUSINESS_LINK_STATUS.pending
+    || normalized.includes(STAFF_BUSINESS_LINK_STATUS.pendingLink)
+  ) {
     return t('staff_salons.status_help.pending')
   }
-  if (normalized === 'rejected' || normalized.includes('rejected')) {
+  if (
+    normalized === STAFF_BUSINESS_LINK_STATUS.rejected
+    || normalized.includes(STAFF_BUSINESS_LINK_STATUS.rejected)
+  ) {
     return t('staff_salons.status_help.rejected')
   }
-  if (normalized === 'inactive' || normalized === 'previous' || normalized.includes('inactive')) {
+  if (
+    normalized === STAFF_BUSINESS_LINK_STATUS.inactive
+    || normalized === STAFF_BUSINESS_LINK_STATUS.previous
+    || normalized.includes(STAFF_BUSINESS_LINK_STATUS.inactive)
+  ) {
     return t('staff_salons.status_help.previous')
   }
-  if (normalized === 'active') return t('staff_salons.status_help.active')
+  if (normalized === STAFF_BUSINESS_LINK_STATUS.active) {
+    return t('staff_salons.status_help.active')
+  }
 
   return t('staff_salons.status_help.default')
 }
