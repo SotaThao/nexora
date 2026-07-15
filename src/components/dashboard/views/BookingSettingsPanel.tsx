@@ -633,15 +633,12 @@ export default function BookingSettingsPanel() {
   };
 
   const handleLanguageSelect = (next: Language) => {
-    setLanguage(next)
-    setGreeting(
-      t(
-        `${TK}.greeting${next === MerchantVoiceUiLanguage.Vi ? "Vi" : "En"}`,
-      ),
-    )
+    const resolved = resolveUiLanguage(next)
+    setLanguage(resolved)
+    setGreeting(t(`${TK}.${greetingI18nKey(resolved)}`))
     setStatus(
       t(`${TK}.languageSelected`, {
-        language: t(`${TK}.languageLabels.${next}`),
+        language: t(`${TK}.languageLabels.${resolved}`),
       }),
     )
   }

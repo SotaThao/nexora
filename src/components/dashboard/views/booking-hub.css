@@ -4373,35 +4373,35 @@
 .booking-hub-view .booking-table {
   display: table;
   width: 100%;
-  /* Keep a usable 6-col layout; scroller handles mid-width panes instead of crushing cells. */
-  min-width: 920px;
+  /* Wide enough for 6 cols + 3 action buttons on one row; scroller handles overflow. */
+  min-width: 1080px;
   border-collapse: collapse;
   table-layout: fixed;
   font-size: 13px;
 }
 
 .booking-hub-view .booking-col-customer {
-  width: 22%;
+  width: 20%;
 }
 
 .booking-hub-view .booking-col-service {
-  width: 18%;
+  width: 16%;
 }
 
 .booking-hub-view .booking-col-tech {
-  width: 12%;
-}
-
-.booking-hub-view .booking-col-time {
-  width: 14%;
-}
-
-.booking-hub-view .booking-col-status {
   width: 11%;
 }
 
+.booking-hub-view .booking-col-time {
+  width: 13%;
+}
+
+.booking-hub-view .booking-col-status {
+  width: 10%;
+}
+
 .booking-hub-view .booking-col-action {
-  width: 23%;
+  width: 300px;
 }
 
 .booking-hub-view .booking-card-panel {
@@ -4626,6 +4626,17 @@
 
 .booking-hub-view .booking-actions .booking-action-button {
   align-self: center;
+}
+
+.booking-hub-view .booking-table .booking-actions {
+  flex-wrap: nowrap;
+  flex-shrink: 0;
+  max-width: none;
+  white-space: nowrap;
+}
+
+.booking-hub-view .booking-table .booking-actions .booking-action-button {
+  flex-shrink: 0;
 }
 
 .booking-hub-view .booking-table td:last-child {
