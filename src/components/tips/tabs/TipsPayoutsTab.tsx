@@ -66,6 +66,7 @@ export default function TipsPayoutsTab({ staff = [] }: { staff?: StaffMember[] }
   const [isUnpaidDialogOpen, setIsUnpaidDialogOpen] = useState(false)
   const [editingPayout, setEditingPayout] = useState<PayoutRecord | null>(null)
   const [preferredStaffProfileId, setPreferredStaffProfileId] = useState<string | null>(null)
+  const [preferredAmount, setPreferredAmount] = useState<number | null>(null)
   const [historyStaffProfile, setHistoryStaffProfile] = useState<UnpaidTipDebtRecord | null>(null)
   const [isFiltersExpanded, setIsFiltersExpanded] = useState(false)
 
@@ -175,12 +176,14 @@ export default function TipsPayoutsTab({ staff = [] }: { staff?: StaffMember[] }
   const openCreate = () => {
     setEditingPayout(null)
     setPreferredStaffProfileId(null)
+    setPreferredAmount(null)
     setIsCreateOpen(true)
   }
 
-  const openCreateForStaff = (staffProfileId: string) => {
+  const openCreateForStaff = (staff: UnpaidTipDebtRecord) => {
     setEditingPayout(null)
-    setPreferredStaffProfileId(staffProfileId)
+    setPreferredStaffProfileId(staff.staffProfileId)
+    setPreferredAmount(staff.balance > 0 ? staff.balance : null)
     setIsUnpaidDialogOpen(false)
     setIsCreateOpen(true)
   }
@@ -195,6 +198,7 @@ export default function TipsPayoutsTab({ staff = [] }: { staff?: StaffMember[] }
     setIsCreateOpen(false)
     setEditingPayout(null)
     setPreferredStaffProfileId(null)
+    setPreferredAmount(null)
   }
 
   return (
@@ -374,6 +378,7 @@ export default function TipsPayoutsTab({ staff = [] }: { staff?: StaffMember[] }
         staffList={staff}
         unpaidDebts={unpaidDebts}
         initialStaffProfileId={preferredStaffProfileId}
+        initialAmount={preferredAmount}
         editingPayout={editingPayout}
       />
 
