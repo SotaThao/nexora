@@ -7,6 +7,7 @@ import { useTranslation } from '../../../contexts/LanguageContext'
 import { visibleMenuItems, MERCHANT_SIDEBAR_MENU_ITEMS, isPaymentsPayoutsRouteActive, VISIBLE_TOUCHPOINTS_SUBMENU } from '../constants'
 import MenuIcon from '../../ui/MenuIcon'
 import HomepageLink from '../../ui/HomepageLink'
+import LanguageSwitcher from '../../ui/LanguageSwitcher'
 import SidebarPlanCard from '../../ui/SidebarPlanCard'
 import PaymentsPayoutsMenuSection from './PaymentsPayoutsMenuSection'
 import { getSubscriptionSidebarCopy } from '../../../utils/subscriptionDisplay'
@@ -39,7 +40,7 @@ export default function DashboardSidebar({
   onLogout,
   userRole = 'owner'
 }) {
-  const { currentLanguage, setLanguage, t } = useTranslation()
+  const { currentLanguage, t } = useTranslation()
   const navigate = useNavigate()
   const [searchParams] = useSearchParams()
   // Sub-tabs are URL-driven (?tab=) so the sidebar highlight stays in sync with
@@ -146,6 +147,7 @@ export default function DashboardSidebar({
               <div className="h-1.5 w-1.5 rounded-full bg-white/20" />
               <span>{t('dashboard.menu.kyb')} ({t('common.coming_soon')})</span>
             </button>
+            <LanguageSwitcher variant="sidebar" />
           </div>
         )}
       </div>

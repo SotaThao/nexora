@@ -333,13 +333,9 @@ export default function DashboardHeader({
       </div>
 
       <div className="flex shrink-0 items-center gap-2 sm:gap-4">
-        {/* Language Switcher */}
-        <LanguageSwitcher />
-
-        <HeaderEcosystem />
-
+        {/* Desktop: Notification → Account → Language → Ecosystem → primary action */}
         {/* Notifications Icon and Dropdown */}
-        <div className="relative hidden sm:inline-flex" ref={dropdownRef}>
+        <div className="relative order-1 hidden sm:inline-flex" ref={dropdownRef}>
           <IconButton
             label="Notifications"
             onClick={() => setIsNotiDropdownOpen(!isNotiDropdownOpen)}
@@ -458,8 +454,16 @@ export default function DashboardHeader({
           )}
         </div>
 
+        <div className="order-4">
+          <LanguageSwitcher />
+        </div>
+
+        <div className="order-5">
+          <HeaderEcosystem />
+        </div>
+
         {/* Profile Dropdown */}
-        <div className="relative hidden sm:inline-flex" ref={headerDropdownRef}>
+        <div className="relative order-2 hidden sm:inline-flex" ref={headerDropdownRef}>
           <button
             type="button"
             onClick={() => setIsHeaderDropdownOpen(!isHeaderDropdownOpen)}
@@ -517,7 +521,7 @@ export default function DashboardHeader({
           )}
         </div>
         {userRole !== 'staff' && (
-          <button onClick={onAddTouchpoint} className="nexora-primary-button">
+          <button onClick={onAddTouchpoint} className="nexora-primary-button order-6">
             <Plus className="h-4 w-4" />
             <span className="hidden sm:inline">{t('dashboard.header.add_tp')}</span>
           </button>

@@ -4,6 +4,7 @@ import { ChevronLeft, ChevronUp, ChevronDown, LogOut } from 'lucide-react'
 import { useTranslation } from '../../../contexts/LanguageContext'
 import MenuIcon from '../../ui/MenuIcon'
 import HomepageLink from '../../ui/HomepageLink'
+import LanguageSwitcher from '../../ui/LanguageSwitcher'
 import SidebarPlanCard from '../../ui/SidebarPlanCard'
 import { getSubscriptionSidebarCopy } from '../../../utils/subscriptionDisplay'
 import {
@@ -152,6 +153,7 @@ export default function MobileMenuDrawer({
                 <div className="h-1.5 w-1.5 rounded-full bg-white/20" />
                 <span>{t('dashboard.menu.kyb')} ({t('common.coming_soon')})</span>
               </button>
+              <LanguageSwitcher variant="sidebar" />
             </div>
           )}
         </div>

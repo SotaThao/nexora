@@ -324,7 +324,7 @@ export default function DashboardHeader({
 
       {/* ── Mobile header ──────────────────────────────────────────────────── */}
       <div className="flex min-h-16 items-center justify-between px-4 lg:hidden">
-        {/* Left: hamburger + logo */}
+        {/* Left: hamburger */}
         <div className="flex items-center gap-2">
           <button
             type="button"
@@ -334,16 +334,11 @@ export default function DashboardHeader({
           >
             <Menu className="h-5 w-5" />
           </button>
-          <img src="/assets/nexora-logo.png" alt="Nexora Logo" className="h-9 w-9 shrink-0 object-contain" />
         </div>
 
-        {/* Right: lang + bell + avatar */}
+        {/* Mobile: Notification → Language → Ecosystem → Add New Station */}
         <div className="flex items-center gap-2">
-          <LanguageSwitcher />
-
-          <HeaderEcosystem />
-
-          <div className="relative" ref={mobileDropdownRef}>
+          <div className="relative order-1" ref={mobileDropdownRef}>
             <button
               type="button"
               onClick={() => setIsNotiDropdownOpen(!isNotiDropdownOpen)}
@@ -365,18 +360,26 @@ export default function DashboardHeader({
             {notificationPanel}
           </div>
 
-          <div className="relative" ref={mobileAvatarRef}>
+          {userRole !== 'staff' && (
             <button
               type="button"
-              onClick={() => setIsHeaderDropdownOpen(!isHeaderDropdownOpen)}
-              className="relative flex h-10 w-10 items-center justify-center rounded-full border border-nexoraBorder overflow-hidden shadow-nexora-soft transition hover:opacity-90 focus:outline-none"
-              aria-label="Account menu"
+              onClick={onAddTouchpoint}
+              className="order-5 flex h-10 w-10 items-center justify-center rounded-xl border border-nexoraBorder bg-white text-nexoraText shadow-nexora-soft transition hover:bg-nexoraSurfaceMuted"
+              aria-label={t('dashboard.header.add_tp')}
+              title={t('dashboard.header.add_tp')}
             >
-              {avatarInner}
+              <Plus className="h-5 w-5" />
             </button>
-            <span className="absolute bottom-0 right-0 z-10 h-2.5 w-2.5 rounded-full bg-green-500 ring-2 ring-white pointer-events-none" />
-            {avatarDropdown}
+          )}
+
+          <div className="order-3">
+            <LanguageSwitcher />
           </div>
+
+          <div className="order-4">
+            <HeaderEcosystem />
+          </div>
+
         </div>
       </div>
 
@@ -489,12 +492,9 @@ export default function DashboardHeader({
         </div>
 
         <div className="flex shrink-0 items-center gap-4">
-          <LanguageSwitcher />
-
-          <HeaderEcosystem />
-
+          {/* Desktop: Notification → Account → Language → Ecosystem → primary action */}
           {/* Notifications */}
-          <div className="relative" ref={dropdownRef}>
+          <div className="relative order-1" ref={dropdownRef}>
             <IconButton
               label="Notifications"
               onClick={() => setIsNotiDropdownOpen(!isNotiDropdownOpen)}
@@ -515,8 +515,16 @@ export default function DashboardHeader({
             {notificationPanel}
           </div>
 
+          <div className="order-4">
+            <LanguageSwitcher />
+          </div>
+
+          <div className="order-5">
+            <HeaderEcosystem />
+          </div>
+
           {/* Profile */}
-          <div className="relative" ref={headerDropdownRef}>
+          <div className="relative order-2" ref={headerDropdownRef}>
             <button
               type="button"
               onClick={() => setIsHeaderDropdownOpen(!isHeaderDropdownOpen)}
@@ -531,7 +539,7 @@ export default function DashboardHeader({
           </div>
 
           {userRole !== 'staff' && (
-            <button onClick={onAddTouchpoint} className="nexora-primary-button">
+            <button onClick={onAddTouchpoint} className="nexora-primary-button order-6">
               <Plus className="h-4 w-4" />
               <span>{t('dashboard.header.add_tp')}</span>
             </button>
