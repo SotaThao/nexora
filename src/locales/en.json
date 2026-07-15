@@ -614,6 +614,7 @@
       "expires_on": "Expires: {{date}}",
       "trial_ends": "Trial ends {{date}}",
       "manage_plan": "Manage Plan",
+      "manage_plan_short": "Manage",
       "google_play_badge_eyebrow": "Get it on",
       "google_play_badge_title": "Google Play",
       "app_store_badge_eyebrow": "Download on the",
