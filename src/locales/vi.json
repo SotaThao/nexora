@@ -2933,6 +2933,7 @@
         "stepConfirm": "Khách xác nhận đã chuyển khoản; bạn xác nhận đã nhận tiền trong lịch sử thanh toán",
         "activeMethodsLabel": "{{count}} phương thức nhận tiền đang hiển thị cho khách",
         "previewQr": "Xem QR",
+        "btn_open": "Xem mã QR",
         "copyLink": "Sao chép link thanh toán",
         "downloadQr": "Tải QR",
         "viewHistory": "Xem lịch sử thanh toán",
