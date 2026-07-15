@@ -1,7 +1,7 @@
 import React, { useState, useRef } from 'react';
-import { useTranslation } from '../contexts/LanguageContext';
 import { useChartDateRange } from '../hooks/useChartDateRange';
 import { useTipsData } from './tips/hooks/useTipsData';
+import PaymentsPayoutsHeader from './dashboard/PaymentsPayoutsHeader';
 import TipsOverviewTab from './tips/tabs/TipsOverviewTab';
 import TipsSavingsTab from './tips/tabs/TipsSavingsTab';
 import TipsPayoutsTab from './tips/tabs/TipsPayoutsTab';
@@ -12,14 +12,10 @@ export default function TipsView({
   metrics,
   tipsChartData,
   activeTab: propActiveTab,
-  onTabChange,
   processingFee: propProcessingFee,
   setProcessingFee: propSetProcessingFee
 }) {
-  const { t } = useTranslation();
-  const [localActiveTab, setLocalActiveTab] = useState('overview');
-  const activeTab = propActiveTab !== undefined ? propActiveTab : localActiveTab;
-  const setActiveTab = onTabChange !== undefined ? onTabChange : setLocalActiveTab;
+  const activeTab = propActiveTab !== undefined ? propActiveTab : 'overview';
 
   const [hoverIndex, setHoverIndex] = useState<any | null>(null);
   const [monthlyVolume, setMonthlyVolume] = useState(5000);
@@ -39,38 +35,8 @@ export default function TipsView({
 
   return (
     <div className="space-y-6 pb-12">
-      {/* Tab Header & Title */}
-      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between border-b border-nexoraBorder pb-5">
-        <div>
-          <h2 className="text-2xl font-black text-inkBlue dark:text-white tracking-tight">
-            {t('dashboard.menu.tips')}
-          </h2>
-          <p className="mt-1 text-sm text-mutedGrey dark:text-slate-400">
-            {t('dashboard.tips.description')}
-          </p>
-        </div>
-
-        {/* Navigation Tabs */}
-        <div className="flex flex-wrap gap-1 bg-nexoraSurfaceMuted dark:bg-luxuryCoal p-1 rounded-xl border border-nexoraBorder dark:border-luxuryGold/10">
-          {[
-            { id: 'overview', label: t('dashboard.tips.tabs.overview') },
-            { id: 'savings', label: t('dashboard.tips.tabs.savings') },
-            { id: 'payouts', label: t('dashboard.tips.tabs.payouts') },
-          ].map(tab => (
-            <button
-              key={tab.id}
-              onClick={() => setActiveTab(tab.id)}
-              className={`h-9 rounded-lg px-4 text-xs font-bold transition-all min-w-[44px] ${
-                activeTab === tab.id
-                  ? 'bg-white dark:bg-luxuryBlack text-luxuryGold shadow-sm font-black'
-                  : 'text-mutedGrey hover:text-inkBlue dark:text-slate-400 dark:hover:text-white'
-              }`}
-            >
-              {tab.label}
-            </button>
-          ))}
-        </div>
-      </div>
+      {/* Unified Payments & Payouts header (title + submenu tabs) */}
+      <PaymentsPayoutsHeader />
 
       {activeTab === 'overview' && (
         <TipsOverviewTab

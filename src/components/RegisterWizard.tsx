@@ -17,7 +17,7 @@ import { loadPendingRegistration } from '../auth/pendingRegistration'
 import { useClearMerchantSetup } from '../data/hooks/useMerchantSetup'
 import { useClearProfileSettings } from '../data/hooks/useProfileSettings'
 import { logger } from '../utils/logger'
-import { saveRefCode, getSavedRefCode } from '../utils/affiliateReferral'
+import { saveRefCode, getSavedRefCode, saveLeg, getSavedLeg } from '../utils/affiliateReferral'
 
 export default function RegisterWizard() {
   const navigate = useNavigate()
@@ -28,6 +28,10 @@ export default function RegisterWizard() {
   // Fall back to whatever was previously saved in storage.
   if (urlRef) saveRefCode(urlRef)
   const refFromUrl = urlRef || getSavedRefCode()
+
+  const urlLeg = searchParams.get('leg') || ''
+  if (urlLeg) saveLeg(urlLeg)
+  const legFromUrl = (urlLeg || getSavedLeg()).toLowerCase()
   const { refreshSession } = useAuth()
   const clearMerchantSetupMutation = useClearMerchantSetup()
   const clearProfileSettingsMutation = useClearProfileSettings()
@@ -85,6 +89,7 @@ export default function RegisterWizard() {
     initialRole: showPersonalSuccessPopup ? 'personal' : 'personal',
     resumeOtpVerification,
     initialRefCode: refFromUrl,
+    initialLeg: legFromUrl,
     autoSendVerificationOnResume,
     resumeEmail,
     resumePassword,

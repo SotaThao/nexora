@@ -290,7 +290,11 @@ export interface NotificationRecord {
   time: string
   staffId?: string
   linkTab?: string
+  /** Sub-tab within the 'reports' linkTab: 'tips' | 'direct_payments'. */
+  reportsTab?: string
   paymentId?: string
+  /** Tip transaction id (referenceId) to auto-open in the Tips list modal. */
+  transactionId?: string
   [key: string]: unknown
 }
 
@@ -378,6 +382,19 @@ export interface StaffDashboardSummary {
   pendingTips: TipCountAmount
   averageRating: number
   totalReviews: number
+}
+
+export interface StaffStatisticsCategory {
+  category: string
+  amount: number
+  percentageOfTotal: number
+}
+
+export interface StaffDashboardStatistics {
+  availableBalance: number
+  pending: number
+  lifetimeEarnings: number
+  categories: StaffStatisticsCategory[]
 }
 
 export interface StaffReviewDistribution {

@@ -3,7 +3,7 @@ import { useNavigate, useSearchParams } from 'react-router-dom'
 import { useAuth } from '../auth/useAuth'
 import apiAuthAdapter from '../auth/adapters/apiAuthAdapter'
 import LoadingScreen from './LoadingScreen'
-import { saveRefCode, saveStaffShareCode } from '../utils/affiliateReferral'
+import { saveRefCode, saveStaffShareCode, saveLeg } from '../utils/affiliateReferral'
 import { useTranslation } from '../contexts/LanguageContext'
 import lazyWithRetry from './lazyWithRetry'
 
@@ -55,14 +55,17 @@ export default function RootRedirect() {
       return
     }
 
-    // Bare ?ref=CODE (optional ?staff=STAFF_ID) → register with ref; persist staff for attribution
+    // Bare ?ref=CODE (optional ?staff=STAFF_ID, ?leg=left|right) → register with ref; persist staff/leg for attribution
     const refCode = searchParams.get('ref') || searchParams.get('refCode')
     const staffShareCode = searchParams.get('staff') || searchParams.get('staffCode')
+    const legCode = searchParams.get('leg')
     if (!action && refCode) {
       saveRefCode(refCode)
       if (staffShareCode?.trim()) saveStaffShareCode(staffShareCode.trim())
+      if (legCode?.trim()) saveLeg(legCode.trim())
       const params = new URLSearchParams()
       params.set('ref', refCode)
+      if (legCode?.trim()) params.set('leg', legCode.trim())
       navigate(`/register?${params.toString()}`, { replace: true })
       return
     }

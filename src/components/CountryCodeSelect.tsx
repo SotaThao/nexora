@@ -78,7 +78,7 @@ export const parsePhone = (phoneStr) => {
 }
 
 export const getCountryByDialCode = (dialCode) => {
-  return COUNTRY_CODES.find(c => c.dialCode === dialCode) || COUNTRY_CODES.find(c => c.code === 'US')
+  return COUNTRY_CODES.find(c => c.dialCode === dialCode)
 }
 
 export const getDefaultDialCode = (appLanguage) => {
@@ -234,6 +234,7 @@ export const formatNationalNumber = (nationalNumber, dialCode) => {
 
   digits = digits.slice(0, getMaxNationalDigits(dialCode))
   const country = getCountryByDialCode(dialCode)
+  if (!country) return digits
   const formatter = new AsYouType(country.code as import('libphonenumber-js').CountryCode)
   return formatter.input(digits)
 }
@@ -289,7 +290,8 @@ export default function CountryCodeSelect({
     }
   }, [showSearch, isOpen])
 
-  const selectedCountry = COUNTRY_CODES.find(c => c.dialCode === value) || COUNTRY_CODES[0]
+  const selectedCountry = COUNTRY_CODES.find(c => c.dialCode === value)
+    || { name: '', code: '', dialCode: value || PhoneDialCode.US }
 
   const filteredCountries = showSearch
     ? COUNTRY_CODES.filter(c =>

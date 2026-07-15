@@ -38,6 +38,7 @@ import { useNotifications, useMarkNotificationRead, useMarkAllNotificationsRead,
 import { useProfileSettings, useSaveProfileSettings } from '../data/hooks/useProfileSettings'
 import { useMerchantSetup, useSaveMerchantSetup } from '../data/hooks/useMerchantSetup'
 import { useMerchantInviteLinkSetting } from '../data/hooks/useMerchantSettings'
+import { useMerchantPaymentMethods } from '../data/hooks/useMerchantPaymentMethods'
 import { merchantTouchpointsRepository } from '../data/repositories/merchantTouchpoints'
 import DashboardHeader from './dashboard/layout/DashboardHeader'
 import DashboardSidebar from './dashboard/layout/DashboardSidebar'
@@ -89,6 +90,8 @@ export default function Dashboard({
     isProfileExpanded, setIsProfileExpanded,
     handleNavigateMenu, navigateMenu
   } = useDashboardNavigation()
+  // Prefetch business payment-method catalog (ordered) for Add Manual Staff / staff wallet UIs.
+  useMerchantPaymentMethods()
   const navigate = useNavigate()
   const handleStartSetup = useCallback(() => {
     if (typeof onStartSetup === 'function') {

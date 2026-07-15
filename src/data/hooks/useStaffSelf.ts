@@ -11,6 +11,7 @@ import { useTranslation } from '../../contexts/LanguageContext'
 import type {
   StaffBusinessLink,
   StaffBusinessTipQr,
+  StaffDashboardStatistics,
   StaffDashboardSummary,
   StaffLinkRequestDetail,
   StaffProfile,
@@ -109,6 +110,16 @@ export function useStaffDashboardSummary({ enabled: callerEnabled = true } = {})
   return useQuery<StaffDashboardSummary>({
     queryKey: qk.staffDashboardSummary(),
     queryFn: () => staffSelfRepository.getDashboardSummary(),
+    enabled: isStaff && callerEnabled,
+    refetchOnMount: true,
+  })
+}
+
+export function useStaffDashboardStatistics({ enabled: callerEnabled = true } = {}) {
+  const { isStaff } = useSessionRole()
+  return useQuery<StaffDashboardStatistics>({
+    queryKey: qk.staffDashboardStatistics(),
+    queryFn: () => staffSelfRepository.getDashboardStatistics(),
     enabled: isStaff && callerEnabled,
     refetchOnMount: true,
   })
@@ -216,6 +227,7 @@ export function useConfirmStaffTipsReceipt() {
       void queryClient.invalidateQueries({ queryKey: ['staffTips'] })
       void queryClient.invalidateQueries({ queryKey: ['staffTransactions', 'paginated'] })
       void queryClient.invalidateQueries({ queryKey: qk.staffDashboardSummary() })
+      void queryClient.invalidateQueries({ queryKey: qk.staffDashboardStatistics() })
     },
     onSuccess: (result) => {
       if (result.failedIds.length > 0) {
