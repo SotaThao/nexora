@@ -114,6 +114,28 @@ export interface PosProductApiDto {
   tags: string[]
 }
 
+// POS Owner Setup — Staff Profile (US-019)
+export interface PosStaffProfileApiDto {
+  businessStaffLinkId: string
+  staffProfileId: string
+  displayName: string
+  photoUrl?: string | null
+  // null => local staff (no Nexora account) — TaxIQ data is structurally not applicable,
+  // distinct from taxYearAvailable=false (has an account, TaxIQ just isn't set up yet).
+  staffUserId?: string | null
+  ssn?: string | null
+  ein?: string | null
+  taxYearAvailable: boolean
+  contractType?: string | null
+  posRoleId?: string | null
+  posRoleName?: string | null
+  payStructureType: string
+  commissionPercent?: number | null
+  weeklySalaryAmount?: number | null
+  agreedAmount?: number | null
+  tipsEnabled: boolean
+}
+
 export interface TipsSummaryApiDto {
   totalAmount?: number
   totalCount?: number

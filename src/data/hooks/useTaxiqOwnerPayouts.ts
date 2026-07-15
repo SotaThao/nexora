@@ -11,6 +11,7 @@ import type {
   ListPayoutRecordsParams,
   PayoutRecord,
   ResolveDisputeParams,
+  SetStaffTinParams,
   StaffTaxIqItem,
   StaffTin,
   UpdatePayoutRecordParams,
@@ -51,6 +52,22 @@ export function useStaffTinMasked(ownerTaxYearId: string | undefined, staffUserI
     queryKey: qk.taxiqOwnerStaffTin(ownerTaxYearId, staffUserId, false),
     queryFn: () => taxiqOwnerPayoutsRepository.getStaffTin(ownerTaxYearId as string, staffUserId as string, false),
     enabled: !!ownerTaxYearId && !!staffUserId,
+  })
+}
+
+// Fill-in-when-empty write, shared by TaxIQ's StaffTinCell and POS's
+// PosStaffProfileView. Broadly invalidates both callers' cache namespaces (rather than
+// a single scoped key) since merchantPosStaffProfile is keyed by businessStaffLinkId,
+// which this hook's caller doesn't necessarily know — the query keys' default prefix
+// matching makes this a cheap, safe way to cover both without threading extra ids through.
+export function useSetStaffTin() {
+  const queryClient = useQueryClient()
+  return useMutation<void, Error, SetStaffTinParams>({
+    mutationFn: (params) => taxiqOwnerPayoutsRepository.setStaffTin(params),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['taxiqOwnerStaffTin'] })
+      queryClient.invalidateQueries({ queryKey: ['merchantSettings', 'posStaffProfile'] })
+    },
   })
 }
 

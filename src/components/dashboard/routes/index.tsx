@@ -36,6 +36,7 @@ import PosRolesView from '../views/pos/PosRolesView'
 import PosCategoriesView from '../views/pos/PosCategoriesView'
 import PosServicesView from '../views/pos/PosServicesView'
 import PosProductsView from '../views/pos/PosProductsView'
+import PosStaffProfileView from '../views/pos/PosStaffProfileView'
 
 export function OverviewRoute() {
   const ctx = useOutletContext<LooseObject>()
@@ -387,6 +388,12 @@ export function PosServicesRoute() {
 // catalog/menu data, not gated behind verificationStatus/KYB.
 export function PosProductsRoute() {
   return <PosProductsView />
+}
+
+// Staff profile (role/pay/tips/tax filing) is not salon identity data either —
+// not gated behind verificationStatus/KYB, same rationale as the other POS catalog routes.
+export function PosStaffProfileRoute() {
+  return <PosStaffProfileView />
 }
 
 export function TaxIqOverviewRoute() {

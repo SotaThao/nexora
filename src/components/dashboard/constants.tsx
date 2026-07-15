@@ -99,7 +99,8 @@ export const MENU_ITEMS = [
       { id: 'roles', label: 'Roles & Permissions' },
       { id: 'categories', label: 'Categories' },
       { id: 'services', label: 'Services' },
-      { id: 'products', label: 'Products' }
+      { id: 'products', label: 'Products' },
+      { id: 'staff', label: 'Staff Profiles' }
     ]
   },
   { id: 'settings', label: 'Settings', icon: Settings },

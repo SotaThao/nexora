@@ -56,6 +56,19 @@ html, body {
   overscroll-behavior: none;
 }
 
+/* Always reserve the vertical scrollbar's gutter, even on pages/states short enough to
+   not need it yet. Without this, content that grows past the viewport height (e.g.
+   selecting a taller record in a master-detail view) makes the scrollbar appear, which
+   shrinks the content area and shifts everything horizontally — a page-wide layout jump,
+   not specific to any one screen. `scrollbar-gutter` only has an effect on a non-`visible`
+   overflow box, so `overflow-y: scroll` (universally supported) is the mechanism that
+   actually reserves the space in every browser; `scrollbar-gutter: stable` lets browsers
+   that support it draw an empty gutter instead of an always-visible scrollbar track. */
+html {
+  overflow-y: scroll;
+  scrollbar-gutter: stable;
+}
+
 /* Premium mobile-first tap highlight override */
 * {
   -webkit-tap-highlight-color: transparent;

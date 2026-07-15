@@ -6,11 +6,12 @@ import {
   useStaffTinMasked,
   useTaxiqOwnerStaffList,
   useRevealStaffTin,
+  useSetStaffTin,
   useUpdateStaffW9Status,
 } from '../../../../../data/hooks/useTaxiqOwnerPayouts'
 import { useOwnerTaxYear, useUpdateBusinessEin } from '../../../../../data/hooks/useTaxiqOwnerTaxYear'
-import { W9_STATUSES, type W9Status } from '../../../../../data/repositories/taxiqOwnerPayouts'
-import { isApiError } from '../../../../../types/domain'
+import { W9_STATUSES, type SetStaffTinParams, type W9Status } from '../../../../../data/repositories/taxiqOwnerPayouts'
+import { getApiErrorCode, isApiError } from '../../../../../types/domain'
 import { getErrorI18nKey } from '../../../../../data/errorCodes'
 import { SkeletonList } from '../../../../ui/skeleton'
 import Tooltip from '../../../../ui/Tooltip'
@@ -74,36 +75,124 @@ function BusinessEinCard({ ownerTaxYearId, canEdit }: { ownerTaxYearId: string; 
   )
 }
 
-function StaffTinCell({ ownerTaxYearId, staffUserId }: { ownerTaxYearId: string; staffUserId: string }) {
+// One row per field (SSN, EIN) so each can independently show either its masked value
+// (with the shared Reveal action) or a fill-in-when-empty input — Owner may set a field
+// only while it's still null; once set (by Staff or a prior Owner write), it becomes
+// view-only here (backend rejects overwrite with TAXIQ_STAFF_TIN_ALREADY_SET). Shared
+// write path (useSetStaffTin) is also used by POS's PosStaffProfileView — see
+// CLAUDE.md "Module Independence & Shared Data".
+function StaffTinFieldRow({
+  label,
+  fieldValue,
+  revealed,
+  isRevealPending,
+  onReveal,
+  staffUserId,
+}: {
+  label: string
+  fieldValue: string | null
+  revealed: boolean
+  isRevealPending: boolean
+  onReveal: () => void
+  staffUserId: string
+}) {
   const { t } = useTranslation()
+  const { showToast } = useNotification()
+  const setTin = useSetStaffTin()
+  const [inputValue, setInputValue] = useState('')
+
+  const field = label === 'EIN' ? 'ein' : 'ssn'
+
+  const handleSet = async () => {
+    const trimmed = inputValue.trim()
+    if (!trimmed) return
+    const payload: SetStaffTinParams = { staffUserId }
+    if (field === 'ein') payload.ein = trimmed
+    else payload.ssn = trimmed
+    try {
+      await setTin.mutateAsync(payload)
+      setInputValue('')
+      showToast(t('taxiq.taxProfile.savedNotice'), 'success')
+    } catch (err) {
+      showToast(t(getErrorI18nKey(getApiErrorCode(err))), 'error')
+    }
+  }
+
+  return (
+    <div className="flex items-center gap-1.5">
+      <span className="w-8 shrink-0 text-[10px] font-bold uppercase text-nexoraMuted">{label}</span>
+      {fieldValue ? (
+        <>
+          <span className="font-mono text-nexoraText">{fieldValue}</span>
+          {!revealed && (
+            <button
+              type="button"
+              onClick={onReveal}
+              disabled={isRevealPending}
+              title={t('taxiq.taxProfile.revealedNotice')}
+              className="inline-flex items-center gap-1 text-[11px] font-bold text-nexoraBrand hover:underline disabled:opacity-60"
+            >
+              {isRevealPending ? <Loader2 className="h-3 w-3 animate-spin" /> : <Eye className="h-3 w-3" />}
+              {t('taxiq.taxProfile.revealButton')}
+            </button>
+          )}
+        </>
+      ) : (
+        <>
+          <input
+            type="text"
+            value={inputValue}
+            onChange={(e) => setInputValue(e.target.value)}
+            placeholder={t('taxiq.taxProfile.notProvided')}
+            className="w-28 rounded border border-nexoraBorder px-1.5 py-0.5 text-[11px]"
+          />
+          <button
+            type="button"
+            onClick={handleSet}
+            disabled={setTin.isPending || !inputValue.trim()}
+            className="inline-flex items-center gap-1 text-[11px] font-bold text-nexoraBrand hover:underline disabled:opacity-60"
+          >
+            {setTin.isPending && <Loader2 className="h-3 w-3 animate-spin" />}
+            {t('taxiq.taxProfile.setButton')}
+          </button>
+        </>
+      )}
+    </div>
+  )
+}
+
+function StaffTinCell({ ownerTaxYearId, staffUserId }: { ownerTaxYearId: string; staffUserId: string }) {
   const maskedQuery = useStaffTinMasked(ownerTaxYearId, staffUserId)
   const revealTin = useRevealStaffTin()
 
   const masked = maskedQuery.data
   const revealed = revealTin.data
-
   const value = revealed ?? masked
-  const displayValue = value?.ein ?? value?.ssn ?? null
 
   if (maskedQuery.isPending) {
     return <span className="text-nexoraMuted">…</span>
   }
 
+  const handleReveal = () => revealTin.mutate({ ownerTaxYearId, staffUserId })
+
   return (
-    <div className="flex items-center gap-2">
-      <span className="font-mono text-nexoraText">{displayValue ?? t('taxiq.taxProfile.notProvided')}</span>
-      {displayValue && !revealed && (
-        <button
-          type="button"
-          onClick={() => revealTin.mutate({ ownerTaxYearId, staffUserId })}
-          disabled={revealTin.isPending}
-          title={t('taxiq.taxProfile.revealedNotice')}
-          className="inline-flex items-center gap-1 text-[11px] font-bold text-nexoraBrand hover:underline disabled:opacity-60"
-        >
-          {revealTin.isPending ? <Loader2 className="h-3 w-3 animate-spin" /> : <Eye className="h-3 w-3" />}
-          {t('taxiq.taxProfile.revealButton')}
-        </button>
-      )}
+    <div className="space-y-1">
+      <StaffTinFieldRow
+        label="SSN"
+        fieldValue={value?.ssn ?? null}
+        revealed={!!revealed}
+        isRevealPending={revealTin.isPending}
+        onReveal={handleReveal}
+        staffUserId={staffUserId}
+      />
+      <StaffTinFieldRow
+        label="EIN"
+        fieldValue={value?.ein ?? null}
+        revealed={!!revealed}
+        isRevealPending={revealTin.isPending}
+        onReveal={handleReveal}
+        staffUserId={staffUserId}
+      />
     </div>
   )
 }

@@ -81,6 +81,9 @@ export const qk = {
   merchantPosTags: ()          => ['merchantSettings', 'posTags'],
   // POS Owner Setup — Products (US-018)
   merchantPosProducts: ()      => ['merchantSettings', 'posProducts'],
+  // POS Owner Setup — Staff Profile (US-019)
+  merchantPosStaffProfile: (businessStaffLinkId?: string) =>
+    ['merchantSettings', 'posStaffProfile', businessStaffLinkId ?? ''],
 
   // Merchant Touchpoints
   merchantTouchpoints: ()      => ['merchantTouchpoints'],

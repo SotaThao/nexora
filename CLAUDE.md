@@ -15,6 +15,14 @@ Treat this as an engineering playbook, not a product brief.
 - No `console.*` in app code. Use the project logger where runtime logging is needed.
 - Do not commit unless explicitly asked.
 
+## Domain Principle: Module Independence & Shared Data (Tip system / TaxIQ / POS)
+
+NEXORA TOUCH has three core modules built on the same Business/Staff foundation: the **Tip system** (QR/NFC tipping, reviews), **TaxIQ** (tax filing, payroll-adjacent data), and **POS** (point of sale, staff pay/role/tips-at-checkout). Follow this when designing or building any staff-related screen in either module:
+
+- **Feature-independent**: a module's staff-setup screen must not hard-fail or block just because another module hasn't been set up yet (e.g. POS staff-profile setup must fully work even if TaxIQ has never been configured for the business — see US-019/backend US-07's `taxYearAvailable` flag for the precedent).
+- **Data-shared**: when a field is a real-world fact about the staff member rather than module-specific (e.g. SSN/EIN, W-2/1099 tax filing type), it is **not** needed for Tips setup, but **is** needed by both TaxIQ and POS — so both modules' staff-setup screens must expose **view and update** for it against the same backend entity, not a per-module copy or a read-only mirror in one of the two. Do not build a field as "read-only in POS, editable only in TaxIQ" (or vice versa) when both modules genuinely need to edit it — confirm the write path exists/is exposed for both before treating one module as read-only-by-default.
+- Before treating a shared field as read-only in a module's screen, check whether that's a deliberate scope decision or an oversight — if the other module already has (or should have) write access, this module's screen should too.
+
 ## Repo Profile
 
 - Frontend: React 18 + Vite.

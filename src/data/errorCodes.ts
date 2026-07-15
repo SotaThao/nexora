@@ -118,6 +118,18 @@ export const errorCodeToI18nKey = {
   POS_PRODUCT_CATEGORY_INVALID: 'errors.pos_product_category_invalid',
   POS_PRODUCT_PHOTO_INVALID_TYPE: 'errors.pos_product_photo_invalid_type',
 
+  // POS Owner Setup — Staff Profile (US-019)
+  POS_STAFF_LINK_NOT_ACTIVE: 'errors.pos_staff_link_not_active',
+  POS_STAFF_PAY_STRUCTURE_TYPE_INVALID: 'errors.pos_staff_pay_structure_type_invalid',
+  POS_STAFF_PAY_STRUCTURE_FIELD_CONFLICT: 'errors.pos_staff_pay_structure_field_conflict',
+  POS_STAFF_COMMISSION_PERCENT_INVALID: 'errors.pos_staff_commission_percent_invalid',
+  POS_STAFF_PAY_AMOUNT_INVALID: 'errors.pos_staff_pay_amount_invalid',
+  POS_STAFF_CONTRACT_TYPE_INVALID: 'errors.pos_staff_contract_type_invalid',
+  POS_STAFF_CONTRACT_TYPE_NOT_ALLOWED: 'errors.pos_staff_contract_type_not_allowed',
+  POS_STAFF_TAX_YEAR_NOT_AVAILABLE: 'errors.pos_staff_tax_year_not_available',
+  POS_STAFF_NO_LINKED_ACCOUNT: 'errors.pos_staff_no_linked_account',
+  TAXIQ_STAFF_TIN_ALREADY_SET: 'errors.taxiq_staff_tin_already_set',
+
   // Support / contact requests
   CONTACT_REQUEST_SUPPORT_TYPE_MIN_LENGTH: 'errors.contact_request_support_type_min_length',
   CONTACT_REQUEST_SUPPORT_TYPE_REQUIRED: 'errors.contact_request_support_type_required',

@@ -94,6 +94,15 @@ export interface UpdateStaffW9StatusParams {
   w9Status: W9Status
 }
 
+// Owner may only fill in a currently-empty ssn/ein — never overwrite an existing value
+// (backend rejects with TAXIQ_STAFF_TIN_ALREADY_SET). Shared by TaxIQ's StaffTinCell and
+// POS's PosStaffProfileView, per CLAUDE.md's "Module Independence & Shared Data" principle.
+export interface SetStaffTinParams {
+  staffUserId: string
+  ssn?: string
+  ein?: string
+}
+
 export interface PayoutRecordApiDto {
   id: string
   ownerTaxYearId: string
@@ -285,6 +294,14 @@ export function createTaxiqOwnerPayoutsRepository(client: HttpClient = httpClien
       const query = new URLSearchParams({ ownerTaxYearId, staffUserId, reveal: String(reveal) })
       const dto = await client.get<StaffTinApiDto>(`/api/v1/taxiq/owner/staff-tin?${query.toString()}`)
       return normalizeStaffTin(dto)
+    },
+
+    async setStaffTin(params: SetStaffTinParams): Promise<void> {
+      await client.put<void>('/api/v1/taxiq/owner/staff-tin', {
+        staffUserId: params.staffUserId,
+        ssn: params.ssn,
+        ein: params.ein,
+      })
     },
 
     async list(params: ListPayoutRecordsParams): Promise<PayoutRecord[]> {
