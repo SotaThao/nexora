@@ -1,5 +1,5 @@
 import React from 'react'
-import { CheckCircle, Copy } from 'lucide-react'
+import { CheckCircle, Copy, Loader2 } from 'lucide-react'
 import { WALLET_KEYS } from '../constants'
 
 function getMemberTipAmount(
@@ -148,6 +148,7 @@ export default function WalletDetails({
   backStep = 'tip_amount',
   paymentMode = false,
   paymentCopyScope = 'merchant',
+  isConfirming = false,
 }) {
   const isMultiStaff = selectedStaffMembers.length > 1
   const accentColor = walletAccentColor(selectedWalletObj.key)
@@ -374,9 +375,14 @@ export default function WalletDetails({
         <button
           type="button"
           onClick={() => isApiMode ? handleConfirmTip() : handlePay(selectedWalletObj.name)}
-          className="w-full py-4 bg-gradient-to-r from-nexoraElectric to-nexoraViolet hover:opacity-95 active:scale-[0.99] transition-all text-white font-extrabold text-sm uppercase tracking-wider rounded-xl shadow-lg shadow-nexoraElectric/25 flex items-center justify-center gap-1.5"
+          disabled={isApiMode && isConfirming}
+          className="w-full py-4 bg-gradient-to-r from-nexoraElectric to-nexoraViolet hover:opacity-95 active:scale-[0.99] transition-all text-white font-extrabold text-sm uppercase tracking-wider rounded-xl shadow-lg shadow-nexoraElectric/25 flex items-center justify-center gap-1.5 disabled:cursor-not-allowed disabled:opacity-70 disabled:active:scale-100"
         >
-          <CheckCircle className="h-5 w-5" />
+          {isApiMode && isConfirming ? (
+            <Loader2 className="h-5 w-5 animate-spin" />
+          ) : (
+            <CheckCircle className="h-5 w-5" />
+          )}
           {t(paymentMode ? 'direct_payment.confirm_sent' : 'components.customer_flow.steps.WalletDetails.yesISentTheTip')}
         </button>
 

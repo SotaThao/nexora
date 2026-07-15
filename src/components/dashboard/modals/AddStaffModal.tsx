@@ -1,13 +1,13 @@
-import { useState, useEffect, useMemo } from 'react'
+import { useState, useEffect } from 'react'
 import { X, HelpCircle, Loader2, Camera } from 'lucide-react'
 import IconButton from '../../ui/IconButton'
 import StaffQrScannerModal from './StaffQrScannerModal'
 import CountryCodeSelect, {
   formatNationalNumber,
-  getDefaultDialCode,
   isValidPhoneE164,
   normalizePhoneForApi,
   parsePhone,
+  PhoneDialCode,
 } from '../../CountryCodeSelect'
 import { useTranslation } from '../../../contexts/LanguageContext'
 import { useSearchMerchantStaff } from '../../../data/hooks/useMerchantStaff'
@@ -63,8 +63,7 @@ function AddStaffModal({
   const { t } = useTranslation()
   const [activeTab, setActiveTab] = useState<'link' | 'invite' | 'manual'>('link')
   const [inviteErrors, setInviteErrors] = useState<Record<string, string>>({})
-  // Default phone country should follow device/browser locale, not UI language.
-  const defaultDialCode = useMemo(() => getDefaultDialCode(undefined), [])
+  const defaultDialCode = PhoneDialCode.US
 
   // Link tab
   const [searchInput, setSearchInput] = useState('')
@@ -259,7 +258,7 @@ function AddStaffModal({
 
   return (
     <div className="fixed inset-0 z-50 flex items-start justify-center overflow-y-auto bg-nexoraText/70 modal-overlay-safe backdrop-blur-sm sm:items-center">
-      <div className="w-full max-w-2xl rounded-xl bg-white p-6 shadow-2xl transition-all">
+      <div className="relative w-full max-w-lg rounded-xl bg-white p-6 shadow-2xl transition-all md:max-w-3xl lg:max-w-4xl">
         <div className="flex items-center justify-between border-b border-nexoraRule pb-4">
           <h2 className="text-lg font-extrabold text-nexoraText">
             {t('components.dashboard.modals.AddStaffModal.title')}
@@ -353,7 +352,7 @@ function AddStaffModal({
                       {t('components.dashboard.modals.AddStaffModal.phone_or_email')}
                     </label>
                     {inviteMethod === 'SMS' ? (
-                      <div className="flex h-10 w-full overflow-hidden rounded-lg">
+                      <div className="relative z-20 flex h-10 w-full overflow-visible rounded-lg">
                         <CountryCodeSelect
                           value={inviteDialCode}
                           onChange={(newCode) => {

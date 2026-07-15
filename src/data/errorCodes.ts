@@ -7,6 +7,8 @@ export const errorCodeToI18nKey = {
   USER_EMAIL_ALREADY_EXIST: 'errors.user_email_already_exists',
   USER_EMAIL_ALREADY_EXISTS_IN_SSO: 'errors.user_email_already_exists',
   USER_INVALID_REFERRAL_CODE: 'errors.user_invalid_referral_code',
+  USER_INVALID_POSITION: 'errors.user_invalid_position',
+  USER_POSITION_REQUIRES_REFERRAL_CODE: 'errors.user_position_requires_referral_code',
   USER_SIGNUP_FAILED: 'errors.user_signup_failed',
   AUTH_PASSWORDS_DO_NOT_MATCH: 'errors.auth_passwords_do_not_match',
   USER_FEATURE_SIGNUP_DISABLED: 'errors.user_feature_signup_disabled',
@@ -110,6 +112,10 @@ export const errorCodeToI18nKey = {
   VOICE_TRIAL_SERVICE_HOURS_FROM_REQUIRED: 'errors.voice_trial_service_hours_from_required',
   VOICE_TRIAL_SERVICE_HOURS_TO_REQUIRED: 'errors.voice_trial_service_hours_to_required',
   VOICE_TRIAL_BIGGEST_PROBLEM_REQUIRED: 'errors.voice_trial_biggest_problem_required',
+
+  // Nexora Voice tenant staff
+  VOICE_TENANT_STAFF_PHONE_NUMBER_REQUIRED: 'errors.voice_tenant_staff_phone_number_required',
+  VOICE_TENANT_STAFF_PHONE_NUMBER_ALREADY_EXISTS: 'errors.voice_tenant_staff_phone_number_already_exists',
 }
 
 /**

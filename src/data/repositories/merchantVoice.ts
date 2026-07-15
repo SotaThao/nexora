@@ -82,6 +82,7 @@ export interface MerchantVoiceBookingDto {
   source: MerchantVoiceLeadSource
   customerPhone: string | null
   customerName: string | null
+  customerEmail: string | null
   service: string | null
   preferredTime: string | null
   notes: string | null
@@ -254,7 +255,7 @@ export interface MerchantVoiceStaffScheduleEntry {
 
 export interface CreateMerchantVoiceStaffRequest {
   fullName: string
-  phoneNumber: string
+  phoneNumber?: string | null
   email?: string | null
   skills?: string | null
   schedules: MerchantVoiceStaffScheduleEntry[]
@@ -270,8 +271,8 @@ export interface UpdateMerchantVoiceStaffScheduleEntry {
 export interface UpdateMerchantVoiceStaffRequest {
   id: string
   fullName: string
-  phoneNumber: string
-  email: string
+  phoneNumber?: string | null
+  email?: string | null
   skills: string
   status: MerchantVoiceStaffActivityStatusApiValue
   schedules: UpdateMerchantVoiceStaffScheduleEntry[]

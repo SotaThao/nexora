@@ -6,8 +6,8 @@ import { useNavigate, useSearchParams } from 'react-router-dom'
 import { useTranslation } from '../../../contexts/LanguageContext'
 import { useStaffAccount } from '../../../contexts/StaffAccountContext'
 import { useProfileSettings } from '../../../data/hooks/useProfileSettings'
-import { buildStaffShareUrl, getProfileReferralCode, splitStaffShareUrlDisplay, splitUrlQueryParamDisplay, splitUrlPathTailDisplay } from '../../../utils/affiliateReferral'
-import { shareQrImage, downloadQrCode } from '../../../utils/qrUtils'
+import { buildStaffShareUrl, getProfileReferralCode, splitStaffShareUrlDisplay, splitUrlQueryParamDisplay, splitUrlPathTailDisplay, LEG_VALUES, DEFAULT_LEG, type Leg } from '../../../utils/affiliateReferral'
+import { shareQrImage, downloadQrCode, QR_IMAGE_SIZES } from '../../../utils/qrUtils'
 import { useStaffBusinessTipQrs } from '../../../data/hooks/useStaffSelf'
 import { useNotifications, useMarkNotificationRead } from '../../../data/hooks/useNotifications'
 import { useNotification } from '../../../contexts/NotificationContext'
@@ -26,6 +26,11 @@ import { SkeletonLayout } from '../../ui/skeleton'
 import QrImage from '../../ui/QrImage'
 
 type LooseObject = Record<string, any>
+
+const LEG_I18N_KEY: Record<Leg, string> = {
+  left: 'staff_dashboard.qr.left_leg',
+  right: 'staff_dashboard.qr.right_leg',
+}
 
 const panel = 'rounded-2xl border border-nexoraBorder bg-nexoraSurface p-4 shadow-sm'
 const compactPanel = 'rounded-lg border border-[#EEE9FF] bg-white p-2.5 shadow-[0_8px_18px_rgba(70,72,212,0.08)]'
@@ -311,6 +316,7 @@ export default function StaffMyQR() {
     data: staffPaymentMethods = [],
     isLoading: isPaymentMethodsLoading,
   } = useStaffPaymentMethods({ enabled: activeTab === 'payment' })
+  const [selectedLeg, setSelectedLeg] = useState<Leg>(DEFAULT_LEG)
   const [showScanner, setShowScanner] = useState(false)
   const [scannerCameraState, setScannerCameraState] = useState<ScannerCameraState>('loading')
   const [isSubmittingScan, setIsSubmittingScan] = useState(false)
@@ -335,15 +341,15 @@ export default function StaffMyQR() {
   const staffCode = (account.staffCode || staffMember.id || '').trim()
   const referralCode = useMemo(() => getProfileReferralCode(profile || {}), [profile])
   const staffShareUrl = useMemo(
-    () => buildStaffShareUrl({ referralCode, staffCode }),
-    [referralCode, staffCode],
+    () => buildStaffShareUrl({ referralCode, staffCode, leg: selectedLeg }),
+    [referralCode, staffCode, selectedLeg],
   )
   const staffShareUrlDisplay = useMemo(
     () => splitStaffShareUrlDisplay(staffShareUrl),
     [staffShareUrl],
   )
   const personalQrImageSrc = useMemo(
-    () => (staffShareUrl ? buildQrImageUrl(staffShareUrl, 200) : ''),
+    () => (staffShareUrl ? buildQrImageUrl(staffShareUrl, QR_IMAGE_SIZES.panel) : ''),
     [staffShareUrl],
   )
 
@@ -365,7 +371,7 @@ export default function StaffMyQR() {
   )
 
   const staffPaymentQrImageSrc = useMemo(
-    () => (staffPaymentPageUrl ? buildQrImageUrl(staffPaymentPageUrl, 200) : ''),
+    () => (staffPaymentPageUrl ? buildQrImageUrl(staffPaymentPageUrl, QR_IMAGE_SIZES.panel) : ''),
     [staffPaymentPageUrl],
   )
 
@@ -483,7 +489,7 @@ export default function StaffMyQR() {
   const handleShareTipQr = useCallback(
     async (biz: StaffBusinessTipQr) => {
       if (!biz.tipUrl) return
-      const qrImageUrl = buildQrImageUrl(biz.tipUrl, 512, biz.qrImageUrl)
+      const qrImageUrl = buildQrImageUrl(biz.tipUrl, QR_IMAGE_SIZES.zoom, biz.qrImageUrl)
       const safeName = (biz.businessName || 'salon').replace(/[^\w.-]+/g, '-').slice(0, 40)
       const ownerName =
         biz.displayName || staffMember.nickname || staffMember.fullName || ''
@@ -511,7 +517,7 @@ export default function StaffMyQR() {
 
     setIsSavingQr(true)
     try {
-      const qrImageUrl = buildQrImageUrl(zoomedQr.url, 600)
+      const qrImageUrl = buildQrImageUrl(zoomedQr.url, QR_IMAGE_SIZES.zoom)
       const safeName = (zoomedQr.title || 'tipping-qr').replace(/\s+/g, '-').toLowerCase()
       const result = await downloadQrCode(qrImageUrl, `${safeName}-qr.png`)
       if (result !== 'cancelled') {
@@ -868,13 +874,48 @@ export default function StaffMyQR() {
           <section className={`${compactPanel} text-center`}>
             <div className="mb-2 flex items-center justify-between gap-2 text-left">
               <div>
-                <p className="text-[10px] font-semibold uppercase text-nexoraBrand">{t('staff_dashboard.qr.tab_invite_refer')}</p>
                 <h3 className="text-sm font-semibold text-nexoraText">{t('staff_dashboard.qr.staff_invite_link')}</h3>
               </div>
               <span className="grid h-8 w-8 place-items-center rounded-lg bg-rose-50 text-rose-500">
                 <Gift className="h-4 w-4" />
               </span>
             </div>
+            {staffCode && (
+              <div className="rounded-xl border border-[#EEE9FF] bg-slate-50 p-3 text-left">
+                <span className="mb-2 block text-[10px] font-extrabold uppercase tracking-wider text-nexoraMuted">
+                  {t('staff_dashboard.qr.select_placement_leg')}
+                </span>
+                <div className="mt-2 flex justify-center gap-6">
+                  {LEG_VALUES.map((leg) => (
+                    <label
+                      key={leg}
+                      className="flex cursor-pointer items-center gap-2 text-xs font-bold text-nexoraText"
+                    >
+                      <input
+                        type="radio"
+                        name="staffPlacementLeg"
+                        value={leg}
+                        checked={selectedLeg === leg}
+                        onChange={() => setSelectedLeg(leg)}
+                        className="sr-only"
+                      />
+                      <span
+                        className={`flex h-4 w-4 items-center justify-center rounded-full border transition-all ${
+                          selectedLeg === leg
+                            ? 'border-nexoraBrand bg-nexoraBrand/10'
+                            : 'border-slate-300 bg-white'
+                        }`}
+                      >
+                        {selectedLeg === leg && <span className="h-1.5 w-1.5 rounded-full bg-nexoraBrand" />}
+                      </span>
+                      <span className={selectedLeg === leg ? 'font-black text-nexoraBrand' : 'text-nexoraMuted'}>
+                        {t(LEG_I18N_KEY[leg])}
+                      </span>
+                    </label>
+                  ))}
+                </div>
+              </div>
+            )}
             {staffCode && staffShareUrl ? (
               <>
                 <div className="mx-auto my-3 flex h-40 w-40 shrink-0 items-center justify-center overflow-hidden rounded-xl border border-[#EEE9FF] bg-white p-3 shadow-sm select-none">
@@ -944,13 +985,17 @@ export default function StaffMyQR() {
               <section className="rounded-2xl border border-[#DDD8FF] bg-white p-3 shadow-[0_10px_22px_rgba(70,72,212,0.10)]">
                 <div className="mb-3 flex items-center justify-between gap-2">
                   <div>
-                    <p className="text-[10px] font-semibold uppercase text-nexoraBrand">{t('staff_dashboard.qr.tab_accept_payments')}</p>
                     <h4 className="text-sm font-semibold text-nexoraText">
-                      Payment & Tip QR
+                      {t('staff_dashboard.qr.business_title')}
                     </h4>
                   </div>
                   <span className="rounded-full bg-[#F4F2FF] px-3 py-1.5 text-[10px] font-semibold text-nexoraBrandDark">
-                    {activeTipQrs.length} salons
+                    {t(
+                      activeTipQrs.length === 1
+                        ? 'staff_dashboard.qr.salons_count_one'
+                        : 'staff_dashboard.qr.salons_count_other',
+                      { count: activeTipQrs.length },
+                    )}
                   </span>
                 </div>
 
@@ -974,7 +1019,7 @@ export default function StaffMyQR() {
                       >
                         {biz.tipUrl ? (
                           <QrImage
-                            src={buildQrImageUrl(biz.tipUrl, 96, biz.qrImageUrl)}
+                            src={buildQrImageUrl(biz.tipUrl, QR_IMAGE_SIZES.thumb, biz.qrImageUrl)}
                             alt={`${biz.businessName} QR`}
                             className="h-full w-full"
                           />
@@ -991,7 +1036,7 @@ export default function StaffMyQR() {
                           {biz.businessName}
                         </div>
                         <div className="truncate text-[10px] font-medium leading-3 text-nexoraMuted">
-                          {t('staff_dashboard.qr.customer_payments_tips')}
+                          {t('staff_dashboard.qr.business_sub')}
                         </div>
                         {biz.tipUrl && (
                           <div className="mt-1 truncate font-mono text-[9px] font-semibold text-nexoraBrandDark">
@@ -1012,7 +1057,7 @@ export default function StaffMyQR() {
                             })
                           }
                           className="grid h-8 w-8 place-items-center rounded-full border border-[#EEE9FF] bg-white text-nexoraBrandDark shadow-sm disabled:opacity-50"
-                          aria-label={t('staff_dashboard.qr.payment_preview')}
+                          aria-label={t('components.staff_dashboard.views.StaffMyQR.clickToEnlargeTipping')}
                         >
                           <Eye className="h-4 w-4" />
                         </button>
@@ -1078,9 +1123,7 @@ export default function StaffMyQR() {
             <section className={`${compactPanel} text-center`}>
               <div className="mb-2 flex items-center justify-between gap-2 text-left">
                 <div>
-                  <p className="text-[10px] font-semibold uppercase text-nexoraBrand">{t('staff_dashboard.qr.tab_accept_payments')}</p>
                   <h3 className="text-sm font-semibold text-nexoraText">{t('staff_dashboard.qr.payment_title')}</h3>
-                  <p className="text-[11px] text-nexoraMuted">{t('staff_dashboard.qr.payment_sub')}</p>
                 </div>
                 <span className="grid h-8 w-8 place-items-center rounded-lg bg-indigo-50 text-indigo-600">
                   <CreditCard className="h-4 w-4" />
@@ -1283,7 +1326,7 @@ export default function StaffMyQR() {
                   <p className="mt-2 text-[9px] font-bold text-white/55">{t('staff_dashboard.qr.poster_tagline')}</p>
 
                   <div className="mx-auto mt-5 w-[224px] rounded-[24px] border border-cyan-300/80 bg-white p-3 shadow-[0_0_28px_rgba(34,211,238,0.55)]">
-                    <QrImage src={buildQrImageUrl(zoomedQr.url, 420)} alt={t('staff_dashboard.qr.tipping_qr_alt')} className="h-full w-full rounded-xl" />
+                    <QrImage src={buildQrImageUrl(zoomedQr.url, QR_IMAGE_SIZES.panel)} alt={t('staff_dashboard.qr.tipping_qr_alt')} className="h-full w-full rounded-xl" />
                   </div>
 
                   <div className="mt-5 grid grid-cols-[1fr_auto_1fr_auto_1fr] items-start gap-2 text-center">
@@ -1360,13 +1403,10 @@ export default function StaffMyQR() {
                   <h3 className="text-sm font-black uppercase tracking-wider text-slate-800">
                     {t('staff_dashboard.qr.payment_title')}
                   </h3>
-                  <p className="text-center text-[10px] font-medium leading-normal text-slate-500">
-                    {t('staff_dashboard.qr.payment_sub')}
-                  </p>
                 </div>
 
                 <div className="relative mx-auto flex h-56 w-56 items-center justify-center rounded-2xl border-2 border-slate-100 bg-white p-4 shadow-md">
-                  <QrImage src={buildQrImageUrl(zoomedQr.url, 300)} alt={t('staff_dashboard.qr.payment_qr_alt')} className="h-full w-full" />
+                  <QrImage src={buildQrImageUrl(zoomedQr.url, QR_IMAGE_SIZES.panel)} alt={t('staff_dashboard.qr.payment_qr_alt')} className="h-full w-full" />
                 </div>
 
                 <div className="space-y-2 text-left">

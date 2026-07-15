@@ -5,6 +5,7 @@ import { parsePhone, formatNationalNumber } from '../../CountryCodeSelect'
 import { serializeBankWireAccount } from '../../payout/bankWireAccount'
 import { captureQrImage } from '../../../utils/qrCode'
 import { getPayoutValidationMessage } from '../../payout/validatePayoutAccount'
+import { isValidLeg } from '../../../utils/affiliateReferral'
 
 const normalizePhone = (raw) => {
   if (!raw) return ''
@@ -26,7 +27,7 @@ import { useCreateStaffProfile, useProfileSettings } from '../../../data/hooks/u
 import { buildUpdateStaffProfileDto } from '../../../utils/mapStaffProfileView'
 import { getRequiredFieldError } from '../../../utils/onboardingFieldValidation'
 
-export function useRegisterForm({ ssoEmail, onBackToLogin, onRegisterSuccess, onRegisterAndLogin, onGoToLogin, onKybSuccess = () => {}, isRedirectedFromSession, initialStep = 0, initialRole = 'personal', resumeOtpVerification = false, autoSendVerificationOnResume = false, resumeEmail = '', resumePassword = '', resumeRole = null, initialRefCode = '' }) {
+export function useRegisterForm({ ssoEmail, onBackToLogin, onRegisterSuccess, onRegisterAndLogin, onGoToLogin, onKybSuccess = () => {}, isRedirectedFromSession, initialStep = 0, initialRole = 'personal', resumeOtpVerification = false, autoSendVerificationOnResume = false, resumeEmail = '', resumePassword = '', resumeRole = null, initialRefCode = '', initialLeg = '' }) {
   const { t, currentLanguage, setLanguage, renderLabel } = useTranslation()
   const replaceAllPendingAccountsMutation = useReplaceAllPendingAccounts()
   const pendingAccountsQuery = usePendingAccounts()
@@ -47,6 +48,7 @@ export function useRegisterForm({ ssoEmail, onBackToLogin, onRegisterSuccess, on
   const [password, setPassword] = useState(resumePassword || '')
   const [showPassword, setShowPassword] = useState(false)
   const [referralCode, setReferralCode] = useState(initialRefCode)
+  const [leg, setLeg] = useState(initialLeg)
   const [fullName, setFullName] = useState('')
   const [nickname, setNickname] = useState('')
   const [position, setPosition] = useState('Nail Technician')
@@ -277,6 +279,7 @@ export function useRegisterForm({ ssoEmail, onBackToLogin, onRegisterSuccess, on
         // profileType enum per signup API docs is "Merchant" | "User" (not "Personal").
         profileType: role === 'business' ? 'Merchant' : 'User',
         ...(trimmedReferralCode ? { referralCode: trimmedReferralCode } : {}),
+        ...(trimmedReferralCode && isValidLeg(leg) ? { leg } : {}),
       })
       const signupOtp = getSignupOtp(signupResponse)
 
@@ -304,6 +307,8 @@ export function useRegisterForm({ ssoEmail, onBackToLogin, onRegisterSuccess, on
       } else if (code === 'AUTH_PASSWORDS_DO_NOT_MATCH') {
         errorsMap.confirmEmail = 'register.errors.email_mismatch'
       } else if (code === 'USER_INVALID_REFERRAL_CODE') {
+        errorsMap.referralCode = i18nKey || 'errors.unknown_error'
+      } else if (code === 'USER_INVALID_POSITION' || code === 'USER_POSITION_REQUIRES_REFERRAL_CODE') {
         errorsMap.referralCode = i18nKey || 'errors.unknown_error'
       } else {
         errorsMap.email = i18nKey || 'errors.unknown_error'
@@ -759,6 +764,8 @@ export function useRegisterForm({ ssoEmail, onBackToLogin, onRegisterSuccess, on
     referralCode,
     setReferralCode,
     initialRefCode,
+    leg,
+    setLeg,
     fullName,
     setFullName,
     fullNameLocked,

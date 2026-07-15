@@ -2,7 +2,7 @@ import React, { useState } from 'react'
 import { Download, CheckCircle2, ShieldCheck, Loader2 } from 'lucide-react'
 import { getCustomerAppBaseUrl } from '../../../utils/webUrlBase'
 import { buildPublicQrImageUrl } from '../../../data/repositories/publicQr'
-import { downloadQrCode } from '../../../utils/qrUtils'
+import { downloadQrCode, QR_IMAGE_SIZES } from '../../../utils/qrUtils'
 import QrImage from '../../ui/QrImage'
 
 export default function Step3Download({
@@ -18,7 +18,7 @@ export default function Step3Download({
 
   const qrImageUrl = buildPublicQrImageUrl(
     `${getCustomerAppBaseUrl()}?flow=customer&merchant=${encodeURIComponent(businessInfo.name || 'Your Business')}`,
-    600,
+    QR_IMAGE_SIZES.print,
   )
 
   const handleDownload = async () => {
@@ -64,7 +64,7 @@ export default function Step3Download({
               <QrImage
                 src={buildPublicQrImageUrl(
                   `${getCustomerAppBaseUrl()}?flow=customer&merchant=${encodeURIComponent(businessInfo.name || 'Your Business')}`,
-                  150,
+                  QR_IMAGE_SIZES.panel,
                 )}
                 alt="QR Preview"
                 className="h-full w-full qr-print-qr-image"

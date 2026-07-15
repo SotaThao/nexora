@@ -1,11 +1,13 @@
 import { useState, useMemo } from 'react'
+import { createPortal } from 'react-dom'
 import { AlertCircle, Plus, HelpCircle, Trash2, User, QrCode, Eye, Link, Copy, X, Share2, Loader2 } from 'lucide-react'
 import { useTranslation } from '../../../contexts/LanguageContext'
 import { useNotification } from '../../../contexts/NotificationContext'
 import { buildPublicInviteLink } from '../../../utils/inviteRef'
 import { getWebUrlOrigin } from '../../../utils/webUrlBase'
 import { buildPublicQrImageUrl } from '../../../data/repositories/publicQr'
-import { PAYOUT_UI_DISPLAY_ORDER, PAYOUT_UI_LABELS } from '../../../data/paymentMethodTypes'
+import { QR_IMAGE_SIZES } from '../../../utils/qrUtils'
+import { orderedPayoutUiKeysFromMethods, PAYOUT_UI_LABELS } from '../../../data/paymentMethodTypes'
 import { formatJoinedDate } from '../../../utils/localDate'
 import IconButton from '../../ui/IconButton'
 import CustomSelect from '../../CustomSelect'
@@ -78,11 +80,11 @@ function StaffView({
     [businessName, businessSlug, inviteLinkSetting?.referralCode, publicInviteEnabled],
   )
   const publicInviteQrSrc = useMemo(
-    () => (publicInviteEnabled && publicInviteLink ? buildPublicQrImageUrl(publicInviteLink, 150) : ''),
+    () => (publicInviteEnabled && publicInviteLink ? buildPublicQrImageUrl(publicInviteLink, QR_IMAGE_SIZES.thumb) : ''),
     [publicInviteEnabled, publicInviteLink],
   )
   const publicInviteQrLargeSrc = useMemo(
-    () => (publicInviteEnabled && publicInviteLink ? buildPublicQrImageUrl(publicInviteLink, 600) : ''),
+    () => (publicInviteEnabled && publicInviteLink ? buildPublicQrImageUrl(publicInviteLink, QR_IMAGE_SIZES.zoom) : ''),
     [publicInviteEnabled, publicInviteLink],
   )
   const publicInviteUnavailableText = isInviteLinkSettingLoading
@@ -144,17 +146,16 @@ function StaffView({
     }
   }
 
-  // Helper to extract wallet labels
+  // Helper to extract wallet labels — preserve staff API paymentMethods order.
   const getWalletBadges = (member) => {
     const accounts = member?.paymentAccounts || {}
-    return Object.entries(accounts)
-      .filter(([, value]) => Boolean(value))
-      .map(([key]) => key.toLowerCase())
-      .sort((a, b) => {
-        const ai = PAYOUT_UI_DISPLAY_ORDER.indexOf(a)
-        const bi = PAYOUT_UI_DISPLAY_ORDER.indexOf(b)
-        return (ai === -1 ? 99 : ai) - (bi === -1 ? 99 : bi)
-      })
+    const methods = Array.isArray(member?.paymentMethods) ? member.paymentMethods : null
+    const orderedKeys = methods?.length
+      ? orderedPayoutUiKeysFromMethods(methods)
+      : Object.keys(accounts)
+
+    return orderedKeys
+      .filter((key) => Boolean(accounts[key]))
       .map((key) => PAYMENT_ACCOUNT_LABELS[key] || key)
   }
 
@@ -623,14 +624,15 @@ function StaffView({
         ) : null}
       </div>
 
-      {/* Large Join QR Modal */}
-      {largeJoinQrOpen && publicInviteEnabled && (
+      {/* Large Join QR Modal — portaled to body so the backdrop escapes any
+          transformed ancestor and covers the full viewport (incl. header) */}
+      {largeJoinQrOpen && publicInviteEnabled && createPortal(
         <div
-          className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm modal-overlay-safe cursor-zoom-out"
+          className="fixed inset-0 z-[100] flex items-center justify-center bg-black/60 backdrop-blur-sm modal-overlay-safe cursor-zoom-out"
           onClick={() => setLargeJoinQrOpen(false)}
         >
           <div
-            className="w-full max-w-lg rounded-2xl bg-white p-6 shadow-2xl border border-slate-100 flex flex-col items-center cursor-default animate-scaleUp"
+            className="w-full max-w-md rounded-2xl bg-white p-6 shadow-2xl border border-slate-100 flex flex-col items-center cursor-default animate-scaleUp"
             onClick={(e) => e.stopPropagation()}
           >
             <div className="w-full flex justify-between items-center mb-4">
@@ -646,7 +648,7 @@ function StaffView({
             </div>
 
             <div className="mb-4 w-full">
-              <div className="aspect-square w-full max-w-full min-w-0 overflow-hidden rounded-2xl border border-slate-200 bg-white p-3 shadow-inner sm:p-4">
+              <div className="mx-auto aspect-square w-full max-w-[15rem] min-w-0 overflow-hidden rounded-2xl border border-slate-200 bg-white p-3 shadow-inner sm:p-4">
               <QrImage
                 src={publicInviteQrLargeSrc}
                 alt={t('components.dashboard.views.StaffView.scanToJoinAlt')}
@@ -675,7 +677,8 @@ function StaffView({
               </button>
             </div>
           </div>
-        </div>
+        </div>,
+        document.body,
       )}
 
 
