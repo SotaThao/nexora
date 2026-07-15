@@ -121,13 +121,11 @@ export type MerchantVoiceStaffActivityStatusApiValue =
   typeof MerchantVoiceStaffActivityStatusApi[keyof typeof MerchantVoiceStaffActivityStatusApi]
 
 export enum MerchantVoiceConfigLanguage {
-  Auto = 'auto',
   ViVN = 'vi-VN',
   EnUS = 'en-US',
 }
 
 export enum MerchantVoiceUiLanguage {
-  Auto = 'auto',
   Vi = 'vi',
   En = 'en',
 }
@@ -289,7 +287,7 @@ export function mapConfigLanguageToUiLanguage(language: string | null | undefine
   ) {
     return MerchantVoiceUiLanguage.Vi
   }
-  // Treat auto / unknown as English — UI only exposes VI + EN.
+  // Treat unknown values as English — UI only exposes VI + EN.
   return MerchantVoiceUiLanguage.En
 }
 
