@@ -1439,7 +1439,15 @@ export default function BookingSettingsPanel() {
               </button>
             </div>
             <label className="settings-field settings-span-full">
-              <span className="settings-label">{t(`${TK}.promoLabel`)}</span>
+              <div className="settings-promo-head">
+                <span className="settings-label">{t(`${TK}.promoLabel`)}</span>
+                <div
+                  id="settings-promo-count"
+                  className={`settings-promo-count ${promotion.length >= PROMO_MAX_LENGTH ? "is-max" : ""}`}
+                >
+                  <span>{promotion.length}</span>/{PROMO_MAX_LENGTH}
+                </div>
+              </div>
               <textarea
                 className="settings-textarea settings-textarea-promo"
                 value={promotion}
@@ -1448,12 +1456,6 @@ export default function BookingSettingsPanel() {
                 aria-describedby="settings-promo-count"
                 onChange={(event) => handlePromoChange(event.target.value.slice(0, PROMO_MAX_LENGTH))}
               />
-              <div
-                id="settings-promo-count"
-                className={`settings-promo-count ${promotion.length >= PROMO_MAX_LENGTH ? "is-max" : ""}`}
-              >
-                <span>{promotion.length}</span>/{PROMO_MAX_LENGTH}
-              </div>
               <div className="settings-language-status">{t(`${TK}.promoHelp`)}</div>
               <div className="settings-promo-suggest-row">
                 <button

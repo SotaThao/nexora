@@ -3386,12 +3386,25 @@
   white-space: pre-wrap;
 }
 
+.booking-hub-view .settings-promo-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.booking-hub-view .settings-promo-head .settings-label {
+  margin: 0;
+}
+
 .booking-hub-view .settings-promo-count {
-  margin-top: 6px;
+  margin: 0;
   text-align: right;
   color: var(--nexora-muted);
   font-size: 10.5px;
   font-weight: 700;
+  white-space: nowrap;
+  line-height: 1.2;
 }
 
 .booking-hub-view .settings-promo-count.is-max {
