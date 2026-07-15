@@ -62,7 +62,16 @@ function SalonCard({
       tabIndex={0}
       onClick={onOpen}
       onKeyDown={(event) => {
-        if (event.key === 'Enter' || event.key === ' ') {
+        if (event.key === ' ') {
+          event.preventDefault()
+        }
+        if (event.key === 'Enter') {
+          event.preventDefault()
+          onOpen()
+        }
+      }}
+      onKeyUp={(event) => {
+        if (event.key === ' ') {
           event.preventDefault()
           onOpen()
         }
@@ -95,6 +104,7 @@ function SalonCard({
             <span
               onClick={(event) => event.stopPropagation()}
               onKeyDown={(event) => event.stopPropagation()}
+              onKeyUp={(event) => event.stopPropagation()}
             >
               <Tooltip
                 content={statusHelp}
