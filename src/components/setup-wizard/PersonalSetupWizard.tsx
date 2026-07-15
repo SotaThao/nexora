@@ -1,5 +1,6 @@
 import React from 'react'
-import { Check, LogIn, AlertTriangle, User, CreditCard, PartyPopper } from 'lucide-react'
+import { useNavigate } from 'react-router-dom'
+import { Check, LogIn, AlertTriangle, User, CreditCard, PartyPopper, ArrowLeft } from 'lucide-react'
 import StepProfileSetup from '../register/steps/StepProfileSetup'
 import StepPayoutSetup from '../register/steps/StepPayoutSetup'
 import StepSuccess from '../register/steps/StepSuccess'
@@ -7,6 +8,7 @@ import PayoutEditModal from '../register/modals/PayoutEditModal'
 import LanguageSwitcher from '../ui/LanguageSwitcher'
 
 export default function PersonalSetupWizard({ wizard }) {
+  const navigate = useNavigate()
   const {
     t, currentLanguage, setLanguage,
     currentStep, setCurrentStep,
@@ -14,6 +16,8 @@ export default function PersonalSetupWizard({ wizard }) {
     handleBackToLogin,
     stepName
   } = wizard
+
+  const handleBackToDashboard = () => navigate('/staff')
 
   const stepIcon = (step: number) => {
     switch (step) {
@@ -36,6 +40,15 @@ export default function PersonalSetupWizard({ wizard }) {
           </div>
 
           <div className="flex w-full flex-col gap-3 sm:w-auto sm:flex-row sm:items-center">
+            {currentStep < 3 && (
+              <button
+                type="button"
+                onClick={handleBackToDashboard}
+                className="min-h-9 px-4 py-2 rounded-lg border border-nexoraBorder hover:bg-white bg-transparent text-nexoraText font-semibold text-xs flex items-center justify-center gap-1.5 transition-all"
+              >
+                <ArrowLeft className="w-4 h-4 text-nexoraSubtle" /> {t('setup.back_to_dashboard')}
+              </button>
+            )}
             <LanguageSwitcher />
           </div>
         </header>
@@ -94,8 +107,21 @@ export default function PersonalSetupWizard({ wizard }) {
               </div>
             )}
 
-            {currentStep === 1 && <StepProfileSetup {...wizard} />}
-            {currentStep === 2 && <StepPayoutSetup {...wizard} />}
+            {currentStep === 1 && <StepProfileSetup {...wizard} isNicknameRequired={false} onBack={handleBackToDashboard} />}
+            {currentStep === 2 && (
+              <>
+                <StepPayoutSetup {...wizard} />
+                <div className="px-6 pb-6 text-center sm:px-8">
+                  <button
+                    type="button"
+                    onClick={wizard.handlePersonalRegisterSubmit}
+                    className="text-xs font-semibold text-nexoraSubtle underline transition hover:text-nexoraBrand"
+                  >
+                    {t('components.register.steps.StepPayoutSetup.skipForNow')}
+                  </button>
+                </div>
+              </>
+            )}
             {currentStep === 3 && <StepSuccess {...wizard} />}
           </div>
         </main>

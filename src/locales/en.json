@@ -63,6 +63,11 @@
     "missing_payout_title": "Action Required",
     "missing_payout_heading": "Set Up Your Payout Method",
     "setup_payout_now": "Set Up Payout Methods",
+    "onboarding_banner_title": "Complete your profile",
+    "onboarding_banner_heading": "Finish setting up your profile",
+    "onboarding_banner_description": "Add your contact details and, if you choose, a payout method so you are ready when you need it.",
+    "complete_onboarding_now": "Complete onboarding",
+    "dismiss_onboarding_banner": "Dismiss profile reminder",
     "status": {
       "active": "Active",
       "inactive": "Inactive",
@@ -568,6 +573,7 @@
     "step_name_3": "Download & Complete",
     "onboarding_stage": "Onboarding Stage",
     "back_to_login": "Back to Login",
+    "back_to_dashboard": "Back to Dashboard",
     "prefill_demo_data": "Prefill Demo Data",
     "payout_methods": "Payout Methods",
     "payout_account": "Payout account",
@@ -2874,6 +2880,7 @@
           "notConfigured": "Not Configured",
           "configure": "Configure",
           "saveAndActivate": "Save & Activate",
+          "skipForNow": "Skip for now",
           "nexoraId": "NEXORA ID"
         },
         "StepProfileSetup": {
@@ -2882,6 +2889,7 @@
           "acceptedFormatsJpgPng": "Accepted formats: JPG, PNG. Max size: 5MB.",
           "fullName": "Full Name *",
           "displayNickname": "Display Nickname *",
+          "displayNicknameOptional": "Display Nickname (Optional)",
           "phoneNumber": "Phone Number *",
           "emailAddress": "Email Address",
           "roleSpeciality": "Role / Speciality",

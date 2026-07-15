@@ -97,7 +97,7 @@ export default function StepPayoutSetup({
       <div className="pt-4 flex flex-col sm:flex-row gap-3">
         <button
           type="button"
-          onClick={() => setCurrentStep(2)}
+          onClick={() => setCurrentStep(1)}
           className="w-full min-h-11 py-2.5 border border-nexoraBorder hover:bg-nexoraCanvas text-nexoraSubtle hover:text-nexoraText font-semibold text-xs uppercase tracking-wider rounded-lg flex items-center justify-center gap-1.5 transition-all"
         >
           <ArrowLeft className="w-4 h-4" /> {t('common.back')}

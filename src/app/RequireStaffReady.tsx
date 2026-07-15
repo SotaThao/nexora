@@ -1,6 +1,3 @@
-import React from 'react'
-import { Navigate } from 'react-router-dom'
-import { useAuth } from '../auth/useAuth'
 
 /**
  * Staff-area readiness gate.
@@ -15,15 +12,5 @@ import { useAuth } from '../auth/useAuth'
  * Anyone else is sent back to /register to finish the flow.
  */
 export default function RequireStaffReady({ children }) {
-  const { session } = useAuth()
-
-  const isStaffReady =
-    Boolean(session?.staffId) ||
-    (session?.hasStaffProfile && session?.hasCompletedOnboarding)
-
-  if (session && !isStaffReady) {
-    return <Navigate to="/onboarding" replace />
-  }
-
   return children
 }

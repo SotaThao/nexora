@@ -20,6 +20,8 @@ export default function StepProfileSetup({
   t,
   currentLanguage,
   renderLabel,
+  isNicknameRequired = true,
+  onBack,
 }) {
   return (
     <div className="p-6 sm:p-8 animate-fadeIn max-w-xl mx-auto">
@@ -106,12 +108,14 @@ export default function StepProfileSetup({
           {/* Display Nickname */}
           <div>
             <label className="block text-[10px] font-bold text-nexoraText uppercase tracking-wider mb-2">
-              {renderLabel(t('components.register.steps.StepProfileSetup.displayNickname'))}
+              {isNicknameRequired
+                ? renderLabel(t('components.register.steps.StepProfileSetup.displayNickname'))
+                : t('components.register.steps.StepProfileSetup.displayNicknameOptional')}
             </label>
             <input
               type="text"
               placeholder={t('components.register.steps.StepProfileSetup.phNickname')}
-              required
+              required={isNicknameRequired}
               className={`w-full bg-white border rounded-lg px-4 py-2.5 text-sm text-nexoraText focus:outline-none transition-all ${
                 errors?.nickname ? 'border-red-300 focus:border-red-500' : 'border-nexoraBorder focus:border-nexoraBrand'
               }`}
@@ -208,7 +212,7 @@ export default function StepProfileSetup({
         <div className="pt-4 flex flex-col sm:flex-row gap-3">
           <button
             type="button"
-            onClick={() => setCurrentStep(1)}
+            onClick={() => (onBack ? onBack() : setCurrentStep(1))}
             className="w-full min-h-11 py-2.5 border border-nexoraBorder hover:bg-nexoraCanvas text-nexoraSubtle hover:text-nexoraText font-semibold text-xs uppercase tracking-wider rounded-lg flex items-center justify-center gap-1.5 transition-all"
           >
             <ArrowLeft className="w-4 h-4" /> {t('common.back')}
@@ -217,7 +221,7 @@ export default function StepProfileSetup({
             type="submit"
             disabled={
               !fullName.trim() ||
-              !nickname.trim() ||
+              (isNicknameRequired && !nickname.trim()) ||
               !phone.trim() ||
               (!phoneLocked && phoneParsed?.nationalNumber?.replace(/\D/g, '').length < 7)
             }
