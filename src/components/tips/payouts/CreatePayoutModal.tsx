@@ -211,6 +211,7 @@ export default function CreatePayoutModal({
   const [payoutStatus, setPayoutStatus] = useState<PayoutStatusValue>(PayoutStatus.Confirmed)
   const fileInputRef = useRef<HTMLInputElement>(null)
   const formInitKeyRef = useRef('')
+  const lastAutoSeededAmountRef = useRef('')
 
   const selectedStaff = isEditing
     ? editingStaffMember
@@ -237,6 +238,7 @@ export default function CreatePayoutModal({
   useEffect(() => {
     if (!isOpen) {
       formInitKeyRef.current = ''
+      lastAutoSeededAmountRef.current = ''
       return
     }
 
@@ -253,6 +255,7 @@ export default function CreatePayoutModal({
       setStaffProfileError(null)
       setPayoutMethodType(normalizePayoutMethodType(editingPayout.payoutMethodType))
       setAmount(formatUsdInputAmount(editingPayout.amount))
+      lastAutoSeededAmountRef.current = ''
       setAmountError(null)
       setPeriodError(null)
       setPayoutTypesMask(
@@ -291,6 +294,7 @@ export default function CreatePayoutModal({
     }
     setPayoutMethodType(PayoutMethodType.Zelle)
     setAmount(seedAmount)
+    lastAutoSeededAmountRef.current = seedAmount
     setAmountError(null)
     setPeriodError(null)
     // Opening from unpaid tip balance should pre-select Unpaid tip.
@@ -332,8 +336,9 @@ export default function CreatePayoutModal({
   )
   const isUnpaidTipsTypeDisabled = !isEditing && isDebtLookupReady && displayedDebtBalance <= 0
 
-  // Keep Amount paid in sync with unpaid tip balance while that type is selected and
-  // the user has not typed a different amount yet.
+  // Auto-fill Amount paid from unpaid tip balance. Keep updating while the value is
+  // still the last auto-seeded amount (covers async debt lookup). Stop once the user
+  // types a different amount.
   const unpaidBalanceInput =
     !isEditing && includesUnpaidTipsType && displayedDebtBalance > 0
       ? formatUsdInputAmount(displayedDebtBalance)
@@ -342,7 +347,15 @@ export default function CreatePayoutModal({
 
   useEffect(() => {
     if (!unpaidBalanceInput) return
-    setAmount((current) => (current.trim() ? current : unpaidBalanceInput))
+    setAmount((current) => {
+      const trimmed = current.trim()
+      const lastSeeded = lastAutoSeededAmountRef.current
+      if (!trimmed || trimmed === lastSeeded) {
+        lastAutoSeededAmountRef.current = unpaidBalanceInput
+        return unpaidBalanceInput
+      }
+      return current
+    })
   }, [unpaidBalanceInput])
 
   useEffect(() => {
