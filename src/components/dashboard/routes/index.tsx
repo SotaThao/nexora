@@ -280,7 +280,6 @@ export function TipsRoute() {
       metrics={ctx.metrics}
       tipsChartData={ctx.tipsChartData}
       activeTab={tab}
-      onTabChange={(t) => setSp({ tab: t }, { replace: true })}
       processingFee={ctx.processingFee}
       setProcessingFee={ctx.setProcessingFee}
     />

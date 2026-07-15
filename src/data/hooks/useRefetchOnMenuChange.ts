@@ -16,6 +16,7 @@ const MERCHANT_MENU_QUERIES: Record<string, QueryKeyPrefix[]> = {
   staff: [
     qk.merchantStaff(),
     qk.merchantInviteLink(),
+    qk.merchantPaymentMethods(),
   ],
   tips: [
     qk.transactions(),
