@@ -33,6 +33,9 @@ import CpaAccessSettingsView from '../views/taxiq/CpaAccessSettingsView'
 import PosGeneralSettingsView from '../views/pos/PosGeneralSettingsView'
 import PosBusinessHoursView from '../views/pos/PosBusinessHoursView'
 import PosRolesView from '../views/pos/PosRolesView'
+import PosCategoriesView from '../views/pos/PosCategoriesView'
+import PosServicesView from '../views/pos/PosServicesView'
+import PosProductsView from '../views/pos/PosProductsView'
 
 export function OverviewRoute() {
   const ctx = useOutletContext<LooseObject>()
@@ -365,6 +368,25 @@ export function PosBusinessHoursRoute() {
 
 export function PosRolesRoute() {
   return <PosRolesView />
+}
+
+// Categories are catalog/menu data (not salon identity fields, no payment
+// processing), so unlike PosGeneralSettingsRoute/PosBusinessHoursRoute this
+// route is not gated behind verificationStatus/KYB.
+export function PosCategoriesRoute() {
+  return <PosCategoriesView />
+}
+
+// Same rationale as PosCategoriesRoute — Services is catalog/menu data, not
+// gated behind verificationStatus/KYB.
+export function PosServicesRoute() {
+  return <PosServicesView />
+}
+
+// Same rationale as PosCategoriesRoute/PosServicesRoute — Products is
+// catalog/menu data, not gated behind verificationStatus/KYB.
+export function PosProductsRoute() {
+  return <PosProductsView />
 }
 
 export function TaxIqOverviewRoute() {

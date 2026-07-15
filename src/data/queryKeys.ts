@@ -74,6 +74,13 @@ export const qk = {
   merchantBusinessHours: ()    => ['merchantSettings', 'businessHours'],
   // POS Owner Setup — Roles & Permissions (US-015)
   merchantPosRoles: ()         => ['merchantSettings', 'posRoles'],
+  // POS Owner Setup — Categories (US-016)
+  merchantPosCategories: ()    => ['merchantSettings', 'posCategories'],
+  // POS Owner Setup — Services (US-017)
+  merchantPosServices: ()      => ['merchantSettings', 'posServices'],
+  merchantPosTags: ()          => ['merchantSettings', 'posTags'],
+  // POS Owner Setup — Products (US-018)
+  merchantPosProducts: ()      => ['merchantSettings', 'posProducts'],
 
   // Merchant Touchpoints
   merchantTouchpoints: ()      => ['merchantTouchpoints'],

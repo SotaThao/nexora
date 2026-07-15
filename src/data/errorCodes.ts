@@ -91,6 +91,33 @@ export const errorCodeToI18nKey = {
   POS_ROLE_IN_USE: 'errors.pos_role_in_use',
   POS_PERMISSION_DEFINITION_NOT_FOUND: 'errors.pos_permission_definition_not_found',
 
+  // POS Owner Setup — Categories (US-016)
+  POS_CATEGORY_NOT_FOUND: 'errors.pos_category_not_found',
+  POS_CATEGORY_NAME_REQUIRED: 'errors.pos_category_name_required',
+  POS_CATEGORY_NAME_TOO_LONG: 'errors.pos_category_name_too_long',
+  POS_CATEGORY_IN_USE: 'errors.pos_category_in_use',
+
+  // POS Owner Setup — Services (US-017)
+  POS_SERVICE_NOT_FOUND: 'errors.pos_service_not_found',
+  POS_SERVICE_NAME_REQUIRED: 'errors.pos_service_name_required',
+  POS_SERVICE_NAME_TOO_LONG: 'errors.pos_service_name_too_long',
+  POS_SERVICE_DESCRIPTION_TOO_LONG: 'errors.pos_service_description_too_long',
+  POS_SERVICE_DURATION_INVALID: 'errors.pos_service_duration_invalid',
+  POS_SERVICE_PRICE_INVALID: 'errors.pos_service_price_invalid',
+  POS_SERVICE_TAG_TOO_LONG: 'errors.pos_service_tag_too_long',
+  POS_SERVICE_CATEGORY_INVALID: 'errors.pos_service_category_invalid',
+  POS_SERVICE_PHOTO_INVALID_TYPE: 'errors.pos_service_photo_invalid_type',
+
+  // POS Owner Setup — Products (US-018)
+  POS_PRODUCT_NOT_FOUND: 'errors.pos_product_not_found',
+  POS_PRODUCT_NAME_REQUIRED: 'errors.pos_product_name_required',
+  POS_PRODUCT_NAME_TOO_LONG: 'errors.pos_product_name_too_long',
+  POS_PRODUCT_DESCRIPTION_TOO_LONG: 'errors.pos_product_description_too_long',
+  POS_PRODUCT_PRICE_INVALID: 'errors.pos_product_price_invalid',
+  POS_PRODUCT_TAG_TOO_LONG: 'errors.pos_product_tag_too_long',
+  POS_PRODUCT_CATEGORY_INVALID: 'errors.pos_product_category_invalid',
+  POS_PRODUCT_PHOTO_INVALID_TYPE: 'errors.pos_product_photo_invalid_type',
+
   // Support / contact requests
   CONTACT_REQUEST_SUPPORT_TYPE_MIN_LENGTH: 'errors.contact_request_support_type_min_length',
   CONTACT_REQUEST_SUPPORT_TYPE_REQUIRED: 'errors.contact_request_support_type_required',

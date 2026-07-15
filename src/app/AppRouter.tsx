@@ -26,7 +26,7 @@ import {
   TouchpointsRoute,
   TaxIqOverviewRoute, TaxIqDeductionsRoute, TaxIqReceiptsRoute, TaxIqEquipmentRoute,
   TaxIqPayrollRoute, TaxIqRemindersRoute, TaxIqCpaAccessRoute, TaxIqExportRoute,
-  PosGeneralSettingsRoute, PosBusinessHoursRoute, PosRolesRoute
+  PosGeneralSettingsRoute, PosBusinessHoursRoute, PosRolesRoute, PosCategoriesRoute, PosServicesRoute, PosProductsRoute
 } from "../components/dashboard/routes";
 import ErrorBoundary from "../components/ui/ErrorBoundary";
 import { isDemoToolsEnabled } from "./demoTools";
@@ -262,6 +262,9 @@ export default function AppRouter() {
             <Route path="pos" element={<PosGeneralSettingsRoute />} />
             <Route path="pos/business-hours" element={<PosBusinessHoursRoute />} />
             <Route path="pos/roles" element={<PosRolesRoute />} />
+            <Route path="pos/categories" element={<PosCategoriesRoute />} />
+            <Route path="pos/services" element={<PosServicesRoute />} />
+            <Route path="pos/products" element={<PosProductsRoute />} />
             <Route path="settings" element={<SettingsRoute />} />
             <Route path="settings/:tab" element={<SettingsRoute />} />
             <Route path="subscriptions" element={<SubscriptionsRoute />} />

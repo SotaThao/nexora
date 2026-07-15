@@ -73,6 +73,47 @@ export interface PosRoleApiDto {
   permissionAreas: PosPermissionAreaGroupApiDto[]
 }
 
+// POS Owner Setup — Categories (US-016)
+export interface PosCategoryApiDto {
+  id: string
+  name: string
+  displayOrder: number
+}
+
+// POS Owner Setup — Services (US-017)
+export type PosServiceStatus = 'Active' | 'Inactive'
+
+export interface PosServiceApiDto {
+  id: string
+  name: string
+  price: number
+  durationMinutes: number
+  description?: string | null
+  photoUrl?: string | null
+  status: PosServiceStatus
+  displayOrder: number
+  categoryIds: string[]
+  tags: string[]
+}
+
+export interface PosTagApiDto {
+  id: string
+  name: string
+}
+
+// POS Owner Setup — Products (US-018)
+export interface PosProductApiDto {
+  id: string
+  name: string
+  price: number
+  description?: string | null
+  photoUrl?: string | null
+  status: PosServiceStatus
+  displayOrder: number
+  categoryIds: string[]
+  tags: string[]
+}
+
 export interface TipsSummaryApiDto {
   totalAmount?: number
   totalCount?: number
