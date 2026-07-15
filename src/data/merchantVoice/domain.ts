@@ -279,9 +279,16 @@ export function mapDayOfWeekToApiName(day: MerchantVoiceDayOfWeek): MerchantVoic
 }
 
 export function mapConfigLanguageToUiLanguage(language: string | null | undefined): MerchantVoiceUiLanguage {
-  return language === MerchantVoiceConfigLanguage.ViVN
-    ? MerchantVoiceUiLanguage.Vi
-    : MerchantVoiceUiLanguage.En
+  const normalized = String(language ?? '').trim().toLowerCase()
+  if (
+    normalized === MerchantVoiceConfigLanguage.ViVN.toLowerCase()
+    || normalized === MerchantVoiceUiLanguage.Vi
+    || normalized.startsWith('vi')
+  ) {
+    return MerchantVoiceUiLanguage.Vi
+  }
+  // Treat unknown values as English — UI only exposes VI + EN.
+  return MerchantVoiceUiLanguage.En
 }
 
 export function mapUiLanguageToConfigLanguage(language: MerchantVoiceUiLanguage): MerchantVoiceConfigLanguage {

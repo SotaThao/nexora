@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from 'react'
+import React, { useEffect, useMemo, useRef, useState } from 'react'
 import { formatNationalNumber, isValidPhoneE164, parsePhone } from '../../CountryCodeSelect'
 import { useTranslation } from '../../../contexts/LanguageContext'
 import { useNotification } from '../../../contexts/NotificationContext'
@@ -279,17 +279,20 @@ function BookingActions({
   isPending: boolean
   t: (key: string) => string
 }) {
+  const viewLabel = t(`${TK}.today.view`)
+  const doneLabel = t(`${TK}.today.done`)
+  const noShowLabel = t(`${TK}.today.noShow`)
+  const sendSmsLabel = t(`${TK}.today.sendSms`)
+
   const viewBtn = (
     <button
-      className="booking-mini-button icon-only"
+      className="booking-mini-button booking-action-button"
       type="button"
-      aria-label={t(`${TK}.today.view`)}
-      title={t(`${TK}.today.view`)}
       disabled={isPending}
       onClick={() => onAction(booking.id, 'detail')}
     >
       {isPending ? <SpinnerIcon className="booking-inline-spinner" /> : <EyeIcon />}
-      <span className="sr-only">{t(`${TK}.today.view`)}</span>
+      <span>{viewLabel}</span>
     </button>
   )
 
@@ -303,26 +306,22 @@ function BookingActions({
     return (
       <div className="booking-actions">
         <button
-          className="booking-mini-button icon-only primary booking-done-action"
+          className="booking-mini-button booking-action-button primary booking-done-action"
           type="button"
-          aria-label={t(`${TK}.today.done`)}
-          title={t(`${TK}.today.done`)}
           disabled={isPending}
           onClick={() => onAction(booking.id, 'done')}
         >
           {isPending ? <SpinnerIcon className="booking-inline-spinner" /> : <CheckLgIcon />}
-          <span className="sr-only">{t(`${TK}.today.done`)}</span>
+          <span>{doneLabel}</span>
         </button>
         <button
-          className="booking-mini-button icon-only booking-noshow-action"
+          className="booking-mini-button booking-action-button booking-noshow-action"
           type="button"
-          aria-label={t(`${TK}.today.noShow`)}
-          title={t(`${TK}.today.noShow`)}
           disabled={isPending}
           onClick={() => onAction(booking.id, 'noshow')}
         >
           {isPending ? <SpinnerIcon className="booking-inline-spinner" /> : <XLgIcon />}
-          <span className="sr-only">{t(`${TK}.today.noShow`)}</span>
+          <span>{noShowLabel}</span>
         </button>
         {viewBtn}
       </div>
@@ -332,26 +331,22 @@ function BookingActions({
   return (
     <div className="booking-actions">
       <button
-        className="booking-mini-button icon-only primary booking-sms-action"
+        className="booking-mini-button booking-action-button primary booking-sms-action"
         type="button"
-        aria-label={t(`${TK}.today.sendSms`)}
-        title={t(`${TK}.today.sendSms`)}
         disabled={isPending}
         onClick={() => onAction(booking.id, 'send-sms')}
       >
         {isPending ? <SpinnerIcon className="booking-inline-spinner" /> : <SendIcon />}
-        <span className="sr-only">{t(`${TK}.today.sendSms`)}</span>
+        <span>{sendSmsLabel}</span>
       </button>
       <button
-        className="booking-mini-button icon-only booking-noshow-action"
+        className="booking-mini-button booking-action-button booking-noshow-action"
         type="button"
-        aria-label={t(`${TK}.today.noShow`)}
-        title={t(`${TK}.today.noShow`)}
         disabled={isPending}
         onClick={() => onAction(booking.id, 'noshow')}
       >
         {isPending ? <SpinnerIcon className="booking-inline-spinner" /> : <XLgIcon />}
-        <span className="sr-only">{t(`${TK}.today.noShow`)}</span>
+        <span>{noShowLabel}</span>
       </button>
       {viewBtn}
     </div>
@@ -427,12 +422,21 @@ function BookingTableMobileList({
   )
 }
 
+/** Below this content-pane width, stacked rows beat a cramped 6-col table. */
+const COMPACT_TABLE_PANEL_MAX = 720
+
 export default function BookingTodayPanel() {
   const { t, currentLanguage } = useTranslation()
   const { showToast } = useNotification()
   const voiceEnabled = useBookingHubVoiceEnabled()
-  // iPad Pro (1024+) still shows desktop chrome, but content pane is too narrow for 6-col table.
-  const useCompactTableList = useMediaQuery('(max-width: 1366px)')
+  const listPanelRef = useRef<HTMLElement>(null)
+  const [panelWidth, setPanelWidth] = useState<number | null>(null)
+  // Viewport fallback only until ResizeObserver measures the real content pane
+  // (sidebar can leave a narrow panel on a wide desktop viewport).
+  const narrowViewportFallback = useMediaQuery('(max-width: 767px)')
+  const useCompactTableList = panelWidth != null
+    ? panelWidth < COMPACT_TABLE_PANEL_MAX
+    : narrowViewportFallback
   const [viewMode, setViewMode] = useState<ViewMode>('table')
   const [searchField, setSearchField] = useState<SearchField>(BookingUiSearchField.All)
   const [searchKeyword, setSearchKeyword] = useState('')
@@ -636,6 +640,28 @@ export default function BookingTodayPanel() {
     return () => window.clearTimeout(timer)
   }, [searchField, searchKeyword, dateFrom, dateTo, resetPage])
 
+  useEffect(() => {
+    const el = listPanelRef.current
+    if (!el || typeof ResizeObserver === 'undefined') {
+      return undefined
+    }
+
+    const updateWidth = (width: number) => {
+      setPanelWidth((prev) => (prev === width ? prev : width))
+    }
+
+    updateWidth(el.getBoundingClientRect().width)
+
+    const observer = new ResizeObserver((entries) => {
+      const width = entries[0]?.contentRect.width
+      if (typeof width === 'number') {
+        updateWidth(width)
+      }
+    })
+    observer.observe(el)
+    return () => observer.disconnect()
+  }, [])
+
   return (
     <div className="booking-sub-panel is-active" aria-busy={isStatisticsLoading || isListLoading}>
       {isStatisticsLoading ? (
@@ -675,7 +701,7 @@ export default function BookingTodayPanel() {
       )}
 
       <div className="booking-grid">
-        <article className="overview-card overview-card-pad">
+        <article className="overview-card overview-card-pad" ref={listPanelRef}>
           <div className="booking-daybar">
             <div className="booking-date">
               <span className="booking-action-icon"><CalendarIcon /></span>
@@ -992,6 +1018,7 @@ export default function BookingTodayPanel() {
                 className="booking-detail-close"
                 type="button"
                 aria-label={t(`${TK}.today.closeDetail`)}
+                title={t(`${TK}.today.closeDetail`)}
                 onClick={() => setDetailBooking(null)}
               >
                 <XLgIcon />
