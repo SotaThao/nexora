@@ -176,7 +176,7 @@ export default function DashboardHeader({
   }, [searchQuery, staff, transactions, reviews, touchpoints])
 
   const notificationPanel = isNotiDropdownOpen && (
-    <div className="absolute right-0 top-full mt-2 w-80 max-w-[calc(100vw-32px)] max-h-[460px] flex flex-col rounded-xl border border-nexoraBorder bg-white shadow-2xl z-50 animate-fadeIn overflow-hidden">
+    <div className="fixed left-4 right-4 top-[calc(var(--app-safe-area-top)+4.5rem)] z-[80] flex max-h-[calc(100dvh-5.5rem)] w-auto flex-col overflow-hidden rounded-xl border border-nexoraBorder bg-white shadow-2xl animate-fadeIn lg:absolute lg:left-auto lg:right-0 lg:top-full lg:mt-2 lg:max-h-[460px] lg:w-80 lg:max-w-[calc(100vw-32px)]">
       <div className="flex items-center justify-between border-b border-nexoraBorder px-4 py-3 bg-nexoraSurfaceMuted">
         <span className="text-xs font-black uppercase text-nexoraText tracking-wider">
           {t('dashboard.notifications.title')} ({unreadCount})
@@ -192,7 +192,7 @@ export default function DashboardHeader({
           </button>
         )}
       </div>
-      <div className="flex-grow overflow-y-auto max-h-[380px] divide-y divide-nexoraBorder">
+      <div className="max-h-[calc(100dvh-9.5rem)] flex-grow divide-y divide-nexoraBorder overflow-y-auto lg:max-h-[380px]">
         {isNotificationsLoading ? (
           <div className="py-12 text-center text-nexoraSubtle flex flex-col items-center justify-center">
             <Bell className="h-8 w-8 text-nexoraBorder mb-2 animate-pulse" />
@@ -320,7 +320,7 @@ export default function DashboardHeader({
   )
 
   return (
-    <header className="safe-area-top sticky top-0 z-20 border-b border-nexoraBorder bg-nexoraSurface/90 backdrop-blur-md">
+    <header className="safe-area-top sticky top-0 z-40 border-b border-nexoraBorder bg-nexoraSurface/90 backdrop-blur-md">
 
       {/* ── Mobile header ──────────────────────────────────────────────────── */}
       <div className="flex min-h-16 items-center justify-between px-4 lg:hidden">
@@ -539,7 +539,7 @@ export default function DashboardHeader({
           </div>
 
           {userRole !== 'staff' && (
-            <button onClick={onAddTouchpoint} className="nexora-primary-button order-6">
+            <button type="button" onClick={onAddTouchpoint} className="nexora-primary-button order-6">
               <Plus className="h-4 w-4" />
               <span>{t('dashboard.header.add_tp')}</span>
             </button>

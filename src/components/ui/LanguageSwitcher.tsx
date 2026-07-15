@@ -34,7 +34,7 @@ export default function LanguageSwitcher({ className = '', variant = 'header' })
       <button
         type="button"
         onClick={() => setIsOpen(!isOpen)}
-        aria-label="Select language"
+        aria-label={t('staff_dashboard.profile.menu_language')}
         aria-expanded={isOpen}
         aria-haspopup="listbox"
         className={isSidebar
@@ -61,7 +61,7 @@ export default function LanguageSwitcher({ className = '', variant = 'header' })
       {isOpen && (
         <div
           role="listbox"
-          aria-label="Language selection"
+          aria-label={t('staff_dashboard.profile.menu_language')}
           className={`absolute top-full z-50 mt-1.5 min-w-[160px] overflow-hidden rounded-xl border border-nexoraBorder bg-white shadow-lg animate-fadeIn dark:bg-nexoraSidebar dark:border-white/10 ${
             isSidebar ? 'left-0 right-0' : 'right-0'
           }`}

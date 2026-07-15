@@ -147,7 +147,7 @@ export default function DashboardSidebar({
               <div className="h-1.5 w-1.5 rounded-full bg-white/20" />
               <span>{t('dashboard.menu.kyb')} ({t('common.coming_soon')})</span>
             </button>
-            <LanguageSwitcher variant="sidebar" />
+            <LanguageSwitcher variant="sidebar" className="w-full" />
           </div>
         )}
       </div>
