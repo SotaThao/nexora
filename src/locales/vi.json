@@ -46,6 +46,7 @@
       "my_workspace": "Không gian của tôi",
       "my_qr_menu": "QR của tôi",
       "my_qr_code": "Mã QR",
+      "my_earnings": "Thu nhập của tôi",
       "my_reviews": "Đánh giá của tôi",
       "my_salons": "Salon của tôi"
     },
@@ -1039,7 +1040,8 @@
         "col_method": "Ví gửi",
         "col_status": "Trạng thái",
         "status_success": "Thành công",
-        "status_completed": "Hoàn thành"
+        "status_completed": "Hoàn thành",
+        "empty": "Chưa có giao dịch chi trả trực tiếp nào."
       },
       "ledger": {
         "title": "Giao dịch tip",
@@ -1605,6 +1607,16 @@
     "empty_title": "Chưa liên kết salon nào",
     "link_salon_cta": "Liên kết salon",
     "status_previous": "Trước đây",
+    "status_help_aria": "Giải thích trạng thái salon",
+    "status_help": {
+      "active": "Bạn đang liên kết với salon này và có thể sử dụng các tính năng dành cho hồ sơ nhân viên.",
+      "pending": "Yêu cầu liên kết của bạn đã được gửi và đang chờ salon xem xét.",
+      "pending_approval": "Salon cần phê duyệt yêu cầu trước khi liên kết được kích hoạt.",
+      "pending_unlink": "Yêu cầu kết thúc liên kết đang được xử lý. Bạn có thể vẫn truy cập được cho đến khi hoàn tất.",
+      "previous": "Liên kết với salon này không còn hoạt động và được lưu lại trong lịch sử làm việc của bạn.",
+      "rejected": "Salon không phê duyệt yêu cầu liên kết. Hãy liên hệ salon nếu bạn cho rằng có nhầm lẫn.",
+      "default": "Trạng thái này cho biết tình trạng liên kết hiện tại của bạn với salon."
+    },
     "since": "Từ {{date}}",
     "invited": "Mời {{date}}",
     "worked_from": "Làm từ {{date}}"

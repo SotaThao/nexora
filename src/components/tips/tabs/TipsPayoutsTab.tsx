@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from 'react'
+import { createPortal } from 'react-dom'
 import { Calendar, ChevronDown, ChevronUp, Download, FileClock, List, Plus, Search, SlidersHorizontal, User } from 'lucide-react'
 import { useTranslation } from '../../../contexts/LanguageContext'
 import { PayoutStatus, PayoutType } from '../../../data/payoutConstants'
@@ -359,46 +360,53 @@ export default function TipsPayoutsTab({ staff = [] }: { staff?: StaffMember[] }
         />
       </div>
 
-      <UnpaidTipDebtsPanel
-        isOpen={isUnpaidDialogOpen}
-        onClose={() => setIsUnpaidDialogOpen(false)}
-        debts={unpaidDebts}
-        isLoading={isUnpaidTipsPending}
-        currentLanguage={currentLanguage}
-        t={t}
-        onCreatePayout={openCreateForStaff}
-        onViewHistory={(staffDebt) => {
-          setHistoryStaffProfile(staffDebt)
-        }}
-      />
+      {typeof document !== 'undefined'
+        ? createPortal(
+          <>
+            <UnpaidTipDebtsPanel
+              isOpen={isUnpaidDialogOpen}
+              onClose={() => setIsUnpaidDialogOpen(false)}
+              debts={unpaidDebts}
+              isLoading={isUnpaidTipsPending}
+              currentLanguage={currentLanguage}
+              t={t}
+              onCreatePayout={openCreateForStaff}
+              onViewHistory={(staffDebt) => {
+                setHistoryStaffProfile(staffDebt)
+              }}
+            />
 
-      <CreatePayoutModal
-        isOpen={isCreateOpen}
-        onClose={closeCreate}
-        staffList={staff}
-        unpaidDebts={unpaidDebts}
-        initialStaffProfileId={preferredStaffProfileId}
-        initialAmount={preferredAmount}
-        editingPayout={editingPayout}
-      />
+            <CreatePayoutModal
+              isOpen={isCreateOpen}
+              onClose={closeCreate}
+              staffList={staff}
+              unpaidDebts={unpaidDebts}
+              initialStaffProfileId={preferredStaffProfileId}
+              initialAmount={preferredAmount}
+              editingPayout={editingPayout}
+            />
 
-      <PayoutDetailModal
-        payout={selectedPayout}
-        isLoading={isDetailLoading && Boolean(selectedPayoutId)}
-        onClose={() => setSelectedPayoutId(null)}
-        onEdit={(payout) => openEdit(payout)}
-      />
+            <PayoutDetailModal
+              payout={selectedPayout}
+              isLoading={isDetailLoading && Boolean(selectedPayoutId)}
+              onClose={() => setSelectedPayoutId(null)}
+              onEdit={(payout) => openEdit(payout)}
+            />
 
-      <PayoutExportModal
-        isOpen={isExportOpen}
-        onClose={() => setIsExportOpen(false)}
-        staffList={staff}
-      />
+            <PayoutExportModal
+              isOpen={isExportOpen}
+              onClose={() => setIsExportOpen(false)}
+              staffList={staff}
+            />
 
-      <PayoutDebtHistoryModal
-        staff={historyStaffProfile}
-        onClose={() => setHistoryStaffProfile(null)}
-      />
+            <PayoutDebtHistoryModal
+              staff={historyStaffProfile}
+              onClose={() => setHistoryStaffProfile(null)}
+            />
+          </>,
+          document.body,
+        )
+        : null}
     </div>
   )
 }

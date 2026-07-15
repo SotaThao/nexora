@@ -1040,7 +1040,8 @@
         "col_method": "Wallet",
         "col_status": "Status",
         "status_success": "Success",
-        "status_completed": "Completed"
+        "status_completed": "Completed",
+        "empty": "No direct payouts yet."
       },
       "ledger": {
         "title": "Tip Transactions",
@@ -1606,6 +1607,16 @@
     "empty_title": "No salons linked yet",
     "link_salon_cta": "Link a salon",
     "status_previous": "Previous",
+    "status_help_aria": "What this salon status means",
+    "status_help": {
+      "active": "You are currently linked to this salon and can use the salon features available to your staff profile.",
+      "pending": "Your link request has been sent and is waiting for the salon to review it.",
+      "pending_approval": "The salon still needs to approve this link before it becomes active.",
+      "pending_unlink": "A request to end this salon link is being processed. Access may remain available until it is completed.",
+      "previous": "This salon link is no longer active and is shown here for your work history.",
+      "rejected": "The salon did not approve this link request. Contact the salon if you believe this is incorrect.",
+      "default": "This status shows the current state of your connection with this salon."
+    },
     "since": "Since {{date}}",
     "invited": "Invited {{date}}",
     "worked_from": "Worked from {{date}}"
