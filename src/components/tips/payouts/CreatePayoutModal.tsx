@@ -27,6 +27,7 @@ import { imagesRepository } from '../../../data/repositories/images'
 import type { PayoutRecord, UnpaidTipDebtRecord, StaffMember } from '../../../types/domain'
 import { getApiErrorCode } from '../../../types/domain'
 import { formatCurrency } from '../../dashboard/utils'
+import Tooltip from '../../ui/Tooltip'
 import PayoutStaffSelect from './PayoutStaffSelect'
 import { payoutMethodToUiKey, getStaffAvailablePayoutMethods, isStaffPayoutMethodAvailable, resolvePayoutStaffProfileId, sortPayoutMethodsCashLast } from '../../../utils/payoutDisplay'
 import { formatLocalDateIso } from '../../../utils/localDate'
@@ -257,6 +258,7 @@ export default function CreatePayoutModal({
     setStaffProfileId('')
     setSelectedStaffMember(null)
     setStaffProfileError(null)
+    let initialAmount = ''
     if (initialStaffProfileId) {
       const fromList = staffList.find((staff) => staff.staffProfileId === initialStaffProfileId)
       const fromDebt = unpaidDebts.find((debt) => debt.staffProfileId === initialStaffProfileId)
@@ -267,12 +269,16 @@ export default function CreatePayoutModal({
         setStaffProfileId(fromDebt.staffProfileId)
         setSelectedStaffMember(staffMemberFromDebt(fromDebt))
       }
+      if (fromDebt && fromDebt.balance > 0) {
+        initialAmount = formatUsdInputAmount(fromDebt.balance)
+      }
     }
     setPayoutMethodType(PayoutMethodType.Zelle)
-    setAmount('')
+    setAmount(initialAmount)
     setAmountError(null)
     setPeriodError(null)
-    setPayoutTypesMask(PayoutType.Tip)
+    // Opening from unpaid tip balance should pre-select Unpaid tip.
+    setPayoutTypesMask(initialStaffProfileId ? PayoutType.TipDebt : PayoutType.Tip)
     setPeriodStart(defaults.periodStart)
     setPeriodEnd(defaults.periodEnd)
     setNotes('')
@@ -807,9 +813,35 @@ export default function CreatePayoutModal({
 
               {!isEditing ? (
                 <div>
-                  <p className="mb-2 border-b border-nexoraBorder pb-2 text-[11px] font-black uppercase tracking-wide text-mutedGrey">
-                    {t('dashboard.tips.payouts_manager.field_status')} *
-                  </p>
+                  <div className="mb-2 flex items-center gap-1.5 border-b border-nexoraBorder pb-2">
+                    <p className="text-[11px] font-black uppercase tracking-wide text-mutedGrey">
+                      {t('dashboard.tips.payouts_manager.field_status')} *
+                    </p>
+                    <Tooltip
+                      content={
+                        <span className="flex flex-col gap-1.5">
+                          <span>{t('dashboard.tips.payouts_manager.field_status_tooltip_intro')}</span>
+                          <span>
+                            <span className="font-bold">
+                              {t('dashboard.tips.payouts_manager.create_status_pending')}
+                            </span>
+                            {': '}
+                            {t('dashboard.tips.payouts_manager.field_status_tooltip_pending')}
+                          </span>
+                          <span>
+                            <span className="font-bold">
+                              {t('dashboard.tips.payouts_manager.create_status_confirmed')}
+                            </span>
+                            {': '}
+                            {t('dashboard.tips.payouts_manager.field_status_tooltip_confirmed')}
+                          </span>
+                        </span>
+                      }
+                      ariaLabel={t('dashboard.tips.payouts_manager.field_status_tooltip_intro')}
+                      align="start"
+                      placement="bottom"
+                    />
+                  </div>
                   <div className="flex flex-col gap-2">
                     {CREATE_STATUS_OPTIONS.map((status) => {
                       const selected = payoutStatus === status

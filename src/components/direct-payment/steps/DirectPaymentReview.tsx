@@ -1,7 +1,5 @@
-import React from 'react'
+import React, { useEffect, useRef } from 'react'
 import { formatUsdAmount } from '../../../utils/currencyInput'
-
-const QUICK_AMOUNTS = [10, 15, 20, 30, 50]
 
 export default function DirectPaymentReview({
   t,
@@ -14,8 +12,6 @@ export default function DirectPaymentReview({
   reviewDesc,
   noMethodsTitle,
   noMethodsDesc,
-  selectedAmount,
-  setSelectedAmount,
   customAmount,
   onCustomAmountChange,
   activeAmount,
@@ -25,6 +21,7 @@ export default function DirectPaymentReview({
   disablePaymentSelection,
   totalPaymentLabel,
 }) {
+  const amountInputRef = useRef(null)
   const name = recipientName || businessName || t('direct_payment.default_business')
   const subtitle = recipientSubtitle === null
     ? null
@@ -34,6 +31,15 @@ export default function DirectPaymentReview({
   const desc = reviewDesc || t('direct_payment.review_payment_desc')
   const emptyMethodsTitle = noMethodsTitle || t('direct_payment.no_methods_title')
   const emptyMethodsDesc = noMethodsDesc || t('direct_payment.no_methods_desc')
+
+  useEffect(() => {
+    const input = amountInputRef.current
+    if (!input) return
+    const frame = window.requestAnimationFrame(() => {
+      input.focus()
+    })
+    return () => window.cancelAnimationFrame(frame)
+  }, [])
 
   return (
     <div className="space-y-4 animate-fadeIn">
@@ -73,47 +79,19 @@ export default function DirectPaymentReview({
           <p className="text-[10px] font-bold uppercase tracking-wider text-nexoraSubtle">
             {t('direct_payment.amount_label')}
           </p>
-          <div className="grid grid-cols-6 gap-1.5">
-            {QUICK_AMOUNTS.map((val) => (
-              <button
-                key={val}
-                type="button"
-                onClick={() => setSelectedAmount(val)}
-                className={`py-1.5 rounded-lg text-[11px] font-black transition-all ${
-                  selectedAmount === val
-                    ? 'bg-nexoraBrand text-white shadow shadow-nexoraBrand/30'
-                    : 'bg-nexoraCanvas hover:bg-slate-50 text-nexoraText border border-nexoraBorder/60'
-                }`}
-              >
-                ${val}
-              </button>
-            ))}
-            <button
-              type="button"
-              onClick={() => setSelectedAmount('custom')}
-              className={`py-1.5 rounded-lg text-[11px] font-black transition-all ${
-                selectedAmount === 'custom'
-                  ? 'bg-nexoraBrand text-white shadow shadow-nexoraBrand/30'
-                  : 'bg-nexoraCanvas hover:bg-slate-50 text-nexoraText border border-nexoraBorder/60'
-              }`}
-            >
-              {t('customer.custom_tip_btn')}
-            </button>
+          <div className="relative">
+            <span className="absolute left-3.5 top-1/2 -translate-y-1/2 text-sm font-extrabold text-nexoraSubtle">$</span>
+            <input
+              ref={amountInputRef}
+              type="text"
+              inputMode="decimal"
+              placeholder={t('direct_payment.custom_amount_placeholder')}
+              className="h-12 w-full rounded-xl border border-nexoraBorder bg-white py-3 pl-8 pr-3 text-sm font-extrabold text-nexoraText outline-none transition-all focus:border-nexoraBrand"
+              value={customAmount}
+              onChange={(event) => onCustomAmountChange(event.target.value)}
+              aria-label={t('direct_payment.amount_label')}
+            />
           </div>
-          {selectedAmount === 'custom' ? (
-            <div className="relative">
-              <span className="absolute left-3 top-2.5 text-xs font-extrabold text-nexoraSubtle">$</span>
-              <input
-                type="text"
-                inputMode="decimal"
-                placeholder={t('direct_payment.custom_amount_placeholder')}
-                className="w-full rounded-lg border border-nexoraBorder bg-white py-2 pl-7 pr-3 text-xs font-extrabold text-nexoraText outline-none transition-all focus:border-nexoraBrand"
-                value={customAmount}
-                onChange={(event) => onCustomAmountChange(event.target.value)}
-                aria-label={t('direct_payment.amount_label')}
-              />
-            </div>
-          ) : null}
         </div>
 
         <div className="flex items-center justify-between border-t border-nexoraBrandSoft bg-nexoraBrandSoft/35 px-3.5 py-3">

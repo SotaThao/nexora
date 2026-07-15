@@ -25,8 +25,6 @@ export default function StaffDirectPaymentFlow() {
     photoUrl,
     step,
     setStep,
-    selectedAmount,
-    setSelectedAmount,
     customAmount,
     handleCustomAmountChange,
     activeAmount,
@@ -124,8 +122,6 @@ export default function StaffDirectPaymentFlow() {
                   totalPaymentLabel={t('staff_direct_payment.total')}
                   noMethodsTitle={t('staff_direct_payment.no_methods_title')}
                   noMethodsDesc={t('staff_direct_payment.no_methods_desc')}
-                  selectedAmount={selectedAmount}
-                  setSelectedAmount={setSelectedAmount}
                   customAmount={customAmount}
                   onCustomAmountChange={handleCustomAmountChange}
                   activeAmount={activeAmount}
