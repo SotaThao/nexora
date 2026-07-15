@@ -646,6 +646,7 @@
       "pos": "POS",
       "pos_settings": "Cài Đặt Chung",
       "pos_business_hours": "Giờ Mở Cửa",
+      "pos_roles": "Vai Trò & Quyền",
       "settings": "Cài Đặt",
       "business_setting": "Cài đặt",
       "scan": "Quét QR",
@@ -1953,6 +1954,15 @@
     "user_not_merchant": "Tài khoản của bạn không có vai trò chủ tiệm.",
     "touchpoint_starter_limit_reached": "Đã đạt giới hạn gói Starter: bạn chỉ tạo được tối đa 3 trạm. Nâng cấp gói để thêm.",
     "physical_card_not_found": "Không tìm thấy thiết bị thẻ vật lý này. Vui lòng kiểm tra mã thẻ và thử lại.",
+    "pos_role_not_found": "Không tìm thấy vai trò này.",
+    "pos_role_name_required": "Tên vai trò là bắt buộc.",
+    "pos_role_name_too_long": "Tên vai trò không được vượt quá 100 ký tự.",
+    "pos_role_name_duplicate": "Đã tồn tại vai trò với tên này.",
+    "pos_permission_owner_only": "Quyền này chỉ có thể cấp cho vai trò Owner.",
+    "pos_cannot_edit_owner_role_permissions": "Không thể thay đổi quyền của vai trò Owner.",
+    "pos_cannot_delete_owner_role": "Không thể xóa vai trò Owner.",
+    "pos_role_in_use": "Vai trò này vẫn đang được gán cho một hoặc nhiều nhân viên.",
+    "pos_permission_definition_not_found": "Một hoặc nhiều quyền không tồn tại.",
     "image_file_size_exceeded": "Kích thước ảnh vượt quá giới hạn cho phép 10MB.",
     "image_file_size_exceeded_5mb": "Kích thước ảnh vượt quá giới hạn cho phép 5MB.",
     "image_unsupported_file_type": "Định dạng ảnh không hỗ trợ. Vui lòng tải lên PNG, JPEG hoặc WebP.",
@@ -2456,6 +2466,32 @@
           },
           "PosBusinessHoursView": {
             "description": "Thiết lập giờ mở cửa hàng tuần của salon — dùng làm mặc định khi tạo lịch làm việc cho thợ mới."
+          },
+          "PosRolesView": {
+            "description": "Xem 4 vai trò POS mặc định, bật/tắt quyền cho từng vai trò, và tạo vai trò tùy chỉnh.",
+            "ownerRoleNote": "Vai trò Owner luôn có toàn bộ quyền và không thể sửa hoặc xóa.",
+            "addRole": "Thêm Vai Trò",
+            "addRoleModalTitle": "Vai Trò POS Mới",
+            "roleNamePlaceholder": "vd: Lễ tân",
+            "save": "Lưu",
+            "cancel": "Hủy",
+            "delete": "Xóa",
+            "deleteConfirmTitle": "Xóa vai trò này?",
+            "deleteConfirmBody": "Không thể hoàn tác. Vai trò còn đang gán cho nhân viên sẽ không thể xóa.",
+            "systemDefaultBadge": "Mặc định",
+            "ownerBadge": "Owner",
+            "noRoles": "Không tìm thấy vai trò nào.",
+            "savedSuccess": "Đã cập nhật quyền.",
+            "createdSuccess": "Đã tạo vai trò.",
+            "deletedSuccess": "Đã xóa vai trò.",
+            "areas": {
+              "SalonSettings": "Cài Đặt Salon",
+              "Categories": "Danh Mục",
+              "Services": "Dịch Vụ",
+              "Products": "Sản Phẩm",
+              "Staff": "Nhân Viên",
+              "RolesPermissions": "Vai Trò & Quyền"
+            }
           }
         },
         "BookingHubView": {

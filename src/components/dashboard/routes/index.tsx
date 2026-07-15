@@ -32,6 +32,7 @@ import PayoutDisputeCenterView from '../views/taxiq/PayoutDisputeCenterView'
 import CpaAccessSettingsView from '../views/taxiq/CpaAccessSettingsView'
 import PosGeneralSettingsView from '../views/pos/PosGeneralSettingsView'
 import PosBusinessHoursView from '../views/pos/PosBusinessHoursView'
+import PosRolesView from '../views/pos/PosRolesView'
 
 export function OverviewRoute() {
   const ctx = useOutletContext<LooseObject>()
@@ -360,6 +361,10 @@ export function PosGeneralSettingsRoute() {
 export function PosBusinessHoursRoute() {
   const ctx = useOutletContext<LooseObject>()
   return <PosBusinessHoursView verificationStatus={ctx.verificationStatus} />
+}
+
+export function PosRolesRoute() {
+  return <PosRolesView />
 }
 
 export function TaxIqOverviewRoute() {

@@ -72,6 +72,8 @@ export const qk = {
   merchantInviteLink:  ()      => ['merchantSettings', 'inviteLink'],
   // POS Owner Setup — Business Hours (US-014)
   merchantBusinessHours: ()    => ['merchantSettings', 'businessHours'],
+  // POS Owner Setup — Roles & Permissions (US-015)
+  merchantPosRoles: ()         => ['merchantSettings', 'posRoles'],
 
   // Merchant Touchpoints
   merchantTouchpoints: ()      => ['merchantTouchpoints'],

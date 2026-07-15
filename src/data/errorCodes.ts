@@ -80,6 +80,17 @@ export const errorCodeToI18nKey = {
   // Physical cards (QR/NFC hardware)
   PHYSICAL_CARD_NOT_FOUND: 'errors.physical_card_not_found',
 
+  // POS Owner Setup — Roles & Permissions (US-015)
+  POS_ROLE_NOT_FOUND: 'errors.pos_role_not_found',
+  POS_ROLE_NAME_REQUIRED: 'errors.pos_role_name_required',
+  POS_ROLE_NAME_TOO_LONG: 'errors.pos_role_name_too_long',
+  POS_ROLE_NAME_DUPLICATE: 'errors.pos_role_name_duplicate',
+  POS_PERMISSION_OWNER_ONLY: 'errors.pos_permission_owner_only',
+  POS_CANNOT_EDIT_OWNER_ROLE_PERMISSIONS: 'errors.pos_cannot_edit_owner_role_permissions',
+  POS_CANNOT_DELETE_OWNER_ROLE: 'errors.pos_cannot_delete_owner_role',
+  POS_ROLE_IN_USE: 'errors.pos_role_in_use',
+  POS_PERMISSION_DEFINITION_NOT_FOUND: 'errors.pos_permission_definition_not_found',
+
   // Support / contact requests
   CONTACT_REQUEST_SUPPORT_TYPE_MIN_LENGTH: 'errors.contact_request_support_type_min_length',
   CONTACT_REQUEST_SUPPORT_TYPE_REQUIRED: 'errors.contact_request_support_type_required',

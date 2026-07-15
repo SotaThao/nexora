@@ -95,7 +95,8 @@ export const MENU_ITEMS = [
     icon: Store,
     children: [
       { id: 'settings', label: 'General Settings' },
-      { id: 'business-hours', label: 'Business Hours' }
+      { id: 'business-hours', label: 'Business Hours' },
+      { id: 'roles', label: 'Roles & Permissions' }
     ]
   },
   { id: 'settings', label: 'Settings', icon: Settings },

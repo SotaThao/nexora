@@ -647,6 +647,7 @@
       "pos": "POS",
       "pos_settings": "General Settings",
       "pos_business_hours": "Business Hours",
+      "pos_roles": "Roles & Permissions",
       "settings": "Settings",
       "business_setting": "Setting",
       "scan": "Scan",
@@ -1954,6 +1955,15 @@
     "user_not_merchant": "Your account is not registered as a merchant.",
     "touchpoint_starter_limit_reached": "Starter plan limit reached: you can only create up to 3 stations. Please upgrade your plan to add more.",
     "physical_card_not_found": "This physical card was not found. Please check the card code and try again.",
+    "pos_role_not_found": "This role was not found.",
+    "pos_role_name_required": "Role name is required.",
+    "pos_role_name_too_long": "Role name cannot exceed 100 characters.",
+    "pos_role_name_duplicate": "A role with this name already exists.",
+    "pos_permission_owner_only": "This permission can only be granted to the Owner role.",
+    "pos_cannot_edit_owner_role_permissions": "The Owner role's permissions cannot be changed.",
+    "pos_cannot_delete_owner_role": "The Owner role cannot be deleted.",
+    "pos_role_in_use": "This role is still assigned to one or more staff members.",
+    "pos_permission_definition_not_found": "One or more permissions do not exist.",
     "image_file_size_exceeded": "The image file size exceeds the 10MB limit.",
     "image_file_size_exceeded_5mb": "The image file size exceeds the 5MB limit.",
     "image_unsupported_file_type": "Unsupported file format. Please upload PNG, JPEG, or WebP.",
@@ -2457,6 +2467,32 @@
           },
           "PosBusinessHoursView": {
             "description": "Set your salon's weekly opening hours — used as the default schedule for new staff."
+          },
+          "PosRolesView": {
+            "description": "Review the 4 default POS roles, toggle permissions per role, and create custom roles.",
+            "ownerRoleNote": "The Owner role always has full access and cannot be edited or deleted.",
+            "addRole": "Add Role",
+            "addRoleModalTitle": "New POS Role",
+            "roleNamePlaceholder": "e.g. Receptionist",
+            "save": "Save",
+            "cancel": "Cancel",
+            "delete": "Delete",
+            "deleteConfirmTitle": "Delete this role?",
+            "deleteConfirmBody": "This cannot be undone. Roles still assigned to staff cannot be deleted.",
+            "systemDefaultBadge": "Default",
+            "ownerBadge": "Owner",
+            "noRoles": "No roles found.",
+            "savedSuccess": "Permissions updated.",
+            "createdSuccess": "Role created.",
+            "deletedSuccess": "Role deleted.",
+            "areas": {
+              "SalonSettings": "Salon Settings",
+              "Categories": "Categories",
+              "Services": "Services",
+              "Products": "Products",
+              "Staff": "Staff",
+              "RolesPermissions": "Roles & Permissions"
+            }
           }
         },
         "BookingHubView": {

@@ -50,6 +50,29 @@ export interface PosBusinessOperatingHourApiDto {
   closeTime?: string | null
 }
 
+// POS Owner Setup — Roles & Permissions (US-015)
+export interface PosPermissionApiDto {
+  id: string
+  key: string
+  displayName: string
+  description?: string | null
+  isOwnerOnly: boolean
+  isGranted: boolean
+}
+
+export interface PosPermissionAreaGroupApiDto {
+  area: string
+  permissions: PosPermissionApiDto[]
+}
+
+export interface PosRoleApiDto {
+  id: string
+  name: string
+  isSystemDefault: boolean
+  isOwnerRole: boolean
+  permissionAreas: PosPermissionAreaGroupApiDto[]
+}
+
 export interface TipsSummaryApiDto {
   totalAmount?: number
   totalCount?: number
