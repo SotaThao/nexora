@@ -81,6 +81,8 @@ export default function StaffHeader({ activeScreen, onNavigate, onOpenMobileMenu
             type="button"
             onClick={() => setIsProfileOpen((v) => !v)}
             aria-label={t('staff_dashboard.titles.profile')}
+            aria-haspopup="menu"
+            aria-expanded={isProfileOpen}
             className="flex h-10 w-10 items-center justify-center overflow-hidden rounded-full transition hover:opacity-90"
           >
             {account.avatar ? (
