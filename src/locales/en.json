@@ -1663,6 +1663,8 @@
     "list_title": "Payout history",
     "detail_sub": "Review payout details before confirming receipt.",
     "confirm_receipt": "Confirm receipt",
+    "action_view": "View",
+    "action_confirm": "Confirm",
     "confirm_success": "Payout confirmed successfully.",
     "empty": "No payouts found for the selected status."
   },
