@@ -4,6 +4,7 @@ import { qk } from '../queryKeys'
 import type {
   DashboardOverviewMetrics,
   DashboardReviewsSummary,
+  MerchantDashboardAnalytics,
   StaffLeaderboardRow,
   TipsChartDayMetric,
 } from '../../types/repositories'
@@ -49,6 +50,14 @@ export function useDashboardTouchpoints(params: DateRangeParams = EMPTY_PARAMS) 
   return useQuery<LooseObject[]>({
     queryKey: [...qk.dashboardTouchpoints(), params],
     queryFn: () => dashboardRepository.getTouchpointMetrics(params),
+  })
+}
+
+export function useDashboardAnalytics(params: DateRangeParams = EMPTY_PARAMS) {
+  return useQuery<MerchantDashboardAnalytics>({
+    queryKey: [...qk.dashboardAnalytics(), params],
+    queryFn: () => dashboardRepository.getAnalytics(params),
+    retry: false,
   })
 }
 

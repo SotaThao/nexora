@@ -75,9 +75,13 @@ export default function StaffHome() {
         />
         <KpiCard
           label={t('staff_dashboard.home.pending')}
-          value={kpis.pendingCount}
-          sub={t('staff_dashboard.home.need_confirm')}
-          subClass="text-amber-600"
+          value={formatTipAmount(kpis.pendingAmount)}
+          sub={
+            kpis.pendingCount > 0
+              ? t('staff_dashboard.home.awaiting_confirm', { count: kpis.pendingCount })
+              : t('staff_dashboard.home.no_pending')
+          }
+          subClass={kpis.pendingCount > 0 ? 'text-amber-600' : 'text-emerald-600'}
         />
         <KpiCard
           label={t('staff_dashboard.home.rating')}

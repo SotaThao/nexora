@@ -326,15 +326,7 @@ export function ProductManagementRoute() {
 }
 
 export function AnalyticsRoute() {
-  const ctx = useOutletContext<LooseObject>()
-  return (
-    <AnalyticsView
-      transactions={ctx.transactions}
-      staff={ctx.staff}
-      touchpoints={ctx.touchpoints}
-      processingFee={ctx.processingFee}
-    />
-  )
+  return <AnalyticsView />
 }
 
 export function SettingsRoute() {

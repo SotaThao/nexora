@@ -1231,11 +1231,14 @@
         "transactions_unit": "Transactions",
         "avg_tip": "Average Tip",
         "fees_avoided": "Fees Saved",
-        "fees_avoided_tooltip": "Estimated card processing fees saved from direct P2P tips, calculated at 3% of routed volume."
+        "fees_avoided_tooltip": "Estimated card processing fees saved from direct P2P tips, calculated at 3% of routed volume.",
+        "fees_avoided_tooltip_api": "Processing fees saved from direct P2P tips, as reported by the dashboard.",
+        "fees_avoided_sub": "Reported fee savings from direct payouts"
       },
       "charts": {
         "daily_revenue": "Daily Revenue Trend",
-        "wallet_share": "How Tips Were Paid"
+        "wallet_share": "How Tips Were Paid",
+        "no_wallet_data": "No payout method data yet."
       },
       "leaderboards": {
         "staff": "Leaderboard",
@@ -1245,7 +1248,8 @@
         "unassigned": "Unassigned Tip",
         "unassigned_tooltip": "This tip was received through the general salon QR code and was not assigned to a specific technician.",
         "station_stats": "{scans} scans · {tips} tips = {pct}% conversion",
-        "station_stats_no_conversion": "{scans} scans · {tips} tips"
+        "station_stats_no_conversion": "{scans} scans · {tips} tips",
+        "empty": "No data available yet."
       }
     },
     "empty_states": {
@@ -1664,6 +1668,8 @@
     "list_title": "Payout history",
     "detail_sub": "Review payout details before confirming receipt.",
     "confirm_receipt": "Confirm receipt",
+    "action_view": "View",
+    "action_confirm": "Confirm",
     "confirm_success": "Payout confirmed successfully.",
     "empty": "No payouts found for the selected status."
   },
