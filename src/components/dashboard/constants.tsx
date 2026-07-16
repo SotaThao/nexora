@@ -61,6 +61,11 @@ export const DEFAULT_PAYOUT_CONFIGS = {
   applecash: { enabled: false, value: '', qrCode: '', accountName: '' }
 }
 
+/** Sidebar / route id for Merchant Portal Product Management SSO entry. */
+export const PRODUCT_MANAGEMENT_MENU_ID = 'product-management'
+
+export const DASHBOARD_ROOT_PATH = '/dashboard'
+
 export const MENU_ITEMS = [
   { id: 'overview', label: 'Dashboard', icon: LayoutDashboard },
   { id: 'staff', label: 'Staff', icon: Users },
@@ -69,7 +74,7 @@ export const MENU_ITEMS = [
   { id: 'reports', label: 'Transactions', icon: ReceiptText },
   { id: 'touchpoints', label: 'Touch Points', icon: QrCode },
   { id: 'booking-hub', label: 'Booking Hub', icon: Calendar },
-  { id: 'product-management', label: 'Product Management', icon: Package },
+  { id: PRODUCT_MANAGEMENT_MENU_ID, label: 'Product Management', icon: Package },
   { id: 'analytics', label: 'Analytics', icon: BarChart3 },
   { id: 'settings', label: 'Settings', icon: Settings },
   { id: 'support', label: 'Support', icon: HelpCircle }

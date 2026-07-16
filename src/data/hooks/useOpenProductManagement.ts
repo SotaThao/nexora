@@ -3,13 +3,14 @@
  * 1. GET /api/v1/Client/ecosystem
  * 2. Find name === merchantportal
  * 3. POST signin with that id + path /gift-voucher/product-management
+ *
+ * Uses repository calls directly (not useMutation/fetchQuery) so a one-shot
+ * click handler does not touch Query observers.
  */
 import { useCallback, useRef, useState } from 'react'
-import { useQueryClient } from '@tanstack/react-query'
 import { useAuth } from '../../auth/useAuth'
 import { useNotification } from '../../contexts/NotificationContext'
 import { useTranslation } from '../../contexts/LanguageContext'
-import { qk } from '../queryKeys'
 import ecosystemRepository from '../repositories/ecosystem'
 import {
   closeWindowIfOpen,
@@ -24,7 +25,6 @@ import {
   buildProductManagementUrl,
   findMerchantPortalEcosystem,
 } from '../../utils/productManagementSso'
-import { useEcosystemSignIn } from './useEcosystem'
 
 function navigateOpenedTab(newTab: Window | null, url: string) {
   if (newTab && !newTab.closed) {
@@ -38,8 +38,6 @@ export function useOpenProductManagement() {
   const { status } = useAuth()
   const { t } = useTranslation()
   const { showToast } = useNotification()
-  const queryClient = useQueryClient()
-  const signInMutation = useEcosystemSignIn()
   const [isOpening, setIsOpening] = useState(false)
   const openingRef = useRef(false)
 
@@ -57,12 +55,7 @@ export function useOpenProductManagement() {
     }
 
     try {
-      const ecosystems = await queryClient.fetchQuery({
-        queryKey: qk.ecosystems(),
-        queryFn: () => ecosystemRepository.list(),
-        staleTime: 5 * 60_000,
-      })
-
+      const ecosystems = await ecosystemRepository.list()
       const merchantPortal = findMerchantPortalEcosystem(ecosystems)
       if (!merchantPortal?.id) {
         fail()
@@ -80,7 +73,7 @@ export function useOpenProductManagement() {
         return
       }
 
-      const response = await signInMutation.mutateAsync({
+      const response = await ecosystemRepository.signIn({
         id: merchantPortal.id,
         path: PRODUCT_MANAGEMENT_PATH,
         pageName: PRODUCT_MANAGEMENT_PAGE_NAME,
@@ -103,7 +96,7 @@ export function useOpenProductManagement() {
       openingRef.current = false
       setIsOpening(false)
     }
-  }, [queryClient, showToast, signInMutation, status, t])
+  }, [showToast, status, t])
 
   return { openProductManagement, isOpeningProductManagement: isOpening }
 }

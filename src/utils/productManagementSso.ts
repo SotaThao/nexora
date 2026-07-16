@@ -32,11 +32,11 @@ export function findMerchantPortalEcosystem(
 
 /** Build absolute product-management URL from the ecosystem's own `url`. */
 export function buildProductManagementUrl(baseUrl: string): string | null {
-  const trimmed = baseUrl?.trim()
+  const trimmed = baseUrl.trim()
   if (!trimmed) return null
   try {
     const parsed = new URL(trimmed)
-    if (parsed.protocol !== 'https:' && parsed.protocol !== 'http:') return null
+    if (parsed.protocol !== 'https:' || !parsed.hostname) return null
     return `${parsed.origin}${PRODUCT_MANAGEMENT_PATH}`
   } catch {
     return null

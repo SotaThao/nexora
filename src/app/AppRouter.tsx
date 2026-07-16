@@ -26,6 +26,7 @@ import {
   TipsRoute,
   TouchpointsRoute,
 } from "../components/dashboard/routes";
+import { PRODUCT_MANAGEMENT_MENU_ID } from "../components/dashboard/constants";
 import ErrorBoundary from "../components/ui/ErrorBoundary";
 import { isDemoToolsEnabled } from "./demoTools";
 import lazyWithRetry from "./lazyWithRetry";
@@ -237,7 +238,7 @@ export default function AppRouter() {
             <Route path="reviews" element={<ReviewsRoute />} />
             <Route path="reports" element={<ReportsRoute />} />
             <Route path="booking-hub" element={<BookingHubRoute />} />
-            <Route path="product-management" element={<ProductManagementRoute />} />
+            <Route path={PRODUCT_MANAGEMENT_MENU_ID} element={<ProductManagementRoute />} />
             <Route path="touchpoints" element={<TouchpointsRoute />} />
             <Route path="analytics" element={<AnalyticsRoute />} />
             <Route path="settings" element={<SettingsRoute />} />

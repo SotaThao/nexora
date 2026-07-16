@@ -5,7 +5,7 @@ import { useNavigate, useSearchParams } from 'react-router-dom'
 import { ChevronUp, ChevronDown, LogOut } from 'lucide-react'
 import { useTranslation } from '../../../contexts/LanguageContext'
 import { useOpenProductManagement } from '../../../data/hooks/useOpenProductManagement'
-import { visibleMenuItems, MERCHANT_SIDEBAR_MENU_ITEMS, isPaymentsPayoutsRouteActive, VISIBLE_TOUCHPOINTS_SUBMENU } from '../constants'
+import { visibleMenuItems, MERCHANT_SIDEBAR_MENU_ITEMS, isPaymentsPayoutsRouteActive, VISIBLE_TOUCHPOINTS_SUBMENU, PRODUCT_MANAGEMENT_MENU_ID } from '../constants'
 import MenuIcon from '../../ui/MenuIcon'
 import HomepageLink from '../../ui/HomepageLink'
 import LanguageSwitcher from '../../ui/LanguageSwitcher'
@@ -71,7 +71,7 @@ export default function DashboardSidebar({
   }
 
   const handleMenuClick = (id: string) => {
-    if (id === 'product-management') {
+    if (id === PRODUCT_MANAGEMENT_MENU_ID) {
       void openProductManagement()
       return
     }
@@ -179,7 +179,7 @@ export default function DashboardSidebar({
             reviews: t('dashboard.menu.reviews'),
             reports: t('dashboard.menu.transactions'),
             'booking-hub': t('dashboard.menu.booking_hub'),
-            'product-management': t('dashboard.menu.product_management'),
+            [PRODUCT_MANAGEMENT_MENU_ID]: t('dashboard.menu.product_management'),
             touchpoints: t('dashboard.menu.touchpoints'),
             devices: t('dashboard.menu.qr_nfc'),
             analytics: t('dashboard.menu.analytics'),
@@ -191,14 +191,14 @@ export default function DashboardSidebar({
               <button
                 type="button"
                 onClick={() => handleMenuClick(id)}
-                disabled={id === 'product-management' && isOpeningProductManagement}
+                disabled={id === PRODUCT_MANAGEMENT_MENU_ID && isOpeningProductManagement}
                 className={sidebarMenuItemBetweenClass(isActive)}
               >
                 <div className="flex items-center gap-3 min-w-0">
                   <MenuIcon item={item} active={isActive} />
                   <span className="truncate">{localizedLabel}</span>
                 </div>
-                {id === 'product-management' && isOpeningProductManagement ? (
+                {id === PRODUCT_MANAGEMENT_MENU_ID && isOpeningProductManagement ? (
                   <span className="h-4 w-4 shrink-0 animate-spin rounded-full border-2 border-white/30 border-t-white" />
                 ) : id === 'touchpoints' ? (
                   <div className="text-white/50 shrink-0">

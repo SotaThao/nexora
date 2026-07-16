@@ -1,5 +1,7 @@
 import { useState, useEffect } from 'react'
 import { useLocation, useNavigate } from 'react-router-dom'
+import { DASHBOARD_ROOT_PATH, PRODUCT_MANAGEMENT_MENU_ID } from '../constants'
+import { useOpenProductManagement } from '../../../data/hooks/useOpenProductManagement'
 
 type NavigateMenuOptions = {
   closeDrawer?: boolean
@@ -9,6 +11,7 @@ type NavigateMenuOptions = {
 export function useDashboardNavigation() {
   const location = useLocation()
   const navigate = useNavigate()
+  const { openProductManagement } = useOpenProductManagement()
 
   const activeMenu = location.pathname.split('/')[2] || 'overview'
   const isPaymentsPayoutsActive = activeMenu === 'tips' || activeMenu === 'reports'
@@ -33,17 +36,27 @@ export function useDashboardNavigation() {
   }, [activeMenu, isPaymentsPayoutsActive])
 
   const buildMenuRoute = (menuId: string, tab?: string) => {
-    const base = menuId === 'overview' ? '/dashboard' : `/dashboard/${menuId}`
+    const base = menuId === 'overview' ? DASHBOARD_ROOT_PATH : `${DASHBOARD_ROOT_PATH}/${menuId}`
     if (!tab) return base
     return `${base}?tab=${encodeURIComponent(tab)}`
   }
 
   const handleNavigateMenu = (menuId: string, tab?: string) => {
+    if (menuId === PRODUCT_MANAGEMENT_MENU_ID) {
+      void openProductManagement()
+      return
+    }
     navigate(buildMenuRoute(menuId, tab))
   }
 
   const navigateMenu = (menuId: string, options: NavigateMenuOptions = {}) => {
     const { closeDrawer = true, tab } = options
+    if (menuId === PRODUCT_MANAGEMENT_MENU_ID) {
+      void openProductManagement().finally(() => {
+        if (closeDrawer) setIsMobileMenuOpen(false)
+      })
+      return
+    }
     navigate(buildMenuRoute(menuId, tab))
     if (closeDrawer) setIsMobileMenuOpen(false)
   }

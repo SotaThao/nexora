@@ -1,7 +1,7 @@
 import { useCallback, useMemo, useState, type ReactNode } from 'react'
 import { useNavigate } from 'react-router-dom'
 import MobileMenuDrawer from '../../dashboard/layout/MobileMenuDrawer'
-import { MERCHANT_SIDEBAR_MENU_ITEMS } from '../../dashboard/constants'
+import { MERCHANT_SIDEBAR_MENU_ITEMS, PRODUCT_MANAGEMENT_MENU_ID } from '../../dashboard/constants'
 import { useProfileSettings } from '../../../data/hooks/useProfileSettings'
 import { useMerchantSetup } from '../../../data/hooks/useMerchantSetup'
 import { useOpenProductManagement } from '../../../data/hooks/useOpenProductManagement'
@@ -68,7 +68,7 @@ export default function HomePageOwnerSidebarLayout({
 
   const handleNavigateMenu = useCallback(
     (menuId: string) => {
-      if (menuId === 'product-management') {
+      if (menuId === PRODUCT_MANAGEMENT_MENU_ID) {
         void openProductManagement()
         return
       }
@@ -80,7 +80,7 @@ export default function HomePageOwnerSidebarLayout({
 
   const navigateMenu = useCallback(
     (menuId: string, options: { tab?: string; closeDrawer?: boolean } = {}) => {
-      if (menuId === 'product-management') {
+      if (menuId === PRODUCT_MANAGEMENT_MENU_ID) {
         void openProductManagement().finally(() => {
           if (options.closeDrawer !== false) setIsMobileMenuOpen(false)
         })

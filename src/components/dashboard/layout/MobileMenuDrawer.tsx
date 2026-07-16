@@ -20,7 +20,7 @@ import {
   sidebarSubmenuItemClass,
 } from '../../ui/sidebarMenuStyles'
 import PaymentsPayoutsMenuSection from './PaymentsPayoutsMenuSection'
-import { isPaymentsPayoutsRouteActive, VISIBLE_TOUCHPOINTS_SUBMENU } from '../constants'
+import { isPaymentsPayoutsRouteActive, VISIBLE_TOUCHPOINTS_SUBMENU, PRODUCT_MANAGEMENT_MENU_ID } from '../constants'
 
 export default function MobileMenuDrawer({
   isOpen,
@@ -67,7 +67,7 @@ export default function MobileMenuDrawer({
   }
 
   const handleMenuClick = (id: string) => {
-    if (id === 'product-management') {
+    if (id === PRODUCT_MANAGEMENT_MENU_ID) {
       void openProductManagement().finally(() => {
         onClose()
       })
@@ -178,7 +178,7 @@ export default function MobileMenuDrawer({
               reviews: t('dashboard.menu.reviews'),
               reports: t('dashboard.menu.transactions'),
               'booking-hub': t('dashboard.menu.booking_hub'),
-              'product-management': t('dashboard.menu.product_management'),
+              [PRODUCT_MANAGEMENT_MENU_ID]: t('dashboard.menu.product_management'),
               touchpoints: t('dashboard.menu.touchpoints'),
               devices: t('dashboard.menu.qr_nfc'),
               analytics: t('dashboard.menu.analytics'),
@@ -190,14 +190,14 @@ export default function MobileMenuDrawer({
                 <button
                   type="button"
                   onClick={() => handleMenuClick(id)}
-                  disabled={id === 'product-management' && isOpeningProductManagement}
+                  disabled={id === PRODUCT_MANAGEMENT_MENU_ID && isOpeningProductManagement}
                   className={sidebarMenuItemBetweenClass(isActive)}
                 >
                   <div className="flex items-center gap-3 min-w-0">
                     <MenuIcon item={item} active={isActive} />
                     <span>{localizedLabel}</span>
                   </div>
-                  {id === 'product-management' && isOpeningProductManagement ? (
+                  {id === PRODUCT_MANAGEMENT_MENU_ID && isOpeningProductManagement ? (
                     <span className="h-4 w-4 shrink-0 animate-spin rounded-full border-2 border-white/30 border-t-white" />
                   ) : id === 'touchpoints' ? (
                     <div className="text-white/65 shrink-0">

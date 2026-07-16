@@ -18,6 +18,7 @@ import BookingHubView from '../views/BookingHubView'
 import StaffDetailView from '../../StaffDetailView'
 import { useMerchantStaffByCode } from '../../../data/hooks/useMerchantStaff'
 import { useOpenProductManagement } from '../../../data/hooks/useOpenProductManagement'
+import { DASHBOARD_ROOT_PATH } from '../constants'
 import { normaliseMember } from '../hooks/useStaffManagement'
 import { SkeletonList } from '../../ui/skeleton'
 
@@ -306,7 +307,7 @@ export function ProductManagementRoute() {
     if (openedRef.current) return
     openedRef.current = true
     void openProductManagement().finally(() => {
-      navigate('/dashboard', { replace: true })
+      navigate(DASHBOARD_ROOT_PATH, { replace: true })
     })
   }, [navigate, openProductManagement])
 
