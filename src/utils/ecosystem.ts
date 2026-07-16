@@ -98,10 +98,9 @@ export function buildEcosystemCatalog(
 ): EcosystemCatalogEntry[] {
   const available: EcosystemCatalogEntry[] = [];
   const comingSoon: EcosystemCatalogEntry[] = [];
+  const ecosystemItems = apiItems.filter((item) => item.isEcosystem !== false);
 
-  for (const item of apiItems) {
-    if (item.isEcosystem === false) continue;
-
+  for (const item of ecosystemItems) {
     const brandKey =
       resolveEcosystemBrandKey(item.name) ??
       (normalizeEcosystemNameKey(item.name) || item.id);
