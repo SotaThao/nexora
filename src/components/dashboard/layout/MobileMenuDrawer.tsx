@@ -2,6 +2,7 @@ import React from 'react'
 import { useSearchParams } from 'react-router-dom'
 import { ChevronLeft, ChevronUp, ChevronDown, LogOut } from 'lucide-react'
 import { useTranslation } from '../../../contexts/LanguageContext'
+import { useOpenProductManagement } from '../../../data/hooks/useOpenProductManagement'
 import MenuIcon from '../../ui/MenuIcon'
 import HomepageLink from '../../ui/HomepageLink'
 import LanguageSwitcher from '../../ui/LanguageSwitcher'
@@ -19,7 +20,7 @@ import {
   sidebarSubmenuItemClass,
 } from '../../ui/sidebarMenuStyles'
 import PaymentsPayoutsMenuSection from './PaymentsPayoutsMenuSection'
-import { isPaymentsPayoutsRouteActive, VISIBLE_TOUCHPOINTS_SUBMENU } from '../constants'
+import { isPaymentsPayoutsRouteActive, VISIBLE_TOUCHPOINTS_SUBMENU, DASHBOARD_MENU_ID } from '../constants'
 
 export default function MobileMenuDrawer({
   isOpen,
@@ -46,6 +47,7 @@ export default function MobileMenuDrawer({
 }) {
   const { t, currentLanguage } = useTranslation()
   const [searchParams] = useSearchParams()
+  const { openProductManagement, isOpeningProductManagement } = useOpenProductManagement()
   const activeSubTab = searchParams.get('tab')
   const isPaymentsPayoutsActive = isPaymentsPayoutsRouteActive(activeMenu, activeSubTab)
   const subscriptionCopy = getSubscriptionSidebarCopy(
@@ -65,11 +67,18 @@ export default function MobileMenuDrawer({
   }
 
   const handleMenuClick = (id: string) => {
-    if (id === 'touchpoints') {
-      if (activeMenu === 'touchpoints') {
+    if (id === DASHBOARD_MENU_ID.productManagement) {
+      void openProductManagement().finally(() => {
+        onClose()
+      })
+      return
+    }
+
+    if (id === DASHBOARD_MENU_ID.touchpoints) {
+      if (activeMenu === DASHBOARD_MENU_ID.touchpoints) {
         setIsTouchpointsMobileExpanded((prev) => !prev)
       } else {
-        navigateMenu('touchpoints', { closeDrawer: false })
+        navigateMenu(DASHBOARD_MENU_ID.touchpoints, { closeDrawer: false })
         setIsTouchpointsMobileExpanded(true)
         setIsPaymentsPayoutsMobileExpanded(false)
       }
@@ -131,17 +140,17 @@ export default function MobileMenuDrawer({
               <button
                 type="button"
                 onClick={() => {
-                  setActiveMenu('settings')
+                  setActiveMenu(DASHBOARD_MENU_ID.settings)
                   setSettingsTab('profile')
                   onClose()
                 }}
                 className={`flex h-9 w-full items-center gap-2.5 rounded-lg px-3 text-left text-xs font-bold transition ${
-                  activeMenu === 'settings' && settingsTab === 'profile'
+                  activeMenu === DASHBOARD_MENU_ID.settings && settingsTab === 'profile'
                     ? 'text-brandCyan font-extrabold'
                     : 'text-white/75 hover:bg-white/5 hover:text-white'
                 }`}
               >
-                <div className={`h-1.5 w-1.5 rounded-full ${activeMenu === 'settings' && settingsTab === 'profile' ? 'bg-brandCyan shadow-sm' : 'bg-white/30'}`} />
+                <div className={`h-1.5 w-1.5 rounded-full ${activeMenu === DASHBOARD_MENU_ID.settings && settingsTab === 'profile' ? 'bg-brandCyan shadow-sm' : 'bg-white/30'}`} />
                 <span>{t('dashboard.menu.business_setting')}</span>
               </button>
               <button
@@ -160,19 +169,20 @@ export default function MobileMenuDrawer({
 
         <nav className={`${SIDEBAR_NAV_CLASS} mt-0 flex-1`}>
           <HomepageLink variant="menu" active={isHomeActive} onNavigate={onClose} />
-          {menuItemsToDisplay.filter((item) => item.id !== 'settings').map((item) => {
+          {menuItemsToDisplay.filter((item) => item.id !== DASHBOARD_MENU_ID.settings).map((item) => {
             const { id, label } = item
             const isActive = activeMenu === id
             const localizedLabel = {
-              overview: t('dashboard.menu.dashboard'),
-              staff: t('dashboard.menu.staff'),
-              reviews: t('dashboard.menu.reviews'),
-              reports: t('dashboard.menu.transactions'),
-              'booking-hub': t('dashboard.menu.booking_hub'),
-              touchpoints: t('dashboard.menu.touchpoints'),
+              [DASHBOARD_MENU_ID.overview]: t('dashboard.menu.dashboard'),
+              [DASHBOARD_MENU_ID.staff]: t('dashboard.menu.staff'),
+              [DASHBOARD_MENU_ID.reviews]: t('dashboard.menu.reviews'),
+              [DASHBOARD_MENU_ID.reports]: t('dashboard.menu.transactions'),
+              [DASHBOARD_MENU_ID.bookingHub]: t('dashboard.menu.booking_hub'),
+              [DASHBOARD_MENU_ID.productManagement]: t('dashboard.menu.product_management'),
+              [DASHBOARD_MENU_ID.touchpoints]: t('dashboard.menu.touchpoints'),
               devices: t('dashboard.menu.qr_nfc'),
-              analytics: t('dashboard.menu.analytics'),
-              support: t('dashboard.menu.support')
+              [DASHBOARD_MENU_ID.analytics]: t('dashboard.menu.analytics'),
+              [DASHBOARD_MENU_ID.support]: t('dashboard.menu.support'),
             }[id] || label
 
             return (
@@ -180,20 +190,23 @@ export default function MobileMenuDrawer({
                 <button
                   type="button"
                   onClick={() => handleMenuClick(id)}
+                  disabled={id === DASHBOARD_MENU_ID.productManagement && isOpeningProductManagement}
                   className={sidebarMenuItemBetweenClass(isActive)}
                 >
                   <div className="flex items-center gap-3 min-w-0">
                     <MenuIcon item={item} active={isActive} />
                     <span>{localizedLabel}</span>
                   </div>
-                  {id === 'touchpoints' && (
+                  {id === DASHBOARD_MENU_ID.productManagement && isOpeningProductManagement ? (
+                    <span className="h-4 w-4 shrink-0 animate-spin rounded-full border-2 border-white/30 border-t-white" />
+                  ) : id === DASHBOARD_MENU_ID.touchpoints ? (
                     <div className="text-white/65 shrink-0">
                       {isTouchpointsMobileExpanded ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
                     </div>
-                  )}
+                  ) : null}
                 </button>
 
-                {userRole !== 'staff' && id === 'staff' && (
+                {userRole !== 'staff' && id === DASHBOARD_MENU_ID.staff && (
                   <PaymentsPayoutsMenuSection
                     activeMenu={activeMenu}
                     tabParam={activeSubTab}
@@ -203,15 +216,15 @@ export default function MobileMenuDrawer({
                   />
                 )}
 
-                {id === 'touchpoints' && isTouchpointsMobileExpanded && (
+                {id === DASHBOARD_MENU_ID.touchpoints && isTouchpointsMobileExpanded && (
                   <div className={SIDEBAR_SUBMENU_WRAP_CLASS}>
                     {VISIBLE_TOUCHPOINTS_SUBMENU.map((sub) => {
-                      const isSubActive = activeMenu === 'touchpoints' && (activeSubTab || 'stations') === sub.id
+                      const isSubActive = activeMenu === DASHBOARD_MENU_ID.touchpoints && (activeSubTab || 'stations') === sub.id
                       return (
                         <button
                           key={sub.id}
                           type="button"
-                          onClick={() => navigateMenu('touchpoints', { tab: sub.id })}
+                          onClick={() => navigateMenu(DASHBOARD_MENU_ID.touchpoints, { tab: sub.id })}
                           className={sidebarSubmenuItemClass(isSubActive)}
                         >
                           <div className={`h-1.5 w-1.5 rounded-full ${isSubActive ? 'bg-brandCyan shadow-sm' : 'bg-white/30'}`} />
