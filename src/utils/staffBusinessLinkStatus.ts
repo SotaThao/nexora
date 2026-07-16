@@ -4,6 +4,17 @@ type StaffBusinessLinkStatusSource = {
   status?: string | number | null
 }
 
+export const STAFF_BUSINESS_LINK_STATUS = {
+  active: 'active',
+  pending: 'pending',
+  pendingLink: 'pending link',
+  pendingApproval: 'pending approval',
+  pendingUnlink: 'pending unlink',
+  rejected: 'rejected',
+  inactive: 'inactive',
+  previous: 'previous',
+} as const
+
 const LINK_STATUS_LABEL_BY_CODE: Record<number, string> = {
   0: 'Pending',
   1: 'Active',
@@ -38,42 +49,51 @@ export function getStaffBusinessLinkStatusPresentation(label: string): {
 } {
   const normalized = label.trim().toLowerCase()
 
-  if (normalized === 'active') {
+  if (normalized === STAFF_BUSINESS_LINK_STATUS.active) {
     return {
       className: 'bg-emerald-50 text-emerald-600',
       translationKey: 'staff_dashboard.status.active',
     }
   }
 
-  if (normalized === 'pending' || normalized.includes('pending link')) {
+  if (
+    normalized === STAFF_BUSINESS_LINK_STATUS.pending
+    || normalized.includes(STAFF_BUSINESS_LINK_STATUS.pendingLink)
+  ) {
     return {
       className: 'bg-amber-50 text-amber-700',
       translationKey: 'staff_dashboard.status.pending',
     }
   }
 
-  if (normalized.includes('pending approval')) {
+  if (normalized.includes(STAFF_BUSINESS_LINK_STATUS.pendingApproval)) {
     return {
       className: 'bg-amber-50 text-amber-700',
       translationKey: 'staff_dashboard.status.pending_approval',
     }
   }
 
-  if (normalized.includes('pending unlink')) {
+  if (normalized.includes(STAFF_BUSINESS_LINK_STATUS.pendingUnlink)) {
     return {
       className: 'bg-rose-50 text-rose-600',
       translationKey: 'staff_dashboard.status.pending_unlink',
     }
   }
 
-  if (normalized === 'rejected' || normalized.includes('rejected')) {
+  if (
+    normalized === STAFF_BUSINESS_LINK_STATUS.rejected
+    || normalized.includes(STAFF_BUSINESS_LINK_STATUS.rejected)
+  ) {
     return {
       className: 'bg-rose-50 text-rose-700',
       translationKey: 'staff_dashboard.status.rejected',
     }
   }
 
-  if (normalized === 'inactive' || normalized.includes('inactive')) {
+  if (
+    normalized === STAFF_BUSINESS_LINK_STATUS.inactive
+    || normalized.includes(STAFF_BUSINESS_LINK_STATUS.inactive)
+  ) {
     return {
       className: 'bg-nexoraCanvas text-nexoraMuted',
       translationKey: 'staff_dashboard.status.inactive',

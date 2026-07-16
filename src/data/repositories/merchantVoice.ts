@@ -18,6 +18,11 @@ import {
 export {
   BookingHubMainTab,
   BookingHubSubTab,
+  clampMerchantVoiceServiceDurationMinutes,
+  isValidMerchantVoiceServiceDuration,
+  MerchantVoiceServiceField,
+  MERCHANT_VOICE_BOOKINGS_POLL_INTERVAL_MS,
+  MERCHANT_VOICE_SERVICE_MIN_DURATION_MINUTES,
   BookingUiSearchField,
   BookingUiSource,
   BookingUiStatus,

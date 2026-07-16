@@ -1,5 +1,10 @@
 import { useState, useEffect } from 'react'
 import { useLocation, useNavigate } from 'react-router-dom'
+import {
+  buildDashboardMenuPath,
+  DASHBOARD_MENU_ID,
+} from '../constants'
+import { useOpenProductManagement } from '../../../data/hooks/useOpenProductManagement'
 
 type NavigateMenuOptions = {
   closeDrawer?: boolean
@@ -9,13 +14,17 @@ type NavigateMenuOptions = {
 export function useDashboardNavigation() {
   const location = useLocation()
   const navigate = useNavigate()
+  const { openProductManagement } = useOpenProductManagement()
 
-  const activeMenu = location.pathname.split('/')[2] || 'overview'
-  const isPaymentsPayoutsActive = activeMenu === 'tips' || activeMenu === 'reports'
+  const activeMenu = location.pathname.split('/')[2] || DASHBOARD_MENU_ID.overview
+  const isPaymentsPayoutsActive =
+    activeMenu === DASHBOARD_MENU_ID.tips || activeMenu === DASHBOARD_MENU_ID.reports
 
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
   const [isPaymentsPayoutsMobileExpanded, setIsPaymentsPayoutsMobileExpanded] = useState(isPaymentsPayoutsActive)
-  const [isTouchpointsMobileExpanded, setIsTouchpointsMobileExpanded] = useState(activeMenu === 'touchpoints')
+  const [isTouchpointsMobileExpanded, setIsTouchpointsMobileExpanded] = useState(
+    activeMenu === DASHBOARD_MENU_ID.touchpoints,
+  )
   const [settingsTab, setSettingsTab] = useState('profile')
   const [isProfileExpanded, setIsProfileExpanded] = useState(false)
 
@@ -23,7 +32,7 @@ export function useDashboardNavigation() {
   useEffect(() => {
     if (!isMobileMenuOpen) return
     setIsPaymentsPayoutsMobileExpanded(isPaymentsPayoutsActive)
-    setIsTouchpointsMobileExpanded(activeMenu === 'touchpoints')
+    setIsTouchpointsMobileExpanded(activeMenu === DASHBOARD_MENU_ID.touchpoints)
   }, [isMobileMenuOpen, activeMenu, isPaymentsPayoutsActive])
   useEffect(() => {
     if (isPaymentsPayoutsActive) {
@@ -33,17 +42,27 @@ export function useDashboardNavigation() {
   }, [activeMenu, isPaymentsPayoutsActive])
 
   const buildMenuRoute = (menuId: string, tab?: string) => {
-    const base = menuId === 'overview' ? '/dashboard' : `/dashboard/${menuId}`
+    const base = buildDashboardMenuPath(menuId)
     if (!tab) return base
     return `${base}?tab=${encodeURIComponent(tab)}`
   }
 
   const handleNavigateMenu = (menuId: string, tab?: string) => {
+    if (menuId === DASHBOARD_MENU_ID.productManagement) {
+      void openProductManagement()
+      return
+    }
     navigate(buildMenuRoute(menuId, tab))
   }
 
   const navigateMenu = (menuId: string, options: NavigateMenuOptions = {}) => {
     const { closeDrawer = true, tab } = options
+    if (menuId === DASHBOARD_MENU_ID.productManagement) {
+      void openProductManagement().finally(() => {
+        if (closeDrawer) setIsMobileMenuOpen(false)
+      })
+      return
+    }
     navigate(buildMenuRoute(menuId, tab))
     if (closeDrawer) setIsMobileMenuOpen(false)
   }

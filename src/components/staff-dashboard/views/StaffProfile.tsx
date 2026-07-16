@@ -56,9 +56,9 @@ function ProfileMenuItem({ icon: Icon, label, sub = null, onClick = null }: any)
     <button
       type="button"
       onClick={onClick || undefined}
-      className="flex min-h-[44px] w-full items-center gap-3 rounded-lg px-2 text-left transition hover:bg-[#F8F7FF] active:scale-[0.99]"
+      className="flex min-h-[48px] w-full items-center gap-3 rounded-lg px-2 text-left transition hover:bg-[#F8F7FF] active:scale-[0.99]"
     >
-      <span className="grid h-8 w-8 shrink-0 place-items-center rounded-lg bg-[#F4F2FF] text-nexoraBrandDark">
+      <span className="grid h-7 w-7 shrink-0 place-items-center rounded-full bg-white text-slate-500">
         <Icon className="h-4 w-4" />
       </span>
       <span className="min-w-0 flex-1">
