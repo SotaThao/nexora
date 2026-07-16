@@ -25,6 +25,7 @@ export function useDashboardNavigation() {
     if (!isMobileMenuOpen) return
     setIsPaymentsPayoutsMobileExpanded(isPaymentsPayoutsActive)
     setIsTouchpointsMobileExpanded(activeMenu === 'touchpoints')
+    setIsTaxIqMobileExpanded(activeMenu === 'taxiq')
   }, [isMobileMenuOpen, activeMenu, isPaymentsPayoutsActive])
   useEffect(() => {
     if (isPaymentsPayoutsActive) {

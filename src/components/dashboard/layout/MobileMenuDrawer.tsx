@@ -1,11 +1,13 @@
 import React from 'react'
-import { useSearchParams } from 'react-router-dom'
+import { useLocation, useSearchParams } from 'react-router-dom'
 import { ChevronLeft, ChevronUp, ChevronDown, LogOut } from 'lucide-react'
 import { useTranslation } from '../../../contexts/LanguageContext'
 import MenuIcon from '../../ui/MenuIcon'
 import HomepageLink from '../../ui/HomepageLink'
 import SidebarPlanCard from '../../ui/SidebarPlanCard'
 import { getSubscriptionSidebarCopy } from '../../../utils/subscriptionDisplay'
+import { useMerchantSetup } from '../../../data/hooks/useMerchantSetup'
+import { useOwnerTaxYearByBusiness } from '../../../data/hooks/useTaxiqOwnerTaxYear'
 import {
   SIDEBAR_MOBILE_DRAWER_CLASS,
   SIDEBAR_NAV_CLASS,
@@ -18,7 +20,7 @@ import {
   sidebarSubmenuItemClass,
 } from '../../ui/sidebarMenuStyles'
 import PaymentsPayoutsMenuSection from './PaymentsPayoutsMenuSection'
-import { isPaymentsPayoutsRouteActive, VISIBLE_TOUCHPOINTS_SUBMENU } from '../constants'
+import { isPaymentsPayoutsRouteActive, VISIBLE_TOUCHPOINTS_SUBMENU, TAXIQ_SUBMENU, TAXIQ_MENU_CHILD_MODULE } from '../constants'
 
 export default function MobileMenuDrawer({
   isOpen,
@@ -37,6 +39,8 @@ export default function MobileMenuDrawer({
   setIsPaymentsPayoutsMobileExpanded,
   isTouchpointsMobileExpanded,
   setIsTouchpointsMobileExpanded,
+  isTaxIqMobileExpanded,
+  setIsTaxIqMobileExpanded,
   hasKyb,
   userRole,
   onLogout,
@@ -45,8 +49,19 @@ export default function MobileMenuDrawer({
 }) {
   const { t, currentLanguage } = useTranslation()
   const [searchParams] = useSearchParams()
+  const location = useLocation()
   const activeSubTab = searchParams.get('tab')
+  // Tax IQ sub-items are real routes (/dashboard/taxiq/<id>), not a ?tab= param —
+  // mirrors DashboardSidebar's desktop equivalent.
+  const activeTaxIqSubTab = location.pathname.split('/')[3] || null
   const isPaymentsPayoutsActive = isPaymentsPayoutsRouteActive(activeMenu, activeSubTab)
+  // Module-gated Tax IQ sub-items: shares the TanStack Query cache with the
+  // /dashboard/taxiq route itself and with DashboardSidebar, so this fires no
+  // extra network request.
+  const { data: merchantSetupData } = useMerchantSetup({ enabled: userRole !== 'staff' })
+  const taxiqBusinessId = merchantSetupData?.businessInfo?.businessId
+  const { data: ownerTaxYearPage } = useOwnerTaxYearByBusiness(taxiqBusinessId, new Date().getFullYear())
+  const enabledTaxiqModules = ownerTaxYearPage?.items?.[0]?.enabledModules
   const subscriptionCopy = getSubscriptionSidebarCopy(
     subscription ?? profile?.subscription,
     t,
@@ -71,6 +86,18 @@ export default function MobileMenuDrawer({
         navigateMenu('touchpoints', { closeDrawer: false })
         setIsTouchpointsMobileExpanded(true)
         setIsPaymentsPayoutsMobileExpanded(false)
+      }
+      return
+    }
+
+    if (id === 'taxiq') {
+      if (activeMenu === 'taxiq') {
+        setIsTaxIqMobileExpanded((prev) => !prev)
+      } else {
+        navigateMenu('taxiq', { closeDrawer: false })
+        setIsTaxIqMobileExpanded(true)
+        setIsPaymentsPayoutsMobileExpanded(false)
+        setIsTouchpointsMobileExpanded(false)
       }
       return
     }
@@ -169,6 +196,7 @@ export default function MobileMenuDrawer({
               'booking-hub': t('dashboard.menu.booking_hub'),
               touchpoints: t('dashboard.menu.touchpoints'),
               devices: t('dashboard.menu.qr_nfc'),
+              taxiq: t('dashboard.menu.tax_iq'),
               analytics: t('dashboard.menu.analytics'),
               support: t('dashboard.menu.support')
             }[id] || label
@@ -187,6 +215,11 @@ export default function MobileMenuDrawer({
                   {id === 'touchpoints' && (
                     <div className="text-white/65 shrink-0">
                       {isTouchpointsMobileExpanded ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
+                    </div>
+                  )}
+                  {id === 'taxiq' && (
+                    <div className="text-white/65 shrink-0">
+                      {isTaxIqMobileExpanded ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
                     </div>
                   )}
                 </button>
@@ -214,6 +247,32 @@ export default function MobileMenuDrawer({
                         >
                           <div className={`h-1.5 w-1.5 rounded-full ${isSubActive ? 'bg-brandCyan shadow-sm' : 'bg-white/30'}`} />
                           <span>{t(sub.labelKey)}</span>
+                        </button>
+                      )
+                    })}
+                  </div>
+                )}
+
+                {id === 'taxiq' && isTaxIqMobileExpanded && (
+                  <div className={SIDEBAR_SUBMENU_WRAP_CLASS}>
+                    {TAXIQ_SUBMENU.filter((sub) => {
+                      // Fail-open (show all) before onboarding completes or while loading —
+                      // only hide once we positively know a module is disabled.
+                      const requiredModule = TAXIQ_MENU_CHILD_MODULE[sub.id]
+                      if (!requiredModule || !enabledTaxiqModules) return true
+                      return enabledTaxiqModules.includes(requiredModule)
+                    }).map((sub) => {
+                      const isSubActive = activeMenu === 'taxiq' &&
+                        (sub.id === 'onboarding' ? !activeTaxIqSubTab : activeTaxIqSubTab === sub.id)
+                      return (
+                        <button
+                          key={sub.id}
+                          type="button"
+                          onClick={() => navigateMenu(sub.id === 'onboarding' ? 'taxiq' : `taxiq/${sub.id}`)}
+                          className={sidebarSubmenuItemClass(isSubActive)}
+                        >
+                          <div className={`h-1.5 w-1.5 rounded-full ${isSubActive ? 'bg-brandCyan shadow-sm' : 'bg-white/30'}`} />
+                          <span>{t(`dashboard.menu.taxiq_${sub.id.replace('-', '_')}`)}</span>
                         </button>
                       )
                     })}
