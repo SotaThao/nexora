@@ -10,6 +10,19 @@ export const VOICE_TRIAL_DAY_KEY_TO_API = {
 
 export type VoiceTrialDayKey = keyof typeof VOICE_TRIAL_DAY_KEY_TO_API
 
+export enum VoiceTrialFormField {
+  Salon = 'salon',
+  Owner = 'owner',
+  Phone = 'phone',
+  Email = 'email',
+  City = 'city',
+  Referral = 'referral',
+  OpenTime = 'openTime',
+  CloseTime = 'closeTime',
+  PainPoint = 'painPoint',
+  CustomServiceInput = 'customServiceInput',
+}
+
 export interface SubmitVoiceTrialRequest {
   shopName: string
   ownerName: string

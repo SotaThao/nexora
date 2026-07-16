@@ -234,7 +234,8 @@ export default function SettingsViewMobile({
   const { currentLanguage, setLanguage, t } = useTranslation()
   const navigate = useNavigate()
   const [searchParams] = useSearchParams()
-  const { logout } = useAuth()
+  const { logout, session } = useAuth()
+  const isBusinessAccount = session?.accountType === 'business'
   const form = useSettingsForm({
     setupData,
     hasKyb,
@@ -339,7 +340,9 @@ export default function SettingsViewMobile({
             <section className={`${compactPanel} divide-y divide-[#EEE9FF]`}>
               <MerchantProfileMenuItem
                 icon={UserCircle}
-                label={t('staff_dashboard.profile.menu_personal_information')}
+                label={isBusinessAccount
+                  ? t('components.settings.tabs.ProfileTab.businessInformation')
+                  : t('staff_dashboard.profile.menu_personal_information')}
                 onClick={() => openProfileSection('personal')}
               />
               <MerchantVerificationMenuItem
@@ -384,7 +387,9 @@ export default function SettingsViewMobile({
         {form.activeTab === 'profile' && activeSection === 'personal' && (
           <>
           <MerchantProfileSectionHeader
-            title={t('staff_dashboard.profile.menu_personal_information')}
+            title={isBusinessAccount
+              ? t('components.settings.tabs.ProfileTab.businessInformation')
+              : t('staff_dashboard.profile.menu_personal_information')}
             onBack={closeProfileSection}
           />
           <ProfileTab

@@ -1,50 +1,51 @@
 import { useEffect, useRef } from 'react'
 import { useQueryClient } from '@tanstack/react-query'
+import { DASHBOARD_MENU_ID } from '../../components/dashboard/constants'
 import { qk } from '../queryKeys'
 
 type QueryKeyPrefix = readonly unknown[]
 
 /** Query prefixes to invalidate when the merchant opens each dashboard menu. */
 const MERCHANT_MENU_QUERIES: Record<string, QueryKeyPrefix[]> = {
-  overview: [
+  [DASHBOARD_MENU_ID.overview]: [
     qk.dashboardOverview(),
     qk.transactions(),
     qk.merchantStaff(),
     qk.merchantTouchpoints(),
     ['dashboard', 'reviews'],
   ],
-  staff: [
+  [DASHBOARD_MENU_ID.staff]: [
     qk.merchantStaff(),
     qk.merchantInviteLink(),
     qk.merchantPaymentMethods(),
   ],
-  tips: [
+  [DASHBOARD_MENU_ID.tips]: [
     qk.transactions(),
     ['transactions', 'paginated'],
     qk.dashboardOverview(),
     qk.dashboardTipsChart(),
   ],
-  reports: [
+  [DASHBOARD_MENU_ID.reports]: [
     qk.transactions(),
     ['transactions', 'paginated'],
     qk.merchantTouchpoints(),
   ],
-  analytics: [
+  [DASHBOARD_MENU_ID.analytics]: [
     qk.transactions(),
     qk.dashboardOverview(),
     qk.dashboardTipsChart(),
     qk.dashboardStaff(),
     qk.dashboardTouchpoints(),
   ],
-  touchpoints: [qk.merchantTouchpoints()],
-  reviews: [['dashboard', 'reviews'], qk.reviews()],
-  settings: [
+  [DASHBOARD_MENU_ID.touchpoints]: [qk.merchantTouchpoints()],
+  [DASHBOARD_MENU_ID.reviews]: [['dashboard', 'reviews'], qk.reviews()],
+  [DASHBOARD_MENU_ID.settings]: [
     qk.profileSettings(),
     qk.merchantSetup(),
     qk.merchantPaymentMethods(),
     qk.verifiedStatus(),
   ],
-  subscriptions: [qk.profileSettings()],
+  [DASHBOARD_MENU_ID.subscriptions]: [qk.profileSettings()],
 }
 
 /** Query prefixes to invalidate when staff switches bottom-nav / sidebar screen. */

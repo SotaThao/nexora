@@ -10,6 +10,28 @@ export enum BookingHubSubTab {
   Team = 'team',
 }
 
+/** Poll interval when Booking Hub Today tab is active. */
+export const MERCHANT_VOICE_BOOKINGS_POLL_INTERVAL_MS = 15_000
+
+/** Minimum service duration (minutes) in Booking Hub settings. */
+export const MERCHANT_VOICE_SERVICE_MIN_DURATION_MINUTES = 1
+
+export enum MerchantVoiceServiceField {
+  Name = 'name',
+  Price = 'price',
+  Duration = 'duration',
+}
+
+export function clampMerchantVoiceServiceDurationMinutes(duration: number): number {
+  return Number.isFinite(duration) && duration >= MERCHANT_VOICE_SERVICE_MIN_DURATION_MINUTES
+    ? duration
+    : MERCHANT_VOICE_SERVICE_MIN_DURATION_MINUTES
+}
+
+export function isValidMerchantVoiceServiceDuration(duration: number): boolean {
+  return Number.isFinite(duration) && duration >= MERCHANT_VOICE_SERVICE_MIN_DURATION_MINUTES
+}
+
 /** UI-only booking list status (derived from API lead status). */
 export enum BookingUiStatus {
   New = 'new',

@@ -7,7 +7,7 @@ import { useTranslation } from '../../../contexts/LanguageContext'
 import { useStaffAccount } from '../../../contexts/StaffAccountContext'
 import { useProfileSettings } from '../../../data/hooks/useProfileSettings'
 import { buildStaffShareUrl, getProfileReferralCode, splitStaffShareUrlDisplay, splitUrlQueryParamDisplay, splitUrlPathTailDisplay, LEG_VALUES, DEFAULT_LEG, type Leg } from '../../../utils/affiliateReferral'
-import { shareQrImage, downloadQrCode, QR_IMAGE_SIZES } from '../../../utils/qrUtils'
+import { downloadQrCode, QR_IMAGE_SIZES } from '../../../utils/qrUtils'
 import { useStaffBusinessTipQrs } from '../../../data/hooks/useStaffSelf'
 import { useNotifications, useMarkNotificationRead } from '../../../data/hooks/useNotifications'
 import { useNotification } from '../../../contexts/NotificationContext'
@@ -489,27 +489,21 @@ export default function StaffMyQR() {
   const handleShareTipQr = useCallback(
     async (biz: StaffBusinessTipQr) => {
       if (!biz.tipUrl) return
-      const qrImageUrl = buildQrImageUrl(biz.tipUrl, QR_IMAGE_SIZES.zoom, biz.qrImageUrl)
-      const safeName = (biz.businessName || 'salon').replace(/[^\w.-]+/g, '-').slice(0, 40)
-      const ownerName =
-        biz.displayName || staffMember.nickname || staffMember.fullName || ''
 
       try {
-        const result = await shareQrImage(qrImageUrl, {
-          filename: `tip-qr-${safeName || biz.businessId}.png`,
+        const result = await shareUrl({
+          url: biz.tipUrl,
           title: t('staff_dashboard.qr.share_tip'),
-          text: biz.businessName,
-          ownerName,
-          businessName: biz.businessName,
+          text: biz.businessName || undefined,
         })
-        if (result === 'downloaded') {
-          showToast(t('components.staff_dashboard.views.StaffMyQR.tipQrDownloaded'), 'success')
+        if (result === 'copied') {
+          showToast(t('components.staff_dashboard.views.StaffMyQR.tippingLinkCopied'), 'success')
         }
       } catch {
         showToast(t('components.staff_dashboard.views.StaffMyQR.shareFailed'), 'error')
       }
     },
-    [showToast, staffMember.fullName, staffMember.nickname, t],
+    [showToast, t],
   )
 
   const handleDownloadZoomedQr = useCallback(async () => {

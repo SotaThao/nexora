@@ -15,6 +15,7 @@ import {
   BookingHubRoute,
   FallbackRoute,
   OverviewRoute,
+  ProductManagementRoute,
   ReportsRoute,
   ReviewsRoute,
   SettingsRoute,
@@ -25,6 +26,7 @@ import {
   TipsRoute,
   TouchpointsRoute,
 } from "../components/dashboard/routes";
+import { DASHBOARD_MENU_ID } from "../components/dashboard/constants";
 import ErrorBoundary from "../components/ui/ErrorBoundary";
 import { isDemoToolsEnabled } from "./demoTools";
 import lazyWithRetry from "./lazyWithRetry";
@@ -228,20 +230,21 @@ export default function AppRouter() {
             }
           >
             <Route index element={<OverviewRoute />} />
-            <Route path="staff" element={<StaffRoute />} />
-            <Route path="staff/:staffId" element={<StaffDetailRoute />} />
-            <Route path="tips" element={<TipsRoute />} />
-            <Route path="payments" element={<PaymentsRedirect />} />
-            <Route path="payments/:paymentId" element={<PaymentsRedirect />} />
-            <Route path="reviews" element={<ReviewsRoute />} />
-            <Route path="reports" element={<ReportsRoute />} />
-            <Route path="booking-hub" element={<BookingHubRoute />} />
-            <Route path="touchpoints" element={<TouchpointsRoute />} />
-            <Route path="analytics" element={<AnalyticsRoute />} />
-            <Route path="settings" element={<SettingsRoute />} />
-            <Route path="settings/:tab" element={<SettingsRoute />} />
-            <Route path="subscriptions" element={<SubscriptionsRoute />} />
-            <Route path="support" element={<SupportRoute />} />
+            <Route path={DASHBOARD_MENU_ID.staff} element={<StaffRoute />} />
+            <Route path={`${DASHBOARD_MENU_ID.staff}/:staffId`} element={<StaffDetailRoute />} />
+            <Route path={DASHBOARD_MENU_ID.tips} element={<TipsRoute />} />
+            <Route path={DASHBOARD_MENU_ID.payments} element={<PaymentsRedirect />} />
+            <Route path={`${DASHBOARD_MENU_ID.payments}/:paymentId`} element={<PaymentsRedirect />} />
+            <Route path={DASHBOARD_MENU_ID.reviews} element={<ReviewsRoute />} />
+            <Route path={DASHBOARD_MENU_ID.reports} element={<ReportsRoute />} />
+            <Route path={DASHBOARD_MENU_ID.bookingHub} element={<BookingHubRoute />} />
+            <Route path={DASHBOARD_MENU_ID.productManagement} element={<ProductManagementRoute />} />
+            <Route path={DASHBOARD_MENU_ID.touchpoints} element={<TouchpointsRoute />} />
+            <Route path={DASHBOARD_MENU_ID.analytics} element={<AnalyticsRoute />} />
+            <Route path={DASHBOARD_MENU_ID.settings} element={<SettingsRoute />} />
+            <Route path={`${DASHBOARD_MENU_ID.settings}/:tab`} element={<SettingsRoute />} />
+            <Route path={DASHBOARD_MENU_ID.subscriptions} element={<SubscriptionsRoute />} />
+            <Route path={DASHBOARD_MENU_ID.support} element={<SupportRoute />} />
             <Route path="*" element={<FallbackRoute />} />
           </Route>
 
