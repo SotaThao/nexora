@@ -337,6 +337,9 @@ export default function BookingSettingsPanel() {
     address?: string;
     greeting?: string;
   }>({});
+  const [invalidDurationServiceIds, setInvalidDurationServiceIds] = useState<
+    string[]
+  >([]);
   const [hoursErrorByDay, setHoursErrorByDay] = useState<
     Record<DayKey, string>
   >({
@@ -562,6 +565,9 @@ export default function BookingSettingsPanel() {
 
   const removeService = (id: string) => {
     setServices((prev) => prev.filter((service) => service.id !== id));
+    setInvalidDurationServiceIds((prev) =>
+      prev.filter((serviceId) => serviceId !== id),
+    );
   };
 
   const updateService = (
@@ -569,6 +575,11 @@ export default function BookingSettingsPanel() {
     field: "name" | "price" | "duration",
     value: string,
   ) => {
+    if (field === "duration") {
+      setInvalidDurationServiceIds((prev) =>
+        prev.filter((serviceId) => serviceId !== id),
+      );
+    }
     setServices((prev) =>
       prev.map((service) => {
         if (service.id !== id) return service;
@@ -693,6 +704,20 @@ export default function BookingSettingsPanel() {
       return;
     }
 
+    const invalidDurationIds = services
+      .filter(
+        (service) =>
+          !Number.isFinite(service.duration) || service.duration <= 0,
+      )
+      .map((service) => service.id);
+    if (invalidDurationIds.length > 0) {
+      setInvalidDurationServiceIds(invalidDurationIds);
+      setCollapsedCards((prev) => ({ ...prev, services: false }));
+      showToast(t(`${TK}.durationInvalid`), "error");
+      return;
+    }
+    setInvalidDurationServiceIds([]);
+
     try {
       const salonPhonePayload = normalizePhoneForApi(
         salonPhone,
@@ -742,6 +767,7 @@ export default function BookingSettingsPanel() {
       });
       setStatus(t(`${TK}.saveSuccess`));
       setFormErrors({});
+      setInvalidDurationServiceIds([]);
       showToast(t(`${TK}.saveSuccess`), "success");
     } catch (error) {
       const message = t(getErrorI18nKey(getApiErrorCode(error)));
@@ -1230,7 +1256,11 @@ export default function BookingSettingsPanel() {
                 </button>
               </div>
             ) : null}
-            {services.map((service) => (
+            {services.map((service) => {
+              const durationInvalid = invalidDurationServiceIds.includes(
+                service.id,
+              );
+              return (
               <div
                 className={`settings-service-row ${highlightServiceId === service.id ? "is-highlight" : ""}`}
                 key={service.id}
@@ -1298,6 +1328,7 @@ export default function BookingSettingsPanel() {
                           value={formatWholeNumberInputValue(service.duration)}
                           placeholder={t(`${TK}.placeholderServiceDuration`)}
                           aria-label={t(`${TK}.serviceDurationAria`)}
+                          aria-invalid={durationInvalid || undefined}
                           onChange={(event) =>
                             updateService(
                               service.id,
@@ -1322,8 +1353,14 @@ export default function BookingSettingsPanel() {
                     ×
                   </button>
                 </div>
+                {durationInvalid ? (
+                  <p className="settings-service-row-error" role="alert">
+                    {t(`${TK}.durationInvalid`)}
+                  </p>
+                ) : null}
               </div>
-            ))}
+              );
+            })}
           </div>
         </SettingsCard>
 
