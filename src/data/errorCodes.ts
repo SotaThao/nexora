@@ -116,6 +116,25 @@ export const errorCodeToI18nKey = {
   // Nexora Voice tenant staff
   VOICE_TENANT_STAFF_PHONE_NUMBER_REQUIRED: 'errors.voice_tenant_staff_phone_number_required',
   VOICE_TENANT_STAFF_PHONE_NUMBER_ALREADY_EXISTS: 'errors.voice_tenant_staff_phone_number_already_exists',
+
+  // Nexora Voice call log
+  VOICE_CALL_NOT_MISSED_CALL: 'errors.voice_call_not_missed_call',
+  VOICE_CALL_FOLLOW_UP_SMS_ALREADY_SENT: 'errors.voice_call_follow_up_sms_already_sent',
+  VOICE_CALL_CALLER_PHONE_MISSING: 'errors.voice_call_caller_phone_missing',
+  VOICE_CALL_NOT_FOUND: 'errors.voice_call_not_found',
+
+  // Nexora Voice customers
+  VOICE_CUSTOMER_NAME_MAX_LENGTH: 'errors.voice_customer_name_max_length',
+  VOICE_CUSTOMER_EMAIL_INVALID_FORMAT: 'errors.voice_customer_email_invalid_format',
+  VOICE_CUSTOMER_EMAIL_MAX_LENGTH: 'errors.voice_customer_email_max_length',
+  VOICE_CUSTOMER_ADDRESS_MAX_LENGTH: 'errors.voice_customer_address_max_length',
+  VOICE_CUSTOMER_DATE_OF_BIRTH_INVALID: 'errors.voice_customer_date_of_birth_invalid',
+  VOICE_CUSTOMER_TYPE_INVALID: 'errors.voice_customer_type_invalid',
+  VOICE_CUSTOMER_STATUS_INVALID: 'errors.voice_customer_status_invalid',
+  VOICE_CUSTOMER_NOT_FOUND: 'errors.voice_customer_not_found',
+
+  // Nexora Voice tenant
+  VOICE_TENANT_NOT_FOUND: 'errors.voice_tenant_not_found',
 }
 
 /**

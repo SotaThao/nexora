@@ -250,6 +250,156 @@ export function ClockIcon({ className }: IconProps) {
   )
 }
 
+export function PeopleTabIcon({ className }: IconProps) {
+  return (
+    <HubIcon className={className}>
+      <circle cx="9" cy="8" r="3.25" stroke="currentColor" strokeWidth="2" />
+      <path d="M3 20v-1.5A4.5 4.5 0 0 1 7.5 14h3A4.5 4.5 0 0 1 15 18.5V20" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
+      <path d="M16 8.5a2.75 2.75 0 1 0 0-5.5" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
+      <path d="M18.5 20v-1.5a4.5 4.5 0 0 0-2.75-4.15" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
+    </HubIcon>
+  )
+}
+
+export function PhoneTabIcon({ className }: IconProps) {
+  return (
+    <HubIcon className={className}>
+      <path
+        d="M5 4h3.5l1.5 4-2 1.5a11 11 0 0 0 5.5 5.5l1.5-2 4 1.5V18a2 2 0 0 1-2 2C10.5 20 4 13.5 4 6a2 2 0 0 1 1-2Z"
+        stroke="currentColor"
+        strokeWidth="2"
+        strokeLinejoin="round"
+      />
+    </HubIcon>
+  )
+}
+
+export function PhoneXIcon({ className }: IconProps) {
+  return (
+    <HubIcon className={className}>
+      <path
+        d="M5 4h3.5l1.5 4-2 1.5a11 11 0 0 0 5.5 5.5l1.5-2 4 1.5V18a2 2 0 0 1-2 2C10.5 20 4 13.5 4 6a2 2 0 0 1 1-2Z"
+        stroke="currentColor"
+        strokeWidth="2"
+        strokeLinejoin="round"
+      />
+      <path d="M15 3.5 19 7.5" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
+      <path d="M19 3.5 15 7.5" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
+    </HubIcon>
+  )
+}
+
+export function PhoneIncomingIcon({ className }: IconProps) {
+  return (
+    <HubIcon className={className}>
+      <path
+        d="M5 4h3.5l1.5 4-2 1.5a11 11 0 0 0 5.5 5.5l1.5-2 4 1.5V18a2 2 0 0 1-2 2C10.5 20 4 13.5 4 6a2 2 0 0 1 1-2Z"
+        stroke="currentColor"
+        strokeWidth="2"
+        strokeLinejoin="round"
+      />
+      <path d="M15 3v4h4" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+      <path d="M19 3 15 7" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
+    </HubIcon>
+  )
+}
+
+export function CalendarCheckIcon({ className }: IconProps) {
+  return (
+    <HubIcon className={className}>
+      <path d="M8 2v4" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
+      <path d="M16 2v4" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
+      <rect width="18" height="18" x="3" y="4" rx="2" stroke="currentColor" strokeWidth="2" />
+      <path d="M3 10h18" stroke="currentColor" strokeWidth="2" />
+      <path d="m8.5 15 2 2 4-4" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+    </HubIcon>
+  )
+}
+
+export function GraphUpIcon({ className }: IconProps) {
+  return (
+    <HubIcon className={className}>
+      <path d="M4 19V5" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
+      <path d="M4 19h16" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
+      <path d="m6 15 4-4 3 3 6-7" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+      <path d="M15 7h4v4" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+    </HubIcon>
+  )
+}
+
+export function FireIcon({ className }: IconProps) {
+  return (
+    <HubIcon className={className}>
+      <path
+        d="M12 3c1 2.2-2.5 3.4-2.5 6.3A2.5 2.5 0 0 0 12 11.8a2.2 2.2 0 0 0 2.2-2.2c1.6 1.2 2.3 3 2.3 4.6a4.5 4.5 0 0 1-9 0C7.5 10.9 10 8.3 12 3Z"
+        stroke="currentColor"
+        strokeWidth="2"
+        strokeLinejoin="round"
+      />
+    </HubIcon>
+  )
+}
+
+export function GemIcon({ className }: IconProps) {
+  return (
+    <HubIcon className={className}>
+      <path d="M6 3h12l3 5-9 13L3 8Z" stroke="currentColor" strokeWidth="2" strokeLinejoin="round" />
+      <path d="M3 8h18" stroke="currentColor" strokeWidth="2" />
+      <path d="M9 3 12 21 15 3" stroke="currentColor" strokeWidth="2" strokeLinejoin="round" />
+    </HubIcon>
+  )
+}
+
+export function QrCodeIcon({ className }: IconProps) {
+  return (
+    <HubIcon className={className}>
+      <rect x="3" y="3" width="7" height="7" rx="1" stroke="currentColor" strokeWidth="2" />
+      <rect x="14" y="3" width="7" height="7" rx="1" stroke="currentColor" strokeWidth="2" />
+      <rect x="3" y="14" width="7" height="7" rx="1" stroke="currentColor" strokeWidth="2" />
+      <path d="M14 14h3v3h-3zM19 14h2v2h-2zM14 19h2v2h-2zM19 19h2v2h-2z" fill="currentColor" />
+    </HubIcon>
+  )
+}
+
+export function ReceiptIcon({ className }: IconProps) {
+  return (
+    <HubIcon className={className}>
+      <path d="M6 2h12v20l-2.5-1.5L13 22l-2.5-1.5L8 22l-2-1.5Z" stroke="currentColor" strokeWidth="2" strokeLinejoin="round" />
+      <path d="M9 7h6M9 11h6M9 15h4" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
+    </HubIcon>
+  )
+}
+
+export function ImportTrayIcon({ className }: IconProps) {
+  return (
+    <HubIcon className={className}>
+      <path d="M4 4v10" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
+      <path d="m1 11 3 3 3-3" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+      <path d="M9 4h11a1 1 0 0 1 1 1v14a1 1 0 0 1-1 1H9" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+    </HubIcon>
+  )
+}
+
+export function PencilIcon({ className }: IconProps) {
+  return (
+    <HubIcon className={className}>
+      <path
+        d="M4 20h16"
+        stroke="currentColor"
+        strokeWidth="2"
+        strokeLinecap="round"
+      />
+      <path
+        d="m16.5 3.5 4 4L8 20H4v-4Z"
+        stroke="currentColor"
+        strokeWidth="2"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+    </HubIcon>
+  )
+}
+
 export function SpinnerIcon({ className }: IconProps) {
   return (
     <svg viewBox="0 0 24 24" fill="none" aria-hidden="true" className={className}>

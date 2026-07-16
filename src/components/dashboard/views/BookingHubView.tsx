@@ -5,11 +5,15 @@ import { useTranslation } from '../../../contexts/LanguageContext'
 import { useMerchantVoiceTenantStatus } from '../../../data/hooks/useMerchantVoiceBookings'
 import BookingTeamPanel from './BookingTeamPanel'
 import BookingTodayPanel from './BookingTodayPanel'
+import BookingCustomersPanel from './BookingCustomersPanel'
+import BookingCallLogPanel from './BookingCallLogPanel'
 import BookingPlansPanel from './BookingPlansPanel'
 import BookingSettingsPanel from './BookingSettingsPanel'
 import { BookingHubVoiceProvider } from './BookingHubVoiceContext'
 import {
   CalendarTabIcon,
+  PeopleTabIcon,
+  PhoneTabIcon,
   SlidersTabIcon,
   TagsTabIcon,
 } from './BookingHubIcons'
@@ -69,7 +73,12 @@ export default function BookingHubView() {
 
     if (
       !hasVoiceTenant
-      && (parsedMainTab === BookingHubMainTab.Booking || parsedMainTab === BookingHubMainTab.Settings)
+      && (
+        parsedMainTab === BookingHubMainTab.Booking
+        || parsedMainTab === BookingHubMainTab.Customers
+        || parsedMainTab === BookingHubMainTab.CallLog
+        || parsedMainTab === BookingHubMainTab.Settings
+      )
     ) {
       setActiveMainTab(BookingHubMainTab.Plans)
       setActiveSubtab(BookingHubSubTab.Today)
@@ -102,7 +111,12 @@ export default function BookingHubView() {
   ) => {
     if (
       !hasVoiceTenant
-      && (mainTab === BookingHubMainTab.Booking || mainTab === BookingHubMainTab.Settings)
+      && (
+        mainTab === BookingHubMainTab.Booking
+        || mainTab === BookingHubMainTab.Customers
+        || mainTab === BookingHubMainTab.CallLog
+        || mainTab === BookingHubMainTab.Settings
+      )
     ) {
       return
     }
@@ -137,6 +151,30 @@ export default function BookingHubView() {
               >
                 <span className="page-tab-icon"><CalendarTabIcon /></span>
                 <span>{t(`${TK}.tabs.booking`)}</span>
+              </button>
+            )}
+            {hasVoiceTenant && (
+              <button
+                className={`page-tab ${activeMainTab === BookingHubMainTab.Customers ? 'is-active' : ''}`}
+                type="button"
+                role="tab"
+                aria-selected={activeMainTab === BookingHubMainTab.Customers}
+                onClick={() => updateQueryTabs(BookingHubMainTab.Customers)}
+              >
+                <span className="page-tab-icon"><PeopleTabIcon /></span>
+                <span>{t(`${TK}.tabs.customers`)}</span>
+              </button>
+            )}
+            {hasVoiceTenant && (
+              <button
+                className={`page-tab ${activeMainTab === BookingHubMainTab.CallLog ? 'is-active' : ''}`}
+                type="button"
+                role="tab"
+                aria-selected={activeMainTab === BookingHubMainTab.CallLog}
+                onClick={() => updateQueryTabs(BookingHubMainTab.CallLog)}
+              >
+                <span className="page-tab-icon"><PhoneTabIcon /></span>
+                <span>{t(`${TK}.tabs.callLog`)}</span>
               </button>
             )}
             <button
@@ -195,6 +233,18 @@ export default function BookingHubView() {
 
         {activeSubtab === BookingHubSubTab.Today ? <BookingTodayPanel /> : <BookingTeamPanel />}
       </section>
+      )}
+
+      {!isTenantStatusLoading && voiceFeaturesEnabled && activeMainTab === BookingHubMainTab.Customers && (
+        <section className="tab-panel is-active" aria-label={t(`${TK}.ariaCustomersPanel`)}>
+          <BookingCustomersPanel />
+        </section>
+      )}
+
+      {!isTenantStatusLoading && voiceFeaturesEnabled && activeMainTab === BookingHubMainTab.CallLog && (
+        <section className="tab-panel is-active" aria-label={t(`${TK}.ariaCallLogPanel`)}>
+          <BookingCallLogPanel />
+        </section>
       )}
 
       {!isTenantStatusLoading && activeMainTab === BookingHubMainTab.Plans && (
