@@ -37,7 +37,7 @@ export default function StaffHeader({ activeScreen, onNavigate, onOpenMobileMenu
             : 'border border-nexoraBorder'
       }`}
     >
-      <img src="/assets/menu/notification.png" alt="" className="h-5 w-5 object-contain" aria-hidden="true" />
+      <Bell className="h-5 w-5" aria-hidden="true" />
       {unreadCount > 0 && (
         <span
           className={
@@ -103,7 +103,7 @@ export default function StaffHeader({ activeScreen, onNavigate, onOpenMobileMenu
                 isNotiOpen ? 'ring-2 ring-nexoraBrand/30' : ''
               }`}
             >
-              <img src="/assets/menu/notification.png" alt="" className="h-5 w-5 object-contain" aria-hidden="true" />
+              <Bell className="h-5 w-5" aria-hidden="true" />
               {unreadCount > 0 && (
                 <span className="absolute right-1.5 top-1.5 h-2 w-2 rounded-full bg-red-500 ring-2 ring-white" />
               )}
@@ -213,7 +213,7 @@ export default function StaffHeader({ activeScreen, onNavigate, onOpenMobileMenu
                 isNotiOpen ? 'border-nexoraBrand ring-2 ring-nexoraBrand/30' : 'border-nexoraBorder'
               }`}
             >
-              <img src="/assets/menu/notification.png" alt="" className="h-5 w-5 object-contain" aria-hidden="true" />
+              <Bell className="h-5 w-5" aria-hidden="true" />
               {unreadCount > 0 && (
                 <span className="absolute -right-1 -top-1 flex h-[18px] min-w-[18px] items-center justify-center rounded-full bg-red-500 px-1 text-[9px] font-black text-white ring-2 ring-white">
                   {unreadCount > 99 ? '99+' : unreadCount}
