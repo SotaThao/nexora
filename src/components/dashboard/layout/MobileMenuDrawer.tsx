@@ -2,6 +2,7 @@ import React from 'react'
 import { useSearchParams } from 'react-router-dom'
 import { ChevronLeft, ChevronUp, ChevronDown, LogOut } from 'lucide-react'
 import { useTranslation } from '../../../contexts/LanguageContext'
+import { useOpenProductManagement } from '../../../data/hooks/useOpenProductManagement'
 import MenuIcon from '../../ui/MenuIcon'
 import HomepageLink from '../../ui/HomepageLink'
 import LanguageSwitcher from '../../ui/LanguageSwitcher'
@@ -46,6 +47,7 @@ export default function MobileMenuDrawer({
 }) {
   const { t, currentLanguage } = useTranslation()
   const [searchParams] = useSearchParams()
+  const { openProductManagement, isOpeningProductManagement } = useOpenProductManagement()
   const activeSubTab = searchParams.get('tab')
   const isPaymentsPayoutsActive = isPaymentsPayoutsRouteActive(activeMenu, activeSubTab)
   const subscriptionCopy = getSubscriptionSidebarCopy(
@@ -65,6 +67,13 @@ export default function MobileMenuDrawer({
   }
 
   const handleMenuClick = (id: string) => {
+    if (id === 'product-management') {
+      void openProductManagement().finally(() => {
+        onClose()
+      })
+      return
+    }
+
     if (id === 'touchpoints') {
       if (activeMenu === 'touchpoints') {
         setIsTouchpointsMobileExpanded((prev) => !prev)
@@ -169,6 +178,7 @@ export default function MobileMenuDrawer({
               reviews: t('dashboard.menu.reviews'),
               reports: t('dashboard.menu.transactions'),
               'booking-hub': t('dashboard.menu.booking_hub'),
+              'product-management': t('dashboard.menu.product_management'),
               touchpoints: t('dashboard.menu.touchpoints'),
               devices: t('dashboard.menu.qr_nfc'),
               analytics: t('dashboard.menu.analytics'),
@@ -180,17 +190,20 @@ export default function MobileMenuDrawer({
                 <button
                   type="button"
                   onClick={() => handleMenuClick(id)}
+                  disabled={id === 'product-management' && isOpeningProductManagement}
                   className={sidebarMenuItemBetweenClass(isActive)}
                 >
                   <div className="flex items-center gap-3 min-w-0">
                     <MenuIcon item={item} active={isActive} />
                     <span>{localizedLabel}</span>
                   </div>
-                  {id === 'touchpoints' && (
+                  {id === 'product-management' && isOpeningProductManagement ? (
+                    <span className="h-4 w-4 shrink-0 animate-spin rounded-full border-2 border-white/30 border-t-white" />
+                  ) : id === 'touchpoints' ? (
                     <div className="text-white/65 shrink-0">
                       {isTouchpointsMobileExpanded ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
                     </div>
-                  )}
+                  ) : null}
                 </button>
 
                 {userRole !== 'staff' && id === 'staff' && (

@@ -4,6 +4,7 @@ import MobileMenuDrawer from '../../dashboard/layout/MobileMenuDrawer'
 import { MERCHANT_SIDEBAR_MENU_ITEMS } from '../../dashboard/constants'
 import { useProfileSettings } from '../../../data/hooks/useProfileSettings'
 import { useMerchantSetup } from '../../../data/hooks/useMerchantSetup'
+import { useOpenProductManagement } from '../../../data/hooks/useOpenProductManagement'
 import { HomePageLayoutProvider } from '../context/HomePageLayoutContext'
 import type { AuthSession } from '../../../types/auth'
 
@@ -19,6 +20,7 @@ export default function HomePageOwnerSidebarLayout({
   children,
 }: HomePageOwnerSidebarLayoutProps) {
   const navigate = useNavigate()
+  const { openProductManagement } = useOpenProductManagement()
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
   const [settingsTab, setSettingsTab] = useState('profile')
   const [isProfileExpanded, setIsProfileExpanded] = useState(false)
@@ -66,21 +68,31 @@ export default function HomePageOwnerSidebarLayout({
 
   const handleNavigateMenu = useCallback(
     (menuId: string) => {
+      if (menuId === 'product-management') {
+        void openProductManagement()
+        return
+      }
       const route = menuId === 'overview' ? '/dashboard' : `/dashboard/${menuId}`
       navigate(route)
     },
-    [navigate],
+    [navigate, openProductManagement],
   )
 
   const navigateMenu = useCallback(
     (menuId: string, options: { tab?: string; closeDrawer?: boolean } = {}) => {
+      if (menuId === 'product-management') {
+        void openProductManagement().finally(() => {
+          if (options.closeDrawer !== false) setIsMobileMenuOpen(false)
+        })
+        return
+      }
       const { tab, closeDrawer = true } = options
       const base = menuId === 'overview' ? '/dashboard' : `/dashboard/${menuId}`
       const route = tab ? `${base}?tab=${encodeURIComponent(tab)}` : base
       navigate(route)
       if (closeDrawer) setIsMobileMenuOpen(false)
     },
-    [navigate],
+    [navigate, openProductManagement],
   )
 
   const layoutValue = useMemo(

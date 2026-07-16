@@ -631,6 +631,8 @@
       "reviews": "Đánh Giá",
       "transactions": "Giao Dịch",
       "booking_hub": "Trung tâm đặt lịch",
+      "product_management": "Quản lý sản phẩm",
+      "product_management_error": "Không mở được Quản lý sản phẩm. Vui lòng thử lại.",
       "touchpoints": "Trạm & Mã QR",
       "qr_nfc": "Thiết bị QR / NFC",
       "analytics": "Phân Tích",
@@ -3656,6 +3658,8 @@
   "coming_soon": {
     "analytics_title": "Phân Tích Nâng Cao",
     "analytics_desc": "Chuyển đổi thiết bị, phân tích khách quay lại, và tóm tắt đánh giá bằng AI sẽ ra mắt ở giai đoạn 3.",
+    "product_management_title": "Quản lý sản phẩm",
+    "product_management_desc": "Sắp tới bạn có thể quản lý danh mục sản phẩm, giá và tồn kho ngay tại đây.",
     "subscriptions_title": "Gói Dịch Vụ",
     "subscriptions_desc": "Quản lý đơn hàng giá NFC, gói gia hạn, và phần cứng bổ sung từ không gian này.",
     "settings_title": "Cài Đặt",

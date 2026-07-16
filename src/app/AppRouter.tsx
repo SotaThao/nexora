@@ -15,6 +15,7 @@ import {
   BookingHubRoute,
   FallbackRoute,
   OverviewRoute,
+  ProductManagementRoute,
   ReportsRoute,
   ReviewsRoute,
   SettingsRoute,
@@ -236,6 +237,7 @@ export default function AppRouter() {
             <Route path="reviews" element={<ReviewsRoute />} />
             <Route path="reports" element={<ReportsRoute />} />
             <Route path="booking-hub" element={<BookingHubRoute />} />
+            <Route path="product-management" element={<ProductManagementRoute />} />
             <Route path="touchpoints" element={<TouchpointsRoute />} />
             <Route path="analytics" element={<AnalyticsRoute />} />
             <Route path="settings" element={<SettingsRoute />} />

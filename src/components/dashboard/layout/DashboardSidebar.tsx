@@ -4,6 +4,7 @@ import React, { useState, useEffect } from 'react'
 import { useNavigate, useSearchParams } from 'react-router-dom'
 import { ChevronUp, ChevronDown, LogOut } from 'lucide-react'
 import { useTranslation } from '../../../contexts/LanguageContext'
+import { useOpenProductManagement } from '../../../data/hooks/useOpenProductManagement'
 import { visibleMenuItems, MERCHANT_SIDEBAR_MENU_ITEMS, isPaymentsPayoutsRouteActive, VISIBLE_TOUCHPOINTS_SUBMENU } from '../constants'
 import MenuIcon from '../../ui/MenuIcon'
 import HomepageLink from '../../ui/HomepageLink'
@@ -43,6 +44,7 @@ export default function DashboardSidebar({
   const { currentLanguage, t } = useTranslation()
   const navigate = useNavigate()
   const [searchParams] = useSearchParams()
+  const { openProductManagement, isOpeningProductManagement } = useOpenProductManagement()
   // Sub-tabs are URL-driven (?tab=) so the sidebar highlight stays in sync with
   // the rendered route content (TipsRoute / TouchpointsRoute read the same param).
   const activeSubTab = searchParams.get('tab')
@@ -69,6 +71,11 @@ export default function DashboardSidebar({
   }
 
   const handleMenuClick = (id: string) => {
+    if (id === 'product-management') {
+      void openProductManagement()
+      return
+    }
+
     if (id === 'touchpoints') {
       if (activeMenu === 'touchpoints') {
         setIsTouchpointsExpanded((prev) => !prev)
@@ -172,6 +179,7 @@ export default function DashboardSidebar({
             reviews: t('dashboard.menu.reviews'),
             reports: t('dashboard.menu.transactions'),
             'booking-hub': t('dashboard.menu.booking_hub'),
+            'product-management': t('dashboard.menu.product_management'),
             touchpoints: t('dashboard.menu.touchpoints'),
             devices: t('dashboard.menu.qr_nfc'),
             analytics: t('dashboard.menu.analytics'),
@@ -183,17 +191,20 @@ export default function DashboardSidebar({
               <button
                 type="button"
                 onClick={() => handleMenuClick(id)}
+                disabled={id === 'product-management' && isOpeningProductManagement}
                 className={sidebarMenuItemBetweenClass(isActive)}
               >
                 <div className="flex items-center gap-3 min-w-0">
                   <MenuIcon item={item} active={isActive} />
                   <span className="truncate">{localizedLabel}</span>
                 </div>
-                {id === 'touchpoints' && (
+                {id === 'product-management' && isOpeningProductManagement ? (
+                  <span className="h-4 w-4 shrink-0 animate-spin rounded-full border-2 border-white/30 border-t-white" />
+                ) : id === 'touchpoints' ? (
                   <div className="text-white/50 shrink-0">
                     {isTouchpointsExpanded ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
                   </div>
-                )}
+                ) : null}
               </button>
 
               {userRole !== 'staff' && id === 'staff' && (

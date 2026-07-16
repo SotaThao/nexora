@@ -7,6 +7,7 @@ function ComingSoon({ activeMenu, onBack }) {
     analytics: [t('coming_soon.analytics_title'), t('coming_soon.analytics_desc')],
     subscriptions: [t('coming_soon.subscriptions_title'), t('coming_soon.subscriptions_desc')],
     settings: [t('coming_soon.settings_title'), t('coming_soon.settings_desc')],
+    'product-management': [t('coming_soon.product_management_title'), t('coming_soon.product_management_desc')],
   }
   const copy = copyMap[activeMenu] || [t('coming_soon.default_title'), t('coming_soon.default_desc')]
 
