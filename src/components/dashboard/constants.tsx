@@ -100,7 +100,7 @@ export const MENU_ITEMS = [
   { id: DASHBOARD_MENU_ID.reports, label: 'Transactions', icon: ReceiptText },
   { id: DASHBOARD_MENU_ID.touchpoints, label: 'Touch Points', icon: QrCode },
   { id: DASHBOARD_MENU_ID.bookingHub, label: 'Booking Hub', icon: Calendar },
-  { id: DASHBOARD_MENU_ID.productManagement, label: 'Product Management', icon: Package },
+  { id: DASHBOARD_MENU_ID.productManagement, label: 'Gift Card Center', icon: Package },
   { id: DASHBOARD_MENU_ID.analytics, label: 'Analytics', icon: BarChart3 },
   { id: DASHBOARD_MENU_ID.settings, label: 'Settings', icon: Settings },
   { id: DASHBOARD_MENU_ID.support, label: 'Support', icon: HelpCircle },
