@@ -5,11 +5,19 @@
 import httpClient from '../../lib/httpClient'
 import { isApiError } from '../../types/domain'
 import type {
+  DashboardAnalyticsApiDto,
+  DashboardAnalyticsLeaderboardItemApiDto,
+  DashboardAnalyticsPayoutMethodApiDto,
+  DashboardAnalyticsTouchPointApiDto,
   DashboardOverviewApiDto,
   DashboardOverviewMetrics,
   DashboardReviewsSummary,
   DashboardStaffMetricApiDto,
   DashboardTipsChartApiDto,
+  MerchantDashboardAnalytics,
+  MerchantDashboardAnalyticsLeaderboardItem,
+  MerchantDashboardAnalyticsPayoutMethod,
+  MerchantDashboardAnalyticsTouchPoint,
   StaffLeaderboardRow,
   TipsChartDayMetric,
 } from '../../types/repositories'
@@ -46,6 +54,91 @@ function toTipsChartDateParams(params: DateRangeParams = {}) {
 
 interface ListApiResponse<T> {
   data?: T[]
+}
+
+const EMPTY_ANALYTICS: MerchantDashboardAnalytics = {
+  overview: {
+    totalVolume: 0,
+    totalTransactionCount: 0,
+    feeSaved: 0,
+    averageTipAmount: 0,
+  },
+  leaderboard: [],
+  touchPoints: [],
+  payoutMethods: [],
+  directPayout: {
+    totalAmount: 0,
+    totalCount: 0,
+  },
+}
+
+function normalizeAnalyticsLeaderboardItem(
+  dto: DashboardAnalyticsLeaderboardItemApiDto,
+): MerchantDashboardAnalyticsLeaderboardItem {
+  return {
+    staffProfileId: dto.staffProfileId ?? '',
+    displayName: dto.displayName ?? '',
+    nicknameAtBusiness: dto.nicknameAtBusiness ?? null,
+    photoUrl: dto.photoUrl ?? null,
+    position: dto.position ?? null,
+    tipTotal: Number(dto.tipTotal) || 0,
+    tipCount: Number(dto.tipCount) || 0,
+    avgTip: Number(dto.avgTip) || 0,
+    avgRating: Number(dto.avgRating) || 0,
+    reviewCount: Number(dto.reviewCount) || 0,
+    selectionCount: Number(dto.selectionCount) || 0,
+  }
+}
+
+function normalizeAnalyticsTouchPoint(
+  dto: DashboardAnalyticsTouchPointApiDto,
+): MerchantDashboardAnalyticsTouchPoint {
+  return {
+    touchPointId: dto.touchPointId ?? '',
+    name: dto.name ?? '',
+    type: dto.type ?? '',
+    scanCount: Number(dto.scanCount) || 0,
+    tipCount: Number(dto.tipCount) || 0,
+    tipTotal: Number(dto.tipTotal) || 0,
+    ctr: Number(dto.ctr) || 0,
+    avgRating: Number(dto.avgRating) || 0,
+  }
+}
+
+function normalizeAnalyticsPayoutMethod(
+  dto: DashboardAnalyticsPayoutMethodApiDto,
+): MerchantDashboardAnalyticsPayoutMethod {
+  return {
+    method: dto.method ?? 'Other',
+    amount: Number(dto.amount) || 0,
+    count: Number(dto.count) || 0,
+  }
+}
+
+function normalizeDashboardAnalytics(dto: DashboardAnalyticsApiDto): MerchantDashboardAnalytics {
+  const overview = dto.overview ?? {}
+
+  return {
+    overview: {
+      totalVolume: Number(overview.totalVolume) || 0,
+      totalTransactionCount: Number(overview.totalTransactionCount) || 0,
+      feeSaved: Number(overview.feeSaved) || 0,
+      averageTipAmount: Number(overview.averageTipAmount) || 0,
+    },
+    leaderboard: Array.isArray(dto.leaderboard)
+      ? dto.leaderboard.map(normalizeAnalyticsLeaderboardItem)
+      : [],
+    touchPoints: Array.isArray(dto.touchPoints)
+      ? dto.touchPoints.map(normalizeAnalyticsTouchPoint)
+      : [],
+    payoutMethods: Array.isArray(dto.payoutMethods)
+      ? dto.payoutMethods.map(normalizeAnalyticsPayoutMethod)
+      : [],
+    directPayout: {
+      totalAmount: Number(dto.directPayout?.totalAmount) || 0,
+      totalCount: Number(dto.directPayout?.totalCount) || 0,
+    },
+  }
 }
 
 export function createDashboardRepository(client: HttpClient = httpClient) {
@@ -146,6 +239,21 @@ export function createDashboardRepository(client: HttpClient = httpClient) {
         { params: toDashboardDateParams(params) },
       )
       return Array.isArray(response) ? response : (response.data || [])
+    },
+
+    async getAnalytics(params: DateRangeParams = {}): Promise<MerchantDashboardAnalytics> {
+      try {
+        const response = await client.get<DashboardAnalyticsApiDto>(
+          '/api/v1/merchant/dashboard/analytics',
+          { params: toDashboardDateParams(params) },
+        )
+        return normalizeDashboardAnalytics(response)
+      } catch (err: unknown) {
+        if (isApiError(err) && (err.status === 404 || err.status === 403)) {
+          return EMPTY_ANALYTICS
+        }
+        throw err
+      }
     },
 
     async getTipsChart(params: DateRangeParams = {}): Promise<TipsChartDayMetric[]> {
