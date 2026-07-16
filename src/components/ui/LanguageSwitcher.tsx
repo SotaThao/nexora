@@ -13,6 +13,7 @@ export default function LanguageSwitcher({ className = '', variant = 'header' })
   const [isOpen, setIsOpen] = useState(false)
   const containerRef = useRef(null)
   const isSidebar = variant === 'sidebar'
+  const isHeaderPlain = variant === 'header-plain'
   const currentLanguageLabel = LANGUAGE_OPTIONS.find((language) => language.code === currentLanguage)?.label
     ?? currentLanguage.toUpperCase()
 
@@ -39,7 +40,9 @@ export default function LanguageSwitcher({ className = '', variant = 'header' })
         aria-haspopup="listbox"
         className={isSidebar
           ? 'flex h-9 w-full items-center gap-2.5 rounded-lg px-3 text-left text-xs font-bold text-white/75 transition hover:bg-white/5 hover:text-white'
-          : 'flex flex-col items-center justify-center rounded-lg border border-nexoraBorder bg-nexoraSurfaceMuted px-2 py-1 leading-none text-nexoraText transition hover:bg-nexoraCanvas'}
+          : isHeaderPlain
+            ? 'flex flex-col items-center justify-center rounded-lg px-2 py-1 leading-none text-nexoraText transition hover:bg-nexoraCanvas'
+            : 'flex flex-col items-center justify-center rounded-lg border border-nexoraBorder bg-nexoraSurfaceMuted px-2 py-1 leading-none text-nexoraText transition hover:bg-nexoraCanvas'}
       >
         {isSidebar ? (
           <>

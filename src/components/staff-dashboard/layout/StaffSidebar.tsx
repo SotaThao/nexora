@@ -14,6 +14,7 @@ import {
 import { useStaffAccount } from '../../../contexts/StaffAccountContext'
 import MenuIcon from '../../ui/MenuIcon'
 import HomepageLink from '../../ui/HomepageLink'
+import LanguageSwitcher from '../../ui/LanguageSwitcher'
 import {
   SIDEBAR_SHELL_CLASS,
   SIDEBAR_MOBILE_DRAWER_CLASS,
@@ -183,6 +184,7 @@ export default function StaffSidebar({ activeScreen, isHomeActive = false, mobil
                 </button>
               )
             })}
+            <LanguageSwitcher variant="sidebar" className="w-full" />
           </div>
         )}
       </div>
