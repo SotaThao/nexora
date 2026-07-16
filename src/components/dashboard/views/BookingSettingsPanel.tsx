@@ -7,9 +7,12 @@ import {
   useUpdateMerchantVoiceConfig,
 } from "../../../data/hooks/useMerchantVoiceBookings";
 import {
+  clampMerchantVoiceServiceDurationMinutes,
+  isValidMerchantVoiceServiceDuration,
   mapConfigLanguageToUiLanguage,
   mapUiLanguageToConfigLanguage,
   MerchantVoiceDayOfWeek,
+  MerchantVoiceServiceField,
   MerchantVoiceUiLanguage,
   normalizeMerchantVoiceDayOfWeek,
 } from "../../../data/repositories/merchantVoice";
@@ -540,7 +543,7 @@ export default function BookingSettingsPanel() {
         "tone-violet",
       name: service.name || "",
       price: Number(service.price ?? 0),
-      duration: Number(service.durationMinutes ?? 0),
+      duration: clampMerchantVoiceServiceDurationMinutes(Number(service.durationMinutes ?? 0)),
     }));
     setServices(nextServices);
   }, [configData, t]);
@@ -607,10 +610,10 @@ export default function BookingSettingsPanel() {
 
   const updateService = (
     id: string,
-    field: "name" | "price" | "duration",
+    field: MerchantVoiceServiceField,
     value: string,
   ) => {
-    if (field === "duration") {
+    if (field === MerchantVoiceServiceField.Duration) {
       setInvalidDurationServiceIds((prev) =>
         prev.filter((serviceId) => serviceId !== id),
       );
@@ -618,8 +621,8 @@ export default function BookingSettingsPanel() {
     setServices((prev) =>
       prev.map((service) => {
         if (service.id !== id) return service;
-        if (field === "name") return { ...service, name: value };
-        if (field === "price")
+        if (field === MerchantVoiceServiceField.Name) return { ...service, name: value };
+        if (field === MerchantVoiceServiceField.Price)
           return { ...service, price: parseWholeNumberInput(value) };
         return { ...service, duration: parseWholeNumberInput(value) };
       }),
@@ -628,11 +631,17 @@ export default function BookingSettingsPanel() {
 
   const commitServiceNumberOnBlur = (
     id: string,
-    field: "price" | "duration",
+    field: MerchantVoiceServiceField.Price | MerchantVoiceServiceField.Duration,
   ) => {
     setServices((prev) =>
       prev.map((service) => {
         if (service.id !== id) return service;
+        if (field === MerchantVoiceServiceField.Duration) {
+          return {
+            ...service,
+            duration: clampMerchantVoiceServiceDurationMinutes(service.duration),
+          };
+        }
         if (Number.isFinite(service[field])) return service;
         return { ...service, [field]: 0 };
       }),
@@ -744,8 +753,7 @@ export default function BookingSettingsPanel() {
 
     const invalidDurationIds = services
       .filter(
-        (service) =>
-          !Number.isFinite(service.duration) || service.duration <= 0,
+        (service) => !isValidMerchantVoiceServiceDuration(service.duration),
       )
       .map((service) => service.id);
     if (invalidDurationIds.length > 0) {
@@ -795,9 +803,7 @@ export default function BookingSettingsPanel() {
             : {}),
           name: service.name.trim(),
           price: Number.isFinite(service.price) ? service.price : 0,
-          durationMinutes: Number.isFinite(service.duration)
-            ? service.duration
-            : 0,
+          durationMinutes: clampMerchantVoiceServiceDurationMinutes(service.duration),
           note: null,
           icon: service.icon?.trim() || null,
           isActive: true,
@@ -1317,7 +1323,7 @@ export default function BookingSettingsPanel() {
                         placeholder={t(`${TK}.placeholderServiceName`)}
                         aria-label={t(`${TK}.serviceNameAria`)}
                         onChange={(event) =>
-                          updateService(service.id, "name", event.target.value)
+                          updateService(service.id, MerchantVoiceServiceField.Name, event.target.value)
                         }
                       />
                     </label>
@@ -1339,12 +1345,12 @@ export default function BookingSettingsPanel() {
                             onChange={(event) =>
                               updateService(
                                 service.id,
-                                "price",
+                                MerchantVoiceServiceField.Price,
                                 event.target.value,
                               )
                             }
                             onBlur={() =>
-                              commitServiceNumberOnBlur(service.id, "price")
+                              commitServiceNumberOnBlur(service.id, MerchantVoiceServiceField.Price)
                             }
                           />
                         </div>
@@ -1368,12 +1374,12 @@ export default function BookingSettingsPanel() {
                             onChange={(event) =>
                               updateService(
                                 service.id,
-                                "duration",
+                                MerchantVoiceServiceField.Duration,
                                 event.target.value,
                               )
                             }
                             onBlur={() =>
-                              commitServiceNumberOnBlur(service.id, "duration")
+                              commitServiceNumberOnBlur(service.id, MerchantVoiceServiceField.Duration)
                             }
                           />
                           <span className="settings-service-suffix">min</span>

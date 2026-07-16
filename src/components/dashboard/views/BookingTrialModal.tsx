@@ -6,6 +6,7 @@ import { useSubmitVoiceTrialRequest } from "../../../data/hooks/useSubmitVoiceTr
 import {
   formatTrialTimeLabelToApi,
   mapDayKeysToApiOpeningDays,
+  VoiceTrialFormField,
   type SubmitVoiceTrialRequest,
 } from "../../../data/voiceTrial/domain";
 import { getApiErrorCode } from "../../../types/domain";
@@ -65,27 +66,28 @@ const PAIN_POINT_KEYS = {
 type PainPointValue = keyof typeof PAIN_POINT_KEYS;
 
 type TrialFieldKey =
-  | "salon"
-  | "owner"
-  | "phone"
-  | "email"
+  | VoiceTrialFormField.Salon
+  | VoiceTrialFormField.Owner
+  | VoiceTrialFormField.Phone
+  | VoiceTrialFormField.Email
   | "services"
   | "openingDays"
   | "serviceHours"
-  | "painPoint";
+  | VoiceTrialFormField.PainPoint;
 
 type TrialFormErrors = Partial<Record<TrialFieldKey, string>>;
 
 interface TrialFormState {
-  salon: string;
-  owner: string;
-  phone: string;
-  email: string;
-  city: string;
-  referral: string;
-  openTime: string;
-  closeTime: string;
-  painPoint: string;
+  [VoiceTrialFormField.Salon]: string;
+  [VoiceTrialFormField.Owner]: string;
+  [VoiceTrialFormField.Phone]: string;
+  [VoiceTrialFormField.Email]: string;
+  [VoiceTrialFormField.City]: string;
+  [VoiceTrialFormField.Website]: string;
+  [VoiceTrialFormField.Referral]: string;
+  [VoiceTrialFormField.OpenTime]: string;
+  [VoiceTrialFormField.CloseTime]: string;
+  [VoiceTrialFormField.PainPoint]: string;
   activeServices: Set<string>;
   activeDays: Set<string>;
   customServices: string[];
@@ -95,15 +97,16 @@ interface TrialFormState {
 
 function createInitialTrialForm(): TrialFormState {
   return {
-    salon: "",
-    owner: "",
-    phone: "",
-    email: "",
-    city: "",
-    referral: "",
-    openTime: DEFAULT_OPEN_TIME,
-    closeTime: DEFAULT_CLOSE_TIME,
-    painPoint: "",
+    [VoiceTrialFormField.Salon]: "",
+    [VoiceTrialFormField.Owner]: "",
+    [VoiceTrialFormField.Phone]: "",
+    [VoiceTrialFormField.Email]: "",
+    [VoiceTrialFormField.City]: "",
+    [VoiceTrialFormField.Website]: "",
+    [VoiceTrialFormField.Referral]: "",
+    [VoiceTrialFormField.OpenTime]: DEFAULT_OPEN_TIME,
+    [VoiceTrialFormField.CloseTime]: DEFAULT_CLOSE_TIME,
+    [VoiceTrialFormField.PainPoint]: "",
     activeServices: new Set(DEFAULT_ACTIVE_SERVICES),
     activeDays: new Set(DEFAULT_ACTIVE_DAYS),
     customServices: [],
@@ -266,19 +269,7 @@ export default function BookingTrialModal({
   };
 
   const patchFormField = (
-    key: keyof Pick<
-      TrialFormState,
-      | "salon"
-      | "owner"
-      | "phone"
-      | "email"
-      | "city"
-      | "referral"
-      | "openTime"
-      | "closeTime"
-      | "painPoint"
-      | "customServiceInput"
-    >,
+    key: VoiceTrialFormField,
     value: string,
     errorField?: TrialFieldKey,
   ) => {
@@ -352,13 +343,13 @@ export default function BookingTrialModal({
     const painKey = PAIN_POINT_KEYS[form.painPoint as PainPointValue];
     const nextErrors: TrialFormErrors = {};
 
-    if (!shopName) nextErrors.salon = t(`${TK}.validationSalonRequired`);
-    if (!ownerName) nextErrors.owner = t(`${TK}.validationOwnerRequired`);
+    if (!shopName) nextErrors[VoiceTrialFormField.Salon] = t(`${TK}.validationSalonRequired`);
+    if (!ownerName) nextErrors[VoiceTrialFormField.Owner] = t(`${TK}.validationOwnerRequired`);
     const phoneError = getPhoneFieldError(form.phone, phoneParsed.countryCode);
-    if (phoneError) nextErrors.phone = phoneError;
-    if (!emailValue) nextErrors.email = t(`${TK}.validationEmailRequired`);
+    if (phoneError) nextErrors[VoiceTrialFormField.Phone] = phoneError;
+    if (!emailValue) nextErrors[VoiceTrialFormField.Email] = t(`${TK}.validationEmailRequired`);
     else if (!emailValue.includes("@"))
-      nextErrors.email = t(`${TK}.validationEmailInvalid`);
+      nextErrors[VoiceTrialFormField.Email] = t(`${TK}.validationEmailInvalid`);
     if (services.length === 0)
       nextErrors.services = t(`${TK}.validationServicesRequired`);
     if (openingDays.length === 0)
@@ -366,7 +357,7 @@ export default function BookingTrialModal({
     if (compareTime24h(form.closeTime, form.openTime) <= 0) {
       nextErrors.serviceHours = t(`${TK}.validationHoursInvalid`);
     }
-    if (!painKey) nextErrors.painPoint = t(`${TK}.validationPainRequired`);
+    if (!painKey) nextErrors[VoiceTrialFormField.PainPoint] = t(`${TK}.validationPainRequired`);
 
     return nextErrors;
   };
@@ -388,6 +379,7 @@ export default function BookingTrialModal({
     const openingDays = mapDayKeysToApiOpeningDays(form.activeDays);
     const painKey = PAIN_POINT_KEYS[form.painPoint as PainPointValue]!;
     const cityArea = form.city.trim();
+    const website = form.website.trim();
     const referralCode = form.referral.trim();
 
     return {
@@ -396,6 +388,7 @@ export default function BookingTrialModal({
       phoneNumber,
       email: emailValue,
       cityArea: cityArea || null,
+      website: website || null,
       services,
       openingDays,
       serviceHoursFrom: formatTrialTimeLabelToApi(form.openTime),
@@ -508,7 +501,7 @@ export default function BookingTrialModal({
                   value={form.salon}
                   placeholder={t(`${TK}.salonPlaceholder`)}
                   onChange={(e) =>
-                    patchFormField("salon", e.target.value, "salon")
+                    patchFormField(VoiceTrialFormField.Salon, e.target.value, VoiceTrialFormField.Salon)
                   }
                 />
                 <TrialFieldError message={errors.salon} />
@@ -524,7 +517,7 @@ export default function BookingTrialModal({
                   value={form.owner}
                   placeholder={t(`${TK}.ownerPlaceholder`)}
                   onChange={(e) =>
-                    patchFormField("owner", e.target.value, "owner")
+                    patchFormField(VoiceTrialFormField.Owner, e.target.value, VoiceTrialFormField.Owner)
                   }
                 />
                 <TrialFieldError message={errors.owner} />
@@ -543,11 +536,11 @@ export default function BookingTrialModal({
                         nextCode,
                       );
                       const nextPhone = `${nextCode} ${formatted}`.trim();
-                      patchForm("phone", nextPhone);
+                      patchForm(VoiceTrialFormField.Phone, nextPhone);
                       if (phoneTouched) {
                         applyPhoneFieldError(nextPhone, nextCode);
                       } else {
-                        clearFieldError("phone");
+                        clearFieldError(VoiceTrialFormField.Phone);
                       }
                     }}
                   />
@@ -572,9 +565,9 @@ export default function BookingTrialModal({
                         phoneParsed.countryCode,
                       );
                       patchFormField(
-                        "phone",
+                        VoiceTrialFormField.Phone,
                         `${phoneParsed.countryCode} ${formatted}`.trim(),
-                        "phone",
+                        VoiceTrialFormField.Phone,
                       );
                     }}
                   />
@@ -594,7 +587,7 @@ export default function BookingTrialModal({
                   value={form.email}
                   placeholder={t(`${TK}.emailPlaceholder`)}
                   onChange={(e) =>
-                    patchFormField("email", e.target.value, "email")
+                    patchFormField(VoiceTrialFormField.Email, e.target.value, VoiceTrialFormField.Email)
                   }
                 />
                 {!errors.email ? (
@@ -613,7 +606,21 @@ export default function BookingTrialModal({
                   type="text"
                   value={form.city}
                   placeholder={t(`${TK}.cityPlaceholder`)}
-                  onChange={(e) => patchFormField("city", e.target.value)}
+                  onChange={(e) => patchFormField(VoiceTrialFormField.City, e.target.value)}
+                />
+              </div>
+              <div className="trial-field trial-span-2">
+                <label className="trial-label" htmlFor={`trial-${VoiceTrialFormField.Website}`}>
+                  {t(`${TK}.websiteLabel`)}{" "}
+                  <span className="trial-optional">{t(`${TK}.optional`)}</span>
+                </label>
+                <input
+                  className="trial-input"
+                  id={`trial-${VoiceTrialFormField.Website}`}
+                  type="text"
+                  value={form.website}
+                  placeholder={t(`${TK}.websitePlaceholder`)}
+                  onChange={(e) => patchFormField(VoiceTrialFormField.Website, e.target.value)}
                 />
               </div>
               <div
@@ -657,7 +664,7 @@ export default function BookingTrialModal({
                       placeholder={t(`${TK}.customServicePlaceholder`)}
                       autoFocus
                       onChange={(event) =>
-                        patchFormField("customServiceInput", event.target.value)
+                        patchFormField(VoiceTrialFormField.CustomServiceInput, event.target.value)
                       }
                       onKeyDown={(event) => {
                         if (event.key === "Enter") {
@@ -717,7 +724,7 @@ export default function BookingTrialModal({
                     aria-label={t(`${TK}.openTimeLabel`)}
                     aria-invalid={Boolean(errors.serviceHours)}
                     onChange={(e) =>
-                      patchFormField("openTime", e.target.value, "serviceHours")
+                      patchFormField(VoiceTrialFormField.OpenTime, e.target.value, "serviceHours")
                     }
                   />
                   <span>{t(`${TK}.scheduleTo`)}</span>
@@ -730,7 +737,7 @@ export default function BookingTrialModal({
                     aria-invalid={Boolean(errors.serviceHours)}
                     onChange={(e) =>
                       patchFormField(
-                        "closeTime",
+                        VoiceTrialFormField.CloseTime,
                         e.target.value,
                         "serviceHours",
                       )
@@ -751,7 +758,7 @@ export default function BookingTrialModal({
                   id="trial-pain"
                   value={form.painPoint}
                   onChange={(e) =>
-                    patchFormField("painPoint", e.target.value, "painPoint")
+                    patchFormField(VoiceTrialFormField.PainPoint, e.target.value, VoiceTrialFormField.PainPoint)
                   }
                 >
                   <option value="">{t(`${TK}.painDefault`)}</option>
@@ -775,7 +782,7 @@ export default function BookingTrialModal({
                   value={form.referral}
                   placeholder={t(`${TK}.referralPlaceholder`)}
                   onChange={(e) =>
-                    patchFormField("referral", e.target.value.toUpperCase())
+                    patchFormField(VoiceTrialFormField.Referral, e.target.value.toUpperCase())
                   }
                 />
                 <div className="trial-credit">
