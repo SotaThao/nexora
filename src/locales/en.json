@@ -637,6 +637,7 @@
       "tax_iq": "Tax IQ",
       "taxiq_onboarding": "Onboarding",
       "taxiq_deductions": "Deduction Center",
+      "taxiq_income": "Income Summary",
       "taxiq_receipts": "Receipt Vault",
       "taxiq_equipment": "Equipment Tracker",
       "taxiq_payroll": "Payroll & Payout",
@@ -2040,6 +2041,7 @@
     "taxiq_cpa_consent_required": "Staff consent is required before sharing Full or CPA Review data.",
     "taxiq_deduction_not_in_grant_scope": "This record is outside the scope of your CPA access.",
     "taxiq_self_reported_income_not_found": "This self-reported income record could not be found.",
+    "taxiq_owner_income_record_not_found": "This income record could not be found.",
     "taxiq_deduction_record_has_receipts": "Remove attached receipts before deleting this deduction.",
     "taxiq_payout_record_has_receipts": "Remove attached receipts before deleting this payout record.",
     "taxiq_receipt_not_found": "This receipt could not be found.",
@@ -4476,6 +4478,72 @@
         "weekLabel": "Week {{index}} — {{start}}–{{end}}",
         "quarterLabel": "Q{{quarter}}",
         "yearRangeLabel": "Jan 1 – Dec 31, {{taxYear}}"
+      },
+      "form": {
+        "step1Title": "Basic Info",
+        "step2Title": "Details",
+        "step3Title": "Receipt & Save",
+        "periodTypeLabel": "Period type",
+        "periodTypeTooltip": "Log each transaction one by one, or enter one summary total for a whole day/week/month/quarter/year.",
+        "periodLabel": "Period",
+        "dateLabel": "Date",
+        "dateRequired": "Date is required.",
+        "amount": "Amount",
+        "amountRequired": "Amount must be greater than zero.",
+        "source": "Source",
+        "sourceRequired": "Source is required.",
+        "incomeTypeLabel": "Income type (optional)",
+        "incomeTypePlaceholder": "Select an income type",
+        "incomeTypeNote": "Income type note",
+        "notes": "Notes (optional)",
+        "back": "Back",
+        "next": "Next",
+        "save": "Save"
+      }
+    },
+    "ownerIncome": {
+      "title": "Income Summary",
+      "subtitle": "Record your Gross Sales so your CPA package includes revenue, not just deductions.",
+      "add": "Add Income",
+      "edit": "Edit",
+      "delete": "Delete",
+      "deleteConfirm": "Delete this income record? This cannot be undone.",
+      "deleteSuccess": "Income record deleted.",
+      "emptyState": "No income recorded yet. Add your first entry to get started.",
+      "noOwnerTaxYear": "Complete Tax IQ setup before adding income.",
+      "goToSetup": "Go to Tax IQ setup",
+      "loading": "Loading...",
+      "receiptOptional": "Attach a receipt for this income, or skip and add one later.",
+      "lockedNotice": "Your tax year is locked — income records can no longer be created or edited.",
+      "periodType": {
+        "day": "Day",
+        "week": "Week",
+        "month": "Month",
+        "quarter": "Quarter",
+        "year": "Year"
+      },
+      "incomeType": {
+        "serviceRevenue": "Service Revenue",
+        "productRetailRevenue": "Product Retail Revenue",
+        "other": "Other"
+      },
+      "status": {
+        "ready": "Ready",
+        "missingReceipt": "Missing Receipt",
+        "missingInfo": "Missing Info",
+        "cpaReview": "CPA Review",
+        "locked": "Locked"
+      },
+      "columns": {
+        "date": "Date",
+        "amount": "Amount",
+        "source": "Source",
+        "incomeType": "Income Type",
+        "status": "Status",
+        "actions": "Actions"
+      },
+      "errors": {
+        "generic": "Something went wrong. Please try again."
       },
       "form": {
         "step1Title": "Basic Info",

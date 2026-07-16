@@ -78,6 +78,7 @@ export const MENU_ITEMS = [
     children: [
       { id: 'onboarding', label: 'Onboarding' },
       { id: 'deductions', label: 'Deduction Center' },
+      { id: 'income', label: 'Income Summary' },
       { id: 'receipts', label: 'Receipt Vault' },
       { id: 'equipment', label: 'Equipment Tracker' },
       { id: 'payroll', label: 'Payroll & Payout' },

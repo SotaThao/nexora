@@ -117,6 +117,9 @@ export const errorCodeToI18nKey = {
   // Tax IQ — Staff Self-Reported Income (US-13)
   TAXIQ_SELF_REPORTED_INCOME_NOT_FOUND: 'errors.taxiq_self_reported_income_not_found',
 
+  // Tax IQ — Owner Income Summary (US-014)
+  TAXIQ_OWNER_INCOME_RECORD_NOT_FOUND: 'errors.taxiq_owner_income_record_not_found',
+
   // Tax IQ — Delete Record (Deduction, Mileage/Cash Tip Log, Payout)
   TAXIQ_DEDUCTION_RECORD_HAS_RECEIPTS: 'errors.taxiq_deduction_record_has_receipts',
   TAXIQ_PAYOUT_RECORD_HAS_RECEIPTS: 'errors.taxiq_payout_record_has_receipts',

@@ -184,6 +184,10 @@ export const qk = {
   taxiqSelfReportedIncome: (staffTaxYearId?: string) => ['taxiqSelfReportedIncome', staffTaxYearId ?? 'unknown'],
   taxiqSelfReportedIncomeDetail: (id?: string) => ['taxiqSelfReportedIncome', 'detail', id ?? 'unknown'],
 
+  // Tax IQ — Owner Income Summary (US-014)
+  taxiqOwnerIncome: (ownerTaxYearId?: string) => ['taxiqOwnerIncome', ownerTaxYearId ?? 'unknown'],
+  taxiqOwnerIncomeDetail: (id?: string) => ['taxiqOwnerIncome', 'detail', id ?? 'unknown'],
+
   // Tax IQ — Owner Assets Tracker (US-07): Equipment, Gift Card Liability, Membership Credit
   taxiqOwnerEquipment: (ownerTaxYearId?: string) => ['taxiqOwnerEquipment', ownerTaxYearId ?? 'unknown'],
   taxiqOwnerGiftCardLiabilities: (ownerTaxYearId?: string) =>

@@ -636,6 +636,7 @@
       "tax_iq": "Tax IQ",
       "taxiq_onboarding": "Onboarding",
       "taxiq_deductions": "Trung Tâm Khấu Trừ",
+      "taxiq_income": "Tổng Quan Doanh Thu",
       "taxiq_receipts": "Kho Chứng Từ",
       "taxiq_equipment": "Theo Dõi Thiết Bị",
       "taxiq_payroll": "Lương & Payout",
@@ -2039,6 +2040,7 @@
     "taxiq_cpa_consent_required": "Cần có sự đồng ý của Thợ trước khi chia sẻ dữ liệu Full hoặc CPA Review.",
     "taxiq_deduction_not_in_grant_scope": "Bản ghi này nằm ngoài phạm vi quyền truy cập CPA của bạn.",
     "taxiq_self_reported_income_not_found": "Không tìm thấy bản ghi thu nhập tự khai này.",
+    "taxiq_owner_income_record_not_found": "Không tìm thấy bản ghi doanh thu này.",
     "taxiq_deduction_record_has_receipts": "Hãy gỡ các hóa đơn đính kèm trước khi xóa khoản khấu trừ này.",
     "taxiq_payout_record_has_receipts": "Hãy gỡ các hóa đơn đính kèm trước khi xóa payout này.",
     "taxiq_receipt_not_found": "Không tìm thấy hóa đơn này.",
@@ -4485,6 +4487,72 @@
         "incomeTypeLabel": "Loại thu nhập (tùy chọn)",
         "incomeTypePlaceholder": "Chọn loại thu nhập",
         "incomeTypeNote": "Ghi chú loại thu nhập",
+        "notes": "Ghi chú (tùy chọn)",
+        "back": "Quay lại",
+        "next": "Tiếp theo",
+        "save": "Lưu"
+      }
+    },
+    "ownerIncome": {
+      "title": "Tổng Quan Doanh Thu",
+      "subtitle": "Ghi nhận doanh thu (Gross Sales) để hồ sơ CPA có vế doanh thu, không chỉ có deduction.",
+      "add": "Thêm Doanh Thu",
+      "edit": "Sửa",
+      "delete": "Xóa",
+      "deleteConfirm": "Xóa khoản doanh thu này? Hành động này không thể hoàn tác.",
+      "deleteSuccess": "Đã xóa khoản doanh thu.",
+      "emptyState": "Chưa có doanh thu nào được ghi nhận. Thêm khoản đầu tiên để bắt đầu.",
+      "noOwnerTaxYear": "Hoàn tất thiết lập Tax IQ trước khi thêm doanh thu.",
+      "goToSetup": "Đến thiết lập Tax IQ",
+      "loading": "Đang tải...",
+      "receiptOptional": "Đính kèm chứng từ cho khoản doanh thu này, hoặc bỏ qua và thêm sau.",
+      "lockedNotice": "Năm thuế của bạn đã bị khóa — không thể tạo hoặc sửa khoản doanh thu nữa.",
+      "periodType": {
+        "day": "Ngày",
+        "week": "Tuần",
+        "month": "Tháng",
+        "quarter": "Quý",
+        "year": "Năm"
+      },
+      "incomeType": {
+        "serviceRevenue": "Doanh Thu Dịch Vụ",
+        "productRetailRevenue": "Doanh Thu Bán Sản Phẩm",
+        "other": "Khác"
+      },
+      "status": {
+        "ready": "Sẵn Sàng",
+        "missingReceipt": "Thiếu Chứng Từ",
+        "missingInfo": "Thiếu Thông Tin",
+        "cpaReview": "CPA Xem Xét",
+        "locked": "Đã Khóa"
+      },
+      "columns": {
+        "date": "Ngày",
+        "amount": "Số Tiền",
+        "source": "Nguồn",
+        "incomeType": "Loại Doanh Thu",
+        "status": "Trạng Thái",
+        "actions": "Hành Động"
+      },
+      "errors": {
+        "generic": "Đã có lỗi xảy ra. Vui lòng thử lại."
+      },
+      "form": {
+        "step1Title": "Thông Tin Cơ Bản",
+        "step2Title": "Chi Tiết",
+        "step3Title": "Chứng Từ & Lưu",
+        "periodTypeLabel": "Chế độ nhập",
+        "periodTypeTooltip": "Nhập từng giao dịch riêng lẻ, hoặc nhập một số tổng cho cả ngày/tuần/tháng/quý/năm.",
+        "periodLabel": "Kỳ",
+        "dateLabel": "Ngày",
+        "dateRequired": "Ngày là bắt buộc.",
+        "amount": "Số tiền",
+        "amountRequired": "Số tiền phải lớn hơn 0.",
+        "source": "Nguồn",
+        "sourceRequired": "Nguồn là bắt buộc.",
+        "incomeTypeLabel": "Loại doanh thu (tùy chọn)",
+        "incomeTypePlaceholder": "Chọn loại doanh thu",
+        "incomeTypeNote": "Ghi chú loại doanh thu",
         "notes": "Ghi chú (tùy chọn)",
         "back": "Quay lại",
         "next": "Tiếp theo",

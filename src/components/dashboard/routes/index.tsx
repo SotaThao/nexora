@@ -24,6 +24,7 @@ import { useOwnerTaxYearByBusiness } from '../../../data/hooks/useTaxiqOwnerTaxY
 import TaxIqOnboardingWizard from '../views/taxiq/TaxIqOnboardingWizard'
 import TaxIqHomeView from '../views/taxiq/TaxIqHomeView'
 import DeductionCenterView from '../views/taxiq/DeductionCenterView'
+import OwnerIncomeSummaryListView from '../views/taxiq/OwnerIncomeSummaryListView'
 import ReceiptVaultView from '../views/taxiq/ReceiptVaultView'
 import AssetsTrackerView from '../views/taxiq/AssetsTrackerView'
 import YearEndExportView from '../views/taxiq/YearEndExportView'
@@ -409,6 +410,50 @@ export function TaxIqDeductionsRoute() {
   }
 
   return <DeductionCenterView ownerTaxYearId={ownerTaxYear.id} ownerTaxYearStatus={ownerTaxYear.status} />
+}
+export function TaxIqIncomeRoute() {
+  const { t } = useTranslation()
+  const navigate = useNavigate()
+  const { data: merchantSetupData, isLoading: isMerchantLoading } = useMerchantSetup()
+  const businessId = merchantSetupData?.businessInfo?.businessId
+  const currentTaxYear = new Date().getFullYear()
+  const { data: ownerTaxYearPage, isLoading: isTaxYearLoading } = useOwnerTaxYearByBusiness(
+    businessId,
+    currentTaxYear,
+  )
+
+  if (isMerchantLoading || (!!businessId && isTaxYearLoading)) {
+    return (
+      <div className="nexora-card p-6">
+        <SkeletonList count={3} lines={2} />
+      </div>
+    )
+  }
+
+  const ownerTaxYear = ownerTaxYearPage?.items?.[0] ?? null
+
+  if (!ownerTaxYear) {
+    return (
+      <div className="nexora-card flex flex-col items-start gap-3 p-6">
+        <p className="text-sm font-semibold text-nexoraMuted">{t('taxiq.ownerIncome.noOwnerTaxYear')}</p>
+        <button
+          type="button"
+          onClick={() => navigate('/dashboard/taxiq')}
+          className="rounded-lg bg-nexoraBrand px-4 py-2 text-xs font-bold text-white"
+        >
+          {t('taxiq.ownerIncome.goToSetup')}
+        </button>
+      </div>
+    )
+  }
+
+  return (
+    <OwnerIncomeSummaryListView
+      ownerTaxYearId={ownerTaxYear.id}
+      taxYear={ownerTaxYear.taxYear}
+      ownerTaxYearStatus={ownerTaxYear.status}
+    />
+  )
 }
 export function TaxIqReceiptsRoute() {
   const { t } = useTranslation()

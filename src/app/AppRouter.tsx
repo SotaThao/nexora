@@ -24,7 +24,7 @@ import {
   SupportRoute,
   TipsRoute,
   TouchpointsRoute,
-  TaxIqOverviewRoute, TaxIqDeductionsRoute, TaxIqReceiptsRoute, TaxIqEquipmentRoute,
+  TaxIqOverviewRoute, TaxIqDeductionsRoute, TaxIqIncomeRoute, TaxIqReceiptsRoute, TaxIqEquipmentRoute,
   TaxIqPayrollRoute, TaxIqRemindersRoute, TaxIqCpaAccessRoute, TaxIqExportRoute
 } from "../components/dashboard/routes";
 import ErrorBoundary from "../components/ui/ErrorBoundary";
@@ -251,6 +251,7 @@ export default function AppRouter() {
             <Route path="touchpoints" element={<TouchpointsRoute />} />
 	    <Route path="taxiq" element={<TaxIqOverviewRoute />} />
           <Route path="taxiq/deductions" element={<TaxIqDeductionsRoute />} />
+          <Route path="taxiq/income" element={<TaxIqIncomeRoute />} />
           <Route path="taxiq/receipts" element={<TaxIqReceiptsRoute />} />
           <Route path="taxiq/equipment" element={<TaxIqEquipmentRoute />} />
           <Route path="taxiq/payroll" element={<TaxIqPayrollRoute />} />

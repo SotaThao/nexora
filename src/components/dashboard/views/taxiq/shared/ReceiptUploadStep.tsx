@@ -4,15 +4,19 @@ import { useTranslation } from '../../../../../contexts/LanguageContext'
 import { useNotification } from '../../../../../contexts/NotificationContext'
 import { useUploadTaxiqReceipt, useLinkTaxiqReceiptToDeduction } from '../../../../../data/hooks/useTaxiqReceipts'
 import { useLinkReceiptToSelfReportedIncome } from '../../../../../data/hooks/useTaxiqSelfReportedIncome'
+import { useLinkReceiptToOwnerIncome } from '../../../../../data/hooks/useTaxiqOwnerIncome'
 
 // US-13: generalized to also link to a Self-Reported Income record — mirrors the
 // ownerTaxYearId/staffTaxYearId generalization from US-11 (see US-11-assumptions.md A4).
-// Exactly one of `deductionRecordId` / `selfReportedIncomeId` must be passed by the caller.
+// US-014: generalized again to also link to an Owner Income Record.
+// Exactly one of `deductionRecordId` / `selfReportedIncomeId` / `ownerIncomeRecordId` must be
+// passed by the caller.
 export default function ReceiptUploadStep({
   ownerTaxYearId,
   staffTaxYearId,
   deductionRecordId,
   selfReportedIncomeId,
+  ownerIncomeRecordId,
   receiptCount,
   onLinked,
 }: {
@@ -20,6 +24,7 @@ export default function ReceiptUploadStep({
   staffTaxYearId?: string
   deductionRecordId?: string
   selfReportedIncomeId?: string
+  ownerIncomeRecordId?: string
   receiptCount: number
   onLinked?: () => void
 }) {
@@ -28,10 +33,15 @@ export default function ReceiptUploadStep({
   const uploadReceipt = useUploadTaxiqReceipt()
   const linkToDeduction = useLinkTaxiqReceiptToDeduction()
   const linkToSelfReportedIncome = useLinkReceiptToSelfReportedIncome()
+  const linkToOwnerIncome = useLinkReceiptToOwnerIncome()
   const inputRef = useRef<HTMLInputElement>(null)
   const [fileName, setFileName] = useState('')
 
-  const isBusy = uploadReceipt.isPending || linkToDeduction.isPending || linkToSelfReportedIncome.isPending
+  const isBusy =
+    uploadReceipt.isPending
+    || linkToDeduction.isPending
+    || linkToSelfReportedIncome.isPending
+    || linkToOwnerIncome.isPending
   const hasReceipt = receiptCount > 0
 
   const handleFileChange = async (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -42,7 +52,13 @@ export default function ReceiptUploadStep({
     setFileName(file.name)
     try {
       const receiptId = await uploadReceipt.mutateAsync({ ownerTaxYearId, staffTaxYearId, file })
-      if (selfReportedIncomeId) {
+      if (ownerIncomeRecordId) {
+        await linkToOwnerIncome.mutateAsync({
+          id: ownerIncomeRecordId,
+          ownerTaxYearId: ownerTaxYearId as string,
+          receiptId,
+        })
+      } else if (selfReportedIncomeId) {
         await linkToSelfReportedIncome.mutateAsync({
           id: selfReportedIncomeId,
           staffTaxYearId: staffTaxYearId as string,
