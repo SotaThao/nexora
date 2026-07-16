@@ -342,6 +342,9 @@ export default function DashboardHeader({
             aria-label="Account menu"
             title="Account menu"
             id="header-profile-menu-btn"
+            aria-haspopup="menu"
+            aria-expanded={isHeaderDropdownOpen}
+            aria-controls="header-profile-dropdown"
           >
             {profile.avatar && !profile.avatar.includes('unsplash.com') ? (
               <img src={profile.avatar} alt="" className="h-full w-full object-cover" />
