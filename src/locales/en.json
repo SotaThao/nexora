@@ -2579,8 +2579,6 @@
               "emailNote": "Receive activation link and monthly reports at this email",
               "cityLabel": "City / area",
               "cityPlaceholder": "Houston, TX",
-              "websiteLabel": "Website",
-              "websitePlaceholder": "https://yoursalon.com",
               "optional": "(optional)",
               "servicesLabel": "Services your salon offers",
               "tapToSelect": "(tap to select)",

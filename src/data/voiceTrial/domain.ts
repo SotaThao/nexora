@@ -16,7 +16,6 @@ export enum VoiceTrialFormField {
   Phone = 'phone',
   Email = 'email',
   City = 'city',
-  Website = 'website',
   Referral = 'referral',
   OpenTime = 'openTime',
   CloseTime = 'closeTime',
@@ -30,7 +29,6 @@ export interface SubmitVoiceTrialRequest {
   phoneNumber: string
   email: string
   cityArea?: string | null
-  website?: string | null
   services: string[]
   openingDays: string[]
   serviceHoursFrom: string
@@ -54,7 +52,6 @@ export interface VoiceTrialRequestDetailDto {
   phoneNumber: string
   email: string
   cityArea: string | null
-  website: string | null
   services: string[]
   openingDays: string[]
   serviceHoursFrom: string

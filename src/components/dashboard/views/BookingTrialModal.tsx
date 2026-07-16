@@ -83,7 +83,6 @@ interface TrialFormState {
   [VoiceTrialFormField.Phone]: string;
   [VoiceTrialFormField.Email]: string;
   [VoiceTrialFormField.City]: string;
-  [VoiceTrialFormField.Website]: string;
   [VoiceTrialFormField.Referral]: string;
   [VoiceTrialFormField.OpenTime]: string;
   [VoiceTrialFormField.CloseTime]: string;
@@ -102,7 +101,6 @@ function createInitialTrialForm(): TrialFormState {
     [VoiceTrialFormField.Phone]: "",
     [VoiceTrialFormField.Email]: "",
     [VoiceTrialFormField.City]: "",
-    [VoiceTrialFormField.Website]: "",
     [VoiceTrialFormField.Referral]: "",
     [VoiceTrialFormField.OpenTime]: DEFAULT_OPEN_TIME,
     [VoiceTrialFormField.CloseTime]: DEFAULT_CLOSE_TIME,
@@ -379,7 +377,6 @@ export default function BookingTrialModal({
     const openingDays = mapDayKeysToApiOpeningDays(form.activeDays);
     const painKey = PAIN_POINT_KEYS[form.painPoint as PainPointValue]!;
     const cityArea = form.city.trim();
-    const website = form.website.trim();
     const referralCode = form.referral.trim();
 
     return {
@@ -388,7 +385,6 @@ export default function BookingTrialModal({
       phoneNumber,
       email: emailValue,
       cityArea: cityArea || null,
-      website: website || null,
       services,
       openingDays,
       serviceHoursFrom: formatTrialTimeLabelToApi(form.openTime),
@@ -607,20 +603,6 @@ export default function BookingTrialModal({
                   value={form.city}
                   placeholder={t(`${TK}.cityPlaceholder`)}
                   onChange={(e) => patchFormField(VoiceTrialFormField.City, e.target.value)}
-                />
-              </div>
-              <div className="trial-field trial-span-2">
-                <label className="trial-label" htmlFor={`trial-${VoiceTrialFormField.Website}`}>
-                  {t(`${TK}.websiteLabel`)}{" "}
-                  <span className="trial-optional">{t(`${TK}.optional`)}</span>
-                </label>
-                <input
-                  className="trial-input"
-                  id={`trial-${VoiceTrialFormField.Website}`}
-                  type="text"
-                  value={form.website}
-                  placeholder={t(`${TK}.websitePlaceholder`)}
-                  onChange={(e) => patchFormField(VoiceTrialFormField.Website, e.target.value)}
                 />
               </div>
               <div
