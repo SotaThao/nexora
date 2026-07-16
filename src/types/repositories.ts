@@ -159,6 +159,108 @@ export interface TipsChartDayMetric {
   avgAmount: number
 }
 
+export interface DashboardAnalyticsOverviewApiDto {
+  totalVolume?: number
+  totalTransactionCount?: number
+  feeSaved?: number
+  averageTipAmount?: number
+}
+
+export interface DashboardAnalyticsLeaderboardItemApiDto {
+  staffProfileId?: string
+  displayName?: string
+  nicknameAtBusiness?: string | null
+  photoUrl?: string | null
+  position?: string | null
+  tipTotal?: number
+  tipCount?: number
+  avgTip?: number
+  avgRating?: number
+  reviewCount?: number
+  selectionCount?: number
+}
+
+export interface DashboardAnalyticsTouchPointApiDto {
+  touchPointId?: string
+  name?: string
+  type?: string
+  scanCount?: number
+  tipCount?: number
+  tipTotal?: number
+  ctr?: number
+  avgRating?: number
+}
+
+export interface DashboardAnalyticsPayoutMethodApiDto {
+  method?: string
+  amount?: number
+  count?: number
+}
+
+export interface DashboardAnalyticsDirectPayoutApiDto {
+  totalAmount?: number
+  totalCount?: number
+}
+
+export interface DashboardAnalyticsApiDto {
+  overview?: DashboardAnalyticsOverviewApiDto
+  leaderboard?: DashboardAnalyticsLeaderboardItemApiDto[]
+  touchPoints?: DashboardAnalyticsTouchPointApiDto[]
+  payoutMethods?: DashboardAnalyticsPayoutMethodApiDto[]
+  directPayout?: DashboardAnalyticsDirectPayoutApiDto
+}
+
+export interface MerchantDashboardAnalyticsOverview {
+  totalVolume: number
+  totalTransactionCount: number
+  feeSaved: number
+  averageTipAmount: number
+}
+
+export interface MerchantDashboardAnalyticsLeaderboardItem {
+  staffProfileId: string
+  displayName: string
+  nicknameAtBusiness: string | null
+  photoUrl: string | null
+  position: string | null
+  tipTotal: number
+  tipCount: number
+  avgTip: number
+  avgRating: number
+  reviewCount: number
+  selectionCount: number
+}
+
+export interface MerchantDashboardAnalyticsTouchPoint {
+  touchPointId: string
+  name: string
+  type: string
+  scanCount: number
+  tipCount: number
+  tipTotal: number
+  ctr: number
+  avgRating: number
+}
+
+export interface MerchantDashboardAnalyticsPayoutMethod {
+  method: string
+  amount: number
+  count: number
+}
+
+export interface MerchantDashboardAnalyticsDirectPayout {
+  totalAmount: number
+  totalCount: number
+}
+
+export interface MerchantDashboardAnalytics {
+  overview: MerchantDashboardAnalyticsOverview
+  leaderboard: MerchantDashboardAnalyticsLeaderboardItem[]
+  touchPoints: MerchantDashboardAnalyticsTouchPoint[]
+  payoutMethods: MerchantDashboardAnalyticsPayoutMethod[]
+  directPayout: MerchantDashboardAnalyticsDirectPayout
+}
+
 export type DashboardReviewRoutingType = 'Public' | 'Private' | 'Skipped'
 
 /**
