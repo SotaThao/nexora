@@ -1663,6 +1663,8 @@
     "list_title": "Lịch sử chi trả",
     "detail_sub": "Xem chi tiết trước khi xác nhận đã nhận tiền.",
     "confirm_receipt": "Xác nhận đã nhận",
+    "action_view": "Xem",
+    "action_confirm": "Xác nhận",
     "confirm_success": "Đã xác nhận nhận tiền thành công.",
     "empty": "Không có khoản chi trả phù hợp với trạng thái đã chọn."
   },
