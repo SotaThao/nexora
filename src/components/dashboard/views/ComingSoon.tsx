@@ -1,6 +1,6 @@
 import { Sparkles } from 'lucide-react'
 import { useTranslation } from '../../../contexts/LanguageContext'
-import { PRODUCT_MANAGEMENT_MENU_ID } from '../constants'
+import { DASHBOARD_MENU_ID } from '../constants'
 
 function ComingSoon({ activeMenu, onBack }) {
   const { t } = useTranslation()
@@ -8,7 +8,7 @@ function ComingSoon({ activeMenu, onBack }) {
     analytics: [t('coming_soon.analytics_title'), t('coming_soon.analytics_desc')],
     subscriptions: [t('coming_soon.subscriptions_title'), t('coming_soon.subscriptions_desc')],
     settings: [t('coming_soon.settings_title'), t('coming_soon.settings_desc')],
-    [PRODUCT_MANAGEMENT_MENU_ID]: [t('coming_soon.product_management_title'), t('coming_soon.product_management_desc')],
+    [DASHBOARD_MENU_ID.productManagement]: [t('coming_soon.product_management_title'), t('coming_soon.product_management_desc')],
   }
   const copy = copyMap[activeMenu] || [t('coming_soon.default_title'), t('coming_soon.default_desc')]
 

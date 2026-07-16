@@ -1,7 +1,7 @@
 import { useCallback, useMemo, useState, type ReactNode } from 'react'
 import { useNavigate } from 'react-router-dom'
 import MobileMenuDrawer from '../../dashboard/layout/MobileMenuDrawer'
-import { MERCHANT_SIDEBAR_MENU_ITEMS, PRODUCT_MANAGEMENT_MENU_ID } from '../../dashboard/constants'
+import { MERCHANT_SIDEBAR_MENU_ITEMS, buildDashboardMenuPath, DASHBOARD_MENU_ID } from '../../dashboard/constants'
 import { useProfileSettings } from '../../../data/hooks/useProfileSettings'
 import { useMerchantSetup } from '../../../data/hooks/useMerchantSetup'
 import { useOpenProductManagement } from '../../../data/hooks/useOpenProductManagement'
@@ -68,26 +68,25 @@ export default function HomePageOwnerSidebarLayout({
 
   const handleNavigateMenu = useCallback(
     (menuId: string) => {
-      if (menuId === PRODUCT_MANAGEMENT_MENU_ID) {
+      if (menuId === DASHBOARD_MENU_ID.productManagement) {
         void openProductManagement()
         return
       }
-      const route = menuId === 'overview' ? '/dashboard' : `/dashboard/${menuId}`
-      navigate(route)
+      navigate(buildDashboardMenuPath(menuId))
     },
     [navigate, openProductManagement],
   )
 
   const navigateMenu = useCallback(
     (menuId: string, options: { tab?: string; closeDrawer?: boolean } = {}) => {
-      if (menuId === PRODUCT_MANAGEMENT_MENU_ID) {
+      if (menuId === DASHBOARD_MENU_ID.productManagement) {
         void openProductManagement().finally(() => {
           if (options.closeDrawer !== false) setIsMobileMenuOpen(false)
         })
         return
       }
       const { tab, closeDrawer = true } = options
-      const base = menuId === 'overview' ? '/dashboard' : `/dashboard/${menuId}`
+      const base = buildDashboardMenuPath(menuId)
       const route = tab ? `${base}?tab=${encodeURIComponent(tab)}` : base
       navigate(route)
       if (closeDrawer) setIsMobileMenuOpen(false)

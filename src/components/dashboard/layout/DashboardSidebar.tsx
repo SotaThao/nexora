@@ -5,7 +5,7 @@ import { useNavigate, useSearchParams } from 'react-router-dom'
 import { ChevronUp, ChevronDown, LogOut } from 'lucide-react'
 import { useTranslation } from '../../../contexts/LanguageContext'
 import { useOpenProductManagement } from '../../../data/hooks/useOpenProductManagement'
-import { visibleMenuItems, MERCHANT_SIDEBAR_MENU_ITEMS, isPaymentsPayoutsRouteActive, VISIBLE_TOUCHPOINTS_SUBMENU, PRODUCT_MANAGEMENT_MENU_ID } from '../constants'
+import { visibleMenuItems, MERCHANT_SIDEBAR_MENU_ITEMS, isPaymentsPayoutsRouteActive, VISIBLE_TOUCHPOINTS_SUBMENU, DASHBOARD_MENU_ID } from '../constants'
 import MenuIcon from '../../ui/MenuIcon'
 import HomepageLink from '../../ui/HomepageLink'
 import LanguageSwitcher from '../../ui/LanguageSwitcher'
@@ -50,13 +50,13 @@ export default function DashboardSidebar({
   const activeSubTab = searchParams.get('tab')
   const isPaymentsPayoutsActive = isPaymentsPayoutsRouteActive(activeMenu, activeSubTab)
   const [isPaymentsPayoutsExpanded, setIsPaymentsPayoutsExpanded] = useState(isPaymentsPayoutsActive)
-  const [isTouchpointsExpanded, setIsTouchpointsExpanded] = useState(activeMenu === 'touchpoints')
+  const [isTouchpointsExpanded, setIsTouchpointsExpanded] = useState(activeMenu === DASHBOARD_MENU_ID.touchpoints)
 
   useEffect(() => {
     if (isPaymentsPayoutsActive) {
       setIsPaymentsPayoutsExpanded(true)
     }
-    setIsTouchpointsExpanded(activeMenu === 'touchpoints')
+    setIsTouchpointsExpanded(activeMenu === DASHBOARD_MENU_ID.touchpoints)
   }, [activeMenu, isPaymentsPayoutsActive])
 
   const handlePaymentsPayoutsToggle = () => {
@@ -71,16 +71,16 @@ export default function DashboardSidebar({
   }
 
   const handleMenuClick = (id: string) => {
-    if (id === PRODUCT_MANAGEMENT_MENU_ID) {
+    if (id === DASHBOARD_MENU_ID.productManagement) {
       void openProductManagement()
       return
     }
 
-    if (id === 'touchpoints') {
-      if (activeMenu === 'touchpoints') {
+    if (id === DASHBOARD_MENU_ID.touchpoints) {
+      if (activeMenu === DASHBOARD_MENU_ID.touchpoints) {
         setIsTouchpointsExpanded((prev) => !prev)
       } else {
-        setActiveMenu('touchpoints')
+        setActiveMenu(DASHBOARD_MENU_ID.touchpoints)
         setIsTouchpointsExpanded(true)
         setIsPaymentsPayoutsExpanded(false)
       }
@@ -133,16 +133,16 @@ export default function DashboardSidebar({
           <div className="mt-3.5 pt-3 border-t border-white/5 space-y-1 animate-fadeIn">
             <button
               onClick={() => {
-                setActiveMenu('settings')
+                setActiveMenu(DASHBOARD_MENU_ID.settings)
                 setSettingsTab('profile')
               }}
               className={`flex h-9 w-full items-center gap-2.5 rounded-lg px-3 text-left text-xs font-bold transition ${
-                activeMenu === 'settings' && settingsTab === 'profile'
+                activeMenu === DASHBOARD_MENU_ID.settings && settingsTab === 'profile'
                   ? 'text-brandCyan font-extrabold'
                   : 'text-white/75 hover:bg-white/5 hover:text-white'
               }`}
             >
-              <div className={`h-1.5 w-1.5 rounded-full ${activeMenu === 'settings' && settingsTab === 'profile' ? 'bg-brandCyan shadow-sm' : 'bg-white/30'}`} />
+              <div className={`h-1.5 w-1.5 rounded-full ${activeMenu === DASHBOARD_MENU_ID.settings && settingsTab === 'profile' ? 'bg-brandCyan shadow-sm' : 'bg-white/30'}`} />
               <span>{t('dashboard.menu.business_setting')}</span>
             </button>
             <button
@@ -165,8 +165,8 @@ export default function DashboardSidebar({
         {(() => {
           const menuItemsToDisplay = userRole === 'staff'
             ? [
-                { id: 'overview', label: t('components.dashboard.layout.DashboardSidebar.myDashboard'), icon: visibleMenuItems.find(i => i.id === 'overview')?.icon },
-                { id: 'support', label: t('dashboard.menu.support'), icon: visibleMenuItems.find(i => i.id === 'support')?.icon }
+                { id: DASHBOARD_MENU_ID.overview, label: t('components.dashboard.layout.DashboardSidebar.myDashboard'), icon: visibleMenuItems.find(i => i.id === DASHBOARD_MENU_ID.overview)?.icon },
+                { id: DASHBOARD_MENU_ID.support, label: t('dashboard.menu.support'), icon: visibleMenuItems.find(i => i.id === DASHBOARD_MENU_ID.support)?.icon }
               ]
             : MERCHANT_SIDEBAR_MENU_ITEMS
 
@@ -174,16 +174,16 @@ export default function DashboardSidebar({
           const { id, label } = item
           const isActive = activeMenu === id
           const localizedLabel = {
-            overview: t('dashboard.menu.dashboard'),
-            staff: t('dashboard.menu.staff'),
-            reviews: t('dashboard.menu.reviews'),
-            reports: t('dashboard.menu.transactions'),
-            'booking-hub': t('dashboard.menu.booking_hub'),
-            [PRODUCT_MANAGEMENT_MENU_ID]: t('dashboard.menu.product_management'),
-            touchpoints: t('dashboard.menu.touchpoints'),
+            [DASHBOARD_MENU_ID.overview]: t('dashboard.menu.dashboard'),
+            [DASHBOARD_MENU_ID.staff]: t('dashboard.menu.staff'),
+            [DASHBOARD_MENU_ID.reviews]: t('dashboard.menu.reviews'),
+            [DASHBOARD_MENU_ID.reports]: t('dashboard.menu.transactions'),
+            [DASHBOARD_MENU_ID.bookingHub]: t('dashboard.menu.booking_hub'),
+            [DASHBOARD_MENU_ID.productManagement]: t('dashboard.menu.product_management'),
+            [DASHBOARD_MENU_ID.touchpoints]: t('dashboard.menu.touchpoints'),
             devices: t('dashboard.menu.qr_nfc'),
-            analytics: t('dashboard.menu.analytics'),
-            support: t('dashboard.menu.support')
+            [DASHBOARD_MENU_ID.analytics]: t('dashboard.menu.analytics'),
+            [DASHBOARD_MENU_ID.support]: t('dashboard.menu.support'),
           }[id] || label
 
           return (
@@ -191,23 +191,23 @@ export default function DashboardSidebar({
               <button
                 type="button"
                 onClick={() => handleMenuClick(id)}
-                disabled={id === PRODUCT_MANAGEMENT_MENU_ID && isOpeningProductManagement}
+                disabled={id === DASHBOARD_MENU_ID.productManagement && isOpeningProductManagement}
                 className={sidebarMenuItemBetweenClass(isActive)}
               >
                 <div className="flex items-center gap-3 min-w-0">
                   <MenuIcon item={item} active={isActive} />
                   <span className="truncate">{localizedLabel}</span>
                 </div>
-                {id === PRODUCT_MANAGEMENT_MENU_ID && isOpeningProductManagement ? (
+                {id === DASHBOARD_MENU_ID.productManagement && isOpeningProductManagement ? (
                   <span className="h-4 w-4 shrink-0 animate-spin rounded-full border-2 border-white/30 border-t-white" />
-                ) : id === 'touchpoints' ? (
+                ) : id === DASHBOARD_MENU_ID.touchpoints ? (
                   <div className="text-white/50 shrink-0">
                     {isTouchpointsExpanded ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
                   </div>
                 ) : null}
               </button>
 
-              {userRole !== 'staff' && id === 'staff' && (
+              {userRole !== 'staff' && id === DASHBOARD_MENU_ID.staff && (
                 <PaymentsPayoutsMenuSection
                   activeMenu={activeMenu}
                   tabParam={activeSubTab}
@@ -217,10 +217,10 @@ export default function DashboardSidebar({
                 />
               )}
 
-              {id === 'touchpoints' && isTouchpointsExpanded && (
+              {id === DASHBOARD_MENU_ID.touchpoints && isTouchpointsExpanded && (
                 <div className={SIDEBAR_SUBMENU_WRAP_CLASS}>
                   {VISIBLE_TOUCHPOINTS_SUBMENU.map((sub) => {
-                    const isSubActive = activeMenu === 'touchpoints' && (activeSubTab || 'stations') === sub.id
+                    const isSubActive = activeMenu === DASHBOARD_MENU_ID.touchpoints && (activeSubTab || 'stations') === sub.id
                     return (
                       <button
                         key={sub.id}

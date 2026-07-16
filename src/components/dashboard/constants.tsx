@@ -61,26 +61,55 @@ export const DEFAULT_PAYOUT_CONFIGS = {
   applecash: { enabled: false, value: '', qrCode: '', accountName: '' }
 }
 
-/** Sidebar / route id for Merchant Portal Product Management SSO entry. */
-export const PRODUCT_MANAGEMENT_MENU_ID = 'product-management'
-
+/** Dashboard route root. */
 export const DASHBOARD_ROOT_PATH = '/dashboard'
 
+/** Sidebar / route segment ids under `{@link DASHBOARD_ROOT_PATH}/…`. */
+export const DASHBOARD_MENU_ID = {
+  overview: 'overview',
+  staff: 'staff',
+  tips: 'tips',
+  reviews: 'reviews',
+  reports: 'reports',
+  touchpoints: 'touchpoints',
+  bookingHub: 'booking-hub',
+  productManagement: 'product-management',
+  analytics: 'analytics',
+  settings: 'settings',
+  support: 'support',
+  subscriptions: 'subscriptions',
+  payments: 'payments',
+} as const
+
+export type DashboardMenuId = (typeof DASHBOARD_MENU_ID)[keyof typeof DASHBOARD_MENU_ID]
+
+/** Merchant Portal Product Management SSO entry (alias of {@link DASHBOARD_MENU_ID.productManagement}). */
+export const PRODUCT_MANAGEMENT_MENU_ID = DASHBOARD_MENU_ID.productManagement
+
+export function buildDashboardMenuPath(menuId: string): string {
+  return menuId === DASHBOARD_MENU_ID.overview
+    ? DASHBOARD_ROOT_PATH
+    : `${DASHBOARD_ROOT_PATH}/${menuId}`
+}
+
 export const MENU_ITEMS = [
-  { id: 'overview', label: 'Dashboard', icon: LayoutDashboard },
-  { id: 'staff', label: 'Staff', icon: Users },
-  { id: 'tips', label: 'Tips', icon: CircleDollarSign },
-  { id: 'reviews', label: 'Reviews', icon: Star },
-  { id: 'reports', label: 'Transactions', icon: ReceiptText },
-  { id: 'touchpoints', label: 'Touch Points', icon: QrCode },
-  { id: 'booking-hub', label: 'Booking Hub', icon: Calendar },
-  { id: PRODUCT_MANAGEMENT_MENU_ID, label: 'Product Management', icon: Package },
-  { id: 'analytics', label: 'Analytics', icon: BarChart3 },
-  { id: 'settings', label: 'Settings', icon: Settings },
-  { id: 'support', label: 'Support', icon: HelpCircle }
+  { id: DASHBOARD_MENU_ID.overview, label: 'Dashboard', icon: LayoutDashboard },
+  { id: DASHBOARD_MENU_ID.staff, label: 'Staff', icon: Users },
+  { id: DASHBOARD_MENU_ID.tips, label: 'Tips', icon: CircleDollarSign },
+  { id: DASHBOARD_MENU_ID.reviews, label: 'Reviews', icon: Star },
+  { id: DASHBOARD_MENU_ID.reports, label: 'Transactions', icon: ReceiptText },
+  { id: DASHBOARD_MENU_ID.touchpoints, label: 'Touch Points', icon: QrCode },
+  { id: DASHBOARD_MENU_ID.bookingHub, label: 'Booking Hub', icon: Calendar },
+  { id: DASHBOARD_MENU_ID.productManagement, label: 'Product Management', icon: Package },
+  { id: DASHBOARD_MENU_ID.analytics, label: 'Analytics', icon: BarChart3 },
+  { id: DASHBOARD_MENU_ID.settings, label: 'Settings', icon: Settings },
+  { id: DASHBOARD_MENU_ID.support, label: 'Support', icon: HelpCircle },
 ]
 
-export const MERCHANT_SIDEBAR_HIDDEN_MENU_IDS = ['tips', 'reports']
+export const MERCHANT_SIDEBAR_HIDDEN_MENU_IDS = [
+  DASHBOARD_MENU_ID.tips,
+  DASHBOARD_MENU_ID.reports,
+]
 
 /** Temporarily hide Hardware Devices submenu/tab until the feature is ready. */
 export const SHOW_HARDWARE_DEVICES = false
@@ -107,31 +136,31 @@ export const PAYMENTS_PAYOUTS_MENU_ITEM = {
 export const PAYMENTS_PAYOUTS_SUBMENU = [
   {
     id: 'overview',
-    screen: 'tips',
+    screen: DASHBOARD_MENU_ID.tips,
     labelKey: 'dashboard.tips.tabs.overview',
     params: { tab: 'overview' },
   },
   {
     id: 'customer_payments',
-    screen: 'reports',
+    screen: DASHBOARD_MENU_ID.reports,
     labelKey: 'dashboard.menu.payments_payouts_customer_payments',
     params: { tab: 'direct_payments' },
   },
   {
     id: 'tips',
-    screen: 'reports',
+    screen: DASHBOARD_MENU_ID.reports,
     labelKey: 'dashboard.reports.tabs.tips',
     params: { tab: 'tips' },
   },
   {
     id: 'payroll',
-    screen: 'tips',
+    screen: DASHBOARD_MENU_ID.tips,
     labelKey: 'dashboard.menu.payments_payouts_payroll',
     params: { tab: 'payouts' },
   },
   {
     id: 'direct_savings',
-    screen: 'tips',
+    screen: DASHBOARD_MENU_ID.tips,
     labelKey: 'dashboard.tips.tabs.savings',
     params: { tab: 'savings' },
   },
@@ -147,11 +176,11 @@ export function isPaymentsPayoutsSubActive(
   const tab = item.params?.tab
   if (!tab) return true
 
-  if (item.screen === 'tips' && item.id === 'overview') {
+  if (item.screen === DASHBOARD_MENU_ID.tips && item.id === 'overview') {
     return !tabParam || tabParam === 'overview'
   }
 
-  if (item.screen === 'reports' && item.id === 'tips') {
+  if (item.screen === DASHBOARD_MENU_ID.reports && item.id === 'tips') {
     return !tabParam || tabParam === 'tips'
   }
 
@@ -162,7 +191,7 @@ export function isPaymentsPayoutsRouteActive(
   activeMenu: string,
   tabParam: string | null,
 ): boolean {
-  if (activeMenu !== 'tips' && activeMenu !== 'reports') return false
+  if (activeMenu !== DASHBOARD_MENU_ID.tips && activeMenu !== DASHBOARD_MENU_ID.reports) return false
   return PAYMENTS_PAYOUTS_SUBMENU.some((item) =>
     isPaymentsPayoutsSubActive(activeMenu, tabParam, item),
   )

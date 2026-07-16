@@ -10,7 +10,7 @@ import { resolveMerchantStaffTipQr, toLocalCustomerTouchUrl } from '../utils/sta
 import { resolveAssignedStaffProfileId } from '../utils/touchpointTypes'
 import { useTranslation } from '../contexts/LanguageContext'
 import { useNotification } from '../contexts/NotificationContext'
-import { DEFAULT_PAYOUT_CONFIGS, MENU_ITEMS, MERCHANT_SIDEBAR_MENU_ITEMS } from './dashboard/constants'
+import { DEFAULT_PAYOUT_CONFIGS, MENU_ITEMS, MERCHANT_SIDEBAR_MENU_ITEMS, DASHBOARD_MENU_ID } from './dashboard/constants'
 import {
   DEFAULT_TOUCHPOINT_TYPE,
   MASTER_TOUCHPOINT_API_TYPE,
@@ -417,8 +417,8 @@ export default function Dashboard({
 
   const menuItemsToDisplay = userRole === 'staff'
     ? [
-        { id: 'overview', label: t('components.dashboardRoot.myDashboard'), icon: MENU_ITEMS.find(i => i.id === 'overview')?.icon, image: MENU_ITEMS.find(i => i.id === 'overview')?.image },
-        { id: 'support', label: t('dashboard.menu.support'), icon: MENU_ITEMS.find(i => i.id === 'support')?.icon, image: MENU_ITEMS.find(i => i.id === 'support')?.image }
+        { id: DASHBOARD_MENU_ID.overview, label: t('components.dashboardRoot.myDashboard'), icon: MENU_ITEMS.find(i => i.id === DASHBOARD_MENU_ID.overview)?.icon, image: MENU_ITEMS.find(i => i.id === DASHBOARD_MENU_ID.overview)?.image },
+        { id: DASHBOARD_MENU_ID.support, label: t('dashboard.menu.support'), icon: MENU_ITEMS.find(i => i.id === DASHBOARD_MENU_ID.support)?.icon, image: MENU_ITEMS.find(i => i.id === DASHBOARD_MENU_ID.support)?.image }
       ]
     : MERCHANT_SIDEBAR_MENU_ITEMS
 
