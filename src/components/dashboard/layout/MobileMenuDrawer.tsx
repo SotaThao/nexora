@@ -142,17 +142,17 @@ export default function MobileMenuDrawer({
                   <button
                     type="button"
                     onClick={() => {
-                      setActiveMenu('settings')
+                      setActiveMenu(DASHBOARD_MENU_ID.settings)
                       setSettingsTab('profile')
                       onClose()
                     }}
                     className={`flex h-9 w-full items-center gap-2.5 rounded-lg px-3 text-left text-xs font-bold transition ${
-                      activeMenu === 'settings' && settingsTab === 'profile'
+                      activeMenu === DASHBOARD_MENU_ID.settings && settingsTab === 'profile'
                         ? 'text-brandCyan font-extrabold'
                         : 'text-white/75 hover:bg-white/5 hover:text-white'
                     }`}
                   >
-                    <div className={`h-1.5 w-1.5 rounded-full ${activeMenu === 'settings' && settingsTab === 'profile' ? 'bg-brandCyan shadow-sm' : 'bg-white/30'}`} />
+                    <div className={`h-1.5 w-1.5 rounded-full ${activeMenu === DASHBOARD_MENU_ID.settings && settingsTab === 'profile' ? 'bg-brandCyan shadow-sm' : 'bg-white/30'}`} />
                     <span>{t('dashboard.menu.business_setting')}</span>
                   </button>
                   <button
