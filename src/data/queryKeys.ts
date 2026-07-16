@@ -84,6 +84,12 @@ export const qk = {
   // POS Owner Setup — Staff Profile (US-019)
   merchantPosStaffProfile: (businessStaffLinkId?: string) =>
     ['merchantSettings', 'posStaffProfile', businessStaffLinkId ?? ''],
+  // POS Owner Setup — Staff Service Assignment (US-020)
+  merchantPosStaffServiceAssignments: (businessStaffLinkId?: string) =>
+    ['merchantSettings', 'posStaffServiceAssignments', businessStaffLinkId ?? ''],
+  // POS Owner Setup — Staff Weekly Schedule (US-09/US-021)
+  merchantPosStaffWeeklySchedule: (businessStaffLinkId?: string) =>
+    ['merchantSettings', 'posStaffWeeklySchedule', businessStaffLinkId ?? ''],
 
   // Merchant Touchpoints
   merchantTouchpoints: ()      => ['merchantTouchpoints'],

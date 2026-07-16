@@ -114,6 +114,18 @@ export interface PosProductApiDto {
   tags: string[]
 }
 
+// POS Owner Setup — Staff Weekly Schedule (US-09/US-021)
+// Verified against live response (2026-07-16): despite System.DayOfWeek being a numeric
+// enum, the API's global JsonStringEnumConverter serializes it as "Sunday".."Saturday" —
+// same string form Business Hours (US-02) already uses, not the 0-6 originally assumed
+// during backend research.
+export interface StaffWeeklyScheduleDayApiDto {
+  dayOfWeek: string // "Sunday".."Saturday"
+  isDayOff: boolean
+  startTime?: string | null
+  endTime?: string | null
+}
+
 // POS Owner Setup — Staff Profile (US-019)
 export interface PosStaffProfileApiDto {
   businessStaffLinkId: string

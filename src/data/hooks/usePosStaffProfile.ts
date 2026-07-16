@@ -6,7 +6,7 @@ import { keepPreviousData, useMutation, useQuery, useQueryClient } from '@tansta
 import { qk } from '../queryKeys'
 import posStaffProfileRepository, { type SaveStaffPosProfileParams } from '../repositories/posStaffProfile'
 import { AuthContext } from '../../auth/AuthContext'
-import type { PosStaffProfileApiDto } from '../../types/repositories'
+import type { PosStaffProfileApiDto, StaffWeeklyScheduleDayApiDto } from '../../types/repositories'
 
 export function useStaffPosProfile(businessStaffLinkId: string | undefined) {
   const auth = useContext(AuthContext)
@@ -40,6 +40,56 @@ export function useUpdateStaffPosContractType() {
       posStaffProfileRepository.updateContractType(businessStaffLinkId, contractType),
     onSuccess: (_, { businessStaffLinkId }) => {
       queryClient.invalidateQueries({ queryKey: qk.merchantPosStaffProfile(businessStaffLinkId) })
+    },
+  })
+}
+
+export function useStaffServiceAssignments(businessStaffLinkId: string | undefined) {
+  const auth = useContext(AuthContext)
+  const isOwner = auth?.status === 'authenticated' && auth?.session?.role === 'owner'
+  return useQuery<string[]>({
+    queryKey: qk.merchantPosStaffServiceAssignments(businessStaffLinkId),
+    queryFn: () => posStaffProfileRepository.getStaffServiceAssignments(businessStaffLinkId as string),
+    enabled: isOwner && !!businessStaffLinkId,
+    retry: false,
+    // Same jank-avoidance as useStaffPosProfile — keep the previous staff's checklist
+    // rendered while the newly selected staff's assignments fetch.
+    placeholderData: keepPreviousData,
+  })
+}
+
+export function useSaveStaffServiceAssignments() {
+  const queryClient = useQueryClient()
+  return useMutation<boolean, Error, { businessStaffLinkId: string; posServiceIds: string[] }>({
+    mutationFn: ({ businessStaffLinkId, posServiceIds }) =>
+      posStaffProfileRepository.saveStaffServiceAssignments(businessStaffLinkId, posServiceIds),
+    onSuccess: (_, { businessStaffLinkId }) => {
+      queryClient.invalidateQueries({ queryKey: qk.merchantPosStaffServiceAssignments(businessStaffLinkId) })
+    },
+  })
+}
+
+export function useStaffWeeklySchedule(businessStaffLinkId: string | undefined) {
+  const auth = useContext(AuthContext)
+  const isOwner = auth?.status === 'authenticated' && auth?.session?.role === 'owner'
+  return useQuery<StaffWeeklyScheduleDayApiDto[]>({
+    queryKey: qk.merchantPosStaffWeeklySchedule(businessStaffLinkId),
+    queryFn: () => posStaffProfileRepository.getStaffWeeklySchedule(businessStaffLinkId as string),
+    enabled: isOwner && !!businessStaffLinkId,
+    retry: false,
+    // Same jank-avoidance as useStaffPosProfile — keep the previous staff's schedule
+    // rendered while the newly selected staff's schedule fetches.
+    placeholderData: keepPreviousData,
+  })
+}
+
+export function useUpdateStaffWeeklySchedule() {
+  const queryClient = useQueryClient()
+  return useMutation<boolean, Error, { businessStaffLinkId: string; days: StaffWeeklyScheduleDayApiDto[] }>({
+    mutationFn: ({ businessStaffLinkId, days }) =>
+      posStaffProfileRepository.saveStaffWeeklySchedule(businessStaffLinkId, days),
+    onSuccess: (_, { businessStaffLinkId }) => {
+      queryClient.invalidateQueries({ queryKey: qk.merchantPosStaffWeeklySchedule(businessStaffLinkId) })
     },
   })
 }

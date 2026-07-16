@@ -5,7 +5,7 @@
 // contract type, both shared with TaxIQ per CLAUDE.md's "Module Independence & Shared
 // Data" principle) and "Role, Pay & Tips" (role/pay-structure/tips, never depends on
 // TaxIQ setup state).
-import { useEffect, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { useSearchParams } from 'react-router-dom'
 import { Loader2 } from 'lucide-react'
 import { useTranslation } from '../../../../contexts/LanguageContext'
@@ -14,15 +14,22 @@ import { getApiErrorCode } from '../../../../types/domain'
 import { getErrorI18nKey } from '../../../../data/errorCodes'
 import { useMerchantStaff } from '../../../../data/hooks/useMerchantStaff'
 import { usePosRoles } from '../../../../data/hooks/usePosRoles'
+import { usePosCategories } from '../../../../data/hooks/usePosCategories'
+import { usePosServices } from '../../../../data/hooks/usePosServices'
 import {
   useSaveStaffPosProfile,
+  useSaveStaffServiceAssignments,
   useStaffPosProfile,
+  useStaffServiceAssignments,
+  useStaffWeeklySchedule,
   useUpdateStaffPosContractType,
+  useUpdateStaffWeeklySchedule,
 } from '../../../../data/hooks/usePosStaffProfile'
 import { useSetStaffTin } from '../../../../data/hooks/useTaxiqOwnerPayouts'
 import type { SetStaffTinParams } from '../../../../data/repositories/taxiqOwnerPayouts'
 import ToggleSwitch from '../../../ui/ToggleSwitch'
 import { SkeletonList } from '../../../ui/skeleton'
+import WeeklyScheduleEditor, { type WeeklyScheduleEditorDay } from './WeeklyScheduleEditor'
 
 const PAY_STRUCTURE_TYPES = ['Commission', 'WeeklySalary', 'AgreedAmount'] as const
 type PayStructureType = (typeof PAY_STRUCTURE_TYPES)[number]
@@ -30,6 +37,20 @@ type PayStructureType = (typeof PAY_STRUCTURE_TYPES)[number]
 // Booth Renter is a valid TaxIQ contract type but is deliberately not offered here (ticket AC).
 const POS_CONTRACT_TYPES = ['W2', 'C1099'] as const
 type PosContractType = (typeof POS_CONTRACT_TYPES)[number]
+
+// FE-only preset action, never sent to the backend — BE only ever stores the flat,
+// fully-resolved PosServiceId list (see ticket US-08's design deviation from BA doc Rule 4).
+const ASSIGNMENT_MODES = ['Specific', 'Category', 'All'] as const
+type AssignmentMode = (typeof ASSIGNMENT_MODES)[number]
+
+// Weekly Schedule (US-09). dayOfWeek is "Sunday".."Saturday" (verified against the live
+// API response — the same string form Business Hours/US-02 uses), reusing the same
+// Sunday-first day order and i18n day-name keys.
+const DAY_ORDER = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday']
+
+// <input type="time"> works with "HH:mm"; the API uses TimeOnly ("HH:mm:ss").
+const toApiScheduleTime = (hhmm: string): string | null => (hhmm ? `${hhmm}:00` : null)
+const fromApiScheduleTime = (hhmmss?: string | null): string => (hhmmss ? hhmmss.slice(0, 5) : '')
 
 interface StaffPickerItem {
   linkId: string | null
@@ -109,8 +130,28 @@ export default function PosStaffProfileView() {
   const saveProfile = useSaveStaffPosProfile()
   const updateContractType = useUpdateStaffPosContractType()
 
+  const categoriesQuery = usePosCategories()
+  const servicesQuery = usePosServices()
+  const assignmentsQuery = useStaffServiceAssignments(selectedLinkId)
+  const saveAssignments = useSaveStaffServiceAssignments()
+
   const staffItems = (staffListQuery.data?.items ?? []) as unknown as StaffPickerItem[]
   const profile = profileQuery.data
+  const categories = categoriesQuery.data ?? []
+  const services = servicesQuery.data ?? []
+  const assignments = assignmentsQuery.data
+  // Profile row only exists once "Role, Pay & Tips" has been saved at least once — the
+  // backend requires an existing PosStaffProfile before it will accept a services PUT.
+  const hasSavedProfile = profile?.posRoleId != null
+
+  // Unlike useStaffServiceAssignments (backend returns [] gracefully when no profile
+  // exists yet), GetStaffWeeklyScheduleQuery throws POS_STAFF_PROFILE_NOT_FOUND — so this
+  // query must not fire until hasSavedProfile, or every unselected/not-yet-set-up staff
+  // logs a 404 network error even though the UI already hides the section.
+  const scheduleQuery = useStaffWeeklySchedule(hasSavedProfile ? selectedLinkId : undefined)
+  const saveSchedule = useUpdateStaffWeeklySchedule()
+
+  const categoryNameById = useMemo(() => new Map(categories.map((c) => [c.id, c.name])), [categories])
 
   const [posRoleId, setPosRoleId] = useState('')
   const [payStructureType, setPayStructureType] = useState<PayStructureType>('Commission')
@@ -119,6 +160,39 @@ export default function PosStaffProfileView() {
   const [agreedAmount, setAgreedAmount] = useState('')
   const [tipsEnabled, setTipsEnabled] = useState(false)
   const [contractType, setContractType] = useState<PosContractType>('W2')
+
+  const [assignmentMode, setAssignmentMode] = useState<AssignmentMode>('Specific')
+  const [selectedCategoryId, setSelectedCategoryId] = useState('')
+  const [checkedServiceIds, setCheckedServiceIds] = useState<Set<string>>(new Set())
+
+  const [scheduleForm, setScheduleForm] = useState<WeeklyScheduleEditorDay[]>([])
+  const [scheduleErrors, setScheduleErrors] = useState<Record<string, string>>({})
+
+  useEffect(() => {
+    if (!assignments) return
+    setCheckedServiceIds(new Set(assignments))
+  }, [assignments])
+
+  useEffect(() => {
+    setAssignmentMode('Specific')
+    setSelectedCategoryId('')
+    setScheduleErrors({})
+  }, [selectedLinkId])
+
+  useEffect(() => {
+    const data = scheduleQuery.data
+    if (!data) return
+    setScheduleForm(
+      [...data]
+        .sort((a, b) => DAY_ORDER.indexOf(a.dayOfWeek) - DAY_ORDER.indexOf(b.dayOfWeek))
+        .map((day) => ({
+          dayOfWeek: day.dayOfWeek,
+          isWorking: !day.isDayOff,
+          startTime: fromApiScheduleTime(day.startTime),
+          endTime: fromApiScheduleTime(day.endTime),
+        })),
+    )
+  }, [scheduleQuery.data])
 
   useEffect(() => {
     if (!profile) return
@@ -164,6 +238,98 @@ export default function PosStaffProfileView() {
     try {
       await updateContractType.mutateAsync({ businessStaffLinkId: selectedLinkId, contractType })
       showToast(t('components.dashboard.views.pos.PosStaffProfileView.contractTypeSavedSuccess'), 'success')
+    } catch (err) {
+      showToast(t(getErrorI18nKey(getApiErrorCode(err))), 'error')
+    }
+  }
+
+  const toggleServiceChecked = (serviceId: string) => {
+    setCheckedServiceIds((prev) => {
+      const next = new Set(prev)
+      if (next.has(serviceId)) next.delete(serviceId)
+      else next.add(serviceId)
+      return next
+    })
+  }
+
+  const handleAssignmentModeChange = (mode: AssignmentMode) => {
+    setAssignmentMode(mode)
+    if (mode === 'All') {
+      setCheckedServiceIds(new Set(services.filter((s) => s.status === 'Active').map((s) => s.id)))
+    }
+  }
+
+  const handleCategoryPresetChange = (categoryId: string) => {
+    setSelectedCategoryId(categoryId)
+    if (!categoryId) return
+    setCheckedServiceIds(
+      new Set(services.filter((s) => s.status === 'Active' && s.categoryIds.includes(categoryId)).map((s) => s.id)),
+    )
+  }
+
+  const handleSaveServiceAssignments = async () => {
+    if (!selectedLinkId) return
+    try {
+      await saveAssignments.mutateAsync({
+        businessStaffLinkId: selectedLinkId,
+        posServiceIds: Array.from(checkedServiceIds),
+      })
+      showToast(t('components.dashboard.views.pos.PosStaffProfileView.servicesSavedSuccess'), 'success')
+    } catch (err) {
+      showToast(t(getErrorI18nKey(getApiErrorCode(err))), 'error')
+    }
+  }
+
+  const dayLabel = (dayOfWeek: string) =>
+    t(`components.settings.tabs.ProfileTab.businessHours.days.${dayOfWeek.toLowerCase()}`)
+
+  const handleToggleScheduleDay = (dayOfWeek: string) => {
+    setScheduleForm((current) =>
+      current.map((day) => (day.dayOfWeek === dayOfWeek ? { ...day, isWorking: !day.isWorking } : day)),
+    )
+    setScheduleErrors((current) => {
+      if (!current[dayOfWeek]) return current
+      const next = { ...current }
+      delete next[dayOfWeek]
+      return next
+    })
+  }
+
+  const handleChangeScheduleStart = (dayOfWeek: string, value: string) => {
+    setScheduleForm((current) =>
+      current.map((day) => (day.dayOfWeek === dayOfWeek ? { ...day, startTime: value } : day)),
+    )
+  }
+
+  const handleChangeScheduleEnd = (dayOfWeek: string, value: string) => {
+    setScheduleForm((current) =>
+      current.map((day) => (day.dayOfWeek === dayOfWeek ? { ...day, endTime: value } : day)),
+    )
+  }
+
+  const handleSaveSchedule = async () => {
+    if (!selectedLinkId) return
+
+    const errors: Record<string, string> = {}
+    scheduleForm.forEach((day) => {
+      if (!day.isWorking) return
+      if (!day.startTime || !day.endTime) errors[day.dayOfWeek] = 'required'
+      else if (day.endTime <= day.startTime) errors[day.dayOfWeek] = 'invalidRange'
+    })
+    setScheduleErrors(errors)
+    if (Object.keys(errors).length > 0) return
+
+    try {
+      await saveSchedule.mutateAsync({
+        businessStaffLinkId: selectedLinkId,
+        days: scheduleForm.map((day) => ({
+          dayOfWeek: day.dayOfWeek,
+          isDayOff: !day.isWorking,
+          startTime: day.isWorking ? toApiScheduleTime(day.startTime) : null,
+          endTime: day.isWorking ? toApiScheduleTime(day.endTime) : null,
+        })),
+      })
+      showToast(t('components.dashboard.views.pos.PosStaffProfileView.scheduleSavedSuccess'), 'success')
     } catch (err) {
       showToast(t(getErrorI18nKey(getApiErrorCode(err))), 'error')
     }
@@ -392,6 +558,156 @@ export default function PosStaffProfileView() {
                   {saveProfile.isPending && <Loader2 className="h-3.5 w-3.5 animate-spin" />}
                   {t('components.dashboard.views.pos.PosStaffProfileView.save')}
                 </button>
+              </div>
+
+              <div className="nexora-card space-y-3 p-5">
+                <h3 className="text-xs font-black uppercase tracking-wider text-nexoraText">
+                  {t('components.dashboard.views.pos.PosStaffProfileView.serviceAssignmentTitle')}
+                </h3>
+
+                {!hasSavedProfile ? (
+                  <p className="text-xs text-nexoraMuted">
+                    {t('components.dashboard.views.pos.PosStaffProfileView.serviceAssignmentDisabledNotice')}
+                  </p>
+                ) : assignmentsQuery.isLoading || servicesQuery.isLoading ? (
+                  <SkeletonList count={3} lines={1} />
+                ) : (
+                  <>
+                    <div>
+                      <span className="text-[10px] font-bold uppercase text-nexoraMuted">
+                        {t('components.dashboard.views.pos.PosStaffProfileView.assignmentModeLabel')}
+                      </span>
+                      <div className="mt-1 flex w-fit overflow-hidden rounded-lg border border-nexoraBorder">
+                        {ASSIGNMENT_MODES.map((mode) => (
+                          <button
+                            key={mode}
+                            type="button"
+                            onClick={() => handleAssignmentModeChange(mode)}
+                            className={`px-3 py-1.5 text-xs font-semibold transition ${
+                              assignmentMode === mode
+                                ? 'bg-nexoraBrand text-white'
+                                : 'bg-white text-nexoraText hover:bg-nexoraCanvas'
+                            }`}
+                          >
+                            {t(`components.dashboard.views.pos.PosStaffProfileView.assignmentMode${mode}`)}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+
+                    {assignmentMode === 'Category' && (
+                      <div>
+                        <label className="text-[10px] font-bold uppercase text-nexoraMuted">
+                          {t('components.dashboard.views.pos.PosStaffProfileView.categoryPickerLabel')}
+                        </label>
+                        <select
+                          value={selectedCategoryId}
+                          onChange={(e) => handleCategoryPresetChange(e.target.value)}
+                          className="mt-1 block w-full rounded-lg border border-nexoraBorder px-2 py-1.5 text-xs font-semibold sm:w-64"
+                        >
+                          <option value="">
+                            {t('components.dashboard.views.pos.PosStaffProfileView.categoryPickerPlaceholder')}
+                          </option>
+                          {categories.map((category) => (
+                            <option key={category.id} value={category.id}>
+                              {category.name}
+                            </option>
+                          ))}
+                        </select>
+                      </div>
+                    )}
+
+                    {assignmentMode === 'All' && (
+                      <button
+                        type="button"
+                        onClick={() => handleAssignmentModeChange('All')}
+                        className="inline-flex items-center rounded-lg border border-nexoraBorder px-3 py-1.5 text-xs font-semibold text-nexoraText hover:bg-nexoraCanvas"
+                      >
+                        {t('components.dashboard.views.pos.PosStaffProfileView.applyAllServicesButton')}
+                      </button>
+                    )}
+
+                    {services.length === 0 ? (
+                      <p className="text-xs text-nexoraMuted">
+                        {t('components.dashboard.views.pos.PosStaffProfileView.noServicesNotice')}
+                      </p>
+                    ) : (
+                      <div className="max-h-72 space-y-1 overflow-y-auto rounded-lg border border-nexoraBorder p-2">
+                        {services.map((service) => (
+                          <label
+                            key={service.id}
+                            className="flex items-center gap-2 rounded-md px-2 py-1.5 text-xs hover:bg-nexoraCanvas"
+                          >
+                            <input
+                              type="checkbox"
+                              checked={checkedServiceIds.has(service.id)}
+                              onChange={() => toggleServiceChecked(service.id)}
+                            />
+                            <span className="flex-1 truncate font-semibold text-nexoraText">{service.name}</span>
+                            {service.categoryIds.length > 0 && (
+                              <span className="truncate text-[10px] text-nexoraMuted">
+                                {service.categoryIds
+                                  .map((id) => categoryNameById.get(id))
+                                  .filter(Boolean)
+                                  .join(', ')}
+                              </span>
+                            )}
+                            {service.status === 'Inactive' && (
+                              <span className="rounded-full bg-nexoraCanvas px-2 py-0.5 text-[10px] font-bold uppercase text-nexoraMuted">
+                                {t('components.dashboard.views.pos.PosStaffProfileView.inactiveBadge')}
+                              </span>
+                            )}
+                          </label>
+                        ))}
+                      </div>
+                    )}
+
+                    <button
+                      type="button"
+                      onClick={handleSaveServiceAssignments}
+                      disabled={saveAssignments.isPending}
+                      className="inline-flex items-center gap-1.5 rounded-lg bg-nexoraBrand px-4 py-2 text-xs font-bold text-white disabled:opacity-60"
+                    >
+                      {saveAssignments.isPending && <Loader2 className="h-3.5 w-3.5 animate-spin" />}
+                      {t('components.dashboard.views.pos.PosStaffProfileView.saveServices')}
+                    </button>
+                  </>
+                )}
+              </div>
+
+              <div className="nexora-card space-y-3 p-5">
+                <h3 className="text-xs font-black uppercase tracking-wider text-nexoraText">
+                  {t('components.dashboard.views.pos.PosStaffProfileView.weeklyScheduleTitle')}
+                </h3>
+
+                {!hasSavedProfile ? (
+                  <p className="text-xs text-nexoraMuted">
+                    {t('components.dashboard.views.pos.PosStaffProfileView.weeklyScheduleDisabledNotice')}
+                  </p>
+                ) : scheduleQuery.isLoading ? (
+                  <SkeletonList count={3} lines={1} />
+                ) : (
+                  <>
+                    <WeeklyScheduleEditor
+                      days={scheduleForm.map((day) => ({ ...day, error: scheduleErrors[day.dayOfWeek] }))}
+                      dayLabel={dayLabel}
+                      offLabel={t('components.dashboard.views.pos.PosStaffProfileView.dayOffLabel')}
+                      errorMessage={(error) => t(`components.settings.tabs.ProfileTab.validation.${error}`)}
+                      onToggleWorking={handleToggleScheduleDay}
+                      onChangeStart={handleChangeScheduleStart}
+                      onChangeEnd={handleChangeScheduleEnd}
+                    />
+                    <button
+                      type="button"
+                      onClick={handleSaveSchedule}
+                      disabled={saveSchedule.isPending}
+                      className="inline-flex items-center gap-1.5 rounded-lg bg-nexoraBrand px-4 py-2 text-xs font-bold text-white disabled:opacity-60"
+                    >
+                      {saveSchedule.isPending && <Loader2 className="h-3.5 w-3.5 animate-spin" />}
+                      {t('components.dashboard.views.pos.PosStaffProfileView.saveSchedule')}
+                    </button>
+                  </>
+                )}
               </div>
             </div>
           ) : null}

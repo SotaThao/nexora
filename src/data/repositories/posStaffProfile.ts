@@ -2,7 +2,7 @@
  * posStaffProfileRepository — POS Owner Setup: Staff Profile (US-019).
  */
 import httpClient from '../../lib/httpClient'
-import type { PosStaffProfileApiDto } from '../../types/repositories'
+import type { PosStaffProfileApiDto, StaffWeeklyScheduleDayApiDto } from '../../types/repositories'
 
 type HttpClient = typeof httpClient
 
@@ -36,6 +36,35 @@ export function createPosStaffProfileRepository(client: HttpClient = httpClient)
       await client.put<void>(
         `/api/v1/merchant/pos/staff-profiles/${encodeURIComponent(businessStaffLinkId)}/contract-type`,
         { contractType },
+      )
+    },
+
+    async getStaffServiceAssignments(businessStaffLinkId: string): Promise<string[]> {
+      return await client.get<string[]>(
+        `/api/v1/merchant/pos/staff-profiles/${encodeURIComponent(businessStaffLinkId)}/services`,
+      )
+    },
+
+    async saveStaffServiceAssignments(businessStaffLinkId: string, posServiceIds: string[]): Promise<boolean> {
+      return await client.put<boolean>(
+        `/api/v1/merchant/pos/staff-profiles/${encodeURIComponent(businessStaffLinkId)}/services`,
+        { posServiceIds },
+      )
+    },
+
+    async getStaffWeeklySchedule(businessStaffLinkId: string): Promise<StaffWeeklyScheduleDayApiDto[]> {
+      return await client.get<StaffWeeklyScheduleDayApiDto[]>(
+        `/api/v1/merchant/pos/staff-profiles/${encodeURIComponent(businessStaffLinkId)}/weekly-schedule`,
+      )
+    },
+
+    async saveStaffWeeklySchedule(
+      businessStaffLinkId: string,
+      days: StaffWeeklyScheduleDayApiDto[],
+    ): Promise<boolean> {
+      return await client.put<boolean>(
+        `/api/v1/merchant/pos/staff-profiles/${encodeURIComponent(businessStaffLinkId)}/weekly-schedule`,
+        { days },
       )
     },
   }

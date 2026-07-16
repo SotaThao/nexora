@@ -1998,6 +1998,10 @@
     "pos_staff_contract_type_not_allowed": "Booth Renter is not offered in POS setup.",
     "pos_staff_tax_year_not_available": "TaxIQ has not been set up for this business yet.",
     "pos_staff_no_linked_account": "This staff member has no linked Nexora account.",
+    "pos_staff_profile_not_found": "Save this staff member's POS profile before assigning services.",
+    "pos_staff_service_assignment_service_invalid": "One or more selected services are invalid.",
+    "pos_staff_schedule_duplicate_day": "Each day can only appear once in the schedule.",
+    "pos_staff_schedule_invalid_time_range": "End time must be after start time for each working day.",
     "taxiq_staff_tin_already_set": "This value has already been set and cannot be changed here.",
     "image_file_size_exceeded": "The image file size exceeds the 10MB limit.",
     "image_file_size_exceeded_5mb": "The image file size exceeds the 5MB limit.",
@@ -2577,7 +2581,8 @@
             "noServices": "No services found.",
             "createdSuccess": "Service created.",
             "updatedSuccess": "Service updated.",
-            "reorderFailed": "Could not save the new order. Please try again."
+            "reorderFailed": "Could not save the new order. Please try again.",
+            "revisitAssignmentNudge": "You may need to revisit staff service assignments to include this new service."
           },
           "PosProductsView": {
             "description": "Build your retail product catalog with categories, tags, and photos, then drag to reorder.",
@@ -2633,7 +2638,25 @@
             "save": "Save",
             "contractTypeSavedSuccess": "Tax filing type saved.",
             "profileSavedSuccess": "Staff POS profile saved.",
-            "tinSavedSuccess": "Saved."
+            "tinSavedSuccess": "Saved.",
+            "serviceAssignmentTitle": "Service Assignment",
+            "serviceAssignmentDisabledNotice": "Save \"Role, Pay & Tips\" first before assigning services.",
+            "assignmentModeLabel": "Assign",
+            "assignmentModeSpecific": "Specific Services",
+            "assignmentModeCategory": "Whole Category",
+            "assignmentModeAll": "All Services",
+            "categoryPickerLabel": "Category",
+            "categoryPickerPlaceholder": "Select a category",
+            "applyAllServicesButton": "Apply — Tick All Active Services",
+            "inactiveBadge": "Inactive",
+            "noServicesNotice": "No services have been created for this salon yet.",
+            "saveServices": "Save Services",
+            "servicesSavedSuccess": "Service assignment saved.",
+            "weeklyScheduleTitle": "Weekly Schedule",
+            "weeklyScheduleDisabledNotice": "Save \"Role, Pay & Tips\" first before setting a weekly schedule.",
+            "dayOffLabel": "Day Off",
+            "saveSchedule": "Save Schedule",
+            "scheduleSavedSuccess": "Weekly schedule saved."
           }
         },
         "BookingHubView": {

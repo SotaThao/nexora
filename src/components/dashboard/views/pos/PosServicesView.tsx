@@ -85,7 +85,11 @@ export default function PosServicesView() {
         showToast(t('components.dashboard.views.pos.PosServicesView.updatedSuccess'), 'success')
       } else {
         await createService.mutateAsync(input)
-        showToast(t('components.dashboard.views.pos.PosServicesView.createdSuccess'), 'success')
+        const successMessage =
+          input.categoryIds.length > 0
+            ? `${t('components.dashboard.views.pos.PosServicesView.createdSuccess')} ${t('components.dashboard.views.pos.PosServicesView.revisitAssignmentNudge')}`
+            : t('components.dashboard.views.pos.PosServicesView.createdSuccess')
+        showToast(successMessage, 'success')
       }
       setModalState({ open: false, service: null })
     } catch (err) {

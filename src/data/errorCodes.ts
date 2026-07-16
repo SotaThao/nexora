@@ -128,7 +128,13 @@ export const errorCodeToI18nKey = {
   POS_STAFF_CONTRACT_TYPE_NOT_ALLOWED: 'errors.pos_staff_contract_type_not_allowed',
   POS_STAFF_TAX_YEAR_NOT_AVAILABLE: 'errors.pos_staff_tax_year_not_available',
   POS_STAFF_NO_LINKED_ACCOUNT: 'errors.pos_staff_no_linked_account',
+  POS_STAFF_PROFILE_NOT_FOUND: 'errors.pos_staff_profile_not_found',
+  POS_STAFF_SERVICE_ASSIGNMENT_SERVICE_INVALID: 'errors.pos_staff_service_assignment_service_invalid',
   TAXIQ_STAFF_TIN_ALREADY_SET: 'errors.taxiq_staff_tin_already_set',
+
+  // POS Owner Setup — Staff Weekly Schedule (US-09/US-021)
+  POS_STAFF_SCHEDULE_DUPLICATE_DAY: 'errors.pos_staff_schedule_duplicate_day',
+  POS_STAFF_SCHEDULE_INVALID_TIME_RANGE: 'errors.pos_staff_schedule_invalid_time_range',
 
   // Support / contact requests
   CONTACT_REQUEST_SUPPORT_TYPE_MIN_LENGTH: 'errors.contact_request_support_type_min_length',
