@@ -116,6 +116,9 @@ export const errorCodeToI18nKey = {
   // Nexora Voice tenant staff
   VOICE_TENANT_STAFF_PHONE_NUMBER_REQUIRED: 'errors.voice_tenant_staff_phone_number_required',
   VOICE_TENANT_STAFF_PHONE_NUMBER_ALREADY_EXISTS: 'errors.voice_tenant_staff_phone_number_already_exists',
+
+  // Nexora Voice tenant services
+  VOICE_TENANT_SERVICE_DURATION_INVALID: 'errors.voice_tenant_service_duration_invalid',
 }
 
 /**

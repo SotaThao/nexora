@@ -614,6 +614,7 @@
       "expires_on": "Hết hạn: {{date}}",
       "trial_ends": "Dùng thử đến {{date}}",
       "manage_plan": "Quản lý gói",
+      "manage_plan_short": "Quản lý",
       "google_play_badge_eyebrow": "Get it on",
       "google_play_badge_title": "Google Play",
       "app_store_badge_eyebrow": "Download on the",
@@ -2018,6 +2019,7 @@
     "voice_trial_biggest_problem_required": "Vui lòng chọn vấn đề lớn nhất của tiệm.",
     "voice_tenant_staff_phone_number_required": "Vui lòng nhập số điện thoại cho profile thợ.",
     "voice_tenant_staff_phone_number_already_exists": "Số điện thoại này đã được dùng cho profile thợ khác.",
+    "voice_tenant_service_duration_invalid": "Thời lượng dịch vụ phải lớn hơn 0 phút.",
     "payment_not_found": "Không tìm thấy giao dịch thanh toán.",
     "payment_invalid_status": "Giao dịch không ở trạng thái phù hợp để thực hiện thao tác này.",
     "payment_amount_too_low": "Số tiền tối thiểu là $1.00.",
@@ -2514,7 +2516,7 @@
             "colCustomer": "Khách hàng",
             "colService": "Dịch vụ",
             "colTech": "Thợ",
-            "colTime": "Thời gian",
+            "colTime": "Lịch hẹn",
             "colStatus": "Status",
             "colAction": "Action",
             "statusDone": "Hoàn tất",
@@ -2754,7 +2756,8 @@
             "invalidPhone": "Vui lòng nhập số điện thoại hợp lệ.",
             "hourRequired": "Vui lòng nhập giờ mở và giờ đóng cửa.",
             "hourInvalid": "Giờ mở cửa phải nhỏ hơn giờ đóng cửa.",
-            "hourValidationSummary": "Vui lòng kiểm tra lại giờ hoạt động trước khi lưu."
+            "hourValidationSummary": "Vui lòng kiểm tra lại giờ hoạt động trước khi lưu.",
+            "durationInvalid": "Thời lượng dịch vụ phải lớn hơn 0 phút."
           },
           "team": {
             "intro": "Profile thợ dùng chung cho SMS báo khách, QR tip, Review và Reward.",

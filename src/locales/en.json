@@ -614,6 +614,7 @@
       "expires_on": "Expires: {{date}}",
       "trial_ends": "Trial ends {{date}}",
       "manage_plan": "Manage Plan",
+      "manage_plan_short": "Manage",
       "google_play_badge_eyebrow": "Get it on",
       "google_play_badge_title": "Google Play",
       "app_store_badge_eyebrow": "Download on the",
@@ -2018,6 +2019,7 @@
     "voice_trial_biggest_problem_required": "Please select your biggest challenge.",
     "voice_tenant_staff_phone_number_required": "Phone number is required for tech profiles.",
     "voice_tenant_staff_phone_number_already_exists": "This phone number is already used by another tech profile.",
+    "voice_tenant_service_duration_invalid": "Service duration must be greater than 0 minutes.",
     "payment_not_found": "This payment could not be found.",
     "payment_invalid_status": "This payment is not in the correct status for this action.",
     "payment_amount_too_low": "Minimum payment is $1.00.",
@@ -2514,7 +2516,7 @@
             "colCustomer": "Customer",
             "colService": "Service",
             "colTech": "Tech",
-            "colTime": "Time",
+            "colTime": "Booking time",
             "colStatus": "Status",
             "colAction": "Action",
             "statusDone": "Completed",
@@ -2754,7 +2756,8 @@
             "invalidPhone": "Please enter a valid phone number.",
             "hourRequired": "Open and close times are required.",
             "hourInvalid": "Open time must be earlier than close time.",
-            "hourValidationSummary": "Please fix operating hours before saving."
+            "hourValidationSummary": "Please fix operating hours before saving.",
+            "durationInvalid": "Service duration must be greater than 0 minutes."
           },
           "team": {
             "intro": "Shared tech profiles for client SMS alerts, tip QR, reviews, and rewards.",

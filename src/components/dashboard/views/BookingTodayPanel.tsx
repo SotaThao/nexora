@@ -15,6 +15,7 @@ import {
   BookingUiSearchField,
   BookingUiSource,
   BookingUiStatus,
+  MERCHANT_VOICE_BOOKINGS_POLL_INTERVAL_MS,
   mapLeadSourceToUiSource,
   mapLeadStatusToUiStatus,
   mapUiSourceToSourceClass,
@@ -483,7 +484,7 @@ export default function BookingTodayPanel() {
     keyword: apiKeyword,
     dateFrom: dateFromApi,
     dateTo: dateToApi,
-  }, { enabled: voiceEnabled })
+  }, { enabled: voiceEnabled, refetchInterval: voiceEnabled ? MERCHANT_VOICE_BOOKINGS_POLL_INTERVAL_MS : false })
   const updateBookingStatusMutation = useUpdateMerchantVoiceBookingStatus()
   const sendConfirmationSmsMutation = useSendMerchantVoiceBookingConfirmationSms()
 
