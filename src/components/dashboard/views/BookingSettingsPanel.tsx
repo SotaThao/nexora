@@ -194,6 +194,41 @@ const SUGGEST_SERVICES = [
   { name: "Lash Fill", price: 45, duration: 60 },
 ];
 
+const AI_LANGUAGE_OPTIONS = [
+  MerchantVoiceUiLanguage.Vi,
+  MerchantVoiceUiLanguage.En,
+] as const;
+
+const PROMO_MAX_LENGTH = 1000;
+
+const PROMO_TEMPLATES = {
+  "reward-yourself": {
+    labelKey: "promoTemplateRewardLabel",
+    text: [
+      "Promotion 1: Reward Yourself",
+      "Offer: Free $25 e-gift card.",
+      "Eligibility: Book any pedicure service of $55 or more.",
+      "Availability: Monday–Saturday, by appointment only.",
+      "Rules: One free $25 e-gift card per qualifying visit. For future services only, not redeemable for cash, and cannot be used for gratuity. Cannot combine with other promotions, discounts, coupons, rewards, or special offers. One promotional offer per customer per visit.",
+      "General rule: The salon may modify or end any promotion at any time.",
+    ].join("\n"),
+  },
+} as const;
+
+function greetingI18nKey(language: Language) {
+  return language === MerchantVoiceUiLanguage.Vi ? "greetingVi" : "greetingEn";
+}
+
+function languageButtonLabel(language: Language) {
+  return language === MerchantVoiceUiLanguage.Vi ? "VI" : "EN";
+}
+
+function resolveUiLanguage(language: Language): Language {
+  if (language === MerchantVoiceUiLanguage.Vi)
+    return MerchantVoiceUiLanguage.Vi;
+  return MerchantVoiceUiLanguage.En;
+}
+
 function openTimePicker(input: HTMLInputElement | null) {
   if (!input || input.disabled) return;
   input.focus();
@@ -685,7 +720,10 @@ export default function BookingSettingsPanel() {
     }
     if (
       bookingNotifyPhoneParsed.nationalNumber.replace(/\D/g, "") &&
-      !isValidPhoneE164(bookingNotifyPhone, bookingNotifyPhoneParsed.countryCode)
+      !isValidPhoneE164(
+        bookingNotifyPhone,
+        bookingNotifyPhoneParsed.countryCode,
+      )
     ) {
       nextErrors.bookingNotifyPhone = t(`${TK}.invalidPhone`);
     }
@@ -863,9 +901,7 @@ export default function BookingSettingsPanel() {
                       nextCode,
                     );
                     setSalonPhone(
-                      formatted
-                        ? `${nextCode} ${formatted}`.trim()
-                        : "",
+                      formatted ? `${nextCode} ${formatted}`.trim() : "",
                     );
                     if (formErrors.salonPhone)
                       setFormErrors((prev) => ({
@@ -938,9 +974,7 @@ export default function BookingSettingsPanel() {
                       nextCode,
                     );
                     setBookingNotifyPhone(
-                      formatted
-                        ? `${nextCode} ${formatted}`.trim()
-                        : "",
+                      formatted ? `${nextCode} ${formatted}`.trim() : "",
                     );
                     if (formErrors.bookingNotifyPhone)
                       setFormErrors((prev) => ({
@@ -1261,104 +1295,106 @@ export default function BookingSettingsPanel() {
                 service.id,
               );
               return (
-              <div
-                className={`settings-service-row ${highlightServiceId === service.id ? "is-highlight" : ""}`}
-                key={service.id}
-              >
-                <div className="settings-service-edit-grid">
-                  <span
-                    className={`settings-service-visual ${service.tone}`}
-                    aria-hidden="true"
-                  >
-                    {service.icon}
-                  </span>
-                  <label className="settings-service-field settings-service-field-name">
-                    <span className="settings-service-field-label">
-                      {t(`${TK}.serviceColumn`)}
+                <div
+                  className={`settings-service-row ${highlightServiceId === service.id ? "is-highlight" : ""}`}
+                  key={service.id}
+                >
+                  <div className="settings-service-edit-grid">
+                    <span
+                      className={`settings-service-visual ${service.tone}`}
+                      aria-hidden="true"
+                    >
+                      {service.icon}
                     </span>
-                    <input
-                      className="settings-service-input"
-                      type="text"
-                      value={service.name}
-                      placeholder={t(`${TK}.placeholderServiceName`)}
-                      aria-label={t(`${TK}.serviceNameAria`)}
-                      onChange={(event) =>
-                        updateService(service.id, "name", event.target.value)
-                      }
-                    />
-                  </label>
-                  <div className="settings-service-metrics">
-                    <label className="settings-service-field settings-service-field-price">
+                    <label className="settings-service-field settings-service-field-name">
                       <span className="settings-service-field-label">
-                        {t(`${TK}.priceColumn`)}
+                        {t(`${TK}.serviceColumn`)}
                       </span>
-                      <div className="settings-service-input-wrap">
-                        <span className="settings-service-prefix">$</span>
-                        <input
-                          className="settings-service-input price"
-                          type="text"
-                          inputMode="numeric"
-                          pattern="[0-9]*"
-                          value={formatWholeNumberInputValue(service.price)}
-                          placeholder={t(`${TK}.placeholderServicePrice`)}
-                          aria-label={t(`${TK}.servicePriceAria`)}
-                          onChange={(event) =>
-                            updateService(
-                              service.id,
-                              "price",
-                              event.target.value,
-                            )
-                          }
-                          onBlur={() =>
-                            commitServiceNumberOnBlur(service.id, "price")
-                          }
-                        />
-                      </div>
+                      <input
+                        className="settings-service-input"
+                        type="text"
+                        value={service.name}
+                        placeholder={t(`${TK}.placeholderServiceName`)}
+                        aria-label={t(`${TK}.serviceNameAria`)}
+                        onChange={(event) =>
+                          updateService(service.id, "name", event.target.value)
+                        }
+                      />
                     </label>
-                    <label className="settings-service-field settings-service-field-duration">
-                      <span className="settings-service-field-label">
-                        {t(`${TK}.durationColumn`)}
-                      </span>
-                      <div className="settings-service-input-wrap">
-                        <input
-                          className="settings-service-input duration"
-                          type="text"
-                          inputMode="numeric"
-                          pattern="[0-9]*"
-                          value={formatWholeNumberInputValue(service.duration)}
-                          placeholder={t(`${TK}.placeholderServiceDuration`)}
-                          aria-label={t(`${TK}.serviceDurationAria`)}
-                          aria-invalid={durationInvalid || undefined}
-                          onChange={(event) =>
-                            updateService(
-                              service.id,
-                              "duration",
-                              event.target.value,
-                            )
-                          }
-                          onBlur={() =>
-                            commitServiceNumberOnBlur(service.id, "duration")
-                          }
-                        />
-                        <span className="settings-service-suffix">min</span>
-                      </div>
-                    </label>
+                    <div className="settings-service-metrics">
+                      <label className="settings-service-field settings-service-field-price">
+                        <span className="settings-service-field-label">
+                          {t(`${TK}.priceColumn`)}
+                        </span>
+                        <div className="settings-service-input-wrap">
+                          <span className="settings-service-prefix">$</span>
+                          <input
+                            className="settings-service-input price"
+                            type="text"
+                            inputMode="numeric"
+                            pattern="[0-9]*"
+                            value={formatWholeNumberInputValue(service.price)}
+                            placeholder={t(`${TK}.placeholderServicePrice`)}
+                            aria-label={t(`${TK}.servicePriceAria`)}
+                            onChange={(event) =>
+                              updateService(
+                                service.id,
+                                "price",
+                                event.target.value,
+                              )
+                            }
+                            onBlur={() =>
+                              commitServiceNumberOnBlur(service.id, "price")
+                            }
+                          />
+                        </div>
+                      </label>
+                      <label className="settings-service-field settings-service-field-duration">
+                        <span className="settings-service-field-label">
+                          {t(`${TK}.durationColumn`)}
+                        </span>
+                        <div className="settings-service-input-wrap">
+                          <input
+                            className="settings-service-input duration"
+                            type="text"
+                            inputMode="numeric"
+                            pattern="[0-9]*"
+                            value={formatWholeNumberInputValue(
+                              service.duration,
+                            )}
+                            placeholder={t(`${TK}.placeholderServiceDuration`)}
+                            aria-label={t(`${TK}.serviceDurationAria`)}
+                            aria-invalid={durationInvalid || undefined}
+                            onChange={(event) =>
+                              updateService(
+                                service.id,
+                                "duration",
+                                event.target.value,
+                              )
+                            }
+                            onBlur={() =>
+                              commitServiceNumberOnBlur(service.id, "duration")
+                            }
+                          />
+                          <span className="settings-service-suffix">min</span>
+                        </div>
+                      </label>
+                    </div>
+                    <button
+                      className="settings-service-remove"
+                      type="button"
+                      aria-label={t(`${TK}.removeService`)}
+                      onClick={() => removeService(service.id)}
+                    >
+                      ×
+                    </button>
                   </div>
-                  <button
-                    className="settings-service-remove"
-                    type="button"
-                    aria-label={t(`${TK}.removeService`)}
-                    onClick={() => removeService(service.id)}
-                  >
-                    ×
-                  </button>
+                  {durationInvalid ? (
+                    <p className="settings-service-row-error" role="alert">
+                      {t(`${TK}.durationInvalid`)}
+                    </p>
+                  ) : null}
                 </div>
-                {durationInvalid ? (
-                  <p className="settings-service-row-error" role="alert">
-                    {t(`${TK}.durationInvalid`)}
-                  </p>
-                ) : null}
-              </div>
               );
             })}
           </div>
