@@ -88,7 +88,11 @@ export interface EcosystemCatalogEntry {
   logoUrl: string;
 }
 
-/** Catalog built from live VlinkPay API data; active items first, coming soon last. */
+/**
+ * Catalog for the header ecosystem dropdown.
+ * Hides rows with `isEcosystem: false` (e.g. merchantportal used only for Gift Card SSO).
+ * Gift Card Center does not use this filter — it looks up merchantportal on the raw list.
+ */
 export function buildEcosystemCatalog(
   apiItems: EcosystemItem[] = [],
 ): EcosystemCatalogEntry[] {
@@ -96,6 +100,8 @@ export function buildEcosystemCatalog(
   const comingSoon: EcosystemCatalogEntry[] = [];
 
   for (const item of apiItems) {
+    if (item.isEcosystem === false) continue;
+
     const brandKey =
       resolveEcosystemBrandKey(item.name) ??
       (normalizeEcosystemNameKey(item.name) || item.id);

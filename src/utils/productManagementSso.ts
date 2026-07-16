@@ -12,6 +12,7 @@ const MERCHANT_PORTAL_NAME = 'merchantportal'
 /**
  * Find the `merchantportal` row from `GET /api/v1/Client/ecosystem`.
  * Match by normalized name / brand key only — no hardcoded client id.
+ * Ignores `isEcosystem` (Gift Card Center only needs merchantPortal presence + SSO).
  */
 export function findMerchantPortalEcosystem(
   items: EcosystemItem[] = [],
