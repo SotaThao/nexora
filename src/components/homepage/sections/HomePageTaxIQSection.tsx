@@ -15,7 +15,7 @@ export default function HomePageTaxIQSection() {
             <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 items-start">
               
               <div className="lg:col-span-5 space-y-6">
-                <div className="inline-flex items-center gap-2 bg-purple/20 text-purple font-extrabold text-xs px-3.5 py-1.5 rounded-full tracking-wider border border-purple/30">
+                <div className="inline-flex items-center gap-2 bg-purple/20 text-purple font-extrabold text-xs px-3.5 py-1.5 rounded-full tracking-wider border border-purple/30" data-i18n="tax-hero-badge">
                   🤖 AI ASSISTED • CPA REVIEW RECOMMENDED
                 </div>
                 <h2 className="text-3xl sm:text-4xl font-black tracking-tight leading-tight" data-i18n="tax-landing-title">NEXORA Tax IQ — Quick Deduction Optimizer</h2>
@@ -23,11 +23,11 @@ export default function HomePageTaxIQSection() {
                 <p className="text-slate-300 text-sm sm:text-base leading-relaxed" data-i18n="tax-landing-desc-2">Tax IQ helps nail salon owners and technicians identify common deductions, prepare expense documentation, and understand estimated tax savings—before sending records to a CPA or tax professional.</p>
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-4 border-t border-slate-800">
                   <div className="space-y-1">
-                    <strong className="text-green text-lg font-bold">CPA-Ready</strong>
+                    <strong className="text-green text-lg font-bold" data-i18n="tax-substat-1-label">CPA-Ready</strong>
                     <p className="text-xs text-slate-400 font-bold uppercase" data-i18n="tax-substat-1">Prepare Docs Before Filing</p>
                   </div>
                   <div className="space-y-1">
-                    <strong className="text-purple text-lg font-bold">Estimate Only</strong>
+                    <strong className="text-purple text-lg font-bold" data-i18n="tax-substat-2-label">Estimate Only</strong>
                     <p className="text-xs text-slate-400 font-bold uppercase" data-i18n="tax-substat-2">AI-Assisted Deduction Review</p>
                   </div>
                 </div>

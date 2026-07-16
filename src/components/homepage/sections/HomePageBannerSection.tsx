@@ -121,7 +121,7 @@ export default function HomePageBannerSection() {
       <div className="absolute top-0 right-1/3 w-[320px] h-[320px] bg-purple/10 rounded-full blur-[100px] pointer-events-none" />
       <div className="absolute bottom-0 left-1/4 w-[280px] h-[280px] bg-blue/10 rounded-full blur-[100px] pointer-events-none" />
 
-      <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
+      <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-2">
         <div className="relative w-full rounded-xl">
           <div className="overflow-hidden rounded-xl" ref={emblaRef}>
             <div className="flex -mr-4">
@@ -136,11 +136,15 @@ export default function HomePageBannerSection() {
                     rel="noopener noreferrer"
                     className="block w-full rounded-xl overflow-hidden ring-1 ring-purple/8 shadow-sm"
                   >
-                    <div className="w-full h-[120px] md:h-[200px] flex items-center justify-center bg-white/80 backdrop-blur-[2px]">
+                    <div className="w-full h-[90px] md:h-[160px] flex items-center justify-center bg-white/80 backdrop-blur-[2px]">
                       <img
                         src={banner.image}
                         alt={banner.alt}
                         className="max-h-full max-w-full object-contain"
+                        onError={(e) => {
+                          const slide = e.currentTarget.closest('a')
+                          if (slide) (slide as HTMLElement).style.display = 'none'
+                        }}
                       />
                     </div>
                   </a>
@@ -150,7 +154,7 @@ export default function HomePageBannerSection() {
           </div>
 
           {scrollSnaps.length > 1 && (
-            <div className="flex justify-center items-center gap-1.5 mt-3">
+            <div className="flex justify-center items-center gap-1.5 mt-2">
               {scrollSnaps.map((_, index) => (
                 <button
                   key={index}
