@@ -1230,11 +1230,14 @@
         "transactions_unit": "Giao dịch",
         "avg_tip": "Típ Trung Bình",
         "fees_avoided": "Phí tiết kiệm",
-        "fees_avoided_tooltip": "Ước tính phí xử lý thẻ tiết kiệm được từ tip P2P trực tiếp, tính theo 3% trên tổng lượng được định tuyến."
+        "fees_avoided_tooltip": "Ước tính phí xử lý thẻ tiết kiệm được từ tip P2P trực tiếp, tính theo 3% trên tổng lượng được định tuyến.",
+        "fees_avoided_tooltip_api": "Phí xử lý tiết kiệm từ tip P2P trực tiếp, theo báo cáo từ dashboard.",
+        "fees_avoided_sub": "Phí tiết kiệm từ thanh toán trực tiếp"
       },
       "charts": {
         "daily_revenue": "Biểu Đồ Doanh Thu Theo Ngày",
-        "wallet_share": "Tip được trả thế nào"
+        "wallet_share": "Tip được trả thế nào",
+        "no_wallet_data": "Chưa có dữ liệu phương thức thanh toán."
       },
       "leaderboards": {
         "staff": "Bảng Xếp Hạng Nhân Viên",
@@ -1244,7 +1247,8 @@
         "unassigned": "Tip chưa gán",
         "unassigned_tooltip": "Tip này được nhận qua mã QR chung của salon và chưa được gán cho thợ cụ thể.",
         "station_stats": "{scans} lượt quét · {tips} tip = {pct}% chuyển đổi",
-        "station_stats_no_conversion": "{scans} lượt quét · {tips} tip"
+        "station_stats_no_conversion": "{scans} lượt quét · {tips} tip",
+        "empty": "Chưa có dữ liệu."
       }
     },
     "empty_states": {

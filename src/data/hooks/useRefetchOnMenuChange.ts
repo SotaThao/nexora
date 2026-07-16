@@ -31,11 +31,8 @@ const MERCHANT_MENU_QUERIES: Record<string, QueryKeyPrefix[]> = {
     qk.merchantTouchpoints(),
   ],
   [DASHBOARD_MENU_ID.analytics]: [
-    qk.transactions(),
-    qk.dashboardOverview(),
+    qk.dashboardAnalytics(),
     qk.dashboardTipsChart(),
-    qk.dashboardStaff(),
-    qk.dashboardTouchpoints(),
   ],
   [DASHBOARD_MENU_ID.touchpoints]: [qk.merchantTouchpoints()],
   [DASHBOARD_MENU_ID.reviews]: [['dashboard', 'reviews'], qk.reviews()],
