@@ -8,6 +8,7 @@ import { captureQrImage } from '../../../utils/qrCode'
 import { getPayoutValidationMessage } from '../../payout/validatePayoutAccount'
 import { useUploadImage } from '../../../data/hooks/useMerchantSetup'
 import { getRequiredFieldError } from '../../../utils/onboardingFieldValidation'
+import { logger } from '../../../utils/logger'
 
 export default function usePersonalSetupWizard({ onBackToLogin }) {
   const { t, currentLanguage, setLanguage, renderLabel } = useTranslation()
@@ -31,7 +32,7 @@ export default function usePersonalSetupWizard({ onBackToLogin }) {
   const [phoneLocked, setPhoneLocked] = useState(false)
   const [bio, setBio] = useState('')
   const [avatar, setAvatar] = useState<string | null>(null)
-  const [position, setPosition] = useState('Nail Technician')
+  const [position, setPosition] = useState('')
   
   const email = session?.email || ''
   const generatedStaffId = userProfile?.staffProfile?.staffCode || ''
@@ -60,7 +61,6 @@ export default function usePersonalSetupWizard({ onBackToLogin }) {
         const knownFullName = `${userProfile.firstName} ${userProfile.lastName || ''}`.trim()
         setFullName(knownFullName)
         setFullNameLocked(true)
-        if (!userProfile.nickname) setNickname((current) => current || `${knownFullName.split(' ')[0]}.`)
       }
       if (userProfile.nickname) setNickname(userProfile.nickname)
       if (userProfile.phoneNumber) {
@@ -77,9 +77,6 @@ export default function usePersonalSetupWizard({ onBackToLogin }) {
     if (!fullName.trim()) {
       fieldErrors.fullName = getRequiredFieldError(fullName, 'setup.errors.staff_name_required')
     }
-    if (!nickname.trim()) {
-      fieldErrors.nickname = getRequiredFieldError(nickname, 'setup.errors.staff_nickname_required')
-    }
     const phoneError = getRequiredFieldError(phone, 'setup.errors.phone_required')
     if (phoneError) {
       fieldErrors.phone = phoneError
@@ -93,8 +90,8 @@ export default function usePersonalSetupWizard({ onBackToLogin }) {
     }
 
     try {
-      const parsedName = nickname.trim() || email.split('@')[0]
-      const nameParts = parsedName.split(' ')
+      const parsedName = fullName.trim()
+      const nameParts = parsedName.split(/\s+/)
       const fName = nameParts[0]
       const lName = nameParts.slice(1).join(' ') || undefined
 
@@ -108,22 +105,21 @@ export default function usePersonalSetupWizard({ onBackToLogin }) {
       // 2. Update staff profile
       if (userProfile?.hasStaffProfile) {
         await updateStaffProfileMutation.mutateAsync({
-          displayName: parsedName,
-          position,
-          bio,
-          photoUrl: avatar || undefined
+          displayName: parsedName
         })
       } else {
         await createStaffProfileMutation.mutateAsync({
-          displayName: parsedName,
-          position,
-          bio,
-          photoUrl: avatar || undefined
+          displayName: parsedName
         })
       }
 
       setErrors({})
-      setCurrentStep(2)
+      try {
+        await refreshSession()
+      } catch {
+        // A full reload below fetches the updated session again.
+      }
+      window.location.href = '/staff'
     } catch (err) {
       setErrors({ submit: t('register.errors.profile_setup_failed') })
     }
@@ -138,7 +134,7 @@ export default function usePersonalSetupWizard({ onBackToLogin }) {
         setAvatar(uploadedUrl)
       }
     } catch (err: unknown) {
-      console.error('Failed to upload staff avatar', err)
+      logger.error('Failed to upload staff avatar', err)
     }
   }
 

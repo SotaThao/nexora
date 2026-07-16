@@ -247,36 +247,36 @@ export default function AnalyticsView({
       </div>
 
       {/* KPI Cards Grid */}
-      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
-        <div className="card-elevated flex items-center justify-between">
-          <div>
+      <div className="grid grid-cols-2 gap-2.5 sm:gap-4 lg:grid-cols-4">
+        <div className="card-elevated flex items-center justify-between gap-2 p-3 sm:p-6">
+          <div className="min-w-0">
             <small className="text-[10px] font-black text-mutedGrey dark:text-slate-400 uppercase tracking-widest">{t('dashboard.analytics.kpi.total_volume')}</small>
-            <h3 className="mt-1 text-2xl font-black text-inkBlue dark:text-white">{formatUSD(totalVolume)}</h3>
+            <h3 className="mt-1 text-lg font-black text-inkBlue dark:text-white sm:text-2xl">{formatUSD(totalVolume)}</h3>
           </div>
-          <div className="h-10 w-10 flex items-center justify-center rounded-lg bg-luxuryGold/10 text-luxuryGold">
-            <DollarSign className="h-5 w-5" />
+          <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-luxuryGold/10 text-luxuryGold sm:h-10 sm:w-10">
+            <DollarSign className="h-4 w-4 sm:h-5 sm:w-5" />
           </div>
         </div>
-        <div className="card-elevated flex items-center justify-between">
-          <div>
+        <div className="card-elevated flex items-center justify-between gap-2 p-3 sm:p-6">
+          <div className="min-w-0">
             <small className="text-[10px] font-black text-mutedGrey dark:text-slate-400 uppercase tracking-widest">{t('dashboard.analytics.kpi.transactions_count')}</small>
-            <h3 className="mt-1 text-2xl font-black text-inkBlue dark:text-white">{totalCount} {t('dashboard.analytics.kpi.transactions_unit')}</h3>
+            <h3 className="mt-1 text-lg font-black text-inkBlue dark:text-white sm:text-2xl">{totalCount} {t('dashboard.analytics.kpi.transactions_unit')}</h3>
           </div>
-          <div className="h-10 w-10 flex items-center justify-center rounded-lg bg-brandCyan/10 text-brandCyan">
-            <TrendingUp className="h-5 w-5" />
+          <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-brandCyan/10 text-brandCyan sm:h-10 sm:w-10">
+            <TrendingUp className="h-4 w-4 sm:h-5 sm:w-5" />
           </div>
         </div>
-        <div className="card-elevated flex items-center justify-between">
-          <div>
+        <div className="card-elevated flex items-center justify-between gap-2 p-3 sm:p-6">
+          <div className="min-w-0">
             <small className="text-[10px] font-black text-mutedGrey dark:text-slate-400 uppercase tracking-widest">{t('dashboard.analytics.kpi.avg_tip')}</small>
-            <h3 className="mt-1 text-2xl font-black text-inkBlue dark:text-white">{formatUSD(averageTip)}</h3>
+            <h3 className="mt-1 text-lg font-black text-inkBlue dark:text-white sm:text-2xl">{formatUSD(averageTip)}</h3>
           </div>
-          <div className="h-10 w-10 flex items-center justify-center rounded-lg bg-slate-100 dark:bg-white/5 text-mutedGrey">
-            <Percent className="h-5 w-5" />
+          <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-slate-100 text-mutedGrey dark:bg-white/5 sm:h-10 sm:w-10">
+            <Percent className="h-4 w-4 sm:h-5 sm:w-5" />
           </div>
         </div>
-        <div className="card-elevated flex items-center justify-between">
-          <div>
+        <div className="card-elevated flex items-center justify-between gap-2 p-3 sm:p-6">
+          <div className="min-w-0">
             <div className="flex items-center gap-1">
               <small className="text-[10px] font-black text-mutedGrey dark:text-slate-400 uppercase tracking-widest">{t('dashboard.analytics.kpi.fees_avoided')}</small>
               <Tooltip
@@ -284,13 +284,13 @@ export default function AnalyticsView({
                 ariaLabel={t('dashboard.analytics.kpi.fees_avoided_tooltip', { fee: processingFee })}
               />
             </div>
-            <h3 className="mt-1 text-2xl font-black text-emerald-600 dark:text-emerald-400">{formatUSD(feesAvoided)}</h3>
+            <h3 className="mt-1 text-lg font-black text-emerald-600 dark:text-emerald-400 sm:text-2xl">{formatUSD(feesAvoided)}</h3>
             <span className="mt-1 block text-[10px] text-mutedGrey dark:text-slate-400">
               {(t('dashboard.tips.savings.fees_avoided_sub')).replace('3%', `${processingFee}%`)}
             </span>
           </div>
-          <div className="h-10 w-10 flex items-center justify-center rounded-lg bg-emerald-50 dark:bg-emerald-500/10 text-emerald-600 dark:text-emerald-400">
-            <Zap className="h-5 w-5" />
+          <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-emerald-50 text-emerald-600 dark:bg-emerald-500/10 dark:text-emerald-400 sm:h-10 sm:w-10">
+            <Zap className="h-4 w-4 sm:h-5 sm:w-5" />
           </div>
         </div>
       </div>

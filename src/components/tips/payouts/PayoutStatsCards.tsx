@@ -84,26 +84,26 @@ export default function PayoutStatsCards({
   ]
 
   return (
-    <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
+    <div className="grid grid-cols-2 gap-2.5 sm:gap-4 xl:grid-cols-4">
       {cards.map((card) => {
         const { Icon, box, iconClass } = CARD_ICONS[card.key]
         return (
           <div
             key={card.key}
-            className="rounded-xl border border-[#dde5ef] bg-white p-5 shadow-[0_2px_8px_rgba(15,23,42,0.04)]"
+            className="rounded-xl border border-[#dde5ef] bg-white p-3 shadow-[0_2px_8px_rgba(15,23,42,0.04)] sm:p-5"
           >
             <p className="text-[10px] font-extrabold uppercase tracking-[0.06em] text-[#4d5870]">
               {card.label}
             </p>
             <div className="mt-2.5 flex items-end justify-between gap-2">
-              <p className="text-[22px] font-extrabold leading-none text-[#070e25]">
+              <p className="text-lg font-extrabold leading-none text-[#070e25] sm:text-[22px]">
                 {isLoading ? '—' : card.value}
               </p>
               <div
-                className={`flex h-[38px] w-[38px] shrink-0 items-center justify-center rounded-[10px] ${box}`}
+                className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-[10px] sm:h-[38px] sm:w-[38px] ${box}`}
                 aria-hidden
               >
-                <Icon className={`h-[18px] w-[18px] ${iconClass}`} strokeWidth={2.25} />
+                <Icon className={`h-4 w-4 sm:h-[18px] sm:w-[18px] ${iconClass}`} strokeWidth={2.25} />
               </div>
             </div>
             {card.sub ? (

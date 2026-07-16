@@ -31,53 +31,53 @@ export default function TipsOverviewTab({
     <div className="space-y-6">
       {/* Overview Cards Grid */}
       <div
-        className={`grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 ${
+        className={`grid grid-cols-2 gap-2.5 sm:gap-4 lg:grid-cols-3 ${
           hasCrypto ? 'xl:grid-cols-4' : ''
         }`}
       >
-        <div className="card-elevated flex items-center justify-between">
-          <div>
+        <div className="card-elevated flex items-center justify-between gap-2 p-3 sm:p-6">
+          <div className="min-w-0">
             <small className="text-[10px] font-black text-mutedGrey dark:text-slate-400 uppercase tracking-widest">
               {t('dashboard.tips.kpi.total_revenue')}
             </small>
-            <h3 className="mt-1 text-2xl font-black text-inkBlue dark:text-white">{formatUSD(totalVolume)}</h3>
+            <h3 className="mt-1 text-lg font-black text-inkBlue dark:text-white sm:text-2xl">{formatUSD(totalVolume)}</h3>
           </div>
-          <div className="h-10 w-10 flex items-center justify-center rounded-lg bg-luxuryGold/10 text-luxuryGold">
-            <DollarSign className="h-5 w-5" />
+          <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-luxuryGold/10 text-luxuryGold sm:h-10 sm:w-10">
+            <DollarSign className="h-4 w-4 sm:h-5 sm:w-5" />
           </div>
         </div>
-        <div className="card-elevated flex items-center justify-between">
-          <div>
+        <div className="card-elevated flex items-center justify-between gap-2 p-3 sm:p-6">
+          <div className="min-w-0">
             <small className="text-[10px] font-black text-mutedGrey dark:text-slate-400 uppercase tracking-widest">
               {t('dashboard.tips.kpi.direct_p2p')}
             </small>
-            <h3 className="mt-1 text-2xl font-black text-inkBlue dark:text-white">{formatUSD(directTips)}</h3>
+            <h3 className="mt-1 text-lg font-black text-inkBlue dark:text-white sm:text-2xl">{formatUSD(directTips)}</h3>
           </div>
-          <div className="h-10 w-10 flex items-center justify-center rounded-lg bg-brandCyan/10 text-brandCyan">
-            <ArrowUpRight className="h-5 w-5" />
+          <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-brandCyan/10 text-brandCyan sm:h-10 sm:w-10">
+            <ArrowUpRight className="h-4 w-4 sm:h-5 sm:w-5" />
           </div>
         </div>
-        <div className="card-elevated flex items-center justify-between">
-          <div>
+        <div className="card-elevated flex items-center justify-between gap-2 p-3 sm:p-6">
+          <div className="min-w-0">
             <small className="text-[10px] font-black text-mutedGrey dark:text-slate-400 uppercase tracking-widest">
               {t('dashboard.tips.kpi.card_tips')}
             </small>
-            <h3 className="mt-1 text-2xl font-black text-inkBlue dark:text-white">{formatUSD(cardTips)}</h3>
+            <h3 className="mt-1 text-lg font-black text-inkBlue dark:text-white sm:text-2xl">{formatUSD(cardTips)}</h3>
           </div>
-          <div className="h-10 w-10 flex items-center justify-center rounded-lg bg-slate-100 dark:bg-white/5 text-mutedGrey">
-            <DollarSign className="h-5 w-5" />
+          <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-slate-100 text-mutedGrey dark:bg-white/5 sm:h-10 sm:w-10">
+            <DollarSign className="h-4 w-4 sm:h-5 sm:w-5" />
           </div>
         </div>
         {hasCrypto && (
-          <div className="card-elevated flex items-center justify-between">
-            <div>
+          <div className="card-elevated flex items-center justify-between gap-2 p-3 sm:p-6">
+            <div className="min-w-0">
               <small className="text-[10px] font-black text-mutedGrey dark:text-slate-400 uppercase tracking-widest">
                 {t('dashboard.tips.kpi.crypto_tips')}
               </small>
-              <h3 className="mt-1 text-2xl font-black text-inkBlue dark:text-white">{formatUSD(cryptoTips)}</h3>
+              <h3 className="mt-1 text-lg font-black text-inkBlue dark:text-white sm:text-2xl">{formatUSD(cryptoTips)}</h3>
             </div>
-            <div className="h-10 w-10 flex items-center justify-center rounded-lg bg-amber-100 dark:bg-amber-500/10 text-amber-500">
-              <TrendingUp className="h-5 w-5" />
+            <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-amber-100 text-amber-500 dark:bg-amber-500/10 sm:h-10 sm:w-10">
+              <TrendingUp className="h-4 w-4 sm:h-5 sm:w-5" />
             </div>
           </div>
         )}
