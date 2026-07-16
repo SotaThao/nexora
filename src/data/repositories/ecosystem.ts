@@ -14,6 +14,8 @@ interface VlinkPayEcosystemDto {
   name?: string
   url?: string | null
   logoUrl?: string | null
+  isEcosystem?: boolean
+  isComingSoon?: boolean
 }
 
 interface VlinkPayEcosystemSignInResponseDto {
@@ -30,6 +32,8 @@ function normalizeEcosystem(raw: VlinkPayEcosystemDto): EcosystemItem | null {
     name,
     url: raw.url?.trim() ?? '',
     logoUrl: raw.logoUrl?.trim() ?? null,
+    isEcosystem: typeof raw.isEcosystem === 'boolean' ? raw.isEcosystem : undefined,
+    isComingSoon: typeof raw.isComingSoon === 'boolean' ? raw.isComingSoon : undefined,
   }
 }
 
