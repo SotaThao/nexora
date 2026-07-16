@@ -118,8 +118,8 @@ export default function DevicesView({
       {/* View Header */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
-          <h2 className="text-xl font-extrabold text-nexoraText">{t('dashboard.menu.qr_nfc')}</h2>
-          <p className="mt-1 text-xs text-nexoraMuted">
+          <h2 className="hidden text-xl font-extrabold text-nexoraText sm:block">{t('dashboard.menu.qr_nfc')}</h2>
+          <p className="mt-0 text-xs text-nexoraMuted sm:mt-1">
             {t('dashboard.devices.subtitle')}
           </p>
         </div>

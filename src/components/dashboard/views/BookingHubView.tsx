@@ -121,8 +121,8 @@ export default function BookingHubView() {
     <BookingHubVoiceProvider enabled={voiceFeaturesEnabled}>
     <section className="booking-hub-view">
       <div className="page-heading">
-        <h1 className="page-title">{t(`${TK}.title`)}</h1>
-        <p className="page-description">{t(`${TK}.description`)}</p>
+        <h1 className="page-title hidden sm:block">{t(`${TK}.title`)}</h1>
+        <p className="page-description !mt-0 sm:!mt-2">{t(`${TK}.description`)}</p>
         {isTenantStatusLoading ? (
           <BookingHubTabsSkeleton />
         ) : (

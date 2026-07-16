@@ -236,12 +236,12 @@ export default function AnalyticsView({
   return (
     <div className="space-y-6 pb-12">
       {/* Title */}
-      <div className="border-b border-nexoraBorder pb-5">
-        <h2 className="text-2xl font-black text-inkBlue dark:text-white tracking-tight flex items-center gap-2">
+      <div className="border-b border-nexoraBorder pb-3 sm:pb-5">
+        <h2 className="hidden text-2xl font-black text-inkBlue dark:text-white tracking-tight sm:flex sm:items-center sm:gap-2">
           <BarChart3 className="h-6 w-6 text-luxuryGold" />
           {t('dashboard.menu.analytics')}
         </h2>
-        <p className="mt-1 text-sm text-mutedGrey dark:text-slate-400">
+        <p className="mt-0 text-sm text-mutedGrey dark:text-slate-400 sm:mt-1">
           {t('dashboard.analytics.description')}
         </p>
       </div>
