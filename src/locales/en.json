@@ -829,8 +829,8 @@
       "referral_title": "Referral Link",
       "referral_body": "Invite new members to join your network.",
       "btn_open": "Open QR",
-    "btn_download": "Download",
-    "btn_copy_link": "Copy",
+      "btn_download": "Download",
+      "btn_copy_link": "Copy",
       "copied_qr_link": "Link copied to clipboard!"
     },
     "touchpoint_stats": {
@@ -2551,7 +2551,8 @@
             "detailServices": "Booked services",
             "detailSource": "Source",
             "detailNote": "Note",
-            "closeDetail": "Close"
+            "closeDetail": "Close",
+            "generalService": "General Service"
           },
           "plans": {
             "hero": "Founding Salon Offer - only 7 Founding spots left · Price locked for 12 months",
@@ -2659,7 +2660,19 @@
                 "fri": "Fri",
                 "sat": "Sat"
               }
-            }
+            },
+            "perMonth": "/mo",
+            "crossPriceStarter": "$149/mo",
+            "crossPricePro": "$299/mo",
+            "crossPriceElite": "$499/mo",
+            "featVoice247": "AI Voice 24/7",
+            "featMissedCallSms": "Missed-call SMS",
+            "featStarterUsage": "500 min · 500 SMS",
+            "featVoiceSmsCampaigns": "AI Voice + SMS Campaigns",
+            "featOwnerDashboard": "Owner Dashboard",
+            "featAutoGoogleReview": "Auto Google Review",
+            "featProUsage": "1,000 min · 1,000 SMS",
+            "featStaffDashboardTaxIq": "Staff Dashboard + TAX IQ"
           },
           "settings": {
             "eyebrow": "⚙️ Salon settings",
@@ -2775,7 +2788,14 @@
             "invalidPhone": "Please enter a valid phone number.",
             "hourRequired": "Open and close times are required.",
             "hourInvalid": "Open time must be earlier than close time.",
-            "hourValidationSummary": "Please fix operating hours before saving."
+            "hourValidationSummary": "Please fix operating hours before saving.",
+            "syncPillVoice": "AI Voice",
+            "syncPillSms": "SMS",
+            "syncPillLanding": "Landing Page",
+            "syncPillSchema": "Schema",
+            "syncPillBooking": "Booking",
+            "durationUnit": "min",
+            "loadingAria": "Loading salon settings"
           },
           "team": {
             "intro": "Shared tech profiles for client SMS alerts, tip QR, reviews, and rewards.",
@@ -2832,7 +2852,8 @@
             "noPhone": "No phone yet",
             "emptyTitle": "No tech profiles yet",
             "emptyDescription": "Add your first tech profile to enable SMS alerts, tip QR, reviews, and rewards for each team member.",
-            "emptyCta": "Add your first tech"
+            "emptyCta": "Add your first tech",
+            "unnamedStaff": "Unnamed staff"
           },
           "customers": {
             "headerTitle": "Customer list",
@@ -2993,7 +3014,6 @@
       },
       "steps": {
         "StepCredentials": {
-
           "activateAccountEnterOtp": "Activate Account",
           "enterTheOtpCode": "Verification code sent to {{email}}",
           "enterOtpCode": "Enter verification code",
@@ -3410,8 +3430,6 @@
           "ratingOnly": "Rating only — no comment.",
           "pageOf": "Page {{page}} of {{total}}",
           "internal": "Customer identities are protected. You see ratings and feedback only.",
-          "allReviews": "All Reviews",
-          "needsReply": "Needs Reply",
           "needsReplyUnavailable": "Coming soon"
         }
       }

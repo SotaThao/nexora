@@ -161,8 +161,8 @@ function formatServiceLabel(value: string) {
     .join(' ')
 }
 
-function serviceList(service: string | null | undefined) {
-  if (!service) return ['General Service']
+function serviceList(service: string | null | undefined, fallback: string) {
+  if (!service) return [fallback]
   return service
     .split(/[,/]/)
     .map((item) => formatServiceLabel(item.trim()))
@@ -252,6 +252,7 @@ function toBookingItem(
   statusOverride: BookingStatus | undefined,
   todayLabel: string,
   language: string = 'en',
+  generalServiceLabel: string = 'General Service',
 ): BookingItem {
   const source = mapSource(item.source)
   const time = formatTimeBlock(
@@ -272,7 +273,7 @@ function toBookingItem(
     id: item.id,
     name: item.customerName?.trim() || EMPTY_CELL,
     contactDisplay: resolveCustomerContactDisplay(item.customerPhone, item.customerEmail),
-    services: serviceList(item.service),
+    services: serviceList(item.service, generalServiceLabel),
     tech: item.assignedStaffName?.trim() || EMPTY_CELL,
     date: time.dateIso,
     timeMain: time.timeMain,
@@ -566,7 +567,13 @@ export default function BookingTodayPanel() {
 
   const mappedBookings = useMemo(() => (
     (bookingResponse?.items ?? []).map((item) =>
-      toBookingItem(item, statusOverrides[item.id], t(`${TK}.today.todayLabel`), currentLanguage),
+      toBookingItem(
+        item,
+        statusOverrides[item.id],
+        t(`${TK}.today.todayLabel`),
+        currentLanguage,
+        t(`${TK}.today.generalService`),
+      ),
     )
   ), [bookingResponse?.items, statusOverrides, t, currentLanguage])
 

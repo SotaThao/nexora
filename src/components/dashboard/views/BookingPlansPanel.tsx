@@ -69,13 +69,13 @@ export default function BookingPlansPanel() {
             <div className="service-plan-name">Starter</div>
             <div className="service-plan-price">
               $99
-              <span>/mo</span>
+              <span>{t(`${TK}.perMonth`)}</span>
             </div>
-            <div className="service-plan-cross">$149/mo</div>
+            <div className="service-plan-cross">{t(`${TK}.crossPriceStarter`)}</div>
             <div className="plan-features">
-              <PlanFeature included>AI Voice 24/7</PlanFeature>
-              <PlanFeature included>Missed-call SMS</PlanFeature>
-              <PlanFeature included>500 min · 500 SMS</PlanFeature>
+              <PlanFeature included>{t(`${TK}.featVoice247`)}</PlanFeature>
+              <PlanFeature included>{t(`${TK}.featMissedCallSms`)}</PlanFeature>
+              <PlanFeature included>{t(`${TK}.featStarterUsage`)}</PlanFeature>
               <PlanFeature included={false}>{t(`${TK}.dashboardInPro`)}</PlanFeature>
               <PlanFeature included={false}>{t(`${TK}.googleReviewInPro`)}</PlanFeature>
             </div>
@@ -96,15 +96,15 @@ export default function BookingPlansPanel() {
             <div className="service-plan-name">Pro</div>
             <div className="service-plan-price">
               $199
-              <span>/mo</span>
+              <span>{t(`${TK}.perMonth`)}</span>
             </div>
-            <div className="service-plan-cross">$299/mo</div>
+            <div className="service-plan-cross">{t(`${TK}.crossPricePro`)}</div>
             <div className="plan-features">
-              <PlanFeature included>AI Voice + SMS Campaigns</PlanFeature>
-              <PlanFeature included>Owner Dashboard</PlanFeature>
-              <PlanFeature included>Auto Google Review</PlanFeature>
+              <PlanFeature included>{t(`${TK}.featVoiceSmsCampaigns`)}</PlanFeature>
+              <PlanFeature included>{t(`${TK}.featOwnerDashboard`)}</PlanFeature>
+              <PlanFeature included>{t(`${TK}.featAutoGoogleReview`)}</PlanFeature>
               <PlanFeature included>{t(`${TK}.landingPagesAiDesign`)}</PlanFeature>
-              <PlanFeature included>1,000 min · 1,000 SMS</PlanFeature>
+              <PlanFeature included>{t(`${TK}.featProUsage`)}</PlanFeature>
               <div className="plan-aio">{t(`${TK}.aioEngine`)}</div>
             </div>
             <button
@@ -125,13 +125,13 @@ export default function BookingPlansPanel() {
             <div className="service-plan-name">Elite</div>
             <div className="service-plan-price">
               $349
-              <span>/mo</span>
+              <span>{t(`${TK}.perMonth`)}</span>
             </div>
-            <div className="service-plan-cross">$499/mo</div>
+            <div className="service-plan-cross">{t(`${TK}.crossPriceElite`)}</div>
             <div className="plan-features">
               <PlanFeature included>{t(`${TK}.everythingInPro`)}</PlanFeature>
               <div className="plan-aio">{t(`${TK}.aioMax`)}</div>
-              <PlanFeature included>Staff Dashboard + TAX IQ</PlanFeature>
+              <PlanFeature included>{t(`${TK}.featStaffDashboardTaxIq`)}</PlanFeature>
               <PlanFeature included>{t(`${TK}.eliteUsage`)}</PlanFeature>
               <PlanFeature included>{t(`${TK}.emailMarketingWinback`)}</PlanFeature>
             </div>
