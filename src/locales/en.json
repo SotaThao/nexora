@@ -4558,9 +4558,44 @@
         "incomeTypePlaceholder": "Select an income type",
         "incomeTypeNote": "Income type note",
         "notes": "Notes (optional)",
+        "platformLabel": "Payment platform (optional)",
+        "platformPlaceholder": "Select a payment platform",
         "back": "Back",
         "next": "Next",
         "save": "Save"
+      }
+    },
+    "form1099kReconciliation": {
+      "title": "1099-K Reconciliation",
+      "subtitle": "Compare what you self-reported against the actual 1099-K amount each payment platform reports to the IRS.",
+      "add": "Add 1099-K Amount",
+      "edit": "Edit 1099-K Amount",
+      "emptyState": "No 1099-K amounts recorded yet. Add one when you receive a 1099-K from Cash App, Venmo, or PayPal.",
+      "saveSuccess": "1099-K amount saved.",
+      "platform": {
+        "cashApp": "Cash App",
+        "venmo": "Venmo",
+        "payPal": "PayPal"
+      },
+      "columns": {
+        "platform": "Platform",
+        "selfReported": "Self-Reported in Tax IQ",
+        "reported1099k": "On 1099-K Received",
+        "variance": "Variance",
+        "varianceNote": "Explanation",
+        "actions": "Actions"
+      },
+      "errors": {
+        "generic": "Something went wrong. Please try again."
+      },
+      "form": {
+        "platformLabel": "Payment platform",
+        "platformPlaceholder": "Select a payment platform",
+        "amountLabel": "Amount on 1099-K",
+        "amountRequired": "Amount cannot be negative.",
+        "platformRequired": "Payment platform is required.",
+        "varianceNoteLabel": "Explanation for variance (optional)",
+        "varianceNotePlaceholder": "e.g. partly a friend repaying a shared meal, not business income"
       }
     },
     "ownerIncome": {

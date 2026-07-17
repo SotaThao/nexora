@@ -3,6 +3,7 @@ import { useTranslation } from '../../../../contexts/LanguageContext'
 import { useStaffTaxYearByYear } from '../../../../data/hooks/useTaxiqStaffTaxYear'
 import { SkeletonList } from '../../../ui/skeleton'
 import IncomeSummaryListView from './IncomeSummaryListView'
+import Form1099KReconciliationView from './Form1099KReconciliationView'
 
 // Mirrors StaffTaxIqDeductionsRoute/StaffTaxIqLogsRoute's gating: no StaffTaxYear yet →
 // send the Staff back to onboarding instead of rendering Income Summary with nothing to
@@ -39,10 +40,16 @@ export default function StaffTaxIqIncomeRoute() {
   }
 
   return (
-    <IncomeSummaryListView
-      staffTaxYearId={staffTaxYear.id}
-      taxYear={staffTaxYear.taxYear}
-      staffTaxYearStatus={staffTaxYear.status}
-    />
+    <div className="space-y-8">
+      <IncomeSummaryListView
+        staffTaxYearId={staffTaxYear.id}
+        taxYear={staffTaxYear.taxYear}
+        staffTaxYearStatus={staffTaxYear.status}
+      />
+      <Form1099KReconciliationView
+        staffTaxYearId={staffTaxYear.id}
+        staffTaxYearStatus={staffTaxYear.status}
+      />
+    </div>
   )
 }

@@ -4550,9 +4550,44 @@
         "incomeTypePlaceholder": "Chọn loại thu nhập",
         "incomeTypeNote": "Ghi chú loại thu nhập",
         "notes": "Ghi chú (tùy chọn)",
+        "platformLabel": "Nền tảng thanh toán (tùy chọn)",
+        "platformPlaceholder": "Chọn nền tảng thanh toán",
         "back": "Quay lại",
         "next": "Tiếp theo",
         "save": "Lưu"
+      }
+    },
+    "form1099kReconciliation": {
+      "title": "Đối Chiếu 1099-K",
+      "subtitle": "So sánh số tiền bạn tự khai với số tiền thực tế trên 1099-K mà mỗi nền tảng thanh toán báo cáo cho IRS.",
+      "add": "Thêm Số Tiền 1099-K",
+      "edit": "Sửa Số Tiền 1099-K",
+      "emptyState": "Chưa có số tiền 1099-K nào. Thêm khi bạn nhận được 1099-K từ Cash App, Venmo, hoặc PayPal.",
+      "saveSuccess": "Đã lưu số tiền 1099-K.",
+      "platform": {
+        "cashApp": "Cash App",
+        "venmo": "Venmo",
+        "payPal": "PayPal"
+      },
+      "columns": {
+        "platform": "Nền Tảng",
+        "selfReported": "Tự Khai Trong Tax IQ",
+        "reported1099k": "Trên 1099-K Nhận Được",
+        "variance": "Chênh Lệch",
+        "varianceNote": "Giải Thích",
+        "actions": "Hành Động"
+      },
+      "errors": {
+        "generic": "Đã có lỗi xảy ra. Vui lòng thử lại."
+      },
+      "form": {
+        "platformLabel": "Nền tảng thanh toán",
+        "platformPlaceholder": "Chọn nền tảng thanh toán",
+        "amountLabel": "Số tiền trên 1099-K",
+        "amountRequired": "Số tiền không được âm.",
+        "platformRequired": "Nền tảng thanh toán là bắt buộc.",
+        "varianceNoteLabel": "Giải thích chênh lệch (tùy chọn)",
+        "varianceNotePlaceholder": "ví dụ: một phần là bạn bè trả lại tiền ăn chung, không phải thu nhập kinh doanh"
       }
     },
     "ownerIncome": {

@@ -14,12 +14,18 @@ import ReceiptUploadStep from '../../../dashboard/views/taxiq/shared/ReceiptUplo
 import PeriodPicker, { defaultRangeForMode } from './shared/PeriodPicker'
 import type { PeriodMode } from './shared/PeriodPicker'
 import IconButton from '../../../ui/IconButton'
+import { PAYMENT_PLATFORMS } from '../../../../data/repositories/taxiqForm1099K'
 
 const LOCKED_ERROR_CODE = 'TAXIQ_STAFF_TAX_YEAR_LOCKED'
 
 type StepId = 'basic' | 'details' | 'receipt'
 
 const INCOME_TYPE_OPTIONS = ['CashFromClient', 'OtherSalonIncome', 'BoothRentFromSubRenter', 'Other'] as const
+
+// Platform only makes sense for income received through a personal payment app (Cash App/
+// Venmo/PayPal), i.e. the "Cash From Client" tip case from the BA doc's Chị Hoa example —
+// Owner payroll income (Other Salon Income) or booth rent never flows through these apps.
+const PLATFORM_ELIGIBLE_INCOME_TYPE = 'CashFromClient'
 
 const INCOME_TYPE_TOOLTIP_KEYS: Record<string, string> = {
   CashFromClient: 'taxiq.selfReportedIncome.incomeTypeTooltips.cashFromClient',
@@ -77,6 +83,7 @@ export default function SelfReportedIncomeWizard({
   const [source, setSource] = useState('')
   const [incomeType, setIncomeType] = useState('')
   const [incomeTypeNote, setIncomeTypeNote] = useState('')
+  const [platform, setPlatform] = useState('')
   const [notes, setNotes] = useState('')
   const [basicErrors, setBasicErrors] = useState<BasicErrors>({})
   const [lockedNotice, setLockedNotice] = useState(false)
@@ -94,6 +101,7 @@ export default function SelfReportedIncomeWizard({
     setIncomeType(detail.incomeType ?? '')
     setIncomeTypeNote(detail.incomeTypeNote ?? '')
     setNotes(detail.notes ?? '')
+    setPlatform(detail.platform ?? '')
     setReceiptCount(detail.receipts.length)
     setIsPrefilled(true)
   }, [isEditing, isPrefilled, detailQuery.data])
@@ -136,6 +144,7 @@ export default function SelfReportedIncomeWizard({
     incomeType: incomeType || null,
     incomeTypeNote: incomeType === 'Other' ? incomeTypeNote.trim() || null : null,
     notes: notes.trim() || null,
+    platform: incomeType === PLATFORM_ELIGIBLE_INCOME_TYPE ? platform || null : null,
   })
 
   const handleBasicNext = async () => {
@@ -283,6 +292,24 @@ export default function SelfReportedIncomeWizard({
                   <p className="mt-1 text-[11px] font-medium text-nexoraMuted">{t(INCOME_TYPE_TOOLTIP_KEYS[incomeType])}</p>
                 )}
               </div>
+
+              {incomeType === PLATFORM_ELIGIBLE_INCOME_TYPE && (
+                <div>
+                  <label className="text-xs font-bold text-nexoraMuted">{t('taxiq.selfReportedIncome.form.platformLabel')}</label>
+                  <select
+                    value={platform}
+                    onChange={(e) => setPlatform(e.target.value)}
+                    className="mt-1 w-full rounded-lg border border-nexoraBorder px-3 py-2 text-sm"
+                  >
+                    <option value="">{t('taxiq.selfReportedIncome.form.platformPlaceholder')}</option>
+                    {PAYMENT_PLATFORMS.map((opt) => (
+                      <option key={opt} value={opt}>
+                        {t(`taxiq.form1099kReconciliation.platform.${opt.charAt(0).toLowerCase()}${opt.slice(1)}`)}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              )}
 
               {incomeType === 'Other' && (
                 <div>

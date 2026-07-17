@@ -184,6 +184,9 @@ export const qk = {
   taxiqSelfReportedIncome: (staffTaxYearId?: string) => ['taxiqSelfReportedIncome', staffTaxYearId ?? 'unknown'],
   taxiqSelfReportedIncomeDetail: (id?: string) => ['taxiqSelfReportedIncome', 'detail', id ?? 'unknown'],
 
+  // Tax IQ — Staff 1099-K Reconciliation (US-018)
+  taxiqForm1099KReconciliation: (staffTaxYearId?: string) => ['taxiqForm1099KReconciliation', staffTaxYearId ?? 'unknown'],
+
   // Tax IQ — Owner Income Summary (US-014)
   taxiqOwnerIncome: (ownerTaxYearId?: string) => ['taxiqOwnerIncome', ownerTaxYearId ?? 'unknown'],
   taxiqOwnerIncomeDetail: (id?: string) => ['taxiqOwnerIncome', 'detail', id ?? 'unknown'],

@@ -26,6 +26,7 @@ export interface SelfReportedIncomeApiDto {
   incomeTypeNote?: string | null
   notes?: string | null
   status: string
+  platform?: string | null
   receipts: SelfReportedIncomeReceiptApiDto[]
   createdAt: string
   lastModified?: string | null
@@ -43,6 +44,7 @@ export interface SelfReportedIncomeRecord {
   incomeTypeNote: string | null
   notes: string | null
   status: string
+  platform: string | null
   receipts: SelfReportedIncomeReceiptApiDto[]
   hasReceipt: boolean
   createdAt: string
@@ -58,6 +60,7 @@ export interface SelfReportedIncomeFields {
   incomeType?: string | null
   incomeTypeNote?: string | null
   notes?: string | null
+  platform?: string | null
 }
 
 export interface CreateSelfReportedIncomeParams extends SelfReportedIncomeFields {
@@ -78,6 +81,7 @@ function normalizeSelfReportedIncome(dto: SelfReportedIncomeApiDto): SelfReporte
     incomeTypeNote: dto.incomeTypeNote ?? null,
     notes: dto.notes ?? null,
     status: dto.status,
+    platform: dto.platform ?? null,
     receipts,
     hasReceipt: receipts.length > 0,
     createdAt: dto.createdAt,
@@ -118,6 +122,7 @@ export function createTaxiqSelfReportedIncomeRepository(client: HttpClient = htt
         incomeType: params.incomeType ?? null,
         incomeTypeNote: params.incomeTypeNote ?? null,
         notes: params.notes ?? null,
+        platform: params.platform ?? null,
       })
     },
 
@@ -131,6 +136,7 @@ export function createTaxiqSelfReportedIncomeRepository(client: HttpClient = htt
         incomeType: params.incomeType ?? null,
         incomeTypeNote: params.incomeTypeNote ?? null,
         notes: params.notes ?? null,
+        platform: params.platform ?? null,
       })
     },
 
