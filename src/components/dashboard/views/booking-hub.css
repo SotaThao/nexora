@@ -1822,6 +1822,8 @@
   display: flex;
   align-items: center;
   justify-content: center;
+  min-height: 100%;
+  min-height: 100dvh;
   padding: 20px;
   background: rgba(8, 15, 34, 0.55);
 }
@@ -1832,7 +1834,11 @@
 
 .booking-hub-view .cust-modal {
   width: min(560px, 100%);
+  max-width: 100%;
   max-height: 90vh;
+  max-height: 90dvh;
+  margin: auto;
+  overflow-x: hidden;
   overflow-y: auto;
   border-radius: 16px;
   background: var(--nexora-surface);
@@ -1884,16 +1890,91 @@
   grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 14px;
   padding: 20px;
+  min-width: 0;
+  max-width: 100%;
+  overflow-x: hidden;
 }
 
 .booking-hub-view .cust-field {
   display: flex;
   flex-direction: column;
   gap: 6px;
+  min-width: 0;
+  max-width: 100%;
 }
 
 .booking-hub-view .cust-field-full {
   grid-column: 1 / -1;
+}
+
+/* Native date inputs have a large intrinsic min-width on iOS/Android WebKit.
+   Clip inside a sized shell so the control cannot expand past the modal. */
+.booking-hub-view .cust-date-shell {
+  position: relative;
+  display: flex;
+  align-items: center;
+  width: 100%;
+  max-width: 100%;
+  min-width: 0;
+  min-height: 40px;
+  overflow: hidden;
+  border-radius: 8px;
+  background: #fff;
+}
+
+.booking-hub-view .cust-field input[type='date'],
+.booking-hub-view .cust-date-input {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  width: 100%;
+  max-width: 100%;
+  min-width: 0;
+  height: 40px;
+  box-sizing: border-box;
+  -webkit-appearance: none;
+  appearance: none;
+  line-height: normal;
+  text-align: left;
+}
+
+.booking-hub-view .cust-date-input::-webkit-date-and-time-value {
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  width: 100%;
+  max-width: 100%;
+  height: 100%;
+  margin: 0;
+  padding: 0;
+  line-height: normal;
+  text-align: left;
+}
+
+.booking-hub-view .cust-field input[type='date']::-webkit-datetime-edit,
+.booking-hub-view .cust-field input[type='date']::-webkit-datetime-edit-fields-wrapper,
+.booking-hub-view .cust-date-input::-webkit-datetime-edit,
+.booking-hub-view .cust-date-input::-webkit-datetime-edit-fields-wrapper {
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  min-width: 0;
+  max-width: 100%;
+  width: 100%;
+  height: 100%;
+  padding: 0;
+  margin: 0;
+  overflow: hidden;
+  text-align: left;
+}
+
+.booking-hub-view .cust-date-input::-webkit-datetime-edit-text,
+.booking-hub-view .cust-date-input::-webkit-datetime-edit-month-field,
+.booking-hub-view .cust-date-input::-webkit-datetime-edit-day-field,
+.booking-hub-view .cust-date-input::-webkit-datetime-edit-year-field {
+  padding: 0;
+  line-height: normal;
 }
 
 .booking-hub-view .cust-field .booking-input.has-error {
@@ -1952,6 +2033,100 @@
 }
 
 @media (max-width: 767px) {
+  .booking-hub-view .cust-modal-overlay {
+    padding: 12px;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .booking-hub-view .cust-modal {
+    width: 100%;
+    max-height: min(92dvh, 92vh);
+    border-radius: 16px;
+  }
+
+  .booking-hub-view .cust-modal-head {
+    padding: 14px 16px;
+  }
+
+  .booking-hub-view .cust-modal-head h3 {
+    font-size: 17px;
+    line-height: 1.3;
+  }
+
+  .booking-hub-view .cust-modal-body {
+    grid-template-columns: 1fr;
+    padding: 16px;
+    gap: 12px;
+  }
+
+  .booking-hub-view .cust-field-birthday,
+  .booking-hub-view .cust-field {
+    grid-column: 1 / -1;
+  }
+
+  .booking-hub-view .cust-field-label,
+  .booking-hub-view .cust-status-row > span:first-child {
+    font-size: 12px;
+    letter-spacing: 0.03em;
+  }
+
+  .booking-hub-view .cust-field-error {
+    font-size: 12px;
+    line-height: 16px;
+  }
+
+  /*
+   * Mobile inputs: 16px floor avoids iOS Safari zoom on focus.
+   * Text/select stay readable; date also 16px but clipped by cust-date-shell.
+   */
+  .booking-hub-view .cust-date-shell {
+    min-height: 44px;
+  }
+
+  .booking-hub-view .cust-modal .booking-input,
+  .booking-hub-view .cust-modal .booking-select,
+  .booking-hub-view .cust-field input[type='date'],
+  .booking-hub-view .cust-date-input {
+    height: 44px;
+    min-height: 44px;
+    font-size: 16px !important;
+    font-weight: 600;
+    line-height: 44px;
+  }
+
+  .booking-hub-view .cust-date-input {
+    line-height: normal;
+  }
+
+  .booking-hub-view .cust-modal .booking-input::placeholder {
+    font-size: 14px !important;
+    font-weight: 600;
+  }
+
+  .booking-hub-view .cust-status-row {
+    padding: 12px;
+  }
+
+  .booking-hub-view .cust-status-toggle span {
+    font-size: 14px;
+  }
+
+  .booking-hub-view .cust-modal-foot {
+    padding: 12px 16px;
+    flex-wrap: wrap;
+  }
+
+  .booking-hub-view .cust-modal-foot .booking-mini-button {
+    flex: 1 1 auto;
+    min-height: 44px;
+    font-size: 14px;
+  }
+
+  .booking-hub-view .cust-modal-foot .booking-mini-label {
+    font-size: 14px;
+  }
+
   .booking-hub-view .overview-kpis {
     padding-left: 0;
     padding-right: 0;
