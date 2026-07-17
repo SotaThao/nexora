@@ -18,7 +18,10 @@ export type BookingHubStatusFilterAll = typeof BOOKING_HUB_STATUS_FILTER_ALL
 /** Shared className for Booking Hub Pagination (matches `booking-hub.css`). */
 export const BOOKING_HUB_PAGINATION_CLASSNAME = 'booking-pagination' as const
 
-/** Count statuses on the current page list (for status chips). */
+/**
+ * Count statuses on the **current page** list for Booking Hub status chips.
+ * Intentionally page-scoped (same as Appointment Today): chips do not call BE `Status`.
+ */
 export function countPageItemsByStatus<TStatus extends string>(
   items: ReadonlyArray<{ status: TStatus }>,
   statusOrder: ReadonlyArray<TStatus>,
@@ -36,7 +39,10 @@ export function countPageItemsByStatus<TStatus extends string>(
   return counts
 }
 
-/** Filter the current page list by status chip selection. */
+/**
+ * Filter the **current page** list by status chip.
+ * Does not refetch or change paging — BE list query stays page/search only.
+ */
 export function filterPageItemsByStatus<T extends { status: string }>(
   items: ReadonlyArray<T>,
   statusFilter: T['status'] | BookingHubStatusFilterAll,

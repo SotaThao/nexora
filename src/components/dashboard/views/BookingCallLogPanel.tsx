@@ -201,6 +201,7 @@ export default function BookingCallLogPanel() {
     isError: isCallsError,
     refetch: refetchCalls,
   } = useMerchantVoiceCalls(
+    // Status chips are UI-only on the loaded page (same as Today). Search + paging still hit BE.
     { pageNumber, pageSize, searchTerm },
     { enabled: voiceEnabled },
   );
@@ -229,6 +230,7 @@ export default function BookingCallLogPanel() {
     [calls, statusFilter],
   );
 
+  // Stay on the current page: chip filter only narrows this page’s rows (no BE Status refetch).
   const handleStatusFilterChange = (
     next: CallStatus | typeof BOOKING_HUB_STATUS_FILTER_ALL,
   ) => {

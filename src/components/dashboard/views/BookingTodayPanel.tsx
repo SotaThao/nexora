@@ -604,6 +604,7 @@ export default function BookingTodayPanel() {
     noShow: statistics?.noShowBookings ?? 0,
   }), [statistics])
 
+  // Stay on the current page: chip filter only narrows this page’s rows (no BE Status).
   const handleStatusFilterChange = (next: StatusFilter) => {
     if (next === statusFilter) return
     setStatusFilter(next)
