@@ -1,5 +1,6 @@
 import type { ReactNode } from 'react'
 import Skeleton from '../../ui/skeleton/Skeleton'
+import { useTranslation } from '../../../contexts/LanguageContext'
 
 function BookingSkeletonStack({
   children,
@@ -89,20 +90,20 @@ export function BookingTableMobileListSkeleton({ count = 4 }: { count?: number }
     <div className="booking-table-mobile-list" aria-busy="true" aria-hidden="true">
       {Array.from({ length: count }).map((_, index) => (
         <article className="booking-table-mobile-row booking-skeleton-card" key={index}>
-          <div className="booking-table-mobile-head">
-            <BookingSkeletonStack className="booking-skeleton-stack-grow">
-              <Skeleton width="68%" height={16} borderRadius={6} />
-              <Skeleton width="84%" height={12} borderRadius={6} />
-            </BookingSkeletonStack>
-            <Skeleton width={72} height={22} borderRadius={999} />
-          </div>
-          <div className="booking-table-mobile-meta">
-            <Skeleton width={88} height={22} borderRadius={999} />
-            <Skeleton width={72} height={22} borderRadius={999} />
-          </div>
-          <div className="booking-table-mobile-footer">
-            <Skeleton width="42%" height={14} borderRadius={6} />
-            <Skeleton width={96} height={30} borderRadius={8} />
+          <div className="booking-table-mobile-fields">
+            {Array.from({ length: 8 }).map((__, fieldIndex) => (
+              <div
+                className={`booking-table-mobile-field${fieldIndex === 7 ? ' booking-table-mobile-field-actions' : ''}`}
+                key={fieldIndex}
+              >
+                <Skeleton width="42%" height={10} borderRadius={4} />
+                <Skeleton
+                  width={fieldIndex % 2 === 0 ? '78%' : '56%'}
+                  height={fieldIndex === 7 ? 30 : 14}
+                  borderRadius={fieldIndex === 7 ? 8 : 6}
+                />
+              </div>
+            ))}
           </div>
         </article>
       ))}
@@ -270,8 +271,13 @@ export function BookingTechScheduleSkeleton() {
 }
 
 export function BookingSettingsSkeleton() {
+  const { t } = useTranslation()
   return (
-    <div className="settings-shell" aria-busy="true" aria-label="Loading salon settings">
+    <div
+      className="settings-shell"
+      aria-busy="true"
+      aria-label={t('components.dashboard.views.BookingHubView.settings.loadingAria')}
+    >
       <div className="settings-hero is-compact">
         <Skeleton width={120} height={12} borderRadius={6} />
         <Skeleton width="52%" height={24} borderRadius={8} />
