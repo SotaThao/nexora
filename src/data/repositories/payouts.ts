@@ -128,6 +128,9 @@ function normalizePayoutRecord(raw: Record<string, unknown> | null | undefined):
   return {
     id,
     payoutCode: readField<string>(raw, 'payoutCode', 'PayoutCode') ?? '',
+    businessId: readField<string>(raw, 'businessId', 'BusinessId') ?? '',
+    businessName: readField<string>(raw, 'businessName', 'BusinessName') ?? '',
+    businessLogoUrl: readField<string | null>(raw, 'businessLogoUrl', 'BusinessLogoUrl') ?? null,
     staffProfileId: readField<string>(raw, 'staffProfileId', 'StaffProfileId') ?? '',
     staffDisplayName: readField<string>(raw, 'staffDisplayName', 'StaffDisplayName') ?? '',
     staffCode: readField<string>(raw, 'staffCode', 'StaffCode') ?? '',

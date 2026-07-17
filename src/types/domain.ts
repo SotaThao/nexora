@@ -683,6 +683,10 @@ export interface HomePageBannerSlide {
 export interface PayoutRecord {
   id: string
   payoutCode: string
+  /** Present on staff payout lists — identifies the business that issued the payout. */
+  businessId?: string
+  businessName?: string
+  businessLogoUrl?: string | null
   staffProfileId: string
   staffDisplayName: string
   staffCode: string

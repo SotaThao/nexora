@@ -338,7 +338,7 @@ export default function TipsPayoutsTab({ staff = [] }: { staff?: StaffMember[] }
         ) : null}
       </div>
 
-      <div className="overflow-hidden rounded-xl border border-nexoraBorder bg-white">
+      <div className="sm:overflow-hidden sm:rounded-xl sm:border sm:border-nexoraBorder sm:bg-white">
         <PayoutList
           payouts={payouts}
           isPending={isPending}
