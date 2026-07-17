@@ -6,13 +6,21 @@ import { qk } from '../queryKeys'
 import merchantStaffRepository, { StatusFilter } from '../repositories/merchantStaff'
 import type { StaffListPage } from '../repositories/merchantStaff'
 import type { StaffMember, StaffSearchResult } from '../../types/domain'
+import { isApiError } from '../../types/domain'
 import type {
   MerchantStaffInvite,
   MerchantStaffDetailStats,
   StaffInvitesQuery,
   StaffStatsDateParams,
 } from '../../types/repositories'
-import type { StaffInviteParams, StaffLinkRequestParams, StaffReorderItem, UpdateStaffStatusVars } from '../../types/hooks'
+import type {
+  SetMerchantStaffNicknameVars,
+  StaffInviteParams,
+  StaffLinkRequestParams,
+  StaffReorderItem,
+  UpdateStaffStatusVars,
+} from '../../types/hooks'
+import type { StaffNicknameUpdateResult } from '../repositories/merchantStaff'
 import { staffMemberMatchesAnyId } from '../../utils/merchantStaffPending'
 
 export { StatusFilter }
@@ -202,6 +210,58 @@ export function useUpdateMerchantStaffStatus() {
     },
     onSettled: () => {
       queryClient.invalidateQueries({ queryKey: qk.merchantStaff() })
+    },
+  })
+}
+
+export function useSetMerchantStaffNickname() {
+  const queryClient = useQueryClient()
+
+  return useMutation<StaffNicknameUpdateResult, Error, SetMerchantStaffNicknameVars>({
+    mutationFn: ({ staffLinkId, nickname }) =>
+      merchantStaffRepository.setNickname(staffLinkId, nickname),
+    onSuccess: async (result, { staffLinkId, staffCode }) => {
+      queryClient.setQueriesData<StaffListPage>(
+        { queryKey: qk.merchantStaff() },
+        (current) => {
+          if (!current?.items?.length) return current
+          return {
+            ...current,
+            items: current.items.map((item) =>
+              staffMemberMatchesLinkId(item, staffLinkId)
+                ? {
+                    ...item,
+                    nicknameAtBusiness: result.nicknameAtBusiness,
+                    nickname: result.displayName,
+                    displayName: result.displayName,
+                  }
+                : item,
+            ),
+          }
+        },
+      )
+      queryClient.setQueryData<StaffMember>(
+        qk.merchantStaffByCode(staffCode),
+        (current) => current
+          ? {
+              ...current,
+              nicknameAtBusiness: result.nicknameAtBusiness,
+              nickname: result.displayName,
+              displayName: result.displayName,
+            }
+          : current,
+      )
+
+      await Promise.all([
+        queryClient.invalidateQueries({ queryKey: qk.merchantStaff() }),
+        queryClient.invalidateQueries({ queryKey: qk.merchantStaffByCode(staffCode) }),
+        queryClient.invalidateQueries({ queryKey: qk.dashboardStaff() }),
+      ])
+    },
+    onError: async (error) => {
+      if (isApiError(error) && (error.status === 403 || error.status === 404)) {
+        await queryClient.invalidateQueries({ queryKey: qk.merchantStaff() })
+      }
     },
   })
 }

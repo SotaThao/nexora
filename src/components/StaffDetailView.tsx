@@ -18,10 +18,15 @@ import { logger } from '../utils/logger'
 import CopyableTransactionId from './ui/CopyableTransactionId'
 import { formatTransactionDateTime, formatCurrency } from './dashboard/utils'
 import { buildChartPoints, getBezierPath } from './dashboard/overview/chartUtils'
-import { useMerchantStaffStats } from '../data/hooks/useMerchantStaff'
+import {
+  useMerchantStaffByCode,
+  useMerchantStaffStats,
+  useSetMerchantStaffNickname,
+} from '../data/hooks/useMerchantStaff'
 import { staffRecordMatchesMember } from '../utils/staffRecordMatch'
 import { formatJoinedDate } from '../utils/localDate'
 import { orderedPayoutUiKeysFromMethods, PAYOUT_UI_LABELS } from '../data/paymentMethodTypes'
+import NicknameEditor from './NicknameEditor'
 
 const RANGE_DAY_OFFSETS = {
   '7 Days': 6,
@@ -188,6 +193,26 @@ export default function StaffDetailView({
     isLoading: isStatsLoading,
     isFetching: isStatsFetching,
   } = useMerchantStaffStats(staffProfileId, statsDateRange, { enabled: !!staffProfileId })
+  const nicknameLookupKey = String(
+    staffMember?.staffCode ?? staffMember?.linkId ?? staffMember?.id ?? '',
+  )
+  const {
+    data: nicknameStaffMember,
+    refetch: refetchNicknameStaffMember,
+  } = useMerchantStaffByCode(nicknameLookupKey, { enabled: Boolean(nicknameLookupKey) })
+  const setNicknameMutation = useSetMerchantStaffNickname()
+  const rawBusinessNickname = nicknameStaffMember?.nicknameAtBusiness
+    ?? staffMember?.nicknameAtBusiness
+    ?? null
+  const hasBusinessNickname = Boolean(rawBusinessNickname?.trim())
+  const resolvedDisplayName = nicknameStaffMember?.displayName
+    ?? nicknameStaffMember?.nickname
+    ?? staffMember?.displayName
+    ?? staffMember?.nickname
+    ?? staffMember?.fullName
+    ?? ''
+  const originalDisplayName = nicknameStaffMember?.fullName ?? staffMember?.fullName ?? ''
+  const nicknameStaffLinkId = staffMember?.linkId ?? null
 
   const usesApiStats = !!staffProfileId
   const isMetricsLoading = usesApiStats ? (isStatsLoading || isStatsFetching) : isTipsLoading
@@ -420,19 +445,26 @@ export default function StaffDetailView({
             {staffMember.avatar ? (
               <img
                 src={staffMember.avatar}
-                alt={staffMember.fullName}
+                alt={resolvedDisplayName}
                 className="h-16 w-16 rounded-full border border-nexoraBorder object-cover shadow-sm"
               />
             ) : (
               <div className="flex h-16 w-16 items-center justify-center rounded-full bg-gradient-to-tr from-nexoraBrand to-nexoraLavender text-xl font-black text-white shadow-md">
-                {(staffMember.nickname || staffMember.fullName || 'N').charAt(0).toUpperCase()}
+                {(resolvedDisplayName || 'N').charAt(0).toUpperCase()}
               </div>
             )}
 
             <div>
               <div className="flex items-center gap-2 flex-wrap">
-                <h1 className="text-xl font-extrabold text-nexoraText sm:text-2xl">{staffMember.fullName}</h1>
+                <h1 className='text-xl font-extrabold text-nexoraText sm:text-2xl'>
+                  <span className='[overflow-wrap:anywhere]'>{resolvedDisplayName}</span>
+                </h1>
                 <div className="flex gap-1">
+                  {hasBusinessNickname ? (
+                    <span className="rounded-full border border-dashed border-nexoraLavender bg-nexoraBrandSoft px-2.5 py-0.5 text-[10px] font-extrabold uppercase tracking-wider text-nexoraBrand">
+                      {t('staff_detail.nickname_badge')}
+                    </span>
+                  ) : null}
                   <span
                     className={`rounded-full px-2.5 py-0.5 text-[10px] font-extrabold uppercase tracking-wider ${
                       staffMember.isActive
@@ -453,6 +485,11 @@ export default function StaffDetailView({
                   </span>
                 </div>
               </div>
+              {hasBusinessNickname ? (
+                <p className="text-[11px] font-semibold text-nexoraMuted">
+                  {t('staff_detail.nickname_original_name', { name: originalDisplayName })}
+                </p>
+              ) : null}
               <p className="text-xs font-semibold text-nexoraMuted">{stats.specialty || staffMember.position}</p>
               <div className="mt-1.5 flex flex-wrap gap-x-4 gap-y-1.5 text-[11px] text-nexoraSubtle">
                 <div className="flex items-center gap-1">
@@ -476,6 +513,28 @@ export default function StaffDetailView({
           </div>
 
           <div className="flex flex-wrap gap-2">
+            {nicknameStaffLinkId != null ? (
+              <NicknameEditor
+                value={rawBusinessNickname}
+                originalName={originalDisplayName}
+                triggerLabel={t(
+                  hasBusinessNickname
+                    ? 'staff_detail.nickname_edit_action'
+                    : 'staff_detail.nickname_set_action',
+                )}
+                fieldLabel={t('staff_detail.nickname_badge')}
+                helperText={t('staff_detail.nickname_helper_merchant')}
+                onRefresh={async () => {
+                  const result = await refetchNicknameStaffMember({ throwOnError: true })
+                  return result.data?.nicknameAtBusiness ?? null
+                }}
+                onSave={(nickname) => setNicknameMutation.mutateAsync({
+                  staffLinkId: String(nicknameStaffLinkId),
+                  staffCode: nicknameLookupKey,
+                  nickname,
+                })}
+              />
+            ) : null}
             <button
               onClick={() => onQr(staffMember)}
               className="inline-flex h-10 items-center gap-2 rounded-lg border border-nexoraBorder bg-white px-4 text-xs font-bold text-nexoraText shadow-sm hover:bg-nexoraSurfaceMuted transition"

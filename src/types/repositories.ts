@@ -349,6 +349,7 @@ export interface StaffListItemApiDto {
   tipCount?: number
   averageRating?: number
   displayName?: string
+  nicknameAtBusiness?: string | null
   photoUrl?: string | null
   status?: string
   position?: string | null

@@ -19,7 +19,10 @@ import type {
   StaffTipsConfirmReceiptResult,
   StaffTipsPage,
 } from '../../types/domain'
+import { isApiError } from '../../types/domain'
 import type { StaffTipsListParams } from '../repositories/staffSelf'
+import type { StaffNicknameUpdateResult } from '../repositories/staffSelf'
+import type { SetStaffBusinessNicknameVars } from '../../types/hooks'
 import type { TransactionsListQuery } from '../repositories/transactions'
 import type { TransactionsListPage } from '../repositories/transactions'
 import { useStaffAccount } from '../../contexts/StaffAccountContext'
@@ -48,6 +51,31 @@ export function useStaffBusinesses({ enabled: callerEnabled = true } = {}) {
     queryKey: qk.staffBusinesses(),
     queryFn: () => staffSelfRepository.getMyBusinesses(),
     enabled: isStaff && callerEnabled,
+  })
+}
+
+export function useSetStaffBusinessNickname() {
+  const queryClient = useQueryClient()
+
+  return useMutation<StaffNicknameUpdateResult, Error, SetStaffBusinessNicknameVars>({
+    mutationFn: ({ businessId, nickname }) =>
+      staffSelfRepository.setMyNickname(businessId, nickname),
+    onSuccess: async (result, { businessId }) => {
+      queryClient.setQueryData<StaffBusinessLink[]>(
+        qk.staffBusinesses(),
+        (current) => current?.map((business) =>
+          business.businessId === businessId
+            ? { ...business, nicknameAtBusiness: result.nicknameAtBusiness }
+            : business,
+        ),
+      )
+      await queryClient.invalidateQueries({ queryKey: qk.staffBusinesses() })
+    },
+    onError: async (error) => {
+      if (isApiError(error) && (error.status === 403 || error.status === 404)) {
+        await queryClient.invalidateQueries({ queryKey: qk.staffBusinesses() })
+      }
+    },
   })
 }
 
