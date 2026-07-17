@@ -184,7 +184,8 @@ export default function PayoutsTab({
                               entityId: record.id,
                               currentValues: {
                                 ServicePayout: record.servicePayout,
-                                Tip: record.tip,
+                                TipCardAmount: record.tipCardAmount,
+                                TipCashAmount: record.tipCashAmount,
                                 Bonus: record.bonus,
                                 Reimbursement: record.reimbursement,
                               },

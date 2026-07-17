@@ -112,7 +112,9 @@ export interface PayoutRecordApiDto {
   periodStart: string
   periodEnd: string
   servicePayout: number
-  tip: number
+  tipCardAmount: number
+  tipCashAmount: number
+  totalTip: number
   bonus: number
   reimbursement: number
   paymentMethod: string
@@ -132,7 +134,9 @@ export interface PayoutRecord {
   periodStart: string
   periodEnd: string
   servicePayout: number
-  tip: number
+  tipCardAmount: number
+  tipCashAmount: number
+  totalTip: number
   bonus: number
   reimbursement: number
   paymentMethod: string
@@ -153,7 +157,9 @@ function normalizePayoutRecord(dto: PayoutRecordApiDto): PayoutRecord {
     periodStart: dto.periodStart,
     periodEnd: dto.periodEnd,
     servicePayout: dto.servicePayout,
-    tip: dto.tip,
+    tipCardAmount: dto.tipCardAmount,
+    tipCashAmount: dto.tipCashAmount,
+    totalTip: dto.totalTip,
     bonus: dto.bonus,
     reimbursement: dto.reimbursement,
     paymentMethod: dto.paymentMethod,
@@ -170,7 +176,8 @@ export interface PayoutFormFields {
   periodStart: string
   periodEnd: string
   servicePayout: number
-  tip: number
+  tipCardAmount: number
+  tipCashAmount: number
   bonus: number
   reimbursement: number
   paymentMethod: string
@@ -200,7 +207,9 @@ export interface DisputedPayoutApiDto {
   periodStart: string
   periodEnd: string
   servicePayout: number
-  tip: number
+  tipCardAmount: number
+  tipCashAmount: number
+  totalTip: number
   bonus: number
   reimbursement: number
   paymentMethod: string
@@ -220,7 +229,9 @@ export interface DisputedPayout {
   periodStart: string
   periodEnd: string
   servicePayout: number
-  tip: number
+  tipCardAmount: number
+  tipCashAmount: number
+  totalTip: number
   bonus: number
   reimbursement: number
   paymentMethod: string
@@ -241,7 +252,9 @@ function normalizeDisputedPayout(dto: DisputedPayoutApiDto): DisputedPayout {
     periodStart: dto.periodStart,
     periodEnd: dto.periodEnd,
     servicePayout: dto.servicePayout,
-    tip: dto.tip,
+    tipCardAmount: dto.tipCardAmount,
+    tipCashAmount: dto.tipCashAmount,
+    totalTip: dto.totalTip,
     bonus: dto.bonus,
     reimbursement: dto.reimbursement,
     paymentMethod: dto.paymentMethod,
@@ -258,7 +271,8 @@ export interface ResolveDisputeParams {
   resolution: DisputeResolution
   ownerResolutionNote: string
   adjustedServicePayout?: number | null
-  adjustedTip?: number | null
+  adjustedTipCardAmount?: number | null
+  adjustedTipCashAmount?: number | null
   adjustedBonus?: number | null
 }
 
@@ -302,7 +316,8 @@ export function createTaxiqOwnerPayoutsRepository(client: HttpClient = httpClien
         periodStart: params.periodStart,
         periodEnd: params.periodEnd,
         servicePayout: params.servicePayout,
-        tip: params.tip,
+        tipCardAmount: params.tipCardAmount,
+        tipCashAmount: params.tipCashAmount,
         bonus: params.bonus,
         reimbursement: params.reimbursement,
         paymentMethod: params.paymentMethod,
@@ -315,7 +330,8 @@ export function createTaxiqOwnerPayoutsRepository(client: HttpClient = httpClien
         periodStart: params.periodStart,
         periodEnd: params.periodEnd,
         servicePayout: params.servicePayout,
-        tip: params.tip,
+        tipCardAmount: params.tipCardAmount,
+        tipCashAmount: params.tipCashAmount,
         bonus: params.bonus,
         reimbursement: params.reimbursement,
         paymentMethod: params.paymentMethod,
@@ -338,7 +354,8 @@ export function createTaxiqOwnerPayoutsRepository(client: HttpClient = httpClien
         resolution: params.resolution,
         ownerResolutionNote: params.ownerResolutionNote,
         adjustedServicePayout: params.adjustedServicePayout ?? null,
-        adjustedTip: params.adjustedTip ?? null,
+        adjustedTipCardAmount: params.adjustedTipCardAmount ?? null,
+        adjustedTipCashAmount: params.adjustedTipCashAmount ?? null,
         adjustedBonus: params.adjustedBonus ?? null,
       })
     },

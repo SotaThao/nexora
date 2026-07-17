@@ -29,7 +29,7 @@ const ENTITY_TYPE_LABEL_KEYS: Record<string, string> = {
 // The remainder are free text (JSON-encoded as a string). Mirrors the entity/field
 // combinations enforced server-side in CreateAdjustmentRecordCommand's switch.
 const NUMERIC_FIELDS = new Set([
-  'Amount', 'BusinessUsePercent', 'ServicePayout', 'Tip', 'Bonus', 'Reimbursement',
+  'Amount', 'BusinessUsePercent', 'ServicePayout', 'TipCardAmount', 'TipCashAmount', 'Bonus', 'Reimbursement',
   'TotalSold', 'TotalRedeemed', 'CreditsIssued', 'CreditsUsed', 'CreditsExpired', 'Miles',
 ])
 

@@ -15,7 +15,9 @@ export interface StaffPendingPayoutApiDto {
   periodStart: string
   periodEnd: string
   servicePayout: number
-  tip: number
+  tipCardAmount: number
+  tipCashAmount: number
+  totalTip: number
   bonus: number
   reimbursement: number
   paymentMethod: string
@@ -27,7 +29,9 @@ export interface StaffPendingPayout {
   periodStart: string
   periodEnd: string
   servicePayout: number
-  tip: number
+  tipCardAmount: number
+  tipCashAmount: number
+  totalTip: number
   bonus: number
   reimbursement: number
   paymentMethod: string
@@ -40,7 +44,9 @@ function normalizeStaffPendingPayout(dto: StaffPendingPayoutApiDto): StaffPendin
     periodStart: dto.periodStart,
     periodEnd: dto.periodEnd,
     servicePayout: dto.servicePayout,
-    tip: dto.tip,
+    tipCardAmount: dto.tipCardAmount,
+    tipCashAmount: dto.tipCashAmount,
+    totalTip: dto.totalTip,
     bonus: dto.bonus,
     reimbursement: dto.reimbursement,
     paymentMethod: dto.paymentMethod,
@@ -64,7 +70,9 @@ export interface StaffPayoutHistoryApiDto {
   periodStart: string
   periodEnd: string
   servicePayout: number
-  tip: number
+  tipCardAmount: number
+  tipCashAmount: number
+  totalTip: number
   bonus: number
   reimbursement: number
   paymentMethod: string
@@ -81,7 +89,9 @@ export interface StaffPayoutHistory {
   periodStart: string
   periodEnd: string
   servicePayout: number
-  tip: number
+  tipCardAmount: number
+  tipCashAmount: number
+  totalTip: number
   bonus: number
   reimbursement: number
   paymentMethod: string
@@ -99,7 +109,9 @@ function normalizeStaffPayoutHistory(dto: StaffPayoutHistoryApiDto): StaffPayout
     periodStart: dto.periodStart,
     periodEnd: dto.periodEnd,
     servicePayout: dto.servicePayout,
-    tip: dto.tip,
+    tipCardAmount: dto.tipCardAmount,
+    tipCashAmount: dto.tipCashAmount,
+    totalTip: dto.totalTip,
     bonus: dto.bonus,
     reimbursement: dto.reimbursement,
     paymentMethod: dto.paymentMethod,

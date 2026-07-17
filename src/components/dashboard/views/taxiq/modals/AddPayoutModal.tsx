@@ -18,7 +18,8 @@ const EMPTY_FORM = {
   periodStart: '',
   periodEnd: '',
   servicePayout: '',
-  tip: '',
+  tipCardAmount: '',
+  tipCashAmount: '',
   bonus: '',
   reimbursement: '',
   paymentMethod: '',
@@ -67,7 +68,8 @@ export default function AddPayoutModal({
         periodStart: editingRecord.periodStart,
         periodEnd: editingRecord.periodEnd,
         servicePayout: String(editingRecord.servicePayout),
-        tip: String(editingRecord.tip),
+        tipCardAmount: String(editingRecord.tipCardAmount),
+        tipCashAmount: String(editingRecord.tipCashAmount),
         bonus: String(editingRecord.bonus),
         reimbursement: String(editingRecord.reimbursement),
         paymentMethod: editingRecord.paymentMethod,
@@ -103,10 +105,14 @@ export default function AddPayoutModal({
   }
 
   const servicePayout = Number(form.servicePayout) || 0
-  const tip = Number(form.tip) || 0
+  const tipCardAmount = Number(form.tipCardAmount) || 0
+  const tipCashAmount = Number(form.tipCashAmount) || 0
   const bonus = Number(form.bonus) || 0
   const reimbursement = Number(form.reimbursement) || 0
-  const grossPayout = useMemo(() => servicePayout + tip + bonus, [servicePayout, tip, bonus])
+  const grossPayout = useMemo(
+    () => servicePayout + tipCardAmount + tipCashAmount + bonus,
+    [servicePayout, tipCardAmount, tipCashAmount, bonus],
+  )
   const netPaid = useMemo(() => grossPayout - reimbursement, [grossPayout, reimbursement])
 
   const effectiveContractType = contractType ?? (selectedStaff?.contractType as ContractType | null) ?? null
@@ -136,7 +142,8 @@ export default function AddPayoutModal({
           periodStart: form.periodStart,
           periodEnd: form.periodEnd,
           servicePayout,
-          tip,
+          tipCardAmount,
+          tipCashAmount,
           bonus,
           reimbursement,
           paymentMethod: form.paymentMethod.trim(),
@@ -150,7 +157,8 @@ export default function AddPayoutModal({
           periodStart: form.periodStart,
           periodEnd: form.periodEnd,
           servicePayout,
-          tip,
+          tipCardAmount,
+          tipCashAmount,
           bonus,
           reimbursement,
           paymentMethod: form.paymentMethod.trim(),
@@ -319,19 +327,37 @@ export default function AddPayoutModal({
                 </div>
                 <div>
                   <label className="mb-1 block text-xs font-bold text-nexoraMuted">
-                    {t('taxiq.payoutCenter.form.tipLabel')}
+                    <span className="inline-flex items-center gap-1">
+                      {t('taxiq.payoutCenter.form.tipCardAmountLabel')}
+                      <Tooltip content={t('taxiq.payoutCenter.tooltips.tipCardAmount')} />
+                    </span>
                   </label>
                   <input
                     type="number"
                     min="0"
-                    value={form.tip}
-                    onChange={(e) => setForm((f) => ({ ...f, tip: e.target.value }))}
+                    value={form.tipCardAmount}
+                    onChange={(e) => setForm((f) => ({ ...f, tipCardAmount: e.target.value }))}
                     className="w-full rounded-lg border border-nexoraBorder px-3 py-2 text-sm"
                   />
                 </div>
               </div>
 
               <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+                <div>
+                  <label className="mb-1 block text-xs font-bold text-nexoraMuted">
+                    <span className="inline-flex items-center gap-1">
+                      {t('taxiq.payoutCenter.form.tipCashAmountLabel')}
+                      <Tooltip content={t('taxiq.payoutCenter.tooltips.tipCashAmount')} />
+                    </span>
+                  </label>
+                  <input
+                    type="number"
+                    min="0"
+                    value={form.tipCashAmount}
+                    onChange={(e) => setForm((f) => ({ ...f, tipCashAmount: e.target.value }))}
+                    className="w-full rounded-lg border border-nexoraBorder px-3 py-2 text-sm"
+                  />
+                </div>
                 <div>
                   <label className="mb-1 block text-xs font-bold text-nexoraMuted">
                     {t('taxiq.payoutCenter.form.bonusLabel')}
@@ -344,6 +370,9 @@ export default function AddPayoutModal({
                     className="w-full rounded-lg border border-nexoraBorder px-3 py-2 text-sm"
                   />
                 </div>
+              </div>
+
+              <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
                 <div>
                   <label className="mb-1 block text-xs font-bold text-nexoraMuted">
                     <span className="inline-flex items-center gap-1">

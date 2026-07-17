@@ -4947,7 +4947,9 @@
         "reimbursement": "Tiền hoàn lại cho vật tư thợ tự bỏ tiền mua — không tính là thu nhập chịu thuế.",
         "grossPayout": "Tổng chi trả trước mọi khoản trừ: tiền công + tip + thưởng + hoàn phí.",
         "netPaid": "Số tiền thực tế đã chuyển cho thợ.",
-        "payPeriod": "Tần suất trả tiền cho thợ. \"Không định kỳ\" = khoản trả một lần, ngoài lịch trả cố định tuần/tháng."
+        "payPeriod": "Tần suất trả tiền cho thợ. \"Không định kỳ\" = khoản trả một lần, ngoài lịch trả cố định tuần/tháng.",
+        "tipCardAmount": "Tip xử lý qua thẻ/máy POS — có chứng từ đối chiếu được với sao kê của đơn vị xử lý thanh toán.",
+        "tipCashAmount": "Tip chỉ ghi nhận theo lời khai của thợ — không có sao kê để đối chiếu."
       },
       "actions": {
         "edit": "Sửa"
@@ -5007,7 +5009,8 @@
         "periodStartLabel": "Ngày bắt đầu kỳ",
         "periodEndLabel": "Ngày kết thúc kỳ",
         "servicePayoutLabel": "Service payout",
-        "tipLabel": "Tip",
+        "tipCardAmountLabel": "Tip (Thẻ)",
+        "tipCashAmountLabel": "Tip (Tiền mặt)",
         "bonusLabel": "Bonus",
         "reimbursementLabel": "Reimbursement",
         "paymentMethodLabel": "Phương thức thanh toán",

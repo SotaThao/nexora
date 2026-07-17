@@ -4955,7 +4955,9 @@
         "reimbursement": "Money paid back for supplies the staff bought out of pocket — not taxable income.",
         "grossPayout": "Total before anything is taken out: service + tip + bonus + reimbursement.",
         "netPaid": "The amount actually transferred to the staff member.",
-        "payPeriod": "How often this staff member is paid. Ad Hoc = a one-off payment outside the regular weekly/monthly schedule."
+        "payPeriod": "How often this staff member is paid. Ad Hoc = a one-off payment outside the regular weekly/monthly schedule.",
+        "tipCardAmount": "Tip processed through card/POS — has an auditable trail from the merchant processor statement.",
+        "tipCashAmount": "Tip only recorded based on what the staff member reported — no processor statement to verify it."
       },
       "actions": {
         "edit": "Edit"
@@ -5015,7 +5017,8 @@
         "periodStartLabel": "Period start",
         "periodEndLabel": "Period end",
         "servicePayoutLabel": "Service payout",
-        "tipLabel": "Tip",
+        "tipCardAmountLabel": "Tip (Card)",
+        "tipCashAmountLabel": "Tip (Cash)",
         "bonusLabel": "Bonus",
         "reimbursementLabel": "Reimbursement",
         "paymentMethodLabel": "Payment method",

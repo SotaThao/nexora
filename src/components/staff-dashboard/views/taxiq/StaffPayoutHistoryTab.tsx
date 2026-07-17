@@ -76,7 +76,7 @@ export default function StaffPayoutHistoryTab() {
                     {formatPayoutPeriodRange(payout.periodStart, payout.periodEnd, currentLanguage)}
                   </td>
                   <td className="px-4 py-3 text-nexoraText">{formatCurrency(payout.servicePayout)}</td>
-                  <td className="px-4 py-3 text-nexoraText">{formatCurrency(payout.tip)}</td>
+                  <td className="px-4 py-3 text-nexoraText">{formatCurrency(payout.totalTip)}</td>
                   <td className="px-4 py-3 text-nexoraText">{formatCurrency(payout.bonus)}</td>
                   <td className="px-4 py-3 text-nexoraText">{formatCurrency(payout.reimbursement)}</td>
                   <td className="px-4 py-3 text-nexoraMuted">{payout.paymentMethod}</td>
