@@ -5,11 +5,15 @@ import { useTranslation } from '../../../contexts/LanguageContext'
 import { useMerchantVoiceTenantStatus } from '../../../data/hooks/useMerchantVoiceBookings'
 import BookingTeamPanel from './BookingTeamPanel'
 import BookingTodayPanel from './BookingTodayPanel'
+import BookingCustomersPanel from './BookingCustomersPanel'
+import BookingCallLogPanel from './BookingCallLogPanel'
 import BookingPlansPanel from './BookingPlansPanel'
 import BookingSettingsPanel from './BookingSettingsPanel'
 import { BookingHubVoiceProvider } from './BookingHubVoiceContext'
 import {
   CalendarTabIcon,
+  PeopleTabIcon,
+  PhoneTabIcon,
   SlidersTabIcon,
   TagsTabIcon,
 } from './BookingHubIcons'
@@ -20,6 +24,10 @@ import {
   parseBookingHubMainTab,
   parseBookingHubSubTab,
 } from '../../../data/repositories/merchantVoice'
+import {
+  getDefaultBookingHubTab,
+  isBookingHubMainTabAllowed,
+} from '../constants'
 import './booking-hub.css'
 
 const TK = 'components.dashboard.views.BookingHubView'
@@ -67,15 +75,13 @@ export default function BookingHubView() {
     const parsedMainTab = parseBookingHubMainTab(mainTab)
     const parsedSubTab = parseBookingHubSubTab(subTab)
 
-    if (
-      !hasVoiceTenant
-      && (parsedMainTab === BookingHubMainTab.Booking || parsedMainTab === BookingHubMainTab.Settings)
-    ) {
-      setActiveMainTab(BookingHubMainTab.Plans)
+    if (!hasVoiceTenant && !isBookingHubMainTabAllowed(parsedMainTab, false)) {
+      const defaultTab = getDefaultBookingHubTab(false)
+      setActiveMainTab(defaultTab)
       setActiveSubtab(BookingHubSubTab.Today)
 
       const nextParams = new URLSearchParams(searchParams)
-      nextParams.set('tab', BookingHubMainTab.Plans)
+      nextParams.set('tab', defaultTab)
       nextParams.delete('view')
       setSearchParams(nextParams, { replace: true })
       return
@@ -100,10 +106,7 @@ export default function BookingHubView() {
     mainTab: BookingHubMainTab,
     subTab: BookingHubSubTab = activeSubtab,
   ) => {
-    if (
-      !hasVoiceTenant
-      && (mainTab === BookingHubMainTab.Booking || mainTab === BookingHubMainTab.Settings)
-    ) {
+    if (!isBookingHubMainTabAllowed(mainTab, hasVoiceTenant)) {
       return
     }
 
@@ -137,6 +140,30 @@ export default function BookingHubView() {
               >
                 <span className="page-tab-icon"><CalendarTabIcon /></span>
                 <span>{t(`${TK}.tabs.booking`)}</span>
+              </button>
+            )}
+            {hasVoiceTenant && (
+              <button
+                className={`page-tab ${activeMainTab === BookingHubMainTab.Customers ? 'is-active' : ''}`}
+                type="button"
+                role="tab"
+                aria-selected={activeMainTab === BookingHubMainTab.Customers}
+                onClick={() => updateQueryTabs(BookingHubMainTab.Customers)}
+              >
+                <span className="page-tab-icon"><PeopleTabIcon /></span>
+                <span>{t(`${TK}.tabs.customers`)}</span>
+              </button>
+            )}
+            {hasVoiceTenant && (
+              <button
+                className={`page-tab ${activeMainTab === BookingHubMainTab.CallLog ? 'is-active' : ''}`}
+                type="button"
+                role="tab"
+                aria-selected={activeMainTab === BookingHubMainTab.CallLog}
+                onClick={() => updateQueryTabs(BookingHubMainTab.CallLog)}
+              >
+                <span className="page-tab-icon"><PhoneTabIcon /></span>
+                <span>{t(`${TK}.tabs.callLog`)}</span>
               </button>
             )}
             <button
@@ -195,6 +222,22 @@ export default function BookingHubView() {
 
         {activeSubtab === BookingHubSubTab.Today ? <BookingTodayPanel /> : <BookingTeamPanel />}
       </section>
+      )}
+
+      {!isTenantStatusLoading && voiceFeaturesEnabled && activeMainTab === BookingHubMainTab.Customers && (
+        <section className="tab-panel is-active" aria-label={t(`${TK}.ariaCustomersPanel`)}>
+          <BookingCustomersPanel />
+        </section>
+      )}
+
+      {!isTenantStatusLoading && voiceFeaturesEnabled && activeMainTab === BookingHubMainTab.CallLog && (
+        <section
+          className="tab-panel is-active"
+          id="panel-calllog"
+          aria-label={t(`${TK}.ariaCallLogPanel`)}
+        >
+          <BookingCallLogPanel />
+        </section>
       )}
 
       {!isTenantStatusLoading && activeMainTab === BookingHubMainTab.Plans && (

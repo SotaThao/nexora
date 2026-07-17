@@ -8,8 +8,18 @@ import {
   MerchantVoiceDayOfWeekApiValue,
   MerchantVoiceLeadSource,
   MerchantVoiceLeadStatus,
+  MerchantVoiceListQueryParam,
   MerchantVoiceStaffActivityStatusApiValue,
   MerchantVoiceStaffStatus,
+  MerchantVoiceCallOutcome,
+  type MerchantVoiceCallStatusGroupApiValue,
+  MerchantVoiceCustomerGroup,
+  MerchantVoiceCustomerStatus,
+  MerchantVoiceCustomerType,
+  normalizeMerchantVoiceCallOutcome,
+  normalizeMerchantVoiceCustomerGroup,
+  normalizeMerchantVoiceCustomerStatus,
+  normalizeMerchantVoiceCustomerType,
   normalizeMerchantVoiceLeadSource,
   normalizeMerchantVoiceLeadStatus,
   normalizeMerchantVoiceStaffStatus,
@@ -28,8 +38,15 @@ export {
   BookingUiStatus,
   BOOKING_UI_SEARCH_FIELD_TO_API,
   BOOKING_UI_SOURCE_I18N_KEY,
+  CallUiStatus,
+  CustomerUiSegment,
   MerchantVoiceBookingSearchField,
+  MerchantVoiceCallOutcome,
+  MerchantVoiceCallStatusGroupApi,
   MerchantVoiceConfigLanguage,
+  MerchantVoiceCustomerGroup,
+  MerchantVoiceCustomerStatus,
+  MerchantVoiceCustomerType,
   MerchantVoiceDayOfWeek,
   MerchantVoiceDayOfWeekApi,
   MerchantVoiceErrorCode,
@@ -37,17 +54,27 @@ export {
   MerchantVoiceLeadSourceApi,
   MerchantVoiceLeadStatus,
   MerchantVoiceLeadStatusApi,
+  MerchantVoiceListQueryParam,
   MerchantVoiceStaffActivityStatusApi,
   MerchantVoiceStaffStatus,
   MerchantVoiceUiLanguage,
+  mapCallOutcomeToUiStatus,
+  mapCallUiStatusToApiGroup,
   mapConfigLanguageToUiLanguage,
+  mapCustomerGroupToUiSegment,
   mapDayOfWeekToApiName,
   mapLeadSourceToUiSource,
   mapLeadStatusToUiStatus,
   mapStaffStatusToActivityApi,
   mapUiLanguageToConfigLanguage,
+  mapUiSegmentToApiGroup,
   mapUiSourceToSourceClass,
+  isCustomerStatusActive,
   isStaffStatusActive,
+  normalizeMerchantVoiceCallOutcome,
+  normalizeMerchantVoiceCustomerGroup,
+  normalizeMerchantVoiceCustomerStatus,
+  normalizeMerchantVoiceCustomerType,
   normalizeMerchantVoiceDayOfWeek,
   normalizeMerchantVoiceLeadSource,
   normalizeMerchantVoiceLeadStatus,
@@ -58,7 +85,7 @@ export {
 
 export type {
   MerchantVoiceBookingSearchFieldApiValue,
-  MerchantVoiceDayOfWeek,
+  MerchantVoiceCallStatusGroupApiValue,
   MerchantVoiceDayOfWeekApiValue,
   MerchantVoiceLeadSourceApiValue,
   MerchantVoiceLeadStatusApiValue,
@@ -100,6 +127,10 @@ export interface MerchantVoiceBookingDto {
   requestedStartAtUtc: string | null
   requestedEndAtUtc: string | null
   createdAt: string
+  /** UTC when the inbound voice call that created this booking started. */
+  callStartedAt: string | null
+  /** Voice call length in seconds (null for non-call sources). */
+  callDurationSeconds: number | null
 }
 
 export interface MerchantVoiceBookingsResponse {
@@ -174,6 +205,113 @@ export interface MerchantVoiceStaffFilter {
   searchTerm?: string
 }
 
+export interface MerchantVoiceCallDto {
+  id: string
+  tenantId: string
+  tenantName: string | null
+  callerName: string | null
+  callerPhone: string | null
+  outcome: MerchantVoiceCallOutcome
+  durationSeconds: number
+  notes: string | null
+  followUpSmsSentAt: string | null
+  isNewCaller: boolean
+  createdAt: string
+}
+
+export interface MerchantVoiceCallsResponse {
+  items: MerchantVoiceCallDto[]
+  pageNumber: number
+  totalPages: number
+  totalCount: number
+  hasPreviousPage: boolean
+  hasNextPage: boolean
+}
+
+interface MerchantVoiceCallsApiResponse {
+  items?: MerchantVoiceCallDto[]
+  pageNumber?: number
+  totalPages?: number
+  totalCount?: number
+  hasPreviousPage?: boolean
+  hasNextPage?: boolean
+}
+
+export interface MerchantVoiceCallsFilter {
+  pageNumber?: number
+  pageSize?: number
+  status?: MerchantVoiceCallStatusGroupApiValue
+  searchTerm?: string
+}
+
+export interface MerchantVoiceCallStatisticsDto {
+  callsToday: number
+  missedCallsNeedingFollowUp: number
+  bookedToday: number
+  answerRatePercent: number
+}
+
+export interface MerchantVoiceCustomerDto {
+  id: string
+  tenantId: string
+  name: string | null
+  phoneNumber: string | null
+  email: string | null
+  address: string | null
+  dateOfBirth: string | null
+  type: MerchantVoiceCustomerType
+  group: MerchantVoiceCustomerGroup | null
+  status: MerchantVoiceCustomerStatus
+  source: string | null
+  totalVisit: number
+  lastVisit: string | null
+  createdAt: string
+}
+
+export interface MerchantVoiceCustomersResponse {
+  items: MerchantVoiceCustomerDto[]
+  pageNumber: number
+  totalPages: number
+  totalCount: number
+  hasPreviousPage: boolean
+  hasNextPage: boolean
+}
+
+interface MerchantVoiceCustomersApiResponse {
+  items?: MerchantVoiceCustomerDto[]
+  pageNumber?: number
+  totalPages?: number
+  totalCount?: number
+  hasPreviousPage?: boolean
+  hasNextPage?: boolean
+}
+
+export interface MerchantVoiceCustomersFilter {
+  pageNumber?: number
+  pageSize?: number
+  group?: MerchantVoiceCustomerGroup
+  searchTerm?: string
+}
+
+export interface MerchantVoiceCustomerGroupSummaryDto {
+  all: number
+  vip: number
+  new: number
+  days15: number
+  days30: number
+  days60: number
+}
+
+export interface UpdateMerchantVoiceCustomerRequest {
+  name?: string | null
+  email?: string | null
+  address?: string | null
+  dateOfBirth?: string | null
+  /** VoiceCustomerType — Individual | Business | Vip | Guest | Partner | Internal */
+  type: MerchantVoiceCustomerType
+  status: MerchantVoiceCustomerStatus
+}
+
 export interface MerchantVoiceBusinessStaffDto {
   id: string
   fullName: string
@@ -220,6 +358,7 @@ export interface MerchantVoiceConfigDto {
   bookingNotifyPhone: string
   address: string
   googleReviewUrl: string
+  promotion: string
   language: string
   welcomeGreeting: string
   operatingHours: MerchantVoiceOperatingHourDto[]
@@ -232,6 +371,7 @@ export interface UpdateMerchantVoiceConfigRequest {
   bookingNotifyPhone: string
   address: string
   googleReviewUrl: string
+  promotion: string | null
   language: MerchantVoiceConfigLanguage
   welcomeGreeting: string
   operatingHours: Array<{
@@ -337,7 +477,8 @@ function normalizeConfigResponse(response: unknown): MerchantVoiceConfigDto {
       bookingNotifyPhone: '',
       address: '',
       googleReviewUrl: '',
-      language: 'en-US',
+      promotion: '',
+      language: MerchantVoiceConfigLanguage.EnUS,
       welcomeGreeting: '',
       operatingHours: [],
       services: [],
@@ -391,7 +532,8 @@ function normalizeConfigResponse(response: unknown): MerchantVoiceConfigDto {
     bookingNotifyPhone: String(body.bookingNotifyPhone ?? ''),
     address: String(body.address ?? ''),
     googleReviewUrl: String(body.googleReviewUrl ?? ''),
-    language: String(body.language ?? 'en-US'),
+    promotion: String(body.promotion ?? ''),
+    language: String(body.language ?? MerchantVoiceConfigLanguage.EnUS),
     welcomeGreeting: String(body.welcomeGreeting ?? ''),
     operatingHours,
     services,
@@ -399,10 +541,22 @@ function normalizeConfigResponse(response: unknown): MerchantVoiceConfigDto {
 }
 
 function normalizeBookingDto(item: MerchantVoiceBookingDto): MerchantVoiceBookingDto {
+  const duration =
+    item.callDurationSeconds == null ? null : Number(item.callDurationSeconds)
+
   return {
     ...item,
     source: normalizeMerchantVoiceLeadSource(item.source),
     status: normalizeMerchantVoiceLeadStatus(item.status),
+    callStartedAt: item.callStartedAt ?? null,
+    callDurationSeconds: duration != null && Number.isFinite(duration) ? duration : null,
+  }
+}
+
+function buildMerchantVoicePagingParams(pageNumber?: number, pageSize?: number) {
+  return {
+    [MerchantVoiceListQueryParam.PageNumber]: pageNumber ?? 1,
+    [MerchantVoiceListQueryParam.PageSize]: pageSize ?? BOOKING_HUB_PAGE_SIZE,
   }
 }
 
@@ -463,6 +617,76 @@ function normalizeStaffStatus(status: unknown): MerchantVoiceStaffStatus {
   return normalizeMerchantVoiceStaffStatus(status)
 }
 
+function normalizeCallDto(item: MerchantVoiceCallDto): MerchantVoiceCallDto {
+  return {
+    ...item,
+    outcome: normalizeMerchantVoiceCallOutcome(item.outcome),
+  }
+}
+
+function normalizeCallsResponse(
+  response: MerchantVoiceCallsApiResponse | MerchantVoiceCallDto[],
+  pageNumber = 1,
+): MerchantVoiceCallsResponse {
+  if (Array.isArray(response)) {
+    const items = response.map(normalizeCallDto)
+    return {
+      items,
+      pageNumber,
+      totalPages: 1,
+      totalCount: items.length,
+      hasPreviousPage: false,
+      hasNextPage: false,
+    }
+  }
+
+  const items = (response?.items ?? []).map(normalizeCallDto)
+  return {
+    items,
+    pageNumber: response?.pageNumber ?? pageNumber,
+    totalPages: response?.totalPages ?? 1,
+    totalCount: response?.totalCount ?? items.length,
+    hasPreviousPage: response?.hasPreviousPage ?? false,
+    hasNextPage: response?.hasNextPage ?? false,
+  }
+}
+
+function normalizeCustomerDto(item: MerchantVoiceCustomerDto): MerchantVoiceCustomerDto {
+  return {
+    ...item,
+    type: normalizeMerchantVoiceCustomerType(item.type),
+    group: normalizeMerchantVoiceCustomerGroup(item.group),
+    status: normalizeMerchantVoiceCustomerStatus(item.status),
+  }
+}
+
+function normalizeCustomersResponse(
+  response: MerchantVoiceCustomersApiResponse | MerchantVoiceCustomerDto[],
+  pageNumber = 1,
+): MerchantVoiceCustomersResponse {
+  if (Array.isArray(response)) {
+    const items = response.map(normalizeCustomerDto)
+    return {
+      items,
+      pageNumber,
+      totalPages: 1,
+      totalCount: items.length,
+      hasPreviousPage: false,
+      hasNextPage: false,
+    }
+  }
+
+  const items = (response?.items ?? []).map(normalizeCustomerDto)
+  return {
+    items,
+    pageNumber: response?.pageNumber ?? pageNumber,
+    totalPages: response?.totalPages ?? 1,
+    totalCount: response?.totalCount ?? items.length,
+    hasPreviousPage: response?.hasPreviousPage ?? false,
+    hasNextPage: response?.hasNextPage ?? false,
+  }
+}
+
 export function createMerchantVoiceRepository(client: HttpClient = httpClient) {
   return {
     async getBookingStatistics(): Promise<MerchantVoiceBookingStatisticsDto> {
@@ -486,12 +710,11 @@ export function createMerchantVoiceRepository(client: HttpClient = httpClient) {
         {
           headers: MERCHANT_VOICE_HEADERS,
           params: {
-            pageNumber: filters.pageNumber ?? 1,
-            pageSize: filters.pageSize ?? BOOKING_HUB_PAGE_SIZE,
-            searchBy: filters.searchBy,
-            keyword: filters.keyword,
-            dateFrom: filters.dateFrom,
-            dateTo: filters.dateTo,
+            ...buildMerchantVoicePagingParams(filters.pageNumber, filters.pageSize),
+            [MerchantVoiceListQueryParam.SearchBy]: filters.searchBy,
+            [MerchantVoiceListQueryParam.Keyword]: filters.keyword,
+            [MerchantVoiceListQueryParam.DateFrom]: filters.dateFrom,
+            [MerchantVoiceListQueryParam.DateTo]: filters.dateTo,
           },
         },
       )
@@ -520,10 +743,9 @@ export function createMerchantVoiceRepository(client: HttpClient = httpClient) {
         {
           headers: MERCHANT_VOICE_HEADERS,
           params: {
-            pageNumber: filters.pageNumber ?? 1,
-            pageSize: filters.pageSize ?? BOOKING_HUB_PAGE_SIZE,
-            status: filters.status,
-            searchTerm: filters.searchTerm,
+            ...buildMerchantVoicePagingParams(filters.pageNumber, filters.pageSize),
+            [MerchantVoiceListQueryParam.Status]: filters.status,
+            [MerchantVoiceListQueryParam.SearchTerm]: filters.searchTerm,
           },
         },
       )
@@ -559,7 +781,8 @@ export function createMerchantVoiceRepository(client: HttpClient = httpClient) {
         {
           headers: MERCHANT_VOICE_HEADERS,
           params: {
-            searchTerm: filters.searchTerm?.trim() || undefined,
+            [MerchantVoiceListQueryParam.BusinessStaffSearchTerm]:
+              filters.searchTerm?.trim() || undefined,
           },
         },
       )
@@ -602,6 +825,81 @@ export function createMerchantVoiceRepository(client: HttpClient = httpClient) {
         return normalizeStaffStatus(response.status)
       }
       return normalizeStaffStatus(response)
+    },
+
+    async getCalls(filters: MerchantVoiceCallsFilter = {}): Promise<MerchantVoiceCallsResponse> {
+      const response = await client.get<MerchantVoiceCallsApiResponse | MerchantVoiceCallDto[]>(
+        `${MERCHANT_VOICE_BASE}/calls`,
+        {
+          headers: MERCHANT_VOICE_HEADERS,
+          params: {
+            ...buildMerchantVoicePagingParams(filters.pageNumber, filters.pageSize),
+            [MerchantVoiceListQueryParam.Status]: filters.status,
+            [MerchantVoiceListQueryParam.SearchTerm]: filters.searchTerm,
+          },
+        },
+      )
+      return normalizeCallsResponse(response, filters.pageNumber ?? 1)
+    },
+
+    async getCallStatistics(): Promise<MerchantVoiceCallStatisticsDto> {
+      const response = await client.get<MerchantVoiceCallStatisticsDto>(
+        `${MERCHANT_VOICE_BASE}/calls/statistics`,
+        { headers: MERCHANT_VOICE_HEADERS },
+      )
+      return {
+        callsToday: response?.callsToday ?? 0,
+        missedCallsNeedingFollowUp: response?.missedCallsNeedingFollowUp ?? 0,
+        bookedToday: response?.bookedToday ?? 0,
+        answerRatePercent: response?.answerRatePercent ?? 0,
+      }
+    },
+
+    async sendCallFollowUpSms(id: string): Promise<boolean> {
+      const response = await client.post<boolean>(
+        `${MERCHANT_VOICE_BASE}/calls/${encodeURIComponent(id)}/send-follow-up-sms`,
+        {},
+        { headers: MERCHANT_VOICE_HEADERS },
+      )
+      return response === true
+    },
+
+    async getCustomers(filters: MerchantVoiceCustomersFilter = {}): Promise<MerchantVoiceCustomersResponse> {
+      const response = await client.get<MerchantVoiceCustomersApiResponse | MerchantVoiceCustomerDto[]>(
+        `${MERCHANT_VOICE_BASE}/customers`,
+        {
+          headers: MERCHANT_VOICE_HEADERS,
+          params: {
+            ...buildMerchantVoicePagingParams(filters.pageNumber, filters.pageSize),
+            [MerchantVoiceListQueryParam.Group]: filters.group,
+            [MerchantVoiceListQueryParam.SearchTerm]: filters.searchTerm,
+          },
+        },
+      )
+      return normalizeCustomersResponse(response, filters.pageNumber ?? 1)
+    },
+
+    async getCustomerSummary(): Promise<MerchantVoiceCustomerGroupSummaryDto> {
+      const response = await client.get<MerchantVoiceCustomerGroupSummaryDto>(
+        `${MERCHANT_VOICE_BASE}/customers/summary`,
+        { headers: MERCHANT_VOICE_HEADERS },
+      )
+      return {
+        all: response?.all ?? 0,
+        vip: response?.vip ?? 0,
+        new: response?.new ?? 0,
+        days15: response?.days15 ?? 0,
+        days30: response?.days30 ?? 0,
+        days60: response?.days60 ?? 0,
+      }
+    },
+
+    async updateCustomer(id: string, body: UpdateMerchantVoiceCustomerRequest): Promise<void> {
+      await client.put<void>(
+        `${MERCHANT_VOICE_BASE}/customers/${encodeURIComponent(id)}`,
+        body,
+        { headers: MERCHANT_VOICE_HEADERS },
+      )
     },
   }
 }

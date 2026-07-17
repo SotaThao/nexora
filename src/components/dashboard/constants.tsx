@@ -14,6 +14,32 @@ import {
   Calendar,
   Package,
 } from 'lucide-react'
+import { BookingHubMainTab } from '../../data/merchantVoice/domain'
+
+/** Menu ids used by Booking Hub / Touchpoints expandable nav (avoid hardcoding duplicates). */
+export const DASHBOARD_MENU = {
+  Touchpoints: 'touchpoints',
+  BookingHub: 'booking-hub',
+} as const
+
+/** Dashboard session roles passed as `userRole` prop. */
+export const DASHBOARD_USER_ROLE = {
+  Owner: 'owner',
+  Staff: 'staff',
+} as const
+
+export type DashboardUserRole = (typeof DASHBOARD_USER_ROLE)[keyof typeof DASHBOARD_USER_ROLE]
+
+export function isDashboardStaffRole(userRole: string | null | undefined): boolean {
+  return userRole === DASHBOARD_USER_ROLE.Staff
+}
+
+export const BOOKING_HUB_PATH = `/dashboard/${DASHBOARD_MENU.BookingHub}`
+
+export function bookingHubPath(tab?: string) {
+  if (!tab) return BOOKING_HUB_PATH
+  return `${BOOKING_HUB_PATH}?tab=${encodeURIComponent(tab)}`
+}
 
 export const WalletLogos = {
   venmo: (
@@ -122,6 +148,64 @@ export const TOUCHPOINTS_SUBMENU = [
 export const VISIBLE_TOUCHPOINTS_SUBMENU = SHOW_HARDWARE_DEVICES
   ? TOUCHPOINTS_SUBMENU
   : TOUCHPOINTS_SUBMENU.filter((item) => item.id !== 'devices')
+
+/** Booking Hub sidebar children — maps to `/dashboard/booking-hub?tab=`. */
+export const BOOKING_HUB_SUBMENU = [
+  { id: BookingHubMainTab.Booking, labelKey: 'components.dashboard.views.BookingHubView.tabs.booking', requiresVoiceTenant: true },
+  { id: BookingHubMainTab.Customers, labelKey: 'components.dashboard.views.BookingHubView.tabs.customers', requiresVoiceTenant: true },
+  { id: BookingHubMainTab.CallLog, labelKey: 'components.dashboard.views.BookingHubView.tabs.callLog', requiresVoiceTenant: true },
+  { id: BookingHubMainTab.Plans, labelKey: 'components.dashboard.views.BookingHubView.tabs.plans', requiresVoiceTenant: false },
+  { id: BookingHubMainTab.Settings, labelKey: 'components.dashboard.views.BookingHubView.tabs.settings', requiresVoiceTenant: true },
+] as const
+
+/** Match BookingHubView page tabs: without voice tenant only Plans is visible. */
+export function getVisibleBookingHubSubmenu(hasVoiceTenant: boolean) {
+  if (hasVoiceTenant) return BOOKING_HUB_SUBMENU
+  return BOOKING_HUB_SUBMENU.filter((item) => !item.requiresVoiceTenant)
+}
+
+export function getDefaultBookingHubTab(hasVoiceTenant: boolean): BookingHubMainTab {
+  return hasVoiceTenant ? BookingHubMainTab.Booking : BookingHubMainTab.Plans
+}
+
+export function isBookingHubMainTabAllowed(
+  tab: BookingHubMainTab,
+  hasVoiceTenant: boolean,
+): boolean {
+  const item = BOOKING_HUB_SUBMENU.find((entry) => entry.id === tab)
+  if (!item) return false
+  return hasVoiceTenant || !item.requiresVoiceTenant
+}
+
+export function isBookingHubSubActive(
+  activeMenu: string,
+  tabParam: string | null,
+  subId: string,
+  hasVoiceTenant = true,
+): boolean {
+  if (activeMenu !== DASHBOARD_MENU.BookingHub) return false
+  const activeTab = tabParam || getDefaultBookingHubTab(hasVoiceTenant)
+  return activeTab === subId
+}
+
+export function getDashboardMenuLocalizedLabel(
+  id: string,
+  t: (key: string) => string,
+  fallback: string,
+): string {
+  const labels: Record<string, string> = {
+    overview: t('dashboard.menu.dashboard'),
+    staff: t('dashboard.menu.staff'),
+    reviews: t('dashboard.menu.reviews'),
+    reports: t('dashboard.menu.transactions'),
+    [DASHBOARD_MENU.BookingHub]: t('dashboard.menu.booking_hub'),
+    [DASHBOARD_MENU.Touchpoints]: t('dashboard.menu.touchpoints'),
+    devices: t('dashboard.menu.qr_nfc'),
+    analytics: t('dashboard.menu.analytics'),
+    support: t('dashboard.menu.support'),
+  }
+  return labels[id] || fallback
+}
 
 export const MERCHANT_SIDEBAR_MENU_ITEMS = MENU_ITEMS.filter(
   (item) => !MERCHANT_SIDEBAR_HIDDEN_MENU_IDS.includes(item.id),

@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from 'react'
+import { createPortal } from 'react-dom'
 import { CheckCircle2, Eye, List, Loader2, X } from 'lucide-react'
 import { useTranslation } from '../../../contexts/LanguageContext'
 import { useNotification } from '../../../contexts/NotificationContext'
@@ -12,11 +13,13 @@ import {
   useStaffUnpaidDebt,
 } from '../../../data/hooks/useStaffPayouts'
 import type { StaffPayoutsListQuery } from '../../../data/repositories/payouts'
-import { getApiErrorCode, type PayoutRecord } from '../../../types/domain'
+import type { TFunction } from '../../../types/contexts'
+import { getApiErrorCode, type PayoutRecord, type StaffPayoutDetailRecord } from '../../../types/domain'
 import { DEFAULT_PAGE_SIZE } from '../../../constants/pagination'
 import { usePagination } from '../../../hooks/usePagination'
 import { formatCurrency, formatTransactionDateTime } from '../../dashboard/utils'
 import PayoutMethodBadge from '../../tips/payouts/PayoutMethodBadge'
+import PayoutCard from '../../tips/payouts/PayoutCard'
 import PayoutStatusBadge from '../../tips/payouts/PayoutStatusBadge'
 import PayoutToolbarSelect from '../../tips/payouts/PayoutToolbarSelect'
 import Pagination from '../../ui/Pagination'
@@ -52,9 +55,9 @@ function StatCard({
   loading?: boolean
 }) {
   return (
-    <div className="rounded-xl border border-nexoraBorder bg-white p-4 shadow-sm">
+    <div className="h-full rounded-xl border border-nexoraBorder bg-white p-3 shadow-sm sm:p-4">
       <p className="text-[10px] font-extrabold uppercase tracking-wide text-nexoraMuted">{label}</p>
-      <p className="mt-2 text-2xl font-black text-nexoraText">{loading ? '—' : value}</p>
+      <p className="mt-2 text-xl font-black text-nexoraText sm:text-2xl">{loading ? '—' : value}</p>
       {sub ? <p className="mt-1 text-[11px] font-semibold text-nexoraMuted">{sub}</p> : null}
     </div>
   )
@@ -70,7 +73,7 @@ function StaffPayoutList({
   payouts: PayoutRecord[]
   isPending?: boolean
   currentLanguage: string
-  t: (key: string, params?: Record<string, unknown>) => string
+  t: TFunction
   onViewDetail: (payout: PayoutRecord) => void
 }) {
   if (isPending) {
@@ -91,60 +94,17 @@ function StaffPayoutList({
 
   return (
     <>
-      <div className="divide-y divide-nexoraBorder/60 md:hidden">
-        {payouts.map((row) => {
-          const canConfirm = row.status === PayoutStatus.Pending
-          return (
-            <article key={row.id} className="space-y-3 p-4">
-              <div className="flex items-start justify-between gap-2">
-                <div>
-                  <p className="text-lg font-black text-nexoraText">{formatCurrency(row.amount)}</p>
-                  <p className="mt-0.5 text-[11px] font-semibold text-nexoraMuted">
-                    {formatTransactionDateTime(row.createdAt, currentLanguage)}
-                  </p>
-                </div>
-                <PayoutStatusBadge status={row.status} audience="staff" />
-              </div>
-
-              <div className="flex items-center justify-between gap-2">
-                <p className="text-xs font-bold text-nexoraBrand">{row.payoutCode}</p>
-                <PayoutMethodBadge method={row.payoutMethodType} />
-              </div>
-
-              <p className="text-xs text-nexoraMuted">
-                {formatPayoutPeriodRange(row.periodStart, row.periodEnd, currentLanguage)}
-              </p>
-
-              <div className="flex flex-wrap gap-1">
-                {getPayoutTypeI18nKeys(row.payoutTypes).map((key) => (
-                  <span
-                    key={key}
-                    className="rounded-md border border-nexoraBorder bg-slate-50 px-1.5 py-0.5 text-[10px] font-bold"
-                  >
-                    {t(key)}
-                  </span>
-                ))}
-              </div>
-
-              <div className="flex min-w-0 justify-end">
-                <button
-                  type="button"
-                  onClick={() => onViewDetail(row)}
-                  title={canConfirm ? t('staff_payouts.confirm_receipt') : t('staff_payments.view_detail')}
-                  aria-label={canConfirm ? t('staff_payouts.confirm_receipt') : t('staff_payments.view_detail')}
-                  className={`inline-flex h-10 max-w-full items-center justify-center gap-1.5 whitespace-nowrap rounded-lg px-3 text-xs font-bold ${
-                    canConfirm
-                      ? 'bg-nexoraBrand text-white'
-                      : 'border border-nexoraBorder bg-white text-nexoraText'
-                  }`}
-                >
-                  {canConfirm ? <CheckCircle2 className="h-4.5 w-4.5 shrink-0" /> : <Eye className="h-4.5 w-4.5 shrink-0" />}
-                  {t(canConfirm ? 'staff_payouts.action_confirm' : 'staff_payouts.action_view')}
-                </button>
-              </div>
-            </article>
-          )
-        })}
+      <div className="space-y-3 p-3 md:hidden">
+        {payouts.map((row) => (
+          <PayoutCard
+            key={row.id}
+            payout={row}
+            currentLanguage={currentLanguage}
+            t={t}
+            audience="staff"
+            onSelectPayout={() => onViewDetail(row)}
+          />
+        ))}
       </div>
 
       <div className="hidden overflow-x-auto md:block">
@@ -205,7 +165,9 @@ function StaffPayoutList({
                       }`}
                     >
                       {canConfirm ? <CheckCircle2 className="h-4 w-4 shrink-0" /> : <Eye className="h-4 w-4 shrink-0" />}
-                      {t(canConfirm ? 'staff_payouts.action_confirm' : 'staff_payouts.action_view')}
+                      <span>
+                        {canConfirm ? t('staff_payouts.action_confirm') : t('staff_payouts.action_view')}
+                      </span>
                     </button>
                   </td>
                 </tr>
@@ -232,16 +194,16 @@ function StaffPayoutDetailModal({
   isLoading?: boolean
   isError?: boolean
   currentLanguage: string
-  t: (key: string, params?: Record<string, unknown>) => string
+  t: TFunction
   confirmingId: string | null
   onClose: () => void
   onConfirm: (payoutId: string) => void
 }) {
   if (!payout && !isLoading) return null
   const canConfirm = payout?.status === PayoutStatus.Pending
-  return (
-    <div className="fixed inset-0 z-50 flex items-end justify-center bg-slate-900/50 p-0 backdrop-blur-sm sm:items-center sm:p-4">
-      <div className="max-h-[92dvh] w-full max-w-lg overflow-y-auto rounded-t-2xl border border-nexoraBorder bg-white shadow-2xl sm:rounded-2xl">
+  return createPortal(
+    <div className="fixed inset-0 z-[80] flex items-end justify-center bg-slate-900/50 p-0 backdrop-blur-sm sm:items-center sm:p-4">
+      <div className="max-h-[85dvh] w-full max-w-lg overflow-y-auto overscroll-contain rounded-t-2xl border border-nexoraBorder bg-white pb-[max(1rem,env(safe-area-inset-bottom,0px))] shadow-2xl sm:max-h-[92dvh] sm:rounded-2xl sm:pb-0">
         <div className="flex items-start justify-between border-b border-nexoraBorder px-5 py-4">
           <div>
             <h3 className="text-base font-black text-nexoraText">{t('staff_payouts.detail_title')}</h3>
@@ -367,7 +329,8 @@ function StaffPayoutDetailModal({
           </div>
         ) : null}
       </div>
-    </div>
+    </div>,
+    document.body,
   )
 }
 
@@ -431,7 +394,7 @@ export default function StaffPayouts() {
 
   return (
     <div className="space-y-4">
-      <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-4">
+      <div data-testid="staff-payout-stats" className="grid grid-cols-2 gap-3 xl:grid-cols-4">
         <StatCard
           label={t('staff_payouts.stat_received_all_time')}
           value={formatCurrency(stats?.totalReceivedAllTime ?? 0)}

@@ -108,6 +108,31 @@ export function isDirectP2pMethod(apiType: string): boolean {
   return DIRECT_P2P_UI_KEYS.has(payoutTypeToUiKey(apiType))
 }
 
+/** UI keys whose PUT payment-methods payload carries an editable accountName. */
+export const ACCOUNT_NAME_UI_KEYS = new Set([
+  'zelle',
+  'cashapp',
+  'paypal',
+])
+
+export function supportsPayoutAccountName(uiKey = ''): boolean {
+  return ACCOUNT_NAME_UI_KEYS.has(uiKey)
+}
+
+/**
+ * Builds the accountName value for a PUT payment-methods payload.
+ * Unsupported methods return undefined so the key is omitted from the JSON
+ * body entirely; supported methods always send a trimmed name or null (clear).
+ */
+export function toPayoutAccountNameDto(
+  uiKey: string,
+  raw?: string | null,
+): string | null | undefined {
+  if (!supportsPayoutAccountName(uiKey)) return undefined
+  const trimmed = typeof raw === 'string' ? raw.trim() : ''
+  return trimmed || null
+}
+
 /**
  * Returns the human-readable display label for a raw API paymentMethod
  * string. Falls back to the original string when there is no mapping.

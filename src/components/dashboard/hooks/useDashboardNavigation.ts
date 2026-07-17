@@ -1,10 +1,11 @@
 import { useState, useEffect } from 'react'
 import { useLocation, useNavigate } from 'react-router-dom'
+import { useOpenProductManagement } from '../../../data/hooks/useOpenProductManagement'
 import {
   buildDashboardMenuPath,
+  DASHBOARD_MENU,
   DASHBOARD_MENU_ID,
 } from '../constants'
-import { useOpenProductManagement } from '../../../data/hooks/useOpenProductManagement'
 
 type NavigateMenuOptions = {
   closeDrawer?: boolean
@@ -23,7 +24,10 @@ export function useDashboardNavigation() {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
   const [isPaymentsPayoutsMobileExpanded, setIsPaymentsPayoutsMobileExpanded] = useState(isPaymentsPayoutsActive)
   const [isTouchpointsMobileExpanded, setIsTouchpointsMobileExpanded] = useState(
-    activeMenu === DASHBOARD_MENU_ID.touchpoints,
+    activeMenu === DASHBOARD_MENU.Touchpoints,
+  )
+  const [isBookingHubMobileExpanded, setIsBookingHubMobileExpanded] = useState(
+    activeMenu === DASHBOARD_MENU.BookingHub,
   )
   const [settingsTab, setSettingsTab] = useState('profile')
   const [isProfileExpanded, setIsProfileExpanded] = useState(false)
@@ -43,12 +47,17 @@ export function useDashboardNavigation() {
   useEffect(() => {
     if (!isMobileMenuOpen) return
     setIsPaymentsPayoutsMobileExpanded(isPaymentsPayoutsActive)
-    setIsTouchpointsMobileExpanded(activeMenu === DASHBOARD_MENU_ID.touchpoints)
+    setIsTouchpointsMobileExpanded(activeMenu === DASHBOARD_MENU.Touchpoints)
+    setIsBookingHubMobileExpanded(activeMenu === DASHBOARD_MENU.BookingHub)
   }, [isMobileMenuOpen, activeMenu, isPaymentsPayoutsActive])
   useEffect(() => {
     if (isPaymentsPayoutsActive) {
       setIsPaymentsPayoutsMobileExpanded(true)
       setIsTouchpointsMobileExpanded(false)
+      setIsBookingHubMobileExpanded(false)
+    }
+    if (activeMenu === DASHBOARD_MENU.BookingHub) {
+      setIsBookingHubMobileExpanded(true)
     }
   }, [activeMenu, isPaymentsPayoutsActive])
 
@@ -86,6 +95,8 @@ export function useDashboardNavigation() {
     setIsPaymentsPayoutsMobileExpanded,
     isTouchpointsMobileExpanded,
     setIsTouchpointsMobileExpanded,
+    isBookingHubMobileExpanded,
+    setIsBookingHubMobileExpanded,
     settingsTab,
     setSettingsTab,
     isProfileExpanded,

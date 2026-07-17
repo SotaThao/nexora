@@ -1,6 +1,7 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 import profileSettingsRepository from '../repositories/profileSettings'
 import staffPaymentMethodsRepository from '../repositories/staffPaymentMethods'
+import { toPayoutAccountNameDto } from '../paymentMethodTypes'
 import { logger } from '../../utils/logger'
 import type { PaymentMethodDto } from '../../types/domain'
 import type { PersonalOnboardingInput } from '../../types/hooks'
@@ -58,7 +59,10 @@ export function useCompletePersonalOnboarding() {
         if (targetMethod) {
           updatePromises.push(
             staffPaymentMethodsRepository
-              .update(targetMethod.id, { accountInfo })
+              .update(targetMethod.id, {
+                accountInfo,
+                accountName: toPayoutAccountNameDto(uiKey, payoutData.accountName),
+              })
               .then(() => {
                 const isActiveInUi = payoutData.enabled
                 if (isActiveInUi && !targetMethod.isActive) {

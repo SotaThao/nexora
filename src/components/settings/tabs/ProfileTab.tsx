@@ -35,8 +35,11 @@ import {
   getPaymentMethodDisplayName,
   payoutTypeToUiKey,
   isHiddenPayoutConfigType,
+  supportsPayoutAccountName,
+  toPayoutAccountNameDto,
 } from '../../../data/paymentMethodTypes'
 import { formatPaymentMethodAccountDisplay } from '../../payout/bankWireAccount'
+import PayoutAccountNameField from '../../payout/PayoutAccountNameField'
 import SettingsTipQrPanel from '../SettingsTipQrPanel'
 import type { PaymentMethodDto } from '../../../types/domain'
 
@@ -193,6 +196,7 @@ export default function ProfileTab({
   // Local state for the payment method edit modal
   const [editingMethod, setEditingMethod] = useState<any | null>(null)
   const [editValue, setEditValue] = useState('')
+  const [editAccountName, setEditAccountName] = useState('')
   const [editQrCode, setEditQrCode] = useState<any | null>(null)
   const [editQrFile, setEditQrFile] = useState(null)
   const [isCapturing, setIsCapturing] = useState(false)
@@ -239,6 +243,7 @@ export default function ProfileTab({
     const methodData = getMethod(key)
     setEditingMethod(key)
     setEditValue(methodData.accountInfo || '')
+    setEditAccountName(methodData.accountName || '')
     setEditQrCode(methodData.imageUrl || null)
     setEditQrFile(null)
     setModalError('')
@@ -260,6 +265,7 @@ export default function ProfileTab({
       {
         id: methodData.id,
         accountInfo: editValue.trim(),
+        accountName: toPayoutAccountNameDto(editingMethod, editAccountName),
         imageUrl: editQrFile ? null : (editQrCode || null),
         imageFile: editQrFile || undefined,
       },
@@ -509,6 +515,9 @@ export default function ProfileTab({
                         <div className="text-xs font-bold text-nexoraText">{label}</div>
                         {method.isConfigured ? (
                           <div className="mt-0.5 max-w-[110px] truncate font-mono text-[10px] text-nexoraMuted sm:max-w-[150px]">
+                            {supportsPayoutAccountName(uiKey) && method.accountName ? (
+                              <span className="font-sans font-semibold">{method.accountName} · </span>
+                            ) : null}
                             {accountDisplay}
                           </div>
                         ) : (
@@ -1211,6 +1220,12 @@ export default function ProfileTab({
                   />
                   {modalError && <p id="settings-payout-error" role="alert" className="mt-1 text-[10px] font-bold text-rose-500">{modalError}</p>}
                 </div>
+
+                <PayoutAccountNameField
+                  walletKey={editingMethod}
+                  value={editAccountName}
+                  onChange={setEditAccountName}
+                />
 
                 {/* QR Code Optional Upload */}
                 <div>
