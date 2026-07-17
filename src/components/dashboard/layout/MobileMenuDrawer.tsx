@@ -18,7 +18,7 @@ import {
   sidebarSubmenuItemClass,
 } from '../../ui/sidebarMenuStyles'
 import PaymentsPayoutsMenuSection from './PaymentsPayoutsMenuSection'
-import { isPaymentsPayoutsRouteActive, getVisibleBookingHubSubmenu, isBookingHubSubActive, VISIBLE_TOUCHPOINTS_SUBMENU, DASHBOARD_MENU, getDefaultBookingHubTab, getDashboardMenuLocalizedLabel } from '../constants'
+import { isPaymentsPayoutsRouteActive, getVisibleBookingHubSubmenu, isBookingHubSubActive, VISIBLE_TOUCHPOINTS_SUBMENU, DASHBOARD_MENU, getDefaultBookingHubTab, getDashboardMenuLocalizedLabel, isDashboardStaffRole } from '../constants'
 import { handleExpandableMenuClick } from '../hooks/expandableMenuNav'
 import { useMerchantVoiceTenantStatus } from '../../../data/hooks/useMerchantVoiceBookings'
 
@@ -51,7 +51,9 @@ export default function MobileMenuDrawer({
   const [searchParams] = useSearchParams()
   const activeSubTab = searchParams.get('tab')
   const isPaymentsPayoutsActive = isPaymentsPayoutsRouteActive(activeMenu, activeSubTab)
-  const { data: voiceTenantStatus } = useMerchantVoiceTenantStatus({ enabled: userRole !== 'staff' })
+  const { data: voiceTenantStatus } = useMerchantVoiceTenantStatus({
+    enabled: !isDashboardStaffRole(userRole),
+  })
   const hasVoiceTenant = voiceTenantStatus?.hasVoiceTenant === true
   const bookingHubSubmenu = getVisibleBookingHubSubmenu(hasVoiceTenant)
   const subscriptionCopy = getSubscriptionSidebarCopy(

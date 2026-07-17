@@ -4,7 +4,7 @@ import React, { useState, useEffect } from 'react'
 import { useNavigate, useSearchParams } from 'react-router-dom'
 import { ChevronUp, ChevronDown, LogOut } from 'lucide-react'
 import { useTranslation } from '../../../contexts/LanguageContext'
-import { visibleMenuItems, MERCHANT_SIDEBAR_MENU_ITEMS, isPaymentsPayoutsRouteActive, getVisibleBookingHubSubmenu, isBookingHubSubActive, VISIBLE_TOUCHPOINTS_SUBMENU, DASHBOARD_MENU, bookingHubPath, getDefaultBookingHubTab, getDashboardMenuLocalizedLabel } from '../constants'
+import { visibleMenuItems, MERCHANT_SIDEBAR_MENU_ITEMS, isPaymentsPayoutsRouteActive, getVisibleBookingHubSubmenu, isBookingHubSubActive, VISIBLE_TOUCHPOINTS_SUBMENU, DASHBOARD_MENU, bookingHubPath, getDefaultBookingHubTab, getDashboardMenuLocalizedLabel, isDashboardStaffRole } from '../constants'
 import { handleExpandableMenuClick } from '../hooks/expandableMenuNav'
 import MenuIcon from '../../ui/MenuIcon'
 import HomepageLink from '../../ui/HomepageLink'
@@ -47,7 +47,9 @@ export default function DashboardSidebar({
   // Sub-tabs are URL-driven (?tab=) so the sidebar highlight stays in sync with
   // the rendered route content (TipsRoute / TouchpointsRoute read the same param).
   const activeSubTab = searchParams.get('tab')
-  const { data: voiceTenantStatus } = useMerchantVoiceTenantStatus({ enabled: userRole !== 'staff' })
+  const { data: voiceTenantStatus } = useMerchantVoiceTenantStatus({
+    enabled: !isDashboardStaffRole(userRole),
+  })
   const hasVoiceTenant = voiceTenantStatus?.hasVoiceTenant === true
   const bookingHubSubmenu = getVisibleBookingHubSubmenu(hasVoiceTenant)
   const isPaymentsPayoutsActive = isPaymentsPayoutsRouteActive(activeMenu, activeSubTab)

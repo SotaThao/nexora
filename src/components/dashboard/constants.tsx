@@ -21,6 +21,18 @@ export const DASHBOARD_MENU = {
   BookingHub: 'booking-hub',
 } as const
 
+/** Dashboard session roles passed as `userRole` prop. */
+export const DASHBOARD_USER_ROLE = {
+  Owner: 'owner',
+  Staff: 'staff',
+} as const
+
+export type DashboardUserRole = (typeof DASHBOARD_USER_ROLE)[keyof typeof DASHBOARD_USER_ROLE]
+
+export function isDashboardStaffRole(userRole: string | null | undefined): boolean {
+  return userRole === DASHBOARD_USER_ROLE.Staff
+}
+
 export const BOOKING_HUB_PATH = `/dashboard/${DASHBOARD_MENU.BookingHub}`
 
 export function bookingHubPath(tab?: string) {

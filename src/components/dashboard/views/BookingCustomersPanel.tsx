@@ -129,18 +129,32 @@ const CUSTOMER_TYPES: MerchantVoiceCustomerType[] = [
   MerchantVoiceCustomerType.Internal,
 ]
 
-function resolveSourceDisplay(source: string | null, t: (key: string) => string): { icon: React.ReactNode | null; label: string } {
+const SOURCE_DISPLAY_RULES: ReadonlyArray<{
+  keywords: readonly string[]
+  icon: React.ReactNode
+  labelKey: string
+}> = [
+  { keywords: ['qr'], icon: <QrCodeIcon />, labelKey: 'qr' },
+  { keywords: ['receipt'], icon: <ReceiptIcon />, labelKey: 'receipt' },
+  { keywords: ['call', 'voice', 'phone'], icon: <PhoneIncomingIcon />, labelKey: 'call' },
+  { keywords: ['web', 'landing'], icon: <ImportTrayIcon />, labelKey: 'web' },
+  { keywords: ['api', 'online'], icon: <ImportTrayIcon />, labelKey: 'api' },
+  { keywords: ['pos', 'import'], icon: <ImportTrayIcon />, labelKey: 'pos' },
+]
+
+function resolveSourceDisplay(
+  source: string | null,
+  t: (key: string) => string,
+): { icon: React.ReactNode | null; label: string } {
   if (!source) return { icon: null, label: t(`${TK}.sources.none`) }
+
   const lower = source.toLowerCase()
-  if (lower.includes('qr')) return { icon: <QrCodeIcon />, label: t(`${TK}.sources.qr`) }
-  if (lower.includes('receipt')) return { icon: <ReceiptIcon />, label: t(`${TK}.sources.receipt`) }
-  if (lower.includes('call') || lower.includes('voice') || lower.includes('phone')) {
-    return { icon: <PhoneIncomingIcon />, label: t(`${TK}.sources.call`) }
-  }
-  if (lower.includes('web') || lower.includes('landing')) return { icon: <ImportTrayIcon />, label: t(`${TK}.sources.web`) }
-  if (lower.includes('api') || lower.includes('online')) return { icon: <ImportTrayIcon />, label: t(`${TK}.sources.api`) }
-  if (lower.includes('pos') || lower.includes('import')) return { icon: <ImportTrayIcon />, label: t(`${TK}.sources.pos`) }
-  return { icon: null, label: source }
+  const rule = SOURCE_DISPLAY_RULES.find(({ keywords }) =>
+    keywords.some((keyword) => lower.includes(keyword)),
+  )
+  if (!rule) return { icon: null, label: source }
+
+  return { icon: rule.icon, label: t(`${TK}.sources.${rule.labelKey}`) }
 }
 
 /** BE sends UTC; display in the user's local timezone as `Jul 09, 2026, 05:21 AM`. */
