@@ -1,4 +1,5 @@
 import { Eye, FileImage, Loader2 } from 'lucide-react'
+import type { TFunction } from '../../../types/contexts'
 import type { PayoutRecord } from '../../../types/domain'
 import { formatCurrency, formatTransactionDateTime } from '../../dashboard/utils'
 import {
@@ -7,6 +8,7 @@ import {
   staffInitials,
 } from '../../../utils/payoutDisplay'
 import Tooltip from '../../ui/Tooltip'
+import PayoutCard from './PayoutCard'
 import PayoutMethodBadge from './PayoutMethodBadge'
 import PayoutStatusBadge from './PayoutStatusBadge'
 
@@ -20,7 +22,7 @@ export default function PayoutList({
   payouts: PayoutRecord[]
   isPending?: boolean
   currentLanguage: string
-  t: (key: string, params?: Record<string, unknown>) => string
+  t: TFunction
   onSelectPayout: (payoutId: string) => void
 }) {
   if (isPending) {
@@ -41,95 +43,16 @@ export default function PayoutList({
 
   return (
     <>
-      <div className="divide-y divide-nexoraBorder/60 sm:hidden">
-        {payouts.map((row) => {
-          const hasEvidence = row.evidenceCount > 0
-          return (
-            <article
-              key={row.id}
-              className="space-y-3 p-4 transition hover:bg-slate-50/80"
-            >
-              <div className="flex items-center justify-between gap-2">
-                <p className="text-lg font-black text-inkBlue">{formatCurrency(row.amount)}</p>
-                <PayoutStatusBadge status={row.status} className="shrink-0" />
-              </div>
-
-              <div className="flex min-w-0 items-center gap-2 rounded-xl border border-nexoraBorder/70 bg-slate-50 p-3">
-                {row.staffPhotoUrl ? (
-                  <img src={row.staffPhotoUrl} alt="" className="h-9 w-9 shrink-0 rounded-full object-cover" />
-                ) : (
-                  <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-nexoraBrand text-[11px] font-black text-white">
-                    {staffInitials(row.staffDisplayName)}
-                  </span>
-                )}
-                <div className="min-w-0 flex-1">
-                  <p className="truncate text-sm font-bold leading-tight text-inkBlue">{row.staffDisplayName}</p>
-                  <p className="mt-0.5 text-xs text-[#5f6d82]">{row.staffCode}</p>
-                </div>
-                <div className="shrink-0 text-right">
-                  <p className="font-mono text-[11px] font-bold text-nexoraBrand">{row.payoutCode}</p>
-                  <p className="mt-0.5 text-[11px] font-semibold text-[#5f6d82]">
-                    {formatTransactionDateTime(row.createdAt, currentLanguage)}
-                  </p>
-                </div>
-              </div>
-
-              <div className="grid grid-cols-[minmax(0,1.35fr)_minmax(7rem,0.65fr)]">
-                <div className="min-w-0 pr-3">
-                  <p className="text-[9px] font-black uppercase tracking-wider text-nexoraSubtle">
-                    {t('dashboard.tips.payouts_manager.card_coverage')}
-                  </p>
-                  <p className="mt-1 text-xs font-semibold text-[#5f6d82]">
-                    {formatPayoutPeriodRange(row.periodStart, row.periodEnd, currentLanguage)}
-                  </p>
-                  <div className="mt-2 flex flex-wrap gap-1">
-                    {getPayoutTypeI18nKeys(row.payoutTypes).map((key) => (
-                      <span
-                        key={key}
-                        className="rounded-md border border-nexoraBorder bg-slate-50 px-1.5 py-0.5 text-[10px] font-bold"
-                      >
-                        {t(key)}
-                      </span>
-                    ))}
-                  </div>
-                </div>
-
-                <div className="min-w-0 border-l border-nexoraBorder pl-3">
-                  <p className="text-[9px] font-black uppercase tracking-wider text-nexoraSubtle">
-                    {t('dashboard.tips.payouts_manager.card_payout_to')}
-                  </p>
-                  <div className="mt-2">
-                    <PayoutMethodBadge method={row.payoutMethodType} />
-                  </div>
-                </div>
-              </div>
-
-              {hasEvidence ? (
-                <button
-                  type="button"
-                  onClick={() => onSelectPayout(row.id)}
-                  className="inline-flex h-9 w-full items-center justify-center gap-2 rounded-lg border border-nexoraBorder bg-white px-3 text-xs font-bold text-nexoraMuted transition hover:border-nexoraBrand/40 hover:bg-nexoraBrand/5 hover:text-nexoraBrand"
-                >
-                  <FileImage className="h-4 w-4 shrink-0" />
-                  <span>{t('dashboard.tips.payouts_manager.evidence_count', { count: row.evidenceCount })}</span>
-                </button>
-              ) : null}
-
-              <div className="border-t border-nexoraBorder/60 pt-3">
-                <button
-                  type="button"
-                  onClick={() => onSelectPayout(row.id)}
-                  title={t('common.view_detail')}
-                  aria-label={t('common.view_detail')}
-                  className="inline-flex h-10 w-full items-center justify-center gap-2 whitespace-nowrap rounded-lg border border-nexoraBorder bg-white px-3 text-xs font-bold text-inkBlue transition hover:border-nexoraBrand/40 hover:bg-nexoraBrand/5"
-                >
-                  <Eye className="h-4 w-4 shrink-0" />
-                  <span>{t('common.view_detail')}</span>
-                </button>
-              </div>
-            </article>
-          )
-        })}
+      <div className="space-y-3 sm:hidden">
+        {payouts.map((row) => (
+          <PayoutCard
+            key={row.id}
+            payout={row}
+            currentLanguage={currentLanguage}
+            t={t}
+            onSelectPayout={onSelectPayout}
+          />
+        ))}
       </div>
 
       <div className="hidden overflow-x-auto sm:block">
