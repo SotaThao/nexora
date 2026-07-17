@@ -22,6 +22,7 @@ function FillIcon({ className, children }: IconProps & { children: React.ReactNo
   )
 }
 
+/** Lucide calendar — matches HTML Booking Book tab SVG. */
 export function CalendarTabIcon({ className }: IconProps) {
   return (
     <HubIcon className={className}>
@@ -39,33 +40,25 @@ export function CalendarTabIcon({ className }: IconProps) {
   )
 }
 
+/** Bootstrap Icons `bi-tags`. */
 export function TagsTabIcon({ className }: IconProps) {
   return (
-    <HubIcon className={className}>
-      <path
-        d="M20.59 13.41 11 3.83a2 2 0 0 0-2.83 0L3.83 8.17a2 2 0 0 0 0 2.83l9.59 9.58a2 2 0 0 0 2.83 0l4.34-4.34a2 2 0 0 0 0-2.83Z"
-        stroke="currentColor"
-        strokeWidth="2"
-        strokeLinejoin="round"
-      />
-      <circle cx="7.5" cy="7.5" r="1.5" fill="currentColor" />
-    </HubIcon>
+    <FillIcon className={className}>
+      <path d="M3 2v4.586l7 7L14.586 9l-7-7zM2 2a1 1 0 0 1 1-1h4.586a1 1 0 0 1 .707.293l7 7a1 1 0 0 1 0 1.414l-4.586 4.586a1 1 0 0 1-1.414 0l-7-7A1 1 0 0 1 2 6.586z" />
+      <path d="M5.5 5a.5.5 0 1 1 0-1 .5.5 0 0 1 0 1m0 1a1.5 1.5 0 1 0 0-3 1.5 1.5 0 0 0 0 3M1 7.086a1 1 0 0 0 .293.707L8.75 15.25l-.043.043a1 1 0 0 1-1.414 0l-7-7A1 1 0 0 1 0 7.586V3a1 1 0 0 1 1-1z" />
+    </FillIcon>
   )
 }
 
+/** Bootstrap Icons `bi-sliders2-vertical`. */
 export function SlidersTabIcon({ className }: IconProps) {
   return (
-    <HubIcon className={className}>
-      <path d="M4 21v-7" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
-      <path d="M4 10V3" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
-      <path d="M12 21v-9" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
-      <path d="M12 8V3" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
-      <path d="M20 21v-5" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
-      <path d="M20 12V3" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
-      <path d="M2 14h4" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
-      <path d="M10 8h4" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
-      <path d="M18 16h4" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
-    </HubIcon>
+    <FillIcon className={className}>
+      <path
+        fillRule="evenodd"
+        d="M0 10.5a.5.5 0 0 0 .5.5h4a.5.5 0 0 0 0-1H3V1.5a.5.5 0 0 0-1 0V10H.5a.5.5 0 0 0-.5.5M2.5 12a.5.5 0 0 0-.5.5v2a.5.5 0 0 0 1 0v-2a.5.5 0 0 0-.5-.5m3-6.5A.5.5 0 0 0 6 6h1.5v8.5a.5.5 0 0 0 1 0V6H10a.5.5 0 0 0 0-1H6a.5.5 0 0 0-.5.5M8 1a.5.5 0 0 0-.5.5v2a.5.5 0 0 0 1 0v-2A.5.5 0 0 0 8 1m3 9.5a.5.5 0 0 0 .5.5h4a.5.5 0 0 0 0-1H14V1.5a.5.5 0 0 0-1 0V10h-1.5a.5.5 0 0 0-.5.5m2.5 1.5a.5.5 0 0 0-.5.5v2a.5.5 0 0 0 1 0v-2a.5.5 0 0 0-.5-.5"
+      />
+    </FillIcon>
   )
 }
 
@@ -274,27 +267,21 @@ export function StopwatchIcon({ className }: IconProps) {
   )
 }
 
+/** Bootstrap Icons `bi-people`. */
 export function PeopleTabIcon({ className }: IconProps) {
   return (
-    <HubIcon className={className}>
-      <circle cx="9" cy="8" r="3.25" stroke="currentColor" strokeWidth="2" />
-      <path d="M3 20v-1.5A4.5 4.5 0 0 1 7.5 14h3A4.5 4.5 0 0 1 15 18.5V20" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
-      <path d="M16 8.5a2.75 2.75 0 1 0 0-5.5" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
-      <path d="M18.5 20v-1.5a4.5 4.5 0 0 0-2.75-4.15" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
-    </HubIcon>
+    <FillIcon className={className}>
+      <path d="M15 14s1 0 1-1-1-4-5-4-5 3-5 4 1 1 1 1zm-7.978-1L7 12.996c.001-.264.167-1.03.76-1.72C8.312 10.629 9.282 10 11 10c1.717 0 2.687.63 3.24 1.276.593.69.758 1.457.76 1.72l-.008.002-.014.002zM11 7a2 2 0 1 0 0-4 2 2 0 0 0 0 4m3-2a3 3 0 1 1-6 0 3 3 0 0 1 6 0M6.936 9.28a6 6 0 0 0-1.23-.247A7 7 0 0 0 5 9c-4 0-5 3-5 4q0 1 1 1h4.216A2.24 2.24 0 0 1 5 13c0-1.01.377-2.042 1.09-2.904.243-.294.526-.569.846-.816M4.92 10A5.5 5.5 0 0 0 4 13H1c0-.26.164-1.03.76-1.724.545-.636 1.492-1.256 3.16-1.275ZM1.5 5.5a3 3 0 1 1 6 0 3 3 0 0 1-6 0m3-2a2 2 0 1 0 0 4 2 2 0 0 0 0-4" />
+    </FillIcon>
   )
 }
 
+/** Bootstrap Icons `bi-telephone`. */
 export function PhoneTabIcon({ className }: IconProps) {
   return (
-    <HubIcon className={className}>
-      <path
-        d="M5 4h3.5l1.5 4-2 1.5a11 11 0 0 0 5.5 5.5l1.5-2 4 1.5V18a2 2 0 0 1-2 2C10.5 20 4 13.5 4 6a2 2 0 0 1 1-2Z"
-        stroke="currentColor"
-        strokeWidth="2"
-        strokeLinejoin="round"
-      />
-    </HubIcon>
+    <FillIcon className={className}>
+      <path d="M3.654 1.328a.678.678 0 0 0-1.015-.063L1.605 2.3c-.483.484-.661 1.169-.45 1.77a17.6 17.6 0 0 0 4.168 6.608 17.6 17.6 0 0 0 6.608 4.168c.601.211 1.286.033 1.77-.45l1.034-1.034a.678.678 0 0 0-.063-1.015l-2.307-1.794a.68.68 0 0 0-.58-.122l-2.19.547a1.75 1.75 0 0 1-1.657-.459L5.482 8.062a1.75 1.75 0 0 1-.46-1.657l.548-2.19a.68.68 0 0 0-.122-.58zM1.884.511a1.745 1.745 0 0 1 2.612.163L6.29 2.98c.329.423.445.974.315 1.494l-.547 2.19a.68.68 0 0 0 .178.643l2.457 2.457a.68.68 0 0 0 .644.178l2.189-.547a1.75 1.75 0 0 1 1.494.315l2.306 1.794c.829.645.905 1.87.163 2.611l-1.034 1.034c-.74.74-1.846 1.065-2.877.702a18.6 18.6 0 0 1-7.01-4.42 18.6 18.6 0 0 1-4.42-7.009c-.362-1.03-.037-2.137.703-2.877z" />
+    </FillIcon>
   )
 }
 

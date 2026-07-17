@@ -11,6 +11,7 @@ import {
 import {
   CallUiStatus,
   mapCallOutcomeToUiStatus,
+  mapCallUiStatusToApiGroup,
   type MerchantVoiceCallDto,
 } from "../../../data/repositories/merchantVoice";
 import { usePagination } from "../../../hooks/usePagination";
@@ -90,8 +91,8 @@ const STATUS_FILTER_ORDER: CallStatus[] = [
 ];
 
 function formatDuration(seconds: number) {
-  if (!seconds) return "_";
-  const minutes = Math.floor(seconds / 60);
+  if (!seconds) return "00:00";
+  const minutes = String(Math.floor(seconds / 60)).padStart(2, "0");
   const rest = String(seconds % 60).padStart(2, "0");
   return `${minutes}:${rest}`;
 }
@@ -219,6 +220,8 @@ export default function BookingCallLogPanel() {
   }, [search, resetPage]);
 
   const searchTerm = normalizePhoneSearchTerm(debouncedSearch) || undefined;
+  const apiStatus =
+    statusFilter === "all" ? undefined : mapCallUiStatusToApiGroup(statusFilter);
 
   const { data: statistics, isLoading: isStatisticsLoading } =
     useMerchantVoiceCallStatistics({ enabled: voiceEnabled });
@@ -229,7 +232,7 @@ export default function BookingCallLogPanel() {
     isError: isCallsError,
     refetch: refetchCalls,
   } = useMerchantVoiceCalls(
-    { pageNumber, pageSize, searchTerm },
+    { pageNumber, pageSize, searchTerm, status: apiStatus },
     { enabled: voiceEnabled },
   );
   const sendFollowUpSmsMutation = useSendMerchantVoiceCallFollowUpSms();
@@ -261,22 +264,25 @@ export default function BookingCallLogPanel() {
   );
 
   const statusCounts = useMemo(() => {
-    const counts = {
-      all: calls.length,
-      [CallUiStatus.Missed]: 0,
-      [CallUiStatus.Answered]: 0,
-      [CallUiStatus.Booked]: 0,
+    const all = statistics?.callsToday ?? callsResponse?.totalCount ?? calls.length;
+    const missed = statistics?.missedCallsNeedingFollowUp ?? 0;
+    const booked = statistics?.bookedToday ?? 0;
+    const answered = Math.max(0, all - missed - booked);
+    return {
+      all,
+      [CallUiStatus.Missed]: missed,
+      [CallUiStatus.Answered]: answered,
+      [CallUiStatus.Booked]: booked,
     };
-    for (const call of calls) {
-      counts[call.status] += 1;
-    }
-    return counts;
-  }, [calls]);
+  }, [statistics, callsResponse?.totalCount, calls.length]);
 
-  const visibleCalls = useMemo(() => {
-    if (statusFilter === "all") return calls;
-    return calls.filter((call) => call.status === statusFilter);
-  }, [calls, statusFilter]);
+  const visibleCalls = calls;
+
+  const handleStatusFilterChange = (next: CallStatus | "all") => {
+    if (next === statusFilter) return;
+    setStatusFilter(next);
+    resetPage();
+  };
 
   const stats = useMemo(
     () => ({
@@ -409,7 +415,7 @@ export default function BookingCallLogPanel() {
               className={`booking-status-chip ${statusFilter === "all" ? "is-active" : ""}`}
               type="button"
               aria-pressed={statusFilter === "all"}
-              onClick={() => setStatusFilter("all")}
+              onClick={() => handleStatusFilterChange("all")}
             >
               <span>{t(`${TK}.filterAll`)}</span>
               <span className="booking-status-chip-count">
@@ -424,7 +430,7 @@ export default function BookingCallLogPanel() {
                   className={`booking-status-chip ${statusFilter === id ? "is-active" : ""}`}
                   type="button"
                   aria-pressed={statusFilter === id}
-                  onClick={() => setStatusFilter(id)}
+                  onClick={() => handleStatusFilterChange(id)}
                 >
                   <span className="booking-status-chip-icon">{meta.icon}</span>
                   <span>{t(`${TK}.${meta.labelKey}`)}</span>

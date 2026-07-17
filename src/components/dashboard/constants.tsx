@@ -87,6 +87,33 @@ export const VISIBLE_TOUCHPOINTS_SUBMENU = SHOW_HARDWARE_DEVICES
   ? TOUCHPOINTS_SUBMENU
   : TOUCHPOINTS_SUBMENU.filter((item) => item.id !== 'devices')
 
+/** Booking Hub sidebar children — maps to `/dashboard/booking-hub?tab=`. */
+export const BOOKING_HUB_SUBMENU = [
+  { id: 'booking', labelKey: 'components.dashboard.views.BookingHubView.tabs.booking', requiresVoiceTenant: true },
+  { id: 'customers', labelKey: 'components.dashboard.views.BookingHubView.tabs.customers', requiresVoiceTenant: true },
+  { id: 'calllog', labelKey: 'components.dashboard.views.BookingHubView.tabs.callLog', requiresVoiceTenant: true },
+  { id: 'plans', labelKey: 'components.dashboard.views.BookingHubView.tabs.plans', requiresVoiceTenant: false },
+  { id: 'settings', labelKey: 'components.dashboard.views.BookingHubView.tabs.settings', requiresVoiceTenant: true },
+] as const
+
+/** Match BookingHubView page tabs: without voice tenant only Plans is visible. */
+export function getVisibleBookingHubSubmenu(hasVoiceTenant: boolean) {
+  if (hasVoiceTenant) return BOOKING_HUB_SUBMENU
+  return BOOKING_HUB_SUBMENU.filter((item) => !item.requiresVoiceTenant)
+}
+
+export function isBookingHubSubActive(
+  activeMenu: string,
+  tabParam: string | null,
+  subId: string,
+  hasVoiceTenant = true,
+): boolean {
+  if (activeMenu !== 'booking-hub') return false
+  // Match BookingHubView defaults: booking when voice-enabled, plans otherwise.
+  const activeTab = tabParam || (hasVoiceTenant ? 'booking' : 'plans')
+  return activeTab === subId
+}
+
 export const MERCHANT_SIDEBAR_MENU_ITEMS = MENU_ITEMS.filter(
   (item) => !MERCHANT_SIDEBAR_HIDDEN_MENU_IDS.includes(item.id),
 )

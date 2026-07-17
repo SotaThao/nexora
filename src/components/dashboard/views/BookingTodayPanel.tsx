@@ -60,9 +60,24 @@ const KPI_ACCENT_RED = { '--kpi-accent': '#ef4444' } as React.CSSProperties
 
 const SOURCE_KEY_MAP = BOOKING_UI_SOURCE_I18N_KEY
 
+const STATUS_FILTER_ORDER: BookingUiStatus[] = [
+  BookingUiStatus.New,
+  BookingUiStatus.SmsSent,
+  BookingUiStatus.Done,
+  BookingUiStatus.NoShow,
+]
+
+const STATUS_FILTER_LABEL_KEY: Record<BookingUiStatus, string> = {
+  [BookingUiStatus.New]: 'statusNew',
+  [BookingUiStatus.SmsSent]: 'statusSms',
+  [BookingUiStatus.Done]: 'statusDone',
+  [BookingUiStatus.NoShow]: 'statusNoShow',
+}
+
 type BookingStatus = BookingUiStatus
 type BookingSource = BookingUiSource
 type SearchField = BookingUiSearchField
+type StatusFilter = BookingUiStatus | 'all'
 type ViewMode = 'table' | 'card'
 
 interface BookingItem {
@@ -78,7 +93,7 @@ interface BookingItem {
   /** Voice call start (callStartedAt → local); `_` when absent. */
   callStartMain: string
   callStartDate: string
-  /** Call duration label `m:ss`; `_` when absent. */
+  /** Call duration label `mm:ss`; `00:00` when absent. */
   durationLabel: string
   source: BookingSource
   sourceClass: string
@@ -89,11 +104,12 @@ interface BookingItem {
 }
 
 const EMPTY_CELL = '_'
+const EMPTY_DURATION = '00:00'
 
 function formatCallDuration(seconds: number | null | undefined): string {
-  if (seconds == null || !Number.isFinite(seconds) || seconds <= 0) return EMPTY_CELL
+  if (seconds == null || !Number.isFinite(seconds) || seconds <= 0) return EMPTY_DURATION
   const total = Math.floor(seconds)
-  const minutes = Math.floor(total / 60)
+  const minutes = String(Math.floor(total / 60)).padStart(2, '0')
   const rest = String(total % 60).padStart(2, '0')
   return `${minutes}:${rest}`
 }
@@ -491,6 +507,7 @@ export default function BookingTodayPanel() {
     ? panelWidth < COMPACT_TABLE_PANEL_MAX
     : narrowViewportFallback
   const [viewMode, setViewMode] = useState<ViewMode>('table')
+  const [statusFilter, setStatusFilter] = useState<StatusFilter>('all')
   const [searchField, setSearchField] = useState<SearchField>(BookingUiSearchField.All)
   const [searchKeyword, setSearchKeyword] = useState('')
   const [dateFrom, setDateFrom] = useState('')
@@ -516,11 +533,12 @@ export default function BookingTodayPanel() {
   const dateToApi = debouncedFilters.dateTo ? `${debouncedFilters.dateTo}T23:59:59.999Z` : undefined
 
   const hasActiveFilters = useMemo(() => (
-    debouncedFilters.searchField !== BookingUiSearchField.All
+    statusFilter !== 'all'
+    || debouncedFilters.searchField !== BookingUiSearchField.All
     || Boolean(debouncedFilters.searchKeyword.trim())
     || Boolean(debouncedFilters.dateFrom)
     || Boolean(debouncedFilters.dateTo)
-  ), [debouncedFilters])
+  ), [statusFilter, debouncedFilters])
 
   const keywordPlaceholder = searchField === BookingUiSearchField.Name
     ? t(`${TK}.today.keywordPlaceholderName`)
@@ -546,17 +564,42 @@ export default function BookingTodayPanel() {
 
   const isListLoading = isBookingsLoading || isBookingsFetching
 
-  const filteredBookings = useMemo(() => (
+  const mappedBookings = useMemo(() => (
     (bookingResponse?.items ?? []).map((item) =>
       toBookingItem(item, statusOverrides[item.id], t(`${TK}.today.todayLabel`), currentLanguage),
     )
   ), [bookingResponse?.items, statusOverrides, t, currentLanguage])
+
+  /** Status chips are UI-only — API has no Status filter; count/filter the current page list. */
+  const statusCounts = useMemo(() => {
+    const counts = {
+      all: mappedBookings.length,
+      [BookingUiStatus.New]: 0,
+      [BookingUiStatus.SmsSent]: 0,
+      [BookingUiStatus.Done]: 0,
+      [BookingUiStatus.NoShow]: 0,
+    }
+    for (const item of mappedBookings) {
+      counts[item.status] += 1
+    }
+    return counts
+  }, [mappedBookings])
+
+  const filteredBookings = useMemo(() => {
+    if (statusFilter === 'all') return mappedBookings
+    return mappedBookings.filter((item) => item.status === statusFilter)
+  }, [mappedBookings, statusFilter])
 
   const stats = useMemo(() => ({
     todayCount: statistics?.allBookings ?? 0,
     done: statistics?.doneBookings ?? 0,
     noShow: statistics?.noShowBookings ?? 0,
   }), [statistics])
+
+  const handleStatusFilterChange = (next: StatusFilter) => {
+    if (next === statusFilter) return
+    setStatusFilter(next)
+  }
 
   const handleAction = async (id: string, action: 'send-sms' | 'done' | 'noshow' | 'detail') => {
     const booking = filteredBookings.find((item) => item.id === id)
@@ -639,10 +682,12 @@ export default function BookingTodayPanel() {
   }
 
   const clearFilters = () => {
+    setStatusFilter('all')
     setSearchField(BookingUiSearchField.All)
     setSearchKeyword('')
     setDateFrom('')
     setDateTo('')
+    resetPage()
   }
 
   const handleSearchFieldChange = (nextField: SearchField) => {
@@ -780,6 +825,34 @@ export default function BookingTodayPanel() {
                 <span>{t(`${TK}.today.cardView`)}</span>
               </button>
             </div>
+          </div>
+
+          <div
+            className="booking-status-chips"
+            role="group"
+            aria-label={t(`${TK}.today.statusFilterAria`)}
+          >
+            <button
+              className={`booking-status-chip ${statusFilter === 'all' ? 'is-active' : ''}`}
+              type="button"
+              aria-pressed={statusFilter === 'all'}
+              onClick={() => handleStatusFilterChange('all')}
+            >
+              <span>{t(`${TK}.today.filterAll`)}</span>
+              <span className="booking-status-chip-count">{statusCounts.all}</span>
+            </button>
+            {STATUS_FILTER_ORDER.map((id) => (
+              <button
+                key={id}
+                className={`booking-status-chip ${statusFilter === id ? 'is-active' : ''}`}
+                type="button"
+                aria-pressed={statusFilter === id}
+                onClick={() => handleStatusFilterChange(id)}
+              >
+                <span>{t(`${TK}.today.${STATUS_FILTER_LABEL_KEY[id]}`)}</span>
+                <span className="booking-status-chip-count">{statusCounts[id]}</span>
+              </button>
+            ))}
           </div>
 
           <div className="booking-controls" aria-label={t(`${TK}.today.filters`)}>

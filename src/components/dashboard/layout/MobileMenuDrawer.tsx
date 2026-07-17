@@ -18,7 +18,8 @@ import {
   sidebarSubmenuItemClass,
 } from '../../ui/sidebarMenuStyles'
 import PaymentsPayoutsMenuSection from './PaymentsPayoutsMenuSection'
-import { isPaymentsPayoutsRouteActive, VISIBLE_TOUCHPOINTS_SUBMENU } from '../constants'
+import { isPaymentsPayoutsRouteActive, getVisibleBookingHubSubmenu, isBookingHubSubActive, VISIBLE_TOUCHPOINTS_SUBMENU } from '../constants'
+import { useMerchantVoiceTenantStatus } from '../../../data/hooks/useMerchantVoiceBookings'
 
 export default function MobileMenuDrawer({
   isOpen,
@@ -37,6 +38,8 @@ export default function MobileMenuDrawer({
   setIsPaymentsPayoutsMobileExpanded,
   isTouchpointsMobileExpanded,
   setIsTouchpointsMobileExpanded,
+  isBookingHubMobileExpanded,
+  setIsBookingHubMobileExpanded,
   hasKyb,
   userRole,
   onLogout,
@@ -47,6 +50,9 @@ export default function MobileMenuDrawer({
   const [searchParams] = useSearchParams()
   const activeSubTab = searchParams.get('tab')
   const isPaymentsPayoutsActive = isPaymentsPayoutsRouteActive(activeMenu, activeSubTab)
+  const { data: voiceTenantStatus } = useMerchantVoiceTenantStatus({ enabled: userRole !== 'staff' })
+  const hasVoiceTenant = voiceTenantStatus?.hasVoiceTenant === true
+  const bookingHubSubmenu = getVisibleBookingHubSubmenu(hasVoiceTenant)
   const subscriptionCopy = getSubscriptionSidebarCopy(
     subscription ?? profile?.subscription,
     t,
@@ -61,6 +67,7 @@ export default function MobileMenuDrawer({
     navigateMenu(screen, { tab, closeDrawer: true })
     setIsPaymentsPayoutsMobileExpanded(true)
     setIsTouchpointsMobileExpanded(false)
+    setIsBookingHubMobileExpanded(false)
   }
 
   const handleMenuClick = (id: string) => {
@@ -71,6 +78,22 @@ export default function MobileMenuDrawer({
         navigateMenu('touchpoints', { closeDrawer: false })
         setIsTouchpointsMobileExpanded(true)
         setIsPaymentsPayoutsMobileExpanded(false)
+        setIsBookingHubMobileExpanded(false)
+      }
+      return
+    }
+
+    if (id === 'booking-hub') {
+      if (activeMenu === 'booking-hub') {
+        setIsBookingHubMobileExpanded((prev) => !prev)
+      } else {
+        navigateMenu('booking-hub', {
+          closeDrawer: false,
+          tab: hasVoiceTenant ? undefined : 'plans',
+        })
+        setIsBookingHubMobileExpanded(true)
+        setIsPaymentsPayoutsMobileExpanded(false)
+        setIsTouchpointsMobileExpanded(false)
       }
       return
     }
@@ -189,6 +212,11 @@ export default function MobileMenuDrawer({
                       {isTouchpointsMobileExpanded ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
                     </div>
                   )}
+                  {id === 'booking-hub' && (
+                    <div className="text-white/65 shrink-0">
+                      {isBookingHubMobileExpanded ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
+                    </div>
+                  )}
                 </button>
 
                 {userRole !== 'staff' && id === 'staff' && (
@@ -199,6 +227,25 @@ export default function MobileMenuDrawer({
                     onToggle={handlePaymentsPayoutsToggle}
                     onNavigate={handlePaymentsPayoutsNavigate}
                   />
+                )}
+
+                {id === 'booking-hub' && isBookingHubMobileExpanded && (
+                  <div className={SIDEBAR_SUBMENU_WRAP_CLASS}>
+                    {bookingHubSubmenu.map((sub) => {
+                      const isSubActive = isBookingHubSubActive(activeMenu, activeSubTab, sub.id, hasVoiceTenant)
+                      return (
+                        <button
+                          key={sub.id}
+                          type="button"
+                          onClick={() => navigateMenu('booking-hub', { tab: sub.id })}
+                          className={sidebarSubmenuItemClass(isSubActive)}
+                        >
+                          <div className={`h-1.5 w-1.5 rounded-full ${isSubActive ? 'bg-brandCyan shadow-sm' : 'bg-white/30'}`} />
+                          <span>{t(sub.labelKey)}</span>
+                        </button>
+                      )
+                    })}
+                  </div>
                 )}
 
                 {id === 'touchpoints' && isTouchpointsMobileExpanded && (

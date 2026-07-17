@@ -7,8 +7,10 @@ const TK = 'components.dashboard.views.BookingHubView.plans'
 
 type PlanId = 'Starter' | 'Pro' | 'Elite'
 
-function isPlanSelectable(plan: PlanId) {
-  return plan === 'Pro'
+const PLAN_BUTTON_LABEL_KEY: Record<PlanId, string> = {
+  Starter: 'selectStarter',
+  Pro: 'startTrial',
+  Elite: 'selectElite',
 }
 
 function PlanFeature({ included, children }: { included: boolean; children: React.ReactNode }) {
@@ -28,11 +30,6 @@ export default function BookingPlansPanel() {
 
   const hasExistingTrialRequest = myTrialRequest != null
 
-  const selectServicePlan = (plan: PlanId) => {
-    if (!isPlanSelectable(plan)) return
-    setSelectedPlan(plan)
-  }
-
   const getPlanButtonLabel = (plan: PlanId) => {
     if (plan === 'Pro' && hasExistingTrialRequest) {
       return t(`${TK}.trialRequestSubmitted`)
@@ -40,27 +37,22 @@ export default function BookingPlansPanel() {
     if (selectedPlan === plan) {
       return t(`${TK}.planSelected`, { plan })
     }
-    if (plan === 'Starter') return t(`${TK}.selectStarter`)
-    if (plan === 'Pro') return t(`${TK}.startTrial`)
-    return t(`${TK}.selectElite`)
+    return t(`${TK}.${PLAN_BUTTON_LABEL_KEY[plan]}`)
   }
 
   const isPlanButtonPrimary = (plan: PlanId) => {
-    if (!isPlanSelectable(plan)) return false
     if (selectedPlan) return selectedPlan === plan
     return plan === 'Pro'
   }
 
-  const isPlanCardSelected = (plan: PlanId) => isPlanSelectable(plan) && selectedPlan === plan
-
-  const handlePlanClick = (plan: PlanId, opensTrial = false) => {
-    if (opensTrial) {
+  const handlePlanClick = (plan: PlanId) => {
+    // Match HTML: Pro opens trial modal; Starter/Elite only toggle selection.
+    if (plan === 'Pro') {
       if (hasExistingTrialRequest || isTrialRequestLoading) return
       setTrialOpen(true)
       return
     }
-    if (!isPlanSelectable(plan)) return
-    selectServicePlan(plan)
+    setSelectedPlan(plan)
   }
 
   return (
@@ -69,10 +61,16 @@ export default function BookingPlansPanel() {
         <div className="plans-hero">{t(`${TK}.hero`)}</div>
 
         <div className="plans-grid">
-          <article className={`service-plan-card ${isPlanCardSelected('Starter') ? 'is-selected' : ''}`} data-plan-card="starter">
+          <article
+            className={`service-plan-card ${selectedPlan === 'Starter' ? 'is-selected' : ''}`}
+            data-plan-card="starter"
+          >
             <div className="plan-rec" aria-hidden="true" />
             <div className="service-plan-name">Starter</div>
-            <div className="service-plan-price">$99<span>/mo</span></div>
+            <div className="service-plan-price">
+              $99
+              <span>/mo</span>
+            </div>
             <div className="service-plan-cross">$149/mo</div>
             <div className="plan-features">
               <PlanFeature included>AI Voice 24/7</PlanFeature>
@@ -84,17 +82,22 @@ export default function BookingPlansPanel() {
             <button
               className={`plan-select-button ${isPlanButtonPrimary('Starter') ? 'is-primary' : ''}`}
               type="button"
-              disabled
               onClick={() => handlePlanClick('Starter')}
             >
               {getPlanButtonLabel('Starter')}
             </button>
           </article>
 
-          <article className={`service-plan-card is-recommended ${isPlanCardSelected('Pro') ? 'is-selected' : ''}`} data-plan-card="pro">
+          <article
+            className={`service-plan-card is-recommended ${selectedPlan === 'Pro' ? 'is-selected' : ''}`}
+            data-plan-card="pro"
+          >
             <div className="plan-rec">{t(`${TK}.recommended`)}</div>
             <div className="service-plan-name">Pro</div>
-            <div className="service-plan-price">$199<span>/mo</span></div>
+            <div className="service-plan-price">
+              $199
+              <span>/mo</span>
+            </div>
             <div className="service-plan-cross">$299/mo</div>
             <div className="plan-features">
               <PlanFeature included>AI Voice + SMS Campaigns</PlanFeature>
@@ -108,16 +111,22 @@ export default function BookingPlansPanel() {
               className={`plan-select-button ${isPlanButtonPrimary('Pro') ? 'is-primary' : ''}`}
               type="button"
               disabled={hasExistingTrialRequest || isTrialRequestLoading}
-              onClick={() => handlePlanClick('Pro', true)}
+              onClick={() => handlePlanClick('Pro')}
             >
               {getPlanButtonLabel('Pro')}
             </button>
           </article>
 
-          <article className={`service-plan-card ${isPlanCardSelected('Elite') ? 'is-selected' : ''}`} data-plan-card="elite">
+          <article
+            className={`service-plan-card ${selectedPlan === 'Elite' ? 'is-selected' : ''}`}
+            data-plan-card="elite"
+          >
             <div className="plan-rec" aria-hidden="true" />
             <div className="service-plan-name">Elite</div>
-            <div className="service-plan-price">$349<span>/mo</span></div>
+            <div className="service-plan-price">
+              $349
+              <span>/mo</span>
+            </div>
             <div className="service-plan-cross">$499/mo</div>
             <div className="plan-features">
               <PlanFeature included>{t(`${TK}.everythingInPro`)}</PlanFeature>
@@ -129,7 +138,6 @@ export default function BookingPlansPanel() {
             <button
               className={`plan-select-button ${isPlanButtonPrimary('Elite') ? 'is-primary' : ''}`}
               type="button"
-              disabled
               onClick={() => handlePlanClick('Elite')}
             >
               {getPlanButtonLabel('Elite')}
@@ -157,7 +165,8 @@ export default function BookingPlansPanel() {
             </div>
           </div>
           <div className="business-sub roi-summary">
-            {t(`${TK}.roiLabel`)}: <strong>16x</strong> {t(`${TK}.roiPaybackPrefix`)} <strong>{t(`${TK}.roiPaybackDays`)}</strong>
+            {t(`${TK}.roiLabel`)}: <strong>16x</strong> {t(`${TK}.roiPaybackPrefix`)}{' '}
+            <strong>{t(`${TK}.roiPaybackDays`)}</strong>
           </div>
         </article>
 

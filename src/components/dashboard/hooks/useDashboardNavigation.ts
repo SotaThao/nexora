@@ -16,6 +16,7 @@ export function useDashboardNavigation() {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
   const [isPaymentsPayoutsMobileExpanded, setIsPaymentsPayoutsMobileExpanded] = useState(isPaymentsPayoutsActive)
   const [isTouchpointsMobileExpanded, setIsTouchpointsMobileExpanded] = useState(activeMenu === 'touchpoints')
+  const [isBookingHubMobileExpanded, setIsBookingHubMobileExpanded] = useState(activeMenu === 'booking-hub')
   const [settingsTab, setSettingsTab] = useState('profile')
   const [isProfileExpanded, setIsProfileExpanded] = useState(false)
 
@@ -24,11 +25,16 @@ export function useDashboardNavigation() {
     if (!isMobileMenuOpen) return
     setIsPaymentsPayoutsMobileExpanded(isPaymentsPayoutsActive)
     setIsTouchpointsMobileExpanded(activeMenu === 'touchpoints')
+    setIsBookingHubMobileExpanded(activeMenu === 'booking-hub')
   }, [isMobileMenuOpen, activeMenu, isPaymentsPayoutsActive])
   useEffect(() => {
     if (isPaymentsPayoutsActive) {
       setIsPaymentsPayoutsMobileExpanded(true)
       setIsTouchpointsMobileExpanded(false)
+      setIsBookingHubMobileExpanded(false)
+    }
+    if (activeMenu === 'booking-hub') {
+      setIsBookingHubMobileExpanded(true)
     }
   }, [activeMenu, isPaymentsPayoutsActive])
 
@@ -56,6 +62,8 @@ export function useDashboardNavigation() {
     setIsPaymentsPayoutsMobileExpanded,
     isTouchpointsMobileExpanded,
     setIsTouchpointsMobileExpanded,
+    isBookingHubMobileExpanded,
+    setIsBookingHubMobileExpanded,
     settingsTab,
     setSettingsTab,
     isProfileExpanded,
