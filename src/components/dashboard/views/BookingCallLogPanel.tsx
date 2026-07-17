@@ -16,12 +16,13 @@ import {
 } from "../../../data/repositories/merchantVoice";
 import { usePagination } from "../../../hooks/usePagination";
 import { getApiErrorCode } from "../../../types/domain";
+import { normalizePhoneSearchTerm } from "../../CountryCodeSelect";
 import {
-  formatNationalNumber,
-  isValidPhoneE164,
-  normalizePhoneSearchTerm,
-  parsePhone,
-} from "../../CountryCodeSelect";
+  BOOKING_KPI_ACCENTS,
+  formatCallDurationSeconds,
+  formatVoicePhoneDisplay,
+  toLocalDateIso,
+} from "./bookingHubFormatters";
 import Pagination from "../../ui/Pagination";
 import { parseApiDateTime } from "../utils";
 import {
@@ -52,17 +53,6 @@ interface CallItem {
   canFollowUp: boolean;
 }
 
-const KPI_ACCENT_ELECTRIC = {
-  "--kpi-accent": "var(--nexora-electric)",
-} as React.CSSProperties;
-const KPI_ACCENT_RED = { "--kpi-accent": "#ef4444" } as React.CSSProperties;
-const KPI_ACCENT_SUCCESS = {
-  "--kpi-accent": "var(--nexora-success)",
-} as React.CSSProperties;
-const KPI_ACCENT_BRAND = {
-  "--kpi-accent": "var(--nexora-brand)",
-} as React.CSSProperties;
-
 const STATUS_META: Record<
   CallStatus,
   { icon: React.ReactNode; badgeClass: string; labelKey: string }
@@ -89,20 +79,6 @@ const STATUS_FILTER_ORDER: CallStatus[] = [
   CallUiStatus.Answered,
   CallUiStatus.Booked,
 ];
-
-function formatDuration(seconds: number) {
-  if (!seconds) return "00:00";
-  const minutes = String(Math.floor(seconds / 60)).padStart(2, "0");
-  const rest = String(seconds % 60).padStart(2, "0");
-  return `${minutes}:${rest}`;
-}
-
-function toLocalDateIso(date: Date) {
-  const year = date.getFullYear();
-  const month = String(date.getMonth() + 1).padStart(2, "0");
-  const day = String(date.getDate()).padStart(2, "0");
-  return `${year}-${month}-${day}`;
-}
 
 function formatCallTime(
   createdAt: string,
@@ -140,24 +116,6 @@ function formatCallTime(
   return `${dateFormatter.format(date)} ${timeStr}`;
 }
 
-function formatCallerPhoneDisplay(phone: string | null | undefined): string {
-  const raw = phone?.trim();
-  if (!raw) return "";
-
-  const parsed = parsePhone(raw);
-  if (isValidPhoneE164(raw, parsed.countryCode)) {
-    const national = formatNationalNumber(
-      parsed.nationalNumber,
-      parsed.countryCode,
-    );
-    if (national.replace(/\D/g, "")) {
-      return `${parsed.countryCode} ${national}`.trim();
-    }
-  }
-
-  return raw;
-}
-
 function toCallItem(
   item: MerchantVoiceCallDto,
   todayLabel: string,
@@ -166,7 +124,7 @@ function toCallItem(
   language: string,
 ): CallItem {
   const status = mapCallOutcomeToUiStatus(item.outcome);
-  const phoneDisplay = formatCallerPhoneDisplay(item.callerPhone);
+  const phoneDisplay = formatVoicePhoneDisplay(item.callerPhone, "") ?? "";
   return {
     id: item.id,
     time: formatCallTime(item.createdAt, todayLabel, yesterdayLabel, language),
@@ -324,7 +282,7 @@ export default function BookingCallLogPanel() {
       aria-busy={isStatisticsLoading || isListLoading}
     >
       <div className="overview-kpis calllog-kpis">
-        <article className="overview-card kpi-card" style={KPI_ACCENT_ELECTRIC}>
+        <article className="overview-card kpi-card" style={BOOKING_KPI_ACCENTS.electric}>
           <div className="kpi-top">
             <div className="kpi-icon">
               <PhoneTabIcon />
@@ -334,7 +292,7 @@ export default function BookingCallLogPanel() {
           <div className="kpi-value">{stats.todayCount}</div>
         </article>
 
-        <article className="overview-card kpi-card" style={KPI_ACCENT_RED}>
+        <article className="overview-card kpi-card" style={BOOKING_KPI_ACCENTS.red}>
           <div className="kpi-top">
             <div className="kpi-icon">
               <PhoneXIcon />
@@ -347,7 +305,7 @@ export default function BookingCallLogPanel() {
           <div className="kpi-value">{stats.missed}</div>
         </article>
 
-        <article className="overview-card kpi-card" style={KPI_ACCENT_SUCCESS}>
+        <article className="overview-card kpi-card" style={BOOKING_KPI_ACCENTS.success}>
           <div className="kpi-top">
             <div className="kpi-icon">
               <CalendarCheckIcon />
@@ -360,7 +318,7 @@ export default function BookingCallLogPanel() {
           <div className="kpi-value">{stats.booked}</div>
         </article>
 
-        <article className="overview-card kpi-card" style={KPI_ACCENT_BRAND}>
+        <article className="overview-card kpi-card" style={BOOKING_KPI_ACCENTS.brand}>
           <div className="kpi-top">
             <div className="kpi-icon">
               <GraphUpIcon />
@@ -513,7 +471,7 @@ export default function BookingCallLogPanel() {
                               <span>{t(`${TK}.${meta.labelKey}`)}</span>
                             </span>
                           </td>
-                          <td>{formatDuration(call.durationSeconds)}</td>
+                          <td>{formatCallDurationSeconds(call.durationSeconds)}</td>
                           <td>
                             <span className="call-note-cell">
                               {call.note || "_"}

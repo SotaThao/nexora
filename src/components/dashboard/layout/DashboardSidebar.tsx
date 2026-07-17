@@ -4,13 +4,13 @@ import React, { useState, useEffect } from 'react'
 import { useNavigate, useSearchParams } from 'react-router-dom'
 import { ChevronUp, ChevronDown, LogOut } from 'lucide-react'
 import { useTranslation } from '../../../contexts/LanguageContext'
-import { visibleMenuItems, MERCHANT_SIDEBAR_MENU_ITEMS, isPaymentsPayoutsRouteActive, getVisibleBookingHubSubmenu, isBookingHubSubActive, VISIBLE_TOUCHPOINTS_SUBMENU, DASHBOARD_MENU, bookingHubPath } from '../constants'
+import { visibleMenuItems, MERCHANT_SIDEBAR_MENU_ITEMS, isPaymentsPayoutsRouteActive, getVisibleBookingHubSubmenu, isBookingHubSubActive, VISIBLE_TOUCHPOINTS_SUBMENU, DASHBOARD_MENU, bookingHubPath, getDefaultBookingHubTab, getDashboardMenuLocalizedLabel } from '../constants'
+import { handleExpandableMenuClick } from '../hooks/expandableMenuNav'
 import MenuIcon from '../../ui/MenuIcon'
 import HomepageLink from '../../ui/HomepageLink'
 import SidebarPlanCard from '../../ui/SidebarPlanCard'
 import PaymentsPayoutsMenuSection from './PaymentsPayoutsMenuSection'
 import { useMerchantVoiceTenantStatus } from '../../../data/hooks/useMerchantVoiceBookings'
-import { BookingHubMainTab } from '../../../data/merchantVoice/domain'
 import { getSubscriptionSidebarCopy } from '../../../utils/subscriptionDisplay'
 import {
   SIDEBAR_SHELL_CLASS,
@@ -76,38 +76,30 @@ export default function DashboardSidebar({
   }
 
   const handleMenuClick = (id: string) => {
-    if (id === DASHBOARD_MENU.Touchpoints) {
-      if (activeMenu === DASHBOARD_MENU.Touchpoints) {
-        setIsTouchpointsExpanded((prev) => !prev)
-      } else {
-        setActiveMenu(DASHBOARD_MENU.Touchpoints)
-        setIsTouchpointsExpanded(true)
-        setIsPaymentsPayoutsExpanded(false)
-        setIsBookingHubExpanded(false)
-      }
-      return
-    }
-
-    if (id === DASHBOARD_MENU.BookingHub) {
-      if (activeMenu === DASHBOARD_MENU.BookingHub) {
-        setIsBookingHubExpanded((prev) => !prev)
-      } else {
-        if (hasVoiceTenant) {
-          setActiveMenu(DASHBOARD_MENU.BookingHub)
-        } else {
-          navigate(bookingHubPath(BookingHubMainTab.Plans), { replace: true })
-        }
-        setIsBookingHubExpanded(true)
-        setIsPaymentsPayoutsExpanded(false)
-        setIsTouchpointsExpanded(false)
-      }
-      return
-    }
-
-    setActiveMenu(id)
-    setIsPaymentsPayoutsExpanded(false)
-    setIsTouchpointsExpanded(false)
-    setIsBookingHubExpanded(false)
+    handleExpandableMenuClick({
+      clickedId: id,
+      activeMenu,
+      sections: [
+        {
+          id: DASHBOARD_MENU.Touchpoints,
+          setExpanded: setIsTouchpointsExpanded,
+          enter: () => setActiveMenu(DASHBOARD_MENU.Touchpoints),
+        },
+        {
+          id: DASHBOARD_MENU.BookingHub,
+          setExpanded: setIsBookingHubExpanded,
+          enter: () => {
+            if (hasVoiceTenant) {
+              setActiveMenu(DASHBOARD_MENU.BookingHub)
+              return
+            }
+            navigate(bookingHubPath(getDefaultBookingHubTab(false)), { replace: true })
+          },
+        },
+      ],
+      onPlainNavigate: setActiveMenu,
+      collapseExtras: () => setIsPaymentsPayoutsExpanded(false),
+    })
   }
 
   const subscriptionCopy = getSubscriptionSidebarCopy(
@@ -190,17 +182,7 @@ export default function DashboardSidebar({
           return menuItemsToDisplay.map((item) => {
           const { id, label } = item
           const isActive = activeMenu === id
-          const localizedLabel = {
-            overview: t('dashboard.menu.dashboard'),
-            staff: t('dashboard.menu.staff'),
-            reviews: t('dashboard.menu.reviews'),
-            reports: t('dashboard.menu.transactions'),
-            [DASHBOARD_MENU.BookingHub]: t('dashboard.menu.booking_hub'),
-            [DASHBOARD_MENU.Touchpoints]: t('dashboard.menu.touchpoints'),
-            devices: t('dashboard.menu.qr_nfc'),
-            analytics: t('dashboard.menu.analytics'),
-            support: t('dashboard.menu.support')
-          }[id] || label
+          const localizedLabel = getDashboardMenuLocalizedLabel(id, t, label)
 
           return (
             <React.Fragment key={id}>

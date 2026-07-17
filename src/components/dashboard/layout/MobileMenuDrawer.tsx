@@ -18,9 +18,9 @@ import {
   sidebarSubmenuItemClass,
 } from '../../ui/sidebarMenuStyles'
 import PaymentsPayoutsMenuSection from './PaymentsPayoutsMenuSection'
-import { isPaymentsPayoutsRouteActive, getVisibleBookingHubSubmenu, isBookingHubSubActive, VISIBLE_TOUCHPOINTS_SUBMENU, DASHBOARD_MENU } from '../constants'
+import { isPaymentsPayoutsRouteActive, getVisibleBookingHubSubmenu, isBookingHubSubActive, VISIBLE_TOUCHPOINTS_SUBMENU, DASHBOARD_MENU, getDefaultBookingHubTab, getDashboardMenuLocalizedLabel } from '../constants'
+import { handleExpandableMenuClick } from '../hooks/expandableMenuNav'
 import { useMerchantVoiceTenantStatus } from '../../../data/hooks/useMerchantVoiceBookings'
-import { BookingHubMainTab } from '../../../data/merchantVoice/domain'
 
 export default function MobileMenuDrawer({
   isOpen,
@@ -72,34 +72,28 @@ export default function MobileMenuDrawer({
   }
 
   const handleMenuClick = (id: string) => {
-    if (id === DASHBOARD_MENU.Touchpoints) {
-      if (activeMenu === DASHBOARD_MENU.Touchpoints) {
-        setIsTouchpointsMobileExpanded((prev) => !prev)
-      } else {
-        navigateMenu(DASHBOARD_MENU.Touchpoints, { closeDrawer: false })
-        setIsTouchpointsMobileExpanded(true)
-        setIsPaymentsPayoutsMobileExpanded(false)
-        setIsBookingHubMobileExpanded(false)
-      }
-      return
-    }
-
-    if (id === DASHBOARD_MENU.BookingHub) {
-      if (activeMenu === DASHBOARD_MENU.BookingHub) {
-        setIsBookingHubMobileExpanded((prev) => !prev)
-      } else {
-        navigateMenu(DASHBOARD_MENU.BookingHub, {
-          closeDrawer: false,
-          tab: hasVoiceTenant ? undefined : BookingHubMainTab.Plans,
-        })
-        setIsBookingHubMobileExpanded(true)
-        setIsPaymentsPayoutsMobileExpanded(false)
-        setIsTouchpointsMobileExpanded(false)
-      }
-      return
-    }
-
-    navigateMenu(id)
+    handleExpandableMenuClick({
+      clickedId: id,
+      activeMenu,
+      sections: [
+        {
+          id: DASHBOARD_MENU.Touchpoints,
+          setExpanded: setIsTouchpointsMobileExpanded,
+          enter: () => navigateMenu(DASHBOARD_MENU.Touchpoints, { closeDrawer: false }),
+        },
+        {
+          id: DASHBOARD_MENU.BookingHub,
+          setExpanded: setIsBookingHubMobileExpanded,
+          enter: () =>
+            navigateMenu(DASHBOARD_MENU.BookingHub, {
+              closeDrawer: false,
+              tab: hasVoiceTenant ? undefined : getDefaultBookingHubTab(false),
+            }),
+        },
+      ],
+      onPlainNavigate: (menuId) => navigateMenu(menuId),
+      collapseExtras: () => setIsPaymentsPayoutsMobileExpanded(false),
+    })
   }
 
   if (!isOpen) return null
@@ -185,17 +179,7 @@ export default function MobileMenuDrawer({
           {menuItemsToDisplay.filter((item) => item.id !== 'settings').map((item) => {
             const { id, label } = item
             const isActive = activeMenu === id
-            const localizedLabel = {
-              overview: t('dashboard.menu.dashboard'),
-              staff: t('dashboard.menu.staff'),
-              reviews: t('dashboard.menu.reviews'),
-              reports: t('dashboard.menu.transactions'),
-              [DASHBOARD_MENU.BookingHub]: t('dashboard.menu.booking_hub'),
-              [DASHBOARD_MENU.Touchpoints]: t('dashboard.menu.touchpoints'),
-              devices: t('dashboard.menu.qr_nfc'),
-              analytics: t('dashboard.menu.analytics'),
-              support: t('dashboard.menu.support')
-            }[id] || label
+            const localizedLabel = getDashboardMenuLocalizedLabel(id, t, label)
 
             return (
               <React.Fragment key={id}>

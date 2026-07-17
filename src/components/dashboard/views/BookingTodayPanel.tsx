@@ -1,5 +1,4 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react'
-import { formatNationalNumber, isValidPhoneE164, parsePhone } from '../../CountryCodeSelect'
 import { useTranslation } from '../../../contexts/LanguageContext'
 import { useNotification } from '../../../contexts/NotificationContext'
 import { getErrorI18nKey } from '../../../data/errorCodes'
@@ -51,14 +50,42 @@ import {
   BookingKpiSkeleton,
   BookingTodayListSkeleton,
 } from './BookingHubSkeletons'
+import {
+  BOOKING_KPI_ACCENTS,
+  formatCallDurationSeconds,
+  formatVoicePhoneDisplay,
+  toLocalDateIso,
+} from './bookingHubFormatters'
 
 const TK = 'components.dashboard.views.BookingHubView'
 
-const KPI_ACCENT_ELECTRIC = { '--kpi-accent': 'var(--nexora-electric)' } as React.CSSProperties
-const KPI_ACCENT_SUCCESS = { '--kpi-accent': 'var(--nexora-success)' } as React.CSSProperties
-const KPI_ACCENT_RED = { '--kpi-accent': '#ef4444' } as React.CSSProperties
-
 const SOURCE_KEY_MAP = BOOKING_UI_SOURCE_I18N_KEY
+
+const BOOKING_STATUS_META: Record<
+  BookingUiStatus,
+  { labelKey: string; badgeClass: string; rowClass: string }
+> = {
+  [BookingUiStatus.New]: {
+    labelKey: 'statusNew',
+    badgeClass: 'booking-status-new',
+    rowClass: 'is-new',
+  },
+  [BookingUiStatus.SmsSent]: {
+    labelKey: 'statusSms',
+    badgeClass: 'booking-status-sms',
+    rowClass: 'is-sms-sent',
+  },
+  [BookingUiStatus.Done]: {
+    labelKey: 'statusDone',
+    badgeClass: 'booking-status-done',
+    rowClass: 'is-done',
+  },
+  [BookingUiStatus.NoShow]: {
+    labelKey: 'statusNoShow',
+    badgeClass: 'booking-status-noshow',
+    rowClass: 'is-noshow',
+  },
+}
 
 const STATUS_FILTER_ORDER: BookingUiStatus[] = [
   BookingUiStatus.New,
@@ -66,13 +93,6 @@ const STATUS_FILTER_ORDER: BookingUiStatus[] = [
   BookingUiStatus.Done,
   BookingUiStatus.NoShow,
 ]
-
-const STATUS_FILTER_LABEL_KEY: Record<BookingUiStatus, string> = {
-  [BookingUiStatus.New]: 'statusNew',
-  [BookingUiStatus.SmsSent]: 'statusSms',
-  [BookingUiStatus.Done]: 'statusDone',
-  [BookingUiStatus.NoShow]: 'statusNoShow',
-}
 
 type BookingStatus = BookingUiStatus
 type BookingSource = BookingUiSource
@@ -104,15 +124,6 @@ interface BookingItem {
 }
 
 const EMPTY_CELL = '_'
-const EMPTY_DURATION = '00:00'
-
-function formatCallDuration(seconds: number | null | undefined): string {
-  if (seconds == null || !Number.isFinite(seconds) || seconds <= 0) return EMPTY_DURATION
-  const total = Math.floor(seconds)
-  const minutes = String(Math.floor(total / 60)).padStart(2, '0')
-  const rest = String(total % 60).padStart(2, '0')
-  return `${minutes}:${rest}`
-}
 
 function mapSource(source: MerchantVoiceBookingDto['source']): BookingSource {
   return mapLeadSourceToUiSource(source)
@@ -126,26 +137,11 @@ function mapStatus(status: MerchantVoiceBookingDto['status']): BookingStatus {
   return mapLeadStatusToUiStatus(status)
 }
 
-function formatCustomerPhoneDisplay(phone: string | null | undefined): string | null {
-  const raw = phone?.trim()
-  if (!raw) return null
-
-  const parsed = parsePhone(raw)
-  if (isValidPhoneE164(raw, parsed.countryCode)) {
-    const national = formatNationalNumber(parsed.nationalNumber, parsed.countryCode)
-    if (national.replace(/\D/g, '')) {
-      return `${parsed.countryCode} ${national}`.trim()
-    }
-  }
-
-  return raw
-}
-
 function resolveCustomerContactDisplay(
   phone: string | null | undefined,
   email: string | null | undefined,
 ): string | null {
-  const phoneDisplay = formatCustomerPhoneDisplay(phone)
+  const phoneDisplay = formatVoicePhoneDisplay(phone, null)
   if (phoneDisplay) return phoneDisplay
 
   const trimmedEmail = email?.trim()
@@ -167,13 +163,6 @@ function serviceList(service: string | null | undefined, fallback: string) {
     .split(/[,/]/)
     .map((item) => formatServiceLabel(item.trim()))
     .filter(Boolean)
-}
-
-function toLocalDateIso(date: Date) {
-  const year = date.getFullYear()
-  const month = String(date.getMonth() + 1).padStart(2, '0')
-  const day = String(date.getDate()).padStart(2, '0')
-  return `${year}-${month}-${day}`
 }
 
 function formatTimeBlock(
@@ -280,7 +269,7 @@ function toBookingItem(
     timeDate: time.timeDate,
     callStartMain: callStart.timeMain,
     callStartDate: callStart.timeDate,
-    durationLabel: formatCallDuration(item.callDurationSeconds),
+    durationLabel: formatCallDurationSeconds(item.callDurationSeconds),
     source,
     sourceClass: sourceClass(source),
     request: status === BookingUiStatus.New,
@@ -291,17 +280,11 @@ function toBookingItem(
 }
 
 function rowClassForStatus(status: BookingStatus) {
-  if (status === BookingUiStatus.Done) return 'is-done'
-  if (status === BookingUiStatus.SmsSent) return 'is-sms-sent'
-  if (status === BookingUiStatus.NoShow) return 'is-noshow'
-  return 'is-new'
+  return BOOKING_STATUS_META[status].rowClass
 }
 
 function statusBadgeClass(status: BookingStatus) {
-  if (status === BookingUiStatus.Done) return 'booking-status-done'
-  if (status === BookingUiStatus.SmsSent) return 'booking-status-sms'
-  if (status === BookingUiStatus.NoShow) return 'booking-status-noshow'
-  return 'booking-status-new'
+  return BOOKING_STATUS_META[status].badgeClass
 }
 
 function getInitials(name: string) {
@@ -701,12 +684,8 @@ export default function BookingTodayPanel() {
     setSearchField(nextField)
   }
 
-  const statusLabel = (status: BookingStatus) => {
-    if (status === BookingUiStatus.Done) return t(`${TK}.today.statusDone`)
-    if (status === BookingUiStatus.SmsSent) return t(`${TK}.today.statusSms`)
-    if (status === BookingUiStatus.NoShow) return t(`${TK}.today.statusNoShow`)
-    return t(`${TK}.today.statusNew`)
-  }
+  const statusLabel = (status: BookingStatus) =>
+    t(`${TK}.today.${BOOKING_STATUS_META[status].labelKey}`)
 
   useEffect(() => {
     if (!detailBooking) {
@@ -773,7 +752,7 @@ export default function BookingTodayPanel() {
         <BookingKpiSkeleton />
       ) : (
       <div className="overview-kpis">
-        <article className="overview-card kpi-card" style={KPI_ACCENT_ELECTRIC}>
+        <article className="overview-card kpi-card" style={BOOKING_KPI_ACCENTS.electric}>
           <div className="kpi-top">
             <div className="kpi-icon"><CalendarKpiIcon /></div>
             <span className="badge booking-status booking-status-new">{t(`${TK}.today.badgeNew`)}</span>
@@ -783,7 +762,7 @@ export default function BookingTodayPanel() {
           <div className="kpi-trend">{t(`${TK}.today.kpiTodayTrend`)}</div>
         </article>
 
-        <article className="overview-card kpi-card" style={KPI_ACCENT_SUCCESS}>
+        <article className="overview-card kpi-card" style={BOOKING_KPI_ACCENTS.success}>
           <div className="kpi-top">
             <div className="kpi-icon"><CheckKpiIcon /></div>
             <span className="badge booking-status booking-status-done">{t(`${TK}.today.badgeSmsActive`)}</span>
@@ -793,7 +772,7 @@ export default function BookingTodayPanel() {
           <div className="kpi-trend">{t(`${TK}.today.kpiDoneTrend`)}</div>
         </article>
 
-        <article className="overview-card kpi-card" style={KPI_ACCENT_RED}>
+        <article className="overview-card kpi-card" style={BOOKING_KPI_ACCENTS.red}>
           <div className="kpi-top">
             <div className="kpi-icon"><XKpiIcon /></div>
             <span className="badge booking-status booking-status-noshow">{t(`${TK}.today.badgeNoShow`)}</span>
@@ -856,7 +835,7 @@ export default function BookingTodayPanel() {
                 aria-pressed={statusFilter === id}
                 onClick={() => handleStatusFilterChange(id)}
               >
-                <span>{t(`${TK}.today.${STATUS_FILTER_LABEL_KEY[id]}`)}</span>
+                <span>{t(`${TK}.today.${BOOKING_STATUS_META[id].labelKey}`)}</span>
                 <span className="booking-status-chip-count">{statusCounts[id]}</span>
               </button>
             ))}

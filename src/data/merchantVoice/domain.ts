@@ -236,21 +236,30 @@ export function normalizeMerchantVoiceCustomerGroup(value: unknown): MerchantVoi
   return match ?? null
 }
 
+/** UI filter chips ↔ API customer group (Active has no chip). */
+const CUSTOMER_GROUP_UI_PAIRS = [
+  [MerchantVoiceCustomerGroup.New, CustomerUiSegment.New],
+  [MerchantVoiceCustomerGroup.Days15, CustomerUiSegment.Day15],
+  [MerchantVoiceCustomerGroup.Days30, CustomerUiSegment.Day30],
+  [MerchantVoiceCustomerGroup.Days60, CustomerUiSegment.Day60],
+  [MerchantVoiceCustomerGroup.Vip, CustomerUiSegment.Vip],
+] as const satisfies ReadonlyArray<readonly [MerchantVoiceCustomerGroup, CustomerUiSegment]>
+
+const CUSTOMER_GROUP_TO_UI_SEGMENT: Partial<Record<MerchantVoiceCustomerGroup, CustomerUiSegment>> =
+  Object.fromEntries(CUSTOMER_GROUP_UI_PAIRS)
+
+const UI_SEGMENT_TO_CUSTOMER_GROUP: Record<CustomerUiSegment, MerchantVoiceCustomerGroup> =
+  Object.fromEntries(
+    CUSTOMER_GROUP_UI_PAIRS.map(([group, segment]) => [segment, group]),
+  ) as Record<CustomerUiSegment, MerchantVoiceCustomerGroup>
+
 export function mapCustomerGroupToUiSegment(group: MerchantVoiceCustomerGroup | null): CustomerUiSegment | null {
-  if (group === MerchantVoiceCustomerGroup.New) return CustomerUiSegment.New
-  if (group === MerchantVoiceCustomerGroup.Days15) return CustomerUiSegment.Day15
-  if (group === MerchantVoiceCustomerGroup.Days30) return CustomerUiSegment.Day30
-  if (group === MerchantVoiceCustomerGroup.Days60) return CustomerUiSegment.Day60
-  if (group === MerchantVoiceCustomerGroup.Vip) return CustomerUiSegment.Vip
-  return null
+  if (!group) return null
+  return CUSTOMER_GROUP_TO_UI_SEGMENT[group] ?? null
 }
 
 export function mapUiSegmentToApiGroup(segment: CustomerUiSegment): MerchantVoiceCustomerGroup {
-  if (segment === CustomerUiSegment.New) return MerchantVoiceCustomerGroup.New
-  if (segment === CustomerUiSegment.Day15) return MerchantVoiceCustomerGroup.Days15
-  if (segment === CustomerUiSegment.Day30) return MerchantVoiceCustomerGroup.Days30
-  if (segment === CustomerUiSegment.Day60) return MerchantVoiceCustomerGroup.Days60
-  return MerchantVoiceCustomerGroup.Vip
+  return UI_SEGMENT_TO_CUSTOMER_GROUP[segment]
 }
 
 /**

@@ -1,5 +1,6 @@
 import React, { useEffect, useMemo, useState } from 'react'
-import { formatNationalNumber, isValidPhoneE164, normalizePhoneSearchTerm, parsePhone } from '../../CountryCodeSelect'
+import { normalizePhoneSearchTerm } from '../../CountryCodeSelect'
+import { formatVoicePhoneDisplay } from './bookingHubFormatters'
 import { useTranslation } from '../../../contexts/LanguageContext'
 import { useNotification } from '../../../contexts/NotificationContext'
 import { getErrorI18nKey } from '../../../data/errorCodes'
@@ -140,21 +141,6 @@ function resolveSourceDisplay(source: string | null, t: (key: string) => string)
   if (lower.includes('api') || lower.includes('online')) return { icon: <ImportTrayIcon />, label: t(`${TK}.sources.api`) }
   if (lower.includes('pos') || lower.includes('import')) return { icon: <ImportTrayIcon />, label: t(`${TK}.sources.pos`) }
   return { icon: null, label: source }
-}
-
-function formatCustomerPhoneDisplay(phone: string | null | undefined): string {
-  const raw = phone?.trim()
-  if (!raw) return '_'
-
-  const parsed = parsePhone(raw)
-  if (isValidPhoneE164(raw, parsed.countryCode)) {
-    const national = formatNationalNumber(parsed.nationalNumber, parsed.countryCode)
-    if (national.replace(/\D/g, '')) {
-      return `${parsed.countryCode} ${national}`.trim()
-    }
-  }
-
-  return raw
 }
 
 /** BE sends UTC; display in the user's local timezone as `Jul 09, 2026, 05:21 AM`. */
@@ -420,7 +406,7 @@ export default function BookingCustomersPanel() {
                               ) : null}
                             </div>
                           </td>
-                          <td>{formatCustomerPhoneDisplay(customer.phoneNumber)}</td>
+                          <td>{(formatVoicePhoneDisplay(customer.phoneNumber, '_') ?? '_')}</td>
                           <td>
                             {segment ? (
                               <span className="badge seg-badge" style={{ '--seg': segment.color } as React.CSSProperties}>

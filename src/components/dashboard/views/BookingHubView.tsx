@@ -24,6 +24,10 @@ import {
   parseBookingHubMainTab,
   parseBookingHubSubTab,
 } from '../../../data/repositories/merchantVoice'
+import {
+  getDefaultBookingHubTab,
+  isBookingHubMainTabAllowed,
+} from '../constants'
 import './booking-hub.css'
 
 const TK = 'components.dashboard.views.BookingHubView'
@@ -71,20 +75,13 @@ export default function BookingHubView() {
     const parsedMainTab = parseBookingHubMainTab(mainTab)
     const parsedSubTab = parseBookingHubSubTab(subTab)
 
-    if (
-      !hasVoiceTenant
-      && (
-        parsedMainTab === BookingHubMainTab.Booking
-        || parsedMainTab === BookingHubMainTab.Customers
-        || parsedMainTab === BookingHubMainTab.CallLog
-        || parsedMainTab === BookingHubMainTab.Settings
-      )
-    ) {
-      setActiveMainTab(BookingHubMainTab.Plans)
+    if (!hasVoiceTenant && !isBookingHubMainTabAllowed(parsedMainTab, false)) {
+      const defaultTab = getDefaultBookingHubTab(false)
+      setActiveMainTab(defaultTab)
       setActiveSubtab(BookingHubSubTab.Today)
 
       const nextParams = new URLSearchParams(searchParams)
-      nextParams.set('tab', BookingHubMainTab.Plans)
+      nextParams.set('tab', defaultTab)
       nextParams.delete('view')
       setSearchParams(nextParams, { replace: true })
       return
@@ -109,15 +106,7 @@ export default function BookingHubView() {
     mainTab: BookingHubMainTab,
     subTab: BookingHubSubTab = activeSubtab,
   ) => {
-    if (
-      !hasVoiceTenant
-      && (
-        mainTab === BookingHubMainTab.Booking
-        || mainTab === BookingHubMainTab.Customers
-        || mainTab === BookingHubMainTab.CallLog
-        || mainTab === BookingHubMainTab.Settings
-      )
-    ) {
+    if (!isBookingHubMainTabAllowed(mainTab, hasVoiceTenant)) {
       return
     }
 

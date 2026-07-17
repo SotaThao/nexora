@@ -116,6 +116,19 @@ export function getVisibleBookingHubSubmenu(hasVoiceTenant: boolean) {
   return BOOKING_HUB_SUBMENU.filter((item) => !item.requiresVoiceTenant)
 }
 
+export function getDefaultBookingHubTab(hasVoiceTenant: boolean): BookingHubMainTab {
+  return hasVoiceTenant ? BookingHubMainTab.Booking : BookingHubMainTab.Plans
+}
+
+export function isBookingHubMainTabAllowed(
+  tab: BookingHubMainTab,
+  hasVoiceTenant: boolean,
+): boolean {
+  const item = BOOKING_HUB_SUBMENU.find((entry) => entry.id === tab)
+  if (!item) return false
+  return hasVoiceTenant || !item.requiresVoiceTenant
+}
+
 export function isBookingHubSubActive(
   activeMenu: string,
   tabParam: string | null,
@@ -123,10 +136,27 @@ export function isBookingHubSubActive(
   hasVoiceTenant = true,
 ): boolean {
   if (activeMenu !== DASHBOARD_MENU.BookingHub) return false
-  // Match BookingHubView defaults: booking when voice-enabled, plans otherwise.
-  const activeTab =
-    tabParam || (hasVoiceTenant ? BookingHubMainTab.Booking : BookingHubMainTab.Plans)
+  const activeTab = tabParam || getDefaultBookingHubTab(hasVoiceTenant)
   return activeTab === subId
+}
+
+export function getDashboardMenuLocalizedLabel(
+  id: string,
+  t: (key: string) => string,
+  fallback: string,
+): string {
+  const labels: Record<string, string> = {
+    overview: t('dashboard.menu.dashboard'),
+    staff: t('dashboard.menu.staff'),
+    reviews: t('dashboard.menu.reviews'),
+    reports: t('dashboard.menu.transactions'),
+    [DASHBOARD_MENU.BookingHub]: t('dashboard.menu.booking_hub'),
+    [DASHBOARD_MENU.Touchpoints]: t('dashboard.menu.touchpoints'),
+    devices: t('dashboard.menu.qr_nfc'),
+    analytics: t('dashboard.menu.analytics'),
+    support: t('dashboard.menu.support'),
+  }
+  return labels[id] || fallback
 }
 
 export const MERCHANT_SIDEBAR_MENU_ITEMS = MENU_ITEMS.filter(
