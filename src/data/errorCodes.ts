@@ -135,6 +135,9 @@ export const errorCodeToI18nKey = {
 
   // Nexora Voice tenant
   VOICE_TENANT_NOT_FOUND: 'errors.voice_tenant_not_found',
+
+  // Nexora Voice tenant services
+  VOICE_TENANT_SERVICE_DURATION_INVALID: 'errors.voice_tenant_service_duration_invalid',
 }
 
 /**

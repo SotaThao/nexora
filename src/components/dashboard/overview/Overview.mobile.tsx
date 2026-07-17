@@ -25,6 +25,7 @@ import DirectPaymentQrPreviewModal from '../../settings/DirectPaymentQrPreviewMo
 import ReferralQrModal from '../modals/ReferralQrModal'
 import { useProfileSettings } from '../../../data/hooks/useProfileSettings'
 import { useMerchantPaymentQr } from '../../../data/hooks/useMerchantPayments'
+import { useDashboardAnalytics } from '../../../data/hooks/useDashboard'
 import { buildPublicQrImageUrl } from '../../../data/repositories/publicQr'
 import { QR_IMAGE_SIZES } from '../../../utils/qrUtils'
 import { resolveDirectPaymentPageUrl, resolveMerchantBusinessIdFromProfile } from '../../../utils/merchantBusinessId'
@@ -265,13 +266,20 @@ function Overview({
     [paymentPageUrl],
   )
 
+  const yearRange = useMemo(() => {
+    const y = new Date().getFullYear()
+    return { dateFrom: `${y}-01-01`, dateTo: `${y}-12-31` }
+  }, [])
+
+  const { data: analytics } = useDashboardAnalytics()
+  const { data: yearAnalytics } = useDashboardAnalytics(yearRange)
+
   // ── Derived metrics from overview API (month & year) ────────────────────
-  const FEE_RATE = 0.03
   const monthTips = metricsMonth?.totalTips ?? 0
   const monthTxCount = metricsMonth?.totalTransactions ?? 0
   const yearTips = metricsYear?.totalTips ?? 0
-  const moneySavedMonth = monthTips * FEE_RATE
-  const moneySavedYear = yearTips * FEE_RATE
+  const moneySavedMonth = analytics?.overview.feeSaved ?? 0
+  const moneySavedYear = yearAnalytics?.overview.feeSaved ?? 0
 
   const pendingConfirmCount = useMemo(
     () => (transactions || []).filter(isAwaitingShopConfirmation).length,
@@ -323,9 +331,7 @@ function Overview({
           <span className="text-[10px] font-semibold uppercase tracking-wide text-nexoraSubtle">
             {k('money_saved_title')}
           </span>
-          <span className="shrink-0 whitespace-nowrap rounded-full bg-[#EEE9FF] px-1.5 py-1 text-center text-[9px] font-semibold leading-none text-nexoraBrandDark">
-            {k('fee_estimate_badge')}
-          </span>
+         
           </div>
           <div className="grid grid-cols-[minmax(0,1fr)_154px] items-end gap-3">
             <div className="min-w-0">
@@ -336,20 +342,13 @@ function Overview({
                 {k('money_saved_subtitle')}
               </p>
             </div>
-            <div className="grid grid-cols-2 gap-2">
+            <div className="flex justify-end">
               <button
                 type="button"
                 onClick={() => navigate('/dashboard/tips?tab=savings')}
-                className="inline-flex h-7 w-full items-center justify-center rounded-full bg-nexoraBrand px-3 text-[10px] font-semibold text-white transition active:scale-95"
+                className="inline-flex h-7 min-w-[72px] items-center justify-center rounded-full bg-nexoraBrand px-4 text-[10px] font-semibold text-white transition active:scale-95"
               >
                 {k('view_btn')}
-              </button>
-              <button
-                type="button"
-                onClick={() => navigate('/dashboard/tips?tab=savings')}
-                className="inline-flex h-7 w-full items-center justify-center rounded-full border border-[#EEE9FF] bg-white px-3 text-[10px] font-semibold text-nexoraBrandDark shadow-[0_2px_8px_rgba(15,23,42,0.04)] transition active:scale-95"
-              >
-                {k('export_btn')}
               </button>
             </div>
           </div>

@@ -45,12 +45,14 @@ export function useMerchantVoiceBookingStatistics({ enabled = true } = {}) {
 
 export function useMerchantVoiceBookings(
   filters: MerchantVoiceBookingsFilter = EMPTY_FILTERS,
-  { enabled = true } = {},
+  { enabled = true, refetchInterval = false as number | false } = {},
 ) {
   return useQuery<MerchantVoiceBookingsResponse>({
     queryKey: qk.merchantVoiceBookings(filters),
     queryFn: () => merchantVoiceRepository.getBookings(filters),
     enabled,
+    refetchInterval,
+    refetchIntervalInBackground: false,
   })
 }
 

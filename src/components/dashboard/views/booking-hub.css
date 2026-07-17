@@ -3029,7 +3029,8 @@
 }
 
 .booking-hub-view .settings-input[aria-invalid="true"],
-.booking-hub-view .settings-textarea[aria-invalid="true"] {
+.booking-hub-view .settings-textarea[aria-invalid="true"],
+.booking-hub-view .settings-service-input[aria-invalid="true"] {
   border-color: #dc2626;
 }
 
@@ -3471,6 +3472,14 @@
   border-radius: 10px;
   background: #fff;
   padding: 10px;
+}
+
+.booking-hub-view .settings-service-row-error {
+  margin: 8px 0 0;
+  color: #dc2626;
+  font-size: 11px;
+  font-weight: 700;
+  line-height: 16px;
 }
 
 .booking-hub-view .settings-service-input {

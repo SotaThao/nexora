@@ -2,8 +2,10 @@ import React from 'react'
 import { useSearchParams } from 'react-router-dom'
 import { ChevronLeft, ChevronUp, ChevronDown, LogOut } from 'lucide-react'
 import { useTranslation } from '../../../contexts/LanguageContext'
+import { useOpenProductManagement } from '../../../data/hooks/useOpenProductManagement'
 import MenuIcon from '../../ui/MenuIcon'
 import HomepageLink from '../../ui/HomepageLink'
+import LanguageSwitcher from '../../ui/LanguageSwitcher'
 import SidebarPlanCard from '../../ui/SidebarPlanCard'
 import { getSubscriptionSidebarCopy } from '../../../utils/subscriptionDisplay'
 import {
@@ -18,7 +20,7 @@ import {
   sidebarSubmenuItemClass,
 } from '../../ui/sidebarMenuStyles'
 import PaymentsPayoutsMenuSection from './PaymentsPayoutsMenuSection'
-import { isPaymentsPayoutsRouteActive, getVisibleBookingHubSubmenu, isBookingHubSubActive, VISIBLE_TOUCHPOINTS_SUBMENU, DASHBOARD_MENU, getDefaultBookingHubTab, getDashboardMenuLocalizedLabel, isDashboardStaffRole } from '../constants'
+import { isPaymentsPayoutsRouteActive, getVisibleBookingHubSubmenu, isBookingHubSubActive, VISIBLE_TOUCHPOINTS_SUBMENU, DASHBOARD_MENU, DASHBOARD_MENU_ID, getDefaultBookingHubTab, getDashboardMenuLocalizedLabel, isDashboardStaffRole } from '../constants'
 import { handleExpandableMenuClick } from '../hooks/expandableMenuNav'
 import { useMerchantVoiceTenantStatus } from '../../../data/hooks/useMerchantVoiceBookings'
 
@@ -49,6 +51,7 @@ export default function MobileMenuDrawer({
 }) {
   const { t, currentLanguage } = useTranslation()
   const [searchParams] = useSearchParams()
+  const { openProductManagement, isOpeningProductManagement } = useOpenProductManagement()
   const activeSubTab = searchParams.get('tab')
   const isPaymentsPayoutsActive = isPaymentsPayoutsRouteActive(activeMenu, activeSubTab)
   const { data: voiceTenantStatus } = useMerchantVoiceTenantStatus({
@@ -74,6 +77,13 @@ export default function MobileMenuDrawer({
   }
 
   const handleMenuClick = (id: string) => {
+    if (id === DASHBOARD_MENU_ID.productManagement) {
+      void openProductManagement().finally(() => {
+        onClose()
+      })
+      return
+    }
+
     handleExpandableMenuClick({
       clickedId: id,
       activeMenu,
@@ -145,40 +155,45 @@ export default function MobileMenuDrawer({
           </div>
 
           {/* Submenu links */}
-          {isProfileExpanded && userRole !== 'staff' && (
+          {isProfileExpanded && (
             <div className="mt-3 pt-2.5 border-t border-white/5 space-y-1 animate-fadeIn">
-              <button
-                type="button"
-                onClick={() => {
-                  setActiveMenu('settings')
-                  setSettingsTab('profile')
-                  onClose()
-                }}
-                className={`flex h-8 w-full items-center gap-2.5 rounded-lg px-2 text-left text-xs font-bold transition ${
-                  activeMenu === 'settings' && settingsTab === 'profile'
-                    ? 'text-brandCyan font-extrabold'
-                    : 'text-white/75 hover:bg-white/5 hover:text-white'
-                }`}
-              >
-                <div className={`h-1.5 w-1.5 rounded-full ${activeMenu === 'settings' && settingsTab === 'profile' ? 'bg-brandCyan shadow-sm' : 'bg-white/30'}`} />
-                <span>{t('dashboard.menu.business_setting')}</span>
-              </button>
-              <button
-                type="button"
-                disabled
-                aria-disabled="true"
-                className="flex h-8 w-full cursor-not-allowed items-center gap-2.5 rounded-lg px-2 text-left text-xs font-bold text-white/40 opacity-60"
-              >
-                <div className="h-1.5 w-1.5 rounded-full bg-white/20" />
-                <span>{t('dashboard.menu.kyb')} ({t('common.coming_soon')})</span>
-              </button>
+              {userRole !== 'staff' && (
+                <>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setActiveMenu(DASHBOARD_MENU_ID.settings)
+                      setSettingsTab('profile')
+                      onClose()
+                    }}
+                    className={`flex h-8 w-full items-center gap-2.5 rounded-lg px-2 text-left text-xs font-bold transition ${
+                      activeMenu === DASHBOARD_MENU_ID.settings && settingsTab === 'profile'
+                        ? 'text-brandCyan font-extrabold'
+                        : 'text-white/75 hover:bg-white/5 hover:text-white'
+                    }`}
+                  >
+                    <div className={`h-1.5 w-1.5 rounded-full ${activeMenu === DASHBOARD_MENU_ID.settings && settingsTab === 'profile' ? 'bg-brandCyan shadow-sm' : 'bg-white/30'}`} />
+                    <span>{t('dashboard.menu.business_setting')}</span>
+                  </button>
+                  <button
+                    type="button"
+                    disabled
+                    aria-disabled="true"
+                    className="flex h-8 w-full cursor-not-allowed items-center gap-2.5 rounded-lg px-2 text-left text-xs font-bold text-white/40 opacity-60"
+                  >
+                    <div className="h-1.5 w-1.5 rounded-full bg-white/20" />
+                    <span>{t('dashboard.menu.kyb')} ({t('common.coming_soon')})</span>
+                  </button>
+                </>
+              )}
+              <LanguageSwitcher variant="sidebar" className="w-full" />
             </div>
           )}
         </div>
 
         <nav className={`${SIDEBAR_NAV_CLASS} mt-0 flex-1`}>
           <HomepageLink variant="menu" active={isHomeActive} onNavigate={onClose} />
-          {menuItemsToDisplay.filter((item) => item.id !== 'settings').map((item) => {
+          {menuItemsToDisplay.filter((item) => item.id !== DASHBOARD_MENU_ID.settings).map((item) => {
             const { id, label } = item
             const isActive = activeMenu === id
             const localizedLabel = getDashboardMenuLocalizedLabel(id, t, label)
@@ -188,25 +203,27 @@ export default function MobileMenuDrawer({
                 <button
                   type="button"
                   onClick={() => handleMenuClick(id)}
+                  disabled={id === DASHBOARD_MENU_ID.productManagement && isOpeningProductManagement}
                   className={sidebarMenuItemBetweenClass(isActive)}
                 >
                   <div className="flex items-center gap-3 min-w-0">
                     <MenuIcon item={item} active={isActive} />
                     <span>{localizedLabel}</span>
                   </div>
-                  {id === DASHBOARD_MENU.Touchpoints && (
+                  {id === DASHBOARD_MENU_ID.productManagement && isOpeningProductManagement ? (
+                    <span className="h-4 w-4 shrink-0 animate-spin rounded-full border-2 border-white/30 border-t-white" />
+                  ) : id === DASHBOARD_MENU.Touchpoints ? (
                     <div className="text-white/65 shrink-0">
                       {isTouchpointsMobileExpanded ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
                     </div>
-                  )}
-                  {id === DASHBOARD_MENU.BookingHub && (
+                  ) : id === DASHBOARD_MENU.BookingHub ? (
                     <div className="text-white/65 shrink-0">
                       {isBookingHubMobileExpanded ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
                     </div>
-                  )}
+                  ) : null}
                 </button>
 
-                {userRole !== 'staff' && id === 'staff' && (
+                {userRole !== 'staff' && id === DASHBOARD_MENU_ID.staff && (
                   <PaymentsPayoutsMenuSection
                     activeMenu={activeMenu}
                     tabParam={activeSubTab}

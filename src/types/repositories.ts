@@ -159,6 +159,116 @@ export interface TipsChartDayMetric {
   avgAmount: number
 }
 
+export interface DashboardAnalyticsOverviewApiDto {
+  totalVolume?: number
+  totalTransactionCount?: number
+  feeSaved?: number
+  averageTipAmount?: number
+}
+
+export interface DashboardAnalyticsLeaderboardItemApiDto {
+  staffProfileId?: string
+  displayName?: string
+  nicknameAtBusiness?: string | null
+  photoUrl?: string | null
+  position?: string | null
+  tipTotal?: number
+  tipCount?: number
+  avgTip?: number
+  avgRating?: number
+  reviewCount?: number
+  selectionCount?: number
+}
+
+export interface DashboardAnalyticsTouchPointApiDto {
+  touchPointId?: string
+  name?: string
+  type?: string
+  scanCount?: number
+  tipCount?: number
+  tipTotal?: number
+  ctr?: number
+  avgRating?: number
+}
+
+export interface DashboardAnalyticsTipsMethodApiDto {
+  method?: string
+  amount?: number
+  count?: number
+}
+
+/** @deprecated API may still return this; prefer `tipsMethods`. */
+export type DashboardAnalyticsPayoutMethodApiDto = DashboardAnalyticsTipsMethodApiDto
+
+export interface DashboardAnalyticsDirectPayoutApiDto {
+  totalAmount?: number
+  totalCount?: number
+}
+
+export interface DashboardAnalyticsApiDto {
+  overview?: DashboardAnalyticsOverviewApiDto
+  leaderboard?: DashboardAnalyticsLeaderboardItemApiDto[]
+  touchPoints?: DashboardAnalyticsTouchPointApiDto[]
+  tipsMethods?: DashboardAnalyticsTipsMethodApiDto[]
+  /** @deprecated Prefer `tipsMethods`. */
+  payoutMethods?: DashboardAnalyticsTipsMethodApiDto[]
+  directPayout?: DashboardAnalyticsDirectPayoutApiDto
+}
+
+export interface MerchantDashboardAnalyticsOverview {
+  totalVolume: number
+  totalTransactionCount: number
+  feeSaved: number
+  averageTipAmount: number
+}
+
+export interface MerchantDashboardAnalyticsLeaderboardItem {
+  staffProfileId: string
+  displayName: string
+  nicknameAtBusiness: string | null
+  photoUrl: string | null
+  position: string | null
+  tipTotal: number
+  tipCount: number
+  avgTip: number
+  avgRating: number
+  reviewCount: number
+  selectionCount: number
+}
+
+export interface MerchantDashboardAnalyticsTouchPoint {
+  touchPointId: string
+  name: string
+  type: string
+  scanCount: number
+  tipCount: number
+  tipTotal: number
+  ctr: number
+  avgRating: number
+}
+
+export interface MerchantDashboardAnalyticsTipsMethod {
+  method: string
+  amount: number
+  count: number
+}
+
+/** @deprecated Use `MerchantDashboardAnalyticsTipsMethod`. */
+export type MerchantDashboardAnalyticsPayoutMethod = MerchantDashboardAnalyticsTipsMethod
+
+export interface MerchantDashboardAnalyticsDirectPayout {
+  totalAmount: number
+  totalCount: number
+}
+
+export interface MerchantDashboardAnalytics {
+  overview: MerchantDashboardAnalyticsOverview
+  leaderboard: MerchantDashboardAnalyticsLeaderboardItem[]
+  touchPoints: MerchantDashboardAnalyticsTouchPoint[]
+  tipsMethods: MerchantDashboardAnalyticsTipsMethod[]
+  directPayout: MerchantDashboardAnalyticsDirectPayout
+}
+
 export type DashboardReviewRoutingType = 'Public' | 'Private' | 'Skipped'
 
 /**

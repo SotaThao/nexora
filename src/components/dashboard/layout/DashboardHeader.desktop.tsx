@@ -8,7 +8,6 @@ import {
   ClipboardList,
   LogOut,
   Menu,
-  Plus,
   Pointer,
   Search,
   Star,
@@ -71,7 +70,7 @@ export default function DashboardHeader({
     }
     document.addEventListener("mousedown", handleClickOutside)
     return () => document.removeEventListener("mousedown", handleClickOutside)
-  }, [setIsNotiDropdownOpen, setIsSearchFocused, setIsHeaderDropdownOpen])
+  }, [setIsNotiDropdownOpen, setIsSearchFocused])
 
   const handleMarkAllAsRead = () => {
     onMarkAllNotificationsRead?.()
@@ -172,7 +171,7 @@ export default function DashboardHeader({
   }, [searchQuery, staff, transactions, reviews, touchpoints])
 
   return (
-    <header className="sticky top-0 z-20 flex min-h-16 items-center justify-between gap-3 border-b border-nexoraBorder bg-nexoraSurface px-4 sm:px-5">
+    <header className="sticky top-0 z-40 flex min-h-16 items-center justify-between gap-3 border-b border-nexoraBorder bg-nexoraSurface px-4 sm:px-5">
       <div className="flex min-w-0 items-center gap-3 lg:hidden">
         <button
           type="button"
@@ -333,10 +332,62 @@ export default function DashboardHeader({
       </div>
 
       <div className="flex shrink-0 items-center gap-2 sm:gap-4">
-        {/* Language Switcher */}
-        <LanguageSwitcher />
+        {/* Desktop: Account → Notification → Language → Ecosystem */}
+        {/* Profile */}
+        <div className="relative hidden sm:inline-flex" ref={headerDropdownRef}>
+          <button
+            type="button"
+            onClick={() => setIsHeaderDropdownOpen(!isHeaderDropdownOpen)}
+            className="flex h-10 w-10 items-center justify-center overflow-hidden rounded-full transition hover:opacity-90 focus:outline-none"
+            aria-label="Account menu"
+            title="Account menu"
+            id="header-profile-menu-btn"
+            aria-haspopup="menu"
+            aria-expanded={isHeaderDropdownOpen}
+            aria-controls="header-profile-dropdown"
+          >
+            {profile.avatar && !profile.avatar.includes('unsplash.com') ? (
+              <img src={profile.avatar} alt="" className="h-full w-full object-cover" />
+            ) : (
+              <div className="flex h-full w-full items-center justify-center bg-gradient-to-br from-nexoraElectric to-nexoraViolet text-sm font-bold text-white uppercase">
+                {(businessName || profile.email || '').slice(0, 2).toUpperCase() || '?'}
+              </div>
+            )}
+          </button>
 
-        <HeaderEcosystem />
+          {isHeaderDropdownOpen && (
+            <div
+              className="absolute left-0 top-full mt-2 w-64 rounded-xl border border-nexoraBorder bg-white shadow-2xl z-50 py-2 divide-y divide-nexoraRule animate-fadeIn"
+              id="header-profile-dropdown"
+            >
+              <div className="px-4 py-2.5">
+                <div className="text-xs font-black text-nexoraText truncate">{profile.fullName || profile.email || businessName}</div>
+                <div className="text-[10px] text-nexoraMuted truncate mt-0.5">{profile.email}</div>
+              </div>
+              {userRole !== 'staff' && (
+                <div className="py-1">
+                  <button
+                    type="button"
+                    onClick={() => { onNavigateSettingsTab('profile'); setIsHeaderDropdownOpen(false) }}
+                    className="flex w-full items-center px-4 py-2 text-xs font-bold text-nexoraText hover:bg-nexoraSurfaceMuted transition text-left"
+                  >
+                    {t('dashboard.menu.business_setting')}
+                  </button>
+                </div>
+              )}
+              <div className="py-1">
+                <button
+                  type="button"
+                  onClick={() => { setIsHeaderDropdownOpen(false); onLogout() }}
+                  className="flex w-full items-center px-4 py-2 text-xs font-bold text-rose-600 hover:bg-rose-50 transition text-left"
+                >
+                  <LogOut className="h-3.5 w-3.5 mr-2 shrink-0" />
+                  {t('dashboard.sidebar.sign_out')}
+                </button>
+              </div>
+            </div>
+          )}
+        </div>
 
         {/* Notifications Icon and Dropdown */}
         <div className="relative hidden sm:inline-flex" ref={dropdownRef}>
@@ -345,12 +396,7 @@ export default function DashboardHeader({
             onClick={() => setIsNotiDropdownOpen(!isNotiDropdownOpen)}
             className="relative"
           >
-            <img
-              src="/assets/menu/notification.png"
-              alt=""
-              className="h-5 w-5 object-contain"
-              aria-hidden="true"
-            />
+            <Bell className="h-5 w-5" aria-hidden="true" />
             {unreadCount > 0 && (
               <span className="absolute -top-1 -right-1 min-w-[18px] h-[18px] px-1 rounded-full flex items-center justify-center text-[9px] font-black text-white bg-red-500 ring-2 ring-white shadow-sm">
                 {unreadCount > 99 ? '99+' : unreadCount}
@@ -359,7 +405,7 @@ export default function DashboardHeader({
           </IconButton>
 
           {isNotiDropdownOpen && (
-            <div className="absolute right-0 mt-12 w-80 max-h-[460px] flex flex-col rounded-xl border border-nexoraBorder bg-white shadow-2xl z-50 animate-fadeIn overflow-hidden">
+            <div className="fixed left-4 right-4 top-[4.5rem] z-[80] flex max-h-[calc(100dvh-5.5rem)] w-auto flex-col overflow-hidden rounded-xl border border-nexoraBorder bg-white shadow-2xl animate-fadeIn lg:absolute lg:left-auto lg:right-0 lg:top-auto lg:mt-12 lg:max-h-[460px] lg:w-80">
               <div className="flex items-center justify-between border-b border-nexoraBorder px-4 py-3 bg-nexoraSurfaceMuted">
                 <span className="text-xs font-black uppercase text-nexoraText tracking-wider">
                   {t('dashboard.notifications.title')} ({unreadCount})
@@ -375,7 +421,7 @@ export default function DashboardHeader({
                   </button>
                 )}
               </div>
-              <div className="flex-grow overflow-y-auto max-h-[380px] divide-y divide-nexoraBorder">
+              <div className="max-h-[calc(100dvh-9.5rem)] flex-grow divide-y divide-nexoraBorder overflow-y-auto lg:max-h-[380px]">
                 {isNotificationsLoading ? (
                   <div className="py-12 text-center text-nexoraSubtle flex flex-col items-center justify-center">
                     <Bell className="h-8 w-8 text-nexoraBorder mb-2 animate-pulse" />
@@ -458,70 +504,13 @@ export default function DashboardHeader({
           )}
         </div>
 
-        {/* Profile Dropdown */}
-        <div className="relative hidden sm:inline-flex" ref={headerDropdownRef}>
-          <button
-            type="button"
-            onClick={() => setIsHeaderDropdownOpen(!isHeaderDropdownOpen)}
-            className="flex h-10 w-10 items-center justify-center rounded-full border border-nexoraBorder overflow-hidden shadow-nexora-soft transition hover:opacity-90 focus:outline-none"
-            aria-label="Account menu"
-            title="Account menu"
-            id="header-profile-menu-btn"
-          >
-            {profile.avatar && !profile.avatar.includes('unsplash.com') ? (
-              <img src={profile.avatar} alt="" className="h-full w-full object-cover" />
-            ) : (
-              <div className="flex h-full w-full items-center justify-center bg-gradient-to-br from-nexoraElectric to-nexoraViolet text-sm font-bold text-white uppercase">
-                {(businessName || profile.email || '').slice(0, 2).toUpperCase() || '?'}
-              </div>
-            )}
-          </button>
-
-          {isHeaderDropdownOpen && (
-            <div
-              className="absolute right-0 mt-12 w-64 rounded-xl border border-nexoraBorder bg-white shadow-2xl z-50 py-2 divide-y divide-nexoraRule animate-fadeIn"
-              id="header-profile-dropdown"
-            >
-              <div className="px-4 py-2.5">
-                <div className="text-xs font-black text-nexoraText truncate">{profile.fullName || profile.email || businessName}</div>
-                <div className="text-[10px] text-nexoraMuted truncate mt-0.5">{profile.email}</div>
-              </div>
-              {userRole !== 'staff' && (
-                <div className="py-1">
-                  <button
-                    type="button"
-                    onClick={() => {
-                      onNavigateSettingsTab('profile')
-                      setIsHeaderDropdownOpen(false)
-                    }}
-                    className="flex w-full items-center px-4 py-2 text-xs font-bold text-nexoraText hover:bg-nexoraSurfaceMuted transition text-left"
-                  >
-                    {t('dashboard.menu.business_setting')}
-                  </button>
-                </div>
-              )}
-              <div className="py-1">
-                <button
-                  type="button"
-                  onClick={() => {
-                    setIsHeaderDropdownOpen(false)
-                    onLogout()
-                  }}
-                  className="flex w-full items-center px-4 py-2 text-xs font-bold text-rose-600 hover:bg-rose-50 transition text-left"
-                >
-                  <LogOut className="h-3.5 w-3.5 mr-2 shrink-0" />
-                  {t('dashboard.sidebar.sign_out')}
-                </button>
-              </div>
-            </div>
-          )}
+        <div className="order-4">
+          <LanguageSwitcher variant="header-plain" />
         </div>
-        {userRole !== 'staff' && (
-          <button onClick={onAddTouchpoint} className="nexora-primary-button">
-            <Plus className="h-4 w-4" />
-            <span className="hidden sm:inline">{t('dashboard.header.add_tp')}</span>
-          </button>
-        )}
+
+        <div className="order-5">
+          <HeaderEcosystem />
+        </div>
       </div>
     </header>
   )

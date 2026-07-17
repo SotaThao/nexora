@@ -1,6 +1,11 @@
 import { useState, useEffect } from 'react'
 import { useLocation, useNavigate } from 'react-router-dom'
-import { DASHBOARD_MENU } from '../constants'
+import { useOpenProductManagement } from '../../../data/hooks/useOpenProductManagement'
+import {
+  buildDashboardMenuPath,
+  DASHBOARD_MENU,
+  DASHBOARD_MENU_ID,
+} from '../constants'
 
 type NavigateMenuOptions = {
   closeDrawer?: boolean
@@ -10,9 +15,11 @@ type NavigateMenuOptions = {
 export function useDashboardNavigation() {
   const location = useLocation()
   const navigate = useNavigate()
+  const { openProductManagement } = useOpenProductManagement()
 
-  const activeMenu = location.pathname.split('/')[2] || 'overview'
-  const isPaymentsPayoutsActive = activeMenu === 'tips' || activeMenu === 'reports'
+  const activeMenu = location.pathname.split('/')[2] || DASHBOARD_MENU_ID.overview
+  const isPaymentsPayoutsActive =
+    activeMenu === DASHBOARD_MENU_ID.tips || activeMenu === DASHBOARD_MENU_ID.reports
 
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
   const [isPaymentsPayoutsMobileExpanded, setIsPaymentsPayoutsMobileExpanded] = useState(isPaymentsPayoutsActive)
@@ -44,17 +51,27 @@ export function useDashboardNavigation() {
   }, [activeMenu, isPaymentsPayoutsActive])
 
   const buildMenuRoute = (menuId: string, tab?: string) => {
-    const base = menuId === 'overview' ? '/dashboard' : `/dashboard/${menuId}`
+    const base = buildDashboardMenuPath(menuId)
     if (!tab) return base
     return `${base}?tab=${encodeURIComponent(tab)}`
   }
 
   const handleNavigateMenu = (menuId: string, tab?: string) => {
+    if (menuId === DASHBOARD_MENU_ID.productManagement) {
+      void openProductManagement()
+      return
+    }
     navigate(buildMenuRoute(menuId, tab))
   }
 
   const navigateMenu = (menuId: string, options: NavigateMenuOptions = {}) => {
     const { closeDrawer = true, tab } = options
+    if (menuId === DASHBOARD_MENU_ID.productManagement) {
+      void openProductManagement().finally(() => {
+        if (closeDrawer) setIsMobileMenuOpen(false)
+      })
+      return
+    }
     navigate(buildMenuRoute(menuId, tab))
     if (closeDrawer) setIsMobileMenuOpen(false)
   }

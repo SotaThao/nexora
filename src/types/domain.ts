@@ -640,6 +640,10 @@ export interface EcosystemItem {
   name: string
   url: string
   logoUrl?: string | null
+  /** Whether this entry should show in the ecosystem dropdown list. */
+  isEcosystem?: boolean
+  /** API hint for "coming soon" display (UI may still derive from url/name). */
+  isComingSoon?: boolean
 }
 
 export interface EcosystemSignInResult {
@@ -679,6 +683,10 @@ export interface HomePageBannerSlide {
 export interface PayoutRecord {
   id: string
   payoutCode: string
+  /** Present on staff payout lists — identifies the business that issued the payout. */
+  businessId?: string
+  businessName?: string
+  businessLogoUrl?: string | null
   staffProfileId: string
   staffDisplayName: string
   staffCode: string

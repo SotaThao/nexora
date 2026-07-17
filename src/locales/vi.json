@@ -46,6 +46,7 @@
       "my_workspace": "Không gian của tôi",
       "my_qr_menu": "QR của tôi",
       "my_qr_code": "Mã QR",
+      "my_earnings": "Thu nhập của tôi",
       "my_reviews": "Đánh giá của tôi",
       "my_salons": "Salon của tôi"
     },
@@ -520,9 +521,15 @@
     "staff_directory_empty": "Chưa có nhân viên nào được thêm. Vui lòng thêm phía bên trái.",
     "qr_touchpoints_title": "Danh mục trạm QR",
     "qr_touchpoints_desc": "Các mã QR dán tại ghế, quầy thanh toán hoặc in ở hóa đơn.",
+    "qr_touchpoints_explainer": "Trạm = vị trí phục vụ khách (ghế/bàn/quầy) trong tiệm. Chỉ cần chọn loại trạm, hệ thống sẽ tự tạo trạm và mã QR.",
     "tp_name": "Tên trạm *",
     "tp_name_placeholder": "Ví dụ: Service Chair 01...",
     "tp_type": "Loại trạm",
+    "tp_type_table": "Bàn / Ghế",
+    "tp_type_counter": "Quầy",
+    "tp_type_receipt": "Điểm hóa đơn",
+    "tp_type_business_main": "Vị trí chính của tiệm",
+    "tp_type_staff": "QR nhân viên",
     "add_tp_btn": "Thêm trạm",
     "active_tp_count": "{count} trạm đang hoạt động",
     "tp_lobby_default": "QR Sảnh Chờ / Tipping Chung",
@@ -613,6 +620,7 @@
       "expires_on": "Hết hạn: {{date}}",
       "trial_ends": "Dùng thử đến {{date}}",
       "manage_plan": "Quản lý gói",
+      "manage_plan_short": "Quản lý",
       "google_play_badge_eyebrow": "Get it on",
       "google_play_badge_title": "Google Play",
       "app_store_badge_eyebrow": "Download on the",
@@ -630,6 +638,8 @@
       "reviews": "Đánh Giá",
       "transactions": "Giao Dịch",
       "booking_hub": "Trung tâm đặt lịch",
+      "product_management": "Trung tâm thẻ quà tặng",
+      "product_management_error": "Không mở được Trung tâm thẻ quà tặng. Vui lòng thử lại.",
       "touchpoints": "Trạm & Mã QR",
       "qr_nfc": "Thiết bị QR / NFC",
       "analytics": "Phân Tích",
@@ -656,6 +666,7 @@
       "search_no_results": "Không tìm thấy kết quả nào trùng khớp."
     },
     "back_to_dashboard": "Quay lại Bảng Điều Khiển",
+    "back_short": "Quay lại",
     "footer": {
       "copyright": "© 2026 NEXORA Touch."
     },
@@ -1039,7 +1050,8 @@
         "col_method": "Ví gửi",
         "col_status": "Trạng thái",
         "status_success": "Thành công",
-        "status_completed": "Hoàn thành"
+        "status_completed": "Hoàn thành",
+        "empty": "Chưa có giao dịch chi trả trực tiếp nào."
       },
       "ledger": {
         "title": "Giao dịch tip",
@@ -1094,6 +1106,8 @@
         "col_method": "Phương thức",
         "col_types": "Loại",
         "col_period": "Kỳ thanh toán",
+        "card_coverage": "Kỳ áp dụng",
+        "card_payout_to": "Nhận qua",
         "col_evidence": "Bằng chứng",
         "col_status": "Trạng thái",
         "col_actions": "Chi tiết",
@@ -1159,6 +1173,12 @@
         "evidence_none": "Chưa có ảnh bằng chứng.",
         "evidence_drop": "Kéo thả ảnh vào đây hoặc chọn ảnh",
         "evidence_hint": "Tối đa {{max}} ảnh",
+        "evidence_drag_hint": "Bạn cũng có thể kéo thả ảnh vào đây.",
+        "evidence_upload_helper": "Tải lên ảnh rõ nét của xác nhận thanh toán.",
+        "evidence_remaining": "Bạn có thể tải thêm tối đa {{count}} file.",
+        "evidence_size_hint": "Mỗi file phải nhỏ hơn 5MB.",
+        "evidence_camera_title": "Chụp ảnh bằng chứng thanh toán",
+        "evidence_camera_hint": "Đặt xác nhận thanh toán rõ ràng trong khung hình, sau đó nhấn Chụp.",
         "evidence_image_only": "Loại file không hợp lệ. Vui lòng chỉ tải lên file ảnh (JPG, PNG, GIF, WebP, HEIC, SVG).",
         "evidence_max": "Tối đa {{max}} ảnh bằng chứng",
         "evidence_count": "{{count}} ảnh",
@@ -1225,11 +1245,14 @@
         "transactions_unit": "Giao dịch",
         "avg_tip": "Típ Trung Bình",
         "fees_avoided": "Phí tiết kiệm",
-        "fees_avoided_tooltip": "Ước tính phí xử lý thẻ tiết kiệm được từ tip P2P trực tiếp, tính theo 3% trên tổng lượng được định tuyến."
+        "fees_avoided_tooltip": "Ước tính phí xử lý thẻ tiết kiệm được từ tip P2P trực tiếp, tính theo 3% trên tổng lượng được định tuyến.",
+        "fees_avoided_tooltip_api": "Phí xử lý tiết kiệm từ tip P2P trực tiếp, theo báo cáo từ dashboard.",
+        "fees_avoided_sub": "Phí tiết kiệm từ thanh toán trực tiếp"
       },
       "charts": {
         "daily_revenue": "Biểu Đồ Doanh Thu Theo Ngày",
-        "wallet_share": "Tip được trả thế nào"
+        "wallet_share": "Tip được trả thế nào",
+        "no_wallet_data": "Chưa có dữ liệu phương thức thanh toán."
       },
       "leaderboards": {
         "staff": "Bảng Xếp Hạng Nhân Viên",
@@ -1239,7 +1262,8 @@
         "unassigned": "Tip chưa gán",
         "unassigned_tooltip": "Tip này được nhận qua mã QR chung của salon và chưa được gán cho thợ cụ thể.",
         "station_stats": "{scans} lượt quét · {tips} tip = {pct}% chuyển đổi",
-        "station_stats_no_conversion": "{scans} lượt quét · {tips} tip"
+        "station_stats_no_conversion": "{scans} lượt quét · {tips} tip",
+        "empty": "Chưa có dữ liệu."
       }
     },
     "empty_states": {
@@ -1588,7 +1612,7 @@
     "lifetime_earnings": "Tổng thu nhập",
     "tab_overview": "Tổng quan",
     "tab_transactions": "Giao dịch",
-    "tab_payouts": "Chi trả",
+    "tab_payouts": "Nhận Chi Trả",
     "breakdown_tips": "Tiền tip",
     "breakdown_payments": "Thanh toán",
     "breakdown_referral": "Thưởng giới thiệu",
@@ -1605,6 +1629,16 @@
     "empty_title": "Chưa liên kết salon nào",
     "link_salon_cta": "Liên kết salon",
     "status_previous": "Trước đây",
+    "status_help_aria": "Giải thích trạng thái salon",
+    "status_help": {
+      "active": "Bạn đang liên kết với salon này và có thể sử dụng các tính năng dành cho hồ sơ nhân viên.",
+      "pending": "Yêu cầu liên kết của bạn đã được gửi và đang chờ salon xem xét.",
+      "pending_approval": "Salon cần phê duyệt yêu cầu trước khi liên kết được kích hoạt.",
+      "pending_unlink": "Yêu cầu kết thúc liên kết đang được xử lý. Bạn có thể vẫn truy cập được cho đến khi hoàn tất.",
+      "previous": "Liên kết với salon này không còn hoạt động và được lưu lại trong lịch sử làm việc của bạn.",
+      "rejected": "Salon không phê duyệt yêu cầu liên kết. Hãy liên hệ salon nếu bạn cho rằng có nhầm lẫn.",
+      "default": "Trạng thái này cho biết tình trạng liên kết hiện tại của bạn với salon."
+    },
     "since": "Từ {{date}}",
     "invited": "Mời {{date}}",
     "worked_from": "Làm từ {{date}}"
@@ -1618,7 +1652,7 @@
     "stat_current_debt": "Số dư tip chưa nhận",
     "filter_status_label": "Trạng thái",
     "filter_all_status": "Tất cả trạng thái",
-    "detail_title": "Chi tiết chi trả",
+    "detail_title": "Chi tiết khoản chi trả",
     "col_code": "Mã payout",
     "col_date": "Ngày nhận",
     "col_amount": "Số tiền",
@@ -1645,9 +1679,11 @@
     "unpaid_debt_title": "Số dư tip chưa nhận theo tiệm",
     "unpaid_debt_empty": "Hiện không có số dư tip chưa nhận.",
     "unpaid_debt_total": "Tổng số dư tip chưa nhận",
-    "list_title": "Lịch sử chi trả",
+    "list_title": "Lịch sử nhận chi trả",
     "detail_sub": "Xem chi tiết trước khi xác nhận đã nhận tiền.",
     "confirm_receipt": "Xác nhận đã nhận",
+    "action_view": "Xem",
+    "action_confirm": "Xác nhận",
     "confirm_success": "Đã xác nhận nhận tiền thành công.",
     "empty": "Không có khoản chi trả phù hợp với trạng thái đã chọn."
   },
@@ -2017,6 +2053,7 @@
     "voice_customer_status_invalid": "Vui lòng chọn trạng thái khách hàng hợp lệ.",
     "voice_customer_not_found": "Không tìm thấy khách hàng này.",
     "voice_tenant_not_found": "Doanh nghiệp này chưa có voice tenant.",
+    "voice_tenant_service_duration_invalid": "Thời lượng dịch vụ phải lớn hơn 0 phút.",
     "payment_not_found": "Không tìm thấy giao dịch thanh toán.",
     "payment_invalid_status": "Giao dịch không ở trạng thái phù hợp để thực hiện thao tác này.",
     "payment_amount_too_low": "Số tiền tối thiểu là $1.00.",
@@ -2797,7 +2834,8 @@
             "syncPillSchema": "Schema",
             "syncPillBooking": "Đặt lịch",
             "durationUnit": "phút",
-            "loadingAria": "Đang tải cấu hình tiệm"
+            "loadingAria": "Đang tải cấu hình tiệm",
+            "durationInvalid": "Thời lượng dịch vụ phải lớn hơn 0 phút."
           },
           "team": {
             "intro": "Hồ sơ thợ dùng chung cho SMS báo khách, tip QR, đánh giá và thưởng.",
@@ -3107,6 +3145,7 @@
         "stepConfirm": "Khách xác nhận đã chuyển khoản; bạn xác nhận đã nhận tiền trong lịch sử thanh toán",
         "activeMethodsLabel": "{{count}} phương thức nhận tiền đang hiển thị cho khách",
         "previewQr": "Xem QR",
+        "btn_open": "Xem mã QR",
         "copyLink": "Sao chép link thanh toán",
         "downloadQr": "Tải QR",
         "viewHistory": "Xem lịch sử thanh toán",
@@ -3815,6 +3854,8 @@
   "coming_soon": {
     "analytics_title": "Phân Tích Nâng Cao",
     "analytics_desc": "Chuyển đổi thiết bị, phân tích khách quay lại, và tóm tắt đánh giá bằng AI sẽ ra mắt ở giai đoạn 3.",
+    "product_management_title": "Quản lý sản phẩm",
+    "product_management_desc": "Sắp tới bạn có thể quản lý danh mục sản phẩm, giá và tồn kho ngay tại đây.",
     "subscriptions_title": "Gói Dịch Vụ",
     "subscriptions_desc": "Quản lý đơn hàng giá NFC, gói gia hạn, và phần cứng bổ sung từ không gian này.",
     "settings_title": "Cài Đặt",

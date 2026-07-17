@@ -4,10 +4,12 @@ import React, { useState, useEffect } from 'react'
 import { useNavigate, useSearchParams } from 'react-router-dom'
 import { ChevronUp, ChevronDown, LogOut } from 'lucide-react'
 import { useTranslation } from '../../../contexts/LanguageContext'
-import { visibleMenuItems, MERCHANT_SIDEBAR_MENU_ITEMS, isPaymentsPayoutsRouteActive, getVisibleBookingHubSubmenu, isBookingHubSubActive, VISIBLE_TOUCHPOINTS_SUBMENU, DASHBOARD_MENU, bookingHubPath, getDefaultBookingHubTab, getDashboardMenuLocalizedLabel, isDashboardStaffRole } from '../constants'
+import { useOpenProductManagement } from '../../../data/hooks/useOpenProductManagement'
+import { visibleMenuItems, MERCHANT_SIDEBAR_MENU_ITEMS, isPaymentsPayoutsRouteActive, getVisibleBookingHubSubmenu, isBookingHubSubActive, VISIBLE_TOUCHPOINTS_SUBMENU, DASHBOARD_MENU, DASHBOARD_MENU_ID, bookingHubPath, getDefaultBookingHubTab, getDashboardMenuLocalizedLabel, isDashboardStaffRole } from '../constants'
 import { handleExpandableMenuClick } from '../hooks/expandableMenuNav'
 import MenuIcon from '../../ui/MenuIcon'
 import HomepageLink from '../../ui/HomepageLink'
+import LanguageSwitcher from '../../ui/LanguageSwitcher'
 import SidebarPlanCard from '../../ui/SidebarPlanCard'
 import PaymentsPayoutsMenuSection from './PaymentsPayoutsMenuSection'
 import { useMerchantVoiceTenantStatus } from '../../../data/hooks/useMerchantVoiceBookings'
@@ -41,9 +43,10 @@ export default function DashboardSidebar({
   onLogout,
   userRole = 'owner'
 }) {
-  const { currentLanguage, setLanguage, t } = useTranslation()
+  const { currentLanguage, t } = useTranslation()
   const navigate = useNavigate()
   const [searchParams] = useSearchParams()
+  const { openProductManagement, isOpeningProductManagement } = useOpenProductManagement()
   // Sub-tabs are URL-driven (?tab=) so the sidebar highlight stays in sync with
   // the rendered route content (TipsRoute / TouchpointsRoute read the same param).
   const activeSubTab = searchParams.get('tab')
@@ -78,6 +81,11 @@ export default function DashboardSidebar({
   }
 
   const handleMenuClick = (id: string) => {
+    if (id === DASHBOARD_MENU_ID.productManagement) {
+      void openProductManagement()
+      return
+    }
+
     handleExpandableMenuClick({
       clickedId: id,
       activeMenu,
@@ -145,16 +153,16 @@ export default function DashboardSidebar({
           <div className="mt-3.5 pt-3 border-t border-white/5 space-y-1 animate-fadeIn">
             <button
               onClick={() => {
-                setActiveMenu('settings')
+                setActiveMenu(DASHBOARD_MENU_ID.settings)
                 setSettingsTab('profile')
               }}
               className={`flex h-9 w-full items-center gap-2.5 rounded-lg px-3 text-left text-xs font-bold transition ${
-                activeMenu === 'settings' && settingsTab === 'profile'
+                activeMenu === DASHBOARD_MENU_ID.settings && settingsTab === 'profile'
                   ? 'text-brandCyan font-extrabold'
                   : 'text-white/75 hover:bg-white/5 hover:text-white'
               }`}
             >
-              <div className={`h-1.5 w-1.5 rounded-full ${activeMenu === 'settings' && settingsTab === 'profile' ? 'bg-brandCyan shadow-sm' : 'bg-white/30'}`} />
+              <div className={`h-1.5 w-1.5 rounded-full ${activeMenu === DASHBOARD_MENU_ID.settings && settingsTab === 'profile' ? 'bg-brandCyan shadow-sm' : 'bg-white/30'}`} />
               <span>{t('dashboard.menu.business_setting')}</span>
             </button>
             <button
@@ -166,6 +174,7 @@ export default function DashboardSidebar({
               <div className="h-1.5 w-1.5 rounded-full bg-white/20" />
               <span>{t('dashboard.menu.kyb')} ({t('common.coming_soon')})</span>
             </button>
+            <LanguageSwitcher variant="sidebar" className="w-full" />
           </div>
         )}
       </div>
@@ -176,8 +185,8 @@ export default function DashboardSidebar({
         {(() => {
           const menuItemsToDisplay = userRole === 'staff'
             ? [
-                { id: 'overview', label: t('components.dashboard.layout.DashboardSidebar.myDashboard'), icon: visibleMenuItems.find(i => i.id === 'overview')?.icon },
-                { id: 'support', label: t('dashboard.menu.support'), icon: visibleMenuItems.find(i => i.id === 'support')?.icon }
+                { id: DASHBOARD_MENU_ID.overview, label: t('components.dashboard.layout.DashboardSidebar.myDashboard'), icon: visibleMenuItems.find(i => i.id === DASHBOARD_MENU_ID.overview)?.icon },
+                { id: DASHBOARD_MENU_ID.support, label: t('dashboard.menu.support'), icon: visibleMenuItems.find(i => i.id === DASHBOARD_MENU_ID.support)?.icon }
               ]
             : MERCHANT_SIDEBAR_MENU_ITEMS
 
@@ -191,25 +200,27 @@ export default function DashboardSidebar({
               <button
                 type="button"
                 onClick={() => handleMenuClick(id)}
+                disabled={id === DASHBOARD_MENU_ID.productManagement && isOpeningProductManagement}
                 className={sidebarMenuItemBetweenClass(isActive)}
               >
                 <div className="flex items-center gap-3 min-w-0">
                   <MenuIcon item={item} active={isActive} />
                   <span className="truncate">{localizedLabel}</span>
                 </div>
-                {id === DASHBOARD_MENU.Touchpoints && (
+                {id === DASHBOARD_MENU_ID.productManagement && isOpeningProductManagement ? (
+                  <span className="h-4 w-4 shrink-0 animate-spin rounded-full border-2 border-white/30 border-t-white" />
+                ) : id === DASHBOARD_MENU.Touchpoints ? (
                   <div className="text-white/50 shrink-0">
                     {isTouchpointsExpanded ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
                   </div>
-                )}
-                {id === DASHBOARD_MENU.BookingHub && (
+                ) : id === DASHBOARD_MENU.BookingHub ? (
                   <div className="text-white/50 shrink-0">
                     {isBookingHubExpanded ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
                   </div>
-                )}
+                ) : null}
               </button>
 
-              {userRole !== 'staff' && id === 'staff' && (
+              {userRole !== 'staff' && id === DASHBOARD_MENU_ID.staff && (
                 <PaymentsPayoutsMenuSection
                   activeMenu={activeMenu}
                   tabParam={activeSubTab}

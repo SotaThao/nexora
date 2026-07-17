@@ -160,45 +160,45 @@ function ReviewsView({
   return (
     <div className="space-y-5">
       {/* Page Header */}
-      <div className="pb-4 border-b border-nexoraBorder">
-        <h2 className="text-xl font-extrabold text-nexoraText">{t('dashboard.menu.reviews')}</h2>
-        <p className="mt-1 text-xs text-nexoraMuted">{renderTextWithGoldStars(t('setup.review_routing_policy'))}</p>
+      <div className="border-b border-nexoraBorder pb-2 sm:pb-4">
+        <h2 className="hidden text-xl font-extrabold text-nexoraText sm:block">{t('dashboard.menu.reviews')}</h2>
+        <p className="mt-0 text-xs text-nexoraMuted sm:mt-1">{renderTextWithGoldStars(t('setup.review_routing_policy'))}</p>
       </div>
 
       {/* Overview Stats Cards Grid */}
-      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
-        <Panel className="p-4 flex items-center justify-between">
+      <div className="grid grid-cols-2 gap-2.5 sm:gap-4 lg:grid-cols-4">
+        <Panel className="flex items-center justify-between p-3 sm:p-4">
           <div>
             <small className="text-[10px] font-black text-nexoraMuted uppercase tracking-widest">
               {t('dashboard.review_kpi.avg_rating')}
             </small>
-            <h3 className="mt-1 text-2xl font-black text-nexoraText flex items-center gap-1">
-              {stats.avg} <Star className="h-5 w-5 fill-amber-400 text-amber-400" />
+            <h3 className="mt-1 flex items-center gap-1 text-lg font-black text-nexoraText sm:text-2xl">
+              {stats.avg} <Star className="h-4 w-4 fill-amber-400 text-amber-400 sm:h-5 sm:w-5" />
             </h3>
           </div>
         </Panel>
-        <Panel className="p-4 flex items-center justify-between">
+        <Panel className="flex items-center justify-between p-3 sm:p-4">
           <div>
             <small className="text-[10px] font-black text-nexoraMuted uppercase tracking-widest">
               {t('dashboard.review_kpi.google_reviews')}
             </small>
-            <h3 className="mt-1 text-2xl font-black text-nexoraText">{stats.google}</h3>
+            <h3 className="mt-1 text-lg font-black text-nexoraText sm:text-2xl">{stats.google}</h3>
           </div>
         </Panel>
-        <Panel className="p-4 flex items-center justify-between">
+        <Panel className="flex items-center justify-between p-3 sm:p-4">
           <div>
             <small className="text-[10px] font-black text-nexoraMuted uppercase tracking-widest">
               {t('dashboard.review_kpi.yelp_reviews')}
             </small>
-            <h3 className="mt-1 text-2xl font-black text-nexoraText">{stats.yelp}</h3>
+            <h3 className="mt-1 text-lg font-black text-nexoraText sm:text-2xl">{stats.yelp}</h3>
           </div>
         </Panel>
-        <Panel className="p-4 flex items-center justify-between">
+        <Panel className="flex items-center justify-between p-3 sm:p-4">
           <div>
             <small className="text-[10px] font-black text-nexoraMuted uppercase tracking-widest">
               {t('dashboard.review_kpi.internal_feedback')}
             </small>
-            <h3 className="mt-1 text-2xl font-black text-nexoraText">{stats.internal}</h3>
+            <h3 className="mt-1 text-lg font-black text-nexoraText sm:text-2xl">{stats.internal}</h3>
           </div>
         </Panel>
       </div>

@@ -176,7 +176,7 @@ export default function DashboardHeader({
   }, [searchQuery, staff, transactions, reviews, touchpoints])
 
   const notificationPanel = isNotiDropdownOpen && (
-    <div className="absolute right-0 top-full mt-2 w-80 max-w-[calc(100vw-32px)] max-h-[460px] flex flex-col rounded-xl border border-nexoraBorder bg-white shadow-2xl z-50 animate-fadeIn overflow-hidden">
+    <div className="fixed left-4 right-4 top-[calc(var(--app-safe-area-top)+4.5rem)] z-[80] flex max-h-[calc(100dvh-5.5rem)] w-auto flex-col overflow-hidden rounded-xl border border-nexoraBorder bg-white shadow-2xl animate-fadeIn lg:absolute lg:left-auto lg:right-0 lg:top-full lg:mt-2 lg:max-h-[460px] lg:w-80 lg:max-w-[calc(100vw-32px)]">
       <div className="flex items-center justify-between border-b border-nexoraBorder px-4 py-3 bg-nexoraSurfaceMuted">
         <span className="text-xs font-black uppercase text-nexoraText tracking-wider">
           {t('dashboard.notifications.title')} ({unreadCount})
@@ -192,7 +192,7 @@ export default function DashboardHeader({
           </button>
         )}
       </div>
-      <div className="flex-grow overflow-y-auto max-h-[380px] divide-y divide-nexoraBorder">
+      <div className="max-h-[calc(100dvh-9.5rem)] flex-grow divide-y divide-nexoraBorder overflow-y-auto lg:max-h-[380px]">
         {isNotificationsLoading ? (
           <div className="py-12 text-center text-nexoraSubtle flex flex-col items-center justify-center">
             <Bell className="h-8 w-8 text-nexoraBorder mb-2 animate-pulse" />
@@ -320,42 +320,32 @@ export default function DashboardHeader({
   )
 
   return (
-    <header className="safe-area-top sticky top-0 z-20 border-b border-nexoraBorder bg-nexoraSurface/90 backdrop-blur-md">
+    <header className="safe-area-top sticky top-0 z-40 border-b border-nexoraBorder bg-nexoraSurface/90 backdrop-blur-md">
 
       {/* ── Mobile header ──────────────────────────────────────────────────── */}
       <div className="flex min-h-16 items-center justify-between px-4 lg:hidden">
-        {/* Left: hamburger + logo */}
+        {/* Left: hamburger */}
         <div className="flex items-center gap-2">
           <button
             type="button"
             onClick={onOpenMobileMenu}
-            className="flex h-10 w-10 items-center justify-center rounded-xl border border-nexoraBorder bg-white text-nexoraText shadow-nexora-soft transition hover:bg-nexoraSurfaceMuted"
+            className="flex h-10 w-10 items-center justify-center rounded-xl text-nexoraText transition hover:bg-nexoraCanvas"
             aria-label="Open navigation menu"
           >
             <Menu className="h-5 w-5" />
           </button>
-          <img src="/assets/nexora-logo.png" alt="Nexora Logo" className="h-9 w-9 shrink-0 object-contain" />
         </div>
 
-        {/* Right: lang + bell + avatar */}
+        {/* Mobile: Notification → Language → Ecosystem */}
         <div className="flex items-center gap-2">
-          <LanguageSwitcher />
-
-          <HeaderEcosystem />
-
           <div className="relative" ref={mobileDropdownRef}>
             <button
               type="button"
               onClick={() => setIsNotiDropdownOpen(!isNotiDropdownOpen)}
-              className="relative flex h-10 w-10 items-center justify-center rounded-xl border border-nexoraBorder bg-white text-nexoraText shadow-nexora-soft transition hover:bg-nexoraSurfaceMuted"
+              className="relative flex h-10 w-10 items-center justify-center rounded-xl text-nexoraText transition hover:bg-nexoraCanvas"
               aria-label="Notifications"
             >
-              <img
-                src="/assets/menu/notification.png"
-                alt=""
-                className="h-5 w-5 object-contain"
-                aria-hidden="true"
-              />
+              <Bell className="h-5 w-5" aria-hidden="true" />
               {unreadCount > 0 && (
                 <span className="absolute -top-1 -right-1 min-w-[16px] h-4 px-0.5 rounded-full flex items-center justify-center text-[9px] font-black text-white bg-red-500 ring-2 ring-white">
                   {unreadCount > 99 ? '99+' : unreadCount}
@@ -365,18 +355,9 @@ export default function DashboardHeader({
             {notificationPanel}
           </div>
 
-          <div className="relative" ref={mobileAvatarRef}>
-            <button
-              type="button"
-              onClick={() => setIsHeaderDropdownOpen(!isHeaderDropdownOpen)}
-              className="relative flex h-10 w-10 items-center justify-center rounded-full border border-nexoraBorder overflow-hidden shadow-nexora-soft transition hover:opacity-90 focus:outline-none"
-              aria-label="Account menu"
-            >
-              {avatarInner}
-            </button>
-            <span className="absolute bottom-0 right-0 z-10 h-2.5 w-2.5 rounded-full bg-green-500 ring-2 ring-white pointer-events-none" />
-            {avatarDropdown}
-          </div>
+          <LanguageSwitcher variant="header-plain" />
+
+          <HeaderEcosystem plain />
         </div>
       </div>
 
@@ -489,23 +470,15 @@ export default function DashboardHeader({
         </div>
 
         <div className="flex shrink-0 items-center gap-4">
-          <LanguageSwitcher />
-
-          <HeaderEcosystem />
-
+          {/* Desktop: Notification → Account → Language → Ecosystem → primary action */}
           {/* Notifications */}
-          <div className="relative" ref={dropdownRef}>
+          <div className="relative order-1" ref={dropdownRef}>
             <IconButton
               label="Notifications"
               onClick={() => setIsNotiDropdownOpen(!isNotiDropdownOpen)}
               className="relative"
             >
-              <img
-                src="/assets/menu/notification.png"
-                alt=""
-                className="h-5 w-5 object-contain"
-                aria-hidden="true"
-              />
+              <Bell className="h-5 w-5" aria-hidden="true" />
               {unreadCount > 0 && (
                 <span className="absolute -top-1 -right-1 min-w-[18px] h-[18px] px-1 rounded-full flex items-center justify-center text-[9px] font-black text-white bg-red-500 ring-2 ring-white shadow-sm">
                   {unreadCount > 99 ? '99+' : unreadCount}
@@ -515,8 +488,16 @@ export default function DashboardHeader({
             {notificationPanel}
           </div>
 
+          <div className="order-4">
+            <LanguageSwitcher />
+          </div>
+
+          <div className="order-5">
+            <HeaderEcosystem />
+          </div>
+
           {/* Profile */}
-          <div className="relative" ref={headerDropdownRef}>
+          <div className="relative order-2" ref={headerDropdownRef}>
             <button
               type="button"
               onClick={() => setIsHeaderDropdownOpen(!isHeaderDropdownOpen)}
@@ -531,7 +512,7 @@ export default function DashboardHeader({
           </div>
 
           {userRole !== 'staff' && (
-            <button onClick={onAddTouchpoint} className="nexora-primary-button">
+            <button type="button" onClick={onAddTouchpoint} className="nexora-primary-button order-6">
               <Plus className="h-4 w-4" />
               <span>{t('dashboard.header.add_tp')}</span>
             </button>
