@@ -14,7 +14,7 @@ import {
 import type { EcosystemCatalogEntry } from '../../../utils/ecosystem'
 import IconButton from '../../ui/IconButton'
 
-export default function HeaderEcosystem() {
+export default function HeaderEcosystem({ plain = false }) {
   const { t } = useTranslation()
   const { status } = useAuth()
   const isAuthenticated = status === 'authenticated'
@@ -94,14 +94,29 @@ export default function HeaderEcosystem() {
 
   return (
     <div ref={wrapperRef} className="relative inline-flex">
-      <IconButton
-        label={t('dashboard.header.ecosystem')}
-        onClick={() => setIsOpen((value) => !value)}
-        className={isOpen ? 'bg-nexoraSurfaceMuted' : ''}
-        aria-expanded={isOpen}
-      >
-        <img src="/assets/icon_eco.svg" alt="" className="h-[22px] w-[22px]" />
-      </IconButton>
+      {plain ? (
+        <button
+          type="button"
+          aria-label={t('dashboard.header.ecosystem')}
+          title={t('dashboard.header.ecosystem')}
+          onClick={() => setIsOpen((value) => !value)}
+          className={`flex h-10 w-10 items-center justify-center rounded-lg transition hover:bg-nexoraCanvas ${
+            isOpen ? 'bg-nexoraCanvas' : ''
+          }`}
+          aria-expanded={isOpen}
+        >
+          <img src="/assets/icon_eco.svg" alt="" className="h-[22px] w-[22px]" />
+        </button>
+      ) : (
+        <IconButton
+          label={t('dashboard.header.ecosystem')}
+          onClick={() => setIsOpen((value) => !value)}
+          className={isOpen ? 'bg-nexoraSurfaceMuted' : ''}
+          aria-expanded={isOpen}
+        >
+          <img src="/assets/icon_eco.svg" alt="" className="h-[22px] w-[22px]" />
+        </IconButton>
+      )}
 
       {isOpen && (
         <>

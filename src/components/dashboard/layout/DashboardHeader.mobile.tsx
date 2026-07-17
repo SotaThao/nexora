@@ -329,28 +329,23 @@ export default function DashboardHeader({
           <button
             type="button"
             onClick={onOpenMobileMenu}
-            className="flex h-10 w-10 items-center justify-center rounded-xl border border-nexoraBorder bg-white text-nexoraText shadow-nexora-soft transition hover:bg-nexoraSurfaceMuted"
+            className="flex h-10 w-10 items-center justify-center rounded-xl text-nexoraText transition hover:bg-nexoraCanvas"
             aria-label="Open navigation menu"
           >
             <Menu className="h-5 w-5" />
           </button>
         </div>
 
-        {/* Mobile: Notification → Language → Ecosystem → Add New Station */}
+        {/* Mobile: Notification → Language → Ecosystem */}
         <div className="flex items-center gap-2">
-          <div className="relative order-1" ref={mobileDropdownRef}>
+          <div className="relative" ref={mobileDropdownRef}>
             <button
               type="button"
               onClick={() => setIsNotiDropdownOpen(!isNotiDropdownOpen)}
-              className="relative flex h-10 w-10 items-center justify-center rounded-xl border border-nexoraBorder bg-white text-nexoraText shadow-nexora-soft transition hover:bg-nexoraSurfaceMuted"
+              className="relative flex h-10 w-10 items-center justify-center rounded-xl text-nexoraText transition hover:bg-nexoraCanvas"
               aria-label="Notifications"
             >
-              <img
-                src="/assets/menu/notification.png"
-                alt=""
-                className="h-5 w-5 object-contain"
-                aria-hidden="true"
-              />
+              <Bell className="h-5 w-5" aria-hidden="true" />
               {unreadCount > 0 && (
                 <span className="absolute -top-1 -right-1 min-w-[16px] h-4 px-0.5 rounded-full flex items-center justify-center text-[9px] font-black text-white bg-red-500 ring-2 ring-white">
                   {unreadCount > 99 ? '99+' : unreadCount}
@@ -360,26 +355,9 @@ export default function DashboardHeader({
             {notificationPanel}
           </div>
 
-          {userRole !== 'staff' && (
-            <button
-              type="button"
-              onClick={onAddTouchpoint}
-              className="order-5 flex h-10 w-10 items-center justify-center rounded-xl border border-nexoraBorder bg-white text-nexoraText shadow-nexora-soft transition hover:bg-nexoraSurfaceMuted"
-              aria-label={t('dashboard.header.add_tp')}
-              title={t('dashboard.header.add_tp')}
-            >
-              <Plus className="h-5 w-5" />
-            </button>
-          )}
+          <LanguageSwitcher variant="header-plain" />
 
-          <div className="order-3">
-            <LanguageSwitcher />
-          </div>
-
-          <div className="order-4">
-            <HeaderEcosystem />
-          </div>
-
+          <HeaderEcosystem plain />
         </div>
       </div>
 
@@ -500,12 +478,7 @@ export default function DashboardHeader({
               onClick={() => setIsNotiDropdownOpen(!isNotiDropdownOpen)}
               className="relative"
             >
-              <img
-                src="/assets/menu/notification.png"
-                alt=""
-                className="h-5 w-5 object-contain"
-                aria-hidden="true"
-              />
+              <Bell className="h-5 w-5" aria-hidden="true" />
               {unreadCount > 0 && (
                 <span className="absolute -top-1 -right-1 min-w-[18px] h-[18px] px-1 rounded-full flex items-center justify-center text-[9px] font-black text-white bg-red-500 ring-2 ring-white shadow-sm">
                   {unreadCount > 99 ? '99+' : unreadCount}

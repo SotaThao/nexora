@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { TrendingUp, Calculator, CheckCircle } from 'lucide-react';
+import { TrendingUp, Calculator, CheckCircle, WalletCards } from 'lucide-react';
 import { useTranslation } from '../../../contexts/LanguageContext';
 import { formatUSD, getPaymentMethodLogo } from '../../../utils/tipsFormatters';
 import { formatTransactionDateTime } from '../../dashboard/utils';
@@ -181,8 +181,15 @@ export default function TipsSavingsTab({
                   ))
                 ) : (
                   <tr>
-                    <td colSpan={5} className="py-8 text-center text-sm text-mutedGrey">
-                      {t('common.no_results') || 'No direct payouts found.'}
+                    <td colSpan={5} className="text-center align-middle">
+                      <div className="flex min-h-[220px] w-full flex-col items-center justify-center gap-3 text-mutedGrey">
+                        <span className="grid h-11 w-11 place-items-center rounded-full bg-nexoraSurfaceMuted text-nexoraSubtle">
+                          <WalletCards className="h-5 w-5" />
+                        </span>
+                        <span className="text-sm font-medium">
+                          {t('dashboard.tips.savings.empty')}
+                        </span>
+                      </div>
                     </td>
                   </tr>
                 )}

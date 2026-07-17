@@ -126,19 +126,20 @@ function StaffPayoutList({
                 ))}
               </div>
 
-              <div className="flex justify-end">
+              <div className="flex min-w-0 justify-end">
                 <button
                   type="button"
                   onClick={() => onViewDetail(row)}
                   title={canConfirm ? t('staff_payouts.confirm_receipt') : t('staff_payments.view_detail')}
                   aria-label={canConfirm ? t('staff_payouts.confirm_receipt') : t('staff_payments.view_detail')}
-                  className={`inline-flex h-10 w-10 items-center justify-center rounded-lg ${
+                  className={`inline-flex h-10 max-w-full items-center justify-center gap-1.5 whitespace-nowrap rounded-lg px-3 text-xs font-bold ${
                     canConfirm
                       ? 'bg-nexoraBrand text-white'
                       : 'border border-nexoraBorder bg-white text-nexoraText'
                   }`}
                 >
-                  {canConfirm ? <CheckCircle2 className="h-4.5 w-4.5" /> : <Eye className="h-4.5 w-4.5" />}
+                  {canConfirm ? <CheckCircle2 className="h-4.5 w-4.5 shrink-0" /> : <Eye className="h-4.5 w-4.5 shrink-0" />}
+                  {t(canConfirm ? 'staff_payouts.action_confirm' : 'staff_payouts.action_view')}
                 </button>
               </div>
             </article>
@@ -197,13 +198,14 @@ function StaffPayoutList({
                       onClick={() => onViewDetail(row)}
                       title={canConfirm ? t('staff_payouts.confirm_receipt') : t('staff_payments.view_detail')}
                       aria-label={canConfirm ? t('staff_payouts.confirm_receipt') : t('staff_payments.view_detail')}
-                      className={`inline-flex h-9 w-9 items-center justify-center rounded-lg ${
+                      className={`inline-flex h-9 items-center justify-center gap-1.5 whitespace-nowrap rounded-lg px-3 text-xs font-bold ${
                         canConfirm
                           ? 'bg-nexoraBrand text-white'
                           : 'border border-nexoraBorder bg-white text-nexoraText'
                       }`}
                     >
-                      {canConfirm ? <CheckCircle2 className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                      {canConfirm ? <CheckCircle2 className="h-4 w-4 shrink-0" /> : <Eye className="h-4 w-4 shrink-0" />}
+                      {t(canConfirm ? 'staff_payouts.action_confirm' : 'staff_payouts.action_view')}
                     </button>
                   </td>
                 </tr>
