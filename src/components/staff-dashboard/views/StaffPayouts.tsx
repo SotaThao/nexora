@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from 'react'
+import { createPortal } from 'react-dom'
 import { CheckCircle2, Eye, List, Loader2, X } from 'lucide-react'
 import { useTranslation } from '../../../contexts/LanguageContext'
 import { useNotification } from '../../../contexts/NotificationContext'
@@ -12,7 +13,7 @@ import {
   useStaffUnpaidDebt,
 } from '../../../data/hooks/useStaffPayouts'
 import type { StaffPayoutsListQuery } from '../../../data/repositories/payouts'
-import { getApiErrorCode, type PayoutRecord } from '../../../types/domain'
+import { getApiErrorCode, type PayoutRecord, type StaffPayoutDetailRecord } from '../../../types/domain'
 import { DEFAULT_PAGE_SIZE } from '../../../constants/pagination'
 import { usePagination } from '../../../hooks/usePagination'
 import { formatCurrency, formatTransactionDateTime } from '../../dashboard/utils'
@@ -239,9 +240,9 @@ function StaffPayoutDetailModal({
 }) {
   if (!payout && !isLoading) return null
   const canConfirm = payout?.status === PayoutStatus.Pending
-  return (
-    <div className="fixed inset-0 z-50 flex items-end justify-center bg-slate-900/50 p-0 backdrop-blur-sm sm:items-center sm:p-4">
-      <div className="max-h-[92dvh] w-full max-w-lg overflow-y-auto rounded-t-2xl border border-nexoraBorder bg-white shadow-2xl sm:rounded-2xl">
+  return createPortal(
+    <div className="fixed inset-0 z-[80] flex items-end justify-center bg-slate-900/50 p-0 backdrop-blur-sm sm:items-center sm:p-4">
+      <div className="max-h-[85dvh] w-full max-w-lg overflow-y-auto overscroll-contain rounded-t-2xl border border-nexoraBorder bg-white pb-[max(1rem,env(safe-area-inset-bottom,0px))] shadow-2xl sm:max-h-[92dvh] sm:rounded-2xl sm:pb-0">
         <div className="flex items-start justify-between border-b border-nexoraBorder px-5 py-4">
           <div>
             <h3 className="text-base font-black text-nexoraText">{t('staff_payouts.detail_title')}</h3>
@@ -367,7 +368,8 @@ function StaffPayoutDetailModal({
           </div>
         ) : null}
       </div>
-    </div>
+    </div>,
+    document.body,
   )
 }
 
