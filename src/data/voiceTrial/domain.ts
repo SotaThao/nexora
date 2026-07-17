@@ -10,6 +10,34 @@ export const VOICE_TRIAL_DAY_KEY_TO_API = {
 
 export type VoiceTrialDayKey = keyof typeof VOICE_TRIAL_DAY_KEY_TO_API
 
+/** Public marketing entry: `/voice-call/plan?package=trial` */
+export enum VoiceCallPlanPackage {
+  Trial = 'trial',
+}
+
+export const VoiceCallPlanRoute = {
+  path: '/voice-call/plan',
+  packageQuery: 'package',
+} as const
+
+/** Same copy key as BookingTrialModal success toast. */
+export const VOICE_CALL_TRIAL_COPY_KEY =
+  'components.dashboard.views.BookingHubView.plans.trial' as const
+
+/** Seconds shown on the public trial success screen before auto home redirect. */
+export const VOICE_CALL_PLAN_SUCCESS_REDIRECT_SECONDS = 5
+
+/** Countdown tick interval on the public trial success screen. */
+export const VOICE_CALL_PLAN_COUNTDOWN_TICK_MS = 1000
+
+/** Wait so success toast/message is readable before leaving the public trial landing. */
+export const VOICE_CALL_PLAN_SUCCESS_REDIRECT_MS =
+  VOICE_CALL_PLAN_SUCCESS_REDIRECT_SECONDS * VOICE_CALL_PLAN_COUNTDOWN_TICK_MS
+
+export function isVoiceCallTrialPackage(value: string | null | undefined): boolean {
+  return value === VoiceCallPlanPackage.Trial
+}
+
 export enum VoiceTrialFormField {
   Salon = 'salon',
   Owner = 'owner',
@@ -29,12 +57,17 @@ export interface SubmitVoiceTrialRequest {
   phoneNumber: string
   email: string
   cityArea?: string | null
+  website?: string | null
   services: string[]
   openingDays: string[]
   serviceHoursFrom: string
   serviceHoursTo: string
   biggestProblem: string
   referralCode?: string | null
+}
+
+export type SubmitVoiceTrialRequestOptions = {
+  anonymous?: boolean
 }
 
 export type SubmitVoiceTrialRequestResponse = string
@@ -52,6 +85,7 @@ export interface VoiceTrialRequestDetailDto {
   phoneNumber: string
   email: string
   cityArea: string | null
+  website: string | null
   services: string[]
   openingDays: string[]
   serviceHoursFrom: string
@@ -64,9 +98,11 @@ export interface VoiceTrialRequestDetailDto {
   lastModified: string | null
 }
 
-export function mapDayKeysToApiOpeningDays(dayKeys: Iterable<string>): string[] {
+export function mapDayKeysToApiOpeningDays(
+  dayKeys: Iterable<string>,
+): string[] {
   return [...dayKeys]
-    .map((key) => VOICE_TRIAL_DAY_KEY_TO_API[key as VoiceTrialDayKey])
+    .map(key => VOICE_TRIAL_DAY_KEY_TO_API[key as VoiceTrialDayKey])
     .filter(Boolean)
 }
 

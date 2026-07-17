@@ -361,6 +361,7 @@ export default function BookingSettingsPanel() {
     MerchantVoiceUiLanguage.En,
   );
   const [greeting, setGreeting] = useState(() => t(`${TK}.greetingEn`));
+  const [promotion, setPromotion] = useState("");
   const [salonName, setSalonName] = useState("");
   const [salonPhone, setSalonPhone] = useState("");
   const [aiPhone, setAiPhone] = useState("");
@@ -512,6 +513,7 @@ export default function BookingSettingsPanel() {
     );
     setAddress(configData.address || "");
     setGoogleReviewUrl(configData.googleReviewUrl || "");
+    setPromotion((configData.promotion || "").slice(0, PROMO_MAX_LENGTH));
     const resolvedLang = mapConfigLanguageToUiLanguage(configData.language);
     setLanguage(resolvedLang);
     setGreeting(
@@ -543,7 +545,9 @@ export default function BookingSettingsPanel() {
         "tone-violet",
       name: service.name || "",
       price: Number(service.price ?? 0),
-      duration: clampMerchantVoiceServiceDurationMinutes(Number(service.durationMinutes ?? 0)),
+      duration: clampMerchantVoiceServiceDurationMinutes(
+        Number(service.durationMinutes ?? 0),
+      ),
     }));
     setServices(nextServices);
   }, [configData, t]);
@@ -621,7 +625,8 @@ export default function BookingSettingsPanel() {
     setServices((prev) =>
       prev.map((service) => {
         if (service.id !== id) return service;
-        if (field === MerchantVoiceServiceField.Name) return { ...service, name: value };
+        if (field === MerchantVoiceServiceField.Name)
+          return { ...service, name: value };
         if (field === MerchantVoiceServiceField.Price)
           return { ...service, price: parseWholeNumberInput(value) };
         return { ...service, duration: parseWholeNumberInput(value) };
@@ -639,7 +644,9 @@ export default function BookingSettingsPanel() {
         if (field === MerchantVoiceServiceField.Duration) {
           return {
             ...service,
-            duration: clampMerchantVoiceServiceDurationMinutes(service.duration),
+            duration: clampMerchantVoiceServiceDurationMinutes(
+              service.duration,
+            ),
           };
         }
         if (Number.isFinite(service[field])) return service;
@@ -661,14 +668,26 @@ export default function BookingSettingsPanel() {
   };
 
   const handleLanguageSelect = (next: Language) => {
-    setLanguage(next);
-    setGreeting(
-      t(`${TK}.greeting${next === MerchantVoiceUiLanguage.Vi ? "Vi" : "En"}`),
-    );
+    const resolved = resolveUiLanguage(next);
+    setLanguage(resolved);
+    setGreeting(t(`${TK}.${greetingI18nKey(resolved)}`));
     setStatus(
       t(`${TK}.languageSelected`, {
-        language: t(`${TK}.languageLabels.${next}`),
+        language: t(`${TK}.languageLabels.${resolved}`),
       }),
+    );
+  };
+
+  const handlePromoChange = (value: string) => {
+    setPromotion(value.slice(0, PROMO_MAX_LENGTH));
+  };
+
+  const handlePromoSuggest = (key: keyof typeof PROMO_TEMPLATES) => {
+    const template = PROMO_TEMPLATES[key];
+    if (!template) return;
+    setPromotion(template.text.slice(0, PROMO_MAX_LENGTH));
+    setStatus(
+      t(`${TK}.promoFilled`, { name: t(`${TK}.${template.labelKey}`) }),
     );
   };
 
@@ -780,6 +799,7 @@ export default function BookingSettingsPanel() {
         bookingNotifyPhone: bookingNotifyPhonePayload,
         address: address.trim(),
         googleReviewUrl: googleReviewUrl.trim(),
+        promotion: promotion.trim().slice(0, PROMO_MAX_LENGTH) || null,
         language: mapUiLanguageToConfigLanguage(language),
         welcomeGreeting: greeting.trim(),
         operatingHours: DAY_KEYS.map((day) => {
@@ -803,7 +823,9 @@ export default function BookingSettingsPanel() {
             : {}),
           name: service.name.trim(),
           price: Number.isFinite(service.price) ? service.price : 0,
-          durationMinutes: clampMerchantVoiceServiceDurationMinutes(service.duration),
+          durationMinutes: clampMerchantVoiceServiceDurationMinutes(
+            service.duration,
+          ),
           note: null,
           icon: service.icon?.trim() || null,
           isActive: true,
@@ -832,23 +854,23 @@ export default function BookingSettingsPanel() {
         <p className="settings-desc">{t(`${TK}.oneSourceDesc`)}</p>
         <div className="settings-sync-grid">
           <div className="settings-sync-pill">
-            <strong>AI Voice</strong>
+            <strong>{t(`${TK}.syncPillVoice`)}</strong>
             {t(`${TK}.syncVoice`)}
           </div>
           <div className="settings-sync-pill">
-            <strong>SMS</strong>
+            <strong>{t(`${TK}.syncPillSms`)}</strong>
             {t(`${TK}.syncSms`)}
           </div>
           <div className="settings-sync-pill">
-            <strong>Landing Page</strong>
+            <strong>{t(`${TK}.syncPillLanding`)}</strong>
             {t(`${TK}.syncLanding`)}
           </div>
           <div className="settings-sync-pill">
-            <strong>Schema</strong>
+            <strong>{t(`${TK}.syncPillSchema`)}</strong>
             {t(`${TK}.syncSchema`)}
           </div>
           <div className="settings-sync-pill">
-            <strong>Booking</strong>
+            <strong>{t(`${TK}.syncPillBooking`)}</strong>
             {t(`${TK}.syncBooking`)}
           </div>
         </div>
@@ -1323,7 +1345,11 @@ export default function BookingSettingsPanel() {
                         placeholder={t(`${TK}.placeholderServiceName`)}
                         aria-label={t(`${TK}.serviceNameAria`)}
                         onChange={(event) =>
-                          updateService(service.id, MerchantVoiceServiceField.Name, event.target.value)
+                          updateService(
+                            service.id,
+                            MerchantVoiceServiceField.Name,
+                            event.target.value,
+                          )
                         }
                       />
                     </label>
@@ -1350,7 +1376,10 @@ export default function BookingSettingsPanel() {
                               )
                             }
                             onBlur={() =>
-                              commitServiceNumberOnBlur(service.id, MerchantVoiceServiceField.Price)
+                              commitServiceNumberOnBlur(
+                                service.id,
+                                MerchantVoiceServiceField.Price,
+                              )
                             }
                           />
                         </div>
@@ -1379,10 +1408,15 @@ export default function BookingSettingsPanel() {
                               )
                             }
                             onBlur={() =>
-                              commitServiceNumberOnBlur(service.id, MerchantVoiceServiceField.Duration)
+                              commitServiceNumberOnBlur(
+                                service.id,
+                                MerchantVoiceServiceField.Duration,
+                              )
                             }
                           />
-                          <span className="settings-service-suffix">min</span>
+                          <span className="settings-service-suffix">
+                            {t(`${TK}.durationUnit`)}
+                          </span>
                         </div>
                       </label>
                     </div>
@@ -1429,12 +1463,7 @@ export default function BookingSettingsPanel() {
                 role="group"
                 aria-label={t(`${TK}.aiLanguage`)}
               >
-                {(
-                  [
-                    MerchantVoiceUiLanguage.Vi,
-                    MerchantVoiceUiLanguage.En,
-                  ] as const
-                ).map((lang) => (
+                {AI_LANGUAGE_OPTIONS.map((lang) => (
                   <button
                     key={lang}
                     className={`settings-language-card ${language === lang ? "is-active" : ""}`}
@@ -1442,7 +1471,7 @@ export default function BookingSettingsPanel() {
                     aria-pressed={language === lang}
                     onClick={() => handleLanguageSelect(lang)}
                   >
-                    {lang === MerchantVoiceUiLanguage.Vi ? "🇻🇳 VI" : "🇺🇸 EN"}
+                    {languageButtonLabel(lang)}
                   </button>
                 ))}
               </div>
@@ -1450,14 +1479,15 @@ export default function BookingSettingsPanel() {
                 {t(`${TK}.languageStatus.${language}`)}
               </div>
             </div>
-            <label className="settings-field settings-span-full">
-              <span className="settings-label">
+            <div className="settings-field settings-span-full">
+              <span className="settings-label" id="settings-greeting-label">
                 {t(`${TK}.greetingScript`)}
               </span>
               <textarea
                 className="settings-textarea"
                 value={greeting}
                 placeholder={t(`${TK}.placeholderGreeting`)}
+                aria-labelledby="settings-greeting-label"
                 aria-invalid={Boolean(formErrors.greeting)}
                 onChange={(event) => {
                   setGreeting(event.target.value);
@@ -1472,18 +1502,54 @@ export default function BookingSettingsPanel() {
                   </span>
                 ) : null}
               </span>
+              <button
+                className={`booking-secondary-button settings-preview-button ${isPreviewPlaying ? "is-playing" : ""}`}
+                type="button"
+                aria-pressed={isPreviewPlaying}
+                onClick={handlePreview}
+              >
+                {isPreviewPlaying
+                  ? t(`${TK}.previewVoiceStop`)
+                  : t(`${TK}.previewVoice`)}
+              </button>
+            </div>
+            <label className="settings-field settings-span-full">
+              <div className="settings-promo-head">
+                <span className="settings-label">{t(`${TK}.promoLabel`)}</span>
+                <div
+                  id="settings-promo-count"
+                  className={`settings-promo-count ${promotion.length >= PROMO_MAX_LENGTH ? "is-max" : ""}`}
+                >
+                  <span>{promotion.length}</span>/{PROMO_MAX_LENGTH}
+                </div>
+              </div>
+              <textarea
+                className="settings-textarea settings-textarea-promo"
+                value={promotion}
+                maxLength={PROMO_MAX_LENGTH}
+                placeholder={t(`${TK}.promoPlaceholder`)}
+                aria-describedby="settings-promo-count"
+                onChange={(event) =>
+                  handlePromoChange(
+                    event.target.value.slice(0, PROMO_MAX_LENGTH),
+                  )
+                }
+              />
+              <div className="settings-language-status">
+                {t(`${TK}.promoHelp`)}
+              </div>
+              <div className="settings-promo-suggest-row">
+                <button
+                  className="settings-promo-suggest"
+                  type="button"
+                  onClick={() => handlePromoSuggest("reward-yourself")}
+                >
+                  <StarsIcon className="settings-promo-suggest-icon" />
+                  {t(`${TK}.promoSuggestReward`)}
+                </button>
+              </div>
             </label>
           </div>
-          <button
-            className={`booking-secondary-button settings-preview-button ${isPreviewPlaying ? "is-playing" : ""}`}
-            type="button"
-            aria-pressed={isPreviewPlaying}
-            onClick={handlePreview}
-          >
-            {isPreviewPlaying
-              ? t(`${TK}.previewVoiceStop`)
-              : t(`${TK}.previewVoice`)}
-          </button>
         </SettingsCard>
       </div>
 

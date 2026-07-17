@@ -13,6 +13,13 @@ import {
   type MerchantVoiceBookingsFilter,
   type MerchantVoiceBookingsResponse,
   type MerchantVoiceBookingStatisticsDto,
+  type MerchantVoiceCallsFilter,
+  type MerchantVoiceCallsResponse,
+  type MerchantVoiceCallStatisticsDto,
+  type MerchantVoiceCustomersFilter,
+  type MerchantVoiceCustomersResponse,
+  type MerchantVoiceCustomerGroupSummaryDto,
+  type UpdateMerchantVoiceCustomerRequest,
   type MerchantVoiceStaffFilter,
   type MerchantVoiceStaffResponse,
   type MerchantVoiceTenantStatusDto,
@@ -151,6 +158,72 @@ export function useToggleMerchantVoiceStaffStatus() {
     onSuccess: (_status, id) => {
       queryClient.invalidateQueries({ queryKey: ['merchantVoice', 'staff'] })
       queryClient.invalidateQueries({ queryKey: qk.merchantVoiceStaffById(id) })
+    },
+  })
+}
+
+const EMPTY_CALLS_FILTERS: MerchantVoiceCallsFilter = {}
+
+export function useMerchantVoiceCalls(
+  filters: MerchantVoiceCallsFilter = EMPTY_CALLS_FILTERS,
+  { enabled = true } = {},
+) {
+  return useQuery<MerchantVoiceCallsResponse>({
+    queryKey: qk.merchantVoiceCalls(filters),
+    queryFn: () => merchantVoiceRepository.getCalls(filters),
+    enabled,
+  })
+}
+
+export function useMerchantVoiceCallStatistics({ enabled = true } = {}) {
+  return useQuery<MerchantVoiceCallStatisticsDto>({
+    queryKey: qk.merchantVoiceCallStatistics(),
+    queryFn: () => merchantVoiceRepository.getCallStatistics(),
+    enabled,
+  })
+}
+
+export function useSendMerchantVoiceCallFollowUpSms() {
+  const queryClient = useQueryClient()
+
+  return useMutation<boolean, Error, { id: string }>({
+    mutationFn: ({ id }) => merchantVoiceRepository.sendCallFollowUpSms(id),
+    onSuccess: (sent) => {
+      if (!sent) return
+      queryClient.invalidateQueries({ queryKey: ['merchantVoice', 'calls'] })
+      queryClient.invalidateQueries({ queryKey: qk.merchantVoiceCallStatistics() })
+    },
+  })
+}
+
+const EMPTY_CUSTOMERS_FILTERS: MerchantVoiceCustomersFilter = {}
+
+export function useMerchantVoiceCustomers(
+  filters: MerchantVoiceCustomersFilter = EMPTY_CUSTOMERS_FILTERS,
+  { enabled = true } = {},
+) {
+  return useQuery<MerchantVoiceCustomersResponse>({
+    queryKey: qk.merchantVoiceCustomers(filters),
+    queryFn: () => merchantVoiceRepository.getCustomers(filters),
+    enabled,
+  })
+}
+
+export function useMerchantVoiceCustomerSummary({ enabled = true } = {}) {
+  return useQuery<MerchantVoiceCustomerGroupSummaryDto>({
+    queryKey: qk.merchantVoiceCustomerSummary(),
+    queryFn: () => merchantVoiceRepository.getCustomerSummary(),
+    enabled,
+  })
+}
+
+export function useUpdateMerchantVoiceCustomer() {
+  const queryClient = useQueryClient()
+
+  return useMutation<void, Error, { id: string; body: UpdateMerchantVoiceCustomerRequest }>({
+    mutationFn: ({ id, body }) => merchantVoiceRepository.updateCustomer(id, body),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['merchantVoice', 'customers'] })
     },
   })
 }

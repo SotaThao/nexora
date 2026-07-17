@@ -7,7 +7,7 @@ import { isApiError } from '../../types/domain'
 import type {
   DashboardAnalyticsApiDto,
   DashboardAnalyticsLeaderboardItemApiDto,
-  DashboardAnalyticsPayoutMethodApiDto,
+  DashboardAnalyticsTipsMethodApiDto,
   DashboardAnalyticsTouchPointApiDto,
   DashboardOverviewApiDto,
   DashboardOverviewMetrics,
@@ -16,7 +16,7 @@ import type {
   DashboardTipsChartApiDto,
   MerchantDashboardAnalytics,
   MerchantDashboardAnalyticsLeaderboardItem,
-  MerchantDashboardAnalyticsPayoutMethod,
+  MerchantDashboardAnalyticsTipsMethod,
   MerchantDashboardAnalyticsTouchPoint,
   StaffLeaderboardRow,
   TipsChartDayMetric,
@@ -65,7 +65,7 @@ const EMPTY_ANALYTICS: MerchantDashboardAnalytics = {
   },
   leaderboard: [],
   touchPoints: [],
-  payoutMethods: [],
+  tipsMethods: [],
   directPayout: {
     totalAmount: 0,
     totalCount: 0,
@@ -105,14 +105,26 @@ function normalizeAnalyticsTouchPoint(
   }
 }
 
-function normalizeAnalyticsPayoutMethod(
-  dto: DashboardAnalyticsPayoutMethodApiDto,
-): MerchantDashboardAnalyticsPayoutMethod {
+function normalizeAnalyticsTipsMethod(
+  dto: DashboardAnalyticsTipsMethodApiDto,
+): MerchantDashboardAnalyticsTipsMethod {
   return {
     method: dto.method ?? 'Other',
     amount: Number(dto.amount) || 0,
     count: Number(dto.count) || 0,
   }
+}
+
+function resolveAnalyticsTipsMethods(
+  dto: DashboardAnalyticsApiDto,
+): DashboardAnalyticsTipsMethodApiDto[] {
+  if (Array.isArray(dto.tipsMethods) && dto.tipsMethods.length > 0) {
+    return dto.tipsMethods
+  }
+  if (Array.isArray(dto.payoutMethods)) {
+    return dto.payoutMethods
+  }
+  return []
 }
 
 function normalizeDashboardAnalytics(dto: DashboardAnalyticsApiDto): MerchantDashboardAnalytics {
@@ -131,9 +143,7 @@ function normalizeDashboardAnalytics(dto: DashboardAnalyticsApiDto): MerchantDas
     touchPoints: Array.isArray(dto.touchPoints)
       ? dto.touchPoints.map(normalizeAnalyticsTouchPoint)
       : [],
-    payoutMethods: Array.isArray(dto.payoutMethods)
-      ? dto.payoutMethods.map(normalizeAnalyticsPayoutMethod)
-      : [],
+    tipsMethods: resolveAnalyticsTipsMethods(dto).map(normalizeAnalyticsTipsMethod),
     directPayout: {
       totalAmount: Number(dto.directPayout?.totalAmount) || 0,
       totalCount: Number(dto.directPayout?.totalCount) || 0,

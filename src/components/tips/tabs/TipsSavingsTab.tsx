@@ -35,41 +35,41 @@ export default function TipsSavingsTab({
   return (
     <div className="space-y-6">
       {/* Savings Cards Grid */}
-      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
-        <div className="card-elevated">
+      <div className="grid grid-cols-2 gap-2.5 sm:gap-4 lg:grid-cols-4">
+        <div className="card-elevated p-3 sm:p-6">
           <small className="text-[10px] font-black text-mutedGrey dark:text-slate-400 uppercase tracking-widest">
             {t('dashboard.tips.savings.direct_routed')}
           </small>
-          <h3 className="mt-1 text-2xl font-black text-inkBlue dark:text-white">{formatUSD(allTimeDirectTips)}</h3>
+          <h3 className="mt-1 text-lg font-black text-inkBlue dark:text-white sm:text-2xl">{formatUSD(allTimeDirectTips)}</h3>
           <span className="mt-1.5 inline-flex items-center gap-1 text-[11px] font-bold text-brandCyan">
             <TrendingUp className="h-3 w-3" /> {t('dashboard.tips.savings.direct_routed_sub')}
           </span>
         </div>
-        <div className="card-elevated">
+        <div className="card-elevated p-3 sm:p-6">
           <small className="text-[10px] font-black text-mutedGrey dark:text-slate-400 uppercase tracking-widest">
             {t('dashboard.tips.savings.fees_avoided')}
           </small>
-          <h3 className="mt-1 text-2xl font-black text-luxuryGold">{formatUSD(allTimeDirectTips * (processingFee / 100))}</h3>
+          <h3 className="mt-1 text-lg font-black text-luxuryGold sm:text-2xl">{formatUSD(allTimeDirectTips * (processingFee / 100))}</h3>
           <span className="mt-1.5 block text-[11px] font-bold text-mutedGrey dark:text-slate-400">
             {(t('dashboard.tips.savings.fees_avoided_sub')).replace('3%', `${processingFee}%`)}
           </span>
         </div>
-        <div className="card-elevated">
+        <div className="card-elevated p-3 sm:p-6">
           <small className="text-[10px] font-black text-mutedGrey dark:text-slate-400 uppercase tracking-widest">
             {t('dashboard.tips.savings.active_payouts')}
           </small>
-          <h3 className="mt-1 text-2xl font-black text-inkBlue dark:text-white">
+          <h3 className="mt-1 text-lg font-black text-inkBlue dark:text-white sm:text-2xl">
             {new Set(transactions.map(tx => tx.staffProfileId)).size}
           </h3>
           <span className="mt-1.5 block text-[11px] font-bold text-mutedGrey dark:text-slate-400">
             {t('dashboard.tips.savings.active_payouts_sub')}
           </span>
         </div>
-        <div className="card-elevated">
+        <div className="card-elevated p-3 sm:p-6">
           <small className="text-[10px] font-black text-mutedGrey dark:text-slate-400 uppercase tracking-widest">
             {t('dashboard.tips.savings.duration_label')}
           </small>
-          <h3 className="mt-1 text-2xl font-black text-brandCyan">
+          <h3 className="mt-1 text-lg font-black text-brandCyan sm:text-2xl">
             {t('dashboard.tips.savings.duration_value')}
           </h3>
           <span className="mt-1.5 block text-[11px] font-bold text-mutedGrey dark:text-slate-400">

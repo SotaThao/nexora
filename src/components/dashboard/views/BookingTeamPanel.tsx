@@ -1,5 +1,6 @@
 import React, { useEffect, useMemo, useRef, useState } from "react";
 import { BOOKING_HUB_PAGE_SIZE } from "../../../constants/pagination";
+import { BOOKING_HUB_PAGINATION_CLASSNAME } from "./bookingHubFormatters";
 import { useTranslation } from "../../../contexts/LanguageContext";
 import { useNotification } from "../../../contexts/NotificationContext";
 import { getErrorI18nKey } from "../../../data/errorCodes";
@@ -226,11 +227,11 @@ function scheduleToString(staff: MerchantVoiceStaffDto) {
     .join(";");
 }
 
-function toTeamMember(staff: MerchantVoiceStaffDto): TeamMember {
+function toTeamMember(staff: MerchantVoiceStaffDto, unnamedLabel: string): TeamMember {
   const first = staff.fullName?.trim()?.charAt(0)?.toUpperCase() || "T";
   return {
     id: staff.id,
-    name: staff.fullName || "Unnamed staff",
+    name: staff.fullName || unnamedLabel,
     phone: staff.phoneNumber || "",
     email: staff.email || "",
     services: formatSkills(staff.skills),
@@ -935,15 +936,18 @@ export default function BookingTeamPanel() {
   );
 
   useEffect(() => {
-    const mapped = (staffResponse?.items ?? []).map(toTeamMember);
+    const unnamedLabel = t(`${TK}.unnamedStaff`);
+    const mapped = (staffResponse?.items ?? []).map((staff) =>
+      toTeamMember(staff, unnamedLabel),
+    );
     setMembers(mapped);
     setSelectedId((prev) => prev || mapped[0]?.id || "");
-  }, [staffResponse?.items]);
+  }, [staffResponse?.items, t]);
 
   useEffect(() => {
     if (!staffDetail || modalMode === "create") return;
     fillDraftFromMember(
-      toTeamMember(staffDetail),
+      toTeamMember(staffDetail, t(`${TK}.unnamedStaff`)),
       "edit",
       schedulesToWeeklySchedule(staffDetail.schedules),
     );
@@ -1088,6 +1092,7 @@ export default function BookingTeamPanel() {
               hasPreviousPage={staffResponse?.hasPreviousPage}
               onPageChange={setPage}
               isLoading={isStaffFetching}
+              className={BOOKING_HUB_PAGINATION_CLASSNAME}
             />
           ) : null}
         </article>

@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState, type DragEvent } from 'react'
-import { Copy, Loader2, Save, Upload, X, Coins, Banknote, Gift, Tag, HandCoins, Hourglass, CheckCircle2, XCircle } from 'lucide-react'
+import { Copy, Loader2, Save, Upload, X, Coins, Banknote, Gift, Tag, HandCoins, Hourglass, CheckCircle2, XCircle, Camera, FolderOpen } from 'lucide-react'
 import { useTranslation } from '../../../contexts/LanguageContext'
 import { useNotification } from '../../../contexts/NotificationContext'
 import {
@@ -28,6 +28,8 @@ import type { PayoutRecord, UnpaidTipDebtRecord, StaffMember } from '../../../ty
 import { getApiErrorCode } from '../../../types/domain'
 import { formatCurrency } from '../../dashboard/utils'
 import Tooltip from '../../ui/Tooltip'
+import CameraCaptureModal from '../../ui/CameraCaptureModal'
+import ImageFileInput from '../../ui/ImageFileInput'
 import PayoutStaffSelect from './PayoutStaffSelect'
 import { payoutMethodToUiKey, getStaffAvailablePayoutMethods, isStaffPayoutMethodAvailable, resolvePayoutStaffProfileId, sortPayoutMethodsCashLast } from '../../../utils/payoutDisplay'
 import { formatLocalDateIso } from '../../../utils/localDate'
@@ -208,8 +210,8 @@ export default function CreatePayoutModal({
   const [isUploading, setIsUploading] = useState(false)
   const [isDragOver, setIsDragOver] = useState(false)
   const [evidenceError, setEvidenceError] = useState<string | null>(null)
+  const [isEvidenceCameraOpen, setIsEvidenceCameraOpen] = useState(false)
   const [payoutStatus, setPayoutStatus] = useState<PayoutStatusValue>(PayoutStatus.Confirmed)
-  const fileInputRef = useRef<HTMLInputElement>(null)
   const formInitKeyRef = useRef('')
   const lastAutoSeededAmountRef = useRef('')
 
@@ -234,11 +236,13 @@ export default function CreatePayoutModal({
   const isSaving = createMutation.isPending || updateMutation.isPending || isUploading
   const maxEvidenceCount = Math.min(MAX_EVIDENCE_FILES, MAX_PAYOUT_EVIDENCE_URLS)
   const canAddEvidence = evidenceUrls.length < maxEvidenceCount && !isUploading
+  const remainingEvidenceCount = Math.max(0, maxEvidenceCount - evidenceUrls.length)
 
   useEffect(() => {
     if (!isOpen) {
       formInitKeyRef.current = ''
       lastAutoSeededAmountRef.current = ''
+      setIsEvidenceCameraOpen(false)
       return
     }
 
@@ -445,12 +449,6 @@ export default function CreatePayoutModal({
     } finally {
       setIsUploading(false)
     }
-  }
-
-  const openFilePicker = () => {
-    if (!canAddEvidence) return
-    setEvidenceError(null)
-    fileInputRef.current?.click()
   }
 
   const handleDragOver = (event: DragEvent<HTMLDivElement>) => {
@@ -786,47 +784,49 @@ export default function CreatePayoutModal({
                 {t('dashboard.tips.payouts_manager.evidence_title')}
               </p>
               <div
-                role="button"
-                tabIndex={canAddEvidence ? 0 : -1}
-                onClick={openFilePicker}
-                onKeyDown={(event) => {
-                  if (!canAddEvidence) return
-                  if (event.key === 'Enter' || event.key === ' ') {
-                    event.preventDefault()
-                    openFilePicker()
-                  }
-                }}
                 onDragEnter={handleDragEnter}
                 onDragOver={handleDragOver}
                 onDragLeave={handleDragLeave}
                 onDrop={handleDrop}
-                className={`flex flex-col items-center justify-center rounded-xl border-2 border-dashed px-4 py-8 text-center transition ${
-                  canAddEvidence ? 'cursor-pointer' : 'cursor-not-allowed opacity-60'
-                } ${
-                  evidenceError
-                    ? 'border-red-400 bg-red-50'
-                    : isDragOver
-                      ? 'border-nexoraBrand bg-nexoraBrand/10'
-                      : 'border-nexoraBorder bg-slate-50 hover:border-nexoraBrand/50'
+                className={`rounded-xl p-1 transition ${
+                  isDragOver ? 'bg-nexoraBrand/10 ring-2 ring-nexoraBrand/40' : ''
                 }`}
               >
-                <Upload className={`mb-2 h-8 w-8 ${isDragOver ? 'text-nexoraBrand' : 'text-mutedGrey'}`} />
-                <p className="text-sm font-bold text-inkBlue">{t('dashboard.tips.payouts_manager.evidence_drop')}</p>
-                <p className="mt-1 text-[11px] text-mutedGrey">
-                  {t('dashboard.tips.payouts_manager.evidence_hint', { max: MAX_EVIDENCE_FILES })}
-                </p>
-                <input
-                  ref={fileInputRef}
-                  type="file"
-                  accept="image/*"
-                  multiple
-                  className="hidden"
-                  disabled={!canAddEvidence}
-                  onChange={(e) => {
-                    if (e.target.files) void handleFiles(e.target.files)
-                    e.target.value = ''
-                  }}
-                />
+                <div className="grid grid-cols-2 gap-3">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      if (!canAddEvidence) return
+                      setEvidenceError(null)
+                      setIsEvidenceCameraOpen(true)
+                    }}
+                    disabled={!canAddEvidence}
+                    className="flex min-h-24 flex-col items-center justify-center gap-2 rounded-xl border-2 border-dashed border-nexoraBorder bg-slate-50 px-3 py-5 text-center transition hover:border-nexoraBrand/60 hover:bg-nexoraBrand/5 disabled:cursor-not-allowed disabled:opacity-60"
+                  >
+                    <Camera className="h-6 w-6 text-nexoraBrand" />
+                    <span className="text-xs font-bold text-inkBlue">{t('setup.take_photo')}</span>
+                  </button>
+                  <ImageFileInput
+                    as="label"
+                    onPickFile={(file) => void handleFiles([file])}
+                    disabled={!canAddEvidence}
+                    className={`flex min-h-24 flex-col items-center justify-center gap-2 rounded-xl border-2 border-dashed border-nexoraBorder bg-slate-50 px-3 py-5 text-center transition hover:border-nexoraBrand/60 hover:bg-nexoraBrand/5 ${
+                      canAddEvidence ? 'cursor-pointer' : 'cursor-not-allowed opacity-60'
+                    }`}
+                  >
+                    <FolderOpen className="h-6 w-6 text-nexoraBrand" />
+                    <span className="text-xs font-bold text-inkBlue">{t('setup.choose_file')}</span>
+                  </ImageFileInput>
+                </div>
+                <div className="mt-3 flex items-center justify-center gap-1.5 text-[11px] text-mutedGrey">
+                  <Upload className={`h-3.5 w-3.5 ${isDragOver ? 'text-nexoraBrand' : ''}`} />
+                  <span>{t('dashboard.tips.payouts_manager.evidence_drag_hint')}</span>
+                </div>
+                <div className="mt-3 space-y-1 text-[11px] leading-relaxed text-mutedGrey">
+                  <p>{t('dashboard.tips.payouts_manager.evidence_upload_helper')}</p>
+                  <p>{t('dashboard.tips.payouts_manager.evidence_remaining', { count: remainingEvidenceCount })}</p>
+                  <p>{t('dashboard.tips.payouts_manager.evidence_size_hint')}</p>
+                </div>
               </div>
               {evidenceError ? (
                 <p className="text-xs font-semibold text-red-600">{evidenceError}</p>
@@ -942,6 +942,13 @@ export default function CreatePayoutModal({
           </button>
         </div>
       </div>
+      <CameraCaptureModal
+        open={isEvidenceCameraOpen}
+        onClose={() => setIsEvidenceCameraOpen(false)}
+        onCapture={(file) => void handleFiles([file])}
+        title={t('dashboard.tips.payouts_manager.evidence_camera_title')}
+        hint={t('dashboard.tips.payouts_manager.evidence_camera_hint')}
+      />
     </div>
   )
 }

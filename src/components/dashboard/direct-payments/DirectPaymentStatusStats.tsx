@@ -25,7 +25,13 @@ function bucketHasData(bucket: { count: number; totalAmount: number }) {
   return bucket.count > 0 || bucket.totalAmount > 0
 }
 
-function StatsSkeleton({ showSummaryCards = true }: { showSummaryCards?: boolean }) {
+function StatsSkeleton({
+  showSummaryCards = true,
+  compactStatusCards = false,
+}: {
+  showSummaryCards?: boolean
+  compactStatusCards?: boolean
+}) {
   return (
     <div className="space-y-3 sm:space-y-4">
       {showSummaryCards ? (
@@ -35,9 +41,20 @@ function StatsSkeleton({ showSummaryCards = true }: { showSummaryCards?: boolean
           ))}
         </div>
       ) : null}
-      <div className="grid grid-cols-1 gap-2 sm:grid-cols-3">
+      <div
+        className={
+          compactStatusCards
+            ? 'grid grid-cols-2 gap-2.5 sm:grid-cols-3 sm:gap-2'
+            : 'grid grid-cols-1 gap-2 sm:grid-cols-3'
+        }
+      >
         {Array.from({ length: 3 }).map((_, index) => (
-          <div key={index} className="h-[140px] animate-pulse rounded-xl bg-nexoraBorder/50" />
+          <div
+            key={index}
+            className={`${compactStatusCards ? 'h-[112px] sm:h-[140px]' : 'h-[140px]'} ${
+              compactStatusCards && index === 2 ? 'col-span-2 sm:col-span-1' : ''
+            } animate-pulse rounded-xl bg-nexoraBorder/50`}
+          />
         ))}
       </div>
     </div>
@@ -66,7 +83,10 @@ export default function DirectPaymentStatusStats({
   if (isLoading && !stats) {
     return (
       <div className={showSummaryCards || statusCardMode !== 'volume' ? 'rounded-xl border border-nexoraBorder bg-nexoraCanvas/50 p-3 sm:p-4' : ''}>
-        <StatsSkeleton showSummaryCards={showSummaryCards} />
+        <StatsSkeleton
+          showSummaryCards={showSummaryCards}
+          compactStatusCards={statusCardMode === 'volume'}
+        />
       </div>
     )
   }
@@ -187,17 +207,19 @@ export default function DirectPaymentStatusStats({
         </>
       ) : null}
 
-      <div className={statusCardMode === 'volume' ? 'grid grid-cols-1 gap-5 sm:grid-cols-3' : 'grid grid-cols-1 gap-2 sm:grid-cols-3'}>
+      <div className={statusCardMode === 'volume' ? 'grid grid-cols-2 gap-2.5 sm:grid-cols-3 sm:gap-5' : 'grid grid-cols-1 gap-2 sm:grid-cols-3'}>
         {statusCardMode === 'volume'
           ? volumeStatusCards.map((card) => {
             const hasData = bucketHasData(card.bucket)
             return (
             <div
               key={card.key}
-              className="nexora-card flex min-h-[140px] flex-col justify-between border border-nexoraBorder bg-nexoraSurface p-5"
+              className={`nexora-card flex min-h-[112px] flex-col justify-between border border-nexoraBorder bg-nexoraSurface p-3 sm:min-h-[140px] sm:p-5 ${
+                card.key === 'completed' ? 'col-span-2 sm:col-span-1' : ''
+              }`}
             >
               <div>
-                <div className="text-[11px] font-black uppercase tracking-wider text-nexoraSubtle">
+                <div className="min-h-[2lh] text-[11px] font-black uppercase tracking-wider text-nexoraSubtle">
                   {card.label}
                 </div>
                 <div
