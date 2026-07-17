@@ -1,6 +1,6 @@
 import React, { useEffect, useMemo, useState } from 'react'
 import { normalizePhoneSearchTerm } from '../../CountryCodeSelect'
-import { formatVoicePhoneDisplay } from './bookingHubFormatters'
+import { BOOKING_HUB_EMPTY_CELL, BOOKING_HUB_PAGINATION_CLASSNAME, formatVoicePhoneDisplay } from './bookingHubFormatters'
 import { useTranslation } from '../../../contexts/LanguageContext'
 import { useNotification } from '../../../contexts/NotificationContext'
 import { getErrorI18nKey } from '../../../data/errorCodes'
@@ -159,9 +159,9 @@ function resolveSourceDisplay(
 
 /** BE sends UTC; display in the user's local timezone as `Jul 09, 2026, 05:21 AM`. */
 function formatLastVisit(value: string | null, language: string): string {
-  if (!value) return '_'
+  if (!value) return BOOKING_HUB_EMPTY_CELL
   const date = parseApiDateTime(value)
-  if (!date) return '_'
+  if (!date) return BOOKING_HUB_EMPTY_CELL
   const dateLocale = language === 'vi' ? 'vi-VN' : 'en-US'
   const timeZone = Intl.DateTimeFormat().resolvedOptions().timeZone
   return new Intl.DateTimeFormat(dateLocale, {
@@ -412,40 +412,42 @@ export default function BookingCustomersPanel() {
                       const isInactive = !isCustomerStatusActive(customer.status)
                       return (
                         <tr className="booking-table-row" key={customer.id}>
-                          <td>
+                          <td data-label={t(`${TK}.colCustomer`)}>
                             <div className="booking-customer-name">
-                              {customer.name || '_'}
+                              {customer.name || BOOKING_HUB_EMPTY_CELL}
                               {isInactive ? (
                                 <span className="badge badge-soft cust-inactive-tag">{t(`${TK}.inactiveTag`)}</span>
                               ) : null}
                             </div>
                           </td>
-                          <td>{(formatVoicePhoneDisplay(customer.phoneNumber, '_') ?? '_')}</td>
-                          <td>
+                          <td data-label={t(`${TK}.colPhone`)}>
+                            {(formatVoicePhoneDisplay(customer.phoneNumber, BOOKING_HUB_EMPTY_CELL) ?? BOOKING_HUB_EMPTY_CELL)}
+                          </td>
+                          <td data-label={t(`${TK}.colGroup`)}>
                             {segment ? (
                               <span className="badge seg-badge" style={{ '--seg': segment.color } as React.CSSProperties}>
                                 {segment.icon}
                                 <span>{t(`${TK}.${segment.labelKey}`)}</span>
                               </span>
-                            ) : '_'}
+                            ) : BOOKING_HUB_EMPTY_CELL}
                           </td>
-                          <td>
+                          <td data-label={t(`${TK}.colSource`)}>
                             {customer.source ? (
                               <span className="badge badge-soft">
                                 {source.icon}
                                 <span>{source.label}</span>
                               </span>
-                            ) : '_'}
+                            ) : BOOKING_HUB_EMPTY_CELL}
                           </td>
-                          <td>{customer.totalVisit ?? '_'}</td>
-                          <td>{formatLastVisit(customer.lastVisit, currentLanguage)}</td>
-                          <td>
+                          <td data-label={t(`${TK}.colVisits`)}>{customer.totalVisit ?? BOOKING_HUB_EMPTY_CELL}</td>
+                          <td data-label={t(`${TK}.colLastVisit`)}>{formatLastVisit(customer.lastVisit, currentLanguage)}</td>
+                          <td data-label={t(`${TK}.colAction`)}>
                             <div className="booking-actions">
                               <button
                                 className="booking-mini-button"
                                 type="button"
                                 title={t(`${TK}.editAction`)}
-                                aria-label={t(`${TK}.editAriaLabel`, { name: customer.name || '_' })}
+                                aria-label={t(`${TK}.editAriaLabel`, { name: customer.name || BOOKING_HUB_EMPTY_CELL })}
                                 onClick={() => openEditModal(customer)}
                               >
                                 <PencilIcon />
@@ -472,6 +474,7 @@ export default function BookingCustomersPanel() {
               hasPreviousPage={customersResponse?.hasPreviousPage}
               onPageChange={setPage}
               isLoading={isCustomersFetching}
+              className={BOOKING_HUB_PAGINATION_CLASSNAME}
             />
           ) : null}
         </article>

@@ -11,14 +11,18 @@ import {
 import {
   CallUiStatus,
   mapCallOutcomeToUiStatus,
-  mapCallUiStatusToApiGroup,
   type MerchantVoiceCallDto,
 } from "../../../data/repositories/merchantVoice";
 import { usePagination } from "../../../hooks/usePagination";
 import { getApiErrorCode } from "../../../types/domain";
 import { normalizePhoneSearchTerm } from "../../CountryCodeSelect";
 import {
+  BOOKING_HUB_EMPTY_CELL,
+  BOOKING_HUB_PAGINATION_CLASSNAME,
+  BOOKING_HUB_STATUS_FILTER_ALL,
   BOOKING_KPI_ACCENTS,
+  countPageItemsByStatus,
+  filterPageItemsByStatus,
   formatCallDurationSeconds,
   formatVoicePhoneDisplay,
   toLocalDateIso,
@@ -87,7 +91,7 @@ function formatCallTime(
   language: string,
 ): string {
   const date = parseApiDateTime(createdAt);
-  if (!date) return createdAt;
+  if (!date) return BOOKING_HUB_EMPTY_CELL;
 
   const timeZone = Intl.DateTimeFormat().resolvedOptions().timeZone;
   const dateLocale = language === "vi" ? "vi-VN" : "en-US";
@@ -120,19 +124,20 @@ function toCallItem(
   item: MerchantVoiceCallDto,
   todayLabel: string,
   yesterdayLabel: string,
-  unknownLabel: string,
   language: string,
 ): CallItem {
   const status = mapCallOutcomeToUiStatus(item.outcome);
-  const phoneDisplay = formatVoicePhoneDisplay(item.callerPhone, "") ?? "";
+  const phoneDisplay =
+    formatVoicePhoneDisplay(item.callerPhone, BOOKING_HUB_EMPTY_CELL) ??
+    BOOKING_HUB_EMPTY_CELL;
   return {
     id: item.id,
     time: formatCallTime(item.createdAt, todayLabel, yesterdayLabel, language),
-    name: item.callerName?.trim() || unknownLabel,
+    name: item.callerName?.trim() || BOOKING_HUB_EMPTY_CELL,
     phoneDisplay,
     status,
     durationSeconds: item.durationSeconds,
-    note: item.notes || "",
+    note: item.notes?.trim() || BOOKING_HUB_EMPTY_CELL,
     followUpSmsSentAt: item.followUpSmsSentAt,
     isNewCaller: item.isNewCaller,
     canFollowUp:
@@ -142,13 +147,21 @@ function toCallItem(
   };
 }
 
+function callDisplayName(call: Pick<CallItem, "name" | "phoneDisplay">): string {
+  if (call.name !== BOOKING_HUB_EMPTY_CELL) return call.name;
+  if (call.phoneDisplay !== BOOKING_HUB_EMPTY_CELL) return call.phoneDisplay;
+  return call.name;
+}
+
 export default function BookingCallLogPanel() {
   const { t, currentLanguage } = useTranslation();
   const { showToast } = useNotification();
   const voiceEnabled = useBookingHubVoiceEnabled();
 
   const [search, setSearch] = useState("");
-  const [statusFilter, setStatusFilter] = useState<CallStatus | "all">("all");
+  const [statusFilter, setStatusFilter] = useState<
+    CallStatus | typeof BOOKING_HUB_STATUS_FILTER_ALL
+  >(BOOKING_HUB_STATUS_FILTER_ALL);
   const [debouncedSearch, setDebouncedSearch] = useState("");
   const [pendingFollowUps, setPendingFollowUps] = useState<
     Record<string, boolean>
@@ -178,8 +191,6 @@ export default function BookingCallLogPanel() {
   }, [search, resetPage]);
 
   const searchTerm = normalizePhoneSearchTerm(debouncedSearch) || undefined;
-  const apiStatus =
-    statusFilter === "all" ? undefined : mapCallUiStatusToApiGroup(statusFilter);
 
   const { data: statistics, isLoading: isStatisticsLoading } =
     useMerchantVoiceCallStatistics({ enabled: voiceEnabled });
@@ -190,56 +201,39 @@ export default function BookingCallLogPanel() {
     isError: isCallsError,
     refetch: refetchCalls,
   } = useMerchantVoiceCalls(
-    { pageNumber, pageSize, searchTerm, status: apiStatus },
+    { pageNumber, pageSize, searchTerm },
     { enabled: voiceEnabled },
   );
   const sendFollowUpSmsMutation = useSendMerchantVoiceCallFollowUpSms();
 
   const isListLoading = isCallsLoading || isCallsFetching;
 
-  const unknownLabel = t(`${TK}.unknownCaller`);
   const todayLabel = t(`${TK}.todayLabel`);
   const yesterdayLabel = t(`${TK}.yesterdayLabel`);
 
   const calls = useMemo(
     () =>
       (callsResponse?.items ?? []).map((item) =>
-        toCallItem(
-          item,
-          todayLabel,
-          yesterdayLabel,
-          unknownLabel,
-          currentLanguage,
-        ),
+        toCallItem(item, todayLabel, yesterdayLabel, currentLanguage),
       ),
-    [
-      callsResponse?.items,
-      todayLabel,
-      yesterdayLabel,
-      unknownLabel,
-      currentLanguage,
-    ],
+    [callsResponse?.items, todayLabel, yesterdayLabel, currentLanguage],
   );
 
-  const statusCounts = useMemo(() => {
-    const all = statistics?.callsToday ?? callsResponse?.totalCount ?? calls.length;
-    const missed = statistics?.missedCallsNeedingFollowUp ?? 0;
-    const booked = statistics?.bookedToday ?? 0;
-    const answered = Math.max(0, all - missed - booked);
-    return {
-      all,
-      [CallUiStatus.Missed]: missed,
-      [CallUiStatus.Answered]: answered,
-      [CallUiStatus.Booked]: booked,
-    };
-  }, [statistics, callsResponse?.totalCount, calls.length]);
+  const statusCounts = useMemo(
+    () => countPageItemsByStatus(calls, STATUS_FILTER_ORDER),
+    [calls],
+  );
 
-  const visibleCalls = calls;
+  const visibleCalls = useMemo(
+    () => filterPageItemsByStatus(calls, statusFilter),
+    [calls, statusFilter],
+  );
 
-  const handleStatusFilterChange = (next: CallStatus | "all") => {
+  const handleStatusFilterChange = (
+    next: CallStatus | typeof BOOKING_HUB_STATUS_FILTER_ALL,
+  ) => {
     if (next === statusFilter) return;
     setStatusFilter(next);
-    resetPage();
   };
 
   const stats = useMemo(
@@ -258,8 +252,7 @@ export default function BookingCallLogPanel() {
     setPendingFollowUps((prev) => ({ ...prev, [call.id]: true }));
     try {
       const sent = await sendFollowUpSmsMutation.mutateAsync({ id: call.id });
-      const displayName =
-        call.name === unknownLabel ? call.phoneDisplay || call.name : call.name;
+      const displayName = callDisplayName(call);
       if (sent) {
         setSentFollowUpIds((prev) => ({ ...prev, [call.id]: true }));
         showToast(
@@ -278,10 +271,10 @@ export default function BookingCallLogPanel() {
 
   return (
     <div
-      className="booking-sub-panel is-active"
+      className="booking-sub-panel is-active panel-calllog"
       aria-busy={isStatisticsLoading || isListLoading}
     >
-      <div className="overview-kpis calllog-kpis">
+      <div className="overview-kpis calllog-kpis" data-call-stats>
         <article className="overview-card kpi-card" style={BOOKING_KPI_ACCENTS.electric}>
           <div className="kpi-top">
             <div className="kpi-icon">
@@ -370,14 +363,14 @@ export default function BookingCallLogPanel() {
             aria-label={t(`${TK}.statusFilterAria`)}
           >
             <button
-              className={`booking-status-chip ${statusFilter === "all" ? "is-active" : ""}`}
+              className={`booking-status-chip ${statusFilter === BOOKING_HUB_STATUS_FILTER_ALL ? "is-active" : ""}`}
               type="button"
-              aria-pressed={statusFilter === "all"}
-              onClick={() => handleStatusFilterChange("all")}
+              aria-pressed={statusFilter === BOOKING_HUB_STATUS_FILTER_ALL}
+              onClick={() => handleStatusFilterChange(BOOKING_HUB_STATUS_FILTER_ALL)}
             >
               <span>{t(`${TK}.filterAll`)}</span>
               <span className="booking-status-chip-count">
-                {statusCounts.all}
+                {statusCounts[BOOKING_HUB_STATUS_FILTER_ALL]}
               </span>
             </button>
             {STATUS_FILTER_ORDER.map((id) => {
@@ -401,7 +394,6 @@ export default function BookingCallLogPanel() {
           </div>
 
           <div className="booking-table-wrap">
-            <div className="booking-table-scroller">
               <table className="booking-table call-table">
                 <thead>
                   <tr>
@@ -451,8 +443,8 @@ export default function BookingCallLogPanel() {
                         call.canFollowUp && !sentFollowUpIds[call.id];
                       return (
                         <tr className="booking-table-row" key={call.id}>
-                          <td>{call.time}</td>
-                          <td>
+                          <td data-label={t(`${TK}.colTime`)}>{call.time}</td>
+                          <td data-label={t(`${TK}.colCaller`)}>
                             <div className="booking-customer-name">
                               {call.name}
                               {call.isNewCaller ? (
@@ -462,8 +454,10 @@ export default function BookingCallLogPanel() {
                               ) : null}
                             </div>
                           </td>
-                          <td>{call.phoneDisplay || "_"}</td>
-                          <td>
+                          <td data-label={t(`${TK}.colPhone`)}>
+                            {call.phoneDisplay}
+                          </td>
+                          <td data-label={t(`${TK}.colStatus`)}>
                             <span
                               className={`badge booking-status ${meta.badgeClass}`}
                             >
@@ -471,25 +465,25 @@ export default function BookingCallLogPanel() {
                               <span>{t(`${TK}.${meta.labelKey}`)}</span>
                             </span>
                           </td>
-                          <td>{formatCallDurationSeconds(call.durationSeconds)}</td>
-                          <td>
-                            <span className="call-note-cell">
-                              {call.note || "_"}
-                            </span>
+                          <td data-label={t(`${TK}.colDuration`)}>
+                            {formatCallDurationSeconds(
+                              call.durationSeconds,
+                              BOOKING_HUB_EMPTY_CELL,
+                            )}
                           </td>
-                          <td>
+                          <td data-label={t(`${TK}.colNotes`)}>
+                            <span className="call-note-cell">{call.note}</span>
+                          </td>
+                          <td data-label={t(`${TK}.colAction`)}>
                             <div className="booking-actions">
                               {showFollowUpSms ? (
                                 <button
-                                  className="booking-mini-button primary booking-sms-action"
+                                  className="booking-mini-button primary"
                                   type="button"
                                   disabled={isPending}
                                   title={t(`${TK}.followUpSms`)}
                                   aria-label={t(`${TK}.followUpSmsAriaLabel`, {
-                                    name:
-                                      call.name === unknownLabel
-                                        ? call.phoneDisplay || call.name
-                                        : call.name,
+                                    name: callDisplayName(call),
                                   })}
                                   onClick={() => handleFollowUpSms(call)}
                                 >
@@ -511,7 +505,6 @@ export default function BookingCallLogPanel() {
                   )}
                 </tbody>
               </table>
-            </div>
           </div>
 
           {!isListLoading && (callsResponse?.totalCount ?? 0) > 0 ? (
@@ -524,6 +517,7 @@ export default function BookingCallLogPanel() {
               hasPreviousPage={callsResponse?.hasPreviousPage}
               onPageChange={setPage}
               isLoading={isCallsFetching}
+              className={BOOKING_HUB_PAGINATION_CLASSNAME}
             />
           ) : null}
         </article>

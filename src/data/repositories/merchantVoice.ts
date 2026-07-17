@@ -8,6 +8,7 @@ import {
   MerchantVoiceDayOfWeekApiValue,
   MerchantVoiceLeadSource,
   MerchantVoiceLeadStatus,
+  MerchantVoiceListQueryParam,
   MerchantVoiceStaffActivityStatusApiValue,
   MerchantVoiceStaffStatus,
   MerchantVoiceCallOutcome,
@@ -48,6 +49,7 @@ export {
   MerchantVoiceLeadSourceApi,
   MerchantVoiceLeadStatus,
   MerchantVoiceLeadStatusApi,
+  MerchantVoiceListQueryParam,
   MerchantVoiceStaffActivityStatusApi,
   MerchantVoiceStaffStatus,
   MerchantVoiceUiLanguage,
@@ -547,6 +549,13 @@ function normalizeBookingDto(item: MerchantVoiceBookingDto): MerchantVoiceBookin
   }
 }
 
+function buildMerchantVoicePagingParams(pageNumber?: number, pageSize?: number) {
+  return {
+    [MerchantVoiceListQueryParam.PageNumber]: pageNumber ?? 1,
+    [MerchantVoiceListQueryParam.PageSize]: pageSize ?? BOOKING_HUB_PAGE_SIZE,
+  }
+}
+
 function normalizeBookingsResponse(
   response: MerchantVoiceBookingsApiResponse | MerchantVoiceBookingDto[],
   pageNumber = 1,
@@ -697,12 +706,11 @@ export function createMerchantVoiceRepository(client: HttpClient = httpClient) {
         {
           headers: MERCHANT_VOICE_HEADERS,
           params: {
-            pageNumber: filters.pageNumber ?? 1,
-            pageSize: filters.pageSize ?? BOOKING_HUB_PAGE_SIZE,
-            searchBy: filters.searchBy,
-            keyword: filters.keyword,
-            dateFrom: filters.dateFrom,
-            dateTo: filters.dateTo,
+            ...buildMerchantVoicePagingParams(filters.pageNumber, filters.pageSize),
+            [MerchantVoiceListQueryParam.SearchBy]: filters.searchBy,
+            [MerchantVoiceListQueryParam.Keyword]: filters.keyword,
+            [MerchantVoiceListQueryParam.DateFrom]: filters.dateFrom,
+            [MerchantVoiceListQueryParam.DateTo]: filters.dateTo,
           },
         },
       )
@@ -731,10 +739,9 @@ export function createMerchantVoiceRepository(client: HttpClient = httpClient) {
         {
           headers: MERCHANT_VOICE_HEADERS,
           params: {
-            pageNumber: filters.pageNumber ?? 1,
-            pageSize: filters.pageSize ?? BOOKING_HUB_PAGE_SIZE,
-            status: filters.status,
-            searchTerm: filters.searchTerm,
+            ...buildMerchantVoicePagingParams(filters.pageNumber, filters.pageSize),
+            [MerchantVoiceListQueryParam.Status]: filters.status,
+            [MerchantVoiceListQueryParam.SearchTerm]: filters.searchTerm,
           },
         },
       )
@@ -770,7 +777,8 @@ export function createMerchantVoiceRepository(client: HttpClient = httpClient) {
         {
           headers: MERCHANT_VOICE_HEADERS,
           params: {
-            searchTerm: filters.searchTerm?.trim() || undefined,
+            [MerchantVoiceListQueryParam.BusinessStaffSearchTerm]:
+              filters.searchTerm?.trim() || undefined,
           },
         },
       )
@@ -821,10 +829,9 @@ export function createMerchantVoiceRepository(client: HttpClient = httpClient) {
         {
           headers: MERCHANT_VOICE_HEADERS,
           params: {
-            pageNumber: filters.pageNumber ?? 1,
-            pageSize: filters.pageSize ?? BOOKING_HUB_PAGE_SIZE,
-            status: filters.status,
-            searchTerm: filters.searchTerm,
+            ...buildMerchantVoicePagingParams(filters.pageNumber, filters.pageSize),
+            [MerchantVoiceListQueryParam.Status]: filters.status,
+            [MerchantVoiceListQueryParam.SearchTerm]: filters.searchTerm,
           },
         },
       )
@@ -859,10 +866,9 @@ export function createMerchantVoiceRepository(client: HttpClient = httpClient) {
         {
           headers: MERCHANT_VOICE_HEADERS,
           params: {
-            pageNumber: filters.pageNumber ?? 1,
-            pageSize: filters.pageSize ?? BOOKING_HUB_PAGE_SIZE,
-            group: filters.group,
-            searchTerm: filters.searchTerm,
+            ...buildMerchantVoicePagingParams(filters.pageNumber, filters.pageSize),
+            [MerchantVoiceListQueryParam.Group]: filters.group,
+            [MerchantVoiceListQueryParam.SearchTerm]: filters.searchTerm,
           },
         },
       )

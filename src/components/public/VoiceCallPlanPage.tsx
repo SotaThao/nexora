@@ -2,14 +2,15 @@ import { CheckCircle2 } from 'lucide-react'
 import { useEffect, useState } from 'react'
 import { useSearchParams } from 'react-router-dom'
 import { useTranslation } from '../../contexts/LanguageContext'
-import { useNotification } from '../../contexts/NotificationContext'
 import {
   isVoiceCallTrialPackage,
+  VOICE_CALL_PLAN_COUNTDOWN_TICK_MS,
   VOICE_CALL_PLAN_SUCCESS_REDIRECT_MS,
+  VOICE_CALL_PLAN_SUCCESS_REDIRECT_SECONDS,
   VOICE_CALL_TRIAL_COPY_KEY,
   VoiceCallPlanRoute,
 } from '../../data/voiceTrial/domain'
-import { navigateToNexoraHome } from '../../utils/nexoraHomeUrl'
+import { getNexoraHomeUrl, navigateToNexoraHome } from '../../utils/nexoraHomeUrl'
 import BookingTrialModal from '../dashboard/views/BookingTrialModal'
 import '../dashboard/views/booking-hub.css'
 
@@ -20,17 +21,18 @@ enum VoiceCallPlanView {
 
 /**
  * Anonymous landing: `/voice-call/plan?package=trial`
- * White page + trial dialog. Close → home. Submit success → message, then home.
+ * White page + trial dialog. Close → home. Submit success → message + countdown, then home.
  */
 export default function VoiceCallPlanPage() {
   const { t } = useTranslation()
-  const { showToast } = useNotification()
   const [searchParams] = useSearchParams()
   const packageValue = searchParams.get(VoiceCallPlanRoute.packageQuery)
   const isTrialPackage = isVoiceCallTrialPackage(packageValue)
   const [view, setView] = useState(VoiceCallPlanView.Form)
+  const [secondsLeft, setSecondsLeft] = useState(VOICE_CALL_PLAN_SUCCESS_REDIRECT_SECONDS)
 
   const successMessage = t(`${VOICE_CALL_TRIAL_COPY_KEY}.submitSuccess`)
+  const homeUrl = getNexoraHomeUrl()
 
   useEffect(() => {
     if (!isTrialPackage) {
@@ -40,15 +42,25 @@ export default function VoiceCallPlanPage() {
 
   useEffect(() => {
     if (!isTrialPackage || view !== VoiceCallPlanView.Success) return undefined
-    const timerId = window.setTimeout(
+
+    setSecondsLeft(VOICE_CALL_PLAN_SUCCESS_REDIRECT_SECONDS)
+
+    const intervalId = window.setInterval(() => {
+      setSecondsLeft((prev) => Math.max(0, prev - 1))
+    }, VOICE_CALL_PLAN_COUNTDOWN_TICK_MS)
+
+    const timeoutId = window.setTimeout(
       navigateToNexoraHome,
       VOICE_CALL_PLAN_SUCCESS_REDIRECT_MS,
     )
-    return () => window.clearTimeout(timerId)
+
+    return () => {
+      window.clearInterval(intervalId)
+      window.clearTimeout(timeoutId)
+    }
   }, [isTrialPackage, view])
 
   const handleSubmitSuccess = () => {
-    showToast(successMessage, 'success', VOICE_CALL_PLAN_SUCCESS_REDIRECT_MS)
     setView(VoiceCallPlanView.Success)
   }
 
@@ -63,6 +75,22 @@ export default function VoiceCallPlanPage() {
           <CheckCircle2 className="h-14 w-14 text-emerald-500" aria-hidden />
           <p className="text-base font-bold leading-relaxed text-slate-900">
             {successMessage}
+          </p>
+          <p className="text-sm font-semibold leading-relaxed text-slate-600">
+            {t(`${VOICE_CALL_TRIAL_COPY_KEY}.autoRedirectBefore`)}
+            <a
+              href={homeUrl}
+              className="font-bold text-nexoraBrand underline underline-offset-2 hover:text-nexoraBrandDark"
+              onClick={(event) => {
+                event.preventDefault()
+                navigateToNexoraHome()
+              }}
+            >
+              {t(`${VOICE_CALL_TRIAL_COPY_KEY}.autoRedirectBrand`)}
+            </a>
+            {t(`${VOICE_CALL_TRIAL_COPY_KEY}.autoRedirectAfter`, {
+              seconds: secondsLeft,
+            })}
           </p>
         </div>
       </div>
