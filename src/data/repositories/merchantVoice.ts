@@ -121,6 +121,10 @@ export interface MerchantVoiceBookingDto {
   requestedStartAtUtc: string | null
   requestedEndAtUtc: string | null
   createdAt: string
+  /** UTC when the inbound voice call that created this booking started. */
+  callStartedAt: string | null
+  /** Voice call length in seconds (null for non-call sources). */
+  callDurationSeconds: number | null
 }
 
 export interface MerchantVoiceBookingsResponse {
@@ -531,10 +535,15 @@ function normalizeConfigResponse(response: unknown): MerchantVoiceConfigDto {
 }
 
 function normalizeBookingDto(item: MerchantVoiceBookingDto): MerchantVoiceBookingDto {
+  const duration =
+    item.callDurationSeconds == null ? null : Number(item.callDurationSeconds)
+
   return {
     ...item,
     source: normalizeMerchantVoiceLeadSource(item.source),
     status: normalizeMerchantVoiceLeadStatus(item.status),
+    callStartedAt: item.callStartedAt ?? null,
+    callDurationSeconds: duration != null && Number.isFinite(duration) ? duration : null,
   }
 }
 

@@ -90,7 +90,7 @@ const STATUS_FILTER_ORDER: CallStatus[] = [
 ];
 
 function formatDuration(seconds: number) {
-  if (!seconds) return "—";
+  if (!seconds) return "_";
   const minutes = Math.floor(seconds / 60);
   const rest = String(seconds % 60).padStart(2, "0");
   return `${minutes}:${rest}`;
@@ -178,7 +178,7 @@ function toCallItem(
     isNewCaller: item.isNewCaller,
     canFollowUp:
       status === CallUiStatus.Missed &&
-      item.followUpSmsSentAt == null &&
+      !item.followUpSmsSentAt &&
       Boolean(item.callerPhone?.trim()),
   };
 }
@@ -194,6 +194,10 @@ export default function BookingCallLogPanel() {
   const [pendingFollowUps, setPendingFollowUps] = useState<
     Record<string, boolean>
   >({});
+  /** Hide Follow-up SMS immediately after a successful send (no "Sent" tag). */
+  const [sentFollowUpIds, setSentFollowUpIds] = useState<Record<string, true>>(
+    {},
+  );
   const {
     pageNumber,
     pageSize,
@@ -293,6 +297,7 @@ export default function BookingCallLogPanel() {
       const displayName =
         call.name === unknownLabel ? call.phoneDisplay || call.name : call.name;
       if (sent) {
+        setSentFollowUpIds((prev) => ({ ...prev, [call.id]: true }));
         showToast(
           t(`${TK}.followUpSmsSuccess`, { name: displayName }),
           "success",
@@ -478,6 +483,8 @@ export default function BookingCallLogPanel() {
                     visibleCalls.map((call) => {
                       const meta = STATUS_META[call.status];
                       const isPending = Boolean(pendingFollowUps[call.id]);
+                      const showFollowUpSms =
+                        call.canFollowUp && !sentFollowUpIds[call.id];
                       return (
                         <tr className="booking-table-row" key={call.id}>
                           <td>{call.time}</td>
@@ -491,7 +498,7 @@ export default function BookingCallLogPanel() {
                               ) : null}
                             </div>
                           </td>
-                          <td>{call.phoneDisplay || "—"}</td>
+                          <td>{call.phoneDisplay || "_"}</td>
                           <td>
                             <span
                               className={`badge booking-status ${meta.badgeClass}`}
@@ -503,12 +510,12 @@ export default function BookingCallLogPanel() {
                           <td>{formatDuration(call.durationSeconds)}</td>
                           <td>
                             <span className="call-note-cell">
-                              {call.note || "—"}
+                              {call.note || "_"}
                             </span>
                           </td>
                           <td>
                             <div className="booking-actions">
-                              {call.canFollowUp ? (
+                              {showFollowUpSms ? (
                                 <button
                                   className="booking-mini-button primary booking-sms-action"
                                   type="button"
@@ -531,11 +538,6 @@ export default function BookingCallLogPanel() {
                                     {t(`${TK}.followUpSms`)}
                                   </span>
                                 </button>
-                              ) : call.status === CallUiStatus.Missed &&
-                                call.followUpSmsSentAt ? (
-                                <span className="badge badge-soft">
-                                  {t(`${TK}.followUpSmsSent`)}
-                                </span>
                               ) : null}
                             </div>
                           </td>

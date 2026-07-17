@@ -24,6 +24,7 @@ import { parseApiDateTime } from '../utils'
 import { usePagination } from '../../../hooks/usePagination'
 import { BOOKING_HUB_PAGE_SIZE } from '../../../constants/pagination'
 import {
+  CalendarEventIcon,
   CheckLgIcon,
   ClockHistoryIcon,
   FireIcon,
@@ -103,7 +104,7 @@ function isValidDateOfBirth(value: string, bounds = getDobBounds()): boolean {
 
 const SEGMENT_META: Record<CustomerUiSegment, { icon: React.ReactNode; color: string; labelKey: string }> = {
   [CustomerUiSegment.New]: { icon: <StarsIcon />, color: '#2b59ff', labelKey: 'segments.new' },
-  [CustomerUiSegment.Day15]: { icon: <ClockHistoryIcon />, color: '#00b873', labelKey: 'segments.day15' },
+  [CustomerUiSegment.Day15]: { icon: <CalendarEventIcon />, color: '#00b873', labelKey: 'segments.day15' },
   [CustomerUiSegment.Day30]: { icon: <ClockHistoryIcon />, color: '#7c3aed', labelKey: 'segments.day30' },
   [CustomerUiSegment.Day60]: { icon: <FireIcon />, color: '#f59e0b', labelKey: 'segments.day60' },
   [CustomerUiSegment.Vip]: { icon: <GemIcon />, color: '#db2777', labelKey: 'segments.vip' },
@@ -143,7 +144,7 @@ function resolveSourceDisplay(source: string | null, t: (key: string) => string)
 
 function formatCustomerPhoneDisplay(phone: string | null | undefined): string {
   const raw = phone?.trim()
-  if (!raw) return '—'
+  if (!raw) return '_'
 
   const parsed = parsePhone(raw)
   if (isValidPhoneE164(raw, parsed.countryCode)) {
@@ -156,13 +157,22 @@ function formatCustomerPhoneDisplay(phone: string | null | undefined): string {
   return raw
 }
 
+/** BE sends UTC; display in the user's local timezone as `Jul 09, 2026, 05:21 AM`. */
 function formatLastVisit(value: string | null, language: string): string {
-  if (!value) return '—'
+  if (!value) return '_'
   const date = parseApiDateTime(value)
-  if (!date) return '—'
+  if (!date) return '_'
   const dateLocale = language === 'vi' ? 'vi-VN' : 'en-US'
   const timeZone = Intl.DateTimeFormat().resolvedOptions().timeZone
-  return new Intl.DateTimeFormat(dateLocale, { month: 'short', day: 'numeric', year: 'numeric', timeZone }).format(date)
+  return new Intl.DateTimeFormat(dateLocale, {
+    month: 'short',
+    day: '2-digit',
+    year: 'numeric',
+    hour: '2-digit',
+    minute: '2-digit',
+    hour12: true,
+    timeZone,
+  }).format(date)
 }
 
 function toDraft(customer: MerchantVoiceCustomerDto): CustomerDraft {
@@ -417,15 +427,17 @@ export default function BookingCustomersPanel() {
                                 {segment.icon}
                                 <span>{t(`${TK}.${segment.labelKey}`)}</span>
                               </span>
-                            ) : '—'}
+                            ) : '_'}
                           </td>
                           <td>
-                            <span className="badge badge-soft">
-                              {source.icon}
-                              <span>{source.label}</span>
-                            </span>
+                            {customer.source ? (
+                              <span className="badge badge-soft">
+                                {source.icon}
+                                <span>{source.label}</span>
+                              </span>
+                            ) : '_'}
                           </td>
-                          <td>{customer.totalVisit}</td>
+                          <td>{customer.totalVisit ?? '_'}</td>
                           <td>{formatLastVisit(customer.lastVisit, currentLanguage)}</td>
                           <td>
                             <div className="booking-actions">
@@ -466,13 +478,12 @@ export default function BookingCustomersPanel() {
       </div>
 
       {editingCustomer && draft ? (
-        <div className="cust-modal-overlay" role="presentation" onClick={closeEditModal}>
+        <div className="cust-modal-overlay" role="presentation">
           <div
             className="cust-modal"
             role="dialog"
             aria-modal="true"
             aria-labelledby="cust-modal-title"
-            onClick={(event) => event.stopPropagation()}
           >
             <div className="cust-modal-head">
               <h3 id="cust-modal-title">{t(`${TK}.modalTitle`)}</h3>
