@@ -2497,7 +2497,7 @@
             "syncNote": "Every channel lands in one book"
           },
           "kpi": {
-            "todayBookings": "Today's appointments",
+            "todayBookings": "Appointments",
             "completed": "Completed",
             "noShow": "No-show",
             "channels": "Voice · Landing Page · SMS · QR",

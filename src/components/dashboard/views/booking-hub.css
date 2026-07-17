@@ -5787,11 +5787,14 @@
 @container booking-panel (max-width: 640px) {
   .booking-hub-view .booking-controls {
     grid-template-columns: minmax(0, 1fr);
+    gap: 12px;
+    padding: 12px;
   }
 
   .booking-hub-view .booking-date-range {
     grid-column: auto;
     grid-template-columns: minmax(0, 1fr);
+    gap: 12px;
   }
 
   .booking-hub-view .booking-clear-button {
@@ -5809,8 +5812,52 @@
     justify-content: center;
   }
 
+  .booking-hub-view .booking-control-label {
+    font-size: 10px;
+  }
+
+  .booking-hub-view .booking-status-chips {
+    gap: 8px;
+  }
+
+  .booking-hub-view .booking-status-chip {
+    padding: 5px 10px;
+    font-size: 10px;
+  }
+
+  .booking-hub-view .booking-table-mobile-list {
+    gap: 12px;
+    border: 0;
+    border-radius: 0;
+    background: transparent;
+    overflow: visible;
+  }
+
+  .booking-hub-view .booking-table-mobile-row {
+    gap: 12px;
+    padding: 16px 14px;
+    border: 1px solid var(--nexora-border);
+    border-radius: 12px;
+    background: #fff;
+    box-shadow: 0 8px 22px rgba(15, 23, 42, 0.04);
+  }
+
+  .booking-hub-view .booking-table-mobile-row:first-child {
+    border-top: 1px solid var(--nexora-border);
+  }
+
+  .booking-hub-view .booking-table-mobile-fields {
+    gap: 12px 16px;
+  }
+
   .booking-hub-view .booking-card-list {
     grid-template-columns: minmax(0, 1fr);
+    gap: 14px;
+  }
+
+  .booking-hub-view .booking-appointment-card {
+    gap: 14px;
+    padding: 16px;
   }
 }
 
@@ -6040,21 +6087,47 @@
 
   .booking-hub-view .booking-controls {
     grid-template-columns: minmax(0, 1fr);
+    gap: 12px;
+    padding: 12px;
+    margin-bottom: 16px;
   }
 
   .booking-hub-view .booking-date-range {
     grid-template-columns: minmax(0, 1fr);
+    gap: 12px;
   }
 
   .booking-hub-view .booking-clear-button {
     width: 100%;
+    min-height: 40px;
+    font-size: 12px;
+  }
+
+  .booking-hub-view .booking-control-label {
+    font-size: 10px;
+    letter-spacing: 0.03em;
+  }
+
+  /*
+   * Global mobile rule forces all inputs/selects to 16px (iOS anti-zoom).
+   * Booking filters should stay closer to the 12px desktop design; keep date
+   * inputs at 16px so the native picker does not trigger page zoom.
+   */
+  .booking-hub-view .booking-controls .booking-select,
+  .booking-hub-view .booking-controls .booking-input:not(.booking-input-date) {
+    height: 40px;
+    min-height: 40px;
+    font-size: 13px !important;
+    font-weight: 600;
+    letter-spacing: -0.01em;
   }
 
   .booking-hub-view .booking-input-date {
     height: 44px;
     min-height: 44px;
     /* ≥16px on the focused control avoids iOS zoom; placeholder stays design-sized */
-    font-size: 16px;
+    font-size: 16px !important;
+    font-weight: 600;
   }
 
   .booking-hub-view .booking-date-input-shell {
@@ -6073,8 +6146,74 @@
 
   .booking-hub-view .booking-input::placeholder,
   .booking-hub-view .booking-select::placeholder {
-    font-size: 12px;
+    font-size: 12px !important;
     font-weight: 600;
+  }
+
+  .booking-hub-view .booking-status-chips {
+    gap: 8px;
+    margin-bottom: 16px;
+  }
+
+  .booking-hub-view .booking-status-chip {
+    padding: 5px 10px;
+    font-size: 10px;
+    gap: 5px;
+  }
+
+  .booking-hub-view .booking-status-chip-count {
+    min-width: 18px;
+    height: 16px;
+    padding: 0 5px;
+    font-size: 10px;
+  }
+
+  /* Today list: spaced card stack instead of tight stacked rows */
+  .booking-hub-view .booking-table-mobile-list {
+    gap: 12px;
+    border: 0;
+    border-radius: 0;
+    background: transparent;
+    overflow: visible;
+  }
+
+  .booking-hub-view .booking-table-mobile-row {
+    gap: 12px;
+    padding: 16px 14px;
+    border: 1px solid var(--nexora-border);
+    border-radius: 12px;
+    background: #fff;
+    box-shadow: 0 8px 22px rgba(15, 23, 42, 0.04);
+  }
+
+  .booking-hub-view .booking-table-mobile-row:first-child {
+    border-top: 1px solid var(--nexora-border);
+  }
+
+  .booking-hub-view .booking-table-mobile-fields {
+    gap: 12px 16px;
+  }
+
+  .booking-hub-view .booking-table-mobile-field {
+    gap: 6px;
+  }
+
+  .booking-hub-view .booking-table-mobile-label {
+    font-size: 10px;
+  }
+
+  .booking-hub-view .booking-table-mobile-value {
+    font-size: 13px;
+    line-height: 1.45;
+  }
+
+  .booking-hub-view .booking-card-list {
+    gap: 14px;
+  }
+
+  .booking-hub-view .booking-appointment-card {
+    gap: 14px;
+    padding: 16px;
   }
 
   .booking-hub-view .booking-actions {
@@ -6083,7 +6222,8 @@
 
   .booking-hub-view .booking-card-info-list {
     grid-template-columns: repeat(2, minmax(0, 1fr));
-    gap: 8px 12px;
+    gap: 12px 14px;
+    padding-top: 12px;
   }
 
   .booking-hub-view .booking-detail-hero {
@@ -6225,14 +6365,22 @@
   }
 
   .booking-hub-view .booking-status-chips {
-    gap: 6px;
+    gap: 8px;
   }
 
   .booking-hub-view .booking-status-chip {
     flex: 0 0 auto;
     width: auto;
-    padding: 6px 11px;
-    font-size: 11px;
+    padding: 5px 10px;
+    font-size: 10px;
+    gap: 5px;
+  }
+
+  .booking-hub-view .booking-status-chip-count {
+    min-width: 18px;
+    height: 16px;
+    padding: 0 5px;
+    font-size: 10px;
   }
 }
 

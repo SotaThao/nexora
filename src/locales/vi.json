@@ -2497,7 +2497,7 @@
             "syncNote": "Mọi kênh đổ về một sổ lịch"
           },
           "kpi": {
-            "todayBookings": "Hẹn Hôm Nay",
+            "todayBookings": "Lịch hẹn",
             "completed": "Đã Xong",
             "noShow": "Không đến",
             "channels": "Voice · Trang đặt lịch · SMS · QR",
