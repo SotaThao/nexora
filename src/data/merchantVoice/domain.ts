@@ -28,7 +28,7 @@ export enum BookingHubSubTab {
 }
 
 /** Poll interval when Booking Hub Today tab is active. */
-export const MERCHANT_VOICE_BOOKINGS_POLL_INTERVAL_MS = 15_000
+export const MERCHANT_VOICE_BOOKINGS_POLL_INTERVAL_MS = 30_000
 
 /** Minimum service duration (minutes) in Booking Hub settings. */
 export const MERCHANT_VOICE_SERVICE_MIN_DURATION_MINUTES = 1

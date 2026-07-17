@@ -563,8 +563,11 @@ export default function BookingTodayPanel() {
           ? t(`${TK}.today.keywordPlaceholderService`)
           : t(`${TK}.today.keywordPlaceholderAll`)
 
-  const { data: statistics, isLoading: isStatisticsLoading } = useMerchantVoiceBookingStatistics({ enabled: voiceEnabled })
-  const { data: bookingResponse, isLoading: isBookingsLoading, isFetching: isBookingsFetching } = useMerchantVoiceBookings({
+  const { data: statistics, isLoading: isStatisticsLoading } = useMerchantVoiceBookingStatistics({
+    enabled: voiceEnabled,
+    refetchInterval: voiceEnabled ? MERCHANT_VOICE_BOOKINGS_POLL_INTERVAL_MS : false,
+  })
+  const { data: bookingResponse, isLoading: isBookingsLoading } = useMerchantVoiceBookings({
     pageNumber,
     pageSize,
     searchBy: apiSearchField,
@@ -575,7 +578,8 @@ export default function BookingTodayPanel() {
   const updateBookingStatusMutation = useUpdateMerchantVoiceBookingStatus()
   const sendConfirmationSmsMutation = useSendMerchantVoiceBookingConfirmationSms()
 
-  const isListLoading = isBookingsLoading || isBookingsFetching
+  // Initial load only — background poll uses isFetching and must not flash skeletons
+  const isListLoading = isBookingsLoading
 
   const mappedBookings = useMemo(() => (
     (bookingResponse?.items ?? []).map((item) =>
@@ -1132,7 +1136,7 @@ export default function BookingTodayPanel() {
               hasNextPage={bookingResponse?.hasNextPage}
               hasPreviousPage={bookingResponse?.hasPreviousPage}
               onPageChange={setPage}
-              isLoading={isBookingsFetching}
+              isLoading={isBookingsLoading}
               className={BOOKING_HUB_PAGINATION_CLASSNAME}
             />
           ) : null}
