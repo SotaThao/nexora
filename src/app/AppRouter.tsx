@@ -33,6 +33,7 @@ import RequireAuth from "./RequireAuth";
 import RequireOnboarded from "./RequireOnboarded";
 import RequireStaffReady from "./RequireStaffReady";
 import RootRedirect from "./RootRedirect";
+import { VoiceCallPlanRoute } from "../data/voiceTrial/domain";
 
 const SetupWizard = lazyWithRetry(() => import("../components/SetupWizard"));
 const DashboardOwnerShell = lazyWithRetry(
@@ -102,6 +103,9 @@ const TermsOfServicePage = lazyWithRetry(
 );
 const HelpQrPage = lazyWithRetry(
   () => import("../components/public/HelpQrPage"),
+);
+const VoiceCallPlanPage = lazyWithRetry(
+  () => import("../components/public/VoiceCallPlanPage"),
 );
 
 // Bridges the URL (path token / legacy ?flow=staff-invite biz) to the wizard's
@@ -191,6 +195,10 @@ export default function AppRouter() {
           <Route path="/help/qr/:code" element={<HelpQrPage />} />
           <Route path="/privacy-policy" element={<PrivacyPolicyPage />} />
           <Route path="/terms-of-service" element={<TermsOfServicePage />} />
+          <Route
+            path={VoiceCallPlanRoute.path}
+            element={<VoiceCallPlanPage />}
+          />
           <Route path="/invite" element={<InviteRoute />} />
           <Route path="/invite/:token" element={<InviteRoute />} />
           <Route
