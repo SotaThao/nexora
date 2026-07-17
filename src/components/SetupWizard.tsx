@@ -318,6 +318,7 @@ export default function SetupWizard() {
         staffName={businessInfo.name || 'Business Name'}
         initialValue={tempPayoutValues.value}
         initialQrCode={tempPayoutValues.qrCode}
+        initialAccountName={tempPayoutValues.accountName || ''}
         onClose={() => setPayoutSetupOpen(false)}
         onSubmit={handlePayoutSubmit}
       />

@@ -323,6 +323,7 @@ export interface StaffPaymentMethodApiDto {
   type?: string
   isActive?: boolean
   accountInfo?: string | null
+  accountName?: string | null
   imageUrl?: string | null
 }
 
@@ -776,7 +777,7 @@ export interface JoinPublicInviteDto {
 export interface PersonalOnboardingInput {
   accountData: LooseObject
   paymentAccounts: LooseObject
-  payoutConfigs: Record<string, { enabled?: boolean; value?: string }>
+  payoutConfigs: Record<string, { enabled?: boolean; value?: string; accountName?: string }>
 }
 
 export interface PayoutConfigMap {

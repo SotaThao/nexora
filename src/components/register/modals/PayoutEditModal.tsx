@@ -5,6 +5,7 @@ import { PayoutLogos } from '../constants'
 import ImageFileInput from '../../ui/ImageFileInput'
 import BankWireAccountForm from '../../payout/BankWireAccountForm'
 import PayoutAccountIdentifierInput from '../../payout/PayoutAccountIdentifierInput'
+import PayoutAccountNameField from '../../payout/PayoutAccountNameField'
 import { formatPayoutPhoneDisplay } from '../../payout/payoutPhone'
 import CameraCapture from '../../ui/CameraCapture'
 
@@ -109,6 +110,14 @@ export default function PayoutEditModal({
             />
             {modalError && <p className="mt-1 text-[10px] font-bold text-rose-500">{modalError}</p>}
           </div>
+          )}
+
+          {!isBankWire && (
+            <PayoutAccountNameField
+              walletKey={editingMethod}
+              value={editAccountName}
+              onChange={setEditAccountName}
+            />
           )}
 
           {/* QR Code Optional Upload */}

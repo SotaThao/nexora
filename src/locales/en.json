@@ -2089,6 +2089,10 @@
       }
     },
     "payout": {
+      "accountNameField": {
+        "label": "Account Holder Name (Optional)",
+        "placeholder": "e.g. Anna Smith"
+      },
       "bankWireForm": {
         "title": "Set Up Bank Account",
         "beneficiaryName": "Beneficiary Name",

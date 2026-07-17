@@ -484,6 +484,7 @@ function AddManualStaffTab({
         staffName={displayNickname || fullName}
         initialValue={editingConfig?.value || ''}
         initialQrCode={editingConfig?.qrCode || ''}
+        initialAccountName={editingConfig?.accountName || ''}
         onClose={() => setEditingWalletKey(null)}
         onSubmit={handlePayoutSubmit}
       />
