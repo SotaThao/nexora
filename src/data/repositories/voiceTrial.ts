@@ -2,6 +2,7 @@ import httpClient from '../../lib/httpClient'
 import { isApiError } from '../../types/domain'
 import type {
   SubmitVoiceTrialRequest,
+  SubmitVoiceTrialRequestOptions,
   SubmitVoiceTrialRequestResponse,
   VoiceTrialRequestDetailDto,
 } from '../voiceTrial/domain'
@@ -17,7 +18,7 @@ export function createVoiceTrialRepository(client: HttpClient = httpClient) {
   return {
     async submitTrialRequest(
       body: SubmitVoiceTrialRequest,
-      { anonymous = false }: { anonymous?: boolean } = {},
+      { anonymous = false }: SubmitVoiceTrialRequestOptions = {},
     ): Promise<SubmitVoiceTrialRequestResponse> {
       const result = await client.post<SubmitVoiceTrialRequestResponse>(
         '/api/v1/nexora-voice/trial-requests',

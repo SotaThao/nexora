@@ -24,8 +24,8 @@ export const VoiceCallPlanRoute = {
 export const VOICE_CALL_TRIAL_COPY_KEY =
   'components.dashboard.views.BookingHubView.plans.trial' as const
 
-/** Wait so success message is readable before leaving the public trial landing. */
-export const VOICE_CALL_PLAN_SUCCESS_REDIRECT_MS = 3500
+/** Wait so success toast/message is readable before leaving the public trial landing. */
+export const VOICE_CALL_PLAN_SUCCESS_REDIRECT_MS = 6000
 
 export function isVoiceCallTrialPackage(value: string | null | undefined): boolean {
   return value === VoiceCallPlanPackage.Trial
@@ -44,6 +44,10 @@ export interface SubmitVoiceTrialRequest {
   serviceHoursTo: string
   biggestProblem: string
   referralCode?: string | null
+}
+
+export type SubmitVoiceTrialRequestOptions = {
+  anonymous?: boolean
 }
 
 export type SubmitVoiceTrialRequestResponse = string

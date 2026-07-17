@@ -1,9 +1,14 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { qk } from '../queryKeys'
-import type { SubmitVoiceTrialRequest } from '../voiceTrial/domain'
+import type {
+  SubmitVoiceTrialRequest,
+  SubmitVoiceTrialRequestOptions,
+} from '../voiceTrial/domain'
 import { voiceTrialRepository } from '../repositories/voiceTrial'
 
-export function useSubmitVoiceTrialRequest({ anonymous = false } = {}) {
+export function useSubmitVoiceTrialRequest(
+  { anonymous = false }: SubmitVoiceTrialRequestOptions = {},
+) {
   const queryClient = useQueryClient()
 
   return useMutation({
