@@ -1115,6 +1115,8 @@
         "col_method": "Phương thức",
         "col_types": "Loại",
         "col_period": "Kỳ thanh toán",
+        "card_coverage": "Kỳ áp dụng",
+        "card_payout_to": "Nhận qua",
         "col_evidence": "Bằng chứng",
         "col_status": "Trạng thái",
         "col_actions": "Chi tiết",

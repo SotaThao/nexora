@@ -47,73 +47,87 @@ export default function PayoutList({
           return (
             <article
               key={row.id}
-              className="space-y-3 p-3.5 transition hover:bg-slate-50/80"
+              className="space-y-3 p-4 transition hover:bg-slate-50/80"
             >
-            <div className="flex items-start justify-between gap-3">
-              <div className="min-w-0">
-                <p className="text-[1.55rem] font-black leading-none text-inkBlue">{formatCurrency(row.amount)}</p>
-                <p className="mt-1 font-mono text-[11px] font-bold text-nexoraBrand">{row.payoutCode}</p>
-                <p className="mt-0.5 text-[11px] font-semibold text-[#5f6d82]">
-                  {formatTransactionDateTime(row.createdAt, currentLanguage)}
-                </p>
+              <div className="flex items-center justify-between gap-2">
+                <p className="text-lg font-black text-inkBlue">{formatCurrency(row.amount)}</p>
+                <PayoutStatusBadge status={row.status} className="shrink-0" />
               </div>
-              <PayoutStatusBadge status={row.status} className="shrink-0" />
-            </div>
 
-            <div className="flex items-center gap-3">
-              {row.staffPhotoUrl ? (
-                <img src={row.staffPhotoUrl} alt="" className="h-9 w-9 shrink-0 rounded-full object-cover" />
-              ) : (
-                <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-nexoraBrand text-[11px] font-black text-white">
-                  {staffInitials(row.staffDisplayName)}
-                </span>
-              )}
-              <div className="min-w-0">
-                <p className="truncate text-[15px] font-bold leading-tight text-inkBlue">{row.staffDisplayName}</p>
-                <p className="mt-0.5 text-xs text-[#5f6d82]">{row.staffCode}</p>
+              <div className="flex min-w-0 items-center gap-2 rounded-xl border border-nexoraBorder/70 bg-slate-50 p-3">
+                {row.staffPhotoUrl ? (
+                  <img src={row.staffPhotoUrl} alt="" className="h-9 w-9 shrink-0 rounded-full object-cover" />
+                ) : (
+                  <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-nexoraBrand text-[11px] font-black text-white">
+                    {staffInitials(row.staffDisplayName)}
+                  </span>
+                )}
+                <div className="min-w-0 flex-1">
+                  <p className="truncate text-sm font-bold leading-tight text-inkBlue">{row.staffDisplayName}</p>
+                  <p className="mt-0.5 text-xs text-[#5f6d82]">{row.staffCode}</p>
+                </div>
+                <div className="shrink-0 text-right">
+                  <p className="font-mono text-[11px] font-bold text-nexoraBrand">{row.payoutCode}</p>
+                  <p className="mt-0.5 text-[11px] font-semibold text-[#5f6d82]">
+                    {formatTransactionDateTime(row.createdAt, currentLanguage)}
+                  </p>
+                </div>
               </div>
-            </div>
 
-            <div className="flex flex-wrap items-center gap-2.5">
-              <PayoutMethodBadge method={row.payoutMethodType} />
-              {getPayoutTypeI18nKeys(row.payoutTypes).map((key) => (
-                <span
-                  key={key}
-                  className="rounded-md border border-nexoraBorder bg-slate-50 px-1.5 py-0.5 text-[11px] font-bold leading-none"
+              <div className="grid grid-cols-[minmax(0,1.35fr)_minmax(7rem,0.65fr)]">
+                <div className="min-w-0 pr-3">
+                  <p className="text-[9px] font-black uppercase tracking-wider text-nexoraSubtle">
+                    {t('dashboard.tips.payouts_manager.card_coverage')}
+                  </p>
+                  <p className="mt-1 text-xs font-semibold text-[#5f6d82]">
+                    {formatPayoutPeriodRange(row.periodStart, row.periodEnd, currentLanguage)}
+                  </p>
+                  <div className="mt-2 flex flex-wrap gap-1">
+                    {getPayoutTypeI18nKeys(row.payoutTypes).map((key) => (
+                      <span
+                        key={key}
+                        className="rounded-md border border-nexoraBorder bg-slate-50 px-1.5 py-0.5 text-[10px] font-bold"
+                      >
+                        {t(key)}
+                      </span>
+                    ))}
+                  </div>
+                </div>
+
+                <div className="min-w-0 border-l border-nexoraBorder pl-3">
+                  <p className="text-[9px] font-black uppercase tracking-wider text-nexoraSubtle">
+                    {t('dashboard.tips.payouts_manager.card_payout_to')}
+                  </p>
+                  <div className="mt-2">
+                    <PayoutMethodBadge method={row.payoutMethodType} />
+                  </div>
+                </div>
+              </div>
+
+              {hasEvidence ? (
+                <button
+                  type="button"
+                  onClick={() => onSelectPayout(row.id)}
+                  className="inline-flex h-9 w-full items-center justify-center gap-2 rounded-lg border border-nexoraBorder bg-white px-3 text-xs font-bold text-nexoraMuted transition hover:border-nexoraBrand/40 hover:bg-nexoraBrand/5 hover:text-nexoraBrand"
                 >
-                  {t(key)}
-                </span>
-              ))}
-            </div>
+                  <FileImage className="h-4 w-4 shrink-0" />
+                  <span>{t('dashboard.tips.payouts_manager.evidence_count', { count: row.evidenceCount })}</span>
+                </button>
+              ) : null}
 
-            <div className={`flex justify-between gap-3 ${hasEvidence ? 'items-end pt-1' : 'items-center pt-0.5'}`}>
-              <div className="min-w-0">
-                <p className="text-[13px] text-[#5f6d82]">
-                  {formatPayoutPeriodRange(row.periodStart, row.periodEnd, currentLanguage)}
-                </p>
-                {hasEvidence ? (
-                  <button
-                    type="button"
-                    onClick={() => onSelectPayout(row.id)}
-                    className="mt-1 inline-flex items-center gap-1 text-[11px] font-bold text-nexoraBrand"
-                  >
-                    <FileImage className="h-3.5 w-3.5" />
-                    {t('dashboard.tips.payouts_manager.evidence_count', { count: row.evidenceCount })}
-                  </button>
-                ) : null}
+              <div className="border-t border-nexoraBorder/60 pt-3">
+                <button
+                  type="button"
+                  onClick={() => onSelectPayout(row.id)}
+                  title={t('common.view_detail')}
+                  aria-label={t('common.view_detail')}
+                  className="inline-flex h-10 w-full items-center justify-center gap-2 whitespace-nowrap rounded-lg border border-nexoraBorder bg-white px-3 text-xs font-bold text-inkBlue transition hover:border-nexoraBrand/40 hover:bg-nexoraBrand/5"
+                >
+                  <Eye className="h-4 w-4 shrink-0" />
+                  <span>{t('common.view_detail')}</span>
+                </button>
               </div>
-
-              <button
-                type="button"
-                onClick={() => onSelectPayout(row.id)}
-                title={t('common.view_detail')}
-                aria-label={t('common.view_detail')}
-                className="inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-lg border border-nexoraBorder bg-white text-inkBlue transition hover:border-nexoraBrand/40 hover:bg-nexoraBrand/5"
-              >
-                <Eye className="h-4 w-4" />
-              </button>
-            </div>
-          </article>
+            </article>
           )
         })}
       </div>
@@ -209,9 +223,10 @@ export default function PayoutList({
                     onClick={() => onSelectPayout(row.id)}
                     title={t('common.view_detail')}
                     aria-label={t('common.view_detail')}
-                    className="inline-flex h-9 w-9 items-center justify-center rounded-lg border border-nexoraBorder bg-white text-inkBlue transition hover:border-nexoraBrand/40 hover:bg-nexoraBrand/5"
+                    className="inline-flex h-9 items-center justify-center gap-1.5 whitespace-nowrap rounded-lg border border-nexoraBorder bg-white px-3 text-xs font-bold text-inkBlue transition hover:border-nexoraBrand/40 hover:bg-nexoraBrand/5"
                   >
-                    <Eye className="h-4 w-4" />
+                    <Eye className="h-4 w-4 shrink-0" />
+                    <span>{t('common.view_detail')}</span>
                   </button>
                 </td>
               </tr>
