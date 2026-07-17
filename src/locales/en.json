@@ -521,7 +521,7 @@
     "staff_directory_empty": "No technicians added yet. Please fill the form on the left.",
     "qr_touchpoints_title": "QR Stations Directory",
     "qr_touchpoints_desc": "QR codes placed at service tables, reception desk, or receipts.",
-    "qr_touchpoints_explainer": "A station is a customer service location in your shop, such as a chair, table, or counter. Each station gets its own QR code.",
+    "qr_touchpoints_explainer": "A station is a customer service location such as a chair, table, or counter. Select its type and the system will create the station and QR code automatically.",
     "tp_name": "Station Name *",
     "tp_name_placeholder": "e.g., Service Chair 01...",
     "tp_type": "Station Type",
@@ -530,16 +530,6 @@
     "tp_type_receipt": "Receipt point",
     "tp_type_business_main": "Main business station",
     "tp_type_staff": "Staff QR",
-    "tp_name_placeholder_table": "e.g., Table 01 or Chair 05",
-    "tp_name_placeholder_counter": "e.g., Front Counter",
-    "tp_name_placeholder_receipt": "e.g., Checkout Receipt",
-    "tp_name_placeholder_business": "e.g., Main Store",
-    "tp_name_placeholder_staff": "e.g., Lisa's QR",
-    "tp_name_suggestion_table": "Table {number}",
-    "tp_name_suggestion_counter": "Front Counter {number}",
-    "tp_name_suggestion_receipt": "Receipt QR {number}",
-    "tp_name_suggestion_business": "Main Store {number}",
-    "tp_name_suggestion_staff": "Staff QR {number}",
     "add_tp_btn": "Add Station",
     "active_tp_count": "{count} Active Stations",
     "tp_lobby_default": "Lobby Main / General Tipping QR",
@@ -676,6 +666,7 @@
       "search_no_results": "No matching results found."
     },
     "back_to_dashboard": "Back to Dashboard",
+    "back_short": "Back",
     "footer": {
       "copyright": "© 2026 NEXORA Touch."
     },
@@ -1248,11 +1239,14 @@
         "transactions_unit": "Transactions",
         "avg_tip": "Average Tip",
         "fees_avoided": "Fees Saved",
-        "fees_avoided_tooltip": "Estimated card processing fees saved from direct P2P tips, calculated at 3% of routed volume."
+        "fees_avoided_tooltip": "Estimated card processing fees saved from direct P2P tips, calculated at 3% of routed volume.",
+        "fees_avoided_tooltip_api": "Processing fees saved from direct P2P tips, as reported by the dashboard.",
+        "fees_avoided_sub": "Reported fee savings from direct payouts"
       },
       "charts": {
         "daily_revenue": "Daily Revenue Trend",
-        "wallet_share": "How Tips Were Paid"
+        "wallet_share": "How Tips Were Paid",
+        "no_wallet_data": "No payout method data yet."
       },
       "leaderboards": {
         "staff": "Leaderboard",
@@ -1262,7 +1256,8 @@
         "unassigned": "Unassigned Tip",
         "unassigned_tooltip": "This tip was received through the general salon QR code and was not assigned to a specific technician.",
         "station_stats": "{scans} scans · {tips} tips = {pct}% conversion",
-        "station_stats_no_conversion": "{scans} scans · {tips} tips"
+        "station_stats_no_conversion": "{scans} scans · {tips} tips",
+        "empty": "No data available yet."
       }
     },
     "empty_states": {

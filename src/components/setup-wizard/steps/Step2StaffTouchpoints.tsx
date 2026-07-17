@@ -1,13 +1,12 @@
 import React, { useMemo } from 'react'
 import {
-  Plus, Trash2, AlertTriangle, HelpCircle,
+  Plus, Trash2, AlertTriangle,
   QrCode, Users, Edit2, Search
 } from 'lucide-react'
 import CustomSelect from '../../CustomSelect'
 import CountryCodeSelect, { parsePhone } from '../../CountryCodeSelect'
 import ToggleSwitch from '../../ui/ToggleSwitch'
 import { WalletLogos, DEFAULT_PAYOUT_CONFIGS, getTouchpointIcon } from '../constants'
-import { renderLabel } from '../../../contexts/LanguageContext'
 import { getCustomerAppBaseUrl } from '../../../utils/webUrlBase'
 import {
   getPaymentMethodDisplayName,
@@ -23,20 +22,14 @@ const TOUCHPOINT_TYPE_OPTIONS = [
   {
     value: 'Table QR',
     labelKey: 'setup.tp_type_table',
-    placeholderKey: 'setup.tp_name_placeholder_table',
-    suggestionKey: 'setup.tp_name_suggestion_table',
   },
   {
     value: 'Front Desk',
     labelKey: 'setup.tp_type_counter',
-    placeholderKey: 'setup.tp_name_placeholder_counter',
-    suggestionKey: 'setup.tp_name_suggestion_counter',
   },
   {
     value: 'Receipt QR',
     labelKey: 'setup.tp_type_receipt',
-    placeholderKey: 'setup.tp_name_placeholder_receipt',
-    suggestionKey: 'setup.tp_name_suggestion_receipt',
   },
 ]
 
@@ -45,19 +38,16 @@ const EDIT_TOUCHPOINT_TYPE_OPTIONS = [
   {
     value: 'Business Main',
     labelKey: 'setup.tp_type_business_main',
-    placeholderKey: 'setup.tp_name_placeholder_business',
-    suggestionKey: 'setup.tp_name_suggestion_business',
   },
   {
     value: 'Staff QR',
     labelKey: 'setup.tp_type_staff',
-    placeholderKey: 'setup.tp_name_placeholder_staff',
-    suggestionKey: 'setup.tp_name_suggestion_staff',
   },
 ]
 
-function getTouchpointTypeOption(type) {
-  return EDIT_TOUCHPOINT_TYPE_OPTIONS.find((option) => option.value === type) || TOUCHPOINT_TYPE_OPTIONS[0]
+function getTouchpointTypeLabel(t, type) {
+  const option = EDIT_TOUCHPOINT_TYPE_OPTIONS.find((candidate) => candidate.value === type)
+  return option ? t(option.labelKey) : type
 }
 
 export default function Step2StaffTouchpoints({
@@ -72,9 +62,6 @@ export default function Step2StaffTouchpoints({
   setNewTouchpoint,
   editingTpId,
   setEditingTpId,
-  editingTpName,
-  setEditingTpName,
-  editingTpNameError,
   editingTpType,
   setEditingTpType,
   errors,
@@ -91,25 +78,6 @@ export default function Step2StaffTouchpoints({
   merchantPaymentMethods = [],
 }) {
   const newStaffPhoneParsed = parsePhone(newStaff.phone || '')
-
-  const suggestTouchpointName = (type) => {
-    const typeOption = getTouchpointTypeOption(type)
-    const typeCount = touchPoints.filter((touchpoint) => touchpoint.type === type).length + 1
-    return t(typeOption.suggestionKey, { number: String(typeCount).padStart(2, '0') })
-  }
-
-  const handleNewTouchpointTypeChange = (type) => {
-    setNewTouchpoint({
-      ...newTouchpoint,
-      type,
-      name: newTouchpoint.name.trim() ? newTouchpoint.name : suggestTouchpointName(type),
-    })
-  }
-
-  const handleEditingTouchpointTypeChange = (type) => {
-    setEditingTpType(type)
-    if (!editingTpName.trim()) setEditingTpName(suggestTouchpointName(type))
-  }
 
   const displayPaymentMethods = useMemo(() => {
     if (merchantPaymentMethods.length > 0) {
@@ -200,39 +168,18 @@ export default function Step2StaffTouchpoints({
               {t('setup.qr_touchpoints_explainer')}
             </p>
 
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div>
               <div>
                 <label className="block text-[10px] font-bold text-nexoraText uppercase tracking-wider mb-1">{t('setup.tp_type')}</label>
                 <CustomSelect
                   buttonClass="bg-nexoraCanvas focus:bg-white"
                   value={newTouchpoint.type}
-                  onChange={(e) => handleNewTouchpointTypeChange(e.target.value)}
+                  onChange={(e) => setNewTouchpoint({ type: e.target.value })}
                   options={TOUCHPOINT_TYPE_OPTIONS.map((option) => ({
                     value: option.value,
                     label: t(option.labelKey),
                   }))}
                 />
-              </div>
-
-              <div>
-                <label className="flex items-center text-[10px] font-bold text-nexoraText uppercase tracking-wider mb-1">
-                  <span>{renderLabel(t('setup.tp_name'))}</span>
-                  <div className="relative group inline-block ml-1.5 align-middle normal-case font-normal text-nexoraSubtle">
-                    <HelpCircle className="w-3.5 h-3.5 hover:text-nexoraBrand cursor-help transition-colors" />
-                    <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 hidden group-hover:block w-48 bg-black text-white text-[10px] p-2.5 rounded-lg shadow-xl z-50 text-center leading-normal">
-                      {t('components.setup_wizard.steps.Step2StaffTouchpoints.nameThisSpecificTouch')}
-                      <div className="absolute top-full left-1/2 -translate-x-1/2 -mt-1.5 border-4 border-transparent border-t-black"></div>
-                    </div>
-                  </div>
-                </label>
-                <input
-                  type="text"
-                  placeholder={t(getTouchpointTypeOption(newTouchpoint.type).placeholderKey)}
-                  className={`w-full bg-nexoraCanvas border ${errors.tpName ? 'border-red-300 focus:border-red-500' : 'border-nexoraBorder focus:border-nexoraBrand focus:bg-white'} rounded-lg px-3 py-2 text-sm text-nexoraText placeholder-nexoraSubtle focus:outline-none transition-all`}
-                  value={newTouchpoint.name}
-                  onChange={(e) => setNewTouchpoint({ ...newTouchpoint, name: e.target.value })}
-                />
-                {errors.tpName && <span className="text-[10px] text-red-500 mt-1 block">{errors.tpName}</span>}
               </div>
             </div>
 
@@ -258,7 +205,7 @@ export default function Step2StaffTouchpoints({
                       key={tp.id}
                       className="flex flex-col gap-3 p-3 rounded-xl border border-nexoraBrand bg-slate-50 shadow-sm animate-fadeIn"
                     >
-                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                      <div>
                         <div>
                           <label className="block text-[10px] font-bold text-nexoraText uppercase tracking-wider mb-1">
                             {t('setup.tp_type')}
@@ -266,25 +213,12 @@ export default function Step2StaffTouchpoints({
                           <select
                             className="w-full bg-white border border-nexoraBorder rounded-lg px-3 py-1.5 text-xs text-nexoraText focus:outline-none focus:border-nexoraBrand transition-all h-[34px]"
                             value={editingTpType}
-                            onChange={(e) => handleEditingTouchpointTypeChange(e.target.value)}
+                            onChange={(e) => setEditingTpType(e.target.value)}
                           >
                             {EDIT_TOUCHPOINT_TYPE_OPTIONS.map((option) => (
                               <option key={option.value} value={option.value}>{t(option.labelKey)}</option>
                             ))}
                           </select>
-                        </div>
-                        <div>
-                          <label className="block text-[10px] font-bold text-nexoraText uppercase tracking-wider mb-1">
-                            {t('setup.tp_name')}
-                          </label>
-                          <input
-                            type="text"
-                            className={`w-full bg-white border ${editingTpNameError ? 'border-red-300 focus:border-red-500' : 'border-nexoraBorder focus:border-nexoraBrand'} rounded-lg px-3 py-1.5 text-xs text-nexoraText focus:outline-none transition-all`}
-                            value={editingTpName}
-                            onChange={(e) => setEditingTpName(e.target.value)}
-                            placeholder={t(getTouchpointTypeOption(editingTpType).placeholderKey)}
-                          />
-                          {editingTpNameError && <span className="text-xs text-red-500 mt-1 block">{t(editingTpNameError)}</span>}
                         </div>
                       </div>
                       <div className="flex justify-end gap-2">
@@ -329,12 +263,11 @@ export default function Step2StaffTouchpoints({
                       </div>
 
                       <div className="min-w-0 flex-grow ml-3">
-                        <div className="truncate text-xs font-bold text-nexoraText">{tp.name}</div>
-                        <div className="text-[9px] flex items-center gap-2 mt-0.5">
-                          <span className="px-1.5 py-0.5 rounded font-black bg-nexoraBrandSoft text-nexoraBrand border border-nexoraBrandSoft/50 uppercase flex items-center gap-1">
-                            {getTouchpointIcon(tp.type, "w-3 h-3")}
-                            {tp.type}
-                          </span>
+                        <div className="flex items-center gap-1.5 text-xs font-bold text-nexoraText">
+                          {getTouchpointIcon(tp.type, "w-3.5 h-3.5")}
+                          <span className="truncate">{getTouchpointTypeLabel(t, tp.type)}</span>
+                        </div>
+                        <div className="text-[9px] flex items-center gap-2 mt-1">
                           {tp.staffName && (
                             <span className="text-nexoraSubtle">{t('dashboard.modals.assign_staff')} {tp.staffName}</span>
                           )}

@@ -9,6 +9,7 @@ type QueryKeyPrefix = readonly unknown[]
 const MERCHANT_MENU_QUERIES: Record<string, QueryKeyPrefix[]> = {
   [DASHBOARD_MENU_ID.overview]: [
     qk.dashboardOverview(),
+    qk.dashboardAnalytics(),
     qk.transactions(),
     qk.merchantStaff(),
     qk.merchantTouchpoints(),
@@ -31,11 +32,8 @@ const MERCHANT_MENU_QUERIES: Record<string, QueryKeyPrefix[]> = {
     qk.merchantTouchpoints(),
   ],
   [DASHBOARD_MENU_ID.analytics]: [
-    qk.transactions(),
-    qk.dashboardOverview(),
+    qk.dashboardAnalytics(),
     qk.dashboardTipsChart(),
-    qk.dashboardStaff(),
-    qk.dashboardTouchpoints(),
   ],
   [DASHBOARD_MENU_ID.touchpoints]: [qk.merchantTouchpoints()],
   [DASHBOARD_MENU_ID.reviews]: [['dashboard', 'reviews'], qk.reviews()],

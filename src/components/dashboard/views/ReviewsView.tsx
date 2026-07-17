@@ -160,9 +160,9 @@ function ReviewsView({
   return (
     <div className="space-y-5">
       {/* Page Header */}
-      <div className="pb-4 border-b border-nexoraBorder">
-        <h2 className="text-xl font-extrabold text-nexoraText">{t('dashboard.menu.reviews')}</h2>
-        <p className="mt-1 text-xs text-nexoraMuted">{renderTextWithGoldStars(t('setup.review_routing_policy'))}</p>
+      <div className="border-b border-nexoraBorder pb-2 sm:pb-4">
+        <h2 className="hidden text-xl font-extrabold text-nexoraText sm:block">{t('dashboard.menu.reviews')}</h2>
+        <p className="mt-0 text-xs text-nexoraMuted sm:mt-1">{renderTextWithGoldStars(t('setup.review_routing_policy'))}</p>
       </div>
 
       {/* Overview Stats Cards Grid */}
