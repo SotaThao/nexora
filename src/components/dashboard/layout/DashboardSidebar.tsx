@@ -4,12 +4,13 @@ import React, { useState, useEffect } from 'react'
 import { useNavigate, useSearchParams } from 'react-router-dom'
 import { ChevronUp, ChevronDown, LogOut } from 'lucide-react'
 import { useTranslation } from '../../../contexts/LanguageContext'
-import { visibleMenuItems, MERCHANT_SIDEBAR_MENU_ITEMS, isPaymentsPayoutsRouteActive, getVisibleBookingHubSubmenu, isBookingHubSubActive, VISIBLE_TOUCHPOINTS_SUBMENU } from '../constants'
+import { visibleMenuItems, MERCHANT_SIDEBAR_MENU_ITEMS, isPaymentsPayoutsRouteActive, getVisibleBookingHubSubmenu, isBookingHubSubActive, VISIBLE_TOUCHPOINTS_SUBMENU, DASHBOARD_MENU, bookingHubPath } from '../constants'
 import MenuIcon from '../../ui/MenuIcon'
 import HomepageLink from '../../ui/HomepageLink'
 import SidebarPlanCard from '../../ui/SidebarPlanCard'
 import PaymentsPayoutsMenuSection from './PaymentsPayoutsMenuSection'
 import { useMerchantVoiceTenantStatus } from '../../../data/hooks/useMerchantVoiceBookings'
+import { BookingHubMainTab } from '../../../data/merchantVoice/domain'
 import { getSubscriptionSidebarCopy } from '../../../utils/subscriptionDisplay'
 import {
   SIDEBAR_SHELL_CLASS,
@@ -51,15 +52,15 @@ export default function DashboardSidebar({
   const bookingHubSubmenu = getVisibleBookingHubSubmenu(hasVoiceTenant)
   const isPaymentsPayoutsActive = isPaymentsPayoutsRouteActive(activeMenu, activeSubTab)
   const [isPaymentsPayoutsExpanded, setIsPaymentsPayoutsExpanded] = useState(isPaymentsPayoutsActive)
-  const [isTouchpointsExpanded, setIsTouchpointsExpanded] = useState(activeMenu === 'touchpoints')
-  const [isBookingHubExpanded, setIsBookingHubExpanded] = useState(activeMenu === 'booking-hub')
+  const [isTouchpointsExpanded, setIsTouchpointsExpanded] = useState(activeMenu === DASHBOARD_MENU.Touchpoints)
+  const [isBookingHubExpanded, setIsBookingHubExpanded] = useState(activeMenu === DASHBOARD_MENU.BookingHub)
 
   useEffect(() => {
     if (isPaymentsPayoutsActive) {
       setIsPaymentsPayoutsExpanded(true)
     }
-    setIsTouchpointsExpanded(activeMenu === 'touchpoints')
-    setIsBookingHubExpanded(activeMenu === 'booking-hub')
+    setIsTouchpointsExpanded(activeMenu === DASHBOARD_MENU.Touchpoints)
+    setIsBookingHubExpanded(activeMenu === DASHBOARD_MENU.BookingHub)
   }, [activeMenu, isPaymentsPayoutsActive])
 
   const handlePaymentsPayoutsToggle = () => {
@@ -75,11 +76,11 @@ export default function DashboardSidebar({
   }
 
   const handleMenuClick = (id: string) => {
-    if (id === 'touchpoints') {
-      if (activeMenu === 'touchpoints') {
+    if (id === DASHBOARD_MENU.Touchpoints) {
+      if (activeMenu === DASHBOARD_MENU.Touchpoints) {
         setIsTouchpointsExpanded((prev) => !prev)
       } else {
-        setActiveMenu('touchpoints')
+        setActiveMenu(DASHBOARD_MENU.Touchpoints)
         setIsTouchpointsExpanded(true)
         setIsPaymentsPayoutsExpanded(false)
         setIsBookingHubExpanded(false)
@@ -87,14 +88,14 @@ export default function DashboardSidebar({
       return
     }
 
-    if (id === 'booking-hub') {
-      if (activeMenu === 'booking-hub') {
+    if (id === DASHBOARD_MENU.BookingHub) {
+      if (activeMenu === DASHBOARD_MENU.BookingHub) {
         setIsBookingHubExpanded((prev) => !prev)
       } else {
         if (hasVoiceTenant) {
-          setActiveMenu('booking-hub')
+          setActiveMenu(DASHBOARD_MENU.BookingHub)
         } else {
-          navigate('/dashboard/booking-hub?tab=plans', { replace: true })
+          navigate(bookingHubPath(BookingHubMainTab.Plans), { replace: true })
         }
         setIsBookingHubExpanded(true)
         setIsPaymentsPayoutsExpanded(false)
@@ -194,8 +195,8 @@ export default function DashboardSidebar({
             staff: t('dashboard.menu.staff'),
             reviews: t('dashboard.menu.reviews'),
             reports: t('dashboard.menu.transactions'),
-            'booking-hub': t('dashboard.menu.booking_hub'),
-            touchpoints: t('dashboard.menu.touchpoints'),
+            [DASHBOARD_MENU.BookingHub]: t('dashboard.menu.booking_hub'),
+            [DASHBOARD_MENU.Touchpoints]: t('dashboard.menu.touchpoints'),
             devices: t('dashboard.menu.qr_nfc'),
             analytics: t('dashboard.menu.analytics'),
             support: t('dashboard.menu.support')
@@ -212,12 +213,12 @@ export default function DashboardSidebar({
                   <MenuIcon item={item} active={isActive} />
                   <span className="truncate">{localizedLabel}</span>
                 </div>
-                {id === 'touchpoints' && (
+                {id === DASHBOARD_MENU.Touchpoints && (
                   <div className="text-white/50 shrink-0">
                     {isTouchpointsExpanded ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
                   </div>
                 )}
-                {id === 'booking-hub' && (
+                {id === DASHBOARD_MENU.BookingHub && (
                   <div className="text-white/50 shrink-0">
                     {isBookingHubExpanded ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
                   </div>
@@ -234,7 +235,7 @@ export default function DashboardSidebar({
                 />
               )}
 
-              {id === 'booking-hub' && isBookingHubExpanded && (
+              {id === DASHBOARD_MENU.BookingHub && isBookingHubExpanded && (
                 <div className={SIDEBAR_SUBMENU_WRAP_CLASS}>
                   {bookingHubSubmenu.map((sub) => {
                     const isSubActive = isBookingHubSubActive(activeMenu, activeSubTab, sub.id, hasVoiceTenant)
@@ -243,7 +244,7 @@ export default function DashboardSidebar({
                         key={sub.id}
                         type="button"
                         onClick={() => {
-                          navigate(`/dashboard/booking-hub?tab=${encodeURIComponent(sub.id)}`, { replace: true })
+                          navigate(bookingHubPath(sub.id), { replace: true })
                           setIsBookingHubExpanded(true)
                         }}
                         className={sidebarSubmenuItemClass(isSubActive)}
@@ -256,10 +257,10 @@ export default function DashboardSidebar({
                 </div>
               )}
 
-              {id === 'touchpoints' && isTouchpointsExpanded && (
+              {id === DASHBOARD_MENU.Touchpoints && isTouchpointsExpanded && (
                 <div className={SIDEBAR_SUBMENU_WRAP_CLASS}>
                   {VISIBLE_TOUCHPOINTS_SUBMENU.map((sub) => {
-                    const isSubActive = activeMenu === 'touchpoints' && (activeSubTab || 'stations') === sub.id
+                    const isSubActive = activeMenu === DASHBOARD_MENU.Touchpoints && (activeSubTab || 'stations') === sub.id
                     return (
                       <button
                         key={sub.id}

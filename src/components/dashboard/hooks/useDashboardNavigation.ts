@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react'
 import { useLocation, useNavigate } from 'react-router-dom'
+import { DASHBOARD_MENU } from '../constants'
 
 type NavigateMenuOptions = {
   closeDrawer?: boolean
@@ -15,8 +16,12 @@ export function useDashboardNavigation() {
 
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
   const [isPaymentsPayoutsMobileExpanded, setIsPaymentsPayoutsMobileExpanded] = useState(isPaymentsPayoutsActive)
-  const [isTouchpointsMobileExpanded, setIsTouchpointsMobileExpanded] = useState(activeMenu === 'touchpoints')
-  const [isBookingHubMobileExpanded, setIsBookingHubMobileExpanded] = useState(activeMenu === 'booking-hub')
+  const [isTouchpointsMobileExpanded, setIsTouchpointsMobileExpanded] = useState(
+    activeMenu === DASHBOARD_MENU.Touchpoints,
+  )
+  const [isBookingHubMobileExpanded, setIsBookingHubMobileExpanded] = useState(
+    activeMenu === DASHBOARD_MENU.BookingHub,
+  )
   const [settingsTab, setSettingsTab] = useState('profile')
   const [isProfileExpanded, setIsProfileExpanded] = useState(false)
 
@@ -24,8 +29,8 @@ export function useDashboardNavigation() {
   useEffect(() => {
     if (!isMobileMenuOpen) return
     setIsPaymentsPayoutsMobileExpanded(isPaymentsPayoutsActive)
-    setIsTouchpointsMobileExpanded(activeMenu === 'touchpoints')
-    setIsBookingHubMobileExpanded(activeMenu === 'booking-hub')
+    setIsTouchpointsMobileExpanded(activeMenu === DASHBOARD_MENU.Touchpoints)
+    setIsBookingHubMobileExpanded(activeMenu === DASHBOARD_MENU.BookingHub)
   }, [isMobileMenuOpen, activeMenu, isPaymentsPayoutsActive])
   useEffect(() => {
     if (isPaymentsPayoutsActive) {
@@ -33,7 +38,7 @@ export function useDashboardNavigation() {
       setIsTouchpointsMobileExpanded(false)
       setIsBookingHubMobileExpanded(false)
     }
-    if (activeMenu === 'booking-hub') {
+    if (activeMenu === DASHBOARD_MENU.BookingHub) {
       setIsBookingHubMobileExpanded(true)
     }
   }, [activeMenu, isPaymentsPayoutsActive])

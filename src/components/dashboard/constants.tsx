@@ -13,6 +13,20 @@ import {
   Wallet,
   Calendar,
 } from 'lucide-react'
+import { BookingHubMainTab } from '../../data/merchantVoice/domain'
+
+/** Menu ids used by Booking Hub / Touchpoints expandable nav (avoid hardcoding duplicates). */
+export const DASHBOARD_MENU = {
+  Touchpoints: 'touchpoints',
+  BookingHub: 'booking-hub',
+} as const
+
+export const BOOKING_HUB_PATH = `/dashboard/${DASHBOARD_MENU.BookingHub}`
+
+export function bookingHubPath(tab?: string) {
+  if (!tab) return BOOKING_HUB_PATH
+  return `${BOOKING_HUB_PATH}?tab=${encodeURIComponent(tab)}`
+}
 
 export const WalletLogos = {
   venmo: (
@@ -89,11 +103,11 @@ export const VISIBLE_TOUCHPOINTS_SUBMENU = SHOW_HARDWARE_DEVICES
 
 /** Booking Hub sidebar children — maps to `/dashboard/booking-hub?tab=`. */
 export const BOOKING_HUB_SUBMENU = [
-  { id: 'booking', labelKey: 'components.dashboard.views.BookingHubView.tabs.booking', requiresVoiceTenant: true },
-  { id: 'customers', labelKey: 'components.dashboard.views.BookingHubView.tabs.customers', requiresVoiceTenant: true },
-  { id: 'calllog', labelKey: 'components.dashboard.views.BookingHubView.tabs.callLog', requiresVoiceTenant: true },
-  { id: 'plans', labelKey: 'components.dashboard.views.BookingHubView.tabs.plans', requiresVoiceTenant: false },
-  { id: 'settings', labelKey: 'components.dashboard.views.BookingHubView.tabs.settings', requiresVoiceTenant: true },
+  { id: BookingHubMainTab.Booking, labelKey: 'components.dashboard.views.BookingHubView.tabs.booking', requiresVoiceTenant: true },
+  { id: BookingHubMainTab.Customers, labelKey: 'components.dashboard.views.BookingHubView.tabs.customers', requiresVoiceTenant: true },
+  { id: BookingHubMainTab.CallLog, labelKey: 'components.dashboard.views.BookingHubView.tabs.callLog', requiresVoiceTenant: true },
+  { id: BookingHubMainTab.Plans, labelKey: 'components.dashboard.views.BookingHubView.tabs.plans', requiresVoiceTenant: false },
+  { id: BookingHubMainTab.Settings, labelKey: 'components.dashboard.views.BookingHubView.tabs.settings', requiresVoiceTenant: true },
 ] as const
 
 /** Match BookingHubView page tabs: without voice tenant only Plans is visible. */
@@ -108,9 +122,10 @@ export function isBookingHubSubActive(
   subId: string,
   hasVoiceTenant = true,
 ): boolean {
-  if (activeMenu !== 'booking-hub') return false
+  if (activeMenu !== DASHBOARD_MENU.BookingHub) return false
   // Match BookingHubView defaults: booking when voice-enabled, plans otherwise.
-  const activeTab = tabParam || (hasVoiceTenant ? 'booking' : 'plans')
+  const activeTab =
+    tabParam || (hasVoiceTenant ? BookingHubMainTab.Booking : BookingHubMainTab.Plans)
   return activeTab === subId
 }
 
