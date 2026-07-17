@@ -97,49 +97,52 @@ function StaffPayoutList({
           return (
             <article key={row.id} className="space-y-3 p-4">
               <div className="flex items-start justify-between gap-2">
-                <div>
-                  <p className="text-lg font-black text-nexoraText">{formatCurrency(row.amount)}</p>
-                  <p className="mt-0.5 text-[11px] font-semibold text-nexoraMuted">
-                    {formatTransactionDateTime(row.createdAt, currentLanguage)}
-                  </p>
-                </div>
+                <p className="text-lg font-black text-nexoraText">{formatCurrency(row.amount)}</p>
                 <PayoutStatusBadge status={row.status} audience="staff" />
               </div>
 
-              <div className="flex items-center justify-between gap-2">
-                <p className="text-xs font-bold text-nexoraBrand">{row.payoutCode}</p>
-                <PayoutMethodBadge method={row.payoutMethodType} />
+              <div className="grid grid-cols-[minmax(0,1fr)_auto] gap-x-4">
+                <div className="min-w-0 space-y-1.5">
+                  <p className="truncate text-xs font-bold text-nexoraBrand">{row.payoutCode}</p>
+                  <p className="text-[11px] font-semibold text-nexoraMuted">
+                    {formatTransactionDateTime(row.createdAt, currentLanguage)}
+                  </p>
+                  <p className="text-xs text-nexoraMuted">
+                    {formatPayoutPeriodRange(row.periodStart, row.periodEnd, currentLanguage)}
+                  </p>
+                </div>
+
+                <div className="flex max-w-[9rem] flex-col items-end gap-2 text-right">
+                  <PayoutMethodBadge method={row.payoutMethodType} />
+                  <div className="flex flex-wrap justify-end gap-1">
+                    {getPayoutTypeI18nKeys(row.payoutTypes).map((key) => (
+                      <span
+                        key={key}
+                        className="rounded-md border border-nexoraBorder bg-slate-50 px-1.5 py-0.5 text-[10px] font-bold"
+                      >
+                        {t(key)}
+                      </span>
+                    ))}
+                  </div>
+                </div>
               </div>
 
-              <p className="text-xs text-nexoraMuted">
-                {formatPayoutPeriodRange(row.periodStart, row.periodEnd, currentLanguage)}
-              </p>
-
-              <div className="flex flex-wrap gap-1">
-                {getPayoutTypeI18nKeys(row.payoutTypes).map((key) => (
-                  <span
-                    key={key}
-                    className="rounded-md border border-nexoraBorder bg-slate-50 px-1.5 py-0.5 text-[10px] font-bold"
-                  >
-                    {t(key)}
-                  </span>
-                ))}
-              </div>
-
-              <div className="flex min-w-0 justify-end">
+              <div className="border-t border-nexoraBorder/60 pt-3">
                 <button
                   type="button"
                   onClick={() => onViewDetail(row)}
                   title={canConfirm ? t('staff_payouts.confirm_receipt') : t('staff_payments.view_detail')}
                   aria-label={canConfirm ? t('staff_payouts.confirm_receipt') : t('staff_payments.view_detail')}
-                  className={`inline-flex h-10 max-w-full items-center justify-center gap-1.5 whitespace-nowrap rounded-lg px-3 text-xs font-bold ${
+                  className={`inline-flex h-10 w-full items-center justify-center gap-2 whitespace-nowrap rounded-lg px-3 text-xs font-bold ${
                     canConfirm
                       ? 'bg-nexoraBrand text-white'
                       : 'border border-nexoraBorder bg-white text-nexoraText'
                   }`}
                 >
                   {canConfirm ? <CheckCircle2 className="h-4.5 w-4.5 shrink-0" /> : <Eye className="h-4.5 w-4.5 shrink-0" />}
-                  {t(canConfirm ? 'staff_payouts.action_confirm' : 'staff_payouts.action_view')}
+                  <span>
+                    {canConfirm ? t('staff_payouts.action_confirm') : t('staff_payouts.action_view')}
+                  </span>
                 </button>
               </div>
             </article>
@@ -205,7 +208,9 @@ function StaffPayoutList({
                       }`}
                     >
                       {canConfirm ? <CheckCircle2 className="h-4 w-4 shrink-0" /> : <Eye className="h-4 w-4 shrink-0" />}
-                      {t(canConfirm ? 'staff_payouts.action_confirm' : 'staff_payouts.action_view')}
+                      <span>
+                        {canConfirm ? t('staff_payouts.action_confirm') : t('staff_payouts.action_view')}
+                      </span>
                     </button>
                   </td>
                 </tr>

@@ -1,13 +1,12 @@
 import React, { useMemo } from 'react'
 import {
-  Plus, Trash2, AlertTriangle, HelpCircle,
+  Plus, Trash2, AlertTriangle,
   QrCode, Users, Edit2, Search
 } from 'lucide-react'
 import CustomSelect from '../../CustomSelect'
 import CountryCodeSelect, { parsePhone } from '../../CountryCodeSelect'
 import ToggleSwitch from '../../ui/ToggleSwitch'
 import { WalletLogos, DEFAULT_PAYOUT_CONFIGS, getTouchpointIcon } from '../constants'
-import { renderLabel } from '../../../contexts/LanguageContext'
 import { getCustomerAppBaseUrl } from '../../../utils/webUrlBase'
 import {
   getPaymentMethodDisplayName,
@@ -18,6 +17,38 @@ import type { PaymentMethodDto } from '../../../types/domain'
 import { buildPublicQrImageUrl } from '../../../data/repositories/publicQr'
 import { QR_IMAGE_SIZES } from '../../../utils/qrUtils'
 import QrImage from '../../ui/QrImage'
+
+const TOUCHPOINT_TYPE_OPTIONS = [
+  {
+    value: 'Table QR',
+    labelKey: 'setup.tp_type_table',
+  },
+  {
+    value: 'Front Desk',
+    labelKey: 'setup.tp_type_counter',
+  },
+  {
+    value: 'Receipt QR',
+    labelKey: 'setup.tp_type_receipt',
+  },
+]
+
+const EDIT_TOUCHPOINT_TYPE_OPTIONS = [
+  ...TOUCHPOINT_TYPE_OPTIONS,
+  {
+    value: 'Business Main',
+    labelKey: 'setup.tp_type_business_main',
+  },
+  {
+    value: 'Staff QR',
+    labelKey: 'setup.tp_type_staff',
+  },
+]
+
+function getTouchpointTypeLabel(t, type) {
+  const option = EDIT_TOUCHPOINT_TYPE_OPTIONS.find((candidate) => candidate.value === type)
+  return option ? t(option.labelKey) : type
+}
 
 export default function Step2StaffTouchpoints({
   t,
@@ -31,9 +62,6 @@ export default function Step2StaffTouchpoints({
   setNewTouchpoint,
   editingTpId,
   setEditingTpId,
-  editingTpName,
-  setEditingTpName,
-  editingTpNameError,
   editingTpType,
   setEditingTpType,
   errors,
@@ -136,40 +164,21 @@ export default function Step2StaffTouchpoints({
             <h3 className="text-xs font-bold text-nexoraText uppercase tracking-wider flex items-center gap-1.5 pb-1">
               <QrCode className="w-4 h-4 text-nexoraBrand" /> {t('setup.qr_touchpoints_title')}
             </h3>
+            <p className="rounded-lg border border-nexoraBrand/15 bg-nexoraBrandSoft/40 px-3 py-2.5 text-xs leading-relaxed text-nexoraSubtle">
+              {t('setup.qr_touchpoints_explainer')}
+            </p>
 
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              <div>
-                <label className="flex items-center text-[10px] font-bold text-nexoraText uppercase tracking-wider mb-1">
-                  <span>{renderLabel(t('setup.tp_name'))}</span>
-                  <div className="relative group inline-block ml-1.5 align-middle normal-case font-normal text-nexoraSubtle">
-                    <HelpCircle className="w-3.5 h-3.5 hover:text-nexoraBrand cursor-help transition-colors" />
-                    <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 hidden group-hover:block w-48 bg-black text-white text-[10px] p-2.5 rounded-lg shadow-xl z-50 text-center leading-normal">
-                      {t('components.setup_wizard.steps.Step2StaffTouchpoints.nameThisSpecificTouch')}
-                      <div className="absolute top-full left-1/2 -translate-x-1/2 -mt-1.5 border-4 border-transparent border-t-black"></div>
-                    </div>
-                  </div>
-                </label>
-                <input
-                  type="text"
-                  placeholder={t('setup.tp_name_placeholder')}
-                  className={`w-full bg-nexoraCanvas border ${errors.tpName ? 'border-red-300 focus:border-red-500' : 'border-nexoraBorder focus:border-nexoraBrand focus:bg-white'} rounded-lg px-3 py-2 text-sm text-nexoraText placeholder-nexoraSubtle focus:outline-none transition-all`}
-                  value={newTouchpoint.name}
-                  onChange={(e) => setNewTouchpoint({ ...newTouchpoint, name: e.target.value })}
-                />
-                {errors.tpName && <span className="text-[10px] text-red-500 mt-1 block">{errors.tpName}</span>}
-              </div>
-
+            <div>
               <div>
                 <label className="block text-[10px] font-bold text-nexoraText uppercase tracking-wider mb-1">{t('setup.tp_type')}</label>
                 <CustomSelect
                   buttonClass="bg-nexoraCanvas focus:bg-white"
                   value={newTouchpoint.type}
-                  onChange={(e) => setNewTouchpoint({ ...newTouchpoint, type: e.target.value })}
-                  options={[
-                    { value: 'Table QR', label: 'Table QR' },
-                    { value: 'Front Desk', label: 'Front Desk' },
-                    { value: 'Receipt QR', label: 'Receipt QR' }
-                  ]}
+                  onChange={(e) => setNewTouchpoint({ type: e.target.value })}
+                  options={TOUCHPOINT_TYPE_OPTIONS.map((option) => ({
+                    value: option.value,
+                    label: t(option.labelKey),
+                  }))}
                 />
               </div>
             </div>
@@ -196,20 +205,7 @@ export default function Step2StaffTouchpoints({
                       key={tp.id}
                       className="flex flex-col gap-3 p-3 rounded-xl border border-nexoraBrand bg-slate-50 shadow-sm animate-fadeIn"
                     >
-                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                        <div>
-                          <label className="block text-[10px] font-bold text-nexoraText uppercase tracking-wider mb-1">
-                            {t('setup.tp_name')}
-                          </label>
-                          <input
-                            type="text"
-                            className={`w-full bg-white border ${editingTpNameError ? 'border-red-300 focus:border-red-500' : 'border-nexoraBorder focus:border-nexoraBrand'} rounded-lg px-3 py-1.5 text-xs text-nexoraText focus:outline-none transition-all`}
-                            value={editingTpName}
-                            onChange={(e) => setEditingTpName(e.target.value)}
-                            placeholder={t('setup.tp_name_placeholder')}
-                          />
-                          {editingTpNameError && <span className="text-xs text-red-500 mt-1 block">{t(editingTpNameError)}</span>}
-                        </div>
+                      <div>
                         <div>
                           <label className="block text-[10px] font-bold text-nexoraText uppercase tracking-wider mb-1">
                             {t('setup.tp_type')}
@@ -219,11 +215,9 @@ export default function Step2StaffTouchpoints({
                             value={editingTpType}
                             onChange={(e) => setEditingTpType(e.target.value)}
                           >
-                            <option value="Table QR">Table QR</option>
-                            <option value="Front Desk">Front Desk</option>
-                            <option value="Receipt QR">Receipt QR</option>
-                            <option value="Business Main">Business Main</option>
-                            <option value="Staff QR">Staff QR</option>
+                            {EDIT_TOUCHPOINT_TYPE_OPTIONS.map((option) => (
+                              <option key={option.value} value={option.value}>{t(option.labelKey)}</option>
+                            ))}
                           </select>
                         </div>
                       </div>
@@ -269,12 +263,11 @@ export default function Step2StaffTouchpoints({
                       </div>
 
                       <div className="min-w-0 flex-grow ml-3">
-                        <div className="truncate text-xs font-bold text-nexoraText">{tp.name}</div>
-                        <div className="text-[9px] flex items-center gap-2 mt-0.5">
-                          <span className="px-1.5 py-0.5 rounded font-black bg-nexoraBrandSoft text-nexoraBrand border border-nexoraBrandSoft/50 uppercase flex items-center gap-1">
-                            {getTouchpointIcon(tp.type, "w-3 h-3")}
-                            {tp.type}
-                          </span>
+                        <div className="flex items-center gap-1.5 text-xs font-bold text-nexoraText">
+                          {getTouchpointIcon(tp.type, "w-3.5 h-3.5")}
+                          <span className="truncate">{getTouchpointTypeLabel(t, tp.type)}</span>
+                        </div>
+                        <div className="text-[9px] flex items-center gap-2 mt-1">
                           {tp.staffName && (
                             <span className="text-nexoraSubtle">{t('dashboard.modals.assign_staff')} {tp.staffName}</span>
                           )}

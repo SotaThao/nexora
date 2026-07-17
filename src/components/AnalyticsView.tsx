@@ -198,30 +198,30 @@ export default function AnalyticsView() {
             <small className="text-[10px] font-black text-mutedGrey dark:text-slate-400 uppercase tracking-widest">{t('dashboard.analytics.kpi.total_volume')}</small>
             <h3 className="mt-1 text-2xl font-black text-inkBlue dark:text-white">{formatUSD(overview.totalVolume)}</h3>
           </div>
-          <div className="h-10 w-10 flex items-center justify-center rounded-lg bg-luxuryGold/10 text-luxuryGold">
-            <DollarSign className="h-5 w-5" />
+          <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-luxuryGold/10 text-luxuryGold sm:h-10 sm:w-10">
+            <DollarSign className="h-4 w-4 sm:h-5 sm:w-5" />
           </div>
         </div>
-        <div className="card-elevated flex items-center justify-between">
-          <div>
+        <div className="card-elevated flex items-center justify-between gap-2 p-3 sm:p-6">
+          <div className="min-w-0">
             <small className="text-[10px] font-black text-mutedGrey dark:text-slate-400 uppercase tracking-widest">{t('dashboard.analytics.kpi.transactions_count')}</small>
             <h3 className="mt-1 text-2xl font-black text-inkBlue dark:text-white">{overview.totalTransactionCount} {t('dashboard.analytics.kpi.transactions_unit')}</h3>
           </div>
-          <div className="h-10 w-10 flex items-center justify-center rounded-lg bg-brandCyan/10 text-brandCyan">
-            <TrendingUp className="h-5 w-5" />
+          <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-brandCyan/10 text-brandCyan sm:h-10 sm:w-10">
+            <TrendingUp className="h-4 w-4 sm:h-5 sm:w-5" />
           </div>
         </div>
-        <div className="card-elevated flex items-center justify-between">
-          <div>
+        <div className="card-elevated flex items-center justify-between gap-2 p-3 sm:p-6">
+          <div className="min-w-0">
             <small className="text-[10px] font-black text-mutedGrey dark:text-slate-400 uppercase tracking-widest">{t('dashboard.analytics.kpi.avg_tip')}</small>
             <h3 className="mt-1 text-2xl font-black text-inkBlue dark:text-white">{formatUSD(overview.averageTipAmount)}</h3>
           </div>
-          <div className="h-10 w-10 flex items-center justify-center rounded-lg bg-slate-100 dark:bg-white/5 text-mutedGrey">
-            <Percent className="h-5 w-5" />
+          <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-slate-100 text-mutedGrey dark:bg-white/5 sm:h-10 sm:w-10">
+            <Percent className="h-4 w-4 sm:h-5 sm:w-5" />
           </div>
         </div>
-        <div className="card-elevated flex items-center justify-between">
-          <div>
+        <div className="card-elevated flex items-center justify-between gap-2 p-3 sm:p-6">
+          <div className="min-w-0">
             <div className="flex items-center gap-1">
               <small className="text-[10px] font-black text-mutedGrey dark:text-slate-400 uppercase tracking-widest">{t('dashboard.analytics.kpi.fees_avoided')}</small>
               <Tooltip
@@ -234,8 +234,8 @@ export default function AnalyticsView() {
               {t('dashboard.analytics.kpi.fees_avoided_sub')}
             </span>
           </div>
-          <div className="h-10 w-10 flex items-center justify-center rounded-lg bg-emerald-50 dark:bg-emerald-500/10 text-emerald-600 dark:text-emerald-400">
-            <Zap className="h-5 w-5" />
+          <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-emerald-50 text-emerald-600 dark:bg-emerald-500/10 dark:text-emerald-400 sm:h-10 sm:w-10">
+            <Zap className="h-4 w-4 sm:h-5 sm:w-5" />
           </div>
         </div>
       </div>
