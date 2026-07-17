@@ -24,8 +24,15 @@ export const VoiceCallPlanRoute = {
 export const VOICE_CALL_TRIAL_COPY_KEY =
   'components.dashboard.views.BookingHubView.plans.trial' as const
 
+/** Seconds shown on the public trial success screen before auto home redirect. */
+export const VOICE_CALL_PLAN_SUCCESS_REDIRECT_SECONDS = 5
+
+/** Countdown tick interval on the public trial success screen. */
+export const VOICE_CALL_PLAN_COUNTDOWN_TICK_MS = 1000
+
 /** Wait so success toast/message is readable before leaving the public trial landing. */
-export const VOICE_CALL_PLAN_SUCCESS_REDIRECT_MS = 6000
+export const VOICE_CALL_PLAN_SUCCESS_REDIRECT_MS =
+  VOICE_CALL_PLAN_SUCCESS_REDIRECT_SECONDS * VOICE_CALL_PLAN_COUNTDOWN_TICK_MS
 
 export function isVoiceCallTrialPackage(value: string | null | undefined): boolean {
   return value === VoiceCallPlanPackage.Trial

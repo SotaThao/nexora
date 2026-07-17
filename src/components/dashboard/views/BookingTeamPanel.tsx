@@ -1,5 +1,6 @@
 import React, { useEffect, useMemo, useRef, useState } from "react";
 import { BOOKING_HUB_PAGE_SIZE } from "../../../constants/pagination";
+import { BOOKING_HUB_PAGINATION_CLASSNAME } from "./bookingHubFormatters";
 import { useTranslation } from "../../../contexts/LanguageContext";
 import { useNotification } from "../../../contexts/NotificationContext";
 import { getErrorI18nKey } from "../../../data/errorCodes";
@@ -1091,6 +1092,7 @@ export default function BookingTeamPanel() {
               hasPreviousPage={staffResponse?.hasPreviousPage}
               onPageChange={setPage}
               isLoading={isStaffFetching}
+              className={BOOKING_HUB_PAGINATION_CLASSNAME}
             />
           ) : null}
         </article>

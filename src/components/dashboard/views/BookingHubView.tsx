@@ -231,7 +231,11 @@ export default function BookingHubView() {
       )}
 
       {!isTenantStatusLoading && voiceFeaturesEnabled && activeMainTab === BookingHubMainTab.CallLog && (
-        <section className="tab-panel is-active" aria-label={t(`${TK}.ariaCallLogPanel`)}>
+        <section
+          className="tab-panel is-active"
+          id="panel-calllog"
+          aria-label={t(`${TK}.ariaCallLogPanel`)}
+        >
           <BookingCallLogPanel />
         </section>
       )}

@@ -1,3 +1,18 @@
+/** Query param names for merchant `/nexora-voice/*` list endpoints (Swagger PascalCase). */
+export const MerchantVoiceListQueryParam = {
+  PageNumber: 'PageNumber',
+  PageSize: 'PageSize',
+  Status: 'Status',
+  SearchTerm: 'SearchTerm',
+  /** OpenAPI for `GET .../staff/business-staff` only (camelCase). */
+  BusinessStaffSearchTerm: 'searchTerm',
+  Group: 'Group',
+  SearchBy: 'SearchBy',
+  Keyword: 'Keyword',
+  DateFrom: 'DateFrom',
+  DateTo: 'DateTo',
+} as const
+
 /** Booking Hub route query values (not API enums). */
 export enum BookingHubMainTab {
   Booking = 'booking',
