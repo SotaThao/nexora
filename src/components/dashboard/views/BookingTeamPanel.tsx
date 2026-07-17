@@ -226,11 +226,11 @@ function scheduleToString(staff: MerchantVoiceStaffDto) {
     .join(";");
 }
 
-function toTeamMember(staff: MerchantVoiceStaffDto): TeamMember {
+function toTeamMember(staff: MerchantVoiceStaffDto, unnamedLabel: string): TeamMember {
   const first = staff.fullName?.trim()?.charAt(0)?.toUpperCase() || "T";
   return {
     id: staff.id,
-    name: staff.fullName || "Unnamed staff",
+    name: staff.fullName || unnamedLabel,
     phone: staff.phoneNumber || "",
     email: staff.email || "",
     services: formatSkills(staff.skills),
@@ -935,15 +935,18 @@ export default function BookingTeamPanel() {
   );
 
   useEffect(() => {
-    const mapped = (staffResponse?.items ?? []).map(toTeamMember);
+    const unnamedLabel = t(`${TK}.unnamedStaff`);
+    const mapped = (staffResponse?.items ?? []).map((staff) =>
+      toTeamMember(staff, unnamedLabel),
+    );
     setMembers(mapped);
     setSelectedId((prev) => prev || mapped[0]?.id || "");
-  }, [staffResponse?.items]);
+  }, [staffResponse?.items, t]);
 
   useEffect(() => {
     if (!staffDetail || modalMode === "create") return;
     fillDraftFromMember(
-      toTeamMember(staffDetail),
+      toTeamMember(staffDetail, t(`${TK}.unnamedStaff`)),
       "edit",
       schedulesToWeeklySchedule(staffDetail.schedules),
     );

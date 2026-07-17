@@ -18,7 +18,9 @@ import {
   sidebarSubmenuItemClass,
 } from '../../ui/sidebarMenuStyles'
 import PaymentsPayoutsMenuSection from './PaymentsPayoutsMenuSection'
-import { isPaymentsPayoutsRouteActive, VISIBLE_TOUCHPOINTS_SUBMENU } from '../constants'
+import { isPaymentsPayoutsRouteActive, getVisibleBookingHubSubmenu, isBookingHubSubActive, VISIBLE_TOUCHPOINTS_SUBMENU, DASHBOARD_MENU, getDefaultBookingHubTab, getDashboardMenuLocalizedLabel, isDashboardStaffRole } from '../constants'
+import { handleExpandableMenuClick } from '../hooks/expandableMenuNav'
+import { useMerchantVoiceTenantStatus } from '../../../data/hooks/useMerchantVoiceBookings'
 
 export default function MobileMenuDrawer({
   isOpen,
@@ -37,6 +39,8 @@ export default function MobileMenuDrawer({
   setIsPaymentsPayoutsMobileExpanded,
   isTouchpointsMobileExpanded,
   setIsTouchpointsMobileExpanded,
+  isBookingHubMobileExpanded,
+  setIsBookingHubMobileExpanded,
   hasKyb,
   userRole,
   onLogout,
@@ -47,6 +51,11 @@ export default function MobileMenuDrawer({
   const [searchParams] = useSearchParams()
   const activeSubTab = searchParams.get('tab')
   const isPaymentsPayoutsActive = isPaymentsPayoutsRouteActive(activeMenu, activeSubTab)
+  const { data: voiceTenantStatus } = useMerchantVoiceTenantStatus({
+    enabled: !isDashboardStaffRole(userRole),
+  })
+  const hasVoiceTenant = voiceTenantStatus?.hasVoiceTenant === true
+  const bookingHubSubmenu = getVisibleBookingHubSubmenu(hasVoiceTenant)
   const subscriptionCopy = getSubscriptionSidebarCopy(
     subscription ?? profile?.subscription,
     t,
@@ -61,21 +70,32 @@ export default function MobileMenuDrawer({
     navigateMenu(screen, { tab, closeDrawer: true })
     setIsPaymentsPayoutsMobileExpanded(true)
     setIsTouchpointsMobileExpanded(false)
+    setIsBookingHubMobileExpanded(false)
   }
 
   const handleMenuClick = (id: string) => {
-    if (id === 'touchpoints') {
-      if (activeMenu === 'touchpoints') {
-        setIsTouchpointsMobileExpanded((prev) => !prev)
-      } else {
-        navigateMenu('touchpoints', { closeDrawer: false })
-        setIsTouchpointsMobileExpanded(true)
-        setIsPaymentsPayoutsMobileExpanded(false)
-      }
-      return
-    }
-
-    navigateMenu(id)
+    handleExpandableMenuClick({
+      clickedId: id,
+      activeMenu,
+      sections: [
+        {
+          id: DASHBOARD_MENU.Touchpoints,
+          setExpanded: setIsTouchpointsMobileExpanded,
+          enter: () => navigateMenu(DASHBOARD_MENU.Touchpoints, { closeDrawer: false }),
+        },
+        {
+          id: DASHBOARD_MENU.BookingHub,
+          setExpanded: setIsBookingHubMobileExpanded,
+          enter: () =>
+            navigateMenu(DASHBOARD_MENU.BookingHub, {
+              closeDrawer: false,
+              tab: hasVoiceTenant ? undefined : getDefaultBookingHubTab(false),
+            }),
+        },
+      ],
+      onPlainNavigate: (menuId) => navigateMenu(menuId),
+      collapseExtras: () => setIsPaymentsPayoutsMobileExpanded(false),
+    })
   }
 
   if (!isOpen) return null
@@ -161,17 +181,7 @@ export default function MobileMenuDrawer({
           {menuItemsToDisplay.filter((item) => item.id !== 'settings').map((item) => {
             const { id, label } = item
             const isActive = activeMenu === id
-            const localizedLabel = {
-              overview: t('dashboard.menu.dashboard'),
-              staff: t('dashboard.menu.staff'),
-              reviews: t('dashboard.menu.reviews'),
-              reports: t('dashboard.menu.transactions'),
-              'booking-hub': t('dashboard.menu.booking_hub'),
-              touchpoints: t('dashboard.menu.touchpoints'),
-              devices: t('dashboard.menu.qr_nfc'),
-              analytics: t('dashboard.menu.analytics'),
-              support: t('dashboard.menu.support')
-            }[id] || label
+            const localizedLabel = getDashboardMenuLocalizedLabel(id, t, label)
 
             return (
               <React.Fragment key={id}>
@@ -184,9 +194,14 @@ export default function MobileMenuDrawer({
                     <MenuIcon item={item} active={isActive} />
                     <span>{localizedLabel}</span>
                   </div>
-                  {id === 'touchpoints' && (
+                  {id === DASHBOARD_MENU.Touchpoints && (
                     <div className="text-white/65 shrink-0">
                       {isTouchpointsMobileExpanded ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
+                    </div>
+                  )}
+                  {id === DASHBOARD_MENU.BookingHub && (
+                    <div className="text-white/65 shrink-0">
+                      {isBookingHubMobileExpanded ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
                     </div>
                   )}
                 </button>
@@ -201,15 +216,34 @@ export default function MobileMenuDrawer({
                   />
                 )}
 
-                {id === 'touchpoints' && isTouchpointsMobileExpanded && (
+                {id === DASHBOARD_MENU.BookingHub && isBookingHubMobileExpanded && (
                   <div className={SIDEBAR_SUBMENU_WRAP_CLASS}>
-                    {VISIBLE_TOUCHPOINTS_SUBMENU.map((sub) => {
-                      const isSubActive = activeMenu === 'touchpoints' && (activeSubTab || 'stations') === sub.id
+                    {bookingHubSubmenu.map((sub) => {
+                      const isSubActive = isBookingHubSubActive(activeMenu, activeSubTab, sub.id, hasVoiceTenant)
                       return (
                         <button
                           key={sub.id}
                           type="button"
-                          onClick={() => navigateMenu('touchpoints', { tab: sub.id })}
+                          onClick={() => navigateMenu(DASHBOARD_MENU.BookingHub, { tab: sub.id })}
+                          className={sidebarSubmenuItemClass(isSubActive)}
+                        >
+                          <div className={`h-1.5 w-1.5 rounded-full ${isSubActive ? 'bg-brandCyan shadow-sm' : 'bg-white/30'}`} />
+                          <span>{t(sub.labelKey)}</span>
+                        </button>
+                      )
+                    })}
+                  </div>
+                )}
+
+                {id === DASHBOARD_MENU.Touchpoints && isTouchpointsMobileExpanded && (
+                  <div className={SIDEBAR_SUBMENU_WRAP_CLASS}>
+                    {VISIBLE_TOUCHPOINTS_SUBMENU.map((sub) => {
+                      const isSubActive = activeMenu === DASHBOARD_MENU.Touchpoints && (activeSubTab || 'stations') === sub.id
+                      return (
+                        <button
+                          key={sub.id}
+                          type="button"
+                          onClick={() => navigateMenu(DASHBOARD_MENU.Touchpoints, { tab: sub.id })}
                           className={sidebarSubmenuItemClass(isSubActive)}
                         >
                           <div className={`h-1.5 w-1.5 rounded-full ${isSubActive ? 'bg-brandCyan shadow-sm' : 'bg-white/30'}`} />

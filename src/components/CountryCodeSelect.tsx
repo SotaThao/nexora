@@ -169,6 +169,23 @@ export const normalizePhoneForApi = (value: string, fallbackDialCode: string) =>
   return e164
 }
 
+/**
+ * Strip FE-only phone formatting before search API calls.
+ * e.g. "+1 806-388-8899" → "+18063888899". Name queries pass through unchanged.
+ */
+export const normalizePhoneSearchTerm = (value: string) => {
+  const trimmed = String(value ?? '').trim()
+  if (!trimmed) return ''
+
+  // Drop spaces / dashes / parens / thin group separators used for display only.
+  const compacted = trimmed.replace(/[\s().\-\u2009]/g, '')
+  if (/^\+?\d+$/.test(compacted)) {
+    return compacted.startsWith('+') ? `+${compacted.slice(1)}` : compacted
+  }
+
+  return trimmed
+}
+
 export const getDisplayMaxNationalDigits = (dialCode: string, nationalDigits = '') => {
   if (dialCode === PhoneDialCode.Vietnam) {
     return nationalDigits.replace(/\D/g, '').startsWith(PhoneNationalLimits.VnLocalTrunkDigit)

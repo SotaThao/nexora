@@ -1,5 +1,6 @@
 import type { ReactNode } from 'react'
 import Skeleton from '../../ui/skeleton/Skeleton'
+import { useTranslation } from '../../../contexts/LanguageContext'
 
 function BookingSkeletonStack({
   children,
@@ -270,8 +271,13 @@ export function BookingTechScheduleSkeleton() {
 }
 
 export function BookingSettingsSkeleton() {
+  const { t } = useTranslation()
   return (
-    <div className="settings-shell" aria-busy="true" aria-label="Loading salon settings">
+    <div
+      className="settings-shell"
+      aria-busy="true"
+      aria-label={t('components.dashboard.views.BookingHubView.settings.loadingAria')}
+    >
       <div className="settings-hero is-compact">
         <Skeleton width={120} height={12} borderRadius={6} />
         <Skeleton width="52%" height={24} borderRadius={8} />

@@ -800,23 +800,23 @@ export default function BookingSettingsPanel() {
         <p className="settings-desc">{t(`${TK}.oneSourceDesc`)}</p>
         <div className="settings-sync-grid">
           <div className="settings-sync-pill">
-            <strong>AI Voice</strong>
+            <strong>{t(`${TK}.syncPillVoice`)}</strong>
             {t(`${TK}.syncVoice`)}
           </div>
           <div className="settings-sync-pill">
-            <strong>SMS</strong>
+            <strong>{t(`${TK}.syncPillSms`)}</strong>
             {t(`${TK}.syncSms`)}
           </div>
           <div className="settings-sync-pill">
-            <strong>Landing Page</strong>
+            <strong>{t(`${TK}.syncPillLanding`)}</strong>
             {t(`${TK}.syncLanding`)}
           </div>
           <div className="settings-sync-pill">
-            <strong>Schema</strong>
+            <strong>{t(`${TK}.syncPillSchema`)}</strong>
             {t(`${TK}.syncSchema`)}
           </div>
           <div className="settings-sync-pill">
-            <strong>Booking</strong>
+            <strong>{t(`${TK}.syncPillBooking`)}</strong>
             {t(`${TK}.syncBooking`)}
           </div>
         </div>
@@ -1347,7 +1347,7 @@ export default function BookingSettingsPanel() {
                             commitServiceNumberOnBlur(service.id, "duration")
                           }
                         />
-                        <span className="settings-service-suffix">min</span>
+                        <span className="settings-service-suffix">{t(`${TK}.durationUnit`)}</span>
                       </div>
                     </label>
                   </div>

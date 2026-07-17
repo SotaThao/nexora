@@ -16,6 +16,7 @@ export interface SubmitVoiceTrialRequest {
   phoneNumber: string
   email: string
   cityArea?: string | null
+  website?: string | null
   services: string[]
   openingDays: string[]
   serviceHoursFrom: string
@@ -39,6 +40,7 @@ export interface VoiceTrialRequestDetailDto {
   phoneNumber: string
   email: string
   cityArea: string | null
+  website: string | null
   services: string[]
   openingDays: string[]
   serviceHoursFrom: string

@@ -82,6 +82,7 @@ interface TrialFormState {
   phone: string;
   email: string;
   city: string;
+  website: string;
   referral: string;
   openTime: string;
   closeTime: string;
@@ -100,6 +101,7 @@ function createInitialTrialForm(): TrialFormState {
     phone: "",
     email: "",
     city: "",
+    website: "",
     referral: "",
     openTime: DEFAULT_OPEN_TIME,
     closeTime: DEFAULT_CLOSE_TIME,
@@ -273,6 +275,7 @@ export default function BookingTrialModal({
       | "phone"
       | "email"
       | "city"
+      | "website"
       | "referral"
       | "openTime"
       | "closeTime"
@@ -388,6 +391,7 @@ export default function BookingTrialModal({
     const openingDays = mapDayKeysToApiOpeningDays(form.activeDays);
     const painKey = PAIN_POINT_KEYS[form.painPoint as PainPointValue]!;
     const cityArea = form.city.trim();
+    const website = form.website.trim();
     const referralCode = form.referral.trim();
 
     return {
@@ -396,6 +400,7 @@ export default function BookingTrialModal({
       phoneNumber,
       email: emailValue,
       cityArea: cityArea || null,
+      website: website || null,
       services,
       openingDays,
       serviceHoursFrom: formatTrialTimeLabelToApi(form.openTime),
@@ -614,6 +619,22 @@ export default function BookingTrialModal({
                   value={form.city}
                   placeholder={t(`${TK}.cityPlaceholder`)}
                   onChange={(e) => patchFormField("city", e.target.value)}
+                />
+              </div>
+              <div className="trial-field trial-span-2">
+                <label className="trial-label" htmlFor="trial-website">
+                  {t(`${TK}.websiteLabel`)}{" "}
+                  <span className="trial-optional">{t(`${TK}.optional`)}</span>
+                </label>
+                <input
+                  className="trial-input"
+                  id="trial-website"
+                  type="url"
+                  inputMode="url"
+                  autoComplete="url"
+                  value={form.website}
+                  placeholder={t(`${TK}.websitePlaceholder`)}
+                  onChange={(e) => patchFormField("website", e.target.value)}
                 />
               </div>
               <div
