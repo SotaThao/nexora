@@ -88,6 +88,7 @@ export default function useDirectPaymentFlow() {
       {
         type: activePaymentMethod.type,
         accountInfo: activePaymentMethod.accountInfo,
+        accountName: activePaymentMethod.accountName ?? null,
       },
     ]
   }, [activePaymentMethod])

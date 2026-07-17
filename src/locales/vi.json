@@ -2076,6 +2076,10 @@
       }
     },
     "payout": {
+      "accountNameField": {
+        "label": "Tên chủ tài khoản (Không bắt buộc)",
+        "placeholder": "VD: Anna Smith"
+      },
       "bankWireForm": {
         "title": "Thiết lập tài khoản ngân hàng",
         "beneficiaryName": "Tên người thụ hưởng",

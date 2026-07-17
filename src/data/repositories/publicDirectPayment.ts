@@ -27,6 +27,7 @@ function normalizePaymentMethod(raw: Record<string, unknown> | null | undefined)
     type,
     uiKey: payoutTypeToUiKey(type),
     accountInfo,
+    accountName: readField<string | null>(raw, 'accountName', 'AccountName') ?? null,
     imageUrl: readField<string | null>(raw, 'imageUrl', 'ImageUrl') ?? null,
   }
 }

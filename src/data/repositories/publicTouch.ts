@@ -41,7 +41,7 @@ export function createPublicTouchRepository(client: HttpClient = httpClient) {
     },
 
     async getTipPaymentMethods(tipId: string) {
-      return client.get<Array<{ id: string; type: string; accountInfo: string; imageUrl: string }>>(
+      return client.get<Array<{ id: string; type: string; accountInfo: string; accountName?: string | null; imageUrl: string }>>(
         `/api/v1/tips/${encodeURIComponent(tipId)}/payment-methods`,
         { anonymous: true },
       )

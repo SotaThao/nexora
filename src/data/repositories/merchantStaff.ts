@@ -70,6 +70,7 @@ export function normalizePaymentMethods(
       type,
       uiKey: key,
       accountInfo: value || null,
+      accountName: method.accountName ?? null,
       imageUrl: method.imageUrl ?? null,
       isActive: !!method.isActive,
       isConfigured: Boolean(value.trim() || method.imageUrl),
@@ -79,7 +80,7 @@ export function normalizePaymentMethods(
       enabled: !!method.isActive,
       value,
       qrCode: method.imageUrl ?? '',
-      accountName: displayName ?? '',
+      accountName: method.accountName ?? displayName ?? '',
     }
   }
 

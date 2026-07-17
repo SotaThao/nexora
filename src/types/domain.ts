@@ -89,6 +89,7 @@ export interface PublicDirectPaymentMethod {
   type: string
   uiKey?: string
   accountInfo: string
+  accountName?: string | null
   imageUrl?: string | null
 }
 

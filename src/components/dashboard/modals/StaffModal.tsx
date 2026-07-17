@@ -15,7 +15,7 @@ import {
   useToggleLocalStaffPaymentMethod,
   useUpdateLocalStaffPaymentMethod,
 } from '../../../data/hooks/useLocalStaff'
-import { PAYOUT_UI_LABELS, orderedPayoutUiKeysFromMethods } from '../../../data/paymentMethodTypes'
+import { PAYOUT_UI_LABELS, orderedPayoutUiKeysFromMethods, toPayoutAccountNameDto } from '../../../data/paymentMethodTypes'
 import { getApiErrorCode } from '../../../types/domain'
 import { getErrorI18nKey } from '../../../data/errorCodes'
 import { buildStaffReviewSummary } from './staffModalReviewUtils'
@@ -257,6 +257,7 @@ function StaffModal({
           staffProfileId,
           uiKey: payoutSetupWallet,
           accountInfo: trimmed,
+          accountName: toPayoutAccountNameDto(payoutSetupWallet, accountName),
           imageUrl: qrCode || null,
           imageFile: qrFile,
         },
@@ -867,6 +868,7 @@ function StaffModal({
         staffName={form.fullName}
         initialValue={tempPayoutValues.value}
         initialQrCode={tempPayoutValues.qrCode}
+        initialAccountName={tempPayoutValues.accountName || ''}
         onClose={() => setPayoutSetupOpen(false)}
         onSubmit={handlePayoutSubmit}
         readOnly={!isLocalStaff}
