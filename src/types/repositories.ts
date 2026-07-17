@@ -191,11 +191,14 @@ export interface DashboardAnalyticsTouchPointApiDto {
   avgRating?: number
 }
 
-export interface DashboardAnalyticsPayoutMethodApiDto {
+export interface DashboardAnalyticsTipsMethodApiDto {
   method?: string
   amount?: number
   count?: number
 }
+
+/** @deprecated API may still return this; prefer `tipsMethods`. */
+export type DashboardAnalyticsPayoutMethodApiDto = DashboardAnalyticsTipsMethodApiDto
 
 export interface DashboardAnalyticsDirectPayoutApiDto {
   totalAmount?: number
@@ -206,7 +209,9 @@ export interface DashboardAnalyticsApiDto {
   overview?: DashboardAnalyticsOverviewApiDto
   leaderboard?: DashboardAnalyticsLeaderboardItemApiDto[]
   touchPoints?: DashboardAnalyticsTouchPointApiDto[]
-  payoutMethods?: DashboardAnalyticsPayoutMethodApiDto[]
+  tipsMethods?: DashboardAnalyticsTipsMethodApiDto[]
+  /** @deprecated Prefer `tipsMethods`. */
+  payoutMethods?: DashboardAnalyticsTipsMethodApiDto[]
   directPayout?: DashboardAnalyticsDirectPayoutApiDto
 }
 
@@ -242,11 +247,14 @@ export interface MerchantDashboardAnalyticsTouchPoint {
   avgRating: number
 }
 
-export interface MerchantDashboardAnalyticsPayoutMethod {
+export interface MerchantDashboardAnalyticsTipsMethod {
   method: string
   amount: number
   count: number
 }
+
+/** @deprecated Use `MerchantDashboardAnalyticsTipsMethod`. */
+export type MerchantDashboardAnalyticsPayoutMethod = MerchantDashboardAnalyticsTipsMethod
 
 export interface MerchantDashboardAnalyticsDirectPayout {
   totalAmount: number
@@ -257,7 +265,7 @@ export interface MerchantDashboardAnalytics {
   overview: MerchantDashboardAnalyticsOverview
   leaderboard: MerchantDashboardAnalyticsLeaderboardItem[]
   touchPoints: MerchantDashboardAnalyticsTouchPoint[]
-  payoutMethods: MerchantDashboardAnalyticsPayoutMethod[]
+  tipsMethods: MerchantDashboardAnalyticsTipsMethod[]
   directPayout: MerchantDashboardAnalyticsDirectPayout
 }
 
