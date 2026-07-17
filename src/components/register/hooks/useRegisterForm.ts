@@ -23,7 +23,7 @@ import { getSignupOtp } from '../../../auth/signupOtp'
 import { savePendingRegistration, clearPendingRegistration } from '../../../auth/pendingRegistration'
 import { getErrorI18nKey } from '../../../data/errorCodes'
 import { useCompletePersonalOnboarding } from '../../../data/hooks/usePersonalOnboarding'
-import { useCreateStaffProfile, useProfileSettings, useUpdateBasicInfo } from '../../../data/hooks/useProfileSettings'
+import { useCreateStaffProfile, useProfileSettings } from '../../../data/hooks/useProfileSettings'
 import { buildUpdateStaffProfileDto } from '../../../utils/mapStaffProfileView'
 import { getRequiredFieldError } from '../../../utils/onboardingFieldValidation'
 
@@ -38,7 +38,6 @@ export function useRegisterForm({ ssoEmail, onBackToLogin, onRegisterSuccess, on
   const addNotificationMutation = useAddNotification()
   const completePersonalOnboardingMutation = useCompletePersonalOnboarding()
   const createStaffProfileMutation = useCreateStaffProfile()
-  const updateBasicInfoMutation = useUpdateBasicInfo()
   const { data: sessionUserProfile } = useProfileSettings({ enabled: !!isRedirectedFromSession })
   const [currentStep, setCurrentStep] = useState(resumeOtpVerification ? 2 : initialStep)
   const [role, setRole] = useState(resumeRole || initialRole)
@@ -52,7 +51,7 @@ export function useRegisterForm({ ssoEmail, onBackToLogin, onRegisterSuccess, on
   const [leg, setLeg] = useState(initialLeg)
   const [fullName, setFullName] = useState('')
   const [nickname, setNickname] = useState('')
-  const [position, setPosition] = useState('')
+  const [position, setPosition] = useState('Nail Technician')
   const [phone, setPhone] = useState('')
   const [bio, setBio] = useState('')
   const [vlinkpayId, setVlinkpayId] = useState('')
@@ -82,6 +81,7 @@ export function useRegisterForm({ ssoEmail, onBackToLogin, onRegisterSuccess, on
       const knownFullName = `${sessionUserProfile.firstName} ${sessionUserProfile.lastName || ''}`.trim()
       setFullName(knownFullName)
       setFullNameLocked(true)
+      setNickname((current) => current || `${knownFullName.split(' ')[0]}.`)
     }
     const knownPhone = normalizePhone((sessionUserProfile.phoneNumber || sessionUserProfile.phone) as string)
     if (knownPhone) {
@@ -527,6 +527,9 @@ export function useRegisterForm({ ssoEmail, onBackToLogin, onRegisterSuccess, on
     const fullNameError = getRequiredFieldError(fullName, 'setup.errors.staff_name_required')
     if (fullNameError) fieldErrors.fullName = fullNameError
 
+    const nicknameError = getRequiredFieldError(nickname, 'setup.errors.staff_nickname_required')
+    if (nicknameError) fieldErrors.nickname = nicknameError
+
     const phoneError = getRequiredFieldError(phone, 'setup.errors.phone_required')
     if (phoneError) {
       fieldErrors.phone = phoneError
@@ -542,19 +545,12 @@ export function useRegisterForm({ ssoEmail, onBackToLogin, onRegisterSuccess, on
     const isApiMode = import.meta.env.VITE_DATA_SOURCE === 'api'
     if (isApiMode) {
       try {
-        const nameParts = fullName.trim().split(/\s+/)
-        await updateBasicInfoMutation.mutateAsync({
-          firstName: nameParts[0],
-          lastName: nameParts.slice(1).join(' ') || undefined,
-          phoneNumber: phone,
-        })
-
         const dto = buildUpdateStaffProfileDto({}, {
           fullName: fullName.trim(),
-          defaultDisplayName: fullName.trim(),
-          position: '',
-          bio: '',
-          avatar: '',
+          defaultDisplayName: nickname.trim() || email.split('@')[0],
+          position,
+          bio,
+          avatar,
           phone,
         })
         await createStaffProfileMutation.mutateAsync(dto)

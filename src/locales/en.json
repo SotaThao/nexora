@@ -2914,7 +2914,7 @@
         },
         "StepProfileSetup": {
           "personalProfileSetup": "Personal Profile Setup",
-          "configureYourDisplayDetails": "Enter your full name and phone number to continue. You can add other profile details later.",
+          "configureYourDisplayDetails": "Configure your display details for the customer tip screen.",
           "acceptedFormatsJpgPng": "Accepted formats: JPG, PNG. Max size: 5MB.",
           "fullName": "Full Name *",
           "displayNickname": "Display Nickname *",

@@ -2909,7 +2909,7 @@
         },
         "StepProfileSetup": {
           "personalProfileSetup": "Cấu hình hồ sơ cá nhân",
-          "configureYourDisplayDetails": "Nhập họ tên và số điện thoại để tiếp tục. Bạn có thể bổ sung thông tin hồ sơ khác sau.",
+          "configureYourDisplayDetails": "Thiết lập thông tin hiển thị của bạn trên màn hình nhận tiền tip.",
           "acceptedFormatsJpgPng": "Chấp nhận định dạng JPG, PNG. Dung lượng tối đa 5MB.",
           "fullName": "Họ và tên *",
           "displayNickname": "Tên hiển thị (Nickname) *",
