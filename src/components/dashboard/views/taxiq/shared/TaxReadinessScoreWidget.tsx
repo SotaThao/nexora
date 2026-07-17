@@ -31,6 +31,7 @@ export const READINESS_ITEM_ROUTES: Record<string, string> = {
   SelfReportedCpaReview: '/staff/taxiq/income',
   BoothRenterNoIncome: '/staff/taxiq/income',
   Contractor1099NoIncome: '/staff/taxiq/income',
+  MissingBusinessEntityType: '/dashboard/taxiq',
 }
 
 /**
@@ -66,6 +67,7 @@ const READINESS_ITEM_I18N_KEYS: Record<string, string> = {
   SelfReportedCpaReview: 'taxiq.readinessItems.selfReportedCpaReview',
   BoothRenterNoIncome: 'taxiq.readinessItems.boothRenterNoIncome',
   Contractor1099NoIncome: 'taxiq.readinessItems.contractor1099NoIncome',
+  MissingBusinessEntityType: 'taxiq.readinessItems.missingBusinessEntityType',
 }
 
 export function getReadinessItemLabel(item: ReadinessPriorityItem, t: TFunction): string {

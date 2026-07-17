@@ -26,17 +26,32 @@ export type DisputeResolution = (typeof DISPUTE_RESOLUTIONS)[number]
 export interface StaffTinApiDto {
   ssn?: string | null
   ein?: string | null
+  w9LegalName?: string | null
+  w9DbaName?: string | null
+  w9Address?: string | null
+  w9TaxClassification?: string | null
+  w9HasSignedDocument?: boolean
 }
 
 export interface StaffTin {
   ssn: string | null
   ein: string | null
+  w9LegalName: string | null
+  w9DbaName: string | null
+  w9Address: string | null
+  w9TaxClassification: string | null
+  w9HasSignedDocument: boolean
 }
 
 function normalizeStaffTin(dto: StaffTinApiDto): StaffTin {
   return {
     ssn: dto.ssn ?? null,
     ein: dto.ein ?? null,
+    w9LegalName: dto.w9LegalName ?? null,
+    w9DbaName: dto.w9DbaName ?? null,
+    w9Address: dto.w9Address ?? null,
+    w9TaxClassification: dto.w9TaxClassification ?? null,
+    w9HasSignedDocument: dto.w9HasSignedDocument ?? false,
   }
 }
 
@@ -86,12 +101,6 @@ export interface CreateStaffTaxYearByOwnerParams {
   staffUserId: string
   contractType: ContractType
   w9Status?: W9Status
-}
-
-export interface UpdateStaffW9StatusParams {
-  ownerTaxYearId: string
-  staffTaxYearId: string
-  w9Status: W9Status
 }
 
 export interface PayoutRecordApiDto {
@@ -269,16 +278,6 @@ export function createTaxiqOwnerPayoutsRepository(client: HttpClient = httpClien
         contractType: params.contractType,
         w9Status: params.w9Status ?? 'NotRequired',
       })
-    },
-
-    async updateStaffW9Status(params: UpdateStaffW9StatusParams): Promise<void> {
-      await client.put<void>(
-        `/api/v1/taxiq/owner/staff-tax-years/${encodeURIComponent(params.staffTaxYearId)}/w9-status`,
-        {
-          ownerTaxYearId: params.ownerTaxYearId,
-          w9Status: params.w9Status,
-        },
-      )
     },
 
     async getStaffTin(ownerTaxYearId: string, staffUserId: string, reveal: boolean): Promise<StaffTin> {

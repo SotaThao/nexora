@@ -29,10 +29,16 @@ export default function EditStaffModuleConfigModal({
   const updateModules = useUpdateStaffTaxYearModules()
 
   const [enabledModules, setEnabledModules] = useState<string[]>(staffTaxYear.enabledModules)
+  const [officeSqFt, setOfficeSqFt] = useState(staffTaxYear.officeSqFt?.toString() ?? '')
+  const [totalHomeSqFt, setTotalHomeSqFt] = useState(staffTaxYear.totalHomeSqFt?.toString() ?? '')
+  const [homeOfficeError, setHomeOfficeError] = useState('')
 
   useEffect(() => {
     if (open) {
       setEnabledModules(staffTaxYear.enabledModules)
+      setOfficeSqFt(staffTaxYear.officeSqFt?.toString() ?? '')
+      setTotalHomeSqFt(staffTaxYear.totalHomeSqFt?.toString() ?? '')
+      setHomeOfficeError('')
     }
   }, [open, staffTaxYear])
 
@@ -43,12 +49,18 @@ export default function EditStaffModuleConfigModal({
   }
 
   const handleSave = async () => {
+    if (officeSqFt && totalHomeSqFt && Number(officeSqFt) > Number(totalHomeSqFt)) {
+      setHomeOfficeError(t('taxiq.staffOnboarding.step1.homeOfficeError'))
+      return
+    }
     try {
       await updateModules.mutateAsync({
         id: staffTaxYear.id,
         enabledModules,
         contractType: staffTaxYear.contractType,
         w9Status: staffTaxYear.w9Status,
+        officeSqFt: officeSqFt ? Number(officeSqFt) : null,
+        totalHomeSqFt: totalHomeSqFt ? Number(totalHomeSqFt) : null,
       })
       showToast(t('taxiq.staffHome.editModulesModal.saved'), 'success')
       onClose()
@@ -68,6 +80,43 @@ export default function EditStaffModuleConfigModal({
         </div>
 
         <div className="flex-1 space-y-2 overflow-y-auto">
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+            <div>
+              <label className="text-xs font-bold text-nexoraMuted">
+                <span className="inline-flex items-center gap-1">
+                  {t('taxiq.staffOnboarding.step1.officeSqFtLabel')}
+                  <Tooltip content={t('taxiq.staffOnboarding.step1.homeOfficeTooltip')} />
+                </span>
+              </label>
+              <input
+                type="number"
+                min="0"
+                value={officeSqFt}
+                onChange={(e) => {
+                  setOfficeSqFt(e.target.value)
+                  setHomeOfficeError('')
+                }}
+                className="mt-1 w-full rounded-lg border border-nexoraBorder px-3 py-2 text-sm"
+              />
+            </div>
+            <div>
+              <label className="text-xs font-bold text-nexoraMuted">
+                {t('taxiq.staffOnboarding.step1.totalHomeSqFtLabel')}
+              </label>
+              <input
+                type="number"
+                min="0"
+                value={totalHomeSqFt}
+                onChange={(e) => {
+                  setTotalHomeSqFt(e.target.value)
+                  setHomeOfficeError('')
+                }}
+                className="mt-1 w-full rounded-lg border border-nexoraBorder px-3 py-2 text-sm"
+              />
+            </div>
+          </div>
+          {homeOfficeError && <p className="text-xs font-semibold text-rose-500">{homeOfficeError}</p>}
+
           {MODULE_OPTIONS.map((mod) => (
             <label key={mod.key} className="flex items-center gap-2.5 text-sm font-semibold text-nexoraText">
               <input

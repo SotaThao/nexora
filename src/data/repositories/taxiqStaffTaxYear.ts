@@ -12,6 +12,8 @@ export interface StaffTaxYearApiDto {
   status: string
   contractType: string
   w9Status: string
+  officeSqFt?: number | null
+  totalHomeSqFt?: number | null
   enabledModules?: string[]
   createdAt: string
   lastModified?: string | null
@@ -28,6 +30,8 @@ export interface StaffTaxYear {
   status: string
   contractType: string
   w9Status: string
+  officeSqFt: number | null
+  totalHomeSqFt: number | null
   enabledModules: string[]
   createdAt: string
   lastModified: string | null
@@ -42,6 +46,8 @@ export interface CreateStaffTaxYearParams {
   taxYear: number
   contractType: string
   w9Status: string
+  officeSqFt?: number | null
+  totalHomeSqFt?: number | null
   enabledModules: string[]
 }
 
@@ -49,16 +55,49 @@ export interface UpdateStaffTaxYearModulesParams {
   enabledModules: string[]
   contractType?: string
   w9Status?: string
+  officeSqFt?: number | null
+  totalHomeSqFt?: number | null
+}
+
+export interface W9RecordApiDto {
+  legalName: string
+  dbaName?: string | null
+  address: string
+  taxClassification: string
+  hasSignedDocument: boolean
+  signedDocumentUrl?: string | null
+}
+
+export interface W9Record {
+  legalName: string
+  dbaName: string | null
+  address: string
+  taxClassification: string
+  hasSignedDocument: boolean
+  signedDocumentUrl: string | null
+}
+
+function normalizeW9Record(dto: W9RecordApiDto): W9Record {
+  return {
+    legalName: dto.legalName,
+    dbaName: dto.dbaName ?? null,
+    address: dto.address,
+    taxClassification: dto.taxClassification,
+    hasSignedDocument: dto.hasSignedDocument,
+    signedDocumentUrl: dto.signedDocumentUrl ?? null,
+  }
 }
 
 export interface StaffTaxProfileApiDto {
   ssn?: string | null
   ein?: string | null
+  w9Record?: W9RecordApiDto | null
 }
 
 export interface StaffTaxProfile {
   ssn: string | null
   ein: string | null
+  w9Record: W9Record | null
 }
 
 export interface UpsertStaffTaxProfileParams {
@@ -66,10 +105,18 @@ export interface UpsertStaffTaxProfileParams {
   ein?: string | null
 }
 
+export interface UpsertW9RecordParams {
+  legalName: string
+  dbaName?: string | null
+  address: string
+  taxClassification: string
+}
+
 function normalizeStaffTaxProfile(dto: StaffTaxProfileApiDto): StaffTaxProfile {
   return {
     ssn: dto.ssn ?? null,
     ein: dto.ein ?? null,
+    w9Record: dto.w9Record ? normalizeW9Record(dto.w9Record) : null,
   }
 }
 
@@ -112,6 +159,8 @@ function normalizeStaffTaxYear(dto: StaffTaxYearApiDto): StaffTaxYear {
     status: dto.status,
     contractType: dto.contractType,
     w9Status: dto.w9Status,
+    officeSqFt: dto.officeSqFt ?? null,
+    totalHomeSqFt: dto.totalHomeSqFt ?? null,
     enabledModules: dto.enabledModules ?? [],
     createdAt: dto.createdAt,
     lastModified: dto.lastModified ?? null,
@@ -160,6 +209,8 @@ export function createTaxiqStaffTaxYearRepository(client: HttpClient = httpClien
         taxYear: params.taxYear,
         contractType: params.contractType,
         w9Status: params.w9Status,
+        officeSqFt: params.officeSqFt ?? null,
+        totalHomeSqFt: params.totalHomeSqFt ?? null,
         enabledModules: params.enabledModules,
       })
       return id
@@ -177,6 +228,8 @@ export function createTaxiqStaffTaxYearRepository(client: HttpClient = httpClien
         enabledModules: params.enabledModules,
         contractType: params.contractType ?? null,
         w9Status: params.w9Status ?? null,
+        officeSqFt: params.officeSqFt ?? null,
+        totalHomeSqFt: params.totalHomeSqFt ?? null,
       })
     },
 
@@ -190,6 +243,21 @@ export function createTaxiqStaffTaxYearRepository(client: HttpClient = httpClien
         ssn: params.ssn ?? null,
         ein: params.ein ?? null,
       })
+    },
+
+    async upsertW9Record(params: UpsertW9RecordParams): Promise<void> {
+      await client.put('/api/v1/taxiq/staff/tax-profile/w9', {
+        legalName: params.legalName,
+        dbaName: params.dbaName ?? null,
+        address: params.address,
+        taxClassification: params.taxClassification,
+      })
+    },
+
+    async uploadSignedW9(file: File): Promise<void> {
+      const formData = new FormData()
+      formData.append('file', file)
+      await client.upload<void>('/api/v1/taxiq/staff/tax-profile/w9/document', formData, 'POST')
     },
   }
 }

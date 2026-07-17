@@ -3708,6 +3708,33 @@
         "ssnFormat": "SSN phải có 9 số (VD: 123-45-6789)",
         "einFormat": "EIN phải có 9 số (VD: 12-3456789)",
         "generic": "Đã có lỗi xảy ra. Vui lòng thử lại."
+      },
+      "w9": {
+        "title": "Thông Tin W-9",
+        "description": "Thông tin định danh thuế thật của bạn, tiệm dùng để lập Form 1099-NEC.",
+        "legalNameLabel": "Tên pháp lý",
+        "dbaNameLabel": "Tên kinh doanh (DBA, tùy chọn)",
+        "addressLabel": "Địa chỉ",
+        "taxClassificationLabel": "Phân loại thuế",
+        "saveButton": "Lưu thông tin W-9",
+        "savedNotice": "Đã lưu thông tin W-9.",
+        "uploadLabel": "File W-9 đã ký (tùy chọn)",
+        "uploadChooseFile": "Chọn tệp",
+        "uploadSuccess": "Đã tải lên file W-9 đã ký.",
+        "documentAttached": "Đã đính kèm file đã ký",
+        "taxClassifications": {
+          "individual": "Cá Nhân",
+          "soleProprietor": "Sole Proprietor",
+          "llc": "LLC",
+          "partnership": "Hợp Danh (Partnership)",
+          "cCorp": "C-Corp",
+          "sCorp": "S-Corp"
+        },
+        "errors": {
+          "legalNameRequired": "Tên pháp lý là bắt buộc.",
+          "addressRequired": "Địa chỉ là bắt buộc.",
+          "uploadFailed": "Không thể tải lên file W-9 đã ký. Vui lòng thử lại."
+        }
       }
     },
     "tooltips": {
@@ -3731,7 +3758,13 @@
         "salonNameLabel": "Tên tiệm",
         "taxYearLabel": "Năm thuế",
         "taxYearTooltip": "Năm dương lịch mà hồ sơ này theo dõi (1/1 – 31/12). Mỗi năm thuế được thiết lập, theo dõi và xuất hồ sơ riêng.",
-        "taxYearRequiredForCpaExport": "Năm thuế là bắt buộc khi bật Xuất Hồ Sơ Cuối Năm."
+        "taxYearRequiredForCpaExport": "Năm thuế là bắt buộc khi bật Xuất Hồ Sơ Cuối Năm.",
+        "businessEntityTypeLabel": "Loại hình pháp lý doanh nghiệp (tùy chọn)",
+        "businessEntityTypeNone": "Chưa chọn",
+        "officeSqFtLabel": "Diện tích văn phòng (m², tùy chọn)",
+        "totalHomeSqFtLabel": "Tổng diện tích nhà (m², tùy chọn)",
+        "homeOfficeTooltip": "Dùng để tính khấu trừ Home Office — chỉ cần nhập 1 lần mỗi năm thuế.",
+        "homeOfficeError": "Diện tích văn phòng không được lớn hơn tổng diện tích nhà."
       },
       "step2": {
         "title": "Loại nhân viên",
@@ -3761,6 +3794,9 @@
         "title": "Xem lại",
         "reviewSalonName": "Tên tiệm",
         "reviewTaxYear": "Năm thuế",
+        "reviewBusinessEntityType": "Loại hình pháp lý doanh nghiệp",
+        "reviewOfficeSqFt": "Diện tích văn phòng",
+        "reviewTotalHomeSqFt": "Tổng diện tích nhà",
         "reviewModules": "Module"
       },
       "errors": {
@@ -3787,7 +3823,11 @@
         "w9Pending": "Đang chờ",
         "w9PendingTooltip": "Tiệm đã yêu cầu W-9 nhưng chưa nhận được — phía chủ tiệm sẽ hiện cảnh báo High Priority.",
         "w9Received": "Đã nhận",
-        "w9ReceivedTooltip": "Tiệm đã nhận đủ W-9 của bạn."
+        "w9ReceivedTooltip": "Tiệm đã nhận đủ W-9 của bạn.",
+        "officeSqFtLabel": "Diện tích văn phòng (m², tùy chọn)",
+        "totalHomeSqFtLabel": "Tổng diện tích nhà (m², tùy chọn)",
+        "homeOfficeTooltip": "Dùng để tính khấu trừ Home Office — chỉ cần nhập 1 lần mỗi năm thuế.",
+        "homeOfficeError": "Diện tích văn phòng không được lớn hơn tổng diện tích nhà."
       },
       "step2": {
         "title": "Chọn module muốn bật"
@@ -3796,6 +3836,8 @@
         "title": "Xem lại",
         "reviewContractType": "Loại hợp đồng",
         "reviewW9Status": "Trạng thái W-9",
+        "reviewOfficeSqFt": "Diện tích văn phòng",
+        "reviewTotalHomeSqFt": "Tổng diện tích nhà",
         "reviewModules": "Module"
       },
       "errors": {
@@ -3921,7 +3963,16 @@
       "selfReportedMissingReceipt": "Khoản thu nhập tự khai thiếu chứng từ",
       "selfReportedCpaReview": "Khoản thu nhập tự khai cần CPA xem xét",
       "boothRenterNoIncome": "Booth Renter chưa nhập thu nhập tự khai — doanh thu từ khách thường cần khai báo",
-      "contractor1099NoIncome": "Bạn chưa nhập thu nhập tự khai nào cho năm này"
+      "contractor1099NoIncome": "Bạn chưa nhập thu nhập tự khai nào cho năm này",
+      "missingBusinessEntityType": "Cần chọn Loại Hình Pháp Lý Doanh Nghiệp để bật Xuất Hồ Sơ CPA — vào cấu hình Tax IQ để thiết lập"
+    },
+    "businessEntityType": {
+      "soleProprietor": "Sole Proprietor",
+      "partnership": "Hợp Danh (Partnership)",
+      "llc": "LLC",
+      "sCorp": "S-Corp",
+      "cCorp": "C-Corp",
+      "other": "Khác"
     },
     "deductionCenter": {
       "title": "Trung Tâm Khấu Trừ",
@@ -4245,8 +4296,18 @@
           "receiptLabel": "Hóa đơn (tùy chọn)",
           "receiptChooseFile": "Chọn tệp",
           "receiptExisting": "Đã đính kèm hóa đơn",
+          "depreciationMethodLabel": "Phương pháp khấu hao (tùy chọn)",
+          "depreciationMethodNone": "Chưa chọn",
+          "disposalDateLabel": "Ngày thanh lý (tùy chọn)",
+          "disposalAmountLabel": "Giá bán khi thanh lý (tùy chọn)",
           "submit": "Thêm Thiết Bị",
           "saveChanges": "Lưu Thay Đổi"
+        },
+        "depreciationMethod": {
+          "macrs": "MACRS",
+          "straightLine": "Khấu Hao Đường Thẳng",
+          "section179": "Section 179",
+          "bonusDepreciation": "Khấu Hao Bổ Sung"
         },
         "aiSuggestion": {
           "deductNow": "Khấu Trừ Ngay",
@@ -4386,6 +4447,7 @@
           "endLocationLabel": "Điểm đến (tùy chọn)",
           "milesLabel": "Số dặm",
           "milesRequired": "Số dặm phải từ 0 trở lên.",
+          "vehicleInfoLabel": "Thông tin xe (tùy chọn)",
           "missingFieldsHint": "Bỏ trống mục đích hoặc điểm đi/đến sẽ đánh dấu chuyến đi này để CPA xem xét — vẫn có thể lưu được.",
           "submit": "Lưu"
         }

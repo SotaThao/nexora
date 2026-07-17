@@ -39,6 +39,9 @@ export default function StaffTaxIqOnboardingWizard({ taxYear }: { taxYear: numbe
   const [step, setStep] = useState(1)
   const [contractType, setContractType] = useState('W2')
   const [w9Status, setW9Status] = useState('NotRequired')
+  const [officeSqFt, setOfficeSqFt] = useState('')
+  const [totalHomeSqFt, setTotalHomeSqFt] = useState('')
+  const [homeOfficeError, setHomeOfficeError] = useState('')
   const [enabledModules, setEnabledModules] = useState<string[]>([])
   const [duplicateError, setDuplicateError] = useState('')
 
@@ -48,12 +51,30 @@ export default function StaffTaxIqOnboardingWizard({ taxYear }: { taxYear: numbe
     )
   }
 
-  const goNext = () => setStep((s) => Math.min(TOTAL_STEPS, s + 1))
+  const goNext = () => {
+    if (
+      step === 1 &&
+      officeSqFt &&
+      totalHomeSqFt &&
+      Number(officeSqFt) > Number(totalHomeSqFt)
+    ) {
+      setHomeOfficeError(t('taxiq.staffOnboarding.step1.homeOfficeError'))
+      return
+    }
+    setStep((s) => Math.min(TOTAL_STEPS, s + 1))
+  }
   const goBack = () => setStep((s) => Math.max(1, s - 1))
 
   const handleSubmit = async () => {
     try {
-      await createStaffTaxYear.mutateAsync({ taxYear, contractType, w9Status, enabledModules })
+      await createStaffTaxYear.mutateAsync({
+        taxYear,
+        contractType,
+        w9Status,
+        officeSqFt: officeSqFt ? Number(officeSqFt) : null,
+        totalHomeSqFt: totalHomeSqFt ? Number(totalHomeSqFt) : null,
+        enabledModules,
+      })
     } catch (err: unknown) {
       const errorCode = (err as { errorCode?: string })?.errorCode
       if (errorCode === 'TAXIQ_STAFF_TAX_YEAR_ALREADY_EXISTS') {
@@ -138,6 +159,42 @@ export default function StaffTaxIqOnboardingWizard({ taxYear }: { taxYear: numbe
                 {t(W9_STATUS_OPTIONS.find((o) => o.key === w9Status)?.tooltipKey ?? '')}
               </p>
             </div>
+            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+              <div>
+                <label className="text-xs font-bold text-nexoraMuted">
+                  <span className="inline-flex items-center gap-1">
+                    {t('taxiq.staffOnboarding.step1.officeSqFtLabel')}
+                    <Tooltip content={t('taxiq.staffOnboarding.step1.homeOfficeTooltip')} />
+                  </span>
+                </label>
+                <input
+                  type="number"
+                  min="0"
+                  value={officeSqFt}
+                  onChange={(e) => {
+                    setOfficeSqFt(e.target.value)
+                    setHomeOfficeError('')
+                  }}
+                  className="mt-1 w-full rounded-lg border border-nexoraBorder px-3 py-2 text-sm"
+                />
+              </div>
+              <div>
+                <label className="text-xs font-bold text-nexoraMuted">
+                  {t('taxiq.staffOnboarding.step1.totalHomeSqFtLabel')}
+                </label>
+                <input
+                  type="number"
+                  min="0"
+                  value={totalHomeSqFt}
+                  onChange={(e) => {
+                    setTotalHomeSqFt(e.target.value)
+                    setHomeOfficeError('')
+                  }}
+                  className="mt-1 w-full rounded-lg border border-nexoraBorder px-3 py-2 text-sm"
+                />
+              </div>
+            </div>
+            {homeOfficeError && <p className="text-xs font-semibold text-rose-500">{homeOfficeError}</p>}
             {duplicateError && <p className="text-xs font-semibold text-rose-500">{duplicateError}</p>}
           </div>
         )}
@@ -176,6 +233,14 @@ export default function StaffTaxIqOnboardingWizard({ taxYear }: { taxYear: numbe
               <span className="font-semibold">
                 {t(W9_STATUS_OPTIONS.find((o) => o.key === w9Status)?.labelKey ?? '')}
               </span>
+            </div>
+            <div className="flex justify-between">
+              <span className="text-nexoraMuted">{t('taxiq.staffOnboarding.step3.reviewOfficeSqFt')}</span>
+              <span className="font-semibold">{officeSqFt || '—'}</span>
+            </div>
+            <div className="flex justify-between">
+              <span className="text-nexoraMuted">{t('taxiq.staffOnboarding.step3.reviewTotalHomeSqFt')}</span>
+              <span className="font-semibold">{totalHomeSqFt || '—'}</span>
             </div>
             <div className="flex justify-between">
               <span className="text-nexoraMuted">{t('taxiq.staffOnboarding.step3.reviewModules')}</span>

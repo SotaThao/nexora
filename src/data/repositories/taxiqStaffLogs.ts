@@ -17,6 +17,7 @@ export interface MileageLogApiDto {
   startLocation: string
   endLocation: string
   miles: number
+  vehicleInfo?: string | null
   status: string
   createdAt?: string | null
   lastModified?: string | null
@@ -30,6 +31,7 @@ export interface MileageLogRecord {
   startLocation: string
   endLocation: string
   miles: number
+  vehicleInfo: string
   status: string
   createdAt: string | null
   lastModified: string | null
@@ -42,6 +44,7 @@ export interface CreateMileageLogParams {
   startLocation?: string | null
   endLocation?: string | null
   miles: number
+  vehicleInfo?: string | null
 }
 
 export interface UpdateMileageLogParams {
@@ -50,6 +53,7 @@ export interface UpdateMileageLogParams {
   startLocation?: string | null
   endLocation?: string | null
   miles: number
+  vehicleInfo?: string | null
 }
 
 export interface CashTipLogApiDto {
@@ -88,6 +92,7 @@ function normalizeMileageLog(dto: MileageLogApiDto): MileageLogRecord {
     startLocation: dto.startLocation ?? '',
     endLocation: dto.endLocation ?? '',
     miles: dto.miles ?? 0,
+    vehicleInfo: dto.vehicleInfo ?? '',
     status: dto.status,
     createdAt: dto.createdAt ?? null,
     lastModified: dto.lastModified ?? null,
@@ -129,6 +134,7 @@ export function createTaxiqStaffLogsRepository(client: HttpClient = httpClient) 
         startLocation: params.startLocation ?? null,
         endLocation: params.endLocation ?? null,
         miles: params.miles,
+        vehicleInfo: params.vehicleInfo ?? null,
       })
     },
 
@@ -139,6 +145,7 @@ export function createTaxiqStaffLogsRepository(client: HttpClient = httpClient) 
         startLocation: params.startLocation ?? null,
         endLocation: params.endLocation ?? null,
         miles: params.miles,
+        vehicleInfo: params.vehicleInfo ?? null,
       })
     },
 

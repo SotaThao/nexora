@@ -22,6 +22,15 @@ const MODULE_OPTIONS: ModuleOption[] = [
   { key: 'CPAExport', labelKey: 'taxiq.onboarding.step3.cpaExport', tooltipKey: 'taxiq.onboarding.step3.tooltips.cpaExport' },
 ]
 
+const BUSINESS_ENTITY_TYPE_OPTIONS = [
+  { key: 'SoleProprietor', labelKey: 'taxiq.businessEntityType.soleProprietor' },
+  { key: 'Partnership', labelKey: 'taxiq.businessEntityType.partnership' },
+  { key: 'LLC', labelKey: 'taxiq.businessEntityType.llc' },
+  { key: 'SCorp', labelKey: 'taxiq.businessEntityType.sCorp' },
+  { key: 'CCorp', labelKey: 'taxiq.businessEntityType.cCorp' },
+  { key: 'Other', labelKey: 'taxiq.businessEntityType.other' },
+]
+
 const TOTAL_STEPS = 4
 
 export default function TaxIqOnboardingWizard({
@@ -44,6 +53,10 @@ export default function TaxIqOnboardingWizard({
     hasContractor1099: false,
     hasBoothRenter: false,
   })
+  const [businessEntityType, setBusinessEntityType] = useState('')
+  const [officeSqFt, setOfficeSqFt] = useState('')
+  const [totalHomeSqFt, setTotalHomeSqFt] = useState('')
+  const [homeOfficeError, setHomeOfficeError] = useState('')
   const [enabledModules, setEnabledModules] = useState<string[]>([])
 
   const toggleModule = (key: string) => {
@@ -53,6 +66,15 @@ export default function TaxIqOnboardingWizard({
   }
 
   const goNext = () => {
+    if (
+      step === 1 &&
+      officeSqFt &&
+      totalHomeSqFt &&
+      Number(officeSqFt) > Number(totalHomeSqFt)
+    ) {
+      setHomeOfficeError(t('taxiq.onboarding.step1.homeOfficeError'))
+      return
+    }
     if (step === 3 && enabledModules.includes('CPAExport') && !taxYear) {
       setTaxYearError(t('taxiq.onboarding.step1.taxYearRequiredForCpaExport'))
       setStep(1)
@@ -70,6 +92,9 @@ export default function TaxIqOnboardingWizard({
         taxYear,
         salonName,
         employeeTypeConfig,
+        businessEntityType: businessEntityType || null,
+        officeSqFt: officeSqFt ? Number(officeSqFt) : null,
+        totalHomeSqFt: totalHomeSqFt ? Number(totalHomeSqFt) : null,
         enabledModules,
       })
     } catch (err: unknown) {
@@ -129,6 +154,57 @@ export default function TaxIqOnboardingWizard({
               />
               {taxYearError && <p className="mt-1 text-xs font-semibold text-rose-500">{taxYearError}</p>}
             </div>
+            <div>
+              <label className="text-xs font-bold text-nexoraMuted">
+                {t('taxiq.onboarding.step1.businessEntityTypeLabel')}
+              </label>
+              <select
+                value={businessEntityType}
+                onChange={(e) => setBusinessEntityType(e.target.value)}
+                className="mt-1 w-full rounded-lg border border-nexoraBorder px-3 py-2 text-sm"
+              >
+                <option value="">{t('taxiq.onboarding.step1.businessEntityTypeNone')}</option>
+                {BUSINESS_ENTITY_TYPE_OPTIONS.map((opt) => (
+                  <option key={opt.key} value={opt.key}>{t(opt.labelKey)}</option>
+                ))}
+              </select>
+            </div>
+            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+              <div>
+                <label className="text-xs font-bold text-nexoraMuted">
+                  <span className="inline-flex items-center gap-1">
+                    {t('taxiq.onboarding.step1.officeSqFtLabel')}
+                    <Tooltip content={t('taxiq.onboarding.step1.homeOfficeTooltip')} />
+                  </span>
+                </label>
+                <input
+                  type="number"
+                  min="0"
+                  value={officeSqFt}
+                  onChange={(e) => {
+                    setOfficeSqFt(e.target.value)
+                    setHomeOfficeError('')
+                  }}
+                  className="mt-1 w-full rounded-lg border border-nexoraBorder px-3 py-2 text-sm"
+                />
+              </div>
+              <div>
+                <label className="text-xs font-bold text-nexoraMuted">
+                  {t('taxiq.onboarding.step1.totalHomeSqFtLabel')}
+                </label>
+                <input
+                  type="number"
+                  min="0"
+                  value={totalHomeSqFt}
+                  onChange={(e) => {
+                    setTotalHomeSqFt(e.target.value)
+                    setHomeOfficeError('')
+                  }}
+                  className="mt-1 w-full rounded-lg border border-nexoraBorder px-3 py-2 text-sm"
+                />
+              </div>
+            </div>
+            {homeOfficeError && <p className="text-xs font-semibold text-rose-500">{homeOfficeError}</p>}
           </div>
         )}
 
@@ -184,6 +260,9 @@ export default function TaxIqOnboardingWizard({
             <h3 className="mb-2 text-sm font-bold text-nexoraText">{t('taxiq.onboarding.step4.title')}</h3>
             <div className="flex justify-between"><span className="text-nexoraMuted">{t('taxiq.onboarding.step4.reviewSalonName')}</span><span className="font-semibold">{salonName || '—'}</span></div>
             <div className="flex justify-between"><span className="text-nexoraMuted">{t('taxiq.onboarding.step4.reviewTaxYear')}</span><span className="font-semibold">{taxYear}</span></div>
+            <div className="flex justify-between"><span className="text-nexoraMuted">{t('taxiq.onboarding.step4.reviewBusinessEntityType')}</span><span className="font-semibold">{businessEntityType ? t(BUSINESS_ENTITY_TYPE_OPTIONS.find((o) => o.key === businessEntityType)?.labelKey ?? '') : '—'}</span></div>
+            <div className="flex justify-between"><span className="text-nexoraMuted">{t('taxiq.onboarding.step4.reviewOfficeSqFt')}</span><span className="font-semibold">{officeSqFt || '—'}</span></div>
+            <div className="flex justify-between"><span className="text-nexoraMuted">{t('taxiq.onboarding.step4.reviewTotalHomeSqFt')}</span><span className="font-semibold">{totalHomeSqFt || '—'}</span></div>
             <div className="flex justify-between"><span className="text-nexoraMuted">{t('taxiq.onboarding.step4.reviewModules')}</span><span className="font-semibold text-right">{enabledModules.length ? enabledModules.join(', ') : '—'}</span></div>
           </div>
         )}

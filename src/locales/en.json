@@ -3716,6 +3716,33 @@
         "ssnFormat": "SSN must be 9 digits (e.g. 123-45-6789)",
         "einFormat": "EIN must be 9 digits (e.g. 12-3456789)",
         "generic": "Something went wrong. Please try again."
+      },
+      "w9": {
+        "title": "W-9 Information",
+        "description": "Your real tax identity info, used by the salon to issue your Form 1099-NEC.",
+        "legalNameLabel": "Legal name",
+        "dbaNameLabel": "DBA (doing business as, optional)",
+        "addressLabel": "Address",
+        "taxClassificationLabel": "Tax classification",
+        "saveButton": "Save W-9 info",
+        "savedNotice": "W-9 info saved.",
+        "uploadLabel": "Signed W-9 document (optional)",
+        "uploadChooseFile": "Choose file",
+        "uploadSuccess": "Signed W-9 uploaded.",
+        "documentAttached": "Signed document attached",
+        "taxClassifications": {
+          "individual": "Individual",
+          "soleProprietor": "Sole Proprietor",
+          "llc": "LLC",
+          "partnership": "Partnership",
+          "cCorp": "C-Corp",
+          "sCorp": "S-Corp"
+        },
+        "errors": {
+          "legalNameRequired": "Legal name is required.",
+          "addressRequired": "Address is required.",
+          "uploadFailed": "Could not upload the signed W-9. Please try again."
+        }
       }
     },
     "tooltips": {
@@ -3739,7 +3766,13 @@
         "salonNameLabel": "Salon name",
         "taxYearLabel": "Tax year",
         "taxYearTooltip": "The calendar year these records cover (Jan 1 – Dec 31). Each tax year is set up, tracked, and exported separately.",
-        "taxYearRequiredForCpaExport": "Tax year is required when Year-End Export is enabled."
+        "taxYearRequiredForCpaExport": "Tax year is required when Year-End Export is enabled.",
+        "businessEntityTypeLabel": "Business entity type (optional)",
+        "businessEntityTypeNone": "Not selected yet",
+        "officeSqFtLabel": "Office square footage (optional)",
+        "totalHomeSqFtLabel": "Total home square footage (optional)",
+        "homeOfficeTooltip": "Used to calculate the Home Office deduction — enter once per tax year.",
+        "homeOfficeError": "Office square footage cannot be greater than total home square footage."
       },
       "step2": {
         "title": "Employee types",
@@ -3769,6 +3802,9 @@
         "title": "Review",
         "reviewSalonName": "Salon name",
         "reviewTaxYear": "Tax year",
+        "reviewBusinessEntityType": "Business entity type",
+        "reviewOfficeSqFt": "Office sq ft",
+        "reviewTotalHomeSqFt": "Total home sq ft",
         "reviewModules": "Modules"
       },
       "errors": {
@@ -3795,7 +3831,11 @@
         "w9Pending": "Pending",
         "w9PendingTooltip": "The salon has requested your W-9 but hasn't received it yet — this shows as a High Priority item on the owner's side.",
         "w9Received": "Received",
-        "w9ReceivedTooltip": "The salon already has your completed W-9 on file."
+        "w9ReceivedTooltip": "The salon already has your completed W-9 on file.",
+        "officeSqFtLabel": "Office square footage (optional)",
+        "totalHomeSqFtLabel": "Total home square footage (optional)",
+        "homeOfficeTooltip": "Used to calculate the Home Office deduction — enter once per tax year.",
+        "homeOfficeError": "Office square footage cannot be greater than total home square footage."
       },
       "step2": {
         "title": "Modules to enable"
@@ -3804,6 +3844,8 @@
         "title": "Review",
         "reviewContractType": "Contract type",
         "reviewW9Status": "W-9 status",
+        "reviewOfficeSqFt": "Office sq ft",
+        "reviewTotalHomeSqFt": "Total home sq ft",
         "reviewModules": "Modules"
       },
       "errors": {
@@ -3929,7 +3971,16 @@
       "selfReportedMissingReceipt": "Self-reported income entry is missing a receipt",
       "selfReportedCpaReview": "Self-reported income entry needs CPA review",
       "boothRenterNoIncome": "Booth Renter hasn't entered any self-reported income yet — client revenue usually needs to be reported",
-      "contractor1099NoIncome": "You haven't entered any self-reported income for this year"
+      "contractor1099NoIncome": "You haven't entered any self-reported income for this year",
+      "missingBusinessEntityType": "Business Entity Type is required for CPA Export — set it in Tax IQ configuration"
+    },
+    "businessEntityType": {
+      "soleProprietor": "Sole Proprietor",
+      "partnership": "Partnership",
+      "llc": "LLC",
+      "sCorp": "S-Corp",
+      "cCorp": "C-Corp",
+      "other": "Other"
     },
     "deductionCenter": {
       "title": "Deduction Center",
@@ -4253,8 +4304,18 @@
           "receiptLabel": "Receipt (optional)",
           "receiptChooseFile": "Choose file",
           "receiptExisting": "Receipt attached",
+          "depreciationMethodLabel": "Depreciation method (optional)",
+          "depreciationMethodNone": "Not selected yet",
+          "disposalDateLabel": "Disposal date (optional)",
+          "disposalAmountLabel": "Disposal amount (optional)",
           "submit": "Add Equipment",
           "saveChanges": "Save Changes"
+        },
+        "depreciationMethod": {
+          "macrs": "MACRS",
+          "straightLine": "Straight Line",
+          "section179": "Section 179",
+          "bonusDepreciation": "Bonus Depreciation"
         },
         "aiSuggestion": {
           "deductNow": "Deduct Now",
@@ -4394,6 +4455,7 @@
           "endLocationLabel": "End location (optional)",
           "milesLabel": "Miles",
           "milesRequired": "Miles must be zero or greater.",
+          "vehicleInfoLabel": "Vehicle info (optional)",
           "missingFieldsHint": "Leaving purpose or a location blank flags this trip for CPA review — it can still be saved.",
           "submit": "Save"
         }
