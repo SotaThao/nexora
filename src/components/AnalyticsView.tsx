@@ -145,7 +145,7 @@ export default function AnalyticsView() {
   const activePoint = hoverIndex !== null && svgMetrics ? svgMetrics.points[hoverIndex] : null;
 
   const methodDistribution = useMemo(() => {
-    const methods = [...(analytics?.payoutMethods ?? [])];
+    const methods = [...(analytics?.tipsMethods ?? [])];
 
     if (methods.length === 0 && (analytics?.directPayout?.totalAmount ?? 0) > 0) {
       methods.push({
@@ -165,7 +165,7 @@ export default function AnalyticsView() {
         color: PAYMENT_METHOD_COLORS[item.method] || '#cbd5e1',
       }))
       .sort((a, b) => b.amount - a.amount);
-  }, [analytics?.payoutMethods, analytics?.directPayout]);
+  }, [analytics?.tipsMethods, analytics?.directPayout]);
 
   const formatUSD = (val) => `$${val.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
 
