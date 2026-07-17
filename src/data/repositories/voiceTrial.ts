@@ -15,12 +15,16 @@ const VOICE_TRIAL_HEADERS = {
 
 export function createVoiceTrialRepository(client: HttpClient = httpClient) {
   return {
-    async submitTrialRequest(body: SubmitVoiceTrialRequest): Promise<SubmitVoiceTrialRequestResponse> {
+    async submitTrialRequest(
+      body: SubmitVoiceTrialRequest,
+      { anonymous = false }: { anonymous?: boolean } = {},
+    ): Promise<SubmitVoiceTrialRequestResponse> {
       const result = await client.post<SubmitVoiceTrialRequestResponse>(
         '/api/v1/nexora-voice/trial-requests',
         body,
         {
           headers: VOICE_TRIAL_HEADERS,
+          ...(anonymous ? { anonymous: true } : {}),
         },
       )
       if (!result) {

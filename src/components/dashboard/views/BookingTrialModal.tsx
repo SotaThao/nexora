@@ -212,15 +212,21 @@ function RocketIcon() {
 interface BookingTrialModalProps {
   open: boolean;
   onClose: () => void;
+  /** Public landing submits without JWT (Swagger: POST trial-requests has no security). */
+  anonymousSubmit?: boolean;
+  /** When set, called after success toast instead of `onClose` (e.g. delayed home redirect). */
+  onSubmitSuccess?: () => void;
 }
 
 export default function BookingTrialModal({
   open,
   onClose,
+  anonymousSubmit = false,
+  onSubmitSuccess,
 }: BookingTrialModalProps) {
   const { t } = useTranslation();
   const { showToast } = useNotification();
-  const submitTrial = useSubmitVoiceTrialRequest();
+  const submitTrial = useSubmitVoiceTrialRequest({ anonymous: anonymousSubmit });
   const [form, setForm] = useState<TrialFormState>(createInitialTrialForm);
   const [errors, setErrors] = useState<TrialFormErrors>({});
   const [phoneTouched, setPhoneTouched] = useState(false);
@@ -417,6 +423,11 @@ export default function BookingTrialModal({
 
     try {
       await submitTrial.mutateAsync(payload);
+      if (onSubmitSuccess) {
+        resetForm();
+        onSubmitSuccess();
+        return;
+      }
       showToast(t(`${TK}.submitSuccess`), "success");
       handleClose();
     } catch (error) {

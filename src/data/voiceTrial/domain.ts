@@ -10,6 +10,27 @@ export const VOICE_TRIAL_DAY_KEY_TO_API = {
 
 export type VoiceTrialDayKey = keyof typeof VOICE_TRIAL_DAY_KEY_TO_API
 
+/** Public marketing entry: `/voice-call/plan?package=trial` */
+export enum VoiceCallPlanPackage {
+  Trial = 'trial',
+}
+
+export const VoiceCallPlanRoute = {
+  path: '/voice-call/plan',
+  packageQuery: 'package',
+} as const
+
+/** Same copy key as BookingTrialModal success toast. */
+export const VOICE_CALL_TRIAL_COPY_KEY =
+  'components.dashboard.views.BookingHubView.plans.trial' as const
+
+/** Wait so success message is readable before leaving the public trial landing. */
+export const VOICE_CALL_PLAN_SUCCESS_REDIRECT_MS = 3500
+
+export function isVoiceCallTrialPackage(value: string | null | undefined): boolean {
+  return value === VoiceCallPlanPackage.Trial
+}
+
 export interface SubmitVoiceTrialRequest {
   shopName: string
   ownerName: string
