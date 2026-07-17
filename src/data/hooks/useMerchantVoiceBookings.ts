@@ -35,11 +35,15 @@ export function useMerchantVoiceTenantStatus({ enabled = true } = {}) {
   })
 }
 
-export function useMerchantVoiceBookingStatistics({ enabled = true } = {}) {
+export function useMerchantVoiceBookingStatistics(
+  { enabled = true, refetchInterval = false as number | false } = {},
+) {
   return useQuery<MerchantVoiceBookingStatisticsDto>({
     queryKey: qk.merchantVoiceBookingStatistics(),
     queryFn: () => merchantVoiceRepository.getBookingStatistics(),
     enabled,
+    refetchInterval,
+    refetchIntervalInBackground: false,
   })
 }
 
