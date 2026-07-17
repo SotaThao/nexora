@@ -193,13 +193,11 @@ export default function StaffDetailView({
     isLoading: isStatsLoading,
     isFetching: isStatsFetching,
   } = useMerchantStaffStats(staffProfileId, statsDateRange, { enabled: !!staffProfileId })
-  const nicknameLookupKey = String(
-    staffMember?.staffCode ?? staffMember?.linkId ?? staffMember?.id ?? '',
-  )
+  const nicknameStaffCode = String(staffMember?.staffCode ?? '').trim() || null
   const {
     data: nicknameStaffMember,
     refetch: refetchNicknameStaffMember,
-  } = useMerchantStaffByCode(nicknameLookupKey, { enabled: Boolean(nicknameLookupKey) })
+  } = useMerchantStaffByCode(nicknameStaffCode, { enabled: Boolean(nicknameStaffCode) })
   const setNicknameMutation = useSetMerchantStaffNickname()
   const rawBusinessNickname = nicknameStaffMember?.nicknameAtBusiness
     ?? staffMember?.nicknameAtBusiness
@@ -513,7 +511,7 @@ export default function StaffDetailView({
           </div>
 
           <div className="flex flex-wrap gap-2">
-            {nicknameStaffLinkId != null ? (
+            {nicknameStaffLinkId != null && nicknameStaffCode ? (
               <NicknameEditor
                 value={rawBusinessNickname}
                 originalName={originalDisplayName}
@@ -530,7 +528,7 @@ export default function StaffDetailView({
                 }}
                 onSave={(nickname) => setNicknameMutation.mutateAsync({
                   staffLinkId: String(nicknameStaffLinkId),
-                  staffCode: nicknameLookupKey,
+                  staffCode: nicknameStaffCode,
                   nickname,
                 })}
               />
