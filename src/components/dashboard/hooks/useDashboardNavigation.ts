@@ -28,6 +28,17 @@ export function useDashboardNavigation() {
   const [settingsTab, setSettingsTab] = useState('profile')
   const [isProfileExpanded, setIsProfileExpanded] = useState(false)
 
+  // Keep sidebar KYB/profile highlight in sync with /dashboard/settings/:tab
+  useEffect(() => {
+    if (activeMenu !== DASHBOARD_MENU_ID.settings) return
+    const tabFromPath = location.pathname.split('/')[3]
+    if (tabFromPath === 'kyb' || tabFromPath === 'profile' || tabFromPath === 'affiliate') {
+      setSettingsTab(tabFromPath)
+    } else if (!tabFromPath) {
+      setSettingsTab('profile')
+    }
+  }, [activeMenu, location.pathname])
+
   // When the drawer opens, reflect the current route's expandable section.
   useEffect(() => {
     if (!isMobileMenuOpen) return

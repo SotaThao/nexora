@@ -792,8 +792,13 @@ export default function Dashboard({
           profile={profile}
           businessName={businessName}
           onNavigateSettingsTab={(tab) => {
-            handleNavigateMenu('settings')
-            setSettingsTab(tab)
+            const settingsPath = tab === 'kyb'
+              ? '/dashboard/settings/kyb'
+              : tab === 'affiliate'
+                ? '/dashboard/settings/affiliate'
+                : '/dashboard/settings/profile'
+            navigate(settingsPath)
+            setSettingsTab(tab === 'kyb' || tab === 'affiliate' ? tab : 'profile')
           }}
           onLogout={onLogout}
           notifications={notificationsData ?? notifications}

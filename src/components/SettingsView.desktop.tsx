@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from 'react'
+import React, { useEffect, useMemo, useState } from 'react'
 import { createPortal } from 'react-dom'
 import { useNavigate } from 'react-router-dom'
 import {
@@ -170,10 +170,23 @@ export default function SettingsViewDesktop({
     openKybPortal: undefined,
   })
 
-  const [tab, setTab] = useState(initialTab === 'affiliate' ? 'affiliate' : 'account')
+  const resolveDesktopTab = (nextTab) => {
+    if (nextTab === 'affiliate') return 'affiliate'
+    if (nextTab === 'kyb') return 'kyb'
+    if (nextTab === 'notification') return 'notification'
+    if (nextTab === 'privacy') return 'privacy'
+    return 'account'
+  }
+
+  const [tab, setTab] = useState(() => resolveDesktopTab(initialTab))
   const [showQrModal, setShowQrModal] = useState(false)
   const [showKybFlow, setShowKybFlow] = useState(false)
   const [selectedLeg, setSelectedLeg] = useState('left')
+
+  useEffect(() => {
+    setTab(resolveDesktopTab(initialTab))
+    if (initialTab === 'kyb') setShowKybFlow(false)
+  }, [initialTab])
 
   const isKybVerified = ['kyb_approved', 'verified_pro', 'verified_lite'].includes(form.effectiveVerificationStatus)
   const kybStatusLabel = isKybVerified
@@ -203,7 +216,7 @@ export default function SettingsViewDesktop({
 
   const TABS = [
     { key: 'account', label: t('components.SettingsView.account') },
-    { key: 'kyb', label: isBusinessAccount ? t('components.SettingsView.kyb') : t('staff_dashboard.profile.kyc_label'), disabled: true },
+    { key: 'kyb', label: isBusinessAccount ? t('components.SettingsView.kyb') : t('staff_dashboard.profile.kyc_label') },
     { key: 'affiliate', label: t('components.SettingsView.affiliateLink') },
     { key: 'notification', label: t('staff_dashboard.profile.menu_notification_preferences') },
     { key: 'privacy', label: t('staff_dashboard.profile.menu_privacy_security') },
@@ -229,13 +242,14 @@ export default function SettingsViewDesktop({
           <button
             key={item.key}
             type="button"
-            disabled={item.disabled}
-            aria-disabled={item.disabled || undefined}
-            onClick={item.disabled ? undefined : () => setTab(item.key)}
+            onClick={() => {
+              setTab(item.key)
+              if (onTabChange) {
+                onTabChange(item.key === 'account' ? 'profile' : item.key)
+              }
+            }}
             className={`px-4 py-2 rounded-lg text-xs font-extrabold uppercase transition ${
-              item.disabled
-                ? 'bg-nexoraSurfaceMuted text-nexoraMuted opacity-60 cursor-not-allowed'
-                : tab === item.key
+              tab === item.key
                 ? 'bg-nexoraBrand text-white shadow-sm'
                 : 'bg-nexoraSurfaceMuted text-nexoraMuted hover:bg-slate-200'
             }`}
