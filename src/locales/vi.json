@@ -1782,38 +1782,44 @@
         "sections": [
           {
             "title": "1. Giới Thiệu",
-            "body": "NEXORA TOUCH LLC (\"Nexora\", \"chúng tôi\") vận hành nền tảng NEXORA TOUCH — dịch vụ nhận tip và đánh giá kỹ thuật số dành cho các doanh nghiệp dịch vụ. Chính Sách Bảo Mật này mô tả cách chúng tôi thu thập, sử dụng và chia sẻ thông tin khi bạn sử dụng Dịch Vụ. Bằng cách sử dụng Dịch Vụ, bạn đồng ý với các thực hành được mô tả trong Chính Sách này."
+            "body": "NEXORA TOUCH LLC (\"Nexora\", \"chúng tôi\") vận hành nền tảng NEXORA TOUCH — dịch vụ công nghệ dành cho các doanh nghiệp dịch vụ, bao gồm nhận tip và đánh giá kỹ thuật số, dịch vụ Tiếp Tân AI trả lời điện thoại doanh nghiệp và đặt lịch hẹn, cùng tin nhắn SMS liên quan. Chính Sách Bảo Mật này mô tả cách chúng tôi thu thập, sử dụng và chia sẻ thông tin khi bạn sử dụng Dịch Vụ. Bằng cách sử dụng Dịch Vụ, bạn đồng ý với các thực hành được mô tả tại đây."
           },
           {
             "title": "2. Thông Tin Chúng Tôi Thu Thập",
-            "body": "Thông tin bạn cung cấp: thông tin tài khoản (họ tên, email, số điện thoại), thông tin doanh nghiệp (đối với merchant), nội dung bạn tải lên (ảnh hồ sơ, logo doanh nghiệp). Thông tin thu thập tự động: dữ liệu sử dụng, địa chỉ IP, thông tin thiết bị và trình duyệt, hoạt động phiên được thu thập qua nền tảng và Google Analytics. Tương tác của khách hàng: khi khách hàng sử dụng luồng tip với tư cách khách (guest), chúng tôi ghi lại dữ liệu phiên ẩn danh (touch point đã truy cập, số tiền tip, xếp hạng). Chúng tôi không thu thập tên, số điện thoại hoặc thông tin thanh toán của khách hàng."
+            "body": "Thông tin bạn cung cấp: thông tin tài khoản (họ tên, email, số điện thoại), thông tin doanh nghiệp (đối với merchant), và nội dung bạn tải lên (ảnh hồ sơ, logo doanh nghiệp).\n\nThông tin người gọi và đặt lịch: khi khách hàng gọi vào số điện thoại doanh nghiệp được dịch vụ Tiếp Tân AI trả lời, chúng tôi thu thập số điện thoại của người gọi và, khi người gọi cung cấp, tên, dịch vụ yêu cầu và thời gian hẹn mong muốn, nhằm cung cấp dịch vụ — bao gồm đặt lịch hẹn và gửi SMS xác nhận, theo dõi. Cuộc gọi có thể được ghi âm cho mục đích chất lượng và đào tạo, và người gọi được xử lý theo quy định pháp luật hiện hành. Khi khách hàng gửi yêu cầu đặt lịch trực tuyến, chúng tôi thu thập thông tin họ nhập (như tên, số điện thoại và dịch vụ yêu cầu).\n\nThông tin thu thập tự động: dữ liệu sử dụng, địa chỉ IP, thông tin thiết bị và trình duyệt, hoạt động phiên được thu thập qua nền tảng và Google Analytics.\n\nTương tác tip của khách vãng lai: khi khách hàng sử dụng luồng tip với tư cách khách (guest), chúng tôi ghi lại dữ liệu phiên ẩn danh (touch point đã truy cập, số tiền tip, xếp hạng) mà không yêu cầu tên hay thông tin thanh toán của khách."
           },
           {
             "title": "3. Cách Chúng Tôi Sử Dụng Thông Tin",
             "body": "Chúng tôi sử dụng thông tin đã thu thập để:",
             "items": [
               "Vận hành và cải thiện Dịch Vụ",
-              "Quản lý tài khoản và liên lạc với người dùng",
-              "Gửi thông báo giao dịch (email và thông báo đẩy)",
+              "Trả lời điện thoại doanh nghiệp và đặt lịch hẹn qua Tiếp Tân AI",
+              "Gửi tin nhắn SMS như xác nhận lịch hẹn, nhắn lại cuộc gọi nhỡ, phản hồi chăm sóc khách hàng, yêu cầu đánh giá, và — khi có sự đồng ý — ưu đãi khuyến mãi",
+              "Quản lý tài khoản và liên lạc với người dùng (email và thông báo đẩy)",
               "Phát hiện gian lận và thực thi Điều Khoản Dịch Vụ",
               "Phân tích việc sử dụng và hiệu suất nền tảng",
               "Tuân thủ nghĩa vụ pháp lý"
             ]
           },
           {
-            "title": "4. Cách Chúng Tôi Chia Sẻ Thông Tin",
-            "body": "Chúng tôi không bán thông tin cá nhân của bạn. Chúng tôi chỉ chia sẻ thông tin với các nhà cung cấp dịch vụ bên thứ ba đáng tin cậy hỗ trợ chúng tôi vận hành nền tảng, bao gồm phân tích, gửi email, thông báo đẩy và cơ sở hạ tầng đám mây. Các nhà cung cấp này bị ràng buộc theo hợp đồng chỉ sử dụng thông tin của bạn khi cần thiết để thực hiện dịch vụ thay mặt chúng tôi. Chúng tôi cũng có thể tiết lộ thông tin để tuân thủ nghĩa vụ pháp lý hoặc để bảo vệ quyền và sự an toàn của người dùng."
+            "title": "4. SMS và Thông Tin Di Động",
+            "body": "Thông tin di động sẽ không được chia sẻ với bên thứ ba hoặc công ty liên kết cho mục đích tiếp thị hay quảng bá. Dữ liệu đồng ý nhận tin nhắn (opt-in) và sự đồng ý sẽ không được chia sẻ với bất kỳ bên thứ ba nào.",
+            "note": "Khách hàng đồng ý nhận tin nhắn SMS bằng cách yêu cầu đặt lịch hẹn hoặc theo dõi bằng lời nói trong cuộc gọi đến số điện thoại của doanh nghiệp tham gia, hoặc bằng cách gửi yêu cầu đặt lịch trực tuyến kèm số điện thoại của họ. Tần suất tin nhắn có thể thay đổi. Có thể áp dụng cước phí tin nhắn và dữ liệu. Khách hàng có thể hủy nhận tin bất cứ lúc nào bằng cách nhắn STOP, và có thể nhận trợ giúp bằng cách nhắn HELP hoặc liên hệ support@nexoratouch.com hoặc (832) 979-5559."
           },
           {
-            "title": "5. Thông Tin Thanh Toán",
+            "title": "5. Cách Chúng Tôi Chia Sẻ Thông Tin",
+            "body": "Chúng tôi không bán thông tin cá nhân của bạn. Chúng tôi chỉ chia sẻ thông tin với các nhà cung cấp dịch vụ bên thứ ba đáng tin cậy hỗ trợ chúng tôi vận hành nền tảng — bao gồm nhà cung cấp viễn thông và gửi SMS, phân tích, gửi email, thông báo đẩy và cơ sở hạ tầng đám mây. Các nhà cung cấp này bị ràng buộc theo hợp đồng chỉ sử dụng thông tin của bạn khi cần thiết để thực hiện dịch vụ thay mặt chúng tôi. Chúng tôi cũng có thể tiết lộ thông tin để tuân thủ nghĩa vụ pháp lý hoặc để bảo vệ quyền và sự an toàn của người dùng. Phù hợp với Mục 4, số điện thoại di động và dữ liệu opt-in SMS không bao giờ được chia sẻ cho mục đích tiếp thị của bên thứ ba."
+          },
+          {
+            "title": "6. Thông Tin Thanh Toán",
             "body": "Nexora không thu thập, lưu trữ hoặc xử lý bất kỳ thông tin thanh toán nào. Tip được gửi trực tiếp giữa khách hàng và nhân viên thông qua các ứng dụng thanh toán bên thứ ba. Chúng tôi không có quyền truy cập vào thông tin tài chính, số tài khoản ngân hàng hoặc thông tin thẻ."
           },
           {
-            "title": "6. Lưu Trữ Dữ Liệu",
-            "body": "Chúng tôi lưu giữ thông tin cá nhân của bạn chỉ trong thời gian cần thiết để cung cấp Dịch Vụ hoặc theo yêu cầu của pháp luật. Bạn có thể yêu cầu xóa tài khoản và dữ liệu bất cứ lúc nào bằng cách liên hệ support@nexoratouch.com."
+            "title": "7. Lưu Trữ Dữ Liệu",
+            "body": "Chúng tôi lưu giữ thông tin cá nhân chỉ trong thời gian cần thiết để cung cấp Dịch Vụ hoặc theo yêu cầu của pháp luật. Bạn có thể yêu cầu xóa tài khoản và dữ liệu bất cứ lúc nào bằng cách liên hệ support@nexoratouch.com."
           },
           {
-            "title": "7. Quyền Của Bạn",
+            "title": "8. Quyền Của Bạn",
             "body": "Tùy thuộc vào vị trí của bạn, bạn có thể có quyền truy cập, sửa, xóa hoặc chuyển dữ liệu cá nhân, và phản đối hoặc hạn chế một số hoạt động xử lý nhất định.",
             "items": [
               "Người dùng tại EU/EEA (GDPR): truy cập, chỉnh sửa, xóa, chuyển dữ liệu, hạn chế và phản đối",
@@ -1822,24 +1828,24 @@
             "note": "Để thực hiện các quyền của bạn, liên hệ support@nexoratouch.com. Chúng tôi sẽ phản hồi trong vòng 30 ngày."
           },
           {
-            "title": "8. Cookie và Theo Dõi",
+            "title": "9. Cookie và Theo Dõi",
             "body": "Chúng tôi sử dụng cookie thiết yếu (cần thiết cho xác thực và quản lý phiên) và cookie phân tích (Google Analytics). Bạn có thể từ chối theo dõi của Google Analytics bằng cách cài đặt Tiện ích từ chối Google Analytics hoặc điều chỉnh cài đặt trình duyệt."
           },
           {
-            "title": "9. Quyền Riêng Tư Của Trẻ Em",
+            "title": "10. Quyền Riêng Tư Của Trẻ Em",
             "body": "Dịch Vụ của chúng tôi không hướng đến trẻ em dưới 13 tuổi. Chúng tôi không cố ý thu thập thông tin cá nhân từ trẻ em dưới 13 tuổi. Nếu bạn cho rằng trẻ em đã cung cấp thông tin cho chúng tôi, liên hệ support@nexoratouch.com và chúng tôi sẽ xóa ngay."
           },
           {
-            "title": "10. Bảo Mật",
+            "title": "11. Bảo Mật",
             "body": "Chúng tôi triển khai các biện pháp bảo vệ kỹ thuật và hành chính hợp lý để bảo vệ thông tin của bạn, bao gồm truyền dữ liệu được mã hóa và cơ sở hạ tầng đám mây an toàn. Không có phương thức truyền nào hoàn toàn an toàn và chúng tôi không thể đảm bảo bảo mật tuyệt đối."
           },
           {
-            "title": "11. Thay Đổi Chính Sách Này",
+            "title": "12. Thay Đổi Chính Sách Này",
             "body": "Chúng tôi có thể cập nhật Chính Sách này theo thời gian. Các thay đổi quan trọng sẽ được thông báo qua email hoặc thông báo trong ứng dụng. Việc tiếp tục sử dụng Dịch Vụ đồng nghĩa với việc chấp nhận Chính Sách được cập nhật."
           },
           {
-            "title": "12. Liên Hệ Chúng Tôi",
-            "body": "NEXORA TOUCH LLC\nEmail: support@nexoratouch.com\nĐịa chỉ: 9793 Westheimer Rd Suite A Houston TX 77042"
+            "title": "13. Liên Hệ Chúng Tôi",
+            "body": "NEXORA TOUCH LLC\nEmail: support@nexoratouch.com\nĐiện thoại: (832) 979-5559\nĐịa chỉ: 9793 Westheimer Rd Suite A, Houston, TX 77042"
           }
         ]
       },
