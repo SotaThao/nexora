@@ -174,10 +174,23 @@ export default function SettingsViewDesktop({
     openKybPortal: undefined,
   })
 
-  const [tab, setTab] = useState(initialTab === 'affiliate' ? 'affiliate' : 'account')
+  const resolveDesktopTab = (nextTab) => {
+    if (nextTab === 'affiliate') return 'affiliate'
+    if (nextTab === 'kyb') return 'kyb'
+    if (nextTab === 'notification') return 'notification'
+    if (nextTab === 'privacy') return 'privacy'
+    return 'account'
+  }
+
+  const [tab, setTab] = useState(() => resolveDesktopTab(initialTab))
   const [showQrModal, setShowQrModal] = useState(false)
   const [showKybFlow, setShowKybFlow] = useState(false)
   const [selectedLeg, setSelectedLeg] = useState('left')
+
+  useEffect(() => {
+    setTab(resolveDesktopTab(initialTab))
+    if (initialTab === 'kyb') setShowKybFlow(false)
+  }, [initialTab])
 
   useEffect(() => {
     if (!SETTINGS_SHOW_NOTIFICATION_TAB && tab === SettingsDesktopTab.Notification) {
@@ -241,13 +254,14 @@ export default function SettingsViewDesktop({
           <button
             key={item.key}
             type="button"
-            disabled={item.disabled}
-            aria-disabled={item.disabled || undefined}
-            onClick={item.disabled ? undefined : () => setTab(item.key)}
+            onClick={() => {
+              setTab(item.key)
+              if (onTabChange) {
+                onTabChange(item.key === 'account' ? 'profile' : item.key)
+              }
+            }}
             className={`px-4 py-2 rounded-lg text-xs font-extrabold uppercase transition ${
-              item.disabled
-                ? 'bg-nexoraSurfaceMuted text-nexoraMuted opacity-60 cursor-not-allowed'
-                : tab === item.key
+              tab === item.key
                 ? 'bg-nexoraBrand text-white shadow-sm'
                 : 'bg-nexoraSurfaceMuted text-nexoraMuted hover:bg-slate-200'
             }`}
