@@ -1,5 +1,6 @@
 import { Sparkles } from 'lucide-react'
 import { useTranslation } from '../../../contexts/LanguageContext'
+import { DASHBOARD_MENU_ID } from '../constants'
 
 function ComingSoon({ activeMenu, onBack }) {
   const { t } = useTranslation()
@@ -21,6 +22,7 @@ function ComingSoon({ activeMenu, onBack }) {
     'staff-taxiq-income': [t('coming_soon.staff_taxiq_income_title'), t('coming_soon.staff_taxiq_income_desc')],
     'staff-taxiq-export': [t('coming_soon.staff_taxiq_export_title'), t('coming_soon.staff_taxiq_export_desc')],
     'staff-taxiq-cpa-access': [t('coming_soon.staff_taxiq_cpa_access_title'), t('coming_soon.staff_taxiq_cpa_access_desc')],
+    [DASHBOARD_MENU_ID.productManagement]: [t('coming_soon.product_management_title'), t('coming_soon.product_management_desc')],
   }
   const copy = copyMap[activeMenu] || [t('coming_soon.default_title'), t('coming_soon.default_desc')]
 

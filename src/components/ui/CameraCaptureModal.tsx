@@ -8,9 +8,11 @@ interface CameraCaptureModalProps {
   open: boolean
   onClose: () => void
   onCapture: (file: File) => void
+  title?: string
+  hint?: string
 }
 
-export default function CameraCaptureModal({ open, onClose, onCapture }: CameraCaptureModalProps) {
+export default function CameraCaptureModal({ open, onClose, onCapture, title, hint }: CameraCaptureModalProps) {
   const { t } = useTranslation()
   const videoRef = useRef<HTMLVideoElement | null>(null)
   const streamRef = useRef<MediaStream | null>(null)
@@ -145,10 +147,10 @@ export default function CameraCaptureModal({ open, onClose, onCapture }: CameraC
 
         <div className="bg-slate-900 px-5 pb-4 pt-5 text-white">
           <h3 className="pr-8 text-sm font-black uppercase tracking-wider">
-            {t('setup.camera_capture_title')}
+            {title ?? t('setup.camera_capture_title')}
           </h3>
           <p className="mt-1 text-[10px] font-medium text-slate-300">
-            {t('setup.camera_capture_hint')}
+            {hint ?? t('setup.camera_capture_hint')}
           </p>
         </div>
 

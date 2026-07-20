@@ -59,7 +59,8 @@ export default function DisputesTab({
               <div className="mt-1 text-sm font-bold text-nexoraText">{formatCurrency(dispute.grossPayout)}</div>
               <div className="text-[11px] text-nexoraMuted">
                 {t('taxiq.payoutCenter.form.servicePayoutLabel')}: {formatCurrency(dispute.servicePayout)} ·{' '}
-                {t('taxiq.payoutCenter.form.tipLabel')}: {formatCurrency(dispute.tip)} ·{' '}
+                {t('taxiq.payoutCenter.form.tipCardAmountLabel')}: {formatCurrency(dispute.tipCardAmount)} ·{' '}
+                {t('taxiq.payoutCenter.form.tipCashAmountLabel')}: {formatCurrency(dispute.tipCashAmount)} ·{' '}
                 {t('taxiq.payoutCenter.form.bonusLabel')}: {formatCurrency(dispute.bonus)}
               </div>
             </div>

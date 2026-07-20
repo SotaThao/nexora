@@ -19,6 +19,9 @@ export interface OwnerTaxYearApiDto {
   status: string
   salonName?: string | null
   employeeTypeConfig?: string | null
+  businessEntityType?: string | null
+  officeSqFt?: number | null
+  totalHomeSqFt?: number | null
   enabledModules?: string[]
   lockedAt?: string | null
   exportedAt?: string | null
@@ -38,6 +41,9 @@ export interface OwnerTaxYear {
   status: string
   salonName: string
   employeeTypeConfig: OwnerTaxYearEmployeeTypeConfig
+  businessEntityType: string | null
+  officeSqFt: number | null
+  totalHomeSqFt: number | null
   enabledModules: string[]
   lockedAt: string | null
   exportedAt: string | null
@@ -55,11 +61,17 @@ export interface CreateOwnerTaxYearParams {
   taxYear: number
   salonName: string
   employeeTypeConfig: OwnerTaxYearEmployeeTypeConfig
+  businessEntityType?: string | null
+  officeSqFt?: number | null
+  totalHomeSqFt?: number | null
   enabledModules: string[]
 }
 
 export interface UpdateOwnerTaxYearModulesParams {
   employeeTypeConfig: OwnerTaxYearEmployeeTypeConfig
+  businessEntityType?: string | null
+  officeSqFt?: number | null
+  totalHomeSqFt?: number | null
   enabledModules: string[]
 }
 
@@ -79,6 +91,9 @@ function normalizeOwnerTaxYear(dto: OwnerTaxYearApiDto): OwnerTaxYear {
     status: dto.status,
     salonName: dto.salonName ?? '',
     employeeTypeConfig,
+    businessEntityType: dto.businessEntityType ?? null,
+    officeSqFt: dto.officeSqFt ?? null,
+    totalHomeSqFt: dto.totalHomeSqFt ?? null,
     enabledModules: dto.enabledModules ?? [],
     lockedAt: dto.lockedAt ?? null,
     exportedAt: dto.exportedAt ?? null,
@@ -120,6 +135,9 @@ export function createTaxiqOwnerTaxYearRepository(client: HttpClient = httpClien
         taxYear: params.taxYear,
         salonName: params.salonName,
         employeeTypeConfig: JSON.stringify(params.employeeTypeConfig ?? {}),
+        businessEntityType: params.businessEntityType ?? null,
+        officeSqFt: params.officeSqFt ?? null,
+        totalHomeSqFt: params.totalHomeSqFt ?? null,
         enabledModules: params.enabledModules,
       })
       return dto ? normalizeOwnerTaxYear(dto) : null
@@ -128,6 +146,9 @@ export function createTaxiqOwnerTaxYearRepository(client: HttpClient = httpClien
     async updateModules(id: string, params: UpdateOwnerTaxYearModulesParams): Promise<void> {
       await client.put(`/api/v1/taxiq/owner/tax-years/${encodeURIComponent(id)}/modules`, {
         employeeTypeConfig: JSON.stringify(params.employeeTypeConfig ?? {}),
+        businessEntityType: params.businessEntityType ?? null,
+        officeSqFt: params.officeSqFt ?? null,
+        totalHomeSqFt: params.totalHomeSqFt ?? null,
         enabledModules: params.enabledModules,
       })
     },

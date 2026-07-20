@@ -15,6 +15,7 @@ import {
   BookingHubRoute,
   FallbackRoute,
   OverviewRoute,
+  ProductManagementRoute,
   ReportsRoute,
   ReviewsRoute,
   SettingsRoute,
@@ -24,11 +25,12 @@ import {
   SupportRoute,
   TipsRoute,
   TouchpointsRoute,
-  TaxIqOverviewRoute, TaxIqDeductionsRoute, TaxIqReceiptsRoute, TaxIqEquipmentRoute,
+  TaxIqOverviewRoute, TaxIqDeductionsRoute, TaxIqIncomeRoute, TaxIqReceiptsRoute, TaxIqEquipmentRoute,
   TaxIqPayrollRoute, TaxIqRemindersRoute, TaxIqCpaAccessRoute, TaxIqExportRoute,
   PosGeneralSettingsRoute, PosBusinessHoursRoute, PosRolesRoute, PosCategoriesRoute, PosServicesRoute, PosProductsRoute,
   PosStaffProfileRoute
 } from "../components/dashboard/routes";
+import { DASHBOARD_MENU_ID } from "../components/dashboard/constants";
 import ErrorBoundary from "../components/ui/ErrorBoundary";
 import { isDemoToolsEnabled } from "./demoTools";
 import lazyWithRetry from "./lazyWithRetry";
@@ -37,6 +39,7 @@ import RequireAuth from "./RequireAuth";
 import RequireOnboarded from "./RequireOnboarded";
 import RequireStaffReady from "./RequireStaffReady";
 import RootRedirect from "./RootRedirect";
+import { VoiceCallPlanRoute } from "../data/voiceTrial/domain";
 
 const SetupWizard = lazyWithRetry(() => import("../components/SetupWizard"));
 const DashboardOwnerShell = lazyWithRetry(
@@ -115,6 +118,9 @@ const TermsOfServicePage = lazyWithRetry(
 );
 const HelpQrPage = lazyWithRetry(
   () => import("../components/public/HelpQrPage"),
+);
+const VoiceCallPlanPage = lazyWithRetry(
+  () => import("../components/public/VoiceCallPlanPage"),
 );
 
 // Bridges the URL (path token / legacy ?flow=staff-invite biz) to the wizard's
@@ -205,6 +211,10 @@ export default function AppRouter() {
 	  <Route path="/cpa/access" element={<CpaViewerPage />} />
           <Route path="/privacy-policy" element={<PrivacyPolicyPage />} />
           <Route path="/terms-of-service" element={<TermsOfServicePage />} />
+          <Route
+            path={VoiceCallPlanRoute.path}
+            element={<VoiceCallPlanPage />}
+          />
           <Route path="/invite" element={<InviteRoute />} />
           <Route path="/invite/:token" element={<InviteRoute />} />
           <Route
@@ -242,23 +252,24 @@ export default function AppRouter() {
             }
           >
             <Route index element={<OverviewRoute />} />
-            <Route path="staff" element={<StaffRoute />} />
-            <Route path="staff/:staffId" element={<StaffDetailRoute />} />
-            <Route path="tips" element={<TipsRoute />} />
-            <Route path="payments" element={<PaymentsRedirect />} />
-            <Route path="payments/:paymentId" element={<PaymentsRedirect />} />
-            <Route path="reviews" element={<ReviewsRoute />} />
-            <Route path="reports" element={<ReportsRoute />} />
-            <Route path="booking-hub" element={<BookingHubRoute />} />
-            <Route path="touchpoints" element={<TouchpointsRoute />} />
-	    <Route path="taxiq" element={<TaxIqOverviewRoute />} />
-          <Route path="taxiq/deductions" element={<TaxIqDeductionsRoute />} />
-          <Route path="taxiq/receipts" element={<TaxIqReceiptsRoute />} />
-          <Route path="taxiq/equipment" element={<TaxIqEquipmentRoute />} />
-          <Route path="taxiq/payroll" element={<TaxIqPayrollRoute />} />
-          <Route path="taxiq/reminders" element={<TaxIqRemindersRoute />} />
-          <Route path="taxiq/cpa-access" element={<TaxIqCpaAccessRoute />} />
-          <Route path="taxiq/export" element={<TaxIqExportRoute />} />
+            <Route path={DASHBOARD_MENU_ID.staff} element={<StaffRoute />} />
+            <Route path={`${DASHBOARD_MENU_ID.staff}/:staffId`} element={<StaffDetailRoute />} />
+            <Route path={DASHBOARD_MENU_ID.tips} element={<TipsRoute />} />
+            <Route path={DASHBOARD_MENU_ID.payments} element={<PaymentsRedirect />} />
+            <Route path={`${DASHBOARD_MENU_ID.payments}/:paymentId`} element={<PaymentsRedirect />} />
+            <Route path={DASHBOARD_MENU_ID.reviews} element={<ReviewsRoute />} />
+            <Route path={DASHBOARD_MENU_ID.reports} element={<ReportsRoute />} />
+            <Route path={DASHBOARD_MENU_ID.bookingHub} element={<BookingHubRoute />} />
+            <Route path={DASHBOARD_MENU_ID.taxiq} element={<TaxIqOverviewRoute />} />
+            <Route path={`${DASHBOARD_MENU_ID.taxiq}/deductions`} element={<TaxIqDeductionsRoute />} />
+            <Route path={`${DASHBOARD_MENU_ID.taxiq}/income`} element={<TaxIqIncomeRoute />} />
+            <Route path={`${DASHBOARD_MENU_ID.taxiq}/receipts`} element={<TaxIqReceiptsRoute />} />
+            <Route path={`${DASHBOARD_MENU_ID.taxiq}/equipment`} element={<TaxIqEquipmentRoute />} />
+            <Route path={`${DASHBOARD_MENU_ID.taxiq}/payroll`} element={<TaxIqPayrollRoute />} />
+            <Route path={`${DASHBOARD_MENU_ID.taxiq}/reminders`} element={<TaxIqRemindersRoute />} />
+            <Route path={`${DASHBOARD_MENU_ID.taxiq}/cpa-access`} element={<TaxIqCpaAccessRoute />} />
+            <Route path={`${DASHBOARD_MENU_ID.taxiq}/export`} element={<TaxIqExportRoute />} />
+            <Route path={DASHBOARD_MENU_ID.productManagement} element={<ProductManagementRoute />} />
             <Route path="analytics" element={<AnalyticsRoute />} />
             <Route path="pos" element={<PosGeneralSettingsRoute />} />
             <Route path="pos/business-hours" element={<PosBusinessHoursRoute />} />
@@ -267,10 +278,12 @@ export default function AppRouter() {
             <Route path="pos/services" element={<PosServicesRoute />} />
             <Route path="pos/products" element={<PosProductsRoute />} />
             <Route path="pos/staff" element={<PosStaffProfileRoute />} />
-            <Route path="settings" element={<SettingsRoute />} />
-            <Route path="settings/:tab" element={<SettingsRoute />} />
-            <Route path="subscriptions" element={<SubscriptionsRoute />} />
-            <Route path="support" element={<SupportRoute />} />
+            <Route path={DASHBOARD_MENU_ID.touchpoints} element={<TouchpointsRoute />} />
+            <Route path={DASHBOARD_MENU_ID.analytics} element={<AnalyticsRoute />} />
+            <Route path={DASHBOARD_MENU_ID.settings} element={<SettingsRoute />} />
+            <Route path={`${DASHBOARD_MENU_ID.settings}/:tab`} element={<SettingsRoute />} />
+            <Route path={DASHBOARD_MENU_ID.subscriptions} element={<SubscriptionsRoute />} />
+            <Route path={DASHBOARD_MENU_ID.support} element={<SupportRoute />} />
             <Route path="*" element={<FallbackRoute />} />
           </Route>
 

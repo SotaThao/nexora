@@ -28,7 +28,10 @@ const LOGO_MAP: Record<string, string> = {
 };
 
 /** Brands that stay coming-soon regardless of API url. */
-const COMING_SOON_BRANDS = new Set<string>([BRAND_NAME_ECO.vmmtravel]);
+const COMING_SOON_BRANDS = new Set<string>([
+  BRAND_NAME_ECO.vmmtravel,
+  BRAND_NAME_ECO.moonglemall,
+]);
 
 /** Fallback URLs when API omits an ecosystem row (BE may lag behind catalog). */
 const FALLBACK_URL_MAP: Partial<Record<string, string>> = {};
@@ -88,14 +91,19 @@ export interface EcosystemCatalogEntry {
   logoUrl: string;
 }
 
-/** Catalog built from live VlinkPay API data; active items first, coming soon last. */
+/**
+ * Catalog for the header ecosystem dropdown.
+ * Hides rows with `isEcosystem: false` (e.g. merchantportal used only for Gift Card SSO).
+ * Gift Card Center does not use this filter — it looks up merchantportal on the raw list.
+ */
 export function buildEcosystemCatalog(
   apiItems: EcosystemItem[] = [],
 ): EcosystemCatalogEntry[] {
   const available: EcosystemCatalogEntry[] = [];
   const comingSoon: EcosystemCatalogEntry[] = [];
+  const ecosystemItems = apiItems.filter((item) => item.isEcosystem !== false);
 
-  for (const item of apiItems) {
+  for (const item of ecosystemItems) {
     const brandKey =
       resolveEcosystemBrandKey(item.name) ??
       (normalizeEcosystemNameKey(item.name) || item.id);

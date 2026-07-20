@@ -14,6 +14,8 @@ interface VlinkPayEcosystemDto {
   name?: string
   url?: string | null
   logoUrl?: string | null
+  isEcosystem?: boolean
+  isComingSoon?: boolean
 }
 
 interface VlinkPayEcosystemSignInResponseDto {
@@ -30,6 +32,8 @@ function normalizeEcosystem(raw: VlinkPayEcosystemDto): EcosystemItem | null {
     name,
     url: raw.url?.trim() ?? '',
     logoUrl: raw.logoUrl?.trim() ?? null,
+    isEcosystem: typeof raw.isEcosystem === 'boolean' ? raw.isEcosystem : undefined,
+    isComingSoon: typeof raw.isComingSoon === 'boolean' ? raw.isComingSoon : undefined,
   }
 }
 
@@ -43,12 +47,17 @@ export function createEcosystemRepository(client = httpClient) {
         .filter((item): item is EcosystemItem => item !== null)
     },
 
-    async signIn(params: { id: string; path?: string | null }): Promise<EcosystemSignInResult> {
+    async signIn(params: {
+      id: string
+      path?: string | null
+      pageName?: string | null
+    }): Promise<EcosystemSignInResult> {
       const response = await client.post<VlinkPayEcosystemSignInResponseDto>(
         '/api/v1/Client/ecosystem/signin',
         {
           id: params.id,
           ...(params.path ? { path: params.path } : {}),
+          ...(params.pageName ? { pageName: params.pageName } : {}),
         },
       )
       return {

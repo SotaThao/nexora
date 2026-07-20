@@ -125,7 +125,7 @@ export default function PayoutConfirmationView({ staffTaxYearStatus }: { staffTa
                     <td className="px-4 py-3 font-bold text-nexoraText">{payout.payPeriod}</td>
                     <td className="px-4 py-3 text-nexoraMuted">{payout.periodStart} – {payout.periodEnd}</td>
                     <td className="px-4 py-3 text-nexoraText">{formatCurrency(payout.servicePayout)}</td>
-                    <td className="px-4 py-3 text-nexoraText">{formatCurrency(payout.tip)}</td>
+                    <td className="px-4 py-3 text-nexoraText">{formatCurrency(payout.totalTip)}</td>
                     <td className="px-4 py-3 text-nexoraText">{formatCurrency(payout.bonus)}</td>
                     <td className="px-4 py-3 text-nexoraText">{formatCurrency(payout.reimbursement)}</td>
                     <td className="px-4 py-3 text-nexoraMuted">{payout.paymentMethod}</td>

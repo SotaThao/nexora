@@ -23,11 +23,6 @@ import {
 const MIN_AMOUNT = DIRECT_PAYMENT_MIN_AMOUNT
 const MAX_AMOUNT = DIRECT_PAYMENT_MAX_AMOUNT
 
-function resolveAmount(selectedAmount: number | 'custom', customAmount: string): number {
-  if (selectedAmount === 'custom') return parseDirectPaymentAmountInput(customAmount)
-  return Number(selectedAmount) || 0
-}
-
 export default function useDirectPaymentFlow() {
   const { businessId = '' } = useParams()
   const { currentLanguage, setLanguage, t } = useTranslation()
@@ -38,7 +33,6 @@ export default function useDirectPaymentFlow() {
   const confirmPaymentMutation = useConfirmDirectPayment()
 
   const [step, setStep] = useState('review')
-  const [selectedAmount, setSelectedAmount] = useState<number | 'custom'>(15)
   const [customAmount, setCustomAmount] = useState('')
   const [selectedWalletObj, setSelectedWalletObj] = useState<any>(null)
   const [selectedWallet, setSelectedWallet] = useState('')
@@ -50,8 +44,8 @@ export default function useDirectPaymentFlow() {
   const logoUrl = pageData?.logoUrl || null
 
   const activeAmount = useMemo(
-    () => resolveAmount(selectedAmount, customAmount),
-    [selectedAmount, customAmount],
+    () => parseDirectPaymentAmountInput(customAmount),
+    [customAmount],
   )
 
   const walletOptions = useMemo(() => {
@@ -94,6 +88,7 @@ export default function useDirectPaymentFlow() {
       {
         type: activePaymentMethod.type,
         accountInfo: activePaymentMethod.accountInfo,
+        accountName: activePaymentMethod.accountName ?? null,
       },
     ]
   }, [activePaymentMethod])
@@ -180,8 +175,6 @@ export default function useDirectPaymentFlow() {
     logoUrl,
     step,
     setStep,
-    selectedAmount,
-    setSelectedAmount,
     customAmount,
     setCustomAmount,
     handleCustomAmountChange,

@@ -12,6 +12,7 @@ import type {
   StaffTaxYearListPage,
   UpdateStaffTaxYearModulesParams,
   UpsertStaffTaxProfileParams,
+  UpsertW9RecordParams,
 } from '../repositories/taxiqStaffTaxYear'
 
 // Single source of truth for "does the current Staff user already have a
@@ -64,6 +65,26 @@ export function useUpsertStaffTaxProfile() {
   const queryClient = useQueryClient()
   return useMutation<void, Error, UpsertStaffTaxProfileParams>({
     mutationFn: (params) => taxiqStaffTaxYearRepository.upsertMyTaxProfile(params),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: qk.taxiqStaffTaxProfile() })
+    },
+  })
+}
+
+export function useUpsertW9Record() {
+  const queryClient = useQueryClient()
+  return useMutation<void, Error, UpsertW9RecordParams>({
+    mutationFn: (params) => taxiqStaffTaxYearRepository.upsertW9Record(params),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: qk.taxiqStaffTaxProfile() })
+    },
+  })
+}
+
+export function useUploadSignedW9() {
+  const queryClient = useQueryClient()
+  return useMutation<void, Error, File>({
+    mutationFn: (file) => taxiqStaffTaxYearRepository.uploadSignedW9(file),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: qk.taxiqStaffTaxProfile() })
     },

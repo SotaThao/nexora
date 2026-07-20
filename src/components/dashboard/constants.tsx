@@ -16,7 +16,35 @@ import {
   Wallet,
   Calendar,
   Store,
+  Package,
 } from 'lucide-react'
+import { BookingHubMainTab } from '../../data/merchantVoice/domain'
+
+/** Menu ids used by Booking Hub / Touchpoints expandable nav (avoid hardcoding duplicates). */
+export const DASHBOARD_MENU = {
+  Touchpoints: 'touchpoints',
+  BookingHub: 'booking-hub',
+  TaxIq: 'taxiq',
+} as const
+
+/** Dashboard session roles passed as `userRole` prop. */
+export const DASHBOARD_USER_ROLE = {
+  Owner: 'owner',
+  Staff: 'staff',
+} as const
+
+export type DashboardUserRole = (typeof DASHBOARD_USER_ROLE)[keyof typeof DASHBOARD_USER_ROLE]
+
+export function isDashboardStaffRole(userRole: string | null | undefined): boolean {
+  return userRole === DASHBOARD_USER_ROLE.Staff
+}
+
+export const BOOKING_HUB_PATH = `/dashboard/${DASHBOARD_MENU.BookingHub}`
+
+export function bookingHubPath(tab?: string) {
+  if (!tab) return BOOKING_HUB_PATH
+  return `${BOOKING_HUB_PATH}?tab=${encodeURIComponent(tab)}`
+}
 
 export const WalletLogos = {
   venmo: (
@@ -64,31 +92,65 @@ export const DEFAULT_PAYOUT_CONFIGS = {
   applecash: { enabled: false, value: '', qrCode: '', accountName: '' }
 }
 
+/** Dashboard route root. */
+export const DASHBOARD_ROOT_PATH = '/dashboard'
+
+/** Sidebar / route segment ids under `{@link DASHBOARD_ROOT_PATH}/…`. */
+export const DASHBOARD_MENU_ID = {
+  overview: 'overview',
+  staff: 'staff',
+  tips: 'tips',
+  reviews: 'reviews',
+  reports: 'reports',
+  touchpoints: 'touchpoints',
+  taxiq: 'taxiq',
+  bookingHub: 'booking-hub',
+  productManagement: 'product-management',
+  analytics: 'analytics',
+  settings: 'settings',
+  support: 'support',
+  subscriptions: 'subscriptions',
+  payments: 'payments',
+} as const
+
+export type DashboardMenuId = (typeof DASHBOARD_MENU_ID)[keyof typeof DASHBOARD_MENU_ID]
+
+/** Merchant Portal Product Management SSO entry (alias of {@link DASHBOARD_MENU_ID.productManagement}). */
+export const PRODUCT_MANAGEMENT_MENU_ID = DASHBOARD_MENU_ID.productManagement
+
+export function buildDashboardMenuPath(menuId: string): string {
+  return menuId === DASHBOARD_MENU_ID.overview
+    ? DASHBOARD_ROOT_PATH
+    : `${DASHBOARD_ROOT_PATH}/${menuId}`
+}
+
 export const MENU_ITEMS = [
-  { id: 'overview', label: 'Dashboard', icon: LayoutDashboard },
-  { id: 'staff', label: 'Staff', icon: Users },
-  { id: 'tips', label: 'Tips', icon: CircleDollarSign },
-  { id: 'reviews', label: 'Reviews', icon: Star },
-  { id: 'reports', label: 'Transactions', icon: ReceiptText },
-  { id: 'touchpoints', label: 'Touch Points', icon: QrCode },
+  { id: DASHBOARD_MENU_ID.overview, label: 'Dashboard', icon: LayoutDashboard },
+  { id: DASHBOARD_MENU_ID.staff, label: 'Staff', icon: Users },
+  { id: DASHBOARD_MENU_ID.tips, label: 'Tips', icon: CircleDollarSign },
+  { id: DASHBOARD_MENU_ID.reviews, label: 'Reviews', icon: Star },
+  { id: DASHBOARD_MENU_ID.reports, label: 'Transactions', icon: ReceiptText },
+  { id: DASHBOARD_MENU_ID.touchpoints, label: 'Touch Points', icon: QrCode },
   {
-    id: 'taxiq',
+    id: DASHBOARD_MENU_ID.taxiq,
     label: 'Tax IQ',
     icon: Calculator,
     image: '/assets/menu/tax-iq.svg',
     children: [
-      { id: 'onboarding', label: 'Onboarding' },
-      { id: 'deductions', label: 'Deduction Center' },
-      { id: 'receipts', label: 'Receipt Vault' },
-      { id: 'equipment', label: 'Equipment Tracker' },
-      { id: 'payroll', label: 'Payroll & Payout' },
-      { id: 'reminders', label: 'Tax Payment Reminders' },
-      { id: 'cpa-access', label: 'CPA Access' },
-      { id: 'export', label: 'Year-End Export' }
+      { id: 'onboarding', labelKey: 'dashboard.menu.taxiq_onboarding' },
+      { id: 'deductions', labelKey: 'dashboard.menu.taxiq_deductions' },
+      { id: 'income', labelKey: 'dashboard.menu.taxiq_income' },
+      { id: 'receipts', labelKey: 'dashboard.menu.taxiq_receipts' },
+      { id: 'equipment', labelKey: 'dashboard.menu.taxiq_equipment' },
+      { id: 'payroll', labelKey: 'dashboard.menu.taxiq_payroll' },
+      { id: 'reminders', labelKey: 'dashboard.menu.taxiq_reminders' },
+      { id: 'cpa-access', labelKey: 'dashboard.menu.taxiq_cpa_access' },
+      { id: 'export', labelKey: 'dashboard.menu.taxiq_export' }
     ]
   },
-  { id: 'booking-hub', label: 'Booking Hub', icon: Calendar },
-  { id: 'analytics', label: 'Analytics', icon: BarChart3 },
+  { id: DASHBOARD_MENU_ID.bookingHub, label: 'Booking Hub', icon: Calendar },
+  { id: DASHBOARD_MENU_ID.productManagement, label: 'Gift Card Center', icon: Package },
+  { id: DASHBOARD_MENU_ID.analytics, label: 'Analytics', icon: BarChart3 },
   {
     id: 'pos',
     label: 'POS',
@@ -103,11 +165,14 @@ export const MENU_ITEMS = [
       { id: 'staff', label: 'Staff Profiles' }
     ]
   },
-  { id: 'settings', label: 'Settings', icon: Settings },
-  { id: 'support', label: 'Support', icon: HelpCircle }
+  { id: DASHBOARD_MENU_ID.settings, label: 'Settings', icon: Settings },
+  { id: DASHBOARD_MENU_ID.support, label: 'Support', icon: HelpCircle }
 ]
 
-export const MERCHANT_SIDEBAR_HIDDEN_MENU_IDS = ['tips', 'reports']
+export const MERCHANT_SIDEBAR_HIDDEN_MENU_IDS = [
+  DASHBOARD_MENU_ID.tips,
+  DASHBOARD_MENU_ID.reports,
+]
 
 /** Temporarily hide Hardware Devices submenu/tab until the feature is ready. */
 export const SHOW_HARDWARE_DEVICES = false
@@ -121,17 +186,76 @@ export const VISIBLE_TOUCHPOINTS_SUBMENU = SHOW_HARDWARE_DEVICES
   ? TOUCHPOINTS_SUBMENU
   : TOUCHPOINTS_SUBMENU.filter((item) => item.id !== 'devices')
 
-export const TAXIQ_SUBMENU: { id: string; label: string }[] =
-  MENU_ITEMS.find((item): item is typeof item & { children: { id: string; label: string }[] } =>
-    item.id === 'taxiq' && 'children' in item,
+export const TAXIQ_SUBMENU: { id: string; labelKey: string }[] =
+  MENU_ITEMS.find((item): item is typeof item & { children: { id: string; labelKey: string }[] } =>
+    item.id === DASHBOARD_MENU_ID.taxiq && 'children' in item,
   )?.children ?? []
 
-// POS Owner Setup — sidebar group (US-014 relocated Business Hours here; more
+/** Booking Hub sidebar children — maps to `/dashboard/booking-hub?tab=`. */
+export const BOOKING_HUB_SUBMENU = [
+  { id: BookingHubMainTab.Booking, labelKey: 'components.dashboard.views.BookingHubView.tabs.booking', requiresVoiceTenant: true },
+  { id: BookingHubMainTab.Customers, labelKey: 'components.dashboard.views.BookingHubView.tabs.customers', requiresVoiceTenant: true },
+  { id: BookingHubMainTab.CallLog, labelKey: 'components.dashboard.views.BookingHubView.tabs.callLog', requiresVoiceTenant: true },
+  { id: BookingHubMainTab.Plans, labelKey: 'components.dashboard.views.BookingHubView.tabs.plans', requiresVoiceTenant: false },
+  { id: BookingHubMainTab.Settings, labelKey: 'components.dashboard.views.BookingHubView.tabs.settings', requiresVoiceTenant: true },
+] as const
+
+/** Match BookingHubView page tabs: without voice tenant only Plans is visible. */
+export function getVisibleBookingHubSubmenu(hasVoiceTenant: boolean) {
+  if (hasVoiceTenant) return BOOKING_HUB_SUBMENU
+  return BOOKING_HUB_SUBMENU.filter((item) => !item.requiresVoiceTenant)
+}
+
+export function getDefaultBookingHubTab(hasVoiceTenant: boolean): BookingHubMainTab {
+  return hasVoiceTenant ? BookingHubMainTab.Booking : BookingHubMainTab.Plans
+}
+
+export function isBookingHubMainTabAllowed(
+  tab: BookingHubMainTab,
+  hasVoiceTenant: boolean,
+): boolean {
+  const item = BOOKING_HUB_SUBMENU.find((entry) => entry.id === tab)
+  if (!item) return false
+  return hasVoiceTenant || !item.requiresVoiceTenant
+}
+
+export function isBookingHubSubActive(
+  activeMenu: string,
+  tabParam: string | null,
+  subId: string,
+  hasVoiceTenant = true,
+): boolean {
+  if (activeMenu !== DASHBOARD_MENU.BookingHub) return false
+  const activeTab = tabParam || getDefaultBookingHubTab(hasVoiceTenant)
+  return activeTab === subId
+}
+
+export function getDashboardMenuLocalizedLabel(
+  id: string,
+  t: (key: string) => string,
+  fallback: string,
+): string {
+  const labels: Record<string, string> = {
+    overview: t('dashboard.menu.dashboard'),
+    staff: t('dashboard.menu.staff'),
+    reviews: t('dashboard.menu.reviews'),
+    reports: t('dashboard.menu.transactions'),
+    [DASHBOARD_MENU.BookingHub]: t('dashboard.menu.booking_hub'),
+    [DASHBOARD_MENU.Touchpoints]: t('dashboard.menu.touchpoints'),
+    [DASHBOARD_MENU.TaxIq]: t('dashboard.menu.tax_iq'),
+    devices: t('dashboard.menu.qr_nfc'),
+    analytics: t('dashboard.menu.analytics'),
+    support: t('dashboard.menu.support'),
+  }
+  return labels[id] || fallback
+}
+
 // sub-items are added as later POS Owner Setup tickets ship their own screens).
 export const POS_SUBMENU: { id: string; label: string }[] =
   MENU_ITEMS.find((item): item is typeof item & { children: { id: string; label: string }[] } =>
     item.id === 'pos' && 'children' in item,
   )?.children ?? []
+
 
 export const MERCHANT_SIDEBAR_MENU_ITEMS = MENU_ITEMS.filter(
   (item) => !MERCHANT_SIDEBAR_HIDDEN_MENU_IDS.includes(item.id),
@@ -146,31 +270,31 @@ export const PAYMENTS_PAYOUTS_MENU_ITEM = {
 export const PAYMENTS_PAYOUTS_SUBMENU = [
   {
     id: 'overview',
-    screen: 'tips',
+    screen: DASHBOARD_MENU_ID.tips,
     labelKey: 'dashboard.tips.tabs.overview',
     params: { tab: 'overview' },
   },
   {
     id: 'customer_payments',
-    screen: 'reports',
+    screen: DASHBOARD_MENU_ID.reports,
     labelKey: 'dashboard.menu.payments_payouts_customer_payments',
     params: { tab: 'direct_payments' },
   },
   {
     id: 'tips',
-    screen: 'reports',
+    screen: DASHBOARD_MENU_ID.reports,
     labelKey: 'dashboard.reports.tabs.tips',
     params: { tab: 'tips' },
   },
   {
     id: 'payroll',
-    screen: 'tips',
+    screen: DASHBOARD_MENU_ID.tips,
     labelKey: 'dashboard.menu.payments_payouts_payroll',
     params: { tab: 'payouts' },
   },
   {
     id: 'direct_savings',
-    screen: 'tips',
+    screen: DASHBOARD_MENU_ID.tips,
     labelKey: 'dashboard.tips.tabs.savings',
     params: { tab: 'savings' },
   },
@@ -202,11 +326,11 @@ export function isPaymentsPayoutsSubActive(
   const tab = item.params?.tab
   if (!tab) return true
 
-  if (item.screen === 'tips' && item.id === 'overview') {
+  if (item.screen === DASHBOARD_MENU_ID.tips && item.id === 'overview') {
     return !tabParam || tabParam === 'overview'
   }
 
-  if (item.screen === 'reports' && item.id === 'tips') {
+  if (item.screen === DASHBOARD_MENU_ID.reports && item.id === 'tips') {
     return !tabParam || tabParam === 'tips'
   }
 
@@ -217,7 +341,7 @@ export function isPaymentsPayoutsRouteActive(
   activeMenu: string,
   tabParam: string | null,
 ): boolean {
-  if (activeMenu !== 'tips' && activeMenu !== 'reports') return false
+  if (activeMenu !== DASHBOARD_MENU_ID.tips && activeMenu !== DASHBOARD_MENU_ID.reports) return false
   return PAYMENTS_PAYOUTS_SUBMENU.some((item) =>
     isPaymentsPayoutsSubActive(activeMenu, tabParam, item),
   )

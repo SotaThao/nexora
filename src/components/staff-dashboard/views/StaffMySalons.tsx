@@ -11,7 +11,49 @@ import {
   getSalonInitials,
   sortSalonBusinesses,
 } from '../utils/staffSalonDisplay'
-import { resolveStaffBusinessLinkStatusLabel } from '../../../utils/staffBusinessLinkStatus'
+import {
+  resolveStaffBusinessLinkStatusLabel,
+  STAFF_BUSINESS_LINK_STATUS,
+} from '../../../utils/staffBusinessLinkStatus'
+import Tooltip from '../../ui/Tooltip'
+
+function getSalonStatusHelp(
+  statusLabel: string,
+  t: (key: string, params?: Record<string, unknown>) => string,
+) {
+  const normalized = statusLabel.trim().toLowerCase()
+
+  if (normalized.includes(STAFF_BUSINESS_LINK_STATUS.pendingUnlink)) {
+    return t('staff_salons.status_help.pending_unlink')
+  }
+  if (normalized.includes(STAFF_BUSINESS_LINK_STATUS.pendingApproval)) {
+    return t('staff_salons.status_help.pending_approval')
+  }
+  if (
+    normalized === STAFF_BUSINESS_LINK_STATUS.pending
+    || normalized.includes(STAFF_BUSINESS_LINK_STATUS.pendingLink)
+  ) {
+    return t('staff_salons.status_help.pending')
+  }
+  if (
+    normalized === STAFF_BUSINESS_LINK_STATUS.rejected
+    || normalized.includes(STAFF_BUSINESS_LINK_STATUS.rejected)
+  ) {
+    return t('staff_salons.status_help.rejected')
+  }
+  if (
+    normalized === STAFF_BUSINESS_LINK_STATUS.inactive
+    || normalized === STAFF_BUSINESS_LINK_STATUS.previous
+    || normalized.includes(STAFF_BUSINESS_LINK_STATUS.inactive)
+  ) {
+    return t('staff_salons.status_help.previous')
+  }
+  if (normalized === STAFF_BUSINESS_LINK_STATUS.active) {
+    return t('staff_salons.status_help.active')
+  }
+
+  return t('staff_salons.status_help.default')
+}
 
 function SalonCard({
   business,
@@ -28,14 +70,31 @@ function SalonCard({
 }) {
   const statusLabel = resolveStaffBusinessLinkStatusLabel(business)
   const status = getSalonDisplayStatus(business, t)
+  const statusHelp = getSalonStatusHelp(statusLabel, t)
   const timeline = formatSalonTimeline(business, statusLabel, t, currentLanguage)
   const location = formatSalonLocation(business)
   const initials = business.logoUrl ? null : getSalonInitials(business.businessName)
 
   return (
-    <button
-      type="button"
+    <div
+      role="button"
+      tabIndex={0}
       onClick={onOpen}
+      onKeyDown={(event) => {
+        if (event.key === ' ') {
+          event.preventDefault()
+        }
+        if (event.key === 'Enter') {
+          event.preventDefault()
+          onOpen()
+        }
+      }}
+      onKeyUp={(event) => {
+        if (event.key === ' ') {
+          event.preventDefault()
+          onOpen()
+        }
+      }}
       className="flex w-full gap-3 rounded-2xl border border-nexoraBorder/80 bg-white p-4 text-left shadow-sm transition hover:border-nexoraBrand/20 hover:shadow-md active:scale-[0.99]"
     >
       {business.logoUrl ? (
@@ -57,8 +116,22 @@ function SalonCard({
           <h3 className="truncate text-sm font-extrabold uppercase tracking-wide text-nexoraText">
             {business.businessName}
           </h3>
-          <span className={`shrink-0 rounded-full px-2.5 py-0.5 text-[10px] font-bold ${status.className}`}>
-            {status.label}
+          <span className="flex shrink-0 items-center gap-1">
+            <span className={`rounded-full px-2.5 py-0.5 text-[10px] font-bold ${status.className}`}>
+              {status.label}
+            </span>
+            <span
+              onClick={(event) => event.stopPropagation()}
+              onKeyDown={(event) => event.stopPropagation()}
+              onKeyUp={(event) => event.stopPropagation()}
+            >
+              <Tooltip
+                content={statusHelp}
+                ariaLabel={t('staff_salons.status_help_aria')}
+                align="end"
+                placement="top"
+              />
+            </span>
           </span>
         </div>
         <p className="truncate text-xs font-medium text-nexoraMuted">{location}</p>
@@ -66,7 +139,7 @@ function SalonCard({
           <p className="pt-0.5 text-right text-[11px] font-semibold text-nexoraMuted">{timeline}</p>
         ) : null}
       </div>
-    </button>
+    </div>
   )
 }
 

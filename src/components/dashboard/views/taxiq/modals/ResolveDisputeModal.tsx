@@ -27,7 +27,8 @@ export default function ResolveDisputeModal({
   const [resolution, setResolution] = useState<DisputeResolution>('Approve')
   const [note, setNote] = useState('')
   const [adjustedServicePayout, setAdjustedServicePayout] = useState('')
-  const [adjustedTip, setAdjustedTip] = useState('')
+  const [adjustedTipCardAmount, setAdjustedTipCardAmount] = useState('')
+  const [adjustedTipCashAmount, setAdjustedTipCashAmount] = useState('')
   const [adjustedBonus, setAdjustedBonus] = useState('')
   const [error, setError] = useState('')
 
@@ -36,7 +37,8 @@ export default function ResolveDisputeModal({
     setResolution('Approve')
     setNote('')
     setAdjustedServicePayout('')
-    setAdjustedTip('')
+    setAdjustedTipCardAmount('')
+    setAdjustedTipCashAmount('')
     setAdjustedBonus('')
     setError('')
   }, [open, dispute.id])
@@ -44,7 +46,10 @@ export default function ResolveDisputeModal({
   if (!open) return null
 
   const hasAtLeastOneAdjustedField =
-    adjustedServicePayout.trim().length > 0 || adjustedTip.trim().length > 0 || adjustedBonus.trim().length > 0
+    adjustedServicePayout.trim().length > 0 ||
+    adjustedTipCardAmount.trim().length > 0 ||
+    adjustedTipCashAmount.trim().length > 0 ||
+    adjustedBonus.trim().length > 0
 
   const canSubmit =
     note.trim().length > 0 && (resolution !== 'Adjust' || hasAtLeastOneAdjustedField)
@@ -63,7 +68,8 @@ export default function ResolveDisputeModal({
         resolution,
         ownerResolutionNote: note.trim(),
         adjustedServicePayout: adjustedServicePayout.trim() ? Number(adjustedServicePayout) : null,
-        adjustedTip: adjustedTip.trim() ? Number(adjustedTip) : null,
+        adjustedTipCardAmount: adjustedTipCardAmount.trim() ? Number(adjustedTipCardAmount) : null,
+        adjustedTipCashAmount: adjustedTipCashAmount.trim() ? Number(adjustedTipCashAmount) : null,
         adjustedBonus: adjustedBonus.trim() ? Number(adjustedBonus) : null,
       })
       showToast(t('taxiq.payoutCenter.resolveDispute.success'), 'success')
@@ -99,7 +105,8 @@ export default function ResolveDisputeModal({
               <div className="mt-1 text-sm font-bold text-nexoraText">{formatCurrency(dispute.grossPayout)}</div>
               <div className="text-[11px] text-nexoraMuted">
                 {t('taxiq.payoutCenter.form.servicePayoutLabel')}: {formatCurrency(dispute.servicePayout)} ·{' '}
-                {t('taxiq.payoutCenter.form.tipLabel')}: {formatCurrency(dispute.tip)} ·{' '}
+                {t('taxiq.payoutCenter.form.tipCardAmountLabel')}: {formatCurrency(dispute.tipCardAmount)} ·{' '}
+                {t('taxiq.payoutCenter.form.tipCashAmountLabel')}: {formatCurrency(dispute.tipCashAmount)} ·{' '}
                 {t('taxiq.payoutCenter.form.bonusLabel')}: {formatCurrency(dispute.bonus)}
               </div>
             </div>
@@ -140,7 +147,7 @@ export default function ResolveDisputeModal({
           </div>
 
           {resolution === 'Adjust' && (
-            <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
+            <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
               <div>
                 <label className="mb-1 block text-xs font-bold text-nexoraMuted">
                   {t('taxiq.payoutCenter.form.servicePayoutLabel')}
@@ -155,18 +162,6 @@ export default function ResolveDisputeModal({
               </div>
               <div>
                 <label className="mb-1 block text-xs font-bold text-nexoraMuted">
-                  {t('taxiq.payoutCenter.form.tipLabel')}
-                </label>
-                <input
-                  type="number"
-                  min="0"
-                  value={adjustedTip}
-                  onChange={(e) => setAdjustedTip(e.target.value)}
-                  className="w-full rounded-lg border border-nexoraBorder px-3 py-2 text-sm"
-                />
-              </div>
-              <div>
-                <label className="mb-1 block text-xs font-bold text-nexoraMuted">
                   {t('taxiq.payoutCenter.form.bonusLabel')}
                 </label>
                 <input
@@ -174,6 +169,30 @@ export default function ResolveDisputeModal({
                   min="0"
                   value={adjustedBonus}
                   onChange={(e) => setAdjustedBonus(e.target.value)}
+                  className="w-full rounded-lg border border-nexoraBorder px-3 py-2 text-sm"
+                />
+              </div>
+              <div>
+                <label className="mb-1 block text-xs font-bold text-nexoraMuted">
+                  {t('taxiq.payoutCenter.form.tipCardAmountLabel')}
+                </label>
+                <input
+                  type="number"
+                  min="0"
+                  value={adjustedTipCardAmount}
+                  onChange={(e) => setAdjustedTipCardAmount(e.target.value)}
+                  className="w-full rounded-lg border border-nexoraBorder px-3 py-2 text-sm"
+                />
+              </div>
+              <div>
+                <label className="mb-1 block text-xs font-bold text-nexoraMuted">
+                  {t('taxiq.payoutCenter.form.tipCashAmountLabel')}
+                </label>
+                <input
+                  type="number"
+                  min="0"
+                  value={adjustedTipCashAmount}
+                  onChange={(e) => setAdjustedTipCashAmount(e.target.value)}
                   className="w-full rounded-lg border border-nexoraBorder px-3 py-2 text-sm"
                 />
               </div>

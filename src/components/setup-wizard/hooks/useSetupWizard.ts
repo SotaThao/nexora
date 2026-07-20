@@ -24,6 +24,7 @@ import { getApiErrorCode } from '../../../types/domain'
 import { getErrorI18nKey } from '../../../data/errorCodes'
 import { getDefaultDialCode, parsePhone } from '../../CountryCodeSelect'
 import { isValidEmail, isValidHttpUrl } from '../../../utils/validation'
+import { buildTouchpointAutoName } from '../touchpointNames'
 
 export default function useSetupWizard({
   initialBusinessInfo,
@@ -93,15 +94,12 @@ export default function useSetupWizard({
 
   // Touchpoint input state
   const [newTouchpoint, setNewTouchpoint] = useState({
-    name: '',
     type: 'Table QR'
   })
 
   // Touchpoint editing states
   const [editingTpId, setEditingTpId] = useState<any | null>(null)
-  const [editingTpName, setEditingTpName] = useState('')
   const [editingTpType, setEditingTpType] = useState('Table QR')
-  const [editingTpNameError, setEditingTpNameError] = useState('')
 
   // QR preview modal state
   const [previewingTp, setPreviewingTp] = useState<any | null>(null)
@@ -519,25 +517,15 @@ export default function useSetupWizard({
 
   // Step 2: Add Touch Point
   const handleAddTouchpoint = () => {
-    if (!newTouchpoint.name.trim()) {
-      setErrors({ ...errors, tpName: t('setup.errors.tp_name_required') })
-      return
-    }
-
     const added = {
       id: `tp-custom-${Date.now()}`,
-      name: newTouchpoint.name.trim(),
+      name: buildTouchpointAutoName(newTouchpoint.type, touchPoints),
       type: newTouchpoint.type,
       isActive: true,
       scans: 0
     }
 
     setTouchPoints([...touchPoints, added])
-    setNewTouchpoint({ ...newTouchpoint, name: '' })
-
-    const cleanedErrors = { ...errors }
-    delete cleanedErrors.tpName
-    setErrors(cleanedErrors)
   }
 
   // Step 2: Remove Touch Point
@@ -548,40 +536,27 @@ export default function useSetupWizard({
   // Step 2: Start Editing Touch Point
   const handleStartEditTouchpoint = (tp) => {
     setEditingTpId(tp.id)
-    setEditingTpName(tp.name)
     setEditingTpType(tp.type)
-    setEditingTpNameError('')
   }
 
   // Step 2: Save Edited Touch Point
   const handleSaveTouchpoint = (id) => {
-    if (!editingTpName.trim()) {
-      setEditingTpNameError('setup.errors.tp_name_required')
-      return
-    }
-    setEditingTpNameError('')
     setTouchPoints(prev => prev.map(tp => {
       if (tp.id === id) {
+        const typeChanged = tp.type !== editingTpType
         const updated = {
           ...tp,
-          name: editingTpName.trim(),
+          name: typeChanged
+            ? buildTouchpointAutoName(editingTpType, prev, id)
+            : tp.name,
           type: editingTpType
         }
-        // If the name is changed, remove the nameKey so that it doesn't get auto-translated
-        if (tp.nameKey) {
-          const originalTranslated = tp.nameKey === 'setup.tp_personal_default'
-            ? t('setup.tp_personal_default', { name: tp.staffName || '' })
-            : t(tp.nameKey)
-          if (editingTpName.trim() !== originalTranslated) {
-            delete updated.nameKey
-          }
-        }
+        if (typeChanged) delete updated.nameKey
         return updated
       }
       return tp
     }))
     setEditingTpId(null)
-    setEditingTpName('')
   }
 
   // Final Complete: step 2 already persisted the onboarding draft. This only
@@ -654,9 +629,6 @@ export default function useSetupWizard({
     setNewTouchpoint,
     editingTpId,
     setEditingTpId,
-    editingTpName,
-    setEditingTpName,
-    editingTpNameError,
     editingTpType,
     setEditingTpType,
     previewingTp,

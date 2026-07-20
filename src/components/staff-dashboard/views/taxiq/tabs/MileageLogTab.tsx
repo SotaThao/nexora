@@ -29,9 +29,17 @@ interface FormState {
   startLocation: string
   endLocation: string
   miles: string
+  vehicleInfo: string
 }
 
-const EMPTY_FORM: FormState = { date: '', purpose: '', startLocation: '', endLocation: '', miles: '' }
+const EMPTY_FORM: FormState = {
+  date: '',
+  purpose: '',
+  startLocation: '',
+  endLocation: '',
+  miles: '',
+  vehicleInfo: '',
+}
 
 function statusBadgeClass(status: string) {
   if (status === 'CPAReview') {
@@ -90,6 +98,7 @@ export default function MileageLogTab({
       startLocation: log.startLocation,
       endLocation: log.endLocation,
       miles: String(log.miles),
+      vehicleInfo: log.vehicleInfo,
     })
     setErrors({})
     setIsModalOpen(true)
@@ -120,6 +129,7 @@ export default function MileageLogTab({
         startLocation: form.startLocation.trim() || null,
         endLocation: form.endLocation.trim() || null,
         miles: Number(form.miles),
+        vehicleInfo: form.vehicleInfo.trim() || null,
       }
       if (editingId) {
         await updateMileageLog.mutateAsync({ id: editingId, staffTaxYearId, ...payload })
@@ -322,6 +332,16 @@ export default function MileageLogTab({
                   className="mt-1 w-full rounded-lg border border-nexoraBorder px-3 py-2 text-sm"
                 />
                 {errors.miles && <p className="mt-1 text-xs font-semibold text-rose-500">{errors.miles}</p>}
+              </div>
+
+              <div>
+                <label className="text-xs font-bold text-nexoraMuted">{t('taxiq.staffLogs.mileage.form.vehicleInfoLabel')}</label>
+                <input
+                  type="text"
+                  value={form.vehicleInfo}
+                  onChange={(e) => setForm((prev) => ({ ...prev, vehicleInfo: e.target.value }))}
+                  className="mt-1 w-full rounded-lg border border-nexoraBorder px-3 py-2 text-sm"
+                />
               </div>
 
               <p className="text-[11px] font-semibold text-nexoraMuted">{t('taxiq.staffLogs.mileage.form.missingFieldsHint')}</p>

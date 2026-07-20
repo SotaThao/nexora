@@ -17,7 +17,7 @@ type HttpClient = typeof httpClient
 
 export const ADJUSTMENT_ENTITY_FIELD_MAP: Record<string, string[]> = {
   DeductionRecord: ['Amount', 'Description', 'VendorName', 'BusinessUsePercent'],
-  PayoutRecord: ['ServicePayout', 'Tip', 'Bonus', 'Reimbursement'],
+  PayoutRecord: ['ServicePayout', 'TipCardAmount', 'TipCashAmount', 'Bonus', 'Reimbursement'],
   EquipmentAsset: ['Amount', 'BusinessUsePercent', 'AssetName'],
   GiftCardLiability: ['TotalSold', 'TotalRedeemed'],
   MembershipCredit: ['CreditsIssued', 'CreditsUsed', 'CreditsExpired'],

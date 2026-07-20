@@ -17,7 +17,21 @@ html.capacitor-native {
   --app-safe-area-left: var(--safe-area-inset-left, env(safe-area-inset-left, 0px));
 }
 
+@keyframes app-fade-in {
+  from {
+    opacity: 0;
+  }
+
+  to {
+    opacity: 1;
+  }
+}
+
 @layer utilities {
+  .animate-fadeIn {
+    animation: app-fade-in 0.35s cubic-bezier(0.16, 1, 0.3, 1) both;
+  }
+
   .safe-area-top {
     padding-top: var(--app-safe-area-top);
   }
@@ -49,6 +63,13 @@ html.capacitor-native {
     height: 2.5rem;
     width: 2.5rem;
   }
+}
+
+/* Full-screen fixed overlays can be direct children of Tailwind `space-y-*`
+   containers. Reset inherited sibling spacing so every backdrop starts at the
+   viewport edge, regardless of where the dialog is mounted. */
+.fixed.inset-0 {
+  margin: 0 !important;
 }
 
 /* Prevent iOS WKWebView rubber-band overscroll that reveals white native background */

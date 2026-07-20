@@ -30,14 +30,12 @@ function BalanceCard({
   pendingAmount,
   lifetimeEarnings,
   isLoading,
-  onWithdraw,
   t,
 }: {
   availableBalance: number
   pendingAmount: number
   lifetimeEarnings: number
   isLoading: boolean
-  onWithdraw: () => void
   t: (key: string, params?: Record<string, unknown>) => string
 }) {
   return (
@@ -51,13 +49,6 @@ function BalanceCard({
             {isLoading ? '—' : formatCurrency(availableBalance)}
           </p>
         </div>
-        <button
-          type="button"
-          onClick={onWithdraw}
-          className="shrink-0 rounded-full bg-white px-4 py-2 text-xs font-extrabold text-[#4648D8] shadow-sm transition hover:bg-white/95 active:scale-95"
-        >
-          {t('staff_earnings.withdraw')}
-        </button>
       </div>
 
       <div className="mt-5 grid grid-cols-2 gap-4 border-t border-white/20 pt-4">
@@ -215,7 +206,6 @@ export default function StaffMyEarnings() {
         pendingAmount={earningsData.pendingAmount}
         lifetimeEarnings={earningsData.lifetimeEarnings}
         isLoading={earningsData.isLoading}
-        onWithdraw={() => navigate('/staff/pay')}
         t={t}
       />
 

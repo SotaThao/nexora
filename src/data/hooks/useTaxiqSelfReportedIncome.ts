@@ -29,11 +29,14 @@ export function useTaxiqSelfReportedIncomeDetail(id?: string) {
 // US-13 DoD: Delete/Edit/Create/Link-receipt must invalidate both the list and the
 // StaffTaxYear dashboard cache (`taxiqStaffTaxYearById`) so Gross Income on Staff Home
 // updates without a manual refresh.
+// US-018: also invalidate the 1099-K reconciliation cache — its `selfReportedAmount`
+// column is a SUM over these same records, so it goes stale otherwise.
 function invalidateAfterMutation(
   queryClient: ReturnType<typeof useQueryClient>,
   staffTaxYearId: string | undefined,
 ) {
   queryClient.invalidateQueries({ queryKey: qk.taxiqSelfReportedIncome(staffTaxYearId) })
+  queryClient.invalidateQueries({ queryKey: qk.taxiqForm1099KReconciliation(staffTaxYearId) })
   if (staffTaxYearId) {
     queryClient.invalidateQueries({ queryKey: qk.taxiqStaffTaxYearById(staffTaxYearId) })
   }

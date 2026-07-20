@@ -2,7 +2,7 @@ import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { Outlet, useNavigate } from 'react-router-dom'
 
 // 2. Third-party
-import { Filter, Settings, ShieldAlert, Check, Link } from 'lucide-react'
+import { Filter, Settings, ShieldAlert, Check, Link, ArrowLeft } from 'lucide-react'
 
 // 3. Internal — utils → contexts → data/constants → hooks → layout → views → modals → ui
 import { logger } from '../utils/logger'
@@ -10,7 +10,7 @@ import { resolveMerchantStaffTipQr, toLocalCustomerTouchUrl } from '../utils/sta
 import { resolveAssignedStaffProfileId } from '../utils/touchpointTypes'
 import { useTranslation } from '../contexts/LanguageContext'
 import { useNotification } from '../contexts/NotificationContext'
-import { DEFAULT_PAYOUT_CONFIGS, MENU_ITEMS, MERCHANT_SIDEBAR_MENU_ITEMS } from './dashboard/constants'
+import { DEFAULT_PAYOUT_CONFIGS, MENU_ITEMS, MERCHANT_SIDEBAR_MENU_ITEMS, DASHBOARD_MENU_ID } from './dashboard/constants'
 import {
   DEFAULT_TOUCHPOINT_TYPE,
   MASTER_TOUCHPOINT_API_TYPE,
@@ -38,6 +38,7 @@ import { useNotifications, useMarkNotificationRead, useMarkAllNotificationsRead,
 import { useProfileSettings, useSaveProfileSettings } from '../data/hooks/useProfileSettings'
 import { useMerchantSetup, useSaveMerchantSetup } from '../data/hooks/useMerchantSetup'
 import { useMerchantInviteLinkSetting } from '../data/hooks/useMerchantSettings'
+import { useMerchantPaymentMethods } from '../data/hooks/useMerchantPaymentMethods'
 import { merchantTouchpointsRepository } from '../data/repositories/merchantTouchpoints'
 import DashboardHeader from './dashboard/layout/DashboardHeader'
 import DashboardSidebar from './dashboard/layout/DashboardSidebar'
@@ -86,10 +87,13 @@ export default function Dashboard({
     isPaymentsPayoutsMobileExpanded, setIsPaymentsPayoutsMobileExpanded,
     isTouchpointsMobileExpanded, setIsTouchpointsMobileExpanded,
     isTaxIqMobileExpanded, setIsTaxIqMobileExpanded,
+    isBookingHubMobileExpanded, setIsBookingHubMobileExpanded,
     settingsTab, setSettingsTab,
     isProfileExpanded, setIsProfileExpanded,
     handleNavigateMenu, navigateMenu
   } = useDashboardNavigation()
+  // Prefetch business payment-method catalog (ordered) for Add Manual Staff / staff wallet UIs.
+  useMerchantPaymentMethods()
   const navigate = useNavigate()
   const handleStartSetup = useCallback(() => {
     if (typeof onStartSetup === 'function') {
@@ -415,8 +419,8 @@ export default function Dashboard({
 
   const menuItemsToDisplay = userRole === 'staff'
     ? [
-        { id: 'overview', label: t('components.dashboardRoot.myDashboard'), icon: MENU_ITEMS.find(i => i.id === 'overview')?.icon, image: MENU_ITEMS.find(i => i.id === 'overview')?.image },
-        { id: 'support', label: t('dashboard.menu.support'), icon: MENU_ITEMS.find(i => i.id === 'support')?.icon, image: MENU_ITEMS.find(i => i.id === 'support')?.image }
+        { id: DASHBOARD_MENU_ID.overview, label: t('components.dashboardRoot.myDashboard'), icon: MENU_ITEMS.find(i => i.id === DASHBOARD_MENU_ID.overview)?.icon, image: MENU_ITEMS.find(i => i.id === DASHBOARD_MENU_ID.overview)?.image },
+        { id: DASHBOARD_MENU_ID.support, label: t('dashboard.menu.support'), icon: MENU_ITEMS.find(i => i.id === DASHBOARD_MENU_ID.support)?.icon, image: MENU_ITEMS.find(i => i.id === DASHBOARD_MENU_ID.support)?.image }
       ]
     : MERCHANT_SIDEBAR_MENU_ITEMS
 
@@ -744,8 +748,24 @@ export default function Dashboard({
     togglingStaffId: updateStatusMutation.isPending ? updateStatusMutation.variables?.staffLinkId ?? null : null,
   }
 
+  const activeMenuItem = MENU_ITEMS.find((item) => item.id === activeMenu)
+  const activeMenuLabelKey = {
+    overview: 'dashboard.menu.dashboard',
+    staff: 'dashboard.menu.staff',
+    tips: 'dashboard.menu.tips',
+    reviews: 'dashboard.menu.reviews',
+    reports: 'dashboard.menu.transactions',
+    booking_hub: 'dashboard.menu.booking_hub',
+    product_management: 'dashboard.menu.product_management',
+    touchpoints: 'dashboard.menu.touchpoints',
+    analytics: 'dashboard.menu.analytics',
+    settings: 'dashboard.menu.settings',
+    support: 'dashboard.menu.support',
+  }[activeMenu]
+  const activeMenuTitle = activeMenuLabelKey ? t(activeMenuLabelKey) : activeMenuItem?.label
+
   return (
-    <div className="min-h-dvh bg-nexoraCanvas font-sans text-nexoraText">
+    <div className="min-h-dvh w-full overflow-x-hidden bg-nexoraCanvas font-sans text-nexoraText">
       <DashboardSidebar
         activeMenu={activeMenu}
         setActiveMenu={handleNavigateMenu}
@@ -763,7 +783,7 @@ export default function Dashboard({
         userRole={userRole}
       />
 
-      <div className="flex min-h-dvh flex-col lg:pl-72">
+      <div className="flex min-h-dvh w-full min-w-0 flex-col lg:pl-72">
         <DashboardHeader
           searchQuery={searchQuery}
           setSearchQuery={setSearchQuery}
@@ -797,14 +817,24 @@ export default function Dashboard({
           onOpenMobileMenu={() => setIsMobileMenuOpen(true)}
         />
 
-        <main className="flex-1 p-4 pb-6 sm:p-6 sm:pb-8 lg:p-7 lg:pb-7">
+        <main className="w-full min-w-0 flex-1 overflow-x-hidden p-4 pb-6 sm:p-6 sm:pb-8 lg:p-7 lg:pb-7">
           {activeMenu !== 'overview' && (
-            <button
-              onClick={() => handleNavigateMenu('overview')}
-              className="mb-5 inline-flex h-9 items-center rounded-lg border border-nexoraBorder bg-white px-4 text-xs font-extrabold text-nexoraText shadow-nexora-soft transition hover:bg-nexoraSurfaceMuted"
-            >
-              {t('dashboard.back_to_dashboard')}
-            </button>
+            <div className="mb-3 flex min-w-0 items-center gap-3 sm:mb-5 sm:block">
+              <button
+                onClick={() => handleNavigateMenu('overview')}
+                title={t('dashboard.back_to_dashboard')}
+                aria-label={t('dashboard.back_to_dashboard')}
+                className="inline-flex h-9 shrink-0 items-center gap-1.5 rounded-lg border border-nexoraBorder bg-white px-3 text-xs font-extrabold text-nexoraText shadow-nexora-soft transition hover:bg-nexoraSurfaceMuted"
+              >
+                <ArrowLeft className="h-4 w-4" aria-hidden="true" />
+                <span>{t('dashboard.back_short')}</span>
+              </button>
+              {activeMenuTitle ? (
+                <h1 className="min-w-0 truncate text-lg font-extrabold text-nexoraText sm:hidden">
+                  {activeMenuTitle}
+                </h1>
+              ) : null}
+            </div>
           )}
           <Outlet context={dashboardCtx} />
         </main>
@@ -836,6 +866,8 @@ export default function Dashboard({
         setIsTouchpointsMobileExpanded={setIsTouchpointsMobileExpanded}
         isTaxIqMobileExpanded={isTaxIqMobileExpanded}
         setIsTaxIqMobileExpanded={setIsTaxIqMobileExpanded}
+        isBookingHubMobileExpanded={isBookingHubMobileExpanded}
+        setIsBookingHubMobileExpanded={setIsBookingHubMobileExpanded}
         hasKyb={hasKyb}
         userRole={userRole}
         onLogout={onLogout}

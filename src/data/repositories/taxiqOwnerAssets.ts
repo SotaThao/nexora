@@ -21,6 +21,9 @@ export interface EquipmentAssetApiDto {
   aiExplanation?: string | null
   isHighPriority: boolean
   receiptId?: string | null
+  depreciationMethod?: string | null
+  disposalDate?: string | null
+  disposalAmount?: number | null
   createdAt: string
   lastModified?: string | null
 }
@@ -37,6 +40,9 @@ export interface EquipmentAsset {
   aiExplanation: string | null
   isHighPriority: boolean
   receiptId: string | null
+  depreciationMethod: string | null
+  disposalDate: string | null
+  disposalAmount: number | null
   createdAt: string
   lastModified: string | null
 }
@@ -50,6 +56,9 @@ export interface CreateEquipmentAssetParams {
   businessUsePercent: number
   isRenovation: boolean
   receiptId?: string | null
+  depreciationMethod?: string | null
+  disposalDate?: string | null
+  disposalAmount?: number | null
 }
 
 export interface UpdateEquipmentAssetParams {
@@ -61,6 +70,9 @@ export interface UpdateEquipmentAssetParams {
   businessUsePercent: number
   isRenovation: boolean
   receiptId?: string | null
+  depreciationMethod?: string | null
+  disposalDate?: string | null
+  disposalAmount?: number | null
 }
 
 function normalizeEquipmentAsset(dto: EquipmentAssetApiDto): EquipmentAsset {
@@ -76,6 +88,9 @@ function normalizeEquipmentAsset(dto: EquipmentAssetApiDto): EquipmentAsset {
     aiExplanation: dto.aiExplanation ?? null,
     isHighPriority: dto.isHighPriority,
     receiptId: dto.receiptId ?? null,
+    depreciationMethod: dto.depreciationMethod ?? null,
+    disposalDate: dto.disposalDate ?? null,
+    disposalAmount: dto.disposalAmount ?? null,
     createdAt: dto.createdAt,
     lastModified: dto.lastModified ?? null,
   }
@@ -216,6 +231,9 @@ export function createTaxiqOwnerAssetsRepository(client: HttpClient = httpClient
         businessUsePercent: params.businessUsePercent,
         isRenovation: params.isRenovation,
         receiptId: params.receiptId ?? null,
+        depreciationMethod: params.depreciationMethod ?? null,
+        disposalDate: params.disposalDate ?? null,
+        disposalAmount: params.disposalAmount ?? null,
       })
     },
 
@@ -228,6 +246,9 @@ export function createTaxiqOwnerAssetsRepository(client: HttpClient = httpClient
         businessUsePercent: params.businessUsePercent,
         isRenovation: params.isRenovation,
         receiptId: params.receiptId ?? null,
+        depreciationMethod: params.depreciationMethod ?? null,
+        disposalDate: params.disposalDate ?? null,
+        disposalAmount: params.disposalAmount ?? null,
       })
     },
 

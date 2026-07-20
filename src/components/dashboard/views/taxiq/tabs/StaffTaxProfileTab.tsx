@@ -162,37 +162,47 @@ function StaffTinFieldRow({
 }
 
 function StaffTinCell({ ownerTaxYearId, staffUserId }: { ownerTaxYearId: string; staffUserId: string }) {
+  const { t } = useTranslation()
   const maskedQuery = useStaffTinMasked(ownerTaxYearId, staffUserId)
   const revealTin = useRevealStaffTin()
 
   const masked = maskedQuery.data
   const revealed = revealTin.data
+
   const value = revealed ?? masked
+  const displayValue = value?.ein ?? value?.ssn ?? null
 
   if (maskedQuery.isPending) {
     return <span className="text-nexoraMuted">…</span>
   }
 
-  const handleReveal = () => revealTin.mutate({ ownerTaxYearId, staffUserId })
-
   return (
     <div className="space-y-1">
-      <StaffTinFieldRow
-        label="SSN"
-        fieldValue={value?.ssn ?? null}
-        revealed={!!revealed}
-        isRevealPending={revealTin.isPending}
-        onReveal={handleReveal}
-        staffUserId={staffUserId}
-      />
-      <StaffTinFieldRow
-        label="EIN"
-        fieldValue={value?.ein ?? null}
-        revealed={!!revealed}
-        isRevealPending={revealTin.isPending}
-        onReveal={handleReveal}
-        staffUserId={staffUserId}
-      />
+      <div className="flex items-center gap-2">
+        <span className="font-mono text-nexoraText">{displayValue ?? t('taxiq.taxProfile.notProvided')}</span>
+        {displayValue && !revealed && (
+          <button
+            type="button"
+            onClick={() => revealTin.mutate({ ownerTaxYearId, staffUserId })}
+            disabled={revealTin.isPending}
+            title={t('taxiq.taxProfile.revealedNotice')}
+            className="inline-flex items-center gap-1 text-[11px] font-bold text-nexoraBrand hover:underline disabled:opacity-60"
+          >
+            {revealTin.isPending ? <Loader2 className="h-3 w-3 animate-spin" /> : <Eye className="h-3 w-3" />}
+            {t('taxiq.taxProfile.revealButton')}
+          </button>
+        )}
+      </div>
+      {value?.w9LegalName && (
+        <div className="text-[11px] text-nexoraMuted">
+          <div>{value.w9LegalName}{value.w9DbaName ? ` (DBA: ${value.w9DbaName})` : ''}</div>
+          {value.w9Address && <div>{value.w9Address}</div>}
+          {value.w9TaxClassification && <div>{value.w9TaxClassification}</div>}
+          {value.w9HasSignedDocument && (
+            <span className="font-bold text-emerald-600">{t('taxiq.taxProfile.w9.documentAttached')}</span>
+          )}
+        </div>
+      )}
     </div>
   )
 }

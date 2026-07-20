@@ -60,6 +60,9 @@ export default function EquipmentTab({
   const [amount, setAmount] = useState('')
   const [businessUsePercent, setBusinessUsePercent] = useState('')
   const [isRenovation, setIsRenovation] = useState(false)
+  const [depreciationMethod, setDepreciationMethod] = useState('')
+  const [disposalDate, setDisposalDate] = useState('')
+  const [disposalAmount, setDisposalAmount] = useState('')
   const [receiptId, setReceiptId] = useState<string | null>(null)
   const [receiptFileName, setReceiptFileName] = useState('')
   const [errors, setErrors] = useState<FormErrors>({})
@@ -76,6 +79,9 @@ export default function EquipmentTab({
     setAmount('')
     setBusinessUsePercent('')
     setIsRenovation(false)
+    setDepreciationMethod('')
+    setDisposalDate('')
+    setDisposalAmount('')
     setReceiptId(null)
     setReceiptFileName('')
     setErrors({})
@@ -95,6 +101,9 @@ export default function EquipmentTab({
     setAmount(String(item.amount))
     setBusinessUsePercent(String(item.businessUsePercent))
     setIsRenovation(false)
+    setDepreciationMethod(item.depreciationMethod ?? '')
+    setDisposalDate(item.disposalDate ?? '')
+    setDisposalAmount(item.disposalAmount != null ? String(item.disposalAmount) : '')
     setReceiptId(item.receiptId)
     setReceiptFileName('')
     setErrors({})
@@ -165,6 +174,9 @@ export default function EquipmentTab({
           businessUsePercent: Number(businessUsePercent),
           isRenovation,
           receiptId,
+          depreciationMethod: depreciationMethod || null,
+          disposalDate: disposalDate || null,
+          disposalAmount: disposalAmount !== '' ? Number(disposalAmount) : null,
         })
         showToast(t('taxiq.assetsTracker.equipment.updateSuccess'), 'success')
       } else {
@@ -177,6 +189,9 @@ export default function EquipmentTab({
           businessUsePercent: Number(businessUsePercent),
           isRenovation,
           receiptId,
+          depreciationMethod: depreciationMethod || null,
+          disposalDate: disposalDate || null,
+          disposalAmount: disposalAmount !== '' ? Number(disposalAmount) : null,
         })
         showToast(t('taxiq.assetsTracker.equipment.addSuccess'), 'success')
       }
@@ -430,6 +445,50 @@ export default function EquipmentTab({
                   {t('taxiq.assetsTracker.equipment.form.isRenovationNotice')}
                 </p>
               )}
+
+              <div>
+                <label className="text-xs font-bold text-nexoraMuted">
+                  {t('taxiq.assetsTracker.equipment.form.depreciationMethodLabel')}
+                </label>
+                <select
+                  value={depreciationMethod}
+                  onChange={(e) => setDepreciationMethod(e.target.value)}
+                  className="mt-1 w-full rounded-lg border border-nexoraBorder px-3 py-2 text-sm"
+                >
+                  <option value="">{t('taxiq.assetsTracker.equipment.form.depreciationMethodNone')}</option>
+                  <option value="MACRS">{t('taxiq.assetsTracker.equipment.depreciationMethod.macrs')}</option>
+                  <option value="StraightLine">{t('taxiq.assetsTracker.equipment.depreciationMethod.straightLine')}</option>
+                  <option value="Section179">{t('taxiq.assetsTracker.equipment.depreciationMethod.section179')}</option>
+                  <option value="BonusDepreciation">{t('taxiq.assetsTracker.equipment.depreciationMethod.bonusDepreciation')}</option>
+                </select>
+              </div>
+
+              <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+                <div>
+                  <label className="text-xs font-bold text-nexoraMuted">
+                    {t('taxiq.assetsTracker.equipment.form.disposalDateLabel')}
+                  </label>
+                  <input
+                    type="date"
+                    value={disposalDate}
+                    onChange={(e) => setDisposalDate(e.target.value)}
+                    className="mt-1 w-full rounded-lg border border-nexoraBorder px-3 py-2 text-sm"
+                  />
+                </div>
+                <div>
+                  <label className="text-xs font-bold text-nexoraMuted">
+                    {t('taxiq.assetsTracker.equipment.form.disposalAmountLabel')}
+                  </label>
+                  <input
+                    type="number"
+                    min={0}
+                    step="0.01"
+                    value={disposalAmount}
+                    onChange={(e) => setDisposalAmount(e.target.value)}
+                    className="mt-1 w-full rounded-lg border border-nexoraBorder px-3 py-2 text-sm"
+                  />
+                </div>
+              </div>
 
               <div>
                 <label className="text-xs font-bold text-nexoraMuted">{t('taxiq.assetsTracker.equipment.form.receiptLabel')}</label>

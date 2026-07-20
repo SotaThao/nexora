@@ -12,7 +12,11 @@ import { SkeletonLayout } from '../../ui/skeleton'
 import PayoutSetupModal from '../../dashboard/modals/PayoutSetupModal'
 import ToggleSwitch from '../../ui/ToggleSwitch'
 import { formatPaymentMethodAccountDisplay } from '../../payout/bankWireAccount'
-import { isHiddenPayoutConfigType } from '../../../data/paymentMethodTypes'
+import {
+  isHiddenPayoutConfigType,
+  supportsPayoutAccountName,
+  toPayoutAccountNameDto,
+} from '../../../data/paymentMethodTypes'
 
 const panel = 'rounded-2xl border border-nexoraBorder bg-nexoraSurface p-4 shadow-sm'
 
@@ -102,12 +106,13 @@ export default function StaffPay() {
     setActiveMethod(null)
   }
 
-  const handleSavePayout = (value, qrCode, _accountName, qrFile) => {
+  const handleSavePayout = (value, qrCode, accountName, qrFile) => {
     if (!activeMethod?.id) return
     updateMutation.mutate(
       {
         id: activeMethod.id,
         accountInfo: value.trim(),
+        accountName: toPayoutAccountNameDto(activeMethod.uiKey || '', accountName),
         imageUrl: qrFile ? null : (qrCode || null),
         imageFile: qrFile || undefined,
       },
@@ -169,6 +174,9 @@ export default function StaffPay() {
                         <div className="text-xs font-bold text-nexoraText">{label}</div>
                         {method.isConfigured && method.accountInfo ? (
                           <div className="mt-0.5 max-w-[120px] truncate font-mono text-[10px] text-nexoraMuted sm:max-w-[200px]">
+                            {supportsPayoutAccountName(uiKey) && method.accountName ? (
+                              <span className="font-sans font-semibold">{method.accountName} · </span>
+                            ) : null}
                             {formatPaymentMethodAccountDisplay(method.uiKey || '', method.accountInfo)}
                           </div>
                         ) : (
@@ -200,7 +208,7 @@ export default function StaffPay() {
         <PayoutSetupModal
           open={Boolean(activeMethod)}
           walletKey={activeMethod.uiKey}
-          staffName={activeMethod.accountName || ''}
+          initialAccountName={activeMethod.accountName || ''}
           initialValue={activeMethod.accountInfo || ''}
           initialQrCode={activeMethod.imageUrl || ''}
           onClose={handleCloseModal}

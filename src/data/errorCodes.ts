@@ -7,6 +7,8 @@ export const errorCodeToI18nKey = {
   USER_EMAIL_ALREADY_EXIST: 'errors.user_email_already_exists',
   USER_EMAIL_ALREADY_EXISTS_IN_SSO: 'errors.user_email_already_exists',
   USER_INVALID_REFERRAL_CODE: 'errors.user_invalid_referral_code',
+  USER_INVALID_POSITION: 'errors.user_invalid_position',
+  USER_POSITION_REQUIRES_REFERRAL_CODE: 'errors.user_position_requires_referral_code',
   USER_SIGNUP_FAILED: 'errors.user_signup_failed',
   AUTH_PASSWORDS_DO_NOT_MATCH: 'errors.auth_passwords_do_not_match',
   USER_FEATURE_SIGNUP_DISABLED: 'errors.user_feature_signup_disabled',
@@ -173,6 +175,9 @@ export const errorCodeToI18nKey = {
   // Tax IQ — Staff Self-Reported Income (US-13)
   TAXIQ_SELF_REPORTED_INCOME_NOT_FOUND: 'errors.taxiq_self_reported_income_not_found',
 
+  // Tax IQ — Owner Income Summary (US-014)
+  TAXIQ_OWNER_INCOME_RECORD_NOT_FOUND: 'errors.taxiq_owner_income_record_not_found',
+
   // Tax IQ — Delete Record (Deduction, Mileage/Cash Tip Log, Payout)
   TAXIQ_DEDUCTION_RECORD_HAS_RECEIPTS: 'errors.taxiq_deduction_record_has_receipts',
   TAXIQ_PAYOUT_RECORD_HAS_RECEIPTS: 'errors.taxiq_payout_record_has_receipts',
@@ -213,6 +218,32 @@ export const errorCodeToI18nKey = {
   VOICE_TRIAL_SERVICE_HOURS_FROM_REQUIRED: 'errors.voice_trial_service_hours_from_required',
   VOICE_TRIAL_SERVICE_HOURS_TO_REQUIRED: 'errors.voice_trial_service_hours_to_required',
   VOICE_TRIAL_BIGGEST_PROBLEM_REQUIRED: 'errors.voice_trial_biggest_problem_required',
+
+  // Nexora Voice tenant staff
+  VOICE_TENANT_STAFF_PHONE_NUMBER_REQUIRED: 'errors.voice_tenant_staff_phone_number_required',
+  VOICE_TENANT_STAFF_PHONE_NUMBER_ALREADY_EXISTS: 'errors.voice_tenant_staff_phone_number_already_exists',
+
+  // Nexora Voice call log
+  VOICE_CALL_NOT_MISSED_CALL: 'errors.voice_call_not_missed_call',
+  VOICE_CALL_FOLLOW_UP_SMS_ALREADY_SENT: 'errors.voice_call_follow_up_sms_already_sent',
+  VOICE_CALL_CALLER_PHONE_MISSING: 'errors.voice_call_caller_phone_missing',
+  VOICE_CALL_NOT_FOUND: 'errors.voice_call_not_found',
+
+  // Nexora Voice customers
+  VOICE_CUSTOMER_NAME_MAX_LENGTH: 'errors.voice_customer_name_max_length',
+  VOICE_CUSTOMER_EMAIL_INVALID_FORMAT: 'errors.voice_customer_email_invalid_format',
+  VOICE_CUSTOMER_EMAIL_MAX_LENGTH: 'errors.voice_customer_email_max_length',
+  VOICE_CUSTOMER_ADDRESS_MAX_LENGTH: 'errors.voice_customer_address_max_length',
+  VOICE_CUSTOMER_DATE_OF_BIRTH_INVALID: 'errors.voice_customer_date_of_birth_invalid',
+  VOICE_CUSTOMER_TYPE_INVALID: 'errors.voice_customer_type_invalid',
+  VOICE_CUSTOMER_STATUS_INVALID: 'errors.voice_customer_status_invalid',
+  VOICE_CUSTOMER_NOT_FOUND: 'errors.voice_customer_not_found',
+
+  // Nexora Voice tenant
+  VOICE_TENANT_NOT_FOUND: 'errors.voice_tenant_not_found',
+
+  // Nexora Voice tenant services
+  VOICE_TENANT_SERVICE_DURATION_INVALID: 'errors.voice_tenant_service_duration_invalid',
 }
 
 /**

@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo } from 'react'
+import React, { useEffect, useMemo, useRef } from 'react'
 import { useOutletContext, useNavigate, useParams, Navigate, useSearchParams } from 'react-router-dom'
 import { useTranslation } from '../../../contexts/LanguageContext'
 import { SHOW_HARDWARE_DEVICES } from '../constants'
@@ -17,6 +17,8 @@ import ManagePlanView from '../views/ManagePlanView'
 import BookingHubView from '../views/BookingHubView'
 import StaffDetailView from '../../StaffDetailView'
 import { useMerchantStaffByCode } from '../../../data/hooks/useMerchantStaff'
+import { useOpenProductManagement } from '../../../data/hooks/useOpenProductManagement'
+import { DASHBOARD_ROOT_PATH } from '../constants'
 import { normaliseMember } from '../hooks/useStaffManagement'
 import { SkeletonList } from '../../ui/skeleton'
 import { useMerchantSetup } from '../../../data/hooks/useMerchantSetup'
@@ -24,6 +26,7 @@ import { useOwnerTaxYearByBusiness } from '../../../data/hooks/useTaxiqOwnerTaxY
 import TaxIqOnboardingWizard from '../views/taxiq/TaxIqOnboardingWizard'
 import TaxIqHomeView from '../views/taxiq/TaxIqHomeView'
 import DeductionCenterView from '../views/taxiq/DeductionCenterView'
+import OwnerIncomeSummaryListView from '../views/taxiq/OwnerIncomeSummaryListView'
 import ReceiptVaultView from '../views/taxiq/ReceiptVaultView'
 import AssetsTrackerView from '../views/taxiq/AssetsTrackerView'
 import YearEndExportView from '../views/taxiq/YearEndExportView'
@@ -298,7 +301,6 @@ export function TipsRoute() {
       metrics={ctx.metrics}
       tipsChartData={ctx.tipsChartData}
       activeTab={tab}
-      onTabChange={(t) => setSp({ tab: t }, { replace: true })}
       processingFee={ctx.processingFee}
       setProcessingFee={ctx.setProcessingFee}
     />
@@ -314,16 +316,36 @@ export function BookingHubRoute() {
   return <BookingHubView />
 }
 
-export function AnalyticsRoute() {
-  const ctx = useOutletContext<LooseObject>()
+export function ProductManagementRoute() {
+  const navigate = useNavigate()
+  const { openProductManagement, isOpeningProductManagement } = useOpenProductManagement()
+  const { t } = useTranslation()
+  const openedRef = useRef(false)
+
+  useEffect(() => {
+    if (openedRef.current) return
+    openedRef.current = true
+    void openProductManagement().finally(() => {
+      navigate(DASHBOARD_ROOT_PATH, { replace: true })
+    })
+  }, [navigate, openProductManagement])
+
   return (
-    <AnalyticsView
-      transactions={ctx.transactions}
-      staff={ctx.staff}
-      touchpoints={ctx.touchpoints}
-      processingFee={ctx.processingFee}
-    />
+    <div className="flex min-h-[320px] items-center justify-center">
+      <div className="text-center">
+        {isOpeningProductManagement ? (
+          <span className="mx-auto mb-3 block h-8 w-8 animate-spin rounded-full border-[3px] border-nexoraBorder border-t-nexoraBrand" />
+        ) : null}
+        <p className="text-sm font-semibold text-nexoraMuted">
+          {t('dashboard.menu.product_management')}…
+        </p>
+      </div>
+    </div>
   )
+}
+
+export function AnalyticsRoute() {
+  return <AnalyticsView />
 }
 
 export function SettingsRoute() {
@@ -458,6 +480,50 @@ export function TaxIqDeductionsRoute() {
   }
 
   return <DeductionCenterView ownerTaxYearId={ownerTaxYear.id} ownerTaxYearStatus={ownerTaxYear.status} />
+}
+export function TaxIqIncomeRoute() {
+  const { t } = useTranslation()
+  const navigate = useNavigate()
+  const { data: merchantSetupData, isLoading: isMerchantLoading } = useMerchantSetup()
+  const businessId = merchantSetupData?.businessInfo?.businessId
+  const currentTaxYear = new Date().getFullYear()
+  const { data: ownerTaxYearPage, isLoading: isTaxYearLoading } = useOwnerTaxYearByBusiness(
+    businessId,
+    currentTaxYear,
+  )
+
+  if (isMerchantLoading || (!!businessId && isTaxYearLoading)) {
+    return (
+      <div className="nexora-card p-6">
+        <SkeletonList count={3} lines={2} />
+      </div>
+    )
+  }
+
+  const ownerTaxYear = ownerTaxYearPage?.items?.[0] ?? null
+
+  if (!ownerTaxYear) {
+    return (
+      <div className="nexora-card flex flex-col items-start gap-3 p-6">
+        <p className="text-sm font-semibold text-nexoraMuted">{t('taxiq.ownerIncome.noOwnerTaxYear')}</p>
+        <button
+          type="button"
+          onClick={() => navigate('/dashboard/taxiq')}
+          className="rounded-lg bg-nexoraBrand px-4 py-2 text-xs font-bold text-white"
+        >
+          {t('taxiq.ownerIncome.goToSetup')}
+        </button>
+      </div>
+    )
+  }
+
+  return (
+    <OwnerIncomeSummaryListView
+      ownerTaxYearId={ownerTaxYear.id}
+      taxYear={ownerTaxYear.taxYear}
+      ownerTaxYearStatus={ownerTaxYear.status}
+    />
+  )
 }
 export function TaxIqReceiptsRoute() {
   const { t } = useTranslation()

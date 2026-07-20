@@ -92,7 +92,7 @@ export default function DisputePayoutModal({
             </div>
             <div className="mt-1 grid grid-cols-1 gap-x-3 gap-y-1 text-[11px] text-nexoraMuted sm:grid-cols-2">
               <div>{t('taxiq.staffPayoutConfirmation.columns.servicePayout')}: {formatCurrency(payout.servicePayout)}</div>
-              <div>{t('taxiq.staffPayoutConfirmation.columns.tip')}: {formatCurrency(payout.tip)}</div>
+              <div>{t('taxiq.staffPayoutConfirmation.columns.tip')}: {formatCurrency(payout.totalTip)}</div>
               <div>{t('taxiq.staffPayoutConfirmation.columns.bonus')}: {formatCurrency(payout.bonus)}</div>
               <div>{t('taxiq.staffPayoutConfirmation.columns.reimbursement')}: {formatCurrency(payout.reimbursement)}</div>
             </div>

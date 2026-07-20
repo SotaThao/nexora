@@ -225,11 +225,11 @@ export default function SupportView() {
   return (
     <div className="space-y-6 pb-12">
       <div>
-        <h2 className="text-xl font-extrabold text-nexoraText flex items-center gap-2">
+        <h2 className="hidden text-xl font-extrabold text-nexoraText sm:flex sm:items-center sm:gap-2">
           <HelpCircle className="h-5 w-5 text-nexoraBrand dark:text-luxuryGold" />
           <span>{t('dashboard.menu.support')}</span>
         </h2>
-        <p className="mt-1 text-xs text-nexoraMuted">
+        <p className="mt-0 text-xs text-nexoraMuted sm:mt-1">
           {t('dashboard.support.subtitle')}
         </p>
       </div>

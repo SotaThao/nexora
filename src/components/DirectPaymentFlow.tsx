@@ -22,8 +22,6 @@ export default function DirectPaymentFlow() {
     logoUrl,
     step,
     setStep,
-    selectedAmount,
-    setSelectedAmount,
     customAmount,
     handleCustomAmountChange,
     activeAmount,
@@ -117,8 +115,6 @@ export default function DirectPaymentFlow() {
                   amountRangeHint=""
                   reviewDesc={t('direct_payment.review_payment_desc', { name: businessName })}
                   totalPaymentLabel={t('direct_payment.total')}
-                  selectedAmount={selectedAmount}
-                  setSelectedAmount={setSelectedAmount}
                   customAmount={customAmount}
                   onCustomAmountChange={handleCustomAmountChange}
                   activeAmount={activeAmount}
