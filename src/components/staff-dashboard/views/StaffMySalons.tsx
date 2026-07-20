@@ -1,5 +1,4 @@
 import { useMemo, useState } from 'react'
-import { useQueries } from '@tanstack/react-query'
 import { Loader2 } from 'lucide-react'
 import { useNavigate } from 'react-router-dom'
 import { useTranslation } from '../../../contexts/LanguageContext'
@@ -11,8 +10,6 @@ import {
   useUnlinkStaffBusiness,
 } from '../../../data/hooks/useStaffSelf'
 import { useMarkNotificationRead, useNotifications } from '../../../data/hooks/useNotifications'
-import { qk } from '../../../data/queryKeys'
-import staffSelfRepository from '../../../data/repositories/staffSelf'
 import errorCodeToI18nKey from '../../../data/errorCodes'
 import { isApiError } from '../../../types/domain'
 import type { StaffBusinessLink } from '../../../types/domain'
@@ -208,28 +205,20 @@ export default function StaffMySalons() {
   const markNotificationRead = useMarkNotificationRead()
   const unlinkBusiness = useUnlinkStaffBusiness()
   const [unlinkError, setUnlinkError] = useState<{ title: string; message: string } | null>(null)
-  const linkRequestsWithIds = useMemo(() => {
+  const pendingLinkRequestNotifications = useMemo(() => {
+    const seenLinkIds = new Set<string>()
+
     return notifications.flatMap((notification) => {
       if (notification.type !== 'StaffLinkRequest') return []
+      if (notification.read || notification.isRead) return []
 
       const linkId = getStaffLinkRequestId(notification)
-      return linkId ? [{ notification, linkId }] : []
+      if (!linkId || seenLinkIds.has(linkId)) return []
+
+      seenLinkIds.add(linkId)
+      return [notification]
     })
   }, [notifications])
-  const linkRequestQueries = useQueries({
-    queries: linkRequestsWithIds.map(({ linkId }) => {
-      return {
-        queryKey: qk.staffLinkRequest(linkId),
-        queryFn: () => staffSelfRepository.getLinkRequest(linkId),
-      }
-    }),
-  })
-  const pendingLinkRequests = useMemo(() => {
-    return linkRequestsWithIds.filter((_, index) => {
-      const query = linkRequestQueries[index]
-      return query.isSuccess && query.data?.status === 'WaitingStaffAcceptance'
-    })
-  }, [linkRequestsWithIds, linkRequestQueries])
   const salons = sortSalonBusinesses(businesses)
   const isLoading = isPending && businesses.length === 0
   const originalName = staffProfile?.displayName?.trim()
@@ -269,13 +258,13 @@ export default function StaffMySalons() {
         <p className="mt-1 text-xs leading-relaxed text-nexoraMuted">{t('staff_salons.subtitle')}</p>
       </div>
 
-      {pendingLinkRequests.length > 0 && (
+      {pendingLinkRequestNotifications.length > 0 && (
         <section className="rounded-2xl border border-nexoraBorder bg-nexoraSurface p-4 shadow-sm">
           <h3 className="mb-3 text-base font-extrabold text-nexoraText">
             {t('staff_dashboard.qr.link_requests_title')}
           </h3>
           <div className="space-y-2">
-            {pendingLinkRequests.map(({ notification }) => (
+            {pendingLinkRequestNotifications.map((notification) => (
               <StaffLinkRequestCard
                 key={notification.id}
                 notification={notification}
