@@ -4,3 +4,5 @@ export const BOOKING_HUB_PAGE_SIZE = 20
 /** Global dashboard watcher — scans recent direct payments for ack polling. */
 export const DIRECT_PAYMENTS_WATCH_PAGE_SIZE = 100
 export const STAFF_FILTER_LIST_PAGE_SIZE = 100
+/** Confirmed tips page size for overview “awaiting confirmation” banner count. */
+export const AWAITING_SHOP_CONFIRMATION_PAGE_SIZE = 100

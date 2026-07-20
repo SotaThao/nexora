@@ -7,6 +7,8 @@ import {
   formatTransactionDateTime,
   isAwaitingShopConfirmation,
   isReceiptConfirmableTip,
+  resolveLocalStaffIds,
+  withResolvedLocalStaff,
 } from '../utils'
 import { WalletLogos } from '../constants'
 import TransactionFilter from '../../TransactionFilter'
@@ -107,15 +109,6 @@ function formatStaffCell(tx) {
     return tx.tipItems.map((item) => item.staffName).filter(Boolean).join(', ')
   }
   return '—'
-}
-
-function resolveLocalStaffSet(staff = []) {
-  const localStaffIds = new Set<string>()
-  for (const member of staff) {
-    if (!member?.staffProfileId) continue
-    if (member.isLocalStaff) localStaffIds.add(member.staffProfileId)
-  }
-  return localStaffIds
 }
 
 function ReportsView({
@@ -412,13 +405,9 @@ function ReportsView({
   // Amount filter only — not supported by tips API
   // For the awaiting-confirmation filter, also refine client-side to the exact eligibility predicate
   const filtered = useMemo(() => {
-    const localStaffIds = resolveLocalStaffSet(staff)
+    const localStaffIds = resolveLocalStaffIds(staff)
     return transactions.filter((tx) => {
-      const isLocalStaffResolved =
-        tx?.isLocalStaff === true ||
-        (tx?.staffProfileId ? localStaffIds.has(String(tx.staffProfileId)) : false)
-      const txWithResolvedLocalFlag =
-        tx?.isLocalStaff === true ? tx : { ...tx, isLocalStaff: isLocalStaffResolved }
+      const txWithResolvedLocalFlag = withResolvedLocalStaff(tx, localStaffIds)
 
       if (minAmount && tx.amount < parseFloat(minAmount)) return false
       if (maxAmount && tx.amount > parseFloat(maxAmount)) return false
@@ -436,12 +425,7 @@ function ReportsView({
         if (tp !== selectedTouchpoint.toLowerCase()) return false
       }
       return true
-    }).map((tx) => {
-      if (tx?.isLocalStaff === true) return tx
-      const isLocalStaffResolved =
-        tx?.staffProfileId ? localStaffIds.has(String(tx.staffProfileId)) : false
-      return isLocalStaffResolved ? { ...tx, isLocalStaff: true } : tx
-    })
+    }).map((tx) => withResolvedLocalStaff(tx, localStaffIds))
   }, [
     transactions,
     staff,
