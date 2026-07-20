@@ -8,6 +8,7 @@ import { captureQrImage } from '../../../utils/qrCode'
 import { getPayoutValidationMessage } from '../../payout/validatePayoutAccount'
 import { useUploadImage } from '../../../data/hooks/useMerchantSetup'
 import { getRequiredFieldError } from '../../../utils/onboardingFieldValidation'
+import { logger } from '../../../utils/logger'
 
 export default function usePersonalSetupWizard({ onBackToLogin }) {
   const { t, currentLanguage, setLanguage, renderLabel } = useTranslation()
@@ -31,7 +32,7 @@ export default function usePersonalSetupWizard({ onBackToLogin }) {
   const [phoneLocked, setPhoneLocked] = useState(false)
   const [bio, setBio] = useState('')
   const [avatar, setAvatar] = useState<string | null>(null)
-  const [position, setPosition] = useState('Nail Technician')
+  const [position, setPosition] = useState('')
   
   const email = session?.email || ''
   const generatedStaffId = userProfile?.staffProfile?.staffCode || ''
@@ -77,9 +78,6 @@ export default function usePersonalSetupWizard({ onBackToLogin }) {
     if (!fullName.trim()) {
       fieldErrors.fullName = getRequiredFieldError(fullName, 'setup.errors.staff_name_required')
     }
-    if (!nickname.trim()) {
-      fieldErrors.nickname = getRequiredFieldError(nickname, 'setup.errors.staff_nickname_required')
-    }
     const phoneError = getRequiredFieldError(phone, 'setup.errors.phone_required')
     if (phoneError) {
       fieldErrors.phone = phoneError
@@ -93,8 +91,8 @@ export default function usePersonalSetupWizard({ onBackToLogin }) {
     }
 
     try {
-      const parsedName = nickname.trim() || email.split('@')[0]
-      const nameParts = parsedName.split(' ')
+      const displayName = nickname.trim() || fullName.trim() || email.split('@')[0]
+      const nameParts = fullName.trim().split(' ')
       const fName = nameParts[0]
       const lName = nameParts.slice(1).join(' ') || undefined
 
@@ -106,18 +104,18 @@ export default function usePersonalSetupWizard({ onBackToLogin }) {
       })
 
       // 2. Update staff profile
-      if (userProfile?.hasStaffProfile) {
+      if (session?.hasStaffProfile) {
         await updateStaffProfileMutation.mutateAsync({
-          displayName: parsedName,
-          position,
-          bio,
+          displayName,
+          position: position.trim() || undefined,
+          bio: bio.trim() || undefined,
           photoUrl: avatar || undefined
         })
       } else {
         await createStaffProfileMutation.mutateAsync({
-          displayName: parsedName,
-          position,
-          bio,
+          displayName,
+          position: position.trim() || undefined,
+          bio: bio.trim() || undefined,
           photoUrl: avatar || undefined
         })
       }
@@ -138,19 +136,11 @@ export default function usePersonalSetupWizard({ onBackToLogin }) {
         setAvatar(uploadedUrl)
       }
     } catch (err: unknown) {
-      console.error('Failed to upload staff avatar', err)
+      logger.error('Failed to upload staff avatar', err)
     }
   }
 
   const handlePersonalRegisterSubmit = async () => {
-    // Validate payout method
-    const hasConfiguredPayout = Object.values(payouts).some((p: any) => p.enabled && p.value.trim())
-    if (!hasConfiguredPayout) {
-      setErrors({ payout: t('components.register.hooks.useRegisterForm.thisFieldIsRequired') })
-      return
-    }
-    setErrors({ ...errors, payout: '' })
-
     try {
       // Call Payout APIs
       await completePersonalOnboardingMutation.mutateAsync({

@@ -29,6 +29,11 @@
     "missing_payout_title": "Cần hành động",
     "missing_payout_heading": "Cài đặt phương thức nhận tiền",
     "setup_payout_now": "Cài đặt ngay",
+    "onboarding_banner_title": "Hoàn thiện hồ sơ",
+    "onboarding_banner_heading": "Hoàn tất thiết lập hồ sơ của bạn",
+    "onboarding_banner_description": "Thêm thông tin liên hệ và, nếu muốn, phương thức nhận tiền để sẵn sàng khi cần.",
+    "complete_onboarding_now": "Hoàn tất thiết lập",
+    "dismiss_onboarding_banner": "Ẩn lời nhắc hoàn thiện hồ sơ",
     "nav": {
       "home": "Dashboard",
       "my_qr": "Mã QR",
@@ -183,6 +188,9 @@
       "title": "Phương thức nhận tiền",
       "owner_note": "Bạn tự quản lý phương thức nhận tip. Chủ tiệm không sửa được phần này.",
       "empty": "Chưa có phương thức thanh toán.",
+      "empty_hint": "Hoàn tất thiết lập hồ sơ để mở khóa và cấu hình phương thức nhận tiền.",
+      "empty_cta": "Thiết lập ngay",
+      "setup_hint": "Bạn chưa kích hoạt phương thức nhận tiền nào. Cấu hình ít nhất một để bắt đầu nhận tip.",
       "not_set": "Chưa thiết lập",
       "handle_placeholder": "Nhập tài khoản / handle",
       "save": "Lưu phương thức",
@@ -577,6 +585,7 @@
     "step_name_3": "Tải xuống & Hoàn tất",
     "onboarding_stage": "Onboarding Stage",
     "back_to_login": "Quay lại Đăng nhập",
+    "back_to_dashboard": "Về Dashboard",
     "prefill_demo_data": "Prefill Demo Data",
     "payout_methods": "Phương thức nhận tiền",
     "payout_account": "Tài khoản nhận tiền",
@@ -3097,7 +3106,8 @@
           "autoFill": "Tự động điền",
           "notConfigured": "Chưa cấu hình",
           "configure": "Thiết lập",
-          "saveAndActivate": "Lưu & Kích hoạt"
+          "saveAndActivate": "Lưu & Kích hoạt",
+          "skipForNow": "Để sau"
         },
         "StepProfileSetup": {
           "personalProfileSetup": "Cấu hình hồ sơ cá nhân",
@@ -3105,6 +3115,7 @@
           "acceptedFormatsJpgPng": "Chấp nhận định dạng JPG, PNG. Dung lượng tối đa 5MB.",
           "fullName": "Họ và tên *",
           "displayNickname": "Tên hiển thị (Nickname) *",
+          "displayNicknameOptional": "Tên hiển thị (Nickname) (Tùy chọn)",
           "phoneNumber": "Số điện thoại *",
           "emailAddress": "Địa chỉ Email",
           "roleSpeciality": "Chuyên môn / Vai trò",

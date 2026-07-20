@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo, useRef } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { getApiErrorCode, isApiError } from '../../../types/domain'
 import { useTranslation } from '../../../contexts/LanguageContext'
 import { parsePhone, formatNationalNumber } from '../../CountryCodeSelect'
@@ -15,7 +15,7 @@ const normalizePhone = (raw) => {
 }
 import { MOCK_NEXORA_STAFF_PROFILES } from '../../staff-registration/hooks/useStaffRegistration'
 import { useReplaceAllPendingAccounts, usePendingAccounts } from '../../../data/hooks/usePendingAccounts'
-import { useMerchantSetup, useSaveMerchantSetup, useUploadImage } from '../../../data/hooks/useMerchantSetup'
+import { useMerchantSetup, useSaveMerchantSetup } from '../../../data/hooks/useMerchantSetup'
 import { useAddNotification } from '../../../data/hooks/useNotifications'
 import { logger } from '../../../utils/logger'
 import apiAuthAdapter from '../../../auth/adapters/apiAuthAdapter'
@@ -23,9 +23,6 @@ import { getSignupOtp } from '../../../auth/signupOtp'
 import { savePendingRegistration, clearPendingRegistration } from '../../../auth/pendingRegistration'
 import { getErrorI18nKey } from '../../../data/errorCodes'
 import { useCompletePersonalOnboarding } from '../../../data/hooks/usePersonalOnboarding'
-import { useCreateStaffProfile, useProfileSettings } from '../../../data/hooks/useProfileSettings'
-import { buildUpdateStaffProfileDto } from '../../../utils/mapStaffProfileView'
-import { getRequiredFieldError } from '../../../utils/onboardingFieldValidation'
 
 export function useRegisterForm({ ssoEmail, onBackToLogin, onRegisterSuccess, onRegisterAndLogin, onGoToLogin, onKybSuccess = () => {}, isRedirectedFromSession, initialStep = 0, initialRole = 'personal', resumeOtpVerification = false, autoSendVerificationOnResume = false, resumeEmail = '', resumePassword = '', resumeRole = null, initialRefCode = '', initialLeg = '' }) {
   const { t, currentLanguage, setLanguage, renderLabel } = useTranslation()
@@ -33,12 +30,9 @@ export function useRegisterForm({ ssoEmail, onBackToLogin, onRegisterSuccess, on
   const pendingAccountsQuery = usePendingAccounts()
   const merchantSetupQuery = useMerchantSetup()
   const saveMerchantSetupMutation = useSaveMerchantSetup()
-  const uploadImageMutation = useUploadImage()
 
   const addNotificationMutation = useAddNotification()
   const completePersonalOnboardingMutation = useCompletePersonalOnboarding()
-  const createStaffProfileMutation = useCreateStaffProfile()
-  const { data: sessionUserProfile } = useProfileSettings({ enabled: !!isRedirectedFromSession })
   const [currentStep, setCurrentStep] = useState(resumeOtpVerification ? 2 : initialStep)
   const [role, setRole] = useState(resumeRole || initialRole)
 
@@ -49,15 +43,11 @@ export function useRegisterForm({ ssoEmail, onBackToLogin, onRegisterSuccess, on
   const [showPassword, setShowPassword] = useState(false)
   const [referralCode, setReferralCode] = useState(initialRefCode)
   const [leg, setLeg] = useState(initialLeg)
-  const [fullName, setFullName] = useState('')
   const [nickname, setNickname] = useState('')
   const [position, setPosition] = useState('Nail Technician')
   const [phone, setPhone] = useState('')
-  const [bio, setBio] = useState('')
   const [vlinkpayId, setVlinkpayId] = useState('')
   const [avatar, setAvatar] = useState('')
-  const [fullNameLocked, setFullNameLocked] = useState(false)
-  const [phoneLocked, setPhoneLocked] = useState(false)
   const [payouts, setPayouts] = useState({
     zelle: { enabled: false, value: '', qrCode: '', accountName: '' },
     bankwire: { enabled: false, value: '', qrCode: '', accountName: '' },
@@ -74,21 +64,6 @@ export function useRegisterForm({ ssoEmail, onBackToLogin, onRegisterSuccess, on
   const [simToken, setSimToken] = useState('sim-token-123')
   const [verifySuccess, setVerifySuccess] = useState(false)
   const [resendMessage, setResendMessage] = useState('')
-
-  useEffect(() => {
-    if (!isRedirectedFromSession || !sessionUserProfile) return
-    if (sessionUserProfile.firstName) {
-      const knownFullName = `${sessionUserProfile.firstName} ${sessionUserProfile.lastName || ''}`.trim()
-      setFullName(knownFullName)
-      setFullNameLocked(true)
-      setNickname((current) => current || `${knownFullName.split(' ')[0]}.`)
-    }
-    const knownPhone = normalizePhone((sessionUserProfile.phoneNumber || sessionUserProfile.phone) as string)
-    if (knownPhone) {
-      setPhone(knownPhone)
-      setPhoneLocked(true)
-    }
-  }, [isRedirectedFromSession, sessionUserProfile])
 
   // Step 2 states
   const [generatedStaffId, setGeneratedStaffId] = useState('')
@@ -116,35 +91,6 @@ export function useRegisterForm({ ssoEmail, onBackToLogin, onRegisterSuccess, on
   const [showEmailExistsModal, setShowEmailExistsModal] = useState(false)
   const resumeVerificationSentRef = useRef(false)
 
-  const AVATAR_MAX_SIZE = 5 * 1024 * 1024
-  const AVATAR_ALLOWED_TYPES = ['image/jpeg', 'image/png']
-
-  const handleAvatarFileChange = async (file: File) => {
-    if (!file) return
-
-    if (!AVATAR_ALLOWED_TYPES.includes(file.type)) {
-      setErrors(prev => ({ ...prev, avatar: 'errors.image_unsupported_file_type' }))
-      return
-    }
-    if (file.size > AVATAR_MAX_SIZE) {
-      setErrors(prev => ({ ...prev, avatar: 'errors.image_file_size_exceeded_5mb' }))
-      return
-    }
-
-    setErrors(prev => ({ ...prev, avatar: undefined }))
-    try {
-      const uploaded = await uploadImageMutation.mutateAsync(file)
-      const uploadedUrl = uploaded.imageUrl || uploaded.fileUrl || ''
-      if (uploadedUrl) {
-        setAvatar(uploadedUrl)
-        return
-      }
-    } catch (err: unknown) {
-      logger.error('Failed to upload staff avatar', err)
-      setErrors(prev => ({ ...prev, avatar: 'errors.image_upload_failed' }))
-    }
-  }
-
   const handleSimulateVerify = () => {
     setErrors({})
     setVerifySuccess(false)
@@ -158,13 +104,8 @@ export function useRegisterForm({ ssoEmail, onBackToLogin, onRegisterSuccess, on
       .then(async () => {
         // Business creation is handled by Setup Wizard (onboarding), not here.
         setTimeout(() => {
-          if (role === 'business') {
-            if (onRegisterAndLogin) onRegisterAndLogin(email.trim().toLowerCase())
-            else if (onRegisterSuccess) onRegisterSuccess()
-          } else {
-            setIsVerificationPending(false)
-            setCurrentStep(3)
-          }
+          if (onRegisterAndLogin) onRegisterAndLogin(email.trim().toLowerCase())
+          else if (onRegisterSuccess) onRegisterSuccess()
         }, 1500)
       })
       .catch((err) => {
@@ -234,8 +175,6 @@ export function useRegisterForm({ ssoEmail, onBackToLogin, onRegisterSuccess, on
       if (vlinkpayTimeout) clearTimeout(vlinkpayTimeout)
     }
   }, [vlinkpayTimeout])
-
-  const phoneParsed = useMemo(() => parsePhone(phone), [phone])
 
   const handleStep1Next = async (e) => {
     e.preventDefault()
@@ -401,7 +340,11 @@ export function useRegisterForm({ ssoEmail, onBackToLogin, onRegisterSuccess, on
         replaceAllPendingAccountsMutation.mutate(filtered)
 
         setShowOtpInput(false)
-        setCurrentStep(3)
+        if (onRegisterAndLogin) {
+          onRegisterAndLogin(email.trim().toLowerCase())
+        } else if (onRegisterSuccess) {
+          onRegisterSuccess()
+        }
       }
     } catch (err) {
       logger.error('Verify account activation failed', err)
@@ -519,54 +462,6 @@ export function useRegisterForm({ ssoEmail, onBackToLogin, onRegisterSuccess, on
 
   const handleModalClearQr = () => {
     setEditQrCode('')
-  }
-
-  const handleProfileSetupSubmit = async () => {
-    const fieldErrors: LooseObject = {}
-
-    const fullNameError = getRequiredFieldError(fullName, 'setup.errors.staff_name_required')
-    if (fullNameError) fieldErrors.fullName = fullNameError
-
-    const nicknameError = getRequiredFieldError(nickname, 'setup.errors.staff_nickname_required')
-    if (nicknameError) fieldErrors.nickname = nicknameError
-
-    const phoneError = getRequiredFieldError(phone, 'setup.errors.phone_required')
-    if (phoneError) {
-      fieldErrors.phone = phoneError
-    } else if (!phoneLocked && phoneParsed?.nationalNumber?.replace(/\D/g, '').length < 7) {
-      fieldErrors.phone = 'setup.errors.staff_phone_invalid'
-    }
-
-    if (Object.keys(fieldErrors).length > 0) {
-      setErrors(fieldErrors)
-      return
-    }
-
-    const isApiMode = import.meta.env.VITE_DATA_SOURCE === 'api'
-    if (isApiMode) {
-      try {
-        const dto = buildUpdateStaffProfileDto({}, {
-          fullName: fullName.trim(),
-          defaultDisplayName: nickname.trim() || email.split('@')[0],
-          position,
-          bio,
-          avatar,
-          phone,
-        })
-        await createStaffProfileMutation.mutateAsync(dto)
-      } catch (err: unknown) {
-        logger.error('Failed to create staff profile during onboarding', err)
-        setErrors({ submit: 'register.errors.profile_setup_failed' })
-        return
-      }
-    }
-
-    setErrors({})
-    if (onRegisterAndLogin) {
-      onRegisterAndLogin(email.trim().toLowerCase())
-    } else if (onRegisterSuccess) {
-      onRegisterSuccess()
-    }
   }
 
   const handlePersonalRegisterSubmit = async () => {
@@ -730,14 +625,13 @@ export function useRegisterForm({ ssoEmail, onBackToLogin, onRegisterSuccess, on
         case 2: return t('components.register.hooks.useRegisterForm.activateOtp')
         default: return ''
       }
-    } else {
-      switch (step) {
-        case 0: return t('components.register.hooks.useRegisterForm.accountType')
-        case 1: return t('components.register.hooks.useRegisterForm.credentials')
-        case 2: return t('components.register.hooks.useRegisterForm.activateOtp')
-        case 3: return t('components.register.hooks.useRegisterForm.profileSetup')
-        default: return ''
-      }
+    }
+
+    switch (step) {
+      case 0: return t('components.register.hooks.useRegisterForm.accountType')
+      case 1: return t('components.register.hooks.useRegisterForm.credentials')
+      case 2: return t('components.register.hooks.useRegisterForm.activateOtp')
+      default: return ''
     }
   }
 
@@ -766,19 +660,12 @@ export function useRegisterForm({ ssoEmail, onBackToLogin, onRegisterSuccess, on
     initialRefCode,
     leg,
     setLeg,
-    fullName,
-    setFullName,
-    fullNameLocked,
     nickname,
     setNickname,
     position,
     setPosition,
     phone,
     setPhone,
-    phoneLocked,
-    phoneParsed,
-    bio,
-    setBio,
     vlinkpayId,
     setVlinkpayId,
     avatar,
@@ -839,7 +726,6 @@ export function useRegisterForm({ ssoEmail, onBackToLogin, onRegisterSuccess, on
     // handlers
     handleStep1Next,
     handleVerifyOtp,
-    handleProfileSetupSubmit,
     handleVlinkpayIdChange,
     handleToggleMethod,
     handleEditPayoutAccount,
@@ -857,6 +743,5 @@ export function useRegisterForm({ ssoEmail, onBackToLogin, onRegisterSuccess, on
     onRegisterAndLogin,
     onKybSuccess,
     isRedirectedFromSession,
-    handleAvatarFileChange,
   }
 }

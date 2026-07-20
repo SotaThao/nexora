@@ -44,6 +44,7 @@ debug.log
 *.mjs
 *.mjs
 .agent-rules
+.agent-rules.d/
 .cursorrules
 pr_body.md
 
@@ -64,3 +65,4 @@ pnpm-workspace.yaml
 docs/prototypes/
 
 .gstack/
+.context/

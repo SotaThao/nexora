@@ -8,7 +8,6 @@ import HomepageLink from './ui/HomepageLink'
 import StepRoleSelect from './register/steps/StepRoleSelect'
 import StepCredentials from './register/steps/StepCredentials'
 import StepOtpVerify from './register/steps/StepOtpVerify'
-import StepProfileSetup from './register/steps/StepProfileSetup'
 import StepPayoutSetup from './register/steps/StepPayoutSetup'
 import StepSuccess from './register/steps/StepSuccess'
 import PayoutEditModal from './register/modals/PayoutEditModal'
@@ -36,7 +35,6 @@ export default function RegisterWizard() {
   const clearMerchantSetupMutation = useClearMerchantSetup()
   const clearProfileSettingsMutation = useClearProfileSettings()
 
-  const showPersonalSuccessPopup = location.state?.showPersonalSuccessPopup || false
   const ssoEmail = location.state?.ssoEmail || ''
   const pendingRegistration = loadPendingRegistration(location.state?.resumeEmail)
   // `resumeOtpVerification` chỉ điều khiển nhảy thẳng tới bước OTP + prefill.
@@ -45,10 +43,8 @@ export default function RegisterWizard() {
   // signup đã tự gửi OTP. Một `pendingRegistration` vừa lưu (vừa signup) nếu không
   // tách ra sẽ khiến reload bước OTP gọi lại `send-verification-email` → OTP trùng.
   const resumeFromLogin = Boolean(location.state?.resumeOtpVerification)
-  const resumeOtpVerification = !showPersonalSuccessPopup && (
-    resumeFromLogin || Boolean(pendingRegistration)
-  )
-  const autoSendVerificationOnResume = !showPersonalSuccessPopup && resumeFromLogin
+  const resumeOtpVerification = resumeFromLogin || Boolean(pendingRegistration)
+  const autoSendVerificationOnResume = resumeFromLogin
   const resumeEmail = location.state?.resumeEmail || pendingRegistration?.email || ''
   const resumePassword = location.state?.resumePassword || pendingRegistration?.password || ''
   const resumeRole = location.state?.resumeRole || pendingRegistration?.role || null
@@ -85,8 +81,8 @@ export default function RegisterWizard() {
   const formProps = {
     ssoEmail,
     isRedirectedFromSession: !!ssoEmail,
-    initialStep: showPersonalSuccessPopup ? 3 : 0,
-    initialRole: showPersonalSuccessPopup ? 'personal' : 'personal',
+    initialStep: 0,
+    initialRole: 'personal',
     resumeOtpVerification,
     initialRefCode: refFromUrl,
     initialLeg: legFromUrl,
@@ -146,11 +142,11 @@ export default function RegisterWizard() {
                 <div className="absolute inset-0 bg-slate-200/60 rounded-full"></div>
                 <div
                   className="absolute left-0 top-0 h-full bg-gradient-to-r from-nexoraElectric via-nexoraElectricMid to-nexoraViolet rounded-full transition-all duration-500 ease-out"
-                  style={{ width: `${((currentStep - 1) / (role === 'business' ? 1 : 2)) * 100}%` }}
+                  style={{ width: `${((currentStep - 1) / 1) * 100}%` }}
                 ></div>
               </div>
 
-              {(role === 'business' ? [1, 2] : [1, 2, 3]).map((step) => {
+              {[1, 2].map((step) => {
                 const isActive = step === currentStep
                 const isCompleted = step < currentStep
                 return (
@@ -187,7 +183,6 @@ export default function RegisterWizard() {
           {currentStep === 0 && <StepRoleSelect {...form} />}
           {currentStep === 1 && <StepCredentials {...form} refCodeReadOnly={!!initialRefCode} />}
           {currentStep === 2 && <StepOtpVerify {...form} />}
-          {currentStep === 3 && role === 'personal' && <StepProfileSetup {...form} />}
         </div>
       </div>
 
