@@ -800,7 +800,7 @@ html.homepage-active {
     scroll-margin-top: calc(64px + var(--app-safe-area-top, env(safe-area-inset-top, 0px)));
   }
 
-  .nx-homepage header img {
+  .nx-homepage header .homepage-header-logo-img {
     width: 29px !important;
     height: 29px !important;
   }
