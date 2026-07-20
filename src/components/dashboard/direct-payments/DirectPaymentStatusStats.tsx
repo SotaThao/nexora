@@ -102,6 +102,8 @@ export default function DirectPaymentStatusStats({
       confirmed: { count: 0, totalAmount: 0 },
       completed: { count: 0, totalAmount: 0 },
     },
+    paymentPending: { count: 0, totalAmount: 0 },
+    paymentCompleted: { count: 0, totalAmount: 0 },
     byPaymentMethod: [],
   }
 
@@ -148,12 +150,12 @@ export default function DirectPaymentStatusStats({
     },
   ]
 
-  const confirmedBucket = data.byStatus.confirmed
-  const completedBucket = data.byStatus.completed
   const volumeBucket = {
-    count: confirmedBucket.count + completedBucket.count,
-    totalAmount: confirmedBucket.totalAmount + completedBucket.totalAmount,
+    count: data.totalCount,
+    totalAmount: data.totalAmount,
   }
+  const pendingBucket = data.paymentPending
+  const completedBucket = data.paymentCompleted
 
   const volumeStatusCards = [
     {
@@ -164,7 +166,7 @@ export default function DirectPaymentStatusStats({
     {
       key: 'pending',
       label: t(`${prefix}.stats_pending`),
-      bucket: confirmedBucket,
+      bucket: pendingBucket,
     },
     {
       key: 'completed',

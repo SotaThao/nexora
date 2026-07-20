@@ -21,7 +21,7 @@ import { getApiErrorCode } from '../../../types/domain'
 import MerchantPaymentDetailModal from '../modals/MerchantPaymentDetailModal'
 import CustomSelect from '../../CustomSelect'
 import { dismissAckPrompt } from '../../../utils/directPaymentAckDismiss'
-import { resolveDirectPaymentDateRange, resolvePaymentStatsDateRange } from '../../../utils/directPaymentDateRange'
+import { resolveDirectPaymentDateRange } from '../../../utils/directPaymentDateRange'
 import DirectPaymentStatusStats from '../direct-payments/DirectPaymentStatusStats'
 import {
   DirectPaymentStatusBadge,
@@ -68,10 +68,8 @@ export default function ReportsDirectPaymentsTab({
     ...resolveDirectPaymentDateRange(datePreset, startDate, endDate),
   }), [pageNumber, pageSize, statusFilter, datePreset, startDate, endDate])
 
-  const statsQuery = useMemo(() => resolvePaymentStatsDateRange(), [])
-
   const { data: paymentsPage, isPending, isFetching } = useMerchantPaymentsList(apiQuery)
-  const { data: paymentStats, isPending: isStatsPending } = useMerchantPaymentStats(statsQuery)
+  const { data: paymentStats, isPending: isStatsPending } = useMerchantPaymentStats()
   const { data: selectedPaymentDetail, isPending: isDetailLoading } = useMerchantPaymentDetail(
     selectedPaymentId,
     { enabled: Boolean(selectedPaymentId) },

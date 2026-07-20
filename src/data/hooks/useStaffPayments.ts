@@ -62,7 +62,7 @@ export function useStaffPaymentDetail(paymentId?: string | null, { enabled = tru
 }
 
 export function useStaffPaymentStats(
-  query: StaffPaymentStatsQuery,
+  query: StaffPaymentStatsQuery = {},
   { enabled = true } = {},
 ) {
   const canFetch = useIsStaff(enabled)
@@ -70,7 +70,7 @@ export function useStaffPaymentStats(
   return useQuery<MerchantPaymentStats>({
     queryKey: qk.staffPaymentStats(query),
     queryFn: () => staffPaymentsRepository.getStats(query),
-    enabled: canFetch && Boolean(query.from && query.to),
+    enabled: canFetch,
     retry: false,
   })
 }

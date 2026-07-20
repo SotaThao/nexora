@@ -1,16 +1,19 @@
 import React, { useState, useRef } from 'react';
 import { useChartDateRange } from '../hooks/useChartDateRange';
+import { useDashboardAnalytics, useDashboardTipsChart } from '../data/hooks/useDashboard';
+import { useMerchantPaymentStats } from '../data/hooks/useMerchantPayments';
 import { useTipsData } from './tips/hooks/useTipsData';
 import PaymentsPayoutsHeader from './dashboard/PaymentsPayoutsHeader';
 import TipsOverviewTab from './tips/tabs/TipsOverviewTab';
 import TipsSavingsTab from './tips/tabs/TipsSavingsTab';
 import TipsPayoutsTab from './tips/tabs/TipsPayoutsTab';
 
+const WEEKLY_CHART_RANGE = '7 Days';
+
 export default function TipsView({
   transactions = [],
   staff = [],
   metrics,
-  tipsChartData,
   activeTab: propActiveTab,
   processingFee: propProcessingFee,
   setProcessingFee: propSetProcessingFee
@@ -23,11 +26,24 @@ export default function TipsView({
   const processingFee = propProcessingFee !== undefined ? propProcessingFee : localProcessingFee;
   const setProcessingFee = propSetProcessingFee !== undefined ? propSetProcessingFee : setLocalProcessingFee;
   const chartRef = useRef(null);
+  const { chartStartDate, chartEndDate } = useChartDateRange(transactions);
+  const { data: analytics } = useDashboardAnalytics();
+  const { data: paymentStats } = useMerchantPaymentStats();
+  const { data: tipsChartData = [] } = useDashboardTipsChart({
+    startDate: chartStartDate,
+    endDate: chartEndDate,
+  });
 
-  const { chartRange, chartStartDate, chartEndDate, setChartStartDate, setChartEndDate, handleChartRangeChange } =
-    useChartDateRange(transactions);
-
-  const tipsData = useTipsData({ transactions, metrics, tipsChartData, chartStartDate, chartEndDate, chartRange });
+  const tipsData = useTipsData({
+    transactions,
+    metrics,
+    tipsChartData,
+    chartStartDate,
+    chartEndDate,
+    chartRange: WEEKLY_CHART_RANGE,
+    tipRevenue: analytics?.tipRevenue,
+    byPaymentMethod: paymentStats?.byPaymentMethod,
+  });
 
   const activePoint = hoverIndex !== null && tipsData.svgMetrics
     ? tipsData.svgMetrics.points[hoverIndex]
@@ -44,12 +60,6 @@ export default function TipsView({
           directTips={tipsData.directTips}
           cardTips={tipsData.cardTips}
           cryptoTips={tipsData.cryptoTips}
-          chartRange={chartRange}
-          handleChartRangeChange={handleChartRangeChange}
-          chartStartDate={chartStartDate}
-          chartEndDate={chartEndDate}
-          setChartStartDate={setChartStartDate}
-          setChartEndDate={setChartEndDate}
           svgMetrics={tipsData.svgMetrics}
           yTicks={tipsData.yTicks}
           chartBars={tipsData.chartBars}
@@ -58,6 +68,7 @@ export default function TipsView({
           setHoverIndex={setHoverIndex}
           activePoint={activePoint}
           donutSegments={tipsData.donutSegments}
+          donutTotal={tipsData.donutTotal}
         />
       )}
 

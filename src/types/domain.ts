@@ -191,6 +191,8 @@ export interface MerchantPaymentStats {
     confirmed: MerchantPaymentStatusBucket
     completed: MerchantPaymentStatusBucket
   }
+  paymentPending: MerchantPaymentStatusBucket
+  paymentCompleted: MerchantPaymentStatusBucket
   byPaymentMethod: MerchantPaymentMethodStat[]
 }
 
