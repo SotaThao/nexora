@@ -112,7 +112,7 @@ export default function YearEndExportView({
   const [draftResult, setDraftResult] = useState<ExportPackage | null>(null)
   const [finalResult, setFinalResult] = useState<FinalExportResult | null>(null)
   const [consentConfirmed, setConsentConfirmed] = useState(false)
-  const [selectedPackageType, setSelectedPackageType] = useState<CpaPackageType | null>(null)
+  const [selectedPackageType, setSelectedPackageType] = useState<CpaPackageType | null>(PACKAGE_TYPES[0])
 
   const requiresConsent = selectedPackageType === 'Full' || selectedPackageType === 'CPAReview'
 
