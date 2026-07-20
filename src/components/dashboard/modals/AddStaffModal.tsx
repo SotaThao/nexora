@@ -257,8 +257,9 @@ function AddStaffModal({
   const activeSearchPaymentMethods = (searchResult?.paymentMethods ?? []).filter((method) => method.isActive)
 
   return (
-    <div className="fixed inset-0 z-50 flex items-start justify-center overflow-y-auto bg-nexoraText/70 modal-overlay-safe backdrop-blur-sm sm:items-center">
-      <div className="relative w-full max-w-lg rounded-xl bg-white p-6 shadow-2xl transition-all md:max-w-3xl lg:max-w-4xl">
+    <div className="fixed inset-0 z-50 overflow-y-auto bg-nexoraText/70 modal-overlay-safe backdrop-blur-sm">
+      <div className="flex min-h-full items-center justify-center">
+        <div className="relative w-full max-w-lg rounded-xl bg-white p-6 shadow-2xl transition-all md:max-w-3xl lg:max-w-4xl">
         <div className="flex items-center justify-between border-b border-nexoraRule pb-4">
           <h2 className="text-lg font-extrabold text-nexoraText">
             {t('components.dashboard.modals.AddStaffModal.title')}
@@ -556,6 +557,7 @@ function AddStaffModal({
             </div>
           </div>
         )}
+        </div>
       </div>
 
       <StaffQrScannerModal
