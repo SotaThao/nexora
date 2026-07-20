@@ -91,6 +91,9 @@ export const qk = {
   // POS Owner Setup — Staff Weekly Schedule (US-09/US-021)
   merchantPosStaffWeeklySchedule: (businessStaffLinkId?: string) =>
     ['merchantSettings', 'posStaffWeeklySchedule', businessStaffLinkId ?? ''],
+  // POS Merchant Ops — Front Desk access self-check + Check-in/Waitlist (US-12)
+  merchantPosAccess: (businessId?: string) => ['merchantSettings', 'posAccess', businessId ?? ''],
+  merchantPosWaitlist: (businessId?: string) => ['merchantSettings', 'posWaitlist', businessId ?? ''],
 
   // Merchant Touchpoints
   merchantTouchpoints: ()      => ['merchantTouchpoints'],

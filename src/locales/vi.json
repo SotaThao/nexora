@@ -664,6 +664,7 @@
       "pos_services": "Dịch Vụ",
       "pos_products": "Sản Phẩm",
       "pos_staff": "Hồ Sơ Nhân Viên",
+      "pos_board": "Lễ Tân",
       "settings": "Cài Đặt",
       "business_setting": "Cài đặt",
       "scan": "Quét QR",
@@ -2735,6 +2736,30 @@
             "saveSchedule": "Lưu Lịch",
             "scheduleSavedSuccess": "Đã lưu lịch làm việc."
           }
+        },
+        "PosFrontDeskView": {
+          "description": "Check-in khách, theo dõi hàng đợi, và giải phóng trạm khi checkout xong.",
+          "noAccess": "Bạn không có quyền quản lý vận hành Lễ tân cho salon này.",
+          "tabs": {
+            "checkin": "Check-in queue",
+            "turnboard": "Turn Board",
+            "checkout": "Checkout"
+          },
+          "checkInFormTitle": "Check-in Khách",
+          "customerName": "Tên khách",
+          "customerNameRequired": "Vui lòng nhập tên khách.",
+          "customerPhone": "Số điện thoại",
+          "customerEmail": "Email",
+          "checkInButton": "Check In",
+          "checkedIn": "Đã check-in khách.",
+          "waitlistTitle": "Hàng đợi",
+          "waitlistEmpty": "Không có khách đang chờ.",
+          "waitMinutes": "Chờ {{minutes}} phút",
+          "cancelButton": "Hủy",
+          "confirmCancelTitle": "Gỡ khỏi hàng đợi?",
+          "confirmCancelBody": "\"{{name}}\" sẽ bị gỡ khỏi hàng đợi check-in.",
+          "turnBoardComingSoon": "Turn Board sẽ có sớm.",
+          "checkoutComingSoon": "Checkout sẽ có sớm."
         },
         "BookingHubView": {
           "title": "Trung tâm đặt lịch",

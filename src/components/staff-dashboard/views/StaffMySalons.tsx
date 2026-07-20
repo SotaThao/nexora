@@ -2,6 +2,7 @@ import { Loader2 } from 'lucide-react'
 import { useNavigate } from 'react-router-dom'
 import { useTranslation } from '../../../contexts/LanguageContext'
 import { useStaffBusinesses } from '../../../data/hooks/useStaffSelf'
+import { usePosAccess } from '../../../data/hooks/usePosAccess'
 import type { StaffBusinessLink } from '../../../types/domain'
 import {
   formatSalonLocation,
@@ -60,20 +61,32 @@ function SalonCard({
   index,
   currentLanguage,
   t,
-  onOpen,
 }: {
   business: StaffBusinessLink
   index: number
   currentLanguage: string
   t: (key: string, params?: Record<string, unknown>) => string
-  onOpen: () => void
 }) {
+  const navigate = useNavigate()
   const statusLabel = resolveStaffBusinessLinkStatusLabel(business)
   const status = getSalonDisplayStatus(business, t)
   const statusHelp = getSalonStatusHelp(statusLabel, t)
   const timeline = formatSalonTimeline(business, statusLabel, t, currentLanguage)
   const location = formatSalonLocation(business)
   const initials = business.logoUrl ? null : getSalonInitials(business.businessName)
+
+  // Only worth checking Operations access for a link the Staff can actually act
+  // on (Active); pending/rejected/inactive links keep the old tipping-page tap target.
+  const isActiveLink = statusLabel.trim().toLowerCase() === STAFF_BUSINESS_LINK_STATUS.active
+  const { data: access } = usePosAccess(isActiveLink ? business.businessId : undefined)
+
+  const onOpen = () => {
+    if (isActiveLink && access?.canManageOperations) {
+      navigate(`/staff/salons/${business.businessId}/front-desk`)
+      return
+    }
+    navigate('/staff/qr?tab=tipping')
+  }
 
   return (
     <div
@@ -182,7 +195,6 @@ export default function StaffMySalons() {
               index={index}
               currentLanguage={currentLanguage}
               t={t}
-              onOpen={() => navigate('/staff/qr?tab=tipping')}
             />
           ))}
         </div>

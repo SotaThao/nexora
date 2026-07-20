@@ -149,6 +149,28 @@ export interface PosStaffProfileApiDto {
   tipsEnabled: boolean
 }
 
+// POS Merchant Ops — Front Desk access self-check (US-12)
+export interface PosAccessApiDto {
+  canManageOperations?: boolean
+}
+
+// POS Merchant Ops — Check-in & Waitlist (US-12)
+export interface PosWaitlistTicketApiDto {
+  id: string
+  ticketNumber: string
+  customerName: string
+  checkedInAt: string
+  waitMinutes: number
+  serviceNames: string[]
+}
+
+export interface CheckInTicketPayload {
+  customerName: string
+  customerEmail?: string
+  customerPhone?: string
+  posServiceIds?: string[]
+}
+
 export interface TipsSummaryApiDto {
   totalAmount?: number
   totalCount?: number

@@ -664,6 +664,7 @@
       "pos_services": "Services",
       "pos_products": "Products",
       "pos_staff": "Staff Profiles",
+      "pos_board": "Front Desk",
       "settings": "Settings",
       "business_setting": "Setting",
       "scan": "Scan",
@@ -2735,6 +2736,30 @@
             "saveSchedule": "Save Schedule",
             "scheduleSavedSuccess": "Weekly schedule saved."
           }
+        },
+        "PosFrontDeskView": {
+          "description": "Check in guests, watch the waitlist, and release stations when checkout is done.",
+          "noAccess": "You don't have permission to manage Front Desk operations for this business.",
+          "tabs": {
+            "checkin": "Check-in queue",
+            "turnboard": "Turn Board",
+            "checkout": "Checkout"
+          },
+          "checkInFormTitle": "Check In a Guest",
+          "customerName": "Customer Name",
+          "customerNameRequired": "Customer name is required.",
+          "customerPhone": "Phone",
+          "customerEmail": "Email",
+          "checkInButton": "Check In",
+          "checkedIn": "Guest checked in.",
+          "waitlistTitle": "Waitlist",
+          "waitlistEmpty": "No guests waiting.",
+          "waitMinutes": "{{minutes}}m wait",
+          "cancelButton": "Cancel",
+          "confirmCancelTitle": "Remove from waitlist?",
+          "confirmCancelBody": "\"{{name}}\" will be removed from the check-in queue.",
+          "turnBoardComingSoon": "Turn Board is coming soon.",
+          "checkoutComingSoon": "Checkout is coming soon."
         },
         "BookingHubView": {
           "title": "Booking Hub",

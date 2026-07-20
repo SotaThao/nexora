@@ -40,6 +40,7 @@ import PosCategoriesView from '../views/pos/PosCategoriesView'
 import PosServicesView from '../views/pos/PosServicesView'
 import PosProductsView from '../views/pos/PosProductsView'
 import PosStaffProfileView from '../views/pos/PosStaffProfileView'
+import PosFrontDeskView from '../views/pos/PosFrontDeskView'
 
 export function OverviewRoute() {
   const ctx = useOutletContext<LooseObject>()
@@ -416,6 +417,22 @@ export function PosProductsRoute() {
 // not gated behind verificationStatus/KYB, same rationale as the other POS catalog routes.
 export function PosStaffProfileRoute() {
   return <PosStaffProfileView />
+}
+
+// Front Desk (Check-in queue / Turn Board / Checkout, US-12) — shared component
+// with the Staff dashboard's salons/:businessId/front-desk route (see AppRouter.tsx).
+// For the Owner, businessId always comes from their own merchant setup data.
+export function PosFrontDeskRoute() {
+  const { data: merchantSetupData } = useMerchantSetup()
+  const businessId = merchantSetupData?.businessInfo?.businessId
+  if (!businessId) {
+    return (
+      <div className="nexora-card p-6">
+        <SkeletonList count={3} lines={1} />
+      </div>
+    )
+  }
+  return <PosFrontDeskView businessId={businessId} />
 }
 
 export function TaxIqOverviewRoute() {

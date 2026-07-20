@@ -28,7 +28,7 @@ import {
   TaxIqOverviewRoute, TaxIqDeductionsRoute, TaxIqIncomeRoute, TaxIqReceiptsRoute, TaxIqEquipmentRoute,
   TaxIqPayrollRoute, TaxIqRemindersRoute, TaxIqCpaAccessRoute, TaxIqExportRoute,
   PosGeneralSettingsRoute, PosBusinessHoursRoute, PosRolesRoute, PosCategoriesRoute, PosServicesRoute, PosProductsRoute,
-  PosStaffProfileRoute
+  PosStaffProfileRoute, PosFrontDeskRoute
 } from "../components/dashboard/routes";
 import { DASHBOARD_MENU_ID } from "../components/dashboard/constants";
 import ErrorBoundary from "../components/ui/ErrorBoundary";
@@ -99,6 +99,9 @@ const StaffMyEarnings = lazyWithRetry(
 );
 const StaffMySalons = lazyWithRetry(
   () => import("../components/staff-dashboard/views/StaffMySalons"),
+);
+const StaffFrontDesk = lazyWithRetry(
+  () => import("../components/staff-dashboard/views/StaffFrontDesk"),
 );
 const ForgotPassword = lazyWithRetry(
   () => import("../components/ForgotPassword"),
@@ -278,6 +281,7 @@ export default function AppRouter() {
             <Route path="pos/services" element={<PosServicesRoute />} />
             <Route path="pos/products" element={<PosProductsRoute />} />
             <Route path="pos/staff" element={<PosStaffProfileRoute />} />
+            <Route path="pos/board" element={<PosFrontDeskRoute />} />
             <Route path={DASHBOARD_MENU_ID.touchpoints} element={<TouchpointsRoute />} />
             <Route path={DASHBOARD_MENU_ID.analytics} element={<AnalyticsRoute />} />
             <Route path={DASHBOARD_MENU_ID.settings} element={<SettingsRoute />} />
@@ -318,6 +322,7 @@ export default function AppRouter() {
           <Route path="taxiq/cpa-access" element={<StaffTaxIqCpaAccessRoute />} />
             <Route path="earnings" element={<StaffMyEarnings />} />
             <Route path="salons" element={<StaffMySalons />} />
+            <Route path="salons/:businessId/front-desk" element={<StaffFrontDesk />} />
             <Route path="profile" element={<StaffProfile />} />
             <Route path="notifications" element={<StaffNotifications />} />
             <Route path="*" element={<StaffFallbackRoute />} />
