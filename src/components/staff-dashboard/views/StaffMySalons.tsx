@@ -382,10 +382,10 @@ export default function StaffMySalons() {
           aria-modal="true" aria-labelledby="staff-unlink-error-title" aria-describedby="staff-unlink-error-message"
         >
           <div className="w-full max-w-sm overflow-hidden rounded-2xl border border-slate-100 bg-white p-6 shadow-2xl">
-            <h4 className="mb-2 text-sm font-black uppercase tracking-wide text-slate-900">
+            <h4 id="staff-unlink-error-title" className="mb-2 text-sm font-black uppercase tracking-wide text-slate-900">
               {unlinkError.title}
             </h4>
-            <p className="mb-6 text-xs font-semibold leading-relaxed text-slate-600">
+            <p id="staff-unlink-error-message" className="mb-6 text-xs font-semibold leading-relaxed text-slate-600">
               {unlinkError.message}
             </p>
             <div className="flex justify-end">
