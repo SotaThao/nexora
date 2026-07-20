@@ -318,7 +318,7 @@ export function useUnlinkStaffBusiness() {
       // useStaffBusinessTipQrs derives its data from the same staffBusinesses
       // query (see useStaffBusinessTipQrs above), so invalidating this one key
       // refreshes both the salon list and the tip QR list.
-      queryClient.invalidateQueries({ queryKey: qk.staffBusinesses() })
+      void queryClient.invalidateQueries({ queryKey: qk.staffBusinesses() })
     },
   })
 }
