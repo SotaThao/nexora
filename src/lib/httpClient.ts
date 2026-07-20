@@ -90,9 +90,15 @@ async function buildError(response: Response): Promise<ApiError> {
         errors?: Record<string, string[]>
         retryAfter?: number | string
         errorDetail?: ErrorDetailItem[]
+        // RFC 7807 ProblemDetails fields — some endpoints (e.g. Staff_UnlinkFromBusiness)
+        // only return { type, title, status, detail, instance } with no errorCode/message.
+        detail?: string
+        title?: string
       }
       if (body.errorCode) errorCode = body.errorCode
       if (body.message) message = body.message
+      else if (body.detail) message = body.detail
+      else if (body.title) message = body.title
       if (body.errors !== undefined) errors = body.errors
       if (body.retryAfter !== undefined) retryAfter = body.retryAfter
 

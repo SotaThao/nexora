@@ -489,6 +489,10 @@ export function createStaffSelfRepository(client: HttpClient = httpClient) {
     async rejectLinkRequest(linkId: string): Promise<void> {
       await client.put(`/api/v1/staff/link-requests/${encodeURIComponent(linkId)}/reject`)
     },
+
+    async unlinkBusiness(businessId: string): Promise<void> {
+      await client.del(`/api/v1/staff/businesses/${encodeURIComponent(businessId)}`)
+    },
   }
 }
 
