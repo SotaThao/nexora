@@ -10,11 +10,11 @@ import CountryCodeSelect, {
 import { useTranslation, renderLabel } from '../../../contexts/LanguageContext'
 import { WalletLogos } from '../constants'
 import {
-  orderedPayoutUiKeysFromMethods,
+  orderedStaffPayoutUiKeysFromSupported,
   PAYOUT_UI_LABELS,
   STAFF_CONFIGURABLE_PAYOUT_UI_KEYS,
 } from '../../../data/paymentMethodTypes'
-import { useMerchantPaymentMethods } from '../../../data/hooks/useMerchantPaymentMethods'
+import { useSupportedPaymentMethods } from '../../../data/hooks/useSupportedPaymentMethods'
 import { getErrorI18nKey } from '../../../data/errorCodes'
 import { getStaffDisplayNameErrorCode } from '../../../utils/staffDisplayName'
 import { isValidEmail } from '../../../utils/validation'
@@ -68,11 +68,11 @@ function AddManualStaffTab({
 }: AddManualStaffTabProps) {
   const { t } = useTranslation()
   const defaultDialCode = PhoneDialCode.US
-  const { data: merchantPaymentMethods = [] } = useMerchantPaymentMethods({ enabled: open })
+  const { data: supportedPaymentMethods = [] } = useSupportedPaymentMethods({ enabled: open })
 
   const manualStaffPayoutKeys = useMemo(
-    () => orderedPayoutUiKeysFromMethods(merchantPaymentMethods, STAFF_CONFIGURABLE_PAYOUT_UI_KEYS),
-    [merchantPaymentMethods],
+    () => orderedStaffPayoutUiKeysFromSupported(supportedPaymentMethods),
+    [supportedPaymentMethods],
   )
 
   const [fullName, setFullName] = useState('')

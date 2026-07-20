@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from 'react'
+import React, { useEffect, useMemo, useState } from 'react'
 import { createPortal } from 'react-dom'
 import { useNavigate } from 'react-router-dom'
 import {
@@ -33,6 +33,10 @@ import {
 } from '../data/hooks/useNotifications'
 import { formatNotificationDateTime } from './dashboard/utils'
 import QrImage from './ui/QrImage'
+import {
+  SETTINGS_SHOW_NOTIFICATION_TAB,
+  SettingsDesktopTab,
+} from './settings/constants'
 
 const notificationPanel =
   'rounded-2xl border border-nexoraBorder bg-nexoraSurface p-4 shadow-sm sm:p-5'
@@ -175,6 +179,12 @@ export default function SettingsViewDesktop({
   const [showKybFlow, setShowKybFlow] = useState(false)
   const [selectedLeg, setSelectedLeg] = useState('left')
 
+  useEffect(() => {
+    if (!SETTINGS_SHOW_NOTIFICATION_TAB && tab === SettingsDesktopTab.Notification) {
+      setTab(SettingsDesktopTab.Account)
+    }
+  }, [SETTINGS_SHOW_NOTIFICATION_TAB, tab, setTab])
+
   const isKybVerified = ['kyb_approved', 'verified_pro', 'verified_lite'].includes(form.effectiveVerificationStatus)
   const kybStatusLabel = isKybVerified
     ? t('staff_dashboard.profile.menu_verified')
@@ -202,11 +212,13 @@ export default function SettingsViewDesktop({
   }
 
   const TABS = [
-    { key: 'account', label: t('components.SettingsView.account') },
-    { key: 'kyb', label: isBusinessAccount ? t('components.SettingsView.kyb') : t('staff_dashboard.profile.kyc_label'), disabled: true },
-    { key: 'affiliate', label: t('components.SettingsView.affiliateLink') },
-    { key: 'notification', label: t('staff_dashboard.profile.menu_notification_preferences') },
-    { key: 'privacy', label: t('staff_dashboard.profile.menu_privacy_security') },
+    { key: SettingsDesktopTab.Account, label: t('components.SettingsView.account') },
+    { key: SettingsDesktopTab.Kyb, label: isBusinessAccount ? t('components.SettingsView.kyb') : t('staff_dashboard.profile.kyc_label'), disabled: true },
+    { key: SettingsDesktopTab.Affiliate, label: t('components.SettingsView.affiliateLink') },
+    ...(SETTINGS_SHOW_NOTIFICATION_TAB
+      ? [{ key: SettingsDesktopTab.Notification, label: t('staff_dashboard.profile.menu_notification_preferences') }]
+      : []),
+    { key: SettingsDesktopTab.Privacy, label: t('staff_dashboard.profile.menu_privacy_security') },
   ]
 
   return (
@@ -479,7 +491,9 @@ export default function SettingsViewDesktop({
           </div>
         )}
 
-        {tab === 'notification' && <MerchantNotificationsContent />}
+        {SETTINGS_SHOW_NOTIFICATION_TAB && tab === SettingsDesktopTab.Notification && (
+          <MerchantNotificationsContent />
+        )}
 
         {tab === 'privacy' && (
           <section className="rounded-2xl border border-nexoraBorder bg-nexoraSurface shadow-sm divide-y divide-nexoraRule overflow-hidden">
