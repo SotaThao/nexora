@@ -1649,6 +1649,7 @@
     "filter_all_status": "Tất cả trạng thái",
     "detail_title": "Chi tiết nhận thanh toán",
     "col_code": "Mã payout",
+    "col_code_tooltip": "Mã tham chiếu của khoản chi trả. Dùng để theo dõi giao dịch và đối chiếu với biên lai hoặc tin nhắn chuyển tiền của bạn (Zelle, Venmo, Cash App,…).",
     "col_date": "Ngày nhận",
     "col_amount": "Số tiền",
     "col_method": "Phương thức",

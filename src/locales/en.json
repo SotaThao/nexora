@@ -1649,6 +1649,7 @@
     "filter_all_status": "All statuses",
     "detail_title": "Receive Payment Details",
     "col_code": "Payout code",
+    "col_code_tooltip": "Reference code for this payout. Use it to track the payment and match it with your receipts or transfer notes (Zelle, Venmo, Cash App, etc.).",
     "col_date": "Paid on",
     "col_amount": "Amount",
     "col_method": "Method",
