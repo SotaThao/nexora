@@ -1,10 +1,11 @@
 import { useState } from 'react'
 import { createPortal } from 'react-dom'
-import { Download, Loader2, Printer, ShieldCheck, X } from 'lucide-react'
+import { Copy, Check, Download, Loader2, Printer, ShieldCheck, X } from 'lucide-react'
 import { useTranslation } from '../../contexts/LanguageContext'
 import { useNotification } from '../../contexts/NotificationContext'
 import { buildPublicQrImageUrl } from '../../data/repositories/publicQr'
 import { downloadQrCode, QR_IMAGE_SIZES } from '../../utils/qrUtils'
+import { copyTextToClipboard } from '../../utils/clipboard'
 import QrImage from '../ui/QrImage'
 
 const slugify = (value = '') =>
@@ -23,11 +24,24 @@ export default function DirectPaymentQrPreviewModal({
   const { t } = useTranslation()
   const { showToast } = useNotification()
   const [isSaving, setIsSaving] = useState(false)
+  const [isCopied, setIsCopied] = useState(false)
 
   if (!open || !previewQrUrl || typeof document === 'undefined') return null
 
   const displayUrl = paymentPageUrl?.replace(/^https?:\/\//, '') ?? ''
   const qrImageSrc = paymentPageUrl ? buildPublicQrImageUrl(paymentPageUrl, QR_IMAGE_SIZES.print) : previewQrUrl
+
+  const handleCopyLink = async () => {
+    if (!paymentPageUrl) return
+    try {
+      await copyTextToClipboard(paymentPageUrl)
+      setIsCopied(true)
+      showToast(t('dashboard.master_gateway.copied_qr_link'), 'success')
+      window.setTimeout(() => setIsCopied(false), 2000)
+    } catch {
+      showToast(t('common.error'), 'error')
+    }
+  }
 
   const handleDownload = async () => {
     if (isSaving) return
@@ -92,9 +106,19 @@ export default function DirectPaymentQrPreviewModal({
         </div>
 
         {!hideUrlCode && displayUrl ? (
-          <p className="mt-4 select-all rounded-lg bg-nexoraCanvas px-3 py-2 text-[10px] font-mono text-nexoraMuted qr-print-url">
-            {displayUrl}
-          </p>
+          <div className="mt-4 flex items-center justify-between gap-2 overflow-hidden rounded-xl border border-nexoraBorder bg-nexoraCanvas p-2 shadow-inner qr-print-url">
+            <span className="min-w-0 flex-1 truncate pl-2 text-left font-mono text-[11px] text-nexoraMuted">
+              {displayUrl}
+            </span>
+            <button
+              type="button"
+              onClick={() => void handleCopyLink()}
+              className="no-print flex shrink-0 items-center gap-1.5 rounded-full px-2 py-1 text-xs font-extrabold uppercase tracking-wide text-nexoraBrand transition hover:opacity-80"
+            >
+              {isCopied ? <Check className="h-3.5 w-3.5 text-emerald-600" /> : <Copy className="h-3.5 w-3.5" />}
+              <span>{t('common.copy')}</span>
+            </button>
+          </div>
         ) : null}
 
         <div className="no-print mt-5 space-y-2">

@@ -269,7 +269,6 @@ export default function SettingsTipQrPanel({
           businessName={businessName}
           previewQrUrl={previewQrUrl}
           paymentPageUrl={paymentPageUrl}
-          hideUrlCode
           scanCaption={t('components.settings.SettingsTipQrPanel.scanCaption')}
         />
       </>

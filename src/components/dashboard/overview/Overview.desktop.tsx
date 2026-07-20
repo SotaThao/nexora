@@ -506,7 +506,6 @@ function Overview({
           {/* Direct Payment QR section */}
           <SettingsTipQrPanel
             variant="gateway"
-            hideUrlCode
             businessName={businessName}
             showToast={showToast}
             handleCopy={handleCopyPaymentLink}
