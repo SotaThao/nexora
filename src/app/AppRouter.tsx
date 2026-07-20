@@ -258,15 +258,15 @@ export default function AppRouter() {
             <Route path={DASHBOARD_MENU_ID.reviews} element={<ReviewsRoute />} />
             <Route path={DASHBOARD_MENU_ID.reports} element={<ReportsRoute />} />
             <Route path={DASHBOARD_MENU_ID.bookingHub} element={<BookingHubRoute />} />
-	    <Route path="taxiq" element={<TaxIqOverviewRoute />} />
-	    <Route path="taxiq/deductions" element={<TaxIqDeductionsRoute />} />
-	    <Route path="taxiq/income" element={<TaxIqIncomeRoute />} />
-	    <Route path="taxiq/receipts" element={<TaxIqReceiptsRoute />} />
-	    <Route path="taxiq/equipment" element={<TaxIqEquipmentRoute />} />
-	    <Route path="taxiq/payroll" element={<TaxIqPayrollRoute />} />
-	    <Route path="taxiq/reminders" element={<TaxIqRemindersRoute />} />
-	    <Route path="taxiq/cpa-access" element={<TaxIqCpaAccessRoute />} />
-	    <Route path="taxiq/export" element={<TaxIqExportRoute />} />
+            <Route path={DASHBOARD_MENU_ID.taxiq} element={<TaxIqOverviewRoute />} />
+            <Route path={`${DASHBOARD_MENU_ID.taxiq}/deductions`} element={<TaxIqDeductionsRoute />} />
+            <Route path={`${DASHBOARD_MENU_ID.taxiq}/income`} element={<TaxIqIncomeRoute />} />
+            <Route path={`${DASHBOARD_MENU_ID.taxiq}/receipts`} element={<TaxIqReceiptsRoute />} />
+            <Route path={`${DASHBOARD_MENU_ID.taxiq}/equipment`} element={<TaxIqEquipmentRoute />} />
+            <Route path={`${DASHBOARD_MENU_ID.taxiq}/payroll`} element={<TaxIqPayrollRoute />} />
+            <Route path={`${DASHBOARD_MENU_ID.taxiq}/reminders`} element={<TaxIqRemindersRoute />} />
+            <Route path={`${DASHBOARD_MENU_ID.taxiq}/cpa-access`} element={<TaxIqCpaAccessRoute />} />
+            <Route path={`${DASHBOARD_MENU_ID.taxiq}/export`} element={<TaxIqExportRoute />} />
             <Route path={DASHBOARD_MENU_ID.productManagement} element={<ProductManagementRoute />} />
             <Route path={DASHBOARD_MENU_ID.touchpoints} element={<TouchpointsRoute />} />
             <Route path={DASHBOARD_MENU_ID.analytics} element={<AnalyticsRoute />} />

@@ -23,6 +23,7 @@ import { BookingHubMainTab } from '../../data/merchantVoice/domain'
 export const DASHBOARD_MENU = {
   Touchpoints: 'touchpoints',
   BookingHub: 'booking-hub',
+  TaxIq: 'taxiq',
 } as const
 
 /** Dashboard session roles passed as `userRole` prop. */
@@ -101,6 +102,7 @@ export const DASHBOARD_MENU_ID = {
   reviews: 'reviews',
   reports: 'reports',
   touchpoints: 'touchpoints',
+  taxiq: 'taxiq',
   bookingHub: 'booking-hub',
   productManagement: 'product-management',
   analytics: 'analytics',
@@ -129,20 +131,20 @@ export const MENU_ITEMS = [
   { id: DASHBOARD_MENU_ID.reports, label: 'Transactions', icon: ReceiptText },
   { id: DASHBOARD_MENU_ID.touchpoints, label: 'Touch Points', icon: QrCode },
   {
-    id: 'taxiq',
+    id: DASHBOARD_MENU_ID.taxiq,
     label: 'Tax IQ',
     icon: Calculator,
     image: '/assets/menu/tax-iq.svg',
     children: [
-      { id: 'onboarding', label: 'Onboarding' },
-      { id: 'deductions', label: 'Deduction Center' },
-      { id: 'income', label: 'Income Summary' },
-      { id: 'receipts', label: 'Receipt Vault' },
-      { id: 'equipment', label: 'Equipment Tracker' },
-      { id: 'payroll', label: 'Payroll & Payout' },
-      { id: 'reminders', label: 'Tax Payment Reminders' },
-      { id: 'cpa-access', label: 'CPA Access' },
-      { id: 'export', label: 'Year-End Export' }
+      { id: 'onboarding', labelKey: 'dashboard.menu.taxiq_onboarding' },
+      { id: 'deductions', labelKey: 'dashboard.menu.taxiq_deductions' },
+      { id: 'income', labelKey: 'dashboard.menu.taxiq_income' },
+      { id: 'receipts', labelKey: 'dashboard.menu.taxiq_receipts' },
+      { id: 'equipment', labelKey: 'dashboard.menu.taxiq_equipment' },
+      { id: 'payroll', labelKey: 'dashboard.menu.taxiq_payroll' },
+      { id: 'reminders', labelKey: 'dashboard.menu.taxiq_reminders' },
+      { id: 'cpa-access', labelKey: 'dashboard.menu.taxiq_cpa_access' },
+      { id: 'export', labelKey: 'dashboard.menu.taxiq_export' }
     ]
   },
   { id: DASHBOARD_MENU_ID.bookingHub, label: 'Booking Hub', icon: Calendar },
@@ -169,9 +171,9 @@ export const VISIBLE_TOUCHPOINTS_SUBMENU = SHOW_HARDWARE_DEVICES
   ? TOUCHPOINTS_SUBMENU
   : TOUCHPOINTS_SUBMENU.filter((item) => item.id !== 'devices')
 
-export const TAXIQ_SUBMENU: { id: string; label: string }[] =
-  MENU_ITEMS.find((item): item is typeof item & { children: { id: string; label: string }[] } =>
-    item.id === 'taxiq' && 'children' in item,
+export const TAXIQ_SUBMENU: { id: string; labelKey: string }[] =
+  MENU_ITEMS.find((item): item is typeof item & { children: { id: string; labelKey: string }[] } =>
+    item.id === DASHBOARD_MENU_ID.taxiq && 'children' in item,
   )?.children ?? []
 
 /** Booking Hub sidebar children — maps to `/dashboard/booking-hub?tab=`. */
@@ -225,6 +227,7 @@ export function getDashboardMenuLocalizedLabel(
     reports: t('dashboard.menu.transactions'),
     [DASHBOARD_MENU.BookingHub]: t('dashboard.menu.booking_hub'),
     [DASHBOARD_MENU.Touchpoints]: t('dashboard.menu.touchpoints'),
+    [DASHBOARD_MENU.TaxIq]: t('dashboard.menu.tax_iq'),
     devices: t('dashboard.menu.qr_nfc'),
     analytics: t('dashboard.menu.analytics'),
     support: t('dashboard.menu.support'),
@@ -321,8 +324,6 @@ export function isPaymentsPayoutsRouteActive(
     isPaymentsPayoutsSubActive(activeMenu, tabParam, item),
   )
 }
-
-export const visibleMenuItems = MENU_ITEMS
 
 export const PUBLIC_HOME_MENU_ITEM = {
   id: 'public-home',

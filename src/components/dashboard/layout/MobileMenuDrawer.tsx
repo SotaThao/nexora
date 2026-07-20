@@ -104,9 +104,9 @@ export default function MobileMenuDrawer({
       activeMenu,
       sections: [
         {
-          id: 'taxiq',
+          id: DASHBOARD_MENU.TaxIq,
           setExpanded: setIsTaxIqMobileExpanded,
-          enter: () => navigateMenu('taxiq', { closeDrawer: false }),
+          enter: () => navigateMenu(DASHBOARD_MENU.TaxIq, { closeDrawer: false }),
         },
         {
           id: DASHBOARD_MENU.Touchpoints,
@@ -236,7 +236,7 @@ export default function MobileMenuDrawer({
                     <div className="text-white/65 shrink-0">
                       {isTouchpointsMobileExpanded ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
                     </div>
-                  ) : id === 'taxiq' ? (
+                  ) : id === DASHBOARD_MENU.TaxIq ? (
                     <div className="text-white/65 shrink-0">
                       {isTaxIqMobileExpanded ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
                     </div>
@@ -275,7 +275,7 @@ export default function MobileMenuDrawer({
                     })}
                   </div>
                 )}
-		{id === 'taxiq' && isTaxIqMobileExpanded && (
+                {id === DASHBOARD_MENU.TaxIq && isTaxIqMobileExpanded && (
                   <div className={SIDEBAR_SUBMENU_WRAP_CLASS}>
                     {TAXIQ_SUBMENU.filter((sub) => {
                       // Fail-open (show all) before onboarding completes or while loading —
@@ -284,17 +284,17 @@ export default function MobileMenuDrawer({
                       if (!requiredModule || !enabledTaxiqModules) return true
                       return enabledTaxiqModules.includes(requiredModule)
                     }).map((sub) => {
-                      const isSubActive = activeMenu === 'taxiq' &&
+                      const isSubActive = activeMenu === DASHBOARD_MENU.TaxIq &&
                         (sub.id === 'onboarding' ? !activeTaxIqSubTab : activeTaxIqSubTab === sub.id)
                       return (
                         <button
                           key={sub.id}
                           type="button"
-                          onClick={() => navigateMenu(sub.id === 'onboarding' ? 'taxiq' : `taxiq/${sub.id}`)}
+                          onClick={() => navigateMenu(sub.id === 'onboarding' ? DASHBOARD_MENU.TaxIq : `${DASHBOARD_MENU.TaxIq}/${sub.id}`)}
                           className={sidebarSubmenuItemClass(isSubActive)}
                         >
                           <div className={`h-1.5 w-1.5 rounded-full ${isSubActive ? 'bg-brandCyan shadow-sm' : 'bg-white/30'}`} />
-                          <span>{t(`dashboard.menu.taxiq_${sub.id.replace('-', '_')}`)}</span>
+                          <span>{t(sub.labelKey)}</span>
                         </button>
                       )
                     })}

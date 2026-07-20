@@ -62,7 +62,7 @@ export default function DashboardSidebar({
   const bookingHubSubmenu = getVisibleBookingHubSubmenu(hasVoiceTenant)
   const isPaymentsPayoutsActive = isPaymentsPayoutsRouteActive(activeMenu, activeSubTab)
   const [isPaymentsPayoutsExpanded, setIsPaymentsPayoutsExpanded] = useState(isPaymentsPayoutsActive)
-  const [isTaxIqExpanded, setIsTaxIqExpanded] = useState(activeMenu === 'taxiq')
+  const [isTaxIqExpanded, setIsTaxIqExpanded] = useState(activeMenu === DASHBOARD_MENU.TaxIq)
   // Module-gated Tax IQ sub-items: shares the TanStack Query cache with the
   // /dashboard/taxiq route itself, so this fires no extra network request.
   const { data: merchantSetupData } = useMerchantSetup({ enabled: userRole !== 'staff' })
@@ -77,7 +77,7 @@ export default function DashboardSidebar({
       setIsPaymentsPayoutsExpanded(true)
     }
     setIsTouchpointsExpanded(activeMenu === DASHBOARD_MENU.Touchpoints)
-    setIsTaxIqExpanded(activeMenu === 'taxiq')
+    setIsTaxIqExpanded(activeMenu === DASHBOARD_MENU.TaxIq)
     setIsBookingHubExpanded(activeMenu === DASHBOARD_MENU.BookingHub)
   }, [activeMenu, isPaymentsPayoutsActive])
 
@@ -105,21 +105,10 @@ export default function DashboardSidebar({
       activeMenu,
       sections: [
         {
-          id: 'taxiq',
+          id: DASHBOARD_MENU.TaxIq,
           setExpanded: setIsTaxIqExpanded,
-          enter: () => setActiveMenu('taxiq'),
+          enter: () => setActiveMenu(DASHBOARD_MENU.TaxIq),
         },
-	{
-          id: DASHBOARD_MENU.BookingHub,
-          setExpanded: setIsBookingHubExpanded,
-          enter: () => {
-            if (hasVoiceTenant) {
-              setActiveMenu(DASHBOARD_MENU.BookingHub)
-              return
-            }
-            navigate(bookingHubPath(getDefaultBookingHubTab(false)), { replace: true })
-          },
-	},
         {
           id: DASHBOARD_MENU.BookingHub,
           setExpanded: setIsBookingHubExpanded,
@@ -238,7 +227,7 @@ export default function DashboardSidebar({
                   <div className="text-white/50 shrink-0">
                     {isTouchpointsExpanded ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
                   </div>
-                ): id === 'taxiq' ? (
+                ): id === DASHBOARD_MENU.TaxIq ? (
                   <div className="text-white/50 shrink-0">
                     {isTaxIqExpanded ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
                   </div>
@@ -296,7 +285,13 @@ export default function DashboardSidebar({
                       >
                         <div className={`h-1.5 w-1.5 rounded-full ${isSubActive ? 'bg-brandCyan shadow-sm' : 'bg-white/30'}`} />
                         <span>{t(sub.labelKey)}</span>
-              {id === 'taxiq' && isTaxIqExpanded && (
+                      </button>
+                    )
+                  })}
+                </div>
+              )}
+
+              {id === DASHBOARD_MENU.TaxIq && isTaxIqExpanded && (
                 <div className={SIDEBAR_SUBMENU_WRAP_CLASS}>
                   {TAXIQ_SUBMENU.filter((sub) => {
                     // Fail-open (show all) before onboarding completes or while loading —
@@ -307,7 +302,7 @@ export default function DashboardSidebar({
                   }).map((sub) => {
                     // 'onboarding' lives at /dashboard/taxiq itself (no extra segment),
                     // so it's active whenever there's no deeper sub-route in the URL.
-                    const isSubActive = activeMenu === 'taxiq' &&
+                    const isSubActive = activeMenu === DASHBOARD_MENU.TaxIq &&
                       (sub.id === 'onboarding' ? !activeTaxIqSubTab : activeTaxIqSubTab === sub.id)
                     return (
                       <button
@@ -319,7 +314,7 @@ export default function DashboardSidebar({
                         className={sidebarSubmenuItemClass(isSubActive)}
                       >
                         <div className={`h-1.5 w-1.5 rounded-full ${isSubActive ? 'bg-brandCyan shadow-sm' : 'bg-white/30'}`} />
-                        <span>{t(`dashboard.menu.taxiq_${sub.id.replace('-', '_')}`)}</span>
+                        <span>{t(sub.labelKey)}</span>
                       </button>
                     )
                   })}

@@ -23,7 +23,7 @@ export function useDashboardNavigation() {
 
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
   const [isPaymentsPayoutsMobileExpanded, setIsPaymentsPayoutsMobileExpanded] = useState(isPaymentsPayoutsActive)
-  const [isTaxIqMobileExpanded, setIsTaxIqMobileExpanded] = useState(activeMenu === 'taxiq')
+  const [isTaxIqMobileExpanded, setIsTaxIqMobileExpanded] = useState(activeMenu === DASHBOARD_MENU.TaxIq)
 
   const [isTouchpointsMobileExpanded, setIsTouchpointsMobileExpanded] = useState(
     activeMenu === DASHBOARD_MENU.Touchpoints,
@@ -38,7 +38,7 @@ export function useDashboardNavigation() {
   useEffect(() => {
     if (!isMobileMenuOpen) return
     setIsPaymentsPayoutsMobileExpanded(isPaymentsPayoutsActive)
-    setIsTaxIqMobileExpanded(activeMenu === 'taxiq')
+    setIsTaxIqMobileExpanded(activeMenu === DASHBOARD_MENU.TaxIq)
     setIsTouchpointsMobileExpanded(activeMenu === DASHBOARD_MENU.Touchpoints)
     setIsBookingHubMobileExpanded(activeMenu === DASHBOARD_MENU.BookingHub)
   }, [isMobileMenuOpen, activeMenu, isPaymentsPayoutsActive])
