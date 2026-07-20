@@ -42,8 +42,10 @@ export default function usePersonalSetupWizard({ onBackToLogin }) {
   // Step 2: Payouts
   const [payouts, setPayouts] = useState<any>({
     zelle: { enabled: false, value: '' },
+    paypal: { enabled: false, value: '' },
     venmo: { enabled: false, value: '' },
     cashapp: { enabled: false, value: '' },
+    applecash: { enabled: false, value: '' },
     bankwire: { enabled: false, value: '' },
   })
   
@@ -120,6 +122,14 @@ export default function usePersonalSetupWizard({ onBackToLogin }) {
         })
       }
 
+      // 3. Persist payout methods configured in this same step (optional — left blank/disabled means skipped)
+      await completePersonalOnboardingMutation.mutateAsync({
+        accountData: { fullName: fullName.trim(), nickname: displayName, phone, position },
+        paymentAccounts: {},
+        payoutConfigs: payouts,
+        skipProfileUpdates: true,
+      })
+
       setErrors({})
       setCurrentStep(2)
     } catch (err) {
@@ -137,27 +147,6 @@ export default function usePersonalSetupWizard({ onBackToLogin }) {
       }
     } catch (err: unknown) {
       logger.error('Failed to upload staff avatar', err)
-    }
-  }
-
-  const handlePersonalRegisterSubmit = async () => {
-    try {
-      // Call Payout APIs
-      await completePersonalOnboardingMutation.mutateAsync({
-        accountData: {
-          fullName: fullName.trim(),
-          nickname: nickname.trim() || email.split('@')[0],
-          phone,
-          position
-        },
-        paymentAccounts: {},
-        payoutConfigs: payouts
-      })
-
-      // Move to success
-      setCurrentStep(3)
-    } catch (err) {
-      setErrors({ submit: t('register.errors.profile_setup_failed') })
     }
   }
 
@@ -233,8 +222,7 @@ export default function usePersonalSetupWizard({ onBackToLogin }) {
   const stepName = (step: number) => {
     switch (step) {
       case 1: return t('components.register.hooks.useRegisterForm.profileSetup')
-      case 2: return t('components.register.hooks.useRegisterForm.payoutSetup')
-      case 3: return t('components.register.hooks.useRegisterForm.success')
+      case 2: return t('components.register.hooks.useRegisterForm.success')
       default: return ''
     }
   }
@@ -257,7 +245,6 @@ export default function usePersonalSetupWizard({ onBackToLogin }) {
     editAccountName, setEditAccountName,
     isCapturing, modalError, setModalError,
     handleProfileSetupSubmit,
-    handlePersonalRegisterSubmit,
     handleToggleMethod,
     handleEditPayoutAccount,
     savePayoutAccount,

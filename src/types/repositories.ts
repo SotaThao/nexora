@@ -805,6 +805,7 @@ export interface PersonalOnboardingInput {
   accountData: LooseObject
   paymentAccounts: LooseObject
   payoutConfigs: Record<string, { enabled?: boolean; value?: string; accountName?: string }>
+  skipProfileUpdates?: boolean
 }
 
 export interface PayoutConfigMap {
