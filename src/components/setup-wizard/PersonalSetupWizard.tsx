@@ -57,7 +57,7 @@ export default function PersonalSetupWizard({ wizard }) {
               <div className="absolute inset-0 bg-slate-200/60 rounded-full"></div>
               <div
                 className="absolute left-0 top-0 h-full bg-gradient-to-r from-nexoraElectric via-nexoraElectricMid to-nexoraViolet rounded-full transition-all duration-500 ease-out"
-                style={{ width: `${((currentStep - 1) / 1) * 100}%` }}
+                style={{ width: currentStep === 2 ? '100%' : '0%' }}
               ></div>
             </div>
 

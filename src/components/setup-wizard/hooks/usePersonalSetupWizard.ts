@@ -42,8 +42,10 @@ export default function usePersonalSetupWizard({ onBackToLogin }) {
   // Step 2: Payouts
   const [payouts, setPayouts] = useState<any>({
     zelle: { enabled: false, value: '' },
+    paypal: { enabled: false, value: '' },
     venmo: { enabled: false, value: '' },
     cashapp: { enabled: false, value: '' },
+    applecash: { enabled: false, value: '' },
     bankwire: { enabled: false, value: '' },
   })
   
@@ -124,7 +126,8 @@ export default function usePersonalSetupWizard({ onBackToLogin }) {
       await completePersonalOnboardingMutation.mutateAsync({
         accountData: { fullName: fullName.trim(), nickname: displayName, phone, position },
         paymentAccounts: {},
-        payoutConfigs: payouts
+        payoutConfigs: payouts,
+        skipProfileUpdates: true,
       })
 
       setErrors({})

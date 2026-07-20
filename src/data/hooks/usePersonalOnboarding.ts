@@ -20,24 +20,26 @@ export function useCompletePersonalOnboarding() {
   const queryClient = useQueryClient()
 
   return useMutation<{ success: boolean }, Error, PersonalOnboardingInput>({
-    mutationFn: async ({ accountData, payoutConfigs }) => {
+    mutationFn: async ({ accountData, payoutConfigs, skipProfileUpdates }) => {
       const firstName = accountData.fullName?.split(' ')[0] || ''
       const lastName = accountData.fullName?.split(' ').slice(1).join(' ') || ''
 
-      await profileSettingsRepository.updateUserProfile({
-        firstName,
-        lastName,
-        phoneNumber: accountData.phone || '',
-      })
+      if (!skipProfileUpdates) {
+        await profileSettingsRepository.updateUserProfile({
+          firstName,
+          lastName,
+          phoneNumber: accountData.phone || '',
+        })
 
-      await profileSettingsRepository
-        .updateStaffProfile({
-          displayName: accountData.nickname || accountData.fullName,
-          position: accountData.position || '',
-        })
-        .catch((err: unknown) => {
-          logger.warn('[Personal Onboarding] Ignored staff profile update error:', err)
-        })
+        await profileSettingsRepository
+          .updateStaffProfile({
+            displayName: accountData.nickname || accountData.fullName,
+            position: accountData.position || '',
+          })
+          .catch((err: unknown) => {
+            logger.warn('[Personal Onboarding] Ignored staff profile update error:', err)
+          })
+      }
 
       let methods: PaymentMethodDto[] = []
       try {

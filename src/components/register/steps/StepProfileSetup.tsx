@@ -52,7 +52,7 @@ export default function StepProfileSetup({
               </>
             ) : (
               <div className="h-16 w-16 rounded-full bg-nexoraCanvas flex items-center justify-center font-black text-nexoraSubtle text-lg border border-nexoraBorder">
-                {fullName.charAt(0) || 'N'}
+                {fullName.trim().charAt(0) || 'N'}
               </div>
             )}
           </div>
@@ -206,12 +206,6 @@ export default function StepProfileSetup({
               <span className="text-nexoraText font-extrabold font-mono bg-white border border-nexoraBorder px-2.5 py-1 rounded-lg">
                 {generatedStaffId}
               </span>
-            </div>
-          )}
-
-          {errors?.payout && (
-            <div className="text-red-500 text-xs text-center pt-3 font-semibold">
-              {errors.payout}
             </div>
           )}
         </div>
