@@ -1,12 +1,14 @@
 // StaffPay — staff self-managed payout methods (owner cannot edit these).
 import { useState, useMemo } from 'react'
-import { Bitcoin, Edit2 } from 'lucide-react'
+import { useNavigate } from 'react-router-dom'
+import { Bitcoin, Edit2, Wallet, ArrowRight, AlertCircle } from 'lucide-react'
 import { useTranslation } from '../../../contexts/LanguageContext'
 import {
   useStaffPaymentMethods,
   useUpdateStaffPaymentMethod,
   useToggleStaffPaymentMethod
 } from '../../../data/hooks/useStaffPaymentMethods'
+import { useStaffProfile } from '../../../data/hooks/useStaffSelf'
 import type { PaymentMethodDto } from '../../../types/domain'
 import { SkeletonLayout } from '../../ui/skeleton'
 import PayoutSetupModal from '../../dashboard/modals/PayoutSetupModal'
@@ -58,11 +60,17 @@ const PayoutLogos = {
 
 export default function StaffPay() {
   const { t } = useTranslation()
+  const navigate = useNavigate()
   const {
     data: apiPaymentMethods = [],
     isPending,
     isFetching,
   } = useStaffPaymentMethods()
+  const {
+    data: staffProfile,
+    isPending: isProfilePending,
+    isFetching: isProfileFetching,
+  } = useStaffProfile()
   const toggleMutation = useToggleStaffPaymentMethod()
   const updateMutation = useUpdateStaffPaymentMethod()
 
@@ -73,7 +81,17 @@ export default function StaffPay() {
     [apiPaymentMethods],
   )
 
-  const isLoading = isPending || isFetching
+  const isLoading = isPending || isFetching || isProfilePending || isProfileFetching
+
+  // Case 1: no staff profile yet (GET /api/v1/staff/profile → 404). Methods are
+  // only seeded on profile creation, so send the user through onboarding first.
+  const profileMissing = staffProfile === null
+  // Case 2: profile + seeded methods exist, but none is activated & configured.
+  const hasUnconfiguredPayout =
+    visiblePaymentMethods.length > 0 &&
+    !visiblePaymentMethods.some(
+      (method) => method.isActive && method.isConfigured && method.accountInfo?.trim(),
+    )
 
   const isMethodSetUp = (method: PaymentMethodDto) =>
     Boolean(method.isConfigured && method.accountInfo?.trim())
@@ -141,13 +159,40 @@ export default function StaffPay() {
       <section className={panel}>
         <p className="text-xs text-nexoraMuted">{t('staff_dashboard.pay.owner_note')}</p>
 
-        {visiblePaymentMethods.length === 0 ? (
+        {profileMissing ? (
+          <div className="mt-4 flex flex-col items-center gap-3 py-8 text-center">
+            <span className="flex h-12 w-12 items-center justify-center rounded-full bg-nexoraBrand/10">
+              <Wallet className="h-6 w-6 text-nexoraBrand" />
+            </span>
+            <p className="text-sm font-semibold text-nexoraText">
+              {t('staff_dashboard.pay.empty')}
+            </p>
+            <p className="max-w-xs text-xs text-nexoraSubtle">
+              {t('staff_dashboard.pay.empty_hint')}
+            </p>
+            <button
+              type="button"
+              onClick={() => navigate('/onboarding')}
+              className="mt-1 inline-flex items-center justify-center gap-2 rounded-xl bg-nexoraBrand px-5 py-2.5 text-xs font-bold uppercase tracking-wider text-white shadow-lg transition-all hover:scale-[1.02] hover:shadow-nexoraBrand/25 active:scale-95"
+            >
+              <span>{t('staff_dashboard.pay.empty_cta')}</span>
+              <ArrowRight className="h-4 w-4" />
+            </button>
+          </div>
+        ) : visiblePaymentMethods.length === 0 ? (
           <p className="mt-4 py-6 text-center text-xs text-nexoraSubtle">
             {t('staff_dashboard.pay.empty')}
           </p>
         ) : (
-          <div className="mt-4 divide-y divide-nexoraBorder">
-            {visiblePaymentMethods.map((method) => {
+          <div className="mt-4">
+            {hasUnconfiguredPayout && (
+              <div className="mb-3 flex items-start gap-2 rounded-xl border border-amber-200 bg-amber-50 px-3 py-2.5">
+                <AlertCircle className="mt-0.5 h-4 w-4 shrink-0 text-amber-500" />
+                <p className="text-xs text-amber-700">{t('staff_dashboard.pay.setup_hint')}</p>
+              </div>
+            )}
+            <div className="divide-y divide-nexoraBorder">
+              {visiblePaymentMethods.map((method) => {
               const uiKey = method.uiKey || ''
               const label = method.name || method.type
               return (
@@ -192,6 +237,7 @@ export default function StaffPay() {
                 </div>
               )
             })}
+            </div>
           </div>
         )}
       </section>
