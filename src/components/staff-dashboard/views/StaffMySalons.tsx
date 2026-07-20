@@ -255,26 +255,28 @@ export default function StaffMySalons() {
   const markNotificationRead = useMarkNotificationRead()
   const unlinkBusiness = useUnlinkStaffBusiness()
   const [unlinkError, setUnlinkError] = useState<{ title: string; message: string } | null>(null)
-  const linkRequests = useMemo(
-    () => notifications.filter((notification) => notification.type === 'StaffLinkRequest'),
-    [notifications],
-  )
-  const linkRequestQueries = useQueries({
-    queries: linkRequests.map((notification) => {
+  const linkRequestsWithIds = useMemo(() => {
+    return notifications.flatMap((notification) => {
+      if (notification.type !== 'StaffLinkRequest') return []
+
       const linkId = getStaffLinkRequestId(notification)
+      return linkId ? [{ notification, linkId }] : []
+    })
+  }, [notifications])
+  const linkRequestQueries = useQueries({
+    queries: linkRequestsWithIds.map(({ linkId }) => {
       return {
         queryKey: qk.staffLinkRequest(linkId),
-        queryFn: () => staffSelfRepository.getLinkRequest(linkId || ''),
-        enabled: !!linkId,
+        queryFn: () => staffSelfRepository.getLinkRequest(linkId),
       }
     }),
   })
   const pendingLinkRequests = useMemo(() => {
-    return linkRequests.filter((notification, index) => {
+    return linkRequestsWithIds.filter((_, index) => {
       const query = linkRequestQueries[index]
       return query.isSuccess && query.data?.status === 'WaitingStaffAcceptance'
     })
-  }, [linkRequests, linkRequestQueries])
+  }, [linkRequestsWithIds, linkRequestQueries])
   const salons = sortSalonBusinesses(businesses)
   const isLoading = isPending && businesses.length === 0
   const originalName = staffProfile?.displayName?.trim()
@@ -320,7 +322,7 @@ export default function StaffMySalons() {
             {t('staff_dashboard.qr.link_requests_title')}
           </h3>
           <div className="space-y-2">
-            {pendingLinkRequests.map((notification) => (
+            {pendingLinkRequests.map(({ notification }) => (
               <StaffLinkRequestCard
                 key={notification.id}
                 notification={notification}
