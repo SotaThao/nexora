@@ -77,7 +77,7 @@ export default function LoginScreen() {
         newSession.clearMerchantSetup ||
         newSession.hasCompletedOnboarding === false
 
-      if (newSession.flag === '!personal' || newSession.role === 'personal' || newSession.role === 'staff') {
+      if (newSession.flag === '!personal' || ['personal', 'staff'].includes(newSession.role)) {
         navigate('/staff')
       } else if (needsOnboarding) {
         navigate('/onboarding')
