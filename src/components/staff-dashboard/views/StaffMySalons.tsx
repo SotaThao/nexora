@@ -379,7 +379,7 @@ export default function StaffMySalons() {
         <div
           className="fixed inset-0 z-[99998] flex items-center justify-center bg-slate-900/60 p-4 backdrop-blur-sm"
           role="alertdialog"
-          aria-modal="true"
+          aria-modal="true" aria-labelledby="staff-unlink-error-title" aria-describedby="staff-unlink-error-message"
         >
           <div className="w-full max-w-sm overflow-hidden rounded-2xl border border-slate-100 bg-white p-6 shadow-2xl">
             <h4 className="mb-2 text-sm font-black uppercase tracking-wide text-slate-900">
