@@ -29,6 +29,18 @@ import { resolveStaffFullNameFromApi } from '../../utils/staffName'
 
 type HttpClient = typeof httpClient
 
+interface StaffNicknameUpdateApiDto {
+  linkId?: string
+  nicknameAtBusiness?: string | null
+  displayName?: string | null
+}
+
+export interface StaffNicknameUpdateResult {
+  linkId: string
+  nicknameAtBusiness: string | null
+  displayName: string
+}
+
 const PAYOUT_TYPE_TO_KEY: Record<string, string> = {
   Zelle: 'zelle',
   BankWire: 'bankwire',
@@ -123,6 +135,7 @@ export function normalizeStaffListItem(dto: StaffListItemApiDto): StaffMember {
     fullName: resolveStaffFullNameFromApi(dto),
     nickname: displayName,
     displayName,
+    nicknameAtBusiness: dto.nicknameAtBusiness ?? null,
     avatar: dto.photoUrl ?? null,
     status,
     apiStatus: dto.status ?? null,
@@ -448,6 +461,21 @@ export function createMerchantStaffRepository(client: HttpClient = httpClient) {
         staffLinkId,
         status,
       })
+    },
+
+    async setNickname(
+      staffLinkId: string,
+      nickname: string | null,
+    ): Promise<StaffNicknameUpdateResult> {
+      const dto = await client.patch<StaffNicknameUpdateApiDto>(
+        `/api/v1/merchant/staff/${encodeURIComponent(staffLinkId)}/nickname`,
+        { nickname },
+      )
+      return {
+        linkId: dto.linkId ?? staffLinkId,
+        nicknameAtBusiness: dto.nicknameAtBusiness ?? null,
+        displayName: dto.displayName ?? '',
+      }
     },
 
     async rejectLink(linkId: string): Promise<void> {

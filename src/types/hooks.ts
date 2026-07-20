@@ -39,6 +39,17 @@ export interface UpdateStaffStatusVars {
   status: string
 }
 
+export interface SetMerchantStaffNicknameVars {
+  staffLinkId: string
+  staffCode: string
+  nickname: string | null
+}
+
+export interface SetStaffBusinessNicknameVars {
+  businessId: string
+  nickname: string | null
+}
+
 export interface DownloadTouchpointQrVars {
   id: string
   format?: 'png' | 'pdf'

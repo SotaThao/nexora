@@ -22,6 +22,7 @@ export interface StaffMember {
   id?: string
   fullName?: string
   nickname?: string
+  nicknameAtBusiness?: string | null
   email?: string
   phone?: string
   isActive?: boolean
@@ -332,6 +333,7 @@ export interface StaffSearchResult {
 export interface StaffBusinessLink {
   businessId: string
   businessName: string
+  nicknameAtBusiness: string | null
   address: string | null
   city: string | null
   state: string | null
