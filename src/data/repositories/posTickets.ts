@@ -25,6 +25,16 @@ export function createPosTicketsRepository(client: HttpClient = httpClient) {
     async cancelTicket(businessId: string, ticketId: string): Promise<boolean> {
       return await client.post<boolean>(`/api/v1/merchant/pos/${businessId}/tickets/${ticketId}/cancel`)
     },
+
+    async assignTicketToStation(
+      businessId: string,
+      ticketId: string,
+      posStaffProfileId?: string,
+    ): Promise<boolean> {
+      return await client.post<boolean>(`/api/v1/merchant/pos/${businessId}/tickets/${ticketId}/assign`, {
+        posStaffProfileId,
+      })
+    },
   }
 }
 

@@ -2758,8 +2758,20 @@
           "cancelButton": "Hủy",
           "confirmCancelTitle": "Gỡ khỏi hàng đợi?",
           "confirmCancelBody": "\"{{name}}\" sẽ bị gỡ khỏi hàng đợi check-in.",
-          "turnBoardComingSoon": "Turn Board sẽ có sớm.",
-          "checkoutComingSoon": "Checkout sẽ có sớm."
+          "checkoutComingSoon": "Checkout sẽ có sớm.",
+          "assignButton": "Gán thợ",
+          "assigned": "Đã gán khách vào trạm.",
+          "turnBoardEmpty": "Chưa có trạm thợ nào — thiết lập hồ sơ POS cho thợ trước.",
+          "stationStatus": {
+            "Empty": "Đang trống",
+            "InService": "Đang phục vụ",
+            "Break": "Đang nghỉ"
+          },
+          "assignGuestButton": "+ Gán khách",
+          "servingSince": "Bắt đầu phục vụ lúc {{time}}",
+          "checkoutButton": "Checkout",
+          "startBreakButton": "Bắt đầu nghỉ",
+          "endBreakButton": "Kết thúc nghỉ"
         },
         "BookingHubView": {
           "title": "Trung tâm đặt lịch",

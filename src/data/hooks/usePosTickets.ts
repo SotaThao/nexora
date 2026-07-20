@@ -40,3 +40,17 @@ export function useCancelTicket(businessId?: string) {
     },
   })
 }
+
+// US-13 — moves a ticket out of the Waitlist onto a station (auto-picked when
+// posStaffProfileId is omitted), so both caches must be invalidated together.
+export function useAssignTicketToStation(businessId?: string) {
+  const queryClient = useQueryClient()
+  return useMutation<boolean, Error, { ticketId: string; posStaffProfileId?: string }>({
+    mutationFn: ({ ticketId, posStaffProfileId }) =>
+      posTicketsRepository.assignTicketToStation(businessId as string, ticketId, posStaffProfileId),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: qk.merchantPosWaitlist(businessId) })
+      queryClient.invalidateQueries({ queryKey: qk.merchantPosTurnBoard(businessId) })
+    },
+  })
+}

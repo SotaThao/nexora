@@ -171,6 +171,18 @@ export interface CheckInTicketPayload {
   posServiceIds?: string[]
 }
 
+// POS Merchant Ops — Turn Board Assign & Break (US-13)
+export interface TurnBoardStationApiDto {
+  posStaffProfileId: string
+  displayName: string
+  photoUrl?: string | null
+  currentStatus: string
+  currentTicketId?: string | null
+  currentCustomerName?: string | null
+  currentPrimaryServiceName?: string | null
+  assignedAt?: string | null
+}
+
 export interface TipsSummaryApiDto {
   totalAmount?: number
   totalCount?: number

@@ -94,6 +94,8 @@ export const qk = {
   // POS Merchant Ops — Front Desk access self-check + Check-in/Waitlist (US-12)
   merchantPosAccess: (businessId?: string) => ['merchantSettings', 'posAccess', businessId ?? ''],
   merchantPosWaitlist: (businessId?: string) => ['merchantSettings', 'posWaitlist', businessId ?? ''],
+  // POS Merchant Ops — Turn Board Assign & Break (US-13)
+  merchantPosTurnBoard: (businessId?: string) => ['merchantSettings', 'posTurnBoard', businessId ?? ''],
 
   // Merchant Touchpoints
   merchantTouchpoints: ()      => ['merchantTouchpoints'],

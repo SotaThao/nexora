@@ -1,12 +1,12 @@
-// PosFrontDeskView — POS Merchant Ops: Check-in queue / Turn Board / Checkout (US-12).
+// PosFrontDeskView — POS Merchant Ops: Check-in queue / Turn Board / Checkout (US-12/US-13).
 // Shared between the Owner dashboard (POS > Front Desk) and the Staff dashboard
 // (My Salons > a business the Staff has the Operations permission for) — same
 // component, no per-shell duplication. `canManageOperations` (from usePosAccess)
 // decides whether the actionable UI renders at all; the caller (Owner vs Staff
 // route wrapper) is responsible for only linking here when access is expected.
 //
-// Turn Board and Checkout tabs are "coming soon" placeholders — their backend
-// (US-13/US-14) doesn't exist yet. Check-in queue is the only functional tab.
+// Checkout tab is a "coming soon" placeholder — its backend (US-14) doesn't
+// exist yet. Check-in queue and Turn Board are both functional.
 import { useState, type FormEvent } from 'react'
 import { Loader2 } from 'lucide-react'
 import { useTranslation } from '../../../../contexts/LanguageContext'
@@ -14,7 +14,14 @@ import { useNotification } from '../../../../contexts/NotificationContext'
 import { getApiErrorCode } from '../../../../types/domain'
 import { getErrorI18nKey } from '../../../../data/errorCodes'
 import { usePosAccess } from '../../../../data/hooks/usePosAccess'
-import { useCancelTicket, useCheckInTicket, useWaitlist } from '../../../../data/hooks/usePosTickets'
+import {
+  useAssignTicketToStation,
+  useCancelTicket,
+  useCheckInTicket,
+  useWaitlist,
+} from '../../../../data/hooks/usePosTickets'
+import { useSetStaffBreakStatus, useTurnBoard } from '../../../../data/hooks/usePosTurnBoard'
+import type { TurnBoardStationApiDto } from '../../../../types/repositories'
 import { SkeletonList } from '../../../ui/skeleton'
 
 type FrontDeskTab = 'checkin' | 'turnboard' | 'checkout'
@@ -27,19 +34,36 @@ function ComingSoonPanel({ title }: { title: string }) {
   )
 }
 
+function getInitials(name: string) {
+  return name
+    .split(' ')
+    .filter(Boolean)
+    .slice(0, 2)
+    .map((part) => part[0]?.toUpperCase())
+    .join('')
+}
+
+function formatTime(iso: string) {
+  return new Date(iso).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+}
+
 export default function PosFrontDeskView({ businessId }: { businessId: string }) {
   const { t } = useTranslation()
   const { showToast, showConfirm } = useNotification()
   const { data: access, isLoading: isAccessLoading } = usePosAccess(businessId)
   const { data: waitlist = [], isLoading: isWaitlistLoading } = useWaitlist(businessId)
+  const { data: turnBoard = [], isLoading: isTurnBoardLoading } = useTurnBoard(businessId)
   const checkInTicket = useCheckInTicket(businessId)
   const cancelTicket = useCancelTicket(businessId)
+  const assignTicket = useAssignTicketToStation(businessId)
+  const setStaffBreakStatus = useSetStaffBreakStatus(businessId)
 
   const [activeTab, setActiveTab] = useState<FrontDeskTab>('checkin')
   const [customerName, setCustomerName] = useState('')
   const [customerEmail, setCustomerEmail] = useState('')
   const [customerPhone, setCustomerPhone] = useState('')
   const [nameError, setNameError] = useState('')
+  const [assignSelection, setAssignSelection] = useState<Record<string, string>>({})
 
   if (isAccessLoading) {
     return (
@@ -98,6 +122,31 @@ export default function PosFrontDeskView({ businessId }: { businessId: string })
     }
   }
 
+  const handleAssign = (ticketId: string, posStaffProfileId?: string) => {
+    assignTicket.mutate(
+      { ticketId, posStaffProfileId },
+      {
+        onSuccess: () => {
+          showToast(t('components.dashboard.views.pos.PosFrontDeskView.assigned'))
+        },
+        onError: (err: unknown) => {
+          showToast(t(getErrorI18nKey(getApiErrorCode(err, 'ERROR'))), 'error')
+        },
+      },
+    )
+  }
+
+  const handleToggleBreak = (posStaffProfileId: string, isBreak: boolean) => {
+    setStaffBreakStatus.mutate(
+      { posStaffProfileId, isBreak },
+      {
+        onError: (err: unknown) => {
+          showToast(t(getErrorI18nKey(getApiErrorCode(err, 'ERROR'))), 'error')
+        },
+      },
+    )
+  }
+
   const tabs: { id: FrontDeskTab; labelKey: string; badge?: number }[] = [
     {
       id: 'checkin',
@@ -107,6 +156,107 @@ export default function PosFrontDeskView({ businessId }: { businessId: string })
     { id: 'turnboard', labelKey: 'components.dashboard.views.pos.PosFrontDeskView.tabs.turnboard' },
     { id: 'checkout', labelKey: 'components.dashboard.views.pos.PosFrontDeskView.tabs.checkout' },
   ]
+
+  const renderStationCard = (station: TurnBoardStationApiDto) => {
+    const selectedTicketId = assignSelection[station.posStaffProfileId] ?? waitlist[0]?.id ?? ''
+
+    return (
+      <div key={station.posStaffProfileId} className="nexora-card space-y-3 p-4">
+        <div className="flex items-center gap-3">
+          <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-nexoraCanvas text-[11px] font-bold text-nexoraText">
+            {station.photoUrl ? (
+              <img src={station.photoUrl} alt="" className="h-9 w-9 rounded-full object-cover" />
+            ) : (
+              getInitials(station.displayName)
+            )}
+          </div>
+          <div className="min-w-0 flex-1">
+            <p className="truncate text-sm font-bold text-nexoraText">{station.displayName}</p>
+            <p className="text-[11px] font-extrabold uppercase text-nexoraMuted">
+              {t(`components.dashboard.views.pos.PosFrontDeskView.stationStatus.${station.currentStatus}`)}
+            </p>
+          </div>
+        </div>
+
+        {station.currentStatus === 'InService' && (
+          <div className="space-y-2 rounded-lg bg-nexoraCanvas p-3">
+            <p className="truncate text-xs font-bold text-nexoraText">{station.currentCustomerName}</p>
+            {station.currentPrimaryServiceName ? (
+              <p className="truncate text-[11px] text-nexoraMuted">{station.currentPrimaryServiceName}</p>
+            ) : null}
+            {station.assignedAt ? (
+              <p className="text-[11px] text-nexoraMuted">
+                {t('components.dashboard.views.pos.PosFrontDeskView.servingSince', {
+                  time: formatTime(station.assignedAt),
+                })}
+              </p>
+            ) : null}
+            <button
+              type="button"
+              disabled
+              title={t('components.dashboard.views.pos.PosFrontDeskView.checkoutComingSoon')}
+              className="h-9 w-full rounded-lg border border-nexoraBorder text-xs font-bold text-nexoraMuted opacity-60"
+            >
+              {t('components.dashboard.views.pos.PosFrontDeskView.checkoutButton')}
+            </button>
+          </div>
+        )}
+
+        {station.currentStatus === 'Empty' && (
+          <div className="space-y-2">
+            {waitlist.length > 0 ? (
+              <>
+                <select
+                  value={selectedTicketId}
+                  onChange={(e) =>
+                    setAssignSelection((prev) => ({ ...prev, [station.posStaffProfileId]: e.target.value }))
+                  }
+                  className="h-9 w-full rounded-lg border border-nexoraBorder bg-white px-2.5 text-xs text-nexoraText outline-none focus:border-nexoraBrand"
+                >
+                  {waitlist.map((ticket) => (
+                    <option key={ticket.id} value={ticket.id}>
+                      #{ticket.ticketNumber} — {ticket.customerName}
+                    </option>
+                  ))}
+                </select>
+                <button
+                  type="button"
+                  onClick={() => handleAssign(selectedTicketId, station.posStaffProfileId)}
+                  disabled={assignTicket.isPending}
+                  className="h-9 w-full rounded-lg bg-nexoraBrand text-xs font-bold text-white hover:bg-nexoraBrandDark disabled:opacity-60"
+                >
+                  {t('components.dashboard.views.pos.PosFrontDeskView.assignGuestButton')}
+                </button>
+              </>
+            ) : (
+              <p className="text-[11px] text-nexoraMuted">
+                {t('components.dashboard.views.pos.PosFrontDeskView.waitlistEmpty')}
+              </p>
+            )}
+            <button
+              type="button"
+              onClick={() => handleToggleBreak(station.posStaffProfileId, true)}
+              disabled={setStaffBreakStatus.isPending}
+              className="h-8 w-full rounded-lg border border-nexoraBorder text-[11px] font-bold text-nexoraMuted hover:text-nexoraText disabled:opacity-60"
+            >
+              {t('components.dashboard.views.pos.PosFrontDeskView.startBreakButton')}
+            </button>
+          </div>
+        )}
+
+        {station.currentStatus === 'Break' && (
+          <button
+            type="button"
+            onClick={() => handleToggleBreak(station.posStaffProfileId, false)}
+            disabled={setStaffBreakStatus.isPending}
+            className="h-9 w-full rounded-lg bg-nexoraBrand text-xs font-bold text-white hover:bg-nexoraBrandDark disabled:opacity-60"
+          >
+            {t('components.dashboard.views.pos.PosFrontDeskView.endBreakButton')}
+          </button>
+        )}
+      </div>
+    )
+  }
 
   return (
     <div className="space-y-6">
@@ -249,6 +399,14 @@ export default function PosFrontDeskView({ businessId }: { businessId: string })
                       </span>
                       <button
                         type="button"
+                        onClick={() => handleAssign(ticket.id)}
+                        disabled={assignTicket.isPending}
+                        className="shrink-0 rounded-lg bg-nexoraBrand px-2.5 py-1.5 text-[10px] font-bold text-white hover:bg-nexoraBrandDark disabled:opacity-60"
+                      >
+                        {t('components.dashboard.views.pos.PosFrontDeskView.assignButton')}
+                      </button>
+                      <button
+                        type="button"
                         onClick={() => handleCancel(ticket.id, ticket.customerName)}
                         disabled={cancelTicket.isPending}
                         className="shrink-0 rounded-lg border border-nexoraBorder px-2.5 py-1.5 text-[10px] font-bold text-nexoraMuted hover:border-rose-300 hover:text-rose-600 disabled:opacity-60"
@@ -265,7 +423,19 @@ export default function PosFrontDeskView({ businessId }: { businessId: string })
       )}
 
       {activeTab === 'turnboard' && (
-        <ComingSoonPanel title={t('components.dashboard.views.pos.PosFrontDeskView.turnBoardComingSoon')} />
+        isTurnBoardLoading ? (
+          <div className="nexora-card p-6">
+            <SkeletonList count={3} lines={2} />
+          </div>
+        ) : turnBoard.length === 0 ? (
+          <div className="nexora-card p-6 text-center text-xs text-nexoraMuted">
+            {t('components.dashboard.views.pos.PosFrontDeskView.turnBoardEmpty')}
+          </div>
+        ) : (
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
+            {turnBoard.map(renderStationCard)}
+          </div>
+        )
       )}
       {activeTab === 'checkout' && (
         <ComingSoonPanel title={t('components.dashboard.views.pos.PosFrontDeskView.checkoutComingSoon')} />
