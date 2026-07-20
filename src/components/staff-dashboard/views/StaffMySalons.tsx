@@ -1,11 +1,20 @@
+import { useMemo, useState } from 'react'
+import { useQueries } from '@tanstack/react-query'
 import { Loader2 } from 'lucide-react'
 import { useNavigate } from 'react-router-dom'
 import { useTranslation } from '../../../contexts/LanguageContext'
+import { useNotification } from '../../../contexts/NotificationContext'
 import {
   useSetStaffBusinessNickname,
   useStaffBusinesses,
   useStaffProfile,
+  useUnlinkStaffBusiness,
 } from '../../../data/hooks/useStaffSelf'
+import { useMarkNotificationRead, useNotifications } from '../../../data/hooks/useNotifications'
+import { qk } from '../../../data/queryKeys'
+import staffSelfRepository from '../../../data/repositories/staffSelf'
+import errorCodeToI18nKey from '../../../data/errorCodes'
+import { isApiError } from '../../../types/domain'
 import type { StaffBusinessLink } from '../../../types/domain'
 import type { TFunction } from '../../../types/contexts'
 import {
@@ -22,6 +31,7 @@ import {
 } from '../../../utils/staffBusinessLinkStatus'
 import Tooltip from '../../ui/Tooltip'
 import NicknameEditor, { type NicknameEditorSaveResult } from '../../NicknameEditor'
+import StaffLinkRequestCard, { getStaffLinkRequestId } from './StaffLinkRequestCard'
 
 function getSalonStatusHelp(
   statusLabel: string,
@@ -70,6 +80,8 @@ function SalonCard({
   originalName,
   onRefreshNickname,
   onSaveNickname,
+  onUnlink,
+  isUnlinking = false,
 }: {
   business: StaffBusinessLink
   index: number
@@ -79,6 +91,8 @@ function SalonCard({
   originalName: string
   onRefreshNickname: () => Promise<string | null>
   onSaveNickname: (nickname: string | null) => Promise<NicknameEditorSaveResult>
+  onUnlink?: () => void
+  isUnlinking?: boolean
 }) {
   const statusLabel = resolveStaffBusinessLinkStatusLabel(business)
   const status = getSalonDisplayStatus(business, t)
@@ -89,6 +103,7 @@ function SalonCard({
   const isActive = statusLabel.trim().toLowerCase() === STAFF_BUSINESS_LINK_STATUS.active
   const nicknameValue = business.nicknameAtBusiness?.trim() ?? ''
   const nicknameDisplayValue = nicknameValue || t('staff_salons.nickname_not_set')
+  const canUnlink = isActive && typeof onUnlink === 'function'
 
   return (
     <div className="w-full rounded-2xl border border-nexoraBorder/80 bg-white p-4 text-left shadow-sm transition hover:border-nexoraBrand/20 hover:shadow-md">
@@ -151,9 +166,28 @@ function SalonCard({
           </span>
         </div>
         <p className="truncate text-xs font-medium text-nexoraMuted">{location}</p>
-        {timeline ? (
-          <p className="pt-0.5 text-left text-[11px] font-semibold text-nexoraMuted">{timeline}</p>
-        ) : null}
+        <div className="flex items-center justify-between gap-2 pt-0.5">
+          {canUnlink ? (
+            <button
+              type="button"
+              onClick={(event) => {
+                event.stopPropagation()
+                onUnlink?.()
+              }}
+              onKeyDown={(event) => event.stopPropagation()}
+              onKeyUp={(event) => event.stopPropagation()}
+              disabled={isUnlinking}
+              className="shrink-0 rounded-lg border border-nexoraDanger/25 bg-white px-2.5 py-1 text-[10px] font-extrabold uppercase tracking-wide text-nexoraDanger transition hover:bg-nexoraDanger/5 disabled:cursor-not-allowed disabled:opacity-60"
+            >
+              {t('staff_salons.unlink_button')}
+            </button>
+          ) : (
+            <span />
+          )}
+          {timeline ? (
+            <p className="text-right text-[11px] font-semibold text-nexoraMuted">{timeline}</p>
+          ) : null}
+        </div>
       </div>
       </div>
       {isActive ? (
@@ -209,6 +243,7 @@ function SalonCard({
 export default function StaffMySalons() {
   const { t, currentLanguage } = useTranslation()
   const navigate = useNavigate()
+  const { showToast, showConfirm } = useNotification()
   const {
     data: businesses = [],
     isPending,
@@ -216,10 +251,61 @@ export default function StaffMySalons() {
   } = useStaffBusinesses()
   const { data: staffProfile } = useStaffProfile()
   const setNicknameMutation = useSetStaffBusinessNickname()
+  const { data: notifications = [] } = useNotifications()
+  const markNotificationRead = useMarkNotificationRead()
+  const unlinkBusiness = useUnlinkStaffBusiness()
+  const [unlinkError, setUnlinkError] = useState<{ title: string; message: string } | null>(null)
+  const linkRequests = useMemo(
+    () => notifications.filter((notification) => notification.type === 'StaffLinkRequest'),
+    [notifications],
+  )
+  const linkRequestQueries = useQueries({
+    queries: linkRequests.map((notification) => {
+      const linkId = getStaffLinkRequestId(notification)
+      return {
+        queryKey: qk.staffLinkRequest(linkId),
+        queryFn: () => staffSelfRepository.getLinkRequest(linkId || ''),
+        enabled: !!linkId,
+      }
+    }),
+  })
+  const pendingLinkRequests = useMemo(() => {
+    return linkRequests.filter((notification, index) => {
+      const query = linkRequestQueries[index]
+      return query.isSuccess && query.data?.status === 'WaitingStaffAcceptance'
+    })
+  }, [linkRequests, linkRequestQueries])
   const salons = sortSalonBusinesses(businesses)
   const isLoading = isPending && businesses.length === 0
   const originalName = staffProfile?.displayName?.trim()
     || `${staffProfile?.firstName ?? ''} ${staffProfile?.lastName ?? ''}`.trim()
+
+  const handleUnlink = async (business: StaffBusinessLink) => {
+    const confirmed = await showConfirm(
+      t('staff_salons.unlink_confirm_message', { business: business.businessName }),
+      t('staff_salons.unlink_confirm_title'),
+    )
+    if (!confirmed) return
+
+    unlinkBusiness.mutate(business.businessId, {
+      onSuccess: () => {
+        showToast(t('staff_salons.unlink_success', { business: business.businessName }), 'success')
+      },
+      onError: (err) => {
+        const errorCode = isApiError(err) ? err.errorCode : null
+        const mappedKey = errorCode === 'STAFF_LINK_HAS_OUTSTANDING_DEBT'
+          ? 'errors.staff_unlink_has_outstanding_debt'
+          : errorCode && Object.prototype.hasOwnProperty.call(errorCodeToI18nKey, errorCode)
+            ? errorCodeToI18nKey[errorCode as keyof typeof errorCodeToI18nKey]
+            : null
+        const rawMessage = isApiError(err) ? err.message?.trim() : ''
+        const message = mappedKey
+          ? t(mappedKey)
+          : rawMessage || t('errors.staff_unlink_failed')
+        setUnlinkError({ title: t('staff_salons.unlink_error_title'), message })
+      },
+    })
+  }
 
   return (
     <div className="space-y-4">
@@ -227,6 +313,23 @@ export default function StaffMySalons() {
         <h2 className="text-xl font-extrabold text-nexoraText">{t('staff_salons.title')}</h2>
         <p className="mt-1 text-xs leading-relaxed text-nexoraMuted">{t('staff_salons.subtitle')}</p>
       </div>
+
+      {pendingLinkRequests.length > 0 && (
+        <section className="rounded-2xl border border-nexoraBorder bg-nexoraSurface p-4 shadow-sm">
+          <h3 className="mb-3 text-base font-extrabold text-nexoraText">
+            {t('staff_dashboard.qr.link_requests_title')}
+          </h3>
+          <div className="space-y-2">
+            {pendingLinkRequests.map((notification) => (
+              <StaffLinkRequestCard
+                key={notification.id}
+                notification={notification}
+                onResolved={(id) => markNotificationRead.mutate(id)}
+              />
+            ))}
+          </div>
+        </section>
+      )}
 
       {isLoading ? (
         <div className="flex justify-center py-16">
@@ -265,8 +368,36 @@ export default function StaffMySalons() {
                 businessId: business.businessId,
                 nickname,
               })}
+              onUnlink={() => handleUnlink(business)}
+              isUnlinking={unlinkBusiness.isPending}
             />
           ))}
+        </div>
+      )}
+
+      {unlinkError && (
+        <div
+          className="fixed inset-0 z-[99998] flex items-center justify-center bg-slate-900/60 p-4 backdrop-blur-sm"
+          role="alertdialog"
+          aria-modal="true"
+        >
+          <div className="w-full max-w-sm overflow-hidden rounded-2xl border border-slate-100 bg-white p-6 shadow-2xl">
+            <h4 className="mb-2 text-sm font-black uppercase tracking-wide text-slate-900">
+              {unlinkError.title}
+            </h4>
+            <p className="mb-6 text-xs font-semibold leading-relaxed text-slate-600">
+              {unlinkError.message}
+            </p>
+            <div className="flex justify-end">
+              <button
+                type="button"
+                onClick={() => setUnlinkError(null)}
+                className="rounded-xl bg-nexoraBrand px-4.5 py-2.5 text-[10px] font-extrabold uppercase tracking-wider text-white shadow-sm transition-colors hover:bg-nexoraBrand/90"
+              >
+                {t('common.confirm')}
+              </button>
+            </div>
+          </div>
         </div>
       )}
     </div>

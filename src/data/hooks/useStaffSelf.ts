@@ -309,3 +309,16 @@ export function useRejectStaffLinkRequest() {
     },
   })
 }
+
+export function useUnlinkStaffBusiness() {
+  const queryClient = useQueryClient()
+  return useMutation<void, unknown, string>({
+    mutationFn: (businessId) => staffSelfRepository.unlinkBusiness(businessId),
+    onSuccess: () => {
+      // useStaffBusinessTipQrs derives its data from the same staffBusinesses
+      // query (see useStaffBusinessTipQrs above), so invalidating this one key
+      // refreshes both the salon list and the tip QR list.
+      queryClient.invalidateQueries({ queryKey: qk.staffBusinesses() })
+    },
+  })
+}

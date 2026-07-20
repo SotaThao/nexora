@@ -1653,7 +1653,12 @@
     },
     "since": "Vào tiệm {{date}}",
     "invited": "Mời {{date}}",
-    "worked_from": "Làm từ {{date}}"
+    "worked_from": "Làm từ {{date}}",
+    "unlink_button": "Hủy liên kết",
+    "unlink_confirm_title": "Hủy liên kết với salon?",
+    "unlink_confirm_message": "Bạn sắp hủy liên kết với {{business}}. Bạn sẽ mất ngay mã QR nhận tip của salon này. Các khoản tip chưa nhận vẫn sẽ được xử lý theo chính sách chi trả của salon. Bạn có muốn tiếp tục?",
+    "unlink_success": "Bạn đã hủy liên kết với {{business}}.",
+    "unlink_error_title": "Không thể hủy liên kết"
   },
   "staff_payouts": {
     "description": "Theo dõi khoản chi trả tiệm gửi cho bạn, xác nhận đã nhận tiền và xem số dư tip chưa nhận theo từng tiệm.",
@@ -2030,6 +2035,8 @@
     "local_staff_not_found": "Không tìm thấy nhân viên thủ công.",
     "local_staff_not_owned": "Bạn không có quyền quản lý nhân viên thủ công này.",
     "staff_link_has_outstanding_debt": "Không thể xóa thợ còn số dư tip chưa chi trả. Hãy chi trả tip trước.",
+    "staff_unlink_has_outstanding_debt": "Bạn chưa thể hủy liên kết khi salon vẫn còn khoản tip chưa chi trả cho bạn. Hãy liên hệ salon để thanh toán số dư rồi thử lại.",
+    "staff_unlink_failed": "Không thể hủy liên kết. Vui lòng thử lại hoặc liên hệ salon.",
     "staff_payment_method_not_found": "Không tìm thấy phương thức thanh toán.",
     "staff_payment_method_access_denied": "Bạn không có quyền cập nhật phương thức thanh toán này.",
     "common_validation_error": "Dữ liệu nhập vào chưa hợp lệ. Vui lòng kiểm tra lại.",
