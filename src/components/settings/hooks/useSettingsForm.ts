@@ -101,6 +101,7 @@ const DEFAULT_PROFILE = {
   businessEmail: "",
   businessWebsite: "",
   bookingNotificationPhone: "",
+  salesTaxRatePercent: "",
   paymentAccounts: {
     zelle: "",
     bankwire: "",
@@ -316,6 +317,10 @@ export default function useSettingsForm({
           businessPhone: setupData.businessInfo?.phone || "",
           businessWebsite: setupData.businessInfo?.website || "",
           bookingNotificationPhone: setupData.businessInfo?.bookingNotificationPhone || "",
+          salesTaxRatePercent:
+            setupData.businessInfo?.salesTaxRatePercent != null
+              ? String(setupData.businessInfo.salesTaxRatePercent)
+              : "",
           businessEmail:
             setupData.reviewLinks?.feedbackEmail || next.businessEmail || "",
           street: next.street || setupData.businessInfo?.address || "",

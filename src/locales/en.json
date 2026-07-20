@@ -3472,6 +3472,8 @@
           "phone": "Phone",
           "bookingNotificationPhone": "Booking Notification Phone",
           "bookingNotificationPhoneHint": "Dedicated phone number for booking alerts (new, changed, or cancelled), separate from your main business phone.",
+          "salesTaxRatePercent": "Sales Tax Rate (%)",
+          "salesTaxRatePercentHint": "Flat sales tax rate applied to the Services subtotal on POS Checkout. Leave blank to use 0%.",
           "businessLogo": "Business Logo",
           "businessLogoHint": "Shown to customers on tip and booking pages. Click to upload a new image.",
           "uploading": "Uploading...",
@@ -3519,7 +3521,8 @@
             "postalCode": "Please enter a valid ZIP or postal code.",
             "venmo": "Enter a valid Venmo username starting with @.",
             "cashapp": "Enter a valid Cash App cashtag starting with $.",
-            "invalidRange": "Close time must be after open time."
+            "invalidRange": "Close time must be after open time.",
+            "range": "Enter a value between 0 and 100."
           }
         },
         "KybTab": {

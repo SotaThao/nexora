@@ -14,6 +14,7 @@ type BusinessInfoCardProps = {
   businessEmail?: string
   businessWebsite?: string
   bookingNotificationPhone?: string
+  salesTaxRatePercent?: string
   logoUrl?: string | null
   onLogoChange?: (e: ChangeEvent<HTMLInputElement>) => void
   isUploadingLogo?: boolean
@@ -34,6 +35,7 @@ export default function BusinessInfoCard({
   businessEmail,
   businessWebsite,
   bookingNotificationPhone,
+  salesTaxRatePercent,
   logoUrl,
   onLogoChange,
   isUploadingLogo,
@@ -224,6 +226,34 @@ export default function BusinessInfoCard({
             />
             <FieldError id="settings-booking-notification-phone-error" error={businessErrors.bookingNotificationPhone} />
           </div>
+          <div>
+            <label className="flex items-center text-[10px] font-extrabold uppercase text-nexoraMuted gap-1">
+              <span>{t('components.settings.tabs.ProfileTab.salesTaxRatePercent')}</span>
+              <div className="relative group inline-block normal-case font-normal text-nexoraSubtle">
+                <HelpCircle className="w-3.5 h-3.5 hover:text-nexoraBrand cursor-help transition-colors" />
+                <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 hidden group-hover:block w-48 bg-black text-white text-[10px] p-2.5 rounded-lg shadow-xl z-50 text-center leading-normal">
+                  {t('components.settings.tabs.ProfileTab.salesTaxRatePercentHint')}
+                  <div className="absolute top-full left-1/2 -translate-x-1/2 -mt-1.5 border-4 border-transparent border-t-black"></div>
+                </div>
+              </div>
+            </label>
+            <input
+              id="settings-sales-tax-rate-percent"
+              type="number"
+              min={0}
+              max={100}
+              step="0.01"
+              className={inputClass(businessErrors.salesTaxRatePercent)}
+              value={businessForm.salesTaxRatePercent}
+              aria-invalid={Boolean(businessErrors.salesTaxRatePercent)}
+              aria-describedby={businessErrors.salesTaxRatePercent ? 'settings-sales-tax-rate-percent-error' : undefined}
+              onChange={(e) => {
+                setBusinessForm({ ...businessForm, salesTaxRatePercent: e.target.value })
+                clearError(setBusinessErrors, 'salesTaxRatePercent')
+              }}
+            />
+            <FieldError id="settings-sales-tax-rate-percent-error" error={businessErrors.salesTaxRatePercent} />
+          </div>
           <div className="flex gap-2 pt-2 justify-end">
             <button
               type="button"
@@ -272,6 +302,10 @@ export default function BusinessInfoCard({
           <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center py-2 sm:py-1 border-t border-slate-50 gap-1">
             <span className="text-nexoraMuted font-bold">{t('components.settings.tabs.ProfileTab.bookingNotificationPhone')}</span>
             <span className="text-nexoraText font-extrabold">{bookingNotificationPhone || 'N/A'}</span>
+          </div>
+          <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center py-2 sm:py-1 border-t border-slate-50 gap-1">
+            <span className="text-nexoraMuted font-bold">{t('components.settings.tabs.ProfileTab.salesTaxRatePercent')}</span>
+            <span className="text-nexoraText font-extrabold">{salesTaxRatePercent ? `${salesTaxRatePercent}%` : 'N/A'}</span>
           </div>
         </div>
       )}

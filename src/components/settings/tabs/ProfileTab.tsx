@@ -865,6 +865,7 @@ export default function ProfileTab({
             businessEmail={profile.businessEmail}
             businessWebsite={profile.businessWebsite}
             bookingNotificationPhone={profile.bookingNotificationPhone}
+            salesTaxRatePercent={profile.salesTaxRatePercent}
             logoUrl={logoUrl}
             onLogoChange={handleLogoChange}
             isUploadingLogo={isUploadingLogo}

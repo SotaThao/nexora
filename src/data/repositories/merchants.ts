@@ -28,6 +28,7 @@ export function mapBusinessApiDtoToSetup(res: BusinessApiDto): MerchantSetup {
       website: res.website || '',
       logo: res.logoUrl || null,
       bookingNotificationPhone: res.bookingNotificationPhone || '',
+      salesTaxRatePercent: res.salesTaxRatePercent,
       createdAt: res.createdAt ?? null,
       paymentAccounts: {
         venmo: '',
@@ -138,6 +139,7 @@ export function createMerchantsRepository(client: HttpClient = httpClient) {
       feedbackEmail?: string
       website?: string
       bookingNotificationPhone?: string
+      salesTaxRatePercent?: number
     }): Promise<void> {
       await client.put('/api/v1/merchant/business/info', dto)
     },

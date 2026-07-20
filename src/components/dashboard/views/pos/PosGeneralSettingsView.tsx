@@ -35,6 +35,7 @@ export default function PosGeneralSettingsView({ verificationStatus }: { verific
           businessEmail={businessInfoForm.businessInfo.businessEmail}
           businessWebsite={businessInfoForm.businessInfo.businessWebsite}
           bookingNotificationPhone={businessInfoForm.businessInfo.bookingNotificationPhone}
+          salesTaxRatePercent={businessInfoForm.businessInfo.salesTaxRatePercent}
           logoUrl={businessInfoForm.logoUrl}
           onLogoChange={businessInfoForm.handleLogoChange}
           isUploadingLogo={businessInfoForm.isUploadingLogo}

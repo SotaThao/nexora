@@ -3468,6 +3468,8 @@
           "phone": "Số điện thoại",
           "bookingNotificationPhone": "SĐT nhận thông báo đặt lịch",
           "bookingNotificationPhoneHint": "Số điện thoại riêng để nhận thông báo đặt lịch (mới, thay đổi, hoặc hủy), tách biệt với số điện thoại chính của doanh nghiệp.",
+          "salesTaxRatePercent": "Thuế suất bán hàng (%)",
+          "salesTaxRatePercentHint": "Thuế suất bán hàng cố định áp dụng trên tổng tiền dịch vụ ở màn hình Checkout POS. Để trống nếu muốn dùng 0%.",
           "businessLogo": "Logo doanh nghiệp",
           "businessLogoHint": "Hiển thị cho khách hàng trên trang tip và đặt lịch. Nhấn để tải ảnh mới.",
           "uploading": "Đang tải lên...",
@@ -3515,7 +3517,8 @@
             "postalCode": "Vui lòng nhập mã bưu chính hợp lệ.",
             "venmo": "Nhập tên Venmo hợp lệ, bắt đầu bằng @.",
             "cashapp": "Nhập Cashtag hợp lệ, bắt đầu bằng $.",
-            "invalidRange": "Giờ đóng cửa phải sau giờ mở cửa."
+            "invalidRange": "Giờ đóng cửa phải sau giờ mở cửa.",
+            "range": "Nhập giá trị trong khoảng 0 đến 100."
           }
         },
         "KybTab": {

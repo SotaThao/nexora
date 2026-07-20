@@ -33,6 +33,7 @@ export interface BusinessApiDto {
   website?: string
   logoUrl?: string | null
   bookingNotificationPhone?: string
+  salesTaxRatePercent?: number
   googleReviewUrl?: string
   yelpUrl?: string
   facebookUrl?: string

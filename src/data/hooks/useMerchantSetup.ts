@@ -136,7 +136,14 @@ export function useUpdateBusinessInfo() {
   return useMutation<
     void,
     Error,
-    { name: string; phone?: string; feedbackEmail?: string; website?: string; bookingNotificationPhone?: string }
+    {
+      name: string
+      phone?: string
+      feedbackEmail?: string
+      website?: string
+      bookingNotificationPhone?: string
+      salesTaxRatePercent?: number
+    }
   >({
     mutationFn: (dto) => merchantsRepository.updateBusinessInfo(dto),
     onSuccess: () => {

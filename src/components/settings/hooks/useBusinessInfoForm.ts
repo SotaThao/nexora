@@ -32,6 +32,10 @@ const validateBusinessForm = (form: LooseObject): SettingsFormErrors => {
   if (formValue(form.businessWebsite) && !isValidHttpUrl(form.businessWebsite)) {
     errors.businessWebsite = 'url'
   }
+  if (formValue(form.salesTaxRatePercent)) {
+    const rate = Number(form.salesTaxRatePercent)
+    if (Number.isNaN(rate) || rate < 0 || rate > 100) errors.salesTaxRatePercent = 'range'
+  }
   return errors
 }
 
@@ -41,6 +45,7 @@ type BusinessInfo = {
   businessEmail: string
   businessWebsite: string
   bookingNotificationPhone: string
+  salesTaxRatePercent: string
 }
 
 export default function useBusinessInfoForm({
@@ -72,6 +77,10 @@ export default function useBusinessInfoForm({
     businessEmail: setupData?.reviewLinks?.feedbackEmail || '',
     businessWebsite: setupData?.businessInfo?.website || '',
     bookingNotificationPhone: setupData?.businessInfo?.bookingNotificationPhone || '',
+    salesTaxRatePercent:
+      setupData?.businessInfo?.salesTaxRatePercent != null
+        ? String(setupData.businessInfo.salesTaxRatePercent)
+        : '',
   }
 
   const logoUrl: string | null = setupData?.businessInfo?.logo || null
@@ -113,6 +122,7 @@ export default function useBusinessInfoForm({
       businessEmail: formValue(businessForm.businessEmail),
       businessWebsite: formValue(businessForm.businessWebsite),
       bookingNotificationPhone: formValue(businessForm.bookingNotificationPhone),
+      salesTaxRatePercent: formValue(businessForm.salesTaxRatePercent),
     }
     updateBusinessInfoMutation.mutate(
       {
@@ -121,6 +131,7 @@ export default function useBusinessInfoForm({
         feedbackEmail: next.businessEmail || undefined,
         website: next.businessWebsite || undefined,
         bookingNotificationPhone: next.bookingNotificationPhone || undefined,
+        salesTaxRatePercent: next.salesTaxRatePercent ? Number(next.salesTaxRatePercent) : undefined,
       },
       {
         onSuccess: () => {

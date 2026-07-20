@@ -15,6 +15,7 @@ export interface MerchantBusinessInfo {
   website?: string
   logo?: string | null
   bookingNotificationPhone?: string
+  salesTaxRatePercent?: number
   createdAt?: string | null
   [key: string]: unknown
 }
