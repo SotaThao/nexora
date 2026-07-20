@@ -183,6 +183,70 @@ export interface TurnBoardStationApiDto {
   assignedAt?: string | null
 }
 
+// POS Merchant Ops — Checkout (US-14 / US-025)
+export interface ReadyTicketApiDto {
+  id: string
+  ticketNumber: string
+  customerName: string
+  technicianName?: string | null
+  serviceNames: string[]
+  assignedAt?: string | null
+}
+
+export interface TicketServiceLineApiDto {
+  id: string
+  serviceName: string
+  unitPrice: number
+  quantity: number
+  lineTotal: number
+}
+
+export interface TicketDetailApiDto {
+  id: string
+  ticketNumber: string
+  customerName: string
+  customerEmail?: string | null
+  customerPhone?: string | null
+  status: string
+  technicianName?: string | null
+  assignedPosStaffProfileId?: string | null
+  serviceLines: TicketServiceLineApiDto[]
+  servicesSubtotal: number
+  tipAmount: number
+  discountAmount: number
+  salesTaxAmount: number
+  total: number
+  paymentMethodType?: string | null
+  receiptEmail?: string | null
+  receiptPhone?: string | null
+  paidAt?: string | null
+}
+
+export interface CheckoutServiceCatalogItemApiDto {
+  id: string
+  name: string
+  price: number
+}
+
+export type PosCheckoutPaymentMethodType = 'Card' | 'Cash' | 'GiftCard' | 'SplitPay'
+
+export interface ChargeTicketPayload {
+  paymentMethodType: PosCheckoutPaymentMethodType
+  receiptEmail?: string
+  receiptPhone?: string
+}
+
+export interface ChargeTicketResultApiDto {
+  ticketId: string
+  servicesSubtotal: number
+  tipAmount: number
+  discountAmount: number
+  salesTaxAmount: number
+  totalAmount: number
+  status: string
+  paidAt: string
+}
+
 export interface TipsSummaryApiDto {
   totalAmount?: number
   totalCount?: number

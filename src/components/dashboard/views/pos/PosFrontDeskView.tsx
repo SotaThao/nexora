@@ -1,12 +1,9 @@
-// PosFrontDeskView — POS Merchant Ops: Check-in queue / Turn Board / Checkout (US-12/US-13).
+// PosFrontDeskView — POS Merchant Ops: Check-in queue / Turn Board / Checkout (US-12/US-13/US-14).
 // Shared between the Owner dashboard (POS > Front Desk) and the Staff dashboard
 // (My Salons > a business the Staff has the Operations permission for) — same
 // component, no per-shell duplication. `canManageOperations` (from usePosAccess)
 // decides whether the actionable UI renders at all; the caller (Owner vs Staff
 // route wrapper) is responsible for only linking here when access is expected.
-//
-// Checkout tab is a "coming soon" placeholder — its backend (US-14) doesn't
-// exist yet. Check-in queue and Turn Board are both functional.
 import { useState, type FormEvent } from 'react'
 import { Loader2 } from 'lucide-react'
 import { useTranslation } from '../../../../contexts/LanguageContext'
@@ -21,18 +18,14 @@ import {
   useWaitlist,
 } from '../../../../data/hooks/usePosTickets'
 import { useSetStaffBreakStatus, useTurnBoard } from '../../../../data/hooks/usePosTurnBoard'
+import { useMarkTicketReady, useReadyTickets } from '../../../../data/hooks/usePosCheckout'
 import type { TurnBoardStationApiDto } from '../../../../types/repositories'
 import { SkeletonList } from '../../../ui/skeleton'
+import PosCheckoutModal from './modals/PosCheckoutModal'
 
 type FrontDeskTab = 'checkin' | 'turnboard' | 'checkout'
 
 const WAIT_WARNING_MINUTES = 15
-
-function ComingSoonPanel({ title }: { title: string }) {
-  return (
-    <div className="nexora-card p-6 text-center text-xs text-nexoraMuted">{title}</div>
-  )
-}
 
 function getInitials(name: string) {
   return name
@@ -53,10 +46,12 @@ export default function PosFrontDeskView({ businessId }: { businessId: string })
   const { data: access, isLoading: isAccessLoading } = usePosAccess(businessId)
   const { data: waitlist = [], isLoading: isWaitlistLoading } = useWaitlist(businessId)
   const { data: turnBoard = [], isLoading: isTurnBoardLoading } = useTurnBoard(businessId)
+  const { data: readyTickets = [], isLoading: isReadyTicketsLoading } = useReadyTickets(businessId)
   const checkInTicket = useCheckInTicket(businessId)
   const cancelTicket = useCancelTicket(businessId)
   const assignTicket = useAssignTicketToStation(businessId)
   const setStaffBreakStatus = useSetStaffBreakStatus(businessId)
+  const markTicketReady = useMarkTicketReady(businessId)
 
   const [activeTab, setActiveTab] = useState<FrontDeskTab>('checkin')
   const [customerName, setCustomerName] = useState('')
@@ -64,6 +59,7 @@ export default function PosFrontDeskView({ businessId }: { businessId: string })
   const [customerPhone, setCustomerPhone] = useState('')
   const [nameError, setNameError] = useState('')
   const [assignSelection, setAssignSelection] = useState<Record<string, string>>({})
+  const [checkoutTicketId, setCheckoutTicketId] = useState<string | null>(null)
 
   if (isAccessLoading) {
     return (
@@ -147,6 +143,18 @@ export default function PosFrontDeskView({ businessId }: { businessId: string })
     )
   }
 
+  // US-14 — opens Checkout straight from an InService station on the Turn Board:
+  // moves the ticket InService -> Ready first, then opens the modal for it.
+  const handleOpenCheckoutFromStation = (ticketId: string | null | undefined) => {
+    if (!ticketId) return
+    markTicketReady.mutate(ticketId, {
+      onSuccess: () => setCheckoutTicketId(ticketId),
+      onError: (err: unknown) => {
+        showToast(t(getErrorI18nKey(getApiErrorCode(err, 'ERROR'))), 'error')
+      },
+    })
+  }
+
   const tabs: { id: FrontDeskTab; labelKey: string; badge?: number }[] = [
     {
       id: 'checkin',
@@ -154,7 +162,11 @@ export default function PosFrontDeskView({ businessId }: { businessId: string })
       badge: waitlist.length,
     },
     { id: 'turnboard', labelKey: 'components.dashboard.views.pos.PosFrontDeskView.tabs.turnboard' },
-    { id: 'checkout', labelKey: 'components.dashboard.views.pos.PosFrontDeskView.tabs.checkout' },
+    {
+      id: 'checkout',
+      labelKey: 'components.dashboard.views.pos.PosFrontDeskView.tabs.checkout',
+      badge: readyTickets.length,
+    },
   ]
 
   const renderStationCard = (station: TurnBoardStationApiDto) => {
@@ -193,9 +205,9 @@ export default function PosFrontDeskView({ businessId }: { businessId: string })
             ) : null}
             <button
               type="button"
-              disabled
-              title={t('components.dashboard.views.pos.PosFrontDeskView.checkoutComingSoon')}
-              className="h-9 w-full rounded-lg border border-nexoraBorder text-xs font-bold text-nexoraMuted opacity-60"
+              onClick={() => handleOpenCheckoutFromStation(station.currentTicketId)}
+              disabled={markTicketReady.isPending}
+              className="h-9 w-full rounded-lg bg-nexoraBrand text-xs font-bold text-white hover:bg-nexoraBrandDark disabled:opacity-60"
             >
               {t('components.dashboard.views.pos.PosFrontDeskView.checkoutButton')}
             </button>
@@ -438,8 +450,58 @@ export default function PosFrontDeskView({ businessId }: { businessId: string })
         )
       )}
       {activeTab === 'checkout' && (
-        <ComingSoonPanel title={t('components.dashboard.views.pos.PosFrontDeskView.checkoutComingSoon')} />
+        isReadyTicketsLoading ? (
+          <div className="nexora-card p-6">
+            <SkeletonList count={3} lines={1} />
+          </div>
+        ) : readyTickets.length === 0 ? (
+          <div className="nexora-card p-6 text-center text-xs text-nexoraMuted">
+            {t('components.dashboard.views.pos.PosFrontDeskView.readyTicketsEmpty')}
+          </div>
+        ) : (
+          <div className="nexora-card overflow-x-auto p-4">
+            <table className="w-full text-left text-xs">
+              <thead>
+                <tr className="text-[10px] font-black uppercase tracking-wide text-nexoraMuted">
+                  <th className="pb-2 pr-3">{t('components.dashboard.views.pos.PosFrontDeskView.readyTicketColumnTicket')}</th>
+                  <th className="pb-2 pr-3">{t('components.dashboard.views.pos.PosFrontDeskView.readyTicketColumnGuest')}</th>
+                  <th className="pb-2 pr-3">{t('components.dashboard.views.pos.PosFrontDeskView.readyTicketColumnTechnician')}</th>
+                  <th className="pb-2 pr-3">{t('components.dashboard.views.pos.PosFrontDeskView.readyTicketColumnServices')}</th>
+                  <th className="pb-2 text-right">{t('components.dashboard.views.pos.PosFrontDeskView.readyTicketColumnAction')}</th>
+                </tr>
+              </thead>
+              <tbody>
+                {readyTickets.map((ticket) => (
+                  <tr key={ticket.id} className="border-t border-nexoraBorder">
+                    <td className="py-2 pr-3 font-mono font-bold text-nexoraMuted">#{ticket.ticketNumber}</td>
+                    <td className="py-2 pr-3 font-bold text-nexoraText">{ticket.customerName}</td>
+                    <td className="py-2 pr-3 text-nexoraMuted">{ticket.technicianName ?? '—'}</td>
+                    <td className="py-2 pr-3 text-nexoraMuted">
+                      {ticket.serviceNames.length > 0 ? ticket.serviceNames.join(', ') : '—'}
+                    </td>
+                    <td className="py-2 text-right">
+                      <button
+                        type="button"
+                        onClick={() => setCheckoutTicketId(ticket.id)}
+                        className="rounded-lg bg-nexoraBrand px-3 py-1.5 text-[10px] font-bold text-white hover:bg-nexoraBrandDark"
+                      >
+                        {t('components.dashboard.views.pos.PosFrontDeskView.openCheckoutButton')}
+                      </button>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )
       )}
+
+      <PosCheckoutModal
+        open={checkoutTicketId !== null}
+        businessId={businessId}
+        ticketId={checkoutTicketId}
+        onClose={() => setCheckoutTicketId(null)}
+      />
     </div>
   )
 }

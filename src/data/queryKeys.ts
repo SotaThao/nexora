@@ -96,6 +96,12 @@ export const qk = {
   merchantPosWaitlist: (businessId?: string) => ['merchantSettings', 'posWaitlist', businessId ?? ''],
   // POS Merchant Ops — Turn Board Assign & Break (US-13)
   merchantPosTurnBoard: (businessId?: string) => ['merchantSettings', 'posTurnBoard', businessId ?? ''],
+  // POS Merchant Ops — Checkout (US-14 / US-025)
+  merchantPosReadyTickets: (businessId?: string) => ['merchantSettings', 'posReadyTickets', businessId ?? ''],
+  merchantPosTicketDetail: (businessId?: string, ticketId?: string) =>
+    ['merchantSettings', 'posTicketDetail', businessId ?? '', ticketId ?? ''],
+  merchantPosCheckoutServiceCatalog: (businessId?: string) =>
+    ['merchantSettings', 'posCheckoutServiceCatalog', businessId ?? ''],
 
   // Merchant Touchpoints
   merchantTouchpoints: ()      => ['merchantTouchpoints'],
