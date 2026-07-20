@@ -8,6 +8,7 @@ import useAuth from '../../../auth/useAuth'
 import { dashboardPathForSession } from '../utils/sessionRouting'
 import { getInitialHomePageLanguage } from '../homepageLogic.js'
 import { homepageTranslations, type HomePageLang } from '../i18n/homepageTranslations'
+import HeaderEcosystem from '../../dashboard/layout/HeaderEcosystem'
 
 export default function HomePageHeaderSection() {
   const navigate = useNavigate()
@@ -111,6 +112,8 @@ export default function HomePageHeaderSection() {
                 </div>
               </div>
             </div>
+
+            <HeaderEcosystem plain />
 
             {hasMobileMenu && isAuthenticated ? (
               <div className="homepage-header-session" id="header-user-badge">
