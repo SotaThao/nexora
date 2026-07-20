@@ -193,18 +193,70 @@ export function getDashboardMenuLocalizedLabel(
   t: (key: string) => string,
   fallback: string,
 ): string {
-  const labels: Record<string, string> = {
-    overview: t('dashboard.menu.dashboard'),
-    staff: t('dashboard.menu.staff'),
-    reviews: t('dashboard.menu.reviews'),
-    reports: t('dashboard.menu.transactions'),
-    [DASHBOARD_MENU.BookingHub]: t('dashboard.menu.booking_hub'),
-    [DASHBOARD_MENU.Touchpoints]: t('dashboard.menu.touchpoints'),
-    devices: t('dashboard.menu.qr_nfc'),
-    analytics: t('dashboard.menu.analytics'),
-    support: t('dashboard.menu.support'),
+  const labelKey = DASHBOARD_MENU_LABEL_KEYS[id]
+  if (labelKey) return t(labelKey)
+  if (id === 'devices') return t('dashboard.menu.qr_nfc')
+  return fallback
+}
+
+/** i18n keys for dashboard sidebar / mobile header titles. */
+export const DASHBOARD_MENU_LABEL_KEYS: Record<string, string> = {
+  [DASHBOARD_MENU_ID.overview]: 'dashboard.menu.dashboard',
+  [DASHBOARD_MENU_ID.staff]: 'dashboard.menu.staff',
+  [DASHBOARD_MENU_ID.tips]: 'dashboard.menu.tips',
+  [DASHBOARD_MENU_ID.reviews]: 'dashboard.menu.reviews',
+  [DASHBOARD_MENU_ID.reports]: 'dashboard.menu.transactions',
+  [DASHBOARD_MENU_ID.bookingHub]: 'dashboard.menu.booking_hub',
+  [DASHBOARD_MENU_ID.productManagement]: 'dashboard.menu.product_management',
+  [DASHBOARD_MENU_ID.touchpoints]: 'dashboard.menu.touchpoints',
+  [DASHBOARD_MENU_ID.analytics]: 'dashboard.menu.analytics',
+  [DASHBOARD_MENU_ID.settings]: 'dashboard.menu.settings',
+  [DASHBOARD_MENU_ID.support]: 'dashboard.menu.support',
+}
+
+export const DASHBOARD_SETTINGS_TAB = {
+  profile: 'profile',
+  kyb: 'kyb',
+  affiliate: 'affiliate',
+} as const
+
+export function buildDashboardSettingsPath(tab: string): string {
+  if (tab === DASHBOARD_SETTINGS_TAB.kyb) {
+    return `${DASHBOARD_ROOT_PATH}/settings/${DASHBOARD_SETTINGS_TAB.kyb}`
   }
-  return labels[id] || fallback
+  if (tab === DASHBOARD_SETTINGS_TAB.affiliate) {
+    return `${DASHBOARD_ROOT_PATH}/settings/${DASHBOARD_SETTINGS_TAB.affiliate}`
+  }
+  return `${DASHBOARD_ROOT_PATH}/settings/${DASHBOARD_SETTINGS_TAB.profile}`
+}
+
+export function normalizeDashboardSettingsTab(tab: string): string {
+  if (tab === DASHBOARD_SETTINGS_TAB.kyb || tab === DASHBOARD_SETTINGS_TAB.affiliate) {
+    return tab
+  }
+  return DASHBOARD_SETTINGS_TAB.profile
+}
+
+export const DASHBOARD_REVIEW_FILTER_ALL = 'all'
+
+export const DASHBOARD_STAFF_SIDEBAR_MENU_IDS = [
+  DASHBOARD_MENU_ID.overview,
+  DASHBOARD_MENU_ID.support,
+] as const
+
+export function resolveDashboardMobileMenuTitle(
+  activeMenu: string,
+  tabParam: string | null,
+  t: (key: string) => string,
+  fallbackLabel = '',
+): string {
+  const paymentsPayoutsItem = getActivePaymentsPayoutsSubmenuItem(activeMenu, tabParam)
+  if (paymentsPayoutsItem) return t(paymentsPayoutsItem.labelKey)
+
+  const labelKey = DASHBOARD_MENU_LABEL_KEYS[activeMenu]
+  if (labelKey) return t(labelKey)
+
+  return fallbackLabel
 }
 
 export const MERCHANT_SIDEBAR_MENU_ITEMS = MENU_ITEMS.filter(
@@ -278,6 +330,17 @@ export function isPaymentsPayoutsRouteActive(
   if (activeMenu !== DASHBOARD_MENU_ID.tips && activeMenu !== DASHBOARD_MENU_ID.reports) return false
   return PAYMENTS_PAYOUTS_SUBMENU.some((item) =>
     isPaymentsPayoutsSubActive(activeMenu, tabParam, item),
+  )
+}
+
+export function getActivePaymentsPayoutsSubmenuItem(
+  activeMenu: string,
+  tabParam: string | null,
+) {
+  return (
+    PAYMENTS_PAYOUTS_SUBMENU.find((item) =>
+      isPaymentsPayoutsSubActive(activeMenu, tabParam, item),
+    ) ?? null
   )
 }
 
