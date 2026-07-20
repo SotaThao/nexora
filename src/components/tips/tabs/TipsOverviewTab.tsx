@@ -13,12 +13,6 @@ export default function TipsOverviewTab({
   directTips,
   cardTips,
   cryptoTips,
-  chartRange,
-  handleChartRangeChange,
-  chartStartDate,
-  chartEndDate,
-  setChartStartDate,
-  setChartEndDate,
   svgMetrics,
   yTicks,
   chartBars,
@@ -27,8 +21,9 @@ export default function TipsOverviewTab({
   setHoverIndex,
   activePoint,
   donutSegments,
+  donutTotal,
 }) {
-  const { t, currentLanguage } = useTranslation();
+  const { t } = useTranslation();
   const hasCrypto = cryptoTips > 0;
   const overviewCards = [
     {
@@ -108,70 +103,9 @@ export default function TipsOverviewTab({
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-5">
         {/* Week Summary Chart */}
         <div className="card-elevated lg:col-span-3">
-          <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between mb-6">
-            <h4 className="text-sm font-black text-inkBlue dark:text-white uppercase tracking-wider">
-              {chartRange === '7 Days'
-                ? (t('dashboard.tips.charts.weekly_title'))
-                : (t('components.tips.tabs.TipsOverviewTab.tipsOverTimeTrend'))}
-            </h4>
-            <div className="flex flex-wrap items-center gap-1.5 justify-end">
-              {['7 Days', '30 Days', '90 Days', '180 Days', '365 Days', 'Custom'].map((item) => {
-                const rangeLabel = (itm) => ({
-                  '7 Days': t('dashboard.chart.7_days'),
-                  '30 Days': t('dashboard.chart.30_days'),
-                  '90 Days': t('dashboard.chart.90_days'),
-                  '180 Days': t('dashboard.chart.180_days'),
-                  '365 Days': t('dashboard.chart.365_days')
-                }[itm] || itm);
-                return (
-                  <button
-                    key={item}
-                    type="button"
-                    onClick={() => handleChartRangeChange(item)}
-                    className={`min-h-8 rounded-lg px-3 text-[11px] font-bold transition cursor-pointer ${
-                      chartRange === item
-                        ? 'bg-nexoraBrand text-white shadow-sm'
-                        : 'bg-nexoraSurfaceMuted dark:bg-luxuryCoal text-mutedGrey dark:text-slate-400 hover:text-inkBlue dark:hover:text-white hover:bg-slate-200'
-                    }`}
-                  >
-                    {item === 'Custom'
-                      ? (t('components.tips.tabs.TipsOverviewTab.custom'))
-                      : rangeLabel(item)}
-                  </button>
-                );
-              })}
-            </div>
-          </div>
-
-          {/* Custom Date Range Picker */}
-          {chartRange === 'Custom' && (
-            <div className="flex flex-wrap items-center justify-end gap-3 mb-6 border-t border-dashed border-nexoraRule dark:border-slate-800 pt-3">
-              <div className="flex items-center gap-1.5">
-                <label className="text-[10px] font-bold uppercase text-mutedGrey dark:text-slate-400 tracking-wider">
-                  {t('components.tips.tabs.TipsOverviewTab.from')}
-                </label>
-                <input
-                  type="date"
-                  value={chartStartDate}
-                  onChange={(e) => setChartStartDate(e.target.value)}
-                  max={chartEndDate}
-                  className="h-8 rounded border border-nexoraBorder dark:border-slate-700 px-2.5 text-xs font-semibold outline-none focus:border-nexoraBrand text-inkBlue dark:text-white bg-white dark:bg-luxuryBlack cursor-pointer"
-                />
-              </div>
-              <div className="flex items-center gap-1.5">
-                <label className="text-[10px] font-bold uppercase text-mutedGrey dark:text-slate-400 tracking-wider">
-                  {t('components.tips.tabs.TipsOverviewTab.to')}
-                </label>
-                <input
-                  type="date"
-                  value={chartEndDate}
-                  onChange={(e) => setChartEndDate(e.target.value)}
-                  min={chartStartDate}
-                  className="h-8 rounded border border-nexoraBorder dark:border-slate-700 px-2.5 text-xs font-semibold outline-none focus:border-nexoraBrand text-inkBlue dark:text-white bg-white dark:bg-luxuryBlack cursor-pointer"
-                />
-              </div>
-            </div>
-          )}
+          <h4 className="mb-6 text-sm font-black uppercase tracking-wider text-inkBlue dark:text-white">
+            {t('dashboard.tips.charts.weekly_title')}
+          </h4>
 
           <TipsTrendChart
             svgMetrics={svgMetrics}
@@ -221,7 +155,7 @@ export default function TipsOverviewTab({
                 <span className="text-xs font-bold text-mutedGrey dark:text-slate-400 uppercase tracking-widest">
                   {t('dashboard.tips.kpi.total_tips_circle')}
                 </span>
-                <span className="text-lg font-black text-inkBlue dark:text-white mt-0.5">{formatUSD(totalVolume)}</span>
+                <span className="text-lg font-black text-inkBlue dark:text-white mt-0.5">{formatUSD(donutTotal)}</span>
               </div>
             </div>
           </div>

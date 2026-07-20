@@ -205,8 +205,21 @@ export interface DashboardAnalyticsDirectPayoutApiDto {
   totalCount?: number
 }
 
+export interface DashboardAnalyticsTipRevenueBreakdownApiDto {
+  amount?: number
+  count?: number
+}
+
+export interface DashboardAnalyticsTipRevenueApiDto {
+  totalRevenue?: number
+  directTips?: DashboardAnalyticsTipRevenueBreakdownApiDto
+  cardTips?: DashboardAnalyticsTipRevenueBreakdownApiDto
+  cryptoTips?: DashboardAnalyticsTipRevenueBreakdownApiDto
+}
+
 export interface DashboardAnalyticsApiDto {
   overview?: DashboardAnalyticsOverviewApiDto
+  tipRevenue?: DashboardAnalyticsTipRevenueApiDto
   leaderboard?: DashboardAnalyticsLeaderboardItemApiDto[]
   touchPoints?: DashboardAnalyticsTouchPointApiDto[]
   tipsMethods?: DashboardAnalyticsTipsMethodApiDto[]
@@ -261,8 +274,21 @@ export interface MerchantDashboardAnalyticsDirectPayout {
   totalCount: number
 }
 
+export interface MerchantDashboardAnalyticsTipRevenueBreakdown {
+  amount: number
+  count: number
+}
+
+export interface MerchantDashboardAnalyticsTipRevenue {
+  totalRevenue: number
+  directTips: MerchantDashboardAnalyticsTipRevenueBreakdown
+  cardTips: MerchantDashboardAnalyticsTipRevenueBreakdown
+  cryptoTips: MerchantDashboardAnalyticsTipRevenueBreakdown
+}
+
 export interface MerchantDashboardAnalytics {
   overview: MerchantDashboardAnalyticsOverview
+  tipRevenue: MerchantDashboardAnalyticsTipRevenue
   leaderboard: MerchantDashboardAnalyticsLeaderboardItem[]
   touchPoints: MerchantDashboardAnalyticsTouchPoint[]
   tipsMethods: MerchantDashboardAnalyticsTipsMethod[]

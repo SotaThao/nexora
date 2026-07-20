@@ -39,6 +39,17 @@ export function normalizePaymentStats(raw: Record<string, unknown> | null | unde
   const methodsRawValue = source.byPaymentMethod ?? source.ByPaymentMethod
   const methodsRaw = (Array.isArray(methodsRawValue) ? methodsRawValue : []) as Record<string, unknown>[]
 
+  const paymentPending = normalizeStatusBucket(
+    readField<Record<string, unknown>>(source, 'paymentPending', 'PaymentPending')
+      ?? byStatusRaw.confirmed
+      ?? byStatusRaw.Confirmed,
+  )
+  const paymentCompleted = normalizeStatusBucket(
+    readField<Record<string, unknown>>(source, 'paymentCompleted', 'PaymentCompleted')
+      ?? byStatusRaw.completed
+      ?? byStatusRaw.Completed,
+  )
+
   return {
     totalCount: Number(readField<number>(source, 'totalCount', 'TotalCount') ?? 0),
     totalAmount: Number(readField<number>(source, 'totalAmount', 'TotalAmount') ?? 0),
@@ -50,6 +61,8 @@ export function normalizePaymentStats(raw: Record<string, unknown> | null | unde
       confirmed: normalizeStatusBucket(byStatusRaw.confirmed ?? byStatusRaw.Confirmed),
       completed: normalizeStatusBucket(byStatusRaw.completed ?? byStatusRaw.Completed),
     },
+    paymentPending,
+    paymentCompleted,
     byPaymentMethod: methodsRaw
       .map((item) => normalizePaymentMethodStat(item))
       .filter((item): item is MerchantPaymentMethodStat => Boolean(item)),

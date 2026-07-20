@@ -280,7 +280,6 @@ export function TipsRoute() {
       transactions={ctx.transactions}
       staff={ctx.staff}
       metrics={ctx.metrics}
-      tipsChartData={ctx.tipsChartData}
       activeTab={tab}
       processingFee={ctx.processingFee}
       setProcessingFee={ctx.setProcessingFee}
