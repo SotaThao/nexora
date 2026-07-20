@@ -183,7 +183,7 @@ export default function SettingsViewDesktop({
     if (!SETTINGS_SHOW_NOTIFICATION_TAB && tab === SettingsDesktopTab.Notification) {
       setTab(SettingsDesktopTab.Account)
     }
-  }, [tab])
+  }, [SETTINGS_SHOW_NOTIFICATION_TAB, tab, setTab])
 
   const isKybVerified = ['kyb_approved', 'verified_pro', 'verified_lite'].includes(form.effectiveVerificationStatus)
   const kybStatusLabel = isKybVerified

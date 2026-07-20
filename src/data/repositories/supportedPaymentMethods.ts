@@ -28,10 +28,12 @@ function normalizeSupportedPaymentMethod(
   const raw = dto as Record<string, unknown>
   const type = String(readField<string>(raw, 'type', 'Type') ?? '').trim()
   if (!type) return null
+  const sortOrderRaw = readField<number>(raw, 'sortOrder', 'SortOrder')
+  const sortOrder = Number(sortOrderRaw)
   return {
     type,
     uiKey: payoutTypeToUiKey(type),
-    sortOrder: Number(readField<number>(raw, 'sortOrder', 'SortOrder') ?? 0),
+    sortOrder: Number.isFinite(sortOrder) ? sortOrder : 0,
   }
 }
 
