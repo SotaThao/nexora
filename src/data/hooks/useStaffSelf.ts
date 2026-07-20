@@ -60,7 +60,7 @@ export function useSetStaffBusinessNickname() {
   return useMutation<StaffNicknameUpdateResult, Error, SetStaffBusinessNicknameVars>({
     mutationFn: ({ businessId, nickname }) =>
       staffSelfRepository.setMyNickname(businessId, nickname),
-    onSuccess: async (result, { businessId }) => {
+    onSuccess: (result, { businessId }) => {
       queryClient.setQueryData<StaffBusinessLink[]>(
         qk.staffBusinesses(),
         (current) => current?.map((business) =>
@@ -69,11 +69,11 @@ export function useSetStaffBusinessNickname() {
             : business,
         ),
       )
-      await queryClient.invalidateQueries({ queryKey: qk.staffBusinesses() })
+      void queryClient.invalidateQueries({ queryKey: qk.staffBusinesses() })
     },
-    onError: async (error) => {
+    onError: (error) => {
       if (isApiError(error) && (error.status === 403 || error.status === 404)) {
-        await queryClient.invalidateQueries({ queryKey: qk.staffBusinesses() })
+        void queryClient.invalidateQueries({ queryKey: qk.staffBusinesses() })
       }
     },
   })

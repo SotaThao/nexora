@@ -220,7 +220,7 @@ export function useSetMerchantStaffNickname() {
   return useMutation<StaffNicknameUpdateResult, Error, SetMerchantStaffNicknameVars>({
     mutationFn: ({ staffLinkId, nickname }) =>
       merchantStaffRepository.setNickname(staffLinkId, nickname),
-    onSuccess: async (result, { staffLinkId, staffCode }) => {
+    onSuccess: (result, { staffLinkId, staffCode }) => {
       queryClient.setQueriesData<StaffListPage>(
         { queryKey: qk.merchantStaff() },
         (current) => {
@@ -252,15 +252,13 @@ export function useSetMerchantStaffNickname() {
           : current,
       )
 
-      await Promise.all([
-        queryClient.invalidateQueries({ queryKey: qk.merchantStaff() }),
-        queryClient.invalidateQueries({ queryKey: qk.merchantStaffByCode(staffCode) }),
-        queryClient.invalidateQueries({ queryKey: qk.dashboardStaff() }),
-      ])
+      void queryClient.invalidateQueries({ queryKey: qk.merchantStaff() })
+      void queryClient.invalidateQueries({ queryKey: qk.merchantStaffByCode(staffCode) })
+      void queryClient.invalidateQueries({ queryKey: qk.dashboardStaff() })
     },
-    onError: async (error) => {
+    onError: (error) => {
       if (isApiError(error) && (error.status === 403 || error.status === 404)) {
-        await queryClient.invalidateQueries({ queryKey: qk.merchantStaff() })
+        void queryClient.invalidateQueries({ queryKey: qk.merchantStaff() })
       }
     },
   })
