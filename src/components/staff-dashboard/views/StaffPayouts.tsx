@@ -23,6 +23,7 @@ import PayoutCard from '../../tips/payouts/PayoutCard'
 import PayoutStatusBadge from '../../tips/payouts/PayoutStatusBadge'
 import PayoutToolbarSelect from '../../tips/payouts/PayoutToolbarSelect'
 import Pagination from '../../ui/Pagination'
+import Tooltip from '../../ui/Tooltip'
 import { formatPayoutPeriodRange, getPayoutStatusDescI18nKey, getPayoutTypeI18nKeys } from '../../../utils/payoutDisplay'
 
 const STATUS_FILTER_OPTIONS = [
@@ -256,7 +257,15 @@ function StaffPayoutDetailModal({
             </div>
 
             <dl className="grid grid-cols-[120px_1fr] gap-x-4 gap-y-2.5 text-sm">
-              <dt className="font-semibold text-nexoraMuted">{t(STAFF_PAYOUT_COL_KEYS.code)}</dt>
+              <dt className="inline-flex items-center gap-1 font-semibold text-nexoraMuted">
+                {t(STAFF_PAYOUT_COL_KEYS.code)}
+                <Tooltip
+                  content={t('staff_payouts.col_code_tooltip')}
+                  ariaLabel={t('staff_payouts.col_code_tooltip')}
+                  align="start"
+                  placement="bottom"
+                />
+              </dt>
               <dd className="font-mono text-xs font-bold text-nexoraBrand">{payout.payoutCode}</dd>
               <dt className="font-semibold text-nexoraMuted">{t(STAFF_PAYOUT_COL_KEYS.date)}</dt>
               <dd className="font-semibold text-nexoraText">{formatTransactionDateTime(payout.createdAt, currentLanguage)}</dd>
