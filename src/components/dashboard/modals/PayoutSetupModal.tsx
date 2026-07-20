@@ -4,6 +4,7 @@ import { useTranslation, renderLabel } from '../../../contexts/LanguageContext'
 import ImageFileInput from '../../ui/ImageFileInput'
 import BankWireAccountForm from '../../payout/BankWireAccountForm'
 import PayoutAccountIdentifierInput from '../../payout/PayoutAccountIdentifierInput'
+import PayoutAccountNameField from '../../payout/PayoutAccountNameField'
 import { formatPayoutPhoneDisplay } from '../../payout/payoutPhone'
 import CameraCapture from '../../ui/CameraCapture'
 import { readImageFileAsDataUrl } from '../../../utils/imageFile'
@@ -19,6 +20,8 @@ interface PayoutSetupModalProps {
   staffName?: string
   initialValue?: string
   initialQrCode?: string
+  /** Persisted account-holder name; takes precedence over the staffName fallback. */
+  initialAccountName?: string
   onClose: () => void
   onSubmit: (value: string, qrCode: string, accountName: string, qrFile?: File | null) => void
   readOnly?: boolean
@@ -31,6 +34,7 @@ function PayoutSetupModal({
   staffName,
   initialValue,
   initialQrCode,
+  initialAccountName,
   onClose,
   onSubmit,
   readOnly = false,
@@ -40,7 +44,7 @@ function PayoutSetupModal({
   const [value, setValue] = useState(initialValue || '')
   const [qrCode, setQrCode] = useState(initialQrCode || '')
   const [qrFile, setQrFile] = useState(null)
-  const [accountName, setAccountName] = useState(staffName || '')
+  const [accountName, setAccountName] = useState(initialAccountName || staffName || '')
   const [isCapturing, setIsCapturing] = useState(false)
   const [isCameraOpen, setIsCameraOpen] = useState(false)
   const [error, setError] = useState('')
@@ -50,11 +54,11 @@ function PayoutSetupModal({
     setValue(initialValue || '')
     setQrCode(initialQrCode || '')
     setQrFile(null)
-    setAccountName(staffName || '')
+    setAccountName(initialAccountName || staffName || '')
     setError('')
     setUploadError('')
     setIsCameraOpen(false)
-  }, [open, walletKey, initialValue, initialQrCode, staffName])
+  }, [open, walletKey, initialValue, initialQrCode, initialAccountName, staffName])
 
   useEffect(() => {
     return () => {
@@ -257,6 +261,13 @@ function PayoutSetupModal({
             />
             {error && <p className="mt-1 text-[10px] font-bold text-rose-500">{error}</p>}
           </div>
+
+          <PayoutAccountNameField
+            walletKey={walletKey}
+            value={accountName}
+            onChange={setAccountName}
+            disabled={readOnly}
+          />
 
           <div>
             <label className="block text-[10px] font-extrabold uppercase text-slate-500 tracking-wider mb-2">

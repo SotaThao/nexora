@@ -11,7 +11,6 @@ import {
   TrendingUp,
   UserPlus,
   QrCode,
-  BarChart3,
   CreditCard,
 } from 'lucide-react'
 import { useNavigate } from 'react-router-dom'
@@ -23,8 +22,10 @@ import SetupGuideBanner from './SetupGuideBanner'
 import PayoutSetupWarningBanner from './PayoutSetupWarningBanner'
 import ActiveBannersCarousel from './ActiveBannersCarousel'
 import DirectPaymentQrPreviewModal from '../../settings/DirectPaymentQrPreviewModal'
+import ReferralQrModal from '../modals/ReferralQrModal'
 import { useProfileSettings } from '../../../data/hooks/useProfileSettings'
 import { useMerchantPaymentQr } from '../../../data/hooks/useMerchantPayments'
+import { useDashboardAnalytics } from '../../../data/hooks/useDashboard'
 import { buildPublicQrImageUrl } from '../../../data/repositories/publicQr'
 import { QR_IMAGE_SIZES } from '../../../utils/qrUtils'
 import { resolveDirectPaymentPageUrl, resolveMerchantBusinessIdFromProfile } from '../../../utils/merchantBusinessId'
@@ -57,15 +58,15 @@ function clampPct(n) {
 const QUICK_ACTION_ACCENTS = {
   staff: 'border-[#DDD8FF] bg-[#F4F2FF]',
   qr: 'border-emerald-200 bg-emerald-50',
-  reports: 'border-orange-200 bg-orange-50',
   reviews: 'border-rose-200 bg-rose-50',
+  referral: 'border-orange-200 bg-orange-50',
 }
 
 const QUICK_ACTION_ICON_COLORS = {
   staff: 'text-nexoraBrandDark',
   qr: 'text-nexoraSuccess',
-  reports: 'text-orange-500',
   reviews: 'text-rose-500',
+  referral: 'text-orange-500',
 }
 
 /* ─── KPI Card (top row style: icon+label left, arrow top-right, value, trend badge) ── */
@@ -222,6 +223,7 @@ function Overview({
   const { t } = useTranslation()
   const navigate = useNavigate()
   const [isPaymentQrPreviewOpen, setIsPaymentQrPreviewOpen] = useState(false)
+  const [isReferralQrOpen, setIsReferralQrOpen] = useState(false)
   const { data: userProfile } = useProfileSettings()
   const { data: paymentQr } = useMerchantPaymentQr()
 
@@ -264,13 +266,20 @@ function Overview({
     [paymentPageUrl],
   )
 
+  const yearRange = useMemo(() => {
+    const y = new Date().getFullYear()
+    return { dateFrom: `${y}-01-01`, dateTo: `${y}-12-31` }
+  }, [])
+
+  const { data: analytics } = useDashboardAnalytics()
+  const { data: yearAnalytics } = useDashboardAnalytics(yearRange)
+
   // ── Derived metrics from overview API (month & year) ────────────────────
-  const FEE_RATE = 0.03
   const monthTips = metricsMonth?.totalTips ?? 0
   const monthTxCount = metricsMonth?.totalTransactions ?? 0
   const yearTips = metricsYear?.totalTips ?? 0
-  const moneySavedMonth = monthTips * FEE_RATE
-  const moneySavedYear = yearTips * FEE_RATE
+  const moneySavedMonth = analytics?.overview.feeSaved ?? 0
+  const moneySavedYear = yearAnalytics?.overview.feeSaved ?? 0
 
   const pendingConfirmCount = useMemo(
     () => (transactions || []).filter(isAwaitingShopConfirmation).length,
@@ -322,9 +331,7 @@ function Overview({
           <span className="text-[10px] font-semibold uppercase tracking-wide text-nexoraSubtle">
             {k('money_saved_title')}
           </span>
-          <span className="shrink-0 whitespace-nowrap rounded-full bg-[#EEE9FF] px-1.5 py-1 text-center text-[9px] font-semibold leading-none text-nexoraBrandDark">
-            {k('fee_estimate_badge')}
-          </span>
+         
           </div>
           <div className="grid grid-cols-[minmax(0,1fr)_154px] items-end gap-3">
             <div className="min-w-0">
@@ -335,20 +342,13 @@ function Overview({
                 {k('money_saved_subtitle')}
               </p>
             </div>
-            <div className="grid grid-cols-2 gap-2">
+            <div className="flex justify-end">
               <button
                 type="button"
                 onClick={() => navigate('/dashboard/tips?tab=savings')}
-                className="inline-flex h-7 w-full items-center justify-center rounded-full bg-nexoraBrand px-3 text-[10px] font-semibold text-white transition active:scale-95"
+                className="inline-flex h-7 min-w-[72px] items-center justify-center rounded-full bg-nexoraBrand px-4 text-[10px] font-semibold text-white transition active:scale-95"
               >
                 {k('view_btn')}
-              </button>
-              <button
-                type="button"
-                onClick={() => navigate('/dashboard/tips?tab=savings')}
-                className="inline-flex h-7 w-full items-center justify-center rounded-full border border-[#EEE9FF] bg-white px-3 text-[10px] font-semibold text-nexoraBrandDark shadow-[0_2px_8px_rgba(15,23,42,0.04)] transition active:scale-95"
-              >
-                {k('export_btn')}
               </button>
             </div>
           </div>
@@ -436,10 +436,10 @@ function Overview({
             onClick={() => navigate('/dashboard/tips?tab=payouts')}
           />
           <QuickAction
-            icon={<BarChart3 className={`h-4 w-4 ${QUICK_ACTION_ICON_COLORS.reports}`} />}
-            label={k('quick_reports')}
-            accent={QUICK_ACTION_ACCENTS.reports}
-            onClick={() => onNavigateMenu?.('reports')}
+            icon={<QrCode className={`h-4 w-4 ${QUICK_ACTION_ICON_COLORS.referral}`} />}
+            label={k('quick_referral_qr')}
+            accent={QUICK_ACTION_ACCENTS.referral}
+            onClick={() => setIsReferralQrOpen(true)}
           />
           <QuickAction
             icon={<Star className={`h-4 w-4 ${QUICK_ACTION_ICON_COLORS.reviews}`} />}
@@ -607,6 +607,7 @@ function Overview({
       hideUrlCode
       scanCaption={t('components.settings.SettingsTipQrPanel.scanCaption')}
     />
+    <ReferralQrModal open={isReferralQrOpen} onClose={() => setIsReferralQrOpen(false)} />
     </>
   )
 }

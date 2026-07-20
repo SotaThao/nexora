@@ -89,6 +89,7 @@ export interface PublicDirectPaymentMethod {
   type: string
   uiKey?: string
   accountInfo: string
+  accountName?: string | null
   imageUrl?: string | null
 }
 
@@ -290,7 +291,11 @@ export interface NotificationRecord {
   time: string
   staffId?: string
   linkTab?: string
+  /** Sub-tab within the 'reports' linkTab: 'tips' | 'direct_payments'. */
+  reportsTab?: string
   paymentId?: string
+  /** Tip transaction id (referenceId) to auto-open in the Tips list modal. */
+  transactionId?: string
   [key: string]: unknown
 }
 
@@ -378,6 +383,19 @@ export interface StaffDashboardSummary {
   pendingTips: TipCountAmount
   averageRating: number
   totalReviews: number
+}
+
+export interface StaffStatisticsCategory {
+  category: string
+  amount: number
+  percentageOfTotal: number
+}
+
+export interface StaffDashboardStatistics {
+  availableBalance: number
+  pending: number
+  lifetimeEarnings: number
+  categories: StaffStatisticsCategory[]
 }
 
 export interface StaffReviewDistribution {
@@ -623,6 +641,10 @@ export interface EcosystemItem {
   name: string
   url: string
   logoUrl?: string | null
+  /** Whether this entry should show in the ecosystem dropdown list. */
+  isEcosystem?: boolean
+  /** API hint for "coming soon" display (UI may still derive from url/name). */
+  isComingSoon?: boolean
 }
 
 export interface EcosystemSignInResult {
@@ -662,6 +684,10 @@ export interface HomePageBannerSlide {
 export interface PayoutRecord {
   id: string
   payoutCode: string
+  /** Present on staff payout lists — identifies the business that issued the payout. */
+  businessId?: string
+  businessName?: string
+  businessLogoUrl?: string | null
   staffProfileId: string
   staffDisplayName: string
   staffCode: string

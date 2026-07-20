@@ -29,7 +29,7 @@ import { getApiErrorCode } from '../../../types/domain'
 import { getErrorI18nKey } from '../../../data/errorCodes'
 import { isValidEmail } from '../../../utils/validation'
 import { resolveStaffDisplayNames, splitFullName } from '../../../utils/staffName'
-import { getDefaultDialCode, isValidPhoneE164, normalizePhoneE164 } from '../../CountryCodeSelect'
+import { isValidPhoneE164, normalizePhoneE164, PhoneDialCode } from '../../CountryCodeSelect'
 
 function resolveStaffDetailCode(member: { staffCode?: string | null }) {
   const code = String(member?.staffCode ?? '').trim()
@@ -69,6 +69,10 @@ function mergeStaffModalMember(detail, listMember) {
     isProfileComplete: detail.isProfileComplete ?? list?.isProfileComplete ?? false,
     payoutConfigs: detail.payoutConfigs || list?.payoutConfigs || getPayoutConfigsFromMember(detail),
     paymentAccounts: detail.paymentAccounts || list?.paymentAccounts,
+    // Prefer staff-list paymentMethods order (GET /merchant/staff) over detail payload.
+    paymentMethods: list?.paymentMethods?.length
+      ? list.paymentMethods
+      : (detail.paymentMethods ?? []),
   }
 }
 
@@ -91,15 +95,8 @@ export function normaliseMember(member) {
     flowType: member.flowType || '',
     isActive: member.isActive !== undefined ? member.isActive : true,
     showInTipsFlow: member.showInTipsFlow !== undefined ? member.showInTipsFlow : true,
-    paymentAccounts: {
-      venmo: member.paymentAccounts?.venmo || '',
-      cashapp: member.paymentAccounts?.cashapp || '',
-      zelle: member.paymentAccounts?.zelle || '',
-      vlinkpay: member.paymentAccounts?.vlinkpay || '',
-      paypal: member.paymentAccounts?.paypal || '',
-      bankwire: member.paymentAccounts?.bankwire || '',
-      applecash: member.paymentAccounts?.applecash || ''
-    },
+    paymentAccounts: member.paymentAccounts || {},
+    paymentMethods: Array.isArray(member.paymentMethods) ? member.paymentMethods : [],
     payoutConfigs: member.payoutConfigs || getPayoutConfigsFromMember(member),
     // Preserve API identifiers
     staffLinkId: member.staffLinkId ?? null,
@@ -135,9 +132,9 @@ export function useStaffManagement({
   viewingStaffDetailId = null,
   setViewingStaffDetailId = (_id: string | null) => {},
 }) {
-  const { t, currentLanguage } = useTranslation()
+  const { t } = useTranslation()
   const { showToast, showConfirm } = useNotification()
-  const fallbackDialCode = getDefaultDialCode(currentLanguage)
+  const fallbackDialCode = PhoneDialCode.US
 
   // API mutation hooks — all invalidate qk.merchantStaff() on success
   const inviteStaffMutation = useInviteStaff()
@@ -241,7 +238,8 @@ export function useStaffManagement({
       staffProfileId: member.staffProfileId || '',
       averageRating: member.averageRating ?? 0,
       showInTipsFlow: member.showInTipsFlow !== false,
-      payoutConfigs: member.payoutConfigs || getPayoutConfigsFromMember(member)
+      payoutConfigs: member.payoutConfigs || getPayoutConfigsFromMember(member),
+      paymentMethods: Array.isArray(member.paymentMethods) ? member.paymentMethods : [],
     })
     setErrors({})
     setIsApproveModalOpen(true)
@@ -270,6 +268,7 @@ export function useStaffManagement({
       isLocalStaff: member.isLocalStaff ?? false,
       isProfileComplete: member.isProfileComplete ?? false,
       payoutConfigs: member.payoutConfigs || getPayoutConfigsFromMember(member),
+      paymentMethods: Array.isArray(member.paymentMethods) ? member.paymentMethods : [],
     })
     setErrors({})
   }
@@ -747,6 +746,11 @@ export function useStaffManagement({
       isProfileComplete: prev.isProfileComplete ?? member.isProfileComplete ?? false,
       phone: pickNonEmptyString(prev.phone, member.phone, member.invitedPhone),
       email: pickNonEmptyString(prev.email, member.email, member.invitedEmail),
+      paymentMethods: Array.isArray(member.paymentMethods) && member.paymentMethods.length
+        ? member.paymentMethods
+        : prev.paymentMethods,
+      paymentAccounts: member.paymentAccounts || prev.paymentAccounts,
+      payoutConfigs: member.payoutConfigs || prev.payoutConfigs,
     }))
   }, [staff, editingStaffId, isStaffModalOpen])
 

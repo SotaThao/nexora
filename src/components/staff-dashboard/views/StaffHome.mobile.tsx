@@ -118,7 +118,7 @@ export default function StaffHome() {
 
   const firstName = account?.fullName?.split(' ')[0] || account?.nickname || 'Staff'
 
-  const pendingAmount = (pendingTips || []).reduce((s, tip) => s + Number(tip.amount || 0), 0)
+  const pendingAmount = kpis.pendingAmount || 0
 
   const go = (screen, params?: Record<string, string>) => onNavigate?.(screen, params)
 
@@ -148,7 +148,7 @@ export default function StaffHome() {
       </section>
 
       {/* ── Needs Confirmation Hero ──────────────────────────────────────── */}
-      {pendingTips.length > 0 && (
+      {kpis.pendingCount > 0 && (
         <section className="rounded-lg border border-[#DDD8FF] bg-[#F4F2FF] p-2.5 shadow-[0_10px_22px_rgba(70,72,212,0.10)]">
           <div className="flex items-center justify-between gap-3">
             <div className="min-w-0">

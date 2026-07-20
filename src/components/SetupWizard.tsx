@@ -74,7 +74,6 @@ export default function SetupWizard() {
     touchPoints,
     newTouchpoint, setNewTouchpoint,
     editingTpId, setEditingTpId,
-    editingTpName, setEditingTpName, editingTpNameError,
     editingTpType, setEditingTpType,
     previewingTp, setPreviewingTp,
     payoutSetupOpen, setPayoutSetupOpen,
@@ -231,9 +230,6 @@ export default function SetupWizard() {
                 setNewTouchpoint={setNewTouchpoint}
                 editingTpId={editingTpId}
                 setEditingTpId={setEditingTpId}
-                editingTpName={editingTpName}
-                setEditingTpName={setEditingTpName}
-                editingTpNameError={editingTpNameError}
                 editingTpType={editingTpType}
                 setEditingTpType={setEditingTpType}
                 errors={errors}
@@ -322,6 +318,7 @@ export default function SetupWizard() {
         staffName={businessInfo.name || 'Business Name'}
         initialValue={tempPayoutValues.value}
         initialQrCode={tempPayoutValues.qrCode}
+        initialAccountName={tempPayoutValues.accountName || ''}
         onClose={() => setPayoutSetupOpen(false)}
         onSubmit={handlePayoutSubmit}
       />

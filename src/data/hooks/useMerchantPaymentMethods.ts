@@ -6,6 +6,7 @@ import { useTranslation } from '../../contexts/LanguageContext'
 import type { PaymentMethodDto } from '../../types/domain'
 import type { PayoutConfigMap, UpdatePaymentMethodVars } from '../../types/hooks'
 import { resolvePaymentMethodImageUrl } from '../../utils/resolvePaymentMethodImageUrl'
+import { toPayoutAccountNameDto } from '../paymentMethodTypes'
 
 export function useMerchantPaymentMethods({ enabled = true } = {}) {
   return useQuery<PaymentMethodDto[]>({
@@ -21,10 +22,11 @@ export function useUpdateMerchantPaymentMethod() {
   const { t } = useTranslation()
 
   return useMutation<PaymentMethodDto, Error, UpdatePaymentMethodVars>({
-    mutationFn: async ({ id, accountInfo, imageUrl, imageFile }) => {
+    mutationFn: async ({ id, accountInfo, accountName, imageUrl, imageFile }) => {
       const resolvedImageUrl = await resolvePaymentMethodImageUrl({ imageFile, imageUrl })
       return merchantPaymentMethodsRepository.update(id, {
         accountInfo,
+        accountName,
         imageUrl: resolvedImageUrl,
       })
     },
@@ -66,11 +68,14 @@ export function useSaveMerchantPayoutConfigs() {
 
         const accountInfo = config.value?.trim() || ''
         const wantsActive = !!(config.enabled && accountInfo)
+        const accountName = toPayoutAccountNameDto(uiKey, config.accountName)
 
         tasks.push(
           (async () => {
-            if (accountInfo && accountInfo !== method.accountInfo) {
-              await merchantPaymentMethodsRepository.update(method.id, { accountInfo })
+            const accountNameChanged =
+              accountName !== undefined && accountName !== (method.accountName ?? null)
+            if (accountInfo && (accountInfo !== method.accountInfo || accountNameChanged)) {
+              await merchantPaymentMethodsRepository.update(method.id, { accountInfo, accountName })
             }
             if (method.isActive !== wantsActive) {
               if (backendType === 'VlinkPay') return

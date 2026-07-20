@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from 'react'
+import { createPortal } from 'react-dom'
 import { Calendar, ChevronDown, ChevronUp, Download, FileClock, List, Plus, Search, SlidersHorizontal, User } from 'lucide-react'
 import { useTranslation } from '../../../contexts/LanguageContext'
 import { PayoutStatus, PayoutType } from '../../../data/payoutConstants'
@@ -66,6 +67,7 @@ export default function TipsPayoutsTab({ staff = [] }: { staff?: StaffMember[] }
   const [isUnpaidDialogOpen, setIsUnpaidDialogOpen] = useState(false)
   const [editingPayout, setEditingPayout] = useState<PayoutRecord | null>(null)
   const [preferredStaffProfileId, setPreferredStaffProfileId] = useState<string | null>(null)
+  const [preferredAmount, setPreferredAmount] = useState<number | null>(null)
   const [historyStaffProfile, setHistoryStaffProfile] = useState<UnpaidTipDebtRecord | null>(null)
   const [isFiltersExpanded, setIsFiltersExpanded] = useState(false)
 
@@ -175,12 +177,14 @@ export default function TipsPayoutsTab({ staff = [] }: { staff?: StaffMember[] }
   const openCreate = () => {
     setEditingPayout(null)
     setPreferredStaffProfileId(null)
+    setPreferredAmount(null)
     setIsCreateOpen(true)
   }
 
-  const openCreateForStaff = (staffProfileId: string) => {
+  const openCreateForStaff = (staff: UnpaidTipDebtRecord) => {
     setEditingPayout(null)
-    setPreferredStaffProfileId(staffProfileId)
+    setPreferredStaffProfileId(staff.staffProfileId)
+    setPreferredAmount(staff.balance > 0 ? staff.balance : null)
     setIsUnpaidDialogOpen(false)
     setIsCreateOpen(true)
   }
@@ -195,6 +199,7 @@ export default function TipsPayoutsTab({ staff = [] }: { staff?: StaffMember[] }
     setIsCreateOpen(false)
     setEditingPayout(null)
     setPreferredStaffProfileId(null)
+    setPreferredAmount(null)
   }
 
   return (
@@ -333,7 +338,7 @@ export default function TipsPayoutsTab({ staff = [] }: { staff?: StaffMember[] }
         ) : null}
       </div>
 
-      <div className="overflow-hidden rounded-xl border border-nexoraBorder bg-white">
+      <div className="sm:overflow-hidden sm:rounded-xl sm:border sm:border-nexoraBorder sm:bg-white">
         <PayoutList
           payouts={payouts}
           isPending={isPending}
@@ -355,45 +360,53 @@ export default function TipsPayoutsTab({ staff = [] }: { staff?: StaffMember[] }
         />
       </div>
 
-      <UnpaidTipDebtsPanel
-        isOpen={isUnpaidDialogOpen}
-        onClose={() => setIsUnpaidDialogOpen(false)}
-        debts={unpaidDebts}
-        isLoading={isUnpaidTipsPending}
-        currentLanguage={currentLanguage}
-        t={t}
-        onCreatePayout={openCreateForStaff}
-        onViewHistory={(staffDebt) => {
-          setHistoryStaffProfile(staffDebt)
-        }}
-      />
+      {typeof document !== 'undefined'
+        ? createPortal(
+          <>
+            <UnpaidTipDebtsPanel
+              isOpen={isUnpaidDialogOpen}
+              onClose={() => setIsUnpaidDialogOpen(false)}
+              debts={unpaidDebts}
+              isLoading={isUnpaidTipsPending}
+              currentLanguage={currentLanguage}
+              t={t}
+              onCreatePayout={openCreateForStaff}
+              onViewHistory={(staffDebt) => {
+                setHistoryStaffProfile(staffDebt)
+              }}
+            />
 
-      <CreatePayoutModal
-        isOpen={isCreateOpen}
-        onClose={closeCreate}
-        staffList={staff}
-        unpaidDebts={unpaidDebts}
-        initialStaffProfileId={preferredStaffProfileId}
-        editingPayout={editingPayout}
-      />
+            <CreatePayoutModal
+              isOpen={isCreateOpen}
+              onClose={closeCreate}
+              staffList={staff}
+              unpaidDebts={unpaidDebts}
+              initialStaffProfileId={preferredStaffProfileId}
+              initialAmount={preferredAmount}
+              editingPayout={editingPayout}
+            />
 
-      <PayoutDetailModal
-        payout={selectedPayout}
-        isLoading={isDetailLoading && Boolean(selectedPayoutId)}
-        onClose={() => setSelectedPayoutId(null)}
-        onEdit={(payout) => openEdit(payout)}
-      />
+            <PayoutDetailModal
+              payout={selectedPayout}
+              isLoading={isDetailLoading && Boolean(selectedPayoutId)}
+              onClose={() => setSelectedPayoutId(null)}
+              onEdit={(payout) => openEdit(payout)}
+            />
 
-      <PayoutExportModal
-        isOpen={isExportOpen}
-        onClose={() => setIsExportOpen(false)}
-        staffList={staff}
-      />
+            <PayoutExportModal
+              isOpen={isExportOpen}
+              onClose={() => setIsExportOpen(false)}
+              staffList={staff}
+            />
 
-      <PayoutDebtHistoryModal
-        staff={historyStaffProfile}
-        onClose={() => setHistoryStaffProfile(null)}
-      />
+            <PayoutDebtHistoryModal
+              staff={historyStaffProfile}
+              onClose={() => setHistoryStaffProfile(null)}
+            />
+          </>,
+          document.body,
+        )
+        : null}
     </div>
   )
 }

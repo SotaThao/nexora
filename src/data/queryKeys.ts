@@ -28,6 +28,7 @@ export const qk = {
   dashboardStaff:           () => ['dashboard', 'staff'],
   dashboardTouchpoints:     () => ['dashboard', 'touchpoints'],
   dashboardTipsChart:       () => ['dashboard', 'tipsChart'],
+  dashboardAnalytics:       (filters = EMPTY) => ['dashboard', 'analytics', filters],
   dashboardReviews:         (filters = EMPTY) => ['dashboard', 'reviews', filters],
   
   // Notifications
@@ -114,6 +115,7 @@ export const qk = {
   staffProfile:        ()      => ['staffProfile'],
   staffBusinesses:     ()      => ['staffBusinesses'],
   staffDashboardSummary: ()    => ['staffDashboardSummary'],
+  staffDashboardStatistics: () => ['staffDashboardStatistics'],
   staffReviews:          (filters = EMPTY) => ['staffReviews', filters],
   staffTips:             (filters = EMPTY) => ['staffTips', filters],
   staffTransactionsPaginated: (filters = EMPTY) => ['staffTransactions', 'paginated', filters],
@@ -253,6 +255,10 @@ export const qk = {
   merchantVoiceBusinessStaff: (filters = EMPTY) => ['merchantVoice', 'staff', 'businessStaff', filters],
   merchantVoiceConfig: () => ['merchantVoice', 'config'],
   merchantVoiceTenantStatus: () => ['merchantVoice', 'tenant', 'status'],
+  merchantVoiceCalls: (filters = EMPTY) => ['merchantVoice', 'calls', filters],
+  merchantVoiceCallStatistics: () => ['merchantVoice', 'calls', 'statistics'],
+  merchantVoiceCustomers: (filters = EMPTY) => ['merchantVoice', 'customers', filters],
+  merchantVoiceCustomerSummary: () => ['merchantVoice', 'customers', 'summary'],
 
   // Nexora Voice trial (merchant)
   voiceTrialRequestMe: () => ['nexora-voice', 'trial-request', 'me'],

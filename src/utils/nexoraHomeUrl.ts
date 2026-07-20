@@ -21,3 +21,8 @@ export function getNexoraHomeUrl(): string {
   }
   return DEFAULT_HOME_URL
 }
+
+/** Full navigation to the env-scoped marketing home (test → test, staging → staging). */
+export function navigateToNexoraHome(): void {
+  window.location.assign(getNexoraHomeUrl())
+}

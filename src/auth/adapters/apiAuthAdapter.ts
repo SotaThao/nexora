@@ -3,6 +3,7 @@ import httpClient from '../../lib/httpClient'
 import { clearAuthQueryCache, seedAuthQueryCache } from '../../data/seedAuthQueryCache'
 import profileSettingsRepository from '../../data/repositories/profileSettings'
 import { logger } from '../../utils/logger'
+import { isValidLeg, legToApiValue } from '../../utils/affiliateReferral'
 
 import type {
   AuthSession,
@@ -396,7 +397,7 @@ export const apiAuthAdapter = {
   },
 
   async signup(credentials: SignupCredentials): Promise<SignupResponse | null> {
-    const { email, confirmEmail, password, confirmPassword, firstName, lastName, type, profileType, referralCode } =
+    const { email, confirmEmail, password, confirmPassword, firstName, lastName, type, profileType, referralCode, leg } =
       credentials
     const trimmedReferralCode = referralCode?.trim()
     return httpClient.post<SignupResponse>(
@@ -410,6 +411,7 @@ export const apiAuthAdapter = {
         lastName,
         type: type || profileType,
         ...(trimmedReferralCode ? { referralCode: trimmedReferralCode } : {}),
+        ...(trimmedReferralCode && isValidLeg(leg) ? { position: legToApiValue(leg) } : {}),
       },
       { anonymous: true },
     )

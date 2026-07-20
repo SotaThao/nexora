@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState, type DragEvent } from 'react'
-import { Copy, Loader2, Save, Upload, X, Coins, Banknote, Gift, Tag, HandCoins, Hourglass, CheckCircle2, XCircle } from 'lucide-react'
+import { Copy, Loader2, Save, Upload, X, Coins, Banknote, Gift, Tag, HandCoins, Hourglass, CheckCircle2, XCircle, Camera, FolderOpen } from 'lucide-react'
 import { useTranslation } from '../../../contexts/LanguageContext'
 import { useNotification } from '../../../contexts/NotificationContext'
 import {
@@ -27,6 +27,9 @@ import { imagesRepository } from '../../../data/repositories/images'
 import type { PayoutRecord, UnpaidTipDebtRecord, StaffMember } from '../../../types/domain'
 import { getApiErrorCode } from '../../../types/domain'
 import { formatCurrency } from '../../dashboard/utils'
+import Tooltip from '../../ui/Tooltip'
+import CameraCaptureModal from '../../ui/CameraCaptureModal'
+import ImageFileInput from '../../ui/ImageFileInput'
 import PayoutStaffSelect from './PayoutStaffSelect'
 import { payoutMethodToUiKey, getStaffAvailablePayoutMethods, isStaffPayoutMethodAvailable, resolvePayoutStaffProfileId, sortPayoutMethodsCashLast } from '../../../utils/payoutDisplay'
 import { formatLocalDateIso } from '../../../utils/localDate'
@@ -68,7 +71,6 @@ const TYPE_ICON: Record<number, any> = {
 const CREATE_STATUS_OPTIONS: PayoutStatusValue[] = [
   PayoutStatus.Pending,
   PayoutStatus.Confirmed,
-  PayoutStatus.Cancelled,
 ]
 
 function defaultPeriodDates() {
@@ -148,6 +150,7 @@ export default function CreatePayoutModal({
   staffList,
   unpaidDebts,
   initialStaffProfileId,
+  initialAmount = null,
   editingPayout = null,
 }: {
   isOpen: boolean
@@ -155,6 +158,7 @@ export default function CreatePayoutModal({
   staffList: StaffMember[]
   unpaidDebts: UnpaidTipDebtRecord[]
   initialStaffProfileId?: string | null
+  initialAmount?: number | null
   editingPayout?: PayoutRecord | null
 }) {
   const { t } = useTranslation()
@@ -206,9 +210,10 @@ export default function CreatePayoutModal({
   const [isUploading, setIsUploading] = useState(false)
   const [isDragOver, setIsDragOver] = useState(false)
   const [evidenceError, setEvidenceError] = useState<string | null>(null)
+  const [isEvidenceCameraOpen, setIsEvidenceCameraOpen] = useState(false)
   const [payoutStatus, setPayoutStatus] = useState<PayoutStatusValue>(PayoutStatus.Confirmed)
-  const fileInputRef = useRef<HTMLInputElement>(null)
-  const amountPrefillKeyRef = useRef('')
+  const formInitKeyRef = useRef('')
+  const lastAutoSeededAmountRef = useRef('')
 
   const selectedStaff = isEditing
     ? editingStaffMember
@@ -231,9 +236,22 @@ export default function CreatePayoutModal({
   const isSaving = createMutation.isPending || updateMutation.isPending || isUploading
   const maxEvidenceCount = Math.min(MAX_EVIDENCE_FILES, MAX_PAYOUT_EVIDENCE_URLS)
   const canAddEvidence = evidenceUrls.length < maxEvidenceCount && !isUploading
+  const remainingEvidenceCount = Math.max(0, maxEvidenceCount - evidenceUrls.length)
 
   useEffect(() => {
-    if (!isOpen) return
+    if (!isOpen) {
+      formInitKeyRef.current = ''
+      lastAutoSeededAmountRef.current = ''
+      setIsEvidenceCameraOpen(false)
+      return
+    }
+
+    const initKey = editingPayout?.id
+      ? `edit:${editingPayout.id}`
+      : `create:${initialStaffProfileId ?? ''}:${initialAmount ?? ''}`
+    if (formInitKeyRef.current === initKey) return
+    formInitKeyRef.current = initKey
+
     if (editingPayout) {
       const resolvedStaffProfileId = resolvePayoutStaffProfileId(editingPayout, staffList)
       setStaffProfileId(resolvedStaffProfileId)
@@ -241,6 +259,7 @@ export default function CreatePayoutModal({
       setStaffProfileError(null)
       setPayoutMethodType(normalizePayoutMethodType(editingPayout.payoutMethodType))
       setAmount(formatUsdInputAmount(editingPayout.amount))
+      lastAutoSeededAmountRef.current = ''
       setAmountError(null)
       setPeriodError(null)
       setPayoutTypesMask(
@@ -253,13 +272,13 @@ export default function CreatePayoutModal({
       setEvidencePreviews(editingPayout.evidenceUrls ?? [])
       setEvidenceError(null)
       setIsDragOver(false)
-      amountPrefillKeyRef.current = ''
       return
     }
     const defaults = defaultPeriodDates()
     setStaffProfileId('')
     setSelectedStaffMember(null)
     setStaffProfileError(null)
+    let seedAmount = ''
     if (initialStaffProfileId) {
       const fromList = staffList.find((staff) => staff.staffProfileId === initialStaffProfileId)
       const fromDebt = unpaidDebts.find((debt) => debt.staffProfileId === initialStaffProfileId)
@@ -270,12 +289,20 @@ export default function CreatePayoutModal({
         setStaffProfileId(fromDebt.staffProfileId)
         setSelectedStaffMember(staffMemberFromDebt(fromDebt))
       }
+      const seededBalance =
+        (typeof initialAmount === 'number' && initialAmount > 0 ? initialAmount : null)
+        ?? (fromDebt && fromDebt.balance > 0 ? fromDebt.balance : null)
+      if (seededBalance != null) {
+        seedAmount = formatUsdInputAmount(seededBalance)
+      }
     }
     setPayoutMethodType(PayoutMethodType.Zelle)
-    setAmount('')
+    setAmount(seedAmount)
+    lastAutoSeededAmountRef.current = seedAmount
     setAmountError(null)
     setPeriodError(null)
-    setPayoutTypesMask(PayoutType.Tip)
+    // Opening from unpaid tip balance should pre-select Unpaid tip.
+    setPayoutTypesMask(initialStaffProfileId ? PayoutType.TipDebt : PayoutType.Tip)
     setPeriodStart(defaults.periodStart)
     setPeriodEnd(defaults.periodEnd)
     setNotes('')
@@ -284,8 +311,7 @@ export default function CreatePayoutModal({
     setEvidenceError(null)
     setIsDragOver(false)
     setPayoutStatus(PayoutStatus.Confirmed)
-    amountPrefillKeyRef.current = ''
-  }, [isOpen, editingPayout, editingStaffMember, staffList, unpaidDebts, initialStaffProfileId])
+  }, [isOpen, editingPayout, editingStaffMember, staffList, unpaidDebts, initialStaffProfileId, initialAmount])
 
   useEffect(() => {
     if (!isOpen || isEditing || !selectedStaff) return
@@ -296,39 +322,6 @@ export default function CreatePayoutModal({
       return availablePayoutMethods[0] ?? PayoutMethodType.Zelle
     })
   }, [isOpen, isEditing, selectedStaff, availablePayoutMethods])
-
-  useEffect(() => {
-    if (!isOpen || isEditing || !staffProfileId || !isDebtLookupReady || isStaffDebtLoading) return
-    if (!hasPayoutType(payoutTypesMask, PayoutType.TipDebt)) return
-
-    const prefillKey = `${staffProfileId}:${payoutTypesMask}:${displayedDebtBalance}`
-    if (amountPrefillKeyRef.current === prefillKey) return
-    amountPrefillKeyRef.current = prefillKey
-
-    if (displayedDebtBalance > 0) {
-      setAmount(formatUsdInputAmount(displayedDebtBalance))
-      setAmountError(null)
-    } else {
-      setAmount('')
-      setAmountError(null)
-    }
-  }, [
-    isOpen,
-    isEditing,
-    staffProfileId,
-    payoutTypesMask,
-    isDebtLookupReady,
-    isStaffDebtLoading,
-    displayedDebtBalance,
-  ])
-
-  useEffect(() => {
-    if (!isOpen || isEditing) return
-    if (hasPayoutType(payoutTypesMask, PayoutType.TipDebt)) return
-    setAmount('0.00')
-    setAmountError(null)
-    amountPrefillKeyRef.current = ''
-  }, [isOpen, isEditing, payoutTypesMask])
 
   useEffect(() => {
     if (isOpen) return
@@ -347,6 +340,28 @@ export default function CreatePayoutModal({
   )
   const isUnpaidTipsTypeDisabled = !isEditing && isDebtLookupReady && displayedDebtBalance <= 0
 
+  // Auto-fill Amount paid from unpaid tip balance. Keep updating while the value is
+  // still the last auto-seeded amount (covers async debt lookup). Stop once the user
+  // types a different amount.
+  const unpaidBalanceInput =
+    !isEditing && includesUnpaidTipsType && displayedDebtBalance > 0
+      ? formatUsdInputAmount(displayedDebtBalance)
+      : ''
+  const amountInputValue = amount.trim() ? amount : unpaidBalanceInput
+
+  useEffect(() => {
+    if (!unpaidBalanceInput) return
+    setAmount((current) => {
+      const trimmed = current.trim()
+      const lastSeeded = lastAutoSeededAmountRef.current
+      if (!trimmed || trimmed === lastSeeded) {
+        lastAutoSeededAmountRef.current = unpaidBalanceInput
+        return unpaidBalanceInput
+      }
+      return current
+    })
+  }, [unpaidBalanceInput])
+
   useEffect(() => {
     if (isEditing || !isUnpaidTipsTypeDisabled) return
     if (hasPayoutType(payoutTypesMask, PayoutType.TipDebt)) {
@@ -360,6 +375,11 @@ export default function CreatePayoutModal({
     if (isEditing && normalizePayoutMethodType(editingPayout?.payoutMethodType) === method) {
       return true
     }
+    // Before a staff member is chosen, show every create-payout method as selectable.
+    // Availability is filtered to that staff's wallets once they are selected.
+    if (!selectedStaff) {
+      return method !== PayoutMethodType.Other
+    }
     return isStaffPayoutMethodAvailable(selectedStaff, method as PayoutMethodTypeValue)
   }
 
@@ -368,7 +388,6 @@ export default function CreatePayoutModal({
     setStaffProfileId(staff.staffProfileId)
     setSelectedStaffMember(staff)
     setStaffProfileError(null)
-    amountPrefillKeyRef.current = ''
   }
 
   const handleCopyAccount = async () => {
@@ -432,12 +451,6 @@ export default function CreatePayoutModal({
     }
   }
 
-  const openFilePicker = () => {
-    if (!canAddEvidence) return
-    setEvidenceError(null)
-    fileInputRef.current?.click()
-  }
-
   const handleDragOver = (event: DragEvent<HTMLDivElement>) => {
     event.preventDefault()
     event.stopPropagation()
@@ -474,8 +487,8 @@ export default function CreatePayoutModal({
   }
 
   const handleAmountBlur = () => {
-    if (!amount.trim()) return
-    setAmountError(validatePayoutAmount(amount, t))
+    if (!amountInputValue.trim()) return
+    setAmountError(validatePayoutAmount(amountInputValue, t))
   }
 
   const handlePeriodStartChange = (value: string) => {
@@ -501,7 +514,7 @@ export default function CreatePayoutModal({
     const nextStaffError = !staffProfileId
       ? t('dashboard.tips.payouts_manager.staff_required')
       : null
-    const nextAmountError = validatePayoutAmount(amount, t)
+    const nextAmountError = validatePayoutAmount(amountInputValue, t)
     const nextPeriodError = validatePayoutPeriod(periodStart, periodEnd, t)
 
     setStaffProfileError(nextStaffError)
@@ -512,7 +525,7 @@ export default function CreatePayoutModal({
       return
     }
 
-    const parsedAmount = parseDirectPaymentAmountInput(amount)
+    const parsedAmount = parseDirectPaymentAmountInput(amountInputValue)
     if (!isPayoutTypesMaskValid(payoutTypesMask)) {
       showToast(t(getErrorI18nKey('PAYOUT_TYPES_REQUIRED')), 'error')
       return
@@ -641,11 +654,7 @@ export default function CreatePayoutModal({
                     )
                   })}
                 </div>
-                {!staffProfileId ? (
-                  <p className="mt-1.5 text-xs text-mutedGrey">
-                    {t('dashboard.tips.payouts_manager.method_select_staff_first')}
-                  </p>
-                ) : availablePayoutMethods.length === 0 ? (
+                {staffProfileId && availablePayoutMethods.length === 0 ? (
                   <p className="mt-1.5 text-xs font-semibold text-amber-700">
                     {t('dashboard.tips.payouts_manager.method_staff_none')}
                   </p>
@@ -667,7 +676,7 @@ export default function CreatePayoutModal({
                         ? 'border-red-400 focus:border-red-500 focus:ring-1 focus:ring-red-200'
                         : 'border-nexoraBorder focus:border-nexoraBrand focus:ring-1 focus:ring-nexoraBrand/20'
                     } outline-none`}
-                    value={amount}
+                    value={amountInputValue}
                     onChange={(e) => handleAmountChange(e.target.value)}
                     onBlur={handleAmountBlur}
                     placeholder={includesUnpaidTipsType && hasNoTipDebt ? '—' : '0.00'}
@@ -775,47 +784,49 @@ export default function CreatePayoutModal({
                 {t('dashboard.tips.payouts_manager.evidence_title')}
               </p>
               <div
-                role="button"
-                tabIndex={canAddEvidence ? 0 : -1}
-                onClick={openFilePicker}
-                onKeyDown={(event) => {
-                  if (!canAddEvidence) return
-                  if (event.key === 'Enter' || event.key === ' ') {
-                    event.preventDefault()
-                    openFilePicker()
-                  }
-                }}
                 onDragEnter={handleDragEnter}
                 onDragOver={handleDragOver}
                 onDragLeave={handleDragLeave}
                 onDrop={handleDrop}
-                className={`flex flex-col items-center justify-center rounded-xl border-2 border-dashed px-4 py-8 text-center transition ${
-                  canAddEvidence ? 'cursor-pointer' : 'cursor-not-allowed opacity-60'
-                } ${
-                  evidenceError
-                    ? 'border-red-400 bg-red-50'
-                    : isDragOver
-                      ? 'border-nexoraBrand bg-nexoraBrand/10'
-                      : 'border-nexoraBorder bg-slate-50 hover:border-nexoraBrand/50'
+                className={`rounded-xl p-1 transition ${
+                  isDragOver ? 'bg-nexoraBrand/10 ring-2 ring-nexoraBrand/40' : ''
                 }`}
               >
-                <Upload className={`mb-2 h-8 w-8 ${isDragOver ? 'text-nexoraBrand' : 'text-mutedGrey'}`} />
-                <p className="text-sm font-bold text-inkBlue">{t('dashboard.tips.payouts_manager.evidence_drop')}</p>
-                <p className="mt-1 text-[11px] text-mutedGrey">
-                  {t('dashboard.tips.payouts_manager.evidence_hint', { max: MAX_EVIDENCE_FILES })}
-                </p>
-                <input
-                  ref={fileInputRef}
-                  type="file"
-                  accept="image/*"
-                  multiple
-                  className="hidden"
-                  disabled={!canAddEvidence}
-                  onChange={(e) => {
-                    if (e.target.files) void handleFiles(e.target.files)
-                    e.target.value = ''
-                  }}
-                />
+                <div className="grid grid-cols-2 gap-3">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      if (!canAddEvidence) return
+                      setEvidenceError(null)
+                      setIsEvidenceCameraOpen(true)
+                    }}
+                    disabled={!canAddEvidence}
+                    className="flex min-h-24 flex-col items-center justify-center gap-2 rounded-xl border-2 border-dashed border-nexoraBorder bg-slate-50 px-3 py-5 text-center transition hover:border-nexoraBrand/60 hover:bg-nexoraBrand/5 disabled:cursor-not-allowed disabled:opacity-60"
+                  >
+                    <Camera className="h-6 w-6 text-nexoraBrand" />
+                    <span className="text-xs font-bold text-inkBlue">{t('setup.take_photo')}</span>
+                  </button>
+                  <ImageFileInput
+                    as="label"
+                    onPickFile={(file) => void handleFiles([file])}
+                    disabled={!canAddEvidence}
+                    className={`flex min-h-24 flex-col items-center justify-center gap-2 rounded-xl border-2 border-dashed border-nexoraBorder bg-slate-50 px-3 py-5 text-center transition hover:border-nexoraBrand/60 hover:bg-nexoraBrand/5 ${
+                      canAddEvidence ? 'cursor-pointer' : 'cursor-not-allowed opacity-60'
+                    }`}
+                  >
+                    <FolderOpen className="h-6 w-6 text-nexoraBrand" />
+                    <span className="text-xs font-bold text-inkBlue">{t('setup.choose_file')}</span>
+                  </ImageFileInput>
+                </div>
+                <div className="mt-3 flex items-center justify-center gap-1.5 text-[11px] text-mutedGrey">
+                  <Upload className={`h-3.5 w-3.5 ${isDragOver ? 'text-nexoraBrand' : ''}`} />
+                  <span>{t('dashboard.tips.payouts_manager.evidence_drag_hint')}</span>
+                </div>
+                <div className="mt-3 space-y-1 text-[11px] leading-relaxed text-mutedGrey">
+                  <p>{t('dashboard.tips.payouts_manager.evidence_upload_helper')}</p>
+                  <p>{t('dashboard.tips.payouts_manager.evidence_remaining', { count: remainingEvidenceCount })}</p>
+                  <p>{t('dashboard.tips.payouts_manager.evidence_size_hint')}</p>
+                </div>
               </div>
               {evidenceError ? (
                 <p className="text-xs font-semibold text-red-600">{evidenceError}</p>
@@ -844,9 +855,35 @@ export default function CreatePayoutModal({
 
               {!isEditing ? (
                 <div>
-                  <p className="mb-2 border-b border-nexoraBorder pb-2 text-[11px] font-black uppercase tracking-wide text-mutedGrey">
-                    {t('dashboard.tips.payouts_manager.field_status')} *
-                  </p>
+                  <div className="mb-2 flex items-center gap-1.5 border-b border-nexoraBorder pb-2">
+                    <p className="text-[11px] font-black uppercase tracking-wide text-mutedGrey">
+                      {t('dashboard.tips.payouts_manager.field_status')} *
+                    </p>
+                    <Tooltip
+                      content={
+                        <span className="flex flex-col gap-1.5">
+                          <span>{t('dashboard.tips.payouts_manager.field_status_tooltip_intro')}</span>
+                          <span>
+                            <span className="font-bold">
+                              {t('dashboard.tips.payouts_manager.create_status_pending')}
+                            </span>
+                            {': '}
+                            {t('dashboard.tips.payouts_manager.field_status_tooltip_pending')}
+                          </span>
+                          <span>
+                            <span className="font-bold">
+                              {t('dashboard.tips.payouts_manager.create_status_confirmed')}
+                            </span>
+                            {': '}
+                            {t('dashboard.tips.payouts_manager.field_status_tooltip_confirmed')}
+                          </span>
+                        </span>
+                      }
+                      ariaLabel={t('dashboard.tips.payouts_manager.field_status_tooltip_intro')}
+                      align="start"
+                      placement="bottom"
+                    />
+                  </div>
                   <div className="flex flex-col gap-2">
                     {CREATE_STATUS_OPTIONS.map((status) => {
                       const selected = payoutStatus === status
@@ -905,6 +942,13 @@ export default function CreatePayoutModal({
           </button>
         </div>
       </div>
+      <CameraCaptureModal
+        open={isEvidenceCameraOpen}
+        onClose={() => setIsEvidenceCameraOpen(false)}
+        onCapture={(file) => void handleFiles([file])}
+        title={t('dashboard.tips.payouts_manager.evidence_camera_title')}
+        hint={t('dashboard.tips.payouts_manager.evidence_camera_hint')}
+      />
     </div>
   )
 }

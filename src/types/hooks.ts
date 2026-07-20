@@ -12,6 +12,8 @@ import type {
 export interface UpdatePaymentMethodVars {
   id: string
   accountInfo?: string | null
+  /** Only sent for methods in ACCOUNT_NAME_UI_KEYS; undefined omits the key from the payload. */
+  accountName?: string | null
   imageUrl?: string | null
   /** When set, file is uploaded via POST /api/v1/images/upload before PUT payment-methods. */
   imageFile?: File | null

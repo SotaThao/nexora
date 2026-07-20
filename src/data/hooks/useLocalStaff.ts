@@ -2,7 +2,7 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { qk } from '../queryKeys'
 import localStaffRepository from '../repositories/localStaff'
 import { imagesRepository } from '../repositories/images'
-import { payoutTypeToUiKey } from '../paymentMethodTypes'
+import { payoutTypeToUiKey, toPayoutAccountNameDto } from '../paymentMethodTypes'
 import { resolvePaymentMethodImageUrl } from '../../utils/resolvePaymentMethodImageUrl'
 import { dataUrlToFile } from '../../utils/imageFile'
 import { splitFullName } from '../../utils/staffName'
@@ -53,6 +53,7 @@ async function configureLocalStaffPaymentMethods(
 
     await localStaffRepository.updatePaymentMethod(staffProfileId, method.id, {
       accountInfo,
+      accountName: toPayoutAccountNameDto(uiKey, config.accountName),
       imageUrl,
     })
 
@@ -141,6 +142,28 @@ function invalidateLocalStaffCaches(
   queryClient.invalidateQueries({ queryKey: qk.merchantStaff() })
 }
 
+async function resolveLocalStaffPaymentMethodId(
+  staffProfileId: string,
+  paymentMethodId?: string | null,
+  uiKey?: string | null,
+): Promise<string> {
+  if (paymentMethodId) return paymentMethodId
+  if (!uiKey) {
+    const err = new Error('STAFF_PAYMENT_METHOD_NOT_FOUND') as Error & { errorCode?: string }
+    err.errorCode = 'STAFF_PAYMENT_METHOD_NOT_FOUND'
+    throw err
+  }
+
+  const methods = await localStaffRepository.getPaymentMethods(staffProfileId)
+  const match = methods.find((method) => (method.uiKey || payoutTypeToUiKey(method.type || '')) === uiKey)
+  if (!match?.id) {
+    const err = new Error('STAFF_PAYMENT_METHOD_NOT_FOUND') as Error & { errorCode?: string }
+    err.errorCode = 'STAFF_PAYMENT_METHOD_NOT_FOUND'
+    throw err
+  }
+  return match.id
+}
+
 export function useUpdateLocalStaffPaymentMethod() {
   const queryClient = useQueryClient()
 
@@ -148,19 +171,25 @@ export function useUpdateLocalStaffPaymentMethod() {
     mutationFn: async ({
       staffProfileId,
       paymentMethodId,
+      uiKey,
       accountInfo,
+      accountName,
       imageUrl,
       imageFile,
     }: {
       staffProfileId: string
-      paymentMethodId: string
+      paymentMethodId?: string
+      uiKey?: string
       accountInfo?: string | null
+      accountName?: string | null
       imageUrl?: string | null
       imageFile?: File | null
     }) => {
+      const methodId = await resolveLocalStaffPaymentMethodId(staffProfileId, paymentMethodId, uiKey)
       const resolvedImageUrl = await resolvePaymentMethodImageUrl({ imageFile, imageUrl })
-      return localStaffRepository.updatePaymentMethod(staffProfileId, paymentMethodId, {
+      return localStaffRepository.updatePaymentMethod(staffProfileId, methodId, {
         accountInfo,
+        accountName,
         imageUrl: resolvedImageUrl,
       })
     },
@@ -174,13 +203,18 @@ export function useToggleLocalStaffPaymentMethod() {
   const queryClient = useQueryClient()
 
   return useMutation({
-    mutationFn: ({
+    mutationFn: async ({
       staffProfileId,
       paymentMethodId,
+      uiKey,
     }: {
       staffProfileId: string
-      paymentMethodId: string
-    }) => localStaffRepository.togglePaymentMethod(staffProfileId, paymentMethodId),
+      paymentMethodId?: string
+      uiKey?: string
+    }) => {
+      const methodId = await resolveLocalStaffPaymentMethodId(staffProfileId, paymentMethodId, uiKey)
+      return localStaffRepository.togglePaymentMethod(staffProfileId, methodId)
+    },
     onSuccess: (_data, vars) => {
       invalidateLocalStaffCaches(queryClient, vars.staffProfileId)
     },

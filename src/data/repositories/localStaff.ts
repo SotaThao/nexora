@@ -9,6 +9,7 @@ interface LocalStaffPaymentMethodApiDto {
   id?: string
   type?: string
   accountInfo?: string | null
+  accountName?: string | null
   imageUrl?: string | null
   isActive?: boolean
   isConfigured?: boolean
@@ -36,6 +37,7 @@ function normalizeLocalStaffPaymentMethod(dto: LocalStaffPaymentMethodApiDto): P
     uiKey,
     name: PAYOUT_UI_LABELS[uiKey] || type,
     accountInfo: dto.accountInfo ?? null,
+    accountName: dto.accountName ?? null,
     imageUrl: dto.imageUrl ?? null,
     isActive: Boolean(dto.isActive),
     isConfigured: Boolean(dto.isConfigured),
@@ -69,7 +71,7 @@ export function createLocalStaffRepository(client: HttpClient = httpClient) {
     async updatePaymentMethod(
       staffProfileId: string,
       paymentMethodId: string,
-      dto: { accountInfo?: string | null; imageUrl?: string | null },
+      dto: { accountInfo?: string | null; accountName?: string | null; imageUrl?: string | null },
     ): Promise<PaymentMethodDto> {
       const res = await client.put<LocalStaffPaymentMethodApiDto>(
         `/api/v1/merchant/local-staff/${encodeURIComponent(staffProfileId)}/payment-methods/${encodeURIComponent(paymentMethodId)}`,

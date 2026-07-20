@@ -2,8 +2,10 @@ import React from 'react'
 import { useLocation, useSearchParams } from 'react-router-dom'
 import { ChevronLeft, ChevronUp, ChevronDown, LogOut } from 'lucide-react'
 import { useTranslation } from '../../../contexts/LanguageContext'
+import { useOpenProductManagement } from '../../../data/hooks/useOpenProductManagement'
 import MenuIcon from '../../ui/MenuIcon'
 import HomepageLink from '../../ui/HomepageLink'
+import LanguageSwitcher from '../../ui/LanguageSwitcher'
 import SidebarPlanCard from '../../ui/SidebarPlanCard'
 import { getSubscriptionSidebarCopy } from '../../../utils/subscriptionDisplay'
 import { useMerchantSetup } from '../../../data/hooks/useMerchantSetup'
@@ -20,7 +22,9 @@ import {
   sidebarSubmenuItemClass,
 } from '../../ui/sidebarMenuStyles'
 import PaymentsPayoutsMenuSection from './PaymentsPayoutsMenuSection'
-import { isPaymentsPayoutsRouteActive, VISIBLE_TOUCHPOINTS_SUBMENU, TAXIQ_SUBMENU, TAXIQ_MENU_CHILD_MODULE } from '../constants'
+import { isPaymentsPayoutsRouteActive, getVisibleBookingHubSubmenu, isBookingHubSubActive, VISIBLE_TOUCHPOINTS_SUBMENU, TAXIQ_SUBMENU, TAXIQ_MENU_CHILD_MODULE, DASHBOARD_MENU, DASHBOARD_MENU_ID, getDefaultBookingHubTab, getDashboardMenuLocalizedLabel, isDashboardStaffRole } from '../constants'
+import { handleExpandableMenuClick } from '../hooks/expandableMenuNav'
+import { useMerchantVoiceTenantStatus } from '../../../data/hooks/useMerchantVoiceBookings'
 
 export default function MobileMenuDrawer({
   isOpen,
@@ -41,6 +45,8 @@ export default function MobileMenuDrawer({
   setIsTouchpointsMobileExpanded,
   isTaxIqMobileExpanded,
   setIsTaxIqMobileExpanded,
+  isBookingHubMobileExpanded,
+  setIsBookingHubMobileExpanded,
   hasKyb,
   userRole,
   onLogout,
@@ -50,6 +56,7 @@ export default function MobileMenuDrawer({
   const { t, currentLanguage } = useTranslation()
   const [searchParams] = useSearchParams()
   const location = useLocation()
+  const { openProductManagement, isOpeningProductManagement } = useOpenProductManagement()
   const activeSubTab = searchParams.get('tab')
   // Tax IQ sub-items are real routes (/dashboard/taxiq/<id>), not a ?tab= param —
   // mirrors DashboardSidebar's desktop equivalent.
@@ -62,6 +69,11 @@ export default function MobileMenuDrawer({
   const taxiqBusinessId = merchantSetupData?.businessInfo?.businessId
   const { data: ownerTaxYearPage } = useOwnerTaxYearByBusiness(taxiqBusinessId, new Date().getFullYear())
   const enabledTaxiqModules = ownerTaxYearPage?.items?.[0]?.enabledModules
+  const { data: voiceTenantStatus } = useMerchantVoiceTenantStatus({
+    enabled: !isDashboardStaffRole(userRole),
+  })
+  const hasVoiceTenant = voiceTenantStatus?.hasVoiceTenant === true
+  const bookingHubSubmenu = getVisibleBookingHubSubmenu(hasVoiceTenant)
   const subscriptionCopy = getSubscriptionSidebarCopy(
     subscription ?? profile?.subscription,
     t,
@@ -76,33 +88,44 @@ export default function MobileMenuDrawer({
     navigateMenu(screen, { tab, closeDrawer: true })
     setIsPaymentsPayoutsMobileExpanded(true)
     setIsTouchpointsMobileExpanded(false)
+    setIsBookingHubMobileExpanded(false)
   }
 
   const handleMenuClick = (id: string) => {
-    if (id === 'touchpoints') {
-      if (activeMenu === 'touchpoints') {
-        setIsTouchpointsMobileExpanded((prev) => !prev)
-      } else {
-        navigateMenu('touchpoints', { closeDrawer: false })
-        setIsTouchpointsMobileExpanded(true)
-        setIsPaymentsPayoutsMobileExpanded(false)
-      }
+    if (id === DASHBOARD_MENU_ID.productManagement) {
+      void openProductManagement().finally(() => {
+        onClose()
+      })
       return
     }
 
-    if (id === 'taxiq') {
-      if (activeMenu === 'taxiq') {
-        setIsTaxIqMobileExpanded((prev) => !prev)
-      } else {
-        navigateMenu('taxiq', { closeDrawer: false })
-        setIsTaxIqMobileExpanded(true)
-        setIsPaymentsPayoutsMobileExpanded(false)
-        setIsTouchpointsMobileExpanded(false)
-      }
-      return
-    }
-
-    navigateMenu(id)
+    handleExpandableMenuClick({
+      clickedId: id,
+      activeMenu,
+      sections: [
+        {
+          id: 'taxiq',
+          setExpanded: setIsTaxIqMobileExpanded,
+          enter: () => navigateMenu('taxiq', { closeDrawer: false }),
+        },
+        {
+          id: DASHBOARD_MENU.Touchpoints,
+          setExpanded: setIsTouchpointsMobileExpanded,
+          enter: () => navigateMenu(DASHBOARD_MENU.Touchpoints, { closeDrawer: false }),
+        },
+        {
+          id: DASHBOARD_MENU.BookingHub,
+          setExpanded: setIsBookingHubMobileExpanded,
+          enter: () =>
+            navigateMenu(DASHBOARD_MENU.BookingHub, {
+              closeDrawer: false,
+              tab: hasVoiceTenant ? undefined : getDefaultBookingHubTab(false),
+            }),
+        },
+      ],
+      onPlainNavigate: (menuId) => navigateMenu(menuId),
+      collapseExtras: () => setIsPaymentsPayoutsMobileExpanded(false),
+    })
   }
 
   if (!isOpen) return null
@@ -152,79 +175,79 @@ export default function MobileMenuDrawer({
           </div>
 
           {/* Submenu links */}
-          {isProfileExpanded && userRole !== 'staff' && (
+          {isProfileExpanded && (
             <div className="mt-3 pt-2.5 border-t border-white/5 space-y-1 animate-fadeIn">
-              <button
-                type="button"
-                onClick={() => {
-                  setActiveMenu('settings')
-                  setSettingsTab('profile')
-                  onClose()
-                }}
-                className={`flex h-8 w-full items-center gap-2.5 rounded-lg px-2 text-left text-xs font-bold transition ${
-                  activeMenu === 'settings' && settingsTab === 'profile'
-                    ? 'text-brandCyan font-extrabold'
-                    : 'text-white/75 hover:bg-white/5 hover:text-white'
-                }`}
-              >
-                <div className={`h-1.5 w-1.5 rounded-full ${activeMenu === 'settings' && settingsTab === 'profile' ? 'bg-brandCyan shadow-sm' : 'bg-white/30'}`} />
-                <span>{t('dashboard.menu.business_setting')}</span>
-              </button>
-              <button
-                type="button"
-                disabled
-                aria-disabled="true"
-                className="flex h-8 w-full cursor-not-allowed items-center gap-2.5 rounded-lg px-2 text-left text-xs font-bold text-white/40 opacity-60"
-              >
-                <div className="h-1.5 w-1.5 rounded-full bg-white/20" />
-                <span>{t('dashboard.menu.kyb')} ({t('common.coming_soon')})</span>
-              </button>
+              {userRole !== 'staff' && (
+                <>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setActiveMenu(DASHBOARD_MENU_ID.settings)
+                      setSettingsTab('profile')
+                      onClose()
+                    }}
+                    className={`flex h-8 w-full items-center gap-2.5 rounded-lg px-2 text-left text-xs font-bold transition ${
+                      activeMenu === DASHBOARD_MENU_ID.settings && settingsTab === 'profile'
+                        ? 'text-brandCyan font-extrabold'
+                        : 'text-white/75 hover:bg-white/5 hover:text-white'
+                    }`}
+                  >
+                    <div className={`h-1.5 w-1.5 rounded-full ${activeMenu === DASHBOARD_MENU_ID.settings && settingsTab === 'profile' ? 'bg-brandCyan shadow-sm' : 'bg-white/30'}`} />
+                    <span>{t('dashboard.menu.business_setting')}</span>
+                  </button>
+                  <button
+                    type="button"
+                    disabled
+                    aria-disabled="true"
+                    className="flex h-8 w-full cursor-not-allowed items-center gap-2.5 rounded-lg px-2 text-left text-xs font-bold text-white/40 opacity-60"
+                  >
+                    <div className="h-1.5 w-1.5 rounded-full bg-white/20" />
+                    <span>{t('dashboard.menu.kyb')} ({t('common.coming_soon')})</span>
+                  </button>
+                </>
+              )}
+              <LanguageSwitcher variant="sidebar" className="w-full" />
             </div>
           )}
         </div>
 
         <nav className={`${SIDEBAR_NAV_CLASS} mt-0 flex-1`}>
           <HomepageLink variant="menu" active={isHomeActive} onNavigate={onClose} />
-          {menuItemsToDisplay.filter((item) => item.id !== 'settings').map((item) => {
+          {menuItemsToDisplay.filter((item) => item.id !== DASHBOARD_MENU_ID.settings).map((item) => {
             const { id, label } = item
             const isActive = activeMenu === id
-            const localizedLabel = {
-              overview: t('dashboard.menu.dashboard'),
-              staff: t('dashboard.menu.staff'),
-              reviews: t('dashboard.menu.reviews'),
-              reports: t('dashboard.menu.transactions'),
-              'booking-hub': t('dashboard.menu.booking_hub'),
-              touchpoints: t('dashboard.menu.touchpoints'),
-              devices: t('dashboard.menu.qr_nfc'),
-              taxiq: t('dashboard.menu.tax_iq'),
-              analytics: t('dashboard.menu.analytics'),
-              support: t('dashboard.menu.support')
-            }[id] || label
+            const localizedLabel = getDashboardMenuLocalizedLabel(id, t, label)
 
             return (
               <React.Fragment key={id}>
                 <button
                   type="button"
                   onClick={() => handleMenuClick(id)}
+                  disabled={id === DASHBOARD_MENU_ID.productManagement && isOpeningProductManagement}
                   className={sidebarMenuItemBetweenClass(isActive)}
                 >
                   <div className="flex items-center gap-3 min-w-0">
                     <MenuIcon item={item} active={isActive} />
                     <span>{localizedLabel}</span>
                   </div>
-                  {id === 'touchpoints' && (
+                  {id === DASHBOARD_MENU_ID.productManagement && isOpeningProductManagement ? (
+                    <span className="h-4 w-4 shrink-0 animate-spin rounded-full border-2 border-white/30 border-t-white" />
+                  ) : id === DASHBOARD_MENU.Touchpoints ? (
                     <div className="text-white/65 shrink-0">
                       {isTouchpointsMobileExpanded ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
                     </div>
-                  )}
-                  {id === 'taxiq' && (
+                  ) : id === 'taxiq' ? (
                     <div className="text-white/65 shrink-0">
                       {isTaxIqMobileExpanded ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
                     </div>
-                  )}
+                  ) : id === DASHBOARD_MENU.BookingHub ? (
+                    <div className="text-white/65 shrink-0">
+                      {isBookingHubMobileExpanded ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
+                    </div>
+                  ) : null}
                 </button>
 
-                {userRole !== 'staff' && id === 'staff' && (
+                {userRole !== 'staff' && id === DASHBOARD_MENU_ID.staff && (
                   <PaymentsPayoutsMenuSection
                     activeMenu={activeMenu}
                     tabParam={activeSubTab}
@@ -234,15 +257,15 @@ export default function MobileMenuDrawer({
                   />
                 )}
 
-                {id === 'touchpoints' && isTouchpointsMobileExpanded && (
+                {id === DASHBOARD_MENU.BookingHub && isBookingHubMobileExpanded && (
                   <div className={SIDEBAR_SUBMENU_WRAP_CLASS}>
-                    {VISIBLE_TOUCHPOINTS_SUBMENU.map((sub) => {
-                      const isSubActive = activeMenu === 'touchpoints' && (activeSubTab || 'stations') === sub.id
+                    {bookingHubSubmenu.map((sub) => {
+                      const isSubActive = isBookingHubSubActive(activeMenu, activeSubTab, sub.id, hasVoiceTenant)
                       return (
                         <button
                           key={sub.id}
                           type="button"
-                          onClick={() => navigateMenu('touchpoints', { tab: sub.id })}
+                          onClick={() => navigateMenu(DASHBOARD_MENU.BookingHub, { tab: sub.id })}
                           className={sidebarSubmenuItemClass(isSubActive)}
                         >
                           <div className={`h-1.5 w-1.5 rounded-full ${isSubActive ? 'bg-brandCyan shadow-sm' : 'bg-white/30'}`} />
@@ -252,8 +275,7 @@ export default function MobileMenuDrawer({
                     })}
                   </div>
                 )}
-
-                {id === 'taxiq' && isTaxIqMobileExpanded && (
+		{id === 'taxiq' && isTaxIqMobileExpanded && (
                   <div className={SIDEBAR_SUBMENU_WRAP_CLASS}>
                     {TAXIQ_SUBMENU.filter((sub) => {
                       // Fail-open (show all) before onboarding completes or while loading —
@@ -273,6 +295,24 @@ export default function MobileMenuDrawer({
                         >
                           <div className={`h-1.5 w-1.5 rounded-full ${isSubActive ? 'bg-brandCyan shadow-sm' : 'bg-white/30'}`} />
                           <span>{t(`dashboard.menu.taxiq_${sub.id.replace('-', '_')}`)}</span>
+                        </button>
+                      )
+                    })}
+                  </div>
+                )}
+                {id === DASHBOARD_MENU.Touchpoints && isTouchpointsMobileExpanded && (
+                  <div className={SIDEBAR_SUBMENU_WRAP_CLASS}>
+                    {VISIBLE_TOUCHPOINTS_SUBMENU.map((sub) => {
+                      const isSubActive = activeMenu === DASHBOARD_MENU.Touchpoints && (activeSubTab || 'stations') === sub.id
+                      return (
+                        <button
+                          key={sub.id}
+                          type="button"
+                          onClick={() => navigateMenu(DASHBOARD_MENU.Touchpoints, { tab: sub.id })}
+                          className={sidebarSubmenuItemClass(isSubActive)}
+                        >
+                          <div className={`h-1.5 w-1.5 rounded-full ${isSubActive ? 'bg-brandCyan shadow-sm' : 'bg-white/30'}`} />
+                          <span>{t(sub.labelKey)}</span>
                         </button>
                       )
                     })}

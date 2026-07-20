@@ -34,7 +34,8 @@
     "react-hook-form": "^7.79.0",
     "react-loading-skeleton": "^3.5.0",
     "react-router-dom": "^6.30.4",
-    "recharts": "^3.9.2"
+    "recharts": "^3.9.2",
+    "react-time-picker": "^8.0.3"
   },
   "devDependencies": {
     "@tanstack/react-query-devtools": "^5.0.0",

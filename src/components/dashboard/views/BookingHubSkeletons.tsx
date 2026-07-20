@@ -1,5 +1,6 @@
 import type { ReactNode } from 'react'
 import Skeleton from '../../ui/skeleton/Skeleton'
+import { useTranslation } from '../../../contexts/LanguageContext'
 
 function BookingSkeletonStack({
   children,
@@ -84,10 +85,47 @@ export function BookingCardListSkeleton({ count = 4 }: { count?: number }) {
   )
 }
 
-export function BookingTodayListSkeleton({ viewMode }: { viewMode: 'table' | 'card' }) {
+export function BookingTableMobileListSkeleton({ count = 4 }: { count?: number }) {
+  return (
+    <div className="booking-table-mobile-list" aria-busy="true" aria-hidden="true">
+      {Array.from({ length: count }).map((_, index) => (
+        <article className="booking-table-mobile-row booking-skeleton-card" key={index}>
+          <div className="booking-table-mobile-fields">
+            {Array.from({ length: 8 }).map((__, fieldIndex) => (
+              <div
+                className={`booking-table-mobile-field${fieldIndex === 7 ? ' booking-table-mobile-field-actions' : ''}`}
+                key={fieldIndex}
+              >
+                <Skeleton width="42%" height={10} borderRadius={4} />
+                <Skeleton
+                  width={fieldIndex % 2 === 0 ? '78%' : '56%'}
+                  height={fieldIndex === 7 ? 30 : 14}
+                  borderRadius={fieldIndex === 7 ? 8 : 6}
+                />
+              </div>
+            ))}
+          </div>
+        </article>
+      ))}
+    </div>
+  )
+}
+
+export function BookingTodayListSkeleton({
+  viewMode,
+  isMobileUI = false,
+}: {
+  viewMode: 'table' | 'card'
+  isMobileUI?: boolean
+}) {
+  if (viewMode === 'table' && isMobileUI) {
+    return <BookingTableMobileListSkeleton count={4} />
+  }
+
   if (viewMode === 'table') {
     return (
       <div className="booking-table-wrap" aria-busy="true" aria-hidden="true">
+        <div className="booking-table-scroller">
         <table className="booking-table">
           <thead>
             <tr>
@@ -102,6 +140,7 @@ export function BookingTodayListSkeleton({ viewMode }: { viewMode: 'table' | 'ca
             <BookingTableSkeleton rows={6} />
           </tbody>
         </table>
+        </div>
       </div>
     )
   }
@@ -232,8 +271,13 @@ export function BookingTechScheduleSkeleton() {
 }
 
 export function BookingSettingsSkeleton() {
+  const { t } = useTranslation()
   return (
-    <div className="settings-shell" aria-busy="true" aria-label="Loading salon settings">
+    <div
+      className="settings-shell"
+      aria-busy="true"
+      aria-label={t('components.dashboard.views.BookingHubView.settings.loadingAria')}
+    >
       <div className="settings-hero is-compact">
         <Skeleton width={120} height={12} borderRadius={6} />
         <Skeleton width="52%" height={24} borderRadius={8} />

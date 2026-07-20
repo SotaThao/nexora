@@ -10,6 +10,7 @@ type HttpClient = typeof httpClient
 
 interface UpdatePaymentMethodDto {
   accountInfo?: string | null
+  accountName?: string | null
   imageUrl?: string | null
 }
 
@@ -17,6 +18,7 @@ interface StaffPaymentMethodApiDto {
   id?: string
   type?: string
   accountInfo?: string | null
+  accountName?: string | null
   imageUrl?: string | null
   isActive?: boolean
   isConfigured?: boolean
@@ -31,6 +33,7 @@ function normalizeStaffPaymentMethod(dto: StaffPaymentMethodApiDto): PaymentMeth
     uiKey,
     name: PAYOUT_UI_LABELS[uiKey] || type,
     accountInfo: dto.accountInfo ?? null,
+    accountName: dto.accountName ?? null,
     imageUrl: dto.imageUrl ?? null,
     isActive: Boolean(dto.isActive),
     isConfigured: Boolean(dto.isConfigured),

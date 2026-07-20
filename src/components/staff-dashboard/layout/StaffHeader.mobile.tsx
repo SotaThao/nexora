@@ -37,7 +37,7 @@ export default function StaffHeader({ activeScreen, onNavigate, onOpenMobileMenu
             : 'border border-nexoraBorder'
       }`}
     >
-      <img src="/assets/menu/notification.png" alt="" className="h-5 w-5 object-contain" aria-hidden="true" />
+      <Bell className="h-5 w-5" aria-hidden="true" />
       {unreadCount > 0 && (
         <span
           className={
@@ -94,8 +94,6 @@ export default function StaffHeader({ activeScreen, onNavigate, onOpenMobileMenu
         </div>
 
         <div className="flex items-center justify-end gap-2">
-          <LanguageSwitcher />
-          <HeaderEcosystem />
           <div ref={notiMobileRef} className="relative">
             <button
               type="button"
@@ -105,7 +103,7 @@ export default function StaffHeader({ activeScreen, onNavigate, onOpenMobileMenu
                 isNotiOpen ? 'ring-2 ring-nexoraBrand/30' : ''
               }`}
             >
-              <img src="/assets/menu/notification.png" alt="" className="h-5 w-5 object-contain" aria-hidden="true" />
+              <Bell className="h-5 w-5" aria-hidden="true" />
               {unreadCount > 0 && (
                 <span className="absolute right-1.5 top-1.5 h-2 w-2 rounded-full bg-red-500 ring-2 ring-white" />
               )}
@@ -191,21 +189,8 @@ export default function StaffHeader({ activeScreen, onNavigate, onOpenMobileMenu
             )}
           </div>
 
-          <button
-            type="button"
-            onClick={() => onNavigate('profile')}
-            aria-label={t('staff_dashboard.titles.profile')}
-            className="relative flex h-10 w-10 items-center justify-center overflow-hidden rounded-full border-2 border-white shadow-sm transition hover:opacity-90"
-          >
-            {account.avatar ? (
-              <img src={account.avatar} alt="" className="h-full w-full object-cover" />
-            ) : (
-              <div className="flex h-full w-full items-center justify-center bg-gradient-to-br from-nexoraElectric to-nexoraViolet text-sm font-bold text-white">
-                {displayName.charAt(0)}
-              </div>
-            )}
-            <span className="absolute bottom-0 right-0 h-2.5 w-2.5 rounded-full border-2 border-white bg-emerald-500" />
-          </button>
+          <LanguageSwitcher variant="header-plain" />
+          <HeaderEcosystem plain />
         </div>
       </div>
 
@@ -228,7 +213,7 @@ export default function StaffHeader({ activeScreen, onNavigate, onOpenMobileMenu
                 isNotiOpen ? 'border-nexoraBrand ring-2 ring-nexoraBrand/30' : 'border-nexoraBorder'
               }`}
             >
-              <img src="/assets/menu/notification.png" alt="" className="h-5 w-5 object-contain" aria-hidden="true" />
+              <Bell className="h-5 w-5" aria-hidden="true" />
               {unreadCount > 0 && (
                 <span className="absolute -right-1 -top-1 flex h-[18px] min-w-[18px] items-center justify-center rounded-full bg-red-500 px-1 text-[9px] font-black text-white ring-2 ring-white">
                   {unreadCount > 99 ? '99+' : unreadCount}
