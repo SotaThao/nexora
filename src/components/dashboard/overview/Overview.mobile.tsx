@@ -16,7 +16,7 @@ import {
 import { useNavigate } from 'react-router-dom'
 import { useTranslation } from '../../../contexts/LanguageContext'
 import { buildMasterQrTarget, resolveMasterTouchpoint } from '../utils'
-import { isAwaitingShopConfirmation } from '../utils'
+import { useAwaitingShopConfirmationCount } from '../hooks/useAwaitingShopConfirmationCount'
 import { isMerchantConfirmablePending } from '../../../utils/merchantStaffPending'
 import SetupGuideBanner from './SetupGuideBanner'
 import PayoutSetupWarningBanner from './PayoutSetupWarningBanner'
@@ -281,10 +281,7 @@ function Overview({
   const moneySavedMonth = analytics?.overview.feeSaved ?? 0
   const moneySavedYear = yearAnalytics?.overview.feeSaved ?? 0
 
-  const pendingConfirmCount = useMemo(
-    () => (transactions || []).filter(isAwaitingShopConfirmation).length,
-    [transactions],
-  )
+  const pendingConfirmCount = useAwaitingShopConfirmationCount()
 
   const activeStaff = (staff || []).filter((m) => m.status === 'Active' || m.active === true)
   const pendingCount = (pendingStaff || []).filter(isMerchantConfirmablePending).length
@@ -604,7 +601,6 @@ function Overview({
       businessName={businessName}
       previewQrUrl={paymentQrModalUrl}
       paymentPageUrl={paymentPageUrl}
-      hideUrlCode
       scanCaption={t('components.settings.SettingsTipQrPanel.scanCaption')}
     />
     <ReferralQrModal open={isReferralQrOpen} onClose={() => setIsReferralQrOpen(false)} />

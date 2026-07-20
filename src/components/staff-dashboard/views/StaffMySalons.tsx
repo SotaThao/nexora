@@ -1,8 +1,13 @@
 import { Loader2 } from 'lucide-react'
 import { useNavigate } from 'react-router-dom'
 import { useTranslation } from '../../../contexts/LanguageContext'
-import { useStaffBusinesses } from '../../../data/hooks/useStaffSelf'
+import {
+  useSetStaffBusinessNickname,
+  useStaffBusinesses,
+  useStaffProfile,
+} from '../../../data/hooks/useStaffSelf'
 import type { StaffBusinessLink } from '../../../types/domain'
+import type { TFunction } from '../../../types/contexts'
 import {
   formatSalonLocation,
   formatSalonTimeline,
@@ -16,10 +21,11 @@ import {
   STAFF_BUSINESS_LINK_STATUS,
 } from '../../../utils/staffBusinessLinkStatus'
 import Tooltip from '../../ui/Tooltip'
+import NicknameEditor, { type NicknameEditorSaveResult } from '../../NicknameEditor'
 
 function getSalonStatusHelp(
   statusLabel: string,
-  t: (key: string, params?: Record<string, unknown>) => string,
+  t: TFunction,
 ) {
   const normalized = statusLabel.trim().toLowerCase()
 
@@ -61,12 +67,18 @@ function SalonCard({
   currentLanguage,
   t,
   onOpen,
+  originalName,
+  onRefreshNickname,
+  onSaveNickname,
 }: {
   business: StaffBusinessLink
   index: number
   currentLanguage: string
-  t: (key: string, params?: Record<string, unknown>) => string
+  t: TFunction
   onOpen: () => void
+  originalName: string
+  onRefreshNickname: () => Promise<string | null>
+  onSaveNickname: (nickname: string | null) => Promise<NicknameEditorSaveResult>
 }) {
   const statusLabel = resolveStaffBusinessLinkStatusLabel(business)
   const status = getSalonDisplayStatus(business, t)
@@ -74,10 +86,14 @@ function SalonCard({
   const timeline = formatSalonTimeline(business, statusLabel, t, currentLanguage)
   const location = formatSalonLocation(business)
   const initials = business.logoUrl ? null : getSalonInitials(business.businessName)
+  const isActive = statusLabel.trim().toLowerCase() === STAFF_BUSINESS_LINK_STATUS.active
+  const nicknameValue = business.nicknameAtBusiness?.trim() ?? ''
+  const nicknameDisplayValue = nicknameValue || t('staff_salons.nickname_not_set')
 
   return (
-    <div
-      role="button"
+    <div className="w-full rounded-2xl border border-nexoraBorder/80 bg-white p-4 text-left shadow-sm transition hover:border-nexoraBrand/20 hover:shadow-md">
+      <div
+        role="button"
       tabIndex={0}
       onClick={onOpen}
       onKeyDown={(event) => {
@@ -95,8 +111,8 @@ function SalonCard({
           onOpen()
         }
       }}
-      className="flex w-full gap-3 rounded-2xl border border-nexoraBorder/80 bg-white p-4 text-left shadow-sm transition hover:border-nexoraBrand/20 hover:shadow-md active:scale-[0.99]"
-    >
+        className="flex w-full gap-3 rounded-lg text-left transition active:scale-[0.99] focus:outline-none focus:ring-2 focus:ring-nexoraBrand/30"
+      >
       {business.logoUrl ? (
         <img
           src={business.logoUrl}
@@ -136,9 +152,56 @@ function SalonCard({
         </div>
         <p className="truncate text-xs font-medium text-nexoraMuted">{location}</p>
         {timeline ? (
-          <p className="pt-0.5 text-right text-[11px] font-semibold text-nexoraMuted">{timeline}</p>
+          <p className="pt-0.5 text-left text-[11px] font-semibold text-nexoraMuted">{timeline}</p>
         ) : null}
       </div>
+      </div>
+      {isActive ? (
+        <div className="mt-2 flex min-w-0 items-center gap-2">
+          <div
+            role="button"
+            tabIndex={0}
+            onClick={onOpen}
+            onKeyDown={(event) => {
+              if (event.key === ' ') event.preventDefault()
+              if (event.key === 'Enter') {
+                event.preventDefault()
+                onOpen()
+              }
+            }}
+            onKeyUp={(event) => {
+              if (event.key === ' ') {
+                event.preventDefault()
+                onOpen()
+              }
+            }}
+            className="flex min-w-0 flex-1 items-center gap-2 rounded-lg py-1 text-left focus:outline-none focus:ring-2 focus:ring-nexoraBrand/30"
+          >
+            <span className="shrink-0 rounded-full border border-dashed border-nexoraLavender bg-nexoraBrandSoft px-2 py-0.5 text-[10px] font-extrabold uppercase text-nexoraBrand">
+              {t('staff_salons.nickname_badge')}
+            </span>
+            <span
+              className={`min-w-0 flex-1 truncate text-xs text-nexoraText ${nicknameValue ? 'font-semibold' : 'italic text-nexoraMuted'}`}
+              title={nicknameDisplayValue}
+              aria-label={nicknameDisplayValue}
+            >
+              {nicknameDisplayValue}
+            </span>
+          </div>
+          <NicknameEditor
+            value={business.nicknameAtBusiness}
+            originalName={originalName}
+            triggerLabel={t('staff_salons.nickname_edit_action')}
+            fieldLabel={t('staff_salons.nickname_badge')}
+            helperText={t('staff_salons.nickname_helper_staff')}
+            onRefresh={onRefreshNickname}
+            onSave={onSaveNickname}
+            triggerVariant="icon"
+            containerClassName="shrink-0"
+            stopPropagation
+          />
+        </div>
+      ) : null}
     </div>
   )
 }
@@ -146,9 +209,17 @@ function SalonCard({
 export default function StaffMySalons() {
   const { t, currentLanguage } = useTranslation()
   const navigate = useNavigate()
-  const { data: businesses = [], isPending, isFetching } = useStaffBusinesses()
+  const {
+    data: businesses = [],
+    isPending,
+    refetch: refetchBusinesses,
+  } = useStaffBusinesses()
+  const { data: staffProfile } = useStaffProfile()
+  const setNicknameMutation = useSetStaffBusinessNickname()
   const salons = sortSalonBusinesses(businesses)
-  const isLoading = isPending || isFetching
+  const isLoading = isPending && businesses.length === 0
+  const originalName = staffProfile?.displayName?.trim()
+    || `${staffProfile?.firstName ?? ''} ${staffProfile?.lastName ?? ''}`.trim()
 
   return (
     <div className="space-y-4">
@@ -183,6 +254,17 @@ export default function StaffMySalons() {
               currentLanguage={currentLanguage}
               t={t}
               onOpen={() => navigate('/staff/qr?tab=tipping')}
+              originalName={originalName}
+              onRefreshNickname={async () => {
+                const result = await refetchBusinesses({ throwOnError: true })
+                return result.data?.find(
+                  (item) => item.businessId === business.businessId,
+                )?.nicknameAtBusiness ?? null
+              }}
+              onSaveNickname={(nickname) => setNicknameMutation.mutateAsync({
+                businessId: business.businessId,
+                nickname,
+              })}
             />
           ))}
         </div>

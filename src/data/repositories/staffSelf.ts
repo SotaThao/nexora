@@ -26,9 +26,22 @@ import type { StaffLinkRequestDetailApiDto } from '../../types/repositories'
 
 type HttpClient = typeof httpClient
 
+interface StaffNicknameUpdateApiDto {
+  linkId?: string
+  nicknameAtBusiness?: string | null
+  displayName?: string | null
+}
+
+export interface StaffNicknameUpdateResult {
+  linkId: string
+  nicknameAtBusiness: string | null
+  displayName: string
+}
+
 interface StaffBusinessApiDto {
   businessId?: string
   businessName?: string
+  nicknameAtBusiness?: string | null
   address?: string | null
   city?: string | null
   state?: string | null
@@ -92,6 +105,7 @@ function normalizeStaffBusinessLink(b: StaffBusinessApiDto): StaffBusinessLink {
   return {
     businessId: b.businessId ?? '',
     businessName: b.businessName ?? '',
+    nicknameAtBusiness: b.nicknameAtBusiness ?? null,
     address: b.address ?? null,
     city: b.city ?? null,
     state: b.state ?? null,
@@ -372,6 +386,21 @@ export function createStaffSelfRepository(client: HttpClient = httpClient) {
       const res = await client.get<StaffBusinessApiDto[] | StaffBusinessesResponse>('/api/v1/staff/businesses')
       const items = Array.isArray(res) ? res : (res?.items || [])
       return items.map(normalizeStaffBusinessLink)
+    },
+
+    async setMyNickname(
+      businessId: string,
+      nickname: string | null,
+    ): Promise<StaffNicknameUpdateResult> {
+      const dto = await client.patch<StaffNicknameUpdateApiDto>(
+        `/api/v1/staff/businesses/${encodeURIComponent(businessId)}/nickname`,
+        { nickname },
+      )
+      return {
+        linkId: dto.linkId ?? '',
+        nicknameAtBusiness: dto.nicknameAtBusiness ?? null,
+        displayName: dto.displayName ?? '',
+      }
     },
 
     async getDashboardSummary(): Promise<StaffDashboardSummary> {

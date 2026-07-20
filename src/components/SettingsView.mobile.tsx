@@ -37,6 +37,7 @@ import {
 import { formatNotificationDateTime } from './dashboard/utils'
 import QrImage from './ui/QrImage'
 import { formatMemberSinceDate } from '../utils/localDate'
+import { SettingsMobileProfileSection } from './settings/constants'
 
 const compactPanel =
   'rounded-lg border border-[#EEE9FF] bg-white p-2.5 shadow-[0_8px_18px_rgba(70,72,212,0.08)]'
@@ -371,7 +372,7 @@ export default function SettingsViewMobile({
               <MerchantProfileMenuItem
                 icon={Bell}
                 label={t('staff_dashboard.profile.menu_notification_preferences')}
-                onClick={() => openProfileSection('notifications')}
+                onClick={() => openProfileSection(SettingsMobileProfileSection.Notifications)}
               />
               <MerchantLanguageMenuItem
                 label={t('staff_dashboard.profile.menu_language')}
@@ -563,7 +564,7 @@ export default function SettingsViewMobile({
           </>
         )}
 
-        {form.activeTab === 'profile' && activeSection === 'notifications' && (
+        {form.activeTab === 'profile' && activeSection === SettingsMobileProfileSection.Notifications && (
           <>
             <MerchantProfileSectionHeader title={t('staff_dashboard.profile.menu_notification_preferences')} onBack={closeProfileSection} />
             <MerchantNotificationsContent />

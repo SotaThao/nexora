@@ -605,7 +605,7 @@ function StaffModal({
             <div className="grid grid-cols-1 gap-4 sm:grid-cols-[minmax(0,1fr)_minmax(0,1fr)]">
               <div className="min-w-0">
                 <label className="flex h-4 items-center text-[10px] font-extrabold uppercase text-nexoraMuted gap-1">
-                  <span>{renderLabel(t('setup.staff_displayname'))}</span>
+                  <span>{renderLabel(t('components.dashboard.modals.StaffModal.displayName'))}</span>
                   <div className="relative group inline-block normal-case font-normal text-nexoraSubtle">
                     <HelpCircle className="w-3.5 h-3.5 hover:text-nexoraBrand cursor-help transition-colors" />
                     <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 hidden group-hover:block w-48 bg-black text-white text-[10px] p-2.5 rounded-lg shadow-xl z-50 text-center leading-normal">

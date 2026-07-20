@@ -1,12 +1,13 @@
 import { useState } from 'react'
 import { createPortal } from 'react-dom'
-import { X, ShieldAlert, ShieldCheck, Download, Printer, Loader2 } from 'lucide-react'
+import { X, ShieldAlert, ShieldCheck, Download, Printer, Loader2, Copy, Check } from 'lucide-react'
 import IconButton from '../../ui/IconButton'
 import { useTranslation } from '../../../contexts/LanguageContext'
 import { useNotification } from '../../../contexts/NotificationContext'
 import { toLocalCustomerTouchUrl, buildQrImageUrl } from '../../../utils/staffTipUrl'
 import { getWebUrlOrigin } from '../../../utils/webUrlBase'
 import { downloadQrCode, downloadTouchpointQrFile, QR_IMAGE_SIZES } from '../../../utils/qrUtils'
+import { copyTextToClipboard } from '../../../utils/clipboard'
 import QrImage from '../../ui/QrImage'
 
 const slugify = (str = '') => str.toLowerCase().trim().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '')
@@ -19,13 +20,16 @@ function resolveTouchpointDownloadId(target) {
 function QrGatewayPreviewLayout({
   target,
   qrImageSrc,
+  qrUrl,
   scanCaption,
   onClose,
   t,
   showInactiveWarning = false,
   isSaving = false,
+  isCopied = false,
   onDownload,
   onPrint,
+  onCopyLink,
 }) {
   if (typeof document === 'undefined') return null
 
@@ -83,6 +87,22 @@ function QrGatewayPreviewLayout({
           </div>
         </div>
 
+        {qrUrl ? (
+          <div className="no-print mt-4 flex items-center justify-between gap-2 overflow-hidden rounded-xl border border-nexoraBorder bg-nexoraCanvas p-2 shadow-inner">
+            <span className="min-w-0 flex-1 truncate pl-2 text-left font-mono text-[11px] text-nexoraMuted">
+              {qrUrl.replace(/^https?:\/\//, '')}
+            </span>
+            <button
+              type="button"
+              onClick={() => void onCopyLink?.()}
+              className="flex shrink-0 items-center gap-1.5 rounded-full px-2 py-1 text-xs font-extrabold uppercase tracking-wide text-nexoraBrand transition hover:opacity-80"
+            >
+              {isCopied ? <Check className="h-3.5 w-3.5 text-emerald-600" /> : <Copy className="h-3.5 w-3.5" />}
+              <span>{t('common.copy')}</span>
+            </button>
+          </div>
+        ) : null}
+
         <div className="no-print mt-5 space-y-2">
           <button
             type="button"
@@ -112,6 +132,7 @@ function QrModal({ target, businessName, onClose }) {
   const { t } = useTranslation()
   const { showToast } = useNotification()
   const [isSaving, setIsSaving] = useState(false)
+  const [isCopied, setIsCopied] = useState(false)
 
   if (!target) return null
 
@@ -166,18 +187,33 @@ function QrModal({ target, businessName, onClose }) {
     window.print()
   }
 
+  const handleCopyLink = async () => {
+    if (!qrUrl) return
+    try {
+      await copyTextToClipboard(qrUrl)
+      setIsCopied(true)
+      showToast(t('dashboard.master_gateway.copied_qr_link'), 'success')
+      window.setTimeout(() => setIsCopied(false), 2000)
+    } catch {
+      showToast(t('common.error'), 'error')
+    }
+  }
+
   if (target.isGatewayQr || isStaff) {
     return (
       <QrGatewayPreviewLayout
         target={target}
         qrImageSrc={qrImageSrcHighRes}
+        qrUrl={qrUrl}
         scanCaption={t('customer.scan_to_tip_review')}
         onClose={onClose}
         t={t}
         showInactiveWarning={isStaff && !target.isActive}
         isSaving={isSaving}
+        isCopied={isCopied}
         onDownload={handleSaveQr}
         onPrint={handlePrint}
+        onCopyLink={handleCopyLink}
       />
     )
   }
