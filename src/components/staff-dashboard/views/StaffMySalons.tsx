@@ -114,18 +114,12 @@ function SalonCard({
             <span className={`rounded-full px-2.5 py-0.5 text-[10px] font-bold ${status.className}`}>
               {status.label}
             </span>
-            <span
-              onClick={(event) => event.stopPropagation()}
-              onKeyDown={(event) => event.stopPropagation()}
-              onKeyUp={(event) => event.stopPropagation()}
-            >
-              <Tooltip
-                content={statusHelp}
-                ariaLabel={t('staff_salons.status_help_aria')}
-                align="end"
-                placement="top"
-              />
-            </span>
+            <Tooltip
+              content={statusHelp}
+              ariaLabel={t('staff_salons.status_help_aria')}
+              align="end"
+              placement="top"
+            />
           </span>
         </div>
         <p className="truncate text-xs font-medium text-nexoraMuted">{location}</p>
@@ -158,7 +152,6 @@ function SalonCard({
             onSave={onSaveNickname}
             triggerVariant="icon"
             containerClassName="shrink-0"
-            stopPropagation
           />
         </div>
       ) : null}
