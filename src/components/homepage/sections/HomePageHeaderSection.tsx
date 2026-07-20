@@ -62,7 +62,7 @@ export default function HomePageHeaderSection() {
             <a className="hidden sm:flex items-center group shrink-0 ds-control ds-link" href="#" aria-label="NEXORA TOUCH">
               <picture>
                 <source media="(max-width: 767px)" srcSet="/homepage/assets/images/icon-nexora.png" />
-                <img alt="NEXORA TOUCH" className="h-8 sm:h-10 w-auto group-hover:scale-105 transition-transform" src="/homepage/assets/images/logo-light-mode.png" />
+                <img alt="NEXORA TOUCH" className="homepage-header-logo-img h-8 sm:h-10 w-auto group-hover:scale-105 transition-transform" src="/homepage/assets/images/logo-light-mode.png" />
               </picture>
             </a>
           </div>
@@ -149,7 +149,7 @@ export default function HomePageHeaderSection() {
                 </button>
               </div>
             ) : !hasMobileMenu ? (
-              <div className="homepage-header-actions" id="header-auth-group">
+              <div className="flex items-center gap-2" id="header-auth-group">
                 <button
                   type="button"
                   className="homepage-header-action homepage-header-action--ghost"
