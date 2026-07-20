@@ -604,7 +604,6 @@ function Overview({
       businessName={businessName}
       previewQrUrl={paymentQrModalUrl}
       paymentPageUrl={paymentPageUrl}
-      hideUrlCode
       scanCaption={t('components.settings.SettingsTipQrPanel.scanCaption')}
     />
     <ReferralQrModal open={isReferralQrOpen} onClose={() => setIsReferralQrOpen(false)} />
