@@ -66,7 +66,6 @@ function SalonCard({
   index,
   currentLanguage,
   t,
-  onOpen,
   originalName,
   onRefreshNickname,
   onSaveNickname,
@@ -75,7 +74,6 @@ function SalonCard({
   index: number
   currentLanguage: string
   t: TFunction
-  onOpen: () => void
   originalName: string
   onRefreshNickname: () => Promise<string | null>
   onSaveNickname: (nickname: string | null) => Promise<NicknameEditorSaveResult>
@@ -91,28 +89,8 @@ function SalonCard({
   const nicknameDisplayValue = nicknameValue || t('staff_salons.nickname_not_set')
 
   return (
-    <div className="w-full rounded-2xl border border-nexoraBorder/80 bg-white p-4 text-left shadow-sm transition hover:border-nexoraBrand/20 hover:shadow-md">
-      <div
-        role="button"
-      tabIndex={0}
-      onClick={onOpen}
-      onKeyDown={(event) => {
-        if (event.key === ' ') {
-          event.preventDefault()
-        }
-        if (event.key === 'Enter') {
-          event.preventDefault()
-          onOpen()
-        }
-      }}
-      onKeyUp={(event) => {
-        if (event.key === ' ') {
-          event.preventDefault()
-          onOpen()
-        }
-      }}
-        className="flex w-full gap-3 rounded-lg text-left transition active:scale-[0.99] focus:outline-none focus:ring-2 focus:ring-nexoraBrand/30"
-      >
+    <div className="w-full rounded-2xl border border-nexoraBorder/80 bg-white p-4 text-left shadow-sm">
+      <div className="flex w-full gap-3 text-left">
       {business.logoUrl ? (
         <img
           src={business.logoUrl}
@@ -158,25 +136,7 @@ function SalonCard({
       </div>
       {isActive ? (
         <div className="mt-2 flex min-w-0 items-center gap-2">
-          <div
-            role="button"
-            tabIndex={0}
-            onClick={onOpen}
-            onKeyDown={(event) => {
-              if (event.key === ' ') event.preventDefault()
-              if (event.key === 'Enter') {
-                event.preventDefault()
-                onOpen()
-              }
-            }}
-            onKeyUp={(event) => {
-              if (event.key === ' ') {
-                event.preventDefault()
-                onOpen()
-              }
-            }}
-            className="flex min-w-0 flex-1 items-center gap-2 rounded-lg py-1 text-left focus:outline-none focus:ring-2 focus:ring-nexoraBrand/30"
-          >
+          <div className="flex min-w-0 flex-1 items-center gap-2 rounded-lg py-1 text-left">
             <span className="shrink-0 rounded-full border border-dashed border-nexoraLavender bg-nexoraBrandSoft px-2 py-0.5 text-[10px] font-extrabold uppercase text-nexoraBrand">
               {t('staff_salons.nickname_badge')}
             </span>
@@ -253,7 +213,6 @@ export default function StaffMySalons() {
               index={index}
               currentLanguage={currentLanguage}
               t={t}
-              onOpen={() => navigate('/staff/qr?tab=tipping')}
               originalName={originalName}
               onRefreshNickname={async () => {
                 const result = await refetchBusinesses({ throwOnError: true })

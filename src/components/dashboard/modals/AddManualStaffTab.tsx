@@ -479,6 +479,7 @@ function AddManualStaffTab({
       </form>
 
       <PayoutSetupModal
+        lockBackground
         open={Boolean(editingWalletKey)}
         walletKey={editingWalletKey || ''}
         staffName={displayNickname || fullName}
