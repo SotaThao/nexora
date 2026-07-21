@@ -6,6 +6,7 @@ import { useNotification } from '../../../contexts/NotificationContext'
 import {
   useSetStaffBusinessNickname,
   useStaffBusinesses,
+  useStaffLinkRequests,
   useStaffProfile,
   useUnlinkStaffBusiness,
 } from '../../../data/hooks/useStaffSelf'
@@ -22,6 +23,9 @@ import {
   getSalonInitials,
   sortSalonBusinesses,
 } from '../utils/staffSalonDisplay'
+import {
+  isLoadedStaffLinkRequestActionable,
+} from '../../../utils/staffLinkRequestStatus'
 import {
   resolveStaffBusinessLinkStatusLabel,
   STAFF_BUSINESS_LINK_STATUS,
@@ -205,7 +209,7 @@ export default function StaffMySalons() {
   const markNotificationRead = useMarkNotificationRead()
   const unlinkBusiness = useUnlinkStaffBusiness()
   const [unlinkError, setUnlinkError] = useState<{ title: string; message: string } | null>(null)
-  const pendingLinkRequestNotifications = useMemo(() => {
+  const linkRequestsWithIds = useMemo(() => {
     const seenLinkIds = new Set<string>()
 
     return notifications.flatMap((notification) => {
@@ -215,9 +219,19 @@ export default function StaffMySalons() {
       if (!linkId || seenLinkIds.has(linkId)) return []
 
       seenLinkIds.add(linkId)
-      return [notification]
+      return [{ notification, linkId }]
     })
   }, [notifications])
+  const linkRequestIds = useMemo(
+    () => linkRequestsWithIds.map(({ linkId }) => linkId),
+    [linkRequestsWithIds],
+  )
+  const linkRequestQueries = useStaffLinkRequests(linkRequestIds)
+  const pendingLinkRequests = linkRequestsWithIds.flatMap((request, index) => {
+    const query = linkRequestQueries[index]
+    if (!isLoadedStaffLinkRequestActionable(query?.isSuccess ?? false, query?.data)) return []
+    return [{ ...request, detail: query.data! }]
+  })
   const salons = sortSalonBusinesses(businesses)
   const isLoading = isPending && businesses.length === 0
   const originalName = staffProfile?.displayName?.trim()
@@ -257,16 +271,18 @@ export default function StaffMySalons() {
         <p className="mt-1 text-xs leading-relaxed text-nexoraMuted">{t('staff_salons.subtitle')}</p>
       </div>
 
-      {pendingLinkRequestNotifications.length > 0 && (
+      {pendingLinkRequests.length > 0 && (
         <section className="rounded-2xl border border-nexoraBorder bg-nexoraSurface p-4 shadow-sm">
           <h3 className="mb-3 text-base font-extrabold text-nexoraText">
             {t('staff_dashboard.qr.link_requests_title')}
           </h3>
           <div className="space-y-2">
-            {pendingLinkRequestNotifications.map((notification) => (
+            {pendingLinkRequests.map(({ notification, linkId, detail }) => (
               <StaffLinkRequestCard
                 key={notification.id}
                 notification={notification}
+                linkId={linkId}
+                detail={detail}
                 onResolved={(id) => markNotificationRead.mutate(id)}
               />
             ))}

@@ -2,7 +2,14 @@
  * useStaffSelf — TanStack Query hooks for the staff self-service domain.
  */
 import { useMemo } from 'react'
-import { useMutation, useQuery, useQueryClient, keepPreviousData, type QueryClient } from '@tanstack/react-query'
+import {
+  keepPreviousData,
+  useMutation,
+  useQueries,
+  useQuery,
+  useQueryClient,
+  type QueryClient,
+} from '@tanstack/react-query'
 import { qk } from '../queryKeys'
 import staffSelfRepository from '../repositories/staffSelf'
 import { useSessionRole } from '../../auth/useSessionRole'
@@ -306,6 +313,15 @@ export function useStaffLinkRequest(linkId: string | null | undefined, { enabled
     queryKey: qk.staffLinkRequest(linkId),
     queryFn: () => staffSelfRepository.getLinkRequest(linkId || ''),
     enabled: enabled && !!linkId,
+  })
+}
+
+export function useStaffLinkRequests(linkIds: readonly string[]) {
+  return useQueries({
+    queries: linkIds.map((linkId) => ({
+      queryKey: qk.staffLinkRequest(linkId),
+      queryFn: () => staffSelfRepository.getLinkRequest(linkId),
+    })),
   })
 }
 

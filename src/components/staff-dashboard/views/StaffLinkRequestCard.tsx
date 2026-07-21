@@ -1,15 +1,15 @@
 // StaffLinkRequestCard — an incoming salon link request with status + Approve/Reject CTAs.
 // Used on the Salon Link & Tips page. The link-request id comes from the notification
 // (referenceId / actionUrl), since GET /staff/businesses does not carry it.
-import { Check, Clock, Store, XCircle } from 'lucide-react'
+import { Check, Clock, XCircle } from 'lucide-react'
 import { useTranslation } from '../../../contexts/LanguageContext'
 import { useNotification } from '../../../contexts/NotificationContext'
 import {
   useAcceptStaffLinkRequest,
   useRejectStaffLinkRequest,
-  useStaffLinkRequest,
 } from '../../../data/hooks/useStaffSelf'
-import type { NotificationRecord } from '../../../types/domain'
+import type { NotificationRecord, StaffLinkRequestDetail } from '../../../types/domain'
+import { isStaffLinkRequestActionable } from '../../../utils/staffLinkRequestStatus'
 
 export function getStaffLinkRequestId(notification: NotificationRecord): string | null {
   if (notification.referenceId) return notification.referenceId
@@ -19,22 +19,23 @@ export function getStaffLinkRequestId(notification: NotificationRecord): string 
 
 export default function StaffLinkRequestCard({
   notification,
+  linkId,
+  detail,
   onResolved,
   variant = 'card',
 }: {
   notification: NotificationRecord
+  linkId: string
+  detail: StaffLinkRequestDetail
   onResolved: (id: string) => void
   variant?: 'card' | 'list-item'
 }) {
   const { t } = useTranslation()
   const { showToast, showConfirm } = useNotification()
-  const linkId = getStaffLinkRequestId(notification)
-  const detailQuery = useStaffLinkRequest(linkId)
   const acceptMutation = useAcceptStaffLinkRequest()
   const rejectMutation = useRejectStaffLinkRequest()
-  const detail = detailQuery.data
 
-  if (detailQuery.isSuccess && detail && detail.status && detail.status !== 'WaitingStaffAcceptance') {
+  if (!isStaffLinkRequestActionable(detail.status)) {
     return null
   }
 
