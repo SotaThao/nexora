@@ -11,8 +11,8 @@ import type {
   ReportTargetType,
 } from '../../community/enums'
 
-export type CommunityStorageBucket = 'community-public' | 'community-private'
 export type CursorDirection = 'forward' | 'backward'
+export type CommunityMediaDeliveryType = 'upload' | 'authenticated'
 
 export interface KeysetCursor {
   createdAt: string
@@ -31,10 +31,12 @@ export interface KeysetPage<T> {
   previousCursor: KeysetCursor | null
 }
 
-/** Storage references remain paths; a repository resolves signed URLs when needed. */
+/** Provider-neutral media references; a repository resolves display URLs on demand. */
 export interface MediaAsset {
-  bucket: CommunityStorageBucket
+  /** Cloudinary public ID, kept as a provider reference rather than a display URL. */
   path: string
+  deliveryType: CommunityMediaDeliveryType
+  format?: string | null
   contentType?: string | null
   altText?: string | null
 }
@@ -191,10 +193,20 @@ export interface UpdateCommunityInput {
 }
 
 export interface CreatePostInput {
+  /** Generated before media upload so provider paths are stable and scoped. */
+  id?: string
   communityId: string
   body: string
   media?: MediaAsset[]
   isAnnouncement?: boolean
+}
+
+export interface UploadCommunityPostMediaInput {
+  communityId: string
+  postId: string
+  visibility: CommunityVisibility
+  file: File
+  onProgress?: (progress: number) => void
 }
 
 export interface CreateCommentInput {

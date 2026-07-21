@@ -31,7 +31,6 @@ import {
   useConsumeInvite,
   useCreateCommunity,
   useCreateCommunityComment,
-  useCreateCommunityPost,
   useInvitePreview,
   useMyCommunities,
   usePostReactions,
@@ -40,6 +39,7 @@ import {
 } from '../../data/hooks/useCommunity'
 import DemoStaffShell from './demo/DemoStaffShell'
 import { CommunityAuthProvider, CommunityPersonaSwitcher, useCommunityAuth } from './CommunityAuth'
+import { CommunityPostComposer, CommunityPostMedia } from './CommunityPostMedia'
 
 const cardClass = 'overflow-hidden rounded-2xl border border-nexoraBorder bg-nexoraSurface shadow-nexora-card'
 const gradientClass = 'bg-gradient-to-br from-nexoraElectric to-nexoraViolet'
@@ -123,29 +123,16 @@ function CommunityStoryRings({ communities }: { communities: CommunityDto[] }) {
 }
 
 function PostComposer({ communityId, onClose }: { communityId: string; onClose: () => void }) {
-  const { isAnonymous } = useCommunityAuth()
-  const createPost = useCreateCommunityPost()
-  const [body, setBody] = useState('')
-  const submit = (event: FormEvent) => {
-    event.preventDefault()
-    if (!body.trim()) return
-    createPost.mutate({ communityId, body }, { onSuccess: () => { setBody(''); onClose() } })
-  }
-  if (isAnonymous) return null
-  return (
-    <form onSubmit={submit} className={`${cardClass} p-3`}>
-      <label className="sr-only" htmlFor={`post-body-${communityId}`}>Nội dung bài viết</label>
-      <textarea id={`post-body-${communityId}`} value={body} onChange={(event) => setBody(event.target.value)} maxLength={10_000} placeholder="Bạn đang nghĩ gì?" className="min-h-24 w-full resize-none rounded-xl border border-nexoraBorder bg-nexoraSurfaceMuted p-3 text-sm outline-none placeholder:text-nexoraSubtle focus:border-nexoraBrand" />
-      {createPost.error ? <p className="mt-2 text-xs font-semibold text-nexoraDanger">{createPost.error.message}</p> : null}
-      <div className="mt-2 flex justify-end gap-2"><button type="button" onClick={onClose} className="min-h-11 rounded-xl px-3 text-sm font-bold text-nexoraMuted">Hủy</button><button type="submit" disabled={!body.trim() || createPost.isPending} className={`min-h-11 rounded-xl px-4 text-sm font-extrabold text-white ${gradientClass} disabled:opacity-50`}>{createPost.isPending ? 'Đang đăng…' : 'Đăng bài'}</button></div>
-    </form>
-  )
+  const community = useCommunityDetail(communityId)
+  if (community.isLoading) return <div className="h-40 animate-pulse rounded-2xl bg-nexoraSurfaceMuted" aria-label="Đang tải trình soạn bài" />
+  if (!community.data) return null
+  return <CommunityPostComposer community={community.data} onClose={onClose} />
 }
 
 function QuickComposer({ communityId, onOpen }: { communityId?: string; onOpen: () => void }) {
   const { isAnonymous, user } = useCommunityAuth()
   if (!communityId || isAnonymous) return null
-  return <button type="button" onClick={onOpen} className="-mx-4 flex w-[calc(100%+2rem)] items-center gap-3 border-b-8 border-nexoraCanvas bg-nexoraSurface px-4 py-3 text-left sm:-mx-6 sm:w-[calc(100%+3rem)] sm:px-6"><Avatar name={user?.email} className="h-10 w-10" /><span className="flex min-h-11 flex-1 items-center rounded-full border border-nexoraBorder bg-nexoraSurfaceMuted px-4 text-sm text-nexoraSubtle">Bạn đang nghĩ gì?</span><ImageIcon className="h-5 w-5 text-nexoraBrand" aria-label="Bài viết chỉ hỗ trợ văn bản trong bản demo này" /></button>
+  return <button type="button" onClick={onOpen} className="-mx-4 flex w-[calc(100%+2rem)] items-center gap-3 border-b-8 border-nexoraCanvas bg-nexoraSurface px-4 py-3 text-left sm:-mx-6 sm:w-[calc(100%+3rem)] sm:px-6"><Avatar name={user?.email} className="h-10 w-10" /><span className="flex min-h-11 flex-1 items-center rounded-full border border-nexoraBorder bg-nexoraSurfaceMuted px-4 text-sm text-nexoraSubtle">Bạn đang nghĩ gì?</span><ImageIcon className="h-5 w-5 text-nexoraBrand" aria-hidden="true" /></button>
 }
 
 function CommentThread({ post }: { post: PostDto }) {
@@ -182,7 +169,8 @@ function FeedPost({ post, communityName }: { post: PostDto; communityName: strin
     <article className={`${cardClass} ${isAnnouncement ? 'border-l-[3px] border-l-nexoraBrand bg-[#fbfbff]' : ''}`}>
       {isAnnouncement ? <p className="px-4 pt-3 text-[10px] font-extrabold uppercase tracking-[0.08em] text-nexoraBrand">Thông báo · {communityName}</p> : null}
       <div className="flex items-center gap-3 px-4 pt-3"><Avatar name={post.author?.displayName} className="h-9 w-9" /><div className="min-w-0 flex-1"><p className="truncate text-sm font-extrabold text-nexoraText">{post.author?.displayName || 'Thành viên Nexora'}</p><p className="text-[11px] text-nexoraSubtle">{communityName} · {relativeTime(post.createdAt)}</p></div>{post.isAnnouncement ? <ShieldCheck className="h-4 w-4 text-nexoraBrand" aria-label="Thông báo" /> : null}</div>
-      <p className="whitespace-pre-wrap px-4 py-3 text-sm leading-relaxed text-nexoraText">{post.body}</p>
+      <CommunityPostMedia media={post.media} authorName={post.author?.displayName} />
+      {post.body ? <p className="whitespace-pre-wrap px-4 py-3 text-sm leading-relaxed text-nexoraText">{post.body}</p> : null}
       <div className="flex items-center gap-1 border-t border-nexoraRule px-2 py-1"><button type="button" aria-pressed={hasLiked} disabled={isAnonymous || toggle.isPending} onClick={() => user && toggle.mutate({ postId: post.id, type: likeType, userId: user.id })} className={`inline-flex min-h-11 items-center gap-1.5 rounded-lg px-3 text-sm font-bold disabled:opacity-50 ${hasLiked ? 'text-nexoraBrand' : 'text-nexoraMuted hover:bg-nexoraSurfaceMuted'}`}><Heart className={`h-4 w-4 ${hasLiked ? 'fill-current' : ''}`} aria-hidden="true" />{reactions.data?.length ?? 0}</button><button type="button" onClick={() => setCommentsOpen((open) => !open)} aria-expanded={commentsOpen} className="inline-flex min-h-11 items-center gap-1.5 rounded-lg px-3 text-sm font-bold text-nexoraMuted hover:bg-nexoraSurfaceMuted"><MessageCircle className="h-4 w-4" aria-hidden="true" />Bình luận</button></div>
       {reactions.error ? <p className="px-4 pb-2 text-xs font-semibold text-nexoraDanger">{reactions.error.message}</p> : null}
       {toggle.error ? <p className="px-4 pb-2 text-xs font-semibold text-nexoraDanger">{toggle.error.message}</p> : null}

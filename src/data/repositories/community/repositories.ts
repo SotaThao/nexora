@@ -20,6 +20,7 @@ import type {
   KeysetPage,
   KeysetPageRequest,
   MediaAsset,
+  CommunityMediaDeliveryType,
   MessageDto,
   NotificationDto,
   PostDto,
@@ -27,6 +28,7 @@ import type {
   ReactionDto,
   ReportDto,
   UpdateCommunityInput,
+  UploadCommunityPostMediaInput,
 } from './types'
 import type {
   ChannelKind,
@@ -71,8 +73,12 @@ export interface PostsRepository {
   list(communityId: string, query?: KeysetPageRequest): Promise<KeysetPage<PostDto>>
   /** Gets one post if the current actor may read it. */
   getById(postId: string): Promise<PostDto | null>
-  /** Creates a post. Media values are storage paths, never signed URLs. */
+  /** Creates a post. Media values are provider references, never signed URLs. */
   create(input: CreatePostInput): Promise<PostDto>
+  /** Uploads one image through the Cloudinary signed-upload flow. */
+  uploadMedia(input: UploadCommunityPostMediaInput): Promise<MediaAsset>
+  /** Resolves a display-only URL without persisting it in a DTO. */
+  resolveMediaUrl(asset: MediaAsset): Promise<string>
   /** Deletes a post when allowed by author or moderator policy. */
   remove(postId: string): Promise<void>
 }
@@ -162,8 +168,6 @@ export interface ProfilesRepository {
   getMe(): Promise<ProfileDto | null>
   /** Updates the current actor's mutable profile fields. */
   updateMe(input: Pick<ProfileDto, 'displayName' | 'avatarPath' | 'bio'>): Promise<ProfileDto>
-  /** Resolves one stored media path to a public or signed URL at the repository boundary. */
-  resolveMediaUrl(asset: MediaAsset): Promise<string>
 }
 
 type ProfileRow = {
@@ -211,6 +215,7 @@ type PostRow = {
   created_at: string
   updated_at: string
   author?: ProfileRow | null
+  community?: { media_visibility: CommunityVisibility } | null
 }
 
 type CommentRow = {
@@ -349,10 +354,54 @@ function mapCommunity(row: CommunityRow): CommunityDto {
   }
 }
 
+type StoredMediaReference = {
+  publicId?: unknown
+  type?: unknown
+  format?: unknown
+  contentType?: unknown
+  altText?: unknown
+}
+
+type CloudinaryUploadSignature = {
+  cloudName: string
+  apiKey: string
+  timestamp: number
+  signature: string
+  folder: string
+  publicIdPrefix: string
+  type: CommunityMediaDeliveryType
+  uploadUrl: string
+}
+
+type CloudinaryUploadResponse = {
+  public_id?: unknown
+  type?: unknown
+  format?: unknown
+}
+
+type CloudinarySignedUrl = { url?: unknown }
+
+function mediaDeliveryTypeForVisibility(visibility: CommunityVisibility): CommunityMediaDeliveryType {
+  return visibility === 'private' ? 'authenticated' : 'upload'
+}
+
 function mapMedia(paths: unknown, visibility: CommunityVisibility = 'public'): MediaAsset[] {
   if (!Array.isArray(paths)) return []
-  const bucket = visibility === 'private' ? 'community-private' : 'community-public'
-  return paths.filter((path): path is string => typeof path === 'string').map((path) => ({ bucket, path }))
+  const expectedDeliveryType = mediaDeliveryTypeForVisibility(visibility)
+
+  return paths.flatMap((value): MediaAsset[] => {
+    const stored = value && typeof value === 'object' ? value as StoredMediaReference : null
+    const path = typeof value === 'string' ? value : typeof stored?.publicId === 'string' ? stored.publicId : null
+    if (!path) return []
+    return [{
+      path,
+      // Community media visibility is immutable, so it is the authority rather than stored JSON.
+      deliveryType: expectedDeliveryType,
+      format: typeof stored?.format === 'string' ? stored.format : null,
+      contentType: typeof stored?.contentType === 'string' ? stored.contentType : null,
+      altText: typeof stored?.altText === 'string' ? stored.altText : null,
+    }]
+  })
 }
 
 function mapMember(row: MemberRow): CommunityMemberDto {
@@ -374,12 +423,81 @@ function mapPost(row: PostRow): PostDto {
     communityId: row.community_id,
     authorId: row.author_id,
     body: row.body,
-    media: mapMedia(row.media_paths),
+    media: mapMedia(row.media_paths, row.community?.media_visibility),
     isAnnouncement: row.is_announcement,
     author: row.author ? mapProfile(row.author) : undefined,
     createdAt: row.created_at,
     updatedAt: row.updated_at,
   }
+}
+
+function cloudinaryConfigError(message: string): SupabaseDisplayError {
+  return mapSupabaseError({ message, status: 500 })
+}
+
+function cloudinaryCloudName(): string {
+  const cloudName = (import.meta.env as Record<string, string | undefined>).VITE_CLOUDINARY_CLOUD_NAME?.trim()
+  if (!cloudName) throw cloudinaryConfigError('Cloudinary is not configured. Set VITE_CLOUDINARY_CLOUD_NAME.')
+  return cloudName
+}
+
+function cloudinaryPublicUrl(cloudName: string, publicId: string): string {
+  const safePublicId = publicId.split('/').map(encodeURIComponent).join('/')
+  return `https://res.cloudinary.com/${encodeURIComponent(cloudName)}/image/upload/${safePublicId}`
+}
+
+function isCloudinaryUploadSignature(value: unknown): value is CloudinaryUploadSignature {
+  if (!value || typeof value !== 'object') return false
+  const data = value as Record<string, unknown>
+  return typeof data.cloudName === 'string'
+    && typeof data.apiKey === 'string'
+    && typeof data.timestamp === 'number'
+    && typeof data.signature === 'string'
+    && typeof data.folder === 'string'
+    && typeof data.publicIdPrefix === 'string'
+    && (data.type === 'upload' || data.type === 'authenticated')
+    && typeof data.uploadUrl === 'string'
+}
+
+function uploadToCloudinary(
+  signature: CloudinaryUploadSignature,
+  file: File,
+  onProgress?: (progress: number) => void,
+): Promise<CloudinaryUploadResponse> {
+  return new Promise((resolve, reject) => {
+    const request = new XMLHttpRequest()
+    const form = new FormData()
+    form.append('file', file)
+    form.append('api_key', signature.apiKey)
+    form.append('timestamp', String(signature.timestamp))
+    form.append('signature', signature.signature)
+    form.append('folder', signature.folder)
+    form.append('public_id_prefix', signature.publicIdPrefix)
+    form.append('type', signature.type)
+
+    request.open('POST', signature.uploadUrl)
+    request.upload.onprogress = (event) => {
+      if (event.lengthComputable) onProgress?.(event.loaded / event.total)
+    }
+    request.onerror = () => reject(mapSupabaseError({ status: request.status || 503, message: 'Không thể tải ảnh lên Cloudinary.' }))
+    request.onload = () => {
+      let response: CloudinaryUploadResponse & { error?: { message?: unknown } } = {}
+      try {
+        response = JSON.parse(request.responseText) as CloudinaryUploadResponse & { error?: { message?: unknown } }
+      } catch {
+        // The HTTP status below produces the mapped error for malformed responses.
+      }
+      if (request.status < 200 || request.status >= 300) {
+        reject(mapSupabaseError({
+          status: request.status,
+          message: typeof response.error?.message === 'string' ? response.error.message : 'Không thể tải ảnh lên Cloudinary.',
+        }))
+        return
+      }
+      resolve(response)
+    }
+    request.send(form)
+  })
 }
 
 function mapComment(row: CommentRow): CommentDto {
@@ -602,7 +720,7 @@ export function createPostsRepository(): PostsRepository {
       const filter = cursorFilter(query?.cursor, query)
       let request = supabaseClient
         .from('posts')
-        .select('*,author:profiles!posts_author_id_fkey(*)')
+        .select('*,author:profiles!posts_author_id_fkey(*),community:communities!posts_community_id_fkey(media_visibility)')
         .eq('community_id', communityId)
         .order('created_at', { ascending: false })
         .order('id', { ascending: false })
@@ -614,24 +732,75 @@ export function createPostsRepository(): PostsRepository {
     async getById(postId) {
       const { data, error } = await supabaseClient
         .from('posts')
-        .select('*,author:profiles!posts_author_id_fkey(*)')
+        .select('*,author:profiles!posts_author_id_fkey(*),community:communities!posts_community_id_fkey(media_visibility)')
         .eq('id', postId)
         .maybeSingle()
       throwIfSupabaseError(error)
       return data ? mapPost(data as PostRow) : null
+    },
+    async uploadMedia(input) {
+      const { data, error } = await supabaseClient.functions.invoke('cloudinary-media', {
+        body: {
+          action: 'sign-upload',
+          communityId: input.communityId,
+          postId: input.postId,
+          visibility: input.visibility,
+        },
+      })
+      throwIfSupabaseError(error)
+      if (!isCloudinaryUploadSignature(data)) throw cloudinaryConfigError('Cloudinary upload signature unavailable.')
+
+      input.onProgress?.(0.05)
+      const uploaded = await uploadToCloudinary(data, input.file, input.onProgress)
+      if (typeof uploaded.public_id !== 'string' || !uploaded.public_id.startsWith(`${data.folder}/`)) {
+        throw cloudinaryConfigError('Cloudinary returned an invalid community media reference.')
+      }
+      if (uploaded.type !== data.type) throw cloudinaryConfigError('Cloudinary returned an unexpected media delivery type.')
+
+      input.onProgress?.(1)
+      return {
+        path: uploaded.public_id,
+        deliveryType: data.type,
+        format: typeof uploaded.format === 'string' ? uploaded.format : null,
+        contentType: input.file.type || null,
+      }
+    },
+    async resolveMediaUrl(asset) {
+      if (asset.deliveryType === 'upload') {
+        return cloudinaryPublicUrl(cloudinaryCloudName(), asset.path)
+      }
+      const { data, error } = await supabaseClient.functions.invoke('cloudinary-media', {
+        body: {
+          action: 'sign-url',
+          publicId: asset.path,
+          visibility: 'private',
+          format: asset.format,
+        },
+      })
+      throwIfSupabaseError(error)
+      const signedUrl = data as CloudinarySignedUrl | null
+      if (!signedUrl || typeof signedUrl.url !== 'string') throw cloudinaryConfigError('Cloudinary media URL unavailable.')
+      return signedUrl.url
     },
     async create(input) {
       const authorId = await requireCurrentUserId()
       const { data, error } = await supabaseClient
         .from('posts')
         .insert({
+          ...(input.id ? { id: input.id } : {}),
           community_id: input.communityId,
           author_id: authorId,
           body: input.body.trim(),
-          media_paths: (input.media ?? []).map((asset) => asset.path),
+          media_paths: (input.media ?? []).map((asset) => ({
+            publicId: asset.path,
+            type: asset.deliveryType,
+            format: asset.format ?? null,
+            contentType: asset.contentType ?? null,
+            altText: asset.altText ?? null,
+          })),
           is_announcement: input.isAnnouncement ?? false,
         })
-        .select('*,author:profiles!posts_author_id_fkey(*)')
+        .select('*,author:profiles!posts_author_id_fkey(*),community:communities!posts_community_id_fkey(media_visibility)')
         .single()
       throwIfSupabaseError(error)
       return mapPost(data as PostRow)
@@ -908,15 +1077,6 @@ export function createProfilesRepository(): ProfilesRepository {
         .single()
       throwIfSupabaseError(error)
       return mapProfile(data as ProfileRow)
-    },
-    async resolveMediaUrl(asset) {
-      if (asset.bucket === 'community-public') {
-        return supabaseClient.storage.from(asset.bucket).getPublicUrl(asset.path).data.publicUrl
-      }
-      const { data, error } = await supabaseClient.storage.from(asset.bucket).createSignedUrl(asset.path, 60 * 10)
-      throwIfSupabaseError(error)
-      if (!data?.signedUrl) throw mapSupabaseError({ message: 'Storage URL unavailable', status: 500 })
-      return data.signedUrl
     },
   }
 }

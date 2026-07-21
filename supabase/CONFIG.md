@@ -14,16 +14,13 @@ This file records dashboard state that is intentionally outside the SQL migratio
 - Enable Realtime for the project.
 - The migration adds `public.messages` to the `supabase_realtime` publication. Confirm the publication remains enabled after project restores or dashboard changes.
 
-## Storage
+## Community media (Cloudinary)
 
-Create both buckets with these exact settings:
+Community post media now uses Cloudinary through the `cloudinary-media` Edge Function. Set `VITE_CLOUDINARY_CLOUD_NAME` in the SPA deployment, and set `CLOUDINARY_CLOUD_NAME`, `CLOUDINARY_API_KEY`, and `CLOUDINARY_API_SECRET` as Supabase Edge secrets only. The API secret must never be placed in a Vite environment value or repository file.
 
-| Bucket | Public access | Size limit | Allowed MIME types | Use |
-| --- | --- | --- | --- | --- |
-| `community-public` | Public read | 5 MB | `image/*` | Media for public communities |
-| `community-private` | Private; serve through signed URLs | 5 MB | `image/*` | Media for private and salon communities |
+Public communities use Cloudinary `upload` delivery. Private and salon communities use Cloudinary `authenticated` delivery and receive a five-minute signed URL only after the Edge Function re-checks the caller's community membership. Posts persist the Cloudinary public ID, delivery type, and original format, never a delivery URL.
 
-Store object paths using `{community_id}/{post_id}/...`. Database DTOs keep those paths; repositories resolve public or signed URLs when rendering requires one.
+The `community-public` and `community-private` Storage buckets from migration `0008` are legacy and unused by the active community media path.
 
 ## Migration Boundary
 

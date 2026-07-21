@@ -24,8 +24,10 @@ import type {
   JoinRequestDto,
   KeysetCursor,
   KeysetPage,
+  MediaAsset,
   PostDto,
   ReactionDto,
+  UploadCommunityPostMediaInput,
 } from '../repositories/community'
 import type { ReactionType } from '../community/enums'
 import type { SupabaseDisplayError } from '../../lib/supabaseError'
@@ -146,6 +148,17 @@ export function useCommunityProfile(profileId?: string | null, { enabled = true 
   })
 }
 
+export function useCommunityMediaUrl(asset?: MediaAsset | null, { enabled = true } = {}) {
+  const queryEnabled = useCommunityQueryEnabled(enabled)
+  return useQuery<string, CommunityError>({
+    queryKey: ['community', 'media', asset?.deliveryType ?? '', asset?.path ?? ''],
+    queryFn: () => postsRepository.resolveMediaUrl(asset!),
+    enabled: queryEnabled && Boolean(asset?.path),
+    staleTime: 4 * 60 * 1_000,
+    retry: false,
+  })
+}
+
 export function useCreateCommunity() {
   const queryClient = useQueryClient()
   return useMutation<CommunityDto, CommunityError, CreateCommunityInput>({
@@ -166,6 +179,12 @@ export function useCreateCommunityPost() {
       queryClient.setQueryData(qk.communityPost(post.id), post)
       queryClient.invalidateQueries({ queryKey: ['community', 'posts', post.communityId] })
     },
+  })
+}
+
+export function useUploadCommunityPostMedia() {
+  return useMutation<MediaAsset, CommunityError, UploadCommunityPostMediaInput>({
+    mutationFn: (input) => postsRepository.uploadMedia(input),
   })
 }
 
