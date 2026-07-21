@@ -8,6 +8,9 @@ importers:
 
   .:
     dependencies:
+      '@daypilot/daypilot-lite-react':
+        specifier: 5.10.0
+        version: 5.10.0(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
       '@tanstack/react-query':
         specifier: ^5.0.0
         version: 5.101.0(react@18.3.1)
@@ -256,6 +259,15 @@ packages:
   '@csstools/css-tokenizer@4.0.0':
     resolution: {integrity: sha512-QxULHAm7cNu72w97JUNCBFODFaXpbDg+dP8b/oWFAZ2MTRppA3U00Y2L1HqaS4J6yBqxwa/Y3nMBaxVKbB/NsA==}
     engines: {node: '>=20.19.0'}
+
+  '@daypilot/daypilot-lite-javascript@5.10.0':
+    resolution: {integrity: sha512-14wmIkHFIhM20ahT4GBTfRk3eoAOQgh6Op1emTcAke0/B80LmPOlenaNcWxTN7WhIk4jiZjbXAL9DdFwR0XcVg==}
+
+  '@daypilot/daypilot-lite-react@5.10.0':
+    resolution: {integrity: sha512-L/nQJonGdEHph0nBi/7J+Z8lTkXPvId6xIFYIc1YNAmHg8a+Pm+7zjCC/0wWmJr4SE7a7WIZ+sti9eogj2iDoQ==}
+    peerDependencies:
+      react: '>=16.0.0'
+      react-dom: '>=16.0.0'
 
   '@esbuild/aix-ppc64@0.21.5':
     resolution: {integrity: sha512-1SDgH6ZSPTlggy1yI6+Dbkiz8xzpHJEVAlF/AM1tHPLsf5STom9rwtjE4hKAF20FfXXNTFqEYXyJNWh1GiZedQ==}
@@ -847,6 +859,9 @@ packages:
 
   convert-source-map@2.0.0:
     resolution: {integrity: sha512-Kvp459HrV2FEJ1CAsi1Ku+MY3kasH19TFykTz2xWmMeq6bk2NU3XXvfJ+Q61m0xktWwt+1HSYf3JZsTms3aRJg==}
+
+  create-react-class@15.7.0:
+    resolution: {integrity: sha512-QZv4sFWG9S5RUvkTYWbflxeZX+JG7Cz0Tn33rQBJ+WFQTqTfUTjMjiv9tnfXazjsO5r0KhPs+AqCjyrQX6h2ng==}
 
   cross-spawn@7.0.6:
     resolution: {integrity: sha512-uV2QOWP2nWzsy2aMp8aRibhi9dlzF5Hgh5SHaB9OiTGEyDTiJJyx0uy51QXdyWbtAHNua4XJzUKca3OzKUd3vA==}
@@ -1936,6 +1951,15 @@ snapshots:
 
   '@csstools/css-tokenizer@4.0.0': {}
 
+  '@daypilot/daypilot-lite-javascript@5.10.0': {}
+
+  '@daypilot/daypilot-lite-react@5.10.0(react-dom@18.3.1(react@18.3.1))(react@18.3.1)':
+    dependencies:
+      '@daypilot/daypilot-lite-javascript': 5.10.0
+      create-react-class: 15.7.0
+      react: 18.3.1
+      react-dom: 18.3.1(react@18.3.1)
+
   '@esbuild/aix-ppc64@0.21.5':
     optional: true
 
@@ -2406,6 +2430,11 @@ snapshots:
   commander@4.1.1: {}
 
   convert-source-map@2.0.0: {}
+
+  create-react-class@15.7.0:
+    dependencies:
+      loose-envify: 1.4.0
+      object-assign: 4.1.1
 
   cross-spawn@7.0.6:
     dependencies:
