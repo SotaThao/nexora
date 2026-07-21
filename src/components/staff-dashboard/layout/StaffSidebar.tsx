@@ -154,14 +154,9 @@ export default function StaffSidebar({ activeScreen, isHomeActive = false, mobil
           <div className="mt-3.5 pt-3 border-t border-white/5 space-y-1 animate-fadeIn">
             {[
               { tab: 'account', labelKey: 'staff_dashboard.nav.profile_account', disabled: false },
-              { tab: 'kyc', labelKey: 'staff_dashboard.nav.profile_kyc', disabled: false },
+              { tab: 'kyc', labelKey: 'staff_dashboard.nav.profile_kyc', disabled: true },
             ].map(({ tab, labelKey, disabled }) => {
-              const sectionParam = searchParams.get('section')
-              const isSubActive =
-                activeScreen === 'profile' &&
-                (tab === 'account'
-                  ? !sectionParam || sectionParam === 'personal'
-                  : sectionParam === 'verification' || searchParams.get('tab') === 'kyc')
+              const isSubActive = activeScreen === 'profile' && tab === 'account'
               return (
                 <button
                   key={tab}
@@ -170,11 +165,7 @@ export default function StaffSidebar({ activeScreen, isHomeActive = false, mobil
                   aria-disabled={disabled || undefined}
                   onClick={() => {
                     if (disabled) return
-                    if (tab === 'kyc') {
-                      onNavigate('profile', { section: 'verification' })
-                    } else {
-                      onNavigate('profile', { tab: 'account' })
-                    }
+                    onNavigate('profile', { tab })
                     if (isMobile && onClose) onClose()
                   }}
                   className={`flex h-9 w-full items-center gap-2.5 rounded-lg px-3 text-left text-xs font-bold transition ${
@@ -186,7 +177,10 @@ export default function StaffSidebar({ activeScreen, isHomeActive = false, mobil
                   }`}
                 >
                   <div className={`h-1.5 w-1.5 rounded-full ${isSubActive ? 'bg-brandCyan shadow-sm' : 'bg-white/30'}`} />
-                  <span>{t(labelKey)}</span>
+                  <span>
+                    {t(labelKey)}
+                    {disabled ? ` (${t('common.coming_soon')})` : ''}
+                  </span>
                 </button>
               )
             })}
