@@ -281,9 +281,6 @@ export const DASHBOARD_SETTINGS_TAB = {
 } as const
 
 export function buildDashboardSettingsPath(tab: string): string {
-  if (tab === DASHBOARD_SETTINGS_TAB.kyb) {
-    return `${DASHBOARD_ROOT_PATH}/settings/${DASHBOARD_SETTINGS_TAB.kyb}`
-  }
   if (tab === DASHBOARD_SETTINGS_TAB.affiliate) {
     return `${DASHBOARD_ROOT_PATH}/settings/${DASHBOARD_SETTINGS_TAB.affiliate}`
   }
@@ -291,7 +288,7 @@ export function buildDashboardSettingsPath(tab: string): string {
 }
 
 export function normalizeDashboardSettingsTab(tab: string): string {
-  if (tab === DASHBOARD_SETTINGS_TAB.kyb || tab === DASHBOARD_SETTINGS_TAB.affiliate) {
+  if (tab === DASHBOARD_SETTINGS_TAB.affiliate) {
     return tab
   }
   return DASHBOARD_SETTINGS_TAB.profile
