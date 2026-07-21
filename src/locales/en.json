@@ -1817,7 +1817,7 @@
     },
     "legal": {
       "effectiveDate": "June 26, 2026",
-      "lastUpdated": "June 26, 2026",
+      "lastUpdated": "July 18, 2026",
       "effectiveDateLabel": "Effective Date",
       "lastUpdatedLabel": "Last Updated",
       "privacyTagline": "How we collect, use, and protect information",
@@ -1826,64 +1826,70 @@
         "sections": [
           {
             "title": "1. Introduction",
-            "body": "NEXORA TOUCH LLC (\"Nexora\", \"we\", \"us\", or \"our\") operates the NEXORA TOUCH platform — a digital tipping and review service for service businesses. This Privacy Policy describes how we collect, use, and share information when you use our Services. By using our Services, you agree to the practices described in this Policy."
+            "body": "NEXORA TOUCH LLC (\"Nexora\", \"we\", \"us\") operates the NEXORA TOUCH platform — a technology service for service businesses that includes digital tipping and reviews, an AI phone receptionist that answers business phone lines and books appointments, and related SMS text notifications. This Privacy Policy describes how we collect, use, and share information when you use the Service. By using the Service, you agree to the practices described here."
           },
           {
             "title": "2. Information We Collect",
-            "body": "Information you provide: account details (name, email, phone number), business information (for merchants), and content you upload (profile photos, business logos). Information collected automatically: usage data, IP address, device and browser information, and session activity collected through our platform and Google Analytics. Customer interactions: when a customer uses the tip flow as a guest, we record anonymous session data (touch point accessed, tip amount, rating). We do not collect the customer's name, phone number, or payment information."
+            "body": "Information you provide: account information (name, email, phone number), business information (for merchants), and content you upload (profile photos, business logos).\n\nCaller and booking information: when a customer calls a business phone line answered by our AI receptionist service, we collect the caller's phone number and, when provided by the caller, their name, requested service, and preferred appointment time, in order to deliver the service — including booking the appointment and sending SMS confirmations and follow-ups. Calls may be recorded for quality and training purposes, and callers are handled in accordance with applicable law. When a customer submits an online booking request, we collect the information they enter (such as name, phone number, and requested service).\n\nAutomatically collected information: usage data, IP address, device and browser information, and session activity collected via the platform and Google Analytics.\n\nGuest tipping interactions: when customers use the tipping flow as guests, we record anonymous session data (touch points visited, tip amounts, ratings) without requiring the guest's name or payment details."
           },
           {
-            "title": "3. How We Use Your Information",
+            "title": "3. How We Use Information",
             "body": "We use collected information to:",
             "items": [
-              "Operate and improve the Services",
-              "Manage accounts and communicate with users",
-              "Send transactional notifications (email and push)",
+              "Operate and improve the Service",
+              "Answer business phone calls and book appointments through the AI receptionist",
+              "Send SMS text messages such as appointment confirmations, missed-call follow-ups, customer care responses, review requests, and — with consent — occasional promotional offers",
+              "Manage accounts and communicate with users (email and push notifications)",
               "Detect fraud and enforce our Terms of Service",
               "Analyze platform usage and performance",
               "Comply with legal obligations"
             ]
           },
           {
-            "title": "4. How We Share Your Information",
-            "body": "We do not sell your personal information. We share information only with trusted third-party service providers that assist us in operating the platform, including analytics, email delivery, push notifications, and cloud infrastructure. These providers are contractually bound to use your information only as necessary to perform services on our behalf. We may also disclose information to comply with legal obligations or to protect the rights and safety of our users."
+            "title": "4. SMS and Mobile Information",
+            "body": "No mobile information will be shared with third parties or affiliates for marketing or promotional purposes. Text messaging originator opt-in data and consent will not be shared with any third parties.",
+            "note": "Customers opt in to receive SMS messages by verbally requesting an appointment or follow-up during a phone call to a participating business's phone number, or by submitting an online booking request with their phone number. Message frequency varies. Message and data rates may apply. Customers can opt out at any time by replying STOP, and can get help by replying HELP or contacting support@nexoratouch.com or (832) 979-5559."
           },
           {
-            "title": "5. Payment Information",
-            "body": "Nexora does not collect, store, or process payment information of any kind. Tips are sent directly between customers and staff through third-party payment applications. We have no access to financial credentials, bank account numbers, or card details."
+            "title": "5. How We Share Information",
+            "body": "We do not sell your personal information. We share information only with trusted third-party service providers who help us operate the platform — including telecommunications and SMS delivery providers, analytics, email delivery, push notifications, and cloud infrastructure. These providers are contractually bound to use your information only as necessary to perform services on our behalf. We may also disclose information to comply with legal obligations or to protect the rights and safety of users. Consistent with Section 4, mobile numbers and SMS opt-in data are never shared for third-party marketing."
           },
           {
-            "title": "6. Data Retention",
-            "body": "We retain your personal information only as long as necessary to provide the Services or as required by law. You may request deletion of your account and data at any time by contacting support@nexoratouch.com."
+            "title": "6. Payment Information",
+            "body": "Nexora does not collect, store, or process any payment information. Tips are sent directly between customers and staff through third-party payment applications. We have no access to financial information, bank account numbers, or card details."
           },
           {
-            "title": "7. Your Rights",
-            "body": "Depending on your location, you may have the right to access, correct, delete, or port your personal data, and to object to or restrict certain processing.",
+            "title": "7. Data Retention",
+            "body": "We retain personal information only as long as necessary to provide the Service or as required by law. You may request deletion of your account and data at any time by contacting support@nexoratouch.com."
+          },
+          {
+            "title": "8. Your Rights",
+            "body": "Depending on your location, you may have rights to access, correct, delete, or port personal data, and to object to or restrict certain processing.",
             "items": [
               "EU/EEA users (GDPR): access, rectification, erasure, portability, restriction, and objection",
-              "California residents (CCPA): right to know, delete, correct, and opt out of sale (we do not sell data)"
+              "California residents (CCPA): rights to know, delete, correct, and opt out of sale (we do not sell data)"
             ],
             "note": "To exercise your rights, contact support@nexoratouch.com. We will respond within 30 days."
           },
           {
-            "title": "8. Cookies and Tracking",
-            "body": "We use essential cookies (required for authentication and session management) and analytics cookies (Google Analytics). You may opt out of Google Analytics tracking by installing the Google Analytics Opt-out Browser Add-on or adjusting your browser settings."
+            "title": "9. Cookies and Tracking",
+            "body": "We use essential cookies (required for authentication and session management) and analytics cookies (Google Analytics). You can opt out of Google Analytics tracking by installing the Google Analytics Opt-out Add-on or adjusting your browser settings."
           },
           {
-            "title": "9. Children's Privacy",
-            "body": "Our Services are not directed to children under 13. We do not knowingly collect personal information from children under 13. If you believe a child has provided us with personal information, contact us at support@nexoratouch.com and we will delete it promptly."
+            "title": "10. Children's Privacy",
+            "body": "Our Service is not directed to children under 13. We do not knowingly collect personal information from children under 13. If you believe a child has provided information to us, contact support@nexoratouch.com and we will delete it promptly."
           },
           {
-            "title": "10. Security",
-            "body": "We implement reasonable technical and administrative safeguards to protect your information, including encrypted data transmission and secure cloud infrastructure. No method of transmission is completely secure, and we cannot guarantee absolute security."
+            "title": "11. Security",
+            "body": "We implement reasonable technical and administrative safeguards to protect your information, including encrypted data transmission and secure cloud infrastructure. No transmission method is completely secure and we cannot guarantee absolute security."
           },
           {
-            "title": "11. Changes to This Policy",
-            "body": "We may update this Policy from time to time. Material changes will be communicated via email or in-app notification. Continued use of the Services constitutes acceptance of the updated Policy."
+            "title": "12. Changes to This Policy",
+            "body": "We may update this Policy from time to time. Material changes will be communicated by email or in-app notice. Continued use of the Service constitutes acceptance of the updated Policy."
           },
           {
-            "title": "12. Contact Us",
-            "body": "NEXORA TOUCH LLC\nEmail: support@nexoratouch.com\nAddress: 9793 Westheimer Rd Suite A Houston TX 77042"
+            "title": "13. Contact Us",
+            "body": "NEXORA TOUCH LLC\nEmail: support@nexoratouch.com\nPhone: (832) 979-5559\nAddress: 9793 Westheimer Rd Suite A, Houston, TX 77042"
           }
         ]
       },
@@ -1891,71 +1897,81 @@
         "sections": [
           {
             "title": "1. Acceptance of Terms",
-            "body": "By accessing or using the NEXORA TOUCH platform, website, or applications (collectively, the \"Services\"), you agree to be bound by these Terms of Service. If you do not agree, please discontinue use of the Services. We reserve the right to modify these Terms at any time. Continued use after changes take effect constitutes acceptance of the updated Terms."
+            "body": "By accessing or using the NEXORA TOUCH platform, website, or applications (collectively, the \"Service\"), you agree to be bound by these Terms. If you do not agree, please discontinue use of the Service. We reserve the right to modify these Terms at any time. Continued use of the Service after changes take effect constitutes acceptance of the new Terms."
           },
           {
-            "title": "2. Description of Services",
-            "body": "NEXORA TOUCH is a digital tipping and review platform for service businesses, enabling customers to send tips to staff and leave reviews via QR code or NFC. The platform connects merchants, service staff, and customers without acting as a payment intermediary."
+            "title": "2. Description of Service",
+            "body": "NEXORA TOUCH is a technology platform for service businesses (such as nail salons and spas) that includes: (a) digital tipping and review collection via QR code or NFC; (b) an AI phone receptionist service that answers a participating business's phone line, provides business information, collects appointment requests, and books appointments; and (c) related SMS text notifications sent to customers, such as appointment confirmations and follow-ups. The platform connects merchants, staff, and customers and does not act as a payment intermediary."
           },
           {
             "title": "3. Eligibility",
-            "body": "To use the Services, you must be at least 13 years of age and, if registering as a merchant, legally authorized to operate a business in your jurisdiction. By using the Services, you represent that you meet these requirements."
+            "body": "To use the Service you must be at least 13 years old and, if registering as a merchant, legally permitted to operate a business in your jurisdiction. By using the Service you confirm that you meet these requirements."
           },
           {
             "title": "4. User Accounts",
-            "body": "You are responsible for maintaining the confidentiality of your account credentials and for all activity that occurs under your account. Notify us immediately of any unauthorized use at support@nexoratouch.com. Merchants may manage their business profile, staff, and touch points. Staff members own and control their own payment information — merchants cannot view or modify staff payment handles."
+            "body": "You are responsible for safeguarding your login credentials and for all activity that occurs under your account. Notify us immediately of any unauthorized access at support@nexoratouch.com. Merchants may manage their business profile, staff, and touch points. Staff members own and control their own payout information — merchants cannot view or modify it."
           },
           {
-            "title": "5. Payments and Tipping",
-            "body": "Nexora is a platform only. We do not process, hold, transfer, or guarantee any payments. Tips are sent directly by customers to service staff through third-party payment applications (such as Cash App, Venmo, Zelle, or PayPal). Nexora has no involvement in these transactions. Nexora is not liable for any payment failures, disputes, or financial loss arising from tip transactions between users. Users are responsible for resolving payment disputes directly with the other party or their chosen payment application. Staff are responsible for ensuring their payment information is accurate and for complying with any applicable tax obligations on tips received."
-          },
-          {
-            "title": "6. Subscription Plans",
-            "body": "Merchant access to platform features is governed by the subscription plan in effect at the time of use. Plan details, pricing, and feature limits are available at the point of purchase. We reserve the right to update pricing with prior notice."
-          },
-          {
-            "title": "7. Prohibited Conduct",
-            "body": "You agree not to:",
+            "title": "5. SMS Program (NEXORA TOUCH SMS)",
+            "body": "When customers interact with a participating business — for example by calling its phone line answered by our AI receptionist, or by submitting an online booking request — they may receive SMS text messages from that business's number, powered by NEXORA TOUCH. Message types include: appointment booking confirmations, missed-call follow-ups, customer care responses, review requests, and occasional promotional offers.",
             "items": [
-              "Provide false, fraudulent, or misleading information",
-              "Impersonate any person or entity",
-              "Manipulate tip or review data",
-              "Upload malicious code or attempt unauthorized access",
-              "Use the platform for any illegal purpose",
-              "Create multiple accounts to circumvent platform limits"
+              "Consent (opt-in): Customers consent to receive these messages by verbally requesting an appointment or follow-up during a phone call to a participating business's phone number, or by submitting a booking request online with their phone number.",
+              "Message frequency and rates: Message frequency varies. Message and data rates may apply.",
+              "Opt-out and help: Reply STOP to cancel at any time. Reply HELP for help, or contact support@nexoratouch.com or (832) 979-5559.",
+              "Carriers: Carriers are not liable for delayed or undelivered messages."
             ]
           },
           {
-            "title": "8. Intellectual Property",
-            "body": "All content, software, and trademarks belonging to Nexora remain our property. By uploading content to the platform, you grant us a limited, non-exclusive license to display that content solely for the purpose of providing the Services."
+            "title": "6. Payments and Tips",
+            "body": "Nexora is a platform only. We do not process, hold, transfer, or guarantee any payments. Tips are sent by customers directly to staff through third-party payment applications (such as Cash App, Venmo, Zelle, PayPal). Nexora is not a party to those transactions and is not responsible for payment errors, disputes, or financial losses arising from tip transactions between users. Users are responsible for resolving payment disputes with the other party. Staff are responsible for ensuring their payout information is accurate and for tax obligations arising from tips received."
           },
           {
-            "title": "9. Disclaimer of Warranties",
-            "body": "THE SERVICES ARE PROVIDED \"AS IS\" WITHOUT WARRANTY OF ANY KIND. WE DISCLAIM ALL WARRANTIES, EXPRESS OR IMPLIED, INCLUDING WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE. WE DO NOT WARRANT THAT THE SERVICES WILL BE UNINTERRUPTED, ERROR-FREE, OR THAT ANY THIRD-PARTY PAYMENT APPLICATION WILL FUNCTION AS EXPECTED."
+            "title": "7. Subscription Plans",
+            "body": "Merchant access to platform features is governed by the subscription plan in effect at the time of use. Plan details, pricing, and feature limits are displayed at the time of purchase. We reserve the right to update pricing with advance notice."
           },
           {
-            "title": "10. Limitation of Liability",
-            "body": "TO THE MAXIMUM EXTENT PERMITTED BY LAW, NEXORA SHALL NOT BE LIABLE FOR ANY INDIRECT, INCIDENTAL, SPECIAL, OR CONSEQUENTIAL DAMAGES, INCLUDING LOSS OF TIPS OR REVENUE, OR ANY FINANCIAL DISPUTES BETWEEN USERS. OUR TOTAL LIABILITY SHALL NOT EXCEED THE AMOUNTS PAID BY YOU IN THE 12 MONTHS PRIOR TO THE CLAIM, OR USD $100, WHICHEVER IS GREATER."
+            "title": "8. Prohibited Conduct",
+            "body": "You agree not to:",
+            "items": [
+              "Providing false, fraudulent, or misleading information",
+              "Impersonating any person or entity",
+              "Manipulating tip or review data",
+              "Uploading malicious code or attempting unauthorized access",
+              "Using the platform for any unlawful purpose, including sending unsolicited or unlawful text messages",
+              "Creating multiple accounts to circumvent platform limits"
+            ]
           },
           {
-            "title": "11. Indemnification",
-            "body": "You agree to indemnify and hold harmless NEXORA TOUCH LLC and its officers, employees, and agents from any claims, damages, or expenses arising from your use of the Services or your violation of these Terms."
+            "title": "9. Intellectual Property",
+            "body": "All content, software, and trademarks belonging to Nexora remain our property. By uploading content to the platform, you grant us a limited, non-exclusive license to display that content solely for the purpose of providing the Service."
           },
           {
-            "title": "12. Termination",
-            "body": "We may suspend or terminate your account for violations of these Terms or conduct harmful to other users. You may close your account at any time by contacting support@nexoratouch.com."
+            "title": "10. Disclaimer of Warranties",
+            "body": "THE SERVICE IS PROVIDED \"AS IS\" WITHOUT WARRANTIES OF ANY KIND. WE DISCLAIM ALL WARRANTIES, EXPRESS OR IMPLIED, INCLUDING WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE. WE DO NOT WARRANT THAT THE SERVICE WILL BE UNINTERRUPTED OR ERROR-FREE, THAT ANY THIRD-PARTY PAYMENT APPLICATION WILL FUNCTION AS EXPECTED, OR THAT ANY SMS MESSAGE WILL BE DELIVERED BY CARRIERS."
           },
           {
-            "title": "13. Governing Law",
-            "body": "These Terms are governed by the laws of the United States. Where applicable, local consumer protection laws may also apply. Disputes that cannot be resolved informally will be submitted to binding individual arbitration."
+            "title": "11. Limitation of Liability",
+            "body": "TO THE MAXIMUM EXTENT PERMITTED BY LAW, NEXORA SHALL NOT BE LIABLE FOR ANY INDIRECT, INCIDENTAL, SPECIAL, OR CONSEQUENTIAL DAMAGES, INCLUDING LOST TIPS, LOST REVENUE, MISSED APPOINTMENTS, OR FINANCIAL DISPUTES BETWEEN USERS. OUR TOTAL LIABILITY SHALL NOT EXCEED THE AMOUNTS YOU PAID IN THE 12 MONTHS PRECEDING THE CLAIM, OR $100 USD, WHICHEVER IS GREATER."
           },
           {
-            "title": "14. Changes to Terms",
-            "body": "We may update these Terms at any time. Material changes will be communicated via email or in-app notification."
+            "title": "12. Indemnification",
+            "body": "You agree to indemnify and hold harmless NEXORA TOUCH LLC and our officers, employees, and agents from any claims, damages, or expenses arising from your use of the Service or your violation of these Terms."
           },
           {
-            "title": "15. Contact Us",
-            "body": "NEXORA TOUCH LLC\nEmail: support@nexoratouch.com\nAddress: 9793 Westheimer Rd Suite A Houston TX 77042"
+            "title": "13. Termination",
+            "body": "We may suspend or terminate your account for violations of these Terms. You may close your account at any time by contacting support@nexoratouch.com."
+          },
+          {
+            "title": "14. Governing Law",
+            "body": "These Terms are governed by the laws of the United States and, where applicable, the State of Texas. Local consumer protection laws may also apply. Disputes that cannot be resolved informally will be submitted to binding individual arbitration."
+          },
+          {
+            "title": "15. Changes to These Terms",
+            "body": "We may update these Terms at any time. Material changes will be communicated by email or in-app notice."
+          },
+          {
+            "title": "16. Contact Us",
+            "body": "NEXORA TOUCH LLC\nEmail: support@nexoratouch.com\nPhone: (832) 979-5559\nAddress: 9793 Westheimer Rd Suite A, Houston, TX 77042"
           }
         ]
       }
