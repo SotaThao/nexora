@@ -769,6 +769,7 @@ export default function StaffProfile() {
                       </div>
                     </div>
                   </section>
+                  {!isKYCVerified ? <StaffKycOverview /> : null}
                 </>
               ) : null}
 

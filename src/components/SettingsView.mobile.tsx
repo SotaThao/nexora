@@ -23,6 +23,7 @@ import {
 } from 'lucide-react'
 import useSettingsForm from './settings/hooks/useSettingsForm'
 import ProfileTab from './settings/tabs/ProfileTab'
+import KybTab from './settings/tabs/KybTab'
 import useAuth from '../auth/useAuth'
 import { downloadQrCode, buildPublicQrImageUrl, QR_IMAGE_SIZES } from '../utils/qrUtils'
 import { buildAffiliateReferralUrl, getProfileReferralCode } from '../utils/affiliateReferral'
@@ -251,6 +252,7 @@ export default function SettingsViewMobile({
 
   const [showQrModal, setShowQrModal] = useState(false)
   const [selectedLeg, setSelectedLeg] = useState('left')
+  const [showKybFlow, setShowKybFlow] = useState(false)
   const activeSection = form.activeTab === 'profile' ? (searchParams.get('section') || '') : ''
   const merchantName = form.profile.businessName || form.profile.fullName || userEmail || 'Merchant'
   const merchantInitial = merchantName.trim().charAt(0).toUpperCase() || 'M'
@@ -260,6 +262,16 @@ export default function SettingsViewMobile({
   const kybStatusLabel = isKybVerified
     ? t('staff_dashboard.profile.menu_verified')
     : t('staff_dashboard.profile.menu_not_verified')
+
+  useEffect(() => {
+    if (initialTab === 'kyb') {
+      navigate('/dashboard/settings/profile?section=verification', { replace: true })
+    }
+  }, [initialTab, navigate])
+
+  useEffect(() => {
+    if (activeSection !== 'verification') setShowKybFlow(false)
+  }, [activeSection])
 
   const referralCode = useMemo(
     () => getProfileReferralCode(form.profile),
@@ -503,21 +515,52 @@ export default function SettingsViewMobile({
               title={t('staff_dashboard.profile.menu_verification')}
               onBack={closeProfileSection}
             />
-            <section className="rounded-2xl border border-nexoraBorder bg-nexoraSurface p-4 shadow-sm">
-              <div className="flex items-start gap-3">
-                <span className={`grid h-10 w-10 shrink-0 place-items-center rounded-xl ${isKybVerified ? 'bg-emerald-50 text-emerald-600' : 'bg-amber-50 text-amber-600'}`}>
-                  <ShieldCheck className="h-5 w-5" />
-                </span>
-                <div>
-                  <h3 className="text-sm font-extrabold text-nexoraText">{kybStatusLabel}</h3>
-                  <p className="mt-1 text-xs leading-5 text-nexoraMuted">
-                    {isKybVerified
-                      ? t('staff_dashboard.profile.verification_body')
-                      : t('staff_dashboard.profile.verification_unverified_body')}
-                  </p>
-                </div>
+            {showKybFlow ? (
+              <div className="space-y-3">
+                <button
+                  type="button"
+                  onClick={() => setShowKybFlow(false)}
+                  className="inline-flex items-center gap-1 text-xs font-bold text-nexoraMuted transition hover:text-nexoraText"
+                >
+                  <ArrowLeft className="h-4 w-4" />
+                  {t('common.back')}
+                </button>
+                <KybTab
+                  profile={form.profile}
+                  cardDetails={null}
+                  verificationStatus={form.effectiveVerificationStatus}
+                  showToast={form.showToast}
+                />
               </div>
-            </section>
+            ) : (
+              <section className="rounded-2xl border border-nexoraBorder bg-nexoraSurface p-4 shadow-sm space-y-4">
+                <div className="flex items-start gap-3">
+                  <span className={`grid h-10 w-10 shrink-0 place-items-center rounded-xl ${isKybVerified ? 'bg-emerald-50 text-emerald-600' : 'bg-amber-50 text-amber-600'}`}>
+                    <ShieldCheck className="h-5 w-5" />
+                  </span>
+                  <div>
+                    <h3 className="text-sm font-extrabold text-nexoraText">{kybStatusLabel}</h3>
+                    <p className="mt-1 text-xs leading-5 text-nexoraMuted">
+                      {isKybVerified
+                        ? t('staff_dashboard.profile.verification_body')
+                        : isBusinessAccount
+                          ? t('staff_dashboard.profile.verification_unverified_body_business')
+                          : t('staff_dashboard.profile.verification_unverified_body')}
+                    </p>
+                  </div>
+                </div>
+                {!isKybVerified && (
+                  <button
+                    type="button"
+                    onClick={() => setShowKybFlow(true)}
+                    className="inline-flex w-full items-center justify-center gap-2 rounded-lg bg-gradient-to-r from-nexoraElectric to-nexoraViolet px-5 py-2.5 text-xs font-black uppercase tracking-wider text-white shadow-md transition hover:opacity-90"
+                  >
+                    <ShieldCheck className="h-4 w-4" />
+                    {t('components.dashboardRoot.verifyNow')}
+                  </button>
+                )}
+              </section>
+            )}
           </>
         )}
 
