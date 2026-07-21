@@ -23,8 +23,11 @@ export function legToApiValue(leg: Leg): 'Left' | 'Right' {
 export const DEFAULT_LEG: Leg = 'left'
 
 /** sessionStorage (not the shared localStorage-backed `storage`) so the ref code is
- * forgotten once the tab closes, instead of leaking into unrelated future visits. */
+ * forgotten once the tab closes, instead of leaking into unrelated future visits.
+ * Also purges any leftover localStorage entry from before this change shipped, so
+ * browsers that already had a ref code saved there don't keep carrying it forever. */
 export function saveRefCode(code: string) {
+  localStorage.removeItem(STORAGE_PREFIX + REF_CODE_KEY)
   const trimmed = code.trim()
   if (trimmed) {
     sessionStorage.setItem(STORAGE_PREFIX + REF_CODE_KEY, trimmed)
@@ -32,12 +35,14 @@ export function saveRefCode(code: string) {
 }
 
 export function getSavedRefCode(): string {
+  localStorage.removeItem(STORAGE_PREFIX + REF_CODE_KEY)
   return sessionStorage.getItem(STORAGE_PREFIX + REF_CODE_KEY) || ''
 }
 
 /** Persist the chosen binary tree side ('left' | 'right') from a referral link's ?leg= param.
- * sessionStorage-scoped for the same reason as saveRefCode above. */
+ * sessionStorage-scoped for the same reason as saveRefCode above, same legacy purge too. */
 export function saveLeg(leg: string) {
+  localStorage.removeItem(STORAGE_PREFIX + LEG_KEY)
   const trimmed = leg.trim().toLowerCase()
   if (isValidLeg(trimmed)) {
     sessionStorage.setItem(STORAGE_PREFIX + LEG_KEY, trimmed)
@@ -45,6 +50,7 @@ export function saveLeg(leg: string) {
 }
 
 export function getSavedLeg(): string {
+  localStorage.removeItem(STORAGE_PREFIX + LEG_KEY)
   return sessionStorage.getItem(STORAGE_PREFIX + LEG_KEY) || ''
 }
 
