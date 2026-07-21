@@ -13,6 +13,20 @@ function shouldRequestKybCamera(verificationStatus: string) {
   )
 }
 
+function appendKybType(url: string | undefined): string | undefined {
+  if (!url) return url
+
+  try {
+    const parsed = new URL(url)
+    parsed.searchParams.set('type', 'kyb')
+    return parsed.toString()
+  } catch {
+    // Not an absolute URL (e.g. relative path) — fall back to plain concatenation.
+    const separator = url.includes('?') ? '&' : '?'
+    return `${url}${separator}type=kyb`
+  }
+}
+
 async function requestCameraPermission() {
   if (!navigator.mediaDevices?.getUserMedia) return
 
@@ -62,7 +76,7 @@ export default function KybTab({
     refetch: refetchKybInfo,
   } = useKybInfo({ language: currentLanguage })
 
-  const iframeUrl = kybInfo?.url
+  const iframeUrl = appendKybType(kybInfo?.url)
   const hasUrl = Boolean(iframeUrl)
   const isBusy = isLoadingKybInfo || (isFetchingKybInfo && !hasUrl)
 
