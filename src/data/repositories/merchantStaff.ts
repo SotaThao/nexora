@@ -41,6 +41,16 @@ export interface StaffNicknameUpdateResult {
   displayName: string
 }
 
+interface StaffRoleUpdateApiDto {
+  linkId?: string
+  roleAtBusiness?: string
+}
+
+export interface StaffRoleUpdateResult {
+  linkId: string
+  roleAtBusiness: string
+}
+
 const PAYOUT_TYPE_TO_KEY: Record<string, string> = {
   Zelle: 'zelle',
   BankWire: 'bankwire',
@@ -475,6 +485,21 @@ export function createMerchantStaffRepository(client: HttpClient = httpClient) {
         linkId: dto.linkId ?? staffLinkId,
         nicknameAtBusiness: dto.nicknameAtBusiness ?? null,
         displayName: dto.displayName ?? '',
+      }
+    },
+
+    async updateRoleAtBusiness(
+      staffLinkId: string,
+      roleAtBusiness: string,
+    ): Promise<StaffRoleUpdateResult> {
+      const dto = await client.patch<StaffRoleUpdateApiDto & Record<string, unknown>>(
+        `/api/v1/merchant/staff/${encodeURIComponent(staffLinkId)}/role`,
+        { roleAtBusiness },
+      )
+      const raw = (dto ?? {}) as StaffRoleUpdateApiDto & Record<string, unknown>
+      return {
+        linkId: (raw.linkId ?? raw.LinkId ?? staffLinkId) as string,
+        roleAtBusiness: (raw.roleAtBusiness ?? raw.RoleAtBusiness ?? roleAtBusiness) as string,
       }
     },
 

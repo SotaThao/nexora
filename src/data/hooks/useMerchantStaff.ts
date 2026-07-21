@@ -18,9 +18,10 @@ import type {
   StaffInviteParams,
   StaffLinkRequestParams,
   StaffReorderItem,
+  UpdateMerchantStaffRoleVars,
   UpdateStaffStatusVars,
 } from '../../types/hooks'
-import type { StaffNicknameUpdateResult } from '../repositories/merchantStaff'
+import type { StaffNicknameUpdateResult, StaffRoleUpdateResult } from '../repositories/merchantStaff'
 import { staffMemberMatchesAnyId } from '../../utils/merchantStaffPending'
 
 export { StatusFilter }
@@ -248,6 +249,54 @@ export function useSetMerchantStaffNickname() {
               nicknameAtBusiness: result.nicknameAtBusiness,
               nickname: result.displayName,
               displayName: result.displayName,
+            }
+          : current,
+      )
+
+      void queryClient.invalidateQueries({ queryKey: qk.merchantStaff() })
+      void queryClient.invalidateQueries({ queryKey: qk.merchantStaffByCode(staffCode) })
+      void queryClient.invalidateQueries({ queryKey: qk.dashboardStaff() })
+    },
+    onError: (error) => {
+      if (isApiError(error) && (error.status === 403 || error.status === 404)) {
+        void queryClient.invalidateQueries({ queryKey: qk.merchantStaff() })
+      }
+    },
+  })
+}
+
+export function useUpdateMerchantStaffRole() {
+  const queryClient = useQueryClient()
+
+  return useMutation<StaffRoleUpdateResult, Error, UpdateMerchantStaffRoleVars>({
+    mutationFn: ({ staffLinkId, roleAtBusiness }) =>
+      merchantStaffRepository.updateRoleAtBusiness(staffLinkId, roleAtBusiness),
+    onSuccess: (result, { staffLinkId, staffCode }) => {
+      queryClient.setQueriesData<StaffListPage>(
+        { queryKey: qk.merchantStaff() },
+        (current) => {
+          if (!current?.items?.length) return current
+          return {
+            ...current,
+            items: current.items.map((item) =>
+              staffMemberMatchesLinkId(item, staffLinkId)
+                ? {
+                    ...item,
+                    roleAtBusiness: result.roleAtBusiness,
+                    position: result.roleAtBusiness,
+                  }
+                : item,
+            ),
+          }
+        },
+      )
+      queryClient.setQueryData<StaffMember>(
+        qk.merchantStaffByCode(staffCode),
+        (current) => current
+          ? {
+              ...current,
+              roleAtBusiness: result.roleAtBusiness,
+              position: result.roleAtBusiness,
             }
           : current,
       )

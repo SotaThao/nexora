@@ -26,6 +26,10 @@ import type { StaffLinkRequestDetailApiDto } from '../../types/repositories'
 
 type HttpClient = typeof httpClient
 
+function readField<T>(dto: Record<string, unknown>, camel: string, pascal: string): T | undefined {
+  return (dto[camel] ?? dto[pascal]) as T | undefined
+}
+
 interface StaffNicknameUpdateApiDto {
   linkId?: string
   nicknameAtBusiness?: string | null
@@ -38,6 +42,16 @@ export interface StaffNicknameUpdateResult {
   displayName: string
 }
 
+interface StaffRoleUpdateApiDto {
+  businessId?: string
+  roleAtBusiness?: string
+}
+
+export interface StaffBusinessRoleUpdateResult {
+  businessId: string
+  roleAtBusiness: string
+}
+
 interface StaffBusinessApiDto {
   businessId?: string
   businessName?: string
@@ -46,10 +60,10 @@ interface StaffBusinessApiDto {
   city?: string | null
   state?: string | null
   logoUrl?: string | null
-  role?: string | null
+  role?: number | string | null
   roleLabel?: string | null
   roleAtBusiness?: string | null
-  linkStatus?: string | null
+  linkStatus?: number | string | null
   linkStatusLabel?: string | null
   linkedAt?: string | null
   businessSlug?: string | null
@@ -102,19 +116,28 @@ function normalizeStaffBusinessLink(b: StaffBusinessApiDto): StaffBusinessLink {
     !touchPointSlug?.trim() &&
     !tipUrl?.trim()
 
+  const roleAtBusinessRaw =
+    readField<string | null>(b as Record<string, unknown>, 'roleAtBusiness', 'RoleAtBusiness')
+    ?? b.roleAtBusiness
+    ?? null
+  const roleAtBusiness = roleAtBusinessRaw?.trim() || null
+  const wireRole = b.role ?? readField<number | string>(b as Record<string, unknown>, 'role', 'Role')
+  const linkStatus =
+    b.linkStatus ?? readField<number | string>(b as Record<string, unknown>, 'linkStatus', 'LinkStatus') ?? null
+
   return {
-    businessId: b.businessId ?? '',
-    businessName: b.businessName ?? '',
-    nicknameAtBusiness: b.nicknameAtBusiness ?? null,
+    businessId: readField<string>(b as Record<string, unknown>, 'businessId', 'BusinessId') ?? '',
+    businessName: readField<string>(b as Record<string, unknown>, 'businessName', 'BusinessName') ?? b.businessName ?? '',
+    nicknameAtBusiness: readField<string | null>(b as Record<string, unknown>, 'nicknameAtBusiness', 'NicknameAtBusiness') ?? b.nicknameAtBusiness ?? null,
     address: b.address ?? null,
     city: b.city ?? null,
     state: b.state ?? null,
     logoUrl: b.logoUrl ?? null,
-    role: b.role ?? null,
-    roleLabel: b.roleLabel ?? null,
-    roleAtBusiness: b.roleAtBusiness ?? null,
-    linkStatus: b.linkStatus ?? null,
-    linkStatusLabel: b.linkStatusLabel ?? null,
+    role: wireRole != null ? String(wireRole) : null,
+    roleLabel: b.roleLabel ?? readField<string>(b as Record<string, unknown>, 'roleLabel', 'RoleLabel') ?? null,
+    roleAtBusiness,
+    linkStatus: linkStatus != null ? String(linkStatus) : null,
+    linkStatusLabel: b.linkStatusLabel ?? readField<string>(b as Record<string, unknown>, 'linkStatusLabel', 'LinkStatusLabel') ?? null,
     linkedAt: b.linkedAt ?? null,
     businessSlug: b.businessSlug ?? null,
     touchPointSlug,
@@ -400,6 +423,21 @@ export function createStaffSelfRepository(client: HttpClient = httpClient) {
         linkId: dto.linkId ?? '',
         nicknameAtBusiness: dto.nicknameAtBusiness ?? null,
         displayName: dto.displayName ?? '',
+      }
+    },
+
+    async updateMyRoleAtBusiness(
+      businessId: string,
+      roleAtBusiness: string,
+    ): Promise<StaffBusinessRoleUpdateResult> {
+      const dto = await client.patch<StaffRoleUpdateApiDto & Record<string, unknown>>(
+        `/api/v1/staff/businesses/${encodeURIComponent(businessId)}/role`,
+        { roleAtBusiness },
+      )
+      const raw = (dto ?? {}) as StaffRoleUpdateApiDto & Record<string, unknown>
+      return {
+        businessId: readField<string>(raw, 'businessId', 'BusinessId') ?? businessId,
+        roleAtBusiness: readField<string>(raw, 'roleAtBusiness', 'RoleAtBusiness') ?? roleAtBusiness,
       }
     },
 

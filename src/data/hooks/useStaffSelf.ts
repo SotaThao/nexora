@@ -21,8 +21,8 @@ import type {
 } from '../../types/domain'
 import { isApiError } from '../../types/domain'
 import type { StaffTipsListParams } from '../repositories/staffSelf'
-import type { StaffNicknameUpdateResult } from '../repositories/staffSelf'
-import type { SetStaffBusinessNicknameVars } from '../../types/hooks'
+import type { StaffNicknameUpdateResult, StaffBusinessRoleUpdateResult } from '../repositories/staffSelf'
+import type { SetStaffBusinessNicknameVars, UpdateStaffBusinessRoleVars } from '../../types/hooks'
 import type { TransactionsListQuery } from '../repositories/transactions'
 import type { TransactionsListPage } from '../repositories/transactions'
 import { useStaffAccount } from '../../contexts/StaffAccountContext'
@@ -66,6 +66,31 @@ export function useSetStaffBusinessNickname() {
         (current) => current?.map((business) =>
           business.businessId === businessId
             ? { ...business, nicknameAtBusiness: result.nicknameAtBusiness }
+            : business,
+        ),
+      )
+      void queryClient.invalidateQueries({ queryKey: qk.staffBusinesses() })
+    },
+    onError: (error) => {
+      if (isApiError(error) && (error.status === 403 || error.status === 404)) {
+        void queryClient.invalidateQueries({ queryKey: qk.staffBusinesses() })
+      }
+    },
+  })
+}
+
+export function useUpdateStaffBusinessRole() {
+  const queryClient = useQueryClient()
+
+  return useMutation<StaffBusinessRoleUpdateResult, Error, UpdateStaffBusinessRoleVars>({
+    mutationFn: ({ businessId, roleAtBusiness }) =>
+      staffSelfRepository.updateMyRoleAtBusiness(businessId, roleAtBusiness),
+    onSuccess: (result, { businessId }) => {
+      queryClient.setQueryData<StaffBusinessLink[]>(
+        qk.staffBusinesses(),
+        (current) => current?.map((business) =>
+          business.businessId === businessId
+            ? { ...business, roleAtBusiness: result.roleAtBusiness }
             : business,
         ),
       )
