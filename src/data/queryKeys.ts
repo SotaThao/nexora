@@ -138,6 +138,28 @@ export const qk = {
   publicDirectPaymentPage: (businessId) => ['publicDirectPaymentPage', businessId],
   publicStaffDirectPaymentPage: (staffProfileId: string) => ['publicStaffDirectPaymentPage', staffProfileId],
   publicPaymentStatus: (paymentId: string) => ['publicPayment', 'status', paymentId],
+
+  // Community demo (backend-neutral data boundary)
+  communityList: (filters = EMPTY) => ['community', 'list', filters],
+  communityMyList: () => ['community', 'my-list'],
+  communityDetail: (communityId: string) => ['community', 'detail', communityId],
+  communityBySlug: (slug: string) => ['community', 'slug', slug],
+  communityMembers: (communityId: string, filters = EMPTY) => ['community', 'members', communityId, filters],
+  communityPosts: (communityId: string, filters = EMPTY) => ['community', 'posts', communityId, filters],
+  communityPost: (postId: string) => ['community', 'post', postId],
+  communityComments: (postId: string, filters = EMPTY) => ['community', 'comments', postId, filters],
+  communityReactions: (postId: string) => ['community', 'reactions', postId],
+  communityInvites: (communityId: string) => ['community', 'invites', communityId],
+  communityInvitePreview: (token: string) => ['community', 'invitePreview', token],
+  communityJoinRequests: (communityId: string, filters = EMPTY) => ['community', 'joinRequests', communityId, filters],
+  communityChannels: (communityId: string) => ['community', 'channels', communityId],
+  communityMessages: (channelId: string, filters = EMPTY) => ['community', 'messages', channelId, filters],
+  communityChatChannel: (communityId: string) => ['community', 'chat', 'channel', communityId],
+  communityChatMessages: (channelId: string) => ['community', 'chat', 'messages', channelId],
+  communityReports: (communityId: string, filters = EMPTY) => ['community', 'reports', communityId, filters],
+  communityNotifications: (filters = EMPTY) => ['community', 'notifications', filters],
+  communityNotificationsUnreadCount: () => ['community', 'notifications', 'unreadCount'],
+  communityProfile: (profileId: string) => ['community', 'profile', profileId],
 }
 
 /** Maps localStorage domain keys → TanStack Query key arrays (storage event bridge). */

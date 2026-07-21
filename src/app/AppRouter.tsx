@@ -33,6 +33,14 @@ import RequireAuth from "./RequireAuth";
 import RequireOnboarded from "./RequireOnboarded";
 import RequireStaffReady from "./RequireStaffReady";
 import RootRedirect from "./RootRedirect";
+import {
+  CommunityCreateWizard,
+  CommunityDetail,
+  CommunityHome,
+  CommunityJoinPreview,
+  CommunityRouteRoot,
+} from "../components/community/CommunityScreens";
+import { CommunityChat } from "../components/community/CommunityChat";
 
 const SetupWizard = lazyWithRetry(() => import("../components/SetupWizard"));
 const DashboardOwnerShell = lazyWithRetry(
@@ -102,6 +110,12 @@ const TermsOfServicePage = lazyWithRetry(
 );
 const HelpQrPage = lazyWithRetry(
   () => import("../components/public/HelpQrPage"),
+);
+const CommunityDesignDemo = lazyWithRetry(
+  () => import("../components/community/demo/CommunityDesignDemo"),
+);
+const CommunityBusinessDemo = lazyWithRetry(
+  () => import("../components/community/demo/CommunityBusinessDemo"),
 );
 
 // Bridges the URL (path token / legacy ?flow=staff-invite biz) to the wizard's
@@ -191,6 +205,18 @@ export default function AppRouter() {
           <Route path="/help/qr/:code" element={<HelpQrPage />} />
           <Route path="/privacy-policy" element={<PrivacyPolicyPage />} />
           <Route path="/terms-of-service" element={<TermsOfServicePage />} />
+          <Route path="/design-demo/community" element={<CommunityDesignDemo />} />
+          <Route
+            path="/design-demo/community-business"
+            element={<CommunityBusinessDemo />}
+          />
+          <Route path="/community" element={<CommunityRouteRoot />}>
+            <Route index element={<CommunityHome />} />
+            <Route path="new" element={<CommunityCreateWizard />} />
+            <Route path="join/:token" element={<CommunityJoinPreview />} />
+            <Route path=":id/chat" element={<CommunityChat />} />
+            <Route path=":id" element={<CommunityDetail />} />
+          </Route>
           <Route path="/invite" element={<InviteRoute />} />
           <Route path="/invite/:token" element={<InviteRoute />} />
           <Route
