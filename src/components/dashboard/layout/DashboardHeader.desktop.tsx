@@ -21,6 +21,10 @@ import IconButton from '../../ui/IconButton'
 import LanguageSwitcher from '../../ui/LanguageSwitcher'
 import { truncateTransactionId } from '../../ui/CopyableTransactionId'
 import HeaderEcosystem from './HeaderEcosystem'
+import {
+  buildDashboardReportsPath,
+  DASHBOARD_REPORTS_TAB,
+} from '../constants'
 
 export default function DashboardHeader({
   searchQuery,
@@ -96,18 +100,23 @@ export default function DashboardHeader({
       // Both Tips and Direct Payments notifications land on the Reports
       // screen; reportsTab picks the sub-tab, transactionId/paymentId let
       // that tab auto-open the matching transaction's detail modal.
-      const params = new URLSearchParams({ tab: item.reportsTab || 'direct_payments' })
+      const params: {
+        tab: string
+        transactionId?: string
+        paymentId?: string
+        date?: string
+      } = { tab: item.reportsTab || DASHBOARD_REPORTS_TAB.directPayments }
       if (item.transactionId) {
-        params.set('transactionId', String(item.transactionId))
+        params.transactionId = String(item.transactionId)
         // ReportsView narrows its date filter to this day to find the tip
         // (the tips API has no get-by-id/lookup-by-id endpoint).
         const createdAt = item.createdAt ? new Date(item.createdAt) : null
         if (createdAt && !Number.isNaN(createdAt.getTime())) {
-          params.set('date', createdAt.toISOString().slice(0, 10))
+          params.date = createdAt.toISOString().slice(0, 10)
         }
       }
-      if (item.paymentId) params.set('paymentId', String(item.paymentId))
-      navigate(`/dashboard/reports?${params.toString()}`)
+      if (item.paymentId) params.paymentId = String(item.paymentId)
+      navigate(buildDashboardReportsPath(params))
     } else if (item.linkTab) {
       onNavigateMenu(item.linkTab)
     }

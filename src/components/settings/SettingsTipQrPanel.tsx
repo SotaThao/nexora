@@ -21,6 +21,10 @@ import {
   resolveDirectPaymentPageUrl,
   resolveMerchantBusinessIdFromProfile,
 } from '../../utils/merchantBusinessId'
+import {
+  buildDashboardReportsPath,
+  DASHBOARD_REPORTS_TAB,
+} from '../dashboard/constants'
 import { downloadQrCode, QR_IMAGE_SIZES } from '../../utils/qrUtils'
 import { payoutTypeToUiKey, getPaymentMethodDisplayName } from '../../data/paymentMethodTypes'
 import QrImage from '../ui/QrImage'
@@ -377,7 +381,9 @@ export default function SettingsTipQrPanel({
                 </button>
                 <button
                   type="button"
-                  onClick={() => navigate('/dashboard/reports?tab=direct_payments')}
+                  onClick={() =>
+                    navigate(buildDashboardReportsPath({ tab: DASHBOARD_REPORTS_TAB.directPayments }))
+                  }
                   className="inline-flex h-9 w-full items-center justify-center gap-1.5 rounded-lg border border-nexoraBrand/20 bg-nexoraBrandSoft px-3 text-[11px] font-bold text-nexoraBrand transition hover:bg-nexoraBrand/10"
                 >
                   <ClipboardList className="h-3.5 w-3.5" />
@@ -467,7 +473,9 @@ export default function SettingsTipQrPanel({
 
         <button
           type="button"
-          onClick={() => navigate('/dashboard/reports?tab=direct_payments')}
+          onClick={() =>
+            navigate(buildDashboardReportsPath({ tab: DASHBOARD_REPORTS_TAB.directPayments }))
+          }
           className="flex w-full cursor-pointer items-center justify-center gap-2 rounded-lg border border-nexoraBrand/20 bg-nexoraBrandSoft px-4 py-3 text-xs font-bold text-nexoraBrand transition hover:bg-nexoraBrand/10"
         >
           <ClipboardList className="h-4 w-4 shrink-0" />
