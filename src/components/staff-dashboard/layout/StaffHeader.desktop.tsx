@@ -21,11 +21,10 @@ export default function StaffHeader({ activeScreen, onNavigate, onOpenMobileMenu
   const { staffMember, account } = useStaffAccount()
   const { data: unreadCount = 0 } = useUnreadCount()
   const displayName = account.defaultDisplayName || staffMember.fullName || 'Staff'
-
-  const [isProfileOpen, setIsProfileOpen] = useState(false)
   const [isNotiOpen, setIsNotiOpen] = useState(false)
-  const profileRef = useRef<HTMLDivElement>(null)
   const notiRef = useRef<HTMLDivElement>(null)
+  const [isProfileOpen, setIsProfileOpen] = useState(false)
+  const profileRef = useRef<HTMLDivElement>(null)
 
   const { data: notifications, isLoading: isNotificationsLoading } = useNotifications({ enabled: isNotiOpen })
   const { mutate: markRead } = useMarkNotificationRead()
@@ -33,26 +32,26 @@ export default function StaffHeader({ activeScreen, onNavigate, onOpenMobileMenu
 
   useEffect(() => {
     const handleClickOutside = (e: MouseEvent) => {
-      if (profileRef.current && !profileRef.current.contains(e.target as Node)) {
-        setIsProfileOpen(false)
-      }
       if (notiRef.current && !notiRef.current.contains(e.target as Node)) {
         setIsNotiOpen(false)
+      }
+      if (profileRef.current && !profileRef.current.contains(e.target as Node)) {
+        setIsProfileOpen(false)
       }
     }
     document.addEventListener('mousedown', handleClickOutside)
     return () => document.removeEventListener('mousedown', handleClickOutside)
   }, [])
 
-  const handleProfileNav = (tab: string) => {
-    onNavigate('profile', { tab })
-    setIsProfileOpen(false)
-  }
-
   const handleNotificationClick = (item) => {
     if (!item.read) markRead(item.id)
     setIsNotiOpen(false)
     navigateStaffNotification(item, navigate, onNavigate)
+  }
+
+  const handleProfileNav = (tab: string) => {
+    onNavigate('profile', { tab })
+    setIsProfileOpen(false)
   }
 
   return (
@@ -76,9 +75,69 @@ export default function StaffHeader({ activeScreen, onNavigate, onOpenMobileMenu
       </div>
 
       <div className="flex shrink-0 items-center gap-2 sm:gap-3">
-        <LanguageSwitcher />
+        {/* Profile avatar + dropdown */}
+        <div ref={profileRef} className="relative">
+          <button
+            type="button"
+            onClick={() => setIsProfileOpen((v) => !v)}
+            aria-label={t('staff_dashboard.titles.profile')}
+            aria-haspopup="menu"
+            aria-expanded={isProfileOpen}
+            className="flex h-10 w-10 items-center justify-center overflow-hidden rounded-full transition hover:opacity-90"
+          >
+            {account.avatar ? (
+              <img src={account.avatar} alt="" className="h-full w-full object-cover" />
+            ) : (
+              <div className="flex h-full w-full items-center justify-center bg-nexoraBrand text-sm font-bold text-white">
+                {displayName.charAt(0)}
+              </div>
+            )}
+          </button>
 
-        <HeaderEcosystem />
+          {isProfileOpen && (
+            <div className="absolute left-0 top-12 z-50 w-52 rounded-xl border border-nexoraBorder bg-nexoraSurface shadow-lg animate-fadeIn">
+              <div className="border-b border-nexoraBorder px-4 py-3">
+                <div className="truncate text-sm font-bold text-nexoraText">
+                  {account.fullName || staffMember.fullName || displayName}
+                </div>
+                <div className="mt-0.5 truncate text-[11px] text-nexoraMuted">
+                  {t('staff_dashboard.staff_id')}: {account.staffCode || staffMember.id}
+                </div>
+              </div>
+
+              <div className="p-1.5 space-y-0.5">
+                <button
+                  type="button"
+                  onClick={() => handleProfileNav('account')}
+                  className="flex w-full items-center gap-2.5 rounded-lg px-3 py-2 text-sm font-semibold text-nexoraText transition hover:bg-nexoraCanvas"
+                >
+                  <Settings className="h-4 w-4 text-nexoraMuted" />
+                  <span>{t('staff_dashboard.nav.profile_account')}</span>
+                </button>
+                <button
+                  type="button"
+                  disabled
+                  aria-disabled="true"
+                  className="flex w-full cursor-not-allowed items-center gap-2.5 rounded-lg px-3 py-2 text-sm font-semibold text-nexoraMuted opacity-60"
+                >
+                  <ShieldCheck className="h-4 w-4 text-nexoraMuted" />
+                  <span>{t('staff_dashboard.nav.profile_kyc')}</span>
+                </button>
+              </div>
+
+              <div className="border-t border-nexoraBorder p-1.5">
+                <button
+                  type="button"
+                  onClick={() => { setIsProfileOpen(false); onLogout?.() }}
+                  className="flex w-full items-center gap-2.5 rounded-lg px-3 py-2 text-sm font-semibold text-red-500 transition hover:bg-red-50"
+                >
+                  <LogOut className="h-4 w-4" />
+                  <span>{t('staff_dashboard.sign_out')}</span>
+                </button>
+              </div>
+            </div>
+          )}
+        </div>
 
         {/* Notifications bell + dropdown */}
         <div ref={notiRef} className="relative">
@@ -86,11 +145,11 @@ export default function StaffHeader({ activeScreen, onNavigate, onOpenMobileMenu
             type="button"
             onClick={() => setIsNotiOpen((v) => !v)}
             aria-label={t('staff_dashboard.titles.notifications')}
-            className={`relative flex h-10 w-10 items-center justify-center rounded-full border transition hover:bg-nexoraCanvas ${
-              isNotiOpen ? 'border-nexoraBrand ring-2 ring-nexoraBrand/30' : 'border-nexoraBorder'
+            className={`relative flex h-10 w-10 items-center justify-center rounded-full transition hover:bg-nexoraCanvas ${
+              isNotiOpen ? 'ring-2 ring-nexoraBrand/30' : ''
             }`}
           >
-            <img src="/assets/menu/notification.png" alt="" className="h-5 w-5 object-contain" aria-hidden="true" />
+            <Bell className="h-5 w-5" aria-hidden="true" />
             {unreadCount > 0 && (
               <span className="absolute -right-1 -top-1 flex h-[18px] min-w-[18px] items-center justify-center rounded-full bg-red-500 px-1 text-[9px] font-black text-white ring-2 ring-white">
                 {unreadCount > 99 ? '99+' : unreadCount}
@@ -178,69 +237,9 @@ export default function StaffHeader({ activeScreen, onNavigate, onOpenMobileMenu
           )}
         </div>
 
-        {/* Profile avatar + dropdown */}
-        <div ref={profileRef} className="relative">
-          <button
-            type="button"
-            onClick={() => setIsProfileOpen((v) => !v)}
-            aria-label={t('staff_dashboard.titles.profile')}
-            className={`flex h-10 w-10 items-center justify-center overflow-hidden rounded-full border transition hover:opacity-90 ${
-              isProfileOpen ? 'border-nexoraBrand ring-2 ring-nexoraBrand/30' : 'border-nexoraBorder'
-            }`}
-          >
-            {account.avatar ? (
-              <img src={account.avatar} alt="" className="h-full w-full object-cover" />
-            ) : (
-              <div className="flex h-full w-full items-center justify-center bg-nexoraBrand text-sm font-bold text-white">
-                {displayName.charAt(0)}
-              </div>
-            )}
-          </button>
+        <LanguageSwitcher variant="header-plain" />
 
-          {isProfileOpen && (
-            <div className="absolute right-0 top-12 z-50 w-52 rounded-xl border border-nexoraBorder bg-nexoraSurface shadow-lg animate-fadeIn">
-              <div className="border-b border-nexoraBorder px-4 py-3">
-                <div className="truncate text-sm font-bold text-nexoraText">
-                  {account.fullName || staffMember.fullName || displayName}
-                </div>
-                <div className="mt-0.5 truncate text-[11px] text-nexoraMuted">
-                  {t('staff_dashboard.staff_id')}: {account.staffCode || staffMember.id}
-                </div>
-              </div>
-
-              <div className="p-1.5 space-y-0.5">
-                <button
-                  type="button"
-                  onClick={() => handleProfileNav('account')}
-                  className="flex w-full items-center gap-2.5 rounded-lg px-3 py-2 text-sm font-semibold text-nexoraText transition hover:bg-nexoraCanvas"
-                >
-                  <Settings className="h-4 w-4 text-nexoraMuted" />
-                  <span>{t('staff_dashboard.nav.profile_account')}</span>
-                </button>
-                <button
-                  type="button"
-                  disabled
-                  aria-disabled="true"
-                  className="flex w-full cursor-not-allowed items-center gap-2.5 rounded-lg px-3 py-2 text-sm font-semibold text-nexoraMuted opacity-60"
-                >
-                  <ShieldCheck className="h-4 w-4 text-nexoraMuted" />
-                  <span>{t('staff_dashboard.nav.profile_kyc')}</span>
-                </button>
-              </div>
-
-              <div className="border-t border-nexoraBorder p-1.5">
-                <button
-                  type="button"
-                  onClick={() => { setIsProfileOpen(false); onLogout?.() }}
-                  className="flex w-full items-center gap-2.5 rounded-lg px-3 py-2 text-sm font-semibold text-red-500 transition hover:bg-red-50"
-                >
-                  <LogOut className="h-4 w-4" />
-                  <span>{t('staff_dashboard.sign_out')}</span>
-                </button>
-              </div>
-            </div>
-          )}
-        </div>
+        <HeaderEcosystem />
       </div>
     </header>
   )

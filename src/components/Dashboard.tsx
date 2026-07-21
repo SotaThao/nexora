@@ -1,16 +1,24 @@
-import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react'
-import { Outlet, useNavigate } from 'react-router-dom'
+import React, { useCallback, useEffect, useMemo, useState } from 'react'
+import { Outlet, useNavigate, useSearchParams } from 'react-router-dom'
 
 // 2. Third-party
-import { Filter, Settings, ShieldAlert, Check, Link } from 'lucide-react'
+import { ArrowLeft } from 'lucide-react'
 
 // 3. Internal — utils → contexts → data/constants → hooks → layout → views → modals → ui
 import { logger } from '../utils/logger'
 import { resolveMerchantStaffTipQr, toLocalCustomerTouchUrl } from '../utils/staffTipUrl'
 import { resolveAssignedStaffProfileId } from '../utils/touchpointTypes'
 import { useTranslation } from '../contexts/LanguageContext'
-import { useNotification } from '../contexts/NotificationContext'
-import { DEFAULT_PAYOUT_CONFIGS, MENU_ITEMS, MERCHANT_SIDEBAR_MENU_ITEMS } from './dashboard/constants'
+import {
+  MENU_ITEMS,
+  MERCHANT_SIDEBAR_MENU_ITEMS,
+  DASHBOARD_MENU_ID,
+  DASHBOARD_REVIEW_FILTER_ALL,
+  DASHBOARD_STAFF_SIDEBAR_MENU_IDS,
+  buildDashboardSettingsPath,
+  normalizeDashboardSettingsTab,
+  resolveDashboardMobileMenuTitle,
+} from './dashboard/constants'
 import {
   DEFAULT_TOUCHPOINT_TYPE,
   MASTER_TOUCHPOINT_API_TYPE,
@@ -18,12 +26,12 @@ import {
   getTouchpointApiType,
   isMasterTouchpoint,
 } from '../constants/touchpoints'
-import { slugify, getPayoutConfigsFromMember } from './dashboard/utils'
+import { slugify } from './dashboard/utils'
 import { useDashboardNavigation } from './dashboard/hooks/useDashboardNavigation'
 import { useDevices } from './dashboard/hooks/useDevices'
 import { useKybGate } from '../contexts/KybGateContext'
 import { useStaffManagement } from './dashboard/hooks/useStaffManagement'
-import { useTouchpoints, useCreateTouchpoint, useDeleteTouchpoint, useToggleTouchpoint, useDownloadTouchpointQr } from '../data/hooks/useMerchantTouchpoints'
+import { useTouchpoints, useCreateTouchpoint, useDeleteTouchpoint, useToggleTouchpoint } from '../data/hooks/useMerchantTouchpoints'
 import { useMerchantStaff, StatusFilter } from '../data/hooks/useMerchantStaff'
 import { useRefetchMerchantMenuQueries } from '../data/hooks/useRefetchOnMenuChange'
 import {
@@ -35,8 +43,8 @@ import { useTransactions } from '../data/hooks/useTransactions'
 import { useDashboardOverview, useDashboardTipsChart, useDashboardOverviewCurrentMonth, useDashboardOverviewCurrentYear, useDashboardReviewsSummary } from '../data/hooks/useDashboard'
 import { useDashboardReviews, DASHBOARD_REVIEWS_LIST_QUERY } from '../data/hooks/useReviews'
 import { useNotifications, useMarkNotificationRead, useMarkAllNotificationsRead, useUnreadCount } from '../data/hooks/useNotifications'
-import { useProfileSettings, useSaveProfileSettings } from '../data/hooks/useProfileSettings'
-import { useMerchantSetup, useSaveMerchantSetup } from '../data/hooks/useMerchantSetup'
+import { useProfileSettings } from '../data/hooks/useProfileSettings'
+import { useMerchantSetup } from '../data/hooks/useMerchantSetup'
 import { useMerchantInviteLinkSetting } from '../data/hooks/useMerchantSettings'
 import { useMerchantPaymentMethods } from '../data/hooks/useMerchantPaymentMethods'
 import { merchantTouchpointsRepository } from '../data/repositories/merchantTouchpoints'
@@ -45,17 +53,6 @@ import DashboardSidebar from './dashboard/layout/DashboardSidebar'
 import MobileMenuDrawer from './dashboard/layout/MobileMenuDrawer'
 import MobileBottomNav from './dashboard/layout/MobileBottomNav'
 import AppDownloadLinks from './ui/AppDownloadLinks'
-import Overview from './dashboard/overview/Overview'
-import StaffView from './dashboard/views/StaffView'
-import ReviewsView from './dashboard/views/ReviewsView'
-import ReportsView from './dashboard/views/ReportsView'
-import ComingSoon from './dashboard/views/ComingSoon'
-import AnalyticsView from './AnalyticsView'
-import SettingsView from './SettingsView'
-import SupportView from './SupportView'
-import TipsView from './TipsView'
-import TouchpointsView from './TouchpointsView'
-import StaffDetailView from './StaffDetailView'
 import StaffModal from './dashboard/modals/StaffModal'
 import AddStaffModal from './dashboard/modals/AddStaffModal'
 import QrModal from './dashboard/modals/QrModal'
@@ -71,15 +68,12 @@ export default function Dashboard({
   hasKyb = verificationStatus === 'kyb_approved',
   userEmail = '',
   onKybSuccess = () => {},
-  initialMenu = 'overview',
-  initialSettingsTab = 'profile',
   onLogout,
   userRole = 'owner',
   currentStaffId = null,
   onStartSetup = null,
 }) {
   const { currentLanguage, t } = useTranslation()
-  const { showToast, showConfirm } = useNotification()
   const { requireKyb } = useKybGate()
   const {
     activeMenu,
@@ -224,7 +218,6 @@ export default function Dashboard({
 
   const markNotificationReadMutation = useMarkNotificationRead()
   const markAllNotificationsReadMutation = useMarkAllNotificationsRead()
-  const saveMerchantSetupMutation = useSaveMerchantSetup()
 
   // ---------------------------------------------------------------------------
   // Derived read data (with fallbacks so UI is never empty on first load)
@@ -321,7 +314,7 @@ export default function Dashboard({
 
   const { devices, setDevices, handleAddDevice, handleDeleteDevice, handleToggleDeviceStatus } = useDevices()
   const [qrTarget, setQrTarget] = useState<any | null>(null)
-  const [reviewFilterStaff, setReviewFilterStaff] = useState('all')
+  const [reviewFilterStaff, setReviewFilterStaff] = useState(DASHBOARD_REVIEW_FILTER_ALL)
   const handleReviewFilterStaffChange = useCallback((value) => {
     setReviewFilterStaff(value)
     reviewsPagination.setPage(1)
@@ -338,7 +331,7 @@ export default function Dashboard({
   const { data: metricsMonthData } = useDashboardOverviewCurrentMonth()
   const { data: metricsYearData } = useDashboardOverviewCurrentYear()
 
-  const { data: tipsChartData, isLoading: isTipsChartLoading } = useDashboardTipsChart({
+  const { data: tipsChartData } = useDashboardTipsChart({
     startDate: chartStartDate,
     endDate: chartEndDate,
   })
@@ -371,7 +364,7 @@ export default function Dashboard({
     inviteShareDefaultName, setInviteShareDefaultName,
     inviteShareDefaultContact, setInviteShareDefaultContact,
     resetStaffForm, openAddStaff, closeAddStaffModal, openApproveStaff, openEditStaff, openViewStaff, closeStaffModal,
-    saveStaff, sendSetupLinkFromModal, handleLinkStaff, handleInviteStaff, handleSaveManualStaff,
+    saveStaff, handleLinkStaff, handleInviteStaff, handleSaveManualStaff,
     handleResendInvite,
     handleAcceptJoinRequest, handleDeclineJoinRequest, deleteStaff, toggleStaff, toggleStaffTipsFlow,
     handleAcceptUnlinkRequest, handleDeclineUnlinkRequest,
@@ -417,10 +410,16 @@ export default function Dashboard({
   }, [userRole, currentStaffId, staff, businessName])
 
   const menuItemsToDisplay = userRole === 'staff'
-    ? [
-        { id: 'overview', label: t('components.dashboardRoot.myDashboard'), icon: MENU_ITEMS.find(i => i.id === 'overview')?.icon, image: MENU_ITEMS.find(i => i.id === 'overview')?.image },
-        { id: 'support', label: t('dashboard.menu.support'), icon: MENU_ITEMS.find(i => i.id === 'support')?.icon, image: MENU_ITEMS.find(i => i.id === 'support')?.image }
-      ]
+    ? DASHBOARD_STAFF_SIDEBAR_MENU_IDS.map((id) => {
+        const item = MENU_ITEMS.find((menuItem) => menuItem.id === id)
+        return {
+          id,
+          label: id === DASHBOARD_MENU_ID.overview
+            ? t('components.dashboardRoot.myDashboard')
+            : t('dashboard.menu.support'),
+          icon: item?.icon,
+        }
+      })
     : MERCHANT_SIDEBAR_MENU_ITEMS
 
   // Filter lists based on searchQuery
@@ -747,6 +746,16 @@ export default function Dashboard({
     togglingStaffId: updateStatusMutation.isPending ? updateStatusMutation.variables?.staffLinkId ?? null : null,
   }
 
+  const activeMenuItem = MENU_ITEMS.find((item) => item.id === activeMenu)
+  const [searchParams] = useSearchParams()
+  const tabParam = searchParams.get('tab')
+  const activeMenuTitle = resolveDashboardMobileMenuTitle(
+    activeMenu,
+    tabParam,
+    t,
+    activeMenuItem?.label ?? '',
+  )
+
   return (
     <div className="min-h-dvh w-full overflow-x-hidden bg-nexoraCanvas font-sans text-nexoraText">
       <DashboardSidebar
@@ -777,8 +786,8 @@ export default function Dashboard({
           profile={profile}
           businessName={businessName}
           onNavigateSettingsTab={(tab) => {
-            handleNavigateMenu('settings')
-            setSettingsTab(tab)
+            navigate(buildDashboardSettingsPath(tab))
+            setSettingsTab(normalizeDashboardSettingsTab(tab))
           }}
           onLogout={onLogout}
           notifications={notificationsData ?? notifications}
@@ -802,12 +811,22 @@ export default function Dashboard({
 
         <main className="w-full min-w-0 flex-1 overflow-x-hidden p-4 pb-6 sm:p-6 sm:pb-8 lg:p-7 lg:pb-7">
           {activeMenu !== 'overview' && (
-            <button
-              onClick={() => handleNavigateMenu('overview')}
-              className="mb-5 inline-flex h-9 items-center rounded-lg border border-nexoraBorder bg-white px-4 text-xs font-extrabold text-nexoraText shadow-nexora-soft transition hover:bg-nexoraSurfaceMuted"
-            >
-              {t('dashboard.back_to_dashboard')}
-            </button>
+            <div className="mb-3 flex min-w-0 items-center gap-3 sm:mb-5 sm:block">
+              <button
+                onClick={() => handleNavigateMenu('overview')}
+                title={t('dashboard.back_to_dashboard')}
+                aria-label={t('dashboard.back_to_dashboard')}
+                className="inline-flex h-9 shrink-0 items-center gap-1.5 rounded-lg border border-nexoraBorder bg-white px-3 text-xs font-extrabold text-nexoraText shadow-nexora-soft transition hover:bg-nexoraSurfaceMuted"
+              >
+                <ArrowLeft className="h-4 w-4" aria-hidden="true" />
+                <span>{t('dashboard.back_short')}</span>
+              </button>
+              {activeMenuTitle ? (
+                <h1 className="min-w-0 truncate text-lg font-extrabold text-nexoraText sm:hidden">
+                  {activeMenuTitle}
+                </h1>
+              ) : null}
+            </div>
           )}
           <Outlet context={dashboardCtx} />
         </main>

@@ -7,21 +7,16 @@ import { useTranslation } from '../../../contexts/LanguageContext'
 import { useStaffAccount } from '../../../contexts/StaffAccountContext'
 import { useProfileSettings } from '../../../data/hooks/useProfileSettings'
 import { buildStaffShareUrl, getProfileReferralCode, splitStaffShareUrlDisplay, splitUrlQueryParamDisplay, splitUrlPathTailDisplay, LEG_VALUES, DEFAULT_LEG, type Leg } from '../../../utils/affiliateReferral'
-import { shareQrImage, downloadQrCode, QR_IMAGE_SIZES } from '../../../utils/qrUtils'
+import { downloadQrCode, QR_IMAGE_SIZES } from '../../../utils/qrUtils'
 import { useStaffBusinessTipQrs } from '../../../data/hooks/useStaffSelf'
-import { useNotifications, useMarkNotificationRead } from '../../../data/hooks/useNotifications'
 import { useNotification } from '../../../contexts/NotificationContext'
 import { useJoinPublicInvite } from '../../../data/hooks/useStaffInvites'
-import StaffLinkRequestCard, { getStaffLinkRequestId } from './StaffLinkRequestCard'
 import { isApiError } from '../../../types/domain'
 import type { StaffBusinessTipQr } from '../../../types/domain'
 import { shareUrl } from '../../../utils/shareUrl'
 import { buildQrImageUrl, resolveStaffDirectPaymentPageUrl } from '../../../utils/staffTipUrl'
 import { useStaffPaymentQr } from '../../../data/hooks/useStaffPayments'
 import { useStaffPaymentMethods } from '../../../data/hooks/useStaffPaymentMethods'
-import { useQueries } from '@tanstack/react-query'
-import { qk } from '../../../data/queryKeys'
-import staffSelfRepository from '../../../data/repositories/staffSelf'
 import { SkeletonLayout } from '../../ui/skeleton'
 import QrImage from '../../ui/QrImage'
 
@@ -92,10 +87,6 @@ function extractUrlFromQrText(value: string): URL | null {
 
 function getBusinessStatusLabel(biz: StaffBusinessTipQr): string {
   return biz.linkStatusLabel || biz.linkStatus || 'Active'
-}
-
-function getBusinessRoleLabel(biz: StaffBusinessTipQr): string {
-  return biz.roleAtBusiness?.trim() || biz.roleLabel || 'Staff'
 }
 
 function isBusinessActive(biz: StaffBusinessTipQr): boolean {
@@ -279,31 +270,6 @@ export default function StaffMyQR() {
   const { businessTipQrs, isLoading: isTipQrLoading } = useStaffBusinessTipQrs()
   const { showToast } = useNotification()
   const joinPublicInviteMutation = useJoinPublicInvite()
-  const { data: notifications = [] } = useNotifications()
-  const markNotificationRead = useMarkNotificationRead()
-  const linkRequests = useMemo(
-    () => notifications.filter((n) => n.type === 'StaffLinkRequest'),
-    [notifications],
-  )
-
-  const linkRequestQueries = useQueries({
-    queries: linkRequests.map((n) => {
-      const linkId = getStaffLinkRequestId(n)
-      return {
-        queryKey: qk.staffLinkRequest(linkId),
-        queryFn: () => staffSelfRepository.getLinkRequest(linkId || ''),
-        enabled: !!linkId,
-      }
-    }),
-  })
-
-  const pendingLinkRequests = useMemo(() => {
-    return linkRequests.filter((n, i) => {
-      const query = linkRequestQueries[i]
-      return query.isSuccess && query.data?.status === 'WaitingStaffAcceptance'
-    })
-  }, [linkRequests, linkRequestQueries])
-
   const [activeTab, setActiveTab] = useState<QrTab>('personal')
   const userSelectedTabRef = useRef(false)
   const {
@@ -489,27 +455,21 @@ export default function StaffMyQR() {
   const handleShareTipQr = useCallback(
     async (biz: StaffBusinessTipQr) => {
       if (!biz.tipUrl) return
-      const qrImageUrl = buildQrImageUrl(biz.tipUrl, QR_IMAGE_SIZES.zoom, biz.qrImageUrl)
-      const safeName = (biz.businessName || 'salon').replace(/[^\w.-]+/g, '-').slice(0, 40)
-      const ownerName =
-        biz.displayName || staffMember.nickname || staffMember.fullName || ''
 
       try {
-        const result = await shareQrImage(qrImageUrl, {
-          filename: `tip-qr-${safeName || biz.businessId}.png`,
+        const result = await shareUrl({
+          url: biz.tipUrl,
           title: t('staff_dashboard.qr.share_tip'),
-          text: biz.businessName,
-          ownerName,
-          businessName: biz.businessName,
+          text: biz.businessName || undefined,
         })
-        if (result === 'downloaded') {
-          showToast(t('components.staff_dashboard.views.StaffMyQR.tipQrDownloaded'), 'success')
+        if (result === 'copied') {
+          showToast(t('components.staff_dashboard.views.StaffMyQR.tippingLinkCopied'), 'success')
         }
       } catch {
         showToast(t('components.staff_dashboard.views.StaffMyQR.shareFailed'), 'error')
       }
     },
-    [showToast, staffMember.fullName, staffMember.nickname, t],
+    [showToast, t],
   )
 
   const handleDownloadZoomedQr = useCallback(async () => {
@@ -855,22 +815,6 @@ export default function StaffMyQR() {
 
       {activeTab === 'personal' && (
         <div className="space-y-4">
-          {pendingLinkRequests.length > 0 && (
-            <section className={panel}>
-              <h3 className="mb-3 text-base font-extrabold text-nexoraText">
-                {t('staff_dashboard.qr.link_requests_title')}
-              </h3>
-              <div className="space-y-2">
-                {pendingLinkRequests.map((n) => (
-                  <StaffLinkRequestCard
-                    key={n.id}
-                    notification={n}
-                    onResolved={(id) => markNotificationRead.mutate(id)}
-                  />
-                ))}
-              </div>
-            </section>
-          )}
           <section className={`${compactPanel} text-center`}>
             <div className="mb-2 flex items-center justify-between gap-2 text-left">
               <div>

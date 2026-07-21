@@ -28,6 +28,7 @@ export const qk = {
   dashboardStaff:           () => ['dashboard', 'staff'],
   dashboardTouchpoints:     () => ['dashboard', 'touchpoints'],
   dashboardTipsChart:       () => ['dashboard', 'tipsChart'],
+  dashboardAnalytics:       (filters = EMPTY) => ['dashboard', 'analytics', filters],
   dashboardReviews:         (filters = EMPTY) => ['dashboard', 'reviews', filters],
   
   // Notifications
@@ -83,6 +84,7 @@ export const qk = {
 
   // Merchant Payment Methods
   merchantPaymentMethods: ()   => ['merchantPaymentMethods'],
+  supportedPaymentMethods: ()  => ['supportedPaymentMethods'],
   merchantPaymentQr: ()        => ['merchantPaymentQr'],
   merchantPaymentsList: (filters = EMPTY) => ['merchantPayments', 'list', filters],
   merchantPaymentDetail: (paymentId: string) => ['merchantPayments', 'detail', paymentId],

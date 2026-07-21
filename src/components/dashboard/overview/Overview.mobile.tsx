@@ -16,7 +16,7 @@ import {
 import { useNavigate } from 'react-router-dom'
 import { useTranslation } from '../../../contexts/LanguageContext'
 import { buildMasterQrTarget, resolveMasterTouchpoint } from '../utils'
-import { isAwaitingShopConfirmation } from '../utils'
+import { useAwaitingShopConfirmationCount } from '../hooks/useAwaitingShopConfirmationCount'
 import { isMerchantConfirmablePending } from '../../../utils/merchantStaffPending'
 import SetupGuideBanner from './SetupGuideBanner'
 import PayoutSetupWarningBanner from './PayoutSetupWarningBanner'
@@ -25,6 +25,13 @@ import DirectPaymentQrPreviewModal from '../../settings/DirectPaymentQrPreviewMo
 import ReferralQrModal from '../modals/ReferralQrModal'
 import { useProfileSettings } from '../../../data/hooks/useProfileSettings'
 import { useMerchantPaymentQr } from '../../../data/hooks/useMerchantPayments'
+import { TipStatus } from '../../../constants/tipStatus'
+import {
+  buildDashboardReportsPath,
+  buildDashboardTipsPath,
+  DASHBOARD_TIPS_TAB,
+} from '../constants'
+import { useDashboardAnalytics } from '../../../data/hooks/useDashboard'
 import { buildPublicQrImageUrl } from '../../../data/repositories/publicQr'
 import { QR_IMAGE_SIZES } from '../../../utils/qrUtils'
 import { resolveDirectPaymentPageUrl, resolveMerchantBusinessIdFromProfile } from '../../../utils/merchantBusinessId'
@@ -265,18 +272,17 @@ function Overview({
     [paymentPageUrl],
   )
 
-  // ── Derived metrics from overview API (month & year) ────────────────────
-  const FEE_RATE = 0.03
-  const monthTips = metricsMonth?.totalTips ?? 0
-  const monthTxCount = metricsMonth?.totalTransactions ?? 0
-  const yearTips = metricsYear?.totalTips ?? 0
-  const moneySavedMonth = monthTips * FEE_RATE
-  const moneySavedYear = yearTips * FEE_RATE
+  const { data: analytics } = useDashboardAnalytics()
 
-  const pendingConfirmCount = useMemo(
-    () => (transactions || []).filter(isAwaitingShopConfirmation).length,
-    [transactions],
-  )
+  // ── Derived metrics from overview API (month & year) ────────────────────
+  const monthTips = metricsMonth?.totalTips ?? 0
+  const yearTips = metricsYear?.totalTips ?? 0
+  // All-time analytics (no dateFrom/dateTo)
+  const allTimeTxCount = analytics?.overview.totalTransactionCount ?? 0
+  const moneySavedMonth = analytics?.overview.feeSaved ?? 0
+  const moneySavedYear = moneySavedMonth
+
+  const pendingConfirmCount = useAwaitingShopConfirmationCount()
 
   const activeStaff = (staff || []).filter((m) => m.status === 'Active' || m.active === true)
   const pendingCount = (pendingStaff || []).filter(isMerchantConfirmablePending).length
@@ -287,7 +293,11 @@ function Overview({
 
   // Month-over-month trend percentages (mock for now — will come from API)
   const tipsTrend = metricsMonth?.tipsDeltaPercent
-  const txTrend = metricsMonth?.txDeltaPercent
+
+  // All-time Completed — matches analytics transaction count on the card
+  const openTransactionsReports = () => {
+    navigate(buildDashboardReportsPath({ status: TipStatus.Completed }))
+  }
 
   return (
     <>
@@ -323,9 +333,7 @@ function Overview({
           <span className="text-[10px] font-semibold uppercase tracking-wide text-nexoraSubtle">
             {k('money_saved_title')}
           </span>
-          <span className="shrink-0 whitespace-nowrap rounded-full bg-[#EEE9FF] px-1.5 py-1 text-center text-[9px] font-semibold leading-none text-nexoraBrandDark">
-            {k('fee_estimate_badge')}
-          </span>
+         
           </div>
           <div className="grid grid-cols-[minmax(0,1fr)_154px] items-end gap-3">
             <div className="min-w-0">
@@ -336,20 +344,13 @@ function Overview({
                 {k('money_saved_subtitle')}
               </p>
             </div>
-            <div className="grid grid-cols-2 gap-2">
+            <div className="flex justify-end">
               <button
                 type="button"
-                onClick={() => navigate('/dashboard/tips?tab=savings')}
-                className="inline-flex h-7 w-full items-center justify-center rounded-full bg-nexoraBrand px-3 text-[10px] font-semibold text-white transition active:scale-95"
+                onClick={() => navigate(buildDashboardTipsPath({ tab: DASHBOARD_TIPS_TAB.savings }))}
+                className="inline-flex h-7 min-w-[72px] items-center justify-center rounded-full bg-nexoraBrand px-4 text-[10px] font-semibold text-white transition active:scale-95"
               >
                 {k('view_btn')}
-              </button>
-              <button
-                type="button"
-                onClick={() => navigate('/dashboard/tips?tab=savings')}
-                className="inline-flex h-7 w-full items-center justify-center rounded-full border border-[#EEE9FF] bg-white px-3 text-[10px] font-semibold text-nexoraBrandDark shadow-[0_2px_8px_rgba(15,23,42,0.04)] transition active:scale-95"
-              >
-                {k('export_btn')}
               </button>
             </div>
           </div>
@@ -359,7 +360,7 @@ function Overview({
       {pendingConfirmCount > 0 && (
         <button
           type="button"
-          onClick={() => navigate('/dashboard/reports?status=AwaitingShopConfirmation')}
+          onClick={() => navigate(buildDashboardReportsPath({ status: TipStatus.Confirmed }))}
           className="flex w-full items-center gap-3 rounded-2xl border border-violet-100 bg-violet-50 px-4 py-3 text-left active:scale-[0.98] transition cursor-pointer"
         >
           <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-violet-100">
@@ -394,11 +395,11 @@ function Overview({
           icon={<ReceiptText className="h-3.5 w-3.5" />}
           iconBg="bg-nexoraBrand"
           label={k('kpi_transactions')}
-          value={fmtNumber(monthTxCount)}
-          trend={txTrend != null ? `+${Number(txTrend).toFixed(1)}%` : null}
+          value={fmtNumber(allTimeTxCount)}
+          trend={null}
           trendColor="text-emerald-600"
           trendBg=""
-          onClick={() => onNavigateMenu?.('reports')}
+          onClick={openTransactionsReports}
         />
         {/* Row 2: Active Staff + Review Score (chevron style) */}
         <KpiCardBottom
@@ -434,7 +435,7 @@ function Overview({
             icon={<CreditCard className={`h-4 w-4 ${QUICK_ACTION_ICON_COLORS.qr}`} />}
             label={k('quick_payouts')}
             accent={QUICK_ACTION_ACCENTS.qr}
-            onClick={() => navigate('/dashboard/tips?tab=payouts')}
+              onClick={() => navigate(buildDashboardTipsPath({ tab: DASHBOARD_TIPS_TAB.payouts }))}
           />
           <QuickAction
             icon={<QrCode className={`h-4 w-4 ${QUICK_ACTION_ICON_COLORS.referral}`} />}
@@ -545,7 +546,7 @@ function Overview({
       </div>
 
       {/* ── Savings Summary ──────────────────────────────────────────────── */}
-      <Panel title={k('savings_summary_title')} action={k('details')} onAction={() => navigate('/dashboard/tips?tab=savings')}>
+      <Panel title={k('savings_summary_title')} action={k('details')} onAction={() => navigate(buildDashboardTipsPath({ tab: DASHBOARD_TIPS_TAB.savings }))}>
         <div className="grid grid-cols-2 gap-2">
           {/* This Month — mint/teal soft card per mockup */}
           <div className="rounded-xl border border-emerald-200 bg-emerald-50 p-2.5">
@@ -605,7 +606,6 @@ function Overview({
       businessName={businessName}
       previewQrUrl={paymentQrModalUrl}
       paymentPageUrl={paymentPageUrl}
-      hideUrlCode
       scanCaption={t('components.settings.SettingsTipQrPanel.scanCaption')}
     />
     <ReferralQrModal open={isReferralQrOpen} onClose={() => setIsReferralQrOpen(false)} />

@@ -4,6 +4,7 @@ import { qk } from '../queryKeys'
 import type {
   DashboardOverviewMetrics,
   DashboardReviewsSummary,
+  MerchantDashboardAnalytics,
   StaffLeaderboardRow,
   TipsChartDayMetric,
 } from '../../types/repositories'
@@ -52,6 +53,14 @@ export function useDashboardTouchpoints(params: DateRangeParams = EMPTY_PARAMS) 
   })
 }
 
+export function useDashboardAnalytics(params: DateRangeParams = EMPTY_PARAMS) {
+  return useQuery<MerchantDashboardAnalytics>({
+    queryKey: [...qk.dashboardAnalytics(), params],
+    queryFn: () => dashboardRepository.getAnalytics(params),
+    retry: false,
+  })
+}
+
 export function useDashboardTipsChart(params: DateRangeParams = EMPTY_PARAMS) {
   const enabled = Boolean(params.startDate && params.endDate)
 
@@ -64,7 +73,7 @@ export function useDashboardTipsChart(params: DateRangeParams = EMPTY_PARAMS) {
 }
 
 /** Returns the current calendar month's boundary as ISO date strings. */
-function currentMonthRange(): { dateFrom: string; dateTo: string } {
+export function currentMonthRange(): { dateFrom: string; dateTo: string } {
   const now = new Date()
   const y = now.getFullYear()
   const m = String(now.getMonth() + 1).padStart(2, '0')

@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { TrendingUp, Calculator, CheckCircle } from 'lucide-react';
+import { TrendingUp, Calculator, CheckCircle, WalletCards } from 'lucide-react';
 import { useTranslation } from '../../../contexts/LanguageContext';
 import { formatUSD, getPaymentMethodLogo } from '../../../utils/tipsFormatters';
 import { formatTransactionDateTime } from '../../dashboard/utils';
@@ -17,14 +17,13 @@ export default function TipsSavingsTab({
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 5;
 
-  // Calculate all-time direct tips for savings calculator
   const directCompletedTips = transactions.filter(
     tx =>
       isDirectP2pMethod(tx.paymentMethod ?? '') &&
       (tx.status === 'Success' || tx.status === 'Completed')
   );
 
-  const allTimeDirectTips = directCompletedTips.reduce((sum, tx) => sum + (tx.amount || 0), 0);
+  const allTimeDirectTips = directTips ?? 0;
 
   const totalPages = Math.ceil(directCompletedTips.length / itemsPerPage) || 1;
   const paginatedTips = directCompletedTips.slice(
@@ -35,41 +34,41 @@ export default function TipsSavingsTab({
   return (
     <div className="space-y-6">
       {/* Savings Cards Grid */}
-      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
-        <div className="card-elevated">
+      <div className="grid grid-cols-2 gap-2.5 sm:gap-4 lg:grid-cols-4">
+        <div className="card-elevated p-3 sm:p-6">
           <small className="text-[10px] font-black text-mutedGrey dark:text-slate-400 uppercase tracking-widest">
             {t('dashboard.tips.savings.direct_routed')}
           </small>
-          <h3 className="mt-1 text-2xl font-black text-inkBlue dark:text-white">{formatUSD(allTimeDirectTips)}</h3>
+          <h3 className="mt-1 text-lg font-black text-inkBlue dark:text-white sm:text-2xl">{formatUSD(allTimeDirectTips)}</h3>
           <span className="mt-1.5 inline-flex items-center gap-1 text-[11px] font-bold text-brandCyan">
             <TrendingUp className="h-3 w-3" /> {t('dashboard.tips.savings.direct_routed_sub')}
           </span>
         </div>
-        <div className="card-elevated">
+        <div className="card-elevated p-3 sm:p-6">
           <small className="text-[10px] font-black text-mutedGrey dark:text-slate-400 uppercase tracking-widest">
             {t('dashboard.tips.savings.fees_avoided')}
           </small>
-          <h3 className="mt-1 text-2xl font-black text-luxuryGold">{formatUSD(allTimeDirectTips * (processingFee / 100))}</h3>
+          <h3 className="mt-1 text-lg font-black text-luxuryGold sm:text-2xl">{formatUSD(allTimeDirectTips * (processingFee / 100))}</h3>
           <span className="mt-1.5 block text-[11px] font-bold text-mutedGrey dark:text-slate-400">
             {(t('dashboard.tips.savings.fees_avoided_sub')).replace('3%', `${processingFee}%`)}
           </span>
         </div>
-        <div className="card-elevated">
+        <div className="card-elevated p-3 sm:p-6">
           <small className="text-[10px] font-black text-mutedGrey dark:text-slate-400 uppercase tracking-widest">
             {t('dashboard.tips.savings.active_payouts')}
           </small>
-          <h3 className="mt-1 text-2xl font-black text-inkBlue dark:text-white">
+          <h3 className="mt-1 text-lg font-black text-inkBlue dark:text-white sm:text-2xl">
             {new Set(transactions.map(tx => tx.staffProfileId)).size}
           </h3>
           <span className="mt-1.5 block text-[11px] font-bold text-mutedGrey dark:text-slate-400">
             {t('dashboard.tips.savings.active_payouts_sub')}
           </span>
         </div>
-        <div className="card-elevated">
+        <div className="card-elevated p-3 sm:p-6">
           <small className="text-[10px] font-black text-mutedGrey dark:text-slate-400 uppercase tracking-widest">
             {t('dashboard.tips.savings.duration_label')}
           </small>
-          <h3 className="mt-1 text-2xl font-black text-brandCyan">
+          <h3 className="mt-1 text-lg font-black text-brandCyan sm:text-2xl">
             {t('dashboard.tips.savings.duration_value')}
           </h3>
           <span className="mt-1.5 block text-[11px] font-bold text-mutedGrey dark:text-slate-400">
@@ -181,8 +180,15 @@ export default function TipsSavingsTab({
                   ))
                 ) : (
                   <tr>
-                    <td colSpan={5} className="py-8 text-center text-sm text-mutedGrey">
-                      {t('common.no_results') || 'No direct payouts found.'}
+                    <td colSpan={5} className="text-center align-middle">
+                      <div className="flex min-h-[220px] w-full flex-col items-center justify-center gap-3 text-mutedGrey">
+                        <span className="grid h-11 w-11 place-items-center rounded-full bg-nexoraSurfaceMuted text-nexoraSubtle">
+                          <WalletCards className="h-5 w-5" />
+                        </span>
+                        <span className="text-sm font-medium">
+                          {t('dashboard.tips.savings.empty')}
+                        </span>
+                      </div>
                     </td>
                   </tr>
                 )}

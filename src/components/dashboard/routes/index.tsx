@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo } from 'react'
+import React, { useEffect, useMemo, useRef } from 'react'
 import { useOutletContext, useNavigate, useParams, Navigate, useSearchParams } from 'react-router-dom'
 import { useTranslation } from '../../../contexts/LanguageContext'
 import { SHOW_HARDWARE_DEVICES } from '../constants'
@@ -17,6 +17,8 @@ import ManagePlanView from '../views/ManagePlanView'
 import BookingHubView from '../views/BookingHubView'
 import StaffDetailView from '../../StaffDetailView'
 import { useMerchantStaffByCode } from '../../../data/hooks/useMerchantStaff'
+import { useOpenProductManagement } from '../../../data/hooks/useOpenProductManagement'
+import { DASHBOARD_ROOT_PATH } from '../constants'
 import { normaliseMember } from '../hooks/useStaffManagement'
 import { SkeletonList } from '../../ui/skeleton'
 
@@ -278,7 +280,6 @@ export function TipsRoute() {
       transactions={ctx.transactions}
       staff={ctx.staff}
       metrics={ctx.metrics}
-      tipsChartData={ctx.tipsChartData}
       activeTab={tab}
       processingFee={ctx.processingFee}
       setProcessingFee={ctx.setProcessingFee}
@@ -295,16 +296,36 @@ export function BookingHubRoute() {
   return <BookingHubView />
 }
 
-export function AnalyticsRoute() {
-  const ctx = useOutletContext<LooseObject>()
+export function ProductManagementRoute() {
+  const navigate = useNavigate()
+  const { openProductManagement, isOpeningProductManagement } = useOpenProductManagement()
+  const { t } = useTranslation()
+  const openedRef = useRef(false)
+
+  useEffect(() => {
+    if (openedRef.current) return
+    openedRef.current = true
+    void openProductManagement().finally(() => {
+      navigate(DASHBOARD_ROOT_PATH, { replace: true })
+    })
+  }, [navigate, openProductManagement])
+
   return (
-    <AnalyticsView
-      transactions={ctx.transactions}
-      staff={ctx.staff}
-      touchpoints={ctx.touchpoints}
-      processingFee={ctx.processingFee}
-    />
+    <div className="flex min-h-[320px] items-center justify-center">
+      <div className="text-center">
+        {isOpeningProductManagement ? (
+          <span className="mx-auto mb-3 block h-8 w-8 animate-spin rounded-full border-[3px] border-nexoraBorder border-t-nexoraBrand" />
+        ) : null}
+        <p className="text-sm font-semibold text-nexoraMuted">
+          {t('dashboard.menu.product_management')}…
+        </p>
+      </div>
+    </div>
   )
+}
+
+export function AnalyticsRoute() {
+  return <AnalyticsView />
 }
 
 export function SettingsRoute() {

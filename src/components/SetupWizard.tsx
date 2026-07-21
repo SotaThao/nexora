@@ -67,14 +67,13 @@ export default function SetupWizard() {
     isNameLocked, isAddressLocked, isPhoneLocked, isWebsiteLocked, isFeedbackEmailLocked,
     isStepSaving,
     businessInfo, setBusinessInfo,
-    merchantPaymentMethods,
+    supportedPaymentMethods,
     reviewLinks, setReviewLinks,
     staffList,
     newStaff, setNewStaff,
     touchPoints,
     newTouchpoint, setNewTouchpoint,
     editingTpId, setEditingTpId,
-    editingTpName, setEditingTpName, editingTpNameError,
     editingTpType, setEditingTpType,
     previewingTp, setPreviewingTp,
     payoutSetupOpen, setPayoutSetupOpen,
@@ -231,14 +230,11 @@ export default function SetupWizard() {
                 setNewTouchpoint={setNewTouchpoint}
                 editingTpId={editingTpId}
                 setEditingTpId={setEditingTpId}
-                editingTpName={editingTpName}
-                setEditingTpName={setEditingTpName}
-                editingTpNameError={editingTpNameError}
                 editingTpType={editingTpType}
                 setEditingTpType={setEditingTpType}
                 errors={errors}
                 businessInfo={businessInfo}
-                merchantPaymentMethods={merchantPaymentMethods}
+                supportedPaymentMethods={supportedPaymentMethods}
                 handleAddStaff={handleAddStaff}
                 handleToggleWallet={handleToggleWallet}
                 openPayoutSetup={openPayoutSetup}
@@ -319,9 +315,9 @@ export default function SetupWizard() {
       <PayoutSetupModal
         open={payoutSetupOpen}
         walletKey={payoutSetupWallet}
-        staffName={businessInfo.name || 'Business Name'}
         initialValue={tempPayoutValues.value}
         initialQrCode={tempPayoutValues.qrCode}
+        initialAccountName={tempPayoutValues.accountName || ''}
         onClose={() => setPayoutSetupOpen(false)}
         onSubmit={handlePayoutSubmit}
       />

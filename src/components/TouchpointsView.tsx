@@ -288,8 +288,8 @@ export default function TouchpointsView({
   return (
     <div className="space-y-4 sm:space-y-6">
       {/* Tab Header & Title */}
-      <div className="border-b border-nexoraBorder pb-4 sm:pb-5">
-        <h2 className="text-lg font-extrabold text-nexoraText sm:text-xl">
+      <div className="border-b border-nexoraBorder pb-1 sm:pb-5">
+        <h2 className="hidden text-lg font-extrabold text-nexoraText sm:block sm:text-xl">
           {t('dashboard.menu.touchpoints')}
         </h2>
         {/* Navigation Tabs */}

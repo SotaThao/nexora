@@ -7,9 +7,12 @@ import {
   useUpdateMerchantVoiceConfig,
 } from "../../../data/hooks/useMerchantVoiceBookings";
 import {
+  clampMerchantVoiceServiceDurationMinutes,
+  isValidMerchantVoiceServiceDuration,
   mapConfigLanguageToUiLanguage,
   mapUiLanguageToConfigLanguage,
   MerchantVoiceDayOfWeek,
+  MerchantVoiceServiceField,
   MerchantVoiceUiLanguage,
   normalizeMerchantVoiceDayOfWeek,
 } from "../../../data/repositories/merchantVoice";
@@ -197,35 +200,36 @@ const SUGGEST_SERVICES = [
 const AI_LANGUAGE_OPTIONS = [
   MerchantVoiceUiLanguage.Vi,
   MerchantVoiceUiLanguage.En,
-] as const
+] as const;
 
-const PROMO_MAX_LENGTH = 1000
+const PROMO_MAX_LENGTH = 1000;
 
 const PROMO_TEMPLATES = {
-  'reward-yourself': {
-    labelKey: 'promoTemplateRewardLabel',
+  "reward-yourself": {
+    labelKey: "promoTemplateRewardLabel",
     text: [
-      'Promotion 1: Reward Yourself',
-      'Offer: Free $25 e-gift card.',
-      'Eligibility: Book any pedicure service of $55 or more.',
-      'Availability: Monday–Saturday, by appointment only.',
-      'Rules: One free $25 e-gift card per qualifying visit. For future services only, not redeemable for cash, and cannot be used for gratuity. Cannot combine with other promotions, discounts, coupons, rewards, or special offers. One promotional offer per customer per visit.',
-      'General rule: The salon may modify or end any promotion at any time.',
-    ].join('\n'),
+      "Promotion 1: Reward Yourself",
+      "Offer: Free $25 e-gift card.",
+      "Eligibility: Book any pedicure service of $55 or more.",
+      "Availability: Monday–Saturday, by appointment only.",
+      "Rules: One free $25 e-gift card per qualifying visit. For future services only, not redeemable for cash, and cannot be used for gratuity. Cannot combine with other promotions, discounts, coupons, rewards, or special offers. One promotional offer per customer per visit.",
+      "General rule: The salon may modify or end any promotion at any time.",
+    ].join("\n"),
   },
-} as const
+} as const;
 
 function greetingI18nKey(language: Language) {
-  return language === MerchantVoiceUiLanguage.Vi ? 'greetingVi' : 'greetingEn'
+  return language === MerchantVoiceUiLanguage.Vi ? "greetingVi" : "greetingEn";
 }
 
 function languageButtonLabel(language: Language) {
-  return language === MerchantVoiceUiLanguage.Vi ? '🇻🇳 VI' : '🇺🇸 EN'
+  return language === MerchantVoiceUiLanguage.Vi ? "VI" : "EN";
 }
 
 function resolveUiLanguage(language: Language): Language {
-  if (language === MerchantVoiceUiLanguage.Vi) return MerchantVoiceUiLanguage.Vi
-  return MerchantVoiceUiLanguage.En
+  if (language === MerchantVoiceUiLanguage.Vi)
+    return MerchantVoiceUiLanguage.Vi;
+  return MerchantVoiceUiLanguage.En;
 }
 
 function openTimePicker(input: HTMLInputElement | null) {
@@ -333,29 +337,38 @@ function SettingsCard({
 }
 
 export default function BookingSettingsPanel() {
-  const { t } = useTranslation()
-  const { showToast } = useNotification()
-  const voiceEnabled = useBookingHubVoiceEnabled()
-  const { data: configData, isLoading: isConfigLoading } = useMerchantVoiceConfig({ enabled: voiceEnabled })
-  const updateConfigMutation = useUpdateMerchantVoiceConfig()
-  const [collapsedCards, setCollapsedCards] = useState<Record<string, boolean>>({})
-  const [hours, setHours] = useState(INITIAL_HOURS)
-  const [services, setServices] = useState(INITIAL_SERVICES)
-  const [suggestOpen, setSuggestOpen] = useState(false)
-  const [usedSuggests, setUsedSuggests] = useState<Set<string>>(() => new Set())
-  const [pressingSuggest, setPressingSuggest] = useState<string | null>(null)
-  const [highlightServiceId, setHighlightServiceId] = useState<string | null>(null)
-  const [isPreviewPlaying, setIsPreviewPlaying] = useState(false)
-  const [language, setLanguage] = useState<Language>(MerchantVoiceUiLanguage.En)
-  const [greeting, setGreeting] = useState(() => t(`${TK}.greetingEn`))
-  const [promotion, setPromotion] = useState('')
-  const [salonName, setSalonName] = useState('')
-  const [salonPhone, setSalonPhone] = useState('')
-  const [aiPhone, setAiPhone] = useState('')
-  const [bookingNotifyPhone, setBookingNotifyPhone] = useState('')
-  const [address, setAddress] = useState('')
-  const [googleReviewUrl, setGoogleReviewUrl] = useState('')
-  const [statusMessage, setStatusMessage] = useState('')
+  const { t } = useTranslation();
+  const { showToast } = useNotification();
+  const voiceEnabled = useBookingHubVoiceEnabled();
+  const { data: configData, isLoading: isConfigLoading } =
+    useMerchantVoiceConfig({ enabled: voiceEnabled });
+  const updateConfigMutation = useUpdateMerchantVoiceConfig();
+  const [collapsedCards, setCollapsedCards] = useState<Record<string, boolean>>(
+    {},
+  );
+  const [hours, setHours] = useState(INITIAL_HOURS);
+  const [services, setServices] = useState(INITIAL_SERVICES);
+  const [suggestOpen, setSuggestOpen] = useState(false);
+  const [usedSuggests, setUsedSuggests] = useState<Set<string>>(
+    () => new Set(),
+  );
+  const [pressingSuggest, setPressingSuggest] = useState<string | null>(null);
+  const [highlightServiceId, setHighlightServiceId] = useState<string | null>(
+    null,
+  );
+  const [isPreviewPlaying, setIsPreviewPlaying] = useState(false);
+  const [language, setLanguage] = useState<Language>(
+    MerchantVoiceUiLanguage.En,
+  );
+  const [greeting, setGreeting] = useState(() => t(`${TK}.greetingEn`));
+  const [promotion, setPromotion] = useState("");
+  const [salonName, setSalonName] = useState("");
+  const [salonPhone, setSalonPhone] = useState("");
+  const [aiPhone, setAiPhone] = useState("");
+  const [bookingNotifyPhone, setBookingNotifyPhone] = useState("");
+  const [address, setAddress] = useState("");
+  const [googleReviewUrl, setGoogleReviewUrl] = useState("");
+  const [statusMessage, setStatusMessage] = useState("");
   const [formErrors, setFormErrors] = useState<{
     salonName?: string;
     salonPhone?: string;
@@ -363,6 +376,9 @@ export default function BookingSettingsPanel() {
     address?: string;
     greeting?: string;
   }>({});
+  const [invalidDurationServiceIds, setInvalidDurationServiceIds] = useState<
+    string[]
+  >([]);
   const [hoursErrorByDay, setHoursErrorByDay] = useState<
     Record<DayKey, string>
   >({
@@ -489,23 +505,23 @@ export default function BookingSettingsPanel() {
   useEffect(() => {
     if (!configData) return;
 
-    setSalonName(configData.name || "")
-    setSalonPhone(formatPhoneInput(configData.forwardPhoneNumber || ""))
-    setAiPhone(formatPhoneInput(configData.aiPhoneNumber || ""))
+    setSalonName(configData.name || "");
+    setSalonPhone(formatPhoneInput(configData.forwardPhoneNumber || ""));
+    setAiPhone(formatPhoneInput(configData.aiPhoneNumber || ""));
     setBookingNotifyPhone(
-      formatPhoneInput(configData.bookingNotifyPhone || "")
-    )
-    setAddress(configData.address || "")
-    setGoogleReviewUrl(configData.googleReviewUrl || "")
-    setPromotion((configData.promotion || "").slice(0, PROMO_MAX_LENGTH))
-    const resolvedLang = mapConfigLanguageToUiLanguage(configData.language)
-    setLanguage(resolvedLang)
+      formatPhoneInput(configData.bookingNotifyPhone || ""),
+    );
+    setAddress(configData.address || "");
+    setGoogleReviewUrl(configData.googleReviewUrl || "");
+    setPromotion((configData.promotion || "").slice(0, PROMO_MAX_LENGTH));
+    const resolvedLang = mapConfigLanguageToUiLanguage(configData.language);
+    setLanguage(resolvedLang);
     setGreeting(
       configData.welcomeGreeting ||
         t(
           `${TK}.greeting${resolvedLang === MerchantVoiceUiLanguage.Vi ? "Vi" : "En"}`,
         ),
-    )
+    );
 
     const nextHours = { ...INITIAL_HOURS };
     configData.operatingHours.forEach((item) => {
@@ -529,7 +545,9 @@ export default function BookingSettingsPanel() {
         "tone-violet",
       name: service.name || "",
       price: Number(service.price ?? 0),
-      duration: Number(service.durationMinutes ?? 0),
+      duration: clampMerchantVoiceServiceDurationMinutes(
+        Number(service.durationMinutes ?? 0),
+      ),
     }));
     setServices(nextServices);
   }, [configData, t]);
@@ -589,18 +607,27 @@ export default function BookingSettingsPanel() {
 
   const removeService = (id: string) => {
     setServices((prev) => prev.filter((service) => service.id !== id));
+    setInvalidDurationServiceIds((prev) =>
+      prev.filter((serviceId) => serviceId !== id),
+    );
   };
 
   const updateService = (
     id: string,
-    field: "name" | "price" | "duration",
+    field: MerchantVoiceServiceField,
     value: string,
   ) => {
+    if (field === MerchantVoiceServiceField.Duration) {
+      setInvalidDurationServiceIds((prev) =>
+        prev.filter((serviceId) => serviceId !== id),
+      );
+    }
     setServices((prev) =>
       prev.map((service) => {
         if (service.id !== id) return service;
-        if (field === "name") return { ...service, name: value };
-        if (field === "price")
+        if (field === MerchantVoiceServiceField.Name)
+          return { ...service, name: value };
+        if (field === MerchantVoiceServiceField.Price)
           return { ...service, price: parseWholeNumberInput(value) };
         return { ...service, duration: parseWholeNumberInput(value) };
       }),
@@ -609,11 +636,19 @@ export default function BookingSettingsPanel() {
 
   const commitServiceNumberOnBlur = (
     id: string,
-    field: "price" | "duration",
+    field: MerchantVoiceServiceField.Price | MerchantVoiceServiceField.Duration,
   ) => {
     setServices((prev) =>
       prev.map((service) => {
         if (service.id !== id) return service;
+        if (field === MerchantVoiceServiceField.Duration) {
+          return {
+            ...service,
+            duration: clampMerchantVoiceServiceDurationMinutes(
+              service.duration,
+            ),
+          };
+        }
         if (Number.isFinite(service[field])) return service;
         return { ...service, [field]: 0 };
       }),
@@ -633,26 +668,28 @@ export default function BookingSettingsPanel() {
   };
 
   const handleLanguageSelect = (next: Language) => {
-    const resolved = resolveUiLanguage(next)
-    setLanguage(resolved)
-    setGreeting(t(`${TK}.${greetingI18nKey(resolved)}`))
+    const resolved = resolveUiLanguage(next);
+    setLanguage(resolved);
+    setGreeting(t(`${TK}.${greetingI18nKey(resolved)}`));
     setStatus(
       t(`${TK}.languageSelected`, {
         language: t(`${TK}.languageLabels.${resolved}`),
       }),
-    )
-  }
+    );
+  };
 
   const handlePromoChange = (value: string) => {
-    setPromotion(value.slice(0, PROMO_MAX_LENGTH))
-  }
+    setPromotion(value.slice(0, PROMO_MAX_LENGTH));
+  };
 
   const handlePromoSuggest = (key: keyof typeof PROMO_TEMPLATES) => {
-    const template = PROMO_TEMPLATES[key]
-    if (!template) return
-    setPromotion(template.text.slice(0, PROMO_MAX_LENGTH))
-    setStatus(t(`${TK}.promoFilled`, { name: t(`${TK}.${template.labelKey}`) }))
-  }
+    const template = PROMO_TEMPLATES[key];
+    if (!template) return;
+    setPromotion(template.text.slice(0, PROMO_MAX_LENGTH));
+    setStatus(
+      t(`${TK}.promoFilled`, { name: t(`${TK}.${template.labelKey}`) }),
+    );
+  };
 
   const handlePreview = async () => {
     if (isPreviewPlaying) {
@@ -662,7 +699,7 @@ export default function BookingSettingsPanel() {
       return;
     }
 
-    const text = greeting.trim() || t(`${TK}.greetingEn`)
+    const text = greeting.trim() || t(`${TK}.greetingEn`);
 
     try {
       await speakBookingPreview({
@@ -711,7 +748,10 @@ export default function BookingSettingsPanel() {
     }
     if (
       bookingNotifyPhoneParsed.nationalNumber.replace(/\D/g, "") &&
-      !isValidPhoneE164(bookingNotifyPhone, bookingNotifyPhoneParsed.countryCode)
+      !isValidPhoneE164(
+        bookingNotifyPhone,
+        bookingNotifyPhoneParsed.countryCode,
+      )
     ) {
       nextErrors.bookingNotifyPhone = t(`${TK}.invalidPhone`);
     }
@@ -729,6 +769,19 @@ export default function BookingSettingsPanel() {
       showToast(t(`${TK}.hourValidationSummary`), "error");
       return;
     }
+
+    const invalidDurationIds = services
+      .filter(
+        (service) => !isValidMerchantVoiceServiceDuration(service.duration),
+      )
+      .map((service) => service.id);
+    if (invalidDurationIds.length > 0) {
+      setInvalidDurationServiceIds(invalidDurationIds);
+      setCollapsedCards((prev) => ({ ...prev, services: false }));
+      showToast(t(`${TK}.durationInvalid`), "error");
+      return;
+    }
+    setInvalidDurationServiceIds([]);
 
     try {
       const salonPhonePayload = normalizePhoneForApi(
@@ -770,9 +823,9 @@ export default function BookingSettingsPanel() {
             : {}),
           name: service.name.trim(),
           price: Number.isFinite(service.price) ? service.price : 0,
-          durationMinutes: Number.isFinite(service.duration)
-            ? service.duration
-            : 0,
+          durationMinutes: clampMerchantVoiceServiceDurationMinutes(
+            service.duration,
+          ),
           note: null,
           icon: service.icon?.trim() || null,
           isActive: true,
@@ -780,6 +833,7 @@ export default function BookingSettingsPanel() {
       });
       setStatus(t(`${TK}.saveSuccess`));
       setFormErrors({});
+      setInvalidDurationServiceIds([]);
       showToast(t(`${TK}.saveSuccess`), "success");
     } catch (error) {
       const message = t(getErrorI18nKey(getApiErrorCode(error)));
@@ -875,9 +929,7 @@ export default function BookingSettingsPanel() {
                       nextCode,
                     );
                     setSalonPhone(
-                      formatted
-                        ? `${nextCode} ${formatted}`.trim()
-                        : "",
+                      formatted ? `${nextCode} ${formatted}`.trim() : "",
                     );
                     if (formErrors.salonPhone)
                       setFormErrors((prev) => ({
@@ -950,9 +1002,7 @@ export default function BookingSettingsPanel() {
                       nextCode,
                     );
                     setBookingNotifyPhone(
-                      formatted
-                        ? `${nextCode} ${formatted}`.trim()
-                        : "",
+                      formatted ? `${nextCode} ${formatted}`.trim() : "",
                     );
                     if (formErrors.bookingNotifyPhone)
                       setFormErrors((prev) => ({
@@ -1268,100 +1318,125 @@ export default function BookingSettingsPanel() {
                 </button>
               </div>
             ) : null}
-            {services.map((service) => (
-              <div
-                className={`settings-service-row ${highlightServiceId === service.id ? "is-highlight" : ""}`}
-                key={service.id}
-              >
-                <div className="settings-service-edit-grid">
-                  <span
-                    className={`settings-service-visual ${service.tone}`}
-                    aria-hidden="true"
-                  >
-                    {service.icon}
-                  </span>
-                  <label className="settings-service-field settings-service-field-name">
-                    <span className="settings-service-field-label">
-                      {t(`${TK}.serviceColumn`)}
+            {services.map((service) => {
+              const durationInvalid = invalidDurationServiceIds.includes(
+                service.id,
+              );
+              return (
+                <div
+                  className={`settings-service-row ${highlightServiceId === service.id ? "is-highlight" : ""}`}
+                  key={service.id}
+                >
+                  <div className="settings-service-edit-grid">
+                    <span
+                      className={`settings-service-visual ${service.tone}`}
+                      aria-hidden="true"
+                    >
+                      {service.icon}
                     </span>
-                    <input
-                      className="settings-service-input"
-                      type="text"
-                      value={service.name}
-                      placeholder={t(`${TK}.placeholderServiceName`)}
-                      aria-label={t(`${TK}.serviceNameAria`)}
-                      onChange={(event) =>
-                        updateService(service.id, "name", event.target.value)
-                      }
-                    />
-                  </label>
-                  <div className="settings-service-metrics">
-                    <label className="settings-service-field settings-service-field-price">
+                    <label className="settings-service-field settings-service-field-name">
                       <span className="settings-service-field-label">
-                        {t(`${TK}.priceColumn`)}
+                        {t(`${TK}.serviceColumn`)}
                       </span>
-                      <div className="settings-service-input-wrap">
-                        <span className="settings-service-prefix">$</span>
-                        <input
-                          className="settings-service-input price"
-                          type="text"
-                          inputMode="numeric"
-                          pattern="[0-9]*"
-                          value={formatWholeNumberInputValue(service.price)}
-                          placeholder={t(`${TK}.placeholderServicePrice`)}
-                          aria-label={t(`${TK}.servicePriceAria`)}
-                          onChange={(event) =>
-                            updateService(
-                              service.id,
-                              "price",
-                              event.target.value,
-                            )
-                          }
-                          onBlur={() =>
-                            commitServiceNumberOnBlur(service.id, "price")
-                          }
-                        />
-                      </div>
+                      <input
+                        className="settings-service-input"
+                        type="text"
+                        value={service.name}
+                        placeholder={t(`${TK}.placeholderServiceName`)}
+                        aria-label={t(`${TK}.serviceNameAria`)}
+                        onChange={(event) =>
+                          updateService(
+                            service.id,
+                            MerchantVoiceServiceField.Name,
+                            event.target.value,
+                          )
+                        }
+                      />
                     </label>
-                    <label className="settings-service-field settings-service-field-duration">
-                      <span className="settings-service-field-label">
-                        {t(`${TK}.durationColumn`)}
-                      </span>
-                      <div className="settings-service-input-wrap">
-                        <input
-                          className="settings-service-input duration"
-                          type="text"
-                          inputMode="numeric"
-                          pattern="[0-9]*"
-                          value={formatWholeNumberInputValue(service.duration)}
-                          placeholder={t(`${TK}.placeholderServiceDuration`)}
-                          aria-label={t(`${TK}.serviceDurationAria`)}
-                          onChange={(event) =>
-                            updateService(
-                              service.id,
-                              "duration",
-                              event.target.value,
-                            )
-                          }
-                          onBlur={() =>
-                            commitServiceNumberOnBlur(service.id, "duration")
-                          }
-                        />
-                        <span className="settings-service-suffix">{t(`${TK}.durationUnit`)}</span>
-                      </div>
-                    </label>
+                    <div className="settings-service-metrics">
+                      <label className="settings-service-field settings-service-field-price">
+                        <span className="settings-service-field-label">
+                          {t(`${TK}.priceColumn`)}
+                        </span>
+                        <div className="settings-service-input-wrap">
+                          <span className="settings-service-prefix">$</span>
+                          <input
+                            className="settings-service-input price"
+                            type="text"
+                            inputMode="numeric"
+                            pattern="[0-9]*"
+                            value={formatWholeNumberInputValue(service.price)}
+                            placeholder={t(`${TK}.placeholderServicePrice`)}
+                            aria-label={t(`${TK}.servicePriceAria`)}
+                            onChange={(event) =>
+                              updateService(
+                                service.id,
+                                MerchantVoiceServiceField.Price,
+                                event.target.value,
+                              )
+                            }
+                            onBlur={() =>
+                              commitServiceNumberOnBlur(
+                                service.id,
+                                MerchantVoiceServiceField.Price,
+                              )
+                            }
+                          />
+                        </div>
+                      </label>
+                      <label className="settings-service-field settings-service-field-duration">
+                        <span className="settings-service-field-label">
+                          {t(`${TK}.durationColumn`)}
+                        </span>
+                        <div className="settings-service-input-wrap">
+                          <input
+                            className="settings-service-input duration"
+                            type="text"
+                            inputMode="numeric"
+                            pattern="[0-9]*"
+                            value={formatWholeNumberInputValue(
+                              service.duration,
+                            )}
+                            placeholder={t(`${TK}.placeholderServiceDuration`)}
+                            aria-label={t(`${TK}.serviceDurationAria`)}
+                            aria-invalid={durationInvalid || undefined}
+                            onChange={(event) =>
+                              updateService(
+                                service.id,
+                                MerchantVoiceServiceField.Duration,
+                                event.target.value,
+                              )
+                            }
+                            onBlur={() =>
+                              commitServiceNumberOnBlur(
+                                service.id,
+                                MerchantVoiceServiceField.Duration,
+                              )
+                            }
+                          />
+                          <span className="settings-service-suffix">
+                            {t(`${TK}.durationUnit`)}
+                          </span>
+                        </div>
+                      </label>
+                    </div>
+                    <button
+                      className="settings-service-remove"
+                      type="button"
+                      aria-label={t(`${TK}.removeService`)}
+                      onClick={() => removeService(service.id)}
+                    >
+                      ×
+                    </button>
                   </div>
-                  <button
-                    className="settings-service-remove"
-                    type="button"
-                    aria-label={t(`${TK}.removeService`)}
-                    onClick={() => removeService(service.id)}
-                  >
-                    ×
-                  </button>
+                  {durationInvalid ? (
+                    <p className="settings-service-row-error" role="alert">
+                      {t(`${TK}.durationInvalid`)}
+                    </p>
+                  ) : null}
                 </div>
-              </div>
-            ))}
+              );
+            })}
           </div>
         </SettingsCard>
 
@@ -1454,9 +1529,15 @@ export default function BookingSettingsPanel() {
                 maxLength={PROMO_MAX_LENGTH}
                 placeholder={t(`${TK}.promoPlaceholder`)}
                 aria-describedby="settings-promo-count"
-                onChange={(event) => handlePromoChange(event.target.value.slice(0, PROMO_MAX_LENGTH))}
+                onChange={(event) =>
+                  handlePromoChange(
+                    event.target.value.slice(0, PROMO_MAX_LENGTH),
+                  )
+                }
               />
-              <div className="settings-language-status">{t(`${TK}.promoHelp`)}</div>
+              <div className="settings-language-status">
+                {t(`${TK}.promoHelp`)}
+              </div>
               <div className="settings-promo-suggest-row">
                 <button
                   className="settings-promo-suggest"

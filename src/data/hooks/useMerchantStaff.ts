@@ -6,13 +6,22 @@ import { qk } from '../queryKeys'
 import merchantStaffRepository, { StatusFilter } from '../repositories/merchantStaff'
 import type { StaffListPage } from '../repositories/merchantStaff'
 import type { StaffMember, StaffSearchResult } from '../../types/domain'
+import { isApiError } from '../../types/domain'
 import type {
   MerchantStaffInvite,
   MerchantStaffDetailStats,
   StaffInvitesQuery,
   StaffStatsDateParams,
 } from '../../types/repositories'
-import type { StaffInviteParams, StaffLinkRequestParams, StaffReorderItem, UpdateStaffStatusVars } from '../../types/hooks'
+import type {
+  SetMerchantStaffNicknameVars,
+  StaffInviteParams,
+  StaffLinkRequestParams,
+  StaffReorderItem,
+  UpdateMerchantStaffRoleVars,
+  UpdateStaffStatusVars,
+} from '../../types/hooks'
+import type { StaffNicknameUpdateResult, StaffRoleUpdateResult } from '../repositories/merchantStaff'
 import { staffMemberMatchesAnyId } from '../../utils/merchantStaffPending'
 
 export { StatusFilter }
@@ -202,6 +211,104 @@ export function useUpdateMerchantStaffStatus() {
     },
     onSettled: () => {
       queryClient.invalidateQueries({ queryKey: qk.merchantStaff() })
+    },
+  })
+}
+
+export function useSetMerchantStaffNickname() {
+  const queryClient = useQueryClient()
+
+  return useMutation<StaffNicknameUpdateResult, Error, SetMerchantStaffNicknameVars>({
+    mutationFn: ({ staffLinkId, nickname }) =>
+      merchantStaffRepository.setNickname(staffLinkId, nickname),
+    onSuccess: (result, { staffLinkId, staffCode }) => {
+      queryClient.setQueriesData<StaffListPage>(
+        { queryKey: qk.merchantStaff() },
+        (current) => {
+          if (!current?.items?.length) return current
+          return {
+            ...current,
+            items: current.items.map((item) =>
+              staffMemberMatchesLinkId(item, staffLinkId)
+                ? {
+                    ...item,
+                    nicknameAtBusiness: result.nicknameAtBusiness,
+                    nickname: result.displayName,
+                    displayName: result.displayName,
+                  }
+                : item,
+            ),
+          }
+        },
+      )
+      queryClient.setQueryData<StaffMember>(
+        qk.merchantStaffByCode(staffCode),
+        (current) => current
+          ? {
+              ...current,
+              nicknameAtBusiness: result.nicknameAtBusiness,
+              nickname: result.displayName,
+              displayName: result.displayName,
+            }
+          : current,
+      )
+
+      void queryClient.invalidateQueries({ queryKey: qk.merchantStaff() })
+      void queryClient.invalidateQueries({ queryKey: qk.merchantStaffByCode(staffCode) })
+      void queryClient.invalidateQueries({ queryKey: qk.dashboardStaff() })
+    },
+    onError: (error) => {
+      if (isApiError(error) && (error.status === 403 || error.status === 404)) {
+        void queryClient.invalidateQueries({ queryKey: qk.merchantStaff() })
+      }
+    },
+  })
+}
+
+export function useUpdateMerchantStaffRole() {
+  const queryClient = useQueryClient()
+
+  return useMutation<StaffRoleUpdateResult, Error, UpdateMerchantStaffRoleVars>({
+    mutationFn: ({ staffLinkId, roleAtBusiness }) =>
+      merchantStaffRepository.updateRoleAtBusiness(staffLinkId, roleAtBusiness),
+    onSuccess: (result, { staffLinkId, staffCode }) => {
+      queryClient.setQueriesData<StaffListPage>(
+        { queryKey: qk.merchantStaff() },
+        (current) => {
+          if (!current?.items?.length) return current
+          return {
+            ...current,
+            items: current.items.map((item) =>
+              staffMemberMatchesLinkId(item, staffLinkId)
+                ? {
+                    ...item,
+                    roleAtBusiness: result.roleAtBusiness,
+                    position: result.roleAtBusiness,
+                  }
+                : item,
+            ),
+          }
+        },
+      )
+      queryClient.setQueryData<StaffMember>(
+        qk.merchantStaffByCode(staffCode),
+        (current) => current
+          ? {
+              ...current,
+              roleAtBusiness: result.roleAtBusiness,
+              position: result.roleAtBusiness,
+            }
+          : current,
+      )
+
+      void queryClient.invalidateQueries({ queryKey: qk.merchantStaff() })
+      void queryClient.invalidateQueries({ queryKey: qk.merchantStaffByCode(staffCode) })
+      void queryClient.invalidateQueries({ queryKey: qk.dashboardStaff() })
+    },
+    onError: (error) => {
+      if (isApiError(error) && (error.status === 403 || error.status === 404)) {
+        void queryClient.invalidateQueries({ queryKey: qk.merchantStaff() })
+      }
     },
   })
 }

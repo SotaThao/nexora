@@ -159,6 +159,142 @@ export interface TipsChartDayMetric {
   avgAmount: number
 }
 
+export interface DashboardAnalyticsOverviewApiDto {
+  totalVolume?: number
+  totalTransactionCount?: number
+  feeSaved?: number
+  averageTipAmount?: number
+}
+
+export interface DashboardAnalyticsLeaderboardItemApiDto {
+  staffProfileId?: string
+  displayName?: string
+  nicknameAtBusiness?: string | null
+  photoUrl?: string | null
+  position?: string | null
+  tipTotal?: number
+  tipCount?: number
+  avgTip?: number
+  avgRating?: number
+  reviewCount?: number
+  selectionCount?: number
+}
+
+export interface DashboardAnalyticsTouchPointApiDto {
+  touchPointId?: string
+  name?: string
+  type?: string
+  scanCount?: number
+  tipCount?: number
+  tipTotal?: number
+  ctr?: number
+  avgRating?: number
+}
+
+export interface DashboardAnalyticsTipsMethodApiDto {
+  method?: string
+  amount?: number
+  count?: number
+}
+
+/** @deprecated API may still return this; prefer `tipsMethods`. */
+export type DashboardAnalyticsPayoutMethodApiDto = DashboardAnalyticsTipsMethodApiDto
+
+export interface DashboardAnalyticsDirectPayoutApiDto {
+  totalAmount?: number
+  totalCount?: number
+}
+
+export interface DashboardAnalyticsTipRevenueBreakdownApiDto {
+  amount?: number
+  count?: number
+}
+
+export interface DashboardAnalyticsTipRevenueApiDto {
+  totalRevenue?: number
+  directTips?: DashboardAnalyticsTipRevenueBreakdownApiDto
+  cardTips?: DashboardAnalyticsTipRevenueBreakdownApiDto
+  cryptoTips?: DashboardAnalyticsTipRevenueBreakdownApiDto
+}
+
+export interface DashboardAnalyticsApiDto {
+  overview?: DashboardAnalyticsOverviewApiDto
+  tipRevenue?: DashboardAnalyticsTipRevenueApiDto
+  leaderboard?: DashboardAnalyticsLeaderboardItemApiDto[]
+  touchPoints?: DashboardAnalyticsTouchPointApiDto[]
+  tipsMethods?: DashboardAnalyticsTipsMethodApiDto[]
+  /** @deprecated Prefer `tipsMethods`. */
+  payoutMethods?: DashboardAnalyticsTipsMethodApiDto[]
+  directPayout?: DashboardAnalyticsDirectPayoutApiDto
+}
+
+export interface MerchantDashboardAnalyticsOverview {
+  totalVolume: number
+  totalTransactionCount: number
+  feeSaved: number
+  averageTipAmount: number
+}
+
+export interface MerchantDashboardAnalyticsLeaderboardItem {
+  staffProfileId: string
+  displayName: string
+  nicknameAtBusiness: string | null
+  photoUrl: string | null
+  position: string | null
+  tipTotal: number
+  tipCount: number
+  avgTip: number
+  avgRating: number
+  reviewCount: number
+  selectionCount: number
+}
+
+export interface MerchantDashboardAnalyticsTouchPoint {
+  touchPointId: string
+  name: string
+  type: string
+  scanCount: number
+  tipCount: number
+  tipTotal: number
+  ctr: number
+  avgRating: number
+}
+
+export interface MerchantDashboardAnalyticsTipsMethod {
+  method: string
+  amount: number
+  count: number
+}
+
+/** @deprecated Use `MerchantDashboardAnalyticsTipsMethod`. */
+export type MerchantDashboardAnalyticsPayoutMethod = MerchantDashboardAnalyticsTipsMethod
+
+export interface MerchantDashboardAnalyticsDirectPayout {
+  totalAmount: number
+  totalCount: number
+}
+
+export interface MerchantDashboardAnalyticsTipRevenueBreakdown {
+  amount: number
+  count: number
+}
+
+export interface MerchantDashboardAnalyticsTipRevenue {
+  totalRevenue: number
+  directTips: MerchantDashboardAnalyticsTipRevenueBreakdown
+  cardTips: MerchantDashboardAnalyticsTipRevenueBreakdown
+  cryptoTips: MerchantDashboardAnalyticsTipRevenueBreakdown
+}
+
+export interface MerchantDashboardAnalytics {
+  overview: MerchantDashboardAnalyticsOverview
+  tipRevenue: MerchantDashboardAnalyticsTipRevenue
+  leaderboard: MerchantDashboardAnalyticsLeaderboardItem[]
+  touchPoints: MerchantDashboardAnalyticsTouchPoint[]
+  tipsMethods: MerchantDashboardAnalyticsTipsMethod[]
+  directPayout: MerchantDashboardAnalyticsDirectPayout
+}
+
 export type DashboardReviewRoutingType = 'Public' | 'Private' | 'Skipped'
 
 /**
@@ -213,6 +349,7 @@ export interface StaffPaymentMethodApiDto {
   type?: string
   isActive?: boolean
   accountInfo?: string | null
+  accountName?: string | null
   imageUrl?: string | null
 }
 
@@ -239,6 +376,7 @@ export interface StaffListItemApiDto {
   tipCount?: number
   averageRating?: number
   displayName?: string
+  nicknameAtBusiness?: string | null
   photoUrl?: string | null
   status?: string
   position?: string | null
@@ -666,7 +804,8 @@ export interface JoinPublicInviteDto {
 export interface PersonalOnboardingInput {
   accountData: LooseObject
   paymentAccounts: LooseObject
-  payoutConfigs: Record<string, { enabled?: boolean; value?: string }>
+  payoutConfigs: Record<string, { enabled?: boolean; value?: string; accountName?: string }>
+  skipProfileUpdates?: boolean
 }
 
 export interface PayoutConfigMap {

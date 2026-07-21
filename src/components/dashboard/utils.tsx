@@ -100,6 +100,39 @@ export function isAwaitingShopConfirmation(tx) {
   return isTipStatus(tx.status, TipStatus.Confirmed)
 }
 
+/** Staff profile IDs marked local-staff (Reports / overview resolve tip flags from this set). */
+export function resolveLocalStaffIds(staff = []) {
+  const localStaffIds = new Set()
+  for (const member of staff) {
+    if (!member?.staffProfileId) continue
+    if (member.isLocalStaff) localStaffIds.add(String(member.staffProfileId))
+  }
+  return localStaffIds
+}
+
+/** Attach resolved `isLocalStaff` when the tips API omits / understates the flag. */
+export function withResolvedLocalStaff(tx, localStaffIds) {
+  if (!tx || tx.isLocalStaff === true) return tx
+  const profileId = tx.staffProfileId != null ? String(tx.staffProfileId) : ''
+  if (!profileId || !localStaffIds?.has(profileId)) return tx
+  return { ...tx, isLocalStaff: true }
+}
+
+/**
+ * Count tips awaiting owner shop confirmation — same predicate as Reports
+ * `?status=AwaitingShopConfirmation` (after local-staff resolution).
+ */
+export function countAwaitingShopConfirmation(transactions = [], staff = []) {
+  const localStaffIds = resolveLocalStaffIds(staff)
+  let count = 0
+  for (const tx of transactions) {
+    if (isAwaitingShopConfirmation(withResolvedLocalStaff(tx, localStaffIds))) {
+      count += 1
+    }
+  }
+  return count
+}
+
 // A shop-account tip the owner has already confirmed received.
 export function isShopConfirmed(tx) {
   return Boolean((tx?.isMultiStaff || tx?.isLocalStaff) && tx?.merchantConfirmedAt)

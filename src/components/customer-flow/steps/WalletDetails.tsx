@@ -163,14 +163,15 @@ export default function WalletDetails({
   }
 
   // Prefer account info from the tip payment methods API response
-  const tipApiAccountVal = (() => {
+  const tipApiMethod = (() => {
     if (!Array.isArray(tipPaymentMethodsData) || tipPaymentMethodsData.length === 0) return null
-    const match = tipPaymentMethodsData.find(
+    return tipPaymentMethodsData.find(
       (pm) => (pm.type || '').toLowerCase() === selectedWalletObj.key.toLowerCase()
         || (pm.type || '').toLowerCase().replace(/\s+/g, '') === selectedWalletObj.key.toLowerCase(),
-    )
-    return match?.accountInfo || null
+    ) || null
   })()
+  const tipApiAccountVal = tipApiMethod?.accountInfo || null
+  const accountHolderName = tipApiMethod?.accountName || null
 
   const legacyAccountVal = (() => {
     if (isMultiStaff) return businessPaymentAccounts?.[selectedWalletObj.key] || null
@@ -201,9 +202,10 @@ export default function WalletDetails({
     ? (currentTipId ? `TIP-${String(currentTipId).slice(0, 8).toUpperCase()}` : `TIP-NEXORA-${tipRefNumber}`)
     : `TIP-${selectedStaffMembers[0].nickname.toUpperCase().replace(/[^A-Z0-9]/g, '')}-${tipRefNumber}`
 
-  const recipientName = isMultiStaff
-    ? bizName
-    : selectedStaffMembers[0].nickname
+  // Per-method account holder name from the payment-methods API replaces the
+  // profile display name so the customer sees the exact wallet account name.
+  const recipientName = accountHolderName
+    || (isMultiStaff ? bizName : selectedStaffMembers[0].nickname)
 
   const recipientFullName = isMultiStaff
     ? bizName
@@ -216,7 +218,7 @@ export default function WalletDetails({
       recipient: recipientName,
     })
     : isMultiStaff
-    ? t('components.customer_flow.steps.WalletDetails.multiStaffTitle', { wallet: selectedWalletObj.name, amount: activeTipAmount.toFixed(2), business: bizName || recipientName })
+    ? t('components.customer_flow.steps.WalletDetails.multiStaffTitle', { wallet: selectedWalletObj.name, amount: activeTipAmount.toFixed(2), business: recipientName || bizName })
     : t('components.customer_flow.steps.WalletDetails.singleStaffTitle', { wallet: selectedWalletObj.name, amount: activeTipAmount.toFixed(2), recipient: recipientName })
 
   const subtitle = paymentMode
@@ -224,7 +226,7 @@ export default function WalletDetails({
       ? t('staff_direct_payment.review_payment_desc', { name: recipientName })
       : t('direct_payment.review_payment_desc', { name: recipientName }))
     : isMultiStaff
-    ? t('components.customer_flow.steps.WalletDetails.multiStaffSubtitle', { business: bizName || recipientName })
+    ? t('components.customer_flow.steps.WalletDetails.multiStaffSubtitle', { business: recipientName || bizName })
     : (() => {
       const params = { recipient: recipientName }
       if (selectedWalletObj.key === WALLET_KEYS.ZELLE) return t('components.customer_flow.steps.WalletDetails.singleStaffSubtitle_zelle', params)

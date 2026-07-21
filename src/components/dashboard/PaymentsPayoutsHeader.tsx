@@ -19,12 +19,12 @@ export default function PaymentsPayoutsHeader() {
   const tabParam = searchParams.get('tab')
 
   return (
-    <div className="border-b border-nexoraBorder pb-5">
-      <h2 className="text-2xl font-black text-inkBlue dark:text-white tracking-tight">
+    <div className="border-b border-nexoraBorder pb-3 sm:pb-5">
+      <h2 className="hidden text-2xl font-black text-inkBlue dark:text-white tracking-tight sm:block">
         {t(PAYMENTS_PAYOUTS_MENU_ITEM.labelKey)}
       </h2>
 
-      <div className="mt-3 flex w-full flex-wrap gap-1 bg-nexoraSurfaceMuted dark:bg-luxuryCoal p-1 rounded-xl border border-nexoraBorder dark:border-luxuryGold/10 sm:w-fit">
+      <div className="mt-0 flex w-full flex-wrap gap-1 bg-nexoraSurfaceMuted dark:bg-luxuryCoal p-1 rounded-xl border border-nexoraBorder dark:border-luxuryGold/10 sm:mt-3 sm:w-fit">
         {PAYMENTS_PAYOUTS_SUBMENU.map((item) => {
           const isActive = isPaymentsPayoutsSubActive(activeMenu, tabParam, item)
           return (

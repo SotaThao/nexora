@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react'
-import { Copy, Edit2, Loader2, Trash2, Upload, X } from 'lucide-react'
+import { Camera, Copy, Edit2, FolderOpen, Loader2, Trash2, X } from 'lucide-react'
 import { useTranslation } from '../../../contexts/LanguageContext'
 import { useNotification } from '../../../contexts/NotificationContext'
 import { getErrorI18nKey } from '../../../data/errorCodes'
@@ -14,6 +14,8 @@ import type { PayoutRecord } from '../../../types/domain'
 import { getApiErrorCode } from '../../../types/domain'
 import { formatCurrency, formatTransactionDateTime } from '../../dashboard/utils'
 import Tooltip from '../../ui/Tooltip'
+import CameraCaptureModal from '../../ui/CameraCaptureModal'
+import ImageFileInput from '../../ui/ImageFileInput'
 import {
   formatPayoutPeriodRange,
   getPayoutStatusDescI18nKey,
@@ -51,9 +53,9 @@ export default function PayoutDetailModal({
   const deleteMutation = useDeleteMerchantPayout()
   const cancelMutation = useCancelMerchantPayout()
   const updateMutation = useUpdateMerchantPayout()
-  const fileInputRef = useRef<HTMLInputElement>(null)
   const latestEvidenceUrlsRef = useRef<string[]>(payout?.evidenceUrls ?? [])
   const [isUploadingEvidence, setIsUploadingEvidence] = useState(false)
+  const [isEvidenceCameraOpen, setIsEvidenceCameraOpen] = useState(false)
 
   useEffect(() => {
     latestEvidenceUrlsRef.current = payout?.evidenceUrls ?? []
@@ -65,6 +67,7 @@ export default function PayoutDetailModal({
   const currentEvidenceCount = payout?.evidenceUrls?.length ?? 0
   const canUploadEvidence = Boolean(isCompleted && currentEvidenceCount < maxEvidenceCount)
   const isBusy = deleteMutation.isPending || cancelMutation.isPending || isUploadingEvidence || updateMutation.isPending
+  const remainingEvidenceCount = Math.max(0, maxEvidenceCount - currentEvidenceCount)
 
   if (!payout && !isLoading) return null
 
@@ -108,11 +111,6 @@ export default function PayoutDetailModal({
     } catch (err) {
       showToast(t(getErrorI18nKey(getApiErrorCode(err))), 'error')
     }
-  }
-
-  const openEvidencePicker = () => {
-    if (!canUploadEvidence || isBusy) return
-    fileInputRef.current?.click()
   }
 
   const handleEvidenceFiles = async (files: FileList | File[]) => {
@@ -292,18 +290,6 @@ export default function PayoutDetailModal({
               </div>
             ) : null}
 
-            <input
-              ref={fileInputRef}
-              type="file"
-              accept="image/*"
-              multiple
-              className="hidden"
-              disabled={!canUploadEvidence || isBusy}
-              onChange={(e) => {
-                if (e.target.files) void handleEvidenceFiles(e.target.files)
-                e.target.value = ''
-              }}
-            />
           </div>
         ) : null}
 
@@ -342,18 +328,43 @@ export default function PayoutDetailModal({
 
         {payout && canUploadEvidence ? (
           <div className="border-t border-nexoraBorder px-5 py-4">
-            <button
-              type="button"
-              disabled={isBusy}
-              onClick={openEvidencePicker}
-              className="inline-flex h-12 w-full items-center justify-center gap-2 rounded-xl bg-nexoraBrand px-4 text-sm font-bold text-white disabled:cursor-not-allowed disabled:opacity-60"
-            >
-              {isBusy ? <Loader2 className="h-4 w-4 animate-spin" /> : <Upload className="h-4 w-4" />}
-              {t('dashboard.tips.payouts_manager.action_upload_evidence')}
-            </button>
+            <div className="grid grid-cols-2 gap-3">
+              <button
+                type="button"
+                disabled={isBusy}
+                onClick={() => setIsEvidenceCameraOpen(true)}
+                className="flex min-h-20 flex-col items-center justify-center gap-2 rounded-xl border-2 border-dashed border-nexoraBorder bg-slate-50 px-3 py-4 text-center transition hover:border-nexoraBrand/60 hover:bg-nexoraBrand/5 disabled:cursor-not-allowed disabled:opacity-60"
+              >
+                {isUploadingEvidence ? <Loader2 className="h-5 w-5 animate-spin text-nexoraBrand" /> : <Camera className="h-5 w-5 text-nexoraBrand" />}
+                <span className="text-xs font-bold text-inkBlue">{t('setup.take_photo')}</span>
+              </button>
+              <ImageFileInput
+                as="label"
+                onPickFile={(file) => void handleEvidenceFiles([file])}
+                disabled={isBusy}
+                className={`flex min-h-20 flex-col items-center justify-center gap-2 rounded-xl border-2 border-dashed border-nexoraBorder bg-slate-50 px-3 py-4 text-center transition hover:border-nexoraBrand/60 hover:bg-nexoraBrand/5 ${
+                  isBusy ? 'cursor-not-allowed opacity-60' : 'cursor-pointer'
+                }`}
+              >
+                <FolderOpen className="h-5 w-5 text-nexoraBrand" />
+                <span className="text-xs font-bold text-inkBlue">{t('setup.choose_file')}</span>
+              </ImageFileInput>
+            </div>
+            <div className="mt-3 space-y-1 text-[11px] leading-relaxed text-mutedGrey">
+              <p>{t('dashboard.tips.payouts_manager.evidence_upload_helper')}</p>
+              <p>{t('dashboard.tips.payouts_manager.evidence_remaining', { count: remainingEvidenceCount })}</p>
+              <p>{t('dashboard.tips.payouts_manager.evidence_size_hint')}</p>
+            </div>
           </div>
         ) : null}
       </div>
+      <CameraCaptureModal
+        open={isEvidenceCameraOpen}
+        onClose={() => setIsEvidenceCameraOpen(false)}
+        onCapture={(file) => void handleEvidenceFiles([file])}
+        title={t('dashboard.tips.payouts_manager.evidence_camera_title')}
+        hint={t('dashboard.tips.payouts_manager.evidence_camera_hint')}
+      />
     </div>
   )
 }

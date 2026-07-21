@@ -6,6 +6,7 @@ type HttpClient = typeof httpClient
 
 interface UpdatePaymentMethodDto {
   accountInfo?: string | null
+  accountName?: string | null
   imageUrl?: string | null
 }
 
@@ -13,6 +14,7 @@ interface MerchantPaymentMethodApiDto {
   id?: string
   type?: string
   accountInfo?: string | null
+  accountName?: string | null
   imageUrl?: string | null
   isActive?: boolean
   isConfigured?: boolean
@@ -29,6 +31,7 @@ function normalizeMerchantPaymentMethod(dto: MerchantPaymentMethodApiDto): Payme
     uiKey,
     name: PAYOUT_UI_LABELS[uiKey] || dto.name || type,
     accountInfo: dto.accountInfo ?? null,
+    accountName: dto.accountName ?? null,
     imageUrl: dto.imageUrl ?? null,
     isActive: Boolean(dto.isActive),
     isConfigured: Boolean(dto.isConfigured),

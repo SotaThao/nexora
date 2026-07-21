@@ -13,9 +13,10 @@ import Pagination from '../../ui/Pagination'
 import Tooltip from '../../ui/Tooltip'
 import TransactionDetailModal from '../../dashboard/modals/TransactionDetailModal'
 import { STAFF_TIPS_SKELETON } from '../skeletons/staffDashboardSkeletons'
+import { DEFAULT_PAGE_SIZE } from '../../../constants/pagination'
 
 const panel = 'rounded-2xl border border-nexoraBorder bg-nexoraSurface p-4 shadow-sm'
-const PAGE_SIZE = 7
+const PAGE_SIZE = DEFAULT_PAGE_SIZE
 
 const STATUS_STYLE: Partial<Record<TipStatus, string>> = {
   [TipStatus.Initiated]: 'bg-amber-50 text-amber-600',

@@ -38,6 +38,19 @@ export function isVoiceCallTrialPackage(value: string | null | undefined): boole
   return value === VoiceCallPlanPackage.Trial
 }
 
+export enum VoiceTrialFormField {
+  Salon = 'salon',
+  Owner = 'owner',
+  Phone = 'phone',
+  Email = 'email',
+  City = 'city',
+  Referral = 'referral',
+  OpenTime = 'openTime',
+  CloseTime = 'closeTime',
+  PainPoint = 'painPoint',
+  CustomServiceInput = 'customServiceInput',
+}
+
 export interface SubmitVoiceTrialRequest {
   shopName: string
   ownerName: string
@@ -85,9 +98,11 @@ export interface VoiceTrialRequestDetailDto {
   lastModified: string | null
 }
 
-export function mapDayKeysToApiOpeningDays(dayKeys: Iterable<string>): string[] {
+export function mapDayKeysToApiOpeningDays(
+  dayKeys: Iterable<string>,
+): string[] {
   return [...dayKeys]
-    .map((key) => VOICE_TRIAL_DAY_KEY_TO_API[key as VoiceTrialDayKey])
+    .map(key => VOICE_TRIAL_DAY_KEY_TO_API[key as VoiceTrialDayKey])
     .filter(Boolean)
 }
 

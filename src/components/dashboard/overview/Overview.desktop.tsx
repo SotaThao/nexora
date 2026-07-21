@@ -7,7 +7,14 @@ import { useDownloadTouchpointQr } from '../../../data/hooks/useMerchantTouchpoi
 import { downloadQrCode, QR_IMAGE_SIZES } from '../../../utils/qrUtils'
 import { buildQrImageUrl, toLocalCustomerTouchUrl } from '../../../utils/staffTipUrl'
 import { getWebUrlOrigin } from '../../../utils/webUrlBase'
-import { buildMasterQrTarget, formatCurrency, isAwaitingShopConfirmation, resolveMasterTouchpoint } from '../utils'
+import { buildMasterQrTarget, formatCurrency, resolveMasterTouchpoint } from '../utils'
+import { useAwaitingShopConfirmationCount } from '../hooks/useAwaitingShopConfirmationCount'
+import { TipStatus } from '../../../constants/tipStatus'
+import {
+  buildDashboardReportsPath,
+  buildDashboardSettingsQueryPath,
+  DASHBOARD_SETTINGS_QUERY_TAB,
+} from '../constants'
 import Panel from '../../ui/Panel'
 import KpiCard, { NO_DELTA_FALLBACK } from '../../ui/KpiCard'
 import { SkeletonKpiCard } from '../../ui/skeleton'
@@ -144,10 +151,7 @@ function Overview({
   const navigate = useNavigate()
   const downloadTouchpointQrMutation = useDownloadTouchpointQr()
 
-  const pendingConfirmCount = useMemo(
-    () => (transactions || []).filter(isAwaitingShopConfirmation).length,
-    [transactions],
-  )
+  const pendingConfirmCount = useAwaitingShopConfirmationCount()
   const [isDropdownOpen, setIsDropdownOpen] = useState(false)
   const [isMasterQrDownloading, setIsMasterQrDownloading] = useState(false)
   const [copiedPaymentLinkId, setCopiedPaymentLinkId] = useState(null)
@@ -353,7 +357,7 @@ function Overview({
           </div>
           <button
             type="button"
-            onClick={() => navigate('/dashboard/reports?status=AwaitingShopConfirmation')}
+            onClick={() => navigate(buildDashboardReportsPath({ status: TipStatus.Confirmed }))}
             className="shrink-0 rounded-lg bg-violet-600 px-3 py-1.5 text-[10px] font-bold uppercase tracking-wide text-white hover:bg-violet-700 transition cursor-pointer whitespace-nowrap"
           >
             {t('merchant_dashboard.tips.pending_view_cta')} →
@@ -508,13 +512,14 @@ function Overview({
           {/* Direct Payment QR section */}
           <SettingsTipQrPanel
             variant="gateway"
-            hideUrlCode
             businessName={businessName}
             showToast={showToast}
             handleCopy={handleCopyPaymentLink}
             copiedId={copiedPaymentLinkId}
             t={t}
-            onConfigurePayoutMethods={() => navigate('/dashboard/settings?tab=payout')}
+            onConfigurePayoutMethods={() =>
+              navigate(buildDashboardSettingsQueryPath(DASHBOARD_SETTINGS_QUERY_TAB.payout))
+            }
           />
 
           {/* Referral QR section */}

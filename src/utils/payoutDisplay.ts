@@ -163,8 +163,8 @@ export function formatPayoutPeriodRange(
 ): string {
   if (!periodStart || !periodEnd) return '—'
   const fmt = new Intl.DateTimeFormat(locale === 'vi' ? 'vi-VN' : 'en-US', {
-    day: '2-digit',
-    month: '2-digit',
+    month: 'short',
+    day: 'numeric',
     year: 'numeric',
   })
   const start = fmt.format(new Date(`${periodStart}T00:00:00`))

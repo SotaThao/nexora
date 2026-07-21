@@ -6,6 +6,7 @@ import ImageFileInput from '../ui/ImageFileInput'
 import { captureQrImage } from '../../utils/qrCode'
 import BankWireAccountForm from '../payout/BankWireAccountForm'
 import PayoutAccountIdentifierInput from '../payout/PayoutAccountIdentifierInput'
+import PayoutAccountNameField from '../payout/PayoutAccountNameField'
 import { formatPayoutPhoneDisplay } from '../payout/payoutPhone'
 import {
   getBankWireBeneficiaryName,
@@ -13,20 +14,20 @@ import {
 } from '../payout/bankWireAccount'
 import { validatePayoutAccount } from '../payout/validatePayoutAccount'
 
-export default function PayoutSetupModal({ open, walletKey, staffName, initialValue, initialQrCode, onClose, onSubmit }) {
+export default function PayoutSetupModal({ open, walletKey, initialValue, initialQrCode, initialAccountName, onClose, onSubmit }) {
   const { t } = useTranslation()
   const [value, setValue] = useState(initialValue || '')
   const [qrCode, setQrCode] = useState(initialQrCode || '')
-  const [accountName, setAccountName] = useState(staffName || '')
+  const [accountName, setAccountName] = useState(initialAccountName || '')
   const [isCapturing, setIsCapturing] = useState(false)
   const [error, setError] = useState('')
 
   useEffect(() => {
     setValue(initialValue || '')
     setQrCode(initialQrCode || '')
-    setAccountName(staffName || '')
+    setAccountName(initialAccountName || '')
     setError('')
-  }, [open, walletKey, initialValue, initialQrCode, staffName])
+  }, [open, walletKey, initialValue, initialQrCode, initialAccountName])
 
   if (!open) return null
   const isBankWire = walletKey === 'bankwire'
@@ -144,6 +145,12 @@ export default function PayoutSetupModal({ open, walletKey, staffName, initialVa
             />
             {error && <p className="mt-1 text-[10px] font-bold text-rose-500">{error}</p>}
           </div>
+
+          <PayoutAccountNameField
+            walletKey={walletKey}
+            value={accountName}
+            onChange={setAccountName}
+          />
 
           <div>
             <label className="block text-[10px] font-extrabold uppercase text-slate-500 tracking-wider mb-2">

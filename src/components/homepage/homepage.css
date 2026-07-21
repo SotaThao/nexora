@@ -78,8 +78,8 @@
   scrollbar-width: none;
 }
 
-.animate-fadeIn {
-  animation: fadeIn 0.35s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+.nx-homepage .animate-fadeIn {
+  animation: homepage-fade-in 0.35s cubic-bezier(0.16, 1, 0.3, 1) forwards;
 }
 
 .mobile-menu-toggle {
@@ -141,7 +141,7 @@
   }
 }
 
-@keyframes fadeIn {
+@keyframes homepage-fade-in {
   from {
     opacity: 0;
     transform: translateY(12px);
@@ -800,7 +800,7 @@ html.homepage-active {
     scroll-margin-top: calc(64px + var(--app-safe-area-top, env(safe-area-inset-top, 0px)));
   }
 
-  .nx-homepage header img {
+  .nx-homepage header .homepage-header-logo-img {
     width: 29px !important;
     height: 29px !important;
   }

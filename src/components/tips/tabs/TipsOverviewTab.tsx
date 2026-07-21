@@ -4,17 +4,15 @@ import { useTranslation } from '../../../contexts/LanguageContext';
 import { formatUSD } from '../../../utils/tipsFormatters';
 import TipsTrendChart from '../../dashboard/charts/TipsTrendChart';
 
+export function isLeadingOddCard(itemCount: number, index: number) {
+  return itemCount % 2 === 1 && index === 0;
+}
+
 export default function TipsOverviewTab({
   totalVolume,
   directTips,
   cardTips,
   cryptoTips,
-  chartRange,
-  handleChartRangeChange,
-  chartStartDate,
-  chartEndDate,
-  setChartStartDate,
-  setChartEndDate,
   svgMetrics,
   yTicks,
   chartBars,
@@ -23,134 +21,91 @@ export default function TipsOverviewTab({
   setHoverIndex,
   activePoint,
   donutSegments,
+  donutTotal,
 }) {
-  const { t, currentLanguage } = useTranslation();
+  const { t } = useTranslation();
   const hasCrypto = cryptoTips > 0;
+  const overviewCards = [
+    {
+      id: 'total',
+      label: t('dashboard.tips.kpi.total_revenue'),
+      value: totalVolume,
+      icon: DollarSign,
+      iconClass: 'bg-luxuryGold/10 text-luxuryGold',
+    },
+    {
+      id: 'direct',
+      label: t('dashboard.tips.kpi.direct_p2p'),
+      value: directTips,
+      icon: ArrowUpRight,
+      iconClass: 'bg-brandCyan/10 text-brandCyan',
+    },
+    {
+      id: 'card',
+      label: t('dashboard.tips.kpi.card_tips'),
+      value: cardTips,
+      icon: DollarSign,
+      iconClass: 'bg-slate-100 text-mutedGrey dark:bg-white/5',
+    },
+    ...(hasCrypto
+      ? [
+          {
+            id: 'crypto',
+            label: t('dashboard.tips.kpi.crypto_tips'),
+            value: cryptoTips,
+            icon: TrendingUp,
+            iconClass: 'bg-amber-100 text-amber-500 dark:bg-amber-500/10',
+          },
+        ]
+      : []),
+  ];
 
   return (
     <div className="space-y-6">
       {/* Overview Cards Grid */}
       <div
-        className={`grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 ${
+        data-testid="tips-kpi-grid"
+        className={`grid grid-cols-2 gap-2.5 sm:gap-4 lg:grid-cols-3 ${
           hasCrypto ? 'xl:grid-cols-4' : ''
         }`}
       >
-        <div className="card-elevated flex items-center justify-between">
-          <div>
-            <small className="text-[10px] font-black text-mutedGrey dark:text-slate-400 uppercase tracking-widest">
-              {t('dashboard.tips.kpi.total_revenue')}
-            </small>
-            <h3 className="mt-1 text-2xl font-black text-inkBlue dark:text-white">{formatUSD(totalVolume)}</h3>
-          </div>
-          <div className="h-10 w-10 flex items-center justify-center rounded-lg bg-luxuryGold/10 text-luxuryGold">
-            <DollarSign className="h-5 w-5" />
-          </div>
-        </div>
-        <div className="card-elevated flex items-center justify-between">
-          <div>
-            <small className="text-[10px] font-black text-mutedGrey dark:text-slate-400 uppercase tracking-widest">
-              {t('dashboard.tips.kpi.direct_p2p')}
-            </small>
-            <h3 className="mt-1 text-2xl font-black text-inkBlue dark:text-white">{formatUSD(directTips)}</h3>
-          </div>
-          <div className="h-10 w-10 flex items-center justify-center rounded-lg bg-brandCyan/10 text-brandCyan">
-            <ArrowUpRight className="h-5 w-5" />
-          </div>
-        </div>
-        <div className="card-elevated flex items-center justify-between">
-          <div>
-            <small className="text-[10px] font-black text-mutedGrey dark:text-slate-400 uppercase tracking-widest">
-              {t('dashboard.tips.kpi.card_tips')}
-            </small>
-            <h3 className="mt-1 text-2xl font-black text-inkBlue dark:text-white">{formatUSD(cardTips)}</h3>
-          </div>
-          <div className="h-10 w-10 flex items-center justify-center rounded-lg bg-slate-100 dark:bg-white/5 text-mutedGrey">
-            <DollarSign className="h-5 w-5" />
-          </div>
-        </div>
-        {hasCrypto && (
-          <div className="card-elevated flex items-center justify-between">
-            <div>
-              <small className="text-[10px] font-black text-mutedGrey dark:text-slate-400 uppercase tracking-widest">
-                {t('dashboard.tips.kpi.crypto_tips')}
-              </small>
-              <h3 className="mt-1 text-2xl font-black text-inkBlue dark:text-white">{formatUSD(cryptoTips)}</h3>
+        {overviewCards.map((card, index) => {
+          const Icon = card.icon;
+          const spansMobileRow = isLeadingOddCard(overviewCards.length, index);
+
+          return (
+            <div
+              key={card.id}
+              data-testid={`tips-kpi-${card.id}`}
+              className={`card-elevated flex items-center justify-between gap-2 p-3 sm:p-6 ${
+                spansMobileRow ? 'col-span-2 lg:col-span-1' : ''
+              }`.trim()}
+            >
+              <div className="min-w-0">
+                <small className="text-[10px] font-black text-mutedGrey dark:text-slate-400 uppercase tracking-widest">
+                  {card.label}
+                </small>
+                <h3 className="mt-1 text-lg font-black text-inkBlue dark:text-white sm:text-2xl">
+                  {formatUSD(card.value)}
+                </h3>
+              </div>
+              <div
+                className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-lg sm:h-10 sm:w-10 ${card.iconClass}`}
+              >
+                <Icon className="h-4 w-4 sm:h-5 sm:w-5" />
+              </div>
             </div>
-            <div className="h-10 w-10 flex items-center justify-center rounded-lg bg-amber-100 dark:bg-amber-500/10 text-amber-500">
-              <TrendingUp className="h-5 w-5" />
-            </div>
-          </div>
-        )}
+          );
+        })}
       </div>
 
       {/* Charts Grid */}
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-5">
         {/* Week Summary Chart */}
         <div className="card-elevated lg:col-span-3">
-          <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between mb-6">
-            <h4 className="text-sm font-black text-inkBlue dark:text-white uppercase tracking-wider">
-              {chartRange === '7 Days'
-                ? (t('dashboard.tips.charts.weekly_title'))
-                : (t('components.tips.tabs.TipsOverviewTab.tipsOverTimeTrend'))}
-            </h4>
-            <div className="flex flex-wrap items-center gap-1.5 justify-end">
-              {['7 Days', '30 Days', '90 Days', '180 Days', '365 Days', 'Custom'].map((item) => {
-                const rangeLabel = (itm) => ({
-                  '7 Days': t('dashboard.chart.7_days'),
-                  '30 Days': t('dashboard.chart.30_days'),
-                  '90 Days': t('dashboard.chart.90_days'),
-                  '180 Days': t('dashboard.chart.180_days'),
-                  '365 Days': t('dashboard.chart.365_days')
-                }[itm] || itm);
-                return (
-                  <button
-                    key={item}
-                    type="button"
-                    onClick={() => handleChartRangeChange(item)}
-                    className={`min-h-8 rounded-lg px-3 text-[11px] font-bold transition cursor-pointer ${
-                      chartRange === item
-                        ? 'bg-nexoraBrand text-white shadow-sm'
-                        : 'bg-nexoraSurfaceMuted dark:bg-luxuryCoal text-mutedGrey dark:text-slate-400 hover:text-inkBlue dark:hover:text-white hover:bg-slate-200'
-                    }`}
-                  >
-                    {item === 'Custom'
-                      ? (t('components.tips.tabs.TipsOverviewTab.custom'))
-                      : rangeLabel(item)}
-                  </button>
-                );
-              })}
-            </div>
-          </div>
-
-          {/* Custom Date Range Picker */}
-          {chartRange === 'Custom' && (
-            <div className="flex flex-wrap items-center justify-end gap-3 mb-6 border-t border-dashed border-nexoraRule dark:border-slate-800 pt-3">
-              <div className="flex items-center gap-1.5">
-                <label className="text-[10px] font-bold uppercase text-mutedGrey dark:text-slate-400 tracking-wider">
-                  {t('components.tips.tabs.TipsOverviewTab.from')}
-                </label>
-                <input
-                  type="date"
-                  value={chartStartDate}
-                  onChange={(e) => setChartStartDate(e.target.value)}
-                  max={chartEndDate}
-                  className="h-8 rounded border border-nexoraBorder dark:border-slate-700 px-2.5 text-xs font-semibold outline-none focus:border-nexoraBrand text-inkBlue dark:text-white bg-white dark:bg-luxuryBlack cursor-pointer"
-                />
-              </div>
-              <div className="flex items-center gap-1.5">
-                <label className="text-[10px] font-bold uppercase text-mutedGrey dark:text-slate-400 tracking-wider">
-                  {t('components.tips.tabs.TipsOverviewTab.to')}
-                </label>
-                <input
-                  type="date"
-                  value={chartEndDate}
-                  onChange={(e) => setChartEndDate(e.target.value)}
-                  min={chartStartDate}
-                  className="h-8 rounded border border-nexoraBorder dark:border-slate-700 px-2.5 text-xs font-semibold outline-none focus:border-nexoraBrand text-inkBlue dark:text-white bg-white dark:bg-luxuryBlack cursor-pointer"
-                />
-              </div>
-            </div>
-          )}
+          <h4 className="mb-6 text-sm font-black uppercase tracking-wider text-inkBlue dark:text-white">
+            {t('dashboard.tips.charts.weekly_title')}
+          </h4>
 
           <TipsTrendChart
             svgMetrics={svgMetrics}
@@ -200,7 +155,7 @@ export default function TipsOverviewTab({
                 <span className="text-xs font-bold text-mutedGrey dark:text-slate-400 uppercase tracking-widest">
                   {t('dashboard.tips.kpi.total_tips_circle')}
                 </span>
-                <span className="text-lg font-black text-inkBlue dark:text-white mt-0.5">{formatUSD(totalVolume)}</span>
+                <span className="text-lg font-black text-inkBlue dark:text-white mt-0.5">{formatUSD(donutTotal)}</span>
               </div>
             </div>
           </div>

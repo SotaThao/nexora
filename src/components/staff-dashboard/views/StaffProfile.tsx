@@ -3,7 +3,6 @@
 import {
   ArrowLeft,
   Camera,
-  Bell,
   ChevronRight,
   FileText,
   Languages,
@@ -20,15 +19,22 @@ import { useNotification } from "../../../contexts/NotificationContext";
 import { useStaffAccount } from "../../../contexts/StaffAccountContext";
 import { useUploadImage } from "../../../data/hooks/useMerchantSetup";
 import { useStaffProfileView } from "../../../data/hooks/useStaffProfileView";
+import {
+  useStaffBusinesses,
+  useUpdateStaffBusinessRole,
+} from "../../../data/hooks/useStaffSelf";
 import { logger } from "../../../utils/logger";
 import { formatMemberSinceDate } from "../../../utils/localDate";
+import { resolveStaffBusinessJobTitle } from "../../../utils/staffBusinessRole";
 import CountryCodeSelect, {
   formatNationalNumber,
   getDefaultDialCode,
   parsePhone,
 } from "../../CountryCodeSelect";
 import Tooltip from "../../ui/Tooltip";
+import RoleAtBusinessEditor from "../../RoleAtBusinessEditor";
 import { useStaffLinkedBusinesses } from "../hooks/useStaffLinkedBusinesses";
+import StaffKycOverview from "./StaffKycOverview";
 import StaffNotifications from "./StaffNotifications";
 
 const panel =
@@ -46,7 +52,6 @@ const profileSections = [
   "personal",
   "verification",
   "tax",
-  "notifications",
   "language",
   "privacy",
 ];
@@ -56,9 +61,9 @@ function ProfileMenuItem({ icon: Icon, label, sub = null, onClick = null }: any)
     <button
       type="button"
       onClick={onClick || undefined}
-      className="flex min-h-[44px] w-full items-center gap-3 rounded-lg px-2 text-left transition hover:bg-[#F8F7FF] active:scale-[0.99]"
+      className="flex min-h-[48px] w-full items-center gap-3 rounded-lg px-2 text-left transition hover:bg-[#F8F7FF] active:scale-[0.99]"
     >
-      <span className="grid h-8 w-8 shrink-0 place-items-center rounded-lg bg-[#F4F2FF] text-nexoraBrandDark">
+      <span className="grid h-7 w-7 shrink-0 place-items-center rounded-full bg-white text-slate-500">
         <Icon className="h-4 w-4" />
       </span>
       <span className="min-w-0 flex-1">
@@ -141,6 +146,8 @@ export default function StaffProfile() {
   const { staffMember, saveProfile, setBusinessDisplayName } =
     useStaffAccount();
   const { linkedBusinesses } = useStaffLinkedBusinesses();
+  const { refetch: refetchStaffBusinesses } = useStaffBusinesses();
+  const updateBusinessRoleMutation = useUpdateStaffBusinessRole();
   const { data: profileView, isLoading: isProfileLoading } =
     useStaffProfileView();
   const { onLogout } = useOutletContext<LooseObject>() || {};
@@ -373,11 +380,6 @@ export default function StaffProfile() {
                   status={kycStatusLabel}
                   verified={isKYCVerified}
                   onClick={() => openProfileSection("verification")}
-                />
-                <ProfileMenuItem
-                  icon={Bell}
-                  label={t("staff_dashboard.profile.menu_notification_preferences")}
-                  onClick={() => openProfileSection("notifications")}
                 />
                 <LanguageMenuItem
                   label={t("staff_dashboard.profile.menu_language")}
@@ -649,28 +651,89 @@ export default function StaffProfile() {
 
               {linkedBusinesses.length > 0 ? (
                 <section className={panel}>
-                  <h3 className="mb-3 text-base font-extrabold text-nexoraText">
-                    {t("staff_dashboard.profile.business_names")}
+                  <h3 className="mb-1 text-base font-extrabold text-nexoraText">
+                    {t("staff_dashboard.profile.business_settings")}
                   </h3>
-                  <div className="space-y-3">
-                    {linkedBusinesses.map((biz) => (
-                      <div key={biz.businessStaffLinkId}>
-                        <label className={labelCls}>{biz.businessName}</label>
-                        <input
-                          className={inputCls}
-                          value={biz.displayName}
-                          placeholder={t(
-                            "staff_dashboard.profile.ph_business_display_name",
-                          )}
-                          onChange={(e) =>
-                            setBusinessDisplayName(
-                              biz.businessStaffLinkId,
-                              e.target.value,
-                            )
-                          }
-                        />
-                      </div>
-                    ))}
+                  <p className="mb-4 text-xs leading-relaxed text-nexoraMuted">
+                    {t("staff_dashboard.profile.business_settings_desc")}
+                  </p>
+                  <div className="space-y-4">
+                    {linkedBusinesses.map((biz) => {
+                      const hasJobTitle = Boolean(biz.roleAtBusiness?.trim())
+
+                      return (
+                        <div
+                          key={biz.businessId}
+                          className="space-y-3 rounded-xl border border-nexoraBorder bg-nexoraCanvas/40 p-3"
+                        >
+                          <p className="text-sm font-extrabold text-nexoraText">
+                            {biz.businessName}
+                          </p>
+
+                          <div>
+                            <label className={labelCls}>
+                              {t("staff_dashboard.profile.business_display_name")}
+                            </label>
+                            <input
+                              className={inputCls}
+                              value={biz.displayName}
+                              placeholder={t(
+                                "staff_dashboard.profile.ph_business_display_name",
+                              )}
+                              onChange={(e) =>
+                                setBusinessDisplayName(
+                                  biz.businessStaffLinkId,
+                                  e.target.value,
+                                )
+                              }
+                            />
+                          </div>
+
+                          <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+                            <div className="min-w-0">
+                              <label className={labelCls}>
+                                {t("staff_dashboard.profile.business_job_title")}
+                              </label>
+                              <p
+                                className={`truncate text-sm ${
+                                  hasJobTitle
+                                    ? "font-semibold text-nexoraText"
+                                    : "italic text-nexoraMuted"
+                                }`}
+                              >
+                                {hasJobTitle
+                                  ? biz.roleAtBusiness
+                                  : t("staff_dashboard.profile.business_job_title_not_set")}
+                              </p>
+                            </div>
+                            <RoleAtBusinessEditor
+                              value={biz.roleAtBusiness}
+                              triggerLabel={t("staff_detail.role_set_action")}
+                              fieldLabel={t("staff_dashboard.profile.business_job_title")}
+                              helperText={t("staff_dashboard.profile.business_job_title_helper")}
+                              placeholder={t("staff_detail.role_placeholder")}
+                              onRefresh={async () => {
+                                const result = await refetchStaffBusinesses({ throwOnError: true })
+                                const item = result.data?.find(
+                                  (entry) => entry.businessId === biz.businessId,
+                                )
+                                return item ? resolveStaffBusinessJobTitle(item.roleAtBusiness) : ""
+                              }}
+                              onSave={async (roleAtBusiness) => {
+                                if (!biz.businessId?.trim()) {
+                                  throw new Error('MISSING_BUSINESS_ID')
+                                }
+                                const result = await updateBusinessRoleMutation.mutateAsync({
+                                  businessId: biz.businessId,
+                                  roleAtBusiness,
+                                })
+                                return { roleAtBusiness: result.roleAtBusiness }
+                              }}
+                            />
+                          </div>
+                        </div>
+                      )
+                    })}
                   </div>
                 </section>
               ) : null}
@@ -706,16 +769,6 @@ export default function StaffProfile() {
                       </div>
                     </div>
                   </section>
-                </>
-              ) : null}
-
-              {activeSection === "notifications" ? (
-                <>
-                  <ProfileSectionHeader
-                    title={t("staff_dashboard.profile.menu_notification_preferences")}
-                    onBack={closeProfileSection}
-                  />
-                  <StaffNotifications showPushPreferences={false} />
                 </>
               ) : null}
 

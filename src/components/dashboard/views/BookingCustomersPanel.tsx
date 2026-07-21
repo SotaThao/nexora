@@ -518,7 +518,7 @@ export default function BookingCustomersPanel() {
                   <span className="cust-field-error" aria-live="polite">{formErrors.name}</span>
                 ) : null}
               </label>
-              <label className="cust-field">
+              <label className="cust-field cust-field-full">
                 <span className="cust-field-label">{t(`${TK}.fieldEmail`)}</span>
                 <input
                   className={`booking-input ${formErrors.email ? 'has-error' : ''}`}
@@ -535,26 +535,28 @@ export default function BookingCustomersPanel() {
                   <span className="cust-field-error" aria-live="polite">{formErrors.email}</span>
                 ) : null}
               </label>
-              <label className="cust-field">
+              <label className="cust-field cust-field-full cust-field-birthday">
                 <span className="cust-field-label">{t(`${TK}.fieldBirthday`)}</span>
-                <input
-                  className={`booking-input ${formErrors.dateOfBirth ? 'has-error' : ''}`}
-                  type="date"
-                  value={draft.dateOfBirth}
-                  min={dobBounds.min}
-                  max={dobBounds.max}
-                  aria-invalid={Boolean(formErrors.dateOfBirth)}
-                  onChange={(event) => {
-                    const nextValue = event.target.value
-                    setDraft({ ...draft, dateOfBirth: nextValue })
-                    setFormErrors((prev) => ({
-                      ...prev,
-                      dateOfBirth: nextValue && !isValidDateOfBirth(nextValue, dobBounds)
-                        ? t(`${TK}.invalidBirthday`)
-                        : undefined,
-                    }))
-                  }}
-                />
+                <span className="cust-date-shell">
+                  <input
+                    className={`booking-input cust-date-input ${formErrors.dateOfBirth ? 'has-error' : ''}`}
+                    type="date"
+                    value={draft.dateOfBirth}
+                    min={dobBounds.min}
+                    max={dobBounds.max}
+                    aria-invalid={Boolean(formErrors.dateOfBirth)}
+                    onChange={(event) => {
+                      const nextValue = event.target.value
+                      setDraft({ ...draft, dateOfBirth: nextValue })
+                      setFormErrors((prev) => ({
+                        ...prev,
+                        dateOfBirth: nextValue && !isValidDateOfBirth(nextValue, dobBounds)
+                          ? t(`${TK}.invalidBirthday`)
+                          : undefined,
+                      }))
+                    }}
+                  />
+                </span>
                 {formErrors.dateOfBirth ? (
                   <span className="cust-field-error" aria-live="polite">{formErrors.dateOfBirth}</span>
                 ) : null}

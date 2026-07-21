@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from 'react'
+import React, { useEffect, useMemo, useState } from 'react'
 import { createPortal } from 'react-dom'
 import { useNavigate, useSearchParams } from 'react-router-dom'
 import {
@@ -36,6 +36,7 @@ import {
 import { formatNotificationDateTime } from './dashboard/utils'
 import QrImage from './ui/QrImage'
 import { formatMemberSinceDate } from '../utils/localDate'
+import { SettingsMobileProfileSection } from './settings/constants'
 
 const compactPanel =
   'rounded-lg border border-[#EEE9FF] bg-white p-2.5 shadow-[0_8px_18px_rgba(70,72,212,0.08)]'
@@ -234,7 +235,8 @@ export default function SettingsViewMobile({
   const { currentLanguage, setLanguage, t } = useTranslation()
   const navigate = useNavigate()
   const [searchParams] = useSearchParams()
-  const { logout } = useAuth()
+  const { logout, session } = useAuth()
+  const isBusinessAccount = session?.accountType === 'business'
   const form = useSettingsForm({
     setupData,
     hasKyb,
@@ -339,7 +341,9 @@ export default function SettingsViewMobile({
             <section className={`${compactPanel} divide-y divide-[#EEE9FF]`}>
               <MerchantProfileMenuItem
                 icon={UserCircle}
-                label={t('staff_dashboard.profile.menu_personal_information')}
+                label={isBusinessAccount
+                  ? t('components.settings.tabs.ProfileTab.businessInformation')
+                  : t('staff_dashboard.profile.menu_personal_information')}
                 onClick={() => openProfileSection('personal')}
               />
               <MerchantVerificationMenuItem
@@ -356,7 +360,7 @@ export default function SettingsViewMobile({
               <MerchantProfileMenuItem
                 icon={Bell}
                 label={t('staff_dashboard.profile.menu_notification_preferences')}
-                onClick={() => openProfileSection('notifications')}
+                onClick={() => openProfileSection(SettingsMobileProfileSection.Notifications)}
               />
               <MerchantLanguageMenuItem
                 label={t('staff_dashboard.profile.menu_language')}
@@ -384,7 +388,9 @@ export default function SettingsViewMobile({
         {form.activeTab === 'profile' && activeSection === 'personal' && (
           <>
           <MerchantProfileSectionHeader
-            title={t('staff_dashboard.profile.menu_personal_information')}
+            title={isBusinessAccount
+              ? t('components.settings.tabs.ProfileTab.businessInformation')
+              : t('staff_dashboard.profile.menu_personal_information')}
             onBack={closeProfileSection}
           />
           <ProfileTab
@@ -515,7 +521,7 @@ export default function SettingsViewMobile({
           </>
         )}
 
-        {form.activeTab === 'profile' && activeSection === 'notifications' && (
+        {form.activeTab === 'profile' && activeSection === SettingsMobileProfileSection.Notifications && (
           <>
             <MerchantProfileSectionHeader title={t('staff_dashboard.profile.menu_notification_preferences')} onBack={closeProfileSection} />
             <MerchantNotificationsContent />

@@ -72,6 +72,8 @@ export const errorCodeToI18nKey = {
   STAFF_DISPLAY_NAME_REQUIRED: 'errors.staff_display_name_required',
   STAFF_DISPLAY_NAME_TOO_SHORT: 'errors.staff_display_name_too_short',
   STAFF_DISPLAY_NAME_TOO_LONG: 'errors.staff_display_name_too_long',
+  STAFF_POSITION_REQUIRED: 'errors.staff_position_required',
+  STAFF_POSITION_TOO_LONG: 'errors.staff_position_too_long',
   STAFF_LIMIT_REACHED: 'errors.staff_limit_reached',
   LOCAL_STAFF_NOT_FOUND: 'errors.local_staff_not_found',
   LOCAL_STAFF_NOT_OWNED: 'errors.local_staff_not_owned',
@@ -135,6 +137,9 @@ export const errorCodeToI18nKey = {
 
   // Nexora Voice tenant
   VOICE_TENANT_NOT_FOUND: 'errors.voice_tenant_not_found',
+
+  // Nexora Voice tenant services
+  VOICE_TENANT_SERVICE_DURATION_INVALID: 'errors.voice_tenant_service_duration_invalid',
 }
 
 /**

@@ -22,6 +22,7 @@ export interface StaffMember {
   id?: string
   fullName?: string
   nickname?: string
+  nicknameAtBusiness?: string | null
   email?: string
   phone?: string
   isActive?: boolean
@@ -89,6 +90,7 @@ export interface PublicDirectPaymentMethod {
   type: string
   uiKey?: string
   accountInfo: string
+  accountName?: string | null
   imageUrl?: string | null
 }
 
@@ -190,6 +192,8 @@ export interface MerchantPaymentStats {
     confirmed: MerchantPaymentStatusBucket
     completed: MerchantPaymentStatusBucket
   }
+  paymentPending: MerchantPaymentStatusBucket
+  paymentCompleted: MerchantPaymentStatusBucket
   byPaymentMethod: MerchantPaymentMethodStat[]
 }
 
@@ -331,6 +335,7 @@ export interface StaffSearchResult {
 export interface StaffBusinessLink {
   businessId: string
   businessName: string
+  nicknameAtBusiness: string | null
   address: string | null
   city: string | null
   state: string | null
@@ -640,6 +645,10 @@ export interface EcosystemItem {
   name: string
   url: string
   logoUrl?: string | null
+  /** Whether this entry should show in the ecosystem dropdown list. */
+  isEcosystem?: boolean
+  /** API hint for "coming soon" display (UI may still derive from url/name). */
+  isComingSoon?: boolean
 }
 
 export interface EcosystemSignInResult {
@@ -679,6 +688,10 @@ export interface HomePageBannerSlide {
 export interface PayoutRecord {
   id: string
   payoutCode: string
+  /** Present on staff payout lists — identifies the business that issued the payout. */
+  businessId?: string
+  businessName?: string
+  businessLogoUrl?: string | null
   staffProfileId: string
   staffDisplayName: string
   staffCode: string
