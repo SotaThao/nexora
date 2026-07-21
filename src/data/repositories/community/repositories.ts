@@ -159,6 +159,8 @@ export interface NotificationsRepository {
   markAllRead(): Promise<void>
   /** Filters current-user notifications by producer type. */
   listByType(type: NotificationType, query?: KeysetPageRequest): Promise<KeysetPage<NotificationDto>>
+  /** Maps a Postgres Changes INSERT row at the repository boundary. */
+  fromRealtime(row: unknown): NotificationDto | null
 }
 
 export interface ProfilesRepository {
@@ -276,6 +278,15 @@ type MessageRow = {
   created_at: string
   updated_at: string
   sender?: ProfileRow | null
+}
+
+type NotificationRow = {
+  id: string
+  user_id: string
+  type: NotificationType
+  payload: unknown
+  read_at: string | null
+  created_at: string
 }
 
 type InvitePreviewRow = {
@@ -566,6 +577,19 @@ function mapMessage(row: MessageRow): MessageDto {
   }
 }
 
+function mapNotification(row: NotificationRow): NotificationDto {
+  return {
+    id: row.id,
+    userId: row.user_id,
+    type: row.type,
+    payload: row.payload && typeof row.payload === 'object' && !Array.isArray(row.payload)
+      ? row.payload as Record<string, unknown>
+      : {},
+    readAt: row.read_at,
+    createdAt: row.created_at,
+  }
+}
+
 function isRealtimeMessageRow(row: unknown): row is MessageRow {
   if (!row || typeof row !== 'object') return false
   const value = row as Record<string, unknown>
@@ -576,6 +600,19 @@ function isRealtimeMessageRow(row: unknown): row is MessageRow {
     && (typeof value.reply_to_message_id === 'string' || value.reply_to_message_id === null)
     && typeof value.created_at === 'string'
     && typeof value.updated_at === 'string'
+}
+
+function isRealtimeNotificationRow(row: unknown): row is NotificationRow {
+  if (!row || typeof row !== 'object') return false
+  const value = row as Record<string, unknown>
+  return typeof value.id === 'string'
+    && typeof value.user_id === 'string'
+    && typeof value.type === 'string'
+    && value.payload !== null
+    && typeof value.payload === 'object'
+    && !Array.isArray(value.payload)
+    && (typeof value.read_at === 'string' || value.read_at === null)
+    && typeof value.created_at === 'string'
 }
 
 async function sha256(value: string): Promise<string> {
@@ -1049,11 +1086,61 @@ export function createReportsRepository(): ReportsRepository {
 
 export function createNotificationsRepository(): NotificationsRepository {
   return {
-    list: () => notImplemented('notificationsRepository', 'list'),
-    getUnreadCount: () => notImplemented('notificationsRepository', 'getUnreadCount'),
-    markRead: () => notImplemented('notificationsRepository', 'markRead'),
-    markAllRead: () => notImplemented('notificationsRepository', 'markAllRead'),
-    listByType: () => notImplemented('notificationsRepository', 'listByType'),
+    async list(query) {
+      const limit = pageSize(query)
+      const filter = cursorFilter(query?.cursor, query)
+      let request = supabaseClient
+        .from('notifications')
+        .select('*')
+        .order('created_at', { ascending: false })
+        .order('id', { ascending: false })
+      if (filter) request = request.or(filter)
+      const { data, error } = await request.limit(limit + 1)
+      throwIfSupabaseError(error)
+      return mapPage(data as NotificationRow[] | null, limit, mapNotification)
+    },
+    async getUnreadCount() {
+      const { count, error } = await supabaseClient
+        .from('notifications')
+        .select('*', { count: 'exact', head: true })
+        .is('read_at', null)
+      throwIfSupabaseError(error)
+      return count ?? 0
+    },
+    async markRead(notificationId) {
+      const { data, error } = await supabaseClient
+        .from('notifications')
+        .update({ read_at: new Date().toISOString() })
+        .eq('id', notificationId)
+        .select('*')
+        .single()
+      throwIfSupabaseError(error)
+      return mapNotification(data as NotificationRow)
+    },
+    async markAllRead() {
+      const { error } = await supabaseClient
+        .from('notifications')
+        .update({ read_at: new Date().toISOString() })
+        .is('read_at', null)
+      throwIfSupabaseError(error)
+    },
+    async listByType(type, query) {
+      const limit = pageSize(query)
+      const filter = cursorFilter(query?.cursor, query)
+      let request = supabaseClient
+        .from('notifications')
+        .select('*')
+        .eq('type', type)
+        .order('created_at', { ascending: false })
+        .order('id', { ascending: false })
+      if (filter) request = request.or(filter)
+      const { data, error } = await request.limit(limit + 1)
+      throwIfSupabaseError(error)
+      return mapPage(data as NotificationRow[] | null, limit, mapNotification)
+    },
+    fromRealtime(row) {
+      return isRealtimeNotificationRow(row) ? mapNotification(row) : null
+    },
   }
 }
 

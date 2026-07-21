@@ -39,6 +39,7 @@ import {
 } from '../../data/hooks/useCommunity'
 import DemoStaffShell from './demo/DemoStaffShell'
 import { CommunityAuthProvider, CommunityPersonaSwitcher, useCommunityAuth } from './CommunityAuth'
+import { CommunityNotificationBell, CommunityNotificationsProvider } from './CommunityNotifications'
 import { CommunityPostComposer, CommunityPostMedia } from './CommunityPostMedia'
 
 const cardClass = 'overflow-hidden rounded-2xl border border-nexoraBorder bg-nexoraSurface shadow-nexora-card'
@@ -200,7 +201,22 @@ export function CommunityHome() {
   const [composerCommunityId, setComposerCommunityId] = useState<string | null>(null)
   const ringCommunities = myCommunities.data?.items.length ? myCommunities.data.items : (communities.data?.items ?? [])
   const feedCommunities = (myCommunities.data?.items.length ? myCommunities.data.items : communities.data?.items ?? []).slice(0, 3)
-  return <CommunityFrame><header className="flex items-center justify-between"><div><p className="text-xs font-bold uppercase tracking-[0.12em] text-nexoraBrand">Nexora</p><h1 className="text-xl font-extrabold text-nexoraText">Cộng đồng</h1></div><Link to="/community/new" className={`inline-flex min-h-11 items-center gap-2 rounded-xl px-3 text-sm font-extrabold text-white ${gradientClass}`}><Plus className="h-4 w-4" aria-hidden="true" />Tạo nhóm</Link></header>{isLoading || myCommunities.isLoading || communities.isLoading ? <LoadingState rows={4} /> : null}{myCommunities.error ? <ErrorState error={myCommunities.error} onRetry={() => void myCommunities.refetch()} /> : null}{communities.error ? <ErrorState error={communities.error} onRetry={() => void communities.refetch()} /> : null}{ringCommunities.length ? <CommunityStoryRings communities={ringCommunities} /> : <EmptyState title="Chào mừng đến Community">Chọn một persona demo để vào nhóm hoặc tạo nhóm đầu tiên của bạn.</EmptyState>}{composerCommunityId ? <PostComposer communityId={composerCommunityId} onClose={() => setComposerCommunityId(null)} /> : null}{feedCommunities.map((community, index) => <div key={community.id}>{index === 0 ? <QuickComposer communityId={community.id} onOpen={() => setComposerCommunityId(community.id)} /> : null}<CommunityFeed community={community} /></div>)}<button type="button" onClick={() => setSheetOpen(true)} aria-label="Tạo mới" className={`fixed bottom-24 right-5 z-40 grid h-14 w-14 place-items-center rounded-full text-white shadow-xl lg:bottom-7 ${gradientClass}`}><Plus className="h-6 w-6" aria-hidden="true" /></button>{sheetOpen ? <CreateSheet onClose={() => setSheetOpen(false)} onPost={() => { setComposerCommunityId(feedCommunities[0]?.id ?? null); setSheetOpen(false) }} onGroup={() => setSheetOpen(false)} /> : null}</CommunityFrame>
+  return (
+    <CommunityFrame>
+      <header className="flex items-center justify-between gap-3">
+        <div><p className="text-xs font-bold uppercase tracking-[0.12em] text-nexoraBrand">Nexora</p><h1 className="text-xl font-extrabold text-nexoraText">Cộng đồng</h1></div>
+        <div className="flex items-center gap-2"><CommunityNotificationBell /><Link to="/community/new" className={`inline-flex min-h-11 items-center gap-2 rounded-xl px-3 text-sm font-extrabold text-white ${gradientClass}`}><Plus className="h-4 w-4" aria-hidden="true" />Tạo nhóm</Link></div>
+      </header>
+      {isLoading || myCommunities.isLoading || communities.isLoading ? <LoadingState rows={4} /> : null}
+      {myCommunities.error ? <ErrorState error={myCommunities.error} onRetry={() => void myCommunities.refetch()} /> : null}
+      {communities.error ? <ErrorState error={communities.error} onRetry={() => void communities.refetch()} /> : null}
+      {ringCommunities.length ? <CommunityStoryRings communities={ringCommunities} /> : <EmptyState title="Chào mừng đến Community">Chọn một persona demo để vào nhóm hoặc tạo nhóm đầu tiên của bạn.</EmptyState>}
+      {composerCommunityId ? <PostComposer communityId={composerCommunityId} onClose={() => setComposerCommunityId(null)} /> : null}
+      {feedCommunities.map((community, index) => <div key={community.id}>{index === 0 ? <QuickComposer communityId={community.id} onOpen={() => setComposerCommunityId(community.id)} /> : null}<CommunityFeed community={community} /></div>)}
+      <button type="button" onClick={() => setSheetOpen(true)} aria-label="Tạo mới" className={`fixed bottom-24 right-5 z-40 grid h-14 w-14 place-items-center rounded-full text-white shadow-xl lg:bottom-7 ${gradientClass}`}><Plus className="h-6 w-6" aria-hidden="true" /></button>
+      {sheetOpen ? <CreateSheet onClose={() => setSheetOpen(false)} onPost={() => { setComposerCommunityId(feedCommunities[0]?.id ?? null); setSheetOpen(false) }} onGroup={() => setSheetOpen(false)} /> : null}
+    </CommunityFrame>
+  )
 }
 
 function MemberList({ members, canModerate, communityId }: { members: CommunityMemberDto[]; canModerate: boolean; communityId: string }) {
@@ -303,5 +319,5 @@ function CommunityAuthGate() {
 }
 
 export function CommunityRouteRoot() {
-  return <CommunityAuthProvider><CommunityAuthGate /></CommunityAuthProvider>
+  return <CommunityAuthProvider><CommunityNotificationsProvider><CommunityAuthGate /></CommunityNotificationsProvider></CommunityAuthProvider>
 }
