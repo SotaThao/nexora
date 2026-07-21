@@ -1,5 +1,5 @@
 import { getWebUrlOrigin } from './webUrlBase'
-import { storage } from './storage'
+import { storage, STORAGE_PREFIX } from './storage'
 
 const REF_CODE_KEY = 'referral_ref_code'
 const STAFF_SHARE_CODE_KEY = 'referral_staff_share_code'
@@ -22,27 +22,30 @@ export function legToApiValue(leg: Leg): 'Left' | 'Right' {
 /** Used where a leg is needed but there's no picker UI (e.g. the merchant's own referral link). */
 export const DEFAULT_LEG: Leg = 'left'
 
+/** sessionStorage (not the shared localStorage-backed `storage`) so the ref code is
+ * forgotten once the tab closes, instead of leaking into unrelated future visits. */
 export function saveRefCode(code: string) {
   const trimmed = code.trim()
   if (trimmed) {
-    storage.setItem(REF_CODE_KEY, trimmed)
+    sessionStorage.setItem(STORAGE_PREFIX + REF_CODE_KEY, trimmed)
   }
 }
 
 export function getSavedRefCode(): string {
-  return storage.getItem(REF_CODE_KEY) || ''
+  return sessionStorage.getItem(STORAGE_PREFIX + REF_CODE_KEY) || ''
 }
 
-/** Persist the chosen binary tree side ('left' | 'right') from a referral link's ?leg= param. */
+/** Persist the chosen binary tree side ('left' | 'right') from a referral link's ?leg= param.
+ * sessionStorage-scoped for the same reason as saveRefCode above. */
 export function saveLeg(leg: string) {
   const trimmed = leg.trim().toLowerCase()
   if (isValidLeg(trimmed)) {
-    storage.setItem(LEG_KEY, trimmed)
+    sessionStorage.setItem(STORAGE_PREFIX + LEG_KEY, trimmed)
   }
 }
 
 export function getSavedLeg(): string {
-  return storage.getItem(LEG_KEY) || ''
+  return sessionStorage.getItem(STORAGE_PREFIX + LEG_KEY) || ''
 }
 
 /** Persist staff ID from a shared personal QR link (/?staff=) for signup attribution. */

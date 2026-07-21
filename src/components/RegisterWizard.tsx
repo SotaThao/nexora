@@ -109,7 +109,6 @@ export default function RegisterWizard() {
     editAccountName, setEditAccountName,
     isCapturing, modalError, setModalError,
     savePayoutAccount, handleModalImagePick, handleModalTakePhoto, handleModalClearQr,
-    initialRefCode,
   } = form
 
 
@@ -181,7 +180,7 @@ export default function RegisterWizard() {
         {/* Main Card container */}
         <div className="bg-white rounded-2xl border border-nexoraBorder shadow-premium overflow-hidden transition-all duration-500">
           {currentStep === 0 && <StepRoleSelect {...form} />}
-          {currentStep === 1 && <StepCredentials {...form} refCodeReadOnly={!!initialRefCode} />}
+          {currentStep === 1 && <StepCredentials {...form} refCodeReadOnly={!!urlRef} />}
           {currentStep === 2 && <StepOtpVerify {...form} />}
         </div>
       </div>
