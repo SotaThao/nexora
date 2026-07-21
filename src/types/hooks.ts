@@ -45,9 +45,20 @@ export interface SetMerchantStaffNicknameVars {
   nickname: string | null
 }
 
+export interface UpdateMerchantStaffRoleVars {
+  staffLinkId: string
+  staffCode: string
+  roleAtBusiness: string
+}
+
 export interface SetStaffBusinessNicknameVars {
   businessId: string
   nickname: string | null
+}
+
+export interface UpdateStaffBusinessRoleVars {
+  businessId: string
+  roleAtBusiness: string
 }
 
 export interface DownloadTouchpointQrVars {

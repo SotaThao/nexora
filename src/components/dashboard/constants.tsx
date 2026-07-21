@@ -118,6 +118,66 @@ export function buildDashboardMenuPath(menuId: string): string {
     : `${DASHBOARD_ROOT_PATH}/${menuId}`
 }
 
+export const DASHBOARD_REPORTS_PATH = buildDashboardMenuPath(DASHBOARD_MENU_ID.reports)
+export const DASHBOARD_TIPS_PATH = buildDashboardMenuPath(DASHBOARD_MENU_ID.tips)
+export const DASHBOARD_SETTINGS_BASE_PATH = `${DASHBOARD_ROOT_PATH}/settings`
+
+export const DASHBOARD_REPORTS_TAB = {
+  tips: 'tips',
+  directPayments: 'direct_payments',
+} as const
+
+export const DASHBOARD_TIPS_TAB = {
+  savings: 'savings',
+  payouts: 'payouts',
+} as const
+
+export const DASHBOARD_SETTINGS_QUERY_TAB = {
+  payout: 'payout',
+} as const
+
+type DashboardReportsQuery = {
+  status?: string
+  tab?: string
+  dateFrom?: string
+  dateTo?: string
+  transactionId?: string
+  paymentId?: string
+  date?: string
+}
+
+function withQuery(path: string, query: Record<string, string | undefined | null>): string {
+  const params = new URLSearchParams()
+  for (const [key, value] of Object.entries(query)) {
+    if (value != null && value !== '') params.set(key, value)
+  }
+  const qs = params.toString()
+  return qs ? `${path}?${qs}` : path
+}
+
+/** `/dashboard/reports` with optional query (status, tab, date range, ids). */
+export function buildDashboardReportsPath(query: DashboardReportsQuery = {}): string {
+  return withQuery(DASHBOARD_REPORTS_PATH, {
+    status: query.status,
+    tab: query.tab,
+    dateFrom: query.dateFrom,
+    dateTo: query.dateTo,
+    transactionId: query.transactionId,
+    paymentId: query.paymentId,
+    date: query.date,
+  })
+}
+
+/** `/dashboard/tips` with optional tab. */
+export function buildDashboardTipsPath(query: { tab?: string } = {}): string {
+  return withQuery(DASHBOARD_TIPS_PATH, { tab: query.tab })
+}
+
+/** `/dashboard/settings?tab=…` (query-tab form used by payout setup). */
+export function buildDashboardSettingsQueryPath(tab: string): string {
+  return withQuery(DASHBOARD_SETTINGS_BASE_PATH, { tab })
+}
+
 export const MENU_ITEMS = [
   { id: DASHBOARD_MENU_ID.overview, label: 'Dashboard', icon: LayoutDashboard },
   { id: DASHBOARD_MENU_ID.staff, label: 'Staff', icon: Users },

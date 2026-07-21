@@ -67,7 +67,7 @@ export default function SetupWizard() {
     isNameLocked, isAddressLocked, isPhoneLocked, isWebsiteLocked, isFeedbackEmailLocked,
     isStepSaving,
     businessInfo, setBusinessInfo,
-    merchantPaymentMethods,
+    supportedPaymentMethods,
     reviewLinks, setReviewLinks,
     staffList,
     newStaff, setNewStaff,
@@ -234,7 +234,7 @@ export default function SetupWizard() {
                 setEditingTpType={setEditingTpType}
                 errors={errors}
                 businessInfo={businessInfo}
-                merchantPaymentMethods={merchantPaymentMethods}
+                supportedPaymentMethods={supportedPaymentMethods}
                 handleAddStaff={handleAddStaff}
                 handleToggleWallet={handleToggleWallet}
                 openPayoutSetup={openPayoutSetup}
@@ -315,7 +315,6 @@ export default function SetupWizard() {
       <PayoutSetupModal
         open={payoutSetupOpen}
         walletKey={payoutSetupWallet}
-        staffName={businessInfo.name || 'Business Name'}
         initialValue={tempPayoutValues.value}
         initialQrCode={tempPayoutValues.qrCode}
         initialAccountName={tempPayoutValues.accountName || ''}

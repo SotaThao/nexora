@@ -7,11 +7,10 @@ import {
   useCompleteOnboarding,
   useMerchantSetup,
 } from '../../../data/hooks/useMerchantSetup'
+import { useSupportedPaymentMethods } from '../../../data/hooks/useSupportedPaymentMethods'
 import {
-  useMerchantPaymentMethods,
   useSaveMerchantPayoutConfigs
 } from '../../../data/hooks/useMerchantPaymentMethods'
-import { payoutTypeToUiKey } from '../../../data/paymentMethodTypes'
 import { useCreateTouchpoint } from '../../../data/hooks/useMerchantTouchpoints'
 import {
   DEMO_BUSINESS,
@@ -146,30 +145,10 @@ export default function useSetupWizard({
   const isWebsiteLocked = isSsoLocked || Boolean(existingBusiness?.website)
   const isFeedbackEmailLocked = isSsoLocked || Boolean(existingFeedbackEmail)
 
-  // Payment methods are pre-seeded after the business exists (created at step 1 → 2).
-  const merchantPaymentMethodsQuery = useMerchantPaymentMethods({
-    enabled: currentStep >= 2 && !!(hasKyb || businessInfo.businessId),
+  // Supported payout method catalog for step 2 (new accounts — no merchant configs yet).
+  const supportedPaymentMethodsQuery = useSupportedPaymentMethods({
+    enabled: currentStep >= 2,
   })
-
-  // Prefill payout toggles from GET /api/v1/merchant/payment-methods without
-  // clobbering values the user already entered in this session.
-  useEffect(() => {
-    const methods = merchantPaymentMethodsQuery.data
-    if (!methods?.length) return
-    setBusinessInfo(prev => {
-      const configs = { ...(prev.payoutConfigs || DEFAULT_PAYOUT_CONFIGS) }
-      let changed = false
-      for (const method of methods) {
-        const key = payoutTypeToUiKey(method.type || '')
-        const existing = configs[key]
-        if (!existing || existing.value.trim()) continue
-        if (!method.accountInfo && !method.isActive) continue
-        configs[key] = { ...existing, enabled: !!method.isActive, value: method.accountInfo || '' }
-        changed = true
-      }
-      return changed ? { ...prev, payoutConfigs: configs } : prev
-    })
-  }, [merchantPaymentMethodsQuery.data])
 
   // Translate default/personal touchpoints dynamically when language toggles
   useEffect(() => {
@@ -613,7 +592,7 @@ export default function useSetupWizard({
     // business
     businessInfo,
     setBusinessInfo,
-    merchantPaymentMethods: merchantPaymentMethodsQuery.data ?? [],
+    supportedPaymentMethods: supportedPaymentMethodsQuery.data ?? [],
     // review links
     reviewLinks,
     setReviewLinks,

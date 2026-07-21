@@ -89,10 +89,6 @@ function getBusinessStatusLabel(biz: StaffBusinessTipQr): string {
   return biz.linkStatusLabel || biz.linkStatus || 'Active'
 }
 
-function getBusinessRoleLabel(biz: StaffBusinessTipQr): string {
-  return biz.roleAtBusiness?.trim() || biz.roleLabel || 'Staff'
-}
-
 function isBusinessActive(biz: StaffBusinessTipQr): boolean {
   const label = getBusinessStatusLabel(biz).toLowerCase()
   return label === 'active' && Boolean(biz.tipUrl) && !biz.tipLinkIncomplete
