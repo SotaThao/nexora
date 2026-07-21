@@ -210,7 +210,6 @@ export default function StaffMySalons() {
 
     return notifications.flatMap((notification) => {
       if (notification.type !== 'StaffLinkRequest') return []
-      if (notification.read || notification.isRead) return []
 
       const linkId = getStaffLinkRequestId(notification)
       if (!linkId || seenLinkIds.has(linkId)) return []
