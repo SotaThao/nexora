@@ -31,6 +31,9 @@ export function useDashboardNavigation() {
   const [isBookingHubMobileExpanded, setIsBookingHubMobileExpanded] = useState(
     activeMenu === DASHBOARD_MENU.BookingHub,
   )
+  // POS has no DASHBOARD_MENU.* constant — 'pos' is used as a raw id throughout
+  // (matching DashboardSidebar's desktop equivalent, isPosExpanded).
+  const [isPosMobileExpanded, setIsPosMobileExpanded] = useState(activeMenu === 'pos')
   const [settingsTab, setSettingsTab] = useState('profile')
   const [isProfileExpanded, setIsProfileExpanded] = useState(false)
 
@@ -41,6 +44,7 @@ export function useDashboardNavigation() {
     setIsTaxIqMobileExpanded(activeMenu === DASHBOARD_MENU.TaxIq)
     setIsTouchpointsMobileExpanded(activeMenu === DASHBOARD_MENU.Touchpoints)
     setIsBookingHubMobileExpanded(activeMenu === DASHBOARD_MENU.BookingHub)
+    setIsPosMobileExpanded(activeMenu === 'pos')
   }, [isMobileMenuOpen, activeMenu, isPaymentsPayoutsActive])
   useEffect(() => {
     if (isPaymentsPayoutsActive) {
@@ -48,6 +52,7 @@ export function useDashboardNavigation() {
       setIsTouchpointsMobileExpanded(false)
       setIsTaxIqMobileExpanded(false)
       setIsBookingHubMobileExpanded(false)
+      setIsPosMobileExpanded(false)
     }
     if (activeMenu === DASHBOARD_MENU.BookingHub) {
       setIsBookingHubMobileExpanded(true)
@@ -92,6 +97,8 @@ export function useDashboardNavigation() {
     setIsTouchpointsMobileExpanded,
     isBookingHubMobileExpanded,
     setIsBookingHubMobileExpanded,
+    isPosMobileExpanded,
+    setIsPosMobileExpanded,
     settingsTab,
     setSettingsTab,
     isProfileExpanded,

@@ -44,6 +44,17 @@ export function useUpdateStaffPosContractType() {
   })
 }
 
+export function useSetStaffPosStatus() {
+  const queryClient = useQueryClient()
+  return useMutation<boolean, Error, { businessStaffLinkId: string; status: string }>({
+    mutationFn: ({ businessStaffLinkId, status }) =>
+      posStaffProfileRepository.setStaffPosStatus(businessStaffLinkId, status),
+    onSuccess: (_, { businessStaffLinkId }) => {
+      queryClient.invalidateQueries({ queryKey: qk.merchantPosStaffProfile(businessStaffLinkId) })
+    },
+  })
+}
+
 export function useStaffServiceAssignments(businessStaffLinkId: string | undefined) {
   const auth = useContext(AuthContext)
   const isOwner = auth?.status === 'authenticated' && auth?.session?.role === 'owner'

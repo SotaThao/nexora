@@ -39,6 +39,13 @@ export function createPosStaffProfileRepository(client: HttpClient = httpClient)
       )
     },
 
+    async setStaffPosStatus(businessStaffLinkId: string, status: string): Promise<boolean> {
+      return await client.put<boolean>(
+        `/api/v1/merchant/pos/staff-profiles/${encodeURIComponent(businessStaffLinkId)}/status`,
+        { status },
+      )
+    },
+
     async getStaffServiceAssignments(businessStaffLinkId: string): Promise<string[]> {
       return await client.get<string[]>(
         `/api/v1/merchant/pos/staff-profiles/${encodeURIComponent(businessStaffLinkId)}/services`,

@@ -1,6 +1,6 @@
 /**
- * posTurnBoardRepository — POS Merchant Ops: Turn Board Assign & Break (US-13).
- * businessId is an explicit param on every call, same as posTicketsRepository —
+ * posTurnBoardRepository — POS Merchant Ops: Turn Board Assign (US-13).
+ * businessId is an explicit param on every call, same as posOrdersRepository —
  * a Staff caller may be linked to more than one business.
  */
 import httpClient from '../../lib/httpClient'
@@ -15,17 +15,6 @@ export function createPosTurnBoardRepository(client: HttpClient = httpClient) {
         `/api/v1/merchant/pos/${businessId}/turn-board`,
       )
       return res ?? []
-    },
-
-    async setStaffBreakStatus(
-      businessId: string,
-      posStaffProfileId: string,
-      isBreak: boolean,
-    ): Promise<boolean> {
-      return await client.put<boolean>(
-        `/api/v1/merchant/pos/${businessId}/turn-board/${posStaffProfileId}/break-status`,
-        { isBreak },
-      )
     },
   }
 }

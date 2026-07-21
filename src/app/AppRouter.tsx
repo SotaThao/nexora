@@ -27,7 +27,7 @@ import {
   TouchpointsRoute,
   TaxIqOverviewRoute, TaxIqDeductionsRoute, TaxIqIncomeRoute, TaxIqReceiptsRoute, TaxIqEquipmentRoute,
   TaxIqPayrollRoute, TaxIqRemindersRoute, TaxIqCpaAccessRoute, TaxIqExportRoute,
-  PosGeneralSettingsRoute, PosBusinessHoursRoute, PosRolesRoute, PosCategoriesRoute, PosServicesRoute, PosProductsRoute,
+  PosGeneralSettingsRoute, PosRolesRoute, PosCategoriesRoute, PosServicesRoute, PosProductsRoute,
   PosStaffProfileRoute, PosFrontDeskRoute
 } from "../components/dashboard/routes";
 import { DASHBOARD_MENU_ID } from "../components/dashboard/constants";
@@ -275,7 +275,6 @@ export default function AppRouter() {
             <Route path={DASHBOARD_MENU_ID.productManagement} element={<ProductManagementRoute />} />
             <Route path="analytics" element={<AnalyticsRoute />} />
             <Route path="pos" element={<PosGeneralSettingsRoute />} />
-            <Route path="pos/business-hours" element={<PosBusinessHoursRoute />} />
             <Route path="pos/roles" element={<PosRolesRoute />} />
             <Route path="pos/categories" element={<PosCategoriesRoute />} />
             <Route path="pos/services" element={<PosServicesRoute />} />

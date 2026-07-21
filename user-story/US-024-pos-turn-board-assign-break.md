@@ -85,6 +85,16 @@ Nguồn: `docs/plan/tasks/pos/US-13-pos-turn-board-assign-break.md` (backend rep
 - [ ] Test theo 3 layer (skill feature-focused-tester): L1 UI / L2 data boundary / L3 flow
 - [ ] Cập nhật trạng thái file này + link TC
 
+## Amendment (2026-07-21) — Break xoá hoàn toàn, thay bằng Staff Status
+
+Backend (`vlink-nexora`) tách "trạng thái nhân viên đi làm/off/lock" (mới: `PosStaffProfile.Status`, enum `Active/Off/Locked`) ra khỏi "đang phục vụ khách" (suy ra từ `PosOrderItem`, không còn cache trên staff). Hệ quả cho story này:
+
+- **`PosStationStatus.Break` bị xoá hoàn toàn** — không còn khái niệm "nghỉ giải lao trong ca" ở tầng station. `SetStaffBreakStatusCommand` và route `PUT .../turn-board/{id}/break-status` đã bị xoá khỏi backend.
+- FE đã gỡ: nút `Start break`/`End break` khỏi `PosFrontDeskView.tsx`, `setStaffBreakStatus`/`useSetStaffBreakStatus` khỏi `posTurnBoard.ts`/`usePosTurnBoard.ts`, key `stationStatus.Break`/`startBreakButton`/`endBreakButton` khỏi cả 2 locale. Card `currentStatus` trên Turn Board giờ chỉ còn 2 giá trị: `Empty`/`InService`.
+- Thay vào đó, **Status (Active/Off/Locked) được set từ màn Staff Profile** (`PosStaffProfileView.tsx`, US-019/US-020), không phải từ Turn Board — vì đây là thuộc tính nhân viên (đi làm hay không), không phải trạng thái trạm tức thời. Backend chặn set Off/Locked khi thợ đang có `PosOrderItem` chưa `CompletedAt` (lỗi `POS_STAFF_CANNOT_CHANGE_STATUS_WHILE_IN_SERVICE`). Chỉ thợ `Status = Active` mới xuất hiện trên Turn Board.
+- **API Mapping ở trên đã lỗi thời** (route `.../tickets/{ticketId}/assign` là tên cũ trước refactor US-026 → nay là `.../orders/{orderId}/services/{serviceLineId}/assign`) — xem `US-026-pos-order-refactor.md` cho contract hiện hành; không sửa lại bảng cũ ở đây để giữ lịch sử, chỉ note tại đây.
+- Verify: `npx tsc --noEmit` và `npx vite build --mode production` chạy lại sau khi gỡ Break — xem kết quả ở cuối phiên amendment này.
+
 ## Ghi chú phiên thực thi
 
 - **4 error code mới của US-13 (`STATION_NOT_EMPTY`, `TICKET_NOT_WAITING_FOR_ASSIGN`, `STAFF_ALREADY_IN_BREAK`, `STAFF_NOT_IN_BREAK`) không được thêm vào `errorCodeToI18nKey`** — nhất quán với việc US-023 cũng không map các `POS_TICKET_*` code (fallback `errors.unknown_error`). Nếu sau này cần thông báo lỗi rõ ràng hơn cho 2 ticket này, phải bổ sung cả 2 file cùng lúc (backend đã đặt tên code không có prefix `POS_`, khác với phần còn lại của `DomainErrorCode.Pos`).

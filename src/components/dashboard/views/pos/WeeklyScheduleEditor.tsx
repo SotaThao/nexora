@@ -1,9 +1,8 @@
 // WeeklyScheduleEditor — shared presentational "7 rows x day" editor (toggle
-// working/off + start/end time), generalized from the day-row UI
-// PosBusinessHoursView (US-02) built first for the business's own hours.
-// PosBusinessHoursView itself is deliberately left untouched (already
-// integrated/tested for US-014) — only new callers (Staff Weekly Schedule,
-// US-09) use this shared version, to avoid regressing that screen.
+// working/off + start/end time), generalized from the day-row UI the
+// Business Hours section (now part of PosGeneralSettingsView, US-014/US-02)
+// built first for the business's own hours. Only new callers (Staff Weekly
+// Schedule, US-09) use this shared version, to avoid regressing that screen.
 import ToggleSwitch from '../../../ui/ToggleSwitch'
 
 export interface WeeklyScheduleEditorDay {

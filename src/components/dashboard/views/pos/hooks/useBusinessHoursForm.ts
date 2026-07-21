@@ -1,6 +1,7 @@
-// useBusinessHoursForm — POS > Business Hours edit state + save mutation
-// (US-014). Lives under POS now instead of the general Settings hook, per the
-// decision to move Business Hours out of Settings and into its own POS section.
+// useBusinessHoursForm — POS > General Settings > Business Hours edit state +
+// save mutation (US-014). Lives under POS now instead of the general Settings
+// hook, per the decision to move Business Hours out of Settings and into POS
+// (originally its own POS screen, later merged into PosGeneralSettingsView).
 //
 // Unlike Business Info, Business Hours is operational data with no KYB
 // significance — POS Owner Setup features work regardless of KYB status — so

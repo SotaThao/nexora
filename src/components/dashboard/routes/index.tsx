@@ -34,7 +34,6 @@ import TaxRemindersView from '../views/taxiq/TaxRemindersView'
 import PayoutDisputeCenterView from '../views/taxiq/PayoutDisputeCenterView'
 import CpaAccessSettingsView from '../views/taxiq/CpaAccessSettingsView'
 import PosGeneralSettingsView from '../views/pos/PosGeneralSettingsView'
-import PosBusinessHoursView from '../views/pos/PosBusinessHoursView'
 import PosRolesView from '../views/pos/PosRolesView'
 import PosCategoriesView from '../views/pos/PosCategoriesView'
 import PosServicesView from '../views/pos/PosServicesView'
@@ -377,17 +376,14 @@ export function SettingsRoute() {
   )
 }
 
-// POS Owner Setup — sidebar group (US-014). Both screens are gated by the same
-// KYB-editability rule as general Settings, so they take verificationStatus
-// from the same outlet context as SettingsRoute above.
+// POS Owner Setup — sidebar group (US-014). Business Info and Business Hours
+// are gated by the same KYB-editability rule as general Settings, so this
+// screen takes verificationStatus from the same outlet context as
+// SettingsRoute above. Business Hours was previously its own route
+// (PosBusinessHoursRoute, /pos/business-hours) — merged into this screen.
 export function PosGeneralSettingsRoute() {
   const ctx = useOutletContext<LooseObject>()
   return <PosGeneralSettingsView verificationStatus={ctx.verificationStatus} />
-}
-
-export function PosBusinessHoursRoute() {
-  const ctx = useOutletContext<LooseObject>()
-  return <PosBusinessHoursView verificationStatus={ctx.verificationStatus} />
 }
 
 export function PosRolesRoute() {
@@ -395,8 +391,8 @@ export function PosRolesRoute() {
 }
 
 // Categories are catalog/menu data (not salon identity fields, no payment
-// processing), so unlike PosGeneralSettingsRoute/PosBusinessHoursRoute this
-// route is not gated behind verificationStatus/KYB.
+// processing), so unlike PosGeneralSettingsRoute this route is not gated
+// behind verificationStatus/KYB.
 export function PosCategoriesRoute() {
   return <PosCategoriesView />
 }

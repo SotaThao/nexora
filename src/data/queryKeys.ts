@@ -94,14 +94,29 @@ export const qk = {
   // POS Merchant Ops — Front Desk access self-check + Check-in/Waitlist (US-12)
   merchantPosAccess: (businessId?: string) => ['merchantSettings', 'posAccess', businessId ?? ''],
   merchantPosWaitlist: (businessId?: string) => ['merchantSettings', 'posWaitlist', businessId ?? ''],
+  // POS Merchant Ops — Order List tab (US-17), Waiting + InService combined.
+  merchantPosOrderList: (businessId?: string) => ['merchantSettings', 'posOrderList', businessId ?? ''],
+  // POS Merchant Ops — Completed Orders panel (US-17 follow-up), paginated + filtered.
+  // `filters` is only appended when explicitly passed — omitting it (e.g. from an
+  // invalidateQueries call after Complete/edit) yields a short prefix that matches every
+  // cached page/filter combination, instead of only the exact one it was built with.
+  merchantPosCompletedOrders: (businessId?: string, filters?: object) => {
+    const key: unknown[] = ['merchantSettings', 'posCompletedOrders', businessId ?? '']
+    if (filters) key.push(filters)
+    return key
+  },
   // POS Merchant Ops — Turn Board Assign & Break (US-13)
   merchantPosTurnBoard: (businessId?: string) => ['merchantSettings', 'posTurnBoard', businessId ?? ''],
-  // POS Merchant Ops — Checkout (US-14 / US-025)
-  merchantPosReadyTickets: (businessId?: string) => ['merchantSettings', 'posReadyTickets', businessId ?? ''],
-  merchantPosTicketDetail: (businessId?: string, ticketId?: string) =>
-    ['merchantSettings', 'posTicketDetail', businessId ?? '', ticketId ?? ''],
+  // POS Merchant Ops — Checkout (US-14 / US-025, refactored to Order in US-026)
+  merchantPosInServiceOrders: (businessId?: string) => ['merchantSettings', 'posInServiceOrders', businessId ?? ''],
+  merchantPosOrderDetail: (businessId?: string, orderId?: string) =>
+    ['merchantSettings', 'posOrderDetail', businessId ?? '', orderId ?? ''],
   merchantPosCheckoutServiceCatalog: (businessId?: string) =>
     ['merchantSettings', 'posCheckoutServiceCatalog', businessId ?? ''],
+  merchantPosCheckoutProductCatalog: (businessId?: string) =>
+    ['merchantSettings', 'posCheckoutProductCatalog', businessId ?? ''],
+  merchantPosAssignableStaff: (businessId?: string, posServiceId?: string) =>
+    ['merchantSettings', 'posAssignableStaff', businessId ?? '', posServiceId ?? ''],
 
   // Merchant Touchpoints
   merchantTouchpoints: ()      => ['merchantTouchpoints'],

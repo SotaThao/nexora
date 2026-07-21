@@ -22,7 +22,7 @@ import {
   sidebarSubmenuItemClass,
 } from '../../ui/sidebarMenuStyles'
 import PaymentsPayoutsMenuSection from './PaymentsPayoutsMenuSection'
-import { isPaymentsPayoutsRouteActive, getVisibleBookingHubSubmenu, isBookingHubSubActive, VISIBLE_TOUCHPOINTS_SUBMENU, TAXIQ_SUBMENU, TAXIQ_MENU_CHILD_MODULE, DASHBOARD_MENU, DASHBOARD_MENU_ID, getDefaultBookingHubTab, getDashboardMenuLocalizedLabel, isDashboardStaffRole } from '../constants'
+import { isPaymentsPayoutsRouteActive, getVisibleBookingHubSubmenu, isBookingHubSubActive, VISIBLE_TOUCHPOINTS_SUBMENU, TAXIQ_SUBMENU, TAXIQ_MENU_CHILD_MODULE, POS_SUBMENU, DASHBOARD_MENU, DASHBOARD_MENU_ID, getDefaultBookingHubTab, getDashboardMenuLocalizedLabel, isDashboardStaffRole } from '../constants'
 import { handleExpandableMenuClick } from '../hooks/expandableMenuNav'
 import { useMerchantVoiceTenantStatus } from '../../../data/hooks/useMerchantVoiceBookings'
 
@@ -47,6 +47,8 @@ export default function MobileMenuDrawer({
   setIsTaxIqMobileExpanded,
   isBookingHubMobileExpanded,
   setIsBookingHubMobileExpanded,
+  isPosMobileExpanded,
+  setIsPosMobileExpanded,
   hasKyb,
   userRole,
   onLogout,
@@ -61,6 +63,9 @@ export default function MobileMenuDrawer({
   // Tax IQ sub-items are real routes (/dashboard/taxiq/<id>), not a ?tab= param —
   // mirrors DashboardSidebar's desktop equivalent.
   const activeTaxIqSubTab = location.pathname.split('/')[3] || null
+  // POS sub-items are real routes (/dashboard/pos/<id>), same as Tax IQ above —
+  // mirrors DashboardSidebar's desktop equivalent (activePosSubTab).
+  const activePosSubTab = location.pathname.split('/')[3] || null
   const isPaymentsPayoutsActive = isPaymentsPayoutsRouteActive(activeMenu, activeSubTab)
   // Module-gated Tax IQ sub-items: shares the TanStack Query cache with the
   // /dashboard/taxiq route itself and with DashboardSidebar, so this fires no
@@ -121,6 +126,11 @@ export default function MobileMenuDrawer({
               closeDrawer: false,
               tab: hasVoiceTenant ? undefined : getDefaultBookingHubTab(false),
             }),
+        },
+        {
+          id: 'pos',
+          setExpanded: setIsPosMobileExpanded,
+          enter: () => navigateMenu('pos', { closeDrawer: false }),
         },
       ],
       onPlainNavigate: (menuId) => navigateMenu(menuId),
@@ -244,6 +254,10 @@ export default function MobileMenuDrawer({
                     <div className="text-white/65 shrink-0">
                       {isBookingHubMobileExpanded ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
                     </div>
+                  ) : id === 'pos' ? (
+                    <div className="text-white/65 shrink-0">
+                      {isPosMobileExpanded ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
+                    </div>
                   ) : null}
                 </button>
 
@@ -313,6 +327,27 @@ export default function MobileMenuDrawer({
                         >
                           <div className={`h-1.5 w-1.5 rounded-full ${isSubActive ? 'bg-brandCyan shadow-sm' : 'bg-white/30'}`} />
                           <span>{t(sub.labelKey)}</span>
+                        </button>
+                      )
+                    })}
+                  </div>
+                )}
+                {id === 'pos' && isPosMobileExpanded && (
+                  <div className={SIDEBAR_SUBMENU_WRAP_CLASS}>
+                    {POS_SUBMENU.map((sub) => {
+                      // 'settings' (General Settings) lives at /dashboard/pos itself (no
+                      // extra segment), so it's active whenever there's no deeper sub-route.
+                      const isSubActive = activeMenu === 'pos' &&
+                        (sub.id === 'settings' ? !activePosSubTab : activePosSubTab === sub.id)
+                      return (
+                        <button
+                          key={sub.id}
+                          type="button"
+                          onClick={() => navigateMenu(sub.id === 'settings' ? 'pos' : `pos/${sub.id}`)}
+                          className={sidebarSubmenuItemClass(isSubActive)}
+                        >
+                          <div className={`h-1.5 w-1.5 rounded-full ${isSubActive ? 'bg-brandCyan shadow-sm' : 'bg-white/30'}`} />
+                          <span>{t(`dashboard.menu.pos_${sub.id.replace('-', '_')}`)}</span>
                         </button>
                       )
                     })}

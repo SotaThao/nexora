@@ -132,6 +132,9 @@ export const errorCodeToI18nKey = {
   POS_STAFF_NO_LINKED_ACCOUNT: 'errors.pos_staff_no_linked_account',
   POS_STAFF_PROFILE_NOT_FOUND: 'errors.pos_staff_profile_not_found',
   POS_STAFF_SERVICE_ASSIGNMENT_SERVICE_INVALID: 'errors.pos_staff_service_assignment_service_invalid',
+  POS_STAFF_STATUS_INVALID: 'errors.pos_staff_status_invalid',
+  POS_STAFF_STATUS_NOT_ACTIVE: 'errors.pos_staff_status_not_active',
+  POS_STAFF_CANNOT_CHANGE_STATUS_WHILE_IN_SERVICE: 'errors.pos_staff_cannot_change_status_while_in_service',
   TAXIQ_STAFF_TIN_ALREADY_SET: 'errors.taxiq_staff_tin_already_set',
 
   // POS Owner Setup — Staff Weekly Schedule (US-09/US-021)

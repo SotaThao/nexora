@@ -19,6 +19,7 @@ import { usePosServices } from '../../../../data/hooks/usePosServices'
 import {
   useSaveStaffPosProfile,
   useSaveStaffServiceAssignments,
+  useSetStaffPosStatus,
   useStaffPosProfile,
   useStaffServiceAssignments,
   useStaffWeeklySchedule,
@@ -37,6 +38,11 @@ type PayStructureType = (typeof PAY_STRUCTURE_TYPES)[number]
 // Booth Renter is a valid TaxIQ contract type but is deliberately not offered here (ticket AC).
 const POS_CONTRACT_TYPES = ['W2', 'C1099'] as const
 type PosContractType = (typeof POS_CONTRACT_TYPES)[number]
+
+// Whether the staff member is on shift at all — independent of Turn Board's
+// Empty/InService (which is about being busy with a customer right now).
+const POS_STAFF_STATUSES = ['Active', 'Off', 'Locked'] as const
+type PosStaffStatusType = (typeof POS_STAFF_STATUSES)[number]
 
 // FE-only preset action, never sent to the backend — BE only ever stores the flat,
 // fully-resolved PosServiceId list (see ticket US-08's design deviation from BA doc Rule 4).
@@ -129,6 +135,7 @@ export default function PosStaffProfileView() {
   const profileQuery = useStaffPosProfile(selectedLinkId)
   const saveProfile = useSaveStaffPosProfile()
   const updateContractType = useUpdateStaffPosContractType()
+  const setStaffStatus = useSetStaffPosStatus()
 
   const categoriesQuery = usePosCategories()
   const servicesQuery = usePosServices()
@@ -160,6 +167,7 @@ export default function PosStaffProfileView() {
   const [agreedAmount, setAgreedAmount] = useState('')
   const [tipsEnabled, setTipsEnabled] = useState(false)
   const [contractType, setContractType] = useState<PosContractType>('W2')
+  const [status, setStatus] = useState<PosStaffStatusType>('Active')
 
   const [assignmentMode, setAssignmentMode] = useState<AssignmentMode>('Specific')
   const [selectedCategoryId, setSelectedCategoryId] = useState('')
@@ -209,6 +217,9 @@ export default function PosStaffProfileView() {
     if (POS_CONTRACT_TYPES.includes(profile.contractType as PosContractType)) {
       setContractType(profile.contractType as PosContractType)
     }
+    if (POS_STAFF_STATUSES.includes(profile.status as PosStaffStatusType)) {
+      setStatus(profile.status as PosStaffStatusType)
+    }
   }, [profile])
 
   const handleSelect = (linkId: string) => {
@@ -229,6 +240,19 @@ export default function PosStaffProfileView() {
       })
       showToast(t('components.dashboard.views.pos.PosStaffProfileView.profileSavedSuccess'), 'success')
     } catch (err) {
+      showToast(t(getErrorI18nKey(getApiErrorCode(err))), 'error')
+    }
+  }
+
+  const handleChangeStatus = async (newStatus: PosStaffStatusType) => {
+    if (!selectedLinkId || newStatus === status) return
+    const previousStatus = status
+    setStatus(newStatus)
+    try {
+      await setStaffStatus.mutateAsync({ businessStaffLinkId: selectedLinkId, status: newStatus })
+      showToast(t('components.dashboard.views.pos.PosStaffProfileView.statusSavedSuccess'), 'success')
+    } catch (err) {
+      setStatus(previousStatus)
       showToast(t(getErrorI18nKey(getApiErrorCode(err))), 'error')
     }
   }
@@ -460,6 +484,31 @@ export default function PosStaffProfileView() {
                 <h3 className="text-xs font-black uppercase tracking-wider text-nexoraText">
                   {t('components.dashboard.views.pos.PosStaffProfileView.rolePayTipsTitle')}
                 </h3>
+
+                {hasSavedProfile && (
+                  <div>
+                    <span className="text-[10px] font-bold uppercase text-nexoraMuted">
+                      {t('components.dashboard.views.pos.PosStaffProfileView.statusLabel')}
+                    </span>
+                    <div className="mt-1 flex w-fit overflow-hidden rounded-lg border border-nexoraBorder">
+                      {POS_STAFF_STATUSES.map((option) => (
+                        <button
+                          key={option}
+                          type="button"
+                          onClick={() => handleChangeStatus(option)}
+                          disabled={setStaffStatus.isPending}
+                          className={`px-3 py-1.5 text-xs font-semibold transition disabled:opacity-60 ${
+                            status === option
+                              ? 'bg-nexoraBrand text-white'
+                              : 'bg-white text-nexoraText hover:bg-nexoraCanvas'
+                          }`}
+                        >
+                          {t(`components.dashboard.views.pos.PosStaffProfileView.staffStatus.${option}`)}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                )}
 
                 <div>
                   <label className="text-[10px] font-bold uppercase text-nexoraMuted">

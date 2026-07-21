@@ -147,6 +147,10 @@ export interface PosStaffProfileApiDto {
   weeklySalaryAmount?: number | null
   agreedAmount?: number | null
   tipsEnabled: boolean
+  // Active/Off/Locked — whether the staff member is currently on shift at all. Separate
+  // from Turn Board's currentStatus (Empty/InService), which is about being busy with a
+  // customer right now, not whether they're on shift.
+  status: string
 }
 
 // POS Merchant Ops — Front Desk access self-check (US-12)
@@ -154,97 +158,201 @@ export interface PosAccessApiDto {
   canManageOperations?: boolean
 }
 
-// POS Merchant Ops — Check-in & Waitlist (US-12)
-export interface PosWaitlistTicketApiDto {
+// POS Merchant Ops — Check-in & Waitlist (US-12, refactored to Order in US-026)
+export interface PosWaitlistOrderApiDto {
   id: string
-  ticketNumber: string
+  orderNumber: string
   customerName: string
   checkedInAt: string
   waitMinutes: number
   serviceNames: string[]
 }
 
-export interface CheckInTicketPayload {
+// US-17 — Order Workspace (Create mode) sends the whole draft (service + product lines,
+// technician + note already chosen) in one call rather than posServiceIds only.
+export interface CheckInOrderItemPayload {
+  itemType: 'Service' | 'Product'
+  // posServiceId or posProductId, depending on itemType.
+  id: string
+  quantity?: number
+  // Service items only. Omitted means "Next Available" (skill-filtered auto-pick).
+  posStaffProfileId?: string
+  // Service items only.
+  note?: string
+}
+
+export interface CheckInOrderPayload {
   customerName: string
   customerEmail?: string
   customerPhone?: string
-  posServiceIds?: string[]
+  items: CheckInOrderItemPayload[]
 }
 
-// POS Merchant Ops — Turn Board Assign & Break (US-13)
+// POS Merchant Ops — Order List tab (US-17) — Waiting + InService combined.
+export interface OrderListItemApiDto {
+  id: string
+  orderNumber: string
+  customerName: string
+  status: string
+  checkedInAt: string
+  elapsedMinutes: number
+  serviceNames: string[]
+  technicianNames: string[]
+}
+
+// POS Merchant Ops — Completed Orders panel (US-17 follow-up), paginated + filterable.
+export interface CompletedOrderListItemApiDto {
+  id: string
+  orderNumber: string
+  customerName: string
+  customerPhone?: string | null
+  completedAt?: string | null
+  serviceNames: string[]
+  technicianNames: string[]
+  total: number
+  paymentMethodType?: string | null
+}
+
+export interface CompletedOrdersListQuery {
+  pageNumber?: number
+  pageSize?: number
+  dateFrom?: string
+  dateTo?: string
+  customerName?: string
+  customerPhone?: string
+}
+
+export interface CompletedOrdersPage {
+  items: CompletedOrderListItemApiDto[]
+  pageNumber: number
+  totalPages: number
+  totalCount: number
+  hasNextPage: boolean
+  hasPreviousPage: boolean
+}
+
+// POS Merchant Ops — Turn Board Assign & Break (US-13, refactored in US-026)
 export interface TurnBoardStationApiDto {
   posStaffProfileId: string
   displayName: string
   photoUrl?: string | null
   currentStatus: string
-  currentTicketId?: string | null
+  currentOrderId?: string | null
   currentCustomerName?: string | null
   currentPrimaryServiceName?: string | null
   assignedAt?: string | null
 }
 
-// POS Merchant Ops — Checkout (US-14 / US-025)
-export interface ReadyTicketApiDto {
+// POS Merchant Ops — Checkout (US-14 / US-025, refactored to Order + multi-staff + products in US-026)
+export interface InServiceOrderApiDto {
   id: string
-  ticketNumber: string
+  orderNumber: string
   customerName: string
-  technicianName?: string | null
+  technicianNames: string[]
   serviceNames: string[]
-  assignedAt?: string | null
+  firstAssignedAt?: string | null
 }
 
-export interface TicketServiceLineApiDto {
+export interface OrderServiceLineApiDto {
   id: string
+  posServiceId: string
   serviceName: string
+  unitPrice: number
+  quantity: number
+  lineTotal: number
+  assignedPosStaffProfileId?: string | null
+  technicianName?: string | null
+  note?: string | null
+  completedAt?: string | null
+}
+
+export interface OrderProductLineApiDto {
+  id: string
+  productName: string
   unitPrice: number
   quantity: number
   lineTotal: number
 }
 
-export interface TicketDetailApiDto {
+export interface OrderStaffTipShareApiDto {
+  posStaffProfileId: string
+  technicianName: string
+  tipAmount: number
+}
+
+export interface OrderDetailApiDto {
   id: string
-  ticketNumber: string
+  orderNumber: string
   customerName: string
   customerEmail?: string | null
   customerPhone?: string | null
   status: string
-  technicianName?: string | null
-  assignedPosStaffProfileId?: string | null
-  serviceLines: TicketServiceLineApiDto[]
+  serviceLines: OrderServiceLineApiDto[]
+  productLines: OrderProductLineApiDto[]
   servicesSubtotal: number
+  productsSubtotal: number
   tipAmount: number
   discountAmount: number
   salesTaxAmount: number
   total: number
+  staffTipShares: OrderStaffTipShareApiDto[]
   paymentMethodType?: string | null
   receiptEmail?: string | null
   receiptPhone?: string | null
-  paidAt?: string | null
+  completedAt?: string | null
+}
+
+export interface CatalogCategoryApiDto {
+  id: string
+  name: string
 }
 
 export interface CheckoutServiceCatalogItemApiDto {
   id: string
   name: string
   price: number
+  categories: CatalogCategoryApiDto[]
+}
+
+export interface CheckoutProductCatalogItemApiDto {
+  id: string
+  name: string
+  price: number
+  categories: CatalogCategoryApiDto[]
+}
+
+// Technician picker for a given service — only staff whose skill (PosStaffServiceAssignment)
+// covers this service. isBusy is informational only: the caller can still pick a busy
+// technician as an explicit override (see AssignStaffToServiceLineCommand, backend).
+export interface AssignableStaffApiDto {
+  posStaffProfileId: string
+  displayName: string
+  photoUrl?: string | null
+  isBusy: boolean
 }
 
 export type PosCheckoutPaymentMethodType = 'Card' | 'Cash' | 'GiftCard' | 'SplitPay'
 
-export interface ChargeTicketPayload {
+export interface CompleteOrderPayload {
   paymentMethodType: PosCheckoutPaymentMethodType
   receiptEmail?: string
   receiptPhone?: string
 }
 
-export interface ChargeTicketResultApiDto {
-  ticketId: string
+export interface CompleteOrderResultApiDto {
+  orderId: string
   servicesSubtotal: number
+  productsSubtotal: number
   tipAmount: number
   discountAmount: number
   salesTaxAmount: number
   totalAmount: number
   status: string
-  paidAt: string
+  completedAt: string
+}
+
+export interface SetOrderStaffTipSplitPayload {
+  shares: { posStaffProfileId: string; tipAmount: number }[]
 }
 
 export interface TipsSummaryApiDto {
