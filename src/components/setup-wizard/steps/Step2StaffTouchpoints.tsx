@@ -12,8 +12,9 @@ import {
   getPaymentMethodDisplayName,
   payoutTypeToUiKey,
   PAYOUT_UI_LABELS,
+  isHiddenPayoutConfigType,
 } from '../../../data/paymentMethodTypes'
-import type { PaymentMethodDto } from '../../../types/domain'
+import type { SupportedPaymentMethod } from '../../../data/repositories/supportedPaymentMethods'
 import { buildPublicQrImageUrl } from '../../../data/repositories/publicQr'
 import { QR_IMAGE_SIZES } from '../../../utils/qrUtils'
 import QrImage from '../../ui/QrImage'
@@ -49,25 +50,32 @@ export default function Step2StaffTouchpoints({
   handleStartEditTouchpoint,
   handleSaveTouchpoint,
   setPreviewingTp,
-  merchantPaymentMethods = [],
+  supportedPaymentMethods = [],
 }) {
   const newStaffPhoneParsed = parsePhone(newStaff.phone || '')
 
   const displayPaymentMethods = useMemo(() => {
-    if (merchantPaymentMethods.length > 0) {
-      return merchantPaymentMethods
-        .map((method: PaymentMethodDto) => ({
-          key: method.uiKey || payoutTypeToUiKey(method.type || ''),
-          name: method.name || getPaymentMethodDisplayName(method.type || ''),
-        }))
-        .filter((m) => m.key !== 'other')
+    if (supportedPaymentMethods.length > 0) {
+      return (supportedPaymentMethods as SupportedPaymentMethod[])
+        .filter((method) => !isHiddenPayoutConfigType(method))
+        .map((method) => {
+          const key = method.uiKey || payoutTypeToUiKey(method.type || '')
+          return {
+            key,
+            name:
+              getPaymentMethodDisplayName(method.type || '') ||
+              PAYOUT_UI_LABELS[key] ||
+              method.type,
+          }
+        })
+        .filter((m) => m.key && m.key !== 'other')
     }
 
     return Object.keys(DEFAULT_PAYOUT_CONFIGS).map((key) => ({
         key,
         name: PAYOUT_UI_LABELS[key] || key,
       }))
-  }, [merchantPaymentMethods])
+  }, [supportedPaymentMethods])
 
   return (
     <div className="space-y-6 animate-fadeIn">

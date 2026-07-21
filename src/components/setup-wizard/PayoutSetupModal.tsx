@@ -14,20 +14,20 @@ import {
 } from '../payout/bankWireAccount'
 import { validatePayoutAccount } from '../payout/validatePayoutAccount'
 
-export default function PayoutSetupModal({ open, walletKey, staffName, initialValue, initialQrCode, initialAccountName, onClose, onSubmit }) {
+export default function PayoutSetupModal({ open, walletKey, initialValue, initialQrCode, initialAccountName, onClose, onSubmit }) {
   const { t } = useTranslation()
   const [value, setValue] = useState(initialValue || '')
   const [qrCode, setQrCode] = useState(initialQrCode || '')
-  const [accountName, setAccountName] = useState(initialAccountName || staffName || '')
+  const [accountName, setAccountName] = useState(initialAccountName || '')
   const [isCapturing, setIsCapturing] = useState(false)
   const [error, setError] = useState('')
 
   useEffect(() => {
     setValue(initialValue || '')
     setQrCode(initialQrCode || '')
-    setAccountName(initialAccountName || staffName || '')
+    setAccountName(initialAccountName || '')
     setError('')
-  }, [open, walletKey, initialValue, initialQrCode, initialAccountName, staffName])
+  }, [open, walletKey, initialValue, initialQrCode, initialAccountName])
 
   if (!open) return null
   const isBankWire = walletKey === 'bankwire'
