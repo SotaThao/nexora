@@ -35,6 +35,7 @@ import Tooltip from "../../ui/Tooltip";
 import RoleAtBusinessEditor from "../../RoleAtBusinessEditor";
 import { useStaffLinkedBusinesses } from "../hooks/useStaffLinkedBusinesses";
 import StaffKycOverview from "./StaffKycOverview";
+import StaffNotifications from "./StaffNotifications";
 
 const panel =
   "rounded-2xl border border-nexoraBorder bg-nexoraSurface p-4 shadow-sm";
@@ -768,7 +769,6 @@ export default function StaffProfile() {
                       </div>
                     </div>
                   </section>
-                  {!isKYCVerified ? <StaffKycOverview /> : null}
                 </>
               ) : null}
 
