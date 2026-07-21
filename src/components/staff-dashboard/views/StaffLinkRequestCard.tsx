@@ -1,6 +1,6 @@
 // StaffLinkRequestCard — an incoming salon link request with status + Approve/Reject CTAs.
-// Used on the Salon Link & Tips page. The link-request id comes from the notification
-// (referenceId / actionUrl), since GET /staff/businesses does not carry it.
+// Used on staff dashboard surfaces that render pending staff link requests (e.g., "My Salon").
+// The link-request id comes from the notification (referenceId / actionUrl), since GET /staff/businesses does not carry it.
 import { Check, Clock, XCircle } from 'lucide-react'
 import { useTranslation } from '../../../contexts/LanguageContext'
 import { useNotification } from '../../../contexts/NotificationContext'
