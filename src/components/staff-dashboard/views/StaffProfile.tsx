@@ -36,7 +36,6 @@ import RoleAtBusinessEditor from "../../RoleAtBusinessEditor";
 import { useStaffLinkedBusinesses } from "../hooks/useStaffLinkedBusinesses";
 import StaffKycOverview from "./StaffKycOverview";
 import StaffNotifications from "./StaffNotifications";
-import StaffKycOverview from "./StaffKycOverview";
 
 const panel =
   "rounded-2xl border border-nexoraBorder bg-nexoraSurface p-4 shadow-sm";
