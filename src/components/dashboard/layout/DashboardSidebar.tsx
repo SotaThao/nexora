@@ -152,8 +152,9 @@ export default function DashboardSidebar({
         {isProfileExpanded && userRole !== 'staff' && (
           <div className="mt-3.5 pt-3 border-t border-white/5 space-y-1 animate-fadeIn">
             <button
+              type="button"
               onClick={() => {
-                setActiveMenu(DASHBOARD_MENU_ID.settings)
+                navigate('/dashboard/settings/profile')
                 setSettingsTab('profile')
               }}
               className={`flex h-9 w-full items-center gap-2.5 rounded-lg px-3 text-left text-xs font-bold transition ${

@@ -12,6 +12,8 @@ import type {
 export interface UpdatePaymentMethodVars {
   id: string
   accountInfo?: string | null
+  /** Only sent for methods in ACCOUNT_NAME_UI_KEYS; undefined omits the key from the payload. */
+  accountName?: string | null
   imageUrl?: string | null
   /** When set, file is uploaded via POST /api/v1/images/upload before PUT payment-methods. */
   imageFile?: File | null
@@ -35,6 +37,28 @@ export interface UpdateTransactionVars {
 export interface UpdateStaffStatusVars {
   staffLinkId: string
   status: string
+}
+
+export interface SetMerchantStaffNicknameVars {
+  staffLinkId: string
+  staffCode: string
+  nickname: string | null
+}
+
+export interface UpdateMerchantStaffRoleVars {
+  staffLinkId: string
+  staffCode: string
+  roleAtBusiness: string
+}
+
+export interface SetStaffBusinessNicknameVars {
+  businessId: string
+  nickname: string | null
+}
+
+export interface UpdateStaffBusinessRoleVars {
+  businessId: string
+  roleAtBusiness: string
 }
 
 export interface DownloadTouchpointQrVars {

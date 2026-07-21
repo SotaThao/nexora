@@ -1,9 +1,11 @@
 import { useState, useEffect } from 'react'
+import { createPortal } from 'react-dom'
 import { X, Camera, FolderOpen, AlertTriangle, Bitcoin } from 'lucide-react'
 import { useTranslation, renderLabel } from '../../../contexts/LanguageContext'
 import ImageFileInput from '../../ui/ImageFileInput'
 import BankWireAccountForm from '../../payout/BankWireAccountForm'
 import PayoutAccountIdentifierInput from '../../payout/PayoutAccountIdentifierInput'
+import PayoutAccountNameField from '../../payout/PayoutAccountNameField'
 import { formatPayoutPhoneDisplay } from '../../payout/payoutPhone'
 import CameraCapture from '../../ui/CameraCapture'
 import { readImageFileAsDataUrl } from '../../../utils/imageFile'
@@ -19,10 +21,14 @@ interface PayoutSetupModalProps {
   staffName?: string
   initialValue?: string
   initialQrCode?: string
+  /** Persisted account-holder name; takes precedence over the staffName fallback. */
+  initialAccountName?: string
   onClose: () => void
   onSubmit: (value: string, qrCode: string, accountName: string, qrFile?: File | null) => void
   readOnly?: boolean
   isSaving?: boolean
+  /** Portal to body and lock page scroll — for use inside another scrollable modal. */
+  lockBackground?: boolean
 }
 
 function PayoutSetupModal({
@@ -31,16 +37,18 @@ function PayoutSetupModal({
   staffName,
   initialValue,
   initialQrCode,
+  initialAccountName,
   onClose,
   onSubmit,
   readOnly = false,
   isSaving = false,
+  lockBackground = false,
 }: PayoutSetupModalProps) {
   const { t } = useTranslation()
   const [value, setValue] = useState(initialValue || '')
   const [qrCode, setQrCode] = useState(initialQrCode || '')
   const [qrFile, setQrFile] = useState(null)
-  const [accountName, setAccountName] = useState(staffName || '')
+  const [accountName, setAccountName] = useState(initialAccountName || staffName || '')
   const [isCapturing, setIsCapturing] = useState(false)
   const [isCameraOpen, setIsCameraOpen] = useState(false)
   const [error, setError] = useState('')
@@ -50,11 +58,20 @@ function PayoutSetupModal({
     setValue(initialValue || '')
     setQrCode(initialQrCode || '')
     setQrFile(null)
-    setAccountName(staffName || '')
+    setAccountName(initialAccountName || staffName || '')
     setError('')
     setUploadError('')
     setIsCameraOpen(false)
-  }, [open, walletKey, initialValue, initialQrCode, staffName])
+  }, [open, walletKey, initialValue, initialQrCode, initialAccountName, staffName])
+
+  useEffect(() => {
+    if (!open || !lockBackground || typeof document === 'undefined') return undefined
+    const previousOverflow = document.body.style.overflow
+    document.body.style.overflow = 'hidden'
+    return () => {
+      document.body.style.overflow = previousOverflow
+    }
+  }, [open, lockBackground])
 
   useEffect(() => {
     return () => {
@@ -204,44 +221,44 @@ function PayoutSetupModal({
     crypto: { text: 'Crypto Wallet', color: 'text-nexoraWarning', fontClass: 'font-black text-lg tracking-tight' }
   }[walletKey] || { text: walletKey, color: 'text-slate-800', fontClass: 'font-bold' }
 
-  return (
-    <div className="fixed inset-0 z-[60] flex items-center justify-center bg-slate-900/60 backdrop-blur-sm modal-overlay-safe text-left">
-      <div data-testid="payout-setup-modal" className={`bg-white rounded-3xl border border-slate-100 w-full shadow-2xl relative overflow-hidden animate-scaleUp ${isCameraOpen ? 'max-w-sm h-[480px]' : `p-6 space-y-4.5 ${isBankWire ? 'max-w-md' : 'max-w-sm'}`}`}>
-        <div className="flex items-center gap-3.5 border-b border-slate-100 pb-3">
-          <span className="h-11 w-11 rounded-xl bg-slate-50 border border-slate-100 flex items-center justify-center shrink-0 shadow-sm">
-            {PayoutLogos[walletKey]}
-          </span>
-          <div>
-            <h3 className="text-sm font-black text-slate-800 uppercase tracking-wider">
-              {isBankWire
-                ? t('components.payout.bankWireForm.title')
-                : t('components.dashboard.modals.PayoutSetupModal.walletAccountTitle', {
-                  wallet: walletNames[walletKey]?.toUpperCase(),
-                })}
-            </h3>
-            <p className="text-[10px] text-slate-400 font-medium">
-              {t('components.dashboard.modals.PayoutSetupModal.specifyReceivingTargetIdentifier')}
-            </p>
-          </div>
-        </div>
+  const header = (
+    <div className="flex items-center gap-3.5 border-b border-slate-100 pb-3">
+      <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl border border-slate-100 bg-slate-50 shadow-sm">
+        {PayoutLogos[walletKey]}
+      </span>
+      <div className="min-w-0 flex-1">
+        <h3 className="text-sm font-black uppercase tracking-wider text-slate-800">
+          {isBankWire
+            ? t('components.payout.bankWireForm.title')
+            : t('components.dashboard.modals.PayoutSetupModal.walletAccountTitle', {
+                wallet: walletNames[walletKey]?.toUpperCase(),
+              })}
+        </h3>
+        <p className="text-[10px] font-medium text-slate-400">
+          {t('components.dashboard.modals.PayoutSetupModal.specifyReceivingTargetIdentifier')}
+        </p>
+      </div>
+    </div>
+  )
 
-        <div className="space-y-4">
-          {isBankWire && (
-            <BankWireAccountForm
-              value={value}
-              onChange={(nextValue) => {
-                setValue(nextValue)
-                setError('')
-              }}
-              onBeneficiaryNameChange={setAccountName}
-              disabled={readOnly}
-              error={error}
-            />
-          )}
-          {!isBankWire && (
-          <>
+  const body = (
+    <div className="space-y-4">
+      {isBankWire && (
+        <BankWireAccountForm
+          value={value}
+          onChange={(nextValue) => {
+            setValue(nextValue)
+            setError('')
+          }}
+          onBeneficiaryNameChange={setAccountName}
+          disabled={readOnly}
+          error={error}
+        />
+      )}
+      {!isBankWire && (
+        <>
           <div>
-            <label className="block text-[10px] font-extrabold uppercase text-slate-500 tracking-wider mb-2">
+            <label className="mb-2 block text-[10px] font-extrabold uppercase tracking-wider text-slate-500">
               {renderLabel(t('components.dashboard.modals.PayoutSetupModal.accountIdentifier'))}
             </label>
             <PayoutAccountIdentifierInput
@@ -258,8 +275,15 @@ function PayoutSetupModal({
             {error && <p className="mt-1 text-[10px] font-bold text-rose-500">{error}</p>}
           </div>
 
+          <PayoutAccountNameField
+            walletKey={walletKey}
+            value={accountName}
+            onChange={setAccountName}
+            disabled={readOnly}
+          />
+
           <div>
-            <label className="block text-[10px] font-extrabold uppercase text-slate-500 tracking-wider mb-2">
+            <label className="mb-2 block text-[10px] font-extrabold uppercase tracking-wider text-slate-500">
               {t('components.dashboard.modals.PayoutSetupModal.qrCodeOptional')}
             </label>
 
@@ -269,7 +293,7 @@ function PayoutSetupModal({
                   <button
                     type="button"
                     onClick={handleClearQr}
-                    className="absolute right-2 top-2 rounded-full p-1 text-slate-400 hover:bg-slate-100 hover:text-slate-600 transition"
+                    className="absolute right-2 top-2 rounded-full p-1 text-slate-400 transition hover:bg-slate-100 hover:text-slate-600"
                     title="Remove image"
                   >
                     <X className="h-4 w-4" />
@@ -277,11 +301,11 @@ function PayoutSetupModal({
                 )}
                 <div className="text-center">
                   <div className="text-sm font-extrabold text-slate-800">{accountName}</div>
-                  <div className="text-[10px] font-semibold text-slate-400 mt-0.5">
+                  <div className="mt-0.5 text-[10px] font-semibold text-slate-400">
                     {formatPayoutPhoneDisplay(value) || value}
                   </div>
                 </div>
-                <div className="my-3 flex h-28 w-28 items-center justify-center border border-slate-100 bg-white p-1 rounded-lg">
+                <div className="my-3 flex h-28 w-28 items-center justify-center rounded-lg border border-slate-100 bg-white p-1">
                   <img src={qrCode} alt="Payout QR Code" className="h-full w-full object-contain" />
                 </div>
                 <div className={`${brandStyles.color} ${brandStyles.fontClass}`}>
@@ -289,7 +313,7 @@ function PayoutSetupModal({
                 </div>
               </div>
             ) : readOnly ? (
-              <div className="flex h-24 w-full flex-col items-center justify-center rounded-xl border border-slate-150 bg-slate-50 text-slate-400 text-xs font-semibold">
+              <div className="flex h-24 w-full flex-col items-center justify-center rounded-xl border border-slate-150 bg-slate-50 text-xs font-semibold text-slate-400">
                 {t('components.dashboard.modals.PayoutSetupModal.noQrCodeUploaded')}
               </div>
             ) : (
@@ -298,24 +322,24 @@ function PayoutSetupModal({
                   type="button"
                   onClick={handleTakePhoto}
                   disabled={isCapturing}
-                  className="flex flex-col items-center justify-center py-5 border border-dashed border-slate-200 hover:border-nexoraBrand rounded-xl bg-slate-50 hover:bg-slate-50/50 transition gap-1.5 disabled:opacity-60"
+                  className="flex flex-col items-center justify-center gap-1.5 rounded-xl border border-dashed border-slate-200 bg-slate-50 py-5 transition hover:border-nexoraBrand hover:bg-slate-50/50 disabled:opacity-60"
                 >
-                  <Camera className="w-5 h-5 text-nexoraBrand" />
+                  <Camera className="h-5 w-5 text-nexoraBrand" />
                   <span className="text-[11px] font-bold text-slate-600">{t('setup.take_photo')}</span>
                 </button>
                 <ImageFileInput
                   as="label"
-                  className="flex flex-col items-center justify-center py-5 border border-dashed border-slate-200 hover:border-nexoraBrand rounded-xl bg-slate-50 hover:bg-slate-50/50 transition gap-1.5 cursor-pointer"
+                  className="flex cursor-pointer flex-col items-center justify-center gap-1.5 rounded-xl border border-dashed border-slate-200 bg-slate-50 py-5 transition hover:border-nexoraBrand hover:bg-slate-50/50"
                   onPickFile={handleImageFilePick}
                   disabled={readOnly}
                 >
-                  <FolderOpen className="w-5 h-5 text-nexoraBrand" />
+                  <FolderOpen className="h-5 w-5 text-nexoraBrand" />
                   <span className="text-[11px] font-bold text-slate-600">{t('setup.choose_file')}</span>
                 </ImageFileInput>
               </div>
             )}
             {!qrCode && !readOnly && (
-              <p className="mt-2 text-[10px] text-slate-400 leading-normal">
+              <p className="mt-2 text-[10px] leading-normal text-slate-400">
                 {t('setup.uploader_hint')}
               </p>
             )}
@@ -323,38 +347,60 @@ function PayoutSetupModal({
               <p className="mt-1 text-[10px] font-bold text-rose-500">{uploadError}</p>
             ) : null}
           </div>
-          </>
-          )}
+        </>
+      )}
 
-          <div className="rounded-lg bg-blue-50/50 border border-blue-100 p-3 text-[10.5px] leading-relaxed text-blue-800 flex gap-2">
-            <AlertTriangle className="h-4 w-4 text-blue-500 shrink-0 mt-0.5" />
-            <span>
-              {readOnly
-                ? (t('components.dashboard.modals.PayoutSetupModal.thisInformationWasEntered'))
-                : isBankWire
-                  ? (t('components.payout.bankWireForm.warning'))
-                : (t('setup.payout_warning'))}
-            </span>
-          </div>
-        </div>
+      <div className="flex gap-2 rounded-lg border border-blue-100 bg-blue-50/50 p-3 text-[10.5px] leading-relaxed text-blue-800">
+        <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0 text-blue-500" />
+        <span>
+          {readOnly
+            ? t('components.dashboard.modals.PayoutSetupModal.thisInformationWasEntered')
+            : isBankWire
+              ? t('components.payout.bankWireForm.warning')
+              : t('setup.payout_warning')}
+        </span>
+      </div>
+    </div>
+  )
 
-        <div className="flex justify-end gap-2.5 pt-2.5 border-t border-slate-100">
-          <button
-            onClick={onClose}
-            className={`px-5 py-2.5 border border-slate-200 hover:bg-slate-50 text-slate-500 text-xs font-bold uppercase tracking-wider rounded-lg transition ${readOnly ? 'w-full text-center' : ''}`}
-          >
-            {t(readOnly || isBankWire ? 'setup.close' : 'common.cancel')}
-          </button>
-          {!readOnly && (
-            <button
-              onClick={handleSubmit}
-              disabled={isSaving || Boolean(uploadError)}
-              className="px-5 py-2.5 bg-amber-600 hover:bg-amber-700 disabled:opacity-60 disabled:cursor-not-allowed text-white text-xs font-bold uppercase tracking-wider rounded-lg shadow-sm transition"
-            >
-              {t(isBankWire ? 'common.update' : 'components.dashboard.modals.PayoutSetupModal.save')}
-            </button>
-          )}
-        </div>
+  const footer = (
+    <div className="flex justify-end gap-2.5 border-t border-slate-100 pt-2.5">
+      <button
+        type="button"
+        onClick={onClose}
+        className={`rounded-lg border border-slate-200 px-5 py-2.5 text-xs font-bold uppercase tracking-wider text-slate-500 transition hover:bg-slate-50 ${
+          readOnly ? 'w-full text-center' : ''
+        }`}
+      >
+        {t(readOnly || isBankWire ? 'setup.close' : 'common.cancel')}
+      </button>
+      {!readOnly && (
+        <button
+          type="button"
+          onClick={handleSubmit}
+          disabled={isSaving || Boolean(uploadError)}
+          className="rounded-lg bg-amber-600 px-5 py-2.5 text-xs font-bold uppercase tracking-wider text-white shadow-sm transition hover:bg-amber-700 disabled:cursor-not-allowed disabled:opacity-60"
+        >
+          {t(isBankWire ? 'common.update' : 'components.dashboard.modals.PayoutSetupModal.save')}
+        </button>
+      )}
+    </div>
+  )
+
+  const panelClass = `relative w-full overflow-hidden rounded-3xl border border-slate-100 bg-white shadow-2xl animate-scaleUp ${
+    isCameraOpen ? 'h-[480px] max-w-sm' : `space-y-4.5 p-6 ${isBankWire ? 'max-w-md' : 'max-w-sm'}`
+  }`
+
+  const overlayClass = lockBackground
+    ? 'fixed inset-0 z-[100] flex h-dvh items-center justify-center overflow-hidden bg-slate-900/60 modal-overlay-safe text-left backdrop-blur-sm'
+    : 'fixed inset-0 z-[60] flex items-center justify-center bg-slate-900/60 modal-overlay-safe text-left backdrop-blur-sm'
+
+  const modal = (
+    <div className={overlayClass}>
+      <div data-testid="payout-setup-modal" className={panelClass}>
+        {header}
+        {body}
+        {footer}
         {isCameraOpen && (
           <CameraCapture
             onCapture={(dataUrl) => {
@@ -367,6 +413,12 @@ function PayoutSetupModal({
       </div>
     </div>
   )
+
+  if (lockBackground && typeof document !== 'undefined') {
+    return createPortal(modal, document.body)
+  }
+
+  return modal
 }
 
 export default PayoutSetupModal

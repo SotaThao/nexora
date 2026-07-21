@@ -4,6 +4,10 @@ import { AlertCircle, ArrowRight, Settings } from 'lucide-react'
 import { useTranslation } from '../../../contexts/LanguageContext'
 import { useMerchantPaymentMethods } from '../../../data/hooks/useMerchantPaymentMethods'
 import { AuthContext } from '../../../auth/AuthContext'
+import {
+  buildDashboardSettingsQueryPath,
+  DASHBOARD_SETTINGS_QUERY_TAB,
+} from '../constants'
 
 export default function PayoutSetupWarningBanner() {
   const { t } = useTranslation()
@@ -48,7 +52,7 @@ export default function PayoutSetupWarningBanner() {
 
         <button
           type="button"
-          onClick={() => navigate('/dashboard/settings?tab=payout')}
+          onClick={() => navigate(buildDashboardSettingsQueryPath(DASHBOARD_SETTINGS_QUERY_TAB.payout))}
           className="group relative inline-flex items-center justify-center gap-2 overflow-hidden rounded-xl bg-indigo-600 px-6 py-3 text-xs font-bold uppercase tracking-wider text-white shadow-lg shadow-indigo-600/20 transition-all hover:bg-indigo-700 active:scale-95"
         >
           <Settings className="h-4 w-4 transition-transform group-hover:rotate-90" />

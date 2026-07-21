@@ -1,8 +1,7 @@
-import React, { useMemo, useState } from 'react'
+import React, { useEffect, useMemo, useState } from 'react'
 import { createPortal } from 'react-dom'
 import { useNavigate } from 'react-router-dom'
 import {
-  ArrowLeft,
   Bell,
   Check,
   ChevronRight,
@@ -12,7 +11,6 @@ import {
   FileText,
   Lock,
   QrCode,
-  ShieldCheck,
   Star,
   Users,
   Wallet,
@@ -20,7 +18,6 @@ import {
 } from 'lucide-react'
 import useSettingsForm from './settings/hooks/useSettingsForm'
 import ProfileTab from './settings/tabs/ProfileTab'
-import KybTab from './settings/tabs/KybTab'
 import useAuth from '../auth/useAuth'
 import { downloadQrCode, buildPublicQrImageUrl, QR_IMAGE_SIZES } from '../utils/qrUtils'
 import { buildAffiliateReferralUrl, getProfileReferralCode } from '../utils/affiliateReferral'
@@ -33,6 +30,10 @@ import {
 } from '../data/hooks/useNotifications'
 import { formatNotificationDateTime } from './dashboard/utils'
 import QrImage from './ui/QrImage'
+import {
+  SETTINGS_SHOW_NOTIFICATION_TAB,
+  SettingsDesktopTab,
+} from './settings/constants'
 
 const notificationPanel =
   'rounded-2xl border border-nexoraBorder bg-nexoraSurface p-4 shadow-sm sm:p-5'
@@ -170,15 +171,26 @@ export default function SettingsViewDesktop({
     openKybPortal: undefined,
   })
 
-  const [tab, setTab] = useState(initialTab === 'affiliate' ? 'affiliate' : 'account')
+  const resolveDesktopTab = (nextTab) => {
+    if (nextTab === 'affiliate') return 'affiliate'
+    if (nextTab === 'notification') return 'notification'
+    if (nextTab === 'privacy') return 'privacy'
+    return 'account'
+  }
+
+  const [tab, setTab] = useState(() => resolveDesktopTab(initialTab))
   const [showQrModal, setShowQrModal] = useState(false)
-  const [showKybFlow, setShowKybFlow] = useState(false)
   const [selectedLeg, setSelectedLeg] = useState('left')
 
-  const isKybVerified = ['kyb_approved', 'verified_pro', 'verified_lite'].includes(form.effectiveVerificationStatus)
-  const kybStatusLabel = isKybVerified
-    ? t('staff_dashboard.profile.menu_verified')
-    : t('staff_dashboard.profile.menu_not_verified')
+  useEffect(() => {
+    setTab(resolveDesktopTab(initialTab))
+  }, [initialTab])
+
+  useEffect(() => {
+    if (!SETTINGS_SHOW_NOTIFICATION_TAB && tab === SettingsDesktopTab.Notification) {
+      setTab(SettingsDesktopTab.Account)
+    }
+  }, [SETTINGS_SHOW_NOTIFICATION_TAB, tab, setTab])
 
   const referralCode = useMemo(
     () => getProfileReferralCode(form.profile),
@@ -202,11 +214,13 @@ export default function SettingsViewDesktop({
   }
 
   const TABS = [
-    { key: 'account', label: t('components.SettingsView.account') },
-    { key: 'kyb', label: isBusinessAccount ? t('components.SettingsView.kyb') : t('staff_dashboard.profile.kyc_label'), disabled: true },
-    { key: 'affiliate', label: t('components.SettingsView.affiliateLink') },
-    { key: 'notification', label: t('staff_dashboard.profile.menu_notification_preferences') },
-    { key: 'privacy', label: t('staff_dashboard.profile.menu_privacy_security') },
+    { key: SettingsDesktopTab.Account, label: t('components.SettingsView.account') },
+    { key: SettingsDesktopTab.Kyb, label: isBusinessAccount ? t('components.SettingsView.kyb') : t('staff_dashboard.profile.kyc_label'), disabled: true },
+    { key: SettingsDesktopTab.Affiliate, label: t('components.SettingsView.affiliateLink') },
+    ...(SETTINGS_SHOW_NOTIFICATION_TAB
+      ? [{ key: SettingsDesktopTab.Notification, label: t('staff_dashboard.profile.menu_notification_preferences') }]
+      : []),
+    { key: SettingsDesktopTab.Privacy, label: t('staff_dashboard.profile.menu_privacy_security') },
   ]
 
   return (
@@ -231,13 +245,18 @@ export default function SettingsViewDesktop({
             type="button"
             disabled={item.disabled}
             aria-disabled={item.disabled || undefined}
-            onClick={item.disabled ? undefined : () => setTab(item.key)}
+            onClick={item.disabled ? undefined : () => {
+              setTab(item.key)
+              if (onTabChange) {
+                onTabChange(item.key === 'account' ? 'profile' : item.key)
+              }
+            }}
             className={`px-4 py-2 rounded-lg text-xs font-extrabold uppercase transition ${
               item.disabled
                 ? 'bg-nexoraSurfaceMuted text-nexoraMuted opacity-60 cursor-not-allowed'
                 : tab === item.key
-                ? 'bg-nexoraBrand text-white shadow-sm'
-                : 'bg-nexoraSurfaceMuted text-nexoraMuted hover:bg-slate-200'
+                  ? 'bg-nexoraBrand text-white shadow-sm'
+                  : 'bg-nexoraSurfaceMuted text-nexoraMuted hover:bg-slate-200'
             }`}
           >
             {item.label}
@@ -296,53 +315,6 @@ export default function SettingsViewDesktop({
             inlineReferral
           />
         )}
-
-        {tab === 'kyb' && (showKybFlow ? (
-          <div className="space-y-3">
-            <button
-              type="button"
-              onClick={() => setShowKybFlow(false)}
-              className="inline-flex items-center gap-1 text-xs font-bold text-nexoraMuted transition hover:text-nexoraText"
-            >
-              <ArrowLeft className="h-4 w-4" />
-              {t('common.back')}
-            </button>
-            <KybTab
-              profile={form.profile}
-              cardDetails={null}
-              verificationStatus={form.effectiveVerificationStatus}
-              showToast={form.showToast}
-            />
-          </div>
-        ) : (
-          <section className="rounded-2xl border border-nexoraBorder bg-nexoraSurface p-4 shadow-sm space-y-4">
-            <div className="flex items-start gap-3">
-              <span className={`grid h-10 w-10 shrink-0 place-items-center rounded-xl ${isKybVerified ? 'bg-emerald-50 text-emerald-600' : 'bg-amber-50 text-amber-600'}`}>
-                <ShieldCheck className="h-5 w-5" />
-              </span>
-              <div>
-                <h3 className="text-sm font-extrabold text-nexoraText">{kybStatusLabel}</h3>
-                <p className="mt-1 text-xs leading-5 text-nexoraMuted">
-                  {isKybVerified
-                    ? t('staff_dashboard.profile.verification_body')
-                    : isBusinessAccount
-                      ? t('staff_dashboard.profile.verification_unverified_body_business')
-                      : t('staff_dashboard.profile.verification_unverified_body')}
-                </p>
-              </div>
-            </div>
-            {!isKybVerified && (
-              <button
-                type="button"
-                onClick={() => setShowKybFlow(true)}
-                className="inline-flex items-center justify-center gap-2 rounded-lg bg-gradient-to-r from-nexoraElectric to-nexoraViolet px-5 py-2.5 text-xs font-black uppercase tracking-wider text-white shadow-md transition hover:opacity-90"
-              >
-                <ShieldCheck className="h-4 w-4" />
-                {t('components.dashboardRoot.verifyNow')}
-              </button>
-            )}
-          </section>
-        ))}
 
         {tab === 'affiliate' && (
           <div className="rounded-xl border border-nexoraBorder bg-white shadow-sm p-6 max-w-xl mx-auto animate-fadeIn select-none space-y-6">
@@ -479,7 +451,9 @@ export default function SettingsViewDesktop({
           </div>
         )}
 
-        {tab === 'notification' && <MerchantNotificationsContent />}
+        {SETTINGS_SHOW_NOTIFICATION_TAB && tab === SettingsDesktopTab.Notification && (
+          <MerchantNotificationsContent />
+        )}
 
         {tab === 'privacy' && (
           <section className="rounded-2xl border border-nexoraBorder bg-nexoraSurface shadow-sm divide-y divide-nexoraRule overflow-hidden">

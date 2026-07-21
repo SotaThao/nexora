@@ -21,8 +21,8 @@ export interface StaffPaymentsListQuery {
 }
 
 export interface StaffPaymentStatsQuery {
-  from: string
-  to: string
+  from?: string
+  to?: string
 }
 
 function readField<T>(raw: Record<string, unknown>, camel: string, pascal: string): T | undefined {
@@ -137,10 +137,15 @@ export function createStaffPaymentsRepository(client: HttpClient = httpClient) {
       )
     },
 
-    async getStats(query: StaffPaymentStatsQuery): Promise<MerchantPaymentStats> {
-      const res = await client.get<Record<string, unknown>>('/api/v1/staff/payments/stats', {
-        params: { from: query.from, to: query.to },
-      })
+    async getStats(query: StaffPaymentStatsQuery = {}): Promise<MerchantPaymentStats> {
+      const params: Record<string, string> = {}
+      if (query.from) params.from = query.from
+      if (query.to) params.to = query.to
+
+      const res = await client.get<Record<string, unknown>>(
+        '/api/v1/staff/payments/stats',
+        Object.keys(params).length > 0 ? { params } : undefined,
+      )
       return normalizePaymentStats(res)
     },
   }

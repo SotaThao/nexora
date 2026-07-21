@@ -73,6 +73,31 @@ export function orderedPayoutUiKeysFromMethods(
   return ordered
 }
 
+/**
+ * Staff manual-add: order payout keys from GET /payment-methods/supported only,
+ * ascending by `sortOrder` (no hardcoded fallback reorder).
+ */
+export function orderedStaffPayoutUiKeysFromSupported(
+  methods: Array<{ type?: string; uiKey?: string; sortOrder?: number }> | null | undefined,
+  allowedKeys: readonly string[] = STAFF_CONFIGURABLE_PAYOUT_UI_KEYS,
+): string[] {
+  const allowed = new Set(allowedKeys)
+  const seen = new Set<string>()
+  const sorted = [...(methods ?? [])].sort(
+    (a, b) => (Number(a.sortOrder) || 0) - (Number(b.sortOrder) || 0),
+  )
+  const ordered: string[] = []
+
+  for (const method of sorted) {
+    const key = method.uiKey || payoutTypeToUiKey(method.type || '')
+    if (!key || !allowed.has(key) || seen.has(key)) continue
+    seen.add(key)
+    ordered.push(key)
+  }
+
+  return ordered
+}
+
 export function payoutTypeToUiKey(type = ''): string {
   return PAYOUT_TYPE_TO_UI_KEY[type] || type.toLowerCase().replace(/\s+/g, '')
 }
@@ -106,6 +131,31 @@ export const DIRECT_P2P_UI_KEYS = new Set([
  */
 export function isDirectP2pMethod(apiType: string): boolean {
   return DIRECT_P2P_UI_KEYS.has(payoutTypeToUiKey(apiType))
+}
+
+/** UI keys whose PUT payment-methods payload carries an editable accountName. */
+export const ACCOUNT_NAME_UI_KEYS = new Set([
+  'zelle',
+  'cashapp',
+  'paypal',
+])
+
+export function supportsPayoutAccountName(uiKey = ''): boolean {
+  return ACCOUNT_NAME_UI_KEYS.has(uiKey)
+}
+
+/**
+ * Builds the accountName value for a PUT payment-methods payload.
+ * Unsupported methods return undefined so the key is omitted from the JSON
+ * body entirely; supported methods always send a trimmed name or null (clear).
+ */
+export function toPayoutAccountNameDto(
+  uiKey: string,
+  raw?: string | null,
+): string | null | undefined {
+  if (!supportsPayoutAccountName(uiKey)) return undefined
+  const trimmed = typeof raw === 'string' ? raw.trim() : ''
+  return trimmed || null
 }
 
 /**

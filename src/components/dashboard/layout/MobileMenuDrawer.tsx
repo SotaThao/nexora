@@ -1,5 +1,5 @@
 import React from 'react'
-import { useSearchParams } from 'react-router-dom'
+import { useNavigate, useSearchParams } from 'react-router-dom'
 import { ChevronLeft, ChevronUp, ChevronDown, LogOut } from 'lucide-react'
 import { useTranslation } from '../../../contexts/LanguageContext'
 import { useOpenProductManagement } from '../../../data/hooks/useOpenProductManagement'
@@ -50,6 +50,7 @@ export default function MobileMenuDrawer({
   navigateMenu,
 }) {
   const { t, currentLanguage } = useTranslation()
+  const navigate = useNavigate()
   const [searchParams] = useSearchParams()
   const { openProductManagement, isOpeningProductManagement } = useOpenProductManagement()
   const activeSubTab = searchParams.get('tab')
@@ -162,7 +163,7 @@ export default function MobileMenuDrawer({
                   <button
                     type="button"
                     onClick={() => {
-                      setActiveMenu(DASHBOARD_MENU_ID.settings)
+                      navigate('/dashboard/settings/profile')
                       setSettingsTab('profile')
                       onClose()
                     }}
@@ -179,7 +180,7 @@ export default function MobileMenuDrawer({
                     type="button"
                     disabled
                     aria-disabled="true"
-                    className="flex h-8 w-full cursor-not-allowed items-center gap-2.5 rounded-lg px-2 text-left text-xs font-bold text-white/40 opacity-60"
+                    className="flex h-9 w-full cursor-not-allowed items-center gap-2.5 rounded-lg px-3 text-left text-xs font-bold text-white/40 opacity-60"
                   >
                     <div className="h-1.5 w-1.5 rounded-full bg-white/20" />
                     <span>{t('dashboard.menu.kyb')} ({t('common.coming_soon')})</span>

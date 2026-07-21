@@ -19,7 +19,10 @@ import type {
   StaffTipsConfirmReceiptResult,
   StaffTipsPage,
 } from '../../types/domain'
+import { isApiError } from '../../types/domain'
 import type { StaffTipsListParams } from '../repositories/staffSelf'
+import type { StaffNicknameUpdateResult, StaffBusinessRoleUpdateResult } from '../repositories/staffSelf'
+import type { SetStaffBusinessNicknameVars, UpdateStaffBusinessRoleVars } from '../../types/hooks'
 import type { TransactionsListQuery } from '../repositories/transactions'
 import type { TransactionsListPage } from '../repositories/transactions'
 import { useStaffAccount } from '../../contexts/StaffAccountContext'
@@ -48,6 +51,56 @@ export function useStaffBusinesses({ enabled: callerEnabled = true } = {}) {
     queryKey: qk.staffBusinesses(),
     queryFn: () => staffSelfRepository.getMyBusinesses(),
     enabled: isStaff && callerEnabled,
+  })
+}
+
+export function useSetStaffBusinessNickname() {
+  const queryClient = useQueryClient()
+
+  return useMutation<StaffNicknameUpdateResult, Error, SetStaffBusinessNicknameVars>({
+    mutationFn: ({ businessId, nickname }) =>
+      staffSelfRepository.setMyNickname(businessId, nickname),
+    onSuccess: (result, { businessId }) => {
+      queryClient.setQueryData<StaffBusinessLink[]>(
+        qk.staffBusinesses(),
+        (current) => current?.map((business) =>
+          business.businessId === businessId
+            ? { ...business, nicknameAtBusiness: result.nicknameAtBusiness }
+            : business,
+        ),
+      )
+      void queryClient.invalidateQueries({ queryKey: qk.staffBusinesses() })
+    },
+    onError: (error) => {
+      if (isApiError(error) && (error.status === 403 || error.status === 404)) {
+        void queryClient.invalidateQueries({ queryKey: qk.staffBusinesses() })
+      }
+    },
+  })
+}
+
+export function useUpdateStaffBusinessRole() {
+  const queryClient = useQueryClient()
+
+  return useMutation<StaffBusinessRoleUpdateResult, Error, UpdateStaffBusinessRoleVars>({
+    mutationFn: ({ businessId, roleAtBusiness }) =>
+      staffSelfRepository.updateMyRoleAtBusiness(businessId, roleAtBusiness),
+    onSuccess: (result, { businessId }) => {
+      queryClient.setQueryData<StaffBusinessLink[]>(
+        qk.staffBusinesses(),
+        (current) => current?.map((business) =>
+          business.businessId === businessId
+            ? { ...business, roleAtBusiness: result.roleAtBusiness }
+            : business,
+        ),
+      )
+      void queryClient.invalidateQueries({ queryKey: qk.staffBusinesses() })
+    },
+    onError: (error) => {
+      if (isApiError(error) && (error.status === 403 || error.status === 404)) {
+        void queryClient.invalidateQueries({ queryKey: qk.staffBusinesses() })
+      }
+    },
   })
 }
 
@@ -278,6 +331,19 @@ export function useRejectStaffLinkRequest() {
       queryClient.invalidateQueries({ queryKey: qk.staffBusinesses() })
       queryClient.invalidateQueries({ queryKey: qk.notifications() })
       queryClient.invalidateQueries({ queryKey: qk.notificationsUnreadCount() })
+    },
+  })
+}
+
+export function useUnlinkStaffBusiness() {
+  const queryClient = useQueryClient()
+  return useMutation<void, unknown, string>({
+    mutationFn: (businessId) => staffSelfRepository.unlinkBusiness(businessId),
+    onSuccess: () => {
+      // useStaffBusinessTipQrs derives its data from the same staffBusinesses
+      // query (see useStaffBusinessTipQrs above), so invalidating this one key
+      // refreshes both the salon list and the tip QR list.
+      void queryClient.invalidateQueries({ queryKey: qk.staffBusinesses() })
     },
   })
 }

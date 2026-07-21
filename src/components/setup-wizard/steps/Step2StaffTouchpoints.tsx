@@ -12,43 +12,18 @@ import {
   getPaymentMethodDisplayName,
   payoutTypeToUiKey,
   PAYOUT_UI_LABELS,
+  isHiddenPayoutConfigType,
 } from '../../../data/paymentMethodTypes'
-import type { PaymentMethodDto } from '../../../types/domain'
+import type { SupportedPaymentMethod } from '../../../data/repositories/supportedPaymentMethods'
 import { buildPublicQrImageUrl } from '../../../data/repositories/publicQr'
 import { QR_IMAGE_SIZES } from '../../../utils/qrUtils'
 import QrImage from '../../ui/QrImage'
 
 const TOUCHPOINT_TYPE_OPTIONS = [
-  {
-    value: 'Table QR',
-    labelKey: 'setup.tp_type_table',
-  },
-  {
-    value: 'Front Desk',
-    labelKey: 'setup.tp_type_counter',
-  },
-  {
-    value: 'Receipt QR',
-    labelKey: 'setup.tp_type_receipt',
-  },
+  { value: 'Table QR', label: 'Table QR' },
+  { value: 'Front Desk', label: 'Front Desk' },
+  { value: 'Receipt QR', label: 'Receipt QR' },
 ]
-
-const EDIT_TOUCHPOINT_TYPE_OPTIONS = [
-  ...TOUCHPOINT_TYPE_OPTIONS,
-  {
-    value: 'Business Main',
-    labelKey: 'setup.tp_type_business_main',
-  },
-  {
-    value: 'Staff QR',
-    labelKey: 'setup.tp_type_staff',
-  },
-]
-
-function getTouchpointTypeLabel(t, type) {
-  const option = EDIT_TOUCHPOINT_TYPE_OPTIONS.find((candidate) => candidate.value === type)
-  return option ? t(option.labelKey) : type
-}
 
 export default function Step2StaffTouchpoints({
   t,
@@ -75,25 +50,32 @@ export default function Step2StaffTouchpoints({
   handleStartEditTouchpoint,
   handleSaveTouchpoint,
   setPreviewingTp,
-  merchantPaymentMethods = [],
+  supportedPaymentMethods = [],
 }) {
   const newStaffPhoneParsed = parsePhone(newStaff.phone || '')
 
   const displayPaymentMethods = useMemo(() => {
-    if (merchantPaymentMethods.length > 0) {
-      return merchantPaymentMethods
-        .map((method: PaymentMethodDto) => ({
-          key: method.uiKey || payoutTypeToUiKey(method.type || ''),
-          name: method.name || getPaymentMethodDisplayName(method.type || ''),
-        }))
-        .filter((m) => m.key !== 'other')
+    if (supportedPaymentMethods.length > 0) {
+      return (supportedPaymentMethods as SupportedPaymentMethod[])
+        .filter((method) => !isHiddenPayoutConfigType(method))
+        .map((method) => {
+          const key = method.uiKey || payoutTypeToUiKey(method.type || '')
+          return {
+            key,
+            name:
+              getPaymentMethodDisplayName(method.type || '') ||
+              PAYOUT_UI_LABELS[key] ||
+              method.type,
+          }
+        })
+        .filter((m) => m.key && m.key !== 'other')
     }
 
     return Object.keys(DEFAULT_PAYOUT_CONFIGS).map((key) => ({
         key,
         name: PAYOUT_UI_LABELS[key] || key,
       }))
-  }, [merchantPaymentMethods])
+  }, [supportedPaymentMethods])
 
   return (
     <div className="space-y-6 animate-fadeIn">
@@ -175,10 +157,7 @@ export default function Step2StaffTouchpoints({
                   buttonClass="bg-nexoraCanvas focus:bg-white"
                   value={newTouchpoint.type}
                   onChange={(e) => setNewTouchpoint({ type: e.target.value })}
-                  options={TOUCHPOINT_TYPE_OPTIONS.map((option) => ({
-                    value: option.value,
-                    label: t(option.labelKey),
-                  }))}
+                  options={TOUCHPOINT_TYPE_OPTIONS}
                 />
               </div>
             </div>
@@ -210,15 +189,12 @@ export default function Step2StaffTouchpoints({
                           <label className="block text-[10px] font-bold text-nexoraText uppercase tracking-wider mb-1">
                             {t('setup.tp_type')}
                           </label>
-                          <select
-                            className="w-full bg-white border border-nexoraBorder rounded-lg px-3 py-1.5 text-xs text-nexoraText focus:outline-none focus:border-nexoraBrand transition-all h-[34px]"
+                          <CustomSelect
+                            buttonClass="bg-white focus:bg-white"
                             value={editingTpType}
                             onChange={(e) => setEditingTpType(e.target.value)}
-                          >
-                            {EDIT_TOUCHPOINT_TYPE_OPTIONS.map((option) => (
-                              <option key={option.value} value={option.value}>{t(option.labelKey)}</option>
-                            ))}
-                          </select>
+                            options={TOUCHPOINT_TYPE_OPTIONS}
+                          />
                         </div>
                       </div>
                       <div className="flex justify-end gap-2">
@@ -265,7 +241,7 @@ export default function Step2StaffTouchpoints({
                       <div className="min-w-0 flex-grow ml-3">
                         <div className="flex items-center gap-1.5 text-xs font-bold text-nexoraText">
                           {getTouchpointIcon(tp.type, "w-3.5 h-3.5")}
-                          <span className="truncate">{getTouchpointTypeLabel(t, tp.type)}</span>
+                          <span className="truncate">{tp.type}</span>
                         </div>
                         <div className="text-[9px] flex items-center gap-2 mt-1">
                           {tp.staffName && (

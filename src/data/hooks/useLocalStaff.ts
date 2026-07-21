@@ -2,7 +2,7 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { qk } from '../queryKeys'
 import localStaffRepository from '../repositories/localStaff'
 import { imagesRepository } from '../repositories/images'
-import { payoutTypeToUiKey } from '../paymentMethodTypes'
+import { payoutTypeToUiKey, toPayoutAccountNameDto } from '../paymentMethodTypes'
 import { resolvePaymentMethodImageUrl } from '../../utils/resolvePaymentMethodImageUrl'
 import { dataUrlToFile } from '../../utils/imageFile'
 import { splitFullName } from '../../utils/staffName'
@@ -53,6 +53,7 @@ async function configureLocalStaffPaymentMethods(
 
     await localStaffRepository.updatePaymentMethod(staffProfileId, method.id, {
       accountInfo,
+      accountName: toPayoutAccountNameDto(uiKey, config.accountName),
       imageUrl,
     })
 
@@ -172,6 +173,7 @@ export function useUpdateLocalStaffPaymentMethod() {
       paymentMethodId,
       uiKey,
       accountInfo,
+      accountName,
       imageUrl,
       imageFile,
     }: {
@@ -179,6 +181,7 @@ export function useUpdateLocalStaffPaymentMethod() {
       paymentMethodId?: string
       uiKey?: string
       accountInfo?: string | null
+      accountName?: string | null
       imageUrl?: string | null
       imageFile?: File | null
     }) => {
@@ -186,6 +189,7 @@ export function useUpdateLocalStaffPaymentMethod() {
       const resolvedImageUrl = await resolvePaymentMethodImageUrl({ imageFile, imageUrl })
       return localStaffRepository.updatePaymentMethod(staffProfileId, methodId, {
         accountInfo,
+        accountName,
         imageUrl: resolvedImageUrl,
       })
     },

@@ -22,7 +22,7 @@ import { getApiErrorCode } from '../../../types/domain'
 import StaffPaymentDetailModal from '../modals/StaffPaymentDetailModal'
 import CustomSelect from '../../CustomSelect'
 import { dismissAckPrompt } from '../../../utils/directPaymentAckDismiss'
-import { resolveDirectPaymentDateRange, resolvePaymentStatsDateRange } from '../../../utils/directPaymentDateRange'
+import { resolveDirectPaymentDateRange } from '../../../utils/directPaymentDateRange'
 import DirectPaymentStatusStats from '../../dashboard/direct-payments/DirectPaymentStatusStats'
 import { DirectPaymentStatusBadge } from '../../dashboard/direct-payments/DirectPaymentStatusBadge'
 import {
@@ -64,10 +64,8 @@ export default function StaffPayments() {
     ...resolveDirectPaymentDateRange(datePreset, startDate, endDate),
   }), [pageNumber, pageSize, statusFilter, datePreset, startDate, endDate])
 
-  const statsQuery = useMemo(() => resolvePaymentStatsDateRange(), [])
-
   const { data: paymentsPage, isPending, isFetching } = useStaffPaymentsList(apiQuery)
-  const { data: paymentStats, isPending: isStatsPending } = useStaffPaymentStats(statsQuery)
+  const { data: paymentStats, isPending: isStatsPending } = useStaffPaymentStats()
   const { data: selectedPaymentDetail, isPending: isDetailLoading } = useStaffPaymentDetail(
     selectedPaymentId,
     { enabled: Boolean(selectedPaymentId) },

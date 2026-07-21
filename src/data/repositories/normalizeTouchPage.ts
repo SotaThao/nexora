@@ -8,6 +8,7 @@ function normalizePaymentMethodDto(raw: LooseObject): PaymentMethodDto {
     type,
     uiKey: payoutTypeToUiKey(type),
     accountInfo: raw.accountInfo ?? raw.account_info ?? null,
+    accountName: raw.accountName ?? raw.account_name ?? null,
     imageUrl: raw.imageUrl ?? null,
     isActive: raw.isActive !== false,
     name: raw.name,

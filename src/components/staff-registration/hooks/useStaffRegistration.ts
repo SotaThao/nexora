@@ -38,7 +38,7 @@ import { useStaffInviteInfo, useAcceptStaffInvite, usePublicMerchantInvite } fro
 import { apiAuthAdapter } from '../../../auth/adapters/apiAuthAdapter'
 import { getSignupOtp } from '../../../auth/signupOtp'
 import { staffPaymentMethodsRepository } from '../../../data/repositories/staffPaymentMethods'
-import { payoutTypeToUiKey } from '../../../data/paymentMethodTypes'
+import { payoutTypeToUiKey, toPayoutAccountNameDto } from '../../../data/paymentMethodTypes'
 import { staffInvitesRepository } from '../../../data/repositories/staffInvites'
 import profileSettingsRepository from '../../../data/repositories/profileSettings'
 import httpClient from '../../../lib/httpClient'
@@ -980,6 +980,7 @@ export default function useStaffRegistration({ inviteData }) {
 
       await staffPaymentMethodsRepository.update(match.id, {
         accountInfo,
+        accountName: toPayoutAccountNameDto(key, cfg.accountName),
         imageUrl: imageUrlOrNull(cfg.qrCode),
       })
 

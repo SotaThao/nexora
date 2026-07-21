@@ -1,12 +1,13 @@
 import React from 'react'
-import { Check, LogIn, AlertTriangle, User, CreditCard, PartyPopper } from 'lucide-react'
+import { useNavigate } from 'react-router-dom'
+import { Check, LogIn, AlertTriangle, User, PartyPopper, ArrowLeft } from 'lucide-react'
 import StepProfileSetup from '../register/steps/StepProfileSetup'
-import StepPayoutSetup from '../register/steps/StepPayoutSetup'
 import StepSuccess from '../register/steps/StepSuccess'
 import PayoutEditModal from '../register/modals/PayoutEditModal'
 import LanguageSwitcher from '../ui/LanguageSwitcher'
 
 export default function PersonalSetupWizard({ wizard }) {
+  const navigate = useNavigate()
   const {
     t, currentLanguage, setLanguage,
     currentStep, setCurrentStep,
@@ -15,11 +16,12 @@ export default function PersonalSetupWizard({ wizard }) {
     stepName
   } = wizard
 
+  const handleBackToDashboard = () => navigate('/staff')
+
   const stepIcon = (step: number) => {
     switch (step) {
       case 1: return <User className="w-5 h-5" />
-      case 2: return <CreditCard className="w-5 h-5" />
-      case 3: return <PartyPopper className="w-5 h-5" />
+      case 2: return <PartyPopper className="w-5 h-5" />
       default: return null
     }
   }
@@ -36,6 +38,15 @@ export default function PersonalSetupWizard({ wizard }) {
           </div>
 
           <div className="flex w-full flex-col gap-3 sm:w-auto sm:flex-row sm:items-center">
+            {currentStep < 2 && (
+              <button
+                type="button"
+                onClick={handleBackToDashboard}
+                className="min-h-9 px-4 py-2 rounded-lg border border-nexoraBorder hover:bg-white bg-transparent text-nexoraText font-semibold text-xs flex items-center justify-center gap-1.5 transition-all"
+              >
+                <ArrowLeft className="w-4 h-4 text-nexoraSubtle" /> {t('setup.back_to_dashboard')}
+              </button>
+            )}
             <LanguageSwitcher />
           </div>
         </header>
@@ -46,11 +57,11 @@ export default function PersonalSetupWizard({ wizard }) {
               <div className="absolute inset-0 bg-slate-200/60 rounded-full"></div>
               <div
                 className="absolute left-0 top-0 h-full bg-gradient-to-r from-nexoraElectric via-nexoraElectricMid to-nexoraViolet rounded-full transition-all duration-500 ease-out"
-                style={{ width: `${((currentStep - 1) / 2) * 100}%` }}
+                style={{ width: currentStep === 2 ? '100%' : '0%' }}
               ></div>
             </div>
 
-            {[1, 2, 3].map((step) => {
+            {[1, 2].map((step) => {
               const isActive = step === currentStep
               const isCompleted = step < currentStep
               return (
@@ -94,9 +105,8 @@ export default function PersonalSetupWizard({ wizard }) {
               </div>
             )}
 
-            {currentStep === 1 && <StepProfileSetup {...wizard} />}
-            {currentStep === 2 && <StepPayoutSetup {...wizard} />}
-            {currentStep === 3 && <StepSuccess {...wizard} />}
+            {currentStep === 1 && <StepProfileSetup {...wizard} onBack={handleBackToDashboard} />}
+            {currentStep === 2 && <StepSuccess {...wizard} />}
           </div>
         </main>
         

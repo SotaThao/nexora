@@ -283,7 +283,7 @@ export default function StepProfile({
 
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
           <div>
-            <label className="flex items-center text-[10px] font-black uppercase text-nexoraSubtle tracking-wider h-4">Role / Speciality</label>
+            <label className="flex items-center text-[10px] font-black uppercase text-nexoraSubtle tracking-wider h-4">Role or Speciality</label>
             <input
               type="text"
               className="mt-1.5 h-10 w-full rounded-lg border border-nexoraBorder px-3 text-xs outline-none focus:border-nexoraBrand focus:ring-2 focus:ring-nexoraBrand/20 focus:outline-none transition-all"

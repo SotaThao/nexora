@@ -1,6 +1,7 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 import profileSettingsRepository from '../repositories/profileSettings'
 import staffPaymentMethodsRepository from '../repositories/staffPaymentMethods'
+import { toPayoutAccountNameDto } from '../paymentMethodTypes'
 import { logger } from '../../utils/logger'
 import type { PaymentMethodDto } from '../../types/domain'
 import type { PersonalOnboardingInput } from '../../types/hooks'
@@ -19,24 +20,26 @@ export function useCompletePersonalOnboarding() {
   const queryClient = useQueryClient()
 
   return useMutation<{ success: boolean }, Error, PersonalOnboardingInput>({
-    mutationFn: async ({ accountData, payoutConfigs }) => {
+    mutationFn: async ({ accountData, payoutConfigs, skipProfileUpdates }) => {
       const firstName = accountData.fullName?.split(' ')[0] || ''
       const lastName = accountData.fullName?.split(' ').slice(1).join(' ') || ''
 
-      await profileSettingsRepository.updateUserProfile({
-        firstName,
-        lastName,
-        phoneNumber: accountData.phone || '',
-      })
+      if (!skipProfileUpdates) {
+        await profileSettingsRepository.updateUserProfile({
+          firstName,
+          lastName,
+          phoneNumber: accountData.phone || '',
+        })
 
-      await profileSettingsRepository
-        .updateStaffProfile({
-          displayName: accountData.nickname || accountData.fullName,
-          position: accountData.position || '',
-        })
-        .catch((err: unknown) => {
-          logger.warn('[Personal Onboarding] Ignored staff profile update error:', err)
-        })
+        await profileSettingsRepository
+          .updateStaffProfile({
+            displayName: accountData.nickname || accountData.fullName,
+            position: accountData.position || '',
+          })
+          .catch((err: unknown) => {
+            logger.warn('[Personal Onboarding] Ignored staff profile update error:', err)
+          })
+      }
 
       let methods: PaymentMethodDto[] = []
       try {
@@ -58,7 +61,10 @@ export function useCompletePersonalOnboarding() {
         if (targetMethod) {
           updatePromises.push(
             staffPaymentMethodsRepository
-              .update(targetMethod.id, { accountInfo })
+              .update(targetMethod.id, {
+                accountInfo,
+                accountName: toPayoutAccountNameDto(uiKey, payoutData.accountName),
+              })
               .then(() => {
                 const isActiveInUi = payoutData.enabled
                 if (isActiveInUi && !targetMethod.isActive) {

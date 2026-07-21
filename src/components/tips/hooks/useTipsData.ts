@@ -2,7 +2,19 @@ import { useMemo } from 'react';
 import { useTranslation } from '../../../contexts/LanguageContext';
 import { isDirectP2pMethod, payoutTypeToUiKey, PAYOUT_UI_LABELS } from '../../../data/paymentMethodTypes';
 
-export function useTipsData({ transactions, metrics, tipsChartData, chartStartDate, chartEndDate, chartRange }) {
+const DONUT_SEGMENT_COLORS: Record<string, string> = {
+  zelle: '#d4af37',
+  cashapp: '#00B873',
+  venmo: '#32D7FF',
+  vlinkpay: '#4648D8',
+  paypal: '#003087',
+  applecash: '#000000',
+  bankwire: '#687385',
+  crypto: '#F59E0B',
+  card: '#687385',
+};
+
+export function useTipsData({ transactions, metrics, tipsChartData, chartStartDate, chartEndDate, chartRange, tipRevenue, byPaymentMethod }) {
   const { t, currentLanguage } = useTranslation();
 
   const filteredTxsForOverview = useMemo(() => {
@@ -13,26 +25,35 @@ export function useTipsData({ transactions, metrics, tipsChartData, chartStartDa
   }, [transactions, chartStartDate, chartEndDate]);
 
   const totalVolume = useMemo(() => {
-    return metrics?.totalTips ?? 0;
-  }, [metrics]);
+    return tipRevenue?.totalRevenue ?? metrics?.totalTips ?? 0;
+  }, [tipRevenue, metrics]);
 
   const directTips = useMemo(() => {
+    if (tipRevenue) {
+      return tipRevenue.directTips?.amount ?? 0;
+    }
     return filteredTxsForOverview
       .filter(tx => isDirectP2pMethod(tx.paymentMethod ?? '') && (tx.status === 'Success' || tx.status === 'Completed'))
       .reduce((sum, tx) => sum + (tx.amount || 0), 0);
-  }, [filteredTxsForOverview]);
+  }, [tipRevenue, filteredTxsForOverview]);
 
   const cardTips = useMemo(() => {
+    if (tipRevenue) {
+      return tipRevenue.cardTips?.amount ?? 0;
+    }
     return filteredTxsForOverview
       .filter(tx => tx.paymentMethod === 'Card' && (tx.status === 'Success' || tx.status === 'Completed'))
       .reduce((sum, tx) => sum + (tx.amount || 0), 0);
-  }, [filteredTxsForOverview]);
+  }, [tipRevenue, filteredTxsForOverview]);
 
   const cryptoTips = useMemo(() => {
+    if (tipRevenue) {
+      return tipRevenue.cryptoTips?.amount ?? 0;
+    }
     return filteredTxsForOverview
       .filter(tx => tx.paymentMethod === 'Crypto' && (tx.status === 'Success' || tx.status === 'Completed'))
       .reduce((sum, tx) => sum + (tx.amount || 0), 0);
-  }, [filteredTxsForOverview]);
+  }, [tipRevenue, filteredTxsForOverview]);
 
   const averageTip = useMemo(() => {
     return metrics?.averageTip ?? 0;
@@ -208,26 +229,37 @@ export function useTipsData({ transactions, metrics, tipsChartData, chartStartDa
     ? [svgMetrics.max, svgMetrics.max * 0.75, svgMetrics.max * 0.5, svgMetrics.max * 0.25, 0]
     : [];
 
+  const donutTotal = useMemo(() => {
+    if (byPaymentMethod?.length) {
+      return byPaymentMethod.reduce((sum, item) => sum + (item.totalAmount || 0), 0);
+    }
+    return filteredTxsForOverview.reduce((sum, tx) => {
+      const key = payoutTypeToUiKey(tx.paymentMethod ?? '');
+      return key ? sum + (tx.amount || 0) : sum;
+    }, 0);
+  }, [byPaymentMethod, filteredTxsForOverview]);
+
   const donutSegments = useMemo(() => {
     const grouped: Record<string, number> = {};
-    transactions.forEach(tx => {
-      const key = payoutTypeToUiKey(tx.paymentMethod ?? '');
-      if (key) {
-        grouped[key] = (grouped[key] ?? 0) + (tx.amount || 0);
-      }
-    });
-    const total = Object.values(grouped).reduce((a, b) => a + b, 0) || 1;
+
+    if (byPaymentMethod?.length) {
+      byPaymentMethod.forEach((item) => {
+        const key = payoutTypeToUiKey(item.method);
+        if (!key) return;
+        grouped[key] = (grouped[key] ?? 0) + (item.totalAmount || 0);
+      });
+    } else {
+      filteredTxsForOverview.forEach(tx => {
+        const key = payoutTypeToUiKey(tx.paymentMethod ?? '');
+        if (key) {
+          grouped[key] = (grouped[key] ?? 0) + (tx.amount || 0);
+        }
+      });
+    }
+
+    const total = donutTotal || 1;
     let accumulatedAngle = 0;
-    const SEGMENT_COLORS: Record<string, string> = {
-      zelle:     '#d4af37',
-      cashapp:   '#00B873',
-      venmo:     '#32D7FF',
-      vlinkpay:  '#4648D8',
-      paypal:    '#003087',
-      applecash: '#000000',
-      bankwire:  '#687385',
-      crypto:    '#F59E0B',
-    };
+
     return Object.entries(grouped)
       .filter(([, val]) => val > 0)
       .map(([key, val]) => {
@@ -241,10 +273,10 @@ export function useTipsData({ transactions, metrics, tipsChartData, chartStartDa
           percentage,
           startAngle,
           endAngle: accumulatedAngle,
-          color: SEGMENT_COLORS[key] || '#cbd5e1',
+          color: DONUT_SEGMENT_COLORS[key] || '#cbd5e1',
         };
       });
-  }, [transactions]);
+  }, [byPaymentMethod, filteredTxsForOverview, donutTotal]);
 
   return {
     filteredTxsForOverview,
@@ -261,5 +293,6 @@ export function useTipsData({ transactions, metrics, tipsChartData, chartStartDa
     svgMetrics,
     yTicks,
     donutSegments,
+    donutTotal,
   };
 }

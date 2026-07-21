@@ -156,7 +156,10 @@ export function useCreateStaffProfile() {
   return useMutation<LooseObject, Error, UpdateStaffProfileDto>({
     mutationFn: (dto) => profileSettingsRepository.createStaffProfile(dto),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: qk.staffProfile() })
+      // `useStaffProfile` intentionally serves cached profile data without
+      // refetching. Remove a cached 404 (`null`) so the new profile is loaded
+      // when the staff dashboard is next opened.
+      queryClient.removeQueries({ queryKey: qk.staffProfile() })
     },
   })
 }

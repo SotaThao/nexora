@@ -63,7 +63,7 @@ export function useMerchantPaymentDetail(paymentId?: string | null, { enabled = 
 }
 
 export function useMerchantPaymentStats(
-  query: MerchantPaymentStatsQuery,
+  query: MerchantPaymentStatsQuery = {},
   { enabled = true } = {},
 ) {
   const canFetch = useIsOwner(enabled)
@@ -71,7 +71,7 @@ export function useMerchantPaymentStats(
   return useQuery<MerchantPaymentStats>({
     queryKey: qk.merchantPaymentStats(query),
     queryFn: () => merchantPaymentsRepository.getStats(query),
-    enabled: canFetch && Boolean(query.from && query.to),
+    enabled: canFetch,
     retry: false,
   })
 }
