@@ -2207,6 +2207,7 @@
           "scanToPay": "Scan to pay",
           "businessName": "Business or Store",
           "name": "Name",
+          "accountHolder": "{wallet} Registered Name",
           "emailPhone": "Email or Phone",
           "venmoUsername": "Venmo Username",
           "cashTag": "Cash Tag",
