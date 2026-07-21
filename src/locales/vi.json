@@ -2207,6 +2207,7 @@
           "scanToPay": "Quét mã để chuyển khoản",
           "name": "Tên người nhận",
           "businessName": "Tiệm hoặc Doanh nghiệp",
+          "accountHolder": "Tên đăng ký {wallet}",
           "emailPhone": "Email hoặc SĐT",
           "venmoUsername": "Tài khoản Venmo",
           "cashTag": "Thẻ Cash App",
