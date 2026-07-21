@@ -544,6 +544,12 @@ function readField<T>(raw: Record<string, unknown>, camel: string, pascal: strin
   return (raw[camel] ?? raw[pascal]) as T | undefined
 }
 
+/** Coerce API numeric fields; invalid values must not leak NaN/Infinity into paging or KPI UI. */
+function toFiniteNumber(value: unknown, fallback: number): number {
+  const parsed = Number(value)
+  return Number.isFinite(parsed) ? parsed : fallback
+}
+
 function readNullableString(raw: Record<string, unknown>, camel: string, pascal: string): string | null {
   const value = readField<unknown>(raw, camel, pascal)
   if (value == null) return null
@@ -608,7 +614,7 @@ function normalizeBookingsResponse(
   const list = Array.isArray(rawItems) ? rawItems : []
   const items = list.map((item) => normalizeBookingDto(item as Record<string, unknown>))
   const resolvedPage = Number(readField<unknown>(raw, 'pageNumber', 'PageNumber') ?? pageNumber)
-  const totalPages = Math.max(1, Number(readField<unknown>(raw, 'totalPages', 'TotalPages') ?? 1))
+  const totalPages = Math.max(1, toFiniteNumber(readField<unknown>(raw, 'totalPages', 'TotalPages') ?? 1, 1))
   const totalCount = Number(readField<unknown>(raw, 'totalCount', 'TotalCount') ?? items.length)
   const hasPreviousPage = Boolean(
     readField<unknown>(raw, 'hasPreviousPage', 'HasPreviousPage') ?? resolvedPage > 1,
@@ -735,41 +741,18 @@ export function createMerchantVoiceRepository(client: HttpClient = httpClient) {
         { headers: MERCHANT_VOICE_HEADERS },
       )
 
+      const raw = (response ?? {}) as Record<string, unknown>
       return {
-        allBookings: Number(
-          readField<unknown>(
-            (response ?? {}) as Record<string, unknown>,
-            'allBookings',
-            'AllBookings',
-          ) ?? 0,
+        allBookings: toFiniteNumber(readField<unknown>(raw, 'allBookings', 'AllBookings') ?? 0, 0),
+        newBookings: toFiniteNumber(readField<unknown>(raw, 'newBookings', 'NewBookings') ?? 0, 0),
+        confirmedBookings: toFiniteNumber(
+          readField<unknown>(raw, 'confirmedBookings', 'ConfirmedBookings') ?? 0,
+          0,
         ),
-        newBookings: Number(
-          readField<unknown>(
-            (response ?? {}) as Record<string, unknown>,
-            'newBookings',
-            'NewBookings',
-          ) ?? 0,
-        ),
-        confirmedBookings: Number(
-          readField<unknown>(
-            (response ?? {}) as Record<string, unknown>,
-            'confirmedBookings',
-            'ConfirmedBookings',
-          ) ?? 0,
-        ),
-        doneBookings: Number(
-          readField<unknown>(
-            (response ?? {}) as Record<string, unknown>,
-            'doneBookings',
-            'DoneBookings',
-          ) ?? 0,
-        ),
-        noShowBookings: Number(
-          readField<unknown>(
-            (response ?? {}) as Record<string, unknown>,
-            'noShowBookings',
-            'NoShowBookings',
-          ) ?? 0,
+        doneBookings: toFiniteNumber(readField<unknown>(raw, 'doneBookings', 'DoneBookings') ?? 0, 0),
+        noShowBookings: toFiniteNumber(
+          readField<unknown>(raw, 'noShowBookings', 'NoShowBookings') ?? 0,
+          0,
         ),
       }
     },
