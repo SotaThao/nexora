@@ -321,6 +321,7 @@ export function useStaffLinkRequests(linkIds: readonly string[]) {
     queries: linkIds.map((linkId) => ({
       queryKey: qk.staffLinkRequest(linkId),
       queryFn: () => staffSelfRepository.getLinkRequest(linkId),
+      staleTime: 30 * 1000,
     })),
   })
 }
