@@ -15,7 +15,6 @@ import { isApiError } from '../../../types/domain'
 import type { StaffBusinessTipQr } from '../../../types/domain'
 import { shareUrl } from '../../../utils/shareUrl'
 import { buildQrImageUrl, resolveStaffDirectPaymentPageUrl } from '../../../utils/staffTipUrl'
-import { resolveStaffBusinessJobTitle } from '../../../utils/staffBusinessRole'
 import { useStaffPaymentQr } from '../../../data/hooks/useStaffPayments'
 import { useStaffPaymentMethods } from '../../../data/hooks/useStaffPaymentMethods'
 import { SkeletonLayout } from '../../ui/skeleton'
@@ -88,10 +87,6 @@ function extractUrlFromQrText(value: string): URL | null {
 
 function getBusinessStatusLabel(biz: StaffBusinessTipQr): string {
   return biz.linkStatusLabel || biz.linkStatus || 'Active'
-}
-
-function getBusinessRoleLabel(biz: StaffBusinessTipQr): string {
-  return resolveStaffBusinessJobTitle(biz.roleAtBusiness)
 }
 
 function isBusinessActive(biz: StaffBusinessTipQr): boolean {
