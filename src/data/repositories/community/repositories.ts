@@ -28,6 +28,7 @@ import type {
   ReactionDto,
   ReportDto,
   UpdateCommunityInput,
+  UploadCommunityMessageMediaInput,
   UploadCommunityPostMediaInput,
 } from './types'
 import type {
@@ -133,6 +134,8 @@ export interface ChannelsRepository {
 export interface MessagesRepository {
   /** Lists channel messages with cursor/keyset pagination. */
   list(channelId: string, query?: KeysetPageRequest): Promise<KeysetPage<MessageDto>>
+  /** Uploads one chat image through the shared Cloudinary signed-upload flow. */
+  uploadMedia(input: UploadCommunityMessageMediaInput): Promise<MediaAsset>
   /** Sends a message as the current actor. */
   send(input: CreateMessageInput): Promise<MessageDto>
   /** Maps a Postgres Changes INSERT row at the repository boundary. */
@@ -274,10 +277,12 @@ type MessageRow = {
   channel_id: string
   sender_id: string
   body: string
+  media_paths?: unknown
   reply_to_message_id: string | null
   created_at: string
   updated_at: string
   sender?: ProfileRow | null
+  channel?: { community?: { media_visibility: CommunityVisibility } | null } | null
 }
 
 type NotificationRow = {
@@ -396,18 +401,20 @@ function mediaDeliveryTypeForVisibility(visibility: CommunityVisibility): Commun
   return visibility === 'private' ? 'authenticated' : 'upload'
 }
 
-function mapMedia(paths: unknown, visibility: CommunityVisibility = 'public'): MediaAsset[] {
+function mapMedia(paths: unknown, visibility?: CommunityVisibility): MediaAsset[] {
   if (!Array.isArray(paths)) return []
-  const expectedDeliveryType = mediaDeliveryTypeForVisibility(visibility)
 
   return paths.flatMap((value): MediaAsset[] => {
     const stored = value && typeof value === 'object' ? value as StoredMediaReference : null
     const path = typeof value === 'string' ? value : typeof stored?.publicId === 'string' ? stored.publicId : null
     if (!path) return []
+    const storedDeliveryType = stored?.type === 'authenticated' || stored?.type === 'upload'
+      ? stored.type
+      : 'upload'
     return [{
       path,
-      // Community media visibility is immutable, so it is the authority rather than stored JSON.
-      deliveryType: expectedDeliveryType,
+      // Community visibility is authoritative when joined; realtime rows fall back to the stored type.
+      deliveryType: visibility ? mediaDeliveryTypeForVisibility(visibility) : storedDeliveryType,
       format: typeof stored?.format === 'string' ? stored.format : null,
       contentType: typeof stored?.contentType === 'string' ? stored.contentType : null,
       altText: typeof stored?.altText === 'string' ? stored.altText : null,
@@ -511,6 +518,72 @@ function uploadToCloudinary(
   })
 }
 
+type UploadCommunityMediaInput = {
+  communityId: string
+  containerId: string
+  visibility: CommunityVisibility
+  file: File
+  onProgress?: (progress: number) => void
+}
+
+function serializeMediaAssets(media: MediaAsset[] | undefined): StoredMediaReference[] {
+  return (media ?? []).map((asset) => ({
+    publicId: asset.path,
+    type: asset.deliveryType,
+    format: asset.format ?? null,
+    contentType: asset.contentType ?? null,
+    altText: asset.altText ?? null,
+  }))
+}
+
+async function uploadCommunityMedia(input: UploadCommunityMediaInput): Promise<MediaAsset> {
+  const { data, error } = await supabaseClient.functions.invoke('cloudinary-media', {
+    body: {
+      action: 'sign-upload',
+      communityId: input.communityId,
+      // The signing contract calls this postId, but accepts any stable media container UUID.
+      postId: input.containerId,
+      visibility: input.visibility,
+    },
+  })
+  throwIfSupabaseError(error)
+  if (!isCloudinaryUploadSignature(data)) throw cloudinaryConfigError('Cloudinary upload signature unavailable.')
+
+  input.onProgress?.(0.05)
+  const uploaded = await uploadToCloudinary(data, input.file, input.onProgress)
+  if (typeof uploaded.public_id !== 'string' || !uploaded.public_id.startsWith(`${data.folder}/`)) {
+    throw cloudinaryConfigError('Cloudinary returned an invalid community media reference.')
+  }
+  if (uploaded.type !== data.type) throw cloudinaryConfigError('Cloudinary returned an unexpected media delivery type.')
+
+  input.onProgress?.(1)
+  return {
+    path: uploaded.public_id,
+    deliveryType: data.type,
+    format: typeof uploaded.format === 'string' ? uploaded.format : null,
+    contentType: input.file.type || null,
+  }
+}
+
+async function resolveCommunityMediaUrl(asset: MediaAsset): Promise<string> {
+  if (asset.deliveryType === 'upload') {
+    return cloudinaryPublicUrl(cloudinaryCloudName(), asset.path)
+  }
+  const format = asset.format || asset.path.split('.').pop() || 'png'
+  const { data, error } = await supabaseClient.functions.invoke('cloudinary-media', {
+    body: {
+      action: 'sign-url',
+      publicId: asset.path,
+      visibility: 'private',
+      format,
+    },
+  })
+  throwIfSupabaseError(error)
+  const signedUrl = data as CloudinarySignedUrl | null
+  if (!signedUrl || typeof signedUrl.url !== 'string') throw cloudinaryConfigError('Cloudinary media URL unavailable.')
+  return signedUrl.url
+}
+
 function mapComment(row: CommentRow): CommentDto {
   return {
     id: row.id,
@@ -570,6 +643,7 @@ function mapMessage(row: MessageRow): MessageDto {
     channelId: row.channel_id,
     senderId: row.sender_id,
     body: row.body,
+    media: mapMedia(row.media_paths, row.channel?.community?.media_visibility),
     replyToMessageId: row.reply_to_message_id,
     sender: row.sender ? mapProfile(row.sender) : undefined,
     createdAt: row.created_at,
@@ -776,49 +850,16 @@ export function createPostsRepository(): PostsRepository {
       return data ? mapPost(data as PostRow) : null
     },
     async uploadMedia(input) {
-      const { data, error } = await supabaseClient.functions.invoke('cloudinary-media', {
-        body: {
-          action: 'sign-upload',
-          communityId: input.communityId,
-          postId: input.postId,
-          visibility: input.visibility,
-        },
+      return uploadCommunityMedia({
+        communityId: input.communityId,
+        containerId: input.postId,
+        visibility: input.visibility,
+        file: input.file,
+        onProgress: input.onProgress,
       })
-      throwIfSupabaseError(error)
-      if (!isCloudinaryUploadSignature(data)) throw cloudinaryConfigError('Cloudinary upload signature unavailable.')
-
-      input.onProgress?.(0.05)
-      const uploaded = await uploadToCloudinary(data, input.file, input.onProgress)
-      if (typeof uploaded.public_id !== 'string' || !uploaded.public_id.startsWith(`${data.folder}/`)) {
-        throw cloudinaryConfigError('Cloudinary returned an invalid community media reference.')
-      }
-      if (uploaded.type !== data.type) throw cloudinaryConfigError('Cloudinary returned an unexpected media delivery type.')
-
-      input.onProgress?.(1)
-      return {
-        path: uploaded.public_id,
-        deliveryType: data.type,
-        format: typeof uploaded.format === 'string' ? uploaded.format : null,
-        contentType: input.file.type || null,
-      }
     },
     async resolveMediaUrl(asset) {
-      if (asset.deliveryType === 'upload') {
-        return cloudinaryPublicUrl(cloudinaryCloudName(), asset.path)
-      }
-      const format = asset.format || asset.path.split('.').pop() || 'png'
-      const { data, error } = await supabaseClient.functions.invoke('cloudinary-media', {
-        body: {
-          action: 'sign-url',
-          publicId: asset.path,
-          visibility: 'private',
-          format,
-        },
-      })
-      throwIfSupabaseError(error)
-      const signedUrl = data as CloudinarySignedUrl | null
-      if (!signedUrl || typeof signedUrl.url !== 'string') throw cloudinaryConfigError('Cloudinary media URL unavailable.')
-      return signedUrl.url
+      return resolveCommunityMediaUrl(asset)
     },
     async create(input) {
       const authorId = await requireCurrentUserId()
@@ -829,13 +870,7 @@ export function createPostsRepository(): PostsRepository {
           community_id: input.communityId,
           author_id: authorId,
           body: input.body.trim(),
-          media_paths: (input.media ?? []).map((asset) => ({
-            publicId: asset.path,
-            type: asset.deliveryType,
-            format: asset.format ?? null,
-            contentType: asset.contentType ?? null,
-            altText: asset.altText ?? null,
-          })),
+          media_paths: serializeMediaAssets(input.media),
           is_announcement: input.isAnnouncement ?? false,
         })
         .select('*,author:profiles!posts_author_id_fkey(*),community:communities!posts_community_id_fkey(media_visibility)')
@@ -1031,7 +1066,7 @@ export function createMessagesRepository(): MessagesRepository {
           : `created_at.gt.${cursor.createdAt},and(created_at.eq.${cursor.createdAt},id.gt.${cursor.id})`
       let request = supabaseClient
         .from('messages')
-        .select('*,sender:profiles!messages_sender_id_fkey(*)')
+        .select('*,sender:profiles!messages_sender_id_fkey(*),channel:channels!messages_channel_id_fkey(community:communities!channels_community_id_fkey(media_visibility))')
         .eq('channel_id', channelId)
         .order('created_at', { ascending: !isOlderHistory })
         .order('id', { ascending: !isOlderHistory })
@@ -1056,17 +1091,28 @@ export function createMessagesRepository(): MessagesRepository {
         previousCursor: oldest ? { createdAt: oldest.created_at, id: oldest.id } : null,
       }
     },
+    async uploadMedia(input) {
+      return uploadCommunityMedia({
+        communityId: input.communityId,
+        containerId: input.messageId,
+        visibility: input.visibility,
+        file: input.file,
+        onProgress: input.onProgress,
+      })
+    },
     async send(input) {
       const senderId = await requireCurrentUserId()
       const { data, error } = await supabaseClient
         .from('messages')
         .insert({
+          ...(input.id ? { id: input.id } : {}),
           channel_id: input.channelId,
           sender_id: senderId,
           body: input.body.trim(),
+          ...(input.media?.length ? { media_paths: serializeMediaAssets(input.media) } : {}),
           reply_to_message_id: input.replyToMessageId ?? null,
         })
-        .select('*,sender:profiles!messages_sender_id_fkey(*)')
+        .select('*,sender:profiles!messages_sender_id_fkey(*),channel:channels!messages_channel_id_fkey(community:communities!channels_community_id_fkey(media_visibility))')
         .single()
       throwIfSupabaseError(error)
       return mapMessage(data as MessageRow)

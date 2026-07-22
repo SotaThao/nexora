@@ -165,6 +165,7 @@ export interface MessageDto {
   channelId: string
   senderId: string
   body: string
+  media: MediaAsset[]
   replyToMessageId: string | null
   sender?: ProfileDto
   createdAt: string
@@ -226,6 +227,14 @@ export interface UploadCommunityPostMediaInput {
   onProgress?: (progress: number) => void
 }
 
+export interface UploadCommunityMessageMediaInput {
+  communityId: string
+  messageId: string
+  visibility: CommunityVisibility
+  file: File
+  onProgress?: (progress: number) => void
+}
+
 export interface CreateCommentInput {
   postId: string
   body: string
@@ -243,8 +252,10 @@ export interface CreateJoinRequestInput {
 }
 
 export interface CreateMessageInput {
+  id?: string
   channelId: string
   body: string
+  media?: MediaAsset[]
   replyToMessageId?: string | null
 }
 

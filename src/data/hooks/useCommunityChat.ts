@@ -4,7 +4,14 @@ import { mapSupabaseError, type SupabaseDisplayError } from '../../lib/supabaseE
 import { supabaseClient } from '../../lib/supabaseClient'
 import { qk } from '../queryKeys'
 import { channelsRepository, messagesRepository } from '../repositories/community'
-import type { ChannelDto, CreateMessageInput, KeysetCursor, MessageDto } from '../repositories/community'
+import type {
+  ChannelDto,
+  CreateMessageInput,
+  KeysetCursor,
+  MediaAsset,
+  MessageDto,
+  UploadCommunityMessageMediaInput,
+} from '../repositories/community'
 import { useCommunityAuth } from '../../components/community/CommunityAuth'
 
 const CHAT_PAGE_SIZE = 40
@@ -207,6 +214,9 @@ export function useCommunityChat(communityId?: string | null, { enabled = true }
   const sendMutation = useMutation<MessageDto, CommunityError, CreateMessageInput>({
     mutationFn: (input) => messagesRepository.send(input),
   })
+  const uploadMediaMutation = useMutation<MediaAsset, CommunityError, UploadCommunityMessageMediaInput>({
+    mutationFn: (input) => messagesRepository.uploadMedia(input),
+  })
 
   const retry = useCallback(() => {
     setHistoryError(null)
@@ -231,5 +241,9 @@ export function useCommunityChat(communityId?: string | null, { enabled = true }
     sendMessage: sendMutation.mutateAsync,
     sendError: sendMutation.error,
     isSending: sendMutation.isPending,
+    uploadMessageMedia: uploadMediaMutation.mutateAsync,
+    uploadError: uploadMediaMutation.error,
+    isUploadingMedia: uploadMediaMutation.isPending,
+    resetMediaUpload: uploadMediaMutation.reset,
   }
 }
