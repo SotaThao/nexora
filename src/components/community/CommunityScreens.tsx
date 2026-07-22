@@ -220,18 +220,8 @@ export function CommunityHome() {
   )
 }
 
-export function CommunityChatInboxPlaceholder() {
-  return (
-    <CommunityFrame>
-      <section className={`${cardClass} px-6 py-12 text-center`}>
-        <span className="mx-auto grid h-14 w-14 place-items-center rounded-2xl bg-nexoraBrandSoft text-nexoraBrand"><MessagesSquare className="h-7 w-7" aria-hidden="true" /></span>
-        <h1 className="mt-4 text-xl font-extrabold text-nexoraText">Chat inbox — coming soon</h1>
-        <p className="mx-auto mt-2 max-w-sm text-sm leading-relaxed text-nexoraMuted">Danh sách cuộc trò chuyện sẽ được bổ sung trong bản cập nhật tiếp theo.</p>
-        <Link to="/community" className="mt-5 inline-flex min-h-11 items-center rounded-xl border border-nexoraBorder px-4 text-sm font-bold text-nexoraBrand hover:bg-nexoraBrandSoft">Về Community</Link>
-      </section>
-    </CommunityFrame>
-  )
-}
+export { CommunityChatInbox } from './CommunityChatInbox'
+export { CommunityChatInbox as CommunityChatInboxPlaceholder } from './CommunityChatInbox'
 
 function MemberList({ members, canModerate, communityId }: { members: CommunityMemberDto[]; canModerate: boolean; communityId: string }) {
   const requests = useCommunityJoinRequests(communityId, { enabled: canModerate })

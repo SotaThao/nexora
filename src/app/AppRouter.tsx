@@ -34,7 +34,7 @@ import RequireOnboarded from "./RequireOnboarded";
 import RequireStaffReady from "./RequireStaffReady";
 import RootRedirect from "./RootRedirect";
 import {
-  CommunityChatInboxPlaceholder,
+  CommunityChatInbox,
   CommunityCreateWizard,
   CommunityDetail,
   CommunityHome,
@@ -42,6 +42,7 @@ import {
   CommunityRouteRoot,
 } from "../components/community/CommunityScreens";
 import { CommunityChat } from "../components/community/CommunityChat";
+import { CommunityDirectChat } from "../components/community/CommunityDirectChat";
 
 const SetupWizard = lazyWithRetry(() => import("../components/SetupWizard"));
 const DashboardOwnerShell = lazyWithRetry(
@@ -213,7 +214,8 @@ export default function AppRouter() {
           />
           <Route path="/community" element={<CommunityRouteRoot />}>
             <Route index element={<CommunityHome />} />
-            <Route path="chat" element={<CommunityChatInboxPlaceholder />} />
+            <Route path="chat" element={<CommunityChatInbox />} />
+            <Route path="chat/dm/:channelId" element={<CommunityDirectChat />} />
             <Route path="new" element={<CommunityCreateWizard />} />
             <Route path="join/:token" element={<CommunityJoinPreview />} />
             <Route path=":id/chat" element={<CommunityChat />} />

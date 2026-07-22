@@ -1,7 +1,9 @@
-import { AlertCircle, ChevronDown, Loader2, ShieldCheck, Trash2, Users, X } from 'lucide-react'
+import { AlertCircle, ChevronDown, Loader2, MessageSquare, ShieldCheck, Trash2, Users, X } from 'lucide-react'
 import { useEffect, useMemo, useState } from 'react'
+import { useNavigate } from 'react-router-dom'
 import type { MemberRole } from '../../data/community/enums'
 import { useChangeCommunityMemberRole, useRemoveCommunityMember } from '../../data/hooks/useCommunity'
+import { useFindOrCreateDirectChannel } from '../../data/hooks/useDirectMessages'
 import type { CommunityMemberDto } from '../../data/repositories/community'
 
 type CommunityChatMemberActionsSheetProps = {
@@ -41,15 +43,17 @@ export function CommunityChatMemberActionsSheet({
   members,
   currentUserId,
 }: CommunityChatMemberActionsSheetProps) {
+  const navigate = useNavigate()
   const changeRole = useChangeCommunityMemberRole()
   const removeMember = useRemoveCommunityMember()
+  const findOrCreateChannel = useFindOrCreateDirectChannel()
   const [expandedMemberId, setExpandedMemberId] = useState<string | null>(null)
   const [selectedRoles, setSelectedRoles] = useState<Record<string, MemberRole>>({})
   const [removeConfirmationId, setRemoveConfirmationId] = useState<string | null>(null)
   const ownMembership = useMemo(() => members.find((member) => member.userId === currentUserId), [currentUserId, members])
   const canModerate = ownMembership?.role === 'owner' || ownMembership?.role === 'admin'
-  const actionError = changeRole.error || removeMember.error
-  const isMutating = changeRole.isPending || removeMember.isPending
+  const actionError = changeRole.error || removeMember.error || findOrCreateChannel.error
+  const isMutating = changeRole.isPending || removeMember.isPending || findOrCreateChannel.isPending
 
   useEffect(() => {
     if (!open) return
@@ -68,6 +72,15 @@ export function CommunityChatMemberActionsSheet({
   }, [open])
 
   if (!open) return null
+
+  const handleStartDm = (targetUserId: string) => {
+    findOrCreateChannel.mutate(targetUserId, {
+      onSuccess: (channel) => {
+        onClose()
+        navigate(`/community/chat/dm/${channel.id}`)
+      },
+    })
+  }
 
   const applyRole = (member: CommunityMemberDto) => {
     const newRole = selectedRoles[member.id] ?? member.role
@@ -105,6 +118,17 @@ export function CommunityChatMemberActionsSheet({
               <div className="flex items-center gap-3">
                 <MemberAvatar name={name} />
                 <div className="min-w-0 flex-1"><p className="truncate text-sm font-extrabold text-nexoraText">{name}{member.userId === currentUserId ? <span className="ml-1.5 text-xs font-semibold text-nexoraSubtle">(Bạn)</span> : null}</p><span className={`mt-1 inline-flex rounded-full px-2 py-0.5 text-[10px] font-bold ${roleClassNames[member.role]}`}>{roleLabels[member.role]}</span></div>
+                {member.userId !== currentUserId ? (
+                  <button
+                    type="button"
+                    onClick={() => handleStartDm(member.userId)}
+                    disabled={isMutating}
+                    className="inline-flex min-h-9 items-center gap-1 rounded-lg border border-nexoraBorder px-2.5 text-xs font-extrabold text-nexoraBrand hover:bg-nexoraBrandSoft disabled:opacity-50"
+                  >
+                    <MessageSquare className="h-3.5 w-3.5" aria-hidden="true" />
+                    Nhắn tin
+                  </button>
+                ) : null}
                 {canModerate ? <button type="button" onClick={() => { setExpandedMemberId(isExpanded ? null : member.id); setRemoveConfirmationId(null) }} disabled={isMutating} className="inline-flex min-h-10 items-center gap-1 rounded-lg px-2 text-xs font-extrabold text-nexoraBrand hover:bg-nexoraBrandSoft disabled:opacity-50" aria-expanded={isExpanded} aria-controls={`member-actions-${member.id}`}><ShieldCheck className="h-4 w-4" aria-hidden="true" />Quản lý<ChevronDown className={`h-3.5 w-3.5 transition-transform ${isExpanded ? 'rotate-180' : ''}`} aria-hidden="true" /></button> : null}
               </div>
 

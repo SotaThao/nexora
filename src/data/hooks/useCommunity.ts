@@ -17,6 +17,7 @@ import {
 } from '../repositories/community'
 import type {
   CommunityDto,
+  CommunityMemberDto,
   CreateCommentInput,
   CreateCommunityInput,
   CreateJoinRequestInput,
@@ -29,7 +30,7 @@ import type {
   ReactionDto,
   UploadCommunityPostMediaInput,
 } from '../repositories/community'
-import type { ReactionType } from '../community/enums'
+import type { MemberRole, ReactionType } from '../community/enums'
 import type { SupabaseDisplayError } from '../../lib/supabaseError'
 import { useCommunityAuth } from '../../components/community/CommunityAuth'
 
