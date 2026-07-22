@@ -231,6 +231,7 @@ export default function StaffMySalons() {
       return !isPreviousOrInactive
     })
     return sortSalonBusinesses(visibleBusinesses)
+  }, [businesses])
   const isLoading = isPending && businesses.length === 0
   const originalName = staffProfile?.displayName?.trim()
     || `${staffProfile?.firstName ?? ''} ${staffProfile?.lastName ?? ''}`.trim()
