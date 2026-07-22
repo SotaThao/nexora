@@ -32,19 +32,20 @@ export default function PersonalSetupWizard({ wizard }) {
       <div className="absolute bottom-1/4 right-1/4 h-64 w-64 bg-[radial-gradient(circle_at_center,_var(--tw-gradient-stops))] from-[rgba(43,89,255,0.02)] via-transparent to-transparent blur-3xl pointer-events-none sm:h-[450px] sm:w-[450px] no-print"></div>
 
       <div className="max-w-3xl mx-auto px-4 py-6 sm:py-8 relative z-10 flex flex-col min-h-dvh justify-between no-print">
-        <header className="flex flex-col md:flex-row md:items-center justify-between border-b border-nexoraBorder pb-6 mb-8 gap-4">
-          <div className="flex min-w-0 items-center">
-            <img src="/assets/logo-nexora.png" alt="Nexora Logo" className="h-11 w-auto max-w-[200px] object-contain" />
+        <header className="flex items-center justify-between border-b border-nexoraBorder pb-6 mb-8 gap-4">
+          <div className="flex shrink-0 items-center">
+            <img src="/assets/logo-nexora.png" alt="Nexora Logo" className="h-9 sm:h-11 w-auto max-w-[180px] sm:max-w-[200px] object-contain" />
           </div>
 
-          <div className="flex w-full flex-col gap-3 sm:w-auto sm:flex-row sm:items-center">
+          <div className="flex items-center gap-2.5 sm:gap-3 shrink-0">
             {currentStep < 2 && (
               <button
                 type="button"
                 onClick={handleBackToDashboard}
-                className="min-h-9 px-4 py-2 rounded-lg border border-nexoraBorder hover:bg-white bg-transparent text-nexoraText font-semibold text-xs flex items-center justify-center gap-1.5 transition-all"
+                className="min-h-9 px-3 sm:px-4 py-2 rounded-lg border border-nexoraBorder hover:bg-white bg-transparent text-nexoraText font-semibold text-xs flex items-center justify-center gap-1.5 transition-all shadow-sm whitespace-nowrap"
               >
-                <ArrowLeft className="w-4 h-4 text-nexoraSubtle" /> {t('setup.back_to_dashboard')}
+                <ArrowLeft className="w-4 h-4 text-nexoraSubtle shrink-0" />
+                <span>{t('setup.back_to_dashboard')}</span>
               </button>
             )}
             <LanguageSwitcher />
