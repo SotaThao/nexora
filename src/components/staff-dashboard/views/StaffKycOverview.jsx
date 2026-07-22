@@ -58,6 +58,16 @@ export default function StaffKycOverview() {
     setIsIframeLoading(false)
   }
 
+  useEffect(() => {
+    function handleKycMessage(event) {
+      if (event.data?.action === 'navigate' || event.data?.action === 'navigate-kyb') {
+        window.location.reload()
+      }
+    }
+    window.addEventListener('message', handleKycMessage)
+    return () => window.removeEventListener('message', handleKycMessage)
+  }, [])
+
   return (
     <div>
       {isStatusError && (
