@@ -322,6 +322,8 @@ export function useStaffLinkRequests(linkIds: readonly string[]) {
       queryKey: qk.staffLinkRequest(linkId),
       queryFn: () => staffSelfRepository.getLinkRequest(linkId),
       staleTime: 30 * 1000,
+      retry: (failureCount: number, error: unknown) =>
+        isApiError(error) && error.status === 404 ? false : failureCount < 1,
     })),
   })
 }
