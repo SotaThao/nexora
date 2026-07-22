@@ -121,20 +121,24 @@ export default function HomePageBannerSection() {
       <div className="absolute top-0 right-1/3 w-[320px] h-[320px] bg-purple/10 rounded-full blur-[100px] pointer-events-none" />
       <div className="absolute bottom-0 left-1/4 w-[280px] h-[280px] bg-blue/10 rounded-full blur-[100px] pointer-events-none" />
 
-      <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-2">
+      <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3 sm:py-4">
         <div className="relative w-full rounded-xl">
           <div className="overflow-hidden rounded-xl" ref={emblaRef}>
             <div className="flex -mr-4">
               {banners.map((banner) => (
                 <div
                   key={banner.id}
-                  className="flex-[0_0_100%] lg:flex-[0_0_50%] pr-4"
+                  className={`pr-4 ${
+                    banners.length === 1
+                      ? 'flex-[0_0_100%]'
+                      : 'flex-[0_0_100%] lg:flex-[0_0_50%]'
+                  }`}
                 >
                   <a
                     href={banner.link}
                     target={banner.target}
                     rel="noopener noreferrer"
-                    className="block w-full rounded-xl overflow-hidden ring-1 ring-purple/8 shadow-sm"
+                    className="block w-full rounded-xl overflow-hidden border border-purple/20 shadow-sm hover:border-purple/40 hover:shadow-md transition-all"
                   >
                     <div className="w-full h-[90px] md:h-[160px] flex items-center justify-center bg-white/80 backdrop-blur-[2px]">
                       <img
@@ -154,7 +158,7 @@ export default function HomePageBannerSection() {
           </div>
 
           {scrollSnaps.length > 1 && (
-            <div className="flex justify-center items-center gap-1.5 mt-2">
+            <div className="flex justify-center items-center gap-1.5 mt-2.5">
               {scrollSnaps.map((_, index) => (
                 <button
                   key={index}
