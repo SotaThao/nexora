@@ -140,11 +140,11 @@ export default function HomePageBannerSection() {
                     rel="noopener noreferrer"
                     className="block w-full rounded-xl overflow-hidden border border-purple/20 shadow-sm hover:border-purple/40 hover:shadow-md transition-all"
                   >
-                    <div className="w-full aspect-[3/1] flex items-center justify-center overflow-hidden">
+                    <div className="w-full aspect-[3/1] flex items-center justify-center bg-white/80 backdrop-blur-[2px]">
                       <img
                         src={banner.image}
                         alt={banner.alt}
-                        className="w-full h-full object-cover"
+                        className="max-h-full max-w-full object-contain"
                         onError={(e) => {
                           const slide = e.currentTarget.closest('a')
                           if (slide) (slide as HTMLElement).style.display = 'none'
