@@ -7,6 +7,7 @@ import {
   Loader2,
   LockKeyhole,
   MessageCircle,
+  MessagesSquare,
   Plus,
   Send,
   ShieldCheck,
@@ -205,7 +206,7 @@ export function CommunityHome() {
     <CommunityFrame>
       <header className="flex items-center justify-between gap-3">
         <div><p className="text-xs font-bold uppercase tracking-[0.12em] text-nexoraBrand">Nexora</p><h1 className="text-xl font-extrabold text-nexoraText">Cộng đồng</h1></div>
-        <div className="flex items-center gap-2"><CommunityNotificationBell /><Link to="/community/new" className={`inline-flex min-h-11 items-center gap-2 rounded-xl px-3 text-sm font-extrabold text-white ${gradientClass}`}><Plus className="h-4 w-4" aria-hidden="true" />Tạo nhóm</Link></div>
+        <div className="flex items-center gap-2"><CommunityNotificationBell /><Link to="/community/chat" aria-label="Mở Chat inbox" className="grid h-11 w-11 place-items-center rounded-xl border border-nexoraBorder bg-nexoraSurface text-nexoraBrand hover:bg-nexoraBrandSoft"><MessagesSquare className="h-5 w-5" aria-hidden="true" /></Link><Link to="/community/new" className={`inline-flex min-h-11 items-center gap-2 rounded-xl px-3 text-sm font-extrabold text-white ${gradientClass}`}><Plus className="h-4 w-4" aria-hidden="true" />Tạo nhóm</Link></div>
       </header>
       {isLoading || myCommunities.isLoading || communities.isLoading ? <LoadingState rows={4} /> : null}
       {myCommunities.error ? <ErrorState error={myCommunities.error} onRetry={() => void myCommunities.refetch()} /> : null}
@@ -215,6 +216,19 @@ export function CommunityHome() {
       {feedCommunities.map((community, index) => <div key={community.id}>{index === 0 ? <QuickComposer communityId={community.id} onOpen={() => setComposerCommunityId(community.id)} /> : null}<CommunityFeed community={community} /></div>)}
       <button type="button" onClick={() => setSheetOpen(true)} aria-label="Tạo mới" className={`fixed bottom-24 right-5 z-40 grid h-14 w-14 place-items-center rounded-full text-white shadow-xl lg:bottom-7 ${gradientClass}`}><Plus className="h-6 w-6" aria-hidden="true" /></button>
       {sheetOpen ? <CreateSheet onClose={() => setSheetOpen(false)} onPost={() => { setComposerCommunityId(feedCommunities[0]?.id ?? null); setSheetOpen(false) }} onGroup={() => setSheetOpen(false)} /> : null}
+    </CommunityFrame>
+  )
+}
+
+export function CommunityChatInboxPlaceholder() {
+  return (
+    <CommunityFrame>
+      <section className={`${cardClass} px-6 py-12 text-center`}>
+        <span className="mx-auto grid h-14 w-14 place-items-center rounded-2xl bg-nexoraBrandSoft text-nexoraBrand"><MessagesSquare className="h-7 w-7" aria-hidden="true" /></span>
+        <h1 className="mt-4 text-xl font-extrabold text-nexoraText">Chat inbox — coming soon</h1>
+        <p className="mx-auto mt-2 max-w-sm text-sm leading-relaxed text-nexoraMuted">Danh sách cuộc trò chuyện sẽ được bổ sung trong bản cập nhật tiếp theo.</p>
+        <Link to="/community" className="mt-5 inline-flex min-h-11 items-center rounded-xl border border-nexoraBorder px-4 text-sm font-bold text-nexoraBrand hover:bg-nexoraBrandSoft">Về Community</Link>
+      </section>
     </CommunityFrame>
   )
 }

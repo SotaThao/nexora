@@ -34,6 +34,7 @@ import RequireOnboarded from "./RequireOnboarded";
 import RequireStaffReady from "./RequireStaffReady";
 import RootRedirect from "./RootRedirect";
 import {
+  CommunityChatInboxPlaceholder,
   CommunityCreateWizard,
   CommunityDetail,
   CommunityHome,
@@ -212,6 +213,7 @@ export default function AppRouter() {
           />
           <Route path="/community" element={<CommunityRouteRoot />}>
             <Route index element={<CommunityHome />} />
+            <Route path="chat" element={<CommunityChatInboxPlaceholder />} />
             <Route path="new" element={<CommunityCreateWizard />} />
             <Route path="join/:token" element={<CommunityJoinPreview />} />
             <Route path=":id/chat" element={<CommunityChat />} />
