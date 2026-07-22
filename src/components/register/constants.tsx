@@ -29,9 +29,7 @@ export const PayoutLogos: Record<string, React.ReactNode> = {
     </svg>
   ),
   vlinkpay: (
-    <svg viewBox="0 0 24 24" className="h-[18px] w-[18px] fill-nexoraBrand" xmlns="http://www.w3.org/2000/svg">
-      <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5" />
-    </svg>
+    <img src="/assets/vlinkpay-logo.png" alt="VLINKPAY" className="h-[18px] w-[18px] object-contain" />
   ),
   applecash: (
     <svg viewBox="0 0 24 24" className="h-[18px] w-[18px] fill-black" xmlns="http://www.w3.org/2000/svg">
