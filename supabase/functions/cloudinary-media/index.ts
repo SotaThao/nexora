@@ -85,10 +85,13 @@ function safePublicId(publicId: string): string {
 function communityIdFromPublicId(publicId: unknown): string {
   if (typeof publicId !== 'string') throw new HttpError(400, 'Invalid media reference.')
   const parts = publicId.split('/')
-  if (parts.length < 4 || parts[0] !== 'community' || !UUID_PATTERN.test(parts[1]) || !UUID_PATTERN.test(parts[2])) {
-    throw new HttpError(400, 'Invalid community media reference.')
+  if (parts.length >= 4 && parts[0] === 'community' && UUID_PATTERN.test(parts[1]) && UUID_PATTERN.test(parts[2])) {
+    return parts[1]
   }
-  return parts[1]
+  if (parts.length >= 3 && UUID_PATTERN.test(parts[0]) && UUID_PATTERN.test(parts[1])) {
+    return parts[0]
+  }
+  throw new HttpError(400, 'Invalid community media reference.')
 }
 
 async function sha1(value: string): Promise<Uint8Array> {
