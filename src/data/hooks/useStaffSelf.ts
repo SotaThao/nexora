@@ -5,7 +5,6 @@ import { useMemo } from 'react'
 import {
   keepPreviousData,
   useMutation,
-  useQueries,
   useQuery,
   useQueryClient,
   type QueryClient,
@@ -35,7 +34,6 @@ import type { TransactionsListPage } from '../repositories/transactions'
 import { useStaffAccount } from '../../contexts/StaffAccountContext'
 import { resolveStaffTipQr } from '../../utils/staffTipUrl'
 import { getWebUrlOrigin } from '../../utils/webUrlBase'
-import { STAFF_LINK_REQUEST_GONE_STATUS } from '../../utils/staffLinkRequestStatus'
 
 export function useStaffProfile({ enabled: callerEnabled = true } = {}) {
   const queryClient = useQueryClient()
@@ -309,49 +307,18 @@ export function useConfirmStaffTipsReceipt() {
   })
 }
 
-export function useStaffLinkRequest(linkId: string | null | undefined, { enabled = true } = {}) {
-  return useQuery<StaffLinkRequestDetail>({
-    queryKey: qk.staffLinkRequest(linkId),
-    queryFn: () => staffSelfRepository.getLinkRequest(linkId || ''),
-    enabled: enabled && !!linkId,
-  })
-}
-
-export function useStaffLinkRequests(linkIds: readonly string[]) {
-  return useQueries({
-    queries: linkIds.map((linkId) => ({
-      queryKey: qk.staffLinkRequest(linkId),
-      queryFn: async () => {
-        try {
-          return await staffSelfRepository.getLinkRequest(linkId)
-        } catch (error) {
-          // A notification can reference a link request that's been permanently
-          // deleted server-side (old/duplicate test data, cleaned-up records).
-          // Treat that as a resolved success instead of a query error: an error
-          // state has no successful dataUpdatedAt, so TanStack Query retries it
-          // on every remount of "My Salons" regardless of staleTime/gcTime —
-          // resolving it here lets the cache actually stick for the session.
-          if (isApiError(error) && error.status === 404) {
-            return {
-              id: linkId,
-              businessName: '',
-              businessLogoUrl: null,
-              businessRole: null,
-              requestedAt: null,
-              status: STAFF_LINK_REQUEST_GONE_STATUS,
-              roleAtBusiness: null,
-            } satisfies StaffLinkRequestDetail
-          }
-          throw error
-        }
-      },
-      // A link request's resolved/gone state never reverts on its own — the only
-      // way it changes is accept/reject, which already invalidates this exact key
-      // (see useAcceptStaffLinkRequest/useRejectStaffLinkRequest). So once fetched,
-      // cache it for the session instead of re-checking it on every remount.
-      staleTime: Infinity,
-      gcTime: Infinity,
-    })),
+// BE now exposes GET /staff/link-requests (list, filterable by Status) — use that
+// directly instead of deriving link-request ids from the notifications feed and
+// probing each one individually (the old approach re-checked every historical,
+// possibly-deleted link request on every mount of "My Salons").
+export function useStaffLinkRequestsList({ enabled: callerEnabled = true } = {}) {
+  return useQuery<StaffLinkRequestDetail[]>({
+    queryKey: qk.staffLinkRequestsList({ status: 'WaitingStaffAcceptance' }),
+    queryFn: async () => {
+      const page = await staffSelfRepository.listLinkRequests({ status: 'WaitingStaffAcceptance' })
+      return page.items
+    },
+    enabled: callerEnabled,
   })
 }
 
@@ -361,6 +328,7 @@ export function useAcceptStaffLinkRequest() {
     mutationFn: (linkId) => staffSelfRepository.acceptLinkRequest(linkId),
     onSuccess: (_data, linkId) => {
       queryClient.invalidateQueries({ queryKey: qk.staffLinkRequest(linkId) })
+      queryClient.invalidateQueries({ queryKey: qk.staffLinkRequestsList() })
       queryClient.invalidateQueries({ queryKey: qk.staffBusinesses() })
       queryClient.invalidateQueries({ queryKey: qk.notifications() })
       queryClient.invalidateQueries({ queryKey: qk.notificationsUnreadCount() })
@@ -374,6 +342,7 @@ export function useRejectStaffLinkRequest() {
     mutationFn: (linkId) => staffSelfRepository.rejectLinkRequest(linkId),
     onSuccess: (_data, linkId) => {
       queryClient.invalidateQueries({ queryKey: qk.staffLinkRequest(linkId) })
+      queryClient.invalidateQueries({ queryKey: qk.staffLinkRequestsList() })
       queryClient.invalidateQueries({ queryKey: qk.staffBusinesses() })
       queryClient.invalidateQueries({ queryKey: qk.notifications() })
       queryClient.invalidateQueries({ queryKey: qk.notificationsUnreadCount() })

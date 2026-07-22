@@ -1,6 +1,7 @@
 // StaffLinkRequestCard — an incoming salon link request with status + Approve/Reject CTAs.
 // Used on staff dashboard surfaces that render pending staff link requests (e.g., "My Salon").
-// The link-request id comes from the notification (referenceId / actionUrl), since GET /staff/businesses does not carry it.
+// The request comes straight from GET /staff/link-requests (already filtered server-side to
+// WaitingStaffAcceptance), not derived from the notifications feed.
 import { Check, Clock, XCircle } from 'lucide-react'
 import { useTranslation } from '../../../contexts/LanguageContext'
 import { useNotification } from '../../../contexts/NotificationContext'
@@ -8,26 +9,14 @@ import {
   useAcceptStaffLinkRequest,
   useRejectStaffLinkRequest,
 } from '../../../data/hooks/useStaffSelf'
-import type { NotificationRecord, StaffLinkRequestDetail } from '../../../types/domain'
+import type { StaffLinkRequestDetail } from '../../../types/domain'
 import { isStaffLinkRequestActionable } from '../../../utils/staffLinkRequestStatus'
 
-export function getStaffLinkRequestId(notification: NotificationRecord): string | null {
-  if (notification.referenceId) return notification.referenceId
-  const match = String(notification.actionUrl || '').match(/\/staff\/link-requests\/([^/?#]+)/i)
-  return match?.[1] || null
-}
-
 export default function StaffLinkRequestCard({
-  notification,
-  linkId,
-  detail,
-  onResolved,
+  request,
   variant = 'card',
 }: {
-  notification: NotificationRecord
-  linkId: string
-  detail: StaffLinkRequestDetail
-  onResolved: (id: string) => void
+  request: StaffLinkRequestDetail
   variant?: 'card' | 'list-item'
 }) {
   const { t } = useTranslation()
@@ -35,22 +24,17 @@ export default function StaffLinkRequestCard({
   const acceptMutation = useAcceptStaffLinkRequest()
   const rejectMutation = useRejectStaffLinkRequest()
 
-  if (!isStaffLinkRequestActionable(detail.status)) {
+  if (!isStaffLinkRequestActionable(request.status)) {
     return null
   }
 
   const isPending = acceptMutation.isPending || rejectMutation.isPending
-  const businessName =
-    detail?.businessName ||
-    notification.title ||
-    t('staff_dashboard.notifications.link_request_business_fallback')
-  const role = detail?.roleAtBusiness || null
+  const businessName = request.businessName || t('staff_dashboard.notifications.link_request_business_fallback')
+  const role = request.roleAtBusiness || null
 
   const handleAccept = () => {
-    if (!linkId) return
-    acceptMutation.mutate(linkId, {
+    acceptMutation.mutate(request.id, {
       onSuccess: () => {
-        onResolved(notification.id)
         showToast(t('staff_dashboard.notifications.link_request_accepted'), 'success')
       },
       onError: () => showToast(t('staff_dashboard.notifications.link_request_accept_failed'), 'error'),
@@ -58,15 +42,13 @@ export default function StaffLinkRequestCard({
   }
 
   const handleReject = async () => {
-    if (!linkId) return
     const confirmed = await showConfirm(
       t('staff_dashboard.notifications.reject_link_request_confirm', { business: businessName }),
       t('staff_dashboard.notifications.reject_link_request_confirm_title'),
     )
     if (!confirmed) return
-    rejectMutation.mutate(linkId, {
+    rejectMutation.mutate(request.id, {
       onSuccess: () => {
-        onResolved(notification.id)
         showToast(t('staff_dashboard.notifications.link_request_rejected'), 'success')
       },
       onError: () => showToast(t('staff_dashboard.notifications.link_request_reject_failed'), 'error'),
@@ -81,8 +63,8 @@ export default function StaffLinkRequestCard({
     <div className={containerClass}>
       <div className="flex min-w-0 items-start gap-3">
         <div className="flex h-9 w-9 shrink-0 items-center justify-center overflow-hidden rounded-lg bg-nexoraBrandSoft text-nexoraBrand">
-          {detail?.businessLogoUrl ? (
-            <img src={detail.businessLogoUrl} alt={businessName} className="h-full w-full object-cover" />
+          {request.businessLogoUrl ? (
+            <img src={request.businessLogoUrl} alt={businessName} className="h-full w-full object-cover" />
           ) : (
             <span className="text-sm font-bold uppercase">{businessName.substring(0, 2)}</span>
           )}
@@ -101,11 +83,7 @@ export default function StaffLinkRequestCard({
             <div className="mt-0.5 truncate text-xs text-nexoraMuted">
               {t('staff_dashboard.notifications.link_request_role', { role })}
             </div>
-          ) : (
-            <div className="mt-0.5 truncate text-xs text-nexoraMuted">
-              {notification.message || t('staff_dashboard.notifications.link_request_title')}
-            </div>
-          )}
+          ) : null}
         </div>
       </div>
 

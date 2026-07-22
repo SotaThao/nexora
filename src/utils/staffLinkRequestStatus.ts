@@ -1,6 +1,3 @@
-/** Local sentinel for a link request whose record no longer exists server-side (404). */
-export const STAFF_LINK_REQUEST_GONE_STATUS = '__gone__'
-
 const RESOLVED_STAFF_LINK_REQUEST_STATUSES = new Set([
   'active',
   'accepted',
@@ -11,7 +8,6 @@ const RESOLVED_STAFF_LINK_REQUEST_STATUSES = new Set([
   'inactive',
   'rejected',
   'staffrejected',
-  STAFF_LINK_REQUEST_GONE_STATUS,
 ])
 
 /**
@@ -24,11 +20,4 @@ const RESOLVED_STAFF_LINK_REQUEST_STATUSES = new Set([
 export function isStaffLinkRequestActionable(status: string | null | undefined): boolean {
   const normalizedStatus = status?.trim().toLowerCase()
   return !normalizedStatus || !RESOLVED_STAFF_LINK_REQUEST_STATUSES.has(normalizedStatus)
-}
-
-export function isLoadedStaffLinkRequestActionable(
-  isSuccess: boolean,
-  detail: { status?: string | null } | null | undefined,
-): boolean {
-  return isSuccess && Boolean(detail) && isStaffLinkRequestActionable(detail?.status)
 }

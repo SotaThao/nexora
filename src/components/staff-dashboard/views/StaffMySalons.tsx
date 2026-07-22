@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react'
+import { useState } from 'react'
 import { Loader2 } from 'lucide-react'
 import { useNavigate } from 'react-router-dom'
 import { useTranslation } from '../../../contexts/LanguageContext'
@@ -6,11 +6,10 @@ import { useNotification } from '../../../contexts/NotificationContext'
 import {
   useSetStaffBusinessNickname,
   useStaffBusinesses,
-  useStaffLinkRequests,
+  useStaffLinkRequestsList,
   useStaffProfile,
   useUnlinkStaffBusiness,
 } from '../../../data/hooks/useStaffSelf'
-import { useMarkNotificationRead, useNotifications } from '../../../data/hooks/useNotifications'
 import errorCodeToI18nKey from '../../../data/errorCodes'
 import { isApiError } from '../../../types/domain'
 import type { StaffBusinessLink } from '../../../types/domain'
@@ -24,15 +23,12 @@ import {
   sortSalonBusinesses,
 } from '../utils/staffSalonDisplay'
 import {
-  isLoadedStaffLinkRequestActionable,
-} from '../../../utils/staffLinkRequestStatus'
-import {
   resolveStaffBusinessLinkStatusLabel,
   STAFF_BUSINESS_LINK_STATUS,
 } from '../../../utils/staffBusinessLinkStatus'
 import Tooltip from '../../ui/Tooltip'
 import NicknameEditor, { type NicknameEditorSaveResult } from '../../NicknameEditor'
-import StaffLinkRequestCard, { getStaffLinkRequestId } from './StaffLinkRequestCard'
+import StaffLinkRequestCard from './StaffLinkRequestCard'
 
 function getSalonStatusHelp(
   statusLabel: string,
@@ -205,33 +201,9 @@ export default function StaffMySalons() {
   } = useStaffBusinesses()
   const { data: staffProfile } = useStaffProfile()
   const setNicknameMutation = useSetStaffBusinessNickname()
-  const { data: notifications = [] } = useNotifications()
-  const markNotificationRead = useMarkNotificationRead()
+  const { data: pendingLinkRequests = [] } = useStaffLinkRequestsList()
   const unlinkBusiness = useUnlinkStaffBusiness()
   const [unlinkError, setUnlinkError] = useState<{ title: string; message: string } | null>(null)
-  const linkRequestsWithIds = useMemo(() => {
-    const seenLinkIds = new Set<string>()
-
-    return notifications.flatMap((notification) => {
-      if (notification.type !== 'StaffLinkRequest') return []
-
-      const linkId = getStaffLinkRequestId(notification)
-      if (!linkId || seenLinkIds.has(linkId)) return []
-
-      seenLinkIds.add(linkId)
-      return [{ notification, linkId }]
-    })
-  }, [notifications])
-  const linkRequestIds = useMemo(
-    () => linkRequestsWithIds.map(({ linkId }) => linkId),
-    [linkRequestsWithIds],
-  )
-  const linkRequestQueries = useStaffLinkRequests(linkRequestIds)
-  const pendingLinkRequests = linkRequestsWithIds.flatMap((request, index) => {
-    const query = linkRequestQueries[index]
-    if (!isLoadedStaffLinkRequestActionable(query?.isSuccess ?? false, query?.data)) return []
-    return [{ ...request, detail: query.data! }]
-  })
   const salons = sortSalonBusinesses(businesses)
   const isLoading = isPending && businesses.length === 0
   const originalName = staffProfile?.displayName?.trim()
@@ -277,14 +249,8 @@ export default function StaffMySalons() {
             {t('staff_dashboard.qr.link_requests_title')}
           </h3>
           <div className="space-y-2">
-            {pendingLinkRequests.map(({ notification, linkId, detail }) => (
-              <StaffLinkRequestCard
-                key={notification.id}
-                notification={notification}
-                linkId={linkId}
-                detail={detail}
-                onResolved={(id) => markNotificationRead.mutate(id)}
-              />
+            {pendingLinkRequests.map((request) => (
+              <StaffLinkRequestCard key={request.id} request={request} />
             ))}
           </div>
         </section>

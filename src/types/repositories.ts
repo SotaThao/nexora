@@ -601,6 +601,7 @@ export interface NotificationApiDto {
 
 export interface StaffLinkRequestDetailApiDto {
   id?: string
+  businessId?: string
   businessName?: string
   businessLogoUrl?: string | null
   businessRole?: string | null

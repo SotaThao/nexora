@@ -121,6 +121,7 @@ export const qk = {
   staffTips:             (filters = EMPTY) => ['staffTips', filters],
   staffTransactionsPaginated: (filters = EMPTY) => ['staffTransactions', 'paginated', filters],
   staffLinkRequest:    (linkId: string | null | undefined) => ['staffLinkRequest', linkId ?? 'unknown'],
+  staffLinkRequestsList: (filters = EMPTY) => ['staffLinkRequests', 'list', filters],
 
   // Merchant Nexora Voice
   merchantVoiceBookings: (filters = EMPTY) => ['merchantVoice', 'bookings', filters],
