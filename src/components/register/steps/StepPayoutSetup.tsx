@@ -34,7 +34,7 @@ export default function StepPayoutSetup({
         </div>
       </div>
 
-      <div className="space-y-1 divide-y divide-nexoraBorder max-h-[300px] overflow-y-auto pr-1">
+      <div className="space-y-1 divide-y divide-nexoraBorder max-h-[380px] overflow-y-auto pr-1">
         {displayPayoutMethods.filter(method => method.key !== 'bankwire').map(method => {
           const cfg = payouts[method.key] || { enabled: false, value: '' }
           return (
