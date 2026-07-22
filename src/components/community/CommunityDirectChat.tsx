@@ -10,7 +10,7 @@ import {
   X,
 } from 'lucide-react'
 import { useMemo, useState, type FormEvent } from 'react'
-import { useNavigate, useParams } from 'react'
+import { useNavigate, useParams } from 'react-router-dom'
 import type { MessageDto } from '../../data/repositories/community'
 import { useCommunityChat } from '../../data/hooks/useCommunityChat'
 import { useDirectChannels } from '../../data/hooks/useDirectMessages'
