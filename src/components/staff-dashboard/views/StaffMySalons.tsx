@@ -219,7 +219,16 @@ export default function StaffMySalons() {
       return [notification]
     })
   }, [notifications])
-  const salons = sortSalonBusinesses(businesses)
+  const salons = useMemo(() => {
+    const activeAndPendingBusinesses = businesses.filter((business) => {
+      const statusLabel = resolveStaffBusinessLinkStatusLabel(business).trim().toLowerCase()
+      return (
+        statusLabel !== STAFF_BUSINESS_LINK_STATUS.inactive
+        && statusLabel !== STAFF_BUSINESS_LINK_STATUS.previous
+      )
+    })
+    return sortSalonBusinesses(activeAndPendingBusinesses)
+  }, [businesses])
   const isLoading = isPending && businesses.length === 0
   const originalName = staffProfile?.displayName?.trim()
     || `${staffProfile?.firstName ?? ''} ${staffProfile?.lastName ?? ''}`.trim()
