@@ -30,7 +30,7 @@ export default function HomePageHeroSection() {
                 </h2>
                 <p className="text-base sm:text-lg text-slate-600 leading-relaxed max-w-2xl mx-auto lg:mx-0" data-i18n="hero-desc">One smart QR code. Your customers tip your staff directly — no card fees. They leave Google reviews automatically. And they earn rewards to come back.</p>
                 <div className="flex flex-row gap-4 justify-center lg:justify-start flex-wrap">
-                  <a className="inline-flex items-center justify-center gap-2 rounded-full bg-navy text-white px-7 py-4 text-base font-bold shadow-lg hover:bg-slate-800 transition-all hover:scale-[1.02] ds-control ds-button nx-hero-btn" href="#simulator">
+                  <a className="inline-flex items-center justify-center gap-2 rounded-full bg-navy text-white px-7 py-4 text-base font-bold shadow-lg hover:bg-slate-800 transition-all hover:scale-[1.02] ds-control ds-button nx-hero-btn" href="https://taxiq.nexoratouch.com/" target="_blank" rel="noopener noreferrer">
                     <span data-i18n="hero-btn-primary">Try the Live Demo</span>
                   </a>
                   <a className="inline-flex items-center justify-center gap-2 rounded-full bg-white border border-slate-200 px-7 py-4 text-base font-bold text-slate-700 shadow-sm hover:bg-slate-50 transition-all ds-control ds-button nx-hero-btn btn-light" data-i18n="hero-btn-secondary" href="#calculator">Calculate Net Savings</a>
