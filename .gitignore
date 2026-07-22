@@ -3,6 +3,7 @@ dist/
 .vite/
 .vercel/
 .env
+.env.local
 !.env.development
 !.env.test
 !.env.staging
