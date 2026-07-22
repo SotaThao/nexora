@@ -2,7 +2,6 @@ const RESOLVED_STAFF_LINK_REQUEST_STATUSES = new Set([
   'active',
   'accepted',
   'cancelled',
-  'canceled',
   'declined',
   'expired',
   'inactive',
