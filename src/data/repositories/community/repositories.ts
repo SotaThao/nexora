@@ -806,12 +806,13 @@ export function createPostsRepository(): PostsRepository {
       if (asset.deliveryType === 'upload') {
         return cloudinaryPublicUrl(cloudinaryCloudName(), asset.path)
       }
+      const format = asset.format || asset.path.split('.').pop() || 'png'
       const { data, error } = await supabaseClient.functions.invoke('cloudinary-media', {
         body: {
           action: 'sign-url',
           publicId: asset.path,
           visibility: 'private',
-          format: asset.format,
+          format,
         },
       })
       throwIfSupabaseError(error)
