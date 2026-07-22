@@ -12,8 +12,8 @@ function isValidUrl(url?: string | null): boolean {
     trimmed.length > 0 &&
     (trimmed.startsWith('http://') ||
       trimmed.startsWith('https://') ||
-      trimmed.startsWith('/') ||
-      trimmed.startsWith('data:'))
+      (trimmed.startsWith('/') && !trimmed.startsWith('//')) ||
+      trimmed.startsWith('data:image/'))
   )
 }
 
