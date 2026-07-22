@@ -76,7 +76,10 @@ export default function StepPayments({
     if (listToUse.length > 0) {
       return listToUse.map((method: PaymentMethodDto | SupportedPaymentMethod) => {
         const key = method.uiKey || payoutTypeToUiKey(method.type || '')
-        const label = ('name' in method && method.name) || getPaymentMethodDisplayName(method.type || '')
+        const i18nLabelKey = `components.staff_registration.steps.StepPayments.walletLabel_${key}`
+        const translatedLabel = t(i18nLabelKey)
+        const label = ('name' in method && method.name)
+          || (translatedLabel !== i18nLabelKey ? translatedLabel : getPaymentMethodDisplayName(method.type || ''))
         return {
           key,
           label,
