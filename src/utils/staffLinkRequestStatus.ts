@@ -1,3 +1,6 @@
+/** Local sentinel for a link request whose record no longer exists server-side (404). */
+export const STAFF_LINK_REQUEST_GONE_STATUS = '__gone__'
+
 const RESOLVED_STAFF_LINK_REQUEST_STATUSES = new Set([
   'active',
   'accepted',
@@ -8,6 +11,7 @@ const RESOLVED_STAFF_LINK_REQUEST_STATUSES = new Set([
   'inactive',
   'rejected',
   'staffrejected',
+  STAFF_LINK_REQUEST_GONE_STATUS,
 ])
 
 /**

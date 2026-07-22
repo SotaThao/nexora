@@ -35,6 +35,7 @@ import type { TransactionsListPage } from '../repositories/transactions'
 import { useStaffAccount } from '../../contexts/StaffAccountContext'
 import { resolveStaffTipQr } from '../../utils/staffTipUrl'
 import { getWebUrlOrigin } from '../../utils/webUrlBase'
+import { STAFF_LINK_REQUEST_GONE_STATUS } from '../../utils/staffLinkRequestStatus'
 
 export function useStaffProfile({ enabled: callerEnabled = true } = {}) {
   const queryClient = useQueryClient()
@@ -320,10 +321,36 @@ export function useStaffLinkRequests(linkIds: readonly string[]) {
   return useQueries({
     queries: linkIds.map((linkId) => ({
       queryKey: qk.staffLinkRequest(linkId),
-      queryFn: () => staffSelfRepository.getLinkRequest(linkId),
-      staleTime: 30 * 1000,
-      retry: (failureCount: number, error: unknown) =>
-        isApiError(error) && error.status === 404 ? false : failureCount < 1,
+      queryFn: async () => {
+        try {
+          return await staffSelfRepository.getLinkRequest(linkId)
+        } catch (error) {
+          // A notification can reference a link request that's been permanently
+          // deleted server-side (old/duplicate test data, cleaned-up records).
+          // Treat that as a resolved success instead of a query error: an error
+          // state has no successful dataUpdatedAt, so TanStack Query retries it
+          // on every remount of "My Salons" regardless of staleTime/gcTime —
+          // resolving it here lets the cache actually stick for the session.
+          if (isApiError(error) && error.status === 404) {
+            return {
+              id: linkId,
+              businessName: '',
+              businessLogoUrl: null,
+              businessRole: null,
+              requestedAt: null,
+              status: STAFF_LINK_REQUEST_GONE_STATUS,
+              roleAtBusiness: null,
+            } satisfies StaffLinkRequestDetail
+          }
+          throw error
+        }
+      },
+      // A link request's resolved/gone state never reverts on its own — the only
+      // way it changes is accept/reject, which already invalidates this exact key
+      // (see useAcceptStaffLinkRequest/useRejectStaffLinkRequest). So once fetched,
+      // cache it for the session instead of re-checking it on every remount.
+      staleTime: Infinity,
+      gcTime: Infinity,
     })),
   })
 }
