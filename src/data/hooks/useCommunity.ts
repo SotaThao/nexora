@@ -138,6 +138,43 @@ export function useCommunityMembers(communityId?: string | null, { enabled = tru
   })
 }
 
+type ChangeCommunityMemberRoleInput = {
+  communityId: string
+  userId: string
+  newRole: MemberRole
+}
+
+/** Changes a member role through the server-side, invariant-preserving RPC. */
+export function useChangeCommunityMemberRole() {
+  const queryClient = useQueryClient()
+  return useMutation<CommunityMemberDto, CommunityError, ChangeCommunityMemberRoleInput>({
+    mutationFn: ({ communityId, userId, newRole }) => membersRepository.changeRole(communityId, userId, newRole),
+    onSuccess: (member) => {
+      queryClient.invalidateQueries({ queryKey: ['community', 'members', member.communityId] })
+      queryClient.invalidateQueries({ queryKey: qk.communityDetail(member.communityId) })
+      queryClient.invalidateQueries({ queryKey: qk.communityMyList() })
+    },
+  })
+}
+
+type RemoveCommunityMemberInput = {
+  communityId: string
+  userId: string
+}
+
+/** Removes a member through the existing server-side moderation contract. */
+export function useRemoveCommunityMember() {
+  const queryClient = useQueryClient()
+  return useMutation<void, CommunityError, RemoveCommunityMemberInput>({
+    mutationFn: ({ communityId, userId }) => membersRepository.remove(communityId, userId),
+    onSuccess: (_result, { communityId }) => {
+      queryClient.invalidateQueries({ queryKey: ['community', 'members', communityId] })
+      queryClient.invalidateQueries({ queryKey: qk.communityDetail(communityId) })
+      queryClient.invalidateQueries({ queryKey: qk.communityMyList() })
+    },
+  })
+}
+
 export function useCommunityProfile(profileId?: string | null, { enabled = true } = {}) {
   const queryEnabled = useCommunityQueryEnabled(enabled)
   return useQuery({

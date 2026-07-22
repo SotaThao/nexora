@@ -7,6 +7,7 @@ import {
   Pin,
   Reply,
   Send,
+  Users,
   WifiOff,
   X,
 } from 'lucide-react'
@@ -16,6 +17,7 @@ import type { CommunityMemberDto, MessageDto } from '../../data/repositories/com
 import { useCommunityChat } from '../../data/hooks/useCommunityChat'
 import { useCommunityDetail, useCommunityFeedPosts, useCommunityMembers } from '../../data/hooks/useCommunity'
 import { CommunityPersonaSwitcher, useCommunityAuth } from './CommunityAuth'
+import { CommunityChatMemberActionsSheet } from './CommunityChatMemberActionsSheet'
 import DemoStaffShell from './demo/DemoStaffShell'
 
 const gradientClass = 'bg-gradient-to-br from-nexoraElectric to-nexoraViolet'
@@ -107,6 +109,7 @@ export function CommunityChat() {
   const chat = useCommunityChat(id)
   const [body, setBody] = useState('')
   const [replyTo, setReplyTo] = useState<MessageDto | null>(null)
+  const [memberSheetOpen, setMemberSheetOpen] = useState(false)
 
   const members = useMemo(() => membersQuery.data?.pages.flatMap((page) => page.items) ?? [], [membersQuery.data])
   const membersByUserId = useMemo(() => new Map(members.map((member) => [member.userId, member])), [members])
@@ -147,6 +150,7 @@ export function CommunityChat() {
             <button type="button" onClick={() => navigate(`/community/${id}`)} className="grid h-11 w-11 place-items-center rounded-full text-nexoraMuted hover:bg-nexoraSurfaceMuted" aria-label="Quay lại nhóm"><ArrowLeft className="h-5 w-5" aria-hidden="true" /></button>
             <Avatar name={detail.data?.name} />
             <div className="min-w-0 flex-1"><div className="flex items-center gap-1"><h1 className="truncate text-sm font-extrabold text-nexoraText">{detail.data?.name || 'Nhóm Community'}</h1>{detail.data?.verified ? <BadgeCheck className="h-4 w-4 shrink-0 text-nexoraSuccess" aria-label="Đã xác minh" /> : null}</div><p className="text-[11px] text-nexoraSubtle">{members.length} thành viên</p></div>
+            <button type="button" onClick={() => setMemberSheetOpen(true)} className="grid h-10 w-10 place-items-center rounded-full text-nexoraMuted hover:bg-nexoraSurfaceMuted" aria-label="Mở danh sách thành viên"><Users className="h-5 w-5" aria-hidden="true" /></button>
             {chat.isReconnecting ? <span className="inline-flex items-center gap-1 rounded-full bg-nexoraWarning/10 px-2 py-1 text-[10px] font-bold text-nexoraWarning"><WifiOff className="h-3 w-3" aria-hidden="true" />Đang kết nối lại</span> : null}
           </header>
 
@@ -166,6 +170,7 @@ export function CommunityChat() {
             <div className="flex items-center gap-2"><input value={body} onChange={(event) => setBody(event.target.value)} maxLength={5_000} disabled={!chat.channel || chat.isSending} placeholder="Nhắn tin…" aria-label="Nội dung tin nhắn" className="min-h-11 min-w-0 flex-1 rounded-full border border-nexoraBorder bg-nexoraSurfaceMuted px-4 text-sm text-nexoraText outline-none placeholder:text-nexoraSubtle focus:border-nexoraBrand disabled:opacity-60" /><button type="submit" disabled={!body.trim() || !chat.channel || chat.isSending} className={`grid h-11 w-11 shrink-0 place-items-center rounded-full text-white ${gradientClass} disabled:cursor-not-allowed disabled:opacity-50`} aria-label="Gửi tin nhắn">{chat.isSending ? <Loader2 className="h-4 w-4 animate-spin" aria-hidden="true" /> : <Send className="h-4 w-4" aria-hidden="true" />}</button></div>
           </form>
         </main>
+        <CommunityChatMemberActionsSheet open={memberSheetOpen} onClose={() => setMemberSheetOpen(false)} communityId={id} members={members} currentUserId={user?.id} />
       </DemoStaffShell>
     </>
   )
