@@ -825,6 +825,11 @@ html.homepage-active {
     padding-bottom: 3rem !important;
   }
 
+  .nx-homepage section.nx-homepage-banner-section {
+    padding-top: 1rem !important;
+    padding-bottom: 1rem !important;
+  }
+
   /* ──────────────────────────────────────────
      TYPOGRAPHY HIERARCHY  (mobile overrides)
      T1  Display  hero H1     clamp 2–3.25rem

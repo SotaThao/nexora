@@ -155,7 +155,7 @@ export default function HomePageBannerSection() {
   }
 
   return (
-    <section className="relative overflow-hidden bg-gradient-to-b from-white via-indigo-50/25 to-slate-50 ds-section">
+    <section className="nx-homepage-banner-section relative overflow-hidden bg-gradient-to-b from-white via-indigo-50/25 to-slate-50 ds-section">
       <div className="absolute top-0 right-1/3 w-[320px] h-[320px] bg-purple/10 rounded-full blur-[100px] pointer-events-none" />
       <div className="absolute bottom-0 left-1/4 w-[280px] h-[280px] bg-blue/10 rounded-full blur-[100px] pointer-events-none" />
 
