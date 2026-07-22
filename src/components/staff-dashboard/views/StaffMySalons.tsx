@@ -220,23 +220,17 @@ export default function StaffMySalons() {
     })
   }, [notifications])
   const salons = useMemo(() => {
-    const activeAndPendingBusinesses = businesses.filter((business) => {
+    const visibleBusinesses = businesses.filter((business) => {
       const statusLabel = resolveStaffBusinessLinkStatusLabel(business).trim().toLowerCase()
-      const rawStatus = String(business.status ?? business.linkStatus ?? '').trim().toLowerCase()
-      const isPrevious = (
+      const isPreviousOrInactive = (
         statusLabel === STAFF_BUSINESS_LINK_STATUS.inactive
         || statusLabel === STAFF_BUSINESS_LINK_STATUS.previous
         || statusLabel.includes(STAFF_BUSINESS_LINK_STATUS.inactive)
         || statusLabel.includes(STAFF_BUSINESS_LINK_STATUS.previous)
-        || rawStatus === '2'
-        || rawStatus === '5'
-        || rawStatus === 'inactive'
-        || rawStatus === 'previous'
       )
-      return !isPrevious
+      return !isPreviousOrInactive
     })
-    return sortSalonBusinesses(activeAndPendingBusinesses)
-  }, [businesses])
+    return sortSalonBusinesses(visibleBusinesses)
   const isLoading = isPending && businesses.length === 0
   const originalName = staffProfile?.displayName?.trim()
     || `${staffProfile?.firstName ?? ''} ${staffProfile?.lastName ?? ''}`.trim()
