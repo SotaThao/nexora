@@ -36,9 +36,32 @@ export const PayoutLogos = {
 
 export const payoutMethodsList = [
   { key: 'zelle', label: 'Zelle', placeholder: 'Enter Zelle email/phone...' },
-  { key: 'bankwire', label: 'Bank Wire', placeholder: 'Enter Bank Wire routing - account...' },
-  { key: 'paypal', label: 'PayPal', placeholder: 'Enter PayPal email...' },
-  { key: 'venmo', label: 'Venmo', placeholder: 'Enter Venmo @username...' },
   { key: 'cashapp', label: 'Cash App', placeholder: 'Enter Cash App $cashtag...' },
-  { key: 'applecash', label: 'Apple Cash', placeholder: 'Enter Apple Cash phone number...' }
+  { key: 'venmo', label: 'Venmo', placeholder: 'Enter Venmo @username...' },
+  { key: 'applecash', label: 'Apple Cash', placeholder: 'Enter Apple Cash phone number...' },
+  { key: 'paypal', label: 'PayPal', placeholder: 'Enter PayPal email...' },
+  { key: 'bankwire', label: 'Bank Wire', placeholder: 'Enter Bank Wire routing - account...' }
 ]
+
+export function getSortedPayoutMethods(
+  supportedMethods?: Array<{ uiKey?: string; type?: string }>
+) {
+  if (!supportedMethods || supportedMethods.length === 0) {
+    return payoutMethodsList
+  }
+
+  const orderMap = new Map<string, number>()
+  supportedMethods.forEach((m, idx) => {
+    const key = (m.uiKey || m.type || '').toLowerCase()
+    if (key) {
+      orderMap.set(key, idx)
+    }
+  })
+
+  return [...payoutMethodsList].sort((a, b) => {
+    const orderA = orderMap.has(a.key.toLowerCase()) ? orderMap.get(a.key.toLowerCase())! : 999
+    const orderB = orderMap.has(b.key.toLowerCase()) ? orderMap.get(b.key.toLowerCase())! : 999
+    return orderA - orderB
+  })
+}
+
