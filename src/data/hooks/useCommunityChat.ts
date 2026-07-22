@@ -57,7 +57,15 @@ function latestCursor(messages: MessageDto[]): KeysetCursor | null {
   return latest ? { createdAt: latest.createdAt, id: latest.id } : null
 }
 
-export function useCommunityChat(communityId?: string | null, { enabled = true } = {}) {
+type UseCommunityChatOptions = {
+  directChannelId?: string | null
+  enabled?: boolean
+}
+
+export function useCommunityChat(
+  communityId?: string | null,
+  { directChannelId, enabled = true }: UseCommunityChatOptions = {},
+) {
   const { authReady } = useCommunityAuth()
   const queryClient = useQueryClient()
   const [subscriptionAttempt, setSubscriptionAttempt] = useState(0)
@@ -69,13 +77,24 @@ export function useCommunityChat(communityId?: string | null, { enabled = true }
   const chatEnabled = enabled && authReady
 
   const channelQuery = useQuery<ChannelDto | null, CommunityError>({
-    queryKey: qk.communityChatChannel(communityId ?? ''),
-    queryFn: () => channelsRepository.getMain(communityId!),
-    enabled: chatEnabled && Boolean(communityId),
+    queryKey: directChannelId
+      ? qk.communityDirectChannel(directChannelId)
+      : qk.communityChatChannel(communityId ?? ''),
+    queryFn: () =>
+      directChannelId
+        ? Promise.resolve({
+            id: directChannelId,
+            communityId: null,
+            kind: 'direct' as const,
+            name: 'Direct',
+            createdAt: new Date().toISOString(),
+          })
+        : channelsRepository.getMain(communityId!),
+    enabled: chatEnabled && (Boolean(directChannelId) || Boolean(communityId)),
     retry: false,
   })
 
-  const channelId = channelQuery.data?.id
+  const channelId = directChannelId || channelQuery.data?.id
   const messagesKey = useMemo(() => qk.communityChatMessages(channelId ?? ''), [channelId])
   const messagesQuery = useQuery<ChatMessageCache, CommunityError>({
     queryKey: messagesKey,
