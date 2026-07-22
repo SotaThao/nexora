@@ -309,9 +309,14 @@ export function resolveDashboardMobileMenuTitle(
   tabParam: string | null,
   t: (key: string) => string,
   fallbackLabel = '',
+  sectionParam: string | null = null,
 ): string {
   const paymentsPayoutsItem = getActivePaymentsPayoutsSubmenuItem(activeMenu, tabParam)
   if (paymentsPayoutsItem) return t(paymentsPayoutsItem.labelKey)
+
+  if (activeMenu === DASHBOARD_MENU_ID.settings && sectionParam === 'verification') {
+    return t('staff_dashboard.profile.menu_verification')
+  }
 
   const labelKey = DASHBOARD_MENU_LABEL_KEYS[activeMenu]
   if (labelKey) return t(labelKey)

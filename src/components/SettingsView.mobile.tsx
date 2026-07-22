@@ -511,20 +511,8 @@ export default function SettingsViewMobile({
 
         {form.activeTab === 'profile' && activeSection === 'verification' && (
           <>
-            <MerchantProfileSectionHeader
-              title={t('staff_dashboard.profile.menu_verification')}
-              onBack={closeProfileSection}
-            />
             {showKybFlow ? (
               <div className="space-y-3">
-                <button
-                  type="button"
-                  onClick={() => setShowKybFlow(false)}
-                  className="inline-flex items-center gap-1 text-xs font-bold text-nexoraMuted transition hover:text-nexoraText"
-                >
-                  <ArrowLeft className="h-4 w-4" />
-                  {t('common.back')}
-                </button>
                 <KybTab
                   profile={form.profile}
                   cardDetails={null}
