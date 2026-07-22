@@ -540,15 +540,48 @@ function normalizeConfigResponse(response: unknown): MerchantVoiceConfigDto {
   }
 }
 
-function normalizeBookingDto(item: MerchantVoiceBookingDto): MerchantVoiceBookingDto {
-  const duration =
-    item.callDurationSeconds == null ? null : Number(item.callDurationSeconds)
+function readField<T>(raw: Record<string, unknown>, camel: string, pascal: string): T | undefined {
+  return (raw[camel] ?? raw[pascal]) as T | undefined
+}
+
+/** Coerce API numeric fields; invalid values must not leak NaN/Infinity into paging or KPI UI. */
+function toFiniteNumber(value: unknown, fallback: number): number {
+  const parsed = Number(value)
+  return Number.isFinite(parsed) ? parsed : fallback
+}
+
+function readNullableString(raw: Record<string, unknown>, camel: string, pascal: string): string | null {
+  const value = readField<unknown>(raw, camel, pascal)
+  if (value == null) return null
+  const trimmed = String(value).trim()
+  return trimmed || null
+}
+
+function normalizeBookingDto(item: MerchantVoiceBookingDto | Record<string, unknown>): MerchantVoiceBookingDto {
+  const raw = (item ?? {}) as Record<string, unknown>
+  const durationRaw = readField<unknown>(raw, 'callDurationSeconds', 'CallDurationSeconds')
+  const duration = durationRaw == null ? null : Number(durationRaw)
 
   return {
-    ...item,
-    source: normalizeMerchantVoiceLeadSource(item.source),
-    status: normalizeMerchantVoiceLeadStatus(item.status),
-    callStartedAt: item.callStartedAt ?? null,
+    id: String(readField<unknown>(raw, 'id', 'Id') ?? ''),
+    tenantId: String(readField<unknown>(raw, 'tenantId', 'TenantId') ?? ''),
+    source: normalizeMerchantVoiceLeadSource(readField(raw, 'source', 'Source')),
+    customerPhone: readNullableString(raw, 'customerPhone', 'CustomerPhone'),
+    customerName: readNullableString(raw, 'customerName', 'CustomerName'),
+    customerEmail: readNullableString(raw, 'customerEmail', 'CustomerEmail'),
+    service: readNullableString(raw, 'service', 'Service'),
+    preferredTime: readNullableString(raw, 'preferredTime', 'PreferredTime'),
+    notes: readNullableString(raw, 'notes', 'Notes'),
+    status: normalizeMerchantVoiceLeadStatus(readField(raw, 'status', 'Status')),
+    confirmationSmsSentAt: readNullableString(raw, 'confirmationSmsSentAt', 'ConfirmationSmsSentAt'),
+    assignedStaffId: readNullableString(raw, 'assignedStaffId', 'AssignedStaffId'),
+    assignedStaffName: readNullableString(raw, 'assignedStaffName', 'AssignedStaffName'),
+    assignedStaffEmail: readNullableString(raw, 'assignedStaffEmail', 'AssignedStaffEmail'),
+    assignedStaffPhone: readNullableString(raw, 'assignedStaffPhone', 'AssignedStaffPhone'),
+    requestedStartAtUtc: readNullableString(raw, 'requestedStartAtUtc', 'RequestedStartAtUtc'),
+    requestedEndAtUtc: readNullableString(raw, 'requestedEndAtUtc', 'RequestedEndAtUtc'),
+    createdAt: String(readField<unknown>(raw, 'createdAt', 'CreatedAt') ?? ''),
+    callStartedAt: readNullableString(raw, 'callStartedAt', 'CallStartedAt'),
     callDurationSeconds: duration != null && Number.isFinite(duration) ? duration : null,
   }
 }
@@ -561,11 +594,11 @@ function buildMerchantVoicePagingParams(pageNumber?: number, pageSize?: number) 
 }
 
 function normalizeBookingsResponse(
-  response: MerchantVoiceBookingsApiResponse | MerchantVoiceBookingDto[],
+  response: MerchantVoiceBookingsApiResponse | MerchantVoiceBookingDto[] | Record<string, unknown>,
   pageNumber = 1,
 ): MerchantVoiceBookingsResponse {
   if (Array.isArray(response)) {
-    const items = response.map(normalizeBookingDto)
+    const items = response.map((item) => normalizeBookingDto(item))
     return {
       items,
       pageNumber,
@@ -576,14 +609,27 @@ function normalizeBookingsResponse(
     }
   }
 
-  const items = (response?.items ?? []).map(normalizeBookingDto)
+  const raw = (response ?? {}) as Record<string, unknown>
+  const rawItems = readField<unknown>(raw, 'items', 'Items')
+  const list = Array.isArray(rawItems) ? rawItems : []
+  const items = list.map((item) => normalizeBookingDto(item as Record<string, unknown>))
+  const resolvedPage = Number(readField<unknown>(raw, 'pageNumber', 'PageNumber') ?? pageNumber)
+  const totalPages = Math.max(1, toFiniteNumber(readField<unknown>(raw, 'totalPages', 'TotalPages') ?? 1, 1))
+  const totalCount = Number(readField<unknown>(raw, 'totalCount', 'TotalCount') ?? items.length)
+  const hasPreviousPage = Boolean(
+    readField<unknown>(raw, 'hasPreviousPage', 'HasPreviousPage') ?? resolvedPage > 1,
+  )
+  const hasNextPage = Boolean(
+    readField<unknown>(raw, 'hasNextPage', 'HasNextPage') ?? resolvedPage < totalPages,
+  )
+
   return {
     items,
-    pageNumber: response?.pageNumber ?? pageNumber,
-    totalPages: response?.totalPages ?? 1,
-    totalCount: response?.totalCount ?? items.length,
-    hasPreviousPage: response?.hasPreviousPage ?? false,
-    hasNextPage: response?.hasNextPage ?? false,
+    pageNumber: Number.isFinite(resolvedPage) ? resolvedPage : pageNumber,
+    totalPages,
+    totalCount: Number.isFinite(totalCount) ? totalCount : items.length,
+    hasPreviousPage,
+    hasNextPage,
   }
 }
 
@@ -695,12 +741,19 @@ export function createMerchantVoiceRepository(client: HttpClient = httpClient) {
         { headers: MERCHANT_VOICE_HEADERS },
       )
 
+      const raw = (response ?? {}) as Record<string, unknown>
       return {
-        allBookings: response?.allBookings ?? 0,
-        newBookings: response?.newBookings ?? 0,
-        confirmedBookings: response?.confirmedBookings ?? 0,
-        doneBookings: response?.doneBookings ?? 0,
-        noShowBookings: response?.noShowBookings ?? 0,
+        allBookings: toFiniteNumber(readField<unknown>(raw, 'allBookings', 'AllBookings') ?? 0, 0),
+        newBookings: toFiniteNumber(readField<unknown>(raw, 'newBookings', 'NewBookings') ?? 0, 0),
+        confirmedBookings: toFiniteNumber(
+          readField<unknown>(raw, 'confirmedBookings', 'ConfirmedBookings') ?? 0,
+          0,
+        ),
+        doneBookings: toFiniteNumber(readField<unknown>(raw, 'doneBookings', 'DoneBookings') ?? 0, 0),
+        noShowBookings: toFiniteNumber(
+          readField<unknown>(raw, 'noShowBookings', 'NoShowBookings') ?? 0,
+          0,
+        ),
       }
     },
 
