@@ -159,7 +159,7 @@ export default function HomePageBannerSection() {
       <div className="absolute top-0 right-1/3 w-[320px] h-[320px] bg-purple/10 rounded-full blur-[100px] pointer-events-none" />
       <div className="absolute bottom-0 left-1/4 w-[280px] h-[280px] bg-blue/10 rounded-full blur-[100px] pointer-events-none" />
 
-      <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-1 sm:py-3">
+      <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-1 pb-1 sm:py-2">
         <div className="relative w-full rounded-xl">
           <div className="overflow-hidden rounded-xl" ref={emblaRef}>
             <div className="flex -mr-4">
@@ -178,7 +178,7 @@ export default function HomePageBannerSection() {
                     rel="noopener noreferrer"
                     className="block w-full rounded-xl overflow-hidden border border-purple/20 shadow-sm hover:border-purple/40 hover:shadow-md transition-all"
                   >
-                    <div className="w-full aspect-[3/1] flex items-center justify-center bg-white/80 backdrop-blur-[2px]">
+                    <div className="w-full aspect-[3.8/1] sm:aspect-[3/1] flex items-center justify-center bg-white/80 backdrop-blur-[2px]">
                       <img
                         src={banner.image}
                         alt={banner.alt}
