@@ -5,11 +5,39 @@ import { useTranslation } from '../../../contexts/LanguageContext'
 import { useActiveBanners } from '../../../data/hooks/useBanners'
 import type { Banner, BannerTranslation, HomePageBannerSlide } from '../../../types/domain'
 
-function getTranslation(banner: Banner, lang: string): BannerTranslation | undefined {
+function isValidUrl(url?: string | null): boolean {
+  if (!url) return false
+  const trimmed = url.trim()
   return (
-    banner.translations.find((t) => t.languageCode === lang) ||
-    banner.translations.find((t) => t.languageCode === 'en') ||
-    banner.translations[0]
+    trimmed.length > 0 &&
+    (trimmed.startsWith('http://') ||
+      trimmed.startsWith('https://') ||
+      trimmed.startsWith('/') ||
+      trimmed.startsWith('data:'))
+  )
+}
+
+function getTranslation(banner: Banner, lang: string): BannerTranslation | undefined {
+  const langMatch = banner.translations.find((t) => t.languageCode === lang)
+  if (
+    langMatch &&
+    (isValidUrl(langMatch.webUrl) || isValidUrl(langMatch.mobileUrl) || isValidUrl(langMatch.tabletUrl))
+  ) {
+    return langMatch
+  }
+
+  const enMatch = banner.translations.find((t) => t.languageCode === 'en')
+  if (
+    enMatch &&
+    (isValidUrl(enMatch.webUrl) || isValidUrl(enMatch.mobileUrl) || isValidUrl(enMatch.tabletUrl))
+  ) {
+    return enMatch
+  }
+
+  return (
+    banner.translations.find(
+      (t) => isValidUrl(t.webUrl) || isValidUrl(t.mobileUrl) || isValidUrl(t.tabletUrl)
+    ) || banner.translations[0]
   )
 }
 
@@ -83,14 +111,24 @@ export default function HomePageBannerSection() {
         const translation = getTranslation(banner, currentLanguage)
         if (!translation) return null
 
-        let imageUrl = translation.webUrl
-        if (isMobile && translation.mobileUrl) {
+        let imageUrl: string | null = null
+        if (isMobile && isValidUrl(translation.mobileUrl)) {
           imageUrl = translation.mobileUrl
-        } else if (isTablet && translation.tabletUrl) {
+        } else if (isTablet && isValidUrl(translation.tabletUrl)) {
           imageUrl = translation.tabletUrl
         }
 
-        if (!imageUrl) return null
+        if (!isValidUrl(imageUrl)) {
+          if (isValidUrl(translation.webUrl)) {
+            imageUrl = translation.webUrl
+          } else if (isValidUrl(translation.mobileUrl)) {
+            imageUrl = translation.mobileUrl
+          } else if (isValidUrl(translation.tabletUrl)) {
+            imageUrl = translation.tabletUrl
+          }
+        }
+
+        if (!isValidUrl(imageUrl)) return null
 
         let actionUrl = banner.webActionUrl
         if (deviceType === 'ios' && banner.iosActionUrl) {
@@ -101,7 +139,7 @@ export default function HomePageBannerSection() {
 
         return {
           id: banner.id,
-          image: imageUrl,
+          image: imageUrl!,
           alt: banner.title,
           link: actionUrl || '#',
           target: isOpenNewTabTarget(banner.target) ? '_blank' : '_self',
@@ -121,14 +159,14 @@ export default function HomePageBannerSection() {
       <div className="absolute top-0 right-1/3 w-[320px] h-[320px] bg-purple/10 rounded-full blur-[100px] pointer-events-none" />
       <div className="absolute bottom-0 left-1/4 w-[280px] h-[280px] bg-blue/10 rounded-full blur-[100px] pointer-events-none" />
 
-      <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3 sm:py-4">
+      <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-1 sm:py-3">
         <div className="relative w-full rounded-xl">
           <div className="overflow-hidden rounded-xl" ref={emblaRef}>
             <div className="flex -mr-4">
               {banners.map((banner) => (
                 <div
                   key={banner.id}
-                  className={`pr-4 ${
+                  className={`nx-banner-slide-item pr-4 ${
                     banners.length === 1
                       ? 'flex-[0_0_100%]'
                       : 'flex-[0_0_100%] lg:flex-[0_0_50%]'
@@ -146,7 +184,7 @@ export default function HomePageBannerSection() {
                         alt={banner.alt}
                         className="max-h-full max-w-full object-contain"
                         onError={(e) => {
-                          const slide = e.currentTarget.closest('a')
+                          const slide = e.currentTarget.closest('.nx-banner-slide-item')
                           if (slide) (slide as HTMLElement).style.display = 'none'
                         }}
                       />
@@ -158,7 +196,7 @@ export default function HomePageBannerSection() {
           </div>
 
           {scrollSnaps.length > 1 && (
-            <div className="flex justify-center items-center gap-1.5 mt-2.5">
+            <div className="flex justify-center items-center gap-1.5 mt-2">
               {scrollSnaps.map((_, index) => (
                 <button
                   key={index}
