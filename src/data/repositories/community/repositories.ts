@@ -263,7 +263,7 @@ type JoinRequestRow = {
 
 type ChannelRow = {
   id: string
-  community_id: string
+  community_id: string | null
   kind: ChannelKind
   name: string
   created_at: string

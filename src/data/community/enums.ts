@@ -76,6 +76,7 @@ export type ReportTargetType = (typeof ReportTargetType)[keyof typeof ReportTarg
 
 export const ChannelKind = {
   Main: 'main',
+  Direct: 'direct',
 } as const
 
 export type ChannelKind = (typeof ChannelKind)[keyof typeof ChannelKind]

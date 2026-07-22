@@ -137,9 +137,26 @@ export interface JoinRequestDto {
 
 export interface ChannelDto {
   id: string
-  communityId: string
+  communityId: string | null
   kind: ChannelKind
   name: string
+  createdAt: string
+}
+
+/** Minimal public profile projection exposed to the open DM directory. */
+export interface DirectMessageProfileDto {
+  id: string
+  displayName: string
+  avatarPath: string | null
+}
+
+/** Backend-neutral 1:1 channel summary for the current actor. */
+export interface DirectChannelDto {
+  id: string
+  kind: 'direct'
+  name: string
+  participantIds: string[]
+  otherParticipant: DirectMessageProfileDto
   createdAt: string
 }
 
