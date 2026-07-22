@@ -222,10 +222,18 @@ export default function StaffMySalons() {
   const salons = useMemo(() => {
     const activeAndPendingBusinesses = businesses.filter((business) => {
       const statusLabel = resolveStaffBusinessLinkStatusLabel(business).trim().toLowerCase()
-      return (
-        statusLabel !== STAFF_BUSINESS_LINK_STATUS.inactive
-        && statusLabel !== STAFF_BUSINESS_LINK_STATUS.previous
+      const rawStatus = String(business.status ?? business.linkStatus ?? '').trim().toLowerCase()
+      const isPrevious = (
+        statusLabel === STAFF_BUSINESS_LINK_STATUS.inactive
+        || statusLabel === STAFF_BUSINESS_LINK_STATUS.previous
+        || statusLabel.includes(STAFF_BUSINESS_LINK_STATUS.inactive)
+        || statusLabel.includes(STAFF_BUSINESS_LINK_STATUS.previous)
+        || rawStatus === '2'
+        || rawStatus === '5'
+        || rawStatus === 'inactive'
+        || rawStatus === 'previous'
       )
+      return !isPrevious
     })
     return sortSalonBusinesses(activeAndPendingBusinesses)
   }, [businesses])
