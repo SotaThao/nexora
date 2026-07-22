@@ -1,8 +1,9 @@
-import React from 'react'
+import React, { useMemo } from 'react'
 import { Upload, X, ArrowLeft, ArrowRight } from 'lucide-react'
 import ImageFileInput from '../../ui/ImageFileInput'
 import CountryCodeSelect, { formatNationalNumber } from '../../CountryCodeSelect'
-import { PayoutLogos, payoutMethodsList } from '../constants'
+import { PayoutLogos, getSortedPayoutMethods } from '../constants'
+import { useSupportedPaymentMethods } from '../../../data/hooks/useSupportedPaymentMethods'
 import ToggleSwitch from '../../ui/ToggleSwitch'
 
 export default function StepProfileSetup({
@@ -23,6 +24,11 @@ export default function StepProfileSetup({
   renderLabel,
   onBack,
 }) {
+  const { data: supportedPaymentMethods } = useSupportedPaymentMethods()
+  const displayPayoutMethods = useMemo(
+    () => getSortedPayoutMethods(supportedPaymentMethods),
+    [supportedPaymentMethods]
+  )
   return (
     <div className="p-6 sm:p-8 animate-fadeIn max-w-xl mx-auto">
       <div className="text-center">
@@ -152,8 +158,8 @@ export default function StepProfileSetup({
             {t('components.register.steps.StepPayoutSetup.enableAndConfigureYour')}
           </p>
 
-          <div className="space-y-1 divide-y divide-nexoraBorder max-h-[240px] overflow-y-auto pr-1">
-            {payoutMethodsList.filter(method => method.key !== 'bankwire').map(method => {
+          <div className="space-y-1 divide-y divide-nexoraBorder max-h-[380px] overflow-y-auto pr-1">
+            {displayPayoutMethods.filter(method => method.key !== 'bankwire').map(method => {
               const cfg = payouts[method.key] || { enabled: false, value: '' }
               return (
                 <div key={method.key} className="flex items-center justify-between py-3">
