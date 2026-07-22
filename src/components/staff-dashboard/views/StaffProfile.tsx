@@ -748,7 +748,7 @@ export default function StaffProfile() {
                     title={t("staff_dashboard.profile.menu_verification")}
                     onBack={closeProfileSection}
                   />
-                  {!isKycWidgetActive ? (
+                  {isKYCVerified || !isKycWidgetActive ? (
                     <section className={panel}>
                       <div className="flex items-start gap-3">
                         <span
@@ -783,12 +783,10 @@ export default function StaffProfile() {
                       )}
                     </section>
                   ) : null}
-                  {!isKYCVerified ? (
-                    <StaffKycOverview
-                      ref={kycPortalRef}
-                      onWidgetVisibleChange={setIsKycWidgetActive}
-                    />
-                  ) : null}
+                  <StaffKycOverview
+                    ref={kycPortalRef}
+                    onWidgetVisibleChange={setIsKycWidgetActive}
+                  />
                 </>
               ) : null}
 
