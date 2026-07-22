@@ -140,7 +140,7 @@ export default function HomePageBannerSection() {
                     rel="noopener noreferrer"
                     className="block w-full rounded-xl overflow-hidden border border-purple/20 shadow-sm hover:border-purple/40 hover:shadow-md transition-all"
                   >
-                    <div className="w-full h-[90px] md:h-[160px] flex items-center justify-center overflow-hidden">
+                    <div className="w-full aspect-[3/1] flex items-center justify-center overflow-hidden">
                       <img
                         src={banner.image}
                         alt={banner.alt}
