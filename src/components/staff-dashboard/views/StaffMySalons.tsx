@@ -6,10 +6,10 @@ import { useNotification } from '../../../contexts/NotificationContext'
 import {
   useSetStaffBusinessNickname,
   useStaffBusinesses,
+  useStaffLinkRequestsList,
   useStaffProfile,
   useUnlinkStaffBusiness,
 } from '../../../data/hooks/useStaffSelf'
-import { useMarkNotificationRead, useNotifications } from '../../../data/hooks/useNotifications'
 import errorCodeToI18nKey from '../../../data/errorCodes'
 import { isApiError } from '../../../types/domain'
 import type { StaffBusinessLink } from '../../../types/domain'
@@ -28,7 +28,7 @@ import {
 } from '../../../utils/staffBusinessLinkStatus'
 import Tooltip from '../../ui/Tooltip'
 import NicknameEditor, { type NicknameEditorSaveResult } from '../../NicknameEditor'
-import StaffLinkRequestCard, { getStaffLinkRequestId } from './StaffLinkRequestCard'
+import StaffLinkRequestCard from './StaffLinkRequestCard'
 
 function getSalonStatusHelp(
   statusLabel: string,
@@ -201,24 +201,9 @@ export default function StaffMySalons() {
   } = useStaffBusinesses()
   const { data: staffProfile } = useStaffProfile()
   const setNicknameMutation = useSetStaffBusinessNickname()
-  const { data: notifications = [] } = useNotifications()
-  const markNotificationRead = useMarkNotificationRead()
+  const { data: pendingLinkRequests = [] } = useStaffLinkRequestsList()
   const unlinkBusiness = useUnlinkStaffBusiness()
   const [unlinkError, setUnlinkError] = useState<{ title: string; message: string } | null>(null)
-  const pendingLinkRequestNotifications = useMemo(() => {
-    const seenLinkIds = new Set<string>()
-
-    return notifications.flatMap((notification) => {
-      if (notification.type !== 'StaffLinkRequest') return []
-      if (notification.read || notification.isRead) return []
-
-      const linkId = getStaffLinkRequestId(notification)
-      if (!linkId || seenLinkIds.has(linkId)) return []
-
-      seenLinkIds.add(linkId)
-      return [notification]
-    })
-  }, [notifications])
   const salons = useMemo(() => {
     const visibleBusinesses = businesses.filter((business) => {
       const statusLabel = resolveStaffBusinessLinkStatusLabel(business).trim().toLowerCase()
@@ -270,18 +255,14 @@ export default function StaffMySalons() {
         <p className="mt-1 text-xs leading-relaxed text-nexoraMuted">{t('staff_salons.subtitle')}</p>
       </div>
 
-      {pendingLinkRequestNotifications.length > 0 && (
+      {pendingLinkRequests.length > 0 && (
         <section className="rounded-2xl border border-nexoraBorder bg-nexoraSurface p-4 shadow-sm">
           <h3 className="mb-3 text-base font-extrabold text-nexoraText">
             {t('staff_dashboard.qr.link_requests_title')}
           </h3>
           <div className="space-y-2">
-            {pendingLinkRequestNotifications.map((notification) => (
-              <StaffLinkRequestCard
-                key={notification.id}
-                notification={notification}
-                onResolved={(id) => markNotificationRead.mutate(id)}
-              />
+            {pendingLinkRequests.map((request) => (
+              <StaffLinkRequestCard key={request.id} request={request} />
             ))}
           </div>
         </section>
