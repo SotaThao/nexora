@@ -1,5 +1,5 @@
 import React, { useCallback, useEffect, useMemo, useState } from 'react'
-import { Outlet, useNavigate, useSearchParams } from 'react-router-dom'
+import { Outlet, useNavigate, useSearchParams, useLocation } from 'react-router-dom'
 
 // 2. Third-party
 import { ArrowLeft } from 'lucide-react'
@@ -88,6 +88,15 @@ export default function Dashboard({
   // Prefetch business payment-method catalog (ordered) for Add Manual Staff / staff wallet UIs.
   useMerchantPaymentMethods()
   const navigate = useNavigate()
+  const location = useLocation()
+  const handleBackNavigation = useCallback(() => {
+    const sectionParam = new URLSearchParams(location.search).get('section')
+    if (activeMenu === DASHBOARD_MENU_ID.settings && sectionParam) {
+      navigate(location.pathname)
+      return
+    }
+    handleNavigateMenu('overview')
+  }, [activeMenu, location.pathname, location.search, navigate, handleNavigateMenu])
   const handleStartSetup = useCallback(() => {
     if (typeof onStartSetup === 'function') {
       onStartSetup()
@@ -749,11 +758,13 @@ export default function Dashboard({
   const activeMenuItem = MENU_ITEMS.find((item) => item.id === activeMenu)
   const [searchParams] = useSearchParams()
   const tabParam = searchParams.get('tab')
+  const sectionParam = searchParams.get('section')
   const activeMenuTitle = resolveDashboardMobileMenuTitle(
     activeMenu,
     tabParam,
     t,
     activeMenuItem?.label ?? '',
+    sectionParam,
   )
 
   return (
@@ -813,7 +824,7 @@ export default function Dashboard({
           {activeMenu !== 'overview' && (
             <div className="mb-3 flex min-w-0 items-center gap-3 sm:mb-5 sm:block">
               <button
-                onClick={() => handleNavigateMenu('overview')}
+                onClick={handleBackNavigation}
                 title={t('dashboard.back_to_dashboard')}
                 aria-label={t('dashboard.back_to_dashboard')}
                 className="inline-flex h-9 shrink-0 items-center gap-1.5 rounded-lg border border-nexoraBorder bg-white px-3 text-xs font-extrabold text-nexoraText shadow-nexora-soft transition hover:bg-nexoraSurfaceMuted"

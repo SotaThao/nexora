@@ -26,9 +26,12 @@ export default function StaffDashboard({ staffId = null, onLogout }) {
   
   const activeScreen = location.pathname.split('/')[2] || 'home'
   useRefetchStaffMenuQueries(activeScreen)
-  const mainWidthClass = activeScreen === 'payments' || activeScreen === 'earnings'
-    ? 'w-full max-w-6xl xl:max-w-7xl'
-    : 'max-w-3xl'
+  const isVerificationSection =
+    activeScreen === 'profile' && new URLSearchParams(location.search).get('section') === 'verification'
+  const mainWidthClass =
+    activeScreen === 'payments' || activeScreen === 'earnings' || isVerificationSection
+      ? 'w-full max-w-6xl xl:max-w-7xl'
+      : 'max-w-3xl'
   
   const handleNavigate = (screen, params?: Record<string, string>) => {
     const path = screen === 'home' ? '/staff' : `/staff/${screen}`

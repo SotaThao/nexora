@@ -176,6 +176,8 @@ export default function StaffProfile() {
   const [isSavingProfile, setIsSavingProfile] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [avatarPreview, setAvatarPreview] = useState<string | null>(null);
+  const [isKycWidgetActive, setIsKycWidgetActive] = useState(false);
+  const kycPortalRef = useRef<{ openPortal: () => void } | null>(null);
   const avatarObjectUrlRef = useRef<string | null>(null);
   const uploadImageMutation = useUploadImage();
   const displayAvatar = avatarPreview || profileView.avatar;
@@ -746,29 +748,45 @@ export default function StaffProfile() {
                     title={t("staff_dashboard.profile.menu_verification")}
                     onBack={closeProfileSection}
                   />
-                  <section className={panel}>
-                    <div className="flex items-start gap-3">
-                      <span
-                        className={`grid h-10 w-10 shrink-0 place-items-center rounded-xl ${
-                          isKYCVerified
-                            ? "bg-emerald-50 text-emerald-600"
-                            : "bg-amber-50 text-amber-600"
-                        }`}
-                      >
-                        <ShieldCheck className="h-5 w-5" />
-                      </span>
-                      <div>
-                        <h3 className="text-sm font-extrabold text-nexoraText">
-                          {kycStatusLabel}
-                        </h3>
-                        <p className="mt-1 text-xs leading-5 text-nexoraMuted">
-                          {isKYCVerified
-                            ? t("staff_dashboard.profile.verification_body")
-                            : t("staff_dashboard.profile.verification_unverified_body")}
-                        </p>
+                  {isKYCVerified || !isKycWidgetActive ? (
+                    <section className={panel}>
+                      <div className="flex items-start gap-3">
+                        <span
+                          className={`grid h-10 w-10 shrink-0 place-items-center rounded-xl ${
+                            isKYCVerified
+                              ? "bg-emerald-50 text-emerald-600"
+                              : "bg-amber-50 text-amber-600"
+                          }`}
+                        >
+                          <ShieldCheck className="h-5 w-5" />
+                        </span>
+                        <div>
+                          <h3 className="text-sm font-extrabold text-nexoraText">
+                            {kycStatusLabel}
+                          </h3>
+                          <p className="mt-1 text-xs leading-5 text-nexoraMuted">
+                            {isKYCVerified
+                              ? t("staff_dashboard.profile.verification_body")
+                              : t("staff_dashboard.profile.verification_unverified_body")}
+                          </p>
+                        </div>
                       </div>
-                    </div>
-                  </section>
+                      {!isKYCVerified && (
+                        <button
+                          type="button"
+                          onClick={() => kycPortalRef.current?.openPortal()}
+                          className="mt-4 inline-flex items-center justify-center gap-2 rounded-lg bg-gradient-to-r from-nexoraElectric to-nexoraViolet px-5 py-2.5 text-xs font-black uppercase tracking-wider text-white shadow-md transition hover:opacity-90"
+                        >
+                          <ShieldCheck className="h-4 w-4" />
+                          {t("components.dashboardRoot.verifyNow")}
+                        </button>
+                      )}
+                    </section>
+                  ) : null}
+                  <StaffKycOverview
+                    ref={kycPortalRef}
+                    onWidgetVisibleChange={setIsKycWidgetActive}
+                  />
                 </>
               ) : null}
 

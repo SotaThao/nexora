@@ -124,12 +124,12 @@ export default function SetupWizard() {
       >
 
         {/* Header */}
-        <header className="flex flex-col md:flex-row md:items-center justify-between border-b border-nexoraBorder pb-6 mb-8 gap-4">
-          <div className="flex min-w-0 items-center">
-            <img src="/assets/logo-nexora.png" alt="Nexora Logo" className="h-11 w-auto max-w-[200px] object-contain" />
+        <header className="flex items-center justify-between border-b border-nexoraBorder pb-6 mb-8 gap-4">
+          <div className="flex shrink-0 items-center">
+            <img src="/assets/logo-nexora.png" alt="Nexora Logo" className="h-9 sm:h-11 w-auto max-w-[180px] sm:max-w-[200px] object-contain" />
           </div>
 
-          <div className="flex w-full flex-col gap-3 sm:w-auto sm:flex-row sm:items-center">
+          <div className="flex items-center gap-3 shrink-0">
             <LanguageSwitcher />
           </div>
         </header>

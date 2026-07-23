@@ -2,7 +2,13 @@
  * useStaffSelf — TanStack Query hooks for the staff self-service domain.
  */
 import { useMemo } from 'react'
-import { useMutation, useQuery, useQueryClient, keepPreviousData, type QueryClient } from '@tanstack/react-query'
+import {
+  keepPreviousData,
+  useMutation,
+  useQuery,
+  useQueryClient,
+  type QueryClient,
+} from '@tanstack/react-query'
 import { qk } from '../queryKeys'
 import staffSelfRepository from '../repositories/staffSelf'
 import { useSessionRole } from '../../auth/useSessionRole'
@@ -28,6 +34,7 @@ import type { TransactionsListPage } from '../repositories/transactions'
 import { useStaffAccount } from '../../contexts/StaffAccountContext'
 import { resolveStaffTipQr } from '../../utils/staffTipUrl'
 import { getWebUrlOrigin } from '../../utils/webUrlBase'
+import { PENDING_STAFF_LINK_REQUEST_STATUSES } from '../../utils/staffLinkRequestStatus'
 
 export function useStaffProfile({ enabled: callerEnabled = true } = {}) {
   const queryClient = useQueryClient()
@@ -301,11 +308,15 @@ export function useConfirmStaffTipsReceipt() {
   })
 }
 
-export function useStaffLinkRequest(linkId: string | null | undefined, { enabled = true } = {}) {
-  return useQuery<StaffLinkRequestDetail>({
-    queryKey: qk.staffLinkRequest(linkId),
-    queryFn: () => staffSelfRepository.getLinkRequest(linkId || ''),
-    enabled: enabled && !!linkId,
+// BE now exposes GET /staff/link-requests (list, filterable by Status) — use that
+// directly instead of deriving link-request ids from the notifications feed and
+// probing each one individually (the old approach re-checked every historical,
+// possibly-deleted link request on every mount of "My Salons").
+export function useStaffLinkRequestsList({ enabled: callerEnabled = true } = {}) {
+  return useQuery<StaffLinkRequestDetail[]>({
+    queryKey: qk.staffLinkRequestsList({ statuses: PENDING_STAFF_LINK_REQUEST_STATUSES }),
+    queryFn: () => staffSelfRepository.listPendingLinkRequests(),
+    enabled: callerEnabled,
   })
 }
 
@@ -315,6 +326,7 @@ export function useAcceptStaffLinkRequest() {
     mutationFn: (linkId) => staffSelfRepository.acceptLinkRequest(linkId),
     onSuccess: (_data, linkId) => {
       queryClient.invalidateQueries({ queryKey: qk.staffLinkRequest(linkId) })
+      queryClient.invalidateQueries({ queryKey: qk.staffLinkRequestsList() })
       queryClient.invalidateQueries({ queryKey: qk.staffBusinesses() })
       queryClient.invalidateQueries({ queryKey: qk.notifications() })
       queryClient.invalidateQueries({ queryKey: qk.notificationsUnreadCount() })
@@ -328,6 +340,7 @@ export function useRejectStaffLinkRequest() {
     mutationFn: (linkId) => staffSelfRepository.rejectLinkRequest(linkId),
     onSuccess: (_data, linkId) => {
       queryClient.invalidateQueries({ queryKey: qk.staffLinkRequest(linkId) })
+      queryClient.invalidateQueries({ queryKey: qk.staffLinkRequestsList() })
       queryClient.invalidateQueries({ queryKey: qk.staffBusinesses() })
       queryClient.invalidateQueries({ queryKey: qk.notifications() })
       queryClient.invalidateQueries({ queryKey: qk.notificationsUnreadCount() })

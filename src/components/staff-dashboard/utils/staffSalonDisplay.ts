@@ -34,7 +34,7 @@ export function formatSalonLocation(business: StaffBusinessLink) {
   return business.address?.trim() || '—'
 }
 
-export function formatSalonMonthYear(
+export function formatSalonDate(
   isoDate: string | null | undefined,
   currentLanguage: string,
 ) {
@@ -42,7 +42,7 @@ export function formatSalonMonthYear(
   const date = new Date(isoDate)
   if (Number.isNaN(date.getTime())) return null
   const locale = currentLanguage === 'vi' ? 'vi-VN' : 'en-US'
-  return date.toLocaleDateString(locale, { month: 'short', year: 'numeric' })
+  return date.toLocaleDateString(locale, { day: 'numeric', month: 'short', year: 'numeric' })
 }
 
 export function formatSalonTimeline(
@@ -51,7 +51,7 @@ export function formatSalonTimeline(
   t: (key: string, params?: Record<string, unknown>) => string,
   currentLanguage: string,
 ) {
-  const formattedDate = formatSalonMonthYear(business.linkedAt, currentLanguage)
+  const formattedDate = formatSalonDate(business.linkedAt, currentLanguage)
   if (!formattedDate) return null
 
   const normalized = statusLabel.trim().toLowerCase()
