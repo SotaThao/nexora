@@ -4,7 +4,6 @@ import useCustomerFlow from './customer-flow/hooks/useCustomerFlow'
 import SelectStaff from './customer-flow/steps/SelectStaff'
 import TipAmount from './customer-flow/steps/TipAmount'
 import WalletDetails from './customer-flow/steps/WalletDetails'
-import Processing from './customer-flow/steps/Processing'
 import SuccessPayment from './customer-flow/steps/SuccessPayment'
 import LeaveReview from './customer-flow/steps/LeaveReview'
 import ReviewRouting from './customer-flow/steps/ReviewRouting'
@@ -31,7 +30,8 @@ export default function CustomerFlow() {
     availablePaymentWalletKeys, isPaymentMethodsLoading, multiStaffPaymentBlocked,
     setSelectedWalletObj, setSelectedWallet, setTipRefNumber,
     selectedWalletObj, qrCodeVal, tipRefNumber, handlePay,
-    selectedWallet, paymentLinkData, tipPaymentMethodsData, currentTipId,
+    paymentLinkData, tipPaymentMethodsData, currentTipId,
+    isProcessing,
     rating, handleRatingChange,
     positiveTagKeys, negativeTagKeys, selectedTags, handleTagToggle,
     comment, setComment, handleSubmitFeedback,
@@ -164,6 +164,7 @@ export default function CustomerFlow() {
                   setTipRefNumber={setTipRefNumber}
                   isApiMode={isApiMode}
                   handlePay={handlePay}
+                  isProcessing={isProcessing}
                   paymentMode={isPaymentFlow}
                 />
               )}
@@ -192,10 +193,6 @@ export default function CustomerFlow() {
                   paymentMode={isPaymentFlow}
                   paymentCopyScope={paymentCopyScope ?? 'merchant'}
                 />
-              )}
-
-              {step === 'processing' && (
-                <Processing t={t} selectedWallet={selectedWallet} />
               )}
 
               {step === 'success_payment' && (

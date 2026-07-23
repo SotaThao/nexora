@@ -1,4 +1,4 @@
-import React from 'react'
+import React, { useState } from 'react'
 import { getWalletOptions } from './Payment'
 
 const QUICK_TIP_AMOUNTS = [5, 10, 15, 20, 30]
@@ -26,6 +26,7 @@ export default function TipAmount({
   setTipRefNumber,
   isApiMode,
   handlePay,
+  isProcessing = false,
   paymentMode = false,
 }) {
   const walletOptions = getWalletOptions(availablePaymentWalletKeys)
@@ -38,14 +39,17 @@ export default function TipAmount({
   const isTotalInvalid = activeTipAmount < 1
   const disablePaymentSelection = hasInvalidAmount || isTotalInvalid
 
+  const [pendingWalletKey, setPendingWalletKey] = useState(null)
+
   const handleSelectWallet = (wallet) => {
-    if (disablePaymentSelection) return
+    if (disablePaymentSelection || isProcessing) return
 
     setSelectedWalletObj(wallet)
     setSelectedWallet(wallet.name)
     setTipRefNumber(Math.floor(1000 + Math.random() * 9000).toString())
 
     if (isApiMode && typeof handlePay === 'function') {
+      setPendingWalletKey(wallet.key)
       handlePay(wallet.name, wallet.key)
     } else {
       setStep('wallet_details')
@@ -186,23 +190,30 @@ export default function TipAmount({
           </div>
         ) : null}
 
-        {walletOptions.map((wallet) => (
-          <button
-            key={wallet.key}
-            type="button"
-            disabled={disablePaymentSelection}
-            onClick={() => handleSelectWallet(wallet)}
-            className="flex w-full items-center justify-between rounded-xl border border-nexoraBorder bg-white p-3 text-sm font-bold text-nexoraText shadow-sm disabled:cursor-not-allowed disabled:opacity-60"
-          >
-            <div className="flex items-center gap-3">
-              <span className={`h-8 w-8 rounded-lg flex items-center justify-center shrink-0 ${wallet.color}`}>
-                {wallet.logo}
-              </span>
-              <span>{wallet.name}</span>
-            </div>
-            <span className="text-xs text-nexoraSubtle font-medium">{t('customer.choose_chevron')}</span>
-          </button>
-        ))}
+        {walletOptions.map((wallet) => {
+          const isPendingWallet = isProcessing && pendingWalletKey === wallet.key
+          return (
+            <button
+              key={wallet.key}
+              type="button"
+              disabled={disablePaymentSelection || isProcessing}
+              onClick={() => handleSelectWallet(wallet)}
+              className="flex w-full items-center justify-between rounded-xl border border-nexoraBorder bg-white p-3 text-sm font-bold text-nexoraText shadow-sm disabled:cursor-not-allowed disabled:opacity-60"
+            >
+              <div className="flex items-center gap-3">
+                <span className={`h-8 w-8 rounded-lg flex items-center justify-center shrink-0 ${wallet.color}`}>
+                  {wallet.logo}
+                </span>
+                <span>{wallet.name}</span>
+              </div>
+              {isPendingWallet ? (
+                <div className="h-4 w-4 border-2 border-nexoraSubtle border-t-transparent rounded-full animate-spin" />
+              ) : (
+                <span className="text-xs text-nexoraSubtle font-medium">{t('customer.choose_chevron')}</span>
+              )}
+            </button>
+          )
+        })}
 
         {!isPaymentMethodsLoading && walletOptions.length === 0 ? (
           <div className="rounded-xl border border-nexoraBorder bg-nexoraCanvas/70 px-4 py-3 text-center">
