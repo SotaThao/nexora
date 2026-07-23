@@ -165,7 +165,7 @@ export function CommunityChatInbox() {
                   }`}
                 >
                   <MessageSquare className="h-4 w-4" />
-                  Tin nhắn 1:1 ({directChannels.data?.length ?? 0})
+                  Tin nhắn ({directChannels.data?.length ?? 0})
                 </button>
                 <button
                   type="button"
