@@ -863,6 +863,7 @@ function StaffModal({
       </div>
 
       <PayoutSetupModal
+        lockBackground
         open={payoutSetupOpen}
         walletKey={payoutSetupWallet}
         staffName={form.fullName}

@@ -6,6 +6,7 @@ import httpClient from '../../lib/httpClient'
 import { normalizeTipStatus } from '../../constants/tipStatus'
 import { isApiError } from '../../types/domain'
 import type {
+  PaginatedResponse,
   StaffBusinessLink,
   StaffDashboardStatistics,
   StaffDashboardSummary,
@@ -23,6 +24,7 @@ import type {
 } from '../../types/domain'
 import type { TransactionsListPage, TransactionsListQuery } from './transactions'
 import type { StaffLinkRequestDetailApiDto } from '../../types/repositories'
+import { PENDING_STAFF_LINK_REQUEST_STATUSES } from '../../utils/staffLinkRequestStatus'
 
 type HttpClient = typeof httpClient
 
@@ -385,6 +387,7 @@ function normalizeTipsPage(dto: StaffTipsPageApiDto): StaffTipsPage {
 export function normalizeStaffLinkRequestDetail(dto: StaffLinkRequestDetailApiDto): StaffLinkRequestDetail {
   return {
     id: dto.id ?? '',
+    businessId: dto.businessId ?? null,
     businessName: dto.businessName ?? '',
     businessLogoUrl: dto.businessLogoUrl ?? null,
     businessRole: dto.businessRole ?? null,
@@ -518,6 +521,43 @@ export function createStaffSelfRepository(client: HttpClient = httpClient) {
         `/api/v1/staff/link-requests/${encodeURIComponent(linkId)}`,
       )
       return normalizeStaffLinkRequestDetail(data)
+    },
+
+    async listLinkRequests({
+      status,
+      pageNumber = 1,
+      pageSize = 50,
+    }: { status?: string; pageNumber?: number; pageSize?: number } = {}): Promise<
+      PaginatedResponse<StaffLinkRequestDetail>
+    > {
+      const params: Record<string, string | number> = { PageNumber: pageNumber, PageSize: pageSize }
+      if (status) params.Status = status
+      const res = await client.get<PaginatedResponse<StaffLinkRequestDetailApiDto>>(
+        '/api/v1/staff/link-requests',
+        { params },
+      )
+      return {
+        items: (res?.items ?? []).map(normalizeStaffLinkRequestDetail),
+        pageNumber: res?.pageNumber ?? pageNumber,
+        totalPages: res?.totalPages ?? 1,
+        totalCount: res?.totalCount ?? 0,
+        hasNextPage: Boolean(res?.hasNextPage),
+        hasPreviousPage: Boolean(res?.hasPreviousPage),
+      }
+    },
+
+    // GET /staff/link-requests only accepts a single Status value per call, so
+    // fetch each status that counts as "needs staff action" and merge.
+    async listPendingLinkRequests(): Promise<StaffLinkRequestDetail[]> {
+      const pages = await Promise.all(
+        PENDING_STAFF_LINK_REQUEST_STATUSES.map((status) => this.listLinkRequests({ status })),
+      )
+      const seenIds = new Set<string>()
+      return pages.flatMap((page) => page.items).filter((item) => {
+        if (seenIds.has(item.id)) return false
+        seenIds.add(item.id)
+        return true
+      })
     },
 
     async acceptLinkRequest(linkId: string): Promise<void> {

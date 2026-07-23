@@ -8,6 +8,9 @@ import {
 } from '../../../data/paymentMethodTypes'
 import type { PaymentMethodDto } from '../../../types/domain'
 
+import { useSupportedPaymentMethods } from '../../../data/hooks/useSupportedPaymentMethods'
+import type { SupportedPaymentMethod } from '../../../data/repositories/supportedPaymentMethods'
+
 const PayoutLogos = {
   zelle: (
     <svg viewBox="0 0 24 24" className="h-4.5 w-4.5 fill-walletZelle" xmlns="http://www.w3.org/2000/svg">
@@ -45,7 +48,7 @@ const PayoutLogos = {
   ),
 }
 
-const PAYOUT_KEYS = ['zelle', 'bankwire', 'paypal', 'venmo', 'cashapp', 'applecash'] as const
+const PAYOUT_KEYS = ['zelle', 'cashapp', 'venmo', 'applecash', 'paypal', 'bankwire'] as const
 
 export default function StepPayments({
   payouts,
@@ -63,11 +66,20 @@ export default function StepPayments({
   const [consentConfirm, setConsentConfirm] = useState(false)
   const bothConsentsChecked = consentTax && consentConfirm
 
+  const { data: supportedPaymentMethods } = useSupportedPaymentMethods({ enabled: paymentMethods.length === 0 })
+
   const payoutMethodsList = useMemo(() => {
-    if (paymentMethods.length > 0) {
-      return paymentMethods.map((method: PaymentMethodDto) => {
+    const listToUse = paymentMethods.length > 0
+      ? paymentMethods
+      : (supportedPaymentMethods ?? [])
+
+    if (listToUse.length > 0) {
+      return listToUse.map((method: PaymentMethodDto | SupportedPaymentMethod) => {
         const key = method.uiKey || payoutTypeToUiKey(method.type || '')
-        const label = method.name || getPaymentMethodDisplayName(method.type || '')
+        const i18nLabelKey = `components.staff_registration.steps.StepPayments.walletLabel_${key}`
+        const translatedLabel = t(i18nLabelKey)
+        const label = ('name' in method && method.name)
+          || (translatedLabel !== i18nLabelKey ? translatedLabel : getPaymentMethodDisplayName(method.type || ''))
         return {
           key,
           label,
@@ -83,7 +95,7 @@ export default function StepPayments({
       label: t(`components.staff_registration.steps.StepPayments.walletLabel_${key}`),
       placeholder: t(`components.staff_registration.steps.StepPayments.walletPlaceholder_${key}`),
     }))
-  }, [paymentMethods, t])
+  }, [paymentMethods, supportedPaymentMethods, t])
 
   return (
     <div className="space-y-5 py-2 animate-fadeIn">

@@ -168,12 +168,18 @@ export default function DashboardSidebar({
             </button>
             <button
               type="button"
-              disabled
-              aria-disabled="true"
-              className="flex h-9 w-full cursor-not-allowed items-center gap-2.5 rounded-lg px-3 text-left text-xs font-bold text-white/40 opacity-60"
+              onClick={() => {
+                navigate('/dashboard/settings/kyb')
+                setSettingsTab('kyb')
+              }}
+              className={`flex h-9 w-full items-center gap-2.5 rounded-lg px-3 text-left text-xs font-bold transition ${
+                activeMenu === DASHBOARD_MENU_ID.settings && settingsTab === 'kyb'
+                  ? 'text-brandCyan font-extrabold'
+                  : 'text-white/75 hover:bg-white/5 hover:text-white'
+              }`}
             >
-              <div className="h-1.5 w-1.5 rounded-full bg-white/20" />
-              <span>{t('dashboard.menu.kyb')} ({t('common.coming_soon')})</span>
+              <div className={`h-1.5 w-1.5 rounded-full ${activeMenu === DASHBOARD_MENU_ID.settings && settingsTab === 'kyb' ? 'bg-brandCyan shadow-sm' : 'bg-white/30'}`} />
+              <span>{t('dashboard.menu.kyb')}</span>
             </button>
             <LanguageSwitcher variant="sidebar" className="w-full" />
           </div>
