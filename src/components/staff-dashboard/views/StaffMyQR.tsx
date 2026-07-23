@@ -898,8 +898,16 @@ export default function StaffMyQR() {
                   icon={QrCode}
                   title={t('staff_dashboard.qr.referral_unavailable_title')}
                   description={t('staff_dashboard.qr.referral_unavailable_body')}
-                  actionLabel={t('staff_dashboard.pay.empty_cta')}
-                  onAction={() => navigate('/onboarding')}
+                  actionLabel={
+                    String(account?.staffCode ?? '').trim()
+                      ? undefined
+                      : t('staff_dashboard.pay.empty_cta')
+                  }
+                  onAction={
+                    String(account?.staffCode ?? '').trim()
+                      ? undefined
+                      : () => navigate('/onboarding')
+                  }
                 />
               </div>
             )}
