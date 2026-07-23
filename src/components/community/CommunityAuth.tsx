@@ -152,7 +152,10 @@ export function CommunityPersonaSwitcher() {
   const { error, isAnonymous, isLoading, signInAs, signOutToAnonymous, user } = useCommunityAuth()
   const [isSigningIn, setIsSigningIn] = useState(false)
 
-  if (!import.meta.env.DEV) return null
+  // Show on dev, and on demo deploys where VITE_ENABLE_DEMO_TOOLS is set (the
+  // deployed Community demo needs persona switching, and DemoStaffShell reserves
+  // a 52px top bar for this switcher — hiding it on prod left an empty header gap).
+  if (!import.meta.env.DEV && import.meta.env.VITE_ENABLE_DEMO_TOOLS !== 'true') return null
 
   const selectPersona = async (persona: DemoPersona) => {
     setIsSigningIn(true)
