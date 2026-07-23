@@ -583,7 +583,7 @@ export default function useCustomerFlow() {
    */
   const handlePay = async (walletName, walletKey?: string) => {
     setSelectedWallet(walletName)
-    setStep('processing')
+    setIsProcessing(true)
     const resolvedWalletKey = walletKey || walletNameToKey(walletName)
 
     try {
@@ -591,12 +591,10 @@ export default function useCustomerFlow() {
         const touchPointId = touchPageData?.touchPoint?.id
         if (!touchPointId) {
           showToast(t('customer.multi_staff_missing_touchpoint'), 'error')
-          setStep('tip_amount')
           return
         }
         if (!businessId) {
           showToast(t('customer.multi_staff_missing_business'), 'error')
-          setStep('tip_amount')
           return
         }
 
@@ -606,7 +604,6 @@ export default function useCustomerFlow() {
         )
         if (!businessPaymentMethodId) {
           showToast(t('customer.multi_staff_missing_payment_method'), 'error')
-          setStep('tip_amount')
           return
         }
 
@@ -654,7 +651,8 @@ export default function useCustomerFlow() {
     } catch (err) {
       logger.error('Failed to create tip', err)
       showToast(getApiErrorMessage(err, t('errors.generic'), t), 'error')
-      setStep('tip_amount')
+    } finally {
+      setIsProcessing(false)
     }
   }
 
