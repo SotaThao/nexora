@@ -1,7 +1,7 @@
 // Statuses that count as "needs staff action" on GET /staff/link-requests.
 // The API only accepts one Status value per call, so callers issue one
 // request per entry and merge (see staffSelf.listPendingLinkRequests).
-export const PENDING_STAFF_LINK_REQUEST_STATUSES = ['WaitingStaffAcceptance', 'Pending'] as const
+export const PENDING_STAFF_LINK_REQUEST_STATUSES = ['WaitingStaffAcceptance'] as const
 
 const RESOLVED_STAFF_LINK_REQUEST_STATUSES = new Set([
   'active',
