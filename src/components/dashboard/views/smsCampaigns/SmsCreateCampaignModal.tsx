@@ -2,7 +2,9 @@ import React, { useEffect, useMemo, useRef, useState } from 'react'
 import { useTranslation } from '../../../../contexts/LanguageContext'
 import { useNotification } from '../../../../contexts/NotificationContext'
 import { getErrorI18nKey } from '../../../../data/errorCodes'
+import { useMerchantVoiceMyTenant } from '../../../../data/hooks/useMerchantVoiceBookings'
 import {
+  useAnalyzeMerchantVoiceSmsText,
   useCreateMerchantVoiceSmsCampaign,
   useEstimateMerchantVoiceSmsCampaign,
   useMerchantVoiceSmsCampaign,
@@ -11,9 +13,14 @@ import {
 import {
   SmsCampaignAudience,
   SmsCampaignScheduleMode,
+  SmsEncoding,
 } from '../../../../data/merchantVoice/domain'
-import type { SmsCampaignAudienceSummaryDto } from '../../../../data/repositories/merchantVoiceSmsCampaigns'
+import type {
+  SmsCampaignAudienceSummaryDto,
+  SmsTextEstimateDto,
+} from '../../../../data/repositories/merchantVoiceSmsCampaigns'
 import { getApiErrorCode } from '../../../../types/domain'
+import { getWebUrlOrigin } from '../../../../utils/webUrlBase'
 import {
   AlertTriangleIcon,
   CalendarTabIcon,
@@ -35,6 +42,8 @@ import {
   ZapIcon,
 } from '../BookingHubIcons'
 import {
+  buildSmsCampaignBusinessLinkPreview,
+  formatSmsCostUsd,
   getAudienceCount,
   SMS_API_MODE_TO_COMPOSER,
   SMS_CAMPAIGN_SEGMENT_CARDS,
@@ -47,9 +56,18 @@ import {
   SMS_PRICE_PER_SMS,
   SmsComposerScheduleMode,
 } from './constants'
-import { getSmsCharInfo } from './smsCharInfo'
 
 const TK = SMS_CAMPAIGN_TK
+const SMS_ANALYZE_MAX_CHARS = 3200
+const EMPTY_TEXT_ESTIMATE: SmsTextEstimateDto = {
+  encoding: SmsEncoding.Gsm7,
+  characterCount: 0,
+  segmentCount: 0,
+  maxCharactersPerSegment: 160,
+  charactersRemainingInLastSegment: 160,
+  estimatedCostUsd: 0,
+  segments: [],
+}
 
 const SEGMENT_ICON: Record<SmsCampaignAudience, React.ReactNode> = {
   [SmsCampaignAudience.New]: <UserPlusIcon className="marketing-icon" />,
@@ -61,10 +79,10 @@ const SEGMENT_ICON: Record<SmsCampaignAudience, React.ReactNode> = {
 }
 
 const TAG_ICON: Record<string, React.ReactNode> = {
-  '{TenKhach}': <UserIcon className="marketing-icon is-compact" />,
-  '{TenTiem}': <StoreIcon className="marketing-icon is-compact" />,
-  '{Link}': <LinkIcon className="marketing-icon is-compact" />,
-  '{SoDT}': <PhoneIcon className="marketing-icon is-compact" />,
+  '{name}': <UserIcon className="marketing-icon is-compact" />,
+  '{shop}': <StoreIcon className="marketing-icon is-compact" />,
+  '{link}': <LinkIcon className="marketing-icon is-compact" />,
+  '{phone}': <PhoneIcon className="marketing-icon is-compact" />,
 }
 
 type Props = {
@@ -83,13 +101,43 @@ function escapeHtml(value: string): string {
   ))
 }
 
-function renderPreviewHtml(text: string): string {
+/** Turn SMS preview link text (often host/path without scheme) into an absolute href. */
+function toPreviewHref(displayLink: string): string | null {
+  const trimmed = displayLink.trim()
+  if (!trimmed || trimmed.includes('…') || trimmed.includes('...')) return null
+  if (/^https?:\/\//i.test(trimmed)) return trimmed
+
+  const origin = getWebUrlOrigin()
+  if (origin) {
+    try {
+      const { protocol } = new URL(origin)
+      return `${protocol}//${trimmed.replace(/^\/+/, '')}`
+    } catch {
+      // fall through
+    }
+  }
+  return `https://${trimmed.replace(/^\/+/, '')}`
+}
+
+function renderPreviewLinkHtml(displayLink: string): string {
+  const label = escapeHtml(displayLink)
+  const href = toPreviewHref(displayLink)
+  if (!href) return `<span class="lnk">${label}</span>`
+  return (
+    `<a class="lnk" href="${escapeHtml(href)}" target="_blank" rel="noopener noreferrer">${label}</a>`
+  )
+}
+
+function renderPreviewHtml(
+  text: string,
+  tagSamples: Record<string, string> = SMS_COMPOSER_TAG_SAMPLES,
+): string {
   if (!text.trim()) return ''
   let safe = escapeHtml(text)
-  for (const [tag, sample] of Object.entries(SMS_COMPOSER_TAG_SAMPLES)) {
+  for (const [tag, sample] of Object.entries(tagSamples)) {
     const safeTag = escapeHtml(tag)
-    const rendered = tag === '{Link}'
-      ? `<span class="lnk">${escapeHtml(sample)}</span>`
+    const rendered = tag === '{link}'
+      ? renderPreviewLinkHtml(sample)
       : `<strong>${escapeHtml(sample)}</strong>`
     safe = safe.split(safeTag).join(rendered)
   }
@@ -101,6 +149,25 @@ function toScheduledAtUtc(date: string, time: string): string | undefined {
   const local = new Date(`${date}T${time}`)
   if (Number.isNaN(local.getTime())) return undefined
   return local.toISOString()
+}
+
+function openDateTimePicker(input: HTMLInputElement | null) {
+  if (!input || input.disabled) return
+  input.focus()
+  if (typeof input.showPicker === 'function') {
+    try {
+      input.showPicker()
+    } catch {
+      // Browser may block showPicker without a trusted user gesture.
+    }
+  }
+}
+
+function toLocalDateInputValue(date = new Date()): string {
+  const year = date.getFullYear()
+  const month = String(date.getMonth() + 1).padStart(2, '0')
+  const day = String(date.getDate()).padStart(2, '0')
+  return `${year}-${month}-${day}`
 }
 
 function splitUtcToLocalInputs(iso: string | null | undefined): { date: string; time: string } {
@@ -127,15 +194,17 @@ export default function SmsCreateCampaignModal({
   const { t, currentLanguage } = useTranslation()
   const { showToast } = useNotification()
   const textareaRef = useRef<HTMLTextAreaElement | null>(null)
-  const confirmBoxRef = useRef<HTMLDivElement | null>(null)
   const closeBtnRef = useRef<HTMLButtonElement | null>(null)
 
   const isEdit = !!campaignId
+  const myTenantQuery = useMerchantVoiceMyTenant({ enabled: open })
   const campaignQuery = useMerchantVoiceSmsCampaign(campaignId, { enabled: open && isEdit })
   const estimateMutation = useEstimateMerchantVoiceSmsCampaign()
+  const analyzeMutation = useAnalyzeMerchantVoiceSmsText()
   const createMutation = useCreateMerchantVoiceSmsCampaign()
   const updateMutation = useUpdateMerchantVoiceSmsCampaign()
   const { mutate: estimateCampaign } = estimateMutation
+  const { mutate: analyzeText } = analyzeMutation
 
   const [audience, setAudience] = useState(initialAudience)
   const [campaignName, setCampaignName] = useState('')
@@ -144,8 +213,9 @@ export default function SmsCreateCampaignModal({
   const [scheduleMode, setScheduleMode] = useState(SmsComposerScheduleMode.Now)
   const [scheduleDate, setScheduleDate] = useState('')
   const [scheduleTime, setScheduleTime] = useState('10:00')
-  const [confirming, setConfirming] = useState(false)
   const [hydratedId, setHydratedId] = useState<string | null>(null)
+  const [textEstimate, setTextEstimate] = useState<SmsTextEstimateDto>(EMPTY_TEXT_ESTIMATE)
+  const analyzeRequestIdRef = useRef(0)
 
   const isSubmitting = createMutation.isPending || updateMutation.isPending
   const isHydrating = isEdit && campaignQuery.isLoading && hydratedId !== campaignId
@@ -157,29 +227,38 @@ export default function SmsCreateCampaignModal({
     }
 
     document.body.style.overflow = 'hidden'
-    if (!isEdit) {
-      setAudience(initialAudience)
-      setCampaignName('')
-      setMessage('')
-      setLandingPage('')
-      setScheduleMode(SmsComposerScheduleMode.Now)
-      setScheduleDate('')
-      setScheduleTime('10:00')
-      setConfirming(false)
-      setHydratedId(null)
-    }
 
     const onKeyDown = (event: KeyboardEvent) => {
       if (event.key === 'Escape' && !isSubmitting) onClose()
     }
     window.addEventListener('keydown', onKeyDown)
-    requestAnimationFrame(() => closeBtnRef.current?.focus())
 
     return () => {
       document.body.style.overflow = ''
       window.removeEventListener('keydown', onKeyDown)
     }
-  }, [open, initialAudience, isEdit, isSubmitting, onClose])
+  }, [open, isSubmitting, onClose])
+
+  // Reset create form only when the dialog opens — not when submit pending toggles (e.g. after API error).
+  useEffect(() => {
+    if (!open || isEdit) return
+
+    setAudience(initialAudience)
+    setCampaignName('')
+    setMessage('')
+    setLandingPage('')
+    setScheduleMode(SmsComposerScheduleMode.Now)
+    setScheduleDate('')
+    setScheduleTime('10:00')
+    setHydratedId(null)
+    setTextEstimate(EMPTY_TEXT_ESTIMATE)
+    requestAnimationFrame(() => closeBtnRef.current?.focus())
+  }, [open, isEdit, initialAudience])
+
+  useEffect(() => {
+    if (!open || !isEdit) return
+    requestAnimationFrame(() => closeBtnRef.current?.focus())
+  }, [open, isEdit])
 
   useEffect(() => {
     if (!open || !isEdit || !campaignQuery.data || hydratedId === campaignQuery.data.id) return
@@ -192,19 +271,15 @@ export default function SmsCreateCampaignModal({
     setScheduleMode(SMS_API_MODE_TO_COMPOSER[detail.scheduleMode])
     setScheduleDate(scheduleInputs.date)
     setScheduleTime(scheduleInputs.time)
-    setConfirming(false)
     setHydratedId(detail.id)
   }, [open, isEdit, campaignQuery.data, hydratedId])
 
   useEffect(() => {
-    if (!confirming) return
-    confirmBoxRef.current?.scrollIntoView({ behavior: 'smooth', block: 'nearest' })
-  }, [confirming])
-
-  useEffect(() => {
     if (!open) return undefined
-    const text = message.trim()
-    if (!text) return undefined
+
+    // API requires non-empty messageBody — use a minimal placeholder until the user composes.
+    const text = message.trim() || '{name}'
+    const delayMs = message.trim() ? 400 : 0
 
     const timer = window.setTimeout(() => {
       estimateCampaign({
@@ -212,10 +287,30 @@ export default function SmsCreateCampaignModal({
         messageBody: text,
         linkUrl: landingPage || undefined,
       })
-    }, 400)
+    }, delayMs)
 
     return () => window.clearTimeout(timer)
   }, [open, audience, message, landingPage, estimateCampaign])
+
+  useEffect(() => {
+    if (!open) return undefined
+
+    const requestId = ++analyzeRequestIdRef.current
+    const timer = window.setTimeout(() => {
+      analyzeText(
+        { text: message.slice(0, SMS_ANALYZE_MAX_CHARS) },
+        {
+          onSuccess: (data) => {
+            if (requestId === analyzeRequestIdRef.current) {
+              setTextEstimate(data)
+            }
+          },
+        },
+      )
+    }, 300)
+
+    return () => window.clearTimeout(timer)
+  }, [open, message, analyzeText])
 
   const numberLocale = currentLanguage === 'vi' ? 'vi-VN' : 'en-US'
   const segmentCard = useMemo(
@@ -223,31 +318,45 @@ export default function SmsCreateCampaignModal({
     [audience],
   )
   const templates = SMS_CAMPAIGN_TEMPLATES[audience]
-  const localCharInfo = useMemo(() => getSmsCharInfo(message), [message])
   const estimate = estimateMutation.data
 
   const audienceCount = estimate?.recipients
     ?? getAudienceCount(audienceSummary, audience)
-  const parts = Math.max(estimate?.segmentsPerMessage ?? localCharInfo.parts, 1)
+  const parts = Math.max(estimate?.segmentsPerMessage ?? textEstimate.segmentCount, 1)
   const totalSms = estimate?.totalSegments ?? audienceCount * parts
-  const cost = (estimate?.estimatedCostUsd ?? totalSms * SMS_PRICE_PER_SMS).toFixed(2)
+  const estimatedCostUsd = estimate?.estimatedCostUsd
+  const cost = formatSmsCostUsd(
+    typeof estimatedCostUsd === 'number' && Number.isFinite(estimatedCostUsd)
+      ? estimatedCostUsd
+      : totalSms * SMS_PRICE_PER_SMS,
+  )
   const spendableCredits = estimate?.creditBalance ?? availableCredits
   const enoughCredits = estimate?.hasEnoughCredits ?? spendableCredits >= totalSms
-  const encodingLabel = estimate?.encoding ?? localCharInfo.encoding
-  const previewHtml = useMemo(() => renderPreviewHtml(message), [message])
+  const encodingLabel = estimate?.encoding ?? textEstimate.encoding
+  const charUnits = textEstimate.characterCount
+  const charParts = textEstimate.segmentCount
+  const charEncoding = textEstimate.encoding
+  const charPerPart = textEstimate.maxCharactersPerSegment || 160
+  const tagSamples = useMemo(() => ({
+    ...SMS_COMPOSER_TAG_SAMPLES,
+    '{shop}': myTenantQuery.data?.name?.trim() || SMS_COMPOSER_TAG_SAMPLES['{shop}'],
+    '{link}': buildSmsCampaignBusinessLinkPreview(myTenantQuery.data?.businessKey),
+  }), [myTenantQuery.data?.businessKey, myTenantQuery.data?.name])
+  const previewHtml = useMemo(
+    () => renderPreviewHtml(message, tagSamples),
+    [message, tagSamples],
+  )
 
   const insertTag = (tag: string) => {
     const el = textareaRef.current
     if (!el) {
       setMessage((prev) => prev + tag)
-      setConfirming(false)
       return
     }
     const start = el.selectionStart ?? message.length
     const end = el.selectionEnd ?? message.length
     const next = `${message.slice(0, start)}${tag}${message.slice(end)}`
     setMessage(next)
-    setConfirming(false)
     requestAnimationFrame(() => {
       el.focus()
       const cursor = start + tag.length
@@ -297,11 +406,6 @@ export default function SmsCreateCampaignModal({
         t(`${TK}.alertInsufficientCredits`, { need: totalSms, have: spendableCredits }),
         'error',
       )
-      return
-    }
-
-    if (!confirming) {
-      setConfirming(true)
       return
     }
 
@@ -358,7 +462,7 @@ export default function SmsCreateCampaignModal({
 
   if (isEdit && campaignQuery.isError) {
     return (
-      <div className="modal-overlay open" role="presentation" onClick={onClose}>
+      <div className="modal-overlay open" role="presentation">
         <div className="modal" role="dialog" aria-modal="true">
           <div className="modal-header">
             <div className="modal-title">{t(`${TK}.composerTitle`)}</div>
@@ -382,14 +486,13 @@ export default function SmsCreateCampaignModal({
 
   const countLabel = new Intl.NumberFormat(numberLocale).format(audienceCount)
   const controlsDisabled = isSubmitting || isHydrating
+  const scheduleControlsDisabled = controlsDisabled || isEdit
+  const minScheduleDate = toLocalDateInputValue()
 
   return (
     <div
       className="modal-overlay open"
       role="presentation"
-      onClick={(event) => {
-        if (event.target === event.currentTarget && !isSubmitting) onClose()
-      }}
     >
       <div
         className="modal"
@@ -427,7 +530,6 @@ export default function SmsCreateCampaignModal({
               placeholder={t(`${TK}.campaignNamePlaceholder`)}
               onChange={(event) => {
                 setCampaignName(event.target.value)
-                setConfirming(false)
               }}
             />
           </div>
@@ -445,7 +547,6 @@ export default function SmsCreateCampaignModal({
                     disabled={controlsDisabled}
                     onClick={() => {
                       setAudience(item.id)
-                      setConfirming(false)
                     }}
                   >
                     <span className="segment-btn-icon">{SEGMENT_ICON[item.id]}</span>
@@ -470,7 +571,6 @@ export default function SmsCreateCampaignModal({
                   disabled={controlsDisabled}
                   onClick={() => {
                     setMessage(t(`${TK}.${tpl.textKey}`))
-                    setConfirming(false)
                   }}
                 >
                   <div className="template-item-title">
@@ -509,17 +609,16 @@ export default function SmsCreateCampaignModal({
                 placeholder={t(`${TK}.composePlaceholder`)}
                 onChange={(event) => {
                   setMessage(event.target.value)
-                  setConfirming(false)
                 }}
               />
               <div className="sms-footer">
                 <span>{t(`${TK}.stopDisclaimer`)}</span>
-                <span className={`char-count${parts > 1 ? ' multi' : ''}`}>
+                <span className={`char-count${charParts > 1 ? ' multi' : ''}`}>
                   {t(`${TK}.charCount`, {
-                    units: estimate?.characterCount ?? localCharInfo.units,
-                    parts,
-                    encoding: encodingLabel,
-                    perPart: estimate?.maxCharactersPerSegment ?? localCharInfo.perPart,
+                    units: charUnits,
+                    parts: charParts,
+                    encoding: charEncoding,
+                    perPart: charPerPart,
                   })}
                 </span>
               </div>
@@ -546,11 +645,9 @@ export default function SmsCreateCampaignModal({
               <select
                 className="form-select"
                 value={landingPage}
-                disabled={controlsDisabled}
-                onChange={(event) => {
-                  setLandingPage(event.target.value)
-                  setConfirming(false)
-                }}
+                disabled
+                title={t(`${TK}.createLandingPageSoon`)}
+                aria-label={t(`${TK}.stepLanding`)}
               >
                 {SMS_LANDING_PAGE_OPTIONS.map((option) => (
                   <option key={option.value || 'none'} value={option.value}>
@@ -577,10 +674,9 @@ export default function SmsCreateCampaignModal({
               <button
                 className={`schedule-opt${scheduleMode === SmsComposerScheduleMode.Now ? ' selected' : ''}`}
                 type="button"
-                disabled={controlsDisabled || isEdit}
+                disabled={scheduleControlsDisabled}
                 onClick={() => {
                   setScheduleMode(SmsComposerScheduleMode.Now)
-                  setConfirming(false)
                 }}
               >
                 <span className="schedule-opt-icon"><ZapIcon className="marketing-icon" /></span>
@@ -589,10 +685,9 @@ export default function SmsCreateCampaignModal({
               <button
                 className={`schedule-opt${scheduleMode === SmsComposerScheduleMode.Schedule ? ' selected' : ''}`}
                 type="button"
-                disabled={controlsDisabled || isEdit}
+                disabled={scheduleControlsDisabled}
                 onClick={() => {
                   setScheduleMode(SmsComposerScheduleMode.Schedule)
-                  setConfirming(false)
                 }}
               >
                 <span className="schedule-opt-icon"><ClockIcon className="marketing-icon" /></span>
@@ -601,10 +696,9 @@ export default function SmsCreateCampaignModal({
               <button
                 className={`schedule-opt${scheduleMode === SmsComposerScheduleMode.Auto ? ' selected' : ''}`}
                 type="button"
-                disabled={controlsDisabled || isEdit}
+                disabled={scheduleControlsDisabled}
                 onClick={() => {
                   setScheduleMode(SmsComposerScheduleMode.Auto)
-                  setConfirming(false)
                 }}
               >
                 <span className="schedule-opt-icon"><RefreshCwIcon className="marketing-icon" /></span>
@@ -614,50 +708,50 @@ export default function SmsCreateCampaignModal({
             {scheduleMode === SmsComposerScheduleMode.Schedule ? (
               <div className="time-input-row">
                 <input
-                  className="form-input"
+                  className="form-input schedule-datetime-input"
                   type="date"
                   value={scheduleDate}
-                  disabled={controlsDisabled}
+                  min={minScheduleDate}
+                  disabled={scheduleControlsDisabled}
+                  onClick={(event) => openDateTimePicker(event.currentTarget)}
                   onChange={(event) => {
-                    setScheduleDate(event.target.value)
-                    setConfirming(false)
+                    const next = event.target.value
+                    setScheduleDate(next && next < minScheduleDate ? minScheduleDate : next)
                   }}
                 />
                 <input
-                  className="form-input"
+                  className="form-input schedule-datetime-input"
                   type="time"
                   value={scheduleTime}
-                  disabled={controlsDisabled}
+                  disabled={scheduleControlsDisabled}
+                  onClick={(event) => openDateTimePicker(event.currentTarget)}
                   onChange={(event) => {
                     setScheduleTime(event.target.value)
-                    setConfirming(false)
                   }}
                 />
               </div>
             ) : null}
           </div>
 
-          {confirming ? (
-            <div className="confirm-box show" ref={confirmBoxRef}>
-              <div className="confirm-title">
-                <AlertTriangleIcon className="marketing-icon is-compact" />
-                <span>{t(`${TK}.confirmTitle`)}</span>
-              </div>
-              <div className="confirm-detail">
-                {t(`${TK}.confirmDetailSegment`)}{' '}
-                <strong>{t(`${TK}.${segmentCard.nameKey}`)}</strong> ({countLabel} {t(`${TK}.countCustomers`)})
-                <br />
-                {t(`${TK}.confirmDetailSms`)}{' '}
-                <strong>{totalSms} SMS</strong>{' '}
-                ({parts} {t(`${TK}.perCustomer`)}, {encodingLabel})
-                <br />
-                {t(`${TK}.confirmDetailCost`)}{' '}
-                <strong>${cost}</strong> — {t(`${TK}.confirmDetailDeduct`, { count: totalSms })}
-                <br />
-                {t(`${TK}.confirmDetailWhen`)} <strong>{whenLabel}</strong>
-              </div>
+          <div className="confirm-box show">
+            <div className="confirm-title">
+              <AlertTriangleIcon className="marketing-icon is-compact" />
+              <span>{t(`${TK}.confirmTitle`)}</span>
             </div>
-          ) : null}
+            <div className="confirm-detail">
+              {t(`${TK}.confirmDetailSegment`)}{' '}
+              <strong>{t(`${TK}.${segmentCard.nameKey}`)}</strong> ({countLabel} {t(`${TK}.countCustomers`)})
+              <br />
+              {t(`${TK}.confirmDetailSms`)}{' '}
+              <strong>{totalSms} SMS</strong>{' '}
+              ({parts} {t(`${TK}.perCustomer`)}, {encodingLabel})
+              <br />
+              {t(`${TK}.confirmDetailCost`)}{' '}
+              <strong>${cost}</strong> — {t(`${TK}.confirmDetailDeduct`, { count: totalSms })}
+              <br />
+              {t(`${TK}.confirmDetailWhen`)} <strong>{whenLabel}</strong>
+            </div>
+          </div>
         </div>
 
         <div className="modal-footer">
@@ -695,11 +789,9 @@ export default function SmsCreateCampaignModal({
               <span>
                 {isSubmitting
                   ? t(`${TK}.saving`)
-                  : confirming
-                    ? t(`${TK}.confirmSend`)
-                    : isEdit
-                      ? t(`${TK}.saveCampaign`)
-                      : t(`${TK}.sendCampaign`)}
+                  : isEdit
+                    ? t(`${TK}.saveCampaign`)
+                    : t(`${TK}.sendCampaign`)}
               </span>
             </button>
           </div>

@@ -130,6 +130,7 @@ export const qk = {
   merchantVoiceBusinessStaff: (filters = EMPTY) => ['merchantVoice', 'staff', 'businessStaff', filters],
   merchantVoiceConfig: () => ['merchantVoice', 'config'],
   merchantVoiceTenantStatus: () => ['merchantVoice', 'tenant', 'status'],
+  merchantVoiceMyTenant: () => ['merchantVoice', 'tenant', 'my'],
   merchantVoiceCalls: (filters = EMPTY) => ['merchantVoice', 'calls', filters],
   merchantVoiceCallStatistics: () => ['merchantVoice', 'calls', 'statistics'],
   merchantVoiceCustomers: (filters = EMPTY) => ['merchantVoice', 'customers', filters],

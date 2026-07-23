@@ -4,6 +4,7 @@ import {
   SmsCampaignStatus,
   SmsCreditPackageCode,
 } from '../../../../data/merchantVoice/domain'
+import { getWebUrlOrigin } from '../../../../utils/webUrlBase'
 
 export const SMS_CAMPAIGN_TK = 'components.dashboard.views.BookingHubView.smsCampaigns'
 
@@ -147,6 +148,17 @@ export function getAudienceCount(
 /** Fallback local USD/segment estimate when API estimate is not ready yet. */
 export const SMS_PRICE_PER_SMS = 0.025
 
+/**
+ * Format API USD amounts without rounding 0.025 → 0.03.
+ * Keeps up to 3 decimals when needed; otherwise 2 for normal currency.
+ */
+export function formatSmsCostUsd(value: number): string {
+  if (!Number.isFinite(value)) return '0.00'
+  const as3 = value.toFixed(3)
+  if (as3.endsWith('0')) return value.toFixed(2)
+  return as3
+}
+
 export enum SmsComposerScheduleMode {
   Now = 'now',
   Schedule = 'schedule',
@@ -243,17 +255,36 @@ export const SMS_CREDIT_PAYMENTS_MOCK: SmsCreditPaymentMock[] = [
 ]
 
 export const SMS_COMPOSER_TAG_SAMPLES = {
-  '{TenKhach}': 'Linh',
-  '{TenTiem}': 'Bitcoin Nail Bar',
-  '{Link}': 'nexora.ai/b/x7k2',
-  '{SoDT}': '832-786-5576',
+  '{name}': 'Linh',
+  '{shop}': 'Bitcoin Nail Bar',
+  '{link}': 'nexora.ai/b/…',
+  '{phone}': '832-786-5576',
 } as const
 
+/** SMS-friendly business booking link: `{domain}/b/{businessKey}` from my-tenant. */
+export function buildSmsCampaignBusinessLinkPreview(businessKey?: string | null): string {
+  const key = String(businessKey ?? '').trim()
+  const origin = getWebUrlOrigin()
+  let host = ''
+  if (origin) {
+    try {
+      host = new URL(origin).host
+    } catch {
+      host = origin.replace(/^https?:\/\//i, '').replace(/\/$/, '')
+    }
+  }
+  if (!host && typeof window !== 'undefined') {
+    host = window.location.host
+  }
+  if (!host) host = 'nexora.ai'
+  return key ? `${host}/b/${key}` : `${host}/b/…`
+}
+
 export const SMS_COMPOSER_TAGS = [
-  { tag: '{TenKhach}', labelKey: 'tagCustomerName' },
-  { tag: '{TenTiem}', labelKey: 'tagShopName' },
-  { tag: '{Link}', labelKey: 'tagOfferLink' },
-  { tag: '{SoDT}', labelKey: 'tagPhone' },
+  { tag: '{name}', labelKey: 'tagCustomerName' },
+  { tag: '{shop}', labelKey: 'tagShopName' },
+  { tag: '{link}', labelKey: 'tagOfferLink' },
+  { tag: '{phone}', labelKey: 'tagPhone' },
 ] as const
 
 export const SMS_LANDING_PAGE_OPTIONS = [

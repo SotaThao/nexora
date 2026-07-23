@@ -7315,6 +7315,11 @@
   background: #fbfdff;
 }
 
+.booking-hub-view .panel-sms-campaigns .sms-campaign-history .booking-pagination {
+  padding: 14px 16px !important;
+  margin-top: 0;
+}
+
 .booking-hub-view .panel-sms-campaigns .sms-campaign-table td:first-child {
   min-width: 160px;
   font-weight: 800;
@@ -7495,14 +7500,6 @@
 
   .booking-hub-view .panel-sms-campaigns .sms-campaign-count-label,
   .booking-hub-view .panel-sms-campaigns .sms-campaign-badge {
-    font-size: 0.75rem;
-  }
-
-  .booking-hub-view .panel-sms-campaigns .sms-campaign-table {
-    font-size: 0.8125rem;
-  }
-
-  .booking-hub-view .panel-sms-campaigns .sms-campaign-table th {
     font-size: 0.75rem;
   }
 
@@ -7846,6 +7843,11 @@
 #nx-campaign-root .sms-bubble .lnk {
   color: var(--nx-electric);
   text-decoration: underline;
+  cursor: pointer;
+}
+
+#nx-campaign-root .sms-bubble a.lnk:hover {
+  color: var(--nx-brand-dark, #393bc8);
 }
 
 #nx-campaign-root .sms-preview-empty {
@@ -8017,6 +8019,41 @@
   background: rgba(70, 72, 216, 0.08);
 }
 
+#nx-campaign-root .schedule-opt:disabled,
+#nx-campaign-root .schedule-opt:disabled:hover {
+  cursor: not-allowed;
+  border-color: var(--nexora-border);
+  background: #f1f5f9;
+  color: #94a3b8;
+  opacity: 1;
+  box-shadow: none;
+}
+
+#nx-campaign-root .schedule-opt:disabled .schedule-opt-icon {
+  color: #94a3b8;
+}
+
+#nx-campaign-root .schedule-opt:disabled .schedule-opt-label {
+  color: #94a3b8;
+}
+
+/* Keep the previously chosen schedule bright while editing (disabled but selected). */
+#nx-campaign-root .schedule-opt.selected:disabled,
+#nx-campaign-root .schedule-opt.selected:disabled:hover {
+  cursor: not-allowed;
+  border-color: var(--nx-brand);
+  background: rgba(70, 72, 216, 0.08);
+  color: var(--nexora-text);
+}
+
+#nx-campaign-root .schedule-opt.selected:disabled .schedule-opt-icon {
+  color: var(--nx-brand);
+}
+
+#nx-campaign-root .schedule-opt.selected:disabled .schedule-opt-label {
+  color: var(--nexora-text);
+}
+
 #nx-campaign-root .schedule-opt-icon {
   display: flex;
   justify-content: center;
@@ -8034,9 +8071,39 @@
 
 #nx-campaign-root .time-input-row {
   display: grid;
-  grid-template-columns: 1fr 1fr;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
   gap: 10px;
   margin-top: 10px;
+  width: 100%;
+  min-width: 0;
+}
+
+#nx-campaign-root .schedule-datetime-input {
+  box-sizing: border-box;
+  width: 100%;
+  min-width: 0;
+  max-width: 100%;
+  cursor: pointer;
+}
+
+#nx-campaign-root .schedule-datetime-input:disabled {
+  cursor: not-allowed;
+  background: #f1f5f9;
+  color: #94a3b8;
+  border-color: var(--nexora-border);
+  opacity: 1;
+}
+
+#nx-campaign-root .schedule-datetime-input[type="date"],
+#nx-campaign-root .schedule-datetime-input[type="time"] {
+  min-width: 0;
+  max-width: 100%;
+}
+
+#nx-campaign-root .schedule-datetime-input::-webkit-datetime-edit,
+#nx-campaign-root .schedule-datetime-input::-webkit-datetime-edit-fields-wrapper {
+  min-width: 0;
+  padding: 0;
 }
 
 #nx-campaign-root .confirm-box {
@@ -8542,6 +8609,16 @@
     font-size: 0.75rem;
   }
 
+  #nx-campaign-root .time-input-row {
+    grid-template-columns: 1fr;
+    gap: 8px;
+  }
+
+  #nx-campaign-root .schedule-datetime-input {
+    min-height: 44px;
+    font-size: 16px; /* avoid iOS zoom + native control overflow */
+  }
+
   #nx-campaign-root .cost-preview-label {
     font-size: 0.75rem;
   }
@@ -8635,6 +8712,9 @@
     display: block;
     width: 100%;
     min-width: 0;
+    border-collapse: separate;
+    table-layout: auto;
+    font-size: 0.8125rem;
   }
 
   .booking-hub-view .panel-sms-campaigns .sms-campaign-table thead {
@@ -8666,11 +8746,15 @@
     align-items: start;
     gap: 9px;
     width: auto;
-    min-width: 0;
+    min-width: 0 !important;
     max-width: 100%;
     border-bottom: 0;
     padding: 0;
     white-space: normal;
+  }
+
+  .booking-hub-view .panel-sms-campaigns .sms-campaign-table td:last-child {
+    align-items: center;
   }
 
   .booking-hub-view .panel-sms-campaigns .sms-campaign-table td::before {
@@ -8686,25 +8770,36 @@
   .booking-hub-view .panel-sms-campaigns .sms-campaign-table td.sms-campaign-empty {
     display: block;
     padding: 24px 16px;
+    text-align: center;
   }
 
   .booking-hub-view .panel-sms-campaigns .sms-campaign-table td.sms-campaign-empty::before {
     content: none;
   }
 
+  .booking-hub-view .panel-sms-campaigns .sms-campaign-status {
+    justify-self: start;
+  }
+
   .booking-hub-view .panel-sms-campaigns .sms-campaign-actions {
     flex-wrap: wrap;
     justify-content: flex-start;
+    white-space: normal;
   }
 
   .booking-hub-view .panel-sms-campaigns .sms-campaign-history {
     border: 0;
     background: transparent;
     box-shadow: none;
+    overflow: visible;
   }
 
   .booking-hub-view .panel-sms-campaigns .sms-campaign-history .marketing-section-heading {
     border-bottom: 0;
     padding: 0 0 8px;
+  }
+
+  .booking-hub-view .panel-sms-campaigns .booking-pagination {
+    padding: 12px 16px !important;
   }
 }

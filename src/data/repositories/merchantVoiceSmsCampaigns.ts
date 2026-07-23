@@ -31,6 +31,7 @@ export interface SmsCampaignDashboardDto {
   campaignsSentThisMonth: number
   activeAutoCampaigns: number
   creditBalance: number
+  estimatedCostUsd: number
 }
 
 export interface SmsCampaignAudienceSummaryDto {
@@ -265,6 +266,7 @@ function normalizeDashboard(response: unknown): SmsCampaignDashboardDto {
     campaignsSentThisMonth: asNumber(data.campaignsSentThisMonth),
     activeAutoCampaigns: asNumber(data.activeAutoCampaigns),
     creditBalance: asNumber(data.creditBalance),
+    estimatedCostUsd: asNumber(data.estimatedCostUsd),
   }
 }
 

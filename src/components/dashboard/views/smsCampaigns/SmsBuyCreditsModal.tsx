@@ -74,9 +74,6 @@ export default function SmsBuyCreditsModal({
     <div
       className="sms-credit-modal"
       role="presentation"
-      onClick={(event) => {
-        if (event.target === event.currentTarget && !submitting) onClose()
-      }}
     >
       <div
         className="sms-credit-dialog"
@@ -211,11 +208,10 @@ export default function SmsBuyCreditsModal({
           <button
             className="btn-primary"
             type="button"
-            disabled={submitting}
-            onClick={() => void onConfirm(selectedPackage, selectedPayment)}
+            disabled
           >
             <ShieldCheckIcon className="marketing-icon is-compact" />
-            <span>{submitting ? t(`${TK}.saving`) : t(`${TK}.confirmPayment`)}</span>
+            <span>{t(`${TK}.confirmPayment`)}</span>
           </button>
         </div>
       </div>

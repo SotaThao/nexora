@@ -27,11 +27,21 @@ const EMPTY_RECIPIENT_FILTERS: MerchantSmsCampaignRecipientsFilter = {}
 const EMPTY_CREDIT_HISTORY_FILTERS: MerchantSmsCreditHistoryFilter = {}
 
 function invalidateSmsCampaignQueries(queryClient: ReturnType<typeof useQueryClient>, id?: string) {
-  queryClient.invalidateQueries({ queryKey: ['merchantVoice', 'smsCampaigns'] })
+  // Invalidate specific scopes only — a broad ['merchantVoice', 'smsCampaigns'] prefix also
+  // matches detail/{id} and refetches GET .../sms-campaigns/{id} (often more than once) while
+  // the edit dialog is still mounted (mutation onSuccess runs before the modal closes).
+  queryClient.invalidateQueries({ queryKey: qk.merchantVoiceSmsCampaignDashboard() })
+  queryClient.invalidateQueries({ queryKey: qk.merchantVoiceSmsCampaignAudienceSummary() })
+  queryClient.invalidateQueries({ queryKey: ['merchantVoice', 'smsCampaigns', 'list'] })
   queryClient.invalidateQueries({ queryKey: ['merchantVoice', 'smsCredits'] })
   if (id) {
-    queryClient.invalidateQueries({ queryKey: qk.merchantVoiceSmsCampaignById(id) })
-    queryClient.invalidateQueries({ queryKey: ['merchantVoice', 'smsCampaigns', id, 'recipients'] })
+    queryClient.invalidateQueries({
+      queryKey: qk.merchantVoiceSmsCampaignById(id),
+      refetchType: 'none',
+    })
+    queryClient.invalidateQueries({
+      queryKey: ['merchantVoice', 'smsCampaigns', id, 'recipients'],
+    })
   }
 }
 

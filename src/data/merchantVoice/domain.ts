@@ -187,7 +187,10 @@ export function isSmsCampaignCancellable(status: SmsCampaignStatus): boolean {
 }
 
 export function isSmsCampaignDeletable(status: SmsCampaignStatus, totalSent: number): boolean {
-  return status !== SmsCampaignStatus.Sending && totalSent === 0
+  if (status === SmsCampaignStatus.Sending) return false
+  // Cancelled campaigns are cleaned up via Delete (not Cancel again).
+  if (status === SmsCampaignStatus.Cancelled) return true
+  return totalSent === 0
 }
 
 export function isSmsCampaignAutoToggleable(
