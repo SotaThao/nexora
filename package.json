@@ -9,6 +9,7 @@
     "build": "pnpm run build:prod",
     "build:dev": "vite build --mode development",
     "build:test": "vite build --mode test",
+    "build:test2": "vite build --mode test2",
     "build:staging": "vite build --mode staging",
     "build:prod": "vite build --mode production",
     "preview": "vite preview",

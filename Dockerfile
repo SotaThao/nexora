@@ -16,7 +16,7 @@ RUN pnpm install --frozen-lockfile
 # Copy the rest of the application code to the working directory
 COPY . .
 
-# Build argument to specify build environment (production, staging, test, development)
+# Build argument to specify build environment (production, staging, test, test2, development)
 ARG BUILD_ENV=production
 ARG VITE_APP_ENV=production
 ARG VITE_API_BASE_URL=
@@ -46,6 +46,8 @@ RUN set -e; \
       pnpm run build:staging; \
     elif [ "$BUILD_ENV" = "test" ]; then \
       pnpm run build:test; \
+    elif [ "$BUILD_ENV" = "test2" ]; then \
+      pnpm run build:test2; \
     else \
       pnpm run build:dev; \
     fi
