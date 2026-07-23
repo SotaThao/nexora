@@ -7,6 +7,11 @@ import MobileIframeScreen from '../../ui/MobileIframeScreen'
 
 const APPROVED_STATUSES = new Set(['kyb_approved', 'verified_pro'])
 
+// Verified/approved KYB is the only state that keeps an informational card in
+// the parent. Every other state opens the KYC/KYB portal directly — there is no
+// "Verify now" launcher card anymore.
+const VERIFIED_STATUSES = new Set(['kyb_approved', 'verified_pro', 'verified_lite'])
+
 function shouldRequestKybCamera(verificationStatus: string) {
   return (
     verificationStatus === 'basic' ||
@@ -60,6 +65,10 @@ type KybTabProps = {
   /** Reports whether the portal is taking over the view, so the parent can
    *  show/hide its launcher card (mirrors StaffKycOverview's contract). */
   onWidgetVisibleChange?: (visible: boolean) => void
+  /** Mobile: back button on the full-screen webview. Should navigate out of the
+   *  verification section (to the profile menu) rather than just close, so the
+   *  user isn't dropped back onto the launcher card at ?section=verification. */
+  onExit?: () => void
 }
 
 export default function KybTab({
@@ -67,15 +76,17 @@ export default function KybTab({
   verificationStatus,
   portalRef,
   onWidgetVisibleChange,
+  onExit,
 }: KybTabProps) {
   const { t, currentLanguage } = useTranslation()
   const isMobile = useIsMobileUI()
-  const [isWebviewOpen, setIsWebviewOpen] = useState(false)
+  const [isWebviewOpen, setIsWebviewOpen] = useState(() => !VERIFIED_STATUSES.has(verificationStatus))
   const [isIframeLoading, setIsIframeLoading] = useState(false)
   const timeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
   const cameraRequestedRef = useRef(false)
 
   const isApproved = APPROVED_STATUSES.has(verificationStatus)
+  const isVerified = VERIFIED_STATUSES.has(verificationStatus)
 
   const {
     data: kybInfo,
@@ -109,6 +120,13 @@ export default function KybTab({
     onWidgetVisibleChange?.(isWebviewOpen)
     return () => onWidgetVisibleChange?.(false)
   }, [isWebviewOpen, onWidgetVisibleChange])
+
+  // Go straight into the KYC/KYB portal for anyone who isn't verified yet — no
+  // "Verify now" launcher card. Re-syncs if the live status resolves later or
+  // verification completes (then the parent shows its verified card instead).
+  useEffect(() => {
+    setIsWebviewOpen(!isVerified)
+  }, [isVerified])
 
   useEffect(() => {
     if (!hasUrl) return
@@ -155,7 +173,7 @@ export default function KybTab({
         open={isWebviewOpen}
         title={t('components.settings.tabs.KybTab.iframeTitle')}
         iframeTitle={t('components.settings.tabs.KybTab.iframeTitle')}
-        onClose={closePortal}
+        onClose={onExit ?? closePortal}
         src={showIframe ? iframeUrl : undefined}
         isLoading={isBusy || (showIframe && isIframeLoading)}
         loadingLabel={t('common.loading')}
