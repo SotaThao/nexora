@@ -159,7 +159,17 @@ async function request<T = unknown>(path: string, init: HttpRequestInit = {}): P
   if (params) {
     const qs = new URLSearchParams()
     for (const [k, v] of Object.entries(params)) {
-      if (v !== null && v !== undefined) qs.append(k, String(v))
+      if (v !== null && v !== undefined) {
+        if (Array.isArray(v)) {
+          for (const item of v) {
+            if (item !== null && item !== undefined) {
+              qs.append(k, String(item))
+            }
+          }
+        } else {
+          qs.append(k, String(v))
+        }
+      }
     }
     const sep = path.includes('?') ? '&' : '?'
     const qsStr = qs.toString()
@@ -227,7 +237,17 @@ export async function getBlob(path: string, opts: HttpRequestInit = {}) {
   if (params) {
     const qs = new URLSearchParams()
     for (const [k, v] of Object.entries(params)) {
-      if (v !== null && v !== undefined) qs.append(k, String(v))
+      if (v !== null && v !== undefined) {
+        if (Array.isArray(v)) {
+          for (const item of v) {
+            if (item !== null && item !== undefined) {
+              qs.append(k, String(item))
+            }
+          }
+        } else {
+          qs.append(k, String(v))
+        }
+      }
     }
     const sep = path.includes('?') ? '&' : '?'
     const qsStr = qs.toString()
