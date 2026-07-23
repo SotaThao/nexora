@@ -53,6 +53,13 @@ const StaffKycOverview = forwardRef(function StaffKycOverview({ onWidgetVisibleC
     return () => onWidgetVisibleChange?.(false)
   }, [isTakingOver, onWidgetVisibleChange])
 
+  // Already-submitted users (status = Review) skip the launcher card and open the
+  // verification screen directly (once) — it shows their pending/review status.
+  const isSubmitted = verifyStatusData?.status === UserVerifyStatus.Review
+  useEffect(() => {
+    if (isSubmitted) setIsWebviewOpen(true)
+  }, [isSubmitted])
+
   useEffect(() => {
     if (hasUrl) {
       setIsIframeLoading(true)

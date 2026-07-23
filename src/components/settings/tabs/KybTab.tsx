@@ -7,6 +7,10 @@ import MobileIframeScreen from '../../ui/MobileIframeScreen'
 
 const APPROVED_STATUSES = new Set(['kyb_approved', 'verified_pro'])
 
+// KYB already submitted and awaiting review — no "Verify now" launcher needed,
+// the user should land straight on the verification screen (which shows status).
+const SUBMITTED_STATUSES = new Set(['kyb_pending', 'lite_pending', 'pro_pending', 'under_review'])
+
 function shouldRequestKybCamera(verificationStatus: string) {
   return (
     verificationStatus === 'basic' ||
@@ -76,6 +80,7 @@ export default function KybTab({
   const cameraRequestedRef = useRef(false)
 
   const isApproved = APPROVED_STATUSES.has(verificationStatus)
+  const isSubmitted = SUBMITTED_STATUSES.has(verificationStatus)
 
   const {
     data: kybInfo,
@@ -109,6 +114,12 @@ export default function KybTab({
     onWidgetVisibleChange?.(isWebviewOpen)
     return () => onWidgetVisibleChange?.(false)
   }, [isWebviewOpen, onWidgetVisibleChange])
+
+  // Already-submitted users skip the launcher card and open the portal directly
+  // (once) — the verification screen itself shows the pending/review status.
+  useEffect(() => {
+    if (isSubmitted) setIsWebviewOpen(true)
+  }, [isSubmitted])
 
   useEffect(() => {
     if (!hasUrl) return
