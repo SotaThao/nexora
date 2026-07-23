@@ -20,7 +20,7 @@ export default function HomePageCtaSection() {
                 <p className="text-indigo-100 text-sm sm:text-base leading-relaxed" data-i18n="cta-desc">Join salons already saving thousands per year with Nexora Touch.</p>
                 <div className="pt-4 flex flex-row flex-wrap justify-center gap-4">
                   <button className="bg-white hover:bg-slate-100 text-purple font-black text-sm px-8 py-4 rounded-full shadow-lg transition-all active:scale-95 ds-control ds-button nx-hero-btn" data-i18n="btn-cta-1" onClick={planCta}>Get Started Free</button>
-                  <a className="bg-[rgba(255,255,255,0.10)] hover:bg-[rgba(255,255,255,0.20)] text-white hover:text-white font-extrabold text-sm px-8 py-4 rounded-full border border-white/10 transition-all text-center ds-control ds-button nx-hero-btn" data-i18n="btn-cta-2" href="#simulator">Schedule a Demo</a>
+                  <a className="bg-[rgba(255,255,255,0.10)] hover:bg-[rgba(255,255,255,0.20)] text-white hover:text-white font-extrabold text-sm px-8 py-4 rounded-full border border-white/10 transition-all text-center ds-control ds-button nx-hero-btn" data-i18n="btn-cta-2" href="https://taxiq.nexoratouch.com/" target="_blank" rel="noopener noreferrer">Schedule a Demo</a>
                 </div>
               </div>
             </div>

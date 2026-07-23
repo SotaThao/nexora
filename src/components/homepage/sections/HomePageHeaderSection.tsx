@@ -69,7 +69,7 @@ export default function HomePageHeaderSection() {
 
           <nav className="hidden lg:flex items-center gap-4 xl:gap-8 text-sm font-semibold text-slate-600">
             <a className="hover:text-purple transition-colors ds-control ds-link ds-nav-link" data-i18n="nav-features" href="#features">Features</a>
-            <a className="hover:text-purple transition-colors ds-control ds-link ds-nav-link" href="#simulator">
+            <a className="hover:text-purple transition-colors ds-control ds-link ds-nav-link" href="https://taxiq.nexoratouch.com/" target="_blank" rel="noopener noreferrer">
               <span data-i18n="nav-simulator">Live Demo</span>
             </a>
             <a className="hover:text-purple transition-colors ds-control ds-link ds-nav-link" data-i18n="nav-tax-iq" href="#tax-iq">Tax IQ Assistant</a>
@@ -172,7 +172,7 @@ export default function HomePageHeaderSection() {
         {!hasMobileMenu && (
           <div className="mobile-menu-panel hidden lg:hidden animate-fadeIn p-2 space-y-1 font-extrabold text-xs sm:text-sm text-slate-600" id="mobile-navigation-menu">
             <a className="flex px-3 py-2 hover:text-purple transition-colors ds-control ds-link" data-i18n="nav-features" href="#features" onClick={() => { hp.toggleMobileMenu() }}>Features</a>
-            <a className="flex px-3 py-2 hover:text-purple transition-colors ds-control ds-link" data-i18n="nav-simulator" href="#simulator" onClick={() => { hp.toggleMobileMenu() }}>Live Demo</a>
+            <a className="flex px-3 py-2 hover:text-purple transition-colors ds-control ds-link" data-i18n="nav-simulator" href="https://taxiq.nexoratouch.com/" target="_blank" rel="noopener noreferrer" onClick={() => { hp.toggleMobileMenu() }}>Live Demo</a>
             <a className="flex px-3 py-2 hover:text-purple transition-colors ds-control ds-link" data-i18n="nav-tax-iq" href="#tax-iq" onClick={() => { hp.toggleMobileMenu() }}>Tax IQ Assistant</a>
             <a className="flex px-3 py-2 hover:text-purple transition-colors ds-control ds-link" data-i18n="nav-rewards" href="#customer-rewards" onClick={() => { hp.toggleMobileMenu() }}>Customer Portal</a>
             <a className="flex px-3 py-2 hover:text-purple transition-colors ds-control ds-link" data-i18n="nav-calculator" href="#calculator" onClick={() => { hp.toggleMobileMenu() }}>Calculator</a>

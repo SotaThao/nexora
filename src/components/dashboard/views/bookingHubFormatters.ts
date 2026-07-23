@@ -66,6 +66,34 @@ export function toLocalDateIso(date: Date): string {
   return `${year}-${month}-${day}`
 }
 
+/**
+ * Convert a local `YYYY-MM-DD` to an inclusive UTC instant for API DateFrom/DateTo.
+ * Uses the end-user timezone (not bare `T00:00:00.000Z`, which shifts the day).
+ */
+export function localDateIsoToUtcRange(dateIso: string, bound: 'start' | 'end'): string {
+  const [year, month, day] = dateIso.split('-').map(Number)
+  if (!year || !month || !day) return dateIso
+  const local = bound === 'start'
+    ? new Date(year, month - 1, day, 0, 0, 0, 0)
+    : new Date(year, month - 1, day, 23, 59, 59, 999)
+  return local.toISOString()
+}
+
+/** Keep rows whose Appointment local date (`YYYY-MM-DD`) is inside [from, to]. */
+export function filterByAppointmentDate<T extends { date: string }>(
+  items: ReadonlyArray<T>,
+  dateFrom: string,
+  dateTo: string,
+): T[] {
+  if (!dateFrom && !dateTo) return [...items]
+  return items.filter((item) => {
+    if (!item.date) return false
+    if (dateFrom && item.date < dateFrom) return false
+    if (dateTo && item.date > dateTo) return false
+    return true
+  })
+}
+
 /** Call duration as `mm:ss`; empty/invalid → `empty` (default `00:00`). */
 export function formatCallDurationSeconds(
   seconds: number | null | undefined,

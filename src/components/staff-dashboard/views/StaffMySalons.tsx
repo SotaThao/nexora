@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useMemo, useState } from 'react'
 import { Loader2 } from 'lucide-react'
 import { useNavigate } from 'react-router-dom'
 import { useTranslation } from '../../../contexts/LanguageContext'
@@ -204,7 +204,19 @@ export default function StaffMySalons() {
   const { data: pendingLinkRequests = [] } = useStaffLinkRequestsList()
   const unlinkBusiness = useUnlinkStaffBusiness()
   const [unlinkError, setUnlinkError] = useState<{ title: string; message: string } | null>(null)
-  const salons = sortSalonBusinesses(businesses)
+  const salons = useMemo(() => {
+    const visibleBusinesses = businesses.filter((business) => {
+      const statusLabel = resolveStaffBusinessLinkStatusLabel(business).trim().toLowerCase()
+      const isPreviousOrInactive = (
+        statusLabel === STAFF_BUSINESS_LINK_STATUS.inactive
+        || statusLabel === STAFF_BUSINESS_LINK_STATUS.previous
+        || statusLabel.includes(STAFF_BUSINESS_LINK_STATUS.inactive)
+        || statusLabel.includes(STAFF_BUSINESS_LINK_STATUS.previous)
+      )
+      return !isPreviousOrInactive
+    })
+    return sortSalonBusinesses(visibleBusinesses)
+  }, [businesses])
   const isLoading = isPending && businesses.length === 0
   const originalName = staffProfile?.displayName?.trim()
     || `${staffProfile?.firstName ?? ''} ${staffProfile?.lastName ?? ''}`.trim()
