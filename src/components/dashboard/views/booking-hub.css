@@ -6959,3 +6959,1752 @@
     box-shadow: 0 0 0 1px rgba(239, 68, 68, 0.14);
   }
 }
+
+/* ===== SMS Campaigns panel — match booking-book-phase-1.html ===== */
+.booking-hub-view .marketing-icon {
+  width: 18px;
+  height: 18px;
+  flex: 0 0 18px;
+  stroke-width: 2;
+}
+
+.booking-hub-view .marketing-icon.is-compact {
+  width: 16px;
+  height: 16px;
+  flex-basis: 16px;
+}
+
+.booking-hub-view .marketing-icon-label {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.booking-hub-view .panel-sms-campaigns {
+  --cyan: #0891b2;
+  --green: var(--nexora-success);
+  --purple: var(--nexora-violet);
+  --orange: var(--nexora-warning);
+  --pink: #ec4899;
+}
+
+.booking-hub-view .panel-sms-campaigns .marketing-panel-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 18px;
+  margin-bottom: 18px;
+}
+
+.booking-hub-view .panel-sms-campaigns .marketing-panel-head h2 {
+  margin: 0;
+  font-size: clamp(1.125rem, 1rem + 0.6vw, 1.375rem);
+  line-height: 1.2;
+  color: var(--nexora-text);
+}
+
+.booking-hub-view .panel-sms-campaigns .marketing-panel-head h2 .marketing-icon {
+  color: var(--nexora-brand);
+}
+
+.booking-hub-view .panel-sms-campaigns .marketing-panel-head p {
+  margin: 0;
+  color: var(--nexora-muted);
+  font-size: clamp(0.8125rem, 0.78rem + 0.2vw, 0.875rem);
+  line-height: 1.55;
+}
+
+.booking-hub-view .panel-sms-campaigns .marketing-panel-actions {
+  display: flex;
+  align-items: stretch;
+  gap: 10px;
+}
+
+.booking-hub-view .panel-sms-campaigns .sms-credit-pill {
+  display: grid;
+  grid-template-columns: auto auto;
+  gap: 2px 10px;
+  min-width: 170px;
+  border: 1px solid var(--nexora-border);
+  border-radius: 12px;
+  background: #fff;
+  padding: 9px 12px;
+  box-shadow: var(--nexora-card-shadow);
+}
+
+.booking-hub-view .panel-sms-campaigns .sms-credit-pill span {
+  color: var(--nexora-subtle);
+  font-size: clamp(0.6875rem, 0.65rem + 0.15vw, 0.75rem);
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.booking-hub-view .panel-sms-campaigns .sms-credit-pill strong {
+  grid-row: 1 / 3;
+  grid-column: 2;
+  align-self: center;
+  color: var(--nexora-brand);
+  font-size: clamp(1.125rem, 1.05rem + 0.4vw, 1.25rem);
+}
+
+.booking-hub-view .panel-sms-campaigns .sms-credit-pill strong.is-low {
+  color: #dc2626;
+}
+
+.booking-hub-view .panel-sms-campaigns .sms-credit-pill small {
+  color: var(--nexora-muted);
+  font-size: clamp(0.6875rem, 0.65rem + 0.15vw, 0.75rem);
+}
+
+.booking-hub-view .panel-sms-campaigns .sms-credit-buy-button {
+  align-self: stretch;
+  min-width: 138px;
+  border: 0;
+  background: linear-gradient(135deg, #f59e0b, #ea580c);
+  padding: 10px 16px;
+  color: #fff;
+  font-size: clamp(0.75rem, 0.72rem + 0.15vw, 0.8125rem);
+  white-space: nowrap;
+  box-shadow: 0 10px 22px rgba(234, 88, 12, 0.24);
+}
+
+.booking-hub-view .panel-sms-campaigns .sms-credit-buy-button .marketing-icon {
+  color: #fff;
+}
+
+.booking-hub-view .panel-sms-campaigns .sms-credit-buy-button:hover {
+  background: linear-gradient(135deg, #fbbf24, #f97316);
+  box-shadow: 0 12px 26px rgba(234, 88, 12, 0.32);
+}
+
+.booking-hub-view .panel-sms-campaigns .sms-credit-buy-button:focus-visible {
+  outline: 3px solid rgba(245, 158, 11, 0.28);
+  outline-offset: 2px;
+}
+
+.booking-hub-view .panel-sms-campaigns .sms-campaign-stats {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 8px;
+  margin-bottom: 16px;
+}
+
+.booking-hub-view .panel-sms-campaigns .sms-stat-card,
+.booking-hub-view .panel-sms-campaigns .sms-campaign-card {
+  position: relative;
+  overflow: hidden;
+  border: 1px solid var(--nexora-border);
+  border-radius: 12px;
+  background: #fff;
+  box-shadow: var(--nexora-card-shadow);
+}
+
+.booking-hub-view .panel-sms-campaigns .sms-stat-card {
+  min-height: 72px;
+  padding: 8px 12px;
+}
+
+.booking-hub-view .panel-sms-campaigns .sms-stat-card::before,
+.booking-hub-view .panel-sms-campaigns .sms-campaign-card::before {
+  content: "";
+  position: absolute;
+  inset: 0 0 auto;
+  height: 3px;
+  background: var(--card-accent, var(--nexora-brand));
+}
+
+.booking-hub-view .panel-sms-campaigns .sms-stat-card span {
+  display: block;
+  color: var(--nexora-muted);
+  font-size: clamp(0.6875rem, 0.65rem + 0.2vw, 0.75rem);
+  font-weight: 700;
+  line-height: 1.15;
+}
+
+.booking-hub-view .panel-sms-campaigns .sms-stat-card strong {
+  display: block;
+  margin: 4px 0 1px;
+  color: var(--card-accent, var(--nexora-brand));
+  font-size: clamp(1.25rem, 1.1rem + 0.7vw, 1.3125rem);
+  line-height: 1.05;
+}
+
+.booking-hub-view .panel-sms-campaigns .sms-stat-card small {
+  color: var(--nexora-subtle);
+  font-size: clamp(0.6875rem, 0.65rem + 0.15vw, 0.75rem);
+  line-height: 1.2;
+}
+
+.booking-hub-view .panel-sms-campaigns .sms-stat-card.cyan {
+  --card-accent: #0891b2;
+}
+
+.booking-hub-view .panel-sms-campaigns .sms-stat-card.violet {
+  --card-accent: var(--nexora-violet);
+}
+
+.booking-hub-view .panel-sms-campaigns .sms-stat-card.green {
+  --card-accent: var(--nexora-success);
+}
+
+.booking-hub-view .panel-sms-campaigns .sms-stat-card.orange {
+  --card-accent: var(--nexora-warning);
+}
+
+.booking-hub-view .panel-sms-campaigns .marketing-section-heading h3 {
+  margin: 0 0 12px;
+  font-size: clamp(0.875rem, 0.82rem + 0.25vw, 0.9375rem);
+  color: var(--nexora-text);
+  font-weight: 800;
+}
+
+.booking-hub-view .panel-sms-campaigns .sms-campaign-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 14px;
+}
+
+.booking-hub-view .panel-sms-campaigns .sms-campaign-card {
+  display: grid;
+  grid-template-columns: 34px minmax(0, 1fr);
+  column-gap: 8px;
+  row-gap: 10px;
+  width: 100%;
+  padding: 12px;
+  color: var(--nexora-text);
+  text-align: left;
+  cursor: pointer;
+  transition: 0.2s ease;
+}
+
+.booking-hub-view .panel-sms-campaigns .sms-campaign-card:hover {
+  border-color: rgba(70, 72, 216, 0.5);
+  transform: translateY(-2px);
+}
+
+.booking-hub-view .panel-sms-campaigns .sms-campaign-icon {
+  display: flex;
+  grid-column: 1;
+  grid-row: 1;
+  width: 34px;
+  height: 34px;
+  align-items: center;
+  justify-content: center;
+  border-radius: 9px;
+  background: rgba(70, 72, 216, 0.09);
+  color: var(--nexora-brand);
+}
+
+.booking-hub-view .panel-sms-campaigns .sms-campaign-icon .marketing-icon {
+  width: 18px;
+  height: 18px;
+}
+
+.booking-hub-view .panel-sms-campaigns .sms-campaign-copy {
+  grid-column: 2;
+  min-width: 0;
+  align-self: start;
+}
+
+.booking-hub-view .panel-sms-campaigns .sms-campaign-name {
+  display: block;
+  font-size: clamp(0.8125rem, 0.78rem + 0.2vw, 0.875rem);
+  font-weight: 800;
+  line-height: 1.25;
+}
+
+.booking-hub-view .panel-sms-campaigns .sms-campaign-desc {
+  display: block;
+  margin-top: 3px;
+  color: var(--nexora-muted);
+  font-size: clamp(0.75rem, 0.7rem + 0.2vw, 0.8125rem);
+  line-height: 1.4;
+}
+
+.booking-hub-view .panel-sms-campaigns .sms-campaign-meta {
+  display: flex;
+  grid-column: 1 / -1;
+  justify-content: space-between;
+  align-items: end;
+  gap: 8px;
+  padding-top: 8px;
+  border-top: 1px solid var(--nexora-rule);
+}
+
+.booking-hub-view .panel-sms-campaigns .sms-campaign-count-wrap {
+  display: flex;
+  align-items: baseline;
+  gap: 4px;
+}
+
+.booking-hub-view .panel-sms-campaigns .sms-campaign-count {
+  color: #0891b2;
+  font-size: clamp(1rem, 0.95rem + 0.35vw, 1.0625rem);
+  font-weight: 800;
+}
+
+.booking-hub-view .panel-sms-campaigns .sms-campaign-count-label {
+  color: var(--nexora-subtle);
+  font-size: clamp(0.6875rem, 0.65rem + 0.15vw, 0.75rem);
+}
+
+.booking-hub-view .panel-sms-campaigns .sms-campaign-badge {
+  border-radius: 999px;
+  background: var(--nexora-surface-muted);
+  padding: 4px 8px;
+  color: var(--nexora-muted);
+  font-size: clamp(0.6875rem, 0.65rem + 0.15vw, 0.75rem);
+  font-weight: 800;
+}
+
+.booking-hub-view .panel-sms-campaigns .sms-campaign-history {
+  margin-top: 24px;
+  overflow: hidden;
+  border: 1px solid var(--nexora-border);
+  border-radius: 12px;
+  background: #fff;
+  box-shadow: var(--nexora-card-shadow);
+}
+
+.booking-hub-view .panel-sms-campaigns .sms-campaign-history .marketing-section-heading {
+  margin: 0;
+  border-bottom: 1px solid var(--nexora-rule);
+  padding: 16px 18px 4px;
+}
+
+.booking-hub-view .panel-sms-campaigns .sms-campaign-history .marketing-section-heading h3 {
+  margin: 0 0 12px;
+}
+
+.booking-hub-view .panel-sms-campaigns .sms-campaign-table-wrap {
+  overflow-x: auto;
+}
+
+.booking-hub-view .panel-sms-campaigns .sms-campaign-table {
+  width: 100%;
+  min-width: 760px;
+  border-collapse: collapse;
+  color: var(--nexora-text);
+  font-size: clamp(0.75rem, 0.72rem + 0.15vw, 0.8125rem);
+}
+
+.booking-hub-view .panel-sms-campaigns .sms-campaign-table th {
+  background: #fbfdff;
+  color: var(--nexora-subtle);
+  font-size: clamp(0.6875rem, 0.65rem + 0.15vw, 0.75rem);
+  font-weight: 800;
+  letter-spacing: 0.04em;
+  text-align: left;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+
+.booking-hub-view .panel-sms-campaigns .sms-campaign-table th,
+.booking-hub-view .panel-sms-campaigns .sms-campaign-table td {
+  border-bottom: 1px solid var(--nexora-rule);
+  padding: 13px 16px;
+  vertical-align: middle;
+}
+
+.booking-hub-view .panel-sms-campaigns .sms-campaign-table tbody tr:last-child td {
+  border-bottom: 0;
+}
+
+.booking-hub-view .panel-sms-campaigns .sms-campaign-table tbody tr:hover {
+  background: #fbfdff;
+}
+
+.booking-hub-view .panel-sms-campaigns .sms-campaign-table td:first-child {
+  min-width: 160px;
+  font-weight: 800;
+}
+
+.booking-hub-view .panel-sms-campaigns .sms-campaign-table td:nth-child(2) {
+  min-width: 150px;
+  color: var(--nexora-muted);
+}
+
+.booking-hub-view .panel-sms-campaigns .sms-campaign-table td:nth-child(5),
+.booking-hub-view .panel-sms-campaigns .sms-campaign-table td:nth-child(6) {
+  color: var(--nexora-muted);
+  font-variant-numeric: tabular-nums;
+}
+
+.booking-hub-view .panel-sms-campaigns .sms-campaign-status {
+  display: inline-flex;
+  align-items: center;
+  border-radius: 999px;
+  padding: 4px 8px;
+  font-size: clamp(0.6875rem, 0.65rem + 0.15vw, 0.75rem);
+  font-weight: 800;
+  white-space: nowrap;
+}
+
+.booking-hub-view .panel-sms-campaigns .sms-campaign-status.is-sent {
+  background: rgba(0, 184, 115, 0.1);
+  color: var(--nexora-success);
+}
+
+.booking-hub-view .panel-sms-campaigns .sms-campaign-status.is-scheduled {
+  background: rgba(43, 89, 255, 0.1);
+  color: var(--nexora-electric);
+}
+
+.booking-hub-view .panel-sms-campaigns .sms-campaign-status.is-active {
+  background: rgba(142, 77, 248, 0.1);
+  color: var(--nexora-violet);
+}
+
+.booking-hub-view .panel-sms-campaigns .sms-campaign-status.is-cancelled {
+  background: rgba(122, 130, 150, 0.14);
+  color: var(--nexora-muted);
+}
+
+.booking-hub-view .panel-sms-campaigns .sms-campaign-actions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  white-space: nowrap;
+}
+
+.booking-hub-view .panel-sms-campaigns .sms-campaign-action {
+  display: inline-flex;
+  min-height: 30px;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid var(--nexora-border);
+  border-radius: 7px;
+  background: #fff;
+  padding: 6px 10px;
+  color: var(--nexora-brand);
+  font-size: clamp(0.75rem, 0.7rem + 0.2vw, 0.8125rem);
+  font-weight: 700;
+  text-decoration: none;
+  cursor: pointer;
+  transition:
+    background 0.18s ease,
+    border-color 0.18s ease,
+    color 0.18s ease,
+    transform 0.18s ease;
+}
+
+.booking-hub-view .panel-sms-campaigns .sms-campaign-action:hover {
+  border-color: rgba(70, 72, 216, 0.4);
+  background: rgba(70, 72, 216, 0.06);
+  color: #393bc8;
+  transform: translateY(-1px);
+}
+
+.booking-hub-view .panel-sms-campaigns .sms-campaign-action.is-danger {
+  border-color: rgba(194, 65, 65, 0.25);
+  background: #fff8f8;
+  color: #c24141;
+}
+
+.booking-hub-view .panel-sms-campaigns .sms-campaign-action.is-danger:hover {
+  border-color: rgba(194, 65, 65, 0.45);
+  background: #fff0f0;
+  color: #a83232;
+}
+
+.booking-hub-view .panel-sms-campaigns .sms-campaign-empty {
+  padding: 24px 16px !important;
+  color: var(--nexora-subtle);
+  text-align: center;
+}
+
+.booking-hub-view .panel-sms-campaigns .booking-primary-button .marketing-icon {
+  color: #fff;
+}
+
+@media (max-width: 900px) {
+  .booking-hub-view .panel-sms-campaigns .sms-campaign-stats {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .booking-hub-view .panel-sms-campaigns .sms-campaign-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .booking-hub-view .panel-sms-campaigns .sms-stat-card strong {
+    font-size: clamp(1.375rem, 1.2rem + 0.8vw, 1.5rem);
+  }
+
+  .booking-hub-view .panel-sms-campaigns .sms-campaign-name {
+    font-size: 0.875rem;
+  }
+
+  .booking-hub-view .panel-sms-campaigns .sms-campaign-desc {
+    font-size: 0.8125rem;
+  }
+}
+
+@media (max-width: 767px) {
+  .booking-hub-view .panel-sms-campaigns .marketing-panel-head p {
+    font-size: 0.875rem;
+  }
+
+  .booking-hub-view .panel-sms-campaigns .sms-credit-pill span,
+  .booking-hub-view .panel-sms-campaigns .sms-credit-pill small {
+    font-size: 0.75rem;
+  }
+
+  .booking-hub-view .panel-sms-campaigns .sms-credit-pill strong {
+    font-size: 1.375rem;
+  }
+
+  .booking-hub-view .panel-sms-campaigns .sms-credit-buy-button,
+  .booking-hub-view .panel-sms-campaigns .marketing-panel-actions .booking-primary-button {
+    font-size: 0.875rem;
+    min-height: 44px;
+  }
+
+  .booking-hub-view .panel-sms-campaigns .sms-stat-card {
+    min-height: 84px;
+    padding: 12px 14px;
+  }
+
+  .booking-hub-view .panel-sms-campaigns .sms-stat-card span {
+    font-size: 0.75rem;
+  }
+
+  .booking-hub-view .panel-sms-campaigns .sms-stat-card strong {
+    font-size: 1.5rem;
+  }
+
+  .booking-hub-view .panel-sms-campaigns .sms-stat-card small {
+    font-size: 0.75rem;
+  }
+
+  .booking-hub-view .panel-sms-campaigns .marketing-section-heading h3 {
+    font-size: 1rem;
+  }
+
+  .booking-hub-view .panel-sms-campaigns .sms-campaign-name {
+    font-size: 0.9375rem;
+  }
+
+  .booking-hub-view .panel-sms-campaigns .sms-campaign-desc {
+    font-size: 0.8125rem;
+  }
+
+  .booking-hub-view .panel-sms-campaigns .sms-campaign-count {
+    font-size: 1.125rem;
+  }
+
+  .booking-hub-view .panel-sms-campaigns .sms-campaign-count-label,
+  .booking-hub-view .panel-sms-campaigns .sms-campaign-badge {
+    font-size: 0.75rem;
+  }
+
+  .booking-hub-view .panel-sms-campaigns .sms-campaign-table {
+    font-size: 0.8125rem;
+  }
+
+  .booking-hub-view .panel-sms-campaigns .sms-campaign-table th {
+    font-size: 0.75rem;
+  }
+
+  .booking-hub-view .panel-sms-campaigns .sms-campaign-status {
+    font-size: 0.75rem;
+  }
+
+  .booking-hub-view .panel-sms-campaigns .sms-campaign-action {
+    min-height: 36px;
+    font-size: 0.8125rem;
+    padding: 8px 12px;
+  }
+}
+
+@media (max-width: 600px) {
+  .booking-hub-view .panel-sms-campaigns .marketing-panel-head {
+    flex-direction: column;
+  }
+
+  .booking-hub-view .panel-sms-campaigns .marketing-panel-actions {
+    width: 100%;
+    flex-direction: column;
+  }
+
+  .booking-hub-view .panel-sms-campaigns .sms-credit-pill,
+  .booking-hub-view .panel-sms-campaigns .sms-credit-buy-button,
+  .booking-hub-view .panel-sms-campaigns .marketing-panel-actions .booking-primary-button {
+    width: 100%;
+  }
+
+  .booking-hub-view .panel-sms-campaigns .sms-campaign-stats,
+  .booking-hub-view .panel-sms-campaigns .sms-campaign-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .booking-hub-view .panel-sms-campaigns .sms-campaign-table th,
+  .booking-hub-view .panel-sms-campaigns .sms-campaign-table td {
+    padding: 12px;
+  }
+}
+
+/* ===== SMS Campaign modals (#nx-campaign-root) — match booking-book-phase-1.html ===== */
+#nx-campaign-root {
+  --nx-brand: #4648d8;
+  --nx-brand-dark: #393bc8;
+  --nx-electric: #2b59ff;
+  --nx-cyan: #0891b2;
+  font-family: inherit;
+  color: var(--nexora-text);
+}
+
+#nx-campaign-root .modal-overlay {
+  display: none;
+  position: fixed;
+  inset: 0;
+  z-index: 130;
+  align-items: center;
+  justify-content: center;
+  padding: 18px;
+  background: rgba(8, 31, 73, 0.42);
+  backdrop-filter: blur(8px);
+}
+
+#nx-campaign-root .modal-overlay.open {
+  display: flex;
+}
+
+#nx-campaign-root .modal {
+  width: min(100%, 680px);
+  max-height: 90vh;
+  overflow-y: auto;
+  border: 1px solid var(--nexora-border);
+  border-radius: 12px;
+  background: #fff;
+  box-shadow: 0 28px 80px rgba(8, 31, 73, 0.24);
+}
+
+#nx-campaign-root .modal-header {
+  position: sticky;
+  top: 0;
+  z-index: 2;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 16px 20px;
+  border-bottom: 1px solid var(--nexora-border);
+  background: linear-gradient(180deg, #fff, #f8fbff);
+}
+
+#nx-campaign-root .modal-title {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: var(--nexora-text);
+  font-size: clamp(0.9375rem, 0.9rem + 0.25vw, 1rem);
+  font-weight: 800;
+}
+
+#nx-campaign-root .modal-title .marketing-icon {
+  color: var(--nx-brand);
+}
+
+#nx-campaign-root .modal-close {
+  display: inline-flex;
+  width: 34px;
+  height: 34px;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid var(--nexora-border);
+  border-radius: 10px;
+  background: #fff;
+  color: var(--nexora-muted);
+  font-size: 15px;
+  cursor: pointer;
+}
+
+#nx-campaign-root .modal-close:hover {
+  background: #f7f9fc;
+  color: var(--nexora-text);
+}
+
+#nx-campaign-root .modal-body {
+  padding: 16px 20px;
+  background: #f7f9fc;
+}
+
+#nx-campaign-root .field-group {
+  margin-bottom: 18px;
+}
+
+#nx-campaign-root .field-label {
+  margin-bottom: 8px;
+  color: var(--nexora-subtle);
+  font-size: clamp(0.6875rem, 0.65rem + 0.15vw, 0.75rem);
+  font-weight: 800;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+}
+
+#nx-campaign-root .segment-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 10px;
+}
+
+#nx-campaign-root .segment-btn {
+  border: 1px solid var(--nexora-border);
+  border-radius: 10px;
+  background: #fff;
+  padding: 12px 10px;
+  text-align: center;
+  cursor: pointer;
+  transition: all 0.15s;
+  font-family: inherit;
+  color: var(--nexora-text);
+  box-shadow: 0 2px 8px rgba(15, 23, 42, 0.04);
+}
+
+#nx-campaign-root .segment-btn:hover {
+  border-color: var(--nx-brand);
+  transform: translateY(-1px);
+}
+
+#nx-campaign-root .segment-btn.selected {
+  border-color: var(--nx-brand);
+  background: rgba(70, 72, 216, 0.08);
+  box-shadow: 0 8px 18px rgba(70, 72, 216, 0.14);
+}
+
+#nx-campaign-root .segment-btn-icon {
+  display: flex;
+  justify-content: center;
+  margin-bottom: 6px;
+  color: var(--nx-brand);
+}
+
+#nx-campaign-root .segment-btn-name {
+  display: block;
+  font-size: clamp(0.75rem, 0.72rem + 0.15vw, 0.8125rem);
+  font-weight: 700;
+}
+
+#nx-campaign-root .segment-btn-count {
+  display: block;
+  margin-top: 2px;
+  font-size: clamp(0.6875rem, 0.65rem + 0.15vw, 0.75rem);
+  font-weight: 700;
+  color: var(--nx-cyan);
+}
+
+#nx-campaign-root .template-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+#nx-campaign-root .template-item {
+  border: 1px solid var(--nexora-border);
+  border-radius: 10px;
+  background: #fff;
+  padding: 12px 14px;
+  text-align: left;
+  cursor: pointer;
+  transition: all 0.15s;
+  font-family: inherit;
+}
+
+#nx-campaign-root .template-item:hover {
+  border-color: var(--nx-brand);
+  background: rgba(70, 72, 216, 0.04);
+}
+
+#nx-campaign-root .template-item-title {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-bottom: 4px;
+  font-size: clamp(0.75rem, 0.72rem + 0.15vw, 0.8125rem);
+  font-weight: 800;
+  color: var(--nx-brand);
+}
+
+#nx-campaign-root .template-item-text {
+  font-size: clamp(0.8125rem, 0.78rem + 0.2vw, 0.875rem);
+  line-height: 1.5;
+  color: var(--nexora-muted);
+}
+
+#nx-campaign-root .sms-composer {
+  overflow: hidden;
+  border: 1px solid var(--nexora-border);
+  border-radius: 10px;
+  background: #fff;
+}
+
+#nx-campaign-root .sms-toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 14px;
+  border-bottom: 1px solid var(--nexora-rule);
+  background: #fbfdff;
+}
+
+#nx-campaign-root .sms-toolbar > span:first-child {
+  color: var(--nexora-subtle);
+  font-size: clamp(0.6875rem, 0.65rem + 0.15vw, 0.75rem);
+  font-weight: 700;
+}
+
+#nx-campaign-root .tag-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  border: 1px solid rgba(70, 72, 216, 0.18);
+  border-radius: 7px;
+  background: rgba(70, 72, 216, 0.08);
+  padding: 5px 10px;
+  color: var(--nx-brand);
+  font-size: clamp(0.6875rem, 0.65rem + 0.15vw, 0.75rem);
+  font-weight: 700;
+  cursor: pointer;
+  font-family: inherit;
+}
+
+#nx-campaign-root .tag-btn:hover {
+  background: rgba(70, 72, 216, 0.16);
+}
+
+#nx-campaign-root .sms-textarea {
+  display: block;
+  width: 100%;
+  min-height: 100px;
+  resize: vertical;
+  border: 0;
+  background: transparent;
+  padding: 14px;
+  color: var(--nexora-text);
+  font-family: inherit;
+  font-size: clamp(0.875rem, 0.84rem + 0.2vw, 0.9375rem);
+  line-height: 1.6;
+  outline: none;
+}
+
+#nx-campaign-root .sms-footer {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 6px;
+  padding: 10px 14px;
+  border-top: 1px solid var(--nexora-rule);
+  color: var(--nexora-muted);
+  font-size: 12px;
+  font-weight: 600;
+}
+
+#nx-campaign-root .char-count {
+  color: var(--nx-electric);
+  font-weight: 800;
+}
+
+#nx-campaign-root .char-count.multi {
+  color: var(--nexora-warning);
+}
+
+#nx-campaign-root .sms-preview {
+  margin-top: 12px;
+  border: 1px solid var(--nexora-border);
+  border-radius: 10px;
+  background: #f4f7fb;
+  padding: 14px;
+}
+
+#nx-campaign-root .sms-preview-label {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-bottom: 8px;
+  color: var(--nexora-subtle);
+  font-size: clamp(0.6875rem, 0.65rem + 0.15vw, 0.75rem);
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+#nx-campaign-root .sms-bubble {
+  max-width: 85%;
+  border-radius: 16px 16px 16px 4px;
+  background: #fff;
+  padding: 11px 14px;
+  color: var(--nexora-text);
+  font-size: clamp(0.8125rem, 0.78rem + 0.2vw, 0.875rem);
+  line-height: 1.5;
+  word-wrap: break-word;
+  box-shadow: 0 4px 12px rgba(15, 23, 42, 0.08);
+}
+
+#nx-campaign-root .sms-bubble .lnk {
+  color: var(--nx-electric);
+  text-decoration: underline;
+}
+
+#nx-campaign-root .sms-preview-empty {
+  color: var(--nexora-subtle);
+  font-size: 12px;
+  font-style: italic;
+}
+
+#nx-campaign-root .form-input,
+#nx-campaign-root .form-select,
+#nx-campaign-root .form-textarea {
+  width: 100%;
+  border: 1px solid var(--nexora-border);
+  border-radius: 10px;
+  background: #fff;
+  padding: 10px 14px;
+  color: var(--nexora-text);
+  font-family: inherit;
+  font-size: 13px;
+  outline: none;
+  transition: border-color 0.15s;
+}
+
+#nx-campaign-root .form-input:focus,
+#nx-campaign-root .form-select:focus,
+#nx-campaign-root .form-textarea:focus {
+  border-color: var(--nx-brand);
+}
+
+#nx-campaign-root .modal-footer {
+  position: sticky;
+  bottom: 0;
+  display: flex;
+  flex-wrap: nowrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 16px 20px;
+  border-top: 1px solid var(--nexora-border);
+  background: #fff;
+}
+
+#nx-campaign-root .cost-preview {
+  flex: 1 1 auto;
+  min-width: 0;
+  border: 1px solid rgba(43, 89, 255, 0.25);
+  border-radius: 10px;
+  background: rgba(43, 89, 255, 0.06);
+  padding: 10px 16px;
+}
+
+#nx-campaign-root .cost-preview.warn {
+  border-color: rgba(220, 38, 38, 0.35);
+  background: rgba(220, 38, 38, 0.07);
+}
+
+#nx-campaign-root .cost-preview-label {
+  color: var(--nexora-muted);
+  font-size: clamp(0.6875rem, 0.65rem + 0.15vw, 0.75rem);
+  font-weight: 600;
+}
+
+#nx-campaign-root .cost-preview-amount {
+  color: var(--nx-electric);
+  font-size: clamp(0.9375rem, 0.9rem + 0.25vw, 1rem);
+  font-weight: 800;
+  overflow-wrap: anywhere;
+}
+
+#nx-campaign-root .cost-preview.warn .cost-preview-amount {
+  color: #dc2626;
+}
+
+#nx-campaign-root .modal-footer-actions {
+  display: flex;
+  flex: 0 0 auto;
+  align-items: stretch;
+  gap: 10px;
+}
+
+#nx-campaign-root .modal-footer-actions .btn-primary,
+#nx-campaign-root .modal-footer-actions .btn-outline {
+  box-sizing: border-box;
+  min-height: 42px;
+  height: 42px;
+  padding-top: 0;
+  padding-bottom: 0;
+  justify-content: center;
+}
+
+#nx-campaign-root .btn-primary {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  border: 1px solid transparent;
+  border-radius: 8px;
+  background: var(--nx-brand);
+  padding: 10px 16px;
+  color: #fff;
+  font-size: clamp(0.8125rem, 0.78rem + 0.2vw, 0.875rem);
+  font-weight: 900;
+  cursor: pointer;
+  font-family: inherit;
+  box-shadow: 0 10px 22px rgba(70, 72, 216, 0.2);
+  transition: transform 0.15s, background 0.2s, opacity 0.2s;
+}
+
+#nx-campaign-root .btn-primary:hover {
+  background: var(--nx-brand-dark);
+  transform: translateY(-1px);
+}
+
+#nx-campaign-root .btn-primary:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+  box-shadow: none;
+  transform: none;
+}
+
+#nx-campaign-root .btn-outline {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  border: 1px solid var(--nexora-border);
+  border-radius: 8px;
+  background: #fff;
+  padding: 10px 16px;
+  color: var(--nexora-brand);
+  font-size: clamp(0.8125rem, 0.78rem + 0.2vw, 0.875rem);
+  font-weight: 800;
+  cursor: pointer;
+  font-family: inherit;
+  text-decoration: none;
+  transition: all 0.15s;
+}
+
+#nx-campaign-root .btn-outline:hover {
+  border-color: var(--nx-brand);
+}
+
+#nx-campaign-root .schedule-options {
+  display: flex;
+  gap: 8px;
+  align-items: stretch;
+}
+
+#nx-campaign-root .schedule-opt {
+  flex: 1 1 0;
+  min-width: 0;
+  border: 1px solid var(--nexora-border);
+  border-radius: 10px;
+  background: #fff;
+  padding: 12px 8px;
+  text-align: center;
+  cursor: pointer;
+  transition: all 0.15s;
+  font-family: inherit;
+  color: var(--nexora-text);
+}
+
+#nx-campaign-root .schedule-opt:hover {
+  border-color: var(--nx-brand);
+}
+
+#nx-campaign-root .schedule-opt.selected {
+  border-color: var(--nx-brand);
+  background: rgba(70, 72, 216, 0.08);
+}
+
+#nx-campaign-root .schedule-opt-icon {
+  display: flex;
+  justify-content: center;
+  margin-bottom: 6px;
+  color: var(--nx-brand);
+}
+
+#nx-campaign-root .schedule-opt-label {
+  display: block;
+  font-size: clamp(0.75rem, 0.72rem + 0.15vw, 0.8125rem);
+  font-weight: 700;
+  line-height: 1.25;
+  overflow-wrap: anywhere;
+}
+
+#nx-campaign-root .time-input-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+  margin-top: 10px;
+}
+
+#nx-campaign-root .confirm-box {
+  display: none;
+  margin-bottom: 16px;
+  border: 1px solid rgba(245, 158, 11, 0.35);
+  border-radius: 12px;
+  background: rgba(245, 158, 11, 0.09);
+  padding: 14px 16px;
+}
+
+#nx-campaign-root .confirm-box.show {
+  display: block;
+}
+
+#nx-campaign-root .confirm-title {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  margin-bottom: 8px;
+  color: #9a5a00;
+  font-size: clamp(0.8125rem, 0.78rem + 0.2vw, 0.875rem);
+  font-weight: 800;
+}
+
+#nx-campaign-root .confirm-detail {
+  color: var(--nexora-muted);
+  font-size: clamp(0.8125rem, 0.78rem + 0.2vw, 0.875rem);
+  line-height: 1.7;
+}
+
+#nx-campaign-root .confirm-detail strong {
+  color: var(--nexora-text);
+}
+
+#nx-campaign-root .success-banner {
+  display: none;
+  position: fixed;
+  left: 50%;
+  bottom: 24px;
+  transform: translateX(-50%);
+  z-index: 140;
+  align-items: center;
+  gap: 10px;
+  border: 1px solid rgba(0, 184, 115, 0.4);
+  border-radius: 12px;
+  background: #fff;
+  padding: 13px 18px;
+  box-shadow: 0 18px 44px rgba(8, 31, 73, 0.18);
+}
+
+#nx-campaign-root .success-banner.show {
+  display: flex;
+}
+
+#nx-campaign-root .success-icon {
+  display: inline-flex;
+  color: var(--nexora-success);
+}
+
+#nx-campaign-root .success-text {
+  color: var(--nexora-text);
+  font-size: 14px;
+  font-weight: 700;
+}
+
+#nx-campaign-root .sms-credit-modal {
+  position: fixed;
+  inset: 0;
+  z-index: 150;
+  display: grid;
+  place-items: center;
+  padding: 18px;
+  background: rgba(8, 31, 73, 0.48);
+  backdrop-filter: blur(8px);
+}
+
+#nx-campaign-root .sms-credit-dialog {
+  display: flex;
+  width: min(100%, 720px);
+  max-height: min(90vh, 760px);
+  flex-direction: column;
+  overflow: hidden;
+  border: 1px solid var(--nexora-border);
+  border-radius: 16px;
+  background: #fff;
+  box-shadow: 0 28px 80px rgba(8, 31, 73, 0.28);
+}
+
+#nx-campaign-root .sms-credit-modal-head {
+  display: flex;
+  flex: 0 0 auto;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  border-bottom: 1px solid var(--nexora-rule);
+  background: linear-gradient(180deg, #fff, #f8fbff);
+  padding: 17px 20px;
+}
+
+#nx-campaign-root .sms-credit-modal-title {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  color: var(--nexora-text);
+  font-size: clamp(1rem, 0.95rem + 0.3vw, 1.0625rem);
+  font-weight: 900;
+}
+
+#nx-campaign-root .sms-credit-modal-title .marketing-icon {
+  color: var(--nexora-brand);
+}
+
+#nx-campaign-root .sms-credit-modal-sub {
+  margin-top: 4px;
+  color: var(--nexora-muted);
+  font-size: clamp(0.75rem, 0.72rem + 0.15vw, 0.8125rem);
+  font-weight: 600;
+}
+
+#nx-campaign-root .sms-credit-close {
+  display: grid;
+  width: 34px;
+  height: 34px;
+  flex: 0 0 34px;
+  place-items: center;
+  border: 1px solid var(--nexora-border);
+  border-radius: 50%;
+  background: #fff;
+  color: var(--nexora-muted);
+  cursor: pointer;
+  transition: 0.18s ease;
+}
+
+#nx-campaign-root .sms-credit-close:hover {
+  border-color: rgba(70, 72, 216, 0.35);
+  background: var(--nexora-surface-muted);
+  color: var(--nexora-text);
+}
+
+#nx-campaign-root .sms-credit-modal-body {
+  overflow-y: auto;
+  background: #f8fafc;
+  padding: 18px 20px 20px;
+}
+
+#nx-campaign-root .sms-credit-section + .sms-credit-section {
+  margin-top: 22px;
+}
+
+#nx-campaign-root .sms-credit-section-label {
+  margin-bottom: 10px;
+  color: var(--nexora-subtle);
+  font-size: clamp(0.6875rem, 0.65rem + 0.15vw, 0.75rem);
+  font-weight: 900;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+#nx-campaign-root .sms-credit-package-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+}
+
+#nx-campaign-root .sms-credit-package {
+  position: relative;
+  min-width: 0;
+  border: 1px solid var(--nexora-border);
+  border-radius: 12px;
+  background: #fff;
+  padding: 13px;
+  color: var(--nexora-text);
+  text-align: left;
+  cursor: pointer;
+  transition: border-color 0.18s ease, box-shadow 0.18s ease, transform 0.18s ease;
+}
+
+#nx-campaign-root .sms-credit-package:hover {
+  border-color: rgba(70, 72, 216, 0.45);
+  transform: translateY(-1px);
+}
+
+#nx-campaign-root .sms-credit-package.is-selected {
+  border-color: var(--nexora-brand);
+  background: rgba(70, 72, 216, 0.055);
+  box-shadow: 0 8px 18px rgba(70, 72, 216, 0.12);
+}
+
+#nx-campaign-root .sms-credit-package-badge {
+  position: absolute;
+  top: 9px;
+  right: 10px;
+  border-radius: 999px;
+  background: var(--nexora-brand);
+  padding: 3px 6px;
+  color: #fff;
+  font-size: clamp(0.625rem, 0.6rem + 0.1vw, 0.6875rem);
+  font-weight: 900;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+#nx-campaign-root .sms-credit-package-name {
+  display: block;
+  color: var(--nexora-muted);
+  font-size: clamp(0.6875rem, 0.65rem + 0.15vw, 0.75rem);
+  font-weight: 800;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+#nx-campaign-root .sms-credit-package-amount {
+  display: block;
+  margin-top: 5px;
+  color: var(--nexora-text);
+  font-size: clamp(1.25rem, 1.15rem + 0.5vw, 1.3125rem);
+  font-weight: 900;
+  line-height: 1.1;
+}
+
+#nx-campaign-root .sms-credit-package-price {
+  display: block;
+  margin-top: 6px;
+  color: var(--nexora-brand);
+  font-size: clamp(0.875rem, 0.84rem + 0.2vw, 0.9375rem);
+  font-weight: 900;
+}
+
+#nx-campaign-root .sms-credit-package-note {
+  display: block;
+  margin-top: 4px;
+  color: var(--nexora-subtle);
+  font-size: clamp(0.6875rem, 0.65rem + 0.15vw, 0.75rem);
+  font-weight: 600;
+}
+
+#nx-campaign-root .sms-credit-package-check {
+  position: absolute;
+  right: 11px;
+  bottom: 10px;
+  display: grid;
+  width: 20px;
+  height: 20px;
+  place-items: center;
+  border: 1px solid var(--nexora-border);
+  border-radius: 50%;
+  background: #fff;
+  color: transparent;
+  font-size: 12px;
+  font-weight: 900;
+  opacity: 0.75;
+  transition: background 0.18s ease, border-color 0.18s ease, color 0.18s ease, transform 0.18s ease;
+}
+
+#nx-campaign-root .sms-credit-package.is-selected .sms-credit-package-check {
+  border-color: var(--nexora-brand);
+  background: var(--nexora-brand);
+  color: #fff;
+  opacity: 1;
+  transform: scale(1.05);
+}
+
+#nx-campaign-root .sms-credit-payment-list {
+  display: grid;
+  gap: 8px;
+}
+
+#nx-campaign-root .sms-credit-payment {
+  display: flex;
+  width: 100%;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  border: 1px solid var(--nexora-border);
+  border-radius: 11px;
+  background: #fff;
+  padding: 8px 11px;
+  color: var(--nexora-text);
+  text-align: left;
+  cursor: pointer;
+  transition: 0.18s ease;
+}
+
+#nx-campaign-root .sms-credit-payment:hover {
+  border-color: rgba(70, 72, 216, 0.45);
+}
+
+#nx-campaign-root .sms-credit-payment.is-selected {
+  border-color: var(--nexora-brand);
+  background: rgba(70, 72, 216, 0.065);
+  box-shadow: 0 5px 12px rgba(70, 72, 216, 0.08);
+}
+
+#nx-campaign-root .sms-credit-payment-main {
+  display: flex;
+  min-width: 0;
+  align-items: center;
+  gap: 9px;
+}
+
+#nx-campaign-root .sms-credit-radio {
+  display: grid;
+  width: 15px;
+  height: 15px;
+  flex: 0 0 15px;
+  place-items: center;
+  border: 2px solid #cbd5e1;
+  border-radius: 50%;
+}
+
+#nx-campaign-root .sms-credit-payment.is-selected .sms-credit-radio {
+  border-color: var(--nexora-brand);
+}
+
+#nx-campaign-root .sms-credit-payment.is-selected .sms-credit-radio::after {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--nexora-brand);
+  content: "";
+}
+
+#nx-campaign-root .sms-credit-token {
+  display: block;
+  width: 28px;
+  height: 28px;
+  flex: 0 0 28px;
+  border: 1px solid rgba(15, 23, 42, 0.08);
+  border-radius: 50%;
+  background: #fff;
+  object-fit: contain;
+  padding: 1px;
+}
+
+#nx-campaign-root .sms-credit-payment-name {
+  font-size: clamp(0.75rem, 0.72rem + 0.15vw, 0.8125rem);
+  font-weight: 800;
+}
+
+#nx-campaign-root .sms-credit-payment-balance {
+  flex: 0 0 auto;
+  color: var(--nexora-muted);
+  text-align: right;
+}
+
+#nx-campaign-root .sms-credit-payment-balance span {
+  display: block;
+  color: var(--nexora-subtle);
+  font-size: clamp(0.625rem, 0.6rem + 0.1vw, 0.6875rem);
+  font-weight: 800;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+}
+
+#nx-campaign-root .sms-credit-payment-balance strong {
+  display: block;
+  margin-top: 2px;
+  color: var(--nexora-text);
+  font-size: clamp(0.6875rem, 0.65rem + 0.15vw, 0.75rem);
+  font-weight: 900;
+}
+
+#nx-campaign-root .sms-credit-invoice {
+  border: 1px solid var(--nexora-border);
+  border-radius: 12px;
+  background: #fff;
+  padding: 13px;
+}
+
+#nx-campaign-root .sms-credit-invoice-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  color: var(--nexora-muted);
+  font-size: clamp(0.75rem, 0.72rem + 0.15vw, 0.8125rem);
+  font-weight: 600;
+}
+
+#nx-campaign-root .sms-credit-invoice-row + .sms-credit-invoice-row {
+  margin-top: 8px;
+}
+
+#nx-campaign-root .sms-credit-invoice-row strong {
+  color: var(--nexora-text);
+  font-weight: 900;
+}
+
+#nx-campaign-root .sms-credit-invoice-total {
+  margin-top: 10px;
+  border-top: 1px solid var(--nexora-rule);
+  padding-top: 10px;
+  color: var(--nexora-text);
+  font-size: clamp(0.875rem, 0.84rem + 0.2vw, 0.9375rem);
+  font-weight: 900;
+}
+
+#nx-campaign-root .sms-credit-invoice-total strong {
+  color: var(--nexora-brand);
+  font-size: clamp(0.9375rem, 0.9rem + 0.25vw, 1rem);
+}
+
+#nx-campaign-root .sms-credit-modal-foot {
+  display: flex;
+  flex: 0 0 auto;
+  align-items: stretch;
+  gap: 10px;
+  border-top: 1px solid var(--nexora-rule);
+  background: #fff;
+  padding: 14px 20px;
+}
+
+#nx-campaign-root .sms-credit-modal-foot .btn-outline {
+  flex: 1;
+  color: var(--nexora-muted);
+}
+
+#nx-campaign-root .sms-credit-modal-foot .btn-primary {
+  flex: 2;
+  justify-content: center;
+}
+
+#nx-campaign-root .sms-credit-modal-foot .btn-primary,
+#nx-campaign-root .sms-credit-modal-foot .btn-outline {
+  box-sizing: border-box;
+  min-height: 42px;
+  height: 42px;
+  padding-top: 0;
+  padding-bottom: 0;
+  justify-content: center;
+}
+
+@media (max-width: 640px) {
+  #nx-campaign-root .segment-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  #nx-campaign-root .modal-title,
+  #nx-campaign-root .sms-credit-modal-title {
+    font-size: 1.0625rem;
+  }
+
+  #nx-campaign-root .field-label,
+  #nx-campaign-root .sms-credit-section-label {
+    font-size: 0.75rem;
+  }
+
+  #nx-campaign-root .segment-btn-name {
+    font-size: 0.8125rem;
+  }
+
+  #nx-campaign-root .segment-btn-count {
+    font-size: 0.75rem;
+  }
+
+  #nx-campaign-root .template-item-title {
+    font-size: 0.8125rem;
+  }
+
+  #nx-campaign-root .template-item-text,
+  #nx-campaign-root .sms-textarea {
+    font-size: 0.9375rem;
+  }
+
+  #nx-campaign-root .tag-btn,
+  #nx-campaign-root .sms-toolbar > span:first-child {
+    font-size: 0.75rem;
+  }
+
+  #nx-campaign-root .btn-primary,
+  #nx-campaign-root .btn-outline {
+    min-height: 44px;
+    font-size: 0.875rem;
+  }
+
+  #nx-campaign-root .modal-footer-actions .btn-primary,
+  #nx-campaign-root .modal-footer-actions .btn-outline,
+  #nx-campaign-root .sms-credit-modal-foot .btn-primary,
+  #nx-campaign-root .sms-credit-modal-foot .btn-outline {
+    min-height: 44px;
+    height: 44px;
+  }
+
+  #nx-campaign-root .schedule-options {
+    gap: 6px;
+  }
+
+  #nx-campaign-root .schedule-opt {
+    padding: 10px 6px;
+  }
+
+  #nx-campaign-root .schedule-opt-icon {
+    margin-bottom: 4px;
+  }
+
+  #nx-campaign-root .schedule-opt-icon .marketing-icon {
+    width: 16px;
+    height: 16px;
+  }
+
+  #nx-campaign-root .schedule-opt-label {
+    font-size: 0.75rem;
+  }
+
+  #nx-campaign-root .cost-preview-label {
+    font-size: 0.75rem;
+  }
+
+  #nx-campaign-root .cost-preview-amount {
+    font-size: 1.0625rem;
+  }
+
+  #nx-campaign-root .sms-credit-modal-sub {
+    font-size: 0.8125rem;
+  }
+
+  #nx-campaign-root .sms-credit-package-name,
+  #nx-campaign-root .sms-credit-package-note {
+    font-size: 0.75rem;
+  }
+
+  #nx-campaign-root .sms-credit-package-amount {
+    font-size: 1.375rem;
+  }
+
+  #nx-campaign-root .sms-credit-package-price {
+    font-size: 0.9375rem;
+  }
+
+  #nx-campaign-root .sms-credit-payment-name,
+  #nx-campaign-root .sms-credit-invoice-row {
+    font-size: 0.8125rem;
+  }
+
+  #nx-campaign-root .sms-credit-payment-balance span {
+    font-size: 0.6875rem;
+  }
+
+  #nx-campaign-root .sms-credit-payment-balance strong {
+    font-size: 0.75rem;
+  }
+
+  #nx-campaign-root .sms-bubble {
+    font-size: 0.9375rem;
+  }
+
+  #nx-campaign-root .modal-footer {
+    flex-direction: column;
+    flex-wrap: wrap;
+    align-items: stretch;
+  }
+
+  #nx-campaign-root .modal-footer-actions {
+    width: 100%;
+  }
+
+  #nx-campaign-root .modal-footer-actions .btn-outline,
+  #nx-campaign-root .modal-footer-actions .btn-primary {
+    flex: 1;
+  }
+
+  #nx-campaign-root .sms-credit-package-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* SMS Campaigns QC polish */
+#nx-campaign-root .lp-attach-row {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+#nx-campaign-root .lp-attach-row .form-select {
+  flex: 1;
+  min-width: 200px;
+}
+
+#nx-campaign-root .btn-outline:disabled {
+  cursor: not-allowed;
+  opacity: 0.45;
+}
+
+#nx-campaign-root .sms-credit-package.is-featured {
+  padding-top: 28px;
+}
+
+@media (max-width: 767px) {
+  .booking-hub-view .panel-sms-campaigns .sms-campaign-table-wrap {
+    overflow: visible;
+  }
+
+  .booking-hub-view .panel-sms-campaigns .sms-campaign-table {
+    display: block;
+    width: 100%;
+    min-width: 0;
+  }
+
+  .booking-hub-view .panel-sms-campaigns .sms-campaign-table thead {
+    display: none;
+  }
+
+  .booking-hub-view .panel-sms-campaigns .sms-campaign-table tbody {
+    display: grid;
+    gap: 10px;
+  }
+
+  .booking-hub-view .panel-sms-campaigns .sms-campaign-table tbody tr {
+    display: grid;
+    gap: 10px;
+    border: 1px solid var(--nexora-border);
+    border-radius: 10px;
+    background: #fff;
+    padding: 12px;
+    box-shadow: 0 8px 22px rgba(15, 23, 42, 0.05);
+  }
+
+  .booking-hub-view .panel-sms-campaigns .sms-campaign-table tbody tr:hover {
+    background: #fff;
+  }
+
+  .booking-hub-view .panel-sms-campaigns .sms-campaign-table td {
+    display: grid;
+    grid-template-columns: 84px minmax(0, 1fr);
+    align-items: start;
+    gap: 9px;
+    width: auto;
+    min-width: 0;
+    max-width: 100%;
+    border-bottom: 0;
+    padding: 0;
+    white-space: normal;
+  }
+
+  .booking-hub-view .panel-sms-campaigns .sms-campaign-table td::before {
+    content: attr(data-label);
+    color: var(--nexora-subtle);
+    font-size: 0.75rem;
+    font-weight: 800;
+    letter-spacing: 0.04em;
+    line-height: 1.4;
+    text-transform: uppercase;
+  }
+
+  .booking-hub-view .panel-sms-campaigns .sms-campaign-table td.sms-campaign-empty {
+    display: block;
+    padding: 24px 16px;
+  }
+
+  .booking-hub-view .panel-sms-campaigns .sms-campaign-table td.sms-campaign-empty::before {
+    content: none;
+  }
+
+  .booking-hub-view .panel-sms-campaigns .sms-campaign-actions {
+    flex-wrap: wrap;
+    justify-content: flex-start;
+  }
+
+  .booking-hub-view .panel-sms-campaigns .sms-campaign-history {
+    border: 0;
+    background: transparent;
+    box-shadow: none;
+  }
+
+  .booking-hub-view .panel-sms-campaigns .sms-campaign-history .marketing-section-heading {
+    border-bottom: 0;
+    padding: 0 0 8px;
+  }
+}

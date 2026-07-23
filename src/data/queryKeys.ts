@@ -134,6 +134,19 @@ export const qk = {
   merchantVoiceCallStatistics: () => ['merchantVoice', 'calls', 'statistics'],
   merchantVoiceCustomers: (filters = EMPTY) => ['merchantVoice', 'customers', filters],
   merchantVoiceCustomerSummary: () => ['merchantVoice', 'customers', 'summary'],
+  merchantVoiceSmsCampaignDashboard: () => ['merchantVoice', 'smsCampaigns', 'dashboard'],
+  merchantVoiceSmsCampaignAudienceSummary: () => ['merchantVoice', 'smsCampaigns', 'audience-summary'],
+  merchantVoiceSmsCampaigns: (filters = EMPTY) => ['merchantVoice', 'smsCampaigns', 'list', filters],
+  merchantVoiceSmsCampaignById: (id?: string | null) => ['merchantVoice', 'smsCampaigns', 'detail', id ?? ''],
+  merchantVoiceSmsCampaignRecipients: (id?: string | null, filters = EMPTY) => [
+    'merchantVoice',
+    'smsCampaigns',
+    id ?? '',
+    'recipients',
+    filters,
+  ],
+  merchantVoiceSmsCreditSummary: () => ['merchantVoice', 'smsCredits', 'summary'],
+  merchantVoiceSmsCreditHistory: (filters = EMPTY) => ['merchantVoice', 'smsCredits', 'history', filters],
 
   // Nexora Voice trial (merchant)
   voiceTrialRequestMe: () => ['nexora-voice', 'trial-request', 'me'],
