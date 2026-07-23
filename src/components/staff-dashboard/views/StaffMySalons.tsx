@@ -119,7 +119,7 @@ function SalonCard({
 
       <div className="flex min-w-0 flex-1 flex-col gap-1">
         <div className="flex items-start justify-between gap-2">
-          <h3 className="truncate text-sm font-extrabold uppercase tracking-wide text-nexoraText">
+          <h3 className="truncate text-sm font-extrabold tracking-wide text-nexoraText">
             {business.businessName}
           </h3>
           <span className="flex shrink-0 items-center gap-1">
