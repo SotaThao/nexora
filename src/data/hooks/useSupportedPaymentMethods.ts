@@ -8,5 +8,6 @@ export function useSupportedPaymentMethods({ enabled = true } = {}) {
     queryKey: qk.supportedPaymentMethods(),
     queryFn: () => supportedPaymentMethodsRepository.getSupported(),
     enabled,
+    staleTime: 1000 * 60 * 30, // Cache supported methods for 30 mins to eliminate duplicate network calls
   })
 }

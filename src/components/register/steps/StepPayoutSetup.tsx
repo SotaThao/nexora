@@ -1,6 +1,7 @@
-import React from 'react'
+import React, { useMemo } from 'react'
 import { ArrowLeft, ArrowRight } from 'lucide-react'
-import { PayoutLogos, payoutMethodsList } from '../constants'
+import { PayoutLogos, getSortedPayoutMethods } from '../constants'
+import { useSupportedPaymentMethods } from '../../../data/hooks/useSupportedPaymentMethods'
 import ToggleSwitch from '../../ui/ToggleSwitch'
 
 export default function StepPayoutSetup({
@@ -14,6 +15,12 @@ export default function StepPayoutSetup({
   t,
   errors,
 }) {
+  const { data: supportedPaymentMethods } = useSupportedPaymentMethods()
+  const displayPayoutMethods = useMemo(
+    () => getSortedPayoutMethods(supportedPaymentMethods),
+    [supportedPaymentMethods]
+  )
+
   return (
     <div className="p-6 sm:p-8 space-y-6 animate-fadeIn max-w-xl mx-auto">
       <div className="flex items-center justify-between border-b border-nexoraBorder pb-3">
@@ -27,8 +34,8 @@ export default function StepPayoutSetup({
         </div>
       </div>
 
-      <div className="space-y-1 divide-y divide-nexoraBorder max-h-[300px] overflow-y-auto pr-1">
-        {payoutMethodsList.filter(method => method.key !== 'bankwire').map(method => {
+      <div className="space-y-1 divide-y divide-nexoraBorder max-h-[380px] overflow-y-auto pr-1">
+        {displayPayoutMethods.filter(method => method.key !== 'bankwire').map(method => {
           const cfg = payouts[method.key] || { enabled: false, value: '' }
           return (
             <div key={method.key} className="flex items-center justify-between py-3">

@@ -184,6 +184,36 @@ export function GridIcon({ className }: IconProps) {
   )
 }
 
+/** Bootstrap funnel — booking filter toggle. */
+export function FunnelIcon({ className }: IconProps) {
+  return (
+    <HubIcon className={className}>
+      <path
+        d="M4 4h16l-6 7.5V18l-4 2v-8.5L4 4Z"
+        stroke="currentColor"
+        strokeWidth="2"
+        strokeLinejoin="round"
+      />
+    </HubIcon>
+  )
+}
+
+export function ChevronLeftIcon({ className }: IconProps) {
+  return (
+    <HubIcon className={className}>
+      <path d="m15 18-6-6 6-6" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+    </HubIcon>
+  )
+}
+
+export function ChevronRightIcon({ className }: IconProps) {
+  return (
+    <HubIcon className={className}>
+      <path d="m9 18 6-6-6-6" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+    </HubIcon>
+  )
+}
+
 export function CalendarKpiIcon({ className }: IconProps) {
   return (
     <HubIcon className={className}>

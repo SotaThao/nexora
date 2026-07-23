@@ -22,7 +22,7 @@ export default function RegisterWizard() {
   const navigate = useNavigate()
   const location = useLocation()
   const [searchParams] = useSearchParams()
-  const urlRef = searchParams.get('ref') || ''
+  const urlRef = (searchParams.get('ref') || '').trim()
   // If a new ref code arrives via URL, persist it (overwrite previous).
   // Fall back to whatever was previously saved in storage.
   if (urlRef) saveRefCode(urlRef)
@@ -109,7 +109,6 @@ export default function RegisterWizard() {
     editAccountName, setEditAccountName,
     isCapturing, modalError, setModalError,
     savePayoutAccount, handleModalImagePick, handleModalTakePhoto, handleModalClearQr,
-    initialRefCode,
   } = form
 
 
@@ -181,7 +180,7 @@ export default function RegisterWizard() {
         {/* Main Card container */}
         <div className="bg-white rounded-2xl border border-nexoraBorder shadow-premium overflow-hidden transition-all duration-500">
           {currentStep === 0 && <StepRoleSelect {...form} />}
-          {currentStep === 1 && <StepCredentials {...form} refCodeReadOnly={!!initialRefCode} />}
+          {currentStep === 1 && <StepCredentials {...form} refCodeReadOnly={!!urlRef} />}
           {currentStep === 2 && <StepOtpVerify {...form} />}
         </div>
       </div>

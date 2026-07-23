@@ -2,6 +2,7 @@ import React, { useEffect, useMemo, useState } from 'react'
 import { createPortal } from 'react-dom'
 import { useNavigate } from 'react-router-dom'
 import {
+  ArrowLeft,
   Bell,
   Check,
   ChevronRight,
@@ -11,6 +12,7 @@ import {
   FileText,
   Lock,
   QrCode,
+  ShieldCheck,
   Star,
   Users,
   Wallet,
@@ -18,6 +20,7 @@ import {
 } from 'lucide-react'
 import useSettingsForm from './settings/hooks/useSettingsForm'
 import ProfileTab from './settings/tabs/ProfileTab'
+import KybTab from './settings/tabs/KybTab'
 import useAuth from '../auth/useAuth'
 import { downloadQrCode, buildPublicQrImageUrl, QR_IMAGE_SIZES } from '../utils/qrUtils'
 import { buildAffiliateReferralUrl, getProfileReferralCode } from '../utils/affiliateReferral'
@@ -173,6 +176,7 @@ export default function SettingsViewDesktop({
 
   const resolveDesktopTab = (nextTab) => {
     if (nextTab === 'affiliate') return 'affiliate'
+    if (nextTab === 'kyb') return 'kyb'
     if (nextTab === 'notification') return 'notification'
     if (nextTab === 'privacy') return 'privacy'
     return 'account'
@@ -180,10 +184,12 @@ export default function SettingsViewDesktop({
 
   const [tab, setTab] = useState(() => resolveDesktopTab(initialTab))
   const [showQrModal, setShowQrModal] = useState(false)
+  const [showKybFlow, setShowKybFlow] = useState(false)
   const [selectedLeg, setSelectedLeg] = useState('left')
 
   useEffect(() => {
     setTab(resolveDesktopTab(initialTab))
+    if (initialTab === 'kyb') setShowKybFlow(false)
   }, [initialTab])
 
   useEffect(() => {
@@ -191,6 +197,11 @@ export default function SettingsViewDesktop({
       setTab(SettingsDesktopTab.Account)
     }
   }, [SETTINGS_SHOW_NOTIFICATION_TAB, tab, setTab])
+
+  const isKybVerified = ['kyb_approved', 'verified_pro', 'verified_lite'].includes(form.effectiveVerificationStatus)
+  const kybStatusLabel = isKybVerified
+    ? t('staff_dashboard.profile.menu_verified')
+    : t('staff_dashboard.profile.menu_not_verified')
 
   const referralCode = useMemo(
     () => getProfileReferralCode(form.profile),
@@ -243,20 +254,16 @@ export default function SettingsViewDesktop({
           <button
             key={item.key}
             type="button"
-            disabled={item.disabled}
-            aria-disabled={item.disabled || undefined}
-            onClick={item.disabled ? undefined : () => {
+            onClick={() => {
               setTab(item.key)
               if (onTabChange) {
                 onTabChange(item.key === 'account' ? 'profile' : item.key)
               }
             }}
             className={`px-4 py-2 rounded-lg text-xs font-extrabold uppercase transition ${
-              item.disabled
-                ? 'bg-nexoraSurfaceMuted text-nexoraMuted opacity-60 cursor-not-allowed'
-                : tab === item.key
-                  ? 'bg-nexoraBrand text-white shadow-sm'
-                  : 'bg-nexoraSurfaceMuted text-nexoraMuted hover:bg-slate-200'
+              tab === item.key
+                ? 'bg-nexoraBrand text-white shadow-sm'
+                : 'bg-nexoraSurfaceMuted text-nexoraMuted hover:bg-slate-200'
             }`}
           >
             {item.label}
@@ -315,6 +322,53 @@ export default function SettingsViewDesktop({
             inlineReferral
           />
         )}
+
+        {tab === 'kyb' && (showKybFlow ? (
+          <div className="space-y-3">
+            <button
+              type="button"
+              onClick={() => setShowKybFlow(false)}
+              className="inline-flex items-center gap-1 text-xs font-bold text-nexoraMuted transition hover:text-nexoraText"
+            >
+              <ArrowLeft className="h-4 w-4" />
+              {t('common.back')}
+            </button>
+            <KybTab
+              profile={form.profile}
+              cardDetails={null}
+              verificationStatus={form.effectiveVerificationStatus}
+              showToast={form.showToast}
+            />
+          </div>
+        ) : (
+          <section className="rounded-2xl border border-nexoraBorder bg-nexoraSurface p-4 shadow-sm space-y-4">
+            <div className="flex items-start gap-3">
+              <span className={`grid h-10 w-10 shrink-0 place-items-center rounded-xl ${isKybVerified ? 'bg-emerald-50 text-emerald-600' : 'bg-amber-50 text-amber-600'}`}>
+                <ShieldCheck className="h-5 w-5" />
+              </span>
+              <div>
+                <h3 className="text-sm font-extrabold text-nexoraText">{kybStatusLabel}</h3>
+                <p className="mt-1 text-xs leading-5 text-nexoraMuted">
+                  {isKybVerified
+                    ? t('staff_dashboard.profile.verification_body')
+                    : isBusinessAccount
+                      ? t('staff_dashboard.profile.verification_unverified_body_business')
+                      : t('staff_dashboard.profile.verification_unverified_body')}
+                </p>
+              </div>
+            </div>
+            {!isKybVerified && (
+              <button
+                type="button"
+                onClick={() => setShowKybFlow(true)}
+                className="inline-flex items-center justify-center gap-2 rounded-lg bg-gradient-to-r from-nexoraElectric to-nexoraViolet px-5 py-2.5 text-xs font-black uppercase tracking-wider text-white shadow-md transition hover:opacity-90"
+              >
+                <ShieldCheck className="h-4 w-4" />
+                {t('components.dashboardRoot.verifyNow')}
+              </button>
+            )}
+          </section>
+        ))}
 
         {tab === 'affiliate' && (
           <div className="rounded-xl border border-nexoraBorder bg-white shadow-sm p-6 max-w-xl mx-auto animate-fadeIn select-none space-y-6">

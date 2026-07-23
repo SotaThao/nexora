@@ -22,6 +22,7 @@ export function useStaffPaymentMethods({ enabled: callerEnabled = true } = {}) {
       }
     },
     enabled: isStaff && callerEnabled,
+    staleTime: 1000 * 60 * 5, // Cache staff payment methods for 5 mins
     retry: (failureCount, error) => {
       if (isApiError(error) && error.status === 404) return false
       return failureCount < 3

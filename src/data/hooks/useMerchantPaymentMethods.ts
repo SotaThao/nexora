@@ -13,6 +13,7 @@ export function useMerchantPaymentMethods({ enabled = true } = {}) {
     queryKey: qk.merchantPaymentMethods(),
     queryFn: () => merchantPaymentMethodsRepository.getAll(),
     enabled,
+    staleTime: 1000 * 60 * 5, // Cache merchant payment methods for 5 mins
   })
 }
 

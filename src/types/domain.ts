@@ -469,6 +469,7 @@ export interface StaffTipsConfirmReceiptResult {
 
 export interface StaffLinkRequestDetail {
   id: string
+  businessId: string | null
   businessName: string
   businessLogoUrl: string | null
   businessRole: string | null
