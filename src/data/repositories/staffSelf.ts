@@ -24,6 +24,7 @@ import type {
 } from '../../types/domain'
 import type { TransactionsListPage, TransactionsListQuery } from './transactions'
 import type { StaffLinkRequestDetailApiDto } from '../../types/repositories'
+import { PENDING_STAFF_LINK_REQUEST_STATUSES } from '../../utils/staffLinkRequestStatus'
 
 type HttpClient = typeof httpClient
 
@@ -543,6 +544,20 @@ export function createStaffSelfRepository(client: HttpClient = httpClient) {
         hasNextPage: Boolean(res?.hasNextPage),
         hasPreviousPage: Boolean(res?.hasPreviousPage),
       }
+    },
+
+    // GET /staff/link-requests only accepts a single Status value per call, so
+    // fetch each status that counts as "needs staff action" and merge.
+    async listPendingLinkRequests(): Promise<StaffLinkRequestDetail[]> {
+      const pages = await Promise.all(
+        PENDING_STAFF_LINK_REQUEST_STATUSES.map((status) => this.listLinkRequests({ status })),
+      )
+      const seenIds = new Set<string>()
+      return pages.flatMap((page) => page.items).filter((item) => {
+        if (seenIds.has(item.id)) return false
+        seenIds.add(item.id)
+        return true
+      })
     },
 
     async acceptLinkRequest(linkId: string): Promise<void> {

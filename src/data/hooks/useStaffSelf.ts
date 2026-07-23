@@ -34,6 +34,7 @@ import type { TransactionsListPage } from '../repositories/transactions'
 import { useStaffAccount } from '../../contexts/StaffAccountContext'
 import { resolveStaffTipQr } from '../../utils/staffTipUrl'
 import { getWebUrlOrigin } from '../../utils/webUrlBase'
+import { PENDING_STAFF_LINK_REQUEST_STATUSES } from '../../utils/staffLinkRequestStatus'
 
 export function useStaffProfile({ enabled: callerEnabled = true } = {}) {
   const queryClient = useQueryClient()
@@ -313,11 +314,8 @@ export function useConfirmStaffTipsReceipt() {
 // possibly-deleted link request on every mount of "My Salons").
 export function useStaffLinkRequestsList({ enabled: callerEnabled = true } = {}) {
   return useQuery<StaffLinkRequestDetail[]>({
-    queryKey: qk.staffLinkRequestsList({ status: 'WaitingStaffAcceptance' }),
-    queryFn: async () => {
-      const page = await staffSelfRepository.listLinkRequests({ status: 'WaitingStaffAcceptance' })
-      return page.items
-    },
+    queryKey: qk.staffLinkRequestsList({ statuses: PENDING_STAFF_LINK_REQUEST_STATUSES }),
+    queryFn: () => staffSelfRepository.listPendingLinkRequests(),
     enabled: callerEnabled,
   })
 }
