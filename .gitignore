@@ -1,6 +1,7 @@
 node_modules/
 dist/
 .vite/
+.next/
 .vercel/
 .env
 !.env.development
@@ -64,3 +65,5 @@ pnpm-workspace.yaml
 docs/prototypes/
 
 .gstack/
+.env.local
+.design-ref/
