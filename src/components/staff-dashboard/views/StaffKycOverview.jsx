@@ -1,64 +1,33 @@
 import { forwardRef, useEffect, useImperativeHandle, useRef, useState } from 'react'
 import { Loader2, RotateCcw } from 'lucide-react'
 import { useTranslation } from '../../../contexts/LanguageContext'
-import { UserVerifyStatus } from '../../../constants/userVerifyStatus'
-import { useKycInitialize, useVerifiedStatus } from '../../../data/hooks/useProfileSettings'
+import { useKycInitialize } from '../../../data/hooks/useProfileSettings'
 import useIsMobileUI from '../../../hooks/useIsMobileUI'
 import MobileIframeScreen from '../../ui/MobileIframeScreen'
 
-const StaffKycOverview = forwardRef(function StaffKycOverview({ onWidgetVisibleChange } = {}, ref) {
+// The parent only mounts this widget for staff who aren't verified yet (verified
+// staff see an informational card instead), so it goes straight into the KYC
+// portal — there is no "Verify now" launcher card.
+const StaffKycOverview = forwardRef(function StaffKycOverview({ onExit } = {}, ref) {
   const { t } = useTranslation()
   const isMobile = useIsMobileUI()
-  const [shouldInitialize, setShouldInitialize] = useState(false)
-  const [isWebviewOpen, setIsWebviewOpen] = useState(false)
-
-  const {
-    data: verifyStatusData,
-    isLoading: isLoadingStatus,
-    isError: isStatusError,
-    refetch: refetchStatus,
-  } = useVerifiedStatus()
-
-  const isNoneStatus = verifyStatusData?.status === UserVerifyStatus.None
+  const [isWebviewOpen, setIsWebviewOpen] = useState(true)
 
   const { data, isLoading, isFetching, isError, refetch } = useKycInitialize({
-    enabled: shouldInitialize || !isNoneStatus,
+    enabled: true,
   })
 
   const [isIframeLoading, setIsIframeLoading] = useState(false)
   const timeoutRef = useRef(null)
 
   useImperativeHandle(ref, () => ({
-    openPortal: () => {
-      setShouldInitialize(true)
-      setIsWebviewOpen(true)
-    },
+    openPortal: () => setIsWebviewOpen(true),
+    closePortal: () => setIsWebviewOpen(false),
   }), [])
 
-  const isBusy = isLoading || isFetching || isLoadingStatus
+  const isBusy = isLoading || isFetching
   const hasUrl = Boolean(data?.url)
   const iframeUrl = data?.url
-
-  // Once the widget takes over (initialized or already past the "None" state),
-  // the parent's standalone "Not verified" card is redundant with the widget's
-  // own status display — mirrors the KYB tab, which never shows that card
-  // once the portal is opened.
-  const isWidgetActive = shouldInitialize || !isNoneStatus
-  // On mobile the widget only "takes over" while the full-screen webview is
-  // open; otherwise the parent keeps showing its status card + launch button.
-  // On desktop the embedded widget takes over as soon as it becomes active.
-  const isTakingOver = isMobile ? isWebviewOpen : isWidgetActive
-  useEffect(() => {
-    onWidgetVisibleChange?.(isTakingOver)
-    return () => onWidgetVisibleChange?.(false)
-  }, [isTakingOver, onWidgetVisibleChange])
-
-  // Already-submitted users (status = Review) skip the launcher card and open the
-  // verification screen directly (once) — it shows their pending/review status.
-  const isSubmitted = verifyStatusData?.status === UserVerifyStatus.Review
-  useEffect(() => {
-    if (isSubmitted) setIsWebviewOpen(true)
-  }, [isSubmitted])
 
   useEffect(() => {
     if (hasUrl) {
@@ -106,7 +75,7 @@ const StaffKycOverview = forwardRef(function StaffKycOverview({ onWidgetVisibleC
         open={isWebviewOpen}
         title={t('staff_dashboard.profile.menu_verification')}
         iframeTitle="KYC/KYB"
-        onClose={() => setIsWebviewOpen(false)}
+        onClose={onExit ?? (() => setIsWebviewOpen(false))}
         src={!isError && hasUrl ? iframeUrl : undefined}
         isLoading={isBusy || (hasUrl && isIframeLoading)}
         loadingLabel={t('common.loading')}
@@ -136,26 +105,11 @@ const StaffKycOverview = forwardRef(function StaffKycOverview({ onWidgetVisibleC
     )
   }
 
-  if (!isWidgetActive) {
-    return null
-  }
-
+  // Desktop: embed the KYC portal inline (the parent only renders this widget
+  // for staff who still need to verify).
   return (
     <div>
-      {isStatusError && (
-        <div className="mb-4 flex justify-end">
-          <button
-            type="button"
-            onClick={() => refetchStatus()}
-            className="inline-flex items-center rounded-lg border border-nexoraBorder bg-white px-3 py-1.5 text-xs font-bold text-nexoraText hover:bg-slate-50 transition cursor-pointer"
-          >
-            <RotateCcw className="mr-2 h-4 w-4" />
-            {t('components.staff_dashboard.views.StaffKycOverview.retry')}
-          </button>
-        </div>
-      )}
-
-      {isError && !isNoneStatus && (
+      {isError && (
         <div className="mb-4 flex justify-end">
           <button
             type="button"
@@ -175,7 +129,7 @@ const StaffKycOverview = forwardRef(function StaffKycOverview({ onWidgetVisibleC
         </div>
       )}
 
-      {!isBusy && isError && !isNoneStatus && (
+      {!isBusy && isError && (
         <div className="flex h-[calc(100dvh-280px)] min-h-[480px] flex-col items-center justify-center gap-3">
           <p className="max-w-sm text-center text-sm text-nexoraMuted">
             {t('components.staff_dashboard.views.StaffKycOverview.networkError')}

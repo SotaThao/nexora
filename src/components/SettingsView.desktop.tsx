@@ -1,8 +1,7 @@
-import React, { useEffect, useMemo, useRef, useState } from 'react'
+import React, { useEffect, useMemo, useState } from 'react'
 import { createPortal } from 'react-dom'
 import { useNavigate } from 'react-router-dom'
 import {
-  ArrowLeft,
   Bell,
   Check,
   ChevronRight,
@@ -20,7 +19,7 @@ import {
 } from 'lucide-react'
 import useSettingsForm from './settings/hooks/useSettingsForm'
 import ProfileTab from './settings/tabs/ProfileTab'
-import KybTab, { type KybTabHandle } from './settings/tabs/KybTab'
+import KybTab from './settings/tabs/KybTab'
 import useAuth from '../auth/useAuth'
 import { downloadQrCode, buildPublicQrImageUrl, QR_IMAGE_SIZES } from '../utils/qrUtils'
 import { buildAffiliateReferralUrl, getProfileReferralCode } from '../utils/affiliateReferral'
@@ -184,13 +183,10 @@ export default function SettingsViewDesktop({
 
   const [tab, setTab] = useState(() => resolveDesktopTab(initialTab))
   const [showQrModal, setShowQrModal] = useState(false)
-  const kybPortalRef = useRef<KybTabHandle | null>(null)
-  const [isKybWidgetActive, setIsKybWidgetActive] = useState(false)
   const [selectedLeg, setSelectedLeg] = useState('left')
 
   useEffect(() => {
     setTab(resolveDesktopTab(initialTab))
-    if (initialTab === 'kyb') kybPortalRef.current?.closePortal()
   }, [initialTab])
 
   useEffect(() => {
@@ -326,52 +322,28 @@ export default function SettingsViewDesktop({
 
         {tab === 'kyb' && (
           <div className="space-y-3">
-            {isKybWidgetActive ? (
-              <button
-                type="button"
-                onClick={() => kybPortalRef.current?.closePortal()}
-                className="inline-flex items-center gap-1 text-xs font-bold text-nexoraMuted transition hover:text-nexoraText"
-              >
-                <ArrowLeft className="h-4 w-4" />
-                {t('common.back')}
-              </button>
-            ) : (
-              <section className="rounded-2xl border border-nexoraBorder bg-nexoraSurface p-4 shadow-sm space-y-4">
+            {isKybVerified ? (
+              <section className="rounded-2xl border border-nexoraBorder bg-nexoraSurface p-4 shadow-sm">
                 <div className="flex items-start gap-3">
-                  <span className={`grid h-10 w-10 shrink-0 place-items-center rounded-xl ${isKybVerified ? 'bg-emerald-50 text-emerald-600' : 'bg-amber-50 text-amber-600'}`}>
+                  <span className="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-emerald-50 text-emerald-600">
                     <ShieldCheck className="h-5 w-5" />
                   </span>
                   <div>
                     <h3 className="text-sm font-extrabold text-nexoraText">{kybStatusLabel}</h3>
                     <p className="mt-1 text-xs leading-5 text-nexoraMuted">
-                      {isKybVerified
-                        ? t('staff_dashboard.profile.verification_body')
-                        : isBusinessAccount
-                          ? t('staff_dashboard.profile.verification_unverified_body_business')
-                          : t('staff_dashboard.profile.verification_unverified_body')}
+                      {t('staff_dashboard.profile.verification_body')}
                     </p>
                   </div>
                 </div>
-                {!isKybVerified && (
-                  <button
-                    type="button"
-                    onClick={() => kybPortalRef.current?.openPortal()}
-                    className="inline-flex items-center justify-center gap-2 rounded-lg bg-gradient-to-r from-nexoraElectric to-nexoraViolet px-5 py-2.5 text-xs font-black uppercase tracking-wider text-white shadow-md transition hover:opacity-90"
-                  >
-                    <ShieldCheck className="h-4 w-4" />
-                    {t('components.dashboardRoot.verifyNow')}
-                  </button>
-                )}
               </section>
+            ) : (
+              <KybTab
+                profile={form.profile}
+                cardDetails={null}
+                verificationStatus={form.effectiveVerificationStatus}
+                showToast={form.showToast}
+              />
             )}
-            <KybTab
-              profile={form.profile}
-              cardDetails={null}
-              verificationStatus={form.effectiveVerificationStatus}
-              showToast={form.showToast}
-              portalRef={kybPortalRef}
-              onWidgetVisibleChange={setIsKybWidgetActive}
-            />
           </div>
         )}
 
