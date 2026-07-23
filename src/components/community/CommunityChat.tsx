@@ -102,37 +102,44 @@ function ChatBubble({
   members,
   messagesById,
   currentUserId,
+  isFirstInRun,
+  isLastInRun,
   onReply,
 }: {
   message: MessageDto
   members: Map<string, CommunityMemberDto>
   messagesById: Map<string, MessageDto>
   currentUserId?: string
+  isFirstInRun: boolean
+  isLastInRun: boolean
   onReply: (message: MessageDto) => void
 }) {
   const isOwn = message.senderId === currentUserId
   const senderName = memberName(message, members)
   const quoted = message.replyToMessageId ? messagesById.get(message.replyToMessageId) : undefined
   const quotedName = quoted ? memberName(quoted, members) : 'Tin nhắn gốc'
+  const groupedCornerClass = isOwn
+    ? `${isFirstInRun ? '' : 'rounded-tr-md'} ${isLastInRun ? '' : 'rounded-br-md'}`
+    : `${isFirstInRun ? '' : 'rounded-tl-md'} ${isLastInRun ? '' : 'rounded-bl-md'}`
 
   return (
-    <article className={`flex max-w-[86%] gap-2 ${isOwn ? 'ml-auto flex-row-reverse' : ''}`}>
-      {!isOwn ? <Avatar name={senderName} /> : null}
-      <div className={`min-w-0 rounded-xl border px-3 py-2 shadow-[0_1px_2px_rgba(11,18,32,0.04)] ${isOwn ? 'border-[#d8d9ff] bg-nexoraBrandSoft' : 'border-nexoraRule bg-nexoraSurface'}`}>
-        {!isOwn ? <p className="mb-0.5 text-xs font-extrabold text-nexoraViolet">{senderName}</p> : null}
+    <article className={`flex max-w-[86%] items-end gap-2 sm:max-w-[78%] ${isOwn ? 'ml-auto flex-row-reverse' : ''}`}>
+      {!isOwn ? (isLastInRun ? <Avatar name={senderName} /> : <span aria-hidden="true" className="h-8 w-8 shrink-0" />) : null}
+      <div className={`min-w-0 rounded-2xl px-3 py-2 shadow-[0_1px_2px_rgba(11,18,32,0.06)] ${groupedCornerClass} ${isOwn ? 'bg-nexoraBrand' : 'bg-nexoraSurfaceMuted'}`}>
+        {!isOwn && isFirstInRun ? <p className="mb-0.5 text-xs font-extrabold text-nexoraViolet">{senderName}</p> : null}
         {message.replyToMessageId ? (
-          <div className="mb-1.5 rounded-md border-l-[3px] border-nexoraBrand bg-nexoraBrandSoft px-2 py-1 text-xs leading-snug text-nexoraMuted">
-            <b className="block text-[11px] text-nexoraBrand">{quotedName}</b>
+          <div className={`mb-1.5 rounded-md border-l-[3px] px-2 py-1 text-xs leading-snug ${isOwn ? 'border-white/70 bg-white/10 text-white/80' : 'border-nexoraBrand bg-nexoraBrandSoft text-nexoraMuted'}`}>
+            <b className={`block text-[11px] ${isOwn ? 'text-white' : 'text-nexoraBrand'}`}>{quotedName}</b>
             <span className="line-clamp-2">{quoted?.body || (quoted?.media.length ? 'Ảnh' : 'Tin nhắn này không còn trong lịch sử đã tải.')}</span>
           </div>
         ) : null}
         {message.media.length ? <div className="mb-1.5 grid gap-1.5">{message.media.map((asset) => <ChatMessageImage key={`${message.id}:${asset.path}`} asset={asset} />)}</div> : null}
-        {message.body ? <p className="whitespace-pre-wrap break-words text-[13.5px] leading-relaxed text-nexoraText">{message.body}</p> : null}
-        <div className="mt-1 flex items-center justify-end gap-1 text-[10.5px] text-nexoraSubtle">
-          <time dateTime={message.createdAt}>{formatTime(message.createdAt)}</time>
-          {isOwn ? <CheckCheck className="h-3.5 w-3.5 text-nexoraBrand" aria-label="Đã gửi" /> : null}
-        </div>
-        <button type="button" onClick={() => onReply(message)} className="mt-1 inline-flex min-h-7 items-center gap-1 text-[11px] font-bold text-nexoraMuted hover:text-nexoraBrand" aria-label={`Trả lời ${senderName}`}>
+        {message.body ? <p className={`whitespace-pre-wrap break-words text-[13.5px] leading-relaxed ${isOwn ? 'text-white' : 'text-nexoraText'}`}>{message.body}</p> : null}
+        {isLastInRun || isOwn ? <div className={`mt-1 flex items-center justify-end gap-1 text-[10.5px] ${isOwn ? 'text-white/70' : 'text-nexoraSubtle'}`}>
+          {isLastInRun ? <time dateTime={message.createdAt}>{formatTime(message.createdAt)}</time> : null}
+          {isOwn ? <CheckCheck className="h-3.5 w-3.5 text-white/80" aria-label="Đã gửi" /> : null}
+        </div> : null}
+        <button type="button" onClick={() => onReply(message)} className={`mt-1 inline-flex min-h-7 items-center gap-1 text-[11px] font-bold ${isOwn ? 'text-white/80 hover:text-white' : 'text-nexoraMuted hover:text-nexoraBrand'}`} aria-label={`Trả lời ${senderName}`}>
           <Reply className="h-3.5 w-3.5" aria-hidden="true" />Trả lời
         </button>
       </div>
@@ -265,14 +272,21 @@ export function CommunityChat() {
   const renderTimeline = () => {
     if (chat.isLoading) return <ChatSkeleton />
     if (!chat.messages.length) return <div className="flex min-h-[280px] items-center justify-center px-6 text-center"><div><Send className="mx-auto h-8 w-8 text-nexoraBrand" aria-hidden="true" /><h2 className="mt-3 text-base font-extrabold text-nexoraText">Bắt đầu cuộc trò chuyện</h2><p className="mt-1 text-sm text-nexoraMuted">Gửi một tin nhắn để chào mọi người trong nhóm.</p></div></div>
-    return <div className="space-y-3 px-3 py-4">{chat.hasOlderMessages ? <button type="button" onClick={() => void chat.loadOlder()} disabled={chat.isLoadingOlder} className="mx-auto flex min-h-9 items-center gap-2 rounded-full bg-nexoraSurfaceMuted px-3 text-xs font-bold text-nexoraMuted hover:bg-nexoraBrandSoft disabled:opacity-60">{chat.isLoadingOlder ? <Loader2 className="h-3.5 w-3.5 animate-spin" aria-hidden="true" /> : null}Tải tin nhắn cũ hơn</button> : null}{chat.messages.map((message, index) => <div key={message.id} className="space-y-2">{index === 0 || dayKey(chat.messages[index - 1].createdAt) !== dayKey(message.createdAt) ? <p className="mx-auto w-fit rounded-full bg-nexoraSurfaceMuted px-3 py-1 text-[11px] font-semibold text-nexoraSubtle">{formatDay(message.createdAt)}</p> : null}<ChatBubble message={message} members={membersByUserId} messagesById={messagesById} currentUserId={user?.id} onReply={setReplyTo} /></div>)}</div>
+    return <div className="px-3 py-4">{chat.hasOlderMessages ? <button type="button" onClick={() => void chat.loadOlder()} disabled={chat.isLoadingOlder} className="mx-auto mb-3 flex min-h-9 items-center gap-2 rounded-full bg-nexoraSurfaceMuted px-3 text-xs font-bold text-nexoraMuted hover:bg-nexoraBrandSoft disabled:opacity-60">{chat.isLoadingOlder ? <Loader2 className="h-3.5 w-3.5 animate-spin" aria-hidden="true" /> : null}Tải tin nhắn cũ hơn</button> : null}{chat.messages.map((message, index) => {
+      const previous = chat.messages[index - 1]
+      const next = chat.messages[index + 1]
+      const startsNewDay = !previous || dayKey(previous.createdAt) !== dayKey(message.createdAt)
+      const isFirstInRun = !previous || previous.senderId !== message.senderId || startsNewDay
+      const isLastInRun = !next || next.senderId !== message.senderId || dayKey(next.createdAt) !== dayKey(message.createdAt)
+      return <div key={message.id} className={`${isFirstInRun ? 'mt-3' : 'mt-0.5'} first:mt-0`}>{startsNewDay ? <p className="mx-auto mb-3 w-fit rounded-full bg-nexoraSurfaceMuted px-3 py-1 text-[11px] font-semibold text-nexoraSubtle">{formatDay(message.createdAt)}</p> : null}<ChatBubble message={message} members={membersByUserId} messagesById={messagesById} currentUserId={user?.id} isFirstInRun={isFirstInRun} isLastInRun={isLastInRun} onReply={setReplyTo} /></div>
+    })}</div>
   }
 
   return (
     <>
       <CommunityPersonaSwitcher />
       <DemoStaffShell onDemoNavigation={() => navigate('/community')}>
-        <main className="mx-auto flex min-h-[calc(100vh-120px)] w-full max-w-[680px] flex-col overflow-hidden border-x border-nexoraBorder bg-nexoraCanvas font-sans shadow-nexora-card">
+        <main className="mx-auto flex h-full min-h-0 w-full max-w-[720px] flex-col overflow-hidden border-x border-nexoraBorder bg-nexoraCanvas font-sans shadow-nexora-card lg:h-auto lg:min-h-[calc(100vh-120px)]">
           <header className="flex items-center gap-3 border-b border-nexoraBorder bg-nexoraSurface px-3 py-3">
             <button type="button" onClick={() => navigate(`/community/${id}`)} className="grid h-11 w-11 place-items-center rounded-full text-nexoraMuted hover:bg-nexoraSurfaceMuted" aria-label="Quay lại nhóm"><ArrowLeft className="h-5 w-5" aria-hidden="true" /></button>
             <Avatar name={detail.data?.name} />
@@ -291,7 +305,7 @@ export function CommunityChat() {
 
           <section className="min-h-0 flex-1 overflow-y-auto">{renderTimeline()}</section>
 
-          <form onSubmit={(event) => void submit(event)} className="border-t border-nexoraBorder bg-nexoraSurface p-3">
+          <form onSubmit={(event) => void submit(event)} className="shrink-0 border-t border-nexoraBorder bg-nexoraSurface p-3">
             {replyTo ? <div className="mb-2 flex items-center gap-2 rounded-lg border-l-[3px] border-nexoraBrand bg-nexoraBrandSoft px-2 py-1.5 text-xs text-nexoraMuted"><Reply className="h-4 w-4 shrink-0 text-nexoraBrand" aria-hidden="true" /><p className="min-w-0 flex-1 truncate"><b className="text-nexoraBrand">Đang trả lời</b> · {replyTo.body || (replyTo.media.length ? 'Ảnh' : 'Tin nhắn')}</p><button type="button" onClick={() => setReplyTo(null)} className="grid h-7 w-7 place-items-center rounded-full hover:bg-white/70" aria-label="Hủy trả lời"><X className="h-4 w-4" aria-hidden="true" /></button></div> : null}
             {previewUrl ? (
               <div className="mb-2 flex items-center gap-3 rounded-xl border border-nexoraBorder bg-nexoraSurfaceMuted p-2">
