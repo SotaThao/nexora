@@ -1,5 +1,5 @@
 import React, { Suspense, useEffect, useState } from 'react'
-import { useNavigate, useSearchParams } from 'react-router-dom'
+import { Navigate, useNavigate, useSearchParams } from 'react-router-dom'
 import { useAuth } from '../auth/useAuth'
 import apiAuthAdapter from '../auth/adapters/apiAuthAdapter'
 import LoadingScreen from './LoadingScreen'
@@ -76,6 +76,13 @@ export default function RootRedirect() {
 
     setIsProcessingDeepLink(false)
   }, [searchParams, navigate, t])
+
+  // Community demo deploys land straight on the Supabase-backed Community app,
+  // bypassing the main-app home/login (which calls the prod REST API and is not
+  // part of the demo). Gated on the demo flag so real builds keep HomePage.
+  if (import.meta.env.VITE_ENABLE_DEMO_TOOLS === 'true') {
+    return <Navigate to="/community" replace />
+  }
 
   if (isProcessingDeepLink || status === 'loading') {
     return <LoadingScreen />
