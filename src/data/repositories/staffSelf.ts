@@ -525,16 +525,21 @@ export function createStaffSelfRepository(client: HttpClient = httpClient) {
 
     async listLinkRequests({
       status,
+      statuses,
       pageNumber = 1,
       pageSize = 50,
-    }: { status?: string; pageNumber?: number; pageSize?: number } = {}): Promise<
+    }: { status?: string; statuses?: string[]; pageNumber?: number; pageSize?: number } = {}): Promise<
       PaginatedResponse<StaffLinkRequestDetail>
     > {
-      const params: Record<string, string | number> = { PageNumber: pageNumber, PageSize: pageSize }
-      if (status) params.Status = status
+      const params: Record<string, unknown> = { PageNumber: pageNumber, PageSize: pageSize }
+      if (statuses && statuses.length > 0) {
+        params.statuses = statuses
+      } else if (status) {
+        params.Status = status
+      }
       const res = await client.get<PaginatedResponse<StaffLinkRequestDetailApiDto>>(
         '/api/v1/staff/link-requests',
-        { params },
+        { params: params as Record<string, string | number> },
       )
       return {
         items: (res?.items ?? []).map(normalizeStaffLinkRequestDetail),
@@ -546,18 +551,12 @@ export function createStaffSelfRepository(client: HttpClient = httpClient) {
       }
     },
 
-    // GET /staff/link-requests only accepts a single Status value per call, so
-    // fetch each status that counts as "needs staff action" and merge.
+    // GET /staff/link-requests accepts statuses parameter with multiple values in a single call.
     async listPendingLinkRequests(): Promise<StaffLinkRequestDetail[]> {
-      const pages = await Promise.all(
-        PENDING_STAFF_LINK_REQUEST_STATUSES.map((status) => this.listLinkRequests({ status })),
-      )
-      const seenIds = new Set<string>()
-      return pages.flatMap((page) => page.items).filter((item) => {
-        if (seenIds.has(item.id)) return false
-        seenIds.add(item.id)
-        return true
+      const res = await this.listLinkRequests({
+        statuses: [...PENDING_STAFF_LINK_REQUEST_STATUSES],
       })
+      return res.items
     },
 
     async acceptLinkRequest(linkId: string): Promise<void> {
