@@ -7,6 +7,8 @@ import {
   formatTransactionDateTime,
   isAwaitingShopConfirmation,
   isReceiptConfirmableTip,
+  resolveLocalStaffIds,
+  withResolvedLocalStaff,
 } from '../utils'
 import { WalletLogos } from '../constants'
 import TransactionFilter from '../../TransactionFilter'
@@ -22,10 +24,18 @@ import {
 import { useMerchantStaff } from '../../../data/hooks/useMerchantStaff'
 import { useTouchpoints } from '../../../data/hooks/useMerchantTouchpoints'
 import type { TransactionsListQuery } from '../../../data/repositories/transactions'
+import { TipStatus } from '../../../constants/tipStatus'
 import ReportsTableSkeleton from './ReportsTableSkeleton'
 import CopyableTransactionId from '../../ui/CopyableTransactionId'
 import ReportsDirectPaymentsTab from './ReportsDirectPaymentsTab'
 import PaymentsPayoutsHeader from '../PaymentsPayoutsHeader'
+
+const TIP_STATUS_FILTER_VALUES = new Set<string>([
+  TipStatus.Initiated,
+  TipStatus.Confirmed,
+  TipStatus.Skipped,
+  TipStatus.Completed,
+])
 
 // Confirm-receipt ownership follows US-024/US-025: staff owns direct-to-staff
 // tips, and the owner owns shop-account / multi-staff tips. Force-completing
@@ -109,15 +119,6 @@ function formatStaffCell(tx) {
   return '—'
 }
 
-function resolveLocalStaffSet(staff = []) {
-  const localStaffIds = new Set<string>()
-  for (const member of staff) {
-    if (!member?.staffProfileId) continue
-    if (member.isLocalStaff) localStaffIds.add(member.staffProfileId)
-  }
-  return localStaffIds
-}
-
 function ReportsView({
   audience = 'merchant',
   staff: staffProp = [],
@@ -150,6 +151,13 @@ function ReportsView({
     !isStaffAudience && activeTab === REPORTS_TAB_TIPS ? searchParams.get('transactionId') : null
   const deepLinkDate = deepLinkTransactionId ? searchParams.get('date') : null
 
+  // Deep-link from mobile dashboard Transactions KPI (same month as overview card).
+  const rangeDateFrom = searchParams.get('dateFrom')
+  const rangeDateTo = searchParams.get('dateTo')
+  const hasRangeDeepLink = Boolean(rangeDateFrom || rangeDateTo)
+  const initialCustomStart = deepLinkDate || rangeDateFrom || ''
+  const initialCustomEnd = deepLinkDate || rangeDateTo || ''
+
   const setActiveTab = useCallback((tab: string) => {
     const next = new URLSearchParams(searchParams)
     next.set('tab', tab)
@@ -174,10 +182,14 @@ function ReportsView({
     setSearchParams(next, { replace: true })
   }, [searchParams, setSearchParams])
 
-  // Allow deep-linking the awaiting-confirmation filter, e.g. the dashboard
-  // overview "View" banner navigates to /dashboard/reports?status=AwaitingShopConfirmation.
-  const initialStatus =
-    !isStaffAudience && searchParams.get('status') === AWAITING_STATUS ? AWAITING_STATUS : 'all'
+  // Deep-link status: tip API statuses, or merchant awaiting-confirmation sentinel.
+  const statusParam = searchParams.get('status')
+  const initialStatus = (() => {
+    if (!statusParam) return 'all'
+    if (TIP_STATUS_FILTER_VALUES.has(statusParam)) return statusParam
+    if (!isStaffAudience && statusParam === AWAITING_STATUS) return AWAITING_STATUS
+    return 'all'
+  })()
   const directPaymentsStatusFilter = useMemo(() => {
     const status = searchParams.get('status')
     if (status === '1' || status === 'confirmed') return '1'
@@ -185,9 +197,11 @@ function ReportsView({
   }, [searchParams])
 
   // Filter States
-  const [dateRangePreset, setDateRangePreset] = useState(deepLinkDate ? 'custom' : 'all')
-  const [startDate, setStartDate] = useState(deepLinkDate || '')
-  const [endDate, setEndDate] = useState(deepLinkDate || '')
+  const [dateRangePreset, setDateRangePreset] = useState(
+    deepLinkDate || hasRangeDeepLink ? 'custom' : 'all',
+  )
+  const [startDate, setStartDate] = useState(initialCustomStart)
+  const [endDate, setEndDate] = useState(initialCustomEnd)
 
   // The lazy useState initializers above only apply on first mount. If a tip
   // notification is clicked while already on this route (no remount, just a
@@ -202,6 +216,20 @@ function ReportsView({
       setEndDate(deepLinkDate)
     }
   }, [deepLinkTransactionId, deepLinkDate])
+
+  // Re-sync when dashboard KPI navigates here with dateFrom/dateTo (same-route).
+  const syncedRangeKey = `${rangeDateFrom ?? ''}|${rangeDateTo ?? ''}`
+  const syncedRangeRef = useRef<string | null>(hasRangeDeepLink ? syncedRangeKey : null)
+  useEffect(() => {
+    if (!hasRangeDeepLink) return
+    if (syncedRangeRef.current === syncedRangeKey) return
+    // Prefer tip-notification deep link when both are present.
+    if (deepLinkTransactionId && deepLinkDate) return
+    syncedRangeRef.current = syncedRangeKey
+    setDateRangePreset('custom')
+    setStartDate(rangeDateFrom || '')
+    setEndDate(rangeDateTo || '')
+  }, [hasRangeDeepLink, syncedRangeKey, rangeDateFrom, rangeDateTo, deepLinkTransactionId, deepLinkDate])
   const [minAmount, setMinAmount] = useState('')
   const [maxAmount, setMaxAmount] = useState('')
   const [selectedStaff, setSelectedStaff] = useState('all')
@@ -216,6 +244,14 @@ function ReportsView({
     // be on page 1 alongside the date-narrowed filter above.
     pageSize: deepLinkTransactionId ? 100 : DEFAULT_PAGE_SIZE,
   })
+
+  // Re-sync status when navigating from dashboard with ?status=… (same-route).
+  const syncedStatusRef = useRef(initialStatus)
+  useEffect(() => {
+    if (syncedStatusRef.current === initialStatus) return
+    syncedStatusRef.current = initialStatus
+    setSelectedStatus(initialStatus)
+  }, [initialStatus])
 
   // Awaiting-confirmation is driven by the visible Status filter, not a
   // separate toggle, so the criteria is transparent and clears via Reset.
@@ -412,13 +448,9 @@ function ReportsView({
   // Amount filter only — not supported by tips API
   // For the awaiting-confirmation filter, also refine client-side to the exact eligibility predicate
   const filtered = useMemo(() => {
-    const localStaffIds = resolveLocalStaffSet(staff)
+    const localStaffIds = resolveLocalStaffIds(staff)
     return transactions.filter((tx) => {
-      const isLocalStaffResolved =
-        tx?.isLocalStaff === true ||
-        (tx?.staffProfileId ? localStaffIds.has(String(tx.staffProfileId)) : false)
-      const txWithResolvedLocalFlag =
-        tx?.isLocalStaff === true ? tx : { ...tx, isLocalStaff: isLocalStaffResolved }
+      const txWithResolvedLocalFlag = withResolvedLocalStaff(tx, localStaffIds)
 
       if (minAmount && tx.amount < parseFloat(minAmount)) return false
       if (maxAmount && tx.amount > parseFloat(maxAmount)) return false
@@ -436,12 +468,7 @@ function ReportsView({
         if (tp !== selectedTouchpoint.toLowerCase()) return false
       }
       return true
-    }).map((tx) => {
-      if (tx?.isLocalStaff === true) return tx
-      const isLocalStaffResolved =
-        tx?.staffProfileId ? localStaffIds.has(String(tx.staffProfileId)) : false
-      return isLocalStaffResolved ? { ...tx, isLocalStaff: true } : tx
-    })
+    }).map((tx) => withResolvedLocalStaff(tx, localStaffIds))
   }, [
     transactions,
     staff,
@@ -525,19 +552,21 @@ function ReportsView({
   const statusOptions = useMemo(() => {
     const options = [
       { value: 'all', label: t('dashboard.activity_log.all_statuses') },
-      { value: 'Initiated', label: t('dashboard.activity_log.status_initiated') },
-      { value: 'Confirmed', label: t('dashboard.activity_log.status_confirmed') },
-      { value: 'Skipped', label: t('dashboard.activity_log.status_skipped') },
-      { value: 'Completed', label: t('dashboard.activity_log.status_completed') },
+      { value: TipStatus.Initiated, label: t('dashboard.activity_log.status_initiated') },
+      { value: TipStatus.Confirmed, label: t('dashboard.activity_log.status_confirmed') },
+      { value: TipStatus.Skipped, label: t('dashboard.activity_log.status_skipped') },
+      { value: TipStatus.Completed, label: t('dashboard.activity_log.status_completed') },
     ]
-    if (!isStaffAudience) {
+    // AwaitingShopConfirmation maps to API Confirmed — keep option only when
+    // deep-linked from the pending banner so the select can display the value.
+    if (!isStaffAudience && selectedStatus === AWAITING_STATUS) {
       options.push({
         value: AWAITING_STATUS,
-        label: t('merchant_dashboard.tips.awaiting_shop_confirmation'),
+        label: t('dashboard.activity_log.status_confirmed'),
       })
     }
     return options
-  }, [isStaffAudience, t])
+  }, [isStaffAudience, selectedStatus, t])
 
   const showTableSkeleton = (isPending && !transactionsPage) || isFetching
   const tableColumnCount = isStaffAudience ? 7 : 8

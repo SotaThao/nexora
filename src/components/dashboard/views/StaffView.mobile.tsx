@@ -10,6 +10,7 @@ import { buildPublicQrImageUrl } from '../../../data/repositories/publicQr'
 import { QR_IMAGE_SIZES } from '../../../utils/qrUtils'
 import { orderedPayoutUiKeysFromMethods, PAYOUT_UI_LABELS } from '../../../data/paymentMethodTypes'
 import { formatJoinedDate } from '../../../utils/localDate'
+import { resolveStaffRoleLabel } from '../../../utils/staffBusinessRole'
 import IconButton from '../../ui/IconButton'
 import CustomSelect from '../../CustomSelect'
 import Pagination from '../../ui/Pagination'
@@ -112,7 +113,7 @@ function StaffMemberCard({
               <p className="font-extrabold text-nexoraText truncate group-hover:text-nexoraBrand transition">
                 {member.nickname || member.fullName}
               </p>
-              <p className="text-xs text-nexoraMuted truncate">{member.position}</p>
+              <p className="text-xs text-nexoraMuted truncate">{resolveStaffRoleLabel(member)}</p>
             </div>
           </button>
           {isPendingInvite && (
@@ -607,7 +608,7 @@ function StaffView({
                           )}
                           <div>
                             <div className="font-extrabold text-nexoraText">{member.nickname || member.fullName}</div>
-                            <div className="text-xs text-nexoraMuted">{member.position}</div>
+                            <div className="text-xs text-nexoraMuted">{resolveStaffRoleLabel(member)}</div>
                           </div>
                         </div>
                       </td>

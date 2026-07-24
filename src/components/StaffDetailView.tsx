@@ -18,10 +18,18 @@ import { logger } from '../utils/logger'
 import CopyableTransactionId from './ui/CopyableTransactionId'
 import { formatTransactionDateTime, formatCurrency } from './dashboard/utils'
 import { buildChartPoints, getBezierPath } from './dashboard/overview/chartUtils'
-import { useMerchantStaffStats } from '../data/hooks/useMerchantStaff'
+import {
+  useMerchantStaffByCode,
+  useMerchantStaffStats,
+  useSetMerchantStaffNickname,
+  useUpdateMerchantStaffRole,
+} from '../data/hooks/useMerchantStaff'
 import { staffRecordMatchesMember } from '../utils/staffRecordMatch'
 import { formatJoinedDate } from '../utils/localDate'
 import { orderedPayoutUiKeysFromMethods, PAYOUT_UI_LABELS } from '../data/paymentMethodTypes'
+import NicknameEditor from './NicknameEditor'
+import RoleAtBusinessEditor from './RoleAtBusinessEditor'
+import { STAFF_ROLE_ERROR_KEYS } from './staff/constants'
 
 const RANGE_DAY_OFFSETS = {
   '7 Days': 6,
@@ -188,6 +196,30 @@ export default function StaffDetailView({
     isLoading: isStatsLoading,
     isFetching: isStatsFetching,
   } = useMerchantStaffStats(staffProfileId, statsDateRange, { enabled: !!staffProfileId })
+  const nicknameStaffCode = String(staffMember?.staffCode ?? '').trim() || null
+  const {
+    data: nicknameStaffMember,
+    refetch: refetchNicknameStaffMember,
+  } = useMerchantStaffByCode(nicknameStaffCode, { enabled: Boolean(nicknameStaffCode) })
+  const setNicknameMutation = useSetMerchantStaffNickname()
+  const updateRoleMutation = useUpdateMerchantStaffRole()
+  const rawBusinessNickname = nicknameStaffMember?.nicknameAtBusiness
+    ?? staffMember?.nicknameAtBusiness
+    ?? null
+  const hasBusinessNickname = Boolean(rawBusinessNickname?.trim())
+  const resolvedDisplayName = nicknameStaffMember?.displayName
+    ?? nicknameStaffMember?.nickname
+    ?? staffMember?.displayName
+    ?? staffMember?.nickname
+    ?? staffMember?.fullName
+    ?? ''
+  const originalDisplayName = nicknameStaffMember?.fullName ?? staffMember?.fullName ?? ''
+  const nicknameStaffLinkId = staffMember?.linkId ?? null
+  const rawRoleAtBusiness = nicknameStaffMember?.roleAtBusiness
+    ?? staffMember?.roleAtBusiness
+    ?? staffMember?.position
+    ?? ''
+  const resolvedRoleAtBusiness = String(rawRoleAtBusiness ?? '').trim()
 
   const usesApiStats = !!staffProfileId
   const isMetricsLoading = usesApiStats ? (isStatsLoading || isStatsFetching) : isTipsLoading
@@ -211,7 +243,7 @@ export default function StaffDetailView({
         totalTips: period.tipsCollected,
         averageRating: Number(allTime.averageRating ?? 0).toFixed(2),
         totalReviews: period.totalReviews ?? allTime.totalReviews ?? 0,
-        specialty: staffMember.roleAtBusiness || staffMember.position || '',
+        specialty: resolvedRoleAtBusiness,
         recentTransactions: staffStats.recentTips,
         filteredReviews: staffStats.recentReviews,
         tipsTrend: period.tipsTrend,
@@ -245,12 +277,12 @@ export default function StaffDetailView({
       totalTips,
       averageRating,
       totalReviews,
-      specialty: staffMember.roleAtBusiness || staffMember.position || '',
+      specialty: resolvedRoleAtBusiness,
       recentTransactions: staffTxFiltered,
       filteredReviews: staffReviewsFiltered,
       tipsTrend: null,
     }
-  }, [staffMember, usesApiStats, staffStats, transactions, reviews, startDate, endDate])
+  }, [staffMember, usesApiStats, staffStats, transactions, reviews, startDate, endDate, resolvedRoleAtBusiness])
 
   // 2. Generate tips over time data for SVG chart
   const chartData = useMemo(() => {
@@ -405,8 +437,8 @@ export default function StaffDetailView({
         <div className="absolute -right-16 -top-16 h-36 w-36 bg-nexoraBrand/5 rounded-full blur-2xl pointer-events-none"></div>
         <div className="absolute -left-16 -bottom-16 h-36 w-36 bg-brandCyan/5 rounded-full blur-2xl pointer-events-none"></div>
 
-        <div className="flex flex-col gap-5 sm:flex-row sm:items-center sm:justify-between relative z-10">
-          <div className="flex items-center gap-4">
+        <div className="flex flex-col gap-5 xl:flex-row xl:items-start xl:justify-between relative z-10">
+          <div className="flex min-w-0 items-start gap-4">
             {onBack && (
               <button
                 onClick={onBack}
@@ -420,19 +452,26 @@ export default function StaffDetailView({
             {staffMember.avatar ? (
               <img
                 src={staffMember.avatar}
-                alt={staffMember.fullName}
+                alt={resolvedDisplayName}
                 className="h-16 w-16 rounded-full border border-nexoraBorder object-cover shadow-sm"
               />
             ) : (
               <div className="flex h-16 w-16 items-center justify-center rounded-full bg-gradient-to-tr from-nexoraBrand to-nexoraLavender text-xl font-black text-white shadow-md">
-                {(staffMember.nickname || staffMember.fullName || 'N').charAt(0).toUpperCase()}
+                {(resolvedDisplayName || 'N').charAt(0).toUpperCase()}
               </div>
             )}
 
-            <div>
+            <div className="min-w-0 flex-1">
               <div className="flex items-center gap-2 flex-wrap">
-                <h1 className="text-xl font-extrabold text-nexoraText sm:text-2xl">{staffMember.fullName}</h1>
+                <h1 className='text-xl font-extrabold text-nexoraText sm:text-2xl'>
+                  <span className='[overflow-wrap:anywhere]'>{resolvedDisplayName}</span>
+                </h1>
                 <div className="flex gap-1">
+                  {hasBusinessNickname ? (
+                    <span className="rounded-full border border-dashed border-nexoraLavender bg-nexoraBrandSoft px-2.5 py-0.5 text-[10px] font-extrabold uppercase tracking-wider text-nexoraBrand">
+                      {t('staff_detail.nickname_badge')}
+                    </span>
+                  ) : null}
                   <span
                     className={`rounded-full px-2.5 py-0.5 text-[10px] font-extrabold uppercase tracking-wider ${
                       staffMember.isActive
@@ -453,6 +492,11 @@ export default function StaffDetailView({
                   </span>
                 </div>
               </div>
+              {hasBusinessNickname ? (
+                <p className="text-[11px] font-semibold text-nexoraMuted">
+                  {t('staff_detail.nickname_original_name', { name: originalDisplayName })}
+                </p>
+              ) : null}
               <p className="text-xs font-semibold text-nexoraMuted">{stats.specialty || staffMember.position}</p>
               <div className="mt-1.5 flex flex-wrap gap-x-4 gap-y-1.5 text-[11px] text-nexoraSubtle">
                 <div className="flex items-center gap-1">
@@ -475,17 +519,61 @@ export default function StaffDetailView({
             </div>
           </div>
 
-          <div className="flex flex-wrap gap-2">
+          <div className="grid w-full grid-cols-2 gap-2 sm:grid-cols-3 xl:flex xl:w-auto xl:flex-wrap xl:items-center xl:justify-end [&>div]:w-full [&>div>button]:w-full xl:[&>div]:w-auto xl:[&>div>button]:w-auto">
+            {nicknameStaffLinkId != null && nicknameStaffCode ? (
+              <NicknameEditor
+                value={rawBusinessNickname}
+                originalName={originalDisplayName}
+                triggerLabel={t(
+                  hasBusinessNickname
+                    ? 'staff_detail.nickname_edit_action'
+                    : 'staff_detail.nickname_set_action',
+                )}
+                fieldLabel={t('staff_detail.nickname_badge')}
+                helperText={t('staff_detail.nickname_helper_merchant')}
+                onRefresh={async () => {
+                  const result = await refetchNicknameStaffMember({ throwOnError: true })
+                  return result.data?.nicknameAtBusiness ?? null
+                }}
+                onSave={(nickname) => setNicknameMutation.mutateAsync({
+                  staffLinkId: String(nicknameStaffLinkId),
+                  staffCode: nicknameStaffCode,
+                  nickname,
+                })}
+              />
+            ) : null}
+            {nicknameStaffLinkId != null && nicknameStaffCode ? (
+              <RoleAtBusinessEditor
+                value={resolvedRoleAtBusiness}
+                triggerLabel={t('staff_detail.role_set_action')}
+                fieldLabel={t('staff_detail.role_badge')}
+                helperText={t('staff_detail.role_helper_merchant')}
+                placeholder={t('staff_detail.role_placeholder')}
+                notFoundErrorKey={STAFF_ROLE_ERROR_KEYS.merchantLinkNotFound}
+                onRefresh={async () => {
+                  const result = await refetchNicknameStaffMember({ throwOnError: true })
+                  return result.data?.roleAtBusiness ?? result.data?.position ?? ''
+                }}
+                onSave={async (roleAtBusiness) => {
+                  const result = await updateRoleMutation.mutateAsync({
+                    staffLinkId: String(nicknameStaffLinkId),
+                    staffCode: nicknameStaffCode,
+                    roleAtBusiness,
+                  })
+                  return { roleAtBusiness: result.roleAtBusiness }
+                }}
+              />
+            ) : null}
             <button
               onClick={() => onQr(staffMember)}
-              className="inline-flex h-10 items-center gap-2 rounded-lg border border-nexoraBorder bg-white px-4 text-xs font-bold text-nexoraText shadow-sm hover:bg-nexoraSurfaceMuted transition"
+              className="inline-flex h-10 w-full items-center justify-center gap-2 rounded-lg border border-nexoraBorder bg-white px-4 text-xs font-bold text-nexoraText shadow-sm transition hover:bg-nexoraSurfaceMuted xl:w-auto"
             >
               <QrCode className="h-4 w-4 text-brandCyan" /> {t('staff_detail.personal_qr')}
             </button>
             {onViewStaff && (
               <button
                 onClick={() => onViewStaff(staffMember)}
-                className="inline-flex h-10 items-center gap-2 rounded-lg border border-nexoraBorder bg-white px-4 text-xs font-bold text-nexoraText shadow-sm hover:bg-nexoraSurfaceMuted transition"
+                className="inline-flex h-10 w-full items-center justify-center gap-2 rounded-lg border border-nexoraBorder bg-white px-4 text-xs font-bold text-nexoraText shadow-sm transition hover:bg-nexoraSurfaceMuted xl:w-auto"
               >
                 <Eye className="h-4 w-4 text-nexoraBrand" /> {t('common.view_detail')}
               </button>
@@ -493,7 +581,7 @@ export default function StaffDetailView({
             {onDelete && (
               <button
                 onClick={() => onDelete(staffMember.id)}
-                className="inline-flex h-10 w-10 items-center justify-center rounded-lg border border-red-200 bg-red-50 text-red-600 hover:bg-red-100 transition"
+                className="inline-flex h-10 w-10 shrink-0 items-center justify-center justify-self-end rounded-lg border border-red-200 bg-red-50 text-red-600 transition hover:bg-red-100"
                 title={t('staff_detail.delete_tech')}
               >
                 <Trash2 className="h-4 w-4" />
@@ -504,7 +592,7 @@ export default function StaffDetailView({
       </div>
 
       {/* 2. KPI METRICS CARDS */}
-      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-3">
         {/* KPI 1: Tips */}
         <div className="nexora-card p-5 shadow-sm">
           <div className="flex items-start justify-between">
@@ -546,15 +634,15 @@ export default function StaffDetailView({
         </div>
       </div>
 
-      <div className="grid grid-cols-1 gap-6 lg:grid-cols-2 lg:items-stretch">
+      <div className="grid grid-cols-1 gap-6 xl:grid-cols-2 xl:items-stretch">
         {/* 3. WEEKLY TIPS TREND CHART */}
         <div className="nexora-card flex min-w-0 flex-col p-5 shadow-sm">
-        <div className="mb-4 flex shrink-0 flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-          <h2 className="text-sm font-extrabold text-nexoraText uppercase tracking-wider">
+        <div className="mb-4 flex shrink-0 flex-col gap-4 xl:flex-row xl:items-center xl:justify-between">
+          <h2 className="text-sm font-extrabold text-nexoraText uppercase tracking-wider shrink-0">
             {range === '7 Days' ? t('staff_detail.weekly_trend') : (t('components.StaffDetailView.tipsPerformanceTrend'))}
           </h2>
-          <div className="-mx-1 overflow-x-auto pb-1 sm:mx-0 sm:overflow-visible sm:pb-0">
-            <div className="flex min-w-max items-center gap-1.5 px-1 sm:min-w-0 sm:flex-wrap sm:justify-end sm:gap-2 sm:px-0">
+          <div className="-mx-1 overflow-x-auto pb-1 xl:mx-0 xl:overflow-visible xl:pb-0">
+            <div className="flex min-w-max items-center gap-1.5 px-1 xl:min-w-0 xl:flex-wrap xl:justify-end xl:gap-2 xl:px-0">
             {['7 Days', '30 Days', '90 Days', '180 Days', '365 Days', 'Custom'].map((item) => {
               const rangeLabel = (itm) => {
                 return {
@@ -766,16 +854,16 @@ export default function StaffDetailView({
               return (
                 <div
                   key={key}
-                  className={`flex items-center justify-between p-3 rounded-lg border text-xs transition ${
+                  className={`flex flex-col gap-2 p-3 rounded-lg border text-xs transition sm:flex-row sm:items-center sm:justify-between ${
                     isConfigured
                       ? 'bg-nexoraSurfaceMuted border-nexoraBorder'
                       : 'bg-slate-50/30 border-dashed border-nexoraBorder opacity-60'
                   }`}
                 >
-                  <div className="flex items-center gap-2.5">
-                    <span className="font-bold text-nexoraText">{label}</span>
+                  <div className="flex min-w-0 items-center gap-2.5">
+                    <span className="shrink-0 font-bold text-nexoraText">{label}</span>
                     {isConfigured ? (
-                      <span className="font-mono text-nexoraMuted">{String(value ?? '')}</span>
+                      <span className="min-w-0 truncate font-mono text-nexoraMuted">{String(value ?? '')}</span>
                     ) : (
                       <span className="italic text-nexoraSubtle">{t('staff_detail.not_configured')}</span>
                     )}
@@ -854,7 +942,7 @@ export default function StaffDetailView({
 
       {/* 6. REVIEWS ROUTING FILTERABLE FEED */}
       <div className="nexora-card p-5 shadow-sm">
-        <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between mb-5">
+        <div className="mb-5 flex flex-col gap-4 xl:flex-row xl:items-center xl:justify-between">
           <div>
             <h2 className="text-sm font-extrabold text-nexoraText uppercase tracking-wider">{t('staff_detail.filtered_reviews')}</h2>
             <p className="text-xs text-nexoraMuted mt-0.5">{t('staff_detail.reviews_desc')}</p>

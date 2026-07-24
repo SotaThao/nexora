@@ -800,7 +800,7 @@ html.homepage-active {
     scroll-margin-top: calc(64px + var(--app-safe-area-top, env(safe-area-inset-top, 0px)));
   }
 
-  .nx-homepage header img {
+  .nx-homepage header .homepage-header-logo-img {
     width: 29px !important;
     height: 29px !important;
   }
@@ -823,6 +823,11 @@ html.homepage-active {
   .nx-homepage section {
     padding-top: 3rem !important;
     padding-bottom: 3rem !important;
+  }
+
+  .nx-homepage section.nx-homepage-banner-section {
+    padding-top: 1rem !important;
+    padding-bottom: 1rem !important;
   }
 
   /* ──────────────────────────────────────────

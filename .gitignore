@@ -3,6 +3,7 @@ dist/
 .vite/
 .vercel/
 .env
+.env.local
 !.env.development
 !.env.test
 !.env.staging
@@ -44,6 +45,7 @@ debug.log
 *.mjs
 *.mjs
 .agent-rules
+.agent-rules.d/
 .cursorrules
 pr_body.md
 
@@ -64,3 +66,4 @@ pnpm-workspace.yaml
 docs/prototypes/
 
 .gstack/
+.context/

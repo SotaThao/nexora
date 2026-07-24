@@ -11,8 +11,6 @@ import { STAFF_REVIEWS_SKELETON } from '../skeletons/staffDashboardSkeletons'
 const PAGE_SIZE = 20
 const STAR_VALUES = [1, 2, 3, 4, 5] as const
 const RATING_LEVELS = [5, 4, 3, 2, 1] as const
-const LOW_RATING_THRESHOLD = 2
-
 const panel = 'rounded-2xl border border-nexoraBorder bg-nexoraSurface p-4 shadow-sm'
 
 const REVIEW_REPLY_FIELD_AVAILABLE = false
@@ -124,14 +122,13 @@ function RatingDistributionRow({
   totalReviews: number
 }) {
   const pct = totalReviews > 0 ? Math.round((count / totalReviews) * 100) : 0
-  const barClass = star === 2 ? 'bg-red-500' : 'bg-indigo-600'
 
   return (
     <div className="flex items-center gap-3">
       <span className="w-3 shrink-0 text-right text-sm font-semibold text-slate-500">{star}</span>
       <div className="h-2.5 min-w-0 flex-1 overflow-hidden rounded-full bg-[#EEF0FA]">
         <div
-          className={`h-full rounded-full transition-all ${barClass}`}
+          className="h-full rounded-full bg-nexoraBrand transition-all"
           style={{ width: `${pct}%` }}
         />
       </div>
@@ -232,7 +229,7 @@ export default function StaffReviews() {
         <div className="flex gap-8">
           <button
             type="button"
-            className="-mb-px border-b-2 border-indigo-600 pb-3 text-sm font-bold text-indigo-600"
+            className="-mb-px border-b-2 border-nexoraBrand pb-3 text-sm font-bold text-nexoraBrand"
           >
             {t('components.staff_dashboard.views.StaffReviews.allReviews')}
           </button>

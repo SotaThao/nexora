@@ -73,7 +73,7 @@ export function useDashboardTipsChart(params: DateRangeParams = EMPTY_PARAMS) {
 }
 
 /** Returns the current calendar month's boundary as ISO date strings. */
-function currentMonthRange(): { dateFrom: string; dateTo: string } {
+export function currentMonthRange(): { dateFrom: string; dateTo: string } {
   const now = new Date()
   const y = now.getFullYear()
   const m = String(now.getMonth() + 1).padStart(2, '0')

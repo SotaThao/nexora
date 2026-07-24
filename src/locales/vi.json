@@ -29,6 +29,11 @@
     "missing_payout_title": "Cần hành động",
     "missing_payout_heading": "Cài đặt phương thức nhận tiền",
     "setup_payout_now": "Cài đặt ngay",
+    "onboarding_banner_title": "Hoàn thiện hồ sơ",
+    "onboarding_banner_heading": "Hoàn tất thiết lập hồ sơ của bạn",
+    "onboarding_banner_description": "Thêm thông tin liên hệ và, nếu muốn, phương thức nhận tiền để sẵn sàng khi cần.",
+    "complete_onboarding_now": "Hoàn tất thiết lập",
+    "dismiss_onboarding_banner": "Ẩn lời nhắc hoàn thiện hồ sơ",
     "nav": {
       "home": "Dashboard",
       "my_qr": "Mã QR",
@@ -191,8 +196,11 @@
       "title": "Phương thức nhận tiền",
       "owner_note": "Bạn tự quản lý phương thức nhận tip. Chủ tiệm không sửa được phần này.",
       "empty": "Chưa có phương thức thanh toán.",
+      "empty_hint": "Hoàn tất thiết lập hồ sơ để mở khóa và cấu hình phương thức nhận tiền.",
+      "empty_cta": "Thiết lập ngay",
+      "setup_hint": "Bạn chưa kích hoạt phương thức nhận tiền nào. Cấu hình ít nhất một để bắt đầu nhận tip.",
       "not_set": "Chưa thiết lập",
-      "handle_placeholder": "Nhập tài khoản / handle",
+      "handle_placeholder": "Nhập tài khoản hoặc handle",
       "save": "Lưu phương thức",
       "saved": "Đã lưu ✓"
     },
@@ -265,7 +273,7 @@
       "share_tip": "Chia sẻ QR tip",
       "copy_tip_link": "Sao chép link tip",
       "business_title": "QR nhận tip",
-      "business_sub": "QR riêng cho tip/đánh giá tại tiệm này",
+      "business_sub": "QR riêng cho tip và đánh giá tại tiệm này",
       "note": "QR theo tiệm được lưu theo business_staff_link_id để không bị lẫn khi bạn làm ở nhiều tiệm.",
       "no_linked_businesses": "Chưa liên kết tiệm nào. Quét QR giới thiệu của tiệm để gửi yêu cầu tham gia.",
       "no_linked_businesses_title": "Chưa liên kết tiệm nào",
@@ -336,6 +344,12 @@
       "save": "Lưu tài khoản",
       "saved": "Đã lưu ✓",
       "business_names": "Tên hiển thị theo tiệm",
+      "business_settings": "Thiết lập hiển thị theo tiệm",
+      "business_settings_desc": "Tùy chỉnh tên hiển thị và chức danh cho khách tại từng tiệm đã liên kết.",
+      "business_display_name": "Tên hiển thị",
+      "business_job_title": "Chức danh",
+      "business_job_title_helper": "Hiển thị với khách tại tiệm này. Tối đa 100 ký tự.",
+      "business_job_title_not_set": "Chưa đặt",
       "ph_full_name": "vd: Lisa Marie Tran",
       "ph_display_name": "vd: Lisa T.",
       "ph_phone": "vd: 408-555-1234",
@@ -408,6 +422,14 @@
     "loading": "Đang tải...",
     "processing": "Đang xử lý...",
     "saving": "Đang lưu...",
+    "nickname_dialog_title": "Nickname tại business của bạn",
+    "nickname_error_length": "Nickname phải từ 2 đến 100 ký tự.",
+    "nickname_error_network": "Không lưu được, thử lại.",
+    "nickname_clear_action": "Xoá nickname",
+    "nickname_clear_confirm_label": "Xoá & dùng tên gốc",
+    "nickname_toast_set": "Đã đặt nickname",
+    "nickname_toast_updated": "Đã cập nhật nickname",
+    "nickname_toast_removed": "Đã xoá nickname — dùng lại tên gốc",
     "error": "Lỗi",
     "qr_load_failed": "Không tải được mã QR",
     "qr_reload": "Tải lại",
@@ -445,7 +467,7 @@
     "update_failed": "Không thể cập nhật phương thức thanh toán",
     "toggle_enabled": "Đã bật phương thức thanh toán.",
     "toggle_disabled": "Đã tắt phương thức thanh toán.",
-    "toggle_failed": "Không thể bật/tắt phương thức thanh toán"
+    "toggle_failed": "Không thể bật hoặc tắt phương thức thanh toán"
   },
   "login": {
     "title": "NEXORA TOUCH",
@@ -482,9 +504,9 @@
     "business_category": "Loại hình",
     "biz_type_nail": "Nail Salon (Tiệm Nail)",
     "biz_type_restaurant": "Restaurant (Nhà Hàng)",
-    "biz_type_cafe": "Cafe / Tiệm bánh",
+    "biz_type_cafe": "Cafe hoặc Tiệm bánh",
     "biz_type_spa": "Spa & Beauty Clinic",
-    "biz_type_other": "Khác / Dịch vụ",
+    "biz_type_other": "Khác hoặc Dịch vụ",
     "store_address": "Địa Chỉ Hoạt Động *",
     "store_address_placeholder": "Nhập địa chỉ chính xác...",
     "store_phone": "Số Điện Thoại *",
@@ -493,7 +515,7 @@
     "store_payment_title": "Phương thức nhận tiền của tiệm",
     "logo_hint": "Logo vuông (Tối đa 5MB)",
     "review_routing_title": "Định Tuyến Đánh Giá",
-    "review_routing_policy": "Chính sách: Khách hài lòng (4-5★) được đưa tới Google/Yelp. Khách chưa hài lòng (1-3★) gửi phản hồi riêng tư trực tiếp cho bạn qua email bên dưới.",
+    "review_routing_policy": "Chính sách: Khách hài lòng (4-5★) được đưa tới Google và Yelp. Khách chưa hài lòng (1-3★) gửi phản hồi riêng tư trực tiếp cho bạn qua email bên dưới.",
     "google_review_link": "Liên kết Đánh Giá Google (Tùy chọn)",
     "yelp_review_link": "Liên kết Đánh Giá Yelp (Tùy chọn)",
     "facebook_link": "Liên kết Facebook (Tùy chọn)",
@@ -514,7 +536,7 @@
     "staff_phone_placeholder": "Ví dụ: 407-555-0123",
     "staff_email": "Địa Chỉ Email",
     "staff_email_placeholder": "Ví dụ: mia.tran@gmail.com",
-    "wallet_zelle": "Zelle (Email / Phone)",
+    "wallet_zelle": "Zelle (Email hoặc Phone)",
     "wallet_zelle_placeholder": "Nhập tài khoản Zelle...",
     "wallet_venmo": "Venmo Account",
     "wallet_venmo_placeholder": "@username-venmo",
@@ -529,23 +551,23 @@
     "staff_directory_empty": "Chưa có nhân viên nào được thêm. Vui lòng thêm phía bên trái.",
     "qr_touchpoints_title": "Danh mục trạm QR",
     "qr_touchpoints_desc": "Các mã QR dán tại ghế, quầy thanh toán hoặc in ở hóa đơn.",
-    "qr_touchpoints_explainer": "Trạm = vị trí phục vụ khách (ghế/bàn/quầy) trong tiệm. Chỉ cần chọn loại trạm, hệ thống sẽ tự tạo trạm và mã QR.",
+    "qr_touchpoints_explainer": "Trạm = vị trí phục vụ khách (ghế, bàn, hoặc quầy) trong tiệm. Chỉ cần chọn loại trạm, hệ thống sẽ tự tạo trạm và mã QR.",
     "tp_name": "Tên trạm *",
     "tp_name_placeholder": "Ví dụ: Service Chair 01...",
     "tp_type": "Loại trạm",
     "add_tp_btn": "Thêm trạm",
     "active_tp_count": "{count} trạm đang hoạt động",
-    "tp_lobby_default": "QR Sảnh Chờ / Tipping Chung",
-    "tp_front_default": "Quầy Lễ Tân / Trạm Chính",
+    "tp_lobby_default": "QR Sảnh Chờ hoặc Tipping Chung",
+    "tp_front_default": "Quầy Lễ Tân hoặc Trạm Chính",
     "tp_personal_default": "QR Cá Nhân - {name}",
     "title_step_3": "Bước 3: In QR & Hoàn Tất Cấu Hình",
     "desc_step_3": "Mọi thứ đã sẵn sàng! Bạn có thể in bộ mã QR và vào Bảng Điều Khiển Nexora.",
-    "download_explain": "Chúng tôi đã chuẩn bị toàn bộ mã QR của tiệm thành tệp PDF/ZIP in ấn chất lượng cao. Khách hàng chỉ cần quét để Típ & Đánh Giá.",
+    "download_explain": "Chúng tôi đã chuẩn bị toàn bộ mã QR của tiệm thành tệp PDF hoặc ZIP in ấn chất lượng cao. Khách hàng chỉ cần quét để Típ & Đánh Giá.",
     "download_btn": "In Bộ Kit QR",
     "print_btn": "In ›",
     "config_checklist_title": "Kiểm tra cấu hình",
     "chk_business": "Cửa hàng: {name} ({industry})",
-    "chk_routing": "Google/Yelp Định Tuyến: Đã liên kết",
+    "chk_routing": "Google và Yelp Định Tuyến: Đã liên kết",
     "chk_staff": "Nhân viên: {count} kỹ thuật viên liên kết ví",
     "chk_touchpoints": "Trạm: {count} mã QR đã tạo",
     "print_action": "In ấn",
@@ -577,6 +599,7 @@
     "step_name_3": "Tải xuống & Hoàn tất",
     "onboarding_stage": "Onboarding Stage",
     "back_to_login": "Quay lại Đăng nhập",
+    "back_to_dashboard": "Về Dashboard",
     "prefill_demo_data": "Prefill Demo Data",
     "payout_methods": "Phương thức nhận tiền",
     "payout_account": "Tài khoản nhận tiền",
@@ -644,7 +667,7 @@
       "product_management": "Trung tâm thẻ quà tặng",
       "product_management_error": "Không mở được Trung tâm thẻ quà tặng. Vui lòng thử lại.",
       "touchpoints": "Trạm & Mã QR",
-      "qr_nfc": "Thiết bị QR / NFC",
+      "qr_nfc": "Thiết bị QR và NFC",
       "tax_iq": "Tax IQ",
       "taxiq_onboarding": "Onboarding",
       "taxiq_employers": "Pháp Nhân (Employers)",
@@ -702,7 +725,7 @@
       "empty": "Không có thông báo mới."
     },
     "title": "Trung Tâm Điều Hành Cửa Hàng",
-    "subtitle": "Theo dõi dòng tiền típ trực tiếp, lượt quét QR/NFC, định tuyến review và hiệu suất thợ.",
+    "subtitle": "Theo dõi dòng tiền típ trực tiếp, lượt quét QR và NFC, định tuyến review và hiệu suất thợ.",
     "overview_title": "Tổng quan Dashboard",
     "kpi": {
       "total_tips": "Tổng Tiền Típ",
@@ -713,7 +736,7 @@
       "no_comparison": "Chưa có dữ liệu",
       "based_on_period": "Theo kỳ đã chọn",
       "this_week": "tuần này",
-      "scans": "Lượt Quét QR/NFC",
+      "scans": "Lượt Quét QR và NFC",
       "reviews": "Lượt Đánh Giá",
       "avg_rating": "Đánh Giá Trung Bình",
       "reviews_routed": "Lượt Đánh Giá Định Tuyến",
@@ -820,7 +843,7 @@
       "add_tp_title": "Thêm trạm mới",
       "tp_name_label": "Tên trạm (vd. Ghế Manicure 05)",
       "tp_name_placeholder": "Ví dụ: Ghế Manicure 05",
-      "device_id_label": "Serial thiết bị / Mã NFC",
+      "device_id_label": "Serial thiết bị hoặc Mã NFC",
       "device_id_placeholder": "Ví dụ: NFC-105, QR-Table-01",
       "tp_type_label": "Loại vị trí",
       "add_btn": "Thêm trạm",
@@ -940,8 +963,8 @@
       "location": "Vị trí",
       "scans": "Lượt quét",
       "last_scan": "Lần quét cuối",
-      "add_modal_title": "Đăng Ký Phần Cứng QR / NFC",
-      "id_label": "ID Thiết Bị / Serial (Yêu cầu)",
+      "add_modal_title": "Đăng Ký Phần Cứng QR hoặc NFC",
+      "id_label": "ID Thiết Bị hoặc Serial (Yêu cầu)",
       "type_label": "Loại Phần Cứng Thiết Bị",
       "location_label": "Vị Trí Lắp Đặt (Yêu cầu)",
       "delete_confirm": "Bạn có chắc chắn muốn hủy đăng ký thiết bị này? Thao tác này sẽ ngắt liên kết quét.",
@@ -1017,7 +1040,7 @@
         "q3": "Làm thế nào để thiết lập Ví VLINKPAY?",
         "a3": "Điều hướng đến Cài đặt -> tab Hồ sơ, cuộn xuống Phương thức nhận tiền và nhập định danh Ví VLINKPAY của bạn. Sau khi được xác minh, khách hàng sẽ thấy VLINKPAY dưới dạng tùy chọn típ trực tiếp.",
         "q4": "Làm thế nào để đặt mua đế dựng NFC?",
-        "a4": "Bạn có thể đặt mua đế dựng bằng gỗ NFC khắc laser tùy chỉnh hoặc thẻ đặt bàn trực tiếp từ tab Quản lý Gói / Đăng ký, hoặc liên hệ với đội ngũ hỗ trợ của chúng tôi cùng với số lượng trạm salon của bạn.",
+        "a4": "Bạn có thể đặt mua đế dựng bằng gỗ NFC khắc laser tùy chỉnh hoặc thẻ đặt bàn trực tiếp từ tab Quản lý Gói hoặc Đăng ký, hoặc liên hệ với đội ngũ hỗ trợ của chúng tôi cùng với số lượng trạm salon của bạn.",
         "q5": "Khách hàng của tôi tip mà không cần tải app thì làm thế nào?",
         "a5": "Khách hàng quét mã QR tại trạm bằng camera điện thoại — không cần tải ứng dụng. Họ chọn số tiền tip, chọn phương thức thanh toán (Venmo, Zelle, Cash App hoặc VLINKPAY) và hoàn tất thanh toán trong ứng dụng ví hiện có của họ.",
         "q6": "Tip đến tài khoản của thợ khi nào?",
@@ -1159,7 +1182,7 @@
         "method_other": "Khác",
         "create_title": "Tạo payout mới",
         "edit_title": "Sửa payout",
-        "create_sub": "Ghi nhận khoản chi trả tip / lương / thưởng cho thợ",
+        "create_sub": "Ghi nhận khoản chi trả tip, lương, hoặc thưởng cho thợ",
         "detail_title": "Chi tiết payout",
         "detail_sub": "Giao dịch chi trả cho thợ",
         "copy_payout_code": "Sao chép mã payout",
@@ -1392,7 +1415,7 @@
     "filtered_reviews": "Đánh Giá Khách Hàng Được Lọc",
     "reviews_desc": "Đánh giá từ khách khi quét trạm riêng của kỹ thuật viên này.",
     "tab_all": "Tất cả",
-    "tab_google": "Google/Yelp (4-5★)",
+    "tab_google": "Google và Yelp (4-5★)",
     "tab_private": "Góp ý nội bộ (1-3★)",
     "no_reviews_matching": "Không có đánh giá nào phù hợp với bộ lọc cho thợ này.",
     "no_reviews_desc": "Các đánh giá của khách hàng khớp với bộ lọc sẽ hiển thị tại đây.",
@@ -1409,6 +1432,22 @@
     "reviews_count": "{count} đánh giá",
     "publicly_routed": "Đã chia sẻ công khai",
     "private_recovery": "Góp ý nội bộ",
+    "nickname_set_action": "Đặt nickname",
+    "nickname_edit_action": "Sửa nickname",
+    "nickname_helper_merchant": "Chỉ dùng tại business này. Bạn và nhân viên đều sửa được. Để trống để dùng tên gốc.",
+    "nickname_original_name": "Tên gốc: {name}",
+    "nickname_badge": "Nickname",
+    "role_set_action": "Đặt chức danh",
+    "role_edit_action": "Sửa chức danh",
+    "role_helper_merchant": "Chức danh khách thấy tại tiệm này. Tối đa 100 ký tự.",
+    "role_badge": "Chức danh",
+    "role_placeholder": "vd: Thợ nail cao cấp",
+    "role_dialog_title": "Chức danh tại tiệm",
+    "role_toast_set": "Đã đặt chức danh",
+    "role_toast_updated": "Đã cập nhật chức danh",
+    "role_error_required": "Vui lòng nhập chức danh. Không được để trống hoặc chỉ có khoảng trắng.",
+    "role_error_too_long": "Chức danh không được dài hơn 100 ký tự.",
+    "role_error_network": "Không lưu được chức danh, thử lại.",
     "no_chart_data": "Không có dữ liệu biểu đồ."
   },
   "customer": {
@@ -1654,6 +1693,10 @@
     "subtitle": "Các salon đã liên kết với hồ sơ nhân viên của bạn.",
     "empty_title": "Chưa liên kết salon nào",
     "link_salon_cta": "Liên kết salon",
+    "nickname_edit_action": "Sửa nickname",
+    "nickname_helper_staff": "Chỉ dùng tại business này. Bạn và chủ tiệm đều sửa được. Để trống để dùng tên gốc.",
+    "nickname_not_set": "Chưa đặt — dùng tên gốc",
+    "nickname_badge": "Nickname",
     "status_previous": "Trước đây",
     "status_help_aria": "Giải thích trạng thái salon",
     "status_help": {
@@ -1665,9 +1708,14 @@
       "rejected": "Salon không phê duyệt yêu cầu liên kết. Hãy liên hệ salon nếu bạn cho rằng có nhầm lẫn.",
       "default": "Trạng thái này cho biết tình trạng liên kết hiện tại của bạn với salon."
     },
-    "since": "Từ {{date}}",
+    "since": "Vào tiệm {{date}}",
     "invited": "Mời {{date}}",
-    "worked_from": "Làm từ {{date}}"
+    "worked_from": "Làm từ {{date}}",
+    "unlink_button": "Hủy liên kết",
+    "unlink_confirm_title": "Hủy liên kết với salon?",
+    "unlink_confirm_message": "Bạn sắp hủy liên kết với {{business}}. Bạn sẽ mất ngay mã QR nhận tip của salon này. Các khoản tip chưa nhận vẫn sẽ được xử lý theo chính sách chi trả của salon. Bạn có muốn tiếp tục?",
+    "unlink_success": "Bạn đã hủy liên kết với {{business}}.",
+    "unlink_error_title": "Không thể hủy liên kết"
   },
   "staff_payouts": {
     "description": "Theo dõi khoản chi trả tiệm gửi cho bạn, xác nhận đã nhận tiền và xem số dư tip chưa nhận theo từng tiệm.",
@@ -1680,6 +1728,7 @@
     "filter_all_status": "Tất cả trạng thái",
     "detail_title": "Chi tiết nhận thanh toán",
     "col_code": "Mã payout",
+    "col_code_tooltip": "Mã tham chiếu của khoản chi trả. Dùng để theo dõi giao dịch và đối chiếu với biên lai hoặc tin nhắn chuyển tiền của bạn (Zelle, Venmo, Cash App,…).",
     "col_date": "Ngày nhận",
     "col_amount": "Số tiền",
     "col_method": "Phương thức",
@@ -1727,7 +1776,7 @@
     "staff_success_desc": "Tài khoản cá nhân của bạn đã được tạo. Bạn không cần xác minh KYB doanh nghiệp để bắt đầu.",
     "need_invite_link": "Bạn cần có liên kết mời từ một tiệm (Doanh Nghiệp) để trở thành thợ.",
     "staff_id_label": "Mã Personal ID của bạn:",
-    "staff_linking_instructions": "Cung cấp mã Personal ID này cho Chủ tiệm/Salon để họ liên kết bạn vào danh sách của tiệm.",
+    "staff_linking_instructions": "Cung cấp mã Personal ID này cho Chủ tiệm hoặc Salon để họ liên kết bạn vào danh sách của tiệm.",
     "staff_login_btn": "Đăng nhập vào Bảng điều khiển Cá nhân",
     "agree_terms": "Tôi đồng ý với Điều khoản & Điều kiện sử dụng Nexora Touch",
     "terms_error": "Bạn phải đồng ý với Điều khoản & Điều kiện để tiếp tục.",
@@ -1753,7 +1802,7 @@
     "back_to_login": "Quay lại Đăng nhập",
     "kyb_form": {
       "legal_name": "Tên Doanh Nghiệp Pháp Lý *",
-      "tax_id": "Mã Số Thuế / EIN *",
+      "tax_id": "Mã Số Thuế (EIN) *",
       "business_type": "Loại Hình Doanh Nghiệp *",
       "owner_name": "Họ Tên Chủ Sở Hữu (Đại diện pháp luật) *",
       "bank_name": "Tên Ngân Hàng Nhận Tiền *",
@@ -1799,7 +1848,7 @@
     },
     "legal": {
       "effectiveDate": "26 tháng 6, 2026",
-      "lastUpdated": "26 tháng 6, 2026",
+      "lastUpdated": "18 tháng 7, 2026",
       "effectiveDateLabel": "Ngày có hiệu lực",
       "lastUpdatedLabel": "Cập nhật lần cuối",
       "privacyTagline": "Cách chúng tôi thu thập, sử dụng và bảo vệ thông tin",
@@ -1808,38 +1857,44 @@
         "sections": [
           {
             "title": "1. Giới Thiệu",
-            "body": "NEXORA TOUCH LLC (\"Nexora\", \"chúng tôi\") vận hành nền tảng NEXORA TOUCH — dịch vụ nhận tip và đánh giá kỹ thuật số dành cho các doanh nghiệp dịch vụ. Chính Sách Bảo Mật này mô tả cách chúng tôi thu thập, sử dụng và chia sẻ thông tin khi bạn sử dụng Dịch Vụ. Bằng cách sử dụng Dịch Vụ, bạn đồng ý với các thực hành được mô tả trong Chính Sách này."
+            "body": "NEXORA TOUCH LLC (\"Nexora\", \"chúng tôi\") vận hành nền tảng NEXORA TOUCH — dịch vụ công nghệ dành cho các doanh nghiệp dịch vụ, bao gồm nhận tip và đánh giá kỹ thuật số, dịch vụ Tiếp Tân AI trả lời điện thoại doanh nghiệp và đặt lịch hẹn, cùng tin nhắn SMS liên quan. Chính Sách Bảo Mật này mô tả cách chúng tôi thu thập, sử dụng và chia sẻ thông tin khi bạn sử dụng Dịch Vụ. Bằng cách sử dụng Dịch Vụ, bạn đồng ý với các thực hành được mô tả tại đây."
           },
           {
             "title": "2. Thông Tin Chúng Tôi Thu Thập",
-            "body": "Thông tin bạn cung cấp: thông tin tài khoản (họ tên, email, số điện thoại), thông tin doanh nghiệp (đối với merchant), nội dung bạn tải lên (ảnh hồ sơ, logo doanh nghiệp). Thông tin thu thập tự động: dữ liệu sử dụng, địa chỉ IP, thông tin thiết bị và trình duyệt, hoạt động phiên được thu thập qua nền tảng và Google Analytics. Tương tác của khách hàng: khi khách hàng sử dụng luồng tip với tư cách khách (guest), chúng tôi ghi lại dữ liệu phiên ẩn danh (touch point đã truy cập, số tiền tip, xếp hạng). Chúng tôi không thu thập tên, số điện thoại hoặc thông tin thanh toán của khách hàng."
+            "body": "Thông tin bạn cung cấp: thông tin tài khoản (họ tên, email, số điện thoại), thông tin doanh nghiệp (đối với merchant), và nội dung bạn tải lên (ảnh hồ sơ, logo doanh nghiệp).\n\nThông tin người gọi và đặt lịch: khi khách hàng gọi vào số điện thoại doanh nghiệp được dịch vụ Tiếp Tân AI trả lời, chúng tôi thu thập số điện thoại của người gọi và, khi người gọi cung cấp, tên, dịch vụ yêu cầu và thời gian hẹn mong muốn, nhằm cung cấp dịch vụ — bao gồm đặt lịch hẹn và gửi SMS xác nhận, theo dõi. Cuộc gọi có thể được ghi âm cho mục đích chất lượng và đào tạo, và người gọi được xử lý theo quy định pháp luật hiện hành. Khi khách hàng gửi yêu cầu đặt lịch trực tuyến, chúng tôi thu thập thông tin họ nhập (như tên, số điện thoại và dịch vụ yêu cầu).\n\nThông tin thu thập tự động: dữ liệu sử dụng, địa chỉ IP, thông tin thiết bị và trình duyệt, hoạt động phiên được thu thập qua nền tảng và Google Analytics.\n\nTương tác tip của khách vãng lai: khi khách hàng sử dụng luồng tip với tư cách khách (guest), chúng tôi ghi lại dữ liệu phiên ẩn danh (touch point đã truy cập, số tiền tip, xếp hạng) mà không yêu cầu tên hay thông tin thanh toán của khách."
           },
           {
             "title": "3. Cách Chúng Tôi Sử Dụng Thông Tin",
             "body": "Chúng tôi sử dụng thông tin đã thu thập để:",
             "items": [
               "Vận hành và cải thiện Dịch Vụ",
-              "Quản lý tài khoản và liên lạc với người dùng",
-              "Gửi thông báo giao dịch (email và thông báo đẩy)",
+              "Trả lời điện thoại doanh nghiệp và đặt lịch hẹn qua Tiếp Tân AI",
+              "Gửi tin nhắn SMS như xác nhận lịch hẹn, nhắn lại cuộc gọi nhỡ, phản hồi chăm sóc khách hàng, yêu cầu đánh giá, và — khi có sự đồng ý — ưu đãi khuyến mãi",
+              "Quản lý tài khoản và liên lạc với người dùng (email và thông báo đẩy)",
               "Phát hiện gian lận và thực thi Điều Khoản Dịch Vụ",
               "Phân tích việc sử dụng và hiệu suất nền tảng",
               "Tuân thủ nghĩa vụ pháp lý"
             ]
           },
           {
-            "title": "4. Cách Chúng Tôi Chia Sẻ Thông Tin",
-            "body": "Chúng tôi không bán thông tin cá nhân của bạn. Chúng tôi chỉ chia sẻ thông tin với các nhà cung cấp dịch vụ bên thứ ba đáng tin cậy hỗ trợ chúng tôi vận hành nền tảng, bao gồm phân tích, gửi email, thông báo đẩy và cơ sở hạ tầng đám mây. Các nhà cung cấp này bị ràng buộc theo hợp đồng chỉ sử dụng thông tin của bạn khi cần thiết để thực hiện dịch vụ thay mặt chúng tôi. Chúng tôi cũng có thể tiết lộ thông tin để tuân thủ nghĩa vụ pháp lý hoặc để bảo vệ quyền và sự an toàn của người dùng."
+            "title": "4. SMS và Thông Tin Di Động",
+            "body": "Thông tin di động sẽ không được chia sẻ với bên thứ ba hoặc công ty liên kết cho mục đích tiếp thị hay quảng bá. Dữ liệu đồng ý nhận tin nhắn (opt-in) và sự đồng ý sẽ không được chia sẻ với bất kỳ bên thứ ba nào.",
+            "note": "Khách hàng đồng ý nhận tin nhắn SMS bằng cách yêu cầu đặt lịch hẹn hoặc theo dõi bằng lời nói trong cuộc gọi đến số điện thoại của doanh nghiệp tham gia, hoặc bằng cách gửi yêu cầu đặt lịch trực tuyến kèm số điện thoại của họ. Tần suất tin nhắn có thể thay đổi. Có thể áp dụng cước phí tin nhắn và dữ liệu. Khách hàng có thể hủy nhận tin bất cứ lúc nào bằng cách nhắn STOP, và có thể nhận trợ giúp bằng cách nhắn HELP hoặc liên hệ support@nexoratouch.com hoặc (832) 979-5559."
           },
           {
-            "title": "5. Thông Tin Thanh Toán",
+            "title": "5. Cách Chúng Tôi Chia Sẻ Thông Tin",
+            "body": "Chúng tôi không bán thông tin cá nhân của bạn. Chúng tôi chỉ chia sẻ thông tin với các nhà cung cấp dịch vụ bên thứ ba đáng tin cậy hỗ trợ chúng tôi vận hành nền tảng — bao gồm nhà cung cấp viễn thông và gửi SMS, phân tích, gửi email, thông báo đẩy và cơ sở hạ tầng đám mây. Các nhà cung cấp này bị ràng buộc theo hợp đồng chỉ sử dụng thông tin của bạn khi cần thiết để thực hiện dịch vụ thay mặt chúng tôi. Chúng tôi cũng có thể tiết lộ thông tin để tuân thủ nghĩa vụ pháp lý hoặc để bảo vệ quyền và sự an toàn của người dùng. Phù hợp với Mục 4, số điện thoại di động và dữ liệu opt-in SMS không bao giờ được chia sẻ cho mục đích tiếp thị của bên thứ ba."
+          },
+          {
+            "title": "6. Thông Tin Thanh Toán",
             "body": "Nexora không thu thập, lưu trữ hoặc xử lý bất kỳ thông tin thanh toán nào. Tip được gửi trực tiếp giữa khách hàng và nhân viên thông qua các ứng dụng thanh toán bên thứ ba. Chúng tôi không có quyền truy cập vào thông tin tài chính, số tài khoản ngân hàng hoặc thông tin thẻ."
           },
           {
-            "title": "6. Lưu Trữ Dữ Liệu",
-            "body": "Chúng tôi lưu giữ thông tin cá nhân của bạn chỉ trong thời gian cần thiết để cung cấp Dịch Vụ hoặc theo yêu cầu của pháp luật. Bạn có thể yêu cầu xóa tài khoản và dữ liệu bất cứ lúc nào bằng cách liên hệ support@nexoratouch.com."
+            "title": "7. Lưu Trữ Dữ Liệu",
+            "body": "Chúng tôi lưu giữ thông tin cá nhân chỉ trong thời gian cần thiết để cung cấp Dịch Vụ hoặc theo yêu cầu của pháp luật. Bạn có thể yêu cầu xóa tài khoản và dữ liệu bất cứ lúc nào bằng cách liên hệ support@nexoratouch.com."
           },
           {
-            "title": "7. Quyền Của Bạn",
+            "title": "8. Quyền Của Bạn",
             "body": "Tùy thuộc vào vị trí của bạn, bạn có thể có quyền truy cập, sửa, xóa hoặc chuyển dữ liệu cá nhân, và phản đối hoặc hạn chế một số hoạt động xử lý nhất định.",
             "items": [
               "Người dùng tại EU/EEA (GDPR): truy cập, chỉnh sửa, xóa, chuyển dữ liệu, hạn chế và phản đối",
@@ -1848,24 +1903,24 @@
             "note": "Để thực hiện các quyền của bạn, liên hệ support@nexoratouch.com. Chúng tôi sẽ phản hồi trong vòng 30 ngày."
           },
           {
-            "title": "8. Cookie và Theo Dõi",
+            "title": "9. Cookie và Theo Dõi",
             "body": "Chúng tôi sử dụng cookie thiết yếu (cần thiết cho xác thực và quản lý phiên) và cookie phân tích (Google Analytics). Bạn có thể từ chối theo dõi của Google Analytics bằng cách cài đặt Tiện ích từ chối Google Analytics hoặc điều chỉnh cài đặt trình duyệt."
           },
           {
-            "title": "9. Quyền Riêng Tư Của Trẻ Em",
+            "title": "10. Quyền Riêng Tư Của Trẻ Em",
             "body": "Dịch Vụ của chúng tôi không hướng đến trẻ em dưới 13 tuổi. Chúng tôi không cố ý thu thập thông tin cá nhân từ trẻ em dưới 13 tuổi. Nếu bạn cho rằng trẻ em đã cung cấp thông tin cho chúng tôi, liên hệ support@nexoratouch.com và chúng tôi sẽ xóa ngay."
           },
           {
-            "title": "10. Bảo Mật",
+            "title": "11. Bảo Mật",
             "body": "Chúng tôi triển khai các biện pháp bảo vệ kỹ thuật và hành chính hợp lý để bảo vệ thông tin của bạn, bao gồm truyền dữ liệu được mã hóa và cơ sở hạ tầng đám mây an toàn. Không có phương thức truyền nào hoàn toàn an toàn và chúng tôi không thể đảm bảo bảo mật tuyệt đối."
           },
           {
-            "title": "11. Thay Đổi Chính Sách Này",
+            "title": "12. Thay Đổi Chính Sách Này",
             "body": "Chúng tôi có thể cập nhật Chính Sách này theo thời gian. Các thay đổi quan trọng sẽ được thông báo qua email hoặc thông báo trong ứng dụng. Việc tiếp tục sử dụng Dịch Vụ đồng nghĩa với việc chấp nhận Chính Sách được cập nhật."
           },
           {
-            "title": "12. Liên Hệ Chúng Tôi",
-            "body": "NEXORA TOUCH LLC\nEmail: support@nexoratouch.com\nĐịa chỉ: 9793 Westheimer Rd Suite A Houston TX 77042"
+            "title": "13. Liên Hệ Chúng Tôi",
+            "body": "NEXORA TOUCH LLC\nEmail: support@nexoratouch.com\nĐiện thoại: (832) 979-5559\nĐịa chỉ: 9793 Westheimer Rd Suite A, Houston, TX 77042"
           }
         ]
       },
@@ -1877,7 +1932,7 @@
           },
           {
             "title": "2. Mô Tả Dịch Vụ",
-            "body": "NEXORA TOUCH là nền tảng nhận tip và đánh giá kỹ thuật số dành cho các doanh nghiệp dịch vụ, cho phép khách hàng gửi tip cho nhân viên và để lại đánh giá qua mã QR hoặc NFC. Nền tảng kết nối merchant, nhân viên và khách hàng mà không đóng vai trò là trung gian thanh toán."
+            "body": "NEXORA TOUCH là nền tảng công nghệ dành cho các doanh nghiệp dịch vụ (như tiệm nail và spa), bao gồm: (a) nhận tip và đánh giá kỹ thuật số qua mã QR hoặc NFC; (b) dịch vụ Tiếp Tân AI trả lời điện thoại của doanh nghiệp tham gia, cung cấp thông tin doanh nghiệp, tiếp nhận yêu cầu đặt lịch hẹn và đặt lịch hẹn; và (c) tin nhắn SMS gửi cho khách hàng như xác nhận lịch hẹn và tin nhắn theo dõi. Nền tảng kết nối merchant, nhân viên và khách hàng mà không đóng vai trò trung gian thanh toán."
           },
           {
             "title": "3. Điều Kiện Tham Gia",
@@ -1888,56 +1943,66 @@
             "body": "Bạn có trách nhiệm bảo mật thông tin đăng nhập và chịu trách nhiệm về mọi hoạt động diễn ra trong tài khoản của mình. Thông báo ngay cho chúng tôi về bất kỳ truy cập trái phép nào tại support@nexoratouch.com. Merchant có thể quản lý hồ sơ doanh nghiệp, nhân viên và touch point của mình. Nhân viên sở hữu và kiểm soát thông tin thanh toán riêng của họ — merchant không thể xem hoặc sửa đổi thông tin này."
           },
           {
-            "title": "5. Thanh Toán và Tip",
-            "body": "Nexora chỉ là một nền tảng. Chúng tôi không xử lý, giữ, chuyển khoản hay bảo đảm bất kỳ khoản thanh toán nào. Tip được khách hàng gửi trực tiếp cho nhân viên thông qua các ứng dụng thanh toán bên thứ ba (như Cash App, Venmo, Zelle, PayPal). Nexora không tham gia vào các giao dịch này. Nexora không chịu trách nhiệm về bất kỳ lỗi thanh toán, tranh chấp hoặc tổn thất tài chính nào phát sinh từ các giao dịch tip giữa người dùng. Người dùng có trách nhiệm tự giải quyết tranh chấp thanh toán với bên kia. Nhân viên có trách nhiệm đảm bảo thông tin thanh toán của mình chính xác và tuân thủ nghĩa vụ thuế phát sinh từ các khoản tip nhận được."
+            "title": "5. Chương Trình SMS (NEXORA TOUCH SMS)",
+            "body": "Khi khách hàng tương tác với doanh nghiệp tham gia — ví dụ bằng cách gọi vào số điện thoại được Tiếp Tân AI trả lời, hoặc gửi yêu cầu đặt lịch trực tuyến — họ có thể nhận được tin nhắn SMS từ số điện thoại của doanh nghiệp đó, được vận hành bởi NEXORA TOUCH. Các loại tin nhắn bao gồm: xác nhận đặt lịch hẹn, tin nhắn theo dõi cuộc gọi nhỡ, phản hồi chăm sóc khách hàng, yêu cầu đánh giá, và đôi khi là ưu đãi khuyến mãi.",
+            "items": [
+              "Sự đồng ý (opt-in): Khách hàng đồng ý nhận các tin nhắn này bằng cách yêu cầu đặt lịch hẹn hoặc theo dõi bằng lời nói trong cuộc gọi đến số điện thoại của doanh nghiệp tham gia, hoặc bằng cách gửi yêu cầu đặt lịch trực tuyến kèm số điện thoại của họ.",
+              "Tần suất tin nhắn và cước phí: Tần suất tin nhắn có thể thay đổi. Có thể áp dụng cước phí tin nhắn và dữ liệu.",
+              "Hủy nhận tin và trợ giúp: Nhắn STOP để hủy nhận tin bất cứ lúc nào. Nhắn HELP để được trợ giúp, hoặc liên hệ support@nexoratouch.com hoặc (832) 979-5559.",
+              "Nhà mạng: Nhà mạng không chịu trách nhiệm về tin nhắn bị trễ hoặc không gửi được."
+            ]
           },
           {
-            "title": "6. Gói Đăng Ký",
+            "title": "6. Thanh Toán và Tip",
+            "body": "Nexora chỉ là một nền tảng. Chúng tôi không xử lý, giữ, chuyển khoản hay bảo đảm bất kỳ khoản thanh toán nào. Tip được khách hàng gửi trực tiếp cho nhân viên thông qua các ứng dụng thanh toán bên thứ ba (như Cash App, Venmo, Zelle, PayPal). Nexora không phải là một bên trong các giao dịch này và không chịu trách nhiệm về lỗi thanh toán, tranh chấp hoặc tổn thất tài chính phát sinh từ giao dịch tip giữa người dùng. Người dùng có trách nhiệm tự giải quyết tranh chấp thanh toán với bên kia. Nhân viên có trách nhiệm đảm bảo thông tin thanh toán của mình chính xác và tuân thủ nghĩa vụ thuế phát sinh từ các khoản tip nhận được."
+          },
+          {
+            "title": "7. Gói Đăng Ký",
             "body": "Quyền truy cập các tính năng nền tảng của merchant được điều chỉnh bởi gói đăng ký đang có hiệu lực tại thời điểm sử dụng. Chi tiết gói, giá cả và giới hạn tính năng được hiển thị tại thời điểm mua hàng. Chúng tôi có quyền cập nhật giá có thông báo trước."
           },
           {
-            "title": "7. Hành Vi Bị Cấm",
+            "title": "8. Hành Vi Bị Cấm",
             "body": "Bạn đồng ý không:",
             "items": [
               "Cung cấp thông tin sai sự thật, gian lận hoặc gây nhầm lẫn",
               "Giả mạo bất kỳ cá nhân hoặc tổ chức nào",
               "Thao túng dữ liệu tip hoặc đánh giá",
               "Tải lên mã độc hại hoặc cố gắng truy cập trái phép",
-              "Sử dụng nền tảng cho bất kỳ mục đích bất hợp pháp nào",
+              "Sử dụng nền tảng cho bất kỳ mục đích bất hợp pháp nào, bao gồm gửi tin nhắn văn bản trái phép hoặc không được yêu cầu",
               "Tạo nhiều tài khoản để vượt qua giới hạn nền tảng"
             ]
           },
           {
-            "title": "8. Sở Hữu Trí Tuệ",
+            "title": "9. Sở Hữu Trí Tuệ",
             "body": "Tất cả nội dung, phần mềm và nhãn hiệu thuộc về Nexora vẫn là tài sản của chúng tôi. Bằng cách tải nội dung lên nền tảng, bạn cấp cho chúng tôi giấy phép có giới hạn, không độc quyền để hiển thị nội dung đó chỉ nhằm mục đích cung cấp Dịch Vụ."
           },
           {
-            "title": "9. Từ Chối Bảo Đảm",
-            "body": "DỊCH VỤ ĐƯỢC CUNG CẤP \"NGUYÊN TRẠNG\" MÀ KHÔNG CÓ BẢO ĐẢM DƯỚI BẤT KỲ HÌNH THỨC NÀO. CHÚNG TÔI TỪ CHỐI TẤT CẢ CÁC BẢO ĐẢM, RÕ RÀNG HOẶC NGỤ Ý, BAO GỒM BẢO ĐẢM VỀ KHẢ NĂNG THƯƠNG MẠI VÀ SỰ PHÙ HỢP CHO MỤC ĐÍCH CỤ THỂ. CHÚNG TÔI KHÔNG BẢO ĐẢM RẰNG DỊCH VỤ SẼ KHÔNG BỊ GIÁN ĐOẠN, KHÔNG CÓ LỖI, HOẶC BẤT KỲ ỨNG DỤNG THANH TOÁN BÊN THỨ BA NÀO SẼ HOẠT ĐỘNG NHƯ MONG ĐỢI."
+            "title": "10. Từ Chối Bảo Đảm",
+            "body": "DỊCH VỤ ĐƯỢC CUNG CẤP \"NGUYÊN TRẠNG\" MÀ KHÔNG CÓ BẢO ĐẢM DƯỚI BẤT KỲ HÌNH THỨC NÀO. CHÚNG TÔI TỪ CHỐI TẤT CẢ CÁC BẢO ĐẢM, RÕ RÀNG HOẶC NGỤ Ý, BAO GỒM BẢO ĐẢM VỀ KHẢ NĂNG THƯƠNG MẠI VÀ SỰ PHÙ HỢP CHO MỤC ĐÍCH CỤ THỂ. CHÚNG TÔI KHÔNG BẢO ĐẢM RẰNG DỊCH VỤ SẼ KHÔNG BỊ GIÁN ĐOẠN HOẶC KHÔNG CÓ LỖI, RẰNG BẤT KỲ ỨNG DỤNG THANH TOÁN BÊN THỨ BA NÀO SẼ HOẠT ĐỘNG NHƯ MONG ĐỢI, HOẶC BẤT KỲ TIN NHẮN SMS NÀO SẼ ĐƯỢC NHÀ MẠNG GỬI THÀNH CÔNG."
           },
           {
-            "title": "10. Giới Hạn Trách Nhiệm",
-            "body": "TRONG PHẠM VI TỐI ĐA ĐƯỢC PHÉP THEO PHÁP LUẬT, NEXORA KHÔNG CHỊU TRÁCH NHIỆM VỀ BẤT KỲ THIỆT HẠI GIÁN TIẾP, NGẪU NHIÊN, ĐẶC BIỆT HOẶC HẬU QUẢ NÀO, BAO GỒM MẤT TIP, DOANH THU HOẶC TRANH CHẤP TÀI CHÍNH GIỮA NGƯỜI DÙNG. TỔNG TRÁCH NHIỆM CỦA CHÚNG TÔI KHÔNG VƯỢT QUÁ SỐ TIỀN BẠN ĐÃ THANH TOÁN TRONG 12 THÁNG TRƯỚC KHIẾU NẠI, HOẶC 100 USD, TÙY THEO SỐ NÀO LỚN HƠN."
+            "title": "11. Giới Hạn Trách Nhiệm",
+            "body": "TRONG PHẠM VI TỐI ĐA ĐƯỢC PHÁP LUẬT CHO PHÉP, NEXORA KHÔNG CHỊU TRÁCH NHIỆM VỀ BẤT KỲ THIỆT HẠI GIÁN TIẾP, NGẪU NHIÊN, ĐẶC BIỆT HOẶC HẬU QUẢ NÀO, BAO GỒM MẤT TIP, MẤT DOANH THU, LỠ LỊCH HẸN HOẶC TRANH CHẤP TÀI CHÍNH GIỮA NGƯỜI DÙNG. TỔNG TRÁCH NHIỆM CỦA CHÚNG TÔI KHÔNG VƯỢT QUÁ SỐ TIỀN BẠN ĐÃ THANH TOÁN TRONG 12 THÁNG TRƯỚC KHIẾU NẠI, HOẶC 100 USD, TÙY THEO SỐ NÀO LỚN HƠN."
           },
           {
-            "title": "11. Bồi Thường",
+            "title": "12. Bồi Thường",
             "body": "Bạn đồng ý bồi thường và giữ vô hại NEXORA TOUCH LLC và các cán bộ, nhân viên, đại diện của chúng tôi khỏi bất kỳ khiếu nại, thiệt hại hoặc chi phí nào phát sinh từ việc bạn sử dụng Dịch Vụ hoặc vi phạm các Điều Khoản này."
           },
           {
-            "title": "12. Chấm Dứt",
+            "title": "13. Chấm Dứt",
             "body": "Chúng tôi có thể đình chỉ hoặc chấm dứt tài khoản của bạn khi vi phạm các Điều Khoản này. Bạn có thể đóng tài khoản bất cứ lúc nào bằng cách liên hệ support@nexoratouch.com."
           },
           {
-            "title": "13. Luật Điều Chỉnh",
-            "body": "Các Điều Khoản này được điều chỉnh bởi luật pháp Hoa Kỳ. Khi áp dụng, luật bảo vệ người tiêu dùng địa phương cũng có thể được áp dụng. Các tranh chấp không thể giải quyết không chính thức sẽ được đưa ra trọng tài cá nhân bắt buộc."
+            "title": "14. Luật Điều Chỉnh",
+            "body": "Các Điều Khoản này được điều chỉnh bởi luật pháp Hoa Kỳ và, khi áp dụng, luật bang Texas. Luật bảo vệ người tiêu dùng địa phương cũng có thể được áp dụng. Các tranh chấp không thể giải quyết không chính thức sẽ được đưa ra trọng tài cá nhân bắt buộc."
           },
           {
-            "title": "14. Thay Đổi Điều Khoản",
+            "title": "15. Thay Đổi Điều Khoản",
             "body": "Chúng tôi có thể cập nhật các Điều Khoản này bất cứ lúc nào. Các thay đổi quan trọng sẽ được thông báo qua email hoặc thông báo trong ứng dụng."
           },
           {
-            "title": "15. Liên Hệ Chúng Tôi",
-            "body": "NEXORA TOUCH LLC\nEmail: support@nexoratouch.com\nĐịa chỉ: 9793 Westheimer Rd Suite A Houston TX 77042"
+            "title": "16. Liên Hệ Chúng Tôi",
+            "body": "NEXORA TOUCH LLC\nEmail: support@nexoratouch.com\nĐiện thoại: (832) 979-5559\nĐịa chỉ: 9793 Westheimer Rd Suite A, Houston, TX 77042"
           }
         ]
       }
@@ -1954,7 +2019,7 @@
     "option_a_desc": "Dùng khi thợ đã có NEXORA Staff Profile. Nhập Staff ID, Điện thoại hoặc Email.",
     "option_b_title": "Lựa chọn B — Mời nhân viên mới",
     "option_b_desc": "Dùng khi thợ chưa có tài khoản. Họ sẽ tự hoàn tất cấu hình qua link nhận được.",
-    "search_placeholder": "Staff ID / Số điện thoại / Email",
+    "search_placeholder": "Staff ID, Số điện thoại hoặc Email",
     "search_btn": "Tìm kiếm thợ",
     "invite_btn": "Gửi link invite",
     "link_request_btn": "Gửi yêu cầu liên kết",
@@ -1971,7 +2036,7 @@
     "wizard_title": "Hoàn Tất Tài Khoản Nhận Tip",
     "wizard_subtitle": "Thiết lập thông tin thợ và ví nhận tiền một lần. Dùng Staff ID để liên kết với bất kỳ tiệm nào.",
     "otp_verify": "1. Xác thực OTP",
-    "otp_desc": "Nhập mã gồm 4 chữ số được gửi tới số điện thoại/email của bạn.",
+    "otp_desc": "Nhập mã gồm 4 chữ số được gửi tới số điện thoại hoặc email của bạn.",
     "consent_tax": "Tôi hiểu rằng các khoản tiền tip nhận trực tiếp có thể là thu nhập phải báo cáo thuế. Tôi chịu trách nhiệm lưu trữ hồ sơ và báo cáo thu nhập theo quy định pháp luật.",
     "consent_confirm": "Tôi xác nhận rằng thông tin thanh toán của mình là chính xác và khách hàng có thể sử dụng các phương thức này để gửi tip trực tiếp cho tôi.",
     "label_invited_name": "Tên được mời:",
@@ -2087,15 +2152,22 @@
     "staff_display_name_required": "Vui lòng nhập tên hiển thị.",
     "staff_display_name_too_short": "Tên hiển thị phải có ít nhất 2 ký tự.",
     "staff_display_name_too_long": "Tên hiển thị không được quá 100 ký tự.",
+    "staff_position_required": "Vui lòng nhập chức danh. Không được để trống hoặc chỉ có khoảng trắng.",
+    "staff_position_too_long": "Chức danh không được dài hơn 100 ký tự.",
+    "staff_business_role_link_not_active": "Bạn chưa có liên kết đang hoạt động với tiệm này nên không thể lưu chức danh tại đây.",
+    "staff_business_role_unauthorized": "Bạn chưa đăng nhập. Vui lòng đăng nhập lại rồi thử lưu chức danh.",
+    "staff_role_link_not_found": "Không tìm thấy liên kết nhân viên này. Tải lại trang và thử lại.",
     "staff_limit_reached": "Gói của bạn đã đạt giới hạn số nhân viên.",
     "local_staff_not_found": "Không tìm thấy nhân viên thủ công.",
     "local_staff_not_owned": "Bạn không có quyền quản lý nhân viên thủ công này.",
     "staff_link_has_outstanding_debt": "Không thể xóa thợ còn số dư tip chưa chi trả. Hãy chi trả tip trước.",
+    "staff_unlink_has_outstanding_debt": "Bạn chưa thể hủy liên kết khi salon vẫn còn khoản tip chưa chi trả cho bạn. Hãy liên hệ salon để thanh toán số dư rồi thử lại.",
+    "staff_unlink_failed": "Không thể hủy liên kết. Vui lòng thử lại hoặc liên hệ salon.",
     "staff_payment_method_not_found": "Không tìm thấy phương thức thanh toán.",
     "staff_payment_method_access_denied": "Bạn không có quyền cập nhật phương thức thanh toán này.",
     "common_validation_error": "Dữ liệu nhập vào chưa hợp lệ. Vui lòng kiểm tra lại.",
-    "common_not_found": "Không tìm thấy tài nguyên yêu cầu.",
-    "common_unauthorized": "Truy cập chưa được xác thực.",
+    "common_not_found": "Không tìm thấy mục yêu cầu.",
+    "common_unauthorized": "Bạn chưa đăng nhập. Vui lòng đăng nhập và thử lại.",
     "common_forbidden": "Không có quyền truy cập.",
     "common_rate_limit_exceeded": "Yêu cầu quá nhanh. Vui lòng thử lại sau.",
     "common_internal_server_error": "Đã xảy ra lỗi hệ thống bên trong.",
@@ -2241,11 +2313,11 @@
         "title": "Thiết lập tài khoản ngân hàng",
         "beneficiaryName": "Tên người thụ hưởng",
         "bankName": "Tên ngân hàng",
-        "routingNumber": "Số ABA/Routing",
+        "routingNumber": "Số ABA (Routing)",
         "accountNumber": "Số tài khoản",
         "bankAddress": "Địa chỉ ngân hàng",
         "city": "Thành phố",
-        "state": "Bang/Tỉnh",
+        "state": "Bang hoặc Tỉnh",
         "zipCode": "Mã bưu chính",
         "country": "Quốc gia",
         "selectCountry": "Chọn quốc gia",
@@ -2283,8 +2355,9 @@
           "tipAmount": "Số tiền chuyển khoản",
           "scanToPay": "Quét mã để chuyển khoản",
           "name": "Tên người nhận",
-          "businessName": "Tiệm / Doanh nghiệp",
-          "emailPhone": "Email / SĐT",
+          "businessName": "Tiệm hoặc Doanh nghiệp",
+          "accountHolder": "Tên đăng ký {wallet}",
+          "emailPhone": "Email hoặc SĐT",
           "venmoUsername": "Tài khoản Venmo",
           "cashTag": "Thẻ Cash App",
           "paypalEmailPhone": "Tài khoản PayPal",
@@ -2386,7 +2459,7 @@
           "orSendDirectly": "HOẶC GỬI TRỰC TIẾP",
           "technicianName": "Tên thợ",
           "phoneNumber": "Số điện thoại",
-          "rolePosition": "Vai trò / Chức danh",
+          "rolePosition": "Vai trò hoặc Chức danh",
           "sendInviteLink": "Gửi liên kết mời thợ",
           "joinQrCode": "MÃ QR GIA NHẬP",
           "haveTechniciansScanThis": "Cho thợ quét mã này bằng camera điện thoại để tự đăng ký hoặc liên kết tài khoản vào tiệm.",
@@ -2411,12 +2484,12 @@
         },
         "PayoutSetupModal": {
           "walletAccountTitle": "TÀI KHOẢN {wallet}",
-          "placeholderZelle": "Nhập email/SĐT Zelle...",
+          "placeholderZelle": "Nhập email hoặc SĐT Zelle...",
           "placeholderBankWire": "Số tài khoản & số routing",
           "placeholderPaypal": "email@paypal.com",
           "placeholderAppleCash": "Nhập số điện thoại...",
           "placeholderVlinkpay": "Nhập VLINKPAY ID (vd: MIA0123)...",
-          "placeholderCrypto": "Nhập địa chỉ BTC/ETH/USDT...",
+          "placeholderCrypto": "Nhập địa chỉ BTC, ETH, hoặc USDT...",
           "specifyReceivingTargetIdentifier": "Chỉ định thông tin tài khoản nhận tiền",
           "accountIdentifier": "THÔNG TIN TÀI KHOẢN *",
           "qrCodeOptional": "MÃ QR (TÙY CHỌN)",
@@ -2463,7 +2536,7 @@
           "staffNotFound": "Không tìm thấy thợ. Hãy mời bằng email hoặc số điện thoại.",
           "searchError": "Chưa thể tìm kiếm thợ lúc này.",
           "reviewJoinRequest": "Duyệt yêu cầu tham gia",
-          "nexoraIdVlinkpayId": "NEXORA ID / VLINKPAY ID",
+          "nexoraIdVlinkpayId": "NEXORA ID hoặc VLINKPAY ID",
           "scanQrCode": "Quét mã QR",
           "shareInviteLink": "Chia sẻ liên kết mời thợ",
           "invite": "Mời",
@@ -2482,6 +2555,7 @@
           "phExampleVlp2": "vd: VL8893",
           "phExampleStaffId": "vd: LISA1102",
           "phFullName": "Mia Tran",
+          "displayName": "Tên hiển thị *",
           "phNickname": "Mia T.",
           "phPosition": "Thợ nail",
           "scanVlinkpayQrCode": "Quét mã QR VLINKPAY",
@@ -2595,7 +2669,7 @@
           "clickPillToToggle": "Nhấp vào chip để đổi trạng thái hoạt động",
           "tipsFlow": "Cho phép Tip",
           "tipsFlowTooltip": "Khi tắt, nhân viên này sẽ không xuất hiện trong luồng tip của khách hàng.",
-          "clickPillToShow": "Nhấp vào chip để ẩn/hiển thị thợ trên QR tiệm",
+          "clickPillToShow": "Nhấp vào chip để ẩn hoặc hiển thị thợ trên QR tiệm",
           "linkedDate": "Ngày liên kết: ",
           "col_linked_date": "Ngày liên kết",
           "noWallets": "Không có ví",
@@ -2966,7 +3040,7 @@
             "badgeSmsActive": "SMS đã kích hoạt",
             "badgeNoShow": "Không đến",
             "todayLabel": "Hôm nay",
-            "kpiTodayTrend": "Tổng lịch hẹn hôm nay",
+            "kpiTodayTrend": "Tổng lịch hẹn",
             "kpiDoneTrend": "SMS review đã sẵn sàng",
             "kpiNoReview": "Không gửi review",
             "kpiNoShowTrend": "Không gửi review khi khách không đến",
@@ -2974,6 +3048,15 @@
             "viewMode": "Chế độ xem lịch hẹn",
             "tableView": "Bảng",
             "cardView": "Thẻ",
+            "calendarView": "Lịch",
+            "filterToggle": "Bộ lọc",
+            "filterPopoverTitle": "Lọc lịch hẹn",
+            "calendarTitle": "Lịch theo kỹ thuật viên",
+            "calendarSubtitle": "Lịch hẹn nhóm theo kỹ thuật viên",
+            "calendarPrev": "Ngày trước",
+            "calendarNext": "Ngày sau",
+            "calendarUnassigned": "Chưa gán",
+            "calendarEmpty": "Không có lịch hẹn trong ngày này.",
             "filters": "Bộ lọc lịch hẹn",
             "statusFilterAria": "Lọc theo trạng thái",
             "filterAll": "Tất cả",
@@ -2991,8 +3074,8 @@
             "keywordPlaceholderAll": "Nhập từ khóa",
             "dateFrom": "Từ ngày",
             "dateTo": "Đến ngày",
-            "dateFromPlaceholder": "Chọn ngày bắt đầu",
-            "dateToPlaceholder": "Chọn ngày kết thúc",
+            "dateFromPlaceholder": "Chọn ngày",
+            "dateToPlaceholder": "Chọn ngày",
             "clear": "Xóa",
             "colCallStart": "Bắt đầu gọi",
             "colCustomer": "Khách hàng",
@@ -3079,7 +3162,7 @@
               "emailLabel": "Email",
               "emailPlaceholder": "john.doe@gmail.com",
               "emailNote": "Nhận link kích hoạt + báo cáo hằng tháng qua email này",
-              "cityLabel": "Thành phố / khu vực",
+              "cityLabel": "Thành phố hoặc khu vực",
               "cityPlaceholder": "Houston, TX",
               "websiteLabel": "Trang web",
               "websitePlaceholder": "https://bitcoinnailbar.com",
@@ -3098,7 +3181,7 @@
               "painDefault": "- Chọn -",
               "painMissed": "Cuộc gọi nhỡ, khách gọi không ai bắt máy",
               "painRetention": "Khách không quay lại sau 30 ngày",
-              "painReviews": "Ít Google Review / khó lên top",
+              "painReviews": "Ít Google Review và khó lên top",
               "painManual": "Đặt lịch thủ công, dễ sót lịch",
               "painSms": "Muốn chạy chiến dịch SMS nhưng không có thời gian",
               "referralLabel": "Mã giới thiệu",
@@ -3119,7 +3202,7 @@
               "autoRedirectBefore": "Tự động chuyển đến ",
               "autoRedirectBrand": "Nexora Touch",
               "autoRedirectAfter": " sau ({{seconds}}) giây",
-              "footer": "Không cần thẻ tín dụng · Không tự động tính phí · Bấm gửi là chị đồng ý cho NEXORA liên hệ qua SMS/email",
+              "footer": "Không cần thẻ tín dụng · Không tự động tính phí · Bấm gửi là chị đồng ý cho NEXORA liên hệ qua SMS hoặc email",
               "contactLine": "NEXORA TOUCH · AI Nhân Viên cho tiệm nail",
               "contactTry": "gọi thử - AI bắt máy đó",
               "emailTitle": "Kiểm tra email của bạn",
@@ -3201,7 +3284,7 @@
             "suggestServices": "Gợi Ý Ngành",
             "addManually": "Tự Nhập",
             "scanPanelTitle": "Quét ảnh menu — AI đọc bảng giá rồi thêm dịch vụ mới vào danh sách bên dưới.",
-            "scanProgress1": "Mở camera / tải ảnh menu lên",
+            "scanProgress1": "Mở camera hoặc tải ảnh menu lên",
             "scanProgress2": "AI đọc ảnh menu",
             "scanProgress3": "Nhận diện tên dịch vụ, giá và thời lượng",
             "scanProgress4": "Thêm dịch vụ mới vào danh sách bên dưới",
@@ -3282,7 +3365,7 @@
             "intro": "Hồ sơ thợ dùng chung cho SMS báo khách, tip QR, đánh giá và thưởng.",
             "addTech": "Thêm Thợ",
             "clientsToday": "Khách hôm nay",
-            "toggleSms": "Bật/tắt SMS cho {name}",
+            "toggleSms": "Bật hoặc tắt SMS cho {name}",
             "toggleStaffSuccess": "Đã cập nhật thành công.",
             "modalTitleCreate": "Thông Tin Thợ",
             "modalTitleEdit": "Chỉnh Thông Tin Thợ",
@@ -3473,9 +3556,9 @@
       },
       "modals": {
         "PayoutEditModal": {
-          "emailPhone": "email/SĐT",
+          "emailPhone": "email hoặc SĐT",
           "details": "chi tiết",
-          "enterZelleEmailPhone": "Nhập email/SĐT Zelle...",
+          "enterZelleEmailPhone": "Nhập email hoặc SĐT Zelle...",
           "accountAndRoutingNumbers": "Số tài khoản & Số Routing",
           "enterPhoneNumber": "Nhập số điện thoại...",
           "specifyReceivingTargetIdentifier": "Chỉ định thông tin tài khoản nhận tiền",
@@ -3521,7 +3604,8 @@
           "autoFill": "Tự động điền",
           "notConfigured": "Chưa cấu hình",
           "configure": "Thiết lập",
-          "saveAndActivate": "Lưu & Kích hoạt"
+          "saveAndActivate": "Lưu & Kích hoạt",
+          "skipForNow": "Để sau"
         },
         "StepProfileSetup": {
           "personalProfileSetup": "Cấu hình hồ sơ cá nhân",
@@ -3529,11 +3613,12 @@
           "acceptedFormatsJpgPng": "Chấp nhận định dạng JPG, PNG. Dung lượng tối đa 5MB.",
           "fullName": "Họ và tên *",
           "displayNickname": "Tên hiển thị (Nickname) *",
+          "displayNicknameOptional": "Tên hiển thị (Nickname) (Tùy chọn)",
           "phoneNumber": "Số điện thoại *",
           "emailAddress": "Địa chỉ Email",
-          "roleSpeciality": "Chuyên môn / Vai trò",
+          "roleSpeciality": "Chuyên môn hoặc Vai trò",
           "nexoraStaffId": "NEXORA ID",
-          "shortBioShowsOn": "Lời chào / Tiểu sử ngắn",
+          "shortBioShowsOn": "Lời chào hoặc Tiểu sử ngắn",
           "phFullName": "vd: Lisa Marie Tran",
           "phNickname": "vd: Lisa T.",
           "phPhone": "vd: 408-555-1234",
@@ -3612,9 +3697,9 @@
           "copy": "Sao chép",
           "showQr": "Hiện mã QR",
           "notConfigured": "Chưa cấu hình",
-          "streetAddress": "Địa chỉ đường/phố",
+          "streetAddress": "Địa chỉ đường hoặc phố",
           "city": "Thành phố",
-          "stateProvince": "Bang/Tỉnh",
+          "stateProvince": "Bang hoặc Tỉnh",
           "zipCode": "Mã bưu chính",
           "businessPhone": "Số điện thoại doanh nghiệp",
           "businessEmail": "Email doanh nghiệp",
@@ -3638,11 +3723,11 @@
           "phoneNumber": "Số điện thoại",
           "addressDetails": "Chi tiết địa chỉ",
           "provideThePhysicalLocation": "Cung cấp địa chỉ thực của cửa hàng. Được sử dụng để bản địa hóa và xác minh.",
-          "street": "Đường/Phố",
-          "state": "Bang/Tỉnh",
+          "street": "Đường hoặc Phố",
+          "state": "Bang hoặc Tỉnh",
           "country": "Quốc gia",
           "businessInformation": "Thông tin doanh nghiệp",
-          "enterTheLegalOr": "Nhập tên hợp pháp hoặc tên công khai của cửa hàng/salon của bạn sẽ hiển thị trên màn hình thanh toán của khách hàng.",
+          "enterTheLegalOr": "Nhập tên hợp pháp hoặc tên công khai của cửa hàng hoặc salon của bạn sẽ hiển thị trên màn hình thanh toán của khách hàng.",
           "businessName": "Tên doanh nghiệp",
           "phone": "Số điện thoại",
           "bookingNotificationPhone": "SĐT nhận thông báo đặt lịch",
@@ -3668,9 +3753,9 @@
           "locationMap": "Bản đồ vị trí",
           "locationMapEmpty": "Thêm địa chỉ để hiển thị vị trí cửa hàng trên bản đồ.",
           "reviewLinks": "Liên kết đánh giá",
-          "emailPhone": "email/SĐT",
+          "emailPhone": "email hoặc SĐT",
           "details": "chi tiết",
-          "enterZelleEmailPhone": "Nhập email/SĐT Zelle...",
+          "enterZelleEmailPhone": "Nhập email hoặc SĐT Zelle...",
           "enterBankWireRouting": "Số tài khoản & Số Routing...",
           "enterPaypalEmail": "Nhập PayPal email...",
           "enterVenmoUsername": "Nhập Venmo @username...",
@@ -3713,7 +3798,7 @@
           "closeForm": "Đóng Form",
           "submittingKybDetails": "Đang gửi thông tin xác thực...",
           "legalBusinessName": "Tên pháp lý doanh nghiệp",
-          "taxIdEin": "Mã số thuế / EIN",
+          "taxIdEin": "Mã số thuế (EIN)",
           "businessStructure": "Hình thức doanh nghiệp",
           "representativeOwnerName": "Người đại diện pháp luật",
           "bankName": "Tên ngân hàng",
@@ -3758,7 +3843,7 @@
       },
       "steps": {
         "Step1BusinessInfo": {
-          "enterTheLegalOr": "Nhập tên hợp pháp hoặc tên công khai của cửa hàng/salon của bạn sẽ hiển thị trên màn hình thanh toán của khách hàng.",
+          "enterTheLegalOr": "Nhập tên hợp pháp hoặc tên công khai của cửa hàng hoặc salon của bạn sẽ hiển thị trên màn hình thanh toán của khách hàng.",
           "provideThePhysicalLocation": "Cung cấp địa chỉ thực của cửa hàng. Được sử dụng để bản địa hóa và xác minh.",
           "phPhone": "+1 (555) 789-2026",
           "phWebsite": "https://spasalon.com",
@@ -3772,7 +3857,7 @@
           "setUpPayoutMethods": "Thiết lập các phương thức thanh toán và các vị trí dán mã QR (ví dụ: quầy lễ tân, bàn làm việc, xe đẩy) tại tiệm.",
           "setUpPaymentMethods": "Thiết lập các phương thức thanh toán để nhận tiền vào tài khoản tiệm.",
           "scanQrAlt": "Quét mã QR",
-          "tpTypeTableQr": "QR Bàn/Ghế",
+          "tpTypeTableQr": "QR Bàn hoặc Ghế",
           "tpTypeFrontDesk": "Quầy Lễ Tân",
           "tpTypeReceiptQr": "QR Trên Hóa Đơn",
           "tpTypeBusinessMain": "QR Chính Tiệm",
@@ -3815,7 +3900,7 @@
           "scanSalonQrCode": "Quét Mã QR Của Tiệm",
           "scanTheSalonReferral": "Quét mã QR liên kết thợ của tiệm (referral QR) để gửi yêu cầu gia nhập chủ động",
           "cameraScanNotAvailableYet": "Tính năng quét QR bằng camera hiện chưa được tích hợp.",
-          "orEnterInviteLink": "Hoặc Nhập Liên Kết / Tên Tiệm",
+          "orEnterInviteLink": "Hoặc Nhập Liên Kết hoặc Tên Tiệm",
           "pasteSalonInviteLink": "Dán link mời hoặc mã referral của tiệm...",
           "send": "Gửi",
           "referralCodeRequired": "Vui lòng nhập link mời hoặc mã referral của tiệm.",
@@ -3853,10 +3938,10 @@
           "closeForm": "Đóng Form",
           "submittingKycDetails": "Đang gửi hồ sơ xác thực...",
           "legalFullName": "Họ và tên hợp pháp",
-          "idNumberSsn": "Số định danh / SSN / ID",
+          "idNumberSsn": "Số định danh, SSN hoặc ID",
           "documentType": "Loại giấy tờ xác thực",
           "passport": "Hộ chiếu",
-          "nationalIdCard": "Căn cước công dân / ID quốc gia",
+          "nationalIdCard": "Căn cước công dân hoặc ID quốc gia",
           "idCardFrontImage": "Mặt trước giấy tờ",
           "uploadFrontSide": "Chọn ảnh mặt trước",
           "idCardBackImage": "Mặt sau giấy tờ",
@@ -3992,7 +4077,7 @@
           "walletLabel_venmo": "Venmo",
           "walletLabel_cashapp": "Cash App",
           "walletLabel_applecash": "Apple Cash",
-          "walletPlaceholder_zelle": "Nhập email/SĐT Zelle...",
+          "walletPlaceholder_zelle": "Nhập email hoặc SĐT Zelle...",
           "walletPlaceholder_bankwire": "Nhập số routing và tài khoản ngân hàng...",
           "walletPlaceholder_paypal": "Nhập email PayPal...",
           "walletPlaceholder_venmo": "Nhập @username Venmo...",
@@ -4032,7 +4117,7 @@
           "copyStaffLink": "SAO CHÉP STAFF LINK"
         },
         "StepWelcome": {
-          "declineRequest": "Hủy bỏ / Từ chối",
+          "declineRequest": "Hủy bỏ hoặc Từ chối",
           "loadingInvitation": "Đang tải lời mời...",
           "invalidInvitationTitle": "Lời mời không hợp lệ",
           "invalidInvitationDescription": "Liên kết lời mời này không hợp lệ hoặc đã hết hạn. Vui lòng liên hệ tiệm để được mời lại.",
@@ -4043,7 +4128,7 @@
           "registerAccount": "Đăng ký tài khoản",
           "registerANewAccount": "Đăng ký tài khoản mới, thiết lập ví nhận tiền và KYC.",
           "linkAccountLogin": "Đăng nhập liên kết tài khoản",
-          "signInToYour": "Đăng nhập vào tài khoản NEXORA / VLINKPAY của bạn để liên kết nhanh với tiệm nail này.",
+          "signInToYour": "Đăng nhập vào tài khoản NEXORA hoặc VLINKPAY của bạn để liên kết nhanh với tiệm nail này.",
           "password": "Mật khẩu",
           "demoAccountTip": "Gợi ý tài khoản Demo:",
           "back": "Quay lại",
@@ -4063,9 +4148,9 @@
           "phPassword": "••••••••"
         },
         "PayoutEditModal": {
-          "emailPhone": "email/SĐT",
+          "emailPhone": "email hoặc SĐT",
           "details": "chi tiết",
-          "enterZelleEmailPhone": "Nhập email/SĐT Zelle...",
+          "enterZelleEmailPhone": "Nhập email hoặc SĐT Zelle...",
           "accountAndRoutingNumbers": "Số tài khoản & Số Routing",
           "enterPhoneNumber": "Nhập số điện thoại...",
           "specifyReceivingTargetIdentifier": "Chỉ định thông tin tài khoản nhận tiền",

@@ -6,6 +6,7 @@ import httpClient from '../../lib/httpClient'
 import { normalizeTipStatus } from '../../constants/tipStatus'
 import { isApiError } from '../../types/domain'
 import type {
+  PaginatedResponse,
   StaffBusinessLink,
   StaffDashboardStatistics,
   StaffDashboardSummary,
@@ -23,20 +24,48 @@ import type {
 } from '../../types/domain'
 import type { TransactionsListPage, TransactionsListQuery } from './transactions'
 import type { StaffLinkRequestDetailApiDto } from '../../types/repositories'
+import { PENDING_STAFF_LINK_REQUEST_STATUSES } from '../../utils/staffLinkRequestStatus'
 
 type HttpClient = typeof httpClient
+
+function readField<T>(dto: Record<string, unknown>, camel: string, pascal: string): T | undefined {
+  return (dto[camel] ?? dto[pascal]) as T | undefined
+}
+
+interface StaffNicknameUpdateApiDto {
+  linkId?: string
+  nicknameAtBusiness?: string | null
+  displayName?: string | null
+}
+
+export interface StaffNicknameUpdateResult {
+  linkId: string
+  nicknameAtBusiness: string | null
+  displayName: string
+}
+
+interface StaffRoleUpdateApiDto {
+  businessId?: string
+  roleAtBusiness?: string
+}
+
+export interface StaffBusinessRoleUpdateResult {
+  businessId: string
+  roleAtBusiness: string
+}
 
 interface StaffBusinessApiDto {
   businessId?: string
   businessName?: string
+  nicknameAtBusiness?: string | null
   address?: string | null
   city?: string | null
   state?: string | null
   logoUrl?: string | null
-  role?: string | null
+  role?: number | string | null
   roleLabel?: string | null
   roleAtBusiness?: string | null
-  linkStatus?: string | null
+  linkStatus?: number | string | null
   linkStatusLabel?: string | null
   linkedAt?: string | null
   businessSlug?: string | null
@@ -89,18 +118,28 @@ function normalizeStaffBusinessLink(b: StaffBusinessApiDto): StaffBusinessLink {
     !touchPointSlug?.trim() &&
     !tipUrl?.trim()
 
+  const roleAtBusinessRaw =
+    readField<string | null>(b as Record<string, unknown>, 'roleAtBusiness', 'RoleAtBusiness')
+    ?? b.roleAtBusiness
+    ?? null
+  const roleAtBusiness = roleAtBusinessRaw?.trim() || null
+  const wireRole = b.role ?? readField<number | string>(b as Record<string, unknown>, 'role', 'Role')
+  const linkStatus =
+    b.linkStatus ?? readField<number | string>(b as Record<string, unknown>, 'linkStatus', 'LinkStatus') ?? null
+
   return {
-    businessId: b.businessId ?? '',
-    businessName: b.businessName ?? '',
+    businessId: readField<string>(b as Record<string, unknown>, 'businessId', 'BusinessId') ?? '',
+    businessName: readField<string>(b as Record<string, unknown>, 'businessName', 'BusinessName') ?? b.businessName ?? '',
+    nicknameAtBusiness: readField<string | null>(b as Record<string, unknown>, 'nicknameAtBusiness', 'NicknameAtBusiness') ?? b.nicknameAtBusiness ?? null,
     address: b.address ?? null,
     city: b.city ?? null,
     state: b.state ?? null,
     logoUrl: b.logoUrl ?? null,
-    role: b.role ?? null,
-    roleLabel: b.roleLabel ?? null,
-    roleAtBusiness: b.roleAtBusiness ?? null,
-    linkStatus: b.linkStatus ?? null,
-    linkStatusLabel: b.linkStatusLabel ?? null,
+    role: wireRole != null ? String(wireRole) : null,
+    roleLabel: b.roleLabel ?? readField<string>(b as Record<string, unknown>, 'roleLabel', 'RoleLabel') ?? null,
+    roleAtBusiness,
+    linkStatus: linkStatus != null ? String(linkStatus) : null,
+    linkStatusLabel: b.linkStatusLabel ?? readField<string>(b as Record<string, unknown>, 'linkStatusLabel', 'LinkStatusLabel') ?? null,
     linkedAt: b.linkedAt ?? null,
     businessSlug: b.businessSlug ?? null,
     touchPointSlug,
@@ -348,6 +387,7 @@ function normalizeTipsPage(dto: StaffTipsPageApiDto): StaffTipsPage {
 export function normalizeStaffLinkRequestDetail(dto: StaffLinkRequestDetailApiDto): StaffLinkRequestDetail {
   return {
     id: dto.id ?? '',
+    businessId: dto.businessId ?? null,
     businessName: dto.businessName ?? '',
     businessLogoUrl: dto.businessLogoUrl ?? null,
     businessRole: dto.businessRole ?? null,
@@ -372,6 +412,36 @@ export function createStaffSelfRepository(client: HttpClient = httpClient) {
       const res = await client.get<StaffBusinessApiDto[] | StaffBusinessesResponse>('/api/v1/staff/businesses')
       const items = Array.isArray(res) ? res : (res?.items || [])
       return items.map(normalizeStaffBusinessLink)
+    },
+
+    async setMyNickname(
+      businessId: string,
+      nickname: string | null,
+    ): Promise<StaffNicknameUpdateResult> {
+      const dto = await client.patch<StaffNicknameUpdateApiDto>(
+        `/api/v1/staff/businesses/${encodeURIComponent(businessId)}/nickname`,
+        { nickname },
+      )
+      return {
+        linkId: dto.linkId ?? '',
+        nicknameAtBusiness: dto.nicknameAtBusiness ?? null,
+        displayName: dto.displayName ?? '',
+      }
+    },
+
+    async updateMyRoleAtBusiness(
+      businessId: string,
+      roleAtBusiness: string,
+    ): Promise<StaffBusinessRoleUpdateResult> {
+      const dto = await client.patch<StaffRoleUpdateApiDto & Record<string, unknown>>(
+        `/api/v1/staff/businesses/${encodeURIComponent(businessId)}/role`,
+        { roleAtBusiness },
+      )
+      const raw = (dto ?? {}) as StaffRoleUpdateApiDto & Record<string, unknown>
+      return {
+        businessId: readField<string>(raw, 'businessId', 'BusinessId') ?? businessId,
+        roleAtBusiness: readField<string>(raw, 'roleAtBusiness', 'RoleAtBusiness') ?? roleAtBusiness,
+      }
     },
 
     async getDashboardSummary(): Promise<StaffDashboardSummary> {
@@ -453,12 +523,52 @@ export function createStaffSelfRepository(client: HttpClient = httpClient) {
       return normalizeStaffLinkRequestDetail(data)
     },
 
+    async listLinkRequests({
+      status,
+      statuses,
+      pageNumber = 1,
+      pageSize = 50,
+    }: { status?: string; statuses?: string[]; pageNumber?: number; pageSize?: number } = {}): Promise<
+      PaginatedResponse<StaffLinkRequestDetail>
+    > {
+      const params: Record<string, unknown> = { PageNumber: pageNumber, PageSize: pageSize }
+      if (statuses && statuses.length > 0) {
+        params.statuses = statuses
+      } else if (status) {
+        params.Status = status
+      }
+      const res = await client.get<PaginatedResponse<StaffLinkRequestDetailApiDto>>(
+        '/api/v1/staff/link-requests',
+        { params: params as Record<string, string | number> },
+      )
+      return {
+        items: (res?.items ?? []).map(normalizeStaffLinkRequestDetail),
+        pageNumber: res?.pageNumber ?? pageNumber,
+        totalPages: res?.totalPages ?? 1,
+        totalCount: res?.totalCount ?? 0,
+        hasNextPage: Boolean(res?.hasNextPage),
+        hasPreviousPage: Boolean(res?.hasPreviousPage),
+      }
+    },
+
+    // GET /staff/link-requests accepts statuses parameter with multiple values in a single call.
+    async listPendingLinkRequests(): Promise<StaffLinkRequestDetail[]> {
+      const res = await this.listLinkRequests({
+        statuses: [...PENDING_STAFF_LINK_REQUEST_STATUSES],
+      })
+      return res.items
+    },
+
     async acceptLinkRequest(linkId: string): Promise<void> {
       await client.put(`/api/v1/staff/link-requests/${encodeURIComponent(linkId)}/accept`)
     },
 
     async rejectLinkRequest(linkId: string): Promise<void> {
       await client.put(`/api/v1/staff/link-requests/${encodeURIComponent(linkId)}/reject`)
+    },
+
+    async unlinkBusiness(businessId: string): Promise<void> {
+      await client.del(`/api/v1/staff/businesses/${encodeURIComponent(businessId)}`)
     },
   }
 }

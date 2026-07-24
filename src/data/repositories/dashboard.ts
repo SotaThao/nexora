@@ -56,6 +56,13 @@ interface ListApiResponse<T> {
   data?: T[]
 }
 
+const EMPTY_TIP_REVENUE = {
+  totalRevenue: 0,
+  directTips: { amount: 0, count: 0 },
+  cardTips: { amount: 0, count: 0 },
+  cryptoTips: { amount: 0, count: 0 },
+}
+
 const EMPTY_ANALYTICS: MerchantDashboardAnalytics = {
   overview: {
     totalVolume: 0,
@@ -63,6 +70,7 @@ const EMPTY_ANALYTICS: MerchantDashboardAnalytics = {
     feeSaved: 0,
     averageTipAmount: 0,
   },
+  tipRevenue: EMPTY_TIP_REVENUE,
   leaderboard: [],
   touchPoints: [],
   tipsMethods: [],
@@ -127,6 +135,26 @@ function resolveAnalyticsTipsMethods(
   return []
 }
 
+function normalizeAnalyticsTipRevenueBreakdown(
+  dto?: { amount?: number; count?: number },
+) {
+  return {
+    amount: Number(dto?.amount) || 0,
+    count: Number(dto?.count) || 0,
+  }
+}
+
+function normalizeAnalyticsTipRevenue(
+  dto?: DashboardAnalyticsApiDto['tipRevenue'],
+): MerchantDashboardAnalytics['tipRevenue'] {
+  return {
+    totalRevenue: Number(dto?.totalRevenue) || 0,
+    directTips: normalizeAnalyticsTipRevenueBreakdown(dto?.directTips),
+    cardTips: normalizeAnalyticsTipRevenueBreakdown(dto?.cardTips),
+    cryptoTips: normalizeAnalyticsTipRevenueBreakdown(dto?.cryptoTips),
+  }
+}
+
 function normalizeDashboardAnalytics(dto: DashboardAnalyticsApiDto): MerchantDashboardAnalytics {
   const overview = dto.overview ?? {}
 
@@ -137,6 +165,7 @@ function normalizeDashboardAnalytics(dto: DashboardAnalyticsApiDto): MerchantDas
       feeSaved: Number(overview.feeSaved) || 0,
       averageTipAmount: Number(overview.averageTipAmount) || 0,
     },
+    tipRevenue: normalizeAnalyticsTipRevenue(dto.tipRevenue),
     leaderboard: Array.isArray(dto.leaderboard)
       ? dto.leaderboard.map(normalizeAnalyticsLeaderboardItem)
       : [],

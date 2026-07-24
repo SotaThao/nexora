@@ -17,14 +17,13 @@ export default function TipsSavingsTab({
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 5;
 
-  // Calculate all-time direct tips for savings calculator
   const directCompletedTips = transactions.filter(
     tx =>
       isDirectP2pMethod(tx.paymentMethod ?? '') &&
       (tx.status === 'Success' || tx.status === 'Completed')
   );
 
-  const allTimeDirectTips = directCompletedTips.reduce((sum, tx) => sum + (tx.amount || 0), 0);
+  const allTimeDirectTips = directTips ?? 0;
 
   const totalPages = Math.ceil(directCompletedTips.length / itemsPerPage) || 1;
   const paginatedTips = directCompletedTips.slice(

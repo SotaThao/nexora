@@ -304,7 +304,6 @@ export function TipsRoute() {
       transactions={ctx.transactions}
       staff={ctx.staff}
       metrics={ctx.metrics}
-      tipsChartData={ctx.tipsChartData}
       activeTab={tab}
       processingFee={ctx.processingFee}
       setProcessingFee={ctx.setProcessingFee}
@@ -358,14 +357,6 @@ export function SettingsRoute() {
   const { tab = 'profile' } = useParams()
   const navigate = useNavigate()
 
-  useEffect(() => {
-    if (tab === 'kyb') {
-      navigate('/dashboard/settings/profile', { replace: true })
-    }
-  }, [tab, navigate])
-
-  const initialTab = tab === 'kyb' ? 'profile' : tab
-
   return (
     <SettingsView
       {...({ onBlockedFeatureClick: ctx.requireKyb } as any)}
@@ -374,7 +365,7 @@ export function SettingsRoute() {
       verificationStatus={ctx.verificationStatus}
       userEmail={ctx.userEmail}
       onKybRequired={ctx.requireKyb}
-      initialTab={initialTab}
+      initialTab={tab}
       onTabChange={(nextTab) => navigate(`/dashboard/settings/${nextTab}`)}
       onKybSuccess={ctx.onKybSuccess}
     />

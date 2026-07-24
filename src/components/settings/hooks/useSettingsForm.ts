@@ -134,7 +134,7 @@ const DEFAULT_PROFILE = {
 
 const KYB_EDITABLE_STATUSES = new Set(['basic', 'kyb_rejected', 'rejected'])
 
-const ENABLED_SETTINGS_TABS = new Set(['profile', 'affiliate'])
+const ENABLED_SETTINGS_TABS = new Set(['profile', 'kyb', 'affiliate'])
 
 function normalizeSettingsTab(tab) {
   return ENABLED_SETTINGS_TABS.has(tab) ? tab : 'profile'

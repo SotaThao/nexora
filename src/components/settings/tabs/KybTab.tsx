@@ -2,8 +2,15 @@ import React, { useCallback, useEffect, useImperativeHandle, useRef, useState } 
 import { Loader2, RotateCcw } from 'lucide-react'
 import { useTranslation } from '../../../contexts/LanguageContext'
 import { useKybInfo } from '../../../data/hooks/useProfileSettings'
+import useIsMobileUI from '../../../hooks/useIsMobileUI'
+import MobileIframeScreen from '../../ui/MobileIframeScreen'
 
 const APPROVED_STATUSES = new Set(['kyb_approved', 'verified_pro'])
+
+// Verified/approved KYB is the only state that keeps an informational card in
+// the parent. Every other state opens the KYC/KYB portal directly — there is no
+// "Verify now" launcher card anymore.
+const VERIFIED_STATUSES = new Set(['kyb_approved', 'verified_pro', 'verified_lite'])
 
 function shouldRequestKybCamera(verificationStatus: string) {
   return (
@@ -11,6 +18,20 @@ function shouldRequestKybCamera(verificationStatus: string) {
     verificationStatus === 'kyb_rejected' ||
     verificationStatus === 'rejected'
   )
+}
+
+function appendKybType(url: string | undefined): string | undefined {
+  if (!url) return url
+
+  try {
+    const parsed = new URL(url)
+    parsed.searchParams.set('type', 'kyb')
+    return parsed.toString()
+  } catch {
+    // Not an absolute URL (e.g. relative path) — fall back to plain concatenation.
+    const separator = url.includes('?') ? '&' : '?'
+    return `${url}${separator}type=kyb`
+  }
 }
 
 async function requestCameraPermission() {
@@ -32,6 +53,7 @@ async function requestCameraPermission() {
 
 export type KybTabHandle = {
   openPortal: () => void
+  closePortal: () => void
 }
 
 type KybTabProps = {
@@ -40,19 +62,31 @@ type KybTabProps = {
   verificationStatus: string
   showToast: (message: string) => void
   portalRef?: React.Ref<KybTabHandle>
+  /** Reports whether the portal is taking over the view, so the parent can
+   *  show/hide its launcher card (mirrors StaffKycOverview's contract). */
+  onWidgetVisibleChange?: (visible: boolean) => void
+  /** Mobile: back button on the full-screen webview. Should navigate out of the
+   *  verification section (to the profile menu) rather than just close, so the
+   *  user isn't dropped back onto the launcher card at ?section=verification. */
+  onExit?: () => void
 }
 
 export default function KybTab({
   cardDetails,
   verificationStatus,
   portalRef,
+  onWidgetVisibleChange,
+  onExit,
 }: KybTabProps) {
   const { t, currentLanguage } = useTranslation()
+  const isMobile = useIsMobileUI()
+  const [isWebviewOpen, setIsWebviewOpen] = useState(() => !VERIFIED_STATUSES.has(verificationStatus))
   const [isIframeLoading, setIsIframeLoading] = useState(false)
   const timeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
   const cameraRequestedRef = useRef(false)
 
   const isApproved = APPROVED_STATUSES.has(verificationStatus)
+  const isVerified = VERIFIED_STATUSES.has(verificationStatus)
 
   const {
     data: kybInfo,
@@ -62,7 +96,7 @@ export default function KybTab({
     refetch: refetchKybInfo,
   } = useKybInfo({ language: currentLanguage })
 
-  const iframeUrl = kybInfo?.url
+  const iframeUrl = appendKybType(kybInfo?.url)
   const hasUrl = Boolean(iframeUrl)
   const isBusy = isLoadingKybInfo || (isFetchingKybInfo && !hasUrl)
 
@@ -71,10 +105,28 @@ export default function KybTab({
   }, [refetchKybInfo])
 
   const openPortal = useCallback(() => {
+    setIsWebviewOpen(true)
     onLoadKybForm()
   }, [onLoadKybForm])
 
-  useImperativeHandle(portalRef, () => ({ openPortal }), [openPortal])
+  const closePortal = useCallback(() => {
+    setIsWebviewOpen(false)
+  }, [])
+
+  useImperativeHandle(portalRef, () => ({ openPortal, closePortal }), [openPortal, closePortal])
+
+  // Let the parent hide its launcher card while the portal is taking over.
+  useEffect(() => {
+    onWidgetVisibleChange?.(isWebviewOpen)
+    return () => onWidgetVisibleChange?.(false)
+  }, [isWebviewOpen, onWidgetVisibleChange])
+
+  // Go straight into the KYC/KYB portal for anyone who isn't verified yet — no
+  // "Verify now" launcher card. Re-syncs if the live status resolves later or
+  // verification completes (then the parent shows its verified card instead).
+  useEffect(() => {
+    setIsWebviewOpen(!isVerified)
+  }, [isVerified])
 
   useEffect(() => {
     if (!hasUrl) return
@@ -110,6 +162,50 @@ export default function KybTab({
   const showIframe = !isBusy && !isKybInfoError && hasUrl
   const showInitError = !isBusy && isKybInfoError
   const showMissingUrl = !isBusy && !isKybInfoError && !hasUrl
+
+  // Mobile: the KYB portal takes over the whole screen as its own webview so the
+  // provider's (cross-origin) popups aren't clipped by the surrounding chrome.
+  // openPortal/closePortal (via ref) toggle it; the parent's launcher card opens
+  // it and reappears once closed — same contract as StaffKycOverview.
+  if (isMobile) {
+    return (
+      <MobileIframeScreen
+        open={isWebviewOpen}
+        title={t('components.settings.tabs.KybTab.iframeTitle')}
+        iframeTitle={t('components.settings.tabs.KybTab.iframeTitle')}
+        onClose={onExit ?? closePortal}
+        src={showIframe ? iframeUrl : undefined}
+        isLoading={isBusy || (showIframe && isIframeLoading)}
+        loadingLabel={t('common.loading')}
+        onLoad={handleIframeLoad}
+        fallback={
+          showInitError || showMissingUrl ? (
+            <div className="flex flex-col items-center gap-4 text-center">
+              <p className="max-w-sm text-sm text-nexoraMuted">
+                {t(
+                  showInitError
+                    ? 'components.settings.tabs.KybTab.networkError'
+                    : 'components.settings.tabs.KybTab.serverError',
+                )}
+              </p>
+              <button
+                type="button"
+                onClick={handleRetry}
+                className="inline-flex items-center rounded-lg border border-nexoraBorder bg-white px-4 py-2 text-xs font-bold text-nexoraText hover:bg-slate-50 transition"
+              >
+                <RotateCcw className="mr-2 h-4 w-4" />
+                {t('components.settings.tabs.KybTab.retry')}
+              </button>
+            </div>
+          ) : null
+        }
+      />
+    )
+  }
+
+  // Desktop: embed the portal inline once opened; until then the parent's
+  // launcher card is shown instead.
+  if (!isWebviewOpen) return null
 
   return (
     <div className="space-y-6 animate-fadeIn">
@@ -164,14 +260,14 @@ export default function KybTab({
       )}
 
       {isBusy && (
-        <div className="flex h-[calc(100vh-320px)] min-h-[400px] flex-col items-center justify-center gap-3">
+        <div className="flex h-[calc(100dvh-320px)] min-h-[400px] flex-col items-center justify-center gap-3">
           <Loader2 className="h-6 w-6 animate-spin text-nexoraBrand" />
           <span className="text-sm text-nexoraMuted">{t('common.loading')}</span>
         </div>
       )}
 
       {showInitError && (
-        <div className="flex h-[calc(100vh-320px)] min-h-[300px] flex-col items-center justify-center gap-4">
+        <div className="flex h-[calc(100dvh-320px)] min-h-[300px] flex-col items-center justify-center gap-4">
           <p className="max-w-sm text-center text-sm text-nexoraMuted">
             {t('components.settings.tabs.KybTab.networkError')}
           </p>
@@ -187,7 +283,7 @@ export default function KybTab({
       )}
 
       {showIframe && (
-        <div className="relative h-[calc(100vh-280px)] min-h-[480px] w-full rounded-xl border border-nexoraBorder overflow-hidden bg-white shadow-sm animate-fadeIn">
+        <div className="relative h-[calc(100dvh-280px)] min-h-[480px] w-full rounded-xl border border-nexoraBorder overflow-hidden bg-white shadow-sm animate-fadeIn">
           {isIframeLoading && (
             <div className="absolute inset-0 z-10 flex flex-col items-center justify-center gap-3 bg-white">
               <Loader2 className="h-6 w-6 animate-spin text-nexoraBrand" />
@@ -206,7 +302,7 @@ export default function KybTab({
       )}
 
       {showMissingUrl && (
-        <div className="flex h-[calc(100vh-320px)] min-h-[300px] flex-col items-center justify-center gap-4">
+        <div className="flex h-[calc(100dvh-320px)] min-h-[300px] flex-col items-center justify-center gap-4">
           <p className="max-w-sm text-center text-sm text-nexoraMuted">
             {t('components.settings.tabs.KybTab.serverError')}
           </p>

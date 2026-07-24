@@ -40,8 +40,13 @@ export function seedAuthQueryCache({ userProfile, staffProfile, rawBusiness }: S
   }
 }
 
+/**
+ * Wipe the entire query cache on logout. Nearly every cached query in this
+ * app is scoped to the current user/staff/business (query keys are not
+ * parameterized by identity — see queryKeys.ts), so leaving any of them
+ * behind lets the next account logged in on the same tab see the previous
+ * account's cached data (profile, KYC/KYB status, transactions, etc.).
+ */
 export function clearAuthQueryCache() {
-  queryClient.removeQueries({ queryKey: qk.userProfile() })
-  queryClient.removeQueries({ queryKey: qk.staffProfile() })
-  queryClient.removeQueries({ queryKey: qk.merchantSetup() })
+  queryClient.clear()
 }

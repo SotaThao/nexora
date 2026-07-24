@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from 'react'
+import React, { useEffect, useMemo, useState } from 'react'
 import { createPortal } from 'react-dom'
 import { useNavigate, useSearchParams } from 'react-router-dom'
 import {
@@ -23,6 +23,7 @@ import {
 } from 'lucide-react'
 import useSettingsForm from './settings/hooks/useSettingsForm'
 import ProfileTab from './settings/tabs/ProfileTab'
+import KybTab from './settings/tabs/KybTab'
 import useAuth from '../auth/useAuth'
 import { downloadQrCode, buildPublicQrImageUrl, QR_IMAGE_SIZES } from '../utils/qrUtils'
 import { buildAffiliateReferralUrl, getProfileReferralCode } from '../utils/affiliateReferral'
@@ -36,6 +37,7 @@ import {
 import { formatNotificationDateTime } from './dashboard/utils'
 import QrImage from './ui/QrImage'
 import { formatMemberSinceDate } from '../utils/localDate'
+import { SettingsMobileProfileSection } from './settings/constants'
 
 const compactPanel =
   'rounded-lg border border-[#EEE9FF] bg-white p-2.5 shadow-[0_8px_18px_rgba(70,72,212,0.08)]'
@@ -260,6 +262,12 @@ export default function SettingsViewMobile({
     ? t('staff_dashboard.profile.menu_verified')
     : t('staff_dashboard.profile.menu_not_verified')
 
+  useEffect(() => {
+    if (initialTab === 'kyb') {
+      navigate('/dashboard/settings/profile?section=verification', { replace: true })
+    }
+  }, [initialTab, navigate])
+
   const referralCode = useMemo(
     () => getProfileReferralCode(form.profile),
     [form.profile],
@@ -359,7 +367,7 @@ export default function SettingsViewMobile({
               <MerchantProfileMenuItem
                 icon={Bell}
                 label={t('staff_dashboard.profile.menu_notification_preferences')}
-                onClick={() => openProfileSection('notifications')}
+                onClick={() => openProfileSection(SettingsMobileProfileSection.Notifications)}
               />
               <MerchantLanguageMenuItem
                 label={t('staff_dashboard.profile.menu_language')}
@@ -502,25 +510,33 @@ export default function SettingsViewMobile({
               title={t('staff_dashboard.profile.menu_verification')}
               onBack={closeProfileSection}
             />
-            <section className="rounded-2xl border border-nexoraBorder bg-nexoraSurface p-4 shadow-sm">
-              <div className="flex items-start gap-3">
-                <span className={`grid h-10 w-10 shrink-0 place-items-center rounded-xl ${isKybVerified ? 'bg-emerald-50 text-emerald-600' : 'bg-amber-50 text-amber-600'}`}>
-                  <ShieldCheck className="h-5 w-5" />
-                </span>
-                <div>
-                  <h3 className="text-sm font-extrabold text-nexoraText">{kybStatusLabel}</h3>
-                  <p className="mt-1 text-xs leading-5 text-nexoraMuted">
-                    {isKybVerified
-                      ? t('staff_dashboard.profile.verification_body')
-                      : t('staff_dashboard.profile.verification_unverified_body')}
-                  </p>
+            {isKybVerified ? (
+              <section className="rounded-2xl border border-nexoraBorder bg-nexoraSurface p-4 shadow-sm">
+                <div className="flex items-start gap-3">
+                  <span className="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-emerald-50 text-emerald-600">
+                    <ShieldCheck className="h-5 w-5" />
+                  </span>
+                  <div>
+                    <h3 className="text-sm font-extrabold text-nexoraText">{kybStatusLabel}</h3>
+                    <p className="mt-1 text-xs leading-5 text-nexoraMuted">
+                      {t('staff_dashboard.profile.verification_body')}
+                    </p>
+                  </div>
                 </div>
-              </div>
-            </section>
+              </section>
+            ) : (
+              <KybTab
+                profile={form.profile}
+                cardDetails={null}
+                verificationStatus={form.effectiveVerificationStatus}
+                showToast={form.showToast}
+                onExit={closeProfileSection}
+              />
+            )}
           </>
         )}
 
-        {form.activeTab === 'profile' && activeSection === 'notifications' && (
+        {form.activeTab === 'profile' && activeSection === SettingsMobileProfileSection.Notifications && (
           <>
             <MerchantProfileSectionHeader title={t('staff_dashboard.profile.menu_notification_preferences')} onBack={closeProfileSection} />
             <MerchantNotificationsContent />

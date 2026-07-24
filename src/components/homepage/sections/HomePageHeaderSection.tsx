@@ -8,6 +8,7 @@ import useAuth from '../../../auth/useAuth'
 import { dashboardPathForSession } from '../utils/sessionRouting'
 import { getInitialHomePageLanguage } from '../homepageLogic.js'
 import { homepageTranslations, type HomePageLang } from '../i18n/homepageTranslations'
+import HeaderEcosystem from '../../dashboard/layout/HeaderEcosystem'
 
 export default function HomePageHeaderSection() {
   const navigate = useNavigate()
@@ -58,17 +59,17 @@ export default function HomePageHeaderSection() {
               </svg>
             </button>
 
-            <a className="flex items-center group shrink-0 ds-control ds-link" href="#" aria-label="NEXORA TOUCH">
+            <a className="hidden sm:flex items-center group shrink-0 ds-control ds-link" href="#" aria-label="NEXORA TOUCH">
               <picture>
                 <source media="(max-width: 767px)" srcSet="/homepage/assets/images/icon-nexora.png" />
-                <img alt="NEXORA TOUCH" className="h-8 sm:h-10 w-auto group-hover:scale-105 transition-transform" src="/homepage/assets/images/logo-light-mode.png" />
+                <img alt="NEXORA TOUCH" className="homepage-header-logo-img h-8 sm:h-10 w-auto group-hover:scale-105 transition-transform" src="/homepage/assets/images/logo-light-mode.png" />
               </picture>
             </a>
           </div>
 
           <nav className="hidden lg:flex items-center gap-4 xl:gap-8 text-sm font-semibold text-slate-600">
             <a className="hover:text-purple transition-colors ds-control ds-link ds-nav-link" data-i18n="nav-features" href="#features">Features</a>
-            <a className="hover:text-purple transition-colors ds-control ds-link ds-nav-link" href="#simulator">
+            <a className="hover:text-purple transition-colors ds-control ds-link ds-nav-link" href="https://taxiq.nexoratouch.com/" target="_blank" rel="noopener noreferrer">
               <span data-i18n="nav-simulator">Live Demo</span>
             </a>
             <a className="hover:text-purple transition-colors ds-control ds-link ds-nav-link" data-i18n="nav-tax-iq" href="#tax-iq">Tax IQ Assistant</a>
@@ -81,15 +82,15 @@ export default function HomePageHeaderSection() {
             <div className="relative inline-block text-left">
               <button
                 type="button"
-                className="homepage-header-lang-btn ds-control ds-button"
+                className="flex flex-col items-center justify-center rounded-lg px-2 py-1 leading-none text-nexoraText transition hover:bg-nexoraCanvas ds-control ds-button"
                 id="lang-dropdown-btn"
                 aria-haspopup="listbox"
                 aria-expanded="false"
                 onClick={() => { hp.toggleLanguageDropdown() }}
               >
-                <Globe className="homepage-header-lang-btn__icon" aria-hidden="true" />
-                <span id="lang-current-text">{homepageLang.toUpperCase()}</span>
-                <ChevronDown className="homepage-header-lang-btn__chevron" id="lang-dropdown-chevron" aria-hidden="true" />
+                <Globe className="h-4 w-4 text-nexoraMuted" aria-hidden="true" />
+                <span className="mt-0.5 text-[9px] font-bold uppercase tracking-wide" id="lang-current-text">{homepageLang.toUpperCase()}</span>
+                <ChevronDown className="hidden" id="lang-dropdown-chevron" aria-hidden="true" />
               </button>
 
               <div className="hidden absolute right-0 mt-2 w-36 bg-white rounded-2xl shadow-xl border border-slate-100 animate-fadeIn z-50 overflow-hidden ds-surface" id="language-dropdown-menu">
@@ -112,11 +113,10 @@ export default function HomePageHeaderSection() {
               </div>
             </div>
 
+            <HeaderEcosystem plain />
+
             {hasMobileMenu && isAuthenticated ? (
-              <div className="homepage-header-session" id="header-user-badge">
-                <span className="homepage-header-session__status" title="Signed in" aria-hidden="true">
-                  <span className="homepage-header-session__dot" />
-                </span>
+              <div className="flex items-center gap-2" id="header-user-badge">
                 <button
                   type="button"
                   className="homepage-header-action homepage-header-action--primary"
@@ -149,7 +149,7 @@ export default function HomePageHeaderSection() {
                 </button>
               </div>
             ) : !hasMobileMenu ? (
-              <div className="homepage-header-actions" id="header-auth-group">
+              <div className="flex items-center gap-2" id="header-auth-group">
                 <button
                   type="button"
                   className="homepage-header-action homepage-header-action--ghost"
@@ -172,7 +172,7 @@ export default function HomePageHeaderSection() {
         {!hasMobileMenu && (
           <div className="mobile-menu-panel hidden lg:hidden animate-fadeIn p-2 space-y-1 font-extrabold text-xs sm:text-sm text-slate-600" id="mobile-navigation-menu">
             <a className="flex px-3 py-2 hover:text-purple transition-colors ds-control ds-link" data-i18n="nav-features" href="#features" onClick={() => { hp.toggleMobileMenu() }}>Features</a>
-            <a className="flex px-3 py-2 hover:text-purple transition-colors ds-control ds-link" data-i18n="nav-simulator" href="#simulator" onClick={() => { hp.toggleMobileMenu() }}>Live Demo</a>
+            <a className="flex px-3 py-2 hover:text-purple transition-colors ds-control ds-link" data-i18n="nav-simulator" href="https://taxiq.nexoratouch.com/" target="_blank" rel="noopener noreferrer" onClick={() => { hp.toggleMobileMenu() }}>Live Demo</a>
             <a className="flex px-3 py-2 hover:text-purple transition-colors ds-control ds-link" data-i18n="nav-tax-iq" href="#tax-iq" onClick={() => { hp.toggleMobileMenu() }}>Tax IQ Assistant</a>
             <a className="flex px-3 py-2 hover:text-purple transition-colors ds-control ds-link" data-i18n="nav-rewards" href="#customer-rewards" onClick={() => { hp.toggleMobileMenu() }}>Customer Portal</a>
             <a className="flex px-3 py-2 hover:text-purple transition-colors ds-control ds-link" data-i18n="nav-calculator" href="#calculator" onClick={() => { hp.toggleMobileMenu() }}>Calculator</a>

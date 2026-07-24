@@ -26,6 +26,7 @@ import { getApiErrorCode } from '../../../types/domain'
 import { parseApiDateTime } from '../utils'
 import {
   BroadcastIcon,
+  CalendarEventIcon,
   CalendarKpiIcon,
   CheckKpiIcon,
   CheckLgIcon,
@@ -51,15 +52,25 @@ import {
   BookingKpiSkeleton,
   BookingTodayListSkeleton,
 } from './BookingHubSkeletons'
+import BookingKpiCard from './BookingKpiCard'
+import BookingFilterPopover from './BookingFilterPopover'
+import BookingTeamCalendar from './BookingTeamCalendar'
+import {
+  BOOKING_STATUS_FILTER_ORDER,
+  BOOKING_STATUS_META,
+  BookingTodayViewMode,
+} from './bookingTodayConstants'
 import {
   BOOKING_HUB_EMPTY_CELL,
   BOOKING_HUB_PAGINATION_CLASSNAME,
   BOOKING_HUB_STATUS_FILTER_ALL,
   BOOKING_KPI_ACCENTS,
   countPageItemsByStatus,
+  filterByAppointmentDate,
   filterPageItemsByStatus,
   formatCallDurationSeconds,
   formatVoicePhoneDisplay,
+  localDateIsoToUtcRange,
   toLocalDateIso,
 } from './bookingHubFormatters'
 
@@ -67,48 +78,19 @@ const TK = 'components.dashboard.views.BookingHubView'
 
 const SOURCE_KEY_MAP = BOOKING_UI_SOURCE_I18N_KEY
 
-const BOOKING_STATUS_META: Record<
-  BookingUiStatus,
-  { labelKey: string; badgeClass: string; rowClass: string }
-> = {
-  [BookingUiStatus.New]: {
-    labelKey: 'statusNew',
-    badgeClass: 'booking-status-new',
-    rowClass: 'is-new',
-  },
-  [BookingUiStatus.SmsSent]: {
-    labelKey: 'statusSms',
-    badgeClass: 'booking-status-sms',
-    rowClass: 'is-sms-sent',
-  },
-  [BookingUiStatus.Done]: {
-    labelKey: 'statusDone',
-    badgeClass: 'booking-status-done',
-    rowClass: 'is-done',
-  },
-  [BookingUiStatus.NoShow]: {
-    labelKey: 'statusNoShow',
-    badgeClass: 'booking-status-noshow',
-    rowClass: 'is-noshow',
-  },
-}
-
-const STATUS_FILTER_ORDER: BookingUiStatus[] = [
-  BookingUiStatus.New,
-  BookingUiStatus.SmsSent,
-  BookingUiStatus.Done,
-  BookingUiStatus.NoShow,
-]
+const STATUS_FILTER_ORDER = BOOKING_STATUS_FILTER_ORDER
 
 type BookingStatus = BookingUiStatus
 type BookingSource = BookingUiSource
 type SearchField = BookingUiSearchField
 type StatusFilter = BookingUiStatus | typeof BOOKING_HUB_STATUS_FILTER_ALL
-type ViewMode = 'table' | 'card'
+type ViewMode = BookingTodayViewMode
 
 interface BookingItem {
   id: string
   name: string
+  phone: string | null
+  email: string | null
   contactDisplay: string | null
   services: string[]
   tech: string
@@ -116,11 +98,15 @@ interface BookingItem {
   /** Appointment start (requestedStartAtUtc → local). */
   timeMain: string
   timeDate: string
+  /** Appointment end (requestedEndAtUtc → local); empty cell when absent. */
+  endTimeMain: string
   /** Voice call start (callStartedAt → local); `_` when absent. */
   callStartMain: string
   callStartDate: string
-  /** Call duration label `mm:ss`; `00:00` when absent. */
+  /** Call duration label `mm:ss`; `_` when BE has no call duration. */
   durationLabel: string
+  startAtUtc: string | null
+  endAtUtc: string | null
   source: BookingSource
   sourceClass: string
   request?: boolean
@@ -163,12 +149,13 @@ function formatServiceLabel(value: string) {
     .join(' ')
 }
 
-function serviceList(service: string | null | undefined, fallback: string) {
-  if (!service) return [fallback]
-  return service
+function serviceList(service: string | null | undefined) {
+  if (!service?.trim()) return [EMPTY_CELL]
+  const items = service
     .split(/[,/]/)
     .map((item) => formatServiceLabel(item.trim()))
     .filter(Boolean)
+  return items.length > 0 ? items : [EMPTY_CELL]
 }
 
 function formatTimeBlock(
@@ -188,9 +175,10 @@ function formatTimeBlock(
 ) {
   if (!startAt) {
     return {
-      timeMain: fallback || emptyMain,
-      timeDate: fallback ? '' : emptyDate,
-      dateIso: toLocalDateIso(new Date()),
+      timeMain: fallback?.trim() || emptyMain,
+      timeDate: fallback?.trim() ? '' : emptyDate,
+      // No Appointment start from BE → no appointment day (do not invent "today").
+      dateIso: '',
     }
   }
 
@@ -198,9 +186,9 @@ function formatTimeBlock(
   const start = parseApiDateTime(startAt)
   if (!start) {
     return {
-      timeMain: fallback || startAt || emptyMain,
-      timeDate: fallback || emptyDate,
-      dateIso: toLocalDateIso(new Date()),
+      timeMain: fallback?.trim() || startAt || emptyMain,
+      timeDate: fallback?.trim() || emptyDate,
+      dateIso: '',
     }
   }
 
@@ -247,7 +235,6 @@ function toBookingItem(
   statusOverride: BookingStatus | undefined,
   todayLabel: string,
   language: string = 'en',
-  generalServiceLabel: string = 'General Service',
 ): BookingItem {
   const source = mapSource(item.source)
   const time = formatTimeBlock(
@@ -264,18 +251,34 @@ function toBookingItem(
     { useTodayPrefix: false },
   )
   const status = resolveBookingStatus(item, statusOverride)
+  const phone = formatVoicePhoneDisplay(item.customerPhone, null)
+  const email = item.customerEmail?.trim() || null
+  const endTime = formatTimeBlock(
+    item.requestedEndAtUtc,
+    null,
+    todayLabel,
+    language,
+    { useTodayPrefix: false, emptyMain: EMPTY_CELL, emptyDate: '' },
+  )
   return {
     id: item.id,
     name: item.customerName?.trim() || EMPTY_CELL,
+    phone,
+    email,
     contactDisplay: resolveCustomerContactDisplay(item.customerPhone, item.customerEmail),
-    services: serviceList(item.service, generalServiceLabel),
+    services: serviceList(item.service),
     tech: item.assignedStaffName?.trim() || EMPTY_CELL,
     date: time.dateIso,
     timeMain: time.timeMain,
     timeDate: time.timeDate,
+    endTimeMain: endTime.timeMain,
     callStartMain: callStart.timeMain,
     callStartDate: callStart.timeDate,
-    durationLabel: formatCallDurationSeconds(item.callDurationSeconds),
+    durationLabel: item.callDurationSeconds != null
+      ? formatCallDurationSeconds(item.callDurationSeconds)
+      : EMPTY_CELL,
+    startAtUtc: item.requestedStartAtUtc,
+    endAtUtc: item.requestedEndAtUtc,
     source,
     sourceClass: sourceClass(source),
     request: status === BookingUiStatus.New,
@@ -300,6 +303,114 @@ function getInitials(name: string) {
     .slice(0, 2)
     .map((part) => part[0]?.toUpperCase() ?? '')
     .join('')
+}
+
+function formatBookingCardContact(phone: string | null, email: string | null) {
+  // HTML: always "phone · email" (missing → empty cell).
+  return `${phone || EMPTY_CELL} · ${email || EMPTY_CELL}`
+}
+
+function formatBookingCardCallStart(main: string, date: string) {
+  if ((!main || main === EMPTY_CELL) && (!date || date === EMPTY_CELL)) return EMPTY_CELL
+  if (!main || main === EMPTY_CELL) return date
+  if (!date || date === EMPTY_CELL || main.includes(date)) return main
+  return `${main} · ${date}`
+}
+
+/** HTML card Appointment: single line `time · date` (start only). */
+function formatBookingCardAppointmentText(main: string, date: string) {
+  return formatBookingCardCallStart(main, date)
+}
+
+/** Table appointment cell: optional end range + date stacked above time. */
+function formatBookingCardAppointment(main: string, date: string, endMain: string) {
+  const start = main === EMPTY_CELL ? EMPTY_CELL : main
+  const range = start !== EMPTY_CELL && endMain !== EMPTY_CELL && endMain !== start
+    ? `${start} – ${endMain}`
+    : start
+  if (date && date !== EMPTY_CELL && range !== EMPTY_CELL && !range.includes(date)) {
+    return { main: range, date }
+  }
+  return { main: range, date: '' }
+}
+
+function BookingAppointmentCard({
+  booking,
+  statusLabel,
+  pending,
+  onAction,
+  t,
+}: {
+  booking: BookingItem
+  statusLabel: (status: BookingStatus) => string
+  pending: boolean
+  onAction: (id: string, action: 'send-sms' | 'done' | 'noshow' | 'detail') => void
+  t: (key: string) => string
+}) {
+  return (
+    <article className="booking-appointment-card">
+      <div className="booking-card-top">
+        <div>
+          <div className="booking-card-name">{booking.name}</div>
+          <div className="booking-card-contact">
+            {formatBookingCardContact(booking.phone, booking.email)}
+          </div>
+        </div>
+        <span className={`badge booking-status ${statusBadgeClass(booking.status)}`}>
+          {statusLabel(booking.status)}
+        </span>
+      </div>
+
+      <div className="booking-service-list">
+        {booking.services.map((service) => (
+          <span className="booking-service-chip" key={service}>{service}</span>
+        ))}
+      </div>
+
+      <div className="booking-card-info-list">
+        <div className="booking-card-info-row">
+          <span className="booking-card-label">{t(`${TK}.today.colTime`)}</span>
+          <span className="booking-card-value">
+            {formatBookingCardCallStart(booking.callStartMain, booking.callStartDate)}
+          </span>
+        </div>
+        <div className="booking-card-info-row">
+          <span className="booking-card-label">{t(`${TK}.today.colTech`)}</span>
+          <span className="booking-card-value">{booking.tech}</span>
+        </div>
+        <div className="booking-card-info-row">
+          <span className="booking-card-label">{t(`${TK}.today.colAppointment`)}</span>
+          <span className="booking-card-value">
+            {formatBookingCardAppointmentText(booking.timeMain, booking.timeDate)}
+          </span>
+        </div>
+        <div className="booking-card-info-row">
+          <span className="booking-card-label">{t(`${TK}.today.colDuration`)}</span>
+          <span className="booking-card-value">{booking.durationLabel}</span>
+        </div>
+        <div className="booking-card-info-row">
+          <span className="booking-card-label">{t(`${TK}.today.detailSource`)}</span>
+          <span className="booking-card-value booking-source-list">
+            <span className={`badge ${booking.sourceClass}`}>
+              {t(`${TK}.${SOURCE_KEY_MAP[booking.source]}`)}
+            </span>
+            {booking.request ? (
+              <span className="badge badge-warning">{t(`${TK}.booking.request`)}</span>
+            ) : null}
+          </span>
+        </div>
+      </div>
+
+      <div className="booking-card-actions">
+        <BookingActions
+          booking={booking}
+          onAction={pending ? () => undefined : onAction}
+          isPending={pending}
+          t={t}
+        />
+      </div>
+    </article>
+  )
 }
 
 function CalendarIcon() {
@@ -411,11 +522,6 @@ function BookingTableMobileList({
   onAction: (id: string, action: 'send-sms' | 'done' | 'noshow' | 'detail') => void
   t: (key: string) => string
 }) {
-  const formatTimeValue = (main: string, date: string) => {
-    if (!date || main === EMPTY_CELL || main.includes(date)) return main
-    return `${main} · ${date}`
-  }
-
   return (
     <div className="booking-table-mobile-list">
       {bookings.map((booking) => (
@@ -436,9 +542,9 @@ function BookingTableMobileList({
                     <span className="badge badge-warning">{t(`${TK}.booking.request`)}</span>
                   ) : null}
                 </div>
-                {booking.contactDisplay ? (
-                  <div className="booking-customer-meta">{booking.contactDisplay}</div>
-                ) : null}
+                <div className="booking-customer-meta">
+                  {formatBookingCardContact(booking.phone, booking.email)}
+                </div>
               </div>
             </div>
 
@@ -468,21 +574,9 @@ function BookingTableMobileList({
             </div>
 
             <div className="booking-table-mobile-field">
-              <span className="booking-table-mobile-label">{t(`${TK}.today.colCallStart`)}</span>
-              <div className="booking-table-mobile-value">
-                {formatTimeValue(booking.callStartMain, booking.callStartDate)}
-              </div>
-            </div>
-
-            <div className="booking-table-mobile-field">
-              <span className="booking-table-mobile-label">{t(`${TK}.today.colDuration`)}</span>
-              <div className="booking-table-mobile-value">{booking.durationLabel}</div>
-            </div>
-
-            <div className="booking-table-mobile-field">
               <span className="booking-table-mobile-label">{t(`${TK}.today.colAppointment`)}</span>
               <div className="booking-table-mobile-value">
-                {formatTimeValue(booking.timeMain, booking.timeDate)}
+                {formatBookingCardAppointmentText(booking.timeMain, booking.timeDate)}
               </div>
             </div>
 
@@ -519,14 +613,17 @@ export default function BookingTodayPanel() {
   const useCompactTableList = panelWidth != null
     ? panelWidth < COMPACT_TABLE_PANEL_MAX
     : narrowViewportFallback
-  const [viewMode, setViewMode] = useState<ViewMode>('table')
+  const [viewMode, setViewMode] = useState<ViewMode>(BookingTodayViewMode.Table)
+  const [isFilterOpen, setIsFilterOpen] = useState(false)
+  const todayIso = toLocalDateIso(new Date())
+  const [calendarDate, setCalendarDate] = useState(todayIso)
   const [statusFilter, setStatusFilter] = useState<StatusFilter>(BOOKING_HUB_STATUS_FILTER_ALL)
-  const [searchField, setSearchField] = useState<SearchField>(BookingUiSearchField.All)
+  const [searchField, setSearchField] = useState<SearchField>(BookingUiSearchField.Name)
   const [searchKeyword, setSearchKeyword] = useState('')
   const [dateFrom, setDateFrom] = useState('')
   const [dateTo, setDateTo] = useState('')
   const [debouncedFilters, setDebouncedFilters] = useState({
-    searchField: BookingUiSearchField.All as SearchField,
+    searchField: BookingUiSearchField.Name as SearchField,
     searchKeyword: '',
     dateFrom: '',
     dateTo: '',
@@ -542,29 +639,34 @@ export default function BookingTodayPanel() {
 
   const apiKeyword = debouncedFilters.searchKeyword.trim() || undefined
 
-  const dateFromApi = debouncedFilters.dateFrom ? `${debouncedFilters.dateFrom}T00:00:00.000Z` : undefined
-  const dateToApi = debouncedFilters.dateTo ? `${debouncedFilters.dateTo}T23:59:59.999Z` : undefined
+  const dateFromApi = debouncedFilters.dateFrom
+    ? localDateIsoToUtcRange(debouncedFilters.dateFrom, 'start')
+    : undefined
+  const dateToApi = debouncedFilters.dateTo
+    ? localDateIsoToUtcRange(debouncedFilters.dateTo, 'end')
+    : undefined
 
   const hasActiveFilters = useMemo(() => (
     statusFilter !== BOOKING_HUB_STATUS_FILTER_ALL
-    || debouncedFilters.searchField !== BookingUiSearchField.All
+    || debouncedFilters.searchField !== BookingUiSearchField.Name
     || Boolean(debouncedFilters.searchKeyword.trim())
     || Boolean(debouncedFilters.dateFrom)
     || Boolean(debouncedFilters.dateTo)
   ), [statusFilter, debouncedFilters])
 
-  const keywordPlaceholder = searchField === BookingUiSearchField.Name
-    ? t(`${TK}.today.keywordPlaceholderName`)
-    : searchField === BookingUiSearchField.Phone
-      ? t(`${TK}.today.keywordPlaceholderPhone`)
-      : searchField === BookingUiSearchField.Email
-        ? t(`${TK}.today.keywordPlaceholderEmail`)
-        : searchField === BookingUiSearchField.Service
-          ? t(`${TK}.today.keywordPlaceholderService`)
-          : t(`${TK}.today.keywordPlaceholderAll`)
+  const keywordPlaceholder = searchField === BookingUiSearchField.Phone
+    ? t(`${TK}.today.keywordPlaceholderPhone`)
+    : searchField === BookingUiSearchField.Email
+      ? t(`${TK}.today.keywordPlaceholderEmail`)
+      : searchField === BookingUiSearchField.Service
+        ? t(`${TK}.today.keywordPlaceholderService`)
+        : t(`${TK}.today.keywordPlaceholderName`)
 
-  const { data: statistics, isLoading: isStatisticsLoading } = useMerchantVoiceBookingStatistics({ enabled: voiceEnabled })
-  const { data: bookingResponse, isLoading: isBookingsLoading, isFetching: isBookingsFetching } = useMerchantVoiceBookings({
+  const { data: statistics, isLoading: isStatisticsLoading } = useMerchantVoiceBookingStatistics({
+    enabled: voiceEnabled,
+    refetchInterval: voiceEnabled ? MERCHANT_VOICE_BOOKINGS_POLL_INTERVAL_MS : false,
+  })
+  const { data: bookingResponse, isLoading: isBookingsLoading } = useMerchantVoiceBookings({
     pageNumber,
     pageSize,
     searchBy: apiSearchField,
@@ -575,7 +677,8 @@ export default function BookingTodayPanel() {
   const updateBookingStatusMutation = useUpdateMerchantVoiceBookingStatus()
   const sendConfirmationSmsMutation = useSendMerchantVoiceBookingConfirmationSms()
 
-  const isListLoading = isBookingsLoading || isBookingsFetching
+  // Initial load only — background poll uses isFetching and must not flash skeletons
+  const isListLoading = isBookingsLoading
 
   const mappedBookings = useMemo(() => (
     (bookingResponse?.items ?? []).map((item) =>
@@ -584,7 +687,6 @@ export default function BookingTodayPanel() {
         statusOverrides[item.id],
         t(`${TK}.today.todayLabel`),
         currentLanguage,
-        t(`${TK}.today.generalService`),
       ),
     )
   ), [bookingResponse?.items, statusOverrides, t, currentLanguage])
@@ -597,6 +699,16 @@ export default function BookingTodayPanel() {
   const filteredBookings = useMemo(
     () => filterPageItemsByStatus(mappedBookings, statusFilter),
     [mappedBookings, statusFilter],
+  )
+
+  // When date filters are set, keep Card/Table/Calendar on Appointment local dates only.
+  const appointmentBookings = useMemo(
+    () => filterByAppointmentDate(
+      filteredBookings,
+      debouncedFilters.dateFrom,
+      debouncedFilters.dateTo,
+    ),
+    [filteredBookings, debouncedFilters.dateFrom, debouncedFilters.dateTo],
   )
 
   const stats = useMemo(() => ({
@@ -612,7 +724,7 @@ export default function BookingTodayPanel() {
   }
 
   const handleAction = async (id: string, action: 'send-sms' | 'done' | 'noshow' | 'detail') => {
-    const booking = filteredBookings.find((item) => item.id === id)
+    const booking = appointmentBookings.find((item) => item.id === id)
     if (!booking) return
 
     if (action === 'detail') {
@@ -637,7 +749,7 @@ export default function BookingTodayPanel() {
     if (!nextStatus) return
 
     setStatusOverrides((prev) => {
-      const currentStatus = prev[id] ?? filteredBookings.find((item) => item.id === id)?.status
+      const currentStatus = prev[id] ?? appointmentBookings.find((item) => item.id === id)?.status
       if (!currentStatus) return prev
 
       const computedNext = getNextStatus(currentStatus)
@@ -693,7 +805,7 @@ export default function BookingTodayPanel() {
 
   const clearFilters = () => {
     setStatusFilter(BOOKING_HUB_STATUS_FILTER_ALL)
-    setSearchField(BookingUiSearchField.All)
+    setSearchField(BookingUiSearchField.Name)
     setSearchKeyword('')
     setDateFrom('')
     setDateTo('')
@@ -772,35 +884,33 @@ export default function BookingTodayPanel() {
         <BookingKpiSkeleton />
       ) : (
       <div className="overview-kpis">
-        <article className="overview-card kpi-card" style={BOOKING_KPI_ACCENTS.electric}>
-          <div className="kpi-top">
-            <div className="kpi-icon"><CalendarKpiIcon /></div>
-            <span className="badge booking-status booking-status-new">{t(`${TK}.today.badgeNew`)}</span>
-          </div>
-          <div className="kpi-label">{t(`${TK}.kpi.todayBookings`)}</div>
-          <div className="kpi-value">{stats.todayCount}</div>
-          <div className="kpi-trend">{t(`${TK}.today.kpiTodayTrend`)}</div>
-        </article>
-
-        <article className="overview-card kpi-card" style={BOOKING_KPI_ACCENTS.success}>
-          <div className="kpi-top">
-            <div className="kpi-icon"><CheckKpiIcon /></div>
-            <span className="badge booking-status booking-status-done">{t(`${TK}.today.badgeSmsActive`)}</span>
-          </div>
-          <div className="kpi-label">{t(`${TK}.kpi.completed`)}</div>
-          <div className="kpi-value">{stats.done}</div>
-          <div className="kpi-trend">{t(`${TK}.today.kpiDoneTrend`)}</div>
-        </article>
-
-        <article className="overview-card kpi-card" style={BOOKING_KPI_ACCENTS.red}>
-          <div className="kpi-top">
-            <div className="kpi-icon"><XKpiIcon /></div>
-            <span className="badge booking-status booking-status-noshow">{t(`${TK}.today.badgeNoShow`)}</span>
-          </div>
-          <div className="kpi-label">{t(`${TK}.today.kpiNoReview`)}</div>
-          <div className="kpi-value">{stats.noShow}</div>
-          <div className="kpi-trend">{t(`${TK}.today.kpiNoShowTrend`)}</div>
-        </article>
+        <BookingKpiCard
+          accentStyle={BOOKING_KPI_ACCENTS.electric}
+          icon={<CalendarKpiIcon />}
+          badge={t(`${TK}.today.badgeNew`)}
+          badgeClass="booking-status-new"
+          label={t(`${TK}.kpi.todayBookings`)}
+          value={stats.todayCount}
+          trend={t(`${TK}.today.kpiTodayTrend`)}
+        />
+        <BookingKpiCard
+          accentStyle={BOOKING_KPI_ACCENTS.success}
+          icon={<CheckKpiIcon />}
+          badge={t(`${TK}.today.badgeSmsActive`)}
+          badgeClass="booking-status-done"
+          label={t(`${TK}.kpi.completed`)}
+          value={stats.done}
+          trend={t(`${TK}.today.kpiDoneTrend`)}
+        />
+        <BookingKpiCard
+          accentStyle={BOOKING_KPI_ACCENTS.red}
+          icon={<XKpiIcon />}
+          badge={t(`${TK}.today.badgeNoShow`)}
+          badgeClass="booking-status-noshow"
+          label={t(`${TK}.today.kpiNoReview`)}
+          value={stats.noShow}
+          trend={t(`${TK}.today.kpiNoShowTrend`)}
+        />
       </div>
       )}
 
@@ -811,25 +921,118 @@ export default function BookingTodayPanel() {
               <span className="booking-action-icon"><CalendarIcon /></span>
               <span>{t(`${TK}.today.overviewTitle`)}</span>
             </div>
-            <div className="booking-view-switch" role="group" aria-label={t(`${TK}.today.viewMode`)}>
-              <button
-                className={`booking-view-button ${viewMode === 'table' ? 'is-active' : ''}`}
-                type="button"
-                aria-pressed={viewMode === 'table'}
-                onClick={() => setViewMode('table')}
+            <div className="booking-daybar-actions">
+              <div className="booking-view-switch" role="group" aria-label={t(`${TK}.today.viewMode`)}>
+                <button
+                  className={`booking-view-button ${viewMode === BookingTodayViewMode.Table ? 'is-active' : ''}`}
+                  type="button"
+                  aria-pressed={viewMode === BookingTodayViewMode.Table}
+                  onClick={() => setViewMode(BookingTodayViewMode.Table)}
+                >
+                  <TableIcon />
+                  <span>{t(`${TK}.today.tableView`)}</span>
+                </button>
+                <button
+                  className={`booking-view-button ${viewMode === BookingTodayViewMode.Card ? 'is-active' : ''}`}
+                  type="button"
+                  aria-pressed={viewMode === BookingTodayViewMode.Card}
+                  onClick={() => setViewMode(BookingTodayViewMode.Card)}
+                >
+                  <GridIcon />
+                  <span>{t(`${TK}.today.cardView`)}</span>
+                </button>
+                <button
+                  className={`booking-view-button ${viewMode === BookingTodayViewMode.Calendar ? 'is-active' : ''}`}
+                  type="button"
+                  aria-pressed={viewMode === BookingTodayViewMode.Calendar}
+                  onClick={() => setViewMode(BookingTodayViewMode.Calendar)}
+                >
+                  <CalendarEventIcon />
+                  <span>{t(`${TK}.today.calendarView`)}</span>
+                </button>
+              </div>
+              <BookingFilterPopover
+                title={t(`${TK}.today.filterPopoverTitle`)}
+                toggleLabel={t(`${TK}.today.filterToggle`)}
+                isOpen={isFilterOpen}
+                onOpenChange={setIsFilterOpen}
               >
-                <TableIcon />
-                <span>{t(`${TK}.today.tableView`)}</span>
-              </button>
-              <button
-                className={`booking-view-button ${viewMode === 'card' ? 'is-active' : ''}`}
-                type="button"
-                aria-pressed={viewMode === 'card'}
-                onClick={() => setViewMode('card')}
-              >
-                <GridIcon />
-                <span>{t(`${TK}.today.cardView`)}</span>
-              </button>
+                <div className="booking-controls booking-controls-filter" aria-label={t(`${TK}.today.filters`)}>
+                  <label className="booking-control-field">
+                    <span className="booking-control-label">{t(`${TK}.today.searchBy`)}</span>
+                    <select
+                      className="booking-select"
+                      value={searchField}
+                      onChange={(event) => handleSearchFieldChange(event.target.value as SearchField)}
+                    >
+                      <option value={BookingUiSearchField.Name}>{t(`${TK}.today.searchName`)}</option>
+                      <option value={BookingUiSearchField.Phone}>{t(`${TK}.today.searchPhone`)}</option>
+                      <option value={BookingUiSearchField.Email}>{t(`${TK}.today.searchEmail`)}</option>
+                      <option value={BookingUiSearchField.Service}>{t(`${TK}.today.searchService`)}</option>
+                    </select>
+                  </label>
+                  <label className="booking-control-field">
+                    <span className="booking-control-label">{t(`${TK}.today.keyword`)}</span>
+                    <span className={`booking-keyword-shell${searchKeyword ? ' has-value' : ''}`}>
+                      <input
+                        className="booking-input booking-input-keyword"
+                        type="search"
+                        placeholder={keywordPlaceholder}
+                        value={searchKeyword}
+                        onChange={(event) => setSearchKeyword(event.target.value)}
+                      />
+                      {searchKeyword ? (
+                        <button
+                          className="booking-keyword-clear"
+                          type="button"
+                          aria-label={t(`${TK}.today.clear`)}
+                          title={t(`${TK}.today.clear`)}
+                          onClick={() => setSearchKeyword('')}
+                        >
+                          <XLgIcon />
+                        </button>
+                      ) : null}
+                    </span>
+                  </label>
+                  <label className="booking-control-field">
+                    <span className="booking-control-label">{t(`${TK}.today.dateFrom`)}</span>
+                    <span className={`booking-date-input-shell ${dateFrom ? 'has-value' : 'is-empty'}`}>
+                      <input
+                        className={`booking-input booking-input-date ${dateFrom ? 'has-value' : 'is-empty'}`}
+                        type="date"
+                        value={dateFrom}
+                        aria-label={t(`${TK}.today.dateFrom`)}
+                        onChange={(event) => setDateFrom(event.target.value)}
+                      />
+                      {!dateFrom ? (
+                        <span className="booking-date-placeholder" aria-hidden="true">
+                          {t(`${TK}.today.dateFromPlaceholder`)}
+                        </span>
+                      ) : null}
+                    </span>
+                  </label>
+                  <label className="booking-control-field">
+                    <span className="booking-control-label">{t(`${TK}.today.dateTo`)}</span>
+                    <span className={`booking-date-input-shell ${dateTo ? 'has-value' : 'is-empty'}`}>
+                      <input
+                        className={`booking-input booking-input-date ${dateTo ? 'has-value' : 'is-empty'}`}
+                        type="date"
+                        value={dateTo}
+                        aria-label={t(`${TK}.today.dateTo`)}
+                        onChange={(event) => setDateTo(event.target.value)}
+                      />
+                      {!dateTo ? (
+                        <span className="booking-date-placeholder" aria-hidden="true">
+                          {t(`${TK}.today.dateToPlaceholder`)}
+                        </span>
+                      ) : null}
+                    </span>
+                  </label>
+                  <button className="booking-mini-button booking-clear-button" type="button" onClick={clearFilters}>
+                    {t(`${TK}.today.clear`)}
+                  </button>
+                </div>
+              </BookingFilterPopover>
             </div>
           </div>
 
@@ -861,122 +1064,74 @@ export default function BookingTodayPanel() {
             ))}
           </div>
 
-          <div className="booking-controls" aria-label={t(`${TK}.today.filters`)}>
-            <label className="booking-control-field">
-              <span className="booking-control-label">{t(`${TK}.today.searchBy`)}</span>
-              <select
-                className="booking-select"
-                value={searchField}
-                onChange={(event) => handleSearchFieldChange(event.target.value as SearchField)}
-              >
-                <option value={BookingUiSearchField.All}>{t(`${TK}.today.searchAll`)}</option>
-                <option value={BookingUiSearchField.Name}>{t(`${TK}.today.searchName`)}</option>
-                <option value={BookingUiSearchField.Phone}>{t(`${TK}.today.searchPhone`)}</option>
-                <option value={BookingUiSearchField.Email}>{t(`${TK}.today.searchEmail`)}</option>
-                <option value={BookingUiSearchField.Service}>{t(`${TK}.today.searchService`)}</option>
-              </select>
-            </label>
-            <label className="booking-control-field">
-              <span className="booking-control-label">{t(`${TK}.today.keyword`)}</span>
-              <input
-                className="booking-input"
-                type="search"
-                placeholder={keywordPlaceholder}
-                value={searchKeyword}
-                onChange={(event) => setSearchKeyword(event.target.value)}
-              />
-            </label>
-            <div className="booking-date-range">
-              <label className="booking-control-field">
-                <span className="booking-control-label">{t(`${TK}.today.dateFrom`)}</span>
-                <span className={`booking-date-input-shell ${dateFrom ? 'has-value' : 'is-empty'}`}>
-                  <input
-                    className={`booking-input booking-input-date ${dateFrom ? 'has-value' : 'is-empty'}`}
-                    type="date"
-                    value={dateFrom}
-                    aria-label={t(`${TK}.today.dateFrom`)}
-                    onChange={(event) => setDateFrom(event.target.value)}
-                  />
-                  {!dateFrom ? (
-                    <span className="booking-date-placeholder" aria-hidden="true">
-                      {t(`${TK}.today.dateFromPlaceholder`)}
-                    </span>
-                  ) : null}
-                </span>
-              </label>
-              <label className="booking-control-field">
-                <span className="booking-control-label">{t(`${TK}.today.dateTo`)}</span>
-                <span className={`booking-date-input-shell ${dateTo ? 'has-value' : 'is-empty'}`}>
-                  <input
-                    className={`booking-input booking-input-date ${dateTo ? 'has-value' : 'is-empty'}`}
-                    type="date"
-                    value={dateTo}
-                    aria-label={t(`${TK}.today.dateTo`)}
-                    onChange={(event) => setDateTo(event.target.value)}
-                  />
-                  {!dateTo ? (
-                    <span className="booking-date-placeholder" aria-hidden="true">
-                      {t(`${TK}.today.dateToPlaceholder`)}
-                    </span>
-                  ) : null}
-                </span>
-              </label>
-            </div>
-            <button className="booking-mini-button booking-clear-button" type="button" onClick={clearFilters}>
-              {t(`${TK}.today.clear`)}
-            </button>
-          </div>
-
           {isListLoading ? (
-            <BookingTodayListSkeleton viewMode={viewMode} isMobileUI={useCompactTableList} />
-          ) : viewMode === 'table' && useCompactTableList ? (
+            <BookingTodayListSkeleton viewMode={viewMode === BookingTodayViewMode.Calendar ? BookingTodayViewMode.Table : viewMode} isMobileUI={useCompactTableList} />
+          ) : viewMode === BookingTodayViewMode.Calendar ? (
+            <BookingTeamCalendar
+              bookings={appointmentBookings.map((booking) => ({
+                id: booking.id,
+                name: booking.name,
+                tech: booking.tech,
+                date: booking.date,
+                services: booking.services,
+                statusLabel: statusLabel(booking.status),
+                startAtUtc: booking.startAtUtc,
+                endAtUtc: booking.endAtUtc,
+              }))}
+              calendarDate={calendarDate}
+              onCalendarDateChange={setCalendarDate}
+              onEventClick={(bookingId) => handleAction(bookingId, 'detail')}
+              todayIso={todayIso}
+              locale={currentLanguage === 'vi' ? 'vi-VN' : 'en-US'}
+              title={t(`${TK}.today.calendarTitle`)}
+              subtitle={t(`${TK}.today.calendarSubtitle`)}
+              todayLabel={t(`${TK}.today.todayLabel`)}
+              prevAriaLabel={t(`${TK}.today.calendarPrev`)}
+              nextAriaLabel={t(`${TK}.today.calendarNext`)}
+              unassignedLabel={t(`${TK}.today.calendarUnassigned`)}
+            />
+          ) : viewMode === BookingTodayViewMode.Table && useCompactTableList ? (
             <BookingTableMobileList
-              bookings={filteredBookings}
+              bookings={appointmentBookings}
               statusLabel={statusLabel}
               pendingStatusUpdates={pendingStatusUpdates}
               onAction={handleAction}
               t={t}
             />
-          ) : viewMode === 'table' ? (
+          ) : viewMode === BookingTodayViewMode.Table ? (
             <div className="booking-table-wrap">
               <div className="booking-table-scroller">
-              <table className="booking-table">
+              <table className="booking-table" data-booking-table>
                 <colgroup>
-                  <col className="booking-col-call-start" />
                   <col className="booking-col-customer" />
                   <col className="booking-col-service" />
                   <col className="booking-col-tech" />
                   <col className="booking-col-time" />
-                  <col className="booking-col-duration" />
                   <col className="booking-col-status" />
                   <col className="booking-col-action" />
                 </colgroup>
                 <thead>
                   <tr>
-                    <th scope="col">{t(`${TK}.today.colCallStart`)}</th>
                     <th scope="col">{t(`${TK}.today.colCustomer`)}</th>
                     <th scope="col">{t(`${TK}.today.colService`)}</th>
                     <th scope="col">{t(`${TK}.today.colTech`)}</th>
                     <th scope="col">{t(`${TK}.today.colAppointment`)}</th>
-                    <th scope="col">{t(`${TK}.today.colDuration`)}</th>
                     <th scope="col">{t(`${TK}.today.colStatus`)}</th>
                     <th scope="col">{t(`${TK}.today.colAction`)}</th>
                   </tr>
                 </thead>
                 <tbody>
-                  {filteredBookings.map((booking) => (
+                  {appointmentBookings.map((booking) => {
+                    const appointment = formatBookingCardAppointment(
+                      booking.timeMain,
+                      booking.timeDate,
+                      booking.endTimeMain,
+                    )
+                    return (
                     <tr
                       key={booking.id}
                       className={`booking-table-row ${rowClassForStatus(booking.status)}`}
                     >
-                      <td>
-                        <div className="booking-time-block">
-                          <div className="booking-time-main booking-callstart-main">{booking.callStartMain}</div>
-                          {booking.callStartDate && booking.callStartMain !== EMPTY_CELL ? (
-                            <div className="booking-time-date booking-callstart-date">{booking.callStartDate}</div>
-                          ) : null}
-                        </div>
-                      </td>
                       <td>
                         <div className="booking-customer">
                           <div className="booking-customer-name">
@@ -989,7 +1144,7 @@ export default function BookingTodayPanel() {
                             ) : null}
                           </div>
                           <div className="booking-customer-meta">
-                            {booking.contactDisplay || EMPTY_CELL}
+                            {formatBookingCardContact(booking.phone, booking.email)}
                           </div>
                         </div>
                       </td>
@@ -1008,18 +1163,12 @@ export default function BookingTodayPanel() {
                         </div>
                       </td>
                       <td>
-                        <div className="booking-time-block">
-                          <div className="booking-time-main">{booking.timeMain}</div>
-                          {booking.timeDate && booking.timeMain !== EMPTY_CELL ? (
-                            <div className="booking-time-date">{booking.timeDate}</div>
+                        <div className="booking-time-block booking-appointment-block">
+                          <div className="booking-time-main">{appointment.main}</div>
+                          {appointment.date ? (
+                            <div className="booking-time-date">{appointment.date}</div>
                           ) : null}
                         </div>
-                      </td>
-                      <td>
-                        <span className="booking-duration">
-                          <StopwatchIcon />
-                          <span className="booking-duration-value">{booking.durationLabel}</span>
-                        </span>
                       </td>
                       <td className="booking-status-cell">
                         <span className={`badge booking-status ${statusBadgeClass(booking.status)}`}>
@@ -1035,7 +1184,8 @@ export default function BookingTodayPanel() {
                         />
                       </td>
                     </tr>
-                  ))}
+                    )
+                  })}
                 </tbody>
               </table>
               </div>
@@ -1043,87 +1193,21 @@ export default function BookingTodayPanel() {
           ) : (
             <div className="booking-card-panel">
               <div className="booking-card-list">
-                {filteredBookings.map((booking) => (
-                  <article className="booking-appointment-card" key={booking.id}>
-                    <div className="booking-card-top">
-                      <div>
-                        <div className="booking-card-name">
-                          {booking.name}{' '}
-                          <span className={`badge ${booking.sourceClass}`}>
-                            {t(`${TK}.${SOURCE_KEY_MAP[booking.source]}`)}
-                          </span>
-                          {booking.request ? (
-                            <span className="badge badge-warning">{t(`${TK}.booking.request`)}</span>
-                          ) : null}
-                        </div>
-                        <div className="booking-card-contact">
-                          {booking.contactDisplay || EMPTY_CELL}
-                        </div>
-                      </div>
-                      <span className={`badge booking-status ${statusBadgeClass(booking.status)}`}>
-                        {statusLabel(booking.status)}
-                      </span>
-                    </div>
-                    <div className="booking-card-info-list">
-                      <div className="booking-card-info-row">
-                        <span className="booking-card-label">{t(`${TK}.today.colService`)}</span>
-                        <span className="booking-card-value">
-                          <span className="booking-service-list">
-                            {booking.services.map((service) => (
-                              <span className="booking-service-chip" key={service}>{service}</span>
-                            ))}
-                          </span>
-                        </span>
-                      </div>
-                      <div className="booking-card-info-row">
-                        <span className="booking-card-label">{t(`${TK}.today.colTech`)}</span>
-                        <span className="booking-card-value">
-                          <span className="booking-tech-name">{booking.tech}</span>
-                        </span>
-                      </div>
-                      <div className="booking-card-info-row">
-                        <span className="booking-card-label">{t(`${TK}.today.colCallStart`)}</span>
-                        <span className="booking-card-value">
-                          {booking.callStartMain}
-                          {booking.callStartDate && booking.callStartMain !== EMPTY_CELL
-                            && !booking.callStartMain.includes(booking.callStartDate)
-                            ? ` · ${booking.callStartDate}`
-                            : ''}
-                        </span>
-                      </div>
-                      <div className="booking-card-info-row">
-                        <span className="booking-card-label">{t(`${TK}.today.colDuration`)}</span>
-                        <span className="booking-card-value">{booking.durationLabel}</span>
-                      </div>
-                      <div className="booking-card-info-row">
-                        <span className="booking-card-label">{t(`${TK}.today.colAppointment`)}</span>
-                        <span className="booking-card-value booking-card-time">
-                          <span className="booking-card-time-main">{booking.timeMain}</span>
-                          {booking.timeDate && booking.timeMain !== EMPTY_CELL
-                            && !booking.timeMain.includes(booking.timeDate) ? (
-                            <span className="booking-card-time-date">{booking.timeDate}</span>
-                          ) : null}
-                        </span>
-                      </div>
-                      <div className="booking-card-info-row booking-card-info-row-actions">
-                        <span className="booking-card-label">{t(`${TK}.today.colAction`)}</span>
-                        <span className="booking-card-value booking-card-actions">
-                          <BookingActions
-                            booking={booking}
-                            onAction={pendingStatusUpdates[booking.id] ? () => undefined : handleAction}
-                            isPending={Boolean(pendingStatusUpdates[booking.id])}
-                            t={t}
-                          />
-                        </span>
-                      </div>
-                    </div>
-                  </article>
+                {appointmentBookings.map((booking) => (
+                  <BookingAppointmentCard
+                    key={booking.id}
+                    booking={booking}
+                    statusLabel={statusLabel}
+                    pending={Boolean(pendingStatusUpdates[booking.id])}
+                    onAction={pendingStatusUpdates[booking.id] ? () => undefined : handleAction}
+                    t={t}
+                  />
                 ))}
               </div>
             </div>
           )}
 
-          {!isListLoading && (bookingResponse?.totalCount ?? 0) > 0 ? (
+          {!isListLoading && viewMode !== BookingTodayViewMode.Calendar && (bookingResponse?.totalCount ?? 0) > 0 ? (
             <Pagination
               pageNumber={pageNumber}
               pageSize={pageSize}
@@ -1132,12 +1216,12 @@ export default function BookingTodayPanel() {
               hasNextPage={bookingResponse?.hasNextPage}
               hasPreviousPage={bookingResponse?.hasPreviousPage}
               onPageChange={setPage}
-              isLoading={isBookingsFetching}
+              isLoading={isBookingsLoading}
               className={BOOKING_HUB_PAGINATION_CLASSNAME}
             />
           ) : null}
 
-          {!isListLoading && filteredBookings.length === 0 ? (
+          {!isListLoading && viewMode !== BookingTodayViewMode.Calendar && appointmentBookings.length === 0 ? (
             <div className="booking-list-empty">
               <div className="booking-list-empty-icon" aria-hidden="true">
                 <JournalIcon />
@@ -1199,7 +1283,7 @@ export default function BookingTodayPanel() {
                 <div>
                   <div className="booking-detail-name">{detailBooking.name}</div>
                   <div className="booking-detail-hero-sub">
-                    <span>{detailBooking.contactDisplay || EMPTY_CELL}</span>
+                    <span>{formatBookingCardContact(detailBooking.phone, detailBooking.email)}</span>
                   </div>
                 </div>
                 <div className={`booking-detail-status-pill booking-status ${statusBadgeClass(detailBooking.status)}`}>
@@ -1225,11 +1309,10 @@ export default function BookingTodayPanel() {
                   <div>
                     <div className="booking-detail-label">{t(`${TK}.today.colCallStart`)}</div>
                     <div className="booking-detail-value">
-                      {detailBooking.callStartMain}
-                      {detailBooking.callStartDate && detailBooking.callStartMain !== EMPTY_CELL
-                        && !detailBooking.callStartMain.includes(detailBooking.callStartDate)
-                        ? ` · ${detailBooking.callStartDate}`
-                        : ''}
+                      {formatBookingCardCallStart(
+                        detailBooking.callStartMain,
+                        detailBooking.callStartDate,
+                      )}
                     </div>
                   </div>
                 </div>
@@ -1245,11 +1328,10 @@ export default function BookingTodayPanel() {
                   <div>
                     <div className="booking-detail-label">{t(`${TK}.today.colAppointment`)}</div>
                     <div className="booking-detail-value">
-                      {detailBooking.timeMain}
-                      {detailBooking.timeDate && detailBooking.timeMain !== EMPTY_CELL
-                        && !detailBooking.timeMain.includes(detailBooking.timeDate)
-                        ? ` · ${detailBooking.timeDate}`
-                        : ''}
+                      {formatBookingCardAppointmentText(
+                        detailBooking.timeMain,
+                        detailBooking.timeDate,
+                      )}
                     </div>
                   </div>
                 </div>

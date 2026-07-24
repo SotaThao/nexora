@@ -31,7 +31,7 @@ import {
   PosGeneralSettingsRoute, PosRolesRoute, PosCategoriesRoute, PosServicesRoute, PosProductsRoute,
   PosStaffProfileRoute, PosFrontDeskRoute
 } from "../components/dashboard/routes";
-import { DASHBOARD_MENU_ID } from "../components/dashboard/constants";
+import { DASHBOARD_MENU_ID, buildDashboardReportsPath, DASHBOARD_REPORTS_TAB } from "../components/dashboard/constants";
 import ErrorBoundary from "../components/ui/ErrorBoundary";
 import { isDemoToolsEnabled } from "./demoTools";
 import lazyWithRetry from "./lazyWithRetry";
@@ -166,9 +166,10 @@ function InviteRoute() {
 
 function PaymentsRedirect() {
   const { paymentId } = useParams();
-  const target = paymentId
-    ? `/dashboard/reports?tab=direct_payments&paymentId=${encodeURIComponent(paymentId)}`
-    : "/dashboard/reports?tab=direct_payments";
+  const target = buildDashboardReportsPath({
+    tab: DASHBOARD_REPORTS_TAB.directPayments,
+    paymentId: paymentId || undefined,
+  });
   return <Navigate to={target} replace />;
 }
 

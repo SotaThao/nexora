@@ -16,6 +16,7 @@ import {
   useRemoveMerchantStaff,
   useCancelStaffInvite,
   useMerchantStaffByCode,
+  useUpdateMerchantStaffRole,
 } from '../../../data/hooks/useMerchantStaff'
 import {
   useCreateLocalStaff,
@@ -29,6 +30,7 @@ import { getApiErrorCode } from '../../../types/domain'
 import { getErrorI18nKey } from '../../../data/errorCodes'
 import { isValidEmail } from '../../../utils/validation'
 import { resolveStaffDisplayNames, splitFullName } from '../../../utils/staffName'
+import { resolveStaffRoleLabel } from '../../../utils/staffBusinessRole'
 import { isValidPhoneE164, normalizePhoneE164, PhoneDialCode } from '../../CountryCodeSelect'
 
 function resolveStaffDetailCode(member: { staffCode?: string | null }) {
@@ -148,6 +150,7 @@ export function useStaffManagement({
   const createLocalStaffMutation = useCreateLocalStaff()
   const updateLocalStaffMutation = useUpdateLocalStaff()
   const deleteLocalStaffMutation = useDeleteLocalStaff()
+  const updateStaffRoleMutation = useUpdateMerchantStaffRole()
 
   // Map an API error to a localized, human-readable message (US-014 AC #11/#12).
   // Falls back to errors.unknown_error for unmapped server codes.
@@ -250,7 +253,7 @@ export function useStaffManagement({
     setStaffForm({
       fullName,
       nickname,
-      position: member.position,
+      position: resolveStaffRoleLabel(member),
       avatar: member.avatar || '',
       avatarFile: null,
       phone: member.phone || member.invitedPhone || '',
@@ -330,11 +333,14 @@ export function useStaffManagement({
         )
         const fullName = staffForm.fullName.trim()
         const { firstName, lastName } = splitFullName(fullName)
+        const roleAtBusiness = staffForm.position?.trim() || ''
+        const staffLinkId = getStaffLinkId(member)
+
         updateLocalStaffMutation.mutate({
           staffProfileId: member.staffProfileId,
           params: {
             displayName: (staffForm.nickname || staffForm.fullName).trim(),
-            position: staffForm.position?.trim() || null,
+            position: member.position ?? null,
             bio: staffForm.bio?.trim() || null,
             photoUrl,
             phoneNumber: normalizedPhone || null,
@@ -344,10 +350,29 @@ export function useStaffManagement({
           },
         }, {
           onSuccess: () => {
-            showToast(t('components.dashboard.hooks.useStaffManagement.localStaffUpdated', {
-              name: staffForm.fullName.trim(),
-            }), 'success')
-            closeStaffModal()
+            const finishSave = () => {
+              showToast(t('components.dashboard.hooks.useStaffManagement.localStaffUpdated', {
+                name: staffForm.fullName.trim(),
+              }), 'success')
+              closeStaffModal()
+            }
+
+            if (roleAtBusiness && roleAtBusiness !== (member.roleAtBusiness ?? '') && staffLinkId) {
+              updateStaffRoleMutation.mutate({
+                staffLinkId,
+                staffCode: member.staffCode,
+                roleAtBusiness,
+              }, {
+                onSuccess: finishSave,
+                onError: (err) => {
+                  showToast(t('components.dashboard.hooks.useStaffManagement.localStaffUpdateFailed', {
+                    error: errMsg(err),
+                  }), 'error')
+                },
+              })
+            } else {
+              finishSave()
+            }
           },
           onError: (err) => {
             showToast(t('components.dashboard.hooks.useStaffManagement.localStaffUpdateFailed', {

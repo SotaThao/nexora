@@ -165,6 +165,7 @@ export const qk = {
 
   // Merchant Payment Methods
   merchantPaymentMethods: ()   => ['merchantPaymentMethods'],
+  supportedPaymentMethods: ()  => ['supportedPaymentMethods'],
   merchantPaymentQr: ()        => ['merchantPaymentQr'],
   merchantPaymentsList: (filters = EMPTY) => ['merchantPayments', 'list', filters],
   merchantPaymentDetail: (paymentId: string) => ['merchantPayments', 'detail', paymentId],
@@ -201,6 +202,7 @@ export const qk = {
   staffTips:             (filters = EMPTY) => ['staffTips', filters],
   staffTransactionsPaginated: (filters = EMPTY) => ['staffTransactions', 'paginated', filters],
   staffLinkRequest:    (linkId: string | null | undefined) => ['staffLinkRequest', linkId ?? 'unknown'],
+  staffLinkRequestsList: (filters = EMPTY) => ['staffLinkRequests', 'list', filters],
 
   // Tax IQ — Owner Tax Year (prefixed with 'taxiqOwnerTaxYear' so invalidating
   // qk.taxiqOwnerTaxYear() also clears the byId cache below).

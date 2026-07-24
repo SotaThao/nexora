@@ -73,6 +73,31 @@ export function orderedPayoutUiKeysFromMethods(
   return ordered
 }
 
+/**
+ * Staff manual-add: order payout keys from GET /payment-methods/supported only,
+ * ascending by `sortOrder` (no hardcoded fallback reorder).
+ */
+export function orderedStaffPayoutUiKeysFromSupported(
+  methods: Array<{ type?: string; uiKey?: string; sortOrder?: number }> | null | undefined,
+  allowedKeys: readonly string[] = STAFF_CONFIGURABLE_PAYOUT_UI_KEYS,
+): string[] {
+  const allowed = new Set(allowedKeys)
+  const seen = new Set<string>()
+  const sorted = [...(methods ?? [])].sort(
+    (a, b) => (Number(a.sortOrder) || 0) - (Number(b.sortOrder) || 0),
+  )
+  const ordered: string[] = []
+
+  for (const method of sorted) {
+    const key = method.uiKey || payoutTypeToUiKey(method.type || '')
+    if (!key || !allowed.has(key) || seen.has(key)) continue
+    seen.add(key)
+    ordered.push(key)
+  }
+
+  return ordered
+}
+
 export function payoutTypeToUiKey(type = ''): string {
   return PAYOUT_TYPE_TO_UI_KEY[type] || type.toLowerCase().replace(/\s+/g, '')
 }

@@ -90,9 +90,15 @@ async function buildError(response: Response): Promise<ApiError> {
         errors?: Record<string, string[]>
         retryAfter?: number | string
         errorDetail?: ErrorDetailItem[]
+        // RFC 7807 ProblemDetails fields — some endpoints (e.g. Staff_UnlinkFromBusiness)
+        // only return { type, title, status, detail, instance } with no errorCode/message.
+        detail?: string
+        title?: string
       }
       if (body.errorCode) errorCode = body.errorCode
       if (body.message) message = body.message
+      else if (body.detail) message = body.detail
+      else if (body.title) message = body.title
       if (body.errors !== undefined) errors = body.errors
       if (body.retryAfter !== undefined) retryAfter = body.retryAfter
 
@@ -153,7 +159,17 @@ async function request<T = unknown>(path: string, init: HttpRequestInit = {}): P
   if (params) {
     const qs = new URLSearchParams()
     for (const [k, v] of Object.entries(params)) {
-      if (v !== null && v !== undefined) qs.append(k, String(v))
+      if (v !== null && v !== undefined) {
+        if (Array.isArray(v)) {
+          for (const item of v) {
+            if (item !== null && item !== undefined) {
+              qs.append(k, String(item))
+            }
+          }
+        } else {
+          qs.append(k, String(v))
+        }
+      }
     }
     const sep = path.includes('?') ? '&' : '?'
     const qsStr = qs.toString()
@@ -221,7 +237,17 @@ export async function getBlob(path: string, opts: HttpRequestInit = {}) {
   if (params) {
     const qs = new URLSearchParams()
     for (const [k, v] of Object.entries(params)) {
-      if (v !== null && v !== undefined) qs.append(k, String(v))
+      if (v !== null && v !== undefined) {
+        if (Array.isArray(v)) {
+          for (const item of v) {
+            if (item !== null && item !== undefined) {
+              qs.append(k, String(item))
+            }
+          }
+        } else {
+          qs.append(k, String(v))
+        }
+      }
     }
     const sep = path.includes('?') ? '&' : '?'
     const qsStr = qs.toString()

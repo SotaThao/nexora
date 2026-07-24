@@ -2,6 +2,15 @@ import React, { useState } from 'react'
 import { SlidersHorizontal, RotateCcw, Search, ChevronDown, ChevronUp } from 'lucide-react'
 import CustomSelect from './CustomSelect'
 import { useTranslation } from '../contexts/LanguageContext'
+import { TipStatus } from '../constants/tipStatus'
+
+const DEFAULT_STATUS_OPTIONS = [
+  { value: 'all', labelKey: 'dashboard.activity_log.all_statuses' },
+  { value: TipStatus.Initiated, labelKey: 'dashboard.activity_log.status_initiated' },
+  { value: TipStatus.Confirmed, labelKey: 'dashboard.activity_log.status_confirmed' },
+  { value: TipStatus.Skipped, labelKey: 'dashboard.activity_log.status_skipped' },
+  { value: TipStatus.Completed, labelKey: 'dashboard.activity_log.status_completed' },
+]
 
 export default function TransactionFilter({
   searchQuery,
@@ -27,6 +36,7 @@ export default function TransactionFilter({
   resetFilters,
   staffOptions = [],
   touchpointOptions = [],
+  statusOptions: statusOptionsProp,
   variant = 'merchant',
   defaultCollapsed = false,
 }) {
@@ -43,12 +53,10 @@ export default function TransactionFilter({
     { value: 'VLINKPAY', label: 'VLINKPAY' }
   ]
 
-  const statusOptions = [
-    { value: 'all', label: t('dashboard.activity_log.all_statuses') },
-    { value: 'Success', label: 'Success' },
-    { value: 'Pending', label: 'Pending' },
-    { value: 'Failed', label: 'Failed' }
-  ]
+  const statusOptions = statusOptionsProp ?? DEFAULT_STATUS_OPTIONS.map((opt) => ({
+    value: opt.value,
+    label: t(opt.labelKey),
+  }))
 
   const datePresetOptions = [
     { value: 'all', label: t('dashboard.activity_log.preset_all') },

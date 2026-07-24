@@ -71,6 +71,11 @@
     "missing_payout_title": "Action Required",
     "missing_payout_heading": "Set Up Your Payout Method",
     "setup_payout_now": "Set Up Payout Methods",
+    "onboarding_banner_title": "Complete your profile",
+    "onboarding_banner_heading": "Finish setting up your profile",
+    "onboarding_banner_description": "Add your contact details and, if you choose, a payout method so you are ready when you need it.",
+    "complete_onboarding_now": "Complete onboarding",
+    "dismiss_onboarding_banner": "Dismiss profile reminder",
     "status": {
       "active": "Active",
       "inactive": "Inactive",
@@ -191,8 +196,11 @@
       "title": "Payment Methods",
       "owner_note": "You manage your own receiving methods. The business owner cannot edit this section.",
       "empty": "No payment methods available.",
+      "empty_hint": "Complete your profile setup to unlock and configure your receiving methods.",
+      "empty_cta": "Set up now",
+      "setup_hint": "You haven't activated any receiving method yet. Configure at least one to start receiving tips.",
       "not_set": "Not set",
-      "handle_placeholder": "Enter handle / account",
+      "handle_placeholder": "Enter handle or account",
       "save": "Save Payment Methods",
       "saved": "Saved ✓"
     },
@@ -265,7 +273,7 @@
       "share_tip": "Share Tip QR",
       "copy_tip_link": "Copy Tip Link",
       "business_title": "Tipping QR",
-      "business_sub": "Dedicated QR for tips/reviews at this business",
+      "business_sub": "Dedicated QR for tips and reviews at this business",
       "note": "Per-business QR is stored by business_staff_link_id so it is never confused when you work at multiple businesses.",
       "no_linked_businesses": "No linked businesses yet. Scan a salon referral QR to join.",
       "no_linked_businesses_title": "No salon linked yet",
@@ -336,6 +344,12 @@
       "save": "Save Account",
       "saved": "Saved ✓",
       "business_names": "Business Display Names",
+      "business_settings": "Salon display settings",
+      "business_settings_desc": "Customize your display name and job title for customers at each linked salon.",
+      "business_display_name": "Display name",
+      "business_job_title": "Job title",
+      "business_job_title_helper": "Shown to customers at this salon. Max 100 characters.",
+      "business_job_title_not_set": "Not set",
       "ph_full_name": "e.g. Lisa Marie Tran",
       "ph_display_name": "e.g. Lisa T.",
       "ph_phone": "e.g. 408-555-1234",
@@ -408,6 +422,14 @@
     "loading": "Loading...",
     "processing": "Processing...",
     "saving": "Saving...",
+    "nickname_dialog_title": "Nickname at your business",
+    "nickname_error_length": "Nickname must be 2–100 characters.",
+    "nickname_error_network": "Couldn't save, try again.",
+    "nickname_clear_action": "Remove nickname",
+    "nickname_clear_confirm_label": "Remove & use original name",
+    "nickname_toast_set": "Nickname set",
+    "nickname_toast_updated": "Nickname updated",
+    "nickname_toast_removed": "Nickname removed — using original name",
     "error": "Error",
     "qr_load_failed": "Could not load QR code",
     "qr_reload": "Reload",
@@ -482,9 +504,9 @@
     "business_category": "Business Category",
     "biz_type_nail": "Nail Salon",
     "biz_type_restaurant": "Restaurant",
-    "biz_type_cafe": "Cafe / Bakery",
+    "biz_type_cafe": "Cafe or Bakery",
     "biz_type_spa": "Spa & Beauty Clinic",
-    "biz_type_other": "Other / Service",
+    "biz_type_other": "Other or Service",
     "store_address": "Business Address *",
     "store_address_placeholder": "Enter full address...",
     "store_phone": "Phone Number *",
@@ -493,7 +515,7 @@
     "store_payment_title": "Store Payment Methods",
     "logo_hint": "Square image (Max 5MB)",
     "review_routing_title": "Review Routing",
-    "review_routing_policy": "Policy: Happy customers (4-5★) are sent to Google/Yelp. Unhappy customers (1-3★) share private feedback with you directly at the email below.",
+    "review_routing_policy": "Policy: Happy customers (4-5★) are sent to Google and Yelp. Unhappy customers (1-3★) share private feedback with you directly at the email below.",
     "google_review_link": "Google Review Link",
     "yelp_review_link": "Yelp Review Link",
     "facebook_link": "Facebook Link",
@@ -507,15 +529,15 @@
     "staff_displayname": "Display Nickname *",
     "staff_displayname_placeholder": "e.g., Mia T.",
     "nickname_tooltip": "This nickname is visible to customers at the salon when they scan and tip.",
-    "staff_position": "Position / Role",
+    "staff_position": "Position or Role",
     "staff_position_placeholder": "e.g., Gel-X Artist...",
     "staff_avatar": "Avatar",
     "staff_phone": "Phone Number",
     "staff_phone_placeholder": "e.g., 407-555-0123",
     "staff_email": "Email Address",
     "staff_email_placeholder": "e.g., mia.tran@gmail.com",
-    "wallet_zelle": "Zelle (Email / Phone)",
-    "wallet_zelle_placeholder": "Enter Zelle email/phone...",
+    "wallet_zelle": "Zelle (Email or Phone)",
+    "wallet_zelle_placeholder": "Enter Zelle email or phone...",
     "wallet_venmo": "Venmo Account",
     "wallet_venmo_placeholder": "@username-venmo",
     "wallet_cashapp": "Cash App Tag",
@@ -535,17 +557,17 @@
     "tp_type": "Station Type",
     "add_tp_btn": "Add Station",
     "active_tp_count": "{count} Active Stations",
-    "tp_lobby_default": "Lobby Main / General Tipping QR",
-    "tp_front_default": "Reception Desk / Front Counter",
+    "tp_lobby_default": "Lobby Main or General Tipping QR",
+    "tp_front_default": "Reception Desk or Front Counter",
     "tp_personal_default": "Personal QR - {name}",
     "title_step_3": "Step 3: Print QRs & Finalize Setup",
     "desc_step_3": "Everything is ready! You can print your QR kit and launch the Nexora dashboard.",
-    "download_explain": "We have prepared all your salon QR codes as a high-quality print PDF/ZIP. Customers just need to scan to Tip & Review.",
+    "download_explain": "We have prepared all your salon QR codes as a high-quality print PDF or ZIP. Customers just need to scan to Tip & Review.",
     "download_btn": "Print QR Kit",
     "print_btn": "Print ›",
     "config_checklist_title": "Setup Configuration Checklist",
     "chk_business": "Business: {name} ({industry})",
-    "chk_routing": "Google/Yelp Routing: Linked",
+    "chk_routing": "Google and Yelp Routing: Linked",
     "chk_staff": "Staff: {count} technicians with linked wallets",
     "chk_touchpoints": "Stations: {count} QR codes generated",
     "print_action": "Print",
@@ -577,6 +599,7 @@
     "step_name_3": "Download & Complete",
     "onboarding_stage": "Onboarding Stage",
     "back_to_login": "Back to Login",
+    "back_to_dashboard": "Back to Dashboard",
     "prefill_demo_data": "Prefill Demo Data",
     "payout_methods": "Payout Methods",
     "payout_account": "Payout account",
@@ -644,7 +667,7 @@
       "product_management": "Gift Card Center",
       "product_management_error": "Could not open Gift Card Center. Please try again.",
       "touchpoints": "Stations & QR Codes",
-      "qr_nfc": "QR / NFC Devices",
+      "qr_nfc": "QR and NFC Devices",
       "tax_iq": "Tax IQ",
       "taxiq_onboarding": "Onboarding",
       "taxiq_employers": "Employers",
@@ -702,7 +725,7 @@
       "empty": "No new notifications."
     },
     "title": "Salon Command Center",
-    "subtitle": "Live tip flow, QR/NFC scans, review routing, and nail tech performance.",
+    "subtitle": "Live tip flow, QR and NFC scans, review routing, and nail tech performance.",
     "overview_title": "Dashboard Overview",
     "kpi": {
       "total_tips": "Total Tips",
@@ -713,7 +736,7 @@
       "no_comparison": "No data yet",
       "based_on_period": "Based on this period",
       "this_week": "this week",
-      "scans": "QR/NFC Scans",
+      "scans": "QR and NFC Scans",
       "reviews": "Reviews",
       "avg_rating": "Average Star Rating",
       "reviews_routed": "Reviews Sent",
@@ -820,7 +843,7 @@
       "add_tp_title": "Add New Station",
       "tp_name_label": "Station Name (e.g. Manicure Chair 05)",
       "tp_name_placeholder": "e.g. Manicure Chair 05",
-      "device_id_label": "Hardware Serial / NFC ID",
+      "device_id_label": "Hardware Serial or NFC ID",
       "device_id_placeholder": "e.g. NFC-105, QR-Table-01",
       "tp_type_label": "Station Type",
       "add_btn": "Add Station",
@@ -940,8 +963,8 @@
       "location": "Location",
       "scans": "Scans",
       "last_scan": "Last Scan",
-      "add_modal_title": "Register QR / NFC Hardware",
-      "id_label": "Device ID / Serial (Required)",
+      "add_modal_title": "Register QR or NFC Hardware",
+      "id_label": "Device ID or Serial (Required)",
       "type_label": "Device Hardware Type",
       "location_label": "Location Placement (Required)",
       "delete_confirm": "Are you sure you want to unregister this device? This will unlink it from active scans.",
@@ -1017,7 +1040,7 @@
         "q3": "How to set up VLINKPAY Wallet?",
         "a3": "Navigate to Settings -> Profile tab, scroll down to Payout Methods, and enter your VLINKPAY Wallet identifier. Once verified, customers will see VLINKPAY as a direct tipping option.",
         "q4": "How to order NFC stands?",
-        "a4": "You can order custom laser-engraved NFC wooden stands or tabletop cards directly from the Manage Plan / Subscriptions tab, or by contacting our support team with your salon station count.",
+        "a4": "You can order custom laser-engraved NFC wooden stands or tabletop cards directly from the Manage Plan or Subscriptions tab, or by contacting our support team with your salon station count.",
         "q5": "How do my customers tip without an app?",
         "a5": "Customers scan the station QR code with their phone camera — no app download required. They choose a tip amount, select their preferred payment method (Venmo, Zelle, Cash App, or VLINKPAY), and complete the payment in their existing wallet app.",
         "q6": "When do tips arrive in my technician's account?",
@@ -1392,7 +1415,7 @@
     "filtered_reviews": "Filtered Customer Reviews",
     "reviews_desc": "Reviews left by customers scanning this technician's unique station.",
     "tab_all": "All",
-    "tab_google": "Google/Yelp (4-5★)",
+    "tab_google": "Google and Yelp (4-5★)",
     "tab_private": "Internal Recovery (1-3★)",
     "no_reviews_matching": "No reviews matching the filter for this technician.",
     "no_reviews_desc": "Customer reviews matching this filter will show here.",
@@ -1409,6 +1432,22 @@
     "reviews_count": "{count} reviews",
     "publicly_routed": "Shared Publicly",
     "private_recovery": "Private Recovery",
+    "nickname_set_action": "Set nickname",
+    "nickname_edit_action": "Edit nickname",
+    "nickname_helper_merchant": "Used only at this business. You and this staff member can both change it. Leave empty to use the original name.",
+    "nickname_original_name": "Original name: {name}",
+    "nickname_badge": "Nickname",
+    "role_set_action": "Set job title",
+    "role_edit_action": "Edit job title",
+    "role_helper_merchant": "Job title shown to customers at this business. Max 100 characters.",
+    "role_badge": "Job title",
+    "role_placeholder": "e.g., Senior Nail Technician",
+    "role_dialog_title": "Job title at your business",
+    "role_toast_set": "Job title set",
+    "role_toast_updated": "Job title updated",
+    "role_error_required": "Enter a job title. This field cannot be empty or whitespace.",
+    "role_error_too_long": "Job title cannot be longer than 100 characters.",
+    "role_error_network": "Couldn't save job title, try again.",
     "no_chart_data": "No chart data available."
   },
   "customer": {
@@ -1654,6 +1693,10 @@
     "subtitle": "Salons linked to your staff profile.",
     "empty_title": "No salons linked yet",
     "link_salon_cta": "Link a salon",
+    "nickname_edit_action": "Edit nickname",
+    "nickname_helper_staff": "Used only at this business. You and the business owner can both change it. Leave empty to use the original name.",
+    "nickname_not_set": "Not set — using original name",
+    "nickname_badge": "Nickname",
     "status_previous": "Previous",
     "status_help_aria": "What this salon status means",
     "status_help": {
@@ -1665,9 +1708,14 @@
       "rejected": "The salon did not approve this link request. Contact the salon if you believe this is incorrect.",
       "default": "This status shows the current state of your connection with this salon."
     },
-    "since": "Since {{date}}",
+    "since": "Joined {{date}}",
     "invited": "Invited {{date}}",
-    "worked_from": "Worked from {{date}}"
+    "worked_from": "Worked from {{date}}",
+    "unlink_button": "Unlink",
+    "unlink_confirm_title": "Unlink from salon?",
+    "unlink_confirm_message": "You are about to unlink from {{business}}. You will immediately lose the tip QR for this salon. Any tips already sent to you will still be handled under the salon's payout policy. Do you want to continue?",
+    "unlink_success": "You have been unlinked from {{business}}.",
+    "unlink_error_title": "Could not unlink"
   },
   "staff_payouts": {
     "description": "Track payouts sent to you, confirm receipt, and review unpaid tip balance by business.",
@@ -1680,6 +1728,7 @@
     "filter_all_status": "All statuses",
     "detail_title": "Receive Payment Details",
     "col_code": "Payout code",
+    "col_code_tooltip": "Reference code for this payout. Use it to track the payment and match it with your receipts or transfer notes (Zelle, Venmo, Cash App, etc.).",
     "col_date": "Paid on",
     "col_amount": "Amount",
     "col_method": "Method",
@@ -1753,9 +1802,9 @@
     "back_to_login": "Back to Login",
     "kyb_form": {
       "legal_name": "Legal Business Name *",
-      "tax_id": "Tax ID / EIN *",
+      "tax_id": "Tax ID (EIN) *",
       "business_type": "Business Legal Structure *",
-      "owner_name": "Owner / Legal Representative Name *",
+      "owner_name": "Owner or Legal Representative Name *",
       "bank_name": "Settlement Bank Name *",
       "bank_account": "Bank Account Number *",
       "bank_routing": "Bank Routing Transit Number *",
@@ -1799,7 +1848,7 @@
     },
     "legal": {
       "effectiveDate": "June 26, 2026",
-      "lastUpdated": "June 26, 2026",
+      "lastUpdated": "July 18, 2026",
       "effectiveDateLabel": "Effective Date",
       "lastUpdatedLabel": "Last Updated",
       "privacyTagline": "How we collect, use, and protect information",
@@ -1808,64 +1857,70 @@
         "sections": [
           {
             "title": "1. Introduction",
-            "body": "NEXORA TOUCH LLC (\"Nexora\", \"we\", \"us\", or \"our\") operates the NEXORA TOUCH platform — a digital tipping and review service for service businesses. This Privacy Policy describes how we collect, use, and share information when you use our Services. By using our Services, you agree to the practices described in this Policy."
+            "body": "NEXORA TOUCH LLC (\"Nexora\", \"we\", \"us\") operates the NEXORA TOUCH platform — a technology service for service businesses that includes digital tipping and reviews, an AI phone receptionist that answers business phone lines and books appointments, and related SMS text notifications. This Privacy Policy describes how we collect, use, and share information when you use the Service. By using the Service, you agree to the practices described here."
           },
           {
             "title": "2. Information We Collect",
-            "body": "Information you provide: account details (name, email, phone number), business information (for merchants), and content you upload (profile photos, business logos). Information collected automatically: usage data, IP address, device and browser information, and session activity collected through our platform and Google Analytics. Customer interactions: when a customer uses the tip flow as a guest, we record anonymous session data (touch point accessed, tip amount, rating). We do not collect the customer's name, phone number, or payment information."
+            "body": "Information you provide: account information (name, email, phone number), business information (for merchants), and content you upload (profile photos, business logos).\n\nCaller and booking information: when a customer calls a business phone line answered by our AI receptionist service, we collect the caller's phone number and, when provided by the caller, their name, requested service, and preferred appointment time, in order to deliver the service — including booking the appointment and sending SMS confirmations and follow-ups. Calls may be recorded for quality and training purposes, and callers are handled in accordance with applicable law. When a customer submits an online booking request, we collect the information they enter (such as name, phone number, and requested service).\n\nAutomatically collected information: usage data, IP address, device and browser information, and session activity collected via the platform and Google Analytics.\n\nGuest tipping interactions: when customers use the tipping flow as guests, we record anonymous session data (touch points visited, tip amounts, ratings) without requiring the guest's name or payment details."
           },
           {
-            "title": "3. How We Use Your Information",
+            "title": "3. How We Use Information",
             "body": "We use collected information to:",
             "items": [
-              "Operate and improve the Services",
-              "Manage accounts and communicate with users",
-              "Send transactional notifications (email and push)",
+              "Operate and improve the Service",
+              "Answer business phone calls and book appointments through the AI receptionist",
+              "Send SMS text messages such as appointment confirmations, missed-call follow-ups, customer care responses, review requests, and — with consent — occasional promotional offers",
+              "Manage accounts and communicate with users (email and push notifications)",
               "Detect fraud and enforce our Terms of Service",
               "Analyze platform usage and performance",
               "Comply with legal obligations"
             ]
           },
           {
-            "title": "4. How We Share Your Information",
-            "body": "We do not sell your personal information. We share information only with trusted third-party service providers that assist us in operating the platform, including analytics, email delivery, push notifications, and cloud infrastructure. These providers are contractually bound to use your information only as necessary to perform services on our behalf. We may also disclose information to comply with legal obligations or to protect the rights and safety of our users."
+            "title": "4. SMS and Mobile Information",
+            "body": "No mobile information will be shared with third parties or affiliates for marketing or promotional purposes. Text messaging originator opt-in data and consent will not be shared with any third parties.",
+            "note": "Customers opt in to receive SMS messages by verbally requesting an appointment or follow-up during a phone call to a participating business's phone number, or by submitting an online booking request with their phone number. Message frequency varies. Message and data rates may apply. Customers can opt out at any time by replying STOP, and can get help by replying HELP or contacting support@nexoratouch.com or (832) 979-5559."
           },
           {
-            "title": "5. Payment Information",
-            "body": "Nexora does not collect, store, or process payment information of any kind. Tips are sent directly between customers and staff through third-party payment applications. We have no access to financial credentials, bank account numbers, or card details."
+            "title": "5. How We Share Information",
+            "body": "We do not sell your personal information. We share information only with trusted third-party service providers who help us operate the platform — including telecommunications and SMS delivery providers, analytics, email delivery, push notifications, and cloud infrastructure. These providers are contractually bound to use your information only as necessary to perform services on our behalf. We may also disclose information to comply with legal obligations or to protect the rights and safety of users. Consistent with Section 4, mobile numbers and SMS opt-in data are never shared for third-party marketing."
           },
           {
-            "title": "6. Data Retention",
-            "body": "We retain your personal information only as long as necessary to provide the Services or as required by law. You may request deletion of your account and data at any time by contacting support@nexoratouch.com."
+            "title": "6. Payment Information",
+            "body": "Nexora does not collect, store, or process any payment information. Tips are sent directly between customers and staff through third-party payment applications. We have no access to financial information, bank account numbers, or card details."
           },
           {
-            "title": "7. Your Rights",
-            "body": "Depending on your location, you may have the right to access, correct, delete, or port your personal data, and to object to or restrict certain processing.",
+            "title": "7. Data Retention",
+            "body": "We retain personal information only as long as necessary to provide the Service or as required by law. You may request deletion of your account and data at any time by contacting support@nexoratouch.com."
+          },
+          {
+            "title": "8. Your Rights",
+            "body": "Depending on your location, you may have rights to access, correct, delete, or port personal data, and to object to or restrict certain processing.",
             "items": [
               "EU/EEA users (GDPR): access, rectification, erasure, portability, restriction, and objection",
-              "California residents (CCPA): right to know, delete, correct, and opt out of sale (we do not sell data)"
+              "California residents (CCPA): rights to know, delete, correct, and opt out of sale (we do not sell data)"
             ],
             "note": "To exercise your rights, contact support@nexoratouch.com. We will respond within 30 days."
           },
           {
-            "title": "8. Cookies and Tracking",
-            "body": "We use essential cookies (required for authentication and session management) and analytics cookies (Google Analytics). You may opt out of Google Analytics tracking by installing the Google Analytics Opt-out Browser Add-on or adjusting your browser settings."
+            "title": "9. Cookies and Tracking",
+            "body": "We use essential cookies (required for authentication and session management) and analytics cookies (Google Analytics). You can opt out of Google Analytics tracking by installing the Google Analytics Opt-out Add-on or adjusting your browser settings."
           },
           {
-            "title": "9. Children's Privacy",
-            "body": "Our Services are not directed to children under 13. We do not knowingly collect personal information from children under 13. If you believe a child has provided us with personal information, contact us at support@nexoratouch.com and we will delete it promptly."
+            "title": "10. Children's Privacy",
+            "body": "Our Service is not directed to children under 13. We do not knowingly collect personal information from children under 13. If you believe a child has provided information to us, contact support@nexoratouch.com and we will delete it promptly."
           },
           {
-            "title": "10. Security",
-            "body": "We implement reasonable technical and administrative safeguards to protect your information, including encrypted data transmission and secure cloud infrastructure. No method of transmission is completely secure, and we cannot guarantee absolute security."
+            "title": "11. Security",
+            "body": "We implement reasonable technical and administrative safeguards to protect your information, including encrypted data transmission and secure cloud infrastructure. No transmission method is completely secure and we cannot guarantee absolute security."
           },
           {
-            "title": "11. Changes to This Policy",
-            "body": "We may update this Policy from time to time. Material changes will be communicated via email or in-app notification. Continued use of the Services constitutes acceptance of the updated Policy."
+            "title": "12. Changes to This Policy",
+            "body": "We may update this Policy from time to time. Material changes will be communicated by email or in-app notice. Continued use of the Service constitutes acceptance of the updated Policy."
           },
           {
-            "title": "12. Contact Us",
-            "body": "NEXORA TOUCH LLC\nEmail: support@nexoratouch.com\nAddress: 9793 Westheimer Rd Suite A Houston TX 77042"
+            "title": "13. Contact Us",
+            "body": "NEXORA TOUCH LLC\nEmail: support@nexoratouch.com\nPhone: (832) 979-5559\nAddress: 9793 Westheimer Rd Suite A, Houston, TX 77042"
           }
         ]
       },
@@ -1873,71 +1928,81 @@
         "sections": [
           {
             "title": "1. Acceptance of Terms",
-            "body": "By accessing or using the NEXORA TOUCH platform, website, or applications (collectively, the \"Services\"), you agree to be bound by these Terms of Service. If you do not agree, please discontinue use of the Services. We reserve the right to modify these Terms at any time. Continued use after changes take effect constitutes acceptance of the updated Terms."
+            "body": "By accessing or using the NEXORA TOUCH platform, website, or applications (collectively, the \"Service\"), you agree to be bound by these Terms. If you do not agree, please discontinue use of the Service. We reserve the right to modify these Terms at any time. Continued use of the Service after changes take effect constitutes acceptance of the new Terms."
           },
           {
-            "title": "2. Description of Services",
-            "body": "NEXORA TOUCH is a digital tipping and review platform for service businesses, enabling customers to send tips to staff and leave reviews via QR code or NFC. The platform connects merchants, service staff, and customers without acting as a payment intermediary."
+            "title": "2. Description of Service",
+            "body": "NEXORA TOUCH is a technology platform for service businesses (such as nail salons and spas) that includes: (a) digital tipping and review collection via QR code or NFC; (b) an AI phone receptionist service that answers a participating business's phone line, provides business information, collects appointment requests, and books appointments; and (c) related SMS text notifications sent to customers, such as appointment confirmations and follow-ups. The platform connects merchants, staff, and customers and does not act as a payment intermediary."
           },
           {
             "title": "3. Eligibility",
-            "body": "To use the Services, you must be at least 13 years of age and, if registering as a merchant, legally authorized to operate a business in your jurisdiction. By using the Services, you represent that you meet these requirements."
+            "body": "To use the Service you must be at least 13 years old and, if registering as a merchant, legally permitted to operate a business in your jurisdiction. By using the Service you confirm that you meet these requirements."
           },
           {
             "title": "4. User Accounts",
-            "body": "You are responsible for maintaining the confidentiality of your account credentials and for all activity that occurs under your account. Notify us immediately of any unauthorized use at support@nexoratouch.com. Merchants may manage their business profile, staff, and touch points. Staff members own and control their own payment information — merchants cannot view or modify staff payment handles."
+            "body": "You are responsible for safeguarding your login credentials and for all activity that occurs under your account. Notify us immediately of any unauthorized access at support@nexoratouch.com. Merchants may manage their business profile, staff, and touch points. Staff members own and control their own payout information — merchants cannot view or modify it."
           },
           {
-            "title": "5. Payments and Tipping",
-            "body": "Nexora is a platform only. We do not process, hold, transfer, or guarantee any payments. Tips are sent directly by customers to service staff through third-party payment applications (such as Cash App, Venmo, Zelle, or PayPal). Nexora has no involvement in these transactions. Nexora is not liable for any payment failures, disputes, or financial loss arising from tip transactions between users. Users are responsible for resolving payment disputes directly with the other party or their chosen payment application. Staff are responsible for ensuring their payment information is accurate and for complying with any applicable tax obligations on tips received."
-          },
-          {
-            "title": "6. Subscription Plans",
-            "body": "Merchant access to platform features is governed by the subscription plan in effect at the time of use. Plan details, pricing, and feature limits are available at the point of purchase. We reserve the right to update pricing with prior notice."
-          },
-          {
-            "title": "7. Prohibited Conduct",
-            "body": "You agree not to:",
+            "title": "5. SMS Program (NEXORA TOUCH SMS)",
+            "body": "When customers interact with a participating business — for example by calling its phone line answered by our AI receptionist, or by submitting an online booking request — they may receive SMS text messages from that business's number, powered by NEXORA TOUCH. Message types include: appointment booking confirmations, missed-call follow-ups, customer care responses, review requests, and occasional promotional offers.",
             "items": [
-              "Provide false, fraudulent, or misleading information",
-              "Impersonate any person or entity",
-              "Manipulate tip or review data",
-              "Upload malicious code or attempt unauthorized access",
-              "Use the platform for any illegal purpose",
-              "Create multiple accounts to circumvent platform limits"
+              "Consent (opt-in): Customers consent to receive these messages by verbally requesting an appointment or follow-up during a phone call to a participating business's phone number, or by submitting a booking request online with their phone number.",
+              "Message frequency and rates: Message frequency varies. Message and data rates may apply.",
+              "Opt-out and help: Reply STOP to cancel at any time. Reply HELP for help, or contact support@nexoratouch.com or (832) 979-5559.",
+              "Carriers: Carriers are not liable for delayed or undelivered messages."
             ]
           },
           {
-            "title": "8. Intellectual Property",
-            "body": "All content, software, and trademarks belonging to Nexora remain our property. By uploading content to the platform, you grant us a limited, non-exclusive license to display that content solely for the purpose of providing the Services."
+            "title": "6. Payments and Tips",
+            "body": "Nexora is a platform only. We do not process, hold, transfer, or guarantee any payments. Tips are sent by customers directly to staff through third-party payment applications (such as Cash App, Venmo, Zelle, PayPal). Nexora is not a party to those transactions and is not responsible for payment errors, disputes, or financial losses arising from tip transactions between users. Users are responsible for resolving payment disputes with the other party. Staff are responsible for ensuring their payout information is accurate and for tax obligations arising from tips received."
           },
           {
-            "title": "9. Disclaimer of Warranties",
-            "body": "THE SERVICES ARE PROVIDED \"AS IS\" WITHOUT WARRANTY OF ANY KIND. WE DISCLAIM ALL WARRANTIES, EXPRESS OR IMPLIED, INCLUDING WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE. WE DO NOT WARRANT THAT THE SERVICES WILL BE UNINTERRUPTED, ERROR-FREE, OR THAT ANY THIRD-PARTY PAYMENT APPLICATION WILL FUNCTION AS EXPECTED."
+            "title": "7. Subscription Plans",
+            "body": "Merchant access to platform features is governed by the subscription plan in effect at the time of use. Plan details, pricing, and feature limits are displayed at the time of purchase. We reserve the right to update pricing with advance notice."
           },
           {
-            "title": "10. Limitation of Liability",
-            "body": "TO THE MAXIMUM EXTENT PERMITTED BY LAW, NEXORA SHALL NOT BE LIABLE FOR ANY INDIRECT, INCIDENTAL, SPECIAL, OR CONSEQUENTIAL DAMAGES, INCLUDING LOSS OF TIPS OR REVENUE, OR ANY FINANCIAL DISPUTES BETWEEN USERS. OUR TOTAL LIABILITY SHALL NOT EXCEED THE AMOUNTS PAID BY YOU IN THE 12 MONTHS PRIOR TO THE CLAIM, OR USD $100, WHICHEVER IS GREATER."
+            "title": "8. Prohibited Conduct",
+            "body": "You agree not to:",
+            "items": [
+              "Providing false, fraudulent, or misleading information",
+              "Impersonating any person or entity",
+              "Manipulating tip or review data",
+              "Uploading malicious code or attempting unauthorized access",
+              "Using the platform for any unlawful purpose, including sending unsolicited or unlawful text messages",
+              "Creating multiple accounts to circumvent platform limits"
+            ]
           },
           {
-            "title": "11. Indemnification",
-            "body": "You agree to indemnify and hold harmless NEXORA TOUCH LLC and its officers, employees, and agents from any claims, damages, or expenses arising from your use of the Services or your violation of these Terms."
+            "title": "9. Intellectual Property",
+            "body": "All content, software, and trademarks belonging to Nexora remain our property. By uploading content to the platform, you grant us a limited, non-exclusive license to display that content solely for the purpose of providing the Service."
           },
           {
-            "title": "12. Termination",
-            "body": "We may suspend or terminate your account for violations of these Terms or conduct harmful to other users. You may close your account at any time by contacting support@nexoratouch.com."
+            "title": "10. Disclaimer of Warranties",
+            "body": "THE SERVICE IS PROVIDED \"AS IS\" WITHOUT WARRANTIES OF ANY KIND. WE DISCLAIM ALL WARRANTIES, EXPRESS OR IMPLIED, INCLUDING WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE. WE DO NOT WARRANT THAT THE SERVICE WILL BE UNINTERRUPTED OR ERROR-FREE, THAT ANY THIRD-PARTY PAYMENT APPLICATION WILL FUNCTION AS EXPECTED, OR THAT ANY SMS MESSAGE WILL BE DELIVERED BY CARRIERS."
           },
           {
-            "title": "13. Governing Law",
-            "body": "These Terms are governed by the laws of the United States. Where applicable, local consumer protection laws may also apply. Disputes that cannot be resolved informally will be submitted to binding individual arbitration."
+            "title": "11. Limitation of Liability",
+            "body": "TO THE MAXIMUM EXTENT PERMITTED BY LAW, NEXORA SHALL NOT BE LIABLE FOR ANY INDIRECT, INCIDENTAL, SPECIAL, OR CONSEQUENTIAL DAMAGES, INCLUDING LOST TIPS, LOST REVENUE, MISSED APPOINTMENTS, OR FINANCIAL DISPUTES BETWEEN USERS. OUR TOTAL LIABILITY SHALL NOT EXCEED THE AMOUNTS YOU PAID IN THE 12 MONTHS PRECEDING THE CLAIM, OR $100 USD, WHICHEVER IS GREATER."
           },
           {
-            "title": "14. Changes to Terms",
-            "body": "We may update these Terms at any time. Material changes will be communicated via email or in-app notification."
+            "title": "12. Indemnification",
+            "body": "You agree to indemnify and hold harmless NEXORA TOUCH LLC and our officers, employees, and agents from any claims, damages, or expenses arising from your use of the Service or your violation of these Terms."
           },
           {
-            "title": "15. Contact Us",
-            "body": "NEXORA TOUCH LLC\nEmail: support@nexoratouch.com\nAddress: 9793 Westheimer Rd Suite A Houston TX 77042"
+            "title": "13. Termination",
+            "body": "We may suspend or terminate your account for violations of these Terms. You may close your account at any time by contacting support@nexoratouch.com."
+          },
+          {
+            "title": "14. Governing Law",
+            "body": "These Terms are governed by the laws of the United States and, where applicable, the State of Texas. Local consumer protection laws may also apply. Disputes that cannot be resolved informally will be submitted to binding individual arbitration."
+          },
+          {
+            "title": "15. Changes to These Terms",
+            "body": "We may update these Terms at any time. Material changes will be communicated by email or in-app notice."
+          },
+          {
+            "title": "16. Contact Us",
+            "body": "NEXORA TOUCH LLC\nEmail: support@nexoratouch.com\nPhone: (832) 979-5559\nAddress: 9793 Westheimer Rd Suite A, Houston, TX 77042"
           }
         ]
       }
@@ -1954,7 +2019,7 @@
     "option_a_desc": "Use when the technician already has a NEXORA Staff Profile. Enter Staff ID, Phone, or Email.",
     "option_b_title": "Option B — Invite New Staff",
     "option_b_desc": "Use when the technician does not have an account yet. They will complete setup via the link.",
-    "search_placeholder": "Staff ID / Phone / Email",
+    "search_placeholder": "Staff ID, Phone, or Email",
     "search_btn": "Search Staff",
     "invite_btn": "Send Invite Link",
     "link_request_btn": "Send Link Request",
@@ -2087,15 +2152,22 @@
     "staff_display_name_required": "Display name is required.",
     "staff_display_name_too_short": "Display name must be at least 2 characters.",
     "staff_display_name_too_long": "Display name must be at most 100 characters.",
+    "staff_position_required": "Enter a job title. This field cannot be empty or whitespace.",
+    "staff_position_too_long": "Job title cannot be longer than 100 characters.",
+    "staff_business_role_link_not_active": "You don't have an active link with this salon, so your job title can't be saved here.",
+    "staff_business_role_unauthorized": "You're not signed in. Please log in again, then try saving your job title.",
+    "staff_role_link_not_found": "This staff member link was not found. Refresh the page and try again.",
     "staff_limit_reached": "Your plan has reached the maximum number of staff members.",
     "local_staff_not_found": "Local staff member was not found.",
     "local_staff_not_owned": "You do not have permission to manage this local staff member.",
     "staff_link_has_outstanding_debt": "Cannot remove staff with unpaid tip balance. Pay out tips first.",
+    "staff_unlink_has_outstanding_debt": "You cannot unlink while this salon still owes you tip payouts. Ask the salon to settle the balance, then try again.",
+    "staff_unlink_failed": "Unable to unlink from this salon. Please try again or contact the salon.",
     "staff_payment_method_not_found": "Payment method was not found.",
     "staff_payment_method_access_denied": "You do not have permission to update this payment method.",
     "common_validation_error": "Validation failed. Please check your inputs.",
-    "common_not_found": "The requested resource was not found.",
-    "common_unauthorized": "Unauthorized access.",
+    "common_not_found": "The requested item was not found.",
+    "common_unauthorized": "You're not signed in. Please log in and try again.",
     "common_forbidden": "Access denied.",
     "common_rate_limit_exceeded": "Too many requests. Please try again later.",
     "common_internal_server_error": "An internal server error occurred.",
@@ -2241,7 +2313,7 @@
         "title": "Set Up Bank Account",
         "beneficiaryName": "Beneficiary Name",
         "bankName": "Bank Name",
-        "routingNumber": "ABA/Routing Number",
+        "routingNumber": "ABA (Routing) Number",
         "accountNumber": "Account Number",
         "bankAddress": "Bank Address",
         "city": "City",
@@ -2282,12 +2354,13 @@
         "WalletDetails": {
           "tipAmount": "Tip Amount",
           "scanToPay": "Scan to pay",
-          "businessName": "Business / Store",
+          "businessName": "Business or Store",
           "name": "Name",
-          "emailPhone": "Email/Phone",
+          "accountHolder": "{wallet} Registered Name",
+          "emailPhone": "Email or Phone",
           "venmoUsername": "Venmo Username",
           "cashTag": "Cash Tag",
-          "paypalEmailPhone": "PayPal Email/Phone",
+          "paypalEmailPhone": "PayPal Email or Phone",
           "bankDetails": "Bank details",
           "account": "Account",
           "noteRequired": "Note (Required)",
@@ -2386,7 +2459,7 @@
           "orSendDirectly": "OR SEND DIRECTLY",
           "technicianName": "Technician Name",
           "phoneNumber": "Phone Number",
-          "rolePosition": "Role / Position",
+          "rolePosition": "Role or Position",
           "sendInviteLink": "Send Invite Link",
           "joinQrCode": "JOIN QR CODE",
           "haveTechniciansScanThis": "Have technicians scan this QR code with their mobile camera to self-register or link accounts.",
@@ -2411,12 +2484,12 @@
         },
         "PayoutSetupModal": {
           "walletAccountTitle": "{wallet} ACCOUNT",
-          "placeholderZelle": "Enter Zelle email/phone...",
+          "placeholderZelle": "Enter Zelle email or phone...",
           "placeholderBankWire": "Account & Routing numbers",
           "placeholderPaypal": "email@paypal.com",
           "placeholderAppleCash": "Enter phone number...",
           "placeholderVlinkpay": "Enter VLINKPAY ID (e.g. MIA0123)...",
-          "placeholderCrypto": "Enter BTC/ETH/USDT address...",
+          "placeholderCrypto": "Enter BTC, ETH, or USDT address...",
           "specifyReceivingTargetIdentifier": "Specify receiving target identifier",
           "accountIdentifier": "Account Identifier *",
           "qrCodeOptional": "QR Code (optional)",
@@ -2463,7 +2536,7 @@
           "staffNotFound": "Staff not found. Invite them by email or phone instead.",
           "searchError": "Could not search staff right now.",
           "reviewJoinRequest": "Review Join Request",
-          "nexoraIdVlinkpayId": "NEXORA ID / VLINKPAY ID",
+          "nexoraIdVlinkpayId": "NEXORA ID or VLINKPAY ID",
           "scanQrCode": "Scan QR Code",
           "shareInviteLink": "Share Invite Link",
           "invite": "Invite",
@@ -2482,6 +2555,7 @@
           "phExampleVlp2": "e.g. VL8893",
           "phExampleStaffId": "e.g. LISA1102",
           "phFullName": "Mia Tran",
+          "displayName": "Display name *",
           "phNickname": "Mia T.",
           "phPosition": "Nail Tech",
           "scanVlinkpayQrCode": "Scan VLINKPAY QR Code",
@@ -2595,7 +2669,7 @@
           "clickPillToToggle": "Click pill to toggle active status",
           "tipsFlow": "Tips Enabled",
           "tipsFlowTooltip": "When disabled, this staff member won't appear in the customer tipping flow.",
-          "clickPillToShow": "Click pill to show/hide tech on general QR",
+          "clickPillToShow": "Click pill to show or hide tech on general QR",
           "linkedDate": "Linked Date: ",
           "col_linked_date": "Linked Date",
           "noWallets": "No wallets",
@@ -2966,7 +3040,7 @@
             "badgeSmsActive": "SMS activated",
             "badgeNoShow": "No-show",
             "todayLabel": "Today",
-            "kpiTodayTrend": "Total appointments today",
+            "kpiTodayTrend": "Total appointments",
             "kpiDoneTrend": "Review SMS ready",
             "kpiNoReview": "No review sent",
             "kpiNoShowTrend": "No-show will not receive review",
@@ -2974,6 +3048,15 @@
             "viewMode": "Booking view mode",
             "tableView": "Table",
             "cardView": "Card",
+            "calendarView": "Calendar",
+            "filterToggle": "Filter",
+            "filterPopoverTitle": "Filter appointments",
+            "calendarTitle": "Team calendar",
+            "calendarSubtitle": "Appointments grouped by technician",
+            "calendarPrev": "Previous day",
+            "calendarNext": "Next day",
+            "calendarUnassigned": "Unassigned",
+            "calendarEmpty": "No appointments on this day.",
             "filters": "Booking filters",
             "statusFilterAria": "Filter by status",
             "filterAll": "All",
@@ -2991,8 +3074,8 @@
             "keywordPlaceholderAll": "Enter keyword",
             "dateFrom": "Date from",
             "dateTo": "Date to",
-            "dateFromPlaceholder": "Select start date",
-            "dateToPlaceholder": "Select end date",
+            "dateFromPlaceholder": "Select date",
+            "dateToPlaceholder": "Select date",
             "clear": "Clear",
             "colCallStart": "Call Start",
             "colCustomer": "Customer",
@@ -3079,7 +3162,7 @@
               "emailLabel": "Email",
               "emailPlaceholder": "john.doe@gmail.com",
               "emailNote": "Receive activation link and monthly reports at this email",
-              "cityLabel": "City / area",
+              "cityLabel": "City or area",
               "cityPlaceholder": "Houston, TX",
               "websiteLabel": "Website",
               "websitePlaceholder": "https://bitcoinnailbar.com",
@@ -3098,7 +3181,7 @@
               "painDefault": "- Select -",
               "painMissed": "Missed calls — no one picks up",
               "painRetention": "Clients don't return after 30 days",
-              "painReviews": "Few Google reviews / hard to rank",
+              "painReviews": "Few Google reviews and hard to rank",
               "painManual": "Manual booking, easy to miss appointments",
               "painSms": "Want SMS campaigns but no time",
               "referralLabel": "Referral code",
@@ -3119,7 +3202,7 @@
               "autoRedirectBefore": "Auto redirect to ",
               "autoRedirectBrand": "Nexora Touch",
               "autoRedirectAfter": " after ({{seconds}}) seconds",
-              "footer": "No credit card · No auto-charge · By submitting you agree to NEXORA contacting you via SMS/email",
+              "footer": "No credit card · No auto-charge · By submitting you agree to NEXORA contacting you via SMS or email",
               "contactLine": "NEXORA TOUCH · AI staff for nail salons",
               "contactTry": "call to try — AI will answer",
               "emailTitle": "Check your email",
@@ -3473,9 +3556,9 @@
       },
       "modals": {
         "PayoutEditModal": {
-          "emailPhone": "email/phone",
+          "emailPhone": "email or phone",
           "details": "details",
-          "enterZelleEmailPhone": "Enter Zelle email/phone...",
+          "enterZelleEmailPhone": "Enter Zelle email or phone...",
           "accountAndRoutingNumbers": "Account & Routing numbers",
           "enterPhoneNumber": "Enter phone number...",
           "specifyReceivingTargetIdentifier": "Specify receiving target identifier",
@@ -3525,6 +3608,7 @@
           "notConfigured": "Not Configured",
           "configure": "Configure",
           "saveAndActivate": "Save & Activate",
+          "skipForNow": "Skip for now",
           "nexoraId": "NEXORA ID"
         },
         "StepProfileSetup": {
@@ -3533,9 +3617,10 @@
           "acceptedFormatsJpgPng": "Accepted formats: JPG, PNG. Max size: 5MB.",
           "fullName": "Full Name *",
           "displayNickname": "Display Nickname *",
+          "displayNicknameOptional": "Display Nickname (Optional)",
           "phoneNumber": "Phone Number *",
           "emailAddress": "Email Address",
-          "roleSpeciality": "Role / Speciality",
+          "roleSpeciality": "Role or Speciality",
           "nexoraStaffId": "NEXORA ID",
           "shortBioShowsOn": "Short Bio",
           "phFullName": "e.g. Lisa Marie Tran",
@@ -3618,7 +3703,7 @@
           "notConfigured": "Not Configured",
           "streetAddress": "Street Address",
           "city": "City",
-          "stateProvince": "State / Province",
+          "stateProvince": "State or Province",
           "zipCode": "ZIP Code",
           "businessPhone": "Business Phone",
           "businessEmail": "Business Email",
@@ -3646,7 +3731,7 @@
           "state": "State",
           "country": "Country",
           "businessInformation": "Business Information",
-          "enterTheLegalOr": "Enter the legal or public name of your store/salon as it will appear on customer payment screens.",
+          "enterTheLegalOr": "Enter the legal or public name of your store or salon as it will appear on customer payment screens.",
           "businessName": "Business Name",
           "phone": "Phone",
           "bookingNotificationPhone": "Booking Notification Phone",
@@ -3672,9 +3757,9 @@
           "locationMap": "Location Map",
           "locationMapEmpty": "Add your address to display your business location on the map.",
           "reviewLinks": "Review Links",
-          "emailPhone": "email/phone",
+          "emailPhone": "email or phone",
           "details": "details",
-          "enterZelleEmailPhone": "Enter Zelle email/phone...",
+          "enterZelleEmailPhone": "Enter Zelle email or phone...",
           "enterBankWireRouting": "Enter Bank Wire routing - account...",
           "enterPaypalEmail": "Enter PayPal email...",
           "enterVenmoUsername": "Enter Venmo @username...",
@@ -3717,7 +3802,7 @@
           "closeForm": "Close Form",
           "submittingKybDetails": "Submitting KYB details...",
           "legalBusinessName": "Legal Business Name",
-          "taxIdEin": "Tax ID / EIN",
+          "taxIdEin": "Tax ID (EIN)",
           "businessStructure": "Business Structure",
           "representativeOwnerName": "Representative Owner Name",
           "bankName": "Bank Name",
@@ -3762,7 +3847,7 @@
       },
       "steps": {
         "Step1BusinessInfo": {
-          "enterTheLegalOr": "Enter the legal or public name of your store/salon as it will appear on customer payment screens.",
+          "enterTheLegalOr": "Enter the legal or public name of your store or salon as it will appear on customer payment screens.",
           "provideThePhysicalLocation": "Provide the physical location of your store. Used for localization and verification purposes.",
           "phPhone": "+1 (555) 789-2026",
           "phWebsite": "https://spasalon.com",
@@ -3820,7 +3905,7 @@
           "scanSalonQrCode": "Scan Salon QR Code",
           "scanTheSalonReferral": "Scan the salon referral QR code to actively submit your join request",
           "cameraScanNotAvailableYet": "Camera QR scanning is not available yet.",
-          "orEnterInviteLink": "Or Enter Invite Link / Business Name",
+          "orEnterInviteLink": "Or Enter Invite Link or Business Name",
           "pasteSalonInviteLink": "Paste salon invite link or referral code...",
           "send": "Send",
           "referralCodeRequired": "Please enter a salon invite link or referral code.",
@@ -3858,7 +3943,7 @@
           "closeForm": "Close Form",
           "submittingKycDetails": "Submitting KYC details...",
           "legalFullName": "Legal Full Name",
-          "idNumberSsn": "ID Number / SSN",
+          "idNumberSsn": "ID Number (SSN)",
           "documentType": "Document Type",
           "passport": "Passport",
           "nationalIdCard": "National ID Card",
@@ -3875,7 +3960,7 @@
           "verifiedPersonalDossier": "Verified Personal Dossier",
           "legalFullName2": "Legal Full Name",
           "documentType2": "Document Type",
-          "identityNumberSsn": "Identity Number / SSN",
+          "identityNumberSsn": "Identity Number (SSN)",
           "residentialAddress": "Residential Address",
           "payoutSettlementBank": "Payout Settlement Bank",
           "payoutFrequency": "Payout frequency",
@@ -3997,7 +4082,7 @@
           "walletLabel_venmo": "Venmo",
           "walletLabel_cashapp": "Cash App",
           "walletLabel_applecash": "Apple Cash",
-          "walletPlaceholder_zelle": "Enter Zelle email/phone...",
+          "walletPlaceholder_zelle": "Enter Zelle email or phone...",
           "walletPlaceholder_bankwire": "Enter Bank Wire routing - account...",
           "walletPlaceholder_paypal": "Enter PayPal email...",
           "walletPlaceholder_venmo": "Enter Venmo @username...",
@@ -4048,7 +4133,7 @@
           "registerAccount": "Register Account",
           "registerANewAccount": "Register a new account, configure payout wallets, and complete KYC.",
           "linkAccountLogin": "Link Account Login",
-          "signInToYour": "Sign in to your NEXORA / VLINKPAY account to quickly link with this nail salon.",
+          "signInToYour": "Sign in to your NEXORA or VLINKPAY account to quickly link with this nail salon.",
           "password": "Password",
           "demoAccountTip": "Demo Account Tip:",
           "back": "Back",
@@ -4068,9 +4153,9 @@
           "phPassword": "••••••••"
         },
         "PayoutEditModal": {
-          "emailPhone": "email/phone",
+          "emailPhone": "email or phone",
           "details": "details",
-          "enterZelleEmailPhone": "Enter Zelle email/phone...",
+          "enterZelleEmailPhone": "Enter Zelle email or phone...",
           "accountAndRoutingNumbers": "Account & Routing numbers",
           "enterPhoneNumber": "Enter phone number...",
           "specifyReceivingTargetIdentifier": "Specify receiving target identifier",
