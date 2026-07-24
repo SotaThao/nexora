@@ -209,18 +209,12 @@ export default function StaffMySalons() {
   const { t, currentLanguage } = useTranslation()
   const navigate = useNavigate()
   const { showToast, showConfirm } = useNotification()
-  const {
-    data: businesses = [],
-    isPending,
-    refetch: refetchBusinesses,
-  } = useStaffBusinesses()
   const { data: staffProfile } = useStaffProfile()
   const setNicknameMutation = useSetStaffBusinessNickname()
   const { data: pendingLinkRequests = [] } = useStaffLinkRequestsList()
   const unlinkBusiness = useUnlinkStaffBusiness()
   const [unlinkError, setUnlinkError] = useState<{ title: string; message: string } | null>(null)
   const { data: businesses = [], isPending, isFetching } = useStaffBusinesses()
-  const salons = sortSalonBusinesses(businesses)
   const salons = useMemo(() => {
     const visibleBusinesses = businesses.filter((business) => {
       const statusLabel = resolveStaffBusinessLinkStatusLabel(business).trim().toLowerCase()

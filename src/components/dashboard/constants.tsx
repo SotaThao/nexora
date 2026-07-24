@@ -480,8 +480,6 @@ export function getActivePaymentsPayoutsSubmenuItem(
   )
 }
 
-export const visibleMenuItems = MENU_ITEMS
-
 export const PUBLIC_HOME_MENU_ITEM = {
   id: 'public-home',
   label: 'Home',
