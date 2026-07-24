@@ -87,7 +87,8 @@ function normalizeOperatingHour(raw: unknown): PublicBookingOperatingHour | null
   const isOpenRaw = readField(dto, 'isOpen', 'IsOpen')
   return {
     dayOfWeek,
-    isOpen: Boolean(isOpenRaw),
+    // Match merchantVoice: only real boolean true. Boolean("false") would be true.
+    isOpen: isOpenRaw === true,
     openTime: (() => {
       const v = readField(dto, 'openTime', 'OpenTime')
       return v == null || v === '' ? null : String(v)
