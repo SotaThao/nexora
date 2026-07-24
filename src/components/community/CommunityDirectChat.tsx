@@ -57,45 +57,52 @@ function DirectChatBubble({
   messagesById,
   currentUserId,
   recipientName,
+  isFirstInRun,
+  isLastInRun,
   onReply,
 }: {
   message: MessageDto
   messagesById: Map<string, MessageDto>
   currentUserId?: string
   recipientName: string
+  isFirstInRun: boolean
+  isLastInRun: boolean
   onReply: (message: MessageDto) => void
 }) {
   const isOwn = message.senderId === currentUserId
   const senderName = isOwn ? 'Bạn' : recipientName
   const quoted = message.replyToMessageId ? messagesById.get(message.replyToMessageId) : undefined
   const quotedName = quoted ? (quoted.senderId === currentUserId ? 'Bạn' : recipientName) : 'Tin nhắn'
+  const groupedCornerClass = isOwn
+    ? `${isFirstInRun ? '' : 'rounded-tr-md'} ${isLastInRun ? '' : 'rounded-br-md'}`
+    : `${isFirstInRun ? '' : 'rounded-tl-md'} ${isLastInRun ? '' : 'rounded-bl-md'}`
 
   return (
-    <article className={`flex max-w-[86%] gap-2 ${isOwn ? 'ml-auto flex-row-reverse' : ''}`}>
-      {!isOwn ? <Avatar name={senderName} /> : null}
+    <article className={`flex max-w-[86%] items-end gap-2 sm:max-w-[78%] ${isOwn ? 'ml-auto flex-row-reverse' : ''}`}>
+      {!isOwn ? (isLastInRun ? <Avatar name={senderName} /> : <span aria-hidden="true" className="h-9 w-9 shrink-0" />) : null}
       <div
-        className={`min-w-0 rounded-xl border px-3 py-2 shadow-[0_1px_2px_rgba(11,18,32,0.04)] ${
-          isOwn ? 'border-[#d8d9ff] bg-nexoraBrandSoft' : 'border-nexoraRule bg-nexoraSurface'
+        className={`min-w-0 rounded-2xl px-3 py-2 shadow-[0_1px_2px_rgba(11,18,32,0.06)] ${groupedCornerClass} ${
+          isOwn ? 'bg-nexoraBrand' : 'bg-nexoraSurfaceMuted'
         }`}
       >
-        {!isOwn ? <p className="mb-0.5 text-xs font-extrabold text-nexoraViolet">{senderName}</p> : null}
+        {!isOwn && isFirstInRun ? <p className="mb-0.5 text-xs font-extrabold text-nexoraViolet">{senderName}</p> : null}
         {message.replyToMessageId ? (
-          <div className="mb-1.5 rounded-md border-l-[3px] border-nexoraBrand bg-nexoraBrandSoft px-2 py-1 text-xs leading-snug text-nexoraMuted">
-            <b className="block text-[11px] text-nexoraBrand">{quotedName}</b>
+          <div className={`mb-1.5 rounded-md border-l-[3px] px-2 py-1 text-xs leading-snug ${isOwn ? 'border-white/70 bg-white/10 text-white/80' : 'border-nexoraBrand bg-nexoraBrandSoft text-nexoraMuted'}`}>
+            <b className={`block text-[11px] ${isOwn ? 'text-white' : 'text-nexoraBrand'}`}>{quotedName}</b>
             <span className="line-clamp-2">{quoted?.body || 'Tin nhắn gốc'}</span>
           </div>
         ) : null}
-        <p className="whitespace-pre-wrap break-words text-[13.5px] leading-relaxed text-nexoraText">
+        <p className={`whitespace-pre-wrap break-words text-[13.5px] leading-relaxed ${isOwn ? 'text-white' : 'text-nexoraText'}`}>
           {message.body}
         </p>
-        <div className="mt-1 flex items-center justify-end gap-1 text-[10.5px] text-nexoraSubtle">
-          <time dateTime={message.createdAt}>{formatTime(message.createdAt)}</time>
-          {isOwn ? <CheckCheck className="h-3.5 w-3.5 text-nexoraBrand" aria-label="Đã gửi" /> : null}
-        </div>
+        {isLastInRun || isOwn ? <div className={`mt-1 flex items-center justify-end gap-1 text-[10.5px] ${isOwn ? 'text-white/70' : 'text-nexoraSubtle'}`}>
+          {isLastInRun ? <time dateTime={message.createdAt}>{formatTime(message.createdAt)}</time> : null}
+          {isOwn ? <CheckCheck className="h-3.5 w-3.5 text-white/80" aria-label="Đã gửi" /> : null}
+        </div> : null}
         <button
           type="button"
           onClick={() => onReply(message)}
-          className="mt-1 inline-flex min-h-7 items-center gap-1 text-[11px] font-bold text-nexoraMuted hover:text-nexoraBrand"
+          className={`mt-1 inline-flex min-h-7 items-center gap-1 text-[11px] font-bold ${isOwn ? 'text-white/80 hover:text-white' : 'text-nexoraMuted hover:text-nexoraBrand'}`}
           aria-label={`Trả lời ${senderName}`}
         >
           <Reply className="h-3.5 w-3.5" aria-hidden="true" /> Trả lời
@@ -159,13 +166,13 @@ export function CommunityDirectChat() {
       )
     }
     return (
-      <div className="space-y-3 px-3 py-4">
+      <div className="px-3 py-4">
         {chat.hasOlderMessages ? (
           <button
             type="button"
             onClick={() => void chat.loadOlder()}
             disabled={chat.isLoadingOlder}
-            className="mx-auto flex min-h-9 items-center gap-2 rounded-full bg-nexoraSurfaceMuted px-3 text-xs font-bold text-nexoraMuted hover:bg-nexoraBrandSoft disabled:opacity-60"
+            className="mx-auto mb-3 flex min-h-9 items-center gap-2 rounded-full bg-nexoraSurfaceMuted px-3 text-xs font-bold text-nexoraMuted hover:bg-nexoraBrandSoft disabled:opacity-60"
           >
             {chat.isLoadingOlder ? (
               <Loader2 className="h-3.5 w-3.5 animate-spin" aria-hidden="true" />
@@ -173,23 +180,31 @@ export function CommunityDirectChat() {
             Tải tin nhắn cũ hơn
           </button>
         ) : null}
-        {chat.messages.map((message, index) => (
-          <div key={message.id} className="space-y-2">
-            {index === 0 ||
-            dayKey(chat.messages[index - 1].createdAt) !== dayKey(message.createdAt) ? (
-              <p className="mx-auto w-fit rounded-full bg-nexoraSurfaceMuted px-3 py-1 text-[11px] font-semibold text-nexoraSubtle">
-                {formatJoinedDate(message.createdAt)}
-              </p>
-            ) : null}
-            <DirectChatBubble
-              message={message}
-              messagesById={messagesById}
-              currentUserId={user?.id}
-              recipientName={recipientName}
-              onReply={setReplyTo}
-            />
-          </div>
-        ))}
+        {chat.messages.map((message, index) => {
+          const previous = chat.messages[index - 1]
+          const next = chat.messages[index + 1]
+          const startsNewDay = !previous || dayKey(previous.createdAt) !== dayKey(message.createdAt)
+          const isFirstInRun = !previous || previous.senderId !== message.senderId || startsNewDay
+          const isLastInRun = !next || next.senderId !== message.senderId || dayKey(next.createdAt) !== dayKey(message.createdAt)
+          return (
+            <div key={message.id} className={`${isFirstInRun ? 'mt-3' : 'mt-0.5'} first:mt-0`}>
+              {startsNewDay ? (
+                <p className="mx-auto mb-3 w-fit rounded-full bg-nexoraSurfaceMuted px-3 py-1 text-[11px] font-semibold text-nexoraSubtle">
+                  {formatJoinedDate(message.createdAt)}
+                </p>
+              ) : null}
+              <DirectChatBubble
+                message={message}
+                messagesById={messagesById}
+                currentUserId={user?.id}
+                recipientName={recipientName}
+                isFirstInRun={isFirstInRun}
+                isLastInRun={isLastInRun}
+                onReply={setReplyTo}
+              />
+            </div>
+          )
+        })}
       </div>
     )
   }
@@ -198,7 +213,7 @@ export function CommunityDirectChat() {
     <>
       <CommunityPersonaSwitcher />
       <DemoStaffShell onDemoNavigation={() => navigate('/community')}>
-        <main className="mx-auto flex min-h-[calc(100vh-120px)] w-full max-w-[680px] flex-col overflow-hidden border-x border-nexoraBorder bg-nexoraCanvas font-sans shadow-nexora-card">
+        <main className="mx-auto flex h-full min-h-0 w-full max-w-[720px] flex-col overflow-hidden border-x border-nexoraBorder bg-nexoraCanvas font-sans shadow-nexora-card lg:h-auto lg:min-h-[calc(100vh-120px)]">
           <header className="flex items-center gap-3 border-b border-nexoraBorder bg-nexoraSurface px-3 py-3">
             <button
               type="button"
@@ -241,7 +256,7 @@ export function CommunityDirectChat() {
 
           <section className="min-h-0 flex-1 overflow-y-auto">{renderTimeline()}</section>
 
-          <form onSubmit={(event) => void submit(event)} className="border-t border-nexoraBorder bg-nexoraSurface p-3">
+          <form onSubmit={(event) => void submit(event)} className="shrink-0 border-t border-nexoraBorder bg-nexoraSurface p-3">
             {replyTo ? (
               <div className="mb-2 flex items-center gap-2 rounded-lg border-l-[3px] border-nexoraBrand bg-nexoraBrandSoft px-2 py-1.5 text-xs text-nexoraMuted">
                 <Reply className="h-4 w-4 shrink-0 text-nexoraBrand" aria-hidden="true" />
