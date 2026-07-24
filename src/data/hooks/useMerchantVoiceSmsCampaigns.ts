@@ -63,12 +63,14 @@ export function useMerchantVoiceSmsCampaignAudienceSummary({ enabled = true } = 
 
 export function useMerchantVoiceSmsCampaigns(
   filters: MerchantSmsCampaignsFilter = EMPTY_CAMPAIGN_FILTERS,
-  { enabled = true } = {},
+  { enabled = true, refetchInterval = false as number | false } = {},
 ) {
   return useQuery<SmsCampaignsPage>({
     queryKey: qk.merchantVoiceSmsCampaigns(filters),
     queryFn: () => merchantVoiceSmsCampaignsRepository.getCampaigns(filters),
     enabled,
+    refetchInterval,
+    refetchIntervalInBackground: false,
   })
 }
 

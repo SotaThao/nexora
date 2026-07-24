@@ -21,6 +21,7 @@ import type {
 } from '../../../../data/repositories/merchantVoiceSmsCampaigns'
 import { getApiErrorCode } from '../../../../types/domain'
 import { getWebUrlOrigin } from '../../../../utils/webUrlBase'
+import { parseApiDateTime } from '../../utils'
 import {
   AlertTriangleIcon,
   CalendarTabIcon,
@@ -56,6 +57,7 @@ import {
   SMS_PRICE_PER_SMS,
   SmsComposerScheduleMode,
 } from './constants'
+import SmsScheduleDatePicker from './SmsScheduleDatePicker'
 
 const TK = SMS_CAMPAIGN_TK
 const SMS_ANALYZE_MAX_CHARS = 3200
@@ -151,6 +153,29 @@ function toScheduledAtUtc(date: string, time: string): string | undefined {
   return local.toISOString()
 }
 
+/** Format YYYY-MM-DD for display using app language (not device locale). */
+function formatScheduleDateDisplay(isoDate: string, locale: string): string {
+  const [year, month, day] = isoDate.split('-').map(Number)
+  if (!year || !month || !day) return isoDate
+  return new Intl.DateTimeFormat(locale, {
+    year: 'numeric',
+    month: 'short',
+    day: 'numeric',
+  }).format(new Date(year, month - 1, day))
+}
+
+/** Format HH:mm as 12h AM/PM (or locale equivalent) using app language. */
+function formatScheduleTimeDisplay(hhmm: string, locale: string): string {
+  const [hours, minutes] = hhmm.split(':').map(Number)
+  if (!Number.isFinite(hours) || !Number.isFinite(minutes)) return hhmm
+  const date = new Date(1970, 0, 1, hours, minutes, 0, 0)
+  return new Intl.DateTimeFormat(locale, {
+    hour: 'numeric',
+    minute: '2-digit',
+    hour12: true,
+  }).format(date)
+}
+
 function openDateTimePicker(input: HTMLInputElement | null) {
   if (!input || input.disabled) return
   input.focus()
@@ -170,10 +195,16 @@ function toLocalDateInputValue(date = new Date()): string {
   return `${year}-${month}-${day}`
 }
 
+function toLocalTimeInputValue(date = new Date()): string {
+  const hours = String(date.getHours()).padStart(2, '0')
+  const minutes = String(date.getMinutes()).padStart(2, '0')
+  return `${hours}:${minutes}`
+}
+
 function splitUtcToLocalInputs(iso: string | null | undefined): { date: string; time: string } {
   if (!iso) return { date: '', time: '10:00' }
-  const parsed = new Date(iso)
-  if (Number.isNaN(parsed.getTime())) return { date: '', time: '10:00' }
+  const parsed = parseApiDateTime(iso)
+  if (!parsed) return { date: '', time: '10:00' }
   const year = parsed.getFullYear()
   const month = String(parsed.getMonth() + 1).padStart(2, '0')
   const day = String(parsed.getDate()).padStart(2, '0')
@@ -445,8 +476,8 @@ export default function SmsCreateCampaignModal({
       if (apiMode === SmsCampaignScheduleMode.Scheduled) {
         onSaved(t(`${TK}.sendSuccessSchedule`, {
           total: totalSms,
-          date: scheduleDate,
-          time: scheduleTime,
+          date: formatScheduleDateDisplay(scheduleDate, numberLocale),
+          time: formatScheduleTimeDisplay(scheduleTime, numberLocale),
         }))
         return
       }
@@ -481,13 +512,35 @@ export default function SmsCreateCampaignModal({
   const whenLabel = scheduleMode === SmsComposerScheduleMode.Now
     ? t(`${TK}.confirmWhenNow`)
     : scheduleMode === SmsComposerScheduleMode.Schedule
-      ? t(`${TK}.confirmWhenSchedule`, { date: scheduleDate, time: scheduleTime })
+      ? t(`${TK}.confirmWhenSchedule`, {
+        date: scheduleDate ? formatScheduleDateDisplay(scheduleDate, numberLocale) : scheduleDate,
+        time: scheduleTime ? formatScheduleTimeDisplay(scheduleTime, numberLocale) : scheduleTime,
+      })
       : t(`${TK}.confirmWhenAuto`)
 
   const countLabel = new Intl.NumberFormat(numberLocale).format(audienceCount)
   const controlsDisabled = isSubmitting || isHydrating
   const scheduleControlsDisabled = controlsDisabled || isEdit
   const minScheduleDate = toLocalDateInputValue()
+  const minScheduleTime = scheduleDate === minScheduleDate ? toLocalTimeInputValue() : undefined
+
+  const applyScheduleTime = (next: string) => {
+    if (!next) {
+      setScheduleTime(minScheduleTime ?? '10:00')
+      return
+    }
+    // Silent clamp — native mobile time pickers often ignore `min` visually.
+    if (minScheduleTime && next < minScheduleTime) {
+      setScheduleTime(minScheduleTime)
+      return
+    }
+    setScheduleTime(next)
+  }
+
+  const selectScheduleMode = () => {
+    setScheduleMode(SmsComposerScheduleMode.Schedule)
+    setScheduleDate((prev) => (prev && prev >= toLocalDateInputValue() ? prev : toLocalDateInputValue()))
+  }
 
   return (
     <div
@@ -686,9 +739,7 @@ export default function SmsCreateCampaignModal({
                 className={`schedule-opt${scheduleMode === SmsComposerScheduleMode.Schedule ? ' selected' : ''}`}
                 type="button"
                 disabled={scheduleControlsDisabled}
-                onClick={() => {
-                  setScheduleMode(SmsComposerScheduleMode.Schedule)
-                }}
+                onClick={selectScheduleMode}
               >
                 <span className="schedule-opt-icon"><ClockIcon className="marketing-icon" /></span>
                 <span className="schedule-opt-label">{t(`${TK}.scheduleLater`)}</span>
@@ -707,28 +758,54 @@ export default function SmsCreateCampaignModal({
             </div>
             {scheduleMode === SmsComposerScheduleMode.Schedule ? (
               <div className="time-input-row">
-                <input
-                  className="form-input schedule-datetime-input"
-                  type="date"
+                <SmsScheduleDatePicker
                   value={scheduleDate}
-                  min={minScheduleDate}
+                  minDate={minScheduleDate}
+                  locale={numberLocale}
                   disabled={scheduleControlsDisabled}
-                  onClick={(event) => openDateTimePicker(event.currentTarget)}
-                  onChange={(event) => {
-                    const next = event.target.value
-                    setScheduleDate(next && next < minScheduleDate ? minScheduleDate : next)
-                  }}
+                  placeholder={t(`${TK}.scheduleDatePlaceholder`)}
+                  prevMonthAriaLabel={t(`${TK}.schedulePrevMonth`)}
+                  nextMonthAriaLabel={t(`${TK}.scheduleNextMonth`)}
+                  formatDisplay={formatScheduleDateDisplay}
+                  onChange={setScheduleDate}
                 />
-                <input
-                  className="form-input schedule-datetime-input"
-                  type="time"
-                  value={scheduleTime}
-                  disabled={scheduleControlsDisabled}
-                  onClick={(event) => openDateTimePicker(event.currentTarget)}
-                  onChange={(event) => {
-                    setScheduleTime(event.target.value)
-                  }}
-                />
+                <div
+                  className={`schedule-datetime-shell${scheduleTime ? ' has-value' : ' is-empty'}`}
+                  lang={`${numberLocale}-u-hc-h12`}
+                >
+                  <span className="schedule-datetime-display" aria-hidden="true">
+                    {scheduleTime
+                      ? formatScheduleTimeDisplay(scheduleTime, numberLocale)
+                      : t(`${TK}.scheduleTimePlaceholder`)}
+                  </span>
+                  <input
+                    className={`form-input schedule-datetime-input${scheduleTime ? ' has-value' : ' is-empty'}`}
+                    type="time"
+                    lang={`${numberLocale}-u-hc-h12`}
+                    step={60}
+                    value={scheduleTime}
+                    min={minScheduleTime}
+                    disabled={scheduleControlsDisabled}
+                    aria-label={t(`${TK}.scheduleTimePlaceholder`)}
+                    onClick={(event) => {
+                      const input = event.currentTarget
+                      if (minScheduleTime) {
+                        input.min = minScheduleTime
+                        input.setAttribute('min', minScheduleTime)
+                        if (!scheduleTime || scheduleTime < minScheduleTime) {
+                          setScheduleTime(minScheduleTime)
+                          input.value = minScheduleTime
+                        }
+                      } else {
+                        input.removeAttribute('min')
+                      }
+                      openDateTimePicker(input)
+                    }}
+                    onChange={(event) => {
+                      applyScheduleTime(event.target.value)
+                    }}
+                  />
+                </div>
               </div>
             ) : null}
           </div>

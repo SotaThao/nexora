@@ -4,10 +4,11 @@ import { useTranslation } from '../../../../contexts/LanguageContext'
 import { useNotification } from '../../../../contexts/NotificationContext'
 import { getErrorI18nKey } from '../../../../data/errorCodes'
 import {
-  isSmsCampaignAutoToggleable,
   isSmsCampaignCancellable,
   isSmsCampaignDeletable,
   isSmsCampaignEditable,
+  isSmsCampaignViewable,
+  MERCHANT_VOICE_SMS_CAMPAIGNS_POLL_INTERVAL_MS,
   SmsCampaignAudience,
   SmsCampaignScheduleMode,
   SmsCampaignStatus,
@@ -20,7 +21,6 @@ import {
   useMerchantVoiceSmsCampaignAudienceSummary,
   useMerchantVoiceSmsCampaignDashboard,
   useMerchantVoiceSmsCampaigns,
-  useToggleMerchantVoiceSmsCampaignActive,
 } from '../../../../data/hooks/useMerchantVoiceSmsCampaigns'
 import type { SmsCampaignListItemDto } from '../../../../data/repositories/merchantVoiceSmsCampaigns'
 import { usePagination } from '../../../../hooks/usePagination'
@@ -54,6 +54,7 @@ import {
 } from './constants'
 import SmsBuyCreditsModal from './SmsBuyCreditsModal'
 import SmsCreateCampaignModal from './SmsCreateCampaignModal'
+import SmsRecipientsModal from './SmsRecipientsModal'
 
 const TK = SMS_CAMPAIGN_TK
 
@@ -101,18 +102,21 @@ export default function BookingSmsCampaignsPanel() {
   const audienceQuery = useMerchantVoiceSmsCampaignAudienceSummary({ enabled: voiceEnabled })
   const campaignsQuery = useMerchantVoiceSmsCampaigns(
     { pageNumber, pageSize },
-    { enabled: voiceEnabled },
+    {
+      enabled: voiceEnabled,
+      refetchInterval: voiceEnabled ? MERCHANT_VOICE_SMS_CAMPAIGNS_POLL_INTERVAL_MS : false,
+    },
   )
 
   const cancelMutation = useCancelMerchantVoiceSmsCampaign()
   const deleteMutation = useDeleteMerchantVoiceSmsCampaign()
-  const toggleMutation = useToggleMerchantVoiceSmsCampaignActive()
   const purchaseMutation = useCreateMerchantVoiceSmsCreditPurchase()
 
   const [buyOpen, setBuyOpen] = useState(false)
   const [composerOpen, setComposerOpen] = useState(false)
   const [composerAudience, setComposerAudience] = useState(SmsCampaignAudience.New)
   const [editingCampaignId, setEditingCampaignId] = useState<string | null>(null)
+  const [viewingCampaign, setViewingCampaign] = useState<SmsCampaignListItemDto | null>(null)
   const [pendingActionId, setPendingActionId] = useState<string | null>(null)
 
   const isPanelLoading =
@@ -123,7 +127,6 @@ export default function BookingSmsCampaignsPanel() {
   const isBusy =
     cancelMutation.isPending
     || deleteMutation.isPending
-    || toggleMutation.isPending
     || purchaseMutation.isPending
 
   const toastApiError = (error: unknown) => {
@@ -197,24 +200,6 @@ export default function BookingSmsCampaignsPanel() {
     try {
       await deleteMutation.mutateAsync(campaign.id)
       showToast(t(`${TK}.deleteSuccess`, { name: campaign.name }), 'success')
-    } catch (error) {
-      toastApiError(error)
-    } finally {
-      setPendingActionId(null)
-    }
-  }
-
-  const handleToggleCampaign = async (campaign: SmsCampaignListItemDto) => {
-    setPendingActionId(campaign.id)
-    try {
-      const nextStatus = await toggleMutation.mutateAsync(campaign.id)
-      showToast(
-        t(`${TK}.toggleSuccess`, {
-          name: campaign.name,
-          status: statusLabel(nextStatus, t),
-        }),
-        'success',
-      )
     } catch (error) {
       toastApiError(error)
     } finally {
@@ -360,38 +345,51 @@ export default function BookingSmsCampaignsPanel() {
                 ) : (
                   history.map((campaign) => {
                     const rowBusy = isBusy && pendingActionId === campaign.id
+                    const canView = isSmsCampaignViewable(campaign.status)
                     const canEdit = isSmsCampaignEditable(campaign.status)
                     const canCancel = isSmsCampaignCancellable(campaign.status)
                     const canDelete = isSmsCampaignDeletable(campaign.status, campaign.totalSent)
-                    const canToggle = isSmsCampaignAutoToggleable(campaign.scheduleMode, campaign.status)
-                    const hasActions = canEdit || canToggle || canCancel || canDelete
+                    const hasActions = canView || canEdit || canCancel || canDelete
                     return (
                       <tr key={campaign.id}>
-                        <td data-label={t(`${TK}.colName`)}>{campaign.name}</td>
-                        <td data-label={t(`${TK}.colAudience`)}>
+                        <td>{campaign.name}</td>
+                        <td>
                           {t(`${TK}.${SMS_CAMPAIGN_AUDIENCE_I18N_KEY[campaign.audienceSegment]}`)}
                         </td>
-                        <td data-label={t(`${TK}.colMode`)}>{modeLabel(campaign.scheduleMode, t)}</td>
-                        <td data-label={t(`${TK}.colStatus`)}>
+                        <td>{modeLabel(campaign.scheduleMode, t)}</td>
+                        <td>
                           <span
                             className={`sms-campaign-status ${SMS_CAMPAIGN_STATUS_CLASS[campaign.status]}`}
                           >
                             {statusLabel(campaign.status, t)}
                           </span>
                         </td>
-                        <td data-label={t(`${TK}.colSent`)}>
+                        <td>
                           {formatCount(campaign.totalSent, currentLanguage)}
                         </td>
-                        <td data-label={t(`${TK}.colFailed`)}>
+                        <td>
                           {formatCount(campaign.totalFailed, currentLanguage)}
                         </td>
-                        <td data-label={t(`${TK}.colActions`)}>
+                        <td>
                           {hasActions ? (
                             <div className="sms-campaign-actions">
+                              {canView ? (
+                                <button
+                                  className="sms-campaign-action"
+                                  type="button"
+                                  data-sms-campaign-action="view"
+                                  disabled={rowBusy}
+                                  aria-label={t(`${TK}.actionViewAria`, { name: campaign.name })}
+                                  onClick={() => setViewingCampaign(campaign)}
+                                >
+                                  {t(`${TK}.actionView`)}
+                                </button>
+                              ) : null}
                               {canEdit ? (
                                 <button
                                   className="sms-campaign-action"
                                   type="button"
+                                  data-sms-campaign-action="edit"
                                   disabled={rowBusy}
                                   aria-label={t(`${TK}.actionEditAria`, { name: campaign.name })}
                                   onClick={() => openComposer(campaign.audienceSegment, campaign.id)}
@@ -399,23 +397,11 @@ export default function BookingSmsCampaignsPanel() {
                                   {t(`${TK}.actionEdit`)}
                                 </button>
                               ) : null}
-                              {canToggle ? (
-                                <button
-                                  className="sms-campaign-action"
-                                  type="button"
-                                  disabled={rowBusy}
-                                  aria-label={t(`${TK}.actionToggleAria`, { name: campaign.name })}
-                                  onClick={() => void handleToggleCampaign(campaign)}
-                                >
-                                  {campaign.status === SmsCampaignStatus.Active
-                                    ? t(`${TK}.actionPause`)
-                                    : t(`${TK}.actionResume`)}
-                                </button>
-                              ) : null}
                               {canCancel ? (
                                 <button
                                   className="sms-campaign-action"
                                   type="button"
+                                  data-sms-campaign-action="cancel"
                                   disabled={rowBusy}
                                   aria-label={t(`${TK}.actionCancelAria`, { name: campaign.name })}
                                   onClick={() => void handleCancelCampaign(campaign)}
@@ -427,6 +413,7 @@ export default function BookingSmsCampaignsPanel() {
                                 <button
                                   className="sms-campaign-action is-danger"
                                   type="button"
+                                  data-sms-campaign-action="delete"
                                   disabled={rowBusy}
                                   aria-label={t(`${TK}.actionDeleteAria`, { name: campaign.name })}
                                   onClick={() => void handleDeleteCampaign(campaign)}
@@ -483,6 +470,12 @@ export default function BookingSmsCampaignsPanel() {
             setEditingCampaignId(null)
           }}
           onSaved={handleCampaignSaved}
+        />
+        <SmsRecipientsModal
+          open={!!viewingCampaign}
+          campaignId={viewingCampaign?.id ?? null}
+          campaignName={viewingCampaign?.name ?? ''}
+          onClose={() => setViewingCampaign(null)}
         />
       </div>
     </>

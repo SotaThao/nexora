@@ -21,14 +21,14 @@ type Props = {
   open: boolean
   submitting?: boolean
   onClose: () => void
-  onConfirm: (pkg: SmsCreditPackageMock, payment: SmsCreditPaymentMock) => void | Promise<void>
+  /** Reserved for when purchase checkout is enabled. */
+  onConfirm?: (pkg: SmsCreditPackageMock, payment: SmsCreditPaymentMock) => void | Promise<void>
 }
 
 export default function SmsBuyCreditsModal({
   open,
   submitting = false,
   onClose,
-  onConfirm,
 }: Props) {
   const { t, currentLanguage } = useTranslation()
   const closeBtnRef = useRef<HTMLButtonElement | null>(null)
@@ -209,9 +209,10 @@ export default function SmsBuyCreditsModal({
             className="btn-primary"
             type="button"
             disabled
+            aria-disabled="true"
           >
             <ShieldCheckIcon className="marketing-icon is-compact" />
-            <span>{t(`${TK}.confirmPayment`)}</span>
+            <span>{t(`${TK}.confirmPaymentComingSoon`)}</span>
           </button>
         </div>
       </div>

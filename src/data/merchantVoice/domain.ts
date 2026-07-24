@@ -168,29 +168,30 @@ export function normalizeSmsEncoding(value: unknown): SmsEncoding {
   return match ?? SmsEncoding.Gsm7
 }
 
+export function isSmsCampaignViewable(status: SmsCampaignStatus): boolean {
+  return status === SmsCampaignStatus.Sent
+}
+
 export function isSmsCampaignEditable(status: SmsCampaignStatus): boolean {
   return (
-    status === SmsCampaignStatus.Draft
-    || status === SmsCampaignStatus.Scheduled
-    || status === SmsCampaignStatus.Paused
+    status === SmsCampaignStatus.Scheduled
     || status === SmsCampaignStatus.Active
   )
 }
 
 export function isSmsCampaignCancellable(status: SmsCampaignStatus): boolean {
   return (
-    status === SmsCampaignStatus.Draft
-    || status === SmsCampaignStatus.Scheduled
+    status === SmsCampaignStatus.Scheduled
     || status === SmsCampaignStatus.Active
-    || status === SmsCampaignStatus.Paused
   )
 }
 
-export function isSmsCampaignDeletable(status: SmsCampaignStatus, totalSent: number): boolean {
-  if (status === SmsCampaignStatus.Sending) return false
-  // Cancelled campaigns are cleaned up via Delete (not Cancel again).
-  if (status === SmsCampaignStatus.Cancelled) return true
-  return totalSent === 0
+export function isSmsCampaignDeletable(status: SmsCampaignStatus, _totalSent = 0): boolean {
+  return (
+    status === SmsCampaignStatus.Scheduled
+    || status === SmsCampaignStatus.Active
+    || status === SmsCampaignStatus.Cancelled
+  )
 }
 
 export function isSmsCampaignAutoToggleable(
@@ -210,6 +211,9 @@ export enum BookingHubSubTab {
 
 /** Poll interval when Booking Hub Today tab is active. */
 export const MERCHANT_VOICE_BOOKINGS_POLL_INTERVAL_MS = 30_000
+
+/** Poll interval when Booking Hub SMS Campaigns tab is active. */
+export const MERCHANT_VOICE_SMS_CAMPAIGNS_POLL_INTERVAL_MS = 15_000
 
 /** Minimum service duration (minutes) in Booking Hub settings. */
 export const MERCHANT_VOICE_SERVICE_MIN_DURATION_MINUTES = 1

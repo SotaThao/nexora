@@ -1,5 +1,6 @@
 import {
   SmsCampaignAudience,
+  SmsCampaignRecipientStatus,
   SmsCampaignScheduleMode,
   SmsCampaignStatus,
   SmsCreditPackageCode,
@@ -18,6 +19,21 @@ export const SMS_CAMPAIGN_STATUS_CLASS: Record<SmsCampaignStatus, string> = {
   [SmsCampaignStatus.Cancelled]: 'is-cancelled',
   [SmsCampaignStatus.Active]: 'is-active',
   [SmsCampaignStatus.Paused]: 'is-cancelled',
+}
+
+export const SMS_RECIPIENT_STATUS_CLASS: Record<SmsCampaignRecipientStatus, string> = {
+  [SmsCampaignRecipientStatus.Pending]: 'is-scheduled',
+  [SmsCampaignRecipientStatus.Sent]: 'is-sent',
+  [SmsCampaignRecipientStatus.Failed]: 'is-failed',
+  [SmsCampaignRecipientStatus.Cancelled]: 'is-unknown',
+}
+
+/** i18n keys for recipient status labels (API SmsCampaignRecipientStatus). */
+export const SMS_RECIPIENT_STATUS_I18N_KEY: Record<SmsCampaignRecipientStatus, string> = {
+  [SmsCampaignRecipientStatus.Pending]: 'recipientStatusPending',
+  [SmsCampaignRecipientStatus.Sent]: 'recipientStatusSent',
+  [SmsCampaignRecipientStatus.Failed]: 'recipientStatusFailed',
+  [SmsCampaignRecipientStatus.Cancelled]: 'recipientStatusCancelled',
 }
 
 export const SMS_CAMPAIGN_STATUS_I18N_KEY: Record<SmsCampaignStatus, string> = {

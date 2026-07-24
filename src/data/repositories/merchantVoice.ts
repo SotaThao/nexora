@@ -32,6 +32,7 @@ export {
   isValidMerchantVoiceServiceDuration,
   MerchantVoiceServiceField,
   MERCHANT_VOICE_BOOKINGS_POLL_INTERVAL_MS,
+  MERCHANT_VOICE_SMS_CAMPAIGNS_POLL_INTERVAL_MS,
   MERCHANT_VOICE_SERVICE_MIN_DURATION_MINUTES,
   BookingUiSearchField,
   BookingUiSource,
@@ -55,6 +56,7 @@ export {
   isSmsCampaignCancellable,
   isSmsCampaignDeletable,
   isSmsCampaignAutoToggleable,
+  isSmsCampaignViewable,
   normalizeSmsCampaignAudience,
   normalizeSmsCampaignStatus,
   normalizeSmsCampaignScheduleMode,
@@ -430,6 +432,8 @@ export interface CreateMerchantVoiceStaffRequest {
   phoneNumber?: string | null
   email?: string | null
   skills?: string | null
+  /** Present when linking an existing business staff profile from the picker. */
+  staffProfileId?: string | null
   schedules: MerchantVoiceStaffScheduleEntry[]
 }
 
