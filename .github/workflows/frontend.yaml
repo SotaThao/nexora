@@ -249,7 +249,11 @@ jobs:
         run: |
           echo "Updating deployment for Nexora Frontend"
           echo "Deploy path (tag): ${{ needs.resolve-environment.outputs.deploy_path }}, devops path: ${{ needs.resolve-environment.outputs.devops_path }}, SHA: ${{ github.sha }}"
-          sed -i 's|:${{ needs.resolve-environment.outputs.deploy_path }}-.*|:${{ needs.resolve-environment.outputs.deploy_path }}-${{ github.sha }}|g' devops/argocd/${{ needs.resolve-environment.outputs.devops_path }}/app-nexora-frontend/deployment.yaml
+          # Update deployment image tag.
+          # Match the whole image-line (registry+repo+tag) and replace the tag portion
+          # with the current build's deploy_path + sha. The image line uses the
+          # repo name (e.g. nexora-frontend) as a unique key — safe to match.
+          sed -i 's|nexora-frontend:.*|nexora-frontend:'${{ needs.resolve-environment.outputs.deploy_path }}'-'${{ github.sha }}'|g' devops/argocd/${{ needs.resolve-environment.outputs.devops_path }}/app-nexora-frontend/deployment.yaml
 
       - name: Commit and Push Changes
         run: |
