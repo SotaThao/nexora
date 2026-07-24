@@ -31,7 +31,7 @@ import CountryCodeSelect, {
   parsePhone,
 } from "../../CountryCodeSelect";
 import Pagination from "../../ui/Pagination";
-import { EyeIcon, SpinnerIcon } from "./BookingHubIcons";
+import { PencilIcon, SpinnerIcon } from "./BookingHubIcons";
 import {
   BookingTeamGridSkeleton,
   BookingTechModalProfileSkeleton,
@@ -515,6 +515,9 @@ export default function BookingTeamPanel() {
   const [draftPhone, setDraftPhone] = useState("");
   const [draftEmail, setDraftEmail] = useState("");
   const [draftServices, setDraftServices] = useState<string[]>([]);
+  const [draftStaffProfileId, setDraftStaffProfileId] = useState<string | null>(
+    null,
+  );
   const [draftSchedule, setDraftSchedule] =
     useState<WeeklySchedule>(emptySchedule());
   const [formErrors, setFormErrors] = useState<{
@@ -603,6 +606,7 @@ export default function BookingTeamPanel() {
       setDraftPhone("");
       setDraftEmail("");
       setDraftServices([]);
+      setDraftStaffProfileId(null);
       setDraftSchedule(emptySchedule());
       setFormErrors({});
       setShowScheduleValidation(false);
@@ -612,6 +616,7 @@ export default function BookingTeamPanel() {
     setDraftPhone(member.phone);
     setDraftEmail(member.email);
     setDraftServices([...member.services]);
+    setDraftStaffProfileId(null);
     setDraftSchedule(scheduleOverride ?? parseSchedule(member.schedule));
     setFormErrors({});
     setShowScheduleValidation(false);
@@ -663,12 +668,15 @@ export default function BookingTeamPanel() {
     }
 
     setModalMode("create");
-    setSelectedId(staff.id);
+    setSelectedId("");
     setDraftName(staff.name);
     setDraftPhone(staff.phone);
     setDraftEmail(staff.email);
     setDraftServices([]);
+    setDraftStaffProfileId(staff.id);
     setDraftSchedule(emptySchedule());
+    setFormErrors({});
+    setShowScheduleValidation(false);
     setComboboxOpen(false);
     setSearchQuery("");
   };
@@ -856,6 +864,7 @@ export default function BookingTeamPanel() {
           phoneNumber: payload.phone,
           email: payload.email,
           skills: payload.services.join(", "),
+          staffProfileId: draftStaffProfileId,
           schedules,
         },
         {
@@ -998,105 +1007,102 @@ export default function BookingTeamPanel() {
         </button>
       </div>
 
-      <div className="booking-grid">
-        <article className="overview-card overview-card-pad">
-          <div className="tech-grid">
-            {isStaffLoading ? <BookingTeamGridSkeleton count={3} /> : null}
-            {!isStaffLoading && members.length === 0 ? (
-              <div className="tech-grid-empty">
-                <div className="tech-grid-empty-icon" aria-hidden="true">
-                  <PeopleIcon />
-                </div>
-                <div className="tech-grid-empty-title">
-                  {t(`${TK}.emptyTitle`)}
-                </div>
-                <p className="tech-grid-empty-description">
-                  {t(`${TK}.emptyDescription`)}
-                </p>
-                <button
-                  className="booking-primary-button"
-                  type="button"
-                  onClick={() => openModal()}
-                >
-                  <PlusIcon />
-                  <span>{t(`${TK}.emptyCta`)}</span>
-                </button>
-              </div>
-            ) : null}
-            {!isStaffLoading
-              ? members.map((member) => (
-                  <article
-                    className="tech-card tech-card-interactive"
-                    key={member.id}
-                    data-tech-id={member.id}
-                    onClick={() => openModal(member.id, "edit")}
-                  >
-                    <div className="tech-top">
-                      <div className="tech-avatar" style={member.avatarStyle}>
-                        {member.avatar}
-                      </div>
-                      <div className="tech-profile">
-                        <div className="tech-name">{member.name}</div>
-                        <div className="tech-phone">
-                          {formatPhoneDisplay(member.phone)}
-                        </div>
-                      </div>
-                      <div
-                        className="tech-top-actions"
-                        onClick={(event) => event.stopPropagation()}
-                        onKeyDown={(event) => event.stopPropagation()}
-                      >
-                        <button
-                          className="booking-secondary-button icon-only tech-view-button"
-                          type="button"
-                          aria-label={t(`${TK}.viewDetails`)}
-                          title={t(`${TK}.viewDetails`)}
-                          onClick={() => openModal(member.id, "edit")}
-                        >
-                          <EyeIcon />
-                          <span className="sr-only">
-                            {t(`${TK}.viewDetails`)}
-                          </span>
-                        </button>
-                        <button
-                          className={`toggle-pill ${member.smsEnabled ? "is-on" : ""}`}
-                          type="button"
-                          aria-label={t(`${TK}.toggleSms`, {
-                            name: member.name,
-                          })}
-                          aria-pressed={member.smsEnabled}
-                          disabled={pendingToggleIds[member.id]}
-                          onClick={() => toggleSms(member.id)}
-                        />
-                      </div>
-                    </div>
-                    <div className="tech-services">
-                      {member.services.map((service) => (
-                        <span className="badge badge-plan" key={service}>
-                          {service}
-                        </span>
-                      ))}
-                    </div>
-                  </article>
-                ))
-              : null}
+      <div className="tech-grid">
+        {isStaffLoading ? <BookingTeamGridSkeleton count={3} /> : null}
+        {!isStaffLoading && members.length === 0 ? (
+          <div className="tech-grid-empty">
+            <div className="tech-grid-empty-icon" aria-hidden="true">
+              <PeopleIcon />
+            </div>
+            <div className="tech-grid-empty-title">
+              {t(`${TK}.emptyTitle`)}
+            </div>
+            <p className="tech-grid-empty-description">
+              {t(`${TK}.emptyDescription`)}
+            </p>
+            <button
+              className="booking-primary-button"
+              type="button"
+              onClick={() => openModal()}
+            >
+              <PlusIcon />
+              <span>{t(`${TK}.emptyCta`)}</span>
+            </button>
           </div>
-
-          {!isStaffLoading && (staffResponse?.totalCount ?? 0) > 0 ? (
-            <Pagination
-              pageNumber={pageNumber}
-              pageSize={pageSize}
-              totalPages={staffResponse?.totalPages ?? 1}
-              totalCount={staffResponse?.totalCount ?? 0}
-              hasNextPage={staffResponse?.hasNextPage}
-              hasPreviousPage={staffResponse?.hasPreviousPage}
-              onPageChange={setPage}
-              isLoading={isStaffFetching}
-              className={BOOKING_HUB_PAGINATION_CLASSNAME}
-            />
-          ) : null}
-        </article>
+        ) : null}
+        {!isStaffLoading
+          ? members.map((member) => (
+              <article
+                className="tech-card"
+                key={member.id}
+                data-tech-id={member.id}
+              >
+                <div className="tech-top">
+                  <div className="tech-avatar" style={member.avatarStyle}>
+                    {member.avatar}
+                  </div>
+                  <div className="tech-profile">
+                    <div className="tech-name">{member.name}</div>
+                    <div className="tech-phone">
+                      {formatPhoneDisplay(member.phone)}
+                    </div>
+                  </div>
+                  <button
+                    className={`toggle-pill ${member.smsEnabled ? "is-on" : ""}`}
+                    type="button"
+                    aria-label={t(`${TK}.toggleSms`, {
+                      name: member.name,
+                    })}
+                    aria-pressed={member.smsEnabled}
+                    disabled={pendingToggleIds[member.id]}
+                    onClick={() => toggleSms(member.id)}
+                  />
+                </div>
+                <div className="tech-card-footer">
+                  <div className="tech-stats">
+                    <div className="tech-stat">
+                      <strong>{member.customers}</strong>
+                      <span>{t(`${TK}.clientsToday`)}</span>
+                    </div>
+                  </div>
+                  <div className="tech-card-actions">
+                    <button
+                      className="booking-secondary-button"
+                      type="button"
+                      aria-label={t(`${TK}.edit`)}
+                      title={t(`${TK}.edit`)}
+                      onClick={() => openModal(member.id, "detail")}
+                    >
+                      <PencilIcon className="marketing-icon is-compact" />
+                      <span className="booking-mini-label">{t(`${TK}.edit`)}</span>
+                    </button>
+                  </div>
+                </div>
+                <div className="tech-services">
+                  {member.services.map((service) => (
+                    <span className="badge badge-plan" key={service}>
+                      {service}
+                    </span>
+                  ))}
+                </div>
+              </article>
+            ))
+          : null}
       </div>
+
+      {!isStaffLoading && (staffResponse?.totalCount ?? 0) > 0 ? (
+        <Pagination
+          pageNumber={pageNumber}
+          pageSize={pageSize}
+          totalPages={staffResponse?.totalPages ?? 1}
+          totalCount={staffResponse?.totalCount ?? 0}
+          hasNextPage={staffResponse?.hasNextPage}
+          hasPreviousPage={staffResponse?.hasPreviousPage}
+          onPageChange={setPage}
+          isLoading={isStaffFetching}
+          className={BOOKING_HUB_PAGINATION_CLASSNAME}
+        />
+      ) : null}
 
       {modalOpen ? (
         <div
@@ -1180,10 +1186,10 @@ export default function BookingTeamPanel() {
                             {filteredBusinessStaff.map((member) => (
                               <button
                                 key={member.id}
-                                className={`tech-choice-card ${selectedId === member.id ? "is-active" : ""} ${member.isAlreadyAdded ? "is-disabled" : ""}`}
+                                className={`tech-choice-card ${draftStaffProfileId === member.id ? "is-active" : ""} ${member.isAlreadyAdded ? "is-disabled" : ""}`}
                                 type="button"
                                 role="option"
-                                aria-selected={selectedId === member.id}
+                                aria-selected={draftStaffProfileId === member.id}
                                 aria-disabled={member.isAlreadyAdded}
                                 disabled={member.isAlreadyAdded}
                                 onClick={() => selectBusinessStaff(member)}
@@ -1222,7 +1228,7 @@ export default function BookingTeamPanel() {
                     ) : null}
                   </div>
                   <button
-                    className={`booking-secondary-button tech-create-button ${modalMode === "create" ? "is-active" : ""}`}
+                    className={`booking-secondary-button tech-create-button ${modalMode === "create" && !draftStaffProfileId ? "is-active" : ""}`}
                     type="button"
                     onClick={startCreate}
                   >

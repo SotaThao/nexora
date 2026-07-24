@@ -22,6 +22,7 @@ import {
   type UpdateMerchantVoiceCustomerRequest,
   type MerchantVoiceStaffFilter,
   type MerchantVoiceStaffResponse,
+  type MerchantVoiceTenantDto,
   type MerchantVoiceTenantStatusDto,
 } from '../repositories/merchantVoice'
 
@@ -32,6 +33,22 @@ export function useMerchantVoiceTenantStatus({ enabled = true } = {}) {
     queryKey: qk.merchantVoiceTenantStatus(),
     queryFn: () => merchantVoiceRepository.getTenantStatus(),
     enabled,
+  })
+}
+
+export function useMerchantVoiceMyTenant({ enabled = true } = {}) {
+  return useQuery<MerchantVoiceTenantDto>({
+    queryKey: qk.merchantVoiceMyTenant(),
+    queryFn: () => merchantVoiceRepository.getMyTenant(),
+    enabled,
+  })
+}
+
+/** Loads tenant identity only after `GET /tenant/status` confirms a voice tenant exists. */
+export function useMerchantVoiceTenantIdentity() {
+  const status = useMerchantVoiceTenantStatus()
+  return useMerchantVoiceMyTenant({
+    enabled: status.data?.hasVoiceTenant === true,
   })
 }
 
