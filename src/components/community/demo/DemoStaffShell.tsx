@@ -404,6 +404,10 @@ export default function DemoStaffShell({ children, onDemoNavigation }: DemoStaff
   const { pathname } = useLocation()
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
   const hideDecorativeNotification = pathname === '/community' || pathname.startsWith('/community/')
+  const isChatRoute =
+    pathname === '/community/chat' ||
+    pathname.startsWith('/community/chat/') ||
+    /^\/community\/[^/]+\/chat\/?$/.test(pathname)
 
   return (
     <div className="min-h-dvh bg-nexoraCanvas text-nexoraText">
@@ -414,23 +418,37 @@ export default function DemoStaffShell({ children, onDemoNavigation }: DemoStaff
         onDemoNavigation={onDemoNavigation}
       />
 
-      <div className="flex min-h-[calc(100dvh-52px)] flex-col lg:pl-72">
+      <div
+        className={`flex min-h-[calc(100dvh-52px)] flex-col lg:pl-72 ${
+          isChatRoute ? 'h-[calc(100dvh-52px)] overflow-hidden lg:h-auto lg:overflow-visible' : ''
+        }`}
+      >
         <DemoHeader
           onOpenMobileMenu={() => setIsMobileMenuOpen(true)}
           onDemoNavigation={onDemoNavigation}
           hideDecorativeNotification={hideDecorativeNotification}
         />
-        <main className="mx-auto w-full max-w-3xl flex-1 px-4 py-5 sm:px-6">{children}</main>
-        <footer className="mb-20 border-t border-nexoraBorder bg-white px-3 py-3 sm:px-6 lg:mb-0 lg:px-7 lg:py-4">
-          <div className="flex flex-nowrap items-center justify-between gap-2 text-left">
-            <p className="min-w-0 flex-1 truncate text-xs font-medium text-slate-700 sm:text-sm">
-              {t('dashboard.footer.copyright')}
-            </p>
-            <div className="shrink-0">
-              <AppDownloadLinks />
+        <main
+          className={`mx-auto w-full max-w-3xl flex-1 px-4 sm:px-6 ${
+            isChatRoute
+              ? 'min-h-0 pb-[calc(69px+var(--app-safe-area-bottom,env(safe-area-inset-bottom,0px)))] pt-5 lg:py-5'
+              : 'py-5'
+          }`}
+        >
+          {children}
+        </main>
+        {!isChatRoute ? (
+          <footer className="mb-20 border-t border-nexoraBorder bg-white px-3 py-3 sm:px-6 lg:mb-0 lg:px-7 lg:py-4">
+            <div className="flex flex-nowrap items-center justify-between gap-2 text-left">
+              <p className="min-w-0 flex-1 truncate text-xs font-medium text-slate-700 sm:text-sm">
+                {t('dashboard.footer.copyright')}
+              </p>
+              <div className="shrink-0">
+                <AppDownloadLinks />
+              </div>
             </div>
-          </div>
-        </footer>
+          </footer>
+        ) : null}
       </div>
 
       <DemoBottomNav onDemoNavigation={onDemoNavigation} />
