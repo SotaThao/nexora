@@ -288,7 +288,7 @@ export default function NicknameEditor({
 
   const triggerClassName = triggerVariant === 'icon'
     ? 'inline-flex h-11 w-11 shrink-0 items-center justify-center rounded-lg text-nexoraBrand transition hover:bg-nexoraBrandSoft focus:outline-none focus:ring-2 focus:ring-nexoraBrand/30'
-    : 'inline-flex h-10 items-center gap-2 rounded-lg border border-nexoraBorder bg-white px-4 text-xs font-bold text-nexoraText shadow-sm transition hover:bg-nexoraSurfaceMuted focus:outline-none focus:ring-2 focus:ring-nexoraBrand/30'
+    : 'inline-flex h-10 items-center justify-center gap-2 rounded-lg border border-nexoraBorder bg-white px-4 text-xs font-bold text-nexoraText shadow-sm transition hover:bg-nexoraSurfaceMuted focus:outline-none focus:ring-2 focus:ring-nexoraBrand/30'
 
   const trigger = (
     <button
