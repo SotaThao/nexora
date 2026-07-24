@@ -215,9 +215,9 @@ export function CommunityHome() {
           {isLoading || myCommunities.isLoading || communities.isLoading ? <LoadingState rows={4} /> : null}
           {myCommunities.error ? <ErrorState error={myCommunities.error} onRetry={() => void myCommunities.refetch()} /> : null}
           {communities.error ? <ErrorState error={communities.error} onRetry={() => void communities.refetch()} /> : null}
+          {composerCommunityId ? <PostComposer communityId={composerCommunityId} onClose={() => setComposerCommunityId(null)} /> : <QuickComposer communityId={feedCommunities[0]?.id} onOpen={() => setComposerCommunityId(feedCommunities[0]?.id ?? null)} />}
           {ringCommunities.length ? <CommunityStoryRings communities={ringCommunities} /> : <EmptyState title="Chào mừng đến Community">Chọn một persona demo để vào nhóm hoặc tạo nhóm đầu tiên của bạn.</EmptyState>}
-          {composerCommunityId ? <PostComposer communityId={composerCommunityId} onClose={() => setComposerCommunityId(null)} /> : null}
-          {feedCommunities.map((community, index) => <div key={community.id}>{index === 0 ? <QuickComposer communityId={community.id} onOpen={() => setComposerCommunityId(community.id)} /> : null}<CommunityFeed community={community} /></div>)}
+          {feedCommunities.map((community) => <CommunityFeed key={community.id} community={community} />)}
           <button type="button" onClick={() => setSheetOpen(true)} aria-label="Tạo mới" className={`fixed bottom-24 right-5 z-40 grid h-14 w-14 place-items-center rounded-full text-white shadow-xl lg:bottom-7 ${gradientClass}`}><Plus className="h-6 w-6" aria-hidden="true" /></button>
           {sheetOpen ? <CreateSheet onClose={() => setSheetOpen(false)} onPost={() => { setComposerCommunityId(feedCommunities[0]?.id ?? null); setSheetOpen(false) }} onGroup={() => setSheetOpen(false)} /> : null}
         </div>
