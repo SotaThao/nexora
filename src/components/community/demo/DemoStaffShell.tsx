@@ -330,12 +330,6 @@ function DemoHeader({ onOpenMobileMenu, onDemoNavigation, hideDecorativeNotifica
             K
             <span className="absolute bottom-0 right-0 h-2.5 w-2.5 rounded-full border-2 border-white bg-nexoraSuccess" />
           </button>
-          <button
-            type="button"
-            className="inline-flex min-h-11 items-center justify-center rounded-full bg-gradient-to-r from-nexoraElectric to-nexoraViolet px-4 text-[12px] font-extrabold text-white shadow-nexora-soft transition hover:opacity-90"
-          >
-            ＋ Tạo nhóm
-          </button>
         </div>
       </div>
     </header>
