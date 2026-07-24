@@ -28,6 +28,7 @@ jobs:
       github_environment: ${{ steps.resolve.outputs.github_environment }}
       build_env: ${{ steps.resolve.outputs.build_env }}
       deploy_path: ${{ steps.resolve.outputs.deploy_path }}
+      devops_path: ${{ steps.resolve.outputs.devops_path }}
     steps:
       - name: Resolve environment from branch
         id: resolve
@@ -42,18 +43,32 @@ jobs:
             master|main)
               github_environment="PRODUCTION"
               build_env="production"
+              # Docker image tags cannot contain `/`, but the devops repo
+              # organizes manifests under argocd/<raw-branch>/. For master/main
+              # both forms equal the target_ref string so they collapse to the
+              # same value here.
+              deploy_path="$target_ref"
+              devops_path="$target_ref"
               ;;
             staging)
               github_environment="STAGING"
               build_env="staging"
+              deploy_path="$target_ref"
+              devops_path="$target_ref"
               ;;
             feature/taxiq-pos)        # NEW (Phase 3/11 — test2 environment)
               github_environment="TEST2"
               build_env="test2"
+              # Sanitized tag (Docker rejects `/` in tags), branch-path for devops
+              # (matches the seeded manifests in PR #64).
+              deploy_path="taxiq-pos"
+              devops_path="feature/taxiq-pos"
               ;;
             dev)
               github_environment="TEST"
               build_env="test"
+              deploy_path="$target_ref"
+              devops_path="$target_ref"
               ;;
             *)
               echo "Unsupported deployment branch: $target_ref" >&2
@@ -63,9 +78,10 @@ jobs:
 
           echo "github_environment=$github_environment" >> "$GITHUB_OUTPUT"
           echo "build_env=$build_env" >> "$GITHUB_OUTPUT"
-          echo "deploy_path=$target_ref" >> "$GITHUB_OUTPUT"
+          echo "deploy_path=$deploy_path" >> "$GITHUB_OUTPUT"
+          echo "devops_path=$devops_path" >> "$GITHUB_OUTPUT"
 
-          echo "Resolved $target_ref -> $github_environment / $build_env"
+          echo "Resolved $target_ref -> $github_environment / $build_env / deploy_path=$deploy_path / devops_path=$devops_path"
 
   validate-build:
     needs: resolve-environment
@@ -232,8 +248,8 @@ jobs:
       - name: Update Deployment Manifest
         run: |
           echo "Updating deployment for Nexora Frontend"
-          echo "Deploy path: ${{ needs.resolve-environment.outputs.deploy_path }}, SHA: ${{ github.sha }}"
-          sed -i 's|:${{ needs.resolve-environment.outputs.deploy_path }}-.*|:${{ needs.resolve-environment.outputs.deploy_path }}-${{ github.sha }}|g' devops/argocd/${{ needs.resolve-environment.outputs.deploy_path }}/app-nexora-frontend/deployment.yaml
+          echo "Deploy path (tag): ${{ needs.resolve-environment.outputs.deploy_path }}, devops path: ${{ needs.resolve-environment.outputs.devops_path }}, SHA: ${{ github.sha }}"
+          sed -i 's|:${{ needs.resolve-environment.outputs.deploy_path }}-.*|:${{ needs.resolve-environment.outputs.deploy_path }}-${{ github.sha }}|g' devops/argocd/${{ needs.resolve-environment.outputs.devops_path }}/app-nexora-frontend/deployment.yaml
 
       - name: Commit and Push Changes
         run: |
@@ -241,5 +257,5 @@ jobs:
           git config user.name "github-actions"
           git config user.email "github-actions@github.com"
           git add .
-          git diff --staged --quiet || git commit -m "Update Nexora Frontend ${{ needs.resolve-environment.outputs.deploy_path }} image to ${{ github.sha }}"
+          git diff --staged --quiet || git commit -m "Update Nexora Frontend ${{ needs.resolve-environment.outputs.devops_path }} image to ${{ github.sha }}"
           git push
