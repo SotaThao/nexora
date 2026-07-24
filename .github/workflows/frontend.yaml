@@ -44,8 +44,8 @@ jobs:
               github_environment="PRODUCTION"
               build_env="production"
               # Docker image tags cannot contain `/`, but the devops repo
-              # organizes manifests under argocd/<raw-branch>/. For master/main
-              # both forms equal the target_ref string so they collapse to the
+              # organizes manifests under argocd/<env>/. For master/main both
+              # forms equal the target_ref string so they collapse to the
               # same value here.
               deploy_path="$target_ref"
               devops_path="$target_ref"
@@ -59,10 +59,11 @@ jobs:
             feature/taxiq-pos)        # NEW (Phase 3/11 — test2 environment)
               github_environment="TEST2"
               build_env="test2"
-              # Sanitized tag (Docker rejects `/` in tags), branch-path for devops
-              # (matches the seeded manifests in PR #64).
+              # Sanitized tag (Docker rejects `/` in tags). devops path uses
+              # the env_name 'test2' so it matches argocd/test2/ in the
+              # devops repo (renamed from argocd/feature/taxiq-pos/ in PR #65).
               deploy_path="taxiq-pos"
-              devops_path="feature/taxiq-pos"
+              devops_path="test2"
               ;;
             dev)
               github_environment="TEST"
