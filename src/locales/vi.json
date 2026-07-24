@@ -647,11 +647,16 @@
       "qr_nfc": "Thiết bị QR / NFC",
       "tax_iq": "Tax IQ",
       "taxiq_onboarding": "Onboarding",
+      "taxiq_employers": "Pháp Nhân (Employers)",
       "taxiq_deductions": "Trung Tâm Khấu Trừ",
       "taxiq_income": "Tổng Quan Doanh Thu",
       "taxiq_receipts": "Kho Chứng Từ",
       "taxiq_equipment": "Theo Dõi Thiết Bị",
       "taxiq_payroll": "Lương & Payout",
+      "taxiq_pay_engine": "Cấu Hình Lương",
+      "taxiq_weekly_payroll": "Weekly Payroll",
+      "taxiq_payroll_runs": "Payroll Runs",
+      "taxiq_tax_ledger": "Tax Ledger",
       "taxiq_reminders": "Nhắc Nộp Thuế",
       "taxiq_cpa_access": "Truy Cập CPA",
       "taxiq_export": "Xuất Hồ Sơ Cuối Năm",
@@ -2166,6 +2171,43 @@
     "taxiq_cpa_access_unauthorized": "Bạn không có quyền quản lý quyền truy cập CPA này.",
     "taxiq_cpa_consent_required": "Cần có sự đồng ý của Thợ trước khi chia sẻ dữ liệu Full hoặc CPA Review.",
     "taxiq_deduction_not_in_grant_scope": "Bản ghi này nằm ngoài phạm vi quyền truy cập CPA của bạn.",
+    "taxiq_staff_w4_invite_staff_not_local": "Thợ này đã có tài khoản đăng nhập — hãy dùng form W-4 tự khai của họ.",
+    "taxiq_staff_w4_invite_email_required": "Thợ này chưa có email trong hồ sơ. Hãy thêm email vào hồ sơ trước khi gửi lời mời.",
+    "taxiq_staff_w4_invite_staff_link_not_active": "Thợ này hiện không phải thành viên đang hoạt động của doanh nghiệp bạn.",
+    "taxiq_staff_w4_invite_token_invalid": "Liên kết này không hợp lệ.",
+    "taxiq_staff_w4_invite_link_expired": "Liên kết này đã hết hạn hoặc bị thu hồi.",
+    "taxiq_staff_w4_invite_link_revoked": "Liên kết này đã hết hạn hoặc bị thu hồi.",
+    "taxiq_employer_not_found": "Không tìm thấy employer này.",
+    "taxiq_employer_already_exists": "Business này đã có employer.",
+    "taxiq_employer_registration_not_found": "Không tìm thấy registration này.",
+    "taxiq_staff_tax_profile_not_found": "Nhân viên này chưa nộp TIN nào.",
+    "taxiq_staff_tin_verification_not_allowed": "TIN này không ở trạng thái chờ xác thực.",
+    "taxiq_w9_not_ready_for_certification": "Điền đủ các trường bắt buộc của W-9 và tải lên file đã ký trước khi xác nhận.",
+    "pos_staff_pay_rule_profile_not_set_up": "Hoàn tất bước Worker Profile (vai trò POS và tips) cho thợ này trước.",
+    "pos_staff_pay_schedule_invalid": "Chọn nhịp trả lương hợp lệ.",
+    "pos_staff_pay_rule_field_required": "Điền đủ các trường bắt buộc cho công thức lương đã chọn.",
+    "pos_staff_pay_rule_commission_percent_invalid": "Hoa hồng phải trong khoảng 20%–65%.",
+    "pos_staff_pay_rule_overtime_threshold_invalid": "Ngưỡng overtime phải lớn hơn 0.",
+    "pos_staff_pay_rule_tiered_rates_invalid": "Nhập ít nhất một bậc hoa hồng hợp lệ.",
+    "pos_staff_pay_rule_bonus_field_invalid": "Nhập ngưỡng và phần trăm hợp lệ cho khoản thưởng đã bật.",
+    "pos_staff_payout_destination_field_invalid": "Nhập phương thức và điểm đến payout hợp lệ.",
+    "pos_payroll_not_ready": "Công thức trả lương của thợ này chưa được cấu hình.",
+    "pos_payroll_already_paid": "Thợ này đã được trả lương cho tuần này rồi.",
+    "pos_payroll_proof_required": "Cần có bằng chứng thanh toán trước khi trả lương cho thợ này.",
+    "pos_payroll_tax_profile_blocked": "Phân loại lao động hoặc hồ sơ thuế chưa sẵn sàng — bật Owner Override kèm ghi chú để tiếp tục.",
+    "pos_payroll_payout_method_missing": "Thợ này chưa có phương thức nhận lương.",
+    "pos_payroll_not_weekly_schedule": "Thợ này không thuộc nhịp lương Weekly.",
+    "pos_payroll_is_w2": "Thợ W-2 phải được trả qua đường payroll có khấu trừ thuế, không qua Weekly Payroll.",
+    "pos_payroll_override_note_required": "Owner Override chưa được bật cho cấu hình lương của thợ này.",
+    "pos_payroll_amount_zero": "Không có khoản nào để trả cho thợ này trong kỳ này.",
+    "taxiq_payroll_run_not_found": "Không tìm thấy kỳ lương này.",
+    "taxiq_payroll_run_period_invalid": "Ngày bắt đầu kỳ phải trước hoặc bằng ngày kết thúc kỳ.",
+    "taxiq_payroll_run_invalid_status_for_action": "Kỳ lương này đang ở trạng thái không cho phép thao tác này.",
+    "taxiq_payroll_run_approval_note_required": "Cần nhập ghi chú duyệt để chốt kỳ lương này.",
+    "taxiq_payroll_run_validation_blocking": "Còn thợ cần soi lại hồ sơ thuế trước khi chốt kỳ.",
+    "taxiq_payroll_run_cancel_reason_required": "Cần nhập lý do để huỷ kỳ lương này.",
+    "taxiq_payroll_run_cannot_cancel_posted": "Kỳ lương đã ghi sổ ledger không thể huỷ được nữa.",
+    "taxiq_tax_ledger_entry_not_found": "Không tìm thấy bút toán này trong Tax Ledger.",
     "taxiq_self_reported_income_not_found": "Không tìm thấy bản ghi thu nhập tự khai này.",
     "taxiq_owner_income_record_not_found": "Không tìm thấy bản ghi doanh thu này.",
     "taxiq_deduction_record_has_receipts": "Hãy gỡ các hóa đơn đính kèm trước khi xóa khoản khấu trừ này.",
@@ -4338,25 +4380,107 @@
         "legalNameLabel": "Tên pháp lý",
         "dbaNameLabel": "Tên kinh doanh (DBA, tùy chọn)",
         "addressLabel": "Địa chỉ",
+        "cityLabel": "Thành phố",
+        "stateLabel": "Bang",
+        "zipCodeLabel": "Mã ZIP",
         "taxClassificationLabel": "Phân loại thuế",
+        "llcTaxClassificationTypeLabel": "Phân loại thuế của LLC",
+        "otherClassificationDescriptionLabel": "Mô tả phân loại của bạn",
+        "backupWithholdingLabel": "Tôi thuộc diện bị khấu lưu dự phòng (backup withholding)",
+        "selectPlaceholder": "Chọn…",
         "saveButton": "Lưu thông tin W-9",
         "savedNotice": "Đã lưu thông tin W-9.",
         "uploadLabel": "File W-9 đã ký (tùy chọn)",
         "uploadChooseFile": "Chọn tệp",
         "uploadSuccess": "Đã tải lên file W-9 đã ký.",
         "documentAttached": "Đã đính kèm file đã ký",
+        "certifyButton": "Xác nhận W-9",
+        "certifySuccess": "Đã xác nhận W-9.",
+        "certifiedNotice": "Đã xác nhận vào {{date}}",
+        "notCertifiedNotice": "Chưa xác nhận. Điền đủ thông tin và tải file đã ký lên trước, sau đó xác nhận.",
         "taxClassifications": {
           "individual": "Cá Nhân",
           "soleProprietor": "Sole Proprietor",
           "llc": "LLC",
           "partnership": "Hợp Danh (Partnership)",
           "cCorp": "C-Corp",
-          "sCorp": "S-Corp"
+          "sCorp": "S-Corp",
+          "trustEstate": "Trust/Estate",
+          "other": "Khác"
+        },
+        "llcTaxClassifications": {
+          "c": "C Corporation",
+          "s": "S Corporation",
+          "p": "Partnership"
         },
         "errors": {
           "legalNameRequired": "Tên pháp lý là bắt buộc.",
           "addressRequired": "Địa chỉ là bắt buộc.",
-          "uploadFailed": "Không thể tải lên file W-9 đã ký. Vui lòng thử lại."
+          "cityRequired": "Thành phố là bắt buộc.",
+          "stateRequired": "Bang là bắt buộc.",
+          "zipCodeRequired": "Mã ZIP là bắt buộc.",
+          "llcTaxClassificationTypeRequired": "Chọn cách LLC của bạn chịu thuế.",
+          "otherClassificationDescriptionRequired": "Mô tả phân loại thuế của bạn.",
+          "uploadFailed": "Không thể tải lên file W-9 đã ký. Vui lòng thử lại.",
+          "certifyFailed": "Điền đủ các trường bắt buộc của W-9 và tải lên file đã ký trước khi xác nhận."
+        }
+      }
+    },
+    "w4": {
+      "title": "W-4 (Tình Trạng Khai Thuế & Khấu Trừ)",
+      "description": "Được tiệm dùng để khấu trừ thuế cho năm thuế {{taxYear}}.",
+      "lockedNotice": "Năm thuế này đã bị khóa, không thể chỉnh sửa W-4 nữa.",
+      "filingStatusLabel": "Tình trạng khai thuế",
+      "filingStatuses": {
+        "Single": "Độc thân",
+        "MarriedFilingJointly": "Kết hôn khai chung",
+        "MarriedFilingSeparately": "Kết hôn khai riêng",
+        "HeadOfHousehold": "Chủ hộ",
+        "QualifyingSurvivingSpouse": "Vợ/chồng còn sống đủ điều kiện"
+      },
+      "dependentsClaimedLabel": "Số người phụ thuộc",
+      "extraWithholdingLabel": "Khấu trừ thêm mỗi kỳ lương",
+      "residenceStateLabel": "Bang cư trú",
+      "workStateLabel": "Bang làm việc",
+      "statePlaceholder": "vd: TX",
+      "stateExtraWithholdingLabel": "Khấu trừ thêm cấp bang",
+      "saveButton": "Lưu W-4",
+      "savedNotice": "Đã lưu W-4.",
+      "errors": {
+        "generic": "Không thể lưu W-4. Vui lòng kiểm tra lại thông tin và thử lại."
+      }
+    },
+    "w4Invite": {
+      "form": {
+        "inviteButton": "Mời / Gửi lại W-4",
+        "modalTitle": "Mời {{name}} nộp W-4",
+        "expiryDaysLabel": "Liên kết hết hạn sau",
+        "expiryDaysOption": "{{count}} ngày",
+        "reminderCadenceLabel": "Tần suất nhắc nhở",
+        "submitButton": "Gửi lời mời",
+        "success": "Đã gửi lời mời.",
+        "errors": {
+          "generic": "Không thể gửi lời mời này. Vui lòng thử lại."
+        }
+      },
+      "reminderCadences": {
+        "Every3Days": "Mỗi 3 ngày",
+        "Once": "Chỉ một lần",
+        "Every7Days": "Mỗi 7 ngày"
+      },
+      "public": {
+        "title": "Nộp thông tin thuế của bạn",
+        "subtitle": "{{business}} đã mời {{staff}} nộp thông tin năm thuế {{taxYear}}.",
+        "tinSectionTitle": "Mã số thuế (SSN hoặc EIN)",
+        "w4SectionTitle": "W-4",
+        "submitButton": "Nộp",
+        "linkInvalid": "Liên kết này không hợp lệ.",
+        "linkExpiredOrRevoked": "Liên kết này đã hết hạn hoặc không còn hiệu lực.",
+        "errorTitle": "Liên kết không khả dụng",
+        "successTitle": "Đã nộp",
+        "successMessage": "Thông tin thuế của bạn đã được gửi tới {{business}}. Bạn có thể đóng trang này.",
+        "errors": {
+          "generic": "Không thể nộp. Vui lòng kiểm tra lại thông tin và thử lại."
         }
       }
     },
@@ -4365,6 +4489,7 @@
       "contractor1099": "Thợ hợp đồng độc lập. Không bị khấu trừ thuế tại nguồn — tự đóng thuế tự kinh doanh (~15.3%) và nhận Form 1099-NEC nếu được trả từ $600/năm trở lên.",
       "boothRenter": "Thợ thuê ghế: trả tiền thuê chỗ cho tiệm, tự định giá và giữ toàn bộ doanh thu dịch vụ của mình. Không nhận 1099 từ chủ tiệm.",
       "w9": "Mẫu IRS mà thợ 1099 điền để cung cấp mã số thuế (SSN hoặc EIN). Cần thu trước lần trả tiền đầu tiên — thiếu W-9 sẽ chặn Final Export.",
+      "w4": "Mẫu IRS mà thợ W-2 điền về tình trạng khai thuế, số người phụ thuộc và khấu trừ thêm. Thiếu hoặc đã cũ (từ năm thuế trước) có thể chặn Lock Tax Year nếu owner bật yêu cầu này.",
       "cpaReview": "Cần CPA (kế toán thuế) xác nhận. Mục này không được tính vào tổng và sẽ chặn Final Export cho đến khi CPA xử lý.",
       "highPriority": "Vấn đề chưa xử lý sẽ chặn Final Export — ví dụ: thiếu W-9, tranh chấp payout, hoặc chi phí rủi ro cao không có hóa đơn.",
       "businessUsePercent": "Với chi phí dùng chung cá nhân + kinh doanh (điện thoại, xe, internet): tỷ lệ phần dùng cho kinh doanh. Chỉ phần này được khấu trừ thuế.",
@@ -4558,7 +4683,9 @@
         "save": "Lưu",
         "saved": "Đã cập nhật cấu hình module.",
         "cancel": "Hủy",
-        "lockedNotice": "Năm thuế này đã bị khóa và không thể chỉnh sửa."
+        "lockedNotice": "Năm thuế này đã bị khóa và không thể chỉnh sửa.",
+        "requireW4ForLockLabel": "Bắt buộc W-4 để Lock Tax Year",
+        "requireW4ForLockTooltip": "Khi bật, Lock Tax Year sẽ bị chặn nếu có thợ W-2 có payout trong năm này mà thiếu W-4 hiện hành."
       }
     },
     "readinessScore": {
@@ -5532,6 +5659,469 @@
         "generic": "Đã xảy ra lỗi. Vui lòng thử lại."
       }
     },
+    "inviteEmployee": {
+      "button": "Mời Employee",
+      "modalTitle": "Mời Employee",
+      "submitButton": "Gửi Lời Mời",
+      "success": "Đã mời employee — email chứa link tự khai thuế đã được gửi.",
+      "fields": {
+        "legalName": "Tên pháp lý",
+        "email": "Email",
+        "workerType": "Loại worker"
+      },
+      "workerTypes": {
+        "W2": "W-2 Employee",
+        "C1099": "1099 Contractor",
+        "Unknown": "Chưa xác định — cần xem lại"
+      },
+      "errors": {
+        "requiredFields": "Tên pháp lý và email là bắt buộc.",
+        "generic": "Không thể mời employee này. Vui lòng thử lại."
+      }
+    },
+    "employerRegistry": {
+      "title": "Employers",
+      "subtitle": "Sổ đăng ký pháp nhân trả lương — EIN, ngành nghề, đăng ký thuế theo jurisdiction, và deposit schedule.",
+      "addButton": "Thêm Employer",
+      "emptyState": "Business này chưa có employer nào.",
+      "einNotSet": "Chưa có EIN",
+      "savedNotice": "Đã lưu employer.",
+      "addModalTitle": "Thêm Employer",
+      "editModalTitle": "Sửa Employer",
+      "registrationsButton": "Registrations",
+      "columns": {
+        "employer": "Employer",
+        "industry": "Ngành nghề",
+        "employees": "Nhân sự",
+        "registrations": "Registrations",
+        "depositSchedule": "Deposit Schedule",
+        "nextDeposit": "Next Deposit",
+        "health": "Health",
+        "status": "Trạng thái",
+        "actions": "Hành động"
+      },
+      "statuses": {
+        "Active": "Active",
+        "Degraded": "Degraded",
+        "Inactive": "Inactive",
+        "Suspended": "Suspended"
+      },
+      "depositSchedules": {
+        "Semiweekly": "Semiweekly",
+        "Monthly": "Monthly",
+        "Quarterly": "Quarterly"
+      },
+      "fields": {
+        "industry": "Ngành nghề",
+        "industryPlaceholder": "vd: Dịch vụ chăm sóc cá nhân",
+        "federalDepositSchedule": "Deposit schedule liên bang",
+        "status": "Trạng thái",
+        "degradedNotice": "Degraded được tính tự động theo mức độ đầy đủ của registration, không thể chọn trực tiếp — hãy khai bổ sung registration còn thiếu.",
+        "enableStrictFinalization": "Bật strict finalization (chặn finalize payroll nếu registration hoặc tax profile chưa đủ)"
+      },
+      "errors": {
+        "generic": "Không thể lưu employer này. Vui lòng thử lại."
+      },
+      "registrations": {
+        "modalTitle": "Registrations — {{name}}",
+        "emptyState": "Chưa khai jurisdiction nào.",
+        "notSet": "Chưa có",
+        "addButton": "Thêm Registration",
+        "addFormTitle": "Thêm Registration",
+        "editFormTitle": "Sửa Registration",
+        "saveButton": "Lưu Registration",
+        "savedNotice": "Đã lưu registration.",
+        "columns": {
+          "jurisdiction": "Jurisdiction",
+          "accountNumber": "Account Number",
+          "status": "Registration",
+          "depositSchedule": "Deposit Schedule",
+          "nextDue": "Next Due",
+          "action": "Hành động"
+        },
+        "statuses": {
+          "Active": "Active",
+          "Review": "Review",
+          "MissingSetup": "Missing Setup"
+        },
+        "fields": {
+          "jurisdiction": "Jurisdiction",
+          "customJurisdiction": "Khác (nhập tay)",
+          "registrationStatus": "Trạng thái registration",
+          "accountNumber": "Số tài khoản thuế",
+          "accountNumberPlaceholder": "Số tài khoản thuế",
+          "accountNumberKeepNotice": "Để trống nếu muốn giữ nguyên số tài khoản đã lưu.",
+          "depositSchedule": "Deposit schedule",
+          "registeredDate": "Ngày đăng ký",
+          "nextDue": "Ngày đến hạn"
+        },
+        "errors": {
+          "jurisdictionRequired": "Chọn hoặc nhập jurisdiction."
+        }
+      }
+    },
+    "payEngine": {
+      "title": "Cấu Hình Lương",
+      "subtitle": "Cấu hình cách trả lương cho từng thợ — công thức lương, nhịp trả, điểm đến payout, và quy tắc proof/blocking.",
+      "emptyState": "Chưa có thợ nào cho doanh nghiệp này.",
+      "notSet": "Chưa cấu hình",
+      "ready": "Sẵn sàng",
+      "notReady": "Chưa sẵn sàng",
+      "configureButton": "Cấu hình",
+      "modalTitle": "Employee Payment Setup",
+      "savedNotice": "Đã lưu pay rule.",
+      "columns": {
+        "employee": "Thợ",
+        "contractType": "Loại hợp đồng",
+        "payFormula": "Công thức lương",
+        "paySchedule": "Nhịp trả",
+        "payoutMethod": "Payout Method",
+        "overallReady": "Sẵn sàng",
+        "actions": "Hành động"
+      },
+      "blocks": {
+        "workerReadiness": "Worker & Tax Readiness",
+        "payFormula": "Pay Formula",
+        "payoutMethod": "Payout Method",
+        "proofBlocking": "Proof & Blocking Rules",
+        "readyToPayGate": "Ready To Pay Gate"
+      },
+      "fields": {
+        "contractType": "Loại hợp đồng",
+        "tinStatus": "TIN Status",
+        "payStructureType": "Công thức lương",
+        "hourlyRate": "Mức giờ ($)",
+        "overtimeThresholdHours": "Overtime after (giờ/tuần)",
+        "commissionPercent": "Hoa hồng (%)",
+        "commissionRangeHint": "Khoảng khuyến nghị: 20%–65% (ngành nail: 35%–45%).",
+        "tieredRates": "Bậc hoa hồng (Tiered)",
+        "tierThreshold": "Ngưỡng doanh số ($)",
+        "tierPercent": "Hoa hồng (%)",
+        "addTier": "Thêm bậc",
+        "paySchedule": "Nhịp trả",
+        "salesThresholdBonusEnabled": "Bật Sales Threshold Bonus",
+        "kpiBonusEnabled": "Bật KPI Bonus",
+        "bonusThreshold": "Ngưỡng ($)",
+        "bonusPercent": "Thưởng (%)",
+        "kpiTarget": "Mốc KPI ($)",
+        "primaryMethod": "Phương thức chính",
+        "primaryDestination": "Điểm đến chính",
+        "backupMethod": "Phương thức dự phòng",
+        "backupDestination": "Điểm đến dự phòng",
+        "none": "Không có",
+        "requirePaymentProof": "Bắt buộc proof khi trả tiền",
+        "syncProofToPayoutLedger": "Đồng bộ proof vào payout ledger",
+        "blockPaymentIfTaxProfileMissing": "Chặn trả tiền nếu thiếu hồ sơ thuế",
+        "allowOwnerOverrideWithAuditNote": "Cho phép Owner override kèm audit note"
+      },
+      "payFormulas": {
+        "Hourly": "Theo giờ",
+        "Commission": "Hoa hồng",
+        "Hybrid": "Hybrid",
+        "Tiered": "Bậc thang",
+        "WeeklySalary": "Lương tuần (thiết lập nhanh POS)",
+        "AgreedAmount": "Số tiền thoả thuận (thiết lập nhanh POS)"
+      },
+      "paySchedules": {
+        "Weekly": "Hàng tuần",
+        "Biweekly": "2 tuần/lần",
+        "FifteenthAndThirtieth": "Ngày 15 & 30",
+        "Monthly": "Hàng tháng"
+      },
+      "payoutMethods": {
+        "Zelle": "Zelle",
+        "BankWire": "ACH / Chuyển khoản",
+        "PayPal": "PayPal",
+        "Venmo": "Venmo",
+        "CashApp": "Cash App",
+        "AppleCash": "Apple Cash",
+        "VlinkPay": "VlinkPay",
+        "Check": "Séc",
+        "Cash": "Tiền mặt",
+        "Other": "Khác"
+      },
+      "tinStatuses": {
+        "Missing": "Chưa có",
+        "Pending": "Đang chờ",
+        "Verified": "Đã xác thực"
+      },
+      "gate": {
+        "workerClassification": "Phân loại thợ",
+        "payFormula": "Công thức lương",
+        "payoutMethod": "Payout method",
+        "proofRule": "Quy tắc proof",
+        "firstPaymentAction": "Hành động trả đầu tiên",
+        "afterSetup": "Sau khi setup",
+        "required": "Bắt buộc",
+        "notRequired": "Không bắt buộc"
+      },
+      "errors": {
+        "generic": "Không thể lưu pay rule này. Vui lòng thử lại."
+      }
+    },
+    "weeklyPayroll": {
+      "title": "Weekly Payroll",
+      "subtitle": "Xem và trả lương cho thợ theo nhịp Weekly — mọi con số đến từ Pay Engine, không nhập tay.",
+      "emptyState": "Chưa có thợ nào theo nhịp lương Weekly.",
+      "weekLabel": "Tuần {{start}} – {{end}}",
+      "prevWeek": "Tuần trước",
+      "nextWeek": "Tuần sau",
+      "thisWeek": "Tuần này",
+      "metrics": {
+        "totalWeeklyPay": "Tổng lương tuần",
+        "totalSales": "Tổng doanh số",
+        "totalTips": "Tổng tips",
+        "totalBonus": "Tổng thưởng"
+      },
+      "columns": {
+        "employee": "Thợ",
+        "type": "Loại",
+        "hours": "Giờ",
+        "sales": "Doanh số",
+        "hourlyPay": "Lương giờ",
+        "commission": "Hoa hồng",
+        "bonus": "Thưởng",
+        "tips": "Tips",
+        "takeHome": "Take-Home",
+        "actions": "Hành động"
+      },
+      "status": {
+        "Ready": "Sẵn sàng",
+        "Review": "Cần rà soát",
+        "PayrollTax": "Payroll Tax",
+        "Paid": "Đã trả"
+      },
+      "payButton": "Trả",
+      "payAllButton": "Trả tất cả ({{amount}})",
+      "exportCsvButton": "Xuất CSV",
+      "dailyDetailButton": "Chi tiết theo ngày",
+      "noBonus": "—",
+      "payModal": {
+        "title": "Trả lương {{name}}",
+        "amountLabel": "Số tiền phải trả",
+        "proofLabel": "Bằng chứng thanh toán (URL)",
+        "proofPlaceholder": "https://... (link ảnh chụp/biên nhận)",
+        "proofHint": "Cần có bằng chứng trước khi đánh dấu đã trả cho thợ này.",
+        "overrideLabel": "Ghi chú Owner Override",
+        "overrideHint": "Chỉ cần khi thợ đang ở Review — bỏ qua chặn hồ sơ thuế/proof và đánh dấu khoản trả này để CPA rà lại.",
+        "confirmButton": "Xác nhận trả"
+      },
+      "payAllModal": {
+        "title": "Trả tất cả",
+        "confirmMessage": "Thao tác này sẽ trả cho tất cả thợ đang ở trạng thái Sẵn sàng (tổng {{amount}}). Thợ đang Review bị loại và phải trả riêng.",
+        "proofLabel": "Bằng chứng thanh toán (URL, áp dụng cho cả lô)",
+        "confirmButton": "Xác nhận trả tất cả",
+        "resultPaid": "Đã trả {{count}} thợ, tổng {{amount}}.",
+        "resultSkipped": "Bị loại:",
+        "resultSkippedReasonReview": "Cần rà soát",
+        "resultSkippedReasonPayrollTax": "Payroll Tax",
+        "resultSkippedReasonPaid": "Đã trả trước đó"
+      },
+      "dailyDetailModal": {
+        "title": "Chi tiết theo ngày — {{name}}",
+        "columns": {
+          "date": "Ngày",
+          "services": "Dịch vụ",
+          "hours": "Giờ",
+          "sales": "Doanh số",
+          "tips": "Tips",
+          "estimatedPay": "Lương ước tính"
+        },
+        "weekTotal": "Tổng tuần",
+        "estimateHint": "Lương ước tính chỉ gồm lương giờ + hoa hồng của riêng ngày đó — các khoản thưởng chỉ xác định được khi cộng đủ doanh số cả tuần nên không thể chia đều theo ngày."
+      },
+      "savedNotice": "Đã ghi nhận thanh toán.",
+      "errors": {
+        "generic": "Không thể xử lý khoản trả này. Vui lòng thử lại."
+      }
+    },
+    "payrollRuns": {
+      "title": "Payroll Runs",
+      "subtitle": "Mỗi kỳ lương tính khấu trừ Federal + FICA/Medicare thật cho worker W-2, và ghi vào ledger bất biến khi finalize.",
+      "emptyState": "Chưa có kỳ lương nào.",
+      "filters": {
+        "status": "Trạng thái",
+        "allStatuses": "Tất cả trạng thái"
+      },
+      "pageSummary": "Trang {{page}}/{{totalPages}} — {{totalCount}} kỳ lương",
+      "previousPage": "Trước",
+      "nextPage": "Sau",
+      "noEmployer": "Cần khai Employer trước (xem màn Employers) mới tạo được kỳ lương.",
+      "columns": {
+        "runCode": "Mã kỳ",
+        "period": "Kỳ",
+        "payDate": "Ngày trả",
+        "depositDue": "Hạn nộp thuế",
+        "employees": "Số worker",
+        "gross": "Gross",
+        "tax": "Thuế",
+        "status": "Trạng thái",
+        "actions": "Hành động"
+      },
+      "status": {
+        "ValidationFailed": "Validation Failed",
+        "ReviewRequired": "Cần rà soát",
+        "Approved": "Sẵn sàng Finalize",
+        "LedgerPosted": "Đã ghi sổ",
+        "Reported": "Đã xuất báo cáo",
+        "Cancelled": "Đã huỷ"
+      },
+      "createButton": "Tạo kỳ lương",
+      "viewButton": "Xem",
+      "finalizeButton": "Finalize",
+      "reviewButton": "Rà soát",
+      "reportButton": "Report",
+      "runType": {
+        "Regular": "Thường",
+        "Bonus": "Bonus"
+      },
+      "createModal": {
+        "title": "Tạo kỳ lương mới",
+        "correctionTitle": "Tạo run điều chỉnh cho {{runCode}}",
+        "correctionNote": "Thao tác này tạo run mới điều chỉnh {{runCode}}. Các bút toán của run gốc không bị đụng vào — Finalize chỉ post thêm bút toán mới.",
+        "paySchedule": "Nhịp lương",
+        "runType": "Run Type",
+        "periodStart": "Bắt đầu kỳ",
+        "periodEnd": "Kết thúc kỳ",
+        "payDate": "Ngày trả",
+        "depositDue": "Hạn nộp thuế",
+        "importNote": "Gross pay, giờ làm, và hồ sơ thuế được tự động import từ Pay Engine và Employees — không có gì nhập tay ở đây.",
+        "requiredFields": "Cần nhập đủ 4 ngày.",
+        "submitButton": "Tạo Draft",
+        "correctionSubmitButton": "Tạo run điều chỉnh"
+      },
+      "detailModal": {
+        "title": "Kỳ {{runCode}}",
+        "correctionOf": "Đây là run điều chỉnh của:",
+        "correctionViewLink": "Xem run gốc",
+        "hasCorrections": "{{count}} run điều chỉnh:",
+        "correctionRunViewLink": "Xem run điều chỉnh",
+        "createCorrectionButton": "Tạo run điều chỉnh",
+        "validationGate": {
+          "title": "Validation Gate",
+          "schemaIntegrity": "Schema và tính toàn vẹn nguồn",
+          "taxProfileReadiness": "TIN/W-4 readiness",
+          "ledgerReconciliation": "Đối chiếu ledger",
+          "passed": "Đạt",
+          "failed": "Cảnh báo"
+        },
+        "lineItems": {
+          "title": "Line Items",
+          "columns": {
+            "employee": "Worker",
+            "gross": "Gross",
+            "taxable": "Taxable",
+            "preTax": "Pre-tax",
+            "employeeTax": "Employee Tax",
+            "employerTax": "Employer Tax",
+            "net": "Net",
+            "status": "Trạng thái"
+          },
+          "needsReviewStatus": "Cần rà soát"
+        },
+        "taxBreakdown": {
+          "title": "Tax Breakdown",
+          "empty": "Tax breakdown chỉ xuất hiện sau khi kỳ này được finalize.",
+          "columns": {
+            "employee": "Worker",
+            "jurisdiction": "Jurisdiction",
+            "type": "Loại",
+            "taxable": "Taxable",
+            "employeeAmount": "Thuế Employee",
+            "employerAmount": "Thuế Employer"
+          }
+        },
+        "runSummary": {
+          "title": "Run Summary",
+          "grossWages": "Gross wages",
+          "employeeTax": "Employee tax",
+          "employerTax": "Employer tax",
+          "depositDue": "Hạn nộp thuế"
+        },
+        "auditTrail": {
+          "title": "Audit Trail",
+          "empty": "Chưa có hoạt động nào."
+        },
+        "cancelButton": "Huỷ kỳ",
+        "rerunButton": "Chạy lại Validation"
+      },
+      "finalizeModal": {
+        "title": "Finalize kỳ {{runCode}}",
+        "postingPreview": "Posting Preview",
+        "grossWages": "Gross wages → Payroll ledger",
+        "employeeTax": "Employee tax → Tax ledger",
+        "employerTax": "Employer tax → Tax ledger",
+        "approvalNoteLabel": "Ghi chú duyệt",
+        "approvalNotePlaceholder": "Vì sao kỳ này được finalize bây giờ, và cảnh báo nào đang được bỏ qua...",
+        "warningNeedsReview": "Còn worker cần rà soát hồ sơ thuế — nếu employer bật Strict Finalization, finalize sẽ bị chặn.",
+        "confirmButton": "Finalize",
+        "irreversibleHint": "Thao tác này ghi gross wages và thuế vào ledger. Ledger không sửa được sau đó — sai sót phải xử lý bằng một run correction mới."
+      },
+      "cancelModal": {
+        "title": "Huỷ kỳ {{runCode}}",
+        "reasonLabel": "Lý do huỷ",
+        "reasonPlaceholder": "Vì sao kỳ này bị huỷ...",
+        "confirmButton": "Huỷ kỳ"
+      },
+      "savedNotice": "Đã lưu.",
+      "reportedNotice": "Đã xuất báo cáo.",
+      "errors": {
+        "generic": "Không thể xử lý thao tác này. Vui lòng thử lại."
+      }
+    },
+    "taxLedger": {
+      "title": "Tax Ledger",
+      "subtitle": "Sổ cái thuế bất biến, nối hash theo từng bút toán được post lúc Finalize — xác minh tính toàn vẹn từng dòng, lọc theo jurisdiction/loại thuế/run.",
+      "emptyState": "Không có bút toán nào khớp bộ lọc này.",
+      "noEmployer": "Cần khai Employer trước (xem màn Employers) mới xem được Tax Ledger.",
+      "metrics": {
+        "taxableWages": "Taxable Wages",
+        "employeeTax": "Employee Tax",
+        "employerTax": "Employer Tax"
+      },
+      "filters": {
+        "jurisdiction": "Jurisdiction",
+        "type": "Loại thuế",
+        "run": "Run",
+        "all": "Tất cả"
+      },
+      "columns": {
+        "entry": "Entry",
+        "run": "Run",
+        "employee": "Worker",
+        "jurisdiction": "Jurisdiction",
+        "type": "Loại",
+        "taxable": "Taxable",
+        "employeeTax": "Employee Tax",
+        "employerTax": "Employer Tax",
+        "hash": "Hash",
+        "action": "Hành động"
+      },
+      "types": {
+        "FederalIncomeTax": "Federal Income Tax",
+        "SocialSecurity": "Social Security",
+        "Medicare": "Medicare",
+        "AdditionalMedicare": "Additional Medicare",
+        "StateIncomeTax": "State Income Tax",
+        "SutaEmployerTax": "SUTA Employer Tax",
+        "SupplementalWithholding": "Supplemental Withholding",
+        "EmployeeTax": "Employee Tax (cũ)",
+        "EmployerTax": "Employer Tax (cũ)"
+      },
+      "verifyButton": "Verify",
+      "verifyResult": {
+        "verified": "Verified",
+        "mismatch": "Mismatch",
+        "verifiedToast": "Hash khớp — bút toán chưa bị can thiệp.",
+        "mismatchToast": "Nghi ngờ can thiệp — hash tính lại không khớp giá trị đã lưu."
+      },
+      "pageSummary": "Trang {{page}}/{{totalPages}} — {{totalCount}} bút toán",
+      "previousPage": "Trước",
+      "nextPage": "Sau",
+      "errors": {
+        "generic": "Không thể xử lý thao tác này. Vui lòng thử lại."
+      }
+    },
     "payoutCenter": {
       "title": "Trung Tâm Payout & Tranh Chấp",
       "subtitle": "Nhập service payout, tip và bonus cho từng thợ, và giải quyết tranh chấp do thợ báo cáo.",
@@ -5592,21 +6182,57 @@
       "contractTypes": {
         "W2": "W-2",
         "C1099": "1099",
-        "BoothRenter": "Booth Renter"
+        "BoothRenter": "Booth Renter",
+        "Unknown": "Chưa xác định — cần xem lại"
       },
       "w9Statuses": {
         "NotRequired": "Không yêu cầu",
         "Pending": "Đang chờ",
         "Received": "Đã nhận"
       },
+      "w4Statuses": {
+        "Missing": "Thiếu",
+        "Stale": "Đã cũ",
+        "Current": "Hiện hành"
+      },
+      "filingStatuses": {
+        "Single": "Độc thân",
+        "MarriedFilingJointly": "Kết hôn khai chung",
+        "MarriedFilingSeparately": "Kết hôn khai riêng",
+        "HeadOfHousehold": "Chủ hộ",
+        "QualifyingSurvivingSpouse": "Vợ/chồng còn sống đủ điều kiện"
+      },
       "staffTaxProfile": {
         "notActiveNotice": "Chỉ có thể sửa trạng thái W-9 khi năm thuế đang Active. Sau khi Locked hoặc Exported, trạng thái sẽ chỉ xem được.",
         "noTaxYearYet": "Chưa có hồ sơ Tax IQ",
         "updateSuccess": "Đã cập nhật trạng thái W-9.",
+        "stateMismatchTooltip": "Bang cư trú và bang làm việc không khớp nhau.",
+        "localStaffTinNotice": "Do thợ tự quản lý qua liên kết mời an toàn.",
+        "notStarted": "Chưa bắt đầu",
+        "w4YearMissing": "Thiếu",
+        "verifyButton": "Xác thực",
+        "verifySuccess": "Đã xác thực TIN.",
+        "tinStatuses": {
+          "Missing": "Thiếu",
+          "Pending": "Đang chờ",
+          "Verified": "Đã xác thực"
+        },
+        "filters": {
+          "allTinStatuses": "Tất cả trạng thái TIN",
+          "allW4Years": "Tất cả năm W-4"
+        },
         "columns": {
           "staff": "Thợ",
           "contractType": "Loại Hợp Đồng",
-          "w9Status": "Trạng Thái W-9"
+          "tinStatus": "TIN",
+          "w9Status": "Trạng Thái W-9",
+          "w4Status": "Trạng Thái W-4",
+          "w4Year": "Năm W-4",
+          "filing": "Filing",
+          "residence": "Cư Trú",
+          "work": "Làm Việc",
+          "updated": "Cập Nhật",
+          "actions": "Hành Động"
         },
         "emptyState": "Chưa có thợ nào liên kết với business này.",
         "errors": {

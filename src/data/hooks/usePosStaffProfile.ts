@@ -4,7 +4,13 @@
 import { useContext } from 'react'
 import { keepPreviousData, useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { qk } from '../queryKeys'
-import posStaffProfileRepository, { type SaveStaffPosProfileParams } from '../repositories/posStaffProfile'
+import posStaffProfileRepository, {
+  type PayRuleDetail,
+  type PayRuleListItem,
+  type SaveStaffPosProfileParams,
+  type UpsertPayoutDestinationParams,
+  type UpsertPayRuleParams,
+} from '../repositories/posStaffProfile'
 import { AuthContext } from '../../auth/AuthContext'
 import type { PosStaffProfileApiDto, StaffWeeklyScheduleDayApiDto } from '../../types/repositories'
 
@@ -101,6 +107,50 @@ export function useUpdateStaffWeeklySchedule() {
       posStaffProfileRepository.saveStaffWeeklySchedule(businessStaffLinkId, days),
     onSuccess: (_, { businessStaffLinkId }) => {
       queryClient.invalidateQueries({ queryKey: qk.merchantPosStaffWeeklySchedule(businessStaffLinkId) })
+    },
+  })
+}
+
+// Pay Engine (TaxIQ Payroll mục 13, US-031 FE / backend US-23)
+
+export function usePayRuleList(businessId: string | undefined) {
+  const auth = useContext(AuthContext)
+  const isOwner = auth?.status === 'authenticated' && auth?.session?.role === 'owner'
+  return useQuery<{ items: PayRuleListItem[] }>({
+    queryKey: qk.merchantPosPayRuleList(businessId),
+    queryFn: () => posStaffProfileRepository.listPayRules(),
+    enabled: isOwner && !!businessId,
+  })
+}
+
+export function usePayRule(businessStaffLinkId: string | undefined) {
+  const auth = useContext(AuthContext)
+  const isOwner = auth?.status === 'authenticated' && auth?.session?.role === 'owner'
+  return useQuery<PayRuleDetail>({
+    queryKey: qk.merchantPosPayRule(businessStaffLinkId),
+    queryFn: () => posStaffProfileRepository.getPayRule(businessStaffLinkId as string),
+    enabled: isOwner && !!businessStaffLinkId,
+  })
+}
+
+export function useUpsertPayRule(businessId: string | undefined) {
+  const queryClient = useQueryClient()
+  return useMutation<boolean, Error, UpsertPayRuleParams>({
+    mutationFn: (params) => posStaffProfileRepository.upsertPayRule(params),
+    onSuccess: (_, { businessStaffLinkId }) => {
+      queryClient.invalidateQueries({ queryKey: qk.merchantPosPayRule(businessStaffLinkId) })
+      queryClient.invalidateQueries({ queryKey: qk.merchantPosPayRuleList(businessId) })
+    },
+  })
+}
+
+export function useUpsertPayoutDestination(businessId: string | undefined) {
+  const queryClient = useQueryClient()
+  return useMutation<boolean, Error, UpsertPayoutDestinationParams>({
+    mutationFn: (params) => posStaffProfileRepository.upsertPayoutDestination(params),
+    onSuccess: (_, { businessStaffLinkId }) => {
+      queryClient.invalidateQueries({ queryKey: qk.merchantPosPayRule(businessStaffLinkId) })
+      queryClient.invalidateQueries({ queryKey: qk.merchantPosPayRuleList(businessId) })
     },
   })
 }

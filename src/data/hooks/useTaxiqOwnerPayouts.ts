@@ -8,6 +8,8 @@ import type {
   CreatePayoutRecordParams,
   CreateStaffTaxYearByOwnerParams,
   DisputedPayout,
+  InviteEmployeeParams,
+  InviteEmployeeResult,
   ListPayoutRecordsParams,
   PayoutRecord,
   ResolveDisputeParams,
@@ -55,6 +57,30 @@ export function useSetStaffTin() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['taxiqOwnerStaffTin'] })
       queryClient.invalidateQueries({ queryKey: ['merchantSettings', 'posStaffProfile'] })
+    },
+  })
+}
+
+// Owner-triggered "Verify" (US-22/US-030) — manual one-click approval, no external TIN-matching
+// integration. Invalidates the staff list so the TinStatus badge/Verify-button visibility refresh.
+export function useVerifyStaffTin(ownerTaxYearId: string | undefined) {
+  const queryClient = useQueryClient()
+  return useMutation<void, Error, string>({
+    mutationFn: (businessStaffLinkId) => taxiqOwnerPayoutsRepository.verifyStaffTin(businessStaffLinkId),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: qk.taxiqOwnerStaffList(ownerTaxYearId) })
+    },
+  })
+}
+
+// One-shot "Invite Employee" (US-22/US-030) — creates a new local staff + StaffTaxYear + W-4
+// invite link server-side in a single call.
+export function useInviteEmployee(ownerTaxYearId: string | undefined) {
+  const queryClient = useQueryClient()
+  return useMutation<InviteEmployeeResult, Error, InviteEmployeeParams>({
+    mutationFn: (params) => taxiqOwnerPayoutsRepository.inviteEmployee(params),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: qk.taxiqOwnerStaffList(ownerTaxYearId) })
     },
   })
 }

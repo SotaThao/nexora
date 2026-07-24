@@ -647,11 +647,16 @@
       "qr_nfc": "QR / NFC Devices",
       "tax_iq": "Tax IQ",
       "taxiq_onboarding": "Onboarding",
+      "taxiq_employers": "Employers",
       "taxiq_deductions": "Deduction Center",
       "taxiq_income": "Income Summary",
       "taxiq_receipts": "Receipt Vault",
       "taxiq_equipment": "Equipment Tracker",
       "taxiq_payroll": "Payroll & Payout",
+      "taxiq_pay_engine": "Pay Engine",
+      "taxiq_weekly_payroll": "Weekly Payroll",
+      "taxiq_payroll_runs": "Payroll Runs",
+      "taxiq_tax_ledger": "Tax Ledger",
       "taxiq_reminders": "Tax Payment Reminders",
       "taxiq_cpa_access": "CPA Access",
       "taxiq_export": "Year-End Export",
@@ -2166,6 +2171,43 @@
     "taxiq_cpa_access_unauthorized": "You don't have permission to manage this CPA access grant.",
     "taxiq_cpa_consent_required": "Staff consent is required before sharing Full or CPA Review data.",
     "taxiq_deduction_not_in_grant_scope": "This record is outside the scope of your CPA access.",
+    "taxiq_staff_w4_invite_staff_not_local": "This staff member has a login account — use their self-service W-4 form instead.",
+    "taxiq_staff_w4_invite_email_required": "This staff member has no email on file. Add one to their profile before sending an invite.",
+    "taxiq_staff_w4_invite_staff_link_not_active": "This staff member is not an active member of your business.",
+    "taxiq_staff_w4_invite_token_invalid": "This link is invalid.",
+    "taxiq_staff_w4_invite_link_expired": "This link has expired or been revoked.",
+    "taxiq_staff_w4_invite_link_revoked": "This link has expired or been revoked.",
+    "taxiq_employer_not_found": "This employer record could not be found.",
+    "taxiq_employer_already_exists": "An employer record already exists for this business.",
+    "taxiq_employer_registration_not_found": "This registration record could not be found.",
+    "taxiq_staff_tax_profile_not_found": "No TIN has been submitted for this staff member yet.",
+    "taxiq_staff_tin_verification_not_allowed": "This TIN is not pending verification.",
+    "taxiq_w9_not_ready_for_certification": "Complete all required W-9 fields and upload the signed document before certifying.",
+    "pos_staff_pay_rule_profile_not_set_up": "Complete the Worker Profile step (POS role and tips) for this staff member first.",
+    "pos_staff_pay_schedule_invalid": "Select a valid pay schedule.",
+    "pos_staff_pay_rule_field_required": "Fill in the required fields for the selected pay formula.",
+    "pos_staff_pay_rule_commission_percent_invalid": "Commission must be between 20% and 65%.",
+    "pos_staff_pay_rule_overtime_threshold_invalid": "Overtime threshold must be greater than 0.",
+    "pos_staff_pay_rule_tiered_rates_invalid": "Enter at least one valid tiered rate.",
+    "pos_staff_pay_rule_bonus_field_invalid": "Enter a valid threshold and percentage for the enabled bonus.",
+    "pos_staff_payout_destination_field_invalid": "Enter a valid payout method and destination.",
+    "pos_payroll_not_ready": "This staff member's pay formula is not configured yet.",
+    "pos_payroll_already_paid": "This staff member has already been paid for this week.",
+    "pos_payroll_proof_required": "Payment proof is required before this staff member can be paid.",
+    "pos_payroll_tax_profile_blocked": "Worker classification or tax profile is not ready — enable Owner Override with an audit note to proceed anyway.",
+    "pos_payroll_payout_method_missing": "No payout method is configured for this staff member.",
+    "pos_payroll_not_weekly_schedule": "This staff member is not on the Weekly pay schedule.",
+    "pos_payroll_is_w2": "W-2 staff must be paid through payroll tax withholding, not Weekly Payroll.",
+    "pos_payroll_override_note_required": "Owner override is not enabled for this staff member's pay rule.",
+    "pos_payroll_amount_zero": "There is nothing to pay this staff member for this period.",
+    "taxiq_payroll_run_not_found": "This payroll run could not be found.",
+    "taxiq_payroll_run_period_invalid": "Period start must be on or before period end.",
+    "taxiq_payroll_run_invalid_status_for_action": "This payroll run is not in a state that allows this action.",
+    "taxiq_payroll_run_approval_note_required": "An approval note is required to finalize this run.",
+    "taxiq_payroll_run_validation_blocking": "One or more workers still need tax profile review before finalizing.",
+    "taxiq_payroll_run_cancel_reason_required": "A reason is required to cancel this run.",
+    "taxiq_payroll_run_cannot_cancel_posted": "A run that has already posted to the ledger cannot be cancelled.",
+    "taxiq_tax_ledger_entry_not_found": "This tax ledger entry could not be found.",
     "taxiq_self_reported_income_not_found": "This self-reported income record could not be found.",
     "taxiq_owner_income_record_not_found": "This income record could not be found.",
     "taxiq_deduction_record_has_receipts": "Remove attached receipts before deleting this deduction.",
@@ -4343,25 +4385,107 @@
         "legalNameLabel": "Legal name",
         "dbaNameLabel": "DBA (doing business as, optional)",
         "addressLabel": "Address",
+        "cityLabel": "City",
+        "stateLabel": "State",
+        "zipCodeLabel": "ZIP code",
         "taxClassificationLabel": "Tax classification",
+        "llcTaxClassificationTypeLabel": "LLC tax classification",
+        "otherClassificationDescriptionLabel": "Describe your classification",
+        "backupWithholdingLabel": "I am subject to backup withholding",
+        "selectPlaceholder": "Select…",
         "saveButton": "Save W-9 info",
         "savedNotice": "W-9 info saved.",
         "uploadLabel": "Signed W-9 document (optional)",
         "uploadChooseFile": "Choose file",
         "uploadSuccess": "Signed W-9 uploaded.",
         "documentAttached": "Signed document attached",
+        "certifyButton": "Certify W-9",
+        "certifySuccess": "W-9 certified.",
+        "certifiedNotice": "Certified on {{date}}",
+        "notCertifiedNotice": "Not certified yet. Complete all fields and upload the signed document, then certify.",
         "taxClassifications": {
           "individual": "Individual",
           "soleProprietor": "Sole Proprietor",
           "llc": "LLC",
           "partnership": "Partnership",
           "cCorp": "C-Corp",
-          "sCorp": "S-Corp"
+          "sCorp": "S-Corp",
+          "trustEstate": "Trust/Estate",
+          "other": "Other"
+        },
+        "llcTaxClassifications": {
+          "c": "C Corporation",
+          "s": "S Corporation",
+          "p": "Partnership"
         },
         "errors": {
           "legalNameRequired": "Legal name is required.",
           "addressRequired": "Address is required.",
-          "uploadFailed": "Could not upload the signed W-9. Please try again."
+          "cityRequired": "City is required.",
+          "stateRequired": "State is required.",
+          "zipCodeRequired": "ZIP code is required.",
+          "llcTaxClassificationTypeRequired": "Select how your LLC is taxed.",
+          "otherClassificationDescriptionRequired": "Describe your tax classification.",
+          "uploadFailed": "Could not upload the signed W-9. Please try again.",
+          "certifyFailed": "Complete all required W-9 fields and upload the signed document before certifying."
+        }
+      }
+    },
+    "w4": {
+      "title": "W-4 (Filing Status & Withholding)",
+      "description": "Used by your salon for tax withholding for tax year {{taxYear}}.",
+      "lockedNotice": "This tax year is locked and your W-4 can no longer be edited.",
+      "filingStatusLabel": "Filing status",
+      "filingStatuses": {
+        "Single": "Single",
+        "MarriedFilingJointly": "Married filing jointly",
+        "MarriedFilingSeparately": "Married filing separately",
+        "HeadOfHousehold": "Head of household",
+        "QualifyingSurvivingSpouse": "Qualifying surviving spouse"
+      },
+      "dependentsClaimedLabel": "Dependents claimed",
+      "extraWithholdingLabel": "Extra withholding per pay period",
+      "residenceStateLabel": "Residence state",
+      "workStateLabel": "Work state",
+      "statePlaceholder": "e.g. TX",
+      "stateExtraWithholdingLabel": "State extra withholding",
+      "saveButton": "Save W-4",
+      "savedNotice": "W-4 saved.",
+      "errors": {
+        "generic": "Unable to save your W-4. Please check your input and try again."
+      }
+    },
+    "w4Invite": {
+      "form": {
+        "inviteButton": "Invite / Resend W-4",
+        "modalTitle": "Invite {{name}} to submit W-4",
+        "expiryDaysLabel": "Link expires in",
+        "expiryDaysOption": "{{count}} days",
+        "reminderCadenceLabel": "Reminder cadence",
+        "submitButton": "Send invite",
+        "success": "Invite sent.",
+        "errors": {
+          "generic": "Unable to send this invite. Please try again."
+        }
+      },
+      "reminderCadences": {
+        "Every3Days": "Every 3 days",
+        "Once": "Once only",
+        "Every7Days": "Every 7 days"
+      },
+      "public": {
+        "title": "Submit your tax information",
+        "subtitle": "{{business}} invited {{staff}} to submit tax year {{taxYear}} information.",
+        "tinSectionTitle": "Tax ID (SSN or EIN)",
+        "w4SectionTitle": "W-4",
+        "submitButton": "Submit",
+        "linkInvalid": "This link is invalid.",
+        "linkExpiredOrRevoked": "This link has expired or is no longer valid.",
+        "errorTitle": "Link not available",
+        "successTitle": "Submitted",
+        "successMessage": "Your tax information has been sent to {{business}}. You can close this page.",
+        "errors": {
+          "generic": "Unable to submit. Please check your input and try again."
         }
       }
     },
@@ -4370,6 +4494,7 @@
       "contractor1099": "Independent contractor. No tax is withheld — they pay self-employment tax (~15.3%) themselves and receive Form 1099-NEC if paid $600 or more in a year.",
       "boothRenter": "Rents a chair/booth from the salon, sets their own prices, and keeps their own service income. Pays rent to the owner and does NOT receive a 1099.",
       "w9": "IRS form a 1099 contractor fills in to provide their tax ID (SSN or EIN). Collect it before the first payment — a missing W-9 blocks Final Export.",
+      "w4": "IRS form a W-2 employee fills in for filing status, dependents, and extra withholding. Missing or stale (from a prior tax year) can block Lock Tax Year if the owner requires it.",
       "cpaReview": "Needs a tax professional's confirmation. This item is excluded from your totals and blocks Final Export until a CPA resolves it.",
       "highPriority": "An unresolved issue that blocks Final Export — e.g. missing W-9, payout dispute, or a high-risk expense without a receipt.",
       "businessUsePercent": "For expenses used both personally and for business (phone, car, internet): the share used for business. Only that share is deductible.",
@@ -4563,7 +4688,9 @@
         "save": "Save",
         "saved": "Module config updated.",
         "cancel": "Cancel",
-        "lockedNotice": "This tax year is locked and can no longer be edited."
+        "lockedNotice": "This tax year is locked and can no longer be edited.",
+        "requireW4ForLockLabel": "Require W-4 to Lock Tax Year",
+        "requireW4ForLockTooltip": "When on, Lock Tax Year is blocked if any W-2 staff with a payout this year is missing a current W-4."
       }
     },
     "readinessScore": {
@@ -5537,6 +5664,469 @@
         "generic": "Something went wrong. Please try again."
       }
     },
+    "inviteEmployee": {
+      "button": "Invite Employee",
+      "modalTitle": "Invite Employee",
+      "submitButton": "Send Invite",
+      "success": "Employee invited — a secure link to submit tax info has been emailed.",
+      "fields": {
+        "legalName": "Legal name",
+        "email": "Email",
+        "workerType": "Worker type"
+      },
+      "workerTypes": {
+        "W2": "W-2 Employee",
+        "C1099": "1099 Contractor",
+        "Unknown": "Unknown — needs review"
+      },
+      "errors": {
+        "requiredFields": "Legal name and email are required.",
+        "generic": "Unable to invite this employee. Please try again."
+      }
+    },
+    "employerRegistry": {
+      "title": "Employers",
+      "subtitle": "The payroll legal-entity registry — EIN, industry, tax registrations by jurisdiction, and deposit schedule.",
+      "addButton": "Add Employer",
+      "emptyState": "No employer set up yet for this business.",
+      "einNotSet": "EIN not set",
+      "savedNotice": "Employer saved.",
+      "addModalTitle": "Add Employer",
+      "editModalTitle": "Edit Employer",
+      "registrationsButton": "Registrations",
+      "columns": {
+        "employer": "Employer",
+        "industry": "Industry",
+        "employees": "Employees",
+        "registrations": "Registrations",
+        "depositSchedule": "Deposit Schedule",
+        "nextDeposit": "Next Deposit",
+        "health": "Health",
+        "status": "Status",
+        "actions": "Actions"
+      },
+      "statuses": {
+        "Active": "Active",
+        "Degraded": "Degraded",
+        "Inactive": "Inactive",
+        "Suspended": "Suspended"
+      },
+      "depositSchedules": {
+        "Semiweekly": "Semiweekly",
+        "Monthly": "Monthly",
+        "Quarterly": "Quarterly"
+      },
+      "fields": {
+        "industry": "Industry",
+        "industryPlaceholder": "e.g. Personal Care Services",
+        "federalDepositSchedule": "Federal deposit schedule",
+        "status": "Status",
+        "degradedNotice": "Degraded is computed automatically from registration completeness and can't be set directly — complete the missing registrations instead.",
+        "enableStrictFinalization": "Enable strict finalization (blocks payroll finalize if registrations or tax profiles are incomplete)"
+      },
+      "errors": {
+        "generic": "Unable to save this employer. Please try again."
+      },
+      "registrations": {
+        "modalTitle": "Registrations — {{name}}",
+        "emptyState": "No jurisdictions registered yet.",
+        "notSet": "Not set",
+        "addButton": "Add Registration",
+        "addFormTitle": "Add Registration",
+        "editFormTitle": "Edit Registration",
+        "saveButton": "Save Registration",
+        "savedNotice": "Registration saved.",
+        "columns": {
+          "jurisdiction": "Jurisdiction",
+          "accountNumber": "Account Number",
+          "status": "Registration",
+          "depositSchedule": "Deposit Schedule",
+          "nextDue": "Next Due",
+          "action": "Action"
+        },
+        "statuses": {
+          "Active": "Active",
+          "Review": "Review",
+          "MissingSetup": "Missing Setup"
+        },
+        "fields": {
+          "jurisdiction": "Jurisdiction",
+          "customJurisdiction": "Other (enter manually)",
+          "registrationStatus": "Registration status",
+          "accountNumber": "Account number",
+          "accountNumberPlaceholder": "Tax account number",
+          "accountNumberKeepNotice": "Leave blank to keep the existing account number.",
+          "depositSchedule": "Deposit schedule",
+          "registeredDate": "Registered date",
+          "nextDue": "Next due"
+        },
+        "errors": {
+          "jurisdictionRequired": "Select or enter a jurisdiction."
+        }
+      }
+    },
+    "payEngine": {
+      "title": "Pay Engine",
+      "subtitle": "Configure how each staff member gets paid — pay formula, schedule, payout destination, and proof/blocking rules.",
+      "emptyState": "No staff members yet for this business.",
+      "notSet": "Not set",
+      "ready": "Ready",
+      "notReady": "Not Ready",
+      "configureButton": "Configure Rule",
+      "modalTitle": "Employee Payment Setup",
+      "savedNotice": "Pay rule saved.",
+      "columns": {
+        "employee": "Employee",
+        "contractType": "Contract Type",
+        "payFormula": "Pay Formula",
+        "paySchedule": "Pay Schedule",
+        "payoutMethod": "Payout Method",
+        "overallReady": "Ready",
+        "actions": "Actions"
+      },
+      "blocks": {
+        "workerReadiness": "Worker & Tax Readiness",
+        "payFormula": "Pay Formula",
+        "payoutMethod": "Payout Method",
+        "proofBlocking": "Proof & Blocking Rules",
+        "readyToPayGate": "Ready To Pay Gate"
+      },
+      "fields": {
+        "contractType": "Contract Type",
+        "tinStatus": "TIN Status",
+        "payStructureType": "Pay Formula",
+        "hourlyRate": "Hourly Rate ($)",
+        "overtimeThresholdHours": "Overtime After (hours/week)",
+        "commissionPercent": "Commission (%)",
+        "commissionRangeHint": "Recommended range: 20%–65% (nail industry: 35%–45%).",
+        "tieredRates": "Tiered Commission Rates",
+        "tierThreshold": "Sales threshold ($)",
+        "tierPercent": "Commission (%)",
+        "addTier": "Add Tier",
+        "paySchedule": "Pay Schedule",
+        "salesThresholdBonusEnabled": "Enable Sales Threshold Bonus",
+        "kpiBonusEnabled": "Enable KPI Bonus",
+        "bonusThreshold": "Threshold ($)",
+        "bonusPercent": "Bonus (%)",
+        "kpiTarget": "KPI target ($)",
+        "primaryMethod": "Primary Method",
+        "primaryDestination": "Primary Destination",
+        "backupMethod": "Backup Method",
+        "backupDestination": "Backup Destination",
+        "none": "None",
+        "requirePaymentProof": "Require payment proof",
+        "syncProofToPayoutLedger": "Sync proof to payout ledger",
+        "blockPaymentIfTaxProfileMissing": "Block payment if tax profile is missing",
+        "allowOwnerOverrideWithAuditNote": "Allow owner override with audit note"
+      },
+      "payFormulas": {
+        "Hourly": "Hourly",
+        "Commission": "Commission",
+        "Hybrid": "Hybrid",
+        "Tiered": "Tiered",
+        "WeeklySalary": "Weekly Salary (POS quick-setup)",
+        "AgreedAmount": "Agreed Amount (POS quick-setup)"
+      },
+      "paySchedules": {
+        "Weekly": "Weekly",
+        "Biweekly": "Biweekly",
+        "FifteenthAndThirtieth": "15th & 30th",
+        "Monthly": "Monthly"
+      },
+      "payoutMethods": {
+        "Zelle": "Zelle",
+        "BankWire": "ACH / Direct Deposit",
+        "PayPal": "PayPal",
+        "Venmo": "Venmo",
+        "CashApp": "Cash App",
+        "AppleCash": "Apple Cash",
+        "VlinkPay": "VlinkPay",
+        "Check": "Check",
+        "Cash": "Cash",
+        "Other": "Other"
+      },
+      "tinStatuses": {
+        "Missing": "Missing",
+        "Pending": "Pending",
+        "Verified": "Verified"
+      },
+      "gate": {
+        "workerClassification": "Worker classification",
+        "payFormula": "Pay formula",
+        "payoutMethod": "Payout method",
+        "proofRule": "Proof rule",
+        "firstPaymentAction": "First payment action",
+        "afterSetup": "After setup",
+        "required": "Required",
+        "notRequired": "Not Required"
+      },
+      "errors": {
+        "generic": "Unable to save this pay rule. Please try again."
+      }
+    },
+    "weeklyPayroll": {
+      "title": "Weekly Payroll",
+      "subtitle": "Review and pay staff on the Weekly pay schedule — every number comes from Pay Engine, not typed by hand.",
+      "emptyState": "No staff on the Weekly pay schedule yet.",
+      "weekLabel": "Week of {{start}} – {{end}}",
+      "prevWeek": "Previous week",
+      "nextWeek": "Next week",
+      "thisWeek": "This week",
+      "metrics": {
+        "totalWeeklyPay": "Total Weekly Pay",
+        "totalSales": "Total Sales",
+        "totalTips": "Total Tips",
+        "totalBonus": "Total Bonus"
+      },
+      "columns": {
+        "employee": "Employee",
+        "type": "Type",
+        "hours": "Hours",
+        "sales": "Sales",
+        "hourlyPay": "Hourly Pay",
+        "commission": "Commission",
+        "bonus": "Bonus",
+        "tips": "Tips",
+        "takeHome": "Take-Home",
+        "actions": "Actions"
+      },
+      "status": {
+        "Ready": "Ready",
+        "Review": "Review",
+        "PayrollTax": "Payroll Tax",
+        "Paid": "Paid"
+      },
+      "payButton": "Pay",
+      "payAllButton": "Pay All ({{amount}})",
+      "exportCsvButton": "Export CSV",
+      "dailyDetailButton": "Daily Detail",
+      "noBonus": "—",
+      "payModal": {
+        "title": "Pay {{name}}",
+        "amountLabel": "Amount to pay",
+        "proofLabel": "Payment proof (URL)",
+        "proofPlaceholder": "https://... (receipt/screenshot link)",
+        "proofHint": "Proof is required before this staff member can be marked as paid.",
+        "overrideLabel": "Owner Override note",
+        "overrideHint": "Only needed if this staff member is in Review — bypasses the tax-profile/proof block and flags this payout for CPA review.",
+        "confirmButton": "Confirm Pay"
+      },
+      "payAllModal": {
+        "title": "Pay All",
+        "confirmMessage": "This will pay every staff member currently marked Ready ({{amount}} total). Staff in Review are excluded and must be paid individually.",
+        "proofLabel": "Payment proof (URL, applied to every payout in this batch)",
+        "confirmButton": "Confirm Pay All",
+        "resultPaid": "Paid {{count}} staff member(s), total {{amount}}.",
+        "resultSkipped": "Skipped:",
+        "resultSkippedReasonReview": "Review",
+        "resultSkippedReasonPayrollTax": "Payroll Tax",
+        "resultSkippedReasonPaid": "Already Paid"
+      },
+      "dailyDetailModal": {
+        "title": "Daily Detail — {{name}}",
+        "columns": {
+          "date": "Date",
+          "services": "Services",
+          "hours": "Hours",
+          "sales": "Sales",
+          "tips": "Tips",
+          "estimatedPay": "Estimated Pay"
+        },
+        "weekTotal": "Week Total",
+        "estimateHint": "Estimated Pay is hourly + commission for that day only — bonuses can only be determined once the full week's sales are known, so they are never split across days."
+      },
+      "savedNotice": "Payment recorded.",
+      "errors": {
+        "generic": "Unable to process this payment. Please try again."
+      }
+    },
+    "payrollRuns": {
+      "title": "Payroll Runs",
+      "subtitle": "Every run computes real Federal + FICA/Medicare withholding for W-2 workers and posts an immutable ledger entry when finalized.",
+      "emptyState": "No payroll runs yet.",
+      "filters": {
+        "status": "Status",
+        "allStatuses": "All statuses"
+      },
+      "pageSummary": "Page {{page}} of {{totalPages}} — {{totalCount}} runs",
+      "previousPage": "Previous",
+      "nextPage": "Next",
+      "noEmployer": "Set up an Employer first (see the Employers screen) before creating a payroll run.",
+      "columns": {
+        "runCode": "Run ID",
+        "period": "Period",
+        "payDate": "Pay Date",
+        "depositDue": "Deposit Due",
+        "employees": "Employees",
+        "gross": "Gross",
+        "tax": "Tax",
+        "status": "Status",
+        "actions": "Actions"
+      },
+      "status": {
+        "ValidationFailed": "Validation Failed",
+        "ReviewRequired": "Review Required",
+        "Approved": "Ready to Finalize",
+        "LedgerPosted": "Ledger Posted",
+        "Reported": "Reported",
+        "Cancelled": "Cancelled"
+      },
+      "createButton": "Create Run",
+      "viewButton": "View",
+      "finalizeButton": "Finalize",
+      "reviewButton": "Review",
+      "reportButton": "Report",
+      "runType": {
+        "Regular": "Regular",
+        "Bonus": "Bonus"
+      },
+      "createModal": {
+        "title": "Create Payroll Run",
+        "correctionTitle": "Create Correction Run for {{runCode}}",
+        "correctionNote": "This creates a new run that corrects {{runCode}}. The original run's ledger entries are never touched — Finalize will post additional entries only.",
+        "paySchedule": "Pay Schedule",
+        "runType": "Run Type",
+        "periodStart": "Period Start",
+        "periodEnd": "Period End",
+        "payDate": "Pay Date",
+        "depositDue": "Deposit Due",
+        "importNote": "Gross pay, hours, and tax profile data are imported automatically from Pay Engine and Employees — nothing here is entered by hand.",
+        "requiredFields": "All four dates are required.",
+        "submitButton": "Create Draft",
+        "correctionSubmitButton": "Create Correction Run"
+      },
+      "detailModal": {
+        "title": "Run {{runCode}}",
+        "correctionOf": "This is a correction of:",
+        "correctionViewLink": "View original run",
+        "hasCorrections": "{{count}} correction run(s):",
+        "correctionRunViewLink": "View correction",
+        "createCorrectionButton": "Create Correction Run",
+        "validationGate": {
+          "title": "Validation Gate",
+          "schemaIntegrity": "Schema and source integrity",
+          "taxProfileReadiness": "TIN/W-4 readiness",
+          "ledgerReconciliation": "Ledger reconciliation",
+          "passed": "Pass",
+          "failed": "Warn"
+        },
+        "lineItems": {
+          "title": "Line Items",
+          "columns": {
+            "employee": "Employee",
+            "gross": "Gross",
+            "taxable": "Taxable",
+            "preTax": "Pre-tax",
+            "employeeTax": "Employee Tax",
+            "employerTax": "Employer Tax",
+            "net": "Net",
+            "status": "Status"
+          },
+          "needsReviewStatus": "Needs Review"
+        },
+        "taxBreakdown": {
+          "title": "Tax Breakdown",
+          "empty": "Tax breakdown appears once this run is finalized.",
+          "columns": {
+            "employee": "Employee",
+            "jurisdiction": "Jurisdiction",
+            "type": "Type",
+            "taxable": "Taxable",
+            "employeeAmount": "Employee Tax",
+            "employerAmount": "Employer Tax"
+          }
+        },
+        "runSummary": {
+          "title": "Run Summary",
+          "grossWages": "Gross wages",
+          "employeeTax": "Employee tax",
+          "employerTax": "Employer tax",
+          "depositDue": "Deposit due"
+        },
+        "auditTrail": {
+          "title": "Audit Trail",
+          "empty": "No activity yet."
+        },
+        "cancelButton": "Cancel Run",
+        "rerunButton": "Rerun Validation"
+      },
+      "finalizeModal": {
+        "title": "Finalize Run {{runCode}}",
+        "postingPreview": "Posting Preview",
+        "grossWages": "Gross wages → Payroll ledger",
+        "employeeTax": "Employee tax → Tax ledger",
+        "employerTax": "Employer tax → Tax ledger",
+        "approvalNoteLabel": "Approval note",
+        "approvalNotePlaceholder": "Why is this run being finalized now, and any warnings being overridden...",
+        "warningNeedsReview": "One or more workers still need tax profile review — finalizing anyway will be blocked by Strict Finalization if it is enabled for this employer.",
+        "confirmButton": "Finalize",
+        "irreversibleHint": "This posts gross wages and taxes to the ledger. Ledger entries cannot be edited afterward — a mistake must be corrected with a new correction run."
+      },
+      "cancelModal": {
+        "title": "Cancel Run {{runCode}}",
+        "reasonLabel": "Cancel reason",
+        "reasonPlaceholder": "Why is this run being cancelled...",
+        "confirmButton": "Cancel Run"
+      },
+      "savedNotice": "Saved.",
+      "reportedNotice": "Report exported.",
+      "errors": {
+        "generic": "Unable to process this action. Please try again."
+      }
+    },
+    "taxLedger": {
+      "title": "Tax Ledger",
+      "subtitle": "Immutable, hash-chained record of every tax posted at Finalize — verify integrity per entry, filtered by jurisdiction, type, or run.",
+      "emptyState": "No tax ledger entries match this filter.",
+      "noEmployer": "Set up an Employer first (see the Employers screen) before viewing the Tax Ledger.",
+      "metrics": {
+        "taxableWages": "Taxable Wages",
+        "employeeTax": "Employee Tax",
+        "employerTax": "Employer Tax"
+      },
+      "filters": {
+        "jurisdiction": "Jurisdiction",
+        "type": "Type",
+        "run": "Run",
+        "all": "All"
+      },
+      "columns": {
+        "entry": "Entry",
+        "run": "Run",
+        "employee": "Employee",
+        "jurisdiction": "Jurisdiction",
+        "type": "Type",
+        "taxable": "Taxable",
+        "employeeTax": "Employee Tax",
+        "employerTax": "Employer Tax",
+        "hash": "Hash",
+        "action": "Action"
+      },
+      "types": {
+        "FederalIncomeTax": "Federal Income Tax",
+        "SocialSecurity": "Social Security",
+        "Medicare": "Medicare",
+        "AdditionalMedicare": "Additional Medicare",
+        "StateIncomeTax": "State Income Tax",
+        "SutaEmployerTax": "SUTA Employer Tax",
+        "SupplementalWithholding": "Supplemental Withholding",
+        "EmployeeTax": "Employee Tax (legacy)",
+        "EmployerTax": "Employer Tax (legacy)"
+      },
+      "verifyButton": "Verify",
+      "verifyResult": {
+        "verified": "Verified",
+        "mismatch": "Mismatch",
+        "verifiedToast": "Hash verified — entry has not been tampered with.",
+        "mismatchToast": "Tamper suspected — recomputed hash does not match the stored value."
+      },
+      "pageSummary": "Page {{page}} of {{totalPages}} — {{totalCount}} entries",
+      "previousPage": "Previous",
+      "nextPage": "Next",
+      "errors": {
+        "generic": "Unable to process this action. Please try again."
+      }
+    },
     "payoutCenter": {
       "title": "Payout & Dispute Center",
       "subtitle": "Enter service payout, tip, and bonus for each staff member, and resolve any disputes they report.",
@@ -5597,21 +6187,57 @@
       "contractTypes": {
         "W2": "W-2",
         "C1099": "1099",
-        "BoothRenter": "Booth Renter"
+        "BoothRenter": "Booth Renter",
+        "Unknown": "Unknown — Needs Review"
       },
       "w9Statuses": {
         "NotRequired": "Not Required",
         "Pending": "Pending",
         "Received": "Received"
       },
+      "w4Statuses": {
+        "Missing": "Missing",
+        "Stale": "Stale",
+        "Current": "Current"
+      },
+      "filingStatuses": {
+        "Single": "Single",
+        "MarriedFilingJointly": "Married Filing Jointly",
+        "MarriedFilingSeparately": "Married Filing Separately",
+        "HeadOfHousehold": "Head of Household",
+        "QualifyingSurvivingSpouse": "Qualifying Surviving Spouse"
+      },
       "staffTaxProfile": {
         "notActiveNotice": "W-9 status can only be edited while the tax year is Active. Once locked or exported, it becomes read-only.",
         "noTaxYearYet": "No Tax IQ profile yet",
         "updateSuccess": "W-9 status updated.",
+        "stateMismatchTooltip": "Residence state and work state don't match.",
+        "localStaffTinNotice": "Managed by the staff member via a secure invite link.",
+        "notStarted": "Not started",
+        "w4YearMissing": "Missing",
+        "verifyButton": "Verify",
+        "verifySuccess": "TIN verified.",
+        "tinStatuses": {
+          "Missing": "Missing",
+          "Pending": "Pending",
+          "Verified": "Verified"
+        },
+        "filters": {
+          "allTinStatuses": "All TIN statuses",
+          "allW4Years": "All W-4 years"
+        },
         "columns": {
           "staff": "Staff",
           "contractType": "Contract Type",
-          "w9Status": "W-9 Status"
+          "tinStatus": "TIN",
+          "w9Status": "W-9 Status",
+          "w4Status": "W-4 Status",
+          "w4Year": "W-4 Year",
+          "filing": "Filing",
+          "residence": "Residence",
+          "work": "Work",
+          "updated": "Updated",
+          "actions": "Actions"
         },
         "emptyState": "No staff linked to this business yet.",
         "errors": {

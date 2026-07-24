@@ -25,6 +25,7 @@ export interface OwnerTaxYearApiDto {
   enabledModules?: string[]
   lockedAt?: string | null
   exportedAt?: string | null
+  requireW4ForLock?: boolean
   createdAt: string
   lastModified?: string | null
 }
@@ -47,6 +48,7 @@ export interface OwnerTaxYear {
   enabledModules: string[]
   lockedAt: string | null
   exportedAt: string | null
+  requireW4ForLock: boolean
   createdAt: string
   lastModified: string | null
 }
@@ -73,6 +75,7 @@ export interface UpdateOwnerTaxYearModulesParams {
   officeSqFt?: number | null
   totalHomeSqFt?: number | null
   enabledModules: string[]
+  requireW4ForLock: boolean
 }
 
 function normalizeOwnerTaxYear(dto: OwnerTaxYearApiDto): OwnerTaxYear {
@@ -97,6 +100,7 @@ function normalizeOwnerTaxYear(dto: OwnerTaxYearApiDto): OwnerTaxYear {
     enabledModules: dto.enabledModules ?? [],
     lockedAt: dto.lockedAt ?? null,
     exportedAt: dto.exportedAt ?? null,
+    requireW4ForLock: dto.requireW4ForLock ?? true,
     createdAt: dto.createdAt,
     lastModified: dto.lastModified ?? null,
   }
@@ -150,6 +154,7 @@ export function createTaxiqOwnerTaxYearRepository(client: HttpClient = httpClien
         officeSqFt: params.officeSqFt ?? null,
         totalHomeSqFt: params.totalHomeSqFt ?? null,
         enabledModules: params.enabledModules,
+        requireW4ForLock: params.requireW4ForLock,
       })
     },
 

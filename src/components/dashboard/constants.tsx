@@ -138,11 +138,16 @@ export const MENU_ITEMS = [
     image: '/assets/menu/tax-iq.svg',
     children: [
       { id: 'onboarding', labelKey: 'dashboard.menu.taxiq_onboarding' },
+      { id: 'employers', labelKey: 'dashboard.menu.taxiq_employers' },
       { id: 'deductions', labelKey: 'dashboard.menu.taxiq_deductions' },
       { id: 'income', labelKey: 'dashboard.menu.taxiq_income' },
       { id: 'receipts', labelKey: 'dashboard.menu.taxiq_receipts' },
       { id: 'equipment', labelKey: 'dashboard.menu.taxiq_equipment' },
       { id: 'payroll', labelKey: 'dashboard.menu.taxiq_payroll' },
+      { id: 'pay-engine', labelKey: 'dashboard.menu.taxiq_pay_engine' },
+      { id: 'weekly-payroll', labelKey: 'dashboard.menu.taxiq_weekly_payroll' },
+      { id: 'payroll-runs', labelKey: 'dashboard.menu.taxiq_payroll_runs' },
+      { id: 'tax-ledger', labelKey: 'dashboard.menu.taxiq_tax_ledger' },
       { id: 'reminders', labelKey: 'dashboard.menu.taxiq_reminders' },
       { id: 'cpa-access', labelKey: 'dashboard.menu.taxiq_cpa_access' },
       { id: 'export', labelKey: 'dashboard.menu.taxiq_export' }

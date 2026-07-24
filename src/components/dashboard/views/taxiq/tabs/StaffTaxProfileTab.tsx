@@ -1,5 +1,5 @@
-import { useState } from 'react'
-import { Eye, Loader2 } from 'lucide-react'
+import { useMemo, useState } from 'react'
+import { AlertTriangle, Eye, Loader2, ShieldCheck, UserPlus } from 'lucide-react'
 import { useTranslation } from '../../../../../contexts/LanguageContext'
 import { useNotification } from '../../../../../contexts/NotificationContext'
 import {
@@ -7,13 +7,39 @@ import {
   useTaxiqOwnerStaffList,
   useRevealStaffTin,
   useSetStaffTin,
+  useVerifyStaffTin,
 } from '../../../../../data/hooks/useTaxiqOwnerPayouts'
 import { useOwnerTaxYear, useUpdateBusinessEin } from '../../../../../data/hooks/useTaxiqOwnerTaxYear'
 import { getApiErrorCode, isApiError } from '../../../../../types/domain'
 import { getErrorI18nKey } from '../../../../../data/errorCodes'
 import { SkeletonList } from '../../../../ui/skeleton'
 import Tooltip from '../../../../ui/Tooltip'
+import StaffW4InviteModal from '../modals/StaffW4InviteModal'
+import InviteEmployeeModal from '../modals/InviteEmployeeModal'
 import { SetStaffTinParams } from '@/data/repositories/taxiqOwnerPayouts'
+
+const TIN_STATUS_BADGE_STYLES: Record<string, string> = {
+  Missing: 'bg-rose-50 text-rose-600',
+  Pending: 'bg-amber-50 text-amber-600',
+  Verified: 'bg-emerald-50 text-emerald-600',
+}
+
+function TinStatusBadge({ status }: { status: string }) {
+  const { t } = useTranslation()
+  const style = TIN_STATUS_BADGE_STYLES[status] ?? 'bg-nexoraCanvas text-nexoraMuted'
+  return (
+    <span className={`inline-flex items-center rounded-full px-2 py-0.5 text-[10px] font-bold ${style}`}>
+      {t(`taxiq.payoutCenter.staffTaxProfile.tinStatuses.${status}`)}
+    </span>
+  )
+}
+
+function formatUpdatedAt(value: string | null, t: (key: string) => string): string {
+  if (!value) return t('taxiq.payoutCenter.staffTaxProfile.notStarted')
+  const date = new Date(value)
+  if (Number.isNaN(date.getTime())) return t('taxiq.payoutCenter.staffTaxProfile.notStarted')
+  return date.toLocaleDateString()
+}
 
 const EIN_PATTERN = /^\d{2}-?\d{7}$/
 
@@ -196,15 +222,54 @@ function StaffTinCell({ ownerTaxYearId, staffUserId }: { ownerTaxYearId: string;
         <div className="text-[11px] text-nexoraMuted">
           <div>{value.w9LegalName}{value.w9DbaName ? ` (DBA: ${value.w9DbaName})` : ''}</div>
           {value.w9Address && <div>{value.w9Address}</div>}
-          {value.w9TaxClassification && <div>{value.w9TaxClassification}</div>}
+          {(value.w9City || value.w9State || value.w9ZipCode) && (
+            <div>{[value.w9City, value.w9State, value.w9ZipCode].filter(Boolean).join(', ')}</div>
+          )}
+          {value.w9TaxClassification && (
+            <div>
+              {value.w9TaxClassification}
+              {value.w9LlcTaxClassificationType ? ` (${value.w9LlcTaxClassificationType})` : ''}
+              {value.w9OtherClassificationDescription ? ` — ${value.w9OtherClassificationDescription}` : ''}
+            </div>
+          )}
+          {value.w9IsSubjectToBackupWithholding && (
+            <div className="font-bold text-amber-600">{t('taxiq.taxProfile.w9.backupWithholdingLabel')}</div>
+          )}
           {value.w9HasSignedDocument && (
             <span className="font-bold text-emerald-600">{t('taxiq.taxProfile.w9.documentAttached')}</span>
           )}
+          <div className={value.w9CertificationAccepted ? 'font-bold text-emerald-600' : 'text-nexoraMuted'}>
+            {value.w9CertificationAccepted
+              ? t('taxiq.taxProfile.w9.certifiedNotice', {
+                  date: value.w9CertifiedAt ? new Date(value.w9CertifiedAt).toLocaleDateString() : '',
+                })
+              : t('taxiq.taxProfile.w9.notCertifiedNotice')}
+          </div>
         </div>
       )}
     </div>
   )
 }
+
+const W4_BADGE_STYLES: Record<string, string> = {
+  Missing: 'bg-rose-50 text-rose-600',
+  Stale: 'bg-amber-50 text-amber-600',
+  Current: 'bg-emerald-50 text-emerald-600',
+}
+
+function W4StatusBadge({ status }: { status: string | null }) {
+  const { t } = useTranslation()
+  if (!status) return <span className="text-nexoraMuted">—</span>
+  const style = W4_BADGE_STYLES[status] ?? 'bg-nexoraCanvas text-nexoraMuted'
+  return (
+    <span className={`inline-flex items-center rounded-full px-2 py-0.5 text-[10px] font-bold ${style}`}>
+      {t(`taxiq.payoutCenter.w4Statuses.${status}`)}
+    </span>
+  )
+}
+
+const TIN_STATUS_FILTER_VALUES = ['all', 'Missing', 'Pending', 'Verified'] as const
+type TinStatusFilter = (typeof TIN_STATUS_FILTER_VALUES)[number]
 
 export default function StaffTaxProfileTab({
   ownerTaxYearId,
@@ -214,9 +279,43 @@ export default function StaffTaxProfileTab({
   canEdit: boolean
 }) {
   const { t } = useTranslation()
+  const { showToast } = useNotification()
   const listQuery = useTaxiqOwnerStaffList(ownerTaxYearId)
+  const ownerTaxYearQuery = useOwnerTaxYear(ownerTaxYearId)
+  const verifyTin = useVerifyStaffTin(ownerTaxYearId)
+  const [inviteTarget, setInviteTarget] = useState<{ businessStaffLinkId: string; displayName: string } | null>(null)
+  const [showInviteEmployeeModal, setShowInviteEmployeeModal] = useState(false)
+  const [tinStatusFilter, setTinStatusFilter] = useState<TinStatusFilter>('all')
+  const [w4YearFilter, setW4YearFilter] = useState<string>('all')
 
   const items = listQuery.data ?? []
+  const businessId = ownerTaxYearQuery.data?.businessId
+
+  const w4YearOptions = useMemo(() => {
+    const years = new Set<number>()
+    items.forEach((item) => {
+      if (item.w4TaxYear) years.add(item.w4TaxYear)
+    })
+    return Array.from(years).sort((a, b) => b - a)
+  }, [items])
+
+  const filteredItems = useMemo(() => {
+    return items.filter((item) => {
+      if (tinStatusFilter !== 'all' && item.tinStatus !== tinStatusFilter) return false
+      if (w4YearFilter === 'Missing' && item.w4TaxYear) return false
+      if (w4YearFilter !== 'all' && w4YearFilter !== 'Missing' && String(item.w4TaxYear) !== w4YearFilter) return false
+      return true
+    })
+  }, [items, tinStatusFilter, w4YearFilter])
+
+  const handleVerify = async (businessStaffLinkId: string) => {
+    try {
+      await verifyTin.mutateAsync(businessStaffLinkId)
+      showToast(t('taxiq.payoutCenter.staffTaxProfile.verifySuccess'), 'success')
+    } catch (err) {
+      showToast(t(getErrorI18nKey(getApiErrorCode(err))), 'error')
+    }
+  }
 
   return (
     <div className="space-y-4">
@@ -228,40 +327,103 @@ export default function StaffTaxProfileTab({
 
       <BusinessEinCard ownerTaxYearId={ownerTaxYearId} canEdit={canEdit} />
 
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <div className="flex flex-wrap items-center gap-2">
+          <select
+            value={tinStatusFilter}
+            onChange={(e) => setTinStatusFilter(e.target.value as TinStatusFilter)}
+            className="rounded-lg border border-nexoraBorder px-3 py-2 text-xs font-semibold"
+          >
+            <option value="all">{t('taxiq.payoutCenter.staffTaxProfile.filters.allTinStatuses')}</option>
+            {TIN_STATUS_FILTER_VALUES.filter((v) => v !== 'all').map((status) => (
+              <option key={status} value={status}>
+                {t(`taxiq.payoutCenter.staffTaxProfile.tinStatuses.${status}`)}
+              </option>
+            ))}
+          </select>
+          <select
+            value={w4YearFilter}
+            onChange={(e) => setW4YearFilter(e.target.value)}
+            className="rounded-lg border border-nexoraBorder px-3 py-2 text-xs font-semibold"
+          >
+            <option value="all">{t('taxiq.payoutCenter.staffTaxProfile.filters.allW4Years')}</option>
+            {w4YearOptions.map((year) => (
+              <option key={year} value={year}>
+                {year}
+              </option>
+            ))}
+            <option value="Missing">{t('taxiq.payoutCenter.staffTaxProfile.w4YearMissing')}</option>
+          </select>
+        </div>
+        {canEdit && businessId && (
+          <button
+            type="button"
+            onClick={() => setShowInviteEmployeeModal(true)}
+            className="inline-flex items-center gap-1.5 rounded-lg bg-nexoraBrand px-4 py-2 text-xs font-bold text-white"
+          >
+            <UserPlus className="h-3.5 w-3.5" />
+            {t('taxiq.inviteEmployee.button')}
+          </button>
+        )}
+      </div>
+
       <div className="overflow-x-auto rounded-xl border border-nexoraBorder bg-white">
-        <table className="w-full min-w-[760px] text-left text-xs">
+        <table className="w-full min-w-[1280px] text-left text-xs">
           <thead className="bg-nexoraCanvas text-[10px] font-extrabold uppercase text-nexoraMuted">
             <tr>
               <th className="px-4 py-3">{t('taxiq.payoutCenter.staffTaxProfile.columns.staff')}</th>
               <th className="px-4 py-3">{t('taxiq.payoutCenter.staffTaxProfile.columns.contractType')}</th>
+              <th className="px-4 py-3">{t('taxiq.payoutCenter.staffTaxProfile.columns.tinStatus')}</th>
               <th className="px-4 py-3">
                 <span className="inline-flex items-center gap-1">
                   {t('taxiq.payoutCenter.staffTaxProfile.columns.w9Status')}
                   <Tooltip content={t('taxiq.tooltips.w9')} />
                 </span>
               </th>
+              <th className="px-4 py-3">
+                <span className="inline-flex items-center gap-1">
+                  {t('taxiq.payoutCenter.staffTaxProfile.columns.w4Status')}
+                  <Tooltip content={t('taxiq.tooltips.w4')} />
+                </span>
+              </th>
+              <th className="px-4 py-3">{t('taxiq.payoutCenter.staffTaxProfile.columns.w4Year')}</th>
+              <th className="px-4 py-3">{t('taxiq.payoutCenter.staffTaxProfile.columns.filing')}</th>
+              <th className="px-4 py-3">{t('taxiq.payoutCenter.staffTaxProfile.columns.residence')}</th>
+              <th className="px-4 py-3">{t('taxiq.payoutCenter.staffTaxProfile.columns.work')}</th>
+              <th className="px-4 py-3">{t('taxiq.payoutCenter.staffTaxProfile.columns.updated')}</th>
               <th className="px-4 py-3">{t('taxiq.taxProfile.title')}</th>
+              <th className="px-4 py-3">{t('taxiq.payoutCenter.staffTaxProfile.columns.actions')}</th>
             </tr>
           </thead>
           <tbody>
             {listQuery.isPending ? (
               <tr>
-                <td colSpan={4} className="p-4">
+                <td colSpan={12} className="p-4">
                   <SkeletonList count={4} lines={1} />
                 </td>
               </tr>
-            ) : items.length === 0 ? (
+            ) : filteredItems.length === 0 ? (
               <tr>
-                <td colSpan={4} className="px-4 py-8 text-center font-medium text-nexoraMuted">
+                <td colSpan={12} className="px-4 py-8 text-center font-medium text-nexoraMuted">
                   {t('taxiq.payoutCenter.staffTaxProfile.emptyState')}
                 </td>
               </tr>
             ) : (
-              items.map((item) => (
-                <tr key={item.userProfileId} className="border-t border-nexoraRule">
+              filteredItems.map((item) => (
+                <tr key={item.businessStaffLinkId} className="border-t border-nexoraRule">
                   <td className="px-4 py-3 font-bold text-nexoraText">{item.displayName}</td>
                   <td className="px-4 py-3 text-nexoraText">
-                    {item.contractType ? t(`taxiq.payoutCenter.contractTypes.${item.contractType}`) : '—'}
+                    <span className="inline-flex items-center gap-1">
+                      {item.contractType ? t(`taxiq.payoutCenter.contractTypes.${item.contractType}`) : '—'}
+                      {item.stateMismatch && (
+                        <span title={t('taxiq.payoutCenter.staffTaxProfile.stateMismatchTooltip')}>
+                          <AlertTriangle className="h-3.5 w-3.5 text-amber-500" />
+                        </span>
+                      )}
+                    </span>
+                  </td>
+                  <td className="px-4 py-3">
+                    <TinStatusBadge status={item.tinStatus} />
                   </td>
                   <td className="px-4 py-3">
                     {!item.hasStaffTaxYear || !item.staffTaxYearId ? (
@@ -273,7 +435,49 @@ export default function StaffTaxProfileTab({
                     )}
                   </td>
                   <td className="px-4 py-3">
-                    <StaffTinCell ownerTaxYearId={ownerTaxYearId} staffUserId={item.userProfileId} />
+                    <W4StatusBadge status={item.w4Status} />
+                  </td>
+                  <td className="px-4 py-3 text-nexoraText">{item.w4TaxYear ?? '—'}</td>
+                  <td className="px-4 py-3 text-nexoraText">
+                    {item.filingStatus ? t(`taxiq.payoutCenter.filingStatuses.${item.filingStatus}`) : '—'}
+                  </td>
+                  <td className="px-4 py-3 text-nexoraText">{item.residenceState ?? '—'}</td>
+                  <td className="px-4 py-3 text-nexoraText">{item.workState ?? '—'}</td>
+                  <td className="px-4 py-3 text-nexoraText">{formatUpdatedAt(item.updatedAt, t)}</td>
+                  <td className="px-4 py-3">
+                    {item.userProfileId ? (
+                      <StaffTinCell ownerTaxYearId={ownerTaxYearId} staffUserId={item.userProfileId} />
+                    ) : (
+                      <div className="space-y-1">
+                        <span className="block text-nexoraMuted">{t('taxiq.payoutCenter.staffTaxProfile.localStaffTinNotice')}</span>
+                        {canEdit && (
+                          <button
+                            type="button"
+                            onClick={() => setInviteTarget({ businessStaffLinkId: item.businessStaffLinkId, displayName: item.displayName })}
+                            className="text-[11px] font-bold text-nexoraBrand hover:underline"
+                          >
+                            {t('taxiq.w4Invite.form.inviteButton')}
+                          </button>
+                        )}
+                      </div>
+                    )}
+                  </td>
+                  <td className="px-4 py-3">
+                    {canEdit && item.tinStatus === 'Pending' && (
+                      <button
+                        type="button"
+                        onClick={() => handleVerify(item.businessStaffLinkId)}
+                        disabled={verifyTin.isPending}
+                        className="inline-flex items-center gap-1 text-[11px] font-bold text-nexoraBrand hover:underline disabled:opacity-60"
+                      >
+                        {verifyTin.isPending ? (
+                          <Loader2 className="h-3 w-3 animate-spin" />
+                        ) : (
+                          <ShieldCheck className="h-3 w-3" />
+                        )}
+                        {t('taxiq.payoutCenter.staffTaxProfile.verifyButton')}
+                      </button>
+                    )}
                   </td>
                 </tr>
               ))
@@ -281,6 +485,25 @@ export default function StaffTaxProfileTab({
           </tbody>
         </table>
       </div>
+
+      {inviteTarget && (
+        <StaffW4InviteModal
+          open
+          onClose={() => setInviteTarget(null)}
+          ownerTaxYearId={ownerTaxYearId}
+          businessStaffLinkId={inviteTarget.businessStaffLinkId}
+          staffDisplayName={inviteTarget.displayName}
+        />
+      )}
+
+      {showInviteEmployeeModal && businessId && (
+        <InviteEmployeeModal
+          open
+          onClose={() => setShowInviteEmployeeModal(false)}
+          businessId={businessId}
+          ownerTaxYearId={ownerTaxYearId}
+        />
+      )}
     </div>
   )
 }

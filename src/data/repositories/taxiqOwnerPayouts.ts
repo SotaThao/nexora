@@ -29,8 +29,16 @@ export interface StaffTinApiDto {
   w9LegalName?: string | null
   w9DbaName?: string | null
   w9Address?: string | null
+  w9City?: string | null
+  w9State?: string | null
+  w9ZipCode?: string | null
   w9TaxClassification?: string | null
+  w9LlcTaxClassificationType?: string | null
+  w9OtherClassificationDescription?: string | null
   w9HasSignedDocument?: boolean
+  w9IsSubjectToBackupWithholding?: boolean
+  w9CertificationAccepted?: boolean
+  w9CertifiedAt?: string | null
 }
 
 export interface StaffTin {
@@ -39,8 +47,16 @@ export interface StaffTin {
   w9LegalName: string | null
   w9DbaName: string | null
   w9Address: string | null
+  w9City: string | null
+  w9State: string | null
+  w9ZipCode: string | null
   w9TaxClassification: string | null
+  w9LlcTaxClassificationType: string | null
+  w9OtherClassificationDescription: string | null
   w9HasSignedDocument: boolean
+  w9IsSubjectToBackupWithholding: boolean
+  w9CertificationAccepted: boolean
+  w9CertifiedAt: string | null
 }
 
 function normalizeStaffTin(dto: StaffTinApiDto): StaffTin {
@@ -50,13 +66,25 @@ function normalizeStaffTin(dto: StaffTinApiDto): StaffTin {
     w9LegalName: dto.w9LegalName ?? null,
     w9DbaName: dto.w9DbaName ?? null,
     w9Address: dto.w9Address ?? null,
+    w9City: dto.w9City ?? null,
+    w9State: dto.w9State ?? null,
+    w9ZipCode: dto.w9ZipCode ?? null,
     w9TaxClassification: dto.w9TaxClassification ?? null,
+    w9LlcTaxClassificationType: dto.w9LlcTaxClassificationType ?? null,
+    w9OtherClassificationDescription: dto.w9OtherClassificationDescription ?? null,
     w9HasSignedDocument: dto.w9HasSignedDocument ?? false,
+    w9IsSubjectToBackupWithholding: dto.w9IsSubjectToBackupWithholding ?? false,
+    w9CertificationAccepted: dto.w9CertificationAccepted ?? false,
+    w9CertifiedAt: dto.w9CertifiedAt ?? null,
   }
 }
 
+export const TIN_STATUSES = ['Missing', 'Pending', 'Verified'] as const
+export type TinStatus = (typeof TIN_STATUSES)[number]
+
 export interface StaffTaxIqItemApiDto {
-  userProfileId: string
+  businessStaffLinkId: string
+  userProfileId: string | null
   staffProfileId: string
   displayName: string
   photoUrl?: string | null
@@ -66,10 +94,19 @@ export interface StaffTaxIqItemApiDto {
   contractType?: string | null
   w9Status?: string | null
   taxYearStatus?: string | null
+  w4Status?: string | null
+  stateMismatch?: boolean
+  tinStatus?: string
+  w4TaxYear?: number | null
+  filingStatus?: string | null
+  residenceState?: string | null
+  workState?: string | null
+  updatedAt?: string | null
 }
 
 export interface StaffTaxIqItem {
-  userProfileId: string
+  businessStaffLinkId: string
+  userProfileId: string | null
   staffProfileId: string
   displayName: string
   photoUrl: string | null
@@ -79,11 +116,20 @@ export interface StaffTaxIqItem {
   contractType: string | null
   w9Status: string | null
   taxYearStatus: string | null
+  w4Status: string | null
+  stateMismatch: boolean
+  tinStatus: string
+  w4TaxYear: number | null
+  filingStatus: string | null
+  residenceState: string | null
+  workState: string | null
+  updatedAt: string | null
 }
 
 function normalizeStaffTaxIqItem(dto: StaffTaxIqItemApiDto): StaffTaxIqItem {
   return {
-    userProfileId: dto.userProfileId,
+    businessStaffLinkId: dto.businessStaffLinkId,
+    userProfileId: dto.userProfileId ?? null,
     staffProfileId: dto.staffProfileId,
     displayName: dto.displayName,
     photoUrl: dto.photoUrl ?? null,
@@ -93,6 +139,37 @@ function normalizeStaffTaxIqItem(dto: StaffTaxIqItemApiDto): StaffTaxIqItem {
     contractType: dto.contractType ?? null,
     w9Status: dto.w9Status ?? null,
     taxYearStatus: dto.taxYearStatus ?? null,
+    w4Status: dto.w4Status ?? null,
+    stateMismatch: dto.stateMismatch ?? false,
+    tinStatus: dto.tinStatus ?? 'Missing',
+    w4TaxYear: dto.w4TaxYear ?? null,
+    filingStatus: dto.filingStatus ?? null,
+    residenceState: dto.residenceState ?? null,
+    workState: dto.workState ?? null,
+    updatedAt: dto.updatedAt ?? null,
+  }
+}
+
+export interface InviteEmployeeParams {
+  businessId: string
+  ownerTaxYearId: string
+  legalName: string
+  email: string
+  workerType: 'W2' | 'C1099' | 'Unknown'
+  expiryDays: 7 | 15 | 30
+  reminderCadence: 'Every3Days' | 'Once' | 'Every7Days'
+}
+
+export interface InviteEmployeeResult {
+  businessStaffLinkId: string
+  staffProfileId: string
+  inviteLink: {
+    id: string
+    businessStaffLinkId: string
+    ownerTaxYearId: string
+    accessToken: string
+    expiresAt: string
+    reminderCadence: string
   }
 }
 
@@ -330,6 +407,22 @@ export function createTaxiqOwnerPayoutsRepository(client: HttpClient = httpClien
         staffUserId: params.staffUserId,
         ssn: params.ssn,
         ein: params.ein,
+      })
+    },
+
+    async verifyStaffTin(businessStaffLinkId: string): Promise<void> {
+      await client.put<void>('/api/v1/taxiq/owner/staff-tin/verify', { businessStaffLinkId })
+    },
+
+    async inviteEmployee(params: InviteEmployeeParams): Promise<InviteEmployeeResult> {
+      return await client.post<InviteEmployeeResult>('/api/v1/taxiq/owner/staff/invite', {
+        businessId: params.businessId,
+        ownerTaxYearId: params.ownerTaxYearId,
+        legalName: params.legalName,
+        email: params.email,
+        workerType: params.workerType,
+        expiryDays: params.expiryDays,
+        reminderCadence: params.reminderCadence,
       })
     },
 

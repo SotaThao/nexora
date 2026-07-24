@@ -46,6 +46,7 @@ export default function EditModuleConfigModal({
   const [officeSqFt, setOfficeSqFt] = useState(ownerTaxYear.officeSqFt?.toString() ?? '')
   const [totalHomeSqFt, setTotalHomeSqFt] = useState(ownerTaxYear.totalHomeSqFt?.toString() ?? '')
   const [homeOfficeError, setHomeOfficeError] = useState('')
+  const [requireW4ForLock, setRequireW4ForLock] = useState(ownerTaxYear.requireW4ForLock)
 
   useEffect(() => {
     if (open) {
@@ -55,6 +56,7 @@ export default function EditModuleConfigModal({
       setOfficeSqFt(ownerTaxYear.officeSqFt?.toString() ?? '')
       setTotalHomeSqFt(ownerTaxYear.totalHomeSqFt?.toString() ?? '')
       setHomeOfficeError('')
+      setRequireW4ForLock(ownerTaxYear.requireW4ForLock)
     }
   }, [open, ownerTaxYear])
 
@@ -77,6 +79,7 @@ export default function EditModuleConfigModal({
         businessEntityType: businessEntityType || null,
         officeSqFt: officeSqFt ? Number(officeSqFt) : null,
         totalHomeSqFt: totalHomeSqFt ? Number(totalHomeSqFt) : null,
+        requireW4ForLock,
       })
       showToast(t('taxiq.home.editModulesModal.saved'), 'success')
       onClose()
@@ -180,6 +183,19 @@ export default function EditModuleConfigModal({
                 <Tooltip content={t(mod.tooltipKey)} />
               </label>
             ))}
+          </div>
+
+          <div className="rounded-lg border border-nexoraBorder bg-nexoraCanvas p-3">
+            <label className="flex items-center gap-2.5 text-sm font-semibold text-nexoraText">
+              <input
+                type="checkbox"
+                checked={requireW4ForLock}
+                onChange={(e) => setRequireW4ForLock(e.target.checked)}
+                className="h-4 w-4 rounded border-nexoraBorder"
+              />
+              {t('taxiq.home.editModulesModal.requireW4ForLockLabel')}
+              <Tooltip content={t('taxiq.home.editModulesModal.requireW4ForLockTooltip')} />
+            </label>
           </div>
         </div>
 

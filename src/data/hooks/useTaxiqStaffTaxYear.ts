@@ -12,6 +12,7 @@ import type {
   StaffTaxYearListPage,
   UpdateStaffTaxYearModulesParams,
   UpsertStaffTaxProfileParams,
+  UpsertStaffW4Params,
   UpsertW9RecordParams,
 } from '../repositories/taxiqStaffTaxYear'
 
@@ -54,6 +55,17 @@ export function useUpdateStaffTaxYearModules() {
   })
 }
 
+export function useUpsertStaffW4() {
+  const queryClient = useQueryClient()
+  return useMutation<void, Error, { id: string } & UpsertStaffW4Params>({
+    mutationFn: ({ id, ...params }) => taxiqStaffTaxYearRepository.upsertW4(id, params),
+    onSuccess: (_data, variables) => {
+      queryClient.invalidateQueries({ queryKey: qk.taxiqStaffTaxYear() })
+      queryClient.invalidateQueries({ queryKey: qk.taxiqStaffTaxYearById(variables.id) })
+    },
+  })
+}
+
 export function useMyStaffTaxProfile() {
   return useQuery<StaffTaxProfile>({
     queryKey: qk.taxiqStaffTaxProfile(),
@@ -85,6 +97,16 @@ export function useUploadSignedW9() {
   const queryClient = useQueryClient()
   return useMutation<void, Error, File>({
     mutationFn: (file) => taxiqStaffTaxYearRepository.uploadSignedW9(file),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: qk.taxiqStaffTaxProfile() })
+    },
+  })
+}
+
+export function useCertifyW9Record() {
+  const queryClient = useQueryClient()
+  return useMutation<void, Error, void>({
+    mutationFn: () => taxiqStaffTaxYearRepository.certifyW9Record(),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: qk.taxiqStaffTaxProfile() })
     },

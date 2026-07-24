@@ -198,6 +198,59 @@ export const errorCodeToI18nKey = {
   TAXIQ_CPA_CONSENT_REQUIRED: 'errors.taxiq_cpa_consent_required',
   TAXIQ_DEDUCTION_NOT_IN_GRANT_SCOPE: 'errors.taxiq_deduction_not_in_grant_scope',
 
+  // Tax IQ — Staff W-4 Invite Link (US-028)
+  TAXIQ_STAFF_W4_INVITE_STAFF_NOT_LOCAL: 'errors.taxiq_staff_w4_invite_staff_not_local',
+  TAXIQ_STAFF_W4_INVITE_EMAIL_REQUIRED: 'errors.taxiq_staff_w4_invite_email_required',
+  TAXIQ_STAFF_W4_INVITE_STAFF_LINK_NOT_ACTIVE: 'errors.taxiq_staff_w4_invite_staff_link_not_active',
+  TAXIQ_STAFF_W4_INVITE_TOKEN_INVALID: 'errors.taxiq_staff_w4_invite_token_invalid',
+  TAXIQ_STAFF_W4_INVITE_LINK_EXPIRED: 'errors.taxiq_staff_w4_invite_link_expired',
+  TAXIQ_STAFF_W4_INVITE_LINK_REVOKED: 'errors.taxiq_staff_w4_invite_link_revoked',
+
+  // Tax IQ — Employer Registry (US-029 / backend US-21)
+  TAXIQ_EMPLOYER_NOT_FOUND: 'errors.taxiq_employer_not_found',
+  TAXIQ_EMPLOYER_ALREADY_EXISTS: 'errors.taxiq_employer_already_exists',
+  TAXIQ_EMPLOYER_REGISTRATION_NOT_FOUND: 'errors.taxiq_employer_registration_not_found',
+
+  // Tax IQ — Employees core (US-030 / backend US-22)
+  TAXIQ_STAFF_TAX_PROFILE_NOT_FOUND: 'errors.taxiq_staff_tax_profile_not_found',
+  TAXIQ_STAFF_TIN_VERIFICATION_NOT_ALLOWED: 'errors.taxiq_staff_tin_verification_not_allowed',
+
+  // Tax IQ — W-9 full form + self-certification (US-034)
+  TAXIQ_W9_NOT_READY_FOR_CERTIFICATION: 'errors.taxiq_w9_not_ready_for_certification',
+
+  // Tax IQ / POS — Pay Engine (US-031 / backend US-23)
+  POS_STAFF_PAY_RULE_PROFILE_NOT_SET_UP: 'errors.pos_staff_pay_rule_profile_not_set_up',
+  POS_STAFF_PAY_SCHEDULE_INVALID: 'errors.pos_staff_pay_schedule_invalid',
+  POS_STAFF_PAY_RULE_FIELD_REQUIRED: 'errors.pos_staff_pay_rule_field_required',
+  POS_STAFF_PAY_RULE_COMMISSION_PERCENT_INVALID: 'errors.pos_staff_pay_rule_commission_percent_invalid',
+  POS_STAFF_PAY_RULE_OVERTIME_THRESHOLD_INVALID: 'errors.pos_staff_pay_rule_overtime_threshold_invalid',
+  POS_STAFF_PAY_RULE_TIERED_RATES_INVALID: 'errors.pos_staff_pay_rule_tiered_rates_invalid',
+  POS_STAFF_PAY_RULE_BONUS_FIELD_INVALID: 'errors.pos_staff_pay_rule_bonus_field_invalid',
+  POS_STAFF_PAYOUT_DESTINATION_FIELD_INVALID: 'errors.pos_staff_payout_destination_field_invalid',
+
+  // Tax IQ / POS — Weekly Payroll (mục 14, backend US-25)
+  POS_PAYROLL_NOT_READY: 'errors.pos_payroll_not_ready',
+  POS_PAYROLL_ALREADY_PAID: 'errors.pos_payroll_already_paid',
+  POS_PAYROLL_PROOF_REQUIRED: 'errors.pos_payroll_proof_required',
+  POS_PAYROLL_TAX_PROFILE_BLOCKED: 'errors.pos_payroll_tax_profile_blocked',
+  POS_PAYROLL_PAYOUT_METHOD_MISSING: 'errors.pos_payroll_payout_method_missing',
+  POS_PAYROLL_NOT_WEEKLY_SCHEDULE: 'errors.pos_payroll_not_weekly_schedule',
+  POS_PAYROLL_IS_W2: 'errors.pos_payroll_is_w2',
+  POS_PAYROLL_OVERRIDE_NOTE_REQUIRED: 'errors.pos_payroll_override_note_required',
+  POS_PAYROLL_AMOUNT_ZERO: 'errors.pos_payroll_amount_zero',
+
+  // Tax IQ — Payroll Runs (mục 12, backend US-26)
+  TAXIQ_PAYROLL_RUN_NOT_FOUND: 'errors.taxiq_payroll_run_not_found',
+  TAXIQ_PAYROLL_RUN_PERIOD_INVALID: 'errors.taxiq_payroll_run_period_invalid',
+  TAXIQ_PAYROLL_RUN_INVALID_STATUS_FOR_ACTION: 'errors.taxiq_payroll_run_invalid_status_for_action',
+  TAXIQ_PAYROLL_RUN_APPROVAL_NOTE_REQUIRED: 'errors.taxiq_payroll_run_approval_note_required',
+  TAXIQ_PAYROLL_RUN_VALIDATION_BLOCKING: 'errors.taxiq_payroll_run_validation_blocking',
+  TAXIQ_PAYROLL_RUN_CANCEL_REASON_REQUIRED: 'errors.taxiq_payroll_run_cancel_reason_required',
+  TAXIQ_PAYROLL_RUN_CANNOT_CANCEL_POSTED: 'errors.taxiq_payroll_run_cannot_cancel_posted',
+
+  // Tax IQ — Tax Ledger (mục 16, backend US-27/28/29)
+  TAXIQ_TAX_LEDGER_ENTRY_NOT_FOUND: 'errors.taxiq_tax_ledger_entry_not_found',
+
   // Common
   COMMON_VALIDATION_ERROR: 'errors.common_validation_error',
   COMMON_NOT_FOUND: 'errors.common_not_found',

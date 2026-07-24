@@ -33,6 +33,11 @@ import YearEndExportView from '../views/taxiq/YearEndExportView'
 import TaxRemindersView from '../views/taxiq/TaxRemindersView'
 import PayoutDisputeCenterView from '../views/taxiq/PayoutDisputeCenterView'
 import CpaAccessSettingsView from '../views/taxiq/CpaAccessSettingsView'
+import EmployerRegistryView from '../views/taxiq/EmployerRegistryView'
+import PayEngineView from '../views/taxiq/PayEngineView'
+import WeeklyPayrollView from '../views/taxiq/WeeklyPayrollView'
+import PayrollRunsView from '../views/taxiq/PayrollRunsView'
+import TaxLedgerView from '../views/taxiq/TaxLedgerView'
 import PosGeneralSettingsView from '../views/pos/PosGeneralSettingsView'
 import PosRolesView from '../views/pos/PosRolesView'
 import PosCategoriesView from '../views/pos/PosCategoriesView'
@@ -651,6 +656,106 @@ export function TaxIqPayrollRoute() {
   }
 
   return <PayoutDisputeCenterView ownerTaxYearId={ownerTaxYear.id} ownerTaxYearStatus={ownerTaxYear.status} />
+}
+// Employer is 1:1 with Business, not OwnerTaxYear — this route only needs businessId,
+// unlike every other TaxIq*Route above which also resolve an OwnerTaxYear.
+export function TaxIqEmployersRoute() {
+  const { data: merchantSetupData, isLoading: isMerchantLoading } = useMerchantSetup()
+  const businessId = merchantSetupData?.businessInfo?.businessId
+
+  if (isMerchantLoading) {
+    return (
+      <div className="nexora-card p-6">
+        <SkeletonList count={3} lines={2} />
+      </div>
+    )
+  }
+
+  if (!businessId) {
+    return null
+  }
+
+  return <EmployerRegistryView businessId={businessId} />
+}
+// Pay Engine (mục 13) is keyed by BusinessStaffLink/POS staff profile, not OwnerTaxYear —
+// same businessId-only shape as TaxIqEmployersRoute above.
+export function TaxIqPayEngineRoute() {
+  const { data: merchantSetupData, isLoading: isMerchantLoading } = useMerchantSetup()
+  const businessId = merchantSetupData?.businessInfo?.businessId
+
+  if (isMerchantLoading) {
+    return (
+      <div className="nexora-card p-6">
+        <SkeletonList count={3} lines={2} />
+      </div>
+    )
+  }
+
+  if (!businessId) {
+    return null
+  }
+
+  return <PayEngineView businessId={businessId} />
+}
+// Weekly Payroll (mục 14) is keyed by BusinessStaffLink/POS staff profile, not OwnerTaxYear —
+// same businessId-only shape as TaxIqPayEngineRoute above.
+export function TaxIqWeeklyPayrollRoute() {
+  const { data: merchantSetupData, isLoading: isMerchantLoading } = useMerchantSetup()
+  const businessId = merchantSetupData?.businessInfo?.businessId
+
+  if (isMerchantLoading) {
+    return (
+      <div className="nexora-card p-6">
+        <SkeletonList count={3} lines={2} />
+      </div>
+    )
+  }
+
+  if (!businessId) {
+    return null
+  }
+
+  return <WeeklyPayrollView businessId={businessId} />
+}
+// Payroll Runs (mục 12) is keyed by Employer (resolved inside PayrollRunsView itself via
+// useTaxiqEmployers), same businessId-only shape as TaxIqWeeklyPayrollRoute above.
+export function TaxIqPayrollRunsRoute() {
+  const { data: merchantSetupData, isLoading: isMerchantLoading } = useMerchantSetup()
+  const businessId = merchantSetupData?.businessInfo?.businessId
+
+  if (isMerchantLoading) {
+    return (
+      <div className="nexora-card p-6">
+        <SkeletonList count={3} lines={2} />
+      </div>
+    )
+  }
+
+  if (!businessId) {
+    return null
+  }
+
+  return <PayrollRunsView businessId={businessId} />
+}
+// Tax Ledger (mục 16) is keyed by Employer too, same businessId-only shape as
+// TaxIqPayrollRunsRoute above.
+export function TaxIqTaxLedgerRoute() {
+  const { data: merchantSetupData, isLoading: isMerchantLoading } = useMerchantSetup()
+  const businessId = merchantSetupData?.businessInfo?.businessId
+
+  if (isMerchantLoading) {
+    return (
+      <div className="nexora-card p-6">
+        <SkeletonList count={3} lines={2} />
+      </div>
+    )
+  }
+
+  if (!businessId) {
+    return null
+  }
+
+  return <TaxLedgerView businessId={businessId} />
 }
 export function TaxIqRemindersRoute() {
   const { t } = useTranslation()

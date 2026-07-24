@@ -91,6 +91,41 @@ export const qk = {
   // POS Owner Setup — Staff Weekly Schedule (US-09/US-021)
   merchantPosStaffWeeklySchedule: (businessStaffLinkId?: string) =>
     ['merchantSettings', 'posStaffWeeklySchedule', businessStaffLinkId ?? ''],
+  // Tax IQ / POS — Pay Engine (US-031 / backend US-23)
+  merchantPosPayRuleList: (businessId?: string) => ['merchantSettings', 'posPayRuleList', businessId ?? ''],
+  merchantPosPayRule: (businessStaffLinkId?: string) =>
+    ['merchantSettings', 'posPayRule', businessStaffLinkId ?? ''],
+  // Tax IQ / POS — Weekly Payroll (mục 14, backend US-25). weekStart is only appended when
+  // explicitly passed — omitting it (e.g. from a mutation's invalidateQueries call, which may
+  // not know which week the currently-mounted list query was rendered with) yields a short
+  // prefix that matches every cached week for this business, same convention as
+  // merchantPosCompletedOrders above.
+  merchantPosWeeklyPayroll: (businessId?: string, weekStart?: string) => {
+    const key: unknown[] = ['merchantSettings', 'posWeeklyPayroll', businessId ?? '']
+    if (weekStart) key.push(weekStart)
+    return key
+  },
+  merchantPosWeeklyPayrollDailyDetail: (businessStaffLinkId?: string, weekStart?: string) => {
+    const key: unknown[] = ['merchantSettings', 'posWeeklyPayrollDailyDetail', businessStaffLinkId ?? '']
+    if (weekStart) key.push(weekStart)
+    return key
+  },
+  // Tax IQ — Payroll Runs (mục 12, backend US-26). `filters` only appended when passed, same
+  // prefix-invalidation convention as merchantPosCompletedOrders — a mutation (Finalize/
+  // Cancel/Rerun) invalidates the list without knowing which page/filter the list is on.
+  taxiqPayrollRuns: (businessId?: string, filters?: object) => {
+    const key: unknown[] = ['taxiq', 'payrollRuns', businessId ?? '']
+    if (filters) key.push(filters)
+    return key
+  },
+  taxiqPayrollRun: (id?: string) => ['taxiq', 'payrollRun', id ?? ''],
+  // Tax IQ — Tax Ledger (mục 16, backend US-27/28/29). Same filters-appended-when-present
+  // convention as taxiqPayrollRuns.
+  taxiqTaxLedger: (businessId?: string, filters?: object) => {
+    const key: unknown[] = ['taxiq', 'taxLedger', businessId ?? '']
+    if (filters) key.push(filters)
+    return key
+  },
   // POS Merchant Ops — Front Desk access self-check + Check-in/Waitlist (US-12)
   merchantPosAccess: (businessId?: string) => ['merchantSettings', 'posAccess', businessId ?? ''],
   merchantPosWaitlist: (businessId?: string) => ['merchantSettings', 'posWaitlist', businessId ?? ''],
@@ -292,6 +327,15 @@ export const qk = {
   taxiqCpaAccessGrants: (ownerTaxYearId?: string, staffTaxYearId?: string) =>
     ['taxiqCpaAccessGrants', ownerTaxYearId ?? 'none', staffTaxYearId ?? 'none'],
   taxiqCpaViewerPackage: (token?: string) => ['taxiqCpaViewerPackage', token ?? 'unknown'],
+
+  // Tax IQ — Staff W-4 Invite Link (US-028). Anonymous context query, keyed by token.
+  taxiqStaffW4Invite: (token?: string) => ['taxiqStaffW4Invite', token ?? 'unknown'],
+
+  // Tax IQ — Employer Registry (US-029). Prefixed with 'taxiqEmployers' so invalidating
+  // qk.taxiqEmployers() also clears the byId cache below.
+  taxiqEmployers: (businessId?: string) => ['taxiqEmployers', businessId ?? 'unknown'],
+  taxiqEmployerById: (id?: string) => ['taxiqEmployers', 'byId', id ?? 'unknown'],
+  taxiqEmployerRegistrations: (employerId?: string) => ['taxiqEmployerRegistrations', employerId ?? 'unknown'],
 
   // Merchant Nexora Voice
   merchantVoiceBookings: (filters = EMPTY) => ['merchantVoice', 'bookings', filters],

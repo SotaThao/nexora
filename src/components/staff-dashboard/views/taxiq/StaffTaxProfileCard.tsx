@@ -1,8 +1,9 @@
 import { useEffect, useState } from 'react'
-import { Loader2, Paperclip } from 'lucide-react'
+import { Loader2, Paperclip, ShieldCheck } from 'lucide-react'
 import { useTranslation } from '../../../../contexts/LanguageContext'
 import { useNotification } from '../../../../contexts/NotificationContext'
 import {
+  useCertifyW9Record,
   useMyStaffTaxProfile,
   useUploadSignedW9,
   useUpsertStaffTaxProfile,
@@ -21,6 +22,15 @@ const TAX_CLASSIFICATION_OPTIONS = [
   { key: 'Partnership', labelKey: 'taxiq.taxProfile.w9.taxClassifications.partnership' },
   { key: 'CCorp', labelKey: 'taxiq.taxProfile.w9.taxClassifications.cCorp' },
   { key: 'SCorp', labelKey: 'taxiq.taxProfile.w9.taxClassifications.sCorp' },
+  { key: 'TrustEstate', labelKey: 'taxiq.taxProfile.w9.taxClassifications.trustEstate' },
+  { key: 'Other', labelKey: 'taxiq.taxProfile.w9.taxClassifications.other' },
+]
+
+// W-9 line 3b: only meaningful when TAX_CLASSIFICATION_OPTIONS selection is 'LLC'.
+const LLC_TAX_CLASSIFICATION_OPTIONS = [
+  { key: 'C', labelKey: 'taxiq.taxProfile.w9.llcTaxClassifications.c' },
+  { key: 'S', labelKey: 'taxiq.taxProfile.w9.llcTaxClassifications.s' },
+  { key: 'P', labelKey: 'taxiq.taxProfile.w9.llcTaxClassifications.p' },
 ]
 
 interface FormErrors {
@@ -32,6 +42,11 @@ interface FormErrors {
 interface W9FormErrors {
   legalName?: string
   address?: string
+  city?: string
+  state?: string
+  zipCode?: string
+  llcTaxClassificationType?: string
+  otherClassificationDescription?: string
 }
 
 // SSN/EIN capture for W-9 (US-012, tách từ US-17-assumptions.md). Staff owns this
@@ -44,6 +59,7 @@ export default function StaffTaxProfileCard() {
   const upsertProfile = useUpsertStaffTaxProfile()
   const upsertW9Record = useUpsertW9Record()
   const uploadSignedW9 = useUploadSignedW9()
+  const certifyW9Record = useCertifyW9Record()
 
   const [ssn, setSsn] = useState('')
   const [ein, setEin] = useState('')
@@ -53,7 +69,13 @@ export default function StaffTaxProfileCard() {
   const [legalName, setLegalName] = useState('')
   const [dbaName, setDbaName] = useState('')
   const [address, setAddress] = useState('')
+  const [city, setCity] = useState('')
+  const [state, setState] = useState('')
+  const [zipCode, setZipCode] = useState('')
   const [taxClassification, setTaxClassification] = useState('Individual')
+  const [llcTaxClassificationType, setLlcTaxClassificationType] = useState('')
+  const [otherClassificationDescription, setOtherClassificationDescription] = useState('')
+  const [isSubjectToBackupWithholding, setIsSubjectToBackupWithholding] = useState(false)
   const [w9Errors, setW9Errors] = useState<W9FormErrors>({})
   const [isW9Prefilled, setIsW9Prefilled] = useState(false)
 
@@ -70,7 +92,13 @@ export default function StaffTaxProfileCard() {
       setLegalName(profile.w9Record.legalName)
       setDbaName(profile.w9Record.dbaName ?? '')
       setAddress(profile.w9Record.address)
+      setCity(profile.w9Record.city)
+      setState(profile.w9Record.state)
+      setZipCode(profile.w9Record.zipCode)
       setTaxClassification(profile.w9Record.taxClassification)
+      setLlcTaxClassificationType(profile.w9Record.llcTaxClassificationType ?? '')
+      setOtherClassificationDescription(profile.w9Record.otherClassificationDescription ?? '')
+      setIsSubjectToBackupWithholding(profile.w9Record.isSubjectToBackupWithholding)
     }
     setIsW9Prefilled(true)
   }, [isW9Prefilled, profile])
@@ -79,6 +107,15 @@ export default function StaffTaxProfileCard() {
     const next: W9FormErrors = {}
     if (!legalName.trim()) next.legalName = t('taxiq.taxProfile.w9.errors.legalNameRequired')
     if (!address.trim()) next.address = t('taxiq.taxProfile.w9.errors.addressRequired')
+    if (!city.trim()) next.city = t('taxiq.taxProfile.w9.errors.cityRequired')
+    if (!state.trim()) next.state = t('taxiq.taxProfile.w9.errors.stateRequired')
+    if (!zipCode.trim()) next.zipCode = t('taxiq.taxProfile.w9.errors.zipCodeRequired')
+    if (taxClassification === 'LLC' && !llcTaxClassificationType) {
+      next.llcTaxClassificationType = t('taxiq.taxProfile.w9.errors.llcTaxClassificationTypeRequired')
+    }
+    if (taxClassification === 'Other' && !otherClassificationDescription.trim()) {
+      next.otherClassificationDescription = t('taxiq.taxProfile.w9.errors.otherClassificationDescriptionRequired')
+    }
     setW9Errors(next)
     return Object.keys(next).length === 0
   }
@@ -90,7 +127,14 @@ export default function StaffTaxProfileCard() {
         legalName: legalName.trim(),
         dbaName: dbaName.trim() || null,
         address: address.trim(),
+        city: city.trim(),
+        state: state.trim(),
+        zipCode: zipCode.trim(),
         taxClassification,
+        llcTaxClassificationType: taxClassification === 'LLC' ? llcTaxClassificationType : null,
+        otherClassificationDescription:
+          taxClassification === 'Other' ? otherClassificationDescription.trim() : null,
+        isSubjectToBackupWithholding,
       })
       showToast(t('taxiq.taxProfile.w9.savedNotice'), 'success')
     } catch (err) {
@@ -108,6 +152,16 @@ export default function StaffTaxProfileCard() {
       showToast(t('taxiq.taxProfile.w9.uploadSuccess'), 'success')
     } catch (err) {
       const i18nKey = isApiError(err) ? getErrorI18nKey(err.errorCode) : 'taxiq.taxProfile.w9.errors.uploadFailed'
+      showToast(t(i18nKey), 'error')
+    }
+  }
+
+  const handleCertify = async () => {
+    try {
+      await certifyW9Record.mutateAsync()
+      showToast(t('taxiq.taxProfile.w9.certifySuccess'), 'success')
+    } catch (err) {
+      const i18nKey = isApiError(err) ? getErrorI18nKey(err.errorCode) : 'taxiq.taxProfile.w9.errors.certifyFailed'
       showToast(t(i18nKey), 'error')
     }
   }
@@ -220,6 +274,39 @@ export default function StaffTaxProfileCard() {
                 {w9Errors.address && <p className="mt-1 text-xs font-semibold text-rose-500">{w9Errors.address}</p>}
               </div>
 
+              <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
+                <div>
+                  <label className="text-xs font-bold text-nexoraMuted">{t('taxiq.taxProfile.w9.cityLabel')}</label>
+                  <input
+                    type="text"
+                    value={city}
+                    onChange={(e) => setCity(e.target.value)}
+                    className="mt-1 w-full rounded-lg border border-nexoraBorder px-3 py-2 text-sm"
+                  />
+                  {w9Errors.city && <p className="mt-1 text-xs font-semibold text-rose-500">{w9Errors.city}</p>}
+                </div>
+                <div>
+                  <label className="text-xs font-bold text-nexoraMuted">{t('taxiq.taxProfile.w9.stateLabel')}</label>
+                  <input
+                    type="text"
+                    value={state}
+                    onChange={(e) => setState(e.target.value)}
+                    className="mt-1 w-full rounded-lg border border-nexoraBorder px-3 py-2 text-sm"
+                  />
+                  {w9Errors.state && <p className="mt-1 text-xs font-semibold text-rose-500">{w9Errors.state}</p>}
+                </div>
+                <div>
+                  <label className="text-xs font-bold text-nexoraMuted">{t('taxiq.taxProfile.w9.zipCodeLabel')}</label>
+                  <input
+                    type="text"
+                    value={zipCode}
+                    onChange={(e) => setZipCode(e.target.value)}
+                    className="mt-1 w-full rounded-lg border border-nexoraBorder px-3 py-2 text-sm"
+                  />
+                  {w9Errors.zipCode && <p className="mt-1 text-xs font-semibold text-rose-500">{w9Errors.zipCode}</p>}
+                </div>
+              </div>
+
               <div>
                 <label className="text-xs font-bold text-nexoraMuted">{t('taxiq.taxProfile.w9.taxClassificationLabel')}</label>
                 <select
@@ -231,6 +318,57 @@ export default function StaffTaxProfileCard() {
                     <option key={opt.key} value={opt.key}>{t(opt.labelKey)}</option>
                   ))}
                 </select>
+              </div>
+
+              {taxClassification === 'LLC' && (
+                <div>
+                  <label className="text-xs font-bold text-nexoraMuted">
+                    {t('taxiq.taxProfile.w9.llcTaxClassificationTypeLabel')}
+                  </label>
+                  <select
+                    value={llcTaxClassificationType}
+                    onChange={(e) => setLlcTaxClassificationType(e.target.value)}
+                    className="mt-1 w-full rounded-lg border border-nexoraBorder px-3 py-2 text-sm"
+                  >
+                    <option value="">{t('taxiq.taxProfile.w9.selectPlaceholder')}</option>
+                    {LLC_TAX_CLASSIFICATION_OPTIONS.map((opt) => (
+                      <option key={opt.key} value={opt.key}>{t(opt.labelKey)}</option>
+                    ))}
+                  </select>
+                  {w9Errors.llcTaxClassificationType && (
+                    <p className="mt-1 text-xs font-semibold text-rose-500">{w9Errors.llcTaxClassificationType}</p>
+                  )}
+                </div>
+              )}
+
+              {taxClassification === 'Other' && (
+                <div>
+                  <label className="text-xs font-bold text-nexoraMuted">
+                    {t('taxiq.taxProfile.w9.otherClassificationDescriptionLabel')}
+                  </label>
+                  <input
+                    type="text"
+                    value={otherClassificationDescription}
+                    onChange={(e) => setOtherClassificationDescription(e.target.value)}
+                    className="mt-1 w-full rounded-lg border border-nexoraBorder px-3 py-2 text-sm"
+                  />
+                  {w9Errors.otherClassificationDescription && (
+                    <p className="mt-1 text-xs font-semibold text-rose-500">{w9Errors.otherClassificationDescription}</p>
+                  )}
+                </div>
+              )}
+
+              <div className="flex items-center gap-2">
+                <input
+                  id="w9-backup-withholding"
+                  type="checkbox"
+                  checked={isSubjectToBackupWithholding}
+                  onChange={(e) => setIsSubjectToBackupWithholding(e.target.checked)}
+                  className="h-4 w-4 rounded border-nexoraBorder"
+                />
+                <label htmlFor="w9-backup-withholding" className="text-xs font-semibold text-nexoraText">
+                  {t('taxiq.taxProfile.w9.backupWithholdingLabel')}
+                </label>
               </div>
 
               <button
@@ -276,6 +414,36 @@ export default function StaffTaxProfileCard() {
                     )
                   )}
                 </div>
+              </div>
+
+              <div className="mt-2 border-t border-nexoraRule pt-3">
+                {profile?.w9Record?.certificationAccepted ? (
+                  <p className="inline-flex items-center gap-1.5 text-xs font-bold text-emerald-600">
+                    <ShieldCheck className="h-3.5 w-3.5" />
+                    {t('taxiq.taxProfile.w9.certifiedNotice', {
+                      date: profile.w9Record.certifiedAt
+                        ? new Date(profile.w9Record.certifiedAt).toLocaleDateString()
+                        : '',
+                    })}
+                  </p>
+                ) : (
+                  <>
+                    <p className="text-xs text-nexoraMuted">{t('taxiq.taxProfile.w9.notCertifiedNotice')}</p>
+                    <button
+                      type="button"
+                      onClick={handleCertify}
+                      disabled={certifyW9Record.isPending}
+                      className="mt-2 inline-flex items-center gap-1.5 rounded-lg border border-nexoraBorder px-4 py-2 text-xs font-bold text-nexoraText disabled:opacity-60"
+                    >
+                      {certifyW9Record.isPending ? (
+                        <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                      ) : (
+                        <ShieldCheck className="h-3.5 w-3.5" />
+                      )}
+                      {t('taxiq.taxProfile.w9.certifyButton')}
+                    </button>
+                  </>
+                )}
               </div>
             </div>
           </div>

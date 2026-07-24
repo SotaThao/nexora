@@ -6,6 +6,15 @@ import httpClient from '../../lib/httpClient'
 
 type HttpClient = typeof httpClient
 
+export const FILING_STATUSES = [
+  'Single',
+  'MarriedFilingJointly',
+  'MarriedFilingSeparately',
+  'HeadOfHousehold',
+  'QualifyingSurvivingSpouse',
+] as const
+export type FilingStatus = (typeof FILING_STATUSES)[number]
+
 export interface StaffTaxYearApiDto {
   id: string
   taxYear: number
@@ -15,6 +24,13 @@ export interface StaffTaxYearApiDto {
   officeSqFt?: number | null
   totalHomeSqFt?: number | null
   enabledModules?: string[]
+  w4TaxYear?: number | null
+  filingStatus?: string | null
+  dependentsClaimed?: number | null
+  extraWithholdingPerPayPeriod?: number | null
+  residenceState?: string | null
+  workState?: string | null
+  stateExtraWithholding?: number | null
   createdAt: string
   lastModified?: string | null
 }
@@ -33,6 +49,13 @@ export interface StaffTaxYear {
   officeSqFt: number | null
   totalHomeSqFt: number | null
   enabledModules: string[]
+  w4TaxYear: number | null
+  filingStatus: FilingStatus | null
+  dependentsClaimed: number | null
+  extraWithholdingPerPayPeriod: number | null
+  residenceState: string | null
+  workState: string | null
+  stateExtraWithholding: number | null
   createdAt: string
   lastModified: string | null
 }
@@ -59,22 +82,48 @@ export interface UpdateStaffTaxYearModulesParams {
   totalHomeSqFt?: number | null
 }
 
+export interface UpsertStaffW4Params {
+  w4TaxYear: number
+  filingStatus: FilingStatus
+  dependentsClaimed: number
+  extraWithholdingPerPayPeriod: number
+  residenceState: string
+  workState: string
+  stateExtraWithholding: number
+}
+
 export interface W9RecordApiDto {
   legalName: string
   dbaName?: string | null
   address: string
+  city: string
+  state: string
+  zipCode: string
   taxClassification: string
+  llcTaxClassificationType?: string | null
+  otherClassificationDescription?: string | null
   hasSignedDocument: boolean
   signedDocumentUrl?: string | null
+  isSubjectToBackupWithholding: boolean
+  certificationAccepted: boolean
+  certifiedAt?: string | null
 }
 
 export interface W9Record {
   legalName: string
   dbaName: string | null
   address: string
+  city: string
+  state: string
+  zipCode: string
   taxClassification: string
+  llcTaxClassificationType: string | null
+  otherClassificationDescription: string | null
   hasSignedDocument: boolean
   signedDocumentUrl: string | null
+  isSubjectToBackupWithholding: boolean
+  certificationAccepted: boolean
+  certifiedAt: string | null
 }
 
 function normalizeW9Record(dto: W9RecordApiDto): W9Record {
@@ -82,9 +131,17 @@ function normalizeW9Record(dto: W9RecordApiDto): W9Record {
     legalName: dto.legalName,
     dbaName: dto.dbaName ?? null,
     address: dto.address,
+    city: dto.city,
+    state: dto.state,
+    zipCode: dto.zipCode,
     taxClassification: dto.taxClassification,
+    llcTaxClassificationType: dto.llcTaxClassificationType ?? null,
+    otherClassificationDescription: dto.otherClassificationDescription ?? null,
     hasSignedDocument: dto.hasSignedDocument,
     signedDocumentUrl: dto.signedDocumentUrl ?? null,
+    isSubjectToBackupWithholding: dto.isSubjectToBackupWithholding ?? false,
+    certificationAccepted: dto.certificationAccepted ?? false,
+    certifiedAt: dto.certifiedAt ?? null,
   }
 }
 
@@ -109,7 +166,13 @@ export interface UpsertW9RecordParams {
   legalName: string
   dbaName?: string | null
   address: string
+  city: string
+  state: string
+  zipCode: string
   taxClassification: string
+  llcTaxClassificationType?: string | null
+  otherClassificationDescription?: string | null
+  isSubjectToBackupWithholding: boolean
 }
 
 function normalizeStaffTaxProfile(dto: StaffTaxProfileApiDto): StaffTaxProfile {
@@ -162,6 +225,13 @@ function normalizeStaffTaxYear(dto: StaffTaxYearApiDto): StaffTaxYear {
     officeSqFt: dto.officeSqFt ?? null,
     totalHomeSqFt: dto.totalHomeSqFt ?? null,
     enabledModules: dto.enabledModules ?? [],
+    w4TaxYear: dto.w4TaxYear ?? null,
+    filingStatus: (dto.filingStatus as FilingStatus) ?? null,
+    dependentsClaimed: dto.dependentsClaimed ?? null,
+    extraWithholdingPerPayPeriod: dto.extraWithholdingPerPayPeriod ?? null,
+    residenceState: dto.residenceState ?? null,
+    workState: dto.workState ?? null,
+    stateExtraWithholding: dto.stateExtraWithholding ?? null,
     createdAt: dto.createdAt,
     lastModified: dto.lastModified ?? null,
   }
@@ -233,6 +303,18 @@ export function createTaxiqStaffTaxYearRepository(client: HttpClient = httpClien
       })
     },
 
+    async upsertW4(id: string, params: UpsertStaffW4Params): Promise<void> {
+      await client.put(`/api/v1/taxiq/staff/tax-years/${encodeURIComponent(id)}/w4`, {
+        w4TaxYear: params.w4TaxYear,
+        filingStatus: params.filingStatus,
+        dependentsClaimed: params.dependentsClaimed,
+        extraWithholdingPerPayPeriod: params.extraWithholdingPerPayPeriod,
+        residenceState: params.residenceState,
+        workState: params.workState,
+        stateExtraWithholding: params.stateExtraWithholding,
+      })
+    },
+
     async getMyTaxProfile(): Promise<StaffTaxProfile> {
       const dto = await client.get<StaffTaxProfileApiDto>('/api/v1/taxiq/staff/tax-profile')
       return normalizeStaffTaxProfile(dto)
@@ -250,7 +332,13 @@ export function createTaxiqStaffTaxYearRepository(client: HttpClient = httpClien
         legalName: params.legalName,
         dbaName: params.dbaName ?? null,
         address: params.address,
+        city: params.city,
+        state: params.state,
+        zipCode: params.zipCode,
         taxClassification: params.taxClassification,
+        llcTaxClassificationType: params.llcTaxClassificationType ?? null,
+        otherClassificationDescription: params.otherClassificationDescription ?? null,
+        isSubjectToBackupWithholding: params.isSubjectToBackupWithholding,
       })
     },
 
@@ -258,6 +346,13 @@ export function createTaxiqStaffTaxYearRepository(client: HttpClient = httpClien
       const formData = new FormData()
       formData.append('file', file)
       await client.upload<void>('/api/v1/taxiq/staff/tax-profile/w9/document', formData, 'POST')
+    },
+
+    // Separate, deliberate action — mirrors verifyStaffTin on the Owner side. Backend
+    // rejects with TAXIQ_W9_NOT_READY_FOR_CERTIFICATION when required fields or the
+    // signed document are missing.
+    async certifyW9Record(): Promise<void> {
+      await client.post<void>('/api/v1/taxiq/staff/tax-profile/w9/certify')
     },
   }
 }

@@ -89,8 +89,8 @@ export default function PayoutsTab({
             className="rounded-lg border border-nexoraBorder px-3 py-2 text-xs font-semibold"
           >
             <option value="all">{t('taxiq.payoutCenter.filters.allStaff')}</option>
-            {staffList.map((s) => (
-              <option key={s.userProfileId} value={s.userProfileId}>{s.displayName}</option>
+            {staffList.filter((s) => s.userProfileId).map((s) => (
+              <option key={s.userProfileId} value={s.userProfileId as string}>{s.displayName}</option>
             ))}
           </select>
 

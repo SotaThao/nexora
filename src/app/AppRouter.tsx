@@ -26,7 +26,8 @@ import {
   TipsRoute,
   TouchpointsRoute,
   TaxIqOverviewRoute, TaxIqDeductionsRoute, TaxIqIncomeRoute, TaxIqReceiptsRoute, TaxIqEquipmentRoute,
-  TaxIqPayrollRoute, TaxIqRemindersRoute, TaxIqCpaAccessRoute, TaxIqExportRoute,
+  TaxIqPayrollRoute, TaxIqRemindersRoute, TaxIqCpaAccessRoute, TaxIqExportRoute, TaxIqEmployersRoute,
+  TaxIqPayEngineRoute, TaxIqWeeklyPayrollRoute, TaxIqPayrollRunsRoute, TaxIqTaxLedgerRoute,
   PosGeneralSettingsRoute, PosRolesRoute, PosCategoriesRoute, PosServicesRoute, PosProductsRoute,
   PosStaffProfileRoute, PosFrontDeskRoute
 } from "../components/dashboard/routes";
@@ -94,6 +95,7 @@ const StaffTaxIqIncomeRoute = lazyWithRetry(() => import('../components/staff-da
 const StaffTaxIqPayoutsRoute = lazyWithRetry(() => import('../components/staff-dashboard/views/taxiq/StaffTaxIqPayoutsRoute'))
 const StaffTaxIqExportRoute = lazyWithRetry(() => import('../components/staff-dashboard/views/taxiq/StaffTaxIqExportRoute'))
 const CpaViewerPage = lazyWithRetry(() => import('../components/taxiq/CpaViewer/CpaViewerPage'))
+const StaffW4InvitePage = lazyWithRetry(() => import('../components/taxiq/W4Invite/StaffW4InvitePage'))
 const StaffMyEarnings = lazyWithRetry(
   () => import("../components/staff-dashboard/views/StaffMyEarnings"),
 );
@@ -212,6 +214,7 @@ export default function AppRouter() {
           <Route path="/qr/:code" element={<QrRedirectPage />} />
           <Route path="/help/qr/:code" element={<HelpQrPage />} />
 	  <Route path="/cpa/access" element={<CpaViewerPage />} />
+	  <Route path="/w4-invite" element={<StaffW4InvitePage />} />
           <Route path="/privacy-policy" element={<PrivacyPolicyPage />} />
           <Route path="/terms-of-service" element={<TermsOfServicePage />} />
           <Route
@@ -269,6 +272,11 @@ export default function AppRouter() {
             <Route path={`${DASHBOARD_MENU_ID.taxiq}/receipts`} element={<TaxIqReceiptsRoute />} />
             <Route path={`${DASHBOARD_MENU_ID.taxiq}/equipment`} element={<TaxIqEquipmentRoute />} />
             <Route path={`${DASHBOARD_MENU_ID.taxiq}/payroll`} element={<TaxIqPayrollRoute />} />
+            <Route path={`${DASHBOARD_MENU_ID.taxiq}/employers`} element={<TaxIqEmployersRoute />} />
+            <Route path={`${DASHBOARD_MENU_ID.taxiq}/pay-engine`} element={<TaxIqPayEngineRoute />} />
+            <Route path={`${DASHBOARD_MENU_ID.taxiq}/weekly-payroll`} element={<TaxIqWeeklyPayrollRoute />} />
+            <Route path={`${DASHBOARD_MENU_ID.taxiq}/payroll-runs`} element={<TaxIqPayrollRunsRoute />} />
+            <Route path={`${DASHBOARD_MENU_ID.taxiq}/tax-ledger`} element={<TaxIqTaxLedgerRoute />} />
             <Route path={`${DASHBOARD_MENU_ID.taxiq}/reminders`} element={<TaxIqRemindersRoute />} />
             <Route path={`${DASHBOARD_MENU_ID.taxiq}/cpa-access`} element={<TaxIqCpaAccessRoute />} />
             <Route path={`${DASHBOARD_MENU_ID.taxiq}/export`} element={<TaxIqExportRoute />} />
