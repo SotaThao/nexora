@@ -7,6 +7,7 @@ import {
 } from '../../data/hooks/useCommunity'
 import { useDirectChannels } from '../../data/hooks/useDirectMessages'
 import { useCommunityAuth } from './CommunityAuth'
+import { useCommunityChatDock } from './CommunityChatDock'
 import { formatJoinedDate } from '../../utils/localDate'
 
 const cardClass =
@@ -36,6 +37,7 @@ function Avatar({ name, className = 'h-9 w-9' }: { name?: string | null; classNa
 
 export function CommunityRightRail() {
   const { user, isAnonymous } = useCommunityAuth()
+  const dock = useCommunityChatDock()
   const myCommunities = useMyCommunities({ enabled: Boolean(user) })
   const communities = useCommunityList({ enabled: Boolean(user) })
 
@@ -179,10 +181,11 @@ export function CommunityRightRail() {
 
           <div className="mt-3 space-y-1">
             {directChannels.data.slice(0, 5).map((channel) => (
-              <Link
+              <button
                 key={channel.id}
-                to={`/community/chat/dm/${channel.id}`}
-                className="flex items-center gap-3 rounded-xl p-2 transition-colors hover:bg-nexoraBrandSoft/50"
+                type="button"
+                onClick={() => dock.openDirectChat({ id: channel.id, title: channel.otherParticipant.displayName })}
+                className="flex w-full items-center gap-3 rounded-xl p-2 text-left transition-colors hover:bg-nexoraBrandSoft/50"
               >
                 <Avatar name={channel.otherParticipant.displayName} className="h-9 w-9" />
                 <div className="min-w-0 flex-1">
@@ -196,7 +199,7 @@ export function CommunityRightRail() {
                   </div>
                   <p className="truncate text-[11px] text-nexoraSubtle">Chat 1:1</p>
                 </div>
-              </Link>
+              </button>
             ))}
           </div>
         </section>

@@ -40,6 +40,7 @@ import {
 } from '../../data/hooks/useCommunity'
 import DemoStaffShell from './demo/DemoStaffShell'
 import { CommunityAuthProvider, CommunityPersonaSwitcher, useCommunityAuth } from './CommunityAuth'
+import { CommunityChatDock, CommunityChatDockProvider } from './CommunityChatDock'
 import { CommunityNotificationBell, CommunityNotificationsProvider } from './CommunityNotifications'
 import { CommunityPostComposer, CommunityPostMedia } from './CommunityPostMedia'
 import { CommunityRightRail } from './CommunityRightRail'
@@ -312,7 +313,7 @@ function CommunityAuthGate() {
   const navigate = useNavigate()
   const { authReady, error } = useCommunityAuth()
 
-  if (authReady) return <Outlet />
+  if (authReady) return <><Outlet /><CommunityChatDock /></>
 
   return (
     <>
@@ -331,5 +332,5 @@ function CommunityAuthGate() {
 }
 
 export function CommunityRouteRoot() {
-  return <CommunityAuthProvider><CommunityNotificationsProvider><CommunityAuthGate /></CommunityNotificationsProvider></CommunityAuthProvider>
+  return <CommunityAuthProvider><CommunityNotificationsProvider><CommunityChatDockProvider><CommunityAuthGate /></CommunityChatDockProvider></CommunityNotificationsProvider></CommunityAuthProvider>
 }
