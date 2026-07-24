@@ -107,7 +107,7 @@ function CommunityFrame({ children, containerClassName }: { children: ReactNode;
 
 function CommunityStoryRings({ communities }: { communities: CommunityDto[] }) {
   return (
-    <section className="-mx-4 overflow-hidden border-y border-nexoraBorder bg-nexoraSurface px-4 py-3 sm:-mx-6 sm:px-6" aria-label="Nhóm của bạn">
+    <section className="-mx-4 overflow-hidden border-y border-nexoraBorder bg-nexoraSurface px-4 py-3 sm:-mx-6 sm:px-6 lg:mx-0 lg:rounded-2xl lg:border lg:shadow-nexora-card" aria-label="Nhóm của bạn">
       <div className="flex gap-3 overflow-x-auto pb-1">
         {communities.map((community, index) => (
           <Link key={community.id} to={`/community/${community.id}`} className="w-16 shrink-0 text-center">
@@ -206,12 +206,12 @@ export function CommunityHome() {
   const feedCommunities = (myCommunities.data?.items.length ? myCommunities.data.items : communities.data?.items ?? []).slice(0, 3)
   return (
     <CommunityFrame containerClassName="mx-auto w-full max-w-[1040px] pb-20">
+      <header className="mb-4 flex items-center justify-between gap-3">
+        <div><p className="text-xs font-bold uppercase tracking-[0.12em] text-nexoraBrand">Nexora</p><h1 className="text-xl font-extrabold text-nexoraText">Cộng đồng</h1></div>
+        <div className="flex items-center gap-2"><CommunityNotificationBell /><Link to="/community/chat" aria-label="Mở Chat inbox" className="grid h-11 w-11 place-items-center rounded-xl border border-nexoraBorder bg-nexoraSurface text-nexoraBrand hover:bg-nexoraBrandSoft"><MessagesSquare className="h-5 w-5" aria-hidden="true" /></Link><Link to="/community/new" className={`inline-flex min-h-11 items-center gap-2 rounded-xl px-3 text-sm font-extrabold text-white ${gradientClass}`}><Plus className="h-4 w-4" aria-hidden="true" />Tạo nhóm</Link></div>
+      </header>
       <div className="flex flex-col gap-6 lg:flex-row lg:items-start">
         <div className="w-full max-w-[640px] flex-1 space-y-4">
-          <header className="flex items-center justify-between gap-3">
-            <div><p className="text-xs font-bold uppercase tracking-[0.12em] text-nexoraBrand">Nexora</p><h1 className="text-xl font-extrabold text-nexoraText">Cộng đồng</h1></div>
-            <div className="flex items-center gap-2"><CommunityNotificationBell /><Link to="/community/chat" aria-label="Mở Chat inbox" className="grid h-11 w-11 place-items-center rounded-xl border border-nexoraBorder bg-nexoraSurface text-nexoraBrand hover:bg-nexoraBrandSoft"><MessagesSquare className="h-5 w-5" aria-hidden="true" /></Link><Link to="/community/new" className={`inline-flex min-h-11 items-center gap-2 rounded-xl px-3 text-sm font-extrabold text-white ${gradientClass}`}><Plus className="h-4 w-4" aria-hidden="true" />Tạo nhóm</Link></div>
-          </header>
           {isLoading || myCommunities.isLoading || communities.isLoading ? <LoadingState rows={4} /> : null}
           {myCommunities.error ? <ErrorState error={myCommunities.error} onRetry={() => void myCommunities.refetch()} /> : null}
           {communities.error ? <ErrorState error={communities.error} onRetry={() => void communities.refetch()} /> : null}
