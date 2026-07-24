@@ -1,4 +1,4 @@
-import { CheckCheck, Loader2, Maximize2, Minus, Send, X } from 'lucide-react'
+import { CheckCheck, Loader2, Maximize2, Minus, Phone, Send, Video, X } from 'lucide-react'
 import {
   createContext,
   useCallback,
@@ -156,10 +156,12 @@ function DockWindow({ entry, onClose, onMinimize }: { entry: DockChatEntry; onCl
   const expand = () => navigate(`/community/chat/dm/${entry.channelId}`)
 
   return (
-    <div className="flex h-[420px] w-[300px] flex-col overflow-hidden rounded-t-2xl border border-nexoraBorder bg-white font-sans shadow-2xl">
-      <header className="flex shrink-0 items-center gap-2 border-b border-nexoraBorder bg-nexoraSurface px-3 py-2.5">
-        <Avatar name={entry.title} />
+    <div className="flex h-[430px] w-[340px] flex-col overflow-hidden rounded-t-2xl border border-nexoraBorder bg-white font-sans shadow-2xl">
+      <header className="flex shrink-0 items-center gap-1 border-b border-nexoraBorder bg-nexoraSurface px-3 py-2.5">
+        <Avatar name={entry.title} className="h-9 w-9 text-xs" />
         <h2 className="min-w-0 flex-1 truncate text-sm font-extrabold text-nexoraText">{entry.title}</h2>
+        <button type="button" disabled aria-label="Gọi thoại" title="Chưa hỗ trợ gọi thoại trong bản demo" className="grid h-6 w-6 shrink-0 place-items-center rounded-full text-nexoraSubtle opacity-40 cursor-not-allowed"><Phone className="h-3 w-3" aria-hidden="true" /></button>
+        <button type="button" disabled aria-label="Gọi video" title="Chưa hỗ trợ gọi video trong bản demo" className="grid h-6 w-6 shrink-0 place-items-center rounded-full text-nexoraSubtle opacity-40 cursor-not-allowed"><Video className="h-3 w-3" aria-hidden="true" /></button>
         <button type="button" onClick={expand} aria-label="Mở toàn màn hình" className="grid h-7 w-7 shrink-0 place-items-center rounded-full text-nexoraMuted hover:bg-nexoraSurfaceMuted"><Maximize2 className="h-3.5 w-3.5" aria-hidden="true" /></button>
         <button type="button" onClick={onMinimize} aria-label="Thu nhỏ" className="grid h-7 w-7 shrink-0 place-items-center rounded-full text-nexoraMuted hover:bg-nexoraSurfaceMuted"><Minus className="h-3.5 w-3.5" aria-hidden="true" /></button>
         <button type="button" onClick={onClose} aria-label="Đóng đoạn chat" className="grid h-7 w-7 shrink-0 place-items-center rounded-full text-nexoraMuted hover:bg-nexoraSurfaceMuted"><X className="h-4 w-4" aria-hidden="true" /></button>
