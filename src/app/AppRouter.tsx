@@ -36,6 +36,7 @@ import RequireOnboarded from "./RequireOnboarded";
 import RequireStaffReady from "./RequireStaffReady";
 import RootRedirect from "./RootRedirect";
 import { VoiceCallPlanRoute } from "../data/voiceTrial/domain";
+import { PUBLIC_BOOKING_ROUTE } from "../components/public/booking/constants";
 
 const SetupWizard = lazyWithRetry(() => import("../components/SetupWizard"));
 const DashboardOwnerShell = lazyWithRetry(
@@ -105,6 +106,9 @@ const TermsOfServicePage = lazyWithRetry(
 );
 const HelpQrPage = lazyWithRetry(
   () => import("../components/public/HelpQrPage"),
+);
+const PublicBookingPage = lazyWithRetry(
+  () => import("../components/public/booking/PublicBookingPage"),
 );
 const VoiceCallPlanPage = lazyWithRetry(
   () => import("../components/public/VoiceCallPlanPage"),
@@ -196,6 +200,7 @@ export default function AppRouter() {
           <Route path="/merchant/payments/:paymentId" element={<PaymentsRedirect />} />
           <Route path="/qr/:code" element={<QrRedirectPage />} />
           <Route path="/help/qr/:code" element={<HelpQrPage />} />
+          <Route path={PUBLIC_BOOKING_ROUTE.path} element={<PublicBookingPage />} />
           <Route path="/privacy-policy" element={<PrivacyPolicyPage />} />
           <Route path="/terms-of-service" element={<TermsOfServicePage />} />
           <Route

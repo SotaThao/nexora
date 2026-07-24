@@ -2088,6 +2088,7 @@
     "staff_payment_method_not_found": "Payment method was not found.",
     "staff_payment_method_access_denied": "You do not have permission to update this payment method.",
     "common_validation_error": "Validation failed. Please check your inputs.",
+    "common_bad_request": "The request is invalid. Please check your inputs and try again.",
     "common_not_found": "The requested item was not found.",
     "common_unauthorized": "You're not signed in. Please log in and try again.",
     "common_forbidden": "Access denied.",
@@ -2121,6 +2122,8 @@
     "voice_customer_not_found": "This customer could not be found.",
     "voice_tenant_not_found": "No voice tenant is linked to this merchant business.",
     "voice_tenant_service_duration_invalid": "Service duration must be greater than 0 minutes.",
+    "voice_tenant_service_not_found": "That service is not available for this business.",
+    "voice_tenant_staff_not_found": "That technician is not available for this business.",
     "sms_campaign_not_found": "This SMS campaign could not be found.",
     "sms_campaign_invalid_status_transition": "This campaign cannot change status right now.",
     "sms_campaign_not_editable": "This campaign can no longer be edited or deleted.",
@@ -2593,6 +2596,7 @@
           },
           "sources": {
             "voice": "Voice",
+            "web": "Web",
             "landingPage": "Landing Page",
             "sms": "SMS",
             "qr": "QR"

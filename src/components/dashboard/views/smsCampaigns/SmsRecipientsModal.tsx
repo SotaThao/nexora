@@ -4,11 +4,17 @@ import { useTranslation } from '../../../../contexts/LanguageContext'
 import { getErrorI18nKey } from '../../../../data/errorCodes'
 import { SmsCampaignRecipientStatus } from '../../../../data/merchantVoice/domain'
 import { useMerchantVoiceSmsCampaignRecipients } from '../../../../data/hooks/useMerchantVoiceSmsCampaigns'
+import { usePagination } from '../../../../hooks/usePagination'
 import { getApiErrorCode } from '../../../../types/domain'
+import Pagination from '../../../ui/Pagination'
 import Skeleton from '../../../ui/skeleton/Skeleton'
 import { parseApiDateTime } from '../../utils'
 import { CloseIcon } from '../BookingHubIcons'
-import { BOOKING_HUB_EMPTY_CELL, formatVoicePhoneDisplay } from '../bookingHubFormatters'
+import {
+  BOOKING_HUB_EMPTY_CELL,
+  BOOKING_HUB_PAGINATION_CLASSNAME,
+  formatVoicePhoneDisplay,
+} from '../bookingHubFormatters'
 import {
   SMS_CAMPAIGN_TK,
   SMS_RECIPIENT_STATUS_CLASS,
@@ -71,14 +77,17 @@ export default function SmsRecipientsModal({
   const closeBtnRef = useRef<HTMLButtonElement | null>(null)
   const [statusFilter, setStatusFilter] = useState<StatusFilter>(FILTER_ALL)
   const numberLocale = currentLanguage === 'vi' ? 'vi-VN' : 'en-US'
+  const { pageNumber, pageSize, setPage, reset: resetPage } = usePagination({
+    pageSize: BOOKING_HUB_PAGE_SIZE,
+  })
 
   const filters = useMemo(
     () => ({
-      pageNumber: 1,
-      pageSize: BOOKING_HUB_PAGE_SIZE,
+      pageNumber,
+      pageSize,
       status: statusFilter === FILTER_ALL ? undefined : statusFilter,
     }),
-    [statusFilter],
+    [pageNumber, pageSize, statusFilter],
   )
 
   const recipientsQuery = useMerchantVoiceSmsCampaignRecipients(campaignId, filters, {
@@ -88,6 +97,7 @@ export default function SmsRecipientsModal({
   useEffect(() => {
     if (!open) {
       setStatusFilter(FILTER_ALL)
+      resetPage()
       document.body.style.overflow = ''
       return undefined
     }
@@ -97,7 +107,12 @@ export default function SmsRecipientsModal({
     return () => {
       document.body.style.overflow = previousOverflow
     }
-  }, [open])
+  }, [open, resetPage])
+
+  useEffect(() => {
+    if (!open) return
+    resetPage()
+  }, [campaignId, open, resetPage])
 
   useEffect(() => {
     if (!open) return undefined
@@ -108,12 +123,19 @@ export default function SmsRecipientsModal({
     return () => document.removeEventListener('keydown', onKeyDown)
   }, [open, onClose])
 
+  useEffect(() => {
+    const totalPages = recipientsQuery.data?.totalPages
+    if (!totalPages || totalPages < 1) return
+    if (pageNumber > totalPages) setPage(totalPages)
+  }, [recipientsQuery.data?.totalPages, pageNumber, setPage])
+
   if (!open) return null
 
   const recipients = recipientsQuery.data?.items ?? []
-  const totalCount = recipientsQuery.data?.totalCount ?? recipients.length
-  // Skeleton while first load / filter change (no cached page yet). Avoid flash on background refetch.
+  const totalCount = recipientsQuery.data?.totalCount ?? 0
+  // Skeleton while first load / filter or page change (no cached page yet).
   const showSkeleton = !recipientsQuery.data && (recipientsQuery.isLoading || recipientsQuery.isFetching)
+  const showPagination = !recipientsQuery.isLoading && totalCount > 0
 
   return (
     <div
@@ -168,6 +190,7 @@ export default function SmsRecipientsModal({
                 disabled={showSkeleton && !recipientsQuery.data}
                 onChange={(event) => {
                   setStatusFilter(event.target.value as StatusFilter)
+                  resetPage()
                 }}
               >
                 <option value={FILTER_ALL}>{t(`${TK}.recipientsFilterAll`)}</option>
@@ -226,6 +249,20 @@ export default function SmsRecipientsModal({
               </tbody>
             </table>
           </div>
+
+          {showPagination ? (
+            <Pagination
+              pageNumber={pageNumber}
+              pageSize={pageSize}
+              totalPages={recipientsQuery.data?.totalPages ?? 1}
+              totalCount={totalCount}
+              hasNextPage={recipientsQuery.data?.hasNextPage}
+              hasPreviousPage={recipientsQuery.data?.hasPreviousPage}
+              onPageChange={setPage}
+              isLoading={recipientsQuery.isFetching}
+              className={`${BOOKING_HUB_PAGINATION_CLASSNAME} sms-recipients-pagination`}
+            />
+          ) : null}
         </div>
       </div>
     </div>

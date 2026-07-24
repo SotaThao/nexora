@@ -6,6 +6,10 @@ import {
   SmsCreditPackageCode,
 } from '../../../../data/merchantVoice/domain'
 import { getWebUrlOrigin } from '../../../../utils/webUrlBase'
+import {
+  parsePublicBookingLang,
+  PUBLIC_BOOKING_ROUTE,
+} from '../../../public/booking/constants'
 
 export const SMS_CAMPAIGN_TK = 'components.dashboard.views.BookingHubView.smsCampaigns'
 
@@ -273,12 +277,15 @@ export const SMS_CREDIT_PAYMENTS_MOCK: SmsCreditPaymentMock[] = [
 export const SMS_COMPOSER_TAG_SAMPLES = {
   '{name}': 'Linh',
   '{shop}': 'Bitcoin Nail Bar',
-  '{link}': 'nexora.ai/b/…',
+  '{link}': `nexora.ai/b/…?${PUBLIC_BOOKING_ROUTE.langQuery}=${parsePublicBookingLang('en')}`,
   '{phone}': '832-786-5576',
 } as const
 
-/** SMS-friendly business booking link: `{domain}/b/{businessKey}` from my-tenant. */
-export function buildSmsCampaignBusinessLinkPreview(businessKey?: string | null): string {
+/** SMS-friendly business booking link: `{domain}/b/{businessKey}?lang=en|vi`. */
+export function buildSmsCampaignBusinessLinkPreview(
+  businessKey?: string | null,
+  lang?: string | null,
+): string {
   const key = String(businessKey ?? '').trim()
   const origin = getWebUrlOrigin()
   let host = ''
@@ -293,7 +300,9 @@ export function buildSmsCampaignBusinessLinkPreview(businessKey?: string | null)
     host = window.location.host
   }
   if (!host) host = 'nexora.ai'
-  return key ? `${host}/b/${key}` : `${host}/b/…`
+  const path = key ? `${host}/b/${key}` : `${host}/b/…`
+  const langCode = parsePublicBookingLang(lang)
+  return `${path}?${PUBLIC_BOOKING_ROUTE.langQuery}=${langCode}`
 }
 
 export const SMS_COMPOSER_TAGS = [

@@ -245,6 +245,7 @@ export enum BookingUiStatus {
 /** UI display labels for booking source badges. */
 export enum BookingUiSource {
   Voice = 'Voice',
+  Web = 'Web',
   LandingPage = 'Landing Page',
   SMS = 'SMS',
   QR = 'QR',
@@ -535,6 +536,34 @@ const LEAD_SOURCE_API_TO_ENUM: Record<string, MerchantVoiceLeadSource> = {
   [MerchantVoiceLeadSourceApi.Api]: MerchantVoiceLeadSource.SMS,
 }
 
+/** Case-insensitive aliases when API sends non-canonical source strings. */
+const LEAD_SOURCE_ALIAS_TO_ENUM: Record<string, MerchantVoiceLeadSource> = {
+  web: MerchantVoiceLeadSource.LandingPage,
+  landingpage: MerchantVoiceLeadSource.LandingPage,
+  'landing page': MerchantVoiceLeadSource.LandingPage,
+  call: MerchantVoiceLeadSource.Voice,
+  voice: MerchantVoiceLeadSource.Voice,
+  api: MerchantVoiceLeadSource.SMS,
+  sms: MerchantVoiceLeadSource.SMS,
+  qr: MerchantVoiceLeadSource.QR,
+}
+
+/** API `Web` normalizes to LandingPage — booking hub badge shows Web. */
+const LEAD_SOURCE_TO_UI_SOURCE: Record<MerchantVoiceLeadSource, BookingUiSource> = {
+  [MerchantVoiceLeadSource.Voice]: BookingUiSource.Voice,
+  [MerchantVoiceLeadSource.LandingPage]: BookingUiSource.Web,
+  [MerchantVoiceLeadSource.SMS]: BookingUiSource.SMS,
+  [MerchantVoiceLeadSource.QR]: BookingUiSource.QR,
+}
+
+const BOOKING_UI_SOURCE_CLASS: Record<BookingUiSource, string> = {
+  [BookingUiSource.Voice]: 'booking-source-voice',
+  [BookingUiSource.Web]: 'booking-source-web',
+  [BookingUiSource.LandingPage]: 'booking-source-web',
+  [BookingUiSource.SMS]: 'booking-source-sms',
+  [BookingUiSource.QR]: 'booking-source-qr',
+}
+
 export function normalizeMerchantVoiceLeadStatus(value: unknown): MerchantVoiceLeadStatus {
   if (value === MerchantVoiceLeadStatus.New || value === '0') return MerchantVoiceLeadStatus.New
   if (value === MerchantVoiceLeadStatus.Done || value === '1') return MerchantVoiceLeadStatus.Done
@@ -556,8 +585,11 @@ export function normalizeMerchantVoiceLeadSource(value: unknown): MerchantVoiceL
   if (value === MerchantVoiceLeadSource.QR || value === '3') return MerchantVoiceLeadSource.QR
 
   if (typeof value === 'string') {
-    const mapped = LEAD_SOURCE_API_TO_ENUM[value]
-    if (mapped !== undefined) return mapped
+    const trimmed = value.trim()
+    const exact = LEAD_SOURCE_API_TO_ENUM[trimmed]
+    if (exact !== undefined) return exact
+    const alias = LEAD_SOURCE_ALIAS_TO_ENUM[trimmed.toLowerCase()]
+    if (alias !== undefined) return alias
   }
 
   return MerchantVoiceLeadSource.Voice
@@ -571,21 +603,16 @@ export function mapLeadStatusToUiStatus(status: MerchantVoiceLeadStatus): Bookin
 }
 
 export function mapLeadSourceToUiSource(source: MerchantVoiceLeadSource): BookingUiSource {
-  if (source === MerchantVoiceLeadSource.LandingPage) return BookingUiSource.LandingPage
-  if (source === MerchantVoiceLeadSource.SMS) return BookingUiSource.SMS
-  if (source === MerchantVoiceLeadSource.QR) return BookingUiSource.QR
-  return BookingUiSource.Voice
+  return LEAD_SOURCE_TO_UI_SOURCE[source] ?? BookingUiSource.Voice
 }
 
 export function mapUiSourceToSourceClass(source: BookingUiSource): string {
-  if (source === BookingUiSource.LandingPage) return 'booking-source-lp'
-  if (source === BookingUiSource.SMS) return 'booking-source-sms'
-  if (source === BookingUiSource.QR) return 'booking-source-qr'
-  return 'booking-source-voice'
+  return BOOKING_UI_SOURCE_CLASS[source] ?? BOOKING_UI_SOURCE_CLASS[BookingUiSource.Voice]
 }
 
 export const BOOKING_UI_SOURCE_I18N_KEY: Record<BookingUiSource, string> = {
   [BookingUiSource.Voice]: 'sources.voice',
+  [BookingUiSource.Web]: 'sources.web',
   [BookingUiSource.LandingPage]: 'sources.landingPage',
   [BookingUiSource.SMS]: 'sources.sms',
   [BookingUiSource.QR]: 'sources.qr',

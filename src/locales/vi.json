@@ -2088,6 +2088,7 @@
     "staff_payment_method_not_found": "Không tìm thấy phương thức thanh toán.",
     "staff_payment_method_access_denied": "Bạn không có quyền cập nhật phương thức thanh toán này.",
     "common_validation_error": "Dữ liệu nhập vào chưa hợp lệ. Vui lòng kiểm tra lại.",
+    "common_bad_request": "Yêu cầu không hợp lệ. Vui lòng kiểm tra lại thông tin và thử lại.",
     "common_not_found": "Không tìm thấy mục yêu cầu.",
     "common_unauthorized": "Bạn chưa đăng nhập. Vui lòng đăng nhập và thử lại.",
     "common_forbidden": "Không có quyền truy cập.",
@@ -2121,6 +2122,8 @@
     "voice_customer_not_found": "Không tìm thấy khách hàng này.",
     "voice_tenant_not_found": "Doanh nghiệp này chưa có voice tenant.",
     "voice_tenant_service_duration_invalid": "Thời lượng dịch vụ phải lớn hơn 0 phút.",
+    "voice_tenant_service_not_found": "Dịch vụ này không khả dụng cho doanh nghiệp.",
+    "voice_tenant_staff_not_found": "Chuyên viên này không khả dụng cho doanh nghiệp.",
     "sms_campaign_not_found": "Không tìm thấy chiến dịch SMS này.",
     "sms_campaign_invalid_status_transition": "Chiến dịch hiện không thể đổi trạng thái.",
     "sms_campaign_not_editable": "Chiến dịch này không còn chỉnh sửa hoặc xóa được.",
@@ -2593,6 +2596,7 @@
           },
           "sources": {
             "voice": "AI Voice",
+            "web": "Web",
             "landingPage": "Trang đặt lịch",
             "sms": "SMS",
             "qr": "QR"

@@ -93,6 +93,7 @@ export const errorCodeToI18nKey = {
 
   // Common
   COMMON_VALIDATION_ERROR: 'errors.common_validation_error',
+  COMMON_BAD_REQUEST: 'errors.common_bad_request',
   COMMON_NOT_FOUND: 'errors.common_not_found',
   COMMON_UNAUTHORIZED: 'errors.common_unauthorized',
   COMMON_FORBIDDEN: 'errors.common_forbidden',
@@ -138,8 +139,10 @@ export const errorCodeToI18nKey = {
   // Nexora Voice tenant
   VOICE_TENANT_NOT_FOUND: 'errors.voice_tenant_not_found',
 
-  // Nexora Voice tenant services
+  // Nexora Voice tenant services / staff (public booking)
   VOICE_TENANT_SERVICE_DURATION_INVALID: 'errors.voice_tenant_service_duration_invalid',
+  VOICE_TENANT_SERVICE_NOT_FOUND: 'errors.voice_tenant_service_not_found',
+  VOICE_TENANT_STAFF_NOT_FOUND: 'errors.voice_tenant_staff_not_found',
 
   // Nexora Voice SMS campaigns
   SMS_CAMPAIGN_NOT_FOUND: 'errors.sms_campaign_not_found',
