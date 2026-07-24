@@ -429,7 +429,7 @@ export default function DemoStaffShell({ children, onDemoNavigation }: DemoStaff
           hideDecorativeNotification={hideDecorativeNotification}
         />
         <main
-          className={`mx-auto w-full max-w-3xl flex-1 px-4 sm:px-6 ${
+          className={`mx-auto w-full max-w-[1040px] flex-1 px-4 sm:px-6 ${
             isChatRoute
               ? 'min-h-0 pb-[calc(69px+var(--app-safe-area-bottom,env(safe-area-inset-bottom,0px)))] pt-5 lg:py-5'
               : 'py-5'
