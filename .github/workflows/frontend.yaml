@@ -7,12 +7,14 @@ on:
       - main
       - staging
       - dev
+      - feature/taxiq-pos  # NEW (Phase 3/11 — test2 environment)
   pull_request:
     branches:
       - master
       - main
       - staging
       - dev
+      - feature/taxiq-pos  # NEW (Phase 3/11 — test2 environment)
 
 env:
   REGISTRY: registry.digitalocean.com/vlinkdo-container-registry
@@ -26,6 +28,7 @@ jobs:
       github_environment: ${{ steps.resolve.outputs.github_environment }}
       build_env: ${{ steps.resolve.outputs.build_env }}
       deploy_path: ${{ steps.resolve.outputs.deploy_path }}
+      devops_path: ${{ steps.resolve.outputs.devops_path }}
     steps:
       - name: Resolve environment from branch
         id: resolve
@@ -40,14 +43,33 @@ jobs:
             master|main)
               github_environment="PRODUCTION"
               build_env="production"
+              # Docker image tags cannot contain `/`, but the devops repo
+              # organizes manifests under argocd/<env>/. For master/main both
+              # forms equal the target_ref string so they collapse to the
+              # same value here.
+              deploy_path="$target_ref"
+              devops_path="$target_ref"
               ;;
             staging)
               github_environment="STAGING"
               build_env="staging"
+              deploy_path="$target_ref"
+              devops_path="$target_ref"
+              ;;
+            feature/taxiq-pos)        # NEW (Phase 3/11 — test2 environment)
+              github_environment="TEST2"
+              build_env="test2"
+              # Sanitized tag (Docker rejects `/` in tags). devops path uses
+              # the env_name 'test2' so it matches argocd/test2/ in the
+              # devops repo (renamed from argocd/feature/taxiq-pos/ in PR #65).
+              deploy_path="taxiq-pos"
+              devops_path="test2"
               ;;
             dev)
               github_environment="TEST"
               build_env="test"
+              deploy_path="$target_ref"
+              devops_path="$target_ref"
               ;;
             *)
               echo "Unsupported deployment branch: $target_ref" >&2
@@ -57,9 +79,10 @@ jobs:
 
           echo "github_environment=$github_environment" >> "$GITHUB_OUTPUT"
           echo "build_env=$build_env" >> "$GITHUB_OUTPUT"
-          echo "deploy_path=$target_ref" >> "$GITHUB_OUTPUT"
+          echo "deploy_path=$deploy_path" >> "$GITHUB_OUTPUT"
+          echo "devops_path=$devops_path" >> "$GITHUB_OUTPUT"
 
-          echo "Resolved $target_ref -> $github_environment / $build_env"
+          echo "Resolved $target_ref -> $github_environment / $build_env / deploy_path=$deploy_path / devops_path=$devops_path"
 
   validate-build:
     needs: resolve-environment
@@ -108,6 +131,12 @@ jobs:
           VITE_DATA_SOURCE=api \
           VITE_ENABLE_DEMO_TOOLS=false \
           pnpm run build:test
+          rm -rf dist
+          VITE_APP_ENV=test2 \
+          VITE_API_BASE_URL=https://test2-api.nexoratouch.com \
+          VITE_DATA_SOURCE=api \
+          VITE_ENABLE_DEMO_TOOLS=false \
+          pnpm run build:test2
           rm -rf dist
           VITE_APP_ENV=staging \
           VITE_API_BASE_URL=https://staging-api.nexoratouch.com \
@@ -220,8 +249,12 @@ jobs:
       - name: Update Deployment Manifest
         run: |
           echo "Updating deployment for Nexora Frontend"
-          echo "Deploy path: ${{ needs.resolve-environment.outputs.deploy_path }}, SHA: ${{ github.sha }}"
-          sed -i 's|:${{ needs.resolve-environment.outputs.deploy_path }}-.*|:${{ needs.resolve-environment.outputs.deploy_path }}-${{ github.sha }}|g' devops/argocd/${{ needs.resolve-environment.outputs.deploy_path }}/app-nexora-frontend/deployment.yaml
+          echo "Deploy path (tag): ${{ needs.resolve-environment.outputs.deploy_path }}, devops path: ${{ needs.resolve-environment.outputs.devops_path }}, SHA: ${{ github.sha }}"
+          # Update deployment image tag.
+          # Match the whole image-line (registry+repo+tag) and replace the tag portion
+          # with the current build's deploy_path + sha. The image line uses the
+          # repo name (e.g. nexora-frontend) as a unique key — safe to match.
+          sed -i 's|nexora-frontend:.*|nexora-frontend:'${{ needs.resolve-environment.outputs.deploy_path }}'-'${{ github.sha }}'|g' devops/argocd/${{ needs.resolve-environment.outputs.devops_path }}/app-nexora-frontend/deployment.yaml
 
       - name: Commit and Push Changes
         run: |
@@ -229,5 +262,5 @@ jobs:
           git config user.name "github-actions"
           git config user.email "github-actions@github.com"
           git add .
-          git diff --staged --quiet || git commit -m "Update Nexora Frontend ${{ needs.resolve-environment.outputs.deploy_path }} image to ${{ github.sha }}"
+          git diff --staged --quiet || git commit -m "Update Nexora Frontend ${{ needs.resolve-environment.outputs.devops_path }} image to ${{ github.sha }}"
           git push
