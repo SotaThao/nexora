@@ -214,7 +214,7 @@ export default function StaffMySalons() {
   const { data: pendingLinkRequests = [] } = useStaffLinkRequestsList()
   const unlinkBusiness = useUnlinkStaffBusiness()
   const [unlinkError, setUnlinkError] = useState<{ title: string; message: string } | null>(null)
-  const { data: businesses = [], isPending, isFetching } = useStaffBusinesses()
+  const { data: businesses = [], isPending, isFetching, refetch: refetchBusinesses } = useStaffBusinesses()
   const salons = useMemo(() => {
     const visibleBusinesses = businesses.filter((business) => {
       const statusLabel = resolveStaffBusinessLinkStatusLabel(business).trim().toLowerCase()
