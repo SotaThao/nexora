@@ -208,6 +208,9 @@ export const MENU_ITEMS = [
       { id: 'weekly-payroll', labelKey: 'dashboard.menu.taxiq_weekly_payroll' },
       { id: 'payroll-runs', labelKey: 'dashboard.menu.taxiq_payroll_runs' },
       { id: 'tax-ledger', labelKey: 'dashboard.menu.taxiq_tax_ledger' },
+      { id: 'exceptions', labelKey: 'dashboard.menu.taxiq_exceptions' },
+      { id: 'data-quality', labelKey: 'dashboard.menu.taxiq_data_quality' },
+      { id: 'jurisdictions', labelKey: 'dashboard.menu.taxiq_jurisdictions' },
       { id: 'reminders', labelKey: 'dashboard.menu.taxiq_reminders' },
       { id: 'cpa-access', labelKey: 'dashboard.menu.taxiq_cpa_access' },
       { id: 'export', labelKey: 'dashboard.menu.taxiq_export' }

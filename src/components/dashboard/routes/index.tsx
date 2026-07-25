@@ -38,6 +38,9 @@ import PayEngineView from '../views/taxiq/PayEngineView'
 import WeeklyPayrollView from '../views/taxiq/WeeklyPayrollView'
 import PayrollRunsView from '../views/taxiq/PayrollRunsView'
 import TaxLedgerView from '../views/taxiq/TaxLedgerView'
+import ExceptionsQueueView from '../views/taxiq/ExceptionsQueueView'
+import DataQualityCenterView from '../views/taxiq/DataQualityCenterView'
+import JurisdictionsView from '../views/taxiq/JurisdictionsView'
 import PosGeneralSettingsView from '../views/pos/PosGeneralSettingsView'
 import PosRolesView from '../views/pos/PosRolesView'
 import PosCategoriesView from '../views/pos/PosCategoriesView'
@@ -747,6 +750,62 @@ export function TaxIqTaxLedgerRoute() {
   }
 
   return <TaxLedgerView businessId={businessId} />
+}
+// Exceptions Queue (mục 17) + Data Quality Center (mục 18) are keyed by Employer too, same
+// businessId-only shape as TaxIqTaxLedgerRoute above.
+export function TaxIqExceptionsRoute() {
+  const { data: merchantSetupData, isLoading: isMerchantLoading } = useMerchantSetup()
+  const businessId = merchantSetupData?.businessInfo?.businessId
+
+  if (isMerchantLoading) {
+    return (
+      <div className="nexora-card p-6">
+        <SkeletonList count={3} lines={2} />
+      </div>
+    )
+  }
+
+  if (!businessId) {
+    return null
+  }
+
+  return <ExceptionsQueueView businessId={businessId} />
+}
+export function TaxIqDataQualityRoute() {
+  const { data: merchantSetupData, isLoading: isMerchantLoading } = useMerchantSetup()
+  const businessId = merchantSetupData?.businessInfo?.businessId
+
+  if (isMerchantLoading) {
+    return (
+      <div className="nexora-card p-6">
+        <SkeletonList count={3} lines={2} />
+      </div>
+    )
+  }
+
+  if (!businessId) {
+    return null
+  }
+
+  return <DataQualityCenterView businessId={businessId} />
+}
+export function TaxIqJurisdictionsRoute() {
+  const { data: merchantSetupData, isLoading: isMerchantLoading } = useMerchantSetup()
+  const businessId = merchantSetupData?.businessInfo?.businessId
+
+  if (isMerchantLoading) {
+    return (
+      <div className="nexora-card p-6">
+        <SkeletonList count={3} lines={2} />
+      </div>
+    )
+  }
+
+  if (!businessId) {
+    return null
+  }
+
+  return <JurisdictionsView businessId={businessId} />
 }
 export function TaxIqRemindersRoute() {
   const { t } = useTranslation()

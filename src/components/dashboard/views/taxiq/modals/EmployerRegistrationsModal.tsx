@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { Loader2, Plus, X } from 'lucide-react'
 import IconButton from '../../../../ui/IconButton'
 import { useTranslation } from '../../../../../contexts/LanguageContext'
@@ -46,10 +46,14 @@ export default function EmployerRegistrationsModal({
   employer,
   businessId,
   onClose,
+  initialFocusJurisdiction,
 }: {
   employer: Employer
   businessId: string
   onClose: () => void
+  // Opens straight into the Edit form for this jurisdiction — used by JurisdictionsView's
+  // per-row Edit link so Owner doesn't have to find the row again inside this modal's own list.
+  initialFocusJurisdiction?: string
 }) {
   const { t } = useTranslation()
   const { showToast } = useNotification()
@@ -69,6 +73,12 @@ export default function EmployerRegistrationsModal({
   const [depositSchedule, setDepositSchedule] = useState<DepositSchedule>('Monthly')
   const [nextDue, setNextDue] = useState('')
   const [registeredDate, setRegisteredDate] = useState('')
+  const [agencyName, setAgencyName] = useState('')
+  const [expirationDate, setExpirationDate] = useState('')
+  const [alertBeforeDepositDueEnabled, setAlertBeforeDepositDueEnabled] = useState(true)
+  const [alertOnRegistrationExpiryEnabled, setAlertOnRegistrationExpiryEnabled] = useState(true)
+  const [sutaRatePercent, setSutaRatePercent] = useState('0')
+  const [sutaWageBaseCap, setSutaWageBaseCap] = useState('0')
   const [error, setError] = useState('')
 
   const openAddForm = () => {
@@ -80,6 +90,12 @@ export default function EmployerRegistrationsModal({
     setDepositSchedule('Monthly')
     setNextDue('')
     setRegisteredDate('')
+    setAgencyName('')
+    setExpirationDate('')
+    setAlertBeforeDepositDueEnabled(true)
+    setAlertOnRegistrationExpiryEnabled(true)
+    setSutaRatePercent('0')
+    setSutaWageBaseCap('0')
     setError('')
     setFormOpen(true)
   }
@@ -93,9 +109,30 @@ export default function EmployerRegistrationsModal({
     setDepositSchedule(reg.depositSchedule as DepositSchedule)
     setNextDue(toDateInputValue(reg.nextDue))
     setRegisteredDate(toDateInputValue(reg.registeredDate))
+    setAgencyName(reg.agencyName ?? '')
+    setExpirationDate(toDateInputValue(reg.expirationDate))
+    setAlertBeforeDepositDueEnabled(reg.alertBeforeDepositDueEnabled)
+    setAlertOnRegistrationExpiryEnabled(reg.alertOnRegistrationExpiryEnabled)
+    setSutaRatePercent(String(reg.sutaRatePercent))
+    setSutaWageBaseCap(String(reg.sutaWageBaseCap))
     setError('')
     setFormOpen(true)
   }
+
+  // Auto-open the Edit form once for the jurisdiction JurisdictionsView linked in from — the
+  // "once" guard matters because closing the inline form after Save flips formOpen back to
+  // false, and the refetched `items` would otherwise re-trigger this effect and reopen the
+  // same Edit form right after every successful save.
+  const hasAutoOpenedRef = useRef(false)
+  useEffect(() => {
+    if (!initialFocusJurisdiction || hasAutoOpenedRef.current) return
+    const target = items.find((i) => i.jurisdiction === initialFocusJurisdiction)
+    if (target) {
+      openEditForm(target)
+      hasAutoOpenedRef.current = true
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [initialFocusJurisdiction, items])
 
   const effectiveJurisdiction =
     jurisdiction === CUSTOM_JURISDICTION_VALUE ? customJurisdiction.trim().toUpperCase() : jurisdiction
@@ -116,6 +153,12 @@ export default function EmployerRegistrationsModal({
         depositSchedule,
         nextDue: nextDue || null,
         registeredDate: registeredDate || null,
+        agencyName: agencyName.trim() || null,
+        expirationDate: expirationDate || null,
+        alertBeforeDepositDueEnabled,
+        alertOnRegistrationExpiryEnabled,
+        sutaRatePercent: Number(sutaRatePercent) || 0,
+        sutaWageBaseCap: Number(sutaWageBaseCap) || 0,
       })
       showToast(t('taxiq.employerRegistry.registrations.savedNotice'), 'success')
       setFormOpen(false)
@@ -329,6 +372,79 @@ export default function EmployerRegistrationsModal({
                     className="w-full rounded-lg border border-nexoraBorder px-3 py-2 text-xs"
                   />
                 </div>
+
+                <div>
+                  <label className="mb-1 block text-xs font-bold text-nexoraMuted">
+                    {t('taxiq.employerRegistry.registrations.fields.agencyName')}
+                  </label>
+                  <input
+                    type="text"
+                    value={agencyName}
+                    onChange={(e) => setAgencyName(e.target.value)}
+                    placeholder={t('taxiq.employerRegistry.registrations.fields.agencyNamePlaceholder')}
+                    className="w-full rounded-lg border border-nexoraBorder px-3 py-2 text-xs"
+                  />
+                </div>
+
+                <div>
+                  <label className="mb-1 block text-xs font-bold text-nexoraMuted">
+                    {t('taxiq.employerRegistry.registrations.fields.expirationDate')}
+                  </label>
+                  <input
+                    type="date"
+                    value={expirationDate}
+                    onChange={(e) => setExpirationDate(e.target.value)}
+                    className="w-full rounded-lg border border-nexoraBorder px-3 py-2 text-xs"
+                  />
+                </div>
+
+                <div>
+                  <label className="mb-1 block text-xs font-bold text-nexoraMuted">
+                    {t('taxiq.employerRegistry.registrations.fields.sutaRatePercent')}
+                  </label>
+                  <input
+                    type="number"
+                    min="0"
+                    max="100"
+                    step="0.01"
+                    value={sutaRatePercent}
+                    onChange={(e) => setSutaRatePercent(e.target.value)}
+                    className="w-full rounded-lg border border-nexoraBorder px-3 py-2 text-xs"
+                  />
+                </div>
+
+                <div>
+                  <label className="mb-1 block text-xs font-bold text-nexoraMuted">
+                    {t('taxiq.employerRegistry.registrations.fields.sutaWageBaseCap')}
+                  </label>
+                  <input
+                    type="number"
+                    min="0"
+                    step="0.01"
+                    value={sutaWageBaseCap}
+                    onChange={(e) => setSutaWageBaseCap(e.target.value)}
+                    className="w-full rounded-lg border border-nexoraBorder px-3 py-2 text-xs"
+                  />
+                </div>
+              </div>
+
+              <div className="space-y-2">
+                <label className="flex items-center gap-2 text-xs font-bold text-nexoraText">
+                  <input
+                    type="checkbox"
+                    checked={alertBeforeDepositDueEnabled}
+                    onChange={(e) => setAlertBeforeDepositDueEnabled(e.target.checked)}
+                  />
+                  {t('taxiq.employerRegistry.registrations.fields.alertBeforeDepositDue')}
+                </label>
+                <label className="flex items-center gap-2 text-xs font-bold text-nexoraText">
+                  <input
+                    type="checkbox"
+                    checked={alertOnRegistrationExpiryEnabled}
+                    onChange={(e) => setAlertOnRegistrationExpiryEnabled(e.target.checked)}
+                  />
+                  {t('taxiq.employerRegistry.registrations.fields.alertOnRegistrationExpiry')}
+                </label>
               </div>
 
               {error && <p className="text-xs font-semibold text-rose-600">{error}</p>}

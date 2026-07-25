@@ -680,6 +680,9 @@
       "taxiq_weekly_payroll": "Weekly Payroll",
       "taxiq_payroll_runs": "Payroll Runs",
       "taxiq_tax_ledger": "Tax Ledger",
+      "taxiq_exceptions": "Exceptions",
+      "taxiq_data_quality": "Data Quality",
+      "taxiq_jurisdictions": "Jurisdictions",
       "taxiq_reminders": "Tax Payment Reminders",
       "taxiq_cpa_access": "CPA Access",
       "taxiq_export": "Year-End Export",
@@ -2280,6 +2283,10 @@
     "taxiq_payroll_run_cancel_reason_required": "A reason is required to cancel this run.",
     "taxiq_payroll_run_cannot_cancel_posted": "A run that has already posted to the ledger cannot be cancelled.",
     "taxiq_tax_ledger_entry_not_found": "This tax ledger entry could not be found.",
+    "taxiq_exception_not_found": "This exception could not be found.",
+    "taxiq_exception_already_closed": "This exception is already closed.",
+    "taxiq_cleanup_task_not_found": "This cleanup task could not be found.",
+    "taxiq_cleanup_task_already_closed": "This cleanup task is already closed.",
     "taxiq_self_reported_income_not_found": "This self-reported income record could not be found.",
     "taxiq_owner_income_record_not_found": "This income record could not be found.",
     "taxiq_deduction_record_has_receipts": "Remove attached receipts before deleting this deduction.",
@@ -5799,7 +5806,8 @@
       "depositSchedules": {
         "Semiweekly": "Semiweekly",
         "Monthly": "Monthly",
-        "Quarterly": "Quarterly"
+        "Quarterly": "Quarterly",
+        "Annually": "Annually"
       },
       "fields": {
         "industry": "Industry",
@@ -5832,7 +5840,8 @@
         "statuses": {
           "Active": "Active",
           "Review": "Review",
-          "MissingSetup": "Missing Setup"
+          "MissingSetup": "Missing Setup",
+          "Inactive": "Inactive"
         },
         "fields": {
           "jurisdiction": "Jurisdiction",
@@ -5843,11 +5852,39 @@
           "accountNumberKeepNotice": "Leave blank to keep the existing account number.",
           "depositSchedule": "Deposit schedule",
           "registeredDate": "Registered date",
-          "nextDue": "Next due"
+          "nextDue": "Next due",
+          "agencyName": "Agency name",
+          "agencyNamePlaceholder": "e.g. California EDD / FTB",
+          "expirationDate": "Registration expiration date",
+          "sutaRatePercent": "SUTA rate (%)",
+          "sutaWageBaseCap": "SUTA wage base cap",
+          "alertBeforeDepositDue": "Alert 3 days before deposit due",
+          "alertOnRegistrationExpiry": "Alert if registration expires"
         },
         "errors": {
           "jurisdictionRequired": "Select or enter a jurisdiction."
         }
+      }
+    },
+    "jurisdictions": {
+      "title": "Jurisdictions",
+      "subtitle": "Where the merchant is registered, what's owed there year-to-date, and when the next deposit or renewal is due.",
+      "manageButton": "Manage Registrations",
+      "noEmployer": "Set up an Employer first (see the Employers screen) before viewing Jurisdictions.",
+      "emptyState": "No jurisdictions registered yet.",
+      "columns": {
+        "name": "Jurisdiction",
+        "employeeTax": "Employee Tax YTD",
+        "employerTax": "Employer Tax YTD",
+        "registration": "Registration",
+        "schedule": "Schedule",
+        "nextDue": "Next Due",
+        "alerts": "Alerts",
+        "action": "Action"
+      },
+      "alerts": {
+        "depositDueSoon": "Deposit due soon",
+        "registrationExpiringSoon": "Registration expiring soon"
       }
     },
     "payEngine": {
@@ -6210,6 +6247,151 @@
       "nextPage": "Next",
       "errors": {
         "generic": "Unable to process this action. Please try again."
+      }
+    },
+    "exceptions": {
+      "title": "Exceptions Queue",
+      "subtitle": "Data issues affecting active workers — TIN not verified, W-4 stale, jurisdiction mismatch, or missing tax profile.",
+      "scanButton": "Scan",
+      "scanResult": "Scan complete — {{created}} new, {{updated}} updated.",
+      "noEmployer": "Set up an Employer first (see the Employers screen) before scanning for exceptions.",
+      "emptyState": "No exceptions match this filter.",
+      "viewButton": "View",
+      "pageSummary": "Page {{page}} of {{totalPages}} — {{totalCount}} exceptions",
+      "previousPage": "Previous",
+      "nextPage": "Next",
+      "filters": {
+        "status": "Status",
+        "severity": "Severity",
+        "owner": "Owner",
+        "all": "All"
+      },
+      "columns": {
+        "type": "Type",
+        "severity": "Severity",
+        "owner": "Owner",
+        "status": "Status",
+        "period": "Period",
+        "members": "Members",
+        "action": "Action"
+      },
+      "types": {
+        "TinVerificationPending": "TIN Verification Pending",
+        "W4Stale": "W-4 Stale",
+        "JurisdictionMismatch": "Jurisdiction Mismatch",
+        "TaxProfileMissing": "Tax Profile Missing"
+      },
+      "severity": {
+        "Low": "Low",
+        "Medium": "Medium",
+        "High": "High"
+      },
+      "status": {
+        "Open": "Open",
+        "Reviewing": "Reviewing",
+        "Closed": "Closed"
+      },
+      "ownerTeam": {
+        "Payroll": "Payroll",
+        "Hr": "HR",
+        "Tax": "Tax"
+      },
+      "resolutionType": {
+        "Corrected": "Corrected",
+        "Waived": "Waived",
+        "FalsePositive": "False Positive",
+        "EscalatedToCpa": "Escalated to CPA"
+      },
+      "errors": {
+        "generic": "Unable to process this action. Please try again."
+      },
+      "detail": {
+        "title": "Exception Detail",
+        "assignSuccess": "Owner updated.",
+        "noteSuccess": "Note added.",
+        "resolveSuccess": "Exception resolved.",
+        "membersLabel": "Affected workers ({{count}})",
+        "noMembers": "No workers currently affected.",
+        "ownerLabel": "Owner",
+        "latestNoteLabel": "Latest note",
+        "addNoteLabel": "Add a note",
+        "addNoteButton": "Add Note",
+        "resolvedAs": "Resolved as",
+        "resolveTitle": "Resolve",
+        "resolutionTypeLabel": "Resolution Type",
+        "correctedValueLabel": "Corrected Value (optional)",
+        "referenceLabel": "Reference (optional)",
+        "justificationNoteLabel": "Justification Note",
+        "justificationNoteRequired": "Justification note is required to resolve.",
+        "resolveButton": "Resolve"
+      }
+    },
+    "dataQuality": {
+      "title": "Data Quality Center",
+      "subtitle": "Overview of data issues from Employees and Jurisdictions — turn any issue into a tracked cleanup task.",
+      "noEmployer": "Set up an Employer first (see the Employers screen) before viewing Data Quality.",
+      "noIssues": "No data quality issues found.",
+      "noTasks": "No cleanup tasks match this filter.",
+      "issuesTitle": "Issues",
+      "tasksTitle": "Cleanup Tasks",
+      "pageSummary": "Page {{page}} of {{totalPages}} — {{totalCount}} tasks",
+      "previousPage": "Previous",
+      "nextPage": "Next",
+      "metrics": {
+        "blockingIssues": "Blocking Issues",
+        "totalIssues": "Total Issues",
+        "cpaReadyScore": "CPA Ready Score",
+        "notAvailable": "Not available yet"
+      },
+      "filters": {
+        "status": "Status",
+        "all": "All"
+      },
+      "columns": {
+        "source": "Source",
+        "issueType": "Issue",
+        "severity": "Severity",
+        "owner": "Owner",
+        "description": "Description",
+        "action": "Action",
+        "dueDate": "Due Date",
+        "status": "Status"
+      },
+      "source": {
+        "Employees": "Employees",
+        "Jurisdictions": "Jurisdictions"
+      },
+      "issueType": {
+        "TinVerificationPending": "TIN Verification Pending",
+        "W4Stale": "W-4 Stale",
+        "JurisdictionMismatch": "Jurisdiction Mismatch",
+        "TaxProfileMissing": "Tax Profile Missing",
+        "RegistrationMissingSetup": "Registration Missing Setup"
+      },
+      "taskStatus": {
+        "Open": "Open",
+        "Closed": "Closed"
+      },
+      "errors": {
+        "generic": "Unable to process this action. Please try again."
+      },
+      "createTask": {
+        "button": "Create Cleanup Task",
+        "title": "Create Cleanup Task",
+        "ownerLabel": "Owner",
+        "dueDateLabel": "Due Date",
+        "blocksWorkflowLabel": "Blocks related workflow",
+        "blocksWorkflowHighOnly": "Only High severity issues can block a related workflow.",
+        "submitButton": "Create",
+        "success": "Cleanup task created."
+      },
+      "closeTask": {
+        "button": "Close",
+        "title": "Close Cleanup Task",
+        "reviewerNoteLabel": "Reviewer Note",
+        "reviewerNoteRequired": "Reviewer note is required to close.",
+        "submitButton": "Close Task",
+        "success": "Cleanup task closed."
       }
     },
     "payoutCenter": {

@@ -67,6 +67,7 @@ export function useUpsertEmployerRegistration(businessId: string | undefined) {
       queryClient.invalidateQueries({ queryKey: qk.taxiqEmployerRegistrations(params.employerId) })
       queryClient.invalidateQueries({ queryKey: qk.taxiqEmployers(businessId) })
       queryClient.invalidateQueries({ queryKey: qk.taxiqEmployerById(params.employerId) })
+      queryClient.invalidateQueries({ queryKey: qk.taxiqJurisdictionSummary(businessId, params.employerId) })
     },
   })
 }

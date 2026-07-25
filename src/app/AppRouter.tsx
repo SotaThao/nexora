@@ -28,6 +28,7 @@ import {
   TaxIqOverviewRoute, TaxIqDeductionsRoute, TaxIqIncomeRoute, TaxIqReceiptsRoute, TaxIqEquipmentRoute,
   TaxIqPayrollRoute, TaxIqRemindersRoute, TaxIqCpaAccessRoute, TaxIqExportRoute, TaxIqEmployersRoute,
   TaxIqPayEngineRoute, TaxIqWeeklyPayrollRoute, TaxIqPayrollRunsRoute, TaxIqTaxLedgerRoute,
+  TaxIqExceptionsRoute, TaxIqDataQualityRoute, TaxIqJurisdictionsRoute,
   PosGeneralSettingsRoute, PosRolesRoute, PosCategoriesRoute, PosServicesRoute, PosProductsRoute,
   PosStaffProfileRoute, PosFrontDeskRoute
 } from "../components/dashboard/routes";
@@ -278,6 +279,9 @@ export default function AppRouter() {
             <Route path={`${DASHBOARD_MENU_ID.taxiq}/weekly-payroll`} element={<TaxIqWeeklyPayrollRoute />} />
             <Route path={`${DASHBOARD_MENU_ID.taxiq}/payroll-runs`} element={<TaxIqPayrollRunsRoute />} />
             <Route path={`${DASHBOARD_MENU_ID.taxiq}/tax-ledger`} element={<TaxIqTaxLedgerRoute />} />
+            <Route path={`${DASHBOARD_MENU_ID.taxiq}/exceptions`} element={<TaxIqExceptionsRoute />} />
+            <Route path={`${DASHBOARD_MENU_ID.taxiq}/data-quality`} element={<TaxIqDataQualityRoute />} />
+            <Route path={`${DASHBOARD_MENU_ID.taxiq}/jurisdictions`} element={<TaxIqJurisdictionsRoute />} />
             <Route path={`${DASHBOARD_MENU_ID.taxiq}/reminders`} element={<TaxIqRemindersRoute />} />
             <Route path={`${DASHBOARD_MENU_ID.taxiq}/cpa-access`} element={<TaxIqCpaAccessRoute />} />
             <Route path={`${DASHBOARD_MENU_ID.taxiq}/export`} element={<TaxIqExportRoute />} />

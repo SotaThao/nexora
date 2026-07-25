@@ -680,6 +680,9 @@
       "taxiq_weekly_payroll": "Weekly Payroll",
       "taxiq_payroll_runs": "Payroll Runs",
       "taxiq_tax_ledger": "Tax Ledger",
+      "taxiq_exceptions": "Exceptions",
+      "taxiq_data_quality": "Data Quality",
+      "taxiq_jurisdictions": "Jurisdictions",
       "taxiq_reminders": "Nhắc Nộp Thuế",
       "taxiq_cpa_access": "Truy Cập CPA",
       "taxiq_export": "Xuất Hồ Sơ Cuối Năm",
@@ -2280,6 +2283,10 @@
     "taxiq_payroll_run_cancel_reason_required": "Cần nhập lý do để huỷ kỳ lương này.",
     "taxiq_payroll_run_cannot_cancel_posted": "Kỳ lương đã ghi sổ ledger không thể huỷ được nữa.",
     "taxiq_tax_ledger_entry_not_found": "Không tìm thấy bút toán này trong Tax Ledger.",
+    "taxiq_exception_not_found": "Không tìm thấy exception này.",
+    "taxiq_exception_already_closed": "Exception này đã được đóng.",
+    "taxiq_cleanup_task_not_found": "Không tìm thấy cleanup task này.",
+    "taxiq_cleanup_task_already_closed": "Cleanup task này đã được đóng.",
     "taxiq_self_reported_income_not_found": "Không tìm thấy bản ghi thu nhập tự khai này.",
     "taxiq_owner_income_record_not_found": "Không tìm thấy bản ghi doanh thu này.",
     "taxiq_deduction_record_has_receipts": "Hãy gỡ các hóa đơn đính kèm trước khi xóa khoản khấu trừ này.",
@@ -5794,7 +5801,8 @@
       "depositSchedules": {
         "Semiweekly": "Semiweekly",
         "Monthly": "Monthly",
-        "Quarterly": "Quarterly"
+        "Quarterly": "Quarterly",
+        "Annually": "Annually"
       },
       "fields": {
         "industry": "Ngành nghề",
@@ -5827,7 +5835,8 @@
         "statuses": {
           "Active": "Active",
           "Review": "Review",
-          "MissingSetup": "Missing Setup"
+          "MissingSetup": "Missing Setup",
+          "Inactive": "Inactive"
         },
         "fields": {
           "jurisdiction": "Jurisdiction",
@@ -5838,11 +5847,39 @@
           "accountNumberKeepNotice": "Để trống nếu muốn giữ nguyên số tài khoản đã lưu.",
           "depositSchedule": "Deposit schedule",
           "registeredDate": "Ngày đăng ký",
-          "nextDue": "Ngày đến hạn"
+          "nextDue": "Ngày đến hạn",
+          "agencyName": "Tên cơ quan thuế",
+          "agencyNamePlaceholder": "vd: California EDD / FTB",
+          "expirationDate": "Ngày hết hạn đăng ký",
+          "sutaRatePercent": "Tỷ lệ SUTA (%)",
+          "sutaWageBaseCap": "SUTA wage base cap",
+          "alertBeforeDepositDue": "Cảnh báo 3 ngày trước hạn deposit",
+          "alertOnRegistrationExpiry": "Cảnh báo khi đăng ký sắp hết hạn"
         },
         "errors": {
           "jurisdictionRequired": "Chọn hoặc nhập jurisdiction."
         }
+      }
+    },
+    "jurisdictions": {
+      "title": "Jurisdictions",
+      "subtitle": "Merchant đã đăng ký ở đâu, còn nợ gì tính theo năm hiện tại (YTD), và hạn nộp/gia hạn kế tiếp là khi nào.",
+      "manageButton": "Quản Lý Registrations",
+      "noEmployer": "Cần khai Employer trước (xem màn Employers) mới xem được Jurisdictions.",
+      "emptyState": "Chưa khai jurisdiction nào.",
+      "columns": {
+        "name": "Jurisdiction",
+        "employeeTax": "Employee Tax YTD",
+        "employerTax": "Employer Tax YTD",
+        "registration": "Registration",
+        "schedule": "Schedule",
+        "nextDue": "Next Due",
+        "alerts": "Cảnh báo",
+        "action": "Hành động"
+      },
+      "alerts": {
+        "depositDueSoon": "Sắp đến hạn deposit",
+        "registrationExpiringSoon": "Đăng ký sắp hết hạn"
       }
     },
     "payEngine": {
@@ -6205,6 +6242,151 @@
       "nextPage": "Sau",
       "errors": {
         "generic": "Không thể xử lý thao tác này. Vui lòng thử lại."
+      }
+    },
+    "exceptions": {
+      "title": "Hàng Đợi Exceptions",
+      "subtitle": "Các vấn đề dữ liệu ảnh hưởng đến nhân viên đang hoạt động — TIN chưa verify, W-4 hết hạn, jurisdiction mismatch, hoặc thiếu tax profile.",
+      "scanButton": "Quét",
+      "scanResult": "Quét xong — {{created}} mới, {{updated}} cập nhật.",
+      "noEmployer": "Cần khai Employer trước (xem màn Employers) mới quét được Exceptions.",
+      "emptyState": "Không có exception nào khớp bộ lọc này.",
+      "viewButton": "Xem",
+      "pageSummary": "Trang {{page}}/{{totalPages}} — {{totalCount}} exceptions",
+      "previousPage": "Trước",
+      "nextPage": "Sau",
+      "filters": {
+        "status": "Trạng thái",
+        "severity": "Mức độ",
+        "owner": "Phụ trách",
+        "all": "Tất cả"
+      },
+      "columns": {
+        "type": "Loại",
+        "severity": "Mức độ",
+        "owner": "Phụ trách",
+        "status": "Trạng thái",
+        "period": "Kỳ",
+        "members": "Số người",
+        "action": "Hành động"
+      },
+      "types": {
+        "TinVerificationPending": "TIN Chưa Verify",
+        "W4Stale": "W-4 Hết Hạn",
+        "JurisdictionMismatch": "Sai Lệch Jurisdiction",
+        "TaxProfileMissing": "Thiếu Tax Profile"
+      },
+      "severity": {
+        "Low": "Thấp",
+        "Medium": "Trung Bình",
+        "High": "Cao"
+      },
+      "status": {
+        "Open": "Mở",
+        "Reviewing": "Đang Xem Xét",
+        "Closed": "Đã Đóng"
+      },
+      "ownerTeam": {
+        "Payroll": "Payroll",
+        "Hr": "HR",
+        "Tax": "Tax"
+      },
+      "resolutionType": {
+        "Corrected": "Đã Sửa",
+        "Waived": "Bỏ Qua",
+        "FalsePositive": "Báo Sai",
+        "EscalatedToCpa": "Chuyển CPA"
+      },
+      "errors": {
+        "generic": "Không thể xử lý thao tác này. Vui lòng thử lại."
+      },
+      "detail": {
+        "title": "Chi Tiết Exception",
+        "assignSuccess": "Đã cập nhật người phụ trách.",
+        "noteSuccess": "Đã thêm ghi chú.",
+        "resolveSuccess": "Đã giải quyết exception.",
+        "membersLabel": "Nhân viên bị ảnh hưởng ({{count}})",
+        "noMembers": "Hiện không còn ai bị ảnh hưởng.",
+        "ownerLabel": "Phụ trách",
+        "latestNoteLabel": "Ghi chú gần nhất",
+        "addNoteLabel": "Thêm ghi chú",
+        "addNoteButton": "Thêm Ghi Chú",
+        "resolvedAs": "Đã giải quyết theo",
+        "resolveTitle": "Giải Quyết",
+        "resolutionTypeLabel": "Loại Giải Quyết",
+        "correctedValueLabel": "Giá Trị Đã Sửa (tùy chọn)",
+        "referenceLabel": "Tham Chiếu (tùy chọn)",
+        "justificationNoteLabel": "Lý Do Giải Quyết",
+        "justificationNoteRequired": "Bắt buộc nhập lý do để giải quyết.",
+        "resolveButton": "Giải Quyết"
+      }
+    },
+    "dataQuality": {
+      "title": "Trung Tâm Chất Lượng Dữ Liệu",
+      "subtitle": "Tổng quan các vấn đề dữ liệu từ Employees và Jurisdictions — biến bất kỳ vấn đề nào thành cleanup task để theo dõi.",
+      "noEmployer": "Cần khai Employer trước (xem màn Employers) mới xem được Data Quality.",
+      "noIssues": "Không có vấn đề chất lượng dữ liệu nào.",
+      "noTasks": "Không có cleanup task nào khớp bộ lọc này.",
+      "issuesTitle": "Vấn Đề",
+      "tasksTitle": "Cleanup Tasks",
+      "pageSummary": "Trang {{page}}/{{totalPages}} — {{totalCount}} tasks",
+      "previousPage": "Trước",
+      "nextPage": "Sau",
+      "metrics": {
+        "blockingIssues": "Vấn Đề Chặn",
+        "totalIssues": "Tổng Vấn Đề",
+        "cpaReadyScore": "CPA Ready Score",
+        "notAvailable": "Chưa có dữ liệu"
+      },
+      "filters": {
+        "status": "Trạng thái",
+        "all": "Tất cả"
+      },
+      "columns": {
+        "source": "Nguồn",
+        "issueType": "Vấn Đề",
+        "severity": "Mức độ",
+        "owner": "Phụ trách",
+        "description": "Mô Tả",
+        "action": "Hành động",
+        "dueDate": "Hạn Chót",
+        "status": "Trạng thái"
+      },
+      "source": {
+        "Employees": "Employees",
+        "Jurisdictions": "Jurisdictions"
+      },
+      "issueType": {
+        "TinVerificationPending": "TIN Chưa Verify",
+        "W4Stale": "W-4 Hết Hạn",
+        "JurisdictionMismatch": "Sai Lệch Jurisdiction",
+        "TaxProfileMissing": "Thiếu Tax Profile",
+        "RegistrationMissingSetup": "Registration Chưa Setup"
+      },
+      "taskStatus": {
+        "Open": "Mở",
+        "Closed": "Đã Đóng"
+      },
+      "errors": {
+        "generic": "Không thể xử lý thao tác này. Vui lòng thử lại."
+      },
+      "createTask": {
+        "button": "Tạo Cleanup Task",
+        "title": "Tạo Cleanup Task",
+        "ownerLabel": "Phụ trách",
+        "dueDateLabel": "Hạn Chót",
+        "blocksWorkflowLabel": "Chặn workflow liên quan",
+        "blocksWorkflowHighOnly": "Chỉ vấn đề mức High mới được chặn workflow liên quan.",
+        "submitButton": "Tạo",
+        "success": "Đã tạo cleanup task."
+      },
+      "closeTask": {
+        "button": "Đóng",
+        "title": "Đóng Cleanup Task",
+        "reviewerNoteLabel": "Ghi Chú Xác Nhận",
+        "reviewerNoteRequired": "Bắt buộc nhập ghi chú xác nhận để đóng.",
+        "submitButton": "Đóng Task",
+        "success": "Đã đóng cleanup task."
       }
     },
     "payoutCenter": {

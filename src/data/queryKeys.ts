@@ -126,6 +126,20 @@ export const qk = {
     if (filters) key.push(filters)
     return key
   },
+  // Tax IQ — Exceptions Queue + Data Quality Center (mục 17/18, backend US-036). Same
+  // filters-appended-when-present convention as taxiqPayrollRuns/taxiqTaxLedger.
+  taxiqExceptions: (businessId?: string, filters?: object) => {
+    const key: unknown[] = ['taxiq', 'exceptions', businessId ?? '']
+    if (filters) key.push(filters)
+    return key
+  },
+  taxiqException: (id?: string) => ['taxiq', 'exception', id ?? ''],
+  taxiqDataQuality: (businessId?: string, employerId?: string) => ['taxiq', 'dataQuality', businessId ?? '', employerId ?? ''],
+  taxiqCleanupTasks: (businessId?: string, filters?: object) => {
+    const key: unknown[] = ['taxiq', 'cleanupTasks', businessId ?? '']
+    if (filters) key.push(filters)
+    return key
+  },
   // POS Merchant Ops — Front Desk access self-check + Check-in/Waitlist (US-12)
   merchantPosAccess: (businessId?: string) => ['merchantSettings', 'posAccess', businessId ?? ''],
   merchantPosWaitlist: (businessId?: string) => ['merchantSettings', 'posWaitlist', businessId ?? ''],
@@ -338,6 +352,10 @@ export const qk = {
   taxiqEmployers: (businessId?: string) => ['taxiqEmployers', businessId ?? 'unknown'],
   taxiqEmployerById: (id?: string) => ['taxiqEmployers', 'byId', id ?? 'unknown'],
   taxiqEmployerRegistrations: (employerId?: string) => ['taxiqEmployerRegistrations', employerId ?? 'unknown'],
+  // Jurisdictions (mục 19, backend US-037). Keyed by employerId — businessId prefix kept for
+  // consistency with other taxiq* keys even though the query itself only needs employerId.
+  taxiqJurisdictionSummary: (businessId?: string, employerId?: string) =>
+    ['taxiq', 'jurisdictionSummary', businessId ?? '', employerId ?? ''],
 
   // Merchant Nexora Voice
   merchantVoiceBookings: (filters = EMPTY) => ['merchantVoice', 'bookings', filters],

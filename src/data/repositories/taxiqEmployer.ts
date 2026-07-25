@@ -6,13 +6,13 @@ import httpClient from '../../lib/httpClient'
 
 type HttpClient = typeof httpClient
 
-export const DEPOSIT_SCHEDULES = ['Semiweekly', 'Monthly', 'Quarterly'] as const
+export const DEPOSIT_SCHEDULES = ['Semiweekly', 'Monthly', 'Quarterly', 'Annually'] as const
 export type DepositSchedule = (typeof DEPOSIT_SCHEDULES)[number]
 
 export const EMPLOYER_EDITABLE_STATUSES = ['Active', 'Inactive', 'Suspended'] as const
 export type EmployerEditableStatus = (typeof EMPLOYER_EDITABLE_STATUSES)[number]
 
-export const REGISTRATION_STATUSES = ['Active', 'Review', 'MissingSetup'] as const
+export const REGISTRATION_STATUSES = ['Active', 'Review', 'MissingSetup', 'Inactive'] as const
 export type RegistrationStatus = (typeof REGISTRATION_STATUSES)[number]
 
 export const KNOWN_JURISDICTIONS = ['US-FED', 'US-TX', 'US-CA', 'US-NY'] as const
@@ -82,6 +82,12 @@ export interface EmployerRegistrationApiDto {
   depositSchedule: string
   nextDue?: string | null
   registeredDate?: string | null
+  agencyName?: string | null
+  expirationDate?: string | null
+  alertBeforeDepositDueEnabled?: boolean
+  alertOnRegistrationExpiryEnabled?: boolean
+  sutaRatePercent?: number
+  sutaWageBaseCap?: number
 }
 
 export interface EmployerRegistration {
@@ -93,6 +99,12 @@ export interface EmployerRegistration {
   depositSchedule: string
   nextDue: string | null
   registeredDate: string | null
+  agencyName: string | null
+  expirationDate: string | null
+  alertBeforeDepositDueEnabled: boolean
+  alertOnRegistrationExpiryEnabled: boolean
+  sutaRatePercent: number
+  sutaWageBaseCap: number
 }
 
 function normalizeEmployerRegistration(dto: EmployerRegistrationApiDto): EmployerRegistration {
@@ -105,6 +117,12 @@ function normalizeEmployerRegistration(dto: EmployerRegistrationApiDto): Employe
     depositSchedule: dto.depositSchedule,
     nextDue: dto.nextDue ?? null,
     registeredDate: dto.registeredDate ?? null,
+    agencyName: dto.agencyName ?? null,
+    expirationDate: dto.expirationDate ?? null,
+    alertBeforeDepositDueEnabled: dto.alertBeforeDepositDueEnabled ?? true,
+    alertOnRegistrationExpiryEnabled: dto.alertOnRegistrationExpiryEnabled ?? true,
+    sutaRatePercent: dto.sutaRatePercent ?? 0,
+    sutaWageBaseCap: dto.sutaWageBaseCap ?? 0,
   }
 }
 
@@ -136,6 +154,12 @@ export interface UpsertEmployerRegistrationParams {
   depositSchedule: DepositSchedule
   nextDue?: string | null
   registeredDate?: string | null
+  agencyName?: string | null
+  expirationDate?: string | null
+  alertBeforeDepositDueEnabled: boolean
+  alertOnRegistrationExpiryEnabled: boolean
+  sutaRatePercent: number
+  sutaWageBaseCap: number
 }
 
 // PaginatedList<T> field names from backend/src/Application/Common/Models/PaginatedList.cs
@@ -199,6 +223,12 @@ export function createTaxiqEmployerRepository(client: HttpClient = httpClient) {
           depositSchedule: params.depositSchedule,
           nextDue: params.nextDue ?? null,
           registeredDate: params.registeredDate ?? null,
+          agencyName: params.agencyName ?? null,
+          expirationDate: params.expirationDate ?? null,
+          alertBeforeDepositDueEnabled: params.alertBeforeDepositDueEnabled,
+          alertOnRegistrationExpiryEnabled: params.alertOnRegistrationExpiryEnabled,
+          sutaRatePercent: params.sutaRatePercent,
+          sutaWageBaseCap: params.sutaWageBaseCap,
         },
       )
     },

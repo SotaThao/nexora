@@ -253,6 +253,12 @@ export const errorCodeToI18nKey = {
   // Tax IQ — Tax Ledger (mục 16, backend US-27/28/29)
   TAXIQ_TAX_LEDGER_ENTRY_NOT_FOUND: 'errors.taxiq_tax_ledger_entry_not_found',
 
+  // Tax IQ — Exceptions Queue + Data Quality Center (mục 17/18, backend US-036)
+  TAXIQ_EXCEPTION_NOT_FOUND: 'errors.taxiq_exception_not_found',
+  TAXIQ_EXCEPTION_ALREADY_CLOSED: 'errors.taxiq_exception_already_closed',
+  TAXIQ_CLEANUP_TASK_NOT_FOUND: 'errors.taxiq_cleanup_task_not_found',
+  TAXIQ_CLEANUP_TASK_ALREADY_CLOSED: 'errors.taxiq_cleanup_task_already_closed',
+
   // Common
   COMMON_VALIDATION_ERROR: 'errors.common_validation_error',
   COMMON_NOT_FOUND: 'errors.common_not_found',
