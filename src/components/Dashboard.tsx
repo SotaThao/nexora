@@ -554,6 +554,7 @@ export default function Dashboard({
     returningCustomerRate: 0,
     returningCustomerRateChangeVsLastWeek: 0,
     previousPeriodComparison: null,
+    totalBookings: 0,
   }
 
   const metrics = useMemo(() => {

@@ -7,6 +7,7 @@
 // decides whether the actionable UI renders at all; the caller (Owner vs Staff
 // route wrapper) is responsible for only linking here when access is expected.
 import { useState, type FormEvent } from 'react'
+import { useSearchParams } from 'react-router-dom'
 import { useQueryClient } from '@tanstack/react-query'
 import { Loader2 } from 'lucide-react'
 import { useTranslation } from '../../../../contexts/LanguageContext'
@@ -29,8 +30,10 @@ import type { TurnBoardStationApiDto } from '../../../../types/repositories'
 import { SkeletonList } from '../../../ui/skeleton'
 import PosOrderWorkspace from './PosOrderWorkspace'
 import PosCompletedOrdersPanel from './PosCompletedOrdersPanel'
+import NewBookingForm from './booking/NewBookingForm'
+import BookingTab from './booking/BookingTab'
 
-type FrontDeskTab = 'checkin' | 'orderlist' | 'waitlist' | 'turnboard' | 'completed'
+type FrontDeskTab = 'checkin' | 'orderlist' | 'waitlist' | 'turnboard' | 'completed' | 'booking'
 
 type WorkspaceState =
   | { mode: 'create'; customerDraft: { customerName: string; customerEmail?: string; customerPhone?: string } }
@@ -65,7 +68,11 @@ export default function PosFrontDeskView({ businessId }: { businessId: string })
   const assignStaffToServiceLine = useAssignStaffToServiceLine(businessId)
   const startOrderService = useStartOrderService(businessId)
 
-  const [activeTab, setActiveTab] = useState<FrontDeskTab>('checkin')
+  // Deep-link support for the Owner Dashboard's "Total Bookings" KPI card (Ticket 10),
+  // which navigates here with ?tab=booking to land straight on the Bookings tab.
+  const [searchParams] = useSearchParams()
+  const initialTab: FrontDeskTab = searchParams.get('tab') === 'booking' ? 'booking' : 'checkin'
+  const [activeTab, setActiveTab] = useState<FrontDeskTab>(initialTab)
   const [customerName, setCustomerName] = useState('')
   const [customerEmail, setCustomerEmail] = useState('')
   const [customerPhone, setCustomerPhone] = useState('')
@@ -74,6 +81,10 @@ export default function PosFrontDeskView({ businessId }: { businessId: string })
   const [assignServiceSelection, setAssignServiceSelection] = useState<Record<string, string>>({})
   const [assigningOrderId, setAssigningOrderId] = useState<string | null>(null)
   const [workspace, setWorkspace] = useState<WorkspaceState | null>(null)
+  // Entry point for creating a booking (Ticket 3) — kept as the one global "+ New Booking"
+  // action; Ticket 9 added the "Bookings" tab/management screen below for viewing, checking
+  // in, cancelling, and rescheduling existing bookings.
+  const [isBookingModalOpen, setIsBookingModalOpen] = useState(false)
 
   if (isAccessLoading) {
     return (
@@ -195,6 +206,7 @@ export default function PosFrontDeskView({ businessId }: { businessId: string })
     },
     { id: 'turnboard', labelKey: 'components.dashboard.views.pos.PosFrontDeskView.tabs.turnboard' },
     { id: 'completed', labelKey: 'components.dashboard.views.pos.PosFrontDeskView.tabs.completed' },
+    { id: 'booking', labelKey: 'components.dashboard.views.pos.PosFrontDeskView.tabs.booking' },
   ]
 
   const renderServiceSelect = (orderId: string) => (
@@ -300,13 +312,22 @@ export default function PosFrontDeskView({ businessId }: { businessId: string })
 
   return (
     <div className="space-y-6">
-      <section className="space-y-1 px-0.5">
-        <h1 className="text-base font-semibold leading-tight text-nexoraText">
-          {t('dashboard.menu.pos_board')}
-        </h1>
-        <p className="text-xs text-nexoraMuted">
-          {t('components.dashboard.views.pos.PosFrontDeskView.description')}
-        </p>
+      <section className="flex items-start justify-between gap-3 px-0.5">
+        <div className="space-y-1">
+          <h1 className="text-base font-semibold leading-tight text-nexoraText">
+            {t('dashboard.menu.pos_board')}
+          </h1>
+          <p className="text-xs text-nexoraMuted">
+            {t('components.dashboard.views.pos.PosFrontDeskView.description')}
+          </p>
+        </div>
+        <button
+          type="button"
+          onClick={() => setIsBookingModalOpen(true)}
+          className="h-9 shrink-0 rounded-lg bg-nexoraBrand px-3 text-xs font-bold text-white hover:bg-nexoraBrandDark"
+        >
+          {t('components.dashboard.views.pos.NewBookingForm.newBookingButton')}
+        </button>
       </section>
 
       <div className="flex gap-1 border-b border-nexoraBorder">
@@ -513,6 +534,18 @@ export default function PosFrontDeskView({ businessId }: { businessId: string })
       )}
 
       {activeTab === 'completed' && <PosCompletedOrdersPanel businessId={businessId} />}
+
+      {activeTab === 'booking' && <BookingTab businessId={businessId} turnBoardStaff={turnBoard} />}
+
+      <NewBookingForm
+        open={isBookingModalOpen}
+        businessId={businessId}
+        onClose={() => setIsBookingModalOpen(false)}
+        onCreated={() => {
+          setIsBookingModalOpen(false)
+          refreshFrontDeskLists()
+        }}
+      />
     </div>
   )
 }

@@ -230,6 +230,17 @@ export const errorCodeToI18nKey = {
   POS_STAFF_PAY_RULE_BONUS_FIELD_INVALID: 'errors.pos_staff_pay_rule_bonus_field_invalid',
   POS_STAFF_PAYOUT_DESTINATION_FIELD_INVALID: 'errors.pos_staff_payout_destination_field_invalid',
 
+  // POS Booking — Staff/Owner creates a booking (Ticket 3)
+  POS_BOOKING_SERVICE_INVALID: 'errors.pos_booking_service_invalid',
+  POS_BOOKING_OUTSIDE_BUSINESS_HOURS: 'errors.pos_booking_outside_business_hours',
+  POS_BOOKING_LEAD_TIME_VIOLATION: 'errors.pos_booking_lead_time_violation',
+  POS_BOOKING_ADVANCE_LIMIT_EXCEEDED: 'errors.pos_booking_advance_limit_exceeded',
+  POS_BOOKING_STAFF_OUTSIDE_SCHEDULE: 'errors.pos_booking_staff_outside_schedule',
+  POS_BOOKING_SLOT_CONFLICT: 'errors.pos_booking_slot_conflict',
+  POS_BOOKING_PHONE_ALREADY_ACTIVE: 'errors.pos_booking_phone_already_active',
+  POS_BOOKING_CUSTOMER_PHONE_REQUIRED: 'errors.pos_booking_customer_phone_required',
+  POS_BOOKING_NOT_FOUND: 'errors.pos_booking_not_found',
+
   // Tax IQ / POS — Weekly Payroll (mục 14, backend US-25)
   POS_PAYROLL_NOT_READY: 'errors.pos_payroll_not_ready',
   POS_PAYROLL_ALREADY_PAID: 'errors.pos_payroll_already_paid',

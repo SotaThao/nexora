@@ -331,6 +331,188 @@ export interface AssignableStaffApiDto {
   isBusy: boolean
 }
 
+// POS Booking — per-business booking rules (Ticket 2). Owner-configurable; Staff can
+// read/write too when their PosRole grants the Operations permission, same access rule
+// as Orders (see IPosOperationsAccessService, backend).
+export interface PosBookingSettingsApiDto {
+  autoConfirmEnabled: boolean
+  minLeadTimeMinutes: number
+  maxAdvanceDays: number
+  reminderHoursBefore: number
+}
+
+// POS Booking — Staff/Owner creates a booking directly (Ticket 3). Always Confirmed
+// immediately on the backend, bypassing PosBookingSettingsApiDto.autoConfirmEnabled.
+export interface CreateBookingItemPayload {
+  posServiceId: string
+  // Optional — unlike CheckInOrderItemPayload, leaving this out keeps the line
+  // unassigned (no auto-pick) for the Owner to fill in later.
+  posStaffProfileId?: string
+  note?: string
+}
+
+export interface CreateBookingPayload {
+  customerName: string
+  customerPhone: string
+  customerEmail?: string
+  // ISO 8601 with offset (e.g. via `new Date(...).toISOString()`) — matches the
+  // backend's DateTimeOffset ScheduledAt.
+  scheduledAt: string
+  items: CreateBookingItemPayload[]
+}
+
+// POS Booking — Staff/Owner Booking Management screen (Ticket 9)
+export interface BookingListItemApiDto {
+  bookingId: string
+  customerName: string
+  customerPhone?: string | null
+  // ISO 8601 with offset — always read via UTC getters (see feedback_frontend_datetime_timezone_naive).
+  scheduledAt: string
+  status: string
+  source: string
+  orderNumber?: string | null
+  serviceNames: string[]
+  technicianNames: string[]
+}
+
+export interface BookingListResultApiDto {
+  items: BookingListItemApiDto[]
+  totalCount: number
+}
+
+export interface BookingListFilters {
+  posStaffProfileId?: string
+  dateFrom?: string // "YYYY-MM-DD"
+  dateTo?: string // "YYYY-MM-DD"
+  status?: string
+  page?: number
+  pageSize?: number
+}
+
+export interface BookingDetailServiceApiDto {
+  posServiceId: string
+  serviceName: string
+  posStaffProfileId?: string | null
+  technicianName?: string | null
+}
+
+export interface BookingDetailApiDto {
+  bookingId: string
+  customerName: string
+  customerPhone?: string | null
+  customerEmail?: string | null
+  scheduledAt: string
+  status: string
+  source: string
+  orderNumber?: string | null
+  cancellationReason?: string | null
+  services: BookingDetailServiceApiDto[]
+}
+
+export interface CancelBookingPayload {
+  cancellationReason: string
+}
+
+export interface RescheduleBookingItemPayload {
+  posServiceId: string
+  posStaffProfileId?: string
+  note?: string
+}
+
+export interface RescheduleBookingPayload {
+  scheduledAt: string
+  items: RescheduleBookingItemPayload[]
+}
+
+// POS Booking — Public Booking Page discovery (Ticket 4). Anonymous, no auth — resolved by
+// Business.Slug. Technicians are filtered by employment status only (never real-time
+// clock/busy state), per POS-Booking-Business.md.
+export interface PublicBookingServiceApiDto {
+  id: string
+  name: string
+  price: number
+  durationMinutes: number
+  description?: string | null
+  photoUrl?: string | null
+}
+
+export interface PublicBookingTechnicianApiDto {
+  id: string
+  displayName: string
+  photoUrl?: string | null
+  serviceIds: string[]
+}
+
+export interface PublicBookingPageApiDto {
+  businessName: string
+  logoUrl?: string | null
+  services: PublicBookingServiceApiDto[]
+  technicians: PublicBookingTechnicianApiDto[]
+}
+
+// POS Booking — Public availability + submission (Ticket 5)
+export interface PublicAvailabilityItemPayload {
+  posServiceId: string
+  posStaffProfileId?: string
+}
+
+export interface PublicAvailabilityRequestPayload {
+  date: string // "YYYY-MM-DD"
+  items: PublicAvailabilityItemPayload[]
+  // Set only by the Manage-Booking reschedule flow (Ticket 8) so a booking's own existing
+  // slot never shows as a conflict against itself while picking a new time for it.
+  excludeBookingId?: string
+}
+
+export interface PublicAvailabilityApiDto {
+  availableTimes: string[] // "HH:mm", local to the salon's own hours
+}
+
+export interface CreatePublicBookingItemPayload {
+  posServiceId: string
+  posStaffProfileId?: string
+}
+
+export interface CreatePublicBookingPayload {
+  customerName: string
+  customerPhone: string
+  customerEmail?: string
+  // ISO 8601 with offset — built via Date.UTC(...) so the picked wall-clock time travels
+  // unshifted (see NewBookingForm.tsx / feedback_frontend_datetime_timezone_naive memory).
+  scheduledAt: string
+  items: CreatePublicBookingItemPayload[]
+}
+
+export interface CreatePublicBookingResultApiDto {
+  bookingId: string
+  manageToken: string
+  status: string
+}
+
+// POS Booking — customer self-service Manage Booking page (Ticket 8)
+export interface ManageBookingServiceApiDto {
+  posServiceId: string
+  serviceName: string
+  posStaffProfileId?: string | null
+  technicianName?: string | null
+}
+
+export interface ManageBookingApiDto {
+  bookingId: string
+  businessName: string
+  businessSlug: string
+  customerName: string
+  // ISO 8601 with offset — always read via UTC getters (see feedback_frontend_datetime_timezone_naive).
+  scheduledAt: string
+  status: string
+  services: ManageBookingServiceApiDto[]
+  canCancelOrReschedule: boolean
+}
+
+export interface ManageBookingReschedulePayload {
+  scheduledAt: string
+}
+
 export type PosCheckoutPaymentMethodType = 'Card' | 'Cash' | 'GiftCard' | 'SplitPay'
 
 export interface CompleteOrderPayload {
@@ -390,12 +572,18 @@ export interface CustomersSummaryApiDto {
   returningCustomerRateChangeVsLastWeek?: number
 }
 
+// POS Booking (Ticket 10) — count of bookings made within the dashboard's date range.
+export interface BookingsSummaryApiDto {
+  totalCount?: number
+}
+
 export interface DashboardOverviewApiDto {
   tipsSummary?: TipsSummaryApiDto
   scansSummary?: ScansSummaryApiDto
   reviewsSummary?: ReviewsSummaryApiDto
   platformReviews?: PlatformReviewsApiDto
   customersSummary?: CustomersSummaryApiDto
+  bookingsSummary?: BookingsSummaryApiDto
 }
 
 export type DashboardResponseRateLabel =
@@ -426,6 +614,7 @@ export interface DashboardOverviewMetrics {
   returningCustomerRate: number
   returningCustomerRateChangeVsLastWeek: number
   previousPeriodComparison: number | null
+  totalBookings: number
 }
 
 export interface DashboardKpiDeltas {

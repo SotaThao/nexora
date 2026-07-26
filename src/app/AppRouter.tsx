@@ -128,6 +128,12 @@ const HelpQrPage = lazyWithRetry(
 const VoiceCallPlanPage = lazyWithRetry(
   () => import("../components/public/VoiceCallPlanPage"),
 );
+const PublicBookingPage = lazyWithRetry(
+  () => import("../components/public/PublicBookingPage"),
+);
+const ManageBookingPage = lazyWithRetry(
+  () => import("../components/public/ManageBookingPage"),
+);
 
 // Bridges the URL (path token / legacy ?flow=staff-invite biz) to the wizard's
 // inviteData prop. A real token → API-backed invite; otherwise the legacy
@@ -215,6 +221,8 @@ export default function AppRouter() {
           <Route path="/merchant/payments/:paymentId" element={<PaymentsRedirect />} />
           <Route path="/qr/:code" element={<QrRedirectPage />} />
           <Route path="/help/qr/:code" element={<HelpQrPage />} />
+          <Route path="/booking/:businessSlug" element={<PublicBookingPage />} />
+          <Route path="/booking/manage/:manageToken" element={<ManageBookingPage />} />
 	  <Route path="/cpa/access" element={<CpaViewerPage />} />
 	  <Route path="/w4-invite" element={<StaffW4InvitePage />} />
           <Route path="/privacy-policy" element={<PrivacyPolicyPage />} />

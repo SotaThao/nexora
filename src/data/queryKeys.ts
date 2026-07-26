@@ -145,6 +145,8 @@ export const qk = {
   merchantPosWaitlist: (businessId?: string) => ['merchantSettings', 'posWaitlist', businessId ?? ''],
   // POS Merchant Ops — Order List tab (US-17), Waiting + InService combined.
   merchantPosOrderList: (businessId?: string) => ['merchantSettings', 'posOrderList', businessId ?? ''],
+  // POS Booking — per-business settings (Ticket 2)
+  merchantPosBookingSettings: (businessId?: string) => ['merchantSettings', 'posBookingSettings', businessId ?? ''],
   // POS Merchant Ops — Completed Orders panel (US-17 follow-up), paginated + filtered.
   // `filters` is only appended when explicitly passed — omitting it (e.g. from an
   // invalidateQueries call after Complete/edit) yields a short prefix that matches every
@@ -166,6 +168,14 @@ export const qk = {
     ['merchantSettings', 'posCheckoutProductCatalog', businessId ?? ''],
   merchantPosAssignableStaff: (businessId?: string, posServiceId?: string) =>
     ['merchantSettings', 'posAssignableStaff', businessId ?? '', posServiceId ?? ''],
+  // POS Booking — Booking Management screen (Ticket 9)
+  merchantPosBookingList: (businessId?: string, filters?: object) => {
+    const key: unknown[] = ['merchantSettings', 'posBookingList', businessId ?? '']
+    if (filters) key.push(filters)
+    return key
+  },
+  merchantPosBookingDetail: (businessId?: string, bookingId?: string) =>
+    ['merchantSettings', 'posBookingDetail', businessId ?? '', bookingId ?? ''],
 
   // Merchant Touchpoints
   merchantTouchpoints: ()      => ['merchantTouchpoints'],
@@ -378,6 +388,10 @@ export const qk = {
   publicBusinessPaymentMethods: (businessId) => ['publicBusinessPaymentMethods', businessId],
   publicDirectPaymentPage: (businessId) => ['publicDirectPaymentPage', businessId],
   publicStaffDirectPaymentPage: (staffProfileId: string) => ['publicStaffDirectPaymentPage', staffProfileId],
+  // POS Booking — Public Booking Page discovery (Ticket 4)
+  publicBookingPage: (businessSlug?: string) => ['publicBookingPage', businessSlug ?? ''],
+  // POS Booking — customer self-service Manage Booking page (Ticket 8)
+  manageBooking: (manageToken?: string) => ['manageBooking', manageToken ?? ''],
   publicPaymentStatus: (paymentId: string) => ['publicPayment', 'status', paymentId],
 }
 

@@ -13,10 +13,17 @@ import useBusinessInfoForm from '../../../settings/hooks/useBusinessInfoForm'
 import BusinessInfoCard from '../../../settings/BusinessInfoCard'
 import ToggleSwitch from '../../../ui/ToggleSwitch'
 import useBusinessHoursForm from './hooks/useBusinessHoursForm'
+import PosBookingSettingsPanel from './PosBookingSettingsPanel'
 
 type SettingsFormErrors = Record<string, string>
 
-export default function PosGeneralSettingsView({ verificationStatus }: { verificationStatus?: string }) {
+export default function PosGeneralSettingsView({
+  verificationStatus,
+  businessId,
+}: {
+  verificationStatus?: string
+  businessId?: string
+}) {
   const { t } = useTranslation()
   const { data: setupData } = useMerchantSetup()
   const businessInfoForm = useBusinessInfoForm({ setupData, verificationStatus })
@@ -186,6 +193,8 @@ export default function PosGeneralSettingsView({ verificationStatus }: { verific
             </div>
           )}
         </div>
+
+        <PosBookingSettingsPanel businessId={businessId} />
       </div>
     </div>
   )

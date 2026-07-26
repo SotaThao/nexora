@@ -72,6 +72,7 @@ export function OverviewRoute() {
       onOpenTouchpoints={() => navigate('/dashboard/touchpoints')}
       onOpenReviews={() => navigate('/dashboard/reviews')}
       onOpenStaff={() => navigate('/dashboard/staff')}
+      onOpenBookings={() => navigate('/dashboard/pos/board?tab=booking')}
       businessName={ctx.businessName}
       previewQr={ctx.previewQr}
       touchpoints={ctx.touchpoints}
@@ -382,7 +383,9 @@ export function SettingsRoute() {
 // (PosBusinessHoursRoute, /pos/business-hours) — merged into this screen.
 export function PosGeneralSettingsRoute() {
   const ctx = useOutletContext<LooseObject>()
-  return <PosGeneralSettingsView verificationStatus={ctx.verificationStatus} />
+  const { data: merchantSetupData } = useMerchantSetup()
+  const businessId = merchantSetupData?.businessInfo?.businessId
+  return <PosGeneralSettingsView verificationStatus={ctx.verificationStatus} businessId={businessId} />
 }
 
 export function PosRolesRoute() {
