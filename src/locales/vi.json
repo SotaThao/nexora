@@ -3065,6 +3065,10 @@
             "maxAdvanceLabel": "Đặt trước tối đa (ngày)",
             "reminderHoursLabel": "Gửi nhắc lịch trước giờ hẹn (giờ)"
           },
+          "BookingLinkShare": {
+            "title": "Trang đặt lịch của bạn — chia sẻ link này cho khách",
+            "copied": "Đã sao chép link."
+          },
           "NewBookingForm": {
             "newBookingButton": "+ Lịch hẹn mới",
             "title": "Lịch hẹn mới",

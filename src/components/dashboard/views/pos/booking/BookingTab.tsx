@@ -20,6 +20,7 @@ import BookingTable from './BookingTable'
 import BookingCards from './BookingCards'
 import BookingCalendar from './BookingCalendar'
 import RescheduleServicesEditor, { type RescheduleLineDraft } from './RescheduleServicesEditor'
+import BookingLinkShare from './BookingLinkShare'
 
 type ViewMode = 'table' | 'cards' | 'calendar'
 
@@ -33,9 +34,11 @@ function isoDateOnly(date: Date): string {
 
 export default function BookingTab({
   businessId,
+  businessSlug,
   turnBoardStaff,
 }: {
   businessId: string
+  businessSlug?: string
   turnBoardStaff: TurnBoardStationApiDto[]
 }) {
   const { t } = useTranslation()
@@ -176,6 +179,8 @@ export default function BookingTab({
 
   return (
     <div className="space-y-4">
+      <BookingLinkShare businessSlug={businessSlug} />
+
       <div className="flex flex-wrap items-center gap-2">
         <div className="flex gap-1 rounded-lg border border-nexoraBorder p-1">
           {(['table', 'cards', 'calendar'] as ViewMode[]).map((mode) => (

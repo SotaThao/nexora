@@ -54,7 +54,13 @@ function formatTime(iso: string) {
   return new Date(iso).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
 }
 
-export default function PosFrontDeskView({ businessId }: { businessId: string }) {
+export default function PosFrontDeskView({
+  businessId,
+  businessSlug,
+}: {
+  businessId: string
+  businessSlug?: string
+}) {
   const { t } = useTranslation()
   const { showToast, showConfirm } = useNotification()
   const queryClient = useQueryClient()
@@ -535,7 +541,9 @@ export default function PosFrontDeskView({ businessId }: { businessId: string })
 
       {activeTab === 'completed' && <PosCompletedOrdersPanel businessId={businessId} />}
 
-      {activeTab === 'booking' && <BookingTab businessId={businessId} turnBoardStaff={turnBoard} />}
+      {activeTab === 'booking' && (
+        <BookingTab businessId={businessId} businessSlug={businessSlug} turnBoardStaff={turnBoard} />
+      )}
 
       <NewBookingForm
         open={isBookingModalOpen}

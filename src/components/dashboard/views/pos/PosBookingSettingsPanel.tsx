@@ -11,6 +11,7 @@ import { useNotification } from '../../../../contexts/NotificationContext'
 import { useBookingSettings, useUpdateBookingSettings } from '../../../../data/hooks/usePosBookingSettings'
 import ToggleSwitch from '../../../ui/ToggleSwitch'
 import type { PosBookingSettingsApiDto } from '../../../../types/repositories'
+import BookingLinkShare from './booking/BookingLinkShare'
 
 const DEFAULT_SETTINGS: PosBookingSettingsApiDto = {
   autoConfirmEnabled: true,
@@ -19,7 +20,13 @@ const DEFAULT_SETTINGS: PosBookingSettingsApiDto = {
   reminderHoursBefore: 12,
 }
 
-export default function PosBookingSettingsPanel({ businessId }: { businessId?: string }) {
+export default function PosBookingSettingsPanel({
+  businessId,
+  businessSlug,
+}: {
+  businessId?: string
+  businessSlug?: string
+}) {
   const { t } = useTranslation()
   const { showToast: notify } = useNotification()
   const settingsQuery = useBookingSettings(businessId)
@@ -70,6 +77,10 @@ export default function PosBookingSettingsPanel({ businessId }: { businessId?: s
       <p className="text-xs text-nexoraMuted mb-4">
         {t('components.dashboard.views.pos.PosBookingSettingsPanel.description')}
       </p>
+
+      <div className="mb-4">
+        <BookingLinkShare businessSlug={businessSlug} />
+      </div>
 
       {isEditing ? (
         <form onSubmit={save} noValidate className="space-y-4">

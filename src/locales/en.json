@@ -3065,6 +3065,10 @@
             "maxAdvanceLabel": "Maximum advance (days)",
             "reminderHoursLabel": "Reminder sent before appointment (hours)"
           },
+          "BookingLinkShare": {
+            "title": "Your Booking Page — share this link with customers",
+            "copied": "Link copied to clipboard."
+          },
           "NewBookingForm": {
             "newBookingButton": "+ New Booking",
             "title": "New Booking",

@@ -26,6 +26,7 @@ export default function PosGeneralSettingsView({
 }) {
   const { t } = useTranslation()
   const { data: setupData } = useMerchantSetup()
+  const businessSlug = setupData?.businessInfo?.slug
   const businessInfoForm = useBusinessInfoForm({ setupData, verificationStatus })
   const {
     businessHours,
@@ -194,7 +195,7 @@ export default function PosGeneralSettingsView({
           )}
         </div>
 
-        <PosBookingSettingsPanel businessId={businessId} />
+        <PosBookingSettingsPanel businessId={businessId} businessSlug={businessSlug} />
       </div>
     </div>
   )
