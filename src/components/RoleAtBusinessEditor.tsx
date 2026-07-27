@@ -307,7 +307,7 @@ export default function RoleAtBusinessEditor({
       aria-label={triggerLabel}
       title={triggerLabel}
       onClick={() => void handleOpen()}
-      className='inline-flex h-10 shrink-0 items-center gap-2 rounded-lg border border-nexoraBorder bg-white px-4 text-xs font-bold text-nexoraText shadow-sm transition hover:bg-nexoraSurfaceMuted focus:outline-none focus:ring-2 focus:ring-nexoraBrand/30'
+      className='inline-flex h-10 shrink-0 items-center justify-center gap-2 rounded-lg border border-nexoraBorder bg-white px-4 text-xs font-bold text-nexoraText shadow-sm transition hover:bg-nexoraSurfaceMuted focus:outline-none focus:ring-2 focus:ring-nexoraBrand/30'
     >
       <Briefcase className='h-4 w-4 text-nexoraBrand' aria-hidden='true' />
       <span>{triggerLabel}</span>

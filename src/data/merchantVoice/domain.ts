@@ -18,8 +18,195 @@ export enum BookingHubMainTab {
   Booking = 'booking',
   Customers = 'customers',
   CallLog = 'calllog',
+  SmsCampaigns = 'sms-campaigns',
   Plans = 'plans',
   Settings = 'settings',
+}
+
+/** Wire enum — SMS campaign status (API). */
+export enum SmsCampaignStatus {
+  Draft = 'Draft',
+  Scheduled = 'Scheduled',
+  Sending = 'Sending',
+  Sent = 'Sent',
+  PartiallyFailed = 'PartiallyFailed',
+  Failed = 'Failed',
+  Cancelled = 'Cancelled',
+  Active = 'Active',
+  Paused = 'Paused',
+}
+
+/** Wire enum — SMS campaign schedule mode (API). */
+export enum SmsCampaignScheduleMode {
+  SendNow = 'SendNow',
+  Scheduled = 'Scheduled',
+  Auto = 'Auto',
+}
+
+/** Wire enum — SMS campaign audience segment (API). */
+export enum SmsCampaignAudience {
+  New = 'New',
+  Days15 = 'Days15',
+  Days30 = 'Days30',
+  Days60 = 'Days60',
+  Vip = 'Vip',
+  Birthday = 'Birthday',
+}
+
+/** Wire enum — SMS campaign recipient status (API). */
+export enum SmsCampaignRecipientStatus {
+  Pending = 'Pending',
+  Sent = 'Sent',
+  Failed = 'Failed',
+  Cancelled = 'Cancelled',
+}
+
+/** Wire enum — SMS credit transaction type (API). */
+export enum SmsCreditTransactionType {
+  Purchase = 'Purchase',
+  Consumption = 'Consumption',
+  Adjustment = 'Adjustment',
+  Refund = 'Refund',
+}
+
+/** Wire enum — SMS text encoding (API). */
+export enum SmsEncoding {
+  Gsm7 = 'Gsm7',
+  Ucs2 = 'Ucs2',
+}
+
+/** Known SMS credit package codes (server catalog). */
+export enum SmsCreditPackageCode {
+  Sms500 = 'SMS_500',
+  Sms1500 = 'SMS_1500',
+  Sms3000 = 'SMS_3000',
+  Sms6000 = 'SMS_6000',
+}
+
+/** SMS campaign / credit API error codes. */
+export enum SmsCampaignErrorCode {
+  NotFound = 'SMS_CAMPAIGN_NOT_FOUND',
+  InvalidStatusTransition = 'SMS_CAMPAIGN_INVALID_STATUS_TRANSITION',
+  NotEditable = 'SMS_CAMPAIGN_NOT_EDITABLE',
+  NotAutoCampaign = 'SMS_CAMPAIGN_NOT_AUTO_CAMPAIGN',
+  NoRecipients = 'SMS_CAMPAIGN_NO_RECIPIENTS',
+  InsufficientCredits = 'SMS_CAMPAIGN_INSUFFICIENT_CREDITS',
+  MessageBodyRequired = 'SMS_CAMPAIGN_MESSAGE_BODY_REQUIRED',
+  ScheduledAtRequired = 'SMS_CAMPAIGN_SCHEDULED_AT_REQUIRED',
+  ScheduledAtInPast = 'SMS_CAMPAIGN_SCHEDULED_AT_IN_PAST',
+  InvalidPackage = 'SMS_CREDIT_INVALID_PACKAGE',
+  UserNotMerchant = 'USER_NOT_MERCHANT',
+  VoiceTenantNotFound = 'VOICE_TENANT_NOT_FOUND',
+}
+
+/** @deprecated Prefer SmsCampaignAudience — kept as alias for gradual migration. */
+export type SmsCampaignSegmentId = SmsCampaignAudience
+export const SmsCampaignSegmentId = SmsCampaignAudience
+
+/** @deprecated Prefer SmsCampaignStatus */
+export type SmsCampaignUiStatus = SmsCampaignStatus
+export const SmsCampaignUiStatus = SmsCampaignStatus
+
+/** @deprecated Prefer SmsCampaignScheduleMode */
+export enum SmsCampaignUiMode {
+  Now = SmsCampaignScheduleMode.SendNow,
+  Scheduled = SmsCampaignScheduleMode.Scheduled,
+  Automated = SmsCampaignScheduleMode.Auto,
+}
+
+export function normalizeSmsCampaignStatus(value: unknown): SmsCampaignStatus {
+  const normalized = String(value ?? '').trim()
+  const match = Object.values(SmsCampaignStatus).find(
+    (status) => status.toLowerCase() === normalized.toLowerCase(),
+  )
+  return match ?? SmsCampaignStatus.Draft
+}
+
+export function normalizeSmsCampaignScheduleMode(value: unknown): SmsCampaignScheduleMode {
+  const normalized = String(value ?? '').trim()
+  const match = Object.values(SmsCampaignScheduleMode).find(
+    (mode) => mode.toLowerCase() === normalized.toLowerCase(),
+  )
+  return match ?? SmsCampaignScheduleMode.SendNow
+}
+
+export function normalizeSmsCampaignAudience(value: unknown): SmsCampaignAudience {
+  const normalized = String(value ?? '').trim().toLowerCase()
+  if (normalized === 'day15' || normalized === 'days15') return SmsCampaignAudience.Days15
+  if (normalized === 'day30' || normalized === 'days30') return SmsCampaignAudience.Days30
+  if (normalized === 'day60' || normalized === 'days60') return SmsCampaignAudience.Days60
+  if (normalized === 'vip') return SmsCampaignAudience.Vip
+  if (normalized === 'birthday') return SmsCampaignAudience.Birthday
+  if (normalized === 'new') return SmsCampaignAudience.New
+  const match = Object.values(SmsCampaignAudience).find(
+    (audience) => audience.toLowerCase() === normalized,
+  )
+  return match ?? SmsCampaignAudience.New
+}
+
+export function normalizeSmsCampaignRecipientStatus(value: unknown): SmsCampaignRecipientStatus {
+  const normalized = String(value ?? '').trim()
+  const match = Object.values(SmsCampaignRecipientStatus).find(
+    (status) => status.toLowerCase() === normalized.toLowerCase(),
+  )
+  return match ?? SmsCampaignRecipientStatus.Pending
+}
+
+export function normalizeSmsCreditTransactionType(value: unknown): SmsCreditTransactionType {
+  const normalized = String(value ?? '').trim()
+  const match = Object.values(SmsCreditTransactionType).find(
+    (type) => type.toLowerCase() === normalized.toLowerCase(),
+  )
+  return match ?? SmsCreditTransactionType.Purchase
+}
+
+export function normalizeSmsEncoding(value: unknown): SmsEncoding {
+  const normalized = String(value ?? '').trim()
+  const match = Object.values(SmsEncoding).find(
+    (encoding) => encoding.toLowerCase() === normalized.toLowerCase(),
+  )
+  return match ?? SmsEncoding.Gsm7
+}
+
+/** Recipients modal — every persisted campaign status can open the list. */
+const SMS_CAMPAIGN_VIEWABLE_STATUSES = new Set<SmsCampaignStatus>(
+  Object.values(SmsCampaignStatus),
+)
+
+export function isSmsCampaignViewable(status: SmsCampaignStatus): boolean {
+  return SMS_CAMPAIGN_VIEWABLE_STATUSES.has(status)
+}
+
+export function isSmsCampaignEditable(status: SmsCampaignStatus): boolean {
+  return (
+    status === SmsCampaignStatus.Scheduled
+    || status === SmsCampaignStatus.Active
+  )
+}
+
+export function isSmsCampaignCancellable(status: SmsCampaignStatus): boolean {
+  return (
+    status === SmsCampaignStatus.Scheduled
+    || status === SmsCampaignStatus.Active
+  )
+}
+
+export function isSmsCampaignDeletable(status: SmsCampaignStatus, _totalSent = 0): boolean {
+  return (
+    status === SmsCampaignStatus.Scheduled
+    || status === SmsCampaignStatus.Active
+    || status === SmsCampaignStatus.Cancelled
+  )
+}
+
+export function isSmsCampaignAutoToggleable(
+  scheduleMode: SmsCampaignScheduleMode,
+  status: SmsCampaignStatus,
+): boolean {
+  return (
+    scheduleMode === SmsCampaignScheduleMode.Auto
+    && (status === SmsCampaignStatus.Active || status === SmsCampaignStatus.Paused)
+  )
 }
 
 export enum BookingHubSubTab {
@@ -29,6 +216,9 @@ export enum BookingHubSubTab {
 
 /** Poll interval when Booking Hub Today tab is active. */
 export const MERCHANT_VOICE_BOOKINGS_POLL_INTERVAL_MS = 30_000
+
+/** Poll interval when Booking Hub SMS Campaigns tab is active. */
+export const MERCHANT_VOICE_SMS_CAMPAIGNS_POLL_INTERVAL_MS = 15_000
 
 /** Minimum service duration (minutes) in Booking Hub settings. */
 export const MERCHANT_VOICE_SERVICE_MIN_DURATION_MINUTES = 1
@@ -60,6 +250,7 @@ export enum BookingUiStatus {
 /** UI display labels for booking source badges. */
 export enum BookingUiSource {
   Voice = 'Voice',
+  Web = 'Web',
   LandingPage = 'Landing Page',
   SMS = 'SMS',
   QR = 'QR',
@@ -350,6 +541,34 @@ const LEAD_SOURCE_API_TO_ENUM: Record<string, MerchantVoiceLeadSource> = {
   [MerchantVoiceLeadSourceApi.Api]: MerchantVoiceLeadSource.SMS,
 }
 
+/** Case-insensitive aliases when API sends non-canonical source strings. */
+const LEAD_SOURCE_ALIAS_TO_ENUM: Record<string, MerchantVoiceLeadSource> = {
+  web: MerchantVoiceLeadSource.LandingPage,
+  landingpage: MerchantVoiceLeadSource.LandingPage,
+  'landing page': MerchantVoiceLeadSource.LandingPage,
+  call: MerchantVoiceLeadSource.Voice,
+  voice: MerchantVoiceLeadSource.Voice,
+  api: MerchantVoiceLeadSource.SMS,
+  sms: MerchantVoiceLeadSource.SMS,
+  qr: MerchantVoiceLeadSource.QR,
+}
+
+/** API `Web` normalizes to LandingPage — booking hub badge shows Web. */
+const LEAD_SOURCE_TO_UI_SOURCE: Record<MerchantVoiceLeadSource, BookingUiSource> = {
+  [MerchantVoiceLeadSource.Voice]: BookingUiSource.Voice,
+  [MerchantVoiceLeadSource.LandingPage]: BookingUiSource.Web,
+  [MerchantVoiceLeadSource.SMS]: BookingUiSource.SMS,
+  [MerchantVoiceLeadSource.QR]: BookingUiSource.QR,
+}
+
+const BOOKING_UI_SOURCE_CLASS: Record<BookingUiSource, string> = {
+  [BookingUiSource.Voice]: 'booking-source-voice',
+  [BookingUiSource.Web]: 'booking-source-web',
+  [BookingUiSource.LandingPage]: 'booking-source-web',
+  [BookingUiSource.SMS]: 'booking-source-sms',
+  [BookingUiSource.QR]: 'booking-source-qr',
+}
+
 export function normalizeMerchantVoiceLeadStatus(value: unknown): MerchantVoiceLeadStatus {
   if (value === MerchantVoiceLeadStatus.New || value === '0') return MerchantVoiceLeadStatus.New
   if (value === MerchantVoiceLeadStatus.Done || value === '1') return MerchantVoiceLeadStatus.Done
@@ -371,36 +590,52 @@ export function normalizeMerchantVoiceLeadSource(value: unknown): MerchantVoiceL
   if (value === MerchantVoiceLeadSource.QR || value === '3') return MerchantVoiceLeadSource.QR
 
   if (typeof value === 'string') {
-    const mapped = LEAD_SOURCE_API_TO_ENUM[value]
-    if (mapped !== undefined) return mapped
+    const trimmed = value.trim()
+    const exact = LEAD_SOURCE_API_TO_ENUM[trimmed]
+    if (exact !== undefined) return exact
+    const alias = LEAD_SOURCE_ALIAS_TO_ENUM[trimmed.toLowerCase()]
+    if (alias !== undefined) return alias
   }
 
   return MerchantVoiceLeadSource.Voice
 }
 
+const LEAD_STATUS_TO_UI_STATUS: Record<MerchantVoiceLeadStatus, BookingUiStatus> = {
+  [MerchantVoiceLeadStatus.New]: BookingUiStatus.New,
+  [MerchantVoiceLeadStatus.Confirmed]: BookingUiStatus.SmsSent,
+  [MerchantVoiceLeadStatus.Done]: BookingUiStatus.Done,
+  [MerchantVoiceLeadStatus.NoShow]: BookingUiStatus.NoShow,
+}
+
+const UI_STATUS_TO_LEAD_STATUS_API: Record<BookingUiStatus, MerchantVoiceLeadStatusApiValue> = {
+  [BookingUiStatus.New]: MerchantVoiceLeadStatusApi.New,
+  [BookingUiStatus.SmsSent]: MerchantVoiceLeadStatusApi.Confirmed,
+  [BookingUiStatus.Done]: MerchantVoiceLeadStatusApi.Done,
+  [BookingUiStatus.NoShow]: MerchantVoiceLeadStatusApi.NoShow,
+}
+
 export function mapLeadStatusToUiStatus(status: MerchantVoiceLeadStatus): BookingUiStatus {
-  if (status === MerchantVoiceLeadStatus.Done) return BookingUiStatus.Done
-  if (status === MerchantVoiceLeadStatus.Confirmed) return BookingUiStatus.SmsSent
-  if (status === MerchantVoiceLeadStatus.NoShow) return BookingUiStatus.NoShow
-  return BookingUiStatus.New
+  return LEAD_STATUS_TO_UI_STATUS[status] ?? BookingUiStatus.New
+}
+
+/** UI status → OpenAPI `VoiceLeadStatus` string for create/update booking payloads. */
+export function mapUiStatusToLeadStatusApi(
+  status: BookingUiStatus,
+): MerchantVoiceLeadStatusApiValue {
+  return UI_STATUS_TO_LEAD_STATUS_API[status] ?? MerchantVoiceLeadStatusApi.New
 }
 
 export function mapLeadSourceToUiSource(source: MerchantVoiceLeadSource): BookingUiSource {
-  if (source === MerchantVoiceLeadSource.LandingPage) return BookingUiSource.LandingPage
-  if (source === MerchantVoiceLeadSource.SMS) return BookingUiSource.SMS
-  if (source === MerchantVoiceLeadSource.QR) return BookingUiSource.QR
-  return BookingUiSource.Voice
+  return LEAD_SOURCE_TO_UI_SOURCE[source] ?? BookingUiSource.Voice
 }
 
 export function mapUiSourceToSourceClass(source: BookingUiSource): string {
-  if (source === BookingUiSource.LandingPage) return 'booking-source-lp'
-  if (source === BookingUiSource.SMS) return 'booking-source-sms'
-  if (source === BookingUiSource.QR) return 'booking-source-qr'
-  return 'booking-source-voice'
+  return BOOKING_UI_SOURCE_CLASS[source] ?? BOOKING_UI_SOURCE_CLASS[BookingUiSource.Voice]
 }
 
 export const BOOKING_UI_SOURCE_I18N_KEY: Record<BookingUiSource, string> = {
   [BookingUiSource.Voice]: 'sources.voice',
+  [BookingUiSource.Web]: 'sources.web',
   [BookingUiSource.LandingPage]: 'sources.landingPage',
   [BookingUiSource.SMS]: 'sources.sms',
   [BookingUiSource.QR]: 'sources.qr',
@@ -501,6 +736,7 @@ export function mapUiLanguageToConfigLanguage(language: MerchantVoiceUiLanguage)
 export function parseBookingHubMainTab(value: string | null): BookingHubMainTab {
   if (value === BookingHubMainTab.Customers) return BookingHubMainTab.Customers
   if (value === BookingHubMainTab.CallLog) return BookingHubMainTab.CallLog
+  if (value === BookingHubMainTab.SmsCampaigns) return BookingHubMainTab.SmsCampaigns
   if (value === BookingHubMainTab.Plans) return BookingHubMainTab.Plans
   if (value === BookingHubMainTab.Settings) return BookingHubMainTab.Settings
   return BookingHubMainTab.Booking

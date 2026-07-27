@@ -113,7 +113,20 @@ body:not(.homepage-active) input.country-code-search-input:focus-visible {
 }
 
 .country-code-search-wrap {
-  border: none !important;
+  border-left: none !important;
+  border-right: none !important;
+  border-top: none !important;
+}
+
+.country-code-search-field {
+  border: 1px solid theme("colors.nexoraBorder") !important;
+  background: #fff !important;
+  box-shadow: none !important;
+}
+
+.country-code-search-field:focus-within {
+  border-color: theme("colors.nexoraBrand") !important;
+  box-shadow: 0 0 0 2px rgba(70, 72, 216, 0.16) !important;
 }
 
 .country-code-list {
@@ -122,25 +135,25 @@ body:not(.homepage-active) input.country-code-search-input:focus-visible {
 
 /* Prevent iOS Safari from zooming on input focus by ensuring font-size is at least 16px on iOS devices (portrait and landscape) */
 @supports (-webkit-touch-callout: none) {
-  body:not(.homepage-active) input:not([type="checkbox"]):not([type="radio"]):not([type="submit"]):not([type="button"]):not([type="file"]),
-  body:not(.homepage-active) textarea,
-  body:not(.homepage-active) select {
+  body:not(.homepage-active):not(.public-booking-active) input:not([type="checkbox"]):not([type="radio"]):not([type="submit"]):not([type="button"]):not([type="file"]),
+  body:not(.homepage-active):not(.public-booking-active) textarea,
+  body:not(.homepage-active):not(.public-booking-active) select {
     font-size: 16px !important;
   }
 }
 
 /* Prevent zoom on all other mobile browsers on narrow viewports */
 @media screen and (max-width: 767px) {
-  body:not(.homepage-active) input:not([type="checkbox"]):not([type="radio"]):not([type="submit"]):not([type="button"]):not([type="file"]),
-  body:not(.homepage-active) textarea,
-  body:not(.homepage-active) select {
+  body:not(.homepage-active):not(.public-booking-active) input:not([type="checkbox"]):not([type="radio"]):not([type="submit"]):not([type="button"]):not([type="file"]),
+  body:not(.homepage-active):not(.public-booking-active) textarea,
+  body:not(.homepage-active):not(.public-booking-active) select {
     font-size: 16px !important;
   }
 }
 
 /* Keyboard focus visibility for buttons and links */
-body:not(.homepage-active) button:focus-visible,
-body:not(.homepage-active) a:focus-visible {
+body:not(.homepage-active):not(.public-booking-active) button:focus-visible,
+body:not(.homepage-active):not(.public-booking-active) a:focus-visible {
   outline: none !important;
   box-shadow: 0 0 0 2px rgba(70, 72, 216, 0.4) !important;
 }

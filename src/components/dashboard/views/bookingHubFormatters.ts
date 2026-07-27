@@ -18,6 +18,41 @@ export type BookingHubStatusFilterAll = typeof BOOKING_HUB_STATUS_FILTER_ALL
 /** Shared className for Booking Hub Pagination (matches `booking-hub.css`). */
 export const BOOKING_HUB_PAGINATION_CLASSNAME = 'booking-pagination' as const
 
+/** Open the native date/time picker from a trusted click (full-field UX). */
+export function openNativeDateTimePicker(input: HTMLInputElement | null) {
+  if (!input || input.disabled) return
+  input.focus()
+  if (typeof input.showPicker === 'function') {
+    try {
+      input.showPicker()
+    } catch {
+      // Browser may block showPicker without a trusted user gesture.
+    }
+  }
+}
+
+const BOOKING_HUB_DATE_LOCALE: Record<string, string> = {
+  vi: 'vi-VN',
+  en: 'en-US',
+}
+
+/** Format `YYYY-MM-DD` for Booking Hub filter/date displays (local calendar day). */
+export function formatBookingHubDateDisplay(isoDate: string, language: string = 'en') {
+  const [year, month, day] = String(isoDate || '').split('-').map(Number)
+  if (!year || !month || !day) return isoDate || ''
+  const locale = BOOKING_HUB_DATE_LOCALE[language] ?? BOOKING_HUB_DATE_LOCALE.en
+  return new Intl.DateTimeFormat(locale, {
+    year: 'numeric',
+    month: 'short',
+    day: 'numeric',
+  }).format(new Date(year, month - 1, day))
+}
+
+/** Zero-pad to two digits (dates/times). */
+export function pad2(value: number): string {
+  return String(value).padStart(2, '0')
+}
+
 /**
  * Count statuses on the **current page** list for Booking Hub status chips.
  * Intentionally page-scoped (same as Appointment Today): chips do not call BE `Status`.
@@ -40,8 +75,8 @@ export function countPageItemsByStatus<TStatus extends string>(
 }
 
 /**
- * Filter the **current page** list by status chip.
- * Does not refetch or change paging — BE list query stays page/search only.
+ * Filter list items by status chip.
+ * When used after a full collect fetch, this is the filtered “new list” for client paging.
  */
 export function filterPageItemsByStatus<T extends { status: string }>(
   items: ReadonlyArray<T>,
@@ -49,6 +84,60 @@ export function filterPageItemsByStatus<T extends { status: string }>(
 ): T[] {
   if (statusFilter === BOOKING_HUB_STATUS_FILTER_ALL) return items as T[]
   return items.filter((item) => item.status === statusFilter)
+}
+
+/** Slice a filtered list into a page window for client-side pagination. */
+export function paginateItems<T>(
+  items: ReadonlyArray<T>,
+  pageNumber: number,
+  pageSize: number,
+): {
+  items: T[]
+  pageNumber: number
+  totalCount: number
+  totalPages: number
+  hasPreviousPage: boolean
+  hasNextPage: boolean
+} {
+  const totalCount = items.length
+  const totalPages = Math.max(1, Math.ceil(totalCount / Math.max(1, pageSize)) || 1)
+  const safePage = Math.min(Math.max(1, pageNumber), totalPages)
+  const start = (safePage - 1) * pageSize
+  return {
+    items: items.slice(start, start + pageSize) as T[],
+    pageNumber: safePage,
+    totalCount,
+    totalPages,
+    hasPreviousPage: safePage > 1,
+    hasNextPage: safePage < totalPages,
+  }
+}
+
+/** Prefer client page meta when status-filter collect is active; else server page meta. */
+export function resolveBookingListPaging(
+  statusFilterActive: boolean,
+  clientPage: ReturnType<typeof paginateItems> | null,
+  serverPage: {
+    totalCount?: number
+    totalPages?: number
+    hasNextPage?: boolean
+    hasPreviousPage?: boolean
+  } | null | undefined,
+) {
+  if (statusFilterActive && clientPage) {
+    return {
+      totalCount: clientPage.totalCount,
+      totalPages: clientPage.totalPages,
+      hasNextPage: clientPage.hasNextPage,
+      hasPreviousPage: clientPage.hasPreviousPage,
+    }
+  }
+  return {
+    totalCount: serverPage?.totalCount ?? 0,
+    totalPages: serverPage?.totalPages ?? 1,
+    hasNextPage: serverPage?.hasNextPage,
+    hasPreviousPage: serverPage?.hasPreviousPage,
+  }
 }
 
 export const BOOKING_KPI_ACCENTS = {
