@@ -75,32 +75,27 @@ export function CommunityChatInbox() {
       <DemoStaffShell onDemoNavigation={() => navigate('/community')}>
         <main className="mx-auto flex h-full min-h-0 w-full max-w-[680px] flex-col overflow-hidden border-x border-nexoraBorder bg-nexoraCanvas font-sans shadow-nexora-card lg:h-auto lg:min-h-[calc(100vh-120px)]">
           <header className="border-b border-nexoraBorder bg-nexoraSurface px-4 py-3">
-            <div className="flex items-center gap-3">
+            <h1 className="sr-only">Hộp thư nhắn tin</h1>
+            <div className="flex items-center gap-2">
               <button
                 type="button"
                 onClick={() => navigate('/community')}
-                className="grid h-10 w-10 place-items-center rounded-full text-nexoraMuted hover:bg-nexoraSurfaceMuted"
+                className="grid h-10 w-10 shrink-0 place-items-center rounded-full text-nexoraMuted hover:bg-nexoraSurfaceMuted"
                 aria-label="Quay lại Community"
               >
                 <ArrowLeft className="h-5 w-5" aria-hidden="true" />
               </button>
-              <div>
-                <h1 className="text-lg font-extrabold text-nexoraText">Hộp thư nhắn tin</h1>
-                <p className="text-xs text-nexoraSubtle">Trò chuyện 1:1 và Chat nhóm Nexora</p>
+              <div className="relative min-w-0 flex-1">
+                <Search className="absolute left-3.5 top-3 h-4 w-4 text-nexoraSubtle" aria-hidden="true" />
+                <input
+                  type="text"
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  placeholder="Tìm người dùng Nexora để nhắn tin (nhập từ 2 ký tự)..."
+                  aria-label="Tìm kiếm người dùng"
+                  className="min-h-10 w-full rounded-xl border border-nexoraBorder bg-nexoraSurfaceMuted pl-10 pr-4 text-sm text-nexoraText outline-none placeholder:text-nexoraSubtle focus:border-nexoraBrand"
+                />
               </div>
-            </div>
-
-            {/* Profile search input */}
-            <div className="relative mt-3">
-              <Search className="absolute left-3.5 top-3 h-4 w-4 text-nexoraSubtle" aria-hidden="true" />
-              <input
-                type="text"
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                placeholder="Tìm người dùng Nexora để nhắn tin (nhập từ 2 ký tự)..."
-                aria-label="Tìm kiếm người dùng"
-                className="min-h-10 w-full rounded-xl border border-nexoraBorder bg-nexoraSurfaceMuted pl-10 pr-4 text-sm text-nexoraText outline-none placeholder:text-nexoraSubtle focus:border-nexoraBrand"
-              />
             </div>
           </header>
 
