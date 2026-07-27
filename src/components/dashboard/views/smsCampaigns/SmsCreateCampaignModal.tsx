@@ -371,8 +371,11 @@ export default function SmsCreateCampaignModal({
   const tagSamples = useMemo(() => ({
     ...SMS_COMPOSER_TAG_SAMPLES,
     '{shop}': myTenantQuery.data?.name?.trim() || SMS_COMPOSER_TAG_SAMPLES['{shop}'],
-    '{link}': buildSmsCampaignBusinessLinkPreview(myTenantQuery.data?.businessKey),
-  }), [myTenantQuery.data?.businessKey, myTenantQuery.data?.name])
+    '{link}': buildSmsCampaignBusinessLinkPreview(
+      myTenantQuery.data?.businessKey,
+      currentLanguage,
+    ),
+  }), [currentLanguage, myTenantQuery.data?.businessKey, myTenantQuery.data?.name])
   const previewHtml = useMemo(
     () => renderPreviewHtml(message, tagSamples),
     [message, tagSamples],

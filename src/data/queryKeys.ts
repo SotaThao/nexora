@@ -159,6 +159,12 @@ export const qk = {
   publicDirectPaymentPage: (businessId) => ['publicDirectPaymentPage', businessId],
   publicStaffDirectPaymentPage: (staffProfileId: string) => ['publicStaffDirectPaymentPage', staffProfileId],
   publicPaymentStatus: (paymentId: string) => ['publicPayment', 'status', paymentId],
+  publicVoiceBookingPage: (businessKey?: string | null) => [
+    'public',
+    'nexora-voice',
+    'booking-page',
+    businessKey ?? '',
+  ],
 }
 
 /** Maps localStorage domain keys → TanStack Query key arrays (storage event bridge). */

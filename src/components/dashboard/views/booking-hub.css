@@ -671,7 +671,8 @@
   color: #087c99;
 }
 
-.booking-hub-view .booking-source-lp {
+.booking-hub-view .booking-source-lp,
+.booking-hub-view .booking-source-web {
   background: #e9e9ff;
   color: var(--nexora-brand);
 }
@@ -9667,6 +9668,10 @@
   overflow-x: auto;
   border: 1px solid var(--nexora-rule);
   border-radius: 9px;
+}
+
+#nx-campaign-root .sms-recipients-pagination {
+  margin-top: 14px;
 }
 
 #nx-campaign-root .sms-recipients-table {
