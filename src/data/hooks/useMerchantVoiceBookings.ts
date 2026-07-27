@@ -79,6 +79,20 @@ export function useMerchantVoiceBookings(
   })
 }
 
+/** Full list collect for client-side status-filter paging (no BE Status on GET /bookings). */
+export function useMerchantVoiceBookingsCollected(
+  filters: Omit<MerchantVoiceBookingsFilter, 'pageNumber' | 'pageSize'> = EMPTY_FILTERS,
+  { enabled = true, refetchInterval = false as number | false } = {},
+) {
+  return useQuery<MerchantVoiceBookingsResponse>({
+    queryKey: qk.merchantVoiceBookingsCollected(filters),
+    queryFn: () => merchantVoiceRepository.getBookingsCollected(filters),
+    enabled,
+    refetchInterval,
+    refetchIntervalInBackground: false,
+  })
+}
+
 export function useUpdateMerchantVoiceBookingStatus() {
   const queryClient = useQueryClient()
 

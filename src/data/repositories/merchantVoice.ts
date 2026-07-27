@@ -1,5 +1,5 @@
 import httpClient from '../../lib/httpClient'
-import { BOOKING_HUB_PAGE_SIZE } from '../../constants/pagination'
+import { BOOKING_HUB_PAGE_SIZE, BOOKING_HUB_STATUS_COLLECT_MAX_PAGES, BOOKING_HUB_STATUS_COLLECT_PAGE_SIZE } from '../../constants/pagination'
 import {
   mapStaffStatusToActivityApi,
   MerchantVoiceBookingSearchField,
@@ -848,6 +848,45 @@ export function createMerchantVoiceRepository(client: HttpClient = httpClient) {
         },
       )
       return normalizeBookingsResponse(response, filters.pageNumber ?? 1)
+    },
+
+    /**
+     * Walk booking pages until exhausted (or max pages).
+     * Used when UI status chips need a full list to paginate client-side
+     * (GET /bookings has no Status query in Swagger).
+     */
+    async getBookingsCollected(
+      filters: Omit<MerchantVoiceBookingsFilter, 'pageNumber' | 'pageSize'> = {},
+      options: { pageSize?: number; maxPages?: number } = {},
+    ): Promise<MerchantVoiceBookingsResponse> {
+      const pageSize = options.pageSize ?? BOOKING_HUB_STATUS_COLLECT_PAGE_SIZE
+      const maxPages = options.maxPages ?? BOOKING_HUB_STATUS_COLLECT_MAX_PAGES
+      const items: MerchantVoiceBookingDto[] = []
+      let pageNumber = 1
+
+      const toCollectedResponse = (): MerchantVoiceBookingsResponse => ({
+        items,
+        pageNumber: 1,
+        totalPages: 1,
+        totalCount: items.length,
+        hasPreviousPage: false,
+        hasNextPage: false,
+      })
+
+      while (pageNumber <= maxPages) {
+        const page = await this.getBookings({
+          ...filters,
+          pageNumber,
+          pageSize,
+        })
+        items.push(...page.items)
+        if (!page.hasNextPage || page.items.length === 0) {
+          return toCollectedResponse()
+        }
+        pageNumber += 1
+      }
+
+      return toCollectedResponse()
     },
 
     async createBooking(

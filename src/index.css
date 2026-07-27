@@ -113,7 +113,20 @@ body:not(.homepage-active) input.country-code-search-input:focus-visible {
 }
 
 .country-code-search-wrap {
-  border: none !important;
+  border-left: none !important;
+  border-right: none !important;
+  border-top: none !important;
+}
+
+.country-code-search-field {
+  border: 1px solid theme("colors.nexoraBorder") !important;
+  background: #fff !important;
+  box-shadow: none !important;
+}
+
+.country-code-search-field:focus-within {
+  border-color: theme("colors.nexoraBrand") !important;
+  box-shadow: 0 0 0 2px rgba(70, 72, 216, 0.16) !important;
 }
 
 .country-code-list {

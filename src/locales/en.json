@@ -2987,6 +2987,7 @@
             "selectedTech": "selected technician",
             "selectFromList": "Choose from list",
             "searchPlaceholder": "Search or select a technician...",
+            "clearSearch": "Clear search",
             "techList": "Technician list",
             "noMatch": "No matching technician found.",
             "alreadyAdded": "Already added",
@@ -3038,6 +3039,7 @@
             "filtersAria": "Customer filters",
             "searchLabel": "Search",
             "searchPlaceholder": "Search by name or phone number...",
+            "clearSearch": "Clear search",
             "segmentFilterAria": "Filter by customer group",
             "segments": {
               "all": "All",
@@ -3111,6 +3113,7 @@
             "filtersAria": "Call log filters",
             "searchLabel": "Search",
             "searchPlaceholder": "Search by caller or phone number...",
+            "clearSearch": "Clear search",
             "statusFilterAria": "Filter by call status",
             "filterAll": "All",
             "statusAnswered": "Answered",
@@ -4049,7 +4052,8 @@
       }
     },
     "CountryCodeSelect": {
-      "phSearch": "Search country or code..."
+      "phSearch": "Search country or code...",
+      "emptyCountries": "No countries found"
     },
     "DevicesView": {
       "phExampleDeviceIds": "e.g. NFC-003, QR-Table-04",

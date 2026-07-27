@@ -31,7 +31,7 @@ import CountryCodeSelect, {
   parsePhone,
 } from "../../CountryCodeSelect";
 import Pagination from "../../ui/Pagination";
-import { PencilIcon, SpinnerIcon } from "./BookingHubIcons";
+import { PencilIcon, SpinnerIcon, XLgIcon } from "./BookingHubIcons";
 import {
   BookingTeamGridSkeleton,
   BookingTechModalProfileSkeleton,
@@ -995,114 +995,116 @@ export default function BookingTeamPanel() {
 
   return (
     <div className="booking-sub-panel is-active" aria-busy={isStaffLoading}>
-      <div className="tech-intro">
-        <div className="tech-intro-text">{t(`${TK}.intro`)}</div>
-        <button
-          className="booking-primary-button"
-          type="button"
-          onClick={() => openModal()}
-        >
-          <PlusIcon />
-          <span>{t(`${TK}.addTech`)}</span>
-        </button>
-      </div>
+      <article className="overview-card overview-card-pad">
+        <div className="tech-intro">
+          <div className="tech-intro-text">{t(`${TK}.intro`)}</div>
+          <button
+            className="booking-primary-button"
+            type="button"
+            onClick={() => openModal()}
+          >
+            <PlusIcon />
+            <span>{t(`${TK}.addTech`)}</span>
+          </button>
+        </div>
 
-      <div className="tech-grid">
-        {isStaffLoading ? <BookingTeamGridSkeleton count={3} /> : null}
-        {!isStaffLoading && members.length === 0 ? (
-          <div className="tech-grid-empty">
-            <div className="tech-grid-empty-icon" aria-hidden="true">
-              <PeopleIcon />
-            </div>
-            <div className="tech-grid-empty-title">
-              {t(`${TK}.emptyTitle`)}
-            </div>
-            <p className="tech-grid-empty-description">
-              {t(`${TK}.emptyDescription`)}
-            </p>
-            <button
-              className="booking-primary-button"
-              type="button"
-              onClick={() => openModal()}
-            >
-              <PlusIcon />
-              <span>{t(`${TK}.emptyCta`)}</span>
-            </button>
-          </div>
-        ) : null}
-        {!isStaffLoading
-          ? members.map((member) => (
-              <article
-                className="tech-card"
-                key={member.id}
-                data-tech-id={member.id}
+        <div className="tech-grid">
+          {isStaffLoading ? <BookingTeamGridSkeleton count={3} /> : null}
+          {!isStaffLoading && members.length === 0 ? (
+            <div className="tech-grid-empty">
+              <div className="tech-grid-empty-icon" aria-hidden="true">
+                <PeopleIcon />
+              </div>
+              <div className="tech-grid-empty-title">
+                {t(`${TK}.emptyTitle`)}
+              </div>
+              <p className="tech-grid-empty-description">
+                {t(`${TK}.emptyDescription`)}
+              </p>
+              <button
+                className="booking-primary-button"
+                type="button"
+                onClick={() => openModal()}
               >
-                <div className="tech-top">
-                  <div className="tech-avatar" style={member.avatarStyle}>
-                    {member.avatar}
-                  </div>
-                  <div className="tech-profile">
-                    <div className="tech-name">{member.name}</div>
-                    <div className="tech-phone">
-                      {formatPhoneDisplay(member.phone)}
+                <PlusIcon />
+                <span>{t(`${TK}.emptyCta`)}</span>
+              </button>
+            </div>
+          ) : null}
+          {!isStaffLoading
+            ? members.map((member) => (
+                <article
+                  className="tech-card"
+                  key={member.id}
+                  data-tech-id={member.id}
+                >
+                  <div className="tech-top">
+                    <div className="tech-avatar" style={member.avatarStyle}>
+                      {member.avatar}
                     </div>
-                  </div>
-                  <button
-                    className={`toggle-pill ${member.smsEnabled ? "is-on" : ""}`}
-                    type="button"
-                    aria-label={t(`${TK}.toggleSms`, {
-                      name: member.name,
-                    })}
-                    aria-pressed={member.smsEnabled}
-                    disabled={pendingToggleIds[member.id]}
-                    onClick={() => toggleSms(member.id)}
-                  />
-                </div>
-                <div className="tech-card-footer">
-                  <div className="tech-stats">
-                    <div className="tech-stat">
-                      <strong>{member.customers}</strong>
-                      <span>{t(`${TK}.clientsToday`)}</span>
+                    <div className="tech-profile">
+                      <div className="tech-name">{member.name}</div>
+                      <div className="tech-phone">
+                        {formatPhoneDisplay(member.phone)}
+                      </div>
                     </div>
-                  </div>
-                  <div className="tech-card-actions">
                     <button
-                      className="booking-secondary-button"
+                      className={`toggle-pill ${member.smsEnabled ? "is-on" : ""}`}
                       type="button"
-                      aria-label={t(`${TK}.edit`)}
-                      title={t(`${TK}.edit`)}
-                      onClick={() => openModal(member.id, "detail")}
-                    >
-                      <PencilIcon className="marketing-icon is-compact" />
-                      <span className="booking-mini-label">{t(`${TK}.edit`)}</span>
-                    </button>
+                      aria-label={t(`${TK}.toggleSms`, {
+                        name: member.name,
+                      })}
+                      aria-pressed={member.smsEnabled}
+                      disabled={pendingToggleIds[member.id]}
+                      onClick={() => toggleSms(member.id)}
+                    />
                   </div>
-                </div>
-                <div className="tech-services">
-                  {member.services.map((service) => (
-                    <span className="badge badge-plan" key={service}>
-                      {service}
-                    </span>
-                  ))}
-                </div>
-              </article>
-            ))
-          : null}
-      </div>
+                  <div className="tech-card-footer">
+                    <div className="tech-stats">
+                      <div className="tech-stat">
+                        <strong>{member.customers}</strong>
+                        <span>{t(`${TK}.clientsToday`)}</span>
+                      </div>
+                    </div>
+                    <div className="tech-card-actions">
+                      <button
+                        className="booking-secondary-button"
+                        type="button"
+                        aria-label={t(`${TK}.edit`)}
+                        title={t(`${TK}.edit`)}
+                        onClick={() => openModal(member.id, "detail")}
+                      >
+                        <PencilIcon className="marketing-icon is-compact" />
+                        <span className="booking-mini-label">{t(`${TK}.edit`)}</span>
+                      </button>
+                    </div>
+                  </div>
+                  <div className="tech-services">
+                    {member.services.map((service) => (
+                      <span className="badge badge-plan" key={service}>
+                        {service}
+                      </span>
+                    ))}
+                  </div>
+                </article>
+              ))
+            : null}
+        </div>
 
-      {!isStaffLoading && (staffResponse?.totalCount ?? 0) > 0 ? (
-        <Pagination
-          pageNumber={pageNumber}
-          pageSize={pageSize}
-          totalPages={staffResponse?.totalPages ?? 1}
-          totalCount={staffResponse?.totalCount ?? 0}
-          hasNextPage={staffResponse?.hasNextPage}
-          hasPreviousPage={staffResponse?.hasPreviousPage}
-          onPageChange={setPage}
-          isLoading={isStaffFetching}
-          className={BOOKING_HUB_PAGINATION_CLASSNAME}
-        />
-      ) : null}
+        {!isStaffLoading && (staffResponse?.totalCount ?? 0) > 0 ? (
+          <Pagination
+            pageNumber={pageNumber}
+            pageSize={pageSize}
+            totalPages={staffResponse?.totalPages ?? 1}
+            totalCount={staffResponse?.totalCount ?? 0}
+            hasNextPage={staffResponse?.hasNextPage}
+            hasPreviousPage={staffResponse?.hasPreviousPage}
+            onPageChange={setPage}
+            isLoading={isStaffFetching}
+            className={BOOKING_HUB_PAGINATION_CLASSNAME}
+          />
+        ) : null}
+      </article>
 
       {modalOpen ? (
         <div
@@ -1169,6 +1171,20 @@ export default function BookingTeamPanel() {
                         }}
                         onFocus={() => setComboboxOpen(true)}
                       />
+                      {searchQuery ? (
+                        <button
+                          className="tech-search-clear"
+                          type="button"
+                          aria-label={t(`${TK}.clearSearch`)}
+                          title={t(`${TK}.clearSearch`)}
+                          onClick={() => {
+                            setSearchQuery("");
+                            setComboboxOpen(true);
+                          }}
+                        >
+                          <XLgIcon />
+                        </button>
+                      ) : null}
                       <span className="tech-select-chevron">
                         <ChevronDownIcon />
                       </span>

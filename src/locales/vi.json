@@ -2987,6 +2987,7 @@
             "selectedTech": "thợ đang chọn",
             "selectFromList": "Chọn từ danh sách",
             "searchPlaceholder": "Tìm hoặc chọn thợ...",
+            "clearSearch": "Xóa tìm kiếm",
             "techList": "Danh sách thợ",
             "noMatch": "Không tìm thấy thợ phù hợp.",
             "alreadyAdded": "Đã thêm",
@@ -3038,6 +3039,7 @@
             "filtersAria": "Bộ lọc khách hàng",
             "searchLabel": "Tìm kiếm",
             "searchPlaceholder": "Tìm theo tên hoặc số điện thoại...",
+            "clearSearch": "Xóa tìm kiếm",
             "segmentFilterAria": "Lọc theo nhóm khách hàng",
             "segments": {
               "all": "Tất cả",
@@ -3111,6 +3113,7 @@
             "filtersAria": "Bộ lọc lịch sử gọi",
             "searchLabel": "Tìm kiếm",
             "searchPlaceholder": "Tìm theo tên hoặc số điện thoại...",
+            "clearSearch": "Xóa tìm kiếm",
             "statusFilterAria": "Lọc theo trạng thái cuộc gọi",
             "filterAll": "Tất cả",
             "statusAnswered": "Đã trả lời",
@@ -4044,7 +4047,8 @@
       }
     },
     "CountryCodeSelect": {
-      "phSearch": "Tìm quốc gia hoặc mã..."
+      "phSearch": "Tìm quốc gia hoặc mã...",
+      "emptyCountries": "Không tìm thấy quốc gia"
     },
     "DevicesView": {
       "phExampleDeviceIds": "vd: NFC-003, QR-Table-04",
