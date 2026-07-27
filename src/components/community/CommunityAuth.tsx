@@ -164,34 +164,48 @@ export function CommunityPersonaSwitcher() {
   }
 
   return (
-    <div className="fixed inset-x-0 top-0 z-[130] border-b border-white/10 bg-[#101322] text-white">
-      <div className="mx-auto flex min-h-[52px] max-w-6xl flex-wrap items-center justify-center gap-1.5 px-2 py-1.5 sm:justify-between sm:px-4">
-        <span className="text-[10px] font-bold text-white/65">
+    <div className="fixed inset-x-0 top-0 z-[130] h-[52px] border-b border-white/10 bg-[#101322] text-white">
+      <div className="mx-auto flex h-[52px] max-w-6xl flex-nowrap items-center justify-center gap-1 px-2 py-1 sm:justify-between sm:gap-1.5 sm:px-4">
+        <span className="hidden text-[10px] font-bold text-white/65 sm:block">
           {isLoading ? 'Đang tạo phiên demo…' : isAnonymous ? 'Khách ẩn danh' : user?.email}
         </span>
-        <div className="flex items-center gap-1">
-          {COMMUNITY_DEMO_PERSONAS.map((persona) => (
-            <button
-              key={persona.id}
-              type="button"
-              disabled={isLoading || isSigningIn}
-              onClick={() => void selectPersona(persona)}
-              className="min-h-11 rounded-full bg-white/10 px-2.5 text-[10px] font-extrabold text-white transition hover:bg-white/20 disabled:cursor-not-allowed disabled:opacity-50"
-            >
-              {persona.label}
-            </button>
-          ))}
+        <div className="flex min-w-0 items-center justify-center gap-1 overflow-x-auto">
+          {COMMUNITY_DEMO_PERSONAS.map((persona) => {
+            const isActive = !isAnonymous && user?.email === persona.email
+
+            return (
+              <button
+                key={persona.id}
+                type="button"
+                aria-pressed={isActive}
+                disabled={isLoading || isSigningIn}
+                onClick={() => void selectPersona(persona)}
+                className={`h-11 shrink-0 rounded-full px-2.5 text-[10px] font-extrabold text-white transition disabled:cursor-not-allowed disabled:opacity-50 ${
+                  isActive ? 'bg-nexoraBrand ring-2 ring-white/35' : 'bg-white/10 hover:bg-white/20'
+                }`}
+              >
+                {persona.label}
+              </button>
+            )
+          })}
           <button
             type="button"
+            aria-pressed={isAnonymous}
             disabled={isLoading || isSigningIn || isAnonymous}
             onClick={() => void signOutToAnonymous()}
-            className="min-h-11 rounded-full px-2.5 text-[10px] font-extrabold text-brandCyan transition hover:bg-white/10 disabled:cursor-not-allowed disabled:opacity-50"
+            className={`h-11 shrink-0 rounded-full px-2.5 text-[10px] font-extrabold transition disabled:cursor-not-allowed disabled:opacity-50 ${
+              isAnonymous ? 'bg-nexoraBrand text-white ring-2 ring-white/35' : 'text-brandCyan hover:bg-white/10'
+            }`}
           >
             Khách
           </button>
         </div>
       </div>
-      {error ? <p className="border-t border-white/10 px-3 py-1.5 text-center text-[10px] font-semibold text-red-200">{error.message}</p> : null}
+      {error ? (
+        <p className="absolute inset-x-0 top-full border-t border-white/10 bg-[#101322] px-3 py-1.5 text-center text-[10px] font-semibold text-red-200 shadow-lg">
+          {error.message}
+        </p>
+      ) : null}
     </div>
   )
 }

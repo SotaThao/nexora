@@ -7,10 +7,11 @@ import {
 } from '../../data/hooks/useCommunity'
 import { useDirectChannels } from '../../data/hooks/useDirectMessages'
 import { useCommunityAuth } from './CommunityAuth'
+import { useCommunityChatDock } from './CommunityChatDock'
 import { formatJoinedDate } from '../../utils/localDate'
 
 const cardClass =
-  'overflow-hidden rounded-2xl border border-nexoraBorder bg-nexoraSurface p-4 shadow-nexora-card'
+  'overflow-hidden rounded-xl border border-nexoraBorder bg-nexoraSurface p-4 shadow-nexora-card'
 const gradientClass = 'bg-gradient-to-br from-nexoraElectric to-nexoraViolet'
 
 function initials(name?: string | null) {
@@ -36,6 +37,7 @@ function Avatar({ name, className = 'h-9 w-9' }: { name?: string | null; classNa
 
 export function CommunityRightRail() {
   const { user, isAnonymous } = useCommunityAuth()
+  const dock = useCommunityChatDock()
   const myCommunities = useMyCommunities({ enabled: Boolean(user) })
   const communities = useCommunityList({ enabled: Boolean(user) })
 
@@ -53,7 +55,7 @@ export function CommunityRightRail() {
   const directChannels = useDirectChannels({ enabled: Boolean(user) && !isAnonymous })
 
   return (
-    <aside className="sticky top-[68px] space-y-4 font-sans">
+    <aside className="space-y-4 font-sans">
       {/* 1. Người đang hoạt động */}
       <section className={cardClass}>
         <div className="flex items-center justify-between border-b border-nexoraRule pb-3">
@@ -62,7 +64,7 @@ export function CommunityRightRail() {
             <h2 className="text-sm font-extrabold text-nexoraText">Người đang hoạt động</h2>
           </div>
           {memberItems.length > 0 && (
-            <span className="flex items-center gap-1 text-[11px] font-bold text-nexoraSuccess">
+            <span className="flex items-center gap-1 text-xs font-bold text-nexoraMuted">
               <span className="h-2 w-2 animate-pulse rounded-full bg-nexoraSuccess" />
               Online
             </span>
@@ -97,7 +99,7 @@ export function CommunityRightRail() {
               return (
                 <div
                   key={member.id}
-                  className="flex items-center gap-3 rounded-xl p-1.5 transition-colors hover:bg-nexoraSurfaceMuted"
+                  className="flex items-center gap-3 p-1.5"
                 >
                   <div className="relative shrink-0">
                     <Avatar name={displayName} className="h-9 w-9" />
@@ -105,13 +107,13 @@ export function CommunityRightRail() {
                   </div>
                   <div className="min-w-0 flex-1">
                     <p className="truncate text-xs font-bold text-nexoraText">{displayName}</p>
-                    <p className="truncate text-[11px] text-nexoraSubtle">{roleText}</p>
+                    <p className="truncate text-xs text-nexoraMuted">{roleText}</p>
                   </div>
                 </div>
               )
             })
           ) : (
-            <p className="py-2 text-center text-xs text-nexoraSubtle">Chưa có thông tin thành viên.</p>
+            <p className="py-2 text-center text-xs text-nexoraMuted">Chưa có thông tin thành viên.</p>
           )}
         </div>
       </section>
@@ -145,7 +147,7 @@ export function CommunityRightRail() {
                 <Avatar name={community.name} className="h-9 w-9" />
                 <div className="min-w-0 flex-1">
                   <p className="truncate text-xs font-bold text-nexoraText">{community.name}</p>
-                  <p className="truncate text-[11px] text-nexoraSubtle">
+                  <p className="truncate text-xs text-nexoraMuted">
                     {community.kind === 'salon'
                       ? 'Salon Group'
                       : community.visibility === 'private'
@@ -156,33 +158,37 @@ export function CommunityRightRail() {
               </Link>
             ))
           ) : (
-            <p className="py-2 text-center text-xs text-nexoraSubtle">Bạn chưa tham gia nhóm nào.</p>
+            <p className="py-2 text-center text-xs text-nexoraMuted">Bạn chưa tham gia nhóm nào.</p>
           )}
         </div>
       </section>
 
-      {/* 3. Tin nhắn (Chỉ hiển thị nếu có DM) */}
-      {directChannels.data && directChannels.data.length > 0 ? (
-        <section className={cardClass}>
-          <div className="flex items-center justify-between border-b border-nexoraRule pb-3">
-            <div className="flex items-center gap-2">
-              <MessageSquare className="h-4 w-4 text-nexoraBrand" aria-hidden="true" />
-              <h2 className="text-sm font-extrabold text-nexoraText">Tin nhắn</h2>
-            </div>
-            <Link
-              to="/community/chat"
+      {/* 3. Tin nhắn */}
+      <section className={cardClass}>
+        <div className="flex items-center justify-between border-b border-nexoraRule pb-3">
+          <div className="flex items-center gap-2">
+            <MessageSquare className="h-4 w-4 text-nexoraBrand" aria-hidden="true" />
+            <h2 className="text-sm font-extrabold text-nexoraText">Tin nhắn</h2>
+          </div>
+            <button
+              type="button"
+              onClick={dock.toggleInbox}
               className="text-xs font-bold text-nexoraBrand hover:underline"
             >
               Xem tất cả
-            </Link>
-          </div>
+            </button>
+        </div>
 
-          <div className="mt-3 space-y-1">
-            {directChannels.data.slice(0, 5).map((channel) => (
-              <Link
+        <div className="mt-3 space-y-1">
+          {directChannels.isLoading ? (
+            <div className="h-12 animate-pulse rounded-xl bg-nexoraSurfaceMuted" />
+          ) : directChannels.data?.length ? (
+            directChannels.data.slice(0, 5).map((channel) => (
+              <button
                 key={channel.id}
-                to={`/community/chat/dm/${channel.id}`}
-                className="flex items-center gap-3 rounded-xl p-2 transition-colors hover:bg-nexoraBrandSoft/50"
+                type="button"
+                onClick={() => dock.openDirectChat({ id: channel.id, title: channel.otherParticipant.displayName })}
+                className="flex w-full items-center gap-3 rounded-xl p-2 text-left transition-colors hover:bg-nexoraBrandSoft/50"
               >
                 <Avatar name={channel.otherParticipant.displayName} className="h-9 w-9" />
                 <div className="min-w-0 flex-1">
@@ -190,17 +196,19 @@ export function CommunityRightRail() {
                     <p className="truncate text-xs font-bold text-nexoraText">
                       {channel.otherParticipant.displayName}
                     </p>
-                    <time className="shrink-0 text-[10px] text-nexoraSubtle">
+                    <time className="shrink-0 text-[11px] text-nexoraMuted">
                       {formatJoinedDate(channel.createdAt)}
                     </time>
                   </div>
-                  <p className="truncate text-[11px] text-nexoraSubtle">Chat 1:1</p>
+                  <p className="truncate text-xs text-nexoraMuted">Chat 1:1</p>
                 </div>
-              </Link>
-            ))}
-          </div>
-        </section>
-      ) : null}
+              </button>
+            ))
+          ) : (
+            <p className="py-2 text-center text-xs text-nexoraMuted">Chưa có tin nhắn.</p>
+          )}
+        </div>
+      </section>
     </aside>
   )
 }
