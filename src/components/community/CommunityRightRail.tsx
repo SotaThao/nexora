@@ -64,7 +64,7 @@ export function CommunityRightRail() {
             <h2 className="text-sm font-extrabold text-nexoraText">Người đang hoạt động</h2>
           </div>
           {memberItems.length > 0 && (
-            <span className="flex items-center gap-1 text-[11px] font-bold text-nexoraSuccess">
+            <span className="flex items-center gap-1 text-xs font-bold text-nexoraMuted">
               <span className="h-2 w-2 animate-pulse rounded-full bg-nexoraSuccess" />
               Online
             </span>
@@ -107,13 +107,13 @@ export function CommunityRightRail() {
                   </div>
                   <div className="min-w-0 flex-1">
                     <p className="truncate text-xs font-bold text-nexoraText">{displayName}</p>
-                    <p className="truncate text-[11px] text-nexoraSubtle">{roleText}</p>
+                    <p className="truncate text-xs text-nexoraMuted">{roleText}</p>
                   </div>
                 </div>
               )
             })
           ) : (
-            <p className="py-2 text-center text-xs text-nexoraSubtle">Chưa có thông tin thành viên.</p>
+            <p className="py-2 text-center text-xs text-nexoraMuted">Chưa có thông tin thành viên.</p>
           )}
         </div>
       </section>
@@ -147,7 +147,7 @@ export function CommunityRightRail() {
                 <Avatar name={community.name} className="h-9 w-9" />
                 <div className="min-w-0 flex-1">
                   <p className="truncate text-xs font-bold text-nexoraText">{community.name}</p>
-                  <p className="truncate text-[11px] text-nexoraSubtle">
+                  <p className="truncate text-xs text-nexoraMuted">
                     {community.kind === 'salon'
                       ? 'Salon Group'
                       : community.visibility === 'private'
@@ -158,7 +158,7 @@ export function CommunityRightRail() {
               </Link>
             ))
           ) : (
-            <p className="py-2 text-center text-xs text-nexoraSubtle">Bạn chưa tham gia nhóm nào.</p>
+            <p className="py-2 text-center text-xs text-nexoraMuted">Bạn chưa tham gia nhóm nào.</p>
           )}
         </div>
       </section>
@@ -193,11 +193,11 @@ export function CommunityRightRail() {
                     <p className="truncate text-xs font-bold text-nexoraText">
                       {channel.otherParticipant.displayName}
                     </p>
-                    <time className="shrink-0 text-[10px] text-nexoraSubtle">
+                    <time className="shrink-0 text-[11px] text-nexoraMuted">
                       {formatJoinedDate(channel.createdAt)}
                     </time>
                   </div>
-                  <p className="truncate text-[11px] text-nexoraSubtle">Chat 1:1</p>
+                  <p className="truncate text-xs text-nexoraMuted">Chat 1:1</p>
                 </div>
               </button>
             ))}

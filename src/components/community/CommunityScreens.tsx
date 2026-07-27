@@ -114,12 +114,12 @@ function CommunityStoryRings({ communities }: { communities: CommunityDto[] }) {
             <span className={`mx-auto block w-[62px] rounded-full p-[3px] ${index === 0 ? gradientClass : 'bg-nexoraRule'}`}>
               <Avatar name={community.name} className="h-14 w-14 border-2 border-white text-sm" />
             </span>
-            <span className="mt-1 block truncate text-[10px] font-semibold text-nexoraMuted">{community.name}</span>
+            <span className="mt-1 block truncate text-xs font-semibold text-nexoraMuted">{community.name}</span>
           </Link>
         ))}
         <Link to="/community/new" className="w-16 shrink-0 text-center">
           <span className="mx-auto grid h-[62px] w-[62px] place-items-center rounded-full border-2 border-dashed border-nexoraBrand bg-nexoraSurfaceMuted text-nexoraBrand"><Plus className="h-5 w-5" aria-hidden="true" /></span>
-          <span className="mt-1 block text-[10px] font-semibold text-nexoraMuted">Khám phá</span>
+          <span className="mt-1 block text-xs font-semibold text-nexoraMuted">Khám phá</span>
         </Link>
       </div>
     </section>
@@ -172,7 +172,7 @@ function FeedPost({ post, communityName }: { post: PostDto; communityName: strin
   return (
     <article className={`${cardClass} ${isAnnouncement ? 'border-l-[3px] border-l-nexoraBrand bg-[#fbfbff]' : ''}`}>
       {isAnnouncement ? <p className="px-4 pt-3 text-[10px] font-extrabold uppercase tracking-[0.08em] text-nexoraBrand">Thông báo · {communityName}</p> : null}
-      <div className="flex items-center gap-3 px-4 pt-3"><Avatar name={post.author?.displayName} className="h-9 w-9" /><div className="min-w-0 flex-1"><p className="truncate text-sm font-extrabold text-nexoraText">{post.author?.displayName || 'Thành viên Nexora'}</p><p className="text-[11px] text-nexoraSubtle">{communityName} · {relativeTime(post.createdAt)}</p></div>{post.isAnnouncement ? <ShieldCheck className="h-4 w-4 text-nexoraBrand" aria-label="Thông báo" /> : null}</div>
+      <div className="flex items-center gap-3 px-4 pt-3"><Avatar name={post.author?.displayName} className="h-9 w-9" /><div className="min-w-0 flex-1"><p className="truncate text-sm font-extrabold text-nexoraText">{post.author?.displayName || 'Thành viên Nexora'}</p><p className="text-xs text-nexoraMuted">{communityName} · {relativeTime(post.createdAt)}</p></div>{post.isAnnouncement ? <ShieldCheck className="h-4 w-4 text-nexoraBrand" aria-label="Thông báo" /> : null}</div>
       <CommunityPostMedia media={post.media} authorName={post.author?.displayName} />
       {post.body ? <p className="whitespace-pre-wrap px-4 py-3 text-sm leading-relaxed text-nexoraText">{post.body}</p> : null}
       <div className="flex items-center gap-1 border-t border-nexoraRule px-2 py-1"><button type="button" aria-pressed={hasLiked} disabled={isAnonymous || toggle.isPending} onClick={() => user && toggle.mutate({ postId: post.id, type: likeType, userId: user.id })} className={`inline-flex min-h-11 items-center gap-1.5 rounded-lg px-3 text-sm font-bold disabled:opacity-50 ${hasLiked ? 'text-nexoraBrand' : 'text-nexoraMuted hover:bg-nexoraSurfaceMuted'}`}><Heart className={`h-4 w-4 ${hasLiked ? 'fill-current' : ''}`} aria-hidden="true" />{reactions.data?.length ?? 0}</button><button type="button" onClick={() => setCommentsOpen((open) => !open)} aria-expanded={commentsOpen} className="inline-flex min-h-11 items-center gap-1.5 rounded-lg px-3 text-sm font-bold text-nexoraMuted hover:bg-nexoraSurfaceMuted"><MessageCircle className="h-4 w-4" aria-hidden="true" />Bình luận</button></div>
