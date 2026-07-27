@@ -18,6 +18,11 @@ export type BookingHubStatusFilterAll = typeof BOOKING_HUB_STATUS_FILTER_ALL
 /** Shared className for Booking Hub Pagination (matches `booking-hub.css`). */
 export const BOOKING_HUB_PAGINATION_CLASSNAME = 'booking-pagination' as const
 
+/** Zero-pad to two digits (dates/times). */
+export function pad2(value: number): string {
+  return String(value).padStart(2, '0')
+}
+
 /**
  * Count statuses on the **current page** list for Booking Hub status chips.
  * Intentionally page-scoped (same as Appointment Today): chips do not call BE `Status`.

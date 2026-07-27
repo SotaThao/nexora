@@ -4,7 +4,7 @@ import {
   BOOKING_CALENDAR_UNASSIGNED_TECH,
   type BookingCalendarColor,
 } from './bookingTodayConstants'
-import { BOOKING_HUB_EMPTY_CELL } from './bookingHubFormatters'
+import { BOOKING_HUB_EMPTY_CELL, pad2 } from './bookingHubFormatters'
 import { parseApiDateTime } from '../utils'
 
 export type BookingCalendarSource = {
@@ -41,10 +41,6 @@ export type BookingCalendarEvent = {
   toolTip: string
 }
 
-function pad2(value: number) {
-  return String(value).padStart(2, '0')
-}
-
 function escapeHtml(value: string) {
   return value
     .replace(/&/g, '&amp;')
@@ -76,25 +72,43 @@ function resolveTechLabel(techId: string, unassignedLabel: string) {
 export function buildBookingCalendarColumns(
   bookings: ReadonlyArray<Pick<BookingCalendarSource, 'tech'>>,
   unassignedLabel: string,
+  /** Stable Active-staff roster (API order). When set, column positions stay fixed across refetches. */
+  staffNames: ReadonlyArray<string> = [],
 ): BookingCalendarColumn[] {
-  const seen = new Set<string>()
   const columns: BookingCalendarColumn[] = []
+  const seen = new Set<string>()
 
+  const pushTech = (rawName: string) => {
+    const id = resolveTechId(rawName)
+    if (!id || id === BOOKING_CALENDAR_UNASSIGNED_TECH || seen.has(id)) return
+    seen.add(id)
+    columns.push({ id, name: id, toolTip: id })
+  }
+
+  // 1) Fixed roster first — same order as Active staff list.
+  for (const name of staffNames) {
+    pushTech(name)
+  }
+
+  // 2) Any tech present on bookings but missing from roster (alpha-stable, append only).
+  const orphans: string[] = []
   for (const booking of bookings) {
     const id = resolveTechId(booking.tech)
-    if (seen.has(id)) continue
+    if (!id || id === BOOKING_CALENDAR_UNASSIGNED_TECH || seen.has(id)) continue
     seen.add(id)
-    const name = resolveTechLabel(id, unassignedLabel)
-    columns.push({ id, name, toolTip: name })
+    orphans.push(id)
+  }
+  orphans.sort((a, b) => a.localeCompare(b, undefined, { sensitivity: 'base' }))
+  for (const id of orphans) {
+    columns.push({ id, name: id, toolTip: id })
   }
 
-  if (columns.length === 0) {
-    columns.push({
-      id: BOOKING_CALENDAR_UNASSIGNED_TECH,
-      name: unassignedLabel,
-      toolTip: unassignedLabel,
-    })
-  }
+  // 3) Unassigned always last — creating from this column stays put.
+  columns.push({
+    id: BOOKING_CALENDAR_UNASSIGNED_TECH,
+    name: resolveTechLabel(BOOKING_CALENDAR_UNASSIGNED_TECH, unassignedLabel),
+    toolTip: resolveTechLabel(BOOKING_CALENDAR_UNASSIGNED_TECH, unassignedLabel),
+  })
 
   return columns
 }

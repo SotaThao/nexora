@@ -40,6 +40,7 @@ import {
   StoreIcon,
   UserIcon,
   UserPlusIcon,
+  WalletCardsIcon,
   ZapIcon,
 } from '../BookingHubIcons'
 import {
@@ -95,6 +96,7 @@ type Props = {
   audienceSummary?: SmsCampaignAudienceSummaryDto
   onClose: () => void
   onSaved: (message: string) => void
+  onBuyCredits?: () => void
 }
 
 function escapeHtml(value: string): string {
@@ -221,6 +223,7 @@ export default function SmsCreateCampaignModal({
   audienceSummary,
   onClose,
   onSaved,
+  onBuyCredits,
 }: Props) {
   const { t, currentLanguage } = useTranslation()
   const { showToast } = useNotification()
@@ -837,9 +840,23 @@ export default function SmsCreateCampaignModal({
         <div className="modal-footer">
           <div className={`cost-preview${enoughCredits ? '' : ' warn'}`}>
             <div className="cost-preview-label">
-              {enoughCredits
-                ? t(`${TK}.costEstimate`)
-                : t(`${TK}.costInsufficient`, { credits: spendableCredits })}
+              {enoughCredits ? (
+                t(`${TK}.costEstimate`)
+              ) : (
+                <span className="cost-preview-insufficient">
+                  <span>{t(`${TK}.costInsufficient`, { credits: spendableCredits })}</span>
+                  {onBuyCredits ? (
+                    <button
+                      type="button"
+                      className="cost-preview-buy-link"
+                      onClick={onBuyCredits}
+                    >
+                      <WalletCardsIcon className="marketing-icon" />
+                      <span>{t(`${TK}.buyCredits`)}</span>
+                    </button>
+                  ) : null}
+                </span>
+              )}
             </div>
             <div className="cost-preview-amount">
               {t(`${TK}.costBreakdown`, {

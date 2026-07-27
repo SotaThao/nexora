@@ -13,6 +13,9 @@ import {
 
 export const SMS_CAMPAIGN_TK = 'components.dashboard.views.BookingHubView.smsCampaigns'
 
+/** Credit balance below this shows the low-credit pill state. */
+export const SMS_CREDITS_LOW_THRESHOLD = 100
+
 export const SMS_CAMPAIGN_STATUS_CLASS: Record<SmsCampaignStatus, string> = {
   [SmsCampaignStatus.Draft]: 'is-scheduled',
   [SmsCampaignStatus.Scheduled]: 'is-scheduled',
