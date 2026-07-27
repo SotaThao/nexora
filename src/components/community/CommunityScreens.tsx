@@ -191,15 +191,10 @@ function CommunityFeed({ community, withComposer = false }: { community: Communi
   return <section className="space-y-3">{withComposer ? <>{isComposing ? <PostComposer communityId={community.id} onClose={() => setIsComposing(false)} /> : <QuickComposer communityId={community.id} onOpen={() => setIsComposing(true)} />}</> : null}{posts.map((post) => <FeedPost key={post.id} post={post} communityName={community.name} />)}{posts.length === 0 ? <EmptyState title="Chưa có bài viết">Hãy là người đầu tiên chia sẻ một mẹo nail hoặc thông báo cho nhóm.</EmptyState> : null}{feed.hasNextPage ? <button type="button" onClick={() => void feed.fetchNextPage()} disabled={feed.isFetchingNextPage} className="mx-auto block min-h-11 rounded-xl px-4 text-sm font-bold text-nexoraBrand">{feed.isFetchingNextPage ? 'Đang tải…' : 'Xem thêm bài viết'}</button> : null}</section>
 }
 
-function CreateSheet({ onClose, onPost, onGroup }: { onClose: () => void; onPost: () => void; onGroup: () => void }) {
-  return <div className="fixed inset-0 z-[120] flex flex-col justify-end bg-nexoraText/45" role="dialog" aria-modal="true" aria-label="Tạo mới"><button type="button" aria-label="Đóng bảng tạo mới" onClick={onClose} className="absolute inset-0" /><div className="relative rounded-t-[22px] bg-white px-4 pb-6 pt-2"><div className="mx-auto my-2 h-1 w-10 rounded-full bg-nexoraBorder" /><button type="button" onClick={onPost} className="flex min-h-[72px] w-full items-center gap-3 rounded-2xl px-3 text-left hover:bg-nexoraSurfaceMuted"><span className={`grid h-11 w-11 place-items-center rounded-xl text-white ${gradientClass}`}><Send className="h-5 w-5" aria-hidden="true" /></span><span><b className="block text-sm">Đăng bài</b><span className="text-xs text-nexoraSubtle">Chia sẻ với một nhóm của bạn</span></span></button><button type="button" onClick={onGroup} className="flex min-h-[72px] w-full items-center gap-3 rounded-2xl px-3 text-left hover:bg-nexoraSurfaceMuted"><span className="grid h-11 w-11 place-items-center rounded-xl bg-nexoraBrandSoft text-nexoraBrand"><Users className="h-5 w-5" aria-hidden="true" /></span><span><b className="block text-sm">Tạo nhóm</b><span className="text-xs text-nexoraSubtle">Bắt đầu một cộng đồng mới</span></span></button><button type="button" onClick={onClose} className="mt-2 min-h-11 w-full rounded-xl bg-nexoraSurfaceMuted text-sm font-bold text-nexoraMuted">Hủy</button></div></div>
-}
-
 export function CommunityHome() {
   const { user, isLoading } = useCommunityAuth()
   const myCommunities = useMyCommunities({ enabled: Boolean(user) })
   const communities = useCommunityList({ enabled: Boolean(user) })
-  const [sheetOpen, setSheetOpen] = useState(false)
   const [composerCommunityId, setComposerCommunityId] = useState<string | null>(null)
   const ringCommunities = myCommunities.data?.items.length ? myCommunities.data.items : (communities.data?.items ?? [])
   const feedCommunities = (myCommunities.data?.items.length ? myCommunities.data.items : communities.data?.items ?? []).slice(0, 3)
@@ -217,8 +212,6 @@ export function CommunityHome() {
           {composerCommunityId ? <PostComposer communityId={composerCommunityId} onClose={() => setComposerCommunityId(null)} /> : <QuickComposer communityId={feedCommunities[0]?.id} onOpen={() => setComposerCommunityId(feedCommunities[0]?.id ?? null)} />}
           {ringCommunities.length ? <CommunityStoryRings communities={ringCommunities} /> : <EmptyState title="Chào mừng đến Community">Chọn một persona demo để vào nhóm hoặc tạo nhóm đầu tiên của bạn.</EmptyState>}
           {feedCommunities.map((community) => <CommunityFeed key={community.id} community={community} />)}
-          <button type="button" onClick={() => setSheetOpen(true)} aria-label="Tạo mới" className={`fixed bottom-24 right-5 z-40 grid h-14 w-14 place-items-center rounded-full text-white shadow-xl lg:hidden ${gradientClass}`}><Plus className="h-6 w-6" aria-hidden="true" /></button>
-          {sheetOpen ? <CreateSheet onClose={() => setSheetOpen(false)} onPost={() => { setComposerCommunityId(feedCommunities[0]?.id ?? null); setSheetOpen(false) }} onGroup={() => setSheetOpen(false)} /> : null}
         </div>
         <div className="hidden w-[336px] shrink-0 2xl:sticky 2xl:top-[132px] 2xl:block 2xl:self-start">
           <CommunityRightRail />
