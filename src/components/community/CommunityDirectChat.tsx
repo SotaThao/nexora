@@ -10,7 +10,7 @@ import {
   X,
 } from 'lucide-react'
 import { useMemo, useState, type FormEvent } from 'react'
-import { useNavigate, useParams } from 'react-router-dom'
+import { useLocation, useNavigate, useParams } from 'react-router-dom'
 import type { MessageDto } from '../../data/repositories/community'
 import { useCommunityChat } from '../../data/hooks/useCommunityChat'
 import { useDirectChannels } from '../../data/hooks/useDirectMessages'
@@ -113,6 +113,7 @@ function DirectChatBubble({
 }
 
 export function CommunityDirectChat() {
+  const location = useLocation()
   const { channelId = '' } = useParams()
   const navigate = useNavigate()
   const { user } = useCommunityAuth()
@@ -217,7 +218,13 @@ export function CommunityDirectChat() {
           <header className="flex items-center gap-3 border-b border-nexoraBorder bg-nexoraSurface px-3 py-3">
             <button
               type="button"
-              onClick={() => navigate('/community/chat')}
+              onClick={() => {
+                if (location.key === 'default') {
+                  navigate('/community/chat')
+                  return
+                }
+                navigate(-1)
+              }}
               className="grid h-10 w-10 place-items-center rounded-full text-nexoraMuted hover:bg-nexoraSurfaceMuted"
               aria-label="Quay lại danh sách nhắn tin"
             >

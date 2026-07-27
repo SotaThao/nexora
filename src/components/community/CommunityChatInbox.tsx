@@ -10,7 +10,7 @@ import {
   Users,
 } from 'lucide-react'
 import { useState } from 'react'
-import { Link, useNavigate } from 'react-router-dom'
+import { Link, useLocation, useNavigate } from 'react-router-dom'
 import {
   useDirectChannels,
   useFindOrCreateDirectChannel,
@@ -47,6 +47,7 @@ function UserAvatar({ name, className = 'h-10 w-10' }: { name?: string | null; c
 }
 
 export function CommunityChatInbox() {
+  const location = useLocation()
   const navigate = useNavigate()
   const { user, isAnonymous } = useCommunityAuth()
   const dock = useCommunityChatDock()
@@ -68,6 +69,13 @@ export function CommunityChatInbox() {
   }
 
   const isSearching = searchQuery.trim().length >= 2
+  const goBack = () => {
+    if (location.key === 'default') {
+      navigate('/community')
+      return
+    }
+    navigate(-1)
+  }
 
   return (
     <>
@@ -79,7 +87,7 @@ export function CommunityChatInbox() {
             <div className="flex items-center gap-2">
               <button
                 type="button"
-                onClick={() => navigate('/community')}
+                onClick={goBack}
                 className="grid h-10 w-10 shrink-0 place-items-center rounded-full text-nexoraMuted hover:bg-nexoraSurfaceMuted"
                 aria-label="Quay lại Community"
               >

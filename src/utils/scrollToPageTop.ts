@@ -41,10 +41,6 @@ export function scrollToPageTop(origin?: HTMLElement | null) {
 
     scrollScrollableAncestors(origin ?? null)
 
-    const main = document.querySelector('main')
-    if (main instanceof HTMLElement) {
-      main.scrollIntoView({ block: 'start', behavior: 'auto' })
-    }
   }
 
   run()

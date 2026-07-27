@@ -115,8 +115,10 @@ function formatTime(value: string) {
 export function CommunityChatInboxTrigger() {
   const { user, isAnonymous } = useCommunityAuth()
   const { isInboxOpen, toggleInbox, closeInbox, openDirectChat, openGroupChat } = useCommunityChatDock()
+  const location = useLocation()
   const [activeTab, setActiveTab] = useState<'dm' | 'groups'>('dm')
   const [searchQuery, setSearchQuery] = useState('')
+  const isInboxVisible = isInboxOpen && location.pathname === '/community'
   const directChannels = useDirectChannels({ enabled: Boolean(user) && !isAnonymous })
   const myCommunities = useMyCommunities({ enabled: Boolean(user) && !isAnonymous })
   const normalizedQuery = searchQuery.trim().toLocaleLowerCase('vi')
@@ -128,7 +130,7 @@ export function CommunityChatInboxTrigger() {
   )
 
   useEffect(() => {
-    if (!isInboxOpen) return
+    if (!isInboxVisible) return
     const handlePointerDown = (event: PointerEvent) => {
       const target = event.target
       // Mobile and desktop header variants are mounted together. Treat either
@@ -145,7 +147,7 @@ export function CommunityChatInboxTrigger() {
       document.removeEventListener('pointerdown', handlePointerDown)
       document.removeEventListener('keydown', handleKeyDown)
     }
-  }, [closeInbox, isInboxOpen])
+  }, [closeInbox, isInboxVisible])
 
   return (
     <div data-community-chat-inbox-root className="relative">
@@ -153,10 +155,10 @@ export function CommunityChatInboxTrigger() {
         type="button"
         onClick={toggleInbox}
         aria-label="Mở Messenger"
-        aria-expanded={isInboxOpen}
+        aria-expanded={isInboxVisible}
         aria-haspopup="dialog"
         className={`hidden h-11 w-11 place-items-center rounded-xl border bg-nexoraSurface text-nexoraBrand transition-colors hover:bg-nexoraBrandSoft lg:grid ${
-          isInboxOpen ? 'border-nexoraBrand bg-nexoraBrandSoft' : 'border-nexoraBorder'
+          isInboxVisible ? 'border-nexoraBrand bg-nexoraBrandSoft' : 'border-nexoraBorder'
         }`}
       >
         <MessagesSquare className="h-5 w-5" aria-hidden="true" />
@@ -170,7 +172,7 @@ export function CommunityChatInboxTrigger() {
         <MessagesSquare className="h-5 w-5" aria-hidden="true" />
       </Link>
 
-      {isInboxOpen ? (
+      {isInboxVisible ? (
         <section
           role="dialog"
           aria-label="Messenger"
@@ -454,7 +456,7 @@ export function CommunityChatDock() {
   }, [location.pathname])
 
   const visible = entries.filter((entry) => entry.key !== fullPageEntryKey)
-  if (!visible.length) return null
+  if (location.pathname !== '/community' || !visible.length) return null
 
   const open = visible.filter((entry) => !entry.minimized)
   const minimized = visible.filter((entry) => entry.minimized)
