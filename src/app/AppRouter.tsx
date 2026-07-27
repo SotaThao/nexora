@@ -1,10 +1,11 @@
-import { Suspense, useEffect } from "react";
+import { Suspense, useEffect, useLayoutEffect } from "react";
 import {
   Navigate,
   Route,
   Routes,
   useLocation,
   useNavigate,
+  useNavigationType,
   useParams,
   useSearchParams,
 } from "react-router-dom";
@@ -43,6 +44,26 @@ import {
 } from "../components/community/CommunityScreens";
 import { CommunityChat } from "../components/community/CommunityChat";
 import { CommunityDirectChat } from "../components/community/CommunityDirectChat";
+
+const scrollStoragePrefix = "nexora:route-scroll:";
+
+function routeScrollStorageKey(pathname: string, search: string) {
+  return `${scrollStoragePrefix}${pathname}${search}`;
+}
+
+function readRouteScrollPosition(storageKey: string) {
+  try {
+    const value = window.sessionStorage.getItem(storageKey);
+    if (!value) return null;
+    const position = JSON.parse(value) as { left?: unknown; top?: unknown };
+    if (typeof position.left !== "number" || typeof position.top !== "number") {
+      return null;
+    }
+    return { left: position.left, top: position.top };
+  } catch {
+    return null;
+  }
+}
 
 const SetupWizard = lazyWithRetry(() => import("../components/SetupWizard"));
 const DashboardOwnerShell = lazyWithRetry(
@@ -174,9 +195,32 @@ function StaffTransactionsLegacyRedirect() {
 
 function ScrollToTop() {
   const { pathname, search } = useLocation();
+  const navigationType = useNavigationType();
+  const storageKey = routeScrollStorageKey(pathname, search);
+
+  useLayoutEffect(() => {
+    return () => {
+      try {
+        window.sessionStorage.setItem(
+          storageKey,
+          JSON.stringify({ left: window.scrollX, top: window.scrollY }),
+        );
+      } catch {
+        // Scroll restoration remains optional when session storage is unavailable.
+      }
+    };
+  }, [storageKey]);
+
   useEffect(() => {
+    if (navigationType === "POP") {
+      const position = readRouteScrollPosition(storageKey);
+      if (position) {
+        requestAnimationFrame(() => window.scrollTo(position));
+      }
+      return;
+    }
     scrollToPageTop();
-  }, [pathname, search]);
+  }, [navigationType, pathname, search, storageKey]);
   return null;
 }
 

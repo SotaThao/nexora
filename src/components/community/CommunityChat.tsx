@@ -13,14 +13,12 @@ import {
   X,
 } from 'lucide-react'
 import { useEffect, useMemo, useRef, useState, type ChangeEvent, type FormEvent } from 'react'
-import { useNavigate, useParams } from 'react-router-dom'
+import { useLocation, useNavigate, useParams } from 'react-router-dom'
 import type { CommunityMemberDto, MediaAsset, MessageDto } from '../../data/repositories/community'
 import { useCommunityChat } from '../../data/hooks/useCommunityChat'
 import { useCommunityDetail, useCommunityFeedPosts, useCommunityMediaUrl, useCommunityMembers } from '../../data/hooks/useCommunity'
-import { useMediaQuery } from '../../hooks/useMediaQuery'
 import { mapSupabaseError, type SupabaseDisplayError } from '../../lib/supabaseError'
 import { CommunityPersonaSwitcher, useCommunityAuth } from './CommunityAuth'
-import { useCommunityChatDock } from './CommunityChatDock'
 import { CommunityChatMemberActionsSheet } from './CommunityChatMemberActionsSheet'
 import DemoStaffShell from './demo/DemoStaffShell'
 
@@ -155,10 +153,9 @@ function ChatSkeleton() {
 
 export function CommunityChat() {
   const { id = '' } = useParams()
+  const location = useLocation()
   const navigate = useNavigate()
   const { user } = useCommunityAuth()
-  const { openGroupChat } = useCommunityChatDock()
-  const isDesktop = useMediaQuery('(min-width: 1024px)')
   const detail = useCommunityDetail(id)
   const membersQuery = useCommunityMembers(id)
   const postsQuery = useCommunityFeedPosts(id)
@@ -179,11 +176,13 @@ export function CommunityChat() {
     if (previewUrl) URL.revokeObjectURL(previewUrl)
   }, [previewUrl])
 
-  useEffect(() => {
-    if (!isDesktop || !id || detail.isLoading) return
-    openGroupChat({ id, title: detail.data?.name || 'Nhóm Community' })
-    navigate('/community', { replace: true })
-  }, [detail.data?.name, detail.isLoading, id, isDesktop, navigate, openGroupChat])
+  const goBack = () => {
+    if (location.key === 'default') {
+      navigate(`/community/${id}`)
+      return
+    }
+    navigate(-1)
+  }
 
   const members = useMemo(() => membersQuery.data?.pages.flatMap((page) => page.items) ?? [], [membersQuery.data])
   const membersByUserId = useMemo(() => new Map(members.map((member) => [member.userId, member])), [members])
@@ -292,15 +291,13 @@ export function CommunityChat() {
     })}</div>
   }
 
-  if (isDesktop) return null
-
   return (
     <>
       <CommunityPersonaSwitcher />
       <DemoStaffShell onDemoNavigation={() => navigate('/community')}>
         <main className="mx-auto flex h-full min-h-0 w-full max-w-[720px] flex-col overflow-hidden border-x border-nexoraBorder bg-nexoraCanvas font-sans shadow-nexora-card lg:h-auto lg:min-h-[calc(100vh-120px)]">
           <header className="flex items-center gap-3 border-b border-nexoraBorder bg-nexoraSurface px-3 py-3">
-            <button type="button" onClick={() => navigate(`/community/${id}`)} className="grid h-11 w-11 place-items-center rounded-full text-nexoraMuted hover:bg-nexoraSurfaceMuted" aria-label="Quay lại nhóm"><ArrowLeft className="h-5 w-5" aria-hidden="true" /></button>
+            <button type="button" onClick={goBack} className="grid h-11 w-11 place-items-center rounded-full text-nexoraMuted hover:bg-nexoraSurfaceMuted" aria-label="Quay lại nhóm"><ArrowLeft className="h-5 w-5" aria-hidden="true" /></button>
             <Avatar name={detail.data?.name} />
             <div className="min-w-0 flex-1"><div className="flex items-center gap-1"><h1 className="truncate text-sm font-extrabold text-nexoraText">{detail.data?.name || 'Nhóm Community'}</h1>{detail.data?.verified ? <BadgeCheck className="h-4 w-4 shrink-0 text-nexoraSuccess" aria-label="Đã xác minh" /> : null}</div><p className="text-[11px] text-nexoraSubtle">{members.length} thành viên</p></div>
             <button type="button" onClick={() => setMemberSheetOpen(true)} className="grid h-10 w-10 place-items-center rounded-full text-nexoraMuted hover:bg-nexoraSurfaceMuted" aria-label="Mở danh sách thành viên"><Users className="h-5 w-5" aria-hidden="true" /></button>
