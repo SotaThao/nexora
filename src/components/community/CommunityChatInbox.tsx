@@ -3,6 +3,7 @@ import {
   Loader2,
   MessageSquare,
   MessagesSquare,
+  PictureInPicture,
   Search,
   Send,
   UserPlus,
@@ -17,6 +18,7 @@ import {
 } from '../../data/hooks/useDirectMessages'
 import { useMyCommunities } from '../../data/hooks/useCommunity'
 import { useCommunityAuth } from './CommunityAuth'
+import { useCommunityChatDock } from './CommunityChatDock'
 import DemoStaffShell from './demo/DemoStaffShell'
 import { formatJoinedDate } from '../../utils/localDate'
 
@@ -47,6 +49,7 @@ function UserAvatar({ name, className = 'h-10 w-10' }: { name?: string | null; c
 export function CommunityChatInbox() {
   const navigate = useNavigate()
   const { user, isAnonymous } = useCommunityAuth()
+  const dock = useCommunityChatDock()
   const [activeTab, setActiveTab] = useState<'dm' | 'groups'>('dm')
   const [searchQuery, setSearchQuery] = useState('')
 
@@ -192,26 +195,38 @@ export function CommunityChatInbox() {
                   ) : directChannels.data?.length ? (
                     <div className="space-y-2">
                       {directChannels.data.map((channel) => (
-                        <Link
+                        <div
                           key={channel.id}
-                          to={`/community/chat/dm/${channel.id}`}
-                          className="flex items-center gap-3 rounded-2xl border border-nexoraRule bg-nexoraSurface p-3 shadow-sm hover:border-nexoraBrand"
+                          className="flex items-center gap-1 rounded-2xl border border-nexoraRule bg-nexoraSurface p-1 shadow-sm hover:border-nexoraBrand"
                         >
-                          <UserAvatar name={channel.otherParticipant.displayName} />
-                          <div className="min-w-0 flex-1">
-                            <div className="flex items-center justify-between gap-2">
-                              <h3 className="truncate text-sm font-extrabold text-nexoraText">
-                                {channel.otherParticipant.displayName}
-                              </h3>
-                              <time className="shrink-0 text-[11px] text-nexoraSubtle">
-                                {formatJoinedDate(channel.createdAt)}
-                              </time>
+                          <Link
+                            to={`/community/chat/dm/${channel.id}`}
+                            className="flex min-w-0 flex-1 items-center gap-3 rounded-xl p-2"
+                          >
+                            <UserAvatar name={channel.otherParticipant.displayName} />
+                            <div className="min-w-0 flex-1">
+                              <div className="flex items-center justify-between gap-2">
+                                <h3 className="truncate text-sm font-extrabold text-nexoraText">
+                                  {channel.otherParticipant.displayName}
+                                </h3>
+                                <time className="shrink-0 text-[11px] text-nexoraSubtle">
+                                  {formatJoinedDate(channel.createdAt)}
+                                </time>
+                              </div>
+                              <p className="mt-0.5 truncate text-xs text-nexoraMuted">
+                                Cuộc trò chuyện trực tiếp 1:1
+                              </p>
                             </div>
-                            <p className="mt-0.5 truncate text-xs text-nexoraMuted">
-                              Cuộc trò chuyện trực tiếp 1:1
-                            </p>
-                          </div>
-                        </Link>
+                          </Link>
+                          <button
+                            type="button"
+                            onClick={() => dock.openDirectChat({ id: channel.id, title: channel.otherParticipant.displayName })}
+                            aria-label={`Mở đoạn chat với ${channel.otherParticipant.displayName} dạng cửa sổ nổi`}
+                            className="hidden h-10 w-10 shrink-0 place-items-center rounded-full text-nexoraMuted hover:bg-nexoraSurfaceMuted lg:grid"
+                          >
+                            <PictureInPicture className="h-4 w-4" aria-hidden="true" />
+                          </button>
+                        </div>
                       ))}
                     </div>
                   ) : (

@@ -301,12 +301,6 @@ function DemoHeader({ onOpenMobileMenu, onDemoNavigation, hideDecorativeNotifica
         </div>
 
         <div className="flex shrink-0 items-center gap-3">
-          <button
-            type="button"
-            className="inline-flex min-h-11 items-center justify-center rounded-full bg-gradient-to-r from-nexoraElectric to-nexoraViolet px-4 text-[12px] font-extrabold text-white shadow-nexora-soft transition hover:opacity-90"
-          >
-            ＋ Tạo nhóm
-          </button>
           <LanguageSwitcher className="[&>button]:min-h-11 [&>button]:min-w-11" />
           <button
             type="button"
@@ -331,9 +325,10 @@ function DemoHeader({ onOpenMobileMenu, onDemoNavigation, hideDecorativeNotifica
             type="button"
             aria-label="Hồ sơ Kayla Le"
             onClick={onDemoNavigation}
-            className="flex h-11 w-11 items-center justify-center overflow-hidden rounded-full border border-nexoraBorder bg-nexoraBrand text-sm font-bold text-white transition hover:opacity-90"
+            className="relative flex h-11 w-11 items-center justify-center overflow-hidden rounded-full border-2 border-white bg-gradient-to-br from-nexoraElectric to-nexoraViolet text-sm font-bold text-white shadow-sm transition hover:opacity-90"
           >
             K
+            <span className="absolute bottom-0 right-0 h-2.5 w-2.5 rounded-full border-2 border-white bg-nexoraSuccess" />
           </button>
         </div>
       </div>
@@ -429,7 +424,7 @@ export default function DemoStaffShell({ children, onDemoNavigation }: DemoStaff
           hideDecorativeNotification={hideDecorativeNotification}
         />
         <main
-          className={`mx-auto w-full max-w-3xl flex-1 px-4 sm:px-6 ${
+          className={`mx-auto w-full max-w-[1040px] flex-1 px-4 sm:px-6 ${
             isChatRoute
               ? 'min-h-0 pb-[calc(69px+var(--app-safe-area-bottom,env(safe-area-inset-bottom,0px)))] pt-5 lg:py-5'
               : 'py-5'

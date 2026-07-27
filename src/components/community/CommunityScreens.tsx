@@ -40,6 +40,7 @@ import {
 } from '../../data/hooks/useCommunity'
 import DemoStaffShell from './demo/DemoStaffShell'
 import { CommunityAuthProvider, CommunityPersonaSwitcher, useCommunityAuth } from './CommunityAuth'
+import { CommunityChatDock, CommunityChatDockProvider } from './CommunityChatDock'
 import { CommunityNotificationBell, CommunityNotificationsProvider } from './CommunityNotifications'
 import { CommunityPostComposer, CommunityPostMedia } from './CommunityPostMedia'
 import { CommunityRightRail } from './CommunityRightRail'
@@ -106,7 +107,7 @@ function CommunityFrame({ children, containerClassName }: { children: ReactNode;
 
 function CommunityStoryRings({ communities }: { communities: CommunityDto[] }) {
   return (
-    <section className="-mx-4 overflow-hidden border-y border-nexoraBorder bg-nexoraSurface px-4 py-3 sm:-mx-6 sm:px-6" aria-label="Nhóm của bạn">
+    <section className="-mx-4 overflow-hidden border-y border-nexoraBorder bg-nexoraSurface px-4 py-3 sm:-mx-6 sm:px-6 lg:mx-0 lg:rounded-2xl lg:border lg:shadow-nexora-card" aria-label="Nhóm của bạn">
       <div className="flex gap-3 overflow-x-auto pb-1">
         {communities.map((community, index) => (
           <Link key={community.id} to={`/community/${community.id}`} className="w-16 shrink-0 text-center">
@@ -135,7 +136,7 @@ function PostComposer({ communityId, onClose }: { communityId: string; onClose: 
 function QuickComposer({ communityId, onOpen }: { communityId?: string; onOpen: () => void }) {
   const { isAnonymous, user } = useCommunityAuth()
   if (!communityId || isAnonymous) return null
-  return <button type="button" onClick={onOpen} className="-mx-4 flex w-[calc(100%+2rem)] items-center gap-3 border-b-8 border-nexoraCanvas bg-nexoraSurface px-4 py-3 text-left sm:-mx-6 sm:w-[calc(100%+3rem)] sm:px-6"><Avatar name={user?.email} className="h-10 w-10" /><span className="flex min-h-11 flex-1 items-center rounded-full border border-nexoraBorder bg-nexoraSurfaceMuted px-4 text-sm text-nexoraSubtle">Bạn đang nghĩ gì?</span><ImageIcon className="h-5 w-5 text-nexoraBrand" aria-hidden="true" /></button>
+  return <button type="button" onClick={onOpen} className="-mx-4 flex w-[calc(100%+2rem)] items-center gap-3 border-b-8 border-nexoraCanvas bg-nexoraSurface px-4 py-3 text-left sm:-mx-6 sm:w-[calc(100%+3rem)] sm:px-6 lg:mx-0 lg:w-full lg:rounded-2xl lg:border lg:border-nexoraBorder lg:shadow-nexora-card"><Avatar name={user?.email} className="h-10 w-10" /><span className="flex min-h-11 flex-1 items-center rounded-full border border-nexoraBorder bg-nexoraSurfaceMuted px-4 text-sm text-nexoraSubtle">Bạn đang nghĩ gì?</span><ImageIcon className="h-5 w-5 text-nexoraBrand" aria-hidden="true" /></button>
 }
 
 function CommentThread({ post }: { post: PostDto }) {
@@ -205,18 +206,18 @@ export function CommunityHome() {
   const feedCommunities = (myCommunities.data?.items.length ? myCommunities.data.items : communities.data?.items ?? []).slice(0, 3)
   return (
     <CommunityFrame containerClassName="mx-auto w-full max-w-[1040px] pb-20">
+      <header className="mb-4 flex items-center justify-between gap-3">
+        <div><p className="text-xs font-bold uppercase tracking-[0.12em] text-nexoraBrand">Nexora</p><h1 className="text-xl font-extrabold text-nexoraText">Cộng đồng</h1></div>
+        <div className="flex items-center gap-2"><CommunityNotificationBell /><Link to="/community/chat" aria-label="Mở Chat inbox" className="grid h-11 w-11 place-items-center rounded-xl border border-nexoraBorder bg-nexoraSurface text-nexoraBrand hover:bg-nexoraBrandSoft"><MessagesSquare className="h-5 w-5" aria-hidden="true" /></Link><Link to="/community/new" className={`inline-flex min-h-11 items-center gap-2 rounded-xl px-3 text-sm font-extrabold text-white ${gradientClass}`}><Plus className="h-4 w-4" aria-hidden="true" />Tạo nhóm</Link></div>
+      </header>
       <div className="flex flex-col gap-6 lg:flex-row lg:items-start">
         <div className="w-full max-w-[640px] flex-1 space-y-4">
-          <header className="flex items-center justify-between gap-3">
-            <div><p className="text-xs font-bold uppercase tracking-[0.12em] text-nexoraBrand">Nexora</p><h1 className="text-xl font-extrabold text-nexoraText">Cộng đồng</h1></div>
-            <div className="flex items-center gap-2"><CommunityNotificationBell /><Link to="/community/chat" aria-label="Mở Chat inbox" className="grid h-11 w-11 place-items-center rounded-xl border border-nexoraBorder bg-nexoraSurface text-nexoraBrand hover:bg-nexoraBrandSoft"><MessagesSquare className="h-5 w-5" aria-hidden="true" /></Link><Link to="/community/new" className={`inline-flex min-h-11 items-center gap-2 rounded-xl px-3 text-sm font-extrabold text-white ${gradientClass}`}><Plus className="h-4 w-4" aria-hidden="true" />Tạo nhóm</Link></div>
-          </header>
           {isLoading || myCommunities.isLoading || communities.isLoading ? <LoadingState rows={4} /> : null}
           {myCommunities.error ? <ErrorState error={myCommunities.error} onRetry={() => void myCommunities.refetch()} /> : null}
           {communities.error ? <ErrorState error={communities.error} onRetry={() => void communities.refetch()} /> : null}
+          {composerCommunityId ? <PostComposer communityId={composerCommunityId} onClose={() => setComposerCommunityId(null)} /> : <QuickComposer communityId={feedCommunities[0]?.id} onOpen={() => setComposerCommunityId(feedCommunities[0]?.id ?? null)} />}
           {ringCommunities.length ? <CommunityStoryRings communities={ringCommunities} /> : <EmptyState title="Chào mừng đến Community">Chọn một persona demo để vào nhóm hoặc tạo nhóm đầu tiên của bạn.</EmptyState>}
-          {composerCommunityId ? <PostComposer communityId={composerCommunityId} onClose={() => setComposerCommunityId(null)} /> : null}
-          {feedCommunities.map((community, index) => <div key={community.id}>{index === 0 ? <QuickComposer communityId={community.id} onOpen={() => setComposerCommunityId(community.id)} /> : null}<CommunityFeed community={community} /></div>)}
+          {feedCommunities.map((community) => <CommunityFeed key={community.id} community={community} />)}
           <button type="button" onClick={() => setSheetOpen(true)} aria-label="Tạo mới" className={`fixed bottom-24 right-5 z-40 grid h-14 w-14 place-items-center rounded-full text-white shadow-xl lg:bottom-7 ${gradientClass}`}><Plus className="h-6 w-6" aria-hidden="true" /></button>
           {sheetOpen ? <CreateSheet onClose={() => setSheetOpen(false)} onPost={() => { setComposerCommunityId(feedCommunities[0]?.id ?? null); setSheetOpen(false) }} onGroup={() => setSheetOpen(false)} /> : null}
         </div>
@@ -312,7 +313,7 @@ function CommunityAuthGate() {
   const navigate = useNavigate()
   const { authReady, error } = useCommunityAuth()
 
-  if (authReady) return <Outlet />
+  if (authReady) return <><Outlet /><CommunityChatDock /></>
 
   return (
     <>
@@ -331,5 +332,5 @@ function CommunityAuthGate() {
 }
 
 export function CommunityRouteRoot() {
-  return <CommunityAuthProvider><CommunityNotificationsProvider><CommunityAuthGate /></CommunityNotificationsProvider></CommunityAuthProvider>
+  return <CommunityAuthProvider><CommunityNotificationsProvider><CommunityChatDockProvider><CommunityAuthGate /></CommunityChatDockProvider></CommunityNotificationsProvider></CommunityAuthProvider>
 }
