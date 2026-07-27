@@ -428,10 +428,10 @@ export default function DemoStaffShell({ children, onDemoNavigation }: DemoStaff
           isChatRoute={isChatRoute}
         />
         <main
-          className={`mx-auto w-full max-w-[1088px] flex-1 px-4 sm:px-6 ${
+          className={`mx-auto w-full max-w-[1088px] flex-1 ${
             isChatRoute
-              ? 'min-h-0 pb-[calc(69px+var(--app-safe-area-bottom,env(safe-area-inset-bottom,0px)))] pt-5 lg:py-5'
-              : 'py-5'
+              ? 'min-h-0 px-0 pb-[calc(69px+var(--app-safe-area-bottom,env(safe-area-inset-bottom,0px)))] pt-0 lg:px-6 lg:py-5'
+              : 'px-4 py-5 sm:px-6'
           }`}
         >
           {children}
