@@ -424,7 +424,7 @@ function StaffModal({
           animation: scaleUp 0.2s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
         }
       `}</style>
-      <div className="w-full max-w-lg md:max-w-3xl lg:max-w-4xl rounded-xl bg-white p-6 shadow-2xl transition-all relative">
+      <div className="w-full max-w-lg md:max-w-3xl lg:max-w-4xl rounded-xl bg-white p-4 sm:p-6 shadow-2xl transition-all relative">
         {isLoadingDetail && (
           <div className="absolute inset-0 z-10 flex items-center justify-center rounded-xl bg-white/70 backdrop-blur-[1px]">
             <Loader2 className="h-8 w-8 animate-spin text-nexoraBrand" />
@@ -440,7 +440,7 @@ function StaffModal({
             <X className="h-4 w-4" />
           </IconButton>
         </div>
-        <div className="mt-5 grid grid-cols-1 items-start gap-6 md:grid-cols-[minmax(0,1.2fr)_minmax(0,0.8fr)]">
+        <div className="mt-5 grid grid-cols-1 items-start gap-4 md:gap-6 md:grid-cols-[minmax(0,1.2fr)_minmax(0,0.8fr)]">
           {/* Left Column: Basic Info & ID Verification */}
           <div className="space-y-4">
             {/* Staff ID / VLINKPAY ID Section */}

@@ -463,10 +463,10 @@ export default function StaffDetailView({
 
             <div className="min-w-0 flex-1">
               <div className="flex items-center gap-2 flex-wrap">
-                <h1 className='text-xl font-extrabold text-nexoraText sm:text-2xl'>
+                <h1 className='text-xl font-extrabold text-nexoraText sm:text-2xl min-w-0'>
                   <span className='[overflow-wrap:anywhere]'>{resolvedDisplayName}</span>
                 </h1>
-                <div className="flex gap-1">
+                <div className="flex flex-wrap gap-1">
                   {hasBusinessNickname ? (
                     <span className="rounded-full border border-dashed border-nexoraLavender bg-nexoraBrandSoft px-2.5 py-0.5 text-[10px] font-extrabold uppercase tracking-wider text-nexoraBrand">
                       {t('staff_detail.nickname_badge')}
@@ -519,7 +519,7 @@ export default function StaffDetailView({
             </div>
           </div>
 
-          <div className="grid w-full grid-cols-2 gap-2 sm:grid-cols-3 xl:flex xl:w-auto xl:flex-wrap xl:items-center xl:justify-end [&>div]:w-full [&>div>button]:w-full xl:[&>div]:w-auto xl:[&>div>button]:w-auto">
+          <div className="flex w-full flex-col gap-2 sm:grid sm:grid-cols-3 xl:flex xl:w-auto xl:flex-wrap xl:items-center xl:justify-end [&>div]:w-full [&>div>button]:w-full xl:[&>div]:w-auto xl:[&>div>button]:w-auto">
             {nicknameStaffLinkId != null && nicknameStaffCode ? (
               <NicknameEditor
                 value={rawBusinessNickname}
@@ -581,7 +581,7 @@ export default function StaffDetailView({
             {onDelete && (
               <button
                 onClick={() => onDelete(staffMember.id)}
-                className="inline-flex h-10 w-10 shrink-0 items-center justify-center justify-self-end rounded-lg border border-red-200 bg-red-50 text-red-600 transition hover:bg-red-100"
+                className="inline-flex h-10 w-10 shrink-0 items-center justify-center self-end sm:justify-self-end rounded-lg border border-red-200 bg-red-50 text-red-600 transition hover:bg-red-100"
                 title={t('staff_detail.delete_tech')}
               >
                 <Trash2 className="h-4 w-4" />
