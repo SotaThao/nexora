@@ -240,13 +240,14 @@ type DemoHeaderProps = {
   onOpenMobileMenu: () => void
   onDemoNavigation: () => void
   hideDecorativeNotification: boolean
+  isChatRoute: boolean
 }
 
 // Demo-local replica of StaffHeader.mobile.tsx and StaffHeader.desktop.tsx.
 // Query-backed notification/ecosystem controls are represented by their closed visual states.
-function DemoHeader({ onOpenMobileMenu, onDemoNavigation, hideDecorativeNotification }: DemoHeaderProps) {
+function DemoHeader({ onOpenMobileMenu, onDemoNavigation, hideDecorativeNotification, isChatRoute }: DemoHeaderProps) {
   return (
-    <header className="safe-area-top sticky top-[52px] z-20 border-b border-nexoraBorder bg-nexoraSurface">
+    <header className={`safe-area-top sticky z-20 border-b border-nexoraBorder bg-nexoraSurface ${isChatRoute ? 'top-0 lg:top-[52px]' : 'top-[52px]'}`}>
       <div className="flex items-center justify-between gap-2 px-4 py-3 lg:hidden">
         <div className="flex items-center gap-2">
           <button
@@ -422,6 +423,7 @@ export default function DemoStaffShell({ children, onDemoNavigation }: DemoStaff
           onOpenMobileMenu={() => setIsMobileMenuOpen(true)}
           onDemoNavigation={onDemoNavigation}
           hideDecorativeNotification={hideDecorativeNotification}
+          isChatRoute={isChatRoute}
         />
         <main
           className={`mx-auto w-full max-w-[1088px] flex-1 px-4 sm:px-6 ${

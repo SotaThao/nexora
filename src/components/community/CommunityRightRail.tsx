@@ -170,12 +170,13 @@ export function CommunityRightRail() {
             <MessageSquare className="h-4 w-4 text-nexoraBrand" aria-hidden="true" />
             <h2 className="text-sm font-extrabold text-nexoraText">Tin nhắn</h2>
           </div>
-          <Link
-            to="/community/chat"
-            className="text-xs font-bold text-nexoraBrand hover:underline"
-          >
-            Xem tất cả
-          </Link>
+            <button
+              type="button"
+              onClick={dock.toggleInbox}
+              className="text-xs font-bold text-nexoraBrand hover:underline"
+            >
+              Xem tất cả
+            </button>
         </div>
 
         <div className="mt-3 space-y-1">

@@ -1,4 +1,4 @@
-import { CheckCheck, Loader2, Maximize2, Minus, Phone, Send, Video, X } from 'lucide-react'
+import { CheckCheck, Loader2, Maximize2, MessageSquare, MessagesSquare, Minus, Phone, Search, Send, Users, Video, X } from 'lucide-react'
 import {
   createContext,
   useCallback,
@@ -10,10 +10,12 @@ import {
   type FormEvent,
   type ReactNode,
 } from 'react'
-import { useLocation, useNavigate } from 'react-router-dom'
+import { Link, useLocation, useNavigate } from 'react-router-dom'
 import type { MediaAsset, MessageDto } from '../../data/repositories/community'
 import { useCommunityChat } from '../../data/hooks/useCommunityChat'
-import { useCommunityMediaUrl } from '../../data/hooks/useCommunity'
+import { useCommunityMediaUrl, useMyCommunities } from '../../data/hooks/useCommunity'
+import { useDirectChannels } from '../../data/hooks/useDirectMessages'
+import { formatJoinedDate } from '../../utils/localDate'
 import { useCommunityAuth } from './CommunityAuth'
 
 const gradientClass = 'bg-gradient-to-br from-nexoraElectric to-nexoraViolet'
@@ -27,6 +29,9 @@ type DockChatEntry = {
 
 type CommunityChatDockContextValue = {
   entries: DockChatEntry[]
+  isInboxOpen: boolean
+  toggleInbox: () => void
+  closeInbox: () => void
   openDirectChat: (channel: { id: string; title: string }) => void
   close: (channelId: string) => void
   toggleMinimize: (channelId: string) => void
@@ -36,8 +41,13 @@ const CommunityChatDockContext = createContext<CommunityChatDockContextValue | n
 
 export function CommunityChatDockProvider({ children }: { children: ReactNode }) {
   const [entries, setEntries] = useState<DockChatEntry[]>([])
+  const [isInboxOpen, setIsInboxOpen] = useState(false)
+
+  const toggleInbox = useCallback(() => setIsInboxOpen((current) => !current), [])
+  const closeInbox = useCallback(() => setIsInboxOpen(false), [])
 
   const openDirectChat = useCallback((channel: { id: string; title: string }) => {
+    setIsInboxOpen(false)
     setEntries((current) => {
       const existing = current.find((entry) => entry.channelId === channel.id)
       if (existing) {
@@ -62,8 +72,8 @@ export function CommunityChatDockProvider({ children }: { children: ReactNode })
   }, [])
 
   const value = useMemo(
-    () => ({ entries, openDirectChat, close, toggleMinimize }),
-    [entries, openDirectChat, close, toggleMinimize],
+    () => ({ entries, isInboxOpen, toggleInbox, closeInbox, openDirectChat, close, toggleMinimize }),
+    [entries, isInboxOpen, toggleInbox, closeInbox, openDirectChat, close, toggleMinimize],
   )
 
   return <CommunityChatDockContext.Provider value={value}>{children}</CommunityChatDockContext.Provider>
@@ -89,6 +99,193 @@ function Avatar({ name, className = 'h-8 w-8' }: { name?: string | null; classNa
 
 function formatTime(value: string) {
   return new Intl.DateTimeFormat('vi-VN', { hour: '2-digit', minute: '2-digit' }).format(new Date(value))
+}
+
+export function CommunityChatInboxTrigger() {
+  const navigate = useNavigate()
+  const { user, isAnonymous } = useCommunityAuth()
+  const { isInboxOpen, toggleInbox, closeInbox, openDirectChat } = useCommunityChatDock()
+  const [activeTab, setActiveTab] = useState<'dm' | 'groups'>('dm')
+  const [searchQuery, setSearchQuery] = useState('')
+  const wrapperRef = useRef<HTMLDivElement>(null)
+
+  const directChannels = useDirectChannels({ enabled: Boolean(user) && !isAnonymous })
+  const myCommunities = useMyCommunities({ enabled: Boolean(user) && !isAnonymous })
+  const normalizedQuery = searchQuery.trim().toLocaleLowerCase('vi')
+  const visibleDirectChannels = (directChannels.data ?? []).filter((channel) =>
+    channel.otherParticipant.displayName.toLocaleLowerCase('vi').includes(normalizedQuery),
+  )
+  const visibleCommunities = (myCommunities.data?.items ?? []).filter((community) =>
+    community.name.toLocaleLowerCase('vi').includes(normalizedQuery),
+  )
+
+  useEffect(() => {
+    if (!isInboxOpen) return
+    const handlePointerDown = (event: PointerEvent) => {
+      if (!wrapperRef.current?.contains(event.target as Node)) closeInbox()
+    }
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') closeInbox()
+    }
+    document.addEventListener('pointerdown', handlePointerDown)
+    document.addEventListener('keydown', handleKeyDown)
+    return () => {
+      document.removeEventListener('pointerdown', handlePointerDown)
+      document.removeEventListener('keydown', handleKeyDown)
+    }
+  }, [closeInbox, isInboxOpen])
+
+  const openGroupChat = (communityId: string) => {
+    closeInbox()
+    navigate(`/community/${communityId}/chat`)
+  }
+
+  return (
+    <div ref={wrapperRef} className="relative">
+      <button
+        type="button"
+        onClick={toggleInbox}
+        aria-label="Mở Messenger"
+        aria-expanded={isInboxOpen}
+        aria-haspopup="dialog"
+        className={`hidden h-11 w-11 place-items-center rounded-xl border bg-nexoraSurface text-nexoraBrand transition-colors hover:bg-nexoraBrandSoft lg:grid ${
+          isInboxOpen ? 'border-nexoraBrand bg-nexoraBrandSoft' : 'border-nexoraBorder'
+        }`}
+      >
+        <MessagesSquare className="h-5 w-5" aria-hidden="true" />
+      </button>
+      <Link
+        to="/community/chat"
+        onClick={closeInbox}
+        aria-label="Mở ứng dụng Chat"
+        className="grid h-11 w-11 place-items-center rounded-xl border border-nexoraBorder bg-nexoraSurface text-nexoraBrand hover:bg-nexoraBrandSoft lg:hidden"
+      >
+        <MessagesSquare className="h-5 w-5" aria-hidden="true" />
+      </Link>
+
+      {isInboxOpen ? (
+        <section
+          role="dialog"
+          aria-label="Messenger"
+          className="absolute right-0 top-[calc(100%+10px)] z-[90] hidden max-h-[min(620px,calc(100dvh-150px))] w-[min(380px,calc(100vw-2rem))] flex-col overflow-hidden rounded-xl border border-nexoraBorder bg-nexoraSurface text-left shadow-2xl lg:flex"
+        >
+          <header className="flex shrink-0 items-center gap-3 px-4 pb-2 pt-4">
+            <span className={`grid h-10 w-10 place-items-center rounded-full text-white ${gradientClass}`}>
+              <MessagesSquare className="h-5 w-5" aria-hidden="true" />
+            </span>
+            <div className="min-w-0 flex-1">
+              <h2 className="text-lg font-extrabold text-nexoraText">Tin nhắn</h2>
+              <p className="text-xs text-nexoraMuted">Messenger trên Community</p>
+            </div>
+            <button
+              type="button"
+              onClick={closeInbox}
+              aria-label="Đóng Messenger"
+              className="grid h-9 w-9 place-items-center rounded-full text-nexoraMuted hover:bg-nexoraSurfaceMuted"
+            >
+              <X className="h-4 w-4" aria-hidden="true" />
+            </button>
+          </header>
+
+          <div className="relative mx-3 mb-3 shrink-0">
+            <Search className="pointer-events-none absolute left-3 top-2.5 h-4 w-4 text-nexoraSubtle" aria-hidden="true" />
+            <input
+              value={searchQuery}
+              onChange={(event) => setSearchQuery(event.target.value)}
+              placeholder="Tìm cuộc trò chuyện"
+              aria-label="Tìm cuộc trò chuyện"
+              className="min-h-9 w-full rounded-full border border-nexoraBorder bg-nexoraSurfaceMuted pl-9 pr-3 text-sm text-nexoraText outline-none placeholder:text-nexoraSubtle focus:border-nexoraBrand"
+            />
+          </div>
+
+          <div className="flex shrink-0 border-b border-nexoraRule px-3">
+            <button
+              type="button"
+              onClick={() => setActiveTab('dm')}
+              aria-pressed={activeTab === 'dm'}
+              className={`flex min-h-10 flex-1 items-center justify-center gap-1.5 border-b-2 text-xs font-extrabold ${
+                activeTab === 'dm' ? 'border-nexoraBrand text-nexoraBrand' : 'border-transparent text-nexoraMuted'
+              }`}
+            >
+              <MessageSquare className="h-4 w-4" aria-hidden="true" />
+              Tin nhắn ({directChannels.data?.length ?? 0})
+            </button>
+            <button
+              type="button"
+              onClick={() => setActiveTab('groups')}
+              aria-pressed={activeTab === 'groups'}
+              className={`flex min-h-10 flex-1 items-center justify-center gap-1.5 border-b-2 text-xs font-extrabold ${
+                activeTab === 'groups' ? 'border-nexoraBrand text-nexoraBrand' : 'border-transparent text-nexoraMuted'
+              }`}
+            >
+              <Users className="h-4 w-4" aria-hidden="true" />
+              Nhóm ({myCommunities.data?.items.length ?? 0})
+            </button>
+          </div>
+
+          <div className="min-h-0 flex-1 overflow-y-auto p-2">
+            {activeTab === 'dm' ? (
+              directChannels.isLoading ? (
+                <div className="grid min-h-36 place-items-center">
+                  <Loader2 className="h-6 w-6 animate-spin text-nexoraBrand" aria-label="Đang tải tin nhắn" />
+                </div>
+              ) : visibleDirectChannels.length ? (
+                visibleDirectChannels.map((channel) => (
+                  <button
+                    key={channel.id}
+                    type="button"
+                    onClick={() => openDirectChat({ id: channel.id, title: channel.otherParticipant.displayName })}
+                    className="flex min-h-[64px] w-full items-center gap-3 rounded-xl px-2.5 py-2 text-left hover:bg-nexoraBrandSoft/45"
+                  >
+                    <Avatar name={channel.otherParticipant.displayName} className="h-11 w-11 text-xs" />
+                    <span className="min-w-0 flex-1">
+                      <span className="flex items-center justify-between gap-2">
+                        <b className="truncate text-sm text-nexoraText">{channel.otherParticipant.displayName}</b>
+                        <time className="shrink-0 text-[11px] text-nexoraSubtle">{formatJoinedDate(channel.createdAt)}</time>
+                      </span>
+                      <span className="mt-0.5 block truncate text-xs text-nexoraMuted">Mở cuộc trò chuyện 1:1</span>
+                    </span>
+                  </button>
+                ))
+              ) : (
+                <div className="px-6 py-10 text-center">
+                  <MessagesSquare className="mx-auto h-7 w-7 text-nexoraSubtle" aria-hidden="true" />
+                  <p className="mt-2 text-sm font-bold text-nexoraText">Không có cuộc trò chuyện</p>
+                  <p className="mt-1 text-xs text-nexoraMuted">Mở ứng dụng Chat trên mobile để tìm người dùng mới.</p>
+                </div>
+              )
+            ) : myCommunities.isLoading ? (
+              <div className="grid min-h-36 place-items-center">
+                <Loader2 className="h-6 w-6 animate-spin text-nexoraBrand" aria-label="Đang tải nhóm" />
+              </div>
+            ) : visibleCommunities.length ? (
+              visibleCommunities.map((community) => (
+                <button
+                  key={community.id}
+                  type="button"
+                  onClick={() => openGroupChat(community.id)}
+                  className="flex min-h-[64px] w-full items-center gap-3 rounded-xl px-2.5 py-2 text-left hover:bg-nexoraBrandSoft/45"
+                >
+                  <Avatar name={community.name} className="h-11 w-11 text-xs" />
+                  <span className="min-w-0 flex-1">
+                    <b className="block truncate text-sm text-nexoraText">{community.name}</b>
+                    <span className="mt-0.5 block truncate text-xs text-nexoraMuted">
+                      {community.kind === 'salon' ? 'Salon Group' : 'Nhóm Community'}
+                    </span>
+                  </span>
+                </button>
+              ))
+            ) : (
+              <div className="px-6 py-10 text-center">
+                <Users className="mx-auto h-7 w-7 text-nexoraSubtle" aria-hidden="true" />
+                <p className="mt-2 text-sm font-bold text-nexoraText">Không tìm thấy nhóm</p>
+              </div>
+            )}
+          </div>
+        </section>
+      ) : null}
+    </div>
+  )
 }
 
 function DockMessageImage({ asset }: { asset: MediaAsset }) {
