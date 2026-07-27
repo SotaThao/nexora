@@ -22,7 +22,9 @@ const gradientClass = 'bg-gradient-to-br from-nexoraElectric to-nexoraViolet'
 const MAX_OPEN_WINDOWS = 2
 
 type DockChatEntry = {
-  channelId: string
+  key: string
+  targetId: string
+  kind: 'direct' | 'group'
   title: string
   minimized: boolean
 }
@@ -33,8 +35,9 @@ type CommunityChatDockContextValue = {
   toggleInbox: () => void
   closeInbox: () => void
   openDirectChat: (channel: { id: string; title: string }) => void
-  close: (channelId: string) => void
-  toggleMinimize: (channelId: string) => void
+  openGroupChat: (community: { id: string; title: string }) => void
+  close: (entryKey: string) => void
+  toggleMinimize: (entryKey: string) => void
 }
 
 const CommunityChatDockContext = createContext<CommunityChatDockContextValue | null>(null)
@@ -46,34 +49,42 @@ export function CommunityChatDockProvider({ children }: { children: ReactNode })
   const toggleInbox = useCallback(() => setIsInboxOpen((current) => !current), [])
   const closeInbox = useCallback(() => setIsInboxOpen(false), [])
 
-  const openDirectChat = useCallback((channel: { id: string; title: string }) => {
+  const openChat = useCallback((entry: Omit<DockChatEntry, 'minimized'>) => {
     setIsInboxOpen(false)
     setEntries((current) => {
-      const existing = current.find((entry) => entry.channelId === channel.id)
+      const existing = current.find((item) => item.key === entry.key)
       if (existing) {
-        const rest = current.filter((entry) => entry.channelId !== channel.id)
-        return [...rest, { ...existing, title: channel.title, minimized: false }]
+        const rest = current.filter((item) => item.key !== entry.key)
+        return [...rest, { ...existing, title: entry.title, minimized: false }]
       }
       const openCount = current.filter((entry) => !entry.minimized).length
       const overflowIndex = openCount >= MAX_OPEN_WINDOWS ? current.findIndex((entry) => !entry.minimized) : -1
-      const next = current.map((entry, index) => (index === overflowIndex ? { ...entry, minimized: true } : entry))
-      return [...next, { channelId: channel.id, title: channel.title, minimized: false }]
+      const next = current.map((item, index) => (index === overflowIndex ? { ...item, minimized: true } : item))
+      return [...next, { ...entry, minimized: false }]
     })
   }, [])
 
-  const close = useCallback((channelId: string) => {
-    setEntries((current) => current.filter((entry) => entry.channelId !== channelId))
+  const openDirectChat = useCallback((channel: { id: string; title: string }) => {
+    openChat({ key: `direct:${channel.id}`, targetId: channel.id, kind: 'direct', title: channel.title })
+  }, [openChat])
+
+  const openGroupChat = useCallback((community: { id: string; title: string }) => {
+    openChat({ key: `group:${community.id}`, targetId: community.id, kind: 'group', title: community.title })
+  }, [openChat])
+
+  const close = useCallback((entryKey: string) => {
+    setEntries((current) => current.filter((entry) => entry.key !== entryKey))
   }, [])
 
-  const toggleMinimize = useCallback((channelId: string) => {
+  const toggleMinimize = useCallback((entryKey: string) => {
     setEntries((current) =>
-      current.map((entry) => (entry.channelId === channelId ? { ...entry, minimized: !entry.minimized } : entry)),
+      current.map((entry) => (entry.key === entryKey ? { ...entry, minimized: !entry.minimized } : entry)),
     )
   }, [])
 
   const value = useMemo(
-    () => ({ entries, isInboxOpen, toggleInbox, closeInbox, openDirectChat, close, toggleMinimize }),
-    [entries, isInboxOpen, toggleInbox, closeInbox, openDirectChat, close, toggleMinimize],
+    () => ({ entries, isInboxOpen, toggleInbox, closeInbox, openDirectChat, openGroupChat, close, toggleMinimize }),
+    [entries, isInboxOpen, toggleInbox, closeInbox, openDirectChat, openGroupChat, close, toggleMinimize],
   )
 
   return <CommunityChatDockContext.Provider value={value}>{children}</CommunityChatDockContext.Provider>
@@ -102,9 +113,8 @@ function formatTime(value: string) {
 }
 
 export function CommunityChatInboxTrigger() {
-  const navigate = useNavigate()
   const { user, isAnonymous } = useCommunityAuth()
-  const { isInboxOpen, toggleInbox, closeInbox, openDirectChat } = useCommunityChatDock()
+  const { isInboxOpen, toggleInbox, closeInbox, openDirectChat, openGroupChat } = useCommunityChatDock()
   const [activeTab, setActiveTab] = useState<'dm' | 'groups'>('dm')
   const [searchQuery, setSearchQuery] = useState('')
   const directChannels = useDirectChannels({ enabled: Boolean(user) && !isAnonymous })
@@ -136,11 +146,6 @@ export function CommunityChatInboxTrigger() {
       document.removeEventListener('keydown', handleKeyDown)
     }
   }, [closeInbox, isInboxOpen])
-
-  const openGroupChat = (communityId: string) => {
-    closeInbox()
-    navigate(`/community/${communityId}/chat`)
-  }
 
   return (
     <div data-community-chat-inbox-root className="relative">
@@ -265,7 +270,7 @@ export function CommunityChatInboxTrigger() {
                 <button
                   key={community.id}
                   type="button"
-                  onClick={() => openGroupChat(community.id)}
+                  onClick={() => openGroupChat({ id: community.id, title: community.name })}
                   className="flex min-h-[64px] w-full items-center gap-3 rounded-xl px-2.5 py-2 text-left hover:bg-nexoraBrandSoft/45"
                 >
                   <Avatar name={community.name} className="h-11 w-11 text-xs" />
@@ -335,7 +340,9 @@ function DockBubble({
 function DockWindow({ entry, onClose, onMinimize }: { entry: DockChatEntry; onClose: () => void; onMinimize: () => void }) {
   const navigate = useNavigate()
   const { user } = useCommunityAuth()
-  const chat = useCommunityChat(null, { directChannelId: entry.channelId })
+  const chat = useCommunityChat(entry.kind === 'group' ? entry.targetId : null, {
+    directChannelId: entry.kind === 'direct' ? entry.targetId : null,
+  })
   const [body, setBody] = useState('')
   const scrollRef = useRef<HTMLDivElement>(null)
 
@@ -347,12 +354,12 @@ function DockWindow({ entry, onClose, onMinimize }: { entry: DockChatEntry; onCl
     event.preventDefault()
     if (!body.trim() || chat.isSending || !chat.channel) return
     chat
-      .sendMessage({ channelId: entry.channelId, body })
+      .sendMessage({ channelId: chat.channel.id, body })
       .then(() => setBody(''))
       .catch(() => undefined)
   }
 
-  const expand = () => navigate(`/community/chat/dm/${entry.channelId}`)
+  const expand = () => navigate(`/community/chat/dm/${entry.targetId}`)
 
   return (
     <div className="flex h-[430px] w-[340px] flex-col overflow-hidden rounded-t-2xl border border-nexoraBorder bg-white font-sans shadow-2xl">
@@ -361,7 +368,7 @@ function DockWindow({ entry, onClose, onMinimize }: { entry: DockChatEntry; onCl
         <h2 className="min-w-0 flex-1 truncate text-sm font-extrabold text-nexoraText">{entry.title}</h2>
         <button type="button" disabled aria-label="Gọi thoại" title="Chưa hỗ trợ gọi thoại trong bản demo" className="grid h-6 w-6 shrink-0 place-items-center rounded-full text-nexoraSubtle opacity-40 cursor-not-allowed"><Phone className="h-3 w-3" aria-hidden="true" /></button>
         <button type="button" disabled aria-label="Gọi video" title="Chưa hỗ trợ gọi video trong bản demo" className="grid h-6 w-6 shrink-0 place-items-center rounded-full text-nexoraSubtle opacity-40 cursor-not-allowed"><Video className="h-3 w-3" aria-hidden="true" /></button>
-        <button type="button" onClick={expand} aria-label="Mở toàn màn hình" className="grid h-7 w-7 shrink-0 place-items-center rounded-full text-nexoraMuted hover:bg-nexoraSurfaceMuted"><Maximize2 className="h-3.5 w-3.5" aria-hidden="true" /></button>
+        {entry.kind === 'direct' ? <button type="button" onClick={expand} aria-label="Mở toàn màn hình" className="grid h-7 w-7 shrink-0 place-items-center rounded-full text-nexoraMuted hover:bg-nexoraSurfaceMuted"><Maximize2 className="h-3.5 w-3.5" aria-hidden="true" /></button> : null}
         <button type="button" onClick={onMinimize} aria-label="Thu nhỏ" className="grid h-7 w-7 shrink-0 place-items-center rounded-full text-nexoraMuted hover:bg-nexoraSurfaceMuted"><Minus className="h-3.5 w-3.5" aria-hidden="true" /></button>
         <button type="button" onClick={onClose} aria-label="Đóng đoạn chat" className="grid h-7 w-7 shrink-0 place-items-center rounded-full text-nexoraMuted hover:bg-nexoraSurfaceMuted"><X className="h-4 w-4" aria-hidden="true" /></button>
       </header>
@@ -439,12 +446,14 @@ function DockHead({ entry, onOpen, onClose }: { entry: DockChatEntry; onOpen: ()
 export function CommunityChatDock() {
   const { entries, close, toggleMinimize } = useCommunityChatDock()
   const location = useLocation()
-  const fullPageChannelId = useMemo(() => {
-    const match = location.pathname.match(/^\/community\/chat\/dm\/([^/]+)$/)
-    return match?.[1]
+  const fullPageEntryKey = useMemo(() => {
+    const directMatch = location.pathname.match(/^\/community\/chat\/dm\/([^/]+)$/)
+    if (directMatch?.[1]) return `direct:${directMatch[1]}`
+    const groupMatch = location.pathname.match(/^\/community\/([^/]+)\/chat\/?$/)
+    return groupMatch?.[1] ? `group:${groupMatch[1]}` : undefined
   }, [location.pathname])
 
-  const visible = entries.filter((entry) => entry.channelId !== fullPageChannelId)
+  const visible = entries.filter((entry) => entry.key !== fullPageEntryKey)
   if (!visible.length) return null
 
   const open = visible.filter((entry) => !entry.minimized)
@@ -455,13 +464,13 @@ export function CommunityChatDock() {
       {minimized.length ? (
         <div className="pointer-events-auto flex flex-col-reverse gap-2 pb-2">
           {minimized.map((entry) => (
-            <DockHead key={entry.channelId} entry={entry} onOpen={() => toggleMinimize(entry.channelId)} onClose={() => close(entry.channelId)} />
+            <DockHead key={entry.key} entry={entry} onOpen={() => toggleMinimize(entry.key)} onClose={() => close(entry.key)} />
           ))}
         </div>
       ) : null}
       {open.map((entry) => (
-        <div key={entry.channelId} className="pointer-events-auto">
-          <DockWindow entry={entry} onClose={() => close(entry.channelId)} onMinimize={() => toggleMinimize(entry.channelId)} />
+        <div key={entry.key} className="pointer-events-auto">
+          <DockWindow entry={entry} onClose={() => close(entry.key)} onMinimize={() => toggleMinimize(entry.key)} />
         </div>
       ))}
     </div>

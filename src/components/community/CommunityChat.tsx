@@ -17,8 +17,10 @@ import { useNavigate, useParams } from 'react-router-dom'
 import type { CommunityMemberDto, MediaAsset, MessageDto } from '../../data/repositories/community'
 import { useCommunityChat } from '../../data/hooks/useCommunityChat'
 import { useCommunityDetail, useCommunityFeedPosts, useCommunityMediaUrl, useCommunityMembers } from '../../data/hooks/useCommunity'
+import { useMediaQuery } from '../../hooks/useMediaQuery'
 import { mapSupabaseError, type SupabaseDisplayError } from '../../lib/supabaseError'
 import { CommunityPersonaSwitcher, useCommunityAuth } from './CommunityAuth'
+import { useCommunityChatDock } from './CommunityChatDock'
 import { CommunityChatMemberActionsSheet } from './CommunityChatMemberActionsSheet'
 import DemoStaffShell from './demo/DemoStaffShell'
 
@@ -155,6 +157,8 @@ export function CommunityChat() {
   const { id = '' } = useParams()
   const navigate = useNavigate()
   const { user } = useCommunityAuth()
+  const { openGroupChat } = useCommunityChatDock()
+  const isDesktop = useMediaQuery('(min-width: 1024px)')
   const detail = useCommunityDetail(id)
   const membersQuery = useCommunityMembers(id)
   const postsQuery = useCommunityFeedPosts(id)
@@ -174,6 +178,12 @@ export function CommunityChat() {
   useEffect(() => () => {
     if (previewUrl) URL.revokeObjectURL(previewUrl)
   }, [previewUrl])
+
+  useEffect(() => {
+    if (!isDesktop || !id || detail.isLoading) return
+    openGroupChat({ id, title: detail.data?.name || 'Nhóm Community' })
+    navigate('/community', { replace: true })
+  }, [detail.data?.name, detail.isLoading, id, isDesktop, navigate, openGroupChat])
 
   const members = useMemo(() => membersQuery.data?.pages.flatMap((page) => page.items) ?? [], [membersQuery.data])
   const membersByUserId = useMemo(() => new Map(members.map((member) => [member.userId, member])), [members])
@@ -281,6 +291,8 @@ export function CommunityChat() {
       return <div key={message.id} className={`${isFirstInRun ? 'mt-3' : 'mt-0.5'} first:mt-0`}>{startsNewDay ? <p className="mx-auto mb-3 w-fit rounded-full bg-nexoraSurfaceMuted px-3 py-1 text-[11px] font-semibold text-nexoraSubtle">{formatDay(message.createdAt)}</p> : null}<ChatBubble message={message} members={membersByUserId} messagesById={messagesById} currentUserId={user?.id} isFirstInRun={isFirstInRun} isLastInRun={isLastInRun} onReply={setReplyTo} /></div>
     })}</div>
   }
+
+  if (isDesktop) return null
 
   return (
     <>
