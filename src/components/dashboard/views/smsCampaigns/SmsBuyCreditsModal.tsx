@@ -20,6 +20,8 @@ const TK = SMS_CAMPAIGN_TK
 type Props = {
   open: boolean
   submitting?: boolean
+  /** Keep `document.body` scroll lock when this modal closes (e.g. create campaign still open). */
+  preserveBodyLock?: boolean
   onClose: () => void
   /** Reserved for when purchase checkout is enabled. */
   onConfirm?: (pkg: SmsCreditPackageMock, payment: SmsCreditPaymentMock) => void | Promise<void>
@@ -28,6 +30,7 @@ type Props = {
 export default function SmsBuyCreditsModal({
   open,
   submitting = false,
+  preserveBodyLock = false,
   onClose,
 }: Props) {
   const { t, currentLanguage } = useTranslation()
@@ -37,7 +40,7 @@ export default function SmsBuyCreditsModal({
 
   useEffect(() => {
     if (!open) {
-      document.body.style.overflow = ''
+      if (!preserveBodyLock) document.body.style.overflow = ''
       return undefined
     }
 
@@ -46,16 +49,18 @@ export default function SmsBuyCreditsModal({
     setPaymentId(SmsCreditPaymentId.Usdv)
 
     const onKeyDown = (event: KeyboardEvent) => {
-      if (event.key === 'Escape' && !submitting) onClose()
+      if (event.key !== 'Escape' || submitting) return
+      event.stopImmediatePropagation()
+      onClose()
     }
-    window.addEventListener('keydown', onKeyDown)
+    window.addEventListener('keydown', onKeyDown, true)
     requestAnimationFrame(() => closeBtnRef.current?.focus())
 
     return () => {
-      document.body.style.overflow = ''
-      window.removeEventListener('keydown', onKeyDown)
+      if (!preserveBodyLock) document.body.style.overflow = ''
+      window.removeEventListener('keydown', onKeyDown, true)
     }
-  }, [open, onClose, submitting])
+  }, [open, onClose, submitting, preserveBodyLock])
 
   const numberLocale = currentLanguage === 'vi' ? 'vi-VN' : 'en-US'
 

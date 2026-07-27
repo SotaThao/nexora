@@ -595,11 +595,29 @@ export function normalizeMerchantVoiceLeadSource(value: unknown): MerchantVoiceL
   return MerchantVoiceLeadSource.Voice
 }
 
+const LEAD_STATUS_TO_UI_STATUS: Record<MerchantVoiceLeadStatus, BookingUiStatus> = {
+  [MerchantVoiceLeadStatus.New]: BookingUiStatus.New,
+  [MerchantVoiceLeadStatus.Confirmed]: BookingUiStatus.SmsSent,
+  [MerchantVoiceLeadStatus.Done]: BookingUiStatus.Done,
+  [MerchantVoiceLeadStatus.NoShow]: BookingUiStatus.NoShow,
+}
+
+const UI_STATUS_TO_LEAD_STATUS_API: Record<BookingUiStatus, MerchantVoiceLeadStatusApiValue> = {
+  [BookingUiStatus.New]: MerchantVoiceLeadStatusApi.New,
+  [BookingUiStatus.SmsSent]: MerchantVoiceLeadStatusApi.Confirmed,
+  [BookingUiStatus.Done]: MerchantVoiceLeadStatusApi.Done,
+  [BookingUiStatus.NoShow]: MerchantVoiceLeadStatusApi.NoShow,
+}
+
 export function mapLeadStatusToUiStatus(status: MerchantVoiceLeadStatus): BookingUiStatus {
-  if (status === MerchantVoiceLeadStatus.Done) return BookingUiStatus.Done
-  if (status === MerchantVoiceLeadStatus.Confirmed) return BookingUiStatus.SmsSent
-  if (status === MerchantVoiceLeadStatus.NoShow) return BookingUiStatus.NoShow
-  return BookingUiStatus.New
+  return LEAD_STATUS_TO_UI_STATUS[status] ?? BookingUiStatus.New
+}
+
+/** UI status → OpenAPI `VoiceLeadStatus` string for create/update booking payloads. */
+export function mapUiStatusToLeadStatusApi(
+  status: BookingUiStatus,
+): MerchantVoiceLeadStatusApiValue {
+  return UI_STATUS_TO_LEAD_STATUS_API[status] ?? MerchantVoiceLeadStatusApi.New
 }
 
 export function mapLeadSourceToUiSource(source: MerchantVoiceLeadSource): BookingUiSource {

@@ -5,6 +5,7 @@ import { getErrorI18nKey } from '../../../data/errorCodes'
 import {
   useMerchantVoiceBookings,
   useMerchantVoiceBookingStatistics,
+  useMerchantVoiceStaff,
   useSendMerchantVoiceBookingConfirmationSms,
   useUpdateMerchantVoiceBookingStatus,
 } from '../../../data/hooks/useMerchantVoiceBookings'
@@ -20,6 +21,7 @@ import {
   mapUiSourceToSourceClass,
   MerchantVoiceErrorCode,
   MerchantVoiceLeadStatus,
+  MerchantVoiceStaffStatus,
   type MerchantVoiceBookingDto,
 } from '../../../data/repositories/merchantVoice'
 import { getApiErrorCode } from '../../../types/domain'
@@ -35,6 +37,7 @@ import {
   GridIcon,
   JournalIcon,
   PersonWorkspaceIcon,
+  PlusIcon,
   SendIcon,
   SpinnerIcon,
   StarsIcon,
@@ -43,6 +46,14 @@ import {
   XLgIcon,
   XKpiIcon,
 } from './BookingHubIcons'
+import BookingCreateAppointmentModal from './BookingCreateAppointmentModal'
+import type { BookingCreateCreatedSlot, BookingCreatePrefill } from './bookingCreateConstants'
+import {
+  BOOKING_CREATE_LOCAL_ID_PREFIX,
+  BOOKING_CREATE_OPTIMISTIC_TTL_MS,
+  BOOKING_CREATE_STAFF_PAGE_SIZE,
+  BOOKING_CREATE_TK,
+} from './bookingCreateConstants'
 import { useBookingHubVoiceEnabled } from './BookingHubVoiceContext'
 import Pagination from '../../ui/Pagination'
 import { usePagination } from '../../../hooks/usePagination'
@@ -54,12 +65,15 @@ import {
 } from './BookingHubSkeletons'
 import BookingKpiCard from './BookingKpiCard'
 import BookingFilterPopover from './BookingFilterPopover'
-import BookingTeamCalendar from './BookingTeamCalendar'
+import BookingTeamCalendar, { type BookingCalendarSlotSelect } from './BookingTeamCalendar'
+import type { BookingCalendarSource } from './bookingCalendarUtils'
 import {
+  BOOKING_CALENDAR_CELL_DURATION_MINUTES,
   BOOKING_STATUS_FILTER_ORDER,
   BOOKING_STATUS_META,
   BookingTodayViewMode,
 } from './bookingTodayConstants'
+import { toUtcBookingSlot } from '../../../data/repositories/publicVoiceBooking'
 import {
   BOOKING_HUB_EMPTY_CELL,
   BOOKING_HUB_PAGINATION_CLASSNAME,
@@ -116,6 +130,32 @@ interface BookingItem {
 }
 
 const EMPTY_CELL = BOOKING_HUB_EMPTY_CELL
+
+function buildPendingCalendarBooking(
+  slot: BookingCreateCreatedSlot,
+  statusLabelText: string,
+): BookingCalendarSource {
+  const utc = toUtcBookingSlot(slot.date, slot.time)
+  const startAtUtc = utc.date && utc.startTime ? `${utc.date}T${utc.startTime}Z` : null
+  let endAtUtc: string | null = null
+  if (startAtUtc) {
+    const start = parseApiDateTime(startAtUtc)
+    if (start) {
+      const durationMinutes = Math.max(BOOKING_CALENDAR_CELL_DURATION_MINUTES, slot.durationMinutes)
+      endAtUtc = new Date(start.getTime() + durationMinutes * 60_000).toISOString()
+    }
+  }
+  return {
+    id: `${BOOKING_CREATE_LOCAL_ID_PREFIX}${slot.date}T${slot.time}`,
+    name: slot.customerName || EMPTY_CELL,
+    tech: slot.staffName?.trim() || EMPTY_CELL,
+    date: slot.date,
+    services: slot.serviceNames.length > 0 ? slot.serviceNames : [EMPTY_CELL],
+    statusLabel: statusLabelText,
+    startAtUtc,
+    endAtUtc,
+  }
+}
 
 function mapSource(source: MerchantVoiceBookingDto['source']): BookingSource {
   return mapLeadSourceToUiSource(source)
@@ -631,6 +671,9 @@ export default function BookingTodayPanel() {
   const [statusOverrides, setStatusOverrides] = useState<Record<string, BookingStatus>>({})
   const [pendingStatusUpdates, setPendingStatusUpdates] = useState<Record<string, boolean>>({})
   const [detailBooking, setDetailBooking] = useState<BookingItem | null>(null)
+  const [isCreateOpen, setIsCreateOpen] = useState(false)
+  const [createPrefill, setCreatePrefill] = useState<BookingCreatePrefill | null>(null)
+  const [pendingCalendarBooking, setPendingCalendarBooking] = useState<BookingCalendarSource | null>(null)
   const { pageNumber, pageSize, setPage, reset: resetPage } = usePagination({
     pageSize: BOOKING_HUB_PAGE_SIZE,
   })
@@ -674,6 +717,20 @@ export default function BookingTodayPanel() {
     dateFrom: dateFromApi,
     dateTo: dateToApi,
   }, { enabled: voiceEnabled, refetchInterval: voiceEnabled ? MERCHANT_VOICE_BOOKINGS_POLL_INTERVAL_MS : false })
+  const { data: calendarStaffResponse } = useMerchantVoiceStaff(
+    {
+      pageNumber: 1,
+      pageSize: BOOKING_CREATE_STAFF_PAGE_SIZE,
+      status: MerchantVoiceStaffStatus.Active,
+    },
+    { enabled: voiceEnabled && viewMode === BookingTodayViewMode.Calendar },
+  )
+  const calendarStaffNames = useMemo(
+    () => (calendarStaffResponse?.items ?? [])
+      .map((item) => item.fullName?.trim())
+      .filter((name): name is string => Boolean(name)),
+    [calendarStaffResponse?.items],
+  )
   const updateBookingStatusMutation = useUpdateMerchantVoiceBookingStatus()
   const sendConfirmationSmsMutation = useSendMerchantVoiceBookingConfirmationSms()
 
@@ -722,6 +779,56 @@ export default function BookingTodayPanel() {
     if (next === statusFilter) return
     setStatusFilter(next)
   }
+
+  const openCreateModal = (prefill: BookingCreatePrefill | null = null) => {
+    setCreatePrefill(prefill)
+    setIsCreateOpen(true)
+  }
+
+  const handleCalendarSlotSelect = (slot: BookingCalendarSlotSelect) => {
+    openCreateModal({
+      date: slot.date,
+      time: slot.time,
+      staffName: slot.staffName,
+    })
+  }
+
+  const handleAppointmentCreated = (slot: BookingCreateCreatedSlot) => {
+    setViewMode(BookingTodayViewMode.Calendar)
+    setCalendarDate(slot.date)
+    resetPage()
+    setStatusFilter(BOOKING_HUB_STATUS_FILTER_ALL)
+    setPendingCalendarBooking(
+      buildPendingCalendarBooking(
+        slot,
+        t(`${TK}.today.${BOOKING_STATUS_META[slot.status].labelKey}`),
+      ),
+    )
+  }
+
+  // Drop optimistic calendar block once the refetch includes the same local slot.
+  useEffect(() => {
+    if (!pendingCalendarBooking) return undefined
+    const pendingStart = pendingCalendarBooking.startAtUtc
+    const matched = appointmentBookings.some((booking) => {
+      if (booking.date !== pendingCalendarBooking.date) return false
+      if (pendingStart && booking.startAtUtc) {
+        const a = parseApiDateTime(pendingStart)?.getTime()
+        const b = parseApiDateTime(booking.startAtUtc)?.getTime()
+        if (a != null && b != null && Math.abs(a - b) < 60_000) return true
+      }
+      return (
+        booking.name === pendingCalendarBooking.name
+        && booking.tech === pendingCalendarBooking.tech
+      )
+    })
+    if (matched) {
+      setPendingCalendarBooking(null)
+      return undefined
+    }
+    const timer = window.setTimeout(() => setPendingCalendarBooking(null), BOOKING_CREATE_OPTIMISTIC_TTL_MS)
+    return () => window.clearTimeout(timer)
+  }, [appointmentBookings, pendingCalendarBooking])
 
   const handleAction = async (id: string, action: 'send-sms' | 'done' | 'noshow' | 'detail') => {
     const booking = appointmentBookings.find((item) => item.id === id)
@@ -818,6 +925,27 @@ export default function BookingTodayPanel() {
 
   const statusLabel = (status: BookingStatus) =>
     t(`${TK}.today.${BOOKING_STATUS_META[status].labelKey}`)
+
+  const calendarBookings = useMemo(() => {
+    const mapped = appointmentBookings.map((booking) => ({
+      id: booking.id,
+      name: booking.name,
+      tech: booking.tech,
+      date: booking.date,
+      services: booking.services,
+      statusLabel: t(`${TK}.today.${BOOKING_STATUS_META[booking.status].labelKey}`),
+      startAtUtc: booking.startAtUtc,
+      endAtUtc: booking.endAtUtc,
+    }))
+    if (
+      pendingCalendarBooking
+      && pendingCalendarBooking.date === calendarDate
+      && !mapped.some((booking) => booking.id === pendingCalendarBooking.id)
+    ) {
+      return [...mapped, pendingCalendarBooking]
+    }
+    return mapped
+  }, [appointmentBookings, calendarDate, pendingCalendarBooking, t])
 
   useEffect(() => {
     if (!detailBooking) {
@@ -922,6 +1050,14 @@ export default function BookingTodayPanel() {
               <span>{t(`${TK}.today.overviewTitle`)}</span>
             </div>
             <div className="booking-daybar-actions">
+              <button
+                className="booking-primary-button booking-overview-add-button"
+                type="button"
+                onClick={() => openCreateModal(null)}
+              >
+                <PlusIcon />
+                {t(`${BOOKING_CREATE_TK}.newButton`)}
+              </button>
               <div className="booking-view-switch" role="group" aria-label={t(`${TK}.today.viewMode`)}>
                 <button
                   className={`booking-view-button ${viewMode === BookingTodayViewMode.Table ? 'is-active' : ''}`}
@@ -1068,19 +1204,12 @@ export default function BookingTodayPanel() {
             <BookingTodayListSkeleton viewMode={viewMode === BookingTodayViewMode.Calendar ? BookingTodayViewMode.Table : viewMode} isMobileUI={useCompactTableList} />
           ) : viewMode === BookingTodayViewMode.Calendar ? (
             <BookingTeamCalendar
-              bookings={appointmentBookings.map((booking) => ({
-                id: booking.id,
-                name: booking.name,
-                tech: booking.tech,
-                date: booking.date,
-                services: booking.services,
-                statusLabel: statusLabel(booking.status),
-                startAtUtc: booking.startAtUtc,
-                endAtUtc: booking.endAtUtc,
-              }))}
+              bookings={calendarBookings}
+              staffNames={calendarStaffNames}
               calendarDate={calendarDate}
               onCalendarDateChange={setCalendarDate}
               onEventClick={(bookingId) => handleAction(bookingId, 'detail')}
+              onSlotSelect={handleCalendarSlotSelect}
               todayIso={todayIso}
               locale={currentLanguage === 'vi' ? 'vi-VN' : 'en-US'}
               title={t(`${TK}.today.calendarTitle`)}
@@ -1246,6 +1375,17 @@ export default function BookingTodayPanel() {
 
         </article>
       </div>
+
+      <BookingCreateAppointmentModal
+        open={isCreateOpen}
+        prefill={createPrefill}
+        locale={currentLanguage === 'vi' ? 'vi-VN' : 'en-US'}
+        onClose={() => {
+          setIsCreateOpen(false)
+          setCreatePrefill(null)
+        }}
+        onCreated={handleAppointmentCreated}
+      />
 
       {detailBooking ? (
         <div

@@ -10,6 +10,8 @@ import {
   type UpdateMerchantVoiceConfigRequest,
   MerchantVoiceLeadStatus,
   MerchantVoiceStaffStatus,
+  type CreateMerchantVoiceBookingRequest,
+  type CreateMerchantVoiceBookingResultDto,
   type MerchantVoiceBookingsFilter,
   type MerchantVoiceBookingsResponse,
   type MerchantVoiceBookingStatisticsDto,
@@ -84,6 +86,18 @@ export function useUpdateMerchantVoiceBookingStatus() {
     mutationFn: ({ id, status }) => merchantVoiceRepository.updateBookingStatus(id, status),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['merchantVoice', 'bookings'] })
+    },
+  })
+}
+
+export function useCreateMerchantVoiceBooking() {
+  const queryClient = useQueryClient()
+
+  return useMutation<CreateMerchantVoiceBookingResultDto, Error, CreateMerchantVoiceBookingRequest>({
+    mutationFn: (body) => merchantVoiceRepository.createBooking(body),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['merchantVoice', 'bookings'] })
+      queryClient.invalidateQueries({ queryKey: qk.merchantVoiceBookingStatistics() })
     },
   })
 }
