@@ -749,9 +749,6 @@ export default function TouchpointsView({
             <div className="grid grid-cols-1 gap-3 md:grid-cols-2 md:gap-4 xl:grid-cols-3">
               {physicalCards.map((card) => {
                 const isLinked = isLinkedTouchPointId(card.linkedTouchPointId)
-                const linkedAtLabel = card.linkedAt
-                  ? formatTransactionDateTime(card.linkedAt, currentLanguage)
-                  : t('dashboard.touchpoints.physical_card.not_linked_yet')
 
                 return (
                   <Panel key={card.id || card.cardCode || card.helpCode} className="p-4 space-y-4">
@@ -797,7 +794,9 @@ export default function TouchpointsView({
                           {t('dashboard.touchpoints.physical_card.linked_at')}
                         </p>
                         <p className={`mt-1 text-sm ${card.linkedAt ? 'font-bold text-nexoraText' : 'text-nexoraSubtle italic font-normal'}`}>
-                          {linkedAtLabel}
+                          {card.linkedAt
+                            ? formatTransactionDateTime(card.linkedAt, currentLanguage)
+                            : t('dashboard.touchpoints.physical_card.not_linked_yet')}
                         </p>
                       </div>
                     </div>

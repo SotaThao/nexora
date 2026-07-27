@@ -1,3 +1,5 @@
+import { formatDateOnly } from './localDate'
+
 export function formatSubscriptionDate(iso, locale = 'en', { sidebar = false } = {}) {
   if (!iso) return null
   const date = new Date(iso)
@@ -11,11 +13,7 @@ export function formatSubscriptionDate(iso, locale = 'en', { sidebar = false } =
     })
   }
 
-  return date.toLocaleDateString(locale === 'vi' ? 'vi-VN' : 'en-US', {
-    month: 'short',
-    day: 'numeric',
-    year: 'numeric',
-  })
+  return formatDateOnly(iso, locale) || null
 }
 
 export function getSubscriptionSidebarCopy(subscription, t, locale = 'en') {

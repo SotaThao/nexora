@@ -4,7 +4,7 @@ import type { TFunction } from '../../../types/contexts'
 import type { PayoutRecord } from '../../../types/domain'
 import { PayoutStatus } from '../../../data/payoutConstants'
 import { copyTextToClipboard } from '../../../utils/clipboard'
-import { formatCurrency, formatTransactionDateTime } from '../../dashboard/utils'
+import { formatCurrency, DateTimeCell } from '../../dashboard/utils'
 import {
   formatPayoutPeriodRange,
   getPayoutTypeI18nKeys,
@@ -107,7 +107,7 @@ export default function PayoutCard({
           <div className="min-w-0 text-right">
             <CopyablePayoutCode code={payout.payoutCode} t={t} className="ml-auto" />
             <p className="mt-0.5 text-[11px] font-semibold text-[#5f6d82]">
-              {formatTransactionDateTime(payout.createdAt, currentLanguage)}
+              <DateTimeCell value={payout.createdAt} locale={currentLanguage} />
             </p>
           </div>
         </div>
@@ -127,7 +127,7 @@ export default function PayoutCard({
           <div className="shrink-0 text-right">
             <CopyablePayoutCode code={payout.payoutCode} t={t} className="ml-auto" />
             <p className="mt-0.5 text-[11px] font-semibold text-[#5f6d82]">
-              {formatTransactionDateTime(payout.createdAt, currentLanguage)}
+              <DateTimeCell value={payout.createdAt} locale={currentLanguage} />
             </p>
           </div>
         </div>

@@ -18,6 +18,62 @@ export function formatMemberSinceDate(
   return date.toLocaleDateString(locale, { month: 'short', year: 'numeric' })
 }
 
+/** Sáng/Chiều (VI) or AM/PM (EN) for the given date's local hour. Shared by every date+time formatter below so the Sáng/Chiều cutoff (hour < 12) never drifts between them. */
+export function getMeridiem(date: Date, isVietnamese: boolean): string {
+  return date.getHours() < 12
+    ? (isVietnamese ? 'Sáng' : 'AM')
+    : (isVietnamese ? 'Chiều' : 'PM')
+}
+
+/**
+ * Shared date-part formatter — "MMM DD, YYYY" (EN) / "DD Tháng M, YYYY" (VI), or without the
+ * year when `withYear` is false. `timeZone` pins the render to a specific IANA zone (e.g. for
+ * API timestamps); omit it to use the runtime's local zone.
+ */
+export function formatDatePart(
+  date: Date,
+  isVietnamese: boolean,
+  { timeZone, withYear = true }: { timeZone?: string; withYear?: boolean } = {},
+): string {
+  const parts = new Intl.DateTimeFormat(isVietnamese ? 'vi-VN' : 'en-US', {
+    day: '2-digit',
+    month: isVietnamese ? 'numeric' : 'short',
+    ...(withYear ? { year: 'numeric' as const } : {}),
+    ...(timeZone ? { timeZone } : {}),
+  }).formatToParts(date)
+
+  const get = (type: string) => parts.find((p) => p.type === type)?.value ?? ''
+  const year = withYear ? `, ${get('year')}` : ''
+  return isVietnamese
+    ? `${get('day')} Tháng ${get('month')}${year}`
+    : `${get('month')} ${get('day')}${year}`
+}
+
+/** Shared time-part formatter — "hh:mm am/pm" (EN) / "hh:mm sáng/chiều" (VI). hourCycle is forced to h12 — ICU defaults vi-VN to h11 (would render "00:05" instead of "12:05"). */
+export function formatTimePart(date: Date, isVietnamese: boolean, timeZone?: string): string {
+  const parts = new Intl.DateTimeFormat(isVietnamese ? 'vi-VN' : 'en-US', {
+    hour: '2-digit',
+    minute: '2-digit',
+    hourCycle: 'h12',
+    ...(timeZone ? { timeZone } : {}),
+  }).formatToParts(date)
+
+  const get = (type: string) => parts.find((p) => p.type === type)?.value ?? ''
+  return `${get('hour')}:${get('minute')} ${getMeridiem(date, isVietnamese)}`
+}
+
+/** Format ISO date (no time), e.g. "Jun 03, 2026" (EN) / "03 Tháng 6, 2026" (VI). Use for screens that only need a date, not a time. */
+export function formatDateOnly(
+  isoString: string | null | undefined,
+  language: string = 'en',
+): string {
+  if (!isoString) return ''
+  const date = new Date(isoString)
+  if (Number.isNaN(date.getTime())) return ''
+
+  return formatDatePart(date, language.toLowerCase().startsWith('vi'))
+}
+
 export function formatJoinedDate(isoString: string | null | undefined): string {
   if (!isoString) return ''
   const date = new Date(isoString)
