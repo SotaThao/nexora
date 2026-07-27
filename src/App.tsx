@@ -8,6 +8,7 @@ import { useAuth } from './auth/useAuth'
 export default function App() {
   const location = useLocation()
   const isPublicHome = location.pathname === '/'
+  const isCommunity = location.pathname === '/community' || location.pathname.startsWith('/community/')
 
   useEffect(() => {
     initStorage()
@@ -19,7 +20,7 @@ export default function App() {
         className={
           isPublicHome
             ? 'min-h-dvh w-full min-w-0 overflow-x-hidden'
-            : 'min-h-dvh w-full min-w-0 overflow-x-hidden bg-nexoraCanvas text-inkBlue font-sans antialiased'
+            : `min-h-dvh w-full min-w-0 ${isCommunity ? 'overflow-x-clip' : 'overflow-x-hidden'} bg-nexoraCanvas text-inkBlue font-sans antialiased`
         }
       >
         <AppRouter />

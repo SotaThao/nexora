@@ -221,7 +221,7 @@ export function CommunityHome() {
           <button type="button" onClick={() => setSheetOpen(true)} aria-label="Tạo mới" className={`fixed bottom-24 right-5 z-40 grid h-14 w-14 place-items-center rounded-full text-white shadow-xl lg:hidden ${gradientClass}`}><Plus className="h-6 w-6" aria-hidden="true" /></button>
           {sheetOpen ? <CreateSheet onClose={() => setSheetOpen(false)} onPost={() => { setComposerCommunityId(feedCommunities[0]?.id ?? null); setSheetOpen(false) }} onGroup={() => setSheetOpen(false)} /> : null}
         </div>
-        <div className="hidden w-[336px] shrink-0 2xl:block">
+        <div className="hidden w-[336px] shrink-0 2xl:sticky 2xl:top-[132px] 2xl:block 2xl:self-start">
           <CommunityRightRail />
         </div>
       </div>

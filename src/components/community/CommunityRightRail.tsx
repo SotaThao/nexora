@@ -11,7 +11,7 @@ import { useCommunityChatDock } from './CommunityChatDock'
 import { formatJoinedDate } from '../../utils/localDate'
 
 const cardClass =
-  'overflow-hidden rounded-2xl border border-nexoraBorder bg-nexoraSurface p-4 shadow-nexora-card'
+  'border-b border-nexoraRule bg-transparent p-4 last:border-b-0'
 const gradientClass = 'bg-gradient-to-br from-nexoraElectric to-nexoraViolet'
 
 function initials(name?: string | null) {
@@ -55,7 +55,7 @@ export function CommunityRightRail() {
   const directChannels = useDirectChannels({ enabled: Boolean(user) && !isAnonymous })
 
   return (
-    <aside className="sticky top-[68px] space-y-4 font-sans">
+    <aside className="overflow-hidden rounded-2xl border border-nexoraBorder bg-nexoraSurface font-sans shadow-nexora-card">
       {/* 1. Người đang hoạt động */}
       <section className={cardClass}>
         <div className="flex items-center justify-between border-b border-nexoraRule pb-3">
@@ -99,7 +99,7 @@ export function CommunityRightRail() {
               return (
                 <div
                   key={member.id}
-                  className="flex items-center gap-3 rounded-xl p-1.5 transition-colors hover:bg-nexoraSurfaceMuted"
+                  className="flex items-center gap-3 p-1.5"
                 >
                   <div className="relative shrink-0">
                     <Avatar name={displayName} className="h-9 w-9" />
