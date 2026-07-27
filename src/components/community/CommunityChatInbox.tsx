@@ -17,7 +17,7 @@ import {
   useProfileSearch,
 } from '../../data/hooks/useDirectMessages'
 import { useMyCommunities } from '../../data/hooks/useCommunity'
-import { useCommunityAuth } from './CommunityAuth'
+import { CommunityPersonaSwitcher, useCommunityAuth } from './CommunityAuth'
 import { useCommunityChatDock } from './CommunityChatDock'
 import DemoStaffShell from './demo/DemoStaffShell'
 import { formatJoinedDate } from '../../utils/localDate'
@@ -71,8 +71,9 @@ export function CommunityChatInbox() {
 
   return (
     <>
+      <CommunityPersonaSwitcher />
       <DemoStaffShell onDemoNavigation={() => navigate('/community')}>
-        <main className="mx-auto flex min-h-[calc(100vh-120px)] w-full max-w-[680px] flex-col overflow-hidden border-x border-nexoraBorder bg-nexoraCanvas font-sans shadow-nexora-card">
+        <main className="mx-auto flex h-full min-h-0 w-full max-w-[680px] flex-col overflow-hidden border-x border-nexoraBorder bg-nexoraCanvas font-sans shadow-nexora-card lg:h-auto lg:min-h-[calc(100vh-120px)]">
           <header className="border-b border-nexoraBorder bg-nexoraSurface px-4 py-3">
             <div className="flex items-center gap-3">
               <button
