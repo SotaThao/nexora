@@ -206,22 +206,22 @@ export function CommunityHome() {
   const feedCommunities = (myCommunities.data?.items.length ? myCommunities.data.items : communities.data?.items ?? []).slice(0, 3)
   return (
     <CommunityFrame containerClassName="mx-auto w-full max-w-[1040px] pb-20">
-      <header className="mb-4 flex items-center justify-between gap-3">
+      <header className="mx-auto mb-4 flex w-full max-w-[680px] items-center justify-between gap-3 2xl:max-w-none">
         <div><p className="text-xs font-bold uppercase tracking-[0.12em] text-nexoraBrand">Nexora</p><h1 className="text-xl font-extrabold text-nexoraText">Cộng đồng</h1></div>
         <div className="flex items-center gap-2"><CommunityNotificationBell /><Link to="/community/chat" aria-label="Mở Chat inbox" className="grid h-11 w-11 place-items-center rounded-xl border border-nexoraBorder bg-nexoraSurface text-nexoraBrand hover:bg-nexoraBrandSoft"><MessagesSquare className="h-5 w-5" aria-hidden="true" /></Link><Link to="/community/new" className={`inline-flex min-h-11 items-center gap-2 rounded-xl px-3 text-sm font-extrabold text-white ${gradientClass}`}><Plus className="h-4 w-4" aria-hidden="true" />Tạo nhóm</Link></div>
       </header>
-      <div className="flex flex-col gap-6 lg:flex-row lg:items-start">
-        <div className="w-full max-w-[640px] flex-1 space-y-4">
+      <div className="flex flex-col gap-6 2xl:flex-row 2xl:items-start">
+        <div className="mx-auto w-full max-w-[680px] flex-1 space-y-4 2xl:mx-0">
           {isLoading || myCommunities.isLoading || communities.isLoading ? <LoadingState rows={4} /> : null}
           {myCommunities.error ? <ErrorState error={myCommunities.error} onRetry={() => void myCommunities.refetch()} /> : null}
           {communities.error ? <ErrorState error={communities.error} onRetry={() => void communities.refetch()} /> : null}
           {composerCommunityId ? <PostComposer communityId={composerCommunityId} onClose={() => setComposerCommunityId(null)} /> : <QuickComposer communityId={feedCommunities[0]?.id} onOpen={() => setComposerCommunityId(feedCommunities[0]?.id ?? null)} />}
           {ringCommunities.length ? <CommunityStoryRings communities={ringCommunities} /> : <EmptyState title="Chào mừng đến Community">Chọn một persona demo để vào nhóm hoặc tạo nhóm đầu tiên của bạn.</EmptyState>}
           {feedCommunities.map((community) => <CommunityFeed key={community.id} community={community} />)}
-          <button type="button" onClick={() => setSheetOpen(true)} aria-label="Tạo mới" className={`fixed bottom-24 right-5 z-40 grid h-14 w-14 place-items-center rounded-full text-white shadow-xl lg:bottom-7 ${gradientClass}`}><Plus className="h-6 w-6" aria-hidden="true" /></button>
+          <button type="button" onClick={() => setSheetOpen(true)} aria-label="Tạo mới" className={`fixed bottom-24 right-5 z-40 grid h-14 w-14 place-items-center rounded-full text-white shadow-xl lg:hidden ${gradientClass}`}><Plus className="h-6 w-6" aria-hidden="true" /></button>
           {sheetOpen ? <CreateSheet onClose={() => setSheetOpen(false)} onPost={() => { setComposerCommunityId(feedCommunities[0]?.id ?? null); setSheetOpen(false) }} onGroup={() => setSheetOpen(false)} /> : null}
         </div>
-        <div className="hidden w-[320px] shrink-0 lg:block">
+        <div className="hidden w-[336px] shrink-0 2xl:block">
           <CommunityRightRail />
         </div>
       </div>
