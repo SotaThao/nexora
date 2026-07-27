@@ -1,16 +1,9 @@
-import { AlertCircle, Bell, BellRing, CheckCheck, Clock3, Loader2, MessageCircle, RefreshCw, ShieldCheck, Sparkles, UserCheck, Users } from 'lucide-react'
-import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState, type ReactNode } from 'react'
+import { AlertCircle, BellRing, CheckCheck, Clock3, Loader2, MessageCircle, RefreshCw, ShieldCheck, Sparkles, UserCheck, Users } from 'lucide-react'
+import { createContext, useCallback, useContext, useEffect, useRef, useState, type ReactNode } from 'react'
 import { useLocation } from 'react-router-dom'
 import { useNotification } from '../../contexts/NotificationContext'
 import { useCommunityNotifications } from '../../data/hooks/useCommunityNotifications'
-import {
-  useMarkAllNotificationsRead,
-  useMarkNotificationRead,
-  useNotifications,
-  useUnreadCount,
-} from '../../data/hooks/useNotifications'
 import type { NotificationDto } from '../../data/repositories/community'
-import type { NotificationRecord } from '../../types/domain'
 
 type CommunityNotificationsValue = ReturnType<typeof useCommunityNotifications>
 
@@ -69,37 +62,11 @@ export function CommunityNotificationBell() {
   const { pathname } = useLocation()
   const [isOpen, setIsOpen] = useState(false)
   const panelRef = useRef<HTMLDivElement>(null)
-  const { data: webNotifications = [], isLoading: isWebLoading } = useNotifications({ enabled: isOpen })
-  const { data: webUnreadCount = 0 } = useUnreadCount()
-  const { mutate: markWebRead, isPending: isMarkingWebRead } = useMarkNotificationRead()
-  const { mutate: markAllWebRead, isPending: isMarkingAllWebRead } = useMarkAllNotificationsRead()
-  const unreadCount = webUnreadCount + community.unreadCount
+  const unreadCount = community.unreadCount
   const isChatRoute =
     pathname === '/community/chat' ||
     pathname.startsWith('/community/chat/') ||
     /^\/community\/[^/]+\/chat\/?$/.test(pathname)
-
-  const combinedNotifications = useMemo(() => {
-    const web = webNotifications.map((notification) => ({
-      id: notification.id,
-      source: 'web' as const,
-      createdAt: notification.createdAt || notification.time,
-      title: notification.title,
-      message: notification.message,
-      isUnread: !notification.read && !notification.isRead,
-      notification,
-    }))
-    const communityItems = community.notifications.map((notification) => ({
-      id: notification.id,
-      source: 'community' as const,
-      createdAt: notification.createdAt,
-      title: 'Community',
-      message: notificationCopy(notification),
-      isUnread: !notification.readAt,
-      notification,
-    }))
-    return [...web, ...communityItems].sort((first, second) => second.createdAt.localeCompare(first.createdAt))
-  }, [community.notifications, webNotifications])
 
   useEffect(() => {
     if (!isOpen) return
@@ -110,15 +77,12 @@ export function CommunityNotificationBell() {
     return () => document.removeEventListener('mousedown', closeOnOutsidePress)
   }, [isOpen])
 
-  const markAsRead = (item: (typeof combinedNotifications)[number]) => {
-    if (!item.isUnread) return
-    if (item.source === 'community') void community.markRead(item.notification.id)
-    else markWebRead((item.notification as NotificationRecord).id)
+  const markAsRead = (notification: NotificationDto) => {
+    if (!notification.readAt) void community.markRead(notification.id)
   }
 
   const markAllAsRead = () => {
     if (community.unreadCount) void community.markAllRead()
-    if (webUnreadCount) markAllWebRead()
   }
 
   return (
@@ -136,15 +100,15 @@ export function CommunityNotificationBell() {
 
       {isOpen ? <section className={`fixed inset-x-4 z-[90] w-auto overflow-hidden rounded-xl border border-nexoraBorder bg-nexoraSurface shadow-2xl lg:absolute lg:inset-x-auto lg:right-0 lg:top-full lg:mt-2 lg:w-[23rem] ${isChatRoute ? 'top-[76px]' : 'top-[128px]'}`} aria-label="Danh sách thông báo">
         <header className="flex items-center justify-between border-b border-nexoraRule px-4 py-3">
-          <div><h2 className="text-sm font-extrabold text-nexoraText">Thông báo</h2><p className="text-[11px] text-nexoraSubtle">{unreadCount ? `${unreadCount} chưa đọc · Web + Community` : 'Bạn đã xem hết'}</p></div>
-          {unreadCount ? <button type="button" onClick={markAllAsRead} disabled={community.isMarkingAllRead || isMarkingAllWebRead} className="inline-flex min-h-9 items-center gap-1 rounded-lg px-2 text-xs font-extrabold text-nexoraBrand hover:bg-nexoraBrandSoft disabled:opacity-50"><CheckCheck className="h-4 w-4" aria-hidden="true" />Đọc hết</button> : null}
+          <div><h2 className="text-sm font-extrabold text-nexoraText">Thông báo</h2><p className="text-[11px] text-nexoraSubtle">{unreadCount ? `${unreadCount} chưa đọc · Community` : 'Bạn đã xem hết'}</p></div>
+          {unreadCount ? <button type="button" onClick={markAllAsRead} disabled={community.isMarkingAllRead} className="inline-flex min-h-9 items-center gap-1 rounded-lg px-2 text-xs font-extrabold text-nexoraBrand hover:bg-nexoraBrandSoft disabled:opacity-50"><CheckCheck className="h-4 w-4" aria-hidden="true" />Đọc hết</button> : null}
         </header>
 
         {community.isReconnecting ? <p className="flex items-center gap-1.5 border-b border-nexoraRule px-4 py-2 text-[11px] font-semibold text-nexoraMuted"><Loader2 className="h-3.5 w-3.5 animate-spin text-nexoraBrand" aria-hidden="true" />Đang kết nối lại thông báo Community…</p> : null}
-        {community.isLoading || isWebLoading ? <div className="space-y-2 p-4" aria-label="Đang tải thông báo">{Array.from({ length: 3 }, (_, index) => <div key={index} className="h-16 animate-pulse rounded-xl bg-nexoraSurfaceMuted" />)}</div> : null}
-        {!community.isLoading && !isWebLoading && community.error ? <div className="flex items-center justify-between gap-3 border-b border-nexoraRule px-4 py-2" role="alert"><span className="flex min-w-0 items-center gap-2 text-xs font-semibold text-nexoraDanger"><AlertCircle className="h-4 w-4 shrink-0" aria-hidden="true" /><span className="truncate">Community: {community.error.message}</span></span><button type="button" onClick={community.retry} className="shrink-0 text-xs font-extrabold text-nexoraBrand"><RefreshCw className="inline h-3.5 w-3.5" aria-hidden="true" /> Thử lại</button></div> : null}
-        {!community.isLoading && !isWebLoading && combinedNotifications.length === 0 ? <div className="px-5 py-9 text-center"><Sparkles className="mx-auto h-6 w-6 text-nexoraBrand" aria-hidden="true" /><p className="mt-2 text-sm font-extrabold text-nexoraText">Chưa có thông báo</p><p className="mt-1 text-xs text-nexoraSubtle">Thông báo của web và Community sẽ hiện ở đây.</p></div> : null}
-        {!community.isLoading && !isWebLoading && combinedNotifications.length ? <div className="max-h-[min(60vh,28rem)] divide-y divide-nexoraRule overflow-y-auto">{combinedNotifications.map((item) => <button key={`${item.source}:${item.id}`} type="button" onClick={() => markAsRead(item)} disabled={community.isMarkingRead || isMarkingWebRead} className={`flex w-full items-start gap-3 p-3.5 text-left transition hover:bg-nexoraSurfaceMuted disabled:opacity-60 ${item.isUnread ? 'bg-nexoraBrandSoft/40' : ''}`}><span className={`grid h-9 w-9 shrink-0 place-items-center rounded-xl ${item.isUnread ? 'bg-nexoraBrand text-white' : 'bg-nexoraSurfaceMuted text-nexoraMuted'}`}>{item.source === 'community' ? <NotificationIcon type={(item.notification as NotificationDto).type} /> : <Bell className="h-4 w-4" aria-hidden="true" />}</span><span className="min-w-0 flex-1"><span className="flex items-center justify-between gap-2"><b className="truncate text-xs text-nexoraText">{item.title}</b><span className="shrink-0 text-[10px] font-bold uppercase tracking-wide text-nexoraBrand">{item.source === 'community' ? 'Community' : 'Web'}</span></span><span className="mt-1 block text-[11px] font-medium leading-normal text-nexoraMuted">{item.message}</span><span className="mt-1 inline-flex items-center gap-1 text-[10px] text-nexoraSubtle"><Clock3 className="h-3 w-3" aria-hidden="true" />{relativeTime(item.createdAt)}</span></span>{item.isUnread ? <span className="mt-1 h-2 w-2 shrink-0 rounded-full bg-nexoraBrand" aria-label="Chưa đọc" /> : null}</button>)}</div> : null}
+        {community.isLoading ? <div className="space-y-2 p-4" aria-label="Đang tải thông báo">{Array.from({ length: 3 }, (_, index) => <div key={index} className="h-16 animate-pulse rounded-xl bg-nexoraSurfaceMuted" />)}</div> : null}
+        {!community.isLoading && community.error ? <div className="flex items-center justify-between gap-3 border-b border-nexoraRule px-4 py-2" role="alert"><span className="flex min-w-0 items-center gap-2 text-xs font-semibold text-nexoraDanger"><AlertCircle className="h-4 w-4 shrink-0" aria-hidden="true" /><span className="truncate">Community: {community.error.message}</span></span><button type="button" onClick={community.retry} className="shrink-0 text-xs font-extrabold text-nexoraBrand"><RefreshCw className="inline h-3.5 w-3.5" aria-hidden="true" /> Thử lại</button></div> : null}
+        {!community.isLoading && community.notifications.length === 0 ? <div className="px-5 py-9 text-center"><Sparkles className="mx-auto h-6 w-6 text-nexoraBrand" aria-hidden="true" /><p className="mt-2 text-sm font-extrabold text-nexoraText">Chưa có thông báo</p><p className="mt-1 text-xs text-nexoraSubtle">Thông báo Community sẽ hiện ở đây.</p></div> : null}
+        {!community.isLoading && community.notifications.length ? <div className="max-h-[min(60vh,28rem)] divide-y divide-nexoraRule overflow-y-auto">{community.notifications.map((notification) => <button key={notification.id} type="button" onClick={() => markAsRead(notification)} disabled={community.isMarkingRead} className={`flex w-full items-start gap-3 p-3.5 text-left transition hover:bg-nexoraSurfaceMuted disabled:opacity-60 ${!notification.readAt ? 'bg-nexoraBrandSoft/40' : ''}`}><span className={`grid h-9 w-9 shrink-0 place-items-center rounded-xl ${!notification.readAt ? 'bg-nexoraBrand text-white' : 'bg-nexoraSurfaceMuted text-nexoraMuted'}`}><NotificationIcon type={notification.type} /></span><span className="min-w-0 flex-1"><span className="flex items-center justify-between gap-2"><b className="truncate text-xs text-nexoraText">Community</b><span className="shrink-0 text-[10px] font-bold uppercase tracking-wide text-nexoraBrand">Community</span></span><span className="mt-1 block text-[11px] font-medium leading-normal text-nexoraMuted">{notificationCopy(notification)}</span><span className="mt-1 inline-flex items-center gap-1 text-[10px] text-nexoraSubtle"><Clock3 className="h-3 w-3" aria-hidden="true" />{relativeTime(notification.createdAt)}</span></span>{!notification.readAt ? <span className="mt-1 h-2 w-2 shrink-0 rounded-full bg-nexoraBrand" aria-label="Chưa đọc" /> : null}</button>)}</div> : null}
         {community.hasMore && !community.error ? <div className="border-t border-nexoraRule p-2 text-center"><button type="button" onClick={() => void community.loadMore()} disabled={community.isLoadingMore} className="inline-flex min-h-9 items-center gap-1 rounded-lg px-3 text-xs font-extrabold text-nexoraBrand hover:bg-nexoraBrandSoft disabled:opacity-50">{community.isLoadingMore ? <Loader2 className="h-3.5 w-3.5 animate-spin" aria-hidden="true" /> : null}{community.isLoadingMore ? 'Đang tải…' : 'Xem thêm Community'}</button></div> : null}
         {community.markReadError ? <p className="border-t border-nexoraRule px-4 py-2 text-center text-xs font-semibold text-nexoraDanger">{community.markReadError.message}</p> : null}
       </section> : null}
