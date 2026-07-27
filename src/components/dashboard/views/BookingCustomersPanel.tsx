@@ -1,6 +1,7 @@
 import React, { useEffect, useMemo, useState } from 'react'
 import { normalizePhoneSearchTerm } from '../../CountryCodeSelect'
-import { BOOKING_HUB_EMPTY_CELL, BOOKING_HUB_PAGINATION_CLASSNAME, formatVoicePhoneDisplay } from './bookingHubFormatters'
+import { BOOKING_HUB_EMPTY_CELL, BOOKING_HUB_PAGINATION_CLASSNAME, formatVoicePhoneDisplay, openNativeDateTimePicker } from './bookingHubFormatters'
+import BookingKeywordSearchField from './BookingKeywordSearchField'
 import { useTranslation } from '../../../contexts/LanguageContext'
 import { useNotification } from '../../../contexts/NotificationContext'
 import { getErrorI18nKey } from '../../../data/errorCodes'
@@ -322,12 +323,11 @@ export default function BookingCustomersPanel() {
           <div className="booking-controls booking-controls-single" aria-label={t(`${TK}.filtersAria`)}>
             <label className="booking-control-field">
               <span className="booking-control-label">{t(`${TK}.searchLabel`)}</span>
-              <input
-                className="booking-input"
-                type="search"
-                placeholder={t(`${TK}.searchPlaceholder`)}
+              <BookingKeywordSearchField
                 value={search}
-                onChange={(event) => setSearch(event.target.value)}
+                onChange={setSearch}
+                placeholder={t(`${TK}.searchPlaceholder`)}
+                clearLabel={t(`${TK}.clearSearch`)}
               />
             </label>
           </div>
@@ -545,6 +545,7 @@ export default function BookingCustomersPanel() {
                     min={dobBounds.min}
                     max={dobBounds.max}
                     aria-invalid={Boolean(formErrors.dateOfBirth)}
+                    onClick={(event) => openNativeDateTimePicker(event.currentTarget)}
                     onChange={(event) => {
                       const nextValue = event.target.value
                       setDraft({ ...draft, dateOfBirth: nextValue })

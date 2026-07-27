@@ -27,6 +27,7 @@ import {
   formatVoicePhoneDisplay,
   toLocalDateIso,
 } from "./bookingHubFormatters";
+import BookingKeywordSearchField from "./BookingKeywordSearchField";
 import Pagination from "../../ui/Pagination";
 import { parseApiDateTime } from "../utils";
 import {
@@ -349,12 +350,11 @@ export default function BookingCallLogPanel() {
               <span className="booking-control-label">
                 {t(`${TK}.searchLabel`)}
               </span>
-              <input
-                className="booking-input"
-                type="search"
-                placeholder={t(`${TK}.searchPlaceholder`)}
+              <BookingKeywordSearchField
                 value={search}
-                onChange={(event) => setSearch(event.target.value)}
+                onChange={setSearch}
+                placeholder={t(`${TK}.searchPlaceholder`)}
+                clearLabel={t(`${TK}.clearSearch`)}
               />
             </label>
           </div>
@@ -509,7 +509,7 @@ export default function BookingCallLogPanel() {
               </table>
           </div>
 
-          {!isListLoading && (callsResponse?.totalCount ?? 0) > 0 ? (
+          {!isListLoading && visibleCalls.length > 0 ? (
             <Pagination
               pageNumber={pageNumber}
               pageSize={pageSize}

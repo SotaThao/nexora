@@ -168,8 +168,13 @@ export function normalizeSmsEncoding(value: unknown): SmsEncoding {
   return match ?? SmsEncoding.Gsm7
 }
 
+/** Recipients modal — every persisted campaign status can open the list. */
+const SMS_CAMPAIGN_VIEWABLE_STATUSES = new Set<SmsCampaignStatus>(
+  Object.values(SmsCampaignStatus),
+)
+
 export function isSmsCampaignViewable(status: SmsCampaignStatus): boolean {
-  return status === SmsCampaignStatus.Sent
+  return SMS_CAMPAIGN_VIEWABLE_STATUSES.has(status)
 }
 
 export function isSmsCampaignEditable(status: SmsCampaignStatus): boolean {

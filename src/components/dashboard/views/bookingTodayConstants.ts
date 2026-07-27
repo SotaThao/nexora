@@ -1,4 +1,4 @@
-import { BookingUiStatus } from '../../../data/repositories/merchantVoice'
+import { BookingUiSearchField, BookingUiStatus } from '../../../data/repositories/merchantVoice'
 
 export enum BookingTodayViewMode {
   Table = 'table',
@@ -45,6 +45,14 @@ export const BOOKING_STATUS_FILTER_ORDER: BookingUiStatus[] = [
   BookingUiStatus.NoShow,
 ]
 
+/** i18n key suffixes under `…BookingHubView.today` for keyword placeholders. */
+export const BOOKING_TODAY_KEYWORD_PLACEHOLDER_KEY: Record<BookingUiSearchField, string> = {
+  [BookingUiSearchField.All]: 'keywordPlaceholderAll',
+  [BookingUiSearchField.Name]: 'keywordPlaceholderName',
+  [BookingUiSearchField.Phone]: 'keywordPlaceholderPhone',
+  [BookingUiSearchField.Email]: 'keywordPlaceholderEmail',
+  [BookingUiSearchField.Service]: 'keywordPlaceholderService',
+}
 /** Matches booking-book-phase-1.html `BOOKING_CALENDAR_COLORS`. */
 export const BOOKING_CALENDAR_COLORS = [
   { bg: '#ebe6ff', border: '#7456e9', text: '#272343' },

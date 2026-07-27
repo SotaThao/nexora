@@ -1187,6 +1187,51 @@
   font-weight: 700;
 }
 
+.booking-hub-view .tech-search:has(.tech-search-clear) input {
+  padding-right: 68px;
+}
+
+.booking-hub-view .tech-search input::-webkit-search-cancel-button,
+.booking-hub-view .tech-search input::-webkit-search-decoration {
+  -webkit-appearance: none;
+  appearance: none;
+  display: none;
+}
+
+.booking-hub-view .tech-search-clear {
+  position: absolute;
+  top: 50%;
+  right: 34px;
+  z-index: 3;
+  display: inline-flex;
+  width: 32px;
+  height: 32px;
+  min-width: 32px;
+  min-height: 32px;
+  align-items: center;
+  justify-content: center;
+  border: 0;
+  border-radius: 8px;
+  background: transparent;
+  color: var(--nexora-muted);
+  cursor: pointer;
+  transform: translateY(-50%);
+  touch-action: manipulation;
+}
+
+.booking-hub-view .tech-search-clear:hover,
+.booking-hub-view .tech-search-clear:focus-visible {
+  background: var(--nexora-surface-muted);
+  color: var(--nexora-text);
+  outline: none;
+}
+
+.booking-hub-view .tech-search-clear svg {
+  width: 14px;
+  height: 14px;
+  pointer-events: none;
+}
+
 .booking-hub-view .tech-search input:focus {
   border-color: rgba(0, 184, 115, 0.72);
   box-shadow: 0 0 0 3px rgba(0, 184, 115, 0.12);
@@ -1413,8 +1458,12 @@
   border-right: 1px solid var(--nexora-border) !important;
   border-radius: 9px 0 0 9px !important;
   box-shadow: none !important;
-  background: var(--nexora-canvas) !important;
+  background: #fff !important;
   box-sizing: border-box;
+}
+
+.booking-hub-view .phone-input-shell > .relative > button:hover:not(:disabled) {
+  background: #f8fafc !important;
 }
 
 .booking-hub-view .phone-input-shell > .relative > button:focus,
@@ -1459,14 +1508,43 @@
   box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.1);
 }
 
-.booking-hub-view .phone-input-shell .country-code-dropdown,
-.booking-hub-view .phone-input-shell .country-code-search-wrap,
+.booking-hub-view .phone-input-shell .country-code-dropdown {
+  border: none !important;
+  outline: none !important;
+  z-index: 30;
+}
+
+.booking-hub-view .phone-input-shell:has(.country-code-dropdown),
+.booking-hub-view .settings-field:has(.country-code-dropdown),
+.booking-hub-view .tech-modal-section:has(.country-code-dropdown),
+.booking-hub-view .booking-create-field:has(.country-code-dropdown) {
+  position: relative;
+  z-index: 20;
+}
+
+.booking-hub-view .phone-input-shell .country-code-search-wrap {
+  background: #fff !important;
+  border-bottom: 1px solid var(--nexora-border) !important;
+}
+
+.booking-hub-view .phone-input-shell .country-code-search-field {
+  border: 1px solid var(--nexora-border) !important;
+  background: #fff !important;
+  box-shadow: none !important;
+}
+
+.booking-hub-view .phone-input-shell .country-code-search-field:focus-within {
+  border-color: var(--nexora-brand) !important;
+  box-shadow: 0 0 0 2px rgba(70, 72, 216, 0.16) !important;
+}
+
 .booking-hub-view .phone-input-shell .country-code-search-input,
 .booking-hub-view .phone-input-shell .country-code-search-input:focus,
 .booking-hub-view .phone-input-shell .country-code-search-input:focus-visible {
   border: none !important;
   box-shadow: none !important;
   outline: none !important;
+  background: transparent !important;
 }
 
 .booking-hub-view .phone-input-shell .trial-input:focus {
@@ -1928,6 +2006,7 @@
   appearance: none;
   line-height: normal;
   text-align: left;
+  cursor: pointer;
 }
 
 .booking-hub-view .cust-date-input::-webkit-date-and-time-value {
@@ -1966,6 +2045,39 @@
 .booking-hub-view .cust-date-input::-webkit-datetime-edit-year-field {
   padding: 0;
   line-height: normal;
+}
+
+/* Whole birthday field opens the native picker (not only the calendar icon). */
+.booking-hub-view .cust-date-input::-webkit-calendar-picker-indicator {
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  width: auto;
+  height: auto;
+  margin: 0;
+  padding: 0;
+  cursor: pointer;
+  opacity: 0;
+}
+
+.booking-hub-view .cust-date-shell::after {
+  content: '';
+  position: absolute;
+  top: 50%;
+  right: 12px;
+  z-index: 1;
+  width: 16px;
+  height: 16px;
+  pointer-events: none;
+  transform: translateY(-50%);
+  background-color: var(--nexora-subtle);
+  opacity: 0.85;
+  -webkit-mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Crect x='3' y='4' width='18' height='18' rx='2'/%3E%3Cpath d='M16 2v4M8 2v4M3 10h18'/%3E%3C/svg%3E") center / contain no-repeat;
+  mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Crect x='3' y='4' width='18' height='18' rx='2'/%3E%3Cpath d='M16 2v4M8 2v4M3 10h18'/%3E%3C/svg%3E") center / contain no-repeat;
+}
+
+.booking-hub-view .cust-date-input {
+  padding-right: 36px;
 }
 
 .booking-hub-view .cust-field .booking-input.has-error {
@@ -3225,6 +3337,11 @@
 .booking-hub-view .settings-business-grid .phone-input-shell {
   height: 46px;
   min-height: 46px;
+  overflow: visible;
+}
+
+.booking-hub-view .settings-business-grid .settings-field:has(.phone-input-shell) {
+  overflow: visible;
 }
 
 .booking-hub-view .settings-business-grid .phone-input-shell .settings-input,
@@ -4793,8 +4910,10 @@
   gap: 10px;
   margin-bottom: 12px;
   color: var(--nexora-text);
-  font-size: 12px;
-  font-weight: 900;
+  font-size: 14px;
+  font-weight: 800;
+  letter-spacing: -0.01em;
+  line-height: 1.3;
 }
 
 .booking-hub-view .booking-filter-popover .booking-controls {
@@ -4842,39 +4961,45 @@
 }
 
 .booking-hub-view .booking-filter-popover .booking-date-input-shell .booking-input-date {
-  z-index: 1;
-}
-
-.booking-hub-view .booking-filter-popover .booking-date-placeholder {
   z-index: 2;
+  cursor: pointer;
 }
 
-.booking-hub-view .booking-filter-popover .booking-keyword-shell {
+.booking-hub-view .booking-filter-popover .booking-date-display {
+  z-index: 1;
+  pointer-events: none;
+}
+
+/* Shared keyword search + clear (filter popover, Customers, Call Log). */
+.booking-hub-view .booking-keyword-shell {
   position: relative;
   display: block;
   width: 100%;
   min-width: 0;
 }
 
-.booking-hub-view .booking-filter-popover .booking-input-keyword {
-  padding-right: 40px;
+.booking-hub-view .booking-input-keyword {
+  width: 100%;
+  padding-right: 44px;
 }
 
-.booking-hub-view .booking-filter-popover .booking-input-keyword::-webkit-search-cancel-button,
-.booking-hub-view .booking-filter-popover .booking-input-keyword::-webkit-search-decoration {
+.booking-hub-view .booking-input-keyword::-webkit-search-cancel-button,
+.booking-hub-view .booking-input-keyword::-webkit-search-decoration {
   -webkit-appearance: none;
   appearance: none;
   display: none;
 }
 
-.booking-hub-view .booking-filter-popover .booking-keyword-clear {
+.booking-hub-view .booking-keyword-clear {
   position: absolute;
   top: 50%;
-  right: 6px;
+  right: 4px;
   z-index: 3;
   display: inline-flex;
-  width: 28px;
-  height: 28px;
+  width: 36px;
+  height: 36px;
+  min-width: 36px;
+  min-height: 36px;
   align-items: center;
   justify-content: center;
   border: 0;
@@ -4883,16 +5008,20 @@
   color: var(--nexora-muted);
   cursor: pointer;
   transform: translateY(-50%);
+  touch-action: manipulation;
 }
 
-.booking-hub-view .booking-filter-popover .booking-keyword-clear:hover {
+.booking-hub-view .booking-keyword-clear:hover,
+.booking-hub-view .booking-keyword-clear:focus-visible {
   background: var(--nexora-surface-muted);
   color: var(--nexora-text);
+  outline: none;
 }
 
-.booking-hub-view .booking-filter-popover .booking-keyword-clear svg {
-  width: 14px;
-  height: 14px;
+.booking-hub-view .booking-keyword-clear svg {
+  width: 16px;
+  height: 16px;
+  pointer-events: none;
 }
 
 .booking-hub-view .booking-filter-popover .booking-clear-button {
@@ -5341,6 +5470,7 @@
   background: #fff;
 }
 
+.booking-hub-view .booking-date-display,
 .booking-hub-view .booking-date-placeholder {
   position: absolute;
   inset: 0;
@@ -5360,6 +5490,11 @@
   text-overflow: ellipsis;
 }
 
+.booking-hub-view .booking-date-input-shell.has-value .booking-date-display {
+  color: var(--nexora-text);
+  font-weight: 700;
+}
+
 .booking-hub-view
   .booking-date-input-shell.has-value
   .booking-date-placeholder {
@@ -5377,77 +5512,82 @@
   padding-right: 34px;
   line-height: normal;
   text-align: left;
+  color: transparent !important;
+  caret-color: transparent !important;
+  cursor: pointer;
+  background: transparent !important;
 }
 
-.booking-hub-view .booking-input-date.is-empty {
-  color: transparent;
-  background: transparent;
+.booking-hub-view .booking-date-input-shell .booking-input-date:focus,
+.booking-hub-view .booking-date-input-shell .booking-input-date:focus-visible,
+.booking-hub-view .booking-date-input-shell .booking-input-date:active {
+  outline: none;
+  background: transparent !important;
 }
 
-.booking-hub-view .booking-input-date.is-empty::-webkit-datetime-edit,
-.booking-hub-view
-  .booking-input-date.is-empty::-webkit-datetime-edit-fields-wrapper,
-.booking-hub-view .booking-input-date.is-empty::-webkit-datetime-edit-text,
-.booking-hub-view
-  .booking-input-date.is-empty::-webkit-datetime-edit-month-field,
-.booking-hub-view .booking-input-date.is-empty::-webkit-datetime-edit-day-field,
-.booking-hub-view
-  .booking-input-date.is-empty::-webkit-datetime-edit-year-field {
-  color: transparent;
-}
-
+.booking-hub-view .booking-input-date.is-empty,
 .booking-hub-view .booking-input-date.has-value {
-  color: var(--nexora-text);
+  color: transparent !important;
+  background: transparent !important;
 }
 
+/* Hide native MM/DD/YYYY segments so WebKit blue focus boxes never show. */
+.booking-hub-view .booking-input-date::-webkit-date-and-time-value,
 .booking-hub-view .booking-input-date::-webkit-datetime-edit,
-.booking-hub-view .booking-input-date::-webkit-datetime-edit-fields-wrapper {
-  display: flex;
-  align-items: center;
-  justify-content: flex-start;
-  width: 100%;
-  height: 100%;
+.booking-hub-view .booking-input-date::-webkit-datetime-edit-fields-wrapper,
+.booking-hub-view .booking-input-date::-webkit-datetime-edit-text,
+.booking-hub-view .booking-input-date::-webkit-datetime-edit-month-field,
+.booking-hub-view .booking-input-date::-webkit-datetime-edit-day-field,
+.booking-hub-view .booking-input-date::-webkit-datetime-edit-year-field {
+  color: transparent !important;
+  background: transparent !important;
+  min-width: 0;
+  max-width: 100%;
   padding: 0;
   margin: 0;
-  text-align: left;
+  overflow: hidden;
+  opacity: 0;
 }
 
-.booking-hub-view .booking-input-date.has-value::-webkit-datetime-edit,
-.booking-hub-view
-  .booking-input-date.has-value::-webkit-datetime-edit-fields-wrapper,
-.booking-hub-view .booking-input-date.has-value::-webkit-datetime-edit-text,
-.booking-hub-view
-  .booking-input-date.has-value::-webkit-datetime-edit-month-field,
-.booking-hub-view
-  .booking-input-date.has-value::-webkit-datetime-edit-day-field,
-.booking-hub-view
-  .booking-input-date.has-value::-webkit-datetime-edit-year-field,
-.booking-hub-view .booking-input-date.has-value::-webkit-date-and-time-value {
-  color: var(--nexora-text);
-  text-align: left;
-}
-
-.booking-hub-view .booking-input-date::-webkit-date-and-time-value {
-  display: flex;
-  align-items: center;
-  justify-content: flex-start;
-  width: 100%;
-  height: 100%;
-  margin: 0;
-  padding: 0;
-  text-align: left;
-  line-height: normal;
+.booking-hub-view .booking-input-date::-webkit-datetime-edit-year-field:focus,
+.booking-hub-view .booking-input-date::-webkit-datetime-edit-month-field:focus,
+.booking-hub-view .booking-input-date::-webkit-datetime-edit-day-field:focus {
+  background: transparent !important;
+  color: transparent !important;
+  box-shadow: none !important;
+  outline: none !important;
 }
 
 .booking-hub-view .booking-input-date::-webkit-calendar-picker-indicator {
   position: absolute;
-  right: 10px;
-  top: 50%;
-  width: 18px;
-  height: 18px;
-  transform: translateY(-50%);
+  inset: 0;
+  z-index: 3;
+  width: auto;
+  height: auto;
+  margin: 0;
+  padding: 0;
   cursor: pointer;
-  opacity: 0.7;
+  opacity: 0;
+}
+
+.booking-hub-view .booking-date-input-shell::after {
+  content: '';
+  position: absolute;
+  top: 50%;
+  right: 12px;
+  z-index: 1;
+  width: 16px;
+  height: 16px;
+  pointer-events: none;
+  transform: translateY(-50%);
+  background-color: var(--nexora-subtle);
+  opacity: 0.85;
+  -webkit-mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Crect x='3' y='4' width='18' height='18' rx='2'/%3E%3Cpath d='M16 2v4M8 2v4M3 10h18'/%3E%3C/svg%3E") center / contain no-repeat;
+  mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Crect x='3' y='4' width='18' height='18' rx='2'/%3E%3Cpath d='M16 2v4M8 2v4M3 10h18'/%3E%3C/svg%3E") center / contain no-repeat;
+}
+
+.booking-hub-view .booking-date-input-shell.has-value::after {
+  background-color: var(--nexora-muted);
 }
 
 .booking-hub-view .booking-clear-button {
@@ -6121,9 +6261,9 @@
 
 .booking-hub-view .booking-card-info-row {
   display: grid;
-  grid-template-columns: minmax(72px, 5.5rem) minmax(0, 1fr);
+  grid-template-columns: minmax(80px, 6.25rem) minmax(0, 1fr);
   align-items: baseline;
-  gap: 10px;
+  gap: 16px;
   min-width: 0;
 }
 
@@ -6256,6 +6396,7 @@
   min-width: 0;
   gap: 6px;
   align-content: start;
+  position: relative;
 }
 
 .booking-hub-view .booking-create-field.is-full {
@@ -6306,11 +6447,27 @@
 .booking-hub-view .booking-create-modal .phone-input-shell {
   height: 42px;
   min-height: 42px;
-  overflow: hidden;
+  /* Must stay visible — CountryCodeSelect dropdown is absolutely positioned inside. */
+  overflow: visible;
+  position: relative;
+  z-index: 6;
+}
+
+.booking-hub-view .booking-create-modal .phone-input-shell:focus-within,
+.booking-hub-view .booking-create-modal .booking-create-field:has(.phone-input-shell:focus-within) {
+  z-index: 20;
+}
+
+.booking-hub-view .booking-create-modal .phone-input-shell > .relative {
+  overflow: visible;
 }
 
 .booking-hub-view .booking-create-modal .phone-input-shell > .relative > button {
   font-size: 13px;
+}
+
+.booking-hub-view .booking-create-modal .phone-input-shell .country-code-dropdown {
+  z-index: 30;
 }
 
 .booking-hub-view .booking-create-modal textarea.booking-input {
@@ -6664,7 +6821,7 @@
   .booking-hub-view .booking-create-modal .phone-input-shell {
     height: 40px;
     min-height: 40px;
-    overflow: hidden;
+    overflow: visible;
   }
 
   .booking-hub-view .booking-create-modal .phone-input-shell > .relative > button {
@@ -6883,7 +7040,21 @@
   border-top: 1px solid var(--nexora-border);
   border-bottom: 0;
   background: #fff;
-  justify-content: flex-end;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.booking-hub-view .booking-detail-actions .booking-actions {
+  flex: 1 1 auto;
+  min-width: 0;
+  justify-content: flex-start;
+}
+
+.booking-hub-view .booking-detail-actions > .booking-secondary-button {
+  flex: 0 0 auto;
+  margin-left: auto;
 }
 
 .booking-hub-view .booking-detail-title {
@@ -7584,6 +7755,7 @@
   }
 
   /* Placeholders stay compact on mobile (do not inherit the 16px iOS input floor) */
+  .booking-hub-view .booking-date-display,
   .booking-hub-view .booking-date-placeholder {
     font-size: 12px;
     font-weight: 600;

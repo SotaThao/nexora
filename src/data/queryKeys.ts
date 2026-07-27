@@ -125,6 +125,7 @@ export const qk = {
 
   // Merchant Nexora Voice
   merchantVoiceBookings: (filters = EMPTY) => ['merchantVoice', 'bookings', filters],
+  merchantVoiceBookingsCollected: (filters = EMPTY) => ['merchantVoice', 'bookings', 'collected', filters],
   merchantVoiceBookingStatistics: () => ['merchantVoice', 'bookings', 'statistics'],
   merchantVoiceStaff: (filters = EMPTY) => ['merchantVoice', 'staff', filters],
   merchantVoiceStaffById: (id?: string | null) => ['merchantVoice', 'staff', 'detail', id ?? ''],
