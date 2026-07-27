@@ -214,6 +214,7 @@ export const BOOKING_HUB_SUBMENU = [
   { id: BookingHubMainTab.Booking, labelKey: 'components.dashboard.views.BookingHubView.tabs.booking', requiresVoiceTenant: true },
   { id: BookingHubMainTab.Customers, labelKey: 'components.dashboard.views.BookingHubView.tabs.customers', requiresVoiceTenant: true },
   { id: BookingHubMainTab.CallLog, labelKey: 'components.dashboard.views.BookingHubView.tabs.callLog', requiresVoiceTenant: true },
+  { id: BookingHubMainTab.SmsCampaigns, labelKey: 'components.dashboard.views.BookingHubView.tabs.smsCampaigns', requiresVoiceTenant: true },
   { id: BookingHubMainTab.Plans, labelKey: 'components.dashboard.views.BookingHubView.tabs.plans', requiresVoiceTenant: false },
   { id: BookingHubMainTab.Settings, labelKey: 'components.dashboard.views.BookingHubView.tabs.settings', requiresVoiceTenant: true },
 ] as const

@@ -199,10 +199,11 @@ export function BookingTeamGridSkeleton({ count = 3 }: { count?: number }) {
               <Skeleton width="72%" height={14} borderRadius={6} />
               <Skeleton width="54%" height={12} borderRadius={6} />
             </BookingSkeletonStack>
-            <div className="tech-top-actions">
-              <Skeleton width={30} height={30} borderRadius={8} />
-              <Skeleton width={42} height={24} borderRadius={999} />
-            </div>
+            <Skeleton width={42} height={24} borderRadius={999} />
+          </div>
+          <div className="tech-card-footer">
+            <Skeleton width={108} height={22} borderRadius={999} />
+            <Skeleton width={64} height={30} borderRadius={8} />
           </div>
           <div className="booking-skeleton-chip-row">
             <Skeleton width={68} height={22} borderRadius={999} />
@@ -344,6 +345,99 @@ export function BookingHubTabsSkeleton() {
       {Array.from({ length: 3 }).map((_, index) => (
         <Skeleton key={index} width={132} height={40} borderRadius={10} />
       ))}
+    </div>
+  )
+}
+
+export function BookingSmsCampaignsSkeleton() {
+  const { t } = useTranslation()
+
+  return (
+    <div
+      className="panel-sms-campaigns booking-sms-campaigns-skeleton"
+      aria-busy="true"
+      aria-label={t('components.dashboard.views.BookingHubView.smsCampaigns.loadingAria')}
+    >
+      <div className="marketing-panel-head">
+        <BookingSkeletonStack>
+          <Skeleton width={280} height={14} borderRadius={6} />
+        </BookingSkeletonStack>
+        <div className="marketing-panel-actions">
+          <Skeleton width={170} height={52} borderRadius={12} />
+          <Skeleton width={138} height={42} borderRadius={8} />
+          <Skeleton width={168} height={42} borderRadius={8} />
+        </div>
+      </div>
+
+      <div className="sms-campaign-stats" aria-hidden="true">
+        {Array.from({ length: 4 }).map((_, index) => (
+          <article className="sms-stat-card booking-skeleton-card" key={index}>
+            <BookingSkeletonStack>
+              <Skeleton width="58%" height={10} borderRadius={4} />
+              <Skeleton width="42%" height={24} borderRadius={6} />
+              <Skeleton width="72%" height={10} borderRadius={4} />
+            </BookingSkeletonStack>
+          </article>
+        ))}
+      </div>
+
+      <div className="marketing-section-heading">
+        <Skeleton width={240} height={16} borderRadius={6} />
+      </div>
+
+      <div className="sms-campaign-grid" aria-hidden="true">
+        {Array.from({ length: 6 }).map((_, index) => (
+          <article className="sms-campaign-card booking-skeleton-card" key={index}>
+            <Skeleton width={34} height={34} borderRadius={9} />
+            <BookingSkeletonStack className="booking-skeleton-stack-grow">
+              <Skeleton width="70%" height={14} borderRadius={6} />
+              <Skeleton width="92%" height={11} borderRadius={6} />
+              <Skeleton width="88%" height={11} borderRadius={6} />
+            </BookingSkeletonStack>
+            <div className="sms-campaign-meta">
+              <Skeleton width={72} height={18} borderRadius={6} />
+              <Skeleton width={64} height={22} borderRadius={999} />
+            </div>
+          </article>
+        ))}
+      </div>
+
+      <section className="sms-campaign-history" aria-hidden="true">
+        <div className="marketing-section-heading">
+          <Skeleton width={120} height={16} borderRadius={6} />
+        </div>
+        <div className="sms-campaign-table-wrap">
+          <table className="sms-campaign-table">
+            <thead>
+              <tr>
+                {Array.from({ length: 7 }).map((_, index) => (
+                  <th key={index} scope="col">
+                    <Skeleton width={index === 6 ? 56 : 72} height={10} borderRadius={4} />
+                  </th>
+                ))}
+              </tr>
+            </thead>
+            <tbody>
+              {Array.from({ length: 5 }).map((_, rowIndex) => (
+                <tr key={rowIndex} className="booking-skeleton-row">
+                  <td><Skeleton width="78%" height={13} borderRadius={6} /></td>
+                  <td><Skeleton width="72%" height={12} borderRadius={6} /></td>
+                  <td><Skeleton width={64} height={12} borderRadius={6} /></td>
+                  <td><Skeleton width={72} height={22} borderRadius={999} /></td>
+                  <td><Skeleton width={36} height={12} borderRadius={6} /></td>
+                  <td><Skeleton width={28} height={12} borderRadius={6} /></td>
+                  <td>
+                    <div className="sms-campaign-actions">
+                      <Skeleton width={52} height={30} borderRadius={7} />
+                      <Skeleton width={58} height={30} borderRadius={7} />
+                    </div>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      </section>
     </div>
   )
 }

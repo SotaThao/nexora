@@ -32,6 +32,7 @@ export {
   isValidMerchantVoiceServiceDuration,
   MerchantVoiceServiceField,
   MERCHANT_VOICE_BOOKINGS_POLL_INTERVAL_MS,
+  MERCHANT_VOICE_SMS_CAMPAIGNS_POLL_INTERVAL_MS,
   MERCHANT_VOICE_SERVICE_MIN_DURATION_MINUTES,
   BookingUiSearchField,
   BookingUiSource,
@@ -40,6 +41,25 @@ export {
   BOOKING_UI_SOURCE_I18N_KEY,
   CallUiStatus,
   CustomerUiSegment,
+  SmsCampaignSegmentId,
+  SmsCampaignUiMode,
+  SmsCampaignUiStatus,
+  SmsCampaignAudience,
+  SmsCampaignStatus,
+  SmsCampaignScheduleMode,
+  SmsCampaignRecipientStatus,
+  SmsCreditTransactionType,
+  SmsEncoding,
+  SmsCreditPackageCode,
+  SmsCampaignErrorCode,
+  isSmsCampaignEditable,
+  isSmsCampaignCancellable,
+  isSmsCampaignDeletable,
+  isSmsCampaignAutoToggleable,
+  isSmsCampaignViewable,
+  normalizeSmsCampaignAudience,
+  normalizeSmsCampaignStatus,
+  normalizeSmsCampaignScheduleMode,
   MerchantVoiceBookingSearchField,
   MerchantVoiceCallOutcome,
   MerchantVoiceCallStatusGroupApi,
@@ -350,6 +370,15 @@ export interface MerchantVoiceTenantStatusDto {
   isActive: boolean
 }
 
+/** Linked voice tenant identity for the authenticated merchant (`GET .../my-tenant`). */
+export interface MerchantVoiceTenantDto {
+  id: string
+  businessId: string | null
+  businessKey: string
+  name: string
+  isActive: boolean
+}
+
 export interface MerchantVoiceConfigDto {
   id: string
   name: string
@@ -403,6 +432,8 @@ export interface CreateMerchantVoiceStaffRequest {
   phoneNumber?: string | null
   email?: string | null
   skills?: string | null
+  /** Present when linking an existing business staff profile from the picker. */
+  staffProfileId?: string | null
   schedules: MerchantVoiceStaffScheduleEntry[]
 }
 
@@ -463,6 +494,20 @@ function normalizeTenantStatusResponse(response: unknown): MerchantVoiceTenantSt
   return {
     hasVoiceTenant: data.hasVoiceTenant === true,
     voiceTenantId: typeof data.voiceTenantId === 'string' ? data.voiceTenantId : null,
+    isActive: data.isActive === true,
+  }
+}
+
+function normalizeMyTenantResponse(response: unknown): MerchantVoiceTenantDto {
+  const data = response && typeof response === 'object'
+    ? response as Record<string, unknown>
+    : {}
+
+  return {
+    id: typeof data.id === 'string' ? data.id : '',
+    businessId: typeof data.businessId === 'string' ? data.businessId : null,
+    businessKey: typeof data.businessKey === 'string' ? data.businessKey : '',
+    name: typeof data.name === 'string' ? data.name : '',
     isActive: data.isActive === true,
   }
 }
@@ -848,6 +893,14 @@ export function createMerchantVoiceRepository(client: HttpClient = httpClient) {
         { headers: MERCHANT_VOICE_HEADERS },
       )
       return normalizeTenantStatusResponse(response)
+    },
+
+    async getMyTenant(): Promise<MerchantVoiceTenantDto> {
+      const response = await client.get<unknown>(
+        `${MERCHANT_VOICE_BASE}/my-tenant`,
+        { headers: MERCHANT_VOICE_HEADERS },
+      )
+      return normalizeMyTenantResponse(response)
     },
 
     async getConfig(): Promise<MerchantVoiceConfigDto> {
