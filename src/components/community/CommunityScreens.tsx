@@ -45,7 +45,7 @@ import { CommunityNotificationBell, CommunityNotificationsProvider } from './Com
 import { CommunityPostComposer, CommunityPostMedia } from './CommunityPostMedia'
 import { CommunityRightRail } from './CommunityRightRail'
 
-const cardClass = 'overflow-hidden rounded-2xl border border-nexoraBorder bg-nexoraSurface shadow-nexora-card'
+const cardClass = 'overflow-hidden rounded-xl border border-nexoraBorder bg-nexoraSurface shadow-nexora-card'
 const gradientClass = 'bg-gradient-to-br from-nexoraElectric to-nexoraViolet'
 
 function initials(name?: string | null) {
@@ -107,7 +107,7 @@ function CommunityFrame({ children, containerClassName }: { children: ReactNode;
 
 function CommunityStoryRings({ communities }: { communities: CommunityDto[] }) {
   return (
-    <section className="-mx-4 overflow-hidden border-y border-nexoraBorder bg-nexoraSurface px-4 py-3 sm:-mx-6 sm:px-6 lg:mx-0 lg:rounded-2xl lg:border lg:shadow-nexora-card" aria-label="Nhóm của bạn">
+    <section className="overflow-hidden rounded-xl border border-nexoraBorder bg-nexoraSurface px-4 py-3 shadow-nexora-card" aria-label="Nhóm của bạn">
       <div className="flex gap-3 overflow-x-auto pb-1">
         {communities.map((community, index) => (
           <Link key={community.id} to={`/community/${community.id}`} className="w-16 shrink-0 text-center">
@@ -128,7 +128,7 @@ function CommunityStoryRings({ communities }: { communities: CommunityDto[] }) {
 
 function PostComposer({ communityId, onClose }: { communityId: string; onClose: () => void }) {
   const community = useCommunityDetail(communityId)
-  if (community.isLoading) return <div className="h-40 animate-pulse rounded-2xl bg-nexoraSurfaceMuted" aria-label="Đang tải trình soạn bài" />
+  if (community.isLoading) return <div className="h-40 animate-pulse rounded-xl bg-nexoraSurfaceMuted" aria-label="Đang tải trình soạn bài" />
   if (!community.data) return null
   return <CommunityPostComposer community={community.data} onClose={onClose} />
 }
@@ -136,7 +136,7 @@ function PostComposer({ communityId, onClose }: { communityId: string; onClose: 
 function QuickComposer({ communityId, onOpen }: { communityId?: string; onOpen: () => void }) {
   const { isAnonymous, user } = useCommunityAuth()
   if (!communityId || isAnonymous) return null
-  return <button type="button" onClick={onOpen} className="-mx-4 flex w-[calc(100%+2rem)] items-center gap-3 border-b-8 border-nexoraCanvas bg-nexoraSurface px-4 py-3 text-left sm:-mx-6 sm:w-[calc(100%+3rem)] sm:px-6 lg:mx-0 lg:w-full lg:rounded-2xl lg:border lg:border-nexoraBorder lg:shadow-nexora-card"><Avatar name={user?.email} className="h-10 w-10" /><span className="flex min-h-11 flex-1 items-center rounded-full border border-nexoraBorder bg-nexoraSurfaceMuted px-4 text-sm text-nexoraSubtle">Bạn đang nghĩ gì?</span><ImageIcon className="h-5 w-5 text-nexoraBrand" aria-hidden="true" /></button>
+  return <button type="button" onClick={onOpen} className="flex w-full items-center gap-3 rounded-xl border border-nexoraBorder bg-nexoraSurface px-4 py-3 text-left shadow-nexora-card"><Avatar name={user?.email} className="h-10 w-10" /><span className="flex min-h-11 flex-1 items-center rounded-full border border-nexoraBorder bg-nexoraSurfaceMuted px-4 text-sm text-nexoraSubtle">Bạn đang nghĩ gì?</span><ImageIcon className="h-5 w-5 text-nexoraBrand" aria-hidden="true" /></button>
 }
 
 function CommentThread({ post }: { post: PostDto }) {

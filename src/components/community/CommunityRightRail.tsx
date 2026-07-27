@@ -55,7 +55,7 @@ export function CommunityRightRail() {
   const directChannels = useDirectChannels({ enabled: Boolean(user) && !isAnonymous })
 
   return (
-    <aside className="overflow-hidden rounded-2xl border border-nexoraBorder bg-nexoraSurface font-sans shadow-nexora-card">
+    <aside className="overflow-hidden rounded-xl border border-nexoraBorder bg-nexoraSurface font-sans shadow-nexora-card">
       {/* 1. Người đang hoạt động */}
       <section className={cardClass}>
         <div className="flex items-center justify-between border-b border-nexoraRule pb-3">

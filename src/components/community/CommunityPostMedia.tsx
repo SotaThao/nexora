@@ -141,7 +141,7 @@ export function CommunityPostComposer({ community, onClose }: { community: Commu
   const uploadError = mediaError || uploadMedia.error
 
   return (
-    <form onSubmit={submit} className="overflow-hidden rounded-2xl border border-nexoraBorder bg-nexoraSurface p-3 shadow-nexora-card">
+    <form onSubmit={submit} className="overflow-hidden rounded-xl border border-nexoraBorder bg-nexoraSurface p-3 shadow-nexora-card">
       <label className="sr-only" htmlFor={`post-body-${community.id}`}>Nội dung bài viết</label>
       <textarea id={`post-body-${community.id}`} value={body} onChange={(event) => setBody(event.target.value)} maxLength={10_000} placeholder="Chia sẻ mẫu nail hoặc thông báo mới…" className="min-h-24 w-full resize-none rounded-xl border border-nexoraBorder bg-nexoraSurfaceMuted p-3 text-sm outline-none placeholder:text-nexoraSubtle focus:border-nexoraBrand" />
 
