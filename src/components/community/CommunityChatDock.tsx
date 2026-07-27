@@ -107,8 +107,6 @@ export function CommunityChatInboxTrigger() {
   const { isInboxOpen, toggleInbox, closeInbox, openDirectChat } = useCommunityChatDock()
   const [activeTab, setActiveTab] = useState<'dm' | 'groups'>('dm')
   const [searchQuery, setSearchQuery] = useState('')
-  const wrapperRef = useRef<HTMLDivElement>(null)
-
   const directChannels = useDirectChannels({ enabled: Boolean(user) && !isAnonymous })
   const myCommunities = useMyCommunities({ enabled: Boolean(user) && !isAnonymous })
   const normalizedQuery = searchQuery.trim().toLocaleLowerCase('vi')
@@ -122,7 +120,11 @@ export function CommunityChatInboxTrigger() {
   useEffect(() => {
     if (!isInboxOpen) return
     const handlePointerDown = (event: PointerEvent) => {
-      if (!wrapperRef.current?.contains(event.target as Node)) closeInbox()
+      const target = event.target
+      // Mobile and desktop header variants are mounted together. Treat either
+      // Messenger root as inside so the hidden variant cannot cancel a click.
+      if (target instanceof Element && target.closest('[data-community-chat-inbox-root]')) return
+      closeInbox()
     }
     const handleKeyDown = (event: KeyboardEvent) => {
       if (event.key === 'Escape') closeInbox()
@@ -141,7 +143,7 @@ export function CommunityChatInboxTrigger() {
   }
 
   return (
-    <div ref={wrapperRef} className="relative">
+    <div data-community-chat-inbox-root className="relative">
       <button
         type="button"
         onClick={toggleInbox}
