@@ -170,7 +170,7 @@ function FeedPost({ post, communityName }: { post: PostDto; communityName: strin
   const hasLiked = reactions.data?.some((reaction) => reaction.userId === user?.id && reaction.type === likeType) ?? false
   const isAnnouncement = post.isAnnouncement
   return (
-    <article className={`${cardClass} ${isAnnouncement ? 'border-l-[3px] border-l-nexoraBrand bg-[#fbfbff]' : ''}`}>
+    <article className={`${cardClass} ${isAnnouncement ? 'border-l-[3px] border-l-nexoraBrand !bg-nexoraBrandSoft/20' : ''}`}>
       {isAnnouncement ? <p className="px-4 pt-3 text-[10px] font-extrabold uppercase tracking-[0.08em] text-nexoraBrand">Thông báo · {communityName}</p> : null}
       <div className="flex items-center gap-3 px-4 pt-3"><Avatar name={post.author?.displayName} className="h-9 w-9" /><div className="min-w-0 flex-1"><p className="truncate text-sm font-extrabold text-nexoraText">{post.author?.displayName || 'Thành viên Nexora'}</p><p className="text-xs text-nexoraMuted">{communityName} · {relativeTime(post.createdAt)}</p></div>{post.isAnnouncement ? <ShieldCheck className="h-4 w-4 text-nexoraBrand" aria-label="Thông báo" /> : null}</div>
       <CommunityPostMedia media={post.media} authorName={post.author?.displayName} />
