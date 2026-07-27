@@ -11,7 +11,7 @@ import { useCommunityChatDock } from './CommunityChatDock'
 import { formatJoinedDate } from '../../utils/localDate'
 
 const cardClass =
-  'border-b border-nexoraRule bg-transparent p-4 last:border-b-0'
+  'overflow-hidden rounded-xl border border-nexoraBorder bg-nexoraSurface p-4 shadow-nexora-card'
 const gradientClass = 'bg-gradient-to-br from-nexoraElectric to-nexoraViolet'
 
 function initials(name?: string | null) {
@@ -55,7 +55,7 @@ export function CommunityRightRail() {
   const directChannels = useDirectChannels({ enabled: Boolean(user) && !isAnonymous })
 
   return (
-    <aside className="overflow-hidden rounded-xl border border-nexoraBorder bg-nexoraSurface font-sans shadow-nexora-card">
+    <aside className="space-y-4 font-sans">
       {/* 1. Người đang hoạt động */}
       <section className={cardClass}>
         <div className="flex items-center justify-between border-b border-nexoraRule pb-3">
@@ -163,24 +163,26 @@ export function CommunityRightRail() {
         </div>
       </section>
 
-      {/* 3. Tin nhắn (Chỉ hiển thị nếu có DM) */}
-      {directChannels.data && directChannels.data.length > 0 ? (
-        <section className={cardClass}>
-          <div className="flex items-center justify-between border-b border-nexoraRule pb-3">
-            <div className="flex items-center gap-2">
-              <MessageSquare className="h-4 w-4 text-nexoraBrand" aria-hidden="true" />
-              <h2 className="text-sm font-extrabold text-nexoraText">Tin nhắn</h2>
-            </div>
-            <Link
-              to="/community/chat"
-              className="text-xs font-bold text-nexoraBrand hover:underline"
-            >
-              Xem tất cả
-            </Link>
+      {/* 3. Tin nhắn */}
+      <section className={cardClass}>
+        <div className="flex items-center justify-between border-b border-nexoraRule pb-3">
+          <div className="flex items-center gap-2">
+            <MessageSquare className="h-4 w-4 text-nexoraBrand" aria-hidden="true" />
+            <h2 className="text-sm font-extrabold text-nexoraText">Tin nhắn</h2>
           </div>
+          <Link
+            to="/community/chat"
+            className="text-xs font-bold text-nexoraBrand hover:underline"
+          >
+            Xem tất cả
+          </Link>
+        </div>
 
-          <div className="mt-3 space-y-1">
-            {directChannels.data.slice(0, 5).map((channel) => (
+        <div className="mt-3 space-y-1">
+          {directChannels.isLoading ? (
+            <div className="h-12 animate-pulse rounded-xl bg-nexoraSurfaceMuted" />
+          ) : directChannels.data?.length ? (
+            directChannels.data.slice(0, 5).map((channel) => (
               <button
                 key={channel.id}
                 type="button"
@@ -200,10 +202,12 @@ export function CommunityRightRail() {
                   <p className="truncate text-xs text-nexoraMuted">Chat 1:1</p>
                 </div>
               </button>
-            ))}
-          </div>
-        </section>
-      ) : null}
+            ))
+          ) : (
+            <p className="py-2 text-center text-xs text-nexoraMuted">Chưa có tin nhắn.</p>
+          )}
+        </div>
+      </section>
     </aside>
   )
 }
