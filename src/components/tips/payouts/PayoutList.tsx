@@ -1,7 +1,7 @@
 import { Eye, FileImage, Loader2 } from 'lucide-react'
 import type { TFunction } from '../../../types/contexts'
 import type { PayoutRecord } from '../../../types/domain'
-import { formatCurrency, formatTransactionDateTime } from '../../dashboard/utils'
+import { formatCurrency, DateTimeCell } from '../../dashboard/utils'
 import {
   formatPayoutPeriodRange,
   getPayoutTypeI18nKeys,
@@ -87,7 +87,7 @@ export default function PayoutList({
               <tr key={row.id} className="border-t border-nexoraBorder/70 hover:bg-slate-50/80">
                 <td className="px-4 py-3 font-mono text-xs font-bold text-nexoraBrand">{row.payoutCode}</td>
                 <td className="px-4 py-3 text-xs text-mutedGrey">
-                  {formatTransactionDateTime(row.createdAt, currentLanguage)}
+                  <DateTimeCell value={row.createdAt} locale={currentLanguage} />
                 </td>
                 <td className="px-4 py-3">
                   <div className="flex items-center gap-2">

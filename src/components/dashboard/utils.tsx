@@ -3,6 +3,7 @@
 import { useEffect, useMemo, useState } from 'react'
 import { isInitiatedLikeTipStatus, isTipStatus, TipStatus } from '../../constants/tipStatus'
 import { isMasterTouchpoint } from '../../constants/touchpoints'
+import { formatDatePart, formatTimePart } from '../../utils/localDate'
 
 // Render text with styled star rating symbols (★) in luxuryGold with a 4px gap.
 export function renderTextWithGoldStars(text) {
@@ -53,39 +54,55 @@ export function parseApiDateTime(value) {
   return Number.isNaN(date.getTime()) ? null : date
 }
 
-function formatDateTimeWithUserTimeZone(date, locale, options) {
-  const intlLocale = locale === 'vi' ? 'vi-VN' : 'en-US'
-  const timeZone = Intl.DateTimeFormat().resolvedOptions().timeZone
+function localTimeZone() {
+  return Intl.DateTimeFormat().resolvedOptions().timeZone
+}
 
-  return new Intl.DateTimeFormat(intlLocale, {
-    ...options,
-    timeZone,
-  }).format(date)
+// Same output as formatTransactionDateTime, but date/time kept as separate strings —
+// for list/table cells that render the time on its own line under the date.
+export function formatTransactionDateTimeParts(value, locale = 'en') {
+  const date = parseApiDateTime(value)
+  if (!date) return null
+
+  const isVietnamese = locale === 'vi'
+  const timeZone = localTimeZone()
+
+  return {
+    date: formatDatePart(date, isVietnamese, { timeZone }),
+    time: formatTimePart(date, isVietnamese, timeZone),
+  }
 }
 
 export function formatTransactionDateTime(value, locale = 'en') {
-  const date = parseApiDateTime(value)
-  if (!date) return value ? String(value).trim() : '—'
+  const parts = formatTransactionDateTimeParts(value, locale)
+  if (!parts) return value ? String(value).trim() : '—'
 
-  return formatDateTimeWithUserTimeZone(date, locale, {
-    year: 'numeric',
-    month: 'short',
-    day: 'numeric',
-    hour: 'numeric',
-    minute: '2-digit',
-  })
+  return `${parts.date} ${parts.time}`
+}
+
+export function DateTimeCell({ value, locale = 'en', timeClassName = '', className = '' }) {
+  const parts = formatTransactionDateTimeParts(value, locale)
+  if (!parts) return <span className={className}>{value ? String(value).trim() : '—'}</span>
+
+  return (
+    <span className={className}>
+      {parts.date}
+      <br />
+      <span className={timeClassName}>{parts.time}</span>
+    </span>
+  )
 }
 
 export function formatNotificationDateTime(value, locale = 'en') {
   const date = parseApiDateTime(value)
   if (!date) return value ? String(value).trim() : ''
 
-  return formatDateTimeWithUserTimeZone(date, locale, {
-    month: 'short',
-    day: 'numeric',
-    hour: 'numeric',
-    minute: '2-digit',
-  })
+  const isVietnamese = locale === 'vi'
+  const timeZone = localTimeZone()
+  const datePart = formatDatePart(date, isVietnamese, { timeZone, withYear: false })
+  const timePart = formatTimePart(date, isVietnamese, timeZone)
+
+  return `${datePart} ${timePart}`
 }
 
 // US-025 — owner confirm receipt for shop-account / multi-staff tips.

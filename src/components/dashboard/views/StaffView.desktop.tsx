@@ -8,8 +8,8 @@ import { getWebUrlOrigin } from '../../../utils/webUrlBase'
 import { buildPublicQrImageUrl } from '../../../data/repositories/publicQr'
 import { QR_IMAGE_SIZES } from '../../../utils/qrUtils'
 import { orderedPayoutUiKeysFromMethods, PAYOUT_UI_LABELS } from '../../../data/paymentMethodTypes'
-import { formatJoinedDate } from '../../../utils/localDate'
 import { resolveStaffRoleLabel } from '../../../utils/staffBusinessRole'
+import { DateTimeCell } from '../utils'
 import IconButton from '../../ui/IconButton'
 import CustomSelect from '../../CustomSelect'
 import Pagination from '../../ui/Pagination'
@@ -63,7 +63,7 @@ function StaffView({
   onPageChange,
   togglingStaffId = null,
 }) {
-  const { t } = useTranslation()
+  const { t, currentLanguage } = useTranslation()
   const { showToast } = useNotification()
   const [largeJoinQrOpen, setLargeJoinQrOpen] = useState(false)
   const [sortBy, setSortBy] = useState('name-asc') // 'name-asc' | 'name-desc' | 'date-newest' | 'date-oldest' | 'status-active'
@@ -470,7 +470,7 @@ function StaffView({
 
                     <td className="px-5 py-4">
                       <div className="text-xs text-nexoraText font-semibold leading-normal">
-                        {member.joinedDate ? formatJoinedDate(member.joinedDate) : '-'}
+                        {member.joinedDate ? <DateTimeCell value={member.joinedDate} locale={currentLanguage} /> : '-'}
                       </div>
                     </td>
 

@@ -4,6 +4,7 @@ import { useNotification } from "../../../contexts/NotificationContext";
 import { useQueryClient } from "@tanstack/react-query";
 import { useTranslation } from "../../../contexts/LanguageContext";
 import { resolveEffectiveKybStatus } from "../../../utils/kybStatus";
+import { formatDateOnly } from "../../../utils/localDate";
 import {
   useUpdateBusiness,
   useUpdateBusinessInfo,
@@ -650,15 +651,7 @@ export default function useSettingsForm({
   const formatDOB = (dobString) => {
     if (!dobString) return "";
     try {
-      const date = new Date(dobString);
-      return date.toLocaleDateString(
-        currentLanguage === "vi" ? "vi-VN" : "en-US",
-        {
-          month: "short",
-          day: "numeric",
-          year: "numeric",
-        },
-      );
+      return formatDateOnly(dobString, currentLanguage);
     } catch (e) {
       return dobString;
     }
