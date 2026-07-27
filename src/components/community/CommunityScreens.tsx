@@ -39,8 +39,8 @@ import {
 } from '../../data/hooks/useCommunity'
 import DemoStaffShell from './demo/DemoStaffShell'
 import { CommunityAuthProvider, CommunityPersonaSwitcher, useCommunityAuth } from './CommunityAuth'
-import { CommunityChatDock, CommunityChatDockProvider, CommunityChatInboxTrigger } from './CommunityChatDock'
-import { CommunityNotificationBell, CommunityNotificationsProvider } from './CommunityNotifications'
+import { CommunityChatDock, CommunityChatDockProvider } from './CommunityChatDock'
+import { CommunityNotificationsProvider } from './CommunityNotifications'
 import { CommunityPostComposer, CommunityPostMedia } from './CommunityPostMedia'
 import { CommunityRightRail } from './CommunityRightRail'
 
@@ -207,7 +207,7 @@ export function CommunityHome() {
     <CommunityFrame containerClassName="mx-auto w-full max-w-[1040px] pb-20">
       <header className="mx-auto mb-4 flex w-full max-w-[680px] items-center justify-between gap-3 2xl:max-w-none">
         <div><p className="text-xs font-bold uppercase tracking-[0.12em] text-nexoraBrand">Nexora</p><h1 className="text-xl font-extrabold text-nexoraText">Cộng đồng</h1></div>
-        <div className="flex items-center gap-2"><CommunityNotificationBell /><CommunityChatInboxTrigger /><Link to="/community/new" className={`inline-flex min-h-11 items-center gap-2 rounded-xl px-3 text-sm font-extrabold text-white ${gradientClass}`}><Plus className="h-4 w-4" aria-hidden="true" />Tạo nhóm</Link></div>
+        <Link to="/community/new" className={`inline-flex min-h-11 items-center gap-2 rounded-xl px-3 text-sm font-extrabold text-white ${gradientClass}`}><Plus className="h-4 w-4" aria-hidden="true" />Tạo nhóm</Link>
       </header>
       <div className="flex flex-col gap-6 2xl:flex-row 2xl:items-start">
         <div className="mx-auto w-full max-w-[680px] flex-1 space-y-4 2xl:mx-0">

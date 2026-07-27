@@ -13,6 +13,8 @@ import {
 import { useState, type ReactNode } from 'react'
 import { useLocation } from 'react-router-dom'
 import { useTranslation } from '../../../contexts/LanguageContext'
+import { CommunityChatInboxTrigger } from '../CommunityChatDock'
+import { CommunityNotificationBell } from '../CommunityNotifications'
 import AppDownloadLinks from '../../ui/AppDownloadLinks'
 import LanguageSwitcher from '../../ui/LanguageSwitcher'
 import MenuIcon from '../../ui/MenuIcon'
@@ -239,13 +241,13 @@ function DemoSidebar({ isOpen, onClose, onDemoNavigation }: DemoSidebarProps) {
 type DemoHeaderProps = {
   onOpenMobileMenu: () => void
   onDemoNavigation: () => void
-  hideDecorativeNotification: boolean
+  showCommunityActions: boolean
   isChatRoute: boolean
 }
 
 // Demo-local replica of StaffHeader.mobile.tsx and StaffHeader.desktop.tsx.
-// Query-backed notification/ecosystem controls are represented by their closed visual states.
-function DemoHeader({ onOpenMobileMenu, onDemoNavigation, hideDecorativeNotification, isChatRoute }: DemoHeaderProps) {
+// Community routes mount the shared notification data and Messenger controls; design demos keep visual-only controls.
+function DemoHeader({ onOpenMobileMenu, onDemoNavigation, showCommunityActions, isChatRoute }: DemoHeaderProps) {
   return (
     <header className={`safe-area-top sticky z-20 border-b border-nexoraBorder bg-nexoraSurface ${isChatRoute ? 'top-0 lg:top-[52px]' : 'top-[52px]'}`}>
       <div className="flex items-center justify-between gap-2 px-4 py-3 lg:hidden">
@@ -263,16 +265,16 @@ function DemoHeader({ onOpenMobileMenu, onDemoNavigation, hideDecorativeNotifica
         </div>
 
         <div className="flex items-center justify-end gap-1.5 sm:gap-2">
-          <LanguageSwitcher className="[&>button]:min-h-11 [&>button]:min-w-11" />
+          <LanguageSwitcher className="hidden sm:block [&>button]:min-h-11 [&>button]:min-w-11" />
           <button
             type="button"
             aria-label="Hệ sinh thái Nexora"
             onClick={onDemoNavigation}
-            className="grid h-11 w-11 place-items-center rounded-lg text-nexoraText transition hover:bg-nexoraSurfaceMuted"
+            className="hidden h-11 w-11 place-items-center rounded-lg text-nexoraText transition hover:bg-nexoraSurfaceMuted sm:grid"
           >
             <img src="/assets/icon_eco.svg" alt="" className="h-[22px] w-[22px]" aria-hidden="true" />
           </button>
-          {!hideDecorativeNotification ? <button
+          {showCommunityActions ? <><CommunityNotificationBell /><CommunityChatInboxTrigger /></> : <button
             type="button"
             aria-label="Thông báo"
             onClick={onDemoNavigation}
@@ -280,7 +282,7 @@ function DemoHeader({ onOpenMobileMenu, onDemoNavigation, hideDecorativeNotifica
           >
             <img src="/assets/menu/notification.png" alt="" className="h-5 w-5 object-contain" aria-hidden="true" />
             <span className="absolute right-2 top-2 h-2 w-2 rounded-full bg-nexoraDanger ring-2 ring-white" />
-          </button> : null}
+          </button>}
           <button
             type="button"
             aria-label="Hồ sơ Kayla Le"
@@ -311,7 +313,7 @@ function DemoHeader({ onOpenMobileMenu, onDemoNavigation, hideDecorativeNotifica
           >
             <img src="/assets/icon_eco.svg" alt="" className="h-[22px] w-[22px]" aria-hidden="true" />
           </button>
-          {!hideDecorativeNotification ? <button
+          {showCommunityActions ? <><CommunityNotificationBell /><CommunityChatInboxTrigger /></> : <button
             type="button"
             aria-label="Thông báo"
             onClick={onDemoNavigation}
@@ -321,7 +323,7 @@ function DemoHeader({ onOpenMobileMenu, onDemoNavigation, hideDecorativeNotifica
             <span className="absolute -right-1 -top-1 flex h-[18px] min-w-[18px] items-center justify-center rounded-full bg-nexoraDanger px-1 text-[9px] font-black text-white ring-2 ring-white">
               3
             </span>
-          </button> : null}
+          </button>}
           <button
             type="button"
             aria-label="Hồ sơ Kayla Le"
@@ -399,7 +401,7 @@ export default function DemoStaffShell({ children, onDemoNavigation }: DemoStaff
   const { t } = useTranslation()
   const { pathname } = useLocation()
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
-  const hideDecorativeNotification = pathname === '/community' || pathname.startsWith('/community/')
+  const showCommunityActions = pathname === '/community' || pathname.startsWith('/community/')
   const isChatRoute =
     pathname === '/community/chat' ||
     pathname.startsWith('/community/chat/') ||
@@ -422,7 +424,7 @@ export default function DemoStaffShell({ children, onDemoNavigation }: DemoStaff
         <DemoHeader
           onOpenMobileMenu={() => setIsMobileMenuOpen(true)}
           onDemoNavigation={onDemoNavigation}
-          hideDecorativeNotification={hideDecorativeNotification}
+          showCommunityActions={showCommunityActions}
           isChatRoute={isChatRoute}
         />
         <main
