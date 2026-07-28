@@ -11,7 +11,7 @@ import {
   Wallet,
 } from 'lucide-react'
 import { useState, type ReactNode } from 'react'
-import { useLocation } from 'react-router-dom'
+import { Link, useLocation } from 'react-router-dom'
 import { useTranslation } from '../../../contexts/LanguageContext'
 import { CommunityChatInboxTrigger } from '../CommunityChatDock'
 import { CommunityNotificationBell } from '../CommunityNotifications'
@@ -35,6 +35,13 @@ import {
 } from '../../staff-dashboard/constants'
 
 const communityMenuItem = { id: 'community', icon: Users }
+const communitySubmenuItems = [
+  { id: 'feed', label: 'Feed' },
+  { id: 'groups', label: 'Groups' },
+  { id: 'learning', label: 'Learning' },
+  { id: 'jobs', label: 'Jobs' },
+  { id: 'events', label: 'Events' },
+] as const
 const homepageMenuItem = { id: 'homepage', icon: Home }
 
 type DemoStaffShellProps = {
@@ -52,7 +59,14 @@ type DemoSidebarProps = {
 // The production component cannot be mounted here because it reads StaffAccount and query-backed URL state.
 function DemoSidebar({ isOpen, onClose, onDemoNavigation }: DemoSidebarProps) {
   const { t } = useTranslation()
+  const { pathname, search } = useLocation()
+  const isCommunityRoute = pathname === '/community' || pathname.startsWith('/community/')
+  const isCommunityHomeRoute = pathname === '/community' || pathname === '/community/'
+  const activeCommunityTab = isCommunityHomeRoute
+    ? new URLSearchParams(search).get('tab') ?? 'feed'
+    : null
   const [isProfileExpanded, setIsProfileExpanded] = useState(false)
+  const [isCommunityExpanded, setIsCommunityExpanded] = useState(isCommunityRoute)
   const [isWorkspaceExpanded, setIsWorkspaceExpanded] = useState(false)
   const dashboardMenuItem = STAFF_MENU_ITEMS.find((item) => item.id === 'home')
   const remainingMenuItems = STAFF_MENU_ITEMS.filter((item) => item.id !== 'home')
@@ -149,17 +163,62 @@ function DemoSidebar({ isOpen, onClose, onDemoNavigation }: DemoSidebarProps) {
 
         {dashboardMenuItem ? renderRegularItem(dashboardMenuItem, isMobile) : null}
 
-        <button
-          type="button"
-          aria-current="page"
-          className={sidebarMenuItemClass(true)}
-        >
-          <MenuIcon item={communityMenuItem} active />
-          <span className="min-w-0 flex-1 truncate">Community</span>
-          <span className="shrink-0 rounded-full bg-white/15 px-2 py-0.5 text-[9px] font-black tracking-wide text-white ring-1 ring-white/20">
-            NEW
-          </span>
-        </button>
+        <div>
+          <button
+            type="button"
+            aria-current={isCommunityRoute ? 'page' : undefined}
+            aria-expanded={isCommunityExpanded}
+            onClick={() => {
+              setIsCommunityExpanded((current) => !current)
+              onDemoNavigation()
+            }}
+            className={sidebarMenuItemBetweenClass(isCommunityRoute)}
+          >
+            <span className="flex min-w-0 items-center gap-3">
+              <MenuIcon item={communityMenuItem} active={isCommunityRoute} />
+              <span className="truncate">Community</span>
+            </span>
+            <span className="flex shrink-0 items-center gap-2">
+              <span className="rounded-full bg-white/15 px-2 py-0.5 text-[9px] font-black tracking-wide text-white ring-1 ring-white/20">
+                NEW
+              </span>
+              <span className="text-white/50">
+                {isCommunityExpanded ? (
+                  <ChevronUp className="h-4 w-4" aria-hidden="true" />
+                ) : (
+                  <ChevronDown className="h-4 w-4" aria-hidden="true" />
+                )}
+              </span>
+            </span>
+          </button>
+
+          {isCommunityExpanded ? (
+            <div className={SIDEBAR_SUBMENU_WRAP_CLASS}>
+              {communitySubmenuItems.map((item) => {
+                const isActive = activeCommunityTab === item.id
+
+                return (
+                  <Link
+                    key={item.id}
+                    to={`/community?tab=${item.id}`}
+                    aria-current={isActive ? 'page' : undefined}
+                    onClick={() => handleUnavailableItem(isMobile)}
+                    className={`flex min-h-11 w-full items-center gap-2.5 rounded-lg px-3 text-left text-xs font-bold transition hover:bg-white/5 hover:text-white ${
+                      isActive ? 'bg-white/5 text-white' : 'text-white/75'
+                    }`}
+                  >
+                    <span
+                      className={`h-1.5 w-1.5 rounded-full ${
+                        isActive ? 'bg-white/75' : 'bg-white/30'
+                      }`}
+                    />
+                    <span>{item.label}</span>
+                  </Link>
+                )
+              })}
+            </div>
+          ) : null}
+        </div>
 
         <div>
           <button
