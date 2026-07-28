@@ -278,6 +278,110 @@ function ChevronIcon({ collapsed }: { collapsed: boolean }) {
   );
 }
 
+function SettingsInfoTooltip({
+  id,
+  ariaLabel,
+  children,
+}: {
+  id: string;
+  ariaLabel: string;
+  children: React.ReactNode;
+}) {
+  const triggerRef = useRef<HTMLButtonElement>(null);
+  const contentRef = useRef<HTMLSpanElement>(null);
+
+  const placeTooltip = () => {
+    const trigger = triggerRef.current;
+    const content = contentRef.current;
+    if (!trigger || !content) return;
+
+    const pad = 16;
+    const gap = 8;
+    const maxWidth = Math.min(320, window.innerWidth - pad * 2);
+
+    content.classList.add("is-placed");
+    content.style.position = "fixed";
+    content.style.left = "0";
+    content.style.top = "0";
+    content.style.right = "auto";
+    content.style.bottom = "auto";
+    content.style.transform = "none";
+    content.style.width = "max-content";
+    content.style.maxWidth = `${maxWidth}px`;
+
+    const applyPosition = () => {
+      const width = Math.min(content.offsetWidth || maxWidth, maxWidth);
+      content.style.width = `${width}px`;
+
+      const triggerRect = trigger.getBoundingClientRect();
+      let top = triggerRect.top - gap - content.offsetHeight;
+      if (top < pad) {
+        top = triggerRect.bottom + gap;
+      }
+      const maxTop = window.innerHeight - pad - content.offsetHeight;
+      top = Math.max(pad, Math.min(top, Math.max(pad, maxTop)));
+
+      let left =
+        triggerRect.left + triggerRect.width / 2 - content.offsetWidth / 2;
+      left = Math.max(
+        pad,
+        Math.min(left, window.innerWidth - pad - content.offsetWidth),
+      );
+
+      content.style.top = `${Math.round(top)}px`;
+      content.style.left = `${Math.round(left)}px`;
+    };
+
+    requestAnimationFrame(applyPosition);
+  };
+
+  const clearPlacement = () => {
+    const content = contentRef.current;
+    if (!content) return;
+    content.classList.remove("is-placed");
+    content.style.position = "";
+    content.style.left = "";
+    content.style.top = "";
+    content.style.right = "";
+    content.style.bottom = "";
+    content.style.transform = "";
+    content.style.width = "";
+    content.style.maxWidth = "";
+  };
+
+  return (
+    <span
+      className="settings-tooltip"
+      onMouseEnter={placeTooltip}
+      onFocus={placeTooltip}
+      onMouseLeave={clearPlacement}
+      onBlur={clearPlacement}
+    >
+      <button
+        ref={triggerRef}
+        className="settings-tooltip-trigger"
+        type="button"
+        aria-label={ariaLabel}
+        aria-describedby={id}
+        onClick={(event) => {
+          event.preventDefault();
+          placeTooltip();
+        }}
+      >
+        <InfoCircleIcon className="settings-tooltip-icon" />
+      </button>
+      <span
+        ref={contentRef}
+        className="settings-tooltip-content"
+        id={id}
+        role="tooltip"
+      >
+        {children}
+      </span>
+    </span>
+  );
+}
+
 function SettingsCard({
   cardId,
   collapsed,
@@ -1602,23 +1706,12 @@ export default function BookingSettingsPanel() {
                 <div className="settings-first-call-sms-copy">
                   <span className="settings-label settings-label-with-tooltip">
                     {t(`${TK}.firstCallSmsLabel`)}
-                    <span className="settings-tooltip">
-                      <button
-                        className="settings-tooltip-trigger"
-                        type="button"
-                        aria-label={t(`${TK}.firstCallSmsInfoAria`)}
-                        aria-describedby="first-call-sms-help"
-                      >
-                        <InfoCircleIcon className="settings-tooltip-icon" />
-                      </button>
-                      <span
-                        className="settings-tooltip-content"
-                        id="first-call-sms-help"
-                        role="tooltip"
-                      >
-                        {t(`${TK}.firstCallSmsHelp`)}
-                      </span>
-                    </span>
+                    <SettingsInfoTooltip
+                      id="first-call-sms-help"
+                      ariaLabel={t(`${TK}.firstCallSmsInfoAria`)}
+                    >
+                      {t(`${TK}.firstCallSmsHelp`)}
+                    </SettingsInfoTooltip>
                   </span>
                 </div>
                 <div className="settings-first-call-sms-toggle">
