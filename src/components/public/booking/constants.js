@@ -6,6 +6,10 @@ export const PUBLIC_BOOKING_ROUTE = {
   param: 'businessKey',
   langQuery: 'lang',
   sourceQuery: 'src',
+  /** Prefill customer phone from SMS / deep links. */
+  phoneQuery: 'phone',
+  /** Prefill customer name from SMS / deep links. */
+  nameQuery: 'name',
 }
 
 export const PUBLIC_BOOKING_LANG = {

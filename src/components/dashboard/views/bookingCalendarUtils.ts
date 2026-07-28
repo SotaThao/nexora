@@ -4,7 +4,8 @@ import {
   BOOKING_CALENDAR_UNASSIGNED_TECH,
   type BookingCalendarColor,
 } from './bookingTodayConstants'
-import { BOOKING_HUB_EMPTY_CELL, pad2 } from './bookingHubFormatters'
+import { BOOKING_HUB_EMPTY_CELL, isBookingHubVietnamese, pad2 } from './bookingHubFormatters'
+import { formatDatePart } from '../../../utils/localDate'
 import { parseApiDateTime } from '../utils'
 
 export type BookingCalendarSource = {
@@ -193,9 +194,12 @@ export function shiftLocalDateIso(dateIso: string, dayDelta: number) {
 }
 
 export function formatBookingCalendarNavLabel(dateIso: string, locale: string) {
-  return new Date(`${dateIso}T12:00:00`).toLocaleDateString(locale, {
+  const [year, month, day] = String(dateIso || '').split('-').map(Number)
+  if (!year || !month || !day) return dateIso || ''
+  const date = new Date(year, month - 1, day)
+  const isVietnamese = isBookingHubVietnamese(locale)
+  const weekday = new Intl.DateTimeFormat(isVietnamese ? 'vi-VN' : 'en-US', {
     weekday: 'short',
-    month: 'short',
-    day: 'numeric',
-  })
+  }).format(date)
+  return `${weekday}, ${formatDatePart(date, isVietnamese, { withYear: false })}`
 }

@@ -4,6 +4,8 @@ import {
   isValidPhoneE164,
   parsePhone,
 } from '../../CountryCodeSelect'
+import { formatDatePart, formatTimePart } from '../../../utils/localDate'
+import { parseApiDateTime } from '../utils'
 
 export const EMPTY_CALL_DURATION = '00:00'
 
@@ -31,21 +33,101 @@ export function openNativeDateTimePicker(input: HTMLInputElement | null) {
   }
 }
 
-const BOOKING_HUB_DATE_LOCALE: Record<string, string> = {
-  vi: 'vi-VN',
-  en: 'en-US',
+/** Same EN/VI switch as Staff `DateTimeCell` / `formatTransactionDateTime`. */
+export function isBookingHubVietnamese(language: string = 'en'): boolean {
+  return String(language || 'en').toLowerCase().startsWith('vi')
 }
 
-/** Format `YYYY-MM-DD` for Booking Hub filter/date displays (local calendar day). */
+function bookingHubLocalTimeZone(): string {
+  return Intl.DateTimeFormat().resolvedOptions().timeZone
+}
+
+/**
+ * AI Hub date-only display for local `YYYY-MM-DD`.
+ * Matches Staff linked-date date part: `Jul 09, 2026` / `09 Tháng 7, 2026`.
+ */
 export function formatBookingHubDateDisplay(isoDate: string, language: string = 'en') {
   const [year, month, day] = String(isoDate || '').split('-').map(Number)
   if (!year || !month || !day) return isoDate || ''
-  const locale = BOOKING_HUB_DATE_LOCALE[language] ?? BOOKING_HUB_DATE_LOCALE.en
-  return new Intl.DateTimeFormat(locale, {
-    year: 'numeric',
-    month: 'short',
-    day: 'numeric',
-  }).format(new Date(year, month - 1, day))
+  return formatDatePart(new Date(year, month - 1, day), isBookingHubVietnamese(language))
+}
+
+/**
+ * AI Hub time-only display for local `HH:mm`.
+ * Matches Staff linked-date time part: `05:21 AM` / `05:21 Sáng`.
+ */
+export function formatBookingHubTimeDisplay(hhmm: string, language: string = 'en') {
+  const [hours, minutes] = String(hhmm || '').split(':').map(Number)
+  if (!Number.isFinite(hours) || !Number.isFinite(minutes)) return hhmm || ''
+  return formatTimePart(
+    new Date(1970, 0, 1, hours, minutes, 0, 0),
+    isBookingHubVietnamese(language),
+  )
+}
+
+export type BookingHubDateTimeParts = {
+  date: string
+  time: string
+}
+
+/**
+ * Split API timestamp into Staff-style date + time parts (user timezone).
+ * Returns null when the value cannot be parsed.
+ */
+export function formatBookingHubDateTimeParts(
+  value: string | null | undefined,
+  language: string = 'en',
+): BookingHubDateTimeParts | null {
+  const date = parseApiDateTime(value)
+  if (!date) return null
+  const isVietnamese = isBookingHubVietnamese(language)
+  const timeZone = bookingHubLocalTimeZone()
+  return {
+    date: formatDatePart(date, isVietnamese, { timeZone }),
+    time: formatTimePart(date, isVietnamese, timeZone),
+  }
+}
+
+/**
+ * Full datetime for AI Hub tables/details — same shape as Staff Linked date:
+ * `Jul 09, 2026 05:21 AM` / `09 Tháng 7, 2026 05:21 Sáng`.
+ */
+export function formatBookingHubDateTime(
+  value: string | null | undefined,
+  language: string = 'en',
+  empty: string = BOOKING_HUB_EMPTY_CELL,
+): string {
+  const parts = formatBookingHubDateTimeParts(value, language)
+  if (!parts) return empty
+  return `${parts.date} ${parts.time}`
+}
+
+/**
+ * Date part only from an API timestamp (optional year), Staff `formatDatePart` style.
+ */
+export function formatBookingHubTimestampDate(
+  value: string | null | undefined,
+  language: string = 'en',
+  { withYear = true }: { withYear?: boolean } = {},
+): string {
+  const date = parseApiDateTime(value)
+  if (!date) return BOOKING_HUB_EMPTY_CELL
+  return formatDatePart(date, isBookingHubVietnamese(language), {
+    timeZone: bookingHubLocalTimeZone(),
+    withYear,
+  })
+}
+
+/**
+ * Time part only from an API timestamp, Staff `formatTimePart` style.
+ */
+export function formatBookingHubTimestampTime(
+  value: string | null | undefined,
+  language: string = 'en',
+): string {
+  const date = parseApiDateTime(value)
+  if (!date) return BOOKING_HUB_EMPTY_CELL
+  return formatTimePart(date, isBookingHubVietnamese(language), bookingHubLocalTimeZone())
 }
 
 /** Zero-pad to two digits (dates/times). */

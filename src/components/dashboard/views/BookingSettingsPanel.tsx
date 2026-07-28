@@ -44,8 +44,10 @@ import {
 } from "./BookingHubIcons";
 import { BookingSettingsSkeleton } from "./BookingHubSkeletons";
 import { useBookingHubVoiceEnabled } from "./BookingHubVoiceContext";
+import { applyAiHubProgressiveValidation } from "./bookingHubDialogValidation";
 
 const TK = "components.dashboard.views.BookingHubView.settings";
+const TK_HUB = "components.dashboard.views.BookingHubView";
 
 const DAY_KEYS = ["mon", "tue", "wed", "thu", "fri", "sat", "sun"] as const;
 type DayKey = (typeof DAY_KEYS)[number];
@@ -390,6 +392,7 @@ export default function BookingSettingsPanel() {
     sat: "",
     sun: "",
   });
+  const settingsShellRef = useRef<HTMLDivElement>(null);
 
   const isCollapsed = (cardId: string) => collapsedCards[cardId] === true;
   const salonPhoneParsed = useMemo(() => parsePhone(salonPhone), [salonPhone]);
@@ -758,9 +761,23 @@ export default function BookingSettingsPanel() {
     if (!address.trim()) nextErrors.address = requiredMessage;
     if (!greeting.trim()) nextErrors.greeting = requiredMessage;
 
-    if (Object.keys(nextErrors).length > 0) {
-      setFormErrors(nextErrors);
-      showToast(t(`${TK}.saveValidationError`), "error");
+    if (
+      applyAiHubProgressiveValidation({
+        allErrors: nextErrors,
+        root: settingsShellRef.current,
+        setErrors: setFormErrors,
+        showToast,
+        fieldLabels: {
+          salonName: t(`${TK}.salonName`),
+          salonPhone: t(`${TK}.salonPhone`),
+          bookingNotifyPhone: t(`${TK}.bookingNotifyPhone`),
+          address: t(`${TK}.address`),
+          greeting: t(`${TK}.greetingScript`),
+        },
+        hubTk: TK_HUB,
+        t,
+      })
+    ) {
       return;
     }
 
@@ -847,7 +864,7 @@ export default function BookingSettingsPanel() {
   }
 
   return (
-    <div className="settings-shell">
+    <div className="settings-shell" ref={settingsShellRef}>
       <div className="settings-hero is-compact">
         <div className="settings-eyebrow">{t(`${TK}.eyebrow`)}</div>
         <h2 className="settings-title">{t(`${TK}.oneSourceTitle`)}</h2>
@@ -892,7 +909,7 @@ export default function BookingSettingsPanel() {
           subtitle={t(`${TK}.salonInfoSub`)}
         >
           <div className="settings-field-grid settings-business-grid">
-            <label className="settings-field">
+            <label className="settings-field" data-ai-hub-field="salonName">
               <span className="settings-label">{t(`${TK}.salonName`)}</span>
               <input
                 className="settings-input"
@@ -917,7 +934,7 @@ export default function BookingSettingsPanel() {
                 ) : null}
               </span>
             </label>
-            <label className="settings-field">
+            <label className="settings-field" data-ai-hub-field="salonPhone">
               <span className="settings-label">{t(`${TK}.salonPhone`)}</span>
               <span className="phone-input-shell">
                 <CountryCodeSelect
@@ -988,7 +1005,7 @@ export default function BookingSettingsPanel() {
               />
               <span className="settings-help">{t(`${TK}.aiLineHelp`)}</span>
             </label>
-            <label className="settings-field">
+            <label className="settings-field" data-ai-hub-field="bookingNotifyPhone">
               <span className="settings-label">
                 {t(`${TK}.bookingNotifyPhone`)}
               </span>
@@ -1053,7 +1070,7 @@ export default function BookingSettingsPanel() {
                 {t(`${TK}.bookingNotifyHelp`)}
               </span>
             </label>
-            <label className="settings-field settings-span-full">
+            <label className="settings-field settings-span-full" data-ai-hub-field="address">
               <span className="settings-label">{t(`${TK}.address`)}</span>
               <input
                 className="settings-input"
@@ -1479,7 +1496,7 @@ export default function BookingSettingsPanel() {
                 {t(`${TK}.languageStatus.${language}`)}
               </div>
             </div>
-            <div className="settings-field settings-span-full">
+            <div className="settings-field settings-span-full" data-ai-hub-field="greeting">
               <span className="settings-label" id="settings-greeting-label">
                 {t(`${TK}.greetingScript`)}
               </span>

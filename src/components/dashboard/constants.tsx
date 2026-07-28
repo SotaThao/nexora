@@ -16,10 +16,10 @@ import {
 } from 'lucide-react'
 import { BookingHubMainTab } from '../../data/merchantVoice/domain'
 
-/** Menu ids used by Booking Hub / Touchpoints expandable nav (avoid hardcoding duplicates). */
+/** Menu ids used by AI Hub / Touchpoints expandable nav (avoid hardcoding duplicates). */
 export const DASHBOARD_MENU = {
   Touchpoints: 'touchpoints',
-  BookingHub: 'booking-hub',
+  BookingHub: 'ai-hub',
 } as const
 
 /** Dashboard session roles passed as `userRole` prop. */
@@ -35,6 +35,8 @@ export function isDashboardStaffRole(userRole: string | null | undefined): boole
 }
 
 export const BOOKING_HUB_PATH = `/dashboard/${DASHBOARD_MENU.BookingHub}`
+/** Legacy URL segment — redirect to {@link BOOKING_HUB_PATH}. */
+export const BOOKING_HUB_LEGACY_PATH_SEGMENT = 'booking-hub'
 
 export function bookingHubPath(tab?: string) {
   if (!tab) return BOOKING_HUB_PATH
@@ -98,7 +100,7 @@ export const DASHBOARD_MENU_ID = {
   reviews: 'reviews',
   reports: 'reports',
   touchpoints: 'touchpoints',
-  bookingHub: 'booking-hub',
+  bookingHub: 'ai-hub',
   productManagement: 'product-management',
   analytics: 'analytics',
   settings: 'settings',
@@ -185,7 +187,7 @@ export const MENU_ITEMS = [
   { id: DASHBOARD_MENU_ID.reviews, label: 'Reviews', icon: Star },
   { id: DASHBOARD_MENU_ID.reports, label: 'Transactions', icon: ReceiptText },
   { id: DASHBOARD_MENU_ID.touchpoints, label: 'Touch Points', icon: QrCode },
-  { id: DASHBOARD_MENU_ID.bookingHub, label: 'Booking Hub', icon: Calendar },
+  { id: DASHBOARD_MENU_ID.bookingHub, label: 'AI Hub', icon: Calendar },
   { id: DASHBOARD_MENU_ID.productManagement, label: 'Gift Card Center', icon: Package },
   { id: DASHBOARD_MENU_ID.analytics, label: 'Analytics', icon: BarChart3 },
   { id: DASHBOARD_MENU_ID.settings, label: 'Settings', icon: Settings },
@@ -209,7 +211,7 @@ export const VISIBLE_TOUCHPOINTS_SUBMENU = SHOW_HARDWARE_DEVICES
   ? TOUCHPOINTS_SUBMENU
   : TOUCHPOINTS_SUBMENU.filter((item) => item.id !== 'devices')
 
-/** Booking Hub sidebar children — maps to `/dashboard/booking-hub?tab=`. */
+/** AI Hub sidebar children — maps to `/dashboard/ai-hub?tab=`. */
 export const BOOKING_HUB_SUBMENU = [
   { id: BookingHubMainTab.Booking, labelKey: 'components.dashboard.views.BookingHubView.tabs.booking', requiresVoiceTenant: true },
   { id: BookingHubMainTab.Customers, labelKey: 'components.dashboard.views.BookingHubView.tabs.customers', requiresVoiceTenant: true },

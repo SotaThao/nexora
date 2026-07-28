@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from 'react'
+import React, { useEffect, useMemo, useRef, useState } from 'react'
 import { useTranslation } from '../../../contexts/LanguageContext'
 import { useNotification } from '../../../contexts/NotificationContext'
 import { getErrorI18nKey } from '../../../data/errorCodes'
@@ -57,9 +57,11 @@ import {
   BOOKING_STATUS_FILTER_ORDER,
   BOOKING_STATUS_META,
 } from './bookingTodayConstants'
-import { toLocalDateIso } from './bookingHubFormatters'
+import { formatBookingHubDateDisplay, formatBookingHubTimeDisplay, openNativeDateTimePicker, toLocalDateIso } from './bookingHubFormatters'
+import { applyAiHubProgressiveValidation } from './bookingHubDialogValidation'
 
 const TK_TODAY = 'components.dashboard.views.BookingHubView.today'
+const TK_HUB = 'components.dashboard.views.BookingHubView'
 
 type Props = {
   open: boolean
@@ -67,39 +69,6 @@ type Props = {
   locale: string
   onClose: () => void
   onCreated?: (slot: BookingCreateCreatedSlot) => void
-}
-
-function formatDateDisplay(isoDate: string, locale: string) {
-  const [year, month, day] = String(isoDate || '').split('-').map(Number)
-  if (!year || !month || !day) return isoDate || ''
-  return new Intl.DateTimeFormat(locale, {
-    year: 'numeric',
-    month: 'short',
-    day: 'numeric',
-  }).format(new Date(year, month - 1, day))
-}
-
-function formatTimeDisplay(hhmm: string, locale: string) {
-  const [hours, minutes] = String(hhmm || '').split(':').map(Number)
-  if (!Number.isFinite(hours) || !Number.isFinite(minutes)) return hhmm || ''
-  return new Intl.DateTimeFormat(locale, {
-    hour: 'numeric',
-    minute: '2-digit',
-    hour12: true,
-    hourCycle: 'h12',
-  }).format(new Date(1970, 0, 1, hours, minutes, 0, 0))
-}
-
-function openDateTimePicker(input: HTMLInputElement | null) {
-  if (!input || input.disabled) return
-  input.focus()
-  if (typeof input.showPicker === 'function') {
-    try {
-      input.showPicker()
-    } catch {
-      // Browser may block showPicker without a trusted user gesture.
-    }
-  }
 }
 
 function ServiceChipSkeleton() {
@@ -156,6 +125,7 @@ export default function BookingCreateAppointmentModal({
   const [notes, setNotes] = useState('')
   const [fieldErrors, setFieldErrors] = useState<BookingCreateFieldErrors>({})
   const [submitError, setSubmitError] = useState('')
+  const dialogRef = useRef<HTMLDivElement>(null)
 
   const phoneParsed = useMemo(() => parsePhone(phone), [phone])
   const localeTag = `${locale}-u-hc-h12`
@@ -323,10 +293,26 @@ export default function BookingCreateAppointmentModal({
 
   const handleSave = async () => {
     const nextErrors = validateFields()
-    setFieldErrors(nextErrors)
     setSubmitError('')
-    if (Object.keys(nextErrors).length > 0) return
-
+    if (
+      applyAiHubProgressiveValidation({
+        allErrors: nextErrors,
+        root: dialogRef.current,
+        setErrors: setFieldErrors,
+        showToast,
+        fieldLabels: {
+          [BookingCreateField.Phone]: t(`${BOOKING_CREATE_TK}.phoneLabel`),
+          [BookingCreateField.Name]: t(`${BOOKING_CREATE_TK}.nameLabel`),
+          [BookingCreateField.Services]: t(`${BOOKING_CREATE_TK}.servicesLabel`),
+          [BookingCreateField.Date]: t(`${BOOKING_CREATE_TK}.dateLabel`),
+          [BookingCreateField.Time]: t(`${BOOKING_CREATE_TK}.timeLabel`),
+        },
+        hubTk: TK_HUB,
+        t,
+      })
+    ) {
+      return
+    }
     const dialCode = phoneParsed.countryCode || PhoneDialCode.US
     const body = {
       customerName: customerName.trim(),
@@ -342,7 +328,7 @@ export default function BookingCreateAppointmentModal({
     try {
       await createMutation.mutateAsync(body)
       const savedName = customerName.trim()
-      const whenLabel = [formatDateDisplay(date, locale), formatTimeDisplay(time, locale)]
+      const whenLabel = [formatBookingHubDateDisplay(date, locale), formatBookingHubTimeDisplay(time, locale)]
         .filter(Boolean)
         .join(BOOKING_CREATE_DISPLAY_SEPARATOR)
       showToast(
@@ -388,6 +374,7 @@ export default function BookingCreateAppointmentModal({
       }}
     >
       <div
+        ref={dialogRef}
         className="booking-create-dialog"
         role="dialog"
         aria-modal="true"
@@ -417,7 +404,10 @@ export default function BookingCreateAppointmentModal({
 
         <div className="booking-create-body">
           <div className="booking-create-grid">
-            <div className={`booking-create-field${fieldErrors.phone ? ' has-error' : ''}`}>
+            <div
+              className={`booking-create-field${fieldErrors.phone ? ' has-error' : ''}`}
+              data-ai-hub-field={BookingCreateField.Phone}
+            >
               <span className="booking-create-label">{t(`${BOOKING_CREATE_TK}.phoneLabel`)}</span>
               <span className="phone-input-shell">
                 <CountryCodeSelect
@@ -453,7 +443,10 @@ export default function BookingCreateAppointmentModal({
               <FieldError message={fieldErrors.phone} />
             </div>
 
-            <div className={`booking-create-field${fieldErrors.name ? ' has-error' : ''}`}>
+            <div
+              className={`booking-create-field${fieldErrors.name ? ' has-error' : ''}`}
+              data-ai-hub-field={BookingCreateField.Name}
+            >
               <span className="booking-create-label">{t(`${BOOKING_CREATE_TK}.nameLabel`)}</span>
               <input
                 className={`booking-input${fieldErrors.name ? ' has-error' : ''}`}
@@ -471,7 +464,10 @@ export default function BookingCreateAppointmentModal({
               <FieldError message={fieldErrors.name} />
             </div>
 
-            <div className={`booking-create-field is-full${fieldErrors.services ? ' has-error' : ''}`}>
+            <div
+              className={`booking-create-field is-full${fieldErrors.services ? ' has-error' : ''}`}
+              data-ai-hub-field={BookingCreateField.Services}
+            >
               <span className="booking-create-label">
                 {t(`${BOOKING_CREATE_TK}.servicesLabel`)}
                 {' '}
@@ -569,7 +565,10 @@ export default function BookingCreateAppointmentModal({
               </select>
             </label>
 
-            <div className={`booking-create-field${fieldErrors.date ? ' has-error' : ''}`}>
+            <div
+              className={`booking-create-field${fieldErrors.date ? ' has-error' : ''}`}
+              data-ai-hub-field={BookingCreateField.Date}
+            >
               <span className="booking-create-label">{t(`${BOOKING_CREATE_TK}.dateLabel`)}</span>
               <BookingHubDatePicker
                 className="booking-create-datetime-shell"
@@ -580,7 +579,7 @@ export default function BookingCreateAppointmentModal({
                 placeholder={t(`${BOOKING_CREATE_TK}.datePlaceholder`)}
                 prevMonthAriaLabel={t(`${BOOKING_CREATE_TK}.prevMonth`)}
                 nextMonthAriaLabel={t(`${BOOKING_CREATE_TK}.nextMonth`)}
-                formatDisplay={formatDateDisplay}
+                formatDisplay={formatBookingHubDateDisplay}
                 onChange={(next) => {
                   setDate(next)
                   clearFieldError(BookingCreateField.Date)
@@ -590,7 +589,10 @@ export default function BookingCreateAppointmentModal({
               <FieldError message={fieldErrors.date} />
             </div>
 
-            <div className={`booking-create-field${fieldErrors.time ? ' has-error' : ''}`}>
+            <div
+              className={`booking-create-field${fieldErrors.time ? ' has-error' : ''}`}
+              data-ai-hub-field={BookingCreateField.Time}
+            >
               <span className="booking-create-label">{t(`${BOOKING_CREATE_TK}.timeLabel`)}</span>
               <span
                 className={`booking-create-datetime-shell${time ? ' has-value' : ' is-empty'}${fieldErrors.time ? ' has-error' : ''}`}
@@ -598,7 +600,7 @@ export default function BookingCreateAppointmentModal({
               >
                 <span className="booking-create-datetime-display" aria-hidden="true">
                   {time
-                    ? formatTimeDisplay(time, locale)
+                    ? formatBookingHubTimeDisplay(time, locale)
                     : t(`${BOOKING_CREATE_TK}.timePlaceholder`)}
                 </span>
                 <ClockIcon className="booking-create-datetime-icon" />
@@ -623,7 +625,7 @@ export default function BookingCreateAppointmentModal({
                     } else {
                       input.removeAttribute('min')
                     }
-                    openDateTimePicker(input)
+                    openNativeDateTimePicker(input)
                   }}
                   onChange={(event) => {
                     const next = event.target.value

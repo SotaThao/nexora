@@ -34,6 +34,7 @@ import {
   getDefaultBookingSlot,
   moneyFromCents,
   parseBookingTime,
+  readBookingCustomerPrefill,
   resolveBookingFieldErrors,
   resolveBookingServiceNames,
   validateBookingDraft,
@@ -87,7 +88,18 @@ export default function PublicBookingPage() {
   const createMutation = useCreatePublicOnlineBooking()
 
   const defaultSlot = useMemo(() => getDefaultBookingSlot(), [])
-  const [state, setState] = useState(() => createDefaultBookingState(defaultSlot))
+  const [state, setState] = useState(() => {
+    const initial = createDefaultBookingState(defaultSlot)
+    const prefill = readBookingCustomerPrefill(searchParams)
+    if (!prefill.phone && !prefill.name) return initial
+    return {
+      ...initial,
+      customer: {
+        phone: prefill.phone || initial.customer.phone,
+        name: prefill.name || initial.customer.name,
+      },
+    }
+  })
   const [errors, setErrors] = useState([])
   const [statusMessage, setStatusMessage] = useState('')
 
@@ -105,6 +117,21 @@ export default function PublicBookingPage() {
     () => parsePhone(state.customer.phone || PhoneDialCode.US),
     [state.customer.phone],
   )
+
+  // Apply SMS / deep-link prefill when query values change (new preview link).
+  const prefillPhoneRaw = searchParams.get(PUBLIC_BOOKING_ROUTE.phoneQuery) || ''
+  const prefillNameRaw = searchParams.get(PUBLIC_BOOKING_ROUTE.nameQuery) || ''
+  useEffect(() => {
+    const prefill = readBookingCustomerPrefill(searchParams)
+    if (!prefill.phone && !prefill.name) return
+    setState((prev) => ({
+      ...prev,
+      customer: {
+        phone: prefill.phone || prev.customer.phone,
+        name: prefill.name || prev.customer.name,
+      },
+    }))
+  }, [prefillPhoneRaw, prefillNameRaw, searchParams])
 
   useEffect(() => {
     document.title = `${copy.documentTitleSuffix} · ${businessName || copy.documentTitleSuffix}`

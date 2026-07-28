@@ -84,6 +84,8 @@ import {
   countPageItemsByStatus,
   filterPageItemsByStatus,
   formatBookingHubDateDisplay,
+  formatBookingHubTimestampDate,
+  formatBookingHubTimestampTime,
   formatCallDurationSeconds,
   formatVoicePhoneDisplay,
   localDateIsoToUtcRange,
@@ -236,26 +238,10 @@ function formatTimeBlock(
     }
   }
 
-  const dateLocale = language === 'vi' ? 'vi-VN' : 'en-US'
-  const timeZone = Intl.DateTimeFormat().resolvedOptions().timeZone
   const dateIso = toLocalDateIso(start)
   const todayIso = toLocalDateIso(new Date())
-  // Keep en-US + 12h intentionally — matches booking hub hours elsewhere.
-  const timeFormatter = new Intl.DateTimeFormat('en-US', {
-    hour: 'numeric',
-    minute: '2-digit',
-    hour12: true,
-    timeZone,
-  })
-  const dateFormatter = new Intl.DateTimeFormat(dateLocale, {
-    month: 'short',
-    day: 'numeric',
-    year: 'numeric',
-    timeZone,
-  })
-
-  const startTime = timeFormatter.format(start)
-  const dateText = dateFormatter.format(start)
+  const startTime = formatBookingHubTimestampTime(startAt, language)
+  const dateText = formatBookingHubTimestampDate(startAt, language)
 
   return {
     timeMain:
