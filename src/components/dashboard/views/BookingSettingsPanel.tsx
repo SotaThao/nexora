@@ -36,6 +36,7 @@ import CountryCodeSelect, {
 import {
   ClockHistoryIcon,
   CurrencyDollarIcon,
+  InfoCircleIcon,
   LightningIcon,
   PlusIcon,
   ShopIcon,
@@ -205,6 +206,7 @@ const AI_LANGUAGE_OPTIONS = [
 ] as const;
 
 const PROMO_MAX_LENGTH = 1000;
+const FIRST_CALL_SMS_MAX_LENGTH = 320;
 
 const PROMO_TEMPLATES = {
   "reward-yourself": {
@@ -371,6 +373,10 @@ export default function BookingSettingsPanel() {
   const [address, setAddress] = useState("");
   const [googleReviewUrl, setGoogleReviewUrl] = useState("");
   const [website, setWebsite] = useState("");
+  const [description, setDescription] = useState("");
+  const [timeZone, setTimeZone] = useState("");
+  const [promoSms, setPromoSms] = useState("");
+  const [sendSmsPromoEnabled, setSendSmsPromoEnabled] = useState(true);
   const [statusMessage, setStatusMessage] = useState("");
   const [formErrors, setFormErrors] = useState<{
     salonName?: string;
@@ -518,6 +524,10 @@ export default function BookingSettingsPanel() {
     setAddress(configData.address || "");
     setGoogleReviewUrl(configData.googleReviewUrl || "");
     setWebsite(configData.website || "");
+    setDescription(configData.description || "");
+    setTimeZone(configData.timeZone || "");
+    setPromoSms((configData.promoSms || "").slice(0, FIRST_CALL_SMS_MAX_LENGTH));
+    setSendSmsPromoEnabled(configData.sendSmsPromoEnabled !== false);
     setPromotion((configData.promotion || "").slice(0, PROMO_MAX_LENGTH));
     const resolvedLang = mapConfigLanguageToUiLanguage(configData.language);
     setLanguage(resolvedLang);
@@ -819,7 +829,11 @@ export default function BookingSettingsPanel() {
         address: address.trim(),
         googleReviewUrl: googleReviewUrl.trim(),
         website: website.trim() || null,
+        description: description.trim() || null,
         promotion: promotion.trim().slice(0, PROMO_MAX_LENGTH) || null,
+        promoSms: promoSms.trim().slice(0, FIRST_CALL_SMS_MAX_LENGTH) || null,
+        sendSmsPromoEnabled,
+        timeZone: timeZone.trim() || null,
         language: mapUiLanguageToConfigLanguage(language),
         welcomeGreeting: greeting.trim(),
         operatingHours: DAY_KEYS.map((day) => {
@@ -1545,6 +1559,92 @@ export default function BookingSettingsPanel() {
                   : t(`${TK}.previewVoice`)}
               </button>
             </div>
+
+            <div className="settings-first-call-sms settings-span-full">
+              <div className="settings-first-call-sms-head">
+                <div className="settings-first-call-sms-copy">
+                  <span className="settings-label settings-label-with-tooltip">
+                    {t(`${TK}.firstCallSmsLabel`)}
+                    <span className="settings-tooltip">
+                      <button
+                        className="settings-tooltip-trigger"
+                        type="button"
+                        aria-label={t(`${TK}.firstCallSmsInfoAria`)}
+                        aria-describedby="first-call-sms-help"
+                      >
+                        <InfoCircleIcon className="settings-tooltip-icon" />
+                      </button>
+                      <span
+                        className="settings-tooltip-content"
+                        id="first-call-sms-help"
+                        role="tooltip"
+                      >
+                        {t(`${TK}.firstCallSmsHelp`)}
+                      </span>
+                    </span>
+                  </span>
+                  <strong className="settings-first-call-sms-title">
+                    {t(`${TK}.firstCallSmsTitle`)}
+                  </strong>
+                </div>
+                <button
+                  className={`toggle-pill${sendSmsPromoEnabled ? " is-on" : ""}`}
+                  type="button"
+                  role="switch"
+                  aria-checked={sendSmsPromoEnabled}
+                  aria-label={
+                    sendSmsPromoEnabled
+                      ? t(`${TK}.firstCallSmsDisableAria`)
+                      : t(`${TK}.firstCallSmsEnableAria`)
+                  }
+                  onClick={() => {
+                    setSendSmsPromoEnabled((prev) => {
+                      const next = !prev;
+                      setStatus(
+                        next
+                          ? t(`${TK}.firstCallSmsEnabled`)
+                          : t(`${TK}.firstCallSmsDisabled`),
+                      );
+                      return next;
+                    });
+                  }}
+                />
+              </div>
+              <label className="settings-field">
+                <span className="settings-label settings-label-with-tooltip">
+                  {t(`${TK}.firstCallSmsMessageLabel`)}
+                  <span className="settings-tooltip">
+                    <button
+                      className="settings-tooltip-trigger"
+                      type="button"
+                      aria-label={t(`${TK}.firstCallSmsMessageInfoAria`)}
+                      aria-describedby="first-call-sms-message-help"
+                    >
+                      <InfoCircleIcon className="settings-tooltip-icon" />
+                    </button>
+                    <span
+                      className="settings-tooltip-content"
+                      id="first-call-sms-message-help"
+                      role="tooltip"
+                    >
+                      {t(`${TK}.firstCallSmsMessageHelp`)}
+                    </span>
+                  </span>
+                </span>
+                <textarea
+                  className="settings-textarea"
+                  value={promoSms}
+                  maxLength={FIRST_CALL_SMS_MAX_LENGTH}
+                  placeholder={t(`${TK}.firstCallSmsPlaceholder`)}
+                  onChange={(event) =>
+                    setPromoSms(
+                      event.target.value.slice(0, FIRST_CALL_SMS_MAX_LENGTH),
+                    )
+                  }
+                />
+              </label>
+            </div>
+
             <label className="settings-field settings-span-full">
               <div className="settings-promo-head">
                 <span className="settings-label">{t(`${TK}.promoLabel`)}</span>

@@ -419,7 +419,11 @@ export interface MerchantVoiceConfigDto {
   address: string
   googleReviewUrl: string
   website: string
+  description: string
   promotion: string
+  promoSms: string
+  sendSmsPromoEnabled: boolean
+  timeZone: string
   language: string
   welcomeGreeting: string
   operatingHours: MerchantVoiceOperatingHourDto[]
@@ -433,7 +437,11 @@ export interface UpdateMerchantVoiceConfigRequest {
   address: string
   googleReviewUrl: string
   website: string | null
+  description: string | null
   promotion: string | null
+  promoSms: string | null
+  sendSmsPromoEnabled: boolean
+  timeZone: string | null
   language: MerchantVoiceConfigLanguage
   welcomeGreeting: string
   operatingHours: Array<{
@@ -556,7 +564,11 @@ function normalizeConfigResponse(response: unknown): MerchantVoiceConfigDto {
       address: '',
       googleReviewUrl: '',
       website: '',
+      description: '',
       promotion: '',
+      promoSms: '',
+      sendSmsPromoEnabled: true,
+      timeZone: '',
       language: MerchantVoiceConfigLanguage.EnUS,
       welcomeGreeting: '',
       operatingHours: [],
@@ -612,7 +624,14 @@ function normalizeConfigResponse(response: unknown): MerchantVoiceConfigDto {
     address: String(body.address ?? ''),
     googleReviewUrl: String(body.googleReviewUrl ?? ''),
     website: String(body.website ?? ''),
+    description: String(body.description ?? ''),
     promotion: String(body.promotion ?? ''),
+    promoSms: String(body.promoSms ?? ''),
+    sendSmsPromoEnabled:
+      typeof body.sendSmsPromoEnabled === 'boolean'
+        ? body.sendSmsPromoEnabled
+        : true,
+    timeZone: String(body.timeZone ?? ''),
     language: String(body.language ?? MerchantVoiceConfigLanguage.EnUS),
     welcomeGreeting: String(body.welcomeGreeting ?? ''),
     operatingHours,

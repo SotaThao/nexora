@@ -4100,6 +4100,100 @@
   white-space: pre-wrap;
 }
 
+.booking-hub-view .settings-first-call-sms {
+  display: grid;
+  gap: 12px;
+  border: 1px solid rgba(70, 72, 216, 0.18);
+  border-radius: 12px;
+  background: linear-gradient(
+    180deg,
+    rgba(70, 72, 216, 0.06),
+    rgba(50, 215, 255, 0.04)
+  );
+  padding: 14px;
+}
+
+.booking-hub-view .settings-first-call-sms-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.booking-hub-view .settings-first-call-sms-copy {
+  display: grid;
+  min-width: 0;
+  gap: 4px;
+}
+
+.booking-hub-view .settings-first-call-sms-title {
+  color: var(--nexora-text);
+  font-size: 13px;
+  font-weight: 900;
+}
+
+.booking-hub-view .settings-first-call-sms .settings-textarea {
+  min-height: 84px;
+}
+
+.booking-hub-view .settings-label-with-tooltip {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  overflow: visible;
+  text-overflow: clip;
+  white-space: nowrap;
+}
+
+.booking-hub-view .settings-tooltip {
+  position: relative;
+  display: inline-flex;
+}
+
+.booking-hub-view .settings-tooltip-trigger {
+  display: inline-flex;
+  width: 16px;
+  height: 16px;
+  align-items: center;
+  justify-content: center;
+  border: 0;
+  background: transparent;
+  padding: 0;
+  color: var(--nexora-brand);
+  cursor: help;
+}
+
+.booking-hub-view .settings-tooltip-icon {
+  width: 12px;
+  height: 12px;
+}
+
+.booking-hub-view .settings-tooltip-content {
+  position: absolute;
+  bottom: calc(100% + 8px);
+  left: 0;
+  z-index: 20;
+  display: none;
+  width: min(260px, calc(100vw - 48px));
+  border: 1px solid rgba(70, 72, 216, 0.22);
+  border-radius: 8px;
+  background: var(--nexora-sidebar, #0f1f49);
+  padding: 8px 10px;
+  color: #fff;
+  font-size: 10.5px;
+  font-weight: 500;
+  letter-spacing: normal;
+  line-height: 1.45;
+  text-transform: none;
+  box-shadow: 0 8px 20px rgba(8, 31, 73, 0.18);
+  white-space: normal;
+}
+
+.booking-hub-view .settings-tooltip:hover .settings-tooltip-content,
+.booking-hub-view .settings-tooltip:focus-within .settings-tooltip-content {
+  display: block;
+}
+
 .booking-hub-view .settings-promo-head {
   display: flex;
   align-items: center;
