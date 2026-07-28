@@ -213,6 +213,11 @@ export const MENU_ITEMS = [
       { id: 'jurisdictions', labelKey: 'dashboard.menu.taxiq_jurisdictions' },
       { id: 'reminders', labelKey: 'dashboard.menu.taxiq_reminders' },
       { id: 'cpa-access', labelKey: 'dashboard.menu.taxiq_cpa_access' },
+      { id: 'share-links', labelKey: 'dashboard.menu.taxiq_share_links' },
+      { id: '1099nec', labelKey: 'dashboard.menu.taxiq_form1099nec' },
+      { id: 'tip-ledger', labelKey: 'dashboard.menu.taxiq_tip_ledger' },
+      { id: 'forms-reports', labelKey: 'dashboard.menu.taxiq_forms_reports' },
+      { id: 'tax-estimate', labelKey: 'dashboard.menu.taxiq_tax_estimate' },
       { id: 'export', labelKey: 'dashboard.menu.taxiq_export' }
     ]
   },

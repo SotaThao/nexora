@@ -28,7 +28,8 @@ import {
   TaxIqOverviewRoute, TaxIqDeductionsRoute, TaxIqIncomeRoute, TaxIqReceiptsRoute, TaxIqEquipmentRoute,
   TaxIqPayrollRoute, TaxIqRemindersRoute, TaxIqCpaAccessRoute, TaxIqExportRoute, TaxIqEmployersRoute,
   TaxIqPayEngineRoute, TaxIqWeeklyPayrollRoute, TaxIqPayrollRunsRoute, TaxIqTaxLedgerRoute,
-  TaxIqExceptionsRoute, TaxIqDataQualityRoute, TaxIqJurisdictionsRoute,
+  TaxIqExceptionsRoute, TaxIqDataQualityRoute, TaxIqJurisdictionsRoute, TaxIqShareLinksRoute,
+  TaxIqForm1099NecRoute, TaxIqTipLedgerRoute, TaxIqFormsReportsRoute, TaxIqTaxEstimateRoute,
   PosGeneralSettingsRoute, PosRolesRoute, PosCategoriesRoute, PosServicesRoute, PosProductsRoute,
   PosStaffProfileRoute, PosFrontDeskRoute
 } from "../components/dashboard/routes";
@@ -96,6 +97,7 @@ const StaffTaxIqIncomeRoute = lazyWithRetry(() => import('../components/staff-da
 const StaffTaxIqPayoutsRoute = lazyWithRetry(() => import('../components/staff-dashboard/views/taxiq/StaffTaxIqPayoutsRoute'))
 const StaffTaxIqExportRoute = lazyWithRetry(() => import('../components/staff-dashboard/views/taxiq/StaffTaxIqExportRoute'))
 const CpaViewerPage = lazyWithRetry(() => import('../components/taxiq/CpaViewer/CpaViewerPage'))
+const ShareLinkViewerPage = lazyWithRetry(() => import('../components/taxiq/ShareLinkViewer/ShareLinkViewerPage'))
 const StaffW4InvitePage = lazyWithRetry(() => import('../components/taxiq/W4Invite/StaffW4InvitePage'))
 const StaffMyEarnings = lazyWithRetry(
   () => import("../components/staff-dashboard/views/StaffMyEarnings"),
@@ -224,6 +226,7 @@ export default function AppRouter() {
           <Route path="/booking/:businessSlug" element={<PublicBookingPage />} />
           <Route path="/booking/manage/:manageToken" element={<ManageBookingPage />} />
 	  <Route path="/cpa/access" element={<CpaViewerPage />} />
+	  <Route path="/share/access" element={<ShareLinkViewerPage />} />
 	  <Route path="/w4-invite" element={<StaffW4InvitePage />} />
           <Route path="/privacy-policy" element={<PrivacyPolicyPage />} />
           <Route path="/terms-of-service" element={<TermsOfServicePage />} />
@@ -292,6 +295,11 @@ export default function AppRouter() {
             <Route path={`${DASHBOARD_MENU_ID.taxiq}/jurisdictions`} element={<TaxIqJurisdictionsRoute />} />
             <Route path={`${DASHBOARD_MENU_ID.taxiq}/reminders`} element={<TaxIqRemindersRoute />} />
             <Route path={`${DASHBOARD_MENU_ID.taxiq}/cpa-access`} element={<TaxIqCpaAccessRoute />} />
+            <Route path={`${DASHBOARD_MENU_ID.taxiq}/share-links`} element={<TaxIqShareLinksRoute />} />
+            <Route path={`${DASHBOARD_MENU_ID.taxiq}/1099nec`} element={<TaxIqForm1099NecRoute />} />
+            <Route path={`${DASHBOARD_MENU_ID.taxiq}/tip-ledger`} element={<TaxIqTipLedgerRoute />} />
+            <Route path={`${DASHBOARD_MENU_ID.taxiq}/forms-reports`} element={<TaxIqFormsReportsRoute />} />
+            <Route path={`${DASHBOARD_MENU_ID.taxiq}/tax-estimate`} element={<TaxIqTaxEstimateRoute />} />
             <Route path={`${DASHBOARD_MENU_ID.taxiq}/export`} element={<TaxIqExportRoute />} />
             <Route path={DASHBOARD_MENU_ID.productManagement} element={<ProductManagementRoute />} />
             <Route path="analytics" element={<AnalyticsRoute />} />

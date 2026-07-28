@@ -103,3 +103,9 @@ Luồng đầy đủ đã verify:
 
 Không phát hiện lỗi ở nhánh US-028 riêng — bug backend tìm thấy trong session này (xem US-027)
 nằm ở toggle `requireW4ForLock`, không liên quan đến luồng invite.
+
+**Cập nhật 2026-07-28 — W-4 Step 2/4a/4b:** `StaffW4InvitePage.tsx` thêm checkbox Step 2 + 2 input
+Step 4a/4b, y hệt `StaffW4FormCard.tsx` (US-027). Đã live-test qua Playwright: tạo invite mới qua
+Owner, điền đầy đủ form (kể cả 3 field mới) tại `/w4-invite?token=...`, Submit trả 204, verify DB
+qua psql khớp 100% (`Step2MultipleJobs=true, OtherIncome=4000, Deductions=1000`). Mobile 375×667
+không overflow, 0 console error. Xem [[project_taxiq_payroll_runs]] cho công thức backend.

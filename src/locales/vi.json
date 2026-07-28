@@ -685,6 +685,11 @@
       "taxiq_jurisdictions": "Jurisdictions",
       "taxiq_reminders": "Nhắc Nộp Thuế",
       "taxiq_cpa_access": "Truy Cập CPA",
+      "taxiq_share_links": "Chia Sẻ Link",
+      "taxiq_form1099nec": "1099-NEC",
+      "taxiq_tip_ledger": "Sổ Tip",
+      "taxiq_forms_reports": "Biểu Mẫu & Báo Cáo",
+      "taxiq_tax_estimate": "Ước Tính Thuế",
       "taxiq_export": "Xuất Hồ Sơ Cuối Năm",
       "analytics": "Phân Tích",
       "pos": "POS",
@@ -2278,6 +2283,9 @@
     "pos_staff_pay_rule_tiered_rates_invalid": "Nhập ít nhất một bậc hoa hồng hợp lệ.",
     "pos_staff_pay_rule_bonus_field_invalid": "Nhập ngưỡng và phần trăm hợp lệ cho khoản thưởng đã bật.",
     "pos_staff_payout_destination_field_invalid": "Nhập phương thức và điểm đến payout hợp lệ.",
+    "pos_staff_pre_tax_deduction_profile_not_set_up": "Hoàn tất bước Worker Profile (vai trò POS và tips) cho thợ này trước.",
+    "pos_staff_pre_tax_deduction_field_invalid": "Nhập loại khấu trừ, kiểu số tiền và số tiền hợp lệ (0-100 nếu là phần trăm).",
+    "pos_staff_pre_tax_deduction_not_found": "Khấu trừ trước thuế này không còn tồn tại.",
     "pos_payroll_not_ready": "Công thức trả lương của thợ này chưa được cấu hình.",
     "pos_payroll_already_paid": "Thợ này đã được trả lương cho tuần này rồi.",
     "pos_payroll_proof_required": "Cần có bằng chứng thanh toán trước khi trả lương cho thợ này.",
@@ -2299,6 +2307,30 @@
     "taxiq_exception_already_closed": "Exception này đã được đóng.",
     "taxiq_cleanup_task_not_found": "Không tìm thấy cleanup task này.",
     "taxiq_cleanup_task_already_closed": "Cleanup task này đã được đóng.",
+    "taxiq_share_link_not_found": "Không tìm thấy share link này.",
+    "taxiq_share_link_token_invalid": "Link này không hợp lệ.",
+    "taxiq_share_link_expired": "Link này đã hết hạn.",
+    "taxiq_share_link_revoked": "Link này đã bị thu hồi.",
+    "taxiq_share_link_not_draft": "Share link này không ở trạng thái nháp.",
+    "taxiq_share_link_already_revoked": "Share link này đã bị thu hồi trước đó.",
+    "taxiq_share_link_passcode_required": "Cần nhập passcode để mở link này.",
+    "taxiq_share_link_passcode_invalid": "Passcode không đúng.",
+    "taxiq_share_link_access_mode_not_allowed": "Hành động này không được phép với chế độ truy cập của link.",
+    "taxiq_share_link_download_disabled": "Tải xuống đang bị tắt cho link này.",
+    "taxiq_share_link_download_format_not_allowed": "Định dạng tải xuống này không được phép với link.",
+    "taxiq_share_link_invalid_data_anchor": "Share link này thiếu tax year bắt buộc.",
+    "taxiq_share_link_file_too_large": "File này quá lớn (tối đa 10MB).",
+    "taxiq_share_link_file_type_not_allowed": "Định dạng file này không được phép (chỉ PDF, PNG, JPG, XLSX).",
+    "taxiq_form_1099_nec_not_found": "Không tìm thấy form 1099-NEC này.",
+    "taxiq_form_1099_nec_not_ready": "Form này chưa Sẵn Sàng — hãy rà soát trước khi gửi.",
+    "taxiq_form_1099_nec_already_delivered": "Bản copy của form này đã được giao.",
+    "taxiq_form_1099_nec_not_delivered": "Form này chưa được giao bản copy cho worker.",
+    "taxiq_form_1099_nec_recipient_email_required": "Worker này chưa có tài khoản liên kết để gửi thông báo.",
+    "taxiq_tip_ledger_entry_not_found": "Không tìm thấy bản ghi tip này.",
+    "taxiq_forms_report_not_found": "Không tìm thấy báo cáo này.",
+    "taxiq_forms_report_needs_review": "Báo cáo này cần được rà soát trước khi sử dụng.",
+    "taxiq_forms_report_not_ready_to_confirm": "Báo cáo còn blocker ở Data Quality, chưa thể xác nhận.",
+    "taxiq_forms_report_not_ready_to_archive": "Chỉ báo cáo ở trạng thái Ready mới lưu trữ được.",
     "taxiq_self_reported_income_not_found": "Không tìm thấy bản ghi thu nhập tự khai này.",
     "taxiq_owner_income_record_not_found": "Không tìm thấy bản ghi doanh thu này.",
     "taxiq_deduction_record_has_receipts": "Hãy gỡ các hóa đơn đính kèm trước khi xóa khoản khấu trừ này.",
@@ -4687,7 +4719,10 @@
         "HeadOfHousehold": "Chủ hộ",
         "QualifyingSurvivingSpouse": "Vợ/chồng còn sống đủ điều kiện"
       },
+      "step2MultipleJobsLabel": "Có nhiều công việc hoặc vợ/chồng cũng đi làm (Step 2)",
       "dependentsClaimedLabel": "Số người phụ thuộc",
+      "otherIncomeLabel": "Thu nhập khác — hàng năm (Step 4a)",
+      "deductionsLabel": "Khấu trừ thêm — hàng năm (Step 4b)",
       "extraWithholdingLabel": "Khấu trừ thêm mỗi kỳ lương",
       "residenceStateLabel": "Bang cư trú",
       "workStateLabel": "Bang làm việc",
@@ -5397,21 +5432,21 @@
       }
     },
     "staffLogs": {
-      "title": "Nhật Ký Dặm Xe & Tiền Tip Mặt",
-      "subtitle": "Ghi chép mileage và cash tip hàng ngày một cách riêng tư — chủ tiệm không thể xem các mục này.",
-      "noStaffTaxYear": "Hoàn tất thiết lập Tax IQ trước khi ghi mileage hoặc cash tip.",
+      "title": "Nhật Ký Dặm Xe & Sổ Tip",
+      "subtitle": "Ghi chép mileage riêng tư và tip hàng ngày — chủ tiệm vẫn xem được các tip đã ghi (Sổ Tip là dữ liệu dùng chung), nhưng không xem được mileage.",
+      "noStaffTaxYear": "Hoàn tất thiết lập Tax IQ trước khi ghi mileage hoặc tip.",
       "goToSetup": "Đến thiết lập Tax IQ",
       "tabs": {
         "mileage": "Nhật Ký Mileage",
-        "cashTip": "Nhật Ký Cash Tip"
+        "cashTip": "Sổ Tip"
       },
       "tooltips": {
         "mileage": "Chuyến đi vì công việc (mua vật tư, đi học…) được khấu trừ theo dặm. IRS yêu cầu ghi ngày, mục đích, số dặm và điểm đi/đến.",
-        "cashTip": "Tip tiền mặt vẫn là thu nhập chịu thuế dù không có chứng từ — hãy ghi lại để ước tính thuế chính xác."
+        "cashTip": "Tip vẫn là thu nhập chịu thuế dù không có chứng từ — hãy ghi lại để ước tính thuế chính xác."
       },
       "errors": {
         "generic": "Đã có lỗi xảy ra. Vui lòng thử lại.",
-        "lockedMessage": "Năm thuế của bạn đã bị khóa — không thể tạo hoặc sửa nhật ký mileage và cash tip nữa."
+        "lockedMessage": "Năm thuế của bạn đã bị khóa — không thể tạo hoặc sửa nhật ký mileage và tip nữa."
       },
       "mileage": {
         "addButton": "Thêm Mileage",
@@ -5448,28 +5483,6 @@
           "milesRequired": "Số dặm phải từ 0 trở lên.",
           "vehicleInfoLabel": "Thông tin xe (tùy chọn)",
           "missingFieldsHint": "Bỏ trống mục đích hoặc điểm đi/đến sẽ đánh dấu chuyến đi này để CPA xem xét — vẫn có thể lưu được.",
-          "submit": "Lưu"
-        }
-      },
-      "cashTip": {
-        "addButton": "Ghi Cash Tip",
-        "delete": "Xóa",
-        "deleteConfirm": "Xóa nhật ký cash tip này? Không thể hoàn tác.",
-        "deleteSuccess": "Đã xóa nhật ký cash tip.",
-        "addSuccess": "Đã ghi cash tip.",
-        "emptyState": "Chưa có cash tip nào được ghi.",
-        "totalLabel": "tổng cash tip đã ghi",
-        "columns": {
-          "date": "Ngày",
-          "amount": "Số Tiền",
-          "note": "Ghi Chú"
-        },
-        "form": {
-          "dateLabel": "Ngày",
-          "dateRequired": "Ngày là bắt buộc.",
-          "amountLabel": "Số tiền",
-          "amountRequired": "Số tiền phải lớn hơn 0.",
-          "noteLabel": "Ghi chú (tùy chọn)",
           "submit": "Lưu"
         }
       }
@@ -6047,6 +6060,7 @@
       "ready": "Sẵn sàng",
       "notReady": "Chưa sẵn sàng",
       "configureButton": "Cấu hình",
+      "preTaxDeductionsButton": "Khấu Trừ Trước Thuế",
       "modalTitle": "Employee Payment Setup",
       "savedNotice": "Đã lưu pay rule.",
       "columns": {
@@ -6136,6 +6150,32 @@
       },
       "errors": {
         "generic": "Không thể lưu pay rule này. Vui lòng thử lại."
+      },
+      "preTaxDeductions": {
+        "modalTitle": "Khấu Trừ Trước Thuế",
+        "subtitle": "Đóng góp 401(k) chỉ giảm lương chịu thuế Federal/State. Section 125 (bảo hiểm y tế/nha khoa/thị giác, FSA) giảm cả lương chịu thuế Federal/State VÀ FICA/SUTA/FUTA.",
+        "emptyState": "Nhân viên này chưa cấu hình khấu trừ trước thuế nào.",
+        "typeLabel": "Loại khấu trừ",
+        "amountTypeLabel": "Kiểu số tiền",
+        "amountLabel": "Số tiền",
+        "activeLabel": "Đang áp dụng",
+        "addButton": "Thêm khấu trừ",
+        "saveRowButton": "Lưu",
+        "deleteButton": "Xoá",
+        "allTypesConfigured": "Nhân viên này đã cấu hình đủ cả 2 loại khấu trừ.",
+        "types": {
+          "Retirement401k": "Hưu trí 401(k)",
+          "CafeteriaPlan125": "Section 125 (Bảo hiểm y tế/nha khoa/thị giác/FSA)"
+        },
+        "amountTypes": {
+          "FlatPerPayPeriod": "Số tiền cố định mỗi kỳ lương ($)",
+          "PercentOfGross": "% trên lương gộp"
+        },
+        "savedNotice": "Đã lưu khấu trừ trước thuế.",
+        "deletedNotice": "Đã xoá khấu trừ trước thuế.",
+        "errors": {
+          "generic": "Không thể lưu khấu trừ này. Vui lòng thử lại."
+        }
       }
     },
     "weeklyPayroll": {
@@ -6595,7 +6635,8 @@
       "deleteConfirm": "Xóa payout này? Không thể hoàn tác.",
       "deleteSuccess": "Đã xóa payout.",
       "errors": {
-        "generic": "Không thể xóa payout này. Vui lòng thử lại."
+        "lockedMessage": "Năm thuế đã bị khóa — không thể tạo hoặc sửa payout.",
+        "lockedAction": "Xem Year-End Export"
       },
       "payPeriods": {
         "Weekly": "Hàng tuần",
@@ -6724,10 +6765,6 @@
         "errors": {
           "generic": "Không thể giải quyết tranh chấp này. Vui lòng thử lại."
         }
-      },
-      "errors": {
-        "lockedMessage": "Năm thuế đã bị khóa — không thể tạo hoặc sửa payout.",
-        "lockedAction": "Xem Year-End Export"
       }
     },
     "cpaAccess": {
@@ -6842,6 +6879,553 @@
         "errors": {
           "generic": "Không thể lưu ghi chú này. Vui lòng thử lại."
         }
+      }
+    },
+    "shareLinks": {
+      "title": "Chia Sẻ Link",
+      "subtitle": "Tạo link chia sẻ có phạm vi, hạn dùng — ledger, chứng từ, bằng chứng payout, hoặc profile công khai — thu hồi bất cứ lúc nào.",
+      "noOwnerTaxYear": "Hoàn tất thiết lập Tax IQ trước khi tạo share link.",
+      "goToSetup": "Đến trang Thiết lập",
+      "createButton": "Tạo Share Link",
+      "emptyState": "Chưa tạo share link nào.",
+      "neverExpires": "Không hết hạn",
+      "columns": {
+        "recipient": "Người nhận",
+        "accessMode": "Chế độ truy cập",
+        "sharedDataBlocks": "Dữ liệu chia sẻ",
+        "downloadPermission": "Tải xuống",
+        "status": "Trạng thái",
+        "expiresAt": "Hết hạn",
+        "actions": "Hành động"
+      },
+      "status": {
+        "Draft": "Nháp",
+        "Active": "Hoạt động",
+        "Expired": "Hết hạn",
+        "Revoked": "Đã thu hồi"
+      },
+      "recipientTypes": {
+        "Cpa": "CPA / Tax Preparer",
+        "Technician": "Thợ",
+        "FriendReferral": "Bạn bè / Referral",
+        "ExternalReviewer": "Người review ngoài"
+      },
+      "accessModes": {
+        "ReviewOnly": "Chỉ xem",
+        "UploadOnly": "Chỉ nộp file",
+        "ReviewAndUpload": "Xem + nộp file"
+      },
+      "dataBlocks": {
+        "TaxLedgerSummary": "Tóm tắt tax ledger",
+        "ReceiptIndex": "Danh mục receipt",
+        "PayoutEvidence": "Bằng chứng payout",
+        "PublicProfile": "Profile công khai"
+      },
+      "downloadPermissions": {
+        "Disabled": "Tắt",
+        "PdfOnly": "Chỉ PDF",
+        "PdfAndCsv": "PDF + CSV"
+      },
+      "actions": {
+        "copyLink": "Sao chép link",
+        "qr": "QR",
+        "publish": "Phát hành",
+        "revoke": "Thu hồi"
+      },
+      "copyLink": {
+        "errors": {
+          "generic": "Không thể sao chép link này. Vui lòng thử lại."
+        }
+      },
+      "qr": {
+        "errors": {
+          "generic": "Không thể tạo mã QR. Vui lòng thử lại."
+        }
+      },
+      "publish": {
+        "success": "Đã phát hành share link.",
+        "errors": {
+          "generic": "Không thể phát hành share link này. Vui lòng thử lại."
+        }
+      },
+      "form": {
+        "modalTitle": "Tạo Share Link",
+        "recipientTypeLabel": "Loại người nhận",
+        "recipientNameLabel": "Tên người nhận",
+        "recipientNamePlaceholder": "vd: Amy T.",
+        "cpaEmailLabel": "Email CPA",
+        "cpaEmailPlaceholder": "cpa@firm.com",
+        "accessModeLabel": "Chế độ truy cập",
+        "sharedDataBlocksLabel": "Dữ liệu chia sẻ",
+        "noOwnerTaxYear": "Doanh nghiệp chưa có tax year hiện tại — không chia sẻ được Receipt Index và Payout Evidence.",
+        "downloadPermissionLabel": "Quyền tải xuống",
+        "expiryDaysLabel": "Hết hạn sau",
+        "expiryDaysOption": "{{count}} ngày",
+        "neverExpires": "Không hết hạn",
+        "neverExpiresHint": "Chỉ dùng được khi chỉ chọn Public Profile.",
+        "passcodeEnableLabel": "Yêu cầu passcode để mở link",
+        "passcodePlaceholder": "vd: 1234",
+        "saveAsDraftLabel": "Lưu nháp (chưa phát hành ngay)",
+        "submitButton": "Tạo & Phát hành",
+        "saveDraftButton": "Lưu Nháp",
+        "success": "Đã tạo share link.",
+        "errors": {
+          "generic": "Không thể tạo share link này. Vui lòng thử lại."
+        }
+      },
+      "revoke": {
+        "modalTitle": "Thu hồi Share Link?",
+        "modalMessage": "{{name}} sẽ mất quyền truy cập link này ngay lập tức. Không thể hoàn tác.",
+        "reasonLabel": "Lý do (tuỳ chọn)",
+        "reasonPlaceholder": "vd: Kỳ review đã xong",
+        "confirmButton": "Thu Hồi Link",
+        "success": "Đã thu hồi share link.",
+        "errors": {
+          "generic": "Không thể thu hồi share link này. Vui lòng thử lại."
+        }
+      }
+    },
+    "form1099nec": {
+      "title": "Tax Center — 1099-NEC",
+      "subtitle": "Chuẩn bị và giao bản copy 1099-NEC cho worker. Box 1a luôn đã gồm tip Box 1b — không bao giờ cộng thêm lần hai.",
+      "noOwnerTaxYear": "Hoàn tất thiết lập Tax IQ trước khi chuẩn bị form 1099-NEC.",
+      "goToSetup": "Đến trang Thiết lập",
+      "rescanButton": "Quét lại",
+      "create1096Button": "Tạo Báo Cáo 1096",
+      "emailAllButton": "Gửi tất cả worker",
+      "efileAllButton": "E-file All → IRS",
+      "emptyState": "Chưa có contractor nào đạt ngưỡng khai báo $2,000.",
+      "includesBox1b": "đã gồm Box 1b",
+      "metrics": {
+        "totalForms": "Tổng Số Form",
+        "totalBox1a": "Tổng Box 1a",
+        "readyToFile": "Sẵn Sàng Nộp",
+        "w9OnFile": "Đã Có W-9"
+      },
+      "columns": {
+        "worker": "Worker",
+        "tin": "TIN",
+        "serviceCommission": "Dịch Vụ / Commission",
+        "box1b": "Box 1b Cash Tips",
+        "box1a": "Box 1a Total",
+        "box1c": "Box 1c TTOC",
+        "box1d": "Box 1d OT",
+        "w9": "W-9",
+        "status": "Trạng Thái",
+        "actions": "Hành Động"
+      },
+      "status": {
+        "NotReady": "Chưa Đủ Hồ Sơ",
+        "Ready": "Sẵn Sàng",
+        "NeedsReview": "Cần Rà Soát",
+        "CopyDelivered": "Đã Giao Bản Copy",
+        "EFileQueued": "Đã Xếp Hàng E-file"
+      },
+      "w9Status": {
+        "OnFile": "Đã có",
+        "Missing": "Thiếu"
+      },
+      "actions": {
+        "printNec": "In NEC",
+        "email": "Gửi Email",
+        "resend": "Gửi Lại"
+      },
+      "scan": {
+        "success": "Quét xong — tạo mới {{created}}, cập nhật {{updated}}, bỏ qua {{skipped}}.",
+        "errors": {
+          "generic": "Không thể quét lại form 1099-NEC. Vui lòng thử lại."
+        }
+      },
+      "worksheet": {
+        "errors": {
+          "generic": "Không thể tải worksheet. Vui lòng thử lại."
+        }
+      },
+      "report1096": {
+        "title": "IRS Form 1096 — Tổng Hợp Năm",
+        "formCount": "Số Biểu Mẫu",
+        "totalServiceCommission": "Tổng Dịch Vụ/Commission",
+        "totalBox1bCashTips": "Tổng Box 1b Cash Tips",
+        "totalBox1a": "Tổng Box 1a",
+        "errors": {
+          "generic": "Không thể tạo báo cáo 1096. Vui lòng thử lại."
+        }
+      },
+      "sendCopy": {
+        "modalTitle": "Gửi Bản Copy 1099-NEC",
+        "expiryDaysLabel": "Link hết hạn sau",
+        "expiryDaysOption": "{{count}} ngày",
+        "includePdfLabel": "Kèm quyền tải PDF",
+        "correctedCopyLabel": "Gửi dạng corrected copy (tính lại Box 1a/1b từ payout mới nhất)",
+        "resendHint": "Form này đã giao bản copy trước đó — thao tác này sẽ thu hồi link cũ và gửi link mới với cùng số liệu.",
+        "submitButton": "Gửi Bản Copy",
+        "success": "Đã gửi bản copy 1099-NEC.",
+        "resendSuccess": "Đã gửi lại bản copy 1099-NEC — link cũ đã bị thu hồi.",
+        "errors": {
+          "generic": "Không thể gửi bản copy 1099-NEC này. Vui lòng thử lại."
+        }
+      },
+      "sendBatch": {
+        "modalTitle": "Gửi Tất Cả Worker",
+        "workersLabel": "Worker sẽ gửi",
+        "noneReady": "Chưa có form nào Sẵn Sàng để gửi.",
+        "expiryDaysLabel": "Link hết hạn sau",
+        "expiryDaysOption": "{{count}} ngày",
+        "includePdfLabel": "Kèm quyền tải PDF",
+        "beforeSendingHint": "Trước khi gửi: xác nhận mọi bản copy đã được review, W-9/TIN và địa chỉ đã xác minh. Không bao giờ gửi Copy A qua email — nộp IRS đi luồng e-file/nộp giấy riêng.",
+        "submitButton": "Gửi Hàng Loạt",
+        "success": "Đã gửi hàng loạt — {{count}} bản copy đã giao.",
+        "errors": {
+          "generic": "Không thể gửi hàng loạt. Một số form có thể chưa Sẵn Sàng — hãy rà soát trước."
+        }
+      },
+      "efile": {
+        "modalTitle": "E-file → IRS",
+        "workersLabel": "Form sẽ e-file",
+        "noneDelivered": "Chưa có form nào được giao bản copy.",
+        "merchantApprovalLabel": "Merchant đã duyệt các form này",
+        "cpaReviewLabel": "CPA đã review các form này",
+        "submitButton": "Xác Nhận E-file",
+        "success": "Đã xếp hàng e-file.",
+        "errors": {
+          "generic": "Không thể xếp hàng e-file. Xác nhận đủ 2 checkbox duyệt và tất cả form đã được giao bản copy."
+        }
+      }
+    },
+    "tipLedger": {
+      "title": "Sổ Tip",
+      "subtitle": "Công cụ lưu trữ và báo cáo cho chính sách No Tax on Tips — không phải tư vấn thuế. Điều kiện đủ và số khấu trừ cuối cùng phải do người hành nghề thuế có giấy phép xác nhận.",
+      "noOwnerTaxYear": "Hoàn tất setup Tax IQ trước khi ghi tip.",
+      "goToSetup": "Đi Đến Setup",
+      "addButton": "Ghi Tip",
+      "exportButton": "Xuất Gói Cho CPA",
+      "staffPickerLabel": "Nhân viên",
+      "staffPickerPlaceholder": "Chọn một nhân viên",
+      "selectStaffPrompt": "Chọn một nhân viên ở trên để xem sổ tip của họ.",
+      "emptyState": "Chưa có tip nào được ghi cho nhân viên này.",
+      "disclaimer": "Đây là công cụ lưu trữ và báo cáo, không phải tư vấn pháp lý hay tư vấn thuế. Điều kiện đủ và số khấu trừ cuối cùng phải do người hành nghề thuế có giấy phép xác nhận.",
+      "metrics": {
+        "today": "Tip Hôm Nay",
+        "monthToDate": "Từ Đầu Tháng",
+        "yearToDate": "Từ Đầu Năm",
+        "capUsed": "Trần $25K Đã Dùng"
+      },
+      "ytdByMethod": {
+        "title": "Tổng Năm Theo Phương Thức",
+        "method": "Phương Thức",
+        "total": "Tổng",
+        "count": "Số Lần",
+        "average": "TB"
+      },
+      "qualifiedBreakdown": {
+        "title": "Phân Loại Trạng Thái Đủ Điều Kiện"
+      },
+      "filters": {
+        "allMethods": "Mọi phương thức",
+        "allSources": "Mọi nguồn",
+        "allQualifiedStatuses": "Mọi trạng thái"
+      },
+      "columns": {
+        "date": "Ngày",
+        "method": "Phương Thức",
+        "amount": "Số Tiền",
+        "service": "Dịch Vụ",
+        "source": "Nguồn",
+        "qualifiedStatus": "Trạng Thái Đủ Điều Kiện",
+        "proof": "Bằng Chứng",
+        "actions": "Hành Động"
+      },
+      "actions": {
+        "edit": "Sửa",
+        "delete": "Xoá"
+      },
+      "qualifiedStatus": {
+        "LikelyQualified": "Nhiều Khả Năng Đủ Điều Kiện",
+        "NeedsReview": "Cần Xem Lại",
+        "NotQualified": "Không Đủ Điều Kiện"
+      },
+      "method": {
+        "Cash": "Tiền Mặt",
+        "Zelle": "Zelle",
+        "Venmo": "Venmo",
+        "CashApp": "Cash App",
+        "CardPos": "Thẻ/POS",
+        "Qr": "QR",
+        "PayPal": "PayPal",
+        "Other": "Khác"
+      },
+      "source": {
+        "Cash": "Tiền Mặt",
+        "Direct": "Trực Tiếp",
+        "PosOwnerPaid": "POS Trả Qua Tiệm"
+      },
+      "proof": {
+        "None": "Không Có",
+        "Screenshot": "Ảnh Chụp Màn Hình",
+        "ReceiptPhoto": "Ảnh Biên Lai",
+        "PosRecord": "Bản Ghi POS",
+        "CashNote": "Ghi Chú Tiền Mặt"
+      },
+      "serviceType": {
+        "Manicure": "Manicure",
+        "Pedicure": "Pedicure",
+        "NailFullSet": "Nail Full Set",
+        "Eyebrows": "Chân Mày",
+        "Lashes": "Mi",
+        "Waxing": "Waxing",
+        "Facial": "Chăm Sóc Da Mặt",
+        "Other": "Khác"
+      },
+      "form": {
+        "dateLabel": "Ngày nhận",
+        "dateRequired": "Ngày là bắt buộc.",
+        "amountLabel": "Số tiền tip",
+        "amountRequired": "Nhập số tiền lớn hơn 0.",
+        "methodLabel": "Phương thức",
+        "serviceTypeLabel": "Dịch vụ",
+        "serviceAmountLabel": "Số tiền dịch vụ (tuỳ chọn)",
+        "isVoluntaryLabel": "Đây là tip tự nguyện",
+        "isNotMandatoryServiceChargeLabel": "Đây KHÔNG phải mandatory service charge",
+        "proofLabel": "Bằng chứng",
+        "noteLabel": "Ghi chú",
+        "reasonLabel": "Lý do sửa",
+        "reasonRequired": "Cần nhập lý do để sửa bản ghi này.",
+        "submit": "Lưu Tip",
+        "addSuccess": "Đã ghi tip.",
+        "editSuccess": "Đã cập nhật tip.",
+        "deleteReasonLabel": "Lý do xoá",
+        "deleteReasonRequired": "Cần nhập lý do để xoá bản ghi này.",
+        "deleteSuccess": "Đã xoá bản ghi tip.",
+        "deleteSoftNotice": "Bản ghi thuế không bao giờ bị xoá cứng — bản ghi này sẽ được xoá mềm và giữ lại trong nhật ký."
+      },
+      "export": {
+        "recipientNameLabel": "Tên người nhận",
+        "recipientNameRequired": "Tên người nhận là bắt buộc.",
+        "cpaEmailRequired": "Email CPA là bắt buộc khi loại người nhận là CPA.",
+        "recipientTypeLabel": "Loại người nhận",
+        "cpaEmailLabel": "Email CPA",
+        "accessModeLabel": "Quyền truy cập",
+        "downloadPermissionLabel": "Tải xuống",
+        "expiryDaysLabel": "Link hết hạn sau",
+        "expiryDaysOption": "{{count}} ngày",
+        "generateButton": "Tạo Link",
+        "success": "Đã tạo share link.",
+        "linkCreatedNotice": "Đã tạo share link — copy để gửi cho CPA.",
+        "copyLinkButton": "Copy Link",
+        "copyErrors": {
+          "generic": "Không thể copy link. Vui lòng copy thủ công."
+        }
+      },
+      "errors": {
+        "generic": "Không thể lưu tip này. Vui lòng thử lại."
+      }
+    },
+    "formsReports": {
+      "title": "Biểu Mẫu & Báo Cáo",
+      "subtitle": "Chỉ generate sau khi đã xử lý xong blocker về payroll, bằng chứng và CPA review.",
+      "columns": {
+        "report": "Báo Cáo",
+        "period": "Kỳ",
+        "records": "Bản Ghi",
+        "source": "Nguồn",
+        "due": "Hạn Nộp",
+        "status": "Trạng Thái",
+        "actions": "Hành Động"
+      },
+      "reportName": {
+        "W2": "W-2 Wage Summary",
+        "Form941": "Federal 941 Worksheet",
+        "Form940": "Federal 940 FUTA Worksheet",
+        "Suta": "State SUTA Reconciliation",
+        "Nec1099": "1099 Contractor Report"
+      },
+      "status": {
+        "Draft": "Nháp",
+        "NeedsReview": "Cần Rà Soát",
+        "Ready": "Sẵn Sàng",
+        "Archived": "Đã Lưu Trữ"
+      },
+      "actions": {
+        "preview": "Xem Trước",
+        "confirmReady": "Xác Nhận & Chuyển Ready",
+        "archive": "Lưu Trữ",
+        "share": "Chia Sẻ",
+        "generatePackage": "Tạo Gói",
+        "viewIn1099Center": "Xem ở Tax Center 1099-NEC"
+      },
+      "confirmReadySuccess": "Đã xác nhận báo cáo Ready.",
+      "archiveSuccess": "Đã lưu trữ báo cáo.",
+      "needsReviewBanner": "Báo cáo này còn blocker ở Data Quality. Xử lý xong trước khi xác nhận Ready.",
+      "preview": {
+        "title": "Xem Trước Báo Cáo",
+        "w2": {
+          "employee": "Nhân Viên",
+          "wages": "Lương",
+          "federalTax": "Thuế Liên Bang Đã Khấu Trừ",
+          "ssWages": "Lương Chịu SS",
+          "ssTax": "Thuế SS",
+          "medicareWages": "Lương Chịu Medicare",
+          "medicareTax": "Thuế Medicare"
+        },
+        "form941": {
+          "line1": "Line 1 — Tổng wages/tips/other compensation",
+          "line2": "Line 2 — Federal income tax withheld",
+          "line5a": "Line 5a — Taxable Social Security wages",
+          "line5aTax": "Thuế Line 5a",
+          "line5c": "Line 5c — Taxable Medicare wages",
+          "line5cTax": "Thuế Line 5c",
+          "line13": "Line 13 — Tổng deposits"
+        },
+        "form940": {
+          "totalWages": "Tổng FUTA taxable wages",
+          "taxDue": "FUTA tax due"
+        },
+        "suta": {
+          "jurisdiction": "Bang",
+          "taxableWages": "Lương Chịu Thuế",
+          "wageBaseCap": "Trần Lương",
+          "taxDue": "SUTA Tax Due"
+        },
+        "empty": "Chưa có dữ liệu cho kỳ này."
+      },
+      "share": {
+        "recipientNameLabel": "Tên người nhận",
+        "recipientNameRequired": "Tên người nhận là bắt buộc.",
+        "cpaEmailRequired": "Email CPA là bắt buộc khi loại người nhận là CPA.",
+        "recipientTypeLabel": "Loại người nhận",
+        "cpaEmailLabel": "Email CPA",
+        "accessModeLabel": "Quyền truy cập",
+        "downloadPermissionLabel": "Tải xuống",
+        "expiryDaysLabel": "Link hết hạn sau",
+        "expiryDaysOption": "{{count}} ngày",
+        "generateButton": "Tạo Link",
+        "success": "Đã tạo share link.",
+        "linkCreatedNotice": "Đã tạo share link — copy để gửi cho CPA.",
+        "copyLinkButton": "Copy Link",
+        "copyErrors": {
+          "generic": "Không thể copy link. Vui lòng copy thủ công."
+        }
+      },
+      "generatePackage": {
+        "title": "Tạo Gói",
+        "packageTypeLabel": "Loại gói",
+        "packageType": {
+          "PayrollRunPackage": "Gói Payroll Run",
+          "OneNinetyNineSupportPackage": "Gói Hỗ Trợ 1099",
+          "MileagePackage": "Gói Mileage",
+          "TipLedgerPackage": "Gói Tip Ledger"
+        },
+        "piiModeLabel": "Chế độ PII",
+        "piiMode": {
+          "Masked": "Che SSN/TIN",
+          "Full": "PII Đầy Đủ"
+        },
+        "piiFullConfirmLabel": "Tôi hiểu thao tác này xuất dữ liệu SSN/TIN không che.",
+        "piiFullConfirmRequired": "Bạn phải xác nhận trước khi tạo gói với PII Đầy Đủ.",
+        "generateButton": "Tạo Gói",
+        "success": "Đã tạo gói.",
+        "downloadLink": "Tải Gói"
+      },
+      "errors": {
+        "generic": "Không thể hoàn tất thao tác này. Vui lòng thử lại."
+      }
+    },
+    "taxEstimate": {
+      "title": "Ước Tính Thuế",
+      "subtitle": "Ước tính thuế theo quý tách theo từng khu vực pháp lý, cảnh báo hạn nộp, và bảng kiểm sẵn sàng khai báo — để không bị bất ngờ trước mỗi hạn nộp.",
+      "quarterLabel": "Quý {{quarter}}",
+      "dueLabel": "Hạn nộp",
+      "byJurisdictionTitle": "Theo Khu Vực Pháp Lý",
+      "depositScheduleTitle": "Cảnh Báo Lịch Nộp Thuế",
+      "exportCsv": "Xuất CSV",
+      "readinessTitle": "Bảng Kiểm Sẵn Sàng Khai Thuế Mỹ",
+      "connectCpa": "Kết Nối CPA",
+      "updateWithholding": "Cập Nhật Khấu Trừ",
+      "empty": "Chưa có dữ liệu cho kỳ này.",
+      "columns": {
+        "estTax": "Ước Tính Thuế",
+        "withheld": "Đã Khấu Trừ",
+        "balance": "Số Dư",
+        "jurisdiction": "Khu Vực",
+        "deposited": "Đã Nộp",
+        "risk": "Rủi Ro",
+        "nextDue": "Hạn Nộp Kế Tiếp",
+        "depositSchedule": "Chu Kỳ Nộp",
+        "daysUntilDue": "Số Ngày Còn Lại"
+      },
+      "readinessGroup": {
+        "BusinessIdentity": "Thông Tin Doanh Nghiệp",
+        "WorkerSetup": "Thiết Lập Nhân Viên",
+        "FederalPayrollTaxes": "Thuế Lương Liên Bang",
+        "StatePayrollSetup": "Thiết Lập Thuế Bang",
+        "EvidenceVault": "Kho Chứng Từ",
+        "CpaFilingPackage": "Gói Hồ Sơ CPA"
+      },
+      "readinessStatus": {
+        "Ready": "Sẵn Sàng",
+        "NeedsAttention": "Cần Chú Ý",
+        "NotStarted": "Chưa Bắt Đầu"
+      },
+      "riskLevel": {
+        "High": "Cao",
+        "Medium": "Trung Bình",
+        "Low": "Thấp"
+      },
+      "errors": {
+        "generic": "Đã có lỗi xảy ra. Vui lòng thử lại."
+      }
+    },
+    "shareLinkViewer": {
+      "title": "Dữ Liệu Được Chia Sẻ",
+      "errorTitle": "Link Không Khả Dụng",
+      "linkInvalid": "Link này không hợp lệ.",
+      "linkExpiredOrRevoked": "Link này đã hết hạn hoặc bị thu hồi.",
+      "readOnlyBanner": "Bạn đang xem dữ liệu được chia sẻ, hết hạn vào {{date}}.",
+      "readOnlyBannerNoExpiry": "Bạn đang xem dữ liệu được chia sẻ. Link này không hết hạn.",
+      "emptyState": "Không có dữ liệu trong lượt chia sẻ này.",
+      "sections": {
+        "taxLedgerSummary": "Tóm Tắt Tax Ledger",
+        "receiptIndex": "Danh Mục Receipt",
+        "payoutEvidence": "Bằng Chứng Payout"
+      },
+      "columns": {
+        "jurisdiction": "Jurisdiction",
+        "type": "Loại",
+        "employeeAmount": "Employee",
+        "employerAmount": "Employer",
+        "fileName": "File",
+        "vendor": "Vendor",
+        "date": "Ngày",
+        "amount": "Số tiền",
+        "qualityStatus": "Chất lượng",
+        "period": "Kỳ",
+        "servicePayout": "Dịch vụ",
+        "totalTip": "Tip",
+        "bonus": "Bonus/Reimb.",
+        "status": "Trạng thái"
+      },
+      "download": {
+        "pdf": "Tải PDF",
+        "csv": "Tải CSV",
+        "errors": {
+          "generic": "Không thể tải xuống. Vui lòng thử lại."
+        }
+      },
+      "upload": {
+        "title": "Nộp File",
+        "subtitle": "Nộp bằng chứng (receipt, W-9, bằng chứng payout) để chủ tiệm xem lại.",
+        "submitButton": "Nộp",
+        "success": "Đã nộp file.",
+        "errors": {
+          "generic": "Không thể nộp file này. Vui lòng thử lại."
+        }
+      },
+      "passcodeGate": {
+        "title": "Cần Nhập Passcode",
+        "subtitle": "Nhập passcode bạn được cung cấp để mở link này.",
+        "placeholder": "Passcode",
+        "invalid": "Passcode không đúng. Vui lòng thử lại.",
+        "submitButton": "Tiếp tục"
       }
     }
   }

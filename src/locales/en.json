@@ -685,6 +685,11 @@
       "taxiq_jurisdictions": "Jurisdictions",
       "taxiq_reminders": "Tax Payment Reminders",
       "taxiq_cpa_access": "CPA Access",
+      "taxiq_share_links": "Share Links",
+      "taxiq_form1099nec": "1099-NEC",
+      "taxiq_tip_ledger": "Tip Ledger",
+      "taxiq_forms_reports": "Forms & Reports",
+      "taxiq_tax_estimate": "Tax Estimate",
       "taxiq_export": "Year-End Export",
       "analytics": "Analytics",
       "pos": "POS",
@@ -2278,6 +2283,9 @@
     "pos_staff_pay_rule_tiered_rates_invalid": "Enter at least one valid tiered rate.",
     "pos_staff_pay_rule_bonus_field_invalid": "Enter a valid threshold and percentage for the enabled bonus.",
     "pos_staff_payout_destination_field_invalid": "Enter a valid payout method and destination.",
+    "pos_staff_pre_tax_deduction_profile_not_set_up": "Complete the Worker Profile step (POS role and tips) for this staff member first.",
+    "pos_staff_pre_tax_deduction_field_invalid": "Enter a valid deduction type, amount type, and amount (0-100 for a percentage).",
+    "pos_staff_pre_tax_deduction_not_found": "This pre-tax deduction no longer exists.",
     "pos_payroll_not_ready": "This staff member's pay formula is not configured yet.",
     "pos_payroll_already_paid": "This staff member has already been paid for this week.",
     "pos_payroll_proof_required": "Payment proof is required before this staff member can be paid.",
@@ -2299,6 +2307,30 @@
     "taxiq_exception_already_closed": "This exception is already closed.",
     "taxiq_cleanup_task_not_found": "This cleanup task could not be found.",
     "taxiq_cleanup_task_already_closed": "This cleanup task is already closed.",
+    "taxiq_share_link_not_found": "This share link could not be found.",
+    "taxiq_share_link_token_invalid": "This link is invalid.",
+    "taxiq_share_link_expired": "This link has expired.",
+    "taxiq_share_link_revoked": "This link has been revoked.",
+    "taxiq_share_link_not_draft": "This share link is not a draft.",
+    "taxiq_share_link_already_revoked": "This share link has already been revoked.",
+    "taxiq_share_link_passcode_required": "A passcode is required to open this link.",
+    "taxiq_share_link_passcode_invalid": "Incorrect passcode.",
+    "taxiq_share_link_access_mode_not_allowed": "This action isn't allowed for this link's access mode.",
+    "taxiq_share_link_download_disabled": "Download is disabled for this link.",
+    "taxiq_share_link_download_format_not_allowed": "This download format isn't allowed for this link.",
+    "taxiq_share_link_invalid_data_anchor": "This share link is missing a required tax year.",
+    "taxiq_share_link_file_too_large": "This file is too large (max 10MB).",
+    "taxiq_share_link_file_type_not_allowed": "This file type isn't allowed (PDF, PNG, JPG, XLSX only).",
+    "taxiq_form_1099_nec_not_found": "This 1099-NEC form could not be found.",
+    "taxiq_form_1099_nec_not_ready": "This form isn't Ready yet — review it before sending.",
+    "taxiq_form_1099_nec_already_delivered": "This form's copy has already been delivered.",
+    "taxiq_form_1099_nec_not_delivered": "This form hasn't been delivered to the recipient yet.",
+    "taxiq_form_1099_nec_recipient_email_required": "This worker has no linked account to notify.",
+    "taxiq_tip_ledger_entry_not_found": "This tip entry could not be found.",
+    "taxiq_forms_report_not_found": "This report could not be found.",
+    "taxiq_forms_report_needs_review": "This report needs review before it can be used.",
+    "taxiq_forms_report_not_ready_to_confirm": "This report has open Data Quality blockers and cannot be confirmed yet.",
+    "taxiq_forms_report_not_ready_to_archive": "Only a Ready report can be archived.",
     "taxiq_self_reported_income_not_found": "This self-reported income record could not be found.",
     "taxiq_owner_income_record_not_found": "This income record could not be found.",
     "taxiq_deduction_record_has_receipts": "Remove attached receipts before deleting this deduction.",
@@ -4692,7 +4724,10 @@
         "HeadOfHousehold": "Head of household",
         "QualifyingSurvivingSpouse": "Qualifying surviving spouse"
       },
+      "step2MultipleJobsLabel": "Multiple jobs or spouse works (Step 2)",
       "dependentsClaimedLabel": "Dependents claimed",
+      "otherIncomeLabel": "Other income — annual (Step 4a)",
+      "deductionsLabel": "Deductions — annual (Step 4b)",
       "extraWithholdingLabel": "Extra withholding per pay period",
       "residenceStateLabel": "Residence state",
       "workStateLabel": "Work state",
@@ -5402,21 +5437,21 @@
       }
     },
     "staffLogs": {
-      "title": "Mileage & Cash Tip Log",
-      "subtitle": "Log daily mileage and cash tips privately — your employer cannot see these entries.",
-      "noStaffTaxYear": "Complete Tax IQ setup before logging mileage or cash tips.",
+      "title": "Mileage & Tip Ledger",
+      "subtitle": "Log daily mileage and tips privately — your employer can still see recorded tips (Tip Ledger is shared recordkeeping), but not your mileage.",
+      "noStaffTaxYear": "Complete Tax IQ setup before logging mileage or tips.",
       "goToSetup": "Go to Tax IQ setup",
       "tabs": {
         "mileage": "Mileage Log",
-        "cashTip": "Cash Tip Log"
+        "cashTip": "Tip Ledger"
       },
       "tooltips": {
         "mileage": "Business trips (supply runs, training…) are deductible per mile. The IRS requires date, purpose, miles, and start/end locations.",
-        "cashTip": "Cash tips are taxable income even without a paper trail — log them so your tax estimate stays accurate."
+        "cashTip": "Tips are taxable income even without a paper trail — log them so your tax estimate stays accurate."
       },
       "errors": {
         "generic": "Something went wrong. Please try again.",
-        "lockedMessage": "Your tax year is locked — mileage and cash tip logs can no longer be created or edited."
+        "lockedMessage": "Your tax year is locked — mileage and tip entries can no longer be created or edited."
       },
       "mileage": {
         "addButton": "Add Mileage",
@@ -5453,28 +5488,6 @@
           "milesRequired": "Miles must be zero or greater.",
           "vehicleInfoLabel": "Vehicle info (optional)",
           "missingFieldsHint": "Leaving purpose or a location blank flags this trip for CPA review — it can still be saved.",
-          "submit": "Save"
-        }
-      },
-      "cashTip": {
-        "addButton": "Log Cash Tip",
-        "delete": "Delete",
-        "deleteConfirm": "Delete this cash tip log? This cannot be undone.",
-        "deleteSuccess": "Cash tip log deleted.",
-        "addSuccess": "Cash tip logged.",
-        "emptyState": "No cash tips logged yet.",
-        "totalLabel": "total cash tips logged",
-        "columns": {
-          "date": "Date",
-          "amount": "Amount",
-          "note": "Note"
-        },
-        "form": {
-          "dateLabel": "Date",
-          "dateRequired": "Date is required.",
-          "amountLabel": "Amount",
-          "amountRequired": "Amount must be greater than zero.",
-          "noteLabel": "Note (optional)",
           "submit": "Save"
         }
       }
@@ -6052,6 +6065,7 @@
       "ready": "Ready",
       "notReady": "Not Ready",
       "configureButton": "Configure Rule",
+      "preTaxDeductionsButton": "Pre-tax Deductions",
       "modalTitle": "Employee Payment Setup",
       "savedNotice": "Pay rule saved.",
       "columns": {
@@ -6141,6 +6155,32 @@
       },
       "errors": {
         "generic": "Unable to save this pay rule. Please try again."
+      },
+      "preTaxDeductions": {
+        "modalTitle": "Pre-tax Deductions",
+        "subtitle": "401(k) contributions reduce Federal/State taxable wages only. Section 125 (health/dental/vision/FSA) reduces Federal/State AND FICA/SUTA/FUTA taxable wages.",
+        "emptyState": "No pre-tax deductions set up for this employee yet.",
+        "typeLabel": "Deduction type",
+        "amountTypeLabel": "Amount type",
+        "amountLabel": "Amount",
+        "activeLabel": "Active",
+        "addButton": "Add deduction",
+        "saveRowButton": "Save",
+        "deleteButton": "Remove",
+        "allTypesConfigured": "Both deduction types are already configured for this employee.",
+        "types": {
+          "Retirement401k": "401(k) Retirement",
+          "CafeteriaPlan125": "Section 125 (Health/Dental/Vision/FSA)"
+        },
+        "amountTypes": {
+          "FlatPerPayPeriod": "Flat $ per pay period",
+          "PercentOfGross": "% of gross pay"
+        },
+        "savedNotice": "Pre-tax deduction saved.",
+        "deletedNotice": "Pre-tax deduction removed.",
+        "errors": {
+          "generic": "Unable to save this pre-tax deduction. Please try again."
+        }
       }
     },
     "weeklyPayroll": {
@@ -6600,7 +6640,8 @@
       "deleteConfirm": "Delete this payout record? This cannot be undone.",
       "deleteSuccess": "Payout record deleted.",
       "errors": {
-        "generic": "Unable to delete this payout. Please try again."
+        "lockedMessage": "This tax year is locked — payouts can no longer be created or edited.",
+        "lockedAction": "View Year-End Export"
       },
       "payPeriods": {
         "Weekly": "Weekly",
@@ -6729,10 +6770,6 @@
         "errors": {
           "generic": "Unable to resolve this dispute. Please try again."
         }
-      },
-      "errors": {
-        "lockedMessage": "This tax year is locked — payouts can no longer be created or edited.",
-        "lockedAction": "View Year-End Export"
       }
     },
     "cpaAccess": {
@@ -6847,6 +6884,553 @@
         "errors": {
           "generic": "Unable to save this note. Please try again."
         }
+      }
+    },
+    "shareLinks": {
+      "title": "Share Links",
+      "subtitle": "Create scoped, expiring links to share ledger, receipts, payout evidence, or your public profile — revoke any time.",
+      "noOwnerTaxYear": "Complete Tax IQ setup before creating share links.",
+      "goToSetup": "Go to Setup",
+      "createButton": "Create Share Link",
+      "emptyState": "No share links created yet.",
+      "neverExpires": "Never expires",
+      "columns": {
+        "recipient": "Recipient",
+        "accessMode": "Access mode",
+        "sharedDataBlocks": "Shared data",
+        "downloadPermission": "Download",
+        "status": "Status",
+        "expiresAt": "Expires",
+        "actions": "Actions"
+      },
+      "status": {
+        "Draft": "Draft",
+        "Active": "Active",
+        "Expired": "Expired",
+        "Revoked": "Revoked"
+      },
+      "recipientTypes": {
+        "Cpa": "CPA / Tax Preparer",
+        "Technician": "Technician",
+        "FriendReferral": "Friend / Referral",
+        "ExternalReviewer": "External Reviewer"
+      },
+      "accessModes": {
+        "ReviewOnly": "Review-only",
+        "UploadOnly": "Upload-only",
+        "ReviewAndUpload": "Review + upload"
+      },
+      "dataBlocks": {
+        "TaxLedgerSummary": "Tax ledger summary",
+        "ReceiptIndex": "Receipt index",
+        "PayoutEvidence": "Payout evidence",
+        "PublicProfile": "Public profile"
+      },
+      "downloadPermissions": {
+        "Disabled": "Disabled",
+        "PdfOnly": "PDF only",
+        "PdfAndCsv": "PDF + CSV"
+      },
+      "actions": {
+        "copyLink": "Copy link",
+        "qr": "QR",
+        "publish": "Publish",
+        "revoke": "Revoke"
+      },
+      "copyLink": {
+        "errors": {
+          "generic": "Unable to copy this link. Please try again."
+        }
+      },
+      "qr": {
+        "errors": {
+          "generic": "Unable to generate the QR code. Please try again."
+        }
+      },
+      "publish": {
+        "success": "Share link published.",
+        "errors": {
+          "generic": "Unable to publish this share link. Please try again."
+        }
+      },
+      "form": {
+        "modalTitle": "Create Share Link",
+        "recipientTypeLabel": "Recipient type",
+        "recipientNameLabel": "Recipient name",
+        "recipientNamePlaceholder": "e.g. Amy T.",
+        "cpaEmailLabel": "CPA email",
+        "cpaEmailPlaceholder": "cpa@firm.com",
+        "accessModeLabel": "Access mode",
+        "sharedDataBlocksLabel": "Shared data",
+        "noOwnerTaxYear": "This business has no current tax year set up — Receipt Index and Payout Evidence can't be shared.",
+        "downloadPermissionLabel": "Download permission",
+        "expiryDaysLabel": "Expires in",
+        "expiryDaysOption": "{{count}} days",
+        "neverExpires": "Never expires",
+        "neverExpiresHint": "Only available when Public Profile is the only shared data block.",
+        "passcodeEnableLabel": "Require a passcode to open this link",
+        "passcodePlaceholder": "e.g. 1234",
+        "saveAsDraftLabel": "Save as draft (don't activate yet)",
+        "submitButton": "Create & Activate",
+        "saveDraftButton": "Save as Draft",
+        "success": "Share link created.",
+        "errors": {
+          "generic": "Unable to create this share link. Please try again."
+        }
+      },
+      "revoke": {
+        "modalTitle": "Revoke Share Link?",
+        "modalMessage": "{{name}} will immediately lose access to this link. This cannot be undone.",
+        "reasonLabel": "Reason (optional)",
+        "reasonPlaceholder": "e.g. Review period ended",
+        "confirmButton": "Revoke Link",
+        "success": "Share link revoked.",
+        "errors": {
+          "generic": "Unable to revoke this share link. Please try again."
+        }
+      }
+    },
+    "form1099nec": {
+      "title": "Tax Center — 1099-NEC",
+      "subtitle": "Prepare and deliver 1099-NEC recipient copies. Box 1a always includes Box 1b tips — never add them twice.",
+      "noOwnerTaxYear": "Complete Tax IQ setup before preparing 1099-NEC forms.",
+      "goToSetup": "Go to Setup",
+      "rescanButton": "Rescan",
+      "create1096Button": "Create 1096 Report",
+      "emailAllButton": "Email all workers",
+      "efileAllButton": "E-file All → IRS",
+      "emptyState": "No contractors have reached the $2,000 filing threshold yet.",
+      "includesBox1b": "includes Box 1b",
+      "metrics": {
+        "totalForms": "Total Forms",
+        "totalBox1a": "Total Box 1a",
+        "readyToFile": "Ready to File",
+        "w9OnFile": "W-9 on file"
+      },
+      "columns": {
+        "worker": "Worker",
+        "tin": "TIN",
+        "serviceCommission": "Service / Commission",
+        "box1b": "Box 1b Cash Tips",
+        "box1a": "Box 1a Total",
+        "box1c": "Box 1c TTOC",
+        "box1d": "Box 1d OT",
+        "w9": "W-9",
+        "status": "Status",
+        "actions": "Actions"
+      },
+      "status": {
+        "NotReady": "Not Ready",
+        "Ready": "Ready",
+        "NeedsReview": "Needs Review",
+        "CopyDelivered": "Copy Delivered",
+        "EFileQueued": "E-file Queued"
+      },
+      "w9Status": {
+        "OnFile": "On file",
+        "Missing": "Missing"
+      },
+      "actions": {
+        "printNec": "Print NEC",
+        "email": "Email",
+        "resend": "Resend"
+      },
+      "scan": {
+        "success": "Rescan complete — {{created}} created, {{updated}} updated, {{skipped}} skipped.",
+        "errors": {
+          "generic": "Unable to rescan 1099-NEC forms. Please try again."
+        }
+      },
+      "worksheet": {
+        "errors": {
+          "generic": "Unable to download the worksheet. Please try again."
+        }
+      },
+      "report1096": {
+        "title": "IRS Form 1096 — Annual Summary",
+        "formCount": "Form Count",
+        "totalServiceCommission": "Total Service/Commission",
+        "totalBox1bCashTips": "Total Box 1b Cash Tips",
+        "totalBox1a": "Total Box 1a",
+        "errors": {
+          "generic": "Unable to generate the 1096 report. Please try again."
+        }
+      },
+      "sendCopy": {
+        "modalTitle": "Send 1099-NEC Copy",
+        "expiryDaysLabel": "Link expires in",
+        "expiryDaysOption": "{{count}} days",
+        "includePdfLabel": "Include PDF download",
+        "correctedCopyLabel": "Send as corrected copy (recalculates Box 1a/1b from latest payouts)",
+        "resendHint": "This form was already delivered — this will revoke the old link and send a new one with the same numbers.",
+        "submitButton": "Send Copy",
+        "success": "1099-NEC copy sent.",
+        "resendSuccess": "1099-NEC copy resent — the old link has been revoked.",
+        "errors": {
+          "generic": "Unable to send this 1099-NEC copy. Please try again."
+        }
+      },
+      "sendBatch": {
+        "modalTitle": "Email All Workers",
+        "workersLabel": "Workers to send",
+        "noneReady": "No forms are Ready to send.",
+        "expiryDaysLabel": "Link expires in",
+        "expiryDaysOption": "{{count}} days",
+        "includePdfLabel": "Include PDF download",
+        "beforeSendingHint": "Before sending: confirm every copy has been reviewed and W-9/TIN and address are verified. This never emails Copy A — IRS filing is a separate e-file/paper step.",
+        "submitButton": "Send Batch",
+        "success": "Batch sent — {{count}} copies delivered.",
+        "errors": {
+          "generic": "Unable to send the batch. Some forms may not be Ready yet — review them first."
+        }
+      },
+      "efile": {
+        "modalTitle": "E-file → IRS",
+        "workersLabel": "Forms to e-file",
+        "noneDelivered": "No forms have been delivered yet.",
+        "merchantApprovalLabel": "Merchant has approved these forms",
+        "cpaReviewLabel": "CPA has reviewed these forms",
+        "submitButton": "Confirm E-file",
+        "success": "Forms queued for e-file.",
+        "errors": {
+          "generic": "Unable to queue e-file. Confirm both approval checkboxes and that all forms have been delivered."
+        }
+      }
+    },
+    "tipLedger": {
+      "title": "Tip Ledger",
+      "subtitle": "Recordkeeping for the No Tax on Tips policy — not tax advice. Eligibility and final deduction must be confirmed by a licensed tax preparer.",
+      "noOwnerTaxYear": "Complete Tax IQ setup before tracking tips.",
+      "goToSetup": "Go to Setup",
+      "addButton": "Add Tip",
+      "exportButton": "Export CPA Package",
+      "staffPickerLabel": "Staff member",
+      "staffPickerPlaceholder": "Select a staff member",
+      "selectStaffPrompt": "Select a staff member above to view their tip ledger.",
+      "emptyState": "No tips recorded for this staff member yet.",
+      "disclaimer": "This is a recordkeeping and reporting tool, not legal or tax advice. Eligibility and final deduction amount must be confirmed by a licensed tax preparer.",
+      "metrics": {
+        "today": "Today's Tips",
+        "monthToDate": "Month-to-Date",
+        "yearToDate": "Year-to-Date",
+        "capUsed": "$25K Cap Used"
+      },
+      "ytdByMethod": {
+        "title": "YTD by Method",
+        "method": "Method",
+        "total": "Total",
+        "count": "Tips",
+        "average": "Avg"
+      },
+      "qualifiedBreakdown": {
+        "title": "Qualified Status Breakdown"
+      },
+      "filters": {
+        "allMethods": "All methods",
+        "allSources": "All sources",
+        "allQualifiedStatuses": "All statuses"
+      },
+      "columns": {
+        "date": "Date",
+        "method": "Method",
+        "amount": "Amount",
+        "service": "Service",
+        "source": "Source",
+        "qualifiedStatus": "Qualified Status",
+        "proof": "Proof",
+        "actions": "Actions"
+      },
+      "actions": {
+        "edit": "Edit",
+        "delete": "Delete"
+      },
+      "qualifiedStatus": {
+        "LikelyQualified": "Likely Qualified",
+        "NeedsReview": "Needs Review",
+        "NotQualified": "Not Qualified"
+      },
+      "method": {
+        "Cash": "Cash",
+        "Zelle": "Zelle",
+        "Venmo": "Venmo",
+        "CashApp": "Cash App",
+        "CardPos": "Card/POS",
+        "Qr": "QR",
+        "PayPal": "PayPal",
+        "Other": "Other"
+      },
+      "source": {
+        "Cash": "Cash",
+        "Direct": "Direct",
+        "PosOwnerPaid": "POS Owner Paid"
+      },
+      "proof": {
+        "None": "None",
+        "Screenshot": "Screenshot",
+        "ReceiptPhoto": "Receipt Photo",
+        "PosRecord": "POS Record",
+        "CashNote": "Cash Note"
+      },
+      "serviceType": {
+        "Manicure": "Manicure",
+        "Pedicure": "Pedicure",
+        "NailFullSet": "Nail Full Set",
+        "Eyebrows": "Eyebrows",
+        "Lashes": "Lashes",
+        "Waxing": "Waxing",
+        "Facial": "Facial",
+        "Other": "Other"
+      },
+      "form": {
+        "dateLabel": "Date received",
+        "dateRequired": "Date is required.",
+        "amountLabel": "Tip amount",
+        "amountRequired": "Enter an amount greater than zero.",
+        "methodLabel": "Method",
+        "serviceTypeLabel": "Service",
+        "serviceAmountLabel": "Service amount (optional)",
+        "isVoluntaryLabel": "This is a voluntary tip",
+        "isNotMandatoryServiceChargeLabel": "This is NOT a mandatory service charge",
+        "proofLabel": "Proof",
+        "noteLabel": "Note",
+        "reasonLabel": "Reason for edit",
+        "reasonRequired": "A reason is required to edit this entry.",
+        "submit": "Save Tip",
+        "addSuccess": "Tip recorded.",
+        "editSuccess": "Tip updated.",
+        "deleteReasonLabel": "Reason for deletion",
+        "deleteReasonRequired": "A reason is required to delete this entry.",
+        "deleteSuccess": "Tip entry removed.",
+        "deleteSoftNotice": "Tax records are never hard-deleted — this entry will be soft-deleted and kept in the audit log."
+      },
+      "export": {
+        "recipientNameLabel": "Recipient name",
+        "recipientNameRequired": "Recipient name is required.",
+        "cpaEmailRequired": "CPA email is required when recipient type is CPA.",
+        "recipientTypeLabel": "Recipient type",
+        "cpaEmailLabel": "CPA email",
+        "accessModeLabel": "Access",
+        "downloadPermissionLabel": "Download",
+        "expiryDaysLabel": "Link expires in",
+        "expiryDaysOption": "{{count}} days",
+        "generateButton": "Generate Link",
+        "success": "Share link created.",
+        "linkCreatedNotice": "Share link created — copy it to send to the CPA.",
+        "copyLinkButton": "Copy Link",
+        "copyErrors": {
+          "generic": "Unable to copy the link. Please copy it manually."
+        }
+      },
+      "errors": {
+        "generic": "Unable to save this tip. Please try again."
+      }
+    },
+    "formsReports": {
+      "title": "Forms & Reports",
+      "subtitle": "Generate after handling blockers about payroll, evidence, and CPA review.",
+      "columns": {
+        "report": "Report",
+        "period": "Period",
+        "records": "Records",
+        "source": "Source",
+        "due": "Due",
+        "status": "Status",
+        "actions": "Actions"
+      },
+      "reportName": {
+        "W2": "W-2 Wage Summary",
+        "Form941": "Federal 941 Worksheet",
+        "Form940": "Federal 940 FUTA Worksheet",
+        "Suta": "State SUTA Reconciliation",
+        "Nec1099": "1099 Contractor Report"
+      },
+      "status": {
+        "Draft": "Draft",
+        "NeedsReview": "Needs Review",
+        "Ready": "Ready",
+        "Archived": "Archived"
+      },
+      "actions": {
+        "preview": "Preview",
+        "confirmReady": "Confirm & Mark Ready",
+        "archive": "Archive",
+        "share": "Share",
+        "generatePackage": "Generate Package",
+        "viewIn1099Center": "View in 1099-NEC Tax Center"
+      },
+      "confirmReadySuccess": "Report confirmed as Ready.",
+      "archiveSuccess": "Report archived.",
+      "needsReviewBanner": "This report has open Data Quality blockers. Resolve them before confirming Ready.",
+      "preview": {
+        "title": "Report Preview",
+        "w2": {
+          "employee": "Employee",
+          "wages": "Wages",
+          "federalTax": "Federal Tax Withheld",
+          "ssWages": "SS Wages",
+          "ssTax": "SS Tax",
+          "medicareWages": "Medicare Wages",
+          "medicareTax": "Medicare Tax"
+        },
+        "form941": {
+          "line1": "Line 1 — Total wages, tips, other compensation",
+          "line2": "Line 2 — Federal income tax withheld",
+          "line5a": "Line 5a — Taxable Social Security wages",
+          "line5aTax": "Line 5a tax",
+          "line5c": "Line 5c — Taxable Medicare wages",
+          "line5cTax": "Line 5c tax",
+          "line13": "Line 13 — Total deposits"
+        },
+        "form940": {
+          "totalWages": "Total FUTA taxable wages",
+          "taxDue": "FUTA tax due"
+        },
+        "suta": {
+          "jurisdiction": "Jurisdiction",
+          "taxableWages": "Taxable Wages",
+          "wageBaseCap": "Wage Base Cap",
+          "taxDue": "SUTA Tax Due"
+        },
+        "empty": "No data for this period yet."
+      },
+      "share": {
+        "recipientNameLabel": "Recipient name",
+        "recipientNameRequired": "Recipient name is required.",
+        "cpaEmailRequired": "CPA email is required when recipient type is CPA.",
+        "recipientTypeLabel": "Recipient type",
+        "cpaEmailLabel": "CPA email",
+        "accessModeLabel": "Access",
+        "downloadPermissionLabel": "Download",
+        "expiryDaysLabel": "Link expires in",
+        "expiryDaysOption": "{{count}} days",
+        "generateButton": "Generate Link",
+        "success": "Share link created.",
+        "linkCreatedNotice": "Share link created — copy it to send to the CPA.",
+        "copyLinkButton": "Copy Link",
+        "copyErrors": {
+          "generic": "Unable to copy the link. Please copy it manually."
+        }
+      },
+      "generatePackage": {
+        "title": "Generate Package",
+        "packageTypeLabel": "Package type",
+        "packageType": {
+          "PayrollRunPackage": "Payroll Run Package",
+          "OneNinetyNineSupportPackage": "1099 Support Package",
+          "MileagePackage": "Mileage Package",
+          "TipLedgerPackage": "Tip Ledger Package"
+        },
+        "piiModeLabel": "PII mode",
+        "piiMode": {
+          "Masked": "Masked SSN/TIN",
+          "Full": "Full PII"
+        },
+        "piiFullConfirmLabel": "I understand this exports unmasked SSN/TIN data.",
+        "piiFullConfirmRequired": "You must confirm before generating with Full PII.",
+        "generateButton": "Generate",
+        "success": "Package generated.",
+        "downloadLink": "Download Package"
+      },
+      "errors": {
+        "generic": "Unable to complete this action. Please try again."
+      }
+    },
+    "taxEstimate": {
+      "title": "Tax Estimate",
+      "subtitle": "Quarterly estimated tax by jurisdiction, deposit alerts, and filing readiness — so you're never caught off guard before a due date.",
+      "quarterLabel": "Q{{quarter}}",
+      "dueLabel": "Due",
+      "byJurisdictionTitle": "By Jurisdiction",
+      "depositScheduleTitle": "Deposit Schedule Alerts",
+      "exportCsv": "Export CSV",
+      "readinessTitle": "US Tax Readiness Checklist",
+      "connectCpa": "Connect CPA",
+      "updateWithholding": "Update Withholding",
+      "empty": "No data for this period yet.",
+      "columns": {
+        "estTax": "Est. Tax",
+        "withheld": "Withheld",
+        "balance": "Balance",
+        "jurisdiction": "Jurisdiction",
+        "deposited": "Deposited",
+        "risk": "Risk",
+        "nextDue": "Next Due",
+        "depositSchedule": "Deposit Schedule",
+        "daysUntilDue": "Days Until Due"
+      },
+      "readinessGroup": {
+        "BusinessIdentity": "Business Identity",
+        "WorkerSetup": "Worker Setup",
+        "FederalPayrollTaxes": "Federal Payroll Taxes",
+        "StatePayrollSetup": "State Payroll Setup",
+        "EvidenceVault": "Evidence Vault",
+        "CpaFilingPackage": "CPA Filing Package"
+      },
+      "readinessStatus": {
+        "Ready": "Ready",
+        "NeedsAttention": "Needs Attention",
+        "NotStarted": "Not Started"
+      },
+      "riskLevel": {
+        "High": "High",
+        "Medium": "Medium",
+        "Low": "Low"
+      },
+      "errors": {
+        "generic": "Something went wrong. Please try again."
+      }
+    },
+    "shareLinkViewer": {
+      "title": "Shared Data",
+      "errorTitle": "Link Unavailable",
+      "linkInvalid": "This link is invalid.",
+      "linkExpiredOrRevoked": "This link has expired or been revoked.",
+      "readOnlyBanner": "You are viewing shared data, expires on {{date}}.",
+      "readOnlyBannerNoExpiry": "You are viewing shared data. This link does not expire.",
+      "emptyState": "No records in this share.",
+      "sections": {
+        "taxLedgerSummary": "Tax Ledger Summary",
+        "receiptIndex": "Receipt Index",
+        "payoutEvidence": "Payout Evidence"
+      },
+      "columns": {
+        "jurisdiction": "Jurisdiction",
+        "type": "Type",
+        "employeeAmount": "Employee",
+        "employerAmount": "Employer",
+        "fileName": "File",
+        "vendor": "Vendor",
+        "date": "Date",
+        "amount": "Amount",
+        "qualityStatus": "Quality",
+        "period": "Period",
+        "servicePayout": "Service",
+        "totalTip": "Tips",
+        "bonus": "Bonus/Reimb.",
+        "status": "Status"
+      },
+      "download": {
+        "pdf": "Download PDF",
+        "csv": "Download CSV",
+        "errors": {
+          "generic": "Unable to download. Please try again."
+        }
+      },
+      "upload": {
+        "title": "Upload a File",
+        "subtitle": "Submit evidence (receipt, W-9, payout proof) for the business owner to review.",
+        "submitButton": "Upload",
+        "success": "File uploaded.",
+        "errors": {
+          "generic": "Unable to upload this file. Please try again."
+        }
+      },
+      "passcodeGate": {
+        "title": "Passcode Required",
+        "subtitle": "Enter the passcode you were given to open this link.",
+        "placeholder": "Passcode",
+        "invalid": "Incorrect passcode. Please try again.",
+        "submitButton": "Continue"
       }
     }
   }

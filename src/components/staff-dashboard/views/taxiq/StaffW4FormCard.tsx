@@ -11,7 +11,10 @@ const LOCKED_ERROR_CODE = 'TAXIQ_STAFF_TAX_YEAR_LOCKED'
 
 interface FormState {
   filingStatus: FilingStatus
+  step2MultipleJobs: boolean
   dependentsClaimed: string
+  otherIncome: string
+  deductions: string
   extraWithholdingPerPayPeriod: string
   residenceState: string
   workState: string
@@ -21,7 +24,10 @@ interface FormState {
 function buildInitialForm(staffTaxYear: StaffTaxYear): FormState {
   return {
     filingStatus: staffTaxYear.filingStatus ?? 'Single',
+    step2MultipleJobs: staffTaxYear.step2MultipleJobs,
     dependentsClaimed: staffTaxYear.dependentsClaimed !== null ? String(staffTaxYear.dependentsClaimed) : '0',
+    otherIncome: staffTaxYear.otherIncome !== null ? String(staffTaxYear.otherIncome) : '',
+    deductions: staffTaxYear.deductions !== null ? String(staffTaxYear.deductions) : '',
     extraWithholdingPerPayPeriod:
       staffTaxYear.extraWithholdingPerPayPeriod !== null ? String(staffTaxYear.extraWithholdingPerPayPeriod) : '0',
     residenceState: staffTaxYear.residenceState ?? '',
@@ -55,7 +61,10 @@ export default function StaffW4FormCard({ staffTaxYear }: { staffTaxYear: StaffT
         id: staffTaxYear.id,
         w4TaxYear: staffTaxYear.taxYear,
         filingStatus: form.filingStatus,
+        step2MultipleJobs: form.step2MultipleJobs,
         dependentsClaimed: Number(form.dependentsClaimed) || 0,
+        otherIncome: form.otherIncome.trim() === '' ? null : Number(form.otherIncome),
+        deductions: form.deductions.trim() === '' ? null : Number(form.deductions),
         extraWithholdingPerPayPeriod: Number(form.extraWithholdingPerPayPeriod) || 0,
         residenceState: form.residenceState.trim(),
         workState: form.workState.trim(),
@@ -99,6 +108,16 @@ export default function StaffW4FormCard({ staffTaxYear }: { staffTaxYear: StaffT
           </select>
         </div>
 
+        <label className="flex items-start gap-2 text-xs font-semibold text-nexoraText">
+          <input
+            type="checkbox"
+            checked={form.step2MultipleJobs}
+            onChange={(e) => setForm((prev) => ({ ...prev, step2MultipleJobs: e.target.checked }))}
+            className="mt-0.5"
+          />
+          {t('taxiq.w4.step2MultipleJobsLabel')}
+        </label>
+
         <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
           <div>
             <label className="text-xs font-bold text-nexoraMuted">{t('taxiq.w4.dependentsClaimedLabel')}</label>
@@ -118,6 +137,31 @@ export default function StaffW4FormCard({ staffTaxYear }: { staffTaxYear: StaffT
               step="0.01"
               value={form.extraWithholdingPerPayPeriod}
               onChange={(e) => setForm((prev) => ({ ...prev, extraWithholdingPerPayPeriod: e.target.value }))}
+              className="mt-1 w-full rounded-lg border border-nexoraBorder px-3 py-2 text-sm"
+            />
+          </div>
+        </div>
+
+        <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+          <div>
+            <label className="text-xs font-bold text-nexoraMuted">{t('taxiq.w4.otherIncomeLabel')}</label>
+            <input
+              type="number"
+              min="0"
+              step="0.01"
+              value={form.otherIncome}
+              onChange={(e) => setForm((prev) => ({ ...prev, otherIncome: e.target.value }))}
+              className="mt-1 w-full rounded-lg border border-nexoraBorder px-3 py-2 text-sm"
+            />
+          </div>
+          <div>
+            <label className="text-xs font-bold text-nexoraMuted">{t('taxiq.w4.deductionsLabel')}</label>
+            <input
+              type="number"
+              min="0"
+              step="0.01"
+              value={form.deductions}
+              onChange={(e) => setForm((prev) => ({ ...prev, deductions: e.target.value }))}
               className="mt-1 w-full rounded-lg border border-nexoraBorder px-3 py-2 text-sm"
             />
           </div>

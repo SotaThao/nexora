@@ -2,7 +2,7 @@ import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useTranslation } from '../../../../contexts/LanguageContext'
 import MileageLogTab from './tabs/MileageLogTab'
-import CashTipLogTab from './tabs/CashTipLogTab'
+import TipLedgerTab from './tabs/TipLedgerTab'
 
 type TabId = 'mileage' | 'cashTip'
 
@@ -66,7 +66,7 @@ export default function LogsView({
         <MileageLogTab staffTaxYearId={staffTaxYearId} isLocked={isLocked} onLockedError={() => setLockedNoticeVisible(true)} />
       )}
       {activeTab === 'cashTip' && (
-        <CashTipLogTab staffTaxYearId={staffTaxYearId} isLocked={isLocked} onLockedError={() => setLockedNoticeVisible(true)} />
+        <TipLedgerTab staffTaxYearId={staffTaxYearId} isLocked={isLocked} onLockedError={() => setLockedNoticeVisible(true)} />
       )}
     </div>
   )

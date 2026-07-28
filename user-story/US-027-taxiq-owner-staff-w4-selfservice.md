@@ -102,3 +102,10 @@ Kết quả:
 - Form W-4 tự khai (Staff02, sau khi hoàn tất onboarding wizard cho năm 2031): lưu thành công qua
   `PUT .../tax-years/{id}/w4` (204), hiện lại đúng giá trị vừa lưu không cần reload.
 - Xem thêm US-028 cho luồng Invite (cùng session test).
+
+**Cập nhật 2026-07-28 — W-4 Step 2/4a/4b:** `StaffW4FormCard.tsx` thêm checkbox "Multiple jobs or
+spouse works (Step 2)" và 2 input số "Other income (Step 4a)"/"Deductions (Step 4b)", nối vào
+`upsertW4` payload. Backend (`PayrollTaxCalculator`) giờ tính Federal withholding đầy đủ theo
+Worksheet 1A thay vì chỉ xấp xỉ Standard/Step2-unchecked như trước. Đã live-test qua Playwright:
+điền form, verify DB qua psql khớp 100% giá trị nhập, mobile 375×667 không overflow, 0 console
+error. Xem [[project_taxiq_payroll_runs]] cho chi tiết công thức.

@@ -7,9 +7,12 @@ import { qk } from '../queryKeys'
 import posStaffProfileRepository, {
   type PayRuleDetail,
   type PayRuleListItem,
+  type PreTaxDeductionApiDto,
+  type PreTaxDeductionType,
   type SaveStaffPosProfileParams,
   type UpsertPayoutDestinationParams,
   type UpsertPayRuleParams,
+  type UpsertPreTaxDeductionParams,
 } from '../repositories/posStaffProfile'
 import { AuthContext } from '../../auth/AuthContext'
 import type { PosStaffProfileApiDto, StaffWeeklyScheduleDayApiDto } from '../../types/repositories'
@@ -151,6 +154,37 @@ export function useUpsertPayoutDestination(businessId: string | undefined) {
     onSuccess: (_, { businessStaffLinkId }) => {
       queryClient.invalidateQueries({ queryKey: qk.merchantPosPayRule(businessStaffLinkId) })
       queryClient.invalidateQueries({ queryKey: qk.merchantPosPayRuleList(businessId) })
+    },
+  })
+}
+
+export function usePreTaxDeductions(businessStaffLinkId: string | undefined) {
+  const auth = useContext(AuthContext)
+  const isOwner = auth?.status === 'authenticated' && auth?.session?.role === 'owner'
+  return useQuery<PreTaxDeductionApiDto[]>({
+    queryKey: qk.merchantPosPreTaxDeductions(businessStaffLinkId),
+    queryFn: () => posStaffProfileRepository.getPreTaxDeductions(businessStaffLinkId as string),
+    enabled: isOwner && !!businessStaffLinkId,
+  })
+}
+
+export function useUpsertPreTaxDeduction() {
+  const queryClient = useQueryClient()
+  return useMutation<boolean, Error, UpsertPreTaxDeductionParams>({
+    mutationFn: (params) => posStaffProfileRepository.upsertPreTaxDeduction(params),
+    onSuccess: (_, { businessStaffLinkId }) => {
+      queryClient.invalidateQueries({ queryKey: qk.merchantPosPreTaxDeductions(businessStaffLinkId) })
+    },
+  })
+}
+
+export function useDeletePreTaxDeduction() {
+  const queryClient = useQueryClient()
+  return useMutation<boolean, Error, { businessStaffLinkId: string; type: PreTaxDeductionType }>({
+    mutationFn: ({ businessStaffLinkId, type }) =>
+      posStaffProfileRepository.deletePreTaxDeduction(businessStaffLinkId, type),
+    onSuccess: (_, { businessStaffLinkId }) => {
+      queryClient.invalidateQueries({ queryKey: qk.merchantPosPreTaxDeductions(businessStaffLinkId) })
     },
   })
 }

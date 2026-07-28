@@ -11,7 +11,10 @@ interface FormState {
   ssn: string
   ein: string
   filingStatus: FilingStatus
+  step2MultipleJobs: boolean
   dependentsClaimed: string
+  otherIncome: string
+  deductions: string
   extraWithholdingPerPayPeriod: string
   residenceState: string
   workState: string
@@ -22,7 +25,10 @@ const EMPTY_FORM: FormState = {
   ssn: '',
   ein: '',
   filingStatus: 'Single',
+  step2MultipleJobs: false,
   dependentsClaimed: '0',
+  otherIncome: '',
+  deductions: '',
   extraWithholdingPerPayPeriod: '0',
   residenceState: '',
   workState: '',
@@ -82,7 +88,10 @@ export default function StaffW4InvitePage() {
         ein: form.ein.trim() || undefined,
         w4TaxYear: ctx.taxYear,
         filingStatus: form.filingStatus,
+        step2MultipleJobs: form.step2MultipleJobs,
         dependentsClaimed: Number(form.dependentsClaimed) || 0,
+        otherIncome: form.otherIncome.trim() === '' ? null : Number(form.otherIncome),
+        deductions: form.deductions.trim() === '' ? null : Number(form.deductions),
         extraWithholdingPerPayPeriod: Number(form.extraWithholdingPerPayPeriod) || 0,
         residenceState: form.residenceState.trim(),
         workState: form.workState.trim(),
@@ -149,6 +158,16 @@ export default function StaffW4InvitePage() {
               </select>
             </div>
 
+            <label className="flex items-start gap-2 text-xs font-semibold text-nexoraText">
+              <input
+                type="checkbox"
+                checked={form.step2MultipleJobs}
+                onChange={(e) => setForm((prev) => ({ ...prev, step2MultipleJobs: e.target.checked }))}
+                className="mt-0.5"
+              />
+              {t('taxiq.w4.step2MultipleJobsLabel')}
+            </label>
+
             <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
               <div>
                 <label className="text-xs font-bold text-nexoraMuted">{t('taxiq.w4.dependentsClaimedLabel')}</label>
@@ -168,6 +187,31 @@ export default function StaffW4InvitePage() {
                   step="0.01"
                   value={form.extraWithholdingPerPayPeriod}
                   onChange={(e) => setForm((prev) => ({ ...prev, extraWithholdingPerPayPeriod: e.target.value }))}
+                  className="mt-1 w-full rounded-lg border border-nexoraBorder px-3 py-2 text-sm"
+                />
+              </div>
+            </div>
+
+            <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+              <div>
+                <label className="text-xs font-bold text-nexoraMuted">{t('taxiq.w4.otherIncomeLabel')}</label>
+                <input
+                  type="number"
+                  min="0"
+                  step="0.01"
+                  value={form.otherIncome}
+                  onChange={(e) => setForm((prev) => ({ ...prev, otherIncome: e.target.value }))}
+                  className="mt-1 w-full rounded-lg border border-nexoraBorder px-3 py-2 text-sm"
+                />
+              </div>
+              <div>
+                <label className="text-xs font-bold text-nexoraMuted">{t('taxiq.w4.deductionsLabel')}</label>
+                <input
+                  type="number"
+                  min="0"
+                  step="0.01"
+                  value={form.deductions}
+                  onChange={(e) => setForm((prev) => ({ ...prev, deductions: e.target.value }))}
                   className="mt-1 w-full rounded-lg border border-nexoraBorder px-3 py-2 text-sm"
                 />
               </div>

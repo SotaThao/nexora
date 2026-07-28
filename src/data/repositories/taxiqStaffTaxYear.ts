@@ -31,6 +31,9 @@ export interface StaffTaxYearApiDto {
   residenceState?: string | null
   workState?: string | null
   stateExtraWithholding?: number | null
+  step2MultipleJobs?: boolean
+  otherIncome?: number | null
+  deductions?: number | null
   createdAt: string
   lastModified?: string | null
 }
@@ -56,6 +59,9 @@ export interface StaffTaxYear {
   residenceState: string | null
   workState: string | null
   stateExtraWithholding: number | null
+  step2MultipleJobs: boolean
+  otherIncome: number | null
+  deductions: number | null
   createdAt: string
   lastModified: string | null
 }
@@ -90,6 +96,9 @@ export interface UpsertStaffW4Params {
   residenceState: string
   workState: string
   stateExtraWithholding: number
+  step2MultipleJobs: boolean
+  otherIncome?: number | null
+  deductions?: number | null
 }
 
 export interface W9RecordApiDto {
@@ -232,6 +241,9 @@ function normalizeStaffTaxYear(dto: StaffTaxYearApiDto): StaffTaxYear {
     residenceState: dto.residenceState ?? null,
     workState: dto.workState ?? null,
     stateExtraWithholding: dto.stateExtraWithholding ?? null,
+    step2MultipleJobs: dto.step2MultipleJobs ?? false,
+    otherIncome: dto.otherIncome ?? null,
+    deductions: dto.deductions ?? null,
     createdAt: dto.createdAt,
     lastModified: dto.lastModified ?? null,
   }
@@ -312,6 +324,9 @@ export function createTaxiqStaffTaxYearRepository(client: HttpClient = httpClien
         residenceState: params.residenceState,
         workState: params.workState,
         stateExtraWithholding: params.stateExtraWithholding,
+        step2MultipleJobs: params.step2MultipleJobs,
+        otherIncome: params.otherIncome ?? null,
+        deductions: params.deductions ?? null,
       })
     },
 

@@ -3,6 +3,7 @@ import { useTranslation } from '../../../../contexts/LanguageContext'
 import { usePayRuleList } from '../../../../data/hooks/usePosStaffProfile'
 import { SkeletonList } from '../../../ui/skeleton'
 import EmployeePaymentSetupModal from './modals/EmployeePaymentSetupModal'
+import PreTaxDeductionsModal from './modals/PreTaxDeductionsModal'
 
 function ReadyBadge({ ready }: { ready: boolean }) {
   const { t } = useTranslation()
@@ -21,6 +22,7 @@ export default function PayEngineView({ businessId }: { businessId: string }) {
   const { t } = useTranslation()
   const listQuery = usePayRuleList(businessId)
   const [configureTarget, setConfigureTarget] = useState<{ businessStaffLinkId: string; displayName: string } | null>(null)
+  const [preTaxTarget, setPreTaxTarget] = useState<{ businessStaffLinkId: string; displayName: string } | null>(null)
 
   const items = listQuery.data?.items ?? []
 
@@ -73,13 +75,22 @@ export default function PayEngineView({ businessId }: { businessId: string }) {
                     <ReadyBadge ready={item.overallReady} />
                   </td>
                   <td className="px-4 py-3">
-                    <button
-                      type="button"
-                      onClick={() => setConfigureTarget({ businessStaffLinkId: item.businessStaffLinkId, displayName: item.displayName })}
-                      className="text-[11px] font-bold text-nexoraBrand hover:underline"
-                    >
-                      {t('taxiq.payEngine.configureButton')}
-                    </button>
+                    <div className="flex flex-col items-start gap-1">
+                      <button
+                        type="button"
+                        onClick={() => setConfigureTarget({ businessStaffLinkId: item.businessStaffLinkId, displayName: item.displayName })}
+                        className="text-[11px] font-bold text-nexoraBrand hover:underline"
+                      >
+                        {t('taxiq.payEngine.configureButton')}
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setPreTaxTarget({ businessStaffLinkId: item.businessStaffLinkId, displayName: item.displayName })}
+                        className="text-[11px] font-bold text-nexoraBrand hover:underline"
+                      >
+                        {t('taxiq.payEngine.preTaxDeductionsButton')}
+                      </button>
+                    </div>
                   </td>
                 </tr>
               ))}
@@ -94,6 +105,14 @@ export default function PayEngineView({ businessId }: { businessId: string }) {
           businessStaffLinkId={configureTarget.businessStaffLinkId}
           displayName={configureTarget.displayName}
           onClose={() => setConfigureTarget(null)}
+        />
+      )}
+
+      {preTaxTarget && (
+        <PreTaxDeductionsModal
+          businessStaffLinkId={preTaxTarget.businessStaffLinkId}
+          displayName={preTaxTarget.displayName}
+          onClose={() => setPreTaxTarget(null)}
         />
       )}
     </div>

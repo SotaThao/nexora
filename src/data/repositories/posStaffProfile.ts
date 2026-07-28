@@ -117,6 +117,30 @@ export interface UpsertPayoutDestinationParams {
   backupDestination?: string | null
 }
 
+// Pre-tax Deductions (401k/Section 125) — TaxIQ Payroll "để dành" backlog item, backend Ticket
+// 3. Traditional 401(k) reduces Federal/State taxable wages only; Section 125 (health/dental/
+// vision/FSA) reduces Federal/State AND FICA/SUTA/FUTA — see backend PreTaxDeductionType.
+export const PRE_TAX_DEDUCTION_TYPES = ['Retirement401k', 'CafeteriaPlan125'] as const
+export type PreTaxDeductionType = (typeof PRE_TAX_DEDUCTION_TYPES)[number]
+
+export const PRE_TAX_DEDUCTION_AMOUNT_TYPES = ['FlatPerPayPeriod', 'PercentOfGross'] as const
+export type PreTaxDeductionAmountType = (typeof PRE_TAX_DEDUCTION_AMOUNT_TYPES)[number]
+
+export interface PreTaxDeductionApiDto {
+  type: PreTaxDeductionType
+  amountType: PreTaxDeductionAmountType
+  amount: number
+  isActive: boolean
+}
+
+export interface UpsertPreTaxDeductionParams {
+  businessStaffLinkId: string
+  type: PreTaxDeductionType
+  amountType: PreTaxDeductionAmountType
+  amount: number
+  isActive: boolean
+}
+
 export function createPosStaffProfileRepository(client: HttpClient = httpClient) {
   return {
     async getStaffPosProfile(businessStaffLinkId: string): Promise<PosStaffProfileApiDto> {
@@ -201,6 +225,26 @@ export function createPosStaffProfileRepository(client: HttpClient = httpClient)
       return await client.put<boolean>(
         `/api/v1/merchant/pos/staff-profiles/${encodeURIComponent(businessStaffLinkId)}/payout-destination`,
         body,
+      )
+    },
+
+    async getPreTaxDeductions(businessStaffLinkId: string): Promise<PreTaxDeductionApiDto[]> {
+      return await client.get<PreTaxDeductionApiDto[]>(
+        `/api/v1/merchant/pos/staff-profiles/${encodeURIComponent(businessStaffLinkId)}/pre-tax-deductions`,
+      )
+    },
+
+    async upsertPreTaxDeduction(params: UpsertPreTaxDeductionParams): Promise<boolean> {
+      const { businessStaffLinkId, ...body } = params
+      return await client.put<boolean>(
+        `/api/v1/merchant/pos/staff-profiles/${encodeURIComponent(businessStaffLinkId)}/pre-tax-deductions`,
+        body,
+      )
+    },
+
+    async deletePreTaxDeduction(businessStaffLinkId: string, type: PreTaxDeductionType): Promise<boolean> {
+      return await client.del<boolean>(
+        `/api/v1/merchant/pos/staff-profiles/${encodeURIComponent(businessStaffLinkId)}/pre-tax-deductions/${encodeURIComponent(type)}`,
       )
     },
   }

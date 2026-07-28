@@ -1,9 +1,9 @@
 /**
- * taxiqStaffLogsRepository — API implementation for the Staff Mileage Log & Cash Tip
- * Log (US-12, BE US-09 `StaffLogsController`). Two independent record types sharing one
- * file per the ticket's FE Surface table. `StaffLogsController` returns bare arrays
- * (not `{items}`) — normalize handles both shapes defensively, matching the pattern
- * used in `taxiqStaffTaxYear.ts` for the same BE team's list endpoints.
+ * taxiqStaffLogsRepository — API implementation for the Staff Mileage Log (US-12, BE US-09
+ * `StaffLogsController`). Cash tip logging moved to `taxiqTipLedger.ts` (mục 26) — the old
+ * `cash-tips` endpoints were replaced by the richer TipLedgerEntry API. `StaffLogsController`
+ * returns bare arrays (not `{items}`) — normalize handles both shapes defensively, matching the
+ * pattern used in `taxiqStaffTaxYear.ts` for the same BE team's list endpoints.
  */
 import httpClient from '../../lib/httpClient'
 
@@ -56,33 +56,6 @@ export interface UpdateMileageLogParams {
   vehicleInfo?: string | null
 }
 
-export interface CashTipLogApiDto {
-  id: string
-  staffTaxYearId: string
-  date: string
-  amount: number
-  note?: string | null
-  createdAt?: string | null
-  lastModified?: string | null
-}
-
-export interface CashTipLogRecord {
-  id: string
-  staffTaxYearId: string
-  date: string
-  amount: number
-  note: string
-  createdAt: string | null
-  lastModified: string | null
-}
-
-export interface LogCashTipParams {
-  staffTaxYearId: string
-  date: string
-  amount: number
-  note?: string | null
-}
-
 function normalizeMileageLog(dto: MileageLogApiDto): MileageLogRecord {
   return {
     id: dto.id,
@@ -94,18 +67,6 @@ function normalizeMileageLog(dto: MileageLogApiDto): MileageLogRecord {
     miles: dto.miles ?? 0,
     vehicleInfo: dto.vehicleInfo ?? '',
     status: dto.status,
-    createdAt: dto.createdAt ?? null,
-    lastModified: dto.lastModified ?? null,
-  }
-}
-
-function normalizeCashTipLog(dto: CashTipLogApiDto): CashTipLogRecord {
-  return {
-    id: dto.id,
-    staffTaxYearId: dto.staffTaxYearId,
-    date: dto.date,
-    amount: dto.amount ?? 0,
-    note: dto.note ?? '',
     createdAt: dto.createdAt ?? null,
     lastModified: dto.lastModified ?? null,
   }
@@ -149,29 +110,8 @@ export function createTaxiqStaffLogsRepository(client: HttpClient = httpClient) 
       })
     },
 
-    async listCashTipLogs(staffTaxYearId: string): Promise<CashTipLogRecord[]> {
-      const query = new URLSearchParams({ staffTaxYearId })
-      const data = await client.get<CashTipLogApiDto[] | { items: CashTipLogApiDto[] }>(
-        `/api/v1/taxiq/staff/cash-tips?${query.toString()}`,
-      )
-      return toArray(data).map(normalizeCashTipLog)
-    },
-
-    async logCashTip(params: LogCashTipParams): Promise<string> {
-      return await client.post<string>('/api/v1/taxiq/staff/cash-tips', {
-        staffTaxYearId: params.staffTaxYearId,
-        date: params.date,
-        amount: params.amount,
-        note: params.note ?? null,
-      })
-    },
-
     async deleteMileageLog(id: string): Promise<void> {
       await client.del(`/api/v1/taxiq/staff/mileage/${encodeURIComponent(id)}`)
-    },
-
-    async deleteCashTipLog(id: string): Promise<void> {
-      await client.del(`/api/v1/taxiq/staff/cash-tips/${encodeURIComponent(id)}`)
     },
   }
 }

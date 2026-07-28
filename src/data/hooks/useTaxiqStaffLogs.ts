@@ -1,14 +1,13 @@
 /**
- * TanStack Query hooks for the TaxIQ Staff Mileage Log & Cash Tip Log (US-12).
+ * TanStack Query hooks for the TaxIQ Staff Mileage Log (US-12). Cash tip hooks moved to
+ * `useTaxiqTipLedger.ts` (mục 26).
  */
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { qk } from '../queryKeys'
 import taxiqStaffLogsRepository from '../repositories/taxiqStaffLogs'
 import type {
   CreateMileageLogParams,
-  LogCashTipParams,
   MileageLogRecord,
-  CashTipLogRecord,
   UpdateMileageLogParams,
 } from '../repositories/taxiqStaffLogs'
 
@@ -41,40 +40,12 @@ export function useUpdateMileageLog() {
   })
 }
 
-export function useTaxiqStaffCashTipLogs(staffTaxYearId?: string) {
-  return useQuery<CashTipLogRecord[]>({
-    queryKey: qk.taxiqStaffCashTipLogs(staffTaxYearId),
-    queryFn: () => taxiqStaffLogsRepository.listCashTipLogs(staffTaxYearId as string),
-    enabled: !!staffTaxYearId,
-  })
-}
-
-export function useLogCashTip() {
-  const queryClient = useQueryClient()
-  return useMutation<string, Error, LogCashTipParams>({
-    mutationFn: (params) => taxiqStaffLogsRepository.logCashTip(params),
-    onSuccess: (_data, variables) => {
-      queryClient.invalidateQueries({ queryKey: qk.taxiqStaffCashTipLogs(variables.staffTaxYearId) })
-    },
-  })
-}
-
 export function useDeleteMileageLog() {
   const queryClient = useQueryClient()
   return useMutation<void, Error, { id: string; staffTaxYearId: string }>({
     mutationFn: ({ id }) => taxiqStaffLogsRepository.deleteMileageLog(id),
     onSuccess: (_data, variables) => {
       queryClient.invalidateQueries({ queryKey: qk.taxiqStaffMileageLogs(variables.staffTaxYearId) })
-    },
-  })
-}
-
-export function useDeleteCashTipLog() {
-  const queryClient = useQueryClient()
-  return useMutation<void, Error, { id: string; staffTaxYearId: string }>({
-    mutationFn: ({ id }) => taxiqStaffLogsRepository.deleteCashTipLog(id),
-    onSuccess: (_data, variables) => {
-      queryClient.invalidateQueries({ queryKey: qk.taxiqStaffCashTipLogs(variables.staffTaxYearId) })
     },
   })
 }

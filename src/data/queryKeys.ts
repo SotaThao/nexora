@@ -95,6 +95,9 @@ export const qk = {
   merchantPosPayRuleList: (businessId?: string) => ['merchantSettings', 'posPayRuleList', businessId ?? ''],
   merchantPosPayRule: (businessStaffLinkId?: string) =>
     ['merchantSettings', 'posPayRule', businessStaffLinkId ?? ''],
+  // Tax IQ / POS — Pay Engine Pre-tax Deductions (401k/Section 125, backend Ticket 3)
+  merchantPosPreTaxDeductions: (businessStaffLinkId?: string) =>
+    ['merchantSettings', 'posPreTaxDeductions', businessStaffLinkId ?? ''],
   // Tax IQ / POS — Weekly Payroll (mục 14, backend US-25). weekStart is only appended when
   // explicitly passed — omitting it (e.g. from a mutation's invalidateQueries call, which may
   // not know which week the currently-mounted list query was rendered with) yields a short
@@ -284,10 +287,8 @@ export const qk = {
     return key
   },
 
-  // Tax IQ — Staff Mileage & Cash Tip Logs (US-12) — separate keys per DoD (mutation
-  // must not invalidate the other log type's list).
+  // Tax IQ — Staff Mileage Log (US-12)
   taxiqStaffMileageLogs: (staffTaxYearId?: string) => ['taxiqStaffMileageLogs', staffTaxYearId ?? 'unknown'],
-  taxiqStaffCashTipLogs: (staffTaxYearId?: string) => ['taxiqStaffCashTipLogs', staffTaxYearId ?? 'unknown'],
 
   // Tax IQ — Staff Self-Reported Income (US-13)
   taxiqSelfReportedIncome: (staffTaxYearId?: string) => ['taxiqSelfReportedIncome', staffTaxYearId ?? 'unknown'],
@@ -366,6 +367,33 @@ export const qk = {
   // consistency with other taxiq* keys even though the query itself only needs employerId.
   taxiqJurisdictionSummary: (businessId?: string, employerId?: string) =>
     ['taxiq', 'jurisdictionSummary', businessId ?? '', employerId ?? ''],
+
+  // Share Links (mục 23, backend generalized from CpaAccessGrant). Owner-side list has no
+  // params (resolves current business via JWT); public viewer keyed by token + passcode so a
+  // wrong-passcode attempt never masks a subsequent correct one from cache.
+  taxiqShareLinks: () => ['taxiqShareLinks'],
+  taxiqShareLinkContent: (token?: string, passcode?: string) =>
+    ['taxiqShareLinkContent', token ?? 'unknown', passcode ?? ''],
+
+  // Tax Center — 1099-NEC (mục 21, backend reuses Share Link infra from mục 23 for delivery)
+  taxiqForm1099Nec: (ownerTaxYearId?: string) => ['taxiqForm1099Nec', ownerTaxYearId ?? 'unknown'],
+  taxiqForm1096Report: (ownerTaxYearId?: string) => ['taxiqForm1096Report', ownerTaxYearId ?? 'unknown'],
+
+  // Tip Ledger (mục 26) — scoped per staff, same key for owner + staff views (same query shape)
+  taxiqTipLedger: (staffTaxYearId?: string) => ['taxiqTipLedger', staffTaxYearId ?? 'unknown'],
+
+  // Forms & Reports (mục 20) — list scoped per OwnerTaxYear; preview scoped per FormsReportId
+  taxiqFormsReports: (ownerTaxYearId?: string) => ['taxiqFormsReports', ownerTaxYearId ?? 'unknown'],
+  taxiqFormsReportPreview: (formsReportId?: string) => ['taxiqFormsReportPreview', formsReportId ?? 'unknown'],
+
+  // Tax Estimate (mục 27) — quarterly estimate scoped per OwnerTaxYear + quarter; alerts/checklist scoped per OwnerTaxYear only
+  taxiqTaxEstimate: (ownerTaxYearId?: string, quarter?: number) => [
+    'taxiqTaxEstimate',
+    ownerTaxYearId ?? 'unknown',
+    quarter ?? 'current',
+  ],
+  taxiqDepositScheduleAlerts: (ownerTaxYearId?: string) => ['taxiqDepositScheduleAlerts', ownerTaxYearId ?? 'unknown'],
+  taxiqTaxReadinessChecklist: (ownerTaxYearId?: string) => ['taxiqTaxReadinessChecklist', ownerTaxYearId ?? 'unknown'],
 
   // Merchant Nexora Voice
   merchantVoiceBookings: (filters = EMPTY) => ['merchantVoice', 'bookings', filters],

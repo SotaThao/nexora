@@ -84,6 +84,9 @@ export interface SubmitStaffW4ViaInviteParams {
   residenceState: string
   workState: string
   stateExtraWithholding: number
+  step2MultipleJobs: boolean
+  otherIncome?: number | null
+  deductions?: number | null
 }
 
 export function createTaxiqStaffW4InviteRepository(client: HttpClient = httpClient) {
@@ -122,6 +125,9 @@ export function createTaxiqStaffW4InviteRepository(client: HttpClient = httpClie
           residenceState: params.residenceState,
           workState: params.workState,
           stateExtraWithholding: params.stateExtraWithholding,
+          step2MultipleJobs: params.step2MultipleJobs,
+          otherIncome: params.otherIncome ?? null,
+          deductions: params.deductions ?? null,
         },
         { anonymous: true },
       )

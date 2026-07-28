@@ -229,6 +229,9 @@ export const errorCodeToI18nKey = {
   POS_STAFF_PAY_RULE_TIERED_RATES_INVALID: 'errors.pos_staff_pay_rule_tiered_rates_invalid',
   POS_STAFF_PAY_RULE_BONUS_FIELD_INVALID: 'errors.pos_staff_pay_rule_bonus_field_invalid',
   POS_STAFF_PAYOUT_DESTINATION_FIELD_INVALID: 'errors.pos_staff_payout_destination_field_invalid',
+  POS_STAFF_PRE_TAX_DEDUCTION_PROFILE_NOT_SET_UP: 'errors.pos_staff_pre_tax_deduction_profile_not_set_up',
+  POS_STAFF_PRE_TAX_DEDUCTION_FIELD_INVALID: 'errors.pos_staff_pre_tax_deduction_field_invalid',
+  POS_STAFF_PRE_TAX_DEDUCTION_NOT_FOUND: 'errors.pos_staff_pre_tax_deduction_not_found',
 
   // POS Booking — Staff/Owner creates a booking (Ticket 3)
   POS_BOOKING_SERVICE_INVALID: 'errors.pos_booking_service_invalid',
@@ -269,6 +272,38 @@ export const errorCodeToI18nKey = {
   TAXIQ_EXCEPTION_ALREADY_CLOSED: 'errors.taxiq_exception_already_closed',
   TAXIQ_CLEANUP_TASK_NOT_FOUND: 'errors.taxiq_cleanup_task_not_found',
   TAXIQ_CLEANUP_TASK_ALREADY_CLOSED: 'errors.taxiq_cleanup_task_already_closed',
+
+  // Tax IQ — Share Links (mục 23, generalized from CpaAccessGrant)
+  TAXIQ_SHARE_LINK_NOT_FOUND: 'errors.taxiq_share_link_not_found',
+  TAXIQ_SHARE_LINK_TOKEN_INVALID: 'errors.taxiq_share_link_token_invalid',
+  TAXIQ_SHARE_LINK_EXPIRED: 'errors.taxiq_share_link_expired',
+  TAXIQ_SHARE_LINK_REVOKED: 'errors.taxiq_share_link_revoked',
+  TAXIQ_SHARE_LINK_NOT_DRAFT: 'errors.taxiq_share_link_not_draft',
+  TAXIQ_SHARE_LINK_ALREADY_REVOKED: 'errors.taxiq_share_link_already_revoked',
+  TAXIQ_SHARE_LINK_PASSCODE_REQUIRED: 'errors.taxiq_share_link_passcode_required',
+  TAXIQ_SHARE_LINK_PASSCODE_INVALID: 'errors.taxiq_share_link_passcode_invalid',
+  TAXIQ_SHARE_LINK_ACCESS_MODE_NOT_ALLOWED: 'errors.taxiq_share_link_access_mode_not_allowed',
+  TAXIQ_SHARE_LINK_DOWNLOAD_DISABLED: 'errors.taxiq_share_link_download_disabled',
+  TAXIQ_SHARE_LINK_DOWNLOAD_FORMAT_NOT_ALLOWED: 'errors.taxiq_share_link_download_format_not_allowed',
+  TAXIQ_SHARE_LINK_INVALID_DATA_ANCHOR: 'errors.taxiq_share_link_invalid_data_anchor',
+  TAXIQ_SHARE_LINK_FILE_TOO_LARGE: 'errors.taxiq_share_link_file_too_large',
+  TAXIQ_SHARE_LINK_FILE_TYPE_NOT_ALLOWED: 'errors.taxiq_share_link_file_type_not_allowed',
+
+  // Tax IQ — Tax Center 1099-NEC (mục 21)
+  TAXIQ_FORM_1099_NEC_NOT_FOUND: 'errors.taxiq_form_1099_nec_not_found',
+  TAXIQ_FORM_1099_NEC_NOT_READY: 'errors.taxiq_form_1099_nec_not_ready',
+  TAXIQ_FORM_1099_NEC_ALREADY_DELIVERED: 'errors.taxiq_form_1099_nec_already_delivered',
+  TAXIQ_FORM_1099_NEC_NOT_DELIVERED: 'errors.taxiq_form_1099_nec_not_delivered',
+  TAXIQ_FORM_1099_NEC_RECIPIENT_EMAIL_REQUIRED: 'errors.taxiq_form_1099_nec_recipient_email_required',
+
+  // Tax IQ — Tip Ledger (mục 26)
+  TAXIQ_TIP_LEDGER_ENTRY_NOT_FOUND: 'errors.taxiq_tip_ledger_entry_not_found',
+
+  // Tax IQ — Forms & Reports (mục 20)
+  TAXIQ_FORMS_REPORT_NOT_FOUND: 'errors.taxiq_forms_report_not_found',
+  TAXIQ_FORMS_REPORT_NEEDS_REVIEW: 'errors.taxiq_forms_report_needs_review',
+  TAXIQ_FORMS_REPORT_NOT_READY_TO_CONFIRM: 'errors.taxiq_forms_report_not_ready_to_confirm',
+  TAXIQ_FORMS_REPORT_NOT_READY_TO_ARCHIVE: 'errors.taxiq_forms_report_not_ready_to_archive',
 
   // Common
   COMMON_VALIDATION_ERROR: 'errors.common_validation_error',
