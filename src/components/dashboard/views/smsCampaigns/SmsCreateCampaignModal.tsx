@@ -167,7 +167,9 @@ function renderPreviewHtml(
   }
 
   // Linkify booking / http URLs so preview "open link" carries prefill query params.
-  const urlPattern = /(https?:\/\/[^\s]+|(?:[a-zA-Z0-9.-]+)\/b\/[^\s]+)/g;
+  // Host may include a port (e.g. localhost:3000/b/...).
+  const urlPattern =
+    /(https?:\/\/[^\s]+|(?:[a-zA-Z0-9.-]+(?::\d+)?)\/b\/[^\s]+)/g;
   const parts: string[] = [];
   let lastIndex = 0;
   for (const match of raw.matchAll(urlPattern)) {
@@ -244,6 +246,7 @@ export default function SmsCreateCampaignModal({
   const { t, currentLanguage } = useTranslation();
   const { showToast } = useNotification();
   const textareaRef = useRef<HTMLTextAreaElement | null>(null);
+  const messageSelectionRef = useRef({ start: 0, end: 0 });
   const closeBtnRef = useRef<HTMLButtonElement | null>(null);
   const scheduleSectionRef = useRef<HTMLDivElement | null>(null);
   const modalBodyRef = useRef<HTMLDivElement | null>(null);
@@ -305,6 +308,7 @@ export default function SmsCreateCampaignModal({
     setAudience(initialAudience);
     setCampaignName("");
     setMessage("");
+    messageSelectionRef.current = { start: 0, end: 0 };
     setLandingPage("");
     setScheduleMode(SmsComposerScheduleMode.Now);
     setScheduleDate("");
@@ -335,6 +339,10 @@ export default function SmsCreateCampaignModal({
     setAudience(detail.audienceSegment);
     setCampaignName(detail.name);
     setMessage(detail.messageBody);
+    messageSelectionRef.current = {
+      start: detail.messageBody.length,
+      end: detail.messageBody.length,
+    };
     setLandingPage(detail.linkUrl ?? "");
     setScheduleMode(SMS_API_MODE_TO_COMPOSER[detail.scheduleMode]);
     setScheduleDate(scheduleInputs.date);
@@ -440,19 +448,41 @@ export default function SmsCreateCampaignModal({
     [message, tagSamples],
   );
 
+  const rememberMessageSelection = () => {
+    const el = textareaRef.current;
+    if (!el) return;
+    messageSelectionRef.current = {
+      start: el.selectionStart ?? 0,
+      end: el.selectionEnd ?? 0,
+    };
+  };
+
   const insertTag = (tag: string) => {
     const el = textareaRef.current;
-    if (!el) {
-      setMessage((prev) => prev + tag);
-      return;
-    }
-    const start = el.selectionStart ?? message.length;
-    const end = el.selectionEnd ?? message.length;
-    const next = `${message.slice(0, start)}${tag}${message.slice(end)}`;
+    const fallbackEnd = message.length;
+    // Prefer live caret while focused; otherwise last saved caret (tag click blurs).
+    const live =
+      el && document.activeElement === el
+        ? {
+            start: el.selectionStart ?? fallbackEnd,
+            end: el.selectionEnd ?? fallbackEnd,
+          }
+        : messageSelectionRef.current;
+    const start = Number.isFinite(live.start) ? live.start : fallbackEnd;
+    const end = Number.isFinite(live.end) ? live.end : fallbackEnd;
+    const before = message.slice(0, start);
+    const after = message.slice(end);
+    // Keep merge tags spaced (e.g. `{link} {phone}`, not `{link}{phone}`).
+    const lead = before.length > 0 && !/\s$/.test(before) ? " " : "";
+    const trail = after.length > 0 && !/^\s/.test(after) ? " " : "";
+    const inserted = `${lead}${tag}${trail}`;
+    const next = `${before}${inserted}${after}`;
+    const cursor = before.length + inserted.length;
+    messageSelectionRef.current = { start: cursor, end: cursor };
     setMessage(next);
     requestAnimationFrame(() => {
+      if (!el) return;
       el.focus();
-      const cursor = start + tag.length;
       el.setSelectionRange(cursor, cursor);
     });
   };
@@ -754,7 +784,12 @@ export default function SmsCreateCampaignModal({
                   type="button"
                   disabled={controlsDisabled}
                   onClick={() => {
-                    setMessage(t(`${TK}.${tpl.textKey}`));
+                    const next = t(`${TK}.${tpl.textKey}`);
+                    setMessage(next);
+                    messageSelectionRef.current = {
+                      start: next.length,
+                      end: next.length,
+                    };
                   }}
                 >
                   <div className="template-item-title">
@@ -783,6 +818,10 @@ export default function SmsCreateCampaignModal({
                     className="tag-btn"
                     type="button"
                     disabled={controlsDisabled}
+                    onMouseDown={(event) => {
+                      // Keep textarea focus/caret so tags insert at the cursor, not at 0.
+                      event.preventDefault();
+                    }}
                     onClick={() => insertTag(item.tag)}
                   >
                     {TAG_ICON[item.tag]}
@@ -797,8 +836,12 @@ export default function SmsCreateCampaignModal({
                 disabled={controlsDisabled}
                 placeholder={t(`${TK}.composePlaceholder`)}
                 aria-invalid={Boolean(messageError)}
+                onSelect={rememberMessageSelection}
+                onKeyUp={rememberMessageSelection}
+                onClick={rememberMessageSelection}
                 onChange={(event) => {
                   setMessage(event.target.value);
+                  rememberMessageSelection();
                   if (messageError) setMessageError("");
                 }}
               />
