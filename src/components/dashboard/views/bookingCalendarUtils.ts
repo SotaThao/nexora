@@ -120,6 +120,7 @@ function colorForResource(resourceId: string, columns: BookingCalendarColumn[]):
 
 function resolveEventWindow(booking: BookingCalendarSource, calendarDate: string) {
   // BE omits trailing Z on UTC fields — always parse as UTC then convert to local for DayPilot.
+  // Calendar intentionally spans start→end (duration). List modes (table/card) show start only.
   const start = booking.startAtUtc ? parseApiDateTime(booking.startAtUtc) : null
   if (start) {
     const endRaw = booking.endAtUtc ? parseApiDateTime(booking.endAtUtc) : null
