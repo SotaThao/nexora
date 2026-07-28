@@ -1,11 +1,15 @@
 import {
   BadgeCheck,
+  Briefcase,
+  Calendar,
   ChevronLeft,
   AlertCircle,
+  GraduationCap,
   Heart,
   Image as ImageIcon,
   Loader2,
   LockKeyhole,
+  MapPin,
   MessageCircle,
   Plus,
   Send,
@@ -16,7 +20,7 @@ import {
   X,
 } from 'lucide-react'
 import { useMemo, useState, type FormEvent, type ReactNode } from 'react'
-import { Link, Outlet, useNavigate, useParams } from 'react-router-dom'
+import { Link, Outlet, useNavigate, useParams, useSearchParams } from 'react-router-dom'
 import type { CommunityDto, CommunityMemberDto, PostDto } from '../../data/repositories/community'
 import type { ReactionType } from '../../data/community/enums'
 import {
@@ -44,6 +48,7 @@ import { CommunityNotificationsProvider } from './CommunityNotifications'
 import { CommunityPostComposer, CommunityPostMedia } from './CommunityPostMedia'
 import { CommunityRightRail } from './CommunityRightRail'
 import { createCommunitySlug } from './communitySlug'
+import { demoEvents, demoLearning, demoJobs } from './communityDemoContent'
 
 const cardClass = 'overflow-hidden rounded-xl border border-nexoraBorder bg-nexoraSurface shadow-nexora-card'
 const gradientClass = 'bg-gradient-to-br from-nexoraElectric to-nexoraViolet'
@@ -169,13 +174,36 @@ function FeedPost({ post, communityName }: { post: PostDto; communityName: strin
   const likeType: ReactionType = 'like'
   const hasLiked = reactions.data?.some((reaction) => reaction.userId === user?.id && reaction.type === likeType) ?? false
   const isAnnouncement = post.isAnnouncement
+  const title = (post as any).title
+
   return (
-    <article className={`${cardClass} ${isAnnouncement ? 'border-l-[3px] border-l-nexoraBrand !bg-nexoraBrandSoft/20' : ''}`}>
-      {isAnnouncement ? <p className="px-4 pt-3 text-[10px] font-extrabold uppercase tracking-[0.08em] text-nexoraBrand">Thông báo · {communityName}</p> : null}
-      <div className="flex items-center gap-3 px-4 pt-3"><Avatar name={post.author?.displayName} className="h-9 w-9" /><div className="min-w-0 flex-1"><p className="truncate text-sm font-extrabold text-nexoraText">{post.author?.displayName || 'Thành viên Nexora'}</p><p className="text-xs text-nexoraMuted">{communityName} · {relativeTime(post.createdAt)}</p></div>{post.isAnnouncement ? <ShieldCheck className="h-4 w-4 text-nexoraBrand" aria-label="Thông báo" /> : null}</div>
+    <article className={cardClass}>
+      <div className="flex items-center gap-3 px-4 pt-3 pb-2">
+        <Avatar name={post.author?.displayName} className="h-10 w-10" />
+        <div className="min-w-0 flex-1">
+          <div className="flex items-center gap-2">
+            <p className="truncate text-sm font-bold text-nexoraText">{post.author?.displayName || 'Thành viên Nexora'}</p>
+            {isAnnouncement ? <span className="inline-flex items-center rounded-full bg-nexoraBrandSoft px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider text-nexoraBrand">Official</span> : null}
+          </div>
+          <p className="text-xs text-nexoraMuted">{communityName} • {relativeTime(post.createdAt)}</p>
+        </div>
+      </div>
+      
+      {title ? <h3 className="px-4 pb-1 text-sm font-bold text-nexoraText">{title}</h3> : null}
+      {post.body ? <p className="whitespace-pre-wrap px-4 pb-3 text-sm leading-relaxed text-nexoraText">{post.body}</p> : null}
+      
       <CommunityPostMedia media={post.media} authorName={post.author?.displayName} />
-      {post.body ? <p className="whitespace-pre-wrap px-4 py-3 text-sm leading-relaxed text-nexoraText">{post.body}</p> : null}
-      <div className="flex items-center gap-1 border-t border-nexoraRule px-2 py-1"><button type="button" aria-pressed={hasLiked} disabled={isAnonymous || toggle.isPending} onClick={() => user && toggle.mutate({ postId: post.id, type: likeType, userId: user.id })} className={`inline-flex min-h-11 items-center gap-1.5 rounded-lg px-3 text-sm font-bold disabled:opacity-50 ${hasLiked ? 'text-nexoraBrand' : 'text-nexoraMuted hover:bg-nexoraSurfaceMuted'}`}><Heart className={`h-4 w-4 ${hasLiked ? 'fill-current' : ''}`} aria-hidden="true" />{reactions.data?.length ?? 0}</button><button type="button" onClick={() => setCommentsOpen((open) => !open)} aria-expanded={commentsOpen} className="inline-flex min-h-11 items-center gap-1.5 rounded-lg px-3 text-sm font-bold text-nexoraMuted hover:bg-nexoraSurfaceMuted"><MessageCircle className="h-4 w-4" aria-hidden="true" />Bình luận</button></div>
+      
+      <div className="flex items-center gap-4 border-t border-nexoraRule px-4 py-2">
+        <button type="button" aria-pressed={hasLiked} disabled={isAnonymous || toggle.isPending} onClick={() => user && toggle.mutate({ postId: post.id, type: likeType, userId: user.id })} className={`inline-flex min-h-9 items-center gap-1.5 text-sm font-medium ${hasLiked ? 'text-nexoraBrand' : 'text-nexoraMuted hover:text-nexoraText'}`}>
+          <Heart className={`h-4 w-4 ${hasLiked ? 'fill-current' : ''}`} aria-hidden="true" />
+          {reactions.data?.length ?? 0} thích
+        </button>
+        <button type="button" onClick={() => setCommentsOpen((open) => !open)} aria-expanded={commentsOpen} className="inline-flex min-h-9 items-center gap-1.5 text-sm font-medium text-nexoraMuted hover:text-nexoraText">
+          <MessageCircle className="h-4 w-4" aria-hidden="true" />
+          {((post as any).commentCount) ?? 0} bình luận
+        </button>
+      </div>
       {reactions.error ? <p className="px-4 pb-2 text-xs font-semibold text-nexoraDanger">{reactions.error.message}</p> : null}
       {toggle.error ? <p className="px-4 pb-2 text-xs font-semibold text-nexoraDanger">{toggle.error.message}</p> : null}
       {commentsOpen ? <CommentThread post={post} /> : null}
@@ -183,13 +211,153 @@ function FeedPost({ post, communityName }: { post: PostDto; communityName: strin
   )
 }
 
-function CommunityFeed({ community, withComposer = false }: { community: CommunityDto; withComposer?: boolean }) {
+function CommunityFeed({ community, withComposer = false, announcementOnly = false }: { community: CommunityDto; withComposer?: boolean; announcementOnly?: boolean }) {
   const feed = useCommunityFeedPosts(community.id)
   const [isComposing, setIsComposing] = useState(false)
   const posts = feed.data?.pages.flatMap((page) => page.items) ?? []
+  const displayPosts = announcementOnly ? posts.filter(p => p.isAnnouncement) : posts
+  
   if (feed.isLoading) return <LoadingState rows={2} />
   if (feed.error) return <ErrorState error={feed.error} onRetry={() => void feed.refetch()} />
-  return <section className="space-y-3">{withComposer ? <>{isComposing ? <PostComposer communityId={community.id} onClose={() => setIsComposing(false)} /> : <QuickComposer communityId={community.id} onOpen={() => setIsComposing(true)} />}</> : null}{posts.map((post) => <FeedPost key={post.id} post={post} communityName={community.name} />)}{posts.length === 0 ? <EmptyState title="Chưa có bài viết">Hãy là người đầu tiên chia sẻ một mẹo nail hoặc thông báo cho nhóm.</EmptyState> : null}{feed.hasNextPage ? <button type="button" onClick={() => void feed.fetchNextPage()} disabled={feed.isFetchingNextPage} className="mx-auto block min-h-11 rounded-xl px-4 text-sm font-bold text-nexoraBrand">{feed.isFetchingNextPage ? 'Đang tải…' : 'Xem thêm bài viết'}</button> : null}</section>
+  
+  return (
+    <section className="space-y-3">
+      {withComposer && !announcementOnly ? (
+        <>{isComposing ? <PostComposer communityId={community.id} onClose={() => setIsComposing(false)} /> : <QuickComposer communityId={community.id} onOpen={() => setIsComposing(true)} />}</>
+      ) : null}
+      
+      {displayPosts.map((post) => <FeedPost key={post.id} post={post} communityName={community.name} />)}
+      
+      {displayPosts.length === 0 ? (
+        <EmptyState title={announcementOnly ? "Chưa có thông báo" : "Chưa có bài viết"}>
+          {announcementOnly ? "Chưa có thông báo chính thức nào trong nhóm này." : "Hãy là người đầu tiên chia sẻ một mẹo nail hoặc thông báo cho nhóm."}
+        </EmptyState>
+      ) : null}
+      
+      {feed.hasNextPage ? (
+        <button type="button" onClick={() => void feed.fetchNextPage()} disabled={feed.isFetchingNextPage} className="mx-auto block min-h-11 rounded-xl px-4 text-sm font-bold text-nexoraBrand">
+          {feed.isFetchingNextPage ? 'Đang tải…' : 'Xem thêm bài viết'}
+        </button>
+      ) : null}
+    </section>
+  )
+}
+
+const TABS = [
+  { id: 'feed', label: 'Feed' },
+  { id: 'groups', label: 'Groups' },
+  { id: 'events', label: 'Events' },
+  { id: 'announcements', label: 'Announcements' },
+  { id: 'learning', label: 'Learning' },
+  { id: 'jobs', label: 'Jobs' },
+]
+
+function CommunityTabs({ activeTab, onChange }: { activeTab: string; onChange: (tab: string) => void }) {
+  return (
+    <div className="mb-4 overflow-x-auto border-b border-nexoraRule no-scrollbar" style={{ msOverflowStyle: 'none', scrollbarWidth: 'none' }}>
+      <nav className="-mb-px flex gap-6" aria-label="Tabs">
+        {TABS.map((tab) => (
+          <button
+            key={tab.id}
+            type="button"
+            onClick={() => onChange(tab.id)}
+            className={`whitespace-nowrap border-b-2 py-3 text-sm transition-colors ${
+              activeTab === tab.id
+                ? 'border-nexoraBrand font-bold text-nexoraBrand'
+                : 'border-transparent font-semibold text-nexoraMuted hover:border-nexoraRule hover:text-foreground'
+            }`}
+          >
+            {tab.label}
+          </button>
+        ))}
+      </nav>
+    </div>
+  )
+}
+
+function DemoBadge() {
+  return <span className="inline-flex items-center rounded-full bg-nexoraWarning/20 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider text-[#8a5a00] border border-nexoraWarning/40">Nội dung mẫu</span>
+}
+
+function DemoEventList() {
+  return (
+    <section className="space-y-3">
+      {demoEvents.map((event) => (
+        <article key={event.id} className={`${cardClass} flex p-4 gap-4 items-center`}>
+           <img src={event.image} alt={event.title} className="h-20 w-20 rounded-lg object-cover" />
+           <div className="flex-1 min-w-0">
+              <div className="flex items-center gap-2 mb-1">
+                 <DemoBadge />
+                 <span className="text-xs font-bold text-nexoraBrand flex items-center gap-1"><Calendar className="h-3 w-3" />{event.date}</span>
+              </div>
+              <h3 className="font-extrabold text-sm truncate text-nexoraText">{event.title}</h3>
+              <p className="text-xs text-nexoraMuted mt-1 flex items-center gap-1"><MapPin className="h-3 w-3" />{event.location} • {event.attendees} người tham gia</p>
+           </div>
+        </article>
+      ))}
+    </section>
+  )
+}
+
+function DemoLearningList() {
+  return (
+    <section className="space-y-3">
+      {demoLearning.map((item) => (
+        <article key={item.id} className={`${cardClass} flex p-4 gap-4 items-center`}>
+           <img src={item.image} alt={item.title} className="h-20 w-20 rounded-lg object-cover" />
+           <div className="flex-1 min-w-0">
+              <div className="flex items-center gap-2 mb-1">
+                 <DemoBadge />
+                 <span className="text-xs font-bold text-nexoraSuccess flex items-center gap-1"><GraduationCap className="h-3 w-3" />{item.rating} sao</span>
+              </div>
+              <h3 className="font-extrabold text-sm truncate text-nexoraText">{item.title}</h3>
+              <p className="text-xs text-nexoraMuted mt-1">Bởi {item.author} • {item.duration}</p>
+           </div>
+        </article>
+      ))}
+    </section>
+  )
+}
+
+function DemoJobsList() {
+  return (
+    <section className="space-y-3">
+      {demoJobs.map((job) => (
+        <article key={job.id} className={`${cardClass} flex p-4 gap-4 items-center`}>
+           <div className="h-20 w-20 rounded-lg bg-nexoraSurfaceMuted flex items-center justify-center shrink-0">
+              <Briefcase className="h-8 w-8 text-nexoraMuted" />
+           </div>
+           <div className="flex-1 min-w-0">
+              <div className="flex items-center gap-2 mb-1">
+                 <DemoBadge />
+                 <span className="text-xs font-bold text-nexoraElectric">{job.type}</span>
+              </div>
+              <h3 className="font-extrabold text-sm truncate text-nexoraText">{job.title}</h3>
+              <p className="text-xs text-nexoraMuted mt-1">{job.salon} • {job.location}</p>
+              <p className="text-xs font-semibold text-nexoraText mt-1">{job.salary}</p>
+           </div>
+        </article>
+      ))}
+    </section>
+  )
+}
+
+function GroupList({ groups }: { groups: CommunityDto[] }) {
+  if (groups.length === 0) return <EmptyState title="Chưa có nhóm">Tham gia nhóm để xem danh sách tại đây.</EmptyState>
+  return (
+    <section className="space-y-3">
+      {groups.map((group) => (
+        <Link key={group.id} to={`/community/${group.id}`} className={`${cardClass} flex p-4 gap-4 items-center hover:bg-nexoraSurfaceMuted transition-colors`}>
+           <Avatar name={group.name} className="h-16 w-16 text-xl" />
+           <div className="flex-1 min-w-0">
+              <h3 className="font-extrabold text-base truncate text-nexoraText">{group.name}</h3>
+              <p className="text-xs text-nexoraMuted mt-1">{group.kind === 'salon' ? 'Salon Group' : group.visibility === 'private' ? 'Nhóm riêng tư' : 'Cộng đồng công khai'} • {((group as any).memberCount) ?? 'Nhiều'} thành viên</p>
+           </div>
+           <ChevronLeft className="h-5 w-5 text-nexoraMuted rotate-180" />
+        </Link>
+      ))}
+    </section>
+  )
 }
 
 export function CommunityHome() {
@@ -197,8 +365,12 @@ export function CommunityHome() {
   const myCommunities = useMyCommunities({ enabled: Boolean(user) })
   const communities = useCommunityList({ enabled: Boolean(user) })
   const [composerCommunityId, setComposerCommunityId] = useState<string | null>(null)
+  const [searchParams, setSearchParams] = useSearchParams()
+  const currentTab = searchParams.get('tab') || 'feed'
+
   const ringCommunities = myCommunities.data?.items.length ? myCommunities.data.items : (communities.data?.items ?? [])
   const feedCommunities = (myCommunities.data?.items.length ? myCommunities.data.items : communities.data?.items ?? []).slice(0, 3)
+
   return (
     <CommunityFrame containerClassName="mx-auto w-full max-w-[1040px] pb-20">
       <header className="mx-auto mb-4 flex w-full max-w-[680px] items-center justify-between gap-3 2xl:max-w-none">
@@ -206,13 +378,34 @@ export function CommunityHome() {
         <Link to="/community/new" className={`inline-flex min-h-11 items-center gap-2 rounded-xl px-3 text-sm font-extrabold text-white ${gradientClass}`}><Plus className="h-4 w-4" aria-hidden="true" />Tạo nhóm</Link>
       </header>
       <div className="flex flex-col gap-6 2xl:flex-row 2xl:items-start">
-        <div className="mx-auto w-full max-w-[680px] flex-1 space-y-4 2xl:mx-0">
-          {isLoading || myCommunities.isLoading || communities.isLoading ? <LoadingState rows={4} /> : null}
-          {myCommunities.error ? <ErrorState error={myCommunities.error} onRetry={() => void myCommunities.refetch()} /> : null}
-          {communities.error ? <ErrorState error={communities.error} onRetry={() => void communities.refetch()} /> : null}
-          {composerCommunityId ? <PostComposer communityId={composerCommunityId} onClose={() => setComposerCommunityId(null)} /> : <QuickComposer communityId={feedCommunities[0]?.id} onOpen={() => setComposerCommunityId(feedCommunities[0]?.id ?? null)} />}
-          {ringCommunities.length ? <CommunityStoryRings communities={ringCommunities} /> : <EmptyState title="Chào mừng đến Community">Chọn một persona demo để vào nhóm hoặc tạo nhóm đầu tiên của bạn.</EmptyState>}
-          {feedCommunities.map((community) => <CommunityFeed key={community.id} community={community} />)}
+        <div className="mx-auto w-full max-w-[680px] flex-1 2xl:mx-0">
+          <CommunityTabs activeTab={currentTab} onChange={(tab) => setSearchParams({ tab }, { replace: true })} />
+          <div className="space-y-4">
+            {isLoading || myCommunities.isLoading || communities.isLoading ? <LoadingState rows={4} /> : null}
+            {myCommunities.error ? <ErrorState error={myCommunities.error} onRetry={() => void myCommunities.refetch()} /> : null}
+            {communities.error ? <ErrorState error={communities.error} onRetry={() => void communities.refetch()} /> : null}
+            
+            {currentTab === 'feed' ? (
+              <>
+                {composerCommunityId ? <PostComposer communityId={composerCommunityId} onClose={() => setComposerCommunityId(null)} /> : <QuickComposer communityId={feedCommunities[0]?.id} onOpen={() => setComposerCommunityId(feedCommunities[0]?.id ?? null)} />}
+                {ringCommunities.length ? <CommunityStoryRings communities={ringCommunities} /> : <EmptyState title="Chào mừng đến Community">Chọn một persona demo để vào nhóm hoặc tạo nhóm đầu tiên của bạn.</EmptyState>}
+                {feedCommunities.map((community) => <CommunityFeed key={community.id} community={community} />)}
+              </>
+            ) : currentTab === 'groups' ? (
+              <GroupList groups={ringCommunities} />
+            ) : currentTab === 'announcements' ? (
+              <>
+                {feedCommunities.map((community) => <CommunityFeed key={`announcement-${community.id}`} community={community} announcementOnly={true} />)}
+                {feedCommunities.length === 0 ? <EmptyState title="Chưa có thông báo">Không có nhóm nào để hiển thị thông báo.</EmptyState> : null}
+              </>
+            ) : currentTab === 'events' ? (
+              <DemoEventList />
+            ) : currentTab === 'learning' ? (
+              <DemoLearningList />
+            ) : currentTab === 'jobs' ? (
+              <DemoJobsList />
+            ) : null}
+          </div>
         </div>
         <div className="hidden w-[336px] shrink-0 2xl:sticky 2xl:top-[132px] 2xl:block 2xl:self-start">
           <CommunityRightRail />
