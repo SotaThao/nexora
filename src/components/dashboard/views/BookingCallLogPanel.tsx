@@ -23,6 +23,8 @@ import {
   BOOKING_KPI_ACCENTS,
   countPageItemsByStatus,
   filterPageItemsByStatus,
+  formatBookingHubTimestampDate,
+  formatBookingHubTimestampTime,
   formatCallDurationSeconds,
   formatVoicePhoneDisplay,
   toLocalDateIso,
@@ -94,31 +96,19 @@ function formatCallTime(
   const date = parseApiDateTime(createdAt);
   if (!date) return BOOKING_HUB_EMPTY_CELL;
 
-  const timeZone = Intl.DateTimeFormat().resolvedOptions().timeZone;
-  const dateLocale = language === "vi" ? "vi-VN" : "en-US";
   const dateIso = toLocalDateIso(date);
   const todayIso = toLocalDateIso(new Date());
   const yesterday = new Date();
   yesterday.setDate(yesterday.getDate() - 1);
   const yesterdayIso = toLocalDateIso(yesterday);
 
-  const timeFormatter = new Intl.DateTimeFormat("en-US", {
-    hour: "numeric",
-    minute: "2-digit",
-    hour12: true,
-    timeZone,
-  });
-  const timeStr = timeFormatter.format(date);
+  const timeStr = formatBookingHubTimestampTime(createdAt, language);
 
   if (dateIso === todayIso) return `${todayLabel} ${timeStr}`;
   if (dateIso === yesterdayIso) return `${yesterdayLabel} ${timeStr}`;
 
-  const dateFormatter = new Intl.DateTimeFormat(dateLocale, {
-    month: "short",
-    day: "numeric",
-    timeZone,
-  });
-  return `${dateFormatter.format(date)} ${timeStr}`;
+  const dateStr = formatBookingHubTimestampDate(createdAt, language, { withYear: false });
+  return `${dateStr} ${timeStr}`;
 }
 
 function toCallItem(

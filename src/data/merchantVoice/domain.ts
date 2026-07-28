@@ -191,12 +191,9 @@ export function isSmsCampaignCancellable(status: SmsCampaignStatus): boolean {
   )
 }
 
+/** Delete only after cancel — never alongside Cancel on Scheduled/Active. */
 export function isSmsCampaignDeletable(status: SmsCampaignStatus, _totalSent = 0): boolean {
-  return (
-    status === SmsCampaignStatus.Scheduled
-    || status === SmsCampaignStatus.Active
-    || status === SmsCampaignStatus.Cancelled
-  )
+  return status === SmsCampaignStatus.Cancelled
 }
 
 export function isSmsCampaignAutoToggleable(

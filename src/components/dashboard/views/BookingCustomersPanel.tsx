@@ -1,6 +1,7 @@
-import React, { useEffect, useMemo, useState } from 'react'
+import React, { useEffect, useMemo, useRef, useState } from 'react'
 import { normalizePhoneSearchTerm } from '../../CountryCodeSelect'
-import { BOOKING_HUB_EMPTY_CELL, BOOKING_HUB_PAGINATION_CLASSNAME, formatVoicePhoneDisplay, openNativeDateTimePicker } from './bookingHubFormatters'
+import { BOOKING_HUB_EMPTY_CELL, BOOKING_HUB_PAGINATION_CLASSNAME, formatBookingHubDateTime, formatVoicePhoneDisplay, openNativeDateTimePicker } from './bookingHubFormatters'
+import { applyAiHubProgressiveValidation } from './bookingHubDialogValidation'
 import BookingKeywordSearchField from './BookingKeywordSearchField'
 import { useTranslation } from '../../../contexts/LanguageContext'
 import { useNotification } from '../../../contexts/NotificationContext'
@@ -22,7 +23,6 @@ import {
 } from '../../../data/repositories/merchantVoice'
 import { getApiErrorCode } from '../../../types/domain'
 import { isValidEmail } from '../../../utils/validation'
-import { parseApiDateTime } from '../utils'
 import { usePagination } from '../../../hooks/usePagination'
 import { BOOKING_HUB_PAGE_SIZE } from '../../../constants/pagination'
 import {
@@ -45,6 +45,7 @@ import { useBookingHubVoiceEnabled } from './BookingHubVoiceContext'
 import Pagination from '../../ui/Pagination'
 
 const TK = 'components.dashboard.views.BookingHubView.customers'
+const TK_HUB = 'components.dashboard.views.BookingHubView'
 
 interface CustomerDraft {
   id: string
@@ -158,22 +159,10 @@ function resolveSourceDisplay(
   return { icon: rule.icon, label: t(`${TK}.sources.${rule.labelKey}`) }
 }
 
-/** BE sends UTC; display in the user's local timezone as `Jul 09, 2026, 05:21 AM`. */
+/** BE sends UTC; display in the user's local timezone (Staff Linked-date style). */
 function formatLastVisit(value: string | null, language: string): string {
   if (!value) return BOOKING_HUB_EMPTY_CELL
-  const date = parseApiDateTime(value)
-  if (!date) return BOOKING_HUB_EMPTY_CELL
-  const dateLocale = language === 'vi' ? 'vi-VN' : 'en-US'
-  const timeZone = Intl.DateTimeFormat().resolvedOptions().timeZone
-  return new Intl.DateTimeFormat(dateLocale, {
-    month: 'short',
-    day: '2-digit',
-    year: 'numeric',
-    hour: '2-digit',
-    minute: '2-digit',
-    hour12: true,
-    timeZone,
-  }).format(date)
+  return formatBookingHubDateTime(value, language)
 }
 
 function toDraft(customer: MerchantVoiceCustomerDto): CustomerDraft {
@@ -200,6 +189,7 @@ export default function BookingCustomersPanel() {
   const [draft, setDraft] = useState<CustomerDraft | null>(null)
   const [formErrors, setFormErrors] = useState<CustomerFormErrors>({})
   const [isSaving, setIsSaving] = useState(false)
+  const custModalRef = useRef<HTMLDivElement>(null)
   const { pageNumber, pageSize, setPage, reset: resetPage } = usePagination({
     pageSize: BOOKING_HUB_PAGE_SIZE,
   })
@@ -281,9 +271,24 @@ export default function BookingCustomersPanel() {
       nextErrors.dateOfBirth = t(`${TK}.invalidBirthday`)
     }
 
-    setFormErrors(nextErrors)
-    if (nextErrors.name || nextErrors.email || nextErrors.address || nextErrors.dateOfBirth) return
-
+    if (
+      applyAiHubProgressiveValidation({
+        allErrors: nextErrors,
+        root: custModalRef.current,
+        setErrors: setFormErrors,
+        showToast,
+        fieldLabels: {
+          name: t(`${TK}.fieldName`),
+          email: t(`${TK}.fieldEmail`),
+          dateOfBirth: t(`${TK}.fieldBirthday`),
+          address: t(`${TK}.fieldAddress`),
+        },
+        hubTk: TK_HUB,
+        t,
+      })
+    ) {
+      return
+    }
     setIsSaving(true)
     try {
       await updateCustomerMutation.mutateAsync({
@@ -483,6 +488,7 @@ export default function BookingCustomersPanel() {
       {editingCustomer && draft ? (
         <div className="cust-modal-overlay" role="presentation">
           <div
+            ref={custModalRef}
             className="cust-modal"
             role="dialog"
             aria-modal="true"
@@ -501,7 +507,7 @@ export default function BookingCustomersPanel() {
             </div>
 
             <div className="cust-modal-body">
-              <label className="cust-field cust-field-full">
+              <label className="cust-field cust-field-full" data-ai-hub-field="name">
                 <span className="cust-field-label">{t(`${TK}.fieldName`)}</span>
                 <input
                   className={`booking-input ${formErrors.name ? 'has-error' : ''}`}
@@ -518,7 +524,7 @@ export default function BookingCustomersPanel() {
                   <span className="cust-field-error" aria-live="polite">{formErrors.name}</span>
                 ) : null}
               </label>
-              <label className="cust-field cust-field-full">
+              <label className="cust-field cust-field-full" data-ai-hub-field="email">
                 <span className="cust-field-label">{t(`${TK}.fieldEmail`)}</span>
                 <input
                   className={`booking-input ${formErrors.email ? 'has-error' : ''}`}
@@ -535,7 +541,7 @@ export default function BookingCustomersPanel() {
                   <span className="cust-field-error" aria-live="polite">{formErrors.email}</span>
                 ) : null}
               </label>
-              <label className="cust-field cust-field-full cust-field-birthday">
+              <label className="cust-field cust-field-full cust-field-birthday" data-ai-hub-field="dateOfBirth">
                 <span className="cust-field-label">{t(`${TK}.fieldBirthday`)}</span>
                 <span className="cust-date-shell">
                   <input
@@ -562,7 +568,7 @@ export default function BookingCustomersPanel() {
                   <span className="cust-field-error" aria-live="polite">{formErrors.dateOfBirth}</span>
                 ) : null}
               </label>
-              <label className="cust-field cust-field-full">
+              <label className="cust-field cust-field-full" data-ai-hub-field="address">
                 <span className="cust-field-label">{t(`${TK}.fieldAddress`)}</span>
                 <input
                   className={`booking-input ${formErrors.address ? 'has-error' : ''}`}

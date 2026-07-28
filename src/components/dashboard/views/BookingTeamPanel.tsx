@@ -1,6 +1,7 @@
 import React, { useEffect, useMemo, useRef, useState } from "react";
 import { BOOKING_HUB_PAGE_SIZE } from "../../../constants/pagination";
 import { BOOKING_HUB_PAGINATION_CLASSNAME } from "./bookingHubFormatters";
+import { applyAiHubProgressiveValidation } from "./bookingHubDialogValidation";
 import { useTranslation } from "../../../contexts/LanguageContext";
 import { useNotification } from "../../../contexts/NotificationContext";
 import { getErrorI18nKey } from "../../../data/errorCodes";
@@ -42,6 +43,7 @@ import {
 import { useBookingHubVoiceEnabled } from "./BookingHubVoiceContext";
 
 const TK = "components.dashboard.views.BookingHubView.team";
+const TK_HUB = "components.dashboard.views.BookingHubView";
 
 const DAY_KEYS = ["mon", "tue", "wed", "thu", "fri", "sat", "sun"] as const;
 
@@ -529,6 +531,7 @@ export default function BookingTeamPanel() {
   const [showScheduleValidation, setShowScheduleValidation] = useState(false);
   const comboboxRef = useRef<HTMLDivElement>(null);
   const checkAllServicesRef = useRef<HTMLInputElement>(null);
+  const techDialogRef = useRef<HTMLDivElement>(null);
   const { pageNumber, pageSize, setPage } = usePagination({
     pageSize: BOOKING_HUB_PAGE_SIZE,
   });
@@ -792,6 +795,7 @@ export default function BookingTeamPanel() {
       phone?: string;
       email?: string;
       services?: string;
+      schedule?: string;
     } = {};
     const trimmedName = draftName.trim();
     const trimmedEmail = draftEmail.trim();
@@ -813,23 +817,29 @@ export default function BookingTeamPanel() {
       scheduleRequiredMessage,
       scheduleInvalidMessage,
     );
-
-    setFormErrors(nextErrors);
-    setShowScheduleValidation(scheduleInvalid);
-
-    if (Object.keys(nextErrors).length > 0 || scheduleInvalid) {
-      if (scheduleInvalid) {
-        window.requestAnimationFrame(() => {
-          document
-            .querySelector("[data-tech-schedule-section]")
-            ?.scrollIntoView({
-              behavior: "smooth",
-              block: "nearest",
-            });
-        });
-      }
-      return;
+    if (scheduleInvalid) {
+      nextErrors.schedule = scheduleRequiredMessage;
     }
+
+    const blocked = applyAiHubProgressiveValidation({
+      allErrors: nextErrors,
+      root: techDialogRef.current,
+      setErrors: (errors) => {
+        const { schedule: _schedule, ...fieldOnly } = errors;
+        setFormErrors(fieldOnly);
+        setShowScheduleValidation(Boolean(errors.schedule));
+      },
+      showToast,
+      fieldLabels: {
+        name: t(`${TK}.techName`),
+        email: t(`${TK}.email`),
+        services: t(`${TK}.services`),
+        schedule: t(`${TK}.weeklySchedule`),
+      },
+      hubTk: TK_HUB,
+      t,
+    });
+    if (blocked) return;
 
     const payload = {
       name: trimmedName,
@@ -1114,6 +1124,7 @@ export default function BookingTeamPanel() {
           onClick={closeModal}
         >
           <div
+            ref={techDialogRef}
             className="tech-dialog"
             role="dialog"
             aria-modal="true"
@@ -1263,7 +1274,7 @@ export default function BookingTeamPanel() {
                   <BookingTechModalProfileSkeleton />
                 ) : (
                   <div className="tech-modal-grid">
-                    <div className="settings-field">
+                    <div className="settings-field" data-ai-hub-field="name">
                       <span className="settings-label">
                         {t(`${TK}.techName`)}
                       </span>
@@ -1332,7 +1343,7 @@ export default function BookingTeamPanel() {
                         ) : null}
                       </span>
                     </div>
-                    <div className="settings-field">
+                    <div className="settings-field" data-ai-hub-field="email">
                       <span className="settings-label">{t(`${TK}.email`)}</span>
                       <input
                         className="settings-input"
@@ -1353,7 +1364,7 @@ export default function BookingTeamPanel() {
                         ) : null}
                       </span>
                     </div>
-                    <div className="settings-field">
+                    <div className="settings-field" data-ai-hub-field="services">
                       <div className="tech-services-field-head">
                         <span className="settings-label">
                           {t(`${TK}.services`)}
@@ -1402,7 +1413,11 @@ export default function BookingTeamPanel() {
                 )}
               </div>
 
-              <div className="tech-modal-section" data-tech-schedule-section>
+              <div
+                className="tech-modal-section"
+                data-tech-schedule-section
+                data-ai-hub-field="schedule"
+              >
                 <div className="tech-modal-section-title">
                   <CalendarWeekIcon />
                   <span>{t(`${TK}.weeklySchedule`)}</span>
