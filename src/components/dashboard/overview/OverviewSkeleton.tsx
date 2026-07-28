@@ -19,7 +19,8 @@ export default function OverviewSkeleton() {
       <Panel className="p-7">
         <Skeleton width="36%" height={16} borderRadius={6} />
         <Skeleton width="55%" height={12} className="mt-2" borderRadius={6} />
-        <div className="mt-8 grid grid-cols-1 gap-6 md:grid-cols-2">
+        <div className="mt-8 grid grid-cols-1 gap-6 md:grid-cols-2 xl:grid-cols-3">
+          <Skeleton height={196} borderRadius={12} />
           <Skeleton height={196} borderRadius={12} />
           <Skeleton height={196} borderRadius={12} />
         </div>
