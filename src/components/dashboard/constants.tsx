@@ -20,6 +20,7 @@ import { BookingHubMainTab } from '../../data/merchantVoice/domain'
 export const DASHBOARD_MENU = {
   Touchpoints: 'touchpoints',
   BookingHub: 'booking-hub',
+  ProductManagement: 'product-management',
 } as const
 
 /** Dashboard session roles passed as `userRole` prop. */
@@ -208,6 +209,20 @@ export const TOUCHPOINTS_SUBMENU = [
 export const VISIBLE_TOUCHPOINTS_SUBMENU = SHOW_HARDWARE_DEVICES
   ? TOUCHPOINTS_SUBMENU
   : TOUCHPOINTS_SUBMENU.filter((item) => item.id !== 'devices')
+
+/** Gift Card Center sidebar children — SSO destinations (external Merchant Portal). */
+export const GIFT_CARD_CENTER_SUBMENU = [
+  {
+    id: 'gift-card',
+    labelKey: 'dashboard.menu.gift_card',
+    destination: 'gift-card',
+  },
+  {
+    id: 'membership-card',
+    labelKey: 'dashboard.menu.membership_card',
+    destination: 'membership-card',
+  },
+] as const
 
 /** Booking Hub sidebar children — maps to `/dashboard/booking-hub?tab=`. */
 export const BOOKING_HUB_SUBMENU = [

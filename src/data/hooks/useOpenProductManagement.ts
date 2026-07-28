@@ -2,7 +2,7 @@
  * Opens Merchant Portal Product Management via ecosystem SSO:
  * 1. GET /api/v1/Client/ecosystem
  * 2. Find name === merchantportal
- * 3. POST signin with that id + path /gift-voucher/product-management
+ * 3. POST signin with that id + destination path
  *
  * Uses repository calls directly (not useMutation/fetchQuery) so a one-shot
  * click handler does not touch Query observers.
@@ -20,10 +20,11 @@ import {
   updateWindowUrl,
 } from '../../utils/ecosystem'
 import {
-  PRODUCT_MANAGEMENT_PAGE_NAME,
-  PRODUCT_MANAGEMENT_PATH,
-  buildProductManagementUrl,
+  PRODUCT_MANAGEMENT_DESTINATIONS,
+  applyDeepLinkToRedirectUrl,
+  buildMerchantPortalDeepLink,
   findMerchantPortalEcosystem,
+  type ProductManagementDestination,
 } from '../../utils/productManagementSso'
 
 function navigateOpenedTab(newTab: Window | null, url: string) {
@@ -38,13 +39,15 @@ export function useOpenProductManagement() {
   const { status } = useAuth()
   const { t } = useTranslation()
   const { showToast } = useNotification()
-  const [isOpening, setIsOpening] = useState(false)
+  const [openingDestination, setOpeningDestination] = useState<ProductManagementDestination | null>(null)
   const openingRef = useRef(false)
 
-  const openProductManagement = useCallback(async () => {
+  const openProductManagement = useCallback(async (
+    destination: ProductManagementDestination = 'gift-card',
+  ) => {
     if (openingRef.current) return
     openingRef.current = true
-    setIsOpening(true)
+    setOpeningDestination(destination)
 
     // Open blank tab first so mobile Safari does not block the popup after await.
     const newTab = openWindowOrFallback('about:blank')
@@ -54,6 +57,15 @@ export function useOpenProductManagement() {
       showToast(t('dashboard.menu.product_management_error'), 'error')
     }
 
+    const destinationConfig = PRODUCT_MANAGEMENT_DESTINATIONS[destination]
+    if (!destinationConfig) {
+      fail()
+      openingRef.current = false
+      setOpeningDestination(null)
+      return
+    }
+    const { path, pageName } = destinationConfig
+
     try {
       const ecosystems = await ecosystemRepository.list()
       const merchantPortal = findMerchantPortalEcosystem(ecosystems)
@@ -62,7 +74,7 @@ export function useOpenProductManagement() {
         return
       }
 
-      const fallbackUrl = buildProductManagementUrl(merchantPortal.url)
+      const fallbackUrl = buildMerchantPortalDeepLink(merchantPortal.url, path)
 
       if (status !== 'authenticated') {
         if (fallbackUrl && isValidEcosystemRedirectUrl(fallbackUrl)) {
@@ -75,12 +87,17 @@ export function useOpenProductManagement() {
 
       const response = await ecosystemRepository.signIn({
         id: merchantPortal.id,
-        path: PRODUCT_MANAGEMENT_PATH,
-        pageName: PRODUCT_MANAGEMENT_PAGE_NAME,
+        path,
+        pageName,
       })
 
       if (isValidEcosystemRedirectUrl(response.redirectUrl)) {
-        navigateOpenedTab(newTab, response.redirectUrl)
+        // Gift Card: use BE redirect as-is (SSO token URL must not be rewritten).
+        // Membership: keep token URL pathname, inject returnUrl → issue-digital?type=membership.
+        const finalUrl = destination === 'membership-card'
+          ? applyDeepLinkToRedirectUrl(response.redirectUrl, path)
+          : response.redirectUrl
+        navigateOpenedTab(newTab, finalUrl)
         return
       }
 
@@ -94,9 +111,13 @@ export function useOpenProductManagement() {
       fail()
     } finally {
       openingRef.current = false
-      setIsOpening(false)
+      setOpeningDestination(null)
     }
   }, [showToast, status, t])
 
-  return { openProductManagement, isOpeningProductManagement: isOpening }
+  return {
+    openProductManagement,
+    isOpeningProductManagement: openingDestination !== null,
+    openingProductManagementDestination: openingDestination,
+  }
 }

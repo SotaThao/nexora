@@ -16,7 +16,7 @@ import {
 import { useTranslation } from '../contexts/LanguageContext'
 import { logger } from '../utils/logger'
 import CopyableTransactionId from './ui/CopyableTransactionId'
-import { formatTransactionDateTime, formatCurrency } from './dashboard/utils'
+import { DateTimeCell, formatCurrency } from './dashboard/utils'
 import { buildChartPoints, getBezierPath } from './dashboard/overview/chartUtils'
 import {
   useMerchantStaffByCode,
@@ -933,7 +933,7 @@ export default function StaffDetailView({
                 {stats.recentTransactions.map((tx) => (
                   <tr key={tx.id} className="border-t border-nexoraRule hover:bg-slate-50/50">
                     <td className="px-4 py-3.5 font-bold text-nexoraText">{tx.id}</td>
-                    <td className="px-4 py-3.5 text-nexoraMuted">{formatTransactionDateTime(tx.dateTime, currentLanguage)}</td>
+                    <td className="px-4 py-3.5 text-nexoraMuted"><DateTimeCell value={tx.dateTime} locale={currentLanguage} /></td>
                     <td className="px-4 py-3.5 font-black text-nexoraText">{formatCurrency(tx.amount)}</td>
                     <td className="px-4 py-3.5 text-nexoraMuted">{tx.touchpoint}</td>
                     <td className="px-4 py-3.5">
@@ -1022,7 +1022,7 @@ export default function StaffDetailView({
                     {rev.comment}
                   </p>
                   <p className="text-[10px] text-nexoraSubtle font-medium">
-                    Logged: {formatTransactionDateTime(rev.createdAt || rev.date, currentLanguage)}
+                    Logged: <DateTimeCell value={rev.createdAt || rev.date} locale={currentLanguage} />
                   </p>
                 </div>
 

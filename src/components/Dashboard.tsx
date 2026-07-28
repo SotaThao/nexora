@@ -81,6 +81,7 @@ export default function Dashboard({
     isPaymentsPayoutsMobileExpanded, setIsPaymentsPayoutsMobileExpanded,
     isTouchpointsMobileExpanded, setIsTouchpointsMobileExpanded,
     isBookingHubMobileExpanded, setIsBookingHubMobileExpanded,
+    isGiftCardCenterMobileExpanded, setIsGiftCardCenterMobileExpanded,
     settingsTab, setSettingsTab,
     isProfileExpanded, setIsProfileExpanded,
     handleNavigateMenu, navigateMenu
@@ -877,6 +878,8 @@ export default function Dashboard({
         setIsTouchpointsMobileExpanded={setIsTouchpointsMobileExpanded}
         isBookingHubMobileExpanded={isBookingHubMobileExpanded}
         setIsBookingHubMobileExpanded={setIsBookingHubMobileExpanded}
+        isGiftCardCenterMobileExpanded={isGiftCardCenterMobileExpanded}
+        setIsGiftCardCenterMobileExpanded={setIsGiftCardCenterMobileExpanded}
         hasKyb={hasKyb}
         userRole={userRole}
         onLogout={onLogout}

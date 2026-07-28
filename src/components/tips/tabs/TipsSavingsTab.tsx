@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { TrendingUp, Calculator, CheckCircle, WalletCards } from 'lucide-react';
 import { useTranslation } from '../../../contexts/LanguageContext';
 import { formatUSD, getPaymentMethodLogo } from '../../../utils/tipsFormatters';
-import { formatTransactionDateTime } from '../../dashboard/utils';
+import { DateTimeCell } from '../../dashboard/utils';
 import { isDirectP2pMethod } from '../../../data/paymentMethodTypes';
 
 export default function TipsSavingsTab({
@@ -157,7 +157,7 @@ export default function TipsSavingsTab({
                   paginatedTips.map(tx => (
                     <tr key={tx.id} className="border-b border-nexoraBorder/50 dark:border-white/5 hover:bg-slate-50 dark:hover:bg-white/5">
                       <td className="py-3.5 px-2 font-medium text-mutedGrey dark:text-slate-400 whitespace-nowrap">
-                        {formatTransactionDateTime(tx.dateTime, currentLanguage)}
+                        <DateTimeCell value={tx.dateTime} locale={currentLanguage} />
                       </td>
                       <td className="py-3.5 px-2 font-bold text-inkBlue dark:text-white">
                         {tx.isMultiStaff || (Array.isArray(tx.tipItems) && tx.tipItems.length > 1)
