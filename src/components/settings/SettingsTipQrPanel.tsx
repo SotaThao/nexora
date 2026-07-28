@@ -213,28 +213,6 @@ export default function SettingsTipQrPanel({
               <p className="mt-3 text-xs leading-normal text-nexoraMuted">
                 {t('dashboard.master_gateway.payment_body')}
               </p>
-
-              <div className="mt-3 flex items-center justify-between gap-2 rounded-lg border border-nexoraBorder bg-white py-1.5 pl-4 pr-1.5">
-                <input
-                  type="text"
-                  readOnly
-                  value={paymentPageUrl ? paymentPageUrl.replace(/^https?:\/\//, '') : ''}
-                  className="min-w-0 flex-1 truncate bg-transparent text-xs font-semibold text-nexoraBrand"
-                />
-                <button
-                  type="button"
-                  disabled={!paymentPageUrl}
-                  onClick={() => handleCopy(paymentPageUrl, 'direct-payment-url')}
-                  aria-label={t('dashboard.master_gateway.btn_copy_link')}
-                  className="flex h-7 w-7 shrink-0 items-center justify-center rounded-md text-nexoraMuted transition hover:bg-nexoraSurfaceMuted hover:text-nexoraBrand disabled:cursor-not-allowed disabled:opacity-40"
-                >
-                  {copiedId === 'direct-payment-url' ? (
-                    <Check className="h-4 w-4 text-emerald-600" />
-                  ) : (
-                    <Copy className="h-4 w-4" />
-                  )}
-                </button>
-              </div>
             </div>
 
             <button
@@ -258,6 +236,28 @@ export default function SettingsTipQrPanel({
                   {t('components.dashboard.views.StaffView.preview')}
                 </span>
               </div>
+            </button>
+          </div>
+
+          <div className="flex items-center justify-between gap-2 rounded-lg border border-nexoraBorder bg-white py-1.5 pl-4 pr-1.5">
+            <input
+              type="text"
+              readOnly
+              value={paymentPageUrl ? paymentPageUrl.replace(/^https?:\/\//, '') : ''}
+              className="min-w-0 flex-1 truncate bg-transparent text-xs font-semibold text-nexoraBrand"
+            />
+            <button
+              type="button"
+              disabled={!paymentPageUrl}
+              onClick={() => handleCopy(paymentPageUrl, 'direct-payment-url')}
+              aria-label={t('dashboard.master_gateway.btn_copy_link')}
+              className="flex h-7 w-7 shrink-0 items-center justify-center rounded-md text-nexoraMuted transition hover:bg-nexoraSurfaceMuted hover:text-nexoraBrand disabled:cursor-not-allowed disabled:opacity-40"
+            >
+              {copiedId === 'direct-payment-url' ? (
+                <Check className="h-4 w-4 text-emerald-600" />
+              ) : (
+                <Copy className="h-4 w-4" />
+              )}
             </button>
           </div>
 

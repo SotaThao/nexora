@@ -852,7 +852,7 @@
       "subtitle": "Chia sẻ các mã QR để nhận tip, đánh giá và thanh toán trực tiếp.",
       "qr_title": "Mã QR tiệm",
       "qr_desc": "Quầy lễ tân – tất cả kỹ thuật viên",
-      "qr_body": "Khách hàng quét mã để chọn nhân viên và đánh giá.",
+      "qr_body": "Khách chọn thợ, tip và đánh giá.",
       "payment_title": "Mã QR nhận thanh toán",
       "payment_desc": "",
       "payment_body": "Khách hàng quét mã để thanh toán tại quầy.",
