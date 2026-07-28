@@ -10,7 +10,6 @@ export const demoEvents = [
     date: '2026-08-15',
     location: 'Houston, TX',
     attendees: 42,
-    image: 'https://images.unsplash.com/photo-1604654894610-df63bc536371?auto=format&fit=crop&q=80&w=800',
   },
   {
     id: 'e2',
@@ -18,7 +17,6 @@ export const demoEvents = [
     date: '2026-08-22',
     location: 'Online (Zoom)',
     attendees: 156,
-    image: 'https://images.unsplash.com/photo-1556761175-5973dc0f32d7?auto=format&fit=crop&q=80&w=800',
   },
   {
     id: 'e3',
@@ -26,7 +24,6 @@ export const demoEvents = [
     date: '2026-09-05',
     location: 'Atlanta, GA',
     attendees: 28,
-    image: 'https://images.unsplash.com/photo-1519014816548-bf5fe059e98b?auto=format&fit=crop&q=80&w=800',
   }
 ];
 
@@ -37,7 +34,6 @@ export const demoLearning = [
     author: 'Master Kelly',
     duration: '12 video (4 giờ)',
     rating: 4.8,
-    image: 'https://images.unsplash.com/photo-1522337660859-02fbefca4702?auto=format&fit=crop&q=80&w=800',
   },
   {
     id: 'l2',
@@ -45,7 +41,6 @@ export const demoLearning = [
     author: 'Jimmy Nguyen',
     duration: '8 video (2.5 giờ)',
     rating: 4.9,
-    image: 'https://images.unsplash.com/photo-1516975080661-460d3d5718ee?auto=format&fit=crop&q=80&w=800',
   },
   {
     id: 'l3',
@@ -53,7 +48,6 @@ export const demoLearning = [
     author: 'Nexora Academy',
     duration: '20 video (5 giờ)',
     rating: 4.7,
-    image: 'https://images.unsplash.com/photo-1577563908411-5077b6dc7624?auto=format&fit=crop&q=80&w=800',
   }
 ];
 

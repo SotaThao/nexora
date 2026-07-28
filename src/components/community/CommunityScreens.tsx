@@ -279,12 +279,22 @@ function DemoBadge() {
   return <span className="inline-flex items-center rounded-full bg-nexoraWarning/20 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider text-[#8a5a00] border border-nexoraWarning/40">Nội dung mẫu</span>
 }
 
+// Demo cards use a local gradient tile instead of a remote image: the demo must
+// render identically offline / on a locked-down network (remote photos failed to load).
+function DemoThumb({ icon: Icon }: { icon: typeof Calendar }) {
+  return (
+    <span aria-hidden="true" className={`grid h-20 w-20 shrink-0 place-items-center rounded-lg ${gradientClass}`}>
+      <Icon className="h-7 w-7 text-white/90" />
+    </span>
+  )
+}
+
 function DemoEventList() {
   return (
     <section className="space-y-3">
       {demoEvents.map((event) => (
         <article key={event.id} className={`${cardClass} flex p-4 gap-4 items-center`}>
-           <img src={event.image} alt={event.title} className="h-20 w-20 rounded-lg object-cover" />
+           <DemoThumb icon={Calendar} />
            <div className="flex-1 min-w-0">
               <div className="flex items-center gap-2 mb-1">
                  <DemoBadge />
@@ -304,7 +314,7 @@ function DemoLearningList() {
     <section className="space-y-3">
       {demoLearning.map((item) => (
         <article key={item.id} className={`${cardClass} flex p-4 gap-4 items-center`}>
-           <img src={item.image} alt={item.title} className="h-20 w-20 rounded-lg object-cover" />
+           <DemoThumb icon={GraduationCap} />
            <div className="flex-1 min-w-0">
               <div className="flex items-center gap-2 mb-1">
                  <DemoBadge />
