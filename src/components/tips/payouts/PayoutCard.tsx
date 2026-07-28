@@ -75,6 +75,7 @@ export default function PayoutCard({
   onSelectPayout,
   audience = 'merchant',
 }: PayoutCardProps) {
+  const displayPayoutMethod = payout.payoutMethodTypeName?.trim() || payout.payoutMethodType
   const isStaffAudience = audience === 'staff'
   const canConfirm = isStaffAudience && payout.status === PayoutStatus.Pending
   const identityName = payout.staffDisplayName
@@ -102,7 +103,7 @@ export default function PayoutCard({
           className="flex min-w-0 items-center justify-between gap-3 rounded-xl border border-nexoraBorder/70 bg-slate-50 px-3 py-3"
         >
           <div className="min-w-0">
-            <PayoutMethodBadge method={payout.payoutMethodType} variant="featured" />
+            <PayoutMethodBadge method={displayPayoutMethod} variant="featured" />
           </div>
           <div className="min-w-0 text-right">
             <CopyablePayoutCode code={payout.payoutCode} t={t} className="ml-auto" />
@@ -179,7 +180,7 @@ export default function PayoutCard({
               {t('dashboard.tips.payouts_manager.card_payout_to')}
             </p>
             <div className="mt-2">
-              <PayoutMethodBadge method={payout.payoutMethodType} />
+              <PayoutMethodBadge method={displayPayoutMethod} />
             </div>
           </div>
         </div>

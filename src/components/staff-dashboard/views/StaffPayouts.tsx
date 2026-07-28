@@ -133,7 +133,7 @@ function StaffPayoutList({
                   </td>
                   <td className="px-4 py-3 text-sm font-black text-nexoraText">{formatCurrency(row.amount)}</td>
                   <td className="px-4 py-3">
-                    <PayoutMethodBadge method={row.payoutMethodType} />
+                    <PayoutMethodBadge method={row.payoutMethodTypeName?.trim() || row.payoutMethodType} />
                   </td>
                   <td className="px-4 py-3">
                     <div className="flex flex-wrap gap-1">
@@ -270,7 +270,9 @@ function StaffPayoutDetailModal({
               <dt className="font-semibold text-nexoraMuted">{t(STAFF_PAYOUT_COL_KEYS.date)}</dt>
               <dd className="font-semibold text-nexoraText">{formatTransactionDateTime(payout.createdAt, currentLanguage)}</dd>
               <dt className="font-semibold text-nexoraMuted">{t(STAFF_PAYOUT_COL_KEYS.method)}</dt>
-              <dd><PayoutMethodBadge method={payout.payoutMethodType} /></dd>
+              <dd>
+                <PayoutMethodBadge method={payout.payoutMethodTypeName?.trim() || payout.payoutMethodType} />
+              </dd>
               {payout.staffPaymentAccountInfo ? (
                 <>
                   <dt className="font-semibold text-nexoraMuted">{t('staff_payouts.field_account')}</dt>
