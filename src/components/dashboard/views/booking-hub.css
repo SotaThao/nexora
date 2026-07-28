@@ -4165,6 +4165,7 @@
 .booking-hub-view .settings-tooltip {
   position: relative;
   display: inline-flex;
+  flex-shrink: 0;
 }
 
 .booking-hub-view .settings-tooltip-trigger {
@@ -4188,27 +4189,46 @@
 .booking-hub-view .settings-tooltip-content {
   position: absolute;
   bottom: calc(100% + 8px);
-  left: 0;
-  z-index: 20;
+  left: 50%;
+  z-index: 40;
   display: none;
-  width: min(260px, calc(100vw - 48px));
-  border: 1px solid rgba(70, 72, 216, 0.22);
-  border-radius: 8px;
-  background: var(--nexora-sidebar, #0f1f49);
-  padding: 8px 10px;
+  width: max-content;
+  max-width: min(320px, calc(100vw - 32px));
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 10px;
+  background: #0b1220;
+  padding: 10px 12px;
   color: #fff;
-  font-size: 10.5px;
+  font-size: 11px;
   font-weight: 500;
   letter-spacing: normal;
-  line-height: 1.45;
+  line-height: 1.5;
+  text-align: left;
   text-transform: none;
-  box-shadow: 0 8px 20px rgba(8, 31, 73, 0.18);
   white-space: normal;
+  overflow-wrap: anywhere;
+  box-shadow: 0 10px 24px rgba(8, 31, 73, 0.24);
+  transform: translateX(-50%);
+  box-sizing: border-box;
 }
 
+.booking-hub-view .settings-tooltip-content.is-placed,
 .booking-hub-view .settings-tooltip:hover .settings-tooltip-content,
 .booking-hub-view .settings-tooltip:focus-within .settings-tooltip-content {
   display: block;
+}
+
+@media (max-width: 767px) {
+  .booking-hub-view .settings-tooltip-content {
+    /* Mobile uses fixed placement from JS so content never leaves the viewport. */
+    position: fixed;
+    bottom: auto;
+    left: 16px;
+    right: auto;
+    transform: none;
+    max-width: calc(100vw - 32px);
+    z-index: 220;
+  }
 }
 
 .booking-hub-view .settings-promo-head {
@@ -7146,11 +7166,44 @@
   }
 
   .booking-hub-view .tech-modal .settings-input:not([type="time"]),
-  .booking-hub-view .tech-modal select.settings-input,
-  .booking-hub-view .panel-settings .settings-input:not([type="time"]),
-  .booking-hub-view .panel-settings .settings-textarea {
+  .booking-hub-view .tech-modal select.settings-input {
     font-size: 13px !important;
     font-weight: 600;
+  }
+}
+
+@media screen and (max-width: 767px) {
+  .booking-hub-view .panel-settings .settings-input:not([type="time"]),
+  .booking-hub-view .panel-settings select.settings-input,
+  .booking-hub-view .panel-settings .settings-textarea {
+    font-size: 16px !important;
+    font-weight: 600;
+    line-height: 1.45;
+  }
+
+  .booking-hub-view .panel-settings .settings-input:not([type="time"]),
+  .booking-hub-view .panel-settings select.settings-input {
+    min-height: 48px;
+    padding: 0 14px;
+    border-radius: 10px;
+  }
+
+  .booking-hub-view .panel-settings .settings-textarea {
+    min-height: 120px;
+    padding: 14px;
+    border-radius: 10px;
+  }
+
+  .booking-hub-view .panel-settings .settings-first-call-sms .settings-textarea {
+    min-height: 132px;
+  }
+
+  .booking-hub-view .panel-settings .settings-textarea-promo {
+    min-height: 220px;
+  }
+
+  .booking-hub-view .panel-settings .phone-input-shell .settings-input {
+    min-height: 48px;
   }
 }
 
@@ -7166,10 +7219,15 @@
     .booking-hub-view .booking-controls .booking-select,
     .booking-hub-view .booking-controls .booking-input:not(.booking-input-date),
     .booking-hub-view .tech-modal .settings-input:not([type="time"]),
-    .booking-hub-view .tech-modal select.settings-input,
-    .booking-hub-view .panel-settings .settings-input:not([type="time"]),
-    .booking-hub-view .panel-settings .settings-textarea {
+    .booking-hub-view .tech-modal select.settings-input {
       font-size: 13px !important;
+      font-weight: 600;
+    }
+
+    .booking-hub-view .panel-settings .settings-input:not([type="time"]),
+    .booking-hub-view .panel-settings select.settings-input,
+    .booking-hub-view .panel-settings .settings-textarea {
+      font-size: 16px !important;
       font-weight: 600;
     }
 
