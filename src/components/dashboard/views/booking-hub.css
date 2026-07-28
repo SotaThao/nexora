@@ -4115,21 +4115,38 @@
 
 .booking-hub-view .settings-first-call-sms-head {
   display: flex;
-  align-items: flex-start;
+  align-items: center;
   justify-content: space-between;
   gap: 16px;
 }
 
 .booking-hub-view .settings-first-call-sms-copy {
-  display: grid;
+  display: flex;
+  flex: 1 1 auto;
+  align-items: center;
   min-width: 0;
-  gap: 4px;
 }
 
-.booking-hub-view .settings-first-call-sms-title {
-  color: var(--nexora-text);
-  font-size: 13px;
-  font-weight: 900;
+.booking-hub-view .settings-first-call-sms-copy > .settings-label {
+  flex: 0 0 auto;
+}
+
+.booking-hub-view .settings-first-call-sms-toggle {
+  display: flex;
+  flex-shrink: 0;
+  align-items: center;
+  gap: 8px;
+}
+
+.booking-hub-view .settings-first-call-sms-toggle-label {
+  color: var(--nexora-success);
+  font-size: 10px;
+  font-weight: 800;
+  white-space: nowrap;
+}
+
+.booking-hub-view .settings-first-call-sms-toggle-label.is-off {
+  color: var(--nexora-subtle);
 }
 
 .booking-hub-view .settings-first-call-sms .settings-textarea {
