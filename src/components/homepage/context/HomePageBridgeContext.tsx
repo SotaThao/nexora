@@ -25,7 +25,7 @@ type HomePageHandlers = ReturnType<typeof getHomePageHandlers>
 
 interface HomePageBridgeValue {
   hp: HomePageHandlers
-  planCta: () => void
+  planCta: (planId?: string) => void
   onLogout: () => void
 }
 
@@ -83,8 +83,8 @@ export function HomePageBridgeProvider({ children }: HomePageBridgeProviderProps
   const value = useMemo<HomePageBridgeValue>(
     () => ({
       hp,
-      planCta: () => {
-        navigateHomePagePlanCta(session, status, navigate)
+      planCta: (planId?: string) => {
+        navigateHomePagePlanCta(session, status, navigate, planId)
       },
       onLogout: () => {
         hp.handleLogout()

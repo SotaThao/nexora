@@ -181,7 +181,7 @@ export default function HomePagePricingSection() {
                 <li className="flex items-center gap-2"><span className="text-purple">✓</span> <span data-i18n="plan-free-feat-4">Direct peer-to-peer tip routing</span></li>
               </ul>
             </div>
-            <button className="w-full mt-8 bg-green hover:bg-green/95 text-white font-extrabold py-3 rounded-full text-xs tracking-wide transition-all shadow-md shadow-green/10 ds-control ds-button" data-i18n="btn-plan-free" onClick={planCta}>Sign Up Free (Identity Check Required)</button>
+            <button className="w-full mt-8 bg-green hover:bg-green/95 text-white font-extrabold py-3 rounded-full text-xs tracking-wide transition-all shadow-md shadow-green/10 ds-control ds-button" data-i18n="btn-plan-free" onClick={() => planCta('lite')}>Sign Up Free (Identity Check Required)</button>
           </div>
 
           <div className="bg-slate-50 border border-slate-200/60 rounded-[32px] p-6 flex flex-col justify-between hover:shadow-xl transition-all ds-surface ds-pricing-card">
@@ -201,7 +201,7 @@ export default function HomePagePricingSection() {
                 <li className="flex items-center gap-2"><span className="text-purple">✓</span> <span data-i18n="plan-1-feat-4">Basic monthly transactional reviews</span></li>
               </ul>
             </div>
-            <button className="w-full mt-8 bg-white border border-slate-300 hover:bg-slate-100 text-slate-700 font-extrabold py-3 rounded-full text-xs tracking-wide transition-all ds-control ds-button" data-i18n="btn-plan-start" onClick={planCta}>Get Started Now</button>
+            <button className="w-full mt-8 bg-white border border-slate-300 hover:bg-slate-100 text-slate-700 font-extrabold py-3 rounded-full text-xs tracking-wide transition-all ds-control ds-button" data-i18n="btn-plan-start" onClick={() => planCta('starter')}>Get Started Now</button>
           </div>
 
           <div className="bg-gradient-to-b from-indigo-50/50 to-white border-2 border-purple rounded-[32px] p-6 flex flex-col justify-between hover:shadow-2xl transition-all relative transform lg:-translate-y-4 ds-pricing-card">
@@ -223,7 +223,7 @@ export default function HomePagePricingSection() {
                 <li className="flex items-center gap-2"><span className="text-purple">✓</span> <span data-i18n="plan-2-feat-5">Client profile classification tool</span></li>
               </ul>
             </div>
-            <button className="w-full mt-8 bg-purple hover:bg-indigo-700 text-white font-extrabold py-3.5 rounded-full text-xs tracking-wide shadow-lg shadow-purple/20 transition-all hover:scale-[1.01] ds-control ds-button" data-i18n="btn-plan-pro" onClick={planCta}>Select Pro Tier</button>
+            <button className="w-full mt-8 bg-purple hover:bg-indigo-700 text-white font-extrabold py-3.5 rounded-full text-xs tracking-wide shadow-lg shadow-purple/20 transition-all hover:scale-[1.01] ds-control ds-button" data-i18n="btn-plan-pro" onClick={() => planCta('pro')}>Select Pro Tier</button>
           </div>
 
           <div className="bg-slate-50 border border-slate-200/60 rounded-[32px] p-6 flex flex-col justify-between hover:shadow-xl transition-all ds-surface ds-pricing-card">
@@ -243,7 +243,7 @@ export default function HomePagePricingSection() {
                 <li className="flex items-center gap-2"><span className="text-purple">✓</span> <span data-i18n="plan-3-feat-4">24/7 dedicated enterprise success managers</span></li>
               </ul>
             </div>
-            <button className="w-full mt-8 bg-navy hover:bg-slate-800 text-white font-extrabold py-3 rounded-full text-xs tracking-wide transition-all ds-control ds-button" data-i18n="btn-plan-ent" onClick={planCta}>Contact Success Sales</button>
+            <button className="w-full mt-8 bg-navy hover:bg-slate-800 text-white font-extrabold py-3 rounded-full text-xs tracking-wide transition-all ds-control ds-button" data-i18n="btn-plan-ent" onClick={() => planCta('enterprise')}>Contact Success Sales</button>
           </div>
         </div>
 

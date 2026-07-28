@@ -82,6 +82,9 @@ export const qk = {
   publicPhysicalCardHelp: (helpCode?: string | null, authMode?: string | null) =>
     ['publicPhysicalCardHelp', helpCode ?? '', authMode ?? ''],
 
+  // Merchant Subscriptions (billing)
+  merchantSubscriptionPaymentMethods: () => ['merchantSubscriptions', 'paymentMethods'],
+
   // Merchant Payment Methods
   merchantPaymentMethods: ()   => ['merchantPaymentMethods'],
   supportedPaymentMethods: ()  => ['supportedPaymentMethods'],
