@@ -1560,91 +1560,6 @@ export default function BookingSettingsPanel() {
               </button>
             </div>
 
-            <div className="settings-first-call-sms settings-span-full">
-              <div className="settings-first-call-sms-head">
-                <div className="settings-first-call-sms-copy">
-                  <span className="settings-label settings-label-with-tooltip">
-                    {t(`${TK}.firstCallSmsLabel`)}
-                    <span className="settings-tooltip">
-                      <button
-                        className="settings-tooltip-trigger"
-                        type="button"
-                        aria-label={t(`${TK}.firstCallSmsInfoAria`)}
-                        aria-describedby="first-call-sms-help"
-                      >
-                        <InfoCircleIcon className="settings-tooltip-icon" />
-                      </button>
-                      <span
-                        className="settings-tooltip-content"
-                        id="first-call-sms-help"
-                        role="tooltip"
-                      >
-                        {t(`${TK}.firstCallSmsHelp`)}
-                      </span>
-                    </span>
-                  </span>
-                  <strong className="settings-first-call-sms-title">
-                    {t(`${TK}.firstCallSmsTitle`)}
-                  </strong>
-                </div>
-                <button
-                  className={`toggle-pill${sendSmsPromoEnabled ? " is-on" : ""}`}
-                  type="button"
-                  role="switch"
-                  aria-checked={sendSmsPromoEnabled}
-                  aria-label={
-                    sendSmsPromoEnabled
-                      ? t(`${TK}.firstCallSmsDisableAria`)
-                      : t(`${TK}.firstCallSmsEnableAria`)
-                  }
-                  onClick={() => {
-                    setSendSmsPromoEnabled((prev) => {
-                      const next = !prev;
-                      setStatus(
-                        next
-                          ? t(`${TK}.firstCallSmsEnabled`)
-                          : t(`${TK}.firstCallSmsDisabled`),
-                      );
-                      return next;
-                    });
-                  }}
-                />
-              </div>
-              <label className="settings-field">
-                <span className="settings-label settings-label-with-tooltip">
-                  {t(`${TK}.firstCallSmsMessageLabel`)}
-                  <span className="settings-tooltip">
-                    <button
-                      className="settings-tooltip-trigger"
-                      type="button"
-                      aria-label={t(`${TK}.firstCallSmsMessageInfoAria`)}
-                      aria-describedby="first-call-sms-message-help"
-                    >
-                      <InfoCircleIcon className="settings-tooltip-icon" />
-                    </button>
-                    <span
-                      className="settings-tooltip-content"
-                      id="first-call-sms-message-help"
-                      role="tooltip"
-                    >
-                      {t(`${TK}.firstCallSmsMessageHelp`)}
-                    </span>
-                  </span>
-                </span>
-                <textarea
-                  className="settings-textarea"
-                  value={promoSms}
-                  maxLength={FIRST_CALL_SMS_MAX_LENGTH}
-                  placeholder={t(`${TK}.firstCallSmsPlaceholder`)}
-                  onChange={(event) =>
-                    setPromoSms(
-                      event.target.value.slice(0, FIRST_CALL_SMS_MAX_LENGTH),
-                    )
-                  }
-                />
-              </label>
-            </div>
-
             <label className="settings-field settings-span-full">
               <div className="settings-promo-head">
                 <span className="settings-label">{t(`${TK}.promoLabel`)}</span>
@@ -1681,6 +1596,79 @@ export default function BookingSettingsPanel() {
                 </button>
               </div>
             </label>
+
+            <div className="settings-first-call-sms settings-span-full">
+              <div className="settings-first-call-sms-head">
+                <div className="settings-first-call-sms-copy">
+                  <span className="settings-label settings-label-with-tooltip">
+                    {t(`${TK}.firstCallSmsLabel`)}
+                    <span className="settings-tooltip">
+                      <button
+                        className="settings-tooltip-trigger"
+                        type="button"
+                        aria-label={t(`${TK}.firstCallSmsInfoAria`)}
+                        aria-describedby="first-call-sms-help"
+                      >
+                        <InfoCircleIcon className="settings-tooltip-icon" />
+                      </button>
+                      <span
+                        className="settings-tooltip-content"
+                        id="first-call-sms-help"
+                        role="tooltip"
+                      >
+                        {t(`${TK}.firstCallSmsHelp`)}
+                      </span>
+                    </span>
+                  </span>
+                </div>
+                <div className="settings-first-call-sms-toggle">
+                  <span
+                    className={`settings-first-call-sms-toggle-label${sendSmsPromoEnabled ? "" : " is-off"}`}
+                    aria-live="polite"
+                  >
+                    {sendSmsPromoEnabled
+                      ? t(`${TK}.firstCallSmsToggleOn`)
+                      : t(`${TK}.firstCallSmsToggleOff`)}
+                  </span>
+                  <button
+                    className={`toggle-pill${sendSmsPromoEnabled ? " is-on" : ""}`}
+                    type="button"
+                    role="switch"
+                    aria-checked={sendSmsPromoEnabled}
+                    aria-label={
+                      sendSmsPromoEnabled
+                        ? t(`${TK}.firstCallSmsDisableAria`)
+                        : t(`${TK}.firstCallSmsEnableAria`)
+                    }
+                    onClick={() => {
+                      setSendSmsPromoEnabled((prev) => {
+                        const next = !prev;
+                        setStatus(
+                          next
+                            ? t(`${TK}.firstCallSmsEnabled`)
+                            : t(`${TK}.firstCallSmsDisabled`),
+                        );
+                        return next;
+                      });
+                    }}
+                  />
+                </div>
+              </div>
+              <div className="settings-field">
+                <textarea
+                  className="settings-textarea"
+                  value={promoSms}
+                  maxLength={FIRST_CALL_SMS_MAX_LENGTH}
+                  placeholder={t(`${TK}.firstCallSmsPlaceholder`)}
+                  aria-label={t(`${TK}.firstCallSmsMessageLabel`)}
+                  onChange={(event) =>
+                    setPromoSms(
+                      event.target.value.slice(0, FIRST_CALL_SMS_MAX_LENGTH),
+                    )
+                  }
+                />
+              </div>
+            </div>
           </div>
         </SettingsCard>
       </div>
