@@ -370,6 +370,7 @@ export default function BookingSettingsPanel() {
   const [bookingNotifyPhone, setBookingNotifyPhone] = useState("");
   const [address, setAddress] = useState("");
   const [googleReviewUrl, setGoogleReviewUrl] = useState("");
+  const [website, setWebsite] = useState("");
   const [statusMessage, setStatusMessage] = useState("");
   const [formErrors, setFormErrors] = useState<{
     salonName?: string;
@@ -516,6 +517,7 @@ export default function BookingSettingsPanel() {
     );
     setAddress(configData.address || "");
     setGoogleReviewUrl(configData.googleReviewUrl || "");
+    setWebsite(configData.website || "");
     setPromotion((configData.promotion || "").slice(0, PROMO_MAX_LENGTH));
     const resolvedLang = mapConfigLanguageToUiLanguage(configData.language);
     setLanguage(resolvedLang);
@@ -816,6 +818,7 @@ export default function BookingSettingsPanel() {
         bookingNotifyPhone: bookingNotifyPhonePayload,
         address: address.trim(),
         googleReviewUrl: googleReviewUrl.trim(),
+        website: website.trim() || null,
         promotion: promotion.trim().slice(0, PROMO_MAX_LENGTH) || null,
         language: mapUiLanguageToConfigLanguage(language),
         welcomeGreeting: greeting.trim(),
@@ -1102,6 +1105,18 @@ export default function BookingSettingsPanel() {
                 value={googleReviewUrl}
                 placeholder={t(`${TK}.placeholderGoogleReviewLink`)}
                 onChange={(event) => setGoogleReviewUrl(event.target.value)}
+              />
+            </label>
+            <label className="settings-field settings-span-full">
+              <span className="settings-label">{t(`${TK}.website`)}</span>
+              <input
+                className="settings-input"
+                type="url"
+                value={website}
+                placeholder={t(`${TK}.placeholderWebsite`)}
+                autoComplete="url"
+                inputMode="url"
+                onChange={(event) => setWebsite(event.target.value)}
               />
             </label>
           </div>

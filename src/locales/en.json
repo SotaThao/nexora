@@ -2875,6 +2875,8 @@
             "placeholderAddress": "e.g. 123 Main St, Houston, TX",
             "googleReviewLink": "Google Review link",
             "placeholderGoogleReviewLink": "e.g. https://g.page/r/your-salon",
+            "website": "Website",
+            "placeholderWebsite": "https://bitcoinnailbar.com",
             "placeholderServiceName": "e.g. Gel manicure",
             "placeholderServicePrice": "0",
             "placeholderServiceDuration": "45",

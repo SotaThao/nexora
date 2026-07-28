@@ -418,6 +418,7 @@ export interface MerchantVoiceConfigDto {
   bookingNotifyPhone: string
   address: string
   googleReviewUrl: string
+  website: string
   promotion: string
   language: string
   welcomeGreeting: string
@@ -431,6 +432,7 @@ export interface UpdateMerchantVoiceConfigRequest {
   bookingNotifyPhone: string
   address: string
   googleReviewUrl: string
+  website: string | null
   promotion: string | null
   language: MerchantVoiceConfigLanguage
   welcomeGreeting: string
@@ -553,6 +555,7 @@ function normalizeConfigResponse(response: unknown): MerchantVoiceConfigDto {
       bookingNotifyPhone: '',
       address: '',
       googleReviewUrl: '',
+      website: '',
       promotion: '',
       language: MerchantVoiceConfigLanguage.EnUS,
       welcomeGreeting: '',
@@ -608,6 +611,7 @@ function normalizeConfigResponse(response: unknown): MerchantVoiceConfigDto {
     bookingNotifyPhone: String(body.bookingNotifyPhone ?? ''),
     address: String(body.address ?? ''),
     googleReviewUrl: String(body.googleReviewUrl ?? ''),
+    website: String(body.website ?? ''),
     promotion: String(body.promotion ?? ''),
     language: String(body.language ?? MerchantVoiceConfigLanguage.EnUS),
     welcomeGreeting: String(body.welcomeGreeting ?? ''),

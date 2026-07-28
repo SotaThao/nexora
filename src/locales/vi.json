@@ -2875,6 +2875,8 @@
             "placeholderAddress": "Ví dụ: 123 Main St, Houston, TX",
             "googleReviewLink": "Link Google Review",
             "placeholderGoogleReviewLink": "Ví dụ: https://g.page/r/ten-tiem",
+            "website": "Website",
+            "placeholderWebsite": "https://bitcoinnailbar.com",
             "placeholderServiceName": "Ví dụ: Gel manicure",
             "placeholderServicePrice": "0",
             "placeholderServiceDuration": "45",

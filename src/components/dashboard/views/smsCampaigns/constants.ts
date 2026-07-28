@@ -356,11 +356,6 @@ export const SMS_CAMPAIGN_NAME_INPUT = "campaign-name" as const;
 export const SMS_DEFAULT_SCHEDULE_TIME = "10:00" as const;
 export const SMS_LINK_FALLBACK_HOST = "nexora.ai" as const;
 
-const SMS_LITERAL_PHONE_DIGIT_MIN = 9;
-const SMS_LITERAL_PHONE_DIGIT_MAX = 15;
-const SMS_LITERAL_NAME_MIN_LEN = 2;
-const SMS_LITERAL_NAME_MAX_LEN = 40;
-
 export const SMS_COMPOSER_TAG_SAMPLES = {
   [SMS_COMPOSER_TAG.name]: "Linh",
   [SMS_COMPOSER_TAG.shop]: "Bitcoin Nail Bar",
@@ -368,149 +363,7 @@ export const SMS_COMPOSER_TAG_SAMPLES = {
   [SMS_COMPOSER_TAG.phone]: "832-786-5576",
 } as const;
 
-/** Words that look like greeting tails, not customer names. */
-const SMS_NAME_STOPWORDS = new Set([
-  "there",
-  "friend",
-  "thanks",
-  "thank",
-  "you",
-  "all",
-  "everyone",
-  "bạn",
-  "quý",
-  "anh",
-  "chị",
-  "em",
-  "shop",
-  "salon",
-]);
-
-/**
- * Greeting / birthday openers used by SMS templates — capture a literal name when
- * the merchant deleted `{name}` and typed a real customer name.
- */
-const SMS_LITERAL_NAME_PATTERNS = [
-  /(?:^|[\n\s])(?:hi|hey|hello)\s+([A-Za-zÀ-ỹ][\wÀ-ỹ'’.-]{0,39})(?=[!.,\s]|$)/i,
-  /(?:^|[\n\s])(?:xin chào|chào)\s+([A-Za-zÀ-ỹ][\wÀ-ỹ'’.-]{0,39})(?=[!.,\s]|$)/i,
-  /(?:^|[\n\s])([A-Za-zÀ-ỹ][\wÀ-ỹ'’.-]{1,39})\s+ơi(?=[!.,\s]|$)/i,
-  /(?:happy birthday|chúc mừng sinh nhật)\s+([A-Za-zÀ-ỹ][\wÀ-ỹ'’.-]{0,39})(?=[!.,\s]|$)/i,
-] as const;
-
-/** US / VN-ish phone shapes merchants type after removing `{phone}`. */
-const SMS_LITERAL_PHONE_PATTERN =
-  /(?:\+?\d{1,3}[\s.-]*)?(?:\(?\d{2,4}\)?[\s.-]*)\d{2,4}[\s.-]*\d{3,4}|\b0\d{8,10}\b|\+\d{9,15}\b/g;
-
-/** Strip URLs / tags / dates so literal phone/name detection stays stable. */
-function stripSmsNoiseForParsing(text: string): string {
-  return String(text ?? "")
-    .replace(/https?:\/\/\S+/gi, " ")
-    .replace(/(?:[a-z0-9.-]+)\/b\/\S+/gi, " ")
-    .replace(/\{[a-z]+\}/gi, " ")
-    .replace(/\b\d{4}-\d{2}-\d{2}\b/g, " ")
-    .replace(/\b\d{1,2}:\d{2}\b/g, " ")
-    .replace(/\b\d{1,2}%/g, " ");
-}
-
-function phoneDigitCount(value: string): number {
-  return String(value || "").replace(/\D/g, "").length;
-}
-
-function looksLikePhoneLiteral(value: string): boolean {
-  const digits = phoneDigitCount(value);
-  return (
-    digits >= SMS_LITERAL_PHONE_DIGIT_MIN &&
-    digits <= SMS_LITERAL_PHONE_DIGIT_MAX
-  );
-}
-
-/** First literal phone in message copy (ignores URLs, dates, merge tags). */
-export function extractLiteralPhoneFromSmsMessage(
-  messageBody: string,
-): string | null {
-  const haystack = stripSmsNoiseForParsing(messageBody);
-  const matches = haystack.match(SMS_LITERAL_PHONE_PATTERN) || [];
-  for (const match of matches) {
-    const candidate = match.trim();
-    if (looksLikePhoneLiteral(candidate)) return candidate;
-  }
-  return null;
-}
-
-/** First literal customer name from common SMS openers (when `{name}` was removed). */
-export function extractLiteralNameFromSmsMessage(
-  messageBody: string,
-): string | null {
-  const haystack = stripSmsNoiseForParsing(messageBody);
-  for (const pattern of SMS_LITERAL_NAME_PATTERNS) {
-    const match = haystack.match(pattern);
-    const candidate = String(match?.[1] || "")
-      .trim()
-      .replace(/[.,!]+$/g, "");
-    if (!candidate) continue;
-    if (looksLikePhoneLiteral(candidate)) continue;
-    if (SMS_NAME_STOPWORDS.has(candidate.toLowerCase())) continue;
-    if (
-      candidate.length < SMS_LITERAL_NAME_MIN_LEN ||
-      candidate.length > SMS_LITERAL_NAME_MAX_LEN
-    ) {
-      continue;
-    }
-    return candidate;
-  }
-  return null;
-}
-
-export type SmsCampaignLinkPrefill = {
-  phone: string | null;
-  name: string | null;
-};
-
-function resolveSmsPrefillField(
-  text: string,
-  tag: string,
-  sample: string,
-  extractLiteral: (body: string) => string | null,
-  useSamples: boolean,
-): string | null {
-  if (text.includes(tag)) return useSamples ? sample : tag;
-  return extractLiteral(text);
-}
-
-/**
- * Resolve phone/name for the booking `{link}` query:
- * - still has `{phone}` / `{name}` → keep merge tag (or preview sample)
- * - tags removed → detect literal phone / greeted name in the message body
- */
-export function resolveSmsCampaignLinkPrefill(
-  messageBody: string,
-  options: { previewSamples?: boolean } = {},
-): SmsCampaignLinkPrefill {
-  const text = String(messageBody ?? "");
-  const useSamples = Boolean(options.previewSamples);
-  return {
-    phone: resolveSmsPrefillField(
-      text,
-      SMS_COMPOSER_TAG.phone,
-      SMS_COMPOSER_TAG_SAMPLES[SMS_COMPOSER_TAG.phone],
-      extractLiteralPhoneFromSmsMessage,
-      useSamples,
-    ),
-    name: resolveSmsPrefillField(
-      text,
-      SMS_COMPOSER_TAG.name,
-      SMS_COMPOSER_TAG_SAMPLES[SMS_COMPOSER_TAG.name],
-      extractLiteralNameFromSmsMessage,
-      useSamples,
-    ),
-  };
-}
-
 type SmsCampaignLinkOptions = {
-  /** Resolved sample, literal, or merge tag `{phone}` kept for BE substitution. */
-  phone?: string | null;
-  /** Resolved sample, literal, or merge tag `{name}` kept for BE substitution. */
-  name?: string | null;
   source?: string | null;
 };
 
@@ -525,24 +378,16 @@ function appendSmsCampaignLinkQuery(
     [PUBLIC_BOOKING_ROUTE.langQuery, langCode],
     [PUBLIC_BOOKING_ROUTE.sourceQuery, source],
   ];
-  const phone = String(options.phone ?? "").trim();
-  const name = String(options.name ?? "").trim();
-  if (phone) pairs.push([PUBLIC_BOOKING_ROUTE.phoneQuery, phone]);
-  if (name) pairs.push([PUBLIC_BOOKING_ROUTE.nameQuery, name]);
-
   const qs = pairs
-    .map(([key, value]) => {
-      // Keep `{phone}` / `{name}` merge tags readable for BE body substitution.
-      const encodedValue = /\{[a-z]+\}/i.test(value)
-        ? value
-        : encodeURIComponent(value);
-      return `${encodeURIComponent(key)}=${encodedValue}`;
-    })
+    .map(
+      ([key, value]) =>
+        `${encodeURIComponent(key)}=${encodeURIComponent(value)}`,
+    )
     .join("&");
   return `${path}?${qs}`;
 }
 
-/** SMS-friendly business booking link: `{domain}/b/{businessKey}?lang=&src=Sms&phone=&name=`. */
+/** SMS-friendly business booking link: `{domain}/b/{businessKey}?lang=&src=Sms`. */
 export function buildSmsCampaignBusinessLinkPreview(
   businessKey?: string | null,
   lang?: string | null,
@@ -567,7 +412,7 @@ export function buildSmsCampaignBusinessLinkPreview(
   return appendSmsCampaignLinkQuery(path, langCode, options);
 }
 
-/** Expand `{link}` in campaign copy to a booking URL carrying detected phone/name. */
+/** Expand `{link}` in campaign copy to the booking URL (lang + src only). */
 export function expandSmsCampaignLinkTags(
   messageBody: string,
   businessKey?: string | null,
@@ -575,12 +420,7 @@ export function expandSmsCampaignLinkTags(
 ): string {
   const text = String(messageBody ?? "");
   if (!text.includes(SMS_COMPOSER_TAG.link)) return text;
-  const prefill = resolveSmsCampaignLinkPrefill(text);
-  const link = buildSmsCampaignBusinessLinkPreview(businessKey, lang, {
-    phone: prefill.phone,
-    name: prefill.name,
-    source: VoiceLeadSource.Sms,
-  });
+  const link = buildSmsCampaignBusinessLinkPreview(businessKey, lang);
   return text.split(SMS_COMPOSER_TAG.link).join(link);
 }
 

@@ -56,7 +56,6 @@ import {
   expandSmsCampaignLinkTags,
   formatSmsCostUsd,
   getAudienceCount,
-  resolveSmsCampaignLinkPrefill,
   SMS_API_MODE_TO_COMPOSER,
   SMS_CAMPAIGN_NAME_INPUT,
   SMS_CAMPAIGN_SEGMENT_CARDS,
@@ -156,7 +155,7 @@ function renderPreviewHtml(
 ): string {
   if (!text.trim()) return "";
 
-  // Resolve merge tags in plain text first (including phone/name inside booking URLs).
+  // Resolve merge tags in plain text first.
   let raw = text;
   raw = raw
     .split(SMS_COMPOSER_TAG.link)
@@ -419,11 +418,8 @@ export default function SmsCreateCampaignModal({
   const charParts = textEstimate.segmentCount;
   const charEncoding = textEstimate.encoding;
   const charPerPart = textEstimate.maxCharactersPerSegment || 160;
-  const tagSamples = useMemo(() => {
-    const prefill = resolveSmsCampaignLinkPrefill(message, {
-      previewSamples: true,
-    });
-    return {
+  const tagSamples = useMemo(
+    () => ({
       ...SMS_COMPOSER_TAG_SAMPLES,
       [SMS_COMPOSER_TAG.shop]:
         myTenantQuery.data?.name?.trim() ||
@@ -431,18 +427,14 @@ export default function SmsCreateCampaignModal({
       [SMS_COMPOSER_TAG.link]: buildSmsCampaignBusinessLinkPreview(
         myTenantQuery.data?.businessKey,
         currentLanguage,
-        {
-          phone: prefill.phone,
-          name: prefill.name,
-        },
       ),
-    };
-  }, [
-    currentLanguage,
-    message,
-    myTenantQuery.data?.businessKey,
-    myTenantQuery.data?.name,
-  ]);
+    }),
+    [
+      currentLanguage,
+      myTenantQuery.data?.businessKey,
+      myTenantQuery.data?.name,
+    ],
+  );
   const previewHtml = useMemo(
     () => renderPreviewHtml(message, tagSamples),
     [message, tagSamples],
