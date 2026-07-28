@@ -657,6 +657,8 @@
       "transactions": "Giao Dịch",
       "booking_hub": "AI Hub",
       "product_management": "Trung tâm thẻ quà tặng",
+      "gift_card": "Thẻ quà tặng",
+      "membership_card": "Thẻ thành viên",
       "product_management_error": "Không mở được Trung tâm thẻ quà tặng. Vui lòng thử lại.",
       "touchpoints": "Trạm & Mã QR",
       "qr_nfc": "Thiết bị QR và NFC",
@@ -1391,7 +1393,7 @@
     "joined_gateway": "Đã tham gia Nexora Touch",
     "personal_qr": "QR Cá Nhân",
     "edit_profile": "Sửa Hồ Sơ",
-    "delete_tech": "Xóa Thợ",
+    "delete_tech": "Xóa nhân viên",
     "tips_collected": "Tiền Típ Đã Nhận",
     "avg_rating": "Điểm Sao Trung Bình",
     "total_reviews": "Tổng Đánh Giá",
@@ -2170,7 +2172,7 @@
     },
     "payout": {
       "accountNameField": {
-        "label": "Tên chủ tài khoản (Không bắt buộc)",
+        "label": "Tên chủ tài khoản",
         "placeholder": "VD: Anna Smith"
       },
       "bankWireForm": {

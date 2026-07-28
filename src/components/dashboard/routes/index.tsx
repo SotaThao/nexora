@@ -155,7 +155,7 @@ export function StaffDetailRoute() {
     <StaffDetailView
       staffMember={normaliseMember(resolvedMember)}
       staffProfileId={staffProfileId}
-      onBack={() => navigate('/dashboard/staff')}
+      onBack={null}
       onViewStaff={ctx.openViewStaff}
       onQr={ctx.previewQr}
       onDelete={ctx.deleteStaff}
