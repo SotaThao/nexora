@@ -1,6 +1,5 @@
 import { useState, useEffect } from 'react'
 import { useLocation, useNavigate } from 'react-router-dom'
-import { useOpenProductManagement } from '../../../data/hooks/useOpenProductManagement'
 import {
   buildDashboardMenuPath,
   DASHBOARD_MENU,
@@ -15,7 +14,6 @@ type NavigateMenuOptions = {
 export function useDashboardNavigation() {
   const location = useLocation()
   const navigate = useNavigate()
-  const { openProductManagement } = useOpenProductManagement()
 
   const activeMenu = location.pathname.split('/')[2] || DASHBOARD_MENU_ID.overview
   const isPaymentsPayoutsActive =
@@ -29,6 +27,7 @@ export function useDashboardNavigation() {
   const [isBookingHubMobileExpanded, setIsBookingHubMobileExpanded] = useState(
     activeMenu === DASHBOARD_MENU.BookingHub,
   )
+  const [isGiftCardCenterMobileExpanded, setIsGiftCardCenterMobileExpanded] = useState(false)
   const [settingsTab, setSettingsTab] = useState('profile')
   const [isProfileExpanded, setIsProfileExpanded] = useState(false)
 
@@ -55,6 +54,7 @@ export function useDashboardNavigation() {
       setIsPaymentsPayoutsMobileExpanded(true)
       setIsTouchpointsMobileExpanded(false)
       setIsBookingHubMobileExpanded(false)
+      setIsGiftCardCenterMobileExpanded(false)
     }
     if (activeMenu === DASHBOARD_MENU.BookingHub) {
       setIsBookingHubMobileExpanded(true)
@@ -68,21 +68,11 @@ export function useDashboardNavigation() {
   }
 
   const handleNavigateMenu = (menuId: string, tab?: string) => {
-    if (menuId === DASHBOARD_MENU_ID.productManagement) {
-      void openProductManagement()
-      return
-    }
     navigate(buildMenuRoute(menuId, tab))
   }
 
   const navigateMenu = (menuId: string, options: NavigateMenuOptions = {}) => {
     const { closeDrawer = true, tab } = options
-    if (menuId === DASHBOARD_MENU_ID.productManagement) {
-      void openProductManagement().finally(() => {
-        if (closeDrawer) setIsMobileMenuOpen(false)
-      })
-      return
-    }
     navigate(buildMenuRoute(menuId, tab))
     if (closeDrawer) setIsMobileMenuOpen(false)
   }
@@ -97,6 +87,8 @@ export function useDashboardNavigation() {
     setIsTouchpointsMobileExpanded,
     isBookingHubMobileExpanded,
     setIsBookingHubMobileExpanded,
+    isGiftCardCenterMobileExpanded,
+    setIsGiftCardCenterMobileExpanded,
     settingsTab,
     setSettingsTab,
     isProfileExpanded,

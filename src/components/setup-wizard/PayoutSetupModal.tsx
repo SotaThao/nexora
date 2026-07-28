@@ -129,6 +129,12 @@ export default function PayoutSetupModal({ open, walletKey, initialValue, initia
           )}
           {!isBankWire && (
           <>
+          <PayoutAccountNameField
+            walletKey={walletKey}
+            value={accountName}
+            onChange={setAccountName}
+          />
+
           <div>
             <label className="block text-[10px] font-extrabold uppercase text-slate-500 tracking-wider mb-2">
               {t('components.setup_wizard.PayoutSetupModal.accountIdentifier')}
@@ -145,12 +151,6 @@ export default function PayoutSetupModal({ open, walletKey, initialValue, initia
             />
             {error && <p className="mt-1 text-[10px] font-bold text-rose-500">{error}</p>}
           </div>
-
-          <PayoutAccountNameField
-            walletKey={walletKey}
-            value={accountName}
-            onChange={setAccountName}
-          />
 
           <div>
             <label className="block text-[10px] font-extrabold uppercase text-slate-500 tracking-wider mb-2">

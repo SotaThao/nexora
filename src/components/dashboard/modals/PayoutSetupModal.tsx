@@ -257,6 +257,13 @@ function PayoutSetupModal({
       )}
       {!isBankWire && (
         <>
+          <PayoutAccountNameField
+            walletKey={walletKey}
+            value={accountName}
+            onChange={setAccountName}
+            disabled={readOnly}
+          />
+
           <div>
             <label className="mb-2 block text-[10px] font-extrabold uppercase tracking-wider text-slate-500">
               {renderLabel(t('components.dashboard.modals.PayoutSetupModal.accountIdentifier'))}
@@ -274,13 +281,6 @@ function PayoutSetupModal({
             />
             {error && <p className="mt-1 text-[10px] font-bold text-rose-500">{error}</p>}
           </div>
-
-          <PayoutAccountNameField
-            walletKey={walletKey}
-            value={accountName}
-            onChange={setAccountName}
-            disabled={readOnly}
-          />
 
           <div>
             <label className="mb-2 block text-[10px] font-extrabold uppercase tracking-wider text-slate-500">
