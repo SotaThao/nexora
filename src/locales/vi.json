@@ -657,6 +657,8 @@
       "transactions": "Giao Dịch",
       "booking_hub": "Trung tâm đặt lịch",
       "product_management": "Trung tâm thẻ quà tặng",
+      "gift_card": "Thẻ quà tặng",
+      "membership_card": "Thẻ thành viên",
       "product_management_error": "Không mở được Trung tâm thẻ quà tặng. Vui lòng thử lại.",
       "touchpoints": "Trạm & Mã QR",
       "qr_nfc": "Thiết bị QR và NFC",
@@ -2170,7 +2172,7 @@
     },
     "payout": {
       "accountNameField": {
-        "label": "Tên chủ tài khoản (Không bắt buộc)",
+        "label": "Tên chủ tài khoản",
         "placeholder": "VD: Anna Smith"
       },
       "bankWireForm": {

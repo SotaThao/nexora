@@ -5,7 +5,7 @@ import { useNavigate, useSearchParams } from 'react-router-dom'
 import { ChevronUp, ChevronDown, LogOut } from 'lucide-react'
 import { useTranslation } from '../../../contexts/LanguageContext'
 import { useOpenProductManagement } from '../../../data/hooks/useOpenProductManagement'
-import { visibleMenuItems, MERCHANT_SIDEBAR_MENU_ITEMS, isPaymentsPayoutsRouteActive, getVisibleBookingHubSubmenu, isBookingHubSubActive, VISIBLE_TOUCHPOINTS_SUBMENU, DASHBOARD_MENU, DASHBOARD_MENU_ID, bookingHubPath, getDefaultBookingHubTab, getDashboardMenuLocalizedLabel, isDashboardStaffRole } from '../constants'
+import { visibleMenuItems, MERCHANT_SIDEBAR_MENU_ITEMS, isPaymentsPayoutsRouteActive, getVisibleBookingHubSubmenu, isBookingHubSubActive, VISIBLE_TOUCHPOINTS_SUBMENU, GIFT_CARD_CENTER_SUBMENU, DASHBOARD_MENU, DASHBOARD_MENU_ID, bookingHubPath, getDefaultBookingHubTab, getDashboardMenuLocalizedLabel, isDashboardStaffRole } from '../constants'
 import { handleExpandableMenuClick } from '../hooks/expandableMenuNav'
 import MenuIcon from '../../ui/MenuIcon'
 import HomepageLink from '../../ui/HomepageLink'
@@ -46,7 +46,7 @@ export default function DashboardSidebar({
   const { currentLanguage, t } = useTranslation()
   const navigate = useNavigate()
   const [searchParams] = useSearchParams()
-  const { openProductManagement, isOpeningProductManagement } = useOpenProductManagement()
+  const { openProductManagement, isOpeningProductManagement, openingProductManagementDestination } = useOpenProductManagement()
   // Sub-tabs are URL-driven (?tab=) so the sidebar highlight stays in sync with
   // the rendered route content (TipsRoute / TouchpointsRoute read the same param).
   const activeSubTab = searchParams.get('tab')
@@ -59,6 +59,7 @@ export default function DashboardSidebar({
   const [isPaymentsPayoutsExpanded, setIsPaymentsPayoutsExpanded] = useState(isPaymentsPayoutsActive)
   const [isTouchpointsExpanded, setIsTouchpointsExpanded] = useState(activeMenu === DASHBOARD_MENU.Touchpoints)
   const [isBookingHubExpanded, setIsBookingHubExpanded] = useState(activeMenu === DASHBOARD_MENU.BookingHub)
+  const [isGiftCardCenterExpanded, setIsGiftCardCenterExpanded] = useState(false)
 
   useEffect(() => {
     if (isPaymentsPayoutsActive) {
@@ -78,11 +79,15 @@ export default function DashboardSidebar({
     setIsPaymentsPayoutsExpanded(true)
     setIsTouchpointsExpanded(false)
     setIsBookingHubExpanded(false)
+    setIsGiftCardCenterExpanded(false)
   }
 
   const handleMenuClick = (id: string) => {
     if (id === DASHBOARD_MENU_ID.productManagement) {
-      void openProductManagement()
+      setIsGiftCardCenterExpanded((prev) => !prev)
+      setIsTouchpointsExpanded(false)
+      setIsBookingHubExpanded(false)
+      setIsPaymentsPayoutsExpanded(false)
       return
     }
 
@@ -108,7 +113,10 @@ export default function DashboardSidebar({
         },
       ],
       onPlainNavigate: setActiveMenu,
-      collapseExtras: () => setIsPaymentsPayoutsExpanded(false),
+      collapseExtras: () => {
+        setIsPaymentsPayoutsExpanded(false)
+        setIsGiftCardCenterExpanded(false)
+      },
     })
   }
 
@@ -208,14 +216,22 @@ export default function DashboardSidebar({
                 type="button"
                 onClick={() => handleMenuClick(id)}
                 disabled={id === DASHBOARD_MENU_ID.productManagement && isOpeningProductManagement}
-                className={sidebarMenuItemBetweenClass(isActive)}
+                className={sidebarMenuItemBetweenClass(isActive || (id === DASHBOARD_MENU_ID.productManagement && isGiftCardCenterExpanded))}
               >
                 <div className="flex items-center gap-3 min-w-0">
-                  <MenuIcon item={item} active={isActive} />
+                  <MenuIcon item={item} active={isActive || (id === DASHBOARD_MENU_ID.productManagement && isGiftCardCenterExpanded)} />
                   <span className="truncate">{localizedLabel}</span>
                 </div>
-                {id === DASHBOARD_MENU_ID.productManagement && isOpeningProductManagement ? (
-                  <span className="h-4 w-4 shrink-0 animate-spin rounded-full border-2 border-white/30 border-t-white" />
+                {id === DASHBOARD_MENU_ID.productManagement ? (
+                  <div className="text-white/50 shrink-0">
+                    {isOpeningProductManagement ? (
+                      <span className="block h-4 w-4 animate-spin rounded-full border-2 border-white/30 border-t-white" />
+                    ) : isGiftCardCenterExpanded ? (
+                      <ChevronUp className="h-4 w-4" />
+                    ) : (
+                      <ChevronDown className="h-4 w-4" />
+                    )}
+                  </div>
                 ) : id === DASHBOARD_MENU.Touchpoints ? (
                   <div className="text-white/50 shrink-0">
                     {isTouchpointsExpanded ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
@@ -235,6 +251,32 @@ export default function DashboardSidebar({
                   onToggle={handlePaymentsPayoutsToggle}
                   onNavigate={handlePaymentsPayoutsNavigate}
                 />
+              )}
+
+              {id === DASHBOARD_MENU_ID.productManagement && isGiftCardCenterExpanded && (
+                <div className={SIDEBAR_SUBMENU_WRAP_CLASS}>
+                  {GIFT_CARD_CENTER_SUBMENU.map((sub) => {
+                    const isSubOpening = openingProductManagementDestination === sub.destination
+                    return (
+                      <button
+                        key={sub.id}
+                        type="button"
+                        disabled={isOpeningProductManagement}
+                        onClick={() => {
+                          void openProductManagement(sub.destination)
+                          setIsGiftCardCenterExpanded(true)
+                        }}
+                        className={sidebarSubmenuItemClass(isSubOpening)}
+                      >
+                        <div className={`h-1.5 w-1.5 rounded-full ${isSubOpening ? 'bg-brandCyan shadow-sm' : 'bg-white/30'}`} />
+                        <span className="flex-1 text-left">{t(sub.labelKey)}</span>
+                        {isSubOpening ? (
+                          <span className="h-3.5 w-3.5 shrink-0 animate-spin rounded-full border-2 border-white/30 border-t-white" />
+                        ) : null}
+                      </button>
+                    )
+                  })}
+                </div>
               )}
 
               {id === DASHBOARD_MENU.BookingHub && isBookingHubExpanded && (

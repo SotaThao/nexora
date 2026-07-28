@@ -1,10 +1,9 @@
 import { useCallback, useMemo, useState, type ReactNode } from 'react'
 import { useNavigate } from 'react-router-dom'
 import MobileMenuDrawer from '../../dashboard/layout/MobileMenuDrawer'
-import { MERCHANT_SIDEBAR_MENU_ITEMS, buildDashboardMenuPath, DASHBOARD_MENU_ID } from '../../dashboard/constants'
+import { MERCHANT_SIDEBAR_MENU_ITEMS, buildDashboardMenuPath } from '../../dashboard/constants'
 import { useProfileSettings } from '../../../data/hooks/useProfileSettings'
 import { useMerchantSetup } from '../../../data/hooks/useMerchantSetup'
-import { useOpenProductManagement } from '../../../data/hooks/useOpenProductManagement'
 import { HomePageLayoutProvider } from '../context/HomePageLayoutContext'
 import type { AuthSession } from '../../../types/auth'
 
@@ -20,7 +19,6 @@ export default function HomePageOwnerSidebarLayout({
   children,
 }: HomePageOwnerSidebarLayoutProps) {
   const navigate = useNavigate()
-  const { openProductManagement } = useOpenProductManagement()
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
   const [settingsTab, setSettingsTab] = useState('profile')
   const [isProfileExpanded, setIsProfileExpanded] = useState(false)
@@ -28,6 +26,8 @@ export default function HomePageOwnerSidebarLayout({
   const [touchpointsTab, setTouchpointsTab] = useState('stations')
   const [isPaymentsPayoutsMobileExpanded, setIsPaymentsPayoutsMobileExpanded] = useState(false)
   const [isTouchpointsMobileExpanded, setIsTouchpointsMobileExpanded] = useState(false)
+  const [isBookingHubMobileExpanded, setIsBookingHubMobileExpanded] = useState(false)
+  const [isGiftCardCenterMobileExpanded, setIsGiftCardCenterMobileExpanded] = useState(false)
 
   const { data: profileSettingsData } = useProfileSettings()
   const { data: merchantSetupData } = useMerchantSetup()
@@ -68,30 +68,20 @@ export default function HomePageOwnerSidebarLayout({
 
   const handleNavigateMenu = useCallback(
     (menuId: string) => {
-      if (menuId === DASHBOARD_MENU_ID.productManagement) {
-        void openProductManagement()
-        return
-      }
       navigate(buildDashboardMenuPath(menuId))
     },
-    [navigate, openProductManagement],
+    [navigate],
   )
 
   const navigateMenu = useCallback(
     (menuId: string, options: { tab?: string; closeDrawer?: boolean } = {}) => {
-      if (menuId === DASHBOARD_MENU_ID.productManagement) {
-        void openProductManagement().finally(() => {
-          if (options.closeDrawer !== false) setIsMobileMenuOpen(false)
-        })
-        return
-      }
       const { tab, closeDrawer = true } = options
       const base = buildDashboardMenuPath(menuId)
       const route = tab ? `${base}?tab=${encodeURIComponent(tab)}` : base
       navigate(route)
       if (closeDrawer) setIsMobileMenuOpen(false)
     },
-    [navigate, openProductManagement],
+    [navigate],
   )
 
   const layoutValue = useMemo(
@@ -126,6 +116,10 @@ export default function HomePageOwnerSidebarLayout({
           setIsPaymentsPayoutsMobileExpanded={setIsPaymentsPayoutsMobileExpanded}
           isTouchpointsMobileExpanded={isTouchpointsMobileExpanded}
           setIsTouchpointsMobileExpanded={setIsTouchpointsMobileExpanded}
+          isBookingHubMobileExpanded={isBookingHubMobileExpanded}
+          setIsBookingHubMobileExpanded={setIsBookingHubMobileExpanded}
+          isGiftCardCenterMobileExpanded={isGiftCardCenterMobileExpanded}
+          setIsGiftCardCenterMobileExpanded={setIsGiftCardCenterMobileExpanded}
           hasKyb={hasKyb}
           userRole="owner"
           onLogout={onLogout}

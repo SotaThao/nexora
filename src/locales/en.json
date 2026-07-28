@@ -657,6 +657,8 @@
       "transactions": "Transactions",
       "booking_hub": "Booking Hub",
       "product_management": "Gift Card Center",
+      "gift_card": "Gift Card",
+      "membership_card": "Membership Card",
       "product_management_error": "Could not open Gift Card Center. Please try again.",
       "touchpoints": "Stations & QR Codes",
       "qr_nfc": "QR and NFC Devices",
@@ -2170,7 +2172,7 @@
     },
     "payout": {
       "accountNameField": {
-        "label": "Account Holder Name (Optional)",
+        "label": "Account Holder Name",
         "placeholder": "e.g. Anna Smith"
       },
       "bankWireForm": {

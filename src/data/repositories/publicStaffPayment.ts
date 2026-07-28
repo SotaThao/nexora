@@ -61,6 +61,7 @@ function normalizeCreatePaymentResult(raw: Record<string, unknown> | null | unde
       id: '',
       type: '',
       accountInfo: '',
+      accountName: null,
       imageUrl: null,
     },
   }

@@ -122,6 +122,12 @@ export default function PayoutEditModal({
               error={modalError}
             />
           ) : (
+          <>
+          <PayoutAccountNameField
+            walletKey={editingMethod}
+            value={editAccountName}
+            onChange={setEditAccountName}
+          />
           <div>
             <label className="block text-[10px] font-extrabold uppercase text-slate-500 tracking-wider mb-2">
               {renderLabel(t('register.payout.account_label', {
@@ -141,14 +147,7 @@ export default function PayoutEditModal({
             />
             {modalError && <p className="mt-1 text-[10px] font-bold text-rose-500">{modalError}</p>}
           </div>
-          )}
-
-          {!isBankWire && (
-            <PayoutAccountNameField
-              walletKey={editingMethod}
-              value={editAccountName}
-              onChange={setEditAccountName}
-            />
+          </>
           )}
 
           {/* QR Code Optional Upload */}
