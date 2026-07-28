@@ -55,13 +55,14 @@ export type PayoutMethodTypeValue = (typeof PayoutMethodType)[keyof typeof Payou
 
 export const ALL_PAYOUT_METHOD_TYPES = Object.values(PayoutMethodType)
 
-/** Merchant create-payout picker order — Cash last; `Other` is not shown (maps to Cash). */
+/** Merchant create-payout picker order — Cash and Other shown at the end. */
 export const MERCHANT_CREATE_PAYOUT_METHOD_TYPES: PayoutMethodTypeValue[] = [
   PayoutMethodType.Zelle,
   PayoutMethodType.BankTransfer,
   PayoutMethodType.CashApp,
   PayoutMethodType.Venmo,
   PayoutMethodType.Cash,
+  PayoutMethodType.Other,
 ]
 
 export const PayoutDebtTransactionType = {
