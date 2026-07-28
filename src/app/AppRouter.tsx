@@ -26,7 +26,7 @@ import {
   TipsRoute,
   TouchpointsRoute,
 } from "../components/dashboard/routes";
-import { DASHBOARD_MENU_ID, buildDashboardReportsPath, DASHBOARD_REPORTS_TAB } from "../components/dashboard/constants";
+import { DASHBOARD_MENU_ID, BOOKING_HUB_PATH, BOOKING_HUB_LEGACY_PATH_SEGMENT, buildDashboardReportsPath, DASHBOARD_REPORTS_TAB } from "../components/dashboard/constants";
 import ErrorBoundary from "../components/ui/ErrorBoundary";
 import { isDemoToolsEnabled } from "./demoTools";
 import lazyWithRetry from "./lazyWithRetry";
@@ -159,6 +159,12 @@ function PaymentsRedirect() {
   return <Navigate to={target} replace />;
 }
 
+function BookingHubLegacyRedirect() {
+  const [searchParams] = useSearchParams();
+  const qs = searchParams.toString();
+  return <Navigate to={`${BOOKING_HUB_PATH}${qs ? `?${qs}` : ''}`} replace />;
+}
+
 function StaffFallbackRoute() {
   return <Navigate to="/staff" replace />;
 }
@@ -252,6 +258,7 @@ export default function AppRouter() {
             <Route path={DASHBOARD_MENU_ID.reviews} element={<ReviewsRoute />} />
             <Route path={DASHBOARD_MENU_ID.reports} element={<ReportsRoute />} />
             <Route path={DASHBOARD_MENU_ID.bookingHub} element={<BookingHubRoute />} />
+            <Route path={BOOKING_HUB_LEGACY_PATH_SEGMENT} element={<BookingHubLegacyRedirect />} />
             <Route path={DASHBOARD_MENU_ID.productManagement} element={<ProductManagementRoute />} />
             <Route path={DASHBOARD_MENU_ID.touchpoints} element={<TouchpointsRoute />} />
             <Route path={DASHBOARD_MENU_ID.analytics} element={<AnalyticsRoute />} />

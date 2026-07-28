@@ -1941,7 +1941,9 @@
   border-radius: 8px;
   background: #fff;
   color: var(--nexora-muted);
-  transition: background 0.2s, color 0.2s;
+  transition:
+    background 0.2s,
+    color 0.2s;
 }
 
 .booking-hub-view .cust-modal-close:hover {
@@ -1991,7 +1993,7 @@
   background: #fff;
 }
 
-.booking-hub-view .cust-field input[type='date'],
+.booking-hub-view .cust-field input[type="date"],
 .booking-hub-view .cust-date-input {
   position: relative;
   display: flex;
@@ -2022,8 +2024,10 @@
   text-align: left;
 }
 
-.booking-hub-view .cust-field input[type='date']::-webkit-datetime-edit,
-.booking-hub-view .cust-field input[type='date']::-webkit-datetime-edit-fields-wrapper,
+.booking-hub-view .cust-field input[type="date"]::-webkit-datetime-edit,
+.booking-hub-view
+  .cust-field
+  input[type="date"]::-webkit-datetime-edit-fields-wrapper,
 .booking-hub-view .cust-date-input::-webkit-datetime-edit,
 .booking-hub-view .cust-date-input::-webkit-datetime-edit-fields-wrapper {
   display: flex;
@@ -2061,7 +2065,7 @@
 }
 
 .booking-hub-view .cust-date-shell::after {
-  content: '';
+  content: "";
   position: absolute;
   top: 50%;
   right: 12px;
@@ -2072,8 +2076,10 @@
   transform: translateY(-50%);
   background-color: var(--nexora-subtle);
   opacity: 0.85;
-  -webkit-mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Crect x='3' y='4' width='18' height='18' rx='2'/%3E%3Cpath d='M16 2v4M8 2v4M3 10h18'/%3E%3C/svg%3E") center / contain no-repeat;
-  mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Crect x='3' y='4' width='18' height='18' rx='2'/%3E%3Cpath d='M16 2v4M8 2v4M3 10h18'/%3E%3C/svg%3E") center / contain no-repeat;
+  -webkit-mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Crect x='3' y='4' width='18' height='18' rx='2'/%3E%3Cpath d='M16 2v4M8 2v4M3 10h18'/%3E%3C/svg%3E")
+    center / contain no-repeat;
+  mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Crect x='3' y='4' width='18' height='18' rx='2'/%3E%3Cpath d='M16 2v4M8 2v4M3 10h18'/%3E%3C/svg%3E")
+    center / contain no-repeat;
 }
 
 .booking-hub-view .cust-date-input {
@@ -2180,30 +2186,51 @@
   }
 
   /*
-   * Mobile inputs: 16px floor avoids iOS Safari zoom on focus.
-   * Text/select stay readable; date also 16px but clipped by cust-date-shell.
+   * Beat global index.css iOS/mobile `input { font-size: 16px !important }`
+   * (body:not… input:not[type]… → (0,7,2)). Keep 13px like create/tech dialogs.
    */
   .booking-hub-view .cust-date-shell {
     min-height: 44px;
   }
 
-  .booking-hub-view .cust-modal .booking-input,
-  .booking-hub-view .cust-modal .booking-select,
-  .booking-hub-view .cust-field input[type='date'],
-  .booking-hub-view .cust-date-input {
+  body:not(.homepage-active):not(.public-booking-active)
+    .booking-hub-view
+    .cust-modal
+    input.booking-input:not([type="checkbox"]):not([type="radio"]):not(
+      [type="submit"]
+    ):not([type="button"]):not([type="file"]),
+  body:not(.homepage-active):not(.public-booking-active)
+    .booking-hub-view
+    .cust-modal
+    select.booking-select,
+  body:not(.homepage-active):not(.public-booking-active)
+    .booking-hub-view
+    .cust-modal
+    input[type="date"],
+  body:not(.homepage-active):not(.public-booking-active)
+    .booking-hub-view
+    .cust-modal
+    input.cust-date-input {
     height: 44px;
     min-height: 44px;
-    font-size: 16px !important;
+    font-size: 13px !important;
     font-weight: 600;
-    line-height: 44px;
+    letter-spacing: -0.01em;
+    line-height: 1.25;
   }
 
-  .booking-hub-view .cust-date-input {
+  body:not(.homepage-active):not(.public-booking-active)
+    .booking-hub-view
+    .cust-modal
+    input.cust-date-input {
     line-height: normal;
   }
 
-  .booking-hub-view .cust-modal .booking-input::placeholder {
-    font-size: 14px !important;
+  body:not(.homepage-active):not(.public-booking-active)
+    .booking-hub-view
+    .cust-modal
+    input.booking-input::placeholder {
+    font-size: 13px !important;
     font-weight: 600;
   }
 
@@ -2212,7 +2239,7 @@
   }
 
   .booking-hub-view .cust-status-toggle span {
-    font-size: 14px;
+    font-size: 13px;
   }
 
   .booking-hub-view .cust-modal-foot {
@@ -3340,7 +3367,9 @@
   overflow: visible;
 }
 
-.booking-hub-view .settings-business-grid .settings-field:has(.phone-input-shell) {
+.booking-hub-view
+  .settings-business-grid
+  .settings-field:has(.phone-input-shell) {
   overflow: visible;
 }
 
@@ -3790,10 +3819,9 @@
 
 .booking-hub-view .settings-service-header {
   display: grid;
-  grid-template-columns: 30px minmax(96px, 1fr) minmax(76px, 84px) minmax(
-      92px,
-      100px
-    ) 32px;
+  grid-template-columns:
+    30px minmax(96px, 1fr) minmax(76px, 84px) minmax(92px, 100px)
+    32px;
   align-items: center;
   gap: 8px;
   padding: 0 7px 4px;
@@ -3824,10 +3852,9 @@
 
 .booking-hub-view .settings-service-edit-grid {
   display: grid;
-  grid-template-columns: 30px minmax(96px, 1fr) minmax(76px, 84px) minmax(
-      92px,
-      100px
-    ) 32px;
+  grid-template-columns:
+    30px minmax(96px, 1fr) minmax(76px, 84px) minmax(92px, 100px)
+    32px;
   align-items: center;
   gap: 8px;
 }
@@ -4047,7 +4074,10 @@
   font-size: 11px;
   font-weight: 700;
   line-height: 1.2;
-  transition: border-color 0.16s ease, box-shadow 0.16s ease, color 0.16s ease;
+  transition:
+    border-color 0.16s ease,
+    box-shadow 0.16s ease,
+    color 0.16s ease;
 }
 
 .booking-hub-view .settings-language-card.is-active {
@@ -4068,6 +4098,137 @@
 .booking-hub-view .settings-textarea-promo {
   min-height: 220px;
   white-space: pre-wrap;
+}
+
+.booking-hub-view .settings-first-call-sms {
+  display: grid;
+  gap: 12px;
+  border: 1px solid rgba(70, 72, 216, 0.18);
+  border-radius: 12px;
+  background: linear-gradient(
+    180deg,
+    rgba(70, 72, 216, 0.06),
+    rgba(50, 215, 255, 0.04)
+  );
+  padding: 14px;
+}
+
+.booking-hub-view .settings-first-call-sms-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.booking-hub-view .settings-first-call-sms-copy {
+  display: flex;
+  flex: 1 1 auto;
+  align-items: center;
+  min-width: 0;
+}
+
+.booking-hub-view .settings-first-call-sms-copy > .settings-label {
+  flex: 0 0 auto;
+}
+
+.booking-hub-view .settings-first-call-sms-toggle {
+  display: flex;
+  flex-shrink: 0;
+  align-items: center;
+  gap: 8px;
+}
+
+.booking-hub-view .settings-first-call-sms-toggle-label {
+  color: var(--nexora-success);
+  font-size: 10px;
+  font-weight: 800;
+  white-space: nowrap;
+}
+
+.booking-hub-view .settings-first-call-sms-toggle-label.is-off {
+  color: var(--nexora-subtle);
+}
+
+.booking-hub-view .settings-first-call-sms .settings-textarea {
+  min-height: 84px;
+}
+
+.booking-hub-view .settings-label-with-tooltip {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  overflow: visible;
+  text-overflow: clip;
+  white-space: nowrap;
+}
+
+.booking-hub-view .settings-tooltip {
+  position: relative;
+  display: inline-flex;
+  flex-shrink: 0;
+}
+
+.booking-hub-view .settings-tooltip-trigger {
+  display: inline-flex;
+  width: 16px;
+  height: 16px;
+  align-items: center;
+  justify-content: center;
+  border: 0;
+  background: transparent;
+  padding: 0;
+  color: var(--nexora-brand);
+  cursor: help;
+}
+
+.booking-hub-view .settings-tooltip-icon {
+  width: 12px;
+  height: 12px;
+}
+
+.booking-hub-view .settings-tooltip-content {
+  position: absolute;
+  bottom: calc(100% + 8px);
+  left: 50%;
+  z-index: 40;
+  display: none;
+  width: max-content;
+  max-width: min(320px, calc(100vw - 32px));
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 10px;
+  background: #0b1220;
+  padding: 10px 12px;
+  color: #fff;
+  font-size: 11px;
+  font-weight: 500;
+  letter-spacing: normal;
+  line-height: 1.5;
+  text-align: left;
+  text-transform: none;
+  white-space: normal;
+  overflow-wrap: anywhere;
+  box-shadow: 0 10px 24px rgba(8, 31, 73, 0.24);
+  transform: translateX(-50%);
+  box-sizing: border-box;
+}
+
+.booking-hub-view .settings-tooltip-content.is-placed,
+.booking-hub-view .settings-tooltip:hover .settings-tooltip-content,
+.booking-hub-view .settings-tooltip:focus-within .settings-tooltip-content {
+  display: block;
+}
+
+@media (max-width: 767px) {
+  .booking-hub-view .settings-tooltip-content {
+    /* Mobile uses fixed placement from JS so content never leaves the viewport. */
+    position: fixed;
+    bottom: auto;
+    left: 16px;
+    right: auto;
+    transform: none;
+    max-width: calc(100vw - 32px);
+    z-index: 220;
+  }
 }
 
 .booking-hub-view .settings-promo-head {
@@ -4114,7 +4275,9 @@
   font-size: 11px;
   font-weight: 800;
   cursor: pointer;
-  transition: background 0.15s ease, border-color 0.15s ease;
+  transition:
+    background 0.15s ease,
+    border-color 0.15s ease;
 }
 
 .booking-hub-view .settings-promo-suggest:hover {
@@ -4217,7 +4380,8 @@
 .booking-hub-view .trial-head {
   border-bottom: 1px solid var(--nexora-rule);
   background: linear-gradient(180deg, #fff, #f8fbff);
-  padding: clamp(16px, 2.5vw, 22px) clamp(14px, 2.5vw, 22px) clamp(12px, 1.8vw, 16px);
+  padding: clamp(16px, 2.5vw, 22px) clamp(14px, 2.5vw, 22px)
+    clamp(12px, 1.8vw, 16px);
   padding-right: clamp(48px, 6vw, 56px);
   text-align: left;
 }
@@ -4960,7 +5124,10 @@
   overflow: visible;
 }
 
-.booking-hub-view .booking-filter-popover .booking-date-input-shell .booking-input-date {
+.booking-hub-view
+  .booking-filter-popover
+  .booking-date-input-shell
+  .booking-input-date {
   z-index: 2;
   cursor: pointer;
 }
@@ -5150,12 +5317,18 @@
 
 /* Past slots vs user's local clock — not selectable for new appointments. */
 .booking-hub-view .booking-team-calendar .calendar_default_cell.is-past-slot,
-.booking-hub-view .booking-team-calendar .calendar_default_cell.is-past-slot .calendar_default_cell_inner {
+.booking-hub-view
+  .booking-team-calendar
+  .calendar_default_cell.is-past-slot
+  .calendar_default_cell_inner {
   cursor: not-allowed;
   background: #f1f5f9 !important;
 }
 
-.booking-hub-view .booking-team-calendar .calendar_default_cell.is-past-slot:hover .booking-cell-add {
+.booking-hub-view
+  .booking-team-calendar
+  .calendar_default_cell.is-past-slot:hover
+  .booking-cell-add {
   opacity: 0;
 }
 
@@ -5177,7 +5350,11 @@
 
 .booking-hub-view .booking-team-calendar .calendar_default_cell_inner {
   border-color: #edf1f6;
-  background: linear-gradient(90deg, rgba(248, 250, 252, 0.34), rgba(255, 255, 255, 0) 24px);
+  background: linear-gradient(
+    90deg,
+    rgba(248, 250, 252, 0.34),
+    rgba(255, 255, 255, 0) 24px
+  );
 }
 
 .booking-hub-view .booking-team-calendar .booking-cell-add {
@@ -5201,14 +5378,24 @@
   height: 18px;
   place-items: center;
   border-radius: 999px;
-  transition: background 0.15s ease, box-shadow 0.15s ease, transform 0.15s ease;
+  transition:
+    background 0.15s ease,
+    box-shadow 0.15s ease,
+    transform 0.15s ease;
 }
 
-.booking-hub-view .booking-team-calendar .calendar_default_cell:hover .booking-cell-add {
+.booking-hub-view
+  .booking-team-calendar
+  .calendar_default_cell:hover
+  .booking-cell-add {
   opacity: 1;
 }
 
-.booking-hub-view .booking-team-calendar .calendar_default_cell:hover .booking-cell-add > span {
+.booking-hub-view
+  .booking-team-calendar
+  .calendar_default_cell:hover
+  .booking-cell-add
+  > span {
   background: #eef0ff;
   box-shadow: 0 3px 9px rgba(70, 72, 216, 0.18);
   transform: scale(1.08);
@@ -5225,10 +5412,15 @@
   overflow: hidden;
   border-radius: 11px !important;
   box-shadow: 0 6px 18px rgba(15, 23, 42, 0.1);
-  transition: box-shadow 0.16s ease, transform 0.16s ease;
+  transition:
+    box-shadow 0.16s ease,
+    transform 0.16s ease;
 }
 
-.booking-hub-view .booking-team-calendar .calendar_default_event:hover .calendar_default_event_inner {
+.booking-hub-view
+  .booking-team-calendar
+  .calendar_default_event:hover
+  .calendar_default_event_inner {
   box-shadow: 0 10px 22px rgba(15, 23, 42, 0.16);
   transform: translateY(-1px);
 }
@@ -5571,7 +5763,7 @@
 }
 
 .booking-hub-view .booking-date-input-shell::after {
-  content: '';
+  content: "";
   position: absolute;
   top: 50%;
   right: 12px;
@@ -5582,8 +5774,10 @@
   transform: translateY(-50%);
   background-color: var(--nexora-subtle);
   opacity: 0.85;
-  -webkit-mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Crect x='3' y='4' width='18' height='18' rx='2'/%3E%3Cpath d='M16 2v4M8 2v4M3 10h18'/%3E%3C/svg%3E") center / contain no-repeat;
-  mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Crect x='3' y='4' width='18' height='18' rx='2'/%3E%3Cpath d='M16 2v4M8 2v4M3 10h18'/%3E%3C/svg%3E") center / contain no-repeat;
+  -webkit-mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Crect x='3' y='4' width='18' height='18' rx='2'/%3E%3Cpath d='M16 2v4M8 2v4M3 10h18'/%3E%3C/svg%3E")
+    center / contain no-repeat;
+  mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Crect x='3' y='4' width='18' height='18' rx='2'/%3E%3Cpath d='M16 2v4M8 2v4M3 10h18'/%3E%3C/svg%3E")
+    center / contain no-repeat;
 }
 
 .booking-hub-view .booking-date-input-shell.has-value::after {
@@ -5824,11 +6018,15 @@
   gap: 9px;
 }
 
-.booking-hub-view .booking-table-mobile-field-actions .booking-table-mobile-label {
+.booking-hub-view
+  .booking-table-mobile-field-actions
+  .booking-table-mobile-label {
   margin: 0;
 }
 
-.booking-hub-view .booking-table-mobile-field-actions .booking-table-mobile-value {
+.booking-hub-view
+  .booking-table-mobile-field-actions
+  .booking-table-mobile-value {
   display: flex;
   justify-content: flex-start;
   min-width: 0;
@@ -5910,7 +6108,10 @@
   font-size: clamp(0.75rem, 0.72rem + 0.15vw, 0.8125rem);
   font-weight: 700;
   cursor: pointer;
-  transition: background 0.15s ease, border-color 0.15s ease, color 0.15s ease;
+  transition:
+    background 0.15s ease,
+    border-color 0.15s ease,
+    color 0.15s ease;
 }
 
 .booking-hub-view .booking-status-chip-icon {
@@ -6113,7 +6314,10 @@
     text-align: right;
   }
 
-  .booking-hub-view .booking-table[data-booking-table] td:last-child .booking-actions {
+  .booking-hub-view
+    .booking-table[data-booking-table]
+    td:last-child
+    .booking-actions {
     display: inline-flex;
     justify-content: flex-end;
     width: auto;
@@ -6420,7 +6624,11 @@
 }
 
 .booking-hub-view .booking-create-modal .booking-select,
-.booking-hub-view .booking-create-modal input.booking-input:not(.booking-create-datetime-input):not(.phone-mask-input) {
+.booking-hub-view
+  .booking-create-modal
+  input.booking-input:not(.booking-create-datetime-input):not(
+    .phone-mask-input
+  ) {
   height: 42px;
   min-height: 42px;
   font-size: 14px;
@@ -6454,7 +6662,9 @@
 }
 
 .booking-hub-view .booking-create-modal .phone-input-shell:focus-within,
-.booking-hub-view .booking-create-modal .booking-create-field:has(.phone-input-shell:focus-within) {
+.booking-hub-view
+  .booking-create-modal
+  .booking-create-field:has(.phone-input-shell:focus-within) {
   z-index: 20;
 }
 
@@ -6462,11 +6672,18 @@
   overflow: visible;
 }
 
-.booking-hub-view .booking-create-modal .phone-input-shell > .relative > button {
+.booking-hub-view
+  .booking-create-modal
+  .phone-input-shell
+  > .relative
+  > button {
   font-size: 13px;
 }
 
-.booking-hub-view .booking-create-modal .phone-input-shell .country-code-dropdown {
+.booking-hub-view
+  .booking-create-modal
+  .phone-input-shell
+  .country-code-dropdown {
   z-index: 30;
 }
 
@@ -6497,7 +6714,10 @@
   font-weight: 700;
   line-height: 1.3;
   text-align: left;
-  transition: background 0.2s, border-color 0.2s, color 0.2s;
+  transition:
+    background 0.2s,
+    border-color 0.2s,
+    color 0.2s;
 }
 
 .booking-hub-view .booking-service-duration {
@@ -6599,8 +6819,12 @@
 }
 
 @keyframes booking-create-skeleton {
-  0% { background-position: 100% 0; }
-  100% { background-position: -100% 0; }
+  0% {
+    background-position: 100% 0;
+  }
+  100% {
+    background-position: -100% 0;
+  }
 }
 
 .booking-hub-view .booking-create-datetime-shell {
@@ -6640,7 +6864,9 @@
   text-overflow: ellipsis;
 }
 
-.booking-hub-view .booking-create-datetime-shell.is-empty .booking-create-datetime-display {
+.booking-hub-view
+  .booking-create-datetime-shell.is-empty
+  .booking-create-datetime-display {
   color: var(--nexora-subtle);
   font-weight: 600;
 }
@@ -6657,19 +6883,29 @@
   transform: translateY(-50%);
 }
 
-.booking-hub-view .booking-create-datetime-shell.has-value .booking-create-datetime-icon {
+.booking-hub-view
+  .booking-create-datetime-shell.has-value
+  .booking-create-datetime-icon {
   color: var(--nexora-muted);
 }
 
-.booking-hub-view .booking-create-modal .schedule-date-picker.booking-create-datetime-shell {
+.booking-hub-view
+  .booking-create-modal
+  .schedule-date-picker.booking-create-datetime-shell {
   overflow: visible;
 }
 
-.booking-hub-view .booking-create-modal .schedule-date-picker .schedule-datetime-trigger {
+.booking-hub-view
+  .booking-create-modal
+  .schedule-date-picker
+  .schedule-datetime-trigger {
   padding-right: 36px;
 }
 
-.booking-hub-view .booking-create-modal .schedule-date-picker .schedule-datetime-display.is-static {
+.booking-hub-view
+  .booking-create-modal
+  .schedule-date-picker
+  .schedule-datetime-display.is-static {
   display: flex;
   align-items: center;
   padding: 0 0 0 12px;
@@ -6682,7 +6918,10 @@
   text-overflow: ellipsis;
 }
 
-.booking-hub-view .booking-create-modal .schedule-date-picker.is-empty .schedule-datetime-display.is-static {
+.booking-hub-view
+  .booking-create-modal
+  .schedule-date-picker.is-empty
+  .schedule-datetime-display.is-static {
   color: var(--nexora-subtle);
 }
 
@@ -6722,22 +6961,32 @@
   background: transparent !important;
 }
 
-.booking-hub-view .booking-create-datetime-shell[lang^="vi"] .booking-create-datetime-input {
+.booking-hub-view
+  .booking-create-datetime-shell[lang^="vi"]
+  .booking-create-datetime-input {
   -webkit-locale: "vi-VN-u-hc-h12";
 }
 
 /* Hide native edit UI so WebKit focus/selection highlight never shows inside the shell. */
 .booking-hub-view .booking-create-datetime-input::-webkit-date-and-time-value,
 .booking-hub-view .booking-create-datetime-input::-webkit-datetime-edit,
-.booking-hub-view .booking-create-datetime-input::-webkit-datetime-edit-fields-wrapper,
+.booking-hub-view
+  .booking-create-datetime-input::-webkit-datetime-edit-fields-wrapper,
 .booking-hub-view .booking-create-datetime-input::-webkit-datetime-edit-text,
-.booking-hub-view .booking-create-datetime-input::-webkit-datetime-edit-month-field,
-.booking-hub-view .booking-create-datetime-input::-webkit-datetime-edit-day-field,
-.booking-hub-view .booking-create-datetime-input::-webkit-datetime-edit-year-field,
-.booking-hub-view .booking-create-datetime-input::-webkit-datetime-edit-hour-field,
-.booking-hub-view .booking-create-datetime-input::-webkit-datetime-edit-minute-field,
-.booking-hub-view .booking-create-datetime-input::-webkit-datetime-edit-second-field,
-.booking-hub-view .booking-create-datetime-input::-webkit-datetime-edit-ampm-field {
+.booking-hub-view
+  .booking-create-datetime-input::-webkit-datetime-edit-month-field,
+.booking-hub-view
+  .booking-create-datetime-input::-webkit-datetime-edit-day-field,
+.booking-hub-view
+  .booking-create-datetime-input::-webkit-datetime-edit-year-field,
+.booking-hub-view
+  .booking-create-datetime-input::-webkit-datetime-edit-hour-field,
+.booking-hub-view
+  .booking-create-datetime-input::-webkit-datetime-edit-minute-field,
+.booking-hub-view
+  .booking-create-datetime-input::-webkit-datetime-edit-second-field,
+.booking-hub-view
+  .booking-create-datetime-input::-webkit-datetime-edit-ampm-field {
   color: transparent !important;
   background: transparent !important;
   min-width: 0;
@@ -6748,20 +6997,28 @@
   opacity: 0;
 }
 
-.booking-hub-view .booking-create-datetime-input::-webkit-datetime-edit-year-field:focus,
-.booking-hub-view .booking-create-datetime-input::-webkit-datetime-edit-month-field:focus,
-.booking-hub-view .booking-create-datetime-input::-webkit-datetime-edit-day-field:focus,
-.booking-hub-view .booking-create-datetime-input::-webkit-datetime-edit-hour-field:focus,
-.booking-hub-view .booking-create-datetime-input::-webkit-datetime-edit-minute-field:focus,
-.booking-hub-view .booking-create-datetime-input::-webkit-datetime-edit-second-field:focus,
-.booking-hub-view .booking-create-datetime-input::-webkit-datetime-edit-ampm-field:focus {
+.booking-hub-view
+  .booking-create-datetime-input::-webkit-datetime-edit-year-field:focus,
+.booking-hub-view
+  .booking-create-datetime-input::-webkit-datetime-edit-month-field:focus,
+.booking-hub-view
+  .booking-create-datetime-input::-webkit-datetime-edit-day-field:focus,
+.booking-hub-view
+  .booking-create-datetime-input::-webkit-datetime-edit-hour-field:focus,
+.booking-hub-view
+  .booking-create-datetime-input::-webkit-datetime-edit-minute-field:focus,
+.booking-hub-view
+  .booking-create-datetime-input::-webkit-datetime-edit-second-field:focus,
+.booking-hub-view
+  .booking-create-datetime-input::-webkit-datetime-edit-ampm-field:focus {
   background-color: transparent !important;
   color: transparent !important;
   outline: none !important;
   box-shadow: none !important;
 }
 
-.booking-hub-view .booking-create-datetime-input::-webkit-calendar-picker-indicator {
+.booking-hub-view
+  .booking-create-datetime-input::-webkit-calendar-picker-indicator {
   position: absolute;
   inset: 0;
   z-index: 3;
@@ -6787,7 +7044,11 @@
  */
 @media screen and (max-width: 1024px) {
   .booking-hub-view .booking-create-modal .booking-select,
-  .booking-hub-view .booking-create-modal input.booking-input:not(.booking-create-datetime-input):not(.phone-mask-input) {
+  .booking-hub-view
+    .booking-create-modal
+    input.booking-input:not(.booking-create-datetime-input):not(
+      .phone-mask-input
+    ) {
     height: 40px;
     min-height: 40px;
     font-size: 13px !important;
@@ -6824,7 +7085,11 @@
     overflow: visible;
   }
 
-  .booking-hub-view .booking-create-modal .phone-input-shell > .relative > button {
+  .booking-hub-view
+    .booking-create-modal
+    .phone-input-shell
+    > .relative
+    > button {
     font-size: 12px !important;
   }
 
@@ -6901,11 +7166,44 @@
   }
 
   .booking-hub-view .tech-modal .settings-input:not([type="time"]),
-  .booking-hub-view .tech-modal select.settings-input,
-  .booking-hub-view .panel-settings .settings-input:not([type="time"]),
-  .booking-hub-view .panel-settings .settings-textarea {
+  .booking-hub-view .tech-modal select.settings-input {
     font-size: 13px !important;
     font-weight: 600;
+  }
+}
+
+@media screen and (max-width: 767px) {
+  .booking-hub-view .panel-settings .settings-input:not([type="time"]),
+  .booking-hub-view .panel-settings select.settings-input,
+  .booking-hub-view .panel-settings .settings-textarea {
+    font-size: 16px !important;
+    font-weight: 600;
+    line-height: 1.45;
+  }
+
+  .booking-hub-view .panel-settings .settings-input:not([type="time"]),
+  .booking-hub-view .panel-settings select.settings-input {
+    min-height: 48px;
+    padding: 0 14px;
+    border-radius: 10px;
+  }
+
+  .booking-hub-view .panel-settings .settings-textarea {
+    min-height: 120px;
+    padding: 14px;
+    border-radius: 10px;
+  }
+
+  .booking-hub-view .panel-settings .settings-first-call-sms .settings-textarea {
+    min-height: 132px;
+  }
+
+  .booking-hub-view .panel-settings .settings-textarea-promo {
+    min-height: 220px;
+  }
+
+  .booking-hub-view .panel-settings .phone-input-shell .settings-input {
+    min-height: 48px;
   }
 }
 
@@ -6913,15 +7211,44 @@
 @supports (-webkit-touch-callout: none) {
   @media (hover: none), (pointer: coarse) {
     .booking-hub-view .booking-create-modal .booking-select,
-    .booking-hub-view .booking-create-modal input.booking-input:not(.booking-create-datetime-input),
+    .booking-hub-view
+      .booking-create-modal
+      input.booking-input:not(.booking-create-datetime-input),
     .booking-hub-view .booking-create-modal .phone-mask-input,
     .booking-hub-view .booking-create-modal textarea.booking-input,
     .booking-hub-view .booking-controls .booking-select,
     .booking-hub-view .booking-controls .booking-input:not(.booking-input-date),
     .booking-hub-view .tech-modal .settings-input:not([type="time"]),
-    .booking-hub-view .tech-modal select.settings-input,
+    .booking-hub-view .tech-modal select.settings-input {
+      font-size: 13px !important;
+      font-weight: 600;
+    }
+
     .booking-hub-view .panel-settings .settings-input:not([type="time"]),
+    .booking-hub-view .panel-settings select.settings-input,
     .booking-hub-view .panel-settings .settings-textarea {
+      font-size: 16px !important;
+      font-weight: 600;
+    }
+
+    body:not(.homepage-active):not(.public-booking-active)
+      .booking-hub-view
+      .cust-modal
+      input.booking-input:not([type="checkbox"]):not([type="radio"]):not(
+        [type="submit"]
+      ):not([type="button"]):not([type="file"]),
+    body:not(.homepage-active):not(.public-booking-active)
+      .booking-hub-view
+      .cust-modal
+      select.booking-select,
+    body:not(.homepage-active):not(.public-booking-active)
+      .booking-hub-view
+      .cust-modal
+      input[type="date"],
+    body:not(.homepage-active):not(.public-booking-active)
+      .booking-hub-view
+      .cust-modal
+      input.cust-date-input {
       font-size: 13px !important;
       font-weight: 600;
     }
@@ -7365,10 +7692,9 @@
 /* Only when the content panel itself is wide enough for four columns */
 @container booking-panel (min-width: 1180px) {
   .booking-hub-view .booking-controls {
-    grid-template-columns: minmax(120px, 0.65fr) minmax(160px, 1.15fr) minmax(
-        340px,
-        1.45fr
-      ) auto;
+    grid-template-columns:
+      minmax(120px, 0.65fr) minmax(160px, 1.15fr) minmax(340px, 1.45fr)
+      auto;
     align-items: end;
   }
 
@@ -7496,8 +7822,12 @@
     background: transparent;
   }
 
-  .booking-hub-view .booking-table-wrap:has(.cust-table) .booking-table-scroller,
-  .booking-hub-view .booking-table-wrap:has(.call-table) .booking-table-scroller {
+  .booking-hub-view
+    .booking-table-wrap:has(.cust-table)
+    .booking-table-scroller,
+  .booking-hub-view
+    .booking-table-wrap:has(.call-table)
+    .booking-table-scroller {
     overflow: visible;
     touch-action: auto;
   }
@@ -7860,8 +8190,12 @@
     background: transparent;
   }
 
-  .booking-hub-view .booking-table-wrap:has(.cust-table) .booking-table-scroller,
-  .booking-hub-view .booking-table-wrap:has(.call-table) .booking-table-scroller {
+  .booking-hub-view
+    .booking-table-wrap:has(.cust-table)
+    .booking-table-scroller,
+  .booking-hub-view
+    .booking-table-wrap:has(.call-table)
+    .booking-table-scroller {
     overflow: visible;
     touch-action: auto;
   }
@@ -8447,7 +8781,11 @@
   color: var(--nexora-text);
 }
 
-.booking-hub-view .panel-sms-campaigns .marketing-panel-head h2 .marketing-icon {
+.booking-hub-view
+  .panel-sms-campaigns
+  .marketing-panel-head
+  h2
+  .marketing-icon {
   color: var(--nexora-brand);
 }
 
@@ -8518,8 +8856,14 @@
 }
 
 .booking-hub-view .panel-sms-campaigns .sms-credit-buy-button:hover {
-  background: var(--sms-buy-cta-bg-hover, linear-gradient(135deg, #fbbf24, #f97316));
-  box-shadow: var(--sms-buy-cta-shadow-hover, 0 12px 26px rgba(234, 88, 12, 0.32));
+  background: var(
+    --sms-buy-cta-bg-hover,
+    linear-gradient(135deg, #fbbf24, #f97316)
+  );
+  box-shadow: var(
+    --sms-buy-cta-shadow-hover,
+    0 12px 26px rgba(234, 88, 12, 0.32)
+  );
 }
 
 .booking-hub-view .panel-sms-campaigns .sms-credit-buy-button:focus-visible {
@@ -8711,13 +9055,20 @@
   box-shadow: var(--nexora-card-shadow);
 }
 
-.booking-hub-view .panel-sms-campaigns .sms-campaign-history .marketing-section-heading {
+.booking-hub-view
+  .panel-sms-campaigns
+  .sms-campaign-history
+  .marketing-section-heading {
   margin: 0;
   border-bottom: 1px solid var(--nexora-rule);
   padding: 16px 18px 4px;
 }
 
-.booking-hub-view .panel-sms-campaigns .sms-campaign-history .marketing-section-heading h3 {
+.booking-hub-view
+  .panel-sms-campaigns
+  .sms-campaign-history
+  .marketing-section-heading
+  h3 {
   margin: 0 0 12px;
 }
 
@@ -8751,7 +9102,12 @@
   vertical-align: middle;
 }
 
-.booking-hub-view .panel-sms-campaigns .sms-campaign-table tbody tr:last-child td {
+.booking-hub-view
+  .panel-sms-campaigns
+  .sms-campaign-table
+  tbody
+  tr:last-child
+  td {
   border-bottom: 0;
 }
 
@@ -8759,7 +9115,10 @@
   background: #fbfdff;
 }
 
-.booking-hub-view .panel-sms-campaigns .sms-campaign-history .booking-pagination {
+.booking-hub-view
+  .panel-sms-campaigns
+  .sms-campaign-history
+  .booking-pagination {
   padding: 14px 16px !important;
   margin-top: 0;
 }
@@ -8863,53 +9222,77 @@
   color: #a83232;
 }
 
-.booking-hub-view .panel-sms-campaigns .sms-campaign-action[data-sms-campaign-action="view"] {
+.booking-hub-view
+  .panel-sms-campaigns
+  .sms-campaign-action[data-sms-campaign-action="view"] {
   border-color: rgba(43, 89, 255, 0.28);
   background: rgba(43, 89, 255, 0.08);
   color: var(--nexora-electric);
 }
 
-.booking-hub-view .panel-sms-campaigns .sms-campaign-action[data-sms-campaign-action="edit"],
-.booking-hub-view .panel-sms-campaigns .sms-campaign-action[data-sms-campaign-action="pause"],
-.booking-hub-view .panel-sms-campaigns .sms-campaign-action[data-sms-campaign-action="resume"] {
+.booking-hub-view
+  .panel-sms-campaigns
+  .sms-campaign-action[data-sms-campaign-action="edit"],
+.booking-hub-view
+  .panel-sms-campaigns
+  .sms-campaign-action[data-sms-campaign-action="pause"],
+.booking-hub-view
+  .panel-sms-campaigns
+  .sms-campaign-action[data-sms-campaign-action="resume"] {
   border-color: rgba(142, 77, 248, 0.28);
   background: rgba(142, 77, 248, 0.08);
   color: var(--nexora-violet);
 }
 
-.booking-hub-view .panel-sms-campaigns .sms-campaign-action[data-sms-campaign-action="cancel"] {
+.booking-hub-view
+  .panel-sms-campaigns
+  .sms-campaign-action[data-sms-campaign-action="cancel"] {
   border-color: rgba(217, 119, 6, 0.28);
   background: #fffaf0;
   color: #d97706;
 }
 
-.booking-hub-view .panel-sms-campaigns .sms-campaign-action[data-sms-campaign-action="delete"] {
+.booking-hub-view
+  .panel-sms-campaigns
+  .sms-campaign-action[data-sms-campaign-action="delete"] {
   border-color: rgba(194, 65, 65, 0.3);
   background: #fff8f8;
   color: #c24141;
 }
 
-.booking-hub-view .panel-sms-campaigns .sms-campaign-action[data-sms-campaign-action="view"]:hover {
+.booking-hub-view
+  .panel-sms-campaigns
+  .sms-campaign-action[data-sms-campaign-action="view"]:hover {
   border-color: rgba(43, 89, 255, 0.48);
   background: rgba(43, 89, 255, 0.14);
   color: #2048c9;
 }
 
-.booking-hub-view .panel-sms-campaigns .sms-campaign-action[data-sms-campaign-action="edit"]:hover,
-.booking-hub-view .panel-sms-campaigns .sms-campaign-action[data-sms-campaign-action="pause"]:hover,
-.booking-hub-view .panel-sms-campaigns .sms-campaign-action[data-sms-campaign-action="resume"]:hover {
+.booking-hub-view
+  .panel-sms-campaigns
+  .sms-campaign-action[data-sms-campaign-action="edit"]:hover,
+.booking-hub-view
+  .panel-sms-campaigns
+  .sms-campaign-action[data-sms-campaign-action="pause"]:hover,
+.booking-hub-view
+  .panel-sms-campaigns
+  .sms-campaign-action[data-sms-campaign-action="resume"]:hover {
   border-color: rgba(142, 77, 248, 0.48);
   background: rgba(142, 77, 248, 0.14);
   color: #7134d4;
 }
 
-.booking-hub-view .panel-sms-campaigns .sms-campaign-action[data-sms-campaign-action="cancel"]:hover {
+.booking-hub-view
+  .panel-sms-campaigns
+  .sms-campaign-action[data-sms-campaign-action="cancel"]:hover {
   border-color: rgba(217, 119, 6, 0.48);
   background: #fff3d6;
   color: #b45f00;
 }
 
-.booking-hub-view .panel-sms-campaigns .sms-campaign-action[data-sms-campaign-action="delete"]:hover {
+.booking-hub-view
+  .panel-sms-campaigns
+  .sms-campaign-action[data-sms-campaign-action="delete"]:hover {
   border-color: rgba(194, 65, 65, 0.5);
   background: #fff0f0;
   color: #a83232;
@@ -8962,7 +9345,10 @@
   }
 
   .booking-hub-view .panel-sms-campaigns .sms-credit-buy-button,
-  .booking-hub-view .panel-sms-campaigns .marketing-panel-actions .booking-primary-button {
+  .booking-hub-view
+    .panel-sms-campaigns
+    .marketing-panel-actions
+    .booking-primary-button {
     font-size: 0.875rem;
     min-height: 44px;
   }
@@ -9028,7 +9414,10 @@
 
   .booking-hub-view .panel-sms-campaigns .sms-credit-pill,
   .booking-hub-view .panel-sms-campaigns .sms-credit-buy-button,
-  .booking-hub-view .panel-sms-campaigns .marketing-panel-actions .booking-primary-button {
+  .booking-hub-view
+    .panel-sms-campaigns
+    .marketing-panel-actions
+    .booking-primary-button {
     width: 100%;
   }
 
@@ -9384,6 +9773,22 @@
   border-color: var(--nx-brand);
 }
 
+#nx-campaign-root .form-input.has-error,
+#nx-campaign-root .form-select.has-error,
+#nx-campaign-root .form-textarea.has-error,
+#nx-campaign-root .sms-textarea.has-error {
+  border-color: #ef4444;
+}
+
+#nx-campaign-root .field-error {
+  display: block;
+  margin-top: 6px;
+  color: #dc2626;
+  font-size: 12px;
+  font-weight: 600;
+  line-height: 1.35;
+}
+
 #nx-campaign-root .modal-footer {
   position: sticky;
   bottom: 0;
@@ -9449,7 +9854,10 @@
   box-shadow:
     0 1px 0 rgba(255, 255, 255, 0.28) inset,
     var(--sms-buy-cta-shadow);
-  transition: transform 0.15s ease, box-shadow 0.15s ease, filter 0.15s ease;
+  transition:
+    transform 0.15s ease,
+    box-shadow 0.15s ease,
+    filter 0.15s ease;
 }
 
 #nx-campaign-root .cost-preview-buy-link .marketing-icon {
@@ -9521,7 +9929,10 @@
   cursor: pointer;
   font-family: inherit;
   box-shadow: 0 10px 22px rgba(70, 72, 216, 0.2);
-  transition: transform 0.15s, background 0.2s, opacity 0.2s;
+  transition:
+    transform 0.15s,
+    background 0.2s,
+    opacity 0.2s;
 }
 
 #nx-campaign-root .btn-primary:hover {
@@ -9714,7 +10125,9 @@
   cursor: pointer;
 }
 
-#nx-campaign-root .schedule-datetime-shell[lang^="vi"] .schedule-datetime-input {
+#nx-campaign-root
+  .schedule-datetime-shell[lang^="vi"]
+  .schedule-datetime-input {
   -webkit-locale: "vi-VN-u-hc-h12";
 }
 
@@ -9725,12 +10138,14 @@
   opacity: 1;
 }
 
-#nx-campaign-root .schedule-datetime-shell:has(.schedule-datetime-input:disabled) {
+#nx-campaign-root
+  .schedule-datetime-shell:has(.schedule-datetime-input:disabled) {
   background: #f1f5f9;
   border-color: var(--nexora-border);
 }
 
-#nx-campaign-root .schedule-datetime-shell:has(.schedule-datetime-input:disabled)
+#nx-campaign-root
+  .schedule-datetime-shell:has(.schedule-datetime-input:disabled)
   .schedule-datetime-display {
   color: #94a3b8;
 }
@@ -9743,7 +10158,8 @@
 
 #nx-campaign-root .schedule-datetime-input::-webkit-date-and-time-value,
 #nx-campaign-root .schedule-datetime-input::-webkit-datetime-edit,
-#nx-campaign-root .schedule-datetime-input::-webkit-datetime-edit-fields-wrapper,
+#nx-campaign-root
+  .schedule-datetime-input::-webkit-datetime-edit-fields-wrapper,
 #nx-campaign-root .schedule-datetime-input::-webkit-datetime-edit-text,
 #nx-campaign-root .schedule-datetime-input::-webkit-datetime-edit-month-field,
 #nx-campaign-root .schedule-datetime-input::-webkit-datetime-edit-day-field,
@@ -9771,16 +10187,19 @@
 }
 
 /* Custom schedule date picker — past days are disabled (native mobile calendars ignore min). */
-:is(#nx-campaign-root, .booking-hub-view .booking-create-modal) .time-input-row {
+:is(#nx-campaign-root, .booking-hub-view .booking-create-modal)
+  .time-input-row {
   overflow: visible;
 }
 
-:is(#nx-campaign-root, .booking-hub-view .booking-create-modal) .schedule-date-picker {
+:is(#nx-campaign-root, .booking-hub-view .booking-create-modal)
+  .schedule-date-picker {
   overflow: visible;
   z-index: 4;
 }
 
-:is(#nx-campaign-root, .booking-hub-view .booking-create-modal) .schedule-datetime-trigger {
+:is(#nx-campaign-root, .booking-hub-view .booking-create-modal)
+  .schedule-datetime-trigger {
   display: flex;
   align-items: center;
   width: 100%;
@@ -9794,28 +10213,33 @@
   text-align: left;
 }
 
-:is(#nx-campaign-root, .booking-hub-view .booking-create-modal) .schedule-datetime-trigger:disabled {
+:is(#nx-campaign-root, .booking-hub-view .booking-create-modal)
+  .schedule-datetime-trigger:disabled {
   cursor: not-allowed;
 }
 
-:is(#nx-campaign-root, .booking-hub-view .booking-create-modal) .schedule-date-picker:has(.schedule-datetime-trigger:disabled) {
+:is(#nx-campaign-root, .booking-hub-view .booking-create-modal)
+  .schedule-date-picker:has(.schedule-datetime-trigger:disabled) {
   background: #f1f5f9;
   border-color: var(--nexora-border);
 }
 
-:is(#nx-campaign-root, .booking-hub-view .booking-create-modal) .schedule-date-picker:has(.schedule-datetime-trigger:disabled)
+:is(#nx-campaign-root, .booking-hub-view .booking-create-modal)
+  .schedule-date-picker:has(.schedule-datetime-trigger:disabled)
   .schedule-datetime-display {
   color: #94a3b8;
 }
 
-:is(#nx-campaign-root, .booking-hub-view .booking-create-modal) .schedule-datetime-display.is-static {
+:is(#nx-campaign-root, .booking-hub-view .booking-create-modal)
+  .schedule-datetime-display.is-static {
   position: static;
   inset: auto;
   width: 100%;
   pointer-events: none;
 }
 
-:is(#nx-campaign-root, .booking-hub-view .booking-create-modal) .schedule-calendar-popover {
+:is(#nx-campaign-root, .booking-hub-view .booking-create-modal)
+  .schedule-calendar-popover {
   position: absolute;
   top: auto;
   bottom: calc(100% + 6px);
@@ -9830,13 +10254,15 @@
   box-shadow: 0 12px 28px rgba(15, 23, 42, 0.14);
 }
 
-:is(#nx-campaign-root, .booking-hub-view .booking-create-modal) .schedule-calendar-popover.is-fixed {
+:is(#nx-campaign-root, .booking-hub-view .booking-create-modal)
+  .schedule-calendar-popover.is-fixed {
   position: fixed;
   bottom: auto;
   z-index: 200;
 }
 
-:is(#nx-campaign-root, .booking-hub-view .booking-create-modal) .schedule-calendar-nav {
+:is(#nx-campaign-root, .booking-hub-view .booking-create-modal)
+  .schedule-calendar-nav {
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -9844,7 +10270,8 @@
   margin-bottom: 10px;
 }
 
-:is(#nx-campaign-root, .booking-hub-view .booking-create-modal) .schedule-calendar-month {
+:is(#nx-campaign-root, .booking-hub-view .booking-create-modal)
+  .schedule-calendar-month {
   flex: 1;
   color: var(--nexora-text);
   font-size: 13px;
@@ -9853,7 +10280,8 @@
   text-transform: capitalize;
 }
 
-:is(#nx-campaign-root, .booking-hub-view .booking-create-modal) .schedule-calendar-nav-btn {
+:is(#nx-campaign-root, .booking-hub-view .booking-create-modal)
+  .schedule-calendar-nav-btn {
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -9867,28 +10295,36 @@
   cursor: pointer;
 }
 
-:is(#nx-campaign-root, .booking-hub-view .booking-create-modal) .schedule-calendar-nav-btn:disabled {
+:is(#nx-campaign-root, .booking-hub-view .booking-create-modal)
+  .schedule-calendar-nav-btn:disabled {
   opacity: 0.4;
   cursor: not-allowed;
 }
 
-:is(#nx-campaign-root, .booking-hub-view .booking-create-modal) .schedule-calendar-nav-btn .marketing-icon {
+:is(#nx-campaign-root, .booking-hub-view .booking-create-modal)
+  .schedule-calendar-nav-btn
+  .marketing-icon {
   width: 16px;
   height: 16px;
 }
 
-:is(#nx-campaign-root, .booking-hub-view .booking-create-modal) .schedule-calendar-weekdays,
-:is(#nx-campaign-root, .booking-hub-view .booking-create-modal) .schedule-calendar-grid {
+:is(#nx-campaign-root, .booking-hub-view .booking-create-modal)
+  .schedule-calendar-weekdays,
+:is(#nx-campaign-root, .booking-hub-view .booking-create-modal)
+  .schedule-calendar-grid {
   display: grid;
   grid-template-columns: repeat(7, minmax(0, 1fr));
   gap: 4px;
 }
 
-:is(#nx-campaign-root, .booking-hub-view .booking-create-modal) .schedule-calendar-weekdays {
+:is(#nx-campaign-root, .booking-hub-view .booking-create-modal)
+  .schedule-calendar-weekdays {
   margin-bottom: 4px;
 }
 
-:is(#nx-campaign-root, .booking-hub-view .booking-create-modal) .schedule-calendar-weekdays span {
+:is(#nx-campaign-root, .booking-hub-view .booking-create-modal)
+  .schedule-calendar-weekdays
+  span {
   color: var(--nexora-subtle);
   font-size: 11px;
   font-weight: 600;
@@ -9896,7 +10332,8 @@
   text-align: center;
 }
 
-:is(#nx-campaign-root, .booking-hub-view .booking-create-modal) .schedule-calendar-day {
+:is(#nx-campaign-root, .booking-hub-view .booking-create-modal)
+  .schedule-calendar-day {
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -9913,21 +10350,25 @@
   cursor: pointer;
 }
 
-:is(#nx-campaign-root, .booking-hub-view .booking-create-modal) .schedule-calendar-day.is-spacer {
+:is(#nx-campaign-root, .booking-hub-view .booking-create-modal)
+  .schedule-calendar-day.is-spacer {
   visibility: hidden;
   pointer-events: none;
 }
 
-:is(#nx-campaign-root, .booking-hub-view .booking-create-modal) .schedule-calendar-day:not(.is-disabled):hover {
+:is(#nx-campaign-root, .booking-hub-view .booking-create-modal)
+  .schedule-calendar-day:not(.is-disabled):hover {
   background: rgba(15, 23, 42, 0.06);
 }
 
-:is(#nx-campaign-root, .booking-hub-view .booking-create-modal) .schedule-calendar-day.is-selected {
+:is(#nx-campaign-root, .booking-hub-view .booking-create-modal)
+  .schedule-calendar-day.is-selected {
   background: var(--nx-brand);
   color: #fff;
 }
 
-:is(#nx-campaign-root, .booking-hub-view .booking-create-modal) .schedule-calendar-day.is-disabled {
+:is(#nx-campaign-root, .booking-hub-view .booking-create-modal)
+  .schedule-calendar-day.is-disabled {
   color: #cbd5e1;
   cursor: not-allowed;
 }
@@ -10105,7 +10546,10 @@
   color: var(--nexora-text);
   text-align: left;
   cursor: pointer;
-  transition: border-color 0.18s ease, box-shadow 0.18s ease, transform 0.18s ease;
+  transition:
+    border-color 0.18s ease,
+    box-shadow 0.18s ease,
+    transform 0.18s ease;
 }
 
 #nx-campaign-root .sms-credit-package:hover {
@@ -10182,7 +10626,11 @@
   font-size: 12px;
   font-weight: 900;
   opacity: 0.75;
-  transition: background 0.18s ease, border-color 0.18s ease, color 0.18s ease, transform 0.18s ease;
+  transition:
+    background 0.18s ease,
+    border-color 0.18s ease,
+    color 0.18s ease,
+    transform 0.18s ease;
 }
 
 #nx-campaign-root .sms-credit-package.is-selected .sms-credit-package-check {
@@ -10368,13 +10816,11 @@
     grid-template-columns: repeat(2, 1fr);
   }
 
-  #nx-campaign-root .modal-title,
-  #nx-campaign-root .sms-credit-modal-title {
+  #nx-campaign-root .modal-title {
     font-size: 1.0625rem;
   }
 
-  #nx-campaign-root .field-label,
-  #nx-campaign-root .sms-credit-section-label {
+  #nx-campaign-root .field-label {
     font-size: 0.75rem;
   }
 
@@ -10462,34 +10908,68 @@
     font-size: 1.0625rem;
   }
 
+  #nx-campaign-root .sms-credit-modal-title {
+    font-size: 0.9375rem; /* 15px — dialog title, not page hero */
+  }
+
   #nx-campaign-root .sms-credit-modal-sub {
-    font-size: 0.8125rem;
+    font-size: 0.75rem; /* 12px */
+    line-height: 1.35;
+  }
+
+  #nx-campaign-root .sms-credit-section-label {
+    font-size: 0.6875rem; /* 11px section chrome */
+    letter-spacing: 0.06em;
+  }
+
+  #nx-campaign-root .sms-credit-package {
+    padding: 11px 12px;
+  }
+
+  #nx-campaign-root .sms-credit-package-badge {
+    font-size: 0.625rem; /* 10px */
+    padding: 2px 5px;
   }
 
   #nx-campaign-root .sms-credit-package-name,
   #nx-campaign-root .sms-credit-package-note {
-    font-size: 0.75rem;
+    font-size: 0.6875rem; /* 11px */
   }
 
+  /* Credit count: emphasize without dominating the sheet */
   #nx-campaign-root .sms-credit-package-amount {
-    font-size: 1.375rem;
+    font-size: 1.125rem; /* 18px */
   }
 
   #nx-campaign-root .sms-credit-package-price {
-    font-size: 0.9375rem;
+    font-size: 0.8125rem; /* 13px */
   }
 
   #nx-campaign-root .sms-credit-payment-name,
   #nx-campaign-root .sms-credit-invoice-row {
-    font-size: 0.8125rem;
+    font-size: 0.8125rem; /* 13px — match AI Hub field values */
   }
 
   #nx-campaign-root .sms-credit-payment-balance span {
-    font-size: 0.6875rem;
+    font-size: 0.625rem; /* 10px */
   }
 
   #nx-campaign-root .sms-credit-payment-balance strong {
-    font-size: 0.75rem;
+    font-size: 0.75rem; /* 12px */
+  }
+
+  #nx-campaign-root .sms-credit-invoice-total,
+  #nx-campaign-root .sms-credit-invoice-total strong {
+    font-size: 0.875rem; /* 14px */
+  }
+
+  #nx-campaign-root .sms-credit-modal-foot .btn-primary,
+  #nx-campaign-root .sms-credit-modal-foot .btn-outline {
+    font-size: 0.8125rem; /* 13px */
+  }
+
+  #nx-campaign-root .sms-credit-package-grid {
+    grid-template-columns: 1fr;
   }
 
   #nx-campaign-root .sms-bubble {
@@ -10519,10 +10999,6 @@
     padding-left: 10px;
     padding-right: 10px;
     white-space: nowrap;
-  }
-
-  #nx-campaign-root .sms-credit-package-grid {
-    grid-template-columns: 1fr;
   }
 }
 

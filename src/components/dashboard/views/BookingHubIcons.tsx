@@ -702,6 +702,17 @@ export function ShieldCheckIcon({ className }: IconProps) {
   )
 }
 
+/** Lucide `info` (circle). */
+export function InfoCircleIcon({ className }: IconProps) {
+  return (
+    <HubIcon className={className}>
+      <circle cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="2" />
+      <path d="M12 16v-4" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
+      <path d="M12 8h.01" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
+    </HubIcon>
+  )
+}
+
 /** Lucide `check-circle`. */
 export function CheckCircleIcon({ className }: IconProps) {
   return (

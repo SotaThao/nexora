@@ -84,6 +84,8 @@ import {
   countPageItemsByStatus,
   filterPageItemsByStatus,
   formatBookingHubDateDisplay,
+  formatBookingHubTimestampDate,
+  formatBookingHubTimestampTime,
   formatCallDurationSeconds,
   formatVoicePhoneDisplay,
   localDateIsoToUtcRange,
@@ -115,16 +117,15 @@ interface BookingItem {
   services: string[]
   tech: string
   date: string
-  /** Appointment start (requestedStartAtUtc → local). */
+  /** Appointment start (requestedStartAtUtc → local). List UIs show start only. */
   timeMain: string
   timeDate: string
-  /** Appointment end (requestedEndAtUtc → local); empty cell when absent. */
-  endTimeMain: string
   /** Voice call start (callStartedAt → local); `_` when absent. */
   callStartMain: string
   callStartDate: string
   /** Call duration label `mm:ss`; `_` when BE has no call duration. */
   durationLabel: string
+  /** Raw UTC for calendar block placement (start → end / default duration). */
   startAtUtc: string | null
   endAtUtc: string | null
   source: BookingSource
@@ -237,26 +238,10 @@ function formatTimeBlock(
     }
   }
 
-  const dateLocale = language === 'vi' ? 'vi-VN' : 'en-US'
-  const timeZone = Intl.DateTimeFormat().resolvedOptions().timeZone
   const dateIso = toLocalDateIso(start)
   const todayIso = toLocalDateIso(new Date())
-  // Keep en-US + 12h intentionally — matches booking hub hours elsewhere.
-  const timeFormatter = new Intl.DateTimeFormat('en-US', {
-    hour: 'numeric',
-    minute: '2-digit',
-    hour12: true,
-    timeZone,
-  })
-  const dateFormatter = new Intl.DateTimeFormat(dateLocale, {
-    month: 'short',
-    day: 'numeric',
-    year: 'numeric',
-    timeZone,
-  })
-
-  const startTime = timeFormatter.format(start)
-  const dateText = dateFormatter.format(start)
+  const startTime = formatBookingHubTimestampTime(startAt, language)
+  const dateText = formatBookingHubTimestampDate(startAt, language)
 
   return {
     timeMain:
@@ -287,6 +272,8 @@ function toBookingItem(
     item.preferredTime,
     todayLabel,
     language,
+    // Appointment column shows wall-clock start only (no "Today ·" prefix).
+    { useTodayPrefix: false, emptyMain: EMPTY_CELL, emptyDate: '' },
   )
   const callStart = formatTimeBlock(
     item.callStartedAt,
@@ -298,13 +285,6 @@ function toBookingItem(
   const status = resolveBookingStatus(item, statusOverride)
   const phone = formatVoicePhoneDisplay(item.customerPhone, null)
   const email = item.customerEmail?.trim() || null
-  const endTime = formatTimeBlock(
-    item.requestedEndAtUtc,
-    null,
-    todayLabel,
-    language,
-    { useTodayPrefix: false, emptyMain: EMPTY_CELL, emptyDate: '' },
-  )
   return {
     id: item.id,
     name: item.customerName?.trim() || EMPTY_CELL,
@@ -316,7 +296,6 @@ function toBookingItem(
     date: time.dateIso,
     timeMain: time.timeMain,
     timeDate: time.timeDate,
-    endTimeMain: endTime.timeMain,
     callStartMain: callStart.timeMain,
     callStartDate: callStart.timeDate,
     durationLabel: item.callDurationSeconds != null
@@ -369,16 +348,14 @@ function formatBookingCardAppointmentText(main: string, date: string) {
   return formatBookingCardCallStart(main, date)
 }
 
-/** Table appointment cell: optional end range + date stacked above time. */
-function formatBookingCardAppointment(main: string, date: string, endMain: string) {
-  const start = main === EMPTY_CELL ? EMPTY_CELL : main
-  const range = start !== EMPTY_CELL && endMain !== EMPTY_CELL && endMain !== start
-    ? `${start} – ${endMain}`
-    : start
-  if (date && date !== EMPTY_CELL && range !== EMPTY_CELL && !range.includes(date)) {
-    return { main: range, date }
+/** Table appointment cell: start time + optional date under it (no end-range). */
+function formatBookingTableAppointment(main: string, date: string) {
+  if ((!main || main === EMPTY_CELL) && (!date || date === EMPTY_CELL)) {
+    return { main: EMPTY_CELL, date: '' }
   }
-  return { main: range, date: '' }
+  if (!main || main === EMPTY_CELL) return { main: date, date: '' }
+  if (!date || date === EMPTY_CELL || main.includes(date)) return { main, date: '' }
+  return { main, date }
 }
 
 function BookingAppointmentCard({
@@ -1298,10 +1275,9 @@ export default function BookingTodayPanel() {
                 </thead>
                 <tbody>
                   {appointmentBookings.map((booking) => {
-                    const appointment = formatBookingCardAppointment(
+                    const appointment = formatBookingTableAppointment(
                       booking.timeMain,
                       booking.timeDate,
-                      booking.endTimeMain,
                     )
                     return (
                     <tr

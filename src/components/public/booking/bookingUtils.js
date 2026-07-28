@@ -1,4 +1,5 @@
 import {
+  formatNationalNumber,
   isValidPhoneE164,
   normalizePhoneE164,
   parsePhone,
@@ -12,6 +13,7 @@ import {
 import {
   PUBLIC_BOOKING_EM_DASH,
   PUBLIC_BOOKING_LANG,
+  PUBLIC_BOOKING_ROUTE,
   PUBLIC_BOOKING_STEP,
   PUBLIC_BOOKING_VALIDATION_ERROR,
 } from './constants'
@@ -249,5 +251,30 @@ export function createDefaultBookingState(defaultSlot) {
     selectedTime: defaultSlot.time,
     note: '',
     booking: null,
+  }
+}
+
+/** Normalize `?phone=` into the same dial+national shape the form edits. */
+export function formatBookingPrefillPhone(raw) {
+  const value = String(raw || '').trim()
+  if (!value) return ''
+  const parsed = parsePhone(value)
+  const dialCode = parsed.countryCode || PhoneDialCode.US
+  const national = formatNationalNumber(parsed.nationalNumber, dialCode)
+  if (!String(national || '').replace(/\D/g, '')) return ''
+  return `${dialCode} ${national}`.trim()
+}
+
+/**
+ * Read optional SMS deep-link prefill (`phone`, `name`) from the booking URL.
+ * @param {URLSearchParams | { get: (key: string) => string | null }} searchParams
+ */
+export function readBookingCustomerPrefill(searchParams) {
+  if (!searchParams || typeof searchParams.get !== 'function') {
+    return { phone: '', name: '' }
+  }
+  return {
+    phone: formatBookingPrefillPhone(searchParams.get(PUBLIC_BOOKING_ROUTE.phoneQuery)),
+    name: String(searchParams.get(PUBLIC_BOOKING_ROUTE.nameQuery) || '').trim(),
   }
 }
