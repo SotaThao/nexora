@@ -8,7 +8,12 @@ export const AI_HUB_FIELD_ATTR = 'data-ai-hub-field' as const
 export const AI_HUB_INVALID_FIELD_SELECTOR =
   '.has-error, [aria-invalid="true"], .field-error, .cust-field-error, .settings-field-error, .trial-field.has-error' as const
 
-const BELOW_FOLD_PAD_PX = 24
+const FOLD_PAD_PX = 24
+
+/** Error keys that share another field's `data-ai-hub-field` marker. */
+const AI_HUB_FIELD_ALIASES: Record<string, string> = {
+  serviceHours: 'openingDays',
+}
 
 export function isAiHubMobileViewport(): boolean {
   if (typeof window === 'undefined' || typeof window.matchMedia !== 'function') {
@@ -31,18 +36,35 @@ function findScrollParent(el: Element): Element | null {
   return null
 }
 
-/** True when the field’s top sits at/below the visible clip (viewport ∩ scroll parent). */
-export function isAiHubFieldBelowVisibleFold(el: Element): boolean {
-  const rect = el.getBoundingClientRect()
+function getVisibleClip(el: Element): { top: number; bottom: number } {
   const vv = window.visualViewport
-  let clipBottom = vv ? vv.offsetTop + vv.height : window.innerHeight
+  let top = vv ? vv.offsetTop : 0
+  let bottom = vv ? vv.offsetTop + vv.height : window.innerHeight
 
   const scrollParent = findScrollParent(el)
   if (scrollParent) {
-    clipBottom = Math.min(clipBottom, scrollParent.getBoundingClientRect().bottom)
+    const parentRect = scrollParent.getBoundingClientRect()
+    top = Math.max(top, parentRect.top)
+    bottom = Math.min(bottom, parentRect.bottom)
   }
 
-  return rect.top > clipBottom - BELOW_FOLD_PAD_PX
+  return { top, bottom }
+}
+
+/** @deprecated Prefer `isAiHubFieldOutsideVisibleFold` (covers above + below fold). */
+export function isAiHubFieldBelowVisibleFold(el: Element): boolean {
+  const rect = el.getBoundingClientRect()
+  const { bottom } = getVisibleClip(el)
+  return rect.top > bottom - FOLD_PAD_PX
+}
+
+/** True when the field sits above or below the visible clip (viewport ∩ scroll parent). */
+export function isAiHubFieldOutsideVisibleFold(el: Element): boolean {
+  const rect = el.getBoundingClientRect()
+  const { top, bottom } = getVisibleClip(el)
+  return (
+    rect.bottom < top + FOLD_PAD_PX || rect.top > bottom - FOLD_PAD_PX
+  )
 }
 
 export function resolveAiHubFieldElement(
@@ -50,10 +72,11 @@ export function resolveAiHubFieldElement(
   fieldKey: string,
 ): HTMLElement | null {
   if (!root || !fieldKey) return null
+  const resolvedKey = AI_HUB_FIELD_ALIASES[fieldKey] || fieldKey
   const escaped =
     typeof CSS !== 'undefined' && typeof CSS.escape === 'function'
-      ? CSS.escape(fieldKey)
-      : fieldKey.replace(/"/g, '\\"')
+      ? CSS.escape(resolvedKey)
+      : resolvedKey.replace(/"/g, '\\"')
   return root.querySelector<HTMLElement>(`[${AI_HUB_FIELD_ATTR}="${escaped}"]`)
 }
 
@@ -66,11 +89,27 @@ export function queryAiHubInvalidFields(
   )
 }
 
+function scrollAiHubFieldIntoView(el: HTMLElement): void {
+  const scrollParent = findScrollParent(el)
+  if (scrollParent instanceof HTMLElement) {
+    const parentRect = scrollParent.getBoundingClientRect()
+    const elRect = el.getBoundingClientRect()
+    const nextTop =
+      scrollParent.scrollTop +
+      (elRect.top - parentRect.top) -
+      parentRect.height / 2 +
+      elRect.height / 2
+    scrollParent.scrollTo({ top: Math.max(0, nextTop), behavior: 'smooth' })
+    return
+  }
+  el.scrollIntoView({ behavior: 'smooth', block: 'center' })
+}
+
 type ErrorMap = Record<string, string | undefined>
 
 /**
  * Show in-viewport invalid fields first.
- * Only reveal below-fold errors (for scroll/toast) once viewport requireds are clean.
+ * Only reveal offscreen errors (for scroll/toast) once viewport requireds are clean.
  */
 export function pickAiHubViewportFirstErrors<T extends ErrorMap>(
   allErrors: T,
@@ -94,11 +133,11 @@ export function pickAiHubViewportFirstErrors<T extends ErrorMap>(
   const located = entries.map(([key, message]) => {
     const el = resolveAiHubFieldElement(root, key)
     // Unmarked fields stay "in viewport" so we never hide their errors.
-    const below = el ? isAiHubFieldBelowVisibleFold(el) : false
-    return { key, message, below }
+    const outside = el ? isAiHubFieldOutsideVisibleFold(el) : false
+    return { key, message, outside }
   })
 
-  const inViewport = located.filter((item) => !item.below)
+  const inViewport = located.filter((item) => !item.outside)
   if (inViewport.length > 0) {
     return {
       errorsToShow: Object.fromEntries(
@@ -185,12 +224,12 @@ export function notifyAiHubRequiredFieldsOffscreen(options: NotifyOptions): void
     window.requestAnimationFrame(() => {
       const targets = queryAiHubInvalidFields(root)
       const focusEl =
-        targets.find(isAiHubFieldBelowVisibleFold)
+        targets.find(isAiHubFieldOutsideVisibleFold)
         ?? targets[0]
         ?? null
 
       if (scrollIntoView && focusEl) {
-        focusEl.scrollIntoView({ behavior: 'smooth', block: 'center' })
+        scrollAiHubFieldIntoView(focusEl)
       }
 
       if (toast && message) showToast(message, 'warning')

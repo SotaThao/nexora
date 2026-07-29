@@ -4351,6 +4351,7 @@
   width: min(100%, 680px);
   max-height: 95vh;
   max-height: min(95dvh, 100%);
+  overflow-x: hidden;
   overflow-y: auto;
   border: 1px solid var(--nexora-border);
   border-radius: clamp(12px, 2vw, 16px);
@@ -4358,6 +4359,66 @@
   box-shadow: 0 28px 80px rgba(8, 31, 73, 0.24);
   scrollbar-width: thin;
   scrollbar-color: var(--brand-cyan) transparent;
+}
+
+.booking-hub-view .trial-step {
+  display: block;
+}
+
+.booking-hub-view .trial-scroll {
+  overflow: visible;
+}
+
+.booking-hub-view .trial-actions {
+  margin-top: 4px;
+}
+
+.booking-hub-view .trial-actions .trial-submit {
+  margin-top: 14px;
+}
+
+/* Mobile: sticky submit bar + inner scroll (less viewport space). */
+@media (max-width: 767px) {
+  .booking-hub-view .trial-dialog {
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+  }
+
+  .booking-hub-view .trial-step {
+    display: flex;
+    flex: 1 1 auto;
+    flex-direction: column;
+    min-height: 0;
+  }
+
+  .booking-hub-view .trial-scroll {
+    flex: 1 1 auto;
+    min-height: 0;
+    overflow-x: hidden;
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+    overscroll-behavior: contain;
+  }
+
+  .booking-hub-view .trial-actions {
+    position: sticky;
+    bottom: 0;
+    z-index: 2;
+    margin: 0 calc(-1 * clamp(12px, 1.8vw, 16px))
+      calc(-1 * clamp(12px, 1.8vw, 16px));
+    border-top: 1px solid var(--nexora-rule);
+    background: #fff;
+    padding: 12px clamp(12px, 1.8vw, 16px) 10px;
+  }
+
+  .booking-hub-view .trial-actions .trial-submit {
+    margin-top: 0;
+  }
+
+  .booking-hub-view .trial-contact {
+    flex-shrink: 0;
+  }
 }
 
 .booking-hub-view .trial-close {
@@ -4378,6 +4439,7 @@
 }
 
 .booking-hub-view .trial-head {
+  flex-shrink: 0;
   border-bottom: 1px solid var(--nexora-rule);
   background: linear-gradient(180deg, #fff, #f8fbff);
   padding: clamp(16px, 2.5vw, 22px) clamp(14px, 2.5vw, 22px)
@@ -4438,6 +4500,7 @@
 }
 
 .booking-hub-view .trial-benefits {
+  flex-shrink: 0;
   display: flex;
   flex-wrap: wrap;
   justify-content: flex-start;
@@ -4515,8 +4578,15 @@
   color: var(--nexora-text);
   font-size: clamp(0.75rem, 0.72rem + 0.2vw, 0.8125rem);
   font-weight: 600;
-  line-height: 40px;
   outline: none;
+}
+
+.booking-hub-view .trial-input {
+  line-height: 40px;
+}
+
+.booking-hub-view .trial-select {
+  line-height: 1.35;
 }
 
 .booking-hub-view .trial-select {
@@ -4528,6 +4598,15 @@
   background-size: 12px 8px;
   padding-right: 36px;
   cursor: pointer;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.booking-hub-view .trial-select option {
+  font-size: 13px;
+  font-weight: 600;
+  line-height: 1.35;
 }
 
 .booking-hub-view .trial-input-uppercase {
@@ -4667,6 +4746,119 @@
   height: 42px;
   border-radius: 10px;
   font-size: clamp(0.75rem, 0.72rem + 0.2vw, 0.8125rem);
+}
+
+.booking-hub-view .trial-hours-list {
+  margin-top: 2px;
+}
+
+.booking-hub-view .trial-hours-list .settings-hour-times {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+}
+
+.booking-hub-view .trial-hours-list .booking-create-datetime-shell {
+  min-height: 40px;
+  height: 40px;
+}
+
+.booking-hub-view .trial-hours-list .booking-create-datetime-input {
+  height: 40px;
+  min-height: 40px;
+}
+
+.booking-hub-view .trial-hours-list .booking-create-datetime-display {
+  font-size: 13px;
+  padding: 0 34px 0 10px;
+}
+
+.booking-hub-view .trial-hours-list .settings-hour-input[aria-invalid="true"] {
+  border-color: #ef4444;
+  box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.1);
+}
+
+.booking-hub-view .trial-service-price-list {
+  margin-top: 4px;
+  padding-top: 10px;
+  border-top: 1px solid var(--nexora-rule);
+}
+
+.booking-hub-view .trial-file-picker {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+  width: 100%;
+  box-sizing: border-box;
+  border: 1px solid var(--nexora-border);
+  border-radius: 10px;
+  background: #fff;
+  padding: 8px 10px;
+}
+
+.booking-hub-view .trial-file-picker.has-error {
+  border-color: #ef4444;
+  box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.1);
+}
+
+.booking-hub-view .trial-file-pick-button {
+  flex-shrink: 0;
+  border: 1px solid rgba(70, 72, 216, 0.2);
+  border-radius: 7px;
+  background: color-mix(in srgb, var(--nexora-brand) 8%, white);
+  padding: 8px 12px;
+  color: var(--nexora-brand);
+  font-size: 11px;
+  font-weight: 800;
+  line-height: 1.2;
+  white-space: nowrap;
+  cursor: pointer;
+}
+
+.booking-hub-view .trial-file-pick-button:hover {
+  background: color-mix(in srgb, var(--nexora-brand) 14%, white);
+}
+
+.booking-hub-view .trial-file-picker-meta {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-width: 0;
+  color: var(--nexora-muted);
+  font-size: 10px;
+  font-weight: 500;
+  line-height: 1.4;
+}
+
+.booking-hub-view .trial-file-picker-meta > span {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.booking-hub-view .trial-file-input {
+  min-height: 46px;
+  height: auto;
+  line-height: 1.35;
+  padding: 9px 12px;
+  font-size: 12px;
+}
+
+.booking-hub-view .trial-file-input::file-selector-button {
+  margin-right: 10px;
+  border: 1px solid rgba(70, 72, 216, 0.2);
+  border-radius: 7px;
+  background: color-mix(in srgb, var(--nexora-brand) 8%, white);
+  padding: 6px 10px;
+  color: var(--nexora-brand);
+  font-size: 11px;
+  font-weight: 800;
+  cursor: pointer;
 }
 
 .booking-hub-view .trial-time-separator {
@@ -4822,11 +5014,47 @@
   }
 
   .booking-hub-view .trial-input,
-  .booking-hub-view .trial-select,
   .booking-hub-view .trial-service-hours input {
     height: 40px;
     min-height: 40px;
     line-height: 38px;
+  }
+
+  .booking-hub-view .trial-select {
+    height: auto;
+    min-height: 40px;
+    padding-top: 10px;
+    padding-bottom: 10px;
+    font-size: 12px;
+    line-height: 1.35;
+    white-space: normal;
+  }
+
+  .booking-hub-view .trial-select option {
+    font-size: 12px;
+  }
+
+  .booking-hub-view .trial-file-picker {
+    grid-template-columns: 1fr;
+    gap: 8px;
+    padding: 10px;
+  }
+
+  .booking-hub-view .trial-file-pick-button {
+    width: 100%;
+    min-height: 40px;
+    font-size: 12px;
+  }
+
+  .booking-hub-view .trial-file-picker-meta {
+    font-size: 11px;
+  }
+
+  .booking-hub-view .trial-file-picker-meta > span {
+    white-space: normal;
+    overflow: visible;
+    text-overflow: unset;
+    word-break: break-word;
   }
 }
 

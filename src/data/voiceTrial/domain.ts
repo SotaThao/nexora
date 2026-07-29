@@ -42,11 +42,10 @@ export enum VoiceTrialFormField {
   Salon = 'salon',
   Owner = 'owner',
   Phone = 'phone',
+  OwnerPhone = 'ownerPhone',
   Email = 'email',
   City = 'city',
   Referral = 'referral',
-  OpenTime = 'openTime',
-  CloseTime = 'closeTime',
   PainPoint = 'painPoint',
   CustomServiceInput = 'customServiceInput',
 }
@@ -108,21 +107,39 @@ export function mapDayKeysToApiOpeningDays(
 
 /** Converts UI labels like `9:30 AM` or `09:30` to API format `09:30`. */
 export function formatTrialTimeLabelToApi(timeLabel: string): string {
-  const trimmed = timeLabel.trim()
-  const match24 = trimmed.match(/^(\d{1,2}):(\d{2})$/)
-  if (match24) {
-    return `${String(Number.parseInt(match24[1], 10)).padStart(2, '0')}:${match24[2]}`
+  const minutes = trialClockMinutes(timeLabel)
+  if (minutes === null) return timeLabel.trim()
+  const hours = Math.floor(minutes / 60)
+  const mins = minutes % 60
+  return `${String(hours).padStart(2, '0')}:${String(mins).padStart(2, '0')}`
+}
+
+/** Display label for trial / settings-style hours: `7:00 AM`. */
+export function formatTrialApiTimeToLabel(hhmm: string): string {
+  const minutes = trialClockMinutes(hhmm)
+  if (minutes === null) return hhmm.trim()
+  let hours = Math.floor(minutes / 60)
+  const mins = minutes % 60
+  const period = hours >= 12 ? 'PM' : 'AM'
+  hours = hours % 12
+  if (hours === 0) hours = 12
+  return `${hours}:${String(mins).padStart(2, '0')} ${period}`
+}
+
+/** Minutes from midnight for `7:00 AM` / `09:30` labels; null if invalid. */
+export function trialClockMinutes(value: string): number | null {
+  const text = (value || '').trim().toUpperCase()
+  const twelveHour = text.match(/^(\d{1,2})(?::([0-5]\d))?\s*(AM|PM)$/)
+  if (twelveHour) {
+    let hour = Number(twelveHour[1])
+    const minute = Number(twelveHour[2] || 0)
+    if (hour < 1 || hour > 12) return null
+    if (twelveHour[3] === 'AM' && hour === 12) hour = 0
+    if (twelveHour[3] === 'PM' && hour !== 12) hour += 12
+    return hour * 60 + minute
   }
 
-  const match = trimmed.match(/^(\d{1,2}):(\d{2})\s*(AM|PM)$/i)
-  if (!match) return trimmed
-
-  let hours = Number.parseInt(match[1], 10)
-  const minutes = match[2]
-  const period = match[3].toUpperCase()
-
-  if (period === 'PM' && hours !== 12) hours += 12
-  if (period === 'AM' && hours === 12) hours = 0
-
-  return `${String(hours).padStart(2, '0')}:${minutes}`
+  const twentyFourHour = text.match(/^([01]?\d|2[0-3]):([0-5]\d)$/)
+  if (!twentyFourHour) return null
+  return Number(twentyFourHour[1]) * 60 + Number(twentyFourHour[2])
 }
