@@ -2574,7 +2574,7 @@
           "ariaPlansPanel": "Service plans panel",
           "ariaSettingsPanel": "Salon settings panel",
           "tabs": {
-            "booking": "AI Hub",
+            "booking": "Booking Book",
             "customers": "Customers",
             "callLog": "Call Log",
             "smsCampaigns": "SMS Campaigns",
