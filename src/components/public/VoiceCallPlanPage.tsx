@@ -4,6 +4,7 @@ import { useSearchParams } from 'react-router-dom'
 import { useTranslation } from '../../contexts/LanguageContext'
 import {
   isVoiceCallTrialPackage,
+  parseVoiceCallPlanLang,
   VOICE_CALL_PLAN_COUNTDOWN_TICK_MS,
   VOICE_CALL_PLAN_SUCCESS_REDIRECT_MS,
   VOICE_CALL_PLAN_SUCCESS_REDIRECT_SECONDS,
@@ -21,18 +22,29 @@ enum VoiceCallPlanView {
 
 /**
  * Anonymous landing: `/voice-call/plan?package=trial`
- * White page + trial dialog. Close → home. Submit success → message + countdown, then home.
+ * Optional `?lang=vi|en` (default English). White page + trial dialog.
+ * Close → home. Submit success → message + countdown, then home.
  */
 export default function VoiceCallPlanPage() {
-  const { t } = useTranslation()
+  const { t, setLanguage } = useTranslation()
   const [searchParams] = useSearchParams()
   const packageValue = searchParams.get(VoiceCallPlanRoute.packageQuery)
+  const planLang = parseVoiceCallPlanLang(
+    searchParams.get(VoiceCallPlanRoute.langQuery),
+  )
   const isTrialPackage = isVoiceCallTrialPackage(packageValue)
   const [view, setView] = useState(VoiceCallPlanView.Form)
   const [secondsLeft, setSecondsLeft] = useState(VOICE_CALL_PLAN_SUCCESS_REDIRECT_SECONDS)
 
   const successMessage = t(`${VOICE_CALL_TRIAL_COPY_KEY}.submitSuccess`)
   const homeUrl = getNexoraHomeUrl()
+
+  useEffect(() => {
+    setLanguage(planLang)
+    if (typeof document !== 'undefined') {
+      document.documentElement.lang = planLang
+    }
+  }, [planLang, setLanguage])
 
   useEffect(() => {
     if (!isTrialPackage) {
