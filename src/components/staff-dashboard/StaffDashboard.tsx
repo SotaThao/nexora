@@ -23,6 +23,7 @@ export default function StaffDashboard({ staffId = null, onLogout }) {
   const { data: paymentMethods, isSuccess: isPaymentMethodsLoaded } = useStaffPaymentMethods()
   const [showPayoutBanner, setShowPayoutBanner] = useState(false)
   const [showOnboardingBanner, setShowOnboardingBanner] = useState(false)
+  const [onboardingBannerMode, setOnboardingBannerMode] = useState<'profile' | 'payment'>('profile')
   
   const activeScreen = location.pathname.split('/')[2] || 'home'
   useRefetchStaffMenuQueries(activeScreen)
@@ -32,6 +33,11 @@ export default function StaffDashboard({ staffId = null, onLogout }) {
     activeScreen === 'payments' || activeScreen === 'earnings' || isVerificationSection
       ? 'w-full max-w-6xl xl:max-w-7xl'
       : 'max-w-3xl'
+  const isKYCVerified =
+    userProfile?.isKYCVerified === true || userProfile?.isKycVerified === true
+  const hasConfiguredPayout = Boolean(
+    paymentMethods?.some((method) => method.isActive && method.isConfigured && method.accountInfo),
+  )
   
   const handleNavigate = (screen, params?: Record<string, string>) => {
     const path = screen === 'home' ? '/staff' : `/staff/${screen}`
@@ -41,11 +47,14 @@ export default function StaffDashboard({ staffId = null, onLogout }) {
   }
 
   useEffect(() => {
-    if (!isPaymentMethodsLoaded || !paymentMethods) return
+    // KYC-verified users use the "Finish setting up your profile" banner for
+    // payment-method setup instead of the separate payout banner.
+    if (isKYCVerified) {
+      setShowPayoutBanner(false)
+      return
+    }
 
-    const hasConfiguredPayout = paymentMethods.some(
-      (m) => m.isActive && m.isConfigured && m.accountInfo
-    )
+    if (!isPaymentMethodsLoaded || !paymentMethods) return
 
     const bannerDismissed = sessionStorage.getItem('hasDismissedPayoutBanner')
 
@@ -54,26 +63,55 @@ export default function StaffDashboard({ staffId = null, onLogout }) {
     } else {
       setShowPayoutBanner(false)
     }
-  }, [isPaymentMethodsLoaded, paymentMethods])
+  }, [isKYCVerified, isPaymentMethodsLoaded, paymentMethods, hasConfiguredPayout])
 
   useEffect(() => {
     if (!isUserProfileLoaded || !session) {
       setShowOnboardingBanner(false)
+      setOnboardingBannerMode('profile')
+      return
+    }
+
+    const bannerDismissed = sessionStorage.getItem('hasDismissedOnboardingBanner')
+    if (bannerDismissed) {
+      setShowOnboardingBanner(false)
+      setOnboardingBannerMode('profile')
+      return
+    }
+
+    // Already KYC-verified: only remind to finish payment method setup.
+    if (isKYCVerified) {
+      if (!isPaymentMethodsLoaded) return
+      setOnboardingBannerMode('payment')
+      setShowOnboardingBanner(!hasConfiguredPayout)
       return
     }
 
     const isMissingBasicInfo = !userProfile?.firstName?.trim()
     const hasNoStaffProfile = !session.hasStaffProfile
-    const bannerDismissed = sessionStorage.getItem('hasDismissedOnboardingBanner')
-
-    setShowOnboardingBanner(
-      (isMissingBasicInfo || hasNoStaffProfile) && !bannerDismissed,
-    )
-  }, [isUserProfileLoaded, session, userProfile?.firstName])
+    setOnboardingBannerMode('profile')
+    setShowOnboardingBanner(isMissingBasicInfo || hasNoStaffProfile)
+  }, [
+    isUserProfileLoaded,
+    isPaymentMethodsLoaded,
+    session,
+    userProfile?.firstName,
+    isKYCVerified,
+    hasConfiguredPayout,
+  ])
 
   const dismissOnboardingBanner = () => {
     sessionStorage.setItem('hasDismissedOnboardingBanner', 'true')
     setShowOnboardingBanner(false)
+  }
+
+  const handleOnboardingBannerAction = () => {
+    if (onboardingBannerMode === 'payment') {
+      handleNavigate('pay')
+      return
+    }
+    navigate('/onboarding')
+    setIsMobileMenuOpen(false)
   }
 
   return (
@@ -98,7 +136,11 @@ export default function StaffDashboard({ staffId = null, onLogout }) {
             {activeScreen === 'home' && showOnboardingBanner && (
               <div className="mb-6 relative overflow-hidden rounded-2xl bg-gradient-to-br from-nexoraBrand/10 via-white to-nexoraBrandSoft border border-nexoraBrand/20 p-6 md:p-8 shadow-sm animate-fadeIn">
                 <div className="absolute -right-10 -top-10 opacity-10">
-                  <UserRound className="h-48 w-48 text-nexoraBrand" />
+                  {onboardingBannerMode === 'payment' ? (
+                    <Wallet className="h-48 w-48 text-nexoraBrand" />
+                  ) : (
+                    <UserRound className="h-48 w-48 text-nexoraBrand" />
+                  )}
                 </div>
 
                 <button
@@ -124,20 +166,31 @@ export default function StaffDashboard({ staffId = null, onLogout }) {
                   </h2>
 
                   <p className="text-sm text-nexoraMuted mb-6 leading-relaxed">
-                    {t('staff_dashboard.onboarding_banner_description')}
+                    {t(
+                      onboardingBannerMode === 'payment'
+                        ? 'staff_dashboard.onboarding_banner_description_payment'
+                        : 'staff_dashboard.onboarding_banner_description',
+                    )}
                   </p>
 
                   <div className="flex flex-wrap items-center gap-4">
                     <button
                       type="button"
-                      onClick={() => {
-                        navigate('/onboarding')
-                        setIsMobileMenuOpen(false)
-                      }}
+                      onClick={handleOnboardingBannerAction}
                       className="group relative inline-flex items-center justify-center gap-2 overflow-hidden rounded-xl bg-nexoraBrand px-6 py-3 text-xs font-bold uppercase tracking-wider text-white shadow-lg transition-all hover:scale-[1.02] hover:shadow-nexoraBrand/25 active:scale-95"
                     >
-                      <UserRound className="h-4 w-4" />
-                      <span>{t('staff_dashboard.complete_onboarding_now')}</span>
+                      {onboardingBannerMode === 'payment' ? (
+                        <Settings className="h-4 w-4 transition-transform group-hover:rotate-90" />
+                      ) : (
+                        <UserRound className="h-4 w-4" />
+                      )}
+                      <span>
+                        {t(
+                          onboardingBannerMode === 'payment'
+                            ? 'staff_dashboard.setup_payout_now'
+                            : 'staff_dashboard.complete_onboarding_now',
+                        )}
+                      </span>
                       <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-1" />
                     </button>
                   </div>

@@ -160,6 +160,8 @@ export function useCreateStaffProfile() {
       // refetching. Remove a cached 404 (`null`) so the new profile is loaded
       // when the staff dashboard is next opened.
       queryClient.removeQueries({ queryKey: qk.staffProfile() })
+      queryClient.invalidateQueries({ queryKey: qk.staffPaymentMethods() })
+      queryClient.invalidateQueries({ queryKey: qk.userProfile() })
     },
   })
 }
