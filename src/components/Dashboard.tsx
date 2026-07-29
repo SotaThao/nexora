@@ -83,6 +83,7 @@ export default function Dashboard({
     isTaxIqMobileExpanded, setIsTaxIqMobileExpanded,
     isBookingHubMobileExpanded, setIsBookingHubMobileExpanded,
     isPosMobileExpanded, setIsPosMobileExpanded,
+    isGiftCardCenterMobileExpanded, setIsGiftCardCenterMobileExpanded,
     settingsTab, setSettingsTab,
     isProfileExpanded, setIsProfileExpanded,
     handleNavigateMenu, navigateMenu
@@ -97,6 +98,14 @@ export default function Dashboard({
       navigate(location.pathname)
       return
     }
+
+    const paths = location.pathname.split('/').filter(Boolean)
+    // If we are in a sub-route (e.g. /dashboard/staff/123), go back to the parent menu
+    if (paths.length > 2 && paths[0] === 'dashboard' && paths[1] === activeMenu) {
+      navigate(`/dashboard/${activeMenu}`)
+      return
+    }
+
     handleNavigateMenu('overview')
   }, [activeMenu, location.pathname, location.search, navigate, handleNavigateMenu])
   const handleStartSetup = useCallback(() => {
@@ -876,6 +885,8 @@ export default function Dashboard({
         setIsBookingHubMobileExpanded={setIsBookingHubMobileExpanded}
         isPosMobileExpanded={isPosMobileExpanded}
         setIsPosMobileExpanded={setIsPosMobileExpanded}
+        isGiftCardCenterMobileExpanded={isGiftCardCenterMobileExpanded}
+        setIsGiftCardCenterMobileExpanded={setIsGiftCardCenterMobileExpanded}
         hasKyb={hasKyb}
         userRole={userRole}
         onLogout={onLogout}

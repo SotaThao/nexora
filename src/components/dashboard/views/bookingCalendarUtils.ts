@@ -4,7 +4,8 @@ import {
   BOOKING_CALENDAR_UNASSIGNED_TECH,
   type BookingCalendarColor,
 } from './bookingTodayConstants'
-import { BOOKING_HUB_EMPTY_CELL } from './bookingHubFormatters'
+import { BOOKING_HUB_EMPTY_CELL, isBookingHubVietnamese, pad2 } from './bookingHubFormatters'
+import { formatDatePart } from '../../../utils/localDate'
 import { parseApiDateTime } from '../utils'
 
 export type BookingCalendarSource = {
@@ -41,10 +42,6 @@ export type BookingCalendarEvent = {
   toolTip: string
 }
 
-function pad2(value: number) {
-  return String(value).padStart(2, '0')
-}
-
 function escapeHtml(value: string) {
   return value
     .replace(/&/g, '&amp;')
@@ -76,25 +73,43 @@ function resolveTechLabel(techId: string, unassignedLabel: string) {
 export function buildBookingCalendarColumns(
   bookings: ReadonlyArray<Pick<BookingCalendarSource, 'tech'>>,
   unassignedLabel: string,
+  /** Stable Active-staff roster (API order). When set, column positions stay fixed across refetches. */
+  staffNames: ReadonlyArray<string> = [],
 ): BookingCalendarColumn[] {
-  const seen = new Set<string>()
   const columns: BookingCalendarColumn[] = []
+  const seen = new Set<string>()
 
+  const pushTech = (rawName: string) => {
+    const id = resolveTechId(rawName)
+    if (!id || id === BOOKING_CALENDAR_UNASSIGNED_TECH || seen.has(id)) return
+    seen.add(id)
+    columns.push({ id, name: id, toolTip: id })
+  }
+
+  // 1) Fixed roster first — same order as Active staff list.
+  for (const name of staffNames) {
+    pushTech(name)
+  }
+
+  // 2) Any tech present on bookings but missing from roster (alpha-stable, append only).
+  const orphans: string[] = []
   for (const booking of bookings) {
     const id = resolveTechId(booking.tech)
-    if (seen.has(id)) continue
+    if (!id || id === BOOKING_CALENDAR_UNASSIGNED_TECH || seen.has(id)) continue
     seen.add(id)
-    const name = resolveTechLabel(id, unassignedLabel)
-    columns.push({ id, name, toolTip: name })
+    orphans.push(id)
+  }
+  orphans.sort((a, b) => a.localeCompare(b, undefined, { sensitivity: 'base' }))
+  for (const id of orphans) {
+    columns.push({ id, name: id, toolTip: id })
   }
 
-  if (columns.length === 0) {
-    columns.push({
-      id: BOOKING_CALENDAR_UNASSIGNED_TECH,
-      name: unassignedLabel,
-      toolTip: unassignedLabel,
-    })
-  }
+  // 3) Unassigned always last — creating from this column stays put.
+  columns.push({
+    id: BOOKING_CALENDAR_UNASSIGNED_TECH,
+    name: resolveTechLabel(BOOKING_CALENDAR_UNASSIGNED_TECH, unassignedLabel),
+    toolTip: resolveTechLabel(BOOKING_CALENDAR_UNASSIGNED_TECH, unassignedLabel),
+  })
 
   return columns
 }
@@ -106,6 +121,7 @@ function colorForResource(resourceId: string, columns: BookingCalendarColumn[]):
 
 function resolveEventWindow(booking: BookingCalendarSource, calendarDate: string) {
   // BE omits trailing Z on UTC fields — always parse as UTC then convert to local for DayPilot.
+  // Calendar intentionally spans start→end (duration). List modes (table/card) show start only.
   const start = booking.startAtUtc ? parseApiDateTime(booking.startAtUtc) : null
   if (start) {
     const endRaw = booking.endAtUtc ? parseApiDateTime(booking.endAtUtc) : null
@@ -178,9 +194,12 @@ export function shiftLocalDateIso(dateIso: string, dayDelta: number) {
 }
 
 export function formatBookingCalendarNavLabel(dateIso: string, locale: string) {
-  return new Date(`${dateIso}T12:00:00`).toLocaleDateString(locale, {
+  const [year, month, day] = String(dateIso || '').split('-').map(Number)
+  if (!year || !month || !day) return dateIso || ''
+  const date = new Date(year, month - 1, day)
+  const isVietnamese = isBookingHubVietnamese(locale)
+  const weekday = new Intl.DateTimeFormat(isVietnamese ? 'vi-VN' : 'en-US', {
     weekday: 'short',
-    month: 'short',
-    day: 'numeric',
-  })
+  }).format(date)
+  return `${weekday}, ${formatDatePart(date, isVietnamese, { withYear: false })}`
 }

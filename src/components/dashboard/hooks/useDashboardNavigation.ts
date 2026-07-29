@@ -1,6 +1,5 @@
 import { useState, useEffect } from 'react'
 import { useLocation, useNavigate } from 'react-router-dom'
-import { useOpenProductManagement } from '../../../data/hooks/useOpenProductManagement'
 import {
   buildDashboardMenuPath,
   DASHBOARD_MENU,
@@ -15,7 +14,6 @@ type NavigateMenuOptions = {
 export function useDashboardNavigation() {
   const location = useLocation()
   const navigate = useNavigate()
-  const { openProductManagement } = useOpenProductManagement()
 
   const activeMenu = location.pathname.split('/')[2] || DASHBOARD_MENU_ID.overview
   const isPaymentsPayoutsActive =
@@ -34,6 +32,7 @@ export function useDashboardNavigation() {
   // POS has no DASHBOARD_MENU.* constant — 'pos' is used as a raw id throughout
   // (matching DashboardSidebar's desktop equivalent, isPosExpanded).
   const [isPosMobileExpanded, setIsPosMobileExpanded] = useState(activeMenu === 'pos')
+  const [isGiftCardCenterMobileExpanded, setIsGiftCardCenterMobileExpanded] = useState(false)
   const [settingsTab, setSettingsTab] = useState('profile')
   const [isProfileExpanded, setIsProfileExpanded] = useState(false)
 
@@ -64,6 +63,7 @@ export function useDashboardNavigation() {
       setIsTaxIqMobileExpanded(false)
       setIsBookingHubMobileExpanded(false)
       setIsPosMobileExpanded(false)
+      setIsGiftCardCenterMobileExpanded(false)
     }
     if (activeMenu === DASHBOARD_MENU.BookingHub) {
       setIsBookingHubMobileExpanded(true)
@@ -110,6 +110,8 @@ export function useDashboardNavigation() {
     setIsBookingHubMobileExpanded,
     isPosMobileExpanded,
     setIsPosMobileExpanded,
+    isGiftCardCenterMobileExpanded,
+    setIsGiftCardCenterMobileExpanded,
     settingsTab,
     setSettingsTab,
     isProfileExpanded,

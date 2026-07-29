@@ -33,7 +33,7 @@ import {
   PosGeneralSettingsRoute, PosRolesRoute, PosCategoriesRoute, PosServicesRoute, PosProductsRoute,
   PosStaffProfileRoute, PosFrontDeskRoute
 } from "../components/dashboard/routes";
-import { DASHBOARD_MENU_ID, buildDashboardReportsPath, DASHBOARD_REPORTS_TAB } from "../components/dashboard/constants";
+import { DASHBOARD_MENU_ID, BOOKING_HUB_PATH, BOOKING_HUB_LEGACY_PATH_SEGMENT, buildDashboardReportsPath, DASHBOARD_REPORTS_TAB } from "../components/dashboard/constants";
 import ErrorBoundary from "../components/ui/ErrorBoundary";
 import { isDemoToolsEnabled } from "./demoTools";
 import lazyWithRetry from "./lazyWithRetry";
@@ -43,6 +43,7 @@ import RequireOnboarded from "./RequireOnboarded";
 import RequireStaffReady from "./RequireStaffReady";
 import RootRedirect from "./RootRedirect";
 import { VoiceCallPlanRoute } from "../data/voiceTrial/domain";
+import { PUBLIC_BOOKING_ROUTE } from "../components/public/booking/constants";
 
 const SetupWizard = lazyWithRetry(() => import("../components/SetupWizard"));
 const DashboardOwnerShell = lazyWithRetry(
@@ -127,14 +128,17 @@ const TermsOfServicePage = lazyWithRetry(
 const HelpQrPage = lazyWithRetry(
   () => import("../components/public/HelpQrPage"),
 );
-const VoiceCallPlanPage = lazyWithRetry(
-  () => import("../components/public/VoiceCallPlanPage"),
-);
-const PublicBookingPage = lazyWithRetry(
+const PublicPosBookingPage = lazyWithRetry(
   () => import("../components/public/PublicBookingPage"),
 );
 const ManageBookingPage = lazyWithRetry(
   () => import("../components/public/ManageBookingPage"),
+);
+const PublicBookingPage = lazyWithRetry(
+  () => import("../components/public/booking/PublicBookingPage"),
+);
+const VoiceCallPlanPage = lazyWithRetry(
+  () => import("../components/public/VoiceCallPlanPage"),
 );
 
 // Bridges the URL (path token / legacy ?flow=staff-invite biz) to the wizard's
@@ -182,6 +186,12 @@ function PaymentsRedirect() {
   return <Navigate to={target} replace />;
 }
 
+function BookingHubLegacyRedirect() {
+  const [searchParams] = useSearchParams();
+  const qs = searchParams.toString();
+  return <Navigate to={`${BOOKING_HUB_PATH}${qs ? `?${qs}` : ''}`} replace />;
+}
+
 function StaffFallbackRoute() {
   return <Navigate to="/staff" replace />;
 }
@@ -223,11 +233,12 @@ export default function AppRouter() {
           <Route path="/merchant/payments/:paymentId" element={<PaymentsRedirect />} />
           <Route path="/qr/:code" element={<QrRedirectPage />} />
           <Route path="/help/qr/:code" element={<HelpQrPage />} />
-          <Route path="/booking/:businessSlug" element={<PublicBookingPage />} />
+          <Route path={PUBLIC_BOOKING_ROUTE.path} element={<PublicBookingPage />} />
+          <Route path="/booking/:businessSlug" element={<PublicPosBookingPage />} />
           <Route path="/booking/manage/:manageToken" element={<ManageBookingPage />} />
-	  <Route path="/cpa/access" element={<CpaViewerPage />} />
-	  <Route path="/share/access" element={<ShareLinkViewerPage />} />
-	  <Route path="/w4-invite" element={<StaffW4InvitePage />} />
+          <Route path="/cpa/access" element={<CpaViewerPage />} />
+          <Route path="/share/access" element={<ShareLinkViewerPage />} />
+          <Route path="/w4-invite" element={<StaffW4InvitePage />} />
           <Route path="/privacy-policy" element={<PrivacyPolicyPage />} />
           <Route path="/terms-of-service" element={<TermsOfServicePage />} />
           <Route
@@ -279,6 +290,7 @@ export default function AppRouter() {
             <Route path={DASHBOARD_MENU_ID.reviews} element={<ReviewsRoute />} />
             <Route path={DASHBOARD_MENU_ID.reports} element={<ReportsRoute />} />
             <Route path={DASHBOARD_MENU_ID.bookingHub} element={<BookingHubRoute />} />
+            <Route path={BOOKING_HUB_LEGACY_PATH_SEGMENT} element={<BookingHubLegacyRedirect />} />
             <Route path={DASHBOARD_MENU_ID.taxiq} element={<TaxIqOverviewRoute />} />
             <Route path={`${DASHBOARD_MENU_ID.taxiq}/deductions`} element={<TaxIqDeductionsRoute />} />
             <Route path={`${DASHBOARD_MENU_ID.taxiq}/income`} element={<TaxIqIncomeRoute />} />
@@ -340,14 +352,14 @@ export default function AppRouter() {
             <Route path="pay" element={<StaffPay />} />
             <Route path="payments" element={<StaffTransactions />} />
             <Route path="payments/:paymentId" element={<StaffTransactions />} />
-	    <Route path="taxiq" element={<StaffTaxIqOverviewRoute />} />
-          <Route path="taxiq/deductions" element={<StaffTaxIqDeductionsRoute />} />
-          <Route path="taxiq/receipts" element={<StaffTaxIqReceiptsRoute />} />
-          <Route path="taxiq/logs" element={<StaffTaxIqLogsRoute />} />
-          <Route path="taxiq/income" element={<StaffTaxIqIncomeRoute />} />
-          <Route path="taxiq/payouts" element={<StaffTaxIqPayoutsRoute />} />
-          <Route path="taxiq/export" element={<StaffTaxIqExportRoute />} />
-          <Route path="taxiq/cpa-access" element={<StaffTaxIqCpaAccessRoute />} />
+            <Route path="taxiq" element={<StaffTaxIqOverviewRoute />} />
+            <Route path="taxiq/deductions" element={<StaffTaxIqDeductionsRoute />} />
+            <Route path="taxiq/receipts" element={<StaffTaxIqReceiptsRoute />} />
+            <Route path="taxiq/logs" element={<StaffTaxIqLogsRoute />} />
+            <Route path="taxiq/income" element={<StaffTaxIqIncomeRoute />} />
+            <Route path="taxiq/payouts" element={<StaffTaxIqPayoutsRoute />} />
+            <Route path="taxiq/export" element={<StaffTaxIqExportRoute />} />
+            <Route path="taxiq/cpa-access" element={<StaffTaxIqCpaAccessRoute />} />
             <Route path="earnings" element={<StaffMyEarnings />} />
             <Route path="salons" element={<StaffMySalons />} />
             <Route path="salons/:businessId/front-desk" element={<StaffFrontDesk />} />

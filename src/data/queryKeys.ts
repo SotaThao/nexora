@@ -397,16 +397,31 @@ export const qk = {
 
   // Merchant Nexora Voice
   merchantVoiceBookings: (filters = EMPTY) => ['merchantVoice', 'bookings', filters],
+  merchantVoiceBookingsCollected: (filters = EMPTY) => ['merchantVoice', 'bookings', 'collected', filters],
   merchantVoiceBookingStatistics: () => ['merchantVoice', 'bookings', 'statistics'],
   merchantVoiceStaff: (filters = EMPTY) => ['merchantVoice', 'staff', filters],
   merchantVoiceStaffById: (id?: string | null) => ['merchantVoice', 'staff', 'detail', id ?? ''],
   merchantVoiceBusinessStaff: (filters = EMPTY) => ['merchantVoice', 'staff', 'businessStaff', filters],
   merchantVoiceConfig: () => ['merchantVoice', 'config'],
   merchantVoiceTenantStatus: () => ['merchantVoice', 'tenant', 'status'],
+  merchantVoiceMyTenant: () => ['merchantVoice', 'tenant', 'my'],
   merchantVoiceCalls: (filters = EMPTY) => ['merchantVoice', 'calls', filters],
   merchantVoiceCallStatistics: () => ['merchantVoice', 'calls', 'statistics'],
   merchantVoiceCustomers: (filters = EMPTY) => ['merchantVoice', 'customers', filters],
   merchantVoiceCustomerSummary: () => ['merchantVoice', 'customers', 'summary'],
+  merchantVoiceSmsCampaignDashboard: () => ['merchantVoice', 'smsCampaigns', 'dashboard'],
+  merchantVoiceSmsCampaignAudienceSummary: () => ['merchantVoice', 'smsCampaigns', 'audience-summary'],
+  merchantVoiceSmsCampaigns: (filters = EMPTY) => ['merchantVoice', 'smsCampaigns', 'list', filters],
+  merchantVoiceSmsCampaignById: (id?: string | null) => ['merchantVoice', 'smsCampaigns', 'detail', id ?? ''],
+  merchantVoiceSmsCampaignRecipients: (id?: string | null, filters = EMPTY) => [
+    'merchantVoice',
+    'smsCampaigns',
+    id ?? '',
+    'recipients',
+    filters,
+  ],
+  merchantVoiceSmsCreditSummary: () => ['merchantVoice', 'smsCredits', 'summary'],
+  merchantVoiceSmsCreditHistory: (filters = EMPTY) => ['merchantVoice', 'smsCredits', 'history', filters],
 
   // Nexora Voice trial (merchant)
   voiceTrialRequestMe: () => ['nexora-voice', 'trial-request', 'me'],
@@ -421,6 +436,12 @@ export const qk = {
   // POS Booking — customer self-service Manage Booking page (Ticket 8)
   manageBooking: (manageToken?: string) => ['manageBooking', manageToken ?? ''],
   publicPaymentStatus: (paymentId: string) => ['publicPayment', 'status', paymentId],
+  publicVoiceBookingPage: (businessKey?: string | null) => [
+    'public',
+    'nexora-voice',
+    'booking-page',
+    businessKey ?? '',
+  ],
 }
 
 /** Maps localStorage domain keys → TanStack Query key arrays (storage event bridge). */

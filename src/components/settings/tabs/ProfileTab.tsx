@@ -1075,6 +1075,12 @@ export default function ProfileTab({
 
               {/* Form Content */}
               <form onSubmit={savePayoutAccount} noValidate className="space-y-4">
+                <PayoutAccountNameField
+                  walletKey={editingMethod}
+                  value={editAccountName}
+                  onChange={setEditAccountName}
+                />
+
                 {/* Account Identifier Input */}
                 <div>
                   <label className="block text-[10px] font-extrabold uppercase text-slate-500 tracking-wider mb-2">
@@ -1099,12 +1105,6 @@ export default function ProfileTab({
                   />
                   {modalError && <p id="settings-payout-error" role="alert" className="mt-1 text-[10px] font-bold text-rose-500">{modalError}</p>}
                 </div>
-
-                <PayoutAccountNameField
-                  walletKey={editingMethod}
-                  value={editAccountName}
-                  onChange={setEditAccountName}
-                />
 
                 {/* QR Code Optional Upload */}
                 <div>

@@ -367,6 +367,16 @@ export function CalendarEventIcon({ className }: IconProps) {
   )
 }
 
+/** Bootstrap Icons `bi-calendar-plus`. */
+export function CalendarPlusIcon({ className }: IconProps) {
+  return (
+    <FillIcon className={className}>
+      <path d="M8 7a.5.5 0 0 1 .5.5V9H10a.5.5 0 0 1 0 1H8.5v1.5a.5.5 0 0 1-1 0V10H6a.5.5 0 0 1 0-1h1.5V7.5A.5.5 0 0 1 8 7" />
+      <path d="M3.5 0a.5.5 0 0 1 .5.5V1h8V.5a.5.5 0 0 1 1 0V1h1a2 2 0 0 1 2 2v11a2 2 0 0 1-2 2H2a2 2 0 0 1-2-2V3a2 2 0 0 1 2-2h1V.5a.5.5 0 0 1 .5-.5M1 4v10a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1V4z" />
+    </FillIcon>
+  )
+}
+
 export function GraphUpIcon({ className }: IconProps) {
   return (
     <HubIcon className={className}>
@@ -452,5 +462,263 @@ export function SpinnerIcon({ className }: IconProps) {
       <circle cx="12" cy="12" r="9" stroke="currentColor" strokeWidth="2.5" opacity="0.25" />
       <path d="M12 3a9 9 0 0 1 9 9" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" />
     </svg>
+  )
+}
+
+/** Lucide `message-square` — SMS Campaigns tab. */
+export function MessageSquareTabIcon({ className }: IconProps) {
+  return (
+    <HubIcon className={className}>
+      <path
+        d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"
+        stroke="currentColor"
+        strokeWidth="2"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+    </HubIcon>
+  )
+}
+
+/** Lucide `message-square` (marketing panel). */
+export function MessageSquareIcon({ className }: IconProps) {
+  return <MessageSquareTabIcon className={className} />
+}
+
+/** Lucide `sparkles`. */
+export function SparklesIcon({ className }: IconProps) {
+  return (
+    <HubIcon className={className}>
+      <path
+        d="M9.937 15.5A2 2 0 0 0 8.5 14.063l-6.135-1.582a.5.5 0 0 1 0-.962L8.5 9.936A2 2 0 0 0 9.937 8.5l1.582-6.135a.5.5 0 0 1 .963 0L14.063 8.5A2 2 0 0 0 15.5 9.937l6.135 1.581a.5.5 0 0 1 0 .964L15.5 14.063a2 2 0 0 0-1.437 1.437l-1.582 6.135a.5.5 0 0 1-.963 0z"
+        stroke="currentColor"
+        strokeWidth="2"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+      <path d="M20 3v4" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
+      <path d="M22 5h-4" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
+      <path d="M4 17v2" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
+      <path d="M5 18H3" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
+    </HubIcon>
+  )
+}
+
+/** Lucide `wallet-cards`. */
+export function WalletCardsIcon({ className }: IconProps) {
+  return (
+    <HubIcon className={className}>
+      <rect
+        width="18"
+        height="18"
+        x="3"
+        y="3"
+        rx="2"
+        stroke="currentColor"
+        strokeWidth="2"
+      />
+      <path d="M3 9a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2" stroke="currentColor" strokeWidth="2" />
+      <path
+        d="M3 11h3c.8 0 1.6.3 2.1.9l1.1.9c1.6 1.6 4.1 1.6 5.7 0l1.1-.9c.5-.5 1.3-.9 2.1-.9H21"
+        stroke="currentColor"
+        strokeWidth="2"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+    </HubIcon>
+  )
+}
+
+/** Lucide `trending-up`. */
+export function TrendingUpIcon({ className }: IconProps) {
+  return (
+    <HubIcon className={className}>
+      <path d="M16 7h6v6" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+      <path d="m22 7-8.5 8.5-5-5L2 17" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+    </HubIcon>
+  )
+}
+
+/** Lucide `user-plus`. */
+export function UserPlusIcon({ className }: IconProps) {
+  return (
+    <HubIcon className={className}>
+      <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
+      <circle cx="9" cy="7" r="4" stroke="currentColor" strokeWidth="2" />
+      <path d="M19 8v6" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
+      <path d="M22 11h-6" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
+    </HubIcon>
+  )
+}
+
+/** Lucide `refresh-cw`. */
+export function RefreshCwIcon({ className }: IconProps) {
+  return (
+    <HubIcon className={className}>
+      <path d="M3 12a9 9 0 0 1 9-9 9.75 9.75 0 0 1 6.74 2.74L21 8" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+      <path d="M21 3v5h-5" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+      <path d="M21 12a9 9 0 0 1-9 9 9.75 9.75 0 0 1-6.74-2.74L3 16" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+      <path d="M8 16H3v5" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+    </HubIcon>
+  )
+}
+
+/** Lucide `star`. */
+export function StarIcon({ className }: IconProps) {
+  return (
+    <HubIcon className={className}>
+      <path
+        d="M11.525 2.295a.53.53 0 0 1 .95 0l2.31 4.679a2.123 2.123 0 0 0 1.595 1.16l5.166.756a.53.53 0 0 1 .294.904l-3.736 3.638a2.123 2.123 0 0 0-.611 1.878l.882 5.14a.53.53 0 0 1-.771.56l-4.618-2.428a2.122 2.122 0 0 0-1.973 0L6.396 21.01a.53.53 0 0 1-.77-.56l.881-5.139a2.122 2.122 0 0 0-.611-1.879L2.16 9.795a.53.53 0 0 1 .294-.906l5.165-.755a2.122 2.122 0 0 0 1.597-1.16z"
+        stroke="currentColor"
+        strokeWidth="2"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+    </HubIcon>
+  )
+}
+
+/** Lucide `gift`. */
+export function GiftIcon({ className }: IconProps) {
+  return (
+    <HubIcon className={className}>
+      <rect x="3" y="8" width="18" height="4" rx="1" stroke="currentColor" strokeWidth="2" />
+      <path d="M12 8v13" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
+      <path d="M19 12v7a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2v-7" stroke="currentColor" strokeWidth="2" strokeLinejoin="round" />
+      <path
+        d="M7.5 8a2.5 2.5 0 0 1 0-5C11 3 12 8 12 8s1-5 4.5-5a2.5 2.5 0 0 1 0 5"
+        stroke="currentColor"
+        strokeWidth="2"
+        strokeLinejoin="round"
+      />
+    </HubIcon>
+  )
+}
+
+/** Lucide `megaphone`. */
+export function MegaphoneIcon({ className }: IconProps) {
+  return (
+    <HubIcon className={className}>
+      <path d="m3 11 18-5v12L3 14v-3z" stroke="currentColor" strokeWidth="2" strokeLinejoin="round" />
+      <path d="M11.6 16.8a3 3 0 1 1-5.8-1.6" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
+    </HubIcon>
+  )
+}
+
+/** Lucide `x`. */
+export function CloseIcon({ className }: IconProps) {
+  return (
+    <HubIcon className={className}>
+      <path d="M18 6 6 18" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
+      <path d="m6 6 12 12" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
+    </HubIcon>
+  )
+}
+
+/** Lucide `zap`. */
+export function ZapIcon({ className }: IconProps) {
+  return (
+    <HubIcon className={className}>
+      <path d="M4 14a1 1 0 0 1-.78-1.63l9.9-10.2a.5.5 0 0 1 .86.46l-1.92 6.02A1 1 0 0 0 13 10h7a1 1 0 0 1 .78 1.63l-9.9 10.2a.5.5 0 0 1-.86-.46l1.92-6.02A1 1 0 0 0 11 14z" stroke="currentColor" strokeWidth="2" strokeLinejoin="round" />
+    </HubIcon>
+  )
+}
+
+/** Lucide `link`. */
+export function LinkIcon({ className }: IconProps) {
+  return (
+    <HubIcon className={className}>
+      <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
+      <path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
+    </HubIcon>
+  )
+}
+
+/** Lucide `store`. */
+export function StoreIcon({ className }: IconProps) {
+  return (
+    <HubIcon className={className}>
+      <path d="m2 7 4.41-4.41A2 2 0 0 1 7.83 2h8.34a2 2 0 0 1 1.42.59L22 7" stroke="currentColor" strokeWidth="2" strokeLinejoin="round" />
+      <path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8" stroke="currentColor" strokeWidth="2" strokeLinejoin="round" />
+      <path d="M10 22V12h4v10" stroke="currentColor" strokeWidth="2" strokeLinejoin="round" />
+      <path d="M15 7v0" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
+      <path d="M2 7h20" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
+    </HubIcon>
+  )
+}
+
+/** Lucide `user`. */
+export function UserIcon({ className }: IconProps) {
+  return (
+    <HubIcon className={className}>
+      <path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
+      <circle cx="12" cy="7" r="4" stroke="currentColor" strokeWidth="2" />
+    </HubIcon>
+  )
+}
+
+/** Lucide `phone`. */
+export function PhoneIcon({ className }: IconProps) {
+  return (
+    <HubIcon className={className}>
+      <path
+        d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"
+        stroke="currentColor"
+        strokeWidth="2"
+        strokeLinejoin="round"
+      />
+    </HubIcon>
+  )
+}
+
+/** Lucide `smartphone`. */
+export function SmartphoneIcon({ className }: IconProps) {
+  return (
+    <HubIcon className={className}>
+      <rect width="14" height="20" x="5" y="2" rx="2" stroke="currentColor" strokeWidth="2" />
+      <path d="M12 18h.01" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
+    </HubIcon>
+  )
+}
+
+/** Lucide `alert-triangle`. */
+export function AlertTriangleIcon({ className }: IconProps) {
+  return (
+    <HubIcon className={className}>
+      <path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3" stroke="currentColor" strokeWidth="2" strokeLinejoin="round" />
+      <path d="M12 9v4" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
+      <path d="M12 17h.01" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
+    </HubIcon>
+  )
+}
+
+/** Lucide `shield-check`. */
+export function ShieldCheckIcon({ className }: IconProps) {
+  return (
+    <HubIcon className={className}>
+      <path d="M20 13c0 5-3.5 7.5-7.66 8.95a1 1 0 0 1-.67-.01C7.5 20.5 4 18 4 13V6a1 1 0 0 1 1-1c2 0 4.5-1.2 6.24-2.72a1.17 1.17 0 0 1 1.52 0C14.51 3.81 17 5 19 5a1 1 0 0 1 1 1z" stroke="currentColor" strokeWidth="2" strokeLinejoin="round" />
+      <path d="m9 12 2 2 4-4" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+    </HubIcon>
+  )
+}
+
+/** Lucide `info` (circle). */
+export function InfoCircleIcon({ className }: IconProps) {
+  return (
+    <HubIcon className={className}>
+      <circle cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="2" />
+      <path d="M12 16v-4" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
+      <path d="M12 8h.01" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
+    </HubIcon>
+  )
+}
+
+/** Lucide `check-circle`. */
+export function CheckCircleIcon({ className }: IconProps) {
+  return (
+    <HubIcon className={className}>
+      <path d="M21.801 10A10 10 0 1 1 17 3.335" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
+      <path d="m9 11 3 3L22 4" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+    </HubIcon>
   )
 }

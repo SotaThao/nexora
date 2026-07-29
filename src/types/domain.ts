@@ -711,6 +711,7 @@ export interface PayoutRecord {
   staffPhotoUrl: string | null
   amount: number
   payoutMethodType: string
+  payoutMethodTypeName?: string | null
   payoutTypes: number
   periodStart: string
   periodEnd: string
@@ -734,6 +735,7 @@ export interface StaffPayoutDetailRecord {
   businessName: string
   businessLogoUrl: string | null
   payoutMethodType: string
+  payoutMethodTypeName?: string | null
   staffPaymentAccountInfo: string | null
   amount: number
   payoutTypes: number

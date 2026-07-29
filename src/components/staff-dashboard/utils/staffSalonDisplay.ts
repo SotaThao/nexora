@@ -4,6 +4,7 @@ import {
   getStaffBusinessLinkStatusPresentation,
   resolveStaffBusinessLinkStatusLabel,
 } from '../../../utils/staffBusinessLinkStatus'
+import { formatDateOnly } from '../../../utils/localDate'
 
 const AVATAR_CLASSES = [
   'bg-gradient-to-br from-[#1e2a5e] to-[#4648D8] text-amber-300',
@@ -39,11 +40,7 @@ export function formatSalonDate(
   isoDate: string | null | undefined,
   currentLanguage: string,
 ) {
-  if (!isoDate) return null
-  const date = new Date(isoDate)
-  if (Number.isNaN(date.getTime())) return null
-  const locale = currentLanguage === 'vi' ? 'vi-VN' : 'en-US'
-  return date.toLocaleDateString(locale, { day: 'numeric', month: 'short', year: 'numeric' })
+  return formatDateOnly(isoDate, currentLanguage) || null
 }
 
 export function formatSalonTimeline(

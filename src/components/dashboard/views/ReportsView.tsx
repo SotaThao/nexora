@@ -4,7 +4,7 @@ import { CreditCard, Coins, CheckCircle, Clock, XCircle, AlertCircle, Eye } from
 import { useTranslation } from '../../../contexts/LanguageContext'
 import {
   formatCurrency,
-  formatTransactionDateTime,
+  DateTimeCell,
   isAwaitingShopConfirmation,
   isReceiptConfirmableTip,
   resolveLocalStaffIds,
@@ -653,7 +653,7 @@ function ReportsView({
                     />
                   </td>
                   <td className="px-4 py-3 text-nexoraMuted">
-                    {formatTransactionDateTime(tx.dateTime, currentLanguage)}
+                    <DateTimeCell value={tx.dateTime} locale={currentLanguage} />
                   </td>
                   <td className="px-4 py-3 font-extrabold text-nexoraText">{formatCurrency(tx.amount)}</td>
                   {!isStaffAudience ? (

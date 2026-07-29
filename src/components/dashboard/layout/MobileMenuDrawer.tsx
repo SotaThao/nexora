@@ -22,7 +22,7 @@ import {
   sidebarSubmenuItemClass,
 } from '../../ui/sidebarMenuStyles'
 import PaymentsPayoutsMenuSection from './PaymentsPayoutsMenuSection'
-import { isPaymentsPayoutsRouteActive, getVisibleBookingHubSubmenu, isBookingHubSubActive, VISIBLE_TOUCHPOINTS_SUBMENU, DASHBOARD_MENU, DASHBOARD_MENU_ID, getDefaultBookingHubTab, getDashboardMenuLocalizedLabel, isDashboardStaffRole } from '../constants'
+import { isPaymentsPayoutsRouteActive, getVisibleBookingHubSubmenu, isBookingHubSubActive, VISIBLE_TOUCHPOINTS_SUBMENU, GIFT_CARD_CENTER_SUBMENU, DASHBOARD_MENU, DASHBOARD_MENU_ID, getDefaultBookingHubTab, getDashboardMenuLocalizedLabel, isDashboardStaffRole } from '../constants'
 import { handleExpandableMenuClick } from '../hooks/expandableMenuNav'
 import { useMerchantVoiceTenantStatus } from '../../../data/hooks/useMerchantVoiceBookings'
 
@@ -49,6 +49,8 @@ export default function MobileMenuDrawer({
   setIsBookingHubMobileExpanded,
   isPosMobileExpanded,
   setIsPosMobileExpanded,
+  isGiftCardCenterMobileExpanded,
+  setIsGiftCardCenterMobileExpanded,
   hasKyb,
   userRole,
   onLogout,
@@ -59,7 +61,7 @@ export default function MobileMenuDrawer({
   const navigate = useNavigate()
   const [searchParams] = useSearchParams()
   const location = useLocation()
-  const { openProductManagement, isOpeningProductManagement } = useOpenProductManagement()
+  const { openProductManagement, isOpeningProductManagement, openingProductManagementDestination } = useOpenProductManagement()
   const activeSubTab = searchParams.get('tab')
   // Tax IQ sub-items are real routes (/dashboard/taxiq/<id>), not a ?tab= param —
   // mirrors DashboardSidebar's desktop equivalent.
@@ -95,13 +97,15 @@ export default function MobileMenuDrawer({
     setIsPaymentsPayoutsMobileExpanded(true)
     setIsTouchpointsMobileExpanded(false)
     setIsBookingHubMobileExpanded(false)
+    setIsGiftCardCenterMobileExpanded(false)
   }
 
   const handleMenuClick = (id: string) => {
     if (id === DASHBOARD_MENU_ID.productManagement) {
-      void openProductManagement().finally(() => {
-        onClose()
-      })
+      setIsGiftCardCenterMobileExpanded((prev) => !prev)
+      setIsTouchpointsMobileExpanded(false)
+      setIsBookingHubMobileExpanded(false)
+      setIsPaymentsPayoutsMobileExpanded(false)
       return
     }
 
@@ -135,7 +139,10 @@ export default function MobileMenuDrawer({
         },
       ],
       onPlainNavigate: (menuId) => navigateMenu(menuId),
-      collapseExtras: () => setIsPaymentsPayoutsMobileExpanded(false),
+      collapseExtras: () => {
+        setIsPaymentsPayoutsMobileExpanded(false)
+        setIsGiftCardCenterMobileExpanded(false)
+      },
     })
   }
 
@@ -242,19 +249,27 @@ export default function MobileMenuDrawer({
                   type="button"
                   onClick={() => handleMenuClick(id)}
                   disabled={id === DASHBOARD_MENU_ID.productManagement && isOpeningProductManagement}
-                  className={sidebarMenuItemBetweenClass(isActive)}
+                  className={sidebarMenuItemBetweenClass(isActive || (id === DASHBOARD_MENU_ID.productManagement && isGiftCardCenterMobileExpanded))}
                 >
                   <div className="flex items-center gap-3 min-w-0">
-                    <MenuIcon item={item} active={isActive} />
+                    <MenuIcon item={item} active={isActive || (id === DASHBOARD_MENU_ID.productManagement && isGiftCardCenterMobileExpanded)} />
                     <span>{localizedLabel}</span>
                   </div>
-                  {id === DASHBOARD_MENU_ID.productManagement && isOpeningProductManagement ? (
-                    <span className="h-4 w-4 shrink-0 animate-spin rounded-full border-2 border-white/30 border-t-white" />
+                  {id === DASHBOARD_MENU_ID.productManagement ? (
+                    <div className="text-white/65 shrink-0">
+                      {isOpeningProductManagement ? (
+                        <span className="block h-4 w-4 animate-spin rounded-full border-2 border-white/30 border-t-white" />
+                      ) : isGiftCardCenterMobileExpanded ? (
+                        <ChevronUp className="h-4 w-4" />
+                      ) : (
+                        <ChevronDown className="h-4 w-4" />
+                      )}
+                    </div>
                   ) : id === DASHBOARD_MENU.Touchpoints ? (
                     <div className="text-white/65 shrink-0">
                       {isTouchpointsMobileExpanded ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
                     </div>
-                  ) : id === DASHBOARD_MENU.TaxIq ? (
+                  )  : id === DASHBOARD_MENU.TaxIq ? (
                     <div className="text-white/65 shrink-0">
                       {isTaxIqMobileExpanded ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
                     </div>
@@ -277,6 +292,33 @@ export default function MobileMenuDrawer({
                     onToggle={handlePaymentsPayoutsToggle}
                     onNavigate={handlePaymentsPayoutsNavigate}
                   />
+                )}
+
+                {id === DASHBOARD_MENU_ID.productManagement && isGiftCardCenterMobileExpanded && (
+                  <div className={SIDEBAR_SUBMENU_WRAP_CLASS}>
+                    {GIFT_CARD_CENTER_SUBMENU.map((sub) => {
+                      const isSubOpening = openingProductManagementDestination === sub.destination
+                      return (
+                        <button
+                          key={sub.id}
+                          type="button"
+                          disabled={isOpeningProductManagement}
+                          onClick={() => {
+                            void openProductManagement(sub.destination).finally(() => {
+                              onClose()
+                            })
+                          }}
+                          className={sidebarSubmenuItemClass(isSubOpening)}
+                        >
+                          <div className={`h-1.5 w-1.5 rounded-full ${isSubOpening ? 'bg-brandCyan shadow-sm' : 'bg-white/30'}`} />
+                          <span className="flex-1 text-left">{t(sub.labelKey)}</span>
+                          {isSubOpening ? (
+                            <span className="h-3.5 w-3.5 shrink-0 animate-spin rounded-full border-2 border-white/30 border-t-white" />
+                          ) : null}
+                        </button>
+                      )
+                    })}
+                  </div>
                 )}
 
                 {id === DASHBOARD_MENU.BookingHub && isBookingHubMobileExpanded && (

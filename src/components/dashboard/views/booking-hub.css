@@ -671,7 +671,8 @@
   color: #087c99;
 }
 
-.booking-hub-view .booking-source-lp {
+.booking-hub-view .booking-source-lp,
+.booking-hub-view .booking-source-web {
   background: #e9e9ff;
   color: var(--nexora-brand);
 }
@@ -738,9 +739,12 @@
 
 .booking-hub-view .tech-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
   gap: 12px;
-  align-items: stretch;
+}
+
+.booking-hub-view .tech-grid + .booking-pagination {
+  margin-top: 16px;
 }
 
 .booking-hub-view .tech-grid-empty {
@@ -789,36 +793,16 @@
 }
 
 .booking-hub-view .tech-card {
+  display: grid;
+  align-content: start;
+  gap: 9px;
   width: 100%;
-  max-width: 100%;
-  height: 100%;
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
+  min-width: 0;
   border: 1px solid var(--nexora-border);
   border-radius: 12px;
   background: #fff;
   padding: 13px;
   box-shadow: var(--nexora-card-shadow);
-  min-width: 0;
-}
-
-.booking-hub-view .tech-card.tech-card-interactive {
-  cursor: pointer;
-  transition:
-    border-color 0.2s,
-    box-shadow 0.2s,
-    transform 0.2s;
-}
-
-.booking-hub-view .tech-card.tech-card-interactive:hover {
-  border-color: color-mix(
-    in srgb,
-    var(--nexora-brand) 35%,
-    var(--nexora-border)
-  );
-  box-shadow: 0 10px 24px rgba(70, 72, 216, 0.12);
-  transform: translateY(-1px);
 }
 
 .booking-hub-view .tech-top {
@@ -826,27 +810,7 @@
   grid-template-columns: 40px minmax(0, 1fr) auto;
   align-items: center;
   gap: 10px;
-  flex: 0 0 auto;
-  min-height: 40px;
   margin-bottom: 0;
-}
-
-.booking-hub-view .tech-top-actions {
-  display: flex;
-  align-items: center;
-  align-self: center;
-  gap: 6px;
-  flex-shrink: 0;
-  height: 30px;
-}
-
-.booking-hub-view .tech-top-actions .tech-view-button {
-  width: 30px;
-  min-width: 30px;
-  height: 30px;
-  min-height: 30px;
-  padding: 0;
-  border-radius: 8px;
 }
 
 .booking-hub-view .tech-avatar {
@@ -903,13 +867,13 @@
 
 .booking-hub-view .tech-services {
   display: flex;
+  max-height: 128px;
+  overflow-y: auto;
   flex-wrap: wrap;
-  align-items: flex-start;
   align-content: flex-start;
   gap: 6px;
-  flex: 1 1 auto;
-  min-height: 24px;
   margin-bottom: 0;
+  padding-right: 3px;
 }
 
 .booking-hub-view .tech-services .badge {
@@ -932,13 +896,16 @@
 
 .booking-hub-view .tech-card-footer {
   display: flex;
+  height: 42px;
+  min-height: 42px;
   align-items: center;
-  justify-content: flex-end;
+  justify-content: space-between;
   gap: 8px;
   margin-top: 2px;
   border-radius: 10px;
   background: var(--nexora-canvas);
   padding: 6px 7px;
+  box-sizing: border-box;
 }
 
 .booking-hub-view .tech-card-actions {
@@ -953,6 +920,11 @@
   padding: 6px 9px;
   border-radius: 8px;
   font-size: 11px;
+}
+
+.booking-hub-view .tech-card-actions .booking-secondary-button svg {
+  width: 14px;
+  height: 14px;
 }
 
 .booking-hub-view .tech-card-actions .booking-secondary-button.icon-only {
@@ -1215,6 +1187,51 @@
   font-weight: 700;
 }
 
+.booking-hub-view .tech-search:has(.tech-search-clear) input {
+  padding-right: 68px;
+}
+
+.booking-hub-view .tech-search input::-webkit-search-cancel-button,
+.booking-hub-view .tech-search input::-webkit-search-decoration {
+  -webkit-appearance: none;
+  appearance: none;
+  display: none;
+}
+
+.booking-hub-view .tech-search-clear {
+  position: absolute;
+  top: 50%;
+  right: 34px;
+  z-index: 3;
+  display: inline-flex;
+  width: 32px;
+  height: 32px;
+  min-width: 32px;
+  min-height: 32px;
+  align-items: center;
+  justify-content: center;
+  border: 0;
+  border-radius: 8px;
+  background: transparent;
+  color: var(--nexora-muted);
+  cursor: pointer;
+  transform: translateY(-50%);
+  touch-action: manipulation;
+}
+
+.booking-hub-view .tech-search-clear:hover,
+.booking-hub-view .tech-search-clear:focus-visible {
+  background: var(--nexora-surface-muted);
+  color: var(--nexora-text);
+  outline: none;
+}
+
+.booking-hub-view .tech-search-clear svg {
+  width: 14px;
+  height: 14px;
+  pointer-events: none;
+}
+
 .booking-hub-view .tech-search input:focus {
   border-color: rgba(0, 184, 115, 0.72);
   box-shadow: 0 0 0 3px rgba(0, 184, 115, 0.12);
@@ -1441,8 +1458,12 @@
   border-right: 1px solid var(--nexora-border) !important;
   border-radius: 9px 0 0 9px !important;
   box-shadow: none !important;
-  background: var(--nexora-canvas) !important;
+  background: #fff !important;
   box-sizing: border-box;
+}
+
+.booking-hub-view .phone-input-shell > .relative > button:hover:not(:disabled) {
+  background: #f8fafc !important;
 }
 
 .booking-hub-view .phone-input-shell > .relative > button:focus,
@@ -1466,6 +1487,7 @@
 }
 
 .booking-hub-view .phone-mask-input,
+.booking-hub-view .phone-input-shell .booking-input,
 .booking-hub-view .phone-input-shell .settings-input,
 .booking-hub-view .phone-input-shell .trial-input {
   flex: 1;
@@ -1474,7 +1496,7 @@
   min-height: 0;
   border: 0 !important;
   border-radius: 0 9px 9px 0;
-  background: transparent;
+  background: transparent !important;
   box-shadow: none !important;
   padding: 0 14px;
   box-sizing: border-box;
@@ -1486,14 +1508,43 @@
   box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.1);
 }
 
-.booking-hub-view .phone-input-shell .country-code-dropdown,
-.booking-hub-view .phone-input-shell .country-code-search-wrap,
+.booking-hub-view .phone-input-shell .country-code-dropdown {
+  border: none !important;
+  outline: none !important;
+  z-index: 30;
+}
+
+.booking-hub-view .phone-input-shell:has(.country-code-dropdown),
+.booking-hub-view .settings-field:has(.country-code-dropdown),
+.booking-hub-view .tech-modal-section:has(.country-code-dropdown),
+.booking-hub-view .booking-create-field:has(.country-code-dropdown) {
+  position: relative;
+  z-index: 20;
+}
+
+.booking-hub-view .phone-input-shell .country-code-search-wrap {
+  background: #fff !important;
+  border-bottom: 1px solid var(--nexora-border) !important;
+}
+
+.booking-hub-view .phone-input-shell .country-code-search-field {
+  border: 1px solid var(--nexora-border) !important;
+  background: #fff !important;
+  box-shadow: none !important;
+}
+
+.booking-hub-view .phone-input-shell .country-code-search-field:focus-within {
+  border-color: var(--nexora-brand) !important;
+  box-shadow: 0 0 0 2px rgba(70, 72, 216, 0.16) !important;
+}
+
 .booking-hub-view .phone-input-shell .country-code-search-input,
 .booking-hub-view .phone-input-shell .country-code-search-input:focus,
 .booking-hub-view .phone-input-shell .country-code-search-input:focus-visible {
   border: none !important;
   box-shadow: none !important;
   outline: none !important;
+  background: transparent !important;
 }
 
 .booking-hub-view .phone-input-shell .trial-input:focus {
@@ -1890,7 +1941,9 @@
   border-radius: 8px;
   background: #fff;
   color: var(--nexora-muted);
-  transition: background 0.2s, color 0.2s;
+  transition:
+    background 0.2s,
+    color 0.2s;
 }
 
 .booking-hub-view .cust-modal-close:hover {
@@ -1940,7 +1993,7 @@
   background: #fff;
 }
 
-.booking-hub-view .cust-field input[type='date'],
+.booking-hub-view .cust-field input[type="date"],
 .booking-hub-view .cust-date-input {
   position: relative;
   display: flex;
@@ -1955,6 +2008,7 @@
   appearance: none;
   line-height: normal;
   text-align: left;
+  cursor: pointer;
 }
 
 .booking-hub-view .cust-date-input::-webkit-date-and-time-value {
@@ -1970,8 +2024,10 @@
   text-align: left;
 }
 
-.booking-hub-view .cust-field input[type='date']::-webkit-datetime-edit,
-.booking-hub-view .cust-field input[type='date']::-webkit-datetime-edit-fields-wrapper,
+.booking-hub-view .cust-field input[type="date"]::-webkit-datetime-edit,
+.booking-hub-view
+  .cust-field
+  input[type="date"]::-webkit-datetime-edit-fields-wrapper,
 .booking-hub-view .cust-date-input::-webkit-datetime-edit,
 .booking-hub-view .cust-date-input::-webkit-datetime-edit-fields-wrapper {
   display: flex;
@@ -1993,6 +2049,41 @@
 .booking-hub-view .cust-date-input::-webkit-datetime-edit-year-field {
   padding: 0;
   line-height: normal;
+}
+
+/* Whole birthday field opens the native picker (not only the calendar icon). */
+.booking-hub-view .cust-date-input::-webkit-calendar-picker-indicator {
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  width: auto;
+  height: auto;
+  margin: 0;
+  padding: 0;
+  cursor: pointer;
+  opacity: 0;
+}
+
+.booking-hub-view .cust-date-shell::after {
+  content: "";
+  position: absolute;
+  top: 50%;
+  right: 12px;
+  z-index: 1;
+  width: 16px;
+  height: 16px;
+  pointer-events: none;
+  transform: translateY(-50%);
+  background-color: var(--nexora-subtle);
+  opacity: 0.85;
+  -webkit-mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Crect x='3' y='4' width='18' height='18' rx='2'/%3E%3Cpath d='M16 2v4M8 2v4M3 10h18'/%3E%3C/svg%3E")
+    center / contain no-repeat;
+  mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Crect x='3' y='4' width='18' height='18' rx='2'/%3E%3Cpath d='M16 2v4M8 2v4M3 10h18'/%3E%3C/svg%3E")
+    center / contain no-repeat;
+}
+
+.booking-hub-view .cust-date-input {
+  padding-right: 36px;
 }
 
 .booking-hub-view .cust-field .booking-input.has-error {
@@ -2095,30 +2186,51 @@
   }
 
   /*
-   * Mobile inputs: 16px floor avoids iOS Safari zoom on focus.
-   * Text/select stay readable; date also 16px but clipped by cust-date-shell.
+   * Beat global index.css iOS/mobile `input { font-size: 16px !important }`
+   * (body:not… input:not[type]… → (0,7,2)). Keep 13px like create/tech dialogs.
    */
   .booking-hub-view .cust-date-shell {
     min-height: 44px;
   }
 
-  .booking-hub-view .cust-modal .booking-input,
-  .booking-hub-view .cust-modal .booking-select,
-  .booking-hub-view .cust-field input[type='date'],
-  .booking-hub-view .cust-date-input {
+  body:not(.homepage-active):not(.public-booking-active)
+    .booking-hub-view
+    .cust-modal
+    input.booking-input:not([type="checkbox"]):not([type="radio"]):not(
+      [type="submit"]
+    ):not([type="button"]):not([type="file"]),
+  body:not(.homepage-active):not(.public-booking-active)
+    .booking-hub-view
+    .cust-modal
+    select.booking-select,
+  body:not(.homepage-active):not(.public-booking-active)
+    .booking-hub-view
+    .cust-modal
+    input[type="date"],
+  body:not(.homepage-active):not(.public-booking-active)
+    .booking-hub-view
+    .cust-modal
+    input.cust-date-input {
     height: 44px;
     min-height: 44px;
-    font-size: 16px !important;
+    font-size: 13px !important;
     font-weight: 600;
-    line-height: 44px;
+    letter-spacing: -0.01em;
+    line-height: 1.25;
   }
 
-  .booking-hub-view .cust-date-input {
+  body:not(.homepage-active):not(.public-booking-active)
+    .booking-hub-view
+    .cust-modal
+    input.cust-date-input {
     line-height: normal;
   }
 
-  .booking-hub-view .cust-modal .booking-input::placeholder {
-    font-size: 14px !important;
+  body:not(.homepage-active):not(.public-booking-active)
+    .booking-hub-view
+    .cust-modal
+    input.booking-input::placeholder {
+    font-size: 13px !important;
     font-weight: 600;
   }
 
@@ -2127,7 +2239,7 @@
   }
 
   .booking-hub-view .cust-status-toggle span {
-    font-size: 14px;
+    font-size: 13px;
   }
 
   .booking-hub-view .cust-modal-foot {
@@ -2261,7 +2373,23 @@
   }
 
   .booking-hub-view .tech-grid {
-    grid-template-columns: 1fr;
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .booking-hub-view .tech-card {
+    width: 100%;
+    max-width: 100%;
+  }
+
+  .booking-hub-view .tech-top {
+    grid-template-columns: 36px minmax(0, 1fr) auto;
+    gap: 9px;
+  }
+
+  .booking-hub-view .tech-avatar {
+    width: 36px;
+    height: 36px;
+    font-size: 13px;
   }
 
   .booking-hub-view .tech-modal {
@@ -3236,6 +3364,13 @@
 .booking-hub-view .settings-business-grid .phone-input-shell {
   height: 46px;
   min-height: 46px;
+  overflow: visible;
+}
+
+.booking-hub-view
+  .settings-business-grid
+  .settings-field:has(.phone-input-shell) {
+  overflow: visible;
 }
 
 .booking-hub-view .settings-business-grid .phone-input-shell .settings-input,
@@ -3684,10 +3819,9 @@
 
 .booking-hub-view .settings-service-header {
   display: grid;
-  grid-template-columns: 30px minmax(96px, 1fr) minmax(76px, 84px) minmax(
-      92px,
-      100px
-    ) 32px;
+  grid-template-columns:
+    30px minmax(96px, 1fr) minmax(76px, 84px) minmax(92px, 100px)
+    32px;
   align-items: center;
   gap: 8px;
   padding: 0 7px 4px;
@@ -3718,10 +3852,9 @@
 
 .booking-hub-view .settings-service-edit-grid {
   display: grid;
-  grid-template-columns: 30px minmax(96px, 1fr) minmax(76px, 84px) minmax(
-      92px,
-      100px
-    ) 32px;
+  grid-template-columns:
+    30px minmax(96px, 1fr) minmax(76px, 84px) minmax(92px, 100px)
+    32px;
   align-items: center;
   gap: 8px;
 }
@@ -3941,7 +4074,10 @@
   font-size: 11px;
   font-weight: 700;
   line-height: 1.2;
-  transition: border-color 0.16s ease, box-shadow 0.16s ease, color 0.16s ease;
+  transition:
+    border-color 0.16s ease,
+    box-shadow 0.16s ease,
+    color 0.16s ease;
 }
 
 .booking-hub-view .settings-language-card.is-active {
@@ -3962,6 +4098,137 @@
 .booking-hub-view .settings-textarea-promo {
   min-height: 220px;
   white-space: pre-wrap;
+}
+
+.booking-hub-view .settings-first-call-sms {
+  display: grid;
+  gap: 12px;
+  border: 1px solid rgba(70, 72, 216, 0.18);
+  border-radius: 12px;
+  background: linear-gradient(
+    180deg,
+    rgba(70, 72, 216, 0.06),
+    rgba(50, 215, 255, 0.04)
+  );
+  padding: 14px;
+}
+
+.booking-hub-view .settings-first-call-sms-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.booking-hub-view .settings-first-call-sms-copy {
+  display: flex;
+  flex: 1 1 auto;
+  align-items: center;
+  min-width: 0;
+}
+
+.booking-hub-view .settings-first-call-sms-copy > .settings-label {
+  flex: 0 0 auto;
+}
+
+.booking-hub-view .settings-first-call-sms-toggle {
+  display: flex;
+  flex-shrink: 0;
+  align-items: center;
+  gap: 8px;
+}
+
+.booking-hub-view .settings-first-call-sms-toggle-label {
+  color: var(--nexora-success);
+  font-size: 10px;
+  font-weight: 800;
+  white-space: nowrap;
+}
+
+.booking-hub-view .settings-first-call-sms-toggle-label.is-off {
+  color: var(--nexora-subtle);
+}
+
+.booking-hub-view .settings-first-call-sms .settings-textarea {
+  min-height: 84px;
+}
+
+.booking-hub-view .settings-label-with-tooltip {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  overflow: visible;
+  text-overflow: clip;
+  white-space: nowrap;
+}
+
+.booking-hub-view .settings-tooltip {
+  position: relative;
+  display: inline-flex;
+  flex-shrink: 0;
+}
+
+.booking-hub-view .settings-tooltip-trigger {
+  display: inline-flex;
+  width: 16px;
+  height: 16px;
+  align-items: center;
+  justify-content: center;
+  border: 0;
+  background: transparent;
+  padding: 0;
+  color: var(--nexora-brand);
+  cursor: help;
+}
+
+.booking-hub-view .settings-tooltip-icon {
+  width: 12px;
+  height: 12px;
+}
+
+.booking-hub-view .settings-tooltip-content {
+  position: absolute;
+  bottom: calc(100% + 8px);
+  left: 50%;
+  z-index: 40;
+  display: none;
+  width: max-content;
+  max-width: min(320px, calc(100vw - 32px));
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 10px;
+  background: #0b1220;
+  padding: 10px 12px;
+  color: #fff;
+  font-size: 11px;
+  font-weight: 500;
+  letter-spacing: normal;
+  line-height: 1.5;
+  text-align: left;
+  text-transform: none;
+  white-space: normal;
+  overflow-wrap: anywhere;
+  box-shadow: 0 10px 24px rgba(8, 31, 73, 0.24);
+  transform: translateX(-50%);
+  box-sizing: border-box;
+}
+
+.booking-hub-view .settings-tooltip-content.is-placed,
+.booking-hub-view .settings-tooltip:hover .settings-tooltip-content,
+.booking-hub-view .settings-tooltip:focus-within .settings-tooltip-content {
+  display: block;
+}
+
+@media (max-width: 767px) {
+  .booking-hub-view .settings-tooltip-content {
+    /* Mobile uses fixed placement from JS so content never leaves the viewport. */
+    position: fixed;
+    bottom: auto;
+    left: 16px;
+    right: auto;
+    transform: none;
+    max-width: calc(100vw - 32px);
+    z-index: 220;
+  }
 }
 
 .booking-hub-view .settings-promo-head {
@@ -4008,7 +4275,9 @@
   font-size: 11px;
   font-weight: 800;
   cursor: pointer;
-  transition: background 0.15s ease, border-color 0.15s ease;
+  transition:
+    background 0.15s ease,
+    border-color 0.15s ease;
 }
 
 .booking-hub-view .settings-promo-suggest:hover {
@@ -4111,7 +4380,8 @@
 .booking-hub-view .trial-head {
   border-bottom: 1px solid var(--nexora-rule);
   background: linear-gradient(180deg, #fff, #f8fbff);
-  padding: clamp(16px, 2.5vw, 22px) clamp(14px, 2.5vw, 22px) clamp(12px, 1.8vw, 16px);
+  padding: clamp(16px, 2.5vw, 22px) clamp(14px, 2.5vw, 22px)
+    clamp(12px, 1.8vw, 16px);
   padding-right: clamp(48px, 6vw, 56px);
   text-align: left;
 }
@@ -4804,8 +5074,10 @@
   gap: 10px;
   margin-bottom: 12px;
   color: var(--nexora-text);
-  font-size: 12px;
-  font-weight: 900;
+  font-size: 14px;
+  font-weight: 800;
+  letter-spacing: -0.01em;
+  line-height: 1.3;
 }
 
 .booking-hub-view .booking-filter-popover .booking-controls {
@@ -4852,40 +5124,49 @@
   overflow: visible;
 }
 
-.booking-hub-view .booking-filter-popover .booking-date-input-shell .booking-input-date {
-  z-index: 1;
-}
-
-.booking-hub-view .booking-filter-popover .booking-date-placeholder {
+.booking-hub-view
+  .booking-filter-popover
+  .booking-date-input-shell
+  .booking-input-date {
   z-index: 2;
+  cursor: pointer;
 }
 
-.booking-hub-view .booking-filter-popover .booking-keyword-shell {
+.booking-hub-view .booking-filter-popover .booking-date-display {
+  z-index: 1;
+  pointer-events: none;
+}
+
+/* Shared keyword search + clear (filter popover, Customers, Call Log). */
+.booking-hub-view .booking-keyword-shell {
   position: relative;
   display: block;
   width: 100%;
   min-width: 0;
 }
 
-.booking-hub-view .booking-filter-popover .booking-input-keyword {
-  padding-right: 40px;
+.booking-hub-view .booking-input-keyword {
+  width: 100%;
+  padding-right: 44px;
 }
 
-.booking-hub-view .booking-filter-popover .booking-input-keyword::-webkit-search-cancel-button,
-.booking-hub-view .booking-filter-popover .booking-input-keyword::-webkit-search-decoration {
+.booking-hub-view .booking-input-keyword::-webkit-search-cancel-button,
+.booking-hub-view .booking-input-keyword::-webkit-search-decoration {
   -webkit-appearance: none;
   appearance: none;
   display: none;
 }
 
-.booking-hub-view .booking-filter-popover .booking-keyword-clear {
+.booking-hub-view .booking-keyword-clear {
   position: absolute;
   top: 50%;
-  right: 6px;
+  right: 4px;
   z-index: 3;
   display: inline-flex;
-  width: 28px;
-  height: 28px;
+  width: 36px;
+  height: 36px;
+  min-width: 36px;
+  min-height: 36px;
   align-items: center;
   justify-content: center;
   border: 0;
@@ -4894,16 +5175,20 @@
   color: var(--nexora-muted);
   cursor: pointer;
   transform: translateY(-50%);
+  touch-action: manipulation;
 }
 
-.booking-hub-view .booking-filter-popover .booking-keyword-clear:hover {
+.booking-hub-view .booking-keyword-clear:hover,
+.booking-hub-view .booking-keyword-clear:focus-visible {
   background: var(--nexora-surface-muted);
   color: var(--nexora-text);
+  outline: none;
 }
 
-.booking-hub-view .booking-filter-popover .booking-keyword-clear svg {
-  width: 14px;
-  height: 14px;
+.booking-hub-view .booking-keyword-clear svg {
+  width: 16px;
+  height: 16px;
+  pointer-events: none;
 }
 
 .booking-hub-view .booking-filter-popover .booking-clear-button {
@@ -5025,19 +5310,117 @@
   letter-spacing: -0.01em;
 }
 
+.booking-hub-view .booking-team-calendar .calendar_default_cell,
+.booking-hub-view .booking-team-calendar .calendar_default_cell_inner {
+  cursor: pointer;
+}
+
+/* Past slots vs user's local clock — not selectable for new appointments. */
+.booking-hub-view .booking-team-calendar .calendar_default_cell.is-past-slot,
+.booking-hub-view
+  .booking-team-calendar
+  .calendar_default_cell.is-past-slot
+  .calendar_default_cell_inner {
+  cursor: not-allowed;
+  background: #f1f5f9 !important;
+}
+
+.booking-hub-view
+  .booking-team-calendar
+  .calendar_default_cell.is-past-slot:hover
+  .booking-cell-add {
+  opacity: 0;
+}
+
+.booking-hub-view .booking-team-calendar .is-past-slot .booking-cell-add {
+  display: none;
+}
+
+/* Hide DayPilot time-range selection overlay (gray flash on click). */
+.booking-hub-view .booking-team-calendar .calendar_default_shadow,
+.booking-hub-view .booking-team-calendar .calendar_default_shadow_inner,
+.booking-hub-view .booking-team-calendar .calendar_default_shadow_top,
+.booking-hub-view .booking-team-calendar .calendar_default_shadow_bottom {
+  display: none !important;
+  background: transparent !important;
+  border-color: transparent !important;
+  opacity: 0 !important;
+  pointer-events: none !important;
+}
+
 .booking-hub-view .booking-team-calendar .calendar_default_cell_inner {
   border-color: #edf1f6;
-  background: linear-gradient(90deg, rgba(248, 250, 252, 0.34), rgba(255, 255, 255, 0) 24px);
+  background: linear-gradient(
+    90deg,
+    rgba(248, 250, 252, 0.34),
+    rgba(255, 255, 255, 0) 24px
+  );
+}
+
+.booking-hub-view .booking-team-calendar .booking-cell-add {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  color: #5e63dc;
+  font-size: 12px;
+  font-weight: 700;
+  line-height: 1;
+  opacity: 0.07;
+  pointer-events: none;
+  cursor: pointer;
+  transition: opacity 0.15s ease;
+}
+
+.booking-hub-view .booking-team-calendar .booking-cell-add > span {
+  display: grid;
+  width: 18px;
+  height: 18px;
+  place-items: center;
+  border-radius: 999px;
+  transition:
+    background 0.15s ease,
+    box-shadow 0.15s ease,
+    transform 0.15s ease;
+}
+
+.booking-hub-view
+  .booking-team-calendar
+  .calendar_default_cell:hover
+  .booking-cell-add {
+  opacity: 1;
+}
+
+.booking-hub-view
+  .booking-team-calendar
+  .calendar_default_cell:hover
+  .booking-cell-add
+  > span {
+  background: #eef0ff;
+  box-shadow: 0 3px 9px rgba(70, 72, 216, 0.18);
+  transform: scale(1.08);
+}
+
+.booking-hub-view .booking-overview-add-button {
+  height: 36px;
+  min-height: 36px;
+  padding: 6px 10px;
+  font-size: 11px;
 }
 
 .booking-hub-view .booking-team-calendar .calendar_default_event_inner {
   overflow: hidden;
   border-radius: 11px !important;
   box-shadow: 0 6px 18px rgba(15, 23, 42, 0.1);
-  transition: box-shadow 0.16s ease, transform 0.16s ease;
+  transition:
+    box-shadow 0.16s ease,
+    transform 0.16s ease;
 }
 
-.booking-hub-view .booking-team-calendar .calendar_default_event:hover .calendar_default_event_inner {
+.booking-hub-view
+  .booking-team-calendar
+  .calendar_default_event:hover
+  .calendar_default_event_inner {
   box-shadow: 0 10px 22px rgba(15, 23, 42, 0.16);
   transform: translateY(-1px);
 }
@@ -5279,6 +5662,7 @@
   background: #fff;
 }
 
+.booking-hub-view .booking-date-display,
 .booking-hub-view .booking-date-placeholder {
   position: absolute;
   inset: 0;
@@ -5298,6 +5682,11 @@
   text-overflow: ellipsis;
 }
 
+.booking-hub-view .booking-date-input-shell.has-value .booking-date-display {
+  color: var(--nexora-text);
+  font-weight: 700;
+}
+
 .booking-hub-view
   .booking-date-input-shell.has-value
   .booking-date-placeholder {
@@ -5315,77 +5704,84 @@
   padding-right: 34px;
   line-height: normal;
   text-align: left;
+  color: transparent !important;
+  caret-color: transparent !important;
+  cursor: pointer;
+  background: transparent !important;
 }
 
-.booking-hub-view .booking-input-date.is-empty {
-  color: transparent;
-  background: transparent;
+.booking-hub-view .booking-date-input-shell .booking-input-date:focus,
+.booking-hub-view .booking-date-input-shell .booking-input-date:focus-visible,
+.booking-hub-view .booking-date-input-shell .booking-input-date:active {
+  outline: none;
+  background: transparent !important;
 }
 
-.booking-hub-view .booking-input-date.is-empty::-webkit-datetime-edit,
-.booking-hub-view
-  .booking-input-date.is-empty::-webkit-datetime-edit-fields-wrapper,
-.booking-hub-view .booking-input-date.is-empty::-webkit-datetime-edit-text,
-.booking-hub-view
-  .booking-input-date.is-empty::-webkit-datetime-edit-month-field,
-.booking-hub-view .booking-input-date.is-empty::-webkit-datetime-edit-day-field,
-.booking-hub-view
-  .booking-input-date.is-empty::-webkit-datetime-edit-year-field {
-  color: transparent;
-}
-
+.booking-hub-view .booking-input-date.is-empty,
 .booking-hub-view .booking-input-date.has-value {
-  color: var(--nexora-text);
+  color: transparent !important;
+  background: transparent !important;
 }
 
+/* Hide native MM/DD/YYYY segments so WebKit blue focus boxes never show. */
+.booking-hub-view .booking-input-date::-webkit-date-and-time-value,
 .booking-hub-view .booking-input-date::-webkit-datetime-edit,
-.booking-hub-view .booking-input-date::-webkit-datetime-edit-fields-wrapper {
-  display: flex;
-  align-items: center;
-  justify-content: flex-start;
-  width: 100%;
-  height: 100%;
+.booking-hub-view .booking-input-date::-webkit-datetime-edit-fields-wrapper,
+.booking-hub-view .booking-input-date::-webkit-datetime-edit-text,
+.booking-hub-view .booking-input-date::-webkit-datetime-edit-month-field,
+.booking-hub-view .booking-input-date::-webkit-datetime-edit-day-field,
+.booking-hub-view .booking-input-date::-webkit-datetime-edit-year-field {
+  color: transparent !important;
+  background: transparent !important;
+  min-width: 0;
+  max-width: 100%;
   padding: 0;
   margin: 0;
-  text-align: left;
+  overflow: hidden;
+  opacity: 0;
 }
 
-.booking-hub-view .booking-input-date.has-value::-webkit-datetime-edit,
-.booking-hub-view
-  .booking-input-date.has-value::-webkit-datetime-edit-fields-wrapper,
-.booking-hub-view .booking-input-date.has-value::-webkit-datetime-edit-text,
-.booking-hub-view
-  .booking-input-date.has-value::-webkit-datetime-edit-month-field,
-.booking-hub-view
-  .booking-input-date.has-value::-webkit-datetime-edit-day-field,
-.booking-hub-view
-  .booking-input-date.has-value::-webkit-datetime-edit-year-field,
-.booking-hub-view .booking-input-date.has-value::-webkit-date-and-time-value {
-  color: var(--nexora-text);
-  text-align: left;
-}
-
-.booking-hub-view .booking-input-date::-webkit-date-and-time-value {
-  display: flex;
-  align-items: center;
-  justify-content: flex-start;
-  width: 100%;
-  height: 100%;
-  margin: 0;
-  padding: 0;
-  text-align: left;
-  line-height: normal;
+.booking-hub-view .booking-input-date::-webkit-datetime-edit-year-field:focus,
+.booking-hub-view .booking-input-date::-webkit-datetime-edit-month-field:focus,
+.booking-hub-view .booking-input-date::-webkit-datetime-edit-day-field:focus {
+  background: transparent !important;
+  color: transparent !important;
+  box-shadow: none !important;
+  outline: none !important;
 }
 
 .booking-hub-view .booking-input-date::-webkit-calendar-picker-indicator {
   position: absolute;
-  right: 10px;
-  top: 50%;
-  width: 18px;
-  height: 18px;
-  transform: translateY(-50%);
+  inset: 0;
+  z-index: 3;
+  width: auto;
+  height: auto;
+  margin: 0;
+  padding: 0;
   cursor: pointer;
-  opacity: 0.7;
+  opacity: 0;
+}
+
+.booking-hub-view .booking-date-input-shell::after {
+  content: "";
+  position: absolute;
+  top: 50%;
+  right: 12px;
+  z-index: 1;
+  width: 16px;
+  height: 16px;
+  pointer-events: none;
+  transform: translateY(-50%);
+  background-color: var(--nexora-subtle);
+  opacity: 0.85;
+  -webkit-mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Crect x='3' y='4' width='18' height='18' rx='2'/%3E%3Cpath d='M16 2v4M8 2v4M3 10h18'/%3E%3C/svg%3E")
+    center / contain no-repeat;
+  mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Crect x='3' y='4' width='18' height='18' rx='2'/%3E%3Cpath d='M16 2v4M8 2v4M3 10h18'/%3E%3C/svg%3E")
+    center / contain no-repeat;
+}
+
+.booking-hub-view .booking-date-input-shell.has-value::after {
+  background-color: var(--nexora-muted);
 }
 
 .booking-hub-view .booking-clear-button {
@@ -5622,11 +6018,15 @@
   gap: 9px;
 }
 
-.booking-hub-view .booking-table-mobile-field-actions .booking-table-mobile-label {
+.booking-hub-view
+  .booking-table-mobile-field-actions
+  .booking-table-mobile-label {
   margin: 0;
 }
 
-.booking-hub-view .booking-table-mobile-field-actions .booking-table-mobile-value {
+.booking-hub-view
+  .booking-table-mobile-field-actions
+  .booking-table-mobile-value {
   display: flex;
   justify-content: flex-start;
   min-width: 0;
@@ -5708,7 +6108,10 @@
   font-size: clamp(0.75rem, 0.72rem + 0.15vw, 0.8125rem);
   font-weight: 700;
   cursor: pointer;
-  transition: background 0.15s ease, border-color 0.15s ease, color 0.15s ease;
+  transition:
+    background 0.15s ease,
+    border-color 0.15s ease,
+    color 0.15s ease;
 }
 
 .booking-hub-view .booking-status-chip-icon {
@@ -5911,7 +6314,10 @@
     text-align: right;
   }
 
-  .booking-hub-view .booking-table[data-booking-table] td:last-child .booking-actions {
+  .booking-hub-view
+    .booking-table[data-booking-table]
+    td:last-child
+    .booking-actions {
     display: inline-flex;
     justify-content: flex-end;
     width: auto;
@@ -6059,9 +6465,9 @@
 
 .booking-hub-view .booking-card-info-row {
   display: grid;
-  grid-template-columns: minmax(72px, 5.5rem) minmax(0, 1fr);
+  grid-template-columns: minmax(80px, 6.25rem) minmax(0, 1fr);
   align-items: baseline;
-  gap: 10px;
+  gap: 16px;
   min-width: 0;
 }
 
@@ -6096,6 +6502,830 @@
   justify-content: flex-end;
   width: max-content;
   max-width: 100%;
+}
+
+.booking-hub-view .booking-create-modal {
+  position: fixed;
+  inset: 0;
+  z-index: 135;
+  display: grid;
+  place-items: center;
+  background: rgba(8, 31, 73, 0.42);
+  padding: 18px;
+  backdrop-filter: blur(8px);
+  overscroll-behavior: none;
+  touch-action: none;
+}
+
+.booking-hub-view .booking-create-dialog {
+  display: flex;
+  width: min(100%, 680px);
+  max-height: min(88vh, 760px);
+  max-height: min(88dvh, 760px);
+  overflow: hidden;
+  flex-direction: column;
+  border: 1px solid var(--nexora-border);
+  border-radius: 12px;
+  background: #fff;
+  box-shadow: 0 28px 80px rgba(8, 31, 73, 0.24);
+  touch-action: auto;
+}
+
+.booking-hub-view .booking-create-head,
+.booking-hub-view .booking-create-actions {
+  display: flex;
+  flex-shrink: 0;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  border-bottom: 1px solid var(--nexora-border);
+  background: linear-gradient(180deg, #fff, #f8fbff);
+  padding: 16px 18px;
+}
+
+.booking-hub-view .booking-create-actions {
+  justify-content: flex-end;
+  border-top: 1px solid var(--nexora-border);
+  border-bottom: 0;
+  background: #fff;
+}
+
+/* Desktop-first type scale for New appointment dialog. */
+.booking-hub-view .booking-create-title {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  color: var(--nexora-text);
+  font-size: 18px;
+  font-weight: 800;
+  letter-spacing: -0.01em;
+}
+
+.booking-hub-view .booking-create-title svg {
+  width: 20px;
+  height: 20px;
+  color: var(--nexora-brand);
+}
+
+.booking-hub-view .booking-create-sub {
+  margin-top: 4px;
+  color: var(--nexora-muted);
+  font-size: 13px;
+  font-weight: 500;
+  line-height: 1.45;
+}
+
+.booking-hub-view .booking-create-body {
+  display: grid;
+  flex: 1 1 auto;
+  gap: 14px;
+  min-height: 0;
+  overflow-x: hidden;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+  overscroll-behavior: contain;
+  touch-action: pan-y;
+  background: #f7f9fc;
+  padding: 18px;
+}
+
+.booking-hub-view .booking-create-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 14px;
+}
+
+.booking-hub-view .booking-create-field {
+  display: grid;
+  min-width: 0;
+  gap: 6px;
+  align-content: start;
+  position: relative;
+}
+
+.booking-hub-view .booking-create-field.is-full {
+  grid-column: 1 / -1;
+}
+
+.booking-hub-view .booking-create-label {
+  color: var(--nexora-subtle);
+  font-size: 11px;
+  font-weight: 900;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+}
+
+.booking-hub-view .booking-create-hint {
+  color: var(--nexora-muted);
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0;
+  text-transform: none;
+}
+
+.booking-hub-view .booking-create-modal .booking-select,
+.booking-hub-view
+  .booking-create-modal
+  input.booking-input:not(.booking-create-datetime-input):not(
+    .phone-mask-input
+  ) {
+  height: 42px;
+  min-height: 42px;
+  font-size: 14px;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+}
+
+.booking-hub-view .booking-create-modal .booking-input::placeholder {
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.booking-hub-view .booking-create-modal .phone-mask-input {
+  height: 100% !important;
+  min-height: 0 !important;
+  font-size: 14px;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+  background: transparent !important;
+  border: 0 !important;
+  box-shadow: none !important;
+}
+
+.booking-hub-view .booking-create-modal .phone-input-shell {
+  height: 42px;
+  min-height: 42px;
+  /* Must stay visible — CountryCodeSelect dropdown is absolutely positioned inside. */
+  overflow: visible;
+  position: relative;
+  z-index: 6;
+}
+
+.booking-hub-view .booking-create-modal .phone-input-shell:focus-within,
+.booking-hub-view
+  .booking-create-modal
+  .booking-create-field:has(.phone-input-shell:focus-within) {
+  z-index: 20;
+}
+
+.booking-hub-view .booking-create-modal .phone-input-shell > .relative {
+  overflow: visible;
+}
+
+.booking-hub-view
+  .booking-create-modal
+  .phone-input-shell
+  > .relative
+  > button {
+  font-size: 13px;
+}
+
+.booking-hub-view
+  .booking-create-modal
+  .phone-input-shell
+  .country-code-dropdown {
+  z-index: 30;
+}
+
+.booking-hub-view .booking-create-modal textarea.booking-input {
+  height: 78px;
+  min-height: 78px;
+  padding: 10px 11px;
+  font-size: 14px;
+  font-weight: 600;
+  line-height: 1.45;
+  letter-spacing: -0.01em;
+  resize: vertical;
+}
+
+.booking-hub-view .booking-service-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.booking-hub-view .booking-service-chip-button {
+  border: 1px solid var(--nexora-border);
+  border-radius: 8px;
+  background: #fff;
+  padding: 8px 11px;
+  color: var(--nexora-muted);
+  font-size: 13px;
+  font-weight: 700;
+  line-height: 1.3;
+  text-align: left;
+  transition:
+    background 0.2s,
+    border-color 0.2s,
+    color 0.2s;
+}
+
+.booking-hub-view .booking-service-duration {
+  font-weight: 400;
+}
+
+.booking-hub-view .booking-service-chip-button:hover {
+  border-color: var(--nexora-brand);
+  color: var(--nexora-brand);
+}
+
+.booking-hub-view .booking-service-chip-button.is-selected {
+  border-color: transparent;
+  background: var(--nexora-brand);
+  color: #fff;
+}
+
+.booking-hub-view .booking-service-summary {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px 18px;
+  margin-top: 8px;
+}
+
+.booking-hub-view .booking-service-summary-item {
+  color: var(--nexora-muted);
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.booking-hub-view .booking-service-summary-value {
+  color: var(--nexora-text);
+  font-size: 13px;
+  font-weight: 800;
+  white-space: nowrap;
+}
+
+.booking-hub-view .booking-create-field-error {
+  display: block;
+  margin: 0;
+  color: #dc2626;
+  font-size: 12px;
+  font-weight: 700;
+  line-height: 1.35;
+}
+
+.booking-hub-view .booking-create-field .booking-input.has-error,
+.booking-hub-view .booking-create-field .booking-select.has-error,
+.booking-hub-view .booking-create-datetime-shell.has-error {
+  border-color: #fca5a5;
+}
+
+.booking-hub-view .booking-create-field.has-error .phone-input-shell {
+  border-color: #fca5a5;
+}
+
+.booking-hub-view .booking-create-field.has-error .booking-service-chips {
+  outline: 1px solid #fca5a5;
+  border-radius: 8px;
+  padding: 4px;
+}
+
+.booking-hub-view .booking-create-error {
+  border-radius: 8px;
+  color: #b91c1c;
+  font-size: 12px;
+  font-weight: 700;
+  line-height: 1.5;
+}
+
+.booking-hub-view .booking-create-empty {
+  color: var(--nexora-muted);
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.booking-hub-view .booking-create-service-skeleton {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.booking-hub-view .booking-create-skeleton-chip,
+.booking-hub-view .booking-create-skeleton-select {
+  border-radius: 8px;
+  background: linear-gradient(90deg, #eef2f7 25%, #f7f9fc 50%, #eef2f7 75%);
+  background-size: 200% 100%;
+  animation: booking-create-skeleton 1.2s ease-in-out infinite;
+}
+
+.booking-hub-view .booking-create-skeleton-chip {
+  width: 140px;
+  height: 36px;
+}
+
+.booking-hub-view .booking-create-skeleton-select {
+  width: 100%;
+  height: 42px;
+}
+
+@keyframes booking-create-skeleton {
+  0% {
+    background-position: 100% 0;
+  }
+  100% {
+    background-position: -100% 0;
+  }
+}
+
+.booking-hub-view .booking-create-datetime-shell {
+  position: relative;
+  display: flex;
+  align-items: center;
+  width: 100%;
+  max-width: 100%;
+  min-width: 0;
+  min-height: 42px;
+  height: 42px;
+  overflow: hidden;
+  border: 1px solid var(--nexora-border);
+  border-radius: 8px;
+  background: #fff;
+}
+
+.booking-hub-view .booking-create-datetime-shell:focus-within {
+  border-color: var(--nexora-brand);
+  box-shadow: 0 0 0 2px rgba(70, 72, 216, 0.16);
+}
+
+.booking-hub-view .booking-create-datetime-display {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  display: flex;
+  align-items: center;
+  padding: 0 36px 0 12px;
+  color: var(--nexora-text);
+  font-size: 14px;
+  font-weight: 600;
+  line-height: 1.2;
+  pointer-events: none;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.booking-hub-view
+  .booking-create-datetime-shell.is-empty
+  .booking-create-datetime-display {
+  color: var(--nexora-subtle);
+  font-weight: 600;
+}
+
+.booking-hub-view .booking-create-datetime-icon {
+  position: absolute;
+  top: 50%;
+  right: 10px;
+  z-index: 1;
+  width: 16px;
+  height: 16px;
+  color: var(--nexora-subtle);
+  pointer-events: none;
+  transform: translateY(-50%);
+}
+
+.booking-hub-view
+  .booking-create-datetime-shell.has-value
+  .booking-create-datetime-icon {
+  color: var(--nexora-muted);
+}
+
+.booking-hub-view
+  .booking-create-modal
+  .schedule-date-picker.booking-create-datetime-shell {
+  overflow: visible;
+}
+
+.booking-hub-view
+  .booking-create-modal
+  .schedule-date-picker
+  .schedule-datetime-trigger {
+  padding-right: 36px;
+}
+
+.booking-hub-view
+  .booking-create-modal
+  .schedule-date-picker
+  .schedule-datetime-display.is-static {
+  display: flex;
+  align-items: center;
+  padding: 0 0 0 12px;
+  color: var(--nexora-text);
+  font-size: 14px;
+  font-weight: 600;
+  line-height: 1.2;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.booking-hub-view
+  .booking-create-modal
+  .schedule-date-picker.is-empty
+  .schedule-datetime-display.is-static {
+  color: var(--nexora-subtle);
+}
+
+.booking-hub-view .booking-create-datetime-input {
+  position: relative;
+  z-index: 2;
+  box-sizing: border-box;
+  display: block;
+  width: 100%;
+  min-width: 0;
+  max-width: 100%;
+  height: 42px;
+  min-height: 42px;
+  padding: 0;
+  border: 0 !important;
+  border-color: transparent !important;
+  background: transparent !important;
+  box-shadow: none !important;
+  -webkit-appearance: none;
+  appearance: none;
+  -webkit-locale: "en-US-u-hc-h12";
+  color-scheme: light;
+  line-height: normal;
+  text-align: left;
+  color: transparent !important;
+  caret-color: transparent !important;
+  cursor: pointer;
+  outline: none !important;
+}
+
+.booking-hub-view .booking-create-datetime-input:focus,
+.booking-hub-view .booking-create-datetime-input:focus-visible,
+.booking-hub-view .booking-create-datetime-input:active {
+  outline: none !important;
+  border: 0 !important;
+  box-shadow: none !important;
+  background: transparent !important;
+}
+
+.booking-hub-view
+  .booking-create-datetime-shell[lang^="vi"]
+  .booking-create-datetime-input {
+  -webkit-locale: "vi-VN-u-hc-h12";
+}
+
+/* Hide native edit UI so WebKit focus/selection highlight never shows inside the shell. */
+.booking-hub-view .booking-create-datetime-input::-webkit-date-and-time-value,
+.booking-hub-view .booking-create-datetime-input::-webkit-datetime-edit,
+.booking-hub-view
+  .booking-create-datetime-input::-webkit-datetime-edit-fields-wrapper,
+.booking-hub-view .booking-create-datetime-input::-webkit-datetime-edit-text,
+.booking-hub-view
+  .booking-create-datetime-input::-webkit-datetime-edit-month-field,
+.booking-hub-view
+  .booking-create-datetime-input::-webkit-datetime-edit-day-field,
+.booking-hub-view
+  .booking-create-datetime-input::-webkit-datetime-edit-year-field,
+.booking-hub-view
+  .booking-create-datetime-input::-webkit-datetime-edit-hour-field,
+.booking-hub-view
+  .booking-create-datetime-input::-webkit-datetime-edit-minute-field,
+.booking-hub-view
+  .booking-create-datetime-input::-webkit-datetime-edit-second-field,
+.booking-hub-view
+  .booking-create-datetime-input::-webkit-datetime-edit-ampm-field {
+  color: transparent !important;
+  background: transparent !important;
+  min-width: 0;
+  max-width: 100%;
+  padding: 0;
+  margin: 0;
+  overflow: hidden;
+  opacity: 0;
+}
+
+.booking-hub-view
+  .booking-create-datetime-input::-webkit-datetime-edit-year-field:focus,
+.booking-hub-view
+  .booking-create-datetime-input::-webkit-datetime-edit-month-field:focus,
+.booking-hub-view
+  .booking-create-datetime-input::-webkit-datetime-edit-day-field:focus,
+.booking-hub-view
+  .booking-create-datetime-input::-webkit-datetime-edit-hour-field:focus,
+.booking-hub-view
+  .booking-create-datetime-input::-webkit-datetime-edit-minute-field:focus,
+.booking-hub-view
+  .booking-create-datetime-input::-webkit-datetime-edit-second-field:focus,
+.booking-hub-view
+  .booking-create-datetime-input::-webkit-datetime-edit-ampm-field:focus {
+  background-color: transparent !important;
+  color: transparent !important;
+  outline: none !important;
+  box-shadow: none !important;
+}
+
+.booking-hub-view
+  .booking-create-datetime-input::-webkit-calendar-picker-indicator {
+  position: absolute;
+  inset: 0;
+  z-index: 3;
+  width: auto;
+  height: auto;
+  margin: 0;
+  padding: 0;
+  cursor: pointer;
+  opacity: 0;
+}
+
+.booking-hub-view .booking-create-actions .booking-primary-button,
+.booking-hub-view .booking-create-actions .booking-secondary-button {
+  min-height: 40px;
+  font-size: 14px;
+}
+
+/*
+ * Responsive type for New appointment dialog:
+ * - Desktop (>1024): readable 14px fields / 11–13px chrome (base rules above)
+ * - Tablet/laptop narrow (≤1024): slightly tighter, still override global 16px input rule
+ * - Phone (≤600): touch-friendly heights; inputs keep ≥16px via index.css on mobile
+ */
+@media screen and (max-width: 1024px) {
+  .booking-hub-view .booking-create-modal .booking-select,
+  .booking-hub-view
+    .booking-create-modal
+    input.booking-input:not(.booking-create-datetime-input):not(
+      .phone-mask-input
+    ) {
+    height: 40px;
+    min-height: 40px;
+    font-size: 13px !important;
+    font-weight: 600;
+    letter-spacing: -0.01em;
+  }
+
+  .booking-hub-view .booking-create-modal .phone-mask-input {
+    height: 100% !important;
+    min-height: 0 !important;
+    font-size: 13px !important;
+    font-weight: 600;
+    letter-spacing: -0.01em;
+    background: transparent !important;
+    border: 0 !important;
+    box-shadow: none !important;
+  }
+
+  .booking-hub-view .booking-create-modal textarea.booking-input {
+    height: 78px;
+    min-height: 78px;
+    font-size: 13px !important;
+    line-height: 1.4;
+  }
+
+  .booking-hub-view .booking-create-modal .booking-input::placeholder {
+    font-size: 13px !important;
+    font-weight: 600;
+  }
+
+  .booking-hub-view .booking-create-modal .phone-input-shell {
+    height: 40px;
+    min-height: 40px;
+    overflow: visible;
+  }
+
+  .booking-hub-view
+    .booking-create-modal
+    .phone-input-shell
+    > .relative
+    > button {
+    font-size: 12px !important;
+  }
+
+  .booking-hub-view .booking-create-datetime-shell,
+  .booking-hub-view .booking-create-datetime-input {
+    min-height: 40px;
+    height: 40px;
+  }
+
+  .booking-hub-view .booking-create-datetime-display {
+    font-size: 13px;
+  }
+
+  .booking-hub-view .booking-create-label {
+    font-size: 10px;
+  }
+
+  .booking-hub-view .booking-create-hint {
+    font-size: 11px;
+  }
+
+  .booking-hub-view .booking-service-chip-button {
+    font-size: 12px;
+    padding: 7px 10px;
+  }
+
+  .booking-hub-view .booking-service-summary-item {
+    font-size: 12px;
+  }
+
+  .booking-hub-view .booking-service-summary-value {
+    font-size: 13px;
+  }
+
+  .booking-hub-view .booking-create-field-error,
+  .booking-hub-view .booking-create-error {
+    font-size: 12px;
+    line-height: 1.3;
+  }
+
+  .booking-hub-view .booking-create-empty {
+    font-size: 12px;
+  }
+
+  .booking-hub-view .booking-create-grid {
+    gap: 12px;
+  }
+
+  .booking-hub-view .booking-create-body {
+    padding: 16px;
+  }
+
+  .booking-hub-view .booking-create-field {
+    gap: 5px;
+  }
+
+  .booking-hub-view .booking-create-title {
+    font-size: 16px;
+  }
+
+  .booking-hub-view .booking-create-title svg {
+    width: 18px;
+    height: 18px;
+  }
+
+  .booking-hub-view .booking-create-sub {
+    font-size: 12px;
+  }
+
+  .booking-hub-view .booking-create-actions .booking-primary-button,
+  .booking-hub-view .booking-create-actions .booking-secondary-button {
+    min-height: 38px;
+    font-size: 13px;
+  }
+
+  .booking-hub-view .tech-modal .settings-input:not([type="time"]),
+  .booking-hub-view .tech-modal select.settings-input {
+    font-size: 13px !important;
+    font-weight: 600;
+  }
+}
+
+@media screen and (max-width: 767px) {
+  .booking-hub-view .panel-settings .settings-input:not([type="time"]),
+  .booking-hub-view .panel-settings select.settings-input,
+  .booking-hub-view .panel-settings .settings-textarea {
+    font-size: 16px !important;
+    font-weight: 600;
+    line-height: 1.45;
+  }
+
+  .booking-hub-view .panel-settings .settings-input:not([type="time"]),
+  .booking-hub-view .panel-settings select.settings-input {
+    min-height: 48px;
+    padding: 0 14px;
+    border-radius: 10px;
+  }
+
+  .booking-hub-view .panel-settings .settings-textarea {
+    min-height: 120px;
+    padding: 14px;
+    border-radius: 10px;
+  }
+
+  .booking-hub-view .panel-settings .settings-first-call-sms .settings-textarea {
+    min-height: 132px;
+  }
+
+  .booking-hub-view .panel-settings .settings-textarea-promo {
+    min-height: 220px;
+  }
+
+  .booking-hub-view .panel-settings .phone-input-shell .settings-input {
+    min-height: 48px;
+  }
+}
+
+/* iPad / iOS Safari can be wider than 767px but still hit the global 16px input rule. */
+@supports (-webkit-touch-callout: none) {
+  @media (hover: none), (pointer: coarse) {
+    .booking-hub-view .booking-create-modal .booking-select,
+    .booking-hub-view
+      .booking-create-modal
+      input.booking-input:not(.booking-create-datetime-input),
+    .booking-hub-view .booking-create-modal .phone-mask-input,
+    .booking-hub-view .booking-create-modal textarea.booking-input,
+    .booking-hub-view .booking-controls .booking-select,
+    .booking-hub-view .booking-controls .booking-input:not(.booking-input-date),
+    .booking-hub-view .tech-modal .settings-input:not([type="time"]),
+    .booking-hub-view .tech-modal select.settings-input {
+      font-size: 13px !important;
+      font-weight: 600;
+    }
+
+    .booking-hub-view .panel-settings .settings-input:not([type="time"]),
+    .booking-hub-view .panel-settings select.settings-input,
+    .booking-hub-view .panel-settings .settings-textarea {
+      font-size: 16px !important;
+      font-weight: 600;
+    }
+
+    body:not(.homepage-active):not(.public-booking-active)
+      .booking-hub-view
+      .cust-modal
+      input.booking-input:not([type="checkbox"]):not([type="radio"]):not(
+        [type="submit"]
+      ):not([type="button"]):not([type="file"]),
+    body:not(.homepage-active):not(.public-booking-active)
+      .booking-hub-view
+      .cust-modal
+      select.booking-select,
+    body:not(.homepage-active):not(.public-booking-active)
+      .booking-hub-view
+      .cust-modal
+      input[type="date"],
+    body:not(.homepage-active):not(.public-booking-active)
+      .booking-hub-view
+      .cust-modal
+      input.cust-date-input {
+      font-size: 13px !important;
+      font-weight: 600;
+    }
+  }
+}
+
+@media (max-width: 600px) {
+  .booking-hub-view .booking-create-modal {
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-end;
+    align-items: stretch;
+    padding: 0;
+  }
+
+  .booking-hub-view .booking-create-dialog {
+    width: 100%;
+    max-width: 100%;
+    /* Keep sheet inside the visible viewport (address bar / home indicator). */
+    max-height: calc(100svh - 8px);
+    max-height: calc(100dvh - 8px);
+    border-radius: 14px 14px 0 0;
+  }
+
+  .booking-hub-view .booking-create-head {
+    padding: 14px 16px;
+  }
+
+  .booking-hub-view .booking-create-body {
+    padding: 14px 16px;
+  }
+
+  .booking-hub-view .booking-create-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .booking-hub-view .booking-create-field.is-full {
+    grid-column: auto;
+  }
+
+  .booking-hub-view .booking-create-title {
+    font-size: 16px;
+  }
+
+  .booking-hub-view .booking-create-sub {
+    font-size: 12px;
+  }
+
+  .booking-hub-view .booking-create-label {
+    font-size: 11px;
+  }
+
+  .booking-hub-view .booking-create-hint {
+    font-size: 12px;
+  }
+
+  .booking-hub-view .booking-create-datetime-display {
+    font-size: 14px;
+  }
+
+  .booking-hub-view .booking-service-chip-button {
+    font-size: 13px;
+    padding: 8px 11px;
+  }
+
+  .booking-hub-view .booking-create-actions {
+    flex-wrap: wrap;
+    padding: 12px 16px;
+    padding-bottom: max(12px, env(safe-area-inset-bottom, 0px));
+  }
+
+  .booking-hub-view .booking-create-actions .booking-secondary-button,
+  .booking-hub-view .booking-create-actions .booking-primary-button {
+    flex: 1;
+    min-height: 44px;
+    font-size: 14px;
+  }
 }
 
 .booking-hub-view .booking-detail-modal {
@@ -6137,7 +7367,21 @@
   border-top: 1px solid var(--nexora-border);
   border-bottom: 0;
   background: #fff;
-  justify-content: flex-end;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.booking-hub-view .booking-detail-actions .booking-actions {
+  flex: 1 1 auto;
+  min-width: 0;
+  justify-content: flex-start;
+}
+
+.booking-hub-view .booking-detail-actions > .booking-secondary-button {
+  flex: 0 0 auto;
+  margin-left: auto;
 }
 
 .booking-hub-view .booking-detail-title {
@@ -6355,10 +7599,6 @@
 }
 
 @media (max-width: 1023px) {
-  .booking-hub-view .tech-grid {
-    grid-template-columns: minmax(0, 1fr);
-  }
-
   .booking-hub-view .tech-schedule-row {
     grid-template-columns: minmax(0, 1fr) auto;
     align-items: center;
@@ -6452,10 +7692,9 @@
 /* Only when the content panel itself is wide enough for four columns */
 @container booking-panel (min-width: 1180px) {
   .booking-hub-view .booking-controls {
-    grid-template-columns: minmax(120px, 0.65fr) minmax(160px, 1.15fr) minmax(
-        340px,
-        1.45fr
-      ) auto;
+    grid-template-columns:
+      minmax(120px, 0.65fr) minmax(160px, 1.15fr) minmax(340px, 1.45fr)
+      auto;
     align-items: end;
   }
 
@@ -6583,8 +7822,12 @@
     background: transparent;
   }
 
-  .booking-hub-view .booking-table-wrap:has(.cust-table) .booking-table-scroller,
-  .booking-hub-view .booking-table-wrap:has(.call-table) .booking-table-scroller {
+  .booking-hub-view
+    .booking-table-wrap:has(.cust-table)
+    .booking-table-scroller,
+  .booking-hub-view
+    .booking-table-wrap:has(.call-table)
+    .booking-table-scroller {
     overflow: visible;
     touch-action: auto;
   }
@@ -6842,6 +8085,7 @@
   }
 
   /* Placeholders stay compact on mobile (do not inherit the 16px iOS input floor) */
+  .booking-hub-view .booking-date-display,
   .booking-hub-view .booking-date-placeholder {
     font-size: 12px;
     font-weight: 600;
@@ -6946,8 +8190,12 @@
     background: transparent;
   }
 
-  .booking-hub-view .booking-table-wrap:has(.cust-table) .booking-table-scroller,
-  .booking-hub-view .booking-table-wrap:has(.call-table) .booking-table-scroller {
+  .booking-hub-view
+    .booking-table-wrap:has(.cust-table)
+    .booking-table-scroller,
+  .booking-hub-view
+    .booking-table-wrap:has(.call-table)
+    .booking-table-scroller {
     overflow: visible;
     touch-action: auto;
   }
@@ -7479,5 +8727,2539 @@
     .settings-time-box:has(.settings-hour-input[aria-invalid="true"]) {
     border-color: #ef4444;
     box-shadow: 0 0 0 1px rgba(239, 68, 68, 0.14);
+  }
+}
+
+/* ===== SMS Campaigns panel — match booking-book-phase-1.html ===== */
+.booking-hub-view,
+#nx-campaign-root {
+  --sms-buy-cta-bg: linear-gradient(135deg, #f59e0b, #ea580c);
+  --sms-buy-cta-bg-hover: linear-gradient(135deg, #fbbf24, #f97316);
+  --sms-buy-cta-shadow: 0 10px 22px rgba(234, 88, 12, 0.24);
+  --sms-buy-cta-shadow-hover: 0 12px 26px rgba(234, 88, 12, 0.32);
+}
+
+.booking-hub-view .marketing-icon {
+  width: 18px;
+  height: 18px;
+  flex: 0 0 18px;
+  stroke-width: 2;
+}
+
+.booking-hub-view .marketing-icon.is-compact {
+  width: 16px;
+  height: 16px;
+  flex-basis: 16px;
+}
+
+.booking-hub-view .marketing-icon-label {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.booking-hub-view .panel-sms-campaigns {
+  --cyan: #0891b2;
+  --green: var(--nexora-success);
+  --purple: var(--nexora-violet);
+  --orange: var(--nexora-warning);
+  --pink: #ec4899;
+}
+
+.booking-hub-view .panel-sms-campaigns .marketing-panel-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 18px;
+  margin-bottom: 18px;
+}
+
+.booking-hub-view .panel-sms-campaigns .marketing-panel-head h2 {
+  margin: 0;
+  font-size: clamp(1.125rem, 1rem + 0.6vw, 1.375rem);
+  line-height: 1.2;
+  color: var(--nexora-text);
+}
+
+.booking-hub-view
+  .panel-sms-campaigns
+  .marketing-panel-head
+  h2
+  .marketing-icon {
+  color: var(--nexora-brand);
+}
+
+.booking-hub-view .panel-sms-campaigns .marketing-panel-head p {
+  margin: 0;
+  color: var(--nexora-muted);
+  font-size: clamp(0.8125rem, 0.78rem + 0.2vw, 0.875rem);
+  line-height: 1.55;
+}
+
+.booking-hub-view .panel-sms-campaigns .marketing-panel-actions {
+  display: flex;
+  align-items: stretch;
+  gap: 10px;
+}
+
+.booking-hub-view .panel-sms-campaigns .sms-credit-pill {
+  display: grid;
+  grid-template-columns: auto auto;
+  gap: 2px 10px;
+  min-width: 170px;
+  border: 1px solid var(--nexora-border);
+  border-radius: 12px;
+  background: #fff;
+  padding: 9px 12px;
+  box-shadow: var(--nexora-card-shadow);
+}
+
+.booking-hub-view .panel-sms-campaigns .sms-credit-pill span {
+  color: var(--nexora-subtle);
+  font-size: clamp(0.6875rem, 0.65rem + 0.15vw, 0.75rem);
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.booking-hub-view .panel-sms-campaigns .sms-credit-pill strong {
+  grid-row: 1 / 3;
+  grid-column: 2;
+  align-self: center;
+  color: var(--nexora-brand);
+  font-size: clamp(1.125rem, 1.05rem + 0.4vw, 1.25rem);
+}
+
+.booking-hub-view .panel-sms-campaigns .sms-credit-pill strong.is-low {
+  color: #dc2626;
+}
+
+.booking-hub-view .panel-sms-campaigns .sms-credit-pill small {
+  color: var(--nexora-muted);
+  font-size: clamp(0.6875rem, 0.65rem + 0.15vw, 0.75rem);
+}
+
+.booking-hub-view .panel-sms-campaigns .sms-credit-buy-button {
+  align-self: stretch;
+  min-width: 138px;
+  border: 0;
+  background: var(--sms-buy-cta-bg, linear-gradient(135deg, #f59e0b, #ea580c));
+  padding: 10px 16px;
+  color: #fff;
+  font-size: clamp(0.75rem, 0.72rem + 0.15vw, 0.8125rem);
+  white-space: nowrap;
+  box-shadow: var(--sms-buy-cta-shadow, 0 10px 22px rgba(234, 88, 12, 0.24));
+}
+
+.booking-hub-view .panel-sms-campaigns .sms-credit-buy-button .marketing-icon {
+  color: #fff;
+}
+
+.booking-hub-view .panel-sms-campaigns .sms-credit-buy-button:hover {
+  background: var(
+    --sms-buy-cta-bg-hover,
+    linear-gradient(135deg, #fbbf24, #f97316)
+  );
+  box-shadow: var(
+    --sms-buy-cta-shadow-hover,
+    0 12px 26px rgba(234, 88, 12, 0.32)
+  );
+}
+
+.booking-hub-view .panel-sms-campaigns .sms-credit-buy-button:focus-visible {
+  outline: 3px solid rgba(245, 158, 11, 0.28);
+  outline-offset: 2px;
+}
+
+.booking-hub-view .panel-sms-campaigns .sms-campaign-stats {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 8px;
+  margin-bottom: 16px;
+}
+
+.booking-hub-view .panel-sms-campaigns .sms-stat-card,
+.booking-hub-view .panel-sms-campaigns .sms-campaign-card {
+  position: relative;
+  overflow: hidden;
+  border: 1px solid var(--nexora-border);
+  border-radius: 12px;
+  background: #fff;
+  box-shadow: var(--nexora-card-shadow);
+}
+
+.booking-hub-view .panel-sms-campaigns .sms-stat-card {
+  min-height: 72px;
+  padding: 8px 12px;
+}
+
+.booking-hub-view .panel-sms-campaigns .sms-stat-card::before,
+.booking-hub-view .panel-sms-campaigns .sms-campaign-card::before {
+  content: "";
+  position: absolute;
+  inset: 0 0 auto;
+  height: 3px;
+  background: var(--card-accent, var(--nexora-brand));
+}
+
+.booking-hub-view .panel-sms-campaigns .sms-stat-card span {
+  display: block;
+  color: var(--nexora-muted);
+  font-size: clamp(0.6875rem, 0.65rem + 0.2vw, 0.75rem);
+  font-weight: 700;
+  line-height: 1.15;
+}
+
+.booking-hub-view .panel-sms-campaigns .sms-stat-card strong {
+  display: block;
+  margin: 4px 0 1px;
+  color: var(--card-accent, var(--nexora-brand));
+  font-size: clamp(1.25rem, 1.1rem + 0.7vw, 1.3125rem);
+  line-height: 1.05;
+}
+
+.booking-hub-view .panel-sms-campaigns .sms-stat-card small {
+  color: var(--nexora-subtle);
+  font-size: clamp(0.6875rem, 0.65rem + 0.15vw, 0.75rem);
+  line-height: 1.2;
+}
+
+.booking-hub-view .panel-sms-campaigns .sms-stat-card.cyan {
+  --card-accent: #0891b2;
+}
+
+.booking-hub-view .panel-sms-campaigns .sms-stat-card.violet {
+  --card-accent: var(--nexora-violet);
+}
+
+.booking-hub-view .panel-sms-campaigns .sms-stat-card.green {
+  --card-accent: var(--nexora-success);
+}
+
+.booking-hub-view .panel-sms-campaigns .sms-stat-card.orange {
+  --card-accent: var(--nexora-warning);
+}
+
+.booking-hub-view .panel-sms-campaigns .marketing-section-heading h3 {
+  margin: 0 0 12px;
+  font-size: clamp(0.875rem, 0.82rem + 0.25vw, 0.9375rem);
+  color: var(--nexora-text);
+  font-weight: 800;
+}
+
+.booking-hub-view .panel-sms-campaigns .sms-campaign-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 14px;
+}
+
+.booking-hub-view .panel-sms-campaigns .sms-campaign-card {
+  display: grid;
+  grid-template-columns: 34px minmax(0, 1fr);
+  column-gap: 8px;
+  row-gap: 10px;
+  width: 100%;
+  padding: 12px;
+  color: var(--nexora-text);
+  text-align: left;
+  cursor: pointer;
+  transition: 0.2s ease;
+}
+
+.booking-hub-view .panel-sms-campaigns .sms-campaign-card:hover {
+  border-color: rgba(70, 72, 216, 0.5);
+  transform: translateY(-2px);
+}
+
+.booking-hub-view .panel-sms-campaigns .sms-campaign-icon {
+  display: flex;
+  grid-column: 1;
+  grid-row: 1;
+  width: 34px;
+  height: 34px;
+  align-items: center;
+  justify-content: center;
+  border-radius: 9px;
+  background: rgba(70, 72, 216, 0.09);
+  color: var(--nexora-brand);
+}
+
+.booking-hub-view .panel-sms-campaigns .sms-campaign-icon .marketing-icon {
+  width: 18px;
+  height: 18px;
+}
+
+.booking-hub-view .panel-sms-campaigns .sms-campaign-copy {
+  grid-column: 2;
+  min-width: 0;
+  align-self: start;
+}
+
+.booking-hub-view .panel-sms-campaigns .sms-campaign-name {
+  display: block;
+  font-size: clamp(0.8125rem, 0.78rem + 0.2vw, 0.875rem);
+  font-weight: 800;
+  line-height: 1.25;
+}
+
+.booking-hub-view .panel-sms-campaigns .sms-campaign-desc {
+  display: block;
+  margin-top: 3px;
+  color: var(--nexora-muted);
+  font-size: clamp(0.75rem, 0.7rem + 0.2vw, 0.8125rem);
+  line-height: 1.4;
+}
+
+.booking-hub-view .panel-sms-campaigns .sms-campaign-meta {
+  display: flex;
+  grid-column: 1 / -1;
+  justify-content: space-between;
+  align-items: end;
+  gap: 8px;
+  padding-top: 8px;
+  border-top: 1px solid var(--nexora-rule);
+}
+
+.booking-hub-view .panel-sms-campaigns .sms-campaign-count-wrap {
+  display: flex;
+  align-items: baseline;
+  gap: 4px;
+}
+
+.booking-hub-view .panel-sms-campaigns .sms-campaign-count {
+  color: #0891b2;
+  font-size: clamp(1rem, 0.95rem + 0.35vw, 1.0625rem);
+  font-weight: 800;
+}
+
+.booking-hub-view .panel-sms-campaigns .sms-campaign-count-label {
+  color: var(--nexora-subtle);
+  font-size: clamp(0.6875rem, 0.65rem + 0.15vw, 0.75rem);
+}
+
+.booking-hub-view .panel-sms-campaigns .sms-campaign-badge {
+  border-radius: 999px;
+  background: var(--nexora-surface-muted);
+  padding: 4px 8px;
+  color: var(--nexora-muted);
+  font-size: clamp(0.6875rem, 0.65rem + 0.15vw, 0.75rem);
+  font-weight: 800;
+}
+
+.booking-hub-view .panel-sms-campaigns .sms-campaign-history {
+  margin-top: 24px;
+  overflow: hidden;
+  border: 1px solid var(--nexora-border);
+  border-radius: 12px;
+  background: #fff;
+  box-shadow: var(--nexora-card-shadow);
+}
+
+.booking-hub-view
+  .panel-sms-campaigns
+  .sms-campaign-history
+  .marketing-section-heading {
+  margin: 0;
+  border-bottom: 1px solid var(--nexora-rule);
+  padding: 16px 18px 4px;
+}
+
+.booking-hub-view
+  .panel-sms-campaigns
+  .sms-campaign-history
+  .marketing-section-heading
+  h3 {
+  margin: 0 0 12px;
+}
+
+.booking-hub-view .panel-sms-campaigns .sms-campaign-table-wrap {
+  overflow-x: auto;
+}
+
+.booking-hub-view .panel-sms-campaigns .sms-campaign-table {
+  width: 100%;
+  min-width: 760px;
+  border-collapse: collapse;
+  color: var(--nexora-text);
+  font-size: clamp(0.75rem, 0.72rem + 0.15vw, 0.8125rem);
+}
+
+.booking-hub-view .panel-sms-campaigns .sms-campaign-table th {
+  background: #fbfdff;
+  color: var(--nexora-subtle);
+  font-size: clamp(0.6875rem, 0.65rem + 0.15vw, 0.75rem);
+  font-weight: 800;
+  letter-spacing: 0.04em;
+  text-align: left;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+
+.booking-hub-view .panel-sms-campaigns .sms-campaign-table th,
+.booking-hub-view .panel-sms-campaigns .sms-campaign-table td {
+  border-bottom: 1px solid var(--nexora-rule);
+  padding: 13px 16px;
+  vertical-align: middle;
+}
+
+.booking-hub-view
+  .panel-sms-campaigns
+  .sms-campaign-table
+  tbody
+  tr:last-child
+  td {
+  border-bottom: 0;
+}
+
+.booking-hub-view .panel-sms-campaigns .sms-campaign-table tbody tr:hover {
+  background: #fbfdff;
+}
+
+.booking-hub-view
+  .panel-sms-campaigns
+  .sms-campaign-history
+  .booking-pagination {
+  padding: 14px 16px !important;
+  margin-top: 0;
+}
+
+.booking-hub-view .panel-sms-campaigns .sms-campaign-table td:first-child {
+  min-width: 160px;
+  font-weight: 800;
+}
+
+.booking-hub-view .panel-sms-campaigns .sms-campaign-table td:nth-child(2) {
+  min-width: 150px;
+  color: var(--nexora-muted);
+}
+
+.booking-hub-view .panel-sms-campaigns .sms-campaign-table td:nth-child(5),
+.booking-hub-view .panel-sms-campaigns .sms-campaign-table td:nth-child(6) {
+  color: var(--nexora-muted);
+  font-variant-numeric: tabular-nums;
+}
+
+.booking-hub-view .panel-sms-campaigns .sms-campaign-status {
+  display: inline-flex;
+  align-items: center;
+  border-radius: 999px;
+  padding: 4px 8px;
+  font-size: clamp(0.6875rem, 0.65rem + 0.15vw, 0.75rem);
+  font-weight: 800;
+  white-space: nowrap;
+}
+
+.booking-hub-view .panel-sms-campaigns .sms-campaign-status.is-sent {
+  background: rgba(0, 184, 115, 0.1);
+  color: var(--nexora-success);
+}
+
+.booking-hub-view .panel-sms-campaigns .sms-campaign-status.is-scheduled {
+  background: rgba(43, 89, 255, 0.1);
+  color: var(--nexora-electric);
+}
+
+.booking-hub-view .panel-sms-campaigns .sms-campaign-status.is-active {
+  background: rgba(142, 77, 248, 0.1);
+  color: var(--nexora-violet);
+}
+
+.booking-hub-view .panel-sms-campaigns .sms-campaign-status.is-cancelled {
+  background: rgba(122, 130, 150, 0.14);
+  color: var(--nexora-muted);
+}
+
+.booking-hub-view .panel-sms-campaigns .sms-campaign-actions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  white-space: nowrap;
+}
+
+.booking-hub-view .panel-sms-campaigns .sms-campaign-action {
+  display: inline-flex;
+  min-height: 30px;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid var(--nexora-border);
+  border-radius: 7px;
+  background: #fff;
+  padding: 6px 10px;
+  color: var(--nexora-brand);
+  font-size: clamp(0.75rem, 0.7rem + 0.2vw, 0.8125rem);
+  font-weight: 700;
+  text-decoration: none;
+  cursor: pointer;
+  transition:
+    background 0.18s ease,
+    border-color 0.18s ease,
+    color 0.18s ease,
+    transform 0.18s ease;
+}
+
+.booking-hub-view .panel-sms-campaigns .sms-campaign-action:hover {
+  border-color: rgba(70, 72, 216, 0.4);
+  background: rgba(70, 72, 216, 0.06);
+  color: #393bc8;
+  transform: translateY(-1px);
+}
+
+.booking-hub-view .panel-sms-campaigns .sms-campaign-action:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+  transform: none;
+}
+
+.booking-hub-view .panel-sms-campaigns .sms-campaign-action.is-danger {
+  border-color: rgba(194, 65, 65, 0.25);
+  background: #fff8f8;
+  color: #c24141;
+}
+
+.booking-hub-view .panel-sms-campaigns .sms-campaign-action.is-danger:hover {
+  border-color: rgba(194, 65, 65, 0.45);
+  background: #fff0f0;
+  color: #a83232;
+}
+
+.booking-hub-view
+  .panel-sms-campaigns
+  .sms-campaign-action[data-sms-campaign-action="view"] {
+  border-color: rgba(43, 89, 255, 0.28);
+  background: rgba(43, 89, 255, 0.08);
+  color: var(--nexora-electric);
+}
+
+.booking-hub-view
+  .panel-sms-campaigns
+  .sms-campaign-action[data-sms-campaign-action="edit"],
+.booking-hub-view
+  .panel-sms-campaigns
+  .sms-campaign-action[data-sms-campaign-action="pause"],
+.booking-hub-view
+  .panel-sms-campaigns
+  .sms-campaign-action[data-sms-campaign-action="resume"] {
+  border-color: rgba(142, 77, 248, 0.28);
+  background: rgba(142, 77, 248, 0.08);
+  color: var(--nexora-violet);
+}
+
+.booking-hub-view
+  .panel-sms-campaigns
+  .sms-campaign-action[data-sms-campaign-action="cancel"] {
+  border-color: rgba(217, 119, 6, 0.28);
+  background: #fffaf0;
+  color: #d97706;
+}
+
+.booking-hub-view
+  .panel-sms-campaigns
+  .sms-campaign-action[data-sms-campaign-action="delete"] {
+  border-color: rgba(194, 65, 65, 0.3);
+  background: #fff8f8;
+  color: #c24141;
+}
+
+.booking-hub-view
+  .panel-sms-campaigns
+  .sms-campaign-action[data-sms-campaign-action="view"]:hover {
+  border-color: rgba(43, 89, 255, 0.48);
+  background: rgba(43, 89, 255, 0.14);
+  color: #2048c9;
+}
+
+.booking-hub-view
+  .panel-sms-campaigns
+  .sms-campaign-action[data-sms-campaign-action="edit"]:hover,
+.booking-hub-view
+  .panel-sms-campaigns
+  .sms-campaign-action[data-sms-campaign-action="pause"]:hover,
+.booking-hub-view
+  .panel-sms-campaigns
+  .sms-campaign-action[data-sms-campaign-action="resume"]:hover {
+  border-color: rgba(142, 77, 248, 0.48);
+  background: rgba(142, 77, 248, 0.14);
+  color: #7134d4;
+}
+
+.booking-hub-view
+  .panel-sms-campaigns
+  .sms-campaign-action[data-sms-campaign-action="cancel"]:hover {
+  border-color: rgba(217, 119, 6, 0.48);
+  background: #fff3d6;
+  color: #b45f00;
+}
+
+.booking-hub-view
+  .panel-sms-campaigns
+  .sms-campaign-action[data-sms-campaign-action="delete"]:hover {
+  border-color: rgba(194, 65, 65, 0.5);
+  background: #fff0f0;
+  color: #a83232;
+}
+
+.booking-hub-view .panel-sms-campaigns .sms-campaign-empty {
+  padding: 24px 16px !important;
+  color: var(--nexora-subtle);
+  text-align: center;
+}
+
+.booking-hub-view .panel-sms-campaigns .booking-primary-button .marketing-icon {
+  color: #fff;
+}
+
+@media (max-width: 900px) {
+  .booking-hub-view .panel-sms-campaigns .sms-campaign-stats {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .booking-hub-view .panel-sms-campaigns .sms-campaign-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .booking-hub-view .panel-sms-campaigns .sms-stat-card strong {
+    font-size: clamp(1.375rem, 1.2rem + 0.8vw, 1.5rem);
+  }
+
+  .booking-hub-view .panel-sms-campaigns .sms-campaign-name {
+    font-size: 0.875rem;
+  }
+
+  .booking-hub-view .panel-sms-campaigns .sms-campaign-desc {
+    font-size: 0.8125rem;
+  }
+}
+
+@media (max-width: 767px) {
+  .booking-hub-view .panel-sms-campaigns .marketing-panel-head p {
+    font-size: 0.875rem;
+  }
+
+  .booking-hub-view .panel-sms-campaigns .sms-credit-pill span,
+  .booking-hub-view .panel-sms-campaigns .sms-credit-pill small {
+    font-size: 0.75rem;
+  }
+
+  .booking-hub-view .panel-sms-campaigns .sms-credit-pill strong {
+    font-size: 1.375rem;
+  }
+
+  .booking-hub-view .panel-sms-campaigns .sms-credit-buy-button,
+  .booking-hub-view
+    .panel-sms-campaigns
+    .marketing-panel-actions
+    .booking-primary-button {
+    font-size: 0.875rem;
+    min-height: 44px;
+  }
+
+  .booking-hub-view .panel-sms-campaigns .sms-stat-card {
+    min-height: 84px;
+    padding: 12px 14px;
+  }
+
+  .booking-hub-view .panel-sms-campaigns .sms-stat-card span {
+    font-size: 0.75rem;
+  }
+
+  .booking-hub-view .panel-sms-campaigns .sms-stat-card strong {
+    font-size: 1.5rem;
+  }
+
+  .booking-hub-view .panel-sms-campaigns .sms-stat-card small {
+    font-size: 0.75rem;
+  }
+
+  .booking-hub-view .panel-sms-campaigns .marketing-section-heading h3 {
+    font-size: 1rem;
+  }
+
+  .booking-hub-view .panel-sms-campaigns .sms-campaign-name {
+    font-size: 0.9375rem;
+  }
+
+  .booking-hub-view .panel-sms-campaigns .sms-campaign-desc {
+    font-size: 0.8125rem;
+  }
+
+  .booking-hub-view .panel-sms-campaigns .sms-campaign-count {
+    font-size: 1.125rem;
+  }
+
+  .booking-hub-view .panel-sms-campaigns .sms-campaign-count-label,
+  .booking-hub-view .panel-sms-campaigns .sms-campaign-badge {
+    font-size: 0.75rem;
+  }
+
+  .booking-hub-view .panel-sms-campaigns .sms-campaign-status {
+    font-size: 0.75rem;
+  }
+
+  .booking-hub-view .panel-sms-campaigns .sms-campaign-action {
+    min-height: 36px;
+    font-size: 0.8125rem;
+    padding: 8px 12px;
+  }
+}
+
+@media (max-width: 600px) {
+  .booking-hub-view .panel-sms-campaigns .marketing-panel-head {
+    flex-direction: column;
+  }
+
+  .booking-hub-view .panel-sms-campaigns .marketing-panel-actions {
+    width: 100%;
+    flex-direction: column;
+  }
+
+  .booking-hub-view .panel-sms-campaigns .sms-credit-pill,
+  .booking-hub-view .panel-sms-campaigns .sms-credit-buy-button,
+  .booking-hub-view
+    .panel-sms-campaigns
+    .marketing-panel-actions
+    .booking-primary-button {
+    width: 100%;
+  }
+
+  .booking-hub-view .panel-sms-campaigns .sms-campaign-stats,
+  .booking-hub-view .panel-sms-campaigns .sms-campaign-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .booking-hub-view .panel-sms-campaigns .sms-campaign-table th,
+  .booking-hub-view .panel-sms-campaigns .sms-campaign-table td {
+    padding: 12px;
+  }
+}
+
+/* ===== SMS Campaign modals (#nx-campaign-root) — match booking-book-phase-1.html ===== */
+#nx-campaign-root {
+  --nx-brand: #4648d8;
+  --nx-brand-dark: #393bc8;
+  --nx-electric: #2b59ff;
+  --nx-cyan: #0891b2;
+  font-family: inherit;
+  color: var(--nexora-text);
+}
+
+#nx-campaign-root .modal-overlay {
+  display: none;
+  position: fixed;
+  inset: 0;
+  z-index: 130;
+  align-items: center;
+  justify-content: center;
+  padding: 18px;
+  background: rgba(8, 31, 73, 0.42);
+  backdrop-filter: blur(8px);
+}
+
+#nx-campaign-root .modal-overlay.open {
+  display: flex;
+}
+
+#nx-campaign-root .modal {
+  width: min(100%, 680px);
+  max-width: 100%;
+  max-height: 90vh;
+  overflow-x: hidden;
+  overflow-y: auto;
+  border: 1px solid var(--nexora-border);
+  border-radius: 12px;
+  background: #fff;
+  box-shadow: 0 28px 80px rgba(8, 31, 73, 0.24);
+}
+
+#nx-campaign-root .modal-header {
+  position: sticky;
+  top: 0;
+  z-index: 2;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 16px 20px;
+  border-bottom: 1px solid var(--nexora-border);
+  background: linear-gradient(180deg, #fff, #f8fbff);
+}
+
+#nx-campaign-root .modal-title {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: var(--nexora-text);
+  font-size: clamp(0.9375rem, 0.9rem + 0.25vw, 1rem);
+  font-weight: 800;
+}
+
+#nx-campaign-root .modal-title .marketing-icon {
+  color: var(--nx-brand);
+}
+
+#nx-campaign-root .modal-close {
+  display: inline-flex;
+  width: 34px;
+  height: 34px;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid var(--nexora-border);
+  border-radius: 10px;
+  background: #fff;
+  color: var(--nexora-muted);
+  font-size: 15px;
+  cursor: pointer;
+}
+
+#nx-campaign-root .modal-close:hover {
+  background: #f7f9fc;
+  color: var(--nexora-text);
+}
+
+#nx-campaign-root .modal-body {
+  padding: 16px 20px;
+  background: #f7f9fc;
+  min-width: 0;
+}
+
+#nx-campaign-root .field-group {
+  margin-bottom: 18px;
+  min-width: 0;
+  max-width: 100%;
+}
+
+#nx-campaign-root .field-label {
+  margin-bottom: 8px;
+  color: var(--nexora-subtle);
+  font-size: clamp(0.6875rem, 0.65rem + 0.15vw, 0.75rem);
+  font-weight: 800;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+}
+
+#nx-campaign-root .segment-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 10px;
+}
+
+#nx-campaign-root .segment-btn {
+  border: 1px solid var(--nexora-border);
+  border-radius: 10px;
+  background: #fff;
+  padding: 12px 10px;
+  text-align: center;
+  cursor: pointer;
+  transition: all 0.15s;
+  font-family: inherit;
+  color: var(--nexora-text);
+  box-shadow: 0 2px 8px rgba(15, 23, 42, 0.04);
+}
+
+#nx-campaign-root .segment-btn:hover {
+  border-color: var(--nx-brand);
+  transform: translateY(-1px);
+}
+
+#nx-campaign-root .segment-btn.selected {
+  border-color: var(--nx-brand);
+  background: rgba(70, 72, 216, 0.08);
+  box-shadow: 0 8px 18px rgba(70, 72, 216, 0.14);
+}
+
+#nx-campaign-root .segment-btn-icon {
+  display: flex;
+  justify-content: center;
+  margin-bottom: 6px;
+  color: var(--nx-brand);
+}
+
+#nx-campaign-root .segment-btn-name {
+  display: block;
+  font-size: clamp(0.75rem, 0.72rem + 0.15vw, 0.8125rem);
+  font-weight: 700;
+}
+
+#nx-campaign-root .segment-btn-count {
+  display: block;
+  margin-top: 2px;
+  font-size: clamp(0.6875rem, 0.65rem + 0.15vw, 0.75rem);
+  font-weight: 700;
+  color: var(--nx-cyan);
+}
+
+#nx-campaign-root .template-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+#nx-campaign-root .template-item {
+  border: 1px solid var(--nexora-border);
+  border-radius: 10px;
+  background: #fff;
+  padding: 12px 14px;
+  text-align: left;
+  cursor: pointer;
+  transition: all 0.15s;
+  font-family: inherit;
+}
+
+#nx-campaign-root .template-item:hover {
+  border-color: var(--nx-brand);
+  background: rgba(70, 72, 216, 0.04);
+}
+
+#nx-campaign-root .template-item-title {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-bottom: 4px;
+  font-size: clamp(0.75rem, 0.72rem + 0.15vw, 0.8125rem);
+  font-weight: 800;
+  color: var(--nx-brand);
+}
+
+#nx-campaign-root .template-item-text {
+  font-size: clamp(0.8125rem, 0.78rem + 0.2vw, 0.875rem);
+  line-height: 1.5;
+  color: var(--nexora-muted);
+}
+
+#nx-campaign-root .sms-composer {
+  overflow: hidden;
+  border: 1px solid var(--nexora-border);
+  border-radius: 10px;
+  background: #fff;
+}
+
+#nx-campaign-root .sms-toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 14px;
+  border-bottom: 1px solid var(--nexora-rule);
+  background: #fbfdff;
+}
+
+#nx-campaign-root .sms-toolbar > span:first-child {
+  color: var(--nexora-subtle);
+  font-size: clamp(0.6875rem, 0.65rem + 0.15vw, 0.75rem);
+  font-weight: 700;
+}
+
+#nx-campaign-root .tag-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  border: 1px solid rgba(70, 72, 216, 0.18);
+  border-radius: 7px;
+  background: rgba(70, 72, 216, 0.08);
+  padding: 5px 10px;
+  color: var(--nx-brand);
+  font-size: clamp(0.6875rem, 0.65rem + 0.15vw, 0.75rem);
+  font-weight: 700;
+  cursor: pointer;
+  font-family: inherit;
+}
+
+#nx-campaign-root .tag-btn:hover {
+  background: rgba(70, 72, 216, 0.16);
+}
+
+#nx-campaign-root .sms-textarea {
+  display: block;
+  width: 100%;
+  min-height: 100px;
+  resize: vertical;
+  border: 0;
+  background: transparent;
+  padding: 14px;
+  color: var(--nexora-text);
+  font-family: inherit;
+  font-size: clamp(0.875rem, 0.84rem + 0.2vw, 0.9375rem);
+  line-height: 1.6;
+  outline: none;
+}
+
+#nx-campaign-root .sms-footer {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 6px;
+  padding: 10px 14px;
+  border-top: 1px solid var(--nexora-rule);
+  color: var(--nexora-muted);
+  font-size: 12px;
+  font-weight: 600;
+}
+
+#nx-campaign-root .char-count {
+  color: var(--nx-electric);
+  font-weight: 800;
+}
+
+#nx-campaign-root .char-count.multi {
+  color: var(--nexora-warning);
+}
+
+#nx-campaign-root .sms-preview {
+  margin-top: 12px;
+  border: 1px solid var(--nexora-border);
+  border-radius: 10px;
+  background: #f4f7fb;
+  padding: 14px;
+}
+
+#nx-campaign-root .sms-preview-label {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-bottom: 8px;
+  color: var(--nexora-subtle);
+  font-size: clamp(0.6875rem, 0.65rem + 0.15vw, 0.75rem);
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+#nx-campaign-root .sms-bubble {
+  max-width: 85%;
+  border-radius: 16px 16px 16px 4px;
+  background: #fff;
+  padding: 11px 14px;
+  color: var(--nexora-text);
+  font-size: clamp(0.8125rem, 0.78rem + 0.2vw, 0.875rem);
+  line-height: 1.5;
+  word-wrap: break-word;
+  box-shadow: 0 4px 12px rgba(15, 23, 42, 0.08);
+}
+
+#nx-campaign-root .sms-bubble .lnk {
+  color: var(--nx-electric);
+  text-decoration: underline;
+  cursor: pointer;
+}
+
+#nx-campaign-root .sms-bubble a.lnk:hover {
+  color: var(--nx-brand-dark, #393bc8);
+}
+
+#nx-campaign-root .sms-preview-empty {
+  color: var(--nexora-subtle);
+  font-size: 12px;
+  font-style: italic;
+}
+
+#nx-campaign-root .form-input,
+#nx-campaign-root .form-select,
+#nx-campaign-root .form-textarea {
+  width: 100%;
+  border: 1px solid var(--nexora-border);
+  border-radius: 10px;
+  background: #fff;
+  padding: 10px 14px;
+  color: var(--nexora-text);
+  font-family: inherit;
+  font-size: 13px;
+  outline: none;
+  transition: border-color 0.15s;
+}
+
+#nx-campaign-root .form-input:focus,
+#nx-campaign-root .form-select:focus,
+#nx-campaign-root .form-textarea:focus {
+  border-color: var(--nx-brand);
+}
+
+#nx-campaign-root .form-input.has-error,
+#nx-campaign-root .form-select.has-error,
+#nx-campaign-root .form-textarea.has-error,
+#nx-campaign-root .sms-textarea.has-error {
+  border-color: #ef4444;
+}
+
+#nx-campaign-root .field-error {
+  display: block;
+  margin-top: 6px;
+  color: #dc2626;
+  font-size: 12px;
+  font-weight: 600;
+  line-height: 1.35;
+}
+
+#nx-campaign-root .modal-footer {
+  position: sticky;
+  bottom: 0;
+  display: flex;
+  flex-wrap: nowrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 16px 20px;
+  border-top: 1px solid var(--nexora-border);
+  background: #fff;
+}
+
+#nx-campaign-root .cost-preview {
+  flex: 1 1 auto;
+  min-width: 0;
+  border: 1px solid rgba(43, 89, 255, 0.25);
+  border-radius: 10px;
+  background: rgba(43, 89, 255, 0.06);
+  padding: 10px 16px;
+}
+
+#nx-campaign-root .cost-preview.warn {
+  border-color: rgba(220, 38, 38, 0.35);
+  background: rgba(220, 38, 38, 0.07);
+}
+
+#nx-campaign-root .cost-preview-label {
+  color: var(--nexora-muted);
+  font-size: clamp(0.6875rem, 0.65rem + 0.15vw, 0.75rem);
+  font-weight: 600;
+}
+
+#nx-campaign-root .cost-preview-insufficient {
+  display: inline-flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px 10px;
+  margin-bottom: 6px;
+  color: #b91c1c;
+  font-size: clamp(0.75rem, 0.7rem + 0.2vw, 0.8125rem);
+  font-weight: 700;
+}
+
+#nx-campaign-root .cost-preview-buy-link {
+  appearance: none;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  margin: 0;
+  border: 0;
+  border-radius: 999px;
+  padding: 5px 12px 5px 10px;
+  background: var(--sms-buy-cta-bg);
+  color: #fff;
+  font: inherit;
+  font-size: clamp(0.6875rem, 0.65rem + 0.15vw, 0.75rem);
+  font-weight: 800;
+  letter-spacing: 0.01em;
+  line-height: 1.2;
+  white-space: nowrap;
+  cursor: pointer;
+  box-shadow:
+    0 1px 0 rgba(255, 255, 255, 0.28) inset,
+    var(--sms-buy-cta-shadow);
+  transition:
+    transform 0.15s ease,
+    box-shadow 0.15s ease,
+    filter 0.15s ease;
+}
+
+#nx-campaign-root .cost-preview-buy-link .marketing-icon {
+  width: 0.875rem;
+  height: 0.875rem;
+  color: #fff;
+  flex-shrink: 0;
+}
+
+#nx-campaign-root .cost-preview-buy-link:hover {
+  background: var(--sms-buy-cta-bg-hover);
+  filter: brightness(1.02);
+  box-shadow:
+    0 1px 0 rgba(255, 255, 255, 0.32) inset,
+    var(--sms-buy-cta-shadow-hover);
+  transform: translateY(-1px);
+}
+
+#nx-campaign-root .cost-preview-buy-link:active {
+  transform: translateY(0);
+  filter: brightness(0.98);
+}
+
+#nx-campaign-root .cost-preview-buy-link:focus-visible {
+  outline: 3px solid rgba(245, 158, 11, 0.4);
+  outline-offset: 2px;
+}
+
+#nx-campaign-root .cost-preview-amount {
+  color: var(--nx-electric);
+  font-size: clamp(0.9375rem, 0.9rem + 0.25vw, 1rem);
+  font-weight: 800;
+  overflow-wrap: anywhere;
+}
+
+#nx-campaign-root .cost-preview.warn .cost-preview-amount {
+  color: #dc2626;
+}
+
+#nx-campaign-root .modal-footer-actions {
+  display: flex;
+  flex: 0 0 auto;
+  align-items: stretch;
+  gap: 10px;
+}
+
+#nx-campaign-root .modal-footer-actions .btn-primary,
+#nx-campaign-root .modal-footer-actions .btn-outline {
+  box-sizing: border-box;
+  min-height: 42px;
+  height: 42px;
+  padding-top: 0;
+  padding-bottom: 0;
+  justify-content: center;
+}
+
+#nx-campaign-root .btn-primary {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  border: 1px solid transparent;
+  border-radius: 8px;
+  background: var(--nx-brand);
+  padding: 10px 16px;
+  color: #fff;
+  font-size: clamp(0.8125rem, 0.78rem + 0.2vw, 0.875rem);
+  font-weight: 900;
+  cursor: pointer;
+  font-family: inherit;
+  box-shadow: 0 10px 22px rgba(70, 72, 216, 0.2);
+  transition:
+    transform 0.15s,
+    background 0.2s,
+    opacity 0.2s;
+}
+
+#nx-campaign-root .btn-primary:hover {
+  background: var(--nx-brand-dark);
+  transform: translateY(-1px);
+}
+
+#nx-campaign-root .btn-primary:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+  box-shadow: none;
+  transform: none;
+}
+
+#nx-campaign-root .btn-outline {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  border: 1px solid var(--nexora-border);
+  border-radius: 8px;
+  background: #fff;
+  padding: 10px 16px;
+  color: var(--nexora-brand);
+  font-size: clamp(0.8125rem, 0.78rem + 0.2vw, 0.875rem);
+  font-weight: 800;
+  cursor: pointer;
+  font-family: inherit;
+  text-decoration: none;
+  transition: all 0.15s;
+}
+
+#nx-campaign-root .btn-outline:hover {
+  border-color: var(--nx-brand);
+}
+
+#nx-campaign-root .schedule-options {
+  display: flex;
+  gap: 8px;
+  align-items: stretch;
+}
+
+#nx-campaign-root .schedule-opt {
+  flex: 1 1 0;
+  min-width: 0;
+  border: 1px solid var(--nexora-border);
+  border-radius: 10px;
+  background: #fff;
+  padding: 12px 8px;
+  text-align: center;
+  cursor: pointer;
+  transition: all 0.15s;
+  font-family: inherit;
+  color: var(--nexora-text);
+}
+
+#nx-campaign-root .schedule-opt:hover {
+  border-color: var(--nx-brand);
+}
+
+#nx-campaign-root .schedule-opt.selected {
+  border-color: var(--nx-brand);
+  background: rgba(70, 72, 216, 0.08);
+}
+
+#nx-campaign-root .schedule-opt:disabled,
+#nx-campaign-root .schedule-opt:disabled:hover {
+  cursor: not-allowed;
+  border-color: var(--nexora-border);
+  background: #f1f5f9;
+  color: #94a3b8;
+  opacity: 1;
+  box-shadow: none;
+}
+
+#nx-campaign-root .schedule-opt:disabled .schedule-opt-icon {
+  color: #94a3b8;
+}
+
+#nx-campaign-root .schedule-opt:disabled .schedule-opt-label {
+  color: #94a3b8;
+}
+
+/* Keep the previously chosen schedule bright while editing (disabled but selected). */
+#nx-campaign-root .schedule-opt.selected:disabled,
+#nx-campaign-root .schedule-opt.selected:disabled:hover {
+  cursor: not-allowed;
+  border-color: var(--nx-brand);
+  background: rgba(70, 72, 216, 0.08);
+  color: var(--nexora-text);
+}
+
+#nx-campaign-root .schedule-opt.selected:disabled .schedule-opt-icon {
+  color: var(--nx-brand);
+}
+
+#nx-campaign-root .schedule-opt.selected:disabled .schedule-opt-label {
+  color: var(--nexora-text);
+}
+
+#nx-campaign-root .schedule-opt-icon {
+  display: flex;
+  justify-content: center;
+  margin-bottom: 6px;
+  color: var(--nx-brand);
+}
+
+#nx-campaign-root .schedule-opt-label {
+  display: block;
+  font-size: clamp(0.75rem, 0.72rem + 0.15vw, 0.8125rem);
+  font-weight: 700;
+  line-height: 1.25;
+  overflow-wrap: anywhere;
+}
+
+#nx-campaign-root .time-input-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  gap: 10px;
+  margin-top: 10px;
+  width: 100%;
+  max-width: 100%;
+  min-width: 0;
+}
+
+/* Native date/time controls have huge intrinsic min-width on real iOS/Android.
+   Clip inside a sized shell so they cannot expand past the modal.
+   Display text is app-locale overlay; native control text is transparent. */
+#nx-campaign-root .schedule-datetime-display {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  display: flex;
+  align-items: center;
+  padding: 0 36px 0 14px;
+  color: var(--nexora-text);
+  font-size: 13px;
+  font-weight: 600;
+  line-height: 1.2;
+  pointer-events: none;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+#nx-campaign-root .schedule-datetime-shell.is-empty .schedule-datetime-display {
+  color: var(--nexora-subtle);
+}
+
+#nx-campaign-root .schedule-datetime-shell {
+  position: relative;
+  display: flex;
+  align-items: center;
+  width: 100%;
+  max-width: 100%;
+  min-width: 0;
+  min-height: 42px;
+  overflow: hidden;
+  border: 1px solid var(--nexora-border);
+  border-radius: 10px;
+  background: #fff;
+}
+
+#nx-campaign-root .schedule-datetime-shell:focus-within {
+  border-color: var(--nx-brand);
+}
+
+#nx-campaign-root .schedule-datetime-input {
+  position: relative;
+  z-index: 2;
+  box-sizing: border-box;
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  width: 100%;
+  min-width: 0;
+  max-width: 100%;
+  height: 42px;
+  min-height: 42px;
+  border-color: transparent;
+  background: transparent; /* let app-locale overlay show through */
+  -webkit-appearance: none;
+  appearance: none;
+  -webkit-locale: "en-US-u-hc-h12";
+  color-scheme: light;
+  line-height: normal;
+  text-align: left;
+  color: transparent;
+  caret-color: transparent;
+  cursor: pointer;
+}
+
+#nx-campaign-root
+  .schedule-datetime-shell[lang^="vi"]
+  .schedule-datetime-input {
+  -webkit-locale: "vi-VN-u-hc-h12";
+}
+
+#nx-campaign-root .schedule-datetime-input:disabled {
+  cursor: not-allowed;
+  background: transparent;
+  border-color: transparent;
+  opacity: 1;
+}
+
+#nx-campaign-root
+  .schedule-datetime-shell:has(.schedule-datetime-input:disabled) {
+  background: #f1f5f9;
+  border-color: var(--nexora-border);
+}
+
+#nx-campaign-root
+  .schedule-datetime-shell:has(.schedule-datetime-input:disabled)
+  .schedule-datetime-display {
+  color: #94a3b8;
+}
+
+#nx-campaign-root .schedule-datetime-input[type="date"],
+#nx-campaign-root .schedule-datetime-input[type="time"] {
+  min-width: 0;
+  max-width: 100%;
+}
+
+#nx-campaign-root .schedule-datetime-input::-webkit-date-and-time-value,
+#nx-campaign-root .schedule-datetime-input::-webkit-datetime-edit,
+#nx-campaign-root
+  .schedule-datetime-input::-webkit-datetime-edit-fields-wrapper,
+#nx-campaign-root .schedule-datetime-input::-webkit-datetime-edit-text,
+#nx-campaign-root .schedule-datetime-input::-webkit-datetime-edit-month-field,
+#nx-campaign-root .schedule-datetime-input::-webkit-datetime-edit-day-field,
+#nx-campaign-root .schedule-datetime-input::-webkit-datetime-edit-year-field,
+#nx-campaign-root .schedule-datetime-input::-webkit-datetime-edit-hour-field,
+#nx-campaign-root .schedule-datetime-input::-webkit-datetime-edit-minute-field,
+#nx-campaign-root .schedule-datetime-input::-webkit-datetime-edit-ampm-field {
+  color: transparent;
+  min-width: 0;
+  max-width: 100%;
+  padding: 0;
+  overflow: hidden;
+}
+
+#nx-campaign-root .schedule-datetime-input::-webkit-calendar-picker-indicator {
+  position: absolute;
+  right: 10px;
+  z-index: 3;
+  flex: 0 0 auto;
+  width: 18px;
+  height: 18px;
+  margin: 0;
+  cursor: pointer;
+  opacity: 0.7;
+}
+
+/* Custom schedule date picker — past days are disabled (native mobile calendars ignore min). */
+:is(#nx-campaign-root, .booking-hub-view .booking-create-modal)
+  .time-input-row {
+  overflow: visible;
+}
+
+:is(#nx-campaign-root, .booking-hub-view .booking-create-modal)
+  .schedule-date-picker {
+  overflow: visible;
+  z-index: 4;
+}
+
+:is(#nx-campaign-root, .booking-hub-view .booking-create-modal)
+  .schedule-datetime-trigger {
+  display: flex;
+  align-items: center;
+  width: 100%;
+  min-width: 0;
+  height: 42px;
+  min-height: 42px;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  cursor: pointer;
+  text-align: left;
+}
+
+:is(#nx-campaign-root, .booking-hub-view .booking-create-modal)
+  .schedule-datetime-trigger:disabled {
+  cursor: not-allowed;
+}
+
+:is(#nx-campaign-root, .booking-hub-view .booking-create-modal)
+  .schedule-date-picker:has(.schedule-datetime-trigger:disabled) {
+  background: #f1f5f9;
+  border-color: var(--nexora-border);
+}
+
+:is(#nx-campaign-root, .booking-hub-view .booking-create-modal)
+  .schedule-date-picker:has(.schedule-datetime-trigger:disabled)
+  .schedule-datetime-display {
+  color: #94a3b8;
+}
+
+:is(#nx-campaign-root, .booking-hub-view .booking-create-modal)
+  .schedule-datetime-display.is-static {
+  position: static;
+  inset: auto;
+  width: 100%;
+  pointer-events: none;
+}
+
+:is(#nx-campaign-root, .booking-hub-view .booking-create-modal)
+  .schedule-calendar-popover {
+  position: absolute;
+  top: auto;
+  bottom: calc(100% + 6px);
+  left: 0;
+  z-index: 30;
+  width: min(100%, 288px);
+  min-width: 260px;
+  padding: 12px;
+  border: 1px solid var(--nexora-border);
+  border-radius: 12px;
+  background: #fff;
+  box-shadow: 0 12px 28px rgba(15, 23, 42, 0.14);
+}
+
+:is(#nx-campaign-root, .booking-hub-view .booking-create-modal)
+  .schedule-calendar-popover.is-fixed {
+  position: fixed;
+  bottom: auto;
+  z-index: 200;
+}
+
+:is(#nx-campaign-root, .booking-hub-view .booking-create-modal)
+  .schedule-calendar-nav {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  margin-bottom: 10px;
+}
+
+:is(#nx-campaign-root, .booking-hub-view .booking-create-modal)
+  .schedule-calendar-month {
+  flex: 1;
+  color: var(--nexora-text);
+  font-size: 13px;
+  font-weight: 700;
+  text-align: center;
+  text-transform: capitalize;
+}
+
+:is(#nx-campaign-root, .booking-hub-view .booking-create-modal)
+  .schedule-calendar-nav-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  padding: 0;
+  border: 1px solid var(--nexora-border);
+  border-radius: 8px;
+  background: #fff;
+  color: var(--nexora-text);
+  cursor: pointer;
+}
+
+:is(#nx-campaign-root, .booking-hub-view .booking-create-modal)
+  .schedule-calendar-nav-btn:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+:is(#nx-campaign-root, .booking-hub-view .booking-create-modal)
+  .schedule-calendar-nav-btn
+  .marketing-icon {
+  width: 16px;
+  height: 16px;
+}
+
+:is(#nx-campaign-root, .booking-hub-view .booking-create-modal)
+  .schedule-calendar-weekdays,
+:is(#nx-campaign-root, .booking-hub-view .booking-create-modal)
+  .schedule-calendar-grid {
+  display: grid;
+  grid-template-columns: repeat(7, minmax(0, 1fr));
+  gap: 4px;
+}
+
+:is(#nx-campaign-root, .booking-hub-view .booking-create-modal)
+  .schedule-calendar-weekdays {
+  margin-bottom: 4px;
+}
+
+:is(#nx-campaign-root, .booking-hub-view .booking-create-modal)
+  .schedule-calendar-weekdays
+  span {
+  color: var(--nexora-subtle);
+  font-size: 11px;
+  font-weight: 600;
+  line-height: 28px;
+  text-align: center;
+}
+
+:is(#nx-campaign-root, .booking-hub-view .booking-create-modal)
+  .schedule-calendar-day {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  aspect-ratio: 1;
+  min-height: 32px;
+  padding: 0;
+  border: 0;
+  border-radius: 8px;
+  background: transparent;
+  color: var(--nexora-text);
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+:is(#nx-campaign-root, .booking-hub-view .booking-create-modal)
+  .schedule-calendar-day.is-spacer {
+  visibility: hidden;
+  pointer-events: none;
+}
+
+:is(#nx-campaign-root, .booking-hub-view .booking-create-modal)
+  .schedule-calendar-day:not(.is-disabled):hover {
+  background: rgba(15, 23, 42, 0.06);
+}
+
+:is(#nx-campaign-root, .booking-hub-view .booking-create-modal)
+  .schedule-calendar-day.is-selected {
+  background: var(--nx-brand);
+  color: #fff;
+}
+
+:is(#nx-campaign-root, .booking-hub-view .booking-create-modal)
+  .schedule-calendar-day.is-disabled {
+  color: #cbd5e1;
+  cursor: not-allowed;
+}
+
+#nx-campaign-root .confirm-box {
+  display: none;
+  margin-bottom: 16px;
+  border: 1px solid rgba(245, 158, 11, 0.35);
+  border-radius: 12px;
+  background: rgba(245, 158, 11, 0.09);
+  padding: 14px 16px;
+}
+
+#nx-campaign-root .confirm-box.show {
+  display: block;
+}
+
+#nx-campaign-root .confirm-title {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  margin-bottom: 8px;
+  color: #9a5a00;
+  font-size: clamp(0.8125rem, 0.78rem + 0.2vw, 0.875rem);
+  font-weight: 800;
+}
+
+#nx-campaign-root .confirm-detail {
+  color: var(--nexora-muted);
+  font-size: clamp(0.8125rem, 0.78rem + 0.2vw, 0.875rem);
+  line-height: 1.7;
+}
+
+#nx-campaign-root .confirm-detail strong {
+  color: var(--nexora-text);
+}
+
+#nx-campaign-root .success-banner {
+  display: none;
+  position: fixed;
+  left: 50%;
+  bottom: 24px;
+  transform: translateX(-50%);
+  z-index: 140;
+  align-items: center;
+  gap: 10px;
+  border: 1px solid rgba(0, 184, 115, 0.4);
+  border-radius: 12px;
+  background: #fff;
+  padding: 13px 18px;
+  box-shadow: 0 18px 44px rgba(8, 31, 73, 0.18);
+}
+
+#nx-campaign-root .success-banner.show {
+  display: flex;
+}
+
+#nx-campaign-root .success-icon {
+  display: inline-flex;
+  color: var(--nexora-success);
+}
+
+#nx-campaign-root .success-text {
+  color: var(--nexora-text);
+  font-size: 14px;
+  font-weight: 700;
+}
+
+#nx-campaign-root .sms-credit-modal {
+  position: fixed;
+  inset: 0;
+  z-index: 150;
+  display: grid;
+  place-items: center;
+  padding: 18px;
+  background: rgba(8, 31, 73, 0.48);
+  backdrop-filter: blur(8px);
+}
+
+#nx-campaign-root .sms-credit-dialog {
+  display: flex;
+  width: min(100%, 720px);
+  max-height: min(90vh, 760px);
+  flex-direction: column;
+  overflow: hidden;
+  border: 1px solid var(--nexora-border);
+  border-radius: 16px;
+  background: #fff;
+  box-shadow: 0 28px 80px rgba(8, 31, 73, 0.28);
+}
+
+#nx-campaign-root .sms-credit-modal-head {
+  display: flex;
+  flex: 0 0 auto;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  border-bottom: 1px solid var(--nexora-rule);
+  background: linear-gradient(180deg, #fff, #f8fbff);
+  padding: 17px 20px;
+}
+
+#nx-campaign-root .sms-credit-modal-title {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  color: var(--nexora-text);
+  font-size: clamp(1rem, 0.95rem + 0.3vw, 1.0625rem);
+  font-weight: 900;
+}
+
+#nx-campaign-root .sms-credit-modal-title .marketing-icon {
+  color: var(--nexora-brand);
+}
+
+#nx-campaign-root .sms-credit-modal-sub {
+  margin-top: 4px;
+  color: var(--nexora-muted);
+  font-size: clamp(0.75rem, 0.72rem + 0.15vw, 0.8125rem);
+  font-weight: 600;
+}
+
+#nx-campaign-root .sms-credit-close {
+  display: grid;
+  width: 34px;
+  height: 34px;
+  flex: 0 0 34px;
+  place-items: center;
+  border: 1px solid var(--nexora-border);
+  border-radius: 50%;
+  background: #fff;
+  color: var(--nexora-muted);
+  cursor: pointer;
+  transition: 0.18s ease;
+}
+
+#nx-campaign-root .sms-credit-close:hover {
+  border-color: rgba(70, 72, 216, 0.35);
+  background: var(--nexora-surface-muted);
+  color: var(--nexora-text);
+}
+
+#nx-campaign-root .sms-credit-modal-body {
+  overflow-y: auto;
+  background: #f8fafc;
+  padding: 18px 20px 20px;
+}
+
+#nx-campaign-root .sms-credit-section + .sms-credit-section {
+  margin-top: 22px;
+}
+
+#nx-campaign-root .sms-credit-section-label {
+  margin-bottom: 10px;
+  color: var(--nexora-subtle);
+  font-size: clamp(0.6875rem, 0.65rem + 0.15vw, 0.75rem);
+  font-weight: 900;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+#nx-campaign-root .sms-credit-package-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+}
+
+#nx-campaign-root .sms-credit-package {
+  position: relative;
+  min-width: 0;
+  border: 1px solid var(--nexora-border);
+  border-radius: 12px;
+  background: #fff;
+  padding: 13px;
+  color: var(--nexora-text);
+  text-align: left;
+  cursor: pointer;
+  transition:
+    border-color 0.18s ease,
+    box-shadow 0.18s ease,
+    transform 0.18s ease;
+}
+
+#nx-campaign-root .sms-credit-package:hover {
+  border-color: rgba(70, 72, 216, 0.45);
+  transform: translateY(-1px);
+}
+
+#nx-campaign-root .sms-credit-package.is-selected {
+  border-color: var(--nexora-brand);
+  background: rgba(70, 72, 216, 0.055);
+  box-shadow: 0 8px 18px rgba(70, 72, 216, 0.12);
+}
+
+#nx-campaign-root .sms-credit-package-badge {
+  position: absolute;
+  top: 9px;
+  right: 10px;
+  border-radius: 999px;
+  background: var(--nexora-brand);
+  padding: 3px 6px;
+  color: #fff;
+  font-size: clamp(0.625rem, 0.6rem + 0.1vw, 0.6875rem);
+  font-weight: 900;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+#nx-campaign-root .sms-credit-package-name {
+  display: block;
+  color: var(--nexora-muted);
+  font-size: clamp(0.6875rem, 0.65rem + 0.15vw, 0.75rem);
+  font-weight: 800;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+#nx-campaign-root .sms-credit-package-amount {
+  display: block;
+  margin-top: 5px;
+  color: var(--nexora-text);
+  font-size: clamp(1.25rem, 1.15rem + 0.5vw, 1.3125rem);
+  font-weight: 900;
+  line-height: 1.1;
+}
+
+#nx-campaign-root .sms-credit-package-price {
+  display: block;
+  margin-top: 6px;
+  color: var(--nexora-brand);
+  font-size: clamp(0.875rem, 0.84rem + 0.2vw, 0.9375rem);
+  font-weight: 900;
+}
+
+#nx-campaign-root .sms-credit-package-note {
+  display: block;
+  margin-top: 4px;
+  color: var(--nexora-subtle);
+  font-size: clamp(0.6875rem, 0.65rem + 0.15vw, 0.75rem);
+  font-weight: 600;
+}
+
+#nx-campaign-root .sms-credit-package-check {
+  position: absolute;
+  right: 11px;
+  bottom: 10px;
+  display: grid;
+  width: 20px;
+  height: 20px;
+  place-items: center;
+  border: 1px solid var(--nexora-border);
+  border-radius: 50%;
+  background: #fff;
+  color: transparent;
+  font-size: 12px;
+  font-weight: 900;
+  opacity: 0.75;
+  transition:
+    background 0.18s ease,
+    border-color 0.18s ease,
+    color 0.18s ease,
+    transform 0.18s ease;
+}
+
+#nx-campaign-root .sms-credit-package.is-selected .sms-credit-package-check {
+  border-color: var(--nexora-brand);
+  background: var(--nexora-brand);
+  color: #fff;
+  opacity: 1;
+  transform: scale(1.05);
+}
+
+#nx-campaign-root .sms-credit-payment-list {
+  display: grid;
+  gap: 8px;
+}
+
+#nx-campaign-root .sms-credit-payment {
+  display: flex;
+  width: 100%;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  border: 1px solid var(--nexora-border);
+  border-radius: 11px;
+  background: #fff;
+  padding: 8px 11px;
+  color: var(--nexora-text);
+  text-align: left;
+  cursor: pointer;
+  transition: 0.18s ease;
+}
+
+#nx-campaign-root .sms-credit-payment:hover {
+  border-color: rgba(70, 72, 216, 0.45);
+}
+
+#nx-campaign-root .sms-credit-payment.is-selected {
+  border-color: var(--nexora-brand);
+  background: rgba(70, 72, 216, 0.065);
+  box-shadow: 0 5px 12px rgba(70, 72, 216, 0.08);
+}
+
+#nx-campaign-root .sms-credit-payment-main {
+  display: flex;
+  min-width: 0;
+  align-items: center;
+  gap: 9px;
+}
+
+#nx-campaign-root .sms-credit-radio {
+  display: grid;
+  width: 15px;
+  height: 15px;
+  flex: 0 0 15px;
+  place-items: center;
+  border: 2px solid #cbd5e1;
+  border-radius: 50%;
+}
+
+#nx-campaign-root .sms-credit-payment.is-selected .sms-credit-radio {
+  border-color: var(--nexora-brand);
+}
+
+#nx-campaign-root .sms-credit-payment.is-selected .sms-credit-radio::after {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--nexora-brand);
+  content: "";
+}
+
+#nx-campaign-root .sms-credit-token {
+  display: block;
+  width: 28px;
+  height: 28px;
+  flex: 0 0 28px;
+  border: 1px solid rgba(15, 23, 42, 0.08);
+  border-radius: 50%;
+  background: #fff;
+  object-fit: contain;
+  padding: 1px;
+}
+
+#nx-campaign-root .sms-credit-payment-name {
+  font-size: clamp(0.75rem, 0.72rem + 0.15vw, 0.8125rem);
+  font-weight: 800;
+}
+
+#nx-campaign-root .sms-credit-payment-balance {
+  flex: 0 0 auto;
+  color: var(--nexora-muted);
+  text-align: right;
+}
+
+#nx-campaign-root .sms-credit-payment-balance span {
+  display: block;
+  color: var(--nexora-subtle);
+  font-size: clamp(0.625rem, 0.6rem + 0.1vw, 0.6875rem);
+  font-weight: 800;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+}
+
+#nx-campaign-root .sms-credit-payment-balance strong {
+  display: block;
+  margin-top: 2px;
+  color: var(--nexora-text);
+  font-size: clamp(0.6875rem, 0.65rem + 0.15vw, 0.75rem);
+  font-weight: 900;
+}
+
+#nx-campaign-root .sms-credit-invoice {
+  border: 1px solid var(--nexora-border);
+  border-radius: 12px;
+  background: #fff;
+  padding: 13px;
+}
+
+#nx-campaign-root .sms-credit-invoice-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  color: var(--nexora-muted);
+  font-size: clamp(0.75rem, 0.72rem + 0.15vw, 0.8125rem);
+  font-weight: 600;
+}
+
+#nx-campaign-root .sms-credit-invoice-row + .sms-credit-invoice-row {
+  margin-top: 8px;
+}
+
+#nx-campaign-root .sms-credit-invoice-row strong {
+  color: var(--nexora-text);
+  font-weight: 900;
+}
+
+#nx-campaign-root .sms-credit-invoice-total {
+  margin-top: 10px;
+  border-top: 1px solid var(--nexora-rule);
+  padding-top: 10px;
+  color: var(--nexora-text);
+  font-size: clamp(0.875rem, 0.84rem + 0.2vw, 0.9375rem);
+  font-weight: 900;
+}
+
+#nx-campaign-root .sms-credit-invoice-total strong {
+  color: var(--nexora-brand);
+  font-size: clamp(0.9375rem, 0.9rem + 0.25vw, 1rem);
+}
+
+#nx-campaign-root .sms-credit-modal-foot {
+  display: flex;
+  flex: 0 0 auto;
+  align-items: stretch;
+  gap: 10px;
+  border-top: 1px solid var(--nexora-rule);
+  background: #fff;
+  padding: 14px 20px;
+}
+
+#nx-campaign-root .sms-credit-modal-foot .btn-outline {
+  flex: 1;
+  color: var(--nexora-muted);
+}
+
+#nx-campaign-root .sms-credit-modal-foot .btn-primary {
+  flex: 2;
+  justify-content: center;
+}
+
+#nx-campaign-root .sms-credit-modal-foot .btn-primary,
+#nx-campaign-root .sms-credit-modal-foot .btn-outline {
+  box-sizing: border-box;
+  min-height: 42px;
+  height: 42px;
+  padding-top: 0;
+  padding-bottom: 0;
+  justify-content: center;
+}
+
+@media (max-width: 640px) {
+  #nx-campaign-root .segment-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  #nx-campaign-root .modal-title {
+    font-size: 1.0625rem;
+  }
+
+  #nx-campaign-root .field-label {
+    font-size: 0.75rem;
+  }
+
+  #nx-campaign-root .segment-btn-name {
+    font-size: 0.8125rem;
+  }
+
+  #nx-campaign-root .segment-btn-count {
+    font-size: 0.75rem;
+  }
+
+  #nx-campaign-root .template-item-title {
+    font-size: 0.8125rem;
+  }
+
+  #nx-campaign-root .template-item-text,
+  #nx-campaign-root .sms-textarea {
+    font-size: 0.9375rem;
+  }
+
+  #nx-campaign-root .tag-btn,
+  #nx-campaign-root .sms-toolbar > span:first-child {
+    font-size: 0.75rem;
+  }
+
+  #nx-campaign-root .btn-primary,
+  #nx-campaign-root .btn-outline {
+    min-height: 44px;
+    font-size: 0.875rem;
+  }
+
+  #nx-campaign-root .modal-footer-actions .btn-primary,
+  #nx-campaign-root .modal-footer-actions .btn-outline,
+  #nx-campaign-root .sms-credit-modal-foot .btn-primary,
+  #nx-campaign-root .sms-credit-modal-foot .btn-outline {
+    min-height: 44px;
+    height: 44px;
+  }
+
+  #nx-campaign-root .schedule-options {
+    gap: 6px;
+  }
+
+  #nx-campaign-root .schedule-opt {
+    padding: 10px 6px;
+  }
+
+  #nx-campaign-root .schedule-opt-icon {
+    margin-bottom: 4px;
+  }
+
+  #nx-campaign-root .schedule-opt-icon .marketing-icon {
+    width: 16px;
+    height: 16px;
+  }
+
+  #nx-campaign-root .schedule-opt-label {
+    font-size: 0.75rem;
+  }
+
+  #nx-campaign-root .time-input-row {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 8px;
+  }
+
+  #nx-campaign-root .schedule-datetime-shell {
+    min-height: 44px;
+  }
+
+  #nx-campaign-root .schedule-datetime-input {
+    height: 44px;
+    min-height: 44px;
+    font-size: 16px; /* avoid iOS zoom + native control overflow */
+  }
+
+  #nx-campaign-root .schedule-datetime-display {
+    font-size: 16px;
+  }
+
+  #nx-campaign-root .cost-preview-label {
+    font-size: 0.75rem;
+  }
+
+  #nx-campaign-root .cost-preview-amount {
+    font-size: 1.0625rem;
+  }
+
+  #nx-campaign-root .sms-credit-modal-title {
+    font-size: 0.9375rem; /* 15px — dialog title, not page hero */
+  }
+
+  #nx-campaign-root .sms-credit-modal-sub {
+    font-size: 0.75rem; /* 12px */
+    line-height: 1.35;
+  }
+
+  #nx-campaign-root .sms-credit-section-label {
+    font-size: 0.6875rem; /* 11px section chrome */
+    letter-spacing: 0.06em;
+  }
+
+  #nx-campaign-root .sms-credit-package {
+    padding: 11px 12px;
+  }
+
+  #nx-campaign-root .sms-credit-package-badge {
+    font-size: 0.625rem; /* 10px */
+    padding: 2px 5px;
+  }
+
+  #nx-campaign-root .sms-credit-package-name,
+  #nx-campaign-root .sms-credit-package-note {
+    font-size: 0.6875rem; /* 11px */
+  }
+
+  /* Credit count: emphasize without dominating the sheet */
+  #nx-campaign-root .sms-credit-package-amount {
+    font-size: 1.125rem; /* 18px */
+  }
+
+  #nx-campaign-root .sms-credit-package-price {
+    font-size: 0.8125rem; /* 13px */
+  }
+
+  #nx-campaign-root .sms-credit-payment-name,
+  #nx-campaign-root .sms-credit-invoice-row {
+    font-size: 0.8125rem; /* 13px — match AI Hub field values */
+  }
+
+  #nx-campaign-root .sms-credit-payment-balance span {
+    font-size: 0.625rem; /* 10px */
+  }
+
+  #nx-campaign-root .sms-credit-payment-balance strong {
+    font-size: 0.75rem; /* 12px */
+  }
+
+  #nx-campaign-root .sms-credit-invoice-total,
+  #nx-campaign-root .sms-credit-invoice-total strong {
+    font-size: 0.875rem; /* 14px */
+  }
+
+  #nx-campaign-root .sms-credit-modal-foot .btn-primary,
+  #nx-campaign-root .sms-credit-modal-foot .btn-outline {
+    font-size: 0.8125rem; /* 13px */
+  }
+
+  #nx-campaign-root .sms-credit-package-grid {
+    grid-template-columns: 1fr;
+  }
+
+  #nx-campaign-root .sms-bubble {
+    font-size: 0.9375rem;
+  }
+
+  #nx-campaign-root .modal-footer {
+    flex-direction: column;
+    flex-wrap: wrap;
+    align-items: stretch;
+  }
+
+  #nx-campaign-root .modal-footer-actions {
+    width: 100%;
+  }
+
+  /* Equal width by default; only shrink Cancel when Send needs one-line space. */
+  #nx-campaign-root .modal-footer-actions .btn-primary {
+    flex: 1 1 0;
+    min-width: max-content;
+    white-space: nowrap;
+  }
+
+  #nx-campaign-root .modal-footer-actions .btn-outline {
+    flex: 1 1 0;
+    min-width: 0;
+    padding-left: 10px;
+    padding-right: 10px;
+    white-space: nowrap;
+  }
+}
+
+/* SMS Campaigns QC polish */
+#nx-campaign-root .lp-attach-row {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+#nx-campaign-root .lp-attach-row .form-select {
+  flex: 1;
+  min-width: 200px;
+}
+
+#nx-campaign-root .btn-outline:disabled {
+  cursor: not-allowed;
+  opacity: 0.45;
+}
+
+#nx-campaign-root .sms-credit-package.is-featured {
+  padding-top: 28px;
+}
+
+/* Campaign recipients modal — matches booking-book-phase-1.html */
+#nx-campaign-root .sms-recipients-modal {
+  position: fixed;
+  inset: 0;
+  z-index: 155;
+  display: grid;
+  place-items: center;
+  padding: 18px;
+  background: rgba(8, 31, 73, 0.48);
+  backdrop-filter: blur(8px);
+}
+
+#nx-campaign-root .sms-recipients-dialog {
+  display: flex;
+  width: min(100%, 720px);
+  max-height: min(90vh, 680px);
+  flex-direction: column;
+  overflow: hidden;
+  border: 1px solid var(--nexora-border);
+  border-radius: 16px;
+  background: #fff;
+  box-shadow: 0 28px 80px rgba(8, 31, 73, 0.28);
+}
+
+#nx-campaign-root .sms-recipients-modal-head {
+  display: flex;
+  flex: 0 0 auto;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+  border-bottom: 1px solid var(--nexora-rule);
+  background: linear-gradient(180deg, #fff, #f8fbff);
+  padding: 17px 20px;
+}
+
+#nx-campaign-root .sms-recipients-title {
+  margin: 0;
+  color: var(--nexora-text);
+  font-size: 17px;
+  font-weight: 800;
+}
+
+#nx-campaign-root .sms-recipients-subtitle {
+  margin: 4px 0 0;
+  color: var(--nexora-muted);
+  font-size: 12px;
+  font-weight: 500;
+}
+
+#nx-campaign-root .sms-recipients-close {
+  display: grid;
+  width: 30px;
+  height: 30px;
+  flex: 0 0 30px;
+  place-items: center;
+  border: 0;
+  border-radius: 50%;
+  background: transparent;
+  color: var(--nexora-muted);
+  cursor: pointer;
+}
+
+#nx-campaign-root .sms-recipients-close:hover {
+  background: var(--nexora-surface-muted);
+  color: var(--nexora-text);
+}
+
+#nx-campaign-root .sms-recipients-modal-body {
+  overflow-y: auto;
+  background: #fff;
+  padding: 16px 20px 20px;
+}
+
+#nx-campaign-root .sms-recipients-toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 12px;
+}
+
+#nx-campaign-root .sms-recipients-count {
+  color: var(--nexora-muted);
+  font-size: 12px;
+  font-weight: 600;
+}
+
+#nx-campaign-root .sms-recipients-filter {
+  min-width: 156px;
+  max-width: 100%;
+  border: 1px solid var(--nexora-border);
+  border-radius: 7px;
+  background: #fff;
+  padding: 8px 10px;
+  color: var(--nexora-text);
+  font-size: 13px;
+  font-family: inherit;
+  line-height: 1.3;
+}
+
+@media (max-width: 767px) {
+  #nx-campaign-root .sms-recipients-toolbar {
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 8px;
+  }
+
+  #nx-campaign-root .sms-recipients-filter {
+    width: auto;
+    min-width: 148px;
+    max-width: 100%;
+    min-height: 36px;
+    padding: 7px 10px;
+    font-size: 13px;
+  }
+
+  #nx-campaign-root .sms-recipients-count {
+    font-size: 12px;
+  }
+}
+
+#nx-campaign-root .sms-recipients-table-wrap {
+  overflow-x: auto;
+  border: 1px solid var(--nexora-rule);
+  border-radius: 9px;
+}
+
+#nx-campaign-root .sms-recipients-pagination {
+  margin-top: 14px;
+}
+
+#nx-campaign-root .sms-recipients-table {
+  width: 100%;
+  min-width: 600px;
+  border-collapse: collapse;
+  color: var(--nexora-text);
+  font-size: 12px;
+}
+
+#nx-campaign-root .sms-recipients-table th {
+  background: #fbfdff;
+  color: var(--nexora-subtle);
+  font-size: 12px;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+  text-align: left;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+
+#nx-campaign-root .sms-recipients-table th,
+#nx-campaign-root .sms-recipients-table td {
+  border-bottom: 1px solid var(--nexora-rule);
+  padding: 12px 13px;
+  vertical-align: middle;
+}
+
+#nx-campaign-root .sms-recipients-table tbody tr:last-child td {
+  border-bottom: 0;
+}
+
+#nx-campaign-root .sms-recipients-table tbody tr:hover {
+  background: #fbfdff;
+}
+
+#nx-campaign-root .sms-recipients-table td:first-child {
+  min-width: 112px;
+  font-weight: 700;
+}
+
+#nx-campaign-root .sms-recipients-table td:nth-child(2),
+#nx-campaign-root .sms-recipients-table td:nth-child(4),
+#nx-campaign-root .sms-recipients-table td:nth-child(5) {
+  color: var(--nexora-muted);
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+#nx-campaign-root .sms-recipient-status {
+  display: inline-flex;
+  align-items: center;
+  border-radius: 999px;
+  padding: 4px 8px;
+  font-size: 12px;
+  font-weight: 800;
+  white-space: nowrap;
+}
+
+#nx-campaign-root .sms-recipient-status.is-sent,
+#nx-campaign-root .sms-recipient-status.is-delivered {
+  background: rgba(0, 184, 115, 0.1);
+  color: var(--nexora-success);
+}
+
+#nx-campaign-root .sms-recipient-status.is-failed {
+  background: rgba(194, 65, 65, 0.1);
+  color: #c24141;
+}
+
+#nx-campaign-root .sms-recipient-status.is-scheduled {
+  background: rgba(43, 89, 255, 0.1);
+  color: var(--nexora-electric);
+}
+
+#nx-campaign-root .sms-recipient-status.is-unknown {
+  background: rgba(122, 130, 150, 0.14);
+  color: var(--nexora-muted);
+}
+
+#nx-campaign-root .sms-recipient-empty {
+  padding: 28px 16px !important;
+  color: var(--nexora-subtle);
+  text-align: center;
+}
+
+#nx-campaign-root .sms-recipient-skeleton-row td {
+  vertical-align: middle;
+}
+
+@media (max-width: 767px) {
+  /* Keep HTML-style horizontal scroll table (no card stack). */
+  .booking-hub-view .panel-sms-campaigns .sms-campaign-table-wrap {
+    overflow-x: auto;
+  }
+
+  .booking-hub-view .panel-sms-campaigns .sms-campaign-table th,
+  .booking-hub-view .panel-sms-campaigns .sms-campaign-table td {
+    padding: 12px;
+  }
+
+  .booking-hub-view .panel-sms-campaigns .sms-campaign-actions {
+    flex-wrap: wrap;
+    white-space: normal;
+  }
+
+  .booking-hub-view .panel-sms-campaigns .booking-pagination {
+    padding: 12px 16px !important;
   }
 }

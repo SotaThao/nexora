@@ -1,6 +1,7 @@
 import React, { useEffect, useMemo, useRef, useState } from "react";
 import { BOOKING_HUB_PAGE_SIZE } from "../../../constants/pagination";
 import { BOOKING_HUB_PAGINATION_CLASSNAME } from "./bookingHubFormatters";
+import { applyAiHubProgressiveValidation } from "./bookingHubDialogValidation";
 import { useTranslation } from "../../../contexts/LanguageContext";
 import { useNotification } from "../../../contexts/NotificationContext";
 import { getErrorI18nKey } from "../../../data/errorCodes";
@@ -31,7 +32,7 @@ import CountryCodeSelect, {
   parsePhone,
 } from "../../CountryCodeSelect";
 import Pagination from "../../ui/Pagination";
-import { EyeIcon, SpinnerIcon } from "./BookingHubIcons";
+import { PencilIcon, SpinnerIcon, XLgIcon } from "./BookingHubIcons";
 import {
   BookingTeamGridSkeleton,
   BookingTechModalProfileSkeleton,
@@ -42,6 +43,7 @@ import {
 import { useBookingHubVoiceEnabled } from "./BookingHubVoiceContext";
 
 const TK = "components.dashboard.views.BookingHubView.team";
+const TK_HUB = "components.dashboard.views.BookingHubView";
 
 const DAY_KEYS = ["mon", "tue", "wed", "thu", "fri", "sat", "sun"] as const;
 
@@ -515,6 +517,9 @@ export default function BookingTeamPanel() {
   const [draftPhone, setDraftPhone] = useState("");
   const [draftEmail, setDraftEmail] = useState("");
   const [draftServices, setDraftServices] = useState<string[]>([]);
+  const [draftStaffProfileId, setDraftStaffProfileId] = useState<string | null>(
+    null,
+  );
   const [draftSchedule, setDraftSchedule] =
     useState<WeeklySchedule>(emptySchedule());
   const [formErrors, setFormErrors] = useState<{
@@ -526,6 +531,7 @@ export default function BookingTeamPanel() {
   const [showScheduleValidation, setShowScheduleValidation] = useState(false);
   const comboboxRef = useRef<HTMLDivElement>(null);
   const checkAllServicesRef = useRef<HTMLInputElement>(null);
+  const techDialogRef = useRef<HTMLDivElement>(null);
   const { pageNumber, pageSize, setPage } = usePagination({
     pageSize: BOOKING_HUB_PAGE_SIZE,
   });
@@ -603,6 +609,7 @@ export default function BookingTeamPanel() {
       setDraftPhone("");
       setDraftEmail("");
       setDraftServices([]);
+      setDraftStaffProfileId(null);
       setDraftSchedule(emptySchedule());
       setFormErrors({});
       setShowScheduleValidation(false);
@@ -612,6 +619,7 @@ export default function BookingTeamPanel() {
     setDraftPhone(member.phone);
     setDraftEmail(member.email);
     setDraftServices([...member.services]);
+    setDraftStaffProfileId(null);
     setDraftSchedule(scheduleOverride ?? parseSchedule(member.schedule));
     setFormErrors({});
     setShowScheduleValidation(false);
@@ -663,12 +671,15 @@ export default function BookingTeamPanel() {
     }
 
     setModalMode("create");
-    setSelectedId(staff.id);
+    setSelectedId("");
     setDraftName(staff.name);
     setDraftPhone(staff.phone);
     setDraftEmail(staff.email);
     setDraftServices([]);
+    setDraftStaffProfileId(staff.id);
     setDraftSchedule(emptySchedule());
+    setFormErrors({});
+    setShowScheduleValidation(false);
     setComboboxOpen(false);
     setSearchQuery("");
   };
@@ -784,6 +795,7 @@ export default function BookingTeamPanel() {
       phone?: string;
       email?: string;
       services?: string;
+      schedule?: string;
     } = {};
     const trimmedName = draftName.trim();
     const trimmedEmail = draftEmail.trim();
@@ -805,23 +817,29 @@ export default function BookingTeamPanel() {
       scheduleRequiredMessage,
       scheduleInvalidMessage,
     );
-
-    setFormErrors(nextErrors);
-    setShowScheduleValidation(scheduleInvalid);
-
-    if (Object.keys(nextErrors).length > 0 || scheduleInvalid) {
-      if (scheduleInvalid) {
-        window.requestAnimationFrame(() => {
-          document
-            .querySelector("[data-tech-schedule-section]")
-            ?.scrollIntoView({
-              behavior: "smooth",
-              block: "nearest",
-            });
-        });
-      }
-      return;
+    if (scheduleInvalid) {
+      nextErrors.schedule = scheduleRequiredMessage;
     }
+
+    const blocked = applyAiHubProgressiveValidation({
+      allErrors: nextErrors,
+      root: techDialogRef.current,
+      setErrors: (errors) => {
+        const { schedule: _schedule, ...fieldOnly } = errors;
+        setFormErrors(fieldOnly);
+        setShowScheduleValidation(Boolean(errors.schedule));
+      },
+      showToast,
+      fieldLabels: {
+        name: t(`${TK}.techName`),
+        email: t(`${TK}.email`),
+        services: t(`${TK}.services`),
+        schedule: t(`${TK}.weeklySchedule`),
+      },
+      hubTk: TK_HUB,
+      t,
+    });
+    if (blocked) return;
 
     const payload = {
       name: trimmedName,
@@ -856,6 +874,7 @@ export default function BookingTeamPanel() {
           phoneNumber: payload.phone,
           email: payload.email,
           skills: payload.services.join(", "),
+          staffProfileId: draftStaffProfileId,
           schedules,
         },
         {
@@ -986,117 +1005,116 @@ export default function BookingTeamPanel() {
 
   return (
     <div className="booking-sub-panel is-active" aria-busy={isStaffLoading}>
-      <div className="tech-intro">
-        <div className="tech-intro-text">{t(`${TK}.intro`)}</div>
-        <button
-          className="booking-primary-button"
-          type="button"
-          onClick={() => openModal()}
-        >
-          <PlusIcon />
-          <span>{t(`${TK}.addTech`)}</span>
-        </button>
-      </div>
+      <article className="overview-card overview-card-pad">
+        <div className="tech-intro">
+          <div className="tech-intro-text">{t(`${TK}.intro`)}</div>
+          <button
+            className="booking-primary-button"
+            type="button"
+            onClick={() => openModal()}
+          >
+            <PlusIcon />
+            <span>{t(`${TK}.addTech`)}</span>
+          </button>
+        </div>
 
-      <div className="booking-grid">
-        <article className="overview-card overview-card-pad">
-          <div className="tech-grid">
-            {isStaffLoading ? <BookingTeamGridSkeleton count={3} /> : null}
-            {!isStaffLoading && members.length === 0 ? (
-              <div className="tech-grid-empty">
-                <div className="tech-grid-empty-icon" aria-hidden="true">
-                  <PeopleIcon />
-                </div>
-                <div className="tech-grid-empty-title">
-                  {t(`${TK}.emptyTitle`)}
-                </div>
-                <p className="tech-grid-empty-description">
-                  {t(`${TK}.emptyDescription`)}
-                </p>
-                <button
-                  className="booking-primary-button"
-                  type="button"
-                  onClick={() => openModal()}
-                >
-                  <PlusIcon />
-                  <span>{t(`${TK}.emptyCta`)}</span>
-                </button>
+        <div className="tech-grid">
+          {isStaffLoading ? <BookingTeamGridSkeleton count={3} /> : null}
+          {!isStaffLoading && members.length === 0 ? (
+            <div className="tech-grid-empty">
+              <div className="tech-grid-empty-icon" aria-hidden="true">
+                <PeopleIcon />
               </div>
-            ) : null}
-            {!isStaffLoading
-              ? members.map((member) => (
-                  <article
-                    className="tech-card tech-card-interactive"
-                    key={member.id}
-                    data-tech-id={member.id}
-                    onClick={() => openModal(member.id, "edit")}
-                  >
-                    <div className="tech-top">
-                      <div className="tech-avatar" style={member.avatarStyle}>
-                        {member.avatar}
-                      </div>
-                      <div className="tech-profile">
-                        <div className="tech-name">{member.name}</div>
-                        <div className="tech-phone">
-                          {formatPhoneDisplay(member.phone)}
-                        </div>
-                      </div>
-                      <div
-                        className="tech-top-actions"
-                        onClick={(event) => event.stopPropagation()}
-                        onKeyDown={(event) => event.stopPropagation()}
-                      >
-                        <button
-                          className="booking-secondary-button icon-only tech-view-button"
-                          type="button"
-                          aria-label={t(`${TK}.viewDetails`)}
-                          title={t(`${TK}.viewDetails`)}
-                          onClick={() => openModal(member.id, "edit")}
-                        >
-                          <EyeIcon />
-                          <span className="sr-only">
-                            {t(`${TK}.viewDetails`)}
-                          </span>
-                        </button>
-                        <button
-                          className={`toggle-pill ${member.smsEnabled ? "is-on" : ""}`}
-                          type="button"
-                          aria-label={t(`${TK}.toggleSms`, {
-                            name: member.name,
-                          })}
-                          aria-pressed={member.smsEnabled}
-                          disabled={pendingToggleIds[member.id]}
-                          onClick={() => toggleSms(member.id)}
-                        />
-                      </div>
-                    </div>
-                    <div className="tech-services">
-                      {member.services.map((service) => (
-                        <span className="badge badge-plan" key={service}>
-                          {service}
-                        </span>
-                      ))}
-                    </div>
-                  </article>
-                ))
-              : null}
-          </div>
-
-          {!isStaffLoading && (staffResponse?.totalCount ?? 0) > 0 ? (
-            <Pagination
-              pageNumber={pageNumber}
-              pageSize={pageSize}
-              totalPages={staffResponse?.totalPages ?? 1}
-              totalCount={staffResponse?.totalCount ?? 0}
-              hasNextPage={staffResponse?.hasNextPage}
-              hasPreviousPage={staffResponse?.hasPreviousPage}
-              onPageChange={setPage}
-              isLoading={isStaffFetching}
-              className={BOOKING_HUB_PAGINATION_CLASSNAME}
-            />
+              <div className="tech-grid-empty-title">
+                {t(`${TK}.emptyTitle`)}
+              </div>
+              <p className="tech-grid-empty-description">
+                {t(`${TK}.emptyDescription`)}
+              </p>
+              <button
+                className="booking-primary-button"
+                type="button"
+                onClick={() => openModal()}
+              >
+                <PlusIcon />
+                <span>{t(`${TK}.emptyCta`)}</span>
+              </button>
+            </div>
           ) : null}
-        </article>
-      </div>
+          {!isStaffLoading
+            ? members.map((member) => (
+                <article
+                  className="tech-card"
+                  key={member.id}
+                  data-tech-id={member.id}
+                >
+                  <div className="tech-top">
+                    <div className="tech-avatar" style={member.avatarStyle}>
+                      {member.avatar}
+                    </div>
+                    <div className="tech-profile">
+                      <div className="tech-name">{member.name}</div>
+                      <div className="tech-phone">
+                        {formatPhoneDisplay(member.phone)}
+                      </div>
+                    </div>
+                    <button
+                      className={`toggle-pill ${member.smsEnabled ? "is-on" : ""}`}
+                      type="button"
+                      aria-label={t(`${TK}.toggleSms`, {
+                        name: member.name,
+                      })}
+                      aria-pressed={member.smsEnabled}
+                      disabled={pendingToggleIds[member.id]}
+                      onClick={() => toggleSms(member.id)}
+                    />
+                  </div>
+                  <div className="tech-card-footer">
+                    <div className="tech-stats">
+                      <div className="tech-stat">
+                        <strong>{member.customers}</strong>
+                        <span>{t(`${TK}.clientsToday`)}</span>
+                      </div>
+                    </div>
+                    <div className="tech-card-actions">
+                      <button
+                        className="booking-secondary-button"
+                        type="button"
+                        aria-label={t(`${TK}.edit`)}
+                        title={t(`${TK}.edit`)}
+                        onClick={() => openModal(member.id, "detail")}
+                      >
+                        <PencilIcon className="marketing-icon is-compact" />
+                        <span className="booking-mini-label">{t(`${TK}.edit`)}</span>
+                      </button>
+                    </div>
+                  </div>
+                  <div className="tech-services">
+                    {member.services.map((service) => (
+                      <span className="badge badge-plan" key={service}>
+                        {service}
+                      </span>
+                    ))}
+                  </div>
+                </article>
+              ))
+            : null}
+        </div>
+
+        {!isStaffLoading && (staffResponse?.totalCount ?? 0) > 0 ? (
+          <Pagination
+            pageNumber={pageNumber}
+            pageSize={pageSize}
+            totalPages={staffResponse?.totalPages ?? 1}
+            totalCount={staffResponse?.totalCount ?? 0}
+            hasNextPage={staffResponse?.hasNextPage}
+            hasPreviousPage={staffResponse?.hasPreviousPage}
+            onPageChange={setPage}
+            isLoading={isStaffFetching}
+            className={BOOKING_HUB_PAGINATION_CLASSNAME}
+          />
+        ) : null}
+      </article>
 
       {modalOpen ? (
         <div
@@ -1106,6 +1124,7 @@ export default function BookingTeamPanel() {
           onClick={closeModal}
         >
           <div
+            ref={techDialogRef}
             className="tech-dialog"
             role="dialog"
             aria-modal="true"
@@ -1163,6 +1182,20 @@ export default function BookingTeamPanel() {
                         }}
                         onFocus={() => setComboboxOpen(true)}
                       />
+                      {searchQuery ? (
+                        <button
+                          className="tech-search-clear"
+                          type="button"
+                          aria-label={t(`${TK}.clearSearch`)}
+                          title={t(`${TK}.clearSearch`)}
+                          onClick={() => {
+                            setSearchQuery("");
+                            setComboboxOpen(true);
+                          }}
+                        >
+                          <XLgIcon />
+                        </button>
+                      ) : null}
                       <span className="tech-select-chevron">
                         <ChevronDownIcon />
                       </span>
@@ -1180,10 +1213,10 @@ export default function BookingTeamPanel() {
                             {filteredBusinessStaff.map((member) => (
                               <button
                                 key={member.id}
-                                className={`tech-choice-card ${selectedId === member.id ? "is-active" : ""} ${member.isAlreadyAdded ? "is-disabled" : ""}`}
+                                className={`tech-choice-card ${draftStaffProfileId === member.id ? "is-active" : ""} ${member.isAlreadyAdded ? "is-disabled" : ""}`}
                                 type="button"
                                 role="option"
-                                aria-selected={selectedId === member.id}
+                                aria-selected={draftStaffProfileId === member.id}
                                 aria-disabled={member.isAlreadyAdded}
                                 disabled={member.isAlreadyAdded}
                                 onClick={() => selectBusinessStaff(member)}
@@ -1222,7 +1255,7 @@ export default function BookingTeamPanel() {
                     ) : null}
                   </div>
                   <button
-                    className={`booking-secondary-button tech-create-button ${modalMode === "create" ? "is-active" : ""}`}
+                    className={`booking-secondary-button tech-create-button ${modalMode === "create" && !draftStaffProfileId ? "is-active" : ""}`}
                     type="button"
                     onClick={startCreate}
                   >
@@ -1241,7 +1274,7 @@ export default function BookingTeamPanel() {
                   <BookingTechModalProfileSkeleton />
                 ) : (
                   <div className="tech-modal-grid">
-                    <div className="settings-field">
+                    <div className="settings-field" data-ai-hub-field="name">
                       <span className="settings-label">
                         {t(`${TK}.techName`)}
                       </span>
@@ -1310,7 +1343,7 @@ export default function BookingTeamPanel() {
                         ) : null}
                       </span>
                     </div>
-                    <div className="settings-field">
+                    <div className="settings-field" data-ai-hub-field="email">
                       <span className="settings-label">{t(`${TK}.email`)}</span>
                       <input
                         className="settings-input"
@@ -1331,7 +1364,7 @@ export default function BookingTeamPanel() {
                         ) : null}
                       </span>
                     </div>
-                    <div className="settings-field">
+                    <div className="settings-field" data-ai-hub-field="services">
                       <div className="tech-services-field-head">
                         <span className="settings-label">
                           {t(`${TK}.services`)}
@@ -1380,7 +1413,11 @@ export default function BookingTeamPanel() {
                 )}
               </div>
 
-              <div className="tech-modal-section" data-tech-schedule-section>
+              <div
+                className="tech-modal-section"
+                data-tech-schedule-section
+                data-ai-hub-field="schedule"
+              >
                 <div className="tech-modal-section-title">
                   <CalendarWeekIcon />
                   <span>{t(`${TK}.weeklySchedule`)}</span>

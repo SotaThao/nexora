@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useTranslation } from "../../../contexts/LanguageContext";
 import { useNotification } from "../../../contexts/NotificationContext";
 import { getErrorI18nKey } from "../../../data/errorCodes";
@@ -18,8 +18,10 @@ import CountryCodeSelect, {
   parsePhone,
   PhoneDialCode,
 } from "../../CountryCodeSelect";
+import { applyAiHubProgressiveValidation } from "./bookingHubDialogValidation";
 
 const TK = "components.dashboard.views.BookingHubView.plans.trial";
+const TK_HUB = "components.dashboard.views.BookingHubView";
 
 const SERVICE_CHIPS = [
   "Gel Manicure",
@@ -233,6 +235,7 @@ export default function BookingTrialModal({
   const [form, setForm] = useState<TrialFormState>(createInitialTrialForm);
   const [errors, setErrors] = useState<TrialFormErrors>({});
   const [phoneTouched, setPhoneTouched] = useState(false);
+  const trialDialogRef = useRef<HTMLDivElement>(null);
 
   const phoneParsed = useMemo(() => parsePhone(form.phone), [form.phone]);
 
@@ -397,12 +400,28 @@ export default function BookingTrialModal({
 
   const buildPayload = (): SubmitVoiceTrialRequest | null => {
     const formErrors = validateForm();
-    if (Object.keys(formErrors).length > 0) {
-      setErrors(formErrors);
+    if (
+      applyAiHubProgressiveValidation({
+        allErrors: formErrors,
+        root: trialDialogRef.current,
+        setErrors: setErrors,
+        showToast,
+        fieldLabels: {
+          salon: t(`${TK}.salonLabel`),
+          owner: t(`${TK}.ownerLabel`),
+          phone: t(`${TK}.phoneLabel`),
+          email: t(`${TK}.emailLabel`),
+          services: t(`${TK}.servicesLabel`),
+          openingDays: t(`${TK}.openDaysLabel`),
+          serviceHours: t(`${TK}.hoursLabel`),
+          painPoint: t(`${TK}.painLabel`),
+        },
+        hubTk: TK_HUB,
+        t,
+      })
+    ) {
       return null;
     }
-
-    setErrors({});
 
     const shopName = form.salon.trim();
     const ownerName = form.owner.trim();
@@ -490,7 +509,7 @@ export default function BookingTrialModal({
       aria-modal="true"
       aria-labelledby="trial-modal-title"
     >
-      <div className="trial-dialog">
+      <div className="trial-dialog" ref={trialDialogRef}>
         <button
           className="trial-close"
           type="button"
@@ -528,6 +547,7 @@ export default function BookingTrialModal({
             <div className="trial-grid">
               <div
                 className={`trial-field trial-span-2 ${errors.salon ? "has-error" : ""}`}
+                data-ai-hub-field="salon"
               >
                 <label className="trial-label" htmlFor="trial-salon">
                   {t(`${TK}.salonLabel`)} <span>*</span>
@@ -548,7 +568,10 @@ export default function BookingTrialModal({
                 />
                 <TrialFieldError message={errors.salon} />
               </div>
-              <div className={`trial-field ${errors.owner ? "has-error" : ""}`}>
+              <div
+                className={`trial-field ${errors.owner ? "has-error" : ""}`}
+                data-ai-hub-field="owner"
+              >
                 <label className="trial-label" htmlFor="trial-owner">
                   {t(`${TK}.ownerLabel`)} <span>*</span>
                 </label>
@@ -568,7 +591,10 @@ export default function BookingTrialModal({
                 />
                 <TrialFieldError message={errors.owner} />
               </div>
-              <div className={`trial-field ${errors.phone ? "has-error" : ""}`}>
+              <div
+                className={`trial-field ${errors.phone ? "has-error" : ""}`}
+                data-ai-hub-field="phone"
+              >
                 <label className="trial-label" htmlFor="trial-phone">
                   {t(`${TK}.phoneLabel`)} <span>*</span>
                 </label>
@@ -622,6 +648,7 @@ export default function BookingTrialModal({
               </div>
               <div
                 className={`trial-field trial-span-2 ${errors.email ? "has-error" : ""}`}
+                data-ai-hub-field="email"
               >
                 <label className="trial-label" htmlFor="trial-email">
                   {t(`${TK}.emailLabel`)} <span>*</span>
@@ -679,6 +706,7 @@ export default function BookingTrialModal({
               </div>
               <div
                 className={`trial-field trial-span-2 ${errors.services ? "has-error" : ""}`}
+                data-ai-hub-field="services"
               >
                 <div className="trial-label">
                   {t(`${TK}.servicesLabel`)} <span>*</span>{" "}
@@ -747,6 +775,7 @@ export default function BookingTrialModal({
               </div>
               <div
                 className={`trial-field trial-span-2 ${errors.openingDays ? "has-error" : ""}`}
+                data-ai-hub-field="openingDays"
               >
                 <div className="trial-label">{t(`${TK}.openDaysLabel`)}</div>
                 <div className="trial-day-list">
@@ -767,6 +796,7 @@ export default function BookingTrialModal({
               </div>
               <div
                 className={`trial-field trial-span-2 ${errors.serviceHours ? "has-error" : ""}`}
+                data-ai-hub-field="serviceHours"
               >
                 <div className="trial-label">{t(`${TK}.hoursLabel`)}</div>
                 <span
@@ -809,6 +839,7 @@ export default function BookingTrialModal({
               </div>
               <div
                 className={`trial-field trial-span-2 ${errors.painPoint ? "has-error" : ""}`}
+                data-ai-hub-field="painPoint"
               >
                 <label className="trial-label" htmlFor="trial-pain">
                   {t(`${TK}.painLabel`)}{" "}

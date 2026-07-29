@@ -7,11 +7,13 @@ import BookingTeamPanel from './BookingTeamPanel'
 import BookingTodayPanel from './BookingTodayPanel'
 import BookingCustomersPanel from './BookingCustomersPanel'
 import BookingCallLogPanel from './BookingCallLogPanel'
+import BookingSmsCampaignsPanel from './smsCampaigns/BookingSmsCampaignsPanel'
 import BookingPlansPanel from './BookingPlansPanel'
 import BookingSettingsPanel from './BookingSettingsPanel'
 import { BookingHubVoiceProvider } from './BookingHubVoiceContext'
 import {
   CalendarTabIcon,
+  MessageSquareTabIcon,
   PeopleTabIcon,
   PhoneTabIcon,
   SlidersTabIcon,
@@ -166,6 +168,18 @@ export default function BookingHubView() {
                 <span>{t(`${TK}.tabs.callLog`)}</span>
               </button>
             )}
+            {hasVoiceTenant && (
+              <button
+                className={`page-tab ${activeMainTab === BookingHubMainTab.SmsCampaigns ? 'is-active' : ''}`}
+                type="button"
+                role="tab"
+                aria-selected={activeMainTab === BookingHubMainTab.SmsCampaigns}
+                onClick={() => updateQueryTabs(BookingHubMainTab.SmsCampaigns)}
+              >
+                <span className="page-tab-icon"><MessageSquareTabIcon /></span>
+                <span>{t(`${TK}.tabs.smsCampaigns`)}</span>
+              </button>
+            )}
             <button
               className={`page-tab ${activeMainTab === BookingHubMainTab.Plans ? 'is-active' : ''}`}
               type="button"
@@ -237,6 +251,15 @@ export default function BookingHubView() {
           aria-label={t(`${TK}.ariaCallLogPanel`)}
         >
           <BookingCallLogPanel />
+        </section>
+      )}
+
+      {!isTenantStatusLoading && voiceFeaturesEnabled && activeMainTab === BookingHubMainTab.SmsCampaigns && (
+        <section
+          className="tab-panel is-active"
+          aria-label={t(`${TK}.ariaSmsCampaignsPanel`)}
+        >
+          <BookingSmsCampaignsPanel />
         </section>
       )}
 

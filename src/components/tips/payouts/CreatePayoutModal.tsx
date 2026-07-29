@@ -68,6 +68,14 @@ const TYPE_ICON: Record<number, any> = {
   [PayoutType.Other]: Tag,
 }
 
+const OTHER_PAYOUT_METHOD_SUGGESTIONS = [
+  'Check',
+  'Bank Transfer (ACH)',
+  'Payroll Check',
+  'Bank Transfer',
+  'Wire Transfer',
+] as const
+
 const CREATE_STATUS_OPTIONS: PayoutStatusValue[] = [
   PayoutStatus.Pending,
   PayoutStatus.Confirmed,
@@ -198,10 +206,12 @@ export default function CreatePayoutModal({
   const [selectedStaffMember, setSelectedStaffMember] = useState<StaffMember | null>(null)
   const [staffProfileError, setStaffProfileError] = useState<string | null>(null)
   const [payoutMethodType, setPayoutMethodType] = useState<string>(PayoutMethodType.Zelle)
+  const [otherPayoutMethod, setOtherPayoutMethod] = useState('')
+  const [otherPayoutMethodError, setOtherPayoutMethodError] = useState<string | null>(null)
   const [amount, setAmount] = useState('')
   const [amountError, setAmountError] = useState<string | null>(null)
   const [periodError, setPeriodError] = useState<string | null>(null)
-  const [payoutTypesMask, setPayoutTypesMask] = useState(PayoutType.Tip)
+  const [payoutTypesMask, setPayoutTypesMask] = useState<number>(PayoutType.Tip)
   const [periodStart, setPeriodStart] = useState(defaultPeriodDates().periodStart)
   const [periodEnd, setPeriodEnd] = useState(defaultPeriodDates().periodEnd)
   const [notes, setNotes] = useState('')
@@ -254,10 +264,15 @@ export default function CreatePayoutModal({
 
     if (editingPayout) {
       const resolvedStaffProfileId = resolvePayoutStaffProfileId(editingPayout, staffList)
+      const normalizedMethod = normalizePayoutMethodType(editingPayout.payoutMethodType)
+      const hasOtherMethodName = Boolean(editingPayout.payoutMethodTypeName?.trim())
+      const resolvedMethod = hasOtherMethodName ? PayoutMethodType.Other : normalizedMethod
       setStaffProfileId(resolvedStaffProfileId)
       setSelectedStaffMember(editingStaffMember)
       setStaffProfileError(null)
-      setPayoutMethodType(normalizePayoutMethodType(editingPayout.payoutMethodType))
+      setPayoutMethodType(resolvedMethod)
+      setOtherPayoutMethod(hasOtherMethodName ? editingPayout.payoutMethodTypeName!.trim() : '')
+      setOtherPayoutMethodError(null)
       setAmount(formatUsdInputAmount(editingPayout.amount))
       lastAutoSeededAmountRef.current = ''
       setAmountError(null)
@@ -283,7 +298,7 @@ export default function CreatePayoutModal({
       const fromList = staffList.find((staff) => staff.staffProfileId === initialStaffProfileId)
       const fromDebt = unpaidDebts.find((debt) => debt.staffProfileId === initialStaffProfileId)
       if (fromList?.staffProfileId) {
-        setStaffProfileId(fromList.staffProfileId)
+        setStaffProfileId(String(fromList.staffProfileId))
         setSelectedStaffMember(fromList)
       } else if (fromDebt) {
         setStaffProfileId(fromDebt.staffProfileId)
@@ -297,6 +312,8 @@ export default function CreatePayoutModal({
       }
     }
     setPayoutMethodType(PayoutMethodType.Zelle)
+    setOtherPayoutMethod('')
+    setOtherPayoutMethodError(null)
     setAmount(seedAmount)
     lastAutoSeededAmountRef.current = seedAmount
     setAmountError(null)
@@ -316,6 +333,9 @@ export default function CreatePayoutModal({
   useEffect(() => {
     if (!isOpen || isEditing || !selectedStaff) return
     setPayoutMethodType((current) => {
+      if (current === PayoutMethodType.Other) {
+        return current
+      }
       if (isStaffPayoutMethodAvailable(selectedStaff, current as PayoutMethodTypeValue)) {
         return current
       }
@@ -378,14 +398,17 @@ export default function CreatePayoutModal({
     // Before a staff member is chosen, show every create-payout method as selectable.
     // Availability is filtered to that staff's wallets once they are selected.
     if (!selectedStaff) {
-      return method !== PayoutMethodType.Other
+      return true
+    }
+    if (method === PayoutMethodType.Other) {
+      return true
     }
     return isStaffPayoutMethodAvailable(selectedStaff, method as PayoutMethodTypeValue)
   }
 
   const handleStaffSelect = (staff: StaffMember) => {
     if (!staff.staffProfileId) return
-    setStaffProfileId(staff.staffProfileId)
+    setStaffProfileId(String(staff.staffProfileId))
     setSelectedStaffMember(staff)
     setStaffProfileError(null)
   }
@@ -516,12 +539,17 @@ export default function CreatePayoutModal({
       : null
     const nextAmountError = validatePayoutAmount(amountInputValue, t)
     const nextPeriodError = validatePayoutPeriod(periodStart, periodEnd, t)
+    const nextOtherPayoutMethodError = payoutMethodType === PayoutMethodType.Other
+      && !otherPayoutMethod.trim()
+      ? t('dashboard.tips.payouts_manager.other_method_required')
+      : null
 
     setStaffProfileError(nextStaffError)
     setAmountError(nextAmountError)
     setPeriodError(nextPeriodError)
+    setOtherPayoutMethodError(nextOtherPayoutMethodError)
 
-    if (nextStaffError || nextAmountError || nextPeriodError) {
+    if (nextStaffError || nextAmountError || nextPeriodError || nextOtherPayoutMethodError) {
       return
     }
 
@@ -531,9 +559,13 @@ export default function CreatePayoutModal({
       return
     }
 
+    const isOtherPayoutMethod = payoutMethodType === PayoutMethodType.Other
+    const trimmedOtherPayoutMethod = otherPayoutMethod.trim()
+
     const payload = {
       staffProfileId,
       payoutMethodType,
+      payoutMethodTypeName: isOtherPayoutMethod ? trimmedOtherPayoutMethod : null,
       amount: parsedAmount,
       payoutTypes: payoutTypesMask,
       periodStart,
@@ -547,16 +579,18 @@ export default function CreatePayoutModal({
 
     try {
       if (isEditing && editingPayout) {
+        const updatePayload = {
+          payoutMethodType: payload.payoutMethodType,
+          payoutMethodTypeName: payload.payoutMethodTypeName,
+          payoutTypes: payload.payoutTypes,
+          periodStart: payload.periodStart,
+          periodEnd: payload.periodEnd,
+          evidenceUrls: payload.evidenceUrls,
+          notes: payload.notes,
+        }
         await updateMutation.mutateAsync({
           payoutId: editingPayout.id,
-          payload: {
-            payoutMethodType: payload.payoutMethodType,
-            payoutTypes: payload.payoutTypes,
-            periodStart: payload.periodStart,
-            periodEnd: payload.periodEnd,
-            evidenceUrls: payload.evidenceUrls,
-            notes: payload.notes,
-          },
+          payload: updatePayload,
         })
         showToast(t('dashboard.tips.payouts_manager.update_success'), 'success')
       } else {
@@ -640,7 +674,13 @@ export default function CreatePayoutModal({
                       key={method}
                       type="button"
                       disabled={!selectable}
-                      onClick={() => selectable && setPayoutMethodType(method)}
+                      onClick={() => {
+                        if (!selectable) return
+                        setPayoutMethodType(method)
+                        if (otherPayoutMethodError) {
+                          setOtherPayoutMethodError(null)
+                        }
+                      }}
                       className={`rounded-xl border px-2 py-2 text-center text-[11px] font-bold transition ${
                         payoutMethodType === method
                           ? 'border-nexoraBrand bg-nexoraBrand/10 text-nexoraBrand'
@@ -654,6 +694,50 @@ export default function CreatePayoutModal({
                     )
                   })}
                 </div>
+                {payoutMethodType === PayoutMethodType.Other ? (
+                  <div className="mt-2">
+                    <label
+                      htmlFor="payout-other-method-input"
+                      className="mb-1.5 block text-[11px] font-semibold text-mutedGrey"
+                    >
+                      {t('dashboard.tips.payouts_manager.other_method_label')} *
+                    </label>
+                    <input
+                      id="payout-other-method-input"
+                      type="text"
+                      list="payout-other-method-suggestions"
+                      value={otherPayoutMethod}
+                      onChange={(e) => {
+                        setOtherPayoutMethod(e.target.value)
+                        if (otherPayoutMethodError) {
+                          setOtherPayoutMethodError(null)
+                        }
+                      }}
+                      placeholder={t('dashboard.tips.payouts_manager.other_method_placeholder')}
+                      className={`h-10 w-full rounded-lg border bg-white px-3 text-sm outline-none ${
+                        otherPayoutMethodError
+                          ? 'border-red-400 focus:border-red-500 focus:ring-1 focus:ring-red-200'
+                          : 'border-nexoraBorder focus:border-nexoraBrand focus:ring-1 focus:ring-nexoraBrand/20'
+                      }`}
+                      aria-invalid={Boolean(otherPayoutMethodError)}
+                      aria-describedby={otherPayoutMethodError ? 'payout-other-method-error' : undefined}
+                    />
+                    <datalist id="payout-other-method-suggestions">
+                      {OTHER_PAYOUT_METHOD_SUGGESTIONS.map((option) => (
+                        <option key={option} value={option} />
+                      ))}
+                    </datalist>
+                    {otherPayoutMethodError ? (
+                      <p id="payout-other-method-error" className="mt-1.5 text-xs font-semibold text-red-600">
+                        {otherPayoutMethodError}
+                      </p>
+                    ) : (
+                      <p className="mt-1.5 text-[11px] text-mutedGrey">
+                        {t('dashboard.tips.payouts_manager.other_method_hint')}
+                      </p>
+                    )}
+                  </div>
+                ) : null}
                 {staffProfileId && availablePayoutMethods.length === 0 ? (
                   <p className="mt-1.5 text-xs font-semibold text-amber-700">
                     {t('dashboard.tips.payouts_manager.method_staff_none')}

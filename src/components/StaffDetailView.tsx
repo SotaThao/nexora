@@ -16,7 +16,7 @@ import {
 import { useTranslation } from '../contexts/LanguageContext'
 import { logger } from '../utils/logger'
 import CopyableTransactionId from './ui/CopyableTransactionId'
-import { formatTransactionDateTime, formatCurrency } from './dashboard/utils'
+import { DateTimeCell, formatCurrency } from './dashboard/utils'
 import { buildChartPoints, getBezierPath } from './dashboard/overview/chartUtils'
 import {
   useMerchantStaffByCode,
@@ -437,43 +437,46 @@ export default function StaffDetailView({
         <div className="absolute -right-16 -top-16 h-36 w-36 bg-nexoraBrand/5 rounded-full blur-2xl pointer-events-none"></div>
         <div className="absolute -left-16 -bottom-16 h-36 w-36 bg-brandCyan/5 rounded-full blur-2xl pointer-events-none"></div>
 
-        <div className="flex flex-col gap-5 xl:flex-row xl:items-start xl:justify-between relative z-10">
-          <div className="flex min-w-0 items-start gap-4">
-            {onBack && (
-              <button
-                onClick={onBack}
-                className="inline-flex h-9 w-9 items-center justify-center rounded-lg border border-nexoraBorder bg-white text-nexoraText hover:bg-nexoraSurfaceMuted transition"
-                title={t('common.back')}
-              >
-                <ArrowLeft className="h-4 w-4" />
-              </button>
-            )}
+        <div className="flex flex-col gap-5 2xl:flex-row 2xl:items-start 2xl:justify-between relative z-10">
+          <div className="flex flex-col gap-4 min-w-0 flex-1">
+            {/* Top row: Avatar, Name, Badges */}
+            <div className="flex min-w-0 items-center gap-3 sm:gap-4">
+              {onBack && (
+                <button
+                  onClick={onBack}
+                  className="inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-lg border border-nexoraBorder bg-white text-nexoraText hover:bg-nexoraSurfaceMuted transition"
+                  title={t('common.back')}
+                >
+                  <ArrowLeft className="h-4 w-4" />
+                </button>
+              )}
 
-            {staffMember.avatar ? (
-              <img
-                src={staffMember.avatar}
-                alt={resolvedDisplayName}
-                className="h-16 w-16 rounded-full border border-nexoraBorder object-cover shadow-sm"
-              />
-            ) : (
-              <div className="flex h-16 w-16 items-center justify-center rounded-full bg-gradient-to-tr from-nexoraBrand to-nexoraLavender text-xl font-black text-white shadow-md">
-                {(resolvedDisplayName || 'N').charAt(0).toUpperCase()}
-              </div>
-            )}
+              {staffMember.avatar ? (
+                <img
+                  src={staffMember.avatar}
+                  alt={resolvedDisplayName}
+                  className="h-14 w-14 sm:h-16 sm:w-16 shrink-0 rounded-full border border-nexoraBorder object-cover shadow-sm"
+                />
+              ) : (
+                <div className="flex h-14 w-14 sm:h-16 sm:w-16 shrink-0 items-center justify-center rounded-full bg-gradient-to-tr from-nexoraBrand to-nexoraLavender text-xl font-black text-white shadow-md">
+                  {(resolvedDisplayName || 'N').charAt(0).toUpperCase()}
+                </div>
+              )}
 
-            <div className="min-w-0 flex-1">
-              <div className="flex items-center gap-2 flex-wrap">
-                <h1 className='text-xl font-extrabold text-nexoraText sm:text-2xl'>
-                  <span className='[overflow-wrap:anywhere]'>{resolvedDisplayName}</span>
-                </h1>
-                <div className="flex gap-1">
+              <div className="flex flex-col gap-1.5 min-w-0 flex-1 justify-center">
+                <div className="flex items-center gap-2 min-w-0">
+                  <h1 className='text-lg sm:text-2xl font-extrabold text-nexoraText min-w-0 truncate'>
+                    {resolvedDisplayName}
+                  </h1>
                   {hasBusinessNickname ? (
-                    <span className="rounded-full border border-dashed border-nexoraLavender bg-nexoraBrandSoft px-2.5 py-0.5 text-[10px] font-extrabold uppercase tracking-wider text-nexoraBrand">
+                    <span className="shrink-0 rounded border border-dashed border-nexoraLavender bg-nexoraBrandSoft px-1.5 py-[3px] text-[8px] sm:text-[9px] font-bold uppercase leading-none text-nexoraBrand">
                       {t('staff_detail.nickname_badge')}
                     </span>
                   ) : null}
+                </div>
+                <div className="flex flex-wrap items-center gap-1.5">
                   <span
-                    className={`rounded-full px-2.5 py-0.5 text-[10px] font-extrabold uppercase tracking-wider ${
+                    className={`rounded-full px-2 py-0.5 text-[9px] sm:text-[10px] font-extrabold uppercase tracking-wider ${
                       staffMember.isActive
                         ? 'bg-emerald-50 text-emerald-700'
                         : 'bg-rose-50 text-rose-700'
@@ -482,7 +485,7 @@ export default function StaffDetailView({
                     {staffMember.isActive ? t('common.active') : t('common.inactive')}
                   </span>
                   <span
-                    className={`rounded-full px-2.5 py-0.5 text-[10px] font-extrabold uppercase tracking-wider ${
+                    className={`rounded-full px-2 py-0.5 text-[9px] sm:text-[10px] font-extrabold uppercase tracking-wider ${
                       staffMember.showInTipsFlow !== false
                         ? 'bg-blue-50 text-blue-700'
                         : 'bg-slate-100 text-slate-600'
@@ -492,34 +495,47 @@ export default function StaffDetailView({
                   </span>
                 </div>
               </div>
-              {hasBusinessNickname ? (
-                <p className="text-[11px] font-semibold text-nexoraMuted">
-                  {t('staff_detail.nickname_original_name', { name: originalDisplayName })}
-                </p>
-              ) : null}
-              <p className="text-xs font-semibold text-nexoraMuted">{stats.specialty || staffMember.position}</p>
-              <div className="mt-1.5 flex flex-wrap gap-x-4 gap-y-1.5 text-[11px] text-nexoraSubtle">
-                <div className="flex items-center gap-1">
-                  <Calendar className="h-3.5 w-3.5 text-brandCyan" />
-                  {staffMember.joinedDate
-                    ? `${t('staff_detail.joined_gateway')}: ${formatJoinedDate(staffMember.joinedDate)}`
-                    : t('staff_detail.joined_gateway')}
+            </div>
+
+            {/* Details row */}
+            <div className="flex flex-col gap-2.5 bg-slate-50/50 sm:bg-transparent p-3 sm:p-0 rounded-xl sm:rounded-none border border-slate-100 sm:border-0 sm:mt-1">
+              <div className="flex flex-col sm:flex-row sm:items-center sm:gap-3">
+                {(stats.specialty || staffMember.position) && (
+                  <p className="text-sm font-bold text-nexoraText">{stats.specialty || staffMember.position}</p>
+                )}
+                {hasBusinessNickname ? (
+                  <p className="text-[11px] font-medium text-nexoraMuted">
+                    {t('staff_detail.nickname_original_name', { name: originalDisplayName })}
+                  </p>
+                ) : null}
+              </div>
+
+              <div className="flex flex-col gap-2 text-[11px] font-medium text-nexoraSubtle sm:flex-row sm:flex-wrap sm:gap-4 sm:items-center">
+                <div className="flex items-center gap-2 sm:gap-1.5">
+                  <Calendar className="h-3.5 w-3.5 text-brandCyan shrink-0" />
+                  <span className="truncate">
+                    {staffMember.joinedDate
+                      ? `${t('staff_detail.joined_gateway')}: ${formatJoinedDate(staffMember.joinedDate)}`
+                      : t('staff_detail.joined_gateway')}
+                  </span>
                 </div>
                 {staffMember.phone && (
-                  <div className="flex items-center gap-1">
-                    <Phone className="h-3.5 w-3.5 text-brandCyan" /> {staffMember.phone}
+                  <div className="flex items-center gap-2 sm:gap-1.5">
+                    <Phone className="h-3.5 w-3.5 text-brandCyan shrink-0" /> 
+                    <span className="truncate">{staffMember.phone}</span>
                   </div>
                 )}
                 {staffMember.email && (
-                  <div className="flex items-center gap-1">
-                    <Mail className="h-3.5 w-3.5 text-brandCyan" /> {staffMember.email}
+                  <div className="flex items-center gap-2 sm:gap-1.5">
+                    <Mail className="h-3.5 w-3.5 text-brandCyan shrink-0" /> 
+                    <span className="truncate">{staffMember.email}</span>
                   </div>
                 )}
               </div>
             </div>
           </div>
 
-          <div className="grid w-full grid-cols-2 gap-2 sm:grid-cols-3 xl:flex xl:w-auto xl:flex-wrap xl:items-center xl:justify-end [&>div]:w-full [&>div>button]:w-full xl:[&>div]:w-auto xl:[&>div>button]:w-auto">
+          <div className="grid w-full grid-cols-2 gap-2 sm:flex sm:flex-row sm:flex-wrap sm:items-center sm:justify-start 2xl:w-auto 2xl:justify-end 2xl:flex-nowrap [&>div]:w-full [&>div>button]:w-full [&>div>button]:px-2 [&>div>button]:text-[11px] sm:[&>div]:w-auto sm:[&>div>button]:w-auto sm:[&>div>button]:px-4 sm:[&>div>button]:text-xs">
             {nicknameStaffLinkId != null && nicknameStaffCode ? (
               <NicknameEditor
                 value={rawBusinessNickname}
@@ -552,7 +568,7 @@ export default function StaffDetailView({
                 notFoundErrorKey={STAFF_ROLE_ERROR_KEYS.merchantLinkNotFound}
                 onRefresh={async () => {
                   const result = await refetchNicknameStaffMember({ throwOnError: true })
-                  return result.data?.roleAtBusiness ?? result.data?.position ?? ''
+                  return String(result.data?.roleAtBusiness ?? result.data?.position ?? '')
                 }}
                 onSave={async (roleAtBusiness) => {
                   const result = await updateRoleMutation.mutateAsync({
@@ -566,25 +582,26 @@ export default function StaffDetailView({
             ) : null}
             <button
               onClick={() => onQr(staffMember)}
-              className="inline-flex h-10 w-full items-center justify-center gap-2 rounded-lg border border-nexoraBorder bg-white px-4 text-xs font-bold text-nexoraText shadow-sm transition hover:bg-nexoraSurfaceMuted xl:w-auto"
+              className="inline-flex h-10 w-full sm:w-auto items-center justify-center gap-1.5 rounded-lg border border-nexoraBorder bg-white px-2 text-[11px] font-bold text-nexoraText shadow-sm transition hover:bg-nexoraSurfaceMuted sm:gap-2 sm:px-4 sm:text-xs"
             >
-              <QrCode className="h-4 w-4 text-brandCyan" /> {t('staff_detail.personal_qr')}
+              <QrCode className="h-4 w-4 text-brandCyan" /> <span className="truncate">{t('staff_detail.personal_qr')}</span>
             </button>
             {onViewStaff && (
               <button
                 onClick={() => onViewStaff(staffMember)}
-                className="inline-flex h-10 w-full items-center justify-center gap-2 rounded-lg border border-nexoraBorder bg-white px-4 text-xs font-bold text-nexoraText shadow-sm transition hover:bg-nexoraSurfaceMuted xl:w-auto"
+                className="inline-flex h-10 w-full sm:w-auto items-center justify-center gap-1.5 rounded-lg border border-nexoraBorder bg-white px-2 text-[11px] font-bold text-nexoraText shadow-sm transition hover:bg-nexoraSurfaceMuted sm:gap-2 sm:px-4 sm:text-xs"
               >
-                <Eye className="h-4 w-4 text-nexoraBrand" /> {t('common.view_detail')}
+                <Eye className="h-4 w-4 text-nexoraBrand" /> <span className="truncate">{t('common.view_detail')}</span>
               </button>
             )}
             {onDelete && (
               <button
                 onClick={() => onDelete(staffMember.id)}
-                className="inline-flex h-10 w-10 shrink-0 items-center justify-center justify-self-end rounded-lg border border-red-200 bg-red-50 text-red-600 transition hover:bg-red-100"
+                className="col-span-2 sm:col-span-1 inline-flex h-10 w-full sm:w-auto shrink-0 items-center justify-center rounded-lg border border-red-200 bg-red-50 px-2 sm:px-4 text-red-600 transition hover:bg-red-100"
                 title={t('staff_detail.delete_tech')}
               >
-                <Trash2 className="h-4 w-4" />
+                <Trash2 className="h-4 w-4 shrink-0" />
+                <span className="ml-1.5 text-[11px] font-bold sm:text-xs truncate">{t('staff_detail.delete_tech')}</span>
               </button>
             )}
           </div>
@@ -916,7 +933,7 @@ export default function StaffDetailView({
                 {stats.recentTransactions.map((tx) => (
                   <tr key={tx.id} className="border-t border-nexoraRule hover:bg-slate-50/50">
                     <td className="px-4 py-3.5 font-bold text-nexoraText">{tx.id}</td>
-                    <td className="px-4 py-3.5 text-nexoraMuted">{formatTransactionDateTime(tx.dateTime, currentLanguage)}</td>
+                    <td className="px-4 py-3.5 text-nexoraMuted"><DateTimeCell value={tx.dateTime} locale={currentLanguage} /></td>
                     <td className="px-4 py-3.5 font-black text-nexoraText">{formatCurrency(tx.amount)}</td>
                     <td className="px-4 py-3.5 text-nexoraMuted">{tx.touchpoint}</td>
                     <td className="px-4 py-3.5">
@@ -1005,7 +1022,7 @@ export default function StaffDetailView({
                     {rev.comment}
                   </p>
                   <p className="text-[10px] text-nexoraSubtle font-medium">
-                    Logged: {formatTransactionDateTime(rev.createdAt || rev.date, currentLanguage)}
+                    Logged: <DateTimeCell value={rev.createdAt || rev.date} locale={currentLanguage} />
                   </p>
                 </div>
 

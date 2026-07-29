@@ -307,6 +307,7 @@ export const errorCodeToI18nKey = {
 
   // Common
   COMMON_VALIDATION_ERROR: 'errors.common_validation_error',
+  COMMON_BAD_REQUEST: 'errors.common_bad_request',
   COMMON_NOT_FOUND: 'errors.common_not_found',
   COMMON_UNAUTHORIZED: 'errors.common_unauthorized',
   COMMON_FORBIDDEN: 'errors.common_forbidden',
@@ -352,8 +353,22 @@ export const errorCodeToI18nKey = {
   // Nexora Voice tenant
   VOICE_TENANT_NOT_FOUND: 'errors.voice_tenant_not_found',
 
-  // Nexora Voice tenant services
+  // Nexora Voice tenant services / staff (public booking)
   VOICE_TENANT_SERVICE_DURATION_INVALID: 'errors.voice_tenant_service_duration_invalid',
+  VOICE_TENANT_SERVICE_NOT_FOUND: 'errors.voice_tenant_service_not_found',
+  VOICE_TENANT_STAFF_NOT_FOUND: 'errors.voice_tenant_staff_not_found',
+
+  // Nexora Voice SMS campaigns
+  SMS_CAMPAIGN_NOT_FOUND: 'errors.sms_campaign_not_found',
+  SMS_CAMPAIGN_INVALID_STATUS_TRANSITION: 'errors.sms_campaign_invalid_status_transition',
+  SMS_CAMPAIGN_NOT_EDITABLE: 'errors.sms_campaign_not_editable',
+  SMS_CAMPAIGN_NOT_AUTO_CAMPAIGN: 'errors.sms_campaign_not_auto_campaign',
+  SMS_CAMPAIGN_NO_RECIPIENTS: 'errors.sms_campaign_no_recipients',
+  SMS_CAMPAIGN_INSUFFICIENT_CREDITS: 'errors.sms_campaign_insufficient_credits',
+  SMS_CAMPAIGN_MESSAGE_BODY_REQUIRED: 'errors.sms_campaign_message_body_required',
+  SMS_CAMPAIGN_SCHEDULED_AT_REQUIRED: 'errors.sms_campaign_scheduled_at_required',
+  SMS_CAMPAIGN_SCHEDULED_AT_IN_PAST: 'errors.sms_campaign_scheduled_at_in_past',
+  SMS_CREDIT_INVALID_PACKAGE: 'errors.sms_credit_invalid_package',
 }
 
 /**

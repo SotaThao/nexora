@@ -4,7 +4,12 @@ import { useNotification } from "../../../contexts/NotificationContext";
 import { useQueryClient } from "@tanstack/react-query";
 import { useTranslation } from "../../../contexts/LanguageContext";
 import { resolveEffectiveKybStatus } from "../../../utils/kybStatus";
-import { useUpdateBusiness, useUpdateReviewLinks } from "../../../data/hooks/useMerchantSetup";
+import { formatDateOnly } from "../../../utils/localDate";
+import {
+  useUpdateBusiness,
+  useUpdateBusinessInfo,
+  useUpdateReviewLinks,
+} from "../../../data/hooks/useMerchantSetup";
 import useBusinessInfoForm from "./useBusinessInfoForm";
 import {
   useProfileSettings,
@@ -18,7 +23,11 @@ import { qk } from "../../../data/queryKeys";
 import { logger } from "../../../utils/logger";
 import { buildPublicQrImageUrl } from "../../../data/repositories/publicQr";
 import { getUserProfileImageUrl } from "../../../utils/userProfileImage";
-import { isValidHttpUrl, isValidPhone } from "../../../utils/validation";
+import {
+  isValidEmail,
+  isValidHttpUrl,
+  isValidPhone,
+} from "../../../utils/validation";
 
 type SettingsFormErrors = Record<string, string>;
 
@@ -69,6 +78,20 @@ const validateAddressForm = (form: LooseObject): SettingsFormErrors => {
     errors.zipCode = "postalCode";
   }
   if (formValue(form.country) && formValue(form.country).length < 2) errors.country = "invalid";
+  return errors;
+};
+
+const validateBusinessForm = (form: LooseObject): SettingsFormErrors => {
+  const errors: SettingsFormErrors = {};
+  if (!formValue(form.businessName)) errors.businessName = "required";
+  else if (formValue(form.businessName).length < 2) errors.businessName = "invalid";
+  if (!formValue(form.businessPhone)) errors.businessPhone = "required";
+  else if (!isValidPhone(form.businessPhone)) errors.businessPhone = "phone";
+  if (!formValue(form.businessEmail)) errors.businessEmail = "required";
+  else if (!isValidEmail(form.businessEmail)) errors.businessEmail = "email";
+  if (formValue(form.businessWebsite) && !isValidHttpUrl(form.businessWebsite)) {
+    errors.businessWebsite = "url";
+  }
   return errors;
 };
 
@@ -160,6 +183,7 @@ export default function useSettingsForm({
   const updateAddressMutation = useUpdateAddress();
   const updateAvatarMutation = useUpdateAvatar();
   const updateBusinessMutation = useUpdateBusiness();
+  const updateBusinessInfoMutation = useUpdateBusinessInfo();
   const updateReviewLinksMutation = useUpdateReviewLinks();
   const { data: verifiedStatusData } = useVerifiedStatus();
   const businessInfoForm = useBusinessInfoForm({ setupData, verificationStatus });
@@ -259,6 +283,10 @@ export default function useSettingsForm({
   const [addressForm, setAddressForm] = useState<LooseObject>({});
   const [addressErrors, setAddressErrors] = useState<SettingsFormErrors>({});
 
+  const [isEditingBusiness, setIsEditingBusiness] = useState(false);
+  const [businessForm, setBusinessForm] = useState<LooseObject>({});
+  const [businessErrors, setBusinessErrors] = useState<SettingsFormErrors>({});
+
   const [isEditingReviews, setIsEditingReviews] = useState(false);
   const [reviewsForm, setReviewsForm] = useState({
     googleReview: "",
@@ -276,6 +304,7 @@ export default function useSettingsForm({
     if (canEditProfile) return;
     setIsEditingBasic(false);
     setIsEditingAddress(false);
+    setIsEditingBusiness(false);
     businessInfoForm.setIsEditingBusiness(false);
   }, [canEditProfile]);
 
@@ -463,6 +492,17 @@ export default function useSettingsForm({
   // only to keep the Owner-Profile-header's `profile.businessName` mirror
   // (used outside the Business Information card, e.g. the sidebar/profile card)
   // in sync immediately, matching the previous optimistic-update behavior.
+  const startEditBusiness = () => {
+    if (!canEditProfile) return;
+    setBusinessErrors({});
+    setBusinessForm({
+      businessName: profile.businessName,
+      businessPhone: profile.businessPhone,
+      businessEmail: profile.businessEmail,
+      businessWebsite: profile.businessWebsite,
+    });
+    setIsEditingBusiness(true);
+  };
   const saveBusiness = (e) => {
     businessInfoForm.saveBusiness(e, (next) => {
       saveProfile({ ...profile, ...next });
@@ -597,15 +637,7 @@ export default function useSettingsForm({
   const formatDOB = (dobString) => {
     if (!dobString) return "";
     try {
-      const date = new Date(dobString);
-      return date.toLocaleDateString(
-        currentLanguage === "vi" ? "vi-VN" : "en-US",
-        {
-          month: "short",
-          day: "numeric",
-          year: "numeric",
-        },
-      );
+      return formatDateOnly(dobString, currentLanguage);
     } catch (e) {
       return dobString;
     }
