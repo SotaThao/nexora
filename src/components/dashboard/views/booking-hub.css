@@ -4786,67 +4786,25 @@
   border-top: 1px solid var(--nexora-rule);
 }
 
-.booking-hub-view .trial-file-picker {
-  display: grid;
-  grid-template-columns: auto minmax(0, 1fr);
+.booking-hub-view .trial-price-list-selected {
+  display: flex;
+  flex-wrap: wrap;
   align-items: center;
-  gap: 10px;
-  min-width: 0;
-  width: 100%;
-  box-sizing: border-box;
-  border: 1px solid var(--nexora-border);
-  border-radius: 10px;
-  background: #fff;
-  padding: 8px 10px;
-}
-
-.booking-hub-view .trial-file-picker.has-error {
-  border-color: #ef4444;
-  box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.1);
-}
-
-.booking-hub-view .trial-file-pick-button {
-  flex-shrink: 0;
-  border: 1px solid rgba(70, 72, 216, 0.2);
-  border-radius: 7px;
-  background: color-mix(in srgb, var(--nexora-brand) 8%, white);
-  padding: 8px 12px;
-  color: var(--nexora-brand);
-  font-size: 11px;
-  font-weight: 800;
-  line-height: 1.2;
-  white-space: nowrap;
-  cursor: pointer;
-}
-
-.booking-hub-view .trial-file-pick-button:hover {
-  background: color-mix(in srgb, var(--nexora-brand) 14%, white);
-}
-
-.booking-hub-view .trial-file-picker-meta {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  min-width: 0;
-  color: var(--nexora-muted);
-  font-size: 10px;
-  font-weight: 500;
-  line-height: 1.4;
-}
-
-.booking-hub-view .trial-file-picker-meta > span {
-  min-width: 0;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
+  gap: 6px 14px;
+  margin-top: 2px;
 }
 
 .booking-hub-view .trial-file-input {
+  display: block;
+  width: 100%;
+  max-width: 100%;
   min-height: 46px;
   height: auto;
   line-height: 1.35;
   padding: 9px 12px;
   font-size: 12px;
+  white-space: normal;
+  overflow: hidden;
 }
 
 .booking-hub-view .trial-file-input::file-selector-button {
@@ -4859,6 +4817,20 @@
   font-size: 11px;
   font-weight: 800;
   cursor: pointer;
+}
+
+.booking-hub-view .trial-service-price-list .trial-note {
+  display: flex;
+  align-items: flex-start;
+  max-width: 100%;
+  min-width: 0;
+}
+
+.booking-hub-view .trial-service-price-list .trial-note > span {
+  min-width: 0;
+  flex: 1;
+  white-space: normal;
+  word-break: break-word;
 }
 
 .booking-hub-view .trial-time-separator {
@@ -5020,6 +4992,22 @@
     line-height: 38px;
   }
 
+  /* Native file input must not inherit fixed text-field height on mobile. */
+  .booking-hub-view .trial-input.trial-file-input {
+    height: auto;
+    min-height: 44px;
+    line-height: 1.35;
+    padding-top: 10px;
+    padding-bottom: 10px;
+  }
+
+  .booking-hub-view .trial-file-input::file-selector-button {
+    display: inline-block;
+    margin-bottom: 4px;
+    padding: 8px 12px;
+    font-size: 12px;
+  }
+
   .booking-hub-view .trial-select {
     height: auto;
     min-height: 40px;
@@ -5034,26 +5022,12 @@
     font-size: 12px;
   }
 
-  .booking-hub-view .trial-file-picker {
-    grid-template-columns: 1fr;
-    gap: 8px;
-    padding: 10px;
+  .booking-hub-view .trial-price-list-selected {
+    gap: 8px 12px;
   }
 
-  .booking-hub-view .trial-file-pick-button {
-    width: 100%;
-    min-height: 40px;
-    font-size: 12px;
-  }
-
-  .booking-hub-view .trial-file-picker-meta {
-    font-size: 11px;
-  }
-
-  .booking-hub-view .trial-file-picker-meta > span {
+  .booking-hub-view .trial-price-list-selected .trial-note > span {
     white-space: normal;
-    overflow: visible;
-    text-overflow: unset;
     word-break: break-word;
   }
 }

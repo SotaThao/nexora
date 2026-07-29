@@ -3,13 +3,15 @@ import { useTranslation } from "../../../contexts/LanguageContext";
 import { useNotification } from "../../../contexts/NotificationContext";
 import { getErrorI18nKey } from "../../../data/errorCodes";
 import { useSubmitVoiceTrialRequest } from "../../../data/hooks/useSubmitVoiceTrialRequest";
+import { imagesRepository } from "../../../data/repositories/images";
 import {
-  formatTrialTimeLabelToApi,
-  mapDayKeysToApiOpeningDays,
+  toVoiceTrialOperatingHours,
+  VOICE_TRIAL_LIMITS,
+  VOICE_TRIAL_PRICE_LIST_ACCEPT,
   VoiceTrialFormField,
   type SubmitVoiceTrialRequest,
 } from "../../../data/voiceTrial/domain";
-import { getApiErrorCode } from "../../../types/domain";
+import { getApiErrorCode, isApiError } from "../../../types/domain";
 import CountryCodeSelect, {
   formatNationalNumber,
   getNationalPhonePlaceholder,
@@ -49,9 +51,6 @@ const DEFAULT_ACTIVE_SERVICES = new Set([
 const DAY_KEYS = ["mon", "tue", "wed", "thu", "fri", "sat", "sun"] as const;
 type DayKey = (typeof DAY_KEYS)[number];
 
-const TRIAL_PRICE_LIST_MAX_BYTES = 10 * 1024 * 1024;
-const TRIAL_PRICE_LIST_ACCEPT = ".pdf,.png,.jpg,.jpeg,.csv,.xlsx,.xls";
-
 type HourRow = {
   open: boolean;
   openTime: string;
@@ -84,13 +83,12 @@ function compareTime24h(left: string, right: string): number {
 
 function isSupportedPriceListFile(file: File): boolean {
   const fileName = (file.name || "").toLowerCase();
-  const supportedExtension =
-    /\.(pdf|png|jpe?g|csv|xlsx?|xls)$/i.test(fileName);
-  const supportedMime =
-    /^(application\/pdf|image\/(png|jpe?g)|text\/csv|application\/vnd\.ms-excel|application\/vnd\.openxmlformats-officedocument\.spreadsheetml\.sheet)$/i.test(
-      file.type || "",
-    );
-  return (supportedExtension || supportedMime) && file.size <= TRIAL_PRICE_LIST_MAX_BYTES;
+  const supportedExtension = /\.(png|jpe?g|webp)$/i.test(fileName);
+  const supportedMime = /^image\/(png|jpe?g|webp)$/i.test(file.type || "");
+  return (
+    (supportedExtension || supportedMime) &&
+    file.size <= VOICE_TRIAL_LIMITS.priceListFileMaxBytes
+  );
 }
 
 function formatFileSizeLabel(bytes: number): string {
@@ -99,36 +97,19 @@ function formatFileSizeLabel(bytes: number): string {
   return `${(kb / 1024).toFixed(1)} MB`;
 }
 
-function deriveApiHours(hours: HoursByDay): {
-  openingDayKeys: DayKey[];
-  serviceHoursFrom: string;
-  serviceHoursTo: string;
-} {
-  const openingDayKeys = DAY_KEYS.filter((day) => hours[day].open);
-  if (openingDayKeys.length === 0) {
-    return {
-      openingDayKeys,
-      serviceHoursFrom: "09:00",
-      serviceHoursTo: "19:00",
-    };
+function resolveTrialSubmitErrorCode(error: unknown): string {
+  if (isApiError(error) && error.status === 429) {
+    return "COMMON_RATE_LIMIT_EXCEEDED";
   }
-
-  let earliest = hours[openingDayKeys[0]].openTime;
-  let latest = hours[openingDayKeys[0]].closeTime;
-  for (const day of openingDayKeys) {
-    if (compareTime24h(hours[day].openTime, earliest) < 0) {
-      earliest = hours[day].openTime;
-    }
-    if (compareTime24h(hours[day].closeTime, latest) > 0) {
-      latest = hours[day].closeTime;
-    }
+  if (
+    error &&
+    typeof error === "object" &&
+    "errorCode" in error &&
+    typeof (error as { errorCode?: unknown }).errorCode === "string"
+  ) {
+    return (error as { errorCode: string }).errorCode;
   }
-
-  return {
-    openingDayKeys,
-    serviceHoursFrom: earliest,
-    serviceHoursTo: latest,
-  };
+  return getApiErrorCode(error);
 }
 
 const PAIN_POINT_KEYS = {
@@ -170,7 +151,7 @@ interface TrialFormState {
   customServices: string[];
   customServiceInput: string;
   showCustomServiceInput: boolean;
-  priceListFile: File | null;
+  priceListFiles: File[];
 }
 
 function createInitialTrialForm(): TrialFormState {
@@ -189,7 +170,7 @@ function createInitialTrialForm(): TrialFormState {
     customServices: [],
     customServiceInput: "",
     showCustomServiceInput: false,
-    priceListFile: null,
+    priceListFiles: [],
   };
 }
 
@@ -585,24 +566,54 @@ export default function BookingTrialModal({
     clearFieldError("serviceHours");
   };
 
+  const syncPriceListInputFiles = (files: File[]) => {
+    const input = priceListInputRef.current;
+    if (!input) return;
+    const transfer = new DataTransfer();
+    files.forEach((file) => transfer.items.add(file));
+    input.files = transfer.files;
+  };
+
   const handlePriceListChange = (fileList: FileList | null) => {
-    const file = fileList?.[0] ?? null;
-    if (!file) {
-      patchForm("priceListFile", null);
-      clearFieldError("priceList");
+    const incoming = fileList ? Array.from(fileList) : [];
+    // Native file input replaces on each pick — keep prior selections and append.
+    if (incoming.length === 0) {
+      syncPriceListInputFiles(form.priceListFiles);
       return;
     }
-    if (!isSupportedPriceListFile(file)) {
-      patchForm("priceListFile", null);
-      if (priceListInputRef.current) priceListInputRef.current.value = "";
+
+    if (incoming.some((file) => !isSupportedPriceListFile(file))) {
+      syncPriceListInputFiles(form.priceListFiles);
       setErrors((prev) => ({
         ...prev,
         priceList: t(`${TK}.priceListInvalid`),
       }));
       return;
     }
-    patchForm("priceListFile", file);
+
+    const fileKey = (file: File) =>
+      `${file.name}::${file.size}::${file.lastModified}`;
+    const merged = [...form.priceListFiles];
+    for (const file of incoming) {
+      if (!merged.some((existing) => fileKey(existing) === fileKey(file))) {
+        merged.push(file);
+      }
+    }
+
+    if (merged.length > VOICE_TRIAL_LIMITS.priceListUrlsMax) {
+      syncPriceListInputFiles(form.priceListFiles);
+      setErrors((prev) => ({
+        ...prev,
+        priceList: t(`${TK}.priceListTooMany`, {
+          max: VOICE_TRIAL_LIMITS.priceListUrlsMax,
+        }),
+      }));
+      return;
+    }
+
+    patchForm("priceListFiles", merged);
     clearFieldError("priceList");
+    syncPriceListInputFiles(merged);
   };
 
   const validateForm = (): TrialFormErrors => {
@@ -610,7 +621,7 @@ export default function BookingTrialModal({
     const ownerName = form.owner.trim();
     const emailValue = form.email.trim();
     const services = [...form.activeServices];
-    const { openingDayKeys } = deriveApiHours(form.hours);
+    const openingDayKeys = DAY_KEYS.filter((day) => form.hours[day].open);
     const painKey = PAIN_POINT_KEYS[form.painPoint as PainPointValue];
     const nextErrors: TrialFormErrors = {};
 
@@ -656,8 +667,16 @@ export default function BookingTrialModal({
       }
     }
 
-    if (form.priceListFile && !isSupportedPriceListFile(form.priceListFile)) {
-      nextErrors.priceList = t(`${TK}.priceListInvalid`);
+    if (
+      form.priceListFiles.length > VOICE_TRIAL_LIMITS.priceListUrlsMax ||
+      form.priceListFiles.some((file) => !isSupportedPriceListFile(file))
+    ) {
+      nextErrors.priceList =
+        form.priceListFiles.length > VOICE_TRIAL_LIMITS.priceListUrlsMax
+          ? t(`${TK}.priceListTooMany`, {
+              max: VOICE_TRIAL_LIMITS.priceListUrlsMax,
+            })
+          : t(`${TK}.priceListInvalid`);
     }
 
     if (!painKey)
@@ -698,30 +717,27 @@ export default function BookingTrialModal({
     const shopName = form.salon.trim();
     const ownerName = form.owner.trim();
     const phoneNumber = normalizePhoneE164(form.phone, phoneParsed.countryCode);
+    const ownerPhoneNumber = normalizePhoneE164(
+      form.ownerPhone,
+      ownerPhoneParsed.countryCode,
+    );
     const emailValue = form.email.trim();
     const services = [...form.activeServices];
-    const { openingDayKeys, serviceHoursFrom, serviceHoursTo } = deriveApiHours(
-      form.hours,
-    );
-    const openingDays = mapDayKeysToApiOpeningDays(openingDayKeys);
     const painKey = PAIN_POINT_KEYS[form.painPoint as PainPointValue]!;
     const cityArea = form.city.trim();
     const website = form.website.trim();
     const referralCode = form.referral.trim();
 
-    // Owner phone + price list are collected in UI (HTML parity) but not in
-    // SubmitVoiceTrialRequestCommand yet — salon phone maps to phoneNumber.
     return {
       shopName,
       ownerName,
       phoneNumber,
+      ownerPhoneNumber: ownerPhoneNumber || null,
       email: emailValue,
       cityArea: cityArea || null,
       website: website || null,
       services,
-      openingDays,
-      serviceHoursFrom: formatTrialTimeLabelToApi(serviceHoursFrom),
-      serviceHoursTo: formatTrialTimeLabelToApi(serviceHoursTo),
+      operatingHours: toVoiceTrialOperatingHours(form.hours),
       biggestProblem: t(painKey),
       referralCode: referralCode || null,
     };
@@ -734,7 +750,20 @@ export default function BookingTrialModal({
     if (!payload) return;
 
     try {
-      await submitTrial.mutateAsync(payload);
+      let priceListImageUrls: string[] | undefined;
+      if (form.priceListFiles.length > 0) {
+        const upload = anonymousSubmit
+          ? (file: File) => imagesRepository.publicUploadAndGetUrl(file)
+          : (file: File) => imagesRepository.uploadAndGetUrl(file);
+        priceListImageUrls = await Promise.all(
+          form.priceListFiles.map((file) => upload(file)),
+        );
+      }
+
+      await submitTrial.mutateAsync({
+        ...payload,
+        ...(priceListImageUrls ? { priceListImageUrls } : {}),
+      });
       if (onSubmitSuccess) {
         resetForm();
         onSubmitSuccess();
@@ -743,7 +772,10 @@ export default function BookingTrialModal({
       showToast(t(`${TK}.submitSuccess`), "success");
       handleClose();
     } catch (error) {
-      showToast(t(getErrorI18nKey(getApiErrorCode(error))), "error");
+      showToast(
+        t(getErrorI18nKey(resolveTrialSubmitErrorCode(error))),
+        "error",
+      );
     }
   };
 
@@ -816,13 +848,6 @@ export default function BookingTrialModal({
   }, [open]);
 
   if (!open) return null;
-
-  const priceListNote = form.priceListFile
-    ? t(`${TK}.priceListSelected`, {
-        name: form.priceListFile.name,
-        size: formatFileSizeLabel(form.priceListFile.size),
-      })
-    : t(`${TK}.priceListEmpty`);
 
   return (
     <div
@@ -1178,32 +1203,41 @@ export default function BookingTrialModal({
                       {t(`${TK}.optional`)}
                     </span>
                   </label>
-                  <div
-                    className={`trial-file-picker${errors.priceList ? " has-error" : ""}`}
-                  >
-                    <input
-                      ref={priceListInputRef}
-                      className="settings-hidden-file-input"
-                      id="trial-price-list"
-                      type="file"
-                      accept={TRIAL_PRICE_LIST_ACCEPT}
-                      aria-invalid={Boolean(errors.priceList)}
-                      onChange={(event) =>
-                        handlePriceListChange(event.target.files)
-                      }
-                    />
-                    <button
-                      className="trial-file-pick-button"
-                      type="button"
-                      onClick={() => priceListInputRef.current?.click()}
-                    >
-                      {t(`${TK}.priceListChoose`)}
-                    </button>
-                    <div className="trial-file-picker-meta">
+                  <input
+                    ref={priceListInputRef}
+                    className={`trial-input trial-file-input${errors.priceList ? " has-error" : ""}`}
+                    id="trial-price-list"
+                    type="file"
+                    multiple
+                    accept={VOICE_TRIAL_PRICE_LIST_ACCEPT}
+                    aria-invalid={Boolean(errors.priceList)}
+                    onChange={(event) =>
+                      handlePriceListChange(event.target.files)
+                    }
+                  />
+                  {form.priceListFiles.length === 0 ? (
+                    <div className="trial-note">
                       <PaperclipIcon />
-                      <span>{priceListNote}</span>
+                      <span>{t(`${TK}.priceListEmpty`)}</span>
                     </div>
-                  </div>
+                  ) : (
+                    <div className="trial-price-list-selected">
+                      {form.priceListFiles.map((file, index) => (
+                        <div
+                          className="trial-note"
+                          key={`${file.name}-${file.size}-${index}`}
+                        >
+                          <PaperclipIcon />
+                          <span>
+                            {t(`${TK}.priceListSelected`, {
+                              name: file.name,
+                              size: formatFileSizeLabel(file.size),
+                            })}
+                          </span>
+                        </div>
+                      ))}
+                    </div>
+                  )}
                   <TrialFieldError message={errors.priceList} />
                 </div>
               </div>
