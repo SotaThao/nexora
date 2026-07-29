@@ -9,7 +9,7 @@ import { getWebUrlOrigin } from '../../../utils/webUrlBase'
 import { buildPublicQrImageUrl } from '../../../data/repositories/publicQr'
 import { QR_IMAGE_SIZES } from '../../../utils/qrUtils'
 import { orderedPayoutUiKeysFromMethods, PAYOUT_UI_LABELS } from '../../../data/paymentMethodTypes'
-import { formatJoinedDate } from '../../../utils/localDate'
+import { formatTransactionDateTime } from '../utils'
 import { resolveStaffRoleLabel } from '../../../utils/staffBusinessRole'
 import IconButton from '../../ui/IconButton'
 import CustomSelect from '../../CustomSelect'
@@ -61,6 +61,7 @@ function StaffMemberCard({
   isPendingUnlink,
   isPending,
   t,
+  currentLanguage,
   onViewDetail,
   onToggle,
   onToggleTipsFlow,
@@ -144,7 +145,7 @@ function StaffMemberCard({
           </p>
           <p className="text-[10px] text-slate-400 font-bold mt-1">
             {t('components.dashboard.views.StaffView.linkedDate')}
-           {member.joinedDate ? formatJoinedDate(member.joinedDate) : '-'}
+           {member.joinedDate ? formatTransactionDateTime(member.joinedDate, currentLanguage) : '-'}
           </p>
         </div>
 
@@ -349,7 +350,7 @@ function StaffView({
   pageSize = 10,
   togglingStaffId = null,
 }) {
-  const { t } = useTranslation()
+  const { t, currentLanguage } = useTranslation()
   const { showToast } = useNotification()
   const [largeJoinQrOpen, setLargeJoinQrOpen] = useState(false)
   const [sortBy, setSortBy] = useState('name-asc') // 'name-asc' | 'name-desc' | 'date-newest' | 'date-oldest' | 'status-active'
@@ -735,6 +736,7 @@ function StaffView({
                     isPendingUnlink={isPendingUnlink}
                     isPending={isPending}
                     t={t}
+                    currentLanguage={currentLanguage}
                     onViewDetail={onViewDetail}
                     onToggle={onToggle}
                     onToggleTipsFlow={onToggleTipsFlow}
