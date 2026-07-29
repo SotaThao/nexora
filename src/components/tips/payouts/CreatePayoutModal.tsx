@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState, type DragEvent } from 'react'
-import { Copy, Loader2, Save, Upload, X, Coins, Banknote, Gift, Tag, HandCoins, Hourglass, CheckCircle2, XCircle, Camera, FolderOpen } from 'lucide-react'
+import { ChevronDown, Copy, Loader2, Save, Upload, X, Coins, Banknote, Gift, Tag, HandCoins, Hourglass, CheckCircle2, XCircle, Camera, FolderOpen } from 'lucide-react'
 import { useTranslation } from '../../../contexts/LanguageContext'
 import { useNotification } from '../../../contexts/NotificationContext'
 import {
@@ -75,6 +75,178 @@ const OTHER_PAYOUT_METHOD_SUGGESTIONS = [
   'Bank Transfer',
   'Wire Transfer',
 ] as const
+
+function highlightOtherMethodMatch(text: string, query: string) {
+  const trimmedQuery = query.trim()
+  if (!trimmedQuery) {
+    return <span className="font-semibold text-inkBlue">{text}</span>
+  }
+
+  const lowerText = text.toLowerCase()
+  const lowerQuery = trimmedQuery.toLowerCase()
+  const matchIndex = lowerText.indexOf(lowerQuery)
+  if (matchIndex < 0) {
+    return <span className="font-normal text-mutedGrey">{text}</span>
+  }
+
+  const before = text.slice(0, matchIndex)
+  const match = text.slice(matchIndex, matchIndex + trimmedQuery.length)
+  const after = text.slice(matchIndex + trimmedQuery.length)
+
+  return (
+    <span>
+      {before ? <span className="font-normal text-mutedGrey">{before}</span> : null}
+      <span className="font-bold text-inkBlue">{match}</span>
+      {after ? <span className="font-normal text-mutedGrey">{after}</span> : null}
+    </span>
+  )
+}
+
+function OtherPayoutMethodCombobox({
+  id,
+  value,
+  onChange,
+  placeholder,
+  hasError = false,
+  ariaInvalid = false,
+  ariaDescribedBy,
+}: {
+  id: string
+  value: string
+  onChange: (next: string) => void
+  placeholder: string
+  hasError?: boolean
+  ariaInvalid?: boolean
+  ariaDescribedBy?: string
+}) {
+  const [isOpen, setIsOpen] = useState(false)
+  const rootRef = useRef<HTMLDivElement>(null)
+  const inputRef = useRef<HTMLInputElement>(null)
+
+  const query = value.trim()
+  const filteredSuggestions = useMemo(() => {
+    if (!query) return []
+    const lowerQuery = query.toLowerCase()
+    return OTHER_PAYOUT_METHOD_SUGGESTIONS.filter((option) => option.toLowerCase().includes(lowerQuery))
+  }, [query])
+
+  const showSuggestions = isOpen && query.length > 0 && filteredSuggestions.length > 0
+
+  useEffect(() => {
+    function handleClickOutside(event: MouseEvent) {
+      const target = event.target as Node
+      if (rootRef.current?.contains(target)) return
+      setIsOpen(false)
+    }
+    document.addEventListener('mousedown', handleClickOutside)
+    return () => document.removeEventListener('mousedown', handleClickOutside)
+  }, [])
+
+  useEffect(() => {
+    if (!query) setIsOpen(false)
+  }, [query])
+
+  const handleSelect = (option: string) => {
+    onChange(option)
+    setIsOpen(false)
+    inputRef.current?.blur()
+  }
+
+  return (
+    <div ref={rootRef} className="relative">
+      <div
+        className={`flex h-10 items-center rounded-lg border bg-white transition ${
+          hasError
+            ? 'border-red-400 focus-within:border-red-500 focus-within:ring-1 focus-within:ring-red-200'
+            : showSuggestions
+              ? 'border-nexoraBrand ring-1 ring-nexoraBrand/20'
+              : 'border-nexoraBorder focus-within:border-nexoraBrand focus-within:ring-1 focus-within:ring-nexoraBrand/20'
+        }`}
+      >
+        <input
+          ref={inputRef}
+          id={id}
+          type="text"
+          role="combobox"
+          aria-expanded={showSuggestions}
+          aria-controls={`${id}-listbox`}
+          aria-autocomplete="list"
+          aria-invalid={ariaInvalid}
+          aria-describedby={ariaDescribedBy}
+          value={value}
+          onChange={(e) => {
+            const next = e.target.value
+            onChange(next)
+            setIsOpen(next.trim().length > 0)
+          }}
+          onKeyDown={(e) => {
+            if (e.key === 'Escape') {
+              setIsOpen(false)
+              return
+            }
+            if (e.key === 'Enter' && showSuggestions && filteredSuggestions.length === 1) {
+              e.preventDefault()
+              handleSelect(filteredSuggestions[0])
+            }
+          }}
+          placeholder={placeholder}
+          autoComplete="off"
+          className="h-full min-w-0 flex-1 rounded-lg bg-transparent px-3 text-sm font-semibold text-inkBlue outline-none placeholder:font-normal placeholder:text-mutedGrey"
+        />
+        <button
+          type="button"
+          tabIndex={-1}
+          aria-label={placeholder}
+          onClick={() => {
+            inputRef.current?.focus()
+            if (query) setIsOpen((open) => !open)
+          }}
+          className="inline-flex h-full w-9 shrink-0 items-center justify-center text-mutedGrey"
+        >
+          <ChevronDown className={`h-4 w-4 transition-transform ${showSuggestions ? 'rotate-180' : ''}`} />
+        </button>
+      </div>
+
+      {showSuggestions ? (
+        <div
+          id={`${id}-listbox`}
+          role="listbox"
+          className="absolute left-0 right-0 z-20 mt-1.5 overflow-hidden rounded-lg border border-nexoraBorder bg-white shadow-sm"
+        >
+          <div className="max-h-56 overflow-y-auto py-1">
+            {filteredSuggestions.map((option) => {
+              const selected = query.toLowerCase() === option.toLowerCase()
+              return (
+                <button
+                  key={option}
+                  type="button"
+                  role="option"
+                  aria-selected={selected}
+                  onMouseDown={(e) => e.preventDefault()}
+                  onClick={() => handleSelect(option)}
+                  className={`flex w-full flex-col items-start px-3 py-2 text-left transition-colors ${
+                    selected ? 'bg-slate-50' : 'hover:bg-slate-50'
+                  }`}
+                >
+                  {selected ? (
+                    <span className="text-sm font-bold text-inkBlue">{option}</span>
+                  ) : (
+                    <>
+                      <span className="text-sm font-bold text-inkBlue">{query}</span>
+                      <span className="text-sm leading-snug">
+                        {highlightOtherMethodMatch(option, query)}
+                      </span>
+                    </>
+                  )}
+                </button>
+              )
+            })}
+          </div>
+        </div>
+      ) : null}
+    </div>
+  )
+}
 
 const CREATE_STATUS_OPTIONS: PayoutStatusValue[] = [
   PayoutStatus.Pending,
@@ -702,31 +874,20 @@ export default function CreatePayoutModal({
                     >
                       {t('dashboard.tips.payouts_manager.other_method_label')} *
                     </label>
-                    <input
+                    <OtherPayoutMethodCombobox
                       id="payout-other-method-input"
-                      type="text"
-                      list="payout-other-method-suggestions"
                       value={otherPayoutMethod}
-                      onChange={(e) => {
-                        setOtherPayoutMethod(e.target.value)
+                      onChange={(next) => {
+                        setOtherPayoutMethod(next)
                         if (otherPayoutMethodError) {
                           setOtherPayoutMethodError(null)
                         }
                       }}
                       placeholder={t('dashboard.tips.payouts_manager.other_method_placeholder')}
-                      className={`h-10 w-full rounded-lg border bg-white px-3 text-sm outline-none ${
-                        otherPayoutMethodError
-                          ? 'border-red-400 focus:border-red-500 focus:ring-1 focus:ring-red-200'
-                          : 'border-nexoraBorder focus:border-nexoraBrand focus:ring-1 focus:ring-nexoraBrand/20'
-                      }`}
-                      aria-invalid={Boolean(otherPayoutMethodError)}
-                      aria-describedby={otherPayoutMethodError ? 'payout-other-method-error' : undefined}
+                      hasError={Boolean(otherPayoutMethodError)}
+                      ariaInvalid={Boolean(otherPayoutMethodError)}
+                      ariaDescribedBy={otherPayoutMethodError ? 'payout-other-method-error' : undefined}
                     />
-                    <datalist id="payout-other-method-suggestions">
-                      {OTHER_PAYOUT_METHOD_SUGGESTIONS.map((option) => (
-                        <option key={option} value={option} />
-                      ))}
-                    </datalist>
                     {otherPayoutMethodError ? (
                       <p id="payout-other-method-error" className="mt-1.5 text-xs font-semibold text-red-600">
                         {otherPayoutMethodError}
