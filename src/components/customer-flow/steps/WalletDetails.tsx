@@ -213,10 +213,6 @@ export default function WalletDetails({
     ? bizName
     : selectedStaffMembers[0].nickname
 
-  const recipientFullName = isMultiStaff
-    ? bizName
-    : selectedStaffMembers[0].fullName
-
   const accountFieldStyle = {
     backgroundColor: `${accentColor}0D`,
     borderColor: `${accentColor}40`,
