@@ -2229,6 +2229,7 @@
           "businessName": "Business or Store",
           "name": "Name",
           "accountHolder": "{wallet} Registered Name",
+          "displayName": "Display Name",
           "emailPhone": "Email or Phone",
           "venmoUsername": "Venmo Username",
           "cashTag": "Cash Tag",

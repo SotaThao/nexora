@@ -1,5 +1,5 @@
 import React, { useMemo } from 'react'
-import { ShieldCheck, AlertTriangle } from 'lucide-react'
+import { AlertTriangle } from 'lucide-react'
 import { getErrorI18nKey } from '../data/errorCodes'
 import { getApiErrorCode, isApiError } from '../types/domain'
 import useDirectPaymentFlow from './direct-payment/hooks/useDirectPaymentFlow'
@@ -171,9 +171,6 @@ export default function DirectPaymentFlow() {
       </main>
 
       <footer className="relative z-10 space-y-2 text-center">
-        <div className="flex items-center justify-center gap-1.5 text-xs text-nexoraSubtle">
-          <ShieldCheck className="h-4 w-4 text-nexoraBrand" /> {t('customer.secure_footer')}
-        </div>
         <p className="text-[10px] text-nexoraSubtle/70">{t('customer.copyright')}</p>
       </footer>
     </div>

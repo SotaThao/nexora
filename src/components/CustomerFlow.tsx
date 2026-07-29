@@ -1,5 +1,5 @@
 import React from 'react'
-import { ShieldCheck, AlertTriangle } from 'lucide-react'
+import { AlertTriangle } from 'lucide-react'
 import useCustomerFlow from './customer-flow/hooks/useCustomerFlow'
 import SelectStaff from './customer-flow/steps/SelectStaff'
 import TipAmount from './customer-flow/steps/TipAmount'
@@ -241,9 +241,6 @@ export default function CustomerFlow() {
 
       {/* Footer */}
       <footer className="text-center space-y-2 relative z-10">
-        <div className="flex items-center justify-center gap-1.5 text-xs text-nexoraSubtle">
-          <ShieldCheck className="h-4 w-4 text-nexoraBrand" /> {t('customer.secure_footer')}
-        </div>
         <p className="text-[10px] text-nexoraSubtle/70">{t('customer.copyright')}</p>
       </footer>
     </div>
