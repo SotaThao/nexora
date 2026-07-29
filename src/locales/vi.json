@@ -32,6 +32,7 @@
     "onboarding_banner_title": "Hoàn thiện hồ sơ",
     "onboarding_banner_heading": "Hoàn tất thiết lập hồ sơ của bạn",
     "onboarding_banner_description": "Thêm thông tin liên hệ và, nếu muốn, phương thức nhận tiền để sẵn sàng khi cần.",
+    "onboarding_banner_description_payment": "Thiết lập ít nhất một phương thức nhận tiền để có thể nhận tip.",
     "complete_onboarding_now": "Hoàn tất thiết lập",
     "dismiss_onboarding_banner": "Ẩn lời nhắc hoàn thiện hồ sơ",
     "nav": {
@@ -189,6 +190,7 @@
       "owner_note": "Bạn tự quản lý phương thức nhận tip. Chủ tiệm không sửa được phần này.",
       "empty": "Chưa có phương thức thanh toán.",
       "empty_hint": "Hoàn tất thiết lập hồ sơ để mở khóa và cấu hình phương thức nhận tiền.",
+      "empty_hint_payment": "Thiết lập phương thức nhận tiền để bắt đầu nhận tip.",
       "empty_cta": "Thiết lập ngay",
       "setup_hint": "Bạn chưa kích hoạt phương thức nhận tiền nào. Cấu hình ít nhất một để bắt đầu nhận tip.",
       "not_set": "Chưa thiết lập",

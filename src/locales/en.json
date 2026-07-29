@@ -66,6 +66,7 @@
     "onboarding_banner_title": "Complete your profile",
     "onboarding_banner_heading": "Finish setting up your profile",
     "onboarding_banner_description": "Add your contact details and, if you choose, a payout method so you are ready when you need it.",
+    "onboarding_banner_description_payment": "Set up at least one payout method so you can receive tips.",
     "complete_onboarding_now": "Complete onboarding",
     "dismiss_onboarding_banner": "Dismiss profile reminder",
     "status": {
@@ -189,6 +190,7 @@
       "owner_note": "You manage your own receiving methods. The business owner cannot edit this section.",
       "empty": "No payment methods available.",
       "empty_hint": "Complete your profile setup to unlock and configure your receiving methods.",
+      "empty_hint_payment": "Set up your receiving methods so you can start accepting tips.",
       "empty_cta": "Set up now",
       "setup_hint": "You haven't activated any receiving method yet. Configure at least one to start receiving tips.",
       "not_set": "Not set",
