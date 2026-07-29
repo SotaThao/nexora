@@ -16,7 +16,7 @@ import {
 import { useTranslation } from '../contexts/LanguageContext'
 import { logger } from '../utils/logger'
 import CopyableTransactionId from './ui/CopyableTransactionId'
-import { DateTimeCell, formatCurrency } from './dashboard/utils'
+import { DateTimeCell, formatCurrency, formatTransactionDateTime } from './dashboard/utils'
 import { buildChartPoints, getBezierPath } from './dashboard/overview/chartUtils'
 import {
   useMerchantStaffByCode,
@@ -25,7 +25,6 @@ import {
   useUpdateMerchantStaffRole,
 } from '../data/hooks/useMerchantStaff'
 import { staffRecordMatchesMember } from '../utils/staffRecordMatch'
-import { formatJoinedDate } from '../utils/localDate'
 import { orderedPayoutUiKeysFromMethods, PAYOUT_UI_LABELS } from '../data/paymentMethodTypes'
 import NicknameEditor from './NicknameEditor'
 import RoleAtBusinessEditor from './RoleAtBusinessEditor'
@@ -515,7 +514,7 @@ export default function StaffDetailView({
                   <Calendar className="h-3.5 w-3.5 text-brandCyan shrink-0" />
                   <span className="truncate">
                     {staffMember.joinedDate
-                      ? `${t('staff_detail.joined_gateway')}: ${formatJoinedDate(staffMember.joinedDate)}`
+                      ? `${t('staff_detail.joined_gateway')}: ${formatTransactionDateTime(staffMember.joinedDate, currentLanguage)}`
                       : t('staff_detail.joined_gateway')}
                   </span>
                 </div>
