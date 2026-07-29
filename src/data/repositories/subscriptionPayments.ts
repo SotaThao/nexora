@@ -19,8 +19,28 @@ export interface PurchaseSubscriptionResult {
   plan: PurchasableSubscriptionPlan
 }
 
+export interface SubscriptionPackage {
+  plan: 'Lite' | 'Starter' | 'Pro' | 'Enterprise'
+  packageCode: string
+  name: string
+  featuresEn: string[]
+  featuresVi: string[]
+  price: number | null
+  periodInMonths: number | null
+}
+
 export function createSubscriptionPaymentsRepository(client: HttpClient = httpClient) {
   return {
+    async getPackages(): Promise<SubscriptionPackage[]> {
+      const res = await client.get<SubscriptionPackage[]>('/api/v1/merchant/subscriptions/packages')
+      return Array.isArray(res) ? res : []
+    },
+
+    async getPublicPackages(): Promise<SubscriptionPackage[]> {
+      const res = await client.get<SubscriptionPackage[]>('/api/v1/public/subscription-packages')
+      return Array.isArray(res) ? res : []
+    },
+
     async getPaymentMethods(): Promise<SubscriptionPaymentMethod[]> {
       const res = await client.get<SubscriptionPaymentMethod[]>('/api/v1/merchant/subscriptions/payment-methods')
       return Array.isArray(res) ? res : []

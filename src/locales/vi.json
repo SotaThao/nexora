@@ -4191,6 +4191,7 @@
     "title": "Tìm Gói Phù Hợp Nhất Cho Đội Ngũ Của Bạn",
     "subtitle": "Bắt đầu ngay với thẻ thanh toán Smart QR miễn phí và đánh giá tự động, sau đó mở rộng lên kênh hợp tác toàn diện.",
     "current_plan": "Gói hiện tại",
+    "price_note_months": "/ {{count}} tháng",
     "plans": {
       "lite": {
         "name": "Gói Lite (Miễn Phí)",

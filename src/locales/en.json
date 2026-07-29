@@ -4196,6 +4196,7 @@
     "title": "Find the Perfect Alignment for Your Team",
     "subtitle": "Launch immediately with zero-cost Smart QR checkout cards and automated reviews, then scale to full co-op channels.",
     "current_plan": "Current Plan",
+    "price_note_months": "/ {{count}} months",
     "plans": {
       "lite": {
         "name": "Lite Pack (Free)",

@@ -27,6 +27,7 @@ interface HomePageBridgeValue {
   hp: HomePageHandlers
   planCta: (planId?: string) => void
   onLogout: () => void
+  isLoggedIn: boolean
 }
 
 const HomePageBridgeContext = createContext<HomePageBridgeValue | null>(null)
@@ -91,6 +92,7 @@ export function HomePageBridgeProvider({ children }: HomePageBridgeProviderProps
         const { logout: doLogout } = authRef.current
         void doLogout()
       },
+      isLoggedIn: status === 'authenticated',
     }),
     [hp, session, status, navigate],
   )

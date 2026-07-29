@@ -3,8 +3,27 @@ import { qk } from '../queryKeys'
 import subscriptionPaymentsRepository, {
   type PurchasableSubscriptionPlan,
   type PurchaseSubscriptionResult,
+  type SubscriptionPackage,
   type SubscriptionPaymentMethod,
 } from '../repositories/subscriptionPayments'
+
+export function useSubscriptionPackages({ enabled = true } = {}) {
+  return useQuery<SubscriptionPackage[]>({
+    queryKey: qk.merchantSubscriptionPackages(),
+    queryFn: () => subscriptionPaymentsRepository.getPackages(),
+    enabled,
+    staleTime: 60_000,
+  })
+}
+
+export function usePublicSubscriptionPackages({ enabled = true } = {}) {
+  return useQuery<SubscriptionPackage[]>({
+    queryKey: qk.publicSubscriptionPackages(),
+    queryFn: () => subscriptionPaymentsRepository.getPublicPackages(),
+    enabled,
+    staleTime: 60_000,
+  })
+}
 
 export function useSubscriptionPaymentMethods({ enabled = true } = {}) {
   return useQuery<SubscriptionPaymentMethod[]>({

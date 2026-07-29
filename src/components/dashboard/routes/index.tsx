@@ -16,6 +16,7 @@ import ComingSoon from '../views/ComingSoon'
 import ManagePlanView from '../views/ManagePlanView'
 import SubscriptionPaymentModal from '../modals/SubscriptionPaymentModal'
 import type { PurchasableSubscriptionPlan } from '../../../data/repositories/subscriptionPayments'
+import { useSubscriptionPackages } from '../../../data/hooks/useSubscriptionPayments'
 import BookingHubView from '../views/BookingHubView'
 import StaffDetailView from '../../StaffDetailView'
 import { useMerchantStaffByCode } from '../../../data/hooks/useMerchantStaff'
@@ -354,11 +355,6 @@ export function SupportRoute() {
   return <SupportView />
 }
 
-const SUBSCRIPTION_PLAN_PRICE_USD: Record<PurchasableSubscriptionPlan, number> = {
-  Starter: 29,
-  Pro: 79,
-}
-
 function planIdToPurchasablePlan(planId: string): PurchasableSubscriptionPlan | null {
   if (planId === 'starter') return 'Starter'
   if (planId === 'pro') return 'Pro'
@@ -371,16 +367,22 @@ export function SubscriptionsRoute() {
   const [searchParams] = useSearchParams()
   const currentPlanId = ctx?.profile?.subscription?.plan ?? null
   const [paymentPlan, setPaymentPlan] = useState<PurchasableSubscriptionPlan | null>(null)
+  const { data: packages = [] } = useSubscriptionPackages()
 
   useEffect(() => {
     const deepLinkPlan = planIdToPurchasablePlan(searchParams.get('plan') ?? '')
     if (deepLinkPlan) setPaymentPlan(deepLinkPlan)
   }, [searchParams])
 
+  const paymentPlanPrice = paymentPlan
+    ? packages.find((p) => p.plan === paymentPlan)?.price ?? 0
+    : 0
+
   return (
     <>
       <ManagePlanView
         currentPlanId={currentPlanId}
+        packages={packages}
         onSelectPlan={(planId) => {
           const purchasablePlan = planIdToPurchasablePlan(planId)
           if (purchasablePlan) {
@@ -394,7 +396,7 @@ export function SubscriptionsRoute() {
         <SubscriptionPaymentModal
           isOpen
           plan={paymentPlan}
-          price={SUBSCRIPTION_PLAN_PRICE_USD[paymentPlan]}
+          price={paymentPlanPrice}
           onClose={() => setPaymentPlan(null)}
         />
       ) : null}
