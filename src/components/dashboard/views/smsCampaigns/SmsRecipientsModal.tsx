@@ -8,11 +8,11 @@ import { usePagination } from '../../../../hooks/usePagination'
 import { getApiErrorCode } from '../../../../types/domain'
 import Pagination from '../../../ui/Pagination'
 import Skeleton from '../../../ui/skeleton/Skeleton'
-import { parseApiDateTime } from '../../utils'
 import { CloseIcon } from '../BookingHubIcons'
 import {
   BOOKING_HUB_EMPTY_CELL,
   BOOKING_HUB_PAGINATION_CLASSNAME,
+  formatBookingHubDateTime,
   formatVoicePhoneDisplay,
 } from '../bookingHubFormatters'
 import {
@@ -34,21 +34,10 @@ type Props = {
   onClose: () => void
 }
 
-/** API `*Utc` values often omit `Z` — parse as UTC, then format in the user's timezone. */
-function formatRecipientSentAt(value: string | null, locale: string): string {
+/** API `*Utc` values — Staff Linked-date style in the user's timezone. */
+function formatRecipientSentAt(value: string | null, language: string): string {
   if (!value) return BOOKING_HUB_EMPTY_CELL
-  const date = parseApiDateTime(value)
-  if (!date) return value
-  const dateLabel = date.toLocaleDateString(locale, {
-    month: 'short',
-    day: '2-digit',
-    year: 'numeric',
-  })
-  const timeLabel = date.toLocaleTimeString(locale, {
-    hour: 'numeric',
-    minute: '2-digit',
-  })
-  return `${dateLabel} · ${timeLabel}`
+  return formatBookingHubDateTime(value, language)
 }
 
 function SmsRecipientsTableSkeleton({ rows = SKELETON_ROWS }: { rows?: number }) {
@@ -242,7 +231,7 @@ export default function SmsRecipientsModal({
                         </span>
                       </td>
                       <td>{recipient.segments}</td>
-                      <td>{formatRecipientSentAt(recipient.sentAtUtc, numberLocale)}</td>
+                      <td>{formatRecipientSentAt(recipient.sentAtUtc, currentLanguage)}</td>
                     </tr>
                   ))
                 )}

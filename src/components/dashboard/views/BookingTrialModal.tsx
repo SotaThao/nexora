@@ -1,15 +1,17 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useTranslation } from "../../../contexts/LanguageContext";
 import { useNotification } from "../../../contexts/NotificationContext";
 import { getErrorI18nKey } from "../../../data/errorCodes";
 import { useSubmitVoiceTrialRequest } from "../../../data/hooks/useSubmitVoiceTrialRequest";
+import { imagesRepository } from "../../../data/repositories/images";
 import {
-  formatTrialTimeLabelToApi,
-  mapDayKeysToApiOpeningDays,
+  toVoiceTrialOperatingHours,
+  VOICE_TRIAL_LIMITS,
+  VOICE_TRIAL_PRICE_LIST_ACCEPT,
   VoiceTrialFormField,
   type SubmitVoiceTrialRequest,
 } from "../../../data/voiceTrial/domain";
-import { getApiErrorCode } from "../../../types/domain";
+import { getApiErrorCode, isApiError } from "../../../types/domain";
 import CountryCodeSelect, {
   formatNationalNumber,
   getNationalPhonePlaceholder,
@@ -18,8 +20,15 @@ import CountryCodeSelect, {
   parsePhone,
   PhoneDialCode,
 } from "../../CountryCodeSelect";
+import { applyAiHubProgressiveValidation } from "./bookingHubDialogValidation";
+import {
+  formatBookingHubTimeDisplay,
+  openNativeDateTimePicker,
+} from "./bookingHubFormatters";
+import { ClockIcon } from "./BookingHubIcons";
 
 const TK = "components.dashboard.views.BookingHubView.plans.trial";
+const TK_HUB = "components.dashboard.views.BookingHubView";
 
 const SERVICE_CHIPS = [
   "Gel Manicure",
@@ -39,11 +48,28 @@ const DEFAULT_ACTIVE_SERVICES = new Set([
   "Pedicure",
 ]);
 
-const DAY_KEYS = ["sun", "mon", "tue", "wed", "thu", "fri", "sat"] as const;
-const DEFAULT_ACTIVE_DAYS = new Set(["mon", "tue", "wed", "thu", "fri", "sat"]);
+const DAY_KEYS = ["mon", "tue", "wed", "thu", "fri", "sat", "sun"] as const;
+type DayKey = (typeof DAY_KEYS)[number];
 
-const DEFAULT_OPEN_TIME = "09:00";
-const DEFAULT_CLOSE_TIME = "19:00";
+type HourRow = {
+  open: boolean;
+  openTime: string;
+  closeTime: string;
+};
+
+type HoursByDay = Record<DayKey, HourRow>;
+
+function createInitialHours(): HoursByDay {
+  return {
+    mon: { open: true, openTime: "07:00", closeTime: "21:00" },
+    tue: { open: true, openTime: "07:00", closeTime: "21:00" },
+    wed: { open: true, openTime: "07:00", closeTime: "21:00" },
+    thu: { open: true, openTime: "07:00", closeTime: "21:00" },
+    fri: { open: true, openTime: "07:00", closeTime: "21:00" },
+    sat: { open: false, openTime: "10:00", closeTime: "16:00" },
+    sun: { open: false, openTime: "09:00", closeTime: "19:00" },
+  };
+}
 
 function compareTime24h(left: string, right: string): number {
   const [leftHours, leftMinutes] = left
@@ -53,6 +79,37 @@ function compareTime24h(left: string, right: string): number {
     .split(":")
     .map((part) => Number.parseInt(part, 10));
   return leftHours * 60 + leftMinutes - (rightHours * 60 + rightMinutes);
+}
+
+function isSupportedPriceListFile(file: File): boolean {
+  const fileName = (file.name || "").toLowerCase();
+  const supportedExtension = /\.(png|jpe?g|webp)$/i.test(fileName);
+  const supportedMime = /^image\/(png|jpe?g|webp)$/i.test(file.type || "");
+  return (
+    (supportedExtension || supportedMime) &&
+    file.size <= VOICE_TRIAL_LIMITS.priceListFileMaxBytes
+  );
+}
+
+function formatFileSizeLabel(bytes: number): string {
+  const kb = Math.max(1, Math.round(bytes / 1024));
+  if (kb < 1024) return `${kb} KB`;
+  return `${(kb / 1024).toFixed(1)} MB`;
+}
+
+function resolveTrialSubmitErrorCode(error: unknown): string {
+  if (isApiError(error) && error.status === 429) {
+    return "COMMON_RATE_LIMIT_EXCEEDED";
+  }
+  if (
+    error &&
+    typeof error === "object" &&
+    "errorCode" in error &&
+    typeof (error as { errorCode?: unknown }).errorCode === "string"
+  ) {
+    return (error as { errorCode: string }).errorCode;
+  }
+  return getApiErrorCode(error);
 }
 
 const PAIN_POINT_KEYS = {
@@ -69,10 +126,12 @@ type TrialFieldKey =
   | VoiceTrialFormField.Salon
   | VoiceTrialFormField.Owner
   | VoiceTrialFormField.Phone
+  | VoiceTrialFormField.OwnerPhone
   | VoiceTrialFormField.Email
   | "services"
   | "openingDays"
   | "serviceHours"
+  | "priceList"
   | VoiceTrialFormField.PainPoint;
 
 type TrialFormErrors = Partial<Record<TrialFieldKey, string>>;
@@ -81,18 +140,18 @@ interface TrialFormState {
   salon: string;
   owner: string;
   phone: string;
+  ownerPhone: string;
   email: string;
   city: string;
   website: string;
   referral: string;
-  openTime: string;
-  closeTime: string;
   painPoint: string;
+  hours: HoursByDay;
   activeServices: Set<string>;
-  activeDays: Set<string>;
   customServices: string[];
   customServiceInput: string;
   showCustomServiceInput: boolean;
+  priceListFiles: File[];
 }
 
 function createInitialTrialForm(): TrialFormState {
@@ -100,18 +159,18 @@ function createInitialTrialForm(): TrialFormState {
     salon: "",
     owner: "",
     phone: "",
+    ownerPhone: "",
     email: "",
     city: "",
     website: "",
     referral: "",
-    openTime: DEFAULT_OPEN_TIME,
-    closeTime: DEFAULT_CLOSE_TIME,
     painPoint: "",
+    hours: createInitialHours(),
     activeServices: new Set(DEFAULT_ACTIVE_SERVICES),
-    activeDays: new Set(DEFAULT_ACTIVE_DAYS),
     customServices: [],
     customServiceInput: "",
     showCustomServiceInput: false,
+    priceListFiles: [],
   };
 }
 
@@ -210,6 +269,119 @@ function RocketIcon() {
   );
 }
 
+function EnvelopeIcon() {
+  return (
+    <svg
+      viewBox="0 0 16 16"
+      fill="none"
+      aria-hidden="true"
+      width="12"
+      height="12"
+    >
+      <rect
+        x="2"
+        y="3.5"
+        width="12"
+        height="9"
+        rx="1.2"
+        stroke="currentColor"
+        strokeWidth="1.3"
+      />
+      <path
+        d="m2.5 4.5 5.5 4 5.5-4"
+        stroke="currentColor"
+        strokeWidth="1.3"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+    </svg>
+  );
+}
+
+function PaperclipIcon() {
+  return (
+    <svg
+      viewBox="0 0 16 16"
+      fill="none"
+      aria-hidden="true"
+      width="12"
+      height="12"
+    >
+      <path
+        d="M6.5 9.5 10 6a2.1 2.1 0 0 0-3-3L3.5 6.5a3.2 3.2 0 0 0 4.5 4.5L12 7"
+        stroke="currentColor"
+        strokeWidth="1.3"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+    </svg>
+  );
+}
+
+function ClockNoteIcon() {
+  return (
+    <svg
+      viewBox="0 0 16 16"
+      fill="none"
+      aria-hidden="true"
+      width="12"
+      height="12"
+    >
+      <circle cx="8" cy="8" r="5.5" stroke="currentColor" strokeWidth="1.3" />
+      <path
+        d="M8 5v3.2l2 1.2"
+        stroke="currentColor"
+        strokeWidth="1.3"
+        strokeLinecap="round"
+      />
+    </svg>
+  );
+}
+
+interface TrialHourTimeFieldProps {
+  value: string;
+  disabled: boolean;
+  invalid: boolean;
+  locale: string;
+  localeTag: string;
+  ariaLabel: string;
+  onChange: (value: string) => void;
+}
+
+function TrialHourTimeField({
+  value,
+  disabled,
+  invalid,
+  locale,
+  localeTag,
+  ariaLabel,
+  onChange,
+}: TrialHourTimeFieldProps) {
+  return (
+    <span
+      className={`booking-create-datetime-shell has-value${invalid ? " has-error" : ""}`}
+      lang={localeTag}
+    >
+      <span className="booking-create-datetime-display" aria-hidden="true">
+        {formatBookingHubTimeDisplay(value, locale)}
+      </span>
+      <ClockIcon className="booking-create-datetime-icon" />
+      <input
+        className="booking-create-datetime-input has-value"
+        type="time"
+        lang={localeTag}
+        step={60}
+        value={value}
+        disabled={disabled}
+        aria-invalid={invalid}
+        aria-label={ariaLabel}
+        onClick={(event) => openNativeDateTimePicker(event.currentTarget)}
+        onChange={(event) => onChange(event.target.value)}
+      />
+    </span>
+  );
+}
+
 interface BookingTrialModalProps {
   open: boolean;
   onClose: () => void;
@@ -225,7 +397,9 @@ export default function BookingTrialModal({
   anonymousSubmit = false,
   onSubmitSuccess,
 }: BookingTrialModalProps) {
-  const { t } = useTranslation();
+  const { t, currentLanguage } = useTranslation();
+  const locale = currentLanguage === "vi" ? "vi" : "en";
+  const localeTag = `${locale === "vi" ? "vi-VN" : "en-US"}-u-hc-h12`;
   const { showToast } = useNotification();
   const submitTrial = useSubmitVoiceTrialRequest({
     anonymous: anonymousSubmit,
@@ -233,16 +407,24 @@ export default function BookingTrialModal({
   const [form, setForm] = useState<TrialFormState>(createInitialTrialForm);
   const [errors, setErrors] = useState<TrialFormErrors>({});
   const [phoneTouched, setPhoneTouched] = useState(false);
+  const [ownerPhoneTouched, setOwnerPhoneTouched] = useState(false);
+  const trialDialogRef = useRef<HTMLDivElement>(null);
+  const priceListInputRef = useRef<HTMLInputElement>(null);
 
   const phoneParsed = useMemo(() => parsePhone(form.phone), [form.phone]);
+  const ownerPhoneParsed = useMemo(
+    () => parsePhone(form.ownerPhone),
+    [form.ownerPhone],
+  );
 
   const getPhoneFieldError = (
     phoneValue: string,
     dialCode: string,
+    requiredKey: string,
   ): string | undefined => {
     const parsed = parsePhone(phoneValue);
     if (!parsed.nationalNumber.trim()) {
-      return t(`${TK}.validationPhoneRequired`);
+      return t(requiredKey);
     }
     if (!isValidPhoneE164(phoneValue, dialCode)) {
       return t(`${TK}.validationPhoneInvalid`);
@@ -250,12 +432,17 @@ export default function BookingTrialModal({
     return undefined;
   };
 
-  const applyPhoneFieldError = (phoneValue: string, dialCode: string) => {
-    const phoneError = getPhoneFieldError(phoneValue, dialCode);
+  const applyPhoneFieldError = (
+    field: VoiceTrialFormField.Phone | VoiceTrialFormField.OwnerPhone,
+    phoneValue: string,
+    dialCode: string,
+    requiredKey: string,
+  ) => {
+    const phoneError = getPhoneFieldError(phoneValue, dialCode, requiredKey);
     setErrors((prev) => {
       const next = { ...prev };
-      if (phoneError) next.phone = phoneError;
-      else delete next.phone;
+      if (phoneError) next[field] = phoneError;
+      else delete next[field];
       return next;
     });
   };
@@ -282,12 +469,11 @@ export default function BookingTrialModal({
       | "salon"
       | "owner"
       | "phone"
+      | "ownerPhone"
       | "email"
       | "city"
       | "website"
       | "referral"
-      | "openTime"
-      | "closeTime"
       | "painPoint"
       | "customServiceInput"
     >,
@@ -302,6 +488,8 @@ export default function BookingTrialModal({
     setForm(createInitialTrialForm());
     setErrors({});
     setPhoneTouched(false);
+    setOwnerPhoneTouched(false);
+    if (priceListInputRef.current) priceListInputRef.current.value = "";
   };
 
   const serviceChips = [...SERVICE_CHIPS, ...form.customServices];
@@ -341,18 +529,98 @@ export default function BookingTrialModal({
     onClose();
   };
 
-  const toggleChip = (
-    field: "activeServices" | "activeDays",
-    value: string,
-    errorField?: TrialFieldKey,
-  ) => {
+  const toggleServiceChip = (value: string) => {
     setForm((prev) => {
-      const next = new Set(prev[field]);
+      const next = new Set(prev.activeServices);
       if (next.has(value)) next.delete(value);
       else next.add(value);
-      return { ...prev, [field]: next };
+      return { ...prev, activeServices: next };
     });
-    if (errorField) clearFieldError(errorField);
+    clearFieldError("services");
+  };
+
+  const toggleHourDay = (day: DayKey) => {
+    setForm((prev) => ({
+      ...prev,
+      hours: {
+        ...prev.hours,
+        [day]: { ...prev.hours[day], open: !prev.hours[day].open },
+      },
+    }));
+    clearFieldError("openingDays");
+    clearFieldError("serviceHours");
+  };
+
+  const updateHourTime = (
+    day: DayKey,
+    field: "openTime" | "closeTime",
+    value: string,
+  ) => {
+    setForm((prev) => ({
+      ...prev,
+      hours: {
+        ...prev.hours,
+        [day]: { ...prev.hours[day], [field]: value },
+      },
+    }));
+    clearFieldError("serviceHours");
+  };
+
+  const syncPriceListInputFiles = (files: File[]) => {
+    const input = priceListInputRef.current;
+    if (!input) return;
+    const transfer = new DataTransfer();
+    files.forEach((file) => transfer.items.add(file));
+    input.files = transfer.files;
+  };
+
+  const handlePriceListChange = (fileList: FileList | null) => {
+    const incoming = fileList ? Array.from(fileList) : [];
+    // Native file input replaces on each pick — keep prior selections and append.
+    if (incoming.length === 0) {
+      syncPriceListInputFiles(form.priceListFiles);
+      return;
+    }
+
+    if (incoming.some((file) => !isSupportedPriceListFile(file))) {
+      syncPriceListInputFiles(form.priceListFiles);
+      setErrors((prev) => ({
+        ...prev,
+        priceList: t(`${TK}.priceListInvalid`),
+      }));
+      return;
+    }
+
+    const fileKey = (file: File) =>
+      `${file.name}::${file.size}::${file.lastModified}`;
+    const merged = [...form.priceListFiles];
+    for (const file of incoming) {
+      if (!merged.some((existing) => fileKey(existing) === fileKey(file))) {
+        merged.push(file);
+      }
+    }
+
+    if (merged.length > VOICE_TRIAL_LIMITS.priceListUrlsMax) {
+      syncPriceListInputFiles(form.priceListFiles);
+      setErrors((prev) => ({
+        ...prev,
+        priceList: t(`${TK}.priceListTooMany`, {
+          max: VOICE_TRIAL_LIMITS.priceListUrlsMax,
+        }),
+      }));
+      return;
+    }
+
+    patchForm("priceListFiles", merged);
+    clearFieldError("priceList");
+    syncPriceListInputFiles(merged);
+  };
+
+  const removePriceListFile = (index: number) => {
+    const nextFiles = form.priceListFiles.filter((_, i) => i !== index);
+    patchForm("priceListFiles", nextFiles);
+    clearFieldError("priceList");
+    syncPriceListInputFiles(nextFiles);
   };
 
   const validateForm = (): TrialFormErrors => {
@@ -360,7 +628,7 @@ export default function BookingTrialModal({
     const ownerName = form.owner.trim();
     const emailValue = form.email.trim();
     const services = [...form.activeServices];
-    const openingDays = mapDayKeysToApiOpeningDays(form.activeDays);
+    const openingDayKeys = DAY_KEYS.filter((day) => form.hours[day].open);
     const painKey = PAIN_POINT_KEYS[form.painPoint as PainPointValue];
     const nextErrors: TrialFormErrors = {};
 
@@ -372,21 +640,52 @@ export default function BookingTrialModal({
       nextErrors[VoiceTrialFormField.Owner] = t(
         `${TK}.validationOwnerRequired`,
       );
-    const phoneError = getPhoneFieldError(form.phone, phoneParsed.countryCode);
+    const phoneError = getPhoneFieldError(
+      form.phone,
+      phoneParsed.countryCode,
+      `${TK}.validationPhoneRequired`,
+    );
     if (phoneError) nextErrors[VoiceTrialFormField.Phone] = phoneError;
+    const ownerPhoneError = getPhoneFieldError(
+      form.ownerPhone,
+      ownerPhoneParsed.countryCode,
+      `${TK}.validationOwnerPhoneRequired`,
+    );
+    if (ownerPhoneError)
+      nextErrors[VoiceTrialFormField.OwnerPhone] = ownerPhoneError;
     if (!emailValue)
       nextErrors[VoiceTrialFormField.Email] = t(
         `${TK}.validationEmailRequired`,
       );
-    else if (!emailValue.includes("@"))
+    else if (!/^\S+@\S+\.\S+$/.test(emailValue))
       nextErrors[VoiceTrialFormField.Email] = t(`${TK}.validationEmailInvalid`);
     if (services.length === 0)
       nextErrors.services = t(`${TK}.validationServicesRequired`);
-    if (openingDays.length === 0)
+    if (openingDayKeys.length === 0)
       nextErrors.openingDays = t(`${TK}.validationDaysRequired`);
-    if (compareTime24h(form.closeTime, form.openTime) <= 0) {
-      nextErrors.serviceHours = t(`${TK}.validationHoursInvalid`);
+
+    for (const day of openingDayKeys) {
+      const row = form.hours[day];
+      if (compareTime24h(row.closeTime, row.openTime) <= 0) {
+        nextErrors.serviceHours = t(`${TK}.hoursDayInvalid`, {
+          day: t(`${TK}.days.${day}`),
+        });
+        break;
+      }
     }
+
+    if (
+      form.priceListFiles.length > VOICE_TRIAL_LIMITS.priceListUrlsMax ||
+      form.priceListFiles.some((file) => !isSupportedPriceListFile(file))
+    ) {
+      nextErrors.priceList =
+        form.priceListFiles.length > VOICE_TRIAL_LIMITS.priceListUrlsMax
+          ? t(`${TK}.priceListTooMany`, {
+              max: VOICE_TRIAL_LIMITS.priceListUrlsMax,
+            })
+          : t(`${TK}.priceListInvalid`);
+    }
+
     if (!painKey)
       nextErrors[VoiceTrialFormField.PainPoint] = t(
         `${TK}.validationPainRequired`,
@@ -397,19 +696,40 @@ export default function BookingTrialModal({
 
   const buildPayload = (): SubmitVoiceTrialRequest | null => {
     const formErrors = validateForm();
-    if (Object.keys(formErrors).length > 0) {
-      setErrors(formErrors);
+    if (
+      applyAiHubProgressiveValidation({
+        allErrors: formErrors,
+        root: trialDialogRef.current,
+        setErrors: setErrors,
+        showToast: (message, type) => showToast(message, type as 'warning'),
+        fieldLabels: {
+          salon: t(`${TK}.salonLabel`),
+          owner: t(`${TK}.ownerLabel`),
+          phone: t(`${TK}.phoneLabel`),
+          ownerPhone: t(`${TK}.ownerPhoneLabel`),
+          email: t(`${TK}.emailLabel`),
+          services: t(`${TK}.servicesLabel`),
+          openingDays: t(`${TK}.hoursLabel`),
+          serviceHours: t(`${TK}.hoursLabel`),
+          priceList: t(`${TK}.priceListLabel`),
+          painPoint: t(`${TK}.painLabel`),
+        },
+        hubTk: TK_HUB,
+        t,
+      })
+    ) {
       return null;
     }
-
-    setErrors({});
 
     const shopName = form.salon.trim();
     const ownerName = form.owner.trim();
     const phoneNumber = normalizePhoneE164(form.phone, phoneParsed.countryCode);
+    const ownerPhoneNumber = normalizePhoneE164(
+      form.ownerPhone,
+      ownerPhoneParsed.countryCode,
+    );
     const emailValue = form.email.trim();
     const services = [...form.activeServices];
-    const openingDays = mapDayKeysToApiOpeningDays(form.activeDays);
     const painKey = PAIN_POINT_KEYS[form.painPoint as PainPointValue]!;
     const cityArea = form.city.trim();
     const website = form.website.trim();
@@ -419,13 +739,12 @@ export default function BookingTrialModal({
       shopName,
       ownerName,
       phoneNumber,
+      ownerPhoneNumber: ownerPhoneNumber || null,
       email: emailValue,
       cityArea: cityArea || null,
       website: website || null,
       services,
-      openingDays,
-      serviceHoursFrom: formatTrialTimeLabelToApi(form.openTime),
-      serviceHoursTo: formatTrialTimeLabelToApi(form.closeTime),
+      operatingHours: toVoiceTrialOperatingHours(form.hours),
       biggestProblem: t(painKey),
       referralCode: referralCode || null,
     };
@@ -433,11 +752,25 @@ export default function BookingTrialModal({
 
   const handleSubmit = async () => {
     setPhoneTouched(true);
+    setOwnerPhoneTouched(true);
     const payload = buildPayload();
     if (!payload) return;
 
     try {
-      await submitTrial.mutateAsync(payload);
+      let priceListImageUrls: string[] | undefined;
+      if (form.priceListFiles.length > 0) {
+        const upload = anonymousSubmit
+          ? (file: File) => imagesRepository.publicUploadAndGetUrl(file)
+          : (file: File) => imagesRepository.uploadAndGetUrl(file);
+        priceListImageUrls = await Promise.all(
+          form.priceListFiles.map((file) => upload(file)),
+        );
+      }
+
+      await submitTrial.mutateAsync({
+        ...payload,
+        ...(priceListImageUrls ? { priceListImageUrls } : {}),
+      });
       if (onSubmitSuccess) {
         resetForm();
         onSubmitSuccess();
@@ -446,27 +779,67 @@ export default function BookingTrialModal({
       showToast(t(`${TK}.submitSuccess`), "success");
       handleClose();
     } catch (error) {
-      showToast(t(getErrorI18nKey(getApiErrorCode(error))), "error");
+      showToast(
+        t(getErrorI18nKey(resolveTrialSubmitErrorCode(error))),
+        "error",
+      );
     }
   };
 
   const handlePhoneBlur = () => {
     setPhoneTouched(true);
-    applyPhoneFieldError(form.phone, phoneParsed.countryCode);
+    applyPhoneFieldError(
+      VoiceTrialFormField.Phone,
+      form.phone,
+      phoneParsed.countryCode,
+      `${TK}.validationPhoneRequired`,
+    );
+  };
+
+  const handleOwnerPhoneBlur = () => {
+    setOwnerPhoneTouched(true);
+    applyPhoneFieldError(
+      VoiceTrialFormField.OwnerPhone,
+      form.ownerPhone,
+      ownerPhoneParsed.countryCode,
+      `${TK}.validationOwnerPhoneRequired`,
+    );
   };
 
   useEffect(() => {
     if (!phoneTouched) return;
-    applyPhoneFieldError(form.phone, phoneParsed.countryCode);
+    applyPhoneFieldError(
+      VoiceTrialFormField.Phone,
+      form.phone,
+      phoneParsed.countryCode,
+      `${TK}.validationPhoneRequired`,
+    );
   }, [form.phone, phoneParsed.countryCode, phoneTouched]);
+
+  useEffect(() => {
+    if (!ownerPhoneTouched) return;
+    applyPhoneFieldError(
+      VoiceTrialFormField.OwnerPhone,
+      form.ownerPhone,
+      ownerPhoneParsed.countryCode,
+      `${TK}.validationOwnerPhoneRequired`,
+    );
+  }, [form.ownerPhone, ownerPhoneParsed.countryCode, ownerPhoneTouched]);
 
   useEffect(() => {
     if (!open) return;
     setForm((prev) => {
-      if (prev.phone.trim()) return prev;
-      return { ...prev, phone: PhoneDialCode.US };
+      let next = prev;
+      if (!prev.phone.trim()) {
+        next = { ...next, phone: PhoneDialCode.US };
+      }
+      if (!prev.ownerPhone.trim()) {
+        next = { ...next, ownerPhone: PhoneDialCode.US };
+      }
+      return next;
     });
     setPhoneTouched(false);
+    setOwnerPhoneTouched(false);
     setErrors({});
   }, [open]);
 
@@ -490,7 +863,7 @@ export default function BookingTrialModal({
       aria-modal="true"
       aria-labelledby="trial-modal-title"
     >
-      <div className="trial-dialog">
+      <div className="trial-dialog" ref={trialDialogRef}>
         <button
           className="trial-close"
           type="button"
@@ -524,10 +897,12 @@ export default function BookingTrialModal({
             </div>
           </div>
 
-          <div className="trial-body">
-            <div className="trial-grid">
+          <div className="trial-scroll">
+            <div className="trial-body">
+              <div className="trial-grid">
               <div
-                className={`trial-field trial-span-2 ${errors.salon ? "has-error" : ""}`}
+                className={`trial-field ${errors.salon ? "has-error" : ""}`}
+                data-ai-hub-field="salon"
               >
                 <label className="trial-label" htmlFor="trial-salon">
                   {t(`${TK}.salonLabel`)} <span>*</span>
@@ -548,27 +923,11 @@ export default function BookingTrialModal({
                 />
                 <TrialFieldError message={errors.salon} />
               </div>
-              <div className={`trial-field ${errors.owner ? "has-error" : ""}`}>
-                <label className="trial-label" htmlFor="trial-owner">
-                  {t(`${TK}.ownerLabel`)} <span>*</span>
-                </label>
-                <input
-                  className={`trial-input ${errors.owner ? "has-error" : ""}`}
-                  id="trial-owner"
-                  type="text"
-                  value={form.owner}
-                  placeholder={t(`${TK}.ownerPlaceholder`)}
-                  onChange={(e) =>
-                    patchFormField(
-                      VoiceTrialFormField.Owner,
-                      e.target.value,
-                      VoiceTrialFormField.Owner,
-                    )
-                  }
-                />
-                <TrialFieldError message={errors.owner} />
-              </div>
-              <div className={`trial-field ${errors.phone ? "has-error" : ""}`}>
+
+              <div
+                className={`trial-field ${errors.phone ? "has-error" : ""}`}
+                data-ai-hub-field="phone"
+              >
                 <label className="trial-label" htmlFor="trial-phone">
                   {t(`${TK}.phoneLabel`)} <span>*</span>
                 </label>
@@ -584,7 +943,12 @@ export default function BookingTrialModal({
                       const nextPhone = `${nextCode} ${formatted}`.trim();
                       patchForm(VoiceTrialFormField.Phone, nextPhone);
                       if (phoneTouched) {
-                        applyPhoneFieldError(nextPhone, nextCode);
+                        applyPhoneFieldError(
+                          VoiceTrialFormField.Phone,
+                          nextPhone,
+                          nextCode,
+                          `${TK}.validationPhoneRequired`,
+                        );
                       } else {
                         clearFieldError(VoiceTrialFormField.Phone);
                       }
@@ -620,8 +984,95 @@ export default function BookingTrialModal({
                 </span>
                 <TrialFieldError message={errors.phone} />
               </div>
+
+              <div
+                className={`trial-field ${errors.owner ? "has-error" : ""}`}
+                data-ai-hub-field="owner"
+              >
+                <label className="trial-label" htmlFor="trial-owner">
+                  {t(`${TK}.ownerLabel`)} <span>*</span>
+                </label>
+                <input
+                  className={`trial-input ${errors.owner ? "has-error" : ""}`}
+                  id="trial-owner"
+                  type="text"
+                  value={form.owner}
+                  placeholder={t(`${TK}.ownerPlaceholder`)}
+                  onChange={(e) =>
+                    patchFormField(
+                      VoiceTrialFormField.Owner,
+                      e.target.value,
+                      VoiceTrialFormField.Owner,
+                    )
+                  }
+                />
+                <TrialFieldError message={errors.owner} />
+              </div>
+
+              <div
+                className={`trial-field ${errors.ownerPhone ? "has-error" : ""}`}
+                data-ai-hub-field="ownerPhone"
+              >
+                <label className="trial-label" htmlFor="trial-owner-phone">
+                  {t(`${TK}.ownerPhoneLabel`)} <span>*</span>
+                </label>
+                <span className="phone-input-shell trial-phone-input-shell">
+                  <CountryCodeSelect
+                    value={ownerPhoneParsed.countryCode}
+                    embedded
+                    onChange={(nextCode) => {
+                      const formatted = formatNationalNumber(
+                        ownerPhoneParsed.nationalNumber,
+                        nextCode,
+                      );
+                      const nextPhone = `${nextCode} ${formatted}`.trim();
+                      patchForm(VoiceTrialFormField.OwnerPhone, nextPhone);
+                      if (ownerPhoneTouched) {
+                        applyPhoneFieldError(
+                          VoiceTrialFormField.OwnerPhone,
+                          nextPhone,
+                          nextCode,
+                          `${TK}.validationOwnerPhoneRequired`,
+                        );
+                      } else {
+                        clearFieldError(VoiceTrialFormField.OwnerPhone);
+                      }
+                    }}
+                  />
+                  <input
+                    className="trial-input phone-mask-input"
+                    id="trial-owner-phone"
+                    type="tel"
+                    value={formatNationalNumber(
+                      ownerPhoneParsed.nationalNumber,
+                      ownerPhoneParsed.countryCode,
+                    )}
+                    aria-invalid={Boolean(errors.ownerPhone)}
+                    placeholder={getNationalPhonePlaceholder(
+                      ownerPhoneParsed.countryCode,
+                    )}
+                    inputMode="numeric"
+                    autoComplete="tel-national"
+                    onBlur={handleOwnerPhoneBlur}
+                    onChange={(event) => {
+                      const formatted = formatNationalNumber(
+                        event.target.value,
+                        ownerPhoneParsed.countryCode,
+                      );
+                      patchFormField(
+                        VoiceTrialFormField.OwnerPhone,
+                        `${ownerPhoneParsed.countryCode} ${formatted}`.trim(),
+                        VoiceTrialFormField.OwnerPhone,
+                      );
+                    }}
+                  />
+                </span>
+                <TrialFieldError message={errors.ownerPhone} />
+              </div>
+
               <div
                 className={`trial-field trial-span-2 ${errors.email ? "has-error" : ""}`}
+                data-ai-hub-field="email"
               >
                 <label className="trial-label" htmlFor="trial-email">
                   {t(`${TK}.emailLabel`)} <span>*</span>
@@ -641,10 +1092,13 @@ export default function BookingTrialModal({
                   }
                 />
                 {!errors.email ? (
-                  <div className="trial-note">{t(`${TK}.emailNote`)}</div>
+                  <div className="trial-note">
+                    <EnvelopeIcon /> {t(`${TK}.emailNote`)}
+                  </div>
                 ) : null}
                 <TrialFieldError message={errors.email} />
               </div>
+
               <div className="trial-field trial-span-2">
                 <label className="trial-label" htmlFor="trial-city">
                   {t(`${TK}.cityLabel`)}{" "}
@@ -661,6 +1115,7 @@ export default function BookingTrialModal({
                   }
                 />
               </div>
+
               <div className="trial-field trial-span-2">
                 <label className="trial-label" htmlFor="trial-website">
                   {t(`${TK}.websiteLabel`)}{" "}
@@ -677,8 +1132,10 @@ export default function BookingTrialModal({
                   onChange={(e) => patchFormField("website", e.target.value)}
                 />
               </div>
+
               <div
-                className={`trial-field trial-span-2 ${errors.services ? "has-error" : ""}`}
+                className={`trial-field trial-span-2 ${errors.services || errors.priceList ? "has-error" : ""}`}
+                data-ai-hub-field="services"
               >
                 <div className="trial-label">
                   {t(`${TK}.servicesLabel`)} <span>*</span>{" "}
@@ -692,9 +1149,7 @@ export default function BookingTrialModal({
                       key={chip}
                       className={`trial-chip ${form.activeServices.has(chip) ? "is-active" : ""}`}
                       type="button"
-                      onClick={() =>
-                        toggleChip("activeServices", chip, "services")
-                      }
+                      onClick={() => toggleServiceChip(chip)}
                     >
                       {chip}
                     </button>
@@ -744,71 +1199,146 @@ export default function BookingTrialModal({
                   </div>
                 ) : null}
                 <TrialFieldError message={errors.services} />
-              </div>
-              <div
-                className={`trial-field trial-span-2 ${errors.openingDays ? "has-error" : ""}`}
-              >
-                <div className="trial-label">{t(`${TK}.openDaysLabel`)}</div>
-                <div className="trial-day-list">
-                  {DAY_KEYS.map((day) => (
-                    <button
-                      key={day}
-                      className={`trial-day ${form.activeDays.has(day) ? "is-active" : ""}`}
-                      type="button"
-                      onClick={() =>
-                        toggleChip("activeDays", day, "openingDays")
-                      }
-                    >
-                      {t(`${TK}.days.${day}`)}
-                    </button>
-                  ))}
+
+                <div
+                  className="trial-field trial-service-price-list"
+                  data-ai-hub-field="priceList"
+                >
+                  <label className="trial-label" htmlFor="trial-price-list">
+                    {t(`${TK}.priceListLabel`)}{" "}
+                    <span className="trial-optional">
+                      {t(`${TK}.optional`)}
+                    </span>
+                  </label>
+                  <input
+                    ref={priceListInputRef}
+                    className={`trial-input trial-file-input${errors.priceList ? " has-error" : ""}`}
+                    id="trial-price-list"
+                    type="file"
+                    multiple
+                    accept={VOICE_TRIAL_PRICE_LIST_ACCEPT}
+                    aria-invalid={Boolean(errors.priceList)}
+                    onChange={(event) =>
+                      handlePriceListChange(event.target.files)
+                    }
+                  />
+                  {form.priceListFiles.length === 0 ? (
+                    <div className="trial-note">
+                      <PaperclipIcon />
+                      <span>{t(`${TK}.priceListEmpty`)}</span>
+                    </div>
+                  ) : (
+                    <div className="trial-price-list-selected">
+                      {form.priceListFiles.map((file, index) => (
+                        <div
+                          className="trial-price-list-chip"
+                          key={`${file.name}-${file.size}-${file.lastModified}-${index}`}
+                        >
+                          <PaperclipIcon />
+                          <span>
+                            {t(`${TK}.priceListSelected`, {
+                              name: file.name,
+                              size: formatFileSizeLabel(file.size),
+                            })}
+                          </span>
+                          <button
+                            className="trial-price-list-remove"
+                            type="button"
+                            aria-label={t(`${TK}.priceListRemove`, {
+                              name: file.name,
+                            })}
+                            onClick={() => removePriceListFile(index)}
+                          >
+                            <CloseIcon />
+                          </button>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                  <TrialFieldError message={errors.priceList} />
                 </div>
-                <TrialFieldError message={errors.openingDays} />
               </div>
+
               <div
-                className={`trial-field trial-span-2 ${errors.serviceHours ? "has-error" : ""}`}
+                className={`trial-field trial-span-2 ${errors.openingDays || errors.serviceHours ? "has-error" : ""}`}
+                data-ai-hub-field="openingDays"
               >
                 <div className="trial-label">{t(`${TK}.hoursLabel`)}</div>
-                <span
-                  className="tech-schedule-time trial-service-hours"
-                  lang="en-US-u-hc-h12"
-                >
-                  <input
-                    type="time"
-                    value={form.openTime}
-                    lang="en-US-u-hc-h12"
-                    step={60}
-                    aria-label={t(`${TK}.openTimeLabel`)}
-                    aria-invalid={Boolean(errors.serviceHours)}
-                    onChange={(e) =>
-                      patchFormField(
-                        VoiceTrialFormField.OpenTime,
-                        e.target.value,
-                        "serviceHours",
-                      )
-                    }
-                  />
-                  <span>{t(`${TK}.scheduleTo`)}</span>
-                  <input
-                    type="time"
-                    value={form.closeTime}
-                    lang="en-US-u-hc-h12"
-                    step={60}
-                    aria-label={t(`${TK}.closeTimeLabel`)}
-                    aria-invalid={Boolean(errors.serviceHours)}
-                    onChange={(e) =>
-                      patchFormField(
-                        VoiceTrialFormField.CloseTime,
-                        e.target.value,
-                        "serviceHours",
-                      )
-                    }
-                  />
-                </span>
-                <TrialFieldError message={errors.serviceHours} />
+                <div className="settings-hours trial-hours-list">
+                  {DAY_KEYS.map((day) => {
+                    const row = form.hours[day];
+                    const dayInvalid =
+                      Boolean(errors.serviceHours) &&
+                      row.open &&
+                      compareTime24h(row.closeTime, row.openTime) <= 0;
+                    return (
+                      <div
+                        className={`settings-hour-row ${row.open ? "" : "is-closed"}`}
+                        key={day}
+                        onClick={() => toggleHourDay(day)}
+                      >
+                        <label
+                          className="settings-hour-toggle"
+                          onClick={(event) => event.stopPropagation()}
+                        >
+                          <input
+                            type="checkbox"
+                            checked={row.open}
+                            onChange={() => toggleHourDay(day)}
+                          />
+                          <span>{t(`${TK}.days.${day}`)}</span>
+                        </label>
+                        <div
+                          className="settings-hour-times"
+                          onClick={(event) => {
+                            if (row.open) event.stopPropagation();
+                          }}
+                        >
+                          <TrialHourTimeField
+                            value={row.openTime}
+                            disabled={!row.open}
+                            invalid={dayInvalid}
+                            locale={locale}
+                            localeTag={localeTag}
+                            ariaLabel={t(`${TK}.openTimeAria`, {
+                              day: t(`${TK}.days.${day}`),
+                            })}
+                            onChange={(next) =>
+                              updateHourTime(day, "openTime", next)
+                            }
+                          />
+                          <span className="settings-hour-to">
+                            {t(`${TK}.scheduleTo`)}
+                          </span>
+                          <TrialHourTimeField
+                            value={row.closeTime}
+                            disabled={!row.open}
+                            invalid={dayInvalid}
+                            locale={locale}
+                            localeTag={localeTag}
+                            ariaLabel={t(`${TK}.closeTimeAria`, {
+                              day: t(`${TK}.days.${day}`),
+                            })}
+                            onChange={(next) =>
+                              updateHourTime(day, "closeTime", next)
+                            }
+                          />
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+                <div className="trial-note">
+                  <ClockNoteIcon /> {t(`${TK}.hoursNote`)}
+                </div>
+                <TrialFieldError
+                  message={errors.openingDays || errors.serviceHours}
+                />
               </div>
+
               <div
                 className={`trial-field trial-span-2 ${errors.painPoint ? "has-error" : ""}`}
+                data-ai-hub-field="painPoint"
               >
                 <label className="trial-label" htmlFor="trial-pain">
                   {t(`${TK}.painLabel`)}{" "}
@@ -835,6 +1365,7 @@ export default function BookingTrialModal({
                 </select>
                 <TrialFieldError message={errors.painPoint} />
               </div>
+
               <div className="trial-field trial-span-2">
                 <label className="trial-label" htmlFor="trial-ref">
                   {t(`${TK}.referralLabel`)}{" "}
@@ -859,18 +1390,21 @@ export default function BookingTrialModal({
               </div>
             </div>
 
-            <button
-              className="trial-submit"
-              type="button"
-              disabled={submitTrial.isPending}
-              onClick={handleSubmit}
-            >
-              <RocketIcon />
-              {submitTrial.isPending
-                ? t(`${TK}.submitting`)
-                : t(`${TK}.submit`)}
-            </button>
-            <div className="trial-footer">{t(`${TK}.footer`)}</div>
+            <div className="trial-actions">
+              <button
+                className="trial-submit"
+                type="button"
+                disabled={submitTrial.isPending}
+                onClick={handleSubmit}
+              >
+                <RocketIcon />
+                {submitTrial.isPending
+                  ? t(`${TK}.submitting`)
+                  : t(`${TK}.submit`)}
+              </button>
+              <div className="trial-footer">{t(`${TK}.footer`)}</div>
+            </div>
+          </div>
           </div>
 
           <div className="trial-contact">

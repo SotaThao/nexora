@@ -1,6 +1,6 @@
 import { Clock3, FileClock, Loader2, PlusCircle, X } from 'lucide-react'
 import type { UnpaidTipDebtRecord } from '../../../types/domain'
-import { formatCurrency, formatTransactionDateTime } from '../../dashboard/utils'
+import { formatCurrency, DateTimeCell } from '../../dashboard/utils'
 import { staffInitials } from '../../../utils/payoutDisplay'
 
 export default function UnpaidTipDebtsPanel({
@@ -76,7 +76,7 @@ export default function UnpaidTipDebtsPanel({
                   </div>
                   <p className="flex items-center gap-1 text-[11px] text-mutedGrey">
                     <Clock3 className="h-3.5 w-3.5" />
-                    {formatTransactionDateTime(row.lastUpdatedAt, currentLanguage)}
+                    <DateTimeCell value={row.lastUpdatedAt} locale={currentLanguage} />
                   </p>
                   <div className="grid grid-cols-2 gap-2">
                     <button
@@ -132,7 +132,7 @@ export default function UnpaidTipDebtsPanel({
                         {formatCurrency(row.balance)}
                       </td>
                       <td className="px-4 py-3 text-xs text-mutedGrey">
-                        {formatTransactionDateTime(row.lastUpdatedAt, currentLanguage)}
+                        <DateTimeCell value={row.lastUpdatedAt} locale={currentLanguage} />
                       </td>
                       <td className="px-4 py-3">
                         <div className="flex flex-wrap gap-2">

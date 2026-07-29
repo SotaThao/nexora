@@ -47,6 +47,7 @@ import {
   SMS_CAMPAIGN_STATUS_CLASS,
   SMS_CAMPAIGN_STATUS_I18N_KEY,
   SMS_CAMPAIGN_TK,
+  SMS_CREDITS_LOW_THRESHOLD,
   formatSmsCostUsd,
   type SmsCampaignSegmentAccent,
   type SmsCreditPackageMock,
@@ -147,6 +148,7 @@ export default function BookingSmsCampaignsPanel() {
 
   const availableCredits = dashboardQuery.data?.creditBalance ?? 0
   const remainingUsd = formatSmsCostUsd(dashboardQuery.data?.estimatedCostUsd ?? 0)
+  const openBuyCredits = () => setBuyOpen(true)
 
   const history = campaignsQuery.data?.items ?? []
   const campaignsTotalCount = campaignsQuery.data?.totalCount ?? 0
@@ -241,7 +243,7 @@ export default function BookingSmsCampaignsPanel() {
           <div className="marketing-panel-actions">
             <div className="sms-credit-pill">
               <span>{t(`${TK}.creditsLabel`)}</span>
-              <strong className={availableCredits < 100 ? 'is-low' : undefined}>
+              <strong className={availableCredits < SMS_CREDITS_LOW_THRESHOLD ? 'is-low' : undefined}>
                 {formatCount(availableCredits, currentLanguage)}
               </strong>
               <small>
@@ -252,7 +254,7 @@ export default function BookingSmsCampaignsPanel() {
               className="booking-secondary-button sms-credit-buy-button"
               type="button"
               disabled={isBusy}
-              onClick={() => setBuyOpen(true)}
+              onClick={openBuyCredits}
             >
               <WalletCardsIcon className="marketing-icon" />
               <span>{t(`${TK}.buyCredits`)}</span>
@@ -454,6 +456,7 @@ export default function BookingSmsCampaignsPanel() {
         <SmsBuyCreditsModal
           open={buyOpen}
           submitting={purchaseMutation.isPending}
+          preserveBodyLock={composerOpen}
           onClose={() => {
             if (!purchaseMutation.isPending) setBuyOpen(false)
           }}
@@ -470,6 +473,7 @@ export default function BookingSmsCampaignsPanel() {
             setEditingCampaignId(null)
           }}
           onSaved={handleCampaignSaved}
+          onBuyCredits={openBuyCredits}
         />
         <SmsRecipientsModal
           open={!!viewingCampaign}

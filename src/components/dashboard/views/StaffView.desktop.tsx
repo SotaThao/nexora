@@ -8,7 +8,8 @@ import { getWebUrlOrigin } from '../../../utils/webUrlBase'
 import { buildPublicQrImageUrl } from '../../../data/repositories/publicQr'
 import { QR_IMAGE_SIZES } from '../../../utils/qrUtils'
 import { orderedPayoutUiKeysFromMethods, PAYOUT_UI_LABELS } from '../../../data/paymentMethodTypes'
-import { formatJoinedDate } from '../../../utils/localDate'
+import { resolveStaffRoleLabel } from '../../../utils/staffBusinessRole'
+import { DateTimeCell } from '../utils'
 import IconButton from '../../ui/IconButton'
 import CustomSelect from '../../CustomSelect'
 import Pagination from '../../ui/Pagination'
@@ -62,7 +63,7 @@ function StaffView({
   onPageChange,
   togglingStaffId = null,
 }) {
-  const { t } = useTranslation()
+  const { t, currentLanguage } = useTranslation()
   const { showToast } = useNotification()
   const [largeJoinQrOpen, setLargeJoinQrOpen] = useState(false)
   const [sortBy, setSortBy] = useState('name-asc') // 'name-asc' | 'name-desc' | 'date-newest' | 'date-oldest' | 'status-active'
@@ -306,7 +307,7 @@ function StaffView({
                           )}
                           <div>
                             <div className="font-extrabold text-nexoraText">{member.nickname || member.fullName}</div>
-                            <div className="text-xs text-nexoraMuted">{member.position}</div>
+                            <div className="text-xs text-nexoraMuted">{resolveStaffRoleLabel(member)}</div>
                           </div>
                         </div>
                       </td>
@@ -462,14 +463,14 @@ function StaffView({
                         )}
                         <div>
                           <div className="font-extrabold text-nexoraText group-hover:text-nexoraBrand transition">{member.nickname || member.fullName}</div>
-                          <div className="text-xs text-nexoraMuted">{member.position}</div>
+                          <div className="text-xs text-nexoraMuted">{resolveStaffRoleLabel(member)}</div>
                         </div>
                       </div>
                     </td>
 
                     <td className="px-5 py-4">
                       <div className="text-xs text-nexoraText font-semibold leading-normal">
-                        {member.joinedDate ? formatJoinedDate(member.joinedDate) : '-'}
+                        {member.joinedDate ? <DateTimeCell value={member.joinedDate} locale={currentLanguage} /> : '-'}
                       </div>
                     </td>
 

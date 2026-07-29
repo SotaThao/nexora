@@ -367,6 +367,16 @@ export function CalendarEventIcon({ className }: IconProps) {
   )
 }
 
+/** Bootstrap Icons `bi-calendar-plus`. */
+export function CalendarPlusIcon({ className }: IconProps) {
+  return (
+    <FillIcon className={className}>
+      <path d="M8 7a.5.5 0 0 1 .5.5V9H10a.5.5 0 0 1 0 1H8.5v1.5a.5.5 0 0 1-1 0V10H6a.5.5 0 0 1 0-1h1.5V7.5A.5.5 0 0 1 8 7" />
+      <path d="M3.5 0a.5.5 0 0 1 .5.5V1h8V.5a.5.5 0 0 1 1 0V1h1a2 2 0 0 1 2 2v11a2 2 0 0 1-2 2H2a2 2 0 0 1-2-2V3a2 2 0 0 1 2-2h1V.5a.5.5 0 0 1 .5-.5M1 4v10a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1V4z" />
+    </FillIcon>
+  )
+}
+
 export function GraphUpIcon({ className }: IconProps) {
   return (
     <HubIcon className={className}>
@@ -688,6 +698,17 @@ export function ShieldCheckIcon({ className }: IconProps) {
     <HubIcon className={className}>
       <path d="M20 13c0 5-3.5 7.5-7.66 8.95a1 1 0 0 1-.67-.01C7.5 20.5 4 18 4 13V6a1 1 0 0 1 1-1c2 0 4.5-1.2 6.24-2.72a1.17 1.17 0 0 1 1.52 0C14.51 3.81 17 5 19 5a1 1 0 0 1 1 1z" stroke="currentColor" strokeWidth="2" strokeLinejoin="round" />
       <path d="m9 12 2 2 4-4" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+    </HubIcon>
+  )
+}
+
+/** Lucide `info` (circle). */
+export function InfoCircleIcon({ className }: IconProps) {
+  return (
+    <HubIcon className={className}>
+      <circle cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="2" />
+      <path d="M12 16v-4" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
+      <path d="M12 8h.01" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
     </HubIcon>
   )
 }

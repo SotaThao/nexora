@@ -36,6 +36,7 @@ import CountryCodeSelect, {
 import {
   ClockHistoryIcon,
   CurrencyDollarIcon,
+  InfoCircleIcon,
   LightningIcon,
   PlusIcon,
   ShopIcon,
@@ -44,8 +45,10 @@ import {
 } from "./BookingHubIcons";
 import { BookingSettingsSkeleton } from "./BookingHubSkeletons";
 import { useBookingHubVoiceEnabled } from "./BookingHubVoiceContext";
+import { applyAiHubProgressiveValidation } from "./bookingHubDialogValidation";
 
 const TK = "components.dashboard.views.BookingHubView.settings";
+const TK_HUB = "components.dashboard.views.BookingHubView";
 
 const DAY_KEYS = ["mon", "tue", "wed", "thu", "fri", "sat", "sun"] as const;
 type DayKey = (typeof DAY_KEYS)[number];
@@ -203,6 +206,7 @@ const AI_LANGUAGE_OPTIONS = [
 ] as const;
 
 const PROMO_MAX_LENGTH = 1000;
+const FIRST_CALL_SMS_MAX_LENGTH = 320;
 
 const PROMO_TEMPLATES = {
   "reward-yourself": {
@@ -271,6 +275,110 @@ function ChevronIcon({ collapsed }: { collapsed: boolean }) {
         strokeLinejoin="round"
       />
     </svg>
+  );
+}
+
+function SettingsInfoTooltip({
+  id,
+  ariaLabel,
+  children,
+}: {
+  id: string;
+  ariaLabel: string;
+  children: React.ReactNode;
+}) {
+  const triggerRef = useRef<HTMLButtonElement>(null);
+  const contentRef = useRef<HTMLSpanElement>(null);
+
+  const placeTooltip = () => {
+    const trigger = triggerRef.current;
+    const content = contentRef.current;
+    if (!trigger || !content) return;
+
+    const pad = 16;
+    const gap = 8;
+    const maxWidth = Math.min(320, window.innerWidth - pad * 2);
+
+    content.classList.add("is-placed");
+    content.style.position = "fixed";
+    content.style.left = "0";
+    content.style.top = "0";
+    content.style.right = "auto";
+    content.style.bottom = "auto";
+    content.style.transform = "none";
+    content.style.width = "max-content";
+    content.style.maxWidth = `${maxWidth}px`;
+
+    const applyPosition = () => {
+      const width = Math.min(content.offsetWidth || maxWidth, maxWidth);
+      content.style.width = `${width}px`;
+
+      const triggerRect = trigger.getBoundingClientRect();
+      let top = triggerRect.top - gap - content.offsetHeight;
+      if (top < pad) {
+        top = triggerRect.bottom + gap;
+      }
+      const maxTop = window.innerHeight - pad - content.offsetHeight;
+      top = Math.max(pad, Math.min(top, Math.max(pad, maxTop)));
+
+      let left =
+        triggerRect.left + triggerRect.width / 2 - content.offsetWidth / 2;
+      left = Math.max(
+        pad,
+        Math.min(left, window.innerWidth - pad - content.offsetWidth),
+      );
+
+      content.style.top = `${Math.round(top)}px`;
+      content.style.left = `${Math.round(left)}px`;
+    };
+
+    requestAnimationFrame(applyPosition);
+  };
+
+  const clearPlacement = () => {
+    const content = contentRef.current;
+    if (!content) return;
+    content.classList.remove("is-placed");
+    content.style.position = "";
+    content.style.left = "";
+    content.style.top = "";
+    content.style.right = "";
+    content.style.bottom = "";
+    content.style.transform = "";
+    content.style.width = "";
+    content.style.maxWidth = "";
+  };
+
+  return (
+    <span
+      className="settings-tooltip"
+      onMouseEnter={placeTooltip}
+      onFocus={placeTooltip}
+      onMouseLeave={clearPlacement}
+      onBlur={clearPlacement}
+    >
+      <button
+        ref={triggerRef}
+        className="settings-tooltip-trigger"
+        type="button"
+        aria-label={ariaLabel}
+        aria-describedby={id}
+        onClick={(event) => {
+          event.preventDefault();
+          placeTooltip();
+        }}
+      >
+        <InfoCircleIcon className="settings-tooltip-icon" />
+      </button>
+      <span
+        ref={contentRef}
+        className="settings-tooltip-content"
+        id={id}
+        role="tooltip"
+      >
+        {children}
+      </span>
+    </span>
   );
 }
 
@@ -368,6 +476,11 @@ export default function BookingSettingsPanel() {
   const [bookingNotifyPhone, setBookingNotifyPhone] = useState("");
   const [address, setAddress] = useState("");
   const [googleReviewUrl, setGoogleReviewUrl] = useState("");
+  const [website, setWebsite] = useState("");
+  const [description, setDescription] = useState("");
+  const [timeZone, setTimeZone] = useState("");
+  const [promoSms, setPromoSms] = useState("");
+  const [sendSmsPromoEnabled, setSendSmsPromoEnabled] = useState(true);
   const [statusMessage, setStatusMessage] = useState("");
   const [formErrors, setFormErrors] = useState<{
     salonName?: string;
@@ -390,6 +503,7 @@ export default function BookingSettingsPanel() {
     sat: "",
     sun: "",
   });
+  const settingsShellRef = useRef<HTMLDivElement>(null);
 
   const isCollapsed = (cardId: string) => collapsedCards[cardId] === true;
   const salonPhoneParsed = useMemo(() => parsePhone(salonPhone), [salonPhone]);
@@ -513,6 +627,11 @@ export default function BookingSettingsPanel() {
     );
     setAddress(configData.address || "");
     setGoogleReviewUrl(configData.googleReviewUrl || "");
+    setWebsite(configData.website || "");
+    setDescription(configData.description || "");
+    setTimeZone(configData.timeZone || "");
+    setPromoSms((configData.promoSms || "").slice(0, FIRST_CALL_SMS_MAX_LENGTH));
+    setSendSmsPromoEnabled(configData.sendSmsPromoEnabled !== false);
     setPromotion((configData.promotion || "").slice(0, PROMO_MAX_LENGTH));
     const resolvedLang = mapConfigLanguageToUiLanguage(configData.language);
     setLanguage(resolvedLang);
@@ -758,9 +877,23 @@ export default function BookingSettingsPanel() {
     if (!address.trim()) nextErrors.address = requiredMessage;
     if (!greeting.trim()) nextErrors.greeting = requiredMessage;
 
-    if (Object.keys(nextErrors).length > 0) {
-      setFormErrors(nextErrors);
-      showToast(t(`${TK}.saveValidationError`), "error");
+    if (
+      applyAiHubProgressiveValidation({
+        allErrors: nextErrors,
+        root: settingsShellRef.current,
+        setErrors: setFormErrors,
+        showToast,
+        fieldLabels: {
+          salonName: t(`${TK}.salonName`),
+          salonPhone: t(`${TK}.salonPhone`),
+          bookingNotifyPhone: t(`${TK}.bookingNotifyPhone`),
+          address: t(`${TK}.address`),
+          greeting: t(`${TK}.greetingScript`),
+        },
+        hubTk: TK_HUB,
+        t,
+      })
+    ) {
       return;
     }
 
@@ -799,7 +932,12 @@ export default function BookingSettingsPanel() {
         bookingNotifyPhone: bookingNotifyPhonePayload,
         address: address.trim(),
         googleReviewUrl: googleReviewUrl.trim(),
+        website: website.trim() || null,
+        description: description.trim() || null,
         promotion: promotion.trim().slice(0, PROMO_MAX_LENGTH) || null,
+        promoSms: promoSms.trim().slice(0, FIRST_CALL_SMS_MAX_LENGTH) || null,
+        sendSmsPromoEnabled,
+        timeZone: timeZone.trim() || null,
         language: mapUiLanguageToConfigLanguage(language),
         welcomeGreeting: greeting.trim(),
         operatingHours: DAY_KEYS.map((day) => {
@@ -847,7 +985,7 @@ export default function BookingSettingsPanel() {
   }
 
   return (
-    <div className="settings-shell">
+    <div className="settings-shell" ref={settingsShellRef}>
       <div className="settings-hero is-compact">
         <div className="settings-eyebrow">{t(`${TK}.eyebrow`)}</div>
         <h2 className="settings-title">{t(`${TK}.oneSourceTitle`)}</h2>
@@ -892,7 +1030,7 @@ export default function BookingSettingsPanel() {
           subtitle={t(`${TK}.salonInfoSub`)}
         >
           <div className="settings-field-grid settings-business-grid">
-            <label className="settings-field">
+            <label className="settings-field" data-ai-hub-field="salonName">
               <span className="settings-label">{t(`${TK}.salonName`)}</span>
               <input
                 className="settings-input"
@@ -917,7 +1055,7 @@ export default function BookingSettingsPanel() {
                 ) : null}
               </span>
             </label>
-            <label className="settings-field">
+            <label className="settings-field" data-ai-hub-field="salonPhone">
               <span className="settings-label">{t(`${TK}.salonPhone`)}</span>
               <span className="phone-input-shell">
                 <CountryCodeSelect
@@ -988,7 +1126,7 @@ export default function BookingSettingsPanel() {
               />
               <span className="settings-help">{t(`${TK}.aiLineHelp`)}</span>
             </label>
-            <label className="settings-field">
+            <label className="settings-field" data-ai-hub-field="bookingNotifyPhone">
               <span className="settings-label">
                 {t(`${TK}.bookingNotifyPhone`)}
               </span>
@@ -1053,7 +1191,7 @@ export default function BookingSettingsPanel() {
                 {t(`${TK}.bookingNotifyHelp`)}
               </span>
             </label>
-            <label className="settings-field settings-span-full">
+            <label className="settings-field settings-span-full" data-ai-hub-field="address">
               <span className="settings-label">{t(`${TK}.address`)}</span>
               <input
                 className="settings-input"
@@ -1085,6 +1223,18 @@ export default function BookingSettingsPanel() {
                 value={googleReviewUrl}
                 placeholder={t(`${TK}.placeholderGoogleReviewLink`)}
                 onChange={(event) => setGoogleReviewUrl(event.target.value)}
+              />
+            </label>
+            <label className="settings-field settings-span-full">
+              <span className="settings-label">{t(`${TK}.website`)}</span>
+              <input
+                className="settings-input"
+                type="url"
+                value={website}
+                placeholder={t(`${TK}.placeholderWebsite`)}
+                autoComplete="url"
+                inputMode="url"
+                onChange={(event) => setWebsite(event.target.value)}
               />
             </label>
           </div>
@@ -1479,7 +1629,7 @@ export default function BookingSettingsPanel() {
                 {t(`${TK}.languageStatus.${language}`)}
               </div>
             </div>
-            <div className="settings-field settings-span-full">
+            <div className="settings-field settings-span-full" data-ai-hub-field="greeting">
               <span className="settings-label" id="settings-greeting-label">
                 {t(`${TK}.greetingScript`)}
               </span>
@@ -1513,6 +1663,7 @@ export default function BookingSettingsPanel() {
                   : t(`${TK}.previewVoice`)}
               </button>
             </div>
+
             <label className="settings-field settings-span-full">
               <div className="settings-promo-head">
                 <span className="settings-label">{t(`${TK}.promoLabel`)}</span>
@@ -1549,6 +1700,68 @@ export default function BookingSettingsPanel() {
                 </button>
               </div>
             </label>
+
+            <div className="settings-first-call-sms settings-span-full">
+              <div className="settings-first-call-sms-head">
+                <div className="settings-first-call-sms-copy">
+                  <span className="settings-label settings-label-with-tooltip">
+                    {t(`${TK}.firstCallSmsLabel`)}
+                    <SettingsInfoTooltip
+                      id="first-call-sms-help"
+                      ariaLabel={t(`${TK}.firstCallSmsInfoAria`)}
+                    >
+                      {t(`${TK}.firstCallSmsHelp`)}
+                    </SettingsInfoTooltip>
+                  </span>
+                </div>
+                <div className="settings-first-call-sms-toggle">
+                  <span
+                    className={`settings-first-call-sms-toggle-label${sendSmsPromoEnabled ? "" : " is-off"}`}
+                    aria-live="polite"
+                  >
+                    {sendSmsPromoEnabled
+                      ? t(`${TK}.firstCallSmsToggleOn`)
+                      : t(`${TK}.firstCallSmsToggleOff`)}
+                  </span>
+                  <button
+                    className={`toggle-pill${sendSmsPromoEnabled ? " is-on" : ""}`}
+                    type="button"
+                    role="switch"
+                    aria-checked={sendSmsPromoEnabled}
+                    aria-label={
+                      sendSmsPromoEnabled
+                        ? t(`${TK}.firstCallSmsDisableAria`)
+                        : t(`${TK}.firstCallSmsEnableAria`)
+                    }
+                    onClick={() => {
+                      setSendSmsPromoEnabled((prev) => {
+                        const next = !prev;
+                        setStatus(
+                          next
+                            ? t(`${TK}.firstCallSmsEnabled`)
+                            : t(`${TK}.firstCallSmsDisabled`),
+                        );
+                        return next;
+                      });
+                    }}
+                  />
+                </div>
+              </div>
+              <div className="settings-field">
+                <textarea
+                  className="settings-textarea"
+                  value={promoSms}
+                  maxLength={FIRST_CALL_SMS_MAX_LENGTH}
+                  placeholder={t(`${TK}.firstCallSmsPlaceholder`)}
+                  aria-label={t(`${TK}.firstCallSmsMessageLabel`)}
+                  onChange={(event) =>
+                    setPromoSms(
+                      event.target.value.slice(0, FIRST_CALL_SMS_MAX_LENGTH),
+                    )
+                  }
+                />
+              </div>
+            </div>
           </div>
         </SettingsCard>
       </div>

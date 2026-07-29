@@ -17,7 +17,7 @@ import type { TFunction } from '../../../types/contexts'
 import { getApiErrorCode, type PayoutRecord, type StaffPayoutDetailRecord } from '../../../types/domain'
 import { DEFAULT_PAGE_SIZE } from '../../../constants/pagination'
 import { usePagination } from '../../../hooks/usePagination'
-import { formatCurrency, formatTransactionDateTime } from '../../dashboard/utils'
+import { formatCurrency, formatTransactionDateTime, DateTimeCell } from '../../dashboard/utils'
 import PayoutMethodBadge from '../../tips/payouts/PayoutMethodBadge'
 import PayoutCard from '../../tips/payouts/PayoutCard'
 import PayoutStatusBadge from '../../tips/payouts/PayoutStatusBadge'
@@ -129,11 +129,11 @@ function StaffPayoutList({
                 <tr key={row.id} className="border-t border-nexoraBorder/70 hover:bg-slate-50/80">
                   <td className="px-4 py-3 font-mono text-xs font-bold text-nexoraBrand">{row.payoutCode}</td>
                   <td className="px-4 py-3 text-xs text-nexoraMuted">
-                    {formatTransactionDateTime(row.createdAt, currentLanguage)}
+                    <DateTimeCell value={row.createdAt} locale={currentLanguage} />
                   </td>
                   <td className="px-4 py-3 text-sm font-black text-nexoraText">{formatCurrency(row.amount)}</td>
                   <td className="px-4 py-3">
-                    <PayoutMethodBadge method={row.payoutMethodType} />
+                    <PayoutMethodBadge method={row.payoutMethodTypeName?.trim() || row.payoutMethodType} />
                   </td>
                   <td className="px-4 py-3">
                     <div className="flex flex-wrap gap-1">
@@ -270,7 +270,9 @@ function StaffPayoutDetailModal({
               <dt className="font-semibold text-nexoraMuted">{t(STAFF_PAYOUT_COL_KEYS.date)}</dt>
               <dd className="font-semibold text-nexoraText">{formatTransactionDateTime(payout.createdAt, currentLanguage)}</dd>
               <dt className="font-semibold text-nexoraMuted">{t(STAFF_PAYOUT_COL_KEYS.method)}</dt>
-              <dd><PayoutMethodBadge method={payout.payoutMethodType} /></dd>
+              <dd>
+                <PayoutMethodBadge method={payout.payoutMethodTypeName?.trim() || payout.payoutMethodType} />
+              </dd>
               {payout.staffPaymentAccountInfo ? (
                 <>
                   <dt className="font-semibold text-nexoraMuted">{t('staff_payouts.field_account')}</dt>
@@ -450,7 +452,7 @@ export default function StaffPayouts() {
                 <div className="min-w-0">
                   <p className="truncate text-sm font-bold text-nexoraText">{row.businessName}</p>
                   <p className="text-[11px] text-nexoraMuted">
-                    {formatTransactionDateTime(row.lastUpdatedAt, currentLanguage)}
+                    <DateTimeCell value={row.lastUpdatedAt} locale={currentLanguage} />
                   </p>
                 </div>
                 <p className="shrink-0 text-sm font-black text-amber-700">{formatCurrency(row.balance)}</p>

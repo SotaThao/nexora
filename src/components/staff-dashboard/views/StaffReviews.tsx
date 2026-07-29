@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { Star } from 'lucide-react'
 import { useTranslation } from '../../../contexts/LanguageContext'
+import { formatDateOnly } from '../../../utils/localDate'
 import { useStaffReviews } from '../../../data/hooks/useStaffSelf'
 import type { TranslationVariables } from '../../../types/contexts'
 import type { StaffReviewItem } from '../../../types/domain'
@@ -22,6 +23,7 @@ type StarCounts = Record<RatingLevel, number>
 function formatRelativeReviewDate(
   iso: string | null | undefined,
   t: (key: string, variables?: TranslationVariables) => string,
+  currentLanguage: string,
 ) {
   if (!iso) return ''
   const date = new Date(iso)
@@ -45,7 +47,7 @@ function formatRelativeReviewDate(
     return t('components.staff_dashboard.views.StaffReviews.relativeWeeks', { count: diffWeeks })
   }
 
-  return date.toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' })
+  return formatDateOnly(iso, currentLanguage)
 }
 
 function toInitial(name: string) {
@@ -78,11 +80,13 @@ function ReviewCard({
   anonymousLabel,
   ratingOnlyLabel,
   t,
+  currentLanguage,
 }: {
   review: StaffReviewItem
   anonymousLabel: string
   ratingOnlyLabel: string
   t: (key: string, variables?: TranslationVariables) => string
+  currentLanguage: string
 }) {
   const customerLabel = review.customerName?.trim() || anonymousLabel
   const avatarInitial = customerLabel.charAt(0).toUpperCase()
@@ -97,7 +101,7 @@ function ReviewCard({
           <div className="flex items-start justify-between gap-2">
             <p className="truncate text-sm font-bold text-[#1E293B]">{customerLabel}</p>
             <span className="shrink-0 text-xs font-medium text-slate-400">
-              {formatRelativeReviewDate(review.createdAt, t)}
+              {formatRelativeReviewDate(review.createdAt, t, currentLanguage)}
             </span>
           </div>
           {review.rating > 0 ? <ReviewStarRow rating={review.rating} /> : null}
@@ -138,7 +142,7 @@ function RatingDistributionRow({
 }
 
 export default function StaffReviews() {
-  const { t } = useTranslation()
+  const { t, currentLanguage } = useTranslation()
   const [pageNumber, setPageNumber] = useState(1)
   const [activeFilter, setActiveFilter] = useState<ReviewFilter>('all')
   const {
@@ -258,6 +262,7 @@ export default function StaffReviews() {
               anonymousLabel={t('components.staff_dashboard.views.StaffReviews.anonymousCustomer')}
               ratingOnlyLabel={t('components.staff_dashboard.views.StaffReviews.ratingOnly')}
               t={t}
+              currentLanguage={currentLanguage}
             />
           ))}
         </div>

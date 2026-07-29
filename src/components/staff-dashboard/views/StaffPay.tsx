@@ -1,7 +1,7 @@
 // StaffPay — staff self-managed payout methods (owner cannot edit these).
 import { useState, useMemo } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { Bitcoin, Edit2, Wallet, ArrowRight, AlertCircle } from 'lucide-react'
+import { Bitcoin, Edit2, Wallet, ArrowRight, AlertCircle, Loader2 } from 'lucide-react'
 import { useTranslation } from '../../../contexts/LanguageContext'
 import {
   useStaffPaymentMethods,
@@ -9,6 +9,7 @@ import {
   useToggleStaffPaymentMethod
 } from '../../../data/hooks/useStaffPaymentMethods'
 import { useStaffProfile } from '../../../data/hooks/useStaffSelf'
+import { useCreateStaffProfile, useProfileSettings } from '../../../data/hooks/useProfileSettings'
 import type { PaymentMethodDto } from '../../../types/domain'
 import { SkeletonLayout } from '../../ui/skeleton'
 import PayoutSetupModal from '../../dashboard/modals/PayoutSetupModal'
@@ -19,6 +20,9 @@ import {
   supportsPayoutAccountName,
   toPayoutAccountNameDto,
 } from '../../../data/paymentMethodTypes'
+import { getUserProfileImageUrl } from '../../../utils/userProfileImage'
+import { useQueryClient } from '@tanstack/react-query'
+import { qk } from '../../../data/queryKeys'
 
 const panel = 'rounded-2xl border border-nexoraBorder bg-nexoraSurface p-4 shadow-sm'
 
@@ -65,6 +69,7 @@ const PayoutLogos = {
 export default function StaffPay() {
   const { t } = useTranslation()
   const navigate = useNavigate()
+  const queryClient = useQueryClient()
   const {
     data: apiPaymentMethods = [],
     isPending,
@@ -75,6 +80,8 @@ export default function StaffPay() {
     isPending: isProfilePending,
     isFetching: isProfileFetching,
   } = useStaffProfile()
+  const { data: userProfile } = useProfileSettings()
+  const createStaffProfileMutation = useCreateStaffProfile()
   const toggleMutation = useToggleStaffPaymentMethod()
   const updateMutation = useUpdateStaffPaymentMethod()
 
@@ -86,9 +93,13 @@ export default function StaffPay() {
   )
 
   const isLoading = isPending || isFetching || isProfilePending || isProfileFetching
+  const isKYCVerified =
+    userProfile?.isKYCVerified === true || userProfile?.isKycVerified === true
 
   // Case 1: no staff profile yet (GET /api/v1/staff/profile → 404). Methods are
-  // only seeded on profile creation, so send the user through onboarding first.
+  // only seeded on profile creation, so send the user through onboarding first
+  // — unless KYC is already verified, in which case we unlock payment setup
+  // directly on this screen.
   const profileMissing = staffProfile === null
   // Case 2: profile + seeded methods exist, but none is activated & configured.
   const hasUnconfiguredPayout =
@@ -145,7 +156,43 @@ export default function StaffPay() {
     )
   }
 
-  if (isLoading) {
+  const handleEmptySetupClick = async () => {
+    if (!isKYCVerified) {
+      navigate('/onboarding')
+      return
+    }
+
+    const firstName = String(userProfile?.firstName || '').trim()
+    const lastName = String(userProfile?.lastName || '').trim()
+    const fullName = `${firstName} ${lastName}`.trim()
+      || String(userProfile?.fullName || '').trim()
+    const displayName =
+      String(userProfile?.nickname || '').trim()
+      || fullName
+      || String(userProfile?.email || '').split('@')[0]
+      || 'Staff'
+    const phone = String(userProfile?.phoneNumber || userProfile?.phone || '').trim()
+    const photoUrl = getUserProfileImageUrl(userProfile) || undefined
+
+    try {
+      await createStaffProfileMutation.mutateAsync({
+        displayName,
+        firstName: firstName || displayName.split(' ')[0] || undefined,
+        lastName: lastName || undefined,
+        phone: phone || undefined,
+        photoUrl,
+      })
+      await Promise.all([
+        queryClient.invalidateQueries({ queryKey: qk.staffProfile() }),
+        queryClient.invalidateQueries({ queryKey: qk.staffPaymentMethods() }),
+      ])
+    } catch {
+      // Mutation toast/error handling is owned by the hook caller context;
+      // keep the empty-state CTA available for retry.
+    }
+  }
+
+  if (isLoading || createStaffProfileMutation.isPending) {
     return (
       <SkeletonLayout
         blocks={[
@@ -173,13 +220,21 @@ export default function StaffPay() {
               {t('staff_dashboard.pay.empty')}
             </p>
             <p className="max-w-xs text-xs text-nexoraSubtle">
-              {t('staff_dashboard.pay.empty_hint')}
+              {t(
+                isKYCVerified
+                  ? 'staff_dashboard.pay.empty_hint_payment'
+                  : 'staff_dashboard.pay.empty_hint',
+              )}
             </p>
             <button
               type="button"
-              onClick={() => navigate('/onboarding')}
-              className="mt-1 inline-flex items-center justify-center gap-2 rounded-xl bg-nexoraBrand px-5 py-2.5 text-xs font-bold uppercase tracking-wider text-white shadow-lg transition-all hover:scale-[1.02] hover:shadow-nexoraBrand/25 active:scale-95"
+              onClick={() => void handleEmptySetupClick()}
+              disabled={createStaffProfileMutation.isPending}
+              className="mt-1 inline-flex items-center justify-center gap-2 rounded-xl bg-nexoraBrand px-5 py-2.5 text-xs font-bold uppercase tracking-wider text-white shadow-lg transition-all hover:scale-[1.02] hover:shadow-nexoraBrand/25 active:scale-95 disabled:cursor-not-allowed disabled:opacity-70"
             >
+              {createStaffProfileMutation.isPending ? (
+                <Loader2 className="h-4 w-4 animate-spin" />
+              ) : null}
               <span>{t('staff_dashboard.pay.empty_cta')}</span>
               <ArrowRight className="h-4 w-4" />
             </button>

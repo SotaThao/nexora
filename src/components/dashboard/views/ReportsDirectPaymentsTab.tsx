@@ -2,7 +2,7 @@ import { useEffect, useMemo, useState, type MouseEvent } from 'react'
 import { AlertCircle, CheckCircle, CreditCard, Eye, Loader2 } from 'lucide-react'
 import { useTranslation } from '../../../contexts/LanguageContext'
 import { useNotification } from '../../../contexts/NotificationContext'
-import { formatCurrency, formatTransactionDateTime } from '../utils'
+import { formatCurrency, DateTimeCell } from '../utils'
 import { WalletLogos } from '../constants'
 import Pagination from '../../ui/Pagination'
 import { usePagination } from '../../../hooks/usePagination'
@@ -344,7 +344,7 @@ export default function ReportsDirectPaymentsTab({
                         <span className="truncate">{payment.paymentMethodType || '—'}</span>
                       </div>
                       <p className="shrink-0 text-right text-[11px] font-semibold text-nexoraMuted">
-                        {formatTransactionDateTime(payment.createdAt, currentLanguage)}
+                        <DateTimeCell value={payment.createdAt} locale={currentLanguage} />
                       </p>
                     </div>
                     <div className="border-t border-nexoraBorder/60 pt-3">
@@ -377,7 +377,7 @@ export default function ReportsDirectPaymentsTab({
                         className="border-b border-nexoraBorder/60 transition hover:bg-nexoraBrandSoft/30"
                       >
                         <td className="whitespace-nowrap px-4 py-3 font-semibold text-nexoraText">
-                          {formatTransactionDateTime(payment.createdAt, currentLanguage)}
+                          <DateTimeCell value={payment.createdAt} locale={currentLanguage} />
                         </td>
                         <td className="whitespace-nowrap px-4 py-3 font-black text-nexoraText">
                           {formatCurrency(payment.amount)}

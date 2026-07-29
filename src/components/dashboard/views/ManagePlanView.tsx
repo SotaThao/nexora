@@ -25,7 +25,7 @@ interface PlanConfig {
 }
 
 const PLAN_CONFIG: PlanConfig[] = [
-  { id: 'lite', free: true, featureCount: 4 },
+  // { id: 'lite', free: true, featureCount: 4 }, // Hidden free plan
   { id: 'starter', featureCount: 4 },
   { id: 'pro', featured: true, featureCount: 5 },
   { id: 'enterprise', featureCount: 4 },
@@ -58,7 +58,7 @@ function ManagePlanView({ currentPlanId = null, onSelectPlan }: ManagePlanViewPr
       </header>
 
       {/* Plan grid */}
-      <div className="relative mx-auto mt-12 grid max-w-7xl grid-cols-1 gap-5 px-1 pb-4 sm:grid-cols-2 xl:grid-cols-4 xl:items-stretch">
+      <div className="relative mx-auto mt-12 grid max-w-5xl grid-cols-1 gap-5 px-1 pb-4 md:grid-cols-3 xl:items-stretch">
         {PLAN_CONFIG.map((plan) => {
           const base = `manage_plan.plans.${plan.id}`
           const features = Array.from({ length: plan.featureCount }, (_, i) =>
@@ -138,14 +138,19 @@ function ManagePlanView({ currentPlanId = null, onSelectPlan }: ManagePlanViewPr
               {/* CTA */}
               <div className="mt-6">
                 {isCurrent ? (
-                  <button
-                    type="button"
-                    disabled
-                    className="flex h-11 w-full items-center justify-center gap-2 rounded-xl border border-nexoraBorder bg-nexoraSurface text-sm font-bold text-nexoraMuted"
-                  >
-                    <Check className="h-4 w-4" strokeWidth={3} />
-                    {t('manage_plan.current_plan')}
-                  </button>
+                  <div className="flex flex-col items-center gap-2 w-full">
+                    <button
+                      type="button"
+                      disabled
+                      className="flex h-11 w-full items-center justify-center gap-2 rounded-xl border border-nexoraSuccess bg-nexoraSuccess/10 text-sm font-bold text-nexoraSuccess shadow-nexora-soft"
+                    >
+                      <Check className="h-4 w-4" strokeWidth={3} />
+                      Current Active Plan
+                    </button>
+                    <span className="text-[11px] font-semibold tracking-wide text-nexoraMuted">
+                      Renews: Jun 24, 2026, 08:31 AM
+                    </span>
+                  </div>
                 ) : (
                   <button
                     type="button"
@@ -155,13 +160,13 @@ function ManagePlanView({ currentPlanId = null, onSelectPlan }: ManagePlanViewPr
                       plan.featured
                         ? 'bg-gradient-to-r from-nexoraElectric to-nexoraViolet text-white shadow-lg shadow-nexoraViolet/25 hover:brightness-110'
                         : plan.free
-                          ? 'bg-nexoraSuccess text-white shadow-lg shadow-nexoraSuccess/25 hover:brightness-110'
+                          ? 'border border-nexoraBorder bg-nexoraSurface text-nexoraText hover:border-nexoraBrand hover:text-nexoraBrand'
                           : plan.id === 'enterprise'
                             ? 'bg-nexoraSidebar text-white hover:bg-nexoraSidebarPanel'
                             : 'border border-nexoraBorder bg-nexoraSurface text-nexoraText hover:border-nexoraBrand hover:text-nexoraBrand',
                     ].join(' ')}
                   >
-                    {t(`${base}.cta`)}
+                    {plan.featured ? 'Upgrade to Pro' : plan.free ? 'Downgrade' : plan.id === 'enterprise' ? 'Contact Success Sales' : t(`${base}.cta`)}
                   </button>
                 )}
               </div>
