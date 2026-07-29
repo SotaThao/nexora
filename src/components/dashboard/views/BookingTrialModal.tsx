@@ -1275,8 +1275,12 @@ export default function BookingTrialModal({
                       <div
                         className={`settings-hour-row ${row.open ? "" : "is-closed"}`}
                         key={day}
+                        onClick={() => toggleHourDay(day)}
                       >
-                        <label className="settings-hour-toggle">
+                        <label
+                          className="settings-hour-toggle"
+                          onClick={(event) => event.stopPropagation()}
+                        >
                           <input
                             type="checkbox"
                             checked={row.open}
@@ -1284,7 +1288,12 @@ export default function BookingTrialModal({
                           />
                           <span>{t(`${TK}.days.${day}`)}</span>
                         </label>
-                        <div className="settings-hour-times">
+                        <div
+                          className="settings-hour-times"
+                          onClick={(event) => {
+                            if (row.open) event.stopPropagation();
+                          }}
+                        >
                           <TrialHourTimeField
                             value={row.openTime}
                             disabled={!row.open}
