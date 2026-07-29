@@ -45,6 +45,7 @@ export interface DebtHistoryQuery {
 export interface CreateMerchantPayoutPayload {
   staffProfileId: string
   payoutMethodType: string
+  payoutMethodTypeName?: string | null
   amount: number
   payoutTypes: number
   periodStart: string
@@ -57,6 +58,7 @@ export interface CreateMerchantPayoutPayload {
 
 export interface UpdateMerchantPayoutPayload {
   payoutMethodType: string
+  payoutMethodTypeName?: string | null
   payoutTypes: number
   periodStart: string
   periodEnd: string
@@ -90,6 +92,7 @@ function normalizeStaffPayoutDetail(
     businessName: readField<string>(raw, 'businessName', 'BusinessName') ?? '',
     businessLogoUrl: readField<string | null>(raw, 'businessLogoUrl', 'BusinessLogoUrl') ?? null,
     payoutMethodType: normalizePayoutMethodType(readField<string>(raw, 'payoutMethodType', 'PayoutMethodType')),
+    payoutMethodTypeName: readField<string | null>(raw, 'payoutMethodTypeName', 'PayoutMethodTypeName') ?? null,
     staffPaymentAccountInfo:
       readField<string | null>(raw, 'staffPaymentAccountInfo', 'StaffPaymentAccountInfo') ?? null,
     amount: Number(readField<number>(raw, 'amount', 'Amount') ?? 0),
@@ -139,6 +142,7 @@ function normalizePayoutRecord(raw: Record<string, unknown> | null | undefined):
       readField<string | null>(raw, 'staffPaymentAccountInfo', 'StaffPaymentAccountInfo') ?? null,
     amount: Number(readField<number>(raw, 'amount', 'Amount') ?? 0),
     payoutMethodType: normalizePayoutMethodType(readField<string>(raw, 'payoutMethodType', 'PayoutMethodType')),
+    payoutMethodTypeName: readField<string | null>(raw, 'payoutMethodTypeName', 'PayoutMethodTypeName') ?? null,
     payoutTypes: Number(readField<number>(raw, 'payoutTypes', 'PayoutTypes') ?? 0),
     periodStart: normalizePayoutDateOnly(readField<string>(raw, 'periodStart', 'PeriodStart')),
     periodEnd: normalizePayoutDateOnly(readField<string>(raw, 'periodEnd', 'PeriodEnd')),

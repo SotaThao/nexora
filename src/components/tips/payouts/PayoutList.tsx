@@ -106,7 +106,7 @@ export default function PayoutList({
                 </td>
                 <td className="px-4 py-3 text-sm font-black text-inkBlue">{formatCurrency(row.amount)}</td>
                 <td className="hidden px-4 py-3 lg:table-cell">
-                  <PayoutMethodBadge method={row.payoutMethodType} />
+                  <PayoutMethodBadge method={row.payoutMethodTypeName?.trim() || row.payoutMethodType} />
                 </td>
                 <td className="hidden px-4 py-3 xl:table-cell">
                   <div className="flex flex-wrap gap-1">
