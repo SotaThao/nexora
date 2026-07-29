@@ -1,6 +1,5 @@
 import React from 'react'
 import { CheckCircle, Copy, Loader2 } from 'lucide-react'
-import { supportsPayoutAccountName } from '../../../data/paymentMethodTypes'
 import { WALLET_KEYS } from '../constants'
 
 function getMemberTipAmount(
@@ -88,15 +87,22 @@ function CopyField({
   showToast,
   t,
   valueClassName = 'text-sm font-extrabold text-slate-800',
+  className = '',
+  style,
 }: {
   label: string
   value: string
   showToast: (message: string, type: string) => void
   t: (key: string) => string
   valueClassName?: string
+  className?: string
+  style?: React.CSSProperties
 }) {
   return (
-    <div className="group relative border border-nexoraBorder/80 rounded-xl px-4 py-2.5 bg-nexoraCanvas/10 hover:bg-nexoraCanvas/30 hover:border-nexoraBrand/30 transition-all flex flex-col justify-between min-h-[56px]">
+    <div
+      className={`group relative border border-nexoraBorder/80 rounded-xl px-4 py-2.5 bg-nexoraCanvas/10 hover:bg-nexoraCanvas/30 hover:border-nexoraBrand/30 transition-all flex flex-col justify-between min-h-[56px] ${className}`}
+      style={style}
+    >
       <span className="text-[10px] font-bold text-nexoraSubtle uppercase tracking-wider">
         {label}
       </span>
@@ -211,41 +217,13 @@ export default function WalletDetails({
     ? bizName
     : selectedStaffMembers[0].fullName
 
-  const title = paymentMode
-    ? t('direct_payment.wallet_title', {
-      wallet: selectedWalletObj.name,
-      amount: activeTipAmount.toFixed(2),
-      recipient: recipientName,
-    })
-    : isMultiStaff
-    ? t('components.customer_flow.steps.WalletDetails.multiStaffTitle', { wallet: selectedWalletObj.name, amount: activeTipAmount.toFixed(2), business: bizName || recipientName })
-    : t('components.customer_flow.steps.WalletDetails.singleStaffTitle', { wallet: selectedWalletObj.name, amount: activeTipAmount.toFixed(2), recipient: recipientName })
-
-  const subtitle = paymentMode
-    ? (paymentCopyScope === 'staff'
-      ? t('staff_direct_payment.review_payment_desc', { name: recipientName })
-      : t('direct_payment.review_payment_desc', { name: recipientName }))
-    : isMultiStaff
-    ? t('components.customer_flow.steps.WalletDetails.multiStaffSubtitle', { business: bizName || recipientName })
-    : (() => {
-      const params = { recipient: recipientName }
-      if (selectedWalletObj.key === WALLET_KEYS.ZELLE) return t('components.customer_flow.steps.WalletDetails.singleStaffSubtitle_zelle', params)
-      if (selectedWalletObj.key === WALLET_KEYS.VENMO) return t('components.customer_flow.steps.WalletDetails.singleStaffSubtitle_venmo', params)
-      if (selectedWalletObj.key === WALLET_KEYS.CASHAPP) return t('components.customer_flow.steps.WalletDetails.singleStaffSubtitle_cashapp', params)
-      return t('components.customer_flow.steps.WalletDetails.singleStaffSubtitle_default', params)
-    })()
+  const accountFieldStyle = {
+    backgroundColor: `${accentColor}0D`,
+    borderColor: `${accentColor}40`,
+  }
 
   return (
     <div className="space-y-6 animate-fadeIn">
-      <div className="text-center space-y-1">
-        <h3 className="font-extrabold text-xl text-nexoraText">
-          {title}
-        </h3>
-        <p className="text-xs text-nexoraSubtle font-medium leading-relaxed">
-          {subtitle}
-        </p>
-      </div>
-
       <div className="bg-white border border-nexoraBorder rounded-2xl p-6 shadow-sm space-y-5 flex flex-col items-center relative overflow-hidden">
         <div
           className="absolute -top-12 -left-12 w-24 h-24 rounded-full opacity-10 filter blur-xl"
@@ -256,36 +234,30 @@ export default function WalletDetails({
           style={{ backgroundColor: accentColor }}
         />
 
-        <div className={`h-16 w-16 rounded-2xl flex items-center justify-center shadow-md scale-105 transform transition duration-300 hover:rotate-3 ${selectedWalletObj.color}`}>
-          <span className="scale-[1.5]">
-            {selectedWalletObj.logo}
-          </span>
-        </div>
-
-        <div className="text-center space-y-1">
+        <div className="flex items-center justify-center gap-4">
+          <div className={`h-14 w-14 rounded-2xl flex items-center justify-center shadow-md scale-105 transform transition duration-300 hover:rotate-3 ${selectedWalletObj.color}`}>
+            <span className="scale-[1.5]">
+              {selectedWalletObj.logo}
+            </span>
+          </div>
+          <div className="h-10 w-px bg-nexoraBorder" aria-hidden="true" />
           <div
-            className="text-4xl font-black tracking-tight"
+            className="text-3xl font-black tracking-tight"
             style={{ color: accentColor }}
           >
             ${activeTipAmount.toFixed(2)}
           </div>
-          <p className="text-[10px] text-nexoraSubtle font-semibold tracking-wider uppercase">
-            {paymentMode
-              ? (paymentCopyScope === 'staff'
-                ? t('staff_direct_payment.total')
-                : t('direct_payment.total'))
-              : isMultiStaff
-              ? t('components.customer_flow.steps.WalletDetails.totalCombinedTip')
-              : t('components.customer_flow.steps.WalletDetails.tipAmount')}
-          </p>
-          {isMultiStaff ? (
+        </div>
+
+        {isMultiStaff ? (
+          <div className="text-center">
             <p className="text-[10px] text-nexoraMuted font-semibold">
               {t('components.customer_flow.steps.TipAmount.provider_count', {
                 count: selectedStaffMembers.length,
               })}
             </p>
-          ) : null}
-        </div>
+          </div>
+        ) : null}
 
         {isMultiStaff ? (
           <div className="w-full space-y-2">
@@ -343,20 +315,22 @@ export default function WalletDetails({
         <div className="w-full border-t border-dashed border-nexoraBorder/60 my-1" />
 
         <div className="w-full space-y-4">
-          {supportsPayoutAccountName(selectedWalletObj.key) && accountHolderName ? (
-            <CopyField
-              label={t('components.customer_flow.steps.WalletDetails.accountHolder', { wallet: selectedWalletObj.name })}
-              value={accountHolderName}
-              showToast={showToast}
-              t={t}
-            />
-          ) : null}
+          <CopyField
+            label={t('components.customer_flow.steps.WalletDetails.displayName')}
+            value={accountHolderName || recipientName}
+            showToast={showToast}
+            t={t}
+            className="shadow-sm"
+            style={accountFieldStyle}
+          />
 
           <CopyField
             label={getFieldLabel()}
             value={accountVal || ''}
             showToast={showToast}
             t={t}
+            className="shadow-sm"
+            style={accountFieldStyle}
           />
 
           {accountVal && selectedWalletObj.key !== WALLET_KEYS.BANKWIRE ? (

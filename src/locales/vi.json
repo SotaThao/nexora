@@ -2227,6 +2227,7 @@
           "name": "Tên người nhận",
           "businessName": "Tiệm hoặc Doanh nghiệp",
           "accountHolder": "Tên đăng ký {wallet}",
+          "displayName": "Tên hiển thị",
           "emailPhone": "Email hoặc SĐT",
           "venmoUsername": "Tài khoản Venmo",
           "cashTag": "Thẻ Cash App",
