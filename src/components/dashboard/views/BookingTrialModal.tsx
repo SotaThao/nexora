@@ -616,6 +616,13 @@ export default function BookingTrialModal({
     syncPriceListInputFiles(merged);
   };
 
+  const removePriceListFile = (index: number) => {
+    const nextFiles = form.priceListFiles.filter((_, i) => i !== index);
+    patchForm("priceListFiles", nextFiles);
+    clearFieldError("priceList");
+    syncPriceListInputFiles(nextFiles);
+  };
+
   const validateForm = (): TrialFormErrors => {
     const shopName = form.salon.trim();
     const ownerName = form.owner.trim();
@@ -1224,8 +1231,8 @@ export default function BookingTrialModal({
                     <div className="trial-price-list-selected">
                       {form.priceListFiles.map((file, index) => (
                         <div
-                          className="trial-note"
-                          key={`${file.name}-${file.size}-${index}`}
+                          className="trial-price-list-chip"
+                          key={`${file.name}-${file.size}-${file.lastModified}-${index}`}
                         >
                           <PaperclipIcon />
                           <span>
@@ -1234,6 +1241,16 @@ export default function BookingTrialModal({
                               size: formatFileSizeLabel(file.size),
                             })}
                           </span>
+                          <button
+                            className="trial-price-list-remove"
+                            type="button"
+                            aria-label={t(`${TK}.priceListRemove`, {
+                              name: file.name,
+                            })}
+                            onClick={() => removePriceListFile(index)}
+                          >
+                            <CloseIcon />
+                          </button>
                         </div>
                       ))}
                     </div>

@@ -2813,6 +2813,7 @@
               "priceListSelected": "{name} · {size}",
               "priceListSelectedMultiple": "{count} images selected",
               "priceListTooMany": "You can select up to {max} images.",
+              "priceListRemove": "Remove {name}",
               "openDaysLabel": "Open days",
               "hoursLabel": "Working hours",
               "hoursNote": "Choose open/closed status and hours for each day.",

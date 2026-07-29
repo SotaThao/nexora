@@ -2813,6 +2813,7 @@
               "priceListSelected": "{name} · {size}",
               "priceListSelectedMultiple": "Đã chọn {count} ảnh",
               "priceListTooMany": "Bạn chỉ có thể chọn tối đa {max} ảnh.",
+              "priceListRemove": "Xóa {name}",
               "openDaysLabel": "Ngày mở cửa",
               "hoursLabel": "Giờ làm việc",
               "hoursNote": "Chọn mở/đóng và giờ cho từng ngày.",
