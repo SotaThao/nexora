@@ -2,6 +2,7 @@
 import { useState } from 'react'
 import { CheckCircle } from 'lucide-react'
 import { useTranslation } from '../../../contexts/LanguageContext'
+import { formatDateOnly } from '../../../utils/localDate'
 import { TipStatus } from '../../../constants/tipStatus'
 import { useStaffTips } from '../../../data/hooks/useStaffSelf'
 import { isReceiptConfirmableTip } from '../../dashboard/utils'
@@ -47,15 +48,8 @@ function formatTipAmount(amount: number) {
   return `$${Number(amount || 0).toFixed(2)}`
 }
 
-function formatTipDate(iso: string | null | undefined) {
-  if (!iso) return ''
-  const date = new Date(iso)
-  if (Number.isNaN(date.getTime())) return ''
-  return date.toLocaleDateString(undefined, {
-    month: 'short',
-    day: 'numeric',
-    year: 'numeric',
-  })
+function formatTipDate(iso: string | null | undefined, currentLanguage: string) {
+  return formatDateOnly(iso, currentLanguage)
 }
 
 function paymentMethodLabel(method: string | null | undefined) {
@@ -78,7 +72,7 @@ function tipMetaLine(tip: StaffTipItem) {
 }
 
 export default function StaffTips() {
-  const { t } = useTranslation()
+  const { t, currentLanguage } = useTranslation()
   const [pageNumber, setPageNumber] = useState(1)
   const [selectedTip, setSelectedTip] = useState<StaffTipItem | null>(null)
   const {
@@ -169,7 +163,7 @@ export default function StaffTips() {
                     ) : null}
                     {tip.createdAt ? (
                       <div className="mt-0.5 text-[10px] font-semibold text-nexoraSubtle">
-                        {formatTipDate(tip.createdAt)}
+                        {formatTipDate(tip.createdAt, currentLanguage)}
                       </div>
                     ) : null}
                   </div>

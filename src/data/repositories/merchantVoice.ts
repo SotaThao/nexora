@@ -1,5 +1,5 @@
 import httpClient from '../../lib/httpClient'
-import { BOOKING_HUB_PAGE_SIZE } from '../../constants/pagination'
+import { BOOKING_HUB_PAGE_SIZE, BOOKING_HUB_STATUS_COLLECT_MAX_PAGES, BOOKING_HUB_STATUS_COLLECT_PAGE_SIZE } from '../../constants/pagination'
 import {
   mapStaffStatusToActivityApi,
   MerchantVoiceBookingSearchField,
@@ -23,7 +23,9 @@ import {
   normalizeMerchantVoiceLeadSource,
   normalizeMerchantVoiceLeadStatus,
   normalizeMerchantVoiceStaffStatus,
+  type MerchantVoiceLeadStatusApiValue,
 } from '../merchantVoice/domain'
+import { toUtcBookingSlot } from './publicVoiceBooking'
 
 export {
   BookingHubMainTab,
@@ -85,6 +87,7 @@ export {
   mapDayOfWeekToApiName,
   mapLeadSourceToUiSource,
   mapLeadStatusToUiStatus,
+  mapUiStatusToLeadStatusApi,
   mapStaffStatusToActivityApi,
   mapUiLanguageToConfigLanguage,
   mapUiSegmentToApiGroup,
@@ -216,6 +219,34 @@ export interface MerchantVoiceBookingsFilter {
   keyword?: string
   dateFrom?: string
   dateTo?: string
+}
+
+/** POST `/api/v1/merchant/nexora-voice/bookings` — OpenAPI `CreateMerchantVoiceBookingCommand`.
+ * `date` + `startTime` on the wire are UTC (same contract as public online booking).
+ * Callers pass the user's local wall-clock selection; `createBooking` converts via browser TZ.
+ */
+export interface CreateMerchantVoiceBookingRequest {
+  customerName: string
+  customerPhone: string
+  serviceIds: string[]
+  staffId?: string | null
+  /** Local calendar date `YYYY-MM-DD` as shown in the UI. */
+  date: string
+  /** Local start time `HH:mm` or `HH:mm:ss` as shown in the UI. */
+  startTime: string
+  notes?: string | null
+  status: MerchantVoiceLeadStatusApiValue
+}
+
+export interface CreateMerchantVoiceBookingResultDto {
+  leadId: string
+  customerName: string | null
+  customerPhone: string | null
+  serviceName: string | null
+  servicePrice: number | null
+  staffName: string | null
+  requestedTimeLocal: string | null
+  status: MerchantVoiceLeadStatus | string
 }
 
 export interface MerchantVoiceStaffFilter {
@@ -387,7 +418,12 @@ export interface MerchantVoiceConfigDto {
   bookingNotifyPhone: string
   address: string
   googleReviewUrl: string
+  website: string
+  description: string
   promotion: string
+  promoSms: string
+  sendSmsPromoEnabled: boolean
+  timeZone: string
   language: string
   welcomeGreeting: string
   operatingHours: MerchantVoiceOperatingHourDto[]
@@ -400,7 +436,12 @@ export interface UpdateMerchantVoiceConfigRequest {
   bookingNotifyPhone: string
   address: string
   googleReviewUrl: string
+  website: string | null
+  description: string | null
   promotion: string | null
+  promoSms: string | null
+  sendSmsPromoEnabled: boolean
+  timeZone: string | null
   language: MerchantVoiceConfigLanguage
   welcomeGreeting: string
   operatingHours: Array<{
@@ -522,7 +563,12 @@ function normalizeConfigResponse(response: unknown): MerchantVoiceConfigDto {
       bookingNotifyPhone: '',
       address: '',
       googleReviewUrl: '',
+      website: '',
+      description: '',
       promotion: '',
+      promoSms: '',
+      sendSmsPromoEnabled: true,
+      timeZone: '',
       language: MerchantVoiceConfigLanguage.EnUS,
       welcomeGreeting: '',
       operatingHours: [],
@@ -577,7 +623,15 @@ function normalizeConfigResponse(response: unknown): MerchantVoiceConfigDto {
     bookingNotifyPhone: String(body.bookingNotifyPhone ?? ''),
     address: String(body.address ?? ''),
     googleReviewUrl: String(body.googleReviewUrl ?? ''),
+    website: String(body.website ?? ''),
+    description: String(body.description ?? ''),
     promotion: String(body.promotion ?? ''),
+    promoSms: String(body.promoSms ?? ''),
+    sendSmsPromoEnabled:
+      typeof body.sendSmsPromoEnabled === 'boolean'
+        ? body.sendSmsPromoEnabled
+        : true,
+    timeZone: String(body.timeZone ?? ''),
     language: String(body.language ?? MerchantVoiceConfigLanguage.EnUS),
     welcomeGreeting: String(body.welcomeGreeting ?? ''),
     operatingHours,
@@ -817,6 +871,77 @@ export function createMerchantVoiceRepository(client: HttpClient = httpClient) {
         },
       )
       return normalizeBookingsResponse(response, filters.pageNumber ?? 1)
+    },
+
+    /**
+     * Walk booking pages until exhausted (or max pages).
+     * Used when UI status chips need a full list to paginate client-side
+     * (GET /bookings has no Status query in Swagger).
+     */
+    async getBookingsCollected(
+      filters: Omit<MerchantVoiceBookingsFilter, 'pageNumber' | 'pageSize'> = {},
+      options: { pageSize?: number; maxPages?: number } = {},
+    ): Promise<MerchantVoiceBookingsResponse> {
+      const pageSize = options.pageSize ?? BOOKING_HUB_STATUS_COLLECT_PAGE_SIZE
+      const maxPages = options.maxPages ?? BOOKING_HUB_STATUS_COLLECT_MAX_PAGES
+      const items: MerchantVoiceBookingDto[] = []
+      let pageNumber = 1
+
+      const toCollectedResponse = (): MerchantVoiceBookingsResponse => ({
+        items,
+        pageNumber: 1,
+        totalPages: 1,
+        totalCount: items.length,
+        hasPreviousPage: false,
+        hasNextPage: false,
+      })
+
+      while (pageNumber <= maxPages) {
+        const page = await this.getBookings({
+          ...filters,
+          pageNumber,
+          pageSize,
+        })
+        items.push(...page.items)
+        if (!page.hasNextPage || page.items.length === 0) {
+          return toCollectedResponse()
+        }
+        pageNumber += 1
+      }
+
+      return toCollectedResponse()
+    },
+
+    async createBooking(
+      body: CreateMerchantVoiceBookingRequest,
+    ): Promise<CreateMerchantVoiceBookingResultDto> {
+      // UI is client-local; BE stores requestedStartAtUtc — convert like public booking.
+      const utcSlot = toUtcBookingSlot(body.date, body.startTime)
+      const payload: CreateMerchantVoiceBookingRequest = {
+        ...body,
+        date: utcSlot.date || body.date,
+        startTime: utcSlot.startTime || body.startTime,
+      }
+      const response = await client.post<CreateMerchantVoiceBookingResultDto>(
+        `${MERCHANT_VOICE_BASE}/bookings`,
+        payload,
+        { headers: MERCHANT_VOICE_HEADERS },
+      )
+      const raw = (response ?? {}) as Record<string, unknown>
+      return {
+        leadId: String(readField(raw, 'leadId', 'LeadId') ?? ''),
+        customerName: (readField(raw, 'customerName', 'CustomerName') as string | null) ?? null,
+        customerPhone: (readField(raw, 'customerPhone', 'CustomerPhone') as string | null) ?? null,
+        serviceName: (readField(raw, 'serviceName', 'ServiceName') as string | null) ?? null,
+        servicePrice: (() => {
+          const value = readField(raw, 'servicePrice', 'ServicePrice')
+          return typeof value === 'number' ? value : null
+        })(),
+        staffName: (readField(raw, 'staffName', 'StaffName') as string | null) ?? null,
+        requestedTimeLocal:
+          (readField(raw, 'requestedTimeLocal', 'RequestedTimeLocal') as string | null) ?? null,
+        status: normalizeMerchantVoiceLeadStatus(readField(raw, 'status', 'Status')),
+      }
     },
 
     async updateBookingStatus(id: string, status: MerchantVoiceLeadStatus.Done | MerchantVoiceLeadStatus.NoShow): Promise<void> {

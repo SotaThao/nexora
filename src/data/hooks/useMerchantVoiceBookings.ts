@@ -10,6 +10,8 @@ import {
   type UpdateMerchantVoiceConfigRequest,
   MerchantVoiceLeadStatus,
   MerchantVoiceStaffStatus,
+  type CreateMerchantVoiceBookingRequest,
+  type CreateMerchantVoiceBookingResultDto,
   type MerchantVoiceBookingsFilter,
   type MerchantVoiceBookingsResponse,
   type MerchantVoiceBookingStatisticsDto,
@@ -77,6 +79,20 @@ export function useMerchantVoiceBookings(
   })
 }
 
+/** Full list collect for client-side status-filter paging (no BE Status on GET /bookings). */
+export function useMerchantVoiceBookingsCollected(
+  filters: Omit<MerchantVoiceBookingsFilter, 'pageNumber' | 'pageSize'> = EMPTY_FILTERS,
+  { enabled = true, refetchInterval = false as number | false } = {},
+) {
+  return useQuery<MerchantVoiceBookingsResponse>({
+    queryKey: qk.merchantVoiceBookingsCollected(filters),
+    queryFn: () => merchantVoiceRepository.getBookingsCollected(filters),
+    enabled,
+    refetchInterval,
+    refetchIntervalInBackground: false,
+  })
+}
+
 export function useUpdateMerchantVoiceBookingStatus() {
   const queryClient = useQueryClient()
 
@@ -84,6 +100,18 @@ export function useUpdateMerchantVoiceBookingStatus() {
     mutationFn: ({ id, status }) => merchantVoiceRepository.updateBookingStatus(id, status),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['merchantVoice', 'bookings'] })
+    },
+  })
+}
+
+export function useCreateMerchantVoiceBooking() {
+  const queryClient = useQueryClient()
+
+  return useMutation<CreateMerchantVoiceBookingResultDto, Error, CreateMerchantVoiceBookingRequest>({
+    mutationFn: (body) => merchantVoiceRepository.createBooking(body),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['merchantVoice', 'bookings'] })
+      queryClient.invalidateQueries({ queryKey: qk.merchantVoiceBookingStatistics() })
     },
   })
 }

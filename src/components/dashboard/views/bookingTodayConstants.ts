@@ -1,4 +1,4 @@
-import { BookingUiStatus } from '../../../data/repositories/merchantVoice'
+import { BookingUiSearchField, BookingUiStatus } from '../../../data/repositories/merchantVoice'
 
 export enum BookingTodayViewMode {
   Table = 'table',
@@ -45,6 +45,14 @@ export const BOOKING_STATUS_FILTER_ORDER: BookingUiStatus[] = [
   BookingUiStatus.NoShow,
 ]
 
+/** i18n key suffixes under `…BookingHubView.today` for keyword placeholders. */
+export const BOOKING_TODAY_KEYWORD_PLACEHOLDER_KEY: Record<BookingUiSearchField, string> = {
+  [BookingUiSearchField.All]: 'keywordPlaceholderAll',
+  [BookingUiSearchField.Name]: 'keywordPlaceholderName',
+  [BookingUiSearchField.Phone]: 'keywordPlaceholderPhone',
+  [BookingUiSearchField.Email]: 'keywordPlaceholderEmail',
+  [BookingUiSearchField.Service]: 'keywordPlaceholderService',
+}
 /** Matches booking-book-phase-1.html `BOOKING_CALENDAR_COLORS`. */
 export const BOOKING_CALENDAR_COLORS = [
   { bg: '#ebe6ff', border: '#7456e9', text: '#272343' },
@@ -57,6 +65,9 @@ export const BOOKING_CALENDAR_COLORS = [
 export const BOOKING_CALENDAR_UNASSIGNED_TECH = 'unassigned' as const
 
 export const BOOKING_CALENDAR_DEFAULT_DURATION_MINUTES = 60
+
+/** DayPilot grid cell length in minutes (must match `BOOKING_CALENDAR_DAYPILOT_OPTIONS.cellDuration`). */
+export const BOOKING_CALENDAR_CELL_DURATION_MINUTES = 15
 
 /**
  * DayPilot Calendar:
@@ -71,13 +82,14 @@ export const BOOKING_CALENDAR_DAYPILOT_OPTIONS = {
   businessBeginsHour: BOOKING_CALENDAR_DEFAULT_SCROLL_HOUR,
   businessEndsHour: 20,
   heightSpec: 'BusinessHours' as const,
-  cellDuration: 15,
+  cellDuration: BOOKING_CALENDAR_CELL_DURATION_MINUTES,
   cellHeight: 28,
   hourWidth: 64,
   headerHeight: 44,
   timeFormat: 'Clock12Hours' as const,
   eventMoveHandling: 'Disabled' as const,
   eventResizeHandling: 'Disabled' as const,
+  /** Overridden to `Enabled` in `BookingTeamCalendar` when slot create is wired. */
   timeRangeSelectedHandling: 'Disabled' as const,
 }
 

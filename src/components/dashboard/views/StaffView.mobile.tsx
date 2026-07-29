@@ -9,7 +9,8 @@ import { getWebUrlOrigin } from '../../../utils/webUrlBase'
 import { buildPublicQrImageUrl } from '../../../data/repositories/publicQr'
 import { QR_IMAGE_SIZES } from '../../../utils/qrUtils'
 import { orderedPayoutUiKeysFromMethods, PAYOUT_UI_LABELS } from '../../../data/paymentMethodTypes'
-import { formatJoinedDate } from '../../../utils/localDate'
+import { formatTransactionDateTime } from '../utils'
+import { resolveStaffRoleLabel } from '../../../utils/staffBusinessRole'
 import IconButton from '../../ui/IconButton'
 import CustomSelect from '../../CustomSelect'
 import Pagination from '../../ui/Pagination'
@@ -60,6 +61,7 @@ function StaffMemberCard({
   isPendingUnlink,
   isPending,
   t,
+  currentLanguage,
   onViewDetail,
   onToggle,
   onToggleTipsFlow,
@@ -112,7 +114,7 @@ function StaffMemberCard({
               <p className="font-extrabold text-nexoraText truncate group-hover:text-nexoraBrand transition">
                 {member.nickname || member.fullName}
               </p>
-              <p className="text-xs text-nexoraMuted truncate">{member.position}</p>
+              <p className="text-xs text-nexoraMuted truncate">{resolveStaffRoleLabel(member)}</p>
             </div>
           </button>
           {isPendingInvite && (
@@ -143,7 +145,7 @@ function StaffMemberCard({
           </p>
           <p className="text-[10px] text-slate-400 font-bold mt-1">
             {t('components.dashboard.views.StaffView.linkedDate')}
-           {member.joinedDate ? formatJoinedDate(member.joinedDate) : '-'}
+           {member.joinedDate ? formatTransactionDateTime(member.joinedDate, currentLanguage) : '-'}
           </p>
         </div>
 
@@ -348,7 +350,7 @@ function StaffView({
   pageSize = 10,
   togglingStaffId = null,
 }) {
-  const { t } = useTranslation()
+  const { t, currentLanguage } = useTranslation()
   const { showToast } = useNotification()
   const [largeJoinQrOpen, setLargeJoinQrOpen] = useState(false)
   const [sortBy, setSortBy] = useState('name-asc') // 'name-asc' | 'name-desc' | 'date-newest' | 'date-oldest' | 'status-active'
@@ -607,7 +609,7 @@ function StaffView({
                           )}
                           <div>
                             <div className="font-extrabold text-nexoraText">{member.nickname || member.fullName}</div>
-                            <div className="text-xs text-nexoraMuted">{member.position}</div>
+                            <div className="text-xs text-nexoraMuted">{resolveStaffRoleLabel(member)}</div>
                           </div>
                         </div>
                       </td>
@@ -734,6 +736,7 @@ function StaffView({
                     isPendingUnlink={isPendingUnlink}
                     isPending={isPending}
                     t={t}
+                    currentLanguage={currentLanguage}
                     onViewDetail={onViewDetail}
                     onToggle={onToggle}
                     onToggleTipsFlow={onToggleTipsFlow}

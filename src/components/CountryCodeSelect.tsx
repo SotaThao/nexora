@@ -344,21 +344,25 @@ export default function CountryCodeSelect({
           embedded ? 'top-full mt-1' : 'mt-11'
         }`}>
           {showSearch ? (
-            <div className="country-code-search-wrap p-2 bg-slate-50 flex items-center gap-1.5">
-              <Search className="w-3.5 h-3.5 text-nexoraSubtle shrink-0" />
-              <input
-                type="text"
-                autoFocus
-                placeholder={t('components.CountryCodeSelect.phSearch')}
-                value={search}
-                onChange={(e) => setSearch(e.target.value)}
-                className="country-code-search-input w-full text-xs bg-transparent border-0 outline-none p-0 shadow-none focus:ring-0 focus:outline-none text-nexoraText placeholder-nexoraSubtle"
-              />
+            <div className="country-code-search-wrap p-2 bg-white border-b border-nexoraBorder">
+              <div className="country-code-search-field flex items-center gap-1.5 rounded-md border border-nexoraBorder bg-white px-2.5 py-1.5">
+                <Search className="w-3.5 h-3.5 text-nexoraMuted shrink-0" />
+                <input
+                  type="text"
+                  autoFocus
+                  placeholder={t('components.CountryCodeSelect.phSearch')}
+                  value={search}
+                  onChange={(e) => setSearch(e.target.value)}
+                  className="country-code-search-input w-full text-xs bg-transparent border-0 outline-none p-0 shadow-none focus:ring-0 focus:outline-none text-nexoraText placeholder-nexoraSubtle"
+                />
+              </div>
             </div>
           ) : null}
           <div className="country-code-list max-h-48 overflow-y-auto py-1">
             {filteredCountries.length === 0 ? (
-              <div className="p-3 text-[10px] text-nexoraSubtle text-center font-medium">No countries found</div>
+              <div className="p-3 text-[10px] text-nexoraSubtle text-center font-medium">
+                {t('components.CountryCodeSelect.emptyCountries')}
+              </div>
             ) : (
               filteredCountries.map((country) => {
                 const isSelected = country.dialCode === value && country.code === selectedCountry.code

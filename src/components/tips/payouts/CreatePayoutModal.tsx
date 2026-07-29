@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState, type DragEvent } from 'react'
-import { Copy, Loader2, Save, Upload, X, Coins, Banknote, Gift, Tag, HandCoins, Hourglass, CheckCircle2, XCircle, Camera, FolderOpen } from 'lucide-react'
+import { ChevronDown, Copy, Loader2, Save, Upload, X, Coins, Banknote, Gift, Tag, HandCoins, Hourglass, CheckCircle2, XCircle, Camera, FolderOpen } from 'lucide-react'
 import { useTranslation } from '../../../contexts/LanguageContext'
 import { useNotification } from '../../../contexts/NotificationContext'
 import {
@@ -66,6 +66,186 @@ const TYPE_ICON: Record<number, any> = {
   [PayoutType.Salary]: Banknote,
   [PayoutType.Bonus]: Gift,
   [PayoutType.Other]: Tag,
+}
+
+const OTHER_PAYOUT_METHOD_SUGGESTIONS = [
+  'Check',
+  'Bank Transfer (ACH)',
+  'Payroll Check',
+  'Bank Transfer',
+  'Wire Transfer',
+] as const
+
+function highlightOtherMethodMatch(text: string, query: string) {
+  const trimmedQuery = query.trim()
+  if (!trimmedQuery) {
+    return <span className="font-semibold text-inkBlue">{text}</span>
+  }
+
+  const lowerText = text.toLowerCase()
+  const lowerQuery = trimmedQuery.toLowerCase()
+  const matchIndex = lowerText.indexOf(lowerQuery)
+  if (matchIndex < 0) {
+    return <span className="font-normal text-mutedGrey">{text}</span>
+  }
+
+  const before = text.slice(0, matchIndex)
+  const match = text.slice(matchIndex, matchIndex + trimmedQuery.length)
+  const after = text.slice(matchIndex + trimmedQuery.length)
+
+  return (
+    <span>
+      {before ? <span className="font-normal text-mutedGrey">{before}</span> : null}
+      <span className="font-bold text-inkBlue">{match}</span>
+      {after ? <span className="font-normal text-mutedGrey">{after}</span> : null}
+    </span>
+  )
+}
+
+function OtherPayoutMethodCombobox({
+  id,
+  value,
+  onChange,
+  placeholder,
+  hasError = false,
+  ariaInvalid = false,
+  ariaDescribedBy,
+}: {
+  id: string
+  value: string
+  onChange: (next: string) => void
+  placeholder: string
+  hasError?: boolean
+  ariaInvalid?: boolean
+  ariaDescribedBy?: string
+}) {
+  const [isOpen, setIsOpen] = useState(false)
+  const rootRef = useRef<HTMLDivElement>(null)
+  const inputRef = useRef<HTMLInputElement>(null)
+
+  const query = value.trim()
+  const filteredSuggestions = useMemo(() => {
+    if (!query) return []
+    const lowerQuery = query.toLowerCase()
+    return OTHER_PAYOUT_METHOD_SUGGESTIONS.filter((option) => option.toLowerCase().includes(lowerQuery))
+  }, [query])
+
+  const showSuggestions = isOpen && query.length > 0 && filteredSuggestions.length > 0
+
+  useEffect(() => {
+    function handleClickOutside(event: MouseEvent) {
+      const target = event.target as Node
+      if (rootRef.current?.contains(target)) return
+      setIsOpen(false)
+    }
+    document.addEventListener('mousedown', handleClickOutside)
+    return () => document.removeEventListener('mousedown', handleClickOutside)
+  }, [])
+
+  useEffect(() => {
+    if (!query) setIsOpen(false)
+  }, [query])
+
+  const handleSelect = (option: string) => {
+    onChange(option)
+    setIsOpen(false)
+    inputRef.current?.blur()
+  }
+
+  return (
+    <div ref={rootRef} className="relative">
+      <div
+        className={`flex h-10 items-center rounded-lg border bg-white transition ${
+          hasError
+            ? 'border-red-400 focus-within:border-red-500 focus-within:ring-1 focus-within:ring-red-200'
+            : showSuggestions
+              ? 'border-nexoraBrand ring-1 ring-nexoraBrand/20'
+              : 'border-nexoraBorder focus-within:border-nexoraBrand focus-within:ring-1 focus-within:ring-nexoraBrand/20'
+        }`}
+      >
+        <input
+          ref={inputRef}
+          id={id}
+          type="text"
+          role="combobox"
+          aria-expanded={showSuggestions}
+          aria-controls={`${id}-listbox`}
+          aria-autocomplete="list"
+          aria-invalid={ariaInvalid}
+          aria-describedby={ariaDescribedBy}
+          value={value}
+          onChange={(e) => {
+            const next = e.target.value
+            onChange(next)
+            setIsOpen(next.trim().length > 0)
+          }}
+          onKeyDown={(e) => {
+            if (e.key === 'Escape') {
+              setIsOpen(false)
+              return
+            }
+            if (e.key === 'Enter' && showSuggestions && filteredSuggestions.length === 1) {
+              e.preventDefault()
+              handleSelect(filteredSuggestions[0])
+            }
+          }}
+          placeholder={placeholder}
+          autoComplete="off"
+          className="h-full min-w-0 flex-1 rounded-lg bg-transparent px-3 text-sm font-semibold text-inkBlue outline-none placeholder:font-normal placeholder:text-mutedGrey"
+        />
+        <button
+          type="button"
+          tabIndex={-1}
+          aria-label={placeholder}
+          onClick={() => {
+            inputRef.current?.focus()
+            if (query) setIsOpen((open) => !open)
+          }}
+          className="inline-flex h-full w-9 shrink-0 items-center justify-center text-mutedGrey"
+        >
+          <ChevronDown className={`h-4 w-4 transition-transform ${showSuggestions ? 'rotate-180' : ''}`} />
+        </button>
+      </div>
+
+      {showSuggestions ? (
+        <div
+          id={`${id}-listbox`}
+          role="listbox"
+          className="absolute left-0 right-0 z-20 mt-1.5 overflow-hidden rounded-lg border border-nexoraBorder bg-white shadow-sm"
+        >
+          <div className="max-h-56 overflow-y-auto py-1">
+            {filteredSuggestions.map((option) => {
+              const selected = query.toLowerCase() === option.toLowerCase()
+              return (
+                <button
+                  key={option}
+                  type="button"
+                  role="option"
+                  aria-selected={selected}
+                  onMouseDown={(e) => e.preventDefault()}
+                  onClick={() => handleSelect(option)}
+                  className={`flex w-full flex-col items-start px-3 py-2 text-left transition-colors ${
+                    selected ? 'bg-slate-50' : 'hover:bg-slate-50'
+                  }`}
+                >
+                  {selected ? (
+                    <span className="text-sm font-bold text-inkBlue">{option}</span>
+                  ) : (
+                    <>
+                      <span className="text-sm font-bold text-inkBlue">{query}</span>
+                      <span className="text-sm leading-snug">
+                        {highlightOtherMethodMatch(option, query)}
+                      </span>
+                    </>
+                  )}
+                </button>
+              )
+            })}
+          </div>
+        </div>
+      ) : null}
+    </div>
+  )
 }
 
 const CREATE_STATUS_OPTIONS: PayoutStatusValue[] = [
@@ -198,10 +378,12 @@ export default function CreatePayoutModal({
   const [selectedStaffMember, setSelectedStaffMember] = useState<StaffMember | null>(null)
   const [staffProfileError, setStaffProfileError] = useState<string | null>(null)
   const [payoutMethodType, setPayoutMethodType] = useState<string>(PayoutMethodType.Zelle)
+  const [otherPayoutMethod, setOtherPayoutMethod] = useState('')
+  const [otherPayoutMethodError, setOtherPayoutMethodError] = useState<string | null>(null)
   const [amount, setAmount] = useState('')
   const [amountError, setAmountError] = useState<string | null>(null)
   const [periodError, setPeriodError] = useState<string | null>(null)
-  const [payoutTypesMask, setPayoutTypesMask] = useState(PayoutType.Tip)
+  const [payoutTypesMask, setPayoutTypesMask] = useState<number>(PayoutType.Tip)
   const [periodStart, setPeriodStart] = useState(defaultPeriodDates().periodStart)
   const [periodEnd, setPeriodEnd] = useState(defaultPeriodDates().periodEnd)
   const [notes, setNotes] = useState('')
@@ -254,10 +436,15 @@ export default function CreatePayoutModal({
 
     if (editingPayout) {
       const resolvedStaffProfileId = resolvePayoutStaffProfileId(editingPayout, staffList)
+      const normalizedMethod = normalizePayoutMethodType(editingPayout.payoutMethodType)
+      const hasOtherMethodName = Boolean(editingPayout.payoutMethodTypeName?.trim())
+      const resolvedMethod = hasOtherMethodName ? PayoutMethodType.Other : normalizedMethod
       setStaffProfileId(resolvedStaffProfileId)
       setSelectedStaffMember(editingStaffMember)
       setStaffProfileError(null)
-      setPayoutMethodType(normalizePayoutMethodType(editingPayout.payoutMethodType))
+      setPayoutMethodType(resolvedMethod)
+      setOtherPayoutMethod(hasOtherMethodName ? editingPayout.payoutMethodTypeName!.trim() : '')
+      setOtherPayoutMethodError(null)
       setAmount(formatUsdInputAmount(editingPayout.amount))
       lastAutoSeededAmountRef.current = ''
       setAmountError(null)
@@ -283,7 +470,7 @@ export default function CreatePayoutModal({
       const fromList = staffList.find((staff) => staff.staffProfileId === initialStaffProfileId)
       const fromDebt = unpaidDebts.find((debt) => debt.staffProfileId === initialStaffProfileId)
       if (fromList?.staffProfileId) {
-        setStaffProfileId(fromList.staffProfileId)
+        setStaffProfileId(String(fromList.staffProfileId))
         setSelectedStaffMember(fromList)
       } else if (fromDebt) {
         setStaffProfileId(fromDebt.staffProfileId)
@@ -297,6 +484,8 @@ export default function CreatePayoutModal({
       }
     }
     setPayoutMethodType(PayoutMethodType.Zelle)
+    setOtherPayoutMethod('')
+    setOtherPayoutMethodError(null)
     setAmount(seedAmount)
     lastAutoSeededAmountRef.current = seedAmount
     setAmountError(null)
@@ -316,6 +505,9 @@ export default function CreatePayoutModal({
   useEffect(() => {
     if (!isOpen || isEditing || !selectedStaff) return
     setPayoutMethodType((current) => {
+      if (current === PayoutMethodType.Other) {
+        return current
+      }
       if (isStaffPayoutMethodAvailable(selectedStaff, current as PayoutMethodTypeValue)) {
         return current
       }
@@ -378,14 +570,17 @@ export default function CreatePayoutModal({
     // Before a staff member is chosen, show every create-payout method as selectable.
     // Availability is filtered to that staff's wallets once they are selected.
     if (!selectedStaff) {
-      return method !== PayoutMethodType.Other
+      return true
+    }
+    if (method === PayoutMethodType.Other) {
+      return true
     }
     return isStaffPayoutMethodAvailable(selectedStaff, method as PayoutMethodTypeValue)
   }
 
   const handleStaffSelect = (staff: StaffMember) => {
     if (!staff.staffProfileId) return
-    setStaffProfileId(staff.staffProfileId)
+    setStaffProfileId(String(staff.staffProfileId))
     setSelectedStaffMember(staff)
     setStaffProfileError(null)
   }
@@ -516,12 +711,17 @@ export default function CreatePayoutModal({
       : null
     const nextAmountError = validatePayoutAmount(amountInputValue, t)
     const nextPeriodError = validatePayoutPeriod(periodStart, periodEnd, t)
+    const nextOtherPayoutMethodError = payoutMethodType === PayoutMethodType.Other
+      && !otherPayoutMethod.trim()
+      ? t('dashboard.tips.payouts_manager.other_method_required')
+      : null
 
     setStaffProfileError(nextStaffError)
     setAmountError(nextAmountError)
     setPeriodError(nextPeriodError)
+    setOtherPayoutMethodError(nextOtherPayoutMethodError)
 
-    if (nextStaffError || nextAmountError || nextPeriodError) {
+    if (nextStaffError || nextAmountError || nextPeriodError || nextOtherPayoutMethodError) {
       return
     }
 
@@ -531,9 +731,13 @@ export default function CreatePayoutModal({
       return
     }
 
+    const isOtherPayoutMethod = payoutMethodType === PayoutMethodType.Other
+    const trimmedOtherPayoutMethod = otherPayoutMethod.trim()
+
     const payload = {
       staffProfileId,
       payoutMethodType,
+      payoutMethodTypeName: isOtherPayoutMethod ? trimmedOtherPayoutMethod : null,
       amount: parsedAmount,
       payoutTypes: payoutTypesMask,
       periodStart,
@@ -547,16 +751,18 @@ export default function CreatePayoutModal({
 
     try {
       if (isEditing && editingPayout) {
+        const updatePayload = {
+          payoutMethodType: payload.payoutMethodType,
+          payoutMethodTypeName: payload.payoutMethodTypeName,
+          payoutTypes: payload.payoutTypes,
+          periodStart: payload.periodStart,
+          periodEnd: payload.periodEnd,
+          evidenceUrls: payload.evidenceUrls,
+          notes: payload.notes,
+        }
         await updateMutation.mutateAsync({
           payoutId: editingPayout.id,
-          payload: {
-            payoutMethodType: payload.payoutMethodType,
-            payoutTypes: payload.payoutTypes,
-            periodStart: payload.periodStart,
-            periodEnd: payload.periodEnd,
-            evidenceUrls: payload.evidenceUrls,
-            notes: payload.notes,
-          },
+          payload: updatePayload,
         })
         showToast(t('dashboard.tips.payouts_manager.update_success'), 'success')
       } else {
@@ -640,7 +846,13 @@ export default function CreatePayoutModal({
                       key={method}
                       type="button"
                       disabled={!selectable}
-                      onClick={() => selectable && setPayoutMethodType(method)}
+                      onClick={() => {
+                        if (!selectable) return
+                        setPayoutMethodType(method)
+                        if (otherPayoutMethodError) {
+                          setOtherPayoutMethodError(null)
+                        }
+                      }}
                       className={`rounded-xl border px-2 py-2 text-center text-[11px] font-bold transition ${
                         payoutMethodType === method
                           ? 'border-nexoraBrand bg-nexoraBrand/10 text-nexoraBrand'
@@ -654,6 +866,39 @@ export default function CreatePayoutModal({
                     )
                   })}
                 </div>
+                {payoutMethodType === PayoutMethodType.Other ? (
+                  <div className="mt-2">
+                    <label
+                      htmlFor="payout-other-method-input"
+                      className="mb-1.5 block text-[11px] font-semibold text-mutedGrey"
+                    >
+                      {t('dashboard.tips.payouts_manager.other_method_label')} *
+                    </label>
+                    <OtherPayoutMethodCombobox
+                      id="payout-other-method-input"
+                      value={otherPayoutMethod}
+                      onChange={(next) => {
+                        setOtherPayoutMethod(next)
+                        if (otherPayoutMethodError) {
+                          setOtherPayoutMethodError(null)
+                        }
+                      }}
+                      placeholder={t('dashboard.tips.payouts_manager.other_method_placeholder')}
+                      hasError={Boolean(otherPayoutMethodError)}
+                      ariaInvalid={Boolean(otherPayoutMethodError)}
+                      ariaDescribedBy={otherPayoutMethodError ? 'payout-other-method-error' : undefined}
+                    />
+                    {otherPayoutMethodError ? (
+                      <p id="payout-other-method-error" className="mt-1.5 text-xs font-semibold text-red-600">
+                        {otherPayoutMethodError}
+                      </p>
+                    ) : (
+                      <p className="mt-1.5 text-[11px] text-mutedGrey">
+                        {t('dashboard.tips.payouts_manager.other_method_hint')}
+                      </p>
+                    )}
+                  </div>
+                ) : null}
                 {staffProfileId && availablePayoutMethods.length === 0 ? (
                   <p className="mt-1.5 text-xs font-semibold text-amber-700">
                     {t('dashboard.tips.payouts_manager.method_staff_none')}

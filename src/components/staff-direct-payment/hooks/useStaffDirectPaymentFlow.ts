@@ -133,7 +133,18 @@ export default function useStaffDirectPaymentFlow() {
         }
 
         setCurrentPaymentId(result.paymentId)
-        setActivePaymentMethod(result.paymentMethod || wallet.apiMethod)
+        // Prefer create-response method, but keep page accountName when create payload omits it.
+        const pageMethod = wallet.apiMethod as { accountName?: string | null } | undefined
+        const createdMethod = result.paymentMethod
+        setActivePaymentMethod(
+          createdMethod
+            ? {
+                ...pageMethod,
+                ...createdMethod,
+                accountName: createdMethod.accountName ?? pageMethod?.accountName ?? null,
+              }
+            : pageMethod,
+        )
         setStep('wallet_details')
       } catch (err) {
         logger.error('Failed to create staff direct payment', err)

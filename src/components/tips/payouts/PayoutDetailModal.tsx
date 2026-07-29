@@ -147,6 +147,7 @@ export default function PayoutDetailModal({
         payoutId: payout.id,
         payload: {
           payoutMethodType: payout.payoutMethodType,
+          payoutMethodTypeName: payout.payoutMethodTypeName ?? undefined,
           payoutTypes: payout.payoutTypes,
           periodStart: payout.periodStart,
           periodEnd: payout.periodEnd,
@@ -225,7 +226,9 @@ export default function PayoutDetailModal({
               </dd>
 
               <dt className="font-semibold text-mutedGrey">{t('dashboard.tips.payouts_manager.field_method')}</dt>
-              <dd><PayoutMethodBadge method={payout.payoutMethodType} /></dd>
+              <dd>
+                <PayoutMethodBadge method={payout.payoutMethodTypeName?.trim() || payout.payoutMethodType} />
+              </dd>
 
               <dt className="font-semibold text-mutedGrey">{t('dashboard.tips.payouts_manager.col_staff')}</dt>
               <dd className="flex items-center gap-2 font-semibold text-inkBlue">

@@ -8,7 +8,7 @@ interface PayoutAccountNameFieldProps {
   disabled?: boolean
 }
 
-/** Optional account-holder-name input; renders only for methods that persist accountName. */
+/** Account-holder-name input; renders only for methods that persist accountName. */
 export default function PayoutAccountNameField({
   walletKey,
   value,
