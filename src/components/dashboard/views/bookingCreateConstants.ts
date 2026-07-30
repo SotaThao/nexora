@@ -29,6 +29,12 @@ export enum BookingCreateField {
   Time = 'time',
 }
 
+/** Where the create form mounts: centered overlay vs calendar side rail. */
+export enum BookingCreateVariant {
+  Modal = 'modal',
+  Panel = 'panel',
+}
+
 export type BookingCreateFieldErrors = Partial<Record<BookingCreateField, string>>
 
 export type BookingCreatePrefill = {

@@ -86,7 +86,8 @@ export function detectSpeechLang(text, fallback = 'en-US') {
 export function resolvePreviewSpeechLang(language, text) {
   if (language === 'vi') return 'vi-VN'
   if (language === 'en') return 'en-US'
-  return detectSpeechLang(text, 'vi-VN')
+  // Auto / unknown: pick voice from greeting text (VN diacritics → vi-VN).
+  return detectSpeechLang(text, 'en-US')
 }
 
 export function getSpeechTuning(lang) {

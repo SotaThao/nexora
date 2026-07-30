@@ -44,6 +44,7 @@ import {
   BOOKING_CREATE_UNASSIGNED_STAFF,
   BOOKING_CREATE_DISPLAY_SEPARATOR,
   BookingCreateField,
+  BookingCreateVariant,
   getMinBookableClientLocalTime,
   isClientLocalDateBeforeToday,
   isClientLocalSlotPast,
@@ -56,6 +57,7 @@ import {
   BOOKING_CALENDAR_UNASSIGNED_TECH,
   BOOKING_STATUS_FILTER_ORDER,
   BOOKING_STATUS_META,
+  BookingAppointmentPanelState,
 } from './bookingTodayConstants'
 import { formatBookingHubDateDisplay, formatBookingHubTimeDisplay, openNativeDateTimePicker, toLocalDateIso } from './bookingHubFormatters'
 import { applyAiHubProgressiveValidation } from './bookingHubDialogValidation'
@@ -65,6 +67,8 @@ const TK_HUB = 'components.dashboard.views.BookingHubView'
 
 type Props = {
   open: boolean
+  /** `Panel` embeds in the calendar side rail; `Modal` is the centered overlay. */
+  variant?: BookingCreateVariant
   prefill: BookingCreatePrefill | null
   locale: string
   onClose: () => void
@@ -96,6 +100,7 @@ function FieldError({ message }: { message?: string }) {
 
 export default function BookingCreateAppointmentModal({
   open,
+  variant = BookingCreateVariant.Modal,
   prefill,
   locale,
   onClose,
@@ -104,6 +109,7 @@ export default function BookingCreateAppointmentModal({
   const { t } = useTranslation()
   const { showToast } = useNotification()
   const createMutation = useCreateMerchantVoiceBooking()
+  const isPanel = variant === BookingCreateVariant.Panel
 
   const configQuery = useMerchantVoiceConfig({ enabled: open })
   const staffQuery = useMerchantVoiceStaff(
@@ -210,7 +216,8 @@ export default function BookingCreateAppointmentModal({
   }, [open, prefill, staffItems])
 
   useEffect(() => {
-    if (!open) return undefined
+    // Panel rail stays on-page — only the modal overlay locks scroll.
+    if (!open || isPanel) return undefined
 
     const scrollY = window.scrollY
     const { body } = document
@@ -234,7 +241,7 @@ export default function BookingCreateAppointmentModal({
       body.style.width = previous.width
       window.scrollTo(0, scrollY)
     }
-  }, [open])
+  }, [open, isPanel])
 
   useEffect(() => {
     if (!open) return undefined
@@ -365,6 +372,326 @@ export default function BookingCreateAppointmentModal({
   const isServicesLoading = configQuery.isLoading
   const isStaffLoading = staffQuery.isLoading
 
+  const formBody = (
+    <>
+      <div className="booking-create-body">
+        <div className="booking-create-grid">
+          <div
+            className={`booking-create-field${fieldErrors.phone ? ' has-error' : ''}`}
+            data-ai-hub-field={BookingCreateField.Phone}
+          >
+            <span className="booking-create-label">{t(`${BOOKING_CREATE_TK}.phoneLabel`)}</span>
+            <span className="phone-input-shell">
+              <CountryCodeSelect
+                value={phoneParsed.countryCode}
+                embedded
+                onChange={(nextCode) => {
+                  const formatted = formatNationalNumber(phoneParsed.nationalNumber, nextCode)
+                  setPhone(`${nextCode} ${formatted}`.trim())
+                  clearFieldError(BookingCreateField.Phone)
+                }}
+              />
+              <input
+                className={`booking-input phone-mask-input${fieldErrors.phone ? ' has-error' : ''}`}
+                type="tel"
+                value={formatNationalNumber(
+                  phoneParsed.nationalNumber,
+                  phoneParsed.countryCode,
+                )}
+                placeholder={getNationalPhonePlaceholder(phoneParsed.countryCode)}
+                inputMode="numeric"
+                autoComplete="tel-national"
+                aria-invalid={Boolean(fieldErrors.phone)}
+                onChange={(event) => {
+                  const formatted = formatNationalNumber(
+                    event.target.value,
+                    phoneParsed.countryCode,
+                  )
+                  setPhone(`${phoneParsed.countryCode} ${formatted}`.trim())
+                  clearFieldError(BookingCreateField.Phone)
+                }}
+              />
+            </span>
+            <FieldError message={fieldErrors.phone} />
+          </div>
+
+          <div
+            className={`booking-create-field${fieldErrors.name ? ' has-error' : ''}`}
+            data-ai-hub-field={BookingCreateField.Name}
+          >
+            <span className="booking-create-label">{t(`${BOOKING_CREATE_TK}.nameLabel`)}</span>
+            <input
+              className={`booking-input${fieldErrors.name ? ' has-error' : ''}`}
+              type="text"
+              maxLength={BOOKING_CREATE_NAME_MAX}
+              value={customerName}
+              placeholder={t(`${BOOKING_CREATE_TK}.namePlaceholder`)}
+              autoComplete="name"
+              aria-invalid={Boolean(fieldErrors.name)}
+              onChange={(event) => {
+                setCustomerName(event.target.value)
+                clearFieldError(BookingCreateField.Name)
+              }}
+            />
+            <FieldError message={fieldErrors.name} />
+          </div>
+
+          <div
+            className={`booking-create-field is-full${fieldErrors.services ? ' has-error' : ''}`}
+            data-ai-hub-field={BookingCreateField.Services}
+          >
+            <span className="booking-create-label">
+              {t(`${BOOKING_CREATE_TK}.servicesLabel`)}
+              {' '}
+              <span className="booking-create-hint">{t(`${BOOKING_CREATE_TK}.servicesHint`)}</span>
+            </span>
+            {isServicesLoading ? (
+              <ServiceChipSkeleton />
+            ) : services.length === 0 ? (
+              <div className="booking-create-empty">{t(`${BOOKING_CREATE_TK}.servicesEmpty`)}</div>
+            ) : (
+              <div
+                className="booking-service-chips"
+                role="group"
+                aria-label={t(`${BOOKING_CREATE_TK}.servicesAria`)}
+                aria-invalid={Boolean(fieldErrors.services)}
+              >
+                {services.map((service) => {
+                  const selected = selectedServiceIds.includes(service.id)
+                  const duration = service.durationMinutes ?? 0
+                  return (
+                    <button
+                      key={service.id}
+                      className={`booking-service-chip-button${selected ? ' is-selected' : ''}`}
+                      type="button"
+                      aria-pressed={selected}
+                      onClick={() => toggleService(service)}
+                    >
+                      {service.name}
+                      {BOOKING_CREATE_DISPLAY_SEPARATOR}
+                      {formatServicePrice(service.price)}
+                      {BOOKING_CREATE_DISPLAY_SEPARATOR}
+                      <span className="booking-service-duration">
+                        {t(`${BOOKING_CREATE_TK}.durationMin`, { count: duration })}
+                      </span>
+                    </button>
+                  )
+                })}
+              </div>
+            )}
+            <div className="booking-service-summary" aria-live="polite">
+              <span className="booking-service-summary-item">
+                <span className="booking-service-summary-label">
+                  {t(`${BOOKING_CREATE_TK}.totalPrice`)}
+                </span>
+                {' '}
+                <strong className="booking-service-summary-value">{formatServicePrice(totalPrice)}</strong>
+              </span>
+              <span className="booking-service-summary-item">
+                <span className="booking-service-summary-label">
+                  {t(`${BOOKING_CREATE_TK}.totalTime`)}
+                </span>
+                {' '}
+                <strong className="booking-service-summary-value">
+                  {t(`${BOOKING_CREATE_TK}.durationMin`, { count: totalDuration })}
+                </strong>
+              </span>
+            </div>
+            <FieldError message={fieldErrors.services} />
+          </div>
+
+          <label className="booking-create-field">
+            <span className="booking-create-label">{t(`${BOOKING_CREATE_TK}.techLabel`)}</span>
+            {isStaffLoading ? (
+              <StaffSelectSkeleton />
+            ) : (
+              <select
+                className="booking-select"
+                value={staffId}
+                onChange={(event) => setStaffId(event.target.value)}
+              >
+                <option value={BOOKING_CREATE_UNASSIGNED_STAFF}>
+                  {t(`${BOOKING_CREATE_TK}.techUnassigned`)}
+                </option>
+                {staffItems.map((staff) => (
+                  <option key={staff.id} value={staff.id}>
+                    {staff.fullName}
+                  </option>
+                ))}
+              </select>
+            )}
+          </label>
+
+          <label className="booking-create-field">
+            <span className="booking-create-label">{t(`${TK_TODAY}.colStatus`)}</span>
+            <select
+              className="booking-select"
+              value={status}
+              onChange={(event) => setStatus(event.target.value as BookingUiStatus)}
+            >
+              {BOOKING_STATUS_FILTER_ORDER.map((option) => (
+                <option key={option} value={option}>
+                  {t(`${TK_TODAY}.${BOOKING_STATUS_META[option].labelKey}`)}
+                </option>
+              ))}
+            </select>
+          </label>
+
+          <div
+            className={`booking-create-field${fieldErrors.date ? ' has-error' : ''}`}
+            data-ai-hub-field={BookingCreateField.Date}
+          >
+            <span className="booking-create-label">{t(`${BOOKING_CREATE_TK}.dateLabel`)}</span>
+            <BookingHubDatePicker
+              className="booking-create-datetime-shell"
+              value={date}
+              minDate={minDate}
+              locale={locale}
+              hasError={Boolean(fieldErrors.date)}
+              placeholder={t(`${BOOKING_CREATE_TK}.datePlaceholder`)}
+              prevMonthAriaLabel={t(`${BOOKING_CREATE_TK}.prevMonth`)}
+              nextMonthAriaLabel={t(`${BOOKING_CREATE_TK}.nextMonth`)}
+              formatDisplay={formatBookingHubDateDisplay}
+              onChange={(next) => {
+                setDate(next)
+                clearFieldError(BookingCreateField.Date)
+              }}
+              endAdornment={<CalendarKpiIcon className="booking-create-datetime-icon" />}
+            />
+            <FieldError message={fieldErrors.date} />
+          </div>
+
+          <div
+            className={`booking-create-field${fieldErrors.time ? ' has-error' : ''}`}
+            data-ai-hub-field={BookingCreateField.Time}
+          >
+            <span className="booking-create-label">{t(`${BOOKING_CREATE_TK}.timeLabel`)}</span>
+            <span
+              className={`booking-create-datetime-shell${time ? ' has-value' : ' is-empty'}${fieldErrors.time ? ' has-error' : ''}`}
+              lang={localeTag}
+            >
+              <span className="booking-create-datetime-display" aria-hidden="true">
+                {time
+                  ? formatBookingHubTimeDisplay(time, locale)
+                  : t(`${BOOKING_CREATE_TK}.timePlaceholder`)}
+              </span>
+              <ClockIcon className="booking-create-datetime-icon" />
+              <input
+                className={`booking-create-datetime-input${time ? ' has-value' : ' is-empty'}`}
+                type="time"
+                lang={localeTag}
+                step={BOOKING_CREATE_TIME_STEP_SECONDS}
+                min={minTime}
+                value={time}
+                aria-invalid={Boolean(fieldErrors.time)}
+                aria-label={t(`${BOOKING_CREATE_TK}.timePlaceholder`)}
+                onClick={(event) => {
+                  const input = event.currentTarget
+                  if (minTime) {
+                    input.min = minTime
+                    input.setAttribute('min', minTime)
+                    if (time && minTime && time < minTime) {
+                      setTime(minTime)
+                      input.value = minTime
+                    }
+                  } else {
+                    input.removeAttribute('min')
+                  }
+                  openNativeDateTimePicker(input)
+                }}
+                onChange={(event) => {
+                  const next = event.target.value
+                  setTime(minTime && next && next < minTime ? minTime : next)
+                  clearFieldError(BookingCreateField.Time)
+                }}
+              />
+            </span>
+            <FieldError message={fieldErrors.time} />
+          </div>
+
+          <label className="booking-create-field is-full">
+            <span className="booking-create-label">{t(`${BOOKING_CREATE_TK}.noteLabel`)}</span>
+            <textarea
+              className="booking-input"
+              maxLength={BOOKING_CREATE_NOTE_MAX}
+              value={notes}
+              placeholder={t(`${BOOKING_CREATE_TK}.notePlaceholder`)}
+              onChange={(event) => setNotes(event.target.value)}
+            />
+          </label>
+        </div>
+
+        {submitError ? (
+          <div className="booking-create-error" role="alert" aria-live="polite">
+            {submitError}
+          </div>
+        ) : null}
+      </div>
+
+      <div className="booking-create-actions">
+        <button
+          className="booking-secondary-button"
+          type="button"
+          disabled={createMutation.isPending}
+          onClick={onClose}
+        >
+          {t(`${BOOKING_CREATE_TK}.cancel`)}
+        </button>
+        <button
+          className="booking-primary-button"
+          type="button"
+          disabled={createMutation.isPending || isServicesLoading}
+          onClick={() => {
+            void handleSave()
+          }}
+        >
+          {createMutation.isPending ? <SpinnerIcon /> : <CheckLgIcon />}
+          {createMutation.isPending
+            ? t(`${BOOKING_CREATE_TK}.saving`)
+            : t(`${BOOKING_CREATE_TK}.save`)}
+        </button>
+      </div>
+    </>
+  )
+
+  if (isPanel) {
+    return (
+      <div
+        className="booking-create-modal booking-create-modal--panel"
+        data-booking-panel-state={BookingAppointmentPanelState.New}
+      >
+        <div
+          ref={dialogRef}
+          className="booking-create-dialog booking-create-dialog--panel"
+          role="region"
+          aria-labelledby="booking-create-title"
+        >
+          <div className="booking-create-head">
+            <div>
+              <div className="booking-create-title" id="booking-create-title">
+                <CalendarPlusIcon />
+                {' '}
+                {t(`${BOOKING_CREATE_TK}.title`)}
+              </div>
+              <div className="booking-create-sub">{t(`${BOOKING_CREATE_TK}.subtitle`)}</div>
+            </div>
+            <button
+              className="booking-panel-header-close booking-secondary-button icon-only"
+              type="button"
+              aria-label={t(`${BOOKING_CREATE_TK}.closeAria`)}
+              title={t(`${BOOKING_CREATE_TK}.closeAria`)}
+              disabled={createMutation.isPending}
+              onClick={onClose}
+            >
+              <XLgIcon />
+            </button>
+          </div>
+          {formBody}
+        </div>
+      </div>
+    )
+  }
+
   return (
     <div
       className="booking-create-modal"
@@ -401,284 +728,7 @@ export default function BookingCreateAppointmentModal({
             <XLgIcon />
           </button>
         </div>
-
-        <div className="booking-create-body">
-          <div className="booking-create-grid">
-            <div
-              className={`booking-create-field${fieldErrors.phone ? ' has-error' : ''}`}
-              data-ai-hub-field={BookingCreateField.Phone}
-            >
-              <span className="booking-create-label">{t(`${BOOKING_CREATE_TK}.phoneLabel`)}</span>
-              <span className="phone-input-shell">
-                <CountryCodeSelect
-                  value={phoneParsed.countryCode}
-                  embedded
-                  onChange={(nextCode) => {
-                    const formatted = formatNationalNumber(phoneParsed.nationalNumber, nextCode)
-                    setPhone(`${nextCode} ${formatted}`.trim())
-                    clearFieldError(BookingCreateField.Phone)
-                  }}
-                />
-                <input
-                  className={`booking-input phone-mask-input${fieldErrors.phone ? ' has-error' : ''}`}
-                  type="tel"
-                  value={formatNationalNumber(
-                    phoneParsed.nationalNumber,
-                    phoneParsed.countryCode,
-                  )}
-                  placeholder={getNationalPhonePlaceholder(phoneParsed.countryCode)}
-                  inputMode="numeric"
-                  autoComplete="tel-national"
-                  aria-invalid={Boolean(fieldErrors.phone)}
-                  onChange={(event) => {
-                    const formatted = formatNationalNumber(
-                      event.target.value,
-                      phoneParsed.countryCode,
-                    )
-                    setPhone(`${phoneParsed.countryCode} ${formatted}`.trim())
-                    clearFieldError(BookingCreateField.Phone)
-                  }}
-                />
-              </span>
-              <FieldError message={fieldErrors.phone} />
-            </div>
-
-            <div
-              className={`booking-create-field${fieldErrors.name ? ' has-error' : ''}`}
-              data-ai-hub-field={BookingCreateField.Name}
-            >
-              <span className="booking-create-label">{t(`${BOOKING_CREATE_TK}.nameLabel`)}</span>
-              <input
-                className={`booking-input${fieldErrors.name ? ' has-error' : ''}`}
-                type="text"
-                maxLength={BOOKING_CREATE_NAME_MAX}
-                value={customerName}
-                placeholder={t(`${BOOKING_CREATE_TK}.namePlaceholder`)}
-                autoComplete="name"
-                aria-invalid={Boolean(fieldErrors.name)}
-                onChange={(event) => {
-                  setCustomerName(event.target.value)
-                  clearFieldError(BookingCreateField.Name)
-                }}
-              />
-              <FieldError message={fieldErrors.name} />
-            </div>
-
-            <div
-              className={`booking-create-field is-full${fieldErrors.services ? ' has-error' : ''}`}
-              data-ai-hub-field={BookingCreateField.Services}
-            >
-              <span className="booking-create-label">
-                {t(`${BOOKING_CREATE_TK}.servicesLabel`)}
-                {' '}
-                <span className="booking-create-hint">{t(`${BOOKING_CREATE_TK}.servicesHint`)}</span>
-              </span>
-              {isServicesLoading ? (
-                <ServiceChipSkeleton />
-              ) : services.length === 0 ? (
-                <div className="booking-create-empty">{t(`${BOOKING_CREATE_TK}.servicesEmpty`)}</div>
-              ) : (
-                <div
-                  className="booking-service-chips"
-                  role="group"
-                  aria-label={t(`${BOOKING_CREATE_TK}.servicesAria`)}
-                  aria-invalid={Boolean(fieldErrors.services)}
-                >
-                  {services.map((service) => {
-                    const selected = selectedServiceIds.includes(service.id)
-                    const duration = service.durationMinutes ?? 0
-                    return (
-                      <button
-                        key={service.id}
-                        className={`booking-service-chip-button${selected ? ' is-selected' : ''}`}
-                        type="button"
-                        aria-pressed={selected}
-                        onClick={() => toggleService(service)}
-                      >
-                        {service.name}
-                        {BOOKING_CREATE_DISPLAY_SEPARATOR}
-                        {formatServicePrice(service.price)}
-                        {BOOKING_CREATE_DISPLAY_SEPARATOR}
-                        <span className="booking-service-duration">
-                          {t(`${BOOKING_CREATE_TK}.durationMin`, { count: duration })}
-                        </span>
-                      </button>
-                    )
-                  })}
-                </div>
-              )}
-              <div className="booking-service-summary" aria-live="polite">
-                <span className="booking-service-summary-item">
-                  <span className="booking-service-summary-label">
-                    {t(`${BOOKING_CREATE_TK}.totalPrice`)}
-                  </span>
-                  {' '}
-                  <strong className="booking-service-summary-value">{formatServicePrice(totalPrice)}</strong>
-                </span>
-                <span className="booking-service-summary-item">
-                  <span className="booking-service-summary-label">
-                    {t(`${BOOKING_CREATE_TK}.totalTime`)}
-                  </span>
-                  {' '}
-                  <strong className="booking-service-summary-value">
-                    {t(`${BOOKING_CREATE_TK}.durationMin`, { count: totalDuration })}
-                  </strong>
-                </span>
-              </div>
-              <FieldError message={fieldErrors.services} />
-            </div>
-
-            <label className="booking-create-field">
-              <span className="booking-create-label">{t(`${BOOKING_CREATE_TK}.techLabel`)}</span>
-              {isStaffLoading ? (
-                <StaffSelectSkeleton />
-              ) : (
-                <select
-                  className="booking-select"
-                  value={staffId}
-                  onChange={(event) => setStaffId(event.target.value)}
-                >
-                  <option value={BOOKING_CREATE_UNASSIGNED_STAFF}>
-                    {t(`${BOOKING_CREATE_TK}.techUnassigned`)}
-                  </option>
-                  {staffItems.map((staff) => (
-                    <option key={staff.id} value={staff.id}>
-                      {staff.fullName}
-                    </option>
-                  ))}
-                </select>
-              )}
-            </label>
-
-            <label className="booking-create-field">
-              <span className="booking-create-label">{t(`${TK_TODAY}.colStatus`)}</span>
-              <select
-                className="booking-select"
-                value={status}
-                onChange={(event) => setStatus(event.target.value as BookingUiStatus)}
-              >
-                {BOOKING_STATUS_FILTER_ORDER.map((option) => (
-                  <option key={option} value={option}>
-                    {t(`${TK_TODAY}.${BOOKING_STATUS_META[option].labelKey}`)}
-                  </option>
-                ))}
-              </select>
-            </label>
-
-            <div
-              className={`booking-create-field${fieldErrors.date ? ' has-error' : ''}`}
-              data-ai-hub-field={BookingCreateField.Date}
-            >
-              <span className="booking-create-label">{t(`${BOOKING_CREATE_TK}.dateLabel`)}</span>
-              <BookingHubDatePicker
-                className="booking-create-datetime-shell"
-                value={date}
-                minDate={minDate}
-                locale={locale}
-                hasError={Boolean(fieldErrors.date)}
-                placeholder={t(`${BOOKING_CREATE_TK}.datePlaceholder`)}
-                prevMonthAriaLabel={t(`${BOOKING_CREATE_TK}.prevMonth`)}
-                nextMonthAriaLabel={t(`${BOOKING_CREATE_TK}.nextMonth`)}
-                formatDisplay={formatBookingHubDateDisplay}
-                onChange={(next) => {
-                  setDate(next)
-                  clearFieldError(BookingCreateField.Date)
-                }}
-                endAdornment={<CalendarKpiIcon className="booking-create-datetime-icon" />}
-              />
-              <FieldError message={fieldErrors.date} />
-            </div>
-
-            <div
-              className={`booking-create-field${fieldErrors.time ? ' has-error' : ''}`}
-              data-ai-hub-field={BookingCreateField.Time}
-            >
-              <span className="booking-create-label">{t(`${BOOKING_CREATE_TK}.timeLabel`)}</span>
-              <span
-                className={`booking-create-datetime-shell${time ? ' has-value' : ' is-empty'}${fieldErrors.time ? ' has-error' : ''}`}
-                lang={localeTag}
-              >
-                <span className="booking-create-datetime-display" aria-hidden="true">
-                  {time
-                    ? formatBookingHubTimeDisplay(time, locale)
-                    : t(`${BOOKING_CREATE_TK}.timePlaceholder`)}
-                </span>
-                <ClockIcon className="booking-create-datetime-icon" />
-                <input
-                  className={`booking-create-datetime-input${time ? ' has-value' : ' is-empty'}`}
-                  type="time"
-                  lang={localeTag}
-                  step={BOOKING_CREATE_TIME_STEP_SECONDS}
-                  min={minTime}
-                  value={time}
-                  aria-invalid={Boolean(fieldErrors.time)}
-                  aria-label={t(`${BOOKING_CREATE_TK}.timePlaceholder`)}
-                  onClick={(event) => {
-                    const input = event.currentTarget
-                    if (minTime) {
-                      input.min = minTime
-                      input.setAttribute('min', minTime)
-                      if (time && minTime && time < minTime) {
-                        setTime(minTime)
-                        input.value = minTime
-                      }
-                    } else {
-                      input.removeAttribute('min')
-                    }
-                    openNativeDateTimePicker(input)
-                  }}
-                  onChange={(event) => {
-                    const next = event.target.value
-                    setTime(minTime && next && next < minTime ? minTime : next)
-                    clearFieldError(BookingCreateField.Time)
-                  }}
-                />
-              </span>
-              <FieldError message={fieldErrors.time} />
-            </div>
-
-            <label className="booking-create-field is-full">
-              <span className="booking-create-label">{t(`${BOOKING_CREATE_TK}.noteLabel`)}</span>
-              <textarea
-                className="booking-input"
-                maxLength={BOOKING_CREATE_NOTE_MAX}
-                value={notes}
-                placeholder={t(`${BOOKING_CREATE_TK}.notePlaceholder`)}
-                onChange={(event) => setNotes(event.target.value)}
-              />
-            </label>
-          </div>
-
-          {submitError ? (
-            <div className="booking-create-error" role="alert" aria-live="polite">
-              {submitError}
-            </div>
-          ) : null}
-        </div>
-
-        <div className="booking-create-actions">
-          <button
-            className="booking-secondary-button"
-            type="button"
-            disabled={createMutation.isPending}
-            onClick={onClose}
-          >
-            {t(`${BOOKING_CREATE_TK}.cancel`)}
-          </button>
-          <button
-            className="booking-primary-button"
-            type="button"
-            disabled={createMutation.isPending || isServicesLoading}
-            onClick={() => {
-              void handleSave()
-            }}
-          >
-            {createMutation.isPending ? <SpinnerIcon /> : <CheckLgIcon />}
-            {createMutation.isPending
-              ? t(`${BOOKING_CREATE_TK}.saving`)
-              : t(`${BOOKING_CREATE_TK}.save`)}
-          </button>
-        </div>
+        {formBody}
       </div>
     </div>
   )

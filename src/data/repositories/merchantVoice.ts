@@ -353,6 +353,17 @@ export interface MerchantVoiceCustomerGroupSummaryDto {
   days60: number
 }
 
+export interface CreateMerchantVoiceCustomerRequest {
+  phoneNumber: string
+  name?: string | null
+  email?: string | null
+  address?: string | null
+  dateOfBirth?: string | null
+  /** VoiceCustomerType — Individual | Business | Vip | Guest | Partner | Internal */
+  type?: MerchantVoiceCustomerType
+  status?: MerchantVoiceCustomerStatus
+}
+
 export interface UpdateMerchantVoiceCustomerRequest {
   name?: string | null
   email?: string | null
@@ -796,12 +807,23 @@ function normalizeCallsResponse(
   }
 }
 
-function normalizeCustomerDto(item: MerchantVoiceCustomerDto): MerchantVoiceCustomerDto {
+function normalizeCustomerDto(item: unknown): MerchantVoiceCustomerDto {
+  const raw = (item ?? {}) as Record<string, unknown>
   return {
-    ...item,
-    type: normalizeMerchantVoiceCustomerType(item.type),
-    group: normalizeMerchantVoiceCustomerGroup(item.group),
-    status: normalizeMerchantVoiceCustomerStatus(item.status),
+    id: String(readField<unknown>(raw, 'id', 'Id') ?? ''),
+    tenantId: String(readField<unknown>(raw, 'tenantId', 'TenantId') ?? ''),
+    name: (readField<string | null>(raw, 'name', 'Name') ?? null),
+    phoneNumber: (readField<string | null>(raw, 'phoneNumber', 'PhoneNumber') ?? null),
+    email: (readField<string | null>(raw, 'email', 'Email') ?? null),
+    address: (readField<string | null>(raw, 'address', 'Address') ?? null),
+    dateOfBirth: (readField<string | null>(raw, 'dateOfBirth', 'DateOfBirth') ?? null),
+    type: normalizeMerchantVoiceCustomerType(readField(raw, 'type', 'Type')),
+    group: normalizeMerchantVoiceCustomerGroup(readField(raw, 'group', 'Group')),
+    status: normalizeMerchantVoiceCustomerStatus(readField(raw, 'status', 'Status')),
+    source: (readField<string | null>(raw, 'source', 'Source') ?? null),
+    totalVisit: toFiniteNumber(readField<unknown>(raw, 'totalVisit', 'TotalVisit') ?? 0, 0),
+    lastVisit: (readField<string | null>(raw, 'lastVisit', 'LastVisit') ?? null),
+    createdAt: String(readField<unknown>(raw, 'createdAt', 'CreatedAt') ?? ''),
   }
 }
 
@@ -1123,6 +1145,30 @@ export function createMerchantVoiceRepository(client: HttpClient = httpClient) {
         days30: response?.days30 ?? 0,
         days60: response?.days60 ?? 0,
       }
+    },
+
+    /**
+     * POST `/api/v1/merchant/nexora-voice/customers`
+     * Body: CreateMerchantVoiceCustomerCommand
+     * `{ phoneNumber, name, email, address, dateOfBirth, type, status }`
+     */
+    async createCustomer(body: CreateMerchantVoiceCustomerRequest): Promise<MerchantVoiceCustomerDto> {
+      const command: CreateMerchantVoiceCustomerRequest = {
+        phoneNumber: String(body.phoneNumber ?? '').trim(),
+        name: body.name?.trim() ? body.name.trim() : null,
+        email: body.email?.trim() ? body.email.trim() : null,
+        address: body.address?.trim() ? body.address.trim() : null,
+        dateOfBirth: body.dateOfBirth?.trim() ? body.dateOfBirth.trim() : null,
+        type: body.type ?? MerchantVoiceCustomerType.Individual,
+        status: body.status ?? MerchantVoiceCustomerStatus.Active,
+      }
+
+      const response = await client.post<unknown>(
+        `${MERCHANT_VOICE_BASE}/customers`,
+        command,
+        { headers: MERCHANT_VOICE_HEADERS },
+      )
+      return normalizeCustomerDto(response)
     },
 
     async updateCustomer(id: string, body: UpdateMerchantVoiceCustomerRequest): Promise<void> {

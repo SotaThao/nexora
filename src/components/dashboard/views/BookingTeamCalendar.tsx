@@ -19,7 +19,7 @@ import {
   type BookingCalendarSource,
 } from './bookingCalendarUtils'
 import { pad2 } from './bookingHubFormatters'
-import { ChevronLeftIcon, ChevronRightIcon } from './BookingHubIcons'
+import { ChevronLeftIcon, ChevronRightIcon, PlusIcon } from './BookingHubIcons'
 
 export type BookingCalendarSlotSelect = {
   date: string
@@ -35,6 +35,8 @@ type BookingTeamCalendarProps = {
   onCalendarDateChange: (dateIso: string) => void
   onEventClick: (bookingId: string) => void
   onSlotSelect?: (slot: BookingCalendarSlotSelect) => void
+  onAddClick?: () => void
+  addLabel?: string
   todayIso: string
   locale: string
   title: string
@@ -66,6 +68,8 @@ export default function BookingTeamCalendar({
   onCalendarDateChange,
   onEventClick,
   onSlotSelect,
+  onAddClick,
+  addLabel,
   todayIso,
   locale,
   title,
@@ -102,31 +106,39 @@ export default function BookingTeamCalendar({
             <div className="booking-calendar-title">{title}</div>
             <div className="booking-calendar-subtitle">{subtitle}</div>
           </div>
-          <div className="booking-calendar-nav" aria-label={title}>
-            <button
-              className="booking-mini-button"
-              type="button"
-              aria-label={prevAriaLabel}
-              onClick={() => onCalendarDateChange(shiftLocalDateIso(calendarDate, -1))}
-            >
-              <ChevronLeftIcon />
-            </button>
-            <span className="booking-calendar-nav-label">{dateLabel}</span>
-            <button
-              className="booking-mini-button"
-              type="button"
-              onClick={() => onCalendarDateChange(todayIso)}
-            >
-              {todayLabel}
-            </button>
-            <button
-              className="booking-mini-button"
-              type="button"
-              aria-label={nextAriaLabel}
-              onClick={() => onCalendarDateChange(shiftLocalDateIso(calendarDate, 1))}
-            >
-              <ChevronRightIcon />
-            </button>
+          <div className="booking-calendar-head-actions">
+            <div className="booking-calendar-nav" aria-label={title}>
+              <button
+                className="booking-mini-button"
+                type="button"
+                aria-label={prevAriaLabel}
+                onClick={() => onCalendarDateChange(shiftLocalDateIso(calendarDate, -1))}
+              >
+                <ChevronLeftIcon />
+              </button>
+              <span className="booking-calendar-nav-label">{dateLabel}</span>
+              <button
+                className="booking-mini-button"
+                type="button"
+                onClick={() => onCalendarDateChange(todayIso)}
+              >
+                {todayLabel}
+              </button>
+              <button
+                className="booking-mini-button"
+                type="button"
+                aria-label={nextAriaLabel}
+                onClick={() => onCalendarDateChange(shiftLocalDateIso(calendarDate, 1))}
+              >
+                <ChevronRightIcon />
+              </button>
+            </div>
+            {onAddClick && addLabel ? (
+              <button className="booking-primary-button" type="button" onClick={onAddClick}>
+                <PlusIcon />
+                {addLabel}
+              </button>
+            ) : null}
           </div>
         </div>
         <div className="booking-calendar-scroll">

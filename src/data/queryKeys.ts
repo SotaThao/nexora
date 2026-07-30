@@ -136,6 +136,7 @@ export const qk = {
   merchantVoiceCalls: (filters = EMPTY) => ['merchantVoice', 'calls', filters],
   merchantVoiceCallStatistics: () => ['merchantVoice', 'calls', 'statistics'],
   merchantVoiceCustomers: (filters = EMPTY) => ['merchantVoice', 'customers', filters],
+  merchantVoiceCustomersRoot: () => ['merchantVoice', 'customers'] as const,
   merchantVoiceCustomerSummary: () => ['merchantVoice', 'customers', 'summary'],
   merchantVoiceSmsCampaignDashboard: () => ['merchantVoice', 'smsCampaigns', 'dashboard'],
   merchantVoiceSmsCampaignAudienceSummary: () => ['merchantVoice', 'smsCampaigns', 'audience-summary'],

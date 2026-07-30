@@ -3,7 +3,6 @@ import { useQueryClient } from '@tanstack/react-query'
 import { useSearchParams } from 'react-router-dom'
 import { useTranslation } from '../../../contexts/LanguageContext'
 import { useMerchantVoiceTenantStatus } from '../../../data/hooks/useMerchantVoiceBookings'
-import BookingTeamPanel from './BookingTeamPanel'
 import BookingTodayPanel from './BookingTodayPanel'
 import BookingCustomersPanel from './BookingCustomersPanel'
 import BookingCallLogPanel from './BookingCallLogPanel'
@@ -12,6 +11,7 @@ import BookingPlansPanel from './BookingPlansPanel'
 import BookingSettingsPanel from './BookingSettingsPanel'
 import { BookingHubVoiceProvider } from './BookingHubVoiceContext'
 import {
+  CalendarEventIcon,
   CalendarTabIcon,
   MessageSquareTabIcon,
   PeopleTabIcon,
@@ -20,6 +20,9 @@ import {
   TagsTabIcon,
 } from './BookingHubIcons'
 import { BookingHubTabsSkeleton } from './BookingHubSkeletons'
+import {
+  BookingTodayLayout,
+} from './bookingTodayConstants'
 import {
   BookingHubMainTab,
   BookingHubSubTab,
@@ -34,6 +37,11 @@ import './booking-hub.css'
 
 const TK = 'components.dashboard.views.BookingHubView'
 
+const BOOKING_HUB_SUBTAB_LAYOUT: Partial<Record<BookingHubSubTab, BookingTodayLayout>> = {
+  [BookingHubSubTab.Today]: BookingTodayLayout.Appointments,
+  [BookingHubSubTab.Calendar]: BookingTodayLayout.Calendar,
+}
+
 function CalendarIcon() {
   return (
     <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
@@ -44,17 +52,6 @@ function CalendarIcon() {
       <path d="M8 14h.01" />
       <path d="M12 14h.01" />
       <path d="M16 14h.01" />
-    </svg>
-  )
-}
-
-function TeamIcon() {
-  return (
-    <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
-      <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2" />
-      <circle cx="9" cy="7" r="4" />
-      <path d="M22 21v-2a4 4 0 0 0-3-3.87" />
-      <path d="M16 3.13a4 4 0 0 1 0 7.75" />
     </svg>
   )
 }
@@ -84,6 +81,17 @@ export default function BookingHubView() {
 
       const nextParams = new URLSearchParams(searchParams)
       nextParams.set('tab', defaultTab)
+      nextParams.delete('view')
+      setSearchParams(nextParams, { replace: true })
+      return
+    }
+
+    // HTML moved Team into Settings — legacy ?view=team opens Settings.
+    if (parsedMainTab === BookingHubMainTab.Booking && parsedSubTab === BookingHubSubTab.Team) {
+      setActiveMainTab(BookingHubMainTab.Settings)
+      setActiveSubtab(BookingHubSubTab.Today)
+      const nextParams = new URLSearchParams(searchParams)
+      nextParams.set('tab', BookingHubMainTab.Settings)
       nextParams.delete('view')
       setSearchParams(nextParams, { replace: true })
       return
@@ -221,20 +229,24 @@ export default function BookingHubView() {
               <span>{t(`${TK}.schedule.today`)}</span>
             </button>
             <button
-              className={`booking-subtab ${activeSubtab === BookingHubSubTab.Team ? 'is-active' : ''}`}
+              className={`booking-subtab ${activeSubtab === BookingHubSubTab.Calendar ? 'is-active' : ''}`}
               type="button"
               role="tab"
-              aria-selected={activeSubtab === BookingHubSubTab.Team}
-              onClick={() => updateQueryTabs(BookingHubMainTab.Booking, BookingHubSubTab.Team)}
+              aria-selected={activeSubtab === BookingHubSubTab.Calendar}
+              onClick={() => updateQueryTabs(BookingHubMainTab.Booking, BookingHubSubTab.Calendar)}
             >
-              <span className="booking-subtab-icon"><TeamIcon /></span>
-              <span>{t(`${TK}.schedule.team`)}</span>
+              <span className="booking-subtab-icon"><CalendarEventIcon /></span>
+              <span>{t(`${TK}.schedule.calendar`)}</span>
             </button>
           </div>
           <div className="sync-note">{t(`${TK}.schedule.syncNote`)}</div>
         </div>
 
-        {activeSubtab === BookingHubSubTab.Today ? <BookingTodayPanel /> : <BookingTeamPanel />}
+        <BookingTodayPanel
+          bookingLayout={
+            BOOKING_HUB_SUBTAB_LAYOUT[activeSubtab] ?? BookingTodayLayout.Appointments
+          }
+        />
       </section>
       )}
 

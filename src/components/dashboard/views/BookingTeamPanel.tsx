@@ -503,7 +503,12 @@ function CheckIcon() {
   );
 }
 
-export default function BookingTeamPanel() {
+interface Props {
+  /** When true, render without Booking Book sub-panel / overview-card chrome (Settings embed). */
+  embedded?: boolean
+}
+
+export default function BookingTeamPanel({ embedded = false }: Props) {
   const { t } = useTranslation();
   const { showToast } = useNotification();
   const voiceEnabled = useBookingHubVoiceEnabled();
@@ -1004,8 +1009,11 @@ export default function BookingTeamPanel() {
   }, [searchQuery]);
 
   return (
-    <div className="booking-sub-panel is-active" aria-busy={isStaffLoading}>
-      <article className="overview-card overview-card-pad">
+    <div
+      className={embedded ? "settings-team-panel" : "booking-sub-panel is-active"}
+      aria-busy={isStaffLoading}
+    >
+      <article className={embedded ? "settings-team-body" : "overview-card overview-card-pad"}>
         <div className="tech-intro">
           <div className="tech-intro-text">{t(`${TK}.intro`)}</div>
           <button

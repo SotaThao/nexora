@@ -21,6 +21,8 @@ import {
   type MerchantVoiceCustomersFilter,
   type MerchantVoiceCustomersResponse,
   type MerchantVoiceCustomerGroupSummaryDto,
+  type CreateMerchantVoiceCustomerRequest,
+  type MerchantVoiceCustomerDto,
   type UpdateMerchantVoiceCustomerRequest,
   type MerchantVoiceStaffFilter,
   type MerchantVoiceStaffResponse,
@@ -266,13 +268,28 @@ export function useMerchantVoiceCustomerSummary({ enabled = true } = {}) {
   })
 }
 
+function invalidateMerchantVoiceCustomers(queryClient: ReturnType<typeof useQueryClient>) {
+  queryClient.invalidateQueries({ queryKey: qk.merchantVoiceCustomersRoot() })
+}
+
+export function useCreateMerchantVoiceCustomer() {
+  const queryClient = useQueryClient()
+
+  return useMutation<MerchantVoiceCustomerDto, Error, CreateMerchantVoiceCustomerRequest>({
+    mutationFn: (body) => merchantVoiceRepository.createCustomer(body),
+    onSuccess: () => {
+      invalidateMerchantVoiceCustomers(queryClient)
+    },
+  })
+}
+
 export function useUpdateMerchantVoiceCustomer() {
   const queryClient = useQueryClient()
 
   return useMutation<void, Error, { id: string; body: UpdateMerchantVoiceCustomerRequest }>({
     mutationFn: ({ id, body }) => merchantVoiceRepository.updateCustomer(id, body),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['merchantVoice', 'customers'] })
+      invalidateMerchantVoiceCustomers(queryClient)
     },
   })
 }

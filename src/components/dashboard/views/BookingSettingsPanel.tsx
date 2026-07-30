@@ -36,14 +36,18 @@ import CountryCodeSelect, {
 import {
   ClockHistoryIcon,
   CurrencyDollarIcon,
+  FolderTreeIcon,
   InfoCircleIcon,
-  LightningIcon,
+  PeopleTabIcon,
   PlusIcon,
+  PlusLgIcon,
   ShopIcon,
   SpinnerIcon,
   StarsIcon,
+  XLgIcon,
 } from "./BookingHubIcons";
 import { BookingSettingsSkeleton } from "./BookingHubSkeletons";
+import BookingTeamPanel from "./BookingTeamPanel";
 import { useBookingHubVoiceEnabled } from "./BookingHubVoiceContext";
 import { applyAiHubProgressiveValidation } from "./bookingHubDialogValidation";
 
@@ -88,13 +92,190 @@ interface HourRow {
 }
 
 interface ServiceRow {
-  id: string;
-  icon: string;
-  tone: Tone;
-  name: string;
-  price: number;
-  duration: number;
+  id: string
+  icon: string
+  tone: Tone
+  name: string
+  price: number
+  duration: number
+  /** Persisted via config service `note` (HTML category accordion). */
+  category: string
 }
+
+const DEFAULT_SERVICE_CATEGORY = "Other services"
+
+const SETTINGS_COUNTRY_OPTIONS = [
+  { value: "US", labelKey: "countryUS" },
+  { value: "CA", labelKey: "countryCA" },
+  { value: "MX", labelKey: "countryMX" },
+  { value: "VN", labelKey: "countryVN" },
+] as const
+
+type SettingsCountryCode = (typeof SETTINGS_COUNTRY_OPTIONS)[number]["value"]
+
+type LocationParts = {
+  street: string
+  city: string
+  state: string
+  zip: string
+  country: SettingsCountryCode
+}
+
+const EMPTY_LOCATION: LocationParts = {
+  street: "",
+  city: "",
+  state: "",
+  zip: "",
+  country: "US",
+}
+
+function normalizeSettingsCountry(value: string): SettingsCountryCode {
+  const raw = value.trim().toUpperCase()
+  if (raw === "CA" || raw === "CANADA") return "CA"
+  if (raw === "MX" || raw === "MEXICO") return "MX"
+  if (raw === "VN" || raw === "VIETNAM" || raw === "VIỆT NAM") return "VN"
+  if (raw === "US" || raw === "USA" || raw === "UNITED STATES") return "US"
+  return "US"
+}
+
+/** Join structured location fields into the single API `address` string. */
+function joinSettingsAddress(parts: LocationParts) {
+  const street = parts.street.trim()
+  const city = parts.city.trim()
+  const stateZip = [parts.state.trim(), parts.zip.trim()].filter(Boolean).join(" ")
+  const cityStateZip = [city, stateZip].filter(Boolean).join(", ")
+  const country = parts.country.trim()
+  return [street, cityStateZip, country].filter(Boolean).join(", ")
+}
+
+/** Best-effort split of a stored address into HTML location fields. */
+function splitSettingsAddress(raw: string): LocationParts {
+  const text = String(raw || "").trim()
+  if (!text) return { ...EMPTY_LOCATION }
+  const chunks = text.split(",").map((part) => part.trim()).filter(Boolean)
+  if (chunks.length >= 4) {
+    const country = normalizeSettingsCountry(chunks[chunks.length - 1])
+    const stateZip = chunks[chunks.length - 2]
+    const city = chunks[chunks.length - 3]
+    const street = chunks.slice(0, -3).join(", ")
+    const [state, ...zipParts] = stateZip.split(/\s+/).filter(Boolean)
+    return {
+      street,
+      city,
+      state: state || "",
+      zip: zipParts.join(" "),
+      country,
+    }
+  }
+  if (chunks.length === 3) {
+    const stateZip = chunks[2]
+    const [state, ...zipParts] = stateZip.split(/\s+/).filter(Boolean)
+    return {
+      street: chunks[0],
+      city: chunks[1],
+      state: state || "",
+      zip: zipParts.join(" "),
+      country: "US",
+    }
+  }
+  return { ...EMPTY_LOCATION, street: text }
+}
+
+const SETTINGS_TIMEZONE_OPTIONS = [
+  "America/Los_Angeles",
+  "America/Denver",
+  "America/Chicago",
+  "America/New_York",
+  "America/Anchorage",
+  "Pacific/Honolulu",
+  "America/Toronto",
+  "America/Vancouver",
+  "America/Edmonton",
+  "America/Winnipeg",
+  "America/Mexico_City",
+  "America/Tijuana",
+  "Asia/Ho_Chi_Minh",
+] as const
+
+type SettingsTimeZone = (typeof SETTINGS_TIMEZONE_OPTIONS)[number]
+
+const DEFAULT_SETTINGS_TIMEZONE: SettingsTimeZone = "America/Chicago"
+
+const US_STATE_TIMEZONES: Array<{ timeZone: SettingsTimeZone; states: string[] }> = [
+  {
+    timeZone: "America/Los_Angeles",
+    states: ["CA", "CALIFORNIA", "NV", "NEVADA", "OR", "OREGON", "WA", "WASHINGTON"],
+  },
+  {
+    timeZone: "America/Denver",
+    states: [
+      "AZ", "ARIZONA", "CO", "COLORADO", "ID", "IDAHO", "MT", "MONTANA",
+      "NM", "NEW MEXICO", "UT", "UTAH", "WY", "WYOMING",
+    ],
+  },
+  {
+    timeZone: "America/New_York",
+    states: [
+      "CT", "CONNECTICUT", "DE", "DELAWARE", "FL", "FLORIDA", "GA", "GEORGIA",
+      "ME", "MAINE", "MD", "MARYLAND", "MA", "MASSACHUSETTS", "NH", "NEW HAMPSHIRE",
+      "NJ", "NEW JERSEY", "NY", "NEW YORK", "NC", "NORTH CAROLINA", "OH", "OHIO",
+      "PA", "PENNSYLVANIA", "RI", "RHODE ISLAND", "SC", "SOUTH CAROLINA",
+      "VT", "VERMONT", "VA", "VIRGINIA", "WV", "WEST VIRGINIA",
+    ],
+  },
+  {
+    timeZone: "America/Chicago",
+    states: [
+      "AL", "ALABAMA", "AR", "ARKANSAS", "IA", "IOWA", "IL", "ILLINOIS",
+      "KS", "KANSAS", "KY", "KENTUCKY", "LA", "LOUISIANA", "MN", "MINNESOTA",
+      "MS", "MISSISSIPPI", "MO", "MISSOURI", "NE", "NEBRASKA", "ND", "NORTH DAKOTA",
+      "OK", "OKLAHOMA", "SD", "SOUTH DAKOTA", "TN", "TENNESSEE", "TX", "TEXAS",
+      "WI", "WISCONSIN",
+    ],
+  },
+]
+
+function isSettingsTimeZone(value: string): value is SettingsTimeZone {
+  return (SETTINGS_TIMEZONE_OPTIONS as readonly string[]).includes(value)
+}
+
+/** Mirror HTML `detectSettingsTimeZone` from salon location fields. */
+function detectSettingsTimeZone(parts: LocationParts): SettingsTimeZone {
+  const country = parts.country.trim().toUpperCase()
+  const state = parts.state.trim().toUpperCase()
+  const city = parts.city.trim().toUpperCase()
+
+  if (country === "VN") return "Asia/Ho_Chi_Minh"
+
+  if (country === "CA") {
+    if (/^(BC|BRITISH COLUMBIA)$/.test(state)) return "America/Vancouver"
+    if (/^(AB|ALBERTA|SK|SASKATCHEWAN)$/.test(state)) return "America/Edmonton"
+    if (/^(MB|MANITOBA)$/.test(state)) return "America/Winnipeg"
+    return "America/Toronto"
+  }
+
+  if (country === "MX") {
+    if (/TIJUANA|BAJA CALIFORNIA/.test(`${city} ${state}`)) return "America/Tijuana"
+    return "America/Mexico_City"
+  }
+
+  for (const entry of US_STATE_TIMEZONES) {
+    if (entry.states.includes(state)) return entry.timeZone
+  }
+
+  return DEFAULT_SETTINGS_TIMEZONE
+}
+
+const SERVICE_SUGGESTIONS = [
+  { id: "gel-x-extension", name: "Gel-X Extension", price: 55, duration: 90 },
+  { id: "polish-change", name: "Polish Change", price: 15, duration: 20 },
+  { id: "french-tips", name: "French Tips", price: 10, duration: 15 },
+  { id: "chrome-mirror", name: "Chrome / Mirror", price: 15, duration: 20 },
+  { id: "cat-eye-gel", name: "Cat Eye Gel", price: 50, duration: 75 },
+  { id: "soak-off-removal", name: "Soak-Off Removal", price: 10, duration: 20 },
+  { id: "eyebrow-wax", name: "Eyebrow Wax", price: 12, duration: 15 },
+  { id: "lash-fill", name: "Lash Fill", price: 45, duration: 60 },
+] as const
 
 const INITIAL_HOURS: Record<DayKey, HourRow> = {
   mon: { open: true, openTime: "07:00", closeTime: "21:00" },
@@ -113,6 +294,7 @@ const INITIAL_SERVICES: ServiceRow[] = [
     tone: "tone-violet",
     name: "Gel Manicure",
     price: 35,
+    category: DEFAULT_SERVICE_CATEGORY,
     duration: 60,
   },
   {
@@ -121,6 +303,7 @@ const INITIAL_SERVICES: ServiceRow[] = [
     tone: "tone-cyan",
     name: "Classic Manicure",
     price: 22,
+    category: DEFAULT_SERVICE_CATEGORY,
     duration: 45,
   },
   {
@@ -129,6 +312,7 @@ const INITIAL_SERVICES: ServiceRow[] = [
     tone: "tone-rose",
     name: "Full Set Acrylic",
     price: 45,
+    category: DEFAULT_SERVICE_CATEGORY,
     duration: 90,
   },
   {
@@ -137,6 +321,7 @@ const INITIAL_SERVICES: ServiceRow[] = [
     tone: "tone-sky",
     name: "Dip Powder",
     price: 40,
+    category: DEFAULT_SERVICE_CATEGORY,
     duration: 75,
   },
   {
@@ -145,6 +330,7 @@ const INITIAL_SERVICES: ServiceRow[] = [
     tone: "tone-amber",
     name: "Fill-In",
     price: 32,
+    category: DEFAULT_SERVICE_CATEGORY,
     duration: 60,
   },
   {
@@ -153,6 +339,7 @@ const INITIAL_SERVICES: ServiceRow[] = [
     tone: "tone-emerald",
     name: "Classic Pedicure",
     price: 30,
+    category: DEFAULT_SERVICE_CATEGORY,
     duration: 50,
   },
   {
@@ -161,6 +348,7 @@ const INITIAL_SERVICES: ServiceRow[] = [
     tone: "tone-violet",
     name: "Deluxe Pedicure",
     price: 50,
+    category: DEFAULT_SERVICE_CATEGORY,
     duration: 70,
   },
   {
@@ -169,6 +357,7 @@ const INITIAL_SERVICES: ServiceRow[] = [
     tone: "tone-cyan",
     name: "Pedicure + Gel Combo",
     price: 65,
+    category: DEFAULT_SERVICE_CATEGORY,
     duration: 105,
   },
   {
@@ -177,6 +366,7 @@ const INITIAL_SERVICES: ServiceRow[] = [
     tone: "tone-amber",
     name: "Kid Mani-Pedi",
     price: 25,
+    category: DEFAULT_SERVICE_CATEGORY,
     duration: 40,
   },
   {
@@ -185,22 +375,13 @@ const INITIAL_SERVICES: ServiceRow[] = [
     tone: "tone-rose",
     name: "Nail Art (per nail)",
     price: 5,
+    category: DEFAULT_SERVICE_CATEGORY,
     duration: 10,
   },
 ];
 
-const SUGGEST_SERVICES = [
-  { name: "Gel-X Extension", price: 55, duration: 90 },
-  { name: "Polish Change", price: 15, duration: 20 },
-  { name: "French Tips", price: 10, duration: 15 },
-  { name: "Chrome / Mirror", price: 15, duration: 20 },
-  { name: "Cat Eye Gel", price: 50, duration: 75 },
-  { name: "Soak-Off Removal", price: 10, duration: 20 },
-  { name: "Eyebrow Wax", price: 12, duration: 15 },
-  { name: "Lash Fill", price: 45, duration: 60 },
-];
-
 const AI_LANGUAGE_OPTIONS = [
+  MerchantVoiceUiLanguage.Auto,
   MerchantVoiceUiLanguage.Vi,
   MerchantVoiceUiLanguage.En,
 ] as const;
@@ -222,18 +403,24 @@ const PROMO_TEMPLATES = {
   },
 } as const;
 
+const GREETING_I18N_KEY_BY_LANGUAGE: Record<Language, string> = {
+  [MerchantVoiceUiLanguage.Auto]: "greetingAuto",
+  [MerchantVoiceUiLanguage.Vi]: "greetingVi",
+  [MerchantVoiceUiLanguage.En]: "greetingEn",
+}
+
+const LANGUAGE_BUTTON_LABEL_KEY_BY_LANGUAGE: Record<Language, string> = {
+  [MerchantVoiceUiLanguage.Auto]: "languageLabels.autoShort",
+  [MerchantVoiceUiLanguage.Vi]: "languageLabels.vi",
+  [MerchantVoiceUiLanguage.En]: "languageLabels.en",
+}
+
 function greetingI18nKey(language: Language) {
-  return language === MerchantVoiceUiLanguage.Vi ? "greetingVi" : "greetingEn";
+  return GREETING_I18N_KEY_BY_LANGUAGE[language]
 }
 
-function languageButtonLabel(language: Language) {
-  return language === MerchantVoiceUiLanguage.Vi ? "VI" : "EN";
-}
-
-function resolveUiLanguage(language: Language): Language {
-  if (language === MerchantVoiceUiLanguage.Vi)
-    return MerchantVoiceUiLanguage.Vi;
-  return MerchantVoiceUiLanguage.En;
+function languageButtonLabelKey(language: Language) {
+  return LANGUAGE_BUTTON_LABEL_KEY_BY_LANGUAGE[language]
 }
 
 function openTimePicker(input: HTMLInputElement | null) {
@@ -456,17 +643,31 @@ export default function BookingSettingsPanel() {
   );
   const [hours, setHours] = useState(INITIAL_HOURS);
   const [services, setServices] = useState(INITIAL_SERVICES);
+  const [categories, setCategories] = useState<string[]>(() => {
+    const names = Array.from(
+      new Set(INITIAL_SERVICES.map((service) => service.category).filter(Boolean)),
+    );
+    return names.length > 0 ? names : [DEFAULT_SERVICE_CATEGORY];
+  });
   const [suggestOpen, setSuggestOpen] = useState(false);
-  const [usedSuggests, setUsedSuggests] = useState<Set<string>>(
-    () => new Set(),
-  );
-  const [pressingSuggest, setPressingSuggest] = useState<string | null>(null);
+  const [usedSuggestionIds, setUsedSuggestionIds] = useState<string[]>([]);
+  const [serviceModalOpen, setServiceModalOpen] = useState(false);
+  const [categoryModalOpen, setCategoryModalOpen] = useState(false);
+  const [serviceModalDraft, setServiceModalDraft] = useState({
+    category: DEFAULT_SERVICE_CATEGORY,
+    name: "",
+    price: "",
+    duration: "",
+  });
+  const [serviceModalError, setServiceModalError] = useState("");
+  const [categoryDrafts, setCategoryDrafts] = useState<string[]>([]);
+  const [categoryModalError, setCategoryModalError] = useState("");
   const [highlightServiceId, setHighlightServiceId] = useState<string | null>(
     null,
   );
   const [isPreviewPlaying, setIsPreviewPlaying] = useState(false);
   const [language, setLanguage] = useState<Language>(
-    MerchantVoiceUiLanguage.En,
+    MerchantVoiceUiLanguage.Auto,
   );
   const [greeting, setGreeting] = useState(() => t(`${TK}.greetingEn`));
   const [promotion, setPromotion] = useState("");
@@ -474,11 +675,13 @@ export default function BookingSettingsPanel() {
   const [salonPhone, setSalonPhone] = useState("");
   const [aiPhone, setAiPhone] = useState("");
   const [bookingNotifyPhone, setBookingNotifyPhone] = useState("");
-  const [address, setAddress] = useState("");
+  const [location, setLocation] = useState<LocationParts>({ ...EMPTY_LOCATION });
   const [googleReviewUrl, setGoogleReviewUrl] = useState("");
   const [website, setWebsite] = useState("");
   const [description, setDescription] = useState("");
-  const [timeZone, setTimeZone] = useState("");
+  const [timeZone, setTimeZone] = useState<string>(DEFAULT_SETTINGS_TIMEZONE);
+  const [timeZoneManual, setTimeZoneManual] = useState(false);
+  const timeZoneManualRef = useRef(false);
   const [promoSms, setPromoSms] = useState("");
   const [sendSmsPromoEnabled, setSendSmsPromoEnabled] = useState(true);
   const [statusMessage, setStatusMessage] = useState("");
@@ -486,7 +689,11 @@ export default function BookingSettingsPanel() {
     salonName?: string;
     salonPhone?: string;
     bookingNotifyPhone?: string;
-    address?: string;
+    street?: string;
+    city?: string;
+    state?: string;
+    zip?: string;
+    country?: string;
     greeting?: string;
   }>({});
   const [invalidDurationServiceIds, setInvalidDurationServiceIds] = useState<
@@ -507,10 +714,23 @@ export default function BookingSettingsPanel() {
 
   const isCollapsed = (cardId: string) => collapsedCards[cardId] === true;
   const salonPhoneParsed = useMemo(() => parsePhone(salonPhone), [salonPhone]);
+  const aiPhoneParsed = useMemo(() => parsePhone(aiPhone), [aiPhone]);
   const bookingNotifyPhoneParsed = useMemo(
     () => parsePhone(bookingNotifyPhone),
     [bookingNotifyPhone],
   );
+
+  timeZoneManualRef.current = timeZoneManual;
+
+  const patchLocation = (partial: Partial<LocationParts>) => {
+    setLocation((prev) => {
+      const next = { ...prev, ...partial };
+      if (!timeZoneManualRef.current) {
+        setTimeZone(detectSettingsTimeZone(next));
+      }
+      return next;
+    });
+  };
 
   const toggleCard = (cardId: string) => {
     setCollapsedCards((prev) => ({ ...prev, [cardId]: !prev[cardId] }));
@@ -625,11 +845,18 @@ export default function BookingSettingsPanel() {
     setBookingNotifyPhone(
       formatPhoneInput(configData.bookingNotifyPhone || ""),
     );
-    setAddress(configData.address || "");
+    const locationParts = splitSettingsAddress(configData.address || "");
+    setLocation(locationParts);
+    const loadedTimeZone = String(configData.timeZone || "").trim();
+    if (loadedTimeZone && isSettingsTimeZone(loadedTimeZone)) {
+      setTimeZone(loadedTimeZone);
+    } else {
+      setTimeZone(detectSettingsTimeZone(locationParts));
+    }
+    setTimeZoneManual(false);
     setGoogleReviewUrl(configData.googleReviewUrl || "");
     setWebsite(configData.website || "");
     setDescription(configData.description || "");
-    setTimeZone(configData.timeZone || "");
     setPromoSms((configData.promoSms || "").slice(0, FIRST_CALL_SMS_MAX_LENGTH));
     setSendSmsPromoEnabled(configData.sendSmsPromoEnabled !== false);
     setPromotion((configData.promotion || "").slice(0, PROMO_MAX_LENGTH));
@@ -637,9 +864,7 @@ export default function BookingSettingsPanel() {
     setLanguage(resolvedLang);
     setGreeting(
       configData.welcomeGreeting ||
-        t(
-          `${TK}.greeting${resolvedLang === MerchantVoiceUiLanguage.Vi ? "Vi" : "En"}`,
-        ),
+        t(`${TK}.${greetingI18nKey(resolvedLang)}`),
     );
 
     const nextHours = { ...INITIAL_HOURS };
@@ -667,8 +892,15 @@ export default function BookingSettingsPanel() {
       duration: clampMerchantVoiceServiceDurationMinutes(
         Number(service.durationMinutes ?? 0),
       ),
+      category: (service.note || "").trim() || DEFAULT_SERVICE_CATEGORY,
     }));
     setServices(nextServices);
+    const categoryNames = Array.from(
+      new Set(nextServices.map((service) => service.category).filter(Boolean)),
+    );
+    setCategories(
+      categoryNames.length > 0 ? categoryNames : [DEFAULT_SERVICE_CATEGORY],
+    );
   }, [configData, t]);
 
   useEffect(
@@ -682,9 +914,16 @@ export default function BookingSettingsPanel() {
     name: string,
     price: number,
     duration: number,
-    options?: { highlight?: boolean; icon?: string; tone?: Tone },
+    options?: {
+      highlight?: boolean
+      icon?: string
+      tone?: Tone
+      category?: string
+    },
   ) => {
     const id = `service-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`;
+    const category = (options?.category || DEFAULT_SERVICE_CATEGORY).trim()
+      || DEFAULT_SERVICE_CATEGORY;
     setServices((prev) => [
       ...prev,
       {
@@ -694,8 +933,12 @@ export default function BookingSettingsPanel() {
         name,
         price,
         duration,
+        category,
       },
     ]);
+    setCategories((prev) => (
+      prev.includes(category) ? prev : [...prev, category]
+    ));
     if (options?.highlight) {
       setHighlightServiceId(id);
       window.setTimeout(
@@ -706,22 +949,6 @@ export default function BookingSettingsPanel() {
     }
     setStatus(t(`${TK}.serviceAdded`, { name }));
     return id;
-  };
-
-  const handleSuggestAdd = (item: (typeof SUGGEST_SERVICES)[number]) => {
-    setPressingSuggest(item.name);
-    window.setTimeout(() => setPressingSuggest(null), 220);
-
-    const exists = services.some(
-      (service) => service.name.toLowerCase() === item.name.toLowerCase(),
-    );
-    if (!exists) {
-      addService(item.name, item.price, item.duration, { highlight: true });
-    } else {
-      setStatus(t(`${TK}.suggestAlreadyInList`, { name: item.name }));
-    }
-
-    setUsedSuggests((prev) => new Set(prev).add(item.name));
   };
 
   const removeService = (id: string) => {
@@ -774,6 +1001,85 @@ export default function BookingSettingsPanel() {
     );
   };
 
+  const openServiceModal = () => {
+    setServiceModalDraft({
+      category: categories[0] || DEFAULT_SERVICE_CATEGORY,
+      name: "",
+      price: "",
+      duration: "",
+    });
+    setServiceModalError("");
+    setServiceModalOpen(true);
+  };
+
+  const saveServiceModal = () => {
+    const name = serviceModalDraft.name.trim();
+    const price = Number(serviceModalDraft.price);
+    const duration = Number(serviceModalDraft.duration);
+    const category = serviceModalDraft.category.trim() || DEFAULT_SERVICE_CATEGORY;
+    if (!name) {
+      setServiceModalError(t(`${TK}.serviceModalNameRequired`));
+      return;
+    }
+    if (!Number.isFinite(price) || price < 0) {
+      setServiceModalError(t(`${TK}.serviceModalPriceInvalid`));
+      return;
+    }
+    if (!Number.isFinite(duration) || duration <= 0) {
+      setServiceModalError(t(`${TK}.serviceModalDurationInvalid`));
+      return;
+    }
+    addService(name, price, duration, { category, highlight: true });
+    setServiceModalOpen(false);
+  };
+
+  const openCategoryModal = () => {
+    setCategoryDrafts(categories.length ? [...categories] : [DEFAULT_SERVICE_CATEGORY]);
+    setCategoryModalError("");
+    setCategoryModalOpen(true);
+  };
+
+  const saveCategoryModal = () => {
+    const cleaned = categoryDrafts.map((name) => name.trim()).filter(Boolean);
+    if (cleaned.length === 0) {
+      setCategoryModalError(t(`${TK}.categoryModalEmpty`));
+      return;
+    }
+    const unique = Array.from(new Set(cleaned.map((name) => name.toLowerCase())));
+    if (unique.length !== cleaned.length) {
+      setCategoryModalError(t(`${TK}.categoryModalDuplicate`));
+      return;
+    }
+    const removed = categories.filter((name) => !cleaned.includes(name));
+    const blocked = removed.find((name) =>
+      services.some((service) => service.category === name),
+    );
+    if (blocked) {
+      setCategoryModalError(t(`${TK}.categoryModalHasServices`, { name: blocked }));
+      return;
+    }
+    const renameMap = new Map<string, string>();
+    categories.forEach((oldName, index) => {
+      const nextName = cleaned[index];
+      if (nextName && oldName !== nextName) {
+        renameMap.set(oldName, nextName);
+      }
+    });
+    setCategories(cleaned);
+    setServices((prev) =>
+      prev.map((service) => {
+        const renamed = renameMap.get(service.category);
+        if (renamed) return { ...service, category: renamed };
+        if (cleaned.includes(service.category)) return service;
+        return {
+          ...service,
+          category: cleaned[0] || DEFAULT_SERVICE_CATEGORY,
+        };
+      }),
+    );
+    setCategoryModalOpen(false);
+  };
+
   const handleSuggestToggle = () => {
     setSuggestOpen((prev) => {
       const next = !prev;
@@ -782,12 +1088,56 @@ export default function BookingSettingsPanel() {
     });
   };
 
-  const handleAddManual = () => {
-    addService(t(`${TK}.newServiceName`), 30, 45, { highlight: true });
+  const handleSuggestAdd = (suggestion: (typeof SERVICE_SUGGESTIONS)[number]) => {
+    const exists = services.some(
+      (service) =>
+        service.name.trim().toLowerCase() === suggestion.name.toLowerCase(),
+    );
+    if (exists) {
+      setUsedSuggestionIds((prev) =>
+        prev.includes(suggestion.id) ? prev : [...prev, suggestion.id],
+      );
+      setStatus(t(`${TK}.suggestAlreadyInList`, { name: suggestion.name }));
+      return;
+    }
+    addService(suggestion.name, suggestion.price, suggestion.duration, {
+      highlight: true,
+    });
+    setUsedSuggestionIds((prev) =>
+      prev.includes(suggestion.id) ? prev : [...prev, suggestion.id],
+    );
+    setStatus(t(`${TK}.suggestTapHint`));
   };
 
+  const updateCategoryDraft = (index: number, value: string) => {
+    setCategoryDrafts((prev) =>
+      prev.map((name, draftIndex) => (draftIndex === index ? value : name)),
+    );
+  };
+
+  const addCategoryDraft = () => {
+    setCategoryDrafts((prev) => [...prev, ""]);
+  };
+
+  const removeCategoryDraft = (index: number) => {
+    setCategoryDrafts((prev) =>
+      prev.filter((_, draftIndex) => draftIndex !== index),
+    );
+  };
+
+  const servicesByCategory = useMemo(() => {
+    const map = new Map<string, ServiceRow[]>();
+    categories.forEach((name) => map.set(name, []));
+    services.forEach((service) => {
+      const key = service.category || DEFAULT_SERVICE_CATEGORY;
+      if (!map.has(key)) map.set(key, []);
+      map.get(key)!.push(service);
+    });
+    return map;
+  }, [categories, services]);
+
   const handleLanguageSelect = (next: Language) => {
-    const resolved = resolveUiLanguage(next);
+    const resolved = next;
     setLanguage(resolved);
     setGreeting(t(`${TK}.${greetingI18nKey(resolved)}`));
     setStatus(
@@ -854,7 +1204,11 @@ export default function BookingSettingsPanel() {
       salonName?: string;
       salonPhone?: string;
       bookingNotifyPhone?: string;
-      address?: string;
+      street?: string;
+      city?: string;
+      state?: string;
+      zip?: string;
+      country?: string;
       greeting?: string;
     } = {};
     if (!salonName.trim()) nextErrors.salonName = requiredMessage;
@@ -874,7 +1228,11 @@ export default function BookingSettingsPanel() {
     ) {
       nextErrors.bookingNotifyPhone = t(`${TK}.invalidPhone`);
     }
-    if (!address.trim()) nextErrors.address = requiredMessage;
+    if (!location.street.trim()) nextErrors.street = requiredMessage;
+    if (!location.city.trim()) nextErrors.city = requiredMessage;
+    if (!location.state.trim()) nextErrors.state = requiredMessage;
+    if (!location.zip.trim()) nextErrors.zip = requiredMessage;
+    if (!location.country.trim()) nextErrors.country = requiredMessage;
     if (!greeting.trim()) nextErrors.greeting = requiredMessage;
 
     if (
@@ -887,7 +1245,11 @@ export default function BookingSettingsPanel() {
           salonName: t(`${TK}.salonName`),
           salonPhone: t(`${TK}.salonPhone`),
           bookingNotifyPhone: t(`${TK}.bookingNotifyPhone`),
-          address: t(`${TK}.address`),
+          street: t(`${TK}.address`),
+          city: t(`${TK}.city`),
+          state: t(`${TK}.state`),
+          zip: t(`${TK}.zip`),
+          country: t(`${TK}.country`),
           greeting: t(`${TK}.greetingScript`),
         },
         hubTk: TK_HUB,
@@ -930,7 +1292,7 @@ export default function BookingSettingsPanel() {
         name: salonName.trim(),
         forwardPhoneNumber: salonPhonePayload,
         bookingNotifyPhone: bookingNotifyPhonePayload,
-        address: address.trim(),
+        address: joinSettingsAddress(location),
         googleReviewUrl: googleReviewUrl.trim(),
         website: website.trim() || null,
         description: description.trim() || null,
@@ -964,7 +1326,7 @@ export default function BookingSettingsPanel() {
           durationMinutes: clampMerchantVoiceServiceDurationMinutes(
             service.duration,
           ),
-          note: null,
+          note: service.category?.trim() || DEFAULT_SERVICE_CATEGORY,
           icon: service.icon?.trim() || null,
           isActive: true,
         })),
@@ -1056,7 +1418,15 @@ export default function BookingSettingsPanel() {
               </span>
             </label>
             <label className="settings-field" data-ai-hub-field="salonPhone">
-              <span className="settings-label">{t(`${TK}.salonPhone`)}</span>
+              <span className="settings-label settings-label-with-tooltip">
+                {t(`${TK}.salonPhone`)}
+                <SettingsInfoTooltip
+                  id="salon-phone-number-help"
+                  ariaLabel={t(`${TK}.salonPhoneInfoAria`)}
+                >
+                  {t(`${TK}.salonPhoneHelp`)}
+                </SettingsInfoTooltip>
+              </span>
               <span className="phone-input-shell">
                 <CountryCodeSelect
                   value={salonPhoneParsed.countryCode}
@@ -1114,21 +1484,52 @@ export default function BookingSettingsPanel() {
                   </span>
                 ) : null}
               </span>
-              <span className="settings-help">{t(`${TK}.salonPhoneHelp`)}</span>
             </label>
             <label className="settings-field">
-              <span className="settings-label">{t(`${TK}.aiLine`)}</span>
-              <input
-                className="settings-input settings-input-ai"
-                type="text"
-                value={aiPhone}
-                readOnly
-              />
-              <span className="settings-help">{t(`${TK}.aiLineHelp`)}</span>
+              <span className="settings-label settings-label-with-tooltip">
+                {t(`${TK}.aiLine`)}
+                <SettingsInfoTooltip
+                  id="ai-answering-number-help"
+                  ariaLabel={t(`${TK}.aiLineInfoAria`)}
+                >
+                  {t(`${TK}.aiLineHelp`)}
+                </SettingsInfoTooltip>
+              </span>
+              <span className="phone-input-shell">
+                <CountryCodeSelect
+                  value={aiPhoneParsed.countryCode}
+                  embedded
+                  disabled
+                  onChange={() => {}}
+                />
+                <input
+                  className="settings-input phone-mask-input"
+                  type="tel"
+                  value={formatNationalNumber(
+                    aiPhoneParsed.nationalNumber,
+                    aiPhoneParsed.countryCode,
+                  )}
+                  placeholder={getNationalPhonePlaceholder(
+                    aiPhoneParsed.countryCode,
+                  )}
+                  inputMode="numeric"
+                  autoComplete="tel-national"
+                  readOnly
+                />
+              </span>
             </label>
-            <label className="settings-field" data-ai-hub-field="bookingNotifyPhone">
-              <span className="settings-label">
+            <label
+              className="settings-field"
+              data-ai-hub-field="bookingNotifyPhone"
+            >
+              <span className="settings-label settings-label-with-tooltip">
                 {t(`${TK}.bookingNotifyPhone`)}
+                <SettingsInfoTooltip
+                  id="booking-notification-number-help"
+                  ariaLabel={t(`${TK}.bookingNotifyInfoAria`)}
+                >
+                  {t(`${TK}.bookingNotifyHelp`)}
+                </SettingsInfoTooltip>
               </span>
               <span className="phone-input-shell">
                 <CountryCodeSelect
@@ -1187,32 +1588,149 @@ export default function BookingSettingsPanel() {
                   </span>
                 ) : null}
               </span>
-              <span className="settings-help">
-                {t(`${TK}.bookingNotifyHelp`)}
-              </span>
             </label>
-            <label className="settings-field settings-span-full" data-ai-hub-field="address">
-              <span className="settings-label">{t(`${TK}.address`)}</span>
-              <input
-                className="settings-input"
-                type="text"
-                value={address}
-                placeholder={t(`${TK}.placeholderAddress`)}
-                aria-invalid={Boolean(formErrors.address)}
-                onChange={(event) => {
-                  setAddress(event.target.value);
-                  if (formErrors.address)
-                    setFormErrors((prev) => ({ ...prev, address: undefined }));
-                }}
-              />
-              <span className="settings-field-error-slot">
-                {formErrors.address ? (
-                  <span className="settings-field-error">
-                    {formErrors.address}
-                  </span>
-                ) : null}
-              </span>
-            </label>
+            <div className="settings-location-grid">
+              <label
+                className="settings-field settings-span-full"
+                data-ai-hub-field="street"
+              >
+                <span className="settings-label">{t(`${TK}.address`)}</span>
+                <input
+                  className="settings-input"
+                  type="text"
+                  value={location.street}
+                  placeholder={t(`${TK}.placeholderStreet`)}
+                  autoComplete="street-address"
+                  aria-invalid={Boolean(formErrors.street)}
+                  onChange={(event) => {
+                    patchLocation({ street: event.target.value });
+                    if (formErrors.street)
+                      setFormErrors((prev) => ({
+                        ...prev,
+                        street: undefined,
+                      }));
+                  }}
+                />
+                <span className="settings-field-error-slot">
+                  {formErrors.street ? (
+                    <span className="settings-field-error">
+                      {formErrors.street}
+                    </span>
+                  ) : null}
+                </span>
+              </label>
+              <label className="settings-field" data-ai-hub-field="city">
+                <span className="settings-label">{t(`${TK}.city`)}</span>
+                <input
+                  className="settings-input"
+                  type="text"
+                  value={location.city}
+                  placeholder={t(`${TK}.placeholderCity`)}
+                  autoComplete="address-level2"
+                  aria-invalid={Boolean(formErrors.city)}
+                  onChange={(event) => {
+                    patchLocation({ city: event.target.value });
+                    if (formErrors.city)
+                      setFormErrors((prev) => ({
+                        ...prev,
+                        city: undefined,
+                      }));
+                  }}
+                />
+                <span className="settings-field-error-slot">
+                  {formErrors.city ? (
+                    <span className="settings-field-error">
+                      {formErrors.city}
+                    </span>
+                  ) : null}
+                </span>
+              </label>
+              <label className="settings-field" data-ai-hub-field="state">
+                <span className="settings-label">{t(`${TK}.state`)}</span>
+                <input
+                  className="settings-input"
+                  type="text"
+                  value={location.state}
+                  placeholder={t(`${TK}.placeholderState`)}
+                  autoComplete="address-level1"
+                  aria-invalid={Boolean(formErrors.state)}
+                  onChange={(event) => {
+                    patchLocation({ state: event.target.value });
+                    if (formErrors.state)
+                      setFormErrors((prev) => ({
+                        ...prev,
+                        state: undefined,
+                      }));
+                  }}
+                />
+                <span className="settings-field-error-slot">
+                  {formErrors.state ? (
+                    <span className="settings-field-error">
+                      {formErrors.state}
+                    </span>
+                  ) : null}
+                </span>
+              </label>
+              <label className="settings-field" data-ai-hub-field="zip">
+                <span className="settings-label">{t(`${TK}.zip`)}</span>
+                <input
+                  className="settings-input"
+                  type="text"
+                  value={location.zip}
+                  placeholder={t(`${TK}.placeholderZip`)}
+                  autoComplete="postal-code"
+                  inputMode="numeric"
+                  aria-invalid={Boolean(formErrors.zip)}
+                  onChange={(event) => {
+                    patchLocation({ zip: event.target.value });
+                    if (formErrors.zip)
+                      setFormErrors((prev) => ({
+                        ...prev,
+                        zip: undefined,
+                      }));
+                  }}
+                />
+                <span className="settings-field-error-slot">
+                  {formErrors.zip ? (
+                    <span className="settings-field-error">
+                      {formErrors.zip}
+                    </span>
+                  ) : null}
+                </span>
+              </label>
+              <label className="settings-field" data-ai-hub-field="country">
+                <span className="settings-label">{t(`${TK}.country`)}</span>
+                <select
+                  className="settings-select"
+                  value={location.country}
+                  autoComplete="country"
+                  aria-invalid={Boolean(formErrors.country)}
+                  onChange={(event) => {
+                    patchLocation({
+                      country: normalizeSettingsCountry(event.target.value),
+                    });
+                    if (formErrors.country)
+                      setFormErrors((prev) => ({
+                        ...prev,
+                        country: undefined,
+                      }));
+                  }}
+                >
+                  {SETTINGS_COUNTRY_OPTIONS.map((option) => (
+                    <option key={option.value} value={option.value}>
+                      {t(`${TK}.${option.labelKey}`)}
+                    </option>
+                  ))}
+                </select>
+                <span className="settings-field-error-slot">
+                  {formErrors.country ? (
+                    <span className="settings-field-error">
+                      {formErrors.country}
+                    </span>
+                  ) : null}
+                </span>
+              </label>
+            </div>
             <label className="settings-field settings-span-full">
               <span className="settings-label">
                 {t(`${TK}.googleReviewLink`)}
@@ -1363,8 +1881,58 @@ export default function BookingSettingsPanel() {
               );
             })}
           </div>
+          <div className="settings-hours-toolbar">
+            <label className="settings-timezone-field">
+              <span className="settings-label">{t(`${TK}.timeZone`)}</span>
+              <select
+                className="settings-select settings-timezone-select"
+                value={
+                  isSettingsTimeZone(timeZone)
+                    ? timeZone
+                    : DEFAULT_SETTINGS_TIMEZONE
+                }
+                aria-label={t(`${TK}.timeZoneAria`)}
+                onChange={(event) => {
+                  const next = event.target.value;
+                  setTimeZone(next);
+                  setTimeZoneManual(true);
+                  setStatus(
+                    t(`${TK}.timeZoneManualSet`, { timeZone: next }),
+                  );
+                }}
+              >
+                {SETTINGS_TIMEZONE_OPTIONS.map((zone) => (
+                  <option key={zone} value={zone}>
+                    {zone}
+                  </option>
+                ))}
+              </select>
+            </label>
+            <span className="settings-timezone-status">
+              {timeZoneManual
+                ? t(`${TK}.timeZoneManual`)
+                : t(`${TK}.timeZoneAuto`)}
+            </span>
+          </div>
         </SettingsCard>
       </div>
+
+      <article className="settings-card settings-team-card">
+        <div className="settings-card-head">
+          <div>
+            <div className="settings-card-title">
+              <span className="settings-card-title-icon">
+                <PeopleTabIcon />
+              </span>
+              {t(`${TK}.teamTitle`)}
+            </div>
+            <div className="settings-card-sub">{t(`${TK}.teamSub`)}</div>
+          </div>
+        </div>
+        <div className="settings-team-slot">
+          <BookingTeamPanel embedded />
+        </div>
+      </article>
 
       <div className="settings-two-grid">
         <SettingsCard
@@ -1381,212 +1949,242 @@ export default function BookingSettingsPanel() {
           }
           subtitle={t(`${TK}.servicesSub`)}
         >
-          <div className="settings-actions">
+          <div className="settings-actions settings-service-actions">
             <button
-              className={`booking-secondary-button settings-action-button ${suggestOpen ? "is-active" : ""}`}
+              className="booking-secondary-button settings-category-manager-open"
+              type="button"
+              onClick={openCategoryModal}
+            >
+              <FolderTreeIcon />
+              {t(`${TK}.manageCategories`)}
+            </button>
+            <button
+              className={`booking-secondary-button${suggestOpen ? " is-active" : ""}`}
               type="button"
               onClick={handleSuggestToggle}
             >
-              <LightningIcon className="settings-action-icon" />{" "}
+              <StarsIcon />
               {t(`${TK}.suggestServices`)}
             </button>
             <button
-              className="booking-primary-button settings-action-button"
+              className="booking-primary-button"
               type="button"
-              onClick={handleAddManual}
+              onClick={openServiceModal}
             >
-              <PlusIcon className="settings-action-icon" />{" "}
-              {t(`${TK}.addManually`)}
+              <PlusLgIcon />
+              {t(`${TK}.enterManually`)}
             </button>
           </div>
 
-          {suggestOpen && (
+          {suggestOpen ? (
             <div className="settings-service-panel is-visible">
               <div className="settings-service-panel-title">
                 {t(`${TK}.suggestPanelTitle`)}
               </div>
               <div className="settings-service-suggest-grid">
-                {SUGGEST_SERVICES.map((item) => {
-                  const isAdded = usedSuggests.has(item.name);
-                  const isPressing = pressingSuggest === item.name;
-                  if (isAdded) return null;
-                  return (
-                    <button
-                      key={item.name}
-                      className={`settings-service-suggest ${isPressing ? "is-pressing" : ""}`}
-                      type="button"
-                      onClick={() => handleSuggestAdd(item)}
-                    >
-                      <span
-                        className="settings-service-suggest-plus"
-                        aria-hidden="true"
-                      >
-                        +
-                      </span>
-                      {item.name}
-                      <span>${item.price}</span>
-                    </button>
-                  );
-                })}
+                {SERVICE_SUGGESTIONS.filter(
+                  (item) => !usedSuggestionIds.includes(item.id),
+                ).map((item) => (
+                  <button
+                    key={item.id}
+                    className="settings-service-suggest"
+                    type="button"
+                    onClick={() => handleSuggestAdd(item)}
+                  >
+                    + {item.name} <span>${item.price}</span>
+                  </button>
+                ))}
               </div>
-              {usedSuggests.size > 0 &&
-              usedSuggests.size < SUGGEST_SERVICES.length ? (
-                <div className="settings-suggest-hint">
-                  {t(`${TK}.suggestTapHint`)}
-                </div>
-              ) : null}
-              {usedSuggests.size === SUGGEST_SERVICES.length ? (
-                <div className="settings-suggest-complete">
-                  {t(`${TK}.suggestAllAdded`)}
-                </div>
-              ) : null}
             </div>
-          )}
-
-          <div className="settings-service-note-bar">
-            {t(`${TK}.serviceNoteBar`)}
-          </div>
+          ) : null}
 
           <div className="settings-service-list settings-service-body">
-            <div className="settings-service-header" aria-hidden="true">
-              <span />
-              <span>{t(`${TK}.serviceColumn`)}</span>
-              <span>{t(`${TK}.priceColumn`)}</span>
-              <span>{t(`${TK}.durationColumn`)}</span>
-              <span />
-            </div>
             {services.length === 0 ? (
-              <div className="settings-service-empty">
+              <div className="settings-service-catalog-state">
                 <p>{t(`${TK}.servicesEmpty`)}</p>
                 <button
-                  className="booking-primary-button settings-action-button"
+                  className="booking-primary-button"
                   type="button"
-                  onClick={handleAddManual}
+                  onClick={openServiceModal}
                 >
-                  <PlusIcon className="settings-action-icon" />{" "}
+                  <PlusLgIcon />
                   {t(`${TK}.servicesEmptyCta`)}
                 </button>
               </div>
-            ) : null}
-            {services.map((service) => {
-              const durationInvalid = invalidDurationServiceIds.includes(
-                service.id,
-              );
-              return (
-                <div
-                  className={`settings-service-row ${highlightServiceId === service.id ? "is-highlight" : ""}`}
-                  key={service.id}
-                >
-                  <div className="settings-service-edit-grid">
-                    <span
-                      className={`settings-service-visual ${service.tone}`}
-                      aria-hidden="true"
-                    >
-                      {service.icon}
-                    </span>
-                    <label className="settings-service-field settings-service-field-name">
-                      <span className="settings-service-field-label">
-                        {t(`${TK}.serviceColumn`)}
+            ) : (
+              categories.map((categoryName, index) => {
+                const categoryServices =
+                  servicesByCategory.get(categoryName) || [];
+                return (
+                  <details
+                    key={categoryName}
+                    className="settings-service-category"
+                    open={index === 0}
+                  >
+                    <summary className="settings-service-category-head">
+                      <span className="settings-service-category-name">
+                        {categoryName}
                       </span>
-                      <input
-                        className="settings-service-input"
-                        type="text"
-                        value={service.name}
-                        placeholder={t(`${TK}.placeholderServiceName`)}
-                        aria-label={t(`${TK}.serviceNameAria`)}
-                        onChange={(event) =>
-                          updateService(
-                            service.id,
-                            MerchantVoiceServiceField.Name,
-                            event.target.value,
-                          )
-                        }
-                      />
-                    </label>
-                    <div className="settings-service-metrics">
-                      <label className="settings-service-field settings-service-field-price">
-                        <span className="settings-service-field-label">
-                          {t(`${TK}.priceColumn`)}
-                        </span>
-                        <div className="settings-service-input-wrap">
-                          <span className="settings-service-prefix">$</span>
-                          <input
-                            className="settings-service-input price"
-                            type="text"
-                            inputMode="numeric"
-                            pattern="[0-9]*"
-                            value={formatWholeNumberInputValue(service.price)}
-                            placeholder={t(`${TK}.placeholderServicePrice`)}
-                            aria-label={t(`${TK}.servicePriceAria`)}
-                            onChange={(event) =>
-                              updateService(
-                                service.id,
-                                MerchantVoiceServiceField.Price,
-                                event.target.value,
-                              )
-                            }
-                            onBlur={() =>
-                              commitServiceNumberOnBlur(
-                                service.id,
-                                MerchantVoiceServiceField.Price,
-                              )
-                            }
-                          />
+                      <span className="settings-service-category-count">
+                        {categoryServices.length}
+                      </span>
+                      <svg
+                        className="settings-service-category-chevron"
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        aria-hidden="true"
+                        width="16"
+                        height="16"
+                      >
+                        <path
+                          d="m6 9 6 6 6-6"
+                          stroke="currentColor"
+                          strokeWidth="2"
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                        />
+                      </svg>
+                    </summary>
+                    <div className="settings-service-category-body">
+                      <div
+                        className="settings-service-header"
+                        aria-hidden="true"
+                      >
+                        <span />
+                        <span>{t(`${TK}.serviceColumn`)}</span>
+                        <span>{t(`${TK}.priceColumn`)}</span>
+                        <span>{t(`${TK}.durationColumn`)}</span>
+                        <span />
+                      </div>
+                      {categoryServices.length === 0 ? (
+                        <div className="settings-category-empty">
+                          {t(`${TK}.categoryEmpty`)}
                         </div>
-                      </label>
-                      <label className="settings-service-field settings-service-field-duration">
-                        <span className="settings-service-field-label">
-                          {t(`${TK}.durationColumn`)}
-                        </span>
-                        <div className="settings-service-input-wrap">
-                          <input
-                            className="settings-service-input duration"
-                            type="text"
-                            inputMode="numeric"
-                            pattern="[0-9]*"
-                            value={formatWholeNumberInputValue(
-                              service.duration,
-                            )}
-                            placeholder={t(`${TK}.placeholderServiceDuration`)}
-                            aria-label={t(`${TK}.serviceDurationAria`)}
-                            aria-invalid={durationInvalid || undefined}
-                            onChange={(event) =>
-                              updateService(
-                                service.id,
-                                MerchantVoiceServiceField.Duration,
-                                event.target.value,
-                              )
-                            }
-                            onBlur={() =>
-                              commitServiceNumberOnBlur(
-                                service.id,
-                                MerchantVoiceServiceField.Duration,
-                              )
-                            }
-                          />
-                          <span className="settings-service-suffix">
-                            {t(`${TK}.durationUnit`)}
-                          </span>
-                        </div>
-                      </label>
+                      ) : (
+                        categoryServices.map((service) => {
+                          const durationInvalid =
+                            invalidDurationServiceIds.includes(service.id);
+                          return (
+                            <div
+                              className={`settings-service-row is-compact${highlightServiceId === service.id ? " is-highlight" : ""}`}
+                              key={service.id}
+                            >
+                              <div className="settings-service-edit-grid">
+                                <span
+                                  className={`settings-service-visual ${service.tone}`}
+                                  aria-hidden="true"
+                                >
+                                  {service.icon}
+                                </span>
+                                <input
+                                  className="settings-service-input"
+                                  type="text"
+                                  value={service.name}
+                                  placeholder={t(
+                                    `${TK}.placeholderServiceName`,
+                                  )}
+                                  aria-label={t(`${TK}.serviceNameAria`)}
+                                  onChange={(event) =>
+                                    updateService(
+                                      service.id,
+                                      MerchantVoiceServiceField.Name,
+                                      event.target.value,
+                                    )
+                                  }
+                                />
+                                <div className="settings-service-input-wrap">
+                                  <span className="settings-service-prefix">
+                                    $
+                                  </span>
+                                  <input
+                                    className="settings-service-input price"
+                                    type="text"
+                                    inputMode="numeric"
+                                    pattern="[0-9]*"
+                                    value={formatWholeNumberInputValue(
+                                      service.price,
+                                    )}
+                                    placeholder={t(
+                                      `${TK}.placeholderServicePrice`,
+                                    )}
+                                    aria-label={t(`${TK}.servicePriceAria`)}
+                                    onChange={(event) =>
+                                      updateService(
+                                        service.id,
+                                        MerchantVoiceServiceField.Price,
+                                        event.target.value,
+                                      )
+                                    }
+                                    onBlur={() =>
+                                      commitServiceNumberOnBlur(
+                                        service.id,
+                                        MerchantVoiceServiceField.Price,
+                                      )
+                                    }
+                                  />
+                                </div>
+                                <div className="settings-service-input-wrap">
+                                  <input
+                                    className="settings-service-input duration"
+                                    type="text"
+                                    inputMode="numeric"
+                                    pattern="[0-9]*"
+                                    value={formatWholeNumberInputValue(
+                                      service.duration,
+                                    )}
+                                    placeholder={t(
+                                      `${TK}.placeholderServiceDuration`,
+                                    )}
+                                    aria-label={t(
+                                      `${TK}.serviceDurationAria`,
+                                    )}
+                                    aria-invalid={
+                                      durationInvalid || undefined
+                                    }
+                                    onChange={(event) =>
+                                      updateService(
+                                        service.id,
+                                        MerchantVoiceServiceField.Duration,
+                                        event.target.value,
+                                      )
+                                    }
+                                    onBlur={() =>
+                                      commitServiceNumberOnBlur(
+                                        service.id,
+                                        MerchantVoiceServiceField.Duration,
+                                      )
+                                    }
+                                  />
+                                  <span className="settings-service-suffix">
+                                    {t(`${TK}.durationUnit`)}
+                                  </span>
+                                </div>
+                                <button
+                                  className="settings-service-remove"
+                                  type="button"
+                                  aria-label={t(`${TK}.removeService`)}
+                                  onClick={() => removeService(service.id)}
+                                >
+                                  ×
+                                </button>
+                              </div>
+                              {durationInvalid ? (
+                                <p
+                                  className="settings-service-row-error"
+                                  role="alert"
+                                >
+                                  {t(`${TK}.durationInvalid`)}
+                                </p>
+                              ) : null}
+                            </div>
+                          );
+                        })
+                      )}
                     </div>
-                    <button
-                      className="settings-service-remove"
-                      type="button"
-                      aria-label={t(`${TK}.removeService`)}
-                      onClick={() => removeService(service.id)}
-                    >
-                      ×
-                    </button>
-                  </div>
-                  {durationInvalid ? (
-                    <p className="settings-service-row-error" role="alert">
-                      {t(`${TK}.durationInvalid`)}
-                    </p>
-                  ) : null}
-                </div>
-              );
-            })}
+                  </details>
+                );
+              })
+            )}
           </div>
         </SettingsCard>
 
@@ -1621,7 +2219,7 @@ export default function BookingSettingsPanel() {
                     aria-pressed={language === lang}
                     onClick={() => handleLanguageSelect(lang)}
                   >
-                    {languageButtonLabel(lang)}
+                    {t(`${TK}.${languageButtonLabelKey(lang)}`)}
                   </button>
                 ))}
               </div>
@@ -1665,15 +2263,15 @@ export default function BookingSettingsPanel() {
             </div>
 
             <label className="settings-field settings-span-full">
-              <div className="settings-promo-head">
-                <span className="settings-label">{t(`${TK}.promoLabel`)}</span>
-                <div
-                  id="settings-promo-count"
-                  className={`settings-promo-count ${promotion.length >= PROMO_MAX_LENGTH ? "is-max" : ""}`}
+              <span className="settings-label settings-label-with-tooltip">
+                {t(`${TK}.promoLabel`)}
+                <SettingsInfoTooltip
+                  id="promotion-details-help"
+                  ariaLabel={t(`${TK}.promoInfoAria`)}
                 >
-                  <span>{promotion.length}</span>/{PROMO_MAX_LENGTH}
-                </div>
-              </div>
+                  {t(`${TK}.promoHelp`)}
+                </SettingsInfoTooltip>
+              </span>
               <textarea
                 className="settings-textarea settings-textarea-promo"
                 value={promotion}
@@ -1686,18 +2284,23 @@ export default function BookingSettingsPanel() {
                   )
                 }
               />
-              <div className="settings-language-status">
-                {t(`${TK}.promoHelp`)}
-              </div>
-              <div className="settings-promo-suggest-row">
-                <button
-                  className="settings-promo-suggest"
-                  type="button"
-                  onClick={() => handlePromoSuggest("reward-yourself")}
+              <div className="settings-promo-meta">
+                <div className="settings-promo-suggest-row">
+                  <button
+                    className="settings-promo-suggest"
+                    type="button"
+                    onClick={() => handlePromoSuggest("reward-yourself")}
+                  >
+                    <StarsIcon className="settings-promo-suggest-icon" />
+                    {t(`${TK}.promoSuggestReward`)}
+                  </button>
+                </div>
+                <div
+                  id="settings-promo-count"
+                  className={`settings-promo-count ${promotion.length >= PROMO_MAX_LENGTH ? "is-max" : ""}`}
                 >
-                  <StarsIcon className="settings-promo-suggest-icon" />
-                  {t(`${TK}.promoSuggestReward`)}
-                </button>
+                  <span>{promotion.length}</span>/{PROMO_MAX_LENGTH}
+                </div>
               </div>
             </label>
 
@@ -1785,6 +2388,264 @@ export default function BookingSettingsPanel() {
           {t(`${TK}.saveButton`)}
         </button>
       </div>
+
+      {serviceModalOpen ? (
+        <div className="settings-service-modal" role="presentation">
+          <div
+            className="settings-service-dialog"
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="settings-service-modal-title"
+          >
+            <div className="settings-service-modal-head">
+              <div>
+                <div
+                  className="settings-service-modal-title"
+                  id="settings-service-modal-title"
+                >
+                  {t(`${TK}.serviceModalTitle`)}
+                </div>
+                <div className="settings-service-modal-sub">
+                  {t(`${TK}.serviceModalSub`)}
+                </div>
+              </div>
+              <button
+                className="settings-service-modal-close"
+                type="button"
+                aria-label={t(`${TK}.serviceModalCloseAria`)}
+                onClick={() => setServiceModalOpen(false)}
+              >
+                <XLgIcon />
+              </button>
+            </div>
+            <div className="settings-service-modal-body">
+              <div className="settings-service-modal-grid">
+                <label className="settings-field settings-service-modal-field-name">
+                  <span className="settings-label">
+                    {t(`${TK}.serviceModalCategory`)}
+                  </span>
+                  <select
+                    className="settings-input"
+                    value={serviceModalDraft.category}
+                    aria-label={t(`${TK}.serviceModalCategory`)}
+                    onChange={(event) =>
+                      setServiceModalDraft((prev) => ({
+                        ...prev,
+                        category: event.target.value,
+                      }))
+                    }
+                  >
+                    {categories.map((categoryName) => (
+                      <option key={categoryName} value={categoryName}>
+                        {categoryName}
+                      </option>
+                    ))}
+                  </select>
+                </label>
+                <label className="settings-field settings-service-modal-field-name">
+                  <span className="settings-label">
+                    {t(`${TK}.serviceModalName`)}
+                  </span>
+                  <input
+                    className="settings-input"
+                    type="text"
+                    value={serviceModalDraft.name}
+                    placeholder={t(`${TK}.placeholderServiceName`)}
+                    autoComplete="off"
+                    onChange={(event) =>
+                      setServiceModalDraft((prev) => ({
+                        ...prev,
+                        name: event.target.value,
+                      }))
+                    }
+                  />
+                </label>
+                <label className="settings-field">
+                  <span className="settings-label">
+                    {t(`${TK}.serviceModalPrice`)}
+                  </span>
+                  <input
+                    className="settings-input"
+                    type="number"
+                    min={0}
+                    step="0.01"
+                    value={serviceModalDraft.price}
+                    placeholder={t(`${TK}.placeholderServicePrice`)}
+                    inputMode="decimal"
+                    onChange={(event) =>
+                      setServiceModalDraft((prev) => ({
+                        ...prev,
+                        price: event.target.value,
+                      }))
+                    }
+                  />
+                </label>
+                <label className="settings-field">
+                  <span className="settings-label">
+                    {t(`${TK}.serviceModalDuration`)}
+                  </span>
+                  <input
+                    className="settings-input"
+                    type="number"
+                    min={1}
+                    step={1}
+                    value={serviceModalDraft.duration}
+                    placeholder={t(`${TK}.placeholderServiceDuration`)}
+                    inputMode="numeric"
+                    onChange={(event) =>
+                      setServiceModalDraft((prev) => ({
+                        ...prev,
+                        duration: event.target.value,
+                      }))
+                    }
+                  />
+                </label>
+              </div>
+              {serviceModalError ? (
+                <div className="settings-service-modal-error" role="alert">
+                  {serviceModalError}
+                </div>
+              ) : null}
+            </div>
+            <div className="settings-service-modal-actions">
+              <button
+                className="booking-secondary-button"
+                type="button"
+                onClick={() => setServiceModalOpen(false)}
+              >
+                {t(`${TK}.serviceModalCancel`)}
+              </button>
+              <button
+                className="booking-primary-button"
+                type="button"
+                onClick={saveServiceModal}
+              >
+                <PlusIcon className="settings-action-icon" />{" "}
+                {t(`${TK}.serviceModalSave`)}
+              </button>
+            </div>
+          </div>
+        </div>
+      ) : null}
+
+      {categoryModalOpen ? (
+        <div className="settings-service-modal" role="presentation">
+          <div
+            className="settings-service-dialog"
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="settings-category-modal-title"
+          >
+            <div className="settings-service-modal-head">
+              <div>
+                <div
+                  className="settings-service-modal-title"
+                  id="settings-category-modal-title"
+                >
+                  {t(`${TK}.categoryModalTitle`)}
+                </div>
+                <div className="settings-service-modal-sub">
+                  {t(`${TK}.categoryModalSub`)}
+                </div>
+              </div>
+              <button
+                className="settings-service-modal-close"
+                type="button"
+                aria-label={t(`${TK}.categoryModalCloseAria`)}
+                onClick={() => setCategoryModalOpen(false)}
+              >
+                <XLgIcon />
+              </button>
+            </div>
+            <div className="settings-service-modal-body">
+              <div className="settings-category-manager">
+                <div className="settings-category-manager-head">
+                  <div>
+                    <div className="settings-category-manager-title">
+                      <FolderTreeIcon className="settings-category-manager-icon" />
+                      {t(`${TK}.categoryModalCategories`)}
+                    </div>
+                    <div className="settings-category-manager-sub">
+                      {t(`${TK}.categoryModalCategoriesSub`)}
+                    </div>
+                  </div>
+                  <button
+                    className="settings-category-manager-add"
+                    type="button"
+                    onClick={addCategoryDraft}
+                  >
+                    <PlusIcon className="settings-category-manager-add-icon" />
+                    {t(`${TK}.categoryModalAdd`)}
+                  </button>
+                </div>
+                <div className="settings-category-list">
+                  {categoryDrafts.length === 0 ? (
+                    <div className="settings-category-empty">
+                      {t(`${TK}.categoryModalEmpty`)}
+                    </div>
+                  ) : (
+                    categoryDrafts.map((categoryName, index) => {
+                      const serviceCount = services.filter(
+                        (service) => service.category === categoryName,
+                      ).length;
+                      return (
+                        <div className="settings-category-row" key={`${categoryName}-${index}`}>
+                          <div className="settings-category-row-main">
+                            <FolderTreeIcon className="settings-category-row-icon" />
+                            <input
+                              className="settings-category-name-input"
+                              type="text"
+                              value={categoryName}
+                              aria-label={t(`${TK}.categoryModalCategories`)}
+                              onChange={(event) =>
+                                updateCategoryDraft(index, event.target.value)
+                              }
+                            />
+                            <span className="settings-category-count">
+                              {serviceCount}
+                            </span>
+                          </div>
+                          <div className="settings-category-row-actions">
+                            <button
+                              className="settings-category-row-action is-danger"
+                              type="button"
+                              aria-label={t(`${TK}.categoryModalRemoveAria`)}
+                              onClick={() => removeCategoryDraft(index)}
+                            >
+                              ×
+                            </button>
+                          </div>
+                        </div>
+                      );
+                    })
+                  )}
+                </div>
+              </div>
+              {categoryModalError ? (
+                <div className="settings-service-modal-error" role="alert">
+                  {categoryModalError}
+                </div>
+              ) : null}
+            </div>
+            <div className="settings-service-modal-actions">
+              <button
+                className="booking-secondary-button"
+                type="button"
+                onClick={() => setCategoryModalOpen(false)}
+              >
+                {t(`${TK}.categoryModalClose`)}
+              </button>
+              <button
+                className="booking-primary-button"
+                type="button"
+                onClick={saveCategoryModal}
+              >
+                {t(`${TK}.categoryModalSave`)}
+              </button>
+            </div>
+          </div>
+        </div>
+      ) : null}
     </div>
   );
 }
