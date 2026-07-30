@@ -29,6 +29,7 @@ import {
 } from '../../ui/sidebarMenuStyles'
 
 export default function DashboardSidebar({
+  isOpen = true,
   activeMenu,
   isHomeActive = false,
   setActiveMenu,
@@ -154,6 +155,10 @@ export default function DashboardSidebar({
     t,
     currentLanguage,
   )
+
+  // Collapsed by the desktop toggle in DashboardHeader — same conditional-render
+  // pattern MobileMenuDrawer uses for `isOpen`, so no competing display classes.
+  if (!isOpen) return null
 
   return (
     <aside className={SIDEBAR_SHELL_CLASS}>

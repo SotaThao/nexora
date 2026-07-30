@@ -78,6 +78,7 @@ export default function Dashboard({
   const {
     activeMenu,
     isMobileMenuOpen, setIsMobileMenuOpen,
+    isDesktopSidebarOpen, setIsDesktopSidebarOpen,
     isPaymentsPayoutsMobileExpanded, setIsPaymentsPayoutsMobileExpanded,
     isTouchpointsMobileExpanded, setIsTouchpointsMobileExpanded,
     isTaxIqMobileExpanded, setIsTaxIqMobileExpanded,
@@ -782,6 +783,7 @@ export default function Dashboard({
   return (
     <div className="min-h-dvh w-full overflow-x-hidden bg-nexoraCanvas font-sans text-nexoraText">
       <DashboardSidebar
+        isOpen={isDesktopSidebarOpen}
         activeMenu={activeMenu}
         setActiveMenu={handleNavigateMenu}
         businessName={businessName}
@@ -798,8 +800,10 @@ export default function Dashboard({
         userRole={userRole}
       />
 
-      <div className="flex min-h-dvh w-full min-w-0 flex-col lg:pl-72">
+      <div className={`flex min-h-dvh w-full min-w-0 flex-col transition-[padding-left] duration-200 ${isDesktopSidebarOpen ? 'lg:pl-72' : ''}`}>
         <DashboardHeader
+          isSidebarOpen={isDesktopSidebarOpen}
+          onToggleSidebar={() => setIsDesktopSidebarOpen((prev) => !prev)}
           searchQuery={searchQuery}
           setSearchQuery={setSearchQuery}
           onAddTouchpoint={() => {

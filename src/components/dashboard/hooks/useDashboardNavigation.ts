@@ -20,6 +20,10 @@ export function useDashboardNavigation() {
     activeMenu === DASHBOARD_MENU_ID.tips || activeMenu === DASHBOARD_MENU_ID.reports
 
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
+  // Desktop sidebar collapse toggle — same open/closed mechanic as the mobile
+  // drawer above, just docked instead of an overlay (see DashboardSidebar's
+  // `isOpen` prop and DashboardHeader.desktop's PanelLeft toggle button).
+  const [isDesktopSidebarOpen, setIsDesktopSidebarOpen] = useState(true)
   const [isPaymentsPayoutsMobileExpanded, setIsPaymentsPayoutsMobileExpanded] = useState(isPaymentsPayoutsActive)
   const [isTaxIqMobileExpanded, setIsTaxIqMobileExpanded] = useState(activeMenu === DASHBOARD_MENU.TaxIq)
 
@@ -100,6 +104,8 @@ export function useDashboardNavigation() {
     activeMenu,
     isMobileMenuOpen,
     setIsMobileMenuOpen,
+    isDesktopSidebarOpen,
+    setIsDesktopSidebarOpen,
     isPaymentsPayoutsMobileExpanded,
     setIsPaymentsPayoutsMobileExpanded,
     isTouchpointsMobileExpanded,

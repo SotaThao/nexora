@@ -8,6 +8,8 @@ import {
   ClipboardList,
   LogOut,
   Menu,
+  PanelLeftClose,
+  PanelLeftOpen,
   Pointer,
   Search,
   Star,
@@ -50,7 +52,9 @@ export default function DashboardHeader({
   onViewStaffDetail,
   onApproveStaff,
   userRole = 'owner',
-  onOpenMobileMenu
+  onOpenMobileMenu,
+  isSidebarOpen = true,
+  onToggleSidebar
 }) {
   const { t, currentLanguage } = useTranslation()
   const navigate = useNavigate()
@@ -192,6 +196,17 @@ export default function DashboardHeader({
         </button>
         <img src="/assets/nexora-logo.png" alt="Nexora Logo" className="h-9 w-9 shrink-0 object-contain" />
       </div>
+
+      {/* Desktop sidebar collapse toggle — mirrors the mobile hamburger above,
+          just for the docked sidebar instead of the overlay drawer. */}
+      <button
+        type="button"
+        onClick={onToggleSidebar}
+        className="hidden h-10 w-10 shrink-0 items-center justify-center rounded-lg border border-nexoraBorder bg-white text-nexoraText shadow-nexora-soft transition hover:bg-nexoraSurfaceMuted lg:flex"
+        aria-label={isSidebarOpen ? 'Collapse sidebar' : 'Expand sidebar'}
+      >
+        {isSidebarOpen ? <PanelLeftClose className="h-5 w-5" /> : <PanelLeftOpen className="h-5 w-5" />}
+      </button>
 
       {/* Search Input with Suggestions Dropdown */}
       <div className="relative hidden w-full max-w-[385px] sm:block" ref={searchRef}>
