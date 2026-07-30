@@ -160,6 +160,8 @@ export const errorCodeToI18nKey = {
   VOICE_TENANT_SERVICE_DURATION_INVALID: 'errors.voice_tenant_service_duration_invalid',
   VOICE_TENANT_SERVICE_NOT_FOUND: 'errors.voice_tenant_service_not_found',
   VOICE_TENANT_STAFF_NOT_FOUND: 'errors.voice_tenant_staff_not_found',
+  VOICE_SERVICE_CATEGORY_CANNOT_MODIFY_DEFAULT:
+    'errors.voice_service_category_cannot_modify_default',
 
   // Nexora Voice SMS campaigns
   SMS_CAMPAIGN_NOT_FOUND: 'errors.sms_campaign_not_found',

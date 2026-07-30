@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from 'react'
+import { ChevronDown, Search, X } from 'lucide-react'
 import { useParams, useSearchParams } from 'react-router-dom'
 import { useNotification } from '../../../contexts/NotificationContext'
 import {
@@ -17,6 +18,7 @@ import {
   getPublicBookingCopy,
   parsePublicBookingLang,
   parsePublicBookingSource,
+  PUBLIC_BOOKING_ANY_STAFF_ID,
   PUBLIC_BOOKING_BODY_CLASS,
   PUBLIC_BOOKING_FIELD_ID,
   PUBLIC_BOOKING_ROUTE,
@@ -31,17 +33,35 @@ import {
   createDefaultBookingState,
   formatBookingSlot,
   formatCustomerPhoneDisplay,
+  formatServiceChoicePrice,
   getDefaultBookingSlot,
   moneyFromCents,
   parseBookingTime,
   readBookingCustomerPrefill,
   resolveBookingFieldErrors,
   resolveBookingServiceNames,
+  selectedServiceChipLabel,
+  serviceMatchesSearchQuery,
+  getServiceNameHighlightParts,
   validateBookingDraft,
 } from './bookingUtils'
 import BookingDateTimeFields from './BookingDateTimeFields'
 import './public-booking.css'
 import PublicBookingSkeleton from './PublicBookingSkeleton'
+
+function ServiceNameLabel({ name, query }) {
+  const parts = getServiceNameHighlightParts(name, query)
+  if (!query.trim()) return name
+  return parts.map((part, index) =>
+    part.highlight ? (
+      <mark key={`${part.text}-${index}`} className="service-search-mark">
+        {part.text}
+      </mark>
+    ) : (
+      <span key={`${part.text}-${index}`}>{part.text}</span>
+    ),
+  )
+}
 
 function ServiceChips({ names, emptyLabel }) {
   if (!names.length) return emptyLabel
@@ -102,12 +122,15 @@ export default function PublicBookingPage() {
   })
   const [errors, setErrors] = useState([])
   const [statusMessage, setStatusMessage] = useState('')
+  const [openCategoryIds, setOpenCategoryIds] = useState(() => new Set())
+  const [serviceSearchQuery, setServiceSearchQuery] = useState('')
 
   const pageData = pageQuery.data
   const businessName = pageData?.businessName || businessKey
   const catalog = useMemo(
     () => ({
       services: pageData?.services || [],
+      categories: pageData?.categories || [],
       staff: pageData?.staff || [],
       operatingHours: pageData?.operatingHours || [],
     }),
@@ -117,6 +140,69 @@ export default function PublicBookingPage() {
     () => parsePhone(state.customer.phone || PhoneDialCode.US),
     [state.customer.phone],
   )
+
+  const serviceCategories = useMemo(() => {
+    if (catalog.categories.length > 0) return catalog.categories
+    if (catalog.services.length === 0) return []
+    return [
+      {
+        id: 'all-services',
+        name: copy.otherCategoryName,
+        description: '',
+        isSystem: true,
+        services: catalog.services,
+      },
+    ]
+  }, [catalog.categories, catalog.services, copy.otherCategoryName])
+
+  // Open all categories by default when the catalog first loads / changes.
+  const categoryIdsKey = serviceCategories.map((category) => category.id).join('|')
+  useEffect(() => {
+    if (!categoryIdsKey) {
+      setOpenCategoryIds(new Set())
+      return
+    }
+    setOpenCategoryIds(new Set(categoryIdsKey.split('|')))
+  }, [categoryIdsKey])
+
+  const serviceSearchNeedle = serviceSearchQuery.trim()
+  const matchingServiceIds = useMemo(() => {
+    if (!serviceSearchNeedle) return null
+    const ids = new Set()
+    serviceCategories.forEach((category) => {
+      category.services.forEach((service) => {
+        if (serviceMatchesSearchQuery(service.name, serviceSearchNeedle)) {
+          ids.add(service.id)
+        }
+      })
+    })
+    return ids
+  }, [serviceCategories, serviceSearchNeedle])
+
+  // While searching, keep categories that contain matches expanded.
+  useEffect(() => {
+    if (!matchingServiceIds) return
+    if (matchingServiceIds.size === 0) return
+    setOpenCategoryIds((prev) => {
+      const next = new Set(prev)
+      serviceCategories.forEach((category) => {
+        const hasMatch = category.services.some((service) =>
+          matchingServiceIds.has(service.id),
+        )
+        if (hasMatch) next.add(category.id)
+      })
+      return next
+    })
+  }, [matchingServiceIds, serviceCategories])
+
+  const toggleCategory = (categoryId) => {
+    setOpenCategoryIds((prev) => {
+      const next = new Set(prev)
+      if (next.has(categoryId)) next.delete(categoryId)
+      else next.add(categoryId)
+      return next
+    })
+  }
 
   // Apply SMS / deep-link prefill when query values change (new preview link).
   const prefillPhoneRaw = searchParams.get(PUBLIC_BOOKING_ROUTE.phoneQuery) || ''
@@ -149,13 +235,17 @@ export default function PublicBookingPage() {
     }
   }, [copy, locale, businessName])
 
-  const selectedServices = catalog.services.filter((service) =>
-    state.selectedServiceIds.includes(service.id),
-  )
+  const selectedServices = state.selectedServiceIds
+    .map((id) => catalog.services.find((service) => service.id === id))
+    .filter(Boolean)
   const selectedStaff = catalog.staff.find(
     (staff) => staff.id === state.selectedStaffId,
   )
-  const staffName = selectedStaff?.fullName || copy.emDash
+  const staffName =
+    state.selectedStaffId === PUBLIC_BOOKING_ANY_STAFF_ID
+      ? copy.anyStaffName
+      : selectedStaff?.fullName || copy.emDash
+  const customerName = String(state.customer.name || '').trim()
 
   const scrollToFirstError = (errorKeys) => {
     const slotTargetId =
@@ -210,7 +300,7 @@ export default function PublicBookingPage() {
   const chooseStaff = (id) => {
     setState((prev) => ({
       ...prev,
-      selectedStaffId: prev.selectedStaffId === id ? '' : id,
+      selectedStaffId: id,
     }))
     setErrors([])
   }
@@ -248,14 +338,12 @@ export default function PublicBookingPage() {
     try {
       const result = await createMutation.mutateAsync({
         businessKey,
-        body: buildCreateBookingBody(state, {
-          timeZone: pageData?.timeZone,
-        }),
+        body: buildCreateBookingBody(state),
         source: bookingSource,
       })
-      const selectedNames = catalog.services
-        .filter((service) => state.selectedServiceIds.includes(service.id))
-        .map((service) => service.name)
+      const selectedNames = state.selectedServiceIds
+        .map((id) => catalog.services.find((service) => service.id === id)?.name)
+        .filter(Boolean)
       setState((prev) => ({
         ...prev,
         booking: {
@@ -378,9 +466,13 @@ export default function PublicBookingPage() {
                 </div>
               </div>
 
-              <div className="customer-fields booking-select-grid has-name" id="customer-fields">
-                <div className="booking-select-field" id="booking-phone-field">
-                  <span id="booking-phone-label">{copy.phoneLabel}</span>
+              <div className="customer-fields" id="customer-fields">
+                <label
+                  className="form-field"
+                  id="booking-phone-field"
+                  htmlFor={PUBLIC_BOOKING_FIELD_ID.phone}
+                >
+                  <span>{copy.phoneLabel}</span>
                   <div
                     className={`booking-datetime-shell phone-input-shell${
                       phoneParsed.nationalNumber ? ' has-value' : ' is-empty'
@@ -399,7 +491,6 @@ export default function PublicBookingPage() {
                       type="tel"
                       inputMode="numeric"
                       autoComplete="tel-national"
-                      aria-labelledby="booking-phone-label"
                       aria-describedby="phone-error"
                       placeholder={getNationalPhonePlaceholder(
                         phoneParsed.countryCode || PhoneDialCode.US,
@@ -419,74 +510,216 @@ export default function PublicBookingPage() {
                   <p className="field-error" id="phone-error" role="alert">
                     {phoneError}
                   </p>
-                </div>
+                </label>
 
-                <div className="booking-select-field" id="booking-name-field">
-                  <span id="booking-name-label">{copy.nameLabel}</span>
-                  <div
-                    className={`booking-datetime-shell${
-                      state.customer.name ? ' has-value' : ' is-empty'
-                    }`}
-                  >
-                    <input
-                      className="booking-text-input"
-                      id={PUBLIC_BOOKING_FIELD_ID.name}
-                      type="text"
-                      autoComplete="name"
-                      aria-labelledby="booking-name-label"
-                      aria-describedby="name-error"
-                      placeholder={copy.namePlaceholder}
-                      value={state.customer.name}
-                      onChange={(event) => {
-                        setState((prev) => ({
-                          ...prev,
-                          customer: { ...prev.customer, name: event.target.value },
-                        }))
-                        setErrors([])
-                      }}
-                    />
-                  </div>
+                <label
+                  className="form-field"
+                  id="booking-name-field"
+                  htmlFor={PUBLIC_BOOKING_FIELD_ID.name}
+                >
+                  <span>{copy.nameLabel}</span>
+                  <input
+                    className="input"
+                    id={PUBLIC_BOOKING_FIELD_ID.name}
+                    type="text"
+                    autoComplete="name"
+                    aria-describedby="name-error"
+                    placeholder={copy.namePlaceholder}
+                    value={state.customer.name}
+                    onChange={(event) => {
+                      setState((prev) => ({
+                        ...prev,
+                        customer: { ...prev.customer, name: event.target.value },
+                      }))
+                      setErrors([])
+                    }}
+                  />
                   <p className="field-error" id="name-error" role="alert">
                     {nameError}
                   </p>
-                </div>
+                </label>
               </div>
 
-              <div className="card-heading">
+              <div className="card-heading service-heading-row">
                 <div>
                   <h2>{copy.step1ServiceHeading}</h2>
                 </div>
+                <div className="service-search-field">
+                  <Search className="service-search-icon" aria-hidden="true" />
+                  <input
+                    type="text"
+                    className={`service-search-input${serviceSearchQuery ? ' has-clear' : ''}`}
+                    value={serviceSearchQuery}
+                    placeholder={copy.serviceSearchPlaceholder}
+                    aria-label={copy.serviceSearchAria}
+                    autoComplete="off"
+                    onChange={(event) =>
+                      setServiceSearchQuery(event.target.value)
+                    }
+                  />
+                  {serviceSearchQuery ? (
+                    <button
+                      type="button"
+                      className="service-search-clear"
+                      aria-label={copy.serviceSearchClearAria}
+                      onClick={() => setServiceSearchQuery('')}
+                    >
+                      <X aria-hidden="true" />
+                    </button>
+                  ) : null}
+                </div>
               </div>
 
-              {catalog.services.length === 0 ? (
-                <p className="section-copy">{copy.emptyServices}</p>
-              ) : (
-                <div className="service-grid" id={PUBLIC_BOOKING_FIELD_ID.services}>
-                  {catalog.services.map((service) => {
-                    const selected = state.selectedServiceIds.includes(service.id)
+              <div
+                className="service-category-list"
+                id={PUBLIC_BOOKING_FIELD_ID.services}
+                data-service-catalog
+                aria-live="polite"
+              >
+                {serviceCategories.length === 0 ? (
+                  <div className="service-catalog-loading">{copy.emptyServices}</div>
+                ) : matchingServiceIds && matchingServiceIds.size === 0 ? (
+                  <div className="service-catalog-loading">
+                    {copy.serviceSearchEmpty}
+                  </div>
+                ) : (
+                  serviceCategories.map((category) => {
+                    const isOpen = openCategoryIds.has(category.id)
+                    const panelId = `service-category-panel-${category.id}`
+                    const categoryHasMatch =
+                      !matchingServiceIds ||
+                      category.services.some((service) =>
+                        matchingServiceIds.has(service.id),
+                      )
+                    if (matchingServiceIds && !categoryHasMatch) return null
                     return (
-                      <button
-                        key={service.id}
-                        className="choice-card"
-                        type="button"
-                        data-service-id={service.id}
-                        aria-pressed={selected}
-                        onClick={() => chooseService(service.id)}
+                      <div
+                        key={category.id}
+                        className={`service-category${isOpen ? ' is-open' : ''}${matchingServiceIds && categoryHasMatch ? ' has-search-match' : ''}`}
+                        data-service-category={category.id}
                       >
-                        <span className="choice-title">{service.name}</span>
-                        <span className="choice-detail">
-                          <span>
-                            {copy.durationMinutes(service.durationMinutes || 0)}
+                        <button
+                          type="button"
+                          className="service-category-toggle"
+                          aria-expanded={isOpen}
+                          aria-controls={panelId}
+                          onClick={() => toggleCategory(category.id)}
+                        >
+                          <span
+                            className="service-category-name"
+                            data-service-category-name
+                          >
+                            {category.name}
                           </span>
-                          <strong className="choice-price">
-                            {moneyFromCents(service.priceCents)}
-                          </strong>
-                        </span>
-                      </button>
+                          <span
+                            className="service-category-count"
+                            data-service-category-count
+                          >
+                            {copy.categoryServiceCount(
+                              matchingServiceIds
+                                ? category.services.filter((service) =>
+                                    matchingServiceIds.has(service.id),
+                                  ).length
+                                : category.services.length,
+                            )}
+                          </span>
+                          <ChevronDown
+                            className="service-category-chevron"
+                            aria-hidden="true"
+                          />
+                        </button>
+                        <div
+                          className="service-category-body"
+                          id={panelId}
+                          role="region"
+                          aria-hidden={!isOpen}
+                        >
+                          <div className="service-category-body-inner">
+                            <div className="service-grid">
+                              {category.services.map((service) => {
+                                const selected =
+                                  state.selectedServiceIds.includes(service.id)
+                                const isMatch =
+                                  matchingServiceIds?.has(service.id) === true
+                                const isMiss =
+                                  Boolean(matchingServiceIds) && !isMatch
+                                if (isMiss) return null
+                                return (
+                                  <button
+                                    key={`${category.id}-${service.id}`}
+                                    className={`choice-card${isMatch ? ' is-search-match' : ''}`}
+                                    type="button"
+                                    data-service-id={service.id}
+                                    aria-pressed={selected}
+                                    tabIndex={isOpen ? 0 : -1}
+                                    onClick={() => chooseService(service.id)}
+                                  >
+                                    <span className="choice-title">
+                                      <ServiceNameLabel
+                                        name={service.name}
+                                        query={serviceSearchNeedle}
+                                      />
+                                    </span>
+                                    <span className="choice-detail">
+                                      <span>
+                                        {copy.durationMinutes(
+                                          service.durationMinutes || 0,
+                                        )}
+                                      </span>
+                                      <strong className="choice-price">
+                                        {formatServiceChoicePrice(
+                                          service,
+                                          copy.contactPrice,
+                                        )}
+                                      </strong>
+                                    </span>
+                                  </button>
+                                )
+                              })}
+                            </div>
+                          </div>
+                        </div>
+                      </div>
                     )
-                  })}
+                  })
+                )}
+              </div>
+
+              {selectedServices.length > 0 ? (
+                <div
+                  className="selected-services"
+                  id="selected-services"
+                  aria-live="polite"
+                >
+                  <span className="selected-services-label">
+                    {copy.selectedServicesLabel}
+                  </span>
+                  <div
+                    className="selected-service-chips"
+                    id="selected-service-chips"
+                  >
+                    {selectedServices.map((service) => {
+                      const label = selectedServiceChipLabel(
+                        service,
+                        copy.otherCategoryName,
+                      )
+                      return (
+                        <button
+                          key={service.id}
+                          className="selected-service-chip"
+                          type="button"
+                          data-remove-service-id={service.id}
+                          aria-label={copy.removeServiceAria(label)}
+                          onClick={() => chooseService(service.id)}
+                        >
+                          <span>{label}</span>
+                          <X aria-hidden="true" />
+                        </button>
+                      )
+                    })}
+                  </div>
                 </div>
-              )}
+              ) : null}
 
               <div className="selection-summary" aria-live="polite">
                 <span id="service-count">
@@ -501,31 +734,42 @@ export default function PublicBookingPage() {
               </p>
 
               <h3 className="section-title">{copy.staffSectionTitle}</h3>
-              {catalog.staff.length === 0 ? (
-                <p className="section-copy">{copy.emptyStaff}</p>
-              ) : (
-                <div className="staff-grid" id={PUBLIC_BOOKING_FIELD_ID.staff}>
-                  {catalog.staff.map((staff) => {
-                    const selected = state.selectedStaffId === staff.id
-                    return (
-                      <button
-                        key={staff.id}
-                        className="choice-card staff-card"
-                        type="button"
-                        data-staff-id={staff.id}
-                        aria-pressed={selected}
-                        onClick={() => chooseStaff(staff.id)}
-                      >
-                        <span className="choice-icon" aria-hidden="true">
-                          {staff.initials}
-                        </span>
-                        <span className="choice-title">{staff.fullName}</span>
-                        <span className="staff-status">{copy.staffAvailable}</span>
-                      </button>
-                    )
-                  })}
-                </div>
-              )}
+              <div className="staff-grid" id={PUBLIC_BOOKING_FIELD_ID.staff}>
+                <button
+                  className="choice-card staff-card"
+                  type="button"
+                  data-staff-id={PUBLIC_BOOKING_ANY_STAFF_ID}
+                  aria-pressed={
+                    state.selectedStaffId === PUBLIC_BOOKING_ANY_STAFF_ID
+                  }
+                  onClick={() => chooseStaff(PUBLIC_BOOKING_ANY_STAFF_ID)}
+                >
+                  <span className="choice-icon" aria-hidden="true">
+                    ✨
+                  </span>
+                  <span className="choice-title">{copy.anyStaffName}</span>
+                  <span className="staff-status">{copy.anyStaffStatus}</span>
+                </button>
+                {catalog.staff.map((staff) => {
+                  const selected = state.selectedStaffId === staff.id
+                  return (
+                    <button
+                      key={staff.id}
+                      className="choice-card staff-card"
+                      type="button"
+                      data-staff-id={staff.id}
+                      aria-pressed={selected}
+                      onClick={() => chooseStaff(staff.id)}
+                    >
+                      <span className="choice-icon" aria-hidden="true">
+                        {staff.initials}
+                      </span>
+                      <span className="choice-title">{staff.fullName}</span>
+                      <span className="staff-status">{copy.staffAvailable}</span>
+                    </button>
+                  )
+                })}
+              </div>
               <p className="field-error" id="staff-error" role="alert">
                 {staffError}
               </p>
@@ -589,14 +833,17 @@ export default function PublicBookingPage() {
 
               <div className="review-summary">
                 <dl className="review-list">
-                  <div className="review-row">
-                    <dt>{copy.reviewName}</dt>
-                    <dd>{String(state.customer.name || '').trim() || copy.emDash}</dd>
-                  </div>
+                  {customerName ? (
+                    <div className="review-row" id="review-customer-name-row">
+                      <dt>{copy.reviewName}</dt>
+                      <dd>{customerName}</dd>
+                    </div>
+                  ) : null}
                   <div className="review-row">
                     <dt>{copy.reviewPhone}</dt>
                     <dd>
-                      {formatCustomerPhoneDisplay(state.customer.phone) || copy.emDash}
+                      {formatCustomerPhoneDisplay(state.customer.phone) ||
+                        copy.emDash}
                     </dd>
                   </div>
                   <div className="review-row">
@@ -615,7 +862,11 @@ export default function PublicBookingPage() {
                   <div className="review-row">
                     <dt>{copy.reviewSlot}</dt>
                     <dd>
-                      {formatBookingSlot(state.selectedDate, state.selectedTime, locale)}
+                      {formatBookingSlot(
+                        state.selectedDate,
+                        state.selectedTime,
+                        locale,
+                      )}
                     </dd>
                   </div>
                 </dl>
@@ -684,12 +935,21 @@ export default function PublicBookingPage() {
                 <div>
                   <dt>{copy.reviewSlot}</dt>
                   <dd>
-                    {formatBookingSlot(state.selectedDate, state.selectedTime, locale)}
+                    {formatBookingSlot(
+                      state.selectedDate,
+                      state.selectedTime,
+                      locale,
+                    )}
                   </dd>
                 </div>
                 <div>
                   <dt>{copy.reviewStaff}</dt>
-                  <dd>{booking.staffName || copy.emDash}</dd>
+                  <dd>
+                    {booking.staffName ||
+                      (state.selectedStaffId === PUBLIC_BOOKING_ANY_STAFF_ID
+                        ? copy.anyStaffName
+                        : copy.emDash)}
+                  </dd>
                 </div>
                 <div>
                   <dt>{copy.reviewServices}</dt>

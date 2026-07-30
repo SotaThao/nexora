@@ -8,7 +8,7 @@ import { getErrorI18nKey } from "../../../data/errorCodes";
 import {
   useCreateMerchantVoiceStaff,
   useMerchantVoiceBusinessStaff,
-  useMerchantVoiceConfig,
+  useMerchantVoiceServices,
   useMerchantVoiceStaff,
   useMerchantVoiceStaffById,
   useToggleMerchantVoiceStaffStatus,
@@ -503,7 +503,12 @@ function CheckIcon() {
   );
 }
 
-export default function BookingTeamPanel() {
+interface Props {
+  /** When true, render without Booking Book sub-panel / overview-card chrome (Settings embed). */
+  embedded?: boolean
+}
+
+export default function BookingTeamPanel({ embedded = false }: Props) {
   const { t } = useTranslation();
   const { showToast } = useNotification();
   const voiceEnabled = useBookingHubVoiceEnabled();
@@ -551,8 +556,8 @@ export default function BookingTeamPanel() {
       { searchTerm: debouncedSearchQuery },
       { enabled: voiceEnabled && modalOpen },
     );
-  const { data: configResponse, isLoading: isConfigLoading } =
-    useMerchantVoiceConfig({
+  const { data: servicesResponse, isLoading: isServicesLoading } =
+    useMerchantVoiceServices({
       enabled: voiceEnabled && modalOpen,
     });
   const [members, setMembers] = useState<TeamMember[]>(INITIAL_TEAM_MEMBERS);
@@ -585,14 +590,14 @@ export default function BookingTeamPanel() {
   const filteredBusinessStaff = businessStaffOptions;
 
   const serviceOptions = useMemo(() => {
-    const apiServices = configResponse?.services ?? [];
+    const apiServices = servicesResponse ?? [];
     const activeSorted = [...apiServices]
       .filter((service) => service.isActive)
       .sort((a, b) => a.sortOrder - b.sortOrder)
       .map((service) => service.name.trim())
       .filter(Boolean);
     return Array.from(new Set(activeSorted));
-  }, [configResponse?.services]);
+  }, [servicesResponse]);
 
   const draftPhoneParsed = useMemo(() => parsePhone(draftPhone), [draftPhone]);
 
@@ -1004,8 +1009,11 @@ export default function BookingTeamPanel() {
   }, [searchQuery]);
 
   return (
-    <div className="booking-sub-panel is-active" aria-busy={isStaffLoading}>
-      <article className="overview-card overview-card-pad">
+    <div
+      className={embedded ? "settings-team-panel" : "booking-sub-panel is-active"}
+      aria-busy={isStaffLoading}
+    >
+      <article className={embedded ? "settings-team-body" : "overview-card overview-card-pad"}>
         <div className="tech-intro">
           <div className="tech-intro-text">{t(`${TK}.intro`)}</div>
           <button
@@ -1369,7 +1377,7 @@ export default function BookingTeamPanel() {
                         <span className="settings-label">
                           {t(`${TK}.services`)}
                         </span>
-                        {!isConfigLoading && serviceOptions.length > 0 ? (
+                        {!isServicesLoading && serviceOptions.length > 0 ? (
                           <label className="tech-service-check-all-toggle">
                             <input
                               ref={checkAllServicesRef}
@@ -1381,7 +1389,7 @@ export default function BookingTeamPanel() {
                           </label>
                         ) : null}
                       </div>
-                      {isConfigLoading ? (
+                      {isServicesLoading ? (
                         <BookingTechServicesSkeleton count={4} />
                       ) : serviceOptions.length > 0 ? (
                         <div className="tech-service-checks">
