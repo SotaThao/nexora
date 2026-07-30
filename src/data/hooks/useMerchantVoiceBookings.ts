@@ -8,6 +8,12 @@ import {
   type MerchantVoiceBusinessStaffDto,
   type MerchantVoiceConfigDto,
   type UpdateMerchantVoiceConfigRequest,
+  type MerchantVoiceServiceCategoryDto,
+  type MerchantVoiceServiceDto,
+  type CreateMerchantVoiceServiceCategoryRequest,
+  type UpdateMerchantVoiceServiceCategoryRequest,
+  type CreateMerchantVoiceServiceRequest,
+  type UpdateMerchantVoiceServiceRequest,
   MerchantVoiceLeadStatus,
   MerchantVoiceStaffStatus,
   type CreateMerchantVoiceBookingRequest,
@@ -198,6 +204,92 @@ export function useUpdateMerchantVoiceConfig() {
     mutationFn: (body) => merchantVoiceRepository.updateConfig(body),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: qk.merchantVoiceConfig() })
+    },
+  })
+}
+
+export function useMerchantVoiceServiceCategories({ enabled = true } = {}) {
+  return useQuery<MerchantVoiceServiceCategoryDto[]>({
+    queryKey: qk.merchantVoiceServiceCategories(),
+    queryFn: () => merchantVoiceRepository.getServiceCategories(),
+    enabled,
+  })
+}
+
+export function useCreateMerchantVoiceServiceCategory() {
+  const queryClient = useQueryClient()
+  return useMutation<string, Error, CreateMerchantVoiceServiceCategoryRequest>({
+    mutationFn: (body) => merchantVoiceRepository.createServiceCategory(body),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: qk.merchantVoiceServiceCategories() })
+      queryClient.invalidateQueries({ queryKey: qk.merchantVoiceServices() })
+    },
+  })
+}
+
+export function useUpdateMerchantVoiceServiceCategory() {
+  const queryClient = useQueryClient()
+  return useMutation<
+    void,
+    Error,
+    { id: string; body: UpdateMerchantVoiceServiceCategoryRequest }
+  >({
+    mutationFn: ({ id, body }) => merchantVoiceRepository.updateServiceCategory(id, body),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: qk.merchantVoiceServiceCategories() })
+      queryClient.invalidateQueries({ queryKey: qk.merchantVoiceServices() })
+    },
+  })
+}
+
+export function useDeleteMerchantVoiceServiceCategory() {
+  const queryClient = useQueryClient()
+  return useMutation<void, Error, string>({
+    mutationFn: (id) => merchantVoiceRepository.deleteServiceCategory(id),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: qk.merchantVoiceServiceCategories() })
+      queryClient.invalidateQueries({ queryKey: qk.merchantVoiceServices() })
+    },
+  })
+}
+
+export function useMerchantVoiceServices({ enabled = true } = {}) {
+  return useQuery<MerchantVoiceServiceDto[]>({
+    queryKey: qk.merchantVoiceServices(),
+    queryFn: () => merchantVoiceRepository.getServices(),
+    enabled,
+  })
+}
+
+export function useCreateMerchantVoiceService() {
+  const queryClient = useQueryClient()
+  return useMutation<string, Error, CreateMerchantVoiceServiceRequest>({
+    mutationFn: (body) => merchantVoiceRepository.createService(body),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: qk.merchantVoiceServices() })
+      queryClient.invalidateQueries({ queryKey: qk.merchantVoiceServiceCategories() })
+    },
+  })
+}
+
+export function useUpdateMerchantVoiceService() {
+  const queryClient = useQueryClient()
+  return useMutation<void, Error, { id: string; body: UpdateMerchantVoiceServiceRequest }>({
+    mutationFn: ({ id, body }) => merchantVoiceRepository.updateService(id, body),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: qk.merchantVoiceServices() })
+      queryClient.invalidateQueries({ queryKey: qk.merchantVoiceServiceCategories() })
+    },
+  })
+}
+
+export function useDeleteMerchantVoiceService() {
+  const queryClient = useQueryClient()
+  return useMutation<void, Error, string>({
+    mutationFn: (id) => merchantVoiceRepository.deleteService(id),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: qk.merchantVoiceServices() })
+      queryClient.invalidateQueries({ queryKey: qk.merchantVoiceServiceCategories() })
     },
   })
 }

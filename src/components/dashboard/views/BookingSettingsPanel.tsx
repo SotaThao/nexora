@@ -3,29 +3,37 @@ import { useTranslation } from "../../../contexts/LanguageContext";
 import { useNotification } from "../../../contexts/NotificationContext";
 import { getErrorI18nKey } from "../../../data/errorCodes";
 import {
+  useCreateMerchantVoiceService,
+  useCreateMerchantVoiceServiceCategory,
+  useDeleteMerchantVoiceService,
+  useDeleteMerchantVoiceServiceCategory,
   useMerchantVoiceConfig,
+  useMerchantVoiceServiceCategories,
+  useMerchantVoiceServices,
   useUpdateMerchantVoiceConfig,
+  useUpdateMerchantVoiceService,
+  useUpdateMerchantVoiceServiceCategory,
 } from "../../../data/hooks/useMerchantVoiceBookings";
 import {
   clampMerchantVoiceServiceDurationMinutes,
-  isValidMerchantVoiceServiceDuration,
   mapConfigLanguageToUiLanguage,
   mapUiLanguageToConfigLanguage,
+  merchantVoiceRepository,
   MerchantVoiceDayOfWeek,
-  MerchantVoiceServiceField,
   MerchantVoiceUiLanguage,
   normalizeMerchantVoiceDayOfWeek,
+  OTHER_SERVICES_CATEGORY_ID,
+  type MerchantVoiceServiceCategoryDto,
 } from "../../../data/repositories/merchantVoice";
+import { qk } from "../../../data/queryKeys";
+import { useQueryClient } from "@tanstack/react-query";
 import { getApiErrorCode } from "../../../types/domain";
 import {
   loadSpeechVoices,
   speakBookingPreview,
   stopBookingPreview,
 } from "../../../utils/bookingVoicePreview";
-import {
-  formatWholeNumberInputValue,
-  parseWholeNumberInput,
-} from "../../../utils/numericInput";
+import { formatWholeNumberInputValue } from "../../../utils/numericInput";
 import CountryCodeSelect, {
   formatNationalNumber,
   getNationalPhonePlaceholder,
@@ -34,16 +42,38 @@ import CountryCodeSelect, {
   parsePhone,
 } from "../../CountryCodeSelect";
 import {
+  DEFAULT_SETTINGS_TIMEZONE,
+  detectTimeZoneFromAddressText,
+  EMPTY_LOCATION,
+  getSettingsCountryLabel,
+  isKnownSettingsCountryCode,
+  isSettingsTimeZone,
+  normalizeSettingsCountry,
+  SETTINGS_COUNTRY_OPTIONS,
+  SETTINGS_TIMEZONE_OPTIONS,
+  splitSettingsAddress,
+  type LocationParts,
+  type SettingsCountryOption,
+} from "./settingsLocationDetect";
+import {
+  geocodeSalonAddress,
+  isGeocodeAddressQueryReady,
+  type GeocodedSalonAddress,
+} from "./settingsAddressGeocode";
+import {
+  CheckCircleFillIcon,
   ClockHistoryIcon,
   CurrencyDollarIcon,
   FolderTreeIcon,
   InfoCircleIcon,
+  PencilIcon,
   PeopleTabIcon,
   PlusIcon,
   PlusLgIcon,
   ShopIcon,
   SpinnerIcon,
   StarsIcon,
+  Trash2Icon,
   XLgIcon,
 } from "./BookingHubIcons";
 import { BookingSettingsSkeleton } from "./BookingHubSkeletons";
@@ -91,6 +121,12 @@ interface HourRow {
   closeTime: string;
 }
 
+interface SettingsCategory {
+  id: string
+  name: string
+  isSystem: boolean
+}
+
 interface ServiceRow {
   id: string
   icon: string
@@ -98,184 +134,109 @@ interface ServiceRow {
   name: string
   price: number
   duration: number
-  /** Persisted via config service `note` (HTML category accordion). */
+  /** Display name for primary accordion grouping. */
   category: string
+  /** Primary category id (first selected / preferred). */
+  categoryId: string
+  /** All linked category ids (multi-category). */
+  categoryIds: string[]
+}
+
+type ServiceModalMode = "create" | "edit"
+
+type ServiceModalDraft = {
+  mode: ServiceModalMode
+  serviceId: string | null
+  categoryIds: string[]
+  name: string
+  price: string
+  duration: string
+}
+
+interface CategoryDraft {
+  id: string | null
+  name: string
+  isSystem: boolean
+  /** Unsaved row created via Add category. */
+  isNew?: boolean
+  /** Existing row currently in rename mode. */
+  isEditing?: boolean
 }
 
 const DEFAULT_SERVICE_CATEGORY = "Other services"
 
-const SETTINGS_COUNTRY_OPTIONS = [
-  { value: "US", labelKey: "countryUS" },
-  { value: "CA", labelKey: "countryCA" },
-  { value: "MX", labelKey: "countryMX" },
-  { value: "VN", labelKey: "countryVN" },
-] as const
+const GUID_RE =
+  /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i
 
-type SettingsCountryCode = (typeof SETTINGS_COUNTRY_OPTIONS)[number]["value"]
-
-type LocationParts = {
-  street: string
-  city: string
-  state: string
-  zip: string
-  country: SettingsCountryCode
+function isPersistedServiceId(id: string) {
+  return GUID_RE.test(id)
 }
 
-const EMPTY_LOCATION: LocationParts = {
-  street: "",
-  city: "",
-  state: "",
-  zip: "",
-  country: "US",
+function normalizeServiceCategoryIds(
+  categoryIds: string[] | undefined,
+  fallbackId: string,
+): string[] {
+  const cleaned = [
+    ...new Set(
+      (categoryIds || [])
+        .map((id) => String(id || "").trim())
+        .filter(Boolean),
+    ),
+  ]
+  return cleaned.length > 0 ? cleaned : [fallbackId]
 }
 
-function normalizeSettingsCountry(value: string): SettingsCountryCode {
-  const raw = value.trim().toUpperCase()
-  if (raw === "CA" || raw === "CANADA") return "CA"
-  if (raw === "MX" || raw === "MEXICO") return "MX"
-  if (raw === "VN" || raw === "VIETNAM" || raw === "VIỆT NAM") return "VN"
-  if (raw === "US" || raw === "USA" || raw === "UNITED STATES") return "US"
-  return "US"
+function primaryCategoryId(categoryIds: string[], fallbackId: string): string {
+  return categoryIds[0] || fallbackId
 }
 
-/** Join structured location fields into the single API `address` string. */
-function joinSettingsAddress(parts: LocationParts) {
-  const street = parts.street.trim()
-  const city = parts.city.trim()
-  const stateZip = [parts.state.trim(), parts.zip.trim()].filter(Boolean).join(" ")
-  const cityStateZip = [city, stateZip].filter(Boolean).join(", ")
-  const country = parts.country.trim()
-  return [street, cityStateZip, country].filter(Boolean).join(", ")
+/** Real category ids for API. Default "Other services" is built-in — never send its id. */
+function categoryIdsForApi(categoryIds: string[]): string[] {
+  return [
+    ...new Set(
+      categoryIds
+        .map((id) => String(id || "").trim())
+        .filter((id) => id && id !== OTHER_SERVICES_CATEGORY_ID),
+    ),
+  ]
 }
 
-/** Best-effort split of a stored address into HTML location fields. */
-function splitSettingsAddress(raw: string): LocationParts {
-  const text = String(raw || "").trim()
-  if (!text) return { ...EMPTY_LOCATION }
-  const chunks = text.split(",").map((part) => part.trim()).filter(Boolean)
-  if (chunks.length >= 4) {
-    const country = normalizeSettingsCountry(chunks[chunks.length - 1])
-    const stateZip = chunks[chunks.length - 2]
-    const city = chunks[chunks.length - 3]
-    const street = chunks.slice(0, -3).join(", ")
-    const [state, ...zipParts] = stateZip.split(/\s+/).filter(Boolean)
-    return {
-      street,
-      city,
-      state: state || "",
-      zip: zipParts.join(" "),
-      country,
-    }
-  }
-  if (chunks.length === 3) {
-    const stateZip = chunks[2]
-    const [state, ...zipParts] = stateZip.split(/\s+/).filter(Boolean)
-    return {
-      street: chunks[0],
-      city: chunks[1],
-      state: state || "",
-      zip: zipParts.join(" "),
-      country: "US",
-    }
-  }
-  return { ...EMPTY_LOCATION, street: text }
+function sameCategoryIds(left: string[], right: string[]): boolean {
+  if (left.length !== right.length) return false
+  const a = [...left].sort()
+  const b = [...right].sort()
+  return a.every((id, index) => id === b[index])
 }
 
-const SETTINGS_TIMEZONE_OPTIONS = [
-  "America/Los_Angeles",
-  "America/Denver",
-  "America/Chicago",
-  "America/New_York",
-  "America/Anchorage",
-  "Pacific/Honolulu",
-  "America/Toronto",
-  "America/Vancouver",
-  "America/Edmonton",
-  "America/Winnipeg",
-  "America/Mexico_City",
-  "America/Tijuana",
-  "Asia/Ho_Chi_Minh",
-] as const
-
-type SettingsTimeZone = (typeof SETTINGS_TIMEZONE_OPTIONS)[number]
-
-const DEFAULT_SETTINGS_TIMEZONE: SettingsTimeZone = "America/Chicago"
-
-const US_STATE_TIMEZONES: Array<{ timeZone: SettingsTimeZone; states: string[] }> = [
-  {
-    timeZone: "America/Los_Angeles",
-    states: ["CA", "CALIFORNIA", "NV", "NEVADA", "OR", "OREGON", "WA", "WASHINGTON"],
-  },
-  {
-    timeZone: "America/Denver",
-    states: [
-      "AZ", "ARIZONA", "CO", "COLORADO", "ID", "IDAHO", "MT", "MONTANA",
-      "NM", "NEW MEXICO", "UT", "UTAH", "WY", "WYOMING",
-    ],
-  },
-  {
-    timeZone: "America/New_York",
-    states: [
-      "CT", "CONNECTICUT", "DE", "DELAWARE", "FL", "FLORIDA", "GA", "GEORGIA",
-      "ME", "MAINE", "MD", "MARYLAND", "MA", "MASSACHUSETTS", "NH", "NEW HAMPSHIRE",
-      "NJ", "NEW JERSEY", "NY", "NEW YORK", "NC", "NORTH CAROLINA", "OH", "OHIO",
-      "PA", "PENNSYLVANIA", "RI", "RHODE ISLAND", "SC", "SOUTH CAROLINA",
-      "VT", "VERMONT", "VA", "VIRGINIA", "WV", "WEST VIRGINIA",
-    ],
-  },
-  {
-    timeZone: "America/Chicago",
-    states: [
-      "AL", "ALABAMA", "AR", "ARKANSAS", "IA", "IOWA", "IL", "ILLINOIS",
-      "KS", "KANSAS", "KY", "KENTUCKY", "LA", "LOUISIANA", "MN", "MINNESOTA",
-      "MS", "MISSISSIPPI", "MO", "MISSOURI", "NE", "NEBRASKA", "ND", "NORTH DAKOTA",
-      "OK", "OKLAHOMA", "SD", "SOUTH DAKOTA", "TN", "TENNESSEE", "TX", "TEXAS",
-      "WI", "WISCONSIN",
-    ],
-  },
-]
-
-function isSettingsTimeZone(value: string): value is SettingsTimeZone {
-  return (SETTINGS_TIMEZONE_OPTIONS as readonly string[]).includes(value)
+/** Keep full category catalog across refreshes (API may omit empty groups). */
+function unionSettingsCategories(
+  previous: SettingsCategory[],
+  next: SettingsCategory[],
+  removedIds: string[] = [],
+): SettingsCategory[] {
+  const removed = new Set(removedIds)
+  const byId = new Map<string, SettingsCategory>()
+  previous.forEach((category) => {
+    if (removed.has(category.id)) return
+    byId.set(category.id, category)
+  })
+  next.forEach((category) => {
+    if (!category.id || removed.has(category.id)) return
+    const existing = byId.get(category.id)
+    byId.set(category.id, {
+      id: category.id,
+      name: category.name || existing?.name || DEFAULT_SERVICE_CATEGORY,
+      isSystem:
+        category.isSystem ||
+        existing?.isSystem ||
+        category.id === OTHER_SERVICES_CATEGORY_ID,
+    })
+  })
+  return [...byId.values()].sort((left, right) => {
+    if (left.isSystem !== right.isSystem) return left.isSystem ? -1 : 1
+    return left.name.localeCompare(right.name)
+  })
 }
-
-/** Mirror HTML `detectSettingsTimeZone` from salon location fields. */
-function detectSettingsTimeZone(parts: LocationParts): SettingsTimeZone {
-  const country = parts.country.trim().toUpperCase()
-  const state = parts.state.trim().toUpperCase()
-  const city = parts.city.trim().toUpperCase()
-
-  if (country === "VN") return "Asia/Ho_Chi_Minh"
-
-  if (country === "CA") {
-    if (/^(BC|BRITISH COLUMBIA)$/.test(state)) return "America/Vancouver"
-    if (/^(AB|ALBERTA|SK|SASKATCHEWAN)$/.test(state)) return "America/Edmonton"
-    if (/^(MB|MANITOBA)$/.test(state)) return "America/Winnipeg"
-    return "America/Toronto"
-  }
-
-  if (country === "MX") {
-    if (/TIJUANA|BAJA CALIFORNIA/.test(`${city} ${state}`)) return "America/Tijuana"
-    return "America/Mexico_City"
-  }
-
-  for (const entry of US_STATE_TIMEZONES) {
-    if (entry.states.includes(state)) return entry.timeZone
-  }
-
-  return DEFAULT_SETTINGS_TIMEZONE
-}
-
-const SERVICE_SUGGESTIONS = [
-  { id: "gel-x-extension", name: "Gel-X Extension", price: 55, duration: 90 },
-  { id: "polish-change", name: "Polish Change", price: 15, duration: 20 },
-  { id: "french-tips", name: "French Tips", price: 10, duration: 15 },
-  { id: "chrome-mirror", name: "Chrome / Mirror", price: 15, duration: 20 },
-  { id: "cat-eye-gel", name: "Cat Eye Gel", price: 50, duration: 75 },
-  { id: "soak-off-removal", name: "Soak-Off Removal", price: 10, duration: 20 },
-  { id: "eyebrow-wax", name: "Eyebrow Wax", price: 12, duration: 15 },
-  { id: "lash-fill", name: "Lash Fill", price: 45, duration: 60 },
-] as const
 
 const INITIAL_HOURS: Record<DayKey, HourRow> = {
   mon: { open: true, openTime: "07:00", closeTime: "21:00" },
@@ -295,6 +256,8 @@ const INITIAL_SERVICES: ServiceRow[] = [
     name: "Gel Manicure",
     price: 35,
     category: DEFAULT_SERVICE_CATEGORY,
+    categoryId: OTHER_SERVICES_CATEGORY_ID,
+    categoryIds: [OTHER_SERVICES_CATEGORY_ID],
     duration: 60,
   },
   {
@@ -304,6 +267,8 @@ const INITIAL_SERVICES: ServiceRow[] = [
     name: "Classic Manicure",
     price: 22,
     category: DEFAULT_SERVICE_CATEGORY,
+    categoryId: OTHER_SERVICES_CATEGORY_ID,
+    categoryIds: [OTHER_SERVICES_CATEGORY_ID],
     duration: 45,
   },
   {
@@ -313,6 +278,8 @@ const INITIAL_SERVICES: ServiceRow[] = [
     name: "Full Set Acrylic",
     price: 45,
     category: DEFAULT_SERVICE_CATEGORY,
+    categoryId: OTHER_SERVICES_CATEGORY_ID,
+    categoryIds: [OTHER_SERVICES_CATEGORY_ID],
     duration: 90,
   },
   {
@@ -322,6 +289,8 @@ const INITIAL_SERVICES: ServiceRow[] = [
     name: "Dip Powder",
     price: 40,
     category: DEFAULT_SERVICE_CATEGORY,
+    categoryId: OTHER_SERVICES_CATEGORY_ID,
+    categoryIds: [OTHER_SERVICES_CATEGORY_ID],
     duration: 75,
   },
   {
@@ -331,6 +300,8 @@ const INITIAL_SERVICES: ServiceRow[] = [
     name: "Fill-In",
     price: 32,
     category: DEFAULT_SERVICE_CATEGORY,
+    categoryId: OTHER_SERVICES_CATEGORY_ID,
+    categoryIds: [OTHER_SERVICES_CATEGORY_ID],
     duration: 60,
   },
   {
@@ -340,6 +311,8 @@ const INITIAL_SERVICES: ServiceRow[] = [
     name: "Classic Pedicure",
     price: 30,
     category: DEFAULT_SERVICE_CATEGORY,
+    categoryId: OTHER_SERVICES_CATEGORY_ID,
+    categoryIds: [OTHER_SERVICES_CATEGORY_ID],
     duration: 50,
   },
   {
@@ -349,6 +322,8 @@ const INITIAL_SERVICES: ServiceRow[] = [
     name: "Deluxe Pedicure",
     price: 50,
     category: DEFAULT_SERVICE_CATEGORY,
+    categoryId: OTHER_SERVICES_CATEGORY_ID,
+    categoryIds: [OTHER_SERVICES_CATEGORY_ID],
     duration: 70,
   },
   {
@@ -358,6 +333,8 @@ const INITIAL_SERVICES: ServiceRow[] = [
     name: "Pedicure + Gel Combo",
     price: 65,
     category: DEFAULT_SERVICE_CATEGORY,
+    categoryId: OTHER_SERVICES_CATEGORY_ID,
+    categoryIds: [OTHER_SERVICES_CATEGORY_ID],
     duration: 105,
   },
   {
@@ -367,6 +344,8 @@ const INITIAL_SERVICES: ServiceRow[] = [
     name: "Kid Mani-Pedi",
     price: 25,
     category: DEFAULT_SERVICE_CATEGORY,
+    categoryId: OTHER_SERVICES_CATEGORY_ID,
+    categoryIds: [OTHER_SERVICES_CATEGORY_ID],
     duration: 40,
   },
   {
@@ -376,9 +355,127 @@ const INITIAL_SERVICES: ServiceRow[] = [
     name: "Nail Art (per nail)",
     price: 5,
     category: DEFAULT_SERVICE_CATEGORY,
+    categoryId: OTHER_SERVICES_CATEGORY_ID,
+    categoryIds: [OTHER_SERVICES_CATEGORY_ID],
     duration: 10,
   },
 ];
+
+function flattenCategoriesToUi(categoriesData: MerchantVoiceServiceCategoryDto[]): {
+  categories: SettingsCategory[]
+  services: ServiceRow[]
+} {
+  const categories = [...categoriesData]
+    .sort((a, b) => a.sortOrder - b.sortOrder)
+    .map((category) => ({
+      id: category.id,
+      name: category.name,
+      isSystem: category.isSystem || category.id === OTHER_SERVICES_CATEGORY_ID,
+    }))
+
+  const byId = new Map<string, ServiceRow>()
+  let index = 0
+  const otherId =
+    categories.find((category) => category.isSystem)?.id ||
+    OTHER_SERVICES_CATEGORY_ID
+  // Match HTML: place each service under the category accordion it was nested in.
+  ;[...categoriesData]
+    .sort((a, b) => a.sortOrder - b.sortOrder)
+    .forEach((category) => {
+      category.services.forEach((service) => {
+        if (!service.id) return
+        const existing = byId.get(service.id)
+        if (existing) {
+          const mergedIds = normalizeServiceCategoryIds(
+            [...existing.categoryIds, category.id, ...(service.categoryIds || [])],
+            otherId,
+          )
+          const preferredId = primaryCategoryId(mergedIds, otherId)
+          const linked =
+            categories.find((item) => item.id === preferredId) ||
+            categories.find((item) => item.isSystem)
+          byId.set(service.id, {
+            ...existing,
+            categoryIds: mergedIds,
+            categoryId: preferredId,
+            category: linked?.name || existing.category,
+          })
+          return
+        }
+        const toneSeed = INITIAL_SERVICES[index % INITIAL_SERVICES.length]
+        const categoryIds = normalizeServiceCategoryIds(
+          service.categoryIds?.length
+            ? service.categoryIds
+            : [category.id],
+          otherId,
+        )
+        const preferredId = primaryCategoryId(categoryIds, otherId)
+        const linked =
+          categories.find((item) => item.id === preferredId) ||
+          categories.find((item) => item.id === category.id)
+        byId.set(service.id, {
+          id: service.id,
+          icon: service.icon || toneSeed?.icon || "✨",
+          tone: toneSeed?.tone || "tone-violet",
+          name: service.name || "",
+          price: Number(service.price ?? 0),
+          duration: clampMerchantVoiceServiceDurationMinutes(
+            Number(service.durationMinutes ?? 0),
+          ),
+          category: linked?.name || category.name || DEFAULT_SERVICE_CATEGORY,
+          categoryId: preferredId,
+          categoryIds,
+        })
+        index += 1
+      })
+    })
+
+  return { categories, services: Array.from(byId.values()) }
+}
+
+function mergeFlatServicesIntoCategories(
+  categories: SettingsCategory[],
+  flatServices: Array<{
+    id: string
+    name: string
+    price: number | null
+    durationMinutes: number | null
+    icon: string | null
+    isActive: boolean
+    categoryIds: string[]
+  }>,
+): ServiceRow[] {
+  const categoryById = new Map(categories.map((category) => [category.id, category]))
+  const other =
+    categories.find((category) => category.isSystem) ||
+    categories.find((category) => category.id === OTHER_SERVICES_CATEGORY_ID)
+
+  return flatServices
+    .filter((service) => service.isActive !== false && service.id)
+    .map((service, index) => {
+      const otherId = other?.id || OTHER_SERVICES_CATEGORY_ID
+      const categoryIds = normalizeServiceCategoryIds(
+        service.categoryIds,
+        otherId,
+      )
+      const preferredId = primaryCategoryId(categoryIds, otherId)
+      const linked = categoryById.get(preferredId) || other
+      const toneSeed = INITIAL_SERVICES[index % INITIAL_SERVICES.length]
+      return {
+        id: service.id,
+        icon: service.icon || toneSeed?.icon || "✨",
+        tone: toneSeed?.tone || "tone-violet",
+        name: service.name || "",
+        price: Number(service.price ?? 0),
+        duration: clampMerchantVoiceServiceDurationMinutes(
+          Number(service.durationMinutes ?? 0),
+        ),
+        category: linked?.name || DEFAULT_SERVICE_CATEGORY,
+        categoryId: linked?.id || OTHER_SERVICES_CATEGORY_ID,
+        categoryIds,
+      } satisfies ServiceRow
+    })
+}
 
 const AI_LANGUAGE_OPTIONS = [
   MerchantVoiceUiLanguage.Auto,
@@ -633,35 +730,55 @@ function SettingsCard({
 
 export default function BookingSettingsPanel() {
   const { t } = useTranslation();
-  const { showToast } = useNotification();
+  const { showToast, showConfirm } = useNotification();
+  const queryClient = useQueryClient();
   const voiceEnabled = useBookingHubVoiceEnabled();
   const { data: configData, isLoading: isConfigLoading } =
     useMerchantVoiceConfig({ enabled: voiceEnabled });
+  const { data: categoriesData, isLoading: isCategoriesLoading } =
+    useMerchantVoiceServiceCategories({ enabled: voiceEnabled });
+  const { data: flatServicesData, isLoading: isServicesLoading } =
+    useMerchantVoiceServices({ enabled: voiceEnabled });
   const updateConfigMutation = useUpdateMerchantVoiceConfig();
+  const createCategoryMutation = useCreateMerchantVoiceServiceCategory();
+  const updateCategoryMutation = useUpdateMerchantVoiceServiceCategory();
+  const deleteCategoryMutation = useDeleteMerchantVoiceServiceCategory();
+  const createServiceMutation = useCreateMerchantVoiceService();
+  const updateServiceMutation = useUpdateMerchantVoiceService();
+  const deleteServiceMutation = useDeleteMerchantVoiceService();
   const [collapsedCards, setCollapsedCards] = useState<Record<string, boolean>>(
     {},
   );
   const [hours, setHours] = useState(INITIAL_HOURS);
-  const [services, setServices] = useState(INITIAL_SERVICES);
-  const [categories, setCategories] = useState<string[]>(() => {
-    const names = Array.from(
-      new Set(INITIAL_SERVICES.map((service) => service.category).filter(Boolean)),
-    );
-    return names.length > 0 ? names : [DEFAULT_SERVICE_CATEGORY];
-  });
-  const [suggestOpen, setSuggestOpen] = useState(false);
-  const [usedSuggestionIds, setUsedSuggestionIds] = useState<string[]>([]);
+  const [services, setServices] = useState<ServiceRow[]>([]);
+  const [categories, setCategories] = useState<SettingsCategory[]>([]);
+  const servicesRef = useRef<ServiceRow[]>([]);
+  const serviceSnapshotRef = useRef<Map<string, ServiceRow>>(new Map());
+  const servicesDirtyRef = useRef(false);
+  const [isSavingService, setIsSavingService] = useState(false);
+  const [pendingServiceActionId, setPendingServiceActionId] = useState<
+    string | null
+  >(null);
   const [serviceModalOpen, setServiceModalOpen] = useState(false);
   const [categoryModalOpen, setCategoryModalOpen] = useState(false);
-  const [serviceModalDraft, setServiceModalDraft] = useState({
-    category: DEFAULT_SERVICE_CATEGORY,
-    name: "",
-    price: "",
-    duration: "",
-  });
+  const [serviceModalDraft, setServiceModalDraft] = useState<ServiceModalDraft>(
+    {
+      mode: "create",
+      serviceId: null,
+      categoryIds: [],
+      name: "",
+      price: "",
+      duration: "",
+    },
+  );
   const [serviceModalError, setServiceModalError] = useState("");
-  const [categoryDrafts, setCategoryDrafts] = useState<string[]>([]);
+  const [categoryDrafts, setCategoryDrafts] = useState<CategoryDraft[]>([]);
   const [categoryModalError, setCategoryModalError] = useState("");
+  const [isSavingCategories, setIsSavingCategories] = useState(false);
+  const [pendingCategoryFocus, setPendingCategoryFocus] = useState<
+    "new" | "edit" | null
+  >(null);
+  const categoryInputRef = useRef<HTMLInputElement | null>(null);
   const [highlightServiceId, setHighlightServiceId] = useState<string | null>(
     null,
   );
@@ -676,12 +793,23 @@ export default function BookingSettingsPanel() {
   const [aiPhone, setAiPhone] = useState("");
   const [bookingNotifyPhone, setBookingNotifyPhone] = useState("");
   const [location, setLocation] = useState<LocationParts>({ ...EMPTY_LOCATION });
+  const [extraCountries, setExtraCountries] = useState<SettingsCountryOption[]>(
+    [],
+  );
   const [googleReviewUrl, setGoogleReviewUrl] = useState("");
   const [website, setWebsite] = useState("");
   const [description, setDescription] = useState("");
   const [timeZone, setTimeZone] = useState<string>(DEFAULT_SETTINGS_TIMEZONE);
   const [timeZoneManual, setTimeZoneManual] = useState(false);
   const timeZoneManualRef = useRef(false);
+  const addressGeocodeAbortRef = useRef<AbortController | null>(null);
+  const addressGeocodeTimerRef = useRef<ReturnType<typeof setTimeout> | null>(
+    null,
+  );
+  const lastGeocodedQueryRef = useRef("");
+  const [addressGeocodeStatus, setAddressGeocodeStatus] = useState<
+    "idle" | "detecting" | "failed"
+  >("idle");
   const [promoSms, setPromoSms] = useState("");
   const [sendSmsPromoEnabled, setSendSmsPromoEnabled] = useState(true);
   const [statusMessage, setStatusMessage] = useState("");
@@ -696,9 +824,6 @@ export default function BookingSettingsPanel() {
     country?: string;
     greeting?: string;
   }>({});
-  const [invalidDurationServiceIds, setInvalidDurationServiceIds] = useState<
-    string[]
-  >([]);
   const [hoursErrorByDay, setHoursErrorByDay] = useState<
     Record<DayKey, string>
   >({
@@ -720,16 +845,141 @@ export default function BookingSettingsPanel() {
     [bookingNotifyPhone],
   );
 
+  const countryOptions = useMemo(() => {
+    const seen = new Set(SETTINGS_COUNTRY_OPTIONS.map((option) => option.value));
+    const extras = extraCountries.filter((option) => {
+      if (seen.has(option.value)) return false;
+      seen.add(option.value);
+      return true;
+    });
+    return [...SETTINGS_COUNTRY_OPTIONS, ...extras];
+  }, [extraCountries]);
+
+  const ensureCountryOption = (code: string, label?: string) => {
+    const upper = code.trim().toUpperCase();
+    if (!upper || isKnownSettingsCountryCode(upper)) return;
+    setExtraCountries((prev) => {
+      if (prev.some((option) => option.value === upper)) return prev;
+      return [
+        ...prev,
+        {
+          value: upper,
+          label: getSettingsCountryLabel(upper, label),
+        },
+      ];
+    });
+  };
+
   timeZoneManualRef.current = timeZoneManual;
 
-  const patchLocation = (partial: Partial<LocationParts>) => {
-    setLocation((prev) => {
-      const next = { ...prev, ...partial };
-      if (!timeZoneManualRef.current) {
-        setTimeZone(detectSettingsTimeZone(next));
+  const applyGeocodedAddress = (result: GeocodedSalonAddress) => {
+    ensureCountryOption(result.location.country, result.countryLabel);
+
+    // 1) Fill structured location fields from address geocode.
+    // Keep the user's Address text as typed (no road-name rewrite).
+    setLocation((prev) => ({
+      street: prev.street.trim() || result.location.street,
+      city: result.location.city || prev.city,
+      state: result.location.state || prev.state,
+      zip: result.location.zip || prev.zip,
+      country: result.location.country || prev.country,
+    }));
+
+    // 2) Address changed → unlock manual TZ and apply geocoded zone.
+    timeZoneManualRef.current = false;
+    setTimeZoneManual(false);
+    if (result.timeZone) {
+      setTimeZone(result.timeZone);
+      return;
+    }
+    const fallbackTz = detectTimeZoneFromAddressText(
+      result.location.street || "",
+    );
+    if (fallbackTz) setTimeZone(fallbackTz);
+  };
+
+  const runAddressGeocode = async (
+    query: string,
+    options?: { showFailure?: boolean },
+  ) => {
+    const trimmed = query.trim();
+    if (!isGeocodeAddressQueryReady(trimmed)) {
+      setAddressGeocodeStatus("idle");
+      return;
+    }
+    if (lastGeocodedQueryRef.current === trimmed) {
+      setAddressGeocodeStatus("idle");
+      return;
+    }
+
+    addressGeocodeAbortRef.current?.abort();
+    const controller = new AbortController();
+    addressGeocodeAbortRef.current = controller;
+    setAddressGeocodeStatus("detecting");
+
+    try {
+      const result = await geocodeSalonAddress(trimmed, controller.signal);
+      if (controller.signal.aborted) return;
+      if (!result) {
+        const localTz = detectTimeZoneFromAddressText(trimmed);
+        if (localTz) {
+          // New address text → resume auto timezone even after a manual pick.
+          timeZoneManualRef.current = false;
+          setTimeZoneManual(false);
+          setTimeZone(localTz);
+          lastGeocodedQueryRef.current = trimmed;
+          setAddressGeocodeStatus("idle");
+          return;
+        }
+        setAddressGeocodeStatus(options?.showFailure ? "failed" : "idle");
+        return;
       }
-      return next;
-    });
+      lastGeocodedQueryRef.current = trimmed;
+      applyGeocodedAddress(result);
+      setAddressGeocodeStatus("idle");
+      setFormErrors((prev) => ({
+        ...prev,
+        street: undefined,
+        city: undefined,
+        state: undefined,
+        zip: undefined,
+        country: undefined,
+      }));
+    } catch (error) {
+      if ((error as { name?: string })?.name === "AbortError") return;
+      setAddressGeocodeStatus(options?.showFailure ? "failed" : "idle");
+    }
+  };
+
+  const scheduleAddressGeocode = (query: string) => {
+    if (addressGeocodeTimerRef.current) {
+      clearTimeout(addressGeocodeTimerRef.current);
+    }
+    addressGeocodeTimerRef.current = setTimeout(() => {
+      void runAddressGeocode(query);
+    }, 700);
+  };
+
+  const flushAddressGeocode = (query: string) => {
+    if (addressGeocodeTimerRef.current) {
+      clearTimeout(addressGeocodeTimerRef.current);
+      addressGeocodeTimerRef.current = null;
+    }
+    void runAddressGeocode(query, { showFailure: true });
+  };
+
+  useEffect(
+    () => () => {
+      if (addressGeocodeTimerRef.current) {
+        clearTimeout(addressGeocodeTimerRef.current);
+      }
+      addressGeocodeAbortRef.current?.abort();
+    },
+    [],
+  );
+
+  const patchLocation = (partial: Partial<LocationParts>) => {
+    setLocation((prev) => ({ ...prev, ...partial }));
   };
 
   const toggleCard = (cardId: string) => {
@@ -845,15 +1095,42 @@ export default function BookingSettingsPanel() {
     setBookingNotifyPhone(
       formatPhoneInput(configData.bookingNotifyPhone || ""),
     );
-    const locationParts = splitSettingsAddress(configData.address || "");
+    const hasStructuredLocation = Boolean(
+      configData.city?.trim() ||
+        configData.state?.trim() ||
+        configData.zipCode?.trim() ||
+        configData.country?.trim(),
+    );
+    const locationParts = hasStructuredLocation
+      ? {
+          street: (configData.address || "").trim(),
+          city: (configData.city || "").trim(),
+          state: (configData.state || "").trim(),
+          zip: (configData.zipCode || "").trim(),
+          country: normalizeSettingsCountry(configData.country || "US"),
+        }
+      : splitSettingsAddress(configData.address || "");
     setLocation(locationParts);
-    const loadedTimeZone = String(configData.timeZone || "").trim();
-    if (loadedTimeZone && isSettingsTimeZone(loadedTimeZone)) {
-      setTimeZone(loadedTimeZone);
-    } else {
-      setTimeZone(detectSettingsTimeZone(locationParts));
+    if (locationParts.country) {
+      ensureCountryOption(locationParts.country, configData.country || undefined);
     }
-    setTimeZoneManual(false);
+    const loadedTimeZone = String(configData.timeZone || "").trim();
+    const detectedTimeZone = detectTimeZoneFromAddressText(
+      locationParts.street,
+    );
+    if (loadedTimeZone) {
+      setTimeZone(loadedTimeZone);
+      // Lock manual only when saved TZ differs from address-based hint.
+      setTimeZoneManual(
+        detectedTimeZone != null && detectedTimeZone !== loadedTimeZone,
+      );
+    } else if (detectedTimeZone) {
+      setTimeZone(detectedTimeZone);
+      setTimeZoneManual(false);
+    } else {
+      setTimeZone(DEFAULT_SETTINGS_TIMEZONE);
+      setTimeZoneManual(false);
+    }
     setGoogleReviewUrl(configData.googleReviewUrl || "");
     setWebsite(configData.website || "");
     setDescription(configData.description || "");
@@ -880,28 +1157,50 @@ export default function BookingSettingsPanel() {
       };
     });
     setHours(nextHours);
-
-    const nextServices = (configData.services || []).map((service, index) => ({
-      id: service.id || `service-${index}`,
-      icon: service.icon || "✨",
-      tone:
-        INITIAL_SERVICES[index % INITIAL_SERVICES.length]?.tone ||
-        "tone-violet",
-      name: service.name || "",
-      price: Number(service.price ?? 0),
-      duration: clampMerchantVoiceServiceDurationMinutes(
-        Number(service.durationMinutes ?? 0),
-      ),
-      category: (service.note || "").trim() || DEFAULT_SERVICE_CATEGORY,
-    }));
-    setServices(nextServices);
-    const categoryNames = Array.from(
-      new Set(nextServices.map((service) => service.category).filter(Boolean)),
-    );
-    setCategories(
-      categoryNames.length > 0 ? categoryNames : [DEFAULT_SERVICE_CATEGORY],
-    );
   }, [configData, t]);
+
+  useEffect(() => {
+    if (!categoriesData) return;
+    const next = flattenCategoriesToUi(categoriesData);
+    const mergedServices =
+      next.services.length > 0
+        ? next.services
+        : mergeFlatServicesIntoCategories(next.categories, flatServicesData || []);
+    setCategories((prev) => unionSettingsCategories(prev, next.categories));
+    if (!servicesDirtyRef.current) {
+      setServices(mergedServices);
+      servicesRef.current = mergedServices;
+      rememberServiceSnapshot(mergedServices);
+      return;
+    }
+    setServices((prev) =>
+      prev.map((service) => {
+        const other =
+          next.categories.find((item) => item.isSystem) ||
+          next.categories.find((item) => item.id === OTHER_SERVICES_CATEGORY_ID);
+        const otherId = other?.id || OTHER_SERVICES_CATEGORY_ID
+        const categoryIds = normalizeServiceCategoryIds(
+          service.categoryIds,
+          otherId,
+        ).filter(
+          (id) =>
+            next.categories.some((item) => item.id === id) ||
+            id === OTHER_SERVICES_CATEGORY_ID,
+        )
+        const resolvedIds = normalizeServiceCategoryIds(categoryIds, otherId)
+        const preferredId = primaryCategoryId(resolvedIds, otherId)
+        const linked =
+          next.categories.find((item) => item.id === preferredId) || other
+        if (!linked) return { ...service, categoryIds: resolvedIds }
+        return {
+          ...service,
+          category: linked.name,
+          categoryId: linked.id,
+          categoryIds: resolvedIds,
+        }
+      }),
+    );
+  }, [categoriesData, flatServicesData]);
 
   useEffect(
     () => () => {
@@ -910,100 +1209,102 @@ export default function BookingSettingsPanel() {
     [],
   );
 
-  const addService = (
-    name: string,
-    price: number,
-    duration: number,
-    options?: {
-      highlight?: boolean
-      icon?: string
-      tone?: Tone
-      category?: string
-    },
-  ) => {
-    const id = `service-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`;
-    const category = (options?.category || DEFAULT_SERVICE_CATEGORY).trim()
-      || DEFAULT_SERVICE_CATEGORY;
-    setServices((prev) => [
-      ...prev,
-      {
-        id,
-        icon: options?.icon ?? "✨",
-        tone: options?.tone ?? "tone-violet",
-        name,
-        price,
-        duration,
-        category,
-      },
+  const rememberServiceSnapshot = (rows: ServiceRow[]) => {
+    serviceSnapshotRef.current = new Map(rows.map((row) => [row.id, { ...row }]));
+  };
+
+  const refreshServicesCatalog = async () => {
+    const refreshed = await merchantVoiceRepository.getServiceCategories();
+    const next = flattenCategoriesToUi(refreshed);
+    const mergedServices =
+      next.services.length > 0
+        ? next.services
+        : mergeFlatServicesIntoCategories(
+            next.categories,
+            await merchantVoiceRepository.getServices(),
+          );
+    setCategories((prev) => unionSettingsCategories(prev, next.categories));
+    setServices(mergedServices);
+    servicesRef.current = mergedServices;
+    rememberServiceSnapshot(mergedServices);
+    servicesDirtyRef.current = false;
+    await Promise.all([
+      queryClient.invalidateQueries({ queryKey: qk.merchantVoiceServices() }),
+      queryClient.invalidateQueries({
+        queryKey: qk.merchantVoiceServiceCategories(),
+      }),
     ]);
-    setCategories((prev) => (
-      prev.includes(category) ? prev : [...prev, category]
-    ));
-    if (options?.highlight) {
-      setHighlightServiceId(id);
-      window.setTimeout(
-        () =>
-          setHighlightServiceId((current) => (current === id ? null : current)),
-        1400,
-      );
+    return mergedServices;
+  };
+
+  const buildServiceApiPayload = (service: ServiceRow) => ({
+    name: service.name.trim(),
+    price: Number.isFinite(service.price) ? service.price : 0,
+    durationMinutes: clampMerchantVoiceServiceDurationMinutes(service.duration),
+    note: null as string | null,
+    icon: service.icon?.trim() || null,
+    isActive: true,
+    categoryIds: categoryIdsForApi(service.categoryIds),
+  });
+
+  const serviceModalCategoryOptions = useMemo(() => {
+    const byId = new Map<string, SettingsCategory>();
+    const upsert = (category: SettingsCategory) => {
+      if (!category.id) return;
+      const existing = byId.get(category.id);
+      if (existing) {
+        byId.set(category.id, {
+          ...existing,
+          name: category.name || existing.name,
+          isSystem:
+            existing.isSystem ||
+            category.isSystem ||
+            category.id === OTHER_SERVICES_CATEGORY_ID,
+        });
+        return;
+      }
+      byId.set(category.id, {
+        id: category.id,
+        name: category.name || DEFAULT_SERVICE_CATEGORY,
+        isSystem:
+          category.isSystem || category.id === OTHER_SERVICES_CATEGORY_ID,
+      });
+    };
+
+    categories.forEach(upsert);
+    (categoriesData || []).forEach((category) => {
+      upsert({
+        id: category.id,
+        name: category.name,
+        isSystem:
+          category.isSystem || category.id === OTHER_SERVICES_CATEGORY_ID,
+      });
+    });
+
+    const hasOther = [...byId.values()].some(
+      (category) =>
+        category.isSystem || category.id === OTHER_SERVICES_CATEGORY_ID,
+    );
+    if (!hasOther) {
+      upsert({
+        id: OTHER_SERVICES_CATEGORY_ID,
+        name: DEFAULT_SERVICE_CATEGORY,
+        isSystem: true,
+      });
     }
-    setStatus(t(`${TK}.serviceAdded`, { name }));
-    return id;
-  };
 
-  const removeService = (id: string) => {
-    setServices((prev) => prev.filter((service) => service.id !== id));
-    setInvalidDurationServiceIds((prev) =>
-      prev.filter((serviceId) => serviceId !== id),
-    );
-  };
-
-  const updateService = (
-    id: string,
-    field: MerchantVoiceServiceField,
-    value: string,
-  ) => {
-    if (field === MerchantVoiceServiceField.Duration) {
-      setInvalidDurationServiceIds((prev) =>
-        prev.filter((serviceId) => serviceId !== id),
-      );
-    }
-    setServices((prev) =>
-      prev.map((service) => {
-        if (service.id !== id) return service;
-        if (field === MerchantVoiceServiceField.Name)
-          return { ...service, name: value };
-        if (field === MerchantVoiceServiceField.Price)
-          return { ...service, price: parseWholeNumberInput(value) };
-        return { ...service, duration: parseWholeNumberInput(value) };
-      }),
-    );
-  };
-
-  const commitServiceNumberOnBlur = (
-    id: string,
-    field: MerchantVoiceServiceField.Price | MerchantVoiceServiceField.Duration,
-  ) => {
-    setServices((prev) =>
-      prev.map((service) => {
-        if (service.id !== id) return service;
-        if (field === MerchantVoiceServiceField.Duration) {
-          return {
-            ...service,
-            duration: clampMerchantVoiceServiceDurationMinutes(
-              service.duration,
-            ),
-          };
-        }
-        if (Number.isFinite(service[field])) return service;
-        return { ...service, [field]: 0 };
-      }),
-    );
-  };
+    return [...byId.values()].sort((left, right) => {
+      // Default (system) category first, then A–Z.
+      if (left.isSystem !== right.isSystem) return left.isSystem ? -1 : 1;
+      return left.name.localeCompare(right.name);
+    });
+  }, [categories, categoriesData]);
 
   const openServiceModal = () => {
     setServiceModalDraft({
-      category: categories[0] || DEFAULT_SERVICE_CATEGORY,
+      mode: "create",
+      serviceId: null,
+      categoryIds: [],
       name: "",
       price: "",
       duration: "",
@@ -1012,11 +1313,154 @@ export default function BookingSettingsPanel() {
     setServiceModalOpen(true);
   };
 
-  const saveServiceModal = () => {
+  const openEditServiceModal = (service: ServiceRow) => {
+    setServiceModalDraft({
+      mode: "edit",
+      serviceId: service.id,
+      // Other services is built-in / not assignable — only real categories.
+      categoryIds: categoryIdsForApi(service.categoryIds),
+      name: service.name,
+      price: formatWholeNumberInputValue(service.price),
+      duration: formatWholeNumberInputValue(service.duration),
+    });
+    setServiceModalError("");
+    setServiceModalOpen(true);
+  };
+
+  const toggleServiceModalCategory = (categoryId: string) => {
+    setServiceModalError("");
+    setServiceModalDraft((prev) => {
+      const selected = prev.categoryIds.includes(categoryId);
+      if (selected) {
+        return {
+          ...prev,
+          categoryIds: prev.categoryIds.filter((id) => id !== categoryId),
+        };
+      }
+      return {
+        ...prev,
+        categoryIds: [...prev.categoryIds, categoryId],
+      };
+    });
+  };
+
+  const removeService = async (id: string, categoryId: string) => {
+    const service = servicesRef.current.find((row) => row.id === id);
+    if (!service) return;
+
+    const isOtherCategory =
+      categoryId === OTHER_SERVICES_CATEGORY_ID ||
+      categories.find((item) => item.id === categoryId)?.isSystem === true;
+    const assignedCategoryIds = categoryIdsForApi(service.categoryIds);
+    const belongsToMultipleCategories =
+      !isOtherCategory &&
+      assignedCategoryIds.includes(categoryId) &&
+      assignedCategoryIds.length > 1;
+
+    // In a category accordion: only unlink from that category when the service
+    // still belongs to other categories. Otherwise delete the service entirely.
+    if (belongsToMultipleCategories) {
+      const categoryName =
+        categories.find((item) => item.id === categoryId)?.name ||
+        service.category ||
+        DEFAULT_SERVICE_CATEGORY;
+      const ok = await showConfirm(
+        t(`${TK}.serviceRemoveFromCategoryConfirmMessage`, {
+          name: service.name || "—",
+          category: categoryName,
+        }),
+        t(`${TK}.serviceRemoveFromCategoryConfirmTitle`),
+      );
+      if (!ok) return;
+
+      const nextCategoryIds = assignedCategoryIds.filter(
+        (id) => id !== categoryId,
+      );
+      const preferredId = primaryCategoryId(
+        nextCategoryIds,
+        nextCategoryIds[0] || OTHER_SERVICES_CATEGORY_ID,
+      );
+      const linked =
+        categories.find((item) => item.id === preferredId) ||
+        categories.find((item) => item.isSystem);
+      const nextRow: ServiceRow = {
+        ...service,
+        categoryIds: nextCategoryIds,
+        categoryId: preferredId,
+        category: linked?.name || DEFAULT_SERVICE_CATEGORY,
+      };
+
+      setPendingServiceActionId(id);
+      try {
+        if (isPersistedServiceId(id)) {
+          await updateServiceMutation.mutateAsync({
+            id,
+            body: buildServiceApiPayload(nextRow),
+          });
+          await refreshServicesCatalog();
+        } else {
+          setServices((prev) =>
+            prev.map((row) => (row.id === id ? nextRow : row)),
+          );
+          servicesRef.current = servicesRef.current.map((row) =>
+            row.id === id ? nextRow : row,
+          );
+          serviceSnapshotRef.current.set(id, { ...nextRow });
+        }
+        showToast(
+          t(`${TK}.serviceRemovedFromCategory`, {
+            name: service.name,
+            category: categoryName,
+          }),
+          "success",
+        );
+      } catch (error) {
+        const message = t(getErrorI18nKey(getApiErrorCode(error)));
+        showToast(message, "error");
+      } finally {
+        setPendingServiceActionId(null);
+      }
+      return;
+    }
+
+    const ok = await showConfirm(
+      t(`${TK}.serviceDeleteConfirmMessage`, { name: service.name || "—" }),
+      t(`${TK}.serviceDeleteConfirmTitle`),
+    );
+    if (!ok) return;
+
+    if (!isPersistedServiceId(id)) {
+      setServices((prev) => prev.filter((row) => row.id !== id));
+      servicesRef.current = servicesRef.current.filter((row) => row.id !== id);
+      return;
+    }
+
+    setPendingServiceActionId(id);
+    try {
+      await deleteServiceMutation.mutateAsync(id);
+      showToast(t(`${TK}.serviceDeleted`, { name: service.name }), "success");
+      await refreshServicesCatalog();
+    } catch (error) {
+      const message = t(getErrorI18nKey(getApiErrorCode(error)));
+      showToast(message, "error");
+    } finally {
+      setPendingServiceActionId(null);
+    }
+  };
+
+  const saveServiceModal = async () => {
     const name = serviceModalDraft.name.trim();
     const price = Number(serviceModalDraft.price);
     const duration = Number(serviceModalDraft.duration);
-    const category = serviceModalDraft.category.trim() || DEFAULT_SERVICE_CATEGORY;
+    const selectedCategoryIds = [
+      ...new Set(
+        serviceModalDraft.categoryIds
+          .map((id) => String(id || "").trim())
+          .filter(Boolean),
+      ),
+    ];
+    // UI requires a selection; Other alone maps to [] on the API (built-in group).
+    const categoryIds = categoryIdsForApi(selectedCategoryIds);
     if (!name) {
       setServiceModalError(t(`${TK}.serviceModalNameRequired`));
       return;
@@ -1029,111 +1473,467 @@ export default function BookingSettingsPanel() {
       setServiceModalError(t(`${TK}.serviceModalDurationInvalid`));
       return;
     }
-    addService(name, price, duration, { category, highlight: true });
-    setServiceModalOpen(false);
+    if (selectedCategoryIds.length === 0) {
+      setServiceModalError(t(`${TK}.serviceModalCategoryRequired`));
+      return;
+    }
+
+    const preferredId = primaryCategoryId(
+      selectedCategoryIds,
+      selectedCategoryIds[0],
+    );
+    const linked =
+      categories.find((item) => item.id === preferredId) ||
+      serviceModalCategoryOptions.find((item) => item.id === preferredId);
+
+    setIsSavingService(true);
+    setServiceModalError("");
+    try {
+      if (serviceModalDraft.mode === "edit" && serviceModalDraft.serviceId) {
+        const serviceId = serviceModalDraft.serviceId;
+        const existing = servicesRef.current.find((row) => row.id === serviceId);
+        const snapshot = serviceSnapshotRef.current.get(serviceId);
+        const nextRow: ServiceRow = {
+          id: serviceId,
+          icon: existing?.icon || "✨",
+          tone: existing?.tone || "tone-violet",
+          name,
+          price,
+          duration: clampMerchantVoiceServiceDurationMinutes(duration),
+          category: linked?.name || DEFAULT_SERVICE_CATEGORY,
+          categoryId: preferredId,
+          categoryIds: selectedCategoryIds,
+        };
+
+        if (
+          snapshot &&
+          snapshot.name === nextRow.name &&
+          snapshot.price === nextRow.price &&
+          snapshot.duration === nextRow.duration &&
+          sameCategoryIds(
+            categoryIdsForApi(snapshot.categoryIds),
+            categoryIds,
+          )
+        ) {
+          setServiceModalOpen(false);
+          return;
+        }
+
+        if (!isPersistedServiceId(serviceId)) {
+          setServices((prev) =>
+            prev.map((row) => (row.id === serviceId ? nextRow : row)),
+          );
+          servicesRef.current = servicesRef.current.map((row) =>
+            row.id === serviceId ? nextRow : row,
+          );
+          serviceSnapshotRef.current.set(serviceId, { ...nextRow });
+          setServiceModalOpen(false);
+          return;
+        }
+
+        await updateServiceMutation.mutateAsync({
+          id: serviceId,
+          body: buildServiceApiPayload(nextRow),
+        });
+        setServiceModalOpen(false);
+        await refreshServicesCatalog();
+        setHighlightServiceId(serviceId);
+        window.setTimeout(
+          () =>
+            setHighlightServiceId((current) =>
+              current === serviceId ? null : current,
+            ),
+          1400,
+        );
+        setStatus(t(`${TK}.serviceUpdated`, { name }));
+        showToast(t(`${TK}.serviceUpdated`, { name }), "success");
+        return;
+      }
+
+      const newId = await createServiceMutation.mutateAsync({
+        name,
+        price,
+        durationMinutes: clampMerchantVoiceServiceDurationMinutes(duration),
+        note: null,
+        icon: null,
+        isActive: true,
+        categoryIds: categoryIdsForApi(categoryIds),
+      });
+      setServiceModalOpen(false);
+      await refreshServicesCatalog();
+      if (newId) {
+        setHighlightServiceId(newId);
+        window.setTimeout(
+          () =>
+            setHighlightServiceId((current) =>
+              current === newId ? null : current,
+            ),
+          1400,
+        );
+      }
+      setStatus(t(`${TK}.serviceAdded`, { name }));
+      showToast(t(`${TK}.serviceAdded`, { name }), "success");
+    } catch (error) {
+      const message = t(getErrorI18nKey(getApiErrorCode(error)));
+      setServiceModalError(message);
+      showToast(message, "error");
+    } finally {
+      setIsSavingService(false);
+    }
   };
 
   const openCategoryModal = () => {
-    setCategoryDrafts(categories.length ? [...categories] : [DEFAULT_SERVICE_CATEGORY]);
+    setCategoryDrafts(
+      categories.length
+        ? categories.map((category) => ({
+            id: category.id,
+            name: category.name,
+            isSystem: category.isSystem,
+            isNew: false,
+            isEditing: false,
+          }))
+        : [
+            {
+              id: OTHER_SERVICES_CATEGORY_ID,
+              name: DEFAULT_SERVICE_CATEGORY,
+              isSystem: true,
+              isNew: false,
+              isEditing: false,
+            },
+          ],
+    );
     setCategoryModalError("");
+    setPendingCategoryFocus(null);
     setCategoryModalOpen(true);
   };
 
-  const saveCategoryModal = () => {
-    const cleaned = categoryDrafts.map((name) => name.trim()).filter(Boolean);
-    if (cleaned.length === 0) {
-      setCategoryModalError(t(`${TK}.categoryModalEmpty`));
+  const syncCategoryDraftsFromApi = (nextCategories: SettingsCategory[]) => {
+    setCategoryDrafts(
+      nextCategories.map((category) => ({
+        id: category.id,
+        name: category.name,
+        isSystem: category.isSystem,
+        isNew: false,
+        isEditing: false,
+      })),
+    );
+  };
+
+  const countServicesForCategory = (draft: CategoryDraft) =>
+    services.filter((service) => {
+      if (draft.id) return service.categoryIds.includes(draft.id)
+      return service.category === draft.name
+    }).length;
+
+  const formatCategoryServiceCount = (count: number) =>
+    count === 1
+      ? t(`${TK}.categoryServiceCountOne`)
+      : t(`${TK}.categoryServiceCount`, { count });
+
+  const isDuplicateCategoryName = (name: string, ignoreIndex: number) => {
+    const normalized = name.trim().toLowerCase();
+    return categoryDrafts.some(
+      (draft, index) =>
+        index !== ignoreIndex &&
+        draft.name.trim().toLowerCase() === normalized,
+    );
+  };
+
+  const confirmCreateCategory = async (index: number) => {
+    const draft = categoryDrafts[index];
+    if (!draft?.isNew) return;
+    const name = draft.name.trim();
+    if (!name) {
+      setCategoryModalError(t(`${TK}.categoryModalNameRequired`));
+      categoryInputRef.current?.focus();
       return;
     }
-    const unique = Array.from(new Set(cleaned.map((name) => name.toLowerCase())));
-    if (unique.length !== cleaned.length) {
+    if (isDuplicateCategoryName(name, index)) {
       setCategoryModalError(t(`${TK}.categoryModalDuplicate`));
+      categoryInputRef.current?.focus();
       return;
     }
-    const removed = categories.filter((name) => !cleaned.includes(name));
-    const blocked = removed.find((name) =>
-      services.some((service) => service.category === name),
-    );
-    if (blocked) {
-      setCategoryModalError(t(`${TK}.categoryModalHasServices`, { name: blocked }));
-      return;
-    }
-    const renameMap = new Map<string, string>();
-    categories.forEach((oldName, index) => {
-      const nextName = cleaned[index];
-      if (nextName && oldName !== nextName) {
-        renameMap.set(oldName, nextName);
-      }
-    });
-    setCategories(cleaned);
-    setServices((prev) =>
-      prev.map((service) => {
-        const renamed = renameMap.get(service.category);
-        if (renamed) return { ...service, category: renamed };
-        if (cleaned.includes(service.category)) return service;
-        return {
-          ...service,
-          category: cleaned[0] || DEFAULT_SERVICE_CATEGORY,
-        };
-      }),
-    );
-    setCategoryModalOpen(false);
-  };
 
-  const handleSuggestToggle = () => {
-    setSuggestOpen((prev) => {
-      const next = !prev;
-      setStatus(next ? t(`${TK}.suggestOpened`) : t(`${TK}.suggestHidden`));
-      return next;
-    });
-  };
-
-  const handleSuggestAdd = (suggestion: (typeof SERVICE_SUGGESTIONS)[number]) => {
-    const exists = services.some(
-      (service) =>
-        service.name.trim().toLowerCase() === suggestion.name.toLowerCase(),
-    );
-    if (exists) {
-      setUsedSuggestionIds((prev) =>
-        prev.includes(suggestion.id) ? prev : [...prev, suggestion.id],
+    setIsSavingCategories(true);
+    setCategoryModalError("");
+    try {
+      await createCategoryMutation.mutateAsync({ name });
+      setPendingCategoryFocus(null);
+      showToast(t(`${TK}.categoryCreated`), "success");
+      // Query invalidation refreshes categories; keep modal open with latest rows.
+      const refreshed = await merchantVoiceRepository.getServiceCategories();
+      const next = flattenCategoriesToUi(refreshed);
+      const mergedCategories = unionSettingsCategories(
+        categories,
+        next.categories,
       );
-      setStatus(t(`${TK}.suggestAlreadyInList`, { name: suggestion.name }));
+      setCategories(mergedCategories);
+      if (!servicesDirtyRef.current) setServices(next.services);
+      syncCategoryDraftsFromApi(mergedCategories);
+    } catch (error) {
+      const message = t(getErrorI18nKey(getApiErrorCode(error)));
+      setCategoryModalError(message);
+      showToast(message, "error");
+    } finally {
+      setIsSavingCategories(false);
+    }
+  };
+
+  const confirmRenameCategory = async (index: number) => {
+    const draft = categoryDrafts[index];
+    if (!draft?.id || draft.isSystem || !draft.isEditing) return;
+    const name = draft.name.trim();
+    if (!name) {
+      setCategoryModalError(t(`${TK}.categoryModalNameRequired`));
+      categoryInputRef.current?.focus();
       return;
     }
-    addService(suggestion.name, suggestion.price, suggestion.duration, {
-      highlight: true,
-    });
-    setUsedSuggestionIds((prev) =>
-      prev.includes(suggestion.id) ? prev : [...prev, suggestion.id],
+    if (isDuplicateCategoryName(name, index)) {
+      setCategoryModalError(t(`${TK}.categoryModalDuplicate`));
+      categoryInputRef.current?.focus();
+      return;
+    }
+    const previous = categories.find((item) => item.id === draft.id);
+    if (previous && previous.name === name) {
+      setCategoryDrafts((prev) =>
+        prev.map((row, rowIndex) =>
+          rowIndex === index
+            ? { ...row, name, isEditing: false }
+            : row,
+        ),
+      );
+      setPendingCategoryFocus(null);
+      return;
+    }
+
+    setIsSavingCategories(true);
+    setCategoryModalError("");
+    try {
+      await updateCategoryMutation.mutateAsync({
+        id: draft.id,
+        body: { name },
+      });
+      showToast(t(`${TK}.categoryUpdated`), "success");
+      const refreshed = await merchantVoiceRepository.getServiceCategories();
+      const next = flattenCategoriesToUi(refreshed);
+      const mergedCategories = unionSettingsCategories(
+        categories,
+        next.categories,
+      );
+      setCategories(mergedCategories);
+      if (!servicesDirtyRef.current) setServices(next.services);
+      syncCategoryDraftsFromApi(mergedCategories);
+      setPendingCategoryFocus(null);
+    } catch (error) {
+      const message = t(getErrorI18nKey(getApiErrorCode(error)));
+      setCategoryModalError(message);
+      showToast(message, "error");
+    } finally {
+      setIsSavingCategories(false);
+    }
+  };
+
+  const startEditCategory = (index: number) => {
+    const draft = categoryDrafts[index];
+    if (!draft || draft.isSystem || draft.isNew) return;
+    setCategoryModalError("");
+    setCategoryDrafts((prev) =>
+      prev.map((row, rowIndex) => ({
+        ...row,
+        isEditing: rowIndex === index,
+        // Drop unfinished new draft when starting edit.
+        ...(row.isNew ? { name: row.name } : null),
+      })).filter((row) => !(row.isNew && !row.name.trim())),
     );
-    setStatus(t(`${TK}.suggestTapHint`));
+    setPendingCategoryFocus("edit");
+  };
+
+  const cancelCategoryRow = (index: number) => {
+    const draft = categoryDrafts[index];
+    if (!draft) return;
+    setCategoryModalError("");
+    if (draft.isNew) {
+      setCategoryDrafts((prev) => prev.filter((_, rowIndex) => rowIndex !== index));
+      setPendingCategoryFocus(null);
+      return;
+    }
+    const original = categories.find((item) => item.id === draft.id);
+    setCategoryDrafts((prev) =>
+      prev.map((row, rowIndex) =>
+        rowIndex === index
+          ? {
+              ...row,
+              name: original?.name || row.name,
+              isEditing: false,
+            }
+          : row,
+      ),
+    );
+    setPendingCategoryFocus(null);
+  };
+
+  const deleteCategoryRow = async (index: number) => {
+    const draft = categoryDrafts[index];
+    if (!draft || draft.isSystem) return;
+    if (draft.isNew) {
+      cancelCategoryRow(index);
+      return;
+    }
+    if (!draft.id) return;
+
+    const ok = await showConfirm(
+      t(`${TK}.categoryDeleteConfirmMessage`, { name: draft.name }),
+      t(`${TK}.categoryDeleteConfirmTitle`),
+    );
+    if (!ok) return;
+
+    setIsSavingCategories(true);
+    setCategoryModalError("");
+    try {
+      await deleteCategoryMutation.mutateAsync(draft.id);
+      showToast(t(`${TK}.categoryDeleted`), "success");
+      const refreshed = await merchantVoiceRepository.getServiceCategories();
+      const next = flattenCategoriesToUi(refreshed);
+      const mergedCategories = unionSettingsCategories(
+        categories,
+        next.categories,
+        draft.id ? [draft.id] : [],
+      );
+      setCategories(mergedCategories);
+      if (!servicesDirtyRef.current) setServices(next.services);
+      else {
+        // Remap dirty services that lived under deleted category → Other.
+        const other =
+          mergedCategories.find((item) => item.isSystem) ||
+          mergedCategories.find((item) => item.id === OTHER_SERVICES_CATEGORY_ID);
+        setServices((prev) =>
+          prev.map((service) => {
+            if (!draft.id || !service.categoryIds.includes(draft.id) || !other) {
+              return service
+            }
+            const categoryIds = normalizeServiceCategoryIds(
+              service.categoryIds.filter((id) => id !== draft.id),
+              other.id,
+            )
+            const preferredId = primaryCategoryId(categoryIds, other.id)
+            const linked =
+              mergedCategories.find((item) => item.id === preferredId) || other
+            return {
+              ...service,
+              categoryIds,
+              categoryId: preferredId,
+              category: linked.name,
+            }
+          }),
+        );
+      }
+      syncCategoryDraftsFromApi(mergedCategories);
+    } catch (error) {
+      const message = t(getErrorI18nKey(getApiErrorCode(error)));
+      setCategoryModalError(message);
+      showToast(message, "error");
+    } finally {
+      setIsSavingCategories(false);
+    }
   };
 
   const updateCategoryDraft = (index: number, value: string) => {
     setCategoryDrafts((prev) =>
-      prev.map((name, draftIndex) => (draftIndex === index ? value : name)),
+      prev.map((draft, draftIndex) =>
+        draftIndex === index ? { ...draft, name: value } : draft,
+      ),
     );
   };
 
   const addCategoryDraft = () => {
-    setCategoryDrafts((prev) => [...prev, ""]);
+    const existingNewIndex = categoryDrafts.findIndex((draft) => draft.isNew);
+    if (existingNewIndex >= 0) {
+      setPendingCategoryFocus("new");
+      return;
+    }
+    setCategoryModalError("");
+    setCategoryDrafts((prev) => [
+      ...prev.map((row) => ({ ...row, isEditing: false })),
+      { id: null, name: "", isSystem: false, isNew: true, isEditing: false },
+    ]);
+    setPendingCategoryFocus("new");
   };
 
-  const removeCategoryDraft = (index: number) => {
-    setCategoryDrafts((prev) =>
-      prev.filter((_, draftIndex) => draftIndex !== index),
+  useEffect(() => {
+    if (!pendingCategoryFocus || !categoryModalOpen) return;
+    const input = categoryInputRef.current;
+    if (!input) return;
+    input.focus();
+    input.select();
+    setPendingCategoryFocus(null);
+  }, [pendingCategoryFocus, categoryModalOpen, categoryDrafts]);
+
+  const catalogSections = useMemo(() => {
+    const sections = categories.map((category) => ({
+      ...category,
+      services: [] as ServiceRow[],
+    }));
+    const sectionById = new Map(
+      sections.map((section) => [section.id, section] as const),
     );
-  };
+    const otherSection =
+      sections.find((section) => section.isSystem) ||
+      sections.find((section) => section.id === OTHER_SERVICES_CATEGORY_ID);
 
-  const servicesByCategory = useMemo(() => {
-    const map = new Map<string, ServiceRow[]>();
-    categories.forEach((name) => map.set(name, []));
     services.forEach((service) => {
-      const key = service.category || DEFAULT_SERVICE_CATEGORY;
-      if (!map.has(key)) map.set(key, []);
-      map.get(key)!.push(service);
+      const ids = normalizeServiceCategoryIds(
+        service.categoryIds,
+        service.categoryId || OTHER_SERVICES_CATEGORY_ID,
+      )
+      let placed = false
+      ids.forEach((categoryId) => {
+        const target = sectionById.get(categoryId)
+        if (!target) return
+        if (!target.services.some((row) => row.id === service.id)) {
+          target.services.push(service)
+        }
+        placed = true
+      })
+      if (placed) return
+
+      const target = otherSection
+      if (target) {
+        if (!target.services.some((row) => row.id === service.id)) {
+          target.services.push(service)
+        }
+        return
+      }
+
+      // Synthesize a group when categories have not loaded yet.
+      const fallbackId = service.categoryId || OTHER_SERVICES_CATEGORY_ID
+      let fallback = sectionById.get(fallbackId)
+      if (!fallback) {
+        fallback = {
+          id: fallbackId,
+          name: service.category || DEFAULT_SERVICE_CATEGORY,
+          isSystem: fallbackId === OTHER_SERVICES_CATEGORY_ID,
+          services: [],
+        }
+        sections.push(fallback)
+        sectionById.set(fallbackId, fallback)
+      }
+      if (!fallback.services.some((row) => row.id === service.id)) {
+        fallback.services.push(service)
+      }
     });
-    return map;
+
+    if (sections.length === 0 && services.length > 0) {
+      return [
+        {
+          id: OTHER_SERVICES_CATEGORY_ID,
+          name: DEFAULT_SERVICE_CATEGORY,
+          isSystem: true,
+          services: [...services],
+        },
+      ];
+    }
+
+    return sections;
   }, [categories, services]);
 
   const handleLanguageSelect = (next: Language) => {
@@ -1265,19 +2065,6 @@ export default function BookingSettingsPanel() {
       return;
     }
 
-    const invalidDurationIds = services
-      .filter(
-        (service) => !isValidMerchantVoiceServiceDuration(service.duration),
-      )
-      .map((service) => service.id);
-    if (invalidDurationIds.length > 0) {
-      setInvalidDurationServiceIds(invalidDurationIds);
-      setCollapsedCards((prev) => ({ ...prev, services: false }));
-      showToast(t(`${TK}.durationInvalid`), "error");
-      return;
-    }
-    setInvalidDurationServiceIds([]);
-
     try {
       const salonPhonePayload = normalizePhoneForApi(
         salonPhone,
@@ -1292,7 +2079,11 @@ export default function BookingSettingsPanel() {
         name: salonName.trim(),
         forwardPhoneNumber: salonPhonePayload,
         bookingNotifyPhone: bookingNotifyPhonePayload,
-        address: joinSettingsAddress(location),
+        address: location.street.trim(),
+        city: location.city.trim() || null,
+        state: location.state.trim() || null,
+        zipCode: location.zip.trim() || null,
+        country: location.country.trim() || null,
         googleReviewUrl: googleReviewUrl.trim(),
         website: website.trim() || null,
         description: description.trim() || null,
@@ -1317,23 +2108,10 @@ export default function BookingSettingsPanel() {
             closeTime: `${row.closeTime}:00`,
           };
         }),
-        services: services.map((service) => ({
-          ...(service.id && !service.id.startsWith("service-")
-            ? { id: service.id }
-            : {}),
-          name: service.name.trim(),
-          price: Number.isFinite(service.price) ? service.price : 0,
-          durationMinutes: clampMerchantVoiceServiceDurationMinutes(
-            service.duration,
-          ),
-          note: service.category?.trim() || DEFAULT_SERVICE_CATEGORY,
-          icon: service.icon?.trim() || null,
-          isActive: true,
-        })),
       });
+
       setStatus(t(`${TK}.saveSuccess`));
       setFormErrors({});
-      setInvalidDurationServiceIds([]);
       showToast(t(`${TK}.saveSuccess`), "success");
     } catch (error) {
       const message = t(getErrorI18nKey(getApiErrorCode(error)));
@@ -1342,7 +2120,7 @@ export default function BookingSettingsPanel() {
     }
   };
 
-  if (isConfigLoading) {
+  if (isConfigLoading || isCategoriesLoading || isServicesLoading) {
     return <BookingSettingsSkeleton />;
   }
 
@@ -1599,16 +2377,28 @@ export default function BookingSettingsPanel() {
                   className="settings-input"
                   type="text"
                   value={location.street}
-                  placeholder={t(`${TK}.placeholderStreet`)}
+                  placeholder={t(`${TK}.placeholderStreetFull`)}
                   autoComplete="street-address"
                   aria-invalid={Boolean(formErrors.street)}
                   onChange={(event) => {
-                    patchLocation({ street: event.target.value });
+                    const street = event.target.value;
+                    lastGeocodedQueryRef.current = "";
+                    // New address → leave "Manually selected" and re-detect TZ.
+                    timeZoneManualRef.current = false;
+                    setTimeZoneManual(false);
+                    if (addressGeocodeStatus === "failed") {
+                      setAddressGeocodeStatus("idle");
+                    }
+                    patchLocation({ street });
+                    scheduleAddressGeocode(street);
                     if (formErrors.street)
                       setFormErrors((prev) => ({
                         ...prev,
                         street: undefined,
                       }));
+                  }}
+                  onBlur={(event) => {
+                    flushAddressGeocode(event.target.value);
                   }}
                 />
                 <span className="settings-field-error-slot">
@@ -1716,11 +2506,18 @@ export default function BookingSettingsPanel() {
                       }));
                   }}
                 >
-                  {SETTINGS_COUNTRY_OPTIONS.map((option) => (
+                  {countryOptions.map((option) => (
                     <option key={option.value} value={option.value}>
-                      {t(`${TK}.${option.labelKey}`)}
+                      {option.label}
                     </option>
                   ))}
+                  {!countryOptions.some(
+                    (option) => option.value === location.country,
+                  ) && location.country ? (
+                    <option value={location.country}>
+                      {getSettingsCountryLabel(location.country)}
+                    </option>
+                  ) : null}
                 </select>
                 <span className="settings-field-error-slot">
                   {formErrors.country ? (
@@ -1884,34 +2681,53 @@ export default function BookingSettingsPanel() {
           <div className="settings-hours-toolbar">
             <label className="settings-timezone-field">
               <span className="settings-label">{t(`${TK}.timeZone`)}</span>
-              <select
-                className="settings-select settings-timezone-select"
-                value={
-                  isSettingsTimeZone(timeZone)
-                    ? timeZone
-                    : DEFAULT_SETTINGS_TIMEZONE
-                }
-                aria-label={t(`${TK}.timeZoneAria`)}
-                onChange={(event) => {
-                  const next = event.target.value;
-                  setTimeZone(next);
-                  setTimeZoneManual(true);
-                  setStatus(
-                    t(`${TK}.timeZoneManualSet`, { timeZone: next }),
-                  );
-                }}
+              <div
+                className={`settings-timezone-select-wrap${addressGeocodeStatus === "detecting" ? " is-detecting" : ""}`}
               >
-                {SETTINGS_TIMEZONE_OPTIONS.map((zone) => (
-                  <option key={zone} value={zone}>
-                    {zone}
-                  </option>
-                ))}
-              </select>
+                <select
+                  className="settings-select settings-timezone-select"
+                  value={timeZone || DEFAULT_SETTINGS_TIMEZONE}
+                  aria-label={t(`${TK}.timeZoneAria`)}
+                  aria-busy={addressGeocodeStatus === "detecting"}
+                  disabled={addressGeocodeStatus === "detecting"}
+                  onChange={(event) => {
+                    const next = event.target.value;
+                    setTimeZone(next);
+                    setTimeZoneManual(true);
+                    setStatus(
+                      t(`${TK}.timeZoneManualSet`, { timeZone: next }),
+                    );
+                  }}
+                >
+                  {SETTINGS_TIMEZONE_OPTIONS.map((zone) => (
+                    <option key={zone} value={zone}>
+                      {zone}
+                    </option>
+                  ))}
+                  {timeZone && !isSettingsTimeZone(timeZone) ? (
+                    <option value={timeZone}>{timeZone}</option>
+                  ) : null}
+                </select>
+                {addressGeocodeStatus === "detecting" ? (
+                  <span
+                    className="settings-timezone-loading"
+                    aria-hidden="true"
+                  >
+                    <SpinnerIcon className="booking-inline-spinner" />
+                  </span>
+                ) : null}
+              </div>
             </label>
-            <span className="settings-timezone-status">
-              {timeZoneManual
-                ? t(`${TK}.timeZoneManual`)
-                : t(`${TK}.timeZoneAuto`)}
+            <span
+              className={`settings-timezone-status${addressGeocodeStatus === "detecting" ? " is-detecting" : ""}${addressGeocodeStatus === "failed" ? " is-failed" : ""}`}
+            >
+              {addressGeocodeStatus === "detecting"
+                ? t(`${TK}.timeZoneDetecting`)
+                : addressGeocodeStatus === "failed"
+                  ? t(`${TK}.timeZoneDetectFailed`)
+                  : timeZoneManual
+                    ? t(`${TK}.timeZoneManual`)
+                    : t(`${TK}.timeZoneAuto`)}
             </span>
           </div>
         </SettingsCard>
@@ -1959,14 +2775,6 @@ export default function BookingSettingsPanel() {
               {t(`${TK}.manageCategories`)}
             </button>
             <button
-              className={`booking-secondary-button${suggestOpen ? " is-active" : ""}`}
-              type="button"
-              onClick={handleSuggestToggle}
-            >
-              <StarsIcon />
-              {t(`${TK}.suggestServices`)}
-            </button>
-            <button
               className="booking-primary-button"
               type="button"
               onClick={openServiceModal}
@@ -1976,30 +2784,8 @@ export default function BookingSettingsPanel() {
             </button>
           </div>
 
-          {suggestOpen ? (
-            <div className="settings-service-panel is-visible">
-              <div className="settings-service-panel-title">
-                {t(`${TK}.suggestPanelTitle`)}
-              </div>
-              <div className="settings-service-suggest-grid">
-                {SERVICE_SUGGESTIONS.filter(
-                  (item) => !usedSuggestionIds.includes(item.id),
-                ).map((item) => (
-                  <button
-                    key={item.id}
-                    className="settings-service-suggest"
-                    type="button"
-                    onClick={() => handleSuggestAdd(item)}
-                  >
-                    + {item.name} <span>${item.price}</span>
-                  </button>
-                ))}
-              </div>
-            </div>
-          ) : null}
-
           <div className="settings-service-list settings-service-body">
-            {services.length === 0 ? (
+            {catalogSections.length === 0 ? (
               <div className="settings-service-catalog-state">
                 <p>{t(`${TK}.servicesEmpty`)}</p>
                 <button
@@ -2012,21 +2798,20 @@ export default function BookingSettingsPanel() {
                 </button>
               </div>
             ) : (
-              categories.map((categoryName, index) => {
-                const categoryServices =
-                  servicesByCategory.get(categoryName) || [];
+              catalogSections.map((section, index) => {
+                const categoryServices = section.services;
                 return (
                   <details
-                    key={categoryName}
+                    key={section.id}
                     className="settings-service-category"
                     open={index === 0}
                   >
                     <summary className="settings-service-category-head">
                       <span className="settings-service-category-name">
-                        {categoryName}
+                        {section.name}
                       </span>
                       <span className="settings-service-category-count">
-                        {categoryServices.length}
+                        {formatCategoryServiceCount(categoryServices.length)}
                       </span>
                       <svg
                         className="settings-service-category-chevron"
@@ -2062,12 +2847,13 @@ export default function BookingSettingsPanel() {
                         </div>
                       ) : (
                         categoryServices.map((service) => {
-                          const durationInvalid =
-                            invalidDurationServiceIds.includes(service.id);
+                          const isPending =
+                            pendingServiceActionId === service.id;
                           return (
                             <div
                               className={`settings-service-row is-compact${highlightServiceId === service.id ? " is-highlight" : ""}`}
-                              key={service.id}
+                              data-service-row-id={service.id}
+                              key={`${section.id}-${service.id}`}
                             >
                               <div className="settings-service-edit-grid">
                                 <span
@@ -2077,27 +2863,27 @@ export default function BookingSettingsPanel() {
                                   {service.icon}
                                 </span>
                                 <input
-                                  className="settings-service-input"
+                                  className="settings-service-input is-readonly-trigger"
                                   type="text"
                                   value={service.name}
                                   placeholder={t(
                                     `${TK}.placeholderServiceName`,
                                   )}
                                   aria-label={t(`${TK}.serviceNameAria`)}
-                                  onChange={(event) =>
-                                    updateService(
-                                      service.id,
-                                      MerchantVoiceServiceField.Name,
-                                      event.target.value,
-                                    )
-                                  }
+                                  readOnly
+                                  disabled={isPending}
+                                  onClick={() => openEditServiceModal(service)}
+                                  onFocus={(event) => {
+                                    event.currentTarget.blur();
+                                    openEditServiceModal(service);
+                                  }}
                                 />
                                 <div className="settings-service-input-wrap">
                                   <span className="settings-service-prefix">
                                     $
                                   </span>
                                   <input
-                                    className="settings-service-input price"
+                                    className="settings-service-input price is-readonly-trigger"
                                     type="text"
                                     inputMode="numeric"
                                     pattern="[0-9]*"
@@ -2108,24 +2894,20 @@ export default function BookingSettingsPanel() {
                                       `${TK}.placeholderServicePrice`,
                                     )}
                                     aria-label={t(`${TK}.servicePriceAria`)}
-                                    onChange={(event) =>
-                                      updateService(
-                                        service.id,
-                                        MerchantVoiceServiceField.Price,
-                                        event.target.value,
-                                      )
+                                    readOnly
+                                    disabled={isPending}
+                                    onClick={() =>
+                                      openEditServiceModal(service)
                                     }
-                                    onBlur={() =>
-                                      commitServiceNumberOnBlur(
-                                        service.id,
-                                        MerchantVoiceServiceField.Price,
-                                      )
-                                    }
+                                    onFocus={(event) => {
+                                      event.currentTarget.blur();
+                                      openEditServiceModal(service);
+                                    }}
                                   />
                                 </div>
                                 <div className="settings-service-input-wrap">
                                   <input
-                                    className="settings-service-input duration"
+                                    className="settings-service-input duration is-readonly-trigger"
                                     type="text"
                                     inputMode="numeric"
                                     pattern="[0-9]*"
@@ -2138,44 +2920,52 @@ export default function BookingSettingsPanel() {
                                     aria-label={t(
                                       `${TK}.serviceDurationAria`,
                                     )}
-                                    aria-invalid={
-                                      durationInvalid || undefined
+                                    readOnly
+                                    disabled={isPending}
+                                    onClick={() =>
+                                      openEditServiceModal(service)
                                     }
-                                    onChange={(event) =>
-                                      updateService(
-                                        service.id,
-                                        MerchantVoiceServiceField.Duration,
-                                        event.target.value,
-                                      )
-                                    }
-                                    onBlur={() =>
-                                      commitServiceNumberOnBlur(
-                                        service.id,
-                                        MerchantVoiceServiceField.Duration,
-                                      )
-                                    }
+                                    onFocus={(event) => {
+                                      event.currentTarget.blur();
+                                      openEditServiceModal(service);
+                                    }}
                                   />
                                   <span className="settings-service-suffix">
                                     {t(`${TK}.durationUnit`)}
                                   </span>
                                 </div>
-                                <button
-                                  className="settings-service-remove"
-                                  type="button"
-                                  aria-label={t(`${TK}.removeService`)}
-                                  onClick={() => removeService(service.id)}
-                                >
-                                  ×
-                                </button>
+                                <div className="settings-service-row-actions">
+                                  <button
+                                    className="settings-service-edit"
+                                    type="button"
+                                    aria-label={t(`${TK}.serviceEditAria`)}
+                                    disabled={isPending || isSavingService}
+                                    onClick={() =>
+                                      openEditServiceModal(service)
+                                    }
+                                  >
+                                    <PencilIcon className="settings-service-edit-icon" />
+                                  </button>
+                                  <button
+                                    className="settings-service-remove"
+                                    type="button"
+                                    aria-label={t(`${TK}.removeService`)}
+                                    disabled={isPending || isSavingService}
+                                    onClick={() => {
+                                      void removeService(
+                                        service.id,
+                                        section.id,
+                                      );
+                                    }}
+                                  >
+                                    {isPending ? (
+                                      <SpinnerIcon className="booking-inline-spinner" />
+                                    ) : (
+                                      "×"
+                                    )}
+                                  </button>
+                                </div>
                               </div>
-                              {durationInvalid ? (
-                                <p
-                                  className="settings-service-row-error"
-                                  role="alert"
-                                >
-                                  {t(`${TK}.durationInvalid`)}
-                                </p>
-                              ) : null}
                             </div>
                           );
                         })
@@ -2379,7 +3169,11 @@ export default function BookingSettingsPanel() {
         <button
           className="booking-primary-button"
           type="button"
-          disabled={updateConfigMutation.isPending}
+          disabled={
+            updateConfigMutation.isPending ||
+            isSavingCategories ||
+            isSavingService
+          }
           onClick={handleSave}
         >
           {updateConfigMutation.isPending ? (
@@ -2403,10 +3197,22 @@ export default function BookingSettingsPanel() {
                   className="settings-service-modal-title"
                   id="settings-service-modal-title"
                 >
-                  {t(`${TK}.serviceModalTitle`)}
+                  {t(
+                    `${TK}.${
+                      serviceModalDraft.mode === "edit"
+                        ? "serviceModalEditTitle"
+                        : "serviceModalTitle"
+                    }`,
+                  )}
                 </div>
                 <div className="settings-service-modal-sub">
-                  {t(`${TK}.serviceModalSub`)}
+                  {t(
+                    `${TK}.${
+                      serviceModalDraft.mode === "edit"
+                        ? "serviceModalEditSub"
+                        : "serviceModalSub"
+                    }`,
+                  )}
                 </div>
               </div>
               <button
@@ -2420,28 +3226,51 @@ export default function BookingSettingsPanel() {
             </div>
             <div className="settings-service-modal-body">
               <div className="settings-service-modal-grid">
-                <label className="settings-field settings-service-modal-field-name">
+                <div className="settings-field settings-service-modal-field-name">
                   <span className="settings-label">
-                    {t(`${TK}.serviceModalCategory`)}
+                    {t(`${TK}.serviceModalCategories`)}
                   </span>
-                  <select
-                    className="settings-input"
-                    value={serviceModalDraft.category}
-                    aria-label={t(`${TK}.serviceModalCategory`)}
-                    onChange={(event) =>
-                      setServiceModalDraft((prev) => ({
-                        ...prev,
-                        category: event.target.value,
-                      }))
-                    }
+                  <div
+                    className="settings-service-modal-categories"
+                    role="group"
+                    aria-label={t(`${TK}.serviceModalCategories`)}
                   >
-                    {categories.map((categoryName) => (
-                      <option key={categoryName} value={categoryName}>
-                        {categoryName}
-                      </option>
-                    ))}
-                  </select>
-                </label>
+                    {serviceModalCategoryOptions.length === 0 ? (
+                      <div className="settings-service-modal-categories-empty">
+                        {t(`${TK}.serviceModalCategoriesEmpty`)}
+                      </div>
+                    ) : (
+                      serviceModalCategoryOptions.map((category) => {
+                        const isOtherCategory =
+                          category.isSystem ||
+                          category.id === OTHER_SERVICES_CATEGORY_ID;
+                        const checked =
+                          !isOtherCategory &&
+                          serviceModalDraft.categoryIds.includes(category.id);
+                        return (
+                          <label
+                            key={category.id}
+                            className={`settings-service-modal-category-option${checked ? " is-selected" : ""}${isOtherCategory ? " is-disabled" : ""}`}
+                          >
+                            <input
+                              type="checkbox"
+                              checked={checked}
+                              disabled={isOtherCategory}
+                              onChange={() => {
+                                if (isOtherCategory) return;
+                                toggleServiceModalCategory(category.id);
+                              }}
+                            />
+                            <span>{category.name}</span>
+                          </label>
+                        );
+                      })
+                    )}
+                  </div>
+                  <span className="settings-help">
+                    {t(`${TK}.serviceModalCategoriesHelp`)}
+                  </span>
+                </div>
                 <label className="settings-field settings-service-modal-field-name">
                   <span className="settings-label">
                     {t(`${TK}.serviceModalName`)}
@@ -2464,41 +3293,56 @@ export default function BookingSettingsPanel() {
                   <span className="settings-label">
                     {t(`${TK}.serviceModalPrice`)}
                   </span>
-                  <input
-                    className="settings-input"
-                    type="number"
-                    min={0}
-                    step="0.01"
-                    value={serviceModalDraft.price}
-                    placeholder={t(`${TK}.placeholderServicePrice`)}
-                    inputMode="decimal"
-                    onChange={(event) =>
-                      setServiceModalDraft((prev) => ({
-                        ...prev,
-                        price: event.target.value,
-                      }))
-                    }
-                  />
+                  <div className="settings-service-input-wrap settings-service-modal-input-wrap">
+                    <span className="settings-service-prefix" aria-hidden="true">
+                      $
+                    </span>
+                    <input
+                      className="settings-input settings-service-modal-affix-input is-price"
+                      type="text"
+                      inputMode="decimal"
+                      value={serviceModalDraft.price}
+                      placeholder={t(`${TK}.placeholderServicePrice`)}
+                      aria-label={t(`${TK}.serviceModalPrice`)}
+                      onChange={(event) => {
+                        const raw = event.target.value.replace(/[^\d.]/g, "");
+                        const parts = raw.split(".");
+                        const next =
+                          parts.length <= 1
+                            ? raw
+                            : `${parts[0]}.${parts.slice(1).join("").slice(0, 2)}`;
+                        setServiceModalDraft((prev) => ({
+                          ...prev,
+                          price: next,
+                        }));
+                      }}
+                    />
+                  </div>
                 </label>
                 <label className="settings-field">
                   <span className="settings-label">
                     {t(`${TK}.serviceModalDuration`)}
                   </span>
-                  <input
-                    className="settings-input"
-                    type="number"
-                    min={1}
-                    step={1}
-                    value={serviceModalDraft.duration}
-                    placeholder={t(`${TK}.placeholderServiceDuration`)}
-                    inputMode="numeric"
-                    onChange={(event) =>
-                      setServiceModalDraft((prev) => ({
-                        ...prev,
-                        duration: event.target.value,
-                      }))
-                    }
-                  />
+                  <div className="settings-service-input-wrap settings-service-modal-input-wrap">
+                    <input
+                      className="settings-input settings-service-modal-affix-input is-duration"
+                      type="text"
+                      inputMode="numeric"
+                      pattern="[0-9]*"
+                      value={serviceModalDraft.duration}
+                      placeholder={t(`${TK}.placeholderServiceDuration`)}
+                      aria-label={t(`${TK}.serviceModalDuration`)}
+                      onChange={(event) =>
+                        setServiceModalDraft((prev) => ({
+                          ...prev,
+                          duration: event.target.value.replace(/\D/g, ""),
+                        }))
+                      }
+                    />
+                    <span className="settings-service-suffix" aria-hidden="true">
+                      min
+                    </span>
+                  </div>
                 </label>
               </div>
               {serviceModalError ? (
@@ -2518,10 +3362,25 @@ export default function BookingSettingsPanel() {
               <button
                 className="booking-primary-button"
                 type="button"
-                onClick={saveServiceModal}
+                disabled={isSavingService}
+                onClick={() => {
+                  void saveServiceModal();
+                }}
               >
-                <PlusIcon className="settings-action-icon" />{" "}
-                {t(`${TK}.serviceModalSave`)}
+                {isSavingService ? (
+                  <SpinnerIcon className="booking-inline-spinner" />
+                ) : serviceModalDraft.mode === "edit" ? (
+                  <CheckCircleFillIcon className="settings-action-icon" />
+                ) : (
+                  <PlusIcon className="settings-action-icon" />
+                )}{" "}
+                {t(
+                  `${TK}.${
+                    serviceModalDraft.mode === "edit"
+                      ? "serviceModalUpdate"
+                      : "serviceModalSave"
+                  }`,
+                )}
               </button>
             </div>
           </div>
@@ -2572,6 +3431,7 @@ export default function BookingSettingsPanel() {
                   <button
                     className="settings-category-manager-add"
                     type="button"
+                    disabled={isSavingCategories}
                     onClick={addCategoryDraft}
                   >
                     <PlusIcon className="settings-category-manager-add-icon" />
@@ -2584,36 +3444,122 @@ export default function BookingSettingsPanel() {
                       {t(`${TK}.categoryModalEmpty`)}
                     </div>
                   ) : (
-                    categoryDrafts.map((categoryName, index) => {
-                      const serviceCount = services.filter(
-                        (service) => service.category === categoryName,
-                      ).length;
+                    categoryDrafts.map((draft, index) => {
+                      const serviceCount = countServicesForCategory(draft);
+                      const isActiveRow = Boolean(draft.isNew || draft.isEditing);
+                      const canEdit = !draft.isSystem && !draft.isNew;
                       return (
-                        <div className="settings-category-row" key={`${categoryName}-${index}`}>
+                        <div
+                          className={`settings-category-row${draft.isNew ? " is-new" : ""}${draft.isEditing ? " is-editing" : ""}`}
+                          key={`${draft.id || "new"}-${index}`}
+                        >
                           <div className="settings-category-row-main">
                             <FolderTreeIcon className="settings-category-row-icon" />
                             <input
+                              ref={isActiveRow ? categoryInputRef : undefined}
                               className="settings-category-name-input"
                               type="text"
-                              value={categoryName}
+                              value={draft.name}
+                              disabled={
+                                draft.isSystem ||
+                                (!draft.isNew && !draft.isEditing) ||
+                                isSavingCategories
+                              }
+                              placeholder={
+                                draft.isNew
+                                  ? t(`${TK}.categoryNamePlaceholder`)
+                                  : undefined
+                              }
                               aria-label={t(`${TK}.categoryModalCategories`)}
                               onChange={(event) =>
                                 updateCategoryDraft(index, event.target.value)
                               }
+                              onKeyDown={(event) => {
+                                if (event.key === "Enter") {
+                                  event.preventDefault();
+                                  if (draft.isNew) {
+                                    void confirmCreateCategory(index);
+                                  } else if (draft.isEditing) {
+                                    void confirmRenameCategory(index);
+                                  }
+                                }
+                                if (event.key === "Escape" && isActiveRow) {
+                                  event.preventDefault();
+                                  cancelCategoryRow(index);
+                                }
+                              }}
                             />
-                            <span className="settings-category-count">
-                              {serviceCount}
+                            <span
+                              className="settings-category-count"
+                              title={formatCategoryServiceCount(serviceCount)}
+                            >
+                              {formatCategoryServiceCount(serviceCount)}
                             </span>
                           </div>
                           <div className="settings-category-row-actions">
-                            <button
-                              className="settings-category-row-action is-danger"
-                              type="button"
-                              aria-label={t(`${TK}.categoryModalRemoveAria`)}
-                              onClick={() => removeCategoryDraft(index)}
-                            >
-                              ×
-                            </button>
+                            {draft.isNew || draft.isEditing ? (
+                              <>
+                                <button
+                                  className="settings-category-row-action is-confirm"
+                                  type="button"
+                                  aria-label={
+                                    draft.isNew
+                                      ? t(`${TK}.categoryConfirmAddAria`)
+                                      : t(`${TK}.categoryConfirmEditAria`)
+                                  }
+                                  disabled={isSavingCategories}
+                                  onClick={() => {
+                                    if (draft.isNew) {
+                                      void confirmCreateCategory(index);
+                                    } else {
+                                      void confirmRenameCategory(index);
+                                    }
+                                  }}
+                                >
+                                  {isSavingCategories ? (
+                                    <SpinnerIcon className="settings-category-row-action-icon" />
+                                  ) : (
+                                    <CheckCircleFillIcon className="settings-category-row-action-icon is-confirm-icon" />
+                                  )}
+                                </button>
+                                <button
+                                  className="settings-category-row-action"
+                                  type="button"
+                                  aria-label={t(`${TK}.categoryCancelAria`)}
+                                  disabled={isSavingCategories}
+                                  onClick={() => cancelCategoryRow(index)}
+                                >
+                                  <XLgIcon className="settings-category-row-action-icon" />
+                                </button>
+                              </>
+                            ) : (
+                              <>
+                                {canEdit ? (
+                                  <button
+                                    className="settings-category-row-action"
+                                    type="button"
+                                    aria-label={t(`${TK}.categoryEditAria`)}
+                                    disabled={isSavingCategories}
+                                    onClick={() => startEditCategory(index)}
+                                  >
+                                    <PencilIcon className="settings-category-row-action-icon" />
+                                  </button>
+                                ) : null}
+                                {!draft.isSystem ? (
+                                  <button
+                                    className="settings-category-row-action is-danger"
+                                    type="button"
+                                    aria-label={t(`${TK}.categoryModalRemoveAria`)}
+                                    disabled={isSavingCategories}
+                                    onClick={() => {
+                                      void deleteCategoryRow(index);
+                                    }}
+                                  >
+                                    <Trash2Icon className="settings-category-row-action-icon" />
+                                  </button>
+                                ) : null}
+                              </>
+                            )}
                           </div>
                         </div>
                       );
@@ -2629,18 +3575,12 @@ export default function BookingSettingsPanel() {
             </div>
             <div className="settings-service-modal-actions">
               <button
-                className="booking-secondary-button"
+                className="booking-primary-button"
                 type="button"
+                disabled={isSavingCategories}
                 onClick={() => setCategoryModalOpen(false)}
               >
                 {t(`${TK}.categoryModalClose`)}
-              </button>
-              <button
-                className="booking-primary-button"
-                type="button"
-                onClick={saveCategoryModal}
-              >
-                {t(`${TK}.categoryModalSave`)}
               </button>
             </div>
           </div>

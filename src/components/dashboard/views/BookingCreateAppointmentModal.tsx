@@ -4,14 +4,19 @@ import { useNotification } from '../../../contexts/NotificationContext'
 import { getErrorI18nKey } from '../../../data/errorCodes'
 import {
   useCreateMerchantVoiceBooking,
-  useMerchantVoiceConfig,
+  useMerchantVoiceServiceCategories,
+  useMerchantVoiceServices,
   useMerchantVoiceStaff,
 } from '../../../data/hooks/useMerchantVoiceBookings'
+import {
+  buildMerchantVoiceServiceSections,
+  flattenMerchantVoiceServiceSections,
+} from '../../../data/merchantVoice/serviceCatalog'
 import {
   BookingUiStatus,
   MerchantVoiceStaffStatus,
   mapUiStatusToLeadStatusApi,
-  type MerchantVoiceConfigServiceDto,
+  type MerchantVoiceServiceDto,
 } from '../../../data/repositories/merchantVoice'
 import {
   formatServicePrice,
@@ -46,11 +51,15 @@ import {
   BookingCreateField,
   BookingCreateVariant,
   getMinBookableClientLocalTime,
+  isBookingCreateServicePicked,
   isClientLocalDateBeforeToday,
   isClientLocalSlotPast,
+  toggleBookingCreateServicePick,
+  uniqueServiceIdsFromPicks,
   type BookingCreateCreatedSlot,
   type BookingCreateFieldErrors,
   type BookingCreatePrefill,
+  type BookingCreateServicePick,
 } from './bookingCreateConstants'
 import {
   BOOKING_CALENDAR_DEFAULT_DURATION_MINUTES,
@@ -64,6 +73,8 @@ import { applyAiHubProgressiveValidation } from './bookingHubDialogValidation'
 
 const TK_TODAY = 'components.dashboard.views.BookingHubView.today'
 const TK_HUB = 'components.dashboard.views.BookingHubView'
+/** Reuse Settings copy for the category accordion (same catalog UI). */
+const TK_SETTINGS = 'components.dashboard.views.BookingHubView.settings'
 
 type Props = {
   open: boolean
@@ -111,7 +122,8 @@ export default function BookingCreateAppointmentModal({
   const createMutation = useCreateMerchantVoiceBooking()
   const isPanel = variant === BookingCreateVariant.Panel
 
-  const configQuery = useMerchantVoiceConfig({ enabled: open })
+  const categoriesQuery = useMerchantVoiceServiceCategories({ enabled: open })
+  const servicesQuery = useMerchantVoiceServices({ enabled: open })
   const staffQuery = useMerchantVoiceStaff(
     {
       pageNumber: 1,
@@ -123,7 +135,7 @@ export default function BookingCreateAppointmentModal({
 
   const [customerName, setCustomerName] = useState('')
   const [phone, setPhone] = useState(`${PhoneDialCode.US} `)
-  const [selectedServiceIds, setSelectedServiceIds] = useState<string[]>([])
+  const [selectedServicePicks, setSelectedServicePicks] = useState<BookingCreateServicePick[]>([])
   const [staffId, setStaffId] = useState<string>(BOOKING_CREATE_UNASSIGNED_STAFF)
   const [status, setStatus] = useState<BookingUiStatus>(BookingUiStatus.New)
   const [date, setDate] = useState('')
@@ -131,6 +143,7 @@ export default function BookingCreateAppointmentModal({
   const [notes, setNotes] = useState('')
   const [fieldErrors, setFieldErrors] = useState<BookingCreateFieldErrors>({})
   const [submitError, setSubmitError] = useState('')
+  const [openServiceCategoryIds, setOpenServiceCategoryIds] = useState(() => new Set<string>())
   const dialogRef = useRef<HTMLDivElement>(null)
 
   const phoneParsed = useMemo(() => parsePhone(phone), [phone])
@@ -146,10 +159,15 @@ export default function BookingCreateAppointmentModal({
     setSubmitError('')
   }
 
-  const services = useMemo(() => {
-    const rows = configQuery.data?.services ?? []
-    return rows.filter((service) => service.isActive !== false && service.id)
-  }, [configQuery.data?.services])
+  const serviceSections = useMemo(
+    () => buildMerchantVoiceServiceSections(categoriesQuery.data, servicesQuery.data),
+    [categoriesQuery.data, servicesQuery.data],
+  )
+
+  const services = useMemo(
+    () => flattenMerchantVoiceServiceSections(serviceSections),
+    [serviceSections],
+  )
 
   const staffItems = staffQuery.data?.items ?? []
 
@@ -161,7 +179,8 @@ export default function BookingCreateAppointmentModal({
     if (!open) return
     setCustomerName('')
     setPhone(`${PhoneDialCode.US} `)
-    setSelectedServiceIds([])
+    setSelectedServicePicks([])
+    setOpenServiceCategoryIds(new Set())
     setStatus(BookingUiStatus.New)
     setNotes('')
     setFieldErrors({})
@@ -193,6 +212,27 @@ export default function BookingCreateAppointmentModal({
     }
     setStaffId(preferredStaffId || BOOKING_CREATE_UNASSIGNED_STAFF)
   }, [open, prefill])
+
+  // Seed first category open once catalog arrives; leave others as the user toggled them.
+  useEffect(() => {
+    if (!open || serviceSections.length === 0) return
+    setOpenServiceCategoryIds((prev) => {
+      const valid = new Set(
+        [...prev].filter((id) => serviceSections.some((section) => section.id === id)),
+      )
+      if (valid.size > 0) return valid
+      return new Set([serviceSections[0].id])
+    })
+  }, [open, serviceSections])
+
+  const toggleServiceCategory = (categoryId: string) => {
+    setOpenServiceCategoryIds((prev) => {
+      const next = new Set(prev)
+      if (next.has(categoryId)) next.delete(categoryId)
+      else next.add(categoryId)
+      return next
+    })
+  }
 
   // If user switches date to today while holding a past time, clear it (client-local).
   useEffect(() => {
@@ -252,6 +292,11 @@ export default function BookingCreateAppointmentModal({
     return () => document.removeEventListener('keydown', onKeyDown)
   }, [open, onClose, createMutation.isPending])
 
+  const selectedServiceIds = useMemo(
+    () => uniqueServiceIdsFromPicks(selectedServicePicks),
+    [selectedServicePicks],
+  )
+
   const selectedServices = useMemo(
     () => services.filter((service) => selectedServiceIds.includes(service.id)),
     [services, selectedServiceIds],
@@ -263,12 +308,10 @@ export default function BookingCreateAppointmentModal({
     0,
   )
 
-  const toggleService = (service: MerchantVoiceConfigServiceDto) => {
-    setSelectedServiceIds((prev) => (
-      prev.includes(service.id)
-        ? prev.filter((id) => id !== service.id)
-        : [...prev, service.id]
-    ))
+  const toggleService = (service: MerchantVoiceServiceDto, categoryId: string) => {
+    setSelectedServicePicks((prev) =>
+      toggleBookingCreateServicePick(prev, categoryId, service.id),
+    )
     clearFieldError(BookingCreateField.Services)
   }
 
@@ -369,7 +412,7 @@ export default function BookingCreateAppointmentModal({
 
   if (!open) return null
 
-  const isServicesLoading = configQuery.isLoading
+  const isServicesLoading = categoriesQuery.isLoading || servicesQuery.isLoading
   const isStaffLoading = staffQuery.isLoading
 
   const formBody = (
@@ -451,30 +494,92 @@ export default function BookingCreateAppointmentModal({
               <div className="booking-create-empty">{t(`${BOOKING_CREATE_TK}.servicesEmpty`)}</div>
             ) : (
               <div
-                className="booking-service-chips"
+                className="booking-create-service-groups"
                 role="group"
                 aria-label={t(`${BOOKING_CREATE_TK}.servicesAria`)}
                 aria-invalid={Boolean(fieldErrors.services)}
               >
-                {services.map((service) => {
-                  const selected = selectedServiceIds.includes(service.id)
-                  const duration = service.durationMinutes ?? 0
+                {serviceSections.map((section) => {
+                  const isOpen = openServiceCategoryIds.has(section.id)
+                  const count = section.services.length
+                  const panelId = `booking-create-service-panel-${section.id}`
                   return (
-                    <button
-                      key={service.id}
-                      className={`booking-service-chip-button${selected ? ' is-selected' : ''}`}
-                      type="button"
-                      aria-pressed={selected}
-                      onClick={() => toggleService(service)}
+                    <div
+                      className={`settings-service-category booking-create-service-accordion${isOpen ? ' is-open' : ''}`}
+                      key={section.id}
                     >
-                      {service.name}
-                      {BOOKING_CREATE_DISPLAY_SEPARATOR}
-                      {formatServicePrice(service.price)}
-                      {BOOKING_CREATE_DISPLAY_SEPARATOR}
-                      <span className="booking-service-duration">
-                        {t(`${BOOKING_CREATE_TK}.durationMin`, { count: duration })}
-                      </span>
-                    </button>
+                      <button
+                        className="settings-service-category-head booking-create-service-accordion-head"
+                        type="button"
+                        aria-expanded={isOpen}
+                        aria-controls={panelId}
+                        onClick={() => toggleServiceCategory(section.id)}
+                      >
+                        <span className="settings-service-category-name">
+                          {section.name}
+                        </span>
+                        <span className="settings-service-category-count">
+                          {count === 1
+                            ? t(`${TK_SETTINGS}.categoryServiceCountOne`)
+                            : t(`${TK_SETTINGS}.categoryServiceCount`, { count })}
+                        </span>
+                        <svg
+                          className="settings-service-category-chevron"
+                          viewBox="0 0 24 24"
+                          fill="none"
+                          aria-hidden="true"
+                          width="16"
+                          height="16"
+                        >
+                          <path
+                            d="m6 9 6 6 6-6"
+                            stroke="currentColor"
+                            strokeWidth="2"
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                          />
+                        </svg>
+                      </button>
+                      <div
+                        className="booking-create-service-accordion-panel"
+                        id={panelId}
+                        role="region"
+                        aria-hidden={!isOpen}
+                      >
+                        <div className="booking-create-service-accordion-panel-inner">
+                          <div className="settings-service-category-body">
+                            <div className="booking-service-chips">
+                              {section.services.map((service) => {
+                                const selected = isBookingCreateServicePicked(
+                                  selectedServicePicks,
+                                  section.id,
+                                  service.id,
+                                )
+                                const duration = service.durationMinutes ?? 0
+                                return (
+                                  <button
+                                    key={`${section.id}-${service.id}`}
+                                    className={`booking-service-chip-button${selected ? ' is-selected' : ''}`}
+                                    type="button"
+                                    aria-pressed={selected}
+                                    tabIndex={isOpen ? 0 : -1}
+                                    onClick={() => toggleService(service, section.id)}
+                                  >
+                                    {service.name}
+                                    {BOOKING_CREATE_DISPLAY_SEPARATOR}
+                                    {formatServicePrice(service.price)}
+                                    {BOOKING_CREATE_DISPLAY_SEPARATOR}
+                                    <span className="booking-service-duration">
+                                      {t(`${BOOKING_CREATE_TK}.durationMin`, { count: duration })}
+                                    </span>
+                                  </button>
+                                )
+                              })}
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
                   )
                 })}
               </div>

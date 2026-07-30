@@ -5,6 +5,7 @@
 import httpClient from '../../lib/httpClient'
 import {
   BOOKING_DAY_OF_WEEK,
+  OTHER_SERVICES_CATEGORY_ID,
   PUBLIC_VOICE_BOOKING_BASE,
   PUBLIC_VOICE_BOOKING_HEADERS,
   VoiceLeadSource,
@@ -15,6 +16,7 @@ import {
   type PublicBookingOperatingHour,
   type PublicBookingPageData,
   type PublicBookingService,
+  type PublicBookingServiceCategory,
   type PublicBookingStaff,
 } from '../publicVoiceBooking/domain'
 
@@ -53,13 +55,16 @@ function staffInitials(fullName: string): string {
   return `${parts[0][0] ?? ''}${parts[parts.length - 1][0] ?? ''}`.toUpperCase()
 }
 
-function normalizeService(raw: unknown): PublicBookingService | null {
+function normalizeService(
+  raw: unknown,
+  categoryMeta?: { categoryId: string; categoryName: string },
+): PublicBookingService | null {
   const dto = asRecord(raw)
   const id = String(readField(dto, 'id', 'Id') ?? '').trim()
   const name = String(readField(dto, 'name', 'Name') ?? '').trim()
   if (!id || !name) return null
   const price = toNumberOrNull(readField(dto, 'price', 'Price'))
-  return {
+  const service: PublicBookingService = {
     id,
     name,
     price,
@@ -67,6 +72,38 @@ function normalizeService(raw: unknown): PublicBookingService | null {
     durationMinutes: toIntOrZero(readField(dto, 'durationMinutes', 'DurationMinutes')),
     note: String(readField(dto, 'note', 'Note') ?? '').trim(),
     icon: String(readField(dto, 'icon', 'Icon') ?? '').trim(),
+  }
+  if (categoryMeta?.categoryId) {
+    service.categoryId = categoryMeta.categoryId
+    service.categoryName = categoryMeta.categoryName
+  }
+  return service
+}
+
+function normalizeCategory(raw: unknown): PublicBookingServiceCategory | null {
+  const dto = asRecord(raw)
+  const id = String(readField(dto, 'id', 'Id') ?? '').trim()
+  const name =
+    String(readField(dto, 'name', 'Name') ?? '').trim() || 'Other services'
+  if (!id) return null
+  const isSystemRaw = readField(dto, 'isSystem', 'IsSystem')
+  const isSystem =
+    isSystemRaw === true || id === OTHER_SERVICES_CATEGORY_ID
+  const servicesRaw = readField<unknown[]>(dto, 'services', 'Services')
+  const services = Array.isArray(servicesRaw)
+    ? (servicesRaw
+        .map((item) =>
+          normalizeService(item, { categoryId: id, categoryName: name }),
+        )
+        .filter(Boolean) as PublicBookingService[])
+    : []
+  if (!services.length) return null
+  return {
+    id,
+    name,
+    description: String(readField(dto, 'description', 'Description') ?? '').trim(),
+    isSystem,
+    services,
   }
 }
 
@@ -100,13 +137,91 @@ function normalizeOperatingHour(raw: unknown): PublicBookingOperatingHour | null
   }
 }
 
+/**
+ * Resolve selected service ids against the flat `services` list (authoritative).
+ * Falls back to category-embedded services when flat list is empty.
+ */
+export function resolveSelectedServices(
+  data: Pick<PublicBookingPageData, 'services' | 'categories'>,
+  selectedIds: string[],
+): PublicBookingService[] {
+  const byId = new Map<string, PublicBookingService>()
+  for (const service of data.services || []) {
+    if (service?.id) byId.set(service.id, service)
+  }
+  if (byId.size === 0) {
+    for (const category of data.categories || []) {
+      for (const service of category.services || []) {
+        if (service?.id && !byId.has(service.id)) byId.set(service.id, service)
+      }
+    }
+  }
+  return (Array.isArray(selectedIds) ? selectedIds : [])
+    .map((id) => byId.get(String(id || '').trim()))
+    .filter(Boolean) as PublicBookingService[]
+}
+
 export function normalizeBookingPageData(
   res: BookingPageDataDto | null | undefined,
 ): PublicBookingPageData {
   const raw = asRecord(res)
   const servicesRaw = readField<unknown[]>(raw, 'services', 'Services')
+  const categoriesRaw = readField<unknown[]>(raw, 'categories', 'Categories')
   const staffRaw = readField<unknown[]>(raw, 'staff', 'Staff')
   const hoursRaw = readField<unknown[]>(raw, 'operatingHours', 'OperatingHours')
+
+  const categories = Array.isArray(categoriesRaw)
+    ? (categoriesRaw.map(normalizeCategory).filter(Boolean) as PublicBookingServiceCategory[])
+    : []
+
+  let services = Array.isArray(servicesRaw)
+    ? (servicesRaw.map((item) => normalizeService(item)).filter(Boolean) as PublicBookingService[])
+    : []
+
+  // Flat list is authoritative; if BE omits it, derive a deduped list from categories.
+  if (!services.length && categories.length) {
+    const byId = new Map<string, PublicBookingService>()
+    for (const category of categories) {
+      for (const service of category.services) {
+        if (!byId.has(service.id)) {
+          byId.set(service.id, {
+            id: service.id,
+            name: service.name,
+            price: service.price,
+            priceCents: service.priceCents,
+            durationMinutes: service.durationMinutes,
+            note: service.note,
+            icon: service.icon,
+          })
+        }
+      }
+    }
+    services = [...byId.values()]
+  }
+
+  // Enrich flat services with first matching category label for chips.
+  if (categories.length && services.length) {
+    const categoryByServiceId = new Map<string, { categoryId: string; categoryName: string }>()
+    for (const category of categories) {
+      for (const service of category.services) {
+        if (!categoryByServiceId.has(service.id)) {
+          categoryByServiceId.set(service.id, {
+            categoryId: category.id,
+            categoryName: category.name,
+          })
+        }
+      }
+    }
+    services = services.map((service) => {
+      const meta = categoryByServiceId.get(service.id)
+      if (!meta) return service
+      return {
+        ...service,
+        categoryId: meta.categoryId,
+        categoryName: meta.categoryName,
+      }
+    })
+  }
 
   return {
     businessKey: String(readField(raw, 'businessKey', 'BusinessKey') ?? '').trim(),
@@ -115,14 +230,13 @@ export function normalizeBookingPageData(
       const v = readField(raw, 'timeZone', 'TimeZone')
       return v == null || v === '' ? null : String(v)
     })(),
-    services: Array.isArray(servicesRaw)
-      ? servicesRaw.map(normalizeService).filter(Boolean) as PublicBookingService[]
-      : [],
+    services,
+    categories,
     staff: Array.isArray(staffRaw)
-      ? staffRaw.map(normalizeStaff).filter(Boolean) as PublicBookingStaff[]
+      ? (staffRaw.map(normalizeStaff).filter(Boolean) as PublicBookingStaff[])
       : [],
     operatingHours: Array.isArray(hoursRaw)
-      ? hoursRaw.map(normalizeOperatingHour).filter(Boolean) as PublicBookingOperatingHour[]
+      ? (hoursRaw.map(normalizeOperatingHour).filter(Boolean) as PublicBookingOperatingHour[])
       : [],
   }
 }
@@ -234,13 +348,13 @@ export function zonedWallTimeToUtcMillis(
 }
 
 /**
- * Convert local booking slot (business TZ, else browser TZ) to UTC `date` + `startTime`
- * for the create-booking API body.
+ * Convert local booking slot to UTC `date` + `startTime` for the create-booking API.
+ * Always uses the user's device timezone — never the tenant `timeZone` from page data.
  */
 export function toUtcBookingSlot(
   dateIso: string,
   timeHmm: string,
-  timeZone?: string | null,
+  _timeZone?: string | null,
 ): { date: string; startTime: string } {
   const date = String(dateIso || '').trim()
   const time = String(timeHmm || '').trim()
@@ -250,10 +364,9 @@ export function toUtcBookingSlot(
   }
   const [hours, minutes] = startTimeLocal.split(':').map(Number)
   const tz =
-    String(timeZone || '').trim() ||
-    (typeof Intl !== 'undefined'
-      ? Intl.DateTimeFormat().resolvedOptions().timeZone
-      : 'UTC')
+    typeof Intl !== 'undefined'
+      ? Intl.DateTimeFormat().resolvedOptions().timeZone || 'UTC'
+      : 'UTC'
 
   const utcMillis = zonedWallTimeToUtcMillis(date, hours, minutes || 0, tz)
   if (utcMillis == null) {

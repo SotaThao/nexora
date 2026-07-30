@@ -1,3 +1,6 @@
+/** Virtual "Other services" category id — not mutable via category CRUD. */
+export const OTHER_SERVICES_CATEGORY_ID = '00000000-0000-0000-0000-000000000001'
+
 /** Query param names for merchant `/nexora-voice/*` list endpoints (Swagger PascalCase). */
 export const MerchantVoiceListQueryParam = {
   PageNumber: 'PageNumber',

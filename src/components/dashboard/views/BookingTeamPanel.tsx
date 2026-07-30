@@ -8,7 +8,7 @@ import { getErrorI18nKey } from "../../../data/errorCodes";
 import {
   useCreateMerchantVoiceStaff,
   useMerchantVoiceBusinessStaff,
-  useMerchantVoiceConfig,
+  useMerchantVoiceServices,
   useMerchantVoiceStaff,
   useMerchantVoiceStaffById,
   useToggleMerchantVoiceStaffStatus,
@@ -556,8 +556,8 @@ export default function BookingTeamPanel({ embedded = false }: Props) {
       { searchTerm: debouncedSearchQuery },
       { enabled: voiceEnabled && modalOpen },
     );
-  const { data: configResponse, isLoading: isConfigLoading } =
-    useMerchantVoiceConfig({
+  const { data: servicesResponse, isLoading: isServicesLoading } =
+    useMerchantVoiceServices({
       enabled: voiceEnabled && modalOpen,
     });
   const [members, setMembers] = useState<TeamMember[]>(INITIAL_TEAM_MEMBERS);
@@ -590,14 +590,14 @@ export default function BookingTeamPanel({ embedded = false }: Props) {
   const filteredBusinessStaff = businessStaffOptions;
 
   const serviceOptions = useMemo(() => {
-    const apiServices = configResponse?.services ?? [];
+    const apiServices = servicesResponse ?? [];
     const activeSorted = [...apiServices]
       .filter((service) => service.isActive)
       .sort((a, b) => a.sortOrder - b.sortOrder)
       .map((service) => service.name.trim())
       .filter(Boolean);
     return Array.from(new Set(activeSorted));
-  }, [configResponse?.services]);
+  }, [servicesResponse]);
 
   const draftPhoneParsed = useMemo(() => parsePhone(draftPhone), [draftPhone]);
 
@@ -1377,7 +1377,7 @@ export default function BookingTeamPanel({ embedded = false }: Props) {
                         <span className="settings-label">
                           {t(`${TK}.services`)}
                         </span>
-                        {!isConfigLoading && serviceOptions.length > 0 ? (
+                        {!isServicesLoading && serviceOptions.length > 0 ? (
                           <label className="tech-service-check-all-toggle">
                             <input
                               ref={checkAllServicesRef}
@@ -1389,7 +1389,7 @@ export default function BookingTeamPanel({ embedded = false }: Props) {
                           </label>
                         ) : null}
                       </div>
-                      {isConfigLoading ? (
+                      {isServicesLoading ? (
                         <BookingTechServicesSkeleton count={4} />
                       ) : serviceOptions.length > 0 ? (
                         <div className="tech-service-checks">
