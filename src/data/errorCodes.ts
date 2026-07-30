@@ -1,3 +1,5 @@
+import { getApiErrorCode, isApiError } from '../types/domain'
+
 export const errorCodeToI18nKey = {
   // Auth
   USER_LOGIN_INVALID_USERNAME_OR_PASSWORD: 'errors.user_login_invalid_username_or_password',
@@ -142,6 +144,32 @@ export const errorCodeToI18nKey = {
   // POS Owner Setup — Staff Weekly Schedule (US-09/US-021)
   POS_STAFF_SCHEDULE_DUPLICATE_DAY: 'errors.pos_staff_schedule_duplicate_day',
   POS_STAFF_SCHEDULE_INVALID_TIME_RANGE: 'errors.pos_staff_schedule_invalid_time_range',
+
+  // POS Merchant Ops — Check-in, Turn Board & Checkout (US-12..US-17)
+  POS_ORDER_NOT_FOUND: 'errors.pos_order_not_found',
+  POS_ORDER_NOT_WAITING: 'errors.pos_order_not_waiting',
+  POS_ORDER_CUSTOMER_NAME_REQUIRED: 'errors.pos_order_customer_name_required',
+  POS_ORDER_CUSTOMER_NAME_TOO_LONG: 'errors.pos_order_customer_name_too_long',
+  POS_ORDER_CUSTOMER_EMAIL_TOO_LONG: 'errors.pos_order_customer_email_too_long',
+  POS_ORDER_CUSTOMER_PHONE_TOO_LONG: 'errors.pos_order_customer_phone_too_long',
+  POS_ORDER_SERVICE_INVALID: 'errors.pos_order_service_invalid',
+  POS_ORDER_PRODUCT_INVALID: 'errors.pos_order_product_invalid',
+  POS_ORDER_NUMBER_CONFLICT: 'errors.pos_order_number_conflict',
+  STATION_NOT_EMPTY: 'errors.pos_station_not_empty',
+  ORDER_NOT_WAITING_OR_IN_SERVICE: 'errors.pos_order_not_waiting_or_in_service',
+  ORDER_CLOSED_FOR_EDITS: 'errors.pos_order_closed_for_edits',
+  ORDER_NOT_IN_SERVICE: 'errors.pos_order_not_in_service',
+  ORDER_ALREADY_COMPLETED: 'errors.pos_order_already_completed',
+  SERVICE_LINE_NOT_FOUND: 'errors.pos_service_line_not_found',
+  SERVICE_LINE_ALREADY_ASSIGNED: 'errors.pos_service_line_already_assigned',
+  SERVICE_LINE_NOT_ASSIGNED: 'errors.pos_service_line_not_assigned',
+  SERVICE_LINE_ALREADY_COMPLETED: 'errors.pos_service_line_already_completed',
+  SERVICE_LINE_NOTE_TOO_LONG: 'errors.pos_service_line_note_too_long',
+  PRODUCT_LINE_NOT_FOUND: 'errors.pos_product_line_not_found',
+  NO_STAFF_ASSIGNED_TO_START_SERVICE: 'errors.pos_no_staff_assigned_to_start_service',
+  NOT_ALL_SERVICE_LINES_ASSIGNED: 'errors.pos_not_all_service_lines_assigned',
+  TIP_SPLIT_MISMATCH: 'errors.pos_tip_split_mismatch',
+  TIP_SPLIT_STAFF_INVALID: 'errors.pos_tip_split_staff_invalid',
 
   // Support / contact requests
   CONTACT_REQUEST_SUPPORT_TYPE_MIN_LENGTH: 'errors.contact_request_support_type_min_length',
@@ -380,6 +408,28 @@ export const errorCodeToI18nKey = {
  */
 export function getErrorI18nKey(errorCode) {
   return errorCodeToI18nKey[errorCode] || 'errors.unknown_error'
+}
+
+/**
+ * Resolves the best user-facing message for an API error.
+ * - If the error code has an i18n mapping, returns the translated, friendly copy.
+ * - Otherwise, falls back to the raw message the backend returned (errorDetail[].message,
+ *   or the RFC 7807 detail/title) so an unmapped error code still shows something useful
+ *   instead of the generic "unknown error" text.
+ * - Only falls back to the generic translation when the backend gave no message at all.
+ *
+ * @param {unknown} err
+ * @param {(key: string) => string} t
+ * @param {string} [fallbackCode]
+ * @returns {string}
+ */
+export function getErrorMessage(err, t, fallbackCode = 'ERROR') {
+  const errorCode = getApiErrorCode(err, fallbackCode)
+  const mappedKey = errorCodeToI18nKey[errorCode]
+  if (mappedKey) return t(mappedKey)
+
+  const rawMessage = isApiError(err) ? err.message : ''
+  return rawMessage || t('errors.unknown_error')
 }
 
 export default errorCodeToI18nKey

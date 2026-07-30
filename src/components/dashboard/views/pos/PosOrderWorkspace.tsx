@@ -15,8 +15,7 @@ import { useEffect, useMemo, useRef, useState } from 'react'
 import { Loader2, Pencil, Trash2 } from 'lucide-react'
 import { useTranslation } from '../../../../contexts/LanguageContext'
 import { useNotification } from '../../../../contexts/NotificationContext'
-import { getApiErrorCode } from '../../../../types/domain'
-import { getErrorI18nKey } from '../../../../data/errorCodes'
+import { getErrorMessage } from '../../../../data/errorCodes'
 import {
   useAddOrderProductLine,
   useAddOrderServiceLine,
@@ -226,7 +225,7 @@ export default function PosOrderWorkspace({
     : (order?.status ?? '')
 
   const reportError = (err: unknown) => {
-    showToast(t(getErrorI18nKey(getApiErrorCode(err, 'ERROR'))), 'error')
+    showToast(getErrorMessage(err, t, 'ERROR'), 'error')
   }
 
   const handleCatalogServiceClick = (service: CheckoutServiceCatalogItemApiDto) => {

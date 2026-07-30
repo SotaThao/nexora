@@ -387,16 +387,17 @@ export default function DashboardSidebar({
 	      {id === 'pos' && isPosExpanded && (
                 <div className={SIDEBAR_SUBMENU_WRAP_CLASS}>
                   {POS_SUBMENU.map((sub) => {
-                    // 'settings' (General Settings) lives at /dashboard/pos itself (no
-                    // extra segment), so it's active whenever there's no deeper sub-route.
+                    // 'board' (Front Desk) lives at /dashboard/pos itself (no
+                    // extra segment) so it's the default POS view; it's active
+                    // whenever there's no deeper sub-route.
                     const isSubActive = activeMenu === 'pos' &&
-                      (sub.id === 'settings' ? !activePosSubTab : activePosSubTab === sub.id)
+                      (sub.id === 'board' ? !activePosSubTab : activePosSubTab === sub.id)
                     return (
                       <button
                         key={sub.id}
                         type="button"
                         onClick={() => {
-                          navigate(sub.id === 'settings' ? '/dashboard/pos' : `/dashboard/pos/${sub.id}`)
+                          navigate(sub.id === 'board' ? '/dashboard/pos' : `/dashboard/pos/${sub.id}`)
                         }}
                         className={sidebarSubmenuItemClass(isSubActive)}
                       >

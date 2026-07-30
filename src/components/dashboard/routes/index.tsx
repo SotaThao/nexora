@@ -77,7 +77,7 @@ export function OverviewRoute() {
       onOpenTouchpoints={() => navigate('/dashboard/touchpoints')}
       onOpenReviews={() => navigate('/dashboard/reviews')}
       onOpenStaff={() => navigate('/dashboard/staff')}
-      onOpenBookings={() => navigate('/dashboard/pos/board?tab=booking')}
+      onOpenBookings={() => navigate('/dashboard/pos?tab=booking')}
       businessName={ctx.businessName}
       previewQr={ctx.previewQr}
       touchpoints={ctx.touchpoints}

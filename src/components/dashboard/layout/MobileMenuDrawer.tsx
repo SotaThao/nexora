@@ -22,7 +22,7 @@ import {
   sidebarSubmenuItemClass,
 } from '../../ui/sidebarMenuStyles'
 import PaymentsPayoutsMenuSection from './PaymentsPayoutsMenuSection'
-import { isPaymentsPayoutsRouteActive, getVisibleBookingHubSubmenu, isBookingHubSubActive, VISIBLE_TOUCHPOINTS_SUBMENU, GIFT_CARD_CENTER_SUBMENU, DASHBOARD_MENU, DASHBOARD_MENU_ID, getDefaultBookingHubTab, getDashboardMenuLocalizedLabel, isDashboardStaffRole } from '../constants'
+import { isPaymentsPayoutsRouteActive, getVisibleBookingHubSubmenu, isBookingHubSubActive, VISIBLE_TOUCHPOINTS_SUBMENU, GIFT_CARD_CENTER_SUBMENU, DASHBOARD_MENU, DASHBOARD_MENU_ID, getDefaultBookingHubTab, getDashboardMenuLocalizedLabel, isDashboardStaffRole, POS_SUBMENU, TAXIQ_SUBMENU, TAXIQ_MENU_CHILD_MODULE } from '../constants'
 import { handleExpandableMenuClick } from '../hooks/expandableMenuNav'
 import { useMerchantVoiceTenantStatus } from '../../../data/hooks/useMerchantVoiceBookings'
 
@@ -385,15 +385,16 @@ export default function MobileMenuDrawer({
                 {id === 'pos' && isPosMobileExpanded && (
                   <div className={SIDEBAR_SUBMENU_WRAP_CLASS}>
                     {POS_SUBMENU.map((sub) => {
-                      // 'settings' (General Settings) lives at /dashboard/pos itself (no
-                      // extra segment), so it's active whenever there's no deeper sub-route.
+                      // 'board' (Front Desk) lives at /dashboard/pos itself (no
+                      // extra segment) so it's the default POS view; it's active
+                      // whenever there's no deeper sub-route.
                       const isSubActive = activeMenu === 'pos' &&
-                        (sub.id === 'settings' ? !activePosSubTab : activePosSubTab === sub.id)
+                        (sub.id === 'board' ? !activePosSubTab : activePosSubTab === sub.id)
                       return (
                         <button
                           key={sub.id}
                           type="button"
-                          onClick={() => navigateMenu(sub.id === 'settings' ? 'pos' : `pos/${sub.id}`)}
+                          onClick={() => navigateMenu(sub.id === 'board' ? 'pos' : `pos/${sub.id}`)}
                           className={sidebarSubmenuItemClass(isSubActive)}
                         >
                           <div className={`h-1.5 w-1.5 rounded-full ${isSubActive ? 'bg-brandCyan shadow-sm' : 'bg-white/30'}`} />

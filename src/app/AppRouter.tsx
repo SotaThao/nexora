@@ -315,13 +315,13 @@ export default function AppRouter() {
             <Route path={`${DASHBOARD_MENU_ID.taxiq}/export`} element={<TaxIqExportRoute />} />
             <Route path={DASHBOARD_MENU_ID.productManagement} element={<ProductManagementRoute />} />
             <Route path="analytics" element={<AnalyticsRoute />} />
-            <Route path="pos" element={<PosGeneralSettingsRoute />} />
+            <Route path="pos" element={<PosFrontDeskRoute />} />
+            <Route path="pos/settings" element={<PosGeneralSettingsRoute />} />
             <Route path="pos/roles" element={<PosRolesRoute />} />
             <Route path="pos/categories" element={<PosCategoriesRoute />} />
             <Route path="pos/services" element={<PosServicesRoute />} />
             <Route path="pos/products" element={<PosProductsRoute />} />
             <Route path="pos/staff" element={<PosStaffProfileRoute />} />
-            <Route path="pos/board" element={<PosFrontDeskRoute />} />
             <Route path={DASHBOARD_MENU_ID.touchpoints} element={<TouchpointsRoute />} />
             <Route path={DASHBOARD_MENU_ID.analytics} element={<AnalyticsRoute />} />
             <Route path={DASHBOARD_MENU_ID.settings} element={<SettingsRoute />} />

@@ -279,13 +279,13 @@ export const MENU_ITEMS = [
     label: 'POS',
     icon: Store,
     children: [
+      { id: 'board', label: 'Front Desk' },
       { id: 'settings', label: 'General Settings' },
       { id: 'roles', label: 'Roles & Permissions' },
       { id: 'categories', label: 'Categories' },
       { id: 'services', label: 'Services' },
       { id: 'products', label: 'Products' },
-      { id: 'staff', label: 'Staff Profiles' },
-      { id: 'board', label: 'Front Desk' }
+      { id: 'staff', label: 'Staff Profiles' }
     ]
   },
   { id: DASHBOARD_MENU_ID.settings, label: 'Settings', icon: Settings },
