@@ -24,6 +24,7 @@ import {
   VoiceCreditType,
   VoicePlanStatus,
   VOICE_CREDIT_TYPE_TO_PRODUCT,
+  hasJoinedVoicePlan,
   mapCreditsUsageHistoryFilterToCreditType,
   type VoiceUsageActivityDto,
 } from '../../../data/repositories/merchantVoice'
@@ -91,9 +92,9 @@ function resolveActivityLabel(
   t: (key: string) => string,
   CTK: string,
 ): string {
-  const label = item.activityLabel?.trim()
-  if (label) return label
-  const kindKey = ACTIVITY_KIND_I18N_KEY[item.activityKind] ?? ACTIVITY_KIND_I18N_KEY[VoiceCreditActivityKind.Unknown]
+  const kindKey =
+    ACTIVITY_KIND_I18N_KEY[item.activityKind]
+    ?? ACTIVITY_KIND_I18N_KEY[VoiceCreditActivityKind.Unknown]
   return t(`${CTK}.activity.${kindKey}`)
 }
 
@@ -493,12 +494,23 @@ function CreditsUsagePanel() {
 
 export default function BookingPlansPanel() {
   const { t } = useTranslation()
+  const voiceEnabled = useBookingHubVoiceEnabled()
   const { data: myTrialRequest, isLoading: isTrialRequestLoading } = useMyVoiceTrialRequest()
+  const { data: creditWallet, isSuccess: isCreditWalletReady } = useMerchantVoiceCreditWallet({
+    enabled: voiceEnabled,
+  })
   const [selectedPlan, setSelectedPlan] = useState<PlanId | null>(null)
   const [trialOpen, setTrialOpen] = useState(false)
   const [plansView, setPlansView] = useState<PlansView>('package')
 
   const hasExistingTrialRequest = myTrialRequest != null
+  const showCreditUsageTab = isCreditWalletReady && hasJoinedVoicePlan(creditWallet)
+
+  useEffect(() => {
+    if (!showCreditUsageTab && plansView === 'credits') {
+      setPlansView('package')
+    }
+  }, [showCreditUsageTab, plansView])
 
   const getPlanButtonLabel = (plan: PlanId) => {
     if (plan === 'Pro' && hasExistingTrialRequest) {
@@ -528,28 +540,32 @@ export default function BookingPlansPanel() {
   return (
     <>
       <div className="plans-panel-shell">
-        <div className="booking-view-switch" role="group" aria-label={t(`${TK}.viewMode`)}>
-          <button
-            className={`booking-view-button${plansView === 'package' ? ' is-active' : ''}`}
-            type="button"
-            aria-pressed={plansView === 'package'}
-            onClick={() => setPlansView('package')}
-          >
-            <ShoppingBag aria-hidden="true" />
-            {t(`${TK}.buyPackage`)}
-          </button>
-          <button
-            className={`booking-view-button${plansView === 'credits' ? ' is-active' : ''}`}
-            type="button"
-            aria-pressed={plansView === 'credits'}
-            onClick={() => setPlansView('credits')}
-          >
-            <Wallet aria-hidden="true" />
-            {t(`${TK}.creditUsage`)}
-          </button>
-        </div>
+        {showCreditUsageTab ? (
+          <div className="booking-view-switch" role="group" aria-label={t(`${TK}.viewMode`)}>
+            <button
+              className={`booking-view-button${plansView === 'package' ? ' is-active' : ''}`}
+              type="button"
+              aria-pressed={plansView === 'package'}
+              onClick={() => setPlansView('package')}
+            >
+              <ShoppingBag aria-hidden="true" />
+              {t(`${TK}.buyPackage`)}
+            </button>
+            <button
+              className={`booking-view-button${plansView === 'credits' ? ' is-active' : ''}`}
+              type="button"
+              aria-pressed={plansView === 'credits'}
+              onClick={() => setPlansView('credits')}
+            >
+              <Wallet aria-hidden="true" />
+              {t(`${TK}.creditUsage`)}
+            </button>
+          </div>
+        ) : null}
 
-        {plansView === 'package' ? (
+        {plansView === 'credits' && showCreditUsageTab ? (
+          <CreditsUsagePanel />
+        ) : (
           <div className="plans-stack">
             <div className="plans-hero">{t(`${TK}.hero`)}</div>
 
@@ -676,8 +692,6 @@ export default function BookingPlansPanel() {
               </div>
             </article>
           </div>
-        ) : (
-          <CreditsUsagePanel />
         )}
       </div>
 

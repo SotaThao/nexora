@@ -115,6 +115,63 @@ export const GUIDE_CODES: Record<GuideNetwork, Record<GuideMode, GuideModeCodes>
   },
 }
 
+export type GuideBilingualLabel = Record<GuideLang, string>
+
+export const GUIDE_CARRIER_OPTIONS: ReadonlyArray<{
+  value: GuideCarrier
+  label: GuideBilingualLabel
+}> = [
+  { value: 'verizon', label: { vi: 'Verizon', en: 'Verizon' } },
+  { value: 'att', label: { vi: 'AT&T', en: 'AT&T' } },
+  { value: 'tmobile', label: { vi: 'T-Mobile', en: 'T-Mobile' } },
+  {
+    value: 'cricket',
+    label: { vi: 'Cricket (mạng AT&T)', en: 'Cricket (AT&T network)' },
+  },
+  {
+    value: 'metro',
+    label: {
+      vi: 'Metro / Mint (mạng T-Mobile)',
+      en: 'Metro / Mint (T-Mobile network)',
+    },
+  },
+  {
+    value: 'visible',
+    label: {
+      vi: 'Visible / Total (mạng Verizon)',
+      en: 'Visible / Total (Verizon network)',
+    },
+  },
+  {
+    value: 'landline',
+    label: { vi: 'Điện thoại bàn · Landline', en: 'Landline' },
+  },
+  {
+    value: 'voip',
+    label: { vi: 'Internet · VoIP', en: 'Internet · VoIP' },
+  },
+]
+
+export const GUIDE_MODE_OPTIONS: ReadonlyArray<{
+  value: GuideMode
+  label: GuideBilingualLabel
+}> = [
+  {
+    value: 'ring',
+    label: {
+      vi: 'Chuông reo 3 hồi rồi mới qua AI',
+      en: 'Ring 3 times, then AI answers',
+    },
+  },
+  {
+    value: 'now',
+    label: {
+      vi: 'AI bắt máy ngay từ đầu',
+      en: 'AI answers immediately',
+    },
+  },
+]
+
 export function resolveGuideNetwork(carrier: GuideCarrier): GuideNetwork {
   return GUIDE_NETWORK_ALIASES[carrier] ?? (carrier as GuideNetwork)
 }

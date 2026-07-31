@@ -1902,65 +1902,34 @@ body.booking-appointment-panel-modal-open {
   text-transform: uppercase;
 }
 
-.booking-hub-view .tech-schedule-time input {
-  display: flex;
-  align-items: center;
-  justify-content: center;
+.booking-hub-view .tech-schedule-time .settings-time-box {
   width: 100%;
   min-width: 0;
-  max-width: 100%;
+}
+
+.booking-hub-view .tech-schedule-time .settings-hour-input {
   height: 38px;
-  box-sizing: border-box;
-  border: 1px solid var(--nexora-border);
+  min-height: 38px;
   border-radius: 8px;
-  background: #fff;
-  padding: 0 8px;
-  color: var(--nexora-text);
   font-size: 13px;
   font-weight: 700;
-  line-height: normal;
-  text-align: center;
-  -webkit-appearance: none;
-  appearance: none;
-  -webkit-locale: "en-US-u-hc-h12";
-  color-scheme: light;
+  text-align: left;
 }
 
-.booking-hub-view .tech-schedule-time input[type="time"]::-webkit-datetime-edit,
-.booking-hub-view
-  .tech-schedule-time
-  input[type="time"]::-webkit-datetime-edit-fields-wrapper,
-.booking-hub-view
-  .tech-schedule-time
-  input[type="time"]::-webkit-date-and-time-value {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 100%;
-  height: 100%;
-  min-width: 0;
-  padding: 0;
-  margin: 0;
-  line-height: normal;
-  text-align: center;
+.booking-hub-view .tech-schedule-row.is-day-off .settings-time-box {
+  cursor: not-allowed;
 }
 
-.booking-hub-view
-  .tech-schedule-time
-  input[type="time"]::-webkit-calendar-picker-indicator {
-  margin-left: 2px;
-  padding: 0;
-  align-self: center;
-  cursor: pointer;
-  opacity: 0.65;
-}
-
-.booking-hub-view .tech-schedule-time input:disabled {
+.booking-hub-view .tech-schedule-row.is-day-off .settings-hour-input {
   background: var(--nexora-surface-muted);
   color: var(--nexora-subtle);
 }
 
-.booking-hub-view .tech-schedule-time input[aria-invalid="true"] {
+.booking-hub-view .tech-schedule-row.is-day-off .settings-time-box svg {
+  color: var(--nexora-subtle);
+}
+
+.booking-hub-view .tech-schedule-time .settings-hour-input[aria-invalid="true"] {
   border-color: #ef4444;
   box-shadow: 0 0 0 1px rgba(239, 68, 68, 0.14);
 }
@@ -1987,9 +1956,9 @@ body.booking-appointment-panel-modal-open {
     gap: 6px;
   }
 
-  .tech-schedule-time input {
+  .tech-schedule-time .settings-hour-input {
     height: 40px;
-    padding: 0 8px;
+    min-height: 40px;
     font-size: 16px;
   }
 }
@@ -2701,9 +2670,10 @@ body.booking-appointment-panel-modal-open {
     gap: 6px;
   }
 
-  .booking-hub-view .tech-schedule-time input {
+  .booking-hub-view .tech-schedule-time .settings-hour-input {
     height: 40px;
-    padding: 0 8px;
+    min-height: 40px;
+    padding: 0 44px 0 10px;
     font-size: 14px;
     font-weight: 600;
   }
@@ -3572,18 +3542,12 @@ body.booking-appointment-panel-modal-open {
   display: flex;
   width: 100%;
   align-items: center;
-  justify-content: space-between;
-  gap: 10px;
+  gap: 8px;
   margin: 0;
   border: 0;
   border-bottom: 1px solid transparent;
-  list-style: none;
-  cursor: pointer;
-  padding: 10px 11px;
-  color: inherit;
+  padding: 6px 8px 6px 4px;
   background: #f8faff;
-  font: inherit;
-  text-align: left;
   transition: border-color 0.22s ease, background 0.22s ease;
 }
 
@@ -3591,8 +3555,74 @@ body.booking-appointment-panel-modal-open {
   border-bottom-color: var(--nexora-border);
 }
 
-.booking-hub-view .settings-service-category-head::-webkit-details-marker {
-  display: none;
+.booking-hub-view .settings-service-category-toggle {
+  display: flex;
+  min-width: 0;
+  flex: 1 1 auto;
+  align-items: center;
+  margin: 0;
+  border: 0;
+  border-radius: 8px;
+  background: transparent;
+  padding: 6px 8px;
+  color: inherit;
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+
+.booking-hub-view .settings-service-category-toggle:hover {
+  background: rgba(70, 72, 216, 0.06);
+}
+
+.booking-hub-view .settings-service-category-add {
+  display: inline-flex;
+  flex: 0 0 auto;
+  align-items: center;
+  gap: 4px;
+  margin: 0;
+  border: 1px solid rgba(70, 72, 216, 0.22);
+  border-radius: 999px;
+  background: #fff;
+  padding: 5px 9px;
+  color: var(--nexora-brand);
+  font-size: 10px;
+  font-weight: 800;
+  line-height: 1;
+  white-space: nowrap;
+  cursor: pointer;
+  transition: background 0.18s ease, border-color 0.18s ease;
+}
+
+.booking-hub-view .settings-service-category-add:hover {
+  background: #eef1ff;
+  border-color: rgba(70, 72, 216, 0.36);
+}
+
+.booking-hub-view .settings-service-category-add svg {
+  width: 12px;
+  height: 12px;
+  flex: 0 0 auto;
+}
+
+.booking-hub-view .settings-service-category-chevron-btn {
+  display: inline-flex;
+  flex: 0 0 auto;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  margin: 0;
+  border: 0;
+  border-radius: 8px;
+  background: transparent;
+  color: inherit;
+  cursor: pointer;
+  padding: 0;
+}
+
+.booking-hub-view .settings-service-category-chevron-btn:hover {
+  background: rgba(70, 72, 216, 0.06);
 }
 
 .booking-hub-view .settings-service-category-chevron {
@@ -3617,7 +3647,7 @@ body.booking-appointment-panel-modal-open {
 }
 
 .booking-hub-view .settings-service-category-count {
-  margin-left: auto;
+  flex: 0 0 auto;
   border-radius: 999px;
   background: #e9edff;
   padding: 2px 7px;
@@ -8164,7 +8194,8 @@ body.booking-appointment-panel-modal-open {
   display: block;
 }
 
-.booking-hub-view .booking-create-field.has-error .booking-create-service-groups {
+.booking-hub-view .booking-create-field.has-error .booking-create-service-groups,
+.booking-hub-view .booking-create-service-groups.has-error {
   outline: 1px solid var(--nexora-danger, #dc2626);
   outline-offset: 4px;
   border-radius: 8px;
@@ -9142,7 +9173,7 @@ body.booking-appointment-panel-modal-open {
 @media (max-width: 1023px) and (pointer: coarse) {
   /* iOS needs ≥16px on focused inputs to skip zoom; keep weight lighter than titles */
   .booking-hub-view .settings-time-box .settings-hour-input[type="time"],
-  .booking-hub-view .tech-schedule-time input[type="time"] {
+  .booking-hub-view .tech-schedule-time .settings-hour-input[type="time"] {
     font-size: 16px;
     font-weight: 500;
     letter-spacing: -0.01em;
@@ -13321,7 +13352,7 @@ body.booking-appointment-panel-modal-open {
 .booking-hub-view .credits-history-activity strong {
   color: var(--nexora-text);
   font-size: clamp(0.8125rem, 0.78rem + 0.15vw, 0.875rem); /* 13–14px */
-  font-weight: 700;
+  font-weight: normal;
 }
 
 .booking-hub-view .credits-history-date {
