@@ -12,7 +12,7 @@
 //   The bottom action button is only ever the *next status transition* (Start Service /
 //   Checkout) or the final Complete payment.
 import { useEffect, useMemo, useRef, useState } from 'react'
-import { Loader2, Pencil, Trash2 } from 'lucide-react'
+import { Loader2, Package, Pencil, Trash2 } from 'lucide-react'
 import { useTranslation } from '../../../../contexts/LanguageContext'
 import { useNotification } from '../../../../contexts/NotificationContext'
 import { getErrorMessage } from '../../../../data/errorCodes'
@@ -34,10 +34,13 @@ import type {
   CheckInOrderItemPayload,
   CheckoutProductCatalogItemApiDto,
   CheckoutServiceCatalogItemApiDto,
+  CustomerLookupServiceLineApiDto,
   PosCheckoutPaymentMethodType,
 } from '../../../../types/repositories'
 import { SkeletonList } from '../../../ui/skeleton'
 import CategoryGroupedCatalogPicker from './CategoryGroupedCatalogPicker'
+import CustomerHeaderBar from './CustomerHeaderBar'
+import PhoneCheckInStep from './PhoneCheckInStep'
 import SelectTechniciansModal, { type SelectTechniciansSelection } from './modals/SelectTechniciansModal'
 
 type TipMode = 'fixed10' | 'fixed15' | 'pct18' | 'pct20' | 'custom'
@@ -47,6 +50,15 @@ const PAYMENT_METHODS: PosCheckoutPaymentMethodType[] = ['Card', 'Cash', 'GiftCa
 
 function round2(value: number) {
   return Math.round(value * 100) / 100
+}
+
+function initials(name: string) {
+  return name
+    .split(' ')
+    .filter(Boolean)
+    .slice(0, 2)
+    .map((part) => part[0]?.toUpperCase())
+    .join('')
 }
 
 interface DisplayServiceLine {
@@ -82,17 +94,21 @@ function lineTotal(line: DisplayLine): number {
 
 export default function PosOrderWorkspace({
   businessId,
+  businessName,
   orderId,
-  customerDraft,
   onClose,
   onCheckedIn,
   onCompleted,
 }: {
   businessId: string
-  // null = Create mode (Check-in step 2, order does not exist yet).
+  // Shown on Check-in Step 1's welcome message (PhoneCheckInStep) — omitted falls back to
+  // a generic greeting, so callers that don't have it handy (e.g. the Staff dashboard
+  // route) don't need to plumb it through just for this.
+  businessName?: string
+  // null = Create mode (order does not exist yet — customer info is now collected via the
+  // 2-step Check-in below: Step 1 phone (PhoneCheckInStep), Step 2 name/email/catalog
+  // (CustomerHeaderBar) — not a single continuous form).
   orderId: string | null
-  // Required in Create mode — collected by the Check-in step 1 form.
-  customerDraft?: { customerName: string; customerEmail?: string; customerPhone?: string }
   onClose: () => void
   // Create mode, >=1 service line path — order is now Waiting, exit back to the list.
   onCheckedIn?: (newOrderId: string) => void
@@ -106,6 +122,23 @@ export default function PosOrderWorkspace({
   const [internalOrderId, setInternalOrderId] = useState<string | null>(null)
   const effectiveOrderId = orderId ?? internalOrderId
   const isCreateMode = effectiveOrderId === null
+
+  // Check-in Step 1/2 — PO requirement: the phone-entry step must be the same component
+  // used later by the (not yet built) customer self-checkin kiosk, so it's a standalone
+  // screen (PhoneCheckInStep) shown before the rest of the workspace, not a field inline
+  // in CustomerHeaderBar. Only meaningful in Create mode.
+  const [checkinStep, setCheckinStep] = useState<'phone' | 'details'>('phone')
+
+  // POS iPad redesign, Ticket 2 — customer info is collected inline (CustomerHeaderBar)
+  // instead of a separate Check-in step 1 form. Phone is mandatory (backend now rejects
+  // a missing phone) — validated here so Check-in/Checkout stays disabled until filled.
+  const [customerName, setCustomerName] = useState('')
+  const [customerPhone, setCustomerPhone] = useState('')
+  const [customerEmail, setCustomerEmail] = useState('')
+  const [showCustomerErrors, setShowCustomerErrors] = useState(false)
+  const nameError = showCustomerErrors && !customerName.trim()
+    ? t('components.dashboard.views.pos.PosFrontDeskView.customerNameRequired')
+    : undefined
 
   const { data: order, isLoading: isOrderLoading } = useOrderDetail(businessId, effectiveOrderId ?? undefined)
   const { data: serviceCatalog = [] } = useCheckoutServiceCatalog(businessId)
@@ -134,15 +167,19 @@ export default function PosOrderWorkspace({
     initialStaffId?: string
     initialNote?: string
   } | null>(null)
-  // Local text while the user is typing a Qty change — committed (and cleared) on blur/Enter
-  // so an Update-mode edit fires one API call per commit, not one per keystroke.
-  const [qtyInputDrafts, setQtyInputDrafts] = useState<Record<string, string>>({})
-
   const [tipMode, setTipMode] = useState<TipMode>('fixed15')
   const [customTipInput, setCustomTipInput] = useState('')
   const [paymentMethod, setPaymentMethod] = useState<PosCheckoutPaymentMethodType>('Cash')
-  const [receiptEmail, setReceiptEmail] = useState('')
-  const [receiptPhone, setReceiptPhone] = useState('')
+  // POS iPad redesign, Ticket 6 — "Turn to Customer": front desk flips the iPad around so
+  // the customer picks their own tip in private. Deliberately does NOT auto-return after
+  // the customer confirms — front desk must explicitly tap "Back to Staff" once they have
+  // the device back (brainstorm decision: avoid stray taps landing on the next screen).
+  const [customerFacingMode, setCustomerFacingMode] = useState(false)
+  // POS iPad redesign, Ticket 6 — receipt delivery is now a single choice (digital-first):
+  // Send SMS (using the phone already on file — mandatory since Ticket 2, so always
+  // available) or No Receipt. Email option dropped from this screen entirely; physical
+  // Print stays as a disabled placeholder button (no printer integration yet).
+  const [receiptChoice, setReceiptChoice] = useState<'sms' | 'none'>('sms')
   const [tipSplitInputs, setTipSplitInputs] = useState<Record<string, string>>({})
   const initializedOrderIdRef = useRef<string | null>(null)
 
@@ -186,9 +223,15 @@ export default function PosOrderWorkspace({
     if (!order || initializedOrderIdRef.current === order.id) return
     initializedOrderIdRef.current = order.id
 
-    setShowPaymentSection(order.status === 'InService' || order.status === 'Completed')
-    setReceiptEmail(order.customerEmail ?? '')
-    setReceiptPhone(order.customerPhone ?? '')
+    // A product-only order (zero service lines) never transitions through InService — it
+    // completes straight from Waiting (see CompleteOrderCommand) — so treat Waiting the same
+    // as InService for payment-section visibility when there's nothing to serve.
+    setShowPaymentSection(
+      order.status === 'InService' ||
+        order.status === 'Completed' ||
+        (order.status === 'Waiting' && order.serviceLines.length === 0),
+    )
+    setReceiptChoice('sms')
     setPaymentMethod('Cash')
 
     if (order.tipAmount === 0) {
@@ -354,24 +397,20 @@ export default function PosOrderWorkspace({
     }
   }
 
-  const commitQuantityChange = (line: DisplayProductLine) => {
-    const raw = qtyInputDrafts[line.key]
-    setQtyInputDrafts((prev) => {
-      const next = { ...prev }
-      delete next[line.key]
-      return next
-    })
-    if (raw === undefined) return
-    const parsed = Number(raw)
-    if (!Number.isFinite(parsed) || parsed < 1 || parsed === line.quantity) return
+  // POS iPad redesign — Order Detail stepper replaces the old free-text Qty input (which
+  // needed a keyboard draft-then-blur-commit dance). A +/- tap applies immediately since
+  // there's no partial/invalid intermediate state to debounce, unlike typed text.
+  const applyQuantityDelta = (line: DisplayProductLine, delta: number) => {
+    const nextQty = Math.max(1, line.quantity + delta)
+    if (nextQty === line.quantity) return
 
     if (isCreateMode) {
-      setDraftLines((prev) => prev.map((l) => (l.key === line.key ? { ...l, quantity: parsed } : l)))
+      setDraftLines((prev) => prev.map((l) => (l.key === line.key ? { ...l, quantity: nextQty } : l)))
       return
     }
     if (!effectiveOrderId || !line.existingId) return
     updateProductQuantity.mutate(
-      { orderId: effectiveOrderId, productLineId: line.existingId, quantity: parsed },
+      { orderId: effectiveOrderId, productLineId: line.existingId, quantity: nextQty },
       { onError: reportError },
     )
   }
@@ -388,10 +427,21 @@ export default function PosOrderWorkspace({
         : { itemType: 'Product', id: line.posProductId, quantity: line.quantity },
     )
 
+  const isCustomerInfoValid = Boolean(customerName.trim() && customerPhone.trim())
+
+  const buildCustomerDraft = () => ({
+    customerName: customerName.trim(),
+    customerEmail: customerEmail.trim() || undefined,
+    customerPhone: customerPhone.trim(),
+  })
+
   const handleCheckIn = () => {
-    if (!customerDraft) return
+    if (!isCustomerInfoValid) {
+      setShowCustomerErrors(true)
+      return
+    }
     checkInOrder.mutate(
-      { ...customerDraft, items: buildCheckInItems() },
+      { ...buildCustomerDraft(), items: buildCheckInItems() },
       {
         onSuccess: (newOrderId) => {
           showToast(t('components.dashboard.views.pos.PosOrderWorkspace.checkInSuccess'))
@@ -402,21 +452,49 @@ export default function PosOrderWorkspace({
     )
   }
 
+  // Only ever called for a product-only draft (0 service lines — see the button wiring
+  // below), so there's no service to start; go straight to the payment section instead of
+  // calling StartOrderService, which now rejects orders with no service lines.
   const handleCheckoutFromCreate = () => {
-    if (!customerDraft) return
+    if (!isCustomerInfoValid) {
+      setShowCustomerErrors(true)
+      return
+    }
     checkInOrder.mutate(
-      { ...customerDraft, items: buildCheckInItems() },
+      { ...buildCustomerDraft(), items: buildCheckInItems() },
       {
         onSuccess: (newOrderId) => {
           setInternalOrderId(newOrderId)
-          startOrderService.mutate(newOrderId, {
-            onSuccess: () => setShowPaymentSection(true),
-            onError: reportError,
-          })
+          setShowPaymentSection(true)
         },
         onError: reportError,
       },
     )
+  }
+
+  // "Use last visit" (Ticket 2) — only re-adds lines whose service still exists in
+  // today's catalog; a service the salon has since removed is silently skipped rather
+  // than adding a line that would fail at Check-in time. Technician is carried over as-is
+  // (Next Available/skill-mismatch is re-validated server-side same as any other pick).
+  const handleApplyLastVisit = (serviceLines: CustomerLookupServiceLineApiDto[]) => {
+    const validLines = serviceLines.filter((line) => serviceCatalog.some((s) => s.id === line.posServiceId))
+    if (validLines.length === 0) return
+    setDraftLines((prev) => [
+      ...prev,
+      ...validLines.map((line): DisplayServiceLine => {
+        const service = serviceCatalog.find((s) => s.id === line.posServiceId)!
+        return {
+          key: crypto.randomUUID(),
+          itemType: 'Service',
+          posServiceId: service.id,
+          serviceName: service.name,
+          unitPrice: service.price,
+          posStaffProfileId: line.posStaffProfileId ?? undefined,
+          technicianName: line.technicianName ?? undefined,
+          completedAt: null,
+        }
+      }),
+    ])
   }
 
   const handleStartService = () => {
@@ -429,7 +507,10 @@ export default function PosOrderWorkspace({
 
   const handleCheckoutFromUpdate = () => {
     if (!effectiveOrderId) return
-    if (order?.status === 'Waiting') {
+    // Only start service first if there's actually a service to serve — a product-only
+    // Waiting order has nothing to start (StartOrderService rejects it) and can go straight
+    // to payment.
+    if (order?.status === 'Waiting' && hasServiceLines) {
       startOrderService.mutate(effectiveOrderId, {
         onSuccess: () => setShowPaymentSection(true),
         onError: reportError,
@@ -477,8 +558,7 @@ export default function PosOrderWorkspace({
         orderId: effectiveOrderId,
         payload: {
           paymentMethodType: paymentMethod,
-          receiptEmail: receiptEmail.trim() || undefined,
-          receiptPhone: receiptPhone.trim() || undefined,
+          receiptPhone: receiptChoice === 'sms' ? order?.customerPhone ?? undefined : undefined,
         },
       },
       {
@@ -500,7 +580,7 @@ export default function PosOrderWorkspace({
           <h1 className="text-base font-semibold leading-tight text-nexoraText">
             {isCreateMode
               ? t('components.dashboard.views.pos.PosOrderWorkspace.titleCreate', {
-                  customerName: customerDraft?.customerName ?? '',
+                  customerName: customerName || t('components.dashboard.views.pos.PosOrderWorkspace.newGuest'),
                 })
               : t('components.dashboard.views.pos.PosOrderWorkspace.titleUpdate', {
                   orderNumber: order?.orderNumber ?? '',
@@ -515,12 +595,37 @@ export default function PosOrderWorkspace({
           <button
             type="button"
             onClick={onClose}
-            className="rounded-lg border border-nexoraBorder px-3 py-1.5 text-xs font-bold text-nexoraText hover:border-nexoraBrand"
+            className="rounded-lg border border-nexoraBorder px-3 py-1.5 text-xs font-bold text-nexoraText hover:border-posFdAccent"
           >
             {t('components.dashboard.views.pos.PosOrderWorkspace.closeButton')}
           </button>
         </div>
       </div>
+
+      {isCreateMode && checkinStep === 'phone' ? (
+        <PhoneCheckInStep
+          businessName={businessName}
+          initialDigits={customerPhone}
+          onSubmit={(phone) => {
+            setCustomerPhone(phone)
+            setCheckinStep('details')
+          }}
+        />
+      ) : (
+        <>
+      {isCreateMode ? (
+        <CustomerHeaderBar
+          businessId={businessId}
+          customerName={customerName}
+          customerPhone={customerPhone}
+          customerEmail={customerEmail}
+          onChangeName={setCustomerName}
+          onChangeEmail={setCustomerEmail}
+          onChangePhoneNumber={() => setCheckinStep('phone')}
+          onApplyLastVisit={handleApplyLastVisit}
+          nameError={nameError}
+        />
+      ) : null}
 
       {!isCreateMode && isOrderLoading ? (
         <div className="nexora-card p-6">
@@ -535,7 +640,7 @@ export default function PosOrderWorkspace({
                 onClick={() => setCatalogTab('services')}
                 className={`px-3 py-1.5 text-xs font-bold ${
                   catalogTab === 'services'
-                    ? 'border-b-2 border-nexoraBrand text-nexoraBrand'
+                    ? 'border-b-2 border-posFdAccent text-posFdAccent'
                     : 'text-nexoraMuted hover:text-nexoraText'
                 }`}
               >
@@ -546,7 +651,7 @@ export default function PosOrderWorkspace({
                 onClick={() => setCatalogTab('products')}
                 className={`px-3 py-1.5 text-xs font-bold ${
                   catalogTab === 'products'
-                    ? 'border-b-2 border-nexoraBrand text-nexoraBrand'
+                    ? 'border-b-2 border-posFdAccent text-posFdAccent'
                     : 'text-nexoraMuted hover:text-nexoraText'
                 }`}
               >
@@ -556,6 +661,7 @@ export default function PosOrderWorkspace({
 
             {catalogTab === 'services' ? (
               <CategoryGroupedCatalogPicker
+                variant="grid"
                 items={serviceCatalog}
                 onAdd={(itemId) => {
                   const service = serviceCatalog.find((s) => s.id === itemId)
@@ -569,6 +675,7 @@ export default function PosOrderWorkspace({
               />
             ) : (
               <CategoryGroupedCatalogPicker
+                variant="grid"
                 items={productCatalog}
                 onAdd={(itemId) => {
                   const product = productCatalog.find((p) => p.id === itemId)
@@ -591,103 +698,102 @@ export default function PosOrderWorkspace({
               </h3>
 
               {visibleLines.length === 0 ? (
-                <p className="text-[11px] text-nexoraMuted">
+                <p className="text-[11px] text-posFdMuted">
                   {t('components.dashboard.views.pos.PosOrderWorkspace.noLines')}
                 </p>
               ) : (
-                <div className="overflow-x-auto">
-                  <table className="w-full text-left text-xs">
-                    <thead>
-                      <tr className="text-[10px] font-black uppercase tracking-wide text-nexoraMuted">
-                        <th className="pb-2 pr-2">{t('components.dashboard.views.pos.PosOrderWorkspace.columnName')}</th>
-                        <th className="pb-2 pr-2">
-                          {t('components.dashboard.views.pos.PosOrderWorkspace.columnTechnician')}
-                        </th>
-                        <th className="pb-2 pr-2 text-right">
-                          {t('components.dashboard.views.pos.PosOrderWorkspace.columnPrice')}
-                        </th>
-                        <th className="pb-2 pr-2 text-right">
-                          {t('components.dashboard.views.pos.PosOrderWorkspace.columnQty')}
-                        </th>
-                        <th className="pb-2 pr-2 text-right">
-                          {t('components.dashboard.views.pos.PosOrderWorkspace.columnTotal')}
-                        </th>
-                        <th className="pb-2" />
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {visibleLines.map((line) => (
-                        <tr key={line.key} className="border-t border-nexoraBorder">
-                          <td className="py-2 pr-2 font-semibold text-nexoraText">
-                            {line.itemType === 'Service' ? line.serviceName : line.productName}
-                          </td>
-                          <td className="py-2 pr-2 text-nexoraMuted">
-                            {line.itemType === 'Service'
-                              ? line.technicianName ??
-                                t('components.dashboard.views.pos.PosOrderWorkspace.nextAvailable')
-                              : '—'}
-                          </td>
-                          <td className="py-2 pr-2 text-right text-nexoraMuted">${line.unitPrice.toFixed(2)}</td>
-                          <td className="py-2 pr-2 text-right">
-                            {line.itemType === 'Product' ? (
-                              <input
-                                type="number"
-                                min={1}
-                                value={qtyInputDrafts[line.key] ?? String(line.quantity)}
-                                onChange={(e) =>
-                                  setQtyInputDrafts((prev) => ({ ...prev, [line.key]: e.target.value }))
-                                }
-                                onBlur={() => commitQuantityChange(line)}
-                                onKeyDown={(e) => {
-                                  if (e.key === 'Enter') {
-                                    e.preventDefault()
-                                    ;(e.target as HTMLInputElement).blur()
-                                  }
-                                }}
-                                className="h-7 w-14 rounded-lg border border-nexoraBorder bg-white px-1.5 text-right text-xs text-nexoraText outline-none focus:border-nexoraBrand"
-                              />
-                            ) : (
-                              1
-                            )}
-                          </td>
-                          <td className="py-2 pr-2 text-right font-bold text-nexoraText">
-                            ${lineTotal(line).toFixed(2)}
-                          </td>
-                          <td className="py-2 text-right">
-                            <div className="flex items-center justify-end gap-1">
-                              {line.itemType === 'Service' ? (
-                                <button
-                                  type="button"
-                                  onClick={() => handleEditServiceLine(line)}
-                                  className="rounded-md p-1 text-nexoraMuted hover:text-nexoraBrand"
-                                  aria-label={t('components.dashboard.views.pos.PosOrderWorkspace.editLine')}
-                                >
-                                  <Pencil className="h-3.5 w-3.5" />
-                                </button>
-                              ) : null}
-                              <button
-                                type="button"
-                                onClick={() => handleDeleteLine(line)}
-                                className="rounded-md p-1 text-nexoraMuted hover:text-rose-600"
-                                aria-label={t('components.dashboard.views.pos.PosOrderWorkspace.deleteLine')}
-                              >
-                                <Trash2 className="h-3.5 w-3.5" />
-                              </button>
-                            </div>
-                          </td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
+                <div className="space-y-2">
+                  {visibleLines.map((line) =>
+                    line.itemType === 'Service' ? (
+                      <div
+                        key={line.key}
+                        className="flex items-center gap-3 rounded-2xl border border-posFdBorder bg-white p-2.5"
+                      >
+                        <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-posFdLavender/20 text-xs font-bold text-posFdAccentDark">
+                          {initials(
+                            line.technicianName ?? t('components.dashboard.views.pos.PosOrderWorkspace.nextAvailable'),
+                          )}
+                        </div>
+                        <div className="min-w-0 flex-1">
+                          <p className="truncate text-sm font-bold text-posFdText">{line.serviceName}</p>
+                          <p className="truncate text-xs text-posFdMuted">
+                            {line.technicianName ?? t('components.dashboard.views.pos.PosOrderWorkspace.nextAvailable')}
+                          </p>
+                        </div>
+                        <span className="shrink-0 text-sm font-bold text-posFdText">
+                          ${lineTotal(line).toFixed(2)}
+                        </span>
+                        <button
+                          type="button"
+                          onClick={() => handleEditServiceLine(line)}
+                          className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl text-posFdMuted hover:bg-posFdCanvas hover:text-posFdAccentDark"
+                          aria-label={t('components.dashboard.views.pos.PosOrderWorkspace.editLine')}
+                        >
+                          <Pencil className="h-4 w-4" />
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => handleDeleteLine(line)}
+                          className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl text-posFdMuted hover:bg-rose-50 hover:text-rose-600"
+                          aria-label={t('components.dashboard.views.pos.PosOrderWorkspace.deleteLine')}
+                        >
+                          <Trash2 className="h-4 w-4" />
+                        </button>
+                      </div>
+                    ) : (
+                      <div
+                        key={line.key}
+                        className="flex items-center gap-3 rounded-2xl border border-posFdBorder bg-white p-2.5"
+                      >
+                        <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-posFdCanvas text-posFdAccentDark">
+                          <Package className="h-4 w-4" />
+                        </div>
+                        <div className="min-w-0 flex-1">
+                          <p className="truncate text-sm font-bold text-posFdText">{line.productName}</p>
+                          <p className="text-xs text-posFdMuted">${line.unitPrice.toFixed(2)} each</p>
+                        </div>
+                        <div className="flex shrink-0 items-center gap-1.5">
+                          <button
+                            type="button"
+                            onClick={() => applyQuantityDelta(line, -1)}
+                            className="flex h-9 w-9 items-center justify-center rounded-xl border border-posFdBorder text-posFdText hover:border-posFdAccent"
+                            aria-label={t('components.dashboard.views.pos.PosOrderWorkspace.decreaseQty')}
+                          >
+                            −
+                          </button>
+                          <span className="w-5 text-center text-sm font-bold text-posFdText">{line.quantity}</span>
+                          <button
+                            type="button"
+                            onClick={() => applyQuantityDelta(line, 1)}
+                            className="flex h-9 w-9 items-center justify-center rounded-xl border border-posFdBorder text-posFdText hover:border-posFdAccent"
+                            aria-label={t('components.dashboard.views.pos.PosOrderWorkspace.increaseQty')}
+                          >
+                            +
+                          </button>
+                        </div>
+                        <span className="shrink-0 text-sm font-bold text-posFdText">
+                          ${lineTotal(line).toFixed(2)}
+                        </span>
+                        <button
+                          type="button"
+                          onClick={() => handleDeleteLine(line)}
+                          className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl text-posFdMuted hover:bg-rose-50 hover:text-rose-600"
+                          aria-label={t('components.dashboard.views.pos.PosOrderWorkspace.deleteLine')}
+                        >
+                          <Trash2 className="h-4 w-4" />
+                        </button>
+                      </div>
+                    ),
+                  )}
                 </div>
               )}
 
               {noteLines.length > 0 ? (
-                <div className="rounded-lg bg-nexoraCanvas p-3">
-                  <h4 className="mb-1 text-[10px] font-black uppercase tracking-wider text-nexoraMuted">
+                <div className="rounded-xl bg-posFdCanvas p-3">
+                  <h4 className="mb-1 text-[10px] font-black uppercase tracking-wider text-posFdMuted">
                     {t('components.dashboard.views.pos.PosOrderWorkspace.noteTitle')}
                   </h4>
-                  <ul className="space-y-0.5 text-[11px] text-nexoraText">
+                  <ul className="space-y-0.5 text-[11px] text-posFdText">
                     {noteLines.map((line) => (
                       <li key={line.key}>
                         <span className="font-semibold">{line.serviceName}:</span> {line.note}
@@ -698,8 +804,8 @@ export default function PosOrderWorkspace({
               ) : null}
 
               {!showPaymentSection ? (
-                <div className="flex justify-between border-t border-nexoraBorder pt-2 text-xs">
-                  <span className="font-black uppercase text-nexoraText">
+                <div className="flex justify-between border-t border-posFdBorder pt-2 text-xs">
+                  <span className="font-black uppercase text-posFdText">
                     {t('components.dashboard.views.pos.PosOrderWorkspace.estimatedTotal')}
                   </span>
                   <span className="font-black text-nexoraText">${draftSubtotal.toFixed(2)}</span>
@@ -709,12 +815,12 @@ export default function PosOrderWorkspace({
 
             {!isCreateMode && !showPaymentSection ? (
               <div className="flex gap-2">
-                {order?.status === 'Waiting' ? (
+                {order?.status === 'Waiting' && hasServiceLines ? (
                   <button
                     type="button"
                     onClick={handleStartService}
                     disabled={isBusy}
-                    className="h-11 flex-1 rounded-lg border border-nexoraBorder text-sm font-bold text-nexoraText hover:border-nexoraBrand disabled:opacity-60"
+                    className="h-11 flex-1 rounded-lg border border-nexoraBorder text-sm font-bold text-nexoraText hover:border-posFdAccent disabled:opacity-60"
                   >
                     {startOrderService.isPending ? (
                       <Loader2 className="mx-auto h-4 w-4 animate-spin" />
@@ -727,7 +833,7 @@ export default function PosOrderWorkspace({
                   type="button"
                   onClick={handleCheckoutFromUpdate}
                   disabled={isBusy}
-                  className="h-11 flex-1 rounded-lg bg-nexoraBrand text-sm font-bold text-white hover:bg-nexoraBrandDark disabled:opacity-60"
+                  className="h-11 flex-1 rounded-lg bg-posFdAccent text-sm font-bold text-white hover:bg-posFdAccentDark disabled:opacity-60"
                 >
                   {t('components.dashboard.views.pos.PosOrderWorkspace.checkoutButton')}
                 </button>
@@ -740,7 +846,7 @@ export default function PosOrderWorkspace({
                   type="button"
                   onClick={hasServiceLines ? handleCheckIn : handleCheckoutFromCreate}
                   disabled={isBusy || visibleLines.length === 0}
-                  className="h-11 flex-1 rounded-lg bg-nexoraBrand text-sm font-bold text-white hover:bg-nexoraBrandDark disabled:opacity-60"
+                  className="h-11 flex-1 rounded-lg bg-posFdAccent text-sm font-bold text-white hover:bg-posFdAccentDark disabled:opacity-60"
                 >
                   {isBusy ? (
                     <Loader2 className="mx-auto h-4 w-4 animate-spin" />
@@ -756,17 +862,26 @@ export default function PosOrderWorkspace({
             {showPaymentSection && order ? (
               <>
                 <div className="nexora-card space-y-3 p-4">
-                  <h3 className="text-[10px] font-black uppercase tracking-wider text-nexoraMuted">
-                    {t('components.dashboard.views.pos.PosOrderWorkspace.tipTitle')}
-                  </h3>
+                  <div className="flex items-center justify-between gap-2">
+                    <h3 className="text-[10px] font-black uppercase tracking-wider text-nexoraMuted">
+                      {t('components.dashboard.views.pos.PosOrderWorkspace.tipTitle')}
+                    </h3>
+                    <button
+                      type="button"
+                      onClick={() => setCustomerFacingMode(true)}
+                      className="rounded-lg border border-posFdAccent px-2.5 py-1 text-[10px] font-bold text-posFdAccentDark hover:bg-posFdAccent hover:text-white"
+                    >
+                      {t('components.dashboard.views.pos.PosOrderWorkspace.turnToCustomerButton')}
+                    </button>
+                  </div>
                   <div className="grid grid-cols-3 gap-2 sm:grid-cols-5">
                     <button
                       type="button"
                       onClick={() => applyTip('fixed10', 10)}
                       className={`h-9 rounded-lg border text-xs font-bold ${
                         tipMode === 'fixed10'
-                          ? 'border-nexoraBrand bg-nexoraBrand text-white'
-                          : 'border-nexoraBorder text-nexoraText hover:border-nexoraBrand'
+                          ? 'border-posFdAccent bg-posFdAccent text-white'
+                          : 'border-nexoraBorder text-nexoraText hover:border-posFdAccent'
                       }`}
                     >
                       $10
@@ -776,8 +891,8 @@ export default function PosOrderWorkspace({
                       onClick={() => applyTip('fixed15', 15)}
                       className={`h-9 rounded-lg border text-xs font-bold ${
                         tipMode === 'fixed15'
-                          ? 'border-nexoraBrand bg-nexoraBrand text-white'
-                          : 'border-nexoraBorder text-nexoraText hover:border-nexoraBrand'
+                          ? 'border-posFdAccent bg-posFdAccent text-white'
+                          : 'border-nexoraBorder text-nexoraText hover:border-posFdAccent'
                       }`}
                     >
                       $15
@@ -787,8 +902,8 @@ export default function PosOrderWorkspace({
                       onClick={() => applyTip('pct18', round2(order.servicesSubtotal * 0.18))}
                       className={`h-9 rounded-lg border text-xs font-bold ${
                         tipMode === 'pct18'
-                          ? 'border-nexoraBrand bg-nexoraBrand text-white'
-                          : 'border-nexoraBorder text-nexoraText hover:border-nexoraBrand'
+                          ? 'border-posFdAccent bg-posFdAccent text-white'
+                          : 'border-nexoraBorder text-nexoraText hover:border-posFdAccent'
                       }`}
                     >
                       18%
@@ -798,8 +913,8 @@ export default function PosOrderWorkspace({
                       onClick={() => applyTip('pct20', round2(order.servicesSubtotal * 0.2))}
                       className={`h-9 rounded-lg border text-xs font-bold ${
                         tipMode === 'pct20'
-                          ? 'border-nexoraBrand bg-nexoraBrand text-white'
-                          : 'border-nexoraBorder text-nexoraText hover:border-nexoraBrand'
+                          ? 'border-posFdAccent bg-posFdAccent text-white'
+                          : 'border-nexoraBorder text-nexoraText hover:border-posFdAccent'
                       }`}
                     >
                       20%
@@ -822,7 +937,7 @@ export default function PosOrderWorkspace({
                         }}
                         placeholder={t('components.dashboard.views.pos.PosOrderWorkspace.customTipPlaceholder')}
                         className={`h-9 w-full rounded-lg border px-2 text-xs text-nexoraText outline-none ${
-                          tipMode === 'custom' ? 'border-nexoraBrand' : 'border-nexoraBorder'
+                          tipMode === 'custom' ? 'border-posFdAccent' : 'border-nexoraBorder'
                         }`}
                       />
                     </div>
@@ -846,7 +961,7 @@ export default function PosOrderWorkspace({
                           onChange={(e) =>
                             setTipSplitInputs((prev) => ({ ...prev, [share.posStaffProfileId]: e.target.value }))
                           }
-                          className="h-9 w-24 rounded-lg border border-nexoraBorder px-2 text-xs text-nexoraText outline-none focus:border-nexoraBrand"
+                          className="h-9 w-24 rounded-lg border border-nexoraBorder px-2 text-xs text-nexoraText outline-none focus:border-posFdAccent"
                         />
                       </div>
                     ))}
@@ -865,7 +980,7 @@ export default function PosOrderWorkspace({
                         type="button"
                         onClick={handleSaveTipSplit}
                         disabled={!isTipSplitBalanced || setStaffTipSplit.isPending}
-                        className="rounded-lg border border-nexoraBorder px-3 py-1.5 text-[10px] font-bold text-nexoraText hover:border-nexoraBrand disabled:opacity-60"
+                        className="rounded-lg border border-nexoraBorder px-3 py-1.5 text-[10px] font-bold text-nexoraText hover:border-posFdAccent disabled:opacity-60"
                       >
                         {t('components.dashboard.views.pos.PosOrderWorkspace.saveTipSplitButton')}
                       </button>
@@ -885,36 +1000,55 @@ export default function PosOrderWorkspace({
                         onClick={() => setPaymentMethod(method)}
                         className={`h-9 rounded-lg border text-xs font-bold ${
                           paymentMethod === method
-                            ? 'border-nexoraBrand bg-nexoraBrand text-white'
-                            : 'border-nexoraBorder text-nexoraText hover:border-nexoraBrand'
+                            ? 'border-posFdAccent bg-posFdAccent text-white'
+                            : 'border-nexoraBorder text-nexoraText hover:border-posFdAccent'
                         }`}
                       >
                         {t(`components.dashboard.views.pos.PosOrderWorkspace.paymentMethod.${method}`)}
                       </button>
                     ))}
                   </div>
-                  <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-                    <div>
-                      <label className="mb-1 block text-[10px] font-bold uppercase tracking-wide text-nexoraMuted">
-                        {t('components.dashboard.views.pos.PosOrderWorkspace.receiptEmail')}
-                      </label>
-                      <input
-                        type="email"
-                        value={receiptEmail}
-                        onChange={(e) => setReceiptEmail(e.target.value)}
-                        className="h-9 w-full rounded-lg border border-nexoraBorder bg-white px-2.5 text-xs text-nexoraText outline-none focus:border-nexoraBrand"
-                      />
-                    </div>
-                    <div>
-                      <label className="mb-1 block text-[10px] font-bold uppercase tracking-wide text-nexoraMuted">
-                        {t('components.dashboard.views.pos.PosOrderWorkspace.receiptPhone')}
-                      </label>
-                      <input
-                        type="tel"
-                        value={receiptPhone}
-                        onChange={(e) => setReceiptPhone(e.target.value)}
-                        className="h-9 w-full rounded-lg border border-nexoraBorder bg-white px-2.5 text-xs text-nexoraText outline-none focus:border-nexoraBrand"
-                      />
+                  <div>
+                    <label className="mb-1 block text-[10px] font-bold uppercase tracking-wide text-nexoraMuted">
+                      {t('components.dashboard.views.pos.PosOrderWorkspace.receiptTitle')}
+                    </label>
+                    <div className="grid grid-cols-3 gap-2">
+                      <button
+                        type="button"
+                        onClick={() => setReceiptChoice('sms')}
+                        disabled={!order?.customerPhone}
+                        className={`flex h-14 flex-col items-center justify-center gap-0.5 rounded-lg border text-xs font-bold disabled:cursor-not-allowed disabled:opacity-40 ${
+                          receiptChoice === 'sms'
+                            ? 'border-posFdAccent bg-posFdAccent text-white'
+                            : 'border-nexoraBorder text-nexoraText hover:border-posFdAccent'
+                        }`}
+                      >
+                        <span>{t('components.dashboard.views.pos.PosOrderWorkspace.receiptSendSms')}</span>
+                        {order?.customerPhone ? (
+                          <span className={`text-[9px] font-normal ${receiptChoice === 'sms' ? 'text-white/80' : 'text-nexoraMuted'}`}>
+                            {order.customerPhone}
+                          </span>
+                        ) : null}
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setReceiptChoice('none')}
+                        className={`h-14 rounded-lg border text-xs font-bold ${
+                          receiptChoice === 'none'
+                            ? 'border-posFdAccent bg-posFdAccent text-white'
+                            : 'border-nexoraBorder text-nexoraText hover:border-posFdAccent'
+                        }`}
+                      >
+                        {t('components.dashboard.views.pos.PosOrderWorkspace.receiptNone')}
+                      </button>
+                      <button
+                        type="button"
+                        disabled
+                        title={t('components.dashboard.views.pos.PosOrderWorkspace.receiptPrintComingSoon')}
+                        className="h-14 cursor-not-allowed rounded-lg border border-nexoraBorder text-xs font-bold text-nexoraMuted opacity-40"
+                      >
+                        {t('components.dashboard.views.pos.PosOrderWorkspace.receiptPrint')}
+                      </button>
                     </div>
                   </div>
                 </div>
@@ -959,7 +1093,7 @@ export default function PosOrderWorkspace({
                   type="button"
                   onClick={handleComplete}
                   disabled={completeOrder.isPending}
-                  className="h-11 w-full rounded-lg bg-nexoraBrand text-sm font-bold text-white hover:bg-nexoraBrandDark disabled:opacity-60"
+                  className="h-11 w-full rounded-lg bg-posFdAccent text-sm font-bold text-white hover:bg-posFdAccentDark disabled:opacity-60"
                 >
                   {completeOrder.isPending ? (
                     <Loader2 className="mx-auto h-4 w-4 animate-spin" />
@@ -971,6 +1105,8 @@ export default function PosOrderWorkspace({
             ) : null}
           </div>
         </div>
+      )}
+        </>
       )}
 
       {technicianModal ? (
@@ -984,6 +1120,91 @@ export default function PosOrderWorkspace({
           onConfirm={handleTechnicianConfirm}
           onClose={() => setTechnicianModal(null)}
         />
+      ) : null}
+
+      {customerFacingMode && order ? (
+        <div className="fixed inset-0 z-[70] flex flex-col bg-posFdSurface p-6">
+          <div className="flex-1 space-y-6 overflow-y-auto text-center">
+            <p className="text-lg font-bold text-posFdText">
+              {t('components.dashboard.views.pos.PosOrderWorkspace.customerFacingTitle')}
+            </p>
+            <p className="text-sm text-nexoraMuted">
+              {t('components.dashboard.views.pos.PosOrderWorkspace.customerFacingSubtitle')}
+            </p>
+            <div className="mx-auto grid max-w-md grid-cols-2 gap-4">
+              <button
+                type="button"
+                onClick={() => applyTip('fixed10', 10)}
+                className={`h-20 rounded-2xl border-2 text-2xl font-black ${
+                  tipMode === 'fixed10'
+                    ? 'border-posFdAccent bg-posFdAccent text-white'
+                    : 'border-posFdBorder text-posFdText'
+                }`}
+              >
+                $10
+              </button>
+              <button
+                type="button"
+                onClick={() => applyTip('fixed15', 15)}
+                className={`h-20 rounded-2xl border-2 text-2xl font-black ${
+                  tipMode === 'fixed15'
+                    ? 'border-posFdAccent bg-posFdAccent text-white'
+                    : 'border-posFdBorder text-posFdText'
+                }`}
+              >
+                $15
+              </button>
+              <button
+                type="button"
+                onClick={() => applyTip('pct18', round2(order.servicesSubtotal * 0.18))}
+                className={`h-20 rounded-2xl border-2 text-2xl font-black ${
+                  tipMode === 'pct18'
+                    ? 'border-posFdAccent bg-posFdAccent text-white'
+                    : 'border-posFdBorder text-posFdText'
+                }`}
+              >
+                18%
+              </button>
+              <button
+                type="button"
+                onClick={() => applyTip('pct20', round2(order.servicesSubtotal * 0.2))}
+                className={`h-20 rounded-2xl border-2 text-2xl font-black ${
+                  tipMode === 'pct20'
+                    ? 'border-posFdAccent bg-posFdAccent text-white'
+                    : 'border-posFdBorder text-posFdText'
+                }`}
+              >
+                20%
+              </button>
+            </div>
+            <div className="mx-auto flex max-w-md items-center gap-2">
+              <span className="text-lg font-bold text-nexoraMuted">$</span>
+              <input
+                type="number"
+                min={0}
+                step="0.01"
+                value={customTipInput}
+                onChange={(e) => setCustomTipInput(e.target.value)}
+                onFocus={() => setTipMode('custom')}
+                onBlur={handleCustomTipCommit}
+                placeholder={t('components.dashboard.views.pos.PosOrderWorkspace.customTipPlaceholder')}
+                className={`h-14 w-full rounded-2xl border-2 px-4 text-xl text-posFdText outline-none ${
+                  tipMode === 'custom' ? 'border-posFdAccent' : 'border-posFdBorder'
+                }`}
+              />
+            </div>
+          </div>
+
+          {/* Deliberately no auto-return here (brainstorm decision) — front desk must
+              explicitly tap this once they have the iPad back from the customer. */}
+          <button
+            type="button"
+            onClick={() => setCustomerFacingMode(false)}
+            className="h-14 w-full shrink-0 rounded-xl border-2 border-posFdBorder text-base font-bold text-posFdText"
+          >
+            {t('components.dashboard.views.pos.PosOrderWorkspace.backToStaffButton')}
+          </button>
+        </div>
       ) : null}
     </div>
   )

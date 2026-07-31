@@ -12,9 +12,14 @@ import type {
   CheckInOrderPayload,
   CompletedOrdersListQuery,
   CompletedOrdersPage,
+  CustomerLookupResultApiDto,
   OrderListItemApiDto,
   PosWaitlistOrderApiDto,
 } from '../../types/repositories'
+
+// A US phone number needs at least this many digits before a lookup round-trip is worth
+// firing — avoids querying on every keystroke of a partial number.
+const CUSTOMER_LOOKUP_MIN_DIGITS = 10
 
 export function useWaitlist(businessId?: string) {
   const { isAuthenticated } = useSessionRole()
@@ -36,6 +41,21 @@ export function useCheckInOrder(businessId?: string) {
       queryClient.invalidateQueries({ queryKey: qk.merchantPosWaitlist(businessId) })
       queryClient.invalidateQueries({ queryKey: qk.merchantPosOrderList(businessId) })
     },
+  })
+}
+
+// Check-in "returning customer" suggestion (Ticket 2) — only fires once `phone` has
+// enough digits to plausibly be a real number; caller (CustomerHeaderBar) is responsible
+// for debouncing keystrokes before this becomes enabled.
+export function useCustomerLookupByPhone(businessId?: string, phone?: string) {
+  const { isAuthenticated } = useSessionRole()
+  const digitCount = (phone ?? '').replace(/\D/g, '').length
+  return useQuery<CustomerLookupResultApiDto | null>({
+    queryKey: qk.merchantPosCustomerLookup(businessId, phone),
+    queryFn: () => posOrdersRepository.getCustomerLookupByPhone(businessId as string, phone as string),
+    enabled: isAuthenticated && Boolean(businessId) && digitCount >= CUSTOMER_LOOKUP_MIN_DIGITS,
+    retry: false,
+    staleTime: 30000,
   })
 }
 

@@ -152,6 +152,7 @@ export const errorCodeToI18nKey = {
   POS_ORDER_CUSTOMER_NAME_TOO_LONG: 'errors.pos_order_customer_name_too_long',
   POS_ORDER_CUSTOMER_EMAIL_TOO_LONG: 'errors.pos_order_customer_email_too_long',
   POS_ORDER_CUSTOMER_PHONE_TOO_LONG: 'errors.pos_order_customer_phone_too_long',
+  POS_ORDER_CUSTOMER_PHONE_REQUIRED: 'errors.pos_order_customer_phone_required',
   POS_ORDER_SERVICE_INVALID: 'errors.pos_order_service_invalid',
   POS_ORDER_PRODUCT_INVALID: 'errors.pos_order_product_invalid',
   POS_ORDER_NUMBER_CONFLICT: 'errors.pos_order_number_conflict',
@@ -168,6 +169,7 @@ export const errorCodeToI18nKey = {
   PRODUCT_LINE_NOT_FOUND: 'errors.pos_product_line_not_found',
   NO_STAFF_ASSIGNED_TO_START_SERVICE: 'errors.pos_no_staff_assigned_to_start_service',
   NOT_ALL_SERVICE_LINES_ASSIGNED: 'errors.pos_not_all_service_lines_assigned',
+  POS_ORDER_HAS_NO_SERVICE_TO_START: 'errors.pos_order_has_no_service_to_start',
   TIP_SPLIT_MISMATCH: 'errors.pos_tip_split_mismatch',
   TIP_SPLIT_STAFF_INVALID: 'errors.pos_tip_split_staff_invalid',
 

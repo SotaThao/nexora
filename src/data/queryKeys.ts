@@ -148,6 +148,9 @@ export const qk = {
   merchantPosWaitlist: (businessId?: string) => ['merchantSettings', 'posWaitlist', businessId ?? ''],
   // POS Merchant Ops — Order List tab (US-17), Waiting + InService combined.
   merchantPosOrderList: (businessId?: string) => ['merchantSettings', 'posOrderList', businessId ?? ''],
+  // POS iPad redesign, Ticket 2 — Check-in "returning customer" lookup by phone.
+  merchantPosCustomerLookup: (businessId?: string, phone?: string) =>
+    ['merchantSettings', 'posCustomerLookup', businessId ?? '', phone ?? ''],
   // POS Booking — per-business settings (Ticket 2)
   merchantPosBookingSettings: (businessId?: string) => ['merchantSettings', 'posBookingSettings', businessId ?? ''],
   // POS Merchant Ops — Completed Orders panel (US-17 follow-up), paginated + filtered.

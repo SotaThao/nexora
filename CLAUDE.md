@@ -199,6 +199,14 @@ Any new modal, dialog, drawer, or wizard component must handle these two mobile 
 
 When testing such components, resize the browser (or Playwright viewport) to a phone width (e.g. 375×667) and take a screenshot as part of self-verification — `tsc`/`build` passing does not catch layout overflow.
 
+## Form Field Conventions
+
+Apply these on every new or refactored form field — do not wait for a bug report:
+
+- **Phone number inputs must use the shared formatter**, never a bare `<input type="tel">`. Import `formatNationalNumber`, `getNationalPhonePlaceholder`, `PhoneDialCode` from `src/components/CountryCodeSelect.tsx`: `onChange={(e) => onChange(formatNationalNumber(e.target.value, PhoneDialCode.US))}`, `placeholder={getNationalPhonePlaceholder(PhoneDialCode.US)}`. This is the existing convention across staff/customer forms — matching it is not optional polish.
+- **Every text/tel/email input needs a `placeholder`.** Follow the existing "e.g. ..." convention (see `staff_phone_placeholder`, `staff_email_placeholder` in the locales) — add the key to both `en.json` and `vi.json`, never hardcode the string inline.
+- **When extracting an existing form into a new component** (e.g. pulling a form out of a parent into its own file), treat the original JSX as the spec: explicitly check it for formatters, placeholders, `inputMode`/`autoComplete` attributes, and validation before considering the extraction done. Moving the visual structure (labels, layout, styling) while silently dropping these is the most common way this kind of refactor regresses — it will not show up in `tsc`/`build`, only in manual testing.
+
 ## Security And Reliability
 
 - Never commit secrets, tokens, or environment-specific credentials.

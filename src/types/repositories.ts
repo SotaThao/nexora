@@ -184,8 +184,29 @@ export interface CheckInOrderItemPayload {
 export interface CheckInOrderPayload {
   customerName: string
   customerEmail?: string
-  customerPhone?: string
+  // Required as of the POS iPad redesign (Ticket 2) — backend now rejects a missing
+  // phone (POS_ORDER_CUSTOMER_PHONE_REQUIRED). Enables the customer-lookup suggestion
+  // below plus SMS Ticket QR/receipt later.
+  customerPhone: string
   items: CheckInOrderItemPayload[]
+}
+
+// Check-in "returning customer" suggestion (Ticket 2) — most recent order for this phone
+// at this business, regardless of status. `posServiceId`/`posStaffProfileId` let the FE
+// re-add these exact lines to the new draft in one tap ("Use last visit"), but only if
+// they still exist in the current catalog/staff roster — the FE is responsible for that
+// check, this DTO doesn't guarantee it.
+export interface CustomerLookupServiceLineApiDto {
+  posServiceId: string
+  serviceName: string
+  posStaffProfileId?: string | null
+  technicianName?: string | null
+}
+
+export interface CustomerLookupResultApiDto {
+  customerName: string
+  lastCheckedInAt: string
+  serviceLines: CustomerLookupServiceLineApiDto[]
 }
 
 // POS Merchant Ops — Order List tab (US-17) — Waiting + InService combined.

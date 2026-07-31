@@ -10,6 +10,7 @@ import type {
   CheckInOrderPayload,
   CompletedOrdersListQuery,
   CompletedOrdersPage,
+  CustomerLookupResultApiDto,
   OrderListItemApiDto,
   PosWaitlistOrderApiDto,
 } from '../../types/repositories'
@@ -65,6 +66,16 @@ export function createPosOrdersRepository(client: HttpClient = httpClient) {
 
     async checkInOrder(businessId: string, payload: CheckInOrderPayload): Promise<string> {
       return await client.post<string>(`/api/v1/merchant/pos/${businessId}/orders`, payload)
+    },
+
+    // Check-in "returning customer" suggestion (Ticket 2) — null means no prior order
+    // exists for this phone at this business (not an error).
+    async getCustomerLookupByPhone(businessId: string, phone: string): Promise<CustomerLookupResultApiDto | null> {
+      const res = await client.get<CustomerLookupResultApiDto | null>(
+        `/api/v1/merchant/pos/${businessId}/orders/customer-lookup`,
+        { params: { phone } },
+      )
+      return res ?? null
     },
 
     async cancelOrder(businessId: string, orderId: string): Promise<boolean> {

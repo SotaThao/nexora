@@ -3,6 +3,11 @@
 // (changing technician/note). Nothing is persisted here — OK only commits the choice into
 // the parent's local draft; the actual API call (bulk check-in or AssignStaffToServiceLine)
 // happens later, when the draft itself is saved.
+//
+// POS iPad redesign, Ticket 4 — renders as a side drawer sliding in from the right edge
+// (not a centered modal) so the catalog column of Order Workspace stays visible/in-context
+// behind it. Closes via the backdrop click or the X button — no swipe gesture (out of scope,
+// same click-to-close pattern as every other overlay in this codebase).
 import { useMemo, useState } from 'react'
 import { Search, X } from 'lucide-react'
 import { useTranslation } from '../../../../../contexts/LanguageContext'
@@ -68,8 +73,9 @@ export default function SelectTechniciansModal({
   }
 
   return (
-    <div className="fixed inset-0 z-[60] flex items-center justify-center bg-nexoraText/70 p-4 backdrop-blur-sm">
-      <div className="nexora-modal-card max-w-lg">
+    <div className="fixed inset-0 z-[60] flex justify-end">
+      <div className="absolute inset-0 bg-nexoraText/70 backdrop-blur-sm" onClick={onClose} aria-hidden="true" />
+      <div className="relative flex h-full w-full max-w-md flex-col bg-posFdSurface p-4 shadow-xl">
         <div className="mb-4 flex shrink-0 items-center justify-between">
           <h2 className="text-sm font-extrabold text-nexoraText">
             {t('components.dashboard.views.pos.SelectTechniciansModal.title', { serviceName })}
@@ -87,7 +93,7 @@ export default function SelectTechniciansModal({
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               placeholder={t('components.dashboard.views.pos.SelectTechniciansModal.searchPlaceholder')}
-              className="h-9 w-full rounded-lg border border-nexoraBorder bg-white pl-8 pr-2.5 text-xs text-nexoraText outline-none focus:border-nexoraBrand"
+              className="h-9 w-full rounded-lg border border-nexoraBorder bg-white pl-8 pr-2.5 text-xs text-nexoraText outline-none focus:border-posFdAccent"
             />
           </div>
 
@@ -100,8 +106,8 @@ export default function SelectTechniciansModal({
                 onClick={() => setSelectedStaffId(NEXT_AVAILABLE)}
                 className={`flex flex-col items-center gap-1 rounded-xl border p-3 text-center ${
                   selectedStaffId === NEXT_AVAILABLE
-                    ? 'border-nexoraBrand bg-nexoraBrand/5'
-                    : 'border-nexoraBorder hover:border-nexoraBrand'
+                    ? 'border-posFdAccent bg-posFdAccent/5'
+                    : 'border-nexoraBorder hover:border-posFdAccent'
                 }`}
               >
                 <span className="flex h-9 w-9 items-center justify-center rounded-full bg-nexoraCanvas text-[11px] font-bold text-nexoraText">
@@ -119,8 +125,8 @@ export default function SelectTechniciansModal({
                   onClick={() => setSelectedStaffId(staff.posStaffProfileId)}
                   className={`flex flex-col items-center gap-1 rounded-xl border p-3 text-center ${
                     selectedStaffId === staff.posStaffProfileId
-                      ? 'border-nexoraBrand bg-nexoraBrand/5'
-                      : 'border-nexoraBorder hover:border-nexoraBrand'
+                      ? 'border-posFdAccent bg-posFdAccent/5'
+                      : 'border-nexoraBorder hover:border-posFdAccent'
                   }`}
                 >
                   <span className="relative flex h-9 w-9 items-center justify-center rounded-full bg-nexoraCanvas text-[11px] font-bold text-nexoraText">
@@ -167,7 +173,7 @@ export default function SelectTechniciansModal({
               maxLength={500}
               rows={2}
               placeholder={t('components.dashboard.views.pos.SelectTechniciansModal.notePlaceholder')}
-              className="w-full rounded-lg border border-nexoraBorder bg-white px-2.5 py-2 text-xs text-nexoraText outline-none focus:border-nexoraBrand"
+              className="w-full rounded-lg border border-nexoraBorder bg-white px-2.5 py-2 text-xs text-nexoraText outline-none focus:border-posFdAccent"
             />
           </div>
         </div>
@@ -176,14 +182,14 @@ export default function SelectTechniciansModal({
           <button
             type="button"
             onClick={onClose}
-            className="h-10 flex-1 rounded-lg border border-nexoraBorder text-xs font-bold text-nexoraText hover:border-nexoraBrand"
+            className="h-10 flex-1 rounded-lg border border-nexoraBorder text-xs font-bold text-nexoraText hover:border-posFdAccent"
           >
             {t('components.dashboard.views.pos.SelectTechniciansModal.cancel')}
           </button>
           <button
             type="button"
             onClick={handleConfirm}
-            className="h-10 flex-1 rounded-lg bg-nexoraBrand text-xs font-bold text-white hover:bg-nexoraBrandDark"
+            className="h-10 flex-1 rounded-lg bg-posFdAccent text-xs font-bold text-white hover:bg-posFdAccentDark"
           >
             {t('components.dashboard.views.pos.SelectTechniciansModal.ok')}
           </button>

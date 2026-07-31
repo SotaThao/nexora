@@ -1,18 +1,20 @@
-// PosFrontDeskView — POS Merchant Ops: Check-in / Order List / Waiting List / Turn Board
-// (US-12/US-13/US-14, refactored to Order in US-026, restructured into 4 tabs + full-page
-// Order Workspace in US-17).
+// PosFrontDeskView — POS Merchant Ops: Check-in / Order List / Turn Board / Completed
+// Orders / Bookings (US-12/US-13/US-14, refactored to Order in US-026, full-page Order
+// Workspace in US-17). POS iPad redesign (Tickets 1-5): Waiting List folded into Order
+// List as a status filter, Check-in opens the Order Workspace directly (no separate
+// step-1 form), warm posFd* visual identity distinct from the dashboard's nexoraBrand.
 // Shared between the Owner dashboard (POS > Front Desk) and the Staff dashboard
 // (My Salons > a business the Staff has the Operations permission for) — same
 // component, no per-shell duplication. `canManageOperations` (from usePosAccess)
 // decides whether the actionable UI renders at all; the caller (Owner vs Staff
 // route wrapper) is responsible for only linking here when access is expected.
-import { useState, type FormEvent } from 'react'
+import { useState } from 'react'
 import { useSearchParams } from 'react-router-dom'
 import { useQueryClient } from '@tanstack/react-query'
-import { Loader2 } from 'lucide-react'
+import { LayoutGrid, List as ListIcon, Loader2 } from 'lucide-react'
 import { useTranslation } from '../../../../contexts/LanguageContext'
 import { useNotification } from '../../../../contexts/NotificationContext'
-import { formatNationalNumber, getNationalPhonePlaceholder, PhoneDialCode } from '../../../CountryCodeSelect'
+import { storage } from '../../../../utils/storage'
 import { getApiErrorCode } from '../../../../types/domain'
 import { getErrorI18nKey } from '../../../../data/errorCodes'
 import { qk } from '../../../../data/queryKeys'
@@ -26,20 +28,29 @@ import {
 } from '../../../../data/hooks/usePosOrders'
 import { useTurnBoard } from '../../../../data/hooks/usePosTurnBoard'
 import { useAddOrderServiceLine, useCheckoutServiceCatalog } from '../../../../data/hooks/usePosCheckout'
-import type { TurnBoardStationApiDto } from '../../../../types/repositories'
+import type { OrderListItemApiDto, TurnBoardStationApiDto } from '../../../../types/repositories'
 import { SkeletonList } from '../../../ui/skeleton'
 import PosOrderWorkspace from './PosOrderWorkspace'
 import PosCompletedOrdersPanel from './PosCompletedOrdersPanel'
 import NewBookingForm from './booking/NewBookingForm'
 import BookingTab from './booking/BookingTab'
 
-type FrontDeskTab = 'checkin' | 'orderlist' | 'waitlist' | 'turnboard' | 'completed' | 'booking'
+type FrontDeskTab = 'checkin' | 'orderlist' | 'turnboard' | 'completed' | 'booking'
 
-type WorkspaceState =
-  | { mode: 'create'; customerDraft: { customerName: string; customerEmail?: string; customerPhone?: string } }
-  | { mode: 'update'; orderId: string }
+// Order List (US-17) folds the old standalone Waitlist tab in as a filter — Waiting +
+// InService both come from the same useOrderList query, so this stays a client-side
+// filter rather than a second query.
+type OrderListFilter = 'all' | 'waiting' | 'inservice'
 
-const WAIT_WARNING_MINUTES = 15
+// POS iPad redesign, Ticket 3 — user-chosen List/Card view, remembered across visits
+// (pure UI preference, not domain data — plain storage.* is fine here per CLAUDE.md).
+type OrderListViewMode = 'list' | 'card'
+const ORDER_LIST_VIEW_MODE_STORAGE_KEY = 'pos_order_list_view_mode'
+
+// POS iPad redesign — Create mode no longer carries a pre-filled customerDraft;
+// PosOrderWorkspace now collects it itself via its own 2-step Check-in
+// (PhoneCheckInStep for phone, then CustomerHeaderBar for name/email/catalog).
+type WorkspaceState = { mode: 'create' } | { mode: 'update'; orderId: string }
 
 function getInitials(name: string) {
   return name
@@ -56,16 +67,22 @@ function formatTime(iso: string) {
 
 export default function PosFrontDeskView({
   businessId,
+  businessName,
   businessSlug,
 }: {
   businessId: string
+  // Shown on Check-in Step 1's welcome message — optional since the Staff dashboard route
+  // doesn't have it readily available; PhoneCheckInStep falls back to a generic greeting.
+  businessName?: string
   businessSlug?: string
 }) {
   const { t } = useTranslation()
   const { showToast, showConfirm } = useNotification()
   const queryClient = useQueryClient()
   const { data: access, isLoading: isAccessLoading } = usePosAccess(businessId)
-  const { data: waitlist = [], isLoading: isWaitlistLoading } = useWaitlist(businessId)
+  // Still used by the Turn Board "assign an Empty station" dropdown below —
+  // only the standalone Waitlist tab (now folded into Order List) was removed.
+  const { data: waitlist = [] } = useWaitlist(businessId)
   const { data: orderList = [], isLoading: isOrderListLoading } = useOrderList(businessId)
   const { data: turnBoard = [], isLoading: isTurnBoardLoading } = useTurnBoard(businessId)
   const { data: serviceCatalog = [] } = useCheckoutServiceCatalog(businessId)
@@ -76,13 +93,18 @@ export default function PosFrontDeskView({
 
   // Deep-link support for the Owner Dashboard's "Total Bookings" KPI card (Ticket 10),
   // which navigates here with ?tab=booking to land straight on the Bookings tab.
+  // Order List is the default landing tab otherwise (POS iPad redesign, Ticket 1 decision).
   const [searchParams] = useSearchParams()
-  const initialTab: FrontDeskTab = searchParams.get('tab') === 'booking' ? 'booking' : 'checkin'
+  const initialTab: FrontDeskTab = searchParams.get('tab') === 'booking' ? 'booking' : 'orderlist'
   const [activeTab, setActiveTab] = useState<FrontDeskTab>(initialTab)
-  const [customerName, setCustomerName] = useState('')
-  const [customerEmail, setCustomerEmail] = useState('')
-  const [customerPhone, setCustomerPhone] = useState('')
-  const [nameError, setNameError] = useState('')
+  const [orderListFilter, setOrderListFilter] = useState<OrderListFilter>('all')
+  const [viewMode, setViewMode] = useState<OrderListViewMode>(() =>
+    storage.getItem(ORDER_LIST_VIEW_MODE_STORAGE_KEY) === 'card' ? 'card' : 'list',
+  )
+  const handleChangeViewMode = (mode: OrderListViewMode) => {
+    setViewMode(mode)
+    storage.setItem(ORDER_LIST_VIEW_MODE_STORAGE_KEY, mode)
+  }
   const [assignStaffSelection, setAssignStaffSelection] = useState<Record<string, string>>({})
   const [assignServiceSelection, setAssignServiceSelection] = useState<Record<string, string>>({})
   const [assigningOrderId, setAssigningOrderId] = useState<string | null>(null)
@@ -123,15 +145,18 @@ export default function PosFrontDeskView({
     return (
       <PosOrderWorkspace
         businessId={businessId}
+        businessName={businessName}
         orderId={workspace.mode === 'update' ? workspace.orderId : null}
-        customerDraft={workspace.mode === 'create' ? workspace.customerDraft : undefined}
         onClose={() => {
           setWorkspace(null)
           refreshFrontDeskLists()
         }}
         onCheckedIn={() => {
           setWorkspace(null)
-          setActiveTab('waitlist')
+          // 'waitlist' tab is gone (folded into Order List as a filter) — land on
+          // Order List pre-filtered to Waiting so the just-created ticket is visible.
+          setActiveTab('orderlist')
+          setOrderListFilter('waiting')
           refreshFrontDeskLists()
         }}
         onCompleted={() => {
@@ -140,27 +165,6 @@ export default function PosFrontDeskView({
         }}
       />
     )
-  }
-
-  const handleCheckIn = (e: FormEvent) => {
-    e.preventDefault()
-    const name = customerName.trim()
-    if (!name) {
-      setNameError('required')
-      return
-    }
-    setNameError('')
-    setWorkspace({
-      mode: 'create',
-      customerDraft: {
-        customerName: name,
-        customerEmail: customerEmail.trim() || undefined,
-        customerPhone: customerPhone.trim() || undefined,
-      },
-    })
-    setCustomerName('')
-    setCustomerEmail('')
-    setCustomerPhone('')
   }
 
   const handleCancel = async (orderId: string, name: string) => {
@@ -176,9 +180,14 @@ export default function PosFrontDeskView({
     }
   }
 
-  // Turn Board's "Empty" station quick-assign is unchanged by US-17 — still 3 sequential
-  // calls (add the first service line, assign it to a staff member or auto-pick, then
-  // explicitly start service) since the check-in form no longer collects services itself.
+  // Turn Board "Empty" station quick-assign — still 3 sequential calls (add a NEW service
+  // line, assign it to this free staff, then start it). POS iPad redesign, Ticket 5:
+  // kept as-is on purpose, re-scoped from the original brainstorm's "Assign Next" (auto-pick
+  // the oldest unassigned waiting order) — every order already gets a concrete staff at
+  // Check-in (see PosStaffAssignmentResolver), so there is no "unassigned order" left to
+  // grab. What this really does now: an already-free technician picks up an *additional*
+  // service for an existing customer's order (e.g. their pedicure after someone else did
+  // their manicure) — a multi-service upsell action, not a queue hand-off.
   const handleAssignAndStart = async (orderId: string, posStaffProfileId?: string) => {
     const posServiceId = assignServiceSelection[orderId] ?? serviceCatalog[0]?.id
     if (!posServiceId) {
@@ -205,11 +214,6 @@ export default function PosFrontDeskView({
       labelKey: 'components.dashboard.views.pos.PosFrontDeskView.tabs.orderlist',
       badge: orderList.length,
     },
-    {
-      id: 'waitlist',
-      labelKey: 'components.dashboard.views.pos.PosFrontDeskView.tabs.waitlist',
-      badge: waitlist.length,
-    },
     { id: 'turnboard', labelKey: 'components.dashboard.views.pos.PosFrontDeskView.tabs.turnboard' },
     { id: 'completed', labelKey: 'components.dashboard.views.pos.PosFrontDeskView.tabs.completed' },
     { id: 'booking', labelKey: 'components.dashboard.views.pos.PosFrontDeskView.tabs.booking' },
@@ -219,7 +223,7 @@ export default function PosFrontDeskView({
     <select
       value={assignServiceSelection[orderId] ?? serviceCatalog[0]?.id ?? ''}
       onChange={(e) => setAssignServiceSelection((prev) => ({ ...prev, [orderId]: e.target.value }))}
-      className="h-9 w-full rounded-lg border border-nexoraBorder bg-white px-2.5 text-xs text-nexoraText outline-none focus:border-nexoraBrand"
+      className="h-9 w-full rounded-lg border border-nexoraBorder bg-white px-2.5 text-xs text-nexoraText outline-none focus:border-posFdAccent"
     >
       {serviceCatalog.map((service) => (
         <option key={service.id} value={service.id}>
@@ -267,7 +271,7 @@ export default function PosFrontDeskView({
             <button
               type="button"
               onClick={() => station.currentOrderId && setWorkspace({ mode: 'update', orderId: station.currentOrderId })}
-              className="h-9 w-full rounded-lg bg-nexoraBrand text-xs font-bold text-white hover:bg-nexoraBrandDark disabled:opacity-60"
+              className="h-9 w-full rounded-lg bg-posFdAccent text-xs font-bold text-white hover:bg-posFdAccentDark disabled:opacity-60"
             >
               {t('components.dashboard.views.pos.PosFrontDeskView.checkoutButton')}
             </button>
@@ -283,7 +287,7 @@ export default function PosFrontDeskView({
                   onChange={(e) =>
                     setAssignStaffSelection((prev) => ({ ...prev, [station.posStaffProfileId]: e.target.value }))
                   }
-                  className="h-9 w-full rounded-lg border border-nexoraBorder bg-white px-2.5 text-xs text-nexoraText outline-none focus:border-nexoraBrand"
+                  className="h-9 w-full rounded-lg border border-nexoraBorder bg-white px-2.5 text-xs text-nexoraText outline-none focus:border-posFdAccent"
                 >
                   {waitlist.map((order) => (
                     <option key={order.id} value={order.id}>
@@ -296,7 +300,7 @@ export default function PosFrontDeskView({
                   type="button"
                   onClick={() => handleAssignAndStart(selectedOrderId, station.posStaffProfileId)}
                   disabled={isAssigningThisStation || serviceCatalog.length === 0}
-                  className="h-9 w-full rounded-lg bg-nexoraBrand text-xs font-bold text-white hover:bg-nexoraBrandDark disabled:opacity-60"
+                  className="h-9 w-full rounded-lg bg-posFdAccent text-xs font-bold text-white hover:bg-posFdAccentDark disabled:opacity-60"
                 >
                   {isAssigningThisStation ? (
                     <Loader2 className="mx-auto h-4 w-4 animate-spin" />
@@ -330,21 +334,23 @@ export default function PosFrontDeskView({
         <button
           type="button"
           onClick={() => setIsBookingModalOpen(true)}
-          className="h-9 shrink-0 rounded-lg bg-nexoraBrand px-3 text-xs font-bold text-white hover:bg-nexoraBrandDark"
+          className="h-9 shrink-0 rounded-lg bg-posFdAccent px-3 text-xs font-bold text-white hover:bg-posFdAccentDark"
         >
           {t('components.dashboard.views.pos.NewBookingForm.newBookingButton')}
         </button>
       </section>
 
-      <div className="flex gap-1 border-b border-nexoraBorder">
+      {/* POS Front Desk visual identity: warm accent (posFd*), distinct from the
+          main dashboard's nexoraBrand — see tailwind.config.js. */}
+      <div className="flex gap-1 border-b border-posFdBorder">
         {tabs.map((tab) => (
           <button
             key={tab.id}
             type="button"
-            onClick={() => setActiveTab(tab.id)}
+            onClick={() => (tab.id === 'checkin' ? setWorkspace({ mode: 'create' }) : setActiveTab(tab.id))}
             className={`px-3 py-2 text-xs font-bold ${
               activeTab === tab.id
-                ? 'border-b-2 border-nexoraBrand text-nexoraBrand'
+                ? 'border-b-2 border-posFdAccent text-posFdAccentDark'
                 : 'text-nexoraMuted hover:text-nexoraText'
             }`}
           >
@@ -354,173 +360,161 @@ export default function PosFrontDeskView({
         ))}
       </div>
 
-      {activeTab === 'checkin' && (
-        <div className="nexora-card max-w-md p-6">
-          <h3 className="mb-3 text-xs font-black uppercase tracking-wider text-nexoraText">
-            {t('components.dashboard.views.pos.PosFrontDeskView.checkInFormTitle')}
-          </h3>
-          <form onSubmit={handleCheckIn} noValidate className="space-y-3">
-            <div>
-              <label className="text-[10px] font-extrabold uppercase text-nexoraMuted">
-                {t('components.dashboard.views.pos.PosFrontDeskView.customerName')}
-              </label>
-              <input
-                type="text"
-                value={customerName}
-                onChange={(e) => {
-                  setCustomerName(e.target.value)
-                  if (nameError) setNameError('')
-                }}
-                aria-invalid={Boolean(nameError)}
-                className={`mt-1 h-10 w-full rounded-lg border bg-nexoraCanvas px-3.5 text-xs text-nexoraText outline-none transition-all ${
-                  nameError
-                    ? 'border-rose-500 focus:border-rose-500 focus:ring-2 focus:ring-rose-500/15'
-                    : 'border-nexoraBorder focus:border-nexoraBrand focus:bg-white'
-                }`}
-              />
-              {nameError ? (
-                <p role="alert" className="mt-1 text-[10px] font-bold text-rose-500">
-                  {t('components.dashboard.views.pos.PosFrontDeskView.customerNameRequired')}
-                </p>
-              ) : null}
-            </div>
-            <div>
-              <label className="text-[10px] font-extrabold uppercase text-nexoraMuted">
-                {t('components.dashboard.views.pos.PosFrontDeskView.customerPhone')}
-              </label>
-              <input
-                type="tel"
-                value={customerPhone}
-                onChange={(e) => setCustomerPhone(formatNationalNumber(e.target.value, PhoneDialCode.US))}
-                placeholder={getNationalPhonePlaceholder(PhoneDialCode.US)}
-                inputMode="numeric"
-                autoComplete="tel-national"
-                className="mt-1 h-10 w-full rounded-lg border border-nexoraBorder bg-nexoraCanvas px-3.5 text-xs text-nexoraText outline-none transition-all focus:border-nexoraBrand focus:bg-white"
-              />
-            </div>
-            <div>
-              <label className="text-[10px] font-extrabold uppercase text-nexoraMuted">
-                {t('components.dashboard.views.pos.PosFrontDeskView.customerEmail')}
-              </label>
-              <input
-                type="email"
-                value={customerEmail}
-                onChange={(e) => setCustomerEmail(e.target.value)}
-                className="mt-1 h-10 w-full rounded-lg border border-nexoraBorder bg-nexoraCanvas px-3.5 text-xs text-nexoraText outline-none transition-all focus:border-nexoraBrand focus:bg-white"
-              />
-            </div>
-            <button
-              type="submit"
-              className="h-10 w-full rounded-lg bg-nexoraBrand text-xs font-bold text-white hover:bg-nexoraBrandDark disabled:opacity-60"
-            >
-              {t('components.dashboard.views.pos.PosFrontDeskView.checkInButton')}
-            </button>
-          </form>
-        </div>
-      )}
-
       {activeTab === 'orderlist' && (
         isOrderListLoading ? (
           <div className="nexora-card p-6">
             <SkeletonList count={3} lines={1} />
           </div>
-        ) : orderList.length === 0 ? (
-          <div className="nexora-card p-6 text-center text-xs text-nexoraMuted">
-            {t('components.dashboard.views.pos.PosFrontDeskView.orderListEmpty')}
-          </div>
         ) : (
-          <div className="nexora-card overflow-x-auto p-4">
-            <table className="w-full text-left text-xs">
-              <thead>
-                <tr className="text-[10px] font-black uppercase tracking-wide text-nexoraMuted">
-                  <th className="pb-2 pr-3">{t('components.dashboard.views.pos.PosFrontDeskView.orderListColumnOrder')}</th>
-                  <th className="pb-2 pr-3">{t('components.dashboard.views.pos.PosFrontDeskView.orderListColumnGuest')}</th>
-                  <th className="pb-2 pr-3">{t('components.dashboard.views.pos.PosFrontDeskView.orderListColumnStatus')}</th>
-                  <th className="pb-2 pr-3">{t('components.dashboard.views.pos.PosFrontDeskView.orderListColumnTechnician')}</th>
-                  <th className="pb-2 pr-3">{t('components.dashboard.views.pos.PosFrontDeskView.orderListColumnServices')}</th>
-                  <th className="pb-2 text-right">{t('components.dashboard.views.pos.PosFrontDeskView.orderListColumnElapsed')}</th>
-                </tr>
-              </thead>
-              <tbody>
-                {orderList.map((order) => (
-                  <tr
-                    key={order.id}
-                    onClick={() => setWorkspace({ mode: 'update', orderId: order.id })}
-                    className="cursor-pointer border-t border-nexoraBorder hover:bg-nexoraCanvas"
+          <div className="space-y-3">
+            <div className="flex items-center justify-between gap-2">
+              <div className="flex gap-2">
+                {(['all', 'waiting', 'inservice'] as OrderListFilter[]).map((filter) => (
+                  <button
+                    key={filter}
+                    type="button"
+                    onClick={() => setOrderListFilter(filter)}
+                    className={`rounded-full px-3 py-1.5 text-[11px] font-bold ${
+                      orderListFilter === filter
+                        ? 'bg-posFdAccent text-white'
+                        : 'border border-posFdBorder text-nexoraMuted hover:text-nexoraText'
+                    }`}
                   >
-                    <td className="py-2 pr-3 font-mono font-bold text-nexoraMuted">#{order.orderNumber}</td>
-                    <td className="py-2 pr-3 font-bold text-nexoraText">{order.customerName}</td>
-                    <td className="py-2 pr-3 text-nexoraMuted">{order.status}</td>
-                    <td className="py-2 pr-3 text-nexoraMuted">
-                      {order.technicianNames.length > 0 ? order.technicianNames.join(', ') : '—'}
-                    </td>
-                    <td className="py-2 pr-3 text-nexoraMuted">
-                      {order.serviceNames.length > 0 ? order.serviceNames.join(', ') : '—'}
-                    </td>
-                    <td className="py-2 text-right text-nexoraMuted">
-                      {t('components.dashboard.views.pos.PosFrontDeskView.waitMinutes', { minutes: order.elapsedMinutes })}
-                    </td>
-                  </tr>
+                    {t(`components.dashboard.views.pos.PosFrontDeskView.orderListFilter.${filter}`)}
+                  </button>
                 ))}
-              </tbody>
-            </table>
+              </div>
+              <div className="flex gap-1 rounded-lg border border-posFdBorder p-0.5">
+                <button
+                  type="button"
+                  onClick={() => handleChangeViewMode('list')}
+                  aria-label={t('components.dashboard.views.pos.PosFrontDeskView.viewModeList')}
+                  className={`rounded-md p-1.5 ${
+                    viewMode === 'list' ? 'bg-posFdAccent text-white' : 'text-nexoraMuted hover:text-nexoraText'
+                  }`}
+                >
+                  <ListIcon className="h-4 w-4" />
+                </button>
+                <button
+                  type="button"
+                  onClick={() => handleChangeViewMode('card')}
+                  aria-label={t('components.dashboard.views.pos.PosFrontDeskView.viewModeCard')}
+                  className={`rounded-md p-1.5 ${
+                    viewMode === 'card' ? 'bg-posFdAccent text-white' : 'text-nexoraMuted hover:text-nexoraText'
+                  }`}
+                >
+                  <LayoutGrid className="h-4 w-4" />
+                </button>
+              </div>
+            </div>
+
+            {(() => {
+              const filteredOrderList = orderList.filter((order) => {
+                if (orderListFilter === 'waiting') return order.status === 'Waiting'
+                if (orderListFilter === 'inservice') return order.status === 'InService'
+                return true
+              })
+
+              if (filteredOrderList.length === 0) {
+                return (
+                  <div className="nexora-card p-6 text-center text-xs text-nexoraMuted">
+                    {t('components.dashboard.views.pos.PosFrontDeskView.orderListEmpty')}
+                  </div>
+                )
+              }
+
+              const renderCancelButton = (order: OrderListItemApiDto) =>
+                order.status === 'Waiting' ? (
+                  <button
+                    type="button"
+                    onClick={(e) => {
+                      e.stopPropagation()
+                      handleCancel(order.id, order.customerName)
+                    }}
+                    disabled={cancelOrder.isPending}
+                    className="shrink-0 rounded-lg border border-posFdBorder px-2.5 py-1 text-[10px] font-bold text-nexoraMuted hover:border-rose-300 hover:text-rose-600 disabled:opacity-60"
+                  >
+                    {t('components.dashboard.views.pos.PosFrontDeskView.cancelButton')}
+                  </button>
+                ) : null
+
+              if (viewMode === 'card') {
+                return (
+                  <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
+                    {filteredOrderList.map((order) => (
+                      <div
+                        key={order.id}
+                        onClick={() => setWorkspace({ mode: 'update', orderId: order.id })}
+                        className="nexora-card cursor-pointer space-y-2 p-4 hover:border-posFdAccent"
+                      >
+                        <div className="flex items-center justify-between gap-2">
+                          <span className="font-mono text-[11px] font-bold text-nexoraMuted">#{order.orderNumber}</span>
+                          <span className="rounded-full bg-posFdCanvas px-2 py-0.5 text-[10px] font-black uppercase text-posFdAccentDark">
+                            {order.status}
+                          </span>
+                        </div>
+                        <p className="truncate text-sm font-bold text-posFdText">{order.customerName}</p>
+                        <p className="truncate text-[11px] text-nexoraMuted">
+                          {order.serviceNames.length > 0 ? order.serviceNames.join(', ') : '—'}
+                        </p>
+                        <p className="truncate text-[11px] text-nexoraMuted">
+                          {order.technicianNames.length > 0 ? order.technicianNames.join(', ') : '—'}
+                        </p>
+                        <div className="flex items-center justify-between gap-2 border-t border-posFdBorder pt-2">
+                          <span className="text-[11px] text-nexoraMuted">
+                            {t('components.dashboard.views.pos.PosFrontDeskView.waitMinutes', { minutes: order.elapsedMinutes })}
+                          </span>
+                          {renderCancelButton(order)}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )
+              }
+
+              return (
+                <div className="nexora-card overflow-x-auto p-4">
+                  <table className="w-full text-left text-xs">
+                    <thead>
+                      <tr className="text-[10px] font-black uppercase tracking-wide text-nexoraMuted">
+                        <th className="pb-2 pr-3">{t('components.dashboard.views.pos.PosFrontDeskView.orderListColumnOrder')}</th>
+                        <th className="pb-2 pr-3">{t('components.dashboard.views.pos.PosFrontDeskView.orderListColumnGuest')}</th>
+                        <th className="pb-2 pr-3">{t('components.dashboard.views.pos.PosFrontDeskView.orderListColumnStatus')}</th>
+                        <th className="pb-2 pr-3">{t('components.dashboard.views.pos.PosFrontDeskView.orderListColumnTechnician')}</th>
+                        <th className="pb-2 pr-3">{t('components.dashboard.views.pos.PosFrontDeskView.orderListColumnServices')}</th>
+                        <th className="pb-2 pr-3 text-right">{t('components.dashboard.views.pos.PosFrontDeskView.orderListColumnElapsed')}</th>
+                        <th className="pb-2 text-right"></th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {filteredOrderList.map((order) => (
+                        <tr
+                          key={order.id}
+                          onClick={() => setWorkspace({ mode: 'update', orderId: order.id })}
+                          className="cursor-pointer border-t border-posFdBorder hover:bg-posFdCanvas"
+                        >
+                          <td className="py-2 pr-3 font-mono font-bold text-nexoraMuted">#{order.orderNumber}</td>
+                          <td className="py-2 pr-3 font-bold text-nexoraText">{order.customerName}</td>
+                          <td className="py-2 pr-3 text-nexoraMuted">{order.status}</td>
+                          <td className="py-2 pr-3 text-nexoraMuted">
+                            {order.technicianNames.length > 0 ? order.technicianNames.join(', ') : '—'}
+                          </td>
+                          <td className="py-2 pr-3 text-nexoraMuted">
+                            {order.serviceNames.length > 0 ? order.serviceNames.join(', ') : '—'}
+                          </td>
+                          <td className="py-2 pr-3 text-right text-nexoraMuted">
+                            {t('components.dashboard.views.pos.PosFrontDeskView.waitMinutes', { minutes: order.elapsedMinutes })}
+                          </td>
+                          <td className="py-2 text-right">{renderCancelButton(order)}</td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              )
+            })()}
           </div>
         )
-      )}
-
-      {activeTab === 'waitlist' && (
-        <div className="nexora-card p-6">
-          <h3 className="mb-3 text-xs font-black uppercase tracking-wider text-nexoraText">
-            {t('components.dashboard.views.pos.PosFrontDeskView.waitlistTitle')}
-          </h3>
-          {isWaitlistLoading ? (
-            <SkeletonList count={3} lines={1} />
-          ) : waitlist.length === 0 ? (
-            <p className="text-xs text-nexoraMuted">{t('components.dashboard.views.pos.PosFrontDeskView.waitlistEmpty')}</p>
-          ) : (
-            <ul className="space-y-2">
-              {waitlist.map((order) => {
-                const isLongWait = order.waitMinutes >= WAIT_WARNING_MINUTES
-                return (
-                  <li key={order.id}>
-                    <button
-                      type="button"
-                      onClick={() => setWorkspace({ mode: 'update', orderId: order.id })}
-                      className="flex w-full items-center justify-between gap-3 rounded-xl border border-nexoraBorder bg-white px-3 py-2.5 text-left shadow-sm hover:border-nexoraBrand"
-                    >
-                      <div className="min-w-0 flex-1">
-                        <div className="flex items-center gap-2">
-                          <span className="font-mono text-[11px] font-bold text-nexoraMuted">#{order.orderNumber}</span>
-                          <span className="truncate text-sm font-bold text-nexoraText">{order.customerName}</span>
-                        </div>
-                        <p className="truncate text-[11px] text-nexoraMuted">
-                          {order.serviceNames.length > 0
-                            ? order.serviceNames.join(', ')
-                            : t('components.dashboard.views.pos.PosFrontDeskView.noServiceYet')}
-                        </p>
-                      </div>
-                      <span
-                        className={`shrink-0 text-[11px] font-extrabold ${isLongWait ? 'text-rose-600' : 'text-nexoraMuted'}`}
-                      >
-                        {t('components.dashboard.views.pos.PosFrontDeskView.waitMinutes', { minutes: order.waitMinutes })}
-                      </span>
-                    </button>
-                    <div className="mt-1 flex justify-end">
-                      <button
-                        type="button"
-                        onClick={() => handleCancel(order.id, order.customerName)}
-                        disabled={cancelOrder.isPending}
-                        className="shrink-0 rounded-lg border border-nexoraBorder px-2.5 py-1 text-[10px] font-bold text-nexoraMuted hover:border-rose-300 hover:text-rose-600 disabled:opacity-60"
-                      >
-                        {t('components.dashboard.views.pos.PosFrontDeskView.cancelButton')}
-                      </button>
-                    </div>
-                  </li>
-                )
-              })}
-            </ul>
-          )}
-        </div>
       )}
 
       {activeTab === 'turnboard' && (

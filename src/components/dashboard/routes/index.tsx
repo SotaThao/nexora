@@ -428,6 +428,7 @@ export function PosStaffProfileRoute() {
 export function PosFrontDeskRoute() {
   const { data: merchantSetupData } = useMerchantSetup()
   const businessId = merchantSetupData?.businessInfo?.businessId
+  const businessName = merchantSetupData?.businessInfo?.name
   const businessSlug = merchantSetupData?.businessInfo?.slug
   if (!businessId) {
     return (
@@ -436,7 +437,7 @@ export function PosFrontDeskRoute() {
       </div>
     )
   }
-  return <PosFrontDeskView businessId={businessId} businessSlug={businessSlug} />
+  return <PosFrontDeskView businessId={businessId} businessName={businessName} businessSlug={businessSlug} />
 }
 
 export function TaxIqOverviewRoute() {
