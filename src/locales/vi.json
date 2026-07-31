@@ -2966,7 +2966,6 @@
               "booking": "Lịch hẹn"
             },
             "customerName": "Tên khách",
-            "customerNameRequired": "Vui lòng nhập tên khách.",
             "customerPhone": "Số điện thoại",
             "customerEmail": "Email",
             "waitlistEmpty": "Không có khách đang chờ.",

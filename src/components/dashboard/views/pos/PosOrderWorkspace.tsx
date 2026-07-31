@@ -129,16 +129,11 @@ export default function PosOrderWorkspace({
   // in CustomerHeaderBar. Only meaningful in Create mode.
   const [checkinStep, setCheckinStep] = useState<'phone' | 'details'>('phone')
 
-  // POS iPad redesign, Ticket 2 — customer info is collected inline (CustomerHeaderBar)
-  // instead of a separate Check-in step 1 form. Phone is mandatory (backend now rejects
-  // a missing phone) — validated here so Check-in/Checkout stays disabled until filled.
+  // Phone is mandatory (captured and validated in PhoneCheckInStep before this component
+  // ever shows Step 2) — Customer Name is optional (a walk-in may decline to give one).
   const [customerName, setCustomerName] = useState('')
   const [customerPhone, setCustomerPhone] = useState('')
   const [customerEmail, setCustomerEmail] = useState('')
-  const [showCustomerErrors, setShowCustomerErrors] = useState(false)
-  const nameError = showCustomerErrors && !customerName.trim()
-    ? t('components.dashboard.views.pos.PosFrontDeskView.customerNameRequired')
-    : undefined
 
   const { data: order, isLoading: isOrderLoading } = useOrderDetail(businessId, effectiveOrderId ?? undefined)
   const { data: serviceCatalog = [] } = useCheckoutServiceCatalog(businessId)
@@ -427,8 +422,6 @@ export default function PosOrderWorkspace({
         : { itemType: 'Product', id: line.posProductId, quantity: line.quantity },
     )
 
-  const isCustomerInfoValid = Boolean(customerName.trim() && customerPhone.trim())
-
   const buildCustomerDraft = () => ({
     customerName: customerName.trim(),
     customerEmail: customerEmail.trim() || undefined,
@@ -436,10 +429,6 @@ export default function PosOrderWorkspace({
   })
 
   const handleCheckIn = () => {
-    if (!isCustomerInfoValid) {
-      setShowCustomerErrors(true)
-      return
-    }
     checkInOrder.mutate(
       { ...buildCustomerDraft(), items: buildCheckInItems() },
       {
@@ -456,10 +445,6 @@ export default function PosOrderWorkspace({
   // below), so there's no service to start; go straight to the payment section instead of
   // calling StartOrderService, which now rejects orders with no service lines.
   const handleCheckoutFromCreate = () => {
-    if (!isCustomerInfoValid) {
-      setShowCustomerErrors(true)
-      return
-    }
     checkInOrder.mutate(
       { ...buildCustomerDraft(), items: buildCheckInItems() },
       {
@@ -623,7 +608,6 @@ export default function PosOrderWorkspace({
           onChangeEmail={setCustomerEmail}
           onChangePhoneNumber={() => setCheckinStep('phone')}
           onApplyLastVisit={handleApplyLastVisit}
-          nameError={nameError}
         />
       ) : null}
 

@@ -22,7 +22,6 @@ export default function CustomerHeaderBar({
   onChangeEmail,
   onChangePhoneNumber,
   onApplyLastVisit,
-  nameError,
 }: {
   businessId: string
   customerName: string
@@ -32,9 +31,11 @@ export default function CustomerHeaderBar({
   onChangeEmail: (value: string) => void
   onChangePhoneNumber: () => void
   onApplyLastVisit: (serviceLines: CustomerLookupServiceLineApiDto[]) => void
-  nameError?: string
 }) {
   const { t } = useTranslation()
+  // Name is optional (a walk-in may decline to give one) — collapsing to the compact chip
+  // only makes sense once there's a name to show in it, so an empty Name just leaves the
+  // bar expanded rather than collapsing to a nameless chip.
   const isFilled = Boolean(customerName.trim())
   const [collapsed, setCollapsed] = useState(false)
   const { data: lookup } = useCustomerLookupByPhone(businessId, customerPhone)
@@ -43,7 +44,7 @@ export default function CustomerHeaderBar({
   // feedback_ui_jank_verification-adjacent history: a render-time effect keyed on isFilled
   // collapsed the bar mid-entry in an earlier version of this component.
   const handleFieldBlur = () => {
-    if (isFilled && !nameError) setCollapsed(true)
+    if (isFilled) setCollapsed(true)
   }
 
   if (collapsed && isFilled) {
@@ -91,11 +92,8 @@ export default function CustomerHeaderBar({
             onChange={(e) => onChangeName(e.target.value)}
             onBlur={handleFieldBlur}
             placeholder={t('components.dashboard.views.pos.CustomerHeaderBar.namePlaceholder')}
-            className={`mt-1 h-11 w-full rounded-lg border bg-white px-3 text-sm text-posFdText outline-none ${
-              nameError ? 'border-rose-500' : 'border-posFdBorder focus:border-posFdAccent'
-            }`}
+            className="mt-1 h-11 w-full rounded-lg border border-posFdBorder bg-white px-3 text-sm text-posFdText outline-none focus:border-posFdAccent"
           />
-          {nameError ? <p className="mt-1 text-[10px] font-bold text-rose-500">{nameError}</p> : null}
         </div>
         <div>
           <label className="text-[10px] font-extrabold uppercase text-nexoraMuted">
