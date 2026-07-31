@@ -306,7 +306,7 @@ export interface MerchantVoiceCallStatisticsDto {
 
 export interface MerchantVoiceCustomerDto {
   id: string
-  tenantId: string
+  businessId: string
   name: string | null
   phoneNumber: string | null
   email: string | null
@@ -924,7 +924,7 @@ function normalizeCustomerDto(item: unknown): MerchantVoiceCustomerDto {
   const raw = (item ?? {}) as Record<string, unknown>
   return {
     id: String(readField<unknown>(raw, 'id', 'Id') ?? ''),
-    tenantId: String(readField<unknown>(raw, 'tenantId', 'TenantId') ?? ''),
+    businessId: String(readField<unknown>(raw, 'businessId', 'BusinessId') ?? ''),
     name: (readField<string | null>(raw, 'name', 'Name') ?? null),
     phoneNumber: (readField<string | null>(raw, 'phoneNumber', 'PhoneNumber') ?? null),
     email: (readField<string | null>(raw, 'email', 'Email') ?? null),

@@ -4,14 +4,14 @@
 // it unassigned is valid; the Owner assigns one manually later (see
 // POS-Booking-Business.md, "Staff/Owner Creates a Booking").
 import { useState } from 'react'
-import { Loader2, Trash2, X } from 'lucide-react'
+import { Check, Loader2, Trash2, X } from 'lucide-react'
 import { useTranslation } from '../../../../../contexts/LanguageContext'
 import { useNotification } from '../../../../../contexts/NotificationContext'
 import { formatNationalNumber, getNationalPhonePlaceholder, PhoneDialCode } from '../../../../CountryCodeSelect'
 import { getApiErrorCode } from '../../../../../types/domain'
 import { getErrorI18nKey } from '../../../../../data/errorCodes'
 import { useCheckoutServiceCatalog } from '../../../../../data/hooks/usePosCheckout'
-import { useAssignableStaffForService } from '../../../../../data/hooks/usePosOrders'
+import { useAssignableStaffForService, useCustomerLookupByPhone } from '../../../../../data/hooks/usePosOrders'
 import { useCreateStaffBooking } from '../../../../../data/hooks/usePosBooking'
 import IconButton from '../../../../ui/IconButton'
 import CategoryGroupedCatalogPicker from '../CategoryGroupedCatalogPicker'
@@ -80,6 +80,11 @@ export default function NewBookingForm({
   const [scheduledTime, setScheduledTime] = useState('')
   const [lines, setLines] = useState<BookingLineDraft[]>([])
   const [formError, setFormError] = useState('')
+
+  // Returning-customer hint (same lookup as the walk-in check-in's CustomerHeaderBar) —
+  // only offers a Name prefill here since the lookup carries no email, and this is a
+  // booking (no "last visit services" to reuse the way check-in does).
+  const { data: lookup } = useCustomerLookupByPhone(businessId, customerPhone)
 
   if (!open) return null
 
@@ -234,6 +239,24 @@ export default function NewBookingForm({
               </div>
             </div>
           </div>
+
+          {lookup && lookup.customerName && lookup.customerName !== customerName.trim() ? (
+            <div className="flex items-center justify-between gap-3 rounded-lg bg-nexoraCanvas px-3 py-2">
+              <p className="min-w-0 truncate text-[11px] font-semibold text-nexoraText">
+                {t('components.dashboard.views.pos.NewBookingForm.returningCustomerHint', {
+                  name: lookup.customerName,
+                })}
+              </p>
+              <button
+                type="button"
+                onClick={() => setCustomerName(lookup.customerName)}
+                className="flex shrink-0 items-center gap-1 rounded-lg border border-nexoraBrand px-2.5 py-1 text-[10px] font-bold text-nexoraBrand hover:bg-nexoraBrand hover:text-white"
+              >
+                <Check className="h-3 w-3" />
+                {t('components.dashboard.views.pos.NewBookingForm.useName')}
+              </button>
+            </div>
+          ) : null}
 
           <div>
             <h3 className="mb-2 text-[10px] font-black uppercase tracking-wider text-nexoraMuted">

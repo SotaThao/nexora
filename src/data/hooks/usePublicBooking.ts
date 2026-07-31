@@ -8,6 +8,7 @@ import publicBookingRepository from '../repositories/publicBooking'
 import type {
   CreatePublicBookingPayload,
   CreatePublicBookingResultApiDto,
+  CustomerLookupResultApiDto,
   ManageBookingApiDto,
   ManageBookingReschedulePayload,
   PublicAvailabilityApiDto,
@@ -15,12 +16,29 @@ import type {
   PublicBookingPageApiDto,
 } from '../../types/repositories'
 
+// Matches the Merchant check-in lookup's threshold (usePosOrders.ts) — don't fire until a
+// full national number has been entered.
+const CUSTOMER_LOOKUP_MIN_DIGITS = 10
+
 export function usePublicBookingPage(businessSlug?: string) {
   return useQuery<PublicBookingPageApiDto>({
     queryKey: qk.publicBookingPage(businessSlug),
     queryFn: () => publicBookingRepository.getBookingPage(businessSlug as string),
     enabled: Boolean(businessSlug),
     retry: false,
+  })
+}
+
+// Returning-customer contact-step prefill (Customer entity unification) — anonymous, so no
+// session gating unlike useCustomerLookupByPhone (the Merchant/authenticated equivalent).
+export function usePublicBookingCustomerLookup(businessSlug?: string, phone?: string) {
+  const digitCount = (phone ?? '').replace(/\D/g, '').length
+  return useQuery<CustomerLookupResultApiDto | null>({
+    queryKey: qk.publicBookingCustomerLookup(businessSlug, phone),
+    queryFn: () => publicBookingRepository.getCustomerLookup(businessSlug as string, phone as string),
+    enabled: Boolean(businessSlug) && digitCount >= CUSTOMER_LOOKUP_MIN_DIGITS,
+    retry: false,
+    staleTime: 30000,
   })
 }
 

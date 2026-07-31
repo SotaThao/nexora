@@ -6,13 +6,17 @@
 // name/phone/email. Step 4 ("confirmation"): ConfirmationScreen.
 import { useState } from 'react'
 import { useParams } from 'react-router-dom'
-import { Loader2 } from 'lucide-react'
+import { Check, Loader2 } from 'lucide-react'
 import { useTranslation } from '../../contexts/LanguageContext'
 import { useNotification } from '../../contexts/NotificationContext'
 import { formatNationalNumber, getNationalPhonePlaceholder, PhoneDialCode } from '../CountryCodeSelect'
 import { getApiErrorCode } from '../../types/domain'
 import { getErrorI18nKey } from '../../data/errorCodes'
-import { usePublicBookingPage, useCreatePublicBooking } from '../../data/hooks/usePublicBooking'
+import {
+  usePublicBookingCustomerLookup,
+  usePublicBookingPage,
+  useCreatePublicBooking,
+} from '../../data/hooks/usePublicBooking'
 import type { CreatePublicBookingResultApiDto, PublicBookingTechnicianApiDto } from '../../types/repositories'
 import DateTimeStep from '../booking-public/DateTimeStep'
 import ConfirmationScreen from '../booking-public/ConfirmationScreen'
@@ -111,6 +115,10 @@ export default function PublicBookingPage() {
   const [customerEmail, setCustomerEmail] = useState('')
   const [contactError, setContactError] = useState('')
   const [bookingResult, setBookingResult] = useState<CreatePublicBookingResultApiDto | null>(null)
+
+  // Returning-customer contact-step prefill (Customer entity unification) — same lookup as
+  // the POS Merchant check-in's CustomerHeaderBar, public/anonymous variant.
+  const { data: customerLookup } = usePublicBookingCustomerLookup(businessSlug, customerPhone)
 
   if (isLoading) {
     return (
@@ -282,6 +290,22 @@ export default function PublicBookingPage() {
               className="h-10 w-full rounded-lg border border-nexoraBorder bg-white px-3.5 text-xs text-nexoraText outline-none focus:border-nexoraBrand"
             />
           </div>
+          {customerLookup && customerLookup.customerName
+          && customerLookup.customerName !== customerName.trim() ? (
+            <div className="flex items-center justify-between gap-3 rounded-lg bg-nexoraCanvas px-3 py-2">
+              <p className="min-w-0 truncate text-[11px] font-semibold text-nexoraText">
+                {t('public.booking.returningCustomerHint', { name: customerLookup.customerName })}
+              </p>
+              <button
+                type="button"
+                onClick={() => setCustomerName(customerLookup.customerName)}
+                className="flex shrink-0 items-center gap-1 rounded-lg border border-nexoraBrand px-2.5 py-1 text-[10px] font-bold text-nexoraBrand hover:bg-nexoraBrand hover:text-white"
+              >
+                <Check className="h-3 w-3" />
+                {t('public.booking.useName')}
+              </button>
+            </div>
+          ) : null}
           <div>
             <label className="mb-1 block text-[10px] font-extrabold uppercase text-nexoraMuted">
               {t('public.booking.customerEmail')}

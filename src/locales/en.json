@@ -3209,7 +3209,9 @@
             "formIncomplete": "Please fill in customer name, phone, date/time, and at least one service.",
             "cancel": "Cancel",
             "createButton": "Create Booking",
-            "createSuccess": "Booking created and confirmed."
+            "createSuccess": "Booking created and confirmed.",
+            "returningCustomerHint": "Returning customer: {{name}}",
+            "useName": "Use name"
           }
         },
         "BookingHubView": {
@@ -5013,6 +5015,8 @@
       "customerName": "Full name",
       "customerPhone": "Phone number",
       "customerEmail": "Email (optional)",
+      "returningCustomerHint": "Welcome back, {{name}}!",
+      "useName": "Use this name",
       "confirmButton": "Confirm Booking",
       "formIncomplete": "Please fill in your name and phone number.",
       "confirmedTitle": "Booking Confirmed!",

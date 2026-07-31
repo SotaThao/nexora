@@ -3209,7 +3209,9 @@
             "formIncomplete": "Vui lòng nhập tên khách hàng, số điện thoại, ngày/giờ và ít nhất một dịch vụ.",
             "cancel": "Hủy",
             "createButton": "Tạo lịch hẹn",
-            "createSuccess": "Đã tạo lịch hẹn và xác nhận."
+            "createSuccess": "Đã tạo lịch hẹn và xác nhận.",
+            "returningCustomerHint": "Khách quen: {{name}}",
+            "useName": "Dùng tên này"
           }
         },
         "BookingHubView": {
@@ -5008,6 +5010,8 @@
       "customerName": "Họ và tên",
       "customerPhone": "Số điện thoại",
       "customerEmail": "Email (không bắt buộc)",
+      "returningCustomerHint": "Chào mừng trở lại, {{name}}!",
+      "useName": "Dùng tên này",
       "confirmButton": "Xác nhận đặt lịch",
       "formIncomplete": "Vui lòng nhập tên và số điện thoại.",
       "confirmedTitle": "Đã xác nhận lịch hẹn!",

@@ -6,6 +6,7 @@ import httpClient from '../../lib/httpClient'
 import type {
   CreatePublicBookingPayload,
   CreatePublicBookingResultApiDto,
+  CustomerLookupResultApiDto,
   ManageBookingApiDto,
   ManageBookingReschedulePayload,
   PublicAvailabilityApiDto,
@@ -44,6 +45,16 @@ export function createPublicBookingRepository(client: HttpClient = httpClient) {
         payload,
         { anonymous: true },
       )
+    },
+
+    // Returning-customer contact-step prefill — same "returning customer" suggestion as the
+    // POS Merchant check-in lookup, resolved by BusinessSlug since this page is anonymous.
+    async getCustomerLookup(businessSlug: string, phone: string): Promise<CustomerLookupResultApiDto | null> {
+      const res = await client.get<CustomerLookupResultApiDto | null>(
+        `/api/v1/booking/${encodeURIComponent(businessSlug)}/customer-lookup`,
+        { anonymous: true, params: { phone } },
+      )
+      return res ?? null
     },
 
     async getManageBooking(manageToken: string): Promise<ManageBookingApiDto> {
