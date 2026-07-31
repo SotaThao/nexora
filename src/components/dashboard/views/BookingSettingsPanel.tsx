@@ -2759,22 +2759,24 @@ export default function BookingSettingsPanel() {
         </SettingsCard>
       </div>
 
-      <article className="settings-card settings-team-card">
-        <div className="settings-card-head">
-          <div>
-            <div className="settings-card-title">
-              <span className="settings-card-title-icon">
-                <PeopleTabIcon />
-              </span>
-              {t(`${TK}.teamTitle`)}
-            </div>
-            <div className="settings-card-sub">{t(`${TK}.teamSub`)}</div>
-          </div>
-        </div>
+      <SettingsCard
+        cardId="team"
+        collapsed={isCollapsed("team")}
+        onToggle={toggleCard}
+        title={
+          <>
+            <span className="settings-card-title-icon">
+              <PeopleTabIcon />
+            </span>
+            {t(`${TK}.teamTitle`)}
+          </>
+        }
+        subtitle={t(`${TK}.teamSub`)}
+      >
         <div className="settings-team-slot">
           <BookingTeamPanel embedded />
         </div>
-      </article>
+      </SettingsCard>
 
       <div className="settings-two-grid">
         <SettingsCard

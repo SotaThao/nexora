@@ -3413,18 +3413,8 @@ body.booking-appointment-panel-modal-open {
   align-items: stretch;
 }
 
-.booking-hub-view .settings-team-card {
-  margin-top: 0;
-}
-
-.booking-hub-view .settings-team-card .settings-card-head {
-  cursor: default;
-  padding-bottom: 0;
-}
-
 .booking-hub-view .settings-team-slot {
   min-width: 0;
-  padding-top: 12px;
 }
 
 .booking-hub-view .settings-team-panel,
