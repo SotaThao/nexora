@@ -1,3 +1,6 @@
+/** Virtual "Other services" category id — not mutable via category CRUD. */
+export const OTHER_SERVICES_CATEGORY_ID = '00000000-0000-0000-0000-000000000001'
+
 /** Query param names for merchant `/nexora-voice/*` list endpoints (Swagger PascalCase). */
 export const MerchantVoiceListQueryParam = {
   PageNumber: 'PageNumber',
@@ -11,6 +14,11 @@ export const MerchantVoiceListQueryParam = {
   Keyword: 'Keyword',
   DateFrom: 'DateFrom',
   DateTo: 'DateTo',
+  /** GET `/usage/activity` */
+  CreditType: 'CreditType',
+  ActivityKinds: 'ActivityKinds',
+  FromUtc: 'FromUtc',
+  ToUtc: 'ToUtc',
 } as const
 
 /** Booking Hub route query values (not API enums). */
@@ -67,6 +75,117 @@ export enum SmsCreditTransactionType {
   Consumption = 'Consumption',
   Adjustment = 'Adjustment',
   Refund = 'Refund',
+}
+
+/** Wire enum — voice credit wallet type (GET /credits, GET /usage/activity). */
+export enum VoiceCreditType {
+  SmsSegment = 'SmsSegment',
+  CallMinute = 'CallMinute',
+}
+
+/** Wire enum — current plan tier on credit wallet overview. */
+export enum VoicePlanTier {
+  Starter = 'Starter',
+  Pro = 'Pro',
+  Elite = 'Elite',
+}
+
+/** Wire enum — current plan status on credit wallet overview. */
+export enum VoicePlanStatus {
+  Active = 'Active',
+  Expired = 'Expired',
+  Cancelled = 'Cancelled',
+}
+
+/** Wire enum — usage activity kind (GET /usage/activity). */
+export enum VoiceCreditActivityKind {
+  Unknown = 'Unknown',
+  InboundCall = 'InboundCall',
+  OutboundCall = 'OutboundCall',
+  SmsCampaign = 'SmsCampaign',
+  SmsAutoReply = 'SmsAutoReply',
+  SmsNotification = 'SmsNotification',
+  Purchase = 'Purchase',
+  PlanGrant = 'PlanGrant',
+  PlanReset = 'PlanReset',
+  AdminAdjustment = 'AdminAdjustment',
+  Refund = 'Refund',
+}
+
+/** UI filter chips for Credit Usage history (maps to VoiceCreditType or omit). */
+export enum CreditsUsageHistoryFilter {
+  All = 'all',
+  Sms = 'sms',
+  Voice = 'voice',
+}
+
+/** UI product badge for a credit wallet row. */
+export enum CreditsUsageProduct {
+  Sms = 'sms',
+  Voice = 'voice',
+}
+
+export const CREDITS_USAGE_HISTORY_FILTER_TO_CREDIT_TYPE: Record<
+  Exclude<CreditsUsageHistoryFilter, CreditsUsageHistoryFilter.All>,
+  VoiceCreditType
+> = {
+  [CreditsUsageHistoryFilter.Sms]: VoiceCreditType.SmsSegment,
+  [CreditsUsageHistoryFilter.Voice]: VoiceCreditType.CallMinute,
+}
+
+export const VOICE_CREDIT_TYPE_TO_PRODUCT: Record<VoiceCreditType, CreditsUsageProduct> = {
+  [VoiceCreditType.SmsSegment]: CreditsUsageProduct.Sms,
+  [VoiceCreditType.CallMinute]: CreditsUsageProduct.Voice,
+}
+
+export function normalizeVoiceCreditType(value: unknown): VoiceCreditType {
+  const normalized = String(value ?? '').trim()
+  const match = Object.values(VoiceCreditType).find(
+    (type) => type.toLowerCase() === normalized.toLowerCase(),
+  )
+  return match ?? VoiceCreditType.SmsSegment
+}
+
+export function normalizeVoicePlanTier(value: unknown): VoicePlanTier | null {
+  if (value == null || value === '') return null
+  const normalized = String(value).trim()
+  const match = Object.values(VoicePlanTier).find(
+    (tier) => tier.toLowerCase() === normalized.toLowerCase(),
+  )
+  return match ?? null
+}
+
+export function normalizeVoicePlanStatus(value: unknown): VoicePlanStatus | null {
+  if (value == null || value === '') return null
+  const normalized = String(value).trim()
+  const match = Object.values(VoicePlanStatus).find(
+    (status) => status.toLowerCase() === normalized.toLowerCase(),
+  )
+  return match ?? null
+}
+
+/** True when merchant has joined a voice plan (or active trial) — used to gate Credit Usage. */
+export function hasJoinedVoicePlan(wallet: {
+  planTier: VoicePlanTier | null
+  isTrial: boolean
+} | null | undefined): boolean {
+  if (!wallet) return false
+  return wallet.planTier != null || wallet.isTrial
+}
+
+export function normalizeVoiceCreditActivityKind(value: unknown): VoiceCreditActivityKind {
+  const normalized = String(value ?? '').trim()
+  const match = Object.values(VoiceCreditActivityKind).find(
+    (kind) => kind.toLowerCase() === normalized.toLowerCase(),
+  )
+  return match ?? VoiceCreditActivityKind.Unknown
+}
+
+export function mapCreditsUsageHistoryFilterToCreditType(
+  filter: CreditsUsageHistoryFilter,
+): VoiceCreditType | undefined {
+  if (filter === CreditsUsageHistoryFilter.All) return undefined
+  return CREDITS_USAGE_HISTORY_FILTER_TO_CREDIT_TYPE[filter]
 }
 
 /** Wire enum — SMS text encoding (API). */
@@ -208,6 +327,7 @@ export function isSmsCampaignAutoToggleable(
 
 export enum BookingHubSubTab {
   Today = 'today',
+  Calendar = 'calendar',
   Team = 'team',
 }
 
@@ -348,13 +468,32 @@ export type MerchantVoiceStaffActivityStatusApiValue =
   typeof MerchantVoiceStaffActivityStatusApi[keyof typeof MerchantVoiceStaffActivityStatusApi]
 
 export enum MerchantVoiceConfigLanguage {
+  Auto = 'auto',
   ViVN = 'vi-VN',
   EnUS = 'en-US',
 }
 
 export enum MerchantVoiceUiLanguage {
+  Auto = 'auto',
   Vi = 'vi',
   En = 'en',
+}
+
+/** Legacy / alternate wire values that still map to Auto. */
+const MERCHANT_VOICE_CONFIG_LANGUAGE_AUTO_ALIASES = new Set<string>([
+  MerchantVoiceConfigLanguage.Auto,
+  MerchantVoiceUiLanguage.Auto,
+  'auto-detect',
+  'bilingual',
+])
+
+const MERCHANT_VOICE_UI_TO_CONFIG_LANGUAGE: Record<
+  MerchantVoiceUiLanguage,
+  MerchantVoiceConfigLanguage
+> = {
+  [MerchantVoiceUiLanguage.Auto]: MerchantVoiceConfigLanguage.Auto,
+  [MerchantVoiceUiLanguage.Vi]: MerchantVoiceConfigLanguage.ViVN,
+  [MerchantVoiceUiLanguage.En]: MerchantVoiceConfigLanguage.EnUS,
 }
 
 export enum MerchantVoiceErrorCode {
@@ -366,6 +505,11 @@ export enum MerchantVoiceErrorCode {
   CallCallerPhoneMissing = 'VOICE_CALL_CALLER_PHONE_MISSING',
   CallNotFound = 'VOICE_CALL_NOT_FOUND',
   CustomerNotFound = 'VOICE_CUSTOMER_NOT_FOUND',
+  UserNotMerchant = 'USER_NOT_MERCHANT',
+  VoiceTenantNotFound = 'VOICE_TENANT_NOT_FOUND',
+  CommonForbidden = 'COMMON_FORBIDDEN',
+  CommonNotFound = 'COMMON_NOT_FOUND',
+  CommonValidationError = 'COMMON_VALIDATION_ERROR',
 }
 
 /** Call outcome as returned by GET /calls (serialized as string on the wire). */
@@ -713,6 +857,9 @@ export function mapDayOfWeekToApiName(day: MerchantVoiceDayOfWeek): MerchantVoic
 
 export function mapConfigLanguageToUiLanguage(language: string | null | undefined): MerchantVoiceUiLanguage {
   const normalized = String(language ?? '').trim().toLowerCase()
+  if (MERCHANT_VOICE_CONFIG_LANGUAGE_AUTO_ALIASES.has(normalized)) {
+    return MerchantVoiceUiLanguage.Auto
+  }
   if (
     normalized === MerchantVoiceConfigLanguage.ViVN.toLowerCase()
     || normalized === MerchantVoiceUiLanguage.Vi
@@ -720,14 +867,19 @@ export function mapConfigLanguageToUiLanguage(language: string | null | undefine
   ) {
     return MerchantVoiceUiLanguage.Vi
   }
-  // Treat unknown values as English — UI only exposes VI + EN.
-  return MerchantVoiceUiLanguage.En
+  if (
+    normalized === MerchantVoiceConfigLanguage.EnUS.toLowerCase()
+    || normalized === MerchantVoiceUiLanguage.En
+    || normalized.startsWith('en')
+  ) {
+    return MerchantVoiceUiLanguage.En
+  }
+  // Unknown values default to Auto (HTML Settings default).
+  return MerchantVoiceUiLanguage.Auto
 }
 
 export function mapUiLanguageToConfigLanguage(language: MerchantVoiceUiLanguage): MerchantVoiceConfigLanguage {
-  return language === MerchantVoiceUiLanguage.Vi
-    ? MerchantVoiceConfigLanguage.ViVN
-    : MerchantVoiceConfigLanguage.EnUS
+  return MERCHANT_VOICE_UI_TO_CONFIG_LANGUAGE[language] ?? MerchantVoiceConfigLanguage.EnUS
 }
 
 export function parseBookingHubMainTab(value: string | null): BookingHubMainTab {
@@ -739,7 +891,11 @@ export function parseBookingHubMainTab(value: string | null): BookingHubMainTab 
   return BookingHubMainTab.Booking
 }
 
+const BOOKING_HUB_SUB_TAB_VALUES = new Set<string>(Object.values(BookingHubSubTab))
+
 export function parseBookingHubSubTab(value: string | null): BookingHubSubTab {
-  if (value === BookingHubSubTab.Team) return BookingHubSubTab.Team
+  if (value && BOOKING_HUB_SUB_TAB_VALUES.has(value)) {
+    return value as BookingHubSubTab
+  }
   return BookingHubSubTab.Today
 }

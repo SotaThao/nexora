@@ -38,6 +38,11 @@ export function isBookingHubVietnamese(language: string = 'en'): boolean {
   return String(language || 'en').toLowerCase().startsWith('vi')
 }
 
+/** BCP 47 tag for Booking Hub date/time widgets (`vi` → `vi-VN`). */
+export function toBookingHubLocaleTag(language: string = 'en'): string {
+  return isBookingHubVietnamese(language) ? 'vi-VN' : 'en-US'
+}
+
 function bookingHubLocalTimeZone(): string {
   return Intl.DateTimeFormat().resolvedOptions().timeZone
 }

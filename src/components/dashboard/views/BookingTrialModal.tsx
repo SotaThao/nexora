@@ -59,15 +59,18 @@ type HourRow = {
 
 type HoursByDay = Record<DayKey, HourRow>;
 
+const DEFAULT_OPEN_TIME = "09:00";
+const DEFAULT_CLOSE_TIME = "19:00";
+
 function createInitialHours(): HoursByDay {
   return {
-    mon: { open: true, openTime: "07:00", closeTime: "21:00" },
-    tue: { open: true, openTime: "07:00", closeTime: "21:00" },
-    wed: { open: true, openTime: "07:00", closeTime: "21:00" },
-    thu: { open: true, openTime: "07:00", closeTime: "21:00" },
-    fri: { open: true, openTime: "07:00", closeTime: "21:00" },
-    sat: { open: false, openTime: "10:00", closeTime: "16:00" },
-    sun: { open: false, openTime: "09:00", closeTime: "19:00" },
+    mon: { open: true, openTime: DEFAULT_OPEN_TIME, closeTime: DEFAULT_CLOSE_TIME },
+    tue: { open: true, openTime: DEFAULT_OPEN_TIME, closeTime: DEFAULT_CLOSE_TIME },
+    wed: { open: true, openTime: DEFAULT_OPEN_TIME, closeTime: DEFAULT_CLOSE_TIME },
+    thu: { open: true, openTime: DEFAULT_OPEN_TIME, closeTime: DEFAULT_CLOSE_TIME },
+    fri: { open: true, openTime: DEFAULT_OPEN_TIME, closeTime: DEFAULT_CLOSE_TIME },
+    sat: { open: false, openTime: DEFAULT_OPEN_TIME, closeTime: DEFAULT_CLOSE_TIME },
+    sun: { open: false, openTime: DEFAULT_OPEN_TIME, closeTime: DEFAULT_CLOSE_TIME },
   };
 }
 

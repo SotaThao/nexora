@@ -32,8 +32,8 @@ export default function MasterWelcomeQrPanel({
 
   return (
     <div className={`${gatewayCardClass} flex flex-col gap-5`}>
-      <div className="flex flex-col gap-5 md:flex-row md:justify-between">
-        <div className="md:min-w-0 md:flex-grow">
+      <div className="flex flex-1 flex-col gap-5 2xl:flex-row 2xl:justify-between">
+        <div className="2xl:min-w-0 2xl:flex-grow">
           <div className="flex items-center gap-2">
             <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-nexoraBrandSoft text-nexoraBrand">
               <QrCode className="h-5 w-5" />
@@ -42,34 +42,16 @@ export default function MasterWelcomeQrPanel({
               {t('dashboard.master_gateway.qr_title')}
             </h3>
           </div>
-          <p className="mt-4 text-xs leading-normal text-nexoraMuted">
+          <p className="mt-3 text-xs leading-normal text-nexoraMuted">
             {t('dashboard.master_gateway.qr_body')}
           </p>
-
-          <div className="mt-3 flex items-center justify-between gap-2 rounded-lg border border-nexoraBorder bg-white py-1.5 pl-4 pr-1.5">
-            <input
-              type="text"
-              readOnly
-              value={qrLink ? qrLink.replace(/^https?:\/\//, '') : ''}
-              className="min-w-0 flex-1 truncate bg-transparent text-xs font-semibold text-nexoraBrand"
-            />
-            <button
-              type="button"
-              onClick={() => void handleCopy()}
-              disabled={!qrLink}
-              aria-label={t('dashboard.master_gateway.btn_copy_link')}
-              className="flex h-7 w-7 shrink-0 items-center justify-center rounded-md text-nexoraMuted transition hover:bg-nexoraSurfaceMuted hover:text-nexoraBrand disabled:cursor-not-allowed disabled:opacity-40"
-            >
-              {copied ? <Check className="h-4 w-4 text-emerald-600" /> : <Copy className="h-4 w-4" />}
-            </button>
-          </div>
         </div>
 
         <button
           type="button"
           onClick={onPreview}
           aria-label={t('components.settings.SettingsTipQrPanel.previewQr')}
-          className="mx-auto flex h-28 w-28 shrink-0 items-center justify-center rounded-lg border border-nexoraBorder/80 bg-white p-2 shadow-sm relative overflow-hidden cursor-pointer hover:border-nexoraBrand transition select-none group md:mx-0 md:self-start"
+          className="mx-auto mt-auto flex h-28 w-28 shrink-0 items-center justify-center rounded-lg border border-nexoraBorder/80 bg-white p-2 shadow-sm relative overflow-hidden cursor-pointer hover:border-nexoraBrand transition select-none group 2xl:mx-0 2xl:mt-0 2xl:self-start"
         >
           {qrPreviewUrl ? (
             <QrImage
@@ -86,6 +68,24 @@ export default function MasterWelcomeQrPanel({
               {t('components.dashboard.views.StaffView.preview')}
             </span>
           </div>
+        </button>
+      </div>
+
+      <div className="flex items-center justify-between gap-2 rounded-lg border border-nexoraBorder bg-white py-1.5 pl-4 pr-1.5">
+        <input
+          type="text"
+          readOnly
+          value={qrLink ? qrLink.replace(/^https?:\/\//, '') : ''}
+          className="min-w-0 flex-1 truncate bg-transparent text-xs font-semibold text-nexoraBrand"
+        />
+        <button
+          type="button"
+          onClick={() => void handleCopy()}
+          disabled={!qrLink}
+          aria-label={t('dashboard.master_gateway.btn_copy_link')}
+          className="flex h-7 w-7 shrink-0 items-center justify-center rounded-md text-nexoraMuted transition hover:bg-nexoraSurfaceMuted hover:text-nexoraBrand disabled:cursor-not-allowed disabled:opacity-40"
+        >
+          {copied ? <Check className="h-4 w-4 text-emerald-600" /> : <Copy className="h-4 w-4" />}
         </button>
       </div>
 

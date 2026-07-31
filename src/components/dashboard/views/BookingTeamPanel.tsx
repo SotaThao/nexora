@@ -8,12 +8,17 @@ import { getErrorI18nKey } from "../../../data/errorCodes";
 import {
   useCreateMerchantVoiceStaff,
   useMerchantVoiceBusinessStaff,
-  useMerchantVoiceConfig,
+  useMerchantVoiceServiceCategories,
+  useMerchantVoiceServices,
   useMerchantVoiceStaff,
   useMerchantVoiceStaffById,
   useToggleMerchantVoiceStaffStatus,
   useUpdateMerchantVoiceStaff,
 } from "../../../data/hooks/useMerchantVoiceBookings";
+import {
+  buildMerchantVoiceServiceSections,
+  flattenMerchantVoiceServiceSections,
+} from "../../../data/merchantVoice/serviceCatalog";
 import {
   isStaffStatusActive,
   mapDayOfWeekToApiName,
@@ -23,6 +28,7 @@ import {
   normalizeMerchantVoiceDayOfWeek,
   type MerchantVoiceStaffDto,
 } from "../../../data/repositories/merchantVoice";
+import { formatServicePrice } from "../../../data/repositories/publicVoiceBooking";
 import { usePagination } from "../../../hooks/usePagination";
 import { getApiErrorCode } from "../../../types/domain";
 import CountryCodeSelect, {
@@ -32,7 +38,12 @@ import CountryCodeSelect, {
   parsePhone,
 } from "../../CountryCodeSelect";
 import Pagination from "../../ui/Pagination";
-import { PencilIcon, SpinnerIcon, XLgIcon } from "./BookingHubIcons";
+import {
+  ClockIcon,
+  PencilIcon,
+  SpinnerIcon,
+  XLgIcon,
+} from "./BookingHubIcons";
 import {
   BookingTeamGridSkeleton,
   BookingTechModalProfileSkeleton,
@@ -41,9 +52,15 @@ import {
   BookingTechStaffListSkeleton,
 } from "./BookingHubSkeletons";
 import { useBookingHubVoiceEnabled } from "./BookingHubVoiceContext";
+import { BOOKING_CREATE_DISPLAY_SEPARATOR } from "./bookingCreateConstants";
+import { openNativeDateTimePicker } from "./bookingHubFormatters";
 
 const TK = "components.dashboard.views.BookingHubView.team";
 const TK_HUB = "components.dashboard.views.BookingHubView";
+/** Same category accordion copy as Settings / New Appointment. */
+const TK_SETTINGS = "components.dashboard.views.BookingHubView.settings";
+const TK_CREATE =
+  "components.dashboard.views.BookingHubView.today.create";
 
 const DAY_KEYS = ["mon", "tue", "wed", "thu", "fri", "sat", "sun"] as const;
 
@@ -464,6 +481,61 @@ function CalendarWeekIcon() {
   );
 }
 
+function TechScheduleTimeBox({
+  value,
+  disabled,
+  invalid,
+  ariaLabel,
+  onChange,
+}: {
+  value: string;
+  disabled: boolean;
+  invalid: boolean;
+  ariaLabel: string;
+  onChange: (next: string) => void;
+}) {
+  return (
+    <div
+      className="settings-time-box"
+      role="button"
+      tabIndex={disabled ? -1 : 0}
+      aria-label={ariaLabel}
+      onClick={(event) => {
+        event.stopPropagation();
+        if (disabled) return;
+        const input = event.currentTarget.querySelector("input");
+        if (input instanceof HTMLInputElement) {
+          openNativeDateTimePicker(input);
+        }
+      }}
+      onKeyDown={(event) => {
+        if (event.key === "Enter" || event.key === " ") {
+          event.preventDefault();
+          event.stopPropagation();
+          if (disabled) return;
+          openNativeDateTimePicker(
+            event.currentTarget.querySelector("input"),
+          );
+        }
+      }}
+    >
+      <input
+        className="settings-hour-input"
+        type="time"
+        value={value}
+        lang="en-US-u-hc-h12"
+        step={60}
+        disabled={disabled}
+        aria-invalid={invalid}
+        aria-label={ariaLabel}
+        onClick={(event) => event.stopPropagation()}
+        onChange={(event) => onChange(event.target.value)}
+      />
+      <ClockIcon />
+    </div>
+  );
+}
+
 function CloseIcon() {
   return (
     <svg
@@ -503,7 +575,12 @@ function CheckIcon() {
   );
 }
 
-export default function BookingTeamPanel() {
+interface Props {
+  /** When true, render without Booking Book sub-panel / overview-card chrome (Settings embed). */
+  embedded?: boolean
+}
+
+export default function BookingTeamPanel({ embedded = false }: Props) {
   const { t } = useTranslation();
   const { showToast } = useNotification();
   const voiceEnabled = useBookingHubVoiceEnabled();
@@ -517,6 +594,9 @@ export default function BookingTeamPanel() {
   const [draftPhone, setDraftPhone] = useState("");
   const [draftEmail, setDraftEmail] = useState("");
   const [draftServices, setDraftServices] = useState<string[]>([]);
+  const [openServiceCategoryIds, setOpenServiceCategoryIds] = useState(
+    () => new Set<string>(),
+  );
   const [draftStaffProfileId, setDraftStaffProfileId] = useState<string | null>(
     null,
   );
@@ -551,8 +631,12 @@ export default function BookingTeamPanel() {
       { searchTerm: debouncedSearchQuery },
       { enabled: voiceEnabled && modalOpen },
     );
-  const { data: configResponse, isLoading: isConfigLoading } =
-    useMerchantVoiceConfig({
+  const { data: categoriesResponse, isLoading: isCategoriesLoading } =
+    useMerchantVoiceServiceCategories({
+      enabled: voiceEnabled && modalOpen,
+    });
+  const { data: servicesResponse, isLoading: isServicesLoading } =
+    useMerchantVoiceServices({
       enabled: voiceEnabled && modalOpen,
     });
   const [members, setMembers] = useState<TeamMember[]>(INITIAL_TEAM_MEMBERS);
@@ -584,15 +668,20 @@ export default function BookingTeamPanel() {
 
   const filteredBusinessStaff = businessStaffOptions;
 
+  const serviceSections = useMemo(
+    () =>
+      buildMerchantVoiceServiceSections(categoriesResponse, servicesResponse),
+    [categoriesResponse, servicesResponse],
+  );
+
   const serviceOptions = useMemo(() => {
-    const apiServices = configResponse?.services ?? [];
-    const activeSorted = [...apiServices]
-      .filter((service) => service.isActive)
-      .sort((a, b) => a.sortOrder - b.sortOrder)
+    const names = flattenMerchantVoiceServiceSections(serviceSections)
       .map((service) => service.name.trim())
       .filter(Boolean);
-    return Array.from(new Set(activeSorted));
-  }, [configResponse?.services]);
+    return Array.from(new Set(names));
+  }, [serviceSections]);
+
+  const isServiceCatalogLoading = isCategoriesLoading || isServicesLoading;
 
   const draftPhoneParsed = useMemo(() => parsePhone(draftPhone), [draftPhone]);
 
@@ -609,6 +698,7 @@ export default function BookingTeamPanel() {
       setDraftPhone("");
       setDraftEmail("");
       setDraftServices([]);
+      setOpenServiceCategoryIds(new Set());
       setDraftStaffProfileId(null);
       setDraftSchedule(emptySchedule());
       setFormErrors({});
@@ -619,6 +709,7 @@ export default function BookingTeamPanel() {
     setDraftPhone(member.phone);
     setDraftEmail(member.email);
     setDraftServices([...member.services]);
+    setOpenServiceCategoryIds(new Set());
     setDraftStaffProfileId(null);
     setDraftSchedule(scheduleOverride ?? parseSchedule(member.schedule));
     setFormErrors({});
@@ -676,6 +767,7 @@ export default function BookingTeamPanel() {
     setDraftPhone(staff.phone);
     setDraftEmail(staff.email);
     setDraftServices([]);
+    setOpenServiceCategoryIds(new Set());
     setDraftStaffProfileId(staff.id);
     setDraftSchedule(emptySchedule());
     setFormErrors({});
@@ -693,12 +785,23 @@ export default function BookingTeamPanel() {
   };
 
   const toggleService = (service: string) => {
+    const name = service.trim();
+    if (!name) return;
     setDraftServices((prev) =>
-      prev.includes(service)
-        ? prev.filter((item) => item !== service)
-        : [...prev, service],
+      prev.includes(name)
+        ? prev.filter((item) => item !== name)
+        : [...prev, name],
     );
     setFormErrors((prev) => ({ ...prev, services: "" }));
+  };
+
+  const toggleServiceCategory = (categoryId: string) => {
+    setOpenServiceCategoryIds((prev) => {
+      const next = new Set(prev);
+      if (next.has(categoryId)) next.delete(categoryId);
+      else next.add(categoryId);
+      return next;
+    });
   };
 
   const allServicesSelected = useMemo(
@@ -983,6 +1086,19 @@ export default function BookingTeamPanel() {
     };
   }, [modalOpen]);
 
+  // Keep open ids in sync with the catalog; do not auto-expand any category.
+  useEffect(() => {
+    if (!modalOpen || serviceSections.length === 0) return;
+    setOpenServiceCategoryIds((prev) => {
+      const valid = new Set(
+        [...prev].filter((id) =>
+          serviceSections.some((section) => section.id === id),
+        ),
+      );
+      return valid;
+    });
+  }, [modalOpen, serviceSections]);
+
   useEffect(() => {
     if (!comboboxOpen) return undefined;
 
@@ -1004,8 +1120,11 @@ export default function BookingTeamPanel() {
   }, [searchQuery]);
 
   return (
-    <div className="booking-sub-panel is-active" aria-busy={isStaffLoading}>
-      <article className="overview-card overview-card-pad">
+    <div
+      className={embedded ? "settings-team-panel" : "booking-sub-panel is-active"}
+      aria-busy={isStaffLoading}
+    >
+      <article className={embedded ? "settings-team-body" : "overview-card overview-card-pad"}>
         <div className="tech-intro">
           <div className="tech-intro-text">{t(`${TK}.intro`)}</div>
           <button
@@ -1369,7 +1488,8 @@ export default function BookingTeamPanel() {
                         <span className="settings-label">
                           {t(`${TK}.services`)}
                         </span>
-                        {!isConfigLoading && serviceOptions.length > 0 ? (
+                        {!isServiceCatalogLoading &&
+                        serviceOptions.length > 0 ? (
                           <label className="tech-service-check-all-toggle">
                             <input
                               ref={checkAllServicesRef}
@@ -1381,20 +1501,116 @@ export default function BookingTeamPanel() {
                           </label>
                         ) : null}
                       </div>
-                      {isConfigLoading ? (
+                      {isServiceCatalogLoading ? (
                         <BookingTechServicesSkeleton count={4} />
-                      ) : serviceOptions.length > 0 ? (
-                        <div className="tech-service-checks">
-                          {serviceOptions.map((service) => (
-                            <label className="tech-service-check" key={service}>
-                              <input
-                                type="checkbox"
-                                checked={draftServices.includes(service)}
-                                onChange={() => toggleService(service)}
-                              />
-                              {service}
-                            </label>
-                          ))}
+                      ) : serviceSections.length > 0 ? (
+                        <div
+                          className={`booking-create-service-groups${formErrors.services ? " has-error" : ""}`}
+                          role="group"
+                          aria-label={t(`${TK}.services`)}
+                          aria-invalid={Boolean(formErrors.services)}
+                        >
+                          {serviceSections.map((section) => {
+                            const isOpen = openServiceCategoryIds.has(
+                              section.id,
+                            );
+                            const count = section.services.length;
+                            const panelId = `tech-service-panel-${section.id}`;
+                            return (
+                              <div
+                                className={`settings-service-category booking-create-service-accordion${isOpen ? " is-open" : ""}`}
+                                key={section.id}
+                              >
+                                <button
+                                  className="settings-service-category-head booking-create-service-accordion-head"
+                                  type="button"
+                                  aria-expanded={isOpen}
+                                  aria-controls={panelId}
+                                  onClick={() =>
+                                    toggleServiceCategory(section.id)
+                                  }
+                                >
+                                  <span className="settings-service-category-name">
+                                    {section.name}
+                                  </span>
+                                  <span className="settings-service-category-count">
+                                    {count === 1
+                                      ? t(
+                                          `${TK_SETTINGS}.categoryServiceCountOne`,
+                                        )
+                                      : t(
+                                          `${TK_SETTINGS}.categoryServiceCount`,
+                                          { count },
+                                        )}
+                                  </span>
+                                  <svg
+                                    className="settings-service-category-chevron"
+                                    viewBox="0 0 24 24"
+                                    fill="none"
+                                    aria-hidden="true"
+                                    width="16"
+                                    height="16"
+                                  >
+                                    <path
+                                      d="m6 9 6 6 6-6"
+                                      stroke="currentColor"
+                                      strokeWidth="2"
+                                      strokeLinecap="round"
+                                      strokeLinejoin="round"
+                                    />
+                                  </svg>
+                                </button>
+                                <div
+                                  className="booking-create-service-accordion-panel"
+                                  id={panelId}
+                                  role="region"
+                                  aria-hidden={!isOpen}
+                                >
+                                  <div className="booking-create-service-accordion-panel-inner">
+                                    <div className="settings-service-category-body">
+                                      <div className="booking-service-chips">
+                                        {section.services.map((service) => {
+                                          const name = service.name.trim();
+                                          const selected =
+                                            Boolean(name) &&
+                                            draftServices.includes(name);
+                                          const duration =
+                                            service.durationMinutes ?? 0;
+                                          return (
+                                            <button
+                                              key={`${section.id}-${service.id}`}
+                                              className={`booking-service-chip-button${selected ? " is-selected" : ""}`}
+                                              type="button"
+                                              aria-pressed={selected}
+                                              tabIndex={isOpen ? 0 : -1}
+                                              onClick={() =>
+                                                toggleService(name)
+                                              }
+                                            >
+                                              {name}
+                                              {BOOKING_CREATE_DISPLAY_SEPARATOR}
+                                              {formatServicePrice(
+                                                service.price,
+                                              )}
+                                              {
+                                                BOOKING_CREATE_DISPLAY_SEPARATOR
+                                              }
+                                              <span className="booking-service-duration">
+                                                {t(
+                                                  `${TK_CREATE}.durationMin`,
+                                                  { count: duration },
+                                                )}
+                                              </span>
+                                            </button>
+                                          );
+                                        })}
+                                      </div>
+                                    </div>
+                                  </div>
+                                </div>
+                              </div>
+                            );
+                          })}
                         </div>
                       ) : (
                         <div className="tech-service-empty">
@@ -1470,43 +1686,29 @@ export default function BookingTeamPanel() {
                               className="tech-schedule-time"
                               lang="en-US-u-hc-h12"
                             >
-                              <input
-                                type="time"
+                              <TechScheduleTimeBox
                                 value={row.start}
-                                lang="en-US-u-hc-h12"
-                                step={60}
                                 disabled={row.dayOff}
-                                aria-invalid={
+                                invalid={
                                   showRowError &&
                                   (rowMissingTime || isScheduleRowInvalid(row))
                                 }
-                                onClick={(event) => event.stopPropagation()}
-                                onChange={(event) =>
-                                  updateScheduleTime(
-                                    day,
-                                    "start",
-                                    event.target.value,
-                                  )
+                                ariaLabel={`${t(`${TK}.days.${day}`)} ${t(`${TK}.scheduleTo`)}`}
+                                onChange={(next) =>
+                                  updateScheduleTime(day, "start", next)
                                 }
                               />
                               <span>{t(`${TK}.scheduleTo`)}</span>
-                              <input
-                                type="time"
+                              <TechScheduleTimeBox
                                 value={row.end}
-                                lang="en-US-u-hc-h12"
-                                step={60}
                                 disabled={row.dayOff}
-                                aria-invalid={
+                                invalid={
                                   showRowError &&
                                   (rowMissingTime || isScheduleRowInvalid(row))
                                 }
-                                onClick={(event) => event.stopPropagation()}
-                                onChange={(event) =>
-                                  updateScheduleTime(
-                                    day,
-                                    "end",
-                                    event.target.value,
-                                  )
+                                ariaLabel={`${t(`${TK}.days.${day}`)} ${t(`${TK}.scheduleTo`)}`}
+                                onChange={(next) =>
+                                  updateScheduleTime(day, "end", next)
                                 }
                               />
                             </span>

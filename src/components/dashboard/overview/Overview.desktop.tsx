@@ -450,26 +450,6 @@ function Overview({
         )}
       </div>
 
-      {/* Panels Grid */}
-      <div className="grid grid-cols-1 gap-6 2xl:grid-cols-[minmax(0,2fr)_minmax(360px,1fr)]">
-        <TipsOverTimePanel
-          range={chartRange}
-          setRange={setChartRange}
-          chartStartDate={chartStartDate}
-          chartEndDate={chartEndDate}
-          setChartStartDate={setChartStartDate}
-          setChartEndDate={setChartEndDate}
-        />
-        <StaffLeaderboardPanel
-          selectedStaff={selectedStaff}
-          setSelectedStaff={setSelectedStaff}
-          hasKyb={hasKyb}
-          chartStartDate={chartStartDate}
-          chartEndDate={chartEndDate}
-          onOpenStaff={onOpenStaff}
-        />
-      </div>
-
       {/* Master Gateways Panel */}
       <Panel className="p-7">
         <h2 className="text-sm font-extrabold text-nexoraText uppercase tracking-wider">
@@ -528,6 +508,26 @@ function Overview({
           )}
         </div>
       </Panel>
+
+      {/* Panels Grid */}
+      <div className="grid grid-cols-1 gap-6 2xl:grid-cols-[minmax(0,2fr)_minmax(360px,1fr)]">
+        <TipsOverTimePanel
+          range={chartRange}
+          setRange={setChartRange}
+          chartStartDate={chartStartDate}
+          chartEndDate={chartEndDate}
+          setChartStartDate={setChartStartDate}
+          setChartEndDate={setChartEndDate}
+        />
+        <StaffLeaderboardPanel
+          selectedStaff={selectedStaff}
+          setSelectedStaff={setSelectedStaff}
+          hasKyb={hasKyb}
+          chartStartDate={chartStartDate}
+          chartEndDate={chartEndDate}
+          onOpenStaff={onOpenStaff}
+        />
+      </div>
 
       {/* Review metrics — Google / Yelp / Response / Returning */}
       <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-4">

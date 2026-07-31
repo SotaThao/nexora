@@ -3,14 +3,40 @@ import { BookingUiSearchField, BookingUiStatus } from '../../../data/repositorie
 export enum BookingTodayViewMode {
   Table = 'table',
   Card = 'card',
+}
+
+/** Appointments list vs team calendar workspace (Booking Book subtabs). */
+export enum BookingTodayLayout {
+  Appointments = 'appointments',
   Calendar = 'calendar',
 }
 
 export const BOOKING_TODAY_VIEW_MODE_ORDER = [
   BookingTodayViewMode.Table,
   BookingTodayViewMode.Card,
-  BookingTodayViewMode.Calendar,
 ] as const
+
+/**
+ * Below this width the calendar appointment side panel uses overlay presentation
+ * (matches HTML `bookingAppointmentPanelUsesModal`). Keep CSS `@media` in sync.
+ */
+export const BOOKING_APPOINTMENT_PANEL_MODAL_MAX_PX = 1399
+
+export const BOOKING_APPOINTMENT_PANEL_MODAL_MQ =
+  `(max-width: ${BOOKING_APPOINTMENT_PANEL_MODAL_MAX_PX}px)` as const
+
+export const BOOKING_APPOINTMENT_PANEL_MODAL_BODY_CLASS =
+  'booking-appointment-panel-modal-open' as const
+
+export enum BookingAppointmentPanelPresentation {
+  Rail = 'rail',
+  Modal = 'modal',
+}
+
+export enum BookingAppointmentPanelState {
+  Empty = 'empty',
+  New = 'new',
+}
 
 export const BOOKING_STATUS_META: Record<
   BookingUiStatus,
@@ -80,7 +106,7 @@ export const BOOKING_CALENDAR_DEFAULT_SCROLL_HOUR = 9
 export const BOOKING_CALENDAR_DAYPILOT_OPTIONS = {
   viewType: 'Resources' as const,
   businessBeginsHour: BOOKING_CALENDAR_DEFAULT_SCROLL_HOUR,
-  businessEndsHour: 20,
+  businessEndsHour: 19,
   heightSpec: 'BusinessHours' as const,
   cellDuration: BOOKING_CALENDAR_CELL_DURATION_MINUTES,
   cellHeight: 28,

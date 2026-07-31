@@ -131,11 +131,14 @@ export const qk = {
   merchantVoiceStaffById: (id?: string | null) => ['merchantVoice', 'staff', 'detail', id ?? ''],
   merchantVoiceBusinessStaff: (filters = EMPTY) => ['merchantVoice', 'staff', 'businessStaff', filters],
   merchantVoiceConfig: () => ['merchantVoice', 'config'],
+  merchantVoiceServiceCategories: () => ['merchantVoice', 'service-categories'],
+  merchantVoiceServices: () => ['merchantVoice', 'services'],
   merchantVoiceTenantStatus: () => ['merchantVoice', 'tenant', 'status'],
   merchantVoiceMyTenant: () => ['merchantVoice', 'tenant', 'my'],
   merchantVoiceCalls: (filters = EMPTY) => ['merchantVoice', 'calls', filters],
   merchantVoiceCallStatistics: () => ['merchantVoice', 'calls', 'statistics'],
   merchantVoiceCustomers: (filters = EMPTY) => ['merchantVoice', 'customers', filters],
+  merchantVoiceCustomersRoot: () => ['merchantVoice', 'customers'] as const,
   merchantVoiceCustomerSummary: () => ['merchantVoice', 'customers', 'summary'],
   merchantVoiceSmsCampaignDashboard: () => ['merchantVoice', 'smsCampaigns', 'dashboard'],
   merchantVoiceSmsCampaignAudienceSummary: () => ['merchantVoice', 'smsCampaigns', 'audience-summary'],
@@ -150,6 +153,8 @@ export const qk = {
   ],
   merchantVoiceSmsCreditSummary: () => ['merchantVoice', 'smsCredits', 'summary'],
   merchantVoiceSmsCreditHistory: (filters = EMPTY) => ['merchantVoice', 'smsCredits', 'history', filters],
+  merchantVoiceCreditWallet: () => ['merchantVoice', 'credits', 'wallet'],
+  merchantVoiceUsageActivity: (filters = EMPTY) => ['merchantVoice', 'usage', 'activity', filters],
 
   // Nexora Voice trial (merchant)
   voiceTrialRequestMe: () => ['nexora-voice', 'trial-request', 'me'],

@@ -16,6 +16,16 @@ export default function OverviewSkeleton() {
         ))}
       </div>
 
+      <Panel className="p-7">
+        <Skeleton width="36%" height={16} borderRadius={6} />
+        <Skeleton width="55%" height={12} className="mt-2" borderRadius={6} />
+        <div className="mt-8 grid grid-cols-1 gap-6 md:grid-cols-2 xl:grid-cols-3">
+          <Skeleton height={196} borderRadius={12} />
+          <Skeleton height={196} borderRadius={12} />
+          <Skeleton height={196} borderRadius={12} />
+        </div>
+      </Panel>
+
       <div className="grid grid-cols-1 gap-6 2xl:grid-cols-[minmax(0,2fr)_minmax(360px,1fr)]">
         <Panel className="p-7">
           <div className="flex items-center justify-between gap-4">
@@ -30,15 +40,6 @@ export default function OverviewSkeleton() {
           <SkeletonList count={4} showAvatar lines={1} className="mt-7" />
         </Panel>
       </div>
-
-      <Panel className="p-7">
-        <Skeleton width="36%" height={16} borderRadius={6} />
-        <Skeleton width="55%" height={12} className="mt-2" borderRadius={6} />
-        <div className="mt-8 grid grid-cols-1 gap-6 md:grid-cols-2">
-          <Skeleton height={196} borderRadius={12} />
-          <Skeleton height={196} borderRadius={12} />
-        </div>
-      </Panel>
 
       <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-4">
         {Array.from({ length: 4 }, (_, index) => (

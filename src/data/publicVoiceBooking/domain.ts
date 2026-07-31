@@ -46,6 +46,19 @@ export interface BookingServiceDto {
   icon: string | null
 }
 
+/** Fixed id of the virtual "Other services" group — never send it back to the API. */
+export const OTHER_SERVICES_CATEGORY_ID =
+  '00000000-0000-0000-0000-000000000001'
+
+export interface BookingServiceCategoryDto {
+  id: string
+  name: string
+  description: string | null
+  /** True only for the virtual "Other services" group (no DB row). */
+  isSystem: boolean
+  services: BookingServiceDto[]
+}
+
 export interface BookingStaffDto {
   id: string
   fullName: string
@@ -63,10 +76,12 @@ export interface BookingPageDataDto {
   businessName: string
   timeZone: string | null
   services: BookingServiceDto[]
+  categories: BookingServiceCategoryDto[]
   staff: BookingStaffDto[]
   operatingHours: BookingOperatingHourDto[]
 }
 
+/** Public create body — matches OpenAPI `CreateOnlineBookingRequest`. */
 export interface CreateOnlineBookingRequest {
   customerName: string
   customerPhone: string
@@ -98,6 +113,16 @@ export interface PublicBookingService {
   durationMinutes: number
   note: string
   icon: string
+  categoryId?: string
+  categoryName?: string
+}
+
+export interface PublicBookingServiceCategory {
+  id: string
+  name: string
+  description: string
+  isSystem: boolean
+  services: PublicBookingService[]
 }
 
 export interface PublicBookingStaff {
@@ -118,6 +143,7 @@ export interface PublicBookingPageData {
   businessName: string
   timeZone: string | null
   services: PublicBookingService[]
+  categories: PublicBookingServiceCategory[]
   staff: PublicBookingStaff[]
   operatingHours: PublicBookingOperatingHour[]
 }
