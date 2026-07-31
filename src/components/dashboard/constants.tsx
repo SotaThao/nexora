@@ -39,6 +39,8 @@ export function isDashboardStaffRole(
 }
 
 export const BOOKING_HUB_PATH = `/dashboard/${DASHBOARD_MENU.BookingHub}`;
+/** AI Voice setup guide page under AI Hub. */
+export const BOOKING_HUB_SETUP_GUIDE_PATH = `${BOOKING_HUB_PATH}/setup-guide`;
 /** Legacy URL segment — redirect to {@link BOOKING_HUB_PATH}. */
 export const BOOKING_HUB_LEGACY_PATH_SEGMENT = "booking-hub";
 

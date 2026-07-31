@@ -782,6 +782,9 @@ export default function BookingSettingsPanel() {
   const [highlightServiceId, setHighlightServiceId] = useState<string | null>(
     null,
   );
+  const [openServiceCategoryIds, setOpenServiceCategoryIds] = useState(
+    () => new Set<string>(),
+  );
   const [isPreviewPlaying, setIsPreviewPlaying] = useState(false);
   const [language, setLanguage] = useState<Language>(
     MerchantVoiceUiLanguage.Auto,
@@ -1936,6 +1939,29 @@ export default function BookingSettingsPanel() {
     return sections;
   }, [categories, services]);
 
+  // Keep accordion ids valid; seed first category open once when catalog first loads.
+  useEffect(() => {
+    if (catalogSections.length === 0) {
+      setOpenServiceCategoryIds(new Set());
+      return;
+    }
+    setOpenServiceCategoryIds((prev) => {
+      const validIds = new Set(catalogSections.map((section) => section.id));
+      const next = new Set([...prev].filter((id) => validIds.has(id)));
+      if (next.size > 0) return next;
+      return new Set([catalogSections[0].id]);
+    });
+  }, [catalogSections]);
+
+  const toggleServiceCategory = (categoryId: string) => {
+    setOpenServiceCategoryIds((prev) => {
+      const next = new Set(prev);
+      if (next.has(categoryId)) next.delete(categoryId);
+      else next.add(categoryId);
+      return next;
+    });
+  };
+
   const handleLanguageSelect = (next: Language) => {
     const resolved = next;
     setLanguage(resolved);
@@ -2798,15 +2824,22 @@ export default function BookingSettingsPanel() {
                 </button>
               </div>
             ) : (
-              catalogSections.map((section, index) => {
+              catalogSections.map((section) => {
                 const categoryServices = section.services;
+                const isOpen = openServiceCategoryIds.has(section.id);
+                const panelId = `settings-service-category-panel-${section.id}`;
                 return (
-                  <details
+                  <div
                     key={section.id}
-                    className="settings-service-category"
-                    open={index === 0}
+                    className={`settings-service-category${isOpen ? " is-open" : ""}`}
                   >
-                    <summary className="settings-service-category-head">
+                    <button
+                      type="button"
+                      className="settings-service-category-head"
+                      aria-expanded={isOpen}
+                      aria-controls={panelId}
+                      onClick={() => toggleServiceCategory(section.id)}
+                    >
                       <span className="settings-service-category-name">
                         {section.name}
                       </span>
@@ -2829,7 +2862,14 @@ export default function BookingSettingsPanel() {
                           strokeLinejoin="round"
                         />
                       </svg>
-                    </summary>
+                    </button>
+                    <div
+                      className="settings-service-category-panel"
+                      id={panelId}
+                      role="region"
+                      aria-hidden={!isOpen}
+                    >
+                      <div className="settings-service-category-panel-inner">
                     <div className="settings-service-category-body">
                       <div
                         className="settings-service-header"
@@ -2971,7 +3011,9 @@ export default function BookingSettingsPanel() {
                         })
                       )}
                     </div>
-                  </details>
+                      </div>
+                    </div>
+                  </div>
                 );
               })
             )}

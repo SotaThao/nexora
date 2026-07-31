@@ -213,15 +213,14 @@ export default function BookingCreateAppointmentModal({
     setStaffId(preferredStaffId || BOOKING_CREATE_UNASSIGNED_STAFF)
   }, [open, prefill])
 
-  // Seed first category open once catalog arrives; leave others as the user toggled them.
+  // Keep open ids in sync with the catalog; do not auto-expand any category.
   useEffect(() => {
     if (!open || serviceSections.length === 0) return
     setOpenServiceCategoryIds((prev) => {
       const valid = new Set(
         [...prev].filter((id) => serviceSections.some((section) => section.id === id)),
       )
-      if (valid.size > 0) return valid
-      return new Set([serviceSections[0].id])
+      return valid
     })
   }, [open, serviceSections])
 

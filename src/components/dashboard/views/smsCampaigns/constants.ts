@@ -300,6 +300,13 @@ export const SMS_CREDIT_PACKAGES_MOCK: SmsCreditPackageMock[] = [
   },
 ];
 
+/** Featured / best-value package selected when the buy modal opens. */
+export const SMS_CREDIT_DEFAULT_PACKAGE_ID =
+  SMS_CREDIT_PACKAGES_MOCK.find((pkg) => pkg.featured)?.id
+  ?? SMS_CREDIT_PACKAGES_MOCK[0].id;
+
+export const SMS_CREDIT_DEFAULT_PAYMENT_ID = SmsCreditPaymentId.Usdv;
+
 export const SMS_CREDIT_PAYMENTS_MOCK: SmsCreditPaymentMock[] = [
   {
     id: SmsCreditPaymentId.Usdv,
