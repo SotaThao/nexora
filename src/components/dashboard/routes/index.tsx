@@ -15,6 +15,7 @@ import SupportView from '../../SupportView'
 import ComingSoon from '../views/ComingSoon'
 import ManagePlanView from '../views/ManagePlanView'
 import BookingHubView from '../views/BookingHubView'
+import AiVoiceSetupGuideView from '../views/AiVoiceSetupGuideView'
 import StaffDetailView from '../../StaffDetailView'
 import { useMerchantStaffByCode } from '../../../data/hooks/useMerchantStaff'
 import { useOpenProductManagement } from '../../../data/hooks/useOpenProductManagement'
@@ -294,6 +295,10 @@ export function ReportsRoute() {
 
 export function BookingHubRoute() {
   return <BookingHubView />
+}
+
+export function AiVoiceSetupGuideRoute() {
+  return <AiVoiceSetupGuideView />
 }
 
 export function ProductManagementRoute() {

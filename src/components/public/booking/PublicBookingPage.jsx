@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react'
-import { ChevronDown, Search, X } from 'lucide-react'
+import { ChevronDown, FolderOpen, Search, X } from 'lucide-react'
 import { useParams, useSearchParams } from 'react-router-dom'
 import { useNotification } from '../../../contexts/NotificationContext'
 import {
@@ -155,14 +155,15 @@ export default function PublicBookingPage() {
     ]
   }, [catalog.categories, catalog.services, copy.otherCategoryName])
 
-  // Open all categories by default when the catalog first loads / changes.
+  // Open only the first category by default when the catalog first loads / changes.
   const categoryIdsKey = serviceCategories.map((category) => category.id).join('|')
   useEffect(() => {
     if (!categoryIdsKey) {
       setOpenCategoryIds(new Set())
       return
     }
-    setOpenCategoryIds(new Set(categoryIdsKey.split('|')))
+    const firstId = categoryIdsKey.split('|')[0]
+    setOpenCategoryIds(new Set(firstId ? [firstId] : []))
   }, [categoryIdsKey])
 
   const serviceSearchNeedle = serviceSearchQuery.trim()
@@ -605,6 +606,10 @@ export default function PublicBookingPage() {
                           aria-controls={panelId}
                           onClick={() => toggleCategory(category.id)}
                         >
+                          <FolderOpen
+                            className="service-category-icon"
+                            aria-hidden="true"
+                          />
                           <span
                             className="service-category-name"
                             data-service-category-name

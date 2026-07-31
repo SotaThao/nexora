@@ -2,32 +2,32 @@ import React, { useEffect, useMemo, useRef, useState } from 'react'
 import { useTranslation } from '../../../../contexts/LanguageContext'
 import {
   CloseIcon,
+  PhoneIncomingIcon,
   ShieldCheckIcon,
-  WalletCardsIcon,
 } from '../BookingHubIcons'
 import {
-  SMS_CAMPAIGN_TK,
-  SMS_CREDIT_DEFAULT_PACKAGE_ID,
-  SMS_CREDIT_DEFAULT_PAYMENT_ID,
-  SMS_CREDIT_PACKAGES_MOCK,
-  SMS_CREDIT_PAYMENTS_MOCK,
-  type SmsCreditPackageMock,
-  type SmsCreditPaymentMock,
+  VOICE_CREDIT_DEFAULT_PACKAGE_ID,
+  VOICE_CREDIT_DEFAULT_PAYMENT_ID,
+  VOICE_CREDIT_PACKAGES_MOCK,
+  VOICE_CREDIT_PAYMENTS_MOCK,
+  VoiceCreditPackageId,
+  VoiceCreditPaymentId,
+  type VoiceCreditPackageMock,
+  type VoiceCreditPaymentMock,
 } from './constants'
 
-const TK = SMS_CAMPAIGN_TK
+const TK = 'components.dashboard.views.BookingHubView.plans.credits'
 
 type Props = {
   open: boolean
   submitting?: boolean
-  /** Keep `document.body` scroll lock when this modal closes (e.g. create campaign still open). */
   preserveBodyLock?: boolean
   onClose: () => void
-  /** Reserved for when purchase checkout is enabled. */
-  onConfirm?: (pkg: SmsCreditPackageMock, payment: SmsCreditPaymentMock) => void | Promise<void>
+  /** Reserved for when Voice credit purchase checkout is enabled. */
+  onConfirm?: (pkg: VoiceCreditPackageMock, payment: VoiceCreditPaymentMock) => void | Promise<void>
 }
 
-export default function SmsBuyCreditsModal({
+export default function VoiceBuyCreditsModal({
   open,
   submitting = false,
   preserveBodyLock = false,
@@ -35,8 +35,8 @@ export default function SmsBuyCreditsModal({
 }: Props) {
   const { t, currentLanguage } = useTranslation()
   const closeBtnRef = useRef<HTMLButtonElement | null>(null)
-  const [packageId, setPackageId] = useState(SMS_CREDIT_DEFAULT_PACKAGE_ID)
-  const [paymentId, setPaymentId] = useState(SMS_CREDIT_DEFAULT_PAYMENT_ID)
+  const [packageId, setPackageId] = useState(VOICE_CREDIT_DEFAULT_PACKAGE_ID)
+  const [paymentId, setPaymentId] = useState(VOICE_CREDIT_DEFAULT_PAYMENT_ID)
 
   useEffect(() => {
     if (!open) {
@@ -45,8 +45,8 @@ export default function SmsBuyCreditsModal({
     }
 
     document.body.style.overflow = 'hidden'
-    setPackageId(SMS_CREDIT_DEFAULT_PACKAGE_ID)
-    setPaymentId(SMS_CREDIT_DEFAULT_PAYMENT_ID)
+    setPackageId(VOICE_CREDIT_DEFAULT_PACKAGE_ID)
+    setPaymentId(VOICE_CREDIT_DEFAULT_PAYMENT_ID)
 
     const onKeyDown = (event: KeyboardEvent) => {
       if (event.key !== 'Escape' || submitting) return
@@ -65,44 +65,45 @@ export default function SmsBuyCreditsModal({
   const numberLocale = currentLanguage === 'vi' ? 'vi-VN' : 'en-US'
 
   const selectedPackage = useMemo(
-    () => SMS_CREDIT_PACKAGES_MOCK.find((pkg) => pkg.id === packageId) ?? SMS_CREDIT_PACKAGES_MOCK[0],
+    () =>
+      VOICE_CREDIT_PACKAGES_MOCK.find((pkg) => pkg.id === packageId)
+      ?? VOICE_CREDIT_PACKAGES_MOCK[0],
     [packageId],
   )
   const selectedPayment = useMemo(
-    () => SMS_CREDIT_PAYMENTS_MOCK.find((method) => method.id === paymentId) ?? SMS_CREDIT_PAYMENTS_MOCK[0],
+    () =>
+      VOICE_CREDIT_PAYMENTS_MOCK.find((method) => method.id === paymentId)
+      ?? VOICE_CREDIT_PAYMENTS_MOCK[0],
     [paymentId],
   )
 
   if (!open) return null
 
   return (
-    <div
-      className="sms-credit-modal"
-      role="presentation"
-    >
+    <div className="sms-credit-modal" role="presentation" data-voice-credit-modal>
       <div
         className="sms-credit-dialog"
         role="dialog"
         aria-modal="true"
-        aria-labelledby="sms-credit-modal-title"
-        aria-describedby="sms-credit-modal-description"
+        aria-labelledby="voice-credit-modal-title"
+        aria-describedby="voice-credit-modal-description"
         aria-busy={submitting}
       >
         <div className="sms-credit-modal-head">
           <div>
-            <div className="sms-credit-modal-title" id="sms-credit-modal-title">
-              <WalletCardsIcon className="marketing-icon" />
-              <span>{t(`${TK}.buyModalTitle`)}</span>
+            <div className="sms-credit-modal-title" id="voice-credit-modal-title">
+              <PhoneIncomingIcon className="marketing-icon" />
+              <span>{t(`${TK}.buyVoiceModalTitle`)}</span>
             </div>
-            <div className="sms-credit-modal-sub" id="sms-credit-modal-description">
-              {t(`${TK}.buyModalSubtitle`)}
+            <div className="sms-credit-modal-sub" id="voice-credit-modal-description">
+              {t(`${TK}.buyVoiceModalSubtitle`)}
             </div>
           </div>
           <button
             ref={closeBtnRef}
             className="sms-credit-close"
             type="button"
-            aria-label={t(`${TK}.closeBuyModal`)}
+            aria-label={t(`${TK}.closeBuyVoiceModal`)}
             disabled={submitting}
             onClick={onClose}
           >
@@ -111,12 +112,12 @@ export default function SmsBuyCreditsModal({
         </div>
 
         <div className="sms-credit-modal-body">
-          <section className="sms-credit-section" aria-labelledby="sms-credit-package-title">
-            <div className="sms-credit-section-label" id="sms-credit-package-title">
-              {t(`${TK}.choosePackage`)}
+          <section className="sms-credit-section" aria-labelledby="voice-credit-package-title">
+            <div className="sms-credit-section-label" id="voice-credit-package-title">
+              {t(`${TK}.chooseVoicePackage`)}
             </div>
             <div className="sms-credit-package-grid">
-              {SMS_CREDIT_PACKAGES_MOCK.map((pkg) => {
+              {VOICE_CREDIT_PACKAGES_MOCK.map((pkg) => {
                 const selected = pkg.id === packageId
                 return (
                   <button
@@ -125,15 +126,15 @@ export default function SmsBuyCreditsModal({
                     type="button"
                     aria-pressed={selected}
                     disabled={submitting}
-                    onClick={() => setPackageId(pkg.id)}
+                    onClick={() => setPackageId(pkg.id as VoiceCreditPackageId)}
                   >
                     {pkg.featured ? (
                       <span className="sms-credit-package-badge">{t(`${TK}.bestValue`)}</span>
                     ) : null}
                     <span className="sms-credit-package-name">{t(`${TK}.${pkg.nameKey}`)}</span>
                     <span className="sms-credit-package-amount">
-                      {t(`${TK}.packageCredits`, {
-                        count: pkg.credits.toLocaleString(numberLocale),
+                      {t(`${TK}.packageMinutes`, {
+                        count: pkg.minutes.toLocaleString(numberLocale),
                       })}
                     </span>
                     <span className="sms-credit-package-price">${pkg.price}</span>
@@ -145,12 +146,12 @@ export default function SmsBuyCreditsModal({
             </div>
           </section>
 
-          <section className="sms-credit-section" aria-labelledby="sms-credit-payment-title">
-            <div className="sms-credit-section-label" id="sms-credit-payment-title">
+          <section className="sms-credit-section" aria-labelledby="voice-credit-payment-title">
+            <div className="sms-credit-section-label" id="voice-credit-payment-title">
               {t(`${TK}.paymentMethod`)}
             </div>
             <div className="sms-credit-payment-list">
-              {SMS_CREDIT_PAYMENTS_MOCK.map((method) => {
+              {VOICE_CREDIT_PAYMENTS_MOCK.map((method) => {
                 const selected = method.id === paymentId
                 return (
                   <button
@@ -159,7 +160,7 @@ export default function SmsBuyCreditsModal({
                     type="button"
                     aria-pressed={selected}
                     disabled={submitting}
-                    onClick={() => setPaymentId(method.id)}
+                    onClick={() => setPaymentId(method.id as VoiceCreditPaymentId)}
                   >
                     <span className="sms-credit-payment-main">
                       <span className="sms-credit-radio" aria-hidden="true" />
@@ -182,16 +183,16 @@ export default function SmsBuyCreditsModal({
             </div>
           </section>
 
-          <section className="sms-credit-section sms-credit-invoice" aria-labelledby="sms-credit-invoice-title">
-            <div className="sms-credit-section-label" id="sms-credit-invoice-title">
+          <section className="sms-credit-section sms-credit-invoice" aria-labelledby="voice-credit-invoice-title">
+            <div className="sms-credit-section-label" id="voice-credit-invoice-title">
               {t(`${TK}.invoiceSummary`)}
             </div>
             <div className="sms-credit-invoice-row">
-              <span>{t(`${TK}.invoicePackage`)}</span>
+              <span>{t(`${TK}.invoiceVoicePackage`)}</span>
               <strong>
                 {t(`${TK}.${selectedPackage.nameKey}`)} ·{' '}
-                {t(`${TK}.packageCredits`, {
-                  count: selectedPackage.credits.toLocaleString(numberLocale),
+                {t(`${TK}.packageMinutes`, {
+                  count: selectedPackage.minutes.toLocaleString(numberLocale),
                 })}
               </strong>
             </div>
