@@ -1,3 +1,6 @@
+/** Virtual "Other services" category id — not mutable via category CRUD. */
+export const OTHER_SERVICES_CATEGORY_ID = '00000000-0000-0000-0000-000000000001'
+
 /** Query param names for merchant `/nexora-voice/*` list endpoints (Swagger PascalCase). */
 export const MerchantVoiceListQueryParam = {
   PageNumber: 'PageNumber',
@@ -208,6 +211,7 @@ export function isSmsCampaignAutoToggleable(
 
 export enum BookingHubSubTab {
   Today = 'today',
+  Calendar = 'calendar',
   Team = 'team',
 }
 
@@ -348,13 +352,32 @@ export type MerchantVoiceStaffActivityStatusApiValue =
   typeof MerchantVoiceStaffActivityStatusApi[keyof typeof MerchantVoiceStaffActivityStatusApi]
 
 export enum MerchantVoiceConfigLanguage {
+  Auto = 'auto',
   ViVN = 'vi-VN',
   EnUS = 'en-US',
 }
 
 export enum MerchantVoiceUiLanguage {
+  Auto = 'auto',
   Vi = 'vi',
   En = 'en',
+}
+
+/** Legacy / alternate wire values that still map to Auto. */
+const MERCHANT_VOICE_CONFIG_LANGUAGE_AUTO_ALIASES = new Set<string>([
+  MerchantVoiceConfigLanguage.Auto,
+  MerchantVoiceUiLanguage.Auto,
+  'auto-detect',
+  'bilingual',
+])
+
+const MERCHANT_VOICE_UI_TO_CONFIG_LANGUAGE: Record<
+  MerchantVoiceUiLanguage,
+  MerchantVoiceConfigLanguage
+> = {
+  [MerchantVoiceUiLanguage.Auto]: MerchantVoiceConfigLanguage.Auto,
+  [MerchantVoiceUiLanguage.Vi]: MerchantVoiceConfigLanguage.ViVN,
+  [MerchantVoiceUiLanguage.En]: MerchantVoiceConfigLanguage.EnUS,
 }
 
 export enum MerchantVoiceErrorCode {
@@ -713,6 +736,9 @@ export function mapDayOfWeekToApiName(day: MerchantVoiceDayOfWeek): MerchantVoic
 
 export function mapConfigLanguageToUiLanguage(language: string | null | undefined): MerchantVoiceUiLanguage {
   const normalized = String(language ?? '').trim().toLowerCase()
+  if (MERCHANT_VOICE_CONFIG_LANGUAGE_AUTO_ALIASES.has(normalized)) {
+    return MerchantVoiceUiLanguage.Auto
+  }
   if (
     normalized === MerchantVoiceConfigLanguage.ViVN.toLowerCase()
     || normalized === MerchantVoiceUiLanguage.Vi
@@ -720,14 +746,19 @@ export function mapConfigLanguageToUiLanguage(language: string | null | undefine
   ) {
     return MerchantVoiceUiLanguage.Vi
   }
-  // Treat unknown values as English — UI only exposes VI + EN.
-  return MerchantVoiceUiLanguage.En
+  if (
+    normalized === MerchantVoiceConfigLanguage.EnUS.toLowerCase()
+    || normalized === MerchantVoiceUiLanguage.En
+    || normalized.startsWith('en')
+  ) {
+    return MerchantVoiceUiLanguage.En
+  }
+  // Unknown values default to Auto (HTML Settings default).
+  return MerchantVoiceUiLanguage.Auto
 }
 
 export function mapUiLanguageToConfigLanguage(language: MerchantVoiceUiLanguage): MerchantVoiceConfigLanguage {
-  return language === MerchantVoiceUiLanguage.Vi
-    ? MerchantVoiceConfigLanguage.ViVN
-    : MerchantVoiceConfigLanguage.EnUS
+  return MERCHANT_VOICE_UI_TO_CONFIG_LANGUAGE[language] ?? MerchantVoiceConfigLanguage.EnUS
 }
 
 export function parseBookingHubMainTab(value: string | null): BookingHubMainTab {
@@ -739,7 +770,11 @@ export function parseBookingHubMainTab(value: string | null): BookingHubMainTab 
   return BookingHubMainTab.Booking
 }
 
+const BOOKING_HUB_SUB_TAB_VALUES = new Set<string>(Object.values(BookingHubSubTab))
+
 export function parseBookingHubSubTab(value: string | null): BookingHubSubTab {
-  if (value === BookingHubSubTab.Team) return BookingHubSubTab.Team
+  if (value && BOOKING_HUB_SUB_TAB_VALUES.has(value)) {
+    return value as BookingHubSubTab
+  }
   return BookingHubSubTab.Today
 }
