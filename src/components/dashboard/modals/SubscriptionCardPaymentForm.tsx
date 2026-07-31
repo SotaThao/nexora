@@ -101,9 +101,13 @@ function CardPaymentInner({
       return
     }
 
-    if (result.paymentIntent?.status === 'succeeded' || result.paymentIntent?.status === 'processing') {
+    const status = result.paymentIntent?.status
+    if (status === 'succeeded' || status === 'processing') {
       onSuccess()
+      return
     }
+
+    onError(t('dashboard.modals.subscription_card_payment_error'))
   }
 
   return (

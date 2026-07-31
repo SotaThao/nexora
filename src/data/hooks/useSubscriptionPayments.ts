@@ -72,8 +72,10 @@ export function useSubscriptionOrderStatusPoll(orderId: string | null, { enabled
       return history.find((item) => item.orderId === orderId)
     },
     enabled: enabled && !!orderId,
-    refetchInterval: (query) =>
-      query.state.data?.paymentStatus === 'Pending' ? CARD_PAYMENT_POLL_INTERVAL_MS : false,
+    refetchInterval: (query) => {
+      const status = query.state.data?.paymentStatus
+      return status === 'Paid' || status === 'Failed' ? false : CARD_PAYMENT_POLL_INTERVAL_MS
+    },
     refetchOnWindowFocus: false,
     staleTime: 0,
   })
