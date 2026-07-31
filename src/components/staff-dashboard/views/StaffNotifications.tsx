@@ -1,6 +1,6 @@
 // StaffNotifications — notification feed + push preferences.
 import { useNavigate } from 'react-router-dom'
-import { Bell, CreditCard, Star, Users, Wallet } from 'lucide-react'
+import { AlertTriangle, Bell, Calendar, CreditCard, Star, Users, Wallet } from 'lucide-react'
 import { useTranslation } from '../../../contexts/LanguageContext'
 import { useStaffAccount } from '../../../contexts/StaffAccountContext'
 import {
@@ -36,8 +36,13 @@ const TYPE_ICON: Record<string, typeof Bell> = {
   ReviewReply: Star,
   StaffLinkRequest: Users,
   StaffLinkApproved: Users,
+  StaffLinkRejected: Users,
   StaffInviteAccepted: Users,
   DirectPaymentReceived: CreditCard,
+  TaxIqPayoutPending: Wallet,
+  TaxIqDisputeResolved: Wallet,
+  TaxIqDisputeRejected: AlertTriangle,
+  BookingConfirmed: Calendar,
 };
 
 function notificationIcon(type: string) {

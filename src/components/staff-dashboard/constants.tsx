@@ -179,6 +179,11 @@ export const STAFF_TAXIQ_MENU_CHILD_MODULE: Record<string, string> = {
 
 const STAFF_ACTION_URL_ALIASES: Record<string, string> = {
   '/staff/businesses': '/staff',
+  // Backend sends this actionUrl for TaxIqPayoutPending/DisputeResolved/DisputeRejected
+  // (CreatePayoutRecordCommand, ResolvePayoutDisputeCommand) but the real staff route for
+  // confirming/viewing payouts is taxiq/payouts, not taxiq/income — alias it here rather
+  // than changing the backend-owned string.
+  '/staff/income': '/staff/taxiq/payouts',
 }
 
 export function resolveStaffNotificationActionUrl(
