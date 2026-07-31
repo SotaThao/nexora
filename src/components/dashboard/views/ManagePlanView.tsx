@@ -68,7 +68,7 @@ function ManagePlanView({ currentPlanId = null, onSelectPlan, packages }: Manage
       <div className="relative mx-auto mt-12 grid max-w-5xl grid-cols-1 gap-5 px-1 pb-4 md:grid-cols-3 xl:items-stretch">
         {PLAN_CONFIG.map((plan) => {
           const base = `manage_plan.plans.${plan.id}`
-          const pkg = packages?.find((p) => p.plan.toLowerCase() === plan.id)
+          const pkg = packages?.find((p) => p.packageCode === plan.id)
           const pkgFeatures = isVietnamese ? pkg?.featuresVi : pkg?.featuresEn
           const features = pkgFeatures?.length
             ? pkgFeatures
@@ -153,14 +153,12 @@ function ManagePlanView({ currentPlanId = null, onSelectPlan, packages }: Manage
                       'h-11 w-full rounded-xl text-sm font-bold transition-all active:scale-[0.98]',
                       plan.featured
                         ? 'bg-gradient-to-r from-nexoraElectric to-nexoraViolet text-white shadow-lg shadow-nexoraViolet/25 hover:brightness-110'
-                        : plan.free
-                          ? 'border border-nexoraBorder bg-nexoraSurface text-nexoraText hover:border-nexoraBrand hover:text-nexoraBrand'
-                          : plan.id === 'enterprise'
-                            ? 'bg-nexoraSidebar text-white hover:bg-nexoraSidebarPanel'
-                            : 'border border-nexoraBorder bg-nexoraSurface text-nexoraText hover:border-nexoraBrand hover:text-nexoraBrand',
+                        : plan.id === 'enterprise'
+                          ? 'bg-nexoraSidebar text-white hover:bg-nexoraSidebarPanel'
+                          : 'border border-nexoraBorder bg-nexoraSurface text-nexoraText hover:border-nexoraBrand hover:text-nexoraBrand',
                     ].join(' ')}
                   >
-                    {plan.featured ? 'Upgrade to Pro' : plan.free ? 'Downgrade' : plan.id === 'enterprise' ? 'Contact Success Sales' : t(`${base}.cta`)}
+                    {plan.featured ? 'Upgrade to Pro' : plan.id === 'enterprise' ? 'Contact Success Sales' : t(`${base}.cta`)}
                   </button>
                 )}
               </div>
