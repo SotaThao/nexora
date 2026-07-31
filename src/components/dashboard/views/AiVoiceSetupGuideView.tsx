@@ -15,6 +15,8 @@ import {
 import { useTranslation } from '../../../contexts/LanguageContext'
 import { BOOKING_HUB_PATH } from '../constants'
 import {
+  GUIDE_CARRIER_OPTIONS,
+  GUIDE_MODE_OPTIONS,
   GUIDE_MVNO,
   GUIDE_PANIC_CODES,
   getGuideModeCodes,
@@ -172,14 +174,11 @@ export default function AiVoiceSetupGuideView() {
                   value={carrier}
                   onChange={(event) => setCarrier(event.target.value as GuideCarrier)}
                 >
-                  <option value="verizon">Verizon</option>
-                  <option value="att">AT&T</option>
-                  <option value="tmobile">T-Mobile</option>
-                  <option value="cricket">Cricket (mạng AT&T)</option>
-                  <option value="metro">Metro / Mint (mạng T-Mobile)</option>
-                  <option value="visible">Visible / Total (mạng Verizon)</option>
-                  <option value="landline">Điện thoại bàn · Landline</option>
-                  <option value="voip">Internet · VoIP</option>
+                  {GUIDE_CARRIER_OPTIONS.map((option) => (
+                    <option key={option.value} value={option.value}>
+                      {option.label[lang]}
+                    </option>
+                  ))}
                 </select>
               </div>
             </div>
@@ -193,8 +192,11 @@ export default function AiVoiceSetupGuideView() {
                   value={mode}
                   onChange={(event) => setMode(event.target.value as GuideMode)}
                 >
-                  <option value="ring">Chuông reo 3 hồi rồi mới qua AI</option>
-                  <option value="now">AI bắt máy ngay từ đầu</option>
+                  {GUIDE_MODE_OPTIONS.map((option) => (
+                    <option key={option.value} value={option.value}>
+                      {option.label[lang]}
+                    </option>
+                  ))}
                 </select>
               </div>
             </div>

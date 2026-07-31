@@ -1303,11 +1303,14 @@ export default function BookingSettingsPanel() {
     });
   }, [categories, categoriesData]);
 
-  const openServiceModal = () => {
+  const openServiceModal = (categoryId?: string) => {
+    const preferredCategoryIds = categoryId
+      ? categoryIdsForApi([categoryId])
+      : [];
     setServiceModalDraft({
       mode: "create",
       serviceId: null,
-      categoryIds: [],
+      categoryIds: preferredCategoryIds,
       name: "",
       price: "",
       duration: "",
@@ -2055,9 +2058,6 @@ export default function BookingSettingsPanel() {
       nextErrors.bookingNotifyPhone = t(`${TK}.invalidPhone`);
     }
     if (!location.street.trim()) nextErrors.street = requiredMessage;
-    if (!location.city.trim()) nextErrors.city = requiredMessage;
-    if (!location.state.trim()) nextErrors.state = requiredMessage;
-    if (!location.zip.trim()) nextErrors.zip = requiredMessage;
     if (!location.country.trim()) nextErrors.country = requiredMessage;
     if (!greeting.trim()) nextErrors.greeting = requiredMessage;
 
@@ -2759,22 +2759,24 @@ export default function BookingSettingsPanel() {
         </SettingsCard>
       </div>
 
-      <article className="settings-card settings-team-card">
-        <div className="settings-card-head">
-          <div>
-            <div className="settings-card-title">
-              <span className="settings-card-title-icon">
-                <PeopleTabIcon />
-              </span>
-              {t(`${TK}.teamTitle`)}
-            </div>
-            <div className="settings-card-sub">{t(`${TK}.teamSub`)}</div>
-          </div>
-        </div>
+      <SettingsCard
+        cardId="team"
+        collapsed={isCollapsed("team")}
+        onToggle={toggleCard}
+        title={
+          <>
+            <span className="settings-card-title-icon">
+              <PeopleTabIcon />
+            </span>
+            {t(`${TK}.teamTitle`)}
+          </>
+        }
+        subtitle={t(`${TK}.teamSub`)}
+      >
         <div className="settings-team-slot">
           <BookingTeamPanel embedded />
         </div>
-      </article>
+      </SettingsCard>
 
       <div className="settings-two-grid">
         <SettingsCard
@@ -2833,36 +2835,55 @@ export default function BookingSettingsPanel() {
                     key={section.id}
                     className={`settings-service-category${isOpen ? " is-open" : ""}`}
                   >
-                    <button
-                      type="button"
-                      className="settings-service-category-head"
-                      aria-expanded={isOpen}
-                      aria-controls={panelId}
-                      onClick={() => toggleServiceCategory(section.id)}
-                    >
-                      <span className="settings-service-category-name">
-                        {section.name}
-                      </span>
+                    <div className="settings-service-category-head">
+                      <button
+                        type="button"
+                        className="settings-service-category-toggle"
+                        aria-expanded={isOpen}
+                        aria-controls={panelId}
+                        onClick={() => toggleServiceCategory(section.id)}
+                      >
+                        <span className="settings-service-category-name">
+                          {section.name}
+                        </span>
+                      </button>
                       <span className="settings-service-category-count">
                         {formatCategoryServiceCount(categoryServices.length)}
                       </span>
-                      <svg
-                        className="settings-service-category-chevron"
-                        viewBox="0 0 24 24"
-                        fill="none"
-                        aria-hidden="true"
-                        width="16"
-                        height="16"
+                      <button
+                        type="button"
+                        className="settings-service-category-add"
+                        onClick={() => openServiceModal(section.id)}
                       >
-                        <path
-                          d="m6 9 6 6 6-6"
-                          stroke="currentColor"
-                          strokeWidth="2"
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                        />
-                      </svg>
-                    </button>
+                        <PlusLgIcon />
+                        {t(`${TK}.addService`)}
+                      </button>
+                      <button
+                        type="button"
+                        className="settings-service-category-chevron-btn"
+                        aria-expanded={isOpen}
+                        aria-controls={panelId}
+                        aria-label={section.name}
+                        onClick={() => toggleServiceCategory(section.id)}
+                      >
+                        <svg
+                          className="settings-service-category-chevron"
+                          viewBox="0 0 24 24"
+                          fill="none"
+                          aria-hidden="true"
+                          width="16"
+                          height="16"
+                        >
+                          <path
+                            d="m6 9 6 6 6-6"
+                            stroke="currentColor"
+                            strokeWidth="2"
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                          />
+                        </svg>
+                      </button>
+                    </div>
                     <div
                       className="settings-service-category-panel"
                       id={panelId}
