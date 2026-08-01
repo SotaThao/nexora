@@ -710,8 +710,8 @@ export default function PosOrderWorkspace({
           </div>
 
           <div className="space-y-4 lg:col-span-2">
-            <div className="nexora-card space-y-3 p-4">
-              <h3 className="text-[10px] font-black uppercase tracking-wider text-nexoraMuted">
+            <div className="space-y-3 rounded-xl border border-posFdBorder bg-posFdSurface p-4">
+              <h3 className="text-[10px] font-black uppercase tracking-wider text-posFdMuted">
                 {t('components.dashboard.views.pos.PosOrderWorkspace.orderDetailTitle')}
               </h3>
 
@@ -720,7 +720,9 @@ export default function PosOrderWorkspace({
                   {t('components.dashboard.views.pos.PosOrderWorkspace.noLines')}
                 </p>
               ) : (
-                <div className="space-y-2">
+                // Bounded height + internal scroll: a long order scrolls its line items in
+                // place, keeping Note/Estimated Total/Start Service/Checkout below always visible.
+                <div className="max-h-[320px] space-y-2 overflow-y-auto pr-1">
                   {visibleLines.map((line) =>
                     line.itemType === 'Service' ? (
                       <div key={line.key} className="space-y-2 rounded-2xl border border-posFdBorder bg-white p-3">
@@ -752,7 +754,7 @@ export default function PosOrderWorkspace({
                           <button
                             type="button"
                             onClick={() => handleDeleteLine(line)}
-                            className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl text-posFdMuted hover:bg-rose-50 hover:text-rose-600"
+                            className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl text-posFdMuted hover:bg-posFdDangerBg hover:text-posFdDanger"
                             aria-label={t('components.dashboard.views.pos.PosOrderWorkspace.deleteLine')}
                           >
                             <Trash2 className="h-4 w-4" />
@@ -796,7 +798,7 @@ export default function PosOrderWorkspace({
                           <button
                             type="button"
                             onClick={() => handleDeleteLine(line)}
-                            className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl text-posFdMuted hover:bg-rose-50 hover:text-rose-600"
+                            className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl text-posFdMuted hover:bg-posFdDangerBg hover:text-posFdDanger"
                             aria-label={t('components.dashboard.views.pos.PosOrderWorkspace.deleteLine')}
                           >
                             <Trash2 className="h-4 w-4" />
@@ -828,7 +830,7 @@ export default function PosOrderWorkspace({
                   <span className="font-black uppercase text-posFdText">
                     {t('components.dashboard.views.pos.PosOrderWorkspace.estimatedTotal')}
                   </span>
-                  <span className="font-black text-nexoraText">${draftSubtotal.toFixed(2)}</span>
+                  <span className="font-black text-posFdText">${draftSubtotal.toFixed(2)}</span>
                 </div>
               ) : null}
             </div>
@@ -840,7 +842,7 @@ export default function PosOrderWorkspace({
                     type="button"
                     onClick={handleStartService}
                     disabled={isBusy}
-                    className="h-11 flex-1 rounded-lg border border-nexoraBorder text-sm font-bold text-nexoraText hover:border-posFdAccent disabled:opacity-60"
+                    className="h-11 flex-1 rounded-lg border border-posFdBorder text-sm font-bold text-posFdText hover:border-posFdAccent disabled:opacity-60"
                   >
                     {startOrderService.isPending ? (
                       <Loader2 className="mx-auto h-4 w-4 animate-spin" />
@@ -865,7 +867,7 @@ export default function PosOrderWorkspace({
                 <button
                   type="button"
                   onClick={resetCreateDraft}
-                  className="h-11 rounded-lg border border-nexoraBorder px-4 text-sm font-bold text-nexoraText hover:border-posFdAccent"
+                  className="h-11 rounded-lg border border-posFdBorder px-4 text-sm font-bold text-posFdText hover:border-posFdAccent"
                 >
                   {t('components.dashboard.views.pos.PosOrderWorkspace.cancelButton')}
                 </button>

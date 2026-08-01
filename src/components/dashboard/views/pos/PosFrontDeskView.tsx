@@ -204,7 +204,7 @@ export default function PosFrontDeskView({
     <select
       value={assignServiceSelection[orderId] ?? serviceCatalog[0]?.id ?? ''}
       onChange={(e) => setAssignServiceSelection((prev) => ({ ...prev, [orderId]: e.target.value }))}
-      className="h-9 w-full rounded-lg border border-nexoraBorder bg-white px-2.5 text-xs text-nexoraText outline-none focus:border-posFdAccent"
+      className="h-9 w-full rounded-lg border border-posFdBorder bg-white px-2.5 text-xs text-posFdText outline-none focus:border-posFdAccent"
     >
       {serviceCatalog.map((service) => (
         <option key={service.id} value={service.id}>
@@ -219,9 +219,12 @@ export default function PosFrontDeskView({
     const isAssigningThisStation = assigningOrderId === selectedOrderId
 
     return (
-      <div key={station.posStaffProfileId} className="nexora-card space-y-3 p-4">
+      <div
+        key={station.posStaffProfileId}
+        className="space-y-3 rounded-xl border border-posFdBorder bg-posFdSurface p-4"
+      >
         <div className="flex items-center gap-3">
-          <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-nexoraCanvas text-[11px] font-bold text-nexoraText">
+          <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-posFdLavender/20 text-[11px] font-bold text-posFdAccentDark">
             {station.photoUrl ? (
               <img src={station.photoUrl} alt="" className="h-9 w-9 rounded-full object-cover" />
             ) : (
@@ -229,21 +232,21 @@ export default function PosFrontDeskView({
             )}
           </div>
           <div className="min-w-0 flex-1">
-            <p className="truncate text-sm font-bold text-nexoraText">{station.displayName}</p>
-            <p className="text-[11px] font-extrabold uppercase text-nexoraMuted">
+            <p className="truncate text-sm font-bold text-posFdText">{station.displayName}</p>
+            <p className="text-[11px] font-extrabold uppercase text-posFdMuted">
               {t(`components.dashboard.views.pos.PosFrontDeskView.stationStatus.${station.currentStatus}`)}
             </p>
           </div>
         </div>
 
         {station.currentStatus === 'InService' && (
-          <div className="space-y-2 rounded-lg bg-nexoraCanvas p-3">
-            <p className="truncate text-xs font-bold text-nexoraText">{station.currentCustomerName}</p>
+          <div className="space-y-2 rounded-lg bg-posFdCanvas p-3">
+            <p className="truncate text-xs font-bold text-posFdText">{station.currentCustomerName}</p>
             {station.currentPrimaryServiceName ? (
-              <p className="truncate text-[11px] text-nexoraMuted">{station.currentPrimaryServiceName}</p>
+              <p className="truncate text-[11px] text-posFdMuted">{station.currentPrimaryServiceName}</p>
             ) : null}
             {station.assignedAt ? (
-              <p className="text-[11px] text-nexoraMuted">
+              <p className="text-[11px] text-posFdMuted">
                 {t('components.dashboard.views.pos.PosFrontDeskView.servingSince', {
                   time: formatTime(station.assignedAt),
                 })}
@@ -268,7 +271,7 @@ export default function PosFrontDeskView({
                   onChange={(e) =>
                     setAssignStaffSelection((prev) => ({ ...prev, [station.posStaffProfileId]: e.target.value }))
                   }
-                  className="h-9 w-full rounded-lg border border-nexoraBorder bg-white px-2.5 text-xs text-nexoraText outline-none focus:border-posFdAccent"
+                  className="h-9 w-full rounded-lg border border-posFdBorder bg-white px-2.5 text-xs text-posFdText outline-none focus:border-posFdAccent"
                 >
                   {waitlist.map((order) => (
                     <option key={order.id} value={order.id}>
@@ -291,7 +294,7 @@ export default function PosFrontDeskView({
                 </button>
               </>
             ) : (
-              <p className="text-[11px] text-nexoraMuted">
+              <p className="text-[11px] text-posFdMuted">
                 {t('components.dashboard.views.pos.PosFrontDeskView.waitlistEmpty')}
               </p>
             )}
@@ -397,7 +400,7 @@ export default function PosFrontDeskView({
 
       {activeTab === 'orderlist' && (
         isOrderListLoading ? (
-          <div className="nexora-card p-6">
+          <div className="rounded-xl border border-posFdBorder bg-posFdSurface p-6">
             <SkeletonList count={3} lines={1} />
           </div>
         ) : (
@@ -412,7 +415,7 @@ export default function PosFrontDeskView({
                     className={`rounded-full px-3 py-1.5 text-[11px] font-bold ${
                       orderListFilter === filter
                         ? 'bg-posFdAccent text-white'
-                        : 'border border-posFdBorder text-nexoraMuted hover:text-nexoraText'
+                        : 'border border-posFdBorder text-posFdMuted hover:text-posFdText'
                     }`}
                   >
                     {t(`components.dashboard.views.pos.PosFrontDeskView.orderListFilter.${filter}`)}
@@ -425,7 +428,7 @@ export default function PosFrontDeskView({
                   onClick={() => handleChangeViewMode('list')}
                   aria-label={t('components.dashboard.views.pos.PosFrontDeskView.viewModeList')}
                   className={`rounded-md p-1.5 ${
-                    viewMode === 'list' ? 'bg-posFdAccent text-white' : 'text-nexoraMuted hover:text-nexoraText'
+                    viewMode === 'list' ? 'bg-posFdAccent text-white' : 'text-posFdMuted hover:text-posFdText'
                   }`}
                 >
                   <ListIcon className="h-4 w-4" />
@@ -435,7 +438,7 @@ export default function PosFrontDeskView({
                   onClick={() => handleChangeViewMode('card')}
                   aria-label={t('components.dashboard.views.pos.PosFrontDeskView.viewModeCard')}
                   className={`rounded-md p-1.5 ${
-                    viewMode === 'card' ? 'bg-posFdAccent text-white' : 'text-nexoraMuted hover:text-nexoraText'
+                    viewMode === 'card' ? 'bg-posFdAccent text-white' : 'text-posFdMuted hover:text-posFdText'
                   }`}
                 >
                   <LayoutGrid className="h-4 w-4" />
@@ -452,7 +455,7 @@ export default function PosFrontDeskView({
 
               if (filteredOrderList.length === 0) {
                 return (
-                  <div className="nexora-card p-6 text-center text-xs text-nexoraMuted">
+                  <div className="rounded-xl border border-posFdBorder bg-posFdSurface p-6 text-center text-xs text-posFdMuted">
                     {t('components.dashboard.views.pos.PosFrontDeskView.orderListEmpty')}
                   </div>
                 )
@@ -467,36 +470,38 @@ export default function PosFrontDeskView({
                       handleCancel(order.id, order.customerName)
                     }}
                     disabled={cancelOrder.isPending}
-                    className="shrink-0 rounded-lg border border-posFdBorder px-2.5 py-1 text-[10px] font-bold text-nexoraMuted hover:border-rose-300 hover:text-rose-600 disabled:opacity-60"
+                    className="shrink-0 rounded-lg border border-posFdBorder px-2.5 py-1 text-[10px] font-bold text-posFdMuted hover:border-posFdDanger hover:bg-posFdDangerBg hover:text-posFdDanger disabled:opacity-60"
                   >
                     {t('components.dashboard.views.pos.PosFrontDeskView.cancelButton')}
                   </button>
                 ) : null
 
+              // Bounded height + internal scroll so a long queue scrolls in place — the
+              // filter chips/view toggle above stay put instead of the whole page scrolling.
               if (viewMode === 'card') {
                 return (
-                  <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
+                  <div className="grid max-h-[560px] grid-cols-1 gap-3 overflow-y-auto pr-1 sm:grid-cols-2 lg:grid-cols-3">
                     {filteredOrderList.map((order) => (
                       <div
                         key={order.id}
                         onClick={() => setUpdateWorkspace({ orderId: order.id })}
-                        className="nexora-card cursor-pointer space-y-2 p-4 hover:border-posFdAccent"
+                        className="cursor-pointer space-y-2 rounded-2xl border border-posFdBorder bg-posFdSurface p-4 hover:border-posFdAccent"
                       >
                         <div className="flex items-center justify-between gap-2">
-                          <span className="font-mono text-[11px] font-bold text-nexoraMuted">#{order.orderNumber}</span>
+                          <span className="font-mono text-[11px] font-bold text-posFdMuted">#{order.orderNumber}</span>
                           <span className="rounded-full bg-posFdCanvas px-2 py-0.5 text-[10px] font-black uppercase text-posFdAccentDark">
                             {order.status}
                           </span>
                         </div>
                         <p className="truncate text-sm font-bold text-posFdText">{order.customerName}</p>
-                        <p className="truncate text-[11px] text-nexoraMuted">
+                        <p className="truncate text-[11px] text-posFdMuted">
                           {order.serviceNames.length > 0 ? order.serviceNames.join(', ') : '—'}
                         </p>
-                        <p className="truncate text-[11px] text-nexoraMuted">
+                        <p className="truncate text-[11px] text-posFdMuted">
                           {order.technicianNames.length > 0 ? order.technicianNames.join(', ') : '—'}
                         </p>
                         <div className="flex items-center justify-between gap-2 border-t border-posFdBorder pt-2">
-                          <span className="text-[11px] text-nexoraMuted">
+                          <span className="text-[11px] text-posFdMuted">
                             {t('components.dashboard.views.pos.PosFrontDeskView.waitMinutes', { minutes: order.elapsedMinutes })}
                           </span>
                           {renderCancelButton(order)}
@@ -508,10 +513,10 @@ export default function PosFrontDeskView({
               }
 
               return (
-                <div className="nexora-card overflow-x-auto p-4">
+                <div className="max-h-[560px] overflow-y-auto rounded-xl border border-posFdBorder bg-posFdSurface p-4">
                   <table className="w-full text-left text-xs">
                     <thead>
-                      <tr className="text-[10px] font-black uppercase tracking-wide text-nexoraMuted">
+                      <tr className="text-[10px] font-black uppercase tracking-wide text-posFdMuted">
                         <th className="pb-2 pr-3">{t('components.dashboard.views.pos.PosFrontDeskView.orderListColumnOrder')}</th>
                         <th className="pb-2 pr-3">{t('components.dashboard.views.pos.PosFrontDeskView.orderListColumnGuest')}</th>
                         <th className="pb-2 pr-3">{t('components.dashboard.views.pos.PosFrontDeskView.orderListColumnStatus')}</th>
@@ -528,16 +533,20 @@ export default function PosFrontDeskView({
                           onClick={() => setUpdateWorkspace({ orderId: order.id })}
                           className="cursor-pointer border-t border-posFdBorder hover:bg-posFdCanvas"
                         >
-                          <td className="py-2 pr-3 font-mono font-bold text-nexoraMuted">#{order.orderNumber}</td>
-                          <td className="py-2 pr-3 font-bold text-nexoraText">{order.customerName}</td>
-                          <td className="py-2 pr-3 text-nexoraMuted">{order.status}</td>
-                          <td className="py-2 pr-3 text-nexoraMuted">
+                          <td className="py-2 pr-3 font-mono font-bold text-posFdMuted">#{order.orderNumber}</td>
+                          <td className="py-2 pr-3 font-bold text-posFdText">{order.customerName}</td>
+                          <td className="py-2 pr-3">
+                            <span className="rounded-full bg-posFdCanvas px-2 py-0.5 text-[10px] font-black uppercase text-posFdAccentDark">
+                              {order.status}
+                            </span>
+                          </td>
+                          <td className="py-2 pr-3 text-posFdMuted">
                             {order.technicianNames.length > 0 ? order.technicianNames.join(', ') : '—'}
                           </td>
-                          <td className="py-2 pr-3 text-nexoraMuted">
+                          <td className="py-2 pr-3 text-posFdMuted">
                             {order.serviceNames.length > 0 ? order.serviceNames.join(', ') : '—'}
                           </td>
-                          <td className="py-2 pr-3 text-right text-nexoraMuted">
+                          <td className="py-2 pr-3 text-right tabular-nums text-posFdMuted">
                             {t('components.dashboard.views.pos.PosFrontDeskView.waitMinutes', { minutes: order.elapsedMinutes })}
                           </td>
                           <td className="py-2 text-right">{renderCancelButton(order)}</td>
@@ -554,15 +563,17 @@ export default function PosFrontDeskView({
 
       {activeTab === 'turnboard' && (
         isTurnBoardLoading ? (
-          <div className="nexora-card p-6">
+          <div className="rounded-xl border border-posFdBorder bg-posFdSurface p-6">
             <SkeletonList count={3} lines={2} />
           </div>
         ) : turnBoard.length === 0 ? (
-          <div className="nexora-card p-6 text-center text-xs text-nexoraMuted">
+          <div className="rounded-xl border border-posFdBorder bg-posFdSurface p-6 text-center text-xs text-posFdMuted">
             {t('components.dashboard.views.pos.PosFrontDeskView.turnBoardEmpty')}
           </div>
         ) : (
-          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
+          // Bounded height + internal scroll, same principle as Order List — a long
+          // roster of stations scrolls in place instead of the whole page.
+          <div className="grid max-h-[560px] grid-cols-1 gap-4 overflow-y-auto pr-1 sm:grid-cols-2 lg:grid-cols-3">
             {turnBoard.map(renderStationCard)}
           </div>
         )

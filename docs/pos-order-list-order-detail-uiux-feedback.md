@@ -48,3 +48,18 @@ Mục tiêu tài liệu: liệt kê các vấn đề UI/UX phát hiện được
 4. Redesign list/bảng của Order List (#4).
 
 Mục #7 chỉ là ghi chú kiến trúc, mục #8 cần test thiết bị thật trước khi quyết định có sửa hay không.
+
+---
+
+## Đã áp dụng vào code (2026-08-01)
+- Mục #1–#6: Done cho Order List + Order Detail (`PosFrontDeskView.tsx`, `PosOrderWorkspace.tsx`, thêm `posFdDanger`/`posFdDangerBg` vào `tailwind.config.js`).
+- Áp dụng tiếp cùng chuẩn cho **Turn Board tab** (`renderStationCard`, `renderServiceSelect` trong `PosFrontDeskView.tsx`) và **Completed tab** (`PosCompletedOrdersPanel.tsx` — toàn bộ filter form + bảng + pagination, kể cả bọc `max-h-[560px] overflow-auto` cho bảng để pagination footer luôn hiển thị).
+- **Chưa đụng tới Booking tab** (`booking/*.tsx`) — đây là bộ component lớn hơn, dùng chung với modal đặt lịch không gian hẹp (đã note riêng trong `CLAUDE.md`), cần một phiên riêng nếu muốn làm.
+- `pnpm lint` + `pnpm build` đều pass sau khi sửa.
+
+## Bổ sung: View Detail cho Completed Orders (2026-08-01)
+**Vấn đề:** Tab Completed trước đó chỉ hiện bảng liệt kê, không xem được chi tiết 1 order đã hoàn tất (dịch vụ, sản phẩm, breakdown giá, thanh toán...).
+**Đã làm:** Thêm cột "Actions" + nút "View" vào bảng `PosCompletedOrdersPanel.tsx`, mở modal chi tiết — cùng pattern với "View Detail" của Booking (`BookingTab.tsx`: state `viewDetailTargetId` + hook fetch riêng + modal `nexora-modal-card`), nhưng dùng `useOrderDetail(businessId, orderId)` (API đã có sẵn, cùng hook mà `PosOrderWorkspace` dùng) thay vì `useBookingDetail`. Modal hiển thị: khách hàng/SĐT/email, mã order, thời gian hoàn tất, phương thức thanh toán, danh sách dịch vụ (kỹ thuật viên + giá + note), danh sách sản phẩm (SL + đơn giá + thành tiền), và breakdown tổng (dịch vụ/sản phẩm/giảm giá/thuế/tip/tổng cộng). Đã thêm đủ locale key song ngữ (`en.json`/`vi.json`), verify key parity bằng script.
+
+## Bổ sung: giảm page size xuống 10 (2026-08-01)
+Rà lại toàn bộ `pos/` — chỉ `PosCompletedOrdersPanel.tsx` có UI phân trang thật (page number + previous/next); Booking và Staff Profiles chỉ fetch `pageSize: 200` một lần, không có control phân trang. Đổi `PAGE_SIZE` từ 20 xuống 10 trong `PosCompletedOrdersPanel.tsx` để mỗi trang không quá dài trên iPad.

@@ -86,6 +86,8 @@ export default {
         posFdBorder: '#F1DEE1',
         posFdText: '#2B1E22',
         posFdMuted: '#8C7378',
+        posFdDanger: '#C24858',
+        posFdDangerBg: '#FBEAEC',
 
         // Homepage landing palette (scripts/homepage-source)
         navy: '#0f1638',
