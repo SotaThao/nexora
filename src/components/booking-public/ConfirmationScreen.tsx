@@ -2,8 +2,10 @@
 // client-side .ics generation, and the Manage-Booking Link (destination page built in
 // Ticket 8 at /booking/manage/:manageToken — the link itself is correct now, it just has
 // nowhere to land until that ticket ships, same as any other incremental delivery here).
-import { CalendarPlus, CheckCircle2, Clock } from 'lucide-react'
+import { useState } from 'react'
+import { CalendarPlus, Check, CheckCircle2, Clock, Copy } from 'lucide-react'
 import { useTranslation } from '../../contexts/LanguageContext'
+import { copyTextToClipboard } from '../../utils/clipboard'
 
 function pad(value: number): string {
   return String(value).padStart(2, '0')
@@ -63,26 +65,45 @@ function downloadIcs(params: {
 
 export default function ConfirmationScreen({
   businessName,
+  businessAddress,
+  businessPhone,
   status,
   scheduledAt,
   durationMinutes,
   serviceNames,
+  technicianNames,
+  totalPrice,
   bookingId,
   manageToken,
   onDone,
 }: {
   businessName: string
+  businessAddress?: string | null
+  businessPhone?: string | null
   status: string
   scheduledAt: Date
   durationMinutes: number
   serviceNames: string[]
+  technicianNames: string[]
+  totalPrice: number
   bookingId: string
   manageToken: string
   onDone: () => void
 }) {
   const { t } = useTranslation()
+  const [linkCopied, setLinkCopied] = useState(false)
   const isConfirmed = status === 'Confirmed'
   const manageUrl = `${window.location.origin}/booking/manage/${manageToken}`
+
+  const handleCopyLink = async () => {
+    try {
+      await copyTextToClipboard(manageUrl)
+      setLinkCopied(true)
+      window.setTimeout(() => setLinkCopied(false), 2000)
+    } catch {
+      // Clipboard access can fail silently (e.g. permissions) — the link is still visible/tappable below.
+    }
+  }
 
   return (
     <div className="space-y-4 text-center">
@@ -101,11 +122,19 @@ export default function ConfirmationScreen({
           {t('public.booking.summaryTitle')}
         </h3>
         <p className="text-sm font-bold text-nexoraText">{businessName}</p>
-        <p className="text-xs text-nexoraMuted">{serviceNames.join(', ')}</p>
+        {businessAddress ? <p className="text-xs text-nexoraMuted">{businessAddress}</p> : null}
+        {businessPhone ? <p className="text-xs text-nexoraMuted">{businessPhone}</p> : null}
+        <p className="mt-2 text-xs text-nexoraMuted">{serviceNames.join(', ')}</p>
+        {technicianNames.length > 0 ? (
+          <p className="text-xs text-nexoraMuted">{t('public.booking.summaryTechnician')}: {technicianNames.join(', ')}</p>
+        ) : null}
         <div className="mt-1 flex items-center gap-1 text-xs text-nexoraMuted">
           <Clock className="h-3.5 w-3.5" />
           {formatWallClock(scheduledAt)}
         </div>
+        <p className="mt-1 text-sm font-bold text-nexoraText">
+          {t('public.booking.summaryTotal')}: ${totalPrice.toFixed(2)}
+        </p>
       </div>
 
       <button
@@ -125,6 +154,23 @@ export default function ConfirmationScreen({
         <a href={manageUrl} className="mt-2 block break-all text-xs font-semibold text-nexoraBrand underline">
           {manageUrl}
         </a>
+        <button
+          type="button"
+          onClick={handleCopyLink}
+          className="mt-2 flex items-center gap-1.5 text-[11px] font-bold text-nexoraMuted hover:text-nexoraBrand"
+        >
+          {linkCopied ? (
+            <>
+              <Check className="h-3.5 w-3.5" />
+              {t('public.booking.linkCopied')}
+            </>
+          ) : (
+            <>
+              <Copy className="h-3.5 w-3.5" />
+              {t('public.booking.copyLink')}
+            </>
+          )}
+        </button>
       </div>
 
       <button

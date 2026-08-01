@@ -5,6 +5,7 @@ import { useEffect, useState } from 'react'
 import { Loader2 } from 'lucide-react'
 import { useTranslation } from '../../contexts/LanguageContext'
 import { usePublicAvailability } from '../../data/hooks/usePublicBooking'
+import { formatHHmmTo12Hour } from '../../utils/bookingTimeFormat'
 import type { PublicAvailabilityItemPayload } from '../../types/repositories'
 
 export default function DateTimeStep({
@@ -22,7 +23,8 @@ export default function DateTimeStep({
   // never shows as a conflict against itself.
   excludeBookingId?: string
 }) {
-  const { t } = useTranslation()
+  const { t, currentLanguage } = useTranslation()
+  const timeLocale = currentLanguage === 'vi' ? 'vi-VN' : 'en-US'
   const [selectedDate, setSelectedDate] = useState('')
   const [selectedTime, setSelectedTime] = useState('')
   const availability = usePublicAvailability(businessSlug)
@@ -72,13 +74,13 @@ export default function DateTimeStep({
                 key={time}
                 type="button"
                 onClick={() => setSelectedTime(time)}
-                className={`h-10 rounded-lg border text-xs font-bold ${
+                className={`h-10 rounded-lg border text-xs font-bold focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-1 ${
                   selectedTime === time
-                    ? 'border-nexoraBrand bg-nexoraBrand text-white'
-                    : 'border-nexoraBorder text-nexoraText hover:border-nexoraBrand'
+                    ? 'border-nexoraBrand bg-nexoraBrand text-white focus-visible:ring-nexoraBrand'
+                    : 'border-nexoraBorder text-nexoraText hover:border-nexoraBrand focus-visible:ring-nexoraMuted'
                 }`}
               >
-                {time}
+                {formatHHmmTo12Hour(time, timeLocale)}
               </button>
             ))}
           </div>

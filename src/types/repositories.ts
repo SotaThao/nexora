@@ -459,6 +459,11 @@ export interface RescheduleBookingPayload {
 // POS Booking — Public Booking Page discovery (Ticket 4). Anonymous, no auth — resolved by
 // Business.Slug. Technicians are filtered by employment status only (never real-time
 // clock/busy state), per POS-Booking-Business.md.
+export interface PublicBookingCategoryApiDto {
+  id: string
+  name: string
+}
+
 export interface PublicBookingServiceApiDto {
   id: string
   name: string
@@ -466,6 +471,7 @@ export interface PublicBookingServiceApiDto {
   durationMinutes: number
   description?: string | null
   photoUrl?: string | null
+  categories: PublicBookingCategoryApiDto[]
 }
 
 export interface PublicBookingTechnicianApiDto {
@@ -478,6 +484,8 @@ export interface PublicBookingTechnicianApiDto {
 export interface PublicBookingPageApiDto {
   businessName: string
   logoUrl?: string | null
+  businessAddress?: string | null
+  businessPhone?: string | null
   services: PublicBookingServiceApiDto[]
   technicians: PublicBookingTechnicianApiDto[]
 }
