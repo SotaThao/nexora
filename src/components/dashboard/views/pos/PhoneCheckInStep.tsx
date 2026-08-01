@@ -4,7 +4,7 @@
 // not-yet-built customer self-checkin kiosk screen unchanged (PO requirement: staff and
 // customer check-in must use the identical component). Auto-advances the instant the 10th
 // digit is entered — no separate "Continue" button, matching the reference kiosk mockup.
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { useTranslation } from '../../../../contexts/LanguageContext'
 import { formatNationalNumber, PhoneDialCode } from '../../../CountryCodeSelect'
 
@@ -50,6 +50,32 @@ export default function PhoneCheckInStep({
 
   const handleBackspace = () => setDigits((prev) => prev.slice(0, -1))
   const handleClear = () => setDigits('')
+
+  // Physical/Bluetooth keyboard support — this screen has no visible text input (the
+  // digit slots below are a display, not a focusable field), so a global listener is the
+  // only way to accept typed digits. Skips keys typed into an actual input/textarea
+  // elsewhere on the page (e.g. the dashboard's top search bar) so this doesn't hijack
+  // unrelated typing while this step happens to be mounted.
+  useEffect(() => {
+    const handleKeyDown = (event: KeyboardEvent) => {
+      const target = event.target as HTMLElement | null
+      if (target && (target.tagName === 'INPUT' || target.tagName === 'TEXTAREA' || target.isContentEditable)) {
+        return
+      }
+      if (event.key >= '0' && event.key <= '9') {
+        event.preventDefault()
+        handleDigitPress(event.key)
+      } else if (event.key === 'Backspace') {
+        event.preventDefault()
+        handleBackspace()
+      } else if (event.key === 'Escape') {
+        event.preventDefault()
+        handleClear()
+      }
+    }
+    window.addEventListener('keydown', handleKeyDown)
+    return () => window.removeEventListener('keydown', handleKeyDown)
+  }, [digits])
 
   return (
     <div className="mx-auto w-full max-w-sm space-y-6 rounded-2xl border border-posFdBorder bg-posFdSurface p-6 text-center">

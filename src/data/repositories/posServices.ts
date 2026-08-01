@@ -38,24 +38,24 @@ function buildFormData(input: PosServiceInput): FormData {
 export function createPosServicesRepository(client: HttpClient = httpClient) {
   return {
     async getPosServices(): Promise<PosServiceApiDto[]> {
-      const res = await client.get<PosServiceApiDto[]>('/api/v1/merchant/pos/services')
+      const res = await client.get<PosServiceApiDto[]>('/api/v1/merchant/services')
       return res ?? []
     },
 
     async createPosService(input: PosServiceInput): Promise<string> {
-      return await client.upload<string>('/api/v1/merchant/pos/services', buildFormData(input), 'POST')
+      return await client.upload<string>('/api/v1/merchant/services', buildFormData(input), 'POST')
     },
 
     async updatePosService(serviceId: string, input: PosServiceInput): Promise<boolean> {
       return await client.upload<boolean>(
-        `/api/v1/merchant/pos/services/${serviceId}`,
+        `/api/v1/merchant/services/${serviceId}`,
         buildFormData(input),
         'PUT',
       )
     },
 
     async reorderPosServices(items: ServiceOrderItem[]): Promise<void> {
-      await client.put<void>('/api/v1/merchant/pos/services/reorder', { items })
+      await client.put<void>('/api/v1/merchant/services/reorder', { items })
     },
   }
 }

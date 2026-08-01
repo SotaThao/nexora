@@ -21,6 +21,7 @@ import BookingCards from './BookingCards'
 import BookingCalendar from './BookingCalendar'
 import RescheduleServicesEditor, { type RescheduleLineDraft } from './RescheduleServicesEditor'
 import BookingLinkShare from './BookingLinkShare'
+import { formatBookingWallClock, statusLabelKey } from './bookingFormatters'
 
 type ViewMode = 'table' | 'cards' | 'calendar'
 
@@ -59,6 +60,7 @@ export default function BookingTab({
   const [rescheduleDate, setRescheduleDate] = useState('')
   const [rescheduleTime, setRescheduleTime] = useState('')
   const [rescheduleLines, setRescheduleLines] = useState<RescheduleLineDraft[]>([])
+  const [viewDetailTargetId, setViewDetailTargetId] = useState<string | null>(null)
 
   const monthBounds = useMemo(() => {
     const year = calendarMonth.getUTCFullYear()
@@ -84,16 +86,21 @@ export default function BookingTab({
   const cancelMutation = useCancelBooking(businessId)
   const rescheduleMutation = useRescheduleBooking(businessId)
   const rescheduleDetail = useBookingDetail(businessId, rescheduleTargetId ?? undefined)
+  const viewDetail = useBookingDetail(businessId, viewDetailTargetId ?? undefined)
 
   useEffect(() => {
     if (rescheduleDetail.data && rescheduleDetail.data.bookingId === rescheduleTargetId) {
       setRescheduleLines(
-        rescheduleDetail.data.services.map((s) => ({
-          key: crypto.randomUUID(),
-          posServiceId: s.posServiceId,
-          serviceName: s.serviceName,
-          posStaffProfileId: s.posStaffProfileId ?? undefined,
-        })),
+        rescheduleDetail.data.services
+          // A line whose service couldn't be resolved (see BookingDetailServiceApiDto) has no
+          // real posServiceId to reschedule against — Staff must add a concrete service instead.
+          .filter((s): s is typeof s & { posServiceId: string } => !!s.posServiceId)
+          .map((s) => ({
+            key: crypto.randomUUID(),
+            posServiceId: s.posServiceId,
+            serviceName: s.serviceName,
+            posStaffProfileId: s.posStaffProfileId ?? undefined,
+          })),
       )
     }
   }, [rescheduleDetail.data, rescheduleTargetId])
@@ -174,6 +181,7 @@ export default function BookingTab({
     onCheckIn: handleCheckIn,
     onCancel: (id: string) => setCancelTargetId(id),
     onReschedule: openReschedule,
+    onViewDetail: (id: string) => setViewDetailTargetId(id),
     checkingInId,
   }
 
@@ -383,6 +391,114 @@ export default function BookingTab({
                 className="h-10 flex-1 rounded-lg bg-nexoraBrand text-xs font-bold text-white hover:bg-nexoraBrandDark disabled:opacity-60"
               >
                 {t(p + 'rescheduleSubmit')}
+              </button>
+            </div>
+          </div>
+        </div>
+      ) : null}
+
+      {viewDetailTargetId ? (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4">
+          <div className="nexora-modal-card w-full max-w-2xl">
+            <h3 className="shrink-0 text-sm font-bold text-nexoraText">{t(p + 'viewDetailModalTitle')}</h3>
+            <div className="mt-3 flex-1 space-y-4 overflow-y-auto">
+              {viewDetail.isLoading || !viewDetail.data ? (
+                <SkeletonList count={2} lines={2} />
+              ) : (
+                <>
+                  <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+                    <div>
+                      <p className="text-[10px] font-extrabold uppercase text-nexoraMuted">
+                        {t(p + 'viewDetailCustomer')}
+                      </p>
+                      <p className="text-xs text-nexoraText">{viewDetail.data.customerName}</p>
+                    </div>
+                    <div>
+                      <p className="text-[10px] font-extrabold uppercase text-nexoraMuted">
+                        {t(p + 'viewDetailPhone')}
+                      </p>
+                      <p className="text-xs text-nexoraText">{viewDetail.data.customerPhone || t(p + 'viewDetailNotProvided')}</p>
+                    </div>
+                    <div>
+                      <p className="text-[10px] font-extrabold uppercase text-nexoraMuted">
+                        {t(p + 'viewDetailEmail')}
+                      </p>
+                      <p className="text-xs text-nexoraText">{viewDetail.data.customerEmail || t(p + 'viewDetailNotProvided')}</p>
+                    </div>
+                    <div>
+                      <p className="text-[10px] font-extrabold uppercase text-nexoraMuted">
+                        {t(p + 'viewDetailOrderNumber')}
+                      </p>
+                      <p className="text-xs text-nexoraText">{viewDetail.data.orderNumber || t(p + 'viewDetailNotProvided')}</p>
+                    </div>
+                    <div>
+                      <p className="text-[10px] font-extrabold uppercase text-nexoraMuted">
+                        {t(p + 'viewDetailCreatedAt')}
+                      </p>
+                      <p className="text-xs text-nexoraText">{formatBookingWallClock(viewDetail.data.createdAt)}</p>
+                    </div>
+                    <div>
+                      <p className="text-[10px] font-extrabold uppercase text-nexoraMuted">
+                        {t(p + 'viewDetailScheduledAt')}
+                      </p>
+                      <p className="text-xs text-nexoraText">{formatBookingWallClock(viewDetail.data.scheduledAt)}</p>
+                    </div>
+                    <div>
+                      <p className="text-[10px] font-extrabold uppercase text-nexoraMuted">
+                        {t(p + 'viewDetailStatus')}
+                      </p>
+                      <p className="text-xs text-nexoraText">{t(p + statusLabelKey(viewDetail.data.status))}</p>
+                    </div>
+                    <div>
+                      <p className="text-[10px] font-extrabold uppercase text-nexoraMuted">
+                        {t(p + 'viewDetailSource')}
+                      </p>
+                      <p className="text-xs text-nexoraText">{viewDetail.data.source}</p>
+                    </div>
+                  </div>
+
+                  {viewDetail.data.cancellationReason ? (
+                    <div>
+                      <p className="text-[10px] font-extrabold uppercase text-nexoraMuted">
+                        {t(p + 'viewDetailCancellationReason')}
+                      </p>
+                      <p className="text-xs text-nexoraText">{viewDetail.data.cancellationReason}</p>
+                    </div>
+                  ) : null}
+
+                  <div>
+                    <h4 className="mb-2 text-[10px] font-black uppercase tracking-wider text-nexoraMuted">
+                      {t(p + 'viewDetailServicesTitle')}
+                    </h4>
+                    <div className="space-y-2">
+                      {viewDetail.data.services.map((service, index) => (
+                        <div key={`${service.posServiceId ?? 'unresolved'}-${index}`} className="rounded-lg border border-nexoraBorder p-2.5">
+                          <div className="flex items-start justify-between gap-2">
+                            <p className="text-xs font-bold text-nexoraText">{service.serviceName}</p>
+                            <p className="shrink-0 text-xs font-bold text-nexoraText">${service.price.toFixed(2)}</p>
+                          </div>
+                          <p className="text-[11px] text-nexoraMuted">
+                            {service.technicianName || t(p + 'unassigned')}
+                          </p>
+                          {service.note ? (
+                            <p className="mt-1 rounded bg-nexoraCanvas p-1.5 text-[11px] italic text-nexoraMuted">
+                              {service.note}
+                            </p>
+                          ) : null}
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                </>
+              )}
+            </div>
+            <div className="mt-4 flex shrink-0 gap-2">
+              <button
+                type="button"
+                onClick={() => setViewDetailTargetId(null)}
+                className="h-10 flex-1 rounded-lg border border-nexoraBorder text-xs font-bold text-nexoraText hover:border-nexoraBrand"
+              >
+                {t(p + 'viewDetailClose')}
               </button>
             </div>
           </div>

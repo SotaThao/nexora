@@ -50,7 +50,14 @@ const ORDER_LIST_VIEW_MODE_STORAGE_KEY = 'pos_order_list_view_mode'
 // POS iPad redesign — Create mode no longer carries a pre-filled customerDraft;
 // PosOrderWorkspace now collects it itself via its own 2-step Check-in
 // (PhoneCheckInStep for phone, then CustomerHeaderBar for name/email/catalog).
-type WorkspaceState = { mode: 'create' } | { mode: 'update'; orderId: string }
+//
+// Only Update mode (editing an already-existing, server-backed order) is modeled as an
+// ephemeral overlay here — closing it loses nothing since GetOrderDetailQuery re-fetches
+// the same state next time. The Create-mode draft is NOT part of this state: it's a
+// permanently-mounted PosOrderWorkspace instance rendered below (hidden via CSS, not
+// unmounted, whenever the Check-in tab isn't active) specifically so a staff member's
+// in-progress phone/name/services entry survives tapping over to another tab and back.
+type UpdateWorkspaceState = { orderId: string }
 
 function getInitials(name: string) {
   return name
@@ -108,7 +115,7 @@ export default function PosFrontDeskView({
   const [assignStaffSelection, setAssignStaffSelection] = useState<Record<string, string>>({})
   const [assignServiceSelection, setAssignServiceSelection] = useState<Record<string, string>>({})
   const [assigningOrderId, setAssigningOrderId] = useState<string | null>(null)
-  const [workspace, setWorkspace] = useState<WorkspaceState | null>(null)
+  const [updateWorkspace, setUpdateWorkspace] = useState<UpdateWorkspaceState | null>(null)
   // Entry point for creating a booking (Ticket 3) — kept as the one global "+ New Booking"
   // action; Ticket 9 added the "Bookings" tab/management screen below for viewing, checking
   // in, cancelling, and rescheduling existing bookings.
@@ -139,32 +146,6 @@ export default function PosFrontDeskView({
     queryClient.invalidateQueries({ queryKey: qk.merchantPosOrderList(businessId) })
     queryClient.invalidateQueries({ queryKey: qk.merchantPosTurnBoard(businessId) })
     queryClient.invalidateQueries({ queryKey: qk.merchantPosCompletedOrders(businessId) })
-  }
-
-  if (workspace) {
-    return (
-      <PosOrderWorkspace
-        businessId={businessId}
-        businessName={businessName}
-        orderId={workspace.mode === 'update' ? workspace.orderId : null}
-        onClose={() => {
-          setWorkspace(null)
-          refreshFrontDeskLists()
-        }}
-        onCheckedIn={() => {
-          setWorkspace(null)
-          // 'waitlist' tab is gone (folded into Order List as a filter) — land on
-          // Order List pre-filtered to Waiting so the just-created ticket is visible.
-          setActiveTab('orderlist')
-          setOrderListFilter('waiting')
-          refreshFrontDeskLists()
-        }}
-        onCompleted={() => {
-          setWorkspace(null)
-          refreshFrontDeskLists()
-        }}
-      />
-    )
   }
 
   const handleCancel = async (orderId: string, name: string) => {
@@ -270,7 +251,7 @@ export default function PosFrontDeskView({
             ) : null}
             <button
               type="button"
-              onClick={() => station.currentOrderId && setWorkspace({ mode: 'update', orderId: station.currentOrderId })}
+              onClick={() => station.currentOrderId && setUpdateWorkspace({ orderId: station.currentOrderId })}
               className="h-9 w-full rounded-lg bg-posFdAccent text-xs font-bold text-white hover:bg-posFdAccentDark disabled:opacity-60"
             >
               {t('components.dashboard.views.pos.PosFrontDeskView.checkoutButton')}
@@ -322,23 +303,30 @@ export default function PosFrontDeskView({
 
   return (
     <div className="space-y-6">
-      <section className="flex items-start justify-between gap-3 px-0.5">
-        <div className="space-y-1">
-          <h1 className="text-base font-semibold leading-tight text-nexoraText">
-            {t('dashboard.menu.pos_board')}
-          </h1>
-          <p className="text-xs text-nexoraMuted">
-            {t('components.dashboard.views.pos.PosFrontDeskView.description')}
-          </p>
-        </div>
-        <button
-          type="button"
-          onClick={() => setIsBookingModalOpen(true)}
-          className="h-9 shrink-0 rounded-lg bg-posFdAccent px-3 text-xs font-bold text-white hover:bg-posFdAccentDark"
-        >
-          {t('components.dashboard.views.pos.NewBookingForm.newBookingButton')}
-        </button>
-      </section>
+      {/* Hidden while an Order Workspace is open (Check-in draft or editing an existing
+          order) — iPad space optimization: this title/description/+New Booking block is
+          "where am I" chrome that's redundant once the staff is heads-down on one
+          customer's ticket, and the tab bar right below already stays visible/tappable
+          for switching away. */}
+      {!updateWorkspace && activeTab !== 'checkin' ? (
+        <section className="flex items-start justify-between gap-3 px-0.5">
+          <div className="space-y-1">
+            <h1 className="text-base font-semibold leading-tight text-nexoraText">
+              {t('dashboard.menu.pos_board')}
+            </h1>
+            <p className="text-xs text-nexoraMuted">
+              {t('components.dashboard.views.pos.PosFrontDeskView.description')}
+            </p>
+          </div>
+          <button
+            type="button"
+            onClick={() => setIsBookingModalOpen(true)}
+            className="h-9 shrink-0 rounded-lg bg-posFdAccent px-3 text-xs font-bold text-white hover:bg-posFdAccentDark"
+          >
+            {t('components.dashboard.views.pos.NewBookingForm.newBookingButton')}
+          </button>
+        </section>
+      ) : null}
 
       {/* POS Front Desk visual identity: warm accent (posFd*), distinct from the
           main dashboard's nexoraBrand — see tailwind.config.js. */}
@@ -347,9 +335,20 @@ export default function PosFrontDeskView({
           <button
             key={tab.id}
             type="button"
-            onClick={() => (tab.id === 'checkin' ? setWorkspace({ mode: 'create' }) : setActiveTab(tab.id))}
+            onClick={() => {
+              // Switching tabs while editing an existing order (Update mode) closes that
+              // overlay — its edits are already live server-side (GetOrderDetailQuery
+              // re-fetches the same state next time), so nothing is lost. The Check-in
+              // draft is unaffected by this: it's a separately-mounted instance further
+              // down that only gets hidden, never unmounted, by this tab switch.
+              if (updateWorkspace) {
+                setUpdateWorkspace(null)
+                refreshFrontDeskLists()
+              }
+              setActiveTab(tab.id)
+            }}
             className={`px-3 py-2 text-xs font-bold ${
-              activeTab === tab.id
+              !updateWorkspace && activeTab === tab.id
                 ? 'border-b-2 border-posFdAccent text-posFdAccentDark'
                 : 'text-nexoraMuted hover:text-nexoraText'
             }`}
@@ -358,6 +357,42 @@ export default function PosFrontDeskView({
             {typeof tab.badge === 'number' ? ` (${tab.badge})` : ''}
           </button>
         ))}
+      </div>
+
+      {updateWorkspace ? (
+        <PosOrderWorkspace
+          businessId={businessId}
+          businessName={businessName}
+          orderId={updateWorkspace.orderId}
+          onClose={() => {
+            setUpdateWorkspace(null)
+            refreshFrontDeskLists()
+          }}
+          onCompleted={() => {
+            setUpdateWorkspace(null)
+            refreshFrontDeskLists()
+          }}
+        />
+      ) : (
+        <>
+      {/* Always mounted (hidden via CSS, not unmounted) so the in-progress phone/name/
+          services draft survives switching to another tab and back — PosOrderWorkspace
+          resets its own local state back to Step 1 only after a successful Check-In/
+          Checkout, or via its own Cancel button. See top-of-file note. */}
+      <div className={activeTab === 'checkin' ? '' : 'hidden'}>
+        <PosOrderWorkspace
+          businessId={businessId}
+          businessName={businessName}
+          orderId={null}
+          onCheckedIn={() => {
+            // 'waitlist' tab is gone (folded into Order List as a filter) — land on
+            // Order List pre-filtered to Waiting so the just-created ticket is visible.
+            setActiveTab('orderlist')
+            setOrderListFilter('waiting')
+            refreshFrontDeskLists()
+          }}
+          onCompleted={refreshFrontDeskLists}
+        />
       </div>
 
       {activeTab === 'orderlist' && (
@@ -444,7 +479,7 @@ export default function PosFrontDeskView({
                     {filteredOrderList.map((order) => (
                       <div
                         key={order.id}
-                        onClick={() => setWorkspace({ mode: 'update', orderId: order.id })}
+                        onClick={() => setUpdateWorkspace({ orderId: order.id })}
                         className="nexora-card cursor-pointer space-y-2 p-4 hover:border-posFdAccent"
                       >
                         <div className="flex items-center justify-between gap-2">
@@ -490,7 +525,7 @@ export default function PosFrontDeskView({
                       {filteredOrderList.map((order) => (
                         <tr
                           key={order.id}
-                          onClick={() => setWorkspace({ mode: 'update', orderId: order.id })}
+                          onClick={() => setUpdateWorkspace({ orderId: order.id })}
                           className="cursor-pointer border-t border-posFdBorder hover:bg-posFdCanvas"
                         >
                           <td className="py-2 pr-3 font-mono font-bold text-nexoraMuted">#{order.orderNumber}</td>
@@ -537,6 +572,8 @@ export default function PosFrontDeskView({
 
       {activeTab === 'booking' && (
         <BookingTab businessId={businessId} businessSlug={businessSlug} turnBoardStaff={turnBoard} />
+      )}
+        </>
       )}
 
       <NewBookingForm

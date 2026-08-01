@@ -9,12 +9,14 @@ export default function BookingCards({
   onCheckIn,
   onCancel,
   onReschedule,
+  onViewDetail,
   checkingInId,
 }: {
   bookings: BookingListItemApiDto[]
   onCheckIn: (bookingId: string) => void
   onCancel: (bookingId: string) => void
   onReschedule: (bookingId: string) => void
+  onViewDetail: (bookingId: string) => void
   checkingInId: string | null
 }) {
   const { t } = useTranslation()
@@ -33,36 +35,48 @@ export default function BookingCards({
               </span>
             </div>
             <p className="text-xs text-nexoraMuted">{formatBookingWallClock(booking.scheduledAt)}</p>
+            <p className="text-[11px] text-nexoraMuted">
+              {t(p + 'columnCreated')}: {formatBookingWallClock(booking.createdAt)}
+            </p>
             <p className="text-xs text-nexoraMuted">{booking.serviceNames.join(', ')}</p>
             <p className="text-xs text-nexoraMuted">
               {booking.technicianNames.length > 0 ? booking.technicianNames.join(', ') : t(p + 'unassigned')}
             </p>
-            {canAct ? (
-              <div className="flex flex-wrap gap-1.5 pt-1">
-                <button
-                  type="button"
-                  onClick={() => onCheckIn(booking.bookingId)}
-                  disabled={checkingInId === booking.bookingId}
-                  className="rounded-lg bg-nexoraBrand px-2 py-1 text-[11px] font-bold text-white hover:bg-nexoraBrandDark disabled:opacity-60"
-                >
-                  {t(p + 'checkInAction')}
-                </button>
-                <button
-                  type="button"
-                  onClick={() => onReschedule(booking.bookingId)}
-                  className="rounded-lg border border-nexoraBorder px-2 py-1 text-[11px] font-bold text-nexoraText hover:border-nexoraBrand"
-                >
-                  {t(p + 'rescheduleAction')}
-                </button>
-                <button
-                  type="button"
-                  onClick={() => onCancel(booking.bookingId)}
-                  className="rounded-lg border border-nexoraBorder px-2 py-1 text-[11px] font-bold text-nexoraText hover:border-rose-500 hover:text-rose-500"
-                >
-                  {t(p + 'cancelAction')}
-                </button>
-              </div>
-            ) : null}
+            <div className="flex flex-wrap gap-1.5 pt-1">
+              {canAct ? (
+                <>
+                  <button
+                    type="button"
+                    onClick={() => onCheckIn(booking.bookingId)}
+                    disabled={checkingInId === booking.bookingId}
+                    className="rounded-lg bg-nexoraBrand px-2 py-1 text-[11px] font-bold text-white hover:bg-nexoraBrandDark disabled:opacity-60"
+                  >
+                    {t(p + 'checkInAction')}
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => onReschedule(booking.bookingId)}
+                    className="rounded-lg border border-nexoraBorder px-2 py-1 text-[11px] font-bold text-nexoraText hover:border-nexoraBrand"
+                  >
+                    {t(p + 'rescheduleAction')}
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => onCancel(booking.bookingId)}
+                    className="rounded-lg border border-nexoraBorder px-2 py-1 text-[11px] font-bold text-nexoraText hover:border-rose-500 hover:text-rose-500"
+                  >
+                    {t(p + 'cancelAction')}
+                  </button>
+                </>
+              ) : null}
+              <button
+                type="button"
+                onClick={() => onViewDetail(booking.bookingId)}
+                className="rounded-lg border border-nexoraBorder px-2 py-1 text-[11px] font-bold text-nexoraText hover:border-nexoraBrand"
+              >
+                {t(p + 'viewDetailAction')}
+              </button>
+            </div>
           </div>
         )
       })}

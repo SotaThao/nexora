@@ -74,14 +74,16 @@ export interface PosRoleApiDto {
   permissionAreas: PosPermissionAreaGroupApiDto[]
 }
 
-// POS Owner Setup — Categories (US-016)
+// Shared catalog (Category/Service consolidation, 2026-08-01) — same table backs both POS
+// Settings and Booking Hub Settings now; scoped by BusinessId, not TenantId.
 export interface PosCategoryApiDto {
   id: string
   name: string
+  description?: string | null
   displayOrder: number
 }
 
-// POS Owner Setup — Services (US-017)
+// POS Owner Setup — Services (US-017); shape now shared with Booking Hub's catalog.
 export type PosServiceStatus = 'Active' | 'Inactive'
 
 export interface PosServiceApiDto {
@@ -90,6 +92,7 @@ export interface PosServiceApiDto {
   price: number
   durationMinutes: number
   description?: string | null
+  icon?: string | null
   photoUrl?: string | null
   status: PosServiceStatus
   displayOrder: number
@@ -387,6 +390,8 @@ export interface BookingListItemApiDto {
   bookingId: string
   customerName: string
   customerPhone?: string | null
+  // ISO 8601, always read via UTC getters (see feedback_frontend_datetime_timezone_naive).
+  createdAt: string
   // ISO 8601 with offset — always read via UTC getters (see feedback_frontend_datetime_timezone_naive).
   scheduledAt: string
   status: string
@@ -411,8 +416,12 @@ export interface BookingListFilters {
 }
 
 export interface BookingDetailServiceApiDto {
-  posServiceId: string
+  // Null when the service couldn't be resolved (e.g. a Voice call's free-text request with no
+  // confident catalog match) — see the Note field for what the customer actually asked for.
+  posServiceId?: string | null
   serviceName: string
+  price: number
+  note?: string | null
   posStaffProfileId?: string | null
   technicianName?: string | null
 }
@@ -422,6 +431,8 @@ export interface BookingDetailApiDto {
   customerName: string
   customerPhone?: string | null
   customerEmail?: string | null
+  // ISO 8601, always read via UTC getters (see feedback_frontend_datetime_timezone_naive).
+  createdAt: string
   scheduledAt: string
   status: string
   source: string

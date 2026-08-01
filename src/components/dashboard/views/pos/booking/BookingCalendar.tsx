@@ -46,6 +46,7 @@ export default function BookingCalendar({
   onCheckIn,
   onCancel,
   onReschedule,
+  onViewDetail,
   checkingInId,
 }: {
   bookings: BookingListItemApiDto[]
@@ -56,6 +57,7 @@ export default function BookingCalendar({
   onCheckIn: (bookingId: string) => void
   onCancel: (bookingId: string) => void
   onReschedule: (bookingId: string) => void
+  onViewDetail: (bookingId: string) => void
   checkingInId: string | null
 }) {
   const { t } = useTranslation()
@@ -154,33 +156,45 @@ export default function BookingCalendar({
                     </span>
                   </div>
                   <p className="text-[11px] text-nexoraMuted">{formatBookingWallClock(booking.scheduledAt)}</p>
+                  <p className="text-[11px] text-nexoraMuted">
+                    {t(p + 'columnCreated')}: {formatBookingWallClock(booking.createdAt)}
+                  </p>
                   <p className="text-[11px] text-nexoraMuted">{booking.serviceNames.join(', ')}</p>
-                  {canAct ? (
-                    <div className="mt-2 flex flex-wrap gap-1.5">
-                      <button
-                        type="button"
-                        onClick={() => onCheckIn(booking.bookingId)}
-                        disabled={checkingInId === booking.bookingId}
-                        className="rounded-lg bg-nexoraBrand px-2 py-1 text-[11px] font-bold text-white hover:bg-nexoraBrandDark disabled:opacity-60"
-                      >
-                        {t(p + 'checkInAction')}
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() => onReschedule(booking.bookingId)}
-                        className="rounded-lg border border-nexoraBorder px-2 py-1 text-[11px] font-bold text-nexoraText hover:border-nexoraBrand"
-                      >
-                        {t(p + 'rescheduleAction')}
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() => onCancel(booking.bookingId)}
-                        className="rounded-lg border border-nexoraBorder px-2 py-1 text-[11px] font-bold text-nexoraText hover:border-rose-500 hover:text-rose-500"
-                      >
-                        {t(p + 'cancelAction')}
-                      </button>
-                    </div>
-                  ) : null}
+                  <div className="mt-2 flex flex-wrap gap-1.5">
+                    {canAct ? (
+                      <>
+                        <button
+                          type="button"
+                          onClick={() => onCheckIn(booking.bookingId)}
+                          disabled={checkingInId === booking.bookingId}
+                          className="rounded-lg bg-nexoraBrand px-2 py-1 text-[11px] font-bold text-white hover:bg-nexoraBrandDark disabled:opacity-60"
+                        >
+                          {t(p + 'checkInAction')}
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => onReschedule(booking.bookingId)}
+                          className="rounded-lg border border-nexoraBorder px-2 py-1 text-[11px] font-bold text-nexoraText hover:border-nexoraBrand"
+                        >
+                          {t(p + 'rescheduleAction')}
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => onCancel(booking.bookingId)}
+                          className="rounded-lg border border-nexoraBorder px-2 py-1 text-[11px] font-bold text-nexoraText hover:border-rose-500 hover:text-rose-500"
+                        >
+                          {t(p + 'cancelAction')}
+                        </button>
+                      </>
+                    ) : null}
+                    <button
+                      type="button"
+                      onClick={() => onViewDetail(booking.bookingId)}
+                      className="rounded-lg border border-nexoraBorder px-2 py-1 text-[11px] font-bold text-nexoraText hover:border-nexoraBrand"
+                    >
+                      {t(p + 'viewDetailAction')}
+                    </button>
+                  </div>
                 </div>
               )
             })

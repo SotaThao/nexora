@@ -97,27 +97,34 @@ export default function SelectTechniciansModal({
             />
           </div>
 
-          {isLoading ? (
-            <SkeletonList count={4} lines={1} />
-          ) : (
-            <div className="grid grid-cols-2 gap-2 sm:grid-cols-3">
-              <button
-                type="button"
-                onClick={() => setSelectedStaffId(NEXT_AVAILABLE)}
-                className={`flex flex-col items-center gap-1 rounded-xl border p-3 text-center ${
-                  selectedStaffId === NEXT_AVAILABLE
-                    ? 'border-posFdAccent bg-posFdAccent/5'
-                    : 'border-nexoraBorder hover:border-posFdAccent'
-                }`}
-              >
-                <span className="flex h-9 w-9 items-center justify-center rounded-full bg-nexoraCanvas text-[11px] font-bold text-nexoraText">
-                  ⚡
-                </span>
-                <span className="text-[11px] font-bold text-nexoraText">
-                  {t('components.dashboard.views.pos.SelectTechniciansModal.nextAvailable')}
-                </span>
-              </button>
+          {/* "Next Available" doesn't depend on the assignable-staff query at all, so it
+              must not sit behind its loading skeleton — previously it did, meaning a tap
+              right after opening this modal (before that query resolves) landed on the
+              skeleton instead of a button and appeared to do nothing. */}
+          <div className="grid grid-cols-2 gap-2 sm:grid-cols-3">
+            <button
+              type="button"
+              onClick={() => setSelectedStaffId(NEXT_AVAILABLE)}
+              className={`flex flex-col items-center gap-1 rounded-xl border p-3 text-center ${
+                selectedStaffId === NEXT_AVAILABLE
+                  ? 'border-posFdAccent bg-posFdAccent/5'
+                  : 'border-nexoraBorder hover:border-posFdAccent'
+              }`}
+            >
+              <span className="flex h-9 w-9 items-center justify-center rounded-full bg-nexoraCanvas text-[11px] font-bold text-nexoraText">
+                ⚡
+              </span>
+              <span className="text-[11px] font-bold text-nexoraText">
+                {t('components.dashboard.views.pos.SelectTechniciansModal.nextAvailable')}
+              </span>
+            </button>
 
+            {isLoading ? (
+              <div className="col-span-full">
+                <SkeletonList count={4} lines={1} />
+              </div>
+            ) : (
+              <>
               {filteredStaff.map((staff) => (
                 <button
                   key={staff.posStaffProfileId}
@@ -160,8 +167,9 @@ export default function SelectTechniciansModal({
                   {t('components.dashboard.views.pos.SelectTechniciansModal.noStaff')}
                 </p>
               ) : null}
-            </div>
-          )}
+              </>
+            )}
+          </div>
 
           <div>
             <label className="mb-1 block text-[10px] font-bold uppercase tracking-wide text-nexoraMuted">

@@ -8,12 +8,14 @@ export default function BookingTable({
   onCheckIn,
   onCancel,
   onReschedule,
+  onViewDetail,
   checkingInId,
 }: {
   bookings: BookingListItemApiDto[]
   onCheckIn: (bookingId: string) => void
   onCancel: (bookingId: string) => void
   onReschedule: (bookingId: string) => void
+  onViewDetail: (bookingId: string) => void
   checkingInId: string | null
 }) {
   const { t } = useTranslation()
@@ -25,6 +27,7 @@ export default function BookingTable({
         <thead>
           <tr className="border-b border-nexoraBorder bg-nexoraCanvas text-[10px] font-black uppercase tracking-wider text-nexoraMuted">
             <th className="px-3 py-2">{t(p + 'columnCustomer')}</th>
+            <th className="px-3 py-2">{t(p + 'columnCreated')}</th>
             <th className="px-3 py-2">{t(p + 'columnDateTime')}</th>
             <th className="px-3 py-2">{t(p + 'columnServices')}</th>
             <th className="px-3 py-2">{t(p + 'columnTechnician')}</th>
@@ -38,6 +41,7 @@ export default function BookingTable({
             return (
               <tr key={booking.bookingId} className="border-b border-nexoraBorder last:border-0">
                 <td className="px-3 py-2 font-bold text-nexoraText">{booking.customerName}</td>
+                <td className="px-3 py-2 text-nexoraMuted">{formatBookingWallClock(booking.createdAt)}</td>
                 <td className="px-3 py-2 text-nexoraMuted">{formatBookingWallClock(booking.scheduledAt)}</td>
                 <td className="px-3 py-2 text-nexoraMuted">{booking.serviceNames.join(', ')}</td>
                 <td className="px-3 py-2 text-nexoraMuted">
@@ -49,32 +53,41 @@ export default function BookingTable({
                   </span>
                 </td>
                 <td className="px-3 py-2">
-                  {canAct ? (
-                    <div className="flex flex-wrap gap-1.5">
-                      <button
-                        type="button"
-                        onClick={() => onCheckIn(booking.bookingId)}
-                        disabled={checkingInId === booking.bookingId}
-                        className="rounded-lg bg-nexoraBrand px-2 py-1 text-[11px] font-bold text-white hover:bg-nexoraBrandDark disabled:opacity-60"
-                      >
-                        {t(p + 'checkInAction')}
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() => onReschedule(booking.bookingId)}
-                        className="rounded-lg border border-nexoraBorder px-2 py-1 text-[11px] font-bold text-nexoraText hover:border-nexoraBrand"
-                      >
-                        {t(p + 'rescheduleAction')}
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() => onCancel(booking.bookingId)}
-                        className="rounded-lg border border-nexoraBorder px-2 py-1 text-[11px] font-bold text-nexoraText hover:border-rose-500 hover:text-rose-500"
-                      >
-                        {t(p + 'cancelAction')}
-                      </button>
-                    </div>
-                  ) : null}
+                  <div className="flex flex-wrap gap-1.5">
+                    {canAct ? (
+                      <>
+                        <button
+                          type="button"
+                          onClick={() => onCheckIn(booking.bookingId)}
+                          disabled={checkingInId === booking.bookingId}
+                          className="rounded-lg bg-nexoraBrand px-2 py-1 text-[11px] font-bold text-white hover:bg-nexoraBrandDark disabled:opacity-60"
+                        >
+                          {t(p + 'checkInAction')}
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => onReschedule(booking.bookingId)}
+                          className="rounded-lg border border-nexoraBorder px-2 py-1 text-[11px] font-bold text-nexoraText hover:border-nexoraBrand"
+                        >
+                          {t(p + 'rescheduleAction')}
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => onCancel(booking.bookingId)}
+                          className="rounded-lg border border-nexoraBorder px-2 py-1 text-[11px] font-bold text-nexoraText hover:border-rose-500 hover:text-rose-500"
+                        >
+                          {t(p + 'cancelAction')}
+                        </button>
+                      </>
+                    ) : null}
+                    <button
+                      type="button"
+                      onClick={() => onViewDetail(booking.bookingId)}
+                      className="rounded-lg border border-nexoraBorder px-2 py-1 text-[11px] font-bold text-nexoraText hover:border-nexoraBrand"
+                    >
+                      {t(p + 'viewDetailAction')}
+                    </button>
+                  </div>
                 </td>
               </tr>
             )

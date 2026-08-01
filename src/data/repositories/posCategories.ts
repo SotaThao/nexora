@@ -14,24 +14,24 @@ export interface CategoryOrderItem {
 export function createPosCategoriesRepository(client: HttpClient = httpClient) {
   return {
     async getPosCategories(): Promise<PosCategoryApiDto[]> {
-      const res = await client.get<PosCategoryApiDto[]>('/api/v1/merchant/pos/categories')
+      const res = await client.get<PosCategoryApiDto[]>('/api/v1/merchant/categories')
       return res ?? []
     },
 
     async createPosCategory(name: string): Promise<string> {
-      return await client.post<string>('/api/v1/merchant/pos/categories', { name })
+      return await client.post<string>('/api/v1/merchant/categories', { name })
     },
 
     async updatePosCategory(categoryId: string, name: string): Promise<boolean> {
-      return await client.put<boolean>(`/api/v1/merchant/pos/categories/${categoryId}`, { name })
+      return await client.put<boolean>(`/api/v1/merchant/categories/${categoryId}`, { name })
     },
 
     async reorderPosCategories(items: CategoryOrderItem[]): Promise<void> {
-      await client.put<void>('/api/v1/merchant/pos/categories/reorder', { items })
+      await client.put<void>('/api/v1/merchant/categories/reorder', { items })
     },
 
     async deletePosCategory(categoryId: string): Promise<boolean> {
-      return await client.del<boolean>(`/api/v1/merchant/pos/categories/${categoryId}`)
+      return await client.del<boolean>(`/api/v1/merchant/categories/${categoryId}`)
     },
   }
 }

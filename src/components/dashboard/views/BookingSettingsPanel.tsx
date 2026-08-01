@@ -1668,7 +1668,16 @@ export default function BookingSettingsPanel() {
         next.categories,
       );
       setCategories(mergedCategories);
-      if (!servicesDirtyRef.current) setServices(next.services);
+      if (!servicesDirtyRef.current) {
+        setServices(
+          next.services.length > 0
+            ? next.services
+            : mergeFlatServicesIntoCategories(
+                mergedCategories,
+                await merchantVoiceRepository.getServices(),
+              ),
+        );
+      }
       syncCategoryDraftsFromApi(mergedCategories);
     } catch (error) {
       const message = t(getErrorI18nKey(getApiErrorCode(error)));
@@ -1721,7 +1730,16 @@ export default function BookingSettingsPanel() {
         next.categories,
       );
       setCategories(mergedCategories);
-      if (!servicesDirtyRef.current) setServices(next.services);
+      if (!servicesDirtyRef.current) {
+        setServices(
+          next.services.length > 0
+            ? next.services
+            : mergeFlatServicesIntoCategories(
+                mergedCategories,
+                await merchantVoiceRepository.getServices(),
+              ),
+        );
+      }
       syncCategoryDraftsFromApi(mergedCategories);
       setPendingCategoryFocus(null);
     } catch (error) {
@@ -1800,8 +1818,16 @@ export default function BookingSettingsPanel() {
         draft.id ? [draft.id] : [],
       );
       setCategories(mergedCategories);
-      if (!servicesDirtyRef.current) setServices(next.services);
-      else {
+      if (!servicesDirtyRef.current) {
+        setServices(
+          next.services.length > 0
+            ? next.services
+            : mergeFlatServicesIntoCategories(
+                mergedCategories,
+                await merchantVoiceRepository.getServices(),
+              ),
+        );
+      } else {
         // Remap dirty services that lived under deleted category → Other.
         const other =
           mergedCategories.find((item) => item.isSystem) ||

@@ -12,7 +12,7 @@
 //   The bottom action button is only ever the *next status transition* (Start Service /
 //   Checkout) or the final Complete payment.
 import { useEffect, useMemo, useRef, useState } from 'react'
-import { Loader2, Package, Pencil, Trash2 } from 'lucide-react'
+import { ArrowLeft, Loader2, Package, Pencil, Trash2 } from 'lucide-react'
 import { useTranslation } from '../../../../contexts/LanguageContext'
 import { useNotification } from '../../../../contexts/NotificationContext'
 import { getErrorMessage } from '../../../../data/errorCodes'
@@ -109,7 +109,10 @@ export default function PosOrderWorkspace({
   // 2-step Check-in below: Step 1 phone (PhoneCheckInStep), Step 2 name/email/catalog
   // (CustomerHeaderBar) — not a single continuous form).
   orderId: string | null
-  onClose: () => void
+  // Update mode only — renders a "Back" button next to the title. Create mode has no use
+  // for this: the persistently-mounted Check-in slot is never "closed", only navigated
+  // away from via the tab bar, and it already has its own Cancel button in Order Detail.
+  onClose?: () => void
   // Create mode, >=1 service line path — order is now Waiting, exit back to the list.
   onCheckedIn?: (newOrderId: string) => void
   onCompleted?: () => void
@@ -122,6 +125,13 @@ export default function PosOrderWorkspace({
   const [internalOrderId, setInternalOrderId] = useState<string | null>(null)
   const effectiveOrderId = orderId ?? internalOrderId
   const isCreateMode = effectiveOrderId === null
+  // Distinguishes "this mounted instance is the persistently-mounted Check-in tab slot"
+  // from "this instance is the ephemeral Update-mode overlay" — unlike isCreateMode (which
+  // flips to false mid-flow once internalOrderId is set on the 0-service checkout path),
+  // this stays true for this instance's entire lifetime since it's derived from the
+  // immutable `orderId` prop. Used to reset the draft back to a blank Step 1 after a
+  // successful Check-In/Checkout, since this instance is never unmounted by the parent.
+  const isPersistentCreateSlot = orderId === null
 
   // Check-in Step 1/2 — PO requirement: the phone-entry step must be the same component
   // used later by the (not yet built) customer self-checkin kiosk, so it's a standalone
@@ -177,6 +187,28 @@ export default function PosOrderWorkspace({
   const [receiptChoice, setReceiptChoice] = useState<'sms' | 'none'>('sms')
   const [tipSplitInputs, setTipSplitInputs] = useState<Record<string, string>>({})
   const initializedOrderIdRef = useRef<string | null>(null)
+
+  // Only meaningful for the persistent Check-in slot (see isPersistentCreateSlot) — puts
+  // it back to a blank Step 1, ready for the next customer. Called after a successful
+  // Check-In/Checkout completes this draft's order, and from the Step 2 Cancel button.
+  const resetCreateDraft = () => {
+    setInternalOrderId(null)
+    setCheckinStep('phone')
+    setCustomerName('')
+    setCustomerPhone('')
+    setCustomerEmail('')
+    setCatalogTab('services')
+    setDraftLines([])
+    setShowPaymentSection(false)
+    setTechnicianModal(null)
+    setTipMode('fixed15')
+    setCustomTipInput('')
+    setPaymentMethod('Cash')
+    setCustomerFacingMode(false)
+    setReceiptChoice('sms')
+    setTipSplitInputs({})
+    initializedOrderIdRef.current = null
+  }
 
   // Update mode has no local draft for the lines themselves — the table is always a live
   // reflection of the latest GetOrderDetailQuery result, since every edit already calls
@@ -253,14 +285,15 @@ export default function PosOrderWorkspace({
 
   const hasServiceLines = visibleLines.some((l) => l.itemType === 'Service')
   const draftSubtotal = visibleLines.reduce((sum, l) => sum + lineTotal(l), 0)
+  // This is the Check-in screen, so the primary action defaults to "Check In" — including
+  // the empty-draft state (the button stays disabled either way until something's added).
+  // "Checkout" only replaces it for a product-only draft, where there's no service to wait
+  // through and nothing meaningful to check in to Waiting for.
+  const isProductOnlyCheckout = !hasServiceLines && visibleLines.length > 0
 
   const noteLines = visibleLines.filter(
     (l): l is DisplayServiceLine => l.itemType === 'Service' && Boolean(l.note?.trim()),
   )
-
-  const statusLabel = isCreateMode
-    ? t('components.dashboard.views.pos.PosOrderWorkspace.statusDraft')
-    : (order?.status ?? '')
 
   const reportError = (err: unknown) => {
     showToast(getErrorMessage(err, t, 'ERROR'), 'error')
@@ -435,6 +468,7 @@ export default function PosOrderWorkspace({
         onSuccess: (newOrderId) => {
           showToast(t('components.dashboard.views.pos.PosOrderWorkspace.checkInSuccess'))
           onCheckedIn?.(newOrderId)
+          if (isPersistentCreateSlot) resetCreateDraft()
         },
         onError: reportError,
       },
@@ -550,6 +584,7 @@ export default function PosOrderWorkspace({
         onSuccess: () => {
           showToast(t('components.dashboard.views.pos.PosOrderWorkspace.completeSuccess'))
           onCompleted?.()
+          if (isPersistentCreateSlot) resetCreateDraft()
         },
         onError: reportError,
       },
@@ -560,32 +595,31 @@ export default function PosOrderWorkspace({
 
   return (
     <div className="space-y-4">
-      <div className="flex items-center justify-between">
-        <div>
+      {/* Create mode drops its own heading — the Phone/Name/Email fields (and, on the
+          phone step, PhoneCheckInStep's own welcome heading) already show who this order
+          is for, so "New Order · New Guest" was pure vertical space with no unique info.
+          Update mode keeps its heading since order #/customer name isn't shown anywhere
+          else on this screen. */}
+      {!isCreateMode ? (
+        <div className="flex items-center justify-between gap-3">
           <h1 className="text-base font-semibold leading-tight text-nexoraText">
-            {isCreateMode
-              ? t('components.dashboard.views.pos.PosOrderWorkspace.titleCreate', {
-                  customerName: customerName || t('components.dashboard.views.pos.PosOrderWorkspace.newGuest'),
-                })
-              : t('components.dashboard.views.pos.PosOrderWorkspace.titleUpdate', {
-                  orderNumber: order?.orderNumber ?? '',
-                  customerName: order?.customerName ?? '',
-                })}
+            {t('components.dashboard.views.pos.PosOrderWorkspace.titleUpdate', {
+              orderNumber: order?.orderNumber ?? '',
+              customerName: order?.customerName ?? '',
+            })}
           </h1>
+          {onClose ? (
+            <button
+              type="button"
+              onClick={onClose}
+              className="flex h-11 shrink-0 items-center gap-1.5 rounded-lg border border-posFdBorder px-4 text-sm font-bold text-posFdText hover:border-posFdAccent"
+            >
+              <ArrowLeft className="h-4 w-4" />
+              {t('components.dashboard.views.pos.PosOrderWorkspace.backButton')}
+            </button>
+          ) : null}
         </div>
-        <div className="flex items-center gap-3">
-          <span className="rounded-full bg-nexoraCanvas px-3 py-1 text-[10px] font-black uppercase tracking-wider text-nexoraMuted">
-            {statusLabel}
-          </span>
-          <button
-            type="button"
-            onClick={onClose}
-            className="rounded-lg border border-nexoraBorder px-3 py-1.5 text-xs font-bold text-nexoraText hover:border-posFdAccent"
-          >
-            {t('components.dashboard.views.pos.PosOrderWorkspace.closeButton')}
-          </button>
-        </div>
-      </div>
+      ) : null}
 
       {isCreateMode && checkinStep === 'phone' ? (
         <PhoneCheckInStep
@@ -616,8 +650,8 @@ export default function PosOrderWorkspace({
           <SkeletonList count={4} lines={2} />
         </div>
       ) : (
-        <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
-          <div className="nexora-card space-y-3 p-4">
+        <div className="grid grid-cols-1 gap-6 lg:grid-cols-5">
+          <div className="nexora-card space-y-3 p-4 lg:col-span-3">
             <div className="flex gap-1 border-b border-nexoraBorder pb-2">
               <button
                 type="button"
@@ -675,7 +709,7 @@ export default function PosOrderWorkspace({
             )}
           </div>
 
-          <div className="space-y-4">
+          <div className="space-y-4 lg:col-span-2">
             <div className="nexora-card space-y-3 p-4">
               <h3 className="text-[10px] font-black uppercase tracking-wider text-nexoraMuted">
                 {t('components.dashboard.views.pos.PosOrderWorkspace.orderDetailTitle')}
@@ -689,83 +723,85 @@ export default function PosOrderWorkspace({
                 <div className="space-y-2">
                   {visibleLines.map((line) =>
                     line.itemType === 'Service' ? (
-                      <div
-                        key={line.key}
-                        className="flex items-center gap-3 rounded-2xl border border-posFdBorder bg-white p-2.5"
-                      >
-                        <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-posFdLavender/20 text-xs font-bold text-posFdAccentDark">
-                          {initials(
-                            line.technicianName ?? t('components.dashboard.views.pos.PosOrderWorkspace.nextAvailable'),
-                          )}
+                      <div key={line.key} className="space-y-2 rounded-2xl border border-posFdBorder bg-white p-3">
+                        <div className="flex items-start gap-3">
+                          <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-posFdLavender/20 text-xs font-bold text-posFdAccentDark">
+                            {initials(
+                              line.technicianName ?? t('components.dashboard.views.pos.PosOrderWorkspace.nextAvailable'),
+                            )}
+                          </div>
+                          <div className="min-w-0 flex-1">
+                            <p className="text-sm font-bold leading-tight text-posFdText">{line.serviceName}</p>
+                            <p className="text-xs leading-tight text-posFdMuted">
+                              {line.technicianName ?? t('components.dashboard.views.pos.PosOrderWorkspace.nextAvailable')}
+                            </p>
+                          </div>
+                          <span className="shrink-0 text-sm font-bold text-posFdText">
+                            ${lineTotal(line).toFixed(2)}
+                          </span>
                         </div>
-                        <div className="min-w-0 flex-1">
-                          <p className="truncate text-sm font-bold text-posFdText">{line.serviceName}</p>
-                          <p className="truncate text-xs text-posFdMuted">
-                            {line.technicianName ?? t('components.dashboard.views.pos.PosOrderWorkspace.nextAvailable')}
-                          </p>
+                        <div className="flex justify-end gap-1.5">
+                          <button
+                            type="button"
+                            onClick={() => handleEditServiceLine(line)}
+                            className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl text-posFdMuted hover:bg-posFdCanvas hover:text-posFdAccentDark"
+                            aria-label={t('components.dashboard.views.pos.PosOrderWorkspace.editLine')}
+                          >
+                            <Pencil className="h-4 w-4" />
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => handleDeleteLine(line)}
+                            className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl text-posFdMuted hover:bg-rose-50 hover:text-rose-600"
+                            aria-label={t('components.dashboard.views.pos.PosOrderWorkspace.deleteLine')}
+                          >
+                            <Trash2 className="h-4 w-4" />
+                          </button>
                         </div>
-                        <span className="shrink-0 text-sm font-bold text-posFdText">
-                          ${lineTotal(line).toFixed(2)}
-                        </span>
-                        <button
-                          type="button"
-                          onClick={() => handleEditServiceLine(line)}
-                          className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl text-posFdMuted hover:bg-posFdCanvas hover:text-posFdAccentDark"
-                          aria-label={t('components.dashboard.views.pos.PosOrderWorkspace.editLine')}
-                        >
-                          <Pencil className="h-4 w-4" />
-                        </button>
-                        <button
-                          type="button"
-                          onClick={() => handleDeleteLine(line)}
-                          className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl text-posFdMuted hover:bg-rose-50 hover:text-rose-600"
-                          aria-label={t('components.dashboard.views.pos.PosOrderWorkspace.deleteLine')}
-                        >
-                          <Trash2 className="h-4 w-4" />
-                        </button>
                       </div>
                     ) : (
-                      <div
-                        key={line.key}
-                        className="flex items-center gap-3 rounded-2xl border border-posFdBorder bg-white p-2.5"
-                      >
-                        <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-posFdCanvas text-posFdAccentDark">
-                          <Package className="h-4 w-4" />
+                      <div key={line.key} className="space-y-2 rounded-2xl border border-posFdBorder bg-white p-3">
+                        <div className="flex items-start gap-3">
+                          <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-posFdCanvas text-posFdAccentDark">
+                            <Package className="h-4 w-4" />
+                          </div>
+                          <div className="min-w-0 flex-1">
+                            <p className="text-sm font-bold leading-tight text-posFdText">{line.productName}</p>
+                            <p className="text-xs leading-tight text-posFdMuted">${line.unitPrice.toFixed(2)} each</p>
+                          </div>
+                          <span className="shrink-0 text-sm font-bold text-posFdText">
+                            ${lineTotal(line).toFixed(2)}
+                          </span>
                         </div>
-                        <div className="min-w-0 flex-1">
-                          <p className="truncate text-sm font-bold text-posFdText">{line.productName}</p>
-                          <p className="text-xs text-posFdMuted">${line.unitPrice.toFixed(2)} each</p>
-                        </div>
-                        <div className="flex shrink-0 items-center gap-1.5">
+                        <div className="flex items-center justify-between">
+                          <div className="flex items-center gap-1.5">
+                            <button
+                              type="button"
+                              onClick={() => applyQuantityDelta(line, -1)}
+                              className="flex h-9 w-9 items-center justify-center rounded-xl border border-posFdBorder text-posFdText hover:border-posFdAccent"
+                              aria-label={t('components.dashboard.views.pos.PosOrderWorkspace.decreaseQty')}
+                            >
+                              −
+                            </button>
+                            <span className="w-5 text-center text-sm font-bold text-posFdText">{line.quantity}</span>
+                            <button
+                              type="button"
+                              onClick={() => applyQuantityDelta(line, 1)}
+                              className="flex h-9 w-9 items-center justify-center rounded-xl border border-posFdBorder text-posFdText hover:border-posFdAccent"
+                              aria-label={t('components.dashboard.views.pos.PosOrderWorkspace.increaseQty')}
+                            >
+                              +
+                            </button>
+                          </div>
                           <button
                             type="button"
-                            onClick={() => applyQuantityDelta(line, -1)}
-                            className="flex h-9 w-9 items-center justify-center rounded-xl border border-posFdBorder text-posFdText hover:border-posFdAccent"
-                            aria-label={t('components.dashboard.views.pos.PosOrderWorkspace.decreaseQty')}
+                            onClick={() => handleDeleteLine(line)}
+                            className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl text-posFdMuted hover:bg-rose-50 hover:text-rose-600"
+                            aria-label={t('components.dashboard.views.pos.PosOrderWorkspace.deleteLine')}
                           >
-                            −
-                          </button>
-                          <span className="w-5 text-center text-sm font-bold text-posFdText">{line.quantity}</span>
-                          <button
-                            type="button"
-                            onClick={() => applyQuantityDelta(line, 1)}
-                            className="flex h-9 w-9 items-center justify-center rounded-xl border border-posFdBorder text-posFdText hover:border-posFdAccent"
-                            aria-label={t('components.dashboard.views.pos.PosOrderWorkspace.increaseQty')}
-                          >
-                            +
+                            <Trash2 className="h-4 w-4" />
                           </button>
                         </div>
-                        <span className="shrink-0 text-sm font-bold text-posFdText">
-                          ${lineTotal(line).toFixed(2)}
-                        </span>
-                        <button
-                          type="button"
-                          onClick={() => handleDeleteLine(line)}
-                          className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl text-posFdMuted hover:bg-rose-50 hover:text-rose-600"
-                          aria-label={t('components.dashboard.views.pos.PosOrderWorkspace.deleteLine')}
-                        >
-                          <Trash2 className="h-4 w-4" />
-                        </button>
                       </div>
                     ),
                   )}
@@ -828,16 +864,23 @@ export default function PosOrderWorkspace({
               <div className="flex gap-2">
                 <button
                   type="button"
-                  onClick={hasServiceLines ? handleCheckIn : handleCheckoutFromCreate}
+                  onClick={resetCreateDraft}
+                  className="h-11 rounded-lg border border-nexoraBorder px-4 text-sm font-bold text-nexoraText hover:border-posFdAccent"
+                >
+                  {t('components.dashboard.views.pos.PosOrderWorkspace.cancelButton')}
+                </button>
+                <button
+                  type="button"
+                  onClick={isProductOnlyCheckout ? handleCheckoutFromCreate : handleCheckIn}
                   disabled={isBusy || visibleLines.length === 0}
                   className="h-11 flex-1 rounded-lg bg-posFdAccent text-sm font-bold text-white hover:bg-posFdAccentDark disabled:opacity-60"
                 >
                   {isBusy ? (
                     <Loader2 className="mx-auto h-4 w-4 animate-spin" />
-                  ) : hasServiceLines ? (
-                    t('components.dashboard.views.pos.PosOrderWorkspace.checkInButton')
-                  ) : (
+                  ) : isProductOnlyCheckout ? (
                     t('components.dashboard.views.pos.PosOrderWorkspace.checkoutButton')
+                  ) : (
+                    t('components.dashboard.views.pos.PosOrderWorkspace.checkInButton')
                   )}
                 </button>
               </div>
