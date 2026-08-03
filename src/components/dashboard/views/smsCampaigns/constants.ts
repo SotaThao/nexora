@@ -402,9 +402,14 @@ export const SMS_COMPOSER_TAG_SAMPLES = {
 
 type SmsCampaignLinkOptions = {
   source?: string | null;
-  /** Merchant profile phone → `?p=` on the booking link. */
+  /** Merchant profile phone → `?p=` (digits only, no spaces / `+`). */
   phone?: string | null;
 };
+
+/** Strip spaces/symbols so SMS links use digits only. */
+export function toSmsCampaignLinkPhone(value: string | null | undefined): string {
+  return String(value ?? "").replace(/\D/g, "");
+}
 
 function appendSmsCampaignLinkQuery(
   path: string,
@@ -413,21 +418,15 @@ function appendSmsCampaignLinkQuery(
 ): string {
   const source =
     String(options.source ?? VoiceLeadSource.Sms).trim() || VoiceLeadSource.Sms;
-  const pairs: Array<[string, string]> = [
-    [PUBLIC_BOOKING_ROUTE.langQuery, langCode],
-    [PUBLIC_BOOKING_ROUTE.sourceQuery, source],
+  const profilePhone = toSmsCampaignLinkPhone(options.phone);
+  const parts = [
+    `${encodeURIComponent(PUBLIC_BOOKING_ROUTE.langQuery)}=${encodeURIComponent(langCode)}`,
+    `${encodeURIComponent(PUBLIC_BOOKING_ROUTE.sourceQuery)}=${encodeURIComponent(source)}`,
   ];
-  const profilePhone = String(options.phone ?? "").trim();
   if (profilePhone) {
-    pairs.push([PUBLIC_BOOKING_ROUTE.profilePhoneQuery, profilePhone]);
+    parts.push(`${PUBLIC_BOOKING_ROUTE.profilePhoneQuery}=${profilePhone}`);
   }
-  const qs = pairs
-    .map(
-      ([key, value]) =>
-        `${encodeURIComponent(key)}=${encodeURIComponent(value)}`,
-    )
-    .join("&");
-  return `${path}?${qs}`;
+  return `${path}?${parts.join("&")}`;
 }
 
 /** SMS-friendly business booking link: `{domain}/b/{businessKey}?lang=&src=Sms[&p=]`. */

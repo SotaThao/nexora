@@ -3,7 +3,6 @@ import { useTranslation } from "../../../../contexts/LanguageContext";
 import { useNotification } from "../../../../contexts/NotificationContext";
 import { getErrorI18nKey } from "../../../../data/errorCodes";
 import { useMerchantVoiceMyTenant } from "../../../../data/hooks/useMerchantVoiceBookings";
-import { useProfileSettings } from "../../../../data/hooks/useProfileSettings";
 import {
   useAnalyzeMerchantVoiceSmsText,
   useCreateMerchantVoiceSmsCampaign,
@@ -11,6 +10,7 @@ import {
   useMerchantVoiceSmsCampaign,
   useUpdateMerchantVoiceSmsCampaign,
 } from "../../../../data/hooks/useMerchantVoiceSmsCampaigns";
+import { useProfileSettings } from "../../../../data/hooks/useProfileSettings";
 import {
   SmsCampaignAudience,
   SmsCampaignScheduleMode,
