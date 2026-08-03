@@ -2836,6 +2836,7 @@
               "openTimeAria": "{day} open time",
               "closeTimeAria": "{day} close time",
               "scheduleTo": "to",
+              "hoursDayRequired": "{day}: open and close times are required.",
               "hoursDayInvalid": "{day} must have a valid closing time later than its opening time.",
               "painLabel": "What's your salon's biggest challenge right now?",
               "painHint": "(helps us set up what you need first)",

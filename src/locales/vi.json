@@ -2836,6 +2836,7 @@
               "openTimeAria": "Giờ mở cửa {day}",
               "closeTimeAria": "Giờ đóng cửa {day}",
               "scheduleTo": "đến",
+              "hoursDayRequired": "{day}: vui lòng nhập giờ mở và giờ đóng cửa.",
               "hoursDayInvalid": "{day} cần giờ đóng cửa muộn hơn giờ mở cửa.",
               "painLabel": "Vấn đề lớn nhất của tiệm hiện nay?",
               "painHint": "(giúp chúng tôi thiết lập đúng thứ bạn cần trước)",
