@@ -14,6 +14,7 @@ import {
   TagsTabIcon,
 } from './BookingHubIcons'
 import { BookingHubTabsSkeleton } from './BookingHubSkeletons'
+import ComingSoon from './ComingSoon'
 import {
   BookingHubMainTab,
   BookingHubSubTab,
@@ -206,6 +207,16 @@ export default function BookingHubView() {
       {!isTenantStatusLoading && voiceFeaturesEnabled && activeMainTab === BookingHubMainTab.Settings && (
         <section className="tab-panel is-active" aria-label={t(`${TK}.ariaSettingsPanel`)}>
           <BookingSettingsPanel />
+        </section>
+      )}
+
+      {!isTenantStatusLoading && voiceFeaturesEnabled && (
+        activeMainTab === BookingHubMainTab.Customers
+        || activeMainTab === BookingHubMainTab.CallLog
+        || activeMainTab === BookingHubMainTab.SmsCampaigns
+      ) && (
+        <section className="tab-panel is-active">
+          <ComingSoon activeMenu="ai_hub" onBack={() => updateQueryTabs(BookingHubMainTab.Plans)} />
         </section>
       )}
     </section>

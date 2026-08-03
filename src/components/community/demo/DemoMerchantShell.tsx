@@ -11,9 +11,13 @@ import {
   QrCode,
   Search,
   Users,
+  X,
 } from 'lucide-react'
 import { Fragment, useState, type ReactNode } from 'react'
+import { Link, useLocation } from 'react-router-dom'
 import { useTranslation } from '../../../contexts/LanguageContext'
+import { CommunityChatInboxTrigger } from '../CommunityChatDock'
+import { CommunityNotificationBell } from '../CommunityNotifications'
 import {
   MERCHANT_SIDEBAR_MENU_ITEMS,
   VISIBLE_TOUCHPOINTS_SUBMENU,
@@ -47,6 +51,13 @@ type DemoMerchantSidebarProps = {
 
 const homepageMenuItem = { id: 'homepage', icon: Home }
 const communityMenuItem = { id: 'community', icon: MessageCircle }
+const communitySubmenuItems = [
+  { id: 'feed', label: 'Feed' },
+  { id: 'groups', label: 'Groups' },
+  { id: 'learning', label: 'Learning' },
+  { id: 'jobs', label: 'Jobs' },
+  { id: 'events', label: 'Events' },
+] as const
 
 function merchantMenuLabel(id: string, fallback: string, t: (key: string) => string) {
   return (
@@ -69,7 +80,14 @@ function merchantMenuLabel(id: string, fallback: string, t: (key: string) => str
 // The production shell cannot be mounted on this public route because it consumes auth/query/router state.
 function DemoMerchantSidebar({ isOpen, onClose, onDemoNavigation }: DemoMerchantSidebarProps) {
   const { t } = useTranslation()
+  const { pathname, search } = useLocation()
+  const isCommunityRoute = pathname === '/community' || pathname.startsWith('/community/')
+  const isCommunityHomeRoute = pathname === '/community' || pathname === '/community/'
+  const activeCommunityTab = isCommunityHomeRoute
+    ? new URLSearchParams(search).get('tab') ?? 'feed'
+    : null
   const [isProfileExpanded, setIsProfileExpanded] = useState(false)
+  const [isCommunityExpanded, setIsCommunityExpanded] = useState(isCommunityRoute)
   const [isPaymentsExpanded, setIsPaymentsExpanded] = useState(false)
   const [isTouchpointsExpanded, setIsTouchpointsExpanded] = useState(false)
   const overviewItem = MERCHANT_SIDEBAR_MENU_ITEMS.find((item) => item.id === 'overview')
@@ -141,32 +159,48 @@ function DemoMerchantSidebar({ isOpen, onClose, onDemoNavigation }: DemoMerchant
     isMobile: boolean,
   ) => {
     const isTouchpoints = item.id === 'touchpoints'
+    const isStaffItem = item.id === 'staff'
     return (
       <Fragment key={item.id}>
-        <button
-          type="button"
-          aria-expanded={isTouchpoints ? isTouchpointsExpanded : undefined}
-          onClick={() => {
-            if (isTouchpoints) setIsTouchpointsExpanded((current) => !current)
-            onDemoNavigation()
-            if (isMobile && !isTouchpoints) onClose()
-          }}
-          className={sidebarMenuItemBetweenClass(false)}
-        >
-          <span className="flex min-w-0 items-center gap-3">
-            <MenuIcon item={item} active={false} />
-            <span className="truncate">{merchantMenuLabel(item.id, item.label, t)}</span>
-          </span>
-          {isTouchpoints ? (
-            <span className="shrink-0 text-white/50">
-              {isTouchpointsExpanded ? (
-                <ChevronUp className="h-4 w-4" aria-hidden="true" />
-              ) : (
-                <ChevronDown className="h-4 w-4" aria-hidden="true" />
-              )}
+        {isStaffItem ? (
+          // Real route navigation (not a modal) so the URL actually changes —
+          // team members reviewing the demo can see/share the real flow.
+          <Link
+            to="/community/staff"
+            onClick={() => { if (isMobile) onClose() }}
+            className={sidebarMenuItemBetweenClass(false)}
+          >
+            <span className="flex min-w-0 items-center gap-3">
+              <MenuIcon item={item} active={false} />
+              <span className="truncate">{merchantMenuLabel(item.id, item.label, t)}</span>
             </span>
-          ) : null}
-        </button>
+          </Link>
+        ) : (
+          <button
+            type="button"
+            aria-expanded={isTouchpoints ? isTouchpointsExpanded : undefined}
+            onClick={() => {
+              if (isTouchpoints) setIsTouchpointsExpanded((current) => !current)
+              onDemoNavigation()
+              if (isMobile && !isTouchpoints) onClose()
+            }}
+            className={sidebarMenuItemBetweenClass(false)}
+          >
+            <span className="flex min-w-0 items-center gap-3">
+              <MenuIcon item={item} active={false} />
+              <span className="truncate">{merchantMenuLabel(item.id, item.label, t)}</span>
+            </span>
+            {isTouchpoints ? (
+              <span className="shrink-0 text-white/50">
+                {isTouchpointsExpanded ? (
+                  <ChevronUp className="h-4 w-4" aria-hidden="true" />
+                ) : (
+                  <ChevronDown className="h-4 w-4" aria-hidden="true" />
+                )}
+              </span>
+            ) : null}
+          </button>
+        )}
 
         {item.id === 'staff' ? (
           <PaymentsPayoutsMenuSection
@@ -213,13 +247,62 @@ function DemoMerchantSidebar({ isOpen, onClose, onDemoNavigation }: DemoMerchant
 
       {overviewItem ? renderMenuItem(overviewItem, isMobile) : null}
 
-      <button type="button" aria-current="page" className={sidebarMenuItemClass(true)}>
-        <MenuIcon item={communityMenuItem} active />
-        <span className="min-w-0 flex-1 truncate">Community</span>
-        <span className="shrink-0 rounded-full bg-white/15 px-2 py-0.5 text-[9px] font-black tracking-wide text-white ring-1 ring-white/20">
-          NEW
-        </span>
-      </button>
+      <div>
+        <button
+          type="button"
+          aria-current={isCommunityRoute ? 'page' : undefined}
+          aria-expanded={isCommunityExpanded}
+          onClick={() => {
+            setIsCommunityExpanded((current) => !current)
+            onDemoNavigation()
+          }}
+          className={sidebarMenuItemBetweenClass(isCommunityRoute)}
+        >
+          <span className="flex min-w-0 items-center gap-3">
+            <MenuIcon item={communityMenuItem} active={isCommunityRoute} />
+            <span className="truncate">Community</span>
+          </span>
+          <span className="flex shrink-0 items-center gap-2">
+            <span className="rounded-full bg-white/15 px-2 py-0.5 text-[9px] font-black tracking-wide text-white ring-1 ring-white/20">
+              NEW
+            </span>
+            <span className="text-white/50">
+              {isCommunityExpanded ? (
+                <ChevronUp className="h-4 w-4" aria-hidden="true" />
+              ) : (
+                <ChevronDown className="h-4 w-4" aria-hidden="true" />
+              )}
+            </span>
+          </span>
+        </button>
+
+        {isCommunityExpanded ? (
+          <div className={SIDEBAR_SUBMENU_WRAP_CLASS}>
+            {communitySubmenuItems.map((item) => {
+              const isActive = activeCommunityTab === item.id
+
+              return (
+                <Link
+                  key={item.id}
+                  to={`/community?tab=${item.id}`}
+                  aria-current={isActive ? 'page' : undefined}
+                  onClick={() => handleUnavailable(isMobile)}
+                  className={`flex min-h-11 w-full items-center gap-2.5 rounded-lg px-3 text-left text-xs font-bold transition hover:bg-white/5 hover:text-white ${
+                    isActive ? 'bg-white/5 text-white' : 'text-white/75'
+                  }`}
+                >
+                  <span
+                    className={`h-1.5 w-1.5 rounded-full ${
+                      isActive ? 'bg-white/75' : 'bg-white/30'
+                    }`}
+                  />
+                  <span>{item.label}</span>
+                </Link>
+              )
+            })}
+          </div>
+        ) : null}
+      </div>
 
       {remainingItems
         .filter((item) => !isMobile || item.id !== 'settings')
@@ -292,6 +375,12 @@ type DemoMerchantHeaderProps = {
 // Query-backed search and dropdown panels are represented by their closed production states.
 function DemoMerchantHeader({ onOpenMobileMenu, onDemoNavigation }: DemoMerchantHeaderProps) {
   const { t } = useTranslation()
+  const { pathname } = useLocation()
+  // CommunityNotificationBell/CommunityChatInboxTrigger need CommunityAuthProvider +
+  // CommunityChatDockProvider, which only wrap the real /community route (not the
+  // provider-less /design-demo/community-business preview) — gate on pathname like
+  // DemoStaffShell's header does, so this never crashes when reused there.
+  const showCommunityActions = pathname === '/community' || pathname.startsWith('/community/')
 
   const utilityControls = (
     <>
@@ -304,17 +393,24 @@ function DemoMerchantHeader({ onOpenMobileMenu, onDemoNavigation }: DemoMerchant
       >
         <img src="/assets/icon_eco.svg" alt="" className="h-[22px] w-[22px]" aria-hidden="true" />
       </button>
-      <button
-        type="button"
-        aria-label="Thông báo"
-        onClick={onDemoNavigation}
-        className="relative flex h-11 w-11 items-center justify-center rounded-xl border border-nexoraBorder bg-white text-nexoraText shadow-nexora-soft transition hover:bg-nexoraSurfaceMuted"
-      >
-        <img src="/assets/menu/notification.png" alt="" className="h-5 w-5 object-contain" aria-hidden="true" />
-        <span className="absolute -right-1 -top-1 flex h-[18px] min-w-[18px] items-center justify-center rounded-full bg-nexoraDanger px-1 text-[9px] font-black text-white ring-2 ring-white">
-          4
-        </span>
-      </button>
+      {showCommunityActions ? (
+        <>
+          <CommunityNotificationBell />
+          <CommunityChatInboxTrigger />
+        </>
+      ) : (
+        <button
+          type="button"
+          aria-label="Thông báo"
+          onClick={onDemoNavigation}
+          className="relative flex h-11 w-11 items-center justify-center rounded-xl border border-nexoraBorder bg-white text-nexoraText shadow-nexora-soft transition hover:bg-nexoraSurfaceMuted"
+        >
+          <img src="/assets/menu/notification.png" alt="" className="h-5 w-5 object-contain" aria-hidden="true" />
+          <span className="absolute -right-1 -top-1 flex h-[18px] min-w-[18px] items-center justify-center rounded-full bg-nexoraDanger px-1 text-[9px] font-black text-white ring-2 ring-white">
+            4
+          </span>
+        </button>
+      )}
       <button
         type="button"
         aria-label="Menu tài khoản Bitcoin Nail Bar"
@@ -392,14 +488,8 @@ function DemoMerchantBottomNav({ onDemoNavigation }: DemoMerchantBottomNavProps)
       <div className="flex h-[68px] items-center px-2">
         {items.map(({ id, label, Icon }) => {
           const active = id === 'community'
-          return (
-            <button
-              key={id}
-              type="button"
-              aria-current={active ? 'page' : undefined}
-              onClick={active ? undefined : onDemoNavigation}
-              className="relative flex h-full min-w-0 flex-1 flex-col items-center justify-center gap-1 focus:outline-none active:scale-95 transition-transform"
-            >
+          const content = (
+            <>
               <span className="relative">
                 <Icon
                   className={'h-5 w-5 transition-colors duration-200 ' + (active ? 'text-nexoraBrandDark' : 'text-nexoraSubtle')}
@@ -415,6 +505,28 @@ function DemoMerchantBottomNav({ onDemoNavigation }: DemoMerchantBottomNavProps)
               <span className={'max-w-full truncate px-0.5 text-[11px] font-bold transition-colors duration-200 ' + (active ? 'text-nexoraBrand' : 'text-nexoraSubtle')}>
                 {label}
               </span>
+            </>
+          )
+          const itemClassName = 'relative flex h-full min-w-0 flex-1 flex-col items-center justify-center gap-1 focus:outline-none active:scale-95 transition-transform'
+
+          if (id === 'staff') {
+            // Real route navigation (not a modal) — matches the sidebar's Staff link.
+            return (
+              <Link key={id} to="/community/staff" className={itemClassName}>
+                {content}
+              </Link>
+            )
+          }
+
+          return (
+            <button
+              key={id}
+              type="button"
+              aria-current={active ? 'page' : undefined}
+              onClick={active ? undefined : onDemoNavigation}
+              className={itemClassName}
+            >
+              {content}
             </button>
           )
         })}

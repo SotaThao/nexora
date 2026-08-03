@@ -41,6 +41,7 @@ import {
   CommunityHome,
   CommunityJoinPreview,
   CommunityRouteRoot,
+  CommunityStaffPage,
 } from "../components/community/CommunityScreens";
 import { CommunityChat } from "../components/community/CommunityChat";
 import { CommunityDirectChat } from "../components/community/CommunityDirectChat";
@@ -262,6 +263,7 @@ export default function AppRouter() {
             <Route path="chat/dm/:channelId" element={<CommunityDirectChat />} />
             <Route path="new" element={<CommunityCreateWizard />} />
             <Route path="join/:token" element={<CommunityJoinPreview />} />
+            <Route path="staff" element={<CommunityStaffPage />} />
             <Route path=":id/chat" element={<CommunityChat />} />
             <Route path=":id" element={<CommunityDetail />} />
           </Route>
