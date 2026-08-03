@@ -96,7 +96,7 @@ export interface BookingPageDataDto {
   staff: BookingStaffDto[]
   operatingHours: BookingOperatingHourDto[]
   /** Recognised active customer when `phone` query matches; otherwise null/omitted. */
-  customer: BookingCustomerDto | null
+  customer?: BookingCustomerDto | null
 }
 
 /** Public create body — matches OpenAPI `CreateOnlineBookingRequest`. */
