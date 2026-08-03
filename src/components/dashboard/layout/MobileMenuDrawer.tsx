@@ -133,9 +133,9 @@ export default function MobileMenuDrawer({
             }),
         },
         {
-          id: 'pos',
+          id: DASHBOARD_MENU.Pos,
           setExpanded: setIsPosMobileExpanded,
-          enter: () => navigateMenu('pos', { closeDrawer: false }),
+          enter: () => navigateMenu(DASHBOARD_MENU.Pos, { closeDrawer: false }),
         },
       ],
       onPlainNavigate: (menuId) => navigateMenu(menuId),
@@ -277,7 +277,7 @@ export default function MobileMenuDrawer({
                     <div className="text-white/65 shrink-0">
                       {isBookingHubMobileExpanded ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
                     </div>
-                  ) : id === 'pos' ? (
+                  ) : id === DASHBOARD_MENU.Pos ? (
                     <div className="text-white/65 shrink-0">
                       {isPosMobileExpanded ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
                     </div>
@@ -382,23 +382,23 @@ export default function MobileMenuDrawer({
                     })}
                   </div>
                 )}
-                {id === 'pos' && isPosMobileExpanded && (
+                {id === DASHBOARD_MENU.Pos && isPosMobileExpanded && (
                   <div className={SIDEBAR_SUBMENU_WRAP_CLASS}>
                     {POS_SUBMENU.map((sub) => {
                       // 'board' (Front Desk) lives at /dashboard/pos itself (no
                       // extra segment) so it's the default POS view; it's active
                       // whenever there's no deeper sub-route.
-                      const isSubActive = activeMenu === 'pos' &&
+                      const isSubActive = activeMenu === DASHBOARD_MENU.Pos &&
                         (sub.id === 'board' ? !activePosSubTab : activePosSubTab === sub.id)
                       return (
                         <button
                           key={sub.id}
                           type="button"
-                          onClick={() => navigateMenu(sub.id === 'board' ? 'pos' : `pos/${sub.id}`)}
+                          onClick={() => navigateMenu(sub.id === 'board' ? DASHBOARD_MENU.Pos : `${DASHBOARD_MENU.Pos}/${sub.id}`)}
                           className={sidebarSubmenuItemClass(isSubActive)}
                         >
                           <div className={`h-1.5 w-1.5 rounded-full ${isSubActive ? 'bg-brandCyan shadow-sm' : 'bg-white/30'}`} />
-                          <span>{t(`dashboard.menu.pos_${sub.id.replace('-', '_')}`)}</span>
+                          <span>{t(sub.labelKey)}</span>
                         </button>
                       )
                     })}

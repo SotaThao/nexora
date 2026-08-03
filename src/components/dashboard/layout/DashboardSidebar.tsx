@@ -67,7 +67,7 @@ export default function DashboardSidebar({
   const isPaymentsPayoutsActive = isPaymentsPayoutsRouteActive(activeMenu, activeSubTab)
   const [isPaymentsPayoutsExpanded, setIsPaymentsPayoutsExpanded] = useState(isPaymentsPayoutsActive)
   const [isTaxIqExpanded, setIsTaxIqExpanded] = useState(activeMenu === DASHBOARD_MENU.TaxIq)
-  const [isPosExpanded, setIsPosExpanded] = useState(activeMenu === 'pos')
+  const [isPosExpanded, setIsPosExpanded] = useState(activeMenu === DASHBOARD_MENU.Pos)
   // Module-gated Tax IQ sub-items: shares the TanStack Query cache with the
   // /dashboard/taxiq route itself, so this fires no extra network request.
   const { data: merchantSetupData } = useMerchantSetup({ enabled: userRole !== 'staff' })
@@ -84,7 +84,7 @@ export default function DashboardSidebar({
     }
     setIsTouchpointsExpanded(activeMenu === DASHBOARD_MENU.Touchpoints)
     setIsTaxIqExpanded(activeMenu === DASHBOARD_MENU.TaxIq)
-    setIsPosExpanded(activeMenu === 'pos')
+    setIsPosExpanded(activeMenu === DASHBOARD_MENU.Pos)
     setIsBookingHubExpanded(activeMenu === DASHBOARD_MENU.BookingHub)
   }, [activeMenu, isPaymentsPayoutsActive])
 
@@ -125,10 +125,10 @@ export default function DashboardSidebar({
           setExpanded: setIsTaxIqExpanded,
           enter: () => setActiveMenu(DASHBOARD_MENU.TaxIq),
         },
-	{
-          id: 'pos',
+        {
+          id: DASHBOARD_MENU.Pos,
           setExpanded: setIsPosExpanded,
-          enter: () => setActiveMenu('pos'),
+          enter: () => setActiveMenu(DASHBOARD_MENU.Pos),
         },
         {
           id: DASHBOARD_MENU.BookingHub,
@@ -270,11 +270,11 @@ export default function DashboardSidebar({
                   <div className="text-white/50 shrink-0">
                     {isTaxIqExpanded ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
                   </div>
-                ): id === 'pos' ? (
+                ): id === DASHBOARD_MENU.Pos ? (
                   <div className="text-white/50 shrink-0">
                     {isPosExpanded ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
                   </div>
-                ) : id === DASHBOARD_MENU.BookingHub ? (
+                ) : (id as string) === DASHBOARD_MENU.BookingHub ? (
                   <div className="text-white/50 shrink-0">
                     {isBookingHubExpanded ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
                   </div>
@@ -317,7 +317,7 @@ export default function DashboardSidebar({
                 </div>
               )}
 
-              {id === DASHBOARD_MENU.BookingHub && isBookingHubExpanded && (
+              {(id as string) === DASHBOARD_MENU.BookingHub && isBookingHubExpanded && (
                 <div className={SIDEBAR_SUBMENU_WRAP_CLASS}>
                   {bookingHubSubmenu.map((sub) => {
                     const isSubActive = isBookingHubSubActive(activeMenu, activeSubTab, sub.id, hasVoiceTenant)
@@ -389,25 +389,25 @@ export default function DashboardSidebar({
                   })}
                 </div>
               )}
-	      {id === 'pos' && isPosExpanded && (
+              {id === DASHBOARD_MENU.Pos && isPosExpanded && (
                 <div className={SIDEBAR_SUBMENU_WRAP_CLASS}>
                   {POS_SUBMENU.map((sub) => {
                     // 'board' (Front Desk) lives at /dashboard/pos itself (no
                     // extra segment) so it's the default POS view; it's active
                     // whenever there's no deeper sub-route.
-                    const isSubActive = activeMenu === 'pos' &&
+                    const isSubActive = activeMenu === DASHBOARD_MENU.Pos &&
                       (sub.id === 'board' ? !activePosSubTab : activePosSubTab === sub.id)
                     return (
                       <button
                         key={sub.id}
                         type="button"
                         onClick={() => {
-                          navigate(sub.id === 'board' ? '/dashboard/pos' : `/dashboard/pos/${sub.id}`)
+                          navigate(sub.id === 'board' ? `/dashboard/${DASHBOARD_MENU.Pos}` : `/dashboard/${DASHBOARD_MENU.Pos}/${sub.id}`)
                         }}
                         className={sidebarSubmenuItemClass(isSubActive)}
                       >
                         <div className={`h-1.5 w-1.5 rounded-full ${isSubActive ? 'bg-brandCyan shadow-sm' : 'bg-white/30'}`} />
-                        <span>{t(`dashboard.menu.pos_${sub.id.replace('-', '_')}`)}</span>
+                        <span>{t(sub.labelKey)}</span>
                       </button>
                     )
                   })}

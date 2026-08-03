@@ -26,6 +26,7 @@ export const DASHBOARD_MENU = {
   BookingHub: 'booking-hub',
   TaxIq: 'taxiq',
   ProductManagement: "product-management",
+  Pos: 'pos',
 } as const
 
 /** Dashboard session roles passed as `userRole` prop. */
@@ -148,6 +149,7 @@ export const DASHBOARD_MENU_ID = {
   support: 'support',
   subscriptions: 'subscriptions',
   payments: 'payments',
+  pos: 'pos',
 } as const
 
 export type DashboardMenuId = (typeof DASHBOARD_MENU_ID)[keyof typeof DASHBOARD_MENU_ID]
@@ -275,17 +277,17 @@ export const MENU_ITEMS = [
   },
   { id: DASHBOARD_MENU_ID.analytics, label: 'Analytics', icon: BarChart3 },
   {
-    id: 'pos',
+    id: DASHBOARD_MENU_ID.pos,
     label: 'POS',
     icon: Store,
     children: [
-      { id: 'board', label: 'Front Desk' },
-      { id: 'settings', label: 'General Settings' },
-      { id: 'roles', label: 'Roles & Permissions' },
-      { id: 'categories', label: 'Categories' },
-      { id: 'services', label: 'Services' },
-      { id: 'products', label: 'Products' },
-      { id: 'staff', label: 'Staff Profiles' }
+      { id: 'board', labelKey: 'dashboard.menu.pos_board' },
+      { id: 'settings', labelKey: 'dashboard.menu.pos_settings' },
+      { id: 'roles', labelKey: 'dashboard.menu.pos_roles' },
+      { id: 'categories', labelKey: 'dashboard.menu.pos_categories' },
+      { id: 'services', labelKey: 'dashboard.menu.pos_services' },
+      { id: 'products', labelKey: 'dashboard.menu.pos_products' },
+      { id: 'staff', labelKey: 'dashboard.menu.pos_staff' }
     ]
   },
   { id: DASHBOARD_MENU_ID.settings, label: 'Settings', icon: Settings },
@@ -418,6 +420,7 @@ export const DASHBOARD_MENU_LABEL_KEYS: Record<string, string> = {
   [DASHBOARD_MENU_ID.analytics]: "dashboard.menu.analytics",
   [DASHBOARD_MENU_ID.settings]: "dashboard.menu.settings",
   [DASHBOARD_MENU_ID.support]: "dashboard.menu.support",
+  [DASHBOARD_MENU_ID.pos]: "dashboard.menu.pos",
 };
 
 export const DASHBOARD_SETTINGS_TAB = {
@@ -480,9 +483,9 @@ export function resolveDashboardMobileMenuTitle(
 }
 
 // sub-items are added as later POS Owner Setup tickets ship their own screens).
-export const POS_SUBMENU: { id: string; label: string }[] =
-  MENU_ITEMS.find((item): item is typeof item & { children: { id: string; label: string }[] } =>
-    item.id === 'pos' && 'children' in item,
+export const POS_SUBMENU: { id: string; labelKey: string }[] =
+  MENU_ITEMS.find((item): item is typeof item & { children: { id: string; labelKey: string }[] } =>
+    item.id === DASHBOARD_MENU_ID.pos && 'children' in item,
   )?.children ?? []
 
 
