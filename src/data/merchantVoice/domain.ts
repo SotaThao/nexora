@@ -59,6 +59,7 @@ export enum SmsCampaignAudience {
   Days60 = 'Days60',
   Vip = 'Vip',
   Birthday = 'Birthday',
+  All = 'All',
 }
 
 /** Wire enum — SMS campaign recipient status (API). */
@@ -251,6 +252,7 @@ export function normalizeSmsCampaignScheduleMode(value: unknown): SmsCampaignSch
 
 export function normalizeSmsCampaignAudience(value: unknown): SmsCampaignAudience {
   const normalized = String(value ?? '').trim().toLowerCase()
+  if (normalized === 'all') return SmsCampaignAudience.All
   if (normalized === 'day15' || normalized === 'days15') return SmsCampaignAudience.Days15
   if (normalized === 'day30' || normalized === 'days30') return SmsCampaignAudience.Days30
   if (normalized === 'day60' || normalized === 'days60') return SmsCampaignAudience.Days60

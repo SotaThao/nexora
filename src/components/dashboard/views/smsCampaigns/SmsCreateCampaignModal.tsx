@@ -3,6 +3,7 @@ import { useTranslation } from "../../../../contexts/LanguageContext";
 import { useNotification } from "../../../../contexts/NotificationContext";
 import { getErrorI18nKey } from "../../../../data/errorCodes";
 import { useMerchantVoiceMyTenant } from "../../../../data/hooks/useMerchantVoiceBookings";
+import { useProfileSettings } from "../../../../data/hooks/useProfileSettings";
 import {
   useAnalyzeMerchantVoiceSmsText,
   useCreateMerchantVoiceSmsCampaign,
@@ -38,6 +39,7 @@ import {
   GiftIcon,
   LinkIcon,
   MegaphoneIcon,
+  PeopleTabIcon,
   PhoneIcon,
   PlusIcon,
   RefreshCwIcon,
@@ -57,8 +59,9 @@ import {
   formatSmsCostUsd,
   getAudienceCount,
   SMS_API_MODE_TO_COMPOSER,
+  SMS_CAMPAIGN_COMPOSER_SEGMENTS,
+  SMS_CAMPAIGN_DEFAULT_AUDIENCE,
   SMS_CAMPAIGN_NAME_INPUT,
-  SMS_CAMPAIGN_SEGMENT_CARDS,
   SMS_CAMPAIGN_TEMPLATES,
   SMS_CAMPAIGN_TK,
   SMS_COMPOSER_MODE_TO_API,
@@ -94,6 +97,7 @@ const SEGMENT_ICON: Record<SmsCampaignAudience, React.ReactNode> = {
   [SmsCampaignAudience.Days60]: <RefreshCwIcon className="marketing-icon" />,
   [SmsCampaignAudience.Vip]: <StarIcon className="marketing-icon" />,
   [SmsCampaignAudience.Birthday]: <GiftIcon className="marketing-icon" />,
+  [SmsCampaignAudience.All]: <PeopleTabIcon className="marketing-icon" />,
 };
 
 const TAG_ICON: Record<string, React.ReactNode> = {
@@ -234,7 +238,7 @@ function splitUtcToLocalInputs(iso: string | null | undefined): {
 
 export default function SmsCreateCampaignModal({
   open,
-  initialAudience = SmsCampaignAudience.New,
+  initialAudience = SMS_CAMPAIGN_DEFAULT_AUDIENCE,
   campaignId = null,
   availableCredits,
   audienceSummary,
@@ -252,6 +256,7 @@ export default function SmsCreateCampaignModal({
 
   const isEdit = !!campaignId;
   const myTenantQuery = useMerchantVoiceMyTenant({ enabled: open });
+  const profileQuery = useProfileSettings({ enabled: open });
   const campaignQuery = useMerchantVoiceSmsCampaign(campaignId, {
     enabled: open && isEdit,
   });
@@ -390,8 +395,8 @@ export default function SmsCreateCampaignModal({
   const numberLocale = currentLanguage === "vi" ? "vi-VN" : "en-US";
   const segmentCard = useMemo(
     () =>
-      SMS_CAMPAIGN_SEGMENT_CARDS.find((item) => item.id === audience) ??
-      SMS_CAMPAIGN_SEGMENT_CARDS[0],
+      SMS_CAMPAIGN_COMPOSER_SEGMENTS.find((item) => item.id === audience) ??
+      SMS_CAMPAIGN_COMPOSER_SEGMENTS[0],
     [audience],
   );
   const templates = SMS_CAMPAIGN_TEMPLATES[audience];
@@ -413,11 +418,15 @@ export default function SmsCreateCampaignModal({
   const spendableCredits = estimate?.creditBalance ?? availableCredits;
   const enoughCredits =
     estimate?.hasEnoughCredits ?? spendableCredits >= totalSms;
+  const lowCredits =
+    spendableCredits > 0 && totalSms >= spendableCredits * 0.8;
+  const needsCreditWarning = !enoughCredits || lowCredits;
   const encodingLabel = estimate?.encoding ?? textEstimate.encoding;
   const charUnits = textEstimate.characterCount;
   const charParts = textEstimate.segmentCount;
   const charEncoding = textEstimate.encoding;
   const charPerPart = textEstimate.maxCharactersPerSegment || 160;
+  const profilePhone = profileQuery.data?.phoneNumber?.trim() || "";
   const tagSamples = useMemo(
     () => ({
       ...SMS_COMPOSER_TAG_SAMPLES,
@@ -427,12 +436,14 @@ export default function SmsCreateCampaignModal({
       [SMS_COMPOSER_TAG.link]: buildSmsCampaignBusinessLinkPreview(
         myTenantQuery.data?.businessKey,
         currentLanguage,
+        { phone: profilePhone || undefined },
       ),
     }),
     [
       currentLanguage,
       myTenantQuery.data?.businessKey,
       myTenantQuery.data?.name,
+      profilePhone,
     ],
   );
   const previewHtml = useMemo(
@@ -562,6 +573,7 @@ export default function SmsCreateCampaignModal({
         text,
         myTenantQuery.data?.businessKey,
         currentLanguage,
+        { phone: profilePhone || undefined },
       );
 
       if (isEdit && campaignId) {
@@ -738,7 +750,7 @@ export default function SmsCreateCampaignModal({
           <div className="field-group">
             <div className="field-label">{t(`${TK}.stepSegment`)}</div>
             <div className="segment-grid">
-              {SMS_CAMPAIGN_SEGMENT_CARDS.map((item) => {
+              {SMS_CAMPAIGN_COMPOSER_SEGMENTS.map((item) => {
                 const count = getAudienceCount(audienceSummary, item.id);
                 return (
                   <button
@@ -1044,36 +1056,42 @@ export default function SmsCreateCampaignModal({
         </div>
 
         <div className="modal-footer">
-          <div className={`cost-preview${enoughCredits ? "" : " warn"}`}>
-            <div className="cost-preview-label">
-              {enoughCredits ? (
-                t(`${TK}.costEstimate`)
-              ) : (
-                <span className="cost-preview-insufficient">
-                  <span>
-                    {t(`${TK}.costInsufficient`, { credits: spendableCredits })}
-                  </span>
-                  {onBuyCredits ? (
-                    <button
-                      type="button"
-                      className="cost-preview-buy-link"
-                      onClick={onBuyCredits}
-                    >
-                      <WalletCardsIcon className="marketing-icon" />
-                      <span>{t(`${TK}.buyCredits`)}</span>
-                    </button>
-                  ) : null}
-                </span>
-              )}
+          <div className="cost-preview-group">
+            <div
+              className={`cost-preview${needsCreditWarning ? " warn" : ""}`}
+            >
+              <div className="cost-preview-info">
+                <div className="cost-preview-label" aria-live="polite">
+                  {!enoughCredits
+                    ? t(`${TK}.costInsufficient`, {
+                        credits: spendableCredits,
+                      })
+                    : lowCredits
+                      ? t(`${TK}.costLowCredits`, {
+                          credits: spendableCredits,
+                        })
+                      : t(`${TK}.costEstimate`)}
+                </div>
+                <div className="cost-preview-amount">
+                  {t(`${TK}.costBreakdown`, {
+                    customers: audienceCount,
+                    parts,
+                    total: totalSms,
+                    cost,
+                  })}
+                </div>
+              </div>
             </div>
-            <div className="cost-preview-amount">
-              {t(`${TK}.costBreakdown`, {
-                customers: audienceCount,
-                parts,
-                total: totalSms,
-                cost,
-              })}
-            </div>
+            {onBuyCredits && needsCreditWarning ? (
+              <button
+                type="button"
+                className="cost-preview-buy-button"
+                onClick={onBuyCredits}
+              >
+                <WalletCardsIcon className="marketing-icon is-compact" />
+                <span>{t(`${TK}.buyMoreCredits`)}</span>
+              </button>
+            ) : null}
           </div>
           <div className="modal-footer-actions">
             <button

@@ -3413,6 +3413,12 @@ body.booking-appointment-panel-modal-open {
   align-items: stretch;
 }
 
+/* Services sits alone after Voice moved into settings-grid — span full row like HTML. */
+.booking-hub-view .settings-two-grid > .settings-card[data-settings-card="services"],
+.booking-hub-view .settings-two-grid > .settings-service-pricing-card {
+  grid-column: 1 / -1;
+}
+
 .booking-hub-view .settings-team-slot {
   min-width: 0;
 }
@@ -3492,8 +3498,62 @@ body.booking-appointment-panel-modal-open {
   gap: 8px;
 }
 
+.booking-hub-view .settings-config-title {
+  color: var(--nexora-text);
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.booking-hub-view .settings-config-desc {
+  color: var(--nexora-muted);
+  font-size: 11.5px;
+  font-weight: 500;
+  line-height: 1.45;
+}
+
+.booking-hub-view .settings-booking-sms-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 12px;
+  align-items: center;
+  border: 1px solid var(--nexora-border);
+  border-radius: 10px;
+  background: var(--nexora-canvas);
+  padding: 10px;
+}
+
+.booking-hub-view .settings-booking-sms-copy,
+.booking-hub-view .settings-booking-sms-control {
+  min-width: 0;
+}
+
+.booking-hub-view .settings-booking-sms-control {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.booking-hub-view .settings-booking-sms-status {
+  color: var(--nexora-success);
+  font-size: 10px;
+  font-weight: 800;
+  white-space: nowrap;
+}
+
+.booking-hub-view .settings-booking-sms-status.is-off {
+  color: var(--nexora-subtle);
+}
+
+@media (max-width: 520px) {
+  .booking-hub-view .settings-booking-sms-row {
+    align-items: start;
+  }
+}
+
 .booking-hub-view .settings-service-list.settings-service-body {
   gap: 6px;
+  max-height: 540px;
+  overflow-y: auto;
   border: 0;
   background: transparent;
   padding: 0;
@@ -3550,6 +3610,7 @@ body.booking-appointment-panel-modal-open {
   min-width: 0;
   flex: 1 1 auto;
   align-items: center;
+  gap: 8px;
   margin: 0;
   border: 0;
   border-radius: 8px;
@@ -3629,6 +3690,7 @@ body.booking-appointment-panel-modal-open {
 }
 
 .booking-hub-view .settings-service-category-name {
+  min-width: 0;
   color: var(--nexora-text);
   font-size: 11px;
   font-weight: 900;
@@ -3638,12 +3700,14 @@ body.booking-appointment-panel-modal-open {
 
 .booking-hub-view .settings-service-category-count {
   flex: 0 0 auto;
+  margin-left: 0;
   border-radius: 999px;
   background: #e9edff;
   padding: 2px 7px;
   color: var(--nexora-brand);
   font-size: 10px;
   font-weight: 800;
+  white-space: nowrap;
 }
 
 .booking-hub-view .settings-service-category-panel {
@@ -6252,6 +6316,8 @@ body.booking-appointment-panel-modal-open {
 
   .booking-hub-view .settings-service-list.settings-service-body {
     gap: 8px;
+    max-height: 540px;
+    overflow-y: auto;
     padding: 0;
     border: none;
     background: transparent;
@@ -11355,9 +11421,22 @@ body.booking-appointment-panel-modal-open {
   background: #fff;
 }
 
-#nx-campaign-root .cost-preview {
-  flex: 1 1 auto;
+#nx-campaign-root .cost-preview-group {
+  display: flex;
   min-width: 0;
+  flex: 1 1 auto;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 8px;
+}
+
+#nx-campaign-root .cost-preview {
+  display: flex;
+  width: 100%;
+  min-width: 0;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
   border: 1px solid rgba(43, 89, 255, 0.25);
   border-radius: 10px;
   background: rgba(43, 89, 255, 0.06);
@@ -11369,74 +11448,19 @@ body.booking-appointment-panel-modal-open {
   background: rgba(220, 38, 38, 0.07);
 }
 
+#nx-campaign-root .cost-preview-info {
+  min-width: 0;
+}
+
 #nx-campaign-root .cost-preview-label {
   color: var(--nexora-muted);
   font-size: clamp(0.6875rem, 0.65rem + 0.15vw, 0.75rem);
   font-weight: 600;
 }
 
-#nx-campaign-root .cost-preview-insufficient {
-  display: inline-flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: 8px 10px;
-  margin-bottom: 6px;
+#nx-campaign-root .cost-preview.warn .cost-preview-label {
   color: #b91c1c;
-  font-size: clamp(0.75rem, 0.7rem + 0.2vw, 0.8125rem);
   font-weight: 700;
-}
-
-#nx-campaign-root .cost-preview-buy-link {
-  appearance: none;
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  margin: 0;
-  border: 0;
-  border-radius: 999px;
-  padding: 5px 12px 5px 10px;
-  background: var(--sms-buy-cta-bg);
-  color: #fff;
-  font: inherit;
-  font-size: clamp(0.6875rem, 0.65rem + 0.15vw, 0.75rem);
-  font-weight: 800;
-  letter-spacing: 0.01em;
-  line-height: 1.2;
-  white-space: nowrap;
-  cursor: pointer;
-  box-shadow:
-    0 1px 0 rgba(255, 255, 255, 0.28) inset,
-    var(--sms-buy-cta-shadow);
-  transition:
-    transform 0.15s ease,
-    box-shadow 0.15s ease,
-    filter 0.15s ease;
-}
-
-#nx-campaign-root .cost-preview-buy-link .marketing-icon {
-  width: 0.875rem;
-  height: 0.875rem;
-  color: #fff;
-  flex-shrink: 0;
-}
-
-#nx-campaign-root .cost-preview-buy-link:hover {
-  background: var(--sms-buy-cta-bg-hover);
-  filter: brightness(1.02);
-  box-shadow:
-    0 1px 0 rgba(255, 255, 255, 0.32) inset,
-    var(--sms-buy-cta-shadow-hover);
-  transform: translateY(-1px);
-}
-
-#nx-campaign-root .cost-preview-buy-link:active {
-  transform: translateY(0);
-  filter: brightness(0.98);
-}
-
-#nx-campaign-root .cost-preview-buy-link:focus-visible {
-  outline: 3px solid rgba(245, 158, 11, 0.4);
-  outline-offset: 2px;
 }
 
 #nx-campaign-root .cost-preview-amount {
@@ -11448,6 +11472,46 @@ body.booking-appointment-panel-modal-open {
 
 #nx-campaign-root .cost-preview.warn .cost-preview-amount {
   color: #dc2626;
+}
+
+#nx-campaign-root .cost-preview-buy-button {
+  appearance: none;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  gap: 6px;
+  margin: 0;
+  border: 1px solid rgba(220, 38, 38, 0.35);
+  border-radius: 8px;
+  background: #fff;
+  padding: 8px 11px;
+  color: #b91c1c;
+  font: inherit;
+  font-size: 12px;
+  font-weight: 800;
+  white-space: nowrap;
+  cursor: pointer;
+  transition:
+    border-color 0.15s ease,
+    background 0.15s ease;
+}
+
+#nx-campaign-root .cost-preview-buy-button .marketing-icon {
+  width: 0.875rem;
+  height: 0.875rem;
+  color: inherit;
+  flex-shrink: 0;
+}
+
+#nx-campaign-root .cost-preview-buy-button:hover {
+  border-color: #dc2626;
+  background: #fff1f2;
+}
+
+#nx-campaign-root .cost-preview-buy-button:focus-visible {
+  outline: 3px solid rgba(220, 38, 38, 0.2);
+  outline-offset: 2px;
 }
 
 #nx-campaign-root .modal-footer-actions {
@@ -12533,6 +12597,10 @@ body.booking-appointment-panel-modal-open {
     flex-direction: column;
     flex-wrap: wrap;
     align-items: stretch;
+  }
+
+  #nx-campaign-root .cost-preview-group {
+    width: 100%;
   }
 
   #nx-campaign-root .modal-footer-actions {
