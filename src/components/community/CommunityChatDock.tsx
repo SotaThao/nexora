@@ -1,4 +1,4 @@
-import { CheckCheck, Loader2, Maximize2, MessageSquare, MessagesSquare, Minus, Phone, Search, Send, Users, Video, X } from 'lucide-react'
+import { CheckCheck, Loader2, Maximize2, MessageSquare, MessagesSquare, Mic, MicOff, Minus, Phone, PhoneOff, Search, Send, Users, Video, Volume2, X } from 'lucide-react'
 import {
   createContext,
   useCallback,
@@ -339,6 +339,127 @@ function DockBubble({
   )
 }
 
+type ActiveCall = { type: 'voice' | 'video'; status: 'ringing' | 'connected' }
+
+// Local-only simulation — no signaling/WebRTC. Mimics a Messenger call screen
+// (ringing → auto-answer → live timer) entirely within this chat window's state.
+function useCallSimulation() {
+  const [call, setCall] = useState<ActiveCall | null>(null)
+  const [elapsed, setElapsed] = useState(0)
+  const ringTimeoutRef = useRef<ReturnType<typeof setTimeout>>(undefined)
+  const tickIntervalRef = useRef<ReturnType<typeof setInterval>>(undefined)
+
+  const clearTimers = () => {
+    if (ringTimeoutRef.current) clearTimeout(ringTimeoutRef.current)
+    if (tickIntervalRef.current) clearInterval(tickIntervalRef.current)
+  }
+
+  const startCall = useCallback((type: 'voice' | 'video') => {
+    clearTimers()
+    setElapsed(0)
+    setCall({ type, status: 'ringing' })
+    ringTimeoutRef.current = setTimeout(() => {
+      setCall((current) => (current ? { ...current, status: 'connected' } : current))
+    }, 1800)
+  }, [])
+
+  const endCall = useCallback(() => {
+    clearTimers()
+    setCall(null)
+    setElapsed(0)
+  }, [])
+
+  useEffect(() => {
+    if (call?.status !== 'connected') return undefined
+    tickIntervalRef.current = setInterval(() => setElapsed((current) => current + 1), 1000)
+    return () => clearInterval(tickIntervalRef.current)
+  }, [call?.status])
+
+  useEffect(() => clearTimers, [])
+
+  return { call, elapsed, startCall, endCall }
+}
+
+function formatCallDuration(totalSeconds: number) {
+  const minutes = Math.floor(totalSeconds / 60).toString().padStart(2, '0')
+  const seconds = (totalSeconds % 60).toString().padStart(2, '0')
+  return `${minutes}:${seconds}`
+}
+
+function CallOverlay({
+  call,
+  elapsed,
+  name,
+  onEnd,
+}: {
+  call: ActiveCall
+  elapsed: number
+  name: string
+  onEnd: () => void
+}) {
+  const [isMuted, setIsMuted] = useState(false)
+  const [isSpeakerOn, setIsSpeakerOn] = useState(true)
+  const isVideo = call.type === 'video'
+
+  return (
+    <div
+      role="dialog"
+      aria-label={isVideo ? `Đang gọi video với ${name}` : `Đang gọi thoại với ${name}`}
+      className={`absolute inset-0 z-10 flex flex-col items-center justify-between px-4 py-6 text-white ${
+        isVideo ? 'bg-nexoraText' : 'bg-gradient-to-b from-[#0b1220] to-[#1b2540]'
+      }`}
+    >
+      <div className="flex flex-col items-center gap-2 pt-4">
+        <Avatar name={name} className="h-20 w-20 text-xl" />
+        <h3 className="text-base font-extrabold">{name}</h3>
+        <p className="text-xs text-white/70">
+          {call.status === 'ringing' ? (isVideo ? 'Đang gọi video…' : 'Đang gọi…') : formatCallDuration(elapsed)}
+        </p>
+      </div>
+
+      {call.status === 'ringing' ? (
+        <div className="flex gap-1.5" aria-hidden="true">
+          <span className="h-2 w-2 animate-bounce rounded-full bg-white/70 [animation-delay:-0.3s]" />
+          <span className="h-2 w-2 animate-bounce rounded-full bg-white/70 [animation-delay:-0.15s]" />
+          <span className="h-2 w-2 animate-bounce rounded-full bg-white/70" />
+        </div>
+      ) : null}
+
+      <div className="flex flex-col items-center gap-2 pb-1">
+        <div className="flex items-center gap-4">
+          <button
+            type="button"
+            onClick={() => setIsMuted((current) => !current)}
+            aria-pressed={isMuted}
+            aria-label={isMuted ? 'Bật mic' : 'Tắt mic'}
+            className={`grid h-11 w-11 place-items-center rounded-full transition ${isMuted ? 'bg-white text-nexoraText' : 'bg-white/15 text-white hover:bg-white/25'}`}
+          >
+            {isMuted ? <MicOff className="h-[18px] w-[18px]" aria-hidden="true" /> : <Mic className="h-[18px] w-[18px]" aria-hidden="true" />}
+          </button>
+          <button
+            type="button"
+            onClick={onEnd}
+            aria-label="Kết thúc cuộc gọi"
+            className="grid h-12 w-12 place-items-center rounded-full bg-nexoraDanger text-white transition hover:brightness-95"
+          >
+            <PhoneOff className="h-5 w-5" aria-hidden="true" />
+          </button>
+          <button
+            type="button"
+            onClick={() => setIsSpeakerOn((current) => !current)}
+            aria-pressed={isSpeakerOn}
+            aria-label="Loa ngoài"
+            className={`grid h-11 w-11 place-items-center rounded-full transition ${isSpeakerOn ? 'bg-white/15 text-white hover:bg-white/25' : 'bg-white text-nexoraText'}`}
+          >
+            <Volume2 className="h-[18px] w-[18px]" aria-hidden="true" />
+          </button>
+        </div>
+        <p className="text-[10px] text-white/50">Mô phỏng demo — chưa kết nối cuộc gọi thật.</p>
+      </div>
+    </div>
+  )
+}
+
 function DockWindow({ entry, onClose, onMinimize }: { entry: DockChatEntry; onClose: () => void; onMinimize: () => void }) {
   const navigate = useNavigate()
   const { user } = useCommunityAuth()
@@ -347,6 +468,7 @@ function DockWindow({ entry, onClose, onMinimize }: { entry: DockChatEntry; onCl
   })
   const [body, setBody] = useState('')
   const scrollRef = useRef<HTMLDivElement>(null)
+  const { call, elapsed, startCall, endCall } = useCallSimulation()
 
   useEffect(() => {
     scrollRef.current?.scrollTo({ top: scrollRef.current.scrollHeight })
@@ -368,61 +490,83 @@ function DockWindow({ entry, onClose, onMinimize }: { entry: DockChatEntry; onCl
       <header className="flex shrink-0 items-center gap-1 border-b border-nexoraBorder bg-nexoraSurface px-3 py-2.5">
         <Avatar name={entry.title} className="h-9 w-9 text-xs" />
         <h2 className="min-w-0 flex-1 truncate text-sm font-extrabold text-nexoraText">{entry.title}</h2>
-        <button type="button" disabled aria-label="Gọi thoại" title="Chưa hỗ trợ gọi thoại trong bản demo" className="grid h-6 w-6 shrink-0 place-items-center rounded-full text-nexoraSubtle opacity-40 cursor-not-allowed"><Phone className="h-3 w-3" aria-hidden="true" /></button>
-        <button type="button" disabled aria-label="Gọi video" title="Chưa hỗ trợ gọi video trong bản demo" className="grid h-6 w-6 shrink-0 place-items-center rounded-full text-nexoraSubtle opacity-40 cursor-not-allowed"><Video className="h-3 w-3" aria-hidden="true" /></button>
+        <button
+          type="button"
+          onClick={() => startCall('voice')}
+          disabled={Boolean(call)}
+          aria-label="Gọi thoại"
+          title="Gọi thoại (mô phỏng demo)"
+          className={`grid h-6 w-6 shrink-0 place-items-center rounded-full transition ${call?.type === 'voice' ? 'text-nexoraBrand' : 'text-nexoraMuted hover:bg-nexoraBrandSoft hover:text-nexoraBrand'} disabled:cursor-not-allowed disabled:opacity-40`}
+        >
+          <Phone className="h-3 w-3" aria-hidden="true" />
+        </button>
+        <button
+          type="button"
+          onClick={() => startCall('video')}
+          disabled={Boolean(call)}
+          aria-label="Gọi video"
+          title="Gọi video (mô phỏng demo)"
+          className={`grid h-6 w-6 shrink-0 place-items-center rounded-full transition ${call?.type === 'video' ? 'text-nexoraBrand' : 'text-nexoraMuted hover:bg-nexoraBrandSoft hover:text-nexoraBrand'} disabled:cursor-not-allowed disabled:opacity-40`}
+        >
+          <Video className="h-3 w-3" aria-hidden="true" />
+        </button>
         {entry.kind === 'direct' ? <button type="button" onClick={expand} aria-label="Mở toàn màn hình" className="grid h-7 w-7 shrink-0 place-items-center rounded-full text-nexoraMuted hover:bg-nexoraSurfaceMuted"><Maximize2 className="h-3.5 w-3.5" aria-hidden="true" /></button> : null}
         <button type="button" onClick={onMinimize} aria-label="Thu nhỏ" className="grid h-7 w-7 shrink-0 place-items-center rounded-full text-nexoraMuted hover:bg-nexoraSurfaceMuted"><Minus className="h-3.5 w-3.5" aria-hidden="true" /></button>
         <button type="button" onClick={onClose} aria-label="Đóng đoạn chat" className="grid h-7 w-7 shrink-0 place-items-center rounded-full text-nexoraMuted hover:bg-nexoraSurfaceMuted"><X className="h-4 w-4" aria-hidden="true" /></button>
       </header>
 
-      <section ref={scrollRef} className="min-h-0 flex-1 space-y-1 overflow-y-auto px-2.5 py-3">
-        {chat.isLoading ? (
-          <div className="space-y-2" aria-label="Đang tải tin nhắn">
-            <div className="h-10 w-3/4 animate-pulse rounded-xl bg-nexoraSurfaceMuted" />
-            <div className="ml-auto h-12 w-2/3 animate-pulse rounded-xl bg-nexoraBrandSoft" />
-          </div>
-        ) : chat.messages.length ? (
-          chat.messages.map((message, index) => {
-            const previous = chat.messages[index - 1]
-            const next = chat.messages[index + 1]
-            const isFirstInRun = !previous || previous.senderId !== message.senderId
-            const isLastInRun = !next || next.senderId !== message.senderId
-            return (
-              <DockBubble
-                key={message.id}
-                message={message}
-                currentUserId={user?.id}
-                recipientName={entry.title}
-                isFirstInRun={isFirstInRun}
-                isLastInRun={isLastInRun}
-              />
-            )
-          })
-        ) : (
-          <p className="py-8 text-center text-xs text-nexoraSubtle">Gửi tin nhắn để bắt đầu trò chuyện với {entry.title}.</p>
-        )}
-        {chat.error ? <p className="text-center text-[11px] font-semibold text-nexoraDanger">{chat.error.message}</p> : null}
-      </section>
+      <div className="relative flex min-h-0 flex-1 flex-col">
+        <section ref={scrollRef} className="min-h-0 flex-1 space-y-1 overflow-y-auto px-2.5 py-3">
+          {chat.isLoading ? (
+            <div className="space-y-2" aria-label="Đang tải tin nhắn">
+              <div className="h-10 w-3/4 animate-pulse rounded-xl bg-nexoraSurfaceMuted" />
+              <div className="ml-auto h-12 w-2/3 animate-pulse rounded-xl bg-nexoraBrandSoft" />
+            </div>
+          ) : chat.messages.length ? (
+            chat.messages.map((message, index) => {
+              const previous = chat.messages[index - 1]
+              const next = chat.messages[index + 1]
+              const isFirstInRun = !previous || previous.senderId !== message.senderId
+              const isLastInRun = !next || next.senderId !== message.senderId
+              return (
+                <DockBubble
+                  key={message.id}
+                  message={message}
+                  currentUserId={user?.id}
+                  recipientName={entry.title}
+                  isFirstInRun={isFirstInRun}
+                  isLastInRun={isLastInRun}
+                />
+              )
+            })
+          ) : (
+            <p className="py-8 text-center text-xs text-nexoraSubtle">Gửi tin nhắn để bắt đầu trò chuyện với {entry.title}.</p>
+          )}
+          {chat.error ? <p className="text-center text-[11px] font-semibold text-nexoraDanger">{chat.error.message}</p> : null}
+        </section>
 
-      <form onSubmit={submit} className="flex shrink-0 items-center gap-1.5 border-t border-nexoraBorder bg-nexoraSurface p-2">
-        <input
-          value={body}
-          onChange={(event) => setBody(event.target.value)}
-          maxLength={5000}
-          disabled={chat.isSending}
-          placeholder="Nhắn tin…"
-          aria-label={`Nhắn tin cho ${entry.title}`}
-          className="min-h-9 min-w-0 flex-1 rounded-full border border-nexoraBorder bg-nexoraSurfaceMuted px-3 text-xs text-nexoraText outline-none placeholder:text-nexoraSubtle focus:border-nexoraBrand disabled:opacity-60"
-        />
-        <button
-          type="submit"
-          disabled={!body.trim() || chat.isSending}
-          className={`grid h-9 w-9 shrink-0 place-items-center rounded-full text-white ${gradientClass} disabled:cursor-not-allowed disabled:opacity-50`}
-          aria-label="Gửi tin nhắn"
-        >
-          {chat.isSending ? <Loader2 className="h-3.5 w-3.5 animate-spin" aria-hidden="true" /> : <Send className="h-3.5 w-3.5" aria-hidden="true" />}
-        </button>
-      </form>
+        <form onSubmit={submit} className="flex shrink-0 items-center gap-1.5 border-t border-nexoraBorder bg-nexoraSurface p-2">
+          <input
+            value={body}
+            onChange={(event) => setBody(event.target.value)}
+            maxLength={5000}
+            disabled={chat.isSending}
+            placeholder="Nhắn tin…"
+            aria-label={`Nhắn tin cho ${entry.title}`}
+            className="min-h-9 min-w-0 flex-1 rounded-full border border-nexoraBorder bg-nexoraSurfaceMuted px-3 text-xs text-nexoraText outline-none placeholder:text-nexoraSubtle focus:border-nexoraBrand disabled:opacity-60"
+          />
+          <button
+            type="submit"
+            disabled={!body.trim() || chat.isSending}
+            className={`grid h-9 w-9 shrink-0 place-items-center rounded-full text-white ${gradientClass} disabled:cursor-not-allowed disabled:opacity-50`}
+            aria-label="Gửi tin nhắn"
+          >
+            {chat.isSending ? <Loader2 className="h-3.5 w-3.5 animate-spin" aria-hidden="true" /> : <Send className="h-3.5 w-3.5" aria-hidden="true" />}
+          </button>
+        </form>
+
+        {call ? <CallOverlay call={call} elapsed={elapsed} name={entry.title} onEnd={endCall} /> : null}
+      </div>
     </div>
   )
 }

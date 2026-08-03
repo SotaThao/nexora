@@ -6,6 +6,7 @@ import {
   ClipboardList,
   Copy,
   Eye,
+  MessageCircle,
   QrCode,
   Star,
   Trash2,
@@ -16,6 +17,7 @@ import {
 import { useTranslation } from '../contexts/LanguageContext'
 import { logger } from '../utils/logger'
 import CopyableTransactionId from './ui/CopyableTransactionId'
+import StaffQuickChatModal from './ui/StaffQuickChatModal'
 import { formatTransactionDateTime, formatCurrency } from './dashboard/utils'
 import { buildChartPoints, getBezierPath } from './dashboard/overview/chartUtils'
 import { useMerchantStaffStats } from '../data/hooks/useMerchantStaff'
@@ -171,6 +173,7 @@ export default function StaffDetailView({
   const [copiedWallet, setCopiedWallet] = useState<any | null>(null)
   const [reviewFilter, setReviewFilter] = useState('all') // 'all' | 'google' | 'private'
   const [hoverIndex, setHoverIndex] = useState<any | null>(null)
+  const [isChatOpen, setIsChatOpen] = useState(false)
   const chartRef = useRef(null)
 
   const initialRange = getRangeDates('7 Days')
@@ -462,9 +465,9 @@ export default function StaffDetailView({
                     : t('staff_detail.joined_gateway')}
                 </div>
                 {staffMember.phone && (
-                  <div className="flex items-center gap-1">
+                  <a href={`tel:${staffMember.phone}`} className="flex items-center gap-1 hover:text-nexoraText hover:underline">
                     <Phone className="h-3.5 w-3.5 text-brandCyan" /> {staffMember.phone}
-                  </div>
+                  </a>
                 )}
                 {staffMember.email && (
                   <div className="flex items-center gap-1">
@@ -476,6 +479,20 @@ export default function StaffDetailView({
           </div>
 
           <div className="flex flex-wrap gap-2">
+            {staffMember.phone && (
+              <a
+                href={`tel:${staffMember.phone}`}
+                className="inline-flex h-10 items-center gap-2 rounded-lg border border-nexoraBorder bg-white px-4 text-xs font-bold text-nexoraText shadow-sm hover:bg-nexoraSurfaceMuted transition"
+              >
+                <Phone className="h-4 w-4 text-brandCyan" /> {t('staff_detail.call')}
+              </a>
+            )}
+            <button
+              onClick={() => setIsChatOpen(true)}
+              className="inline-flex h-10 items-center gap-2 rounded-lg border border-nexoraBorder bg-white px-4 text-xs font-bold text-nexoraText shadow-sm hover:bg-nexoraSurfaceMuted transition"
+            >
+              <MessageCircle className="h-4 w-4 text-brandCyan" /> {t('staff_detail.chat')}
+            </button>
             <button
               onClick={() => onQr(staffMember)}
               className="inline-flex h-10 items-center gap-2 rounded-lg border border-nexoraBorder bg-white px-4 text-xs font-bold text-nexoraText shadow-sm hover:bg-nexoraSurfaceMuted transition"
@@ -942,6 +959,13 @@ export default function StaffDetailView({
           </div>
         )}
       </div>
+
+      {isChatOpen && (
+        <StaffQuickChatModal
+          staffName={staffMember.nickname || staffMember.fullName}
+          onClose={() => setIsChatOpen(false)}
+        />
+      )}
     </div>
   )
 }

@@ -18,7 +18,16 @@ import {
   sidebarSubmenuItemClass,
 } from '../../ui/sidebarMenuStyles'
 import PaymentsPayoutsMenuSection from './PaymentsPayoutsMenuSection'
-import { isPaymentsPayoutsRouteActive, VISIBLE_TOUCHPOINTS_SUBMENU } from '../constants'
+import {
+  isPaymentsPayoutsRouteActive,
+  VISIBLE_TOUCHPOINTS_SUBMENU,
+  GIFT_CARD_CENTER_SUBMENU,
+  getVisibleBookingHubSubmenu,
+  isBookingHubSubActive,
+  getDefaultBookingHubTab,
+} from '../constants'
+import { useOpenProductManagement } from '../../../data/hooks/useOpenProductManagement'
+import { useMerchantVoiceTenantStatus } from '../../../data/hooks/useMerchantVoiceBookings'
 
 export default function MobileMenuDrawer({
   isOpen,
@@ -47,6 +56,12 @@ export default function MobileMenuDrawer({
   const [searchParams] = useSearchParams()
   const activeSubTab = searchParams.get('tab')
   const isPaymentsPayoutsActive = isPaymentsPayoutsRouteActive(activeMenu, activeSubTab)
+  const [isBookingHubMobileExpanded, setIsBookingHubMobileExpanded] = React.useState(activeMenu === 'booking-hub')
+  const [isGiftCardCenterMobileExpanded, setIsGiftCardCenterMobileExpanded] = React.useState(false)
+  const { data: voiceTenantStatus } = useMerchantVoiceTenantStatus({ enabled: userRole !== 'staff' })
+  const hasVoiceTenant = voiceTenantStatus?.hasVoiceTenant === true
+  const bookingHubSubmenu = getVisibleBookingHubSubmenu(hasVoiceTenant)
+  const { openProductManagement, isOpeningProductManagement, openingProductManagementDestination } = useOpenProductManagement()
   const subscriptionCopy = getSubscriptionSidebarCopy(
     subscription ?? profile?.subscription,
     t,
@@ -61,9 +76,19 @@ export default function MobileMenuDrawer({
     navigateMenu(screen, { tab, closeDrawer: true })
     setIsPaymentsPayoutsMobileExpanded(true)
     setIsTouchpointsMobileExpanded(false)
+    setIsBookingHubMobileExpanded(false)
+    setIsGiftCardCenterMobileExpanded(false)
   }
 
   const handleMenuClick = (id: string) => {
+    if (id === 'product-management') {
+      setIsGiftCardCenterMobileExpanded((prev) => !prev)
+      setIsPaymentsPayoutsMobileExpanded(false)
+      setIsTouchpointsMobileExpanded(false)
+      setIsBookingHubMobileExpanded(false)
+      return
+    }
+
     if (id === 'touchpoints') {
       if (activeMenu === 'touchpoints') {
         setIsTouchpointsMobileExpanded((prev) => !prev)
@@ -71,7 +96,22 @@ export default function MobileMenuDrawer({
         navigateMenu('touchpoints', { closeDrawer: false })
         setIsTouchpointsMobileExpanded(true)
         setIsPaymentsPayoutsMobileExpanded(false)
+        setIsBookingHubMobileExpanded(false)
       }
+      setIsGiftCardCenterMobileExpanded(false)
+      return
+    }
+
+    if (id === 'booking-hub') {
+      if (activeMenu === 'booking-hub') {
+        setIsBookingHubMobileExpanded((prev) => !prev)
+      } else {
+        navigateMenu('booking-hub', { tab: hasVoiceTenant ? undefined : getDefaultBookingHubTab(false), closeDrawer: false })
+        setIsBookingHubMobileExpanded(true)
+        setIsPaymentsPayoutsMobileExpanded(false)
+        setIsTouchpointsMobileExpanded(false)
+      }
+      setIsGiftCardCenterMobileExpanded(false)
       return
     }
 
@@ -167,28 +207,45 @@ export default function MobileMenuDrawer({
               reviews: t('dashboard.menu.reviews'),
               reports: t('dashboard.menu.transactions'),
               'booking-hub': t('dashboard.menu.booking_hub'),
+              'product-management': t('dashboard.menu.gift_card_center'),
               touchpoints: t('dashboard.menu.touchpoints'),
               devices: t('dashboard.menu.qr_nfc'),
               analytics: t('dashboard.menu.analytics'),
               support: t('dashboard.menu.support')
             }[id] || label
+            const isGiftCardCenterRow = id === 'product-management'
 
             return (
               <React.Fragment key={id}>
                 <button
                   type="button"
                   onClick={() => handleMenuClick(id)}
-                  className={sidebarMenuItemBetweenClass(isActive)}
+                  disabled={isGiftCardCenterRow && isOpeningProductManagement}
+                  className={sidebarMenuItemBetweenClass(isActive || (isGiftCardCenterRow && isGiftCardCenterMobileExpanded))}
                 >
                   <div className="flex items-center gap-3 min-w-0">
-                    <MenuIcon item={item} active={isActive} />
+                    <MenuIcon item={item} active={isActive || (isGiftCardCenterRow && isGiftCardCenterMobileExpanded)} />
                     <span>{localizedLabel}</span>
                   </div>
-                  {id === 'touchpoints' && (
+                  {isGiftCardCenterRow ? (
+                    <div className="text-white/65 shrink-0">
+                      {isOpeningProductManagement ? (
+                        <span className="block h-4 w-4 animate-spin rounded-full border-2 border-white/30 border-t-white" />
+                      ) : isGiftCardCenterMobileExpanded ? (
+                        <ChevronUp className="h-4 w-4" />
+                      ) : (
+                        <ChevronDown className="h-4 w-4" />
+                      )}
+                    </div>
+                  ) : id === 'touchpoints' ? (
                     <div className="text-white/65 shrink-0">
                       {isTouchpointsMobileExpanded ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
                     </div>
-                  )}
+                  ) : id === 'booking-hub' ? (
+                    <div className="text-white/65 shrink-0">
+                      {isBookingHubMobileExpanded ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
+                    </div>
+                  ) : null}
                 </button>
 
                 {userRole !== 'staff' && id === 'staff' && (
@@ -199,6 +256,51 @@ export default function MobileMenuDrawer({
                     onToggle={handlePaymentsPayoutsToggle}
                     onNavigate={handlePaymentsPayoutsNavigate}
                   />
+                )}
+
+                {isGiftCardCenterRow && isGiftCardCenterMobileExpanded && (
+                  <div className={SIDEBAR_SUBMENU_WRAP_CLASS}>
+                    {GIFT_CARD_CENTER_SUBMENU.map((sub) => {
+                      const isSubOpening = openingProductManagementDestination === sub.destination
+                      return (
+                        <button
+                          key={sub.id}
+                          type="button"
+                          disabled={isOpeningProductManagement}
+                          onClick={() => {
+                            void openProductManagement(sub.destination)
+                            setIsGiftCardCenterMobileExpanded(true)
+                          }}
+                          className={sidebarSubmenuItemClass(isSubOpening)}
+                        >
+                          <div className={`h-1.5 w-1.5 rounded-full ${isSubOpening ? 'bg-brandCyan shadow-sm' : 'bg-white/30'}`} />
+                          <span className="flex-1 text-left">{t(sub.labelKey)}</span>
+                          {isSubOpening ? (
+                            <span className="h-3.5 w-3.5 shrink-0 animate-spin rounded-full border-2 border-white/30 border-t-white" />
+                          ) : null}
+                        </button>
+                      )
+                    })}
+                  </div>
+                )}
+
+                {id === 'booking-hub' && isBookingHubMobileExpanded && (
+                  <div className={SIDEBAR_SUBMENU_WRAP_CLASS}>
+                    {bookingHubSubmenu.map((sub) => {
+                      const isSubActive = isBookingHubSubActive(activeMenu, activeSubTab, sub.id, hasVoiceTenant)
+                      return (
+                        <button
+                          key={sub.id}
+                          type="button"
+                          onClick={() => navigateMenu('booking-hub', { tab: sub.id, closeDrawer: false })}
+                          className={sidebarSubmenuItemClass(isSubActive)}
+                        >
+                          <div className={`h-1.5 w-1.5 rounded-full ${isSubActive ? 'bg-brandCyan shadow-sm' : 'bg-white/30'}`} />
+                          <span>{t(sub.labelKey)}</span>
+                        </button>
+                      )
+                    })}
+                  </div>
                 )}
 
                 {id === 'touchpoints' && isTouchpointsMobileExpanded && (

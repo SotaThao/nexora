@@ -1,6 +1,9 @@
 /** Booking Hub route query values (not API enums). */
 export enum BookingHubMainTab {
   Booking = 'booking',
+  Customers = 'customers',
+  CallLog = 'calllog',
+  SmsCampaigns = 'sms-campaigns',
   Plans = 'plans',
   Settings = 'settings',
 }
@@ -291,6 +294,9 @@ export function mapUiLanguageToConfigLanguage(language: MerchantVoiceUiLanguage)
 }
 
 export function parseBookingHubMainTab(value: string | null): BookingHubMainTab {
+  if (value === BookingHubMainTab.Customers) return BookingHubMainTab.Customers
+  if (value === BookingHubMainTab.CallLog) return BookingHubMainTab.CallLog
+  if (value === BookingHubMainTab.SmsCampaigns) return BookingHubMainTab.SmsCampaigns
   if (value === BookingHubMainTab.Plans) return BookingHubMainTab.Plans
   if (value === BookingHubMainTab.Settings) return BookingHubMainTab.Settings
   return BookingHubMainTab.Booking

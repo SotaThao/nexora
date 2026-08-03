@@ -4,18 +4,26 @@ import {
   Calendar,
   ChevronLeft,
   AlertCircle,
+  Copy,
+  Eye,
   GraduationCap,
   Heart,
   Image as ImageIcon,
+  Link as LinkIcon,
   Loader2,
   LockKeyhole,
   MapPin,
   MessageCircle,
+  Phone,
   Plus,
+  QrCode,
   Send,
+  Share2,
   ShieldCheck,
   Sparkles,
   Store,
+  Trash2,
+  User,
   Users,
   X,
 } from 'lucide-react'
@@ -41,14 +49,19 @@ import {
   useRejectJoinRequest,
   useToggleCommunityReaction,
 } from '../../data/hooks/useCommunity'
+import { useTranslation } from '../../contexts/LanguageContext'
 import DemoStaffShell from './demo/DemoStaffShell'
-import { CommunityAuthProvider, CommunityPersonaSwitcher, useCommunityAuth } from './CommunityAuth'
+import DemoMerchantShell from './demo/DemoMerchantShell'
+import { COMMUNITY_DEMO_PERSONAS, CommunityAuthProvider, CommunityPersonaSwitcher, useCommunityAuth } from './CommunityAuth'
 import { CommunityChatDock, CommunityChatDockProvider } from './CommunityChatDock'
 import { CommunityNotificationsProvider } from './CommunityNotifications'
 import { CommunityPostComposer, CommunityPostMedia } from './CommunityPostMedia'
 import { CommunityRightRail } from './CommunityRightRail'
 import { createCommunitySlug } from './communitySlug'
 import { demoEvents, demoLearning, demoJobs } from './communityDemoContent'
+import IconButton from '../ui/IconButton'
+import StaffQuickChatModal from '../ui/StaffQuickChatModal'
+import ToggleSwitch from '../ui/ToggleSwitch'
 
 const cardClass = 'overflow-hidden rounded-xl border border-nexoraBorder bg-nexoraSurface shadow-nexora-card'
 const gradientClass = 'bg-gradient-to-br from-nexoraElectric to-nexoraViolet'
@@ -98,14 +111,22 @@ function EmptyState({ title, children }: { title: string; children: ReactNode })
   return <section className={`${cardClass} px-6 py-10 text-center`}><Sparkles className="mx-auto h-8 w-8 text-nexoraBrand" aria-hidden="true" /><h2 className="mt-3 text-base font-extrabold text-nexoraText">{title}</h2><p className="mx-auto mt-2 max-w-sm text-sm leading-relaxed text-nexoraMuted">{children}</p></section>
 }
 
+const KAYLA_PERSONA_EMAIL = COMMUNITY_DEMO_PERSONAS.find((persona) => persona.id === 'kayla')?.email
+
 function CommunityFrame({ children, containerClassName }: { children: ReactNode; containerClassName?: string }) {
   const navigate = useNavigate()
+  const { isAnonymous, user } = useCommunityAuth()
+  const isOwnerPersona = !isAnonymous && user?.email === KAYLA_PERSONA_EMAIL
+  const content = <div className={containerClassName ?? 'mx-auto w-full max-w-[680px] space-y-4 pb-20'}>{children}</div>
+
   return (
     <>
       <CommunityPersonaSwitcher />
-      <DemoStaffShell onDemoNavigation={() => navigate('/community')}>
-        <div className={containerClassName ?? 'mx-auto w-full max-w-[680px] space-y-4 pb-20'}>{children}</div>
-      </DemoStaffShell>
+      {isOwnerPersona ? (
+        <DemoMerchantShell onDemoNavigation={() => navigate('/community')}>{content}</DemoMerchantShell>
+      ) : (
+        <DemoStaffShell onDemoNavigation={() => navigate('/community')}>{content}</DemoStaffShell>
+      )}
     </>
   )
 }
@@ -421,6 +442,193 @@ export function CommunityHome() {
           <CommunityRightRail />
         </div>
       </div>
+    </CommunityFrame>
+  )
+}
+
+// Mirrors the real StaffView.desktop.tsx table shape (name, linked date, wallets,
+// status/tips toggles) with hardcoded values — no repository/hook, demo-only.
+const DEMO_STAFF_MEMBERS = [
+  { id: 'kelly', name: 'Kelly.Z', role: 'TesterQAa', linkedDate: '09/07/2026', wallets: ['Zelle', 'PayPal'], phone: '+17135550142' },
+  { id: 'a2', name: 'a2', role: 'Nail Technicianr', linkedDate: '09/07/2026', wallets: ['Zelle', 'Venmo', 'PayPal'], phone: '+17135550198' },
+  { id: 'glxc301', name: 'glxc301.', role: 'Nail Technician', linkedDate: '27/07/2026', wallets: ['Zelle', 'PayPal', 'Cash App'], phone: '+17135550173' },
+  { id: 'ike', name: 'Ike', role: 'Nail Technician', linkedDate: '23/07/2026', wallets: ['VLINKPAY', 'Zelle'], phone: '+17135550120' },
+  { id: 'jade', name: 'Jade Uri 1', role: 'Role 2', linkedDate: '24/07/2026', wallets: [] as string[], phone: null },
+] as const
+
+const DEMO_PENDING_REQUEST = { name: 'nexora_04', role: 'Nail Technician', wallets: ['Venmo'] }
+const DEMO_INVITE_LINK = 'https://staging-web.nexoratouch.com/invite/public/b1nexora'
+
+function staffInitials(name: string) {
+  return name.split(/\s+/).filter(Boolean).slice(0, 2).map((part) => part[0]).join('').toUpperCase()
+}
+
+type DemoStaffMember = (typeof DEMO_STAFF_MEMBERS)[number]
+
+// Real route (/community/staff) — not a modal — so the URL actually changes and
+// the flow is shareable/understandable for teammates reviewing the demo. Layout
+// mirrors the real StaffView.desktop.tsx (stat cards, invite link/QR, pending
+// join requests, team table).
+export function CommunityStaffPage() {
+  const { t } = useTranslation()
+  const [chatMember, setChatMember] = useState<DemoStaffMember | null>(null)
+  const [toggles, setToggles] = useState<Record<string, { active: boolean; tips: boolean }>>(
+    () => Object.fromEntries(DEMO_STAFF_MEMBERS.map((member) => [member.id, { active: true, tips: true }])),
+  )
+
+  const toggleActive = (id: string) =>
+    setToggles((current) => ({ ...current, [id]: { ...current[id], active: !current[id].active } }))
+  const toggleTips = (id: string) =>
+    setToggles((current) => ({ ...current, [id]: { ...current[id], tips: !current[id].tips } }))
+
+  return (
+    <CommunityFrame containerClassName="mx-auto w-full max-w-5xl space-y-5 pb-20">
+      <h1 className="text-xl font-extrabold text-nexoraText">{t('dashboard.menu.staff')}</h1>
+
+      <div className="grid grid-cols-1 gap-4 lg:grid-cols-4">
+        <div className="rounded-xl border border-nexoraBorder bg-white p-5 shadow-sm">
+          <small className="text-[10px] font-black uppercase tracking-wider text-nexoraMuted">Total Staff</small>
+          <h3 className="mt-2 text-2xl font-black text-nexoraText">{DEMO_STAFF_MEMBERS.length}</h3>
+        </div>
+        <div className="rounded-xl border border-nexoraBorder bg-white p-5 shadow-sm">
+          <small className="text-[10px] font-black uppercase tracking-wider text-nexoraMuted">Pending Invites</small>
+          <h3 className="mt-2 text-2xl font-black text-nexoraText">1</h3>
+        </div>
+        <div className="flex flex-col items-center justify-between gap-4 rounded-xl border border-nexoraBorder bg-white p-5 shadow-sm sm:flex-row lg:col-span-2">
+          <div className="grid h-16 w-16 shrink-0 place-items-center rounded-xl border border-nexoraBorder bg-nexoraSurfaceMuted">
+            <QrCode className="h-7 w-7 text-nexoraSubtle" aria-hidden="true" />
+          </div>
+          <div className="min-w-0 flex-1 space-y-2">
+            <div className="flex items-center gap-1.5">
+              <LinkIcon className="h-3.5 w-3.5 text-amber-600" aria-hidden="true" />
+              <span className="text-[11px] font-black uppercase tracking-wider text-nexoraText">Staff Invite Link</span>
+            </div>
+            <div className="flex flex-wrap gap-2">
+              <input
+                readOnly
+                value={DEMO_INVITE_LINK}
+                className="h-8 min-w-[180px] flex-1 rounded-lg border border-nexoraBorder bg-nexoraSurfaceMuted px-2.5 font-mono text-[11px] text-nexoraMuted"
+              />
+              <button type="button" className="inline-flex h-8 items-center gap-1.5 rounded-lg border border-nexoraBorder bg-white px-2.5 text-xs font-bold text-nexoraText hover:bg-nexoraSurfaceMuted">
+                <Copy className="h-3.5 w-3.5" aria-hidden="true" /> Copy
+              </button>
+              <button type="button" className="inline-flex h-8 items-center gap-1.5 rounded-lg bg-nexoraBrand px-2.5 text-xs font-bold text-white hover:bg-opacity-90">
+                <Share2 className="h-3.5 w-3.5" aria-hidden="true" /> Share
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div className="overflow-hidden rounded-xl border border-amber-200 bg-amber-50/40 shadow-sm">
+        <div className="border-b border-amber-200 bg-amber-50 px-5 py-3">
+          <h3 className="flex items-center gap-1.5 text-xs font-black uppercase tracking-wider text-amber-800">
+            <AlertCircle className="h-4 w-4 text-amber-700" aria-hidden="true" />
+            Pending Join Requests (1)
+          </h3>
+        </div>
+        <div className="flex items-center gap-3 bg-white px-5 py-3">
+          <span className="grid h-9 w-9 shrink-0 place-items-center rounded-full bg-amber-100 text-xs font-extrabold text-amber-700">
+            {staffInitials(DEMO_PENDING_REQUEST.name)}
+          </span>
+          <div className="min-w-0 flex-1">
+            <div className="truncate text-sm font-bold text-nexoraText">{DEMO_PENDING_REQUEST.name}</div>
+            <div className="truncate text-xs text-nexoraMuted">{DEMO_PENDING_REQUEST.role}</div>
+          </div>
+          {DEMO_PENDING_REQUEST.wallets.map((wallet) => (
+            <span key={wallet} className="rounded border border-nexoraBrand/10 bg-nexoraCanvas px-2 py-0.5 text-[10px] font-bold text-nexoraBrand">
+              {wallet}
+            </span>
+          ))}
+          <span className="shrink-0 text-xs font-bold italic text-nexoraMuted">Pending Acceptance</span>
+        </div>
+      </div>
+
+      <div className="overflow-hidden rounded-xl border border-nexoraBorder bg-white shadow-sm">
+        <div className="flex items-center justify-between border-b border-nexoraBorder px-5 py-3">
+          <h3 className="text-xs font-black uppercase tracking-wider text-nexoraText">Your Team</h3>
+          <button type="button" className="inline-flex h-8 items-center gap-1.5 rounded-lg bg-nexoraBrand px-3 text-xs font-bold text-white hover:bg-opacity-90">
+            <Plus className="h-3.5 w-3.5" aria-hidden="true" /> Add Staff
+          </button>
+        </div>
+        <div className="overflow-x-auto">
+          <table className="w-full min-w-[720px] border-collapse text-left text-sm">
+            <thead>
+              <tr className="border-b border-nexoraRule bg-nexoraSurfaceMuted text-[10px] font-extrabold uppercase text-nexoraMuted">
+                <th className="px-5 py-3">Staff</th>
+                <th className="px-5 py-3">Linked Date</th>
+                <th className="px-5 py-3">Payment Methods</th>
+                <th className="px-5 py-3">Status</th>
+                <th className="px-5 py-3">Tips Enabled</th>
+                <th className="px-5 py-3 text-right">Manage</th>
+              </tr>
+            </thead>
+            <tbody>
+              {DEMO_STAFF_MEMBERS.map((member) => (
+                <tr key={member.id} className="border-b border-nexoraRule last:border-0 hover:bg-nexoraSurfaceMuted/40">
+                  <td className="px-5 py-3">
+                    <div className="flex items-center gap-3">
+                      <span className="grid h-9 w-9 shrink-0 place-items-center rounded-full bg-gradient-to-br from-nexoraElectric to-nexoraViolet text-xs font-extrabold text-white">
+                        {staffInitials(member.name)}
+                      </span>
+                      <div className="min-w-0">
+                        <div className="truncate text-sm font-bold text-nexoraText">{member.name}</div>
+                        <div className="truncate text-xs text-nexoraMuted">{member.role}</div>
+                      </div>
+                    </div>
+                  </td>
+                  <td className="px-5 py-3 text-xs font-semibold text-nexoraText">{member.linkedDate}</td>
+                  <td className="px-5 py-3">
+                    <div className="flex flex-wrap gap-1.5">
+                      {member.wallets.length ? (
+                        member.wallets.map((wallet) => (
+                          <span key={wallet} className="rounded border border-nexoraBrand/10 bg-nexoraCanvas px-2 py-0.5 text-[10px] font-bold text-nexoraBrand">
+                            {wallet}
+                          </span>
+                        ))
+                      ) : (
+                        <span className="text-[10px] font-bold italic text-nexoraSubtle">No wallets</span>
+                      )}
+                    </div>
+                  </td>
+                  <td className="px-5 py-3">
+                    <ToggleSwitch checked={toggles[member.id].active} onChange={() => toggleActive(member.id)} />
+                  </td>
+                  <td className="px-5 py-3">
+                    <ToggleSwitch checked={toggles[member.id].tips} onChange={() => toggleTips(member.id)} activeColor="bg-blue-500" />
+                  </td>
+                  <td className="px-5 py-3">
+                    <div className="flex justify-end gap-1">
+                      <IconButton label={t('components.dashboard.views.StaffView.manage_edit_profile')}>
+                        <User className="h-4 w-4" aria-hidden="true" />
+                      </IconButton>
+                      {member.phone && (
+                        <IconButton label={t('staff_detail.call')} className="hover:text-emerald-600" onClick={() => { window.location.href = `tel:${member.phone}` }}>
+                          <Phone className="h-4 w-4" aria-hidden="true" />
+                        </IconButton>
+                      )}
+                      <IconButton label={t('staff_detail.chat')} className="hover:text-nexoraBrand" onClick={() => setChatMember(member)}>
+                        <MessageCircle className="h-4 w-4" aria-hidden="true" />
+                      </IconButton>
+                      <IconButton label={t('components.dashboard.views.StaffView.manage_view_qr')}>
+                        <QrCode className="h-4 w-4" aria-hidden="true" />
+                      </IconButton>
+                      <IconButton label={t('components.dashboard.views.StaffView.manage_preview_customer')}>
+                        <Eye className="h-4 w-4" aria-hidden="true" />
+                      </IconButton>
+                      <IconButton label={t('components.dashboard.views.StaffView.manage_remove_staff')} className="hover:text-rose-600">
+                        <Trash2 className="h-4 w-4" aria-hidden="true" />
+                      </IconButton>
+                    </div>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      {chatMember ? <StaffQuickChatModal staffName={chatMember.name} onClose={() => setChatMember(null)} /> : null}
     </CommunityFrame>
   )
 }

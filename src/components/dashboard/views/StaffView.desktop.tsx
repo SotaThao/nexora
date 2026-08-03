@@ -1,6 +1,6 @@
 import { useState, useMemo } from 'react'
 import { createPortal } from 'react-dom'
-import { AlertCircle, Plus, HelpCircle, Trash2, User, QrCode, Eye, Link, Copy, X, Share2, Loader2 } from 'lucide-react'
+import { AlertCircle, Plus, HelpCircle, Trash2, User, QrCode, Eye, Link, Copy, X, Share2, Loader2, Phone, MessageCircle } from 'lucide-react'
 import { useTranslation } from '../../../contexts/LanguageContext'
 import { useNotification } from '../../../contexts/NotificationContext'
 import { buildPublicInviteLink } from '../../../utils/inviteRef'
@@ -15,6 +15,7 @@ import Pagination from '../../ui/Pagination'
 import ToggleSwitch from '../../ui/ToggleSwitch'
 import { SkeletonList } from '../../ui/skeleton'
 import QrImage from '../../ui/QrImage'
+import StaffQuickChatModal from '../../ui/StaffQuickChatModal'
 
 function isWaitingStaffAcceptance(member) {
   return member?.apiStatus === 'WaitingStaffAcceptance' || member?.status === 'WaitingStaffAcceptance'
@@ -65,6 +66,7 @@ function StaffView({
   const { t } = useTranslation()
   const { showToast } = useNotification()
   const [largeJoinQrOpen, setLargeJoinQrOpen] = useState(false)
+  const [chatMember, setChatMember] = useState(null)
   const [sortBy, setSortBy] = useState('name-asc') // 'name-asc' | 'name-desc' | 'date-newest' | 'date-oldest' | 'status-active'
 
   const publicInviteEnabled = Boolean(inviteLinkSetting?.isEnabled && inviteLinkSetting?.referralCode)
@@ -589,6 +591,14 @@ function StaffView({
                           <IconButton label={t('components.dashboard.views.StaffView.manage_edit_profile')} onClick={() => onViewDetail(member)} className="hover:text-nexoraBrand">
                             <User className="h-4 w-4" />
                           </IconButton>
+                          {member.phone && (
+                            <IconButton label={t('staff_detail.call')} onClick={() => { window.location.href = `tel:${member.phone}` }} className="hover:text-emerald-600">
+                              <Phone className="h-4 w-4" />
+                            </IconButton>
+                          )}
+                          <IconButton label={t('staff_detail.chat')} onClick={() => setChatMember(member)} className="hover:text-nexoraBrand">
+                            <MessageCircle className="h-4 w-4" />
+                          </IconButton>
                           <IconButton label={t('components.dashboard.views.StaffView.manage_view_qr')} onClick={() => onQr(member)}>
                             <QrCode className="h-4 w-4" />
                           </IconButton>
@@ -681,7 +691,13 @@ function StaffView({
         document.body,
       )}
 
-
+      {chatMember && createPortal(
+        <StaffQuickChatModal
+          staffName={chatMember.nickname || chatMember.fullName}
+          onClose={() => setChatMember(null)}
+        />,
+        document.body,
+      )}
     </div>
   )
 }
