@@ -273,11 +273,17 @@ export function createDefaultBookingState(defaultSlot) {
   }
 }
 
-/** Normalize `?phone=` into the same dial+national shape the form edits. */
+/** Normalize `?phone=` / `?p=` into dial + national shape the form edits. */
 export function formatBookingPrefillPhone(raw) {
   const value = String(raw || '').trim()
   if (!value) return ''
-  const parsed = parsePhone(value)
+  const digitsOnly = value.replace(/\D/g, '')
+  const phoneForParse = value.startsWith('+')
+    ? value
+    : digitsOnly
+      ? `+${digitsOnly}`
+      : value
+  const parsed = parsePhone(phoneForParse)
   const dialCode = parsed.countryCode || PhoneDialCode.US
   const national = formatNationalNumber(parsed.nationalNumber, dialCode)
   if (!String(national || '').replace(/\D/g, '')) return ''

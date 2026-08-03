@@ -10,7 +10,6 @@ import {
   useMerchantVoiceSmsCampaign,
   useUpdateMerchantVoiceSmsCampaign,
 } from "../../../../data/hooks/useMerchantVoiceSmsCampaigns";
-import { useProfileSettings } from "../../../../data/hooks/useProfileSettings";
 import {
   SmsCampaignAudience,
   SmsCampaignScheduleMode,
@@ -61,6 +60,7 @@ import {
   SMS_API_MODE_TO_COMPOSER,
   SMS_CAMPAIGN_COMPOSER_SEGMENTS,
   SMS_CAMPAIGN_DEFAULT_AUDIENCE,
+  SMS_CAMPAIGN_LINK_PHONE,
   SMS_CAMPAIGN_NAME_INPUT,
   SMS_CAMPAIGN_TEMPLATES,
   SMS_CAMPAIGN_TK,
@@ -256,7 +256,6 @@ export default function SmsCreateCampaignModal({
 
   const isEdit = !!campaignId;
   const myTenantQuery = useMerchantVoiceMyTenant({ enabled: open });
-  const profileQuery = useProfileSettings({ enabled: open });
   const campaignQuery = useMerchantVoiceSmsCampaign(campaignId, {
     enabled: open && isEdit,
   });
@@ -426,7 +425,6 @@ export default function SmsCreateCampaignModal({
   const charParts = textEstimate.segmentCount;
   const charEncoding = textEstimate.encoding;
   const charPerPart = textEstimate.maxCharactersPerSegment || 160;
-  const profilePhone = profileQuery.data?.phoneNumber?.trim() || "";
   const tagSamples = useMemo(
     () => ({
       ...SMS_COMPOSER_TAG_SAMPLES,
@@ -436,14 +434,13 @@ export default function SmsCreateCampaignModal({
       [SMS_COMPOSER_TAG.link]: buildSmsCampaignBusinessLinkPreview(
         myTenantQuery.data?.businessKey,
         currentLanguage,
-        { phone: profilePhone || undefined },
+        { phone: SMS_CAMPAIGN_LINK_PHONE },
       ),
     }),
     [
       currentLanguage,
       myTenantQuery.data?.businessKey,
       myTenantQuery.data?.name,
-      profilePhone,
     ],
   );
   const previewHtml = useMemo(
@@ -573,7 +570,7 @@ export default function SmsCreateCampaignModal({
         text,
         myTenantQuery.data?.businessKey,
         currentLanguage,
-        { phone: profilePhone || undefined },
+        { phone: SMS_CAMPAIGN_LINK_PHONE },
       );
 
       if (isEdit && campaignId) {

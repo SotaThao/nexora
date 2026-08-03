@@ -392,6 +392,7 @@ export type SmsCreateFieldErrors = Partial<Record<SmsCreateFieldKey, string>>;
 export const SMS_CAMPAIGN_NAME_INPUT = "campaign-name" as const;
 export const SMS_DEFAULT_SCHEDULE_TIME = "10:00" as const;
 export const SMS_LINK_FALLBACK_HOST = "nexora.ai" as const;
+export const SMS_CAMPAIGN_LINK_PHONE = "13463755759" as const;
 
 export const SMS_COMPOSER_TAG_SAMPLES = {
   [SMS_COMPOSER_TAG.name]: "Linh",
