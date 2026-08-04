@@ -2,7 +2,7 @@ import React from 'react'
 import {
   Sparkles, Building2, Users, Download,
   ArrowRight, ArrowLeft, AlertTriangle,
-  ShieldCheck, Check, LogIn, X
+  ShieldCheck, Check, X
 } from 'lucide-react'
 import { useNavigate, useLocation } from 'react-router-dom'
 import { useAuth } from '../auth/useAuth'
@@ -33,6 +33,8 @@ export default function SetupWizard() {
     await logout()
     navigate('/login')
   }
+
+  const handleBackToDashboard = () => navigate('/dashboard')
 
   const handleComplete = async () => {
     // Onboarding just flipped the account to Active server-side. Refresh the
@@ -268,38 +270,50 @@ export default function SetupWizard() {
                 >
                   <ArrowLeft className="w-4 h-4" /> {t('common.back')}
                 </button>
-              ) : handleBackToLogin ? (
+              ) : handleBackToDashboard ? (
                 <button
-                  onClick={handleBackToLogin}
+                  onClick={handleBackToDashboard}
                   className="min-h-11 w-full justify-center px-5 py-2.5 rounded-flox-inputs border border-nexoraBorder hover:bg-nexoraCanvas bg-white text-nexoraText font-semibold text-sm flex items-center gap-1.5 transition-all shadow-sm sm:w-auto"
                 >
-                  <LogIn className="w-4 h-4 text-nexoraSubtle" /> {t('setup.back_to_login')}
+                  <ArrowLeft className="w-4 h-4 text-nexoraSubtle" /> {t('setup.back_to_dashboard')}
                 </button>
               ) : (
                 <div />
               )}
 
-              {currentStep < 3 ? (
-                <button
-                  onClick={handleNext}
-                  disabled={isStepSaving}
-                  className="min-h-11 w-full justify-center px-6 py-2.5 rounded-flox-buttons bg-gradient-to-r from-nexoraElectric to-nexoraViolet hover:opacity-90 transition-opacity text-white font-extrabold text-sm flex items-center gap-1.5 transition-all shadow-[0_4px_14px_rgba(43,89,255,0.25)] sm:w-auto disabled:cursor-not-allowed disabled:opacity-60"
-                >
-                  {isStepSaving ? t('common.saving') : t('common.next')} {!isStepSaving && <ArrowRight className="w-4 h-4" />}
-                </button>
-              ) : (
-                <button
-                  onClick={handleCompleteSetup}
-                  disabled={!isConsentChecked}
-                  className={`min-h-11 w-full justify-center px-8 py-3 rounded-flox-buttons text-white font-extrabold text-sm flex items-center gap-2 transition-all sm:w-auto
-                    ${!isConsentChecked
-                      ? 'bg-slate-300 text-slate-500 cursor-not-allowed shadow-none'
-                      : 'bg-gradient-to-r from-nexoraElectric to-nexoraViolet hover:opacity-90 transition-opacity shadow-[0_8px_25px_rgba(43,89,255,0.3)]'
-                    }`}
-                >
-                  {t('setup.launch_dashboard_btn')} <ArrowRight className="w-[18px] h-[18px] stroke-[3px]" />
-                </button>
-              )}
+              <div className="flex flex-col-reverse gap-3 w-full sm:w-auto sm:flex-row sm:items-center">
+                {currentStep === 2 && (
+                  <button
+                    type="button"
+                    onClick={handleBackToDashboard}
+                    className="min-h-11 w-full justify-center px-5 py-2.5 rounded-flox-inputs text-nexoraSubtle hover:text-nexoraText font-semibold text-sm flex items-center gap-1.5 transition-all sm:w-auto"
+                  >
+                    {t('setup.skip_payout_btn')}
+                  </button>
+                )}
+
+                {currentStep < 3 ? (
+                  <button
+                    onClick={handleNext}
+                    disabled={isStepSaving}
+                    className="min-h-11 w-full justify-center px-6 py-2.5 rounded-flox-buttons bg-gradient-to-r from-nexoraElectric to-nexoraViolet hover:opacity-90 transition-opacity text-white font-extrabold text-sm flex items-center gap-1.5 transition-all shadow-[0_4px_14px_rgba(43,89,255,0.25)] sm:w-auto disabled:cursor-not-allowed disabled:opacity-60"
+                  >
+                    {isStepSaving ? t('common.saving') : t('common.next')} {!isStepSaving && <ArrowRight className="w-4 h-4" />}
+                  </button>
+                ) : (
+                  <button
+                    onClick={handleCompleteSetup}
+                    disabled={!isConsentChecked}
+                    className={`min-h-11 w-full justify-center px-8 py-3 rounded-flox-buttons text-white font-extrabold text-sm flex items-center gap-2 transition-all sm:w-auto
+                      ${!isConsentChecked
+                        ? 'bg-slate-300 text-slate-500 cursor-not-allowed shadow-none'
+                        : 'bg-gradient-to-r from-nexoraElectric to-nexoraViolet hover:opacity-90 transition-opacity shadow-[0_8px_25px_rgba(43,89,255,0.3)]'
+                      }`}
+                  >
+                    {t('setup.launch_dashboard_btn')} <ArrowRight className="w-[18px] h-[18px] stroke-[3px]" />
+                  </button>
+                )}
+              </div>
             </div>
 
           </div>
