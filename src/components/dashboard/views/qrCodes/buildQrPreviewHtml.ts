@@ -1,4 +1,6 @@
 import {
+  QR_APP_FONT_FAMILY,
+  QR_APP_FONT_STYLESHEET,
   QR_BUSINESS_DISPLAY_NAME,
   QR_BUSINESS_PHONE,
   QR_PREVIEW_TOAST_MESSAGE,
@@ -111,8 +113,9 @@ export function buildQrPreviewHtml({
 
   return `<!DOCTYPE html><html lang="${language === 'en' ? 'en' : 'vi'}"><head>
     <meta name="viewport" content="width=device-width,initial-scale=1">
+    <link href="${QR_APP_FONT_STYLESHEET}" rel="stylesheet">
     <style>
-      *{margin:0;padding:0;box-sizing:border-box;font-family:'Inter',sans-serif;}
+      *{margin:0;padding:0;box-sizing:border-box;font-family:${QR_APP_FONT_FAMILY};}
       body{background:linear-gradient(160deg,#7c3aed,#0a0a0f);color:white;min-height:100vh;padding:20px;}
       .top{display:flex;align-items:center;margin-bottom:16px;}
       .logo{font-size:12px;letter-spacing:2px;opacity:0.6;}
@@ -121,14 +124,14 @@ export function buildQrPreviewHtml({
       .promo{background:rgba(255,255,255,0.14);border-radius:12px;padding:12px;font-size:14px;font-weight:700;margin-bottom:12px;text-align:center;}
       .cond{font-size:12px;color:rgba(255,255,255,0.75);line-height:1.6;margin-bottom:16px;}
       label{font-size:12px;letter-spacing:1px;text-transform:uppercase;opacity:0.7;display:block;margin-bottom:6px;}
-      input[type=text],input[type=tel],input[type=date],select{width:100%;padding:15px 14px;border-radius:12px;border:none;font-size:16px;margin-bottom:14px;background:white;color:#111;}
+      input[type=text],input[type=tel],input[type=date],select{width:100%;padding:15px 14px;border-radius:12px;border:none;font-size:16px;font-family:inherit;margin-bottom:14px;background:white;color:#111;}
       .consent{display:flex;gap:10px;align-items:flex-start;font-size:12px;color:rgba(255,255,255,0.8);line-height:1.5;margin-bottom:14px;}
       .consent input{width:20px;height:20px;flex-shrink:0;margin-top:1px;}
       .consent label{display:block;margin:0;font-size:inherit;letter-spacing:normal;text-transform:none;opacity:1;}
-      button{width:100%;background:white;color:#7c3aed;border:none;padding:17px;border-radius:14px;font-size:16px;font-weight:800;cursor:pointer;}
+      button{width:100%;background:white;color:#7c3aed;border:none;padding:17px;border-radius:14px;font-size:16px;font-weight:800;font-family:inherit;cursor:pointer;}
       button:disabled{opacity:0.5;}
       .success{display:none;text-align:center;padding:10px 0;}
-      .success .code{font-family:monospace;font-size:26px;font-weight:800;background:rgba(255,255,255,0.15);border-radius:12px;padding:14px;margin:12px 0;letter-spacing:2px;}
+      .success .code{font-family:ui-monospace,SFMono-Regular,Menlo,Monaco,Consolas,monospace;font-size:26px;font-weight:800;background:rgba(255,255,255,0.15);border-radius:12px;padding:14px;margin:12px 0;letter-spacing:2px;}
       .footer{text-align:center;font-size:12px;color:rgba(255,255,255,0.4);margin-top:16px;}
     </style>${kiosk ? `<style>
       body{padding:40px;max-width:640px;margin:0 auto;}
@@ -291,9 +294,11 @@ export function buildQrPosterHtml({
 }: BuildQrPosterHtmlArgs): string {
   const brand = escapeHtml(QR_BUSINESS_DISPLAY_NAME)
   const phone = escapeHtml(QR_BUSINESS_PHONE)
-  return `<!DOCTYPE html><html><head><meta charset="utf-8"><style>
+  return `<!DOCTYPE html><html><head><meta charset="utf-8">
+  <link href="${QR_APP_FONT_STYLESHEET}" rel="stylesheet">
+  <style>
     @page{size:A4;margin:0;}
-    *{margin:0;padding:0;box-sizing:border-box;font-family:'Inter','Helvetica Neue',Arial,sans-serif;}
+    *{margin:0;padding:0;box-sizing:border-box;font-family:${QR_APP_FONT_FAMILY};}
     body{width:210mm;min-height:297mm;padding:22mm 18mm;background:white;color:#111;text-align:center;}
     .brand{font-size:13px;letter-spacing:4px;color:#7c3aed;font-weight:800;margin-bottom:10mm;}
     h1{font-size:34px;font-weight:900;line-height:1.25;margin-bottom:8mm;}

@@ -13823,6 +13823,17 @@ body.booking-appointment-panel-modal-open {
 }
 
 /* ── QR Codes panel (HTML #panel-qr-codes) ── */
+.booking-hub-view .panel-qr-codes {
+  font-family: Inter, sans-serif;
+}
+
+.booking-hub-view .panel-qr-codes .booking-input,
+.booking-hub-view .panel-qr-codes .booking-select,
+.booking-hub-view .panel-qr-codes button,
+.booking-hub-view .panel-qr-codes textarea {
+  font-family: inherit;
+}
+
 .booking-hub-view .marketing-status {
   display: flex;
   align-items: flex-start;

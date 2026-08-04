@@ -7,6 +7,14 @@ export const QR_PREVIEW_TOAST_MESSAGE = 'nexora-qr-toast' as const
 export const QR_RICH_TEXT_TAGS = ['strong', 'br', 'span'] as const
 export const QR_RICH_TEXT_ATTR = ['class'] as const
 
+/**
+ * Same stack as `index.html` / Tailwind `font-sans` — guest preview iframes
+ * must load this themselves (srcdoc does not inherit the host stylesheet).
+ */
+export const QR_APP_FONT_FAMILY = 'Inter, sans-serif'
+export const QR_APP_FONT_STYLESHEET =
+  'https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap'
+
 export const QR_BUSINESS_SLUG = 'btcnailbar'
 export const QR_LINK_HOST = 'nexora.ai'
 export const QR_BUSINESS_DISPLAY_NAME = 'Bitcoin Nail Bar'
