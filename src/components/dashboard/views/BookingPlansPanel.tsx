@@ -44,6 +44,19 @@ import { useBookingHubVoiceEnabled } from './BookingHubVoiceContext'
 import BookingTrialModal from './BookingTrialModal'
 import SmsBuyCreditsModal from './smsCampaigns/SmsBuyCreditsModal'
 import VoiceBuyCreditsModal from './voiceCredits/VoiceBuyCreditsModal'
+import PlanPaymentModal from './plans/PlanPaymentModal'
+import {
+  isPaidServicePlanId,
+  SERVICE_PLAN_MONTHLY_PRICE,
+  type PaidServicePlanId,
+} from './plans/constants'
+import { useNotification } from '../../../contexts/NotificationContext'
+import {
+  SMS_CAMPAIGN_TK,
+  getSmsCreditNumberLocale,
+  getSmsCreditPaymentLabel,
+  type SmsCreditPaymentMock,
+} from './smsCampaigns/constants'
 
 const CREDITS_HISTORY_PAGE_SIZE = 10
 
@@ -137,7 +150,7 @@ function CreditsUsagePanel() {
     { enabled: voiceEnabled },
   )
 
-  const numberLocale = currentLanguage === 'vi' ? 'vi-VN' : 'en-US'
+  const numberLocale = getSmsCreditNumberLocale(currentLanguage)
   const isHistoryLoading = isActivityLoading || isActivityFetching
 
   useEffect(() => {
@@ -494,6 +507,7 @@ function CreditsUsagePanel() {
 
 export default function BookingPlansPanel() {
   const { t } = useTranslation()
+  const { showToast } = useNotification()
   const voiceEnabled = useBookingHubVoiceEnabled()
   const { data: myTrialRequest, isLoading: isTrialRequestLoading } = useMyVoiceTrialRequest()
   const { data: creditWallet, isSuccess: isCreditWalletReady } = useMerchantVoiceCreditWallet({
@@ -501,6 +515,7 @@ export default function BookingPlansPanel() {
   })
   const [selectedPlan, setSelectedPlan] = useState<PlanId | null>(null)
   const [trialOpen, setTrialOpen] = useState(false)
+  const [paymentPlan, setPaymentPlan] = useState<PaidServicePlanId | null>(null)
   const [plansView, setPlansView] = useState<PlansView>('package')
 
   const hasExistingTrialRequest = myTrialRequest != null
@@ -528,13 +543,36 @@ export default function BookingPlansPanel() {
   }
 
   const handlePlanClick = (plan: PlanId) => {
-    // Match HTML: Pro opens trial modal; Starter/Elite only toggle selection.
+    // Match HTML: Pro opens trial modal; Starter/Elite open payment checkout.
     if (plan === 'Pro') {
       if (hasExistingTrialRequest || isTrialRequestLoading) return
       setTrialOpen(true)
       return
     }
+    if (isPaidServicePlanId(plan)) {
+      setPaymentPlan(plan)
+    }
+  }
+
+  const handlePlanPaymentConfirm = (
+    plan: PaidServicePlanId,
+    payment: SmsCreditPaymentMock,
+  ) => {
+    const price = SERVICE_PLAN_MONTHLY_PRICE[plan]
+    const paymentLabel = getSmsCreditPaymentLabel(
+      payment,
+      t(`${SMS_CAMPAIGN_TK}.cardMethodLabel`),
+    )
     setSelectedPlan(plan)
+    setPaymentPlan(null)
+    showToast(
+      t(`${TK}.planPaymentSuccess`, {
+        plan,
+        price,
+        payment: paymentLabel,
+      }),
+      'success',
+    )
   }
 
   return (
@@ -696,6 +734,15 @@ export default function BookingPlansPanel() {
       </div>
 
       <BookingTrialModal open={trialOpen} onClose={() => setTrialOpen(false)} />
+      {/* Class (not id) — CreditsUsageView already owns `#nx-campaign-root` when mounted. */}
+      <div className="nx-campaign-root">
+        <PlanPaymentModal
+          open={paymentPlan != null}
+          plan={paymentPlan}
+          onClose={() => setPaymentPlan(null)}
+          onConfirm={handlePlanPaymentConfirm}
+        />
+      </div>
     </>
   )
 }
