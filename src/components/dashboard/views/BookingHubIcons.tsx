@@ -93,6 +93,40 @@ export function CurrencyDollarIcon({ className }: IconProps) {
   )
 }
 
+/** Lucide `folder-tree` — Manage Categories / category modal. */
+export function FolderTreeIcon({ className }: IconProps) {
+  return (
+    <HubIcon className={className}>
+      <path
+        d="M20 10a1 1 0 0 0 1-1V6a1 1 0 0 0-1-1h-2.5a1 1 0 0 1-.8-.4l-.9-1.2A1 1 0 0 0 15 3h-2a1 1 0 0 0-.8.4l-.9 1.2a1 1 0 0 1-.8.4H9a1 1 0 0 0-1 1v3a1 1 0 0 0 1 1Z"
+        stroke="currentColor"
+        strokeWidth="2"
+        strokeLinejoin="round"
+      />
+      <path
+        d="M20 21a1 1 0 0 0 1-1v-3a1 1 0 0 0-1-1h-2.9a1 1 0 0 1-.88-.55l-.42-.85a1 1 0 0 0-.92-.6H13a1 1 0 0 0-.92.6l-.42.85a1 1 0 0 1-.88.55H10a1 1 0 0 0-1 1v3a1 1 0 0 0 1 1Z"
+        stroke="currentColor"
+        strokeWidth="2"
+        strokeLinejoin="round"
+      />
+      <path d="M3 5a2 2 0 0 0 2 2h3" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
+      <path d="M3 3v13a2 2 0 0 0 2 2h3" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
+    </HubIcon>
+  )
+}
+
+/** Bootstrap Icons `bi-plus-lg`. */
+export function PlusLgIcon({ className }: IconProps) {
+  return (
+    <FillIcon className={className}>
+      <path
+        fillRule="evenodd"
+        d="M8 2a.5.5 0 0 1 .5.5v5h5a.5.5 0 0 1 0 1h-5v5a.5.5 0 0 1-1 0v-5h-5a.5.5 0 0 1 0-1h5v-5A.5.5 0 0 1 8 2"
+      />
+    </FillIcon>
+  )
+}
+
 export function CameraIcon({ className }: IconProps) {
   return (
     <HubIcon className={className}>
@@ -119,6 +153,8 @@ export function PlusIcon({ className }: IconProps) {
   )
 }
 
+
+
 /** Bootstrap Icons `bi-stars`. */
 export function StarsIcon({ className }: IconProps) {
   return (
@@ -142,6 +178,15 @@ export function CheckLgIcon({ className }: IconProps) {
     <HubIcon className={className}>
       <path d="M20 6 9 17l-5-5" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" />
     </HubIcon>
+  )
+}
+
+/** Filled check-in-circle — clearer confirm affordance than a bare check stroke. */
+export function CheckCircleFillIcon({ className }: IconProps) {
+  return (
+    <svg viewBox="0 0 16 16" fill="currentColor" aria-hidden="true" className={['hub-icon-fill', className].filter(Boolean).join(' ')}>
+      <path d="M16 8A8 8 0 1 1 0 8a8 8 0 0 1 16 0m-3.97-3.03a.75.75 0 0 0-1.08.022L7.477 9.417 5.384 7.323a.75.75 0 0 0-1.06 1.06L6.97 11.03a.75.75 0 0 0 1.079-.02l3.992-4.99a.75.75 0 0 0-.01-1.05z" />
+    </svg>
   )
 }
 
@@ -452,6 +497,25 @@ export function PencilIcon({ className }: IconProps) {
         strokeLinecap="round"
         strokeLinejoin="round"
       />
+    </HubIcon>
+  )
+}
+
+/** Lucide `trash-2`. */
+export function Trash2Icon({ className }: IconProps) {
+  return (
+    <HubIcon className={className}>
+      <path d="M3 6h18" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
+      <path d="M8 6V4h8v2" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+      <path
+        d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6"
+        stroke="currentColor"
+        strokeWidth="2"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+      <path d="M10 11v6" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
+      <path d="M14 11v6" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
     </HubIcon>
   )
 }

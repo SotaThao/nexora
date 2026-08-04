@@ -441,3 +441,108 @@ export function BookingSmsCampaignsSkeleton() {
     </div>
   )
 }
+
+export function BookingCreditsBalanceSkeleton() {
+  return (
+    <div className="credits-balance-grid" aria-hidden="true">
+      {Array.from({ length: 2 }).map((_, index) => (
+        <article
+          className={`credits-card booking-skeleton-card${index === 0 ? ' credits-card-plan' : ' credits-card-topup'}`}
+          key={index}
+        >
+          <div className="credits-card-head">
+            <Skeleton width={40} height={40} borderRadius={12} />
+            <BookingSkeletonStack className="booking-skeleton-stack-grow">
+              <Skeleton width="42%" height={16} borderRadius={6} />
+              <Skeleton width="58%" height={12} borderRadius={6} />
+            </BookingSkeletonStack>
+            <Skeleton width={108} height={28} borderRadius={999} />
+          </div>
+          <div className="credits-plan-remaining">
+            <Skeleton width={72} height={12} borderRadius={6} />
+            <div className="credits-plan-remaining-values">
+              <Skeleton width={64} height={28} borderRadius={8} />
+              <Skeleton width={36} height={14} borderRadius={6} />
+              <Skeleton width={8} height={8} borderRadius={999} />
+              <Skeleton width={56} height={28} borderRadius={8} />
+              <Skeleton width={36} height={14} borderRadius={6} />
+            </div>
+          </div>
+        </article>
+      ))}
+    </div>
+  )
+}
+
+export function BookingCreditsHistoryTableSkeleton({ rows = 5 }: { rows?: number }) {
+  return (
+    <>
+      {Array.from({ length: rows }).map((_, rowIndex) => (
+        <tr key={rowIndex} className="booking-skeleton-row" aria-hidden="true">
+          <td>
+            <Skeleton width={64} height={22} borderRadius={999} />
+          </td>
+          <td>
+            <Skeleton width="72%" height={14} borderRadius={6} />
+          </td>
+          <td>
+            <Skeleton width={88} height={14} borderRadius={6} />
+          </td>
+          <td>
+            <BookingSkeletonStack>
+              <Skeleton width="68%" height={14} borderRadius={6} />
+              <Skeleton width="42%" height={11} borderRadius={6} />
+            </BookingSkeletonStack>
+          </td>
+        </tr>
+      ))}
+    </>
+  )
+}
+
+export function BookingCreditsUsageSkeleton() {
+  const { t } = useTranslation()
+
+  return (
+    <section
+      className="credits-page"
+      aria-busy="true"
+      aria-label={t('components.dashboard.views.BookingHubView.plans.credits.loadingAria')}
+    >
+      <BookingCreditsBalanceSkeleton />
+
+      <section className="credits-history-section" aria-hidden="true">
+        <div className="credits-section-heading">
+          <BookingSkeletonStack>
+            <Skeleton width={72} height={11} borderRadius={6} />
+            <Skeleton width={148} height={18} borderRadius={6} />
+          </BookingSkeletonStack>
+          <div className="credits-history-tools">
+            <div className="credits-history-filters">
+              <Skeleton width={56} height={32} borderRadius={999} />
+              <Skeleton width={56} height={32} borderRadius={999} />
+              <Skeleton width={64} height={32} borderRadius={999} />
+            </div>
+          </div>
+        </div>
+
+        <div className="credits-history-scroll">
+          <table className="credits-history-table">
+            <thead>
+              <tr>
+                {Array.from({ length: 4 }).map((_, index) => (
+                  <th key={index} scope="col">
+                    <Skeleton width={index === 1 ? 72 : 56} height={11} borderRadius={4} />
+                  </th>
+                ))}
+              </tr>
+            </thead>
+            <tbody>
+              <BookingCreditsHistoryTableSkeleton rows={5} />
+            </tbody>
+          </table>
+        </div>
+      </section>
+    </section>
+  )
+}

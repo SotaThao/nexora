@@ -82,6 +82,7 @@ export const SMS_CAMPAIGN_AUDIENCE_I18N_KEY: Record<
   [SmsCampaignAudience.Days60]: "segmentDay60",
   [SmsCampaignAudience.Vip]: "segmentVip",
   [SmsCampaignAudience.Birthday]: "segmentBirthday",
+  [SmsCampaignAudience.All]: "segmentAll",
 };
 
 export const SMS_CAMPAIGN_AUDIENCE_SHORT_I18N_KEY: Record<
@@ -94,6 +95,7 @@ export const SMS_CAMPAIGN_AUDIENCE_SHORT_I18N_KEY: Record<
   [SmsCampaignAudience.Days60]: "segmentDay60Short",
   [SmsCampaignAudience.Vip]: "segmentVipShort",
   [SmsCampaignAudience.Birthday]: "segmentBirthdayShort",
+  [SmsCampaignAudience.All]: "segmentAllShort",
 };
 
 export type SmsCampaignSegmentAccent =
@@ -114,6 +116,7 @@ export interface SmsCampaignSegmentCard {
   badgeKey: string;
 }
 
+/** Panel segment cards — excludes All (composer-only). */
 export const SMS_CAMPAIGN_SEGMENT_CARDS: SmsCampaignSegmentCard[] = [
   {
     id: SmsCampaignAudience.New,
@@ -171,26 +174,53 @@ export const SMS_CAMPAIGN_SEGMENT_CARDS: SmsCampaignSegmentCard[] = [
   },
 ];
 
+/** Create-campaign segment tabs — All first, then panel segments (matches HTML COMPOSER_SEGMENTS). */
+export const SMS_CAMPAIGN_COMPOSER_SEGMENTS: SmsCampaignSegmentCard[] = [
+  {
+    id: SmsCampaignAudience.All,
+    accent: "cyan",
+    nameKey: "segmentAll",
+    shortNameKey: "segmentAllShort",
+    descKey: "segmentAllDesc",
+    countLabelKey: "countCustomers",
+    badgeKey: "badgeReady",
+  },
+  ...SMS_CAMPAIGN_SEGMENT_CARDS,
+];
+
+/** Default selected audience in Create SMS Campaign (first composer tab). */
+export const SMS_CAMPAIGN_DEFAULT_AUDIENCE =
+  SMS_CAMPAIGN_COMPOSER_SEGMENTS[0].id;
+
+type SmsAudienceSummaryCounts = {
+  all: number;
+  new: number;
+  days15: number;
+  days30: number;
+  days60: number;
+  vip: number;
+  birthdayThisMonth: number;
+};
+
+const AUDIENCE_SUMMARY_COUNT: Record<
+  SmsCampaignAudience,
+  (summary: SmsAudienceSummaryCounts) => number
+> = {
+  [SmsCampaignAudience.New]: (summary) => summary.new,
+  [SmsCampaignAudience.Days15]: (summary) => summary.days15,
+  [SmsCampaignAudience.Days30]: (summary) => summary.days30,
+  [SmsCampaignAudience.Days60]: (summary) => summary.days60,
+  [SmsCampaignAudience.Vip]: (summary) => summary.vip,
+  [SmsCampaignAudience.Birthday]: (summary) => summary.birthdayThisMonth,
+  [SmsCampaignAudience.All]: (summary) => summary.all,
+};
+
 export function getAudienceCount(
-  summary:
-    | {
-        new: number;
-        days15: number;
-        days30: number;
-        days60: number;
-        vip: number;
-        birthdayThisMonth: number;
-      }
-    | undefined,
+  summary: SmsAudienceSummaryCounts | undefined,
   audience: SmsCampaignAudience,
 ): number {
   if (!summary) return 0;
-  if (audience === SmsCampaignAudience.New) return summary.new;
-  if (audience === SmsCampaignAudience.Days15) return summary.days15;
-  if (audience === SmsCampaignAudience.Days30) return summary.days30;
-  if (audience === SmsCampaignAudience.Days60) return summary.days60;
-  if (audience === SmsCampaignAudience.Vip) return summary.vip;
-  return summary.birthdayThisMonth;
+  return AUDIENCE_SUMMARY_COUNT[audience](summary);
 }
 
 /** Fallback local USD/segment estimate when API estimate is not ready yet. */
@@ -300,6 +330,13 @@ export const SMS_CREDIT_PACKAGES_MOCK: SmsCreditPackageMock[] = [
   },
 ];
 
+/** Featured / best-value package selected when the buy modal opens. */
+export const SMS_CREDIT_DEFAULT_PACKAGE_ID =
+  SMS_CREDIT_PACKAGES_MOCK.find((pkg) => pkg.featured)?.id
+  ?? SMS_CREDIT_PACKAGES_MOCK[0].id;
+
+export const SMS_CREDIT_DEFAULT_PAYMENT_ID = SmsCreditPaymentId.Usdv;
+
 export const SMS_CREDIT_PAYMENTS_MOCK: SmsCreditPaymentMock[] = [
   {
     id: SmsCreditPaymentId.Usdv,
@@ -355,6 +392,7 @@ export type SmsCreateFieldErrors = Partial<Record<SmsCreateFieldKey, string>>;
 export const SMS_CAMPAIGN_NAME_INPUT = "campaign-name" as const;
 export const SMS_DEFAULT_SCHEDULE_TIME = "10:00" as const;
 export const SMS_LINK_FALLBACK_HOST = "nexora.ai" as const;
+export const SMS_CAMPAIGN_LINK_PHONE = "13463755759" as const;
 
 export const SMS_COMPOSER_TAG_SAMPLES = {
   [SMS_COMPOSER_TAG.name]: "Linh",
@@ -365,7 +403,14 @@ export const SMS_COMPOSER_TAG_SAMPLES = {
 
 type SmsCampaignLinkOptions = {
   source?: string | null;
+  /** Merchant profile phone → `?p=` (digits only, no spaces / `+`). */
+  phone?: string | null;
 };
+
+/** Strip spaces/symbols so SMS links use digits only. */
+export function toSmsCampaignLinkPhone(value: string | null | undefined): string {
+  return String(value ?? "").replace(/\D/g, "");
+}
 
 function appendSmsCampaignLinkQuery(
   path: string,
@@ -374,20 +419,18 @@ function appendSmsCampaignLinkQuery(
 ): string {
   const source =
     String(options.source ?? VoiceLeadSource.Sms).trim() || VoiceLeadSource.Sms;
-  const pairs: Array<[string, string]> = [
-    [PUBLIC_BOOKING_ROUTE.langQuery, langCode],
-    [PUBLIC_BOOKING_ROUTE.sourceQuery, source],
+  const profilePhone = toSmsCampaignLinkPhone(options.phone);
+  const parts = [
+    `${encodeURIComponent(PUBLIC_BOOKING_ROUTE.langQuery)}=${encodeURIComponent(langCode)}`,
+    `${encodeURIComponent(PUBLIC_BOOKING_ROUTE.sourceQuery)}=${encodeURIComponent(source)}`,
   ];
-  const qs = pairs
-    .map(
-      ([key, value]) =>
-        `${encodeURIComponent(key)}=${encodeURIComponent(value)}`,
-    )
-    .join("&");
-  return `${path}?${qs}`;
+  if (profilePhone) {
+    parts.push(`${PUBLIC_BOOKING_ROUTE.profilePhoneQuery}=${profilePhone}`);
+  }
+  return `${path}?${parts.join("&")}`;
 }
 
-/** SMS-friendly business booking link: `{domain}/b/{businessKey}?lang=&src=Sms`. */
+/** SMS-friendly business booking link: `{domain}/b/{businessKey}?lang=&src=Sms[&p=]`. */
 export function buildSmsCampaignBusinessLinkPreview(
   businessKey?: string | null,
   lang?: string | null,
@@ -412,15 +455,16 @@ export function buildSmsCampaignBusinessLinkPreview(
   return appendSmsCampaignLinkQuery(path, langCode, options);
 }
 
-/** Expand `{link}` in campaign copy to the booking URL (lang + src only). */
+/** Expand `{link}` in campaign copy to the booking URL (lang + src + optional p). */
 export function expandSmsCampaignLinkTags(
   messageBody: string,
   businessKey?: string | null,
   lang?: string | null,
+  options: SmsCampaignLinkOptions = {},
 ): string {
   const text = String(messageBody ?? "");
   if (!text.includes(SMS_COMPOSER_TAG.link)) return text;
-  const link = buildSmsCampaignBusinessLinkPreview(businessKey, lang);
+  const link = buildSmsCampaignBusinessLinkPreview(businessKey, lang, options);
   return text.split(SMS_COMPOSER_TAG.link).join(link);
 }
 
@@ -464,5 +508,9 @@ export const SMS_CAMPAIGN_TEMPLATES: Record<
   [SmsCampaignAudience.Birthday]: [
     { titleKey: "tplBirthday1Title", textKey: "tplBirthday1Text" },
     { titleKey: "tplBirthday2Title", textKey: "tplBirthday2Text" },
+  ],
+  [SmsCampaignAudience.All]: [
+    { titleKey: "tplAll1Title", textKey: "tplAll1Text" },
+    { titleKey: "tplAll2Title", textKey: "tplAll2Text" },
   ],
 };

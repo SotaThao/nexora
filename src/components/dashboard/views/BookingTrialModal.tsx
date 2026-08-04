@@ -59,15 +59,18 @@ type HourRow = {
 
 type HoursByDay = Record<DayKey, HourRow>;
 
+const DEFAULT_OPEN_TIME = "09:00";
+const DEFAULT_CLOSE_TIME = "19:00";
+
 function createInitialHours(): HoursByDay {
   return {
-    mon: { open: true, openTime: "07:00", closeTime: "21:00" },
-    tue: { open: true, openTime: "07:00", closeTime: "21:00" },
-    wed: { open: true, openTime: "07:00", closeTime: "21:00" },
-    thu: { open: true, openTime: "07:00", closeTime: "21:00" },
-    fri: { open: true, openTime: "07:00", closeTime: "21:00" },
-    sat: { open: false, openTime: "10:00", closeTime: "16:00" },
-    sun: { open: false, openTime: "09:00", closeTime: "19:00" },
+    mon: { open: true, openTime: DEFAULT_OPEN_TIME, closeTime: DEFAULT_CLOSE_TIME },
+    tue: { open: true, openTime: DEFAULT_OPEN_TIME, closeTime: DEFAULT_CLOSE_TIME },
+    wed: { open: true, openTime: DEFAULT_OPEN_TIME, closeTime: DEFAULT_CLOSE_TIME },
+    thu: { open: true, openTime: DEFAULT_OPEN_TIME, closeTime: DEFAULT_CLOSE_TIME },
+    fri: { open: true, openTime: DEFAULT_OPEN_TIME, closeTime: DEFAULT_CLOSE_TIME },
+    sat: { open: false, openTime: DEFAULT_OPEN_TIME, closeTime: DEFAULT_CLOSE_TIME },
+    sun: { open: false, openTime: DEFAULT_OPEN_TIME, closeTime: DEFAULT_CLOSE_TIME },
   };
 }
 
@@ -79,6 +82,10 @@ function compareTime24h(left: string, right: string): number {
     .split(":")
     .map((part) => Number.parseInt(part, 10));
   return leftHours * 60 + leftMinutes - (rightHours * 60 + rightMinutes);
+}
+
+function isHourTimeMissing(value: string | null | undefined): boolean {
+  return !(value || "").trim();
 }
 
 function isSupportedPriceListFile(file: File): boolean {
@@ -357,9 +364,10 @@ function TrialHourTimeField({
   ariaLabel,
   onChange,
 }: TrialHourTimeFieldProps) {
+  const hasValue = !isHourTimeMissing(value);
   return (
     <span
-      className={`booking-create-datetime-shell has-value${invalid ? " has-error" : ""}`}
+      className={`booking-create-datetime-shell${hasValue ? " has-value" : " is-empty"}${invalid ? " has-error" : ""}`}
       lang={localeTag}
     >
       <span className="booking-create-datetime-display" aria-hidden="true">
@@ -367,7 +375,7 @@ function TrialHourTimeField({
       </span>
       <ClockIcon className="booking-create-datetime-icon" />
       <input
-        className="booking-create-datetime-input has-value"
+        className={`booking-create-datetime-input${hasValue ? " has-value" : ""}`}
         type="time"
         lang={localeTag}
         step={60}
@@ -666,6 +674,12 @@ export default function BookingTrialModal({
 
     for (const day of openingDayKeys) {
       const row = form.hours[day];
+      if (isHourTimeMissing(row.openTime) || isHourTimeMissing(row.closeTime)) {
+        nextErrors.serviceHours = t(`${TK}.hoursDayRequired`, {
+          day: t(`${TK}.days.${day}`),
+        });
+        break;
+      }
       if (compareTime24h(row.closeTime, row.openTime) <= 0) {
         nextErrors.serviceHours = t(`${TK}.hoursDayInvalid`, {
           day: t(`${TK}.days.${day}`),
@@ -1267,10 +1281,18 @@ export default function BookingTrialModal({
                 <div className="settings-hours trial-hours-list">
                   {DAY_KEYS.map((day) => {
                     const row = form.hours[day];
-                    const dayInvalid =
-                      Boolean(errors.serviceHours) &&
-                      row.open &&
+                    const openMissing = isHourTimeMissing(row.openTime);
+                    const closeMissing = isHourTimeMissing(row.closeTime);
+                    const rangeInvalid =
+                      !openMissing &&
+                      !closeMissing &&
                       compareTime24h(row.closeTime, row.openTime) <= 0;
+                    const showHoursError =
+                      Boolean(errors.serviceHours) && row.open;
+                    const openInvalid =
+                      showHoursError && (openMissing || rangeInvalid);
+                    const closeInvalid =
+                      showHoursError && (closeMissing || rangeInvalid);
                     return (
                       <div
                         className={`settings-hour-row ${row.open ? "" : "is-closed"}`}
@@ -1297,7 +1319,7 @@ export default function BookingTrialModal({
                           <TrialHourTimeField
                             value={row.openTime}
                             disabled={!row.open}
-                            invalid={dayInvalid}
+                            invalid={openInvalid}
                             locale={locale}
                             localeTag={localeTag}
                             ariaLabel={t(`${TK}.openTimeAria`, {
@@ -1313,7 +1335,7 @@ export default function BookingTrialModal({
                           <TrialHourTimeField
                             value={row.closeTime}
                             disabled={!row.open}
-                            invalid={dayInvalid}
+                            invalid={closeInvalid}
                             locale={locale}
                             localeTag={localeTag}
                             ariaLabel={t(`${TK}.closeTimeAria`, {
