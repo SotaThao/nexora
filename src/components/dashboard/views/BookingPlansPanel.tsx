@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react'
+import React, { useEffect, useRef, useState } from 'react'
 import {
   Crown,
   Layers3,
@@ -517,6 +517,7 @@ export default function BookingPlansPanel() {
   const [trialOpen, setTrialOpen] = useState(false)
   const [paymentPlan, setPaymentPlan] = useState<PaidServicePlanId | null>(null)
   const [plansView, setPlansView] = useState<PlansView>('package')
+  const hasAutoOpenedTrialRef = useRef(false)
 
   const hasExistingTrialRequest = myTrialRequest != null
   const showCreditUsageTab = isCreditWalletReady && hasJoinedVoicePlan(creditWallet)
@@ -526,6 +527,15 @@ export default function BookingPlansPanel() {
       setPlansView('package')
     }
   }, [showCreditUsageTab, plansView])
+
+  useEffect(() => {
+    if (hasAutoOpenedTrialRef.current) return
+    if (isTrialRequestLoading) return
+    if (hasExistingTrialRequest || showCreditUsageTab) return
+
+    hasAutoOpenedTrialRef.current = true
+    setTrialOpen(true)
+  }, [hasExistingTrialRequest, isTrialRequestLoading, showCreditUsageTab])
 
   const getPlanButtonLabel = (plan: PlanId) => {
     if (plan === 'Pro' && hasExistingTrialRequest) {
