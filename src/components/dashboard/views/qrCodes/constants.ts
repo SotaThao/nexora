@@ -3,6 +3,10 @@ export const QR_CODES_TK = 'components.dashboard.views.BookingHubView.qrCodes'
 /** postMessage type from QR preview/kiosk iframe → host toast. */
 export const QR_PREVIEW_TOAST_MESSAGE = 'nexora-qr-toast' as const
 
+/** Allowed tags for guide / consent / tip copy (matches HTML rich text). */
+export const QR_RICH_TEXT_TAGS = ['strong', 'br', 'span'] as const
+export const QR_RICH_TEXT_ATTR = ['class'] as const
+
 export const QR_BUSINESS_SLUG = 'btcnailbar'
 export const QR_LINK_HOST = 'nexora.ai'
 export const QR_BUSINESS_DISPLAY_NAME = 'Bitcoin Nail Bar'

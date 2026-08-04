@@ -275,7 +275,43 @@ export enum SmsCreditPaymentId {
   Usd = "USD",
   Btc = "BTC",
   Vnd = "VND",
+  Card = "CARD",
 }
+
+export enum SmsCreditCardField {
+  Name = "name",
+  Number = "number",
+  Expiry = "expiry",
+  Cvc = "cvc",
+  Address1 = "address1",
+  City = "city",
+  State = "state",
+  Zip = "zip",
+  Country = "country",
+}
+
+export const SMS_CREDIT_CARD_COUNTRIES = [
+  { value: "US", labelKey: "cardCountryUS" },
+  { value: "CA", labelKey: "cardCountryCA" },
+  { value: "MX", labelKey: "cardCountryMX" },
+  { value: "VN", labelKey: "cardCountryVN" },
+] as const;
+
+export const SMS_CREDIT_CARD_DEFAULT_COUNTRY = "US";
+
+export type SmsCreditCardFormState = Record<SmsCreditCardField, string>;
+
+export const SMS_CREDIT_CARD_FORM_EMPTY: SmsCreditCardFormState = {
+  [SmsCreditCardField.Name]: "",
+  [SmsCreditCardField.Number]: "",
+  [SmsCreditCardField.Expiry]: "",
+  [SmsCreditCardField.Cvc]: "",
+  [SmsCreditCardField.Address1]: "",
+  [SmsCreditCardField.City]: "",
+  [SmsCreditCardField.State]: "",
+  [SmsCreditCardField.Zip]: "",
+  [SmsCreditCardField.Country]: SMS_CREDIT_CARD_DEFAULT_COUNTRY,
+};
 
 export interface SmsCreditPackageMock {
   id: SmsCreditPackageCode;
@@ -288,9 +324,34 @@ export interface SmsCreditPackageMock {
 
 export interface SmsCreditPaymentMock {
   id: SmsCreditPaymentId;
-  label: string;
-  balance: string;
-  asset: string;
+  /** Wallet ticker; omit for card (label comes from i18n). */
+  label?: string;
+  /** Wallet balance label; omitted for card. */
+  balance?: string;
+  /** Token image; omitted for card (uses credit-card icon). */
+  asset?: string;
+}
+
+/** Selected-package checkmark glyph (shared by buy-credits package grid). */
+export const SMS_CREDIT_PACKAGE_SELECTED_MARK = "✓";
+
+/** Intl locale for credit/count formatting by app language. */
+export const SMS_CREDIT_NUMBER_LOCALE: Record<string, string> = {
+  vi: "vi-VN",
+  en: "en-US",
+};
+
+export function getSmsCreditNumberLocale(language: string): string {
+  return SMS_CREDIT_NUMBER_LOCALE[language] ?? SMS_CREDIT_NUMBER_LOCALE.en;
+}
+
+/** Resolve payment method display label (card → i18n; wallets → ticker). */
+export function getSmsCreditPaymentLabel(
+  method: SmsCreditPaymentMock,
+  cardLabel: string,
+): string {
+  if (method.id === SmsCreditPaymentId.Card) return cardLabel;
+  return method.label ?? method.id;
 }
 
 export interface SmsCampaignTemplateMock {
@@ -298,32 +359,33 @@ export interface SmsCampaignTemplateMock {
   textKey: string;
 }
 
+/** Package catalog — matches HTML `SMS_CREDIT_PACKAGES` (prices/notes for UI). */
 export const SMS_CREDIT_PACKAGES_MOCK: SmsCreditPackageMock[] = [
   {
     id: SmsCreditPackageCode.Sms500,
     credits: 500,
-    price: 25,
+    price: 12,
     nameKey: "pkgStarter",
     noteKey: "pkgStarterNote",
   },
   {
     id: SmsCreditPackageCode.Sms1500,
     credits: 1500,
-    price: 60,
+    price: 29,
     nameKey: "pkgGrowth",
     noteKey: "pkgGrowthNote",
   },
   {
     id: SmsCreditPackageCode.Sms3000,
     credits: 3000,
-    price: 99,
+    price: 49,
     nameKey: "pkgBusiness",
     noteKey: "pkgBusinessNote",
   },
   {
     id: SmsCreditPackageCode.Sms6000,
     credits: 6000,
-    price: 175,
+    price: 89,
     nameKey: "pkgScale",
     noteKey: "pkgScaleNote",
     featured: true,
@@ -337,38 +399,60 @@ export const SMS_CREDIT_DEFAULT_PACKAGE_ID =
 
 export const SMS_CREDIT_DEFAULT_PAYMENT_ID = SmsCreditPaymentId.Usdv;
 
+/** Payment methods — matches HTML `SMS_CREDIT_PAYMENT_METHODS`. */
 export const SMS_CREDIT_PAYMENTS_MOCK: SmsCreditPaymentMock[] = [
   {
     id: SmsCreditPaymentId.Usdv,
     label: "USDV",
-    balance: "—",
+    balance: "$79,000.00",
     asset: "/assets/sms-credits/usdv.png",
   },
   {
     id: SmsCreditPaymentId.Usdt,
     label: "USDT",
-    balance: "—",
+    balance: "$79,000.00",
     asset: "/assets/sms-credits/usdt.png",
   },
   {
     id: SmsCreditPaymentId.Usd,
     label: "USD",
-    balance: "—",
+    balance: "$79,000.00",
     asset: "/assets/sms-credits/usd.png",
   },
   {
     id: SmsCreditPaymentId.Btc,
     label: "BTC",
-    balance: "—",
+    balance: "100,000.25",
     asset: "/assets/sms-credits/btc.png",
   },
   {
     id: SmsCreditPaymentId.Vnd,
     label: "VND",
-    balance: "—",
+    balance: "$50,000,000.00",
     asset: "/assets/sms-credits/vnd.png",
   },
+  {
+    id: SmsCreditPaymentId.Card,
+  },
 ];
+
+export function formatSmsCreditCardNumber(raw: string): string {
+  const digits = raw.replace(/\D/g, "").slice(0, 16);
+  return digits.replace(/(.{4})/g, "$1 ").trim();
+}
+
+export function formatSmsCreditCardExpiry(raw: string): string {
+  const digits = raw.replace(/\D/g, "").slice(0, 4);
+  return digits.length > 2 ? `${digits.slice(0, 2)}/${digits.slice(2)}` : digits;
+}
+
+export function formatSmsCreditCardCvc(raw: string): string {
+  return raw.replace(/\D/g, "").slice(0, 4);
+}
+
+export function formatSmsCreditPrice(price: number): string {
+  return `$${price.toFixed(2)}`;
+}
 
 export const SMS_COMPOSER_TAG = {
   name: "{name}",

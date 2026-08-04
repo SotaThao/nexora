@@ -38,12 +38,23 @@ import {
   QR_LEADS_MOCK,
   QR_PREVIEW_TOAST_MESSAGE,
   QR_PROMOS_MOCK,
+  QR_RICH_TEXT_ATTR,
+  QR_RICH_TEXT_TAGS,
   QrLeadStatus,
   type QrLeadMock,
   type QrPromoMock,
 } from './constants'
 
 const TK = QR_CODES_TK
+
+function richHtml(html: string) {
+  return {
+    __html: DOMPurify.sanitize(html, {
+      ALLOWED_TAGS: [...QR_RICH_TEXT_TAGS],
+      ALLOWED_ATTR: [...QR_RICH_TEXT_ATTR],
+    }),
+  }
+}
 
 type VerifyResultState =
   | { kind: 'empty' }
@@ -290,15 +301,15 @@ export default function BookingQrCodesPanel() {
               </div>
               <div className="guide-step">
                 <div className="guide-num">1</div>
-                <div>{t(`${TK}.guideStep1`)}</div>
+                <div dangerouslySetInnerHTML={richHtml(t(`${TK}.guideStep1`))} />
               </div>
               <div className="guide-step">
                 <div className="guide-num">2</div>
-                <div>{t(`${TK}.guideStep2`)}</div>
+                <div dangerouslySetInnerHTML={richHtml(t(`${TK}.guideStep2`))} />
               </div>
               <div className="guide-step">
                 <div className="guide-num">3</div>
-                <div>{t(`${TK}.guideStep3`)}</div>
+                <div dangerouslySetInnerHTML={richHtml(t(`${TK}.guideStep3`))} />
               </div>
             </div>
             <div>
@@ -308,15 +319,15 @@ export default function BookingQrCodesPanel() {
               </div>
               <div className="guide-step">
                 <div className="guide-num c2">4</div>
-                <div>{t(`${TK}.guideStep4`)}</div>
+                <div dangerouslySetInnerHTML={richHtml(t(`${TK}.guideStep4`))} />
               </div>
               <div className="guide-step">
                 <div className="guide-num c2">5</div>
-                <div>{t(`${TK}.guideStep5`)}</div>
+                <div dangerouslySetInnerHTML={richHtml(t(`${TK}.guideStep5`))} />
               </div>
               <div className="guide-step">
                 <div className="guide-num c2">6</div>
-                <div>{t(`${TK}.guideStep6`)}</div>
+                <div dangerouslySetInnerHTML={richHtml(t(`${TK}.guideStep6`))} />
               </div>
             </div>
             <div>
@@ -329,18 +340,18 @@ export default function BookingQrCodesPanel() {
               </div>
               <div className="guide-step">
                 <div className="guide-num c3">7</div>
-                <div>{t(`${TK}.guideStep7`)}</div>
+                <div dangerouslySetInnerHTML={richHtml(t(`${TK}.guideStep7`))} />
               </div>
               <div className="guide-step">
                 <div className="guide-num c3">8</div>
-                <div>{t(`${TK}.guideStep8`)}</div>
+                <div dangerouslySetInnerHTML={richHtml(t(`${TK}.guideStep8`))} />
               </div>
             </div>
           </div>
           <div className="guide-tips">
             <span className="marketing-status">
               <AlertTriangle className="marketing-icon is-compact" aria-hidden="true" />
-              <span>{t(`${TK}.guideTips`)}</span>
+              <span dangerouslySetInnerHTML={richHtml(t(`${TK}.guideTips`))} />
             </span>
           </div>
         </div>
@@ -412,7 +423,7 @@ export default function BookingQrCodesPanel() {
             </div>
             <div className="consent-note">
               <AlertTriangle className="marketing-icon is-compact" aria-hidden="true" />
-              <span>{t(`${TK}.consentNote`)}</span>
+              <span dangerouslySetInnerHTML={richHtml(t(`${TK}.consentNote`))} />
             </div>
           </div>
 
@@ -452,11 +463,7 @@ export default function BookingQrCodesPanel() {
                 </button>
                 <div
                   className="lead-flow-note"
-                  dangerouslySetInnerHTML={{
-                    __html: DOMPurify.sanitize(t(`${TK}.leadFlowNote`), {
-                      ALLOWED_TAGS: ['strong', 'br'],
-                    }),
-                  }}
+                  dangerouslySetInnerHTML={richHtml(t(`${TK}.leadFlowNote`))}
                 />
               </div>
             </div>
