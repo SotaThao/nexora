@@ -67,20 +67,12 @@ export default function LoginScreen() {
 
     try {
       const newSession = await login(credentials)
-      // Onboarding completion is independent of KYB/verification status.
-      // A business that finished onboarding but hasn't done KYB has
-      // verificationStatus 'basic'/'unverified' — that must NOT force the
-      // onboarding wizard (KYB has its own gate). Rely only on the real
-      // onboarding signal (hasCompletedOnboarding, derived from account
-      // status Active / kyb_approved / explicit flag in apiAuthAdapter).
-      const needsOnboarding =
-        newSession.clearMerchantSetup ||
-        newSession.hasCompletedOnboarding === false
-
+      // Owner/merchant sessions go straight to the dashboard, same as
+      // staff/personal — onboarding completion is optional and surfaced via
+      // dashboard banners (SetupGuideBanner/PayoutSetupWarningBanner), not a
+      // hard redirect gate.
       if (newSession.flag === '!personal' || ['personal', 'staff'].includes(newSession.role)) {
         navigate('/staff')
-      } else if (needsOnboarding) {
-        navigate('/onboarding')
       } else {
         navigate('/dashboard')
       }

@@ -53,28 +53,16 @@ export default function RegisterWizard() {
     clearMerchantSetupMutation.mutate()
     clearProfileSettingsMutation.mutate()
 
-    const ssoPrefillData = {
-      email: registeredEmail,
-      name: '',
-      industry: '',
-      address: '',
-      phone: '',
-      website: '',
-      logo: null,
-      paymentAccounts: { venmo: '', cashapp: '', zelle: '', vlinkpay: '' },
-      reviewLinks: { googleReview: '', yelpReview: '', facebookReview: '', feedbackEmail: registeredEmail }
-    }
-
     try {
       await refreshSession()
     } catch (e) {
       logger.error('Failed to get session in handleRegisterAndLogin', e)
     }
-    
+
     if (form.role === 'personal') {
       navigate('/staff', { replace: true })
     } else {
-      navigate('/onboarding', { state: { ssoPrefillData, isNewRegistration: true } })
+      navigate('/dashboard', { replace: true })
     }
   }
 
