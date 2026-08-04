@@ -594,6 +594,7 @@
     "onboarding_stage": "Onboarding Stage",
     "back_to_login": "Back to Login",
     "back_to_dashboard": "Back to Dashboard",
+    "skip_payout_btn": "Skip for now",
     "prefill_demo_data": "Prefill Demo Data",
     "payout_methods": "Payout Methods",
     "payout_account": "Payout account",
