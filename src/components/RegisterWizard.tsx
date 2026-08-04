@@ -13,7 +13,7 @@ import StepSuccess from './register/steps/StepSuccess'
 import PayoutEditModal from './register/modals/PayoutEditModal'
 import apiAuthAdapter from '../auth/adapters/apiAuthAdapter'
 import { loadPendingRegistration } from '../auth/pendingRegistration'
-import { useClearMerchantSetup } from '../data/hooks/useMerchantSetup'
+import { useClearMerchantSetup, useCreateBusiness } from '../data/hooks/useMerchantSetup'
 import { useClearProfileSettings } from '../data/hooks/useProfileSettings'
 import { logger } from '../utils/logger'
 import { saveRefCode, getSavedRefCode, saveLeg, getSavedLeg } from '../utils/affiliateReferral'
@@ -34,6 +34,7 @@ export default function RegisterWizard() {
   const { refreshSession } = useAuth()
   const clearMerchantSetupMutation = useClearMerchantSetup()
   const clearProfileSettingsMutation = useClearProfileSettings()
+  const createBusinessMutation = useCreateBusiness()
 
   const ssoEmail = location.state?.ssoEmail || ''
   const pendingRegistration = loadPendingRegistration(location.state?.resumeEmail)
@@ -62,6 +63,23 @@ export default function RegisterWizard() {
     if (form.role === 'personal') {
       navigate('/staff', { replace: true })
     } else {
+      // Seed a placeholder business profile so the dashboard shows real data
+      // right away instead of an empty state; the merchant edits/replaces
+      // these values later from SetupWizard/Settings. Non-fatal on failure —
+      // the dashboard already tolerates a missing business (SetupGuideBanner).
+      try {
+        const seedName = (registeredEmail.split('@')[0] || '').trim() || 'My Business'
+        await createBusinessMutation.mutateAsync({
+          name: seedName,
+          businessType: 'Nail Salon',
+          address: 'Updating...',
+          phone: 'Updating...',
+          website: '',
+          logoUrl: null,
+        })
+      } catch (e) {
+        logger.error('Failed to seed business profile after registration', e)
+      }
       navigate('/dashboard', { replace: true })
     }
   }
