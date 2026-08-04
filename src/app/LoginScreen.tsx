@@ -1,12 +1,13 @@
 import React, { useState } from 'react'
 import { Lock, Mail, Eye, EyeOff, Loader2 } from 'lucide-react'
-import { useNavigate, useLocation } from 'react-router-dom'
+import { useNavigate, useLocation, useSearchParams } from 'react-router-dom'
 import AuthGraphicPanel from '../components/auth/AuthGraphicPanel'
 import SecondaryButton from '../components/ui/SecondaryButton'
 import HomepageLink from '../components/ui/HomepageLink'
 import { useAuth } from '../auth/useAuth'
 import { useTranslation } from '../contexts/LanguageContext'
 import { getErrorI18nKey } from '../data/errorCodes'
+import { dashboardPathForSession } from '../components/homepage/utils/sessionRouting'
 import { getApiErrorCode } from '../types/domain'
 import { loadPendingRegistration } from '../auth/pendingRegistration'
 
@@ -34,12 +35,14 @@ export default function LoginScreen() {
   const { login } = useAuth()
   const navigate = useNavigate()
   const location = useLocation()
+  const [searchParams] = useSearchParams()
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [loginError, setLoginError] = useState(location.state?.loginError || '')
   const [fieldErrorKeys, setFieldErrorKeys] = useState<{ email?: string; password?: string }>({})
   const [isLoading, setIsLoading] = useState(false)
   const [showPassword, setShowPassword] = useState(false)
+  const returnPath = searchParams.get('returnPath') || ''
 
   const handleLoginSubmit = async () => {
     const newFieldErrorKeys: { email?: string; password?: string } = {}
@@ -74,7 +77,7 @@ export default function LoginScreen() {
       if (newSession.flag === '!personal' || ['personal', 'staff'].includes(newSession.role)) {
         navigate('/staff')
       } else {
-        navigate('/dashboard')
+        navigate(dashboardPathForSession(newSession))
       }
     } catch (err: unknown) {
       const errorCode = getApiErrorCode(err, 'unknown_error')

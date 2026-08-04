@@ -584,6 +584,12 @@ export interface MerchantVoiceConfigDto {
   promotion: string
   promoSms: string
   sendSmsPromoEnabled: boolean
+  /** Send booking SMS to the customer. */
+  bookingConfirmSmsEnabled: boolean
+  /** Send booking SMS to `bookingNotifyPhone` (salon). */
+  bookingNotifySalonSmsEnabled: boolean
+  /** Send booking SMS to the assigned staff member. */
+  bookingNotifyStaffSmsEnabled: boolean
   timeZone: string
   language: string
   welcomeGreeting: string
@@ -605,6 +611,12 @@ export interface UpdateMerchantVoiceConfigRequest {
   promotion: string | null
   promoSms: string | null
   sendSmsPromoEnabled: boolean
+  /** Omit to leave the stored value untouched. */
+  bookingConfirmSmsEnabled?: boolean
+  /** Omit to leave the stored value untouched. */
+  bookingNotifySalonSmsEnabled?: boolean
+  /** Omit to leave the stored value untouched. */
+  bookingNotifyStaffSmsEnabled?: boolean
   timeZone: string | null
   language: MerchantVoiceConfigLanguage
   welcomeGreeting: string
@@ -727,6 +739,9 @@ function normalizeConfigResponse(response: unknown): MerchantVoiceConfigDto {
       promotion: '',
       promoSms: '',
       sendSmsPromoEnabled: true,
+      bookingConfirmSmsEnabled: true,
+      bookingNotifySalonSmsEnabled: true,
+      bookingNotifyStaffSmsEnabled: true,
       timeZone: '',
       language: MerchantVoiceConfigLanguage.EnUS,
       welcomeGreeting: '',
@@ -746,6 +761,9 @@ function normalizeConfigResponse(response: unknown): MerchantVoiceConfigDto {
     } satisfies MerchantVoiceOperatingHourDto
   }).filter((row) => row.dayOfWeek)
 
+  const readBool = (value: unknown, fallback: boolean) =>
+    typeof value === 'boolean' ? value : fallback
+
   return {
     id: String(body.id ?? ''),
     name: String(body.name ?? ''),
@@ -762,10 +780,10 @@ function normalizeConfigResponse(response: unknown): MerchantVoiceConfigDto {
     description: String(body.description ?? ''),
     promotion: String(body.promotion ?? ''),
     promoSms: String(body.promoSms ?? ''),
-    sendSmsPromoEnabled:
-      typeof body.sendSmsPromoEnabled === 'boolean'
-        ? body.sendSmsPromoEnabled
-        : true,
+    sendSmsPromoEnabled: readBool(body.sendSmsPromoEnabled, true),
+    bookingConfirmSmsEnabled: readBool(body.bookingConfirmSmsEnabled, true),
+    bookingNotifySalonSmsEnabled: readBool(body.bookingNotifySalonSmsEnabled, true),
+    bookingNotifyStaffSmsEnabled: readBool(body.bookingNotifyStaffSmsEnabled, true),
     timeZone: String(body.timeZone ?? ''),
     language: String(body.language ?? MerchantVoiceConfigLanguage.EnUS),
     welcomeGreeting: String(body.welcomeGreeting ?? ''),

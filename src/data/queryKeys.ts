@@ -165,11 +165,15 @@ export const qk = {
   publicDirectPaymentPage: (businessId) => ['publicDirectPaymentPage', businessId],
   publicStaffDirectPaymentPage: (staffProfileId: string) => ['publicStaffDirectPaymentPage', staffProfileId],
   publicPaymentStatus: (paymentId: string) => ['publicPayment', 'status', paymentId],
-  publicVoiceBookingPage: (businessKey?: string | null) => [
+  publicVoiceBookingPage: (
+    businessKey?: string | null,
+    phone?: string | null,
+  ) => [
     'public',
     'nexora-voice',
     'booking-page',
     businessKey ?? '',
+    phone ?? null,
   ],
 }
 
