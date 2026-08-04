@@ -490,6 +490,7 @@ const FIRST_CALL_SMS_MAX_LENGTH = 320;
 const BOOKING_SMS_RECIPIENTS = [
   {
     id: "customer",
+    configKey: "bookingConfirmSmsEnabled",
     titleKey: "bookingSmsCustomerTitle",
     descKey: "bookingSmsCustomerDesc",
     enableAriaKey: "bookingSmsCustomerEnableAria",
@@ -497,6 +498,7 @@ const BOOKING_SMS_RECIPIENTS = [
   },
   {
     id: "salon",
+    configKey: "bookingNotifySalonSmsEnabled",
     titleKey: "bookingSmsSalonTitle",
     descKey: "bookingSmsSalonDesc",
     enableAriaKey: "bookingSmsSalonEnableAria",
@@ -504,6 +506,7 @@ const BOOKING_SMS_RECIPIENTS = [
   },
   {
     id: "staff",
+    configKey: "bookingNotifyStaffSmsEnabled",
     titleKey: "bookingSmsStaffTitle",
     descKey: "bookingSmsStaffDesc",
     enableAriaKey: "bookingSmsStaffEnableAria",
@@ -512,6 +515,37 @@ const BOOKING_SMS_RECIPIENTS = [
 ] as const;
 
 type BookingSmsRecipientId = (typeof BOOKING_SMS_RECIPIENTS)[number]["id"];
+type BookingSmsConfigKey = (typeof BOOKING_SMS_RECIPIENTS)[number]["configKey"];
+
+const BOOKING_SMS_DEFAULT_ENABLED: Record<BookingSmsRecipientId, boolean> = {
+  customer: true,
+  salon: true,
+  staff: true,
+};
+
+function bookingSmsEnabledFromConfig(
+  config: Record<BookingSmsConfigKey, boolean>,
+): Record<BookingSmsRecipientId, boolean> {
+  return BOOKING_SMS_RECIPIENTS.reduce(
+    (acc, item) => {
+      acc[item.id] = config[item.configKey]
+      return acc
+    },
+    { ...BOOKING_SMS_DEFAULT_ENABLED },
+  )
+}
+
+function bookingSmsConfigPayloadFromEnabled(
+  enabled: Record<BookingSmsRecipientId, boolean>,
+): Record<BookingSmsConfigKey, boolean> {
+  return BOOKING_SMS_RECIPIENTS.reduce(
+    (acc, item) => {
+      acc[item.configKey] = enabled[item.id]
+      return acc
+    },
+    {} as Record<BookingSmsConfigKey, boolean>,
+  )
+}
 
 const PROMO_TEMPLATES = {
   "reward-yourself": {
@@ -846,11 +880,7 @@ export default function BookingSettingsPanel() {
   const [sendSmsPromoEnabled, setSendSmsPromoEnabled] = useState(true);
   const [bookingSmsEnabled, setBookingSmsEnabled] = useState<
     Record<BookingSmsRecipientId, boolean>
-  >({
-    customer: true,
-    salon: true,
-    staff: true,
-  });
+  >(BOOKING_SMS_DEFAULT_ENABLED);
   const [statusMessage, setStatusMessage] = useState("");
   const [formErrors, setFormErrors] = useState<{
     salonName?: string;
@@ -1175,6 +1205,7 @@ export default function BookingSettingsPanel() {
     setDescription(configData.description || "");
     setPromoSms((configData.promoSms || "").slice(0, FIRST_CALL_SMS_MAX_LENGTH));
     setSendSmsPromoEnabled(configData.sendSmsPromoEnabled !== false);
+    setBookingSmsEnabled(bookingSmsEnabledFromConfig(configData));
     setPromotion((configData.promotion || "").slice(0, PROMO_MAX_LENGTH));
     const resolvedLang = mapConfigLanguageToUiLanguage(configData.language);
     setLanguage(resolvedLang);
@@ -2152,6 +2183,7 @@ export default function BookingSettingsPanel() {
         promotion: promotion.trim().slice(0, PROMO_MAX_LENGTH) || null,
         promoSms: promoSms.trim().slice(0, FIRST_CALL_SMS_MAX_LENGTH) || null,
         sendSmsPromoEnabled,
+        ...bookingSmsConfigPayloadFromEnabled(bookingSmsEnabled),
         timeZone: timeZone.trim() || null,
         language: mapUiLanguageToConfigLanguage(language),
         welcomeGreeting: greeting.trim(),
@@ -3015,6 +3047,11 @@ export default function BookingSettingsPanel() {
                       type="button"
                       role="switch"
                       aria-checked={enabled}
+                      disabled={
+                        !voiceEnabled ||
+                        isConfigLoading ||
+                        updateConfigMutation.isPending
+                      }
                       aria-label={
                         enabled
                           ? t(`${TK}.${item.disableAriaKey}`)
