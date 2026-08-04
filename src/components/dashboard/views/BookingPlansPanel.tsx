@@ -734,7 +734,8 @@ export default function BookingPlansPanel() {
       </div>
 
       <BookingTrialModal open={trialOpen} onClose={() => setTrialOpen(false)} />
-      <div id="nx-campaign-root">
+      {/* Class (not id) — CreditsUsageView already owns `#nx-campaign-root` when mounted. */}
+      <div className="nx-campaign-root">
         <PlanPaymentModal
           open={paymentPlan != null}
           plan={paymentPlan}

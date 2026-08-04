@@ -85,6 +85,7 @@ export default function BookingQrCodesPanel() {
   }, [currentLanguage, t])
 
   const kioskIframeRef = useRef<HTMLIFrameElement>(null)
+  const previewIframeRef = useRef<HTMLIFrameElement>(null)
   const kioskExitRef = useRef<HTMLButtonElement>(null)
   const kioskOpenerRef = useRef<HTMLElement | null>(null)
 
@@ -135,6 +136,9 @@ export default function BookingQrCodesPanel() {
 
   useEffect(() => {
     const onMessage = (event: MessageEvent) => {
+      const previewWindow = previewIframeRef.current?.contentWindow
+      const kioskWindow = kioskIframeRef.current?.contentWindow
+      if (event.source !== previewWindow && event.source !== kioskWindow) return
       const data = event.data
       if (!data || data.type !== QR_PREVIEW_TOAST_MESSAGE) return
       if (typeof data.message !== 'string' || !data.message.trim()) return
@@ -618,7 +622,12 @@ export default function BookingQrCodesPanel() {
             </div>
             <Smartphone className="marketing-icon is-compact" aria-hidden="true" />
           </div>
-          <iframe id="qrIframe" title={t(`${TK}.previewTitle`)} srcDoc={previewHtml} />
+          <iframe
+            id="qrIframe"
+            ref={previewIframeRef}
+            title={t(`${TK}.previewTitle`)}
+            srcDoc={previewHtml}
+          />
         </div>
       </div>
 
