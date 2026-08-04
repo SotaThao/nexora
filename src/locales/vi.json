@@ -2922,6 +2922,7 @@
           },
           "PosStaffProfileView": {
             "description": "Gán role POS, cách trả lương, tùy chọn nhận tip cho từng thợ, và xác nhận loại khai thuế.",
+            "addStaffButton": "Thêm Staff",
             "pickerEmpty": "Chưa có staff đang hoạt động.",
             "selectStaffPrompt": "Chọn 1 staff để xem hồ sơ POS.",
             "taxFilingTitle": "Khai Thuế",

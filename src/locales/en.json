@@ -2922,6 +2922,7 @@
           },
           "PosStaffProfileView": {
             "description": "Set a staff member's POS role, pay structure, and tip preference, and confirm their tax filing type.",
+            "addStaffButton": "Add Staff",
             "pickerEmpty": "No active staff yet.",
             "selectStaffPrompt": "Select a staff member to view their POS profile.",
             "taxFilingTitle": "Tax Filing",

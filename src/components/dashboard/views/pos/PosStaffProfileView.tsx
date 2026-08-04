@@ -6,8 +6,8 @@
 // Data" principle) and "Role, Pay & Tips" (role/pay-structure/tips, never depends on
 // TaxIQ setup state).
 import { useEffect, useMemo, useState } from 'react'
-import { useSearchParams } from 'react-router-dom'
-import { Loader2 } from 'lucide-react'
+import { useNavigate, useSearchParams } from 'react-router-dom'
+import { Loader2, UserPlus } from 'lucide-react'
 import { useTranslation } from '../../../../contexts/LanguageContext'
 import { useNotification } from '../../../../contexts/NotificationContext'
 import { getApiErrorCode } from '../../../../types/domain'
@@ -61,6 +61,7 @@ const fromApiScheduleTime = (hhmmss?: string | null): string => (hhmmss ? hhmmss
 interface StaffPickerItem {
   linkId: string | null
   fullName: string
+  displayName: string | null
   avatar: string | null
 }
 
@@ -127,6 +128,7 @@ function TinField({
 export default function PosStaffProfileView() {
   const { t } = useTranslation()
   const { showToast } = useNotification()
+  const navigate = useNavigate()
   const [searchParams, setSearchParams] = useSearchParams()
   const selectedLinkId = searchParams.get('staff') ?? undefined
 
@@ -361,11 +363,21 @@ export default function PosStaffProfileView() {
 
   return (
     <div className="space-y-6">
-      <section className="space-y-1 px-0.5">
-        <h1 className="text-base font-semibold leading-tight text-nexoraText">{t('dashboard.menu.pos_staff')}</h1>
-        <p className="text-xs text-nexoraMuted">
-          {t('components.dashboard.views.pos.PosStaffProfileView.description')}
-        </p>
+      <section className="flex items-start justify-between gap-3 px-0.5">
+        <div className="space-y-1">
+          <h1 className="text-base font-semibold leading-tight text-nexoraText">{t('dashboard.menu.pos_staff')}</h1>
+          <p className="text-xs text-nexoraMuted">
+            {t('components.dashboard.views.pos.PosStaffProfileView.description')}
+          </p>
+        </div>
+        <button
+          type="button"
+          onClick={() => navigate('/dashboard/staff')}
+          className="inline-flex shrink-0 items-center gap-1.5 rounded-lg bg-nexoraBrand px-3 py-1.5 text-[11px] font-bold text-white"
+        >
+          <UserPlus className="h-3.5 w-3.5" />
+          {t('components.dashboard.views.pos.PosStaffProfileView.addStaffButton')}
+        </button>
       </section>
 
       <div className="grid grid-cols-1 gap-4 lg:items-start lg:grid-cols-[260px_1fr]">
@@ -382,6 +394,7 @@ export default function PosStaffProfileView() {
             staffItems.map((member, index) => {
               const linkId = member.linkId ?? ''
               const isSelected = linkId !== '' && linkId === selectedLinkId
+              const label = member.displayName || member.fullName
               return (
                 <button
                   key={linkId || index}
@@ -395,10 +408,10 @@ export default function PosStaffProfileView() {
                     <img src={member.avatar} alt="" className="h-6 w-6 rounded-full object-cover" />
                   ) : (
                     <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-nexoraCanvas text-[10px] font-bold text-nexoraMuted">
-                      {(member.fullName || '?').slice(0, 1).toUpperCase()}
+                      {(label || '?').slice(0, 1).toUpperCase()}
                     </span>
                   )}
-                  <span className="truncate">{member.fullName}</span>
+                  <span className="truncate">{label}</span>
                 </button>
               )
             })
