@@ -10,6 +10,8 @@ export const PUBLIC_BOOKING_ROUTE = {
   phoneQuery: 'phone',
   /** Prefill customer name from SMS / deep links. */
   nameQuery: 'name',
+  /** Merchant profile phone on SMS campaign booking links (`?p=`). */
+  profilePhoneQuery: 'p',
 }
 
 export const PUBLIC_BOOKING_LANG = {

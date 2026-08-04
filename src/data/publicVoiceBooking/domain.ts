@@ -7,6 +7,17 @@ export const PUBLIC_VOICE_BOOKING_HEADERS = {
   'x-app-source': 'WebPortal',
 } as const
 
+/**
+ * Public booking wire phone — strip spaces and leading `+`
+ * (API stores/matches without `+`, e.g. `14155552671`).
+ */
+export function toPublicBookingApiPhone(value: string | null | undefined): string {
+  return String(value ?? '')
+    .replace(/\s+/g, '')
+    .replace(/^\+/, '')
+    .trim()
+}
+
 export enum VoiceLeadSource {
   Call = 'Call',
   Web = 'Web',
@@ -71,6 +82,11 @@ export interface BookingOperatingHourDto {
   closeTime: string | null
 }
 
+export interface BookingCustomerDto {
+  name: string | null
+  phoneNumber: string
+}
+
 export interface BookingPageDataDto {
   businessKey: string
   businessName: string
@@ -79,6 +95,8 @@ export interface BookingPageDataDto {
   categories: BookingServiceCategoryDto[]
   staff: BookingStaffDto[]
   operatingHours: BookingOperatingHourDto[]
+  /** Recognised active customer when `phone` query matches; otherwise null/omitted. */
+  customer?: BookingCustomerDto | null
 }
 
 /** Public create body — matches OpenAPI `CreateOnlineBookingRequest`. */
@@ -138,6 +156,11 @@ export interface PublicBookingOperatingHour {
   closeTime: string | null
 }
 
+export interface PublicBookingCustomer {
+  name: string
+  phoneNumber: string
+}
+
 export interface PublicBookingPageData {
   businessKey: string
   businessName: string
@@ -146,6 +169,7 @@ export interface PublicBookingPageData {
   categories: PublicBookingServiceCategory[]
   staff: PublicBookingStaff[]
   operatingHours: PublicBookingOperatingHour[]
+  customer: PublicBookingCustomer | null
 }
 
 export interface PublicBookingCreateResult {

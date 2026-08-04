@@ -70,6 +70,7 @@ import {
   PeopleTabIcon,
   PlusIcon,
   PlusLgIcon,
+  MessageSquareIcon,
   ShopIcon,
   SpinnerIcon,
   StarsIcon,
@@ -486,6 +487,32 @@ const AI_LANGUAGE_OPTIONS = [
 const PROMO_MAX_LENGTH = 1000;
 const FIRST_CALL_SMS_MAX_LENGTH = 320;
 
+const BOOKING_SMS_RECIPIENTS = [
+  {
+    id: "customer",
+    titleKey: "bookingSmsCustomerTitle",
+    descKey: "bookingSmsCustomerDesc",
+    enableAriaKey: "bookingSmsCustomerEnableAria",
+    disableAriaKey: "bookingSmsCustomerDisableAria",
+  },
+  {
+    id: "salon",
+    titleKey: "bookingSmsSalonTitle",
+    descKey: "bookingSmsSalonDesc",
+    enableAriaKey: "bookingSmsSalonEnableAria",
+    disableAriaKey: "bookingSmsSalonDisableAria",
+  },
+  {
+    id: "staff",
+    titleKey: "bookingSmsStaffTitle",
+    descKey: "bookingSmsStaffDesc",
+    enableAriaKey: "bookingSmsStaffEnableAria",
+    disableAriaKey: "bookingSmsStaffDisableAria",
+  },
+] as const;
+
+type BookingSmsRecipientId = (typeof BOOKING_SMS_RECIPIENTS)[number]["id"];
+
 const PROMO_TEMPLATES = {
   "reward-yourself": {
     labelKey: "promoTemplateRewardLabel",
@@ -672,6 +699,7 @@ function SettingsCard({
   onToggle,
   title,
   subtitle,
+  className,
   children,
 }: {
   cardId: string;
@@ -679,6 +707,7 @@ function SettingsCard({
   onToggle: (id: string) => void;
   title: React.ReactNode;
   subtitle: string;
+  className?: string;
   children: React.ReactNode;
 }) {
   const { t } = useTranslation();
@@ -695,7 +724,7 @@ function SettingsCard({
 
   return (
     <article
-      className={`settings-card ${collapsed ? "is-collapsed" : ""}`}
+      className={`settings-card${className ? ` ${className}` : ""}${collapsed ? " is-collapsed" : ""}`}
       data-settings-card={cardId}
     >
       <button
@@ -815,6 +844,13 @@ export default function BookingSettingsPanel() {
   >("idle");
   const [promoSms, setPromoSms] = useState("");
   const [sendSmsPromoEnabled, setSendSmsPromoEnabled] = useState(true);
+  const [bookingSmsEnabled, setBookingSmsEnabled] = useState<
+    Record<BookingSmsRecipientId, boolean>
+  >({
+    customer: true,
+    salon: true,
+    staff: true,
+  });
   const [statusMessage, setStatusMessage] = useState("");
   const [formErrors, setFormErrors] = useState<{
     salonName?: string;
@@ -2757,6 +2793,255 @@ export default function BookingSettingsPanel() {
             </span>
           </div>
         </SettingsCard>
+
+        <SettingsCard
+          cardId="voice"
+          collapsed={isCollapsed("voice")}
+          onToggle={toggleCard}
+          title={
+            <>
+              <span className="settings-ai-title-icon" aria-hidden="true">
+                AI
+                <StarsIcon className="settings-ai-spark" />
+              </span>
+              {t(`${TK}.voiceTitle`)}
+            </>
+          }
+          subtitle={t(`${TK}.voiceSub`)}
+        >
+          <div className="settings-field-grid">
+            <div className="settings-field settings-span-full">
+              <span className="settings-label">{t(`${TK}.aiLanguage`)}</span>
+              <div
+                className="settings-language-grid"
+                role="group"
+                aria-label={t(`${TK}.aiLanguage`)}
+              >
+                {AI_LANGUAGE_OPTIONS.map((lang) => (
+                  <button
+                    key={lang}
+                    className={`settings-language-card ${language === lang ? "is-active" : ""}`}
+                    type="button"
+                    aria-pressed={language === lang}
+                    onClick={() => handleLanguageSelect(lang)}
+                  >
+                    {t(`${TK}.${languageButtonLabelKey(lang)}`)}
+                  </button>
+                ))}
+              </div>
+              <div className="settings-language-status">
+                {t(`${TK}.languageStatus.${language}`)}
+              </div>
+            </div>
+            <div className="settings-field settings-span-full" data-ai-hub-field="greeting">
+              <span className="settings-label" id="settings-greeting-label">
+                {t(`${TK}.greetingScript`)}
+              </span>
+              <textarea
+                className="settings-textarea"
+                value={greeting}
+                placeholder={t(`${TK}.placeholderGreeting`)}
+                aria-labelledby="settings-greeting-label"
+                aria-invalid={Boolean(formErrors.greeting)}
+                onChange={(event) => {
+                  setGreeting(event.target.value);
+                  if (formErrors.greeting)
+                    setFormErrors((prev) => ({ ...prev, greeting: undefined }));
+                }}
+              />
+              <span className="settings-field-error-slot">
+                {formErrors.greeting ? (
+                  <span className="settings-field-error">
+                    {formErrors.greeting}
+                  </span>
+                ) : null}
+              </span>
+              <button
+                className={`booking-secondary-button settings-preview-button ${isPreviewPlaying ? "is-playing" : ""}`}
+                type="button"
+                aria-pressed={isPreviewPlaying}
+                onClick={handlePreview}
+              >
+                {isPreviewPlaying
+                  ? t(`${TK}.previewVoiceStop`)
+                  : t(`${TK}.previewVoice`)}
+              </button>
+            </div>
+
+            <label className="settings-field settings-span-full">
+              <span className="settings-label settings-label-with-tooltip">
+                {t(`${TK}.promoLabel`)}
+                <SettingsInfoTooltip
+                  id="promotion-details-help"
+                  ariaLabel={t(`${TK}.promoInfoAria`)}
+                >
+                  {t(`${TK}.promoHelp`)}
+                </SettingsInfoTooltip>
+              </span>
+              <textarea
+                className="settings-textarea settings-textarea-promo"
+                value={promotion}
+                maxLength={PROMO_MAX_LENGTH}
+                placeholder={t(`${TK}.promoPlaceholder`)}
+                aria-describedby="settings-promo-count"
+                onChange={(event) =>
+                  handlePromoChange(
+                    event.target.value.slice(0, PROMO_MAX_LENGTH),
+                  )
+                }
+              />
+              <div className="settings-promo-meta">
+                <div className="settings-promo-suggest-row">
+                  <button
+                    className="settings-promo-suggest"
+                    type="button"
+                    onClick={() => handlePromoSuggest("reward-yourself")}
+                  >
+                    <StarsIcon className="settings-promo-suggest-icon" />
+                    {t(`${TK}.promoSuggestReward`)}
+                  </button>
+                </div>
+                <div
+                  id="settings-promo-count"
+                  className={`settings-promo-count ${promotion.length >= PROMO_MAX_LENGTH ? "is-max" : ""}`}
+                >
+                  <span>{promotion.length}</span>/{PROMO_MAX_LENGTH}
+                </div>
+              </div>
+            </label>
+
+            <div className="settings-first-call-sms settings-span-full">
+              <div className="settings-first-call-sms-head">
+                <div className="settings-first-call-sms-copy">
+                  <span className="settings-label settings-label-with-tooltip">
+                    {t(`${TK}.firstCallSmsLabel`)}
+                    <SettingsInfoTooltip
+                      id="first-call-sms-help"
+                      ariaLabel={t(`${TK}.firstCallSmsInfoAria`)}
+                    >
+                      {t(`${TK}.firstCallSmsHelp`)}
+                    </SettingsInfoTooltip>
+                  </span>
+                </div>
+                <div className="settings-first-call-sms-toggle">
+                  <span
+                    className={`settings-first-call-sms-toggle-label${sendSmsPromoEnabled ? "" : " is-off"}`}
+                    aria-live="polite"
+                  >
+                    {sendSmsPromoEnabled
+                      ? t(`${TK}.firstCallSmsToggleOn`)
+                      : t(`${TK}.firstCallSmsToggleOff`)}
+                  </span>
+                  <button
+                    className={`toggle-pill${sendSmsPromoEnabled ? " is-on" : ""}`}
+                    type="button"
+                    role="switch"
+                    aria-checked={sendSmsPromoEnabled}
+                    aria-label={
+                      sendSmsPromoEnabled
+                        ? t(`${TK}.firstCallSmsDisableAria`)
+                        : t(`${TK}.firstCallSmsEnableAria`)
+                    }
+                    onClick={() => {
+                      setSendSmsPromoEnabled((prev) => {
+                        const next = !prev;
+                        setStatus(
+                          next
+                            ? t(`${TK}.firstCallSmsEnabled`)
+                            : t(`${TK}.firstCallSmsDisabled`),
+                        );
+                        return next;
+                      });
+                    }}
+                  />
+                </div>
+              </div>
+              <div className="settings-field">
+                <textarea
+                  className="settings-textarea"
+                  value={promoSms}
+                  maxLength={FIRST_CALL_SMS_MAX_LENGTH}
+                  placeholder={t(`${TK}.firstCallSmsPlaceholder`)}
+                  aria-label={t(`${TK}.firstCallSmsMessageLabel`)}
+                  onChange={(event) =>
+                    setPromoSms(
+                      event.target.value.slice(0, FIRST_CALL_SMS_MAX_LENGTH),
+                    )
+                  }
+                />
+              </div>
+            </div>
+          </div>
+        </SettingsCard>
+
+        <SettingsCard
+          cardId="bookingSms"
+          collapsed={isCollapsed("bookingSms")}
+          onToggle={toggleCard}
+          title={
+            <>
+              <span className="settings-card-title-icon">
+                <MessageSquareIcon />
+              </span>
+              {t(`${TK}.bookingSmsTitle`)}
+            </>
+          }
+          subtitle={t(`${TK}.bookingSmsSub`)}
+        >
+          <div className="settings-config-stack">
+            {BOOKING_SMS_RECIPIENTS.map((item) => {
+              const enabled = bookingSmsEnabled[item.id];
+              return (
+                <div className="settings-booking-sms-row" key={item.id}>
+                  <div className="settings-booking-sms-copy">
+                    <div className="settings-config-title">
+                      {t(`${TK}.${item.titleKey}`)}
+                    </div>
+                    <div className="settings-config-desc">
+                      {t(`${TK}.${item.descKey}`)}
+                    </div>
+                  </div>
+                  <div className="settings-booking-sms-control">
+                    <span
+                      className={`settings-booking-sms-status${enabled ? "" : " is-off"}`}
+                      aria-live="polite"
+                    >
+                      {enabled
+                        ? t(`${TK}.bookingSmsStatusOn`)
+                        : t(`${TK}.bookingSmsStatusOff`)}
+                    </span>
+                    <button
+                      className={`toggle-pill${enabled ? " is-on" : ""}`}
+                      type="button"
+                      role="switch"
+                      aria-checked={enabled}
+                      aria-label={
+                        enabled
+                          ? t(`${TK}.${item.disableAriaKey}`)
+                          : t(`${TK}.${item.enableAriaKey}`)
+                      }
+                      onClick={() => {
+                        setBookingSmsEnabled((prev) => {
+                          const next = !prev[item.id];
+                          setStatus(
+                            next
+                              ? t(`${TK}.bookingSmsRecipientEnabled`, {
+                                  recipient: t(`${TK}.${item.titleKey}`),
+                                })
+                              : t(`${TK}.bookingSmsRecipientDisabled`, {
+                                  recipient: t(`${TK}.${item.titleKey}`),
+                                }),
+                          );
+                          return { ...prev, [item.id]: next };
+                        });
+                      }}
+                    />
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        </SettingsCard>
       </div>
 
       <SettingsCard
@@ -2781,6 +3066,7 @@ export default function BookingSettingsPanel() {
       <div className="settings-two-grid">
         <SettingsCard
           cardId="services"
+          className="settings-service-pricing-card"
           collapsed={isCollapsed("services")}
           onToggle={toggleCard}
           title={
@@ -2846,10 +3132,10 @@ export default function BookingSettingsPanel() {
                         <span className="settings-service-category-name">
                           {section.name}
                         </span>
+                        <span className="settings-service-category-count">
+                          {formatCategoryServiceCount(categoryServices.length)}
+                        </span>
                       </button>
-                      <span className="settings-service-category-count">
-                        {formatCategoryServiceCount(categoryServices.length)}
-                      </span>
                       <button
                         type="button"
                         className="settings-service-category-add"
@@ -3041,185 +3327,6 @@ export default function BookingSettingsPanel() {
           </div>
         </SettingsCard>
 
-        <SettingsCard
-          cardId="voice"
-          collapsed={isCollapsed("voice")}
-          onToggle={toggleCard}
-          title={
-            <>
-              <span className="settings-ai-title-icon" aria-hidden="true">
-                AI
-                <StarsIcon className="settings-ai-spark" />
-              </span>
-              {t(`${TK}.voiceTitle`)}
-            </>
-          }
-          subtitle={t(`${TK}.voiceSub`)}
-        >
-          <div className="settings-field-grid">
-            <div className="settings-field settings-span-full">
-              <span className="settings-label">{t(`${TK}.aiLanguage`)}</span>
-              <div
-                className="settings-language-grid"
-                role="group"
-                aria-label={t(`${TK}.aiLanguage`)}
-              >
-                {AI_LANGUAGE_OPTIONS.map((lang) => (
-                  <button
-                    key={lang}
-                    className={`settings-language-card ${language === lang ? "is-active" : ""}`}
-                    type="button"
-                    aria-pressed={language === lang}
-                    onClick={() => handleLanguageSelect(lang)}
-                  >
-                    {t(`${TK}.${languageButtonLabelKey(lang)}`)}
-                  </button>
-                ))}
-              </div>
-              <div className="settings-language-status">
-                {t(`${TK}.languageStatus.${language}`)}
-              </div>
-            </div>
-            <div className="settings-field settings-span-full" data-ai-hub-field="greeting">
-              <span className="settings-label" id="settings-greeting-label">
-                {t(`${TK}.greetingScript`)}
-              </span>
-              <textarea
-                className="settings-textarea"
-                value={greeting}
-                placeholder={t(`${TK}.placeholderGreeting`)}
-                aria-labelledby="settings-greeting-label"
-                aria-invalid={Boolean(formErrors.greeting)}
-                onChange={(event) => {
-                  setGreeting(event.target.value);
-                  if (formErrors.greeting)
-                    setFormErrors((prev) => ({ ...prev, greeting: undefined }));
-                }}
-              />
-              <span className="settings-field-error-slot">
-                {formErrors.greeting ? (
-                  <span className="settings-field-error">
-                    {formErrors.greeting}
-                  </span>
-                ) : null}
-              </span>
-              <button
-                className={`booking-secondary-button settings-preview-button ${isPreviewPlaying ? "is-playing" : ""}`}
-                type="button"
-                aria-pressed={isPreviewPlaying}
-                onClick={handlePreview}
-              >
-                {isPreviewPlaying
-                  ? t(`${TK}.previewVoiceStop`)
-                  : t(`${TK}.previewVoice`)}
-              </button>
-            </div>
-
-            <label className="settings-field settings-span-full">
-              <span className="settings-label settings-label-with-tooltip">
-                {t(`${TK}.promoLabel`)}
-                <SettingsInfoTooltip
-                  id="promotion-details-help"
-                  ariaLabel={t(`${TK}.promoInfoAria`)}
-                >
-                  {t(`${TK}.promoHelp`)}
-                </SettingsInfoTooltip>
-              </span>
-              <textarea
-                className="settings-textarea settings-textarea-promo"
-                value={promotion}
-                maxLength={PROMO_MAX_LENGTH}
-                placeholder={t(`${TK}.promoPlaceholder`)}
-                aria-describedby="settings-promo-count"
-                onChange={(event) =>
-                  handlePromoChange(
-                    event.target.value.slice(0, PROMO_MAX_LENGTH),
-                  )
-                }
-              />
-              <div className="settings-promo-meta">
-                <div className="settings-promo-suggest-row">
-                  <button
-                    className="settings-promo-suggest"
-                    type="button"
-                    onClick={() => handlePromoSuggest("reward-yourself")}
-                  >
-                    <StarsIcon className="settings-promo-suggest-icon" />
-                    {t(`${TK}.promoSuggestReward`)}
-                  </button>
-                </div>
-                <div
-                  id="settings-promo-count"
-                  className={`settings-promo-count ${promotion.length >= PROMO_MAX_LENGTH ? "is-max" : ""}`}
-                >
-                  <span>{promotion.length}</span>/{PROMO_MAX_LENGTH}
-                </div>
-              </div>
-            </label>
-
-            <div className="settings-first-call-sms settings-span-full">
-              <div className="settings-first-call-sms-head">
-                <div className="settings-first-call-sms-copy">
-                  <span className="settings-label settings-label-with-tooltip">
-                    {t(`${TK}.firstCallSmsLabel`)}
-                    <SettingsInfoTooltip
-                      id="first-call-sms-help"
-                      ariaLabel={t(`${TK}.firstCallSmsInfoAria`)}
-                    >
-                      {t(`${TK}.firstCallSmsHelp`)}
-                    </SettingsInfoTooltip>
-                  </span>
-                </div>
-                <div className="settings-first-call-sms-toggle">
-                  <span
-                    className={`settings-first-call-sms-toggle-label${sendSmsPromoEnabled ? "" : " is-off"}`}
-                    aria-live="polite"
-                  >
-                    {sendSmsPromoEnabled
-                      ? t(`${TK}.firstCallSmsToggleOn`)
-                      : t(`${TK}.firstCallSmsToggleOff`)}
-                  </span>
-                  <button
-                    className={`toggle-pill${sendSmsPromoEnabled ? " is-on" : ""}`}
-                    type="button"
-                    role="switch"
-                    aria-checked={sendSmsPromoEnabled}
-                    aria-label={
-                      sendSmsPromoEnabled
-                        ? t(`${TK}.firstCallSmsDisableAria`)
-                        : t(`${TK}.firstCallSmsEnableAria`)
-                    }
-                    onClick={() => {
-                      setSendSmsPromoEnabled((prev) => {
-                        const next = !prev;
-                        setStatus(
-                          next
-                            ? t(`${TK}.firstCallSmsEnabled`)
-                            : t(`${TK}.firstCallSmsDisabled`),
-                        );
-                        return next;
-                      });
-                    }}
-                  />
-                </div>
-              </div>
-              <div className="settings-field">
-                <textarea
-                  className="settings-textarea"
-                  value={promoSms}
-                  maxLength={FIRST_CALL_SMS_MAX_LENGTH}
-                  placeholder={t(`${TK}.firstCallSmsPlaceholder`)}
-                  aria-label={t(`${TK}.firstCallSmsMessageLabel`)}
-                  onChange={(event) =>
-                    setPromoSms(
-                      event.target.value.slice(0, FIRST_CALL_SMS_MAX_LENGTH),
-                    )
-                  }
-                />
-              </div>
-            </div>
-          </div>
-        </SettingsCard>
       </div>
 
       <div className="settings-save-bar">

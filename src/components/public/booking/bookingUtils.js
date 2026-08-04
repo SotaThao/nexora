@@ -273,11 +273,17 @@ export function createDefaultBookingState(defaultSlot) {
   }
 }
 
-/** Normalize `?phone=` into the same dial+national shape the form edits. */
+/** Normalize `?phone=` / `?p=` into dial + national shape the form edits. */
 export function formatBookingPrefillPhone(raw) {
   const value = String(raw || '').trim()
   if (!value) return ''
-  const parsed = parsePhone(value)
+  const digitsOnly = value.replace(/\D/g, '')
+  const phoneForParse = value.startsWith('+')
+    ? value
+    : digitsOnly
+      ? `+${digitsOnly}`
+      : value
+  const parsed = parsePhone(phoneForParse)
   const dialCode = parsed.countryCode || PhoneDialCode.US
   const national = formatNationalNumber(parsed.nationalNumber, dialCode)
   if (!String(national || '').replace(/\D/g, '')) return ''
@@ -285,16 +291,48 @@ export function formatBookingPrefillPhone(raw) {
 }
 
 /**
- * Read optional SMS deep-link prefill (`phone`, `name`) from the booking URL.
+ * Read optional SMS deep-link prefill (`phone` / `p`, `name`) from the booking URL.
+ * `p` is the SMS campaign profile-phone query; `phone` remains the generic prefill key.
  * @param {URLSearchParams | { get: (key: string) => string | null }} searchParams
  */
 export function readBookingCustomerPrefill(searchParams) {
   if (!searchParams || typeof searchParams.get !== 'function') {
     return { phone: '', name: '' }
   }
+  const phoneRaw =
+    searchParams.get(PUBLIC_BOOKING_ROUTE.phoneQuery) ||
+    searchParams.get(PUBLIC_BOOKING_ROUTE.profilePhoneQuery) ||
+    ''
   return {
-    phone: formatBookingPrefillPhone(searchParams.get(PUBLIC_BOOKING_ROUTE.phoneQuery)),
+    phone: formatBookingPrefillPhone(phoneRaw),
     name: String(searchParams.get(PUBLIC_BOOKING_ROUTE.nameQuery) || '').trim(),
+  }
+}
+
+/**
+ * Raw phone for GET /bookings?phone= (API strips interior whitespace; FE drops leading `+`).
+ * Prefers `phone`, falls back to `p` so SMS deep-links still trigger customer lookup.
+ */
+export function readBookingLookupPhone(searchParams) {
+  if (!searchParams || typeof searchParams.get !== 'function') return ''
+  const raw =
+    searchParams.get(PUBLIC_BOOKING_ROUTE.phoneQuery) ||
+    searchParams.get(PUBLIC_BOOKING_ROUTE.profilePhoneQuery) ||
+    ''
+  return String(raw).replace(/\s+/g, '').replace(/^\+/, '').trim()
+}
+
+/**
+ * Map API `customer` (when phone matches an active customer) into form fields.
+ * @param {{ name?: string | null, phoneNumber?: string } | null | undefined} customer
+ */
+export function customerFromBookingPageData(customer) {
+  if (!customer) return null
+  const phoneNumber = String(customer.phoneNumber || '').trim()
+  if (!phoneNumber) return null
+  return {
+    phone: formatBookingPrefillPhone(phoneNumber),
+    name: String(customer.name ?? '').trim(),
   }
 }
 

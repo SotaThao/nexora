@@ -60,6 +60,7 @@ export enum SmsCampaignAudience {
   Days60 = 'Days60',
   Vip = 'Vip',
   Birthday = 'Birthday',
+  All = 'All',
 }
 
 /** Wire enum — SMS campaign recipient status (API). */
@@ -250,18 +251,22 @@ export function normalizeSmsCampaignScheduleMode(value: unknown): SmsCampaignSch
   return match ?? SmsCampaignScheduleMode.SendNow
 }
 
+/** Case-insensitive API / legacy aliases → SmsCampaignAudience. */
+const SMS_CAMPAIGN_AUDIENCE_ALIAS: Record<string, SmsCampaignAudience> = {
+  ...Object.fromEntries(
+    Object.values(SmsCampaignAudience).map((audience) => [
+      audience.toLowerCase(),
+      audience,
+    ]),
+  ),
+  day15: SmsCampaignAudience.Days15,
+  day30: SmsCampaignAudience.Days30,
+  day60: SmsCampaignAudience.Days60,
+}
+
 export function normalizeSmsCampaignAudience(value: unknown): SmsCampaignAudience {
   const normalized = String(value ?? '').trim().toLowerCase()
-  if (normalized === 'day15' || normalized === 'days15') return SmsCampaignAudience.Days15
-  if (normalized === 'day30' || normalized === 'days30') return SmsCampaignAudience.Days30
-  if (normalized === 'day60' || normalized === 'days60') return SmsCampaignAudience.Days60
-  if (normalized === 'vip') return SmsCampaignAudience.Vip
-  if (normalized === 'birthday') return SmsCampaignAudience.Birthday
-  if (normalized === 'new') return SmsCampaignAudience.New
-  const match = Object.values(SmsCampaignAudience).find(
-    (audience) => audience.toLowerCase() === normalized,
-  )
-  return match ?? SmsCampaignAudience.New
+  return SMS_CAMPAIGN_AUDIENCE_ALIAS[normalized] ?? SmsCampaignAudience.New
 }
 
 export function normalizeSmsCampaignRecipientStatus(value: unknown): SmsCampaignRecipientStatus {
