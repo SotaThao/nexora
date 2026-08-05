@@ -1,4 +1,4 @@
-import React, { createContext, useState, useContext, useEffect, type ReactNode } from 'react'
+import { createContext, useState, useContext, useEffect, type ReactNode } from 'react'
 import en from '../locales/en.json'
 import vi from '../locales/vi.json'
 import {
@@ -6,6 +6,7 @@ import {
   getStoredAppLanguage,
   setStoredAppLanguage,
 } from '../utils/appLanguage'
+import { renderLabel } from '../utils/renderLabel'
 import type { AppLanguage, LanguageContextValue, TranslationVariables } from '../types/contexts'
 
 const translations = { en, vi }
@@ -73,26 +74,6 @@ export function LanguageProvider({ children }: LanguageProviderProps) {
       {children}
     </LanguageContext.Provider>
   )
-}
-
-export function renderLabel(text: ReactNode): ReactNode {
-  if (typeof text !== 'string') return text
-  if (text.includes('*')) {
-    const parts = text.split('*')
-    return (
-      <>
-        {parts.map((part, idx) => (
-          <React.Fragment key={idx}>
-            {part}
-            {idx < parts.length - 1 && (
-              <span className="text-red-500 font-bold ml-0.5">*</span>
-            )}
-          </React.Fragment>
-        ))}
-      </>
-    )
-  }
-  return text
 }
 
 export function useTranslation() {

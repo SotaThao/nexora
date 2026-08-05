@@ -12479,6 +12479,37 @@ body.booking-appointment-panel-modal-open {
   box-shadow: 0 0 0 3px rgba(70, 72, 216, 0.1);
 }
 
+.subscription-stripe-card-field {
+  width: 100%;
+  min-height: 35px;
+  box-sizing: border-box;
+  border: 1px solid #d8dee8;
+  border-radius: 8px;
+  background: #fff;
+  padding: 8px 10px;
+}
+
+.subscription-stripe-card-field .StripeElement,
+.subscription-stripe-card-field .__PrivateStripeElement {
+  display: block;
+  width: 100%;
+}
+
+.subscription-stripe-card-field iframe {
+  display: block;
+  width: 100% !important;
+  min-height: 20px;
+  pointer-events: auto !important;
+}
+
+.subscription-stripe-card-field--with-icon {
+  padding-left: 34px;
+}
+
+:is(#nx-campaign-root, .nx-campaign-root) .sms-credit-card-input-wrap .subscription-stripe-card-field--with-icon {
+  padding-left: 34px;
+}
+
 :is(#nx-campaign-root, .nx-campaign-root) .sms-credit-card-input[aria-invalid='true'],
 :is(#nx-campaign-root, .nx-campaign-root) .sms-credit-card-select[aria-invalid='true'] {
   border-color: #dc2626;

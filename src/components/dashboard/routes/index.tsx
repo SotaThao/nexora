@@ -17,6 +17,7 @@ import ManagePlanView from '../views/ManagePlanView'
 import SubscriptionPaymentModal from '../modals/SubscriptionPaymentModal'
 import type { PurchasableSubscriptionPlan } from '../../../data/repositories/subscriptionPayments'
 import { useSubscriptionPackages } from '../../../data/hooks/useSubscriptionPayments'
+import { buildSubscriptionBillingDefaultsFromProfile } from '../../../utils/subscriptionBillingDefaults'
 import BookingHubView from '../views/BookingHubView'
 import AiVoiceSetupGuideView from '../views/AiVoiceSetupGuideView'
 import StaffDetailView from '../../StaffDetailView'
@@ -373,19 +374,10 @@ export function SubscriptionsRoute() {
   const currentPlanId = ctx?.profile?.subscription?.packageCode ?? null
   const [paymentPlan, setPaymentPlan] = useState<PurchasableSubscriptionPlan | null>(null)
   const { data: packages = [] } = useSubscriptionPackages()
-  const billingDefaults = useMemo(() => {
-    const profile = ctx?.profile as LooseObject | undefined
-    if (!profile) return undefined
-    return {
-      name: profile.fullName || [profile.firstName, profile.lastName].filter(Boolean).join(' '),
-      email: profile.email,
-      address: profile.address,
-      city: profile.city,
-      state: profile.state,
-      zipCode: profile.zipCode,
-      country: profile.country,
-    }
-  }, [ctx?.profile])
+  const billingDefaults = useMemo(
+    () => buildSubscriptionBillingDefaultsFromProfile(ctx?.profile),
+    [ctx?.profile],
+  )
 
   useEffect(() => {
     const deepLinkPlan = planIdToPurchasablePlan(searchParams.get('plan') ?? '')
@@ -393,7 +385,11 @@ export function SubscriptionsRoute() {
   }, [searchParams])
 
   const selectedPackage = paymentPlan
-    ? packages.find((p) => p.packageCode === paymentPlan.toLowerCase())
+    ? packages.find(
+        (p) =>
+          p.packageCode.toLowerCase() === paymentPlan.toLowerCase()
+          || (p.plan ?? '').toLowerCase() === paymentPlan.toLowerCase(),
+      )
     : undefined
   const paymentPlanPrice = selectedPackage?.price ?? 0
 

@@ -104,6 +104,14 @@ export default function Dashboard({
       return
     }
 
+    // Prefer browser history so Support ← Subscriptions (etc.) works.
+    // Fall back to overview when this is the first history entry (direct load / refresh).
+    const historyIdx = (window.history.state as { idx?: number } | null)?.idx ?? 0
+    if (historyIdx > 0) {
+      navigate(-1)
+      return
+    }
+
     handleNavigateMenu('overview')
   }, [activeMenu, location.pathname, location.search, navigate, handleNavigateMenu])
   const handleStartSetup = useCallback(() => {

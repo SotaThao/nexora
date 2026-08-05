@@ -39,6 +39,13 @@ export const VOICE_AI_PACKAGE_CODE_TO_PLAN: Record<VoiceAiPackageCode, PaidServi
   [VoiceAiPackageCode.Elite]: VoicePlanTier.Elite,
 }
 
+/** Checkout payment id for credit/debit card (Stripe) — not a wallet symbol. */
+export const PLAN_CARD_PAYMENT_SYMBOL = '__card__' as const
+
+export function isPlanCardPaymentSymbol(symbol: string | null | undefined): boolean {
+  return symbol === PLAN_CARD_PAYMENT_SYMBOL
+}
+
 /** Fallback prices when catalog is still loading or a card is missing from API. */
 export const SERVICE_PLAN_MONTHLY_PRICE: Record<PaidServicePlanId, number> = {
   [VoicePlanTier.Starter]: 99,

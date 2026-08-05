@@ -1,6 +1,7 @@
 import React from 'react'
 import { X, Camera, FolderOpen, AlertTriangle } from 'lucide-react'
-import { renderLabel, useTranslation } from '../../../contexts/LanguageContext'
+import { useTranslation } from '../../../contexts/LanguageContext'
+import { renderLabel } from '../../../utils/renderLabel'
 import ImageFileInput from '../../ui/ImageFileInput'
 import BankWireAccountForm from '../../payout/BankWireAccountForm'
 import PayoutAccountIdentifierInput from '../../payout/PayoutAccountIdentifierInput'

@@ -53,7 +53,9 @@ export function useSubscriptionPaymentMethods({ enabled = true } = {}) {
     queryKey: qk.merchantSubscriptionPaymentMethods(),
     queryFn: () => subscriptionPaymentsRepository.getPaymentMethods(),
     enabled,
-    staleTime: 60_000,
+    // Balances change after purchases — always refetch on mount, never reuse stale cache.
+    staleTime: 0,
+    refetchOnMount: 'always',
   })
 }
 
