@@ -5,9 +5,11 @@
 // since name/phone are meant to be independent filters, not scoped to whatever date range
 // happens to be selected. The date pickers are opt-in for narrowing the range.
 import { useState } from 'react'
+import { useQueryClient } from '@tanstack/react-query'
 import { useTranslation } from '../../../../contexts/LanguageContext'
 import { useCompletedOrders } from '../../../../data/hooks/usePosOrders'
 import { useOrderDetail } from '../../../../data/hooks/usePosCheckout'
+import { qk } from '../../../../data/queryKeys'
 import { SkeletonList } from '../../../ui/skeleton'
 
 const PAGE_SIZE = 10
@@ -19,6 +21,7 @@ function formatDateTime(iso: string | null | undefined): string {
 
 export default function PosCompletedOrdersPanel({ businessId }: { businessId: string }) {
   const { t } = useTranslation()
+  const queryClient = useQueryClient()
   const [dateFrom, setDateFrom] = useState('')
   const [dateTo, setDateTo] = useState('')
   const [customerNameInput, setCustomerNameInput] = useState('')
@@ -53,6 +56,10 @@ export default function PosCompletedOrdersPanel({ businessId }: { businessId: st
       customerPhone: customerPhoneInput.trim(),
     })
     setPageNumber(1)
+    // Re-applying the exact same filter values (e.g. retrying a search) produces the same
+    // query key, which TanStack Query would otherwise silently serve from cache instead of
+    // refetching — invalidate so "Lọc" always hits the API with the latest data.
+    queryClient.invalidateQueries({ queryKey: qk.merchantPosCompletedOrders(businessId) })
   }
 
   return (

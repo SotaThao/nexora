@@ -7,7 +7,7 @@
 // While editing, the confirmed phone number triggers a "returning customer" lookup and
 // offers a one-tap "Use last visit" prefill of that customer's most recent service/
 // technician pairs.
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { Check, Phone, User } from 'lucide-react'
 import { useTranslation } from '../../../../contexts/LanguageContext'
 import { useCustomerLookupByPhone } from '../../../../data/hooks/usePosOrders'
@@ -39,6 +39,17 @@ export default function CustomerHeaderBar({
   const isFilled = Boolean(customerName.trim())
   const [collapsed, setCollapsed] = useState(false)
   const { data: lookup } = useCustomerLookupByPhone(businessId, customerPhone)
+
+  // Prefill Name from the returning-customer lookup so Step 2 shows who's checking in
+  // without staff re-typing it — only when Name is still blank, so it never clobbers a
+  // name the staff already entered (e.g. a walk-in typed a name before the lookup resolved,
+  // or is intentionally overriding it for this visit).
+  useEffect(() => {
+    if (lookup && !customerName.trim()) {
+      onChangeName(lookup.customerName)
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [lookup])
 
   // Collapse on blur (leaving Name), not reactively on every keystroke — see
   // feedback_ui_jank_verification-adjacent history: a render-time effect keyed on isFilled
