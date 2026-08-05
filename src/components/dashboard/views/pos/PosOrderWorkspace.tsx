@@ -44,10 +44,19 @@ import CustomerHeaderBar from './CustomerHeaderBar'
 import PhoneCheckInStep from './PhoneCheckInStep'
 import SelectTechniciansModal, { type SelectTechniciansSelection } from './modals/SelectTechniciansModal'
 
-type TipMode = 'fixed10' | 'fixed15' | 'pct18' | 'pct20' | 'custom'
+type TipMode = 'noTip' | 'fixed10' | 'fixed15' | 'pct10' | 'pct20' | 'custom'
 type CatalogTab = 'services' | 'products'
 
 const PAYMENT_METHODS: PosCheckoutPaymentMethodType[] = ['Card', 'Cash', 'GiftCard', 'SplitPay']
+
+// Percentage-based tip modes are a live % of servicesSubtotal, not a one-time snapshot —
+// see the tip-percentage recompute effect below, which re-applies this whenever the
+// subtotal changes (e.g. a service gets added/removed) so Payment Summary never shows a
+// tip that was only correct for a subtotal that no longer exists.
+const TIP_PERCENT_BY_MODE: Partial<Record<TipMode, number>> = {
+  pct10: 0.1,
+  pct20: 0.2,
+}
 
 function round2(value: number) {
   return Math.round(value * 100) / 100
@@ -173,7 +182,7 @@ export default function PosOrderWorkspace({
     initialStaffId?: string
     initialNote?: string
   } | null>(null)
-  const [tipMode, setTipMode] = useState<TipMode>('fixed15')
+  const [tipMode, setTipMode] = useState<TipMode>('noTip')
   const [customTipInput, setCustomTipInput] = useState('')
   const [paymentMethod, setPaymentMethod] = useState<PosCheckoutPaymentMethodType>('Cash')
   // POS iPad redesign, Ticket 6 — "Turn to Customer": front desk flips the iPad around so
@@ -202,7 +211,7 @@ export default function PosOrderWorkspace({
     setDraftLines([])
     setShowPaymentSection(false)
     setTechnicianModal(null)
-    setTipMode('fixed15')
+    setTipMode('noTip')
     setCustomTipInput('')
     setPaymentMethod('Cash')
     setCustomerFacingMode(false)
@@ -263,14 +272,14 @@ export default function PosOrderWorkspace({
     setPaymentMethod('Cash')
 
     if (order.tipAmount === 0) {
-      setTipMode('fixed15')
+      setTipMode('noTip')
     } else {
       const subtotal = order.servicesSubtotal
-      const pct18 = subtotal > 0 ? round2(subtotal * 0.18) : -1
-      const pct20 = subtotal > 0 ? round2(subtotal * 0.2) : -1
+      const pct10 = subtotal > 0 ? round2(subtotal * TIP_PERCENT_BY_MODE.pct10!) : -1
+      const pct20 = subtotal > 0 ? round2(subtotal * TIP_PERCENT_BY_MODE.pct20!) : -1
       if (order.tipAmount === 10) setTipMode('fixed10')
       else if (order.tipAmount === 15) setTipMode('fixed15')
-      else if (order.tipAmount === pct18) setTipMode('pct18')
+      else if (order.tipAmount === pct10) setTipMode('pct10')
       else if (order.tipAmount === pct20) setTipMode('pct20')
       else setTipMode('custom')
       setCustomTipInput(String(order.tipAmount))
@@ -551,6 +560,22 @@ export default function PosOrderWorkspace({
     if (!Number.isFinite(parsed) || parsed < 0) return
     applyTip('custom', round2(parsed))
   }
+
+  // A percentage tip mode (pct10/pct20) is a live % of servicesSubtotal, not a one-time
+  // dollar snapshot — without this, adding/removing a service after picking e.g. 10%
+  // leaves the old dollar amount on the order, so Payment Summary's Tip/Total silently
+  // stop matching the selected percentage. Re-applies the percentage server-side whenever
+  // the subtotal it's based on changes; a no-op once the persisted tip already matches.
+  useEffect(() => {
+    const percent = TIP_PERCENT_BY_MODE[tipMode]
+    if (percent === undefined || !order || !effectiveOrderId) return
+    const expectedTip = round2(order.servicesSubtotal * percent)
+    if (Math.abs(expectedTip - order.tipAmount) < 0.005) return
+    setTip.mutate({ orderId: effectiveOrderId, tipAmount: expectedTip }, { onError: reportError })
+    // Only the subtotal driving the % (and the mode itself) should retrigger this — order.
+    // tipAmount is deliberately excluded, since this effect is what changes it.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [order?.servicesSubtotal, tipMode, effectiveOrderId])
 
   const tipSplitTotal = Object.values(tipSplitInputs).reduce((sum, v) => sum + (Number(v) || 0), 0)
   const isTipSplitBalanced = order ? Math.abs(round2(tipSplitTotal) - order.tipAmount) < 0.01 : false
@@ -904,7 +929,18 @@ export default function PosOrderWorkspace({
                       {t('components.dashboard.views.pos.PosOrderWorkspace.turnToCustomerButton')}
                     </button>
                   </div>
-                  <div className="grid grid-cols-3 gap-2 sm:grid-cols-5">
+                  <div className="grid grid-cols-3 gap-2 sm:grid-cols-6">
+                    <button
+                      type="button"
+                      onClick={() => applyTip('noTip', 0)}
+                      className={`h-9 rounded-lg border text-xs font-bold ${
+                        tipMode === 'noTip'
+                          ? 'border-posFdAccent bg-posFdAccent text-white'
+                          : 'border-nexoraBorder text-nexoraText hover:border-posFdAccent'
+                      }`}
+                    >
+                      {t('components.dashboard.views.pos.PosOrderWorkspace.noTipButton')}
+                    </button>
                     <button
                       type="button"
                       onClick={() => applyTip('fixed10', 10)}
@@ -929,18 +965,18 @@ export default function PosOrderWorkspace({
                     </button>
                     <button
                       type="button"
-                      onClick={() => applyTip('pct18', round2(order.servicesSubtotal * 0.18))}
+                      onClick={() => applyTip('pct10', round2(order.servicesSubtotal * TIP_PERCENT_BY_MODE.pct10!))}
                       className={`h-9 rounded-lg border text-xs font-bold ${
-                        tipMode === 'pct18'
+                        tipMode === 'pct10'
                           ? 'border-posFdAccent bg-posFdAccent text-white'
                           : 'border-nexoraBorder text-nexoraText hover:border-posFdAccent'
                       }`}
                     >
-                      18%
+                      10%
                     </button>
                     <button
                       type="button"
-                      onClick={() => applyTip('pct20', round2(order.servicesSubtotal * 0.2))}
+                      onClick={() => applyTip('pct20', round2(order.servicesSubtotal * TIP_PERCENT_BY_MODE.pct20!))}
                       className={`h-9 rounded-lg border text-xs font-bold ${
                         tipMode === 'pct20'
                           ? 'border-posFdAccent bg-posFdAccent text-white'
@@ -1161,7 +1197,18 @@ export default function PosOrderWorkspace({
             <p className="text-sm text-nexoraMuted">
               {t('components.dashboard.views.pos.PosOrderWorkspace.customerFacingSubtitle')}
             </p>
-            <div className="mx-auto grid max-w-md grid-cols-2 gap-4">
+            <div className="mx-auto grid max-w-md grid-cols-3 gap-4">
+              <button
+                type="button"
+                onClick={() => applyTip('noTip', 0)}
+                className={`h-20 rounded-2xl border-2 text-lg font-black ${
+                  tipMode === 'noTip'
+                    ? 'border-posFdAccent bg-posFdAccent text-white'
+                    : 'border-posFdBorder text-posFdText'
+                }`}
+              >
+                {t('components.dashboard.views.pos.PosOrderWorkspace.noTipButton')}
+              </button>
               <button
                 type="button"
                 onClick={() => applyTip('fixed10', 10)}
@@ -1186,18 +1233,18 @@ export default function PosOrderWorkspace({
               </button>
               <button
                 type="button"
-                onClick={() => applyTip('pct18', round2(order.servicesSubtotal * 0.18))}
+                onClick={() => applyTip('pct10', round2(order.servicesSubtotal * TIP_PERCENT_BY_MODE.pct10!))}
                 className={`h-20 rounded-2xl border-2 text-2xl font-black ${
-                  tipMode === 'pct18'
+                  tipMode === 'pct10'
                     ? 'border-posFdAccent bg-posFdAccent text-white'
                     : 'border-posFdBorder text-posFdText'
                 }`}
               >
-                18%
+                10%
               </button>
               <button
                 type="button"
-                onClick={() => applyTip('pct20', round2(order.servicesSubtotal * 0.2))}
+                onClick={() => applyTip('pct20', round2(order.servicesSubtotal * TIP_PERCENT_BY_MODE.pct20!))}
                 className={`h-20 rounded-2xl border-2 text-2xl font-black ${
                   tipMode === 'pct20'
                     ? 'border-posFdAccent bg-posFdAccent text-white'

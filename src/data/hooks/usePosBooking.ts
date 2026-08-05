@@ -15,8 +15,12 @@ import type {
 } from '../../types/repositories'
 
 export function useCreateStaffBooking(businessId?: string) {
+  const queryClient = useQueryClient()
   return useMutation<string, Error, CreateBookingPayload>({
     mutationFn: (payload) => posBookingRepository.createStaffBooking(businessId as string, payload),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: qk.merchantPosBookingList(businessId) })
+    },
   })
 }
 

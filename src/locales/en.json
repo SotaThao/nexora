@@ -3115,6 +3115,7 @@
             "startServiceSuccess": "Service started.",
             "completeSuccess": "Payment recorded — staff released.",
             "tipTitle": "Tip",
+            "noTipButton": "No Tip",
             "customTipPlaceholder": "Custom",
             "tipSplitTitle": "Tip Split",
             "tipSplitMismatch": "Shares total ${{total}} — must equal ${{expected}}",

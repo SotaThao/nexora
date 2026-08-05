@@ -3115,6 +3115,7 @@
             "startServiceSuccess": "Đã bắt đầu phục vụ.",
             "completeSuccess": "Đã ghi nhận thanh toán — thợ đã được giải phóng.",
             "tipTitle": "Tip",
+            "noTipButton": "Không tip",
             "customTipPlaceholder": "Tự nhập",
             "tipSplitTitle": "Chia Tip",
             "tipSplitMismatch": "Tổng đang là ${{total}} — phải bằng ${{expected}}",
