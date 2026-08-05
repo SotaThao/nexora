@@ -834,7 +834,19 @@
       "print_qr_btn": "Print QR",
       "print_qr": "Print QR",
       "staff_qr_inactive_warning": "This personal QR is blocked while the staff member is inactive.",
-      "customer_view_test": "Simulate Customer Scan ›"
+      "customer_view_test": "Simulate Customer Scan ›",
+      "subscription_payment_title": "Package Payment",
+      "subscription_payment_subtitle": "Confirm your upgrade before checkout",
+      "subscription_payment_method_label": "Payment method",
+      "subscription_payment_methods_loading": "Loading payment methods…",
+      "subscription_payment_methods_error": "Could not load your wallet balances.",
+      "subscription_payment_methods_retry": "Retry loading payment methods",
+      "subscription_invoice_summary": "Invoice summary",
+      "subscription_service_plan": "Service plan:",
+      "subscription_total_due": "Total due:",
+      "subscription_confirm_payment": "Confirm payment",
+      "subscription_payment_success": "Package purchased successfully.",
+      "subscription_price_note_month": "month"
     },
     "settings_panel": {
       "title": "Nexora Configuration",
@@ -2181,7 +2193,13 @@
     "contact_request_message_required": "Please describe the issue before submitting.",
     "contact_request_support_type_min_length": "Please select a support type.",
     "contact_request_support_type_required": "Support type is required.",
-    "touchpoint_not_found_desc": "This station could not be loaded."
+    "touchpoint_not_found_desc": "This station could not be loaded.",
+    "subscription_already_on_paid_plan": "You already have an active paid subscription.",
+    "subscription_plan_not_purchasable": "This plan is not available for self-service purchase.",
+    "subscription_insufficient_balance": "Insufficient balance in your wallet. Please add funds and try again.",
+    "subscription_payment_failed": "Payment failed. Please try again or choose a different payment method.",
+    "subscription_get_payment_methods_failed": "Could not load your wallet balances. Please try again.",
+    "subscription_payment_method_not_accepted": "This payment method is not accepted."
   },
   "components": {
     "common": {
@@ -4496,6 +4514,7 @@
     "title": "Find the Perfect Alignment for Your Team",
     "subtitle": "Launch immediately with zero-cost Smart QR checkout cards and automated reviews, then scale to full co-op channels.",
     "current_plan": "Current Plan",
+    "price_note_months": "/ {{count}} months",
     "plans": {
       "lite": {
         "name": "Lite Pack (Free)",

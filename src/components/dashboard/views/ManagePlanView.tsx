@@ -1,9 +1,12 @@
 // ManagePlanView — pricing / plan selection page for the dashboard "subscriptions"
-// route. Static marketing-style tiers (no billing backend yet); CTAs delegate to
-// the optional onSelectPlan callback. Highlights the merchant's current plan when
-// a matching plan id is supplied.
+// route. Name/Price/Features come from GET /merchant/subscriptions/packages;
+// falls back to the i18n copy below while that request is loading (or for the
+// fields the API leaves null, e.g. Lite's $0 and Enterprise's custom quote).
+// CTAs delegate to the optional onSelectPlan callback. Highlights the merchant's
+// current plan when a matching plan id is supplied.
 import { Check } from 'lucide-react'
 import { useTranslation } from '../../../contexts/LanguageContext'
+import type { SubscriptionPackage } from '../../../data/repositories/subscriptionPayments'
 
 type PlanId = 'lite' | 'starter' | 'pro' | 'enterprise'
 
@@ -12,18 +15,21 @@ interface ManagePlanViewProps {
   currentPlanId?: string | null
   /** Invoked with the chosen plan id when a CTA is pressed. */
   onSelectPlan?: (planId: PlanId) => void
+  /** Packages from the API — undefined while loading. */
+  packages?: SubscriptionPackage[]
 }
 
 interface PlanConfig {
   id: PlanId
   /** Elevated, violet-framed tier with a ribbon badge (Pro). */
   featured?: boolean
-  /** Green free-tier treatment: inline FREE pill, green CTA, green first feature. */
-  free?: boolean
   /** number of feature lines to read from i18n (f1..fN) */
   featureCount: number
 }
 
+// Lite is the free, no-account-yet signup tier — not shown here since this view
+// is only reached from the authenticated dashboard (merchant already has an
+// account) and downgrading an existing paid plan to Lite isn't supported.
 const PLAN_CONFIG: PlanConfig[] = [
   // { id: 'lite', free: true, featureCount: 4 }, // Hidden free plan
   { id: 'starter', featureCount: 4 },
@@ -31,8 +37,9 @@ const PLAN_CONFIG: PlanConfig[] = [
   { id: 'enterprise', featureCount: 4 },
 ]
 
-function ManagePlanView({ currentPlanId = null, onSelectPlan }: ManagePlanViewProps) {
-  const { t } = useTranslation()
+function ManagePlanView({ currentPlanId = null, onSelectPlan, packages }: ManagePlanViewProps) {
+  const { t, currentLanguage } = useTranslation()
+  const isVietnamese = currentLanguage === 'vi'
 
   const normalizedCurrent = (currentPlanId || '').toLowerCase()
 
@@ -61,9 +68,16 @@ function ManagePlanView({ currentPlanId = null, onSelectPlan }: ManagePlanViewPr
       <div className="relative mx-auto mt-12 grid max-w-5xl grid-cols-1 gap-5 px-1 pb-4 md:grid-cols-3 xl:items-stretch">
         {PLAN_CONFIG.map((plan) => {
           const base = `manage_plan.plans.${plan.id}`
-          const features = Array.from({ length: plan.featureCount }, (_, i) =>
-            t(`${base}.f${i + 1}`),
-          )
+          const pkg = packages?.find((p) => p.plan.toLowerCase() === plan.id)
+          const pkgFeatures = isVietnamese ? pkg?.featuresVi : pkg?.featuresEn
+          const features = pkgFeatures?.length
+            ? pkgFeatures
+            : Array.from({ length: plan.featureCount }, (_, i) => t(`${base}.f${i + 1}`))
+          const priceLabel = pkg?.price != null ? `$${pkg.price}` : t(`${base}.price`)
+          const priceNote =
+            pkg && pkg.periodInMonths !== 1
+              ? t('manage_plan.price_note_months', { count: pkg.periodInMonths })
+              : t(`${base}.price_note`)
           const isCurrent =
             !!normalizedCurrent && normalizedCurrent.includes(plan.id)
 
@@ -84,17 +98,9 @@ function ManagePlanView({ currentPlanId = null, onSelectPlan }: ManagePlanViewPr
                 </span>
               )}
 
-              {/* Name + inline free pill */}
-              <div className="flex items-center gap-2">
-                <h2 className="text-lg font-extrabold leading-snug text-nexoraText">
-                  {t(`${base}.name`)}
-                </h2>
-                {plan.free && (
-                  <span className="inline-flex shrink-0 items-center rounded-md bg-nexoraSuccess/15 px-2 py-0.5 text-[10px] font-extrabold uppercase tracking-wider text-nexoraSuccess">
-                    {t(`${base}.badge`)}
-                  </span>
-                )}
-              </div>
+              <h2 className="text-lg font-extrabold leading-snug text-nexoraText">
+                {pkg?.name || t(`${base}.name`)}
+              </h2>
               <p className="mt-1.5 min-h-[40px] text-[13px] leading-relaxed text-nexoraMuted">
                 {t(`${base}.tagline`)}
               </p>
@@ -102,10 +108,10 @@ function ManagePlanView({ currentPlanId = null, onSelectPlan }: ManagePlanViewPr
               {/* Price */}
               <div className="mt-5 flex items-end gap-1.5">
                 <span className="text-4xl font-black tracking-tight text-nexoraText tabular-nums">
-                  {t(`${base}.price`)}
+                  {priceLabel}
                 </span>
                 <span className="pb-1.5 text-xs font-medium text-nexoraSubtle">
-                  {t(`${base}.price_note`)}
+                  {priceNote}
                 </span>
               </div>
 
@@ -113,26 +119,14 @@ function ManagePlanView({ currentPlanId = null, onSelectPlan }: ManagePlanViewPr
 
               {/* Features */}
               <ul className="flex-1 space-y-3">
-                {features.map((feature, i) => {
-                  const highlight = plan.free && i === 0
-                  return (
-                    <li key={i} className="flex items-start gap-2.5">
-                      <span className="mt-0.5 flex h-4 w-4 shrink-0 items-center justify-center rounded-full bg-nexoraSuccess/12 text-nexoraSuccess">
-                        <Check className="h-3 w-3" strokeWidth={3} />
-                      </span>
-                      <span
-                        className={[
-                          'text-[13px] leading-relaxed',
-                          highlight
-                            ? 'font-semibold text-nexoraSuccess'
-                            : 'text-nexoraText/85',
-                        ].join(' ')}
-                      >
-                        {feature}
-                      </span>
-                    </li>
-                  )
-                })}
+                {features.map((feature, i) => (
+                  <li key={i} className="flex items-start gap-2.5">
+                    <span className="mt-0.5 flex h-4 w-4 shrink-0 items-center justify-center rounded-full bg-nexoraSuccess/12 text-nexoraSuccess">
+                      <Check className="h-3 w-3" strokeWidth={3} />
+                    </span>
+                    <span className="text-[13px] leading-relaxed text-nexoraText/85">{feature}</span>
+                  </li>
+                ))}
               </ul>
 
               {/* CTA */}

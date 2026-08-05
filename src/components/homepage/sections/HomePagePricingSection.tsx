@@ -2,6 +2,8 @@
 import { useHomePageBridge } from '../context/HomePageBridgeContext'
 import { useTranslation } from '../../../contexts/LanguageContext'
 import { homepageTranslations, type HomePageTranslationKey } from '../i18n/homepageTranslations'
+import { usePublicSubscriptionPackages } from '../../../data/hooks/useSubscriptionPayments'
+import type { SubscriptionPackage } from '../../../data/repositories/subscriptionPayments'
 
 type TextCell = { type: 'text'; key: HomePageTranslationKey }
 type BoolCell = { type: 'bool'; value: boolean }
@@ -137,12 +139,38 @@ function ComparisonCell({ cell, t }: { cell: CmpCell; t: (key: HomePageTranslati
   return <span className="text-slate-300 font-bold text-base" aria-label="Not included">—</span>
 }
 
+function getPlanFields(
+  packages: SubscriptionPackage[] | undefined,
+  plan: SubscriptionPackage['plan'],
+  isVietnamese: boolean,
+  base: string,
+  featureCount: number,
+  t: (key: HomePageTranslationKey) => string,
+) {
+  const pkg = packages?.find((p) => p.plan === plan)
+  const pkgFeatures = isVietnamese ? pkg?.featuresVi : pkg?.featuresEn
+  const features = pkgFeatures?.length
+    ? pkgFeatures
+    : Array.from({ length: featureCount }, (_, i) => t(`${base}-feat-${i + 1}` as HomePageTranslationKey))
+  return {
+    name: pkg?.name || t(`${base}-title` as HomePageTranslationKey),
+    features,
+    price: pkg?.price != null ? `$${pkg.price}` : null,
+  }
+}
+
 export default function HomePagePricingSection() {
-  const { planCta } = useHomePageBridge()
+  const { planCta, isLoggedIn } = useHomePageBridge()
   const { currentLanguage } = useTranslation()
   const lang = currentLanguage === 'vi' ? 'vi' : 'en'
+  const isVietnamese = lang === 'vi'
   const t = (key: HomePageTranslationKey) =>
     homepageTranslations[lang][key] ?? homepageTranslations.en[key]
+  const { data: packages } = usePublicSubscriptionPackages()
+
+  const lite = getPlanFields(packages, 'Lite', isVietnamese, 'plan-free', 4, t)
+  const starter = getPlanFields(packages, 'Starter', isVietnamese, 'plan-1', 4, t)
+  const pro = getPlanFields(packages, 'Pro', isVietnamese, 'plan-2', 5, t)
 
   return (
     <section className="py-16 sm:py-24 bg-white ds-section" id="pricing">
@@ -159,71 +187,69 @@ export default function HomePagePricingSection() {
           </p>
         </div>
 
-        <div className="grid grid-cols-2 md:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-6 xl:gap-8 items-stretch">
-          <div className="bg-gradient-to-b from-slate-50 to-white border border-slate-200/80 rounded-[32px] p-6 flex flex-col justify-between hover:shadow-xl transition-all relative overflow-hidden ds-surface ds-pricing-card">
-            <div className="absolute -top-10 -right-10 w-24 h-24 bg-green/5 rounded-full blur-xl" />
-            <div className="space-y-6">
-              <div className="flex justify-between items-start">
-                <div className="ds-content-card">
-                  <h3 className="text-xl font-extrabold text-navy" data-i18n="plan-free-title">Lite Pack (Free)</h3>
-                  <p className="text-[11px] text-slate-500 mt-1 leading-normal" data-i18n="plan-free-desc">For salons with 5 staff or fewer. Requires a quick business identity check.</p>
+        <div className={`grid grid-cols-2 md:grid-cols-2 gap-3 sm:gap-6 xl:gap-8 items-stretch ${isLoggedIn ? 'lg:grid-cols-3' : 'lg:grid-cols-4'}`}>
+          {!isLoggedIn && (
+            <div className="bg-gradient-to-b from-slate-50 to-white border border-slate-200/80 rounded-[32px] p-6 flex flex-col justify-between hover:shadow-xl transition-all relative overflow-hidden ds-surface ds-pricing-card">
+              <div className="absolute -top-10 -right-10 w-24 h-24 bg-green/5 rounded-full blur-xl" />
+              <div className="space-y-6">
+                <div className="flex justify-between items-start">
+                  <div className="ds-content-card">
+                    <h3 className="text-xl font-extrabold text-navy">{lite.name}</h3>
+                    <p className="text-[11px] text-slate-500 mt-1 leading-normal">{t('plan-free-desc')}</p>
+                  </div>
+                  <span className="bg-green/10 text-green text-xs font-extrabold px-2 py-0.5 rounded-full uppercase tracking-wider">Free</span>
                 </div>
-                <span className="bg-green/10 text-green text-xs font-extrabold px-2 py-0.5 rounded-full uppercase tracking-wider">Free</span>
+                <div className="flex items-baseline gap-1">
+                  <span className="text-3xl sm:text-4xl font-black text-navy">{lite.price ?? '$0'}</span>
+                  <span className="text-xs text-slate-500 font-bold">/ <span data-i18n="calc-mo">mo</span></span>
+                </div>
+                <ul className="space-y-3.5 text-xs text-slate-600 font-semibold border-t border-slate-200/80 pt-6">
+                  {lite.features.map((feature, i) => (
+                    <li key={i} className="flex items-center gap-2"><span className={i === 0 ? 'text-green font-bold' : 'text-purple'}>✓</span> <span>{feature}</span></li>
+                  ))}
+                </ul>
               </div>
-              <div className="flex items-baseline gap-1">
-                <span className="text-3xl sm:text-4xl font-black text-navy">$0</span>
-                <span className="text-xs text-slate-500 font-bold">/ <span data-i18n="calc-mo">mo</span></span>
-              </div>
-              <ul className="space-y-3.5 text-xs text-slate-600 font-semibold border-t border-slate-200/80 pt-6">
-                <li className="flex items-center gap-2 text-green"><span className="font-bold">✓</span> <span data-i18n="plan-free-feat-1">Up to 5 active specialists</span></li>
-                <li className="flex items-center gap-2"><span className="text-purple">✓</span> <span data-i18n="plan-free-feat-2">Quick business identity check</span></li>
-                <li className="flex items-center gap-2"><span className="text-purple">✓</span> <span data-i18n="plan-free-feat-3">Basic tabletop Smart QR</span></li>
-                <li className="flex items-center gap-2"><span className="text-purple">✓</span> <span data-i18n="plan-free-feat-4">Direct peer-to-peer tip routing</span></li>
-              </ul>
+              <button className="w-full mt-8 bg-green hover:bg-green/95 text-white font-extrabold py-3 rounded-full text-xs tracking-wide transition-all shadow-md shadow-green/10 ds-control ds-button" data-i18n="btn-plan-free" onClick={() => planCta('lite')}>Sign Up Free (Identity Check Required)</button>
             </div>
-            <button className="w-full mt-8 bg-green hover:bg-green/95 text-white font-extrabold py-3 rounded-full text-xs tracking-wide transition-all shadow-md shadow-green/10 ds-control ds-button" data-i18n="btn-plan-free" onClick={planCta}>Sign Up Free (Identity Check Required)</button>
-          </div>
+          )}
 
           <div className="bg-slate-50 border border-slate-200/60 rounded-[32px] p-6 flex flex-col justify-between hover:shadow-xl transition-all ds-surface ds-pricing-card">
             <div className="space-y-6">
               <div className="ds-content-card">
-                <h3 className="text-xl font-extrabold text-navy" data-i18n="plan-1-title">Starter Pack</h3>
-                <p className="text-xs text-slate-500 mt-1" data-i18n="plan-1-desc">Perfect for micro booths &amp; independent practitioners</p>
+                <h3 className="text-xl font-extrabold text-navy">{starter.name}</h3>
+                <p className="text-xs text-slate-500 mt-1">{t('plan-1-desc')}</p>
               </div>
               <div className="flex items-baseline gap-1">
-                <span className="text-3xl sm:text-4xl font-black text-navy">$29</span>
+                <span className="text-3xl sm:text-4xl font-black text-navy">{starter.price ?? '$29'}</span>
                 <span className="text-xs text-slate-500 font-bold">/ <span data-i18n="calc-mo">mo</span></span>
               </div>
               <ul className="space-y-3.5 text-xs text-slate-600 font-semibold border-t border-slate-200/80 pt-6">
-                <li className="flex items-center gap-2"><span className="text-purple">✓</span> <span data-i18n="plan-1-feat-1">Branded tabletop QR placements</span></li>
-                <li className="flex items-center gap-2"><span className="text-purple">✓</span> <span data-i18n="plan-1-feat-2">Instant peer tip direct routing</span></li>
-                <li className="flex items-center gap-2"><span className="text-purple">✓</span> <span data-i18n="plan-1-feat-3">Google review automated channels</span></li>
-                <li className="flex items-center gap-2"><span className="text-purple">✓</span> <span data-i18n="plan-1-feat-4">Basic monthly transactional reviews</span></li>
+                {starter.features.map((feature, i) => (
+                  <li key={i} className="flex items-center gap-2"><span className="text-purple">✓</span> <span>{feature}</span></li>
+                ))}
               </ul>
             </div>
-            <button className="w-full mt-8 bg-white border border-slate-300 hover:bg-slate-100 text-slate-700 font-extrabold py-3 rounded-full text-xs tracking-wide transition-all ds-control ds-button" data-i18n="btn-plan-start" onClick={planCta}>Get Started Now</button>
+            <button className="w-full mt-8 bg-white border border-slate-300 hover:bg-slate-100 text-slate-700 font-extrabold py-3 rounded-full text-xs tracking-wide transition-all ds-control ds-button" data-i18n="btn-plan-start" onClick={() => planCta('starter')}>Get Started Now</button>
           </div>
 
           <div className="bg-gradient-to-b from-indigo-50/50 to-white border-2 border-purple rounded-[32px] p-6 flex flex-col justify-between hover:shadow-2xl transition-all relative transform lg:-translate-y-4 ds-pricing-card">
             <div className="absolute top-0 right-1/2 transform translate-x-1/2 -translate-y-1/2 bg-purple text-white text-xs font-black tracking-widest uppercase py-1.5 px-4 rounded-full shadow-md text-center w-[85%]" data-i18n="plan-pro-badge">RECOMMENDED FOR SALONS</div>
             <div className="space-y-6 pt-3 lg:pt-0">
               <div className="ds-content-card">
-                <h3 className="text-xl font-extrabold text-navy" data-i18n="plan-2-title">Professional Pro</h3>
-                <p className="text-xs text-slate-500 mt-1" data-i18n="plan-2-desc">Brilliant choice for growing teams &amp; local boutique hubs</p>
+                <h3 className="text-xl font-extrabold text-navy">{pro.name}</h3>
+                <p className="text-xs text-slate-500 mt-1">{t('plan-2-desc')}</p>
               </div>
               <div className="flex items-baseline gap-1">
-                <span className="text-3xl sm:text-4xl font-black text-navy">$79</span>
+                <span className="text-3xl sm:text-4xl font-black text-navy">{pro.price ?? '$79'}</span>
                 <span className="text-xs text-slate-500 font-bold">/ <span data-i18n="calc-mo">mo</span></span>
               </div>
               <ul className="space-y-3.5 text-xs text-slate-600 font-semibold border-t border-slate-200/80 pt-6">
-                <li className="flex items-center gap-2"><span className="text-purple">✓</span> <span data-i18n="plan-2-feat-1">Includes every Starter plan feature</span></li>
-                <li className="flex items-center gap-2"><span className="text-purple">✓</span> <span data-i18n="plan-2-feat-2">Custom technician roster logins</span></li>
-                <li className="flex items-center gap-2"><span className="text-purple">✓</span> <span data-i18n="plan-2-feat-3">Automatic direct tip processing pipelines</span></li>
-                <li className="flex items-center gap-2"><span className="text-purple">✓</span> <span data-i18n="plan-2-feat-4">Adjustable B2B rewards rules panel</span></li>
-                <li className="flex items-center gap-2"><span className="text-purple">✓</span> <span data-i18n="plan-2-feat-5">Client profile classification tool</span></li>
+                {pro.features.map((feature, i) => (
+                  <li key={i} className="flex items-center gap-2"><span className="text-purple">✓</span> <span>{feature}</span></li>
+                ))}
               </ul>
             </div>
-            <button className="w-full mt-8 bg-purple hover:bg-indigo-700 text-white font-extrabold py-3.5 rounded-full text-xs tracking-wide shadow-lg shadow-purple/20 transition-all hover:scale-[1.01] ds-control ds-button" data-i18n="btn-plan-pro" onClick={planCta}>Select Pro Tier</button>
+            <button className="w-full mt-8 bg-purple hover:bg-indigo-700 text-white font-extrabold py-3.5 rounded-full text-xs tracking-wide shadow-lg shadow-purple/20 transition-all hover:scale-[1.01] ds-control ds-button" data-i18n="btn-plan-pro" onClick={() => planCta('pro')}>Select Pro Tier</button>
           </div>
 
           <div className="bg-slate-50 border border-slate-200/60 rounded-[32px] p-6 flex flex-col justify-between hover:shadow-xl transition-all ds-surface ds-pricing-card">
@@ -243,7 +269,7 @@ export default function HomePagePricingSection() {
                 <li className="flex items-center gap-2"><span className="text-purple">✓</span> <span data-i18n="plan-3-feat-4">24/7 dedicated enterprise success managers</span></li>
               </ul>
             </div>
-            <button className="w-full mt-8 bg-navy hover:bg-slate-800 text-white font-extrabold py-3 rounded-full text-xs tracking-wide transition-all ds-control ds-button" data-i18n="btn-plan-ent" onClick={planCta}>Contact Success Sales</button>
+            <button className="w-full mt-8 bg-navy hover:bg-slate-800 text-white font-extrabold py-3 rounded-full text-xs tracking-wide transition-all ds-control ds-button" data-i18n="btn-plan-ent" onClick={() => planCta('enterprise')}>Contact Success Sales</button>
           </div>
         </div>
 

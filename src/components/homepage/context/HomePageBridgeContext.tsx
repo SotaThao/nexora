@@ -25,8 +25,9 @@ type HomePageHandlers = ReturnType<typeof getHomePageHandlers>
 
 interface HomePageBridgeValue {
   hp: HomePageHandlers
-  planCta: () => void
+  planCta: (planId?: string) => void
   onLogout: () => void
+  isLoggedIn: boolean
 }
 
 const HomePageBridgeContext = createContext<HomePageBridgeValue | null>(null)
@@ -83,14 +84,15 @@ export function HomePageBridgeProvider({ children }: HomePageBridgeProviderProps
   const value = useMemo<HomePageBridgeValue>(
     () => ({
       hp,
-      planCta: () => {
-        navigateHomePagePlanCta(session, status, navigate)
+      planCta: (planId?: string) => {
+        navigateHomePagePlanCta(session, status, navigate, planId)
       },
       onLogout: () => {
         hp.handleLogout()
         const { logout: doLogout } = authRef.current
         void doLogout()
       },
+      isLoggedIn: status === 'authenticated',
     }),
     [hp, session, status, navigate],
   )

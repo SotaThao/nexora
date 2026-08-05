@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useRef } from 'react'
+import React, { useEffect, useMemo, useRef, useState } from 'react'
 import { useOutletContext, useNavigate, useParams, Navigate, useSearchParams } from 'react-router-dom'
 import { useTranslation } from '../../../contexts/LanguageContext'
 import { SHOW_HARDWARE_DEVICES } from '../constants'
@@ -14,6 +14,9 @@ import AnalyticsView from '../../AnalyticsView'
 import SupportView from '../../SupportView'
 import ComingSoon from '../views/ComingSoon'
 import ManagePlanView from '../views/ManagePlanView'
+import SubscriptionPaymentModal from '../modals/SubscriptionPaymentModal'
+import type { PurchasableSubscriptionPlan } from '../../../data/repositories/subscriptionPayments'
+import { useSubscriptionPackages } from '../../../data/hooks/useSubscriptionPayments'
 import BookingHubView from '../views/BookingHubView'
 import AiVoiceSetupGuideView from '../views/AiVoiceSetupGuideView'
 import StaffDetailView from '../../StaffDetailView'
@@ -357,15 +360,52 @@ export function SupportRoute() {
   return <SupportView />
 }
 
+function planIdToPurchasablePlan(planId: string): PurchasableSubscriptionPlan | null {
+  if (planId === 'starter') return 'Starter'
+  if (planId === 'pro') return 'Pro'
+  return null
+}
+
 export function SubscriptionsRoute() {
   const ctx = useOutletContext<LooseObject>()
   const navigate = useNavigate()
+  const [searchParams] = useSearchParams()
   const currentPlanId = ctx?.profile?.subscription?.plan ?? null
+  const [paymentPlan, setPaymentPlan] = useState<PurchasableSubscriptionPlan | null>(null)
+  const { data: packages = [] } = useSubscriptionPackages()
+
+  useEffect(() => {
+    const deepLinkPlan = planIdToPurchasablePlan(searchParams.get('plan') ?? '')
+    if (deepLinkPlan) setPaymentPlan(deepLinkPlan)
+  }, [searchParams])
+
+  const paymentPlanPrice = paymentPlan
+    ? packages.find((p) => p.plan === paymentPlan)?.price ?? 0
+    : 0
+
   return (
-    <ManagePlanView
-      currentPlanId={currentPlanId}
-      onSelectPlan={() => navigate('/dashboard/support')}
-    />
+    <>
+      <ManagePlanView
+        currentPlanId={currentPlanId}
+        packages={packages}
+        onSelectPlan={(planId) => {
+          const purchasablePlan = planIdToPurchasablePlan(planId)
+          if (purchasablePlan) {
+            setPaymentPlan(purchasablePlan)
+            return
+          }
+          navigate('/dashboard/support')
+        }}
+      />
+      {paymentPlan ? (
+        <SubscriptionPaymentModal
+          isOpen
+          plan={paymentPlan}
+          price={paymentPlanPrice}
+          onClose={() => setPaymentPlan(null)}
+        />
+      ) : null}
+    </>
   )
 }
 

@@ -174,6 +174,14 @@ export const errorCodeToI18nKey = {
   SMS_CAMPAIGN_SCHEDULED_AT_REQUIRED: 'errors.sms_campaign_scheduled_at_required',
   SMS_CAMPAIGN_SCHEDULED_AT_IN_PAST: 'errors.sms_campaign_scheduled_at_in_past',
   SMS_CREDIT_INVALID_PACKAGE: 'errors.sms_credit_invalid_package',
+
+  // Subscription wallet payment
+  SUBSCRIPTION_ALREADY_ON_PAID_PLAN: 'errors.subscription_already_on_paid_plan',
+  SUBSCRIPTION_PLAN_NOT_PURCHASABLE: 'errors.subscription_plan_not_purchasable',
+  SUBSCRIPTION_PAYMENT_METHOD_NOT_ACCEPTED: 'errors.subscription_payment_method_not_accepted',
+  InsufficientBalance: 'errors.subscription_insufficient_balance',
+  PaymentFailed: 'errors.subscription_payment_failed',
+  GetPaymentMethodsFailed: 'errors.subscription_get_payment_methods_failed',
 }
 
 /**

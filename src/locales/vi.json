@@ -834,7 +834,19 @@
       "print_qr_btn": "In Mã QR",
       "print_qr": "In Mã QR",
       "staff_qr_inactive_warning": "QR cá nhân này bị chặn khi nhân viên đang ở trạng thái không hoạt động.",
-      "customer_view_test": "Thử Giao Diện Khách Quét ›"
+      "customer_view_test": "Thử Giao Diện Khách Quét ›",
+      "subscription_payment_title": "Thanh toán gói",
+      "subscription_payment_subtitle": "Xác nhận nâng cấp trước khi thanh toán",
+      "subscription_payment_method_label": "Phương thức thanh toán",
+      "subscription_payment_methods_loading": "Đang tải phương thức thanh toán…",
+      "subscription_payment_methods_error": "Không thể tải số dư ví.",
+      "subscription_payment_methods_retry": "Thử tải lại phương thức thanh toán",
+      "subscription_invoice_summary": "Chi tiết hóa đơn",
+      "subscription_service_plan": "Gói dịch vụ:",
+      "subscription_total_due": "Tổng cộng:",
+      "subscription_confirm_payment": "Xác nhận thanh toán",
+      "subscription_payment_success": "Mua gói thành công.",
+      "subscription_price_note_month": "tháng"
     },
     "settings_panel": {
       "title": "Cấu Hình Hệ Thống Nexora",
@@ -2181,7 +2193,13 @@
     "contact_request_message_required": "Vui lòng mô tả sự cố trước khi gửi.",
     "contact_request_support_type_min_length": "Vui lòng chọn loại hỗ trợ.",
     "contact_request_support_type_required": "Vui lòng chọn loại hỗ trợ.",
-    "touchpoint_not_found_desc": "Không thể tải trạm này."
+    "touchpoint_not_found_desc": "Không thể tải trạm này.",
+    "subscription_already_on_paid_plan": "Bạn đã có một gói trả phí đang hoạt động.",
+    "subscription_plan_not_purchasable": "Gói này không hỗ trợ tự thanh toán.",
+    "subscription_insufficient_balance": "Số dư ví không đủ. Vui lòng nạp thêm tiền và thử lại.",
+    "subscription_payment_failed": "Thanh toán thất bại. Vui lòng thử lại hoặc chọn phương thức khác.",
+    "subscription_get_payment_methods_failed": "Không thể tải số dư ví. Vui lòng thử lại.",
+    "subscription_payment_method_not_accepted": "Phương thức thanh toán này không được hỗ trợ."
   },
   "components": {
     "common": {
@@ -4491,6 +4509,7 @@
     "title": "Tìm Gói Phù Hợp Nhất Cho Đội Ngũ Của Bạn",
     "subtitle": "Bắt đầu ngay với thẻ thanh toán Smart QR miễn phí và đánh giá tự động, sau đó mở rộng lên kênh hợp tác toàn diện.",
     "current_plan": "Gói hiện tại",
+    "price_note_months": "/ {{count}} tháng",
     "plans": {
       "lite": {
         "name": "Gói Lite (Miễn Phí)",
