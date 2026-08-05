@@ -1,6 +1,7 @@
-import React, { useEffect, useState } from 'react'
+import React, { useEffect, useMemo, useState } from 'react'
 import {
   Crown,
+  History,
   Layers3,
   MessageCircle,
   PhoneCall,
@@ -23,13 +24,24 @@ import {
   VoiceCreditActivityKind,
   VoiceCreditType,
   VoicePlanStatus,
+  VoicePlanTier,
   VOICE_CREDIT_TYPE_TO_PRODUCT,
-  hasJoinedVoicePlan,
   mapCreditsUsageHistoryFilterToCreditType,
   type VoiceUsageActivityDto,
 } from '../../../data/repositories/merchantVoice'
+import {
+  SubscriptionPackageType,
+  type SubscriptionPackage,
+  type SubscriptionPaymentMethod,
+} from '../../../data/repositories/subscriptionPayments'
+import {
+  useSubscriptionPackages,
+  useSubscriptionPurchaseHistory,
+} from '../../../data/hooks/useSubscriptionPayments'
+import { qk } from '../../../data/queryKeys'
 import { usePagination } from '../../../hooks/usePagination'
 import { getApiErrorCode } from '../../../types/domain'
+import { useQueryClient } from '@tanstack/react-query'
 import Pagination from '../../ui/Pagination'
 import {
   BOOKING_HUB_EMPTY_CELL,
@@ -37,8 +49,11 @@ import {
   formatBookingHubDateTimeParts,
 } from './bookingHubFormatters'
 import {
+  BookingBuyPackageSkeleton,
   BookingCreditsHistoryTableSkeleton,
   BookingCreditsUsageSkeleton,
+  BookingPackageHistorySkeleton,
+  BookingPackageHistoryTableSkeleton,
 } from './BookingHubSkeletons'
 import { useBookingHubVoiceEnabled } from './BookingHubVoiceContext'
 import BookingTrialModal from './BookingTrialModal'
@@ -46,29 +61,33 @@ import SmsBuyCreditsModal from './smsCampaigns/SmsBuyCreditsModal'
 import VoiceBuyCreditsModal from './voiceCredits/VoiceBuyCreditsModal'
 import PlanPaymentModal from './plans/PlanPaymentModal'
 import {
-  isPaidServicePlanId,
+  PACKAGE_HISTORY_STATUS_CLASS,
+  PACKAGE_HISTORY_STATUS_LABEL_KEY,
+  PAID_SERVICE_PLAN_ORDER,
+  PAID_SERVICE_PLAN_TITLE_KEY,
+  PLAN_FALLBACK_FEATURES,
+  PlansView,
   SERVICE_PLAN_MONTHLY_PRICE,
+  formatPackageHistoryAmount,
+  formatPackageHistoryPackageLabel,
+  formatPlanPrice,
+  indexVoiceAiPackagesByPlan,
+  isPaidServicePlanId,
+  resolvePackageHistoryDisplayAt,
   type PaidServicePlanId,
+  type VoiceAiCheckoutSelection,
 } from './plans/constants'
 import { useNotification } from '../../../contexts/NotificationContext'
-import {
-  SMS_CAMPAIGN_TK,
-  getSmsCreditNumberLocale,
-  getSmsCreditPaymentLabel,
-  type SmsCreditPaymentMock,
-} from './smsCampaigns/constants'
+import { getSmsCreditNumberLocale } from './smsCampaigns/constants'
 
 const CREDITS_HISTORY_PAGE_SIZE = 10
+const PACKAGE_HISTORY_SKELETON_ROWS = 5
 
 const TK = 'components.dashboard.views.BookingHubView.plans'
 
-type PlanId = 'Starter' | 'Pro' | 'Elite'
-type PlansView = 'package' | 'credits'
-
-const PLAN_BUTTON_LABEL_KEY: Record<PlanId, string> = {
-  Starter: 'selectStarter',
-  Pro: 'startTrial',
-  Elite: 'selectElite',
+const PLAN_BUTTON_LABEL_KEY: Record<PaidServicePlanId, string> = {
+  ...PAID_SERVICE_PLAN_TITLE_KEY,
+  [VoicePlanTier.Pro]: 'startTrial',
 }
 
 const HISTORY_FILTERS: { id: CreditsUsageHistoryFilter; labelKey: string }[] = [
@@ -94,7 +113,9 @@ const ACTIVITY_KIND_I18N_KEY: Record<VoiceCreditActivityKind, string> = {
 function PlanFeature({ included, children }: { included: boolean; children: React.ReactNode }) {
   return (
     <div className="plan-feature">
-      <span className={`plan-check ${included ? '' : 'muted'}`}>{included ? '✓' : '—'}</span>
+      <span className={`plan-check ${included ? '' : 'muted'}`}>
+        {included ? '✓' : BOOKING_HUB_EMPTY_CELL}
+      </span>
       <span>{children}</span>
     </div>
   )
@@ -109,6 +130,138 @@ function resolveActivityLabel(
     ACTIVITY_KIND_I18N_KEY[item.activityKind]
     ?? ACTIVITY_KIND_I18N_KEY[VoiceCreditActivityKind.Unknown]
   return t(`${CTK}.activity.${kindKey}`)
+}
+
+function PackageHistoryPanel() {
+  const { t, currentLanguage } = useTranslation()
+  const {
+    data: rows = [],
+    isLoading,
+    isFetching,
+    isError,
+    error,
+    refetch,
+  } = useSubscriptionPurchaseHistory()
+
+  const formatTerm = (months: number) => {
+    if (months === 1) return t(`${TK}.packageHistoryTermMonths`, { count: months })
+    return t(`${TK}.packageHistoryTermMonthsPlural`, { count: months })
+  }
+
+  const showSkeleton = isLoading && rows.length === 0
+  const showTableSkeleton = isFetching && rows.length === 0
+
+  if (showSkeleton) {
+    return <BookingPackageHistorySkeleton />
+  }
+
+  return (
+    <section
+      className="credits-history-section package-history-section"
+      aria-busy={isFetching}
+      aria-labelledby="plans-package-history-title"
+    >
+      <div className="credits-section-heading">
+        <div>
+          <span className="credits-kicker">{t(`${TK}.packageHistoryKicker`)}</span>
+          <h2 id="plans-package-history-title">{t(`${TK}.packageHistoryTitle`)}</h2>
+        </div>
+      </div>
+
+      <div className="credits-history-scroll">
+        <table className="credits-history-table package-history-plan-table">
+          <caption className="sr-only">{t(`${TK}.packageHistoryCaption`)}</caption>
+          <thead>
+            <tr>
+              <th scope="col">{t(`${TK}.packageHistoryColDate`)}</th>
+              <th scope="col">{t(`${TK}.packageHistoryColAmount`)}</th>
+              <th scope="col">{t(`${TK}.packageHistoryColPackage`)}</th>
+              <th scope="col">{t(`${TK}.packageHistoryColTerm`)}</th>
+              <th scope="col">{t(`${TK}.packageHistoryColValidUntil`)}</th>
+              <th scope="col">{t(`${TK}.packageHistoryColStatus`)}</th>
+              <th scope="col">{t(`${TK}.packageHistoryColTransaction`)}</th>
+            </tr>
+          </thead>
+          <tbody>
+            {showTableSkeleton ? (
+              <BookingPackageHistoryTableSkeleton rows={PACKAGE_HISTORY_SKELETON_ROWS} />
+            ) : isError && rows.length === 0 ? (
+              <tr>
+                <td className="booking-empty-cell" colSpan={7}>
+                  <div>{t(getErrorI18nKey(getApiErrorCode(error)))}</div>
+                  <button
+                    className="booking-mini-button"
+                    type="button"
+                    onClick={() => void refetch()}
+                  >
+                    {t(`${TK}.packageHistoryRetry`)}
+                  </button>
+                </td>
+              </tr>
+            ) : rows.length === 0 ? (
+              <tr>
+                <td className="booking-empty-cell" colSpan={7}>
+                  {t(`${TK}.packageHistoryEmpty`)}
+                </td>
+              </tr>
+            ) : (
+              rows.map((row) => {
+                const displayAt = resolvePackageHistoryDisplayAt(row)
+                const purchased = formatBookingHubDateTimeParts(displayAt, currentLanguage)
+                const validUntil = row.validUntil
+                  ? formatBookingHubDateTimeParts(row.validUntil, currentLanguage)?.date
+                    ?? BOOKING_HUB_EMPTY_CELL
+                  : BOOKING_HUB_EMPTY_CELL
+                const statusClass = PACKAGE_HISTORY_STATUS_CLASS[row.uiStatus]
+                const statusLabel = t(
+                  `${TK}.${PACKAGE_HISTORY_STATUS_LABEL_KEY[row.uiStatus]}`,
+                )
+                const packageLabel = formatPackageHistoryPackageLabel(
+                  row.planName,
+                  t(`${TK}.packageHistoryPackageBrand`),
+                )
+                return (
+                  <tr key={row.orderId || row.referenceId}>
+                    <td>
+                      <span className="credits-history-date">
+                        {purchased?.date ?? BOOKING_HUB_EMPTY_CELL}
+                        <small>{purchased?.time ?? BOOKING_HUB_EMPTY_CELL}</small>
+                      </span>
+                    </td>
+                    <td className="package-history-plan-amount">
+                      {formatPackageHistoryAmount(row.amount, row.currency)}
+                    </td>
+                    <td>
+                      <span className="credits-history-activity">
+                        <strong>{packageLabel}</strong>
+                        <small>{t(`${TK}.packageHistoryMonthlySub`)}</small>
+                      </span>
+                    </td>
+                    <td>
+                      <span className="credits-product-badge credits-product-badge-voice">
+                        {formatTerm(row.periodInMonths || 1)}
+                      </span>
+                    </td>
+                    <td>{validUntil}</td>
+                    <td>
+                      <span className={`package-history-status ${statusClass}`}>
+                        {statusLabel}
+                      </span>
+                    </td>
+                    <td>
+                      <span className="package-history-transaction">
+                        {row.referenceId || row.orderId || BOOKING_HUB_EMPTY_CELL}
+                      </span>
+                    </td>
+                  </tr>
+                )
+              })
+            )}
+          </tbody>
+        </table>
+      </div>
+    </section>
+  )
 }
 
 function CreditsUsagePanel() {
@@ -505,30 +658,97 @@ function CreditsUsagePanel() {
   )
 }
 
+function resolvePackageFeatures(
+  pkg: SubscriptionPackage | undefined,
+  language: string,
+): string[] {
+  if (!pkg) return []
+  const isVi = language.toLowerCase().startsWith('vi')
+  const primary = isVi ? pkg.featuresVi : pkg.featuresEn
+  const fallback = isVi ? pkg.featuresEn : pkg.featuresVi
+  if (primary.length > 0) return primary
+  return fallback
+}
+
+function FallbackPlanFeatures({
+  planId,
+  t,
+}: {
+  planId: PaidServicePlanId
+  t: (key: string) => string
+}) {
+  return (
+    <>
+      {PLAN_FALLBACK_FEATURES[planId].map((item) =>
+        item.kind === 'aio' ? (
+          <div className="plan-aio" key={item.key}>
+            {t(`${TK}.${item.key}`)}
+          </div>
+        ) : (
+          <PlanFeature key={item.key} included={item.included}>
+            {t(`${TK}.${item.key}`)}
+          </PlanFeature>
+        ),
+      )}
+    </>
+  )
+}
+
 export default function BookingPlansPanel() {
-  const { t } = useTranslation()
+  const { t, currentLanguage } = useTranslation()
   const { showToast } = useNotification()
+  const queryClient = useQueryClient()
   const voiceEnabled = useBookingHubVoiceEnabled()
   const { data: myTrialRequest, isLoading: isTrialRequestLoading } = useMyVoiceTrialRequest()
-  const { data: creditWallet, isSuccess: isCreditWalletReady } = useMerchantVoiceCreditWallet({
-    enabled: voiceEnabled,
-  })
-  const [selectedPlan, setSelectedPlan] = useState<PlanId | null>(null)
+  const [selectedPlan, setSelectedPlan] = useState<PaidServicePlanId | null>(null)
   const [trialOpen, setTrialOpen] = useState(false)
-  const [paymentPlan, setPaymentPlan] = useState<PaidServicePlanId | null>(null)
-  const [plansView, setPlansView] = useState<PlansView>('package')
+  const [checkoutSelection, setCheckoutSelection] = useState<VoiceAiCheckoutSelection | null>(null)
+  const [plansView, setPlansView] = useState<PlansView>(PlansView.Package)
+
+  const {
+    data: voicePackages = [],
+    isLoading: isPackagesLoading,
+    isFetching: isPackagesFetching,
+    isError: isPackagesError,
+    error: packagesError,
+    refetch: refetchPackages,
+  } = useSubscriptionPackages({
+    enabled: plansView === PlansView.Package,
+    packageType: SubscriptionPackageType.VoiceAI,
+    // No cache window — each Buy Package visit must hit the network.
+    staleTime: 0,
+    refetchOnMount: 'always',
+  })
+
+  const packagesByPlan = useMemo(
+    () => indexVoiceAiPackagesByPlan(voicePackages),
+    [voicePackages],
+  )
 
   const hasExistingTrialRequest = myTrialRequest != null
-  const showCreditUsageTab = isCreditWalletReady && hasJoinedVoicePlan(creditWallet)
+  // Hide Credit Usage when AI Hub only has Plans (no voice tenant).
+  const showCreditUsageTab = voiceEnabled
+  const showPackageSkeleton =
+    (isPackagesLoading || isPackagesFetching) && voicePackages.length === 0
+  const hasMappedPackages = Object.keys(packagesByPlan).length > 0
 
   useEffect(() => {
-    if (!showCreditUsageTab && plansView === 'credits') {
-      setPlansView('package')
+    if (!showCreditUsageTab && plansView === PlansView.Credits) {
+      setPlansView(PlansView.Package)
     }
   }, [showCreditUsageTab, plansView])
 
-  const getPlanButtonLabel = (plan: PlanId) => {
-    if (plan === 'Pro' && hasExistingTrialRequest) {
+  // Leaving Buy Package marks catalog stale/invalid so the next visit always re-calls
+  // GET .../packages?packageType=VoiceAI.
+  useEffect(() => {
+    if (plansView === PlansView.Package) return
+    void queryClient.invalidateQueries({
+      queryKey: qk.merchantSubscriptionPackages(SubscriptionPackageType.VoiceAI),
+    })
+  }, [plansView, queryClient])
+
+  const getPlanButtonLabel = (plan: PaidServicePlanId) => {
+    if (plan === VoicePlanTier.Pro && hasExistingTrialRequest) {
       return t(`${TK}.trialRequestSubmitted`)
     }
     if (selectedPlan === plan) {
@@ -537,159 +757,207 @@ export default function BookingPlansPanel() {
     return t(`${TK}.${PLAN_BUTTON_LABEL_KEY[plan]}`)
   }
 
-  const isPlanButtonPrimary = (plan: PlanId) => {
+  const isPlanButtonPrimary = (plan: PaidServicePlanId) => {
     if (selectedPlan) return selectedPlan === plan
-    return plan === 'Pro'
+    return plan === VoicePlanTier.Pro
   }
 
-  const handlePlanClick = (plan: PlanId) => {
-    // Match HTML: Pro opens trial modal; Starter/Elite open payment checkout.
-    if (plan === 'Pro') {
-      if (hasExistingTrialRequest || isTrialRequestLoading) return
-      setTrialOpen(true)
+  const handleTrialClick = () => {
+    if (hasExistingTrialRequest || isTrialRequestLoading) return
+    setTrialOpen(true)
+  }
+
+  const openCheckoutForPlan = (plan: PaidServicePlanId) => {
+    if (!isPaidServicePlanId(plan)) return
+    const pkg = packagesByPlan[plan]
+    if (!pkg?.id) {
+      showToast(t(`${TK}.planPackageUnavailable`), 'error')
       return
     }
-    if (isPaidServicePlanId(plan)) {
-      setPaymentPlan(plan)
-    }
+    setCheckoutSelection({
+      planId: plan,
+      packageId: pkg.id,
+      packageCode: pkg.packageCode,
+      name: pkg.name || plan,
+      price: pkg.price ?? SERVICE_PLAN_MONTHLY_PRICE[plan],
+    })
   }
 
-  const handlePlanPaymentConfirm = (
-    plan: PaidServicePlanId,
-    payment: SmsCreditPaymentMock,
+  const handleBuyPlanClick = (plan: PaidServicePlanId) => {
+    openCheckoutForPlan(plan)
+  }
+
+  const handlePlanClick = (plan: PaidServicePlanId) => {
+    // Match HTML: Starter/Elite open payment; Pro trial is a separate CTA.
+    if (plan === VoicePlanTier.Pro) {
+      handleTrialClick()
+      return
+    }
+    handleBuyPlanClick(plan)
+  }
+
+  const handlePlanPaymentSuccess = (
+    selection: VoiceAiCheckoutSelection,
+    payment: SubscriptionPaymentMethod,
   ) => {
-    const price = SERVICE_PLAN_MONTHLY_PRICE[plan]
-    const paymentLabel = getSmsCreditPaymentLabel(
-      payment,
-      t(`${SMS_CAMPAIGN_TK}.cardMethodLabel`),
-    )
-    setSelectedPlan(plan)
-    setPaymentPlan(null)
+    const paymentLabel = payment.name || payment.symbol
+    setSelectedPlan(selection.planId)
+    setCheckoutSelection(null)
     showToast(
       t(`${TK}.planPaymentSuccess`, {
-        plan,
-        price,
+        plan: selection.planId,
+        price: selection.price,
         payment: paymentLabel,
       }),
       'success',
     )
   }
 
+  const renderPlanFeatures = (planId: PaidServicePlanId, pkg?: SubscriptionPackage) => {
+    const features = resolvePackageFeatures(pkg, currentLanguage)
+    if (features.length === 0) {
+      return <FallbackPlanFeatures planId={planId} t={t} />
+    }
+    return features.map((feature) => (
+      <PlanFeature key={feature} included>
+        {feature}
+      </PlanFeature>
+    ))
+  }
+
+  const renderPlanPrice = (planId: PaidServicePlanId, pkg?: SubscriptionPackage) => {
+    const price = pkg?.price ?? SERVICE_PLAN_MONTHLY_PRICE[planId]
+    const original = pkg?.originalPrice
+    return (
+      <>
+        <div className="service-plan-price">
+          {formatPlanPrice(price)}
+          <span>{t(`${TK}.perMonth`)}</span>
+        </div>
+        {original != null && original > price ? (
+          <div className="service-plan-cross">{formatPlanPrice(original)}</div>
+        ) : null}
+      </>
+    )
+  }
+
   return (
     <>
       <div className="plans-panel-shell">
-        {showCreditUsageTab ? (
-          <div className="booking-view-switch" role="group" aria-label={t(`${TK}.viewMode`)}>
+        <div className="booking-view-switch" role="group" aria-label={t(`${TK}.viewMode`)}>
+          <button
+            className={`booking-view-button${plansView === PlansView.Package ? ' is-active' : ''}`}
+            type="button"
+            aria-pressed={plansView === PlansView.Package}
+            onClick={() => setPlansView(PlansView.Package)}
+          >
+            <ShoppingBag aria-hidden="true" />
+            {t(`${TK}.buyPackage`)}
+          </button>
+          {showCreditUsageTab ? (
             <button
-              className={`booking-view-button${plansView === 'package' ? ' is-active' : ''}`}
+              className={`booking-view-button${plansView === PlansView.Credits ? ' is-active' : ''}`}
               type="button"
-              aria-pressed={plansView === 'package'}
-              onClick={() => setPlansView('package')}
-            >
-              <ShoppingBag aria-hidden="true" />
-              {t(`${TK}.buyPackage`)}
-            </button>
-            <button
-              className={`booking-view-button${plansView === 'credits' ? ' is-active' : ''}`}
-              type="button"
-              aria-pressed={plansView === 'credits'}
-              onClick={() => setPlansView('credits')}
+              aria-pressed={plansView === PlansView.Credits}
+              onClick={() => setPlansView(PlansView.Credits)}
             >
               <Wallet aria-hidden="true" />
               {t(`${TK}.creditUsage`)}
             </button>
-          </div>
-        ) : null}
+          ) : null}
+          <button
+            className={`booking-view-button${plansView === PlansView.History ? ' is-active' : ''}`}
+            type="button"
+            aria-pressed={plansView === PlansView.History}
+            onClick={() => setPlansView(PlansView.History)}
+          >
+            <History aria-hidden="true" />
+            {t(`${TK}.packageHistory`)}
+          </button>
+        </div>
 
-        {plansView === 'credits' && showCreditUsageTab ? (
+        {plansView === PlansView.Credits && showCreditUsageTab ? (
           <CreditsUsagePanel />
+        ) : plansView === PlansView.History ? (
+          <PackageHistoryPanel />
+        ) : showPackageSkeleton ? (
+          <BookingBuyPackageSkeleton />
+        ) : isPackagesError && !hasMappedPackages ? (
+          <div className="plans-stack">
+            <div className="booking-empty-cell">
+              <div>{t(getErrorI18nKey(getApiErrorCode(packagesError)))}</div>
+              <button
+                className="booking-mini-button"
+                type="button"
+                onClick={() => void refetchPackages()}
+              >
+                {t(`${TK}.buyPackageRetry`)}
+              </button>
+            </div>
+          </div>
+        ) : !hasMappedPackages ? (
+          <div className="plans-stack">
+            <div className="booking-empty-cell">{t(`${TK}.buyPackageEmpty`)}</div>
+          </div>
         ) : (
           <div className="plans-stack">
             <div className="plans-hero">{t(`${TK}.hero`)}</div>
 
             <div className="plans-grid">
-              <article
-                className={`service-plan-card ${selectedPlan === 'Starter' ? 'is-selected' : ''}`}
-                data-plan-card="starter"
-              >
-                <div className="plan-rec" aria-hidden="true" />
-                <div className="service-plan-name">Starter</div>
-                <div className="service-plan-price">
-                  $99
-                  <span>{t(`${TK}.perMonth`)}</span>
-                </div>
-                <div className="service-plan-cross">{t(`${TK}.crossPriceStarter`)}</div>
-                <div className="plan-features">
-                  <PlanFeature included>{t(`${TK}.featVoice247`)}</PlanFeature>
-                  <PlanFeature included>{t(`${TK}.featMissedCallSms`)}</PlanFeature>
-                  <PlanFeature included>{t(`${TK}.featStarterUsage`)}</PlanFeature>
-                  <PlanFeature included={false}>{t(`${TK}.dashboardInPro`)}</PlanFeature>
-                  <PlanFeature included={false}>{t(`${TK}.googleReviewInPro`)}</PlanFeature>
-                </div>
-                <button
-                  className={`plan-select-button ${isPlanButtonPrimary('Starter') ? 'is-primary' : ''}`}
-                  type="button"
-                  onClick={() => handlePlanClick('Starter')}
-                >
-                  {getPlanButtonLabel('Starter')}
-                </button>
-              </article>
-
-              <article
-                className={`service-plan-card is-recommended ${selectedPlan === 'Pro' ? 'is-selected' : ''}`}
-                data-plan-card="pro"
-              >
-                <div className="plan-rec">{t(`${TK}.recommended`)}</div>
-                <div className="service-plan-name">Pro</div>
-                <div className="service-plan-price">
-                  $199
-                  <span>{t(`${TK}.perMonth`)}</span>
-                </div>
-                <div className="service-plan-cross">{t(`${TK}.crossPricePro`)}</div>
-                <div className="plan-features">
-                  <PlanFeature included>{t(`${TK}.featVoiceSmsCampaigns`)}</PlanFeature>
-                  <PlanFeature included>{t(`${TK}.featOwnerDashboard`)}</PlanFeature>
-                  <PlanFeature included>{t(`${TK}.featAutoGoogleReview`)}</PlanFeature>
-                  <PlanFeature included>{t(`${TK}.landingPagesAiDesign`)}</PlanFeature>
-                  <PlanFeature included>{t(`${TK}.featProUsage`)}</PlanFeature>
-                  <div className="plan-aio">{t(`${TK}.aioEngine`)}</div>
-                </div>
-                <button
-                  className={`plan-select-button ${isPlanButtonPrimary('Pro') ? 'is-primary' : ''}`}
-                  type="button"
-                  disabled={hasExistingTrialRequest || isTrialRequestLoading}
-                  onClick={() => handlePlanClick('Pro')}
-                >
-                  {getPlanButtonLabel('Pro')}
-                </button>
-              </article>
-
-              <article
-                className={`service-plan-card ${selectedPlan === 'Elite' ? 'is-selected' : ''}`}
-                data-plan-card="elite"
-              >
-                <div className="plan-rec" aria-hidden="true" />
-                <div className="service-plan-name">Elite</div>
-                <div className="service-plan-price">
-                  $349
-                  <span>{t(`${TK}.perMonth`)}</span>
-                </div>
-                <div className="service-plan-cross">{t(`${TK}.crossPriceElite`)}</div>
-                <div className="plan-features">
-                  <PlanFeature included>{t(`${TK}.everythingInPro`)}</PlanFeature>
-                  <div className="plan-aio">{t(`${TK}.aioMax`)}</div>
-                  <PlanFeature included>{t(`${TK}.featStaffDashboardTaxIq`)}</PlanFeature>
-                  <PlanFeature included>{t(`${TK}.eliteUsage`)}</PlanFeature>
-                  <PlanFeature included>{t(`${TK}.emailMarketingWinback`)}</PlanFeature>
-                </div>
-                <button
-                  className={`plan-select-button ${isPlanButtonPrimary('Elite') ? 'is-primary' : ''}`}
-                  type="button"
-                  onClick={() => handlePlanClick('Elite')}
-                >
-                  {getPlanButtonLabel('Elite')}
-                </button>
-              </article>
+              {PAID_SERVICE_PLAN_ORDER.map((planId) => {
+                const pkg = packagesByPlan[planId]
+                if (!pkg) return null
+                const isPro = planId === VoicePlanTier.Pro
+                return (
+                  <article
+                    key={pkg.id || planId}
+                    className={[
+                      'service-plan-card',
+                      isPro ? 'is-recommended' : '',
+                      selectedPlan === planId ? 'is-selected' : '',
+                    ]
+                      .filter(Boolean)
+                      .join(' ')}
+                    data-plan-card={planId.toLowerCase()}
+                  >
+                    <div className="plan-rec" aria-hidden={!isPro}>
+                      {isPro ? t(`${TK}.recommended`) : null}
+                    </div>
+                    <div className="service-plan-name">{pkg.name || planId}</div>
+                    {renderPlanPrice(planId, pkg)}
+                    <div className="plan-features">{renderPlanFeatures(planId, pkg)}</div>
+                    {isPro ? (
+                      <div className="plan-action-stack">
+                        <button
+                          className={`plan-select-button ${isPlanButtonPrimary(VoicePlanTier.Pro) ? 'is-primary' : ''}`}
+                          type="button"
+                          disabled={hasExistingTrialRequest || isTrialRequestLoading}
+                          onClick={handleTrialClick}
+                        >
+                          {getPlanButtonLabel(VoicePlanTier.Pro)}
+                        </button>
+                        <button
+                          className="plan-select-button plan-buy-button"
+                          type="button"
+                          onClick={() => handleBuyPlanClick(VoicePlanTier.Pro)}
+                        >
+                          {selectedPlan === VoicePlanTier.Pro
+                            ? t(`${TK}.planSelected`, { plan: VoicePlanTier.Pro })
+                            : t(`${TK}.selectPro`)}
+                        </button>
+                      </div>
+                    ) : (
+                      <button
+                        className={`plan-select-button ${isPlanButtonPrimary(planId) ? 'is-primary' : ''}`}
+                        type="button"
+                        onClick={() => handlePlanClick(planId)}
+                      >
+                        {getPlanButtonLabel(planId)}
+                      </button>
+                    )}
+                  </article>
+                )
+              })}
             </div>
 
             <article className="roi-panel">
@@ -703,7 +971,9 @@ export default function BookingPlansPanel() {
                   <div className="roi-label">{t(`${TK}.lostPerMonth`)}</div>
                 </div>
                 <div className="roi-metric is-cost">
-                  <div className="roi-value">$199</div>
+                  <div className="roi-value">
+                    {formatPlanPrice(packagesByPlan[VoicePlanTier.Pro]?.price ?? SERVICE_PLAN_MONTHLY_PRICE[VoicePlanTier.Pro])}
+                  </div>
                   <div className="roi-label">{t(`${TK}.nexoraCost`)}</div>
                 </div>
                 <div className="roi-metric is-gain">
@@ -724,9 +994,7 @@ export default function BookingPlansPanel() {
               </div>
               <div className="guarantee-grid">
                 <div>✓ {t(`${TK}.pilotFree`)}</div>
-                <div>✓ {t(`${TK}.noCreditCard`)}</div>
                 <div>✓ {t(`${TK}.setup24h`)}</div>
-                <div>✓ {t(`${TK}.cancelAnytime`)}</div>
               </div>
             </article>
           </div>
@@ -737,10 +1005,10 @@ export default function BookingPlansPanel() {
       {/* Class (not id) — CreditsUsageView already owns `#nx-campaign-root` when mounted. */}
       <div className="nx-campaign-root">
         <PlanPaymentModal
-          open={paymentPlan != null}
-          plan={paymentPlan}
-          onClose={() => setPaymentPlan(null)}
-          onConfirm={handlePlanPaymentConfirm}
+          open={checkoutSelection != null}
+          selection={checkoutSelection}
+          onClose={() => setCheckoutSelection(null)}
+          onSuccess={handlePlanPaymentSuccess}
         />
       </div>
     </>

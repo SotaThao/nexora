@@ -500,6 +500,156 @@ export function BookingCreditsHistoryTableSkeleton({ rows = 5 }: { rows?: number
   )
 }
 
+/** Skeleton rows for Package History (7 columns — matches HTML table). */
+export function BookingPackageHistoryTableSkeleton({ rows = 5 }: { rows?: number }) {
+  return (
+    <>
+      {Array.from({ length: rows }).map((_, rowIndex) => (
+        <tr key={rowIndex} className="booking-skeleton-row" aria-hidden="true">
+          <td>
+            <BookingSkeletonStack>
+              <Skeleton width="72%" height={14} borderRadius={6} />
+              <Skeleton width="48%" height={11} borderRadius={6} />
+            </BookingSkeletonStack>
+          </td>
+          <td>
+            <Skeleton width={72} height={14} borderRadius={6} />
+          </td>
+          <td>
+            <BookingSkeletonStack>
+              <Skeleton width="70%" height={14} borderRadius={6} />
+              <Skeleton width="45%" height={11} borderRadius={6} />
+            </BookingSkeletonStack>
+          </td>
+          <td>
+            <Skeleton width={72} height={22} borderRadius={999} />
+          </td>
+          <td>
+            <Skeleton width={88} height={14} borderRadius={6} />
+          </td>
+          <td>
+            <Skeleton width={64} height={22} borderRadius={999} />
+          </td>
+          <td>
+            <Skeleton width={120} height={22} borderRadius={6} />
+          </td>
+        </tr>
+      ))}
+    </>
+  )
+}
+
+export function BookingPackageHistorySkeleton() {
+  const { t } = useTranslation()
+
+  return (
+    <section
+      className="credits-history-section package-history-section"
+      aria-busy="true"
+      aria-label={t('components.dashboard.views.BookingHubView.plans.packageHistoryLoadingAria')}
+    >
+      <div className="credits-section-heading">
+        <BookingSkeletonStack>
+          <Skeleton width={64} height={11} borderRadius={6} />
+          <Skeleton width={160} height={18} borderRadius={6} />
+        </BookingSkeletonStack>
+      </div>
+
+      <div className="credits-history-scroll">
+        <table className="credits-history-table package-history-plan-table">
+          <thead>
+            <tr>
+              {Array.from({ length: 7 }).map((_, index) => (
+                <th key={index} scope="col">
+                  <Skeleton width={index === 2 ? 96 : 64} height={11} borderRadius={4} />
+                </th>
+              ))}
+            </tr>
+          </thead>
+          <tbody>
+            <BookingPackageHistoryTableSkeleton rows={5} />
+          </tbody>
+        </table>
+      </div>
+    </section>
+  )
+}
+
+/** Skeleton for Buy Package catalog (3 plan cards). */
+export function BookingBuyPackageSkeleton() {
+  const { t } = useTranslation()
+
+  return (
+    <div
+      className="plans-stack"
+      aria-busy="true"
+      aria-label={t('components.dashboard.views.BookingHubView.plans.buyPackageLoadingAria')}
+    >
+      <div className="plans-hero">
+        <Skeleton width="72%" height={18} borderRadius={6} />
+      </div>
+      <div className="plans-grid">
+        {[0, 1, 2].map((key) => (
+          <article className="service-plan-card booking-skeleton-card" key={key} aria-hidden="true">
+            <BookingSkeletonStack>
+              <Skeleton width={88} height={14} borderRadius={6} />
+              <Skeleton width={96} height={28} borderRadius={8} />
+              <Skeleton width={72} height={12} borderRadius={6} />
+              <Skeleton width="100%" height={12} borderRadius={6} />
+              <Skeleton width="92%" height={12} borderRadius={6} />
+              <Skeleton width="86%" height={12} borderRadius={6} />
+              <Skeleton width="100%" height={40} borderRadius={10} />
+            </BookingSkeletonStack>
+          </article>
+        ))}
+      </div>
+      <article className="roi-panel booking-skeleton-card" aria-hidden="true">
+        <BookingSkeletonStack>
+          <Skeleton width={120} height={16} borderRadius={6} />
+          <Skeleton width="100%" height={64} borderRadius={8} />
+        </BookingSkeletonStack>
+      </article>
+      <article className="guarantee-panel booking-skeleton-card" aria-hidden="true">
+        <BookingSkeletonStack>
+          <Skeleton width={140} height={16} borderRadius={6} />
+          <Skeleton width="80%" height={20} borderRadius={6} />
+        </BookingSkeletonStack>
+      </article>
+    </div>
+  )
+}
+
+/** Skeleton rows for wallet payment methods inside plan checkout modal. */
+export function PlanPaymentMethodsSkeleton({ rows = 3 }: { rows?: number }) {
+  const { t } = useTranslation()
+
+  return (
+    <div
+      className="sms-credit-payment-list plan-payment-methods-skeleton"
+      aria-busy="true"
+      aria-label={t('components.dashboard.views.BookingHubView.plans.planPaymentMethodsLoadingAria')}
+    >
+      {Array.from({ length: rows }).map((_, index) => (
+        <div
+          key={index}
+          className="sms-credit-payment plan-payment-method-skeleton-row"
+          aria-hidden="true"
+        >
+          <span className="sms-credit-payment-main">
+            <Skeleton width={18} height={18} borderRadius={999} />
+            <Skeleton width={28} height={28} borderRadius={999} />
+            <Skeleton width={96} height={14} borderRadius={6} />
+          </span>
+          <span className="sms-credit-payment-balance">
+            <Skeleton width={48} height={10} borderRadius={4} />
+            <Skeleton width={64} height={14} borderRadius={6} />
+          </span>
+        </div>
+      ))}
+    </div>
+  )
+}
+
 export function BookingCreditsUsageSkeleton() {
   const { t } = useTranslation()
 

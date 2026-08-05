@@ -41,7 +41,7 @@ function ManagePlanView({ currentPlanId = null, onSelectPlan, packages }: Manage
   const { t, currentLanguage } = useTranslation()
   const isVietnamese = currentLanguage === 'vi'
 
-  const normalizedCurrent = (currentPlanId || '').toLowerCase()
+  const normalizedCurrent = String(currentPlanId ?? '').toLowerCase()
 
   return (
     <div className="relative">
@@ -68,7 +68,9 @@ function ManagePlanView({ currentPlanId = null, onSelectPlan, packages }: Manage
       <div className="relative mx-auto mt-12 grid max-w-5xl grid-cols-1 gap-5 px-1 pb-4 md:grid-cols-3 xl:items-stretch">
         {PLAN_CONFIG.map((plan) => {
           const base = `manage_plan.plans.${plan.id}`
-          const pkg = packages?.find((p) => p.plan.toLowerCase() === plan.id)
+          const pkg = packages?.find(
+            (p) => (p.plan ?? '').toLowerCase() === plan.id,
+          )
           const pkgFeatures = isVietnamese ? pkg?.featuresVi : pkg?.featuresEn
           const features = pkgFeatures?.length
             ? pkgFeatures
