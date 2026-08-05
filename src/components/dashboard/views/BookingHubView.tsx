@@ -1,21 +1,25 @@
 import React, { useEffect, useState } from 'react'
 import { useQueryClient } from '@tanstack/react-query'
-import { useSearchParams } from 'react-router-dom'
+import { Link, useSearchParams } from 'react-router-dom'
+import { ArrowUpRight } from 'lucide-react'
 import { useTranslation } from '../../../contexts/LanguageContext'
 import { useMerchantVoiceTenantStatus } from '../../../data/hooks/useMerchantVoiceBookings'
 import BookingTodayPanel from './BookingTodayPanel'
 import BookingCustomersPanel from './BookingCustomersPanel'
 import BookingCallLogPanel from './BookingCallLogPanel'
 import BookingSmsCampaignsPanel from './smsCampaigns/BookingSmsCampaignsPanel'
+import BookingQrCodesPanel from './qrCodes/BookingQrCodesPanel'
 import BookingPlansPanel from './BookingPlansPanel'
 import BookingSettingsPanel from './BookingSettingsPanel'
 import { BookingHubVoiceProvider } from './BookingHubVoiceContext'
 import {
   CalendarEventIcon,
   CalendarTabIcon,
+  JournalIcon,
   MessageSquareTabIcon,
   PeopleTabIcon,
   PhoneTabIcon,
+  QrCodeIcon,
   SlidersTabIcon,
   TagsTabIcon,
 } from './BookingHubIcons'
@@ -30,6 +34,7 @@ import {
   parseBookingHubSubTab,
 } from '../../../data/repositories/merchantVoice'
 import {
+  BOOKING_HUB_SETUP_GUIDE_PATH,
   getDefaultBookingHubTab,
   isBookingHubMainTabAllowed,
 } from '../constants'
@@ -136,6 +141,15 @@ export default function BookingHubView() {
       <div className="page-heading">
         <h1 className="page-title hidden sm:block">{t(`${TK}.title`)}</h1>
         <p className="page-description !mt-0 sm:!mt-2">{t(`${TK}.description`)}</p>
+        <Link
+          className="page-guide-link"
+          to={BOOKING_HUB_SETUP_GUIDE_PATH}
+          aria-label={t(`${TK}.setupGuideAria`)}
+        >
+          <JournalIcon />
+          <span>{t(`${TK}.setupGuide`)}</span>
+          <ArrowUpRight aria-hidden="true" />
+        </Link>
         {isTenantStatusLoading ? (
           <BookingHubTabsSkeleton />
         ) : (
@@ -186,6 +200,18 @@ export default function BookingHubView() {
               >
                 <span className="page-tab-icon"><MessageSquareTabIcon /></span>
                 <span>{t(`${TK}.tabs.smsCampaigns`)}</span>
+              </button>
+            )}
+            {hasVoiceTenant && (
+              <button
+                className={`page-tab ${activeMainTab === BookingHubMainTab.QrCodes ? 'is-active' : ''}`}
+                type="button"
+                role="tab"
+                aria-selected={activeMainTab === BookingHubMainTab.QrCodes}
+                onClick={() => updateQueryTabs(BookingHubMainTab.QrCodes)}
+              >
+                <span className="page-tab-icon"><QrCodeIcon /></span>
+                <span>{t(`${TK}.tabs.qrCodes`)}</span>
               </button>
             )}
             <button
@@ -272,6 +298,16 @@ export default function BookingHubView() {
           aria-label={t(`${TK}.ariaSmsCampaignsPanel`)}
         >
           <BookingSmsCampaignsPanel />
+        </section>
+      )}
+
+      {!isTenantStatusLoading && voiceFeaturesEnabled && activeMainTab === BookingHubMainTab.QrCodes && (
+        <section
+          className="tab-panel is-active"
+          id="panel-qr-codes-wrap"
+          aria-label={t(`${TK}.ariaQrCodesPanel`)}
+        >
+          <BookingQrCodesPanel />
         </section>
       )}
 

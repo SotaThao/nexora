@@ -3,6 +3,7 @@ import { getApiErrorCode } from '../../types/domain'
 import { qk } from '../queryKeys'
 import {
   VoiceLeadSource,
+  toPublicBookingApiPhone,
   type CreateOnlineBookingRequest,
   type PublicBookingCreateResult,
   type PublicBookingPageData,
@@ -11,12 +12,14 @@ import publicVoiceBookingRepository from '../repositories/publicVoiceBooking'
 
 export function usePublicBookingPageData(
   businessKey?: string | null,
+  phone?: string | null,
   { enabled = true }: { enabled?: boolean } = {},
 ) {
   const key = String(businessKey ?? '').trim()
+  const phoneParam = toPublicBookingApiPhone(phone) || null
   return useQuery<PublicBookingPageData>({
-    queryKey: qk.publicVoiceBookingPage(key),
-    queryFn: () => publicVoiceBookingRepository.getBookingPageData(key),
+    queryKey: qk.publicVoiceBookingPage(key, phoneParam),
+    queryFn: () => publicVoiceBookingRepository.getBookingPageData(key, phoneParam),
     enabled: enabled && Boolean(key),
     retry: false,
     staleTime: 60_000,

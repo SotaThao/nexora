@@ -1,6 +1,7 @@
 import React from 'react'
-import { Navigate, Outlet } from 'react-router-dom'
+import { Navigate, Outlet, useLocation } from 'react-router-dom'
 import { useAuth } from '../auth/useAuth'
+import { isStaffSession } from '../components/homepage/utils/sessionRouting'
 import LoadingScreen from './LoadingScreen'
 
 export default function RequireAuth({
@@ -11,22 +12,24 @@ export default function RequireAuth({
   children?: React.ReactNode
 }) {
   const { session, status } = useAuth()
+  const location = useLocation()
 
   if (status === 'loading') {
     return <LoadingScreen />
   }
 
   if (status !== 'authenticated' || !session) {
-    return <Navigate to="/login" replace />
+    const returnPath = `${location.pathname}${location.search}${location.hash}`
+    return <Navigate to={`/login?returnPath=${encodeURIComponent(returnPath)}`} replace />
   }
 
-  const isStaffSession = session.flag === '!personal' || session.role === 'personal' || session.role === 'staff'
+  const isStaff = isStaffSession(session)
 
-  if (role === 'owner' && isStaffSession) {
+  if (role === 'owner' && isStaff) {
     return <Navigate to="/staff" replace />
   }
 
-  if (role === 'staff' && !isStaffSession) {
+  if (role === 'staff' && !isStaff) {
     return <Navigate to="/dashboard" replace />
   }
 

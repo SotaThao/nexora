@@ -13,6 +13,7 @@ import { useAuth } from "../auth/useAuth";
 import {
   AnalyticsRoute,
   BookingHubRoute,
+  AiVoiceSetupGuideRoute,
   FallbackRoute,
   OverviewRoute,
   ProductManagementRoute,
@@ -289,6 +290,7 @@ export default function AppRouter() {
             <Route path={`${DASHBOARD_MENU_ID.payments}/:paymentId`} element={<PaymentsRedirect />} />
             <Route path={DASHBOARD_MENU_ID.reviews} element={<ReviewsRoute />} />
             <Route path={DASHBOARD_MENU_ID.reports} element={<ReportsRoute />} />
+            <Route path={`${DASHBOARD_MENU_ID.bookingHub}/setup-guide`} element={<AiVoiceSetupGuideRoute />} />
             <Route path={DASHBOARD_MENU_ID.bookingHub} element={<BookingHubRoute />} />
             <Route path={BOOKING_HUB_LEGACY_PATH_SEGMENT} element={<BookingHubLegacyRedirect />} />
             <Route path={DASHBOARD_MENU_ID.taxiq} element={<TaxIqOverviewRoute />} />

@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react'
-import { ChevronDown, Search, X } from 'lucide-react'
+import { ChevronDown, FolderOpen, Search, X } from 'lucide-react'
 import { useParams, useSearchParams } from 'react-router-dom'
 import { useNotification } from '../../../contexts/NotificationContext'
 import {
@@ -31,6 +31,7 @@ import {
   bookingLocaleFromLang,
   buildCreateBookingBody,
   createDefaultBookingState,
+  customerFromBookingPageData,
   formatBookingSlot,
   formatCustomerPhoneDisplay,
   formatServiceChoicePrice,
@@ -38,6 +39,7 @@ import {
   moneyFromCents,
   parseBookingTime,
   readBookingCustomerPrefill,
+  readBookingLookupPhone,
   resolveBookingFieldErrors,
   resolveBookingServiceNames,
   selectedServiceChipLabel,
@@ -102,7 +104,12 @@ export default function PublicBookingPage() {
   const locale = useMemo(() => bookingLocaleFromLang(lang), [lang])
   const { showToast } = useNotification()
 
-  const pageQuery = usePublicBookingPageData(businessKey, {
+  const lookupPhone = useMemo(
+    () => readBookingLookupPhone(searchParams),
+    [searchParams],
+  )
+
+  const pageQuery = usePublicBookingPageData(businessKey, lookupPhone, {
     enabled: Boolean(businessKey),
   })
   const createMutation = useCreatePublicOnlineBooking()
@@ -155,14 +162,15 @@ export default function PublicBookingPage() {
     ]
   }, [catalog.categories, catalog.services, copy.otherCategoryName])
 
-  // Open all categories by default when the catalog first loads / changes.
+  // Open only the first category by default when the catalog first loads / changes.
   const categoryIdsKey = serviceCategories.map((category) => category.id).join('|')
   useEffect(() => {
     if (!categoryIdsKey) {
       setOpenCategoryIds(new Set())
       return
     }
-    setOpenCategoryIds(new Set(categoryIdsKey.split('|')))
+    const firstId = categoryIdsKey.split('|')[0]
+    setOpenCategoryIds(new Set(firstId ? [firstId] : []))
   }, [categoryIdsKey])
 
   const serviceSearchNeedle = serviceSearchQuery.trim()
@@ -205,7 +213,10 @@ export default function PublicBookingPage() {
   }
 
   // Apply SMS / deep-link prefill when query values change (new preview link).
-  const prefillPhoneRaw = searchParams.get(PUBLIC_BOOKING_ROUTE.phoneQuery) || ''
+  const prefillPhoneRaw =
+    searchParams.get(PUBLIC_BOOKING_ROUTE.phoneQuery) ||
+    searchParams.get(PUBLIC_BOOKING_ROUTE.profilePhoneQuery) ||
+    ''
   const prefillNameRaw = searchParams.get(PUBLIC_BOOKING_ROUTE.nameQuery) || ''
   useEffect(() => {
     const prefill = readBookingCustomerPrefill(searchParams)
@@ -218,6 +229,19 @@ export default function PublicBookingPage() {
       },
     }))
   }, [prefillPhoneRaw, prefillNameRaw, searchParams])
+
+  // When API recognises an active customer for ?phone=, prefer that name/phone.
+  useEffect(() => {
+    const recognised = customerFromBookingPageData(pageData?.customer)
+    if (!recognised) return
+    setState((prev) => ({
+      ...prev,
+      customer: {
+        phone: recognised.phone || prev.customer.phone,
+        name: recognised.name || prev.customer.name,
+      },
+    }))
+  }, [pageData?.customer])
 
   useEffect(() => {
     document.title = `${copy.documentTitleSuffix} · ${businessName || copy.documentTitleSuffix}`
@@ -605,6 +629,10 @@ export default function PublicBookingPage() {
                           aria-controls={panelId}
                           onClick={() => toggleCategory(category.id)}
                         >
+                          <FolderOpen
+                            className="service-category-icon"
+                            aria-hidden="true"
+                          />
                           <span
                             className="service-category-name"
                             data-service-category-name

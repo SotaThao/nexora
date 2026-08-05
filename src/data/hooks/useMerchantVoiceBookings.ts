@@ -34,6 +34,9 @@ import {
   type MerchantVoiceStaffResponse,
   type MerchantVoiceTenantDto,
   type MerchantVoiceTenantStatusDto,
+  type VoiceCreditWalletDto,
+  type MerchantVoiceUsageActivityFilter,
+  type MerchantVoiceUsageActivityResponse,
 } from '../repositories/merchantVoice'
 
 const EMPTY_FILTERS: MerchantVoiceBookingsFilter = {}
@@ -383,6 +386,29 @@ export function useUpdateMerchantVoiceCustomer() {
     onSuccess: () => {
       invalidateMerchantVoiceCustomers(queryClient)
     },
+  })
+}
+
+const EMPTY_USAGE_ACTIVITY_FILTERS: MerchantVoiceUsageActivityFilter = {}
+
+/** GET `/api/v1/merchant/nexora-voice/credits` */
+export function useMerchantVoiceCreditWallet({ enabled = true } = {}) {
+  return useQuery<VoiceCreditWalletDto>({
+    queryKey: qk.merchantVoiceCreditWallet(),
+    queryFn: () => merchantVoiceRepository.getCreditWallet(),
+    enabled,
+  })
+}
+
+/** GET `/api/v1/merchant/nexora-voice/usage/activity` */
+export function useMerchantVoiceUsageActivity(
+  filters: MerchantVoiceUsageActivityFilter = EMPTY_USAGE_ACTIVITY_FILTERS,
+  { enabled = true } = {},
+) {
+  return useQuery<MerchantVoiceUsageActivityResponse>({
+    queryKey: qk.merchantVoiceUsageActivity(filters),
+    queryFn: () => merchantVoiceRepository.getUsageActivity(filters),
+    enabled,
   })
 }
 

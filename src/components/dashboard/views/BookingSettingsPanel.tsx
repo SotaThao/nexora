@@ -70,6 +70,7 @@ import {
   PeopleTabIcon,
   PlusIcon,
   PlusLgIcon,
+  MessageSquareIcon,
   ShopIcon,
   SpinnerIcon,
   StarsIcon,
@@ -486,6 +487,66 @@ const AI_LANGUAGE_OPTIONS = [
 const PROMO_MAX_LENGTH = 1000;
 const FIRST_CALL_SMS_MAX_LENGTH = 320;
 
+const BOOKING_SMS_RECIPIENTS = [
+  {
+    id: "customer",
+    configKey: "bookingConfirmSmsEnabled",
+    titleKey: "bookingSmsCustomerTitle",
+    descKey: "bookingSmsCustomerDesc",
+    enableAriaKey: "bookingSmsCustomerEnableAria",
+    disableAriaKey: "bookingSmsCustomerDisableAria",
+  },
+  {
+    id: "salon",
+    configKey: "bookingNotifySalonSmsEnabled",
+    titleKey: "bookingSmsSalonTitle",
+    descKey: "bookingSmsSalonDesc",
+    enableAriaKey: "bookingSmsSalonEnableAria",
+    disableAriaKey: "bookingSmsSalonDisableAria",
+  },
+  {
+    id: "staff",
+    configKey: "bookingNotifyStaffSmsEnabled",
+    titleKey: "bookingSmsStaffTitle",
+    descKey: "bookingSmsStaffDesc",
+    enableAriaKey: "bookingSmsStaffEnableAria",
+    disableAriaKey: "bookingSmsStaffDisableAria",
+  },
+] as const;
+
+type BookingSmsRecipientId = (typeof BOOKING_SMS_RECIPIENTS)[number]["id"];
+type BookingSmsConfigKey = (typeof BOOKING_SMS_RECIPIENTS)[number]["configKey"];
+
+const BOOKING_SMS_DEFAULT_ENABLED: Record<BookingSmsRecipientId, boolean> = {
+  customer: true,
+  salon: true,
+  staff: true,
+};
+
+function bookingSmsEnabledFromConfig(
+  config: Record<BookingSmsConfigKey, boolean>,
+): Record<BookingSmsRecipientId, boolean> {
+  return BOOKING_SMS_RECIPIENTS.reduce(
+    (acc, item) => {
+      acc[item.id] = config[item.configKey]
+      return acc
+    },
+    { ...BOOKING_SMS_DEFAULT_ENABLED },
+  )
+}
+
+function bookingSmsConfigPayloadFromEnabled(
+  enabled: Record<BookingSmsRecipientId, boolean>,
+): Record<BookingSmsConfigKey, boolean> {
+  return BOOKING_SMS_RECIPIENTS.reduce(
+    (acc, item) => {
+      acc[item.configKey] = enabled[item.id]
+      return acc
+    },
+    {} as Record<BookingSmsConfigKey, boolean>,
+  )
+}
+
 const PROMO_TEMPLATES = {
   "reward-yourself": {
     labelKey: "promoTemplateRewardLabel",
@@ -672,6 +733,7 @@ function SettingsCard({
   onToggle,
   title,
   subtitle,
+  className,
   children,
 }: {
   cardId: string;
@@ -679,6 +741,7 @@ function SettingsCard({
   onToggle: (id: string) => void;
   title: React.ReactNode;
   subtitle: string;
+  className?: string;
   children: React.ReactNode;
 }) {
   const { t } = useTranslation();
@@ -695,7 +758,7 @@ function SettingsCard({
 
   return (
     <article
-      className={`settings-card ${collapsed ? "is-collapsed" : ""}`}
+      className={`settings-card${className ? ` ${className}` : ""}${collapsed ? " is-collapsed" : ""}`}
       data-settings-card={cardId}
     >
       <button
@@ -782,6 +845,9 @@ export default function BookingSettingsPanel() {
   const [highlightServiceId, setHighlightServiceId] = useState<string | null>(
     null,
   );
+  const [openServiceCategoryIds, setOpenServiceCategoryIds] = useState(
+    () => new Set<string>(),
+  );
   const [isPreviewPlaying, setIsPreviewPlaying] = useState(false);
   const [language, setLanguage] = useState<Language>(
     MerchantVoiceUiLanguage.Auto,
@@ -812,6 +878,9 @@ export default function BookingSettingsPanel() {
   >("idle");
   const [promoSms, setPromoSms] = useState("");
   const [sendSmsPromoEnabled, setSendSmsPromoEnabled] = useState(true);
+  const [bookingSmsEnabled, setBookingSmsEnabled] = useState<
+    Record<BookingSmsRecipientId, boolean>
+  >(BOOKING_SMS_DEFAULT_ENABLED);
   const [statusMessage, setStatusMessage] = useState("");
   const [formErrors, setFormErrors] = useState<{
     salonName?: string;
@@ -1136,6 +1205,7 @@ export default function BookingSettingsPanel() {
     setDescription(configData.description || "");
     setPromoSms((configData.promoSms || "").slice(0, FIRST_CALL_SMS_MAX_LENGTH));
     setSendSmsPromoEnabled(configData.sendSmsPromoEnabled !== false);
+    setBookingSmsEnabled(bookingSmsEnabledFromConfig(configData));
     setPromotion((configData.promotion || "").slice(0, PROMO_MAX_LENGTH));
     const resolvedLang = mapConfigLanguageToUiLanguage(configData.language);
     setLanguage(resolvedLang);
@@ -1300,11 +1370,14 @@ export default function BookingSettingsPanel() {
     });
   }, [categories, categoriesData]);
 
-  const openServiceModal = () => {
+  const openServiceModal = (categoryId?: string) => {
+    const preferredCategoryIds = categoryId
+      ? categoryIdsForApi([categoryId])
+      : [];
     setServiceModalDraft({
       mode: "create",
       serviceId: null,
-      categoryIds: [],
+      categoryIds: preferredCategoryIds,
       name: "",
       price: "",
       duration: "",
@@ -1962,6 +2035,29 @@ export default function BookingSettingsPanel() {
     return sections;
   }, [categories, services]);
 
+  // Keep accordion ids valid; seed first category open once when catalog first loads.
+  useEffect(() => {
+    if (catalogSections.length === 0) {
+      setOpenServiceCategoryIds(new Set());
+      return;
+    }
+    setOpenServiceCategoryIds((prev) => {
+      const validIds = new Set(catalogSections.map((section) => section.id));
+      const next = new Set([...prev].filter((id) => validIds.has(id)));
+      if (next.size > 0) return next;
+      return new Set([catalogSections[0].id]);
+    });
+  }, [catalogSections]);
+
+  const toggleServiceCategory = (categoryId: string) => {
+    setOpenServiceCategoryIds((prev) => {
+      const next = new Set(prev);
+      if (next.has(categoryId)) next.delete(categoryId);
+      else next.add(categoryId);
+      return next;
+    });
+  };
+
   const handleLanguageSelect = (next: Language) => {
     const resolved = next;
     setLanguage(resolved);
@@ -2055,9 +2151,6 @@ export default function BookingSettingsPanel() {
       nextErrors.bookingNotifyPhone = t(`${TK}.invalidPhone`);
     }
     if (!location.street.trim()) nextErrors.street = requiredMessage;
-    if (!location.city.trim()) nextErrors.city = requiredMessage;
-    if (!location.state.trim()) nextErrors.state = requiredMessage;
-    if (!location.zip.trim()) nextErrors.zip = requiredMessage;
     if (!location.country.trim()) nextErrors.country = requiredMessage;
     if (!greeting.trim()) nextErrors.greeting = requiredMessage;
 
@@ -2116,6 +2209,7 @@ export default function BookingSettingsPanel() {
         promotion: promotion.trim().slice(0, PROMO_MAX_LENGTH) || null,
         promoSms: promoSms.trim().slice(0, FIRST_CALL_SMS_MAX_LENGTH) || null,
         sendSmsPromoEnabled,
+        ...bookingSmsConfigPayloadFromEnabled(bookingSmsEnabled),
         timeZone: timeZone.trim() || null,
         language: mapUiLanguageToConfigLanguage(language),
         welcomeGreeting: greeting.trim(),
@@ -2757,252 +2851,6 @@ export default function BookingSettingsPanel() {
             </span>
           </div>
         </SettingsCard>
-      </div>
-
-      <article className="settings-card settings-team-card">
-        <div className="settings-card-head">
-          <div>
-            <div className="settings-card-title">
-              <span className="settings-card-title-icon">
-                <PeopleTabIcon />
-              </span>
-              {t(`${TK}.teamTitle`)}
-            </div>
-            <div className="settings-card-sub">{t(`${TK}.teamSub`)}</div>
-          </div>
-        </div>
-        <div className="settings-team-slot">
-          <BookingTeamPanel embedded />
-        </div>
-      </article>
-
-      <div className="settings-two-grid">
-        <SettingsCard
-          cardId="services"
-          collapsed={isCollapsed("services")}
-          onToggle={toggleCard}
-          title={
-            <>
-              <span className="settings-card-title-icon">
-                <CurrencyDollarIcon />
-              </span>
-              {t(`${TK}.servicesTitle`)}
-            </>
-          }
-          subtitle={t(`${TK}.servicesSub`)}
-        >
-          <div className="settings-actions settings-service-actions">
-            <button
-              className="booking-secondary-button settings-category-manager-open"
-              type="button"
-              onClick={openCategoryModal}
-            >
-              <FolderTreeIcon />
-              {t(`${TK}.manageCategories`)}
-            </button>
-            <button
-              className="booking-primary-button"
-              type="button"
-              onClick={openServiceModal}
-            >
-              <PlusLgIcon />
-              {t(`${TK}.enterManually`)}
-            </button>
-          </div>
-
-          <div className="settings-service-list settings-service-body">
-            {catalogSections.length === 0 ? (
-              <div className="settings-service-catalog-state">
-                <p>{t(`${TK}.servicesEmpty`)}</p>
-                <button
-                  className="booking-primary-button"
-                  type="button"
-                  onClick={openServiceModal}
-                >
-                  <PlusLgIcon />
-                  {t(`${TK}.servicesEmptyCta`)}
-                </button>
-              </div>
-            ) : (
-              catalogSections.map((section, index) => {
-                const categoryServices = section.services;
-                return (
-                  <details
-                    key={section.id}
-                    className="settings-service-category"
-                    open={index === 0}
-                  >
-                    <summary className="settings-service-category-head">
-                      <span className="settings-service-category-name">
-                        {section.name}
-                      </span>
-                      <span className="settings-service-category-count">
-                        {formatCategoryServiceCount(categoryServices.length)}
-                      </span>
-                      <svg
-                        className="settings-service-category-chevron"
-                        viewBox="0 0 24 24"
-                        fill="none"
-                        aria-hidden="true"
-                        width="16"
-                        height="16"
-                      >
-                        <path
-                          d="m6 9 6 6 6-6"
-                          stroke="currentColor"
-                          strokeWidth="2"
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                        />
-                      </svg>
-                    </summary>
-                    <div className="settings-service-category-body">
-                      <div
-                        className="settings-service-header"
-                        aria-hidden="true"
-                      >
-                        <span />
-                        <span>{t(`${TK}.serviceColumn`)}</span>
-                        <span>{t(`${TK}.priceColumn`)}</span>
-                        <span>{t(`${TK}.durationColumn`)}</span>
-                        <span />
-                      </div>
-                      {categoryServices.length === 0 ? (
-                        <div className="settings-category-empty">
-                          {t(`${TK}.categoryEmpty`)}
-                        </div>
-                      ) : (
-                        categoryServices.map((service) => {
-                          const isPending =
-                            pendingServiceActionId === service.id;
-                          return (
-                            <div
-                              className={`settings-service-row is-compact${highlightServiceId === service.id ? " is-highlight" : ""}`}
-                              data-service-row-id={service.id}
-                              key={`${section.id}-${service.id}`}
-                            >
-                              <div className="settings-service-edit-grid">
-                                <span
-                                  className={`settings-service-visual ${service.tone}`}
-                                  aria-hidden="true"
-                                >
-                                  {service.icon}
-                                </span>
-                                <input
-                                  className="settings-service-input is-readonly-trigger"
-                                  type="text"
-                                  value={service.name}
-                                  placeholder={t(
-                                    `${TK}.placeholderServiceName`,
-                                  )}
-                                  aria-label={t(`${TK}.serviceNameAria`)}
-                                  readOnly
-                                  disabled={isPending}
-                                  onClick={() => openEditServiceModal(service)}
-                                  onFocus={(event) => {
-                                    event.currentTarget.blur();
-                                    openEditServiceModal(service);
-                                  }}
-                                />
-                                <div className="settings-service-input-wrap">
-                                  <span className="settings-service-prefix">
-                                    $
-                                  </span>
-                                  <input
-                                    className="settings-service-input price is-readonly-trigger"
-                                    type="text"
-                                    inputMode="numeric"
-                                    pattern="[0-9]*"
-                                    value={formatWholeNumberInputValue(
-                                      service.price,
-                                    )}
-                                    placeholder={t(
-                                      `${TK}.placeholderServicePrice`,
-                                    )}
-                                    aria-label={t(`${TK}.servicePriceAria`)}
-                                    readOnly
-                                    disabled={isPending}
-                                    onClick={() =>
-                                      openEditServiceModal(service)
-                                    }
-                                    onFocus={(event) => {
-                                      event.currentTarget.blur();
-                                      openEditServiceModal(service);
-                                    }}
-                                  />
-                                </div>
-                                <div className="settings-service-input-wrap">
-                                  <input
-                                    className="settings-service-input duration is-readonly-trigger"
-                                    type="text"
-                                    inputMode="numeric"
-                                    pattern="[0-9]*"
-                                    value={formatWholeNumberInputValue(
-                                      service.duration,
-                                    )}
-                                    placeholder={t(
-                                      `${TK}.placeholderServiceDuration`,
-                                    )}
-                                    aria-label={t(
-                                      `${TK}.serviceDurationAria`,
-                                    )}
-                                    readOnly
-                                    disabled={isPending}
-                                    onClick={() =>
-                                      openEditServiceModal(service)
-                                    }
-                                    onFocus={(event) => {
-                                      event.currentTarget.blur();
-                                      openEditServiceModal(service);
-                                    }}
-                                  />
-                                  <span className="settings-service-suffix">
-                                    {t(`${TK}.durationUnit`)}
-                                  </span>
-                                </div>
-                                <div className="settings-service-row-actions">
-                                  <button
-                                    className="settings-service-edit"
-                                    type="button"
-                                    aria-label={t(`${TK}.serviceEditAria`)}
-                                    disabled={isPending || isSavingService}
-                                    onClick={() =>
-                                      openEditServiceModal(service)
-                                    }
-                                  >
-                                    <PencilIcon className="settings-service-edit-icon" />
-                                  </button>
-                                  <button
-                                    className="settings-service-remove"
-                                    type="button"
-                                    aria-label={t(`${TK}.removeService`)}
-                                    disabled={isPending || isSavingService}
-                                    onClick={() => {
-                                      void removeService(
-                                        service.id,
-                                        section.id,
-                                      );
-                                    }}
-                                  >
-                                    {isPending ? (
-                                      <SpinnerIcon className="booking-inline-spinner" />
-                                    ) : (
-                                      "×"
-                                    )}
-                                  </button>
-                                </div>
-                              </div>
-                            </div>
-                          );
-                        })
-                      )}
-                    </div>
-                  </details>
-                );
-              })
-            )}
-          </div>
-        </SettingsCard>
 
         <SettingsCard
           cardId="voice"
@@ -3183,6 +3031,365 @@ export default function BookingSettingsPanel() {
             </div>
           </div>
         </SettingsCard>
+
+        <SettingsCard
+          cardId="bookingSms"
+          collapsed={isCollapsed("bookingSms")}
+          onToggle={toggleCard}
+          title={
+            <>
+              <span className="settings-card-title-icon">
+                <MessageSquareIcon />
+              </span>
+              {t(`${TK}.bookingSmsTitle`)}
+            </>
+          }
+          subtitle={t(`${TK}.bookingSmsSub`)}
+        >
+          <div className="settings-config-stack">
+            {BOOKING_SMS_RECIPIENTS.map((item) => {
+              const enabled = bookingSmsEnabled[item.id];
+              return (
+                <div className="settings-booking-sms-row" key={item.id}>
+                  <div className="settings-booking-sms-copy">
+                    <div className="settings-config-title">
+                      {t(`${TK}.${item.titleKey}`)}
+                    </div>
+                    <div className="settings-config-desc">
+                      {t(`${TK}.${item.descKey}`)}
+                    </div>
+                  </div>
+                  <div className="settings-booking-sms-control">
+                    <span
+                      className={`settings-booking-sms-status${enabled ? "" : " is-off"}`}
+                      aria-live="polite"
+                    >
+                      {enabled
+                        ? t(`${TK}.bookingSmsStatusOn`)
+                        : t(`${TK}.bookingSmsStatusOff`)}
+                    </span>
+                    <button
+                      className={`toggle-pill${enabled ? " is-on" : ""}`}
+                      type="button"
+                      role="switch"
+                      aria-checked={enabled}
+                      disabled={
+                        !voiceEnabled ||
+                        isConfigLoading ||
+                        updateConfigMutation.isPending
+                      }
+                      aria-label={
+                        enabled
+                          ? t(`${TK}.${item.disableAriaKey}`)
+                          : t(`${TK}.${item.enableAriaKey}`)
+                      }
+                      onClick={() => {
+                        setBookingSmsEnabled((prev) => {
+                          const next = !prev[item.id];
+                          setStatus(
+                            next
+                              ? t(`${TK}.bookingSmsRecipientEnabled`, {
+                                  recipient: t(`${TK}.${item.titleKey}`),
+                                })
+                              : t(`${TK}.bookingSmsRecipientDisabled`, {
+                                  recipient: t(`${TK}.${item.titleKey}`),
+                                }),
+                          );
+                          return { ...prev, [item.id]: next };
+                        });
+                      }}
+                    />
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        </SettingsCard>
+      </div>
+
+      <SettingsCard
+        cardId="team"
+        collapsed={isCollapsed("team")}
+        onToggle={toggleCard}
+        title={
+          <>
+            <span className="settings-card-title-icon">
+              <PeopleTabIcon />
+            </span>
+            {t(`${TK}.teamTitle`)}
+          </>
+        }
+        subtitle={t(`${TK}.teamSub`)}
+      >
+        <div className="settings-team-slot">
+          <BookingTeamPanel embedded />
+        </div>
+      </SettingsCard>
+
+      <div className="settings-two-grid">
+        <SettingsCard
+          cardId="services"
+          className="settings-service-pricing-card"
+          collapsed={isCollapsed("services")}
+          onToggle={toggleCard}
+          title={
+            <>
+              <span className="settings-card-title-icon">
+                <CurrencyDollarIcon />
+              </span>
+              {t(`${TK}.servicesTitle`)}
+            </>
+          }
+          subtitle={t(`${TK}.servicesSub`)}
+        >
+          <div className="settings-actions settings-service-actions">
+            <button
+              className="booking-secondary-button settings-category-manager-open"
+              type="button"
+              onClick={openCategoryModal}
+            >
+              <FolderTreeIcon />
+              {t(`${TK}.manageCategories`)}
+            </button>
+            <button
+              className="booking-primary-button"
+              type="button"
+              onClick={openServiceModal}
+            >
+              <PlusLgIcon />
+              {t(`${TK}.enterManually`)}
+            </button>
+          </div>
+
+          <div className="settings-service-list settings-service-body">
+            {catalogSections.length === 0 ? (
+              <div className="settings-service-catalog-state">
+                <p>{t(`${TK}.servicesEmpty`)}</p>
+                <button
+                  className="booking-primary-button"
+                  type="button"
+                  onClick={openServiceModal}
+                >
+                  <PlusLgIcon />
+                  {t(`${TK}.servicesEmptyCta`)}
+                </button>
+              </div>
+            ) : (
+              catalogSections.map((section) => {
+                const categoryServices = section.services;
+                const isOpen = openServiceCategoryIds.has(section.id);
+                const panelId = `settings-service-category-panel-${section.id}`;
+                return (
+                  <div
+                    key={section.id}
+                    className={`settings-service-category${isOpen ? " is-open" : ""}`}
+                  >
+                    <div className="settings-service-category-head">
+                      <button
+                        type="button"
+                        className="settings-service-category-toggle"
+                        aria-expanded={isOpen}
+                        aria-controls={panelId}
+                        onClick={() => toggleServiceCategory(section.id)}
+                      >
+                        <span className="settings-service-category-name">
+                          {section.name}
+                        </span>
+                        <span className="settings-service-category-count">
+                          {formatCategoryServiceCount(categoryServices.length)}
+                        </span>
+                      </button>
+                      <button
+                        type="button"
+                        className="settings-service-category-add"
+                        onClick={() => openServiceModal(section.id)}
+                      >
+                        <PlusLgIcon />
+                        {t(`${TK}.addService`)}
+                      </button>
+                      <button
+                        type="button"
+                        className="settings-service-category-chevron-btn"
+                        aria-expanded={isOpen}
+                        aria-controls={panelId}
+                        aria-label={section.name}
+                        onClick={() => toggleServiceCategory(section.id)}
+                      >
+                        <svg
+                          className="settings-service-category-chevron"
+                          viewBox="0 0 24 24"
+                          fill="none"
+                          aria-hidden="true"
+                          width="16"
+                          height="16"
+                        >
+                          <path
+                            d="m6 9 6 6 6-6"
+                            stroke="currentColor"
+                            strokeWidth="2"
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                          />
+                        </svg>
+                      </button>
+                    </div>
+                    <div
+                      className="settings-service-category-panel"
+                      id={panelId}
+                      role="region"
+                      aria-hidden={!isOpen}
+                    >
+                      <div className="settings-service-category-panel-inner">
+                    <div className="settings-service-category-body">
+                      <div
+                        className="settings-service-header"
+                        aria-hidden="true"
+                      >
+                        <span />
+                        <span>{t(`${TK}.serviceColumn`)}</span>
+                        <span>{t(`${TK}.priceColumn`)}</span>
+                        <span>{t(`${TK}.durationColumn`)}</span>
+                        <span />
+                      </div>
+                      {categoryServices.length === 0 ? (
+                        <div className="settings-category-empty">
+                          {t(`${TK}.categoryEmpty`)}
+                        </div>
+                      ) : (
+                        categoryServices.map((service) => {
+                          const isPending =
+                            pendingServiceActionId === service.id;
+                          return (
+                            <div
+                              className={`settings-service-row is-compact${highlightServiceId === service.id ? " is-highlight" : ""}`}
+                              data-service-row-id={service.id}
+                              key={`${section.id}-${service.id}`}
+                            >
+                              <div className="settings-service-edit-grid">
+                                <span
+                                  className={`settings-service-visual ${service.tone}`}
+                                  aria-hidden="true"
+                                >
+                                  {service.icon}
+                                </span>
+                                <input
+                                  className="settings-service-input is-readonly-trigger"
+                                  type="text"
+                                  value={service.name}
+                                  placeholder={t(
+                                    `${TK}.placeholderServiceName`,
+                                  )}
+                                  aria-label={t(`${TK}.serviceNameAria`)}
+                                  readOnly
+                                  disabled={isPending}
+                                  onClick={() => openEditServiceModal(service)}
+                                  onFocus={(event) => {
+                                    event.currentTarget.blur();
+                                    openEditServiceModal(service);
+                                  }}
+                                />
+                                <div className="settings-service-input-wrap">
+                                  <span className="settings-service-prefix">
+                                    $
+                                  </span>
+                                  <input
+                                    className="settings-service-input price is-readonly-trigger"
+                                    type="text"
+                                    inputMode="numeric"
+                                    pattern="[0-9]*"
+                                    value={formatWholeNumberInputValue(
+                                      service.price,
+                                    )}
+                                    placeholder={t(
+                                      `${TK}.placeholderServicePrice`,
+                                    )}
+                                    aria-label={t(`${TK}.servicePriceAria`)}
+                                    readOnly
+                                    disabled={isPending}
+                                    onClick={() =>
+                                      openEditServiceModal(service)
+                                    }
+                                    onFocus={(event) => {
+                                      event.currentTarget.blur();
+                                      openEditServiceModal(service);
+                                    }}
+                                  />
+                                </div>
+                                <div className="settings-service-input-wrap">
+                                  <input
+                                    className="settings-service-input duration is-readonly-trigger"
+                                    type="text"
+                                    inputMode="numeric"
+                                    pattern="[0-9]*"
+                                    value={formatWholeNumberInputValue(
+                                      service.duration,
+                                    )}
+                                    placeholder={t(
+                                      `${TK}.placeholderServiceDuration`,
+                                    )}
+                                    aria-label={t(
+                                      `${TK}.serviceDurationAria`,
+                                    )}
+                                    readOnly
+                                    disabled={isPending}
+                                    onClick={() =>
+                                      openEditServiceModal(service)
+                                    }
+                                    onFocus={(event) => {
+                                      event.currentTarget.blur();
+                                      openEditServiceModal(service);
+                                    }}
+                                  />
+                                  <span className="settings-service-suffix">
+                                    {t(`${TK}.durationUnit`)}
+                                  </span>
+                                </div>
+                                <div className="settings-service-row-actions">
+                                  <button
+                                    className="settings-service-edit"
+                                    type="button"
+                                    aria-label={t(`${TK}.serviceEditAria`)}
+                                    disabled={isPending || isSavingService}
+                                    onClick={() =>
+                                      openEditServiceModal(service)
+                                    }
+                                  >
+                                    <PencilIcon className="settings-service-edit-icon" />
+                                  </button>
+                                  <button
+                                    className="settings-service-remove"
+                                    type="button"
+                                    aria-label={t(`${TK}.removeService`)}
+                                    disabled={isPending || isSavingService}
+                                    onClick={() => {
+                                      void removeService(
+                                        service.id,
+                                        section.id,
+                                      );
+                                    }}
+                                  >
+                                    {isPending ? (
+                                      <SpinnerIcon className="booking-inline-spinner" />
+                                    ) : (
+                                      "×"
+                                    )}
+                                  </button>
+                                </div>
+                              </div>
+                            </div>
+                          );
+                        })
+                      )}
+                    </div>
+                      </div>
+                    </div>
+                  </div>
+                );
+              })
+            )}
+          </div>
+        </SettingsCard>
+
       </div>
 
       <div className="settings-save-bar">

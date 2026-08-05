@@ -428,6 +428,8 @@ export const qk = {
   ],
   merchantVoiceSmsCreditSummary: () => ['merchantVoice', 'smsCredits', 'summary'],
   merchantVoiceSmsCreditHistory: (filters = EMPTY) => ['merchantVoice', 'smsCredits', 'history', filters],
+  merchantVoiceCreditWallet: () => ['merchantVoice', 'credits', 'wallet'],
+  merchantVoiceUsageActivity: (filters = EMPTY) => ['merchantVoice', 'usage', 'activity', filters],
 
   // Nexora Voice trial (merchant)
   voiceTrialRequestMe: () => ['nexora-voice', 'trial-request', 'me'],
@@ -445,11 +447,15 @@ export const qk = {
   // POS Booking — customer self-service Manage Booking page (Ticket 8)
   manageBooking: (manageToken?: string) => ['manageBooking', manageToken ?? ''],
   publicPaymentStatus: (paymentId: string) => ['publicPayment', 'status', paymentId],
-  publicVoiceBookingPage: (businessKey?: string | null) => [
+  publicVoiceBookingPage: (
+    businessKey?: string | null,
+    phone?: string | null,
+  ) => [
     'public',
     'nexora-voice',
     'booking-page',
     businessKey ?? '',
+    phone ?? null,
   ],
 }
 

@@ -5,15 +5,24 @@ import {
   ShieldCheckIcon,
   WalletCardsIcon,
 } from '../BookingHubIcons'
+import CreditCardCheckoutForm from '../creditCheckout/CreditCardCheckoutForm'
+import CreditPaymentMethodList from '../creditCheckout/CreditPaymentMethodList'
+import { useCheckoutModalLock } from '../creditCheckout/useCheckoutModalLock'
+import { useCreditCardForm } from '../creditCheckout/useCreditCardForm'
 import {
   SMS_CAMPAIGN_TK,
+  SMS_CREDIT_DEFAULT_PACKAGE_ID,
+  SMS_CREDIT_DEFAULT_PAYMENT_ID,
+  SMS_CREDIT_PACKAGE_SELECTED_MARK,
   SMS_CREDIT_PACKAGES_MOCK,
   SMS_CREDIT_PAYMENTS_MOCK,
   SmsCreditPaymentId,
+  formatSmsCreditPrice,
+  getSmsCreditNumberLocale,
+  getSmsCreditPaymentLabel,
   type SmsCreditPackageMock,
   type SmsCreditPaymentMock,
 } from './constants'
-import { SmsCreditPackageCode } from '../../../../data/merchantVoice/domain'
 
 const TK = SMS_CAMPAIGN_TK
 
@@ -23,7 +32,6 @@ type Props = {
   /** Keep `document.body` scroll lock when this modal closes (e.g. create campaign still open). */
   preserveBodyLock?: boolean
   onClose: () => void
-  /** Reserved for when purchase checkout is enabled. */
   onConfirm?: (pkg: SmsCreditPackageMock, payment: SmsCreditPaymentMock) => void | Promise<void>
 }
 
@@ -32,37 +40,44 @@ export default function SmsBuyCreditsModal({
   submitting = false,
   preserveBodyLock = false,
   onClose,
+  onConfirm,
 }: Props) {
   const { t, currentLanguage } = useTranslation()
   const closeBtnRef = useRef<HTMLButtonElement | null>(null)
-  const [packageId, setPackageId] = useState(SmsCreditPackageCode.Sms500)
-  const [paymentId, setPaymentId] = useState(SmsCreditPaymentId.Usdv)
+  const [packageId, setPackageId] = useState(SMS_CREDIT_DEFAULT_PACKAGE_ID)
+  const [paymentId, setPaymentId] = useState(SMS_CREDIT_DEFAULT_PAYMENT_ID)
+  const isCardPayment = paymentId === SmsCreditPaymentId.Card
+
+  const {
+    form: cardFields,
+    error: cardError,
+    invalidField,
+    reset: resetCardForm,
+    setField: setCardField,
+    registerField,
+    validate: validateCardForm,
+  } = useCreditCardForm({
+    copyTk: TK,
+    t,
+    enabled: isCardPayment,
+  })
+
+  useCheckoutModalLock({
+    open,
+    onClose,
+    locked: submitting,
+    preserveBodyLock,
+    closeButtonRef: closeBtnRef,
+  })
 
   useEffect(() => {
-    if (!open) {
-      if (!preserveBodyLock) document.body.style.overflow = ''
-      return undefined
-    }
+    if (!open) return
+    setPackageId(SMS_CREDIT_DEFAULT_PACKAGE_ID)
+    setPaymentId(SMS_CREDIT_DEFAULT_PAYMENT_ID)
+    resetCardForm()
+  }, [open, resetCardForm])
 
-    document.body.style.overflow = 'hidden'
-    setPackageId(SmsCreditPackageCode.Sms500)
-    setPaymentId(SmsCreditPaymentId.Usdv)
-
-    const onKeyDown = (event: KeyboardEvent) => {
-      if (event.key !== 'Escape' || submitting) return
-      event.stopImmediatePropagation()
-      onClose()
-    }
-    window.addEventListener('keydown', onKeyDown, true)
-    requestAnimationFrame(() => closeBtnRef.current?.focus())
-
-    return () => {
-      if (!preserveBodyLock) document.body.style.overflow = ''
-      window.removeEventListener('keydown', onKeyDown, true)
-    }
-  }, [open, onClose, submitting, preserveBodyLock])
-
-  const numberLocale = currentLanguage === 'vi' ? 'vi-VN' : 'en-US'
+  const numberLocale = getSmsCreditNumberLocale(currentLanguage)
 
   const selectedPackage = useMemo(
     () => SMS_CREDIT_PACKAGES_MOCK.find((pkg) => pkg.id === packageId) ?? SMS_CREDIT_PACKAGES_MOCK[0],
@@ -73,12 +88,32 @@ export default function SmsBuyCreditsModal({
     [paymentId],
   )
 
+  const paymentLabel = getSmsCreditPaymentLabel(
+    selectedPayment,
+    t(`${TK}.cardMethodLabel`),
+  )
+
+  const handlePaymentSelect = (nextPaymentId: SmsCreditPaymentId) => {
+    setPaymentId(nextPaymentId)
+    if (nextPaymentId !== SmsCreditPaymentId.Card) resetCardForm()
+  }
+
+  const handleConfirm = async () => {
+    if (submitting || !onConfirm) return
+    if (!validateCardForm()) return
+    await onConfirm(selectedPackage, selectedPayment)
+  }
+
   if (!open) return null
 
   return (
     <div
       className="sms-credit-modal"
       role="presentation"
+      onClick={(event) => {
+        if (event.target !== event.currentTarget || submitting) return
+        onClose()
+      }}
     >
       <div
         className="sms-credit-dialog"
@@ -127,6 +162,9 @@ export default function SmsBuyCreditsModal({
                     disabled={submitting}
                     onClick={() => setPackageId(pkg.id)}
                   >
+                    <span className="sms-credit-package-check" aria-hidden="true">
+                      {SMS_CREDIT_PACKAGE_SELECTED_MARK}
+                    </span>
                     {pkg.featured ? (
                       <span className="sms-credit-package-badge">{t(`${TK}.bestValue`)}</span>
                     ) : null}
@@ -136,9 +174,10 @@ export default function SmsBuyCreditsModal({
                         count: pkg.credits.toLocaleString(numberLocale),
                       })}
                     </span>
-                    <span className="sms-credit-package-price">${pkg.price}</span>
+                    <span className="sms-credit-package-price">
+                      {formatSmsCreditPrice(pkg.price)}
+                    </span>
                     <span className="sms-credit-package-note">{t(`${TK}.${pkg.noteKey}`)}</span>
-                    <span className="sms-credit-package-check" aria-hidden="true">✓</span>
                   </button>
                 )
               })}
@@ -149,47 +188,36 @@ export default function SmsBuyCreditsModal({
             <div className="sms-credit-section-label" id="sms-credit-payment-title">
               {t(`${TK}.paymentMethod`)}
             </div>
-            <div className="sms-credit-payment-list">
-              {SMS_CREDIT_PAYMENTS_MOCK.map((method) => {
-                const selected = method.id === paymentId
-                return (
-                  <button
-                    key={method.id}
-                    className={`sms-credit-payment${selected ? ' is-selected' : ''}`}
-                    type="button"
-                    aria-pressed={selected}
-                    disabled={submitting}
-                    onClick={() => setPaymentId(method.id)}
-                  >
-                    <span className="sms-credit-payment-main">
-                      <span className="sms-credit-radio" aria-hidden="true" />
-                      <img
-                        className="sms-credit-token"
-                        src={method.asset}
-                        alt=""
-                        width={28}
-                        height={28}
-                      />
-                      <span className="sms-credit-payment-name">{method.label}</span>
-                    </span>
-                    <span className="sms-credit-payment-balance">
-                      <span>{t(`${TK}.balance`)}</span>
-                      <strong>{method.balance}</strong>
-                    </span>
-                  </button>
-                )
-              })}
-            </div>
+            <CreditPaymentMethodList
+              methods={SMS_CREDIT_PAYMENTS_MOCK}
+              selectedId={paymentId}
+              disabled={submitting}
+              t={t}
+              onSelect={handlePaymentSelect}
+            />
+            {isCardPayment ? (
+              <CreditCardCheckoutForm
+                form={cardFields}
+                error={cardError}
+                invalidField={invalidField}
+                disabled={submitting}
+                t={t}
+                registerField={registerField}
+                onFieldChange={setCardField}
+              />
+            ) : null}
           </section>
 
-          <section className="sms-credit-section sms-credit-invoice" aria-labelledby="sms-credit-invoice-title">
+          <section
+            className="sms-credit-section sms-credit-invoice"
+            aria-labelledby="sms-credit-invoice-title"
+          >
             <div className="sms-credit-section-label" id="sms-credit-invoice-title">
               {t(`${TK}.invoiceSummary`)}
             </div>
             <div className="sms-credit-invoice-row">
               <span>{t(`${TK}.invoicePackage`)}</span>
               <strong>
-                {t(`${TK}.${selectedPackage.nameKey}`)} ·{' '}
                 {t(`${TK}.packageCredits`, {
                   count: selectedPackage.credits.toLocaleString(numberLocale),
                 })}
@@ -197,13 +225,20 @@ export default function SmsBuyCreditsModal({
             </div>
             <div className="sms-credit-invoice-row">
               <span>{t(`${TK}.invoicePayment`)}</span>
-              <strong>{selectedPayment.label}</strong>
+              <strong>{paymentLabel}</strong>
             </div>
             <div className="sms-credit-invoice-row sms-credit-invoice-total">
               <span>{t(`${TK}.invoiceTotal`)}</span>
-              <strong>${selectedPackage.price}</strong>
+              <strong>{formatSmsCreditPrice(selectedPackage.price)}</strong>
             </div>
           </section>
+
+          <div className="sr-only" aria-live="polite">
+            {t(`${TK}.checkoutStatus`, {
+              credits: selectedPackage.credits.toLocaleString(numberLocale),
+              payment: paymentLabel,
+            })}
+          </div>
         </div>
 
         <div className="sms-credit-modal-foot">
@@ -213,11 +248,15 @@ export default function SmsBuyCreditsModal({
           <button
             className="btn-primary"
             type="button"
-            disabled
-            aria-disabled="true"
+            disabled={submitting || !onConfirm}
+            onClick={() => {
+              void handleConfirm()
+            }}
           >
             <ShieldCheckIcon className="marketing-icon is-compact" />
-            <span>{t(`${TK}.confirmPaymentComingSoon`)}</span>
+            <span>
+              {submitting ? t(`${TK}.confirmPaymentPending`) : t(`${TK}.confirmPayment`)}
+            </span>
           </button>
         </div>
       </div>

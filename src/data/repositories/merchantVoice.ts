@@ -24,7 +24,15 @@ import {
   normalizeMerchantVoiceLeadSource,
   normalizeMerchantVoiceLeadStatus,
   normalizeMerchantVoiceStaffStatus,
+  normalizeVoiceCreditActivityKind,
+  normalizeVoiceCreditType,
+  normalizeVoicePlanStatus,
+  normalizeVoicePlanTier,
   type MerchantVoiceLeadStatusApiValue,
+  VoiceCreditType,
+  type VoiceCreditActivityKind,
+  type VoicePlanStatus,
+  type VoicePlanTier,
 } from '../merchantVoice/domain'
 import { toUtcBookingSlot } from './publicVoiceBooking'
 
@@ -104,8 +112,22 @@ export {
   normalizeMerchantVoiceLeadSource,
   normalizeMerchantVoiceLeadStatus,
   normalizeMerchantVoiceStaffStatus,
+  normalizeVoiceCreditActivityKind,
+  normalizeVoiceCreditType,
+  normalizeVoicePlanStatus,
+  normalizeVoicePlanTier,
+  hasJoinedVoicePlan,
   parseBookingHubMainTab,
   parseBookingHubSubTab,
+  VoiceCreditActivityKind,
+  VoiceCreditType,
+  VoicePlanStatus,
+  VoicePlanTier,
+  CreditsUsageHistoryFilter,
+  CreditsUsageProduct,
+  CREDITS_USAGE_HISTORY_FILTER_TO_CREDIT_TYPE,
+  VOICE_CREDIT_TYPE_TO_PRODUCT,
+  mapCreditsUsageHistoryFilterToCreditType,
 } from '../merchantVoice/domain'
 
 export type {
@@ -379,6 +401,81 @@ export interface UpdateMerchantVoiceCustomerRequest {
   status: MerchantVoiceCustomerStatus
 }
 
+/** GET `/api/v1/merchant/nexora-voice/credits` — per-wallet summary. */
+export interface VoiceCreditSummaryDto {
+  tenantId: string
+  creditType: VoiceCreditType
+  purchasedBalance: number
+  grantedBalance: number
+  totalBalance: number
+  balance: number
+  reserved: number
+  available: number
+  isBlocked: boolean
+  isLow: boolean
+  grantExpiresAtUtc: string | null
+  approxValueUsd: number
+  purchasedThisCycle: number
+  grantedThisCycle: number
+  consumedThisCycle: number
+  grantedConsumedThisCycle: number
+  purchasedConsumedThisCycle: number
+  periodStart: string | null
+  periodEnd: string | null
+}
+
+/** GET `/api/v1/merchant/nexora-voice/credits` — wallet overview. */
+export interface VoiceCreditWalletDto {
+  tenantId: string
+  smsSegments: VoiceCreditSummaryDto
+  callMinutes: VoiceCreditSummaryDto
+  planTier: VoicePlanTier | null
+  planStatus: VoicePlanStatus | null
+  isTrial: boolean
+  autoRenew: boolean
+  cycleSequence: number | null
+  periodStart: string | null
+  periodEnd: string | null
+}
+
+/** GET `/api/v1/merchant/nexora-voice/usage/activity` — one history row. */
+export interface VoiceUsageActivityDto {
+  activityKind: VoiceCreditActivityKind
+  activityLabel: string | null
+  creditType: VoiceCreditType
+  units: number
+  occurredAt: string
+  itemCount: number
+  referenceId: string | null
+}
+
+export interface MerchantVoiceUsageActivityResponse {
+  items: VoiceUsageActivityDto[]
+  pageNumber: number
+  totalPages: number
+  totalCount: number
+  hasPreviousPage: boolean
+  hasNextPage: boolean
+}
+
+export interface MerchantVoiceUsageActivityFilter {
+  creditType?: VoiceCreditType
+  activityKinds?: VoiceCreditActivityKind[]
+  fromUtc?: string
+  toUtc?: string
+  pageNumber?: number
+  pageSize?: number
+}
+
+interface MerchantVoiceUsageActivityApiResponse {
+  items?: unknown[]
+  pageNumber?: number
+  totalPages?: number
+  totalCount?: number
+  hasPreviousPage?: boolean
+  hasNextPage?: boolean
+}
+
 export interface MerchantVoiceBusinessStaffDto {
   id: string
   fullName: string
@@ -490,6 +587,12 @@ export interface MerchantVoiceConfigDto {
   promotion: string
   promoSms: string
   sendSmsPromoEnabled: boolean
+  /** Send booking SMS to the customer. */
+  bookingConfirmSmsEnabled: boolean
+  /** Send booking SMS to `bookingNotifyPhone` (salon). */
+  bookingNotifySalonSmsEnabled: boolean
+  /** Send booking SMS to the assigned staff member. */
+  bookingNotifyStaffSmsEnabled: boolean
   timeZone: string
   language: string
   welcomeGreeting: string
@@ -511,6 +614,12 @@ export interface UpdateMerchantVoiceConfigRequest {
   promotion: string | null
   promoSms: string | null
   sendSmsPromoEnabled: boolean
+  /** Omit to leave the stored value untouched. */
+  bookingConfirmSmsEnabled?: boolean
+  /** Omit to leave the stored value untouched. */
+  bookingNotifySalonSmsEnabled?: boolean
+  /** Omit to leave the stored value untouched. */
+  bookingNotifyStaffSmsEnabled?: boolean
   timeZone: string | null
   language: MerchantVoiceConfigLanguage
   welcomeGreeting: string
@@ -633,6 +742,9 @@ function normalizeConfigResponse(response: unknown): MerchantVoiceConfigDto {
       promotion: '',
       promoSms: '',
       sendSmsPromoEnabled: true,
+      bookingConfirmSmsEnabled: true,
+      bookingNotifySalonSmsEnabled: true,
+      bookingNotifyStaffSmsEnabled: true,
       timeZone: '',
       language: MerchantVoiceConfigLanguage.EnUS,
       welcomeGreeting: '',
@@ -652,6 +764,9 @@ function normalizeConfigResponse(response: unknown): MerchantVoiceConfigDto {
     } satisfies MerchantVoiceOperatingHourDto
   }).filter((row) => row.dayOfWeek)
 
+  const readBool = (value: unknown, fallback: boolean) =>
+    typeof value === 'boolean' ? value : fallback
+
   return {
     id: String(body.id ?? ''),
     name: String(body.name ?? ''),
@@ -668,10 +783,10 @@ function normalizeConfigResponse(response: unknown): MerchantVoiceConfigDto {
     description: String(body.description ?? ''),
     promotion: String(body.promotion ?? ''),
     promoSms: String(body.promoSms ?? ''),
-    sendSmsPromoEnabled:
-      typeof body.sendSmsPromoEnabled === 'boolean'
-        ? body.sendSmsPromoEnabled
-        : true,
+    sendSmsPromoEnabled: readBool(body.sendSmsPromoEnabled, true),
+    bookingConfirmSmsEnabled: readBool(body.bookingConfirmSmsEnabled, true),
+    bookingNotifySalonSmsEnabled: readBool(body.bookingNotifySalonSmsEnabled, true),
+    bookingNotifyStaffSmsEnabled: readBool(body.bookingNotifyStaffSmsEnabled, true),
     timeZone: String(body.timeZone ?? ''),
     language: String(body.language ?? MerchantVoiceConfigLanguage.EnUS),
     welcomeGreeting: String(body.welcomeGreeting ?? ''),
@@ -1005,6 +1120,141 @@ function normalizeCustomersResponse(
     hasPreviousPage: response?.hasPreviousPage ?? false,
     hasNextPage: response?.hasNextPage ?? false,
   }
+}
+
+function toApiBoolean(value: unknown): boolean {
+  if (value === true || value === 1) return true
+  if (typeof value === 'string') {
+    const normalized = value.trim().toLowerCase()
+    return normalized === 'true' || normalized === '1'
+  }
+  return false
+}
+
+function normalizeVoiceCreditSummaryDto(
+  item: unknown,
+  fallbackType: VoiceCreditType,
+): VoiceCreditSummaryDto {
+  const raw = (item ?? {}) as Record<string, unknown>
+  const creditType = normalizeVoiceCreditType(
+    readField(raw, 'creditType', 'CreditType') ?? fallbackType,
+  )
+  const totalBalance = toFiniteNumber(
+    readField<unknown>(raw, 'totalBalance', 'TotalBalance')
+      ?? readField<unknown>(raw, 'balance', 'Balance')
+      ?? 0,
+    0,
+  )
+  return {
+    tenantId: String(readField<unknown>(raw, 'tenantId', 'TenantId') ?? ''),
+    creditType,
+    purchasedBalance: toFiniteNumber(readField<unknown>(raw, 'purchasedBalance', 'PurchasedBalance') ?? 0, 0),
+    grantedBalance: toFiniteNumber(readField<unknown>(raw, 'grantedBalance', 'GrantedBalance') ?? 0, 0),
+    totalBalance,
+    balance: toFiniteNumber(readField<unknown>(raw, 'balance', 'Balance') ?? totalBalance, totalBalance),
+    reserved: toFiniteNumber(readField<unknown>(raw, 'reserved', 'Reserved') ?? 0, 0),
+    available: toFiniteNumber(readField<unknown>(raw, 'available', 'Available') ?? totalBalance, totalBalance),
+    isBlocked: toApiBoolean(readField<unknown>(raw, 'isBlocked', 'IsBlocked')),
+    isLow: toApiBoolean(readField<unknown>(raw, 'isLow', 'IsLow')),
+    grantExpiresAtUtc: readNullableString(raw, 'grantExpiresAtUtc', 'GrantExpiresAtUtc'),
+    approxValueUsd: toFiniteNumber(readField<unknown>(raw, 'approxValueUsd', 'ApproxValueUsd') ?? 0, 0),
+    purchasedThisCycle: toFiniteNumber(readField<unknown>(raw, 'purchasedThisCycle', 'PurchasedThisCycle') ?? 0, 0),
+    grantedThisCycle: toFiniteNumber(readField<unknown>(raw, 'grantedThisCycle', 'GrantedThisCycle') ?? 0, 0),
+    consumedThisCycle: toFiniteNumber(readField<unknown>(raw, 'consumedThisCycle', 'ConsumedThisCycle') ?? 0, 0),
+    grantedConsumedThisCycle: toFiniteNumber(
+      readField<unknown>(raw, 'grantedConsumedThisCycle', 'GrantedConsumedThisCycle') ?? 0,
+      0,
+    ),
+    purchasedConsumedThisCycle: toFiniteNumber(
+      readField<unknown>(raw, 'purchasedConsumedThisCycle', 'PurchasedConsumedThisCycle') ?? 0,
+      0,
+    ),
+    periodStart: readNullableString(raw, 'periodStart', 'PeriodStart'),
+    periodEnd: readNullableString(raw, 'periodEnd', 'PeriodEnd'),
+  }
+}
+
+function normalizeVoiceCreditWalletDto(response: unknown): VoiceCreditWalletDto {
+  const raw = (response ?? {}) as Record<string, unknown>
+  const cycleRaw = readField<unknown>(raw, 'cycleSequence', 'CycleSequence')
+  const cycleParsed = cycleRaw == null ? null : Number(cycleRaw)
+  return {
+    tenantId: String(readField<unknown>(raw, 'tenantId', 'TenantId') ?? ''),
+    smsSegments: normalizeVoiceCreditSummaryDto(
+      readField(raw, 'smsSegments', 'SmsSegments'),
+      VoiceCreditType.SmsSegment,
+    ),
+    callMinutes: normalizeVoiceCreditSummaryDto(
+      readField(raw, 'callMinutes', 'CallMinutes'),
+      VoiceCreditType.CallMinute,
+    ),
+    planTier: normalizeVoicePlanTier(readField(raw, 'planTier', 'PlanTier')),
+    planStatus: normalizeVoicePlanStatus(readField(raw, 'planStatus', 'PlanStatus')),
+    isTrial: Boolean(readField<unknown>(raw, 'isTrial', 'IsTrial')),
+    autoRenew: Boolean(readField<unknown>(raw, 'autoRenew', 'AutoRenew')),
+    cycleSequence: cycleParsed != null && Number.isFinite(cycleParsed) ? cycleParsed : null,
+    periodStart: readNullableString(raw, 'periodStart', 'PeriodStart'),
+    periodEnd: readNullableString(raw, 'periodEnd', 'PeriodEnd'),
+  }
+}
+
+function normalizeVoiceUsageActivityDto(item: unknown): VoiceUsageActivityDto {
+  const raw = (item ?? {}) as Record<string, unknown>
+  return {
+    activityKind: normalizeVoiceCreditActivityKind(readField(raw, 'activityKind', 'ActivityKind')),
+    activityLabel: readNullableString(raw, 'activityLabel', 'ActivityLabel'),
+    creditType: normalizeVoiceCreditType(readField(raw, 'creditType', 'CreditType')),
+    units: toFiniteNumber(readField<unknown>(raw, 'units', 'Units') ?? 0, 0),
+    occurredAt: String(readField<unknown>(raw, 'occurredAt', 'OccurredAt') ?? ''),
+    itemCount: toFiniteNumber(readField<unknown>(raw, 'itemCount', 'ItemCount') ?? 1, 1),
+    referenceId: readNullableString(raw, 'referenceId', 'ReferenceId'),
+  }
+}
+
+function normalizeUsageActivityResponse(
+  response: MerchantVoiceUsageActivityApiResponse | unknown[],
+  pageNumber = 1,
+): MerchantVoiceUsageActivityResponse {
+  if (Array.isArray(response)) {
+    const items = response.map(normalizeVoiceUsageActivityDto)
+    return {
+      items,
+      pageNumber,
+      totalPages: 1,
+      totalCount: items.length,
+      hasPreviousPage: false,
+      hasNextPage: false,
+    }
+  }
+
+  const items = (response?.items ?? []).map(normalizeVoiceUsageActivityDto)
+  return {
+    items,
+    pageNumber: response?.pageNumber ?? pageNumber,
+    totalPages: response?.totalPages ?? 1,
+    totalCount: response?.totalCount ?? items.length,
+    hasPreviousPage: response?.hasPreviousPage ?? false,
+    hasNextPage: response?.hasNextPage ?? false,
+  }
+}
+
+function buildUsageActivityParams(filters: MerchantVoiceUsageActivityFilter = {}) {
+  const params: Record<string, string | number | string[]> = {
+    ...buildMerchantVoicePagingParams(filters.pageNumber, filters.pageSize),
+  }
+  if (filters.creditType) {
+    params[MerchantVoiceListQueryParam.CreditType] = filters.creditType
+  }
+  if (filters.activityKinds?.length) {
+    params[MerchantVoiceListQueryParam.ActivityKinds] = filters.activityKinds
+  }
+  if (filters.fromUtc) {
+    params[MerchantVoiceListQueryParam.FromUtc] = filters.fromUtc
+  }
+  if (filters.toUtc) {
+    params[MerchantVoiceListQueryParam.ToUtc] = filters.toUtc
+  }
+  return params
 }
 
 export function createMerchantVoiceRepository(client: HttpClient = httpClient) {
@@ -1406,6 +1656,29 @@ export function createMerchantVoiceRepository(client: HttpClient = httpClient) {
         body,
         { headers: MERCHANT_VOICE_HEADERS },
       )
+    },
+
+    /** GET `/api/v1/merchant/nexora-voice/credits` */
+    async getCreditWallet(): Promise<VoiceCreditWalletDto> {
+      const response = await client.get<unknown>(
+        `${MERCHANT_VOICE_BASE}/credits`,
+        { headers: MERCHANT_VOICE_HEADERS },
+      )
+      return normalizeVoiceCreditWalletDto(response)
+    },
+
+    /** GET `/api/v1/merchant/nexora-voice/usage/activity` */
+    async getUsageActivity(
+      filters: MerchantVoiceUsageActivityFilter = {},
+    ): Promise<MerchantVoiceUsageActivityResponse> {
+      const response = await client.get<MerchantVoiceUsageActivityApiResponse | unknown[]>(
+        `${MERCHANT_VOICE_BASE}/usage/activity`,
+        {
+          headers: MERCHANT_VOICE_HEADERS,
+          params: buildUsageActivityParams(filters),
+        },
+      )
+      return normalizeUsageActivityResponse(response, filters.pageNumber ?? 1)
     },
   }
 }
