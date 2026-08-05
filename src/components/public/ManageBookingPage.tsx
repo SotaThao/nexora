@@ -13,6 +13,7 @@ import {
   useManageBooking,
   useRescheduleManageBooking,
 } from '../../data/hooks/usePublicBooking'
+import { PosOrderStatus } from '../../constants/posOrderStatus'
 import DateTimeStep from '../booking-public/DateTimeStep'
 
 type ViewMode = 'view' | 'confirmCancel' | 'reschedule'
@@ -78,11 +79,11 @@ export default function ManageBookingPage() {
   }
 
   const statusLabel =
-    data.status === 'Confirmed'
+    data.status === PosOrderStatus.Confirmed
       ? t('public.manageBooking.statusConfirmed')
-      : data.status === 'Pending'
+      : data.status === PosOrderStatus.Pending
         ? t('public.manageBooking.statusPending')
-        : data.status === 'Cancelled'
+        : data.status === PosOrderStatus.Cancelled
           ? t('public.manageBooking.statusCancelled')
           : t('public.manageBooking.statusOther')
 
@@ -132,7 +133,7 @@ export default function ManageBookingPage() {
           <p className="mt-1 text-xs text-nexoraMuted">{formatWallClock(data.scheduledAt)}</p>
         </div>
 
-        {data.status === 'Cancelled' ? (
+        {data.status === PosOrderStatus.Cancelled ? (
           <p className="text-center text-xs text-nexoraMuted">{t('public.manageBooking.cancelledNotice')}</p>
         ) : !data.canCancelOrReschedule ? (
           <p className="text-center text-xs text-nexoraMuted">{t('public.manageBooking.lockedNotice')}</p>

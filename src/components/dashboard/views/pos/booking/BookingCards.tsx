@@ -1,6 +1,7 @@
 // BookingCards — Ticket 9, card-grid view for the Booking tab (mobile-friendly alternative to
 // BookingTable, same data/actions).
 import { useTranslation } from '../../../../../contexts/LanguageContext'
+import { PosOrderStatus } from '../../../../../constants/posOrderStatus'
 import type { BookingListItemApiDto } from '../../../../../types/repositories'
 import { formatBookingWallClock, statusLabelKey } from './bookingFormatters'
 
@@ -25,7 +26,7 @@ export default function BookingCards({
   return (
     <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
       {bookings.map((booking) => {
-        const canAct = booking.status === 'Pending' || booking.status === 'Confirmed'
+        const canAct = booking.status === PosOrderStatus.Pending || booking.status === PosOrderStatus.Confirmed
         return (
           <div key={booking.bookingId} className="nexora-card space-y-2 p-4">
             <div className="flex items-start justify-between gap-2">

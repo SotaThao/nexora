@@ -6,6 +6,7 @@ import { useState } from 'react'
 import { CalendarPlus, Check, CheckCircle2, Clock, Copy } from 'lucide-react'
 import { useTranslation } from '../../contexts/LanguageContext'
 import { copyTextToClipboard } from '../../utils/clipboard'
+import { PosOrderStatus } from '../../constants/posOrderStatus'
 
 function pad(value: number): string {
   return String(value).padStart(2, '0')
@@ -92,7 +93,7 @@ export default function ConfirmationScreen({
 }) {
   const { t } = useTranslation()
   const [linkCopied, setLinkCopied] = useState(false)
-  const isConfirmed = status === 'Confirmed'
+  const isConfirmed = status === PosOrderStatus.Confirmed
   const manageUrl = `${window.location.origin}/booking/manage/${manageToken}`
 
   const handleCopyLink = async () => {

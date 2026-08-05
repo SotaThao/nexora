@@ -7,6 +7,7 @@ import { useMemo } from 'react'
 import { DayPilotMonth } from '@daypilot/daypilot-lite-react'
 import type { DayPilot } from '@daypilot/daypilot-lite-react'
 import { useTranslation } from '../../../../../contexts/LanguageContext'
+import { PosOrderStatus } from '../../../../../constants/posOrderStatus'
 import type { BookingListItemApiDto } from '../../../../../types/repositories'
 import { bookingDateKey, formatBookingWallClock, statusLabelKey } from './bookingFormatters'
 import { BOOKING_CALENDAR_COLORS } from '../../../views/bookingTodayConstants'
@@ -146,7 +147,7 @@ export default function BookingCalendar({
             <p className="text-center text-xs text-nexoraMuted">{t(p + 'emptyState')}</p>
           ) : (
             selectedBookings.map((booking) => {
-              const canAct = booking.status === 'Pending' || booking.status === 'Confirmed'
+              const canAct = booking.status === PosOrderStatus.Pending || booking.status === PosOrderStatus.Confirmed
               return (
                 <div key={booking.bookingId} className="rounded-lg border border-nexoraBorder p-3">
                   <div className="flex items-start justify-between gap-2">

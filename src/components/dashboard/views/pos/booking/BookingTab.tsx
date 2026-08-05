@@ -14,6 +14,7 @@ import {
   useCheckInBookingFromList,
   useRescheduleBooking,
 } from '../../../../../data/hooks/usePosBooking'
+import { POS_BOOKING_STATUS_OPTIONS } from '../../../../../constants/posOrderStatus'
 import type { TurnBoardStationApiDto } from '../../../../../types/repositories'
 import { SkeletonList } from '../../../../ui/skeleton'
 import BookingTable from './BookingTable'
@@ -211,7 +212,7 @@ export default function BookingTab({
           className="h-8 rounded-lg border border-nexoraBorder bg-white px-2 text-[11px] text-nexoraText outline-none focus:border-nexoraBrand"
         >
           <option value="">{t(p + 'filterAllStatuses')}</option>
-          {['Pending', 'Confirmed', 'Waiting', 'InService', 'Completed', 'Cancelled'].map((s) => (
+          {POS_BOOKING_STATUS_OPTIONS.map((s) => (
             <option key={s} value={s}>
               {s}
             </option>

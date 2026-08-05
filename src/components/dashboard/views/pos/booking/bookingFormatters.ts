@@ -1,6 +1,8 @@
 // Shared formatting helpers for the Booking tab views (Ticket 9). Read via UTC getters — this
 // feature has no genuine per-business timezone concept anywhere (see
 // feedback_frontend_datetime_timezone_naive memory).
+import { PosOrderStatus } from '../../../../../constants/posOrderStatus'
+
 const MONTH_NAMES_SHORT = [
   'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec',
 ]
@@ -24,12 +26,12 @@ export function bookingDateKey(iso: string): string {
 
 export function statusLabelKey(status: string): string {
   switch (status) {
-    case 'Pending': return 'statusPending'
-    case 'Confirmed': return 'statusConfirmed'
-    case 'Cancelled': return 'statusCancelled'
-    case 'Waiting': return 'statusWaiting'
-    case 'InService': return 'statusInService'
-    case 'Completed': return 'statusCompleted'
+    case PosOrderStatus.Pending: return 'statusPending'
+    case PosOrderStatus.Confirmed: return 'statusConfirmed'
+    case PosOrderStatus.Cancelled: return 'statusCancelled'
+    case PosOrderStatus.Waiting: return 'statusWaiting'
+    case PosOrderStatus.InService: return 'statusInService'
+    case PosOrderStatus.Completed: return 'statusCompleted'
     default: return 'statusConfirmed'
   }
 }

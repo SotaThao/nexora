@@ -30,6 +30,7 @@ import {
   useUpdateOrderProductLineQuantity,
 } from '../../../../data/hooks/usePosCheckout'
 import { useAssignStaffToServiceLine, useCheckInOrder, useStartOrderService } from '../../../../data/hooks/usePosOrders'
+import { PosOrderStatus } from '../../../../constants/posOrderStatus'
 import type {
   CheckInOrderItemPayload,
   CheckoutProductCatalogItemApiDto,
@@ -254,9 +255,9 @@ export default function PosOrderWorkspace({
     // completes straight from Waiting (see CompleteOrderCommand) — so treat Waiting the same
     // as InService for payment-section visibility when there's nothing to serve.
     setShowPaymentSection(
-      order.status === 'InService' ||
-        order.status === 'Completed' ||
-        (order.status === 'Waiting' && order.serviceLines.length === 0),
+      order.status === PosOrderStatus.InService ||
+        order.status === PosOrderStatus.Completed ||
+        (order.status === PosOrderStatus.Waiting && order.serviceLines.length === 0),
     )
     setReceiptChoice('sms')
     setPaymentMethod('Cash')
@@ -529,7 +530,7 @@ export default function PosOrderWorkspace({
     // Only start service first if there's actually a service to serve — a product-only
     // Waiting order has nothing to start (StartOrderService rejects it) and can go straight
     // to payment.
-    if (order?.status === 'Waiting' && hasServiceLines) {
+    if (order?.status === PosOrderStatus.Waiting && hasServiceLines) {
       startOrderService.mutate(effectiveOrderId, {
         onSuccess: () => setShowPaymentSection(true),
         onError: reportError,
@@ -837,7 +838,7 @@ export default function PosOrderWorkspace({
 
             {!isCreateMode && !showPaymentSection ? (
               <div className="flex gap-2">
-                {order?.status === 'Waiting' && hasServiceLines ? (
+                {order?.status === PosOrderStatus.Waiting && hasServiceLines ? (
                   <button
                     type="button"
                     onClick={handleStartService}

@@ -1,5 +1,6 @@
 // BookingTable — Ticket 9, table view for the Booking tab.
 import { useTranslation } from '../../../../../contexts/LanguageContext'
+import { PosOrderStatus } from '../../../../../constants/posOrderStatus'
 import type { BookingListItemApiDto } from '../../../../../types/repositories'
 import { formatBookingWallClock, statusLabelKey } from './bookingFormatters'
 
@@ -37,7 +38,7 @@ export default function BookingTable({
         </thead>
         <tbody>
           {bookings.map((booking) => {
-            const canAct = booking.status === 'Pending' || booking.status === 'Confirmed'
+            const canAct = booking.status === PosOrderStatus.Pending || booking.status === PosOrderStatus.Confirmed
             return (
               <tr key={booking.bookingId} className="border-b border-nexoraBorder last:border-0">
                 <td className="px-3 py-2 font-bold text-nexoraText">{booking.customerName}</td>

@@ -28,6 +28,7 @@ import {
 } from '../../../../data/hooks/usePosOrders'
 import { useTurnBoard } from '../../../../data/hooks/usePosTurnBoard'
 import { useAddOrderServiceLine, useCheckoutServiceCatalog } from '../../../../data/hooks/usePosCheckout'
+import { PosOrderStatus } from '../../../../constants/posOrderStatus'
 import type { OrderListItemApiDto, TurnBoardStationApiDto } from '../../../../types/repositories'
 import { SkeletonList } from '../../../ui/skeleton'
 import PosOrderWorkspace from './PosOrderWorkspace'
@@ -161,6 +162,17 @@ export default function PosFrontDeskView({
     }
   }
 
+  // Order List (manual Waiting -> InService trigger) — backend rejects this when a service
+  // line has no technician assigned yet (see StartOrderServiceCommand), surfaced as a toast.
+  const handleStartService = async (orderId: string) => {
+    try {
+      await startOrderService.mutateAsync(orderId)
+      showToast(t('components.dashboard.views.pos.PosFrontDeskView.startServiceSuccess'))
+    } catch (err: unknown) {
+      showToast(t(getErrorI18nKey(getApiErrorCode(err, 'ERROR'))), 'error')
+    }
+  }
+
   // Turn Board "Empty" station quick-assign — still 3 sequential calls (add a NEW service
   // line, assign it to this free staff, then start it). POS iPad redesign, Ticket 5:
   // kept as-is on purpose, re-scoped from the original brainstorm's "Assign Next" (auto-pick
@@ -239,7 +251,7 @@ export default function PosFrontDeskView({
           </div>
         </div>
 
-        {station.currentStatus === 'InService' && (
+        {station.currentStatus === PosOrderStatus.InService && (
           <div className="space-y-2 rounded-lg bg-posFdCanvas p-3">
             <p className="truncate text-xs font-bold text-posFdText">{station.currentCustomerName}</p>
             {station.currentPrimaryServiceName ? (
@@ -448,8 +460,8 @@ export default function PosFrontDeskView({
 
             {(() => {
               const filteredOrderList = orderList.filter((order) => {
-                if (orderListFilter === 'waiting') return order.status === 'Waiting'
-                if (orderListFilter === 'inservice') return order.status === 'InService'
+                if (orderListFilter === 'waiting') return order.status === PosOrderStatus.Waiting
+                if (orderListFilter === 'inservice') return order.status === PosOrderStatus.InService
                 return true
               })
 
@@ -462,7 +474,7 @@ export default function PosFrontDeskView({
               }
 
               const renderCancelButton = (order: OrderListItemApiDto) =>
-                order.status === 'Waiting' ? (
+                order.status === PosOrderStatus.Waiting ? (
                   <button
                     type="button"
                     onClick={(e) => {
@@ -473,6 +485,21 @@ export default function PosFrontDeskView({
                     className="shrink-0 rounded-lg border border-posFdBorder px-2.5 py-1 text-[10px] font-bold text-posFdMuted hover:border-posFdDanger hover:bg-posFdDangerBg hover:text-posFdDanger disabled:opacity-60"
                   >
                     {t('components.dashboard.views.pos.PosFrontDeskView.cancelButton')}
+                  </button>
+                ) : null
+
+              const renderStartServiceButton = (order: OrderListItemApiDto) =>
+                order.status === PosOrderStatus.Waiting ? (
+                  <button
+                    type="button"
+                    onClick={(e) => {
+                      e.stopPropagation()
+                      handleStartService(order.id)
+                    }}
+                    disabled={startOrderService.isPending}
+                    className="shrink-0 rounded-lg border border-posFdAccent bg-posFdAccent px-2.5 py-1 text-[10px] font-bold text-white hover:bg-posFdAccentDark disabled:opacity-60"
+                  >
+                    {t('components.dashboard.views.pos.PosFrontDeskView.startServiceButton')}
                   </button>
                 ) : null
 
@@ -504,7 +531,10 @@ export default function PosFrontDeskView({
                           <span className="text-[11px] text-posFdMuted">
                             {t('components.dashboard.views.pos.PosFrontDeskView.waitMinutes', { minutes: order.elapsedMinutes })}
                           </span>
-                          {renderCancelButton(order)}
+                          <div className="flex shrink-0 items-center gap-1.5">
+                            {renderStartServiceButton(order)}
+                            {renderCancelButton(order)}
+                          </div>
                         </div>
                       </div>
                     ))}
@@ -549,7 +579,12 @@ export default function PosFrontDeskView({
                           <td className="py-2 pr-3 text-right tabular-nums text-posFdMuted">
                             {t('components.dashboard.views.pos.PosFrontDeskView.waitMinutes', { minutes: order.elapsedMinutes })}
                           </td>
-                          <td className="py-2 text-right">{renderCancelButton(order)}</td>
+                          <td className="py-2 text-right">
+                            <div className="flex justify-end gap-1.5">
+                              {renderStartServiceButton(order)}
+                              {renderCancelButton(order)}
+                            </div>
+                          </td>
                         </tr>
                       ))}
                     </tbody>

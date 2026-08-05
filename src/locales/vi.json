@@ -3001,6 +3001,8 @@
             "viewModeList": "Xem dạng danh sách",
             "viewModeCard": "Xem dạng thẻ",
             "cancelButton": "Hủy",
+            "startServiceButton": "Bắt đầu phục vụ",
+            "startServiceSuccess": "Đã bắt đầu phục vụ.",
             "confirmCancelTitle": "Gỡ khỏi hàng đợi?",
             "confirmCancelBody": "\"{{name}}\" sẽ bị gỡ khỏi hàng đợi check-in.",
             "noServiceAvailable": "Chưa có dịch vụ nào để gán — thiết lập dịch vụ POS trước.",
