@@ -13,7 +13,7 @@ import StepSuccess from './register/steps/StepSuccess'
 import PayoutEditModal from './register/modals/PayoutEditModal'
 import apiAuthAdapter from '../auth/adapters/apiAuthAdapter'
 import { loadPendingRegistration } from '../auth/pendingRegistration'
-import { useClearMerchantSetup, useCreateBusiness } from '../data/hooks/useMerchantSetup'
+import { useClearMerchantSetup, useCompleteOnboarding, useCreateBusiness } from '../data/hooks/useMerchantSetup'
 import { useClearProfileSettings } from '../data/hooks/useProfileSettings'
 import { logger } from '../utils/logger'
 import { saveRefCode, getSavedRefCode, saveLeg, getSavedLeg } from '../utils/affiliateReferral'
@@ -35,6 +35,7 @@ export default function RegisterWizard() {
   const clearMerchantSetupMutation = useClearMerchantSetup()
   const clearProfileSettingsMutation = useClearProfileSettings()
   const createBusinessMutation = useCreateBusiness()
+  const completeOnboardingMutation = useCompleteOnboarding()
 
   const ssoEmail = location.state?.ssoEmail || ''
   const pendingRegistration = loadPendingRegistration(location.state?.resumeEmail)
@@ -54,34 +55,52 @@ export default function RegisterWizard() {
     clearMerchantSetupMutation.mutate()
     clearProfileSettingsMutation.mutate()
 
+    if (form.role === 'personal') {
+      try {
+        await refreshSession()
+      } catch (e) {
+        logger.error('Failed to get session in handleRegisterAndLogin', e)
+      }
+      navigate('/staff', { replace: true })
+      return
+    }
+
+    // Seed a placeholder business profile so the dashboard shows real data
+    // right away instead of an empty state; the merchant edits/replaces
+    // these values later from SetupWizard/Settings. Non-fatal on failure —
+    // the dashboard already tolerates a missing business (SetupGuideBanner).
+    try {
+      const seedName = (registeredEmail.split('@')[0] || '').trim() || 'My Business'
+      await createBusinessMutation.mutateAsync({
+        name: seedName,
+        businessType: 'Nail Salon',
+        address: 'Updating...',
+        phone: 'Updating...',
+        website: '',
+        logoUrl: null,
+      })
+
+      // Only once the seed landed: mark onboarding done server-side
+      // (isPublic=true + onboardingStep=5) so the account is not left in the
+      // incomplete-onboarding state — session.hasCompletedOnboarding derives
+      // from those two fields (see apiAuthAdapter.getBusinessOnboardingState).
+      try {
+        await completeOnboardingMutation.mutateAsync()
+      } catch (e) {
+        logger.error('Failed to complete onboarding after seeding business profile', e)
+      }
+    } catch (e) {
+      logger.error('Failed to seed business profile after registration', e)
+    }
+
+    // Session is resolved after the seed so it reflects hasBusiness /
+    // hasCompletedOnboarding from the business we just created.
     try {
       await refreshSession()
     } catch (e) {
       logger.error('Failed to get session in handleRegisterAndLogin', e)
     }
-
-    if (form.role === 'personal') {
-      navigate('/staff', { replace: true })
-    } else {
-      // Seed a placeholder business profile so the dashboard shows real data
-      // right away instead of an empty state; the merchant edits/replaces
-      // these values later from SetupWizard/Settings. Non-fatal on failure —
-      // the dashboard already tolerates a missing business (SetupGuideBanner).
-      try {
-        const seedName = (registeredEmail.split('@')[0] || '').trim() || 'My Business'
-        await createBusinessMutation.mutateAsync({
-          name: seedName,
-          businessType: 'Nail Salon',
-          address: 'Updating...',
-          phone: 'Updating...',
-          website: '',
-          logoUrl: null,
-        })
-      } catch (e) {
-        logger.error('Failed to seed business profile after registration', e)
-      }
-      navigate('/dashboard', { replace: true })
-    }
+    navigate('/dashboard', { replace: true })
   }
 
   const formProps = {
