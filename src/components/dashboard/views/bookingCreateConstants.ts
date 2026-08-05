@@ -21,12 +21,52 @@ export const BOOKING_CREATE_CELL_ADD_HTML =
 
 export const BOOKING_CREATE_CELL_PAST_CLASS = 'is-past-slot'
 
+/** Chip selection is scoped to the category accordion it was tapped in. */
+export type BookingCreateServicePick = {
+  categoryId: string
+  serviceId: string
+}
+
+export function isBookingCreateServicePicked(
+  picks: BookingCreateServicePick[],
+  categoryId: string,
+  serviceId: string,
+) {
+  return picks.some(
+    (pick) => pick.categoryId === categoryId && pick.serviceId === serviceId,
+  )
+}
+
+export function toggleBookingCreateServicePick(
+  picks: BookingCreateServicePick[],
+  categoryId: string,
+  serviceId: string,
+): BookingCreateServicePick[] {
+  if (isBookingCreateServicePicked(picks, categoryId, serviceId)) {
+    return picks.filter(
+      (pick) => !(pick.categoryId === categoryId && pick.serviceId === serviceId),
+    )
+  }
+  return [...picks, { categoryId, serviceId }]
+}
+
+/** API payload uses unique service ids even if the same service was shown under many categories. */
+export function uniqueServiceIdsFromPicks(picks: BookingCreateServicePick[]) {
+  return [...new Set(picks.map((pick) => pick.serviceId).filter(Boolean))]
+}
+
 export enum BookingCreateField {
   Phone = 'phone',
   Name = 'name',
   Services = 'services',
   Date = 'date',
   Time = 'time',
+}
+
+/** Where the create form mounts: centered overlay vs calendar side rail. */
+export enum BookingCreateVariant {
+  Modal = 'modal',
+  Panel = 'panel',
 }
 
 export type BookingCreateFieldErrors = Partial<Record<BookingCreateField, string>>

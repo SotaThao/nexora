@@ -11,6 +11,7 @@ import {
   toUtcBookingSlot,
 } from '../../../data/repositories/publicVoiceBooking'
 import {
+  PUBLIC_BOOKING_ANY_STAFF_ID,
   PUBLIC_BOOKING_EM_DASH,
   PUBLIC_BOOKING_LANG,
   PUBLIC_BOOKING_ROUTE,
@@ -37,6 +38,21 @@ export function getDefaultBookingSlot(now = new Date()) {
 
 export function moneyFromCents(cents) {
   return `$${(Number(cents || 0) / 100).toFixed(0)}`
+}
+
+/** Match HTML: zero / missing price → contact label. */
+export function formatServiceChoicePrice(service, contactLabel) {
+  const cents = Number(service?.priceCents || 0)
+  if (cents <= 0) return contactLabel || 'Contact'
+  return moneyFromCents(cents)
+}
+
+export function selectedServiceChipLabel(service, otherCategoryName) {
+  const category =
+    String(service?.categoryName || '').trim() ||
+    otherCategoryName ||
+    'Other services'
+  return `${category} - ${service?.name || ''}`.trim()
 }
 
 export function bookingLocaleFromLang(lang) {
@@ -144,7 +160,10 @@ export function validateBookingDraft(draft, catalog, minDate) {
   }
 
   if (staff.length > 0) {
-    if (!staffId || !staff.some((member) => member.id === staffId)) {
+    const isAny = staffId === PUBLIC_BOOKING_ANY_STAFF_ID
+    if (!staffId) {
+      errors.push(PUBLIC_BOOKING_VALIDATION_ERROR.staff)
+    } else if (!isAny && !staff.some((member) => member.id === staffId)) {
       errors.push(PUBLIC_BOOKING_VALIDATION_ERROR.staff)
     }
   }
@@ -170,7 +189,11 @@ export function validateBookingDraft(draft, catalog, minDate) {
   return { ok: errors.length === 0, errors }
 }
 
-export function buildCreateBookingBody(draft, { timeZone } = {}) {
+/**
+ * Build POST body for `CreateOnlineBookingRequest` (OpenAPI: `serviceIds` array).
+ * Slot conversion always uses the device timezone (ignores tenant timeZone).
+ */
+export function buildCreateBookingBody(draft) {
   const staffId = String(draft?.selectedStaffId || '').trim()
   const notes = String(draft?.note || '').trim()
   const phoneRaw = String(draft?.customer?.phone || '').trim()
@@ -180,12 +203,8 @@ export function buildCreateBookingBody(draft, { timeZone } = {}) {
     ? draft.selectedServiceIds.map((id) => String(id || '').trim()).filter(Boolean)
     : []
 
-  // UI keeps local selectedDate/selectedTime; only the API payload is UTC.
-  const utcSlot = toUtcBookingSlot(
-    draft?.selectedDate,
-    draft?.selectedTime,
-    timeZone,
-  )
+  // UI keeps local selectedDate/selectedTime; API payload is UTC in device TZ.
+  const utcSlot = toUtcBookingSlot(draft?.selectedDate, draft?.selectedTime)
 
   const body = {
     customerName: String(draft?.customer?.name || '').trim(),
@@ -195,7 +214,7 @@ export function buildCreateBookingBody(draft, { timeZone } = {}) {
     startTime: utcSlot.startTime,
   }
 
-  if (staffId) body.staffId = staffId
+  if (staffId && staffId !== PUBLIC_BOOKING_ANY_STAFF_ID) body.staffId = staffId
   if (notes) body.notes = notes
   return body
 }
@@ -246,7 +265,7 @@ export function createDefaultBookingState(defaultSlot) {
     step: PUBLIC_BOOKING_STEP.form,
     customer: { phone: '', name: '' },
     selectedServiceIds: [],
-    selectedStaffId: '',
+    selectedStaffId: PUBLIC_BOOKING_ANY_STAFF_ID,
     selectedDate: defaultSlot.date,
     selectedTime: defaultSlot.time,
     note: '',
@@ -254,11 +273,17 @@ export function createDefaultBookingState(defaultSlot) {
   }
 }
 
-/** Normalize `?phone=` into the same dial+national shape the form edits. */
+/** Normalize `?phone=` / `?p=` into dial + national shape the form edits. */
 export function formatBookingPrefillPhone(raw) {
   const value = String(raw || '').trim()
   if (!value) return ''
-  const parsed = parsePhone(value)
+  const digitsOnly = value.replace(/\D/g, '')
+  const phoneForParse = value.startsWith('+')
+    ? value
+    : digitsOnly
+      ? `+${digitsOnly}`
+      : value
+  const parsed = parsePhone(phoneForParse)
   const dialCode = parsed.countryCode || PhoneDialCode.US
   const national = formatNationalNumber(parsed.nationalNumber, dialCode)
   if (!String(national || '').replace(/\D/g, '')) return ''
@@ -266,15 +291,75 @@ export function formatBookingPrefillPhone(raw) {
 }
 
 /**
- * Read optional SMS deep-link prefill (`phone`, `name`) from the booking URL.
+ * Read optional SMS deep-link prefill (`phone` / `p`, `name`) from the booking URL.
+ * `p` is the SMS campaign profile-phone query; `phone` remains the generic prefill key.
  * @param {URLSearchParams | { get: (key: string) => string | null }} searchParams
  */
 export function readBookingCustomerPrefill(searchParams) {
   if (!searchParams || typeof searchParams.get !== 'function') {
     return { phone: '', name: '' }
   }
+  const phoneRaw =
+    searchParams.get(PUBLIC_BOOKING_ROUTE.phoneQuery) ||
+    searchParams.get(PUBLIC_BOOKING_ROUTE.profilePhoneQuery) ||
+    ''
   return {
-    phone: formatBookingPrefillPhone(searchParams.get(PUBLIC_BOOKING_ROUTE.phoneQuery)),
+    phone: formatBookingPrefillPhone(phoneRaw),
     name: String(searchParams.get(PUBLIC_BOOKING_ROUTE.nameQuery) || '').trim(),
   }
+}
+
+/**
+ * Raw phone for GET /bookings?phone= (API strips interior whitespace; FE drops leading `+`).
+ * Prefers `phone`, falls back to `p` so SMS deep-links still trigger customer lookup.
+ */
+export function readBookingLookupPhone(searchParams) {
+  if (!searchParams || typeof searchParams.get !== 'function') return ''
+  const raw =
+    searchParams.get(PUBLIC_BOOKING_ROUTE.phoneQuery) ||
+    searchParams.get(PUBLIC_BOOKING_ROUTE.profilePhoneQuery) ||
+    ''
+  return String(raw).replace(/\s+/g, '').replace(/^\+/, '').trim()
+}
+
+/**
+ * Map API `customer` (when phone matches an active customer) into form fields.
+ * @param {{ name?: string | null, phoneNumber?: string } | null | undefined} customer
+ */
+export function customerFromBookingPageData(customer) {
+  if (!customer) return null
+  const phoneNumber = String(customer.phoneNumber || '').trim()
+  if (!phoneNumber) return null
+  return {
+    phone: formatBookingPrefillPhone(phoneNumber),
+    name: String(customer.name ?? '').trim(),
+  }
+}
+
+/** Case-insensitive service name match for public booking search. */
+export function serviceMatchesSearchQuery(serviceName, query) {
+  const needle = String(query || '').trim().toLowerCase()
+  if (!needle) return false
+  return String(serviceName || '')
+    .toLowerCase()
+    .includes(needle)
+}
+
+/**
+ * Split a service name into plain / highlight segments for search UI.
+ * @returns {Array<{ text: string, highlight: boolean }>}
+ */
+export function getServiceNameHighlightParts(serviceName, query) {
+  const name = String(serviceName || '')
+  const needle = String(query || '').trim()
+  if (!name || !needle) return [{ text: name, highlight: false }]
+
+  const escaped = needle.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
+  const parts = name.split(new RegExp(`(${escaped})`, 'ig'))
+  return parts
+    .filter((part) => part.length > 0)
+    .map((part) => ({
+      text: part,
+      highlight: part.toLowerCase() === needle.toLowerCase(),
+    }))
 }

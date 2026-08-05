@@ -54,6 +54,7 @@ import {
   BOOKING_CREATE_OPTIMISTIC_TTL_MS,
   BOOKING_CREATE_STAFF_PAGE_SIZE,
   BOOKING_CREATE_TK,
+  BookingCreateVariant,
 } from './bookingCreateConstants'
 import { useBookingHubVoiceEnabled } from './BookingHubVoiceContext'
 import Pagination from '../../ui/Pagination'
@@ -73,6 +74,11 @@ import {
   BOOKING_STATUS_FILTER_ORDER,
   BOOKING_STATUS_META,
   BOOKING_TODAY_KEYWORD_PLACEHOLDER_KEY,
+  BOOKING_APPOINTMENT_PANEL_MODAL_BODY_CLASS,
+  BOOKING_APPOINTMENT_PANEL_MODAL_MQ,
+  BookingAppointmentPanelPresentation,
+  BookingAppointmentPanelState,
+  BookingTodayLayout,
   BookingTodayViewMode,
 } from './bookingTodayConstants'
 import { toUtcBookingSlot } from '../../../data/repositories/publicVoiceBooking'
@@ -92,6 +98,7 @@ import {
   openNativeDateTimePicker,
   paginateItems,
   resolveBookingListPaging,
+  toBookingHubLocaleTag,
   toLocalDateIso,
 } from './bookingHubFormatters'
 import BookingKeywordSearchField from './BookingKeywordSearchField'
@@ -622,15 +629,24 @@ function BookingTableMobileList({
 /** Below this content-pane width, stacked rows beat a cramped 6-col table. */
 const COMPACT_TABLE_PANEL_MAX = 720
 
-export default function BookingTodayPanel() {
+type BookingTodayPanelProps = {
+  bookingLayout?: BookingTodayLayout
+}
+
+export default function BookingTodayPanel({
+  bookingLayout = BookingTodayLayout.Appointments,
+}: BookingTodayPanelProps) {
   const { t, currentLanguage } = useTranslation()
   const { showToast } = useNotification()
   const voiceEnabled = useBookingHubVoiceEnabled()
+  const isCalendarLayout = bookingLayout === BookingTodayLayout.Calendar
+  const hubLocale = toBookingHubLocaleTag(currentLanguage)
   const listPanelRef = useRef<HTMLElement>(null)
   const [panelWidth, setPanelWidth] = useState<number | null>(null)
   // Viewport fallback only until ResizeObserver measures the real content pane
   // (sidebar can leave a narrow panel on a wide desktop viewport).
   const narrowViewportFallback = useMediaQuery('(max-width: 767px)')
+  const isNarrowAppointmentPanel = useMediaQuery(BOOKING_APPOINTMENT_PANEL_MODAL_MQ)
   const useCompactTableList = panelWidth != null
     ? panelWidth < COMPACT_TABLE_PANEL_MAX
     : narrowViewportFallback
@@ -678,12 +694,29 @@ export default function BookingTodayPanel() {
 
   const statusFilterActive = statusFilter !== BOOKING_HUB_STATUS_FILTER_ALL
 
-  const sharedListFilters = useMemo(() => ({
-    searchBy: apiSearchField,
-    keyword: apiKeyword,
-    dateFrom: dateFromApi,
-    dateTo: dateToApi,
-  }), [apiSearchField, apiKeyword, dateFromApi, dateToApi])
+  const sharedListFilters = useMemo(() => {
+    if (isCalendarLayout) {
+      return {
+        searchBy: undefined,
+        keyword: undefined,
+        dateFrom: localDateIsoToUtcRange(calendarDate, 'start'),
+        dateTo: localDateIsoToUtcRange(calendarDate, 'end'),
+      }
+    }
+    return {
+      searchBy: apiSearchField,
+      keyword: apiKeyword,
+      dateFrom: dateFromApi,
+      dateTo: dateToApi,
+    }
+  }, [
+    isCalendarLayout,
+    calendarDate,
+    apiSearchField,
+    apiKeyword,
+    dateFromApi,
+    dateToApi,
+  ])
 
   const hasActiveFilters = useMemo(() => (
     statusFilterActive
@@ -699,13 +732,13 @@ export default function BookingTodayPanel() {
   const pollInterval = voiceEnabled ? MERCHANT_VOICE_BOOKINGS_POLL_INTERVAL_MS : false
 
   const { data: statistics, isLoading: isStatisticsLoading } = useMerchantVoiceBookingStatistics({
-    enabled: voiceEnabled,
+    enabled: voiceEnabled && !isCalendarLayout,
     refetchInterval: pollInterval,
   })
   const pagedBookingsQuery = useMerchantVoiceBookings(
     {
-      pageNumber,
-      pageSize,
+      pageNumber: isCalendarLayout ? 1 : pageNumber,
+      pageSize: isCalendarLayout ? BOOKING_CREATE_STAFF_PAGE_SIZE : pageSize,
       ...sharedListFilters,
     },
     {
@@ -717,7 +750,7 @@ export default function BookingTodayPanel() {
   const collectedBookingsQuery = useMerchantVoiceBookingsCollected(
     sharedListFilters,
     {
-      enabled: voiceEnabled && statusFilterActive,
+      enabled: voiceEnabled && statusFilterActive && !isCalendarLayout,
       refetchInterval: pollInterval,
     },
   )
@@ -737,7 +770,7 @@ export default function BookingTodayPanel() {
       pageSize: BOOKING_CREATE_STAFF_PAGE_SIZE,
       status: MerchantVoiceStaffStatus.Active,
     },
-    { enabled: voiceEnabled && viewMode === BookingTodayViewMode.Calendar },
+    { enabled: voiceEnabled && isCalendarLayout },
   )
   const calendarStaffNames = useMemo(
     () => (calendarStaffResponse?.items ?? [])
@@ -813,6 +846,28 @@ export default function BookingTodayPanel() {
     setCreatePrefill(prefill)
     setIsCreateOpen(true)
   }
+
+  const closeCreateModal = () => {
+    setIsCreateOpen(false)
+    setCreatePrefill(null)
+  }
+
+  const calendarCreateAsOverlay = isCalendarLayout && isCreateOpen && isNarrowAppointmentPanel
+
+  useEffect(() => {
+    if (!calendarCreateAsOverlay) {
+      document.body.classList.remove(BOOKING_APPOINTMENT_PANEL_MODAL_BODY_CLASS)
+      return undefined
+    }
+    document.body.classList.add(BOOKING_APPOINTMENT_PANEL_MODAL_BODY_CLASS)
+    return () => {
+      document.body.classList.remove(BOOKING_APPOINTMENT_PANEL_MODAL_BODY_CLASS)
+    }
+  }, [calendarCreateAsOverlay])
+
+  useEffect(() => {
+    closeCreateModal()
+  }, [bookingLayout])
 
   const handleCalendarSlotSelect = (slot: BookingCalendarSlotSelect) => {
     openCreateModal({
@@ -1042,57 +1097,80 @@ export default function BookingTodayPanel() {
   }, [])
 
   return (
-    <div className="booking-sub-panel is-active" aria-busy={isStatisticsLoading || isListLoading}>
-      {isStatisticsLoading ? (
-        <BookingKpiSkeleton />
-      ) : (
-      <div className="overview-kpis">
-        <BookingKpiCard
-          accentStyle={BOOKING_KPI_ACCENTS.electric}
-          icon={<CalendarKpiIcon />}
-          badge={t(`${TK}.today.badgeNew`)}
-          badgeClass="booking-status-new"
-          label={t(`${TK}.kpi.todayBookings`)}
-          value={stats.todayCount}
-          trend={t(`${TK}.today.kpiTodayTrend`)}
-        />
-        <BookingKpiCard
-          accentStyle={BOOKING_KPI_ACCENTS.success}
-          icon={<CheckKpiIcon />}
-          badge={t(`${TK}.today.badgeSmsActive`)}
-          badgeClass="booking-status-done"
-          label={t(`${TK}.kpi.completed`)}
-          value={stats.done}
-          trend={t(`${TK}.today.kpiDoneTrend`)}
-        />
-        <BookingKpiCard
-          accentStyle={BOOKING_KPI_ACCENTS.red}
-          icon={<XKpiIcon />}
-          badge={t(`${TK}.today.badgeNoShow`)}
-          badgeClass="booking-status-noshow"
-          label={t(`${TK}.today.kpiNoReview`)}
-          value={stats.noShow}
-          trend={t(`${TK}.today.kpiNoShowTrend`)}
-        />
-      </div>
-      )}
+    <div
+      className="booking-appointment-layout"
+      data-booking-appointment-workspace
+      data-booking-layout={bookingLayout}
+    >
+      <div className="booking-appointment-main">
+        <div className="booking-sub-panel is-active" aria-busy={isStatisticsLoading || isListLoading}>
+          {isCalendarLayout ? null : isStatisticsLoading ? (
+            <BookingKpiSkeleton />
+          ) : (
+            <div className="overview-kpis">
+              <BookingKpiCard
+                accentStyle={BOOKING_KPI_ACCENTS.electric}
+                icon={<CalendarKpiIcon />}
+                badge={t(`${TK}.today.badgeNew`)}
+                badgeClass="booking-status-new"
+                label={t(`${TK}.kpi.todayBookings`)}
+                value={stats.todayCount}
+                trend={t(`${TK}.today.kpiTodayTrend`)}
+              />
+              <BookingKpiCard
+                accentStyle={BOOKING_KPI_ACCENTS.success}
+                icon={<CheckKpiIcon />}
+                badge={t(`${TK}.today.badgeSmsActive`)}
+                badgeClass="booking-status-done"
+                label={t(`${TK}.kpi.completed`)}
+                value={stats.done}
+                trend={t(`${TK}.today.kpiDoneTrend`)}
+              />
+              <BookingKpiCard
+                accentStyle={BOOKING_KPI_ACCENTS.red}
+                icon={<XKpiIcon />}
+                badge={t(`${TK}.today.badgeNoShow`)}
+                badgeClass="booking-status-noshow"
+                label={t(`${TK}.today.kpiNoReview`)}
+                value={stats.noShow}
+                trend={t(`${TK}.today.kpiNoShowTrend`)}
+              />
+            </div>
+          )}
 
-      <div className="booking-grid">
-        <article className="overview-card overview-card-pad" ref={listPanelRef}>
+          <div className="booking-grid">
+            <article className="overview-card overview-card-pad" ref={listPanelRef}>
+              {isCalendarLayout ? (
+                isListLoading ? (
+                  <BookingTodayListSkeleton viewMode={BookingTodayViewMode.Table} isMobileUI={useCompactTableList} />
+                ) : (
+                  <BookingTeamCalendar
+                    bookings={calendarBookings}
+                    staffNames={calendarStaffNames}
+                    calendarDate={calendarDate}
+                    onCalendarDateChange={setCalendarDate}
+                    onEventClick={(bookingId) => handleAction(bookingId, 'detail')}
+                    onSlotSelect={handleCalendarSlotSelect}
+                    onAddClick={() => openCreateModal(null)}
+                    addLabel={t(`${BOOKING_CREATE_TK}.newButton`)}
+                    todayIso={todayIso}
+                    locale={hubLocale}
+                    title={t(`${TK}.today.calendarTitle`)}
+                    subtitle={t(`${TK}.today.calendarSubtitle`)}
+                    todayLabel={t(`${TK}.today.todayLabel`)}
+                    prevAriaLabel={t(`${TK}.today.calendarPrev`)}
+                    nextAriaLabel={t(`${TK}.today.calendarNext`)}
+                    unassignedLabel={t(`${TK}.today.calendarUnassigned`)}
+                  />
+                )
+              ) : (
+                <>
           <div className="booking-daybar">
             <div className="booking-date">
               <span className="booking-action-icon"><CalendarIcon /></span>
               <span>{t(`${TK}.today.overviewTitle`)}</span>
             </div>
             <div className="booking-daybar-actions">
-              <button
-                className="booking-primary-button booking-overview-add-button"
-                type="button"
-                onClick={() => openCreateModal(null)}
-              >
-                <PlusIcon />
-                {t(`${BOOKING_CREATE_TK}.newButton`)}
-              </button>
               <div className="booking-view-switch" role="group" aria-label={t(`${TK}.today.viewMode`)}>
                 <button
                   className={`booking-view-button ${viewMode === BookingTodayViewMode.Table ? 'is-active' : ''}`}
@@ -1111,15 +1189,6 @@ export default function BookingTodayPanel() {
                 >
                   <GridIcon />
                   <span>{t(`${TK}.today.cardView`)}</span>
-                </button>
-                <button
-                  className={`booking-view-button ${viewMode === BookingTodayViewMode.Calendar ? 'is-active' : ''}`}
-                  type="button"
-                  aria-pressed={viewMode === BookingTodayViewMode.Calendar}
-                  onClick={() => setViewMode(BookingTodayViewMode.Calendar)}
-                >
-                  <CalendarEventIcon />
-                  <span>{t(`${TK}.today.calendarView`)}</span>
                 </button>
               </div>
               <BookingFilterPopover
@@ -1193,6 +1262,14 @@ export default function BookingTodayPanel() {
                   </button>
                 </div>
               </BookingFilterPopover>
+              <button
+                className="booking-primary-button booking-overview-add-button"
+                type="button"
+                onClick={() => openCreateModal(null)}
+              >
+                <PlusIcon />
+                {t(`${BOOKING_CREATE_TK}.newButton`)}
+              </button>
             </div>
           </div>
 
@@ -1225,24 +1302,7 @@ export default function BookingTodayPanel() {
           </div>
 
           {isListLoading ? (
-            <BookingTodayListSkeleton viewMode={viewMode === BookingTodayViewMode.Calendar ? BookingTodayViewMode.Table : viewMode} isMobileUI={useCompactTableList} />
-          ) : viewMode === BookingTodayViewMode.Calendar ? (
-            <BookingTeamCalendar
-              bookings={calendarBookings}
-              staffNames={calendarStaffNames}
-              calendarDate={calendarDate}
-              onCalendarDateChange={setCalendarDate}
-              onEventClick={(bookingId) => handleAction(bookingId, 'detail')}
-              onSlotSelect={handleCalendarSlotSelect}
-              todayIso={todayIso}
-              locale={currentLanguage === 'vi' ? 'vi-VN' : 'en-US'}
-              title={t(`${TK}.today.calendarTitle`)}
-              subtitle={t(`${TK}.today.calendarSubtitle`)}
-              todayLabel={t(`${TK}.today.todayLabel`)}
-              prevAriaLabel={t(`${TK}.today.calendarPrev`)}
-              nextAriaLabel={t(`${TK}.today.calendarNext`)}
-              unassignedLabel={t(`${TK}.today.calendarUnassigned`)}
-            />
+            <BookingTodayListSkeleton viewMode={viewMode} isMobileUI={useCompactTableList} />
           ) : viewMode === BookingTodayViewMode.Table && useCompactTableList ? (
             <BookingTableMobileList
               bookings={appointmentBookings}
@@ -1356,7 +1416,7 @@ export default function BookingTodayPanel() {
             </div>
           )}
 
-          {!isListLoading && viewMode !== BookingTodayViewMode.Calendar && appointmentBookings.length > 0 ? (
+          {!isListLoading && appointmentBookings.length > 0 ? (
             <Pagination
               pageNumber={pageNumber}
               pageSize={pageSize}
@@ -1370,7 +1430,7 @@ export default function BookingTodayPanel() {
             />
           ) : null}
 
-          {!isListLoading && viewMode !== BookingTodayViewMode.Calendar && appointmentBookings.length === 0 ? (
+          {!isListLoading && appointmentBookings.length === 0 ? (
             <div className="booking-list-empty">
               <div className="booking-list-empty-icon" aria-hidden="true">
                 <JournalIcon />
@@ -1392,20 +1452,62 @@ export default function BookingTodayPanel() {
               ) : null}
             </div>
           ) : null}
+                </>
+              )}
 
-        </article>
+            </article>
+          </div>
+        </div>
       </div>
 
-      <BookingCreateAppointmentModal
-        open={isCreateOpen}
-        prefill={createPrefill}
-        locale={currentLanguage === 'vi' ? 'vi-VN' : 'en-US'}
-        onClose={() => {
-          setIsCreateOpen(false)
-          setCreatePrefill(null)
-        }}
-        onCreated={handleAppointmentCreated}
-      />
+      {isCalendarLayout ? (
+        <>
+          <div
+            className="booking-appointment-backdrop"
+            data-booking-appointment-backdrop
+            hidden={!calendarCreateAsOverlay}
+            onClick={closeCreateModal}
+          />
+          <aside
+            className="booking-appointment-panel overview-card"
+            data-booking-appointment-panel
+            data-booking-panel-presentation={
+              calendarCreateAsOverlay
+                ? BookingAppointmentPanelPresentation.Modal
+                : BookingAppointmentPanelPresentation.Rail
+            }
+            role={calendarCreateAsOverlay ? 'dialog' : 'complementary'}
+            aria-modal={calendarCreateAsOverlay ? true : undefined}
+            aria-label={t(`${TK}.today.panelAriaLabel`)}
+          >
+            {isCreateOpen ? (
+              <BookingCreateAppointmentModal
+                open={isCreateOpen}
+                variant={BookingCreateVariant.Panel}
+                prefill={createPrefill}
+                locale={hubLocale}
+                onClose={closeCreateModal}
+                onCreated={handleAppointmentCreated}
+              />
+            ) : (
+              <div data-booking-panel-state={BookingAppointmentPanelState.Empty}>
+                <CalendarEventIcon />
+                <strong>{t(`${TK}.today.panelEmptyTitle`)}</strong>
+                <span>{t(`${TK}.today.panelEmptyDescription`)}</span>
+              </div>
+            )}
+          </aside>
+        </>
+      ) : (
+        <BookingCreateAppointmentModal
+          open={isCreateOpen}
+          variant={BookingCreateVariant.Modal}
+          prefill={createPrefill}
+          locale={hubLocale}
+          onClose={closeCreateModal}
+          onCreated={handleAppointmentCreated}
+        />
+      )}
 
       {detailBooking ? (
         <div

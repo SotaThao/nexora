@@ -583,18 +583,19 @@ body:not(.homepage-active):not(.public-booking-active) a:focus-visible {
   display: none;
 }
 
-/* Print styles for QR Code Stand */
+/* Print styles for QR Code Stand
+   Scoped so other print surfaces (e.g. AI Voice setup guide) are not wiped blank. */
 @media print {
   /* Hide all screen-only parts of the dashboard and other components */
-  aside,
-  .lg\:pl-72,
-  main,
-  header,
-  footer,
-  .no-print,
-  button,
-  a,
-  .fixed.bottom-4 {
+  body:not(.printing-ai-voice-guide) aside,
+  body:not(.printing-ai-voice-guide) .lg\:pl-72,
+  body:not(.printing-ai-voice-guide) main,
+  body:not(.printing-ai-voice-guide) header,
+  body:not(.printing-ai-voice-guide) footer,
+  body:not(.printing-ai-voice-guide) .no-print,
+  body:not(.printing-ai-voice-guide) button,
+  body:not(.printing-ai-voice-guide) a,
+  body:not(.printing-ai-voice-guide) .fixed.bottom-4 {
     display: none !important;
   }
 

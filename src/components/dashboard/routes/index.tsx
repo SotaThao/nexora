@@ -18,6 +18,7 @@ import SubscriptionPaymentModal from '../modals/SubscriptionPaymentModal'
 import type { PurchasableSubscriptionPlan } from '../../../data/repositories/subscriptionPayments'
 import { useSubscriptionPackages } from '../../../data/hooks/useSubscriptionPayments'
 import BookingHubView from '../views/BookingHubView'
+import AiVoiceSetupGuideView from '../views/AiVoiceSetupGuideView'
 import StaffDetailView from '../../StaffDetailView'
 import { useMerchantStaffByCode } from '../../../data/hooks/useMerchantStaff'
 import { useOpenProductManagement } from '../../../data/hooks/useOpenProductManagement'
@@ -297,6 +298,10 @@ export function ReportsRoute() {
 
 export function BookingHubRoute() {
   return <BookingHubView />
+}
+
+export function AiVoiceSetupGuideRoute() {
+  return <AiVoiceSetupGuideView />
 }
 
 export function ProductManagementRoute() {

@@ -7,6 +7,8 @@ type BookingFilterPopoverProps = {
   isOpen: boolean
   onOpenChange: (open: boolean) => void
   children: React.ReactNode
+  /** Narrower popover for single-field filters (customers / call log). */
+  compact?: boolean
 }
 
 /**
@@ -19,6 +21,7 @@ export default function BookingFilterPopover({
   isOpen,
   onOpenChange,
   children,
+  compact = false,
 }: BookingFilterPopoverProps) {
   const wrapRef = useRef<HTMLDivElement>(null)
   const menuId = useId()
@@ -46,7 +49,7 @@ export default function BookingFilterPopover({
   }, [isOpen, onOpenChange])
 
   return (
-    <div className="booking-filter-wrap" ref={wrapRef}>
+    <div className={`booking-filter-wrap${compact ? ' booking-filter-wrap--compact' : ''}`} ref={wrapRef}>
       <button
         className={`booking-secondary-button booking-filter-toggle${isOpen ? ' is-active' : ''}`}
         type="button"
@@ -58,7 +61,7 @@ export default function BookingFilterPopover({
         <span>{toggleLabel}</span>
       </button>
       <div
-        className="booking-filter-popover"
+        className={`booking-filter-popover${compact ? ' booking-filter-popover--compact' : ''}`}
         id={menuId}
         hidden={!isOpen}
         role="dialog"

@@ -9,7 +9,7 @@ export interface ApiError {
 export interface HttpRequestInit extends RequestInit {
   anonymous?: boolean
   _isRefresh?: boolean
-  params?: Record<string, string | number | boolean | null | undefined>
+  params?: Record<string, string | number | boolean | string[] | number[] | null | undefined>
 }
 
 export type RequestInterceptor = (init: HttpRequestInit) => HttpRequestInit

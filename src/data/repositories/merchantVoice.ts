@@ -16,6 +16,7 @@ import {
   MerchantVoiceCustomerGroup,
   MerchantVoiceCustomerStatus,
   MerchantVoiceCustomerType,
+  OTHER_SERVICES_CATEGORY_ID,
   normalizeMerchantVoiceCallOutcome,
   normalizeMerchantVoiceCustomerGroup,
   normalizeMerchantVoiceCustomerStatus,
@@ -23,7 +24,15 @@ import {
   normalizeMerchantVoiceLeadSource,
   normalizeMerchantVoiceLeadStatus,
   normalizeMerchantVoiceStaffStatus,
+  normalizeVoiceCreditActivityKind,
+  normalizeVoiceCreditType,
+  normalizeVoicePlanStatus,
+  normalizeVoicePlanTier,
   type MerchantVoiceLeadStatusApiValue,
+  VoiceCreditType,
+  type VoiceCreditActivityKind,
+  type VoicePlanStatus,
+  type VoicePlanTier,
 } from '../merchantVoice/domain'
 import { toUtcBookingSlot } from './publicVoiceBooking'
 
@@ -77,6 +86,7 @@ export {
   MerchantVoiceLeadStatus,
   MerchantVoiceLeadStatusApi,
   MerchantVoiceListQueryParam,
+  OTHER_SERVICES_CATEGORY_ID,
   MerchantVoiceStaffActivityStatusApi,
   MerchantVoiceStaffStatus,
   MerchantVoiceUiLanguage,
@@ -102,8 +112,22 @@ export {
   normalizeMerchantVoiceLeadSource,
   normalizeMerchantVoiceLeadStatus,
   normalizeMerchantVoiceStaffStatus,
+  normalizeVoiceCreditActivityKind,
+  normalizeVoiceCreditType,
+  normalizeVoicePlanStatus,
+  normalizeVoicePlanTier,
+  hasJoinedVoicePlan,
   parseBookingHubMainTab,
   parseBookingHubSubTab,
+  VoiceCreditActivityKind,
+  VoiceCreditType,
+  VoicePlanStatus,
+  VoicePlanTier,
+  CreditsUsageHistoryFilter,
+  CreditsUsageProduct,
+  CREDITS_USAGE_HISTORY_FILTER_TO_CREDIT_TYPE,
+  VOICE_CREDIT_TYPE_TO_PRODUCT,
+  mapCreditsUsageHistoryFilterToCreditType,
 } from '../merchantVoice/domain'
 
 export type {
@@ -353,6 +377,17 @@ export interface MerchantVoiceCustomerGroupSummaryDto {
   days60: number
 }
 
+export interface CreateMerchantVoiceCustomerRequest {
+  phoneNumber: string
+  name?: string | null
+  email?: string | null
+  address?: string | null
+  dateOfBirth?: string | null
+  /** VoiceCustomerType — Individual | Business | Vip | Guest | Partner | Internal */
+  type?: MerchantVoiceCustomerType
+  status?: MerchantVoiceCustomerStatus
+}
+
 export interface UpdateMerchantVoiceCustomerRequest {
   name?: string | null
   email?: string | null
@@ -361,6 +396,81 @@ export interface UpdateMerchantVoiceCustomerRequest {
   /** VoiceCustomerType — Individual | Business | Vip | Guest | Partner | Internal */
   type: MerchantVoiceCustomerType
   status: MerchantVoiceCustomerStatus
+}
+
+/** GET `/api/v1/merchant/nexora-voice/credits` — per-wallet summary. */
+export interface VoiceCreditSummaryDto {
+  tenantId: string
+  creditType: VoiceCreditType
+  purchasedBalance: number
+  grantedBalance: number
+  totalBalance: number
+  balance: number
+  reserved: number
+  available: number
+  isBlocked: boolean
+  isLow: boolean
+  grantExpiresAtUtc: string | null
+  approxValueUsd: number
+  purchasedThisCycle: number
+  grantedThisCycle: number
+  consumedThisCycle: number
+  grantedConsumedThisCycle: number
+  purchasedConsumedThisCycle: number
+  periodStart: string | null
+  periodEnd: string | null
+}
+
+/** GET `/api/v1/merchant/nexora-voice/credits` — wallet overview. */
+export interface VoiceCreditWalletDto {
+  tenantId: string
+  smsSegments: VoiceCreditSummaryDto
+  callMinutes: VoiceCreditSummaryDto
+  planTier: VoicePlanTier | null
+  planStatus: VoicePlanStatus | null
+  isTrial: boolean
+  autoRenew: boolean
+  cycleSequence: number | null
+  periodStart: string | null
+  periodEnd: string | null
+}
+
+/** GET `/api/v1/merchant/nexora-voice/usage/activity` — one history row. */
+export interface VoiceUsageActivityDto {
+  activityKind: VoiceCreditActivityKind
+  activityLabel: string | null
+  creditType: VoiceCreditType
+  units: number
+  occurredAt: string
+  itemCount: number
+  referenceId: string | null
+}
+
+export interface MerchantVoiceUsageActivityResponse {
+  items: VoiceUsageActivityDto[]
+  pageNumber: number
+  totalPages: number
+  totalCount: number
+  hasPreviousPage: boolean
+  hasNextPage: boolean
+}
+
+export interface MerchantVoiceUsageActivityFilter {
+  creditType?: VoiceCreditType
+  activityKinds?: VoiceCreditActivityKind[]
+  fromUtc?: string
+  toUtc?: string
+  pageNumber?: number
+  pageSize?: number
+}
+
+interface MerchantVoiceUsageActivityApiResponse {
+  items?: unknown[]
+  pageNumber?: number
+  totalPages?: number
+  totalCount?: number
+  hasPreviousPage?: boolean
+  hasNextPage?: boolean
 }
 
 export interface MerchantVoiceBusinessStaffDto {
@@ -377,7 +487,7 @@ export interface MerchantVoiceBusinessStaffFilter {
   searchTerm?: string
 }
 
-export interface MerchantVoiceConfigServiceDto {
+export interface MerchantVoiceServiceDto {
   id: string
   name: string
   price: number | null
@@ -386,6 +496,53 @@ export interface MerchantVoiceConfigServiceDto {
   icon: string | null
   sortOrder: number
   isActive: boolean
+  categoryIds: string[]
+}
+
+/** @deprecated Prefer MerchantVoiceServiceDto — alias for create-appointment chips. */
+export type MerchantVoiceConfigServiceDto = MerchantVoiceServiceDto
+
+export interface MerchantVoiceServiceCategoryDto {
+  id: string
+  name: string
+  description: string | null
+  sortOrder: number
+  isSystem: boolean
+  totalServices: number
+  services: MerchantVoiceServiceDto[]
+}
+
+export interface CreateMerchantVoiceServiceCategoryRequest {
+  name: string
+  description?: string | null
+}
+
+export interface UpdateMerchantVoiceServiceCategoryRequest {
+  name: string
+  description?: string | null
+  sortOrder?: number | null
+}
+
+export interface CreateMerchantVoiceServiceRequest {
+  name: string
+  price?: number | null
+  durationMinutes?: number | null
+  note?: string | null
+  icon?: string | null
+  isActive?: boolean
+  categoryIds?: string[]
+}
+
+export interface UpdateMerchantVoiceServiceRequest {
+  name: string
+  price?: number | null
+  durationMinutes?: number | null
+  note?: string | null
+  icon?: string | null
+  isActive?: boolean
+  sortOrder?: number | null
+  /** Omit / null = leave categories; [] = clear; array = replace */
+  categoryIds?: string[] | null
 }
 
 export interface MerchantVoiceOperatingHourDto {
@@ -417,17 +574,26 @@ export interface MerchantVoiceConfigDto {
   aiPhoneNumber: string
   bookingNotifyPhone: string
   address: string
+  city: string
+  state: string
+  zipCode: string
+  country: string
   googleReviewUrl: string
   website: string
   description: string
   promotion: string
   promoSms: string
   sendSmsPromoEnabled: boolean
+  /** Send booking SMS to the customer. */
+  bookingConfirmSmsEnabled: boolean
+  /** Send booking SMS to `bookingNotifyPhone` (salon). */
+  bookingNotifySalonSmsEnabled: boolean
+  /** Send booking SMS to the assigned staff member. */
+  bookingNotifyStaffSmsEnabled: boolean
   timeZone: string
   language: string
   welcomeGreeting: string
   operatingHours: MerchantVoiceOperatingHourDto[]
-  services: MerchantVoiceConfigServiceDto[]
 }
 
 export interface UpdateMerchantVoiceConfigRequest {
@@ -435,12 +601,22 @@ export interface UpdateMerchantVoiceConfigRequest {
   forwardPhoneNumber: string
   bookingNotifyPhone: string
   address: string
+  city: string | null
+  state: string | null
+  zipCode: string | null
+  country: string | null
   googleReviewUrl: string
   website: string | null
   description: string | null
   promotion: string | null
   promoSms: string | null
   sendSmsPromoEnabled: boolean
+  /** Omit to leave the stored value untouched. */
+  bookingConfirmSmsEnabled?: boolean
+  /** Omit to leave the stored value untouched. */
+  bookingNotifySalonSmsEnabled?: boolean
+  /** Omit to leave the stored value untouched. */
+  bookingNotifyStaffSmsEnabled?: boolean
   timeZone: string | null
   language: MerchantVoiceConfigLanguage
   welcomeGreeting: string
@@ -449,15 +625,6 @@ export interface UpdateMerchantVoiceConfigRequest {
     isOpen: boolean
     openTime?: string
     closeTime?: string
-  }>
-  services: Array<{
-    id: string
-    name: string
-    price: number
-    durationMinutes: number
-    note: string | null
-    icon: string | null
-    isActive: boolean
   }>
 }
 
@@ -562,17 +729,23 @@ function normalizeConfigResponse(response: unknown): MerchantVoiceConfigDto {
       aiPhoneNumber: '',
       bookingNotifyPhone: '',
       address: '',
+      city: '',
+      state: '',
+      zipCode: '',
+      country: '',
       googleReviewUrl: '',
       website: '',
       description: '',
       promotion: '',
       promoSms: '',
       sendSmsPromoEnabled: true,
+      bookingConfirmSmsEnabled: true,
+      bookingNotifySalonSmsEnabled: true,
+      bookingNotifyStaffSmsEnabled: true,
       timeZone: '',
       language: MerchantVoiceConfigLanguage.EnUS,
       welcomeGreeting: '',
       operatingHours: [],
-      services: [],
     }
   }
 
@@ -588,32 +761,8 @@ function normalizeConfigResponse(response: unknown): MerchantVoiceConfigDto {
     } satisfies MerchantVoiceOperatingHourDto
   }).filter((row) => row.dayOfWeek)
 
-  const servicesRaw = body.services ?? body.serviceNames ?? body.availableServices ?? body.skills ?? []
-  const services = Array.isArray(servicesRaw) ? servicesRaw.map((item, index) => {
-    if (item && typeof item === 'object') {
-      const row = item as Record<string, unknown>
-      return {
-        id: String(row.id ?? ''),
-        name: String(row.name ?? '').trim(),
-        price: typeof row.price === 'number' ? row.price : null,
-        durationMinutes: typeof row.durationMinutes === 'number' ? row.durationMinutes : null,
-        note: row.note ? String(row.note) : null,
-        icon: row.icon ? String(row.icon) : null,
-        sortOrder: typeof row.sortOrder === 'number' ? row.sortOrder : index,
-        isActive: row.isActive !== false,
-      } satisfies MerchantVoiceConfigServiceDto
-    }
-    return {
-      id: String(index),
-      name: String(item ?? '').trim(),
-      price: null,
-      durationMinutes: null,
-      note: null,
-      icon: null,
-      sortOrder: index,
-      isActive: true,
-    } satisfies MerchantVoiceConfigServiceDto
-  }).filter((item) => item.name) : []
+  const readBool = (value: unknown, fallback: boolean) =>
+    typeof value === 'boolean' ? value : fallback
 
   return {
     id: String(body.id ?? ''),
@@ -622,21 +771,111 @@ function normalizeConfigResponse(response: unknown): MerchantVoiceConfigDto {
     aiPhoneNumber: String(body.aiPhoneNumber ?? ''),
     bookingNotifyPhone: String(body.bookingNotifyPhone ?? ''),
     address: String(body.address ?? ''),
+    city: String(body.city ?? ''),
+    state: String(body.state ?? ''),
+    zipCode: String(body.zipCode ?? ''),
+    country: String(body.country ?? ''),
     googleReviewUrl: String(body.googleReviewUrl ?? ''),
     website: String(body.website ?? ''),
     description: String(body.description ?? ''),
     promotion: String(body.promotion ?? ''),
     promoSms: String(body.promoSms ?? ''),
-    sendSmsPromoEnabled:
-      typeof body.sendSmsPromoEnabled === 'boolean'
-        ? body.sendSmsPromoEnabled
-        : true,
+    sendSmsPromoEnabled: readBool(body.sendSmsPromoEnabled, true),
+    bookingConfirmSmsEnabled: readBool(body.bookingConfirmSmsEnabled, true),
+    bookingNotifySalonSmsEnabled: readBool(body.bookingNotifySalonSmsEnabled, true),
+    bookingNotifyStaffSmsEnabled: readBool(body.bookingNotifyStaffSmsEnabled, true),
     timeZone: String(body.timeZone ?? ''),
     language: String(body.language ?? MerchantVoiceConfigLanguage.EnUS),
     welcomeGreeting: String(body.welcomeGreeting ?? ''),
     operatingHours,
-    services,
   }
+}
+
+function normalizeServiceDto(item: unknown, index = 0): MerchantVoiceServiceDto | null {
+  if (!item || typeof item !== 'object') return null
+  const row = item as Record<string, unknown>
+  const name = String(row.name ?? row.Name ?? '').trim()
+  if (!name) return null
+  const categoryIdsRaw = row.categoryIds ?? row.CategoryIds
+  const categoryIds = Array.isArray(categoryIdsRaw)
+    ? categoryIdsRaw.map((id) => String(id).trim()).filter(Boolean)
+    : []
+  return {
+    id: String(row.id ?? row.Id ?? ''),
+    name,
+    price: typeof row.price === 'number' && Number.isFinite(row.price)
+      ? row.price
+      : typeof row.Price === 'number' && Number.isFinite(row.Price)
+        ? row.Price
+        : null,
+    durationMinutes:
+      typeof row.durationMinutes === 'number' && Number.isFinite(row.durationMinutes)
+        ? row.durationMinutes
+        : typeof row.DurationMinutes === 'number' && Number.isFinite(row.DurationMinutes)
+          ? row.DurationMinutes
+          : null,
+    note: (row.note ?? row.Note) ? String(row.note ?? row.Note) : null,
+    icon: (row.icon ?? row.Icon) ? String(row.icon ?? row.Icon) : null,
+    sortOrder: typeof row.sortOrder === 'number'
+      ? row.sortOrder
+      : typeof row.SortOrder === 'number'
+        ? row.SortOrder
+        : index,
+    isActive: row.isActive !== false && row.IsActive !== false,
+    categoryIds,
+  }
+}
+
+function unwrapListPayload(response: unknown): unknown[] {
+  if (Array.isArray(response)) return response
+  if (response && typeof response === 'object') {
+    const body = response as Record<string, unknown>
+    const candidate = body.items ?? body.data ?? body.results ?? body.Items ?? body.Data
+    if (Array.isArray(candidate)) return candidate
+  }
+  return []
+}
+
+function normalizeServiceCategoriesResponse(response: unknown): MerchantVoiceServiceCategoryDto[] {
+  const rows = unwrapListPayload(response)
+  return rows.map((item, index) => {
+    const row = (item && typeof item === 'object') ? item as Record<string, unknown> : {}
+    const servicesRaw = Array.isArray(row.services)
+      ? row.services
+      : Array.isArray(row.Services)
+        ? row.Services
+        : []
+    const services = servicesRaw
+      .map((service, serviceIndex) => normalizeServiceDto(service, serviceIndex))
+      .filter((service): service is MerchantVoiceServiceDto => !!service)
+    const id = String(row.id ?? row.Id ?? '')
+    return {
+      id,
+      name: String(row.name ?? row.Name ?? '').trim() || (id === OTHER_SERVICES_CATEGORY_ID ? 'Other services' : ''),
+      description: (row.description ?? row.Description)
+        ? String(row.description ?? row.Description)
+        : null,
+      sortOrder: typeof row.sortOrder === 'number'
+        ? row.sortOrder
+        : typeof row.SortOrder === 'number'
+          ? row.SortOrder
+          : index,
+      isSystem: row.isSystem === true || row.IsSystem === true || id === OTHER_SERVICES_CATEGORY_ID,
+      totalServices: typeof row.totalServices === 'number'
+        ? row.totalServices
+        : typeof row.TotalServices === 'number'
+          ? row.TotalServices
+          : services.length,
+      services,
+    } satisfies MerchantVoiceServiceCategoryDto
+  }).filter((category) => category.id && category.name)
+}
+
+function normalizeServicesResponse(response: unknown): MerchantVoiceServiceDto[] {
+  const rows = unwrapListPayload(response)
+  return rows
+    .map((item, index) => normalizeServiceDto(item, index))
+    .filter((item): item is MerchantVoiceServiceDto => !!item)
 }
 
 function readField<T>(raw: Record<string, unknown>, camel: string, pascal: string): T | undefined {
@@ -796,12 +1035,23 @@ function normalizeCallsResponse(
   }
 }
 
-function normalizeCustomerDto(item: MerchantVoiceCustomerDto): MerchantVoiceCustomerDto {
+function normalizeCustomerDto(item: unknown): MerchantVoiceCustomerDto {
+  const raw = (item ?? {}) as Record<string, unknown>
   return {
-    ...item,
-    type: normalizeMerchantVoiceCustomerType(item.type),
-    group: normalizeMerchantVoiceCustomerGroup(item.group),
-    status: normalizeMerchantVoiceCustomerStatus(item.status),
+    id: String(readField<unknown>(raw, 'id', 'Id') ?? ''),
+    tenantId: String(readField<unknown>(raw, 'tenantId', 'TenantId') ?? ''),
+    name: (readField<string | null>(raw, 'name', 'Name') ?? null),
+    phoneNumber: (readField<string | null>(raw, 'phoneNumber', 'PhoneNumber') ?? null),
+    email: (readField<string | null>(raw, 'email', 'Email') ?? null),
+    address: (readField<string | null>(raw, 'address', 'Address') ?? null),
+    dateOfBirth: (readField<string | null>(raw, 'dateOfBirth', 'DateOfBirth') ?? null),
+    type: normalizeMerchantVoiceCustomerType(readField(raw, 'type', 'Type')),
+    group: normalizeMerchantVoiceCustomerGroup(readField(raw, 'group', 'Group')),
+    status: normalizeMerchantVoiceCustomerStatus(readField(raw, 'status', 'Status')),
+    source: (readField<string | null>(raw, 'source', 'Source') ?? null),
+    totalVisit: toFiniteNumber(readField<unknown>(raw, 'totalVisit', 'TotalVisit') ?? 0, 0),
+    lastVisit: (readField<string | null>(raw, 'lastVisit', 'LastVisit') ?? null),
+    createdAt: String(readField<unknown>(raw, 'createdAt', 'CreatedAt') ?? ''),
   }
 }
 
@@ -830,6 +1080,141 @@ function normalizeCustomersResponse(
     hasPreviousPage: response?.hasPreviousPage ?? false,
     hasNextPage: response?.hasNextPage ?? false,
   }
+}
+
+function toApiBoolean(value: unknown): boolean {
+  if (value === true || value === 1) return true
+  if (typeof value === 'string') {
+    const normalized = value.trim().toLowerCase()
+    return normalized === 'true' || normalized === '1'
+  }
+  return false
+}
+
+function normalizeVoiceCreditSummaryDto(
+  item: unknown,
+  fallbackType: VoiceCreditType,
+): VoiceCreditSummaryDto {
+  const raw = (item ?? {}) as Record<string, unknown>
+  const creditType = normalizeVoiceCreditType(
+    readField(raw, 'creditType', 'CreditType') ?? fallbackType,
+  )
+  const totalBalance = toFiniteNumber(
+    readField<unknown>(raw, 'totalBalance', 'TotalBalance')
+      ?? readField<unknown>(raw, 'balance', 'Balance')
+      ?? 0,
+    0,
+  )
+  return {
+    tenantId: String(readField<unknown>(raw, 'tenantId', 'TenantId') ?? ''),
+    creditType,
+    purchasedBalance: toFiniteNumber(readField<unknown>(raw, 'purchasedBalance', 'PurchasedBalance') ?? 0, 0),
+    grantedBalance: toFiniteNumber(readField<unknown>(raw, 'grantedBalance', 'GrantedBalance') ?? 0, 0),
+    totalBalance,
+    balance: toFiniteNumber(readField<unknown>(raw, 'balance', 'Balance') ?? totalBalance, totalBalance),
+    reserved: toFiniteNumber(readField<unknown>(raw, 'reserved', 'Reserved') ?? 0, 0),
+    available: toFiniteNumber(readField<unknown>(raw, 'available', 'Available') ?? totalBalance, totalBalance),
+    isBlocked: toApiBoolean(readField<unknown>(raw, 'isBlocked', 'IsBlocked')),
+    isLow: toApiBoolean(readField<unknown>(raw, 'isLow', 'IsLow')),
+    grantExpiresAtUtc: readNullableString(raw, 'grantExpiresAtUtc', 'GrantExpiresAtUtc'),
+    approxValueUsd: toFiniteNumber(readField<unknown>(raw, 'approxValueUsd', 'ApproxValueUsd') ?? 0, 0),
+    purchasedThisCycle: toFiniteNumber(readField<unknown>(raw, 'purchasedThisCycle', 'PurchasedThisCycle') ?? 0, 0),
+    grantedThisCycle: toFiniteNumber(readField<unknown>(raw, 'grantedThisCycle', 'GrantedThisCycle') ?? 0, 0),
+    consumedThisCycle: toFiniteNumber(readField<unknown>(raw, 'consumedThisCycle', 'ConsumedThisCycle') ?? 0, 0),
+    grantedConsumedThisCycle: toFiniteNumber(
+      readField<unknown>(raw, 'grantedConsumedThisCycle', 'GrantedConsumedThisCycle') ?? 0,
+      0,
+    ),
+    purchasedConsumedThisCycle: toFiniteNumber(
+      readField<unknown>(raw, 'purchasedConsumedThisCycle', 'PurchasedConsumedThisCycle') ?? 0,
+      0,
+    ),
+    periodStart: readNullableString(raw, 'periodStart', 'PeriodStart'),
+    periodEnd: readNullableString(raw, 'periodEnd', 'PeriodEnd'),
+  }
+}
+
+function normalizeVoiceCreditWalletDto(response: unknown): VoiceCreditWalletDto {
+  const raw = (response ?? {}) as Record<string, unknown>
+  const cycleRaw = readField<unknown>(raw, 'cycleSequence', 'CycleSequence')
+  const cycleParsed = cycleRaw == null ? null : Number(cycleRaw)
+  return {
+    tenantId: String(readField<unknown>(raw, 'tenantId', 'TenantId') ?? ''),
+    smsSegments: normalizeVoiceCreditSummaryDto(
+      readField(raw, 'smsSegments', 'SmsSegments'),
+      VoiceCreditType.SmsSegment,
+    ),
+    callMinutes: normalizeVoiceCreditSummaryDto(
+      readField(raw, 'callMinutes', 'CallMinutes'),
+      VoiceCreditType.CallMinute,
+    ),
+    planTier: normalizeVoicePlanTier(readField(raw, 'planTier', 'PlanTier')),
+    planStatus: normalizeVoicePlanStatus(readField(raw, 'planStatus', 'PlanStatus')),
+    isTrial: Boolean(readField<unknown>(raw, 'isTrial', 'IsTrial')),
+    autoRenew: Boolean(readField<unknown>(raw, 'autoRenew', 'AutoRenew')),
+    cycleSequence: cycleParsed != null && Number.isFinite(cycleParsed) ? cycleParsed : null,
+    periodStart: readNullableString(raw, 'periodStart', 'PeriodStart'),
+    periodEnd: readNullableString(raw, 'periodEnd', 'PeriodEnd'),
+  }
+}
+
+function normalizeVoiceUsageActivityDto(item: unknown): VoiceUsageActivityDto {
+  const raw = (item ?? {}) as Record<string, unknown>
+  return {
+    activityKind: normalizeVoiceCreditActivityKind(readField(raw, 'activityKind', 'ActivityKind')),
+    activityLabel: readNullableString(raw, 'activityLabel', 'ActivityLabel'),
+    creditType: normalizeVoiceCreditType(readField(raw, 'creditType', 'CreditType')),
+    units: toFiniteNumber(readField<unknown>(raw, 'units', 'Units') ?? 0, 0),
+    occurredAt: String(readField<unknown>(raw, 'occurredAt', 'OccurredAt') ?? ''),
+    itemCount: toFiniteNumber(readField<unknown>(raw, 'itemCount', 'ItemCount') ?? 1, 1),
+    referenceId: readNullableString(raw, 'referenceId', 'ReferenceId'),
+  }
+}
+
+function normalizeUsageActivityResponse(
+  response: MerchantVoiceUsageActivityApiResponse | unknown[],
+  pageNumber = 1,
+): MerchantVoiceUsageActivityResponse {
+  if (Array.isArray(response)) {
+    const items = response.map(normalizeVoiceUsageActivityDto)
+    return {
+      items,
+      pageNumber,
+      totalPages: 1,
+      totalCount: items.length,
+      hasPreviousPage: false,
+      hasNextPage: false,
+    }
+  }
+
+  const items = (response?.items ?? []).map(normalizeVoiceUsageActivityDto)
+  return {
+    items,
+    pageNumber: response?.pageNumber ?? pageNumber,
+    totalPages: response?.totalPages ?? 1,
+    totalCount: response?.totalCount ?? items.length,
+    hasPreviousPage: response?.hasPreviousPage ?? false,
+    hasNextPage: response?.hasNextPage ?? false,
+  }
+}
+
+function buildUsageActivityParams(filters: MerchantVoiceUsageActivityFilter = {}) {
+  const params: Record<string, string | number | string[]> = {
+    ...buildMerchantVoicePagingParams(filters.pageNumber, filters.pageSize),
+  }
+  if (filters.creditType) {
+    params[MerchantVoiceListQueryParam.CreditType] = filters.creditType
+  }
+  if (filters.activityKinds?.length) {
+    params[MerchantVoiceListQueryParam.ActivityKinds] = filters.activityKinds
+  }
+  if (filters.fromUtc) {
+    params[MerchantVoiceListQueryParam.FromUtc] = filters.fromUtc
+  }
+  if (filters.toUtc) {
+    params[MerchantVoiceListQueryParam.ToUtc] = filters.toUtc
+  }
+  return params
 }
 
 export function createMerchantVoiceRepository(client: HttpClient = httpClient) {
@@ -1044,6 +1429,97 @@ export function createMerchantVoiceRepository(client: HttpClient = httpClient) {
       )
     },
 
+    async getServiceCategories(): Promise<MerchantVoiceServiceCategoryDto[]> {
+      const response = await client.get<unknown>(
+        `${MERCHANT_VOICE_BASE}/service-categories`,
+        { headers: MERCHANT_VOICE_HEADERS },
+      )
+      return normalizeServiceCategoriesResponse(response)
+    },
+
+    async createServiceCategory(body: CreateMerchantVoiceServiceCategoryRequest): Promise<string> {
+      const response = await client.post<unknown>(
+        `${MERCHANT_VOICE_BASE}/service-categories`,
+        {
+          name: body.name.trim(),
+          description: body.description?.trim() || null,
+        },
+        { headers: MERCHANT_VOICE_HEADERS },
+      )
+      return String(response ?? '').trim()
+    },
+
+    async updateServiceCategory(
+      id: string,
+      body: UpdateMerchantVoiceServiceCategoryRequest,
+    ): Promise<void> {
+      await client.put<void>(
+        `${MERCHANT_VOICE_BASE}/service-categories/${encodeURIComponent(id)}`,
+        {
+          name: body.name.trim(),
+          description: body.description?.trim() || null,
+          sortOrder: body.sortOrder ?? null,
+        },
+        { headers: MERCHANT_VOICE_HEADERS },
+      )
+    },
+
+    async deleteServiceCategory(id: string): Promise<void> {
+      await client.del<void>(
+        `${MERCHANT_VOICE_BASE}/service-categories/${encodeURIComponent(id)}`,
+        { headers: MERCHANT_VOICE_HEADERS },
+      )
+    },
+
+    async getServices(): Promise<MerchantVoiceServiceDto[]> {
+      const response = await client.get<unknown>(
+        `${MERCHANT_VOICE_BASE}/services`,
+        { headers: MERCHANT_VOICE_HEADERS },
+      )
+      return normalizeServicesResponse(response)
+    },
+
+    async createService(body: CreateMerchantVoiceServiceRequest): Promise<string> {
+      const response = await client.post<unknown>(
+        `${MERCHANT_VOICE_BASE}/services`,
+        {
+          name: body.name.trim(),
+          price: body.price ?? null,
+          durationMinutes: body.durationMinutes ?? null,
+          note: body.note?.trim() || null,
+          icon: body.icon?.trim() || null,
+          isActive: body.isActive !== false,
+          categoryIds: body.categoryIds ?? [],
+        },
+        { headers: MERCHANT_VOICE_HEADERS },
+      )
+      return String(response ?? '').trim()
+    },
+
+    async updateService(id: string, body: UpdateMerchantVoiceServiceRequest): Promise<void> {
+      await client.put<void>(
+        `${MERCHANT_VOICE_BASE}/services/${encodeURIComponent(id)}`,
+        {
+          name: body.name.trim(),
+          price: body.price ?? null,
+          durationMinutes: body.durationMinutes ?? null,
+          note: body.note?.trim() || null,
+          icon: body.icon?.trim() || null,
+          isActive: body.isActive !== false,
+          sortOrder: body.sortOrder ?? null,
+          categoryIds: body.categoryIds === undefined ? null : body.categoryIds,
+        },
+        { headers: MERCHANT_VOICE_HEADERS },
+      )
+    },
+
+    async deleteService(id: string): Promise<void> {
+      await client.del<void>(
+        `${MERCHANT_VOICE_BASE}/services/${encodeURIComponent(id)}`,
+        { headers: MERCHANT_VOICE_HEADERS },
+      )
+    },
+
     async toggleStaffStatus(id: string): Promise<MerchantVoiceStaffStatus> {
       const response = await client.patch<
         number | string | { status?: number | string | boolean } | null
@@ -1125,12 +1601,59 @@ export function createMerchantVoiceRepository(client: HttpClient = httpClient) {
       }
     },
 
+    /**
+     * POST `/api/v1/merchant/nexora-voice/customers`
+     * Body: CreateMerchantVoiceCustomerCommand
+     * `{ phoneNumber, name, email, address, dateOfBirth, type, status }`
+     */
+    async createCustomer(body: CreateMerchantVoiceCustomerRequest): Promise<MerchantVoiceCustomerDto> {
+      const command: CreateMerchantVoiceCustomerRequest = {
+        phoneNumber: String(body.phoneNumber ?? '').trim(),
+        name: body.name?.trim() ? body.name.trim() : null,
+        email: body.email?.trim() ? body.email.trim() : null,
+        address: body.address?.trim() ? body.address.trim() : null,
+        dateOfBirth: body.dateOfBirth?.trim() ? body.dateOfBirth.trim() : null,
+        type: body.type ?? MerchantVoiceCustomerType.Individual,
+        status: body.status ?? MerchantVoiceCustomerStatus.Active,
+      }
+
+      const response = await client.post<unknown>(
+        `${MERCHANT_VOICE_BASE}/customers`,
+        command,
+        { headers: MERCHANT_VOICE_HEADERS },
+      )
+      return normalizeCustomerDto(response)
+    },
+
     async updateCustomer(id: string, body: UpdateMerchantVoiceCustomerRequest): Promise<void> {
       await client.put<void>(
         `${MERCHANT_VOICE_BASE}/customers/${encodeURIComponent(id)}`,
         body,
         { headers: MERCHANT_VOICE_HEADERS },
       )
+    },
+
+    /** GET `/api/v1/merchant/nexora-voice/credits` */
+    async getCreditWallet(): Promise<VoiceCreditWalletDto> {
+      const response = await client.get<unknown>(
+        `${MERCHANT_VOICE_BASE}/credits`,
+        { headers: MERCHANT_VOICE_HEADERS },
+      )
+      return normalizeVoiceCreditWalletDto(response)
+    },
+
+    /** GET `/api/v1/merchant/nexora-voice/usage/activity` */
+    async getUsageActivity(
+      filters: MerchantVoiceUsageActivityFilter = {},
+    ): Promise<MerchantVoiceUsageActivityResponse> {
+      const response = await client.get<MerchantVoiceUsageActivityApiResponse | unknown[]>(
+        `${MERCHANT_VOICE_BASE}/usage/activity`,
+        {
+          headers: MERCHANT_VOICE_HEADERS,
+          params: buildUsageActivityParams(filters),
+        },
+      )
+      return normalizeUsageActivityResponse(response, filters.pageNumber ?? 1)
     },
   }
 }

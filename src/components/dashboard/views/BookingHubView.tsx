@@ -1,25 +1,32 @@
 import React, { useEffect, useState } from 'react'
 import { useQueryClient } from '@tanstack/react-query'
-import { useSearchParams } from 'react-router-dom'
+import { Link, useSearchParams } from 'react-router-dom'
+import { ArrowUpRight } from 'lucide-react'
 import { useTranslation } from '../../../contexts/LanguageContext'
 import { useMerchantVoiceTenantStatus } from '../../../data/hooks/useMerchantVoiceBookings'
-import BookingTeamPanel from './BookingTeamPanel'
 import BookingTodayPanel from './BookingTodayPanel'
 import BookingCustomersPanel from './BookingCustomersPanel'
 import BookingCallLogPanel from './BookingCallLogPanel'
 import BookingSmsCampaignsPanel from './smsCampaigns/BookingSmsCampaignsPanel'
+import BookingQrCodesPanel from './qrCodes/BookingQrCodesPanel'
 import BookingPlansPanel from './BookingPlansPanel'
 import BookingSettingsPanel from './BookingSettingsPanel'
 import { BookingHubVoiceProvider } from './BookingHubVoiceContext'
 import {
+  CalendarEventIcon,
   CalendarTabIcon,
+  JournalIcon,
   MessageSquareTabIcon,
   PeopleTabIcon,
   PhoneTabIcon,
+  QrCodeIcon,
   SlidersTabIcon,
   TagsTabIcon,
 } from './BookingHubIcons'
 import { BookingHubTabsSkeleton } from './BookingHubSkeletons'
+import {
+  BookingTodayLayout,
+} from './bookingTodayConstants'
 import {
   BookingHubMainTab,
   BookingHubSubTab,
@@ -27,12 +34,18 @@ import {
   parseBookingHubSubTab,
 } from '../../../data/repositories/merchantVoice'
 import {
+  BOOKING_HUB_SETUP_GUIDE_PATH,
   getDefaultBookingHubTab,
   isBookingHubMainTabAllowed,
 } from '../constants'
 import './booking-hub.css'
 
 const TK = 'components.dashboard.views.BookingHubView'
+
+const BOOKING_HUB_SUBTAB_LAYOUT: Partial<Record<BookingHubSubTab, BookingTodayLayout>> = {
+  [BookingHubSubTab.Today]: BookingTodayLayout.Appointments,
+  [BookingHubSubTab.Calendar]: BookingTodayLayout.Calendar,
+}
 
 function CalendarIcon() {
   return (
@@ -44,17 +57,6 @@ function CalendarIcon() {
       <path d="M8 14h.01" />
       <path d="M12 14h.01" />
       <path d="M16 14h.01" />
-    </svg>
-  )
-}
-
-function TeamIcon() {
-  return (
-    <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
-      <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2" />
-      <circle cx="9" cy="7" r="4" />
-      <path d="M22 21v-2a4 4 0 0 0-3-3.87" />
-      <path d="M16 3.13a4 4 0 0 1 0 7.75" />
     </svg>
   )
 }
@@ -84,6 +86,17 @@ export default function BookingHubView() {
 
       const nextParams = new URLSearchParams(searchParams)
       nextParams.set('tab', defaultTab)
+      nextParams.delete('view')
+      setSearchParams(nextParams, { replace: true })
+      return
+    }
+
+    // HTML moved Team into Settings — legacy ?view=team opens Settings.
+    if (parsedMainTab === BookingHubMainTab.Booking && parsedSubTab === BookingHubSubTab.Team) {
+      setActiveMainTab(BookingHubMainTab.Settings)
+      setActiveSubtab(BookingHubSubTab.Today)
+      const nextParams = new URLSearchParams(searchParams)
+      nextParams.set('tab', BookingHubMainTab.Settings)
       nextParams.delete('view')
       setSearchParams(nextParams, { replace: true })
       return
@@ -128,6 +141,15 @@ export default function BookingHubView() {
       <div className="page-heading">
         <h1 className="page-title hidden sm:block">{t(`${TK}.title`)}</h1>
         <p className="page-description !mt-0 sm:!mt-2">{t(`${TK}.description`)}</p>
+        <Link
+          className="page-guide-link"
+          to={BOOKING_HUB_SETUP_GUIDE_PATH}
+          aria-label={t(`${TK}.setupGuideAria`)}
+        >
+          <JournalIcon />
+          <span>{t(`${TK}.setupGuide`)}</span>
+          <ArrowUpRight aria-hidden="true" />
+        </Link>
         {isTenantStatusLoading ? (
           <BookingHubTabsSkeleton />
         ) : (
@@ -180,6 +202,18 @@ export default function BookingHubView() {
                 <span>{t(`${TK}.tabs.smsCampaigns`)}</span>
               </button>
             )}
+            {hasVoiceTenant && (
+              <button
+                className={`page-tab ${activeMainTab === BookingHubMainTab.QrCodes ? 'is-active' : ''}`}
+                type="button"
+                role="tab"
+                aria-selected={activeMainTab === BookingHubMainTab.QrCodes}
+                onClick={() => updateQueryTabs(BookingHubMainTab.QrCodes)}
+              >
+                <span className="page-tab-icon"><QrCodeIcon /></span>
+                <span>{t(`${TK}.tabs.qrCodes`)}</span>
+              </button>
+            )}
             <button
               className={`page-tab ${activeMainTab === BookingHubMainTab.Plans ? 'is-active' : ''}`}
               type="button"
@@ -221,20 +255,24 @@ export default function BookingHubView() {
               <span>{t(`${TK}.schedule.today`)}</span>
             </button>
             <button
-              className={`booking-subtab ${activeSubtab === BookingHubSubTab.Team ? 'is-active' : ''}`}
+              className={`booking-subtab ${activeSubtab === BookingHubSubTab.Calendar ? 'is-active' : ''}`}
               type="button"
               role="tab"
-              aria-selected={activeSubtab === BookingHubSubTab.Team}
-              onClick={() => updateQueryTabs(BookingHubMainTab.Booking, BookingHubSubTab.Team)}
+              aria-selected={activeSubtab === BookingHubSubTab.Calendar}
+              onClick={() => updateQueryTabs(BookingHubMainTab.Booking, BookingHubSubTab.Calendar)}
             >
-              <span className="booking-subtab-icon"><TeamIcon /></span>
-              <span>{t(`${TK}.schedule.team`)}</span>
+              <span className="booking-subtab-icon"><CalendarEventIcon /></span>
+              <span>{t(`${TK}.schedule.calendar`)}</span>
             </button>
           </div>
           <div className="sync-note">{t(`${TK}.schedule.syncNote`)}</div>
         </div>
 
-        {activeSubtab === BookingHubSubTab.Today ? <BookingTodayPanel /> : <BookingTeamPanel />}
+        <BookingTodayPanel
+          bookingLayout={
+            BOOKING_HUB_SUBTAB_LAYOUT[activeSubtab] ?? BookingTodayLayout.Appointments
+          }
+        />
       </section>
       )}
 
@@ -260,6 +298,16 @@ export default function BookingHubView() {
           aria-label={t(`${TK}.ariaSmsCampaignsPanel`)}
         >
           <BookingSmsCampaignsPanel />
+        </section>
+      )}
+
+      {!isTenantStatusLoading && voiceFeaturesEnabled && activeMainTab === BookingHubMainTab.QrCodes && (
+        <section
+          className="tab-panel is-active"
+          id="panel-qr-codes-wrap"
+          aria-label={t(`${TK}.ariaQrCodesPanel`)}
+        >
+          <BookingQrCodesPanel />
         </section>
       )}
 
