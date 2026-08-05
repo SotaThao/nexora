@@ -1,6 +1,6 @@
 import type { SubscriptionBillingDetails } from '../components/dashboard/modals/SubscriptionCardPaymentForm'
 import type { UserProfile } from '../types/domain'
-import { COUNTRY_CODES } from '../components/CountryCodeSelect'
+import { COUNTRY_CODES } from '../constants/countries'
 
 function pickString(...values: unknown[]): string | undefined {
   for (const value of values) {

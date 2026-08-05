@@ -66,13 +66,17 @@ export function useSubscriptionCardOrderPoll({
   useEffect(() => {
     if (!pendingOrderId) return
 
-    pollTimeoutRef.current = setTimeout(
-      () => setPollTimedOut(true),
-      ORDER_STATUS_POLL_TIMEOUT_MS,
-    )
+    const timeoutId = setTimeout(() => {
+      pollTimeoutRef.current = null
+      setPollTimedOut(true)
+    }, ORDER_STATUS_POLL_TIMEOUT_MS)
+    pollTimeoutRef.current = timeoutId
 
     return () => {
-      if (pollTimeoutRef.current) clearTimeout(pollTimeoutRef.current)
+      if (pollTimeoutRef.current === timeoutId) {
+        clearTimeout(timeoutId)
+        pollTimeoutRef.current = null
+      }
     }
   }, [pendingOrderId])
 
