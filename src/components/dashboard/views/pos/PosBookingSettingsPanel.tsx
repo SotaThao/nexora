@@ -18,6 +18,9 @@ const DEFAULT_SETTINGS: PosBookingSettingsApiDto = {
   minLeadTimeMinutes: 15,
   maxAdvanceDays: 7,
   reminderHoursBefore: 12,
+  notifyCustomerSmsEnabled: true,
+  notifyBusinessSmsEnabled: true,
+  notifyAssignedStaffSmsEnabled: true,
 }
 
 export default function PosBookingSettingsPanel({
@@ -145,6 +148,78 @@ export default function PosBookingSettingsPanel({
             </label>
           </div>
 
+          <div className="pt-2 border-t border-slate-50">
+            <p className="text-xs font-bold text-nexoraText mb-1">
+              {t('components.dashboard.views.pos.PosBookingSettingsPanel.smsSectionTitle')}
+            </p>
+            <p className="text-[11px] text-nexoraMuted mb-3">
+              {t('components.dashboard.views.pos.PosBookingSettingsPanel.smsSectionDescription')}
+            </p>
+
+            <div className="flex items-center justify-between gap-2 py-2">
+              <div>
+                <p className="text-xs font-bold text-nexoraText">
+                  {t('components.dashboard.views.pos.PosBookingSettingsPanel.notifyCustomerSmsLabel')}
+                </p>
+                <p className="text-[11px] text-nexoraMuted mt-0.5">
+                  {t('components.dashboard.views.pos.PosBookingSettingsPanel.notifyCustomerSmsDescription')}
+                </p>
+              </div>
+              <ToggleSwitch
+                checked={form.notifyCustomerSmsEnabled}
+                onChange={() =>
+                  setForm((current) => ({ ...current, notifyCustomerSmsEnabled: !current.notifyCustomerSmsEnabled }))
+                }
+                ariaLabel="Toggle customer booking SMS"
+                activeColor="bg-emerald-500"
+                inactiveColor="bg-slate-300"
+              />
+            </div>
+
+            <div className="flex items-center justify-between gap-2 py-2 border-t border-slate-50">
+              <div>
+                <p className="text-xs font-bold text-nexoraText">
+                  {t('components.dashboard.views.pos.PosBookingSettingsPanel.notifyBusinessSmsLabel')}
+                </p>
+                <p className="text-[11px] text-nexoraMuted mt-0.5">
+                  {t('components.dashboard.views.pos.PosBookingSettingsPanel.notifyBusinessSmsDescription')}
+                </p>
+              </div>
+              <ToggleSwitch
+                checked={form.notifyBusinessSmsEnabled}
+                onChange={() =>
+                  setForm((current) => ({ ...current, notifyBusinessSmsEnabled: !current.notifyBusinessSmsEnabled }))
+                }
+                ariaLabel="Toggle business booking SMS"
+                activeColor="bg-emerald-500"
+                inactiveColor="bg-slate-300"
+              />
+            </div>
+
+            <div className="flex items-center justify-between gap-2 py-2 border-t border-slate-50">
+              <div>
+                <p className="text-xs font-bold text-nexoraText">
+                  {t('components.dashboard.views.pos.PosBookingSettingsPanel.notifyAssignedStaffSmsLabel')}
+                </p>
+                <p className="text-[11px] text-nexoraMuted mt-0.5">
+                  {t('components.dashboard.views.pos.PosBookingSettingsPanel.notifyAssignedStaffSmsDescription')}
+                </p>
+              </div>
+              <ToggleSwitch
+                checked={form.notifyAssignedStaffSmsEnabled}
+                onChange={() =>
+                  setForm((current) => ({
+                    ...current,
+                    notifyAssignedStaffSmsEnabled: !current.notifyAssignedStaffSmsEnabled,
+                  }))
+                }
+                ariaLabel="Toggle assigned staff booking SMS"
+                activeColor="bg-emerald-500"
+                inactiveColor="bg-slate-300"
+              />
+            </div>
+          </div>
+
           <div className="flex gap-2 pt-2 justify-end">
             <button
               type="button"
@@ -186,6 +261,34 @@ export default function PosBookingSettingsPanel({
               {t('components.dashboard.views.pos.PosBookingSettingsPanel.reminderHoursLabel')}
             </span>
             <span className="text-nexoraText font-extrabold">{settings.reminderHoursBefore}</span>
+          </div>
+
+          <p className="text-xs font-bold text-nexoraText pt-3 border-t border-slate-50">
+            {t('components.dashboard.views.pos.PosBookingSettingsPanel.smsSectionTitle')}
+          </p>
+          <div className="flex flex-row justify-between items-center py-1.5">
+            <span className="text-nexoraMuted font-bold">
+              {t('components.dashboard.views.pos.PosBookingSettingsPanel.notifyCustomerSmsLabel')}
+            </span>
+            <span className="text-nexoraText font-extrabold">
+              {settings.notifyCustomerSmsEnabled ? 'On' : 'Off'}
+            </span>
+          </div>
+          <div className="flex flex-row justify-between items-center py-1.5 border-t border-slate-50">
+            <span className="text-nexoraMuted font-bold">
+              {t('components.dashboard.views.pos.PosBookingSettingsPanel.notifyBusinessSmsLabel')}
+            </span>
+            <span className="text-nexoraText font-extrabold">
+              {settings.notifyBusinessSmsEnabled ? 'On' : 'Off'}
+            </span>
+          </div>
+          <div className="flex flex-row justify-between items-center py-1.5 border-t border-slate-50">
+            <span className="text-nexoraMuted font-bold">
+              {t('components.dashboard.views.pos.PosBookingSettingsPanel.notifyAssignedStaffSmsLabel')}
+            </span>
+            <span className="text-nexoraText font-extrabold">
+              {settings.notifyAssignedStaffSmsEnabled ? 'On' : 'Off'}
+            </span>
           </div>
         </div>
       )}

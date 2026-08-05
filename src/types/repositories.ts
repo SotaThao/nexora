@@ -363,6 +363,10 @@ export interface PosBookingSettingsApiDto {
   minLeadTimeMinutes: number
   maxAdvanceDays: number
   reminderHoursBefore: number
+  // Booking SMS Notifications — migrated from the Nexora Voice AI Hub settings.
+  notifyCustomerSmsEnabled: boolean
+  notifyBusinessSmsEnabled: boolean
+  notifyAssignedStaffSmsEnabled: boolean
 }
 
 // POS Booking — Staff/Owner creates a booking directly (Ticket 3). Always Confirmed
