@@ -208,7 +208,7 @@ export default function CategoryGroupedCatalogPicker({
             ))}
           </div>
         ) : (
-          <div className="max-h-72 space-y-3 overflow-y-auto rounded-lg border border-nexoraBorder p-1.5">
+          <div className="max-h-72 space-y-3 overflow-y-auto rounded-lg border border-nexoraBorder p-1.5 pr-3">
             {groupedSections!.map((section) => (
               <div key={section.category.id}>
                 <h4 className="mb-1 px-1.5 text-[10px] font-black uppercase tracking-wider text-nexoraMuted">
@@ -224,7 +224,7 @@ export default function CategoryGroupedCatalogPicker({
           {flatItems.map(renderItemCard)}
         </div>
       ) : (
-        <div className="max-h-72 space-y-1 overflow-y-auto rounded-lg border border-nexoraBorder p-1.5">
+        <div className="max-h-72 space-y-1 overflow-y-auto rounded-lg border border-nexoraBorder p-1.5 pr-3">
           {flatItems.map(renderItemRow)}
         </div>
       )}

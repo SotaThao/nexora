@@ -100,11 +100,26 @@ export default function PosFrontDeskView({
   const startOrderService = useStartOrderService(businessId)
 
   // Deep-link support for the Owner Dashboard's "Total Bookings" KPI card (Ticket 10),
-  // which navigates here with ?tab=booking to land straight on the Bookings tab.
-  // Order List is the default landing tab otherwise (POS iPad redesign, Ticket 1 decision).
-  const [searchParams] = useSearchParams()
-  const initialTab: FrontDeskTab = searchParams.get('tab') === 'booking' ? 'booking' : 'orderlist'
-  const [activeTab, setActiveTab] = useState<FrontDeskTab>(initialTab)
+  // which navigates here with ?tab=booking to land straight on the Bookings tab. Also
+  // kept in sync on every tab switch (see setActiveTab below) so a reload restores
+  // whichever tab was active instead of always falling back to Order List.
+  const FRONT_DESK_TABS: FrontDeskTab[] = ['checkin', 'orderlist', 'turnboard', 'completed', 'booking']
+  const [searchParams, setSearchParams] = useSearchParams()
+  const tabFromUrl = searchParams.get('tab') as FrontDeskTab | null
+  const initialTab: FrontDeskTab =
+    tabFromUrl && FRONT_DESK_TABS.includes(tabFromUrl) ? tabFromUrl : 'orderlist'
+  const [activeTab, setActiveTabState] = useState<FrontDeskTab>(initialTab)
+  const setActiveTab = (tab: FrontDeskTab) => {
+    setActiveTabState(tab)
+    setSearchParams(
+      (prev) => {
+        const next = new URLSearchParams(prev)
+        next.set('tab', tab)
+        return next
+      },
+      { replace: true },
+    )
+  }
   const [orderListFilter, setOrderListFilter] = useState<OrderListFilter>('all')
   const [viewMode, setViewMode] = useState<OrderListViewMode>(() =>
     storage.getItem(ORDER_LIST_VIEW_MODE_STORAGE_KEY) === 'card' ? 'card' : 'list',
@@ -183,13 +198,19 @@ export default function PosFrontDeskView({
   // their manicure) — a multi-service upsell action, not a queue hand-off.
   const handleAssignAndStart = async (orderId: string, posStaffProfileId?: string) => {
     const posServiceId = assignServiceSelection[orderId] ?? serviceCatalog[0]?.id
-    if (!posServiceId) {
+    const service = serviceCatalog.find((s) => s.id === posServiceId)
+    if (!posServiceId || !service) {
       showToast(t('components.dashboard.views.pos.PosFrontDeskView.noServiceAvailable'), 'error')
       return
     }
     setAssigningOrderId(orderId)
     try {
-      const serviceLineId = await addOrderServiceLine.mutateAsync({ orderId, posServiceId })
+      const serviceLineId = await addOrderServiceLine.mutateAsync({
+        orderId,
+        posServiceId,
+        unitPrice: service.price,
+        serviceName: service.name,
+      })
       await assignStaffToServiceLine.mutateAsync({ orderId, serviceLineId, posStaffProfileId })
       await startOrderService.mutateAsync(orderId)
       showToast(t('components.dashboard.views.pos.PosFrontDeskView.assigned'))

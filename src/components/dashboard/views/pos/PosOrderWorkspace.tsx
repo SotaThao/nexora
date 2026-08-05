@@ -329,7 +329,7 @@ export default function PosOrderWorkspace({
     // Live — AddOrderProductLineCommand merges Qty server-side if this product already
     // has a line on the order, so no local duplicate-check is needed here.
     addProductLine.mutate(
-      { orderId: effectiveOrderId, posProductId: product.id, quantity: 1 },
+      { orderId: effectiveOrderId, posProductId: product.id, quantity: 1, unitPrice: product.price, productName: product.name },
       { onError: reportError },
     )
   }
@@ -393,7 +393,7 @@ export default function PosOrderWorkspace({
       )
     } else {
       addServiceLine.mutate(
-        { orderId: effectiveOrderId, posServiceId },
+        { orderId: effectiveOrderId, posServiceId, unitPrice, serviceName },
         {
           onSuccess: (newServiceLineId) => {
             assignStaffToServiceLine.mutate(

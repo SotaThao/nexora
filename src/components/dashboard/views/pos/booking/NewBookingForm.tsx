@@ -24,6 +24,31 @@ interface BookingLineDraft {
   posStaffProfileId?: string
 }
 
+// Per-field validation (replaces the old single "please fill everything" banner) — each
+// input gets its own inline message and clears as soon as the user edits that field, so a
+// guest with e.g. only a missing email doesn't get told the whole form is incomplete.
+enum NewBookingFormField {
+  Name = 'name',
+  Phone = 'phone',
+  Email = 'email',
+  Date = 'date',
+  Time = 'time',
+  Services = 'services',
+}
+
+type NewBookingFormErrors = Partial<Record<NewBookingFormField, string>>
+
+const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
+
+function FieldError({ message }: { message?: string }) {
+  if (!message) return null
+  return (
+    <p role="alert" aria-live="polite" className="mt-1 text-[10px] font-bold text-rose-500">
+      {message}
+    </p>
+  )
+}
+
 // Per-line technician dropdown — a plain <select>, not the walk-in SelectTechniciansModal,
 // because a booking has no "Next Available" auto-pick concept: leaving it blank always
 // means "unassigned", never "resolve to a free technician at save time".
@@ -79,7 +104,7 @@ export default function NewBookingForm({
   const [scheduledDate, setScheduledDate] = useState('')
   const [scheduledTime, setScheduledTime] = useState('')
   const [lines, setLines] = useState<BookingLineDraft[]>([])
-  const [formError, setFormError] = useState('')
+  const [fieldErrors, setFieldErrors] = useState<NewBookingFormErrors>({})
 
   // Returning-customer hint (same lookup as the walk-in check-in's CustomerHeaderBar) —
   // only offers a Name prefill here since the lookup carries no email, and this is a
@@ -99,12 +124,21 @@ export default function NewBookingForm({
     setScheduledDate('')
     setScheduledTime('')
     setLines([])
-    setFormError('')
+    setFieldErrors({})
   }
 
   const handleClose = () => {
     resetForm()
     onClose()
+  }
+
+  const clearFieldError = (field: NewBookingFormField) => {
+    setFieldErrors((prev) => {
+      if (!prev[field]) return prev
+      const next = { ...prev }
+      delete next[field]
+      return next
+    })
   }
 
   const handleAddService = (itemId: string) => {
@@ -114,6 +148,7 @@ export default function NewBookingForm({
       ...prev,
       { key: crypto.randomUUID(), posServiceId: service.id, serviceName: service.name, unitPrice: service.price },
     ])
+    clearFieldError(NewBookingFormField.Services)
   }
 
   const handleRemoveLine = (key: string) => {
@@ -126,15 +161,32 @@ export default function NewBookingForm({
 
   const subtotal = lines.reduce((sum, l) => sum + l.unitPrice, 0)
 
-  const handleSubmit = () => {
+  const validateFields = (): NewBookingFormErrors => {
+    const errors: NewBookingFormErrors = {}
     const name = customerName.trim()
     const phone = customerPhone.trim()
+    const email = customerEmail.trim()
 
-    if (!name || !phone || !scheduledDate || !scheduledTime || lines.length === 0) {
-      setFormError(t('components.dashboard.views.pos.NewBookingForm.formIncomplete'))
-      return
+    if (!name) errors[NewBookingFormField.Name] = t('components.dashboard.views.pos.NewBookingForm.errorName')
+    if (!phone) errors[NewBookingFormField.Phone] = t('components.dashboard.views.pos.NewBookingForm.errorPhone')
+    if (email && !EMAIL_PATTERN.test(email)) {
+      errors[NewBookingFormField.Email] = t('components.dashboard.views.pos.NewBookingForm.errorEmail')
     }
-    setFormError('')
+    if (!scheduledDate) errors[NewBookingFormField.Date] = t('components.dashboard.views.pos.NewBookingForm.errorDate')
+    if (!scheduledTime) errors[NewBookingFormField.Time] = t('components.dashboard.views.pos.NewBookingForm.errorTime')
+    if (lines.length === 0) {
+      errors[NewBookingFormField.Services] = t('components.dashboard.views.pos.NewBookingForm.errorServices')
+    }
+    return errors
+  }
+
+  const handleSubmit = () => {
+    const errors = validateFields()
+    setFieldErrors(errors)
+    if (Object.keys(errors).length > 0) return
+
+    const name = customerName.trim()
+    const phone = customerPhone.trim()
 
     // Built with Date.UTC (not the local-timezone Date constructor) so the picked
     // wall-clock numbers travel to the backend unshifted — PosBusinessOperatingHour/
@@ -166,7 +218,7 @@ export default function NewBookingForm({
 
   return (
     <div className="fixed inset-0 z-[60] flex items-center justify-center bg-nexoraText/70 p-4 backdrop-blur-sm">
-      <div className="nexora-modal-card max-w-2xl">
+      <div className="nexora-modal-card max-w-2xl p-8">
         <div className="mb-4 flex shrink-0 items-center justify-between">
           <h2 className="text-sm font-extrabold text-nexoraText">
             {t('components.dashboard.views.pos.NewBookingForm.title')}
@@ -176,7 +228,7 @@ export default function NewBookingForm({
           </IconButton>
         </div>
 
-        <div className="flex-1 space-y-4 overflow-y-auto">
+        <div className="flex-1 space-y-4 overflow-y-auto pr-2">
           <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
             <div>
               <label className="text-[10px] font-extrabold uppercase text-nexoraMuted">
@@ -185,9 +237,14 @@ export default function NewBookingForm({
               <input
                 type="text"
                 value={customerName}
-                onChange={(e) => setCustomerName(e.target.value)}
-                className="mt-1 h-10 w-full rounded-lg border border-nexoraBorder bg-nexoraCanvas px-3.5 text-xs text-nexoraText outline-none transition-all focus:border-nexoraBrand focus:bg-white"
+                onChange={(e) => {
+                  setCustomerName(e.target.value)
+                  clearFieldError(NewBookingFormField.Name)
+                }}
+                aria-invalid={Boolean(fieldErrors.name)}
+                className={`mt-1 h-10 w-full rounded-lg border bg-nexoraCanvas px-3.5 text-xs text-nexoraText outline-none transition-all focus:bg-white ${fieldErrors.name ? 'border-rose-400 focus:border-rose-400' : 'border-nexoraBorder focus:border-nexoraBrand'}`}
               />
+              <FieldError message={fieldErrors.name} />
             </div>
             <div>
               <label className="text-[10px] font-extrabold uppercase text-nexoraMuted">
@@ -196,12 +253,17 @@ export default function NewBookingForm({
               <input
                 type="tel"
                 value={customerPhone}
-                onChange={(e) => setCustomerPhone(formatNationalNumber(e.target.value, PhoneDialCode.US))}
+                onChange={(e) => {
+                  setCustomerPhone(formatNationalNumber(e.target.value, PhoneDialCode.US))
+                  clearFieldError(NewBookingFormField.Phone)
+                }}
                 placeholder={getNationalPhonePlaceholder(PhoneDialCode.US)}
                 inputMode="numeric"
                 autoComplete="tel-national"
-                className="mt-1 h-10 w-full rounded-lg border border-nexoraBorder bg-nexoraCanvas px-3.5 text-xs text-nexoraText outline-none transition-all focus:border-nexoraBrand focus:bg-white"
+                aria-invalid={Boolean(fieldErrors.phone)}
+                className={`mt-1 h-10 w-full rounded-lg border bg-nexoraCanvas px-3.5 text-xs text-nexoraText outline-none transition-all focus:bg-white ${fieldErrors.phone ? 'border-rose-400 focus:border-rose-400' : 'border-nexoraBorder focus:border-nexoraBrand'}`}
               />
+              <FieldError message={fieldErrors.phone} />
             </div>
             <div>
               <label className="text-[10px] font-extrabold uppercase text-nexoraMuted">
@@ -210,9 +272,14 @@ export default function NewBookingForm({
               <input
                 type="email"
                 value={customerEmail}
-                onChange={(e) => setCustomerEmail(e.target.value)}
-                className="mt-1 h-10 w-full rounded-lg border border-nexoraBorder bg-nexoraCanvas px-3.5 text-xs text-nexoraText outline-none transition-all focus:border-nexoraBrand focus:bg-white"
+                onChange={(e) => {
+                  setCustomerEmail(e.target.value)
+                  clearFieldError(NewBookingFormField.Email)
+                }}
+                aria-invalid={Boolean(fieldErrors.email)}
+                className={`mt-1 h-10 w-full rounded-lg border bg-nexoraCanvas px-3.5 text-xs text-nexoraText outline-none transition-all focus:bg-white ${fieldErrors.email ? 'border-rose-400 focus:border-rose-400' : 'border-nexoraBorder focus:border-nexoraBrand'}`}
               />
+              <FieldError message={fieldErrors.email} />
             </div>
             <div className="grid grid-cols-2 gap-2">
               <div>
@@ -222,9 +289,14 @@ export default function NewBookingForm({
                 <input
                   type="date"
                   value={scheduledDate}
-                  onChange={(e) => setScheduledDate(e.target.value)}
-                  className="mt-1 h-10 w-full rounded-lg border border-nexoraBorder bg-nexoraCanvas px-3.5 text-xs text-nexoraText outline-none transition-all focus:border-nexoraBrand focus:bg-white"
+                  onChange={(e) => {
+                    setScheduledDate(e.target.value)
+                    clearFieldError(NewBookingFormField.Date)
+                  }}
+                  aria-invalid={Boolean(fieldErrors.date)}
+                  className={`mt-1 h-10 w-full rounded-lg border bg-nexoraCanvas px-3.5 text-xs text-nexoraText outline-none transition-all focus:bg-white ${fieldErrors.date ? 'border-rose-400 focus:border-rose-400' : 'border-nexoraBorder focus:border-nexoraBrand'}`}
                 />
+                <FieldError message={fieldErrors.date} />
               </div>
               <div>
                 <label className="text-[10px] font-extrabold uppercase text-nexoraMuted">
@@ -233,9 +305,14 @@ export default function NewBookingForm({
                 <input
                   type="time"
                   value={scheduledTime}
-                  onChange={(e) => setScheduledTime(e.target.value)}
-                  className="mt-1 h-10 w-full rounded-lg border border-nexoraBorder bg-nexoraCanvas px-3.5 text-xs text-nexoraText outline-none transition-all focus:border-nexoraBrand focus:bg-white"
+                  onChange={(e) => {
+                    setScheduledTime(e.target.value)
+                    clearFieldError(NewBookingFormField.Time)
+                  }}
+                  aria-invalid={Boolean(fieldErrors.time)}
+                  className={`mt-1 h-10 w-full rounded-lg border bg-nexoraCanvas px-3.5 text-xs text-nexoraText outline-none transition-all focus:bg-white ${fieldErrors.time ? 'border-rose-400 focus:border-rose-400' : 'border-nexoraBorder focus:border-nexoraBrand'}`}
                 />
+                <FieldError message={fieldErrors.time} />
               </div>
             </div>
           </div>
@@ -271,6 +348,7 @@ export default function NewBookingForm({
               uncategorizedLabel={t('components.dashboard.views.pos.NewBookingForm.uncategorized')}
               searchPlaceholder={t('components.dashboard.views.pos.NewBookingForm.searchServicesPlaceholder')}
             />
+            <FieldError message={fieldErrors.services} />
           </div>
 
           {lines.length > 0 ? (
@@ -311,12 +389,6 @@ export default function NewBookingForm({
                 <span className="font-black text-nexoraText">${subtotal.toFixed(2)}</span>
               </div>
             </div>
-          ) : null}
-
-          {formError ? (
-            <p role="alert" className="text-[10px] font-bold text-rose-500">
-              {formError}
-            </p>
           ) : null}
         </div>
 
