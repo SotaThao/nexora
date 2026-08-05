@@ -3246,6 +3246,7 @@
             "time": "Time",
             "servicesTitle": "Add services",
             "selectedServicesTitle": "Selected services",
+            "noServicesSelected": "No services selected yet.",
             "addButton": "+ Add",
             "noServicesInCategory": "No services in this category.",
             "allCategories": "All",

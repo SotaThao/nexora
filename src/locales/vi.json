@@ -3246,6 +3246,7 @@
             "time": "Giờ",
             "servicesTitle": "Thêm dịch vụ",
             "selectedServicesTitle": "Dịch vụ đã chọn",
+            "noServicesSelected": "Chưa chọn dịch vụ nào.",
             "addButton": "+ Thêm",
             "noServicesInCategory": "Không có dịch vụ nào trong danh mục này.",
             "allCategories": "Tất cả",

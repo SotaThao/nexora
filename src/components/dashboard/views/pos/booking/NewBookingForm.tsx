@@ -218,7 +218,7 @@ export default function NewBookingForm({
 
   return (
     <div className="fixed inset-0 z-[60] flex items-center justify-center bg-nexoraText/70 p-4 backdrop-blur-sm">
-      <div className="nexora-modal-card max-w-2xl p-8">
+      <div className="nexora-modal-card max-w-4xl p-8">
         <div className="mb-4 flex shrink-0 items-center justify-between">
           <h2 className="text-sm font-extrabold text-nexoraText">
             {t('components.dashboard.views.pos.NewBookingForm.title')}
@@ -335,61 +335,78 @@ export default function NewBookingForm({
             </div>
           ) : null}
 
-          <div>
-            <h3 className="mb-2 text-[10px] font-black uppercase tracking-wider text-nexoraMuted">
-              {t('components.dashboard.views.pos.NewBookingForm.servicesTitle')}
-            </h3>
-            <CategoryGroupedCatalogPicker
-              items={serviceCatalog}
-              onAdd={handleAddService}
-              addLabel={t('components.dashboard.views.pos.NewBookingForm.addButton')}
-              emptyLabel={t('components.dashboard.views.pos.NewBookingForm.noServicesInCategory')}
-              allCategoryLabel={t('components.dashboard.views.pos.NewBookingForm.allCategories')}
-              uncategorizedLabel={t('components.dashboard.views.pos.NewBookingForm.uncategorized')}
-              searchPlaceholder={t('components.dashboard.views.pos.NewBookingForm.searchServicesPlaceholder')}
-            />
-            <FieldError message={fieldErrors.services} />
-          </div>
-
-          {lines.length > 0 ? (
-            <div className="space-y-2">
-              <h3 className="text-[10px] font-black uppercase tracking-wider text-nexoraMuted">
-                {t('components.dashboard.views.pos.NewBookingForm.selectedServicesTitle')}
+          <div className="grid grid-cols-1 gap-4 lg:grid-cols-5">
+            <div className="lg:col-span-3">
+              <h3 className="mb-2 text-[10px] font-black uppercase tracking-wider text-nexoraMuted">
+                {t('components.dashboard.views.pos.NewBookingForm.servicesTitle')}
               </h3>
-              {lines.map((line) => (
-                <div key={line.key} className="flex items-center gap-2 rounded-lg border border-nexoraBorder p-2">
-                  <div className="min-w-0 flex-1">
-                    <p className="truncate text-xs font-semibold text-nexoraText">
-                      {line.serviceName} — ${line.unitPrice.toFixed(2)}
-                    </p>
-                    <div className="mt-1">
-                      <TechnicianSelect
-                        businessId={businessId}
-                        posServiceId={line.posServiceId}
-                        value={line.posStaffProfileId}
-                        onChange={(staffId) => handleLineStaffChange(line.key, staffId)}
-                        unassignedLabel={t('components.dashboard.views.pos.NewBookingForm.unassigned')}
-                      />
-                    </div>
+              <CategoryGroupedCatalogPicker
+                items={serviceCatalog}
+                onAdd={handleAddService}
+                addLabel={t('components.dashboard.views.pos.NewBookingForm.addButton')}
+                emptyLabel={t('components.dashboard.views.pos.NewBookingForm.noServicesInCategory')}
+                allCategoryLabel={t('components.dashboard.views.pos.NewBookingForm.allCategories')}
+                uncategorizedLabel={t('components.dashboard.views.pos.NewBookingForm.uncategorized')}
+                searchPlaceholder={t('components.dashboard.views.pos.NewBookingForm.searchServicesPlaceholder')}
+              />
+              <FieldError message={fieldErrors.services} />
+            </div>
+
+            {/* Persistent cart panel — stays visible alongside the catalog on wide screens
+                (lg:col-span-2) instead of sitting below it in the same scroll flow, so adding
+                services no longer pushes the running total off-screen. Its own line-item list
+                is height-bounded with an internal scroll (mirrors PosOrderWorkspace's Order
+                Detail panel) rather than growing the whole modal unboundedly. */}
+            <div className="lg:col-span-2">
+              <div className="space-y-2 rounded-lg border border-nexoraBorder bg-nexoraCanvas p-3">
+                <h3 className="text-[10px] font-black uppercase tracking-wider text-nexoraMuted">
+                  {t('components.dashboard.views.pos.NewBookingForm.selectedServicesTitle')}
+                </h3>
+
+                {lines.length === 0 ? (
+                  <p className="text-[11px] text-nexoraMuted">
+                    {t('components.dashboard.views.pos.NewBookingForm.noServicesSelected')}
+                  </p>
+                ) : (
+                  <div className="max-h-[280px] space-y-2 overflow-y-auto pr-1">
+                    {lines.map((line) => (
+                      <div key={line.key} className="flex items-center gap-2 rounded-lg border border-nexoraBorder bg-white p-2">
+                        <div className="min-w-0 flex-1">
+                          <p className="truncate text-xs font-semibold text-nexoraText">
+                            {line.serviceName} — ${line.unitPrice.toFixed(2)}
+                          </p>
+                          <div className="mt-1">
+                            <TechnicianSelect
+                              businessId={businessId}
+                              posServiceId={line.posServiceId}
+                              value={line.posStaffProfileId}
+                              onChange={(staffId) => handleLineStaffChange(line.key, staffId)}
+                              unassignedLabel={t('components.dashboard.views.pos.NewBookingForm.unassigned')}
+                            />
+                          </div>
+                        </div>
+                        <button
+                          type="button"
+                          onClick={() => handleRemoveLine(line.key)}
+                          className="rounded-md p-1 text-nexoraMuted hover:text-rose-600"
+                          aria-label={t('components.dashboard.views.pos.NewBookingForm.removeLine')}
+                        >
+                          <Trash2 className="h-3.5 w-3.5" />
+                        </button>
+                      </div>
+                    ))}
                   </div>
-                  <button
-                    type="button"
-                    onClick={() => handleRemoveLine(line.key)}
-                    className="rounded-md p-1 text-nexoraMuted hover:text-rose-600"
-                    aria-label={t('components.dashboard.views.pos.NewBookingForm.removeLine')}
-                  >
-                    <Trash2 className="h-3.5 w-3.5" />
-                  </button>
+                )}
+
+                <div className="flex justify-between border-t border-nexoraBorder pt-2 text-xs">
+                  <span className="font-black uppercase text-nexoraText">
+                    {t('components.dashboard.views.pos.NewBookingForm.estimatedTotal')}
+                  </span>
+                  <span className="font-black text-nexoraText">${subtotal.toFixed(2)}</span>
                 </div>
-              ))}
-              <div className="flex justify-between border-t border-nexoraBorder pt-2 text-xs">
-                <span className="font-black uppercase text-nexoraText">
-                  {t('components.dashboard.views.pos.NewBookingForm.estimatedTotal')}
-                </span>
-                <span className="font-black text-nexoraText">${subtotal.toFixed(2)}</span>
               </div>
             </div>
-          ) : null}
+          </div>
         </div>
 
         <div className="mt-4 flex shrink-0 gap-2">
