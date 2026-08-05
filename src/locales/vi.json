@@ -2991,7 +2991,6 @@
             "customerName": "Tên khách",
             "customerPhone": "Số điện thoại",
             "customerEmail": "Email",
-            "waitlistEmpty": "Không có khách đang chờ.",
             "waitMinutes": "{{minutes}} phút",
             "orderListFilter": {
               "all": "Tất cả",
@@ -3005,16 +3004,13 @@
             "startServiceSuccess": "Đã bắt đầu phục vụ.",
             "confirmCancelTitle": "Gỡ khỏi hàng đợi?",
             "confirmCancelBody": "\"{{name}}\" sẽ bị gỡ khỏi hàng đợi check-in.",
-            "noServiceAvailable": "Chưa có dịch vụ nào để gán — thiết lập dịch vụ POS trước.",
             "turnBoardEmpty": "Chưa có trạm thợ nào — thiết lập hồ sơ POS cho thợ trước.",
             "stationStatus": {
               "Empty": "Đang trống",
               "InService": "Đang phục vụ"
             },
-            "assignGuestButton": "+ Gán khách",
             "servingSince": "Bắt đầu phục vụ lúc {{time}}",
             "checkoutButton": "Checkout",
-            "assigned": "Đã gán khách và bắt đầu phục vụ.",
             "orderListEmpty": "Chưa có order nào đang mở.",
             "orderListColumnOrder": "Order",
             "orderListColumnGuest": "Khách",

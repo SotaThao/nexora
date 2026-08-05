@@ -11,7 +11,7 @@
 import { useState } from 'react'
 import { useSearchParams } from 'react-router-dom'
 import { useQueryClient } from '@tanstack/react-query'
-import { LayoutGrid, List as ListIcon, Loader2 } from 'lucide-react'
+import { LayoutGrid, List as ListIcon } from 'lucide-react'
 import { useTranslation } from '../../../../contexts/LanguageContext'
 import { useNotification } from '../../../../contexts/NotificationContext'
 import { storage } from '../../../../utils/storage'
@@ -19,15 +19,8 @@ import { getApiErrorCode } from '../../../../types/domain'
 import { getErrorI18nKey } from '../../../../data/errorCodes'
 import { qk } from '../../../../data/queryKeys'
 import { usePosAccess } from '../../../../data/hooks/usePosAccess'
-import {
-  useAssignStaffToServiceLine,
-  useCancelOrder,
-  useOrderList,
-  useStartOrderService,
-  useWaitlist,
-} from '../../../../data/hooks/usePosOrders'
+import { useCancelOrder, useOrderList, useStartOrderService } from '../../../../data/hooks/usePosOrders'
 import { useTurnBoard } from '../../../../data/hooks/usePosTurnBoard'
-import { useAddOrderServiceLine, useCheckoutServiceCatalog } from '../../../../data/hooks/usePosCheckout'
 import { PosOrderStatus } from '../../../../constants/posOrderStatus'
 import type { OrderListItemApiDto, TurnBoardStationApiDto } from '../../../../types/repositories'
 import { SkeletonList } from '../../../ui/skeleton'
@@ -88,15 +81,9 @@ export default function PosFrontDeskView({
   const { showToast, showConfirm } = useNotification()
   const queryClient = useQueryClient()
   const { data: access, isLoading: isAccessLoading } = usePosAccess(businessId)
-  // Still used by the Turn Board "assign an Empty station" dropdown below —
-  // only the standalone Waitlist tab (now folded into Order List) was removed.
-  const { data: waitlist = [] } = useWaitlist(businessId)
   const { data: orderList = [], isLoading: isOrderListLoading } = useOrderList(businessId)
   const { data: turnBoard = [], isLoading: isTurnBoardLoading } = useTurnBoard(businessId)
-  const { data: serviceCatalog = [] } = useCheckoutServiceCatalog(businessId)
   const cancelOrder = useCancelOrder(businessId)
-  const addOrderServiceLine = useAddOrderServiceLine(businessId)
-  const assignStaffToServiceLine = useAssignStaffToServiceLine(businessId)
   const startOrderService = useStartOrderService(businessId)
 
   // Deep-link support for the Owner Dashboard's "Total Bookings" KPI card (Ticket 10),
@@ -128,9 +115,6 @@ export default function PosFrontDeskView({
     setViewMode(mode)
     storage.setItem(ORDER_LIST_VIEW_MODE_STORAGE_KEY, mode)
   }
-  const [assignStaffSelection, setAssignStaffSelection] = useState<Record<string, string>>({})
-  const [assignServiceSelection, setAssignServiceSelection] = useState<Record<string, string>>({})
-  const [assigningOrderId, setAssigningOrderId] = useState<string | null>(null)
   const [updateWorkspace, setUpdateWorkspace] = useState<UpdateWorkspaceState | null>(null)
   // Entry point for creating a booking (Ticket 3) — kept as the one global "+ New Booking"
   // action; Ticket 9 added the "Bookings" tab/management screen below for viewing, checking
@@ -188,39 +172,6 @@ export default function PosFrontDeskView({
     }
   }
 
-  // Turn Board "Empty" station quick-assign — still 3 sequential calls (add a NEW service
-  // line, assign it to this free staff, then start it). POS iPad redesign, Ticket 5:
-  // kept as-is on purpose, re-scoped from the original brainstorm's "Assign Next" (auto-pick
-  // the oldest unassigned waiting order) — every order already gets a concrete staff at
-  // Check-in (see PosStaffAssignmentResolver), so there is no "unassigned order" left to
-  // grab. What this really does now: an already-free technician picks up an *additional*
-  // service for an existing customer's order (e.g. their pedicure after someone else did
-  // their manicure) — a multi-service upsell action, not a queue hand-off.
-  const handleAssignAndStart = async (orderId: string, posStaffProfileId?: string) => {
-    const posServiceId = assignServiceSelection[orderId] ?? serviceCatalog[0]?.id
-    const service = serviceCatalog.find((s) => s.id === posServiceId)
-    if (!posServiceId || !service) {
-      showToast(t('components.dashboard.views.pos.PosFrontDeskView.noServiceAvailable'), 'error')
-      return
-    }
-    setAssigningOrderId(orderId)
-    try {
-      const serviceLineId = await addOrderServiceLine.mutateAsync({
-        orderId,
-        posServiceId,
-        unitPrice: service.price,
-        serviceName: service.name,
-      })
-      await assignStaffToServiceLine.mutateAsync({ orderId, serviceLineId, posStaffProfileId })
-      await startOrderService.mutateAsync(orderId)
-      showToast(t('components.dashboard.views.pos.PosFrontDeskView.assigned'))
-    } catch (err: unknown) {
-      showToast(t(getErrorI18nKey(getApiErrorCode(err, 'ERROR'))), 'error')
-    } finally {
-      setAssigningOrderId(null)
-    }
-  }
-
   const tabs: { id: FrontDeskTab; labelKey: string; badge?: number }[] = [
     { id: 'checkin', labelKey: 'components.dashboard.views.pos.PosFrontDeskView.tabs.checkin' },
     {
@@ -233,24 +184,7 @@ export default function PosFrontDeskView({
     { id: 'booking', labelKey: 'components.dashboard.views.pos.PosFrontDeskView.tabs.booking' },
   ]
 
-  const renderServiceSelect = (orderId: string) => (
-    <select
-      value={assignServiceSelection[orderId] ?? serviceCatalog[0]?.id ?? ''}
-      onChange={(e) => setAssignServiceSelection((prev) => ({ ...prev, [orderId]: e.target.value }))}
-      className="h-9 w-full rounded-lg border border-posFdBorder bg-white px-2.5 text-xs text-posFdText outline-none focus:border-posFdAccent"
-    >
-      {serviceCatalog.map((service) => (
-        <option key={service.id} value={service.id}>
-          {service.name} — ${service.price.toFixed(2)}
-        </option>
-      ))}
-    </select>
-  )
-
   const renderStationCard = (station: TurnBoardStationApiDto) => {
-    const selectedOrderId = assignStaffSelection[station.posStaffProfileId] ?? waitlist[0]?.id ?? ''
-    const isAssigningThisStation = assigningOrderId === selectedOrderId
-
     return (
       <div
         key={station.posStaffProfileId}
@@ -274,9 +208,16 @@ export default function PosFrontDeskView({
 
         {station.currentStatus === PosOrderStatus.InService && (
           <div className="space-y-2 rounded-lg bg-posFdCanvas p-3">
-            <p className="truncate text-xs font-bold text-posFdText">{station.currentCustomerName}</p>
-            {station.currentPrimaryServiceName ? (
-              <p className="truncate text-[11px] text-posFdMuted">{station.currentPrimaryServiceName}</p>
+            <div className="flex items-center justify-between gap-2">
+              <p className="truncate text-xs font-bold text-posFdText">{station.currentCustomerName}</p>
+              {station.currentOrderNumber ? (
+                <span className="shrink-0 font-mono text-[11px] font-bold text-posFdMuted">
+                  #{station.currentOrderNumber}
+                </span>
+              ) : null}
+            </div>
+            {station.currentServiceNames.length > 0 ? (
+              <p className="truncate text-[11px] text-posFdMuted">{station.currentServiceNames.join(', ')}</p>
             ) : null}
             {station.assignedAt ? (
               <p className="text-[11px] text-posFdMuted">
@@ -292,45 +233,6 @@ export default function PosFrontDeskView({
             >
               {t('components.dashboard.views.pos.PosFrontDeskView.checkoutButton')}
             </button>
-          </div>
-        )}
-
-        {station.currentStatus === 'Empty' && (
-          <div className="space-y-2">
-            {waitlist.length > 0 ? (
-              <>
-                <select
-                  value={selectedOrderId}
-                  onChange={(e) =>
-                    setAssignStaffSelection((prev) => ({ ...prev, [station.posStaffProfileId]: e.target.value }))
-                  }
-                  className="h-9 w-full rounded-lg border border-posFdBorder bg-white px-2.5 text-xs text-posFdText outline-none focus:border-posFdAccent"
-                >
-                  {waitlist.map((order) => (
-                    <option key={order.id} value={order.id}>
-                      #{order.orderNumber} — {order.customerName}
-                    </option>
-                  ))}
-                </select>
-                {renderServiceSelect(selectedOrderId)}
-                <button
-                  type="button"
-                  onClick={() => handleAssignAndStart(selectedOrderId, station.posStaffProfileId)}
-                  disabled={isAssigningThisStation || serviceCatalog.length === 0}
-                  className="h-9 w-full rounded-lg bg-posFdAccent text-xs font-bold text-white hover:bg-posFdAccentDark disabled:opacity-60"
-                >
-                  {isAssigningThisStation ? (
-                    <Loader2 className="mx-auto h-4 w-4 animate-spin" />
-                  ) : (
-                    t('components.dashboard.views.pos.PosFrontDeskView.assignGuestButton')
-                  )}
-                </button>
-              </>
-            ) : (
-              <p className="text-[11px] text-posFdMuted">
-                {t('components.dashboard.views.pos.PosFrontDeskView.waitlistEmpty')}
-              </p>
-            )}
           </div>
         )}
       </div>

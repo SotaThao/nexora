@@ -2991,7 +2991,6 @@
             "customerName": "Customer Name",
             "customerPhone": "Phone",
             "customerEmail": "Email",
-            "waitlistEmpty": "No guests waiting.",
             "waitMinutes": "{{minutes}}m",
             "orderListFilter": {
               "all": "All",
@@ -3005,16 +3004,13 @@
             "startServiceSuccess": "Service started.",
             "confirmCancelTitle": "Remove from waitlist?",
             "confirmCancelBody": "\"{{name}}\" will be removed from the check-in queue.",
-            "noServiceAvailable": "No service available to assign — set up a POS service first.",
             "turnBoardEmpty": "No staff stations yet — set up staff POS profiles first.",
             "stationStatus": {
               "Empty": "Open",
               "InService": "Serving"
             },
-            "assignGuestButton": "+ Assign Guest",
             "servingSince": "Serving since {{time}}",
             "checkoutButton": "Checkout",
-            "assigned": "Guest assigned and service started.",
             "orderListEmpty": "No open orders yet.",
             "orderListColumnOrder": "Order",
             "orderListColumnGuest": "Guest",

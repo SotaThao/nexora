@@ -262,8 +262,9 @@ export interface TurnBoardStationApiDto {
   photoUrl?: string | null
   currentStatus: string
   currentOrderId?: string | null
+  currentOrderNumber?: string | null
   currentCustomerName?: string | null
-  currentPrimaryServiceName?: string | null
+  currentServiceNames: string[]
   assignedAt?: string | null
 }
 

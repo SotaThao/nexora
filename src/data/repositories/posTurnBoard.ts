@@ -14,7 +14,12 @@ export function createPosTurnBoardRepository(client: HttpClient = httpClient) {
       const res = await client.get<TurnBoardStationApiDto[]>(
         `/api/v1/merchant/pos/${businessId}/turn-board`,
       )
-      return res ?? []
+      // Defends against a backend that hasn't rolled out `currentServiceNames` yet — older
+      // API responses omit the field entirely rather than sending `[]`.
+      return (res ?? []).map((station) => ({
+        ...station,
+        currentServiceNames: station.currentServiceNames ?? [],
+      }))
     },
   }
 }
