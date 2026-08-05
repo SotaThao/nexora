@@ -155,14 +155,12 @@ function ManagePlanView({ currentPlanId = null, onSelectPlan, packages }: Manage
                       'h-11 w-full rounded-xl text-sm font-bold transition-all active:scale-[0.98]',
                       plan.featured
                         ? 'bg-gradient-to-r from-nexoraElectric to-nexoraViolet text-white shadow-lg shadow-nexoraViolet/25 hover:brightness-110'
-                        : plan.free
-                          ? 'border border-nexoraBorder bg-nexoraSurface text-nexoraText hover:border-nexoraBrand hover:text-nexoraBrand'
-                          : plan.id === 'enterprise'
-                            ? 'bg-nexoraSidebar text-white hover:bg-nexoraSidebarPanel'
-                            : 'border border-nexoraBorder bg-nexoraSurface text-nexoraText hover:border-nexoraBrand hover:text-nexoraBrand',
+                        : plan.id === 'enterprise'
+                          ? 'bg-nexoraSidebar text-white hover:bg-nexoraSidebarPanel'
+                          : 'border border-nexoraBorder bg-nexoraSurface text-nexoraText hover:border-nexoraBrand hover:text-nexoraBrand',
                     ].join(' ')}
                   >
-                    {plan.featured ? 'Upgrade to Pro' : plan.free ? 'Downgrade' : plan.id === 'enterprise' ? 'Contact Success Sales' : t(`${base}.cta`)}
+                    {plan.featured ? 'Upgrade to Pro' : plan.id === 'enterprise' ? 'Contact Success Sales' : t(`${base}.cta`)}
                   </button>
                 )}
               </div>

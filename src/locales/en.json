@@ -846,7 +846,22 @@
       "subscription_total_due": "Total due:",
       "subscription_confirm_payment": "Confirm payment",
       "subscription_payment_success": "Package purchased successfully.",
-      "subscription_price_note_month": "month"
+      "subscription_price_note_month": "month",
+      "subscription_payment_tab_wallet": "VlinkPay Wallet",
+      "subscription_payment_tab_card": "Credit/Debit Card",
+      "subscription_cardholder_name_label": "Cardholder name",
+      "subscription_billing_address_label": "Address",
+      "subscription_billing_city_label": "City",
+      "subscription_billing_state_label": "State/Province",
+      "subscription_billing_zip_code_label": "Zip code",
+      "subscription_billing_country_label": "Country",
+      "subscription_card_number_label": "Card number",
+      "subscription_card_expiry_label": "Expiry date",
+      "subscription_card_cvc_label": "CVC",
+      "subscription_card_init_error": "Could not start card payment. Please try again.",
+      "subscription_card_payment_error": "Your card was declined. Please try another card.",
+      "subscription_card_payment_processing": "Confirming your payment…",
+      "subscription_card_payment_processing_timeout": "This is taking longer than usual. You can close this and check back shortly."
     },
     "settings_panel": {
       "title": "Nexora Configuration",

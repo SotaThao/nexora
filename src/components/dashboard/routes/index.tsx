@@ -370,18 +370,32 @@ export function SubscriptionsRoute() {
   const ctx = useOutletContext<LooseObject>()
   const navigate = useNavigate()
   const [searchParams] = useSearchParams()
-  const currentPlanId = ctx?.profile?.subscription?.plan ?? null
+  const currentPlanId = ctx?.profile?.subscription?.packageCode ?? null
   const [paymentPlan, setPaymentPlan] = useState<PurchasableSubscriptionPlan | null>(null)
   const { data: packages = [] } = useSubscriptionPackages()
+  const billingDefaults = useMemo(() => {
+    const profile = ctx?.profile as LooseObject | undefined
+    if (!profile) return undefined
+    return {
+      name: profile.fullName || [profile.firstName, profile.lastName].filter(Boolean).join(' '),
+      email: profile.email,
+      address: profile.address,
+      city: profile.city,
+      state: profile.state,
+      zipCode: profile.zipCode,
+      country: profile.country,
+    }
+  }, [ctx?.profile])
 
   useEffect(() => {
     const deepLinkPlan = planIdToPurchasablePlan(searchParams.get('plan') ?? '')
     if (deepLinkPlan) setPaymentPlan(deepLinkPlan)
   }, [searchParams])
 
-  const paymentPlanPrice = paymentPlan
-    ? packages.find((p) => p.plan === paymentPlan)?.price ?? 0
-    : 0
+  const selectedPackage = paymentPlan
+    ? packages.find((p) => p.packageCode === paymentPlan.toLowerCase())
+    : undefined
+  const paymentPlanPrice = selectedPackage?.price ?? 0
 
   return (
     <>
@@ -397,11 +411,13 @@ export function SubscriptionsRoute() {
           navigate('/dashboard/support')
         }}
       />
-      {paymentPlan ? (
+      {paymentPlan && selectedPackage ? (
         <SubscriptionPaymentModal
           isOpen
           plan={paymentPlan}
+          packageId={selectedPackage.id}
           price={paymentPlanPrice}
+          billingDefaults={billingDefaults}
           onClose={() => setPaymentPlan(null)}
         />
       ) : null}

@@ -18,39 +18,6 @@ export enum SubscriptionPackageType {
 
 export type PurchasableSubscriptionPlan = 'Starter' | 'Pro'
 
-/** Legacy Touch purchase response (`plan` + `symbol` body). */
-export interface PurchaseSubscriptionResult {
-  orderId: string
-  referenceId: string
-  paymentStatus: 'Pending' | 'Paid' | 'Failed'
-  plan: PurchasableSubscriptionPlan
-}
-
-/** VoiceAI / MD purchase response (`packageId` + `symbol` body). */
-export interface PurchasePackageByIdResult {
-  orderId: string
-  referenceId: string
-  paymentStatus: SubscriptionPaymentStatus
-  packageCode: string
-}
-
-export interface SubscriptionPackage {
-  /** GUID — required as `packageId` for VoiceAI POST purchase. */
-  id: string
-  packageCode: string
-  name: string
-  /**
-   * Touch catalog field. VoiceAI DTOs may omit it — derive UI key from
-   * `packageCode` / `name` instead.
-   */
-  plan: string | null
-  featuresEn: string[]
-  featuresVi: string[]
-  price: number | null
-  originalPrice: number | null
-  periodInMonths: number | null
-}
-
 /** Wire enum — POST purchase / GET purchase-history `paymentStatus`. */
 export enum SubscriptionPaymentStatus {
   Pending = 'Pending',
@@ -67,6 +34,46 @@ export enum PackageHistoryUiStatus {
   Expired = 'expired',
   Pending = 'pending',
   Failed = 'failed',
+}
+
+/** Crypto / wallet purchase response. */
+export interface PurchaseSubscriptionResult {
+  orderId: string
+  referenceId: string
+  paymentStatus: SubscriptionPaymentStatus
+  packageCode: string
+}
+
+export interface InitializeCardPaymentResult {
+  orderId: string
+  referenceId: string
+  clientSecret: string
+  publishableKey: string
+}
+
+/** VoiceAI / MD purchase response (`packageId` + `symbol` body). */
+export interface PurchasePackageByIdResult {
+  orderId: string
+  referenceId: string
+  paymentStatus: SubscriptionPaymentStatus
+  packageCode: string
+}
+
+export interface SubscriptionPackage {
+  /** GUID — required as `packageId` for VoiceAI / card POST purchase. */
+  id: string
+  packageCode: string
+  name: string
+  /**
+   * Touch catalog field. VoiceAI DTOs may omit it — derive UI key from
+   * `packageCode` / `name` instead.
+   */
+  plan: string | null
+  featuresEn: string[]
+  featuresVi: string[]
+  price: number | null
+  originalPrice: number | null
+  periodInMonths: number | null
 }
 
 /** Normalized GET `/api/v1/merchant/subscriptions/purchase-history` row. */
@@ -221,7 +228,7 @@ function normalizePurchaseHistory(
     .filter((row): row is SubscriptionPurchaseHistoryItem => row != null)
 }
 
-function normalizePurchaseByIdResult(raw: unknown): PurchasePackageByIdResult {
+function normalizePurchaseResult(raw: unknown): PurchaseSubscriptionResult {
   const item = raw && typeof raw === 'object' ? (raw as Record<string, unknown>) : {}
   return {
     orderId: readString(item.orderId),
@@ -264,15 +271,16 @@ export function createSubscriptionPaymentsRepository(client: HttpClient = httpCl
       return normalizePaymentMethods(res)
     },
 
-    /** Legacy Touch: body `{ plan, symbol }`. */
+    /** Tip Platform / wallet: body `{ packageId, symbol }`. */
     async purchase(
-      plan: PurchasableSubscriptionPlan,
+      packageId: string,
       symbol: string,
     ): Promise<PurchaseSubscriptionResult> {
-      return client.post<PurchaseSubscriptionResult>(
+      const res = await client.post<unknown>(
         '/api/v1/merchant/subscriptions/purchase',
-        { plan, symbol },
+        { packageId, symbol },
       )
+      return normalizePurchaseResult(res)
     },
 
     /** VoiceAI MD: body `{ packageId, symbol }`. */
@@ -284,7 +292,14 @@ export function createSubscriptionPaymentsRepository(client: HttpClient = httpCl
         '/api/v1/merchant/subscriptions/purchase',
         { packageId, symbol },
       )
-      return normalizePurchaseByIdResult(res)
+      return normalizePurchaseResult(res)
+    },
+
+    async initializeCardPayment(packageId: string): Promise<InitializeCardPaymentResult> {
+      return client.post<InitializeCardPaymentResult>(
+        '/api/v1/merchant/subscriptions/purchase/card/initialize',
+        { packageId },
+      )
     },
 
     /** GET `/api/v1/merchant/subscriptions/purchase-history` */

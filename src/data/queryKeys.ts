@@ -93,6 +93,7 @@ export const qk = {
     packageType
       ? (['publicSubscriptions', 'packages', packageType] as const)
       : (['publicSubscriptions', 'packages'] as const),
+  merchantSubscriptionOrderStatus: (orderId: string) => ['merchantSubscriptions', 'orderStatus', orderId],
 
   // Merchant Payment Methods
   merchantPaymentMethods: ()   => ['merchantPaymentMethods'],

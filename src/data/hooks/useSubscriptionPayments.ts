@@ -2,13 +2,16 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { qk } from '../queryKeys'
 import subscriptionPaymentsRepository, {
   SubscriptionPackageType,
-  type PurchasableSubscriptionPlan,
+  SubscriptionPaymentStatus,
+  type InitializeCardPaymentResult,
   type PurchasePackageByIdResult,
   type PurchaseSubscriptionResult,
   type SubscriptionPackage,
   type SubscriptionPaymentMethod,
   type SubscriptionPurchaseHistoryItem,
 } from '../repositories/subscriptionPayments'
+
+const CARD_PAYMENT_POLL_INTERVAL_MS = 2_000
 
 export function useSubscriptionPackages({
   enabled = true,
@@ -64,15 +67,16 @@ export function useSubscriptionPurchaseHistory({ enabled = true } = {}) {
   })
 }
 
-/** Legacy Touch purchase — body `{ plan, symbol }`. */
+/** Tip Platform wallet purchase — body `{ packageId, symbol }`. */
 export function usePurchaseSubscription() {
   const queryClient = useQueryClient()
   return useMutation<
     PurchaseSubscriptionResult,
     Error,
-    { plan: PurchasableSubscriptionPlan; symbol: string }
+    { packageId: string; symbol: string }
   >({
-    mutationFn: ({ plan, symbol }) => subscriptionPaymentsRepository.purchase(plan, symbol),
+    mutationFn: ({ packageId, symbol }) =>
+      subscriptionPaymentsRepository.purchase(packageId, symbol),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: qk.userProfile() })
       queryClient.invalidateQueries({ queryKey: qk.merchantSubscriptionPaymentMethods() })
@@ -100,5 +104,37 @@ export function usePurchaseVoiceAiPackage() {
       })
       queryClient.invalidateQueries({ queryKey: qk.merchantVoiceCreditWallet() })
     },
+  })
+}
+
+export function useInitializeCardPayment() {
+  return useMutation<InitializeCardPaymentResult, Error, string>({
+    mutationFn: (packageId) => subscriptionPaymentsRepository.initializeCardPayment(packageId),
+  })
+}
+
+/**
+ * Polls purchase-history for a specific order until Stripe's webhook has
+ * flipped it to Paid/Failed (or the caller gives up by disabling `enabled`).
+ * Card confirmation succeeds client-side before the backend's async webhook
+ * activates the subscription, so the UI needs to wait for that separately.
+ */
+export function useSubscriptionOrderStatusPoll(orderId: string | null, { enabled = true } = {}) {
+  return useQuery<SubscriptionPurchaseHistoryItem | undefined>({
+    queryKey: qk.merchantSubscriptionOrderStatus(orderId ?? ''),
+    queryFn: async () => {
+      const history = await subscriptionPaymentsRepository.getPurchaseHistory()
+      return history.find((item) => item.orderId === orderId)
+    },
+    enabled: enabled && !!orderId,
+    refetchInterval: (query) => {
+      const status = query.state.data?.paymentStatus
+      return status === SubscriptionPaymentStatus.Paid ||
+        status === SubscriptionPaymentStatus.Failed
+        ? false
+        : CARD_PAYMENT_POLL_INTERVAL_MS
+    },
+    refetchOnWindowFocus: false,
+    staleTime: 0,
   })
 }
