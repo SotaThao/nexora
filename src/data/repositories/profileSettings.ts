@@ -39,11 +39,11 @@ function normalizeSubscription(raw: LooseObject | null | undefined): UserSubscri
     business?.Subscription
   if (!sub || typeof sub !== 'object') return null
 
-  const plan = sub.plan ?? sub.Plan
-  if (!plan) return null
+  const packageCode = sub.packageCode ?? sub.PackageCode
+  if (!packageCode) return null
 
   return {
-    plan: String(plan),
+    packageCode: String(packageCode),
     status: sub.status ?? sub.Status ? String(sub.status ?? sub.Status) : undefined,
     trialEndsAt: sub.trialEndsAt ?? sub.TrialEndsAt ?? null,
     currentPeriodEnd: sub.currentPeriodEnd ?? sub.CurrentPeriodEnd ?? null,

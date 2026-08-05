@@ -141,13 +141,13 @@ function ComparisonCell({ cell, t }: { cell: CmpCell; t: (key: HomePageTranslati
 
 function getPlanFields(
   packages: SubscriptionPackage[] | undefined,
-  plan: SubscriptionPackage['plan'],
+  matcher: (p: SubscriptionPackage) => boolean,
   isVietnamese: boolean,
   base: string,
   featureCount: number,
   t: (key: HomePageTranslationKey) => string,
 ) {
-  const pkg = packages?.find((p) => p.plan === plan)
+  const pkg = packages?.find(matcher)
   const pkgFeatures = isVietnamese ? pkg?.featuresVi : pkg?.featuresEn
   const features = pkgFeatures?.length
     ? pkgFeatures
@@ -168,9 +168,10 @@ export default function HomePagePricingSection() {
     homepageTranslations[lang][key] ?? homepageTranslations.en[key]
   const { data: packages } = usePublicSubscriptionPackages()
 
-  const lite = getPlanFields(packages, 'Lite', isVietnamese, 'plan-free', 4, t)
-  const starter = getPlanFields(packages, 'Starter', isVietnamese, 'plan-1', 4, t)
-  const pro = getPlanFields(packages, 'Pro', isVietnamese, 'plan-2', 5, t)
+  // Price 0 identifies the free tier — avoids hard-coding a specific plan/code.
+  const lite = getPlanFields(packages, (p) => p.price === 0, isVietnamese, 'plan-free', 4, t)
+  const starter = getPlanFields(packages, (p) => p.packageCode === 'starter', isVietnamese, 'plan-1', 4, t)
+  const pro = getPlanFields(packages, (p) => p.packageCode === 'pro', isVietnamese, 'plan-2', 5, t)
 
   return (
     <section className="py-16 sm:py-24 bg-white ds-section" id="pricing">
