@@ -17,11 +17,12 @@ export function formatSubscriptionDate(iso, locale = 'en', { sidebar = false } =
 }
 
 export function getSubscriptionSidebarCopy(subscription, t, locale = 'en') {
-  if (!subscription?.plan) {
+  if (!subscription?.packageCode) {
     return { planLabel: null, detailLabel: null }
   }
 
-  const planLabel = subscription.plan
+  // packageCode arrives lowercase (e.g. "starter") — capitalize for display.
+  const planLabel = subscription.packageCode.charAt(0).toUpperCase() + subscription.packageCode.slice(1)
   const trialEnd = formatSubscriptionDate(subscription.trialEndsAt, locale, { sidebar: true })
   const periodEnd = formatSubscriptionDate(subscription.currentPeriodEnd, locale, { sidebar: true })
 

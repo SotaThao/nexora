@@ -85,6 +85,7 @@ export const qk = {
   // Merchant Subscriptions (billing)
   merchantSubscriptionPackages: () => ['merchantSubscriptions', 'packages'],
   merchantSubscriptionPaymentMethods: () => ['merchantSubscriptions', 'paymentMethods'],
+  merchantSubscriptionOrderStatus: (orderId: string) => ['merchantSubscriptions', 'orderStatus', orderId],
   publicSubscriptionPackages: () => ['publicSubscriptions', 'packages'],
 
   // Merchant Payment Methods

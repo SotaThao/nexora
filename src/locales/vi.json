@@ -846,7 +846,22 @@
       "subscription_total_due": "Tổng cộng:",
       "subscription_confirm_payment": "Xác nhận thanh toán",
       "subscription_payment_success": "Mua gói thành công.",
-      "subscription_price_note_month": "tháng"
+      "subscription_price_note_month": "tháng",
+      "subscription_payment_tab_wallet": "Ví VlinkPay",
+      "subscription_payment_tab_card": "Thẻ tín dụng/ghi nợ",
+      "subscription_cardholder_name_label": "Tên chủ thẻ",
+      "subscription_billing_address_label": "Địa chỉ",
+      "subscription_billing_city_label": "Thành phố",
+      "subscription_billing_state_label": "Tỉnh/Bang",
+      "subscription_billing_zip_code_label": "Mã bưu điện",
+      "subscription_billing_country_label": "Quốc gia",
+      "subscription_card_number_label": "Số thẻ",
+      "subscription_card_expiry_label": "Ngày hết hạn",
+      "subscription_card_cvc_label": "CVC",
+      "subscription_card_init_error": "Không thể khởi tạo thanh toán bằng thẻ. Vui lòng thử lại.",
+      "subscription_card_payment_error": "Thẻ của bạn bị từ chối. Vui lòng thử thẻ khác.",
+      "subscription_card_payment_processing": "Đang xác nhận thanh toán…",
+      "subscription_card_payment_processing_timeout": "Việc này đang mất nhiều thời gian hơn bình thường. Bạn có thể đóng lại và kiểm tra sau ít phút."
     },
     "settings_panel": {
       "title": "Cấu Hình Hệ Thống Nexora",

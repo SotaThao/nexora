@@ -551,7 +551,7 @@ export interface ReviewRecord extends DomainEntity {
 }
 
 export interface UserSubscription {
-  plan?: string
+  packageCode?: string
   status?: string
   trialEndsAt?: string | null
   currentPeriodEnd?: string | null

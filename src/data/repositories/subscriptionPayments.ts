@@ -16,11 +16,32 @@ export interface PurchaseSubscriptionResult {
   orderId: string
   referenceId: string
   paymentStatus: 'Pending' | 'Paid' | 'Failed'
-  plan: PurchasableSubscriptionPlan
+  packageCode: string
+}
+
+export interface InitializeCardPaymentResult {
+  orderId: string
+  referenceId: string
+  clientSecret: string
+  publishableKey: string
+}
+
+export interface SubscriptionPurchaseHistoryItem {
+  orderId: string
+  referenceId: string
+  packageCode: string
+  planName: string
+  periodInMonths: number
+  amount: number
+  currency: string
+  paymentStatus: 'Pending' | 'Paid' | 'Failed'
+  createdAt: string
+  paidAt: string | null
+  validUntil: string | null
 }
 
 export interface SubscriptionPackage {
-  plan: 'Lite' | 'Starter' | 'Pro' | 'Enterprise'
+  id: string
   packageCode: string
   name: string
   featuresEn: string[]
@@ -46,8 +67,22 @@ export function createSubscriptionPaymentsRepository(client: HttpClient = httpCl
       return Array.isArray(res) ? res : []
     },
 
-    async purchase(plan: PurchasableSubscriptionPlan, symbol: string): Promise<PurchaseSubscriptionResult> {
-      return client.post<PurchaseSubscriptionResult>('/api/v1/merchant/subscriptions/purchase', { plan, symbol })
+    async purchase(packageId: string, symbol: string): Promise<PurchaseSubscriptionResult> {
+      return client.post<PurchaseSubscriptionResult>('/api/v1/merchant/subscriptions/purchase', { packageId, symbol })
+    },
+
+    async initializeCardPayment(packageId: string): Promise<InitializeCardPaymentResult> {
+      return client.post<InitializeCardPaymentResult>(
+        '/api/v1/merchant/subscriptions/purchase/card/initialize',
+        { packageId },
+      )
+    },
+
+    async getPurchaseHistory(): Promise<SubscriptionPurchaseHistoryItem[]> {
+      const res = await client.get<SubscriptionPurchaseHistoryItem[]>(
+        '/api/v1/merchant/subscriptions/purchase-history',
+      )
+      return Array.isArray(res) ? res : []
     },
   }
 }
