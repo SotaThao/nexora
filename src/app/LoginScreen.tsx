@@ -1,12 +1,13 @@
 import React, { useState } from 'react'
 import { Lock, Mail, Eye, EyeOff, Loader2 } from 'lucide-react'
-import { useNavigate, useLocation } from 'react-router-dom'
+import { useNavigate, useLocation, useSearchParams } from 'react-router-dom'
 import AuthGraphicPanel from '../components/auth/AuthGraphicPanel'
 import SecondaryButton from '../components/ui/SecondaryButton'
 import HomepageLink from '../components/ui/HomepageLink'
 import { useAuth } from '../auth/useAuth'
 import { useTranslation } from '../contexts/LanguageContext'
 import { getErrorI18nKey } from '../data/errorCodes'
+import { dashboardPathForSession } from '../components/homepage/utils/sessionRouting'
 import { getApiErrorCode } from '../types/domain'
 import { loadPendingRegistration } from '../auth/pendingRegistration'
 
@@ -34,12 +35,14 @@ export default function LoginScreen() {
   const { login } = useAuth()
   const navigate = useNavigate()
   const location = useLocation()
+  const [searchParams] = useSearchParams()
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [loginError, setLoginError] = useState(location.state?.loginError || '')
   const [fieldErrorKeys, setFieldErrorKeys] = useState<{ email?: string; password?: string }>({})
   const [isLoading, setIsLoading] = useState(false)
   const [showPassword, setShowPassword] = useState(false)
+  const returnPath = searchParams.get('returnPath') || ''
 
   const handleLoginSubmit = async () => {
     const newFieldErrorKeys: { email?: string; password?: string } = {}
@@ -67,14 +70,22 @@ export default function LoginScreen() {
 
     try {
       const newSession = await login(credentials)
-      // Owner/merchant sessions go straight to the dashboard, same as
-      // staff/personal — onboarding completion is optional and surfaced via
-      // dashboard banners (SetupGuideBanner/PayoutSetupWarningBanner), not a
-      // hard redirect gate.
-      if (newSession.flag === '!personal' || ['personal', 'staff'].includes(newSession.role)) {
-        navigate('/staff')
+      // Onboarding completion is independent of KYB/verification status.
+      // A business that finished onboarding but hasn't done KYB has
+      // verificationStatus 'basic'/'unverified' — that must NOT force the
+      // onboarding wizard (KYB has its own gate). Rely only on the real
+      // onboarding signal (hasCompletedOnboarding, derived from account
+      // status Active / kyb_approved / explicit flag in apiAuthAdapter).
+      const needsOnboarding =
+        newSession.clearMerchantSetup ||
+        newSession.hasCompletedOnboarding === false
+
+      if (returnPath.startsWith('/')) {
+        navigate(returnPath)
+      } else if (needsOnboarding) {
+        navigate('/onboarding')
       } else {
-        navigate('/dashboard')
+        navigate(dashboardPathForSession(newSession))
       }
     } catch (err: unknown) {
       const errorCode = getApiErrorCode(err, 'unknown_error')
