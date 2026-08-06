@@ -14,6 +14,11 @@ import {
   useUpdateMerchantVoiceService,
   useUpdateMerchantVoiceServiceCategory,
 } from "../../../data/hooks/useMerchantVoiceBookings";
+import { useMerchantSetup } from "../../../data/hooks/useMerchantSetup";
+import {
+  useBookingSettings,
+  useUpdateBookingSettings,
+} from "../../../data/hooks/usePosBookingSettings";
 import {
   clampMerchantVoiceServiceDurationMinutes,
   mapConfigLanguageToUiLanguage,
@@ -487,26 +492,29 @@ const AI_LANGUAGE_OPTIONS = [
 const PROMO_MAX_LENGTH = 1000;
 const FIRST_CALL_SMS_MAX_LENGTH = 320;
 
+// Booking SMS Notifications — the setting itself now lives on PosBookingSettings
+// (shared with POS's own Booking Settings card); this panel just reads/writes the
+// 3 recipient toggles through the POS booking-settings endpoint.
 const BOOKING_SMS_RECIPIENTS = [
   {
     id: "customer",
-    configKey: "bookingConfirmSmsEnabled",
+    configKey: "notifyCustomerSmsEnabled",
     titleKey: "bookingSmsCustomerTitle",
     descKey: "bookingSmsCustomerDesc",
     enableAriaKey: "bookingSmsCustomerEnableAria",
     disableAriaKey: "bookingSmsCustomerDisableAria",
   },
   {
-    id: "salon",
-    configKey: "bookingNotifySalonSmsEnabled",
-    titleKey: "bookingSmsSalonTitle",
-    descKey: "bookingSmsSalonDesc",
-    enableAriaKey: "bookingSmsSalonEnableAria",
-    disableAriaKey: "bookingSmsSalonDisableAria",
+    id: "business",
+    configKey: "notifyBusinessSmsEnabled",
+    titleKey: "bookingSmsBusinessTitle",
+    descKey: "bookingSmsBusinessDesc",
+    enableAriaKey: "bookingSmsBusinessEnableAria",
+    disableAriaKey: "bookingSmsBusinessDisableAria",
   },
   {
     id: "staff",
-    configKey: "bookingNotifyStaffSmsEnabled",
+    configKey: "notifyAssignedStaffSmsEnabled",
     titleKey: "bookingSmsStaffTitle",
     descKey: "bookingSmsStaffDesc",
     enableAriaKey: "bookingSmsStaffEnableAria",
@@ -519,23 +527,23 @@ type BookingSmsConfigKey = (typeof BOOKING_SMS_RECIPIENTS)[number]["configKey"];
 
 const BOOKING_SMS_DEFAULT_ENABLED: Record<BookingSmsRecipientId, boolean> = {
   customer: true,
-  salon: true,
+  business: true,
   staff: true,
 };
 
-function bookingSmsEnabledFromConfig(
-  config: Record<BookingSmsConfigKey, boolean>,
+function bookingSmsEnabledFromSettings(
+  settings: Record<BookingSmsConfigKey, boolean>,
 ): Record<BookingSmsRecipientId, boolean> {
   return BOOKING_SMS_RECIPIENTS.reduce(
     (acc, item) => {
-      acc[item.id] = config[item.configKey]
+      acc[item.id] = settings[item.configKey]
       return acc
     },
     { ...BOOKING_SMS_DEFAULT_ENABLED },
   )
 }
 
-function bookingSmsConfigPayloadFromEnabled(
+function bookingSmsSettingsPayloadFromEnabled(
   enabled: Record<BookingSmsRecipientId, boolean>,
 ): Record<BookingSmsConfigKey, boolean> {
   return BOOKING_SMS_RECIPIENTS.reduce(
@@ -803,6 +811,10 @@ export default function BookingSettingsPanel() {
   const { data: flatServicesData, isLoading: isServicesLoading } =
     useMerchantVoiceServices({ enabled: voiceEnabled });
   const updateConfigMutation = useUpdateMerchantVoiceConfig();
+  const { data: merchantSetupData } = useMerchantSetup();
+  const businessId = merchantSetupData?.businessInfo?.businessId;
+  const { data: posBookingSettingsData } = useBookingSettings(businessId);
+  const updateBookingSettingsMutation = useUpdateBookingSettings(businessId);
   const createCategoryMutation = useCreateMerchantVoiceServiceCategory();
   const updateCategoryMutation = useUpdateMerchantVoiceServiceCategory();
   const deleteCategoryMutation = useDeleteMerchantVoiceServiceCategory();
@@ -1205,7 +1217,6 @@ export default function BookingSettingsPanel() {
     setDescription(configData.description || "");
     setPromoSms((configData.promoSms || "").slice(0, FIRST_CALL_SMS_MAX_LENGTH));
     setSendSmsPromoEnabled(configData.sendSmsPromoEnabled !== false);
-    setBookingSmsEnabled(bookingSmsEnabledFromConfig(configData));
     setPromotion((configData.promotion || "").slice(0, PROMO_MAX_LENGTH));
     const resolvedLang = mapConfigLanguageToUiLanguage(configData.language);
     setLanguage(resolvedLang);
@@ -1228,6 +1239,13 @@ export default function BookingSettingsPanel() {
     });
     setHours(nextHours);
   }, [configData, t]);
+
+  // Booking SMS Notifications now live on PosBookingSettings — a separate query/resource
+  // from the Nexora Voice config above, so it hydrates independently.
+  useEffect(() => {
+    if (!posBookingSettingsData) return;
+    setBookingSmsEnabled(bookingSmsEnabledFromSettings(posBookingSettingsData));
+  }, [posBookingSettingsData]);
 
   useEffect(() => {
     if (!categoriesData) return;
@@ -1741,7 +1759,16 @@ export default function BookingSettingsPanel() {
         next.categories,
       );
       setCategories(mergedCategories);
-      if (!servicesDirtyRef.current) setServices(next.services);
+      if (!servicesDirtyRef.current) {
+        setServices(
+          next.services.length > 0
+            ? next.services
+            : mergeFlatServicesIntoCategories(
+                mergedCategories,
+                await merchantVoiceRepository.getServices(),
+              ),
+        );
+      }
       syncCategoryDraftsFromApi(mergedCategories);
     } catch (error) {
       const message = t(getErrorI18nKey(getApiErrorCode(error)));
@@ -1794,7 +1821,16 @@ export default function BookingSettingsPanel() {
         next.categories,
       );
       setCategories(mergedCategories);
-      if (!servicesDirtyRef.current) setServices(next.services);
+      if (!servicesDirtyRef.current) {
+        setServices(
+          next.services.length > 0
+            ? next.services
+            : mergeFlatServicesIntoCategories(
+                mergedCategories,
+                await merchantVoiceRepository.getServices(),
+              ),
+        );
+      }
       syncCategoryDraftsFromApi(mergedCategories);
       setPendingCategoryFocus(null);
     } catch (error) {
@@ -1873,8 +1909,16 @@ export default function BookingSettingsPanel() {
         draft.id ? [draft.id] : [],
       );
       setCategories(mergedCategories);
-      if (!servicesDirtyRef.current) setServices(next.services);
-      else {
+      if (!servicesDirtyRef.current) {
+        setServices(
+          next.services.length > 0
+            ? next.services
+            : mergeFlatServicesIntoCategories(
+                mergedCategories,
+                await merchantVoiceRepository.getServices(),
+              ),
+        );
+      } else {
         // Remap dirty services that lived under deleted category → Other.
         const other =
           mergedCategories.find((item) => item.isSystem) ||
@@ -2168,41 +2212,60 @@ export default function BookingSettingsPanel() {
         parsePhone(bookingNotifyPhone).countryCode,
       );
 
-      await updateConfigMutation.mutateAsync({
-        name: salonName.trim(),
-        forwardPhoneNumber: salonPhonePayload,
-        bookingNotifyPhone: bookingNotifyPhonePayload,
-        address: location.street.trim(),
-        city: location.city.trim() || null,
-        state: location.state.trim() || null,
-        zipCode: location.zip.trim() || null,
-        country: location.country.trim() || null,
-        googleReviewUrl: googleReviewUrl.trim(),
-        website: website.trim() || null,
-        description: description.trim() || null,
-        promotion: promotion.trim().slice(0, PROMO_MAX_LENGTH) || null,
-        promoSms: promoSms.trim().slice(0, FIRST_CALL_SMS_MAX_LENGTH) || null,
-        sendSmsPromoEnabled,
-        ...bookingSmsConfigPayloadFromEnabled(bookingSmsEnabled),
-        timeZone: timeZone.trim() || null,
-        language: mapUiLanguageToConfigLanguage(language),
-        welcomeGreeting: greeting.trim(),
-        operatingHours: DAY_KEYS.map((day) => {
-          const row = hours[day];
-          if (!row.open) {
+      const savePromises: Array<Promise<unknown>> = [
+        updateConfigMutation.mutateAsync({
+          name: salonName.trim(),
+          forwardPhoneNumber: salonPhonePayload,
+          bookingNotifyPhone: bookingNotifyPhonePayload,
+          address: location.street.trim(),
+          city: location.city.trim() || null,
+          state: location.state.trim() || null,
+          zipCode: location.zip.trim() || null,
+          country: location.country.trim() || null,
+          googleReviewUrl: googleReviewUrl.trim(),
+          website: website.trim() || null,
+          description: description.trim() || null,
+          promotion: promotion.trim().slice(0, PROMO_MAX_LENGTH) || null,
+          promoSms: promoSms.trim().slice(0, FIRST_CALL_SMS_MAX_LENGTH) || null,
+          sendSmsPromoEnabled,
+          timeZone: timeZone.trim() || null,
+          language: mapUiLanguageToConfigLanguage(language),
+          welcomeGreeting: greeting.trim(),
+          operatingHours: DAY_KEYS.map((day) => {
+            const row = hours[day];
+            if (!row.open) {
+              return {
+                dayOfWeek: DAY_KEY_TO_API[day],
+                isOpen: false,
+              };
+            }
             return {
               dayOfWeek: DAY_KEY_TO_API[day],
-              isOpen: false,
+              isOpen: true,
+              openTime: `${row.openTime}:00`,
+              closeTime: `${row.closeTime}:00`,
             };
-          }
-          return {
-            dayOfWeek: DAY_KEY_TO_API[day],
-            isOpen: true,
-            openTime: `${row.openTime}:00`,
-            closeTime: `${row.closeTime}:00`,
-          };
+          }),
         }),
-      });
+      ];
+
+      // Booking SMS Notifications live on PosBookingSettings now — saved as a second,
+      // independent request alongside the Nexora Voice config above. Non-SMS fields on
+      // that resource (auto-confirm, lead time, etc.) aren't shown on this panel, so they
+      // round-trip from whatever POS Booking Settings already has loaded.
+      if (businessId) {
+        savePromises.push(
+          updateBookingSettingsMutation.mutateAsync({
+            autoConfirmEnabled: posBookingSettingsData?.autoConfirmEnabled ?? true,
+            minLeadTimeMinutes: posBookingSettingsData?.minLeadTimeMinutes ?? 15,
+            maxAdvanceDays: posBookingSettingsData?.maxAdvanceDays ?? 7,
+            reminderHoursBefore: posBookingSettingsData?.reminderHoursBefore ?? 12,
+            ...bookingSmsSettingsPayloadFromEnabled(bookingSmsEnabled),
+          }),
+        );
+      }
+
+      await Promise.all(savePromises);
 
       setStatus(t(`${TK}.saveSuccess`));
       setFormErrors({});
@@ -3050,7 +3113,8 @@ export default function BookingSettingsPanel() {
                       disabled={
                         !voiceEnabled ||
                         isConfigLoading ||
-                        updateConfigMutation.isPending
+                        updateConfigMutation.isPending ||
+                        updateBookingSettingsMutation.isPending
                       }
                       aria-label={
                         enabled

@@ -4,7 +4,13 @@ import { useAuth } from '../auth/useAuth'
 import { isStaffSession } from '../components/homepage/utils/sessionRouting'
 import LoadingScreen from './LoadingScreen'
 
-export default function RequireAuth({ role, children }) {
+export default function RequireAuth({
+  role,
+  children,
+}: {
+  role?: string
+  children?: React.ReactNode
+}) {
   const { session, status } = useAuth()
   const location = useLocation()
 

@@ -1,4 +1,5 @@
 import type { StaffBusinessLink } from '../../../types/domain'
+import type { TFunction } from '../../../types/contexts'
 import {
   getStaffBusinessLinkStatusPresentation,
   resolveStaffBusinessLinkStatusLabel,
@@ -45,7 +46,7 @@ export function formatSalonDate(
 export function formatSalonTimeline(
   business: StaffBusinessLink,
   statusLabel: string,
-  t: (key: string, params?: Record<string, unknown>) => string,
+  t: TFunction,
   currentLanguage: string,
 ) {
   const formattedDate = formatSalonDate(business.linkedAt, currentLanguage)
@@ -70,7 +71,7 @@ export function getSalonAvatarClass(index: number) {
 
 export function getSalonDisplayStatus(
   business: StaffBusinessLink,
-  t: (key: string, params?: Record<string, unknown>) => string,
+  t: TFunction,
 ) {
   const statusLabel = resolveStaffBusinessLinkStatusLabel(business)
   const normalized = statusLabel.trim().toLowerCase()

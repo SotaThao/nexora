@@ -56,7 +56,7 @@ export function LanguageProvider({ children }: LanguageProviderProps) {
     }
 
     if (typeof value === 'string') {
-      return Object.entries(variables).reduce((acc, [k, v]) => {
+      return Object.entries(variables ?? {}).reduce((acc, [k, v]) => {
         const replacement = String(v)
         // Support both {{key}} (i18next-style) and {key} placeholders.
         return acc

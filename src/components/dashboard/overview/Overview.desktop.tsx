@@ -133,6 +133,7 @@ function Overview({
   onOpenTouchpoints,
   onOpenReviews,
   onOpenStaff,
+  onOpenBookings,
   businessName,
   previewQr,
   touchpoints = [],
@@ -409,9 +410,9 @@ function Overview({
 
 
       {/* KPI Cards Grid */}
-      <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-4">
+      <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-5">
         {isTransactionsLoading ? (
-          Array.from({ length: 4 }, (_, index) => <SkeletonKpiCard key={index} />)
+          Array.from({ length: 5 }, (_, index) => <SkeletonKpiCard key={index} />)
         ) : (
           <>
             <KpiCard
@@ -445,6 +446,14 @@ function Overview({
               weeklyCount={reviewsThisWeekCount ?? 0}
               active={activeKpi === 'reviews'}
               onClick={() => setActiveKpi('reviews')}
+            />
+            <KpiCard
+              label={t('dashboard.kpi.total_bookings')}
+              value={(metrics.totalBookings ?? 0).toString()}
+              deltaPercent={null}
+              noDeltaFallback={NO_DELTA_FALLBACK.PERIOD_NOTE}
+              active={false}
+              onClick={onOpenBookings}
             />
           </>
         )}

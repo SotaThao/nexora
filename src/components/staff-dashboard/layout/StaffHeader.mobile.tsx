@@ -1,7 +1,7 @@
 // StaffHeader — top bar: menu, brand, notifications bell, profile.
 import { useEffect, useRef, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { AlertTriangle, Bell, Menu, Star, UserCheck, Wallet, CreditCard } from 'lucide-react'
+import { AlertTriangle, Bell, Calendar, Menu, Star, UserCheck, Wallet, CreditCard } from 'lucide-react'
 import { useTranslation } from '../../../contexts/LanguageContext'
 import { useStaffAccount } from '../../../contexts/StaffAccountContext'
 import {
@@ -143,11 +143,21 @@ export default function StaffHeader({ activeScreen, onNavigate, onOpenMobileMenu
                         staff_accepted_invite: UserCheck, staffacceptedinvite: UserCheck,
                         stafflinkrequest: UserCheck, staff_link_request: UserCheck,
                         directpaymentreceived: CreditCard,
+                        stafflinkapproved: UserCheck, // StaffLinkApproved
+                        stafflinkrejected: UserCheck, // StaffLinkRejected
+                        taxiqpayoutpending: Wallet, // TaxIqPayoutPending
+                        taxiqdisputeresolved: Wallet, // TaxIqDisputeResolved
+                        taxiqdisputerejected: AlertTriangle, // TaxIqDisputeRejected
+                        bookingconfirmed: Calendar, // BookingConfirmed
                       } as Record<string, typeof Bell>)[typeLower] ?? Bell
                       const iconColor = ({
                         tip_success: 'bg-emerald-500 text-white', tipsuccess: 'bg-emerald-500 text-white',
                         feedback_alert: 'bg-amber-500 text-white', feedbackalert: 'bg-amber-500 text-white',
                         review_good: 'bg-yellow-400 text-white', reviewgood: 'bg-yellow-400 text-white',
+                        stafflinkrejected: 'bg-red-500 text-white',
+                        taxiqdisputeresolved: 'bg-emerald-500 text-white',
+                        taxiqdisputerejected: 'bg-red-500 text-white',
+                        bookingconfirmed: 'bg-emerald-500 text-white',
                       } as Record<string, string>)[typeLower] ?? 'bg-nexoraBrand text-white'
                       const isUnread = !item.read
                       return (
@@ -255,11 +265,21 @@ export default function StaffHeader({ activeScreen, onNavigate, onOpenMobileMenu
                         staff_accepted_invite: UserCheck, staffacceptedinvite: UserCheck,
                         stafflinkrequest: UserCheck, staff_link_request: UserCheck,
                         directpaymentreceived: CreditCard,
+                        stafflinkapproved: UserCheck, // StaffLinkApproved
+                        stafflinkrejected: UserCheck, // StaffLinkRejected
+                        taxiqpayoutpending: Wallet, // TaxIqPayoutPending
+                        taxiqdisputeresolved: Wallet, // TaxIqDisputeResolved
+                        taxiqdisputerejected: AlertTriangle, // TaxIqDisputeRejected
+                        bookingconfirmed: Calendar, // BookingConfirmed
                       } as Record<string, typeof Bell>)[typeLower] ?? Bell
                       const iconColor = ({
                         tip_success: 'bg-emerald-500 text-white', tipsuccess: 'bg-emerald-500 text-white',
                         feedback_alert: 'bg-amber-500 text-white', feedbackalert: 'bg-amber-500 text-white',
                         review_good: 'bg-yellow-400 text-white', reviewgood: 'bg-yellow-400 text-white',
+                        stafflinkrejected: 'bg-red-500 text-white',
+                        taxiqdisputeresolved: 'bg-emerald-500 text-white',
+                        taxiqdisputerejected: 'bg-red-500 text-white',
+                        bookingconfirmed: 'bg-emerald-500 text-white',
                       } as Record<string, string>)[typeLower] ?? 'bg-nexoraBrand text-white'
                       const isUnread = !item.read
                       return (

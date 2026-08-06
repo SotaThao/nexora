@@ -10,6 +10,7 @@ import {
   useUpdateBusinessInfo,
   useUpdateReviewLinks,
 } from "../../../data/hooks/useMerchantSetup";
+import useBusinessInfoForm from "./useBusinessInfoForm";
 import {
   useProfileSettings,
   useUpdateAddress,
@@ -122,6 +123,8 @@ const DEFAULT_PROFILE = {
   businessPhone: "",
   businessEmail: "",
   businessWebsite: "",
+  bookingNotificationPhone: "",
+  salesTaxRatePercent: "",
   paymentAccounts: {
     zelle: "",
     bankwire: "",
@@ -183,6 +186,7 @@ export default function useSettingsForm({
   const updateBusinessInfoMutation = useUpdateBusinessInfo();
   const updateReviewLinksMutation = useUpdateReviewLinks();
   const { data: verifiedStatusData } = useVerifiedStatus();
+  const businessInfoForm = useBusinessInfoForm({ setupData, verificationStatus });
 
   const [activeTab, setActiveTab] = useState(() => normalizeSettingsTab(initialTab))
 
@@ -301,6 +305,7 @@ export default function useSettingsForm({
     setIsEditingBasic(false);
     setIsEditingAddress(false);
     setIsEditingBusiness(false);
+    businessInfoForm.setIsEditingBusiness(false);
   }, [canEditProfile]);
 
   // Load profile settings + business profile into the form.
@@ -340,6 +345,11 @@ export default function useSettingsForm({
           businessName: setupData.businessInfo?.name || "",
           businessPhone: setupData.businessInfo?.phone || "",
           businessWebsite: setupData.businessInfo?.website || "",
+          bookingNotificationPhone: setupData.businessInfo?.bookingNotificationPhone || "",
+          salesTaxRatePercent:
+            setupData.businessInfo?.salesTaxRatePercent != null
+              ? String(setupData.businessInfo.salesTaxRatePercent)
+              : "",
           businessEmail:
             setupData.reviewLinks?.feedbackEmail || next.businessEmail || "",
           street: next.street || setupData.businessInfo?.address || "",
@@ -477,6 +487,11 @@ export default function useSettingsForm({
     });
   };
 
+  // Business Information card's edit state/save mutation is owned by
+  // useBusinessInfoForm (shared with POS > General Settings) — wrap saveBusiness
+  // only to keep the Owner-Profile-header's `profile.businessName` mirror
+  // (used outside the Business Information card, e.g. the sidebar/profile card)
+  // in sync immediately, matching the previous optimistic-update behavior.
   const startEditBusiness = () => {
     if (!canEditProfile) return;
     setBusinessErrors({});
@@ -488,39 +503,10 @@ export default function useSettingsForm({
     });
     setIsEditingBusiness(true);
   };
-
   const saveBusiness = (e) => {
-    e.preventDefault();
-    if (!canEditProfile) return;
-    const errors = validateBusinessForm(businessForm);
-    setBusinessErrors(errors);
-    if (Object.keys(errors).length > 0) return;
-
-    const businessName = String(businessForm.businessName || "").trim();
-    const businessPhone = String(businessForm.businessPhone || "").trim();
-    const businessEmail = String(businessForm.businessEmail || "").trim();
-    const businessWebsite = String(businessForm.businessWebsite || "").trim();
-    updateBusinessInfoMutation.mutate(
-      {
-        name: businessName,
-        phone: businessPhone || undefined,
-        feedbackEmail: businessEmail || undefined,
-        website: businessWebsite || undefined,
-      },
-      {
-        onSuccess: () => {
-          saveProfile({
-            ...profile,
-            businessName,
-            businessPhone,
-            businessEmail,
-            businessWebsite,
-          });
-          showToast(t("components.settings.hooks.useSettingsForm.settingsUpdatedSuccessfully"));
-          setIsEditingBusiness(false);
-        },
-      },
-    );
+    businessInfoForm.saveBusiness(e, (next) => {
+      saveProfile({ ...profile, ...next });
+    });
   };
 
   const startEditReviews = () => {
@@ -829,12 +815,15 @@ export default function useSettingsForm({
     setAddressForm,
     addressErrors,
     setAddressErrors,
-    isEditingBusiness,
-    setIsEditingBusiness,
-    businessForm,
-    setBusinessForm,
-    businessErrors,
-    setBusinessErrors,
+    logoUrl: businessInfoForm.logoUrl,
+    handleLogoChange: businessInfoForm.handleLogoChange,
+    isUploadingLogo: businessInfoForm.isUploadingLogo,
+    isEditingBusiness: businessInfoForm.isEditingBusiness,
+    setIsEditingBusiness: businessInfoForm.setIsEditingBusiness,
+    businessForm: businessInfoForm.businessForm,
+    setBusinessForm: businessInfoForm.setBusinessForm,
+    businessErrors: businessInfoForm.businessErrors,
+    setBusinessErrors: businessInfoForm.setBusinessErrors,
     isEditingReviews,
     setIsEditingReviews,
     reviewsForm,
@@ -858,7 +847,7 @@ export default function useSettingsForm({
     saveBasic,
     startEditAddress,
     saveAddress,
-    startEditBusiness,
+    startEditBusiness: businessInfoForm.startEditBusiness,
     saveBusiness,
     startEditReviews,
     saveReviews,

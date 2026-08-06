@@ -11,7 +11,6 @@ import {
 } from '../../../data/hooks/useMerchantPaymentMethods'
 import {
   User,
-  Building2,
   Edit2,
   Copy,
   Check,
@@ -41,6 +40,7 @@ import {
 import { formatPaymentMethodAccountDisplay } from '../../payout/bankWireAccount'
 import PayoutAccountNameField from '../../payout/PayoutAccountNameField'
 import SettingsTipQrPanel from '../SettingsTipQrPanel'
+import BusinessInfoCard from '../BusinessInfoCard'
 import type { PaymentMethodDto } from '../../../types/domain'
 
 const PayoutLogos = {
@@ -95,6 +95,9 @@ export default function ProfileTab({
   setAddressForm,
   addressErrors,
   setAddressErrors,
+  logoUrl,
+  handleLogoChange,
+  isUploadingLogo,
   isEditingBusiness,
   setIsEditingBusiness,
   businessForm,
@@ -856,150 +859,26 @@ export default function ProfileTab({
           </div>
 
           {/* Business Information */}
-          <div className="rounded-xl border border-nexoraBorder bg-white shadow-sm p-6 relative md:col-span-2">
-            <div className="flex justify-between items-center border-b border-nexoraRule pb-3 mb-4">
-              <h4 className="text-xs font-black uppercase text-nexoraText tracking-wider flex items-center gap-2">
-                <Building2 className="h-4 w-4 text-purple-500" />
-                {t('components.settings.tabs.ProfileTab.businessInformation')}
-              </h4>
-              {!isEditingBusiness && canEditKybFields && (
-                <button
-                  type="button"
-                  onClick={startEditBusiness}
-                  aria-label="Edit Business Information"
-                  className="text-slate-400 hover:text-nexoraBrand transition p-1 hover:bg-slate-100 rounded"
-                >
-                  <Edit2 className="h-3.5 w-3.5" />
-                </button>
-              )}
-            </div>
-
-            {isEditingBusiness ? (
-              <form onSubmit={saveBusiness} noValidate className="space-y-4">
-                <div>
-                  <label className="flex items-center text-[10px] font-extrabold uppercase text-nexoraMuted gap-1">
-                    <span>{t('components.settings.tabs.ProfileTab.businessName')}</span>
-                    <div className="relative group inline-block normal-case font-normal text-nexoraSubtle">
-                      <HelpCircle className="w-3.5 h-3.5 hover:text-nexoraBrand cursor-help transition-colors" />
-                      <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 hidden group-hover:block w-48 bg-black text-white text-[10px] p-2.5 rounded-lg shadow-xl z-50 text-center leading-normal">
-                        {t('components.settings.tabs.ProfileTab.enterTheLegalOr')}
-                        <div className="absolute top-full left-1/2 -translate-x-1/2 -mt-1.5 border-4 border-transparent border-t-black"></div>
-                      </div>
-                    </div>
-                  </label>
-                  <input
-                    id="settings-business-name"
-                    type="text"
-                    className={inputClass(businessErrors.businessName)}
-                    value={businessForm.businessName}
-                    aria-invalid={Boolean(businessErrors.businessName)}
-                    aria-describedby={businessErrors.businessName ? 'settings-business-name-error' : undefined}
-                    onChange={(e) => {
-                      setBusinessForm({ ...businessForm, businessName: e.target.value })
-                      clearError(setBusinessErrors, 'businessName')
-                    }}
-                  />
-                  <FieldError id="settings-business-name-error" error={businessErrors.businessName} />
-                </div>
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                  <div>
-                    <label className="text-[10px] font-extrabold uppercase text-nexoraMuted">{t('components.settings.tabs.ProfileTab.businessPhone')}</label>
-                    <input
-                      id="settings-business-phone"
-                      type="tel"
-                      className={inputClass(businessErrors.businessPhone)}
-                      value={businessForm.businessPhone}
-                      aria-invalid={Boolean(businessErrors.businessPhone)}
-                      aria-describedby={businessErrors.businessPhone ? 'settings-business-phone-error' : undefined}
-                      onChange={(e) => {
-                        setBusinessForm({ ...businessForm, businessPhone: e.target.value })
-                        clearError(setBusinessErrors, 'businessPhone')
-                      }}
-                    />
-                    <FieldError id="settings-business-phone-error" error={businessErrors.businessPhone} />
-                  </div>
-                  <div>
-                    <label className="text-[10px] font-extrabold uppercase text-nexoraMuted">{t('components.settings.tabs.ProfileTab.businessEmail')}</label>
-                    <input
-                      id="settings-business-email"
-                      type="email"
-                      className={inputClass(businessErrors.businessEmail)}
-                      value={businessForm.businessEmail}
-                      aria-invalid={Boolean(businessErrors.businessEmail)}
-                      aria-describedby={businessErrors.businessEmail ? 'settings-business-email-error' : undefined}
-                      onChange={(e) => {
-                        setBusinessForm({ ...businessForm, businessEmail: e.target.value })
-                        clearError(setBusinessErrors, 'businessEmail')
-                      }}
-                    />
-                    <FieldError id="settings-business-email-error" error={businessErrors.businessEmail} />
-                  </div>
-                </div>
-                <div>
-                  <label className="text-[10px] font-extrabold uppercase text-nexoraMuted">{t('components.settings.tabs.ProfileTab.website')}</label>
-                  <input
-                    id="settings-business-website"
-                    type="url"
-                    className={inputClass(businessErrors.businessWebsite)}
-                    value={businessForm.businessWebsite}
-                    aria-invalid={Boolean(businessErrors.businessWebsite)}
-                    aria-describedby={businessErrors.businessWebsite ? 'settings-business-website-error' : undefined}
-                    placeholder="https://example.com"
-                    onChange={(e) => {
-                      setBusinessForm({ ...businessForm, businessWebsite: e.target.value })
-                      clearError(setBusinessErrors, 'businessWebsite')
-                    }}
-                  />
-                  <FieldError id="settings-business-website-error" error={businessErrors.businessWebsite} />
-                </div>
-                <div className="flex gap-2 pt-2 justify-end">
-                  <button
-                    type="button"
-                    onClick={() => setIsEditingBusiness(false)}
-                    className="px-3 py-1.5 border border-slate-200 rounded text-[10px] font-bold text-slate-500 hover:bg-slate-50"
-                  >
-                    {t('components.settings.tabs.ProfileTab.cancel')}
-                  </button>
-                  <button
-                    type="submit"
-                    className="px-3 py-1.5 bg-nexoraBrand hover:bg-nexoraBrandDark text-white rounded text-[10px] font-bold"
-                  >
-                    {t('components.settings.tabs.ProfileTab.save')}
-                  </button>
-                </div>
-              </form>
-            ) : (
-              <div className="space-y-3.5 text-xs">
-                <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center py-2 sm:py-1 gap-1">
-                  <span className="text-nexoraMuted font-bold">{t('components.settings.tabs.ProfileTab.businessName')}</span>
-                  <span className="text-nexoraText font-extrabold">{profile.businessName}</span>
-                </div>
-                <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center py-2 sm:py-1 border-t border-slate-50 gap-1">
-                  <span className="text-nexoraMuted font-bold">{t('components.settings.tabs.ProfileTab.phone')}</span>
-                  <span className="text-nexoraText font-extrabold">{profile.businessPhone}</span>
-                </div>
-                <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center py-2 sm:py-1 border-t border-slate-50 gap-1">
-                  <span className="text-nexoraMuted font-bold">{t('components.settings.tabs.ProfileTab.email')}</span>
-                  <span className="text-nexoraText font-extrabold">{profile.businessEmail}</span>
-                </div>
-                <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center py-2 sm:py-1 border-t border-slate-50 gap-1">
-                  <span className="text-nexoraMuted font-bold">{t('components.settings.tabs.ProfileTab.website')}</span>
-                  {profile.businessWebsite ? (
-                    <a
-                      href={profile.businessWebsite}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="text-nexoraBrand hover:underline font-extrabold flex items-center gap-0.5"
-                    >
-                      {profile.businessWebsite.replace(/^https?:\/\//, '')} <ExternalLink className="h-3 w-3" />
-                    </a>
-                  ) : (
-                    <span className="text-nexoraSubtle font-medium">N/A</span>
-                  )}
-                </div>
-              </div>
-            )}
-          </div>
+          <BusinessInfoCard
+            businessName={profile.businessName}
+            businessPhone={profile.businessPhone}
+            businessEmail={profile.businessEmail}
+            businessWebsite={profile.businessWebsite}
+            bookingNotificationPhone={profile.bookingNotificationPhone}
+            salesTaxRatePercent={profile.salesTaxRatePercent}
+            logoUrl={logoUrl}
+            onLogoChange={handleLogoChange}
+            isUploadingLogo={isUploadingLogo}
+            isEditingBusiness={isEditingBusiness}
+            setIsEditingBusiness={setIsEditingBusiness}
+            businessForm={businessForm}
+            setBusinessForm={setBusinessForm}
+            businessErrors={businessErrors}
+            setBusinessErrors={setBusinessErrors}
+            canEdit={canEditKybFields}
+            startEditBusiness={startEditBusiness}
+            saveBusiness={saveBusiness}
+          />
 
           {/* Nested Location Map and Sponsor Information Grid */}
             {/* Location Map */}

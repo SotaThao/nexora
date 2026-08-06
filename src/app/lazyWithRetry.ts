@@ -11,13 +11,13 @@ function isChunkLoadError(error: unknown) {
   )
 }
 
-type LazyModule<T extends ComponentType<unknown>> = { default: T }
+type LazyModule<T extends ComponentType<any>> = { default: T }
 
 /**
  * Wrap React.lazy so a stale app shell after deploy auto-reloads once
  * instead of showing a permanent error screen.
  */
-export default function lazyWithRetry<T extends ComponentType<unknown>>(
+export default function lazyWithRetry<T extends ComponentType<any>>(
   factory: () => Promise<LazyModule<T>>,
 ): LazyExoticComponent<T> {
   return lazy(async () => {

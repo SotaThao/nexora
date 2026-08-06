@@ -1,8 +1,5 @@
 import React, { useCallback, useEffect, useMemo, useState } from 'react'
-import { Outlet, useNavigate, useSearchParams, useLocation } from 'react-router-dom'
-
-// 2. Third-party
-import { ArrowLeft } from 'lucide-react'
+import { Outlet, useNavigate, useSearchParams } from 'react-router-dom'
 
 // 3. Internal — utils → contexts → data/constants → hooks → layout → views → modals → ui
 import { logger } from '../utils/logger'
@@ -78,9 +75,12 @@ export default function Dashboard({
   const {
     activeMenu,
     isMobileMenuOpen, setIsMobileMenuOpen,
+    isDesktopSidebarOpen, setIsDesktopSidebarOpen,
     isPaymentsPayoutsMobileExpanded, setIsPaymentsPayoutsMobileExpanded,
     isTouchpointsMobileExpanded, setIsTouchpointsMobileExpanded,
+    isTaxIqMobileExpanded, setIsTaxIqMobileExpanded,
     isBookingHubMobileExpanded, setIsBookingHubMobileExpanded,
+    isPosMobileExpanded, setIsPosMobileExpanded,
     isGiftCardCenterMobileExpanded, setIsGiftCardCenterMobileExpanded,
     settingsTab, setSettingsTab,
     isProfileExpanded, setIsProfileExpanded,
@@ -89,23 +89,6 @@ export default function Dashboard({
   // Prefetch business payment-method catalog (ordered) for Add Manual Staff / staff wallet UIs.
   useMerchantPaymentMethods()
   const navigate = useNavigate()
-  const location = useLocation()
-  const handleBackNavigation = useCallback(() => {
-    const sectionParam = new URLSearchParams(location.search).get('section')
-    if (activeMenu === DASHBOARD_MENU_ID.settings && sectionParam) {
-      navigate(location.pathname)
-      return
-    }
-
-    const paths = location.pathname.split('/').filter(Boolean)
-    // If we are in a sub-route (e.g. /dashboard/staff/123), go back to the parent menu
-    if (paths.length > 2 && paths[0] === 'dashboard' && paths[1] === activeMenu) {
-      navigate(`/dashboard/${activeMenu}`)
-      return
-    }
-
-    handleNavigateMenu('overview')
-  }, [activeMenu, location.pathname, location.search, navigate, handleNavigateMenu])
   const handleStartSetup = useCallback(() => {
     if (typeof onStartSetup === 'function') {
       onStartSetup()
@@ -561,6 +544,7 @@ export default function Dashboard({
     returningCustomerRate: 0,
     returningCustomerRateChangeVsLastWeek: 0,
     previousPeriodComparison: null,
+    totalBookings: 0,
   }
 
   const metrics = useMemo(() => {
@@ -779,6 +763,7 @@ export default function Dashboard({
   return (
     <div className="min-h-dvh w-full overflow-x-hidden bg-nexoraCanvas font-sans text-nexoraText">
       <DashboardSidebar
+        isOpen={isDesktopSidebarOpen}
         activeMenu={activeMenu}
         setActiveMenu={handleNavigateMenu}
         businessName={businessName}
@@ -795,8 +780,10 @@ export default function Dashboard({
         userRole={userRole}
       />
 
-      <div className="flex min-h-dvh w-full min-w-0 flex-col lg:pl-72">
+      <div className={`flex min-h-dvh w-full min-w-0 flex-col transition-[padding-left] duration-200 ${isDesktopSidebarOpen ? 'lg:pl-72' : ''}`}>
         <DashboardHeader
+          isSidebarOpen={isDesktopSidebarOpen}
+          onToggleSidebar={() => setIsDesktopSidebarOpen((prev) => !prev)}
           searchQuery={searchQuery}
           setSearchQuery={setSearchQuery}
           onAddTouchpoint={() => {
@@ -830,24 +817,13 @@ export default function Dashboard({
         />
 
         <main className="w-full min-w-0 flex-1 overflow-x-hidden p-4 pb-6 sm:p-6 sm:pb-8 lg:p-7 lg:pb-7">
-          {activeMenu !== 'overview' && activeMenu !== DASHBOARD_MENU_ID.bookingHub && (
-            <div className="mb-3 flex min-w-0 items-center gap-3 sm:mb-5 sm:block">
-              <button
-                onClick={handleBackNavigation}
-                title={t('dashboard.back_to_dashboard')}
-                aria-label={t('dashboard.back_to_dashboard')}
-                className="inline-flex h-9 shrink-0 items-center gap-1.5 rounded-lg border border-nexoraBorder bg-white px-3 text-xs font-extrabold text-nexoraText shadow-nexora-soft transition hover:bg-nexoraSurfaceMuted"
-              >
-                <ArrowLeft className="h-4 w-4" aria-hidden="true" />
-                <span>{t('dashboard.back_short')}</span>
-              </button>
-              {activeMenuTitle ? (
-                <h1 className="min-w-0 truncate text-lg font-extrabold text-nexoraText sm:hidden">
-                  {activeMenuTitle}
-                </h1>
-              ) : null}
+          {activeMenu !== 'overview' && activeMenuTitle ? (
+            <div className="mb-3 flex min-w-0 items-center gap-3 sm:hidden">
+              <h1 className="min-w-0 truncate text-lg font-extrabold text-nexoraText">
+                {activeMenuTitle}
+              </h1>
             </div>
-          )}
+          ) : null}
           <Outlet context={dashboardCtx} />
         </main>
         <footer className="mb-20 border-t border-nexoraBorder bg-white px-3 py-3 sm:px-6 lg:mb-0 lg:px-7 lg:py-4">
@@ -876,8 +852,12 @@ export default function Dashboard({
         setIsPaymentsPayoutsMobileExpanded={setIsPaymentsPayoutsMobileExpanded}
         isTouchpointsMobileExpanded={isTouchpointsMobileExpanded}
         setIsTouchpointsMobileExpanded={setIsTouchpointsMobileExpanded}
+        isTaxIqMobileExpanded={isTaxIqMobileExpanded}
+        setIsTaxIqMobileExpanded={setIsTaxIqMobileExpanded}
         isBookingHubMobileExpanded={isBookingHubMobileExpanded}
         setIsBookingHubMobileExpanded={setIsBookingHubMobileExpanded}
+        isPosMobileExpanded={isPosMobileExpanded}
+        setIsPosMobileExpanded={setIsPosMobileExpanded}
         isGiftCardCenterMobileExpanded={isGiftCardCenterMobileExpanded}
         setIsGiftCardCenterMobileExpanded={setIsGiftCardCenterMobileExpanded}
         hasKyb={hasKyb}
