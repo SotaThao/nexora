@@ -65,6 +65,7 @@ import {
   PAID_SERVICE_PLAN_TITLE_KEY,
   PLAN_FALLBACK_FEATURES,
   PlansView,
+  SHOW_PACKAGE_HISTORY_TAB,
   SERVICE_PLAN_MONTHLY_PRICE,
   formatPlanPrice,
   indexVoiceAiPackagesByPlan,
@@ -611,6 +612,7 @@ export default function BookingPlansPanel({ buyOnlyMode = false }: { buyOnlyMode
   const hasExistingTrialRequest = myTrialRequest != null
   // Hide Credit Usage when AI Hub only has Plans (no voice tenant).
   const showCreditUsageTab = voiceEnabled
+  const showPackageHistoryTab = SHOW_PACKAGE_HISTORY_TAB
   const showPackageSkeleton =
     (isPackagesLoading || isPackagesFetching) && voicePackages.length === 0
   const hasMappedPackages = Object.keys(packagesByPlan).length > 0
@@ -619,8 +621,12 @@ export default function BookingPlansPanel({ buyOnlyMode = false }: { buyOnlyMode
     if (buyOnlyMode) return
     if (!showCreditUsageTab && plansView === PlansView.Credits) {
       setPlansView(PlansView.Package)
+      return
     }
-  }, [buyOnlyMode, showCreditUsageTab, plansView])
+    if (!showPackageHistoryTab && plansView === PlansView.History) {
+      setPlansView(PlansView.Package)
+    }
+  }, [buyOnlyMode, showCreditUsageTab, showPackageHistoryTab, plansView])
 
   // Leaving Buy Package marks catalog stale/invalid so the next visit always re-calls
   // GET .../packages?packageType=VoiceAI.
@@ -779,21 +785,23 @@ export default function BookingPlansPanel({ buyOnlyMode = false }: { buyOnlyMode
               {t(`${TK}.creditUsage`)}
             </button>
           ) : null}
-          <button
-            className={`booking-view-button${plansView === PlansView.History ? ' is-active' : ''}`}
-            type="button"
-            aria-pressed={plansView === PlansView.History}
-            onClick={() => setPlansView(PlansView.History)}
-          >
-            <History aria-hidden="true" />
-            {t(`${TK}.packageHistory`)}
-          </button>
+          {showPackageHistoryTab ? (
+            <button
+              className={`booking-view-button${plansView === PlansView.History ? ' is-active' : ''}`}
+              type="button"
+              aria-pressed={plansView === PlansView.History}
+              onClick={() => setPlansView(PlansView.History)}
+            >
+              <History aria-hidden="true" />
+              {t(`${TK}.packageHistory`)}
+            </button>
+          ) : null}
         </div>
         ) : null}
 
         {effectivePlansView === PlansView.Credits && showCreditUsageTab ? (
           <CreditsUsagePanel />
-        ) : effectivePlansView === PlansView.History ? (
+        ) : effectivePlansView === PlansView.History && showPackageHistoryTab ? (
           <PackageHistoryPanel />
         ) : showPackageSkeleton ? (
           <BookingBuyPackageSkeleton />

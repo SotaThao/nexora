@@ -88,6 +88,16 @@ export function isKnownPackageManagementTab(
   return PACKAGE_MANAGEMENT_TAB_ORDER.some((tab) => tab === raw)
 }
 
+export type PackageOverviewProductKey = 'nexora' | 'voice'
+
+export function resolvePackageRenewTab(
+  productKey: PackageOverviewProductKey,
+): PackageManagementTab {
+  return productKey === 'voice'
+    ? PackageManagementTab.AiVoice
+    : PackageManagementTab.Subscriptions
+}
+
 function shiftIsoDate(days: number, endOfDay = false) {
   const date = new Date()
   date.setHours(endOfDay ? 23 : 0, endOfDay ? 59 : 0, endOfDay ? 59 : 0, endOfDay ? 999 : 0)
@@ -135,6 +145,19 @@ export const PACKAGE_OVERVIEW_OWNED_MOCK: PackageOverviewOwnedItem[] = [
     ],
     activatedAt: shiftIsoDate(-7),
     expiresAt: shiftIsoDate(21, true),
+    autoRenew: false,
+  },
+  {
+    id: 'nexora-starter-lapsed',
+    productKey: 'nexora',
+    nameKey: 'overview.owned.nexoraStarterName',
+    descriptionKey: 'overview.owned.nexoraStarterDesc',
+    featureKeys: [
+      'overview.owned.featOwnerDashboard',
+      'overview.owned.featAutoReview',
+    ],
+    activatedAt: shiftIsoDate(-90),
+    expiresAt: shiftIsoDate(-10, true),
     autoRenew: false,
   },
 ]

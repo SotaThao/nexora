@@ -1,5 +1,6 @@
-import { useEffect, useState } from 'react'
-import { Clock3 } from 'lucide-react'
+import { useCallback, useEffect, useState } from 'react'
+import { Clock3, TimerOff } from 'lucide-react'
+import { useSearchParams } from 'react-router-dom'
 import { useTranslation } from '../../../../contexts/LanguageContext'
 import {
   formatBookingHubTimestampDate,
@@ -10,8 +11,13 @@ import {
   PACKAGE_COUNTDOWN_UNITS,
   PACKAGE_MANAGEMENT_TK,
   PACKAGE_OVERVIEW_OWNED_MOCK,
+  PACKAGE_QUERY_PARAM,
+  PackageManagementTab,
+  resolvePackageRenewTab,
   type PackageOverviewOwnedItem,
+  type PackageOverviewProductKey,
 } from './constants'
+import { stripPlanQueryParam } from './tipPlatformCheckout'
 
 const TK = PACKAGE_MANAGEMENT_TK
 
@@ -24,11 +30,13 @@ function OwnedPackageCard({
   now,
   autoRenew,
   onAutoRenewChange,
+  onRenewPackage,
 }: {
   item: PackageOverviewOwnedItem
   now: number
   autoRenew: boolean
   onAutoRenewChange: (next: boolean) => void
+  onRenewPackage: (productKey: PackageOverviewProductKey) => void
 }) {
   const { t, currentLanguage } = useTranslation()
   const status = getPackageOverviewStatus(item.expiresAt, now)
@@ -43,6 +51,7 @@ function OwnedPackageCard({
     item.expiresAt,
     currentLanguage,
   )
+  const needsManualRenew = countdown.expired && !autoRenew
 
   return (
     <article className="package-owned-card" data-owned-package={item.id}>
@@ -90,30 +99,68 @@ function OwnedPackageCard({
         </div>
       </div>
 
-      <div className="package-countdown" data-countdown>
+      <div
+        className={`package-countdown${needsManualRenew ? ' is-expired' : ''}`}
+        data-countdown
+      >
         <div className="package-countdown-heading">
           <span className="package-countdown-icon" aria-hidden="true">
-            <Clock3 />
+            {needsManualRenew ? <TimerOff /> : <Clock3 />}
           </span>
           <span className="package-countdown-label">{t(`${TK}.overview.remaining`)}</span>
         </div>
-        <div className="package-countdown-units" role="group" aria-label={t(`${TK}.overview.remaining`)}>
-          {PACKAGE_COUNTDOWN_UNITS.map((unit) => (
-            <div key={unit} className="package-countdown-unit">
-              <strong>{pad2(countdown[unit])}</strong>
-              <span>{t(`${TK}.overview.unit.${unit}`)}</span>
-            </div>
-          ))}
-        </div>
+        {needsManualRenew ? (
+          <div className="package-countdown-expired" role="status">
+            <p>{t(`${TK}.overview.remainingExpiredHint`)}</p>
+            <button
+              type="button"
+              className="package-countdown-renew-button"
+              onClick={() => onRenewPackage(item.productKey)}
+            >
+              {t(
+                `${TK}.overview.${
+                  item.productKey === 'voice'
+                    ? 'remainingExpiredRenewAiVoice'
+                    : 'remainingExpiredRenewSubscriptions'
+                }`,
+              )}
+            </button>
+          </div>
+        ) : (
+          <div className="package-countdown-units" role="group" aria-label={t(`${TK}.overview.remaining`)}>
+            {PACKAGE_COUNTDOWN_UNITS.map((unit) => (
+              <div key={unit} className="package-countdown-unit">
+                <strong>{pad2(countdown[unit])}</strong>
+                <span>{t(`${TK}.overview.unit.${unit}`)}</span>
+              </div>
+            ))}
+          </div>
+        )}
       </div>
     </article>
   )
 }
 
 export default function PackageOverviewPanel() {
+  const [searchParams, setSearchParams] = useSearchParams()
   const [now, setNow] = useState(() => Date.now())
   const [autoRenewById, setAutoRenewById] = useState<Record<string, boolean>>(() =>
     Object.fromEntries(PACKAGE_OVERVIEW_OWNED_MOCK.map((item) => [item.id, item.autoRenew])),
+  )
+
+  const navigateToRenewTab = useCallback(
+    (productKey: PackageOverviewProductKey) => {
+      const tab = resolvePackageRenewTab(productKey)
+      const next = new URLSearchParams(searchParams)
+      next.set(PACKAGE_QUERY_PARAM.tab, tab)
+      if (tab !== PackageManagementTab.Subscriptions) {
+        const stripped = stripPlanQueryParam(next)
+        setSearchParams(stripped ?? next)
+        return
+      }
+      setSearchParams(next)
+    },
+    [searchParams, setSearchParams],
   )
 
   useEffect(() => {
@@ -132,6 +179,7 @@ export default function PackageOverviewPanel() {
           onAutoRenewChange={(next) => {
             setAutoRenewById((prev) => ({ ...prev, [item.id]: next }))
           }}
+          onRenewPackage={navigateToRenewTab}
         />
       ))}
     </div>

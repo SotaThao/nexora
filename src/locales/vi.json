@@ -3839,6 +3839,9 @@
             "activated": "Kích hoạt",
             "expires": "Hết hạn",
             "remaining": "Thời gian còn lại",
+            "remainingExpiredHint": "Gia hạn gói để tiếp tục sử dụng.",
+            "remainingExpiredRenewSubscriptions": "Xem gói đăng ký",
+            "remainingExpiredRenewAiVoice": "Xem gói AI Voice",
             "autoRenew": "Tự gia hạn",
             "autoRenewOn": "BẬT",
             "autoRenewOff": "TẮT",
@@ -3854,6 +3857,8 @@
             "owned": {
               "nexoraProName": "Nexora Pro",
               "nexoraProDesc": "Bảng điều khiển chủ tiệm, tipping có thương hiệu và tự động hóa đánh giá.",
+              "nexoraStarterName": "Nexora Starter",
+              "nexoraStarterDesc": "Công cụ tipping và đánh giá cơ bản cho một cơ sở.",
               "voiceProName": "Voice AI Pro",
               "voiceProDesc": "Trợ lý đặt lịch bằng giọng nói kèm SMS và nhắc đánh giá.",
               "featOwnerDashboard": "Bảng điều khiển chủ tiệm",

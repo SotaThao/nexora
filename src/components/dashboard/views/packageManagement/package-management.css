@@ -375,6 +375,76 @@
   white-space: nowrap;
 }
 
+.package-management-view .package-countdown.is-expired {
+  border-color: rgba(180, 35, 24, 0.18);
+  background: linear-gradient(135deg, #fff4f2 0%, #fffaf9 100%);
+  color: #b42318;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.95), 0 6px 14px rgba(180, 35, 24, 0.06);
+}
+
+.package-management-view .package-countdown.is-expired::after {
+  background: rgba(180, 35, 24, 0.08);
+}
+
+.package-management-view .package-countdown.is-expired .package-countdown-icon {
+  color: #b42318;
+}
+
+.package-management-view .package-countdown.is-expired .package-countdown-label {
+  color: #b42318;
+}
+
+.package-management-view .package-countdown-expired {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  min-height: 54px;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  border: 1px dashed rgba(180, 35, 24, 0.24);
+  border-radius: 9px;
+  background: rgba(255, 255, 255, 0.76);
+  padding: 12px 10px;
+  text-align: center;
+}
+
+.package-management-view .package-countdown-expired p {
+  margin: 0;
+  color: #9a3412;
+  font-size: 0.6875rem;
+  font-weight: 700;
+  line-height: 1.45;
+}
+
+.package-management-view .package-countdown-renew-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid rgba(180, 35, 24, 0.28);
+  border-radius: 999px;
+  background: #b42318;
+  padding: 8px 14px;
+  color: #fff;
+  cursor: pointer;
+  font-size: 0.6875rem;
+  font-weight: 900;
+  letter-spacing: 0.01em;
+  line-height: 1.2;
+  transition: background 0.15s ease, border-color 0.15s ease, transform 0.15s ease;
+}
+
+.package-management-view .package-countdown-renew-button:hover {
+  border-color: #912018;
+  background: #912018;
+}
+
+.package-management-view .package-countdown-renew-button:focus-visible {
+  outline: 2px solid rgba(180, 35, 24, 0.35);
+  outline-offset: 2px;
+}
+
 .package-management-view .package-autorenew-row {
   display: flex;
   flex-shrink: 0;

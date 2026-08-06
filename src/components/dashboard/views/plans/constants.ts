@@ -43,6 +43,9 @@ export enum PlansView {
   History = 'history',
 }
 
+/** Package History sub-tab under AI Hub → Plans. */
+export const SHOW_PACKAGE_HISTORY_TAB = false
+
 /** Stable VoiceAI `packageCode` values from catalog (prefer over GUID for UI matching). */
 export enum VoiceAiPackageCode {
   Starter = 'voice-starter',
