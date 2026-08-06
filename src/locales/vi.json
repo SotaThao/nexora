@@ -3866,7 +3866,9 @@
               "featLandingPages": "Landing page",
               "featVoiceSms": "Đặt lịch Voice + SMS",
               "featMinutes": "Phút gọi bao gồm"
-            }
+            },
+            "emptyTitle": "Chưa có gói nào",
+            "emptyDesc": "Các gói đang hoạt động của bạn sẽ hiển thị tại đây sau khi bạn đăng ký."
           },
           "compare": {
             "kicker": "So sánh gói",

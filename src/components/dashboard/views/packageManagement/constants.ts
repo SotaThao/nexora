@@ -90,6 +90,32 @@ export function isKnownPackageManagementTab(
 
 export type PackageOverviewProductKey = 'nexora' | 'voice'
 
+export const PACKAGE_OVERVIEW_SKELETON_CARD_COUNT = 4
+
+export const PACKAGE_OVERVIEW_TIP_PLATFORM_PLAN = {
+  Starter: 'starter',
+  Pro: 'pro',
+} as const
+
+export const PACKAGE_OVERVIEW_I18N = {
+  nexora: {
+    starter: {
+      nameKey: 'overview.owned.nexoraStarterName',
+      descriptionKey: 'overview.owned.nexoraStarterDesc',
+    },
+    pro: {
+      nameKey: 'overview.owned.nexoraProName',
+      descriptionKey: 'overview.owned.nexoraProDesc',
+    },
+  },
+  voice: {
+    pro: {
+      nameKey: 'overview.owned.voiceProName',
+      descriptionKey: 'overview.owned.voiceProDesc',
+    },
+  },
+} as const
+
 export function resolvePackageRenewTab(
   productKey: PackageOverviewProductKey,
 ): PackageManagementTab {

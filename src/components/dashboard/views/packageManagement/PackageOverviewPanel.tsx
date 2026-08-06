@@ -1,7 +1,9 @@
-import { useCallback, useEffect, useState } from 'react'
-import { Clock3, TimerOff } from 'lucide-react'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
+import { Boxes, Clock3, TimerOff } from 'lucide-react'
 import { useSearchParams } from 'react-router-dom'
 import { useTranslation } from '../../../../contexts/LanguageContext'
+import { useSubscriptionMyPackages } from '../../../../data/hooks/useSubscriptionPayments'
+import { SubscriptionMyPackageType } from '../../../../data/repositories/subscriptionPayments'
 import {
   formatBookingHubTimestampDate,
 } from '../bookingHubFormatters'
@@ -9,8 +11,10 @@ import {
   formatPackageCountdownParts,
   getPackageOverviewStatus,
   PACKAGE_COUNTDOWN_UNITS,
+  PACKAGE_OVERVIEW_I18N,
+  PACKAGE_OVERVIEW_SKELETON_CARD_COUNT,
+  PACKAGE_OVERVIEW_TIP_PLATFORM_PLAN,
   PACKAGE_MANAGEMENT_TK,
-  PACKAGE_OVERVIEW_OWNED_MOCK,
   PACKAGE_QUERY_PARAM,
   PackageManagementTab,
   resolvePackageRenewTab,
@@ -18,6 +22,8 @@ import {
   type PackageOverviewProductKey,
 } from './constants'
 import { stripPlanQueryParam } from './tipPlatformCheckout'
+import OverviewEmptyState from '../../overview/OverviewEmptyState'
+import Skeleton from '../../../ui/skeleton/Skeleton'
 
 const TK = PACKAGE_MANAGEMENT_TK
 
@@ -144,9 +150,10 @@ function OwnedPackageCard({
 export default function PackageOverviewPanel() {
   const [searchParams, setSearchParams] = useSearchParams()
   const [now, setNow] = useState(() => Date.now())
-  const [autoRenewById, setAutoRenewById] = useState<Record<string, boolean>>(() =>
-    Object.fromEntries(PACKAGE_OVERVIEW_OWNED_MOCK.map((item) => [item.id, item.autoRenew])),
-  )
+  const { t } = useTranslation()
+  const { data: myPackages = [], isLoading } = useSubscriptionMyPackages()
+  const [autoRenewById, setAutoRenewById] = useState<Record<string, boolean>>({})
+  const didInitAutoRenewRef = useRef(false)
 
   const navigateToRenewTab = useCallback(
     (productKey: PackageOverviewProductKey) => {
@@ -168,9 +175,91 @@ export default function PackageOverviewPanel() {
     return () => window.clearInterval(id)
   }, [])
 
+  const ownedPackages = useMemo<PackageOverviewOwnedItem[]>(() => {
+    const toOwned = (
+      pkg: (typeof myPackages)[number],
+    ): PackageOverviewOwnedItem | null => {
+      const rawPackageIdentity =
+        `${pkg.packageCode ?? ''} ${pkg.name ?? ''}`.toLowerCase()
+
+      const activatedAt = String(pkg.activatedAt ?? '').trim()
+      const expiresAt = String(pkg.expiresAt ?? '').trim()
+      if (!pkg.id || !activatedAt || !expiresAt) return null
+
+      if (pkg.packageType === SubscriptionMyPackageType.TipPlatform) {
+        const isStarter = rawPackageIdentity.includes(
+          PACKAGE_OVERVIEW_TIP_PLATFORM_PLAN.Starter,
+        )
+        const planCopy = isStarter
+          ? PACKAGE_OVERVIEW_I18N.nexora.starter
+          : PACKAGE_OVERVIEW_I18N.nexora.pro
+        return {
+          id: String(pkg.id),
+          productKey: 'nexora',
+          nameKey: planCopy.nameKey,
+          descriptionKey: planCopy.descriptionKey,
+          featureKeys: [],
+          activatedAt,
+          expiresAt,
+          autoRenew: Boolean(pkg.autoRenew),
+        }
+      }
+
+      if (pkg.packageType === SubscriptionMyPackageType.VoiceAI) {
+        return {
+          id: String(pkg.id),
+          productKey: 'voice',
+          nameKey: PACKAGE_OVERVIEW_I18N.voice.pro.nameKey,
+          descriptionKey: PACKAGE_OVERVIEW_I18N.voice.pro.descriptionKey,
+          featureKeys: [],
+          activatedAt,
+          expiresAt,
+          autoRenew: Boolean(pkg.autoRenew),
+        }
+      }
+
+      return null
+    }
+
+    return myPackages.map(toOwned).filter((x): x is PackageOverviewOwnedItem => x != null)
+  }, [myPackages])
+
+  useEffect(() => {
+    if (isLoading) return
+    if (didInitAutoRenewRef.current) return
+    didInitAutoRenewRef.current = true
+
+    setAutoRenewById(Object.fromEntries(ownedPackages.map((item) => [item.id, item.autoRenew])))
+  }, [isLoading, ownedPackages])
+
+  if (isLoading) {
+    return (
+      <div className="package-overview-grid" aria-busy="true" aria-live="polite">
+        {Array.from({ length: PACKAGE_OVERVIEW_SKELETON_CARD_COUNT }, (_, idx) => (
+          <article key={`package-skel-${idx}`} className="package-owned-card">
+            <Skeleton width="100%" height={260} borderRadius={14} />
+          </article>
+        ))}
+      </div>
+    )
+  }
+
+  if (ownedPackages.length === 0) {
+    return (
+      <div className="package-overview-grid" style={{ gridTemplateColumns: '1fr' }}>
+        <OverviewEmptyState
+          icon={Boxes}
+          title={t(`${TK}.overview.emptyTitle`)}
+          description={t(`${TK}.overview.emptyDesc`)}
+          className="min-h-[280px]"
+        />
+      </div>
+    )
+  }
+
   return (
     <div className="package-overview-grid">
-      {PACKAGE_OVERVIEW_OWNED_MOCK.map((item) => (
+      {ownedPackages.map((item) => (
         <OwnedPackageCard
           key={item.id}
           item={item}

@@ -7,6 +7,7 @@ import subscriptionPaymentsRepository, {
   type PurchasePackageByIdResult,
   type PurchaseSubscriptionResult,
   type SubscriptionPackage,
+  type SubscriptionMyPackage,
   type SubscriptionPaymentMethod,
   type SubscriptionPurchaseHistoryItem,
 } from '../repositories/subscriptionPayments'
@@ -30,6 +31,17 @@ export function useSubscriptionPackages({
     enabled,
     staleTime,
     refetchOnMount,
+  })
+}
+
+/** GET `/api/v1/merchant/subscriptions/my-packages`. */
+export function useSubscriptionMyPackages({ enabled = true }: { enabled?: boolean } = {}) {
+  return useQuery<SubscriptionMyPackage[]>({
+    queryKey: qk.merchantSubscriptionMyPackages(),
+    queryFn: () => subscriptionPaymentsRepository.getMyPackages(),
+    enabled,
+    staleTime: 30_000,
+    refetchOnMount: true,
   })
 }
 
@@ -83,6 +95,7 @@ export function usePurchaseSubscription() {
       queryClient.invalidateQueries({ queryKey: qk.userProfile() })
       queryClient.invalidateQueries({ queryKey: qk.merchantSubscriptionPaymentMethods() })
       queryClient.invalidateQueries({ queryKey: qk.merchantSubscriptionPurchaseHistory() })
+      queryClient.invalidateQueries({ queryKey: qk.merchantSubscriptionMyPackages() })
     },
   })
 }
@@ -105,6 +118,7 @@ export function usePurchaseVoiceAiPackage() {
         queryKey: qk.merchantSubscriptionPackages(SubscriptionPackageType.VoiceAI),
       })
       queryClient.invalidateQueries({ queryKey: qk.merchantVoiceCreditWallet() })
+      queryClient.invalidateQueries({ queryKey: qk.merchantSubscriptionMyPackages() })
     },
   })
 }

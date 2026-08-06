@@ -3866,7 +3866,9 @@
               "featLandingPages": "Landing pages",
               "featVoiceSms": "Voice + SMS booking",
               "featMinutes": "Included call minutes"
-            }
+            },
+            "emptyTitle": "No owned packages",
+            "emptyDesc": "Your active packages will appear here once you subscribe."
           },
           "compare": {
             "kicker": "Plan comparison",

@@ -76,6 +76,25 @@ export interface SubscriptionPackage {
   periodInMonths: number | null
 }
 
+/** Normalized GET `/api/v1/merchant/subscriptions/my-packages` row. */
+export interface SubscriptionMyPackage {
+  id: string
+  packageType: SubscriptionMyPackageType
+  packageCode: string
+  name: string
+  status: string
+  activatedAt: string
+  expiresAt: string
+  autoRenew: boolean
+}
+
+/** Wire enum from GET `/api/v1/merchant/subscriptions/my-packages` `packageType`. */
+export enum SubscriptionMyPackageType {
+  TipPlatform = 'TipPlatform',
+  VoiceAI = 'VoiceAI',
+  Unknown = 'Unknown',
+}
+
 /** Normalized GET `/api/v1/merchant/subscriptions/purchase-history` row. */
 export interface SubscriptionPurchaseHistoryItem {
   orderId: string
@@ -170,6 +189,69 @@ function normalizePackages(res: unknown): SubscriptionPackage[] {
     .filter((pkg): pkg is SubscriptionPackage => pkg != null)
 }
 
+function readBoolean(value: unknown, fallback = false): boolean {
+  if (typeof value === 'boolean') return value
+  if (typeof value === 'number') return value !== 0
+  if (typeof value === 'string') {
+    const v = value.trim().toLowerCase()
+    if (v === 'true' || v === '1') return true
+    if (v === 'false' || v === '0') return false
+  }
+  return fallback
+}
+
+function normalizeMyPackageType(value: unknown): SubscriptionMyPackageType {
+  const raw = readString(value).trim().toLowerCase()
+  if (raw === SubscriptionPackageType.TipPlatform.toLowerCase()) {
+    return SubscriptionMyPackageType.TipPlatform
+  }
+  if (raw === SubscriptionPackageType.VoiceAI.toLowerCase()) {
+    return SubscriptionMyPackageType.VoiceAI
+  }
+  return SubscriptionMyPackageType.Unknown
+}
+
+function normalizeMyPackage(raw: unknown): SubscriptionMyPackage | null {
+  if (!raw || typeof raw !== 'object') return null
+  const item = raw as Record<string, unknown>
+
+  const id = readString(item.id).trim()
+  const packageType = normalizeMyPackageType(item.packageType)
+
+  // Some BE versions may provide either `packageCode` or `name` or both.
+  const packageCode =
+    readString(item.packageCode).trim() ||
+    readString(item.packageCode ?? item.name).trim() ||
+    readString(item.name).trim() ||
+    ''
+  const name = readString(item.name).trim() || packageCode
+  const status = readString(item.status).trim()
+
+  const activatedAt = readString(item.activatedAt).trim()
+  const expiresAt = readString(item.expiresAt).trim()
+  const autoRenew = readBoolean(item.autoRenew, false)
+
+  if (!id || !activatedAt || !expiresAt) return null
+
+  return {
+    id,
+    packageType,
+    packageCode,
+    name,
+    status,
+    activatedAt,
+    expiresAt,
+    autoRenew,
+  }
+}
+
+function normalizeMyPackages(res: unknown): SubscriptionMyPackage[] {
+  const list = Array.isArray(res) ? res : []
+  return list
+    .map(normalizeMyPackage)
+    .filter((pkg): pkg is SubscriptionMyPackage => pkg != null)
+}
+
 function normalizePaymentMethod(raw: unknown): SubscriptionPaymentMethod | null {
   if (!raw || typeof raw !== 'object') return null
   const item = raw as Record<string, unknown>
@@ -243,6 +325,10 @@ function packagesPath(packageType?: SubscriptionPackageType): string {
   return `/api/v1/merchant/subscriptions/packages?packageType=${encodeURIComponent(packageType)}`
 }
 
+function myPackagesPath(): string {
+  return '/api/v1/merchant/subscriptions/my-packages'
+}
+
 function publicPackagesPath(packageType?: SubscriptionPackageType): string {
   if (!packageType) return '/api/v1/public/subscription-packages'
   return `/api/v1/public/subscription-packages?packageType=${encodeURIComponent(packageType)}`
@@ -262,6 +348,12 @@ export function createSubscriptionPaymentsRepository(client: HttpClient = httpCl
     ): Promise<SubscriptionPackage[]> {
       const res = await client.get<unknown>(publicPackagesPath(packageType))
       return normalizePackages(res)
+    },
+
+    /** GET `/api/v1/merchant/subscriptions/my-packages` */
+    async getMyPackages(): Promise<SubscriptionMyPackage[]> {
+      const res = await client.get<unknown>(myPackagesPath())
+      return normalizeMyPackages(res)
     },
 
     async getPaymentMethods(): Promise<SubscriptionPaymentMethod[]> {
