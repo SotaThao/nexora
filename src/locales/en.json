@@ -4614,6 +4614,7 @@
           "businessInformation": "Business Information",
           "enterTheLegalOr": "Enter the legal or public name of your store or salon as it will appear on customer payment screens.",
           "businessName": "Business Name",
+          "businessEmailPlaceholder": "e.g. contact@yoursalon.com",
           "phone": "Phone",
           "bookingNotificationPhone": "Booking Notification Phone",
           "bookingNotificationPhoneHint": "Dedicated phone number for booking alerts (new, changed, or cancelled), separate from your main business phone.",

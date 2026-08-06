@@ -4610,6 +4610,7 @@
           "businessInformation": "Thông tin doanh nghiệp",
           "enterTheLegalOr": "Nhập tên hợp pháp hoặc tên công khai của cửa hàng hoặc salon của bạn sẽ hiển thị trên màn hình thanh toán của khách hàng.",
           "businessName": "Tên doanh nghiệp",
+          "businessEmailPlaceholder": "vd. lienhe@salon.com",
           "phone": "Số điện thoại",
           "bookingNotificationPhone": "SĐT nhận thông báo đặt lịch",
           "bookingNotificationPhoneHint": "Số điện thoại riêng để nhận thông báo đặt lịch (mới, thay đổi, hoặc hủy), tách biệt với số điện thoại chính của doanh nghiệp.",

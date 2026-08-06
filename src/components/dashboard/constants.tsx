@@ -23,7 +23,7 @@ import { BookingHubMainTab } from '../../data/merchantVoice/domain'
 /** Menu ids used by Booking Hub / Touchpoints expandable nav (avoid hardcoding duplicates). */
 export const DASHBOARD_MENU = {
   Touchpoints: 'touchpoints',
-  BookingHub: 'booking-hub',
+  BookingHub: 'ai-hub',
   TaxIq: 'taxiq',
   ProductManagement: "product-management",
   Pos: 'pos',

@@ -5,6 +5,7 @@
 import type { ChangeEvent, Dispatch, FormEvent, SetStateAction } from 'react'
 import { Building2, Camera, Edit2, ExternalLink, HelpCircle } from 'lucide-react'
 import { useTranslation } from '../../contexts/LanguageContext'
+import { formatNationalNumber, getNationalPhonePlaceholder, PhoneDialCode } from '../CountryCodeSelect'
 
 type SettingsFormErrors = Record<string, string>
 
@@ -156,12 +157,15 @@ export default function BusinessInfoCard({
               <input
                 id="settings-business-phone"
                 type="tel"
+                inputMode="tel"
+                autoComplete="tel"
                 className={inputClass(businessErrors.businessPhone)}
                 value={businessForm.businessPhone}
+                placeholder={getNationalPhonePlaceholder(PhoneDialCode.US)}
                 aria-invalid={Boolean(businessErrors.businessPhone)}
                 aria-describedby={businessErrors.businessPhone ? 'settings-business-phone-error' : undefined}
                 onChange={(e) => {
-                  setBusinessForm({ ...businessForm, businessPhone: e.target.value })
+                  setBusinessForm({ ...businessForm, businessPhone: formatNationalNumber(e.target.value, PhoneDialCode.US) })
                   clearError(setBusinessErrors, 'businessPhone')
                 }}
               />
@@ -172,12 +176,15 @@ export default function BusinessInfoCard({
               <input
                 id="settings-business-email"
                 type="email"
+                inputMode="email"
+                autoComplete="email"
                 className={inputClass(businessErrors.businessEmail)}
                 value={businessForm.businessEmail}
+                placeholder={t('components.settings.tabs.ProfileTab.businessEmailPlaceholder')}
                 aria-invalid={Boolean(businessErrors.businessEmail)}
                 aria-describedby={businessErrors.businessEmail ? 'settings-business-email-error' : undefined}
                 onChange={(e) => {
-                  setBusinessForm({ ...businessForm, businessEmail: e.target.value })
+                  setBusinessForm({ ...businessForm, businessEmail: e.target.value.trim() })
                   clearError(setBusinessErrors, 'businessEmail')
                 }}
               />
@@ -215,12 +222,15 @@ export default function BusinessInfoCard({
             <input
               id="settings-booking-notification-phone"
               type="tel"
+              inputMode="tel"
+              autoComplete="tel"
               className={inputClass(businessErrors.bookingNotificationPhone)}
               value={businessForm.bookingNotificationPhone}
+              placeholder={getNationalPhonePlaceholder(PhoneDialCode.US)}
               aria-invalid={Boolean(businessErrors.bookingNotificationPhone)}
               aria-describedby={businessErrors.bookingNotificationPhone ? 'settings-booking-notification-phone-error' : undefined}
               onChange={(e) => {
-                setBusinessForm({ ...businessForm, bookingNotificationPhone: e.target.value })
+                setBusinessForm({ ...businessForm, bookingNotificationPhone: formatNationalNumber(e.target.value, PhoneDialCode.US) })
                 clearError(setBusinessErrors, 'bookingNotificationPhone')
               }}
             />
@@ -282,7 +292,7 @@ export default function BusinessInfoCard({
           </div>
           <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center py-2 sm:py-1 border-t border-slate-50 gap-1">
             <span className="text-nexoraMuted font-bold">{t('components.settings.tabs.ProfileTab.email')}</span>
-            <span className="text-nexoraText font-extrabold">{businessEmail}</span>
+            <span className="text-nexoraText font-extrabold">{businessEmail || '-'}</span>
           </div>
           <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center py-2 sm:py-1 border-t border-slate-50 gap-1">
             <span className="text-nexoraMuted font-bold">{t('components.settings.tabs.ProfileTab.website')}</span>
@@ -296,16 +306,16 @@ export default function BusinessInfoCard({
                 {businessWebsite.replace(/^https?:\/\//, '')} <ExternalLink className="h-3 w-3" />
               </a>
             ) : (
-              <span className="text-nexoraSubtle font-medium">N/A</span>
+              <span className="text-nexoraText font-extrabold">-</span>
             )}
           </div>
           <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center py-2 sm:py-1 border-t border-slate-50 gap-1">
             <span className="text-nexoraMuted font-bold">{t('components.settings.tabs.ProfileTab.bookingNotificationPhone')}</span>
-            <span className="text-nexoraText font-extrabold">{bookingNotificationPhone || 'N/A'}</span>
+            <span className="text-nexoraText font-extrabold">{bookingNotificationPhone || '-'}</span>
           </div>
           <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center py-2 sm:py-1 border-t border-slate-50 gap-1">
             <span className="text-nexoraMuted font-bold">{t('components.settings.tabs.ProfileTab.salesTaxRatePercent')}</span>
-            <span className="text-nexoraText font-extrabold">{salesTaxRatePercent ? `${salesTaxRatePercent}%` : 'N/A'}</span>
+            <span className="text-nexoraText font-extrabold">{salesTaxRatePercent ? `${salesTaxRatePercent}%` : '-'}</span>
           </div>
         </div>
       )}
