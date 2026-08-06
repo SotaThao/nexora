@@ -11,6 +11,7 @@ import {
   getDirectPaymentStatusDescKey,
   isDirectPaymentRecordCompleted,
   needsMerchantAcknowledge,
+  canForceComplete,
   normalizePaymentStatusValue,
 } from '../../../utils/directPaymentStatus'
 
@@ -36,7 +37,7 @@ export default function MerchantPaymentDetailModal({
   payment: MerchantPaymentRecord | null
   isLoading?: boolean
   onClose: () => void
-  onAcknowledge?: (paymentId: string) => void
+  onAcknowledge?: (paymentId: string, options?: { isForce?: boolean }) => void
   isAcknowledging?: boolean
 }) {
   const { t, currentLanguage } = useTranslation()
@@ -46,11 +47,19 @@ export default function MerchantPaymentDetailModal({
   const paymentStatus = payment ? normalizePaymentStatusValue(payment.status) : PaymentStatus.Initiated
   const awaitingAck = payment ? needsMerchantAcknowledge(payment) : false
   const completed = payment ? isDirectPaymentRecordCompleted(payment) : false
-  const waitingCustomer = payment ? paymentStatus === PaymentStatus.Initiated : false
+  const canForce = payment ? canForceComplete(payment) : false
+  const waitingCustomer = payment
+    ? paymentStatus === PaymentStatus.Initiated && !payment.customerConfirmedAt
+    : false
 
   const handleAcknowledge = () => {
     if (!payment?.id || isAcknowledging || !onAcknowledge) return
     onAcknowledge(payment.id)
+  }
+
+  const handleForceAcknowledge = () => {
+    if (!payment?.id || isAcknowledging || !onAcknowledge) return
+    onAcknowledge(payment.id, { isForce: true })
   }
 
   return (
@@ -153,7 +162,26 @@ export default function MerchantPaymentDetailModal({
               ) : null}
             </div>
 
-            {waitingCustomer ? (
+            {canForce && onAcknowledge ? (
+              <div className="space-y-3 rounded-xl border border-amber-200 bg-amber-50/70 p-4">
+                <p className="text-[11px] font-semibold leading-normal text-amber-800">
+                  {t('merchant_payments.force_confirm_warning')}
+                </p>
+                <button
+                  type="button"
+                  onClick={handleForceAcknowledge}
+                  disabled={isAcknowledging}
+                  className="flex w-full cursor-pointer items-center justify-center gap-2 rounded-xl bg-amber-600 px-4 py-3 text-xs font-black uppercase tracking-wider text-white transition hover:bg-amber-700 disabled:cursor-not-allowed disabled:opacity-60"
+                >
+                  {isAcknowledging ? (
+                    <Loader2 className="h-4 w-4 animate-spin" />
+                  ) : (
+                    <CheckCircle className="h-4 w-4" />
+                  )}
+                  {t('merchant_payments.force_confirm_receipt')}
+                </button>
+              </div>
+            ) : waitingCustomer ? (
               <div className="flex items-center gap-2 rounded-xl border border-amber-100 bg-amber-50/70 px-3 py-2.5">
                 <Loader2 className="h-3.5 w-3.5 shrink-0 animate-spin text-amber-600" />
                 <p className="text-[11px] leading-normal text-amber-800">

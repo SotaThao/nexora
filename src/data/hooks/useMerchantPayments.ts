@@ -79,9 +79,9 @@ export function useMerchantPaymentStats(
 export function useAcknowledgeMerchantPayment() {
   const queryClient = useQueryClient()
 
-  return useMutation<void, Error, string>({
-    mutationFn: (paymentId) => merchantPaymentsRepository.acknowledge(paymentId),
-    onSuccess: (_data, paymentId) => {
+  return useMutation<void, Error, { paymentId: string; isForce?: boolean }>({
+    mutationFn: ({ paymentId, isForce }) => merchantPaymentsRepository.acknowledge(paymentId, { isForce }),
+    onSuccess: (_data, { paymentId }) => {
       queryClient.setQueriesData<MerchantPaymentsListPage>(
         { queryKey: ['merchantPayments', 'list'] },
         (old) => {

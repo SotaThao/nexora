@@ -42,8 +42,9 @@ export function useDirectPaymentStatusPoll(
     seedPayment,
   }: { enabled?: boolean; seedStatus?: number; seedPayment?: PollSeed | null } = {},
 ) {
-  const pollSeed = seedPayment ?? (seedStatus != null ? { status: seedStatus } : null)
-  const shouldPoll = enabled && Boolean(paymentId) && shouldPollDirectPaymentStatus(seedStatus, pollSeed)
+  const normSeedStatus = seedStatus != null ? normalizePaymentStatusValue(seedStatus) : undefined
+  const pollSeed = seedPayment ?? (normSeedStatus != null ? { status: normSeedStatus } : null)
+  const shouldPoll = enabled && Boolean(paymentId) && shouldPollDirectPaymentStatus(normSeedStatus, pollSeed)
 
   const query = useQuery<DirectPaymentStatusSnapshot>({
     queryKey: qk.publicPaymentStatus(paymentId ?? ''),
@@ -59,7 +60,7 @@ export function useDirectPaymentStatusPoll(
           )
         : pollSeed
       return resolveDirectPaymentStatusPollInterval(
-        snapshot?.status ?? seedStatus,
+        snapshot?.status ?? normSeedStatus,
         merged ?? pollSeed,
       )
     },
@@ -92,7 +93,7 @@ export function useConfirmedDirectPaymentStatusPoll(
 }
 
 type AckWatchPollPayment = AckStatusPollPayment & {
-  createdAt?: string
+  createdAt: string
 }
 
 /** Global watcher — poll every payment needing ack watch; fire when status API is Confirmed. */

@@ -116,3 +116,16 @@ export function needsAcknowledgeFromStatusSnapshot(
   if (snapshot.merchantConfirmedAt) return false
   return true
 }
+
+export function canForceComplete(
+  payment: {
+    status: unknown
+    customerConfirmedAt?: string | null
+    merchantConfirmedAt?: string | null
+    staffConfirmedAt?: string | null
+  },
+): boolean {
+  if (payment.merchantConfirmedAt || payment.staffConfirmedAt || payment.customerConfirmedAt) return false
+  const rawStatus = payment.status
+  return rawStatus === 'Initiated' || rawStatus === 0 || rawStatus === '0'
+}
