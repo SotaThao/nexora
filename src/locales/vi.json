@@ -2815,6 +2815,11 @@
           "manage_remove_staff": "Xóa nhân viên"
         },
         "pos": {
+          "PosOnboardingRequiredPage": {
+            "title": "Hoàn tất thiết lập doanh nghiệp của bạn",
+            "description": "Hoàn tất onboarding để mở khóa POS cho doanh nghiệp của bạn.",
+            "cta": "Hoàn Tất Onboarding"
+          },
           "PosGeneralSettingsView": {
             "description": "Xem và cập nhật thông tin doanh nghiệp của salon ngay trong POS."
           },

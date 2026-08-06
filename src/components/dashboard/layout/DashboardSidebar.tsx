@@ -16,6 +16,7 @@ import { useMerchantVoiceTenantStatus } from '../../../data/hooks/useMerchantVoi
 import { getSubscriptionSidebarCopy } from '../../../utils/subscriptionDisplay'
 import { useMerchantSetup } from '../../../data/hooks/useMerchantSetup'
 import { useOwnerTaxYearByBusiness } from '../../../data/hooks/useTaxiqOwnerTaxYear'
+import { useAuth } from '../../../auth/useAuth'
 import {
   SIDEBAR_SHELL_CLASS,
   SIDEBAR_NAV_CLASS,
@@ -49,6 +50,9 @@ export default function DashboardSidebar({
   const { currentLanguage, setLanguage, t } = useTranslation()
   const navigate = useNavigate()
   const location = useLocation()
+  const { session } = useAuth()
+  // POS is fully gated behind onboarding — no submenu until the merchant finishes it (see PosOnboardingLayout).
+  const hasCompletedOnboarding = session?.hasCompletedOnboarding !== false
   const [searchParams] = useSearchParams()
   const { openProductManagement, isOpeningProductManagement, openingProductManagementDestination } = useOpenProductManagement()
   // Sub-tabs are URL-driven (?tab=) so the sidebar highlight stays in sync with
@@ -270,7 +274,7 @@ export default function DashboardSidebar({
                   <div className="text-white/50 shrink-0">
                     {isTaxIqExpanded ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
                   </div>
-                ): id === DASHBOARD_MENU.Pos ? (
+                ): id === DASHBOARD_MENU.Pos && hasCompletedOnboarding ? (
                   <div className="text-white/50 shrink-0">
                     {isPosExpanded ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
                   </div>
@@ -389,7 +393,7 @@ export default function DashboardSidebar({
                   })}
                 </div>
               )}
-              {id === DASHBOARD_MENU.Pos && isPosExpanded && (
+              {id === DASHBOARD_MENU.Pos && isPosExpanded && hasCompletedOnboarding && (
                 <div className={SIDEBAR_SUBMENU_WRAP_CLASS}>
                   {POS_SUBMENU.map((sub) => {
                     // 'board' (Front Desk) lives at /dashboard/pos itself (no

@@ -2815,6 +2815,11 @@
           "manage_remove_staff": "Remove Staff"
         },
         "pos": {
+          "PosOnboardingRequiredPage": {
+            "title": "Finish setting up your business",
+            "description": "Complete onboarding to unlock POS for your business.",
+            "cta": "Complete Onboarding"
+          },
           "PosGeneralSettingsView": {
             "description": "View and update your salon's business information from inside POS."
           },
