@@ -175,50 +175,44 @@ export default function ReportsDirectPaymentsTab({
     const isForceAck = canForceComplete(payment)
     const showAcknowledge = isNormalAck || isForceAck
 
-    const isForceOnly = isForceAck && !isNormalAck
-
-    const btnClass = isForceOnly
-      ? (layout === 'buttons'
-          ? 'inline-flex min-h-10 flex-1 cursor-pointer items-center justify-center gap-1.5 rounded-lg border border-amber-200 bg-amber-50/70 px-3 py-1.5 text-xs font-bold text-amber-800 transition hover:bg-amber-100'
-          : 'inline-flex h-8 w-8 cursor-pointer items-center justify-center rounded-lg border border-amber-200 bg-amber-50/70 text-amber-800 transition hover:bg-amber-100')
-      : (layout === 'buttons'
-          ? 'inline-flex min-h-10 flex-1 cursor-pointer items-center justify-center gap-1.5 rounded-lg bg-nexoraBrand px-3 py-1.5 text-xs font-bold text-white transition hover:bg-nexoraBrand/90'
-          : 'inline-flex h-8 w-8 cursor-pointer items-center justify-center rounded-lg bg-nexoraBrand text-white transition hover:bg-nexoraBrand/90')
-
     return (
       <div
-        className={layout === 'buttons' ? 'flex gap-2' : 'flex items-center justify-end gap-1'}
+        className={layout === 'buttons' ? 'flex gap-2' : 'flex items-center justify-end gap-2'}
         onClick={(e) => e.stopPropagation()}
       >
-        <button
-          type="button"
-          title={t('merchant_payments.view_detail')}
-          aria-label={t('merchant_payments.view_detail')}
-          onClick={() => onOpenPayment?.(payment.id)}
-          className={
-            layout === 'buttons'
-              ? 'inline-flex min-h-10 flex-1 cursor-pointer items-center justify-center gap-1.5 rounded-lg border border-nexoraBorder bg-white px-3 py-1.5 text-xs font-bold text-nexoraText transition hover:bg-nexoraCanvas'
-              : 'inline-flex h-8 w-8 cursor-pointer items-center justify-center rounded-lg border border-nexoraBorder text-nexoraMuted transition hover:bg-nexoraCanvas hover:text-nexoraText'
-          }
-        >
-          <Eye className="h-4 w-4 shrink-0" />
-          {layout === 'buttons' ? <span>{t('merchant_payments.view_detail')}</span> : null}
-        </button>
         {showAcknowledge ? (
           <button
             type="button"
-            title={t('merchant_payments.confirm_receipt')}
-            aria-label={t('merchant_payments.confirm_receipt')}
+            title={t('dashboard.activity_log.action_complete')}
+            aria-label={t('dashboard.activity_log.action_complete')}
             onClick={(e) => {
               e.stopPropagation()
               onOpenPayment?.(payment.id)
             }}
-            className={btnClass}
+            className={
+              layout === 'buttons'
+                ? 'inline-flex min-h-10 flex-1 cursor-pointer items-center justify-center gap-1.5 rounded-lg border border-emerald-100 bg-emerald-50 px-2.5 py-1.5 text-xs font-bold text-emerald-700 transition-colors hover:bg-emerald-100 dark:border-emerald-500/20 dark:bg-emerald-500/10 dark:text-emerald-400'
+                : 'inline-flex items-center gap-1.5 rounded-lg border border-emerald-100 bg-emerald-50 px-2.5 py-1.5 text-[11px] font-bold text-emerald-700 transition-colors hover:bg-emerald-100 dark:border-emerald-500/20 dark:bg-emerald-500/10 dark:text-emerald-400'
+            }
           >
-            <CheckCircle className="h-4 w-4 shrink-0" />
-            {layout === 'buttons' ? <span>{t('merchant_payments.confirm_receipt')}</span> : null}
+            <CheckCircle className="h-3.5 w-3.5 shrink-0" />
+            <span className={layout === 'buttons' ? undefined : 'hidden sm:inline'}>{t('dashboard.activity_log.action_complete')}</span>
           </button>
         ) : null}
+        <button
+          type="button"
+          title={t('components.dashboard.views.ReportsView.details')}
+          aria-label={t('components.dashboard.views.ReportsView.details')}
+          onClick={() => onOpenPayment?.(payment.id)}
+          className={
+            layout === 'buttons'
+              ? 'inline-flex min-h-10 flex-1 cursor-pointer items-center justify-center gap-1.5 rounded-lg border border-nexoraBorder bg-white px-2.5 py-1.5 text-xs font-bold text-nexoraText transition-colors hover:bg-nexoraCanvas'
+              : 'inline-flex items-center gap-1.5 rounded-lg border border-nexoraBorder bg-white px-2.5 py-1.5 text-[11px] font-bold text-nexoraText transition-colors hover:bg-nexoraCanvas'
+          }
+        >
+          <Eye className="h-3.5 w-3.5 shrink-0" />
+          <span className={layout === 'buttons' ? undefined : 'hidden sm:inline'}>{t('components.dashboard.views.ReportsView.details')}</span>
+        </button>
       </div>
     )
   }
