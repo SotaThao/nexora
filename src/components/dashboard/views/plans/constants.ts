@@ -126,6 +126,21 @@ export function formatPackageHistoryPackageLabel(
   return `${brandLabel} ${name}`
 }
 
+/**
+ * Middle-ellipsis transaction / reference id: `abcdef…uvwxyz`.
+ * Keeps short ids intact; full value remains available via `title` in the UI.
+ */
+export function formatPackageHistoryTransactionId(
+  value: string | null | undefined,
+  head = 8,
+  tail = 6,
+): string {
+  const id = String(value ?? '').trim()
+  if (!id) return BOOKING_HUB_EMPTY_CELL
+  if (id.length <= head + tail + 3) return id
+  return `${id.slice(0, head)}...${id.slice(-tail)}`
+}
+
 /** Map VoiceAI catalog row → Starter | Pro | Elite via packageCode, then name/plan. */
 export function resolveVoiceAiPlanId(
   pkg: Pick<SubscriptionPackage, 'packageCode' | 'name' | 'plan'>,
@@ -149,6 +164,8 @@ export function indexVoiceAiPackagesByPlan(
   }
   return map
 }
+
+export const PACKAGE_HISTORY_PAGE_SIZE = 10
 
 /** Selection passed into checkout after Choose Starter/Pro/Elite. */
 export type VoiceAiCheckoutSelection = {

@@ -843,7 +843,9 @@ export default function Dashboard({
         />
 
         <main className="w-full min-w-0 flex-1 overflow-x-hidden p-4 pb-6 sm:p-6 sm:pb-8 lg:p-7 lg:pb-7">
-          {activeMenu !== 'overview' && activeMenu !== DASHBOARD_MENU_ID.bookingHub && (
+          {activeMenu !== 'overview'
+            && activeMenu !== DASHBOARD_MENU_ID.bookingHub
+            && activeMenu !== DASHBOARD_MENU_ID.packageManagement && (
             <div className="mb-3 flex min-w-0 items-center gap-3 sm:mb-5 sm:block">
               <button
                 onClick={handleBackNavigation}

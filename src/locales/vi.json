@@ -659,6 +659,7 @@
       "transactions": "Giao Dịch",
       "booking_hub": "AI Hub",
       "product_management": "Trung tâm thẻ quà tặng",
+      "package_management": "Quản lý gói",
       "gift_card": "Thẻ quà tặng",
       "membership_card": "Thẻ thành viên",
       "product_management_error": "Không mở được Trung tâm thẻ quà tặng. Vui lòng thử lại.",
@@ -3813,6 +3814,90 @@
             "posterStep2": "Điền tên + số điện thoại",
             "posterStep3": "Nhận promotion code qua SMS — đưa nhân viên khi thanh toán",
             "posterSecondary": "Scan the QR code with your phone camera to get your discount code by text."
+          }
+        },
+        "PackageManagementView": {
+          "title": "Quản lý gói",
+          "description": "Xem gói đang sở hữu, gói Tip Platform, gói AI Voice và lịch sử mua.",
+          "ariaTabs": "Các mục quản lý gói",
+          "tabs": {
+            "overview": "Tổng quan",
+            "subscriptions": "Gói đăng ký",
+            "aiVoice": "Gói AI Voice",
+            "history": "Lịch sử gói"
+          },
+          "overview": {
+            "product": {
+              "nexora": "Nexora Touch",
+              "voice": "AI Voice"
+            },
+            "status": {
+              "active": "Đang hoạt động",
+              "expiring": "Sắp hết hạn",
+              "expired": "Đã hết hạn"
+            },
+            "activated": "Kích hoạt",
+            "expires": "Hết hạn",
+            "remaining": "Thời gian còn lại",
+            "autoRenew": "Tự gia hạn",
+            "autoRenewOn": "BẬT",
+            "autoRenewOff": "TẮT",
+            "autoRenewAria": "Bật/tắt tự gia hạn cho {name}",
+            "unit": {
+              "years": "Năm",
+              "months": "Tháng",
+              "days": "Ngày",
+              "hours": "Giờ",
+              "minutes": "Phút",
+              "seconds": "Giây"
+            },
+            "owned": {
+              "nexoraProName": "Nexora Pro",
+              "nexoraProDesc": "Bảng điều khiển chủ tiệm, tipping có thương hiệu và tự động hóa đánh giá.",
+              "voiceProName": "Voice AI Pro",
+              "voiceProDesc": "Trợ lý đặt lịch bằng giọng nói kèm SMS và nhắc đánh giá.",
+              "featOwnerDashboard": "Bảng điều khiển chủ tiệm",
+              "featAutoReview": "Yêu cầu đánh giá tự động",
+              "featLandingPages": "Landing page",
+              "featVoiceSms": "Đặt lịch Voice + SMS",
+              "featMinutes": "Phút gọi bao gồm"
+            }
+          },
+          "compare": {
+            "kicker": "So sánh gói",
+            "title": "So sánh các gói",
+            "note": "Phù hợp mọi giai đoạn",
+            "caption": "So sánh tính năng các gói NEXORA",
+            "feature": "Tính năng",
+            "plans": {
+              "starter": "Starter",
+              "pro": "Pro",
+              "enterprise": "Enterprise"
+            },
+            "monthlyPrice": "Giá tháng",
+            "activeStaff": "Nhân viên đang hoạt động",
+            "qrTipping": "Tip qua mã QR",
+            "directTips": "Tip trực tiếp nhân viên",
+            "googleReviews": "Đánh giá Google",
+            "staffAccounts": "Tài khoản nhân viên",
+            "customerRewards": "Phần thưởng khách hàng",
+            "neighborCoop": "Hợp tác lân cận",
+            "multiLocation": "Nhiều chi nhánh",
+            "posSync": "Đồng bộ POS / checkout",
+            "support": "Hỗ trợ",
+            "unlimited": "Không giới hạn",
+            "custom": "Tùy chỉnh",
+            "supportEmail": "Email",
+            "supportPriority": "Ưu tiên",
+            "supportDedicated": "Chuyên biệt 24/7",
+            "branded": "Có thương hiệu",
+            "premiumNfc": "NFC cao cấp"
+          },
+          "subscriptions": {
+            "kicker": "Nền tảng NEXORA",
+            "title": "Chọn gói phù hợp cho salon của bạn",
+            "subtitle": "Bắt đầu với các tính năng thiết yếu và mở khóa thêm công cụ tăng trưởng khi đội ngũ phát triển.",
+            "note": "Nâng cấp bất cứ lúc nào"
           }
         }
       }

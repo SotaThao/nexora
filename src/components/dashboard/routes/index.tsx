@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useRef, useState } from 'react'
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { useOutletContext, useNavigate, useParams, Navigate, useSearchParams } from 'react-router-dom'
 import { useTranslation } from '../../../contexts/LanguageContext'
 import { SHOW_HARDWARE_DEVICES } from '../constants'
@@ -15,19 +15,18 @@ import SupportView from '../../SupportView'
 import ComingSoon from '../views/ComingSoon'
 import ManagePlanView from '../views/ManagePlanView'
 import SubscriptionPaymentModal from '../modals/SubscriptionPaymentModal'
-import type { PurchasableSubscriptionPlan } from '../../../data/repositories/subscriptionPayments'
-import { SubscriptionPackageType } from '../../../data/repositories/subscriptionPayments'
-import { useSubscriptionPackages } from '../../../data/hooks/useSubscriptionPayments'
-import { buildSubscriptionBillingDefaultsFromProfile } from '../../../utils/subscriptionBillingDefaults'
-import { getTipPlatformSubscription, isTipPlatformPlanBelowCurrent, resolveTipPlatformPlanId } from '../../../utils/subscriptionDisplay'
 import BookingHubView from '../views/BookingHubView'
 import AiVoiceSetupGuideView from '../views/AiVoiceSetupGuideView'
+import PackageManagementView from '../views/packageManagement/PackageManagementView'
+import { useTipPlatformCheckout, TipPlatformCheckoutResult } from '../views/packageManagement/useTipPlatformCheckout'
 import StaffDetailView from '../../StaffDetailView'
 import { useMerchantStaffByCode } from '../../../data/hooks/useMerchantStaff'
 import { useOpenProductManagement } from '../../../data/hooks/useOpenProductManagement'
-import { DASHBOARD_ROOT_PATH } from '../constants'
+import { DASHBOARD_MENU_ID, DASHBOARD_ROOT_PATH, buildDashboardMenuPath } from '../constants'
 import { normaliseMember } from '../hooks/useStaffManagement'
 import { SkeletonList } from '../../ui/skeleton'
+
+const DASHBOARD_SUPPORT_PATH = buildDashboardMenuPath(DASHBOARD_MENU_ID.support)
 
 export function OverviewRoute() {
   const ctx = useOutletContext<LooseObject>()
@@ -363,57 +362,37 @@ export function SupportRoute() {
   return <SupportView />
 }
 
-function planIdToPurchasablePlan(planId: string): PurchasableSubscriptionPlan | null {
-  if (planId === 'starter') return 'Starter'
-  if (planId === 'pro') return 'Pro'
-  return null
-}
-
-function purchasablePlanToPlanId(plan: PurchasableSubscriptionPlan): 'starter' | 'pro' {
-  return plan === 'Pro' ? 'pro' : 'starter'
+export function PackageManagementRoute() {
+  return <PackageManagementView />
 }
 
 export function SubscriptionsRoute() {
   const ctx = useOutletContext<LooseObject>()
   const navigate = useNavigate()
-  const [searchParams] = useSearchParams()
-  const tipPlatformSubscription = useMemo(
-    () => getTipPlatformSubscription(ctx?.profile),
-    [ctx?.profile],
-  )
-  const currentTipPlanId = useMemo(
-    () => resolveTipPlatformPlanId(tipPlatformSubscription),
-    [tipPlatformSubscription],
-  )
-  const [paymentPlan, setPaymentPlan] = useState<PurchasableSubscriptionPlan | null>(null)
-  const { data: packages = [] } = useSubscriptionPackages({
-    packageType: SubscriptionPackageType.TipPlatform,
+  const [searchParams, setSearchParams] = useSearchParams()
+
+  const {
+    tipPlatformSubscription,
+    packages,
+    billingDefaults,
+    paymentPlan,
+    selectedPackage,
+    paymentPlanPrice,
+    clearCheckout,
+    trySelectPlan,
+    isCheckoutPackageMissing,
+  } = useTipPlatformCheckout({
+    profile: ctx?.profile,
+    searchParams,
+    setSearchParams,
+    packagesEnabled: true,
+    deepLinkEnabled: true,
   })
-  const billingDefaults = useMemo(
-    () => buildSubscriptionBillingDefaultsFromProfile(ctx?.profile),
-    [ctx?.profile],
-  )
 
   useEffect(() => {
-    const deepLinkPlan = planIdToPurchasablePlan(searchParams.get('plan') ?? '')
-    if (!deepLinkPlan) return
-    if (isTipPlatformPlanBelowCurrent(
-      purchasablePlanToPlanId(deepLinkPlan),
-      currentTipPlanId,
-    )) {
-      return
-    }
-    setPaymentPlan(deepLinkPlan)
-  }, [searchParams, currentTipPlanId])
-
-  const selectedPackage = paymentPlan
-    ? packages.find(
-        (p) =>
-          p.packageCode.toLowerCase() === paymentPlan.toLowerCase()
-          || (p.plan ?? '').toLowerCase() === paymentPlan.toLowerCase(),
-      )
-    : undefined
-  const paymentPlanPrice = selectedPackage?.price ?? 0
+    if (!isCheckoutPackageMissing) return
+    clearCheckout()
+  }, [isCheckoutPackageMissing, clearCheckout])
 
   return (
     <>
@@ -421,13 +400,10 @@ export function SubscriptionsRoute() {
         currentSubscription={tipPlatformSubscription}
         packages={packages}
         onSelectPlan={(planId) => {
-          if (isTipPlatformPlanBelowCurrent(planId, currentTipPlanId)) return
-          const purchasablePlan = planIdToPurchasablePlan(planId)
-          if (purchasablePlan) {
-            setPaymentPlan(purchasablePlan)
-            return
+          const result = trySelectPlan(planId)
+          if (result === TipPlatformCheckoutResult.ContactSupport) {
+            navigate(DASHBOARD_SUPPORT_PATH)
           }
-          navigate('/dashboard/support')
         }}
       />
       {paymentPlan && selectedPackage ? (
@@ -437,7 +413,8 @@ export function SubscriptionsRoute() {
           packageId={selectedPackage.id}
           price={paymentPlanPrice}
           billingDefaults={billingDefaults}
-          onClose={() => setPaymentPlan(null)}
+          onClose={clearCheckout}
+          onSuccess={clearCheckout}
         />
       ) : null}
     </>

@@ -37,7 +37,6 @@ import {
 } from '../../../data/repositories/subscriptionPayments'
 import {
   useSubscriptionPackages,
-  useSubscriptionPurchaseHistory,
 } from '../../../data/hooks/useSubscriptionPayments'
 import { useProfileSettings } from '../../../data/hooks/useProfileSettings'
 import { qk } from '../../../data/queryKeys'
@@ -54,29 +53,23 @@ import {
   BookingBuyPackageSkeleton,
   BookingCreditsHistoryTableSkeleton,
   BookingCreditsUsageSkeleton,
-  BookingPackageHistorySkeleton,
-  BookingPackageHistoryTableSkeleton,
 } from './BookingHubSkeletons'
 import { useBookingHubVoiceEnabled } from './BookingHubVoiceContext'
 import BookingTrialModal from './BookingTrialModal'
 import SmsBuyCreditsModal from './smsCampaigns/SmsBuyCreditsModal'
 import VoiceBuyCreditsModal from './voiceCredits/VoiceBuyCreditsModal'
 import PlanPaymentModal from './plans/PlanPaymentModal'
+import PackageHistoryPanel from './plans/PackageHistoryPanel'
 import {
-  PACKAGE_HISTORY_STATUS_CLASS,
-  PACKAGE_HISTORY_STATUS_LABEL_KEY,
   PAID_SERVICE_PLAN_ORDER,
   PAID_SERVICE_PLAN_TITLE_KEY,
   PLAN_FALLBACK_FEATURES,
   PlansView,
   SERVICE_PLAN_MONTHLY_PRICE,
-  formatPackageHistoryAmount,
-  formatPackageHistoryPackageLabel,
   formatPlanPrice,
   indexVoiceAiPackagesByPlan,
   isPaidServicePlanId,
   isVoiceAiPlanBelowCurrent,
-  resolvePackageHistoryDisplayAt,
   resolveVoiceAiPlanId,
   type PaidServicePlanId,
   type VoiceAiCheckoutSelection,
@@ -90,8 +83,6 @@ import {
 } from '../../../utils/subscriptionDisplay'
 
 const CREDITS_HISTORY_PAGE_SIZE = 10
-const PACKAGE_HISTORY_SKELETON_ROWS = 5
-
 const TK = 'components.dashboard.views.BookingHubView.plans'
 
 const PLAN_BUTTON_LABEL_KEY: Record<PaidServicePlanId, string> = {
@@ -139,138 +130,6 @@ function resolveActivityLabel(
     ACTIVITY_KIND_I18N_KEY[item.activityKind]
     ?? ACTIVITY_KIND_I18N_KEY[VoiceCreditActivityKind.Unknown]
   return t(`${CTK}.activity.${kindKey}`)
-}
-
-function PackageHistoryPanel() {
-  const { t, currentLanguage } = useTranslation()
-  const {
-    data: rows = [],
-    isLoading,
-    isFetching,
-    isError,
-    error,
-    refetch,
-  } = useSubscriptionPurchaseHistory()
-
-  const formatTerm = (months: number) => {
-    if (months === 1) return t(`${TK}.packageHistoryTermMonths`, { count: months })
-    return t(`${TK}.packageHistoryTermMonthsPlural`, { count: months })
-  }
-
-  const showSkeleton = isLoading && rows.length === 0
-  const showTableSkeleton = isFetching && rows.length === 0
-
-  if (showSkeleton) {
-    return <BookingPackageHistorySkeleton />
-  }
-
-  return (
-    <section
-      className="credits-history-section package-history-section"
-      aria-busy={isFetching}
-      aria-labelledby="plans-package-history-title"
-    >
-      <div className="credits-section-heading">
-        <div>
-          <span className="credits-kicker">{t(`${TK}.packageHistoryKicker`)}</span>
-          <h2 id="plans-package-history-title">{t(`${TK}.packageHistoryTitle`)}</h2>
-        </div>
-      </div>
-
-      <div className="credits-history-scroll">
-        <table className="credits-history-table package-history-plan-table">
-          <caption className="sr-only">{t(`${TK}.packageHistoryCaption`)}</caption>
-          <thead>
-            <tr>
-              <th scope="col">{t(`${TK}.packageHistoryColDate`)}</th>
-              <th scope="col">{t(`${TK}.packageHistoryColAmount`)}</th>
-              <th scope="col">{t(`${TK}.packageHistoryColPackage`)}</th>
-              <th scope="col">{t(`${TK}.packageHistoryColTerm`)}</th>
-              <th scope="col">{t(`${TK}.packageHistoryColValidUntil`)}</th>
-              <th scope="col">{t(`${TK}.packageHistoryColStatus`)}</th>
-              <th scope="col">{t(`${TK}.packageHistoryColTransaction`)}</th>
-            </tr>
-          </thead>
-          <tbody>
-            {showTableSkeleton ? (
-              <BookingPackageHistoryTableSkeleton rows={PACKAGE_HISTORY_SKELETON_ROWS} />
-            ) : isError && rows.length === 0 ? (
-              <tr>
-                <td className="booking-empty-cell" colSpan={7}>
-                  <div>{t(getErrorI18nKey(getApiErrorCode(error)))}</div>
-                  <button
-                    className="booking-mini-button"
-                    type="button"
-                    onClick={() => void refetch()}
-                  >
-                    {t(`${TK}.packageHistoryRetry`)}
-                  </button>
-                </td>
-              </tr>
-            ) : rows.length === 0 ? (
-              <tr>
-                <td className="booking-empty-cell" colSpan={7}>
-                  {t(`${TK}.packageHistoryEmpty`)}
-                </td>
-              </tr>
-            ) : (
-              rows.map((row) => {
-                const displayAt = resolvePackageHistoryDisplayAt(row)
-                const purchased = formatBookingHubDateTimeParts(displayAt, currentLanguage)
-                const validUntil = row.validUntil
-                  ? formatBookingHubDateTimeParts(row.validUntil, currentLanguage)?.date
-                    ?? BOOKING_HUB_EMPTY_CELL
-                  : BOOKING_HUB_EMPTY_CELL
-                const statusClass = PACKAGE_HISTORY_STATUS_CLASS[row.uiStatus]
-                const statusLabel = t(
-                  `${TK}.${PACKAGE_HISTORY_STATUS_LABEL_KEY[row.uiStatus]}`,
-                )
-                const packageLabel = formatPackageHistoryPackageLabel(
-                  row.planName,
-                  t(`${TK}.packageHistoryPackageBrand`),
-                )
-                return (
-                  <tr key={row.orderId || row.referenceId}>
-                    <td>
-                      <span className="credits-history-date">
-                        {purchased?.date ?? BOOKING_HUB_EMPTY_CELL}
-                        <small>{purchased?.time ?? BOOKING_HUB_EMPTY_CELL}</small>
-                      </span>
-                    </td>
-                    <td className="package-history-plan-amount">
-                      {formatPackageHistoryAmount(row.amount, row.currency)}
-                    </td>
-                    <td>
-                      <span className="credits-history-activity">
-                        <strong>{packageLabel}</strong>
-                        <small>{t(`${TK}.packageHistoryMonthlySub`)}</small>
-                      </span>
-                    </td>
-                    <td>
-                      <span className="credits-product-badge credits-product-badge-voice">
-                        {formatTerm(row.periodInMonths || 1)}
-                      </span>
-                    </td>
-                    <td>{validUntil}</td>
-                    <td>
-                      <span className={`package-history-status ${statusClass}`}>
-                        {statusLabel}
-                      </span>
-                    </td>
-                    <td>
-                      <span className="package-history-transaction">
-                        {row.referenceId || row.orderId || BOOKING_HUB_EMPTY_CELL}
-                      </span>
-                    </td>
-                  </tr>
-                )
-              })
-            )}
-          </tbody>
-        </table>
-      </div>
-    </section>
-  )
 }
 
 function CreditsUsagePanel() {
@@ -703,7 +562,7 @@ function FallbackPlanFeatures({
   )
 }
 
-export default function BookingPlansPanel() {
+export default function BookingPlansPanel({ buyOnlyMode = false }: { buyOnlyMode?: boolean } = {}) {
   const { t, currentLanguage } = useTranslation()
   const { showToast } = useNotification()
   const queryClient = useQueryClient()
@@ -713,6 +572,7 @@ export default function BookingPlansPanel() {
   const [trialOpen, setTrialOpen] = useState(false)
   const [checkoutSelection, setCheckoutSelection] = useState<VoiceAiCheckoutSelection | null>(null)
   const [plansView, setPlansView] = useState<PlansView>(PlansView.Package)
+  const effectivePlansView = buyOnlyMode ? PlansView.Package : plansView
 
   const {
     data: voicePackages = [],
@@ -722,7 +582,7 @@ export default function BookingPlansPanel() {
     error: packagesError,
     refetch: refetchPackages,
   } = useSubscriptionPackages({
-    enabled: plansView === PlansView.Package,
+    enabled: buyOnlyMode || plansView === PlansView.Package,
     packageType: SubscriptionPackageType.VoiceAI,
     // No cache window — each Buy Package visit must hit the network.
     staleTime: 0,
@@ -756,19 +616,20 @@ export default function BookingPlansPanel() {
   const hasMappedPackages = Object.keys(packagesByPlan).length > 0
 
   useEffect(() => {
+    if (buyOnlyMode) return
     if (!showCreditUsageTab && plansView === PlansView.Credits) {
       setPlansView(PlansView.Package)
     }
-  }, [showCreditUsageTab, plansView])
+  }, [buyOnlyMode, showCreditUsageTab, plansView])
 
   // Leaving Buy Package marks catalog stale/invalid so the next visit always re-calls
   // GET .../packages?packageType=VoiceAI.
   useEffect(() => {
-    if (plansView === PlansView.Package) return
+    if (buyOnlyMode || plansView === PlansView.Package) return
     void queryClient.invalidateQueries({
       queryKey: qk.merchantSubscriptionPackages(SubscriptionPackageType.VoiceAI),
     })
-  }, [plansView, queryClient])
+  }, [buyOnlyMode, plansView, queryClient])
 
   const getPlanButtonLabel = (plan: PaidServicePlanId) => {
     if (plan === VoicePlanTier.Pro && hasExistingTrialRequest) {
@@ -896,6 +757,7 @@ export default function BookingPlansPanel() {
   return (
     <>
       <div className="plans-panel-shell">
+        {!buyOnlyMode ? (
         <div className="booking-view-switch" role="group" aria-label={t(`${TK}.viewMode`)}>
           <button
             className={`booking-view-button${plansView === PlansView.Package ? ' is-active' : ''}`}
@@ -927,10 +789,11 @@ export default function BookingPlansPanel() {
             {t(`${TK}.packageHistory`)}
           </button>
         </div>
+        ) : null}
 
-        {plansView === PlansView.Credits && showCreditUsageTab ? (
+        {effectivePlansView === PlansView.Credits && showCreditUsageTab ? (
           <CreditsUsagePanel />
-        ) : plansView === PlansView.History ? (
+        ) : effectivePlansView === PlansView.History ? (
           <PackageHistoryPanel />
         ) : showPackageSkeleton ? (
           <BookingBuyPackageSkeleton />

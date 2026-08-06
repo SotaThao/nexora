@@ -659,6 +659,7 @@
       "transactions": "Transactions",
       "booking_hub": "AI Hub",
       "product_management": "Gift Card Center",
+      "package_management": "Package Management",
       "gift_card": "Gift Card",
       "membership_card": "Membership Card",
       "product_management_error": "Could not open Gift Card Center. Please try again.",
@@ -3813,6 +3814,90 @@
             "posterStep2": "Enter your name + phone number",
             "posterStep3": "Get your promotion code by SMS — show it to staff at checkout",
             "posterSecondary": "Quét mã QR bằng camera điện thoại để nhận mã giảm giá qua tin nhắn."
+          }
+        },
+        "PackageManagementView": {
+          "title": "Package Management",
+          "description": "Review owned packages, tip platform plans, AI Voice plans, and purchase history.",
+          "ariaTabs": "Package management sections",
+          "tabs": {
+            "overview": "Overview",
+            "subscriptions": "Subscriptions",
+            "aiVoice": "AI Voice Plans",
+            "history": "Package History"
+          },
+          "overview": {
+            "product": {
+              "nexora": "Nexora Touch",
+              "voice": "AI Voice"
+            },
+            "status": {
+              "active": "Active",
+              "expiring": "Expiring soon",
+              "expired": "Expired"
+            },
+            "activated": "Activated",
+            "expires": "Expires",
+            "remaining": "Remaining Time",
+            "autoRenew": "Auto Renew",
+            "autoRenewOn": "ON",
+            "autoRenewOff": "OFF",
+            "autoRenewAria": "Toggle auto renew for {name}",
+            "unit": {
+              "years": "Years",
+              "months": "Months",
+              "days": "Days",
+              "hours": "Hours",
+              "minutes": "Minutes",
+              "seconds": "Seconds"
+            },
+            "owned": {
+              "nexoraProName": "Nexora Pro",
+              "nexoraProDesc": "Owner dashboard, branded tipping, and review automation for your salon.",
+              "voiceProName": "Voice AI Pro",
+              "voiceProDesc": "Voice booking assistant with SMS follow-up and review prompts.",
+              "featOwnerDashboard": "Owner dashboard",
+              "featAutoReview": "Auto review requests",
+              "featLandingPages": "Landing pages",
+              "featVoiceSms": "Voice + SMS booking",
+              "featMinutes": "Included call minutes"
+            }
+          },
+          "compare": {
+            "kicker": "Plan comparison",
+            "title": "Compare Plans",
+            "note": "Built for every stage",
+            "caption": "NEXORA plan feature comparison",
+            "feature": "Feature",
+            "plans": {
+              "starter": "Starter",
+              "pro": "Pro",
+              "enterprise": "Enterprise"
+            },
+            "monthlyPrice": "Monthly price",
+            "activeStaff": "Active staff",
+            "qrTipping": "QR code tipping",
+            "directTips": "Direct staff tips",
+            "googleReviews": "Google reviews",
+            "staffAccounts": "Staff accounts",
+            "customerRewards": "Customer rewards",
+            "neighborCoop": "Neighbor co-op",
+            "multiLocation": "Multi-location",
+            "posSync": "POS / checkout sync",
+            "support": "Support",
+            "unlimited": "Unlimited",
+            "custom": "Custom",
+            "supportEmail": "Email",
+            "supportPriority": "Priority",
+            "supportDedicated": "24/7 dedicated",
+            "branded": "Branded",
+            "premiumNfc": "Premium NFC"
+          },
+          "subscriptions": {
+            "kicker": "NEXORA platform",
+            "title": "Choose the right plan for your salon",
+            "subtitle": "Start with the essentials and unlock more growth tools as your team grows.",
+            "note": "Upgrade anytime"
           }
         }
       }
