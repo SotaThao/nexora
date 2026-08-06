@@ -3,6 +3,7 @@ import {
   Crown,
   History,
   Layers3,
+  Lock,
   MessageCircle,
   PhoneCall,
   RefreshCw,
@@ -74,6 +75,7 @@ import {
   formatPlanPrice,
   indexVoiceAiPackagesByPlan,
   isPaidServicePlanId,
+  isVoiceAiPlanBelowCurrent,
   resolvePackageHistoryDisplayAt,
   resolveVoiceAiPlanId,
   type PaidServicePlanId,
@@ -783,6 +785,7 @@ export default function BookingPlansPanel() {
   const openCheckoutForPlan = (plan: PaidServicePlanId) => {
     if (!isPaidServicePlanId(plan)) return
     if (currentVoicePlanId === plan) return
+    if (isVoiceAiPlanBelowCurrent(plan, currentVoicePlanId)) return
     const pkg = packagesByPlan[plan]
     if (!pkg?.id) {
       showToast(t(`${TK}.planPackageUnavailable`), 'error')
@@ -803,6 +806,7 @@ export default function BookingPlansPanel() {
 
   const handlePlanClick = (plan: PaidServicePlanId) => {
     if (currentVoicePlanId === plan) return
+    if (isVoiceAiPlanBelowCurrent(plan, currentVoicePlanId)) return
     // Match HTML: Starter/Elite open payment; Pro trial is a separate CTA.
     if (plan === VoicePlanTier.Pro) {
       handleTrialClick()
@@ -870,6 +874,21 @@ export default function BookingPlansPanel() {
         disabled
       >
         {t(`${TK}.currentActivePlan`)}
+      </button>
+    </div>
+  )
+
+  const renderLockedPlanCta = () => (
+    <div className="plan-action-stack is-locked-actions">
+      <span className="plan-renew-label is-spacer" aria-hidden="true" />
+      <button
+        className="plan-select-button is-locked"
+        type="button"
+        disabled
+        aria-label={t(`${TK}.planLocked`)}
+      >
+        <Lock aria-hidden="true" className="plan-lock-icon" />
+        {t(`${TK}.planLocked`)}
       </button>
     </div>
   )
@@ -942,13 +961,15 @@ export default function BookingPlansPanel() {
                 if (!pkg) return null
                 const isPro = planId === VoicePlanTier.Pro
                 const isCurrent = currentVoicePlanId === planId
+                const isLocked = isVoiceAiPlanBelowCurrent(planId, currentVoicePlanId)
                 return (
                   <article
                     key={pkg.id || planId}
                     className={[
                       'service-plan-card',
-                      isPro && !isCurrent ? 'is-recommended' : '',
+                      isPro && !isCurrent && !isLocked ? 'is-recommended' : '',
                       isCurrent ? 'is-current-plan' : '',
+                      isLocked ? 'is-locked-plan' : '',
                     ]
                       .filter(Boolean)
                       .join(' ')}
@@ -957,7 +978,7 @@ export default function BookingPlansPanel() {
                     <div className="plan-rec" aria-hidden={!isPro && !isCurrent}>
                       {isCurrent
                         ? t(`${TK}.currentActivePlan`)
-                        : isPro
+                        : isPro && !isLocked
                           ? t(`${TK}.recommended`)
                           : null}
                     </div>
@@ -966,6 +987,8 @@ export default function BookingPlansPanel() {
                     <div className="plan-features">{renderPlanFeatures(planId, pkg)}</div>
                     {isCurrent ? (
                       renderCurrentActivePlanCta()
+                    ) : isLocked ? (
+                      renderLockedPlanCta()
                     ) : isPro ? (
                       <div className="plan-action-stack">
                         <span className="plan-renew-label is-spacer" aria-hidden="true" />

@@ -100,6 +100,28 @@ export function isTipPlatformPlanCurrent(subscription, planId) {
   return code === needle || code.includes(needle) || name.includes(needle)
 }
 
+/** Lowest → highest TipPlatform catalog tiers. */
+export const TIP_PLATFORM_PLAN_ORDER = ['lite', 'starter', 'pro', 'enterprise']
+
+/** Resolve active TipPlatform plan id; prefer higher tiers when matching. */
+export function resolveTipPlatformPlanId(subscription) {
+  if (!subscription || !isUserSubscriptionActive(subscription)) return null
+  for (let i = TIP_PLATFORM_PLAN_ORDER.length - 1; i >= 0; i -= 1) {
+    const planId = TIP_PLATFORM_PLAN_ORDER[i]
+    if (isTipPlatformPlanCurrent(subscription, planId)) return planId
+  }
+  return null
+}
+
+/** True when `planId` is a lower tier than the merchant's active TipPlatform plan. */
+export function isTipPlatformPlanBelowCurrent(planId, currentPlanId) {
+  if (!currentPlanId || !planId) return false
+  const currentRank = TIP_PLATFORM_PLAN_ORDER.indexOf(currentPlanId)
+  const planRank = TIP_PLATFORM_PLAN_ORDER.indexOf(planId)
+  if (currentRank < 0 || planRank < 0) return false
+  return planRank < currentRank
+}
+
 export function getSubscriptionSidebarCopy(subscription, t, locale = 'en') {
   if (!subscription?.packageCode) {
     return { planLabel: null, detailLabel: null }

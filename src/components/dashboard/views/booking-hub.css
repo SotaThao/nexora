@@ -2979,8 +2979,8 @@ body.booking-appointment-panel-modal-open {
     transform 0.2s;
 }
 
-.booking-hub-view .service-plan-card:hover,
-.booking-hub-view .service-plan-card.is-recommended,
+.booking-hub-view .service-plan-card:hover:not(.is-locked-plan):not(.is-current-plan),
+.booking-hub-view .service-plan-card.is-recommended:not(.is-locked-plan),
 .booking-hub-view .service-plan-card.is-selected {
   border-color: rgba(70, 72, 216, 0.38);
   box-shadow: var(--nexora-soft-shadow);
@@ -3142,6 +3142,31 @@ body.booking-appointment-panel-modal-open {
   cursor: default;
 }
 
+.booking-hub-view .plan-select-button.is-locked,
+.booking-hub-view .plan-select-button.is-locked:disabled {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  width: 100%;
+  min-height: 44px;
+  border-color: #d4cfe3;
+  background: #f3f1f8;
+  color: #746f8c;
+  font-size: 13px;
+  font-weight: 800;
+  opacity: 1;
+  box-shadow: none;
+  cursor: not-allowed;
+  transform: none;
+}
+
+.booking-hub-view .plan-lock-icon {
+  width: 16px;
+  height: 16px;
+  flex-shrink: 0;
+}
+
 .booking-hub-view .plan-renew-label {
   display: flex;
   align-items: flex-end;
@@ -3170,6 +3195,20 @@ body.booking-appointment-panel-modal-open {
     0 12px 28px rgba(22, 163, 74, 0.14),
     0 0 0 1px color-mix(in srgb, var(--nexora-success, #16a34a) 18%, transparent);
   transform: none;
+}
+
+.booking-hub-view .service-plan-card.is-locked-plan {
+  opacity: 1;
+  border: 1px solid #d4cfe3;
+  background: #faf9fc;
+  box-shadow: none;
+  transform: none;
+}
+
+.booking-hub-view .service-plan-card.is-locked-plan:hover {
+  border-color: #d4cfe3;
+  transform: none;
+  box-shadow: none;
 }
 
 .booking-hub-view .service-plan-card.is-current-plan:hover {

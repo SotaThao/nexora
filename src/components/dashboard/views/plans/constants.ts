@@ -19,6 +19,23 @@ export const PAID_SERVICE_PLAN_ORDER: PaidServicePlanId[] = [
   VoicePlanTier.Elite,
 ]
 
+/** Rank in `PAID_SERVICE_PLAN_ORDER` (0 = lowest). Unknown → -1. */
+export function getVoiceAiPlanRank(planId: PaidServicePlanId): number {
+  return PAID_SERVICE_PLAN_ORDER.indexOf(planId)
+}
+
+/** True when `planId` is a lower tier than the merchant's active VoiceAI plan. */
+export function isVoiceAiPlanBelowCurrent(
+  planId: PaidServicePlanId,
+  currentPlanId: PaidServicePlanId | null | undefined,
+): boolean {
+  if (!currentPlanId) return false
+  const currentRank = getVoiceAiPlanRank(currentPlanId)
+  const planRank = getVoiceAiPlanRank(planId)
+  if (currentRank < 0 || planRank < 0) return false
+  return planRank < currentRank
+}
+
 /** Sub-views under AI Hub → Plans. */
 export enum PlansView {
   Package = 'package',

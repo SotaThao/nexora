@@ -2816,6 +2816,8 @@
             "selectElite": "Choose Elite",
             "planSelected": "{plan} selected",
             "currentActivePlan": "Current Active Plan",
+            "planLocked": "Not available",
+            "planLockedBadge": "Unavailable",
             "planPaymentSubtitle": "Choose a payment method and review the invoice summary.",
             "planPaymentClose": "Close {plan} checkout",
             "planPaymentMethod": "Payment method",
@@ -4570,6 +4572,8 @@
     "subtitle": "Launch immediately with zero-cost Smart QR checkout cards and automated reviews, then scale to full co-op channels.",
     "current_plan": "Current Plan",
     "current_active_plan": "Current Active Plan",
+    "plan_locked": "Not available",
+    "plan_locked_badge": "Unavailable",
     "upgrade_to_pro": "Upgrade to Pro",
     "price_note_months": "/ {{count}} months",
     "plans": {

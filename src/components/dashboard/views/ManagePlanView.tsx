@@ -4,13 +4,16 @@
 // fields the API leaves null, e.g. Lite's $0 and Enterprise's custom quote).
 // CTAs delegate to the optional onSelectPlan callback. Highlights the merchant's
 // current TipPlatform plan from GET /userprofile/me → business.subscriptions.
-import { Check } from 'lucide-react'
+import { Check, Lock } from 'lucide-react'
+import { useMemo } from 'react'
 import { useTranslation } from '../../../contexts/LanguageContext'
 import type { SubscriptionPackage } from '../../../data/repositories/subscriptionPayments'
 import type { UserSubscription } from '../../../types/domain'
 import {
   getSubscriptionPlanRenewLabel,
+  isTipPlatformPlanBelowCurrent,
   isTipPlatformPlanCurrent,
+  resolveTipPlatformPlanId,
 } from '../../../utils/subscriptionDisplay'
 
 type PlanId = 'lite' | 'starter' | 'pro' | 'enterprise'
@@ -54,6 +57,10 @@ function ManagePlanView({
     t,
     currentLanguage,
   )
+  const currentPlanId = useMemo(
+    () => resolveTipPlatformPlanId(currentSubscription),
+    [currentSubscription],
+  )
 
   return (
     <div className="relative">
@@ -93,6 +100,7 @@ function ManagePlanView({
               ? t('manage_plan.price_note_months', { count: pkg.periodInMonths })
               : t(`${base}.price_note`)
           const isCurrent = isTipPlatformPlanCurrent(currentSubscription, plan.id)
+          const isLocked = isTipPlatformPlanBelowCurrent(plan.id, currentPlanId)
 
           return (
             <article
@@ -101,17 +109,18 @@ function ManagePlanView({
                 'group relative flex flex-col rounded-2xl p-6 transition-all duration-300',
                 isCurrent
                   ? 'border-2 border-nexoraSuccess bg-gradient-to-b from-nexoraSuccess/[0.08] via-nexoraSurface to-nexoraSurface shadow-[0_12px_32px_rgba(22,163,74,0.14)] ring-1 ring-nexoraSuccess/25'
-                  : plan.featured
-                    ? 'border-2 border-nexoraViolet bg-nexoraSurface shadow-premium hover:-translate-y-2 hover:shadow-2xl hover:shadow-nexoraViolet/20 xl:-translate-y-4 xl:hover:-translate-y-6 xl:pb-8'
-                    : 'border border-nexoraBorder bg-nexoraSurfaceMuted hover:-translate-y-1 hover:border-nexoraLavender hover:shadow-nexora-soft',
+                  : isLocked
+                    ? 'border border-nexoraBorder bg-nexoraSurfaceMuted'
+                    : plan.featured
+                      ? 'border-2 border-nexoraViolet bg-nexoraSurface shadow-premium hover:-translate-y-2 hover:shadow-2xl hover:shadow-nexoraViolet/20 xl:-translate-y-4 xl:hover:-translate-y-6 xl:pb-8'
+                      : 'border border-nexoraBorder bg-nexoraSurfaceMuted hover:-translate-y-1 hover:border-nexoraLavender hover:shadow-nexora-soft',
               ].join(' ')}
             >
-              {/* Ribbon — Active plan wins over featured recommend badge */}
               {isCurrent ? (
                 <span className="absolute left-1/2 top-0 max-w-[80%] -translate-x-1/2 -translate-y-1/2 cursor-default rounded-full border border-nexoraSuccess/30 bg-nexoraSuccess px-4 py-1.5 text-center text-[10px] font-extrabold uppercase leading-tight tracking-wider text-white shadow-sm">
                   {t('manage_plan.current_plan')}
                 </span>
-              ) : plan.featured ? (
+              ) : !isLocked && plan.featured ? (
                 <span className="plan-recommend-badge absolute left-1/2 top-0 max-w-[80%] cursor-default rounded-full bg-gradient-to-r from-nexoraElectric to-nexoraViolet px-4 py-1.5 text-center text-[10px] font-extrabold uppercase leading-tight tracking-wider text-white">
                   {t(`${base}.badge`)}
                 </span>
@@ -168,6 +177,16 @@ function ManagePlanView({
                   >
                     <Check className="h-4 w-4" strokeWidth={3} />
                     {t('manage_plan.current_active_plan')}
+                  </button>
+                ) : isLocked ? (
+                  <button
+                    type="button"
+                    disabled
+                    aria-label={t('manage_plan.plan_locked')}
+                    className="flex h-11 w-full cursor-not-allowed items-center justify-center gap-2 rounded-xl border border-[#d4cfe3] bg-[#f3f1f8] text-[13px] font-extrabold text-[#746f8c] opacity-100 shadow-none"
+                  >
+                    <Lock className="h-4 w-4 shrink-0" strokeWidth={2.5} />
+                    {t('manage_plan.plan_locked')}
                   </button>
                 ) : (
                   <button

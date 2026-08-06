@@ -299,11 +299,6 @@ export const BOOKING_HUB_SUBMENU = [
     requiresVoiceTenant: true,
   },
   {
-    id: BookingHubMainTab.QrCodes,
-    labelKey: "components.dashboard.views.BookingHubView.tabs.qrCodes",
-    requiresVoiceTenant: true,
-  },
-  {
     id: BookingHubMainTab.Plans,
     labelKey: "components.dashboard.views.BookingHubView.tabs.plans",
     requiresVoiceTenant: false,

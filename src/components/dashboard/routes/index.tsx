@@ -19,7 +19,7 @@ import type { PurchasableSubscriptionPlan } from '../../../data/repositories/sub
 import { SubscriptionPackageType } from '../../../data/repositories/subscriptionPayments'
 import { useSubscriptionPackages } from '../../../data/hooks/useSubscriptionPayments'
 import { buildSubscriptionBillingDefaultsFromProfile } from '../../../utils/subscriptionBillingDefaults'
-import { getTipPlatformSubscription } from '../../../utils/subscriptionDisplay'
+import { getTipPlatformSubscription, isTipPlatformPlanBelowCurrent, resolveTipPlatformPlanId } from '../../../utils/subscriptionDisplay'
 import BookingHubView from '../views/BookingHubView'
 import AiVoiceSetupGuideView from '../views/AiVoiceSetupGuideView'
 import StaffDetailView from '../../StaffDetailView'
@@ -369,6 +369,10 @@ function planIdToPurchasablePlan(planId: string): PurchasableSubscriptionPlan | 
   return null
 }
 
+function purchasablePlanToPlanId(plan: PurchasableSubscriptionPlan): 'starter' | 'pro' {
+  return plan === 'Pro' ? 'pro' : 'starter'
+}
+
 export function SubscriptionsRoute() {
   const ctx = useOutletContext<LooseObject>()
   const navigate = useNavigate()
@@ -376,6 +380,10 @@ export function SubscriptionsRoute() {
   const tipPlatformSubscription = useMemo(
     () => getTipPlatformSubscription(ctx?.profile),
     [ctx?.profile],
+  )
+  const currentTipPlanId = useMemo(
+    () => resolveTipPlatformPlanId(tipPlatformSubscription),
+    [tipPlatformSubscription],
   )
   const [paymentPlan, setPaymentPlan] = useState<PurchasableSubscriptionPlan | null>(null)
   const { data: packages = [] } = useSubscriptionPackages({
@@ -388,8 +396,15 @@ export function SubscriptionsRoute() {
 
   useEffect(() => {
     const deepLinkPlan = planIdToPurchasablePlan(searchParams.get('plan') ?? '')
-    if (deepLinkPlan) setPaymentPlan(deepLinkPlan)
-  }, [searchParams])
+    if (!deepLinkPlan) return
+    if (isTipPlatformPlanBelowCurrent(
+      purchasablePlanToPlanId(deepLinkPlan),
+      currentTipPlanId,
+    )) {
+      return
+    }
+    setPaymentPlan(deepLinkPlan)
+  }, [searchParams, currentTipPlanId])
 
   const selectedPackage = paymentPlan
     ? packages.find(
@@ -406,6 +421,7 @@ export function SubscriptionsRoute() {
         currentSubscription={tipPlatformSubscription}
         packages={packages}
         onSelectPlan={(planId) => {
+          if (isTipPlatformPlanBelowCurrent(planId, currentTipPlanId)) return
           const purchasablePlan = planIdToPurchasablePlan(planId)
           if (purchasablePlan) {
             setPaymentPlan(purchasablePlan)
