@@ -3,16 +3,21 @@
 // falls back to the i18n copy below while that request is loading (or for the
 // fields the API leaves null, e.g. Lite's $0 and Enterprise's custom quote).
 // CTAs delegate to the optional onSelectPlan callback. Highlights the merchant's
-// current plan when a matching plan id is supplied.
+// current TipPlatform plan from GET /userprofile/me → business.subscriptions.
 import { Check } from 'lucide-react'
 import { useTranslation } from '../../../contexts/LanguageContext'
 import type { SubscriptionPackage } from '../../../data/repositories/subscriptionPayments'
+import type { UserSubscription } from '../../../types/domain'
+import {
+  getSubscriptionPlanRenewLabel,
+  isTipPlatformPlanCurrent,
+} from '../../../utils/subscriptionDisplay'
 
 type PlanId = 'lite' | 'starter' | 'pro' | 'enterprise'
 
 interface ManagePlanViewProps {
-  /** Lowercased identifier of the active plan, used to mark "current plan". */
-  currentPlanId?: string | null
+  /** Active TipPlatform subscription from /userprofile/me. */
+  currentSubscription?: UserSubscription | null
   /** Invoked with the chosen plan id when a CTA is pressed. */
   onSelectPlan?: (planId: PlanId) => void
   /** Packages from the API — undefined while loading. */
@@ -37,11 +42,14 @@ const PLAN_CONFIG: PlanConfig[] = [
   { id: 'enterprise', featureCount: 4 },
 ]
 
-function ManagePlanView({ currentPlanId = null, onSelectPlan, packages }: ManagePlanViewProps) {
+function ManagePlanView({
+  currentSubscription = null,
+  onSelectPlan,
+  packages,
+}: ManagePlanViewProps) {
   const { t, currentLanguage } = useTranslation()
   const isVietnamese = currentLanguage === 'vi'
-
-  const normalizedCurrent = String(currentPlanId ?? '').toLowerCase()
+  const renewLabel = getSubscriptionPlanRenewLabel(currentSubscription, t)
 
   return (
     <div className="relative">
@@ -65,7 +73,7 @@ function ManagePlanView({ currentPlanId = null, onSelectPlan, packages }: Manage
       </header>
 
       {/* Plan grid */}
-      <div className="relative mx-auto mt-12 grid max-w-5xl grid-cols-1 gap-5 px-1 pb-4 md:grid-cols-3 xl:items-stretch">
+      <div className="relative mx-auto mt-12 grid max-w-5xl grid-cols-1 gap-5 px-1 pb-4 md:grid-cols-3 md:items-stretch">
         {PLAN_CONFIG.map((plan) => {
           const base = `manage_plan.plans.${plan.id}`
           const pkg = packages?.find(
@@ -80,25 +88,30 @@ function ManagePlanView({ currentPlanId = null, onSelectPlan, packages }: Manage
             pkg && pkg.periodInMonths !== 1
               ? t('manage_plan.price_note_months', { count: pkg.periodInMonths })
               : t(`${base}.price_note`)
-          const isCurrent =
-            !!normalizedCurrent && normalizedCurrent.includes(plan.id)
+          const isCurrent = isTipPlatformPlanCurrent(currentSubscription, plan.id)
 
           return (
             <article
               key={plan.id}
               className={[
                 'group relative flex flex-col rounded-2xl p-6 transition-all duration-300',
-                plan.featured
-                  ? 'border-2 border-nexoraViolet bg-nexoraSurface shadow-premium hover:-translate-y-2 hover:shadow-2xl hover:shadow-nexoraViolet/20 xl:-translate-y-4 xl:hover:-translate-y-6 xl:pb-8'
-                  : 'border border-nexoraBorder bg-nexoraSurfaceMuted hover:-translate-y-1 hover:border-nexoraLavender hover:shadow-nexora-soft',
+                isCurrent
+                  ? 'border-2 border-nexoraSuccess bg-gradient-to-b from-nexoraSuccess/[0.08] via-nexoraSurface to-nexoraSurface shadow-[0_12px_32px_rgba(22,163,74,0.14)] ring-1 ring-nexoraSuccess/25'
+                  : plan.featured
+                    ? 'border-2 border-nexoraViolet bg-nexoraSurface shadow-premium hover:-translate-y-2 hover:shadow-2xl hover:shadow-nexoraViolet/20 xl:-translate-y-4 xl:hover:-translate-y-6 xl:pb-8'
+                    : 'border border-nexoraBorder bg-nexoraSurfaceMuted hover:-translate-y-1 hover:border-nexoraLavender hover:shadow-nexora-soft',
               ].join(' ')}
             >
-              {/* Ribbon badge straddling the top edge (featured tier only) */}
-              {plan.featured && (
+              {/* Ribbon — Active plan wins over featured recommend badge */}
+              {isCurrent ? (
+                <span className="absolute left-1/2 top-0 max-w-[80%] -translate-x-1/2 -translate-y-1/2 cursor-default rounded-full border border-nexoraSuccess/30 bg-nexoraSuccess px-4 py-1.5 text-center text-[10px] font-extrabold uppercase leading-tight tracking-wider text-white shadow-sm">
+                  {t('manage_plan.current_plan')}
+                </span>
+              ) : plan.featured ? (
                 <span className="plan-recommend-badge absolute left-1/2 top-0 max-w-[80%] cursor-default rounded-full bg-gradient-to-r from-nexoraElectric to-nexoraViolet px-4 py-1.5 text-center text-[10px] font-extrabold uppercase leading-tight tracking-wider text-white">
                   {t(`${base}.badge`)}
                 </span>
-              )}
+              ) : null}
 
               <h2 className="text-lg font-extrabold leading-snug text-nexoraText">
                 {pkg?.name || t(`${base}.name`)}
@@ -131,22 +144,27 @@ function ManagePlanView({ currentPlanId = null, onSelectPlan, packages }: Manage
                 ))}
               </ul>
 
-              {/* CTA */}
-              <div className="mt-6">
-                {isCurrent ? (
-                  <div className="flex flex-col items-center gap-2 w-full">
-                    <button
-                      type="button"
-                      disabled
-                      className="flex h-11 w-full items-center justify-center gap-2 rounded-xl border border-nexoraSuccess bg-nexoraSuccess/10 text-sm font-bold text-nexoraSuccess shadow-nexora-soft"
-                    >
-                      <Check className="h-4 w-4" strokeWidth={3} />
-                      Current Active Plan
-                    </button>
-                    <span className="text-[11px] font-semibold tracking-wide text-nexoraMuted">
-                      Renews: Jun 24, 2026, 08:31 AM
+              {/*
+                CTA footer: renew sits ABOVE the button in a reserved slot so every
+                plan card keeps its primary button on the same baseline row.
+              */}
+              <div className="mt-auto flex flex-col pt-6">
+                <div className="mb-2 flex min-h-[2.75rem] flex-col justify-end">
+                  {isCurrent && renewLabel ? (
+                    <span className="text-center text-[11px] font-semibold leading-snug tracking-wide text-nexoraSuccess/90">
+                      {renewLabel}
                     </span>
-                  </div>
+                  ) : null}
+                </div>
+                {isCurrent ? (
+                  <button
+                    type="button"
+                    disabled
+                    className="flex h-11 w-full items-center justify-center gap-2 rounded-xl border border-nexoraSuccess bg-nexoraSuccess text-sm font-bold text-white shadow-nexora-soft"
+                  >
+                    <Check className="h-4 w-4" strokeWidth={3} />
+                    {t('manage_plan.current_active_plan')}
+                  </button>
                 ) : (
                   <button
                     type="button"
@@ -160,7 +178,11 @@ function ManagePlanView({ currentPlanId = null, onSelectPlan, packages }: Manage
                           : 'border border-nexoraBorder bg-nexoraSurface text-nexoraText hover:border-nexoraBrand hover:text-nexoraBrand',
                     ].join(' ')}
                   >
-                    {plan.featured ? 'Upgrade to Pro' : plan.id === 'enterprise' ? 'Contact Success Sales' : t(`${base}.cta`)}
+                    {plan.featured
+                      ? t('manage_plan.upgrade_to_pro')
+                      : plan.id === 'enterprise'
+                        ? t('manage_plan.plans.enterprise.cta')
+                        : t(`${base}.cta`)}
                   </button>
                 )}
               </div>

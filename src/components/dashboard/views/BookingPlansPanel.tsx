@@ -38,6 +38,7 @@ import {
   useSubscriptionPackages,
   useSubscriptionPurchaseHistory,
 } from '../../../data/hooks/useSubscriptionPayments'
+import { useProfileSettings } from '../../../data/hooks/useProfileSettings'
 import { qk } from '../../../data/queryKeys'
 import { usePagination } from '../../../hooks/usePagination'
 import { getApiErrorCode } from '../../../types/domain'
@@ -74,11 +75,17 @@ import {
   indexVoiceAiPackagesByPlan,
   isPaidServicePlanId,
   resolvePackageHistoryDisplayAt,
+  resolveVoiceAiPlanId,
   type PaidServicePlanId,
   type VoiceAiCheckoutSelection,
 } from './plans/constants'
 import { useNotification } from '../../../contexts/NotificationContext'
 import { getSmsCreditNumberLocale } from './smsCampaigns/constants'
+import {
+  getSubscriptionPlanRenewLabel,
+  getVoiceAiSubscription,
+  isUserSubscriptionActive,
+} from '../../../utils/subscriptionDisplay'
 
 const CREDITS_HISTORY_PAGE_SIZE = 10
 const PACKAGE_HISTORY_SKELETON_ROWS = 5
@@ -700,6 +707,7 @@ export default function BookingPlansPanel() {
   const queryClient = useQueryClient()
   const voiceEnabled = useBookingHubVoiceEnabled()
   const { data: myTrialRequest, isLoading: isTrialRequestLoading } = useMyVoiceTrialRequest()
+  const { data: profile } = useProfileSettings()
   const [selectedPlan, setSelectedPlan] = useState<PaidServicePlanId | null>(null)
   const [trialOpen, setTrialOpen] = useState(false)
   const [checkoutSelection, setCheckoutSelection] = useState<VoiceAiCheckoutSelection | null>(null)
@@ -723,6 +731,20 @@ export default function BookingPlansPanel() {
   const packagesByPlan = useMemo(
     () => indexVoiceAiPackagesByPlan(voicePackages),
     [voicePackages],
+  )
+
+  const voiceAiSubscription = useMemo(() => getVoiceAiSubscription(profile), [profile])
+  const currentVoicePlanId = useMemo(() => {
+    if (!voiceAiSubscription || !isUserSubscriptionActive(voiceAiSubscription)) return null
+    return resolveVoiceAiPlanId({
+      packageCode: voiceAiSubscription.packageCode ?? '',
+      name: voiceAiSubscription.name,
+      plan: voiceAiSubscription.name,
+    })
+  }, [voiceAiSubscription])
+  const voiceRenewLabel = useMemo(
+    () => getSubscriptionPlanRenewLabel(voiceAiSubscription, t),
+    [voiceAiSubscription, t],
   )
 
   const hasExistingTrialRequest = myTrialRequest != null
@@ -769,6 +791,7 @@ export default function BookingPlansPanel() {
 
   const openCheckoutForPlan = (plan: PaidServicePlanId) => {
     if (!isPaidServicePlanId(plan)) return
+    if (currentVoicePlanId === plan) return
     const pkg = packagesByPlan[plan]
     if (!pkg?.id) {
       showToast(t(`${TK}.planPackageUnavailable`), 'error')
@@ -788,6 +811,7 @@ export default function BookingPlansPanel() {
   }
 
   const handlePlanClick = (plan: PaidServicePlanId) => {
+    if (currentVoicePlanId === plan) return
     // Match HTML: Starter/Elite open payment; Pro trial is a separate CTA.
     if (plan === VoicePlanTier.Pro) {
       handleTrialClick()
@@ -803,6 +827,7 @@ export default function BookingPlansPanel() {
     const paymentLabel = payment.name || payment.symbol
     setSelectedPlan(selection.planId)
     setCheckoutSelection(null)
+    void queryClient.invalidateQueries({ queryKey: qk.userProfile() })
     showToast(
       t(`${TK}.planPaymentSuccess`, {
         plan: selection.planId,
@@ -840,6 +865,23 @@ export default function BookingPlansPanel() {
       </>
     )
   }
+
+  const renderCurrentActivePlanCta = () => (
+    <div className="plan-action-stack is-current-actions">
+      {voiceRenewLabel ? (
+        <span className="plan-renew-label">{voiceRenewLabel}</span>
+      ) : (
+        <span className="plan-renew-label is-spacer" aria-hidden="true" />
+      )}
+      <button
+        className="plan-select-button is-current"
+        type="button"
+        disabled
+      >
+        {t(`${TK}.currentActivePlan`)}
+      </button>
+    </div>
+  )
 
   return (
     <>
@@ -908,26 +950,35 @@ export default function BookingPlansPanel() {
                 const pkg = packagesByPlan[planId]
                 if (!pkg) return null
                 const isPro = planId === VoicePlanTier.Pro
+                const isCurrent = currentVoicePlanId === planId
                 return (
                   <article
                     key={pkg.id || planId}
                     className={[
                       'service-plan-card',
                       isPro ? 'is-recommended' : '',
-                      selectedPlan === planId ? 'is-selected' : '',
+                      isCurrent || selectedPlan === planId ? 'is-selected' : '',
+                      isCurrent ? 'is-current-plan' : '',
                     ]
                       .filter(Boolean)
                       .join(' ')}
                     data-plan-card={planId.toLowerCase()}
                   >
-                    <div className="plan-rec" aria-hidden={!isPro}>
-                      {isPro ? t(`${TK}.recommended`) : null}
+                    <div className="plan-rec" aria-hidden={!isPro && !isCurrent}>
+                      {isCurrent
+                        ? t(`${TK}.currentActivePlan`)
+                        : isPro
+                          ? t(`${TK}.recommended`)
+                          : null}
                     </div>
                     <div className="service-plan-name">{pkg.name || planId}</div>
                     {renderPlanPrice(planId, pkg)}
                     <div className="plan-features">{renderPlanFeatures(planId, pkg)}</div>
-                    {isPro ? (
+                    {isCurrent ? (
+                      renderCurrentActivePlanCta()
+                    ) : isPro ? (
                       <div className="plan-action-stack">
+                        <span className="plan-renew-label is-spacer" aria-hidden="true" />
                         <button
                           className={`plan-select-button ${isPlanButtonPrimary(VoicePlanTier.Pro) ? 'is-primary' : ''}`}
                           type="button"
@@ -947,13 +998,16 @@ export default function BookingPlansPanel() {
                         </button>
                       </div>
                     ) : (
-                      <button
-                        className={`plan-select-button ${isPlanButtonPrimary(planId) ? 'is-primary' : ''}`}
-                        type="button"
-                        onClick={() => handlePlanClick(planId)}
-                      >
-                        {getPlanButtonLabel(planId)}
-                      </button>
+                      <div className="plan-action-stack">
+                        <span className="plan-renew-label is-spacer" aria-hidden="true" />
+                        <button
+                          className={`plan-select-button ${isPlanButtonPrimary(planId) ? 'is-primary' : ''}`}
+                          type="button"
+                          onClick={() => handlePlanClick(planId)}
+                        >
+                          {getPlanButtonLabel(planId)}
+                        </button>
+                      </div>
                     )}
                   </article>
                 )

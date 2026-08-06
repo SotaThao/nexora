@@ -550,8 +550,12 @@ export interface ReviewRecord extends DomainEntity {
   [key: string]: unknown
 }
 
+/** One row from GET /api/v1/userprofile/me → `business.subscriptions[]`. */
 export interface UserSubscription {
+  /** Wire: TipPlatform | VoiceAI */
+  packageType?: string
   packageCode?: string
+  name?: string
   status?: string
   trialEndsAt?: string | null
   currentPeriodEnd?: string | null
@@ -583,7 +587,13 @@ export interface UserProfile {
   staffId?: string
   hasCompletedOnboarding?: boolean
   referralCode?: string
+  /**
+   * TipPlatform subscription (sidebar / Touch plans).
+   * Prefer reading `subscriptions` + packageType when multiple products exist.
+   */
   subscription?: UserSubscription | null
+  /** Normalized `business.subscriptions` from /userprofile/me. */
+  subscriptions?: UserSubscription[]
   createdAt?: string | null
   [key: string]: unknown
 }

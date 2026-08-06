@@ -16,8 +16,10 @@ import ComingSoon from '../views/ComingSoon'
 import ManagePlanView from '../views/ManagePlanView'
 import SubscriptionPaymentModal from '../modals/SubscriptionPaymentModal'
 import type { PurchasableSubscriptionPlan } from '../../../data/repositories/subscriptionPayments'
+import { SubscriptionPackageType } from '../../../data/repositories/subscriptionPayments'
 import { useSubscriptionPackages } from '../../../data/hooks/useSubscriptionPayments'
 import { buildSubscriptionBillingDefaultsFromProfile } from '../../../utils/subscriptionBillingDefaults'
+import { getTipPlatformSubscription } from '../../../utils/subscriptionDisplay'
 import BookingHubView from '../views/BookingHubView'
 import AiVoiceSetupGuideView from '../views/AiVoiceSetupGuideView'
 import StaffDetailView from '../../StaffDetailView'
@@ -371,9 +373,14 @@ export function SubscriptionsRoute() {
   const ctx = useOutletContext<LooseObject>()
   const navigate = useNavigate()
   const [searchParams] = useSearchParams()
-  const currentPlanId = ctx?.profile?.subscription?.packageCode ?? null
+  const tipPlatformSubscription = useMemo(
+    () => getTipPlatformSubscription(ctx?.profile),
+    [ctx?.profile],
+  )
   const [paymentPlan, setPaymentPlan] = useState<PurchasableSubscriptionPlan | null>(null)
-  const { data: packages = [] } = useSubscriptionPackages()
+  const { data: packages = [] } = useSubscriptionPackages({
+    packageType: SubscriptionPackageType.TipPlatform,
+  })
   const billingDefaults = useMemo(
     () => buildSubscriptionBillingDefaultsFromProfile(ctx?.profile),
     [ctx?.profile],
@@ -396,7 +403,7 @@ export function SubscriptionsRoute() {
   return (
     <>
       <ManagePlanView
-        currentPlanId={currentPlanId}
+        currentSubscription={tipPlatformSubscription}
         packages={packages}
         onSelectPlan={(planId) => {
           const purchasablePlan = planIdToPurchasablePlan(planId)

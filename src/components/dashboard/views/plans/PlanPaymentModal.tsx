@@ -41,6 +41,9 @@ import {
 
 const TK = 'components.dashboard.views.BookingHubView.plans'
 
+/** Stable fallback — `data ?? []` would allocate a new array every render and retrigger effects. */
+const EMPTY_PAYMENT_METHODS: SubscriptionPaymentMethod[] = []
+
 type Props = {
   open: boolean
   selection: VoiceAiCheckoutSelection | null
@@ -106,7 +109,7 @@ export default function PlanPaymentModal({
   const initializeCardMutation = useInitializeCardPayment()
 
   const {
-    data: methods = [],
+    data: methodsData,
     isLoading: isMethodsLoading,
     isError: isMethodsError,
     error: methodsError,
@@ -114,6 +117,7 @@ export default function PlanPaymentModal({
   } = useSubscriptionPaymentMethods({
     enabled: isOpen && !isCardPayment,
   })
+  const methods = methodsData ?? EMPTY_PAYMENT_METHODS
 
   useCheckoutModalLock({
     open: isOpen,
@@ -122,13 +126,18 @@ export default function PlanPaymentModal({
     closeButtonRef: closeBtnRef,
   })
 
+  // Reset local checkout state only when the modal actually closes — calling
+  // mutation.reset() on every closed render caused Maximum update depth loops.
   useEffect(() => {
-    if (!isOpen) {
-      setSelectedSymbol(null)
-      resetCardOrderPolling()
-      initializeCardMutation.reset()
-      return
-    }
+    if (isOpen) return
+    setSelectedSymbol(null)
+    resetCardOrderPolling()
+    initializeCardMutation.reset()
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- intentional: run on open→closed only
+  }, [isOpen])
+
+  useEffect(() => {
+    if (!isOpen) return
     if (selectedSymbol) return
     if (methods.length > 0) {
       setSelectedSymbol(methods[0].symbol)
@@ -137,7 +146,6 @@ export default function PlanPaymentModal({
     if (!isMethodsLoading && !isMethodsError) {
       setSelectedSymbol(PLAN_CARD_PAYMENT_SYMBOL)
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isOpen, methods, isMethodsLoading, isMethodsError, selectedSymbol])
 
   useEffect(() => {

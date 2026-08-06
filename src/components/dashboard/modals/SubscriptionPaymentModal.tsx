@@ -9,7 +9,10 @@ import {
   useInitializeCardPayment,
 } from '../../../data/hooks/useSubscriptionPayments'
 import { resolveTranslatedApiError } from '../../../utils/resolveTranslatedApiError'
-import type { PurchasableSubscriptionPlan } from '../../../data/repositories/subscriptionPayments'
+import type {
+  PurchasableSubscriptionPlan,
+  SubscriptionPaymentMethod,
+} from '../../../data/repositories/subscriptionPayments'
 import { formatCurrency } from '../utils'
 import SubscriptionCardPaymentForm, {
   type SubscriptionBillingDetails,
@@ -24,6 +27,9 @@ const PLAN_ID: Record<PurchasableSubscriptionPlan, string> = {
   Starter: 'starter',
   Pro: 'pro',
 }
+
+/** Stable fallback — avoid `data ?? []` allocating a new array each render. */
+const EMPTY_PAYMENT_METHODS: SubscriptionPaymentMethod[] = []
 
 type PaymentTab = 'wallet' | 'card'
 
@@ -66,27 +72,30 @@ export default function SubscriptionPaymentModal({
   } = useSubscriptionCardOrderPoll({ onPaid: handleCardOrderPaid })
 
   const {
-    data: methods = [],
+    data: methodsData,
     isLoading: isMethodsLoading,
     isError: isMethodsError,
     refetch: refetchMethods,
   } = useSubscriptionPaymentMethods({ enabled: isOpen && paymentTab === 'wallet' })
+  const methods = methodsData ?? EMPTY_PAYMENT_METHODS
 
   const purchaseMutation = usePurchaseSubscription()
   const initializeCardMutation = useInitializeCardPayment()
 
   useEffect(() => {
-    if (!isOpen) {
-      setSelectedSymbol(null)
-      setPaymentTab('wallet')
-      resetCardOrderPolling()
-      initializeCardMutation.reset()
-      return
-    }
+    if (isOpen) return
+    setSelectedSymbol(null)
+    setPaymentTab('wallet')
+    resetCardOrderPolling()
+    initializeCardMutation.reset()
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- run on open→closed only
+  }, [isOpen])
+
+  useEffect(() => {
+    if (!isOpen) return
     if (!selectedSymbol && methods.length > 0) {
       setSelectedSymbol(methods[0].symbol)
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isOpen, methods, selectedSymbol])
 
   useEffect(() => {

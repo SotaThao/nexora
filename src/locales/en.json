@@ -2815,6 +2815,7 @@
             "everythingInPro": "Everything in Pro",
             "selectElite": "Choose Elite",
             "planSelected": "{plan} selected",
+            "currentActivePlan": "Current Active Plan",
             "planPaymentSubtitle": "Choose a payment method and review the invoice summary.",
             "planPaymentClose": "Close {plan} checkout",
             "planPaymentMethod": "Payment method",
@@ -4568,6 +4569,8 @@
     "title": "Find the Perfect Alignment for Your Team",
     "subtitle": "Launch immediately with zero-cost Smart QR checkout cards and automated reviews, then scale to full co-op channels.",
     "current_plan": "Current Plan",
+    "current_active_plan": "Current Active Plan",
+    "upgrade_to_pro": "Upgrade to Pro",
     "price_note_months": "/ {{count}} months",
     "plans": {
       "lite": {

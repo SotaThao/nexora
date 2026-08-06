@@ -3133,6 +3133,61 @@ body.booking-appointment-panel-modal-open {
   box-shadow: none;
 }
 
+.booking-hub-view .plan-select-button.is-current {
+  border-color: transparent;
+  background: var(--nexora-success, #16a34a);
+  color: #fff;
+  opacity: 1;
+  box-shadow: 0 10px 22px rgba(22, 163, 74, 0.22);
+  cursor: default;
+}
+
+.booking-hub-view .plan-renew-label {
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  min-height: 2.75rem;
+  text-align: center;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  line-height: 1.35;
+  color: var(--nexora-success, #16a34a);
+}
+
+.booking-hub-view .plan-renew-label.is-spacer {
+  visibility: hidden;
+}
+
+.booking-hub-view .service-plan-card.is-current-plan {
+  border: 2px solid color-mix(in srgb, var(--nexora-success, #16a34a) 70%, #fff);
+  background: linear-gradient(
+    160deg,
+    color-mix(in srgb, var(--nexora-success, #16a34a) 12%, #fff),
+    #fff 48%
+  );
+  box-shadow:
+    0 12px 28px rgba(22, 163, 74, 0.14),
+    0 0 0 1px color-mix(in srgb, var(--nexora-success, #16a34a) 18%, transparent);
+  transform: none;
+}
+
+.booking-hub-view .service-plan-card.is-current-plan:hover {
+  border-color: color-mix(in srgb, var(--nexora-success, #16a34a) 80%, #fff);
+  box-shadow:
+    0 14px 30px rgba(22, 163, 74, 0.18),
+    0 0 0 1px color-mix(in srgb, var(--nexora-success, #16a34a) 22%, transparent);
+  transform: none;
+}
+
+.booking-hub-view .service-plan-card.is-current-plan .plan-rec {
+  color: var(--nexora-success, #16a34a);
+}
+
+.booking-hub-view .plan-action-stack.is-current-actions {
+  gap: 8px;
+}
+
 .booking-hub-view .roi-panel,
 .booking-hub-view .guarantee-panel {
   position: relative;

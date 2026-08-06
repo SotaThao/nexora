@@ -2815,6 +2815,7 @@
             "everythingInPro": "Tất cả trong Pro",
             "selectElite": "Chọn Elite",
             "planSelected": "Đã chọn {plan}",
+            "currentActivePlan": "Gói đang kích hoạt",
             "planPaymentSubtitle": "Chọn phương thức thanh toán và xem tóm tắt hoá đơn.",
             "planPaymentClose": "Đóng thanh toán {plan}",
             "planPaymentMethod": "Phương thức thanh toán",
@@ -4563,6 +4564,8 @@
     "title": "Tìm Gói Phù Hợp Nhất Cho Đội Ngũ Của Bạn",
     "subtitle": "Bắt đầu ngay với thẻ thanh toán Smart QR miễn phí và đánh giá tự động, sau đó mở rộng lên kênh hợp tác toàn diện.",
     "current_plan": "Gói hiện tại",
+    "current_active_plan": "Gói đang kích hoạt",
+    "upgrade_to_pro": "Nâng cấp lên Pro",
     "price_note_months": "/ {{count}} tháng",
     "plans": {
       "lite": {

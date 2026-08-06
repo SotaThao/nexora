@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react'
 import { useQueryClient } from '@tanstack/react-query'
-import { Link, useSearchParams } from 'react-router-dom'
+import { Link, useLocation, useSearchParams } from 'react-router-dom'
 import { ArrowUpRight } from 'lucide-react'
 import { useTranslation } from '../../../contexts/LanguageContext'
 import { useMerchantVoiceTenantStatus } from '../../../data/hooks/useMerchantVoiceBookings'
@@ -34,6 +34,7 @@ import {
   parseBookingHubSubTab,
 } from '../../../data/repositories/merchantVoice'
 import {
+  BOOKING_HUB_PATH,
   BOOKING_HUB_SETUP_GUIDE_PATH,
   getDefaultBookingHubTab,
   isBookingHubMainTabAllowed,
@@ -61,17 +62,27 @@ function CalendarIcon() {
   )
 }
 
+function isBookingHubLocation(pathname: string): boolean {
+  return pathname === BOOKING_HUB_PATH || pathname.startsWith(`${BOOKING_HUB_PATH}/`)
+}
+
 export default function BookingHubView() {
   const { t } = useTranslation()
   const queryClient = useQueryClient()
+  const location = useLocation()
   const [searchParams, setSearchParams] = useSearchParams()
   const { data: tenantStatus, isLoading: isTenantStatusLoading } = useMerchantVoiceTenantStatus()
   const hasVoiceTenant = tenantStatus?.hasVoiceTenant === true
   const voiceFeaturesEnabled = hasVoiceTenant && !isTenantStatusLoading
   const [activeMainTab, setActiveMainTab] = useState<BookingHubMainTab>(BookingHubMainTab.Plans)
   const [activeSubtab, setActiveSubtab] = useState<BookingHubSubTab>(BookingHubSubTab.Today)
+  const onBookingHubRoute = isBookingHubLocation(location.pathname)
 
   useEffect(() => {
+    // With v7_startTransition, this view can stay mounted briefly after the URL
+    // already left /dashboard/ai-hub. Do not rewrite search params on other routes
+    // (e.g. Manage Plan → /dashboard/subscriptions) or navigation appears stuck.
+    if (!onBookingHubRoute) return
     if (isTenantStatusLoading) return
 
     const mainTab = searchParams.get('tab')
@@ -104,9 +115,16 @@ export default function BookingHubView() {
 
     setActiveMainTab(parsedMainTab)
     setActiveSubtab(parsedSubTab)
-  }, [hasVoiceTenant, isTenantStatusLoading, searchParams, setSearchParams])
+  }, [
+    onBookingHubRoute,
+    hasVoiceTenant,
+    isTenantStatusLoading,
+    searchParams,
+    setSearchParams,
+  ])
 
   useEffect(() => {
+    if (!onBookingHubRoute) return
     if (isTenantStatusLoading || hasVoiceTenant) return
 
     void queryClient.removeQueries({
@@ -115,12 +133,13 @@ export default function BookingHubView() {
         return root === 'merchantVoice' && scope !== 'tenant'
       },
     })
-  }, [hasVoiceTenant, isTenantStatusLoading, queryClient])
+  }, [onBookingHubRoute, hasVoiceTenant, isTenantStatusLoading, queryClient])
 
   const updateQueryTabs = (
     mainTab: BookingHubMainTab,
     subTab: BookingHubSubTab = activeSubtab,
   ) => {
+    if (!onBookingHubRoute) return
     if (!isBookingHubMainTabAllowed(mainTab, hasVoiceTenant)) {
       return
     }

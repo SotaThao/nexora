@@ -6,6 +6,7 @@ import { ArrowLeft } from 'lucide-react'
 
 // 3. Internal — utils → contexts → data/constants → hooks → layout → views → modals → ui
 import { logger } from '../utils/logger'
+import { getTipPlatformSubscription } from '../utils/subscriptionDisplay'
 import { resolveMerchantStaffTipQr, toLocalCustomerTouchUrl } from '../utils/staffTipUrl'
 import { resolveAssignedStaffProfileId } from '../utils/touchpointTypes'
 import { useTranslation } from '../contexts/LanguageContext'
@@ -323,6 +324,7 @@ export default function Dashboard({
       setProfile((prev) => ({
         ...buildFallbackProfile(storeInfo, reviewInfo),
         subscription: prev?.subscription ?? null,
+        subscriptions: prev?.subscriptions ?? [],
       }))
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -367,7 +369,10 @@ export default function Dashboard({
   const [selectedLeaderboardStaff, setSelectedLeaderboardStaff] = useState<any | null>(null)
 
   const businessName = profile?.businessName || setupData?.businessInfo?.name || merchantSetupData?.businessInfo?.name || ''
-  const userSubscription = profileSettingsData?.subscription ?? profile?.subscription ?? null
+  const userSubscription =
+    getTipPlatformSubscription(profileSettingsData)
+    ?? getTipPlatformSubscription(profile)
+    ?? null
   const businessSlug =
     merchantSetupData?.businessInfo?.slug ||
     setupData?.businessInfo?.slug ||
