@@ -31,7 +31,7 @@ export default function BookingCards({
           <div key={booking.bookingId} className="nexora-card space-y-2 p-4">
             <div className="flex items-start justify-between gap-2">
               <p className="text-sm font-bold text-nexoraText">{booking.customerName}</p>
-              <span className="shrink-0 rounded-full bg-nexoraCanvas px-2 py-0.5 text-[10px] font-bold text-nexoraText">
+              <span className="shrink-0 whitespace-nowrap rounded-full bg-nexoraCanvas px-2 py-0.5 text-[10px] font-bold text-nexoraText">
                 {t(p + statusLabelKey(booking.status))}
               </span>
             </div>

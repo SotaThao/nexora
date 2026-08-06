@@ -48,8 +48,8 @@ export default function BookingTable({
                 <td className="px-3 py-2 text-nexoraMuted">
                   {booking.technicianNames.length > 0 ? booking.technicianNames.join(', ') : t(p + 'unassigned')}
                 </td>
-                <td className="px-3 py-2">
-                  <span className="rounded-full bg-nexoraCanvas px-2 py-0.5 text-[10px] font-bold text-nexoraText">
+                <td className="whitespace-nowrap px-3 py-2">
+                  <span className="whitespace-nowrap rounded-full bg-nexoraCanvas px-2 py-0.5 text-[10px] font-bold text-nexoraText">
                     {t(p + statusLabelKey(booking.status))}
                   </span>
                 </td>
