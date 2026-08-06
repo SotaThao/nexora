@@ -5,6 +5,7 @@ type AckPendingPayment = {
   id: string
   status?: unknown
   customerConfirmedAt?: string | null
+  merchantConfirmedAt?: string | null
   createdAt: string
 }
 

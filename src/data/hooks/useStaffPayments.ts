@@ -78,9 +78,9 @@ export function useStaffPaymentStats(
 export function useAcknowledgeStaffPayment() {
   const queryClient = useQueryClient()
 
-  return useMutation<void, Error, string>({
-    mutationFn: (paymentId) => staffPaymentsRepository.acknowledge(paymentId),
-    onSuccess: (_data, paymentId) => {
+  return useMutation<void, Error, { paymentId: string; isForce?: boolean }>({
+    mutationFn: ({ paymentId, isForce }) => staffPaymentsRepository.acknowledge(paymentId, { isForce }),
+    onSuccess: (_data, { paymentId }) => {
       queryClient.setQueriesData<StaffPaymentsListPage>(
         { queryKey: ['staffPayments', 'list'] },
         (old) => {
