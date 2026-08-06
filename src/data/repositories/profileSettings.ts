@@ -4,9 +4,12 @@
 
 import httpClient from '../../lib/httpClient'
 import { isApiError } from '../../types/domain'
-import type { UserProfile, UserSubscription } from '../../types/domain'
+import type { LooseObject, UserProfile, UserSubscription } from '../../types/domain'
 import type { UpdateStaffProfileDto, UpdateUserProfileDto } from '../../types/repositories'
 import { getUserProfileImageUrl } from '../../utils/userProfileImage'
+import {
+  getTipPlatformSubscription,
+} from '../../utils/subscriptionDisplay'
 
 type HttpClient = typeof httpClient
 
@@ -30,28 +33,59 @@ export type InitializeKybResponse = {
 /** @deprecated Use InitializeKybResponse */
 export type RegisterKybResponse = InitializeKybResponse
 
-function normalizeSubscription(raw: LooseObject | null | undefined): UserSubscription | null {
-  const business = raw?.business as LooseObject | undefined
-  const sub =
-    raw?.subscription ??
-    raw?.Subscription ??
-    business?.subscription ??
-    business?.Subscription
-  if (!sub || typeof sub !== 'object') return null
+function readStringField(raw: LooseObject, camel: string, pascal: string): string | undefined {
+  const value = raw[camel] ?? raw[pascal]
+  if (value == null || value === '') return undefined
+  return String(value)
+}
 
-  const packageCode = sub.packageCode ?? sub.PackageCode
+function normalizeOneSubscription(raw: LooseObject | null | undefined): UserSubscription | null {
+  if (!raw || typeof raw !== 'object') return null
+  const packageCode = readStringField(raw, 'packageCode', 'PackageCode')
   if (!packageCode) return null
 
   return {
-    packageCode: String(packageCode),
-    status: sub.status ?? sub.Status ? String(sub.status ?? sub.Status) : undefined,
-    trialEndsAt: sub.trialEndsAt ?? sub.TrialEndsAt ?? null,
-    currentPeriodEnd: sub.currentPeriodEnd ?? sub.CurrentPeriodEnd ?? null,
+    packageType: readStringField(raw, 'packageType', 'PackageType'),
+    packageCode,
+    name: readStringField(raw, 'name', 'Name'),
+    status: readStringField(raw, 'status', 'Status'),
+    trialEndsAt: (raw.trialEndsAt ?? raw.TrialEndsAt ?? null) as string | null,
+    currentPeriodEnd: (raw.currentPeriodEnd ?? raw.CurrentPeriodEnd ?? null) as string | null,
   }
 }
 
+/**
+ * Prefer `business.subscriptions[]` from /userprofile/me.
+ * Falls back to legacy single `subscription` / `business.subscription`.
+ */
+function normalizeSubscriptions(raw: LooseObject | null | undefined): UserSubscription[] {
+  const business = raw?.business as LooseObject | undefined
+  const list = business?.subscriptions ?? business?.Subscriptions ?? raw?.subscriptions ?? raw?.Subscriptions
+
+  if (Array.isArray(list)) {
+    return list
+      .map((item) => normalizeOneSubscription(item as LooseObject))
+      .filter((item): item is UserSubscription => item != null)
+  }
+
+  const legacy =
+    normalizeOneSubscription(
+      (raw?.subscription ??
+        raw?.Subscription ??
+        business?.subscription ??
+        business?.Subscription) as LooseObject | undefined,
+    )
+  return legacy ? [legacy] : []
+}
+
+/** Sidebar / Touch default: TipPlatform only — never VoiceAI (AI Hub plans). */
+function pickDefaultSubscription(subscriptions: UserSubscription[]): UserSubscription | null {
+  return getTipPlatformSubscription({ subscriptions })
+}
+
 function normalizeUserProfile(response: UserProfile): UserProfile {
-  const subscription = normalizeSubscription(response as LooseObject)
+  const subscriptions = normalizeSubscriptions(response as LooseObject)
+  const subscription = pickDefaultSubscription(subscriptions)
   const profileImageUrl = getUserProfileImageUrl(response)
   const raw = response as LooseObject
   const createdAt =
@@ -59,9 +93,19 @@ function normalizeUserProfile(response: UserProfile): UserProfile {
     (typeof raw.CreatedAt === 'string' && raw.CreatedAt) ||
     null
 
+  // Keep business.subscriptions aligned with normalized rows for callers that read nested shape.
+  const business = response.business
+    ? {
+        ...response.business,
+        subscriptions,
+      }
+    : response.business
+
   return {
     ...response,
-    ...(subscription ? { subscription } : {}),
+    business,
+    subscriptions,
+    ...(subscription ? { subscription } : { subscription: null }),
     ...(profileImageUrl ? { profileImageUrl } : {}),
     createdAt,
   }

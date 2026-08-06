@@ -5,7 +5,8 @@ import { useNavigate, useSearchParams } from 'react-router-dom'
 import { ChevronUp, ChevronDown, LogOut } from 'lucide-react'
 import { useTranslation } from '../../../contexts/LanguageContext'
 import { useOpenProductManagement } from '../../../data/hooks/useOpenProductManagement'
-import { visibleMenuItems, MERCHANT_SIDEBAR_MENU_ITEMS, isPaymentsPayoutsRouteActive, getVisibleBookingHubSubmenu, isBookingHubSubActive, VISIBLE_TOUCHPOINTS_SUBMENU, GIFT_CARD_CENTER_SUBMENU, DASHBOARD_MENU, DASHBOARD_MENU_ID, bookingHubPath, getDefaultBookingHubTab, getDashboardMenuLocalizedLabel, isDashboardStaffRole } from '../constants'
+import { visibleMenuItems, MERCHANT_SIDEBAR_MENU_ITEMS, isPaymentsPayoutsRouteActive, getVisibleBookingHubSubmenu, isBookingHubSubActive, VISIBLE_TOUCHPOINTS_SUBMENU, GIFT_CARD_CENTER_SUBMENU, DASHBOARD_MENU, DASHBOARD_MENU_ID, bookingHubPath, buildDashboardMenuPath, packageManagementPath, getDefaultBookingHubTab, getDashboardMenuLocalizedLabel, isDashboardStaffRole } from '../constants'
+import { PackageManagementTab } from '../views/packageManagement/constants'
 import { handleExpandableMenuClick } from '../hooks/expandableMenuNav'
 import MenuIcon from '../../ui/MenuIcon'
 import HomepageLink from '../../ui/HomepageLink'
@@ -13,7 +14,7 @@ import LanguageSwitcher from '../../ui/LanguageSwitcher'
 import SidebarPlanCard from '../../ui/SidebarPlanCard'
 import PaymentsPayoutsMenuSection from './PaymentsPayoutsMenuSection'
 import { useMerchantVoiceTenantStatus } from '../../../data/hooks/useMerchantVoiceBookings'
-import { getSubscriptionSidebarCopy } from '../../../utils/subscriptionDisplay'
+import { getSubscriptionSidebarCopy, getTipPlatformSubscription } from '../../../utils/subscriptionDisplay'
 import {
   SIDEBAR_SHELL_CLASS,
   SIDEBAR_NAV_CLASS,
@@ -121,7 +122,8 @@ export default function DashboardSidebar({
   }
 
   const subscriptionCopy = getSubscriptionSidebarCopy(
-    subscription ?? profile?.subscription,
+    // Sidebar plan = TipPlatform (/dashboard/subscriptions), never VoiceAI (AI Hub).
+    subscription ?? getTipPlatformSubscription(profile),
     t,
     currentLanguage,
   )
@@ -332,7 +334,10 @@ export default function DashboardSidebar({
         {userRole !== 'staff' && (
           <SidebarPlanCard
             subscriptionCopy={subscriptionCopy}
-            onManagePlan={() => setActiveMenu('subscriptions')}
+            onManagePlan={() => {
+              // Absolute path — avoid AI Hub setSearchParams racing this nav under startTransition.
+              navigate(packageManagementPath(PackageManagementTab.Subscriptions))
+            }}
             t={t}
           />
         )}

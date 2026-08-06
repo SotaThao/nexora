@@ -24,6 +24,7 @@ import {
   StaffRoute,
   SubscriptionsRoute,
   SupportRoute,
+  PackageManagementRoute,
   TipsRoute,
   TouchpointsRoute,
 } from "../components/dashboard/routes";
@@ -267,6 +268,7 @@ export default function AppRouter() {
             <Route path={DASHBOARD_MENU_ID.settings} element={<SettingsRoute />} />
             <Route path={`${DASHBOARD_MENU_ID.settings}/:tab`} element={<SettingsRoute />} />
             <Route path={DASHBOARD_MENU_ID.subscriptions} element={<SubscriptionsRoute />} />
+            <Route path={DASHBOARD_MENU_ID.packageManagement} element={<PackageManagementRoute />} />
             <Route path={DASHBOARD_MENU_ID.support} element={<SupportRoute />} />
             <Route path="*" element={<FallbackRoute />} />
           </Route>

@@ -1,28 +1,60 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { qk } from '../queryKeys'
 import subscriptionPaymentsRepository, {
+  SubscriptionPackageType,
+  SubscriptionPaymentStatus,
   type InitializeCardPaymentResult,
+  type PurchasePackageByIdResult,
   type PurchaseSubscriptionResult,
   type SubscriptionPackage,
+  type SubscriptionMyPackage,
   type SubscriptionPaymentMethod,
   type SubscriptionPurchaseHistoryItem,
 } from '../repositories/subscriptionPayments'
 
-const CARD_PAYMENT_POLL_INTERVAL_MS = 3_000
+const CARD_PAYMENT_POLL_INTERVAL_MS = 2_000
 
-export function useSubscriptionPackages({ enabled = true } = {}) {
+export function useSubscriptionPackages({
+  enabled = true,
+  packageType,
+  staleTime = 60_000,
+  refetchOnMount,
+}: {
+  enabled?: boolean
+  packageType?: SubscriptionPackageType
+  staleTime?: number
+  refetchOnMount?: boolean | 'always'
+} = {}) {
   return useQuery<SubscriptionPackage[]>({
-    queryKey: qk.merchantSubscriptionPackages(),
-    queryFn: () => subscriptionPaymentsRepository.getPackages(),
+    queryKey: qk.merchantSubscriptionPackages(packageType),
+    queryFn: () => subscriptionPaymentsRepository.getPackages(packageType),
     enabled,
-    staleTime: 60_000,
+    staleTime,
+    refetchOnMount,
   })
 }
 
-export function usePublicSubscriptionPackages({ enabled = true } = {}) {
+/** GET `/api/v1/merchant/subscriptions/my-packages`. */
+export function useSubscriptionMyPackages({ enabled = true }: { enabled?: boolean } = {}) {
+  return useQuery<SubscriptionMyPackage[]>({
+    queryKey: qk.merchantSubscriptionMyPackages(),
+    queryFn: () => subscriptionPaymentsRepository.getMyPackages(),
+    enabled,
+    staleTime: 30_000,
+    refetchOnMount: true,
+  })
+}
+
+export function usePublicSubscriptionPackages({
+  enabled = true,
+  packageType,
+}: {
+  enabled?: boolean
+  packageType?: SubscriptionPackageType
+} = {}) {
   return useQuery<SubscriptionPackage[]>({
-    queryKey: qk.publicSubscriptionPackages(),
-    queryFn: () => subscriptionPaymentsRepository.getPublicPackages(),
+    queryKey: qk.publicSubscriptionPackages(packageType),
+    queryFn: () => subscriptionPaymentsRepository.getPublicPackages(packageType),
     enabled,
     staleTime: 60_000,
   })
@@ -33,10 +65,23 @@ export function useSubscriptionPaymentMethods({ enabled = true } = {}) {
     queryKey: qk.merchantSubscriptionPaymentMethods(),
     queryFn: () => subscriptionPaymentsRepository.getPaymentMethods(),
     enabled,
-    staleTime: 60_000,
+    // Balances change after purchases — always refetch on mount, never reuse stale cache.
+    staleTime: 0,
+    refetchOnMount: 'always',
   })
 }
 
+/** GET `/api/v1/merchant/subscriptions/purchase-history` */
+export function useSubscriptionPurchaseHistory({ enabled = true } = {}) {
+  return useQuery<SubscriptionPurchaseHistoryItem[]>({
+    queryKey: qk.merchantSubscriptionPurchaseHistory(),
+    queryFn: () => subscriptionPaymentsRepository.getPurchaseHistory(),
+    enabled,
+    staleTime: 30_000,
+  })
+}
+
+/** Tip Platform wallet purchase — body `{ packageId, symbol }`. */
 export function usePurchaseSubscription() {
   const queryClient = useQueryClient()
   return useMutation<
@@ -44,10 +89,36 @@ export function usePurchaseSubscription() {
     Error,
     { packageId: string; symbol: string }
   >({
-    mutationFn: ({ packageId, symbol }) => subscriptionPaymentsRepository.purchase(packageId, symbol),
+    mutationFn: ({ packageId, symbol }) =>
+      subscriptionPaymentsRepository.purchase(packageId, symbol),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: qk.userProfile() })
       queryClient.invalidateQueries({ queryKey: qk.merchantSubscriptionPaymentMethods() })
+      queryClient.invalidateQueries({ queryKey: qk.merchantSubscriptionPurchaseHistory() })
+      queryClient.invalidateQueries({ queryKey: qk.merchantSubscriptionMyPackages() })
+    },
+  })
+}
+
+/** VoiceAI MD purchase — body `{ packageId, symbol }`. */
+export function usePurchaseVoiceAiPackage() {
+  const queryClient = useQueryClient()
+  return useMutation<
+    PurchasePackageByIdResult,
+    Error,
+    { packageId: string; symbol: string }
+  >({
+    mutationFn: ({ packageId, symbol }) =>
+      subscriptionPaymentsRepository.purchaseByPackageId(packageId, symbol),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: qk.userProfile() })
+      queryClient.invalidateQueries({ queryKey: qk.merchantSubscriptionPaymentMethods() })
+      queryClient.invalidateQueries({ queryKey: qk.merchantSubscriptionPurchaseHistory() })
+      queryClient.invalidateQueries({
+        queryKey: qk.merchantSubscriptionPackages(SubscriptionPackageType.VoiceAI),
+      })
+      queryClient.invalidateQueries({ queryKey: qk.merchantVoiceCreditWallet() })
+      queryClient.invalidateQueries({ queryKey: qk.merchantSubscriptionMyPackages() })
     },
   })
 }
@@ -74,7 +145,10 @@ export function useSubscriptionOrderStatusPoll(orderId: string | null, { enabled
     enabled: enabled && !!orderId,
     refetchInterval: (query) => {
       const status = query.state.data?.paymentStatus
-      return status === 'Paid' || status === 'Failed' ? false : CARD_PAYMENT_POLL_INTERVAL_MS
+      return status === SubscriptionPaymentStatus.Paid ||
+        status === SubscriptionPaymentStatus.Failed
+        ? false
+        : CARD_PAYMENT_POLL_INTERVAL_MS
     },
     refetchOnWindowFocus: false,
     staleTime: 0,

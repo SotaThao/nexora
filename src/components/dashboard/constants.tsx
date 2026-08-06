@@ -2,6 +2,7 @@
 // Extracted from Dashboard.jsx (Group 1 refactor).
 import {
   BarChart3,
+  Boxes,
   Calendar,
   CircleDollarSign,
   HelpCircle,
@@ -139,6 +140,7 @@ export const DASHBOARD_MENU_ID = {
   touchpoints: "touchpoints",
   bookingHub: "ai-hub",
   productManagement: "product-management",
+  packageManagement: "package-management",
   analytics: "analytics",
   settings: "settings",
   support: "support",
@@ -156,6 +158,15 @@ export function buildDashboardMenuPath(menuId: string): string {
   return menuId === DASHBOARD_MENU_ID.overview
     ? DASHBOARD_ROOT_PATH
     : `${DASHBOARD_ROOT_PATH}/${menuId}`;
+}
+
+export const PACKAGE_MANAGEMENT_PATH = buildDashboardMenuPath(
+  DASHBOARD_MENU_ID.packageManagement,
+);
+
+export function packageManagementPath(tab?: string) {
+  if (!tab) return PACKAGE_MANAGEMENT_PATH;
+  return `${PACKAGE_MANAGEMENT_PATH}?tab=${encodeURIComponent(tab)}`;
 }
 
 export const DASHBOARD_REPORTS_PATH = buildDashboardMenuPath(
@@ -233,6 +244,11 @@ export const MENU_ITEMS = [
   { id: DASHBOARD_MENU_ID.tips, label: "Tips", icon: CircleDollarSign },
   { id: DASHBOARD_MENU_ID.reviews, label: "Reviews", icon: Star },
   { id: DASHBOARD_MENU_ID.reports, label: "Transactions", icon: ReceiptText },
+  {
+    id: DASHBOARD_MENU_ID.packageManagement,
+    label: "Package Management",
+    icon: Boxes,
+  },
   { id: DASHBOARD_MENU_ID.touchpoints, label: "Touch Points", icon: QrCode },
   { id: DASHBOARD_MENU_ID.bookingHub, label: "AI Hub", icon: Calendar },
   {
@@ -299,11 +315,6 @@ export const BOOKING_HUB_SUBMENU = [
     requiresVoiceTenant: true,
   },
   {
-    id: BookingHubMainTab.QrCodes,
-    labelKey: "components.dashboard.views.BookingHubView.tabs.qrCodes",
-    requiresVoiceTenant: true,
-  },
-  {
     id: BookingHubMainTab.Plans,
     labelKey: "components.dashboard.views.BookingHubView.tabs.plans",
     requiresVoiceTenant: false,
@@ -367,6 +378,7 @@ export const DASHBOARD_MENU_LABEL_KEYS: Record<string, string> = {
   [DASHBOARD_MENU_ID.reports]: "dashboard.menu.transactions",
   [DASHBOARD_MENU_ID.bookingHub]: "dashboard.menu.booking_hub",
   [DASHBOARD_MENU_ID.productManagement]: "dashboard.menu.product_management",
+  [DASHBOARD_MENU_ID.packageManagement]: "dashboard.menu.package_management",
   [DASHBOARD_MENU_ID.touchpoints]: "dashboard.menu.touchpoints",
   [DASHBOARD_MENU_ID.analytics]: "dashboard.menu.analytics",
   [DASHBOARD_MENU_ID.settings]: "dashboard.menu.settings",
@@ -433,7 +445,8 @@ export function resolveDashboardMobileMenuTitle(
 }
 
 export const MERCHANT_SIDEBAR_MENU_ITEMS = MENU_ITEMS.filter(
-  (item) => !MERCHANT_SIDEBAR_HIDDEN_MENU_IDS.includes(item.id),
+  (item) =>
+    !(MERCHANT_SIDEBAR_HIDDEN_MENU_IDS as readonly string[]).includes(item.id),
 );
 
 export const PAYMENTS_PAYOUTS_MENU_ITEM = {

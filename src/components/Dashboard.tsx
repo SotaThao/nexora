@@ -6,6 +6,7 @@ import { ArrowLeft } from 'lucide-react'
 
 // 3. Internal — utils → contexts → data/constants → hooks → layout → views → modals → ui
 import { logger } from '../utils/logger'
+import { getTipPlatformSubscription } from '../utils/subscriptionDisplay'
 import { resolveMerchantStaffTipQr, toLocalCustomerTouchUrl } from '../utils/staffTipUrl'
 import { resolveAssignedStaffProfileId } from '../utils/touchpointTypes'
 import { useTranslation } from '../contexts/LanguageContext'
@@ -101,6 +102,14 @@ export default function Dashboard({
     // If we are in a sub-route (e.g. /dashboard/staff/123), go back to the parent menu
     if (paths.length > 2 && paths[0] === 'dashboard' && paths[1] === activeMenu) {
       navigate(`/dashboard/${activeMenu}`)
+      return
+    }
+
+    // Prefer browser history so Support ← Subscriptions (etc.) works.
+    // Fall back to overview when this is the first history entry (direct load / refresh).
+    const historyIdx = (window.history.state as { idx?: number } | null)?.idx ?? 0
+    if (historyIdx > 0) {
+      navigate(-1)
       return
     }
 
@@ -315,6 +324,7 @@ export default function Dashboard({
       setProfile((prev) => ({
         ...buildFallbackProfile(storeInfo, reviewInfo),
         subscription: prev?.subscription ?? null,
+        subscriptions: prev?.subscriptions ?? [],
       }))
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -359,7 +369,10 @@ export default function Dashboard({
   const [selectedLeaderboardStaff, setSelectedLeaderboardStaff] = useState<any | null>(null)
 
   const businessName = profile?.businessName || setupData?.businessInfo?.name || merchantSetupData?.businessInfo?.name || ''
-  const userSubscription = profileSettingsData?.subscription ?? profile?.subscription ?? null
+  const userSubscription =
+    getTipPlatformSubscription(profileSettingsData)
+    ?? getTipPlatformSubscription(profile)
+    ?? null
   const businessSlug =
     merchantSetupData?.businessInfo?.slug ||
     setupData?.businessInfo?.slug ||
@@ -830,7 +843,9 @@ export default function Dashboard({
         />
 
         <main className="w-full min-w-0 flex-1 overflow-x-hidden p-4 pb-6 sm:p-6 sm:pb-8 lg:p-7 lg:pb-7">
-          {activeMenu !== 'overview' && activeMenu !== DASHBOARD_MENU_ID.bookingHub && (
+          {activeMenu !== 'overview'
+            && activeMenu !== DASHBOARD_MENU_ID.bookingHub
+            && activeMenu !== DASHBOARD_MENU_ID.packageManagement && (
             <div className="mb-3 flex min-w-0 items-center gap-3 sm:mb-5 sm:block">
               <button
                 onClick={handleBackNavigation}

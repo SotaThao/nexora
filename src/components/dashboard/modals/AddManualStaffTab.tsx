@@ -7,7 +7,8 @@ import CountryCodeSelect, {
   parsePhone,
   PhoneDialCode,
 } from '../../CountryCodeSelect'
-import { useTranslation, renderLabel } from '../../../contexts/LanguageContext'
+import { useTranslation } from '../../../contexts/LanguageContext'
+import { renderLabel } from '../../../utils/renderLabel'
 import { WalletLogos } from '../constants'
 import {
   orderedStaffPayoutUiKeysFromSupported,

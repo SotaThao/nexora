@@ -7,7 +7,7 @@ import MenuIcon from '../../ui/MenuIcon'
 import HomepageLink from '../../ui/HomepageLink'
 import LanguageSwitcher from '../../ui/LanguageSwitcher'
 import SidebarPlanCard from '../../ui/SidebarPlanCard'
-import { getSubscriptionSidebarCopy } from '../../../utils/subscriptionDisplay'
+import { getSubscriptionSidebarCopy, getTipPlatformSubscription } from '../../../utils/subscriptionDisplay'
 import {
   SIDEBAR_MOBILE_DRAWER_CLASS,
   SIDEBAR_NAV_CLASS,
@@ -20,7 +20,8 @@ import {
   sidebarSubmenuItemClass,
 } from '../../ui/sidebarMenuStyles'
 import PaymentsPayoutsMenuSection from './PaymentsPayoutsMenuSection'
-import { isPaymentsPayoutsRouteActive, getVisibleBookingHubSubmenu, isBookingHubSubActive, VISIBLE_TOUCHPOINTS_SUBMENU, GIFT_CARD_CENTER_SUBMENU, DASHBOARD_MENU, DASHBOARD_MENU_ID, getDefaultBookingHubTab, getDashboardMenuLocalizedLabel, isDashboardStaffRole } from '../constants'
+import { isPaymentsPayoutsRouteActive, getVisibleBookingHubSubmenu, isBookingHubSubActive, VISIBLE_TOUCHPOINTS_SUBMENU, GIFT_CARD_CENTER_SUBMENU, DASHBOARD_MENU, DASHBOARD_MENU_ID, buildDashboardMenuPath, packageManagementPath, getDefaultBookingHubTab, getDashboardMenuLocalizedLabel, isDashboardStaffRole } from '../constants'
+import { PackageManagementTab } from '../views/packageManagement/constants'
 import { handleExpandableMenuClick } from '../hooks/expandableMenuNav'
 import { useMerchantVoiceTenantStatus } from '../../../data/hooks/useMerchantVoiceBookings'
 
@@ -63,7 +64,8 @@ export default function MobileMenuDrawer({
   const hasVoiceTenant = voiceTenantStatus?.hasVoiceTenant === true
   const bookingHubSubmenu = getVisibleBookingHubSubmenu(hasVoiceTenant)
   const subscriptionCopy = getSubscriptionSidebarCopy(
-    subscription ?? profile?.subscription,
+    // Sidebar plan = TipPlatform (/dashboard/subscriptions), never VoiceAI (AI Hub).
+    subscription ?? getTipPlatformSubscription(profile),
     t,
     currentLanguage,
   )
@@ -330,7 +332,10 @@ export default function MobileMenuDrawer({
           {userRole !== 'staff' && (
             <SidebarPlanCard
               subscriptionCopy={subscriptionCopy}
-              onManagePlan={() => navigateMenu('subscriptions')}
+              onManagePlan={() => {
+                navigate(packageManagementPath(PackageManagementTab.Subscriptions))
+                onClose()
+              }}
               t={t}
               compact
             />

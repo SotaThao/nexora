@@ -83,10 +83,18 @@ export const qk = {
     ['publicPhysicalCardHelp', helpCode ?? '', authMode ?? ''],
 
   // Merchant Subscriptions (billing)
-  merchantSubscriptionPackages: () => ['merchantSubscriptions', 'packages'],
+  merchantSubscriptionPackages: (packageType?: import('./repositories/subscriptionPayments').SubscriptionPackageType) =>
+    packageType
+      ? (['merchantSubscriptions', 'packages', packageType] as const)
+      : (['merchantSubscriptions', 'packages'] as const),
   merchantSubscriptionPaymentMethods: () => ['merchantSubscriptions', 'paymentMethods'],
+  merchantSubscriptionPurchaseHistory: () => ['merchantSubscriptions', 'purchaseHistory'],
+  merchantSubscriptionMyPackages: () => ['merchantSubscriptions', 'myPackages'],
+  publicSubscriptionPackages: (packageType?: import('./repositories/subscriptionPayments').SubscriptionPackageType) =>
+    packageType
+      ? (['publicSubscriptions', 'packages', packageType] as const)
+      : (['publicSubscriptions', 'packages'] as const),
   merchantSubscriptionOrderStatus: (orderId: string) => ['merchantSubscriptions', 'orderStatus', orderId],
-  publicSubscriptionPackages: () => ['publicSubscriptions', 'packages'],
 
   // Merchant Payment Methods
   merchantPaymentMethods: ()   => ['merchantPaymentMethods'],
