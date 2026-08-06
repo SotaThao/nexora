@@ -42,6 +42,7 @@ import LoadingScreen from "./LoadingScreen";
 import RequireAuth from "./RequireAuth";
 import RequireOnboarded from "./RequireOnboarded";
 import RequireStaffReady from "./RequireStaffReady";
+import PosOnboardingLayout from "./PosOnboardingLayout";
 import RootRedirect from "./RootRedirect";
 import { VoiceCallPlanRoute } from "../data/voiceTrial/domain";
 import { PUBLIC_BOOKING_ROUTE } from "../components/public/booking/constants";
@@ -316,13 +317,15 @@ export default function AppRouter() {
             <Route path={`${DASHBOARD_MENU_ID.taxiq}/tax-estimate`} element={<TaxIqTaxEstimateRoute />} />
             <Route path={`${DASHBOARD_MENU_ID.taxiq}/export`} element={<TaxIqExportRoute />} />
             <Route path={DASHBOARD_MENU_ID.productManagement} element={<ProductManagementRoute />} />
-            <Route path={DASHBOARD_MENU_ID.pos} element={<PosFrontDeskRoute />} />
-            <Route path={`${DASHBOARD_MENU_ID.pos}/settings`} element={<PosGeneralSettingsRoute />} />
-            <Route path={`${DASHBOARD_MENU_ID.pos}/roles`} element={<PosRolesRoute />} />
-            <Route path={`${DASHBOARD_MENU_ID.pos}/categories`} element={<PosCategoriesRoute />} />
-            <Route path={`${DASHBOARD_MENU_ID.pos}/services`} element={<PosServicesRoute />} />
-            <Route path={`${DASHBOARD_MENU_ID.pos}/products`} element={<PosProductsRoute />} />
-            <Route path={`${DASHBOARD_MENU_ID.pos}/staff`} element={<PosStaffProfileRoute />} />
+            <Route element={<PosOnboardingLayout />}>
+              <Route path={DASHBOARD_MENU_ID.pos} element={<PosFrontDeskRoute />} />
+              <Route path={`${DASHBOARD_MENU_ID.pos}/settings`} element={<PosGeneralSettingsRoute />} />
+              <Route path={`${DASHBOARD_MENU_ID.pos}/roles`} element={<PosRolesRoute />} />
+              <Route path={`${DASHBOARD_MENU_ID.pos}/categories`} element={<PosCategoriesRoute />} />
+              <Route path={`${DASHBOARD_MENU_ID.pos}/services`} element={<PosServicesRoute />} />
+              <Route path={`${DASHBOARD_MENU_ID.pos}/products`} element={<PosProductsRoute />} />
+              <Route path={`${DASHBOARD_MENU_ID.pos}/staff`} element={<PosStaffProfileRoute />} />
+            </Route>
             <Route path={DASHBOARD_MENU_ID.touchpoints} element={<TouchpointsRoute />} />
             <Route path={DASHBOARD_MENU_ID.analytics} element={<AnalyticsRoute />} />
             <Route path={DASHBOARD_MENU_ID.settings} element={<SettingsRoute />} />
