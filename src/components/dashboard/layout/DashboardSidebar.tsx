@@ -13,7 +13,7 @@ import LanguageSwitcher from '../../ui/LanguageSwitcher'
 import SidebarPlanCard from '../../ui/SidebarPlanCard'
 import PaymentsPayoutsMenuSection from './PaymentsPayoutsMenuSection'
 import { useMerchantVoiceTenantStatus } from '../../../data/hooks/useMerchantVoiceBookings'
-import { getSubscriptionSidebarCopy } from '../../../utils/subscriptionDisplay'
+import { getSubscriptionSidebarCopy, getTipPlatformSubscription } from '../../../utils/subscriptionDisplay'
 import {
   SIDEBAR_SHELL_CLASS,
   SIDEBAR_NAV_CLASS,
@@ -121,7 +121,8 @@ export default function DashboardSidebar({
   }
 
   const subscriptionCopy = getSubscriptionSidebarCopy(
-    subscription ?? profile?.subscription,
+    // Sidebar plan = TipPlatform (/dashboard/subscriptions), never VoiceAI (AI Hub).
+    subscription ?? getTipPlatformSubscription(profile),
     t,
     currentLanguage,
   )

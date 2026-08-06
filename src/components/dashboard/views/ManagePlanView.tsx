@@ -49,7 +49,11 @@ function ManagePlanView({
 }: ManagePlanViewProps) {
   const { t, currentLanguage } = useTranslation()
   const isVietnamese = currentLanguage === 'vi'
-  const renewLabel = getSubscriptionPlanRenewLabel(currentSubscription, t)
+  const renewLabel = getSubscriptionPlanRenewLabel(
+    currentSubscription,
+    t,
+    currentLanguage,
+  )
 
   return (
     <div className="relative">

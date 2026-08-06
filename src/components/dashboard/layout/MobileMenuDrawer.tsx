@@ -7,7 +7,7 @@ import MenuIcon from '../../ui/MenuIcon'
 import HomepageLink from '../../ui/HomepageLink'
 import LanguageSwitcher from '../../ui/LanguageSwitcher'
 import SidebarPlanCard from '../../ui/SidebarPlanCard'
-import { getSubscriptionSidebarCopy } from '../../../utils/subscriptionDisplay'
+import { getSubscriptionSidebarCopy, getTipPlatformSubscription } from '../../../utils/subscriptionDisplay'
 import {
   SIDEBAR_MOBILE_DRAWER_CLASS,
   SIDEBAR_NAV_CLASS,
@@ -63,7 +63,8 @@ export default function MobileMenuDrawer({
   const hasVoiceTenant = voiceTenantStatus?.hasVoiceTenant === true
   const bookingHubSubmenu = getVisibleBookingHubSubmenu(hasVoiceTenant)
   const subscriptionCopy = getSubscriptionSidebarCopy(
-    subscription ?? profile?.subscription,
+    // Sidebar plan = TipPlatform (/dashboard/subscriptions), never VoiceAI (AI Hub).
+    subscription ?? getTipPlatformSubscription(profile),
     t,
     currentLanguage,
   )

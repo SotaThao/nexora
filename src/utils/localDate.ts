@@ -6,6 +6,39 @@ export function formatLocalDateIso(date: Date): string {
   return `${year}-${month}-${day}`
 }
 
+/**
+ * Parse BE datetime strings. Wire values often omit `Z` / offset but are UTC
+ * (e.g. `2026-09-06T01:26:32.369146`). Treat bare ISO as UTC, then callers
+ * format with local getters / Intl for the user's timezone.
+ */
+export function parseApiUtcDateTime(isoString: string | null | undefined): Date | null {
+  const raw = String(isoString ?? '').trim()
+  if (!raw) return null
+
+  if (/[zZ]$/.test(raw) || /[+-]\d{2}:\d{2}$/.test(raw)) {
+    const date = new Date(raw)
+    return Number.isNaN(date.getTime()) ? null : date
+  }
+
+  if (raw.includes(' ') && !raw.includes('T')) {
+    const date = new Date(`${raw.replace(' ', 'T')}Z`)
+    return Number.isNaN(date.getTime()) ? null : date
+  }
+
+  if (/^\d{4}-\d{2}-\d{2}T/.test(raw)) {
+    const date = new Date(`${raw}Z`)
+    return Number.isNaN(date.getTime()) ? null : date
+  }
+
+  if (/^\d{4}-\d{2}-\d{2}$/.test(raw)) {
+    const date = new Date(`${raw}T00:00:00Z`)
+    return Number.isNaN(date.getTime()) ? null : date
+  }
+
+  const date = new Date(raw)
+  return Number.isNaN(date.getTime()) ? null : date
+}
+
 /** Format ISO datetime as locale-aware "Apr 2024" / "thg 4 2024" for member-since labels. */
 export function formatMemberSinceDate(
   isoString: string | null | undefined,

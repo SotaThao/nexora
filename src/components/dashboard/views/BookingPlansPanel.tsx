@@ -708,7 +708,6 @@ export default function BookingPlansPanel() {
   const voiceEnabled = useBookingHubVoiceEnabled()
   const { data: myTrialRequest, isLoading: isTrialRequestLoading } = useMyVoiceTrialRequest()
   const { data: profile } = useProfileSettings()
-  const [selectedPlan, setSelectedPlan] = useState<PaidServicePlanId | null>(null)
   const [trialOpen, setTrialOpen] = useState(false)
   const [checkoutSelection, setCheckoutSelection] = useState<VoiceAiCheckoutSelection | null>(null)
   const [plansView, setPlansView] = useState<PlansView>(PlansView.Package)
@@ -743,8 +742,8 @@ export default function BookingPlansPanel() {
     })
   }, [voiceAiSubscription])
   const voiceRenewLabel = useMemo(
-    () => getSubscriptionPlanRenewLabel(voiceAiSubscription, t),
-    [voiceAiSubscription, t],
+    () => getSubscriptionPlanRenewLabel(voiceAiSubscription, t, currentLanguage),
+    [voiceAiSubscription, t, currentLanguage],
   )
 
   const hasExistingTrialRequest = myTrialRequest != null
@@ -773,15 +772,7 @@ export default function BookingPlansPanel() {
     if (plan === VoicePlanTier.Pro && hasExistingTrialRequest) {
       return t(`${TK}.trialRequestSubmitted`)
     }
-    if (selectedPlan === plan) {
-      return t(`${TK}.planSelected`, { plan })
-    }
     return t(`${TK}.${PLAN_BUTTON_LABEL_KEY[plan]}`)
-  }
-
-  const isPlanButtonPrimary = (plan: PaidServicePlanId) => {
-    if (selectedPlan) return selectedPlan === plan
-    return plan === VoicePlanTier.Pro
   }
 
   const handleTrialClick = () => {
@@ -825,8 +816,8 @@ export default function BookingPlansPanel() {
     payment: SubscriptionPaymentMethod,
   ) => {
     const paymentLabel = payment.name || payment.symbol
-    setSelectedPlan(selection.planId)
     setCheckoutSelection(null)
+    // Current Active Plan comes from GET /userprofile/me → business.subscriptions only.
     void queryClient.invalidateQueries({ queryKey: qk.userProfile() })
     showToast(
       t(`${TK}.planPaymentSuccess`, {
@@ -956,8 +947,7 @@ export default function BookingPlansPanel() {
                     key={pkg.id || planId}
                     className={[
                       'service-plan-card',
-                      isPro ? 'is-recommended' : '',
-                      isCurrent || selectedPlan === planId ? 'is-selected' : '',
+                      isPro && !isCurrent ? 'is-recommended' : '',
                       isCurrent ? 'is-current-plan' : '',
                     ]
                       .filter(Boolean)
@@ -980,7 +970,7 @@ export default function BookingPlansPanel() {
                       <div className="plan-action-stack">
                         <span className="plan-renew-label is-spacer" aria-hidden="true" />
                         <button
-                          className={`plan-select-button ${isPlanButtonPrimary(VoicePlanTier.Pro) ? 'is-primary' : ''}`}
+                          className="plan-select-button is-primary"
                           type="button"
                           disabled={hasExistingTrialRequest || isTrialRequestLoading}
                           onClick={handleTrialClick}
@@ -992,16 +982,14 @@ export default function BookingPlansPanel() {
                           type="button"
                           onClick={() => handleBuyPlanClick(VoicePlanTier.Pro)}
                         >
-                          {selectedPlan === VoicePlanTier.Pro
-                            ? t(`${TK}.planSelected`, { plan: VoicePlanTier.Pro })
-                            : t(`${TK}.selectPro`)}
+                          {t(`${TK}.selectPro`)}
                         </button>
                       </div>
                     ) : (
                       <div className="plan-action-stack">
                         <span className="plan-renew-label is-spacer" aria-hidden="true" />
                         <button
-                          className={`plan-select-button ${isPlanButtonPrimary(planId) ? 'is-primary' : ''}`}
+                          className="plan-select-button"
                           type="button"
                           onClick={() => handlePlanClick(planId)}
                         >

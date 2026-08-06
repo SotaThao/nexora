@@ -9,7 +9,6 @@ import type { UpdateStaffProfileDto, UpdateUserProfileDto } from '../../types/re
 import { getUserProfileImageUrl } from '../../utils/userProfileImage'
 import {
   getTipPlatformSubscription,
-  isUserSubscriptionActive,
 } from '../../utils/subscriptionDisplay'
 
 type HttpClient = typeof httpClient
@@ -79,11 +78,9 @@ function normalizeSubscriptions(raw: LooseObject | null | undefined): UserSubscr
   return legacy ? [legacy] : []
 }
 
-/** Sidebar / Touch default: TipPlatform active, else first active, else first row. */
+/** Sidebar / Touch default: TipPlatform only — never VoiceAI (AI Hub plans). */
 function pickDefaultSubscription(subscriptions: UserSubscription[]): UserSubscription | null {
-  const tip = getTipPlatformSubscription({ subscriptions })
-  if (tip) return tip
-  return subscriptions.find(isUserSubscriptionActive) ?? subscriptions[0] ?? null
+  return getTipPlatformSubscription({ subscriptions })
 }
 
 function normalizeUserProfile(response: UserProfile): UserProfile {
