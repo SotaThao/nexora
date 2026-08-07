@@ -1,5 +1,10 @@
 /** Package Management — tabs, mock overview data, TipPlatform compare rows. */
 
+import {
+  SubscriptionMyPackageType,
+  type SubscriptionMyPackage,
+} from '../../../../data/repositories/subscriptionPayments'
+
 export const PACKAGE_MANAGEMENT_TK =
   'components.dashboard.views.PackageManagementView'
 
@@ -90,11 +95,23 @@ export function isKnownPackageManagementTab(
 
 export type PackageOverviewProductKey = 'nexora' | 'voice'
 
+export const PackageOverviewProduct = {
+  Nexora: 'nexora',
+  Voice: 'voice',
+} as const satisfies Record<string, PackageOverviewProductKey>
+
 export const PACKAGE_OVERVIEW_SKELETON_CARD_COUNT = 4
 
 export const PACKAGE_OVERVIEW_TIP_PLATFORM_PLAN = {
   Starter: 'starter',
   Pro: 'pro',
+} as const
+
+/** VoiceAI owned-card copy keyed by catalog `packageCode` tier. */
+export const PACKAGE_OVERVIEW_VOICE_PLAN = {
+  Starter: 'starter',
+  Pro: 'pro',
+  Elite: 'elite',
 } as const
 
 export const PACKAGE_OVERVIEW_I18N = {
@@ -109,19 +126,125 @@ export const PACKAGE_OVERVIEW_I18N = {
     },
   },
   voice: {
+    starter: {
+      nameKey: 'overview.owned.voiceStarterName',
+      descriptionKey: 'overview.owned.voiceStarterDesc',
+    },
     pro: {
       nameKey: 'overview.owned.voiceProName',
       descriptionKey: 'overview.owned.voiceProDesc',
     },
+    elite: {
+      nameKey: 'overview.owned.voiceEliteName',
+      descriptionKey: 'overview.owned.voiceEliteDesc',
+    },
   },
+} as const
+
+export type PackageOverviewPlanCopy = {
+  nameKey: string
+  descriptionKey: string
+}
+
+type PlanTokenMatcher = {
+  token: string
+  copy: PackageOverviewPlanCopy
+}
+
+/** Elite before Starter so `voice-elite` does not fall through as starter-ish. */
+const VOICE_OWNED_PLAN_MATCHERS: PlanTokenMatcher[] = [
+  {
+    token: PACKAGE_OVERVIEW_VOICE_PLAN.Elite,
+    copy: PACKAGE_OVERVIEW_I18N.voice.elite,
+  },
+  {
+    token: PACKAGE_OVERVIEW_VOICE_PLAN.Starter,
+    copy: PACKAGE_OVERVIEW_I18N.voice.starter,
+  },
+]
+
+const TIP_PLATFORM_OWNED_PLAN_MATCHERS: PlanTokenMatcher[] = [
+  {
+    token: PACKAGE_OVERVIEW_TIP_PLATFORM_PLAN.Starter,
+    copy: PACKAGE_OVERVIEW_I18N.nexora.starter,
+  },
+]
+
+function resolvePlanCopyByToken(
+  identity: string,
+  matchers: PlanTokenMatcher[],
+  fallback: PackageOverviewPlanCopy,
+): PackageOverviewPlanCopy {
+  const match = matchers.find(({ token }) => identity.includes(token))
+  return match?.copy ?? fallback
+}
+
+/** Map my-packages VoiceAI `packageCode` → overview card copy. */
+export function resolveVoiceOwnedPlanCopy(
+  packageCode: string,
+): PackageOverviewPlanCopy {
+  return resolvePlanCopyByToken(
+    packageCode.trim().toLowerCase(),
+    VOICE_OWNED_PLAN_MATCHERS,
+    PACKAGE_OVERVIEW_I18N.voice.pro,
+  )
+}
+
+/** Map my-packages TipPlatform `packageCode`/`name` → overview card copy. */
+export function resolveTipPlatformOwnedPlanCopy(
+  packageCode: string,
+  name = '',
+): PackageOverviewPlanCopy {
+  return resolvePlanCopyByToken(
+    `${packageCode} ${name}`.toLowerCase(),
+    TIP_PLATFORM_OWNED_PLAN_MATCHERS,
+    PACKAGE_OVERVIEW_I18N.nexora.pro,
+  )
+}
+
+export const PACKAGE_OVERVIEW_RENEW_TAB: Record<
+  PackageOverviewProductKey,
+  PackageManagementTab
+> = {
+  [PackageOverviewProduct.Nexora]: PackageManagementTab.Subscriptions,
+  [PackageOverviewProduct.Voice]: PackageManagementTab.AiVoice,
+}
+
+export const PACKAGE_OVERVIEW_RENEW_CTA_KEY: Record<
+  PackageOverviewProductKey,
+  string
+> = {
+  [PackageOverviewProduct.Nexora]: 'remainingExpiredRenewSubscriptions',
+  [PackageOverviewProduct.Voice]: 'remainingExpiredRenewAiVoice',
+}
+
+export const PACKAGE_OVERVIEW_AUTO_RENEW_TOAST_KEY = {
+  enabled: 'autoRenewEnabled',
+  disabled: 'autoRenewDisabled',
+  error: 'autoRenewError',
+} as const
+
+export const PACKAGE_OVERVIEW_AUTO_RENEW_STATE_KEY = {
+  on: 'autoRenewOn',
+  off: 'autoRenewOff',
 } as const
 
 export function resolvePackageRenewTab(
   productKey: PackageOverviewProductKey,
 ): PackageManagementTab {
-  return productKey === 'voice'
-    ? PackageManagementTab.AiVoice
-    : PackageManagementTab.Subscriptions
+  return PACKAGE_OVERVIEW_RENEW_TAB[productKey]
+}
+
+export function resolveAutoRenewToastKey(autoRenew: boolean): string {
+  return autoRenew
+    ? PACKAGE_OVERVIEW_AUTO_RENEW_TOAST_KEY.enabled
+    : PACKAGE_OVERVIEW_AUTO_RENEW_TOAST_KEY.disabled
+}
+
+export function resolveAutoRenewStateKey(autoRenew: boolean): string {
+  return autoRenew
+    ? PACKAGE_OVERVIEW_AUTO_RENEW_STATE_KEY.on
+    : PACKAGE_OVERVIEW_AUTO_RENEW_STATE_KEY.off
 }
 
 function shiftIsoDate(days: number, endOfDay = false) {
@@ -134,7 +257,7 @@ function shiftIsoDate(days: number, endOfDay = false) {
 /** Hard-data owned packages for Overview (until BE owned-packages API exists). */
 export type PackageOverviewOwnedItem = {
   id: string
-  productKey: 'nexora' | 'voice'
+  productKey: PackageOverviewProductKey
   nameKey: string
   descriptionKey: string
   featureKeys: string[]
@@ -143,11 +266,56 @@ export type PackageOverviewOwnedItem = {
   autoRenew: boolean
 }
 
+type OwnedPackagePlanResolver = (pkg: {
+  packageCode: string
+  name: string
+}) => {
+  productKey: PackageOverviewProductKey
+  planCopy: PackageOverviewPlanCopy
+}
+
+const OWNED_PLAN_BY_PACKAGE_TYPE: Partial<
+  Record<SubscriptionMyPackageType, OwnedPackagePlanResolver>
+> = {
+  [SubscriptionMyPackageType.TipPlatform]: (pkg) => ({
+    productKey: PackageOverviewProduct.Nexora,
+    planCopy: resolveTipPlatformOwnedPlanCopy(pkg.packageCode, pkg.name),
+  }),
+  [SubscriptionMyPackageType.VoiceAI]: (pkg) => ({
+    productKey: PackageOverviewProduct.Voice,
+    planCopy: resolveVoiceOwnedPlanCopy(pkg.packageCode),
+  }),
+}
+
+/** Map a my-packages DTO row → Overview owned card model (or null if incomplete). */
+export function mapMyPackageToOwnedItem(
+  pkg: SubscriptionMyPackage,
+): PackageOverviewOwnedItem | null {
+  const activatedAt = String(pkg.activatedAt ?? '').trim()
+  const expiresAt = String(pkg.expiresAt ?? '').trim()
+  if (!pkg.id || !activatedAt || !expiresAt) return null
+
+  const resolve = OWNED_PLAN_BY_PACKAGE_TYPE[pkg.packageType]
+  if (!resolve) return null
+
+  const { productKey, planCopy } = resolve(pkg)
+  return {
+    id: String(pkg.id),
+    productKey,
+    nameKey: planCopy.nameKey,
+    descriptionKey: planCopy.descriptionKey,
+    featureKeys: [],
+    activatedAt,
+    expiresAt,
+    autoRenew: Boolean(pkg.autoRenew),
+  }
+}
+
 /** Relative mock dates so Overview countdown stays demo-valid over time. */
 export const PACKAGE_OVERVIEW_OWNED_MOCK: PackageOverviewOwnedItem[] = [
   {
     id: 'nexora-pro',
-    productKey: 'nexora',
+    productKey: PackageOverviewProduct.Nexora,
     nameKey: 'overview.owned.nexoraProName',
     descriptionKey: 'overview.owned.nexoraProDesc',
     featureKeys: [
@@ -161,7 +329,7 @@ export const PACKAGE_OVERVIEW_OWNED_MOCK: PackageOverviewOwnedItem[] = [
   },
   {
     id: 'voice-pro',
-    productKey: 'voice',
+    productKey: PackageOverviewProduct.Voice,
     nameKey: 'overview.owned.voiceProName',
     descriptionKey: 'overview.owned.voiceProDesc',
     featureKeys: [
@@ -175,7 +343,7 @@ export const PACKAGE_OVERVIEW_OWNED_MOCK: PackageOverviewOwnedItem[] = [
   },
   {
     id: 'nexora-starter-lapsed',
-    productKey: 'nexora',
+    productKey: PackageOverviewProduct.Nexora,
     nameKey: 'overview.owned.nexoraStarterName',
     descriptionKey: 'overview.owned.nexoraStarterDesc',
     featureKeys: [

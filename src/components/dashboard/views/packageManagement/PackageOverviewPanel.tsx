@@ -1,22 +1,27 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
+import { useCallback, useEffect, useMemo, useState } from 'react'
 import { Boxes, Clock3, TimerOff } from 'lucide-react'
 import { useSearchParams } from 'react-router-dom'
 import { useTranslation } from '../../../../contexts/LanguageContext'
+// import { useNotification } from '../../../../contexts/NotificationContext'
 import { useSubscriptionMyPackages } from '../../../../data/hooks/useSubscriptionPayments'
-import { SubscriptionMyPackageType } from '../../../../data/repositories/subscriptionPayments'
+// import { useUpdateSubscriptionAutoRenew } from '../../../../data/hooks/useSubscriptionPayments'
+// import { resolveTranslatedApiError } from '../../../../utils/resolveTranslatedApiError'
 import {
   formatBookingHubTimestampDate,
 } from '../bookingHubFormatters'
 import {
   formatPackageCountdownParts,
   getPackageOverviewStatus,
+  mapMyPackageToOwnedItem,
   PACKAGE_COUNTDOWN_UNITS,
-  PACKAGE_OVERVIEW_I18N,
+  // PACKAGE_OVERVIEW_AUTO_RENEW_TOAST_KEY,
+  PACKAGE_OVERVIEW_RENEW_CTA_KEY,
   PACKAGE_OVERVIEW_SKELETON_CARD_COUNT,
-  PACKAGE_OVERVIEW_TIP_PLATFORM_PLAN,
   PACKAGE_MANAGEMENT_TK,
   PACKAGE_QUERY_PARAM,
   PackageManagementTab,
+  // resolveAutoRenewStateKey,
+  // resolveAutoRenewToastKey,
   resolvePackageRenewTab,
   type PackageOverviewOwnedItem,
   type PackageOverviewProductKey,
@@ -26,6 +31,7 @@ import OverviewEmptyState from '../../overview/OverviewEmptyState'
 import Skeleton from '../../../ui/skeleton/Skeleton'
 
 const TK = PACKAGE_MANAGEMENT_TK
+// const AUTO_RENEW_ERROR_KEY = `${TK}.overview.${PACKAGE_OVERVIEW_AUTO_RENEW_TOAST_KEY.error}`
 
 function pad2(value: number) {
   return String(value).padStart(2, '0')
@@ -34,14 +40,16 @@ function pad2(value: number) {
 function OwnedPackageCard({
   item,
   now,
-  autoRenew,
-  onAutoRenewChange,
+  // autoRenew,
+  // isUpdating,
+  // onAutoRenewChange,
   onRenewPackage,
 }: {
   item: PackageOverviewOwnedItem
   now: number
-  autoRenew: boolean
-  onAutoRenewChange: (next: boolean) => void
+  // autoRenew: boolean
+  // isUpdating: boolean
+  // onAutoRenewChange: (next: boolean) => void
   onRenewPackage: (productKey: PackageOverviewProductKey) => void
 }) {
   const { t, currentLanguage } = useTranslation()
@@ -57,7 +65,9 @@ function OwnedPackageCard({
     item.expiresAt,
     currentLanguage,
   )
-  const needsManualRenew = countdown.expired && !autoRenew
+  const needsManualRenew = countdown.expired && !item.autoRenew
+  const renewCtaKey = PACKAGE_OVERVIEW_RENEW_CTA_KEY[item.productKey]
+  // const autoRenewStateKey = `${TK}.overview.${resolveAutoRenewStateKey(autoRenew)}`
 
   return (
     <article className="package-owned-card" data-owned-package={item.id}>
@@ -70,12 +80,14 @@ function OwnedPackageCard({
         <div className="package-owned-info">
           <div className="package-owned-name-row">
             <h3>{t(`${TK}.${item.nameKey}`)}</h3>
+            {/* Auto renew toggle — temporarily hidden; uncomment to re-enable.
             <div className="package-autorenew-row">
               <span className="package-autorenew-label">{t(`${TK}.overview.autoRenew`)}</span>
-              <label className="package-switch">
+              <label className={`package-switch${isUpdating ? ' is-disabled' : ''}`}>
                 <input
                   type="checkbox"
                   checked={autoRenew}
+                  disabled={isUpdating}
                   onChange={(event) => onAutoRenewChange(event.target.checked)}
                   aria-label={t(`${TK}.overview.autoRenewAria`, {
                     name: t(`${TK}.${item.nameKey}`),
@@ -84,11 +96,12 @@ function OwnedPackageCard({
                 <span className="package-switch-track">
                   <span className="package-switch-thumb" />
                   <span className="package-autorenew-state">
-                    {autoRenew ? t(`${TK}.overview.autoRenewOn`) : t(`${TK}.overview.autoRenewOff`)}
+                    {t(autoRenewStateKey)}
                   </span>
                 </span>
               </label>
             </div>
+            */}
           </div>
           <p>{t(`${TK}.${item.descriptionKey}`)}</p>
         </div>
@@ -123,13 +136,7 @@ function OwnedPackageCard({
               className="package-countdown-renew-button"
               onClick={() => onRenewPackage(item.productKey)}
             >
-              {t(
-                `${TK}.overview.${
-                  item.productKey === 'voice'
-                    ? 'remainingExpiredRenewAiVoice'
-                    : 'remainingExpiredRenewSubscriptions'
-                }`,
-              )}
+              {t(`${TK}.overview.${renewCtaKey}`)}
             </button>
           </div>
         ) : (
@@ -151,9 +158,9 @@ export default function PackageOverviewPanel() {
   const [searchParams, setSearchParams] = useSearchParams()
   const [now, setNow] = useState(() => Date.now())
   const { t } = useTranslation()
+  // const { showToast } = useNotification()
   const { data: myPackages = [], isLoading } = useSubscriptionMyPackages()
-  const [autoRenewById, setAutoRenewById] = useState<Record<string, boolean>>({})
-  const didInitAutoRenewRef = useRef(false)
+  // const updateAutoRenewMutation = useUpdateSubscriptionAutoRenew()
 
   const navigateToRenewTab = useCallback(
     (productKey: PackageOverviewProductKey) => {
@@ -175,62 +182,42 @@ export default function PackageOverviewPanel() {
     return () => window.clearInterval(id)
   }, [])
 
-  const ownedPackages = useMemo<PackageOverviewOwnedItem[]>(() => {
-    const toOwned = (
-      pkg: (typeof myPackages)[number],
-    ): PackageOverviewOwnedItem | null => {
-      const rawPackageIdentity =
-        `${pkg.packageCode ?? ''} ${pkg.name ?? ''}`.toLowerCase()
+  const ownedPackages = useMemo(
+    () =>
+      myPackages
+        .map(mapMyPackageToOwnedItem)
+        .filter((item): item is PackageOverviewOwnedItem => item != null),
+    [myPackages],
+  )
 
-      const activatedAt = String(pkg.activatedAt ?? '').trim()
-      const expiresAt = String(pkg.expiresAt ?? '').trim()
-      if (!pkg.id || !activatedAt || !expiresAt) return null
+  /*
+  const handleAutoRenewChange = useCallback(
+    (subscriptionId: string, nextAutoRenew: boolean) => {
+      updateAutoRenewMutation.mutate(
+        { subscriptionId, autoRenew: nextAutoRenew },
+        {
+          onSuccess: (result) => {
+            showToast(
+              t(`${TK}.overview.${resolveAutoRenewToastKey(result.autoRenew)}`),
+              'success',
+            )
+          },
+          onError: (error) => {
+            showToast(
+              resolveTranslatedApiError(t, error, AUTO_RENEW_ERROR_KEY),
+              'error',
+            )
+          },
+        },
+      )
+    },
+    [showToast, t, updateAutoRenewMutation],
+  )
 
-      if (pkg.packageType === SubscriptionMyPackageType.TipPlatform) {
-        const isStarter = rawPackageIdentity.includes(
-          PACKAGE_OVERVIEW_TIP_PLATFORM_PLAN.Starter,
-        )
-        const planCopy = isStarter
-          ? PACKAGE_OVERVIEW_I18N.nexora.starter
-          : PACKAGE_OVERVIEW_I18N.nexora.pro
-        return {
-          id: String(pkg.id),
-          productKey: 'nexora',
-          nameKey: planCopy.nameKey,
-          descriptionKey: planCopy.descriptionKey,
-          featureKeys: [],
-          activatedAt,
-          expiresAt,
-          autoRenew: Boolean(pkg.autoRenew),
-        }
-      }
-
-      if (pkg.packageType === SubscriptionMyPackageType.VoiceAI) {
-        return {
-          id: String(pkg.id),
-          productKey: 'voice',
-          nameKey: PACKAGE_OVERVIEW_I18N.voice.pro.nameKey,
-          descriptionKey: PACKAGE_OVERVIEW_I18N.voice.pro.descriptionKey,
-          featureKeys: [],
-          activatedAt,
-          expiresAt,
-          autoRenew: Boolean(pkg.autoRenew),
-        }
-      }
-
-      return null
-    }
-
-    return myPackages.map(toOwned).filter((x): x is PackageOverviewOwnedItem => x != null)
-  }, [myPackages])
-
-  useEffect(() => {
-    if (isLoading) return
-    if (didInitAutoRenewRef.current) return
-    didInitAutoRenewRef.current = true
-
-    setAutoRenewById(Object.fromEntries(ownedPackages.map((item) => [item.id, item.autoRenew])))
-  }, [isLoading, ownedPackages])
+  const pendingSubscriptionId = updateAutoRenewMutation.isPending
+    ? updateAutoRenewMutation.variables?.subscriptionId ?? null
+    : null
+  */
 
   if (isLoading) {
     return (
@@ -264,10 +251,9 @@ export default function PackageOverviewPanel() {
           key={item.id}
           item={item}
           now={now}
-          autoRenew={autoRenewById[item.id] ?? item.autoRenew}
-          onAutoRenewChange={(next) => {
-            setAutoRenewById((prev) => ({ ...prev, [item.id]: next }))
-          }}
+          // autoRenew={item.autoRenew}
+          // isUpdating={pendingSubscriptionId === item.id}
+          // onAutoRenewChange={(next) => handleAutoRenewChange(item.id, next)}
           onRenewPackage={navigateToRenewTab}
         />
       ))}

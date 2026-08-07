@@ -10,9 +10,20 @@ import subscriptionPaymentsRepository, {
   type SubscriptionMyPackage,
   type SubscriptionPaymentMethod,
   type SubscriptionPurchaseHistoryItem,
+  type UpdateSubscriptionAutoRenewResult,
 } from '../repositories/subscriptionPayments'
 
 const CARD_PAYMENT_POLL_INTERVAL_MS = 2_000
+
+function patchMyPackagesAutoRenew(
+  packages: SubscriptionMyPackage[] | undefined,
+  subscriptionId: string,
+  autoRenew: boolean,
+): SubscriptionMyPackage[] {
+  return (packages ?? []).map((pkg) =>
+    pkg.id === subscriptionId ? { ...pkg, autoRenew } : pkg,
+  )
+}
 
 export function useSubscriptionPackages({
   enabled = true,
@@ -42,6 +53,39 @@ export function useSubscriptionMyPackages({ enabled = true }: { enabled?: boolea
     enabled,
     staleTime: 30_000,
     refetchOnMount: true,
+  })
+}
+
+/** PATCH `/api/v1/merchant/subscriptions/{id}/auto-renew`. */
+export function useUpdateSubscriptionAutoRenew() {
+  const queryClient = useQueryClient()
+  const myPackagesKey = qk.merchantSubscriptionMyPackages()
+
+  return useMutation<
+    UpdateSubscriptionAutoRenewResult,
+    Error,
+    { subscriptionId: string; autoRenew: boolean },
+    { previous: SubscriptionMyPackage[] | undefined }
+  >({
+    mutationFn: ({ subscriptionId, autoRenew }) =>
+      subscriptionPaymentsRepository.updateAutoRenew(subscriptionId, autoRenew),
+    onMutate: async ({ subscriptionId, autoRenew }) => {
+      await queryClient.cancelQueries({ queryKey: myPackagesKey })
+      const previous = queryClient.getQueryData<SubscriptionMyPackage[]>(myPackagesKey)
+      queryClient.setQueryData<SubscriptionMyPackage[]>(myPackagesKey, (current) =>
+        patchMyPackagesAutoRenew(current, subscriptionId, autoRenew),
+      )
+      return { previous }
+    },
+    onError: (_error, _vars, context) => {
+      if (!context) return
+      queryClient.setQueryData(myPackagesKey, context.previous)
+    },
+    onSuccess: (result) => {
+      queryClient.setQueryData<SubscriptionMyPackage[]>(myPackagesKey, (current) =>
+        patchMyPackagesAutoRenew(current, result.subscriptionId, result.autoRenew),
+      )
+    },
   })
 }
 

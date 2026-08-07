@@ -469,6 +469,15 @@
   cursor: pointer;
 }
 
+.package-management-view .package-switch.is-disabled {
+  cursor: not-allowed;
+  opacity: 0.65;
+}
+
+.package-management-view .package-switch.is-disabled input {
+  cursor: not-allowed;
+}
+
 .package-management-view .package-switch input {
   position: absolute;
   inset: 0;
