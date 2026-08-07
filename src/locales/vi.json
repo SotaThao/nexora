@@ -3092,6 +3092,7 @@
             "backToMonth": "Về xem tháng"
           },
           "PosOrderWorkspace": {
+            "bookingPrefilled": "Đã tự động điền theo lịch hẹn hôm nay của {{name}}",
             "titleUpdate": "Order #{{orderNumber}} · {{customerName}}",
             "backButton": "Quay lại",
             "cancelButton": "Hủy",

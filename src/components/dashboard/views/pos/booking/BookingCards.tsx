@@ -4,6 +4,7 @@ import { useTranslation } from '../../../../../contexts/LanguageContext'
 import { PosOrderStatus } from '../../../../../constants/posOrderStatus'
 import type { BookingListItemApiDto } from '../../../../../types/repositories'
 import { formatBookingWallClock, statusLabelKey } from './bookingFormatters'
+import { formatPosDateTime } from '../posDateTime'
 
 export default function BookingCards({
   bookings,
@@ -20,7 +21,7 @@ export default function BookingCards({
   onViewDetail: (bookingId: string) => void
   checkingInId: string | null
 }) {
-  const { t } = useTranslation()
+  const { t, currentLanguage } = useTranslation()
   const p = 'components.dashboard.views.pos.BookingTab.'
 
   return (
@@ -37,7 +38,7 @@ export default function BookingCards({
             </div>
             <p className="text-xs text-nexoraMuted">{formatBookingWallClock(booking.scheduledAt)}</p>
             <p className="text-[11px] text-nexoraMuted">
-              {t(p + 'columnCreated')}: {formatBookingWallClock(booking.createdAt)}
+              {t(p + 'columnCreated')}: {formatPosDateTime(booking.createdAt, currentLanguage)}
             </p>
             <p className="text-xs text-nexoraMuted">{booking.serviceNames.join(', ')}</p>
             <p className="text-xs text-nexoraMuted">

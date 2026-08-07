@@ -24,19 +24,27 @@ export function useCreateStaffBooking(businessId?: string) {
   })
 }
 
-export function useBookingList(businessId?: string, filters: BookingListFilters = {}) {
+export function useBookingList(
+  businessId?: string,
+  filters: BookingListFilters = {},
+  { enabled = true }: { enabled?: boolean } = {},
+) {
   return useQuery<BookingListResultApiDto>({
     queryKey: qk.merchantPosBookingList(businessId, filters),
     queryFn: () => posBookingRepository.getBookingList(businessId as string, filters),
-    enabled: Boolean(businessId),
+    enabled: enabled && Boolean(businessId),
   })
 }
 
-export function useBookingDetail(businessId?: string, bookingId?: string) {
+export function useBookingDetail(
+  businessId?: string,
+  bookingId?: string,
+  { enabled = true }: { enabled?: boolean } = {},
+) {
   return useQuery<BookingDetailApiDto>({
     queryKey: qk.merchantPosBookingDetail(businessId, bookingId),
     queryFn: () => posBookingRepository.getBookingDetail(businessId as string, bookingId as string),
-    enabled: Boolean(businessId) && Boolean(bookingId),
+    enabled: enabled && Boolean(businessId) && Boolean(bookingId),
   })
 }
 
