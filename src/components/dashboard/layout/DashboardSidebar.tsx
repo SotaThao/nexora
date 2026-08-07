@@ -5,7 +5,7 @@ import { useNavigate, useSearchParams } from 'react-router-dom'
 import { ChevronUp, ChevronDown, LogOut } from 'lucide-react'
 import { useTranslation } from '../../../contexts/LanguageContext'
 import { useOpenProductManagement } from '../../../data/hooks/useOpenProductManagement'
-import { visibleMenuItems, MERCHANT_SIDEBAR_MENU_ITEMS, isPaymentsPayoutsRouteActive, getVisibleBookingHubSubmenu, isBookingHubSubActive, VISIBLE_TOUCHPOINTS_SUBMENU, GIFT_CARD_CENTER_SUBMENU, DASHBOARD_MENU, DASHBOARD_MENU_ID, bookingHubPath, buildDashboardMenuPath, packageManagementPath, getDefaultBookingHubTab, getDashboardMenuLocalizedLabel, isDashboardStaffRole } from '../constants'
+import { visibleMenuItems, MERCHANT_SIDEBAR_MENU_ITEMS, isPaymentsPayoutsRouteActive, getVisibleBookingHubSubmenu, isBookingHubSubActive, isPackageManagementSubActive, PACKAGE_MANAGEMENT_SUBMENU, VISIBLE_TOUCHPOINTS_SUBMENU, GIFT_CARD_CENTER_SUBMENU, DASHBOARD_MENU, DASHBOARD_MENU_ID, bookingHubPath, buildDashboardMenuPath, packageManagementPath, getDefaultBookingHubTab, getDashboardMenuLocalizedLabel, isDashboardStaffRole } from '../constants'
 import { PackageManagementTab } from '../views/packageManagement/constants'
 import { handleExpandableMenuClick } from '../hooks/expandableMenuNav'
 import MenuIcon from '../../ui/MenuIcon'
@@ -60,6 +60,9 @@ export default function DashboardSidebar({
   const [isPaymentsPayoutsExpanded, setIsPaymentsPayoutsExpanded] = useState(isPaymentsPayoutsActive)
   const [isTouchpointsExpanded, setIsTouchpointsExpanded] = useState(activeMenu === DASHBOARD_MENU.Touchpoints)
   const [isBookingHubExpanded, setIsBookingHubExpanded] = useState(activeMenu === DASHBOARD_MENU.BookingHub)
+  const [isPackageManagementExpanded, setIsPackageManagementExpanded] = useState(
+    activeMenu === DASHBOARD_MENU.PackageManagement,
+  )
   const [isGiftCardCenterExpanded, setIsGiftCardCenterExpanded] = useState(false)
 
   useEffect(() => {
@@ -68,6 +71,7 @@ export default function DashboardSidebar({
     }
     setIsTouchpointsExpanded(activeMenu === DASHBOARD_MENU.Touchpoints)
     setIsBookingHubExpanded(activeMenu === DASHBOARD_MENU.BookingHub)
+    setIsPackageManagementExpanded(activeMenu === DASHBOARD_MENU.PackageManagement)
   }, [activeMenu, isPaymentsPayoutsActive])
 
   const handlePaymentsPayoutsToggle = () => {
@@ -80,6 +84,7 @@ export default function DashboardSidebar({
     setIsPaymentsPayoutsExpanded(true)
     setIsTouchpointsExpanded(false)
     setIsBookingHubExpanded(false)
+    setIsPackageManagementExpanded(false)
     setIsGiftCardCenterExpanded(false)
   }
 
@@ -88,6 +93,7 @@ export default function DashboardSidebar({
       setIsGiftCardCenterExpanded((prev) => !prev)
       setIsTouchpointsExpanded(false)
       setIsBookingHubExpanded(false)
+      setIsPackageManagementExpanded(false)
       setIsPaymentsPayoutsExpanded(false)
       return
     }
@@ -96,6 +102,15 @@ export default function DashboardSidebar({
       clickedId: id,
       activeMenu,
       sections: [
+        {
+          id: DASHBOARD_MENU.PackageManagement,
+          setExpanded: setIsPackageManagementExpanded,
+          enter: () => {
+            navigate(packageManagementPath(PackageManagementTab.Overview), {
+              replace: true,
+            })
+          },
+        },
         {
           id: DASHBOARD_MENU.Touchpoints,
           setExpanded: setIsTouchpointsExpanded,
@@ -218,10 +233,10 @@ export default function DashboardSidebar({
                 type="button"
                 onClick={() => handleMenuClick(id)}
                 disabled={id === DASHBOARD_MENU_ID.productManagement && isOpeningProductManagement}
-                className={sidebarMenuItemBetweenClass(isActive || (id === DASHBOARD_MENU_ID.productManagement && isGiftCardCenterExpanded))}
+                className={sidebarMenuItemBetweenClass(isActive || (id === DASHBOARD_MENU_ID.productManagement && isGiftCardCenterExpanded) || (id === DASHBOARD_MENU_ID.packageManagement && isPackageManagementExpanded))}
               >
                 <div className="flex items-center gap-3 min-w-0">
-                  <MenuIcon item={item} active={isActive || (id === DASHBOARD_MENU_ID.productManagement && isGiftCardCenterExpanded)} />
+                  <MenuIcon item={item} active={isActive || (id === DASHBOARD_MENU_ID.productManagement && isGiftCardCenterExpanded) || (id === DASHBOARD_MENU_ID.packageManagement && isPackageManagementExpanded)} />
                   <span className="truncate">{localizedLabel}</span>
                 </div>
                 {id === DASHBOARD_MENU_ID.productManagement ? (
@@ -229,6 +244,14 @@ export default function DashboardSidebar({
                     {isOpeningProductManagement ? (
                       <span className="block h-4 w-4 animate-spin rounded-full border-2 border-white/30 border-t-white" />
                     ) : isGiftCardCenterExpanded ? (
+                      <ChevronUp className="h-4 w-4" />
+                    ) : (
+                      <ChevronDown className="h-4 w-4" />
+                    )}
+                  </div>
+                ) : id === DASHBOARD_MENU_ID.packageManagement ? (
+                  <div className="text-white/50 shrink-0">
+                    {isPackageManagementExpanded ? (
                       <ChevronUp className="h-4 w-4" />
                     ) : (
                       <ChevronDown className="h-4 w-4" />
@@ -275,6 +298,34 @@ export default function DashboardSidebar({
                         {isSubOpening ? (
                           <span className="h-3.5 w-3.5 shrink-0 animate-spin rounded-full border-2 border-white/30 border-t-white" />
                         ) : null}
+                      </button>
+                    )
+                  })}
+                </div>
+              )}
+
+              {id === DASHBOARD_MENU.PackageManagement && isPackageManagementExpanded && (
+                <div className={SIDEBAR_SUBMENU_WRAP_CLASS}>
+                  {PACKAGE_MANAGEMENT_SUBMENU.map((sub) => {
+                    const isSubActive = isPackageManagementSubActive(
+                      activeMenu,
+                      activeSubTab,
+                      sub.id,
+                    )
+                    return (
+                      <button
+                        key={sub.id}
+                        type="button"
+                        onClick={() => {
+                          navigate(packageManagementPath(sub.id), { replace: true })
+                          setIsPackageManagementExpanded(true)
+                        }}
+                        className={sidebarSubmenuItemClass(isSubActive)}
+                      >
+                        <div
+                          className={`h-1.5 w-1.5 rounded-full ${isSubActive ? 'bg-brandCyan shadow-sm' : 'bg-white/30'}`}
+                        />
+                        <span>{t(sub.labelKey)}</span>
                       </button>
                     )
                   })}

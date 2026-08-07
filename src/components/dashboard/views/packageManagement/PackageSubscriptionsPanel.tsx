@@ -1,6 +1,5 @@
+import { useSearchParams } from 'react-router-dom'
 import ManagePlanView from '../ManagePlanView'
-import type { SubscriptionPackage } from '../../../../data/repositories/subscriptionPayments'
-import type { UserSubscription } from '../../../../types/domain'
 import { useTranslation } from '../../../../contexts/LanguageContext'
 import {
   formatCompareCellDisplay,
@@ -8,14 +7,14 @@ import {
   TIP_PLATFORM_COMPARE_PLAN_IDS,
   TIP_PLATFORM_COMPARE_ROWS,
   type TipPlatformComparePlanId,
-  type TipPlatformUiPlanIdValue,
 } from './constants'
+import TipPlatformCheckoutModal from './TipPlatformCheckoutModal'
+import { useTipPlatformCheckoutFlow } from './useTipPlatformCheckoutFlow'
+
+const TK = PACKAGE_MANAGEMENT_TK
 
 type PackageSubscriptionsPanelProps = {
-  currentSubscription?: UserSubscription | null
-  packages?: SubscriptionPackage[]
-  currentPlanId?: TipPlatformComparePlanId | null
-  onSelectPlan?: (planId: TipPlatformUiPlanIdValue) => void
+  profile: LooseObject | null | undefined
 }
 
 function PlanComparisonTable({
@@ -24,7 +23,6 @@ function PlanComparisonTable({
   currentPlanId?: TipPlatformComparePlanId | null
 }) {
   const { t } = useTranslation()
-  const TK = PACKAGE_MANAGEMENT_TK
 
   return (
     <section className="nexora-compare-section" aria-labelledby="nexora-compare-title">
@@ -81,21 +79,49 @@ function PlanComparisonTable({
   )
 }
 
+/** Subscriptions tab — TipPlatform catalog fetch runs only while this panel is mounted. */
 export default function PackageSubscriptionsPanel({
-  currentSubscription = null,
-  packages,
-  currentPlanId = null,
-  onSelectPlan,
+  profile,
 }: PackageSubscriptionsPanelProps) {
+  const [searchParams, setSearchParams] = useSearchParams()
+
+  const {
+    tipPlatformSubscription,
+    comparePlanId,
+    packages,
+    billingDefaults,
+    paymentPlan,
+    selectedPackage,
+    paymentPlanPrice,
+    clearCheckout,
+    handleSelectPlan,
+  } = useTipPlatformCheckoutFlow({
+    profile,
+    searchParams,
+    setSearchParams,
+    packagesEnabled: true,
+    deepLinkEnabled: true,
+  })
+
   return (
-    <div className="nexora-package-content package-plan-content">
-      <ManagePlanView
-        currentSubscription={currentSubscription}
-        packages={packages}
-        onSelectPlan={onSelectPlan}
-        wide
+    <>
+      <div className="nexora-package-content package-plan-content">
+        <ManagePlanView
+          currentSubscription={tipPlatformSubscription}
+          packages={packages}
+          onSelectPlan={handleSelectPlan}
+          wide
+        />
+        <PlanComparisonTable currentPlanId={comparePlanId} />
+      </div>
+
+      <TipPlatformCheckoutModal
+        paymentPlan={paymentPlan}
+        selectedPackage={selectedPackage}
+        paymentPlanPrice={paymentPlanPrice}
+        billingDefaults={billingDefaults}
+        onClose={clearCheckout}
       />
-      <PlanComparisonTable currentPlanId={currentPlanId} />
-    </div>
+    </>
   )
 }

@@ -23,6 +23,10 @@ import {
   formatPackageHistoryTransactionId,
   resolvePackageHistoryDisplayAt,
 } from './constants'
+import {
+  PACKAGE_MANAGEMENT_TAB_QUERY,
+  type PackageManagementTabQueryOptions,
+} from '../packageManagement/constants'
 
 const TK = 'components.dashboard.views.BookingHubView.plans'
 const PACKAGE_HISTORY_SKELETON_ROWS = 5
@@ -32,7 +36,12 @@ const HISTORY_COL_SPAN = 7
  * Package purchase history table (VoiceAI / TipPlatform orders).
  * Client-side pagination — API returns the full list today.
  */
-export default function PackageHistoryPanel() {
+export default function PackageHistoryPanel({
+  queryOptions,
+}: {
+  /** Fresh network fetch on mount (Package Management History tab). */
+  queryOptions?: PackageManagementTabQueryOptions
+} = {}) {
   const { t, currentLanguage } = useTranslation()
   const {
     data: rows = [],
@@ -42,7 +51,7 @@ export default function PackageHistoryPanel() {
     isError,
     error,
     refetch,
-  } = useSubscriptionPurchaseHistory()
+  } = useSubscriptionPurchaseHistory(queryOptions ?? {})
 
   const { pageNumber, pageSize, setPage, reset } = usePagination({
     pageSize: PACKAGE_HISTORY_PAGE_SIZE,
@@ -138,10 +147,7 @@ export default function PackageHistoryPanel() {
                 const statusLabel = t(
                   `${TK}.${PACKAGE_HISTORY_STATUS_LABEL_KEY[row.uiStatus]}`,
                 )
-                const packageLabel = formatPackageHistoryPackageLabel(
-                  row.planName,
-                  t(`${TK}.packageHistoryPackageBrand`),
-                )
+                const packageLabel = formatPackageHistoryPackageLabel(row.planName)
                 return (
                   <tr key={row.orderId || row.referenceId}>
                     <td>

@@ -35,6 +35,7 @@ import {
   type SubscriptionPackage,
   type SubscriptionPaymentMethod,
 } from '../../../data/repositories/subscriptionPayments'
+import { PACKAGE_MANAGEMENT_TAB_QUERY } from './packageManagement/constants'
 import {
   useSubscriptionPackages,
 } from '../../../data/hooks/useSubscriptionPayments'
@@ -585,9 +586,12 @@ export default function BookingPlansPanel({ buyOnlyMode = false }: { buyOnlyMode
   } = useSubscriptionPackages({
     enabled: buyOnlyMode || plansView === PlansView.Package,
     packageType: SubscriptionPackageType.VoiceAI,
-    // No cache window — each Buy Package visit must hit the network.
-    staleTime: 0,
-    refetchOnMount: 'always',
+    ...(buyOnlyMode
+      ? PACKAGE_MANAGEMENT_TAB_QUERY
+      : {
+          staleTime: 0,
+          refetchOnMount: 'always' as const,
+        }),
   })
 
   const packagesByPlan = useMemo(
