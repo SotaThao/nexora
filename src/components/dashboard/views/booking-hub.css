@@ -6301,6 +6301,12 @@ body.booking-appointment-panel-modal-open {
   box-shadow: 0 14px 28px rgba(70, 72, 216, 0.2);
 }
 
+.booking-hub-view .trial-submit:disabled {
+  cursor: not-allowed;
+  opacity: 0.6;
+  box-shadow: none;
+}
+
 .booking-hub-view .trial-submit-spaced {
   margin-top: 12px;
 }
@@ -13546,6 +13552,19 @@ body.booking-appointment-panel-modal-open {
 
 .booking-hub-view .credits-action:active {
   transform: translateY(1px);
+}
+
+.booking-hub-view .credits-action:disabled {
+  cursor: not-allowed;
+  opacity: 0.6;
+  transform: none;
+  box-shadow: none;
+}
+
+.booking-hub-view .credits-action:disabled:hover {
+  background: #fff;
+  border-color: #cfd7e8;
+  color: var(--nexora-brand);
 }
 
 .booking-hub-view .credits-action-secondary {

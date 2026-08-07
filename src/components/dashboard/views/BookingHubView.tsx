@@ -8,7 +8,6 @@ import BookingTodayPanel from './BookingTodayPanel'
 import BookingCustomersPanel from './BookingCustomersPanel'
 import BookingCallLogPanel from './BookingCallLogPanel'
 import BookingSmsCampaignsPanel from './smsCampaigns/BookingSmsCampaignsPanel'
-import BookingQrCodesPanel from './qrCodes/BookingQrCodesPanel'
 import BookingPlansPanel from './BookingPlansPanel'
 import BookingSettingsPanel from './BookingSettingsPanel'
 import { BookingHubVoiceProvider } from './BookingHubVoiceContext'
@@ -19,7 +18,6 @@ import {
   MessageSquareTabIcon,
   PeopleTabIcon,
   PhoneTabIcon,
-  QrCodeIcon,
   SlidersTabIcon,
   TagsTabIcon,
 } from './BookingHubIcons'
@@ -31,6 +29,7 @@ import {
 import {
   BookingHubMainTab,
   BookingHubSubTab,
+  isBookingHubMainTabVisible,
   parseBookingHubMainTab,
   parseBookingHubSubTab,
 } from '../../../data/repositories/merchantVoice'
@@ -87,6 +86,18 @@ export default function BookingHubView() {
 
       const nextParams = new URLSearchParams(searchParams)
       nextParams.set('tab', defaultTab)
+      nextParams.delete('view')
+      setSearchParams(nextParams, { replace: true })
+      return
+    }
+
+    // Hidden tabs (e.g. QR Codes) — redirect to the default voice tab.
+    if (!isBookingHubMainTabVisible(parsedMainTab)) {
+      const fallbackTab = getDefaultBookingHubTab(hasVoiceTenant)
+      setActiveMainTab(fallbackTab)
+      setActiveSubtab(BookingHubSubTab.Today)
+      const nextParams = new URLSearchParams(searchParams)
+      nextParams.set('tab', fallbackTab)
       nextParams.delete('view')
       setSearchParams(nextParams, { replace: true })
       return
@@ -203,18 +214,6 @@ export default function BookingHubView() {
                 <span>{t(`${TK}.tabs.smsCampaigns`)}</span>
               </button>
             )}
-            {hasVoiceTenant && (
-              <button
-                className={`page-tab ${activeMainTab === BookingHubMainTab.QrCodes ? 'is-active' : ''}`}
-                type="button"
-                role="tab"
-                aria-selected={activeMainTab === BookingHubMainTab.QrCodes}
-                onClick={() => updateQueryTabs(BookingHubMainTab.QrCodes)}
-              >
-                <span className="page-tab-icon"><QrCodeIcon /></span>
-                <span>{t(`${TK}.tabs.qrCodes`)}</span>
-              </button>
-            )}
             <button
               className={`page-tab ${activeMainTab === BookingHubMainTab.Plans ? 'is-active' : ''}`}
               type="button"
@@ -300,16 +299,6 @@ export default function BookingHubView() {
           aria-label={t(`${TK}.ariaSmsCampaignsPanel`)}
         >
           <BookingSmsCampaignsPanel />
-        </section>
-      )}
-
-      {!isTenantStatusLoading && voiceFeaturesEnabled && activeMainTab === BookingHubMainTab.QrCodes && (
-        <section
-          className="tab-panel is-active"
-          id="panel-qr-codes-wrap"
-          aria-label={t(`${TK}.ariaQrCodesPanel`)}
-        >
-          <BookingQrCodesPanel />
         </section>
       )}
 
