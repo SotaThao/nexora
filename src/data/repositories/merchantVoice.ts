@@ -119,6 +119,7 @@ export {
   hasJoinedVoicePlan,
   parseBookingHubMainTab,
   parseBookingHubSubTab,
+  isBookingHubMainTabVisible,
   VoiceCreditActivityKind,
   VoiceCreditType,
   VoicePlanStatus,
@@ -392,6 +393,7 @@ export interface CreateMerchantVoiceCustomerRequest {
 }
 
 export interface UpdateMerchantVoiceCustomerRequest {
+  phoneNumber: string
   name?: string | null
   email?: string | null
   address?: string | null
@@ -533,7 +535,8 @@ export interface CreateMerchantVoiceServiceRequest {
   note?: string | null
   icon?: string | null
   isActive?: boolean
-  categoryIds?: string[]
+  /** Real category ids; Other-only / uncategorised → `null` */
+  categoryIds?: string[] | null
 }
 
 export interface UpdateMerchantVoiceServiceRequest {
@@ -544,7 +547,7 @@ export interface UpdateMerchantVoiceServiceRequest {
   icon?: string | null
   isActive?: boolean
   sortOrder?: number | null
-  /** Omit / null = leave categories; [] = clear; array = replace */
+  /** Omit = leave categories; null / [] = Other-only clear; array = replace */
   categoryIds?: string[] | null
 }
 
@@ -776,15 +779,37 @@ function normalizeConfigResponse(response: unknown): MerchantVoiceConfigDto {
   }
 }
 
+function sanitizeCategoryIdsForWire(value: unknown): string[] {
+  if (!Array.isArray(value)) return []
+  return [
+    ...new Set(
+      value
+        .filter((id): id is string => typeof id === 'string')
+        .map((id) => id.trim())
+        .filter(
+          (id) =>
+            Boolean(id)
+            && id !== OTHER_SERVICES_CATEGORY_ID
+            && id !== '[object Object]',
+        ),
+    ),
+  ]
+}
+
+/** Wire payload: Other-only / empty → `null`; otherwise real category ids. */
+function categoryIdsForWire(value: unknown): string[] | null {
+  if (value == null) return null
+  const ids = sanitizeCategoryIdsForWire(value)
+  return ids.length > 0 ? ids : null
+}
+
 function normalizeServiceDto(item: unknown, index = 0): MerchantVoiceServiceDto | null {
   if (!item || typeof item !== 'object') return null
   const row = item as Record<string, unknown>
   const name = String(row.name ?? row.Name ?? '').trim()
   if (!name) return null
   const categoryIdsRaw = row.categoryIds ?? row.CategoryIds
-  const categoryIds = Array.isArray(categoryIdsRaw)
-    ? categoryIdsRaw.map((id) => String(id).trim()).filter(Boolean)
-    : []
+  const categoryIds = sanitizeCategoryIdsForWire(categoryIdsRaw)
   return {
     id: String(row.id ?? row.Id ?? ''),
     name,
@@ -1633,9 +1658,18 @@ export function createMerchantVoiceRepository(client: HttpClient = httpClient) {
     },
 
     async updateCustomer(id: string, body: UpdateMerchantVoiceCustomerRequest): Promise<void> {
+      const command: UpdateMerchantVoiceCustomerRequest = {
+        phoneNumber: String(body.phoneNumber ?? '').trim(),
+        name: body.name?.trim() ? body.name.trim() : null,
+        email: body.email?.trim() ? body.email.trim() : null,
+        address: body.address?.trim() ? body.address.trim() : null,
+        dateOfBirth: body.dateOfBirth?.trim() ? body.dateOfBirth.trim() : null,
+        type: body.type,
+        status: body.status,
+      }
       await client.put<void>(
         `${MERCHANT_VOICE_BASE}/customers/${encodeURIComponent(id)}`,
-        body,
+        command,
         { headers: MERCHANT_VOICE_HEADERS },
       )
     },

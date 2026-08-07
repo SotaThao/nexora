@@ -248,15 +248,11 @@ export default function SmsBuyCreditsModal({
           <button
             className="btn-primary"
             type="button"
-            disabled={submitting || !onConfirm}
-            onClick={() => {
-              void handleConfirm()
-            }}
+            disabled
+            aria-disabled="true"
           >
             <ShieldCheckIcon className="marketing-icon is-compact" />
-            <span>
-              {submitting ? t(`${TK}.confirmPaymentPending`) : t(`${TK}.confirmPayment`)}
-            </span>
+            <span>{t(`${TK}.confirmPaymentComingSoon`)}</span>
           </button>
         </div>
       </div>

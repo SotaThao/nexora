@@ -186,9 +186,14 @@ export default function PlanPaymentModal({ open, plan, onClose, onConfirm }: Pro
           <button className="btn-outline" type="button" onClick={onClose}>
             {t(`${CARD_TK}.cancel`)}
           </button>
-          <button className="btn-primary" type="button" onClick={handleConfirm}>
+          <button
+            className="btn-primary"
+            type="button"
+            disabled
+            aria-disabled="true"
+          >
             <ShieldCheckIcon className="marketing-icon is-compact" />
-            <span>{t(`${TK}.planConfirm`, { plan })}</span>
+            <span>{t(`${TK}.comingSoon`)}</span>
           </button>
         </div>
       </div>

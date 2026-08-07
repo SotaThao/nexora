@@ -18,7 +18,7 @@ import {
   Store,
   Package,
 } from 'lucide-react'
-import { BookingHubMainTab } from '../../data/merchantVoice/domain'
+import { BookingHubMainTab, isBookingHubMainTabVisible } from '../../data/merchantVoice/domain'
 
 /** Menu ids used by Booking Hub / Touchpoints expandable nav (avoid hardcoding duplicates). */
 export const DASHBOARD_MENU = {
@@ -375,8 +375,9 @@ export const BOOKING_HUB_SUBMENU = [
 
 /** Match BookingHubView page tabs: without voice tenant only Plans is visible. */
 export function getVisibleBookingHubSubmenu(hasVoiceTenant: boolean) {
-  if (hasVoiceTenant) return BOOKING_HUB_SUBMENU;
-  return BOOKING_HUB_SUBMENU.filter((item) => !item.requiresVoiceTenant);
+  const visible = BOOKING_HUB_SUBMENU.filter((item) => isBookingHubMainTabVisible(item.id))
+  if (hasVoiceTenant) return visible
+  return visible.filter((item) => !item.requiresVoiceTenant)
 }
 
 export function getDefaultBookingHubTab(
@@ -389,6 +390,7 @@ export function isBookingHubMainTabAllowed(
   tab: BookingHubMainTab,
   hasVoiceTenant: boolean,
 ): boolean {
+  if (!isBookingHubMainTabVisible(tab)) return false
   const item = BOOKING_HUB_SUBMENU.find((entry) => entry.id === tab);
   if (!item) return false;
   return hasVoiceTenant || !item.requiresVoiceTenant;

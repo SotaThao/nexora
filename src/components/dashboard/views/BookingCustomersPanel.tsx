@@ -317,15 +317,13 @@ export default function BookingCustomersPanel() {
     }
 
     let phoneForApi = ''
-    if (isCreateMode) {
-      const hasPhoneInput = Boolean(phoneParsed.nationalNumber.trim())
-      if (!hasPhoneInput) {
-        nextErrors.phone = t(`${TK}.invalidPhoneRequired`)
-      } else {
-        phoneForApi = normalizePhoneE164(draft.phone, dialCode)
-        if (!isValidPhoneE164(phoneForApi, dialCode)) {
-          nextErrors.phone = t(`${TK}.invalidPhone`)
-        }
+    const hasPhoneInput = Boolean(phoneParsed.nationalNumber.trim())
+    if (!hasPhoneInput) {
+      nextErrors.phone = t(`${TK}.invalidPhoneRequired`)
+    } else {
+      phoneForApi = normalizePhoneE164(draft.phone, dialCode)
+      if (!isValidPhoneE164(phoneForApi, dialCode)) {
+        nextErrors.phone = t(`${TK}.invalidPhone`)
       }
     }
 
@@ -367,29 +365,24 @@ export default function BookingCustomersPanel() {
 
     setIsSaving(true)
     try {
+      const customerBody = {
+        phoneNumber: phoneForApi,
+        name: trimmedName || null,
+        email: trimmedEmail || null,
+        address: trimmedAddress || null,
+        dateOfBirth: draft.dateOfBirth.trim() || null,
+        type: draft.type,
+        status: draft.status,
+      }
       if (isCreateMode) {
         // POST /api/v1/merchant/nexora-voice/customers — CreateMerchantVoiceCustomerCommand
-        await createCustomerMutation.mutateAsync({
-          phoneNumber: phoneForApi,
-          name: trimmedName || null,
-          email: trimmedEmail || null,
-          address: trimmedAddress || null,
-          dateOfBirth: draft.dateOfBirth.trim() || null,
-          type: draft.type,
-          status: draft.status,
-        })
+        await createCustomerMutation.mutateAsync(customerBody)
         showToast(t(`${TK}.createSuccess`), 'success')
       } else if (draft.id) {
+        // PUT /api/v1/merchant/nexora-voice/customers/{id} — UpdateMerchantVoiceCustomerCommand
         await updateCustomerMutation.mutateAsync({
           id: draft.id,
-          body: {
-            name: trimmedName || null,
-            email: trimmedEmail || null,
-            address: trimmedAddress || null,
-            dateOfBirth: draft.dateOfBirth || null,
-            type: draft.type,
-            status: draft.status,
-          },
+          body: customerBody,
         })
         showToast(t(`${TK}.saveSuccess`), 'success')
       }
@@ -649,9 +642,8 @@ export default function BookingCustomersPanel() {
                   <CountryCodeSelect
                     value={phoneParsed.countryCode}
                     embedded
-                    disabled={!isCreateMode || isSaving}
+                    disabled={isSaving}
                     onChange={(nextCode) => {
-                      if (!isCreateMode) return
                       const formatted = formatNationalNumber(phoneParsed.nationalNumber, nextCode)
                       setDraft({ ...draft, phone: `${nextCode} ${formatted}`.trim() })
                       if (formErrors.phone) setFormErrors((prev) => ({ ...prev, phone: undefined }))
@@ -664,11 +656,9 @@ export default function BookingCustomersPanel() {
                     placeholder={getNationalPhonePlaceholder(phoneParsed.countryCode)}
                     inputMode="numeric"
                     autoComplete="tel-national"
-                    disabled={!isCreateMode || isSaving}
-                    readOnly={!isCreateMode}
+                    disabled={isSaving}
                     aria-invalid={Boolean(formErrors.phone)}
                     onChange={(event) => {
-                      if (!isCreateMode) return
                       const formatted = formatNationalNumber(event.target.value, phoneParsed.countryCode)
                       setDraft({ ...draft, phone: `${phoneParsed.countryCode} ${formatted}`.trim() })
                       if (formErrors.phone) setFormErrors((prev) => ({ ...prev, phone: undefined }))
