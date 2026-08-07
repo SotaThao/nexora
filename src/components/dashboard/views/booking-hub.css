@@ -149,6 +149,80 @@
   flex-shrink: 0;
 }
 
+.booking-hub-view .public-booking-form-link {
+  display: flex;
+  max-width: 100%;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-top: 12px;
+  border: 1px solid rgba(70, 72, 216, 0.16);
+  border-radius: 12px;
+  background: #fff;
+  padding: 10px 12px;
+  box-shadow: var(--nexora-card-shadow);
+}
+
+.booking-hub-view .public-booking-form-link-copy {
+  min-width: 0;
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.booking-hub-view .public-booking-form-link-label {
+  color: var(--nexora-text);
+  font-size: 0.75rem;
+  font-weight: 800;
+  letter-spacing: 0.01em;
+}
+
+.booking-hub-view .public-booking-form-link-url {
+  overflow: hidden;
+  color: var(--nexora-brand);
+  font-size: 0.8125rem;
+  font-weight: 600;
+  line-height: 1.35;
+  text-decoration: none;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.booking-hub-view .public-booking-form-link-url:hover {
+  text-decoration: underline;
+}
+
+.booking-hub-view .public-booking-form-link-copy-btn {
+  display: inline-flex;
+  flex: none;
+  align-items: center;
+  gap: 6px;
+  border: 1px solid rgba(70, 72, 216, 0.22);
+  border-radius: 10px;
+  background: linear-gradient(135deg, #fff, #f5f6ff);
+  padding: 8px 12px;
+  color: var(--nexora-brand);
+  font-size: 0.75rem;
+  font-weight: 800;
+  cursor: pointer;
+  transition:
+    border-color 0.2s,
+    box-shadow 0.2s,
+    transform 0.2s;
+}
+
+.booking-hub-view .public-booking-form-link-copy-btn:hover {
+  border-color: var(--nexora-brand);
+  box-shadow: 0 6px 14px rgba(70, 72, 216, 0.12);
+  transform: translateY(-1px);
+}
+
+.booking-hub-view .public-booking-form-link-copy-btn svg {
+  width: 14px;
+  height: 14px;
+}
+
 .booking-hub-view .page-tabs {
   display: flex;
   flex-wrap: wrap;
@@ -4034,6 +4108,17 @@ body.booking-appointment-panel-modal-open {
   border: 1px solid var(--nexora-border);
   border-radius: 10px;
   background: #fafbff;
+}
+
+.booking-hub-view .settings-service-modal-categories.has-error {
+  border-color: #dc2626;
+  background: #fff5f5;
+}
+
+.booking-hub-view .settings-required-mark {
+  margin-left: 2px;
+  color: #dc2626;
+  font-weight: 800;
 }
 
 .booking-hub-view .settings-service-modal-categories-empty {

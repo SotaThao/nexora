@@ -2,6 +2,7 @@ import type React from 'react'
 import {
   formatNationalNumber,
   isValidPhoneE164,
+  normalizePhoneE164,
   parsePhone,
 } from '../../CountryCodeSelect'
 import { formatDatePart, formatTimePart } from '../../../utils/localDate'
@@ -284,6 +285,7 @@ export function formatCallDurationSeconds(
 
 /**
  * Format a voice/booking phone for display.
+ * May add dial-code "+" / separators, but must never drop digits returned by BE.
  * @param empty Value when phone is missing (Today uses `null`, lists use `BOOKING_HUB_EMPTY_CELL`).
  */
 export function formatVoicePhoneDisplay(
@@ -293,13 +295,27 @@ export function formatVoicePhoneDisplay(
   const raw = phone?.trim()
   if (!raw) return empty
 
-  const parsed = parsePhone(raw)
-  if (isValidPhoneE164(raw, parsed.countryCode)) {
-    const national = formatNationalNumber(parsed.nationalNumber, parsed.countryCode)
-    if (national.replace(/\D/g, '')) {
-      return `${parsed.countryCode} ${national}`.trim()
-    }
+  const sourceDigits = raw.replace(/\D/g, '')
+  if (!sourceDigits) return raw
+
+  const parsedHint = parsePhone(raw)
+  const e164 = normalizePhoneE164(raw, parsedHint.countryCode)
+  if (!e164 || !isValidPhoneE164(e164, parsePhone(e164).countryCode)) {
+    return raw
   }
 
-  return raw
+  const parsed = parsePhone(e164)
+  const national = formatNationalNumber(parsed.nationalNumber, parsed.countryCode)
+  const nationalDigits = national.replace(/\D/g, '')
+  if (!nationalDigits) return raw
+
+  const formatted = `${parsed.countryCode} ${national}`.trim()
+  const formattedDigits = formatted.replace(/\D/g, '')
+
+  // Formatting may prepend a dial code, but every BE digit must still appear in order.
+  if (!formattedDigits.includes(sourceDigits)) {
+    return raw
+  }
+
+  return formatted
 }

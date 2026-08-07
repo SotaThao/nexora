@@ -530,7 +530,8 @@ export interface CreateMerchantVoiceServiceRequest {
   note?: string | null
   icon?: string | null
   isActive?: boolean
-  categoryIds?: string[]
+  /** Real category ids; Other-only / uncategorised → `[]` */
+  categoryIds?: string[] | null
 }
 
 export interface UpdateMerchantVoiceServiceRequest {
@@ -1471,7 +1472,8 @@ export function createMerchantVoiceRepository(client: HttpClient = httpClient) {
           note: body.note?.trim() || null,
           icon: body.icon?.trim() || null,
           isActive: body.isActive !== false,
-          categoryIds: body.categoryIds ?? [],
+          // Other-only / uncategorised → [] (never send the virtual Other id).
+          categoryIds: Array.isArray(body.categoryIds) ? body.categoryIds : [],
         },
         { headers: MERCHANT_VOICE_HEADERS },
       )

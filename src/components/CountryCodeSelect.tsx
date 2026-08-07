@@ -53,6 +53,10 @@ export const parsePhone = (phoneStr) => {
     return { countryCode: PhoneDialCode.Vietnam, nationalNumber: digits.slice(1) }
   }
 
+  // API / paste without "+": "18065551212" or "84901234567"
+  const prefixed = matchCallingCodePrefixedDigits(digits)
+  if (prefixed) return prefixed
+
   return { countryCode: PhoneDialCode.US, nationalNumber: normalized }
 }
 
@@ -108,6 +112,36 @@ export const getE164MaxNationalDigits = (dialCode: string) => {
   return getMaxNationalDigits(dialCode)
 }
 
+/**
+ * Detect country calling code embedded in digits without a leading "+".
+ * Only accepts an exact national length for that dial code so partial input
+ * and plain national numbers (e.g. 10-digit US) are not mis-parsed.
+ */
+function matchCallingCodePrefixedDigits(digits: string): {
+  countryCode: string
+  nationalNumber: string
+} | null {
+  if (!digits) return null
+
+  const candidates = [...COUNTRY_CODES]
+    .map((country) => ({
+      dialCode: country.dialCode,
+      dialDigits: country.dialCode.replace(/\D/g, ''),
+    }))
+    .filter((country) => country.dialDigits.length > 0)
+    .sort((a, b) => b.dialDigits.length - a.dialDigits.length)
+
+  for (const { dialCode, dialDigits } of candidates) {
+    if (!digits.startsWith(dialDigits)) continue
+    const nationalNumber = digits.slice(dialDigits.length)
+    if (!nationalNumber) continue
+    if (nationalNumber.length !== getE164MaxNationalDigits(dialCode)) continue
+    return { countryCode: dialCode, nationalNumber }
+  }
+
+  return null
+}
+
 /** Strip domestic trunk prefix (e.g. leading 0 for +84) before E.164 payload. */
 export const stripTrunkPrefixNational = (nationalDigits: string, dialCode: string) => {
   const digits = nationalDigits.replace(/\D/g, '')
@@ -121,16 +155,21 @@ export const normalizePhoneE164 = (value: string, fallbackDialCode: string) => {
   const trimmed = value.trim()
   if (!trimmed) return ''
 
-  const parsed = parsePhone(
-    trimmed.startsWith('+') ? trimmed : `${fallbackDialCode}${trimmed.replace(/\D/g, '')}`,
-  )
-  const digits = stripTrunkPrefixNational(parsed.nationalNumber, parsed.countryCode).slice(
+  const digits = trimmed.replace(/\D/g, '')
+  // When the value already includes a calling code without "+", do not prepend
+  // fallbackDialCode again (that produced "+1" + "1806…" → truncated junk).
+  const parsed = trimmed.startsWith('+')
+    ? parsePhone(trimmed)
+    : matchCallingCodePrefixedDigits(digits) ??
+      parsePhone(`${fallbackDialCode}${digits}`)
+
+  const nationalDigits = stripTrunkPrefixNational(parsed.nationalNumber, parsed.countryCode).slice(
     0,
     getE164MaxNationalDigits(parsed.countryCode),
   )
 
-  if (!digits) return ''
-  return `${parsed.countryCode}${digits}`
+  if (!nationalDigits) return ''
+  return `${parsed.countryCode}${nationalDigits}`
 }
 
 /** BE stores VN phones with leading 0; US keeps E.164 (+1...). */
