@@ -10,13 +10,13 @@ const TK = 'components.dashboard.views.BookingHubView'
 
 /** Row under AI Hub tabs: public booking form URL + copy. */
 export default function PublicBookingFormLinkRow() {
-  const { t, currentLanguage } = useTranslation()
+  const { t } = useTranslation()
   const { showToast } = useNotification()
   const { data: tenant } = useMerchantVoiceTenantIdentity()
 
   const bookingUrl = useMemo(
-    () => buildPublicBookingFormUrl(tenant?.businessKey, currentLanguage),
-    [currentLanguage, tenant?.businessKey],
+    () => buildPublicBookingFormUrl(tenant?.businessKey),
+    [tenant?.businessKey],
   )
 
   const handleCopy = useCallback(async () => {
