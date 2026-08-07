@@ -24,6 +24,7 @@ import {
   TagsTabIcon,
 } from './BookingHubIcons'
 import { BookingHubTabsSkeleton } from './BookingHubSkeletons'
+import PublicBookingFormLinkRow from './PublicBookingFormLinkRow'
 import {
   BookingTodayLayout,
 } from './bookingTodayConstants'
@@ -238,6 +239,7 @@ export default function BookingHubView() {
             )}
           </div>
         )}
+        {voiceFeaturesEnabled ? <PublicBookingFormLinkRow /> : null}
       </div>
 
       {!isTenantStatusLoading && voiceFeaturesEnabled && activeMainTab === BookingHubMainTab.Booking && (
