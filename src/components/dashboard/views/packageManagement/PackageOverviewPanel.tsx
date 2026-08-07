@@ -2,12 +2,10 @@ import { useCallback, useEffect, useMemo, useState } from 'react'
 import { Boxes, Clock3, TimerOff } from 'lucide-react'
 import { useSearchParams } from 'react-router-dom'
 import { useTranslation } from '../../../../contexts/LanguageContext'
-import { useNotification } from '../../../../contexts/NotificationContext'
-import {
-  useSubscriptionMyPackages,
-  useUpdateSubscriptionAutoRenew,
-} from '../../../../data/hooks/useSubscriptionPayments'
-import { resolveTranslatedApiError } from '../../../../utils/resolveTranslatedApiError'
+// import { useNotification } from '../../../../contexts/NotificationContext'
+import { useSubscriptionMyPackages } from '../../../../data/hooks/useSubscriptionPayments'
+// import { useUpdateSubscriptionAutoRenew } from '../../../../data/hooks/useSubscriptionPayments'
+// import { resolveTranslatedApiError } from '../../../../utils/resolveTranslatedApiError'
 import {
   formatBookingHubTimestampDate,
 } from '../bookingHubFormatters'
@@ -16,14 +14,14 @@ import {
   getPackageOverviewStatus,
   mapMyPackageToOwnedItem,
   PACKAGE_COUNTDOWN_UNITS,
-  PACKAGE_OVERVIEW_AUTO_RENEW_TOAST_KEY,
+  // PACKAGE_OVERVIEW_AUTO_RENEW_TOAST_KEY,
   PACKAGE_OVERVIEW_RENEW_CTA_KEY,
   PACKAGE_OVERVIEW_SKELETON_CARD_COUNT,
   PACKAGE_MANAGEMENT_TK,
   PACKAGE_QUERY_PARAM,
   PackageManagementTab,
-  resolveAutoRenewStateKey,
-  resolveAutoRenewToastKey,
+  // resolveAutoRenewStateKey,
+  // resolveAutoRenewToastKey,
   resolvePackageRenewTab,
   type PackageOverviewOwnedItem,
   type PackageOverviewProductKey,
@@ -33,7 +31,7 @@ import OverviewEmptyState from '../../overview/OverviewEmptyState'
 import Skeleton from '../../../ui/skeleton/Skeleton'
 
 const TK = PACKAGE_MANAGEMENT_TK
-const AUTO_RENEW_ERROR_KEY = `${TK}.overview.${PACKAGE_OVERVIEW_AUTO_RENEW_TOAST_KEY.error}`
+// const AUTO_RENEW_ERROR_KEY = `${TK}.overview.${PACKAGE_OVERVIEW_AUTO_RENEW_TOAST_KEY.error}`
 
 function pad2(value: number) {
   return String(value).padStart(2, '0')
@@ -42,16 +40,16 @@ function pad2(value: number) {
 function OwnedPackageCard({
   item,
   now,
-  autoRenew,
-  isUpdating,
-  onAutoRenewChange,
+  // autoRenew,
+  // isUpdating,
+  // onAutoRenewChange,
   onRenewPackage,
 }: {
   item: PackageOverviewOwnedItem
   now: number
-  autoRenew: boolean
-  isUpdating: boolean
-  onAutoRenewChange: (next: boolean) => void
+  // autoRenew: boolean
+  // isUpdating: boolean
+  // onAutoRenewChange: (next: boolean) => void
   onRenewPackage: (productKey: PackageOverviewProductKey) => void
 }) {
   const { t, currentLanguage } = useTranslation()
@@ -67,9 +65,9 @@ function OwnedPackageCard({
     item.expiresAt,
     currentLanguage,
   )
-  const needsManualRenew = countdown.expired && !autoRenew
+  const needsManualRenew = countdown.expired && !item.autoRenew
   const renewCtaKey = PACKAGE_OVERVIEW_RENEW_CTA_KEY[item.productKey]
-  const autoRenewStateKey = `${TK}.overview.${resolveAutoRenewStateKey(autoRenew)}`
+  // const autoRenewStateKey = `${TK}.overview.${resolveAutoRenewStateKey(autoRenew)}`
 
   return (
     <article className="package-owned-card" data-owned-package={item.id}>
@@ -82,6 +80,7 @@ function OwnedPackageCard({
         <div className="package-owned-info">
           <div className="package-owned-name-row">
             <h3>{t(`${TK}.${item.nameKey}`)}</h3>
+            {/* Auto renew toggle — temporarily hidden; uncomment to re-enable.
             <div className="package-autorenew-row">
               <span className="package-autorenew-label">{t(`${TK}.overview.autoRenew`)}</span>
               <label className={`package-switch${isUpdating ? ' is-disabled' : ''}`}>
@@ -102,6 +101,7 @@ function OwnedPackageCard({
                 </span>
               </label>
             </div>
+            */}
           </div>
           <p>{t(`${TK}.${item.descriptionKey}`)}</p>
         </div>
@@ -158,9 +158,9 @@ export default function PackageOverviewPanel() {
   const [searchParams, setSearchParams] = useSearchParams()
   const [now, setNow] = useState(() => Date.now())
   const { t } = useTranslation()
-  const { showToast } = useNotification()
+  // const { showToast } = useNotification()
   const { data: myPackages = [], isLoading } = useSubscriptionMyPackages()
-  const updateAutoRenewMutation = useUpdateSubscriptionAutoRenew()
+  // const updateAutoRenewMutation = useUpdateSubscriptionAutoRenew()
 
   const navigateToRenewTab = useCallback(
     (productKey: PackageOverviewProductKey) => {
@@ -190,6 +190,7 @@ export default function PackageOverviewPanel() {
     [myPackages],
   )
 
+  /*
   const handleAutoRenewChange = useCallback(
     (subscriptionId: string, nextAutoRenew: boolean) => {
       updateAutoRenewMutation.mutate(
@@ -216,6 +217,7 @@ export default function PackageOverviewPanel() {
   const pendingSubscriptionId = updateAutoRenewMutation.isPending
     ? updateAutoRenewMutation.variables?.subscriptionId ?? null
     : null
+  */
 
   if (isLoading) {
     return (
@@ -249,9 +251,9 @@ export default function PackageOverviewPanel() {
           key={item.id}
           item={item}
           now={now}
-          autoRenew={item.autoRenew}
-          isUpdating={pendingSubscriptionId === item.id}
-          onAutoRenewChange={(next) => handleAutoRenewChange(item.id, next)}
+          // autoRenew={item.autoRenew}
+          // isUpdating={pendingSubscriptionId === item.id}
+          // onAutoRenewChange={(next) => handleAutoRenewChange(item.id, next)}
           onRenewPackage={navigateToRenewTab}
         />
       ))}

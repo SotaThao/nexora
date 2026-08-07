@@ -157,7 +157,7 @@ export function getSubscriptionSidebarCopy(subscription, t, locale = 'en') {
   return { planLabel, detailLabel: null }
 }
 
-/** Renew / expire line under "Current Active Plan" CTAs. */
+/** Expire / trial-end line under "Current Active Plan" CTAs. */
 export function getSubscriptionPlanRenewLabel(subscription, t, locale = 'en') {
   if (!subscription) return null
   const isTrialing = String(subscription.status ?? '').toLowerCase() === 'trialing'
@@ -166,7 +166,5 @@ export function getSubscriptionPlanRenewLabel(subscription, t, locale = 'en') {
     : (subscription.currentPeriodEnd || subscription.trialEndsAt)
   const date = formatSubscriptionRenewDate(iso, locale)
   if (!date) return null
-  return isTrialing
-    ? t('dashboard.sidebar.expires_on', { date })
-    : t('dashboard.sidebar.renews_on', { date })
+  return t('dashboard.sidebar.expires_on', { date })
 }
