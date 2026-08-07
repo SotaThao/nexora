@@ -14,15 +14,15 @@ import AnalyticsView from '../../AnalyticsView'
 import SupportView from '../../SupportView'
 import ComingSoon from '../views/ComingSoon'
 import ManagePlanView from '../views/ManagePlanView'
-import SubscriptionPaymentModal from '../modals/SubscriptionPaymentModal'
 import BookingHubView from '../views/BookingHubView'
 import AiVoiceSetupGuideView from '../views/AiVoiceSetupGuideView'
 import PackageManagementView from '../views/packageManagement/PackageManagementView'
-import { useTipPlatformCheckout, TipPlatformCheckoutResult } from '../views/packageManagement/useTipPlatformCheckout'
+import TipPlatformCheckoutModal from '../views/packageManagement/TipPlatformCheckoutModal'
+import { useTipPlatformCheckoutFlow } from '../views/packageManagement/useTipPlatformCheckoutFlow'
 import StaffDetailView from '../../StaffDetailView'
 import { useMerchantStaffByCode } from '../../../data/hooks/useMerchantStaff'
 import { useOpenProductManagement } from '../../../data/hooks/useOpenProductManagement'
-import { DASHBOARD_MENU_ID, DASHBOARD_ROOT_PATH, buildDashboardMenuPath } from '../constants'
+import { DASHBOARD_MENU_ID, DASHBOARD_ROOT_PATH } from '../constants'
 import { normaliseMember } from '../hooks/useStaffManagement'
 import { SkeletonList } from '../../ui/skeleton'
 import { useMerchantSetup } from '../../../data/hooks/useMerchantSetup'
@@ -57,8 +57,6 @@ import PosServicesView from '../views/pos/PosServicesView'
 import PosProductsView from '../views/pos/PosProductsView'
 import PosStaffProfileView from '../views/pos/PosStaffProfileView'
 import PosFrontDeskView from '../views/pos/PosFrontDeskView'
-
-const DASHBOARD_SUPPORT_PATH = buildDashboardMenuPath(DASHBOARD_MENU_ID.support)
 
 export function OverviewRoute() {
   const ctx = useOutletContext<LooseObject>()
@@ -1143,7 +1141,6 @@ export function PackageManagementRoute() {
 
 export function SubscriptionsRoute() {
   const ctx = useOutletContext<LooseObject>()
-  const navigate = useNavigate()
   const [searchParams, setSearchParams] = useSearchParams()
 
   const {
@@ -1154,9 +1151,8 @@ export function SubscriptionsRoute() {
     selectedPackage,
     paymentPlanPrice,
     clearCheckout,
-    trySelectPlan,
-    isCheckoutPackageMissing,
-  } = useTipPlatformCheckout({
+    handleSelectPlan,
+  } = useTipPlatformCheckoutFlow({
     profile: ctx?.profile,
     searchParams,
     setSearchParams,
@@ -1164,34 +1160,20 @@ export function SubscriptionsRoute() {
     deepLinkEnabled: true,
   })
 
-  useEffect(() => {
-    if (!isCheckoutPackageMissing) return
-    clearCheckout()
-  }, [isCheckoutPackageMissing, clearCheckout])
-
   return (
     <>
       <ManagePlanView
         currentSubscription={tipPlatformSubscription}
         packages={packages}
-        onSelectPlan={(planId) => {
-          const result = trySelectPlan(planId)
-          if (result === TipPlatformCheckoutResult.ContactSupport) {
-            navigate(DASHBOARD_SUPPORT_PATH)
-          }
-        }}
+        onSelectPlan={handleSelectPlan}
       />
-      {paymentPlan && selectedPackage ? (
-        <SubscriptionPaymentModal
-          isOpen
-          plan={paymentPlan}
-          packageId={selectedPackage.id}
-          price={paymentPlanPrice}
-          billingDefaults={billingDefaults}
-          onClose={clearCheckout}
-          onSuccess={clearCheckout}
-        />
-      ) : null}
+      <TipPlatformCheckoutModal
+        paymentPlan={paymentPlan}
+        selectedPackage={selectedPackage}
+        paymentPlanPrice={paymentPlanPrice}
+        billingDefaults={billingDefaults}
+        onClose={clearCheckout}
+      />
     </>
   )
 }

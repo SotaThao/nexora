@@ -15,6 +15,22 @@ import subscriptionPaymentsRepository, {
 
 const CARD_PAYMENT_POLL_INTERVAL_MS = 2_000
 
+/** TanStack Query cache knobs shared by subscription list hooks. */
+export type SubscriptionQueryCacheOptions = {
+  staleTime?: number
+  refetchOnMount?: boolean | 'always'
+  gcTime?: number
+}
+
+function withOptionalGcTime(options: SubscriptionQueryCacheOptions): SubscriptionQueryCacheOptions {
+  const { staleTime, refetchOnMount, gcTime } = options
+  return {
+    ...(staleTime !== undefined ? { staleTime } : {}),
+    ...(refetchOnMount !== undefined ? { refetchOnMount } : {}),
+    ...(gcTime !== undefined ? { gcTime } : {}),
+  }
+}
+
 function patchMyPackagesAutoRenew(
   packages: SubscriptionMyPackage[] | undefined,
   subscriptionId: string,
@@ -30,29 +46,34 @@ export function useSubscriptionPackages({
   packageType,
   staleTime = 60_000,
   refetchOnMount,
+  gcTime,
 }: {
   enabled?: boolean
   packageType?: SubscriptionPackageType
-  staleTime?: number
-  refetchOnMount?: boolean | 'always'
-} = {}) {
+} & SubscriptionQueryCacheOptions = {}) {
   return useQuery<SubscriptionPackage[]>({
     queryKey: qk.merchantSubscriptionPackages(packageType),
     queryFn: () => subscriptionPaymentsRepository.getPackages(packageType),
     enabled,
     staleTime,
-    refetchOnMount,
+    ...withOptionalGcTime({ refetchOnMount, gcTime }),
   })
 }
 
 /** GET `/api/v1/merchant/subscriptions/my-packages`. */
-export function useSubscriptionMyPackages({ enabled = true }: { enabled?: boolean } = {}) {
+export function useSubscriptionMyPackages({
+  enabled = true,
+  staleTime = 30_000,
+  refetchOnMount = true,
+  gcTime,
+}: {
+  enabled?: boolean
+} & SubscriptionQueryCacheOptions = {}) {
   return useQuery<SubscriptionMyPackage[]>({
     queryKey: qk.merchantSubscriptionMyPackages(),
     queryFn: () => subscriptionPaymentsRepository.getMyPackages(),
     enabled,
-    staleTime: 30_000,
-    refetchOnMount: true,
+    ...withOptionalGcTime({ staleTime, refetchOnMount, gcTime }),
   })
 }
 
@@ -116,12 +137,19 @@ export function useSubscriptionPaymentMethods({ enabled = true } = {}) {
 }
 
 /** GET `/api/v1/merchant/subscriptions/purchase-history` */
-export function useSubscriptionPurchaseHistory({ enabled = true } = {}) {
+export function useSubscriptionPurchaseHistory({
+  enabled = true,
+  staleTime = 30_000,
+  refetchOnMount,
+  gcTime,
+}: {
+  enabled?: boolean
+} & SubscriptionQueryCacheOptions = {}) {
   return useQuery<SubscriptionPurchaseHistoryItem[]>({
     queryKey: qk.merchantSubscriptionPurchaseHistory(),
     queryFn: () => subscriptionPaymentsRepository.getPurchaseHistory(),
     enabled,
-    staleTime: 30_000,
+    ...withOptionalGcTime({ staleTime, refetchOnMount, gcTime }),
   })
 }
 

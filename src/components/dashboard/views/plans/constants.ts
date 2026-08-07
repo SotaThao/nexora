@@ -114,19 +114,11 @@ export function formatWalletBalanceUsd(method: SubscriptionPaymentMethod): strin
 }
 
 /**
- * Package History display name.
- * `brand` comes from i18n (`packageHistoryPackageBrand`) so EN/VI stay in one place.
+ * Package History display name — use API `planName` as-is.
  */
-export function formatPackageHistoryPackageLabel(
-  planName: string,
-  brand: string,
-): string {
+export function formatPackageHistoryPackageLabel(planName: string): string {
   const name = planName.trim()
-  const brandLabel = brand.trim()
-  if (!name) return BOOKING_HUB_EMPTY_CELL
-  if (!brandLabel) return name
-  if (name.toLowerCase().startsWith(brandLabel.toLowerCase())) return name
-  return `${brandLabel} ${name}`
+  return name || BOOKING_HUB_EMPTY_CELL
 }
 
 /**

@@ -86,6 +86,7 @@ export default function Dashboard({
     isTaxIqMobileExpanded, setIsTaxIqMobileExpanded,
     isBookingHubMobileExpanded, setIsBookingHubMobileExpanded,
     isPosMobileExpanded, setIsPosMobileExpanded,
+    isPackageManagementMobileExpanded, setIsPackageManagementMobileExpanded,
     isGiftCardCenterMobileExpanded, setIsGiftCardCenterMobileExpanded,
     settingsTab, setSettingsTab,
     isProfileExpanded, setIsProfileExpanded,
@@ -889,6 +890,8 @@ export default function Dashboard({
         setIsBookingHubMobileExpanded={setIsBookingHubMobileExpanded}
         isPosMobileExpanded={isPosMobileExpanded}
         setIsPosMobileExpanded={setIsPosMobileExpanded}
+        isPackageManagementMobileExpanded={isPackageManagementMobileExpanded}
+        setIsPackageManagementMobileExpanded={setIsPackageManagementMobileExpanded}
         isGiftCardCenterMobileExpanded={isGiftCardCenterMobileExpanded}
         setIsGiftCardCenterMobileExpanded={setIsGiftCardCenterMobileExpanded}
         hasKyb={hasKyb}

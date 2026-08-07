@@ -18,6 +18,7 @@ import {
   PACKAGE_OVERVIEW_RENEW_CTA_KEY,
   PACKAGE_OVERVIEW_SKELETON_CARD_COUNT,
   PACKAGE_MANAGEMENT_TK,
+  PACKAGE_MANAGEMENT_TAB_QUERY,
   PACKAGE_QUERY_PARAM,
   PackageManagementTab,
   // resolveAutoRenewStateKey,
@@ -79,7 +80,7 @@ function OwnedPackageCard({
       <div className="package-owned-title-row">
         <div className="package-owned-info">
           <div className="package-owned-name-row">
-            <h3>{t(`${TK}.${item.nameKey}`)}</h3>
+            <h3>{item.name}</h3>
             {/* Auto renew toggle — temporarily hidden; uncomment to re-enable.
             <div className="package-autorenew-row">
               <span className="package-autorenew-label">{t(`${TK}.overview.autoRenew`)}</span>
@@ -90,7 +91,7 @@ function OwnedPackageCard({
                   disabled={isUpdating}
                   onChange={(event) => onAutoRenewChange(event.target.checked)}
                   aria-label={t(`${TK}.overview.autoRenewAria`, {
-                    name: t(`${TK}.${item.nameKey}`),
+                    name: item.name,
                   })}
                 />
                 <span className="package-switch-track">
@@ -159,7 +160,9 @@ export default function PackageOverviewPanel() {
   const [now, setNow] = useState(() => Date.now())
   const { t } = useTranslation()
   // const { showToast } = useNotification()
-  const { data: myPackages = [], isLoading } = useSubscriptionMyPackages()
+  const { data: myPackages = [], isLoading } = useSubscriptionMyPackages({
+    ...PACKAGE_MANAGEMENT_TAB_QUERY,
+  })
   // const updateAutoRenewMutation = useUpdateSubscriptionAutoRenew()
 
   const navigateToRenewTab = useCallback(

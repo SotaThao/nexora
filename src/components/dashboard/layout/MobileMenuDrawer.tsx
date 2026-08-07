@@ -26,7 +26,9 @@ import PaymentsPayoutsMenuSection from './PaymentsPayoutsMenuSection'
 import { 
 	isPaymentsPayoutsRouteActive, 
 	getVisibleBookingHubSubmenu, 
-	isBookingHubSubActive, 
+	isBookingHubSubActive,
+	isPackageManagementSubActive, 
+	PACKAGE_MANAGEMENT_SUBMENU,
 	VISIBLE_TOUCHPOINTS_SUBMENU, 
 	GIFT_CARD_CENTER_SUBMENU, 
 	DASHBOARD_MENU, 
@@ -66,6 +68,8 @@ export default function MobileMenuDrawer({
   setIsBookingHubMobileExpanded,
   isPosMobileExpanded,
   setIsPosMobileExpanded,
+  isPackageManagementMobileExpanded,
+  setIsPackageManagementMobileExpanded,
   isGiftCardCenterMobileExpanded,
   setIsGiftCardCenterMobileExpanded,
   hasKyb,
@@ -134,6 +138,15 @@ export default function MobileMenuDrawer({
       clickedId: id,
       activeMenu,
       sections: [
+        {
+          id: DASHBOARD_MENU.PackageManagement,
+          setExpanded: setIsPackageManagementMobileExpanded,
+          enter: () =>
+            navigateMenu(DASHBOARD_MENU.PackageManagement, {
+              closeDrawer: false,
+              tab: PackageManagementTab.Overview,
+            }),
+        },
         {
           id: DASHBOARD_MENU.TaxIq,
           setExpanded: setIsTaxIqMobileExpanded,
@@ -270,10 +283,10 @@ export default function MobileMenuDrawer({
                   type="button"
                   onClick={() => handleMenuClick(id)}
                   disabled={id === DASHBOARD_MENU_ID.productManagement && isOpeningProductManagement}
-                  className={sidebarMenuItemBetweenClass(isActive || (id === DASHBOARD_MENU_ID.productManagement && isGiftCardCenterMobileExpanded))}
+                  className={sidebarMenuItemBetweenClass(isActive || (id === DASHBOARD_MENU_ID.productManagement && isGiftCardCenterMobileExpanded) || (id === DASHBOARD_MENU_ID.packageManagement && isPackageManagementMobileExpanded))}
                 >
                   <div className="flex items-center gap-3 min-w-0">
-                    <MenuIcon item={item} active={isActive || (id === DASHBOARD_MENU_ID.productManagement && isGiftCardCenterMobileExpanded)} />
+                    <MenuIcon item={item} active={isActive || (id === DASHBOARD_MENU_ID.productManagement && isGiftCardCenterMobileExpanded) || (id === DASHBOARD_MENU_ID.packageManagement && isPackageManagementMobileExpanded)} />
                     <span>{localizedLabel}</span>
                   </div>
                   {id === DASHBOARD_MENU_ID.productManagement ? (
@@ -281,6 +294,14 @@ export default function MobileMenuDrawer({
                       {isOpeningProductManagement ? (
                         <span className="block h-4 w-4 animate-spin rounded-full border-2 border-white/30 border-t-white" />
                       ) : isGiftCardCenterMobileExpanded ? (
+                        <ChevronUp className="h-4 w-4" />
+                      ) : (
+                        <ChevronDown className="h-4 w-4" />
+                      )}
+                    </div>
+                  ): id === DASHBOARD_MENU_ID.packageManagement ? (
+                    <div className="text-white/65 shrink-0">
+                      {isPackageManagementMobileExpanded ? (
                         <ChevronUp className="h-4 w-4" />
                       ) : (
                         <ChevronDown className="h-4 w-4" />
@@ -336,6 +357,35 @@ export default function MobileMenuDrawer({
                           {isSubOpening ? (
                             <span className="h-3.5 w-3.5 shrink-0 animate-spin rounded-full border-2 border-white/30 border-t-white" />
                           ) : null}
+                        </button>
+                      )
+                    })}
+                  </div>
+                )}
+
+                {id === DASHBOARD_MENU.PackageManagement && isPackageManagementMobileExpanded && (
+                  <div className={SIDEBAR_SUBMENU_WRAP_CLASS}>
+                    {PACKAGE_MANAGEMENT_SUBMENU.map((sub) => {
+                      const isSubActive = isPackageManagementSubActive(
+                        activeMenu,
+                        activeSubTab,
+                        sub.id,
+                      )
+                      return (
+                        <button
+                          key={sub.id}
+                          type="button"
+                          onClick={() =>
+                            navigateMenu(DASHBOARD_MENU.PackageManagement, {
+                              tab: sub.id,
+                            })
+                          }
+                          className={sidebarSubmenuItemClass(isSubActive)}
+                        >
+                          <div
+                            className={`h-1.5 w-1.5 rounded-full ${isSubActive ? 'bg-brandCyan shadow-sm' : 'bg-white/30'}`}
+                          />
+                          <span>{t(sub.labelKey)}</span>
                         </button>
                       )
                     })}
