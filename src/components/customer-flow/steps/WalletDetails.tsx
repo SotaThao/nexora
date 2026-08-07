@@ -312,7 +312,7 @@ export default function WalletDetails({
 
         <div className="w-full space-y-4">
           <CopyField
-            label={t('components.customer_flow.steps.WalletDetails.displayName')}
+            label={t('components.customer_flow.steps.WalletDetails.accountHolder', { wallet: selectedWalletObj.name })}
             value={accountHolderName || recipientName}
             showToast={showToast}
             t={t}
