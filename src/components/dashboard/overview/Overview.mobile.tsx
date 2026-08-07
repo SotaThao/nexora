@@ -12,6 +12,7 @@ import {
   UserPlus,
   QrCode,
   CreditCard,
+  CalendarClock,
 } from 'lucide-react'
 import { useNavigate } from 'react-router-dom'
 import { useTranslation } from '../../../contexts/LanguageContext'
@@ -211,6 +212,7 @@ function Overview({
   setActiveKpi,
   transactions = [],
   onOpenReviews,
+  onOpenBookings,
   businessName,
   previewQr,
   touchpoints = [],
@@ -419,6 +421,20 @@ function Overview({
           sub={totalReviews > 0 ? k('reviews_count', { count: totalReviews }) : k('no_reviews_yet')}
           subColor="text-nexoraBrand font-semibold"
           onClick={() => onOpenReviews?.()}
+        />
+      </div>
+
+      {/* Total Bookings (Ticket 10) — full-width row, kept separate from the 2×2 grid above
+          rather than resizing that already-tuned layout. */}
+      <div className="grid grid-cols-1">
+        <KpiCardBottom
+          icon={<CalendarClock className="h-3.5 w-3.5" />}
+          iconBg="bg-nexoraBrand"
+          label={k('kpi_total_bookings')}
+          value={String(metrics.totalBookings ?? 0)}
+          sub={k('kpi_view_bookings')}
+          subColor="text-nexoraBrand font-semibold"
+          onClick={() => onOpenBookings?.()}
         />
       </div>
 

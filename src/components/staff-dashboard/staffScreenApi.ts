@@ -24,6 +24,12 @@ export const STAFF_SCREEN_API: Record<StaffScreenId, readonly string[]> = {
     'GET /api/v1/staff/payments/{paymentId}',
     'PATCH /api/v1/staff/payments/{paymentId}/acknowledge',
   ],
+  taxiq: [
+    'GET /api/v1/taxiq/staff/tax-years?TaxYear=',
+    'POST /api/v1/taxiq/staff/tax-years',
+    'GET /api/v1/taxiq/staff/tax-years/{id}/dashboard',
+    'PUT /api/v1/taxiq/staff/tax-years/{id}/modules',
+  ],
   earnings: [
     'GET /api/v1/staff/dashboard/summary',
     'GET /api/v1/staff/payouts/stats',

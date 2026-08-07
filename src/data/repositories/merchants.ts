@@ -2,9 +2,15 @@
  * merchantsRepository — API-only implementation.
  */
 import httpClient from '../../lib/httpClient'
-import type { MerchantSetup } from '../../types/domain'
+import type { BusinessHourEntry, MerchantSetup } from '../../types/domain'
 import { isApiError } from '../../types/domain'
-import type { BusinessApiDto, CreateBusinessResult, ImageUploadResult, SlugCheckResult } from '../../types/repositories'
+import type {
+  BusinessApiDto,
+  CreateBusinessResult,
+  ImageUploadResult,
+  PosBusinessOperatingHourApiDto,
+  SlugCheckResult,
+} from '../../types/repositories'
 import { imagesRepository } from './images'
 
 type HttpClient = typeof httpClient
@@ -21,6 +27,8 @@ export function mapBusinessApiDtoToSetup(res: BusinessApiDto): MerchantSetup {
       phone: res.phone || '',
       website: res.website || '',
       logo: res.logoUrl || null,
+      bookingNotificationPhone: res.bookingNotificationPhone || '',
+      salesTaxRatePercent: res.salesTaxRatePercent,
       createdAt: res.createdAt ?? null,
       paymentAccounts: {
         venmo: '',
@@ -107,11 +115,32 @@ export function createMerchantsRepository(client: HttpClient = httpClient) {
       return imagesRepository.uploadAndGetUrl(file)
     },
 
+    // Update the logo on an already-created business (Settings / POS General
+    // Settings). Distinct from uploadLogo above, which only stages an image
+    // URL locally before the business exists during onboarding.
+    async updateBusinessLogo(file: File): Promise<string> {
+      const formData = new FormData()
+      formData.append('logo', file)
+      const res = await client.upload<{ logoUrl: string }>(
+        '/api/v1/merchant/business/logo',
+        formData,
+        'PUT',
+      )
+      return res.logoUrl
+    },
+
     async updateBusiness(dto: LooseObject): Promise<void> {
       await client.put('/api/v1/merchant/business', dto)
     },
 
-    async updateBusinessInfo(dto: { name: string; phone?: string; feedbackEmail?: string; website?: string }): Promise<void> {
+    async updateBusinessInfo(dto: {
+      name: string
+      phone?: string
+      feedbackEmail?: string
+      website?: string
+      bookingNotificationPhone?: string
+      salesTaxRatePercent?: number
+    }): Promise<void> {
       await client.put('/api/v1/merchant/business/info', dto)
     },
 
@@ -121,6 +150,23 @@ export function createMerchantsRepository(client: HttpClient = httpClient) {
 
     async completeOnboarding(): Promise<void> {
       await client.post('/api/v1/merchant/business/complete-onboarding')
+    },
+
+    // POS Owner Setup — Business Hours (US-014)
+    async getBusinessHours(): Promise<BusinessHourEntry[]> {
+      const res = await client.get<PosBusinessOperatingHourApiDto[]>(
+        '/api/v1/merchant/settings/business-hours',
+      )
+      return (res ?? []).map((d) => ({
+        dayOfWeek: d.dayOfWeek,
+        isOpen: d.isOpen,
+        openTime: d.openTime ?? null,
+        closeTime: d.closeTime ?? null,
+      }))
+    },
+
+    async updateBusinessHours(days: BusinessHourEntry[]): Promise<boolean> {
+      return await client.put<boolean>('/api/v1/merchant/settings/business-hours', { days })
     },
   }
 }

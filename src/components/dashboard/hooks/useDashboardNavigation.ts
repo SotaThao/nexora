@@ -20,13 +20,20 @@ export function useDashboardNavigation() {
     activeMenu === DASHBOARD_MENU_ID.tips || activeMenu === DASHBOARD_MENU_ID.reports
 
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
+  // Desktop sidebar collapse toggle — same open/closed mechanic as the mobile
+  // drawer above, just docked instead of an overlay (see DashboardSidebar's
+  // `isOpen` prop and DashboardHeader.desktop's PanelLeft toggle button).
+  const [isDesktopSidebarOpen, setIsDesktopSidebarOpen] = useState(true)
   const [isPaymentsPayoutsMobileExpanded, setIsPaymentsPayoutsMobileExpanded] = useState(isPaymentsPayoutsActive)
+  const [isTaxIqMobileExpanded, setIsTaxIqMobileExpanded] = useState(activeMenu === DASHBOARD_MENU.TaxIq)
+
   const [isTouchpointsMobileExpanded, setIsTouchpointsMobileExpanded] = useState(
     activeMenu === DASHBOARD_MENU.Touchpoints,
   )
   const [isBookingHubMobileExpanded, setIsBookingHubMobileExpanded] = useState(
     activeMenu === DASHBOARD_MENU.BookingHub,
   )
+  const [isPosMobileExpanded, setIsPosMobileExpanded] = useState(activeMenu === DASHBOARD_MENU.Pos)
   const [isGiftCardCenterMobileExpanded, setIsGiftCardCenterMobileExpanded] = useState(false)
   const [settingsTab, setSettingsTab] = useState('profile')
   const [isProfileExpanded, setIsProfileExpanded] = useState(false)
@@ -46,14 +53,18 @@ export function useDashboardNavigation() {
   useEffect(() => {
     if (!isMobileMenuOpen) return
     setIsPaymentsPayoutsMobileExpanded(isPaymentsPayoutsActive)
+    setIsTaxIqMobileExpanded(activeMenu === DASHBOARD_MENU.TaxIq)
     setIsTouchpointsMobileExpanded(activeMenu === DASHBOARD_MENU.Touchpoints)
     setIsBookingHubMobileExpanded(activeMenu === DASHBOARD_MENU.BookingHub)
+    setIsPosMobileExpanded(activeMenu === DASHBOARD_MENU.Pos)
   }, [isMobileMenuOpen, activeMenu, isPaymentsPayoutsActive])
   useEffect(() => {
     if (isPaymentsPayoutsActive) {
       setIsPaymentsPayoutsMobileExpanded(true)
       setIsTouchpointsMobileExpanded(false)
+      setIsTaxIqMobileExpanded(false)
       setIsBookingHubMobileExpanded(false)
+      setIsPosMobileExpanded(false)
       setIsGiftCardCenterMobileExpanded(false)
     }
     if (activeMenu === DASHBOARD_MENU.BookingHub) {
@@ -68,11 +79,21 @@ export function useDashboardNavigation() {
   }
 
   const handleNavigateMenu = (menuId: string, tab?: string) => {
+    if (menuId === DASHBOARD_MENU_ID.productManagement) {
+      void openProductManagement()
+      return
+    }
     navigate(buildMenuRoute(menuId, tab))
   }
 
   const navigateMenu = (menuId: string, options: NavigateMenuOptions = {}) => {
     const { closeDrawer = true, tab } = options
+    if (menuId === DASHBOARD_MENU_ID.productManagement) {
+      void openProductManagement().finally(() => {
+        if (closeDrawer) setIsMobileMenuOpen(false)
+      })
+      return
+    }
     navigate(buildMenuRoute(menuId, tab))
     if (closeDrawer) setIsMobileMenuOpen(false)
   }
@@ -81,12 +102,18 @@ export function useDashboardNavigation() {
     activeMenu,
     isMobileMenuOpen,
     setIsMobileMenuOpen,
+    isDesktopSidebarOpen,
+    setIsDesktopSidebarOpen,
     isPaymentsPayoutsMobileExpanded,
     setIsPaymentsPayoutsMobileExpanded,
     isTouchpointsMobileExpanded,
+    isTaxIqMobileExpanded, 
+    setIsTaxIqMobileExpanded,
     setIsTouchpointsMobileExpanded,
     isBookingHubMobileExpanded,
     setIsBookingHubMobileExpanded,
+    isPosMobileExpanded,
+    setIsPosMobileExpanded,
     isGiftCardCenterMobileExpanded,
     setIsGiftCardCenterMobileExpanded,
     settingsTab,

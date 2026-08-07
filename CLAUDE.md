@@ -1,6 +1,8 @@
 # CLAUDE.md
 
-Guidance for Claude Code when working in this repository. Treat this as an engineering playbook, not a product brief.
+This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
+
+Treat this as an engineering playbook, not a product brief.
 
 ## Operating Principles
 
@@ -12,26 +14,48 @@ Guidance for Claude Code when working in this repository. Treat this as an engin
 - Verify the path you changed with the smallest meaningful test first, then broaden when the blast radius is larger.
 - No `console.*` in app code. Use the project logger where runtime logging is needed.
 - Do not commit unless explicitly asked.
+- **No hardcoded backend enum/status strings.** Any string literal that mirrors a backend enum (`PosOrderStatus`, `TipStatus`, etc. — e.g. `'Waiting'`, `'InService'`, `'Completed'`, `'Cancelled'`, `'Pending'`, `'Confirmed'`) must be compared/assigned via a shared TS `enum`/const object in `src/constants/`, never as an inline string literal in a component, hook, or repository. Check `src/constants/` for an existing constant (e.g. `posOrderStatus.ts`, `tipStatus.ts`) before adding a new comparison — add a new value to the existing enum rather than a parallel literal. When a repository maps a raw API string to a discriminated union type, that mapping is the one allowed place to reference the literal.
+
+## Follow-Up Note (2026-08-05)
+
+`PosOrderStatus` hardcoding was found and fixed across `PosFrontDeskView.tsx`, `PosOrderWorkspace.tsx`, `bookingFormatters.ts`, `BookingTab.tsx`, `BookingCalendar.tsx`, `BookingCards.tsx`, `BookingTable.tsx`, `ManageBookingPage.tsx`, and `ConfirmationScreen.tsx` — all now import `PosOrderStatus`/`POS_BOOKING_STATUS_OPTIONS` from `src/constants/posOrderStatus.ts`. Other status domains (Tip transaction status in `useTipsData.ts`/`TipsSavingsTab.tsx`, staff invite status in `merchantStaff.ts`/`Dashboard.tsx`/`StaffView.mobile.tsx`, direct payment status in `directPaymentStatus.ts`) were left as-is — out of scope for that pass, but the same "no hardcoded enum string" rule above applies if they are touched next.
+
+## Domain Principle: Module Independence & Shared Data (Tip system / TaxIQ / POS)
+
+NEXORA TOUCH has three core modules built on the same Business/Staff foundation: the **Tip system** (QR/NFC tipping, reviews), **TaxIQ** (tax filing, payroll-adjacent data), and **POS** (point of sale, staff pay/role/tips-at-checkout). Follow this when designing or building any staff-related screen in either module:
+
+- **Feature-independent**: a module's staff-setup screen must not hard-fail or block just because another module hasn't been set up yet (e.g. POS staff-profile setup must fully work even if TaxIQ has never been configured for the business — see US-019/backend US-07's `taxYearAvailable` flag for the precedent).
+- **Data-shared**: when a field is a real-world fact about the staff member rather than module-specific (e.g. SSN/EIN, W-2/1099 tax filing type), it is **not** needed for Tips setup, but **is** needed by both TaxIQ and POS — so both modules' staff-setup screens must expose **view and update** for it against the same backend entity, not a per-module copy or a read-only mirror in one of the two. Do not build a field as "read-only in POS, editable only in TaxIQ" (or vice versa) when both modules genuinely need to edit it — confirm the write path exists/is exposed for both before treating one module as read-only-by-default.
+- Before treating a shared field as read-only in a module's screen, check whether that's a deliberate scope decision or an oversight — if the other module already has (or should have) write access, this module's screen should too.
 
 ## Repo Profile
 
 - Frontend: React 18 + Vite.
-- Language: JavaScript/JSX, not TypeScript.
-- Styling: Tailwind utility classes plus shared CSS.
-- Server-state cache: TanStack Query.
+- Language: TypeScript/TSX (`strict: true` but `noImplicitAny` and `strictNullChecks` are off — typed-where-helpful, not enforced everywhere).
+- Import alias: `@/*` → `src/*` (configured in `tsconfig.json`).
+- Styling: Tailwind utility classes with custom design tokens (see `tailwind.config.js`). Run `pnpm lint:tokens` to validate token usage.
+- Server-state cache: TanStack Query v5.
 - Current persistence mode: API-backed (REST API at `VITE_API_BASE_URL`).
 - HTTP client: `src/lib/httpClient.js` with JWT Bearer auth, 401 refresh interceptor.
+- Bilingual: EN + VI. All user-visible strings go in `src/locales/en.json` and `src/locales/vi.json`. Use `useTranslation()` from `LanguageContext` in components; supports `{{variable}}` interpolation.
 
 Useful commands:
 
 ```bash
 pnpm install
-pnpm dev
-pnpm build
-pnpm test
-pnpm test:e2e
-pnpm lint:tokens
+pnpm dev                # local dev on port 3000
+pnpm dev:staging        # dev server against staging env
+pnpm build              # production build (alias for build:prod)
+pnpm build:staging      # staging build
+pnpm typecheck          # tsc --noEmit (no test runner, just types)
+pnpm test               # vitest run (unit tests)
+pnpm test:watch         # vitest watch mode
+pnpm test:e2e           # browser e2e via scripts/run-e2e.cjs
+pnpm lint:tokens        # verify design token usage
+pnpm seed:staff-demo    # seed staff demo data locally
 ```
+
+To run a single test file: `pnpm vitest run src/data/repositories/notifications.test.ts`
 
 ## API Integration Workflow (goal-driven, mandatory)
 
@@ -61,6 +85,20 @@ Verification guide:
 - Narrow logic change: run the targeted test file plus `pnpm build`.
 - Shared hook/repository/auth change: run targeted tests, `pnpm build`, and `pnpm test`.
 - User-flow change: add or run browser/e2e smoke for the affected flow.
+
+## Provider Stack
+
+`main.tsx` mounts providers in this order (inner providers depend on outer ones):
+
+```
+QueryClientProvider → LanguageProvider → AuthProvider → NotificationProvider
+  → BrowserRouter → SkeletonProvider → App (KybGateProvider wraps AppRouter)
+```
+
+Key rules:
+- `AuthProvider` requires `QueryClientProvider` above it (auth state is TanStack Query-backed).
+- `LanguageProvider` must wrap everything that uses `useTranslation()`.
+- `KybGateContext` sits inside `App`, so it has access to auth and routing.
 
 ## Architecture Rules
 
@@ -123,19 +161,26 @@ When changing one of these flows:
 
 | Area | Where to look |
 |------|---------------|
-| App shell/routing | `src/App.jsx`, `src/app/AppRouter.jsx` |
-| Auth state | `src/auth/AuthProvider.jsx`, `src/auth/useAuth.js` |
+| App shell/routing | `src/App.tsx`, `src/app/AppRouter.tsx` |
+| Route components | `src/components/dashboard/routes/index.tsx` |
+| Auth state | `src/auth/AuthProvider.tsx`, `src/auth/useAuth.ts` |
 | Auth adapters | `src/auth/adapters/` |
-| Token store | `src/auth/tokenStore.js` |
+| Token store | `src/auth/tokenStore.ts` |
+| Shared contexts | `src/contexts/` (LanguageContext, NotificationContext, KybGateContext, StaffAccountContext) |
+| Locales (i18n) | `src/locales/en.json`, `src/locales/vi.json` |
 | Data hooks | `src/data/hooks/` |
 | Repositories | `src/data/repositories/` |
-| Query keys | `src/data/queryKeys.js` |
-| Query client | `src/lib/queryClient.js` |
+| Query keys | `src/data/queryKeys.ts` |
+| Query client | `src/lib/queryClient.ts` |
 | HTTP client | `src/lib/httpClient.js` |
-| Error codes | `src/data/errorCodes.js` |
-| Storage (token persistence) | `src/utils/storage.js` |
-| Logger | `src/utils/logger.js` |
-| Tests | `tests/`, `src/setupTests.js`, `vitest*.config.*` |
+| Error codes | `src/data/errorCodes.ts` |
+| Storage (token persistence) | `src/utils/storage.ts` |
+| Logger | `src/utils/logger.ts` |
+| Dashboard sidebar menu config | `src/components/dashboard/constants.tsx` |
+| Shared UI primitives | `src/components/ui/` |
+| Type definitions | `src/types/` |
+| Tests (co-located) | `src/data/repositories/*.test.ts`, `src/components/**/*.test.tsx` |
+| Test setup | `src/setupTests.ts`, `vitest.config.ts`, `vitest.e2e.config.ts` |
 | OpenSpec work | `openspec/changes/` |
 | User stories (integration goals) | `user-story/` (template: `_TEMPLATE.md`) |
 | API contract snapshot | `API/update/<latest>/api-integration-guide-v4.md` (truth: live Swagger) |
@@ -149,6 +194,52 @@ When changing one of these flows:
 - Do not hide async ordering changes inside callbacks without checking caller behavior.
 - Use repository APIs for non-React contexts that cannot call hooks.
 - Hooks must only be called at the top level of React components or custom hooks.
+
+## Mobile-Responsive Modals & Dialogs
+
+Any new modal, dialog, drawer, or wizard component must handle these two mobile failure modes from the first implementation pass — do not wait for a bug report:
+
+- **Height overflow with variable-length content** (e.g. a list that can grow to N items). A `fixed inset-0 flex items-center justify-center` overlay with an unbounded-height card pushes content off-screen with no way to scroll. Fix: the card gets `flex max-h-[90vh] flex-col`; the scrollable body gets `flex-1 overflow-y-auto`; header/footer stay outside that scrollable div so they stay pinned. Prefer `dvh` over `vh` for the max-height, declared as a fallback pair in the *same* CSS rule (`max-height: 90vh; max-height: 90dvh;`, e.g. in a `.nexora-modal-card` component class in `index.css`) rather than as two competing Tailwind utility classes on one element — class order in the generated stylesheet is not reliable. Real mobile Safari/Chrome compute `100vh` against the address-bar-collapsed viewport, so `vh`-only sizing can clip content on initial load in a way that desktop-browser viewport-resize testing will never reproduce.
+- **Width truncation from fixed multi-column grids.** A `grid grid-cols-2` (or more) used to lay out form fields side-by-side (e.g. vendor/date, amount/category) truncates content at ~375px phone widths. Fix: default to `grid-cols-1` and only widen at `sm:` and up (`grid-cols-1 sm:grid-cols-2`).
+
+When testing such components, resize the browser (or Playwright viewport) to a phone width (e.g. 375×667) and take a screenshot as part of self-verification — `tsc`/`build` passing does not catch layout overflow.
+
+## Form Field Conventions
+
+Apply these on every new or refactored form field — do not wait for a bug report:
+
+- **Phone number inputs must use the shared formatter**, never a bare `<input type="tel">`. Import `formatNationalNumber`, `getNationalPhonePlaceholder`, `PhoneDialCode` from `src/components/CountryCodeSelect.tsx`: `onChange={(e) => onChange(formatNationalNumber(e.target.value, PhoneDialCode.US))}`, `placeholder={getNationalPhonePlaceholder(PhoneDialCode.US)}`. This is the existing convention across staff/customer forms — matching it is not optional polish.
+- **Every text/tel/email input needs a `placeholder`.** Follow the existing "e.g. ..." convention (see `staff_phone_placeholder`, `staff_email_placeholder` in the locales) — add the key to both `en.json` and `vi.json`, never hardcode the string inline.
+- **When extracting an existing form into a new component** (e.g. pulling a form out of a parent into its own file), treat the original JSX as the spec: explicitly check it for formatters, placeholders, `inputMode`/`autoComplete` attributes, and validation before considering the extraction done. Moving the visual structure (labels, layout, styling) while silently dropping these is the most common way this kind of refactor regresses — it will not show up in `tsc`/`build`, only in manual testing.
+
+## POS iPad Design Standard
+
+The POS module (`src/components/dashboard/views/pos/`) has its own visual identity, deliberately different from the rest of the dashboard, optimized for iPad touch use (nail salon front desk). A screen is "in scope" for this standard once it adopts the `posFd*` token prefix — screens still on `nexoraBrand`/`nexora-card`/generic dashboard styling have not been migrated yet (see the remaining-scope list below). Do not backport `posFd*` styling into non-POS dashboard screens, and do not introduce a second competing token set inside `pos/`.
+
+- **Color tokens** (`tailwind.config.js`): `posFdAccent` `#E8869B`, `posFdAccentDark` `#D66E85`, `posFdCoral` `#FF8F6B`, `posFdLavender` `#B9A3E3`, `posFdCanvas` `#FFF8F6`, `posFdSurface` `#FFFFFF`, `posFdBorder` `#F1DEE1`, `posFdText` `#2B1E22`, `posFdMuted` `#8C7378`. There is no `posFdDanger` token yet — destructive actions (delete line, remove staff, etc.) currently fall back to plain `rose-50`/`rose-600`, which is an accepted gap, not a redesign target; do not silently invent a danger token as part of an unrelated change.
+- **Radius scale**: `rounded-2xl` for primary containers and line-item rows, `rounded-xl` for card/list wrapper shells, `rounded-lg` for standalone buttons/inputs, `rounded-full` for pills (chips, avatars, toggle segments). Keep this 4-tier scale as-is across new POS work — don't introduce a 5th radius value or swap `rounded-lg` buttons to `rounded-xl` without checking with the team, since the 3 non-pill tiers are already load-bearing across 6 shipped tickets.
+- **Touch targets**: `h-11` is the default interactive control height (primary inputs, CTA buttons) and meets the 44pt touch-target guideline. `h-9` (36px) is used for icon buttons/steppers/avatars and is *below* the 44pt guideline — this is an accepted trade-off for dense, secondary actions with adequate spacing between them, not an oversight; don't "fix" it in isolation without confirming with the team, since widening it is a layout-affecting change across every row that uses it. `h-14`/`h-20` are reserved for the PIN pad's oversized digit buttons — don't reuse these sizes for regular controls.
+- **Spacing**: `p-3`/`p-4` for card padding, `gap-2`/`gap-3` between elements. Chips use two sizes by convention — larger touch-friendly (`px-3.5 py-2`) and compact (`px-2.5 py-1`) — pick based on whether the chip is a primary tap target or a secondary/meta tag, not arbitrarily.
+- **Font scale**: `text-sm font-bold` for row labels/prices, `text-xs` for secondary labels, `text-[10px]`/`text-[11px]` for uppercase micro-labels/meta, `text-2xl font-black` for PIN-pad digits. The bracket (arbitrary) values are a known inconsistency versus Tailwind's token philosophy — acceptable to keep matching them for now, but if `pnpm lint:tokens` gains support for a named micro-label scale, prefer that over adding more arbitrary bracket sizes.
+- **Reusable interaction patterns** (established in `CategoryGroupedCatalogPicker.tsx` and `PosOrderWorkspace.tsx`, reuse rather than reinvent):
+  - Category/tag filtering: a **wrapping** chip row (`flex-wrap`), never a horizontal-scroll chip strip. "All" shows every group under a **sticky** section header; a specific chip filters to just that group.
+  - Item listing: an auto-fill card grid (`grid-cols-2 sm:grid-cols-3`-equivalent, `repeat(auto-fill, minmax(...))` when not using fixed breakpoints), not tall single/double-column cards and not thin table rows.
+  - Quantity steppers (`−`/qty/`+`) mutate directly on tap (`applyQuantityDelta`-style) — no draft-state-then-blur-commit dance. Only use draft/blur-commit for free-text numeric inputs where a stepper isn't viable.
+  - Staff/technician identity in a row: avatar with initials, not a photo placeholder or a bare name string.
+- **Consistency rule**: inside a `posFd*`-tagged component, do not mix in `nexoraMuted`/`nexoraBorder`/`nexoraBrand` for "just this one label" — that mixing has already crept into `CustomerHeaderBar.tsx` and should not spread further. If a component is being touched for other reasons and you notice a stray `nexora*` token inside a posFd screen, it's fair game to fix opportunistically, but don't scope-creep an unrelated task solely to hunt these down.
+
+## POS iPad Redesign — Remaining Scope
+
+As of 2026-08-01, only these files have adopted `posFd*` styling: `PosFrontDeskView.tsx` (partially), `PosOrderWorkspace.tsx`, `CustomerHeaderBar.tsx`, `PhoneCheckInStep.tsx`, `CategoryGroupedCatalogPicker.tsx`, `modals/SelectTechniciansModal.tsx`. Everything else in `pos/` and adjacent POS-relevant screens still uses the old generic dashboard style. Suggested priority order for future sessions (highest-value / lowest-risk first):
+
+1. **Consistency cleanup in already-shipped screens** — add a `posFdDanger` token pair and replace the stray `nexoraMuted`/`nexoraBorder` usages inside `CustomerHeaderBar.tsx` and similar. Cheap, prevents further drift, no new layout risk.
+2. **Turn Board tab** (`PosFrontDeskView.tsx:555-569`) — still `nexora-card`/`nexoraMuted`/plain grid, no `posFd*`, no `rounded-2xl`. High-traffic screen, same file as already-migrated code, natural next step.
+3. **`PosCompletedOrdersPanel.tsx`** — entirely untouched, still a plain `<table>` with `nexora-card`/`nexoraBorder`/`nexoraBrand` hovers. Candidate for the same row-based redesign already applied to the Order Detail panel.
+4. **Settings/catalog admin screens** — `PosGeneralSettingsView.tsx`, `PosCategoriesView.tsx`, `PosServicesView.tsx`, `PosProductsView.tsx`, `PosRolesView.tsx`, `PosStaffProfileView.tsx`, `WeeklyScheduleEditor.tsx`, `PosBookingSettingsPanel.tsx`, and their `modals/Create*Modal.tsx`. Staff use these less often than check-in/order-workspace, but they're still hands-on-iPad screens.
+5. **Booking screens** (`booking/BookingTab.tsx`, `BookingTable.tsx`, `BookingCards.tsx`, `BookingCalendar.tsx`, `NewBookingForm.tsx`, `RescheduleServicesEditor.tsx`, `BookingLinkShare.tsx`) — note `CategoryGroupedCatalogPicker`'s `variant` prop already lets Booking's catalog pickers opt in later without touching POS; Booking's own modals/tables are still unmigrated by design (they weren't part of the original design review and live in more space-constrained modal contexts, so re-check touch-target sizing before just copying the POS pattern wholesale).
+6. **Owner/Manager Dashboard & Reports** (`src/components/dashboard/overview/*`, `ReportsView.tsx`) — previously explicitly deferred by the team as a separate session; confirm that's still the intent before starting.
+7. **Weekly Payroll / staff clock-in** — `WeeklyPayrollView.tsx` lives under `taxiq/`, not `pos/`, and has no `posFd` styling. No dedicated POS clock-in/out screen exists anywhere in the repo yet — this is a missing feature, not a restyle, and needs its own design pass before a visual standard applies.
+8. **Manual Staff PIN Access** — a real functional gap, not cosmetic: `AddManualStaffTab.tsx` lets an Owner add a staff member with no login account (payout config only), and no component anywhere implements PIN-based POS operator login for them. Recommend treating this as a feature-design task (brainstorm first) rather than folding it into a styling pass, since it needs new auth/session design, not just new classNames.
 
 ## Security And Reliability
 

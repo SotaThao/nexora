@@ -10,6 +10,7 @@ import {
   useStaffProfile,
   useUnlinkStaffBusiness,
 } from '../../../data/hooks/useStaffSelf'
+import { usePosAccess } from '../../../data/hooks/usePosAccess'
 import errorCodeToI18nKey from '../../../data/errorCodes'
 import { isApiError } from '../../../types/domain'
 import type { StaffBusinessLink } from '../../../types/domain'
@@ -89,6 +90,7 @@ function SalonCard({
   onUnlink?: () => void
   isUnlinking?: boolean
 }) {
+  const navigate = useNavigate()
   const statusLabel = resolveStaffBusinessLinkStatusLabel(business)
   const status = getSalonDisplayStatus(business, t)
   const statusHelp = getSalonStatusHelp(statusLabel, t)
@@ -99,6 +101,19 @@ function SalonCard({
   const nicknameValue = business.nicknameAtBusiness?.trim() ?? ''
   const nicknameDisplayValue = nicknameValue || t('staff_salons.nickname_not_set')
   const canUnlink = isActive && typeof onUnlink === 'function'
+
+  // Only worth checking Operations access for a link the Staff can actually act
+  // on (Active); pending/rejected/inactive links keep the old tipping-page tap target.
+  const isActiveLink = statusLabel.trim().toLowerCase() === STAFF_BUSINESS_LINK_STATUS.active
+  const { data: access } = usePosAccess(isActiveLink ? business.businessId : undefined)
+
+  const onOpen = () => {
+    if (isActiveLink && access?.canManageOperations) {
+      navigate(`/staff/salons/${business.businessId}/front-desk`)
+      return
+    }
+    navigate('/staff/qr?tab=tipping')
+  }
 
   return (
     <div className="w-full rounded-2xl border border-nexoraBorder/80 bg-white p-4 text-left shadow-sm">
@@ -194,16 +209,12 @@ export default function StaffMySalons() {
   const { t, currentLanguage } = useTranslation()
   const navigate = useNavigate()
   const { showToast, showConfirm } = useNotification()
-  const {
-    data: businesses = [],
-    isPending,
-    refetch: refetchBusinesses,
-  } = useStaffBusinesses()
   const { data: staffProfile } = useStaffProfile()
   const setNicknameMutation = useSetStaffBusinessNickname()
   const { data: pendingLinkRequests = [] } = useStaffLinkRequestsList()
   const unlinkBusiness = useUnlinkStaffBusiness()
   const [unlinkError, setUnlinkError] = useState<{ title: string; message: string } | null>(null)
+  const { data: businesses = [], isPending, isFetching, refetch: refetchBusinesses } = useStaffBusinesses()
   const salons = useMemo(() => {
     const visibleBusinesses = businesses.filter((business) => {
       const statusLabel = resolveStaffBusinessLinkStatusLabel(business).trim().toLowerCase()

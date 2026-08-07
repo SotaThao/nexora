@@ -194,6 +194,7 @@ export function createDashboardRepository(client: HttpClient = httpClient) {
         const reviews = response.reviewsSummary
         const platformReviews = response.platformReviews
         const customers = response.customersSummary
+        const bookings = response.bookingsSummary
 
         return {
           totalTips: tips?.totalAmount ?? 0,
@@ -216,6 +217,7 @@ export function createDashboardRepository(client: HttpClient = httpClient) {
           returningCustomerRate: customers?.returningCustomerRate ?? 0,
           returningCustomerRateChangeVsLastWeek: customers?.returningCustomerRateChangeVsLastWeek ?? 0,
           previousPeriodComparison: tips?.previousPeriodComparison ?? null,
+          totalBookings: bookings?.totalCount ?? 0,
         }
       } catch (err: unknown) {
         if (isApiError(err) && err.status === 404) {

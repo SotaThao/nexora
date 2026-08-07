@@ -74,6 +74,21 @@ export default {
         nexoraTeal: '#12B886',
         nexoraLavender: '#A8A9F3',
 
+        // POS Front Desk — separate visual identity from the main dashboard brand
+        // (`nexoraBrand` #4648D8), warm salon-appropriate accent for the iPad
+        // redesign. Deliberately distinct from `nexoraLavender`/`nexoraTeal` above.
+        posFdAccent: '#E8869B',
+        posFdAccentDark: '#D66E85',
+        posFdCoral: '#FF8F6B',
+        posFdLavender: '#B9A3E3',
+        posFdCanvas: '#FFF8F6',
+        posFdSurface: '#FFFFFF',
+        posFdBorder: '#F1DEE1',
+        posFdText: '#2B1E22',
+        posFdMuted: '#8C7378',
+        posFdDanger: '#C24858',
+        posFdDangerBg: '#FBEAEC',
+
         // Homepage landing palette (scripts/homepage-source)
         navy: '#0f1638',
         ink: '#101322',

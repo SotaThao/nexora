@@ -3,7 +3,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { qk } from '../queryKeys'
 import merchantsRepository from '../repositories/merchants'
 import { AuthContext } from '../../auth/AuthContext'
-import type { MerchantSetup } from '../../types/domain'
+import type { BusinessHourEntry, MerchantSetup } from '../../types/domain'
 import type { CreateBusinessResult, ImageUploadResult, SlugCheckResult } from '../../types/repositories'
 
 export function useMerchantSetup({ enabled: callerEnabled = true } = {}) {
@@ -119,13 +119,57 @@ export function useUpdateBusiness() {
   })
 }
 
+export function useUpdateBusinessLogo() {
+  const queryClient = useQueryClient()
+
+  return useMutation<string, Error, File>({
+    mutationFn: (file) => merchantsRepository.updateBusinessLogo(file),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: qk.merchantSetup() })
+    },
+  })
+}
+
 export function useUpdateBusinessInfo() {
   const queryClient = useQueryClient()
 
-  return useMutation<void, Error, { name: string; phone?: string; feedbackEmail?: string; website?: string }>({
+  return useMutation<
+    void,
+    Error,
+    {
+      name: string
+      phone?: string
+      feedbackEmail?: string
+      website?: string
+      bookingNotificationPhone?: string
+      salesTaxRatePercent?: number
+    }
+  >({
     mutationFn: (dto) => merchantsRepository.updateBusinessInfo(dto),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: qk.merchantSetup() })
+    },
+  })
+}
+
+// POS Owner Setup — Business Hours (US-014)
+export function useBusinessHours() {
+  const auth = useContext(AuthContext)
+  const isOwner = auth?.status === 'authenticated' && auth?.session?.role === 'owner'
+  return useQuery<BusinessHourEntry[]>({
+    queryKey: qk.merchantBusinessHours(),
+    queryFn: () => merchantsRepository.getBusinessHours(),
+    enabled: isOwner,
+    retry: false,
+  })
+}
+
+export function useUpdateBusinessHours() {
+  const queryClient = useQueryClient()
+  return useMutation<boolean, Error, BusinessHourEntry[]>({
+    mutationFn: (days) => merchantsRepository.updateBusinessHours(days),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: qk.merchantBusinessHours() })
     },
   })
 }
