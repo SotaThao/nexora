@@ -9,7 +9,7 @@ import type { DayPilot } from '@daypilot/daypilot-lite-react'
 import { useTranslation } from '../../../../../contexts/LanguageContext'
 import { PosOrderStatus } from '../../../../../constants/posOrderStatus'
 import type { BookingListItemApiDto } from '../../../../../types/repositories'
-import { bookingDateKey, formatBookingWallClock, statusLabelKey } from './bookingFormatters'
+import { bookingDateKey, formatBookingWallClock, resolveBookingWallClockParts, statusLabelKey } from './bookingFormatters'
 import { BOOKING_CALENDAR_COLORS } from '../../../views/bookingTodayConstants'
 import { formatPosDateTime } from '../posDateTime'
 
@@ -31,12 +31,12 @@ function colorForStatus(status: string) {
   return BOOKING_CALENDAR_COLORS[index % BOOKING_CALENDAR_COLORS.length]
 }
 
-// DayPilot needs a naive "yyyy-MM-ddTHH:mm:ss" string. This feature has no genuine per-business
-// timezone concept anywhere (see feedback_frontend_datetime_timezone_naive) — read via UTC
-// getters so the rendered wall-clock matches every other view in this tab.
-function toDayPilotWallClock(iso: string): string {
-  const d = new Date(iso)
-  return `${d.getUTCFullYear()}-${pad(d.getUTCMonth() + 1)}-${pad(d.getUTCDate())}T${pad(d.getUTCHours())}:${pad(d.getUTCMinutes())}:00`
+// DayPilot needs a naive "yyyy-MM-ddTHH:mm:ss" string representing the wall-clock the
+// appointment was actually booked for — resolveBookingWallClockParts already picks the right
+// reading (naive vs UTC-converted) based on the booking's source, see bookingFormatters.ts.
+function toDayPilotWallClock(iso: string, source?: string): string {
+  const { year, month, day, hours, minutes } = resolveBookingWallClockParts(iso, source)
+  return `${year}-${pad(month)}-${pad(day)}T${pad(hours)}:${pad(minutes)}:00`
 }
 
 export default function BookingCalendar({
@@ -78,7 +78,7 @@ export default function BookingCalendar({
     () =>
       bookings.map((booking) => {
         const color = colorForStatus(booking.status)
-        const start = toDayPilotWallClock(booking.scheduledAt)
+        const start = toDayPilotWallClock(booking.scheduledAt, booking.source)
         return {
           id: booking.bookingId,
           text: booking.customerName,
@@ -88,14 +88,14 @@ export default function BookingCalendar({
           borderColor: color.border,
           barColor: color.border,
           fontColor: color.text,
-          toolTip: `${booking.customerName} · ${formatBookingWallClock(booking.scheduledAt)}`,
+          toolTip: `${booking.customerName} · ${formatBookingWallClock(booking.scheduledAt, booking.source)}`,
         }
       }),
     [bookings],
   )
 
   const selectedBookings = selectedDayKey
-    ? bookings.filter((b) => bookingDateKey(b.scheduledAt) === selectedDayKey)
+    ? bookings.filter((b) => bookingDateKey(b.scheduledAt, b.source) === selectedDayKey)
     : []
 
   return (
@@ -157,7 +157,7 @@ export default function BookingCalendar({
                       {t(p + statusLabelKey(booking.status))}
                     </span>
                   </div>
-                  <p className="text-[11px] text-nexoraMuted">{formatBookingWallClock(booking.scheduledAt)}</p>
+                  <p className="text-[11px] text-nexoraMuted">{formatBookingWallClock(booking.scheduledAt, booking.source)}</p>
                   <p className="text-[11px] text-nexoraMuted">
                     {t(p + 'columnCreated')}: {formatPosDateTime(booking.createdAt, currentLanguage)}
                   </p>

@@ -273,12 +273,6 @@ export const MENU_ITEMS = [
   },
   { id: DASHBOARD_MENU_ID.bookingHub, label: 'AI Hub', icon: Calendar },
   {
-    id: DASHBOARD_MENU_ID.productManagement,
-    label: 'Gift Card Center',
-    icon: Package,
-  },
-  { id: DASHBOARD_MENU_ID.analytics, label: 'Analytics', icon: BarChart3 },
-  {
     id: DASHBOARD_MENU_ID.pos,
     label: 'POS',
     icon: Store,
@@ -292,13 +286,22 @@ export const MENU_ITEMS = [
       { id: 'staff', labelKey: 'dashboard.menu.pos_staff' }
     ]
   },
+  {
+    id: DASHBOARD_MENU_ID.productManagement,
+    label: 'Gift Card Center',
+    icon: Package,
+  },
+  { id: DASHBOARD_MENU_ID.analytics, label: 'Analytics', icon: BarChart3 },
   { id: DASHBOARD_MENU_ID.settings, label: 'Settings', icon: Settings },
   { id: DASHBOARD_MENU_ID.support, label: 'Support', icon: HelpCircle },
 ]
 
-export const MERCHANT_SIDEBAR_HIDDEN_MENU_IDS = [
+export const MERCHANT_SIDEBAR_HIDDEN_MENU_IDS: DashboardMenuId[] = [
   DASHBOARD_MENU_ID.tips,
   DASHBOARD_MENU_ID.reports,
+  // Hidden for this go-live — users don't need to discover Tax IQ yet. Routes/data are
+  // untouched, only the sidebar/mobile-drawer entry is hidden (same as Tips/Reports above).
+  DASHBOARD_MENU_ID.taxiq,
 ];
 
 /** Temporarily hide Hardware Devices submenu/tab until the feature is ready. */
