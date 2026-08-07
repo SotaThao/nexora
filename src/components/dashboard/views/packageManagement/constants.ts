@@ -4,6 +4,7 @@ import {
   SubscriptionMyPackageType,
   type SubscriptionMyPackage,
 } from '../../../../data/repositories/subscriptionPayments'
+import { parseApiUtcDateTime } from '../../../../utils/localDate'
 
 export const PACKAGE_MANAGEMENT_TK =
   'components.dashboard.views.PackageManagementView'
@@ -16,6 +17,15 @@ export const PACKAGE_QUERY_PARAM = {
   tab: 'tab',
   plan: 'plan',
 } as const
+
+/** Always hit the network when a Package Management tab panel mounts — no stale cache. */
+export const PACKAGE_MANAGEMENT_TAB_QUERY = {
+  staleTime: 0,
+  gcTime: 0,
+  refetchOnMount: 'always' as const,
+} as const
+
+export type PackageManagementTabQueryOptions = typeof PACKAGE_MANAGEMENT_TAB_QUERY
 
 export const PACKAGE_EMPTY_CELL = '—' as const
 
@@ -258,6 +268,8 @@ function shiftIsoDate(days: number, endOfDay = false) {
 export type PackageOverviewOwnedItem = {
   id: string
   productKey: PackageOverviewProductKey
+  /** Display name from API (`MerchantPackageDto.name`). */
+  name: string
   nameKey: string
   descriptionKey: string
   featureKeys: string[]
@@ -299,9 +311,11 @@ export function mapMyPackageToOwnedItem(
   if (!resolve) return null
 
   const { productKey, planCopy } = resolve(pkg)
+  const name = String(pkg.name ?? '').trim() || String(pkg.packageCode ?? '').trim()
   return {
     id: String(pkg.id),
     productKey,
+    name,
     nameKey: planCopy.nameKey,
     descriptionKey: planCopy.descriptionKey,
     featureKeys: [],
@@ -316,6 +330,7 @@ export const PACKAGE_OVERVIEW_OWNED_MOCK: PackageOverviewOwnedItem[] = [
   {
     id: 'nexora-pro',
     productKey: PackageOverviewProduct.Nexora,
+    name: 'Nexora Pro',
     nameKey: 'overview.owned.nexoraProName',
     descriptionKey: 'overview.owned.nexoraProDesc',
     featureKeys: [
@@ -330,6 +345,7 @@ export const PACKAGE_OVERVIEW_OWNED_MOCK: PackageOverviewOwnedItem[] = [
   {
     id: 'voice-pro',
     productKey: PackageOverviewProduct.Voice,
+    name: 'Voice AI Pro',
     nameKey: 'overview.owned.voiceProName',
     descriptionKey: 'overview.owned.voiceProDesc',
     featureKeys: [
@@ -344,6 +360,7 @@ export const PACKAGE_OVERVIEW_OWNED_MOCK: PackageOverviewOwnedItem[] = [
   {
     id: 'nexora-starter-lapsed',
     productKey: PackageOverviewProduct.Nexora,
+    name: 'Nexora Starter',
     nameKey: 'overview.owned.nexoraStarterName',
     descriptionKey: 'overview.owned.nexoraStarterDesc',
     featureKeys: [
@@ -479,19 +496,24 @@ export type PackageOverviewStatus = 'active' | 'expiring' | 'expired'
 
 const OVERVIEW_EXPIRING_WITHIN_DAYS = 7
 
+const PACKAGE_COUNTDOWN_EXPIRED = {
+  years: 0,
+  months: 0,
+  days: 0,
+  hours: 0,
+  minutes: 0,
+  seconds: 0,
+  expired: true as const,
+}
+
 export function formatPackageCountdownParts(expiresAtIso: string, now = Date.now()) {
-  const endDate = new Date(expiresAtIso)
+  const endDate = parseApiUtcDateTime(expiresAtIso)
+  if (!endDate) {
+    return PACKAGE_COUNTDOWN_EXPIRED
+  }
   const end = endDate.getTime()
   if (!Number.isFinite(end) || end <= now) {
-    return {
-      years: 0,
-      months: 0,
-      days: 0,
-      hours: 0,
-      minutes: 0,
-      seconds: 0,
-      expired: true as const,
-    }
+    return PACKAGE_COUNTDOWN_EXPIRED
   }
 
   let cursor = new Date(now)
@@ -529,7 +551,8 @@ export function getPackageOverviewStatus(
   expiresAtIso: string,
   now = Date.now(),
 ): PackageOverviewStatus {
-  const end = new Date(expiresAtIso).getTime()
+  const endDate = parseApiUtcDateTime(expiresAtIso)
+  const end = endDate?.getTime() ?? NaN
   if (!Number.isFinite(end) || end <= now) return 'expired'
   const daysLeft = (end - now) / 86400000
   if (daysLeft <= OVERVIEW_EXPIRING_WITHIN_DAYS) return 'expiring'

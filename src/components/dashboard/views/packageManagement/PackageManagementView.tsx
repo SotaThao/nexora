@@ -1,20 +1,17 @@
-import { useCallback, useEffect, useMemo } from 'react'
+import { useCallback, useEffect } from 'react'
 import { Boxes, History, LayoutGrid, Sparkles } from 'lucide-react'
-import { useNavigate, useOutletContext, useSearchParams } from 'react-router-dom'
+import { useOutletContext, useSearchParams } from 'react-router-dom'
 import { useTranslation } from '../../../../contexts/LanguageContext'
-import { useNotification } from '../../../../contexts/NotificationContext'
-import { buildDashboardMenuPath, DASHBOARD_MENU_ID } from '../../constants'
-import SubscriptionPaymentModal from '../../modals/SubscriptionPaymentModal'
 import PackageHistoryPanel from '../plans/PackageHistoryPanel'
 import { PhoneTabIcon } from '../BookingHubIcons'
 import PackageAiVoicePlansPanel from './PackageAiVoicePlansPanel'
 import PackageOverviewPanel from './PackageOverviewPanel'
 import PackageSubscriptionsPanel from './PackageSubscriptionsPanel'
 import {
-  BOOKING_HUB_PLANS_TK,
   isKnownPackageManagementTab,
   PACKAGE_MANAGEMENT_TAB_I18N_KEY,
   PACKAGE_MANAGEMENT_TAB_ORDER,
+  PACKAGE_MANAGEMENT_TAB_QUERY,
   PACKAGE_MANAGEMENT_TK,
   PACKAGE_QUERY_PARAM,
   PackageManagementTab,
@@ -23,12 +20,10 @@ import {
   parsePackageManagementTab,
 } from './constants'
 import { stripPlanQueryParam } from './tipPlatformCheckout'
-import { useTipPlatformCheckout, TipPlatformCheckoutResult } from './useTipPlatformCheckout'
 import './package-management.css'
 import '../booking-hub.css'
 
 const TK = PACKAGE_MANAGEMENT_TK
-const DASHBOARD_SUPPORT_PATH = buildDashboardMenuPath(DASHBOARD_MENU_ID.support)
 
 const TAB_ICON = {
   [PackageManagementTab.Overview]: LayoutGrid,
@@ -39,33 +34,11 @@ const TAB_ICON = {
 
 export default function PackageManagementView() {
   const { t } = useTranslation()
-  const { showToast } = useNotification()
-  const navigate = useNavigate()
   const ctx = useOutletContext<LooseObject>()
   const [searchParams, setSearchParams] = useSearchParams()
   const activeTab = parsePackageManagementTab(
     searchParams.get(PACKAGE_QUERY_PARAM.tab),
   )
-  const isSubscriptionsTab = activeTab === PackageManagementTab.Subscriptions
-
-  const {
-    tipPlatformSubscription,
-    comparePlanId,
-    packages,
-    billingDefaults,
-    paymentPlan,
-    selectedPackage,
-    paymentPlanPrice,
-    clearCheckout,
-    trySelectPlan,
-    isCheckoutPackageMissing,
-  } = useTipPlatformCheckout({
-    profile: ctx?.profile,
-    searchParams,
-    setSearchParams,
-    packagesEnabled: isSubscriptionsTab,
-    deepLinkEnabled: isSubscriptionsTab,
-  })
 
   /** Canonicalize ?tab= (missing / casing / invalid) and strip orphan ?plan=. */
   useEffect(() => {
@@ -97,12 +70,6 @@ export default function PackageManagementView() {
     if (changed) setSearchParams(next, { replace: true })
   }, [searchParams, setSearchParams])
 
-  useEffect(() => {
-    if (!isCheckoutPackageMissing) return
-    showToast(t(`${BOOKING_HUB_PLANS_TK}.planPackageUnavailable`), 'error')
-    clearCheckout()
-  }, [isCheckoutPackageMissing, showToast, t, clearCheckout])
-
   const setTab = useCallback(
     (tab: PackageManagementTab) => {
       const next = new URLSearchParams(searchParams)
@@ -117,46 +84,26 @@ export default function PackageManagementView() {
     [searchParams, setSearchParams],
   )
 
-  const handleSelectPlan = useCallback(
-    (planId: string) => {
-      const result = trySelectPlan(planId)
-      if (result === TipPlatformCheckoutResult.ContactSupport) {
-        navigate(DASHBOARD_SUPPORT_PATH)
-      }
-    },
-    [trySelectPlan, navigate],
-  )
-
-  const activePanel = useMemo(() => {
-    switch (activeTab) {
-      case PackageManagementTab.Subscriptions:
-        return (
-          <PackageSubscriptionsPanel
-            currentSubscription={tipPlatformSubscription}
-            packages={packages}
-            currentPlanId={comparePlanId}
-            onSelectPlan={handleSelectPlan}
-          />
-        )
-      case PackageManagementTab.AiVoice:
-        return <PackageAiVoicePlansPanel />
-      case PackageManagementTab.History:
-        return (
-          <div className="booking-hub-view package-history-host">
-            <PackageHistoryPanel />
-          </div>
-        )
-      case PackageManagementTab.Overview:
-      default:
-        return <PackageOverviewPanel />
-    }
-  }, [
-    activeTab,
-    tipPlatformSubscription,
-    packages,
-    comparePlanId,
-    handleSelectPlan,
-  ])
+  let activePanel
+  switch (activeTab) {
+    case PackageManagementTab.Subscriptions:
+      activePanel = <PackageSubscriptionsPanel profile={ctx?.profile} />
+      break
+    case PackageManagementTab.AiVoice:
+      activePanel = <PackageAiVoicePlansPanel />
+      break
+    case PackageManagementTab.History:
+      activePanel = (
+        <div className="booking-hub-view package-history-host">
+          <PackageHistoryPanel queryOptions={PACKAGE_MANAGEMENT_TAB_QUERY} />
+        </div>
+      )
+      break
+    case PackageManagementTab.Overview:
+    default:
+      activePanel = <PackageOverviewPanel />
+      break
+  }
 
   return (
     <div className="package-management-view">
@@ -209,18 +156,6 @@ export default function PackageManagementView() {
       >
         {activePanel}
       </div>
-
-      {paymentPlan && selectedPackage ? (
-        <SubscriptionPaymentModal
-          isOpen
-          plan={paymentPlan}
-          packageId={selectedPackage.id}
-          price={paymentPlanPrice}
-          billingDefaults={billingDefaults}
-          onClose={clearCheckout}
-          onSuccess={clearCheckout}
-        />
-      ) : null}
     </div>
   )
 }

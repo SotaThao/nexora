@@ -16,12 +16,20 @@ import {
   Wallet,
 } from "lucide-react";
 import { BookingHubMainTab } from "../../data/merchantVoice/domain";
+import {
+  PACKAGE_MANAGEMENT_TAB_I18N_KEY,
+  PACKAGE_MANAGEMENT_TAB_ORDER,
+  PACKAGE_MANAGEMENT_TK,
+  PackageManagementTab,
+  parsePackageManagementTab,
+} from "./views/packageManagement/constants";
 
 /** Menu ids used by AI Hub / Touchpoints expandable nav (avoid hardcoding duplicates). */
 export const DASHBOARD_MENU = {
   Touchpoints: "touchpoints",
   BookingHub: "ai-hub",
   ProductManagement: "product-management",
+  PackageManagement: "package-management",
 } as const;
 
 /** Dashboard session roles passed as `userRole` prop. */
@@ -355,6 +363,24 @@ export function isBookingHubSubActive(
 ): boolean {
   if (activeMenu !== DASHBOARD_MENU.BookingHub) return false;
   const activeTab = tabParam || getDefaultBookingHubTab(hasVoiceTenant);
+  return activeTab === subId;
+}
+
+/** Package Management sidebar children — maps to `/dashboard/package-management?tab=`. */
+export const PACKAGE_MANAGEMENT_SUBMENU = PACKAGE_MANAGEMENT_TAB_ORDER.map(
+  (tab) => ({
+    id: tab,
+    labelKey: `${PACKAGE_MANAGEMENT_TK}.${PACKAGE_MANAGEMENT_TAB_I18N_KEY[tab]}`,
+  }),
+) as ReadonlyArray<{ id: PackageManagementTab; labelKey: string }>;
+
+export function isPackageManagementSubActive(
+  activeMenu: string,
+  tabParam: string | null,
+  subId: string,
+): boolean {
+  if (activeMenu !== DASHBOARD_MENU_ID.packageManagement) return false;
+  const activeTab = parsePackageManagementTab(tabParam);
   return activeTab === subId;
 }
 

@@ -8,7 +8,7 @@ import {
   getTipPlatformSubscription,
   resolveTipPlatformPlanId,
 } from '../../../../utils/subscriptionDisplay'
-import { PACKAGE_QUERY_PARAM } from './constants'
+import { PACKAGE_MANAGEMENT_TAB_QUERY, PACKAGE_QUERY_PARAM } from './constants'
 import {
   canOpenTipPlatformCheckout,
   findTipPlatformPackage,
@@ -67,6 +67,7 @@ export function useTipPlatformCheckout({
   } = useSubscriptionPackages({
     enabled: packagesEnabled || paymentPlan != null,
     packageType: SubscriptionPackageType.TipPlatform,
+    ...PACKAGE_MANAGEMENT_TAB_QUERY,
   })
 
   const billingDefaults = useMemo(

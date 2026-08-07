@@ -27,6 +27,8 @@ export function useDashboardNavigation() {
   const [isBookingHubMobileExpanded, setIsBookingHubMobileExpanded] = useState(
     activeMenu === DASHBOARD_MENU.BookingHub,
   )
+  const [isPackageManagementMobileExpanded, setIsPackageManagementMobileExpanded] =
+    useState(activeMenu === DASHBOARD_MENU.PackageManagement)
   const [isGiftCardCenterMobileExpanded, setIsGiftCardCenterMobileExpanded] = useState(false)
   const [settingsTab, setSettingsTab] = useState('profile')
   const [isProfileExpanded, setIsProfileExpanded] = useState(false)
@@ -48,16 +50,23 @@ export function useDashboardNavigation() {
     setIsPaymentsPayoutsMobileExpanded(isPaymentsPayoutsActive)
     setIsTouchpointsMobileExpanded(activeMenu === DASHBOARD_MENU.Touchpoints)
     setIsBookingHubMobileExpanded(activeMenu === DASHBOARD_MENU.BookingHub)
+    setIsPackageManagementMobileExpanded(
+      activeMenu === DASHBOARD_MENU.PackageManagement,
+    )
   }, [isMobileMenuOpen, activeMenu, isPaymentsPayoutsActive])
   useEffect(() => {
     if (isPaymentsPayoutsActive) {
       setIsPaymentsPayoutsMobileExpanded(true)
       setIsTouchpointsMobileExpanded(false)
       setIsBookingHubMobileExpanded(false)
+      setIsPackageManagementMobileExpanded(false)
       setIsGiftCardCenterMobileExpanded(false)
     }
     if (activeMenu === DASHBOARD_MENU.BookingHub) {
       setIsBookingHubMobileExpanded(true)
+    }
+    if (activeMenu === DASHBOARD_MENU.PackageManagement) {
+      setIsPackageManagementMobileExpanded(true)
     }
   }, [activeMenu, isPaymentsPayoutsActive])
 
@@ -87,6 +96,8 @@ export function useDashboardNavigation() {
     setIsTouchpointsMobileExpanded,
     isBookingHubMobileExpanded,
     setIsBookingHubMobileExpanded,
+    isPackageManagementMobileExpanded,
+    setIsPackageManagementMobileExpanded,
     isGiftCardCenterMobileExpanded,
     setIsGiftCardCenterMobileExpanded,
     settingsTab,
