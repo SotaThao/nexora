@@ -1,33 +1,39 @@
 // Dashboard constants — wallet logos, payout config defaults, sidebar menu.
 // Extracted from Dashboard.jsx (Group 1 refactor).
 import {
-  BarChart3,
-  Calendar,
-  CircleDollarSign,
-  HelpCircle,
   LayoutDashboard,
-  Package,
-  QrCode,
-  ReceiptText,
-  Settings,
-  Star,
   Users,
+  ClipboardList,
+  Pointer,
+  Calculator,
+  CircleDollarSign,
+  Star,
+  ReceiptText,
+  QrCode,
+  BarChart3,
+  Settings,
+  HelpCircle,
   Wallet,
-} from "lucide-react";
-import { BookingHubMainTab } from "../../data/merchantVoice/domain";
+  Calendar,
+  Store,
+  Package,
+} from 'lucide-react'
+import { BookingHubMainTab } from '../../data/merchantVoice/domain'
 
-/** Menu ids used by AI Hub / Touchpoints expandable nav (avoid hardcoding duplicates). */
+/** Menu ids used by Booking Hub / Touchpoints expandable nav (avoid hardcoding duplicates). */
 export const DASHBOARD_MENU = {
-  Touchpoints: "touchpoints",
-  BookingHub: "ai-hub",
+  Touchpoints: 'touchpoints',
+  BookingHub: 'ai-hub',
+  TaxIq: 'taxiq',
   ProductManagement: "product-management",
-} as const;
+  Pos: 'pos',
+} as const
 
 /** Dashboard session roles passed as `userRole` prop. */
 export const DASHBOARD_USER_ROLE = {
-  Owner: "owner",
-  Staff: "staff",
-} as const;
+  Owner: 'owner',
+  Staff: 'staff',
+} as const
 
 export type DashboardUserRole =
   (typeof DASHBOARD_USER_ROLE)[keyof typeof DASHBOARD_USER_ROLE];
@@ -118,36 +124,37 @@ export const WalletLogos = {
 };
 
 export const DEFAULT_PAYOUT_CONFIGS = {
-  zelle: { enabled: false, value: "", qrCode: "", accountName: "" },
-  bankwire: { enabled: false, value: "", qrCode: "", accountName: "" },
-  paypal: { enabled: false, value: "", qrCode: "", accountName: "" },
-  venmo: { enabled: false, value: "", qrCode: "", accountName: "" },
-  cashapp: { enabled: false, value: "", qrCode: "", accountName: "" },
-  applecash: { enabled: false, value: "", qrCode: "", accountName: "" },
-};
+  zelle: { enabled: false, value: '', qrCode: '', accountName: '' },
+  bankwire: { enabled: false, value: '', qrCode: '', accountName: '' },
+  paypal: { enabled: false, value: '', qrCode: '', accountName: '' },
+  venmo: { enabled: false, value: '', qrCode: '', accountName: '' },
+  cashapp: { enabled: false, value: '', qrCode: '', accountName: '' },
+  applecash: { enabled: false, value: '', qrCode: '', accountName: '' }
+}
 
 /** Dashboard route root. */
-export const DASHBOARD_ROOT_PATH = "/dashboard";
+export const DASHBOARD_ROOT_PATH = '/dashboard'
 
 /** Sidebar / route segment ids under `{@link DASHBOARD_ROOT_PATH}/…`. */
 export const DASHBOARD_MENU_ID = {
-  overview: "overview",
-  staff: "staff",
-  tips: "tips",
-  reviews: "reviews",
-  reports: "reports",
-  touchpoints: "touchpoints",
-  bookingHub: "ai-hub",
-  productManagement: "product-management",
-  analytics: "analytics",
-  settings: "settings",
-  support: "support",
-  subscriptions: "subscriptions",
-  payments: "payments",
-} as const;
+  overview: 'overview',
+  staff: 'staff',
+  tips: 'tips',
+  reviews: 'reviews',
+  reports: 'reports',
+  touchpoints: 'touchpoints',
+  taxiq: 'taxiq',
+  bookingHub: 'ai-hub',
+  productManagement: 'product-management',
+  analytics: 'analytics',
+  settings: 'settings',
+  support: 'support',
+  subscriptions: 'subscriptions',
+  payments: 'payments',
+  pos: 'pos',
+} as const
 
-export type DashboardMenuId =
-  (typeof DASHBOARD_MENU_ID)[keyof typeof DASHBOARD_MENU_ID];
+export type DashboardMenuId = (typeof DASHBOARD_MENU_ID)[keyof typeof DASHBOARD_MENU_ID]
 
 /** Merchant Portal Product Management SSO entry (alias of {@link DASHBOARD_MENU_ID.productManagement}). */
 export const PRODUCT_MANAGEMENT_MENU_ID = DASHBOARD_MENU_ID.productManagement;
@@ -167,28 +174,28 @@ export const DASHBOARD_TIPS_PATH = buildDashboardMenuPath(
 export const DASHBOARD_SETTINGS_BASE_PATH = `${DASHBOARD_ROOT_PATH}/settings`;
 
 export const DASHBOARD_REPORTS_TAB = {
-  tips: "tips",
-  directPayments: "direct_payments",
-} as const;
+  tips: 'tips',
+  directPayments: 'direct_payments',
+} as const
 
 export const DASHBOARD_TIPS_TAB = {
-  savings: "savings",
-  payouts: "payouts",
-} as const;
+  savings: 'savings',
+  payouts: 'payouts',
+} as const
 
 export const DASHBOARD_SETTINGS_QUERY_TAB = {
-  payout: "payout",
-} as const;
+  payout: 'payout',
+} as const
 
 type DashboardReportsQuery = {
-  status?: string;
-  tab?: string;
-  dateFrom?: string;
-  dateTo?: string;
-  transactionId?: string;
-  paymentId?: string;
-  date?: string;
-};
+  status?: string
+  tab?: string
+  dateFrom?: string
+  dateTo?: string
+  transactionId?: string
+  paymentId?: string
+  date?: string
+}
 
 function withQuery(
   path: string,
@@ -228,26 +235,73 @@ export function buildDashboardSettingsQueryPath(tab: string): string {
 }
 
 export const MENU_ITEMS = [
-  { id: DASHBOARD_MENU_ID.overview, label: "Dashboard", icon: LayoutDashboard },
-  { id: DASHBOARD_MENU_ID.staff, label: "Staff", icon: Users },
-  { id: DASHBOARD_MENU_ID.tips, label: "Tips", icon: CircleDollarSign },
-  { id: DASHBOARD_MENU_ID.reviews, label: "Reviews", icon: Star },
-  { id: DASHBOARD_MENU_ID.reports, label: "Transactions", icon: ReceiptText },
-  { id: DASHBOARD_MENU_ID.touchpoints, label: "Touch Points", icon: QrCode },
-  { id: DASHBOARD_MENU_ID.bookingHub, label: "AI Hub", icon: Calendar },
+  { id: DASHBOARD_MENU_ID.overview, label: 'Dashboard', icon: LayoutDashboard },
+  { id: DASHBOARD_MENU_ID.staff, label: 'Staff', icon: Users },
+  { id: DASHBOARD_MENU_ID.tips, label: 'Tips', icon: CircleDollarSign },
+  { id: DASHBOARD_MENU_ID.reviews, label: 'Reviews', icon: Star },
+  { id: DASHBOARD_MENU_ID.reports, label: 'Transactions', icon: ReceiptText },
+  { id: DASHBOARD_MENU_ID.touchpoints, label: 'Touch Points', icon: QrCode },
+  {
+    id: DASHBOARD_MENU_ID.taxiq,
+    label: 'Tax IQ',
+    icon: Calculator,
+    image: '/assets/menu/tax-iq.svg',
+    children: [
+      { id: 'onboarding', labelKey: 'dashboard.menu.taxiq_onboarding' },
+      { id: 'employers', labelKey: 'dashboard.menu.taxiq_employers' },
+      { id: 'deductions', labelKey: 'dashboard.menu.taxiq_deductions' },
+      { id: 'income', labelKey: 'dashboard.menu.taxiq_income' },
+      { id: 'receipts', labelKey: 'dashboard.menu.taxiq_receipts' },
+      { id: 'equipment', labelKey: 'dashboard.menu.taxiq_equipment' },
+      { id: 'payroll', labelKey: 'dashboard.menu.taxiq_payroll' },
+      { id: 'pay-engine', labelKey: 'dashboard.menu.taxiq_pay_engine' },
+      { id: 'weekly-payroll', labelKey: 'dashboard.menu.taxiq_weekly_payroll' },
+      { id: 'payroll-runs', labelKey: 'dashboard.menu.taxiq_payroll_runs' },
+      { id: 'tax-ledger', labelKey: 'dashboard.menu.taxiq_tax_ledger' },
+      { id: 'exceptions', labelKey: 'dashboard.menu.taxiq_exceptions' },
+      { id: 'data-quality', labelKey: 'dashboard.menu.taxiq_data_quality' },
+      { id: 'jurisdictions', labelKey: 'dashboard.menu.taxiq_jurisdictions' },
+      { id: 'reminders', labelKey: 'dashboard.menu.taxiq_reminders' },
+      { id: 'cpa-access', labelKey: 'dashboard.menu.taxiq_cpa_access' },
+      { id: 'share-links', labelKey: 'dashboard.menu.taxiq_share_links' },
+      { id: '1099nec', labelKey: 'dashboard.menu.taxiq_form1099nec' },
+      { id: 'tip-ledger', labelKey: 'dashboard.menu.taxiq_tip_ledger' },
+      { id: 'forms-reports', labelKey: 'dashboard.menu.taxiq_forms_reports' },
+      { id: 'tax-estimate', labelKey: 'dashboard.menu.taxiq_tax_estimate' },
+      { id: 'export', labelKey: 'dashboard.menu.taxiq_export' }
+    ]
+  },
+  { id: DASHBOARD_MENU_ID.bookingHub, label: 'AI Hub', icon: Calendar },
+  {
+    id: DASHBOARD_MENU_ID.pos,
+    label: 'POS',
+    icon: Store,
+    children: [
+      { id: 'board', labelKey: 'dashboard.menu.pos_board' },
+      { id: 'settings', labelKey: 'dashboard.menu.pos_settings' },
+      { id: 'roles', labelKey: 'dashboard.menu.pos_roles' },
+      { id: 'categories', labelKey: 'dashboard.menu.pos_categories' },
+      { id: 'services', labelKey: 'dashboard.menu.pos_services' },
+      { id: 'products', labelKey: 'dashboard.menu.pos_products' },
+      { id: 'staff', labelKey: 'dashboard.menu.pos_staff' }
+    ]
+  },
   {
     id: DASHBOARD_MENU_ID.productManagement,
-    label: "Gift Card Center",
+    label: 'Gift Card Center',
     icon: Package,
   },
-  { id: DASHBOARD_MENU_ID.analytics, label: "Analytics", icon: BarChart3 },
-  { id: DASHBOARD_MENU_ID.settings, label: "Settings", icon: Settings },
-  { id: DASHBOARD_MENU_ID.support, label: "Support", icon: HelpCircle },
-];
+  { id: DASHBOARD_MENU_ID.analytics, label: 'Analytics', icon: BarChart3 },
+  { id: DASHBOARD_MENU_ID.settings, label: 'Settings', icon: Settings },
+  { id: DASHBOARD_MENU_ID.support, label: 'Support', icon: HelpCircle },
+]
 
-export const MERCHANT_SIDEBAR_HIDDEN_MENU_IDS = [
+export const MERCHANT_SIDEBAR_HIDDEN_MENU_IDS: DashboardMenuId[] = [
   DASHBOARD_MENU_ID.tips,
   DASHBOARD_MENU_ID.reports,
+  // Hidden for this go-live — users don't need to discover Tax IQ yet. Routes/data are
+  // untouched, only the sidebar/mobile-drawer entry is hidden (same as Tips/Reports above).
+  DASHBOARD_MENU_ID.taxiq,
 ];
 
 /** Temporarily hide Hardware Devices submenu/tab until the feature is ready. */
@@ -260,8 +314,12 @@ export const TOUCHPOINTS_SUBMENU = [
 
 export const VISIBLE_TOUCHPOINTS_SUBMENU = SHOW_HARDWARE_DEVICES
   ? TOUCHPOINTS_SUBMENU
-  : TOUCHPOINTS_SUBMENU.filter((item) => item.id !== "devices");
+  : TOUCHPOINTS_SUBMENU.filter((item) => item.id !== 'devices')
 
+export const TAXIQ_SUBMENU: { id: string; labelKey: string }[] =
+  MENU_ITEMS.find((item): item is typeof item & { children: { id: string; labelKey: string }[] } =>
+    item.id === DASHBOARD_MENU_ID.taxiq && 'children' in item,
+  )?.children ?? []
 /** Gift Card Center sidebar children — SSO destinations (external Merchant Portal). */
 export const GIFT_CARD_CENTER_SUBMENU = [
   {
@@ -296,6 +354,11 @@ export const BOOKING_HUB_SUBMENU = [
   {
     id: BookingHubMainTab.SmsCampaigns,
     labelKey: "components.dashboard.views.BookingHubView.tabs.smsCampaigns",
+    requiresVoiceTenant: true,
+  },
+  {
+    id: BookingHubMainTab.QrCodes,
+    labelKey: "components.dashboard.views.BookingHubView.tabs.qrCodes",
     requiresVoiceTenant: true,
   },
   {
@@ -363,9 +426,11 @@ export const DASHBOARD_MENU_LABEL_KEYS: Record<string, string> = {
   [DASHBOARD_MENU_ID.bookingHub]: "dashboard.menu.booking_hub",
   [DASHBOARD_MENU_ID.productManagement]: "dashboard.menu.product_management",
   [DASHBOARD_MENU_ID.touchpoints]: "dashboard.menu.touchpoints",
+  [DASHBOARD_MENU.TaxIq]: 'dashboard.menu.tax_iq',
   [DASHBOARD_MENU_ID.analytics]: "dashboard.menu.analytics",
   [DASHBOARD_MENU_ID.settings]: "dashboard.menu.settings",
   [DASHBOARD_MENU_ID.support]: "dashboard.menu.support",
+  [DASHBOARD_MENU_ID.pos]: "dashboard.menu.pos",
 };
 
 export const DASHBOARD_SETTINGS_TAB = {
@@ -427,6 +492,13 @@ export function resolveDashboardMobileMenuTitle(
   return fallbackLabel;
 }
 
+// sub-items are added as later POS Owner Setup tickets ship their own screens).
+export const POS_SUBMENU: { id: string; labelKey: string }[] =
+  MENU_ITEMS.find((item): item is typeof item & { children: { id: string; labelKey: string }[] } =>
+    item.id === DASHBOARD_MENU_ID.pos && 'children' in item,
+  )?.children ?? []
+
+
 export const MERCHANT_SIDEBAR_MENU_ITEMS = MENU_ITEMS.filter(
   (item) => !MERCHANT_SIDEBAR_HIDDEN_MENU_IDS.includes(item.id),
 );
@@ -469,6 +541,20 @@ export const PAYMENTS_PAYOUTS_SUBMENU = [
     params: { tab: "savings" },
   },
 ];
+
+// Maps a Tax IQ sidebar sub-item id -> the OwnerTaxYear.enabledModules entry that must be
+// present for it to show. Sub-items absent from this table (equipment, cpa-access) are always
+// visible — there's no corresponding module toggle for them in the real backend enum.
+// Values confirmed against backend/src/Domain/Enums/TaxIq/TaxIqModule.cs (verified live via a
+// 400 TAXIQ_INVALID_MODULE response during manual testing — the module names guessed from the
+// business spec prose, e.g. "GiftCardLiability"/"StaffPayout"/"DeductionCenter", do not exist).
+export const TAXIQ_MENU_CHILD_MODULE: Record<string, string> = {
+  deductions: 'DeductionTracking',
+  receipts: 'ReceiptManagement',
+  payroll: 'PayoutTracking',
+  reminders: 'TaxReminders',
+  export: 'CPAExport'
+}
 
 export function isPaymentsPayoutsSubActive(
   activeMenu: string,

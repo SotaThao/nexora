@@ -32,6 +32,8 @@ export interface BusinessApiDto {
   phone?: string
   website?: string
   logoUrl?: string | null
+  bookingNotificationPhone?: string
+  salesTaxRatePercent?: number
   googleReviewUrl?: string
   yelpUrl?: string
   facebookUrl?: string
@@ -39,6 +41,545 @@ export interface BusinessApiDto {
   isPublic?: boolean
   onboardingStep?: number
   createdAt?: string | null
+}
+
+// POS Owner Setup — Business Hours (US-014)
+export interface PosBusinessOperatingHourApiDto {
+  dayOfWeek: string
+  isOpen: boolean
+  openTime?: string | null
+  closeTime?: string | null
+}
+
+// POS Owner Setup — Roles & Permissions (US-015)
+export interface PosPermissionApiDto {
+  id: string
+  key: string
+  displayName: string
+  description?: string | null
+  isOwnerOnly: boolean
+  isGranted: boolean
+}
+
+export interface PosPermissionAreaGroupApiDto {
+  area: string
+  permissions: PosPermissionApiDto[]
+}
+
+export interface PosRoleApiDto {
+  id: string
+  name: string
+  isSystemDefault: boolean
+  isOwnerRole: boolean
+  permissionAreas: PosPermissionAreaGroupApiDto[]
+}
+
+// Shared catalog (Category/Service consolidation, 2026-08-01) — same table backs both POS
+// Settings and Booking Hub Settings now; scoped by BusinessId, not TenantId.
+export interface PosCategoryApiDto {
+  id: string
+  name: string
+  description?: string | null
+  displayOrder: number
+}
+
+// POS Owner Setup — Services (US-017); shape now shared with Booking Hub's catalog.
+export type PosServiceStatus = 'Active' | 'Inactive'
+
+export interface PosServiceApiDto {
+  id: string
+  name: string
+  price: number
+  durationMinutes: number
+  description?: string | null
+  icon?: string | null
+  photoUrl?: string | null
+  status: PosServiceStatus
+  displayOrder: number
+  categoryIds: string[]
+  tags: string[]
+}
+
+export interface PosTagApiDto {
+  id: string
+  name: string
+}
+
+// POS Owner Setup — Products (US-018)
+export interface PosProductApiDto {
+  id: string
+  name: string
+  price: number
+  description?: string | null
+  photoUrl?: string | null
+  status: PosServiceStatus
+  displayOrder: number
+  categoryIds: string[]
+  tags: string[]
+}
+
+// POS Owner Setup — Staff Weekly Schedule (US-09/US-021)
+// Verified against live response (2026-07-16): despite System.DayOfWeek being a numeric
+// enum, the API's global JsonStringEnumConverter serializes it as "Sunday".."Saturday" —
+// same string form Business Hours (US-02) already uses, not the 0-6 originally assumed
+// during backend research.
+export interface StaffWeeklyScheduleDayApiDto {
+  dayOfWeek: string // "Sunday".."Saturday"
+  isDayOff: boolean
+  startTime?: string | null
+  endTime?: string | null
+}
+
+// POS Owner Setup — Staff Profile (US-019)
+export interface PosStaffProfileApiDto {
+  businessStaffLinkId: string
+  staffProfileId: string
+  displayName: string
+  photoUrl?: string | null
+  // null => local staff (no Nexora account) — TaxIQ data is structurally not applicable,
+  // distinct from taxYearAvailable=false (has an account, TaxIQ just isn't set up yet).
+  staffUserId?: string | null
+  ssn?: string | null
+  ein?: string | null
+  taxYearAvailable: boolean
+  contractType?: string | null
+  posRoleId?: string | null
+  posRoleName?: string | null
+  payStructureType: string
+  commissionPercent?: number | null
+  weeklySalaryAmount?: number | null
+  agreedAmount?: number | null
+  tipsEnabled: boolean
+  // Active/Off/Locked — whether the staff member is currently on shift at all. Separate
+  // from Turn Board's currentStatus (Empty/InService), which is about being busy with a
+  // customer right now, not whether they're on shift.
+  status: string
+}
+
+// POS Merchant Ops — Front Desk access self-check (US-12)
+export interface PosAccessApiDto {
+  canManageOperations?: boolean
+}
+
+// POS Merchant Ops — Check-in & Waitlist (US-12, refactored to Order in US-026)
+export interface PosWaitlistOrderApiDto {
+  id: string
+  orderNumber: string
+  customerName: string
+  checkedInAt: string
+  waitMinutes: number
+  serviceNames: string[]
+}
+
+// US-17 — Order Workspace (Create mode) sends the whole draft (service + product lines,
+// technician + note already chosen) in one call rather than posServiceIds only.
+export interface CheckInOrderItemPayload {
+  itemType: 'Service' | 'Product'
+  // posServiceId or posProductId, depending on itemType.
+  id: string
+  quantity?: number
+  // Service items only. Omitted means "Next Available" (skill-filtered auto-pick).
+  posStaffProfileId?: string
+  // Service items only.
+  note?: string
+}
+
+export interface CheckInOrderPayload {
+  customerName: string
+  customerEmail?: string
+  // Required as of the POS iPad redesign (Ticket 2) — backend now rejects a missing
+  // phone (POS_ORDER_CUSTOMER_PHONE_REQUIRED). Enables the customer-lookup suggestion
+  // below plus SMS Ticket QR/receipt later.
+  customerPhone: string
+  items: CheckInOrderItemPayload[]
+}
+
+// Check-in "returning customer" suggestion (Ticket 2) — most recent order for this phone
+// at this business, regardless of status. `posServiceId`/`posStaffProfileId` let the FE
+// re-add these exact lines to the new draft in one tap ("Use last visit"), but only if
+// they still exist in the current catalog/staff roster — the FE is responsible for that
+// check, this DTO doesn't guarantee it.
+export interface CustomerLookupServiceLineApiDto {
+  posServiceId: string
+  serviceName: string
+  posStaffProfileId?: string | null
+  technicianName?: string | null
+}
+
+export interface CustomerLookupResultApiDto {
+  customerName: string
+  lastCheckedInAt: string
+  serviceLines: CustomerLookupServiceLineApiDto[]
+}
+
+// POS Merchant Ops — Order List tab (US-17) — Waiting + InService combined.
+export interface OrderListItemApiDto {
+  id: string
+  orderNumber: string
+  customerName: string
+  status: string
+  checkedInAt: string
+  elapsedMinutes: number
+  serviceNames: string[]
+  technicianNames: string[]
+}
+
+// POS Merchant Ops — Completed Orders panel (US-17 follow-up), paginated + filterable.
+export interface CompletedOrderListItemApiDto {
+  id: string
+  orderNumber: string
+  customerName: string
+  customerPhone?: string | null
+  completedAt?: string | null
+  serviceNames: string[]
+  technicianNames: string[]
+  total: number
+  paymentMethodType?: string | null
+}
+
+export interface CompletedOrdersListQuery {
+  pageNumber?: number
+  pageSize?: number
+  dateFrom?: string
+  dateTo?: string
+  customerName?: string
+  customerPhone?: string
+}
+
+export interface CompletedOrdersPage {
+  items: CompletedOrderListItemApiDto[]
+  pageNumber: number
+  totalPages: number
+  totalCount: number
+  hasNextPage: boolean
+  hasPreviousPage: boolean
+}
+
+// POS Merchant Ops — Turn Board Assign & Break (US-13, refactored in US-026)
+export interface TurnBoardStationApiDto {
+  posStaffProfileId: string
+  displayName: string
+  photoUrl?: string | null
+  currentStatus: string
+  currentOrderId?: string | null
+  currentOrderNumber?: string | null
+  currentCustomerName?: string | null
+  currentServiceNames: string[]
+  assignedAt?: string | null
+}
+
+// POS Merchant Ops — Checkout (US-14 / US-025, refactored to Order + multi-staff + products in US-026)
+export interface InServiceOrderApiDto {
+  id: string
+  orderNumber: string
+  customerName: string
+  technicianNames: string[]
+  serviceNames: string[]
+  firstAssignedAt?: string | null
+}
+
+export interface OrderServiceLineApiDto {
+  id: string
+  posServiceId: string
+  serviceName: string
+  unitPrice: number
+  quantity: number
+  lineTotal: number
+  assignedPosStaffProfileId?: string | null
+  technicianName?: string | null
+  note?: string | null
+  completedAt?: string | null
+}
+
+export interface OrderProductLineApiDto {
+  id: string
+  productName: string
+  unitPrice: number
+  quantity: number
+  lineTotal: number
+}
+
+export interface OrderStaffTipShareApiDto {
+  posStaffProfileId: string
+  technicianName: string
+  tipAmount: number
+}
+
+export interface OrderDetailApiDto {
+  id: string
+  orderNumber: string
+  customerName: string
+  customerEmail?: string | null
+  customerPhone?: string | null
+  status: string
+  serviceLines: OrderServiceLineApiDto[]
+  productLines: OrderProductLineApiDto[]
+  servicesSubtotal: number
+  productsSubtotal: number
+  tipAmount: number
+  discountAmount: number
+  salesTaxAmount: number
+  total: number
+  staffTipShares: OrderStaffTipShareApiDto[]
+  paymentMethodType?: string | null
+  receiptEmail?: string | null
+  receiptPhone?: string | null
+  completedAt?: string | null
+}
+
+export interface CatalogCategoryApiDto {
+  id: string
+  name: string
+}
+
+export interface CheckoutServiceCatalogItemApiDto {
+  id: string
+  name: string
+  price: number
+  categories: CatalogCategoryApiDto[]
+}
+
+export interface CheckoutProductCatalogItemApiDto {
+  id: string
+  name: string
+  price: number
+  categories: CatalogCategoryApiDto[]
+}
+
+// Technician picker for a given service — only staff whose skill (PosStaffServiceAssignment)
+// covers this service. isBusy is informational only: the caller can still pick a busy
+// technician as an explicit override (see AssignStaffToServiceLineCommand, backend).
+export interface AssignableStaffApiDto {
+  posStaffProfileId: string
+  displayName: string
+  photoUrl?: string | null
+  isBusy: boolean
+}
+
+// POS Booking — per-business booking rules (Ticket 2). Owner-configurable; Staff can
+// read/write too when their PosRole grants the Operations permission, same access rule
+// as Orders (see IPosOperationsAccessService, backend).
+export interface PosBookingSettingsApiDto {
+  autoConfirmEnabled: boolean
+  minLeadTimeMinutes: number
+  maxAdvanceDays: number
+  reminderHoursBefore: number
+  // Booking SMS Notifications — migrated from the Nexora Voice AI Hub settings.
+  notifyCustomerSmsEnabled: boolean
+  notifyBusinessSmsEnabled: boolean
+  notifyAssignedStaffSmsEnabled: boolean
+}
+
+// POS Booking — Staff/Owner creates a booking directly (Ticket 3). Always Confirmed
+// immediately on the backend, bypassing PosBookingSettingsApiDto.autoConfirmEnabled.
+export interface CreateBookingItemPayload {
+  posServiceId: string
+  // Optional — unlike CheckInOrderItemPayload, leaving this out keeps the line
+  // unassigned (no auto-pick) for the Owner to fill in later.
+  posStaffProfileId?: string
+  note?: string
+}
+
+export interface CreateBookingPayload {
+  customerName: string
+  customerPhone: string
+  customerEmail?: string
+  // ISO 8601 with offset (e.g. via `new Date(...).toISOString()`) — matches the
+  // backend's DateTimeOffset ScheduledAt.
+  scheduledAt: string
+  items: CreateBookingItemPayload[]
+}
+
+// POS Booking — Staff/Owner Booking Management screen (Ticket 9)
+export interface BookingListItemApiDto {
+  bookingId: string
+  customerName: string
+  customerPhone?: string | null
+  // ISO 8601, always read via UTC getters (see feedback_frontend_datetime_timezone_naive).
+  createdAt: string
+  // ISO 8601 with offset — always read via UTC getters (see feedback_frontend_datetime_timezone_naive).
+  scheduledAt: string
+  status: string
+  source: string
+  orderNumber?: string | null
+  serviceNames: string[]
+  technicianNames: string[]
+}
+
+export interface BookingListResultApiDto {
+  items: BookingListItemApiDto[]
+  totalCount: number
+}
+
+export interface BookingListFilters {
+  posStaffProfileId?: string
+  dateFrom?: string // "YYYY-MM-DD"
+  dateTo?: string // "YYYY-MM-DD"
+  status?: string
+  page?: number
+  pageSize?: number
+}
+
+export interface BookingDetailServiceApiDto {
+  // Null when the service couldn't be resolved (e.g. a Voice call's free-text request with no
+  // confident catalog match) — see the Note field for what the customer actually asked for.
+  posServiceId?: string | null
+  serviceName: string
+  price: number
+  note?: string | null
+  posStaffProfileId?: string | null
+  technicianName?: string | null
+}
+
+export interface BookingDetailApiDto {
+  bookingId: string
+  customerName: string
+  customerPhone?: string | null
+  customerEmail?: string | null
+  // ISO 8601, always read via UTC getters (see feedback_frontend_datetime_timezone_naive).
+  createdAt: string
+  scheduledAt: string
+  status: string
+  source: string
+  orderNumber?: string | null
+  cancellationReason?: string | null
+  services: BookingDetailServiceApiDto[]
+}
+
+export interface CancelBookingPayload {
+  cancellationReason: string
+}
+
+export interface RescheduleBookingItemPayload {
+  posServiceId: string
+  posStaffProfileId?: string
+  note?: string
+}
+
+export interface RescheduleBookingPayload {
+  scheduledAt: string
+  items: RescheduleBookingItemPayload[]
+}
+
+// POS Booking — Public Booking Page discovery (Ticket 4). Anonymous, no auth — resolved by
+// Business.Slug. Technicians are filtered by employment status only (never real-time
+// clock/busy state), per POS-Booking-Business.md.
+export interface PublicBookingCategoryApiDto {
+  id: string
+  name: string
+}
+
+export interface PublicBookingServiceApiDto {
+  id: string
+  name: string
+  price: number
+  durationMinutes: number
+  description?: string | null
+  photoUrl?: string | null
+  categories: PublicBookingCategoryApiDto[]
+}
+
+export interface PublicBookingTechnicianApiDto {
+  id: string
+  displayName: string
+  photoUrl?: string | null
+  serviceIds: string[]
+}
+
+export interface PublicBookingPageApiDto {
+  businessName: string
+  logoUrl?: string | null
+  businessAddress?: string | null
+  businessPhone?: string | null
+  services: PublicBookingServiceApiDto[]
+  technicians: PublicBookingTechnicianApiDto[]
+}
+
+// POS Booking — Public availability + submission (Ticket 5)
+export interface PublicAvailabilityItemPayload {
+  posServiceId: string
+  posStaffProfileId?: string
+}
+
+export interface PublicAvailabilityRequestPayload {
+  date: string // "YYYY-MM-DD"
+  items: PublicAvailabilityItemPayload[]
+  // Set only by the Manage-Booking reschedule flow (Ticket 8) so a booking's own existing
+  // slot never shows as a conflict against itself while picking a new time for it.
+  excludeBookingId?: string
+}
+
+export interface PublicAvailabilityApiDto {
+  availableTimes: string[] // "HH:mm", local to the salon's own hours
+}
+
+export interface CreatePublicBookingItemPayload {
+  posServiceId: string
+  posStaffProfileId?: string
+}
+
+export interface CreatePublicBookingPayload {
+  customerName: string
+  customerPhone: string
+  customerEmail?: string
+  // ISO 8601 with offset — built via Date.UTC(...) so the picked wall-clock time travels
+  // unshifted (see NewBookingForm.tsx / feedback_frontend_datetime_timezone_naive memory).
+  scheduledAt: string
+  items: CreatePublicBookingItemPayload[]
+}
+
+export interface CreatePublicBookingResultApiDto {
+  bookingId: string
+  manageToken: string
+  status: string
+}
+
+// POS Booking — customer self-service Manage Booking page (Ticket 8)
+export interface ManageBookingServiceApiDto {
+  posServiceId: string
+  serviceName: string
+  posStaffProfileId?: string | null
+  technicianName?: string | null
+}
+
+export interface ManageBookingApiDto {
+  bookingId: string
+  businessName: string
+  businessSlug: string
+  customerName: string
+  // ISO 8601 with offset — always read via UTC getters (see feedback_frontend_datetime_timezone_naive).
+  scheduledAt: string
+  status: string
+  services: ManageBookingServiceApiDto[]
+  canCancelOrReschedule: boolean
+}
+
+export interface ManageBookingReschedulePayload {
+  scheduledAt: string
+}
+
+export type PosCheckoutPaymentMethodType = 'Card' | 'Cash' | 'GiftCard' | 'SplitPay'
+
+export interface CompleteOrderPayload {
+  paymentMethodType: PosCheckoutPaymentMethodType
+  receiptEmail?: string
+  receiptPhone?: string
+}
+
+export interface CompleteOrderResultApiDto {
+  orderId: string
+  servicesSubtotal: number
+  productsSubtotal: number
+  tipAmount: number
+  discountAmount: number
+  salesTaxAmount: number
+  totalAmount: number
+  status: string
+  completedAt: string
+}
+
+export interface SetOrderStaffTipSplitPayload {
+  shares: { posStaffProfileId: string; tipAmount: number }[]
 }
 
 export interface TipsSummaryApiDto {
@@ -76,12 +617,18 @@ export interface CustomersSummaryApiDto {
   returningCustomerRateChangeVsLastWeek?: number
 }
 
+// POS Booking (Ticket 10) — count of bookings made within the dashboard's date range.
+export interface BookingsSummaryApiDto {
+  totalCount?: number
+}
+
 export interface DashboardOverviewApiDto {
   tipsSummary?: TipsSummaryApiDto
   scansSummary?: ScansSummaryApiDto
   reviewsSummary?: ReviewsSummaryApiDto
   platformReviews?: PlatformReviewsApiDto
   customersSummary?: CustomersSummaryApiDto
+  bookingsSummary?: BookingsSummaryApiDto
 }
 
 export type DashboardResponseRateLabel =
@@ -112,6 +659,7 @@ export interface DashboardOverviewMetrics {
   returningCustomerRate: number
   returningCustomerRateChangeVsLastWeek: number
   previousPeriodComparison: number | null
+  totalBookings: number
 }
 
 export interface DashboardKpiDeltas {

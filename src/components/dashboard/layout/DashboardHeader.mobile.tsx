@@ -6,6 +6,7 @@ import {
   AlertTriangle,
   Bell,
   ClipboardList,
+  CreditCard,
   LogOut,
   Menu,
   Plus,
@@ -222,6 +223,13 @@ export default function DashboardHeader({
               staffjoined: UserCheck,
               staffinviteaccepted: UserCheck,
               staffpublicjoinrequest: UserCheck,
+              stafflinkrequestaccepted: UserCheck, // StaffLinkRequestAccepted
+              stafflinkrequestrejected: UserCheck, // StaffLinkRequestRejected
+              cardsupportrequest: CreditCard, // CardSupportRequest
+              taxiqpayoutconfirmed: Wallet, // TaxIqPayoutConfirmed
+              taxiqpayoutdisputed: AlertTriangle, // TaxIqPayoutDisputed
+              voicecreditlow: AlertTriangle, // VoiceCreditLow
+              voicecreditexhausted: AlertTriangle, // VoiceCreditExhausted
             }[typeLower] || Bell
 
             const iconColor = {
@@ -236,6 +244,13 @@ export default function DashboardHeader({
               staffjoined: 'bg-nexoraBrand text-white',
               staffinviteaccepted: 'bg-nexoraBrand text-white',
               staffpublicjoinrequest: 'bg-nexoraBrand text-white',
+              stafflinkrequestaccepted: 'bg-nexoraBrand text-white',
+              stafflinkrequestrejected: 'bg-nexoraBrand text-white',
+              cardsupportrequest: 'bg-amber-500 text-white',
+              taxiqpayoutconfirmed: 'bg-emerald-500 text-white',
+              taxiqpayoutdisputed: 'bg-red-500 text-white',
+              voicecreditlow: 'bg-amber-500 text-white',
+              voicecreditexhausted: 'bg-red-500 text-white',
             }[typeLower] || 'bg-nexoraBrand text-white'
 
             const isUnread = !item.read

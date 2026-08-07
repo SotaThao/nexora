@@ -14,6 +14,11 @@ import {
   useUpdateMerchantVoiceService,
   useUpdateMerchantVoiceServiceCategory,
 } from "../../../data/hooks/useMerchantVoiceBookings";
+import { useMerchantSetup } from "../../../data/hooks/useMerchantSetup";
+import {
+  useBookingSettings,
+  useUpdateBookingSettings,
+} from "../../../data/hooks/usePosBookingSettings";
 import {
   clampMerchantVoiceServiceDurationMinutes,
   mapConfigLanguageToUiLanguage,
@@ -70,6 +75,7 @@ import {
   PeopleTabIcon,
   PlusIcon,
   PlusLgIcon,
+  MessageSquareIcon,
   ShopIcon,
   SpinnerIcon,
   StarsIcon,
@@ -486,6 +492,69 @@ const AI_LANGUAGE_OPTIONS = [
 const PROMO_MAX_LENGTH = 1000;
 const FIRST_CALL_SMS_MAX_LENGTH = 320;
 
+// Booking SMS Notifications — the setting itself now lives on PosBookingSettings
+// (shared with POS's own Booking Settings card); this panel just reads/writes the
+// 3 recipient toggles through the POS booking-settings endpoint.
+const BOOKING_SMS_RECIPIENTS = [
+  {
+    id: "customer",
+    configKey: "notifyCustomerSmsEnabled",
+    titleKey: "bookingSmsCustomerTitle",
+    descKey: "bookingSmsCustomerDesc",
+    enableAriaKey: "bookingSmsCustomerEnableAria",
+    disableAriaKey: "bookingSmsCustomerDisableAria",
+  },
+  {
+    id: "business",
+    configKey: "notifyBusinessSmsEnabled",
+    titleKey: "bookingSmsBusinessTitle",
+    descKey: "bookingSmsBusinessDesc",
+    enableAriaKey: "bookingSmsBusinessEnableAria",
+    disableAriaKey: "bookingSmsBusinessDisableAria",
+  },
+  {
+    id: "staff",
+    configKey: "notifyAssignedStaffSmsEnabled",
+    titleKey: "bookingSmsStaffTitle",
+    descKey: "bookingSmsStaffDesc",
+    enableAriaKey: "bookingSmsStaffEnableAria",
+    disableAriaKey: "bookingSmsStaffDisableAria",
+  },
+] as const;
+
+type BookingSmsRecipientId = (typeof BOOKING_SMS_RECIPIENTS)[number]["id"];
+type BookingSmsConfigKey = (typeof BOOKING_SMS_RECIPIENTS)[number]["configKey"];
+
+const BOOKING_SMS_DEFAULT_ENABLED: Record<BookingSmsRecipientId, boolean> = {
+  customer: true,
+  business: true,
+  staff: true,
+};
+
+function bookingSmsEnabledFromSettings(
+  settings: Record<BookingSmsConfigKey, boolean>,
+): Record<BookingSmsRecipientId, boolean> {
+  return BOOKING_SMS_RECIPIENTS.reduce(
+    (acc, item) => {
+      acc[item.id] = settings[item.configKey]
+      return acc
+    },
+    { ...BOOKING_SMS_DEFAULT_ENABLED },
+  )
+}
+
+function bookingSmsSettingsPayloadFromEnabled(
+  enabled: Record<BookingSmsRecipientId, boolean>,
+): Record<BookingSmsConfigKey, boolean> {
+  return BOOKING_SMS_RECIPIENTS.reduce(
+    (acc, item) => {
+      acc[item.configKey] = enabled[item.id]
+      return acc
+    },
+    {} as Record<BookingSmsConfigKey, boolean>,
+  )
+}
+
 const PROMO_TEMPLATES = {
   "reward-yourself": {
     labelKey: "promoTemplateRewardLabel",
@@ -672,6 +741,7 @@ function SettingsCard({
   onToggle,
   title,
   subtitle,
+  className,
   children,
 }: {
   cardId: string;
@@ -679,6 +749,7 @@ function SettingsCard({
   onToggle: (id: string) => void;
   title: React.ReactNode;
   subtitle: string;
+  className?: string;
   children: React.ReactNode;
 }) {
   const { t } = useTranslation();
@@ -695,7 +766,7 @@ function SettingsCard({
 
   return (
     <article
-      className={`settings-card ${collapsed ? "is-collapsed" : ""}`}
+      className={`settings-card${className ? ` ${className}` : ""}${collapsed ? " is-collapsed" : ""}`}
       data-settings-card={cardId}
     >
       <button
@@ -740,6 +811,10 @@ export default function BookingSettingsPanel() {
   const { data: flatServicesData, isLoading: isServicesLoading } =
     useMerchantVoiceServices({ enabled: voiceEnabled });
   const updateConfigMutation = useUpdateMerchantVoiceConfig();
+  const { data: merchantSetupData } = useMerchantSetup();
+  const businessId = merchantSetupData?.businessInfo?.businessId;
+  const { data: posBookingSettingsData } = useBookingSettings(businessId);
+  const updateBookingSettingsMutation = useUpdateBookingSettings(businessId);
   const createCategoryMutation = useCreateMerchantVoiceServiceCategory();
   const updateCategoryMutation = useUpdateMerchantVoiceServiceCategory();
   const deleteCategoryMutation = useDeleteMerchantVoiceServiceCategory();
@@ -815,6 +890,9 @@ export default function BookingSettingsPanel() {
   >("idle");
   const [promoSms, setPromoSms] = useState("");
   const [sendSmsPromoEnabled, setSendSmsPromoEnabled] = useState(true);
+  const [bookingSmsEnabled, setBookingSmsEnabled] = useState<
+    Record<BookingSmsRecipientId, boolean>
+  >(BOOKING_SMS_DEFAULT_ENABLED);
   const [statusMessage, setStatusMessage] = useState("");
   const [formErrors, setFormErrors] = useState<{
     salonName?: string;
@@ -1161,6 +1239,13 @@ export default function BookingSettingsPanel() {
     });
     setHours(nextHours);
   }, [configData, t]);
+
+  // Booking SMS Notifications now live on PosBookingSettings — a separate query/resource
+  // from the Nexora Voice config above, so it hydrates independently.
+  useEffect(() => {
+    if (!posBookingSettingsData) return;
+    setBookingSmsEnabled(bookingSmsEnabledFromSettings(posBookingSettingsData));
+  }, [posBookingSettingsData]);
 
   useEffect(() => {
     if (!categoriesData) return;
@@ -1674,7 +1759,16 @@ export default function BookingSettingsPanel() {
         next.categories,
       );
       setCategories(mergedCategories);
-      if (!servicesDirtyRef.current) setServices(next.services);
+      if (!servicesDirtyRef.current) {
+        setServices(
+          next.services.length > 0
+            ? next.services
+            : mergeFlatServicesIntoCategories(
+                mergedCategories,
+                await merchantVoiceRepository.getServices(),
+              ),
+        );
+      }
       syncCategoryDraftsFromApi(mergedCategories);
     } catch (error) {
       const message = t(getErrorI18nKey(getApiErrorCode(error)));
@@ -1727,7 +1821,16 @@ export default function BookingSettingsPanel() {
         next.categories,
       );
       setCategories(mergedCategories);
-      if (!servicesDirtyRef.current) setServices(next.services);
+      if (!servicesDirtyRef.current) {
+        setServices(
+          next.services.length > 0
+            ? next.services
+            : mergeFlatServicesIntoCategories(
+                mergedCategories,
+                await merchantVoiceRepository.getServices(),
+              ),
+        );
+      }
       syncCategoryDraftsFromApi(mergedCategories);
       setPendingCategoryFocus(null);
     } catch (error) {
@@ -1806,8 +1909,16 @@ export default function BookingSettingsPanel() {
         draft.id ? [draft.id] : [],
       );
       setCategories(mergedCategories);
-      if (!servicesDirtyRef.current) setServices(next.services);
-      else {
+      if (!servicesDirtyRef.current) {
+        setServices(
+          next.services.length > 0
+            ? next.services
+            : mergeFlatServicesIntoCategories(
+                mergedCategories,
+                await merchantVoiceRepository.getServices(),
+              ),
+        );
+      } else {
         // Remap dirty services that lived under deleted category → Other.
         const other =
           mergedCategories.find((item) => item.isSystem) ||
@@ -2101,40 +2212,60 @@ export default function BookingSettingsPanel() {
         parsePhone(bookingNotifyPhone).countryCode,
       );
 
-      await updateConfigMutation.mutateAsync({
-        name: salonName.trim(),
-        forwardPhoneNumber: salonPhonePayload,
-        bookingNotifyPhone: bookingNotifyPhonePayload,
-        address: location.street.trim(),
-        city: location.city.trim() || null,
-        state: location.state.trim() || null,
-        zipCode: location.zip.trim() || null,
-        country: location.country.trim() || null,
-        googleReviewUrl: googleReviewUrl.trim(),
-        website: website.trim() || null,
-        description: description.trim() || null,
-        promotion: promotion.trim().slice(0, PROMO_MAX_LENGTH) || null,
-        promoSms: promoSms.trim().slice(0, FIRST_CALL_SMS_MAX_LENGTH) || null,
-        sendSmsPromoEnabled,
-        timeZone: timeZone.trim() || null,
-        language: mapUiLanguageToConfigLanguage(language),
-        welcomeGreeting: greeting.trim(),
-        operatingHours: DAY_KEYS.map((day) => {
-          const row = hours[day];
-          if (!row.open) {
+      const savePromises: Array<Promise<unknown>> = [
+        updateConfigMutation.mutateAsync({
+          name: salonName.trim(),
+          forwardPhoneNumber: salonPhonePayload,
+          bookingNotifyPhone: bookingNotifyPhonePayload,
+          address: location.street.trim(),
+          city: location.city.trim() || null,
+          state: location.state.trim() || null,
+          zipCode: location.zip.trim() || null,
+          country: location.country.trim() || null,
+          googleReviewUrl: googleReviewUrl.trim(),
+          website: website.trim() || null,
+          description: description.trim() || null,
+          promotion: promotion.trim().slice(0, PROMO_MAX_LENGTH) || null,
+          promoSms: promoSms.trim().slice(0, FIRST_CALL_SMS_MAX_LENGTH) || null,
+          sendSmsPromoEnabled,
+          timeZone: timeZone.trim() || null,
+          language: mapUiLanguageToConfigLanguage(language),
+          welcomeGreeting: greeting.trim(),
+          operatingHours: DAY_KEYS.map((day) => {
+            const row = hours[day];
+            if (!row.open) {
+              return {
+                dayOfWeek: DAY_KEY_TO_API[day],
+                isOpen: false,
+              };
+            }
             return {
               dayOfWeek: DAY_KEY_TO_API[day],
-              isOpen: false,
+              isOpen: true,
+              openTime: `${row.openTime}:00`,
+              closeTime: `${row.closeTime}:00`,
             };
-          }
-          return {
-            dayOfWeek: DAY_KEY_TO_API[day],
-            isOpen: true,
-            openTime: `${row.openTime}:00`,
-            closeTime: `${row.closeTime}:00`,
-          };
+          }),
         }),
-      });
+      ];
+
+      // Booking SMS Notifications live on PosBookingSettings now — saved as a second,
+      // independent request alongside the Nexora Voice config above. Non-SMS fields on
+      // that resource (auto-confirm, lead time, etc.) aren't shown on this panel, so they
+      // round-trip from whatever POS Booking Settings already has loaded.
+      if (businessId) {
+        savePromises.push(
+          updateBookingSettingsMutation.mutateAsync({
+            autoConfirmEnabled: posBookingSettingsData?.autoConfirmEnabled ?? true,
+            minLeadTimeMinutes: posBookingSettingsData?.minLeadTimeMinutes ?? 15,
+            maxAdvanceDays: posBookingSettingsData?.maxAdvanceDays ?? 7,
+            reminderHoursBefore: posBookingSettingsData?.reminderHoursBefore ?? 12,
+            ...bookingSmsSettingsPayloadFromEnabled(bookingSmsEnabled),
+          }),
+        );
+      }
+
+      await Promise.all(savePromises);
 
       setStatus(t(`${TK}.saveSuccess`));
       setFormErrors({});
@@ -2757,6 +2888,261 @@ export default function BookingSettingsPanel() {
             </span>
           </div>
         </SettingsCard>
+
+        <SettingsCard
+          cardId="voice"
+          collapsed={isCollapsed("voice")}
+          onToggle={toggleCard}
+          title={
+            <>
+              <span className="settings-ai-title-icon" aria-hidden="true">
+                AI
+                <StarsIcon className="settings-ai-spark" />
+              </span>
+              {t(`${TK}.voiceTitle`)}
+            </>
+          }
+          subtitle={t(`${TK}.voiceSub`)}
+        >
+          <div className="settings-field-grid">
+            <div className="settings-field settings-span-full">
+              <span className="settings-label">{t(`${TK}.aiLanguage`)}</span>
+              <div
+                className="settings-language-grid"
+                role="group"
+                aria-label={t(`${TK}.aiLanguage`)}
+              >
+                {AI_LANGUAGE_OPTIONS.map((lang) => (
+                  <button
+                    key={lang}
+                    className={`settings-language-card ${language === lang ? "is-active" : ""}`}
+                    type="button"
+                    aria-pressed={language === lang}
+                    onClick={() => handleLanguageSelect(lang)}
+                  >
+                    {t(`${TK}.${languageButtonLabelKey(lang)}`)}
+                  </button>
+                ))}
+              </div>
+              <div className="settings-language-status">
+                {t(`${TK}.languageStatus.${language}`)}
+              </div>
+            </div>
+            <div className="settings-field settings-span-full" data-ai-hub-field="greeting">
+              <span className="settings-label" id="settings-greeting-label">
+                {t(`${TK}.greetingScript`)}
+              </span>
+              <textarea
+                className="settings-textarea"
+                value={greeting}
+                placeholder={t(`${TK}.placeholderGreeting`)}
+                aria-labelledby="settings-greeting-label"
+                aria-invalid={Boolean(formErrors.greeting)}
+                onChange={(event) => {
+                  setGreeting(event.target.value);
+                  if (formErrors.greeting)
+                    setFormErrors((prev) => ({ ...prev, greeting: undefined }));
+                }}
+              />
+              <span className="settings-field-error-slot">
+                {formErrors.greeting ? (
+                  <span className="settings-field-error">
+                    {formErrors.greeting}
+                  </span>
+                ) : null}
+              </span>
+              <button
+                className={`booking-secondary-button settings-preview-button ${isPreviewPlaying ? "is-playing" : ""}`}
+                type="button"
+                aria-pressed={isPreviewPlaying}
+                onClick={handlePreview}
+              >
+                {isPreviewPlaying
+                  ? t(`${TK}.previewVoiceStop`)
+                  : t(`${TK}.previewVoice`)}
+              </button>
+            </div>
+
+            <label className="settings-field settings-span-full">
+              <span className="settings-label settings-label-with-tooltip">
+                {t(`${TK}.promoLabel`)}
+                <SettingsInfoTooltip
+                  id="promotion-details-help"
+                  ariaLabel={t(`${TK}.promoInfoAria`)}
+                >
+                  {t(`${TK}.promoHelp`)}
+                </SettingsInfoTooltip>
+              </span>
+              <textarea
+                className="settings-textarea settings-textarea-promo"
+                value={promotion}
+                maxLength={PROMO_MAX_LENGTH}
+                placeholder={t(`${TK}.promoPlaceholder`)}
+                aria-describedby="settings-promo-count"
+                onChange={(event) =>
+                  handlePromoChange(
+                    event.target.value.slice(0, PROMO_MAX_LENGTH),
+                  )
+                }
+              />
+              <div className="settings-promo-meta">
+                <div className="settings-promo-suggest-row">
+                  <button
+                    className="settings-promo-suggest"
+                    type="button"
+                    onClick={() => handlePromoSuggest("reward-yourself")}
+                  >
+                    <StarsIcon className="settings-promo-suggest-icon" />
+                    {t(`${TK}.promoSuggestReward`)}
+                  </button>
+                </div>
+                <div
+                  id="settings-promo-count"
+                  className={`settings-promo-count ${promotion.length >= PROMO_MAX_LENGTH ? "is-max" : ""}`}
+                >
+                  <span>{promotion.length}</span>/{PROMO_MAX_LENGTH}
+                </div>
+              </div>
+            </label>
+
+            <div className="settings-first-call-sms settings-span-full">
+              <div className="settings-first-call-sms-head">
+                <div className="settings-first-call-sms-copy">
+                  <span className="settings-label settings-label-with-tooltip">
+                    {t(`${TK}.firstCallSmsLabel`)}
+                    <SettingsInfoTooltip
+                      id="first-call-sms-help"
+                      ariaLabel={t(`${TK}.firstCallSmsInfoAria`)}
+                    >
+                      {t(`${TK}.firstCallSmsHelp`)}
+                    </SettingsInfoTooltip>
+                  </span>
+                </div>
+                <div className="settings-first-call-sms-toggle">
+                  <span
+                    className={`settings-first-call-sms-toggle-label${sendSmsPromoEnabled ? "" : " is-off"}`}
+                    aria-live="polite"
+                  >
+                    {sendSmsPromoEnabled
+                      ? t(`${TK}.firstCallSmsToggleOn`)
+                      : t(`${TK}.firstCallSmsToggleOff`)}
+                  </span>
+                  <button
+                    className={`toggle-pill${sendSmsPromoEnabled ? " is-on" : ""}`}
+                    type="button"
+                    role="switch"
+                    aria-checked={sendSmsPromoEnabled}
+                    aria-label={
+                      sendSmsPromoEnabled
+                        ? t(`${TK}.firstCallSmsDisableAria`)
+                        : t(`${TK}.firstCallSmsEnableAria`)
+                    }
+                    onClick={() => {
+                      setSendSmsPromoEnabled((prev) => {
+                        const next = !prev;
+                        setStatus(
+                          next
+                            ? t(`${TK}.firstCallSmsEnabled`)
+                            : t(`${TK}.firstCallSmsDisabled`),
+                        );
+                        return next;
+                      });
+                    }}
+                  />
+                </div>
+              </div>
+              <div className="settings-field">
+                <textarea
+                  className="settings-textarea"
+                  value={promoSms}
+                  maxLength={FIRST_CALL_SMS_MAX_LENGTH}
+                  placeholder={t(`${TK}.firstCallSmsPlaceholder`)}
+                  aria-label={t(`${TK}.firstCallSmsMessageLabel`)}
+                  onChange={(event) =>
+                    setPromoSms(
+                      event.target.value.slice(0, FIRST_CALL_SMS_MAX_LENGTH),
+                    )
+                  }
+                />
+              </div>
+            </div>
+          </div>
+        </SettingsCard>
+
+        <SettingsCard
+          cardId="bookingSms"
+          collapsed={isCollapsed("bookingSms")}
+          onToggle={toggleCard}
+          title={
+            <>
+              <span className="settings-card-title-icon">
+                <MessageSquareIcon />
+              </span>
+              {t(`${TK}.bookingSmsTitle`)}
+            </>
+          }
+          subtitle={t(`${TK}.bookingSmsSub`)}
+        >
+          <div className="settings-config-stack">
+            {BOOKING_SMS_RECIPIENTS.map((item) => {
+              const enabled = bookingSmsEnabled[item.id];
+              return (
+                <div className="settings-booking-sms-row" key={item.id}>
+                  <div className="settings-booking-sms-copy">
+                    <div className="settings-config-title">
+                      {t(`${TK}.${item.titleKey}`)}
+                    </div>
+                    <div className="settings-config-desc">
+                      {t(`${TK}.${item.descKey}`)}
+                    </div>
+                  </div>
+                  <div className="settings-booking-sms-control">
+                    <span
+                      className={`settings-booking-sms-status${enabled ? "" : " is-off"}`}
+                      aria-live="polite"
+                    >
+                      {enabled
+                        ? t(`${TK}.bookingSmsStatusOn`)
+                        : t(`${TK}.bookingSmsStatusOff`)}
+                    </span>
+                    <button
+                      className={`toggle-pill${enabled ? " is-on" : ""}`}
+                      type="button"
+                      role="switch"
+                      aria-checked={enabled}
+                      disabled={
+                        !voiceEnabled ||
+                        isConfigLoading ||
+                        updateConfigMutation.isPending ||
+                        updateBookingSettingsMutation.isPending
+                      }
+                      aria-label={
+                        enabled
+                          ? t(`${TK}.${item.disableAriaKey}`)
+                          : t(`${TK}.${item.enableAriaKey}`)
+                      }
+                      onClick={() => {
+                        setBookingSmsEnabled((prev) => {
+                          const next = !prev[item.id];
+                          setStatus(
+                            next
+                              ? t(`${TK}.bookingSmsRecipientEnabled`, {
+                                  recipient: t(`${TK}.${item.titleKey}`),
+                                })
+                              : t(`${TK}.bookingSmsRecipientDisabled`, {
+                                  recipient: t(`${TK}.${item.titleKey}`),
+                                }),
+                          );
+                          return { ...prev, [item.id]: next };
+                        });
+                      }}
+                    />
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        </SettingsCard>
       </div>
 
       <SettingsCard
@@ -2781,6 +3167,7 @@ export default function BookingSettingsPanel() {
       <div className="settings-two-grid">
         <SettingsCard
           cardId="services"
+          className="settings-service-pricing-card"
           collapsed={isCollapsed("services")}
           onToggle={toggleCard}
           title={
@@ -2846,10 +3233,10 @@ export default function BookingSettingsPanel() {
                         <span className="settings-service-category-name">
                           {section.name}
                         </span>
+                        <span className="settings-service-category-count">
+                          {formatCategoryServiceCount(categoryServices.length)}
+                        </span>
                       </button>
-                      <span className="settings-service-category-count">
-                        {formatCategoryServiceCount(categoryServices.length)}
-                      </span>
                       <button
                         type="button"
                         className="settings-service-category-add"
@@ -3041,185 +3428,6 @@ export default function BookingSettingsPanel() {
           </div>
         </SettingsCard>
 
-        <SettingsCard
-          cardId="voice"
-          collapsed={isCollapsed("voice")}
-          onToggle={toggleCard}
-          title={
-            <>
-              <span className="settings-ai-title-icon" aria-hidden="true">
-                AI
-                <StarsIcon className="settings-ai-spark" />
-              </span>
-              {t(`${TK}.voiceTitle`)}
-            </>
-          }
-          subtitle={t(`${TK}.voiceSub`)}
-        >
-          <div className="settings-field-grid">
-            <div className="settings-field settings-span-full">
-              <span className="settings-label">{t(`${TK}.aiLanguage`)}</span>
-              <div
-                className="settings-language-grid"
-                role="group"
-                aria-label={t(`${TK}.aiLanguage`)}
-              >
-                {AI_LANGUAGE_OPTIONS.map((lang) => (
-                  <button
-                    key={lang}
-                    className={`settings-language-card ${language === lang ? "is-active" : ""}`}
-                    type="button"
-                    aria-pressed={language === lang}
-                    onClick={() => handleLanguageSelect(lang)}
-                  >
-                    {t(`${TK}.${languageButtonLabelKey(lang)}`)}
-                  </button>
-                ))}
-              </div>
-              <div className="settings-language-status">
-                {t(`${TK}.languageStatus.${language}`)}
-              </div>
-            </div>
-            <div className="settings-field settings-span-full" data-ai-hub-field="greeting">
-              <span className="settings-label" id="settings-greeting-label">
-                {t(`${TK}.greetingScript`)}
-              </span>
-              <textarea
-                className="settings-textarea"
-                value={greeting}
-                placeholder={t(`${TK}.placeholderGreeting`)}
-                aria-labelledby="settings-greeting-label"
-                aria-invalid={Boolean(formErrors.greeting)}
-                onChange={(event) => {
-                  setGreeting(event.target.value);
-                  if (formErrors.greeting)
-                    setFormErrors((prev) => ({ ...prev, greeting: undefined }));
-                }}
-              />
-              <span className="settings-field-error-slot">
-                {formErrors.greeting ? (
-                  <span className="settings-field-error">
-                    {formErrors.greeting}
-                  </span>
-                ) : null}
-              </span>
-              <button
-                className={`booking-secondary-button settings-preview-button ${isPreviewPlaying ? "is-playing" : ""}`}
-                type="button"
-                aria-pressed={isPreviewPlaying}
-                onClick={handlePreview}
-              >
-                {isPreviewPlaying
-                  ? t(`${TK}.previewVoiceStop`)
-                  : t(`${TK}.previewVoice`)}
-              </button>
-            </div>
-
-            <label className="settings-field settings-span-full">
-              <span className="settings-label settings-label-with-tooltip">
-                {t(`${TK}.promoLabel`)}
-                <SettingsInfoTooltip
-                  id="promotion-details-help"
-                  ariaLabel={t(`${TK}.promoInfoAria`)}
-                >
-                  {t(`${TK}.promoHelp`)}
-                </SettingsInfoTooltip>
-              </span>
-              <textarea
-                className="settings-textarea settings-textarea-promo"
-                value={promotion}
-                maxLength={PROMO_MAX_LENGTH}
-                placeholder={t(`${TK}.promoPlaceholder`)}
-                aria-describedby="settings-promo-count"
-                onChange={(event) =>
-                  handlePromoChange(
-                    event.target.value.slice(0, PROMO_MAX_LENGTH),
-                  )
-                }
-              />
-              <div className="settings-promo-meta">
-                <div className="settings-promo-suggest-row">
-                  <button
-                    className="settings-promo-suggest"
-                    type="button"
-                    onClick={() => handlePromoSuggest("reward-yourself")}
-                  >
-                    <StarsIcon className="settings-promo-suggest-icon" />
-                    {t(`${TK}.promoSuggestReward`)}
-                  </button>
-                </div>
-                <div
-                  id="settings-promo-count"
-                  className={`settings-promo-count ${promotion.length >= PROMO_MAX_LENGTH ? "is-max" : ""}`}
-                >
-                  <span>{promotion.length}</span>/{PROMO_MAX_LENGTH}
-                </div>
-              </div>
-            </label>
-
-            <div className="settings-first-call-sms settings-span-full">
-              <div className="settings-first-call-sms-head">
-                <div className="settings-first-call-sms-copy">
-                  <span className="settings-label settings-label-with-tooltip">
-                    {t(`${TK}.firstCallSmsLabel`)}
-                    <SettingsInfoTooltip
-                      id="first-call-sms-help"
-                      ariaLabel={t(`${TK}.firstCallSmsInfoAria`)}
-                    >
-                      {t(`${TK}.firstCallSmsHelp`)}
-                    </SettingsInfoTooltip>
-                  </span>
-                </div>
-                <div className="settings-first-call-sms-toggle">
-                  <span
-                    className={`settings-first-call-sms-toggle-label${sendSmsPromoEnabled ? "" : " is-off"}`}
-                    aria-live="polite"
-                  >
-                    {sendSmsPromoEnabled
-                      ? t(`${TK}.firstCallSmsToggleOn`)
-                      : t(`${TK}.firstCallSmsToggleOff`)}
-                  </span>
-                  <button
-                    className={`toggle-pill${sendSmsPromoEnabled ? " is-on" : ""}`}
-                    type="button"
-                    role="switch"
-                    aria-checked={sendSmsPromoEnabled}
-                    aria-label={
-                      sendSmsPromoEnabled
-                        ? t(`${TK}.firstCallSmsDisableAria`)
-                        : t(`${TK}.firstCallSmsEnableAria`)
-                    }
-                    onClick={() => {
-                      setSendSmsPromoEnabled((prev) => {
-                        const next = !prev;
-                        setStatus(
-                          next
-                            ? t(`${TK}.firstCallSmsEnabled`)
-                            : t(`${TK}.firstCallSmsDisabled`),
-                        );
-                        return next;
-                      });
-                    }}
-                  />
-                </div>
-              </div>
-              <div className="settings-field">
-                <textarea
-                  className="settings-textarea"
-                  value={promoSms}
-                  maxLength={FIRST_CALL_SMS_MAX_LENGTH}
-                  placeholder={t(`${TK}.firstCallSmsPlaceholder`)}
-                  aria-label={t(`${TK}.firstCallSmsMessageLabel`)}
-                  onChange={(event) =>
-                    setPromoSms(
-                      event.target.value.slice(0, FIRST_CALL_SMS_MAX_LENGTH),
-                    )
-                  }
-                />
-              </div>
-            </div>
-          </div>
-        </SettingsCard>
       </div>
 
       <div className="settings-save-bar">

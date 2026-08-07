@@ -16,8 +16,7 @@ import {
 } from '../../../data/hooks/useMerchantPayments'
 import { useDirectPaymentStatusPoll } from '../../../data/hooks/useDirectPaymentStatusPoll'
 import type { MerchantPaymentsListQuery } from '../../../data/repositories/merchantPayments'
-import { PaymentType } from '../../../types/domain'
-import { getApiErrorCode } from '../../../types/domain'
+import { PaymentType, type MerchantPaymentRecord, getApiErrorCode } from '../../../types/domain'
 import MerchantPaymentDetailModal from '../modals/MerchantPaymentDetailModal'
 import CustomSelect from '../../CustomSelect'
 import { dismissAckPrompt } from '../../../utils/directPaymentAckDismiss'
@@ -31,6 +30,7 @@ import {
   getDirectPaymentStatusDescKey,
   getDirectPaymentStatusLabelKey,
   needsMerchantAcknowledge,
+  canForceComplete,
   normalizePaymentStatusValue,
 } from '../../../utils/directPaymentStatus'
 
@@ -151,11 +151,11 @@ export default function ReportsDirectPaymentsTab({
   const filterSelectButtonClass = 'px-3.5 text-[11px] sm:px-4 sm:text-xs'
   const filterSelectOptionsClass = 'text-[11px] sm:text-xs'
 
-  const handleAcknowledge = (paymentId: string, event?: MouseEvent, options?: { onSuccess?: () => void }) => {
+  const handleAcknowledge = (paymentId: string, event?: MouseEvent, options?: { isForce?: boolean; onSuccess?: () => void }) => {
     event?.stopPropagation()
     if (acknowledgeMutation.isPending) return
     setAcknowledgingId(paymentId)
-    acknowledgeMutation.mutate(paymentId, {
+    acknowledgeMutation.mutate({ paymentId, isForce: options?.isForce }, {
       onSuccess: () => {
         showToast(t('merchant_payments.confirm_success'), 'success')
         options?.onSuccess?.()
@@ -168,49 +168,54 @@ export default function ReportsDirectPaymentsTab({
   }
 
   const renderPaymentActions = (
-    paymentId: string,
-    showAcknowledge: boolean,
+    payment: MerchantPaymentRecord,
     layout: 'icons' | 'buttons' = 'icons',
-  ) => (
-    <div
-      className={layout === 'buttons' ? 'flex gap-2' : 'flex items-center justify-end gap-1'}
-      onClick={(e) => e.stopPropagation()}
-    >
-      <button
-        type="button"
-        title={t('merchant_payments.view_detail')}
-        aria-label={t('merchant_payments.view_detail')}
-        onClick={() => onOpenPayment?.(paymentId)}
-        className={
-          layout === 'buttons'
-            ? 'inline-flex min-h-10 flex-1 cursor-pointer items-center justify-center gap-1.5 rounded-lg border border-nexoraBorder bg-white px-3 py-1.5 text-xs font-bold text-nexoraText transition hover:bg-nexoraCanvas'
-            : 'inline-flex h-8 w-8 cursor-pointer items-center justify-center rounded-lg border border-nexoraBorder text-nexoraMuted transition hover:bg-nexoraCanvas hover:text-nexoraText'
-        }
+  ) => {
+    const isNormalAck = needsMerchantAcknowledge(payment)
+    const isForceAck = canForceComplete(payment)
+    const showAcknowledge = isNormalAck || isForceAck
+
+    return (
+      <div
+        className={layout === 'buttons' ? 'flex gap-2' : 'flex items-center justify-end gap-2'}
+        onClick={(e) => e.stopPropagation()}
       >
-        <Eye className="h-4 w-4 shrink-0" />
-        {layout === 'buttons' ? <span>{t('merchant_payments.view_detail')}</span> : null}
-      </button>
-      {showAcknowledge ? (
+        {showAcknowledge ? (
+          <button
+            type="button"
+            title={t('dashboard.activity_log.action_complete')}
+            aria-label={t('dashboard.activity_log.action_complete')}
+            onClick={(e) => {
+              e.stopPropagation()
+              onOpenPayment?.(payment.id)
+            }}
+            className={
+              layout === 'buttons'
+                ? 'inline-flex min-h-10 flex-1 cursor-pointer items-center justify-center gap-1.5 rounded-lg border border-emerald-100 bg-emerald-50 px-2.5 py-1.5 text-xs font-bold text-emerald-700 transition-colors hover:bg-emerald-100 dark:border-emerald-500/20 dark:bg-emerald-500/10 dark:text-emerald-400'
+                : 'inline-flex items-center gap-1.5 rounded-lg border border-emerald-100 bg-emerald-50 px-2.5 py-1.5 text-[11px] font-bold text-emerald-700 transition-colors hover:bg-emerald-100 dark:border-emerald-500/20 dark:bg-emerald-500/10 dark:text-emerald-400'
+            }
+          >
+            <CheckCircle className="h-3.5 w-3.5 shrink-0" />
+            <span className={layout === 'buttons' ? undefined : 'hidden sm:inline'}>{t('dashboard.activity_log.action_complete')}</span>
+          </button>
+        ) : null}
         <button
           type="button"
-          title={t('merchant_payments.view_detail')}
-          aria-label={t('merchant_payments.view_detail')}
-          onClick={(e) => {
-            e.stopPropagation()
-            onOpenPayment?.(paymentId)
-          }}
+          title={t('components.dashboard.views.ReportsView.details')}
+          aria-label={t('components.dashboard.views.ReportsView.details')}
+          onClick={() => onOpenPayment?.(payment.id)}
           className={
             layout === 'buttons'
-              ? 'inline-flex min-h-10 flex-1 cursor-pointer items-center justify-center gap-1.5 rounded-lg bg-nexoraBrand px-3 py-1.5 text-xs font-bold text-white transition hover:bg-nexoraBrand/90'
-              : 'inline-flex h-8 w-8 cursor-pointer items-center justify-center rounded-lg bg-nexoraBrand text-white transition hover:bg-nexoraBrand/90'
+              ? 'inline-flex min-h-10 flex-1 cursor-pointer items-center justify-center gap-1.5 rounded-lg border border-nexoraBorder bg-white px-2.5 py-1.5 text-xs font-bold text-nexoraText transition-colors hover:bg-nexoraCanvas'
+              : 'inline-flex items-center gap-1.5 rounded-lg border border-nexoraBorder bg-white px-2.5 py-1.5 text-[11px] font-bold text-nexoraText transition-colors hover:bg-nexoraCanvas'
           }
         >
-          <CheckCircle className="h-4 w-4 shrink-0" />
-          {layout === 'buttons' ? <span>{t('merchant_payments.confirm_receipt')}</span> : null}
+          <Eye className="h-3.5 w-3.5 shrink-0" />
+          <span className={layout === 'buttons' ? undefined : 'hidden sm:inline'}>{t('components.dashboard.views.ReportsView.details')}</span>
         </button>
-      ) : null}
-    </div>
-  )
+      </div>
+    )
+  }
 
   const renderEmptyOrLoading = (className = '') => {
     if (isPending && !paymentsPage) {
@@ -328,7 +333,6 @@ export default function ReportsDirectPaymentsTab({
             <div className="divide-y divide-nexoraBorder/60 md:hidden">
               {payments.map((payment) => {
                 const paymentStatus = normalizePaymentStatusValue(payment.status)
-                const showAcknowledge = needsMerchantAcknowledge(payment)
 
                 return (
                   <article key={payment.id} className="space-y-3 p-4">
@@ -348,7 +352,7 @@ export default function ReportsDirectPaymentsTab({
                       </p>
                     </div>
                     <div className="border-t border-nexoraBorder/60 pt-3">
-                      {renderPaymentActions(payment.id, showAcknowledge, 'buttons')}
+                      {renderPaymentActions(payment, 'buttons')}
                     </div>
                   </article>
                 )
@@ -369,7 +373,6 @@ export default function ReportsDirectPaymentsTab({
                 <tbody>
                   {payments.map((payment) => {
                     const paymentStatus = normalizePaymentStatusValue(payment.status)
-                    const showAcknowledge = needsMerchantAcknowledge(payment)
 
                     return (
                       <tr
@@ -392,7 +395,7 @@ export default function ReportsDirectPaymentsTab({
                           <DirectPaymentStatusBadge status={paymentStatus} t={t} />
                         </td>
                         <td className="whitespace-nowrap px-2 py-3">
-                          {renderPaymentActions(payment.id, showAcknowledge)}
+                          {renderPaymentActions(payment)}
                         </td>
                       </tr>
                     )
@@ -423,7 +426,7 @@ export default function ReportsDirectPaymentsTab({
           payment={selectedPayment}
           isLoading={isDetailLoading && !selectedPayment}
           onClose={handleClosePayment}
-          onAcknowledge={(paymentId) => handleAcknowledge(paymentId, undefined, { onSuccess: () => onClosePayment?.() })}
+          onAcknowledge={(paymentId, options) => handleAcknowledge(paymentId, undefined, { ...options, onSuccess: () => onClosePayment?.() })}
           isAcknowledging={acknowledgeMutation.isPending && acknowledgingId === selectedPaymentId}
         />
       ) : null}

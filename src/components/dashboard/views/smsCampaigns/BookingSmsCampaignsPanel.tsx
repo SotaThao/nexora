@@ -30,6 +30,7 @@ import {
   CalendarTabIcon,
   ClockIcon,
   GiftIcon,
+  PeopleTabIcon,
   RefreshCwIcon,
   SparklesIcon,
   StarIcon,
@@ -42,6 +43,7 @@ import { useBookingHubVoiceEnabled } from '../BookingHubVoiceContext'
 import {
   getAudienceCount,
   SMS_CAMPAIGN_AUDIENCE_I18N_KEY,
+  SMS_CAMPAIGN_DEFAULT_AUDIENCE,
   SMS_CAMPAIGN_MODE_I18N_KEY,
   SMS_CAMPAIGN_SEGMENT_CARDS,
   SMS_CAMPAIGN_STATUS_CLASS,
@@ -66,6 +68,7 @@ const SEGMENT_ICON: Record<SmsCampaignAudience, React.ReactNode> = {
   [SmsCampaignAudience.Days60]: <RefreshCwIcon className="marketing-icon" />,
   [SmsCampaignAudience.Vip]: <StarIcon className="marketing-icon" />,
   [SmsCampaignAudience.Birthday]: <GiftIcon className="marketing-icon" />,
+  [SmsCampaignAudience.All]: <PeopleTabIcon className="marketing-icon" />,
 }
 
 const SEGMENT_ACCENT_STYLE: Record<SmsCampaignSegmentAccent, string> = {
@@ -115,7 +118,7 @@ export default function BookingSmsCampaignsPanel() {
 
   const [buyOpen, setBuyOpen] = useState(false)
   const [composerOpen, setComposerOpen] = useState(false)
-  const [composerAudience, setComposerAudience] = useState(SmsCampaignAudience.New)
+  const [composerAudience, setComposerAudience] = useState(SMS_CAMPAIGN_DEFAULT_AUDIENCE)
   const [editingCampaignId, setEditingCampaignId] = useState<string | null>(null)
   const [viewingCampaign, setViewingCampaign] = useState<SmsCampaignListItemDto | null>(null)
   const [pendingActionId, setPendingActionId] = useState<string | null>(null)
@@ -167,7 +170,7 @@ export default function BookingSmsCampaignsPanel() {
     return <BookingSmsCampaignsSkeleton />
   }
 
-  const openComposer = (audience: SmsCampaignAudience = SmsCampaignAudience.New, campaignId: string | null = null) => {
+  const openComposer = (audience: SmsCampaignAudience = SMS_CAMPAIGN_DEFAULT_AUDIENCE, campaignId: string | null = null) => {
     setComposerAudience(audience)
     setEditingCampaignId(campaignId)
     setComposerOpen(true)

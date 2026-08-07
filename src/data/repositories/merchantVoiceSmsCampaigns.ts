@@ -35,6 +35,7 @@ export interface SmsCampaignDashboardDto {
 }
 
 export interface SmsCampaignAudienceSummaryDto {
+  all: number
   new: number
   days15: number
   days30: number
@@ -273,6 +274,7 @@ function normalizeDashboard(response: unknown): SmsCampaignDashboardDto {
 function normalizeAudienceSummary(response: unknown): SmsCampaignAudienceSummaryDto {
   const data = asRecord(response)
   return {
+    all: asNumber(data.all),
     new: asNumber(data.new),
     days15: asNumber(data.days15),
     days30: asNumber(data.days30),

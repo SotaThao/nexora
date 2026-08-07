@@ -71,6 +71,117 @@ export const qk = {
   staffInvite:         (token)   => ['staffInvite', token],
   publicMerchantInvite: (ref)    => ['publicMerchantInvite', ref],
   merchantInviteLink:  ()      => ['merchantSettings', 'inviteLink'],
+  // POS Owner Setup — Business Hours (US-014)
+  merchantBusinessHours: ()    => ['merchantSettings', 'businessHours'],
+  // POS Owner Setup — Roles & Permissions (US-015)
+  merchantPosRoles: ()         => ['merchantSettings', 'posRoles'],
+  // POS Owner Setup — Categories (US-016)
+  merchantPosCategories: ()    => ['merchantSettings', 'posCategories'],
+  // POS Owner Setup — Services (US-017)
+  merchantPosServices: ()      => ['merchantSettings', 'posServices'],
+  merchantPosTags: ()          => ['merchantSettings', 'posTags'],
+  // POS Owner Setup — Products (US-018)
+  merchantPosProducts: ()      => ['merchantSettings', 'posProducts'],
+  // POS Owner Setup — Staff Profile (US-019)
+  merchantPosStaffProfile: (businessStaffLinkId?: string) =>
+    ['merchantSettings', 'posStaffProfile', businessStaffLinkId ?? ''],
+  // POS Owner Setup — Staff Service Assignment (US-020)
+  merchantPosStaffServiceAssignments: (businessStaffLinkId?: string) =>
+    ['merchantSettings', 'posStaffServiceAssignments', businessStaffLinkId ?? ''],
+  // POS Owner Setup — Staff Weekly Schedule (US-09/US-021)
+  merchantPosStaffWeeklySchedule: (businessStaffLinkId?: string) =>
+    ['merchantSettings', 'posStaffWeeklySchedule', businessStaffLinkId ?? ''],
+  // Tax IQ / POS — Pay Engine (US-031 / backend US-23)
+  merchantPosPayRuleList: (businessId?: string) => ['merchantSettings', 'posPayRuleList', businessId ?? ''],
+  merchantPosPayRule: (businessStaffLinkId?: string) =>
+    ['merchantSettings', 'posPayRule', businessStaffLinkId ?? ''],
+  // Tax IQ / POS — Pay Engine Pre-tax Deductions (401k/Section 125, backend Ticket 3)
+  merchantPosPreTaxDeductions: (businessStaffLinkId?: string) =>
+    ['merchantSettings', 'posPreTaxDeductions', businessStaffLinkId ?? ''],
+  // Tax IQ / POS — Weekly Payroll (mục 14, backend US-25). weekStart is only appended when
+  // explicitly passed — omitting it (e.g. from a mutation's invalidateQueries call, which may
+  // not know which week the currently-mounted list query was rendered with) yields a short
+  // prefix that matches every cached week for this business, same convention as
+  // merchantPosCompletedOrders above.
+  merchantPosWeeklyPayroll: (businessId?: string, weekStart?: string) => {
+    const key: unknown[] = ['merchantSettings', 'posWeeklyPayroll', businessId ?? '']
+    if (weekStart) key.push(weekStart)
+    return key
+  },
+  merchantPosWeeklyPayrollDailyDetail: (businessStaffLinkId?: string, weekStart?: string) => {
+    const key: unknown[] = ['merchantSettings', 'posWeeklyPayrollDailyDetail', businessStaffLinkId ?? '']
+    if (weekStart) key.push(weekStart)
+    return key
+  },
+  // Tax IQ — Payroll Runs (mục 12, backend US-26). `filters` only appended when passed, same
+  // prefix-invalidation convention as merchantPosCompletedOrders — a mutation (Finalize/
+  // Cancel/Rerun) invalidates the list without knowing which page/filter the list is on.
+  taxiqPayrollRuns: (businessId?: string, filters?: object) => {
+    const key: unknown[] = ['taxiq', 'payrollRuns', businessId ?? '']
+    if (filters) key.push(filters)
+    return key
+  },
+  taxiqPayrollRun: (id?: string) => ['taxiq', 'payrollRun', id ?? ''],
+  // Tax IQ — Tax Ledger (mục 16, backend US-27/28/29). Same filters-appended-when-present
+  // convention as taxiqPayrollRuns.
+  taxiqTaxLedger: (businessId?: string, filters?: object) => {
+    const key: unknown[] = ['taxiq', 'taxLedger', businessId ?? '']
+    if (filters) key.push(filters)
+    return key
+  },
+  // Tax IQ — Exceptions Queue + Data Quality Center (mục 17/18, backend US-036). Same
+  // filters-appended-when-present convention as taxiqPayrollRuns/taxiqTaxLedger.
+  taxiqExceptions: (businessId?: string, filters?: object) => {
+    const key: unknown[] = ['taxiq', 'exceptions', businessId ?? '']
+    if (filters) key.push(filters)
+    return key
+  },
+  taxiqException: (id?: string) => ['taxiq', 'exception', id ?? ''],
+  taxiqDataQuality: (businessId?: string, employerId?: string) => ['taxiq', 'dataQuality', businessId ?? '', employerId ?? ''],
+  taxiqCleanupTasks: (businessId?: string, filters?: object) => {
+    const key: unknown[] = ['taxiq', 'cleanupTasks', businessId ?? '']
+    if (filters) key.push(filters)
+    return key
+  },
+  // POS Merchant Ops — Front Desk access self-check + Check-in/Waitlist (US-12)
+  merchantPosAccess: (businessId?: string) => ['merchantSettings', 'posAccess', businessId ?? ''],
+  merchantPosWaitlist: (businessId?: string) => ['merchantSettings', 'posWaitlist', businessId ?? ''],
+  // POS Merchant Ops — Order List tab (US-17), Waiting + InService combined.
+  merchantPosOrderList: (businessId?: string) => ['merchantSettings', 'posOrderList', businessId ?? ''],
+  // POS iPad redesign, Ticket 2 — Check-in "returning customer" lookup by phone.
+  merchantPosCustomerLookup: (businessId?: string, phone?: string) =>
+    ['merchantSettings', 'posCustomerLookup', businessId ?? '', phone ?? ''],
+  // POS Booking — per-business settings (Ticket 2)
+  merchantPosBookingSettings: (businessId?: string) => ['merchantSettings', 'posBookingSettings', businessId ?? ''],
+  // POS Merchant Ops — Completed Orders panel (US-17 follow-up), paginated + filtered.
+  // `filters` is only appended when explicitly passed — omitting it (e.g. from an
+  // invalidateQueries call after Complete/edit) yields a short prefix that matches every
+  // cached page/filter combination, instead of only the exact one it was built with.
+  merchantPosCompletedOrders: (businessId?: string, filters?: object) => {
+    const key: unknown[] = ['merchantSettings', 'posCompletedOrders', businessId ?? '']
+    if (filters) key.push(filters)
+    return key
+  },
+  // POS Merchant Ops — Turn Board Assign & Break (US-13)
+  merchantPosTurnBoard: (businessId?: string) => ['merchantSettings', 'posTurnBoard', businessId ?? ''],
+  // POS Merchant Ops — Checkout (US-14 / US-025, refactored to Order in US-026)
+  merchantPosInServiceOrders: (businessId?: string) => ['merchantSettings', 'posInServiceOrders', businessId ?? ''],
+  merchantPosOrderDetail: (businessId?: string, orderId?: string) =>
+    ['merchantSettings', 'posOrderDetail', businessId ?? '', orderId ?? ''],
+  merchantPosCheckoutServiceCatalog: (businessId?: string) =>
+    ['merchantSettings', 'posCheckoutServiceCatalog', businessId ?? ''],
+  merchantPosCheckoutProductCatalog: (businessId?: string) =>
+    ['merchantSettings', 'posCheckoutProductCatalog', businessId ?? ''],
+  merchantPosAssignableStaff: (businessId?: string, posServiceId?: string) =>
+    ['merchantSettings', 'posAssignableStaff', businessId ?? '', posServiceId ?? ''],
+  // POS Booking — Booking Management screen (Ticket 9)
+  merchantPosBookingList: (businessId?: string, filters?: object) => {
+    const key: unknown[] = ['merchantSettings', 'posBookingList', businessId ?? '']
+    if (filters) key.push(filters)
+    return key
+  },
+  merchantPosBookingDetail: (businessId?: string, bookingId?: string) =>
+    ['merchantSettings', 'posBookingDetail', businessId ?? '', bookingId ?? ''],
 
   // Merchant Touchpoints
   merchantTouchpoints: ()      => ['merchantTouchpoints'],
@@ -123,6 +234,170 @@ export const qk = {
   staffLinkRequest:    (linkId: string | null | undefined) => ['staffLinkRequest', linkId ?? 'unknown'],
   staffLinkRequestsList: (filters = EMPTY) => ['staffLinkRequests', 'list', filters],
 
+  // Tax IQ — Owner Tax Year (prefixed with 'taxiqOwnerTaxYear' so invalidating
+  // qk.taxiqOwnerTaxYear() also clears the byId cache below).
+  taxiqOwnerTaxYear:     (businessId?: string, taxYear?: number) => {
+    const key: unknown[] = ['taxiqOwnerTaxYear']
+    if (businessId) key.push(businessId)
+    if (taxYear !== undefined) key.push(taxYear)
+    return key
+  },
+  taxiqOwnerTaxYearById: (id?: string) => ['taxiqOwnerTaxYear', 'byId', id ?? 'unknown'],
+
+  // Tax IQ — Staff Tax Year (prefixed with 'taxiqStaffTaxYear' so invalidating
+  // qk.taxiqStaffTaxYear() also clears the byId cache below). No businessId —
+  // StaffTaxYear is scoped by the caller's JWT userId only.
+  taxiqStaffTaxYear: (taxYear?: number) => {
+    const key: unknown[] = ['taxiqStaffTaxYear']
+    if (taxYear !== undefined) key.push(taxYear)
+    return key
+  },
+  taxiqStaffTaxYearById: (id?: string) => ['taxiqStaffTaxYear', 'byId', id ?? 'unknown'],
+
+  // Tax IQ — Staff self-entered SSN/EIN (US-012). Scoped by JWT userId only, one
+  // profile per Staff (not per tax year) — no id/year param needed.
+  taxiqStaffTaxProfile: () => ['taxiqStaffTaxProfile'],
+
+  // Tax IQ — Owner Deduction Center
+  taxiqOwnerDeductions: (ownerTaxYearId?: string, recordStatus?: string, categoryId?: string) => {
+    const key: unknown[] = ['taxiqOwnerDeductions']
+    if (ownerTaxYearId) key.push(ownerTaxYearId)
+    if (recordStatus) key.push(recordStatus)
+    if (categoryId) key.push(categoryId)
+    return key
+  },
+  taxiqDeductionCategories: (applicableRole?: string) => ['taxiqDeductionCategories', applicableRole ?? 'all'],
+
+  // Tax IQ — Staff Deduction Center (US-11)
+  taxiqStaffDeductions: (staffTaxYearId?: string, recordStatus?: string, categoryId?: string) => {
+    const key: unknown[] = ['taxiqStaffDeductions']
+    if (staffTaxYearId) key.push(staffTaxYearId)
+    if (recordStatus) key.push(recordStatus)
+    if (categoryId) key.push(categoryId)
+    return key
+  },
+
+  // Tax IQ — Receipt Vault (US-05). Calling with no args yields ['taxiqReceipts'] (broad
+  // invalidation target), same convention as taxiqOwnerDeductions/taxiqStaffDeductions above.
+  // deductionRecordId scopes the key so the "linked receipts for one deduction" query
+  // (server-filtered via GET /receipts?deductionRecordId=...) never collides with the
+  // full-vault query cached under the same tax year ids.
+  taxiqReceipts: (ownerTaxYearId?: string, staffTaxYearId?: string, deductionRecordId?: string) => {
+    const key: unknown[] = ['taxiqReceipts']
+    if (ownerTaxYearId) key.push(ownerTaxYearId)
+    if (staffTaxYearId) key.push(staffTaxYearId)
+    if (deductionRecordId) key.push(deductionRecordId)
+    return key
+  },
+
+  // Tax IQ — Staff Mileage Log (US-12)
+  taxiqStaffMileageLogs: (staffTaxYearId?: string) => ['taxiqStaffMileageLogs', staffTaxYearId ?? 'unknown'],
+
+  // Tax IQ — Staff Self-Reported Income (US-13)
+  taxiqSelfReportedIncome: (staffTaxYearId?: string) => ['taxiqSelfReportedIncome', staffTaxYearId ?? 'unknown'],
+  taxiqSelfReportedIncomeDetail: (id?: string) => ['taxiqSelfReportedIncome', 'detail', id ?? 'unknown'],
+
+  // Tax IQ — Staff 1099-K Reconciliation (US-018)
+  taxiqForm1099KReconciliation: (staffTaxYearId?: string) => ['taxiqForm1099KReconciliation', staffTaxYearId ?? 'unknown'],
+
+  // Tax IQ — Owner Income Summary (US-014)
+  taxiqOwnerIncome: (ownerTaxYearId?: string) => ['taxiqOwnerIncome', ownerTaxYearId ?? 'unknown'],
+  taxiqOwnerIncomeDetail: (id?: string) => ['taxiqOwnerIncome', 'detail', id ?? 'unknown'],
+
+  // Tax IQ — Owner Assets Tracker (US-07): Equipment, Gift Card Liability, Membership Credit
+  taxiqOwnerEquipment: (ownerTaxYearId?: string) => ['taxiqOwnerEquipment', ownerTaxYearId ?? 'unknown'],
+  taxiqOwnerGiftCardLiabilities: (ownerTaxYearId?: string) =>
+    ['taxiqOwnerGiftCardLiabilities', ownerTaxYearId ?? 'unknown'],
+  taxiqOwnerMembershipCredits: (ownerTaxYearId?: string) =>
+    ['taxiqOwnerMembershipCredits', ownerTaxYearId ?? 'unknown'],
+
+  // Tax IQ — Tax Readiness Score (shared widget, Owner + Staff scope)
+  taxiqReadinessScore: (scope?: string, taxYearId?: string) =>
+    ['taxiqReadinessScore', scope ?? 'unknown', taxYearId ?? 'unknown'],
+
+  // Tax IQ — Owner Year-End Export (US-06). Cache also stores the last known
+  // ExportPackageDto via setQueryData so the "no new changes" idempotent-final-export
+  // message can be derived client-side by comparing `version` (BE has no explicit flag).
+  taxiqOwnerExport: (ownerTaxYearId?: string) => ['taxiqOwnerExport', ownerTaxYearId ?? 'unknown'],
+
+  // Tax IQ — Staff Year-End Export (US-15). Same idempotent-reexport cache pattern as Owner.
+  taxiqStaffExport: (staffTaxYearId?: string) => ['taxiqStaffExport', staffTaxYearId ?? 'unknown'],
+
+  // Tax IQ — Owner Adjustment History (US-06, post-Lock only)
+  taxiqOwnerAdjustments: (ownerTaxYearId?: string) => ['taxiqOwnerAdjustments', ownerTaxYearId ?? 'unknown'],
+
+  // Tax IQ — Staff Adjustment History (US-013, post-Lock only)
+  taxiqStaffAdjustments: (staffTaxYearId?: string) => ['taxiqStaffAdjustments', staffTaxYearId ?? 'unknown'],
+
+  // Tax IQ — Owner Tax Payment Reminders (US-08)
+  taxiqTaxReminders: (ownerTaxYearId?: string) => ['taxiqTaxReminders', ownerTaxYearId ?? 'unknown'],
+
+  // Tax IQ — Owner Payout & Dispute Center (US-09)
+  taxiqOwnerStaffList: (ownerTaxYearId?: string) => ['taxiqOwnerStaffList', ownerTaxYearId ?? 'unknown'],
+
+  // Tax IQ — Owner view of a Staff's masked/plaintext TIN (US-012)
+  taxiqOwnerStaffTin: (ownerTaxYearId?: string, staffUserId?: string, reveal?: boolean) =>
+    ['taxiqOwnerStaffTin', ownerTaxYearId ?? 'unknown', staffUserId ?? 'unknown', reveal ?? false],
+  taxiqOwnerPayouts: (ownerTaxYearId?: string, staffUserId?: string, status?: string) => {
+    const key: unknown[] = ['taxiqOwnerPayouts', ownerTaxYearId ?? 'unknown']
+    if (staffUserId) key.push(staffUserId)
+    if (status) key.push(status)
+    return key
+  },
+  taxiqOwnerPayoutsDisputed: (ownerTaxYearId?: string) => ['taxiqOwnerPayoutsDisputed', ownerTaxYearId ?? 'unknown'],
+
+  // Tax IQ — Staff Payout Confirmation & Dispute (US-14). No staffTaxYearId param —
+  // GetPendingPayoutsQuery scopes by JWT userId only, same as taxiqStaffTaxYear above.
+  taxiqStaffPayoutsPending: () => ['taxiqStaffPayoutsPending'],
+  // BUG-03 — Staff Payout History. Filters embedded in key so different status/page
+  // combos cache independently, same convention as staffPayoutsList above.
+  taxiqStaffPayoutsHistory: (filters = EMPTY) => ['taxiqStaffPayoutsHistory', filters],
+
+  // Tax IQ — CPA Access Grant (US-10)
+  taxiqCpaAccessGrants: (ownerTaxYearId?: string, staffTaxYearId?: string) =>
+    ['taxiqCpaAccessGrants', ownerTaxYearId ?? 'none', staffTaxYearId ?? 'none'],
+  taxiqCpaViewerPackage: (token?: string) => ['taxiqCpaViewerPackage', token ?? 'unknown'],
+
+  // Tax IQ — Staff W-4 Invite Link (US-028). Anonymous context query, keyed by token.
+  taxiqStaffW4Invite: (token?: string) => ['taxiqStaffW4Invite', token ?? 'unknown'],
+
+  // Tax IQ — Employer Registry (US-029). Prefixed with 'taxiqEmployers' so invalidating
+  // qk.taxiqEmployers() also clears the byId cache below.
+  taxiqEmployers: (businessId?: string) => ['taxiqEmployers', businessId ?? 'unknown'],
+  taxiqEmployerById: (id?: string) => ['taxiqEmployers', 'byId', id ?? 'unknown'],
+  taxiqEmployerRegistrations: (employerId?: string) => ['taxiqEmployerRegistrations', employerId ?? 'unknown'],
+  // Jurisdictions (mục 19, backend US-037). Keyed by employerId — businessId prefix kept for
+  // consistency with other taxiq* keys even though the query itself only needs employerId.
+  taxiqJurisdictionSummary: (businessId?: string, employerId?: string) =>
+    ['taxiq', 'jurisdictionSummary', businessId ?? '', employerId ?? ''],
+
+  // Share Links (mục 23, backend generalized from CpaAccessGrant). Owner-side list has no
+  // params (resolves current business via JWT); public viewer keyed by token + passcode so a
+  // wrong-passcode attempt never masks a subsequent correct one from cache.
+  taxiqShareLinks: () => ['taxiqShareLinks'],
+  taxiqShareLinkContent: (token?: string, passcode?: string) =>
+    ['taxiqShareLinkContent', token ?? 'unknown', passcode ?? ''],
+
+  // Tax Center — 1099-NEC (mục 21, backend reuses Share Link infra from mục 23 for delivery)
+  taxiqForm1099Nec: (ownerTaxYearId?: string) => ['taxiqForm1099Nec', ownerTaxYearId ?? 'unknown'],
+  taxiqForm1096Report: (ownerTaxYearId?: string) => ['taxiqForm1096Report', ownerTaxYearId ?? 'unknown'],
+
+  // Tip Ledger (mục 26) — scoped per staff, same key for owner + staff views (same query shape)
+  taxiqTipLedger: (staffTaxYearId?: string) => ['taxiqTipLedger', staffTaxYearId ?? 'unknown'],
+
+  // Forms & Reports (mục 20) — list scoped per OwnerTaxYear; preview scoped per FormsReportId
+  taxiqFormsReports: (ownerTaxYearId?: string) => ['taxiqFormsReports', ownerTaxYearId ?? 'unknown'],
+  taxiqFormsReportPreview: (formsReportId?: string) => ['taxiqFormsReportPreview', formsReportId ?? 'unknown'],
+
+  // Tax Estimate (mục 27) — quarterly estimate scoped per OwnerTaxYear + quarter; alerts/checklist scoped per OwnerTaxYear only
+  taxiqTaxEstimate: (ownerTaxYearId?: string, quarter?: number) => [
+    'taxiqTaxEstimate',
+    ownerTaxYearId ?? 'unknown',
+    quarter ?? 'current',
+  ],
+  taxiqDepositScheduleAlerts: (ownerTaxYearId?: string) => ['taxiqDepositScheduleAlerts', ownerTaxYearId ?? 'unknown'],
+  taxiqTaxReadinessChecklist: (ownerTaxYearId?: string) => ['taxiqTaxReadinessChecklist', ownerTaxYearId ?? 'unknown'],
+
   // Merchant Nexora Voice
   merchantVoiceBookings: (filters = EMPTY) => ['merchantVoice', 'bookings', filters],
   merchantVoiceBookingsCollected: (filters = EMPTY) => ['merchantVoice', 'bookings', 'collected', filters],
@@ -164,12 +439,23 @@ export const qk = {
   publicBusinessPaymentMethods: (businessId) => ['publicBusinessPaymentMethods', businessId],
   publicDirectPaymentPage: (businessId) => ['publicDirectPaymentPage', businessId],
   publicStaffDirectPaymentPage: (staffProfileId: string) => ['publicStaffDirectPaymentPage', staffProfileId],
+  // POS Booking — Public Booking Page discovery (Ticket 4)
+  publicBookingPage: (businessSlug?: string) => ['publicBookingPage', businessSlug ?? ''],
+  // Customer entity unification — public contact-step "returning customer" lookup by phone.
+  publicBookingCustomerLookup: (businessSlug?: string, phone?: string) =>
+    ['publicBookingPage', 'customerLookup', businessSlug ?? '', phone ?? ''],
+  // POS Booking — customer self-service Manage Booking page (Ticket 8)
+  manageBooking: (manageToken?: string) => ['manageBooking', manageToken ?? ''],
   publicPaymentStatus: (paymentId: string) => ['publicPayment', 'status', paymentId],
-  publicVoiceBookingPage: (businessKey?: string | null) => [
+  publicVoiceBookingPage: (
+    businessKey?: string | null,
+    phone?: string | null,
+  ) => [
     'public',
     'nexora-voice',
     'booking-page',
     businessKey ?? '',
+    phone ?? null,
   ],
 }
 

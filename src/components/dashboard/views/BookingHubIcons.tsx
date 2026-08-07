@@ -593,6 +593,24 @@ export function WalletCardsIcon({ className }: IconProps) {
   )
 }
 
+/** Lucide `credit-card`. */
+export function CreditCardIcon({ className }: IconProps) {
+  return (
+    <HubIcon className={className}>
+      <rect
+        width="20"
+        height="14"
+        x="2"
+        y="5"
+        rx="2"
+        stroke="currentColor"
+        strokeWidth="2"
+      />
+      <path d="M2 10h20" stroke="currentColor" strokeWidth="2" />
+    </HubIcon>
+  )
+}
+
 /** Lucide `trending-up`. */
 export function TrendingUpIcon({ className }: IconProps) {
   return (

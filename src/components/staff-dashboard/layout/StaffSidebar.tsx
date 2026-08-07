@@ -1,17 +1,19 @@
 // StaffSidebar — desktop (≥1024px) left nav and mobile drawer for the staff dashboard.
 import { useEffect, useState } from 'react'
-import { useSearchParams } from 'react-router-dom'
+import { useLocation, useNavigate, useSearchParams } from 'react-router-dom'
 import { LogOut, ChevronLeft, ChevronDown, ChevronUp } from 'lucide-react'
 import { useTranslation } from '../../../contexts/LanguageContext'
 import {
   STAFF_MENU_ITEMS,
   STAFF_WORKSPACE_MENU_ITEM,
   STAFF_WORKSPACE_SUBMENU,
+  STAFF_TAXIQ_MENU_CHILD_MODULE,
   isStaffTopLevelMenuItemActive,
   isStaffWorkspaceRouteActive,
   isStaffWorkspaceSubActive,
 } from '../constants'
 import { useStaffAccount } from '../../../contexts/StaffAccountContext'
+import { useStaffTaxYearByYear } from '../../../data/hooks/useTaxiqStaffTaxYear'
 import MenuIcon from '../../ui/MenuIcon'
 import HomepageLink from '../../ui/HomepageLink'
 import LanguageSwitcher from '../../ui/LanguageSwitcher'
@@ -32,6 +34,8 @@ import {
 export default function StaffSidebar({ activeScreen, isHomeActive = false, mobileOnly = false, onNavigate, onLogout, isOpen, onClose }) {
   const { t } = useTranslation()
   const [searchParams] = useSearchParams()
+  const navigate = useNavigate()
+  const location = useLocation()
   const { staffMember, account } = useStaffAccount()
   const displayName = account.defaultDisplayName || staffMember.fullName || 'Staff'
   const [isProfileExpanded, setIsProfileExpanded] = useState(false)
@@ -40,6 +44,19 @@ export default function StaffSidebar({ activeScreen, isHomeActive = false, mobil
   const isWorkspaceSectionActive = isStaffWorkspaceRouteActive(activeScreen, tabParam)
 
   const [isWorkspaceExpanded, setIsWorkspaceExpanded] = useState(isWorkspaceSectionActive)
+  
+  const [isTaxIqExpanded, setIsTaxIqExpanded] = useState(activeScreen === 'taxiq')
+  // Tax IQ sub-items are real routes (/staff/taxiq/<id>), not a param — same
+  // path-segment approach as DashboardSidebar.tsx's activeTaxIqSubTab.
+  const activeTaxIqSubTab = location.pathname.split('/')[3] || null
+  // Module-gated Tax IQ sub-items: shares the TanStack Query cache with the
+  // /staff/taxiq route itself, so this fires no extra network request.
+  const { data: staffTaxYearPage } = useStaffTaxYearByYear(new Date().getFullYear())
+  const enabledTaxiqModules = staffTaxYearPage?.items?.[0]?.enabledModules
+
+  useEffect(() => {
+    setIsTaxIqExpanded(activeScreen === 'taxiq')
+  }, [activeScreen])
 
   useEffect(() => {
     if (isWorkspaceSectionActive) {
@@ -58,8 +75,75 @@ export default function StaffSidebar({ activeScreen, isHomeActive = false, mobil
 
   const dashboardMenuItem = STAFF_MENU_ITEMS.find((item) => item.id === 'home')
   const sidebarMenuItems = STAFF_MENU_ITEMS.filter((item) => item.id !== 'home')
+  const taxIqMenuItem = STAFF_MENU_ITEMS.find((item) => item.id === 'taxiq')
+
+  const handleTaxIqToggle = () => {
+    if (activeScreen === 'taxiq') {
+      setIsTaxIqExpanded((prev) => !prev)
+    } else {
+      onNavigate('taxiq')
+      setIsTaxIqExpanded(true)
+    }
+  }
+
+  const handleTaxIqNavigate = (subId, isMobile) => {
+    onNavigate(`taxiq/${subId}`)
+    if (isMobile && onClose) onClose()
+  }
+
+  const renderTaxIqSection = (isMobile) => {
+    const isTaxIqActive = activeScreen === 'taxiq'
+    return (
+      <div>
+        <button
+          type="button"
+          onClick={handleTaxIqToggle}
+          className={sidebarMenuItemBetweenClass(isTaxIqActive)}
+        >
+          <div className="flex items-center gap-3 min-w-0">
+            <MenuIcon item={taxIqMenuItem} active={isTaxIqActive} />
+            <span className="truncate">{t(taxIqMenuItem.labelKey)}</span>
+          </div>
+          <div className="shrink-0 text-white/50">
+            {isTaxIqExpanded ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
+          </div>
+        </button>
+
+        {isTaxIqExpanded && (
+          <div className={SIDEBAR_SUBMENU_WRAP_CLASS}>
+            {taxIqMenuItem.children
+              .filter((sub) => {
+                // Fail-open (show all) before onboarding completes or while loading —
+                // only hide once we positively know a module is disabled.
+                const requiredModule = STAFF_TAXIQ_MENU_CHILD_MODULE[sub.id]
+                if (!requiredModule || !enabledTaxiqModules) return true
+                return enabledTaxiqModules.includes(requiredModule)
+              })
+              .map((sub) => {
+                const isSubActive = isTaxIqActive && activeTaxIqSubTab === sub.id
+                return (
+                  <button
+                    key={sub.id}
+                    type="button"
+                    onClick={() => handleTaxIqNavigate(sub.id, isMobile)}
+                    className={sidebarSubmenuItemClass(isSubActive)}
+                  >
+                    <div className={`h-1.5 w-1.5 rounded-full ${isSubActive ? 'bg-brandCyan shadow-sm' : 'bg-white/30'}`} />
+                    <span>{t(sub.labelKey)}</span>
+                  </button>
+                )
+              })}
+          </div>
+        )}
+      </div>
+    )
+  }
 
   const renderMenuItem = (item, isMobile) => {
+    if (item.id === 'taxiq') {
+      return <div key={item.id}>{renderTaxIqSection(isMobile)}</div>
+    }
+
     const isActive = isStaffTopLevelMenuItemActive(activeScreen, tabParam, item.id)
     return (
       <button
