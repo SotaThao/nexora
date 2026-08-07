@@ -22,7 +22,7 @@ import BookingCards from './BookingCards'
 import BookingCalendar from './BookingCalendar'
 import RescheduleServicesEditor, { type RescheduleLineDraft } from './RescheduleServicesEditor'
 import BookingLinkShare from './BookingLinkShare'
-import { formatBookingWallClock, statusLabelKey } from './bookingFormatters'
+import { formatBookingWallClock, resolveBookingWallClockParts, statusLabelKey } from './bookingFormatters'
 import { formatPosDateTime } from '../posDateTime'
 
 type ViewMode = 'table' | 'cards' | 'calendar'
@@ -141,9 +141,9 @@ export default function BookingTab({
   const openReschedule = (bookingId: string) => {
     const booking = bookings.find((b) => b.bookingId === bookingId)
     if (booking) {
-      const d = new Date(booking.scheduledAt)
-      setRescheduleDate(isoDateOnly(d))
-      setRescheduleTime(`${pad(d.getUTCHours())}:${pad(d.getUTCMinutes())}`)
+      const { year, month, day, hours, minutes } = resolveBookingWallClockParts(booking.scheduledAt, booking.source)
+      setRescheduleDate(`${year}-${pad(month)}-${pad(day)}`)
+      setRescheduleTime(`${pad(hours)}:${pad(minutes)}`)
     }
     setRescheduleLines([])
     setRescheduleTargetId(bookingId)
@@ -443,7 +443,7 @@ export default function BookingTab({
                       <p className="text-[10px] font-extrabold uppercase text-nexoraMuted">
                         {t(p + 'viewDetailScheduledAt')}
                       </p>
-                      <p className="text-xs text-nexoraText">{formatBookingWallClock(viewDetail.data.scheduledAt)}</p>
+                      <p className="text-xs text-nexoraText">{formatBookingWallClock(viewDetail.data.scheduledAt, viewDetail.data.source)}</p>
                     </div>
                     <div>
                       <p className="text-[10px] font-extrabold uppercase text-nexoraMuted">

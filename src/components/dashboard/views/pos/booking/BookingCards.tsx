@@ -36,7 +36,7 @@ export default function BookingCards({
                 {t(p + statusLabelKey(booking.status))}
               </span>
             </div>
-            <p className="text-xs text-nexoraMuted">{formatBookingWallClock(booking.scheduledAt)}</p>
+            <p className="text-xs text-nexoraMuted">{formatBookingWallClock(booking.scheduledAt, booking.source)}</p>
             <p className="text-[11px] text-nexoraMuted">
               {t(p + 'columnCreated')}: {formatPosDateTime(booking.createdAt, currentLanguage)}
             </p>

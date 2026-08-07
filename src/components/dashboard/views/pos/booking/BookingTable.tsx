@@ -44,7 +44,7 @@ export default function BookingTable({
               <tr key={booking.bookingId} className="border-b border-nexoraBorder last:border-0">
                 <td className="px-3 py-2 font-bold text-nexoraText">{booking.customerName}</td>
                 <td className="px-3 py-2 text-nexoraMuted">{formatPosDateTime(booking.createdAt, currentLanguage)}</td>
-                <td className="px-3 py-2 text-nexoraMuted">{formatBookingWallClock(booking.scheduledAt)}</td>
+                <td className="px-3 py-2 text-nexoraMuted">{formatBookingWallClock(booking.scheduledAt, booking.source)}</td>
                 <td className="px-3 py-2 text-nexoraMuted">{booking.serviceNames.join(', ')}</td>
                 <td className="px-3 py-2 text-nexoraMuted">
                   {booking.technicianNames.length > 0 ? booking.technicianNames.join(', ') : t(p + 'unassigned')}
