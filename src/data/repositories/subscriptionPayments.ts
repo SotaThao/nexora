@@ -51,6 +51,12 @@ export interface InitializeCardPaymentResult {
   publishableKey: string
 }
 
+/** PATCH `/api/v1/merchant/subscriptions/{id}/auto-renew` result. */
+export interface UpdateSubscriptionAutoRenewResult {
+  subscriptionId: string
+  autoRenew: boolean
+}
+
 /** VoiceAI / MD purchase response (`packageId` + `symbol` body). */
 export interface PurchasePackageByIdResult {
   orderId: string
@@ -76,23 +82,38 @@ export interface SubscriptionPackage {
   periodInMonths: number | null
 }
 
-/** Normalized GET `/api/v1/merchant/subscriptions/my-packages` row. */
-export interface SubscriptionMyPackage {
-  id: string
-  packageType: SubscriptionMyPackageType
-  packageCode: string
-  name: string
-  status: string
-  activatedAt: string
-  expiresAt: string
-  autoRenew: boolean
-}
-
 /** Wire enum from GET `/api/v1/merchant/subscriptions/my-packages` `packageType`. */
 export enum SubscriptionMyPackageType {
   TipPlatform = 'TipPlatform',
   VoiceAI = 'VoiceAI',
   Unknown = 'Unknown',
+}
+
+/** Wire enum from GET `/api/v1/merchant/subscriptions/my-packages` `status`. */
+export enum SubscriptionMyPackageStatus {
+  Active = 'Active',
+  Trialing = 'Trialing',
+  PastDue = 'PastDue',
+  Cancelled = 'Cancelled',
+  Paused = 'Paused',
+  Unknown = 'Unknown',
+}
+
+/**
+ * Normalized GET `/api/v1/merchant/subscriptions/my-packages` row
+ * (`MerchantPackageDto` + live `level`).
+ */
+export interface SubscriptionMyPackage {
+  id: string
+  packageType: SubscriptionMyPackageType
+  packageCode: string
+  name: string
+  /** Tier rank within `packageType` (live API; may be absent on older BE). */
+  level: number | null
+  status: SubscriptionMyPackageStatus
+  activatedAt: string | null
+  expiresAt: string | null
+  autoRenew: boolean
 }
 
 /** Normalized GET `/api/v1/merchant/subscriptions/purchase-history` row. */
@@ -202,13 +223,18 @@ function readBoolean(value: unknown, fallback = false): boolean {
 
 function normalizeMyPackageType(value: unknown): SubscriptionMyPackageType {
   const raw = readString(value).trim().toLowerCase()
-  if (raw === SubscriptionPackageType.TipPlatform.toLowerCase()) {
-    return SubscriptionMyPackageType.TipPlatform
-  }
-  if (raw === SubscriptionPackageType.VoiceAI.toLowerCase()) {
-    return SubscriptionMyPackageType.VoiceAI
-  }
-  return SubscriptionMyPackageType.Unknown
+  const match = Object.values(SubscriptionMyPackageType).find(
+    (type) => type !== SubscriptionMyPackageType.Unknown && type.toLowerCase() === raw,
+  )
+  return match ?? SubscriptionMyPackageType.Unknown
+}
+
+function normalizeMyPackageStatus(value: unknown): SubscriptionMyPackageStatus {
+  const raw = readString(value).trim().toLowerCase()
+  const match = Object.values(SubscriptionMyPackageStatus).find(
+    (status) => status.toLowerCase() === raw,
+  )
+  return match ?? SubscriptionMyPackageStatus.Unknown
 }
 
 function normalizeMyPackage(raw: unknown): SubscriptionMyPackage | null {
@@ -216,32 +242,22 @@ function normalizeMyPackage(raw: unknown): SubscriptionMyPackage | null {
   const item = raw as Record<string, unknown>
 
   const id = readString(item.id).trim()
-  const packageType = normalizeMyPackageType(item.packageType)
+  if (!id) return null
 
-  // Some BE versions may provide either `packageCode` or `name` or both.
   const packageCode =
-    readString(item.packageCode).trim() ||
-    readString(item.packageCode ?? item.name).trim() ||
-    readString(item.name).trim() ||
-    ''
-  const name = readString(item.name).trim() || packageCode
-  const status = readString(item.status).trim()
-
-  const activatedAt = readString(item.activatedAt).trim()
-  const expiresAt = readString(item.expiresAt).trim()
-  const autoRenew = readBoolean(item.autoRenew, false)
-
-  if (!id || !activatedAt || !expiresAt) return null
+    readString(item.packageCode).trim() || readString(item.name).trim()
+  if (!packageCode) return null
 
   return {
     id,
-    packageType,
+    packageType: normalizeMyPackageType(item.packageType),
     packageCode,
-    name,
-    status,
-    activatedAt,
-    expiresAt,
-    autoRenew,
+    name: readString(item.name).trim() || packageCode,
+    level: readNullableNumber(item.level),
+    status: normalizeMyPackageStatus(item.status),
+    activatedAt: readNullableString(item.activatedAt),
+    expiresAt: readNullableString(item.expiresAt),
+    autoRenew: readBoolean(item.autoRenew, false),
   }
 }
 
@@ -329,6 +345,23 @@ function myPackagesPath(): string {
   return '/api/v1/merchant/subscriptions/my-packages'
 }
 
+function autoRenewPath(subscriptionId: string): string {
+  return `/api/v1/merchant/subscriptions/${encodeURIComponent(subscriptionId)}/auto-renew`
+}
+
+function normalizeAutoRenewResult(
+  raw: unknown,
+  fallback: UpdateSubscriptionAutoRenewResult,
+): UpdateSubscriptionAutoRenewResult {
+  if (!raw || typeof raw !== 'object') return fallback
+  const item = raw as Record<string, unknown>
+  return {
+    subscriptionId: readString(item.subscriptionId).trim() || fallback.subscriptionId,
+    autoRenew:
+      'autoRenew' in item ? readBoolean(item.autoRenew, fallback.autoRenew) : fallback.autoRenew,
+  }
+}
+
 function publicPackagesPath(packageType?: SubscriptionPackageType): string {
   if (!packageType) return '/api/v1/public/subscription-packages'
   return `/api/v1/public/subscription-packages?packageType=${encodeURIComponent(packageType)}`
@@ -354,6 +387,20 @@ export function createSubscriptionPaymentsRepository(client: HttpClient = httpCl
     async getMyPackages(): Promise<SubscriptionMyPackage[]> {
       const res = await client.get<unknown>(myPackagesPath())
       return normalizeMyPackages(res)
+    },
+
+    /** PATCH `/api/v1/merchant/subscriptions/{id}/auto-renew` */
+    async updateAutoRenew(
+      subscriptionId: string,
+      autoRenew: boolean,
+    ): Promise<UpdateSubscriptionAutoRenewResult> {
+      const id = String(subscriptionId || '').trim()
+      const requested: UpdateSubscriptionAutoRenewResult = {
+        subscriptionId: id,
+        autoRenew,
+      }
+      const res = await client.patch<unknown>(autoRenewPath(id), requested)
+      return normalizeAutoRenewResult(res, requested)
     },
 
     async getPaymentMethods(): Promise<SubscriptionPaymentMethod[]> {
