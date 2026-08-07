@@ -23,10 +23,7 @@ import {
   formatPackageHistoryTransactionId,
   resolvePackageHistoryDisplayAt,
 } from './constants'
-import {
-  PACKAGE_MANAGEMENT_TAB_QUERY,
-  type PackageManagementTabQueryOptions,
-} from '../packageManagement/constants'
+import { type PackageManagementTabQueryOptions } from '../packageManagement/constants'
 
 const TK = 'components.dashboard.views.BookingHubView.plans'
 const PACKAGE_HISTORY_SKELETON_ROWS = 5

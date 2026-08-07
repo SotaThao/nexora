@@ -21,6 +21,7 @@ import {
   PACKAGE_MANAGEMENT_TAB_ORDER,
   PACKAGE_MANAGEMENT_TK,
   PackageManagementTab,
+  parsePackageManagementTab,
 } from "./views/packageManagement/constants";
 
 /** Menu ids used by AI Hub / Touchpoints expandable nav (avoid hardcoding duplicates). */
@@ -379,7 +380,7 @@ export function isPackageManagementSubActive(
   subId: string,
 ): boolean {
   if (activeMenu !== DASHBOARD_MENU_ID.packageManagement) return false;
-  const activeTab = tabParam?.trim().toLowerCase() || PackageManagementTab.Overview;
+  const activeTab = parsePackageManagementTab(tabParam);
   return activeTab === subId;
 }
 
