@@ -3,6 +3,7 @@ import { useTranslation } from '../../../../../contexts/LanguageContext'
 import { PosOrderStatus } from '../../../../../constants/posOrderStatus'
 import type { BookingListItemApiDto } from '../../../../../types/repositories'
 import { formatBookingWallClock, statusLabelKey } from './bookingFormatters'
+import { formatPosDateTime } from '../posDateTime'
 
 export default function BookingTable({
   bookings,
@@ -19,7 +20,7 @@ export default function BookingTable({
   onViewDetail: (bookingId: string) => void
   checkingInId: string | null
 }) {
-  const { t } = useTranslation()
+  const { t, currentLanguage } = useTranslation()
   const p = 'components.dashboard.views.pos.BookingTab.'
 
   return (
@@ -42,7 +43,7 @@ export default function BookingTable({
             return (
               <tr key={booking.bookingId} className="border-b border-nexoraBorder last:border-0">
                 <td className="px-3 py-2 font-bold text-nexoraText">{booking.customerName}</td>
-                <td className="px-3 py-2 text-nexoraMuted">{formatBookingWallClock(booking.createdAt)}</td>
+                <td className="px-3 py-2 text-nexoraMuted">{formatPosDateTime(booking.createdAt, currentLanguage)}</td>
                 <td className="px-3 py-2 text-nexoraMuted">{formatBookingWallClock(booking.scheduledAt)}</td>
                 <td className="px-3 py-2 text-nexoraMuted">{booking.serviceNames.join(', ')}</td>
                 <td className="px-3 py-2 text-nexoraMuted">

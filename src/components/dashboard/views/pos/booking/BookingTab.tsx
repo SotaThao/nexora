@@ -23,6 +23,7 @@ import BookingCalendar from './BookingCalendar'
 import RescheduleServicesEditor, { type RescheduleLineDraft } from './RescheduleServicesEditor'
 import BookingLinkShare from './BookingLinkShare'
 import { formatBookingWallClock, statusLabelKey } from './bookingFormatters'
+import { formatPosDateTime } from '../posDateTime'
 
 type ViewMode = 'table' | 'cards' | 'calendar'
 
@@ -43,7 +44,7 @@ export default function BookingTab({
   businessSlug?: string
   turnBoardStaff: TurnBoardStationApiDto[]
 }) {
-  const { t } = useTranslation()
+  const { t, currentLanguage } = useTranslation()
   const { showToast } = useNotification()
 
   const [viewMode, setViewMode] = useState<ViewMode>('table')
@@ -436,7 +437,7 @@ export default function BookingTab({
                       <p className="text-[10px] font-extrabold uppercase text-nexoraMuted">
                         {t(p + 'viewDetailCreatedAt')}
                       </p>
-                      <p className="text-xs text-nexoraText">{formatBookingWallClock(viewDetail.data.createdAt)}</p>
+                      <p className="text-xs text-nexoraText">{formatPosDateTime(viewDetail.data.createdAt, currentLanguage)}</p>
                     </div>
                     <div>
                       <p className="text-[10px] font-extrabold uppercase text-nexoraMuted">

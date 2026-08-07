@@ -11,16 +11,14 @@ import { useCompletedOrders } from '../../../../data/hooks/usePosOrders'
 import { useOrderDetail } from '../../../../data/hooks/usePosCheckout'
 import { qk } from '../../../../data/queryKeys'
 import { SkeletonList } from '../../../ui/skeleton'
+import { formatPosDateTime } from './posDateTime'
 
 const PAGE_SIZE = 10
 
-function formatDateTime(iso: string | null | undefined): string {
-  if (!iso) return '—'
-  return new Date(iso).toLocaleString([], { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })
-}
-
 export default function PosCompletedOrdersPanel({ businessId }: { businessId: string }) {
-  const { t } = useTranslation()
+  const { t, currentLanguage } = useTranslation()
+  const formatDateTime = (iso: string | null | undefined) =>
+    formatPosDateTime(iso, currentLanguage, { withYear: false })
   const queryClient = useQueryClient()
   const [dateFrom, setDateFrom] = useState('')
   const [dateTo, setDateTo] = useState('')

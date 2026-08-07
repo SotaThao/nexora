@@ -11,6 +11,7 @@ import { PosOrderStatus } from '../../../../../constants/posOrderStatus'
 import type { BookingListItemApiDto } from '../../../../../types/repositories'
 import { bookingDateKey, formatBookingWallClock, statusLabelKey } from './bookingFormatters'
 import { BOOKING_CALENDAR_COLORS } from '../../../views/bookingTodayConstants'
+import { formatPosDateTime } from '../posDateTime'
 
 function pad(value: number): string {
   return String(value).padStart(2, '0')
@@ -61,7 +62,7 @@ export default function BookingCalendar({
   onViewDetail: (bookingId: string) => void
   checkingInId: string | null
 }) {
-  const { t } = useTranslation()
+  const { t, currentLanguage } = useTranslation()
   const p = 'components.dashboard.views.pos.BookingTab.'
 
   const year = monthDate.getUTCFullYear()
@@ -158,7 +159,7 @@ export default function BookingCalendar({
                   </div>
                   <p className="text-[11px] text-nexoraMuted">{formatBookingWallClock(booking.scheduledAt)}</p>
                   <p className="text-[11px] text-nexoraMuted">
-                    {t(p + 'columnCreated')}: {formatBookingWallClock(booking.createdAt)}
+                    {t(p + 'columnCreated')}: {formatPosDateTime(booking.createdAt, currentLanguage)}
                   </p>
                   <p className="text-[11px] text-nexoraMuted">{booking.serviceNames.join(', ')}</p>
                   <div className="mt-2 flex flex-wrap gap-1.5">

@@ -19,6 +19,7 @@ import { getApiErrorCode } from '../../../../types/domain'
 import { getErrorI18nKey } from '../../../../data/errorCodes'
 import { qk } from '../../../../data/queryKeys'
 import { usePosAccess } from '../../../../data/hooks/usePosAccess'
+import { formatPosTime } from './posDateTime'
 import { useCancelOrder, useOrderList, useStartOrderService } from '../../../../data/hooks/usePosOrders'
 import { useTurnBoard } from '../../../../data/hooks/usePosTurnBoard'
 import { PosOrderStatus } from '../../../../constants/posOrderStatus'
@@ -62,10 +63,6 @@ function getInitials(name: string) {
     .join('')
 }
 
-function formatTime(iso: string) {
-  return new Date(iso).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
-}
-
 export default function PosFrontDeskView({
   businessId,
   businessName,
@@ -77,7 +74,7 @@ export default function PosFrontDeskView({
   businessName?: string
   businessSlug?: string
 }) {
-  const { t } = useTranslation()
+  const { t, currentLanguage } = useTranslation()
   const { showToast, showConfirm } = useNotification()
   const queryClient = useQueryClient()
   const { data: access, isLoading: isAccessLoading } = usePosAccess(businessId)
@@ -222,7 +219,7 @@ export default function PosFrontDeskView({
             {station.assignedAt ? (
               <p className="text-[11px] text-posFdMuted">
                 {t('components.dashboard.views.pos.PosFrontDeskView.servingSince', {
-                  time: formatTime(station.assignedAt),
+                  time: formatPosTime(station.assignedAt, currentLanguage),
                 })}
               </p>
             ) : null}
