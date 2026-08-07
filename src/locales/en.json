@@ -3088,6 +3088,7 @@
             "backToMonth": "Back to month"
           },
           "PosOrderWorkspace": {
+            "bookingPrefilled": "Filled in from today's booking for {{name}}",
             "titleUpdate": "Order #{{orderNumber}} · {{customerName}}",
             "backButton": "Back",
             "cancelButton": "Cancel",

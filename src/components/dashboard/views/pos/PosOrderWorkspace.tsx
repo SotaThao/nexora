@@ -30,6 +30,8 @@ import {
   useUpdateOrderProductLineQuantity,
 } from '../../../../data/hooks/usePosCheckout'
 import { useAssignStaffToServiceLine, useCheckInOrder, useStartOrderService } from '../../../../data/hooks/usePosOrders'
+import { useBookingDetail, useBookingList } from '../../../../data/hooks/usePosBooking'
+import { formatLocalDateIso } from '../../../../utils/localDate'
 import { PosOrderStatus } from '../../../../constants/posOrderStatus'
 import type {
   CheckInOrderItemPayload,
@@ -60,6 +62,14 @@ const TIP_PERCENT_BY_MODE: Partial<Record<TipMode, number>> = {
 
 function round2(value: number) {
   return Math.round(value * 100) / 100
+}
+
+// Compares two phone numbers regardless of formatting (national vs E.164, punctuation) by
+// matching their last 10 digits — good enough for US-only POS phone entry today.
+function samePhoneDigits(a: string, b: string): boolean {
+  const digitsA = a.replace(/\D/g, '').slice(-10)
+  const digitsB = b.replace(/\D/g, '').slice(-10)
+  return digitsA.length === 10 && digitsA === digitsB
 }
 
 function initials(name: string) {
@@ -159,6 +169,34 @@ export default function PosOrderWorkspace({
   const { data: serviceCatalog = [] } = useCheckoutServiceCatalog(businessId)
   const { data: productCatalog = [] } = useCheckoutProductCatalog(businessId)
 
+  // Phone-first Check-in prefill — once Step 1 hands off a phone number, look for a Pending/
+  // Confirmed booking today for that same phone and, if found, prefill Step 2 (name/email/
+  // services) from it. Scoped to Create mode + Step 2 so Update-mode instances of this same
+  // component never run this lookup. Tracks the last phone it already applied so a background
+  // refetch (or the staff editing fields afterward) doesn't silently re-clobber their edits.
+  const todayIso = useMemo(() => formatLocalDateIso(new Date()), [])
+  const appliedBookingPhoneRef = useRef<string | null>(null)
+  const { data: todaysBookings } = useBookingList(
+    businessId,
+    { dateFrom: todayIso, dateTo: todayIso },
+    { enabled: isCreateMode && checkinStep === 'details' && Boolean(customerPhone) },
+  )
+  const matchedBookingId = useMemo(() => {
+    if (!customerPhone || !todaysBookings?.items?.length) return null
+    const eligible = todaysBookings.items.filter(
+      (b) =>
+        b.customerPhone &&
+        samePhoneDigits(b.customerPhone, customerPhone) &&
+        (b.status === PosOrderStatus.Pending || b.status === PosOrderStatus.Confirmed),
+    )
+    if (eligible.length === 0) return null
+    eligible.sort((a, b) => a.scheduledAt.localeCompare(b.scheduledAt))
+    return eligible[0].bookingId
+  }, [todaysBookings, customerPhone])
+  const { data: matchedBooking } = useBookingDetail(businessId, matchedBookingId ?? undefined, {
+    enabled: Boolean(matchedBookingId),
+  })
+
   const checkInOrder = useCheckInOrder(businessId)
   const addServiceLine = useAddOrderServiceLine(businessId)
   const removeServiceLine = useRemoveOrderServiceLine(businessId)
@@ -218,7 +256,48 @@ export default function PosOrderWorkspace({
     setReceiptChoice('sms')
     setTipSplitInputs({})
     initializedOrderIdRef.current = null
+    appliedBookingPhoneRef.current = null
   }
+
+  // Applies the matched booking's name/email/services to Step 2 exactly once per phone
+  // number — same "skip services no longer in the catalog" validation as Use Last Visit
+  // (handleApplyLastVisit below), since a booked service the salon has since removed can't
+  // be added to a new draft either.
+  useEffect(() => {
+    if (!matchedBooking || appliedBookingPhoneRef.current === customerPhone) return
+    appliedBookingPhoneRef.current = customerPhone
+
+    if (!customerName.trim()) setCustomerName(matchedBooking.customerName)
+    if (!customerEmail.trim() && matchedBooking.customerEmail) setCustomerEmail(matchedBooking.customerEmail)
+
+    const validServices = matchedBooking.services.filter(
+      (s) => s.posServiceId && serviceCatalog.some((cat) => cat.id === s.posServiceId),
+    )
+    if (validServices.length > 0) {
+      setDraftLines((prev) => [
+        ...prev,
+        ...validServices.map((s): DisplayServiceLine => {
+          const service = serviceCatalog.find((cat) => cat.id === s.posServiceId)!
+          return {
+            key: crypto.randomUUID(),
+            itemType: 'Service',
+            posServiceId: service.id,
+            serviceName: service.name,
+            unitPrice: service.price,
+            posStaffProfileId: s.posStaffProfileId ?? undefined,
+            technicianName: s.technicianName ?? undefined,
+            completedAt: null,
+          }
+        }),
+      ])
+    }
+    showToast(
+      t('components.dashboard.views.pos.PosOrderWorkspace.bookingPrefilled', {
+        name: matchedBooking.customerName,
+      }),
+    )
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [matchedBooking])
 
   // Update mode has no local draft for the lines themselves — the table is always a live
   // reflection of the latest GetOrderDetailQuery result, since every edit already calls
