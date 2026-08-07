@@ -96,16 +96,12 @@ async function buildError(response: Response): Promise<ApiError> {
         title?: string
       }
       if (body.errorCode) errorCode = body.errorCode
-      if (body.message) message = body.message
-      else if (body.detail) message = body.detail
-      else if (body.title) message = body.title
       if (body.errors !== undefined) errors = body.errors
       if (body.retryAfter !== undefined) retryAfter = body.retryAfter
 
-      if (!body.errorCode && Array.isArray(body.errorDetail) && body.errorDetail.length > 0) {
-        const firstDetail = body.errorDetail[0]
-        if (firstDetail.errorCode) errorCode = firstDetail.errorCode
-        if (!message && firstDetail.message) message = firstDetail.message
+      const firstDetail = Array.isArray(body.errorDetail) && body.errorDetail.length > 0 ? body.errorDetail[0] : undefined
+      if (!body.errorCode && firstDetail?.errorCode) errorCode = firstDetail.errorCode
+      if (Array.isArray(body.errorDetail)) {
         for (const detail of body.errorDetail) {
           if (detail.errorCode) {
             const field = detail.field || '_general'
@@ -114,6 +110,15 @@ async function buildError(response: Response): Promise<ApiError> {
           }
         }
       }
+
+      // Prefer the most specific message available: an explicit top-level `message`,
+      // then the first errorDetail entry's message (the actual validation/business-rule
+      // text), then the RFC 7807 `detail`/`title` fields — those are generic
+      // ("Bad Request") and would otherwise mask a more useful errorDetail message.
+      if (body.message) message = body.message
+      else if (firstDetail?.message) message = firstDetail.message
+      else if (body.detail) message = body.detail
+      else if (body.title) message = body.title
     }
   } catch {
     // response body was not JSON — use defaults above

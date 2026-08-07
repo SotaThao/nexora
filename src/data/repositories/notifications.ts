@@ -81,6 +81,15 @@ const TYPE_TO_LINK_TAB: Record<string, string> = {
   directpayment: 'reports',
   directpaymentreceived: 'reports', // DirectPaymentReceived
   payment: 'reports',
+  cardsupportrequest: 'touchpoints', // CardSupportRequest — self-notification sent to the owner who filed it
+  // TaxIqPayoutConfirmed/Disputed are sent to the owner (see ConfirmPayoutCommand /
+  // DisputePayoutCommand); the dispute-resolution screen lives at
+  // /dashboard/taxiq/payroll, so the path segment after 'taxiq' is passed straight
+  // through buildDashboardMenuPath.
+  taxiqpayoutconfirmed: 'taxiq/payroll', // TaxIqPayoutConfirmed
+  taxiqpayoutdisputed: 'taxiq/payroll', // TaxIqPayoutDisputed
+  voicecreditlow: 'booking-hub', // VoiceCreditLow
+  voicecreditexhausted: 'booking-hub', // VoiceCreditExhausted
 }
 
 /**

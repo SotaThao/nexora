@@ -1,6 +1,7 @@
 // Staff dashboard navigation constants.
 import {
   LayoutDashboard,
+  Calculator,
   QrCode,
   CircleDollarSign,
   Star,
@@ -11,11 +12,27 @@ import {
 } from 'lucide-react'
 
 // Bottom-nav / sidebar items. Icons align with merchant dashboard MENU_ITEMS.
+// 'taxiq' carries `children` (Tax IQ sub-nav) — StaffSidebar renders it as an
+// expandable group, mirroring the Owner Dashboard's MENU_ITEMS.taxiq pattern.
 export const STAFF_MENU_ITEMS = [
   { id: 'home', icon: LayoutDashboard, labelKey: 'staff_dashboard.nav.home' },
   { id: 'tips', icon: CircleDollarSign, labelKey: 'staff_dashboard.nav.tips' },
   { id: 'payments', icon: ReceiptText, labelKey: 'staff_dashboard.nav.payments' },
   { id: 'pay', icon: BarChart3, labelKey: 'staff_dashboard.nav.pay' },
+  {
+    id: 'taxiq',
+    icon: Calculator,
+    image: '/assets/menu/tax-iq.svg',
+    labelKey: 'staff_dashboard.nav.taxiq',
+    children: [
+      { id: 'deductions', labelKey: 'staff_dashboard.nav.taxiq_deductions' },
+      { id: 'receipts', labelKey: 'staff_dashboard.nav.taxiq_receipts' },
+      { id: 'logs', labelKey: 'staff_dashboard.nav.taxiq_logs' },
+      { id: 'income', labelKey: 'staff_dashboard.nav.taxiq_income' },
+      { id: 'export', labelKey: 'staff_dashboard.nav.taxiq_export' },
+      { id: 'cpa-access', labelKey: 'staff_dashboard.nav.taxiq_cpa_access' },
+    ],
+  },
   { id: 'profile', icon: Settings, labelKey: 'staff_dashboard.nav.profile' },
 ]
 
@@ -49,7 +66,7 @@ export const STAFF_WORKSPACE_SUBMENU = [
   },
 ]
 
-export const STAFF_WORKSPACE_SCREEN_IDS = ['qr', 'payments', 'reviews', 'tips', 'earnings', 'salons']
+export const STAFF_WORKSPACE_SCREEN_IDS = ['qr', 'payments', 'reviews', 'tips', 'earnings', 'salons', 'taxiq']
 
 export function isStaffWorkspaceSubActive(
   activeScreen: string,
@@ -143,10 +160,30 @@ export function isStaffBottomNavItemActive(
   return true
 }
 
-export const STAFF_SCREENS = ['home', 'qr', 'tips', 'reviews', 'pay', 'payments', 'earnings', 'salons', 'profile', 'notifications']
+export const STAFF_SCREENS = ['home', 'qr', 'tips', 'reviews', 'pay', 'payments', 'earnings', 'salons', 'profile', 'notifications', 'taxiq']
+
+// Maps a Staff Tax IQ sidebar sub-item id -> the StaffTaxYear.enabledModules entry
+// that must be present for it to show. Sub-items absent from this table (income,
+// cpa-access) are always visible — there's no corresponding module toggle for them
+// in the real backend enum (backend/src/Domain/Enums/TaxIq/TaxIqModule.cs has only
+// 6 values; the BA doc's "Income Summary"/"Cash Tip Log"/"Tax Estimate"/"Year-End
+// Package" wording doesn't map 1:1 — see openspec/changes/
+// integrate-taxiq-staff-nav-onboarding/design.md D3, same precedent as the Owner
+// side's TAXIQ_MENU_CHILD_MODULE in dashboard/constants.tsx).
+export const STAFF_TAXIQ_MENU_CHILD_MODULE: Record<string, string> = {
+  deductions: 'DeductionTracking',
+  receipts: 'ReceiptManagement',
+  logs: 'MileageLog',
+  export: 'CPAExport',
+}
 
 const STAFF_ACTION_URL_ALIASES: Record<string, string> = {
   '/staff/businesses': '/staff',
+  // Backend sends this actionUrl for TaxIqPayoutPending/DisputeResolved/DisputeRejected
+  // (CreatePayoutRecordCommand, ResolvePayoutDisputeCommand) but the real staff route for
+  // confirming/viewing payouts is taxiq/payouts, not taxiq/income — alias it here rather
+  // than changing the backend-owned string.
+  '/staff/income': '/staff/taxiq/payouts',
 }
 
 export function resolveStaffNotificationActionUrl(

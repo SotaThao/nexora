@@ -24,8 +24,13 @@ export interface VoiceCreditPackageMock {
 export type VoiceCreditPaymentMock = SmsCreditPaymentMock
 export { SmsCreditPaymentId as VoiceCreditPaymentId }
 
-/** Same wallet payment options as SMS buy modal. */
-export const VOICE_CREDIT_PAYMENTS_MOCK = SMS_CREDIT_PAYMENTS_MOCK
+/**
+ * Wallet options shared with SMS buy modal.
+ * Card checkout UI is SMS-only for now (Voice still uses wallet list).
+ */
+export const VOICE_CREDIT_PAYMENTS_MOCK = SMS_CREDIT_PAYMENTS_MOCK.filter(
+  (method) => method.id !== SmsCreditPaymentId.Card,
+)
 
 export const VOICE_CREDIT_PACKAGES_MOCK: VoiceCreditPackageMock[] = [
   {

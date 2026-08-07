@@ -130,10 +130,11 @@ export function createStaffPaymentsRepository(client: HttpClient = httpClient) {
       return payment
     },
 
-    async acknowledge(paymentId: string): Promise<void> {
+    async acknowledge(paymentId: string, options?: { isForce?: boolean }): Promise<void> {
+      const body = options?.isForce ? { isForce: true } : {}
       await client.patch<void>(
         `/api/v1/staff/payments/${encodeURIComponent(paymentId)}/acknowledge`,
-        {},
+        body,
       )
     },
 

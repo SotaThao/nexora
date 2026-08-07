@@ -142,6 +142,9 @@ export type {
 type HttpClient = typeof httpClient
 
 const MERCHANT_VOICE_BASE = '/api/v1/merchant/nexora-voice'
+// Shared Service/Category catalog base — same endpoints POS Settings calls (see posServices.ts,
+// posCategories.ts). Service/Category consolidation, 2026-08-01.
+const SHARED_CATALOG_BASE = '/api/v1/merchant'
 const MERCHANT_VOICE_HEADERS = {
   'x-api-version': '1',
   'x-app-source': 'WebPortal',
@@ -328,7 +331,7 @@ export interface MerchantVoiceCallStatisticsDto {
 
 export interface MerchantVoiceCustomerDto {
   id: string
-  tenantId: string
+  businessId: string
   name: string | null
   phoneNumber: string | null
   email: string | null
@@ -747,6 +750,9 @@ function normalizeConfigResponse(response: unknown): MerchantVoiceConfigDto {
     } satisfies MerchantVoiceOperatingHourDto
   }).filter((row) => row.dayOfWeek)
 
+  const readBool = (value: unknown, fallback: boolean) =>
+    typeof value === 'boolean' ? value : fallback
+
   return {
     id: String(body.id ?? ''),
     name: String(body.name ?? ''),
@@ -763,10 +769,7 @@ function normalizeConfigResponse(response: unknown): MerchantVoiceConfigDto {
     description: String(body.description ?? ''),
     promotion: String(body.promotion ?? ''),
     promoSms: String(body.promoSms ?? ''),
-    sendSmsPromoEnabled:
-      typeof body.sendSmsPromoEnabled === 'boolean'
-        ? body.sendSmsPromoEnabled
-        : true,
+    sendSmsPromoEnabled: readBool(body.sendSmsPromoEnabled, true),
     timeZone: String(body.timeZone ?? ''),
     language: String(body.language ?? MerchantVoiceConfigLanguage.EnUS),
     welcomeGreeting: String(body.welcomeGreeting ?? ''),
@@ -819,14 +822,26 @@ function normalizeServiceDto(item: unknown, index = 0): MerchantVoiceServiceDto 
         : typeof row.DurationMinutes === 'number' && Number.isFinite(row.DurationMinutes)
           ? row.DurationMinutes
           : null,
-    note: (row.note ?? row.Note) ? String(row.note ?? row.Note) : null,
+    // `description`/`displayOrder`/`status` are the shared-catalog field names (Service/Category
+    // consolidation, 2026-08-01); `note`/`sortOrder`/`isActive` are the pre-consolidation Voice
+    // names — read both so this keeps working regardless of which shape the API returns.
+    note: (row.note ?? row.Note ?? row.description ?? row.Description)
+      ? String(row.note ?? row.Note ?? row.description ?? row.Description)
+      : null,
     icon: (row.icon ?? row.Icon) ? String(row.icon ?? row.Icon) : null,
     sortOrder: typeof row.sortOrder === 'number'
       ? row.sortOrder
       : typeof row.SortOrder === 'number'
         ? row.SortOrder
-        : index,
-    isActive: row.isActive !== false && row.IsActive !== false,
+        : typeof row.displayOrder === 'number'
+          ? row.displayOrder
+          : typeof row.DisplayOrder === 'number'
+            ? row.DisplayOrder
+            : index,
+    isActive:
+      row.isActive !== false && row.IsActive !== false
+      && row.status !== 'Inactive' && row.Status !== 'Inactive'
+      && row.status !== 1 && row.Status !== 1,
     categoryIds,
   }
 }
@@ -864,7 +879,11 @@ function normalizeServiceCategoriesResponse(response: unknown): MerchantVoiceSer
         ? row.sortOrder
         : typeof row.SortOrder === 'number'
           ? row.SortOrder
-          : index,
+          : typeof row.displayOrder === 'number'
+            ? row.displayOrder
+            : typeof row.DisplayOrder === 'number'
+              ? row.DisplayOrder
+              : index,
       isSystem: row.isSystem === true || row.IsSystem === true || id === OTHER_SERVICES_CATEGORY_ID,
       totalServices: typeof row.totalServices === 'number'
         ? row.totalServices
@@ -881,6 +900,27 @@ function normalizeServicesResponse(response: unknown): MerchantVoiceServiceDto[]
   return rows
     .map((item, index) => normalizeServiceDto(item, index))
     .filter((item): item is MerchantVoiceServiceDto => !!item)
+}
+
+/**
+ * Builds the multipart body the shared `/merchant/services` endpoint expects — Price and
+ * DurationMinutes are required there (unlike the pre-consolidation Voice-only fields), so a
+ * missing value defaults to 0/30 rather than being omitted.
+ */
+function buildSharedServiceFormData(
+  body: CreateMerchantVoiceServiceRequest | UpdateMerchantVoiceServiceRequest,
+): FormData {
+  const formData = new FormData()
+  formData.append('name', body.name.trim())
+  formData.append('price', String(body.price ?? 0))
+  formData.append('durationMinutes', String(body.durationMinutes ?? 30))
+  const description = body.note?.trim()
+  if (description) formData.append('description', description)
+  const icon = body.icon?.trim()
+  if (icon) formData.append('icon', icon)
+  ;(body.categoryIds ?? []).forEach((categoryId) => formData.append('categoryIds', categoryId))
+  formData.append('status', body.isActive === false ? 'Inactive' : 'Active')
+  return formData
 }
 
 function readField<T>(raw: Record<string, unknown>, camel: string, pascal: string): T | undefined {
@@ -1044,7 +1084,7 @@ function normalizeCustomerDto(item: unknown): MerchantVoiceCustomerDto {
   const raw = (item ?? {}) as Record<string, unknown>
   return {
     id: String(readField<unknown>(raw, 'id', 'Id') ?? ''),
-    tenantId: String(readField<unknown>(raw, 'tenantId', 'TenantId') ?? ''),
+    businessId: String(readField<unknown>(raw, 'businessId', 'BusinessId') ?? ''),
     name: (readField<string | null>(raw, 'name', 'Name') ?? null),
     phoneNumber: (readField<string | null>(raw, 'phoneNumber', 'PhoneNumber') ?? null),
     email: (readField<string | null>(raw, 'email', 'Email') ?? null),
@@ -1434,9 +1474,13 @@ export function createMerchantVoiceRepository(client: HttpClient = httpClient) {
       )
     },
 
+    // Service/Category catalog moved off the Voice-specific `${MERCHANT_VOICE_BASE}/service-categories|services`
+    // endpoints onto the shared catalog used by both Booking Hub Settings and POS Settings
+    // (Service/Category consolidation, 2026-08-01) — same table, so edits made from either
+    // screen show up in both immediately. See SHARED_CATALOG_BASE below.
     async getServiceCategories(): Promise<MerchantVoiceServiceCategoryDto[]> {
       const response = await client.get<unknown>(
-        `${MERCHANT_VOICE_BASE}/service-categories`,
+        `${SHARED_CATALOG_BASE}/categories`,
         { headers: MERCHANT_VOICE_HEADERS },
       )
       return normalizeServiceCategoriesResponse(response)
@@ -1444,7 +1488,7 @@ export function createMerchantVoiceRepository(client: HttpClient = httpClient) {
 
     async createServiceCategory(body: CreateMerchantVoiceServiceCategoryRequest): Promise<string> {
       const response = await client.post<unknown>(
-        `${MERCHANT_VOICE_BASE}/service-categories`,
+        `${SHARED_CATALOG_BASE}/categories`,
         {
           name: body.name.trim(),
           description: body.description?.trim() || null,
@@ -1459,11 +1503,10 @@ export function createMerchantVoiceRepository(client: HttpClient = httpClient) {
       body: UpdateMerchantVoiceServiceCategoryRequest,
     ): Promise<void> {
       await client.put<void>(
-        `${MERCHANT_VOICE_BASE}/service-categories/${encodeURIComponent(id)}`,
+        `${SHARED_CATALOG_BASE}/categories/${encodeURIComponent(id)}`,
         {
           name: body.name.trim(),
           description: body.description?.trim() || null,
-          sortOrder: body.sortOrder ?? null,
         },
         { headers: MERCHANT_VOICE_HEADERS },
       )
@@ -1471,60 +1514,38 @@ export function createMerchantVoiceRepository(client: HttpClient = httpClient) {
 
     async deleteServiceCategory(id: string): Promise<void> {
       await client.del<void>(
-        `${MERCHANT_VOICE_BASE}/service-categories/${encodeURIComponent(id)}`,
+        `${SHARED_CATALOG_BASE}/categories/${encodeURIComponent(id)}`,
         { headers: MERCHANT_VOICE_HEADERS },
       )
     },
 
     async getServices(): Promise<MerchantVoiceServiceDto[]> {
       const response = await client.get<unknown>(
-        `${MERCHANT_VOICE_BASE}/services`,
+        `${SHARED_CATALOG_BASE}/services`,
         { headers: MERCHANT_VOICE_HEADERS },
       )
       return normalizeServicesResponse(response)
     },
 
+    // The shared endpoint accepts multipart form data (it also handles POS's photo upload),
+    // even though Booking Hub's own service form has no photo field yet.
     async createService(body: CreateMerchantVoiceServiceRequest): Promise<string> {
-      const response = await client.post<unknown>(
-        `${MERCHANT_VOICE_BASE}/services`,
-        {
-          name: body.name.trim(),
-          price: body.price ?? null,
-          durationMinutes: body.durationMinutes ?? null,
-          note: body.note?.trim() || null,
-          icon: body.icon?.trim() || null,
-          isActive: body.isActive !== false,
-          // Other-only / uncategorised → null (never send the virtual Other id).
-          categoryIds: categoryIdsForWire(body.categoryIds),
-        },
-        { headers: MERCHANT_VOICE_HEADERS },
-      )
-      return String(response ?? '').trim()
+      const formData = buildSharedServiceFormData(body)
+      return await client.upload<string>(`${SHARED_CATALOG_BASE}/services`, formData, 'POST')
     },
 
     async updateService(id: string, body: UpdateMerchantVoiceServiceRequest): Promise<void> {
-      await client.put<void>(
-        `${MERCHANT_VOICE_BASE}/services/${encodeURIComponent(id)}`,
-        {
-          name: body.name.trim(),
-          price: body.price ?? null,
-          durationMinutes: body.durationMinutes ?? null,
-          note: body.note?.trim() || null,
-          icon: body.icon?.trim() || null,
-          isActive: body.isActive !== false,
-          sortOrder: body.sortOrder ?? null,
-          categoryIds:
-            body.categoryIds === undefined
-              ? undefined
-              : categoryIdsForWire(body.categoryIds),
-        },
-        { headers: MERCHANT_VOICE_HEADERS },
+      const formData = buildSharedServiceFormData(body)
+      await client.upload<void>(
+        `${SHARED_CATALOG_BASE}/services/${encodeURIComponent(id)}`,
+        formData,
+        'PUT',
       )
     },
 
     async deleteService(id: string): Promise<void> {
       await client.del<void>(
-        `${MERCHANT_VOICE_BASE}/services/${encodeURIComponent(id)}`,
+        `${SHARED_CATALOG_BASE}/services/${encodeURIComponent(id)}`,
         { headers: MERCHANT_VOICE_HEADERS },
       )
     },

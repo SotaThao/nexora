@@ -14,7 +14,13 @@ export const isValidPhone = (input: unknown) => {
   // Normalize thin spaces (U+2009) used by phone formatters before validation
   const normalizedPhone = phone.replace(/ /g, " ");
   try {
-    return isPossiblePhoneNumber(normalizedPhone);
+    // A bare national number (no "+" country prefix — e.g. this app's own
+    // formatNationalNumber output like "123-456-7890") is ambiguous without a
+    // default country: libphonenumber-js returns false rather than throwing,
+    // so every un-prefixed US number was rejected. "US" is only a fallback —
+    // an already "+"-prefixed number (any country) still parses by its own
+    // embedded country code and ignores this default.
+    return isPossiblePhoneNumber(normalizedPhone, "US");
   } catch {
     return digits.length >= 10 && digits.length <= 15;
   }

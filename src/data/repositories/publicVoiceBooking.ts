@@ -9,10 +9,12 @@ import {
   PUBLIC_VOICE_BOOKING_BASE,
   PUBLIC_VOICE_BOOKING_HEADERS,
   VoiceLeadSource,
+  toPublicBookingApiPhone,
   type BookingPageDataDto,
   type CreateOnlineBookingRequest,
   type CreateOnlineBookingResultDto,
   type PublicBookingCreateResult,
+  type PublicBookingCustomer,
   type PublicBookingOperatingHour,
   type PublicBookingPageData,
   type PublicBookingService,
@@ -137,6 +139,20 @@ function normalizeOperatingHour(raw: unknown): PublicBookingOperatingHour | null
   }
 }
 
+function normalizeCustomer(raw: unknown): PublicBookingCustomer | null {
+  if (raw == null) return null
+  const dto = asRecord(raw)
+  const phoneNumber = String(
+    readField(dto, 'phoneNumber', 'PhoneNumber') ?? '',
+  ).trim()
+  if (!phoneNumber) return null
+  const nameRaw = readField(dto, 'name', 'Name')
+  return {
+    name: nameRaw == null ? '' : String(nameRaw).trim(),
+    phoneNumber,
+  }
+}
+
 /**
  * Resolve selected service ids against the flat `services` list (authoritative).
  * Falls back to category-embedded services when flat list is empty.
@@ -238,6 +254,7 @@ export function normalizeBookingPageData(
     operatingHours: Array.isArray(hoursRaw)
       ? (hoursRaw.map(normalizeOperatingHour).filter(Boolean) as PublicBookingOperatingHour[])
       : [],
+    customer: normalizeCustomer(readField(raw, 'customer', 'Customer')),
   }
 }
 
@@ -424,13 +441,18 @@ export function formatServicePrice(price: number | null | undefined): string {
 
 export function createPublicVoiceBookingRepository(client: HttpClient = httpClient) {
   return {
-    async getBookingPageData(businessKey: string): Promise<PublicBookingPageData> {
+    async getBookingPageData(
+      businessKey: string,
+      phone?: string | null,
+    ): Promise<PublicBookingPageData> {
       const key = String(businessKey || '').trim()
+      const phoneParam = toPublicBookingApiPhone(phone)
       const res = await client.get<BookingPageDataDto>(
         `${PUBLIC_VOICE_BOOKING_BASE}/${encodeURIComponent(key)}/bookings`,
         {
           anonymous: true,
           headers: { ...PUBLIC_VOICE_BOOKING_HEADERS },
+          ...(phoneParam ? { params: { phone: phoneParam } } : {}),
         },
       )
       return normalizeBookingPageData(res)
@@ -443,9 +465,13 @@ export function createPublicVoiceBookingRepository(client: HttpClient = httpClie
     ): Promise<PublicBookingCreateResult> {
       const key = String(businessKey || '').trim()
       const sourceValue = String(source || '').trim() || VoiceLeadSource.Web
+      const payload: CreateOnlineBookingRequest = {
+        ...body,
+        customerPhone: toPublicBookingApiPhone(body.customerPhone),
+      }
       const res = await client.post<CreateOnlineBookingResultDto>(
         `${PUBLIC_VOICE_BOOKING_BASE}/${encodeURIComponent(key)}/bookings`,
-        body,
+        payload,
         {
           anonymous: true,
           headers: { ...PUBLIC_VOICE_BOOKING_HEADERS },

@@ -5,13 +5,19 @@ import {
   PhoneIncomingIcon,
   ShieldCheckIcon,
 } from '../BookingHubIcons'
+import CreditPaymentMethodList from '../creditCheckout/CreditPaymentMethodList'
+import { useCheckoutModalLock } from '../creditCheckout/useCheckoutModalLock'
+import {
+  SMS_CREDIT_PACKAGE_SELECTED_MARK,
+  formatSmsCreditPrice,
+  getSmsCreditNumberLocale,
+  getSmsCreditPaymentLabel,
+} from '../smsCampaigns/constants'
 import {
   VOICE_CREDIT_DEFAULT_PACKAGE_ID,
   VOICE_CREDIT_DEFAULT_PAYMENT_ID,
   VOICE_CREDIT_PACKAGES_MOCK,
   VOICE_CREDIT_PAYMENTS_MOCK,
-  VoiceCreditPackageId,
-  VoiceCreditPaymentId,
   type VoiceCreditPackageMock,
   type VoiceCreditPaymentMock,
 } from './constants'
@@ -38,31 +44,21 @@ export default function VoiceBuyCreditsModal({
   const [packageId, setPackageId] = useState(VOICE_CREDIT_DEFAULT_PACKAGE_ID)
   const [paymentId, setPaymentId] = useState(VOICE_CREDIT_DEFAULT_PAYMENT_ID)
 
-  useEffect(() => {
-    if (!open) {
-      if (!preserveBodyLock) document.body.style.overflow = ''
-      return undefined
-    }
+  useCheckoutModalLock({
+    open,
+    onClose,
+    locked: submitting,
+    preserveBodyLock,
+    closeButtonRef: closeBtnRef,
+  })
 
-    document.body.style.overflow = 'hidden'
+  useEffect(() => {
+    if (!open) return
     setPackageId(VOICE_CREDIT_DEFAULT_PACKAGE_ID)
     setPaymentId(VOICE_CREDIT_DEFAULT_PAYMENT_ID)
+  }, [open])
 
-    const onKeyDown = (event: KeyboardEvent) => {
-      if (event.key !== 'Escape' || submitting) return
-      event.stopImmediatePropagation()
-      onClose()
-    }
-    window.addEventListener('keydown', onKeyDown, true)
-    requestAnimationFrame(() => closeBtnRef.current?.focus())
-
-    return () => {
-      if (!preserveBodyLock) document.body.style.overflow = ''
-      window.removeEventListener('keydown', onKeyDown, true)
-    }
-  }, [open, onClose, submitting, preserveBodyLock])
-
-  const numberLocale = currentLanguage === 'vi' ? 'vi-VN' : 'en-US'
+  const numberLocale = getSmsCreditNumberLocale(currentLanguage)
 
   const selectedPackage = useMemo(
     () =>
@@ -76,6 +72,8 @@ export default function VoiceBuyCreditsModal({
       ?? VOICE_CREDIT_PAYMENTS_MOCK[0],
     [paymentId],
   )
+
+  const paymentLabel = getSmsCreditPaymentLabel(selectedPayment, '')
 
   if (!open) return null
 
@@ -126,7 +124,7 @@ export default function VoiceBuyCreditsModal({
                     type="button"
                     aria-pressed={selected}
                     disabled={submitting}
-                    onClick={() => setPackageId(pkg.id as VoiceCreditPackageId)}
+                    onClick={() => setPackageId(pkg.id)}
                   >
                     {pkg.featured ? (
                       <span className="sms-credit-package-badge">{t(`${TK}.bestValue`)}</span>
@@ -137,9 +135,13 @@ export default function VoiceBuyCreditsModal({
                         count: pkg.minutes.toLocaleString(numberLocale),
                       })}
                     </span>
-                    <span className="sms-credit-package-price">${pkg.price}</span>
+                    <span className="sms-credit-package-price">
+                      {formatSmsCreditPrice(pkg.price)}
+                    </span>
                     <span className="sms-credit-package-note">{t(`${TK}.${pkg.noteKey}`)}</span>
-                    <span className="sms-credit-package-check" aria-hidden="true">✓</span>
+                    <span className="sms-credit-package-check" aria-hidden="true">
+                      {SMS_CREDIT_PACKAGE_SELECTED_MARK}
+                    </span>
                   </button>
                 )
               })}
@@ -150,37 +152,14 @@ export default function VoiceBuyCreditsModal({
             <div className="sms-credit-section-label" id="voice-credit-payment-title">
               {t(`${TK}.paymentMethod`)}
             </div>
-            <div className="sms-credit-payment-list">
-              {VOICE_CREDIT_PAYMENTS_MOCK.map((method) => {
-                const selected = method.id === paymentId
-                return (
-                  <button
-                    key={method.id}
-                    className={`sms-credit-payment${selected ? ' is-selected' : ''}`}
-                    type="button"
-                    aria-pressed={selected}
-                    disabled={submitting}
-                    onClick={() => setPaymentId(method.id as VoiceCreditPaymentId)}
-                  >
-                    <span className="sms-credit-payment-main">
-                      <span className="sms-credit-radio" aria-hidden="true" />
-                      <img
-                        className="sms-credit-token"
-                        src={method.asset}
-                        alt=""
-                        width={28}
-                        height={28}
-                      />
-                      <span className="sms-credit-payment-name">{method.label}</span>
-                    </span>
-                    <span className="sms-credit-payment-balance">
-                      <span>{t(`${TK}.balance`)}</span>
-                      <strong>{method.balance}</strong>
-                    </span>
-                  </button>
-                )
-              })}
-            </div>
+            <CreditPaymentMethodList
+              methods={VOICE_CREDIT_PAYMENTS_MOCK}
+              selectedId={paymentId}
+              disabled={submitting}
+              t={t}
+              copyTk={TK}
+              onSelect={(nextId) => setPaymentId(nextId)}
+            />
           </section>
 
           <section className="sms-credit-section sms-credit-invoice" aria-labelledby="voice-credit-invoice-title">
@@ -198,11 +177,11 @@ export default function VoiceBuyCreditsModal({
             </div>
             <div className="sms-credit-invoice-row">
               <span>{t(`${TK}.invoicePayment`)}</span>
-              <strong>{selectedPayment.label}</strong>
+              <strong>{paymentLabel}</strong>
             </div>
             <div className="sms-credit-invoice-row sms-credit-invoice-total">
               <span>{t(`${TK}.invoiceTotal`)}</span>
-              <strong>${selectedPackage.price}</strong>
+              <strong>{formatSmsCreditPrice(selectedPackage.price)}</strong>
             </div>
           </section>
         </div>
