@@ -179,7 +179,8 @@ function normalizeServiceCategoryIds(
   const cleaned = [
     ...new Set(
       (categoryIds || [])
-        .map((id) => String(id || "").trim())
+        .filter((id): id is string => typeof id === "string")
+        .map((id) => id.trim())
         .filter(Boolean),
     ),
   ]
@@ -190,12 +191,22 @@ function primaryCategoryId(categoryIds: string[], fallbackId: string): string {
   return categoryIds[0] || fallbackId
 }
 
+function isOtherServicesCategory(category: {
+  id: string;
+  isSystem?: boolean;
+}): boolean {
+  return (
+    category.isSystem === true || category.id === OTHER_SERVICES_CATEGORY_ID
+  );
+}
+
 /** Real category ids for API. Default "Other services" is built-in — never send its id. */
 function categoryIdsForApi(categoryIds: string[]): string[] {
   return [
     ...new Set(
       categoryIds
-        .map((id) => String(id || "").trim())
+        .filter((id): id is string => typeof id === "string")
+        .map((id) => id.trim())
         .filter((id) => id && id !== OTHER_SERVICES_CATEGORY_ID),
     ),
   ]
@@ -203,10 +214,11 @@ function categoryIdsForApi(categoryIds: string[]): string[] {
 
 /**
  * API payload for service categories.
- * Built-in Other is never sent as an id — Other-only → `[]`.
+ * Built-in Other is never sent as an id — Other-only → `null`.
  */
-function categoryIdsPayloadForApi(categoryIds: string[]): string[] {
-  return categoryIdsForApi(categoryIds)
+function categoryIdsPayloadForApi(categoryIds: string[]): string[] | null {
+  const ids = categoryIdsForApi(categoryIds)
+  return ids.length > 0 ? ids : null
 }
 
 function sameCategoryIds(left: string[], right: string[]): boolean {
@@ -1312,18 +1324,39 @@ export default function BookingSettingsPanel() {
     });
   }, [categories, categoriesData]);
 
+  const serviceModalCategorySelection = useMemo(() => {
+    const realCategories = serviceModalCategoryOptions.filter(
+      (category) => !isOtherServicesCategory(category),
+    );
+    const onlyOther =
+      realCategories.length === 0 && serviceModalCategoryOptions.length > 0;
+    return { realCategories, onlyOther, hasRealCategories: realCategories.length > 0 };
+  }, [serviceModalCategoryOptions]);
+
+  useEffect(() => {
+    if (!serviceModalOpen || !serviceModalCategorySelection.onlyOther) return;
+    setServiceModalDraft((prev) => {
+      if (prev.categoryIds.includes(OTHER_SERVICES_CATEGORY_ID)) return prev;
+      return { ...prev, categoryIds: [OTHER_SERVICES_CATEGORY_ID] };
+    });
+  }, [serviceModalOpen, serviceModalCategorySelection.onlyOther]);
+
   const openServiceModal = (categoryId?: string) => {
-    const preferredCategoryIds = categoryId
-      ? categoryIdsForApi([categoryId])
-      : [];
+    const preferredId =
+      typeof categoryId === "string" ? categoryId.trim() : "";
+    const { onlyOther } = serviceModalCategorySelection;
+    // Only Other in catalog → auto-check. Else global Add → none; from group → that category.
+    const initialCategoryIds = onlyOther
+      ? [OTHER_SERVICES_CATEGORY_ID]
+      : !preferredId
+        ? []
+        : preferredId === OTHER_SERVICES_CATEGORY_ID
+          ? [OTHER_SERVICES_CATEGORY_ID]
+          : categoryIdsForApi([preferredId]);
     setServiceModalDraft({
       mode: "create",
       serviceId: null,
-      // Default to built-in Other (shown checked); real category wins when opened from a group.
-      categoryIds:
-        preferredCategoryIds.length > 0
-          ? preferredCategoryIds
-          : [OTHER_SERVICES_CATEGORY_ID],
+      categoryIds: initialCategoryIds,
       name: "",
       price: "",
       duration: "",
@@ -1338,7 +1371,6 @@ export default function BookingSettingsPanel() {
     setServiceModalDraft({
       mode: "edit",
       serviceId: service.id,
-      // Real categories when assigned; otherwise default-check built-in Other.
       categoryIds:
         assignedCategoryIds.length > 0
           ? assignedCategoryIds
@@ -1353,6 +1385,13 @@ export default function BookingSettingsPanel() {
   };
 
   const toggleServiceModalCategory = (categoryId: string) => {
+    const category = serviceModalCategoryOptions.find(
+      (item) => item.id === categoryId,
+    );
+    const isOther = category ? isOtherServicesCategory(category) : false;
+    if (isOther) {
+      return;
+    }
     setServiceModalError("");
     setServiceModalCategoriesError("");
     setServiceModalDraft((prev) => {
@@ -1365,7 +1404,10 @@ export default function BookingSettingsPanel() {
       }
       return {
         ...prev,
-        categoryIds: [...prev.categoryIds, categoryId],
+        categoryIds: [
+          ...prev.categoryIds.filter((id) => id !== OTHER_SERVICES_CATEGORY_ID),
+          categoryId,
+        ],
       };
     });
   };
@@ -1481,17 +1523,17 @@ export default function BookingSettingsPanel() {
     const selectedCategoryIds = [
       ...new Set(
         serviceModalDraft.categoryIds
-          .map((id) => String(id || "").trim())
+          .filter((id): id is string => typeof id === "string")
+          .map((id) => id.trim())
           .filter(Boolean),
       ),
     ];
-    // Other alone → [] on the API (built-in uncategorised group).
+    // Other alone → null on the API (built-in uncategorised group).
     const categoryIds = categoryIdsPayloadForApi(selectedCategoryIds);
     setServiceModalCategoriesError("");
     if (selectedCategoryIds.length === 0) {
-      const message = t(`${TK}.serviceModalCategoryRequired`);
-      setServiceModalCategoriesError(message);
-      setServiceModalError(message);
+      setServiceModalCategoriesError(t(`${TK}.serviceModalCategoryRequired`));
+      setServiceModalError("");
       return;
     }
     if (!name) {
@@ -1541,7 +1583,7 @@ export default function BookingSettingsPanel() {
           snapshot.duration === nextRow.duration &&
           sameCategoryIds(
             categoryIdsForApi(snapshot.categoryIds),
-            categoryIds,
+            categoryIds ?? [],
           )
         ) {
           setServiceModalOpen(false);
@@ -1609,6 +1651,12 @@ export default function BookingSettingsPanel() {
     } finally {
       setIsSavingService(false);
     }
+  };
+
+  const openServiceModalFromCategory = (categoryId: string) => {
+    setCategoryModalOpen(false);
+    setOpenServiceCategoryIds((prev) => new Set([...prev, categoryId]));
+    openServiceModal(categoryId);
   };
 
   const openCategoryModal = () => {
@@ -1965,7 +2013,7 @@ export default function BookingSettingsPanel() {
     return sections;
   }, [categories, services]);
 
-  // Keep accordion ids valid; seed first category open once when catalog first loads.
+  // Keep accordion ids valid when catalog changes; all categories start collapsed.
   useEffect(() => {
     if (catalogSections.length === 0) {
       setOpenServiceCategoryIds(new Set());
@@ -1973,9 +2021,7 @@ export default function BookingSettingsPanel() {
     }
     setOpenServiceCategoryIds((prev) => {
       const validIds = new Set(catalogSections.map((section) => section.id));
-      const next = new Set([...prev].filter((id) => validIds.has(id)));
-      if (next.size > 0) return next;
-      return new Set([catalogSections[0].id]);
+      return new Set([...prev].filter((id) => validIds.has(id)));
     });
   }, [catalogSections]);
 
@@ -2828,7 +2874,7 @@ export default function BookingSettingsPanel() {
             <button
               className="booking-primary-button"
               type="button"
-              onClick={openServiceModal}
+              onClick={() => openServiceModal()}
             >
               <PlusLgIcon />
               {t(`${TK}.enterManually`)}
@@ -2842,7 +2888,7 @@ export default function BookingSettingsPanel() {
                 <button
                   className="booking-primary-button"
                   type="button"
-                  onClick={openServiceModal}
+                  onClick={() => openServiceModal()}
                 >
                   <PlusLgIcon />
                   {t(`${TK}.servicesEmptyCta`)}
@@ -2869,10 +2915,10 @@ export default function BookingSettingsPanel() {
                         <span className="settings-service-category-name">
                           {section.name}
                         </span>
+                        <span className="settings-service-category-count">
+                          {formatCategoryServiceCount(categoryServices.length)}
+                        </span>
                       </button>
-                      <span className="settings-service-category-count">
-                        {formatCategoryServiceCount(categoryServices.length)}
-                      </span>
                       <button
                         type="button"
                         className="settings-service-category-add"
@@ -3342,16 +3388,24 @@ export default function BookingSettingsPanel() {
                       </div>
                     ) : (
                       serviceModalCategoryOptions.map((category) => {
-                        const checked =
-                          serviceModalDraft.categoryIds.includes(category.id);
+                        const isOther = isOtherServicesCategory(category);
+                        const { onlyOther, hasRealCategories } =
+                          serviceModalCategorySelection;
+                        const disabled =
+                          isOther && (onlyOther || hasRealCategories);
+                        const checked = isOther
+                          ? onlyOther ||
+                            serviceModalDraft.categoryIds.includes(category.id)
+                          : serviceModalDraft.categoryIds.includes(category.id);
                         return (
                           <label
                             key={category.id}
-                            className={`settings-service-modal-category-option${checked ? " is-selected" : ""}`}
+                            className={`settings-service-modal-category-option${checked ? " is-selected" : ""}${disabled ? " is-disabled" : ""}`}
                           >
                             <input
                               type="checkbox"
                               checked={checked}
+                              disabled={disabled}
                               onChange={() => {
                                 toggleServiceModalCategory(category.id);
                               }}
@@ -3560,46 +3614,53 @@ export default function BookingSettingsPanel() {
                         >
                           <div className="settings-category-row-main">
                             <FolderTreeIcon className="settings-category-row-icon" />
-                            <input
-                              ref={isActiveRow ? categoryInputRef : undefined}
-                              className="settings-category-name-input"
-                              type="text"
-                              value={draft.name}
-                              disabled={
-                                draft.isSystem ||
-                                (!draft.isNew && !draft.isEditing) ||
-                                isSavingCategories
-                              }
-                              placeholder={
-                                draft.isNew
-                                  ? t(`${TK}.categoryNamePlaceholder`)
-                                  : undefined
-                              }
-                              aria-label={t(`${TK}.categoryModalCategories`)}
-                              onChange={(event) =>
-                                updateCategoryDraft(index, event.target.value)
-                              }
-                              onKeyDown={(event) => {
-                                if (event.key === "Enter") {
-                                  event.preventDefault();
-                                  if (draft.isNew) {
-                                    void confirmCreateCategory(index);
-                                  } else if (draft.isEditing) {
-                                    void confirmRenameCategory(index);
+                            <div className="settings-category-row-label">
+                              <input
+                                ref={isActiveRow ? categoryInputRef : undefined}
+                                className="settings-category-name-input"
+                                type="text"
+                                value={draft.name}
+                                size={
+                                  draft.isNew || draft.isEditing
+                                    ? undefined
+                                    : Math.max(draft.name.length, 1)
+                                }
+                                disabled={
+                                  draft.isSystem ||
+                                  (!draft.isNew && !draft.isEditing) ||
+                                  isSavingCategories
+                                }
+                                placeholder={
+                                  draft.isNew
+                                    ? t(`${TK}.categoryNamePlaceholder`)
+                                    : undefined
+                                }
+                                aria-label={t(`${TK}.categoryModalCategories`)}
+                                onChange={(event) =>
+                                  updateCategoryDraft(index, event.target.value)
+                                }
+                                onKeyDown={(event) => {
+                                  if (event.key === "Enter") {
+                                    event.preventDefault();
+                                    if (draft.isNew) {
+                                      void confirmCreateCategory(index);
+                                    } else if (draft.isEditing) {
+                                      void confirmRenameCategory(index);
+                                    }
                                   }
-                                }
-                                if (event.key === "Escape" && isActiveRow) {
-                                  event.preventDefault();
-                                  cancelCategoryRow(index);
-                                }
-                              }}
-                            />
-                            <span
-                              className="settings-category-count"
-                              title={formatCategoryServiceCount(serviceCount)}
-                            >
-                              {formatCategoryServiceCount(serviceCount)}
-                            </span>
+                                  if (event.key === "Escape" && isActiveRow) {
+                                    event.preventDefault();
+                                    cancelCategoryRow(index);
+                                  }
+                                }}
+                              />
+                              <span
+                                className="settings-category-count"
+                                title={formatCategoryServiceCount(serviceCount)}
+                              >
+                                {formatCategoryServiceCount(serviceCount)}
+                              </span>
+                            </div>
                           </div>
                           <div className="settings-category-row-actions">
                             {draft.isNew || draft.isEditing ? (
@@ -3639,6 +3700,20 @@ export default function BookingSettingsPanel() {
                               </>
                             ) : (
                               <>
+                                {draft.id ? (
+                                  <button
+                                    className="settings-category-row-add-service"
+                                    type="button"
+                                    disabled={isSavingCategories}
+                                    aria-label={t(`${TK}.addService`)}
+                                    onClick={() => {
+                                      openServiceModalFromCategory(draft.id);
+                                    }}
+                                  >
+                                    <PlusLgIcon />
+                                    {t(`${TK}.addService`)}
+                                  </button>
+                                ) : null}
                                 {canEdit ? (
                                   <button
                                     className="settings-category-row-action"

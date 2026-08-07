@@ -530,7 +530,7 @@ export interface CreateMerchantVoiceServiceRequest {
   note?: string | null
   icon?: string | null
   isActive?: boolean
-  /** Real category ids; Other-only / uncategorised → `[]` */
+  /** Real category ids; Other-only / uncategorised → `null` */
   categoryIds?: string[] | null
 }
 
@@ -542,7 +542,7 @@ export interface UpdateMerchantVoiceServiceRequest {
   icon?: string | null
   isActive?: boolean
   sortOrder?: number | null
-  /** Omit / null = leave categories; [] = clear; array = replace */
+  /** Omit = leave categories; null / [] = Other-only clear; array = replace */
   categoryIds?: string[] | null
 }
 
@@ -774,15 +774,37 @@ function normalizeConfigResponse(response: unknown): MerchantVoiceConfigDto {
   }
 }
 
+function sanitizeCategoryIdsForWire(value: unknown): string[] {
+  if (!Array.isArray(value)) return []
+  return [
+    ...new Set(
+      value
+        .filter((id): id is string => typeof id === 'string')
+        .map((id) => id.trim())
+        .filter(
+          (id) =>
+            Boolean(id)
+            && id !== OTHER_SERVICES_CATEGORY_ID
+            && id !== '[object Object]',
+        ),
+    ),
+  ]
+}
+
+/** Wire payload: Other-only / empty → `null`; otherwise real category ids. */
+function categoryIdsForWire(value: unknown): string[] | null {
+  if (value == null) return null
+  const ids = sanitizeCategoryIdsForWire(value)
+  return ids.length > 0 ? ids : null
+}
+
 function normalizeServiceDto(item: unknown, index = 0): MerchantVoiceServiceDto | null {
   if (!item || typeof item !== 'object') return null
   const row = item as Record<string, unknown>
   const name = String(row.name ?? row.Name ?? '').trim()
   if (!name) return null
   const categoryIdsRaw = row.categoryIds ?? row.CategoryIds
-  const categoryIds = Array.isArray(categoryIdsRaw)
-    ? categoryIdsRaw.map((id) => String(id).trim()).filter(Boolean)
-    : []
+  const categoryIds = sanitizeCategoryIdsForWire(categoryIdsRaw)
   return {
     id: String(row.id ?? row.Id ?? ''),
     name,
@@ -1472,8 +1494,8 @@ export function createMerchantVoiceRepository(client: HttpClient = httpClient) {
           note: body.note?.trim() || null,
           icon: body.icon?.trim() || null,
           isActive: body.isActive !== false,
-          // Other-only / uncategorised → [] (never send the virtual Other id).
-          categoryIds: Array.isArray(body.categoryIds) ? body.categoryIds : [],
+          // Other-only / uncategorised → null (never send the virtual Other id).
+          categoryIds: categoryIdsForWire(body.categoryIds),
         },
         { headers: MERCHANT_VOICE_HEADERS },
       )
@@ -1491,7 +1513,10 @@ export function createMerchantVoiceRepository(client: HttpClient = httpClient) {
           icon: body.icon?.trim() || null,
           isActive: body.isActive !== false,
           sortOrder: body.sortOrder ?? null,
-          categoryIds: body.categoryIds === undefined ? null : body.categoryIds,
+          categoryIds:
+            body.categoryIds === undefined
+              ? undefined
+              : categoryIdsForWire(body.categoryIds),
         },
         { headers: MERCHANT_VOICE_HEADERS },
       )
