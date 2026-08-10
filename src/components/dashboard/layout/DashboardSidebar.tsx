@@ -5,7 +5,28 @@ import { useNavigate, useSearchParams, useLocation } from 'react-router-dom'
 import { ChevronUp, ChevronDown, LogOut } from 'lucide-react'
 import { useTranslation } from '../../../contexts/LanguageContext'
 import { useOpenProductManagement } from '../../../data/hooks/useOpenProductManagement'
-import { visibleMenuItems, MERCHANT_SIDEBAR_MENU_ITEMS, TAXIQ_SUBMENU, TAXIQ_MENU_CHILD_MODULE, POS_SUBMENU, isPaymentsPayoutsRouteActive, getVisibleBookingHubSubmenu, isBookingHubSubActive, VISIBLE_TOUCHPOINTS_SUBMENU, GIFT_CARD_CENTER_SUBMENU, DASHBOARD_MENU, DASHBOARD_MENU_ID, bookingHubPath, getDefaultBookingHubTab, getDashboardMenuLocalizedLabel, isDashboardStaffRole } from '../constants'
+import { 
+	visibleMenuItems, 
+	MERCHANT_SIDEBAR_MENU_ITEMS, 
+	TAXIQ_SUBMENU, 
+	TAXIQ_MENU_CHILD_MODULE, 
+	POS_SUBMENU, 
+	isPaymentsPayoutsRouteActive, 
+	getVisibleBookingHubSubmenu, 
+	isBookingHubSubActive, 
+	VISIBLE_TOUCHPOINTS_SUBMENU, 
+	GIFT_CARD_CENTER_SUBMENU, 
+	DASHBOARD_MENU, 
+	DASHBOARD_MENU_ID, 
+	bookingHubPath, 
+	getDefaultBookingHubTab, 
+	getDashboardMenuLocalizedLabel, 
+	buildDashboardMenuPath, 
+	isPackageManagementSubActive,
+	PACKAGE_MANAGEMENT_SUBMENU,
+	packageManagementPath,
+	isDashboardStaffRole } from '../constants'
+import { PackageManagementTab } from '../views/packageManagement/constants'
 import { handleExpandableMenuClick } from '../hooks/expandableMenuNav'
 import MenuIcon from '../../ui/MenuIcon'
 import HomepageLink from '../../ui/HomepageLink'
@@ -13,10 +34,7 @@ import LanguageSwitcher from '../../ui/LanguageSwitcher'
 import SidebarPlanCard from '../../ui/SidebarPlanCard'
 import PaymentsPayoutsMenuSection from './PaymentsPayoutsMenuSection'
 import { useMerchantVoiceTenantStatus } from '../../../data/hooks/useMerchantVoiceBookings'
-import { getSubscriptionSidebarCopy } from '../../../utils/subscriptionDisplay'
-import { useMerchantSetup } from '../../../data/hooks/useMerchantSetup'
-import { useOwnerTaxYearByBusiness } from '../../../data/hooks/useTaxiqOwnerTaxYear'
-import { useAuth } from '../../../auth/useAuth'
+import { getSubscriptionSidebarCopy, getTipPlatformSubscription } from '../../../utils/subscriptionDisplay'
 import {
   SIDEBAR_SHELL_CLASS,
   SIDEBAR_NAV_CLASS,
@@ -28,6 +46,9 @@ import {
   sidebarMenuItemBetweenClass,
   sidebarSubmenuItemClass,
 } from '../../ui/sidebarMenuStyles'
+import useAuth from '../../../auth/useAuth'
+import { useMerchantSetup } from '../../../data/hooks/useMerchantSetup'
+import { useOwnerTaxYearByBusiness } from '../../../data/hooks/useTaxiqOwnerTaxYear'
 
 export default function DashboardSidebar({
   isOpen = true,
@@ -80,6 +101,9 @@ export default function DashboardSidebar({
   const enabledTaxiqModules = ownerTaxYearPage?.items?.[0]?.enabledModules
   const [isTouchpointsExpanded, setIsTouchpointsExpanded] = useState(activeMenu === DASHBOARD_MENU.Touchpoints)
   const [isBookingHubExpanded, setIsBookingHubExpanded] = useState(activeMenu === DASHBOARD_MENU.BookingHub)
+  const [isPackageManagementExpanded, setIsPackageManagementExpanded] = useState(
+    activeMenu === DASHBOARD_MENU.PackageManagement,
+  )
   const [isGiftCardCenterExpanded, setIsGiftCardCenterExpanded] = useState(false)
 
   useEffect(() => {
@@ -90,6 +114,7 @@ export default function DashboardSidebar({
     setIsTaxIqExpanded(activeMenu === DASHBOARD_MENU.TaxIq)
     setIsPosExpanded(activeMenu === DASHBOARD_MENU.Pos)
     setIsBookingHubExpanded(activeMenu === DASHBOARD_MENU.BookingHub)
+    setIsPackageManagementExpanded(activeMenu === DASHBOARD_MENU.PackageManagement)
   }, [activeMenu, isPaymentsPayoutsActive])
 
   const handlePaymentsPayoutsToggle = () => {
@@ -103,6 +128,7 @@ export default function DashboardSidebar({
     setIsTouchpointsExpanded(false)
     setIsTaxIqExpanded(false)
     setIsBookingHubExpanded(false)
+    setIsPackageManagementExpanded(false)
     setIsGiftCardCenterExpanded(false)
   }
 
@@ -111,6 +137,7 @@ export default function DashboardSidebar({
       setIsGiftCardCenterExpanded((prev) => !prev)
       setIsTouchpointsExpanded(false)
       setIsBookingHubExpanded(false)
+      setIsPackageManagementExpanded(false)
       setIsPaymentsPayoutsExpanded(false)
       return
     }
@@ -119,6 +146,15 @@ export default function DashboardSidebar({
       clickedId: id,
       activeMenu,
       sections: [
+        {
+          id: DASHBOARD_MENU.PackageManagement,
+          setExpanded: setIsPackageManagementExpanded,
+          enter: () => {
+            navigate(packageManagementPath(PackageManagementTab.Overview), {
+              replace: true,
+            })
+          },
+        },
         {
           id: DASHBOARD_MENU.Touchpoints,
           setExpanded: setIsTouchpointsExpanded,
@@ -155,7 +191,8 @@ export default function DashboardSidebar({
   }
 
   const subscriptionCopy = getSubscriptionSidebarCopy(
-    subscription ?? profile?.subscription,
+    // Sidebar plan = TipPlatform (/dashboard/subscriptions), never VoiceAI (AI Hub).
+    subscription ?? getTipPlatformSubscription(profile),
     t,
     currentLanguage,
   )
@@ -254,10 +291,10 @@ export default function DashboardSidebar({
                 type="button"
                 onClick={() => handleMenuClick(id)}
                 disabled={id === DASHBOARD_MENU_ID.productManagement && isOpeningProductManagement}
-                className={sidebarMenuItemBetweenClass(isActive || (id === DASHBOARD_MENU_ID.productManagement && isGiftCardCenterExpanded))}
+                className={sidebarMenuItemBetweenClass(isActive || (id === DASHBOARD_MENU_ID.productManagement && isGiftCardCenterExpanded) || (id === DASHBOARD_MENU_ID.packageManagement && isPackageManagementExpanded))}
               >
                 <div className="flex items-center gap-3 min-w-0">
-                  <MenuIcon item={item} active={isActive || (id === DASHBOARD_MENU_ID.productManagement && isGiftCardCenterExpanded)} />
+                  <MenuIcon item={item} active={isActive || (id === DASHBOARD_MENU_ID.productManagement && isGiftCardCenterExpanded) || (id === DASHBOARD_MENU_ID.packageManagement && isPackageManagementExpanded)} />
                   <span className="truncate">{localizedLabel}</span>
                 </div>
                 {id === DASHBOARD_MENU_ID.productManagement ? (
@@ -265,6 +302,14 @@ export default function DashboardSidebar({
                     {isOpeningProductManagement ? (
                       <span className="block h-4 w-4 animate-spin rounded-full border-2 border-white/30 border-t-white" />
                     ) : isGiftCardCenterExpanded ? (
+                      <ChevronUp className="h-4 w-4" />
+                    ) : (
+                      <ChevronDown className="h-4 w-4" />
+                    )}
+                  </div>
+                ): id === DASHBOARD_MENU_ID.packageManagement ? (
+                  <div className="text-white/50 shrink-0">
+                    {isPackageManagementExpanded ? (
                       <ChevronUp className="h-4 w-4" />
                     ) : (
                       <ChevronDown className="h-4 w-4" />
@@ -315,6 +360,34 @@ export default function DashboardSidebar({
                         {isSubOpening ? (
                           <span className="h-3.5 w-3.5 shrink-0 animate-spin rounded-full border-2 border-white/30 border-t-white" />
                         ) : null}
+                      </button>
+                    )
+                  })}
+                </div>
+              )}
+
+              {id === DASHBOARD_MENU.PackageManagement && isPackageManagementExpanded && (
+                <div className={SIDEBAR_SUBMENU_WRAP_CLASS}>
+                  {PACKAGE_MANAGEMENT_SUBMENU.map((sub) => {
+                    const isSubActive = isPackageManagementSubActive(
+                      activeMenu,
+                      activeSubTab,
+                      sub.id,
+                    )
+                    return (
+                      <button
+                        key={sub.id}
+                        type="button"
+                        onClick={() => {
+                          navigate(packageManagementPath(sub.id), { replace: true })
+                          setIsPackageManagementExpanded(true)
+                        }}
+                        className={sidebarSubmenuItemClass(isSubActive)}
+                      >
+                        <div
+                          className={`h-1.5 w-1.5 rounded-full ${isSubActive ? 'bg-brandCyan shadow-sm' : 'bg-white/30'}`}
+                        />
+                        <span>{t(sub.labelKey)}</span>
                       </button>
                     )
                   })}
@@ -428,7 +501,10 @@ export default function DashboardSidebar({
         {userRole !== 'staff' && (
           <SidebarPlanCard
             subscriptionCopy={subscriptionCopy}
-            onManagePlan={() => setActiveMenu('subscriptions')}
+            onManagePlan={() => {
+              // Absolute path — avoid AI Hub setSearchParams racing this nav under startTransition.
+              navigate(packageManagementPath(PackageManagementTab.Subscriptions))
+            }}
             t={t}
           />
         )}

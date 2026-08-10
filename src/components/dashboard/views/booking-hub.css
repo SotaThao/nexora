@@ -3053,8 +3053,8 @@ body.booking-appointment-panel-modal-open {
     transform 0.2s;
 }
 
-.booking-hub-view .service-plan-card:hover,
-.booking-hub-view .service-plan-card.is-recommended,
+.booking-hub-view .service-plan-card:hover:not(.is-locked-plan):not(.is-current-plan),
+.booking-hub-view .service-plan-card.is-recommended:not(.is-locked-plan),
 .booking-hub-view .service-plan-card.is-selected {
   border-color: rgba(70, 72, 216, 0.38);
   box-shadow: var(--nexora-soft-shadow);
@@ -3152,6 +3152,16 @@ body.booking-appointment-panel-modal-open {
   line-height: 1.45;
 }
 
+.booking-hub-view .plan-action-stack {
+  display: grid;
+  gap: 10px;
+  margin-top: auto;
+}
+
+.booking-hub-view .plan-action-stack .plan-select-button {
+  margin-top: 0;
+}
+
 .booking-hub-view .plan-select-button {
   width: 100%;
   margin-top: auto;
@@ -3178,6 +3188,14 @@ body.booking-appointment-panel-modal-open {
   box-shadow: 0 10px 22px rgba(70, 72, 216, 0.22);
 }
 
+/* Outline CTA — must follow filled primary so it wins inside recommended card */
+.booking-hub-view .service-plan-card.is-recommended .plan-select-button.plan-buy-button {
+  border-color: var(--nexora-brand);
+  background: #fff;
+  color: var(--nexora-brand);
+  box-shadow: none;
+}
+
 .booking-hub-view .plan-select-button:hover {
   transform: translateY(-1px);
 }
@@ -3187,6 +3205,100 @@ body.booking-appointment-panel-modal-open {
   opacity: 0.6;
   transform: none;
   box-shadow: none;
+}
+
+.booking-hub-view .plan-select-button.is-current {
+  border-color: transparent;
+  background: var(--nexora-success, #16a34a);
+  color: #fff;
+  opacity: 1;
+  box-shadow: 0 10px 22px rgba(22, 163, 74, 0.22);
+  cursor: default;
+}
+
+.booking-hub-view .plan-select-button.is-locked,
+.booking-hub-view .plan-select-button.is-locked:disabled {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  width: 100%;
+  min-height: 44px;
+  border-color: #d4cfe3;
+  background: #f3f1f8;
+  color: #746f8c;
+  font-size: 13px;
+  font-weight: 800;
+  opacity: 1;
+  box-shadow: none;
+  cursor: not-allowed;
+  transform: none;
+}
+
+.booking-hub-view .plan-lock-icon {
+  width: 16px;
+  height: 16px;
+  flex-shrink: 0;
+}
+
+.booking-hub-view .plan-renew-label {
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  min-height: 2.75rem;
+  text-align: center;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  line-height: 1.35;
+  color: var(--nexora-success, #16a34a);
+}
+
+.booking-hub-view .plan-renew-label.is-spacer {
+  visibility: hidden;
+}
+
+.booking-hub-view .service-plan-card.is-current-plan {
+  border: 2px solid color-mix(in srgb, var(--nexora-success, #16a34a) 70%, #fff);
+  background: linear-gradient(
+    160deg,
+    color-mix(in srgb, var(--nexora-success, #16a34a) 12%, #fff),
+    #fff 48%
+  );
+  box-shadow:
+    0 12px 28px rgba(22, 163, 74, 0.14),
+    0 0 0 1px color-mix(in srgb, var(--nexora-success, #16a34a) 18%, transparent);
+  transform: none;
+}
+
+.booking-hub-view .service-plan-card.is-locked-plan {
+  opacity: 1;
+  border: 1px solid #d4cfe3;
+  background: #faf9fc;
+  box-shadow: none;
+  transform: none;
+}
+
+.booking-hub-view .service-plan-card.is-locked-plan:hover {
+  border-color: #d4cfe3;
+  transform: none;
+  box-shadow: none;
+}
+
+.booking-hub-view .service-plan-card.is-current-plan:hover {
+  border-color: color-mix(in srgb, var(--nexora-success, #16a34a) 80%, #fff);
+  box-shadow:
+    0 14px 30px rgba(22, 163, 74, 0.18),
+    0 0 0 1px color-mix(in srgb, var(--nexora-success, #16a34a) 22%, transparent);
+  transform: none;
+}
+
+.booking-hub-view .service-plan-card.is-current-plan .plan-rec {
+  color: var(--nexora-success, #16a34a);
+}
+
+.booking-hub-view .plan-action-stack.is-current-actions {
+  gap: 8px;
 }
 
 .booking-hub-view .roi-panel,
@@ -12521,6 +12633,17 @@ body.booking-appointment-panel-modal-open {
   font-weight: 900;
 }
 
+:is(#nx-campaign-root, .nx-campaign-root) .plan-payment-method-skeleton-row {
+  pointer-events: none;
+  cursor: default;
+}
+
+:is(#nx-campaign-root, .nx-campaign-root) .plan-payment-method-skeleton-row .sms-credit-payment-balance {
+  display: grid;
+  justify-items: end;
+  gap: 4px;
+}
+
 :is(#nx-campaign-root, .nx-campaign-root) .sms-credit-card-method-icon {
   width: 28px;
   height: 28px;
@@ -12538,6 +12661,41 @@ body.booking-appointment-panel-modal-open {
   border-radius: 9px;
   background: #fff;
   padding: 12px;
+}
+
+/* Package Payment dialog — no orange frame, tighter spacing, keep 2-col rows. */
+:is(#nx-campaign-root, .nx-campaign-root) .sms-credit-card-form.is-subscription-checkout {
+  margin-top: 8px;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  padding: 0;
+}
+
+:is(#nx-campaign-root, .nx-campaign-root) .sms-credit-card-form.is-subscription-checkout .sms-credit-card-required-note {
+  margin-top: 0;
+}
+
+:is(#nx-campaign-root, .nx-campaign-root) .sms-credit-card-form.is-subscription-checkout .sms-credit-card-fields {
+  gap: 8px;
+  margin-top: 8px;
+}
+
+:is(#nx-campaign-root, .nx-campaign-root) .sms-credit-card-form.is-subscription-checkout .sms-credit-card-field {
+  gap: 4px;
+}
+
+:is(#nx-campaign-root, .nx-campaign-root) .sms-credit-card-form.is-subscription-checkout .sms-credit-card-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+  align-items: end;
+}
+
+:is(#nx-campaign-root, .nx-campaign-root) .sms-credit-card-form.is-subscription-checkout .sms-credit-card-input,
+:is(#nx-campaign-root, .nx-campaign-root) .sms-credit-card-form.is-subscription-checkout .subscription-stripe-card-field {
+  min-height: 36px;
+  padding: 6px 10px;
 }
 
 :is(#nx-campaign-root, .nx-campaign-root) .sms-credit-card-form-head {
@@ -12599,6 +12757,37 @@ body.booking-appointment-panel-modal-open {
 :is(#nx-campaign-root, .nx-campaign-root) .sms-credit-card-select:focus {
   border-color: var(--nexora-brand);
   box-shadow: 0 0 0 3px rgba(70, 72, 216, 0.1);
+}
+
+.subscription-stripe-card-field {
+  width: 100%;
+  min-height: 35px;
+  box-sizing: border-box;
+  border: 1px solid #d8dee8;
+  border-radius: 8px;
+  background: #fff;
+  padding: 8px 10px;
+}
+
+.subscription-stripe-card-field .StripeElement,
+.subscription-stripe-card-field .__PrivateStripeElement {
+  display: block;
+  width: 100%;
+}
+
+.subscription-stripe-card-field iframe {
+  display: block;
+  width: 100% !important;
+  min-height: 20px;
+  pointer-events: auto !important;
+}
+
+.subscription-stripe-card-field--with-icon {
+  padding-left: 34px;
+}
+
+:is(#nx-campaign-root, .nx-campaign-root) .sms-credit-card-input-wrap .subscription-stripe-card-field--with-icon {
+  padding-left: 34px;
 }
 
 :is(#nx-campaign-root, .nx-campaign-root) .sms-credit-card-input[aria-invalid='true'],
@@ -12874,6 +13063,10 @@ body.booking-appointment-panel-modal-open {
   }
 
   :is(#nx-campaign-root, .nx-campaign-root) .sms-credit-card-row {
+    grid-template-columns: 1fr;
+  }
+
+  :is(#nx-campaign-root, .nx-campaign-root) .sms-credit-card-form.is-subscription-checkout .sms-credit-card-row {
     grid-template-columns: 1fr;
   }
 
@@ -13330,13 +13523,6 @@ body.booking-appointment-panel-modal-open {
   line-height: 1.5;
 }
 
-.booking-hub-view .credits-voice-warning .credits-actions {
-  width: auto;
-  flex: 0 0 auto;
-  align-self: center;
-  margin-top: 2px;
-}
-
 .booking-hub-view .credits-card-head {
   display: flex;
   min-width: 0;
@@ -13493,6 +13679,20 @@ body.booking-appointment-panel-modal-open {
   line-height: 1.35;
 }
 
+.booking-hub-view .credits-topup-balance-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 12px;
+  margin-top: auto;
+}
+
+.booking-hub-view .credits-topup-balance-row .credits-plan-remaining {
+  flex: 1 1 auto;
+  margin-top: 0;
+}
+
 .booking-hub-view .credits-actions {
   display: flex;
   flex-wrap: wrap;
@@ -13500,6 +13700,49 @@ body.booking-appointment-panel-modal-open {
   justify-content: flex-end;
   gap: 8px;
   margin-top: 10px;
+}
+
+.booking-hub-view .credits-topup-actions {
+  flex: 0 0 auto;
+  justify-content: flex-end;
+  margin-top: 0;
+}
+
+.booking-hub-view .credits-topup-actions .credits-action {
+  flex: 0 0 auto;
+  min-width: 0;
+  border-radius: 7px;
+  padding: 6px 8px;
+  font-size: clamp(0.625rem, 0.6rem + 0.1vw, 0.6875rem); /* 10–11px */
+  font-weight: 700;
+}
+
+.booking-hub-view .credits-topup-actions .credits-action-voice {
+  border-color: #1264df;
+  background: #1264df;
+  color: #fff;
+  box-shadow: 0 5px 12px rgba(18, 100, 223, 0.2);
+}
+
+.booking-hub-view .credits-topup-actions .credits-action-voice:hover,
+.booking-hub-view .credits-topup-actions .credits-action-voice:focus-visible {
+  border-color: #0f57c7;
+  background: #0f57c7;
+  color: #fff;
+}
+
+.booking-hub-view .credits-topup-actions .credits-action-sms {
+  border-color: #168b55;
+  background: #168b55;
+  color: #fff;
+  box-shadow: 0 5px 12px rgba(22, 139, 85, 0.2);
+}
+
+.booking-hub-view .credits-topup-actions .credits-action-sms:hover,
+.booking-hub-view .credits-topup-actions .credits-action-sms:focus-visible {
+  border-color: #0f7446;
+  background: #0f7446;
+  color: #fff;
 }
 
 .booking-hub-view .credits-label {
@@ -13701,6 +13944,12 @@ body.booking-appointment-panel-modal-open {
   font-weight: normal;
 }
 
+.booking-hub-view .credits-history-activity small {
+  color: var(--nexora-subtle);
+  font-size: 10px;
+  font-weight: 700;
+}
+
 .booking-hub-view .credits-history-date {
   display: grid;
   gap: 2px;
@@ -13720,6 +13969,63 @@ body.booking-appointment-panel-modal-open {
 .booking-hub-view .credits-amount-positive {
   color: #07834f;
   font-weight: 800;
+}
+
+.booking-hub-view .package-history-section {
+  margin-top: 0;
+  font-family: Inter, system-ui, sans-serif;
+}
+
+.booking-hub-view .package-history-section,
+.booking-hub-view .package-history-section * {
+  font-family: inherit;
+}
+
+.booking-hub-view .package-history-plan-table {
+  min-width: 960px;
+}
+
+.booking-hub-view .package-history-plan-amount {
+  color: var(--nexora-text);
+  font-weight: 900 !important;
+}
+
+.booking-hub-view .package-history-status {
+  display: inline-flex;
+  border-radius: 999px;
+  padding: 4px 8px;
+  font-size: 10px;
+  font-weight: 900;
+}
+
+.booking-hub-view .package-history-status.is-active {
+  background: #e6fbf2;
+  color: #008f5a;
+}
+
+.booking-hub-view .package-history-status.is-expired {
+  background: #fff1f0;
+  color: #c2410c;
+}
+
+.booking-hub-view .package-history-status.is-pending {
+  background: #fff8e8;
+  color: #b45309;
+}
+
+.booking-hub-view .package-history-status.is-failed {
+  background: #fef2f2;
+  color: #b91c1c;
+}
+
+.booking-hub-view .package-history-transaction {
+  border-radius: 6px;
+  background: #f3f6fa;
+  padding: 4px 7px;
+  color: var(--nexora-brand);
+  font-family: inherit;
+  font-size: 10px;
+  font-weight: 900;
 }
 
 /* Tablet: stack credit cards, stretch view switch */
@@ -13769,15 +14075,17 @@ body.booking-appointment-panel-modal-open {
     align-items: stretch;
   }
 
-  .booking-hub-view .credits-voice-warning .credits-actions {
-    width: 100%;
-    align-self: stretch;
-    justify-content: stretch;
-    margin-top: 4px;
+  .booking-hub-view .credits-topup-balance-row {
+    align-items: stretch;
   }
 
-  .booking-hub-view .credits-voice-warning .credits-action {
-    flex: 1 1 calc(50% - 4px);
+  .booking-hub-view .credits-topup-actions {
+    width: 100%;
+    justify-content: flex-end;
+  }
+
+  .booking-hub-view .credits-topup-actions .credits-action {
+    width: auto;
   }
 }
 
@@ -13890,13 +14198,18 @@ body.booking-appointment-panel-modal-open {
     font-size: 11px;
   }
 
-  .booking-hub-view .credits-voice-warning .credits-actions {
-    flex-direction: column;
+  .booking-hub-view .credits-topup-actions {
+    align-items: center;
+    flex-direction: row;
+    width: 100%;
+    justify-content: flex-end;
   }
 
-  .booking-hub-view .credits-voice-warning .credits-action {
-    flex: 1 1 auto;
-    width: 100%;
+  .booking-hub-view .credits-topup-actions .credits-action {
+    flex: 0 0 auto;
+    width: auto;
+    padding: 5px 7px;
+    font-size: 11px;
   }
 
   .booking-hub-view .credits-history-table th,

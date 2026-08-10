@@ -16,7 +16,7 @@ import { SkeletonList } from '../../../../ui/skeleton'
 import Tooltip from '../../../../ui/Tooltip'
 import StaffW4InviteModal from '../modals/StaffW4InviteModal'
 import InviteEmployeeModal from '../modals/InviteEmployeeModal'
-import { SetStaffTinParams } from '@/data/repositories/taxiqOwnerPayouts'
+import { SetStaffTinParams } from '../../../../../data/repositories/taxiqOwnerPayouts'
 
 const TIN_STATUS_BADGE_STYLES: Record<string, string> = {
   Missing: 'bg-rose-50 text-rose-600',

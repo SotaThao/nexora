@@ -1,172 +1,237 @@
 // ManagePlanView — pricing / plan selection page for the dashboard "subscriptions"
-// route. Static marketing-style tiers (no billing backend yet); CTAs delegate to
-// the optional onSelectPlan callback. Highlights the merchant's current plan when
-// a matching plan id is supplied.
-import { Check } from 'lucide-react'
+// route. Name/Price/Features come from GET /merchant/subscriptions/packages;
+// falls back to the i18n copy below while that request is loading (or for the
+// fields the API leaves null, e.g. Lite's $0 and Enterprise's custom quote).
+// CTAs delegate to the optional onSelectPlan callback. Highlights the merchant's
+// current TipPlatform plan from GET /userprofile/me → business.subscriptions.
+import { Check, Lock } from 'lucide-react'
+import { useMemo } from 'react'
 import { useTranslation } from '../../../contexts/LanguageContext'
+import type { SubscriptionPackage } from '../../../data/repositories/subscriptionPayments'
+import type { UserSubscription } from '../../../types/domain'
+import {
+  getSubscriptionPlanRenewLabel,
+  isTipPlatformPlanBelowCurrent,
+  isTipPlatformPlanCurrent,
+  resolveTipPlatformPlanId,
+} from '../../../utils/subscriptionDisplay'
+import { PACKAGE_MANAGEMENT_TK as PACKAGE_MGMT_TK, TipPlatformUiPlanId } from './packageManagement/constants'
+import type { TipPlatformUiPlanIdValue } from './packageManagement/constants'
 
-type PlanId = 'lite' | 'starter' | 'pro' | 'enterprise'
+type PlanId = TipPlatformUiPlanIdValue
 
 interface ManagePlanViewProps {
-  /** Lowercased identifier of the active plan, used to mark "current plan". */
-  currentPlanId?: string | null
+  /** Active TipPlatform subscription from /userprofile/me. */
+  currentSubscription?: UserSubscription | null
   /** Invoked with the chosen plan id when a CTA is pressed. */
   onSelectPlan?: (planId: PlanId) => void
+  /** Packages from the API — undefined while loading. */
+  packages?: SubscriptionPackage[]
+  /** Stretch plan cards to the content column (Package Management). */
+  wide?: boolean
 }
 
 interface PlanConfig {
   id: PlanId
   /** Elevated, violet-framed tier with a ribbon badge (Pro). */
   featured?: boolean
-  /** Green free-tier treatment: inline FREE pill, green CTA, green first feature. */
-  free?: boolean
   /** number of feature lines to read from i18n (f1..fN) */
   featureCount: number
 }
 
+// Lite is the free, no-account-yet signup tier — not shown here since this view
+// is only reached from the authenticated dashboard (merchant already has an
+// account) and downgrading an existing paid plan to Lite isn't supported.
 const PLAN_CONFIG: PlanConfig[] = [
-  // { id: 'lite', free: true, featureCount: 4 }, // Hidden free plan
-  { id: 'starter', featureCount: 4 },
-  { id: 'pro', featured: true, featureCount: 5 },
-  { id: 'enterprise', featureCount: 4 },
+  // { id: TipPlatformUiPlanId.Lite, free: true, featureCount: 4 }, // Hidden free plan
+  { id: TipPlatformUiPlanId.Starter, featureCount: 4 },
+  { id: TipPlatformUiPlanId.Pro, featured: true, featureCount: 5 },
+  { id: TipPlatformUiPlanId.Enterprise, featureCount: 4 },
 ]
 
-function ManagePlanView({ currentPlanId = null, onSelectPlan }: ManagePlanViewProps) {
-  const { t } = useTranslation()
-
-  const normalizedCurrent = (currentPlanId || '').toLowerCase()
+function ManagePlanView({
+  currentSubscription = null,
+  onSelectPlan,
+  packages,
+  wide = false,
+}: ManagePlanViewProps) {
+  const { t, currentLanguage } = useTranslation()
+  const isVietnamese = currentLanguage === 'vi'
+  const renewLabel = getSubscriptionPlanRenewLabel(
+    currentSubscription,
+    t,
+    currentLanguage,
+  )
+  const currentPlanId = useMemo(
+    () => resolveTipPlatformPlanId(currentSubscription),
+    [currentSubscription],
+  )
 
   return (
-    <div className="relative">
-      {/* Atmospheric backdrop — soft brand glow behind the featured column */}
-      <div
-        aria-hidden
-        className="pointer-events-none absolute inset-x-0 -top-24 mx-auto h-96 max-w-4xl rounded-full bg-gradient-to-r from-nexoraElectric/20 via-nexoraViolet/20 to-brandCyan/15 blur-[100px]"
-      />
-
-      {/* Header */}
-      <header className="relative mx-auto max-w-2xl px-4 pt-2 text-center">
-        <span className="text-[11px] font-extrabold uppercase tracking-[0.22em] text-nexoraBrand">
-          {t('manage_plan.eyebrow')}
-        </span>
-        <h1 className="mt-3 text-3xl font-black leading-tight tracking-tight text-nexoraText sm:text-[2.5rem]">
-          {t('manage_plan.title')}
-        </h1>
-        <p className="mx-auto mt-3 max-w-xl text-sm leading-relaxed text-nexoraMuted">
-          {t('manage_plan.subtitle')}
-        </p>
-      </header>
+    <div className="relative w-full min-w-0">
+      {wide ? (
+        <div className="nexora-package-heading">
+          <div>
+            <span className="package-overview-kicker">
+              {t(`${PACKAGE_MGMT_TK}.subscriptions.kicker`)}
+            </span>
+            <h2>{t(`${PACKAGE_MGMT_TK}.subscriptions.title`)}</h2>
+            <p>{t(`${PACKAGE_MGMT_TK}.subscriptions.subtitle`)}</p>
+          </div>
+          <span className="nexora-package-note">
+            {t(`${PACKAGE_MGMT_TK}.subscriptions.note`)}
+          </span>
+        </div>
+      ) : (
+        <>
+          <div
+            aria-hidden
+            className="pointer-events-none absolute inset-x-0 -top-24 mx-auto h-96 max-w-4xl rounded-full bg-gradient-to-r from-nexoraElectric/20 via-nexoraViolet/20 to-brandCyan/15 blur-[100px]"
+          />
+          <header className="relative mx-auto max-w-2xl px-4 pt-2 text-center">
+            <span className="text-[11px] font-extrabold uppercase tracking-[0.22em] text-nexoraBrand">
+              {t('manage_plan.eyebrow')}
+            </span>
+            <h1 className="mt-3 text-3xl font-black leading-tight tracking-tight text-nexoraText sm:text-[2.5rem]">
+              {t('manage_plan.title')}
+            </h1>
+            <p className="mx-auto mt-3 max-w-xl text-sm leading-relaxed text-nexoraMuted">
+              {t('manage_plan.subtitle')}
+            </p>
+          </header>
+        </>
+      )}
 
       {/* Plan grid */}
-      <div className="relative mx-auto mt-12 grid max-w-5xl grid-cols-1 gap-5 px-1 pb-4 md:grid-cols-3 xl:items-stretch">
+      <div
+        className={[
+          'relative mx-auto grid w-full grid-cols-1 gap-3 px-1 pb-4 sm:gap-5 md:grid-cols-3 md:items-stretch',
+          wide ? 'mt-5 max-w-none' : 'mt-12 max-w-5xl',
+        ].join(' ')}
+      >
         {PLAN_CONFIG.map((plan) => {
           const base = `manage_plan.plans.${plan.id}`
-          const features = Array.from({ length: plan.featureCount }, (_, i) =>
-            t(`${base}.f${i + 1}`),
+          const pkg = packages?.find(
+            (p) => (p.plan ?? '').toLowerCase() === plan.id,
           )
-          const isCurrent =
-            !!normalizedCurrent && normalizedCurrent.includes(plan.id)
+          const pkgFeatures = isVietnamese ? pkg?.featuresVi : pkg?.featuresEn
+          const features = pkgFeatures?.length
+            ? pkgFeatures
+            : Array.from({ length: plan.featureCount }, (_, i) => t(`${base}.f${i + 1}`))
+          const priceLabel = pkg?.price != null ? `$${pkg.price}` : t(`${base}.price`)
+          const priceNote =
+            pkg && pkg.periodInMonths !== 1
+              ? t('manage_plan.price_note_months', { count: pkg.periodInMonths })
+              : t(`${base}.price_note`)
+          const isCurrent = isTipPlatformPlanCurrent(currentSubscription, plan.id)
+          const isLocked = isTipPlatformPlanBelowCurrent(plan.id, currentPlanId)
 
           return (
             <article
               key={plan.id}
               className={[
-                'group relative flex flex-col rounded-2xl p-6 transition-all duration-300',
-                plan.featured
-                  ? 'border-2 border-nexoraViolet bg-nexoraSurface shadow-premium hover:-translate-y-2 hover:shadow-2xl hover:shadow-nexoraViolet/20 xl:-translate-y-4 xl:hover:-translate-y-6 xl:pb-8'
-                  : 'border border-nexoraBorder bg-nexoraSurfaceMuted hover:-translate-y-1 hover:border-nexoraLavender hover:shadow-nexora-soft',
+                'group relative flex flex-col rounded-2xl p-4 transition-all duration-300 sm:p-6',
+                isCurrent
+                  ? 'border-2 border-nexoraSuccess bg-gradient-to-b from-nexoraSuccess/[0.08] via-nexoraSurface to-nexoraSurface shadow-[0_12px_32px_rgba(22,163,74,0.14)] ring-1 ring-nexoraSuccess/25'
+                  : isLocked
+                    ? 'border border-nexoraBorder bg-nexoraSurfaceMuted'
+                    : plan.featured
+                      ? 'border-2 border-nexoraViolet bg-nexoraSurface shadow-premium hover:-translate-y-2 hover:shadow-2xl hover:shadow-nexoraViolet/20 xl:-translate-y-4 xl:hover:-translate-y-6 xl:pb-8'
+                      : 'border border-nexoraBorder bg-nexoraSurfaceMuted hover:-translate-y-1 hover:border-nexoraLavender hover:shadow-nexora-soft',
               ].join(' ')}
             >
-              {/* Ribbon badge straddling the top edge (featured tier only) */}
-              {plan.featured && (
-                <span className="plan-recommend-badge absolute left-1/2 top-0 max-w-[80%] cursor-default rounded-full bg-gradient-to-r from-nexoraElectric to-nexoraViolet px-4 py-1.5 text-center text-[10px] font-extrabold uppercase leading-tight tracking-wider text-white">
+              {isCurrent ? (
+                <span className="absolute left-1/2 top-0 max-w-[80%] -translate-x-1/2 -translate-y-1/2 cursor-default rounded-full border border-nexoraSuccess/30 bg-nexoraSuccess px-3 py-1 text-center text-[9px] font-extrabold uppercase leading-tight tracking-wider text-white shadow-sm sm:px-4 sm:py-1.5 sm:text-[10px]">
+                  {t('manage_plan.current_plan')}
+                </span>
+              ) : !isLocked && plan.featured ? (
+                <span className="plan-recommend-badge absolute left-1/2 top-0 max-w-[80%] cursor-default rounded-full bg-gradient-to-r from-nexoraElectric to-nexoraViolet px-3 py-1 text-center text-[9px] font-extrabold uppercase leading-tight tracking-wider text-white sm:px-4 sm:py-1.5 sm:text-[10px]">
                   {t(`${base}.badge`)}
                 </span>
-              )}
+              ) : null}
 
-              {/* Name + inline free pill */}
-              <div className="flex items-center gap-2">
-                <h2 className="text-lg font-extrabold leading-snug text-nexoraText">
-                  {t(`${base}.name`)}
-                </h2>
-                {plan.free && (
-                  <span className="inline-flex shrink-0 items-center rounded-md bg-nexoraSuccess/15 px-2 py-0.5 text-[10px] font-extrabold uppercase tracking-wider text-nexoraSuccess">
-                    {t(`${base}.badge`)}
-                  </span>
-                )}
-              </div>
-              <p className="mt-1.5 min-h-[40px] text-[13px] leading-relaxed text-nexoraMuted">
+              <h2 className="text-base font-extrabold leading-snug text-nexoraText sm:text-lg">
+                {pkg?.name || t(`${base}.name`)}
+              </h2>
+              <p className="mt-1 min-h-0 text-xs leading-relaxed text-nexoraMuted sm:mt-1.5 sm:min-h-[40px] sm:text-[13px]">
                 {t(`${base}.tagline`)}
               </p>
 
               {/* Price */}
-              <div className="mt-5 flex items-end gap-1.5">
-                <span className="text-4xl font-black tracking-tight text-nexoraText tabular-nums">
-                  {t(`${base}.price`)}
+              <div className="mt-3 flex flex-wrap items-end gap-1 sm:mt-5 sm:gap-1.5">
+                <span className="text-2xl font-black tracking-tight text-nexoraText tabular-nums sm:text-3xl md:text-4xl">
+                  {priceLabel}
                 </span>
-                <span className="pb-1.5 text-xs font-medium text-nexoraSubtle">
-                  {t(`${base}.price_note`)}
+                <span className="pb-0.5 text-[10px] font-medium text-nexoraSubtle sm:pb-1.5 sm:text-xs">
+                  {priceNote}
                 </span>
               </div>
 
-              <div className="my-5 h-px w-full bg-nexoraRule" />
+              <div className="my-3.5 h-px w-full bg-nexoraRule sm:my-5" />
 
               {/* Features */}
-              <ul className="flex-1 space-y-3">
-                {features.map((feature, i) => {
-                  const highlight = plan.free && i === 0
-                  return (
-                    <li key={i} className="flex items-start gap-2.5">
-                      <span className="mt-0.5 flex h-4 w-4 shrink-0 items-center justify-center rounded-full bg-nexoraSuccess/12 text-nexoraSuccess">
-                        <Check className="h-3 w-3" strokeWidth={3} />
-                      </span>
-                      <span
-                        className={[
-                          'text-[13px] leading-relaxed',
-                          highlight
-                            ? 'font-semibold text-nexoraSuccess'
-                            : 'text-nexoraText/85',
-                        ].join(' ')}
-                      >
-                        {feature}
-                      </span>
-                    </li>
-                  )
-                })}
+              <ul className="flex-1 space-y-2 sm:space-y-3">
+                {features.map((feature, i) => (
+                  <li key={i} className="flex items-start gap-2 sm:gap-2.5">
+                    <span className="mt-0.5 flex h-3.5 w-3.5 shrink-0 items-center justify-center rounded-full bg-nexoraSuccess/12 text-nexoraSuccess sm:h-4 sm:w-4">
+                      <Check className="h-2.5 w-2.5 sm:h-3 sm:w-3" strokeWidth={3} />
+                    </span>
+                    <span className="text-xs leading-relaxed text-nexoraText/85 sm:text-[13px]">
+                      {feature}
+                    </span>
+                  </li>
+                ))}
               </ul>
 
-              {/* CTA */}
-              <div className="mt-6">
-                {isCurrent ? (
-                  <div className="flex flex-col items-center gap-2 w-full">
-                    <button
-                      type="button"
-                      disabled
-                      className="flex h-11 w-full items-center justify-center gap-2 rounded-xl border border-nexoraSuccess bg-nexoraSuccess/10 text-sm font-bold text-nexoraSuccess shadow-nexora-soft"
-                    >
-                      <Check className="h-4 w-4" strokeWidth={3} />
-                      Current Active Plan
-                    </button>
-                    <span className="text-[11px] font-semibold tracking-wide text-nexoraMuted">
-                      Renews: Jun 24, 2026, 08:31 AM
+              {/*
+                CTA footer: renew sits ABOVE the button in a reserved slot so every
+                plan card keeps its primary button on the same baseline row.
+              */}
+              <div className="mt-auto flex flex-col pt-4 sm:pt-6">
+                <div className="mb-2 flex min-h-[2rem] flex-col justify-end sm:min-h-[2.75rem]">
+                  {isCurrent && renewLabel ? (
+                    <span className="text-center text-[10px] font-semibold leading-snug tracking-wide text-nexoraSuccess/90 sm:text-[11px]">
+                      {renewLabel}
                     </span>
-                  </div>
+                  ) : null}
+                </div>
+                {isCurrent ? (
+                  <button
+                    type="button"
+                    disabled
+                    className="flex h-10 w-full items-center justify-center gap-2 rounded-xl border border-nexoraSuccess bg-nexoraSuccess text-[13px] font-bold text-white shadow-nexora-soft sm:h-11 sm:text-sm"
+                  >
+                    <Check className="h-4 w-4" strokeWidth={3} />
+                    {t('manage_plan.current_active_plan')}
+                  </button>
+                ) : isLocked ? (
+                  <button
+                    type="button"
+                    disabled
+                    aria-label={t('manage_plan.plan_locked')}
+                    className="flex h-10 w-full cursor-not-allowed items-center justify-center gap-2 rounded-xl border border-[#d4cfe3] bg-[#f3f1f8] text-xs font-extrabold text-[#746f8c] opacity-100 shadow-none sm:h-11 sm:text-[13px]"
+                  >
+                    <Lock className="h-4 w-4 shrink-0" strokeWidth={2.5} />
+                    {t('manage_plan.plan_locked')}
+                  </button>
                 ) : (
                   <button
                     type="button"
                     onClick={() => onSelectPlan?.(plan.id)}
                     className={[
-                      'h-11 w-full rounded-xl text-sm font-bold transition-all active:scale-[0.98]',
+                      'h-10 w-full rounded-xl text-[13px] font-bold transition-all active:scale-[0.98] sm:h-11 sm:text-sm',
                       plan.featured
                         ? 'bg-gradient-to-r from-nexoraElectric to-nexoraViolet text-white shadow-lg shadow-nexoraViolet/25 hover:brightness-110'
-                        : plan.free
-                          ? 'border border-nexoraBorder bg-nexoraSurface text-nexoraText hover:border-nexoraBrand hover:text-nexoraBrand'
-                          : plan.id === 'enterprise'
-                            ? 'bg-nexoraSidebar text-white hover:bg-nexoraSidebarPanel'
-                            : 'border border-nexoraBorder bg-nexoraSurface text-nexoraText hover:border-nexoraBrand hover:text-nexoraBrand',
+                        : plan.id === TipPlatformUiPlanId.Enterprise
+                          ? 'bg-nexoraSidebar text-white hover:bg-nexoraSidebarPanel'
+                          : 'border border-nexoraBorder bg-nexoraSurface text-nexoraText hover:border-nexoraBrand hover:text-nexoraBrand',
                     ].join(' ')}
                   >
-                    {plan.featured ? 'Upgrade to Pro' : plan.free ? 'Downgrade' : plan.id === 'enterprise' ? 'Contact Success Sales' : t(`${base}.cta`)}
+                    {plan.featured
+                      ? t('manage_plan.upgrade_to_pro')
+                      : plan.id === TipPlatformUiPlanId.Enterprise
+                        ? t('manage_plan.plans.enterprise.cta')
+                        : t(`${base}.cta`)}
                   </button>
                 )}
               </div>

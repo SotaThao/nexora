@@ -1,6 +1,6 @@
 import React from 'react'
 import { Eye, EyeOff, Loader2 } from 'lucide-react'
-import { renderLabel } from '../../../contexts/LanguageContext'
+import { renderLabel } from '../../../utils/renderLabel'
 
 export default function StepOtpVerify({
   showOtpInput,

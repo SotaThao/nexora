@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useRef } from 'react'
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { useOutletContext, useNavigate, useParams, Navigate, useSearchParams } from 'react-router-dom'
 import { useTranslation } from '../../../contexts/LanguageContext'
 import { SHOW_HARDWARE_DEVICES } from '../constants'
@@ -16,10 +16,13 @@ import ComingSoon from '../views/ComingSoon'
 import ManagePlanView from '../views/ManagePlanView'
 import BookingHubView from '../views/BookingHubView'
 import AiVoiceSetupGuideView from '../views/AiVoiceSetupGuideView'
+import PackageManagementView from '../views/packageManagement/PackageManagementView'
+import TipPlatformCheckoutModal from '../views/packageManagement/TipPlatformCheckoutModal'
+import { useTipPlatformCheckoutFlow } from '../views/packageManagement/useTipPlatformCheckoutFlow'
 import StaffDetailView from '../../StaffDetailView'
 import { useMerchantStaffByCode } from '../../../data/hooks/useMerchantStaff'
 import { useOpenProductManagement } from '../../../data/hooks/useOpenProductManagement'
-import { DASHBOARD_ROOT_PATH } from '../constants'
+import { DASHBOARD_MENU_ID, DASHBOARD_ROOT_PATH } from '../constants'
 import { normaliseMember } from '../hooks/useStaffManagement'
 import { SkeletonList } from '../../ui/skeleton'
 import { useMerchantSetup } from '../../../data/hooks/useMerchantSetup'
@@ -1132,15 +1135,44 @@ export function SupportRoute() {
   return <SupportView />
 }
 
+export function PackageManagementRoute() {
+  return <PackageManagementView />
+}
+
 export function SubscriptionsRoute() {
   const ctx = useOutletContext<LooseObject>()
-  const navigate = useNavigate()
-  const currentPlanId = ctx?.profile?.subscription?.plan ?? null
+  const [searchParams, setSearchParams] = useSearchParams()
+
+  const {
+    tipPlatformSubscription,
+    packages,
+    paymentPlan,
+    selectedPackage,
+    paymentPlanPrice,
+    clearCheckout,
+    handleSelectPlan,
+  } = useTipPlatformCheckoutFlow({
+    profile: ctx?.profile,
+    searchParams,
+    setSearchParams,
+    packagesEnabled: true,
+    deepLinkEnabled: true,
+  })
+
   return (
-    <ManagePlanView
-      currentPlanId={currentPlanId}
-      onSelectPlan={() => navigate('/dashboard/support')}
-    />
+    <>
+      <ManagePlanView
+        currentSubscription={tipPlatformSubscription}
+        packages={packages}
+        onSelectPlan={handleSelectPlan}
+      />
+      <TipPlatformCheckoutModal
+        paymentPlan={paymentPlan}
+        selectedPackage={selectedPackage}
+        paymentPlanPrice={paymentPlanPrice}
+        onClose={clearCheckout}
+      />
+    </>
   )
 }
 

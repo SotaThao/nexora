@@ -17,16 +17,25 @@ import {
   Calendar,
   Store,
   Package,
+  Boxes,
 } from 'lucide-react'
 import { BookingHubMainTab } from '../../data/merchantVoice/domain'
+import {
+  PACKAGE_MANAGEMENT_TAB_I18N_KEY,
+  PACKAGE_MANAGEMENT_TAB_ORDER,
+  PACKAGE_MANAGEMENT_TK,
+  PackageManagementTab,
+  parsePackageManagementTab,
+} from "./views/packageManagement/constants";
 
 /** Menu ids used by Booking Hub / Touchpoints expandable nav (avoid hardcoding duplicates). */
 export const DASHBOARD_MENU = {
   Touchpoints: 'touchpoints',
   BookingHub: 'ai-hub',
   TaxIq: 'taxiq',
-  ProductManagement: "product-management",
+  ProductManagement: 'product-management',
   Pos: 'pos',
+  PackageManagement: 'package-management',
 } as const
 
 /** Dashboard session roles passed as `userRole` prop. */
@@ -146,6 +155,7 @@ export const DASHBOARD_MENU_ID = {
   taxiq: 'taxiq',
   bookingHub: 'ai-hub',
   productManagement: 'product-management',
+  packageManagement: 'package-management',
   analytics: 'analytics',
   settings: 'settings',
   support: 'support',
@@ -163,6 +173,15 @@ export function buildDashboardMenuPath(menuId: string): string {
   return menuId === DASHBOARD_MENU_ID.overview
     ? DASHBOARD_ROOT_PATH
     : `${DASHBOARD_ROOT_PATH}/${menuId}`;
+}
+
+export const PACKAGE_MANAGEMENT_PATH = buildDashboardMenuPath(
+  DASHBOARD_MENU_ID.packageManagement,
+);
+
+export function packageManagementPath(tab?: string) {
+  if (!tab) return PACKAGE_MANAGEMENT_PATH;
+  return `${PACKAGE_MANAGEMENT_PATH}?tab=${encodeURIComponent(tab)}`;
 }
 
 export const DASHBOARD_REPORTS_PATH = buildDashboardMenuPath(
@@ -240,6 +259,11 @@ export const MENU_ITEMS = [
   { id: DASHBOARD_MENU_ID.tips, label: 'Tips', icon: CircleDollarSign },
   { id: DASHBOARD_MENU_ID.reviews, label: 'Reviews', icon: Star },
   { id: DASHBOARD_MENU_ID.reports, label: 'Transactions', icon: ReceiptText },
+  {
+    id: DASHBOARD_MENU_ID.packageManagement,
+    label: "Package Management",
+    icon: Boxes,
+  },
   { id: DASHBOARD_MENU_ID.touchpoints, label: 'Touch Points', icon: QrCode },
   {
     id: DASHBOARD_MENU_ID.taxiq,
@@ -405,6 +429,24 @@ export function isBookingHubSubActive(
   return activeTab === subId;
 }
 
+/** Package Management sidebar children — maps to `/dashboard/package-management?tab=`. */
+export const PACKAGE_MANAGEMENT_SUBMENU = PACKAGE_MANAGEMENT_TAB_ORDER.map(
+  (tab) => ({
+    id: tab,
+    labelKey: `${PACKAGE_MANAGEMENT_TK}.${PACKAGE_MANAGEMENT_TAB_I18N_KEY[tab]}`,
+  }),
+) as ReadonlyArray<{ id: PackageManagementTab; labelKey: string }>;
+
+export function isPackageManagementSubActive(
+  activeMenu: string,
+  tabParam: string | null,
+  subId: string,
+): boolean {
+  if (activeMenu !== DASHBOARD_MENU_ID.packageManagement) return false;
+  const activeTab = parsePackageManagementTab(tabParam);
+  return activeTab === subId;
+}
+
 export function getDashboardMenuLocalizedLabel(
   id: string,
   t: (key: string) => string,
@@ -425,6 +467,7 @@ export const DASHBOARD_MENU_LABEL_KEYS: Record<string, string> = {
   [DASHBOARD_MENU_ID.reports]: "dashboard.menu.transactions",
   [DASHBOARD_MENU_ID.bookingHub]: "dashboard.menu.booking_hub",
   [DASHBOARD_MENU_ID.productManagement]: "dashboard.menu.product_management",
+  [DASHBOARD_MENU_ID.packageManagement]: "dashboard.menu.package_management",
   [DASHBOARD_MENU_ID.touchpoints]: "dashboard.menu.touchpoints",
   [DASHBOARD_MENU.TaxIq]: 'dashboard.menu.tax_iq',
   [DASHBOARD_MENU_ID.analytics]: "dashboard.menu.analytics",

@@ -1,7 +1,7 @@
 import React, { useState } from 'react'
 import { Upload, Loader2, CheckCircle2, XCircle, QrCode, HelpCircle, X } from 'lucide-react'
 import CountryCodeSelect, { formatNationalNumber, isPhoneValid } from '../../CountryCodeSelect'
-import { renderLabel } from '../../../contexts/LanguageContext'
+import { renderLabel } from '../../../utils/renderLabel'
 import { getErrorI18nKey } from '../../../data/errorCodes'
 import { getStaffDisplayNameErrorCode, STAFF_DISPLAY_NAME_MAX_LENGTH } from '../../../utils/staffDisplayName'
 

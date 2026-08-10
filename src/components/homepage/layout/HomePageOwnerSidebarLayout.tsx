@@ -4,6 +4,7 @@ import MobileMenuDrawer from '../../dashboard/layout/MobileMenuDrawer'
 import { MERCHANT_SIDEBAR_MENU_ITEMS, buildDashboardMenuPath } from '../../dashboard/constants'
 import { useProfileSettings } from '../../../data/hooks/useProfileSettings'
 import { useMerchantSetup } from '../../../data/hooks/useMerchantSetup'
+import { getTipPlatformSubscription } from '../../../utils/subscriptionDisplay'
 import { HomePageLayoutProvider } from '../context/HomePageLayoutContext'
 import type { AuthSession } from '../../../types/auth'
 
@@ -64,7 +65,10 @@ export default function HomePageOwnerSidebarLayout({
 
   const businessName =
     profile?.businessName || merchantSetupData?.businessInfo?.name || ''
-  const userSubscription = profileSettingsData?.subscription ?? profile?.subscription ?? null
+  const userSubscription =
+    getTipPlatformSubscription(profileSettingsData)
+    ?? getTipPlatformSubscription(profile)
+    ?? null
 
   const handleNavigateMenu = useCallback(
     (menuId: string) => {
