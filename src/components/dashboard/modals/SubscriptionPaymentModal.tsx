@@ -24,6 +24,7 @@ import SubscriptionCardPaymentForm, {
 } from './SubscriptionCardPaymentForm'
 import {
   PURCHASABLE_PLAN_I18N_ID,
+  SUBSCRIPTION_PAYMENT_DIALOG_MAX_WIDTH_CLASS,
   SUBSCRIPTION_PAYMENT_MODAL_TK,
   SubscriptionPaymentTab,
   type SubscriptionPaymentTabValue,
@@ -221,7 +222,7 @@ export default function SubscriptionPaymentModal({
         aria-labelledby="subscription-payment-title"
         className={[
           'relative w-full max-h-[90vh] overflow-y-auto rounded-2xl border border-nexoraBorder bg-white p-5 shadow-2xl sm:p-6',
-          isCardTab ? 'max-w-lg' : 'max-w-md',
+          SUBSCRIPTION_PAYMENT_DIALOG_MAX_WIDTH_CLASS,
         ].join(' ')}
       >
         <button

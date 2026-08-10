@@ -24,6 +24,9 @@ export const SubscriptionPaymentTab = {
 export type SubscriptionPaymentTabValue =
   (typeof SubscriptionPaymentTab)[keyof typeof SubscriptionPaymentTab]
 
+/** Same dialog width for Wallet + Card tabs so switching tabs does not resize. */
+export const SUBSCRIPTION_PAYMENT_DIALOG_MAX_WIDTH_CLASS = 'max-w-lg' as const
+
 /** Purchasable TipPlatform plan → `manage_plan.plans.*` i18n segment. */
 export const PURCHASABLE_PLAN_I18N_ID: Record<
   'Starter' | 'Pro',
