@@ -12512,6 +12512,41 @@ body.booking-appointment-panel-modal-open {
   padding: 12px;
 }
 
+/* Package Payment dialog — no orange frame, tighter spacing, keep 2-col rows. */
+:is(#nx-campaign-root, .nx-campaign-root) .sms-credit-card-form.is-subscription-checkout {
+  margin-top: 8px;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  padding: 0;
+}
+
+:is(#nx-campaign-root, .nx-campaign-root) .sms-credit-card-form.is-subscription-checkout .sms-credit-card-required-note {
+  margin-top: 0;
+}
+
+:is(#nx-campaign-root, .nx-campaign-root) .sms-credit-card-form.is-subscription-checkout .sms-credit-card-fields {
+  gap: 8px;
+  margin-top: 8px;
+}
+
+:is(#nx-campaign-root, .nx-campaign-root) .sms-credit-card-form.is-subscription-checkout .sms-credit-card-field {
+  gap: 4px;
+}
+
+:is(#nx-campaign-root, .nx-campaign-root) .sms-credit-card-form.is-subscription-checkout .sms-credit-card-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+  align-items: end;
+}
+
+:is(#nx-campaign-root, .nx-campaign-root) .sms-credit-card-form.is-subscription-checkout .sms-credit-card-input,
+:is(#nx-campaign-root, .nx-campaign-root) .sms-credit-card-form.is-subscription-checkout .subscription-stripe-card-field {
+  min-height: 36px;
+  padding: 6px 10px;
+}
+
 :is(#nx-campaign-root, .nx-campaign-root) .sms-credit-card-form-head {
   display: flex;
   align-items: center;
@@ -12877,6 +12912,10 @@ body.booking-appointment-panel-modal-open {
   }
 
   :is(#nx-campaign-root, .nx-campaign-root) .sms-credit-card-row {
+    grid-template-columns: 1fr;
+  }
+
+  :is(#nx-campaign-root, .nx-campaign-root) .sms-credit-card-form.is-subscription-checkout .sms-credit-card-row {
     grid-template-columns: 1fr;
   }
 

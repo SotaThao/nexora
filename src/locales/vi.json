@@ -903,6 +903,7 @@
       "subscription_card_cvc_label": "CVC",
       "subscription_card_init_error": "Không thể khởi tạo thanh toán bằng thẻ. Vui lòng thử lại.",
       "subscription_card_payment_error": "Thẻ của bạn bị từ chối. Vui lòng thử thẻ khác.",
+      "subscription_payment_failed": "Thanh toán thất bại. Vui lòng thử lại hoặc chọn phương thức khác.",
       "subscription_card_payment_processing": "Đang xác nhận thanh toán…",
       "subscription_card_payment_processing_timeout": "Việc này đang mất nhiều thời gian hơn bình thường. Bạn có thể đóng lại và kiểm tra sau ít phút."
     },

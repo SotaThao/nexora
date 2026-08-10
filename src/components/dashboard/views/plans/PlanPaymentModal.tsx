@@ -6,7 +6,7 @@ import {
   usePurchaseVoiceAiPackage,
   useSubscriptionPaymentMethods,
 } from '../../../../data/hooks/useSubscriptionPayments'
-import { buildSubscriptionBillingDefaultsFromProfile } from '../../../../utils/subscriptionBillingDefaults'
+import { resolveSubscriptionBillingDefaults } from '../../../../utils/subscriptionBillingDefaults'
 import { resolveTranslatedApiError } from '../../../../utils/resolveTranslatedApiError'
 import { Loader2 } from 'lucide-react'
 import { useTranslation } from '../../../../contexts/LanguageContext'
@@ -19,7 +19,7 @@ import SubscriptionCardPaymentForm, {
   type SubscriptionBillingDetails,
   type SubscriptionCardPaymentFormHandle,
 } from '../../modals/SubscriptionCardPaymentForm'
-import { subscriptionModalKey } from '../../modals/subscriptionPaymentConstants'
+import { subscriptionModalKey, tryBeginOrderStatusPolling } from '../../modals/subscriptionPaymentConstants'
 import {
   CloseIcon,
   CreditCardIcon,
@@ -94,14 +94,21 @@ export default function PlanPaymentModal({
     onClose()
   }, [cardPaymentLabel, onClose, onSuccess, selection])
 
+  const handleCardOrderTimeout = useCallback(() => {
+    onClose()
+  }, [onClose])
+
   const {
     isPolling: isCardOrderPolling,
     beginPolling: beginCardOrderPolling,
     resetPolling: resetCardOrderPolling,
-  } = useSubscriptionCardOrderPoll({ onPaid: handleCardOrderPaid })
+  } = useSubscriptionCardOrderPoll({
+    onPaid: handleCardOrderPaid,
+    onTimeout: handleCardOrderTimeout,
+  })
   const { data: profile } = useProfileSettings({ enabled: isOpen })
   const resolvedBillingDefaults = useMemo(
-    () => billingDefaults ?? buildSubscriptionBillingDefaultsFromProfile(profile),
+    () => resolveSubscriptionBillingDefaults(billingDefaults, profile),
     [billingDefaults, profile],
   )
   const isCardPayment = isPlanCardPaymentSymbol(selectedSymbol)
@@ -220,11 +227,13 @@ export default function PlanPaymentModal({
   }
 
   const handleCardSuccess = () => {
-    if (!initializeCardMutation.data) return
-    beginCardOrderPolling(initializeCardMutation.data.orderId)
+    tryBeginOrderStatusPolling(initializeCardMutation.data?.orderId, beginCardOrderPolling)
   }
 
   const handleCardError = (message: string) => {
+    if (tryBeginOrderStatusPolling(initializeCardMutation.data?.orderId, beginCardOrderPolling)) {
+      return
+    }
     showToast(message, 'error')
   }
 

@@ -157,10 +157,15 @@ function readNullableString(value: unknown): string | null {
 }
 
 function normalizePaymentStatus(value: unknown): SubscriptionPaymentStatus {
+  const raw = String(value ?? '').trim()
+  if (!raw) {
+    // Incomplete payloads while webhook is still writing — keep polling, don't treat as Failed.
+    return SubscriptionPaymentStatus.Pending
+  }
   const match = Object.values(SubscriptionPaymentStatus).find(
-    (status) => status.toLowerCase() === String(value ?? '').trim().toLowerCase(),
+    (status) => status.toLowerCase() === raw.toLowerCase(),
   )
-  return match ?? SubscriptionPaymentStatus.Failed
+  return match ?? SubscriptionPaymentStatus.Pending
 }
 
 function resolvePackageHistoryUiStatus(
@@ -344,6 +349,18 @@ function normalizePurchaseResult(raw: unknown): PurchaseSubscriptionResult {
   }
 }
 
+function normalizeInitializeCardPaymentResult(
+  raw: unknown,
+): InitializeCardPaymentResult {
+  const item = raw && typeof raw === 'object' ? (raw as Record<string, unknown>) : {}
+  return {
+    orderId: readString(item.orderId),
+    referenceId: readString(item.referenceId),
+    clientSecret: readString(item.clientSecret),
+    publishableKey: readString(item.publishableKey),
+  }
+}
+
 function packagesPath(packageType?: SubscriptionPackageType): string {
   if (!packageType) return '/api/v1/merchant/subscriptions/packages'
   return `/api/v1/merchant/subscriptions/packages?packageType=${encodeURIComponent(packageType)}`
@@ -443,10 +460,11 @@ export function createSubscriptionPaymentsRepository(client: HttpClient = httpCl
     },
 
     async initializeCardPayment(packageId: string): Promise<InitializeCardPaymentResult> {
-      return client.post<InitializeCardPaymentResult>(
+      const res = await client.post<unknown>(
         '/api/v1/merchant/subscriptions/purchase/card/initialize',
         { packageId },
       )
+      return normalizeInitializeCardPaymentResult(res)
     },
 
     /** GET `/api/v1/merchant/subscriptions/purchase-history` */

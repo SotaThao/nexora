@@ -1,67 +1,93 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { useTranslation } from '../../contexts/LanguageContext'
 import { useNotification } from '../../contexts/NotificationContext'
-import { ORDER_STATUS_POLL_TIMEOUT_MS, subscriptionModalKey } from '../../components/dashboard/modals/subscriptionPaymentConstants'
+import {
+  ORDER_STATUS_POLL_TIMEOUT_MS,
+  subscriptionModalKey,
+} from '../../components/dashboard/modals/subscriptionPaymentConstants'
 import { SubscriptionPaymentStatus } from '../repositories/subscriptionPayments'
 import { useSubscriptionOrderStatusPoll } from './useSubscriptionPayments'
 
 type UseSubscriptionCardOrderPollOptions = {
   onPaid: () => void
   onFailed?: () => void
+  /** Fired when polling exceeds the timeout — order may still settle via webhook. */
+  onTimeout?: () => void
+}
+
+const PollTerminalKind = {
+  Paid: 'paid',
+  Failed: 'failed',
+  Timeout: 'timeout',
+} as const
+
+type PollTerminalKindValue = (typeof PollTerminalKind)[keyof typeof PollTerminalKind]
+
+const TERMINAL_KIND_BY_STATUS: Partial<
+  Record<SubscriptionPaymentStatus, PollTerminalKindValue>
+> = {
+  [SubscriptionPaymentStatus.Paid]: PollTerminalKind.Paid,
+  [SubscriptionPaymentStatus.Failed]: PollTerminalKind.Failed,
 }
 
 export function useSubscriptionCardOrderPoll({
   onPaid,
   onFailed,
+  onTimeout,
 }: UseSubscriptionCardOrderPollOptions) {
   const { t } = useTranslation()
   const { showToast } = useNotification()
   const [pendingOrderId, setPendingOrderId] = useState<string | null>(null)
   const [pollTimedOut, setPollTimedOut] = useState(false)
   const pollTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
-  const handledPaidOrderRef = useRef<string | null>(null)
+  const handledTerminalOrderRef = useRef<string | null>(null)
 
   const orderStatusQuery = useSubscriptionOrderStatusPoll(pendingOrderId, {
     enabled: Boolean(pendingOrderId) && !pollTimedOut,
   })
 
   const beginPolling = useCallback((orderId: string) => {
+    if (!orderId) return
     setPollTimedOut(false)
+    handledTerminalOrderRef.current = null
     setPendingOrderId(orderId)
   }, [])
 
   const resetPolling = useCallback(() => {
     setPendingOrderId(null)
     setPollTimedOut(false)
-    handledPaidOrderRef.current = null
+    handledTerminalOrderRef.current = null
     if (pollTimeoutRef.current) clearTimeout(pollTimeoutRef.current)
   }, [])
 
+  const settleTerminal = useCallback(
+    (orderId: string, kind: PollTerminalKindValue) => {
+      if (handledTerminalOrderRef.current === orderId) return
+      handledTerminalOrderRef.current = orderId
+      setPendingOrderId(null)
+
+      if (kind === PollTerminalKind.Paid) {
+        onPaid()
+        return
+      }
+      if (kind === PollTerminalKind.Failed) {
+        showToast(t(subscriptionModalKey('paymentFailed')), 'error')
+        onFailed?.()
+        return
+      }
+      showToast(t(subscriptionModalKey('cardPaymentProcessingTimeout')), 'info')
+      onTimeout?.()
+    },
+    [onFailed, onPaid, onTimeout, showToast, t],
+  )
+
   useEffect(() => {
     if (!pendingOrderId) return
-
     const status = orderStatusQuery.data?.paymentStatus
-    if (status === SubscriptionPaymentStatus.Paid) {
-      if (handledPaidOrderRef.current === pendingOrderId) return
-      handledPaidOrderRef.current = pendingOrderId
-      setPendingOrderId(null)
-      onPaid()
-      return
-    }
-
-    if (status === SubscriptionPaymentStatus.Failed) {
-      showToast(t(subscriptionModalKey('cardPaymentError')), 'error')
-      setPendingOrderId(null)
-      onFailed?.()
-    }
-  }, [
-    pendingOrderId,
-    orderStatusQuery.data?.paymentStatus,
-    onPaid,
-    onFailed,
-    showToast,
-    t,
-  ])
+    const kind = status ? TERMINAL_KIND_BY_STATUS[status] : undefined
+    if (!kind) return
+    settleTerminal(pendingOrderId, kind)
+  }, [pendingOrderId, orderStatusQuery.data?.paymentStatus, settleTerminal])
 
   useEffect(() => {
     if (!pendingOrderId) return
@@ -82,8 +108,8 @@ export function useSubscriptionCardOrderPoll({
 
   useEffect(() => {
     if (!pollTimedOut || !pendingOrderId) return
-    showToast(t(subscriptionModalKey('cardPaymentProcessingTimeout')), 'info')
-  }, [pollTimedOut, pendingOrderId, showToast, t])
+    settleTerminal(pendingOrderId, PollTerminalKind.Timeout)
+  }, [pollTimedOut, pendingOrderId, settleTerminal])
 
   return {
     pendingOrderId,

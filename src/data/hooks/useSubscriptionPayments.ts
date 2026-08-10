@@ -16,6 +16,23 @@ import subscriptionPaymentsRepository, {
 
 const CARD_PAYMENT_POLL_INTERVAL_MS = 2_000
 
+/** Bust caches shared by TipPlatform wallet + card checkout success paths. */
+export function invalidateSubscriptionPurchaseQueries(queryClient: QueryClient): void {
+  void queryClient.invalidateQueries({ queryKey: qk.userProfile() })
+  void queryClient.invalidateQueries({ queryKey: qk.merchantSubscriptionPaymentMethods() })
+  void queryClient.invalidateQueries({ queryKey: qk.merchantSubscriptionPurchaseHistory() })
+  void queryClient.invalidateQueries({ queryKey: qk.merchantSubscriptionMyPackages() })
+}
+
+export function findPurchaseHistoryItemByOrderRef(
+  items: SubscriptionPurchaseHistoryItem[],
+  orderRef: string,
+): SubscriptionPurchaseHistoryItem | undefined {
+  return items.find(
+    (item) => item.orderId === orderRef || item.referenceId === orderRef,
+  )
+}
+
 /** TanStack Query cache knobs shared by subscription list hooks. */
 export type SubscriptionQueryCacheOptions = {
   staleTime?: number
@@ -165,10 +182,7 @@ export function usePurchaseSubscription() {
     mutationFn: ({ packageId, symbol }) =>
       subscriptionPaymentsRepository.purchase(packageId, symbol),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: qk.userProfile() })
-      queryClient.invalidateQueries({ queryKey: qk.merchantSubscriptionPaymentMethods() })
-      queryClient.invalidateQueries({ queryKey: qk.merchantSubscriptionPurchaseHistory() })
-      queryClient.invalidateQueries({ queryKey: qk.merchantSubscriptionMyPackages() })
+      invalidateSubscriptionPurchaseQueries(queryClient)
     },
   })
 }
@@ -261,7 +275,7 @@ export function useSubscriptionOrderStatusPoll(orderId: string | null, { enabled
     queryKey: qk.merchantSubscriptionOrderStatus(orderId ?? ''),
     queryFn: async () => {
       const history = await subscriptionPaymentsRepository.getPurchaseHistory()
-      return history.find((item) => item.orderId === orderId)
+      return findPurchaseHistoryItemByOrderRef(history, orderId ?? '')
     },
     enabled: enabled && !!orderId,
     refetchInterval: (query) => {
