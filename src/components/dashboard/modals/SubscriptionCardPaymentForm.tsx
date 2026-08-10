@@ -25,7 +25,9 @@ import {
 import { SMS_CAMPAIGN_TK } from '../views/smsCampaigns/constants'
 import {
   STRIPE_CARD_ELEMENT_STYLE,
-  STRIPE_PAYMENT_INTENT_CONFIRMED_STATUSES,
+  SUBSCRIPTION_CARD_FORM_CLASS,
+  isStripePaymentIntentConfirmed,
+  readStripeConfirmPaymentIntentStatus,
   subscriptionModalKey,
 } from './subscriptionPaymentConstants'
 
@@ -141,19 +143,17 @@ const CardPaymentInner = forwardRef<SubscriptionCardPaymentFormHandle, CardPayme
       })
       setIsSubmitting(false)
 
-      if (result.error) {
-        onError(result.error.message || t(subscriptionModalKey('cardPaymentError')))
+      // Stripe may return an error object even when the PaymentIntent already
+      // moved to succeeded/processing (e.g. network blip after bank confirm).
+      const status = readStripeConfirmPaymentIntentStatus(result)
+      if (isStripePaymentIntentConfirmed(status)) {
+        onSuccess()
         return
       }
 
-      const status = result.paymentIntent?.status
-      if (
-        status
-        && STRIPE_PAYMENT_INTENT_CONFIRMED_STATUSES.includes(
-          status as (typeof STRIPE_PAYMENT_INTENT_CONFIRMED_STATUSES)[number],
-        )
-      ) {
-        onSuccess()
+      if (result.error) {
+        // Still ask parent to verify via purchase-history — webhook may have paid.
+        onError(result.error.message || t(subscriptionModalKey('cardPaymentError')))
         return
       }
 
@@ -177,8 +177,13 @@ const CardPaymentInner = forwardRef<SubscriptionCardPaymentFormHandle, CardPayme
       t(subscriptionModalKey(field))
 
     return (
-      <>
-        <div className="sms-credit-card-form">
+      <div className={SUBSCRIPTION_CARD_FORM_CLASS.root}>
+        <div
+          className={[
+            SUBSCRIPTION_CARD_FORM_CLASS.form,
+            SUBSCRIPTION_CARD_FORM_CLASS.checkoutVariant,
+          ].join(' ')}
+        >
           <div className="sms-credit-card-required-note">
             <strong>*</strong> {placeholderLabel('cardRequiredNote')}
           </div>
@@ -307,7 +312,7 @@ const CardPaymentInner = forwardRef<SubscriptionCardPaymentFormHandle, CardPayme
             </button>
           </div>
         ) : null}
-      </>
+      </div>
     )
   },
 )
