@@ -12694,7 +12694,7 @@ body.booking-appointment-panel-modal-open {
   display: grid;
   grid-template-columns: 1fr 1fr;
   gap: 8px;
-  align-items: end;
+  align-items: start;
 }
 
 :is(#nx-campaign-root, .nx-campaign-root) .sms-credit-card-form.is-subscription-checkout .sms-credit-card-input,
@@ -12796,8 +12796,18 @@ body.booking-appointment-panel-modal-open {
 }
 
 :is(#nx-campaign-root, .nx-campaign-root) .sms-credit-card-input[aria-invalid='true'],
-:is(#nx-campaign-root, .nx-campaign-root) .sms-credit-card-select[aria-invalid='true'] {
+:is(#nx-campaign-root, .nx-campaign-root) .sms-credit-card-select[aria-invalid='true'],
+:is(#nx-campaign-root, .nx-campaign-root) .subscription-stripe-card-field.is-invalid {
   border-color: #dc2626;
+}
+
+:is(#nx-campaign-root, .nx-campaign-root) .sms-credit-card-field-error {
+  display: block;
+  margin-top: 2px;
+  color: #b91c1c;
+  font-size: 11px;
+  font-weight: 700;
+  line-height: 1.3;
 }
 
 :is(#nx-campaign-root, .nx-campaign-root) .sms-credit-card-input::placeholder {
