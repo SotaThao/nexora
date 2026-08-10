@@ -3334,7 +3334,7 @@
           "ariaPlansPanel": "Service plans panel",
           "ariaSettingsPanel": "Salon settings panel",
           "tabs": {
-            "booking": "Booking Book",
+            "booking": "Booking",
             "customers": "Customers",
             "callLog": "Call Log",
             "smsCampaigns": "SMS Campaigns",

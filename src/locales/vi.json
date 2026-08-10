@@ -3334,7 +3334,7 @@
           "ariaPlansPanel": "Bảng gói dịch vụ",
           "ariaSettingsPanel": "Bảng cấu hình tiệm",
           "tabs": {
-            "booking": "Booking Book",
+            "booking": "Booking",
             "customers": "Khách hàng",
             "callLog": "Lịch sử gọi",
             "smsCampaigns": "Chiến dịch SMS",
