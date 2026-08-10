@@ -1,6 +1,7 @@
 /** Package Management — tabs, mock overview data, TipPlatform compare rows. */
 
 import {
+  SubscriptionMyPackageStatus,
   SubscriptionMyPackageType,
   type SubscriptionMyPackage,
 } from '../../../../data/repositories/subscriptionPayments'
@@ -101,6 +102,17 @@ export function isKnownPackageManagementTab(
 ): value is PackageManagementTab {
   const raw = String(value ?? '').trim().toLowerCase()
   return PACKAGE_MANAGEMENT_TAB_ORDER.some((tab) => tab === raw)
+}
+
+/** Overview tab only lists these my-packages wire statuses. */
+export const PACKAGE_OVERVIEW_VISIBLE_STATUSES = new Set<SubscriptionMyPackageStatus>([
+  SubscriptionMyPackageStatus.Active,
+])
+
+export function isPackageOverviewVisibleStatus(
+  status: SubscriptionMyPackageStatus,
+): boolean {
+  return PACKAGE_OVERVIEW_VISIBLE_STATUSES.has(status)
 }
 
 export type PackageOverviewProductKey = 'nexora' | 'voice'

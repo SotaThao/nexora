@@ -4,8 +4,6 @@ import {
   History,
   Layers3,
   Lock,
-  MessageCircle,
-  PhoneCall,
   RefreshCw,
   ShieldCheck,
   ShoppingBag,
@@ -17,6 +15,7 @@ import { getErrorI18nKey } from '../../../data/errorCodes'
 import {
   useMerchantVoiceCreditWallet,
   useMerchantVoiceUsageActivity,
+  refetchVoiceTenantUntilReady,
 } from '../../../data/hooks/useMerchantVoiceBookings'
 import { useMyVoiceTrialRequest } from '../../../data/hooks/useMyVoiceTrialRequest'
 import {
@@ -37,6 +36,7 @@ import {
 } from '../../../data/repositories/subscriptionPayments'
 import { PACKAGE_MANAGEMENT_TAB_QUERY } from './packageManagement/constants'
 import {
+  invalidateVoiceAiPlanPurchaseQueries,
   useSubscriptionPackages,
 } from '../../../data/hooks/useSubscriptionPayments'
 import { useProfileSettings } from '../../../data/hooks/useProfileSettings'
@@ -68,14 +68,21 @@ import {
   PlansView,
   SHOW_PACKAGE_HISTORY_TAB,
   SERVICE_PLAN_MONTHLY_PRICE,
+  CREDITS_LOW_BANNER_COPY,
+  CreditsLowBannerKind,
+  VOICE_AI_HUB_UNLOCK_POLL_ATTEMPTS,
+  VOICE_AI_HUB_UNLOCK_POLL_INTERVAL_MS,
   formatPlanPrice,
   indexVoiceAiPackagesByPlan,
   isPaidServicePlanId,
   isVoiceAiPlanBelowCurrent,
+  resolveCreditsLowBannerKind,
   resolveVoiceAiPlanId,
   type PaidServicePlanId,
   type VoiceAiCheckoutSelection,
 } from './plans/constants'
+import { BOOKING_PLANS_CREDITS_TK } from './creditCheckout/constants'
+import { BOOKING_HUB_PLANS_TK } from './packageManagement/constants'
 import { useNotification } from '../../../contexts/NotificationContext'
 import { getSmsCreditNumberLocale } from './smsCampaigns/constants'
 import {
@@ -85,7 +92,7 @@ import {
 } from '../../../utils/subscriptionDisplay'
 
 const CREDITS_HISTORY_PAGE_SIZE = 10
-const TK = 'components.dashboard.views.BookingHubView.plans'
+const TK = BOOKING_HUB_PLANS_TK
 
 const PLAN_BUTTON_LABEL_KEY: Record<PaidServicePlanId, string> = {
   ...PAID_SERVICE_PLAN_TITLE_KEY,
@@ -136,7 +143,7 @@ function resolveActivityLabel(
 
 function CreditsUsagePanel() {
   const { t, currentLanguage } = useTranslation()
-  const CTK = `${TK}.credits`
+  const CTK = BOOKING_PLANS_CREDITS_TK
   const voiceEnabled = useBookingHubVoiceEnabled()
   const [historyFilter, setHistoryFilter] = useState<CreditsUsageHistoryFilter>(
     CreditsUsageHistoryFilter.All,
@@ -187,20 +194,20 @@ function CreditsUsagePanel() {
   const voiceAvailable = wallet?.callMinutes.available ?? 0
   const smsAvailable = wallet?.smsSegments.available ?? 0
   /**
-   * GET /credits — banner from wallet flags:
-   * - CallMinutes.isLow / isBlocked → “AI Voice running low”
-   * - SmsSegments.isLow / isBlocked (and voice ok) → “Need more credits?”
-   * - neither → hide
+   * GET /credits — banner from wallet flags (HTML `data-credits-voice-warning`):
+   * Voice low wins over SMS; neither → hide (buy CTAs live on the top-up card).
    */
-  const isVoiceLow = Boolean(
-    wallet?.callMinutes.isLow || wallet?.callMinutes.isBlocked,
+  const creditsLowBannerKind = resolveCreditsLowBannerKind(
+    Boolean(wallet?.callMinutes.isLow || wallet?.callMinutes.isBlocked),
+    Boolean(wallet?.smsSegments.isLow || wallet?.smsSegments.isBlocked),
   )
-  const isSmsLow = Boolean(
-    wallet?.smsSegments.isLow || wallet?.smsSegments.isBlocked,
-  )
-  const showCreditsPrompt = isVoiceLow || isSmsLow
-  const showVoiceWarning = isVoiceLow
-  const showNeedMoreCredits = !isVoiceLow && isSmsLow
+  const creditsLowBanner = creditsLowBannerKind
+    ? CREDITS_LOW_BANNER_COPY[creditsLowBannerKind]
+    : null
+  const creditsLowBannerRemaining =
+    creditsLowBanner?.remainingSource === 'sms' ? smsAvailable : voiceAvailable
+  const CreditsLowBannerIcon =
+    creditsLowBannerKind === CreditsLowBannerKind.Voice ? AlertTriangle : Wallet
 
   const planName = wallet?.planTier ?? t(`${CTK}.planNameFallback`)
   const planStatus = wallet?.planStatus
@@ -328,77 +335,61 @@ function CreditsUsagePanel() {
             </span>
           </div>
 
-          <div
-            className="credits-plan-remaining credits-topup-remaining"
-            aria-label={t(`${CTK}.remainingTopupAria`)}
-          >
-            <span className="credits-label">{t(`${CTK}.remaining`)}</span>
-            <div className="credits-plan-remaining-values">
-              <strong>{voiceTopupBalance.toLocaleString(numberLocale)}</strong>
-              <span className="credits-plan-remaining-unit">{t(`${CTK}.unitMin`)}</span>
-              <span className="credits-plan-remaining-separator" aria-hidden="true">
-                ·
-              </span>
-              <strong>{smsTopupBalance.toLocaleString(numberLocale)}</strong>
-              <span className="credits-plan-remaining-unit">{t(`${CTK}.unitSms`)}</span>
+          <div className="credits-topup-balance-row">
+            <div
+              className="credits-plan-remaining credits-topup-remaining"
+              aria-label={t(`${CTK}.remainingTopupAria`)}
+            >
+              <span className="credits-label">{t(`${CTK}.remaining`)}</span>
+              <div className="credits-plan-remaining-values">
+                <strong>{voiceTopupBalance.toLocaleString(numberLocale)}</strong>
+                <span className="credits-plan-remaining-unit">{t(`${CTK}.unitMin`)}</span>
+                <span className="credits-plan-remaining-separator" aria-hidden="true">
+                  ·
+                </span>
+                <strong>{smsTopupBalance.toLocaleString(numberLocale)}</strong>
+                <span className="credits-plan-remaining-unit">{t(`${CTK}.unitSms`)}</span>
+              </div>
+            </div>
+
+            <div className="credits-actions credits-topup-actions" aria-label={t(`${CTK}.buyActionsAria`)}>
+              <button
+                className="credits-action credits-action-secondary credits-action-voice"
+                type="button"
+                onClick={() => setVoiceBuyOpen(true)}
+              >
+                <span>{t(`${CTK}.buyVoice`)}</span>
+              </button>
+              <button
+                className="credits-action credits-action-secondary credits-action-sms"
+                type="button"
+                onClick={() => setSmsBuyOpen(true)}
+              >
+                <span>{t(`${CTK}.buySms`)}</span>
+              </button>
             </div>
           </div>
         </article>
       </div>
 
-      {showCreditsPrompt ? (
+      {creditsLowBanner ? (
         <div
-          className={`credits-voice-warning${showVoiceWarning ? '' : ' is-neutral'}`}
+          className={`credits-voice-warning${creditsLowBanner.tone === 'warning' ? '' : ' is-neutral'}`}
           role="status"
           aria-live="polite"
         >
-          {showVoiceWarning ? (
-            <div className="credits-voice-warning-content">
-              <div className="credits-voice-warning-icon">
-                <AlertTriangle aria-hidden="true" />
-              </div>
-              <div>
-                <strong>{t(`${CTK}.voiceWarningTitle`)}</strong>
-                <p>
-                  {t(`${CTK}.voiceWarningBody`, {
-                    remaining: voiceAvailable.toLocaleString(numberLocale),
-                  })}
-                </p>
-              </div>
+          <div className="credits-voice-warning-content">
+            <div className="credits-voice-warning-icon">
+              <CreditsLowBannerIcon aria-hidden="true" />
             </div>
-          ) : null}
-          {showNeedMoreCredits ? (
-            <div className="credits-voice-warning-content">
-              <div className="credits-voice-warning-icon">
-                <Wallet aria-hidden="true" />
-              </div>
-              <div>
-                <strong>{t(`${CTK}.buyBarTitle`)}</strong>
-                <p>
-                  {t(`${CTK}.buyBarBodySms`, {
-                    remaining: smsAvailable.toLocaleString(numberLocale),
-                  })}
-                </p>
-              </div>
+            <div>
+              <strong>{t(`${CTK}.${creditsLowBanner.titleKey}`)}</strong>
+              <p>
+                {t(`${CTK}.${creditsLowBanner.bodyKey}`, {
+                  remaining: creditsLowBannerRemaining.toLocaleString(numberLocale),
+                })}
+              </p>
             </div>
-          ) : null}
-          <div className="credits-actions" aria-label={t(`${CTK}.buyActionsAria`)}>
-            <button
-              className="credits-action credits-action-secondary"
-              type="button"
-              onClick={() => setVoiceBuyOpen(true)}
-            >
-              <PhoneCall aria-hidden="true" />
-              <span>{t(`${CTK}.buyVoice`)}</span>
-            </button>
-            <button
-              className="credits-action credits-action-secondary"
-              type="button"
-              onClick={() => setSmsBuyOpen(true)}
-            >
-              <MessageCircle aria-hidden="true" />
-              <span>{t(`${CTK}.buySms`)}</span>
-            </button>
           </div>
         </div>
       ) : null}
@@ -692,8 +683,9 @@ export default function BookingPlansPanel({ buyOnlyMode = false }: { buyOnlyMode
   ) => {
     const paymentLabel = payment.name || payment.symbol
     setCheckoutSelection(null)
-    // Current Active Plan comes from GET /userprofile/me → business.subscriptions only.
-    void queryClient.invalidateQueries({ queryKey: qk.userProfile() })
+    // Unlock AI Hub tabs (Booking, Customers, …) gated on hasVoiceTenant — no full reload.
+    // Panels mount + fetch only when the user opens each tab.
+    invalidateVoiceAiPlanPurchaseQueries(queryClient)
     showToast(
       t(`${TK}.planPaymentSuccess`, {
         plan: selection.planId,
@@ -702,6 +694,10 @@ export default function BookingPlansPanel({ buyOnlyMode = false }: { buyOnlyMode
       }),
       'success',
     )
+    void refetchVoiceTenantUntilReady(queryClient, {
+      maxAttempts: VOICE_AI_HUB_UNLOCK_POLL_ATTEMPTS,
+      intervalMs: VOICE_AI_HUB_UNLOCK_POLL_INTERVAL_MS,
+    })
   }
 
   const renderPlanFeatures = (planId: PaidServicePlanId, pkg?: SubscriptionPackage) => {

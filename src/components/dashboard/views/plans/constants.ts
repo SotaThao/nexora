@@ -43,6 +43,52 @@ export enum PlansView {
   History = 'history',
 }
 
+/**
+ * Poll GET tenant/status after VoiceAI plan Paid until BE flips hasVoiceTenant.
+ * AI Hub then shows all tabs in-place (no page reload); each tab fetches on open.
+ */
+export const VOICE_AI_HUB_UNLOCK_POLL_ATTEMPTS = 8
+export const VOICE_AI_HUB_UNLOCK_POLL_INTERVAL_MS = 750
+
+/** Low-balance banner on Credit Usage (priority: Voice > SMS). */
+export enum CreditsLowBannerKind {
+  Voice = 'voice',
+  Sms = 'sms',
+}
+
+export type CreditsLowBannerCopy = {
+  titleKey: string
+  bodyKey: string
+  /** Which available balance feeds `{{remaining}}`. */
+  remainingSource: 'voice' | 'sms'
+  /** Warning tone uses amber; SMS-only uses neutral styling. */
+  tone: 'warning' | 'neutral'
+}
+
+export const CREDITS_LOW_BANNER_COPY: Record<CreditsLowBannerKind, CreditsLowBannerCopy> = {
+  [CreditsLowBannerKind.Voice]: {
+    titleKey: 'voiceWarningTitle',
+    bodyKey: 'voiceWarningBody',
+    remainingSource: 'voice',
+    tone: 'warning',
+  },
+  [CreditsLowBannerKind.Sms]: {
+    titleKey: 'buyBarTitle',
+    bodyKey: 'buyBarBodySms',
+    remainingSource: 'sms',
+    tone: 'neutral',
+  },
+}
+
+export function resolveCreditsLowBannerKind(
+  isVoiceLow: boolean,
+  isSmsLow: boolean,
+): CreditsLowBannerKind | null {
+  if (isVoiceLow) return CreditsLowBannerKind.Voice
+  if (isSmsLow) return CreditsLowBannerKind.Sms
+  return null
+}
+
 /** Package History sub-tab under AI Hub → Plans. */
 export const SHOW_PACKAGE_HISTORY_TAB = false
 
@@ -161,6 +207,30 @@ export function indexVoiceAiPackagesByPlan(
 }
 
 export const PACKAGE_HISTORY_PAGE_SIZE = 10
+
+/** Em dash for missing term (e.g. credit top-up with `periodInMonths: 0`). */
+export const PACKAGE_HISTORY_EMPTY_TERM = '—' as const
+
+/**
+ * Term column label. `periodInMonths <= 0` (credit packs) → em dash.
+ * Positive months → localized “N month(s)”.
+ */
+export function formatPackageHistoryTerm(
+  periodInMonths: number,
+  t: (key: string, params?: Record<string, string | number>) => string,
+  plansTk: string,
+): string {
+  const months = Math.trunc(Number(periodInMonths))
+  if (!Number.isFinite(months) || months <= 0) return PACKAGE_HISTORY_EMPTY_TERM
+  if (months === 1) return t(`${plansTk}.packageHistoryTermMonths`, { count: months })
+  return t(`${plansTk}.packageHistoryTermMonthsPlural`, { count: months })
+}
+
+/** True when the row is a recurring subscription term (hide for one-off credit packs). */
+export function isPackageHistorySubscriptionTerm(periodInMonths: number): boolean {
+  const months = Math.trunc(Number(periodInMonths))
+  return Number.isFinite(months) && months > 0
+}
 
 /** Selection passed into checkout after Choose Starter/Pro/Elite. */
 export type VoiceAiCheckoutSelection = {

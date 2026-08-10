@@ -20,7 +20,9 @@ import {
   PACKAGE_HISTORY_STATUS_LABEL_KEY,
   formatPackageHistoryAmount,
   formatPackageHistoryPackageLabel,
+  formatPackageHistoryTerm,
   formatPackageHistoryTransactionId,
+  isPackageHistorySubscriptionTerm,
   resolvePackageHistoryDisplayAt,
 } from './constants'
 import { type PackageManagementTabQueryOptions } from '../packageManagement/constants'
@@ -69,11 +71,6 @@ export default function PackageHistoryPanel({
     const start = (pageNumber - 1) * pageSize
     return rows.slice(start, start + pageSize)
   }, [rows, pageNumber, pageSize])
-
-  const formatTerm = (months: number) => {
-    if (months === 1) return t(`${TK}.packageHistoryTermMonths`, { count: months })
-    return t(`${TK}.packageHistoryTermMonthsPlural`, { count: months })
-  }
 
   const showSkeleton = isLoading && rows.length === 0
   const showTableSkeleton = isFetching && rows.length === 0
@@ -145,6 +142,12 @@ export default function PackageHistoryPanel({
                   `${TK}.${PACKAGE_HISTORY_STATUS_LABEL_KEY[row.uiStatus]}`,
                 )
                 const packageLabel = formatPackageHistoryPackageLabel(row.planName)
+                // `periodInMonths === 0` (credit top-up) → no "Monthly subscription", term "—"
+                // Do not use `periodInMonths || 1` — 0 is falsy and would show "1 month".
+                const showSubscriptionSubtitle = isPackageHistorySubscriptionTerm(
+                  row.periodInMonths,
+                )
+                const termLabel = formatPackageHistoryTerm(row.periodInMonths, t, TK)
                 return (
                   <tr key={row.orderId || row.referenceId}>
                     <td>
@@ -159,13 +162,19 @@ export default function PackageHistoryPanel({
                     <td>
                       <span className="credits-history-activity">
                         <strong>{packageLabel}</strong>
-                        <small>{t(`${TK}.packageHistoryMonthlySub`)}</small>
+                        {showSubscriptionSubtitle ? (
+                          <small>{t(`${TK}.packageHistoryMonthlySub`)}</small>
+                        ) : null}
                       </span>
                     </td>
                     <td>
-                      <span className="credits-product-badge credits-product-badge-voice">
-                        {formatTerm(row.periodInMonths || 1)}
-                      </span>
+                      {showSubscriptionSubtitle ? (
+                        <span className="credits-product-badge credits-product-badge-voice">
+                          {termLabel}
+                        </span>
+                      ) : (
+                        termLabel
+                      )}
                     </td>
                     <td>{validUntil}</td>
                     <td>

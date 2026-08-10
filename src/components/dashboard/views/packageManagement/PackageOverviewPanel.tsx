@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from 'react'
-import { Boxes, Clock3, TimerOff } from 'lucide-react'
+import { Boxes, Clock3 } from 'lucide-react'
 import { useSearchParams } from 'react-router-dom'
 import { useTranslation } from '../../../../contexts/LanguageContext'
 // import { useNotification } from '../../../../contexts/NotificationContext'
@@ -21,6 +21,7 @@ import {
   PACKAGE_MANAGEMENT_TAB_QUERY,
   PACKAGE_QUERY_PARAM,
   PackageManagementTab,
+  isPackageOverviewVisibleStatus,
   // resolveAutoRenewStateKey,
   // resolveAutoRenewToastKey,
   resolvePackageRenewTab,
@@ -119,28 +120,29 @@ function OwnedPackageCard({
         </div>
       </div>
 
-      <div
-        className={`package-countdown${needsManualRenew ? ' is-expired' : ''}`}
-        data-countdown
-      >
-        <div className="package-countdown-heading">
-          <span className="package-countdown-icon" aria-hidden="true">
-            {needsManualRenew ? <TimerOff /> : <Clock3 />}
-          </span>
-          <span className="package-countdown-label">{t(`${TK}.overview.remaining`)}</span>
-        </div>
-        {needsManualRenew ? (
-          <div className="package-countdown-expired" role="status">
-            <p>{t(`${TK}.overview.remainingExpiredHint`)}</p>
-            <button
-              type="button"
-              className="package-countdown-renew-button"
-              onClick={() => onRenewPackage(item.productKey)}
-            >
-              {t(`${TK}.overview.${renewCtaKey}`)}
-            </button>
+      {countdown.expired ? (
+        needsManualRenew ? (
+          <div className="package-countdown is-expired" data-countdown>
+            <div className="package-countdown-expired" role="status">
+              <p>{t(`${TK}.overview.remainingExpiredHint`)}</p>
+              <button
+                type="button"
+                className="package-countdown-renew-button"
+                onClick={() => onRenewPackage(item.productKey)}
+              >
+                {t(`${TK}.overview.${renewCtaKey}`)}
+              </button>
+            </div>
           </div>
-        ) : (
+        ) : null
+      ) : (
+        <div className="package-countdown" data-countdown>
+          <div className="package-countdown-heading">
+            <span className="package-countdown-icon" aria-hidden="true">
+              <Clock3 />
+            </span>
+            <span className="package-countdown-label">{t(`${TK}.overview.remaining`)}</span>
+          </div>
           <div className="package-countdown-units" role="group" aria-label={t(`${TK}.overview.remaining`)}>
             {PACKAGE_COUNTDOWN_UNITS.map((unit) => (
               <div key={unit} className="package-countdown-unit">
@@ -149,8 +151,8 @@ function OwnedPackageCard({
               </div>
             ))}
           </div>
-        )}
-      </div>
+        </div>
+      )}
     </article>
   )
 }
@@ -188,6 +190,7 @@ export default function PackageOverviewPanel() {
   const ownedPackages = useMemo(
     () =>
       myPackages
+        .filter((pkg) => isPackageOverviewVisibleStatus(pkg.status))
         .map(mapMyPackageToOwnedItem)
         .filter((item): item is PackageOverviewOwnedItem => item != null),
     [myPackages],

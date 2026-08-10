@@ -10,10 +10,12 @@ export interface SubscriptionPaymentMethod {
   icon: string
 }
 
-/** Query `packageType` for subscription package catalog (MD VoiceAI purchase flow). */
+/** Query `packageType` for subscription package catalog. */
 export enum SubscriptionPackageType {
   TipPlatform = 'TipPlatform',
   VoiceAI = 'VoiceAI',
+  VoiceSms = 'VoiceSms',
+  VoiceCallMinutes = 'VoiceCallMinutes',
 }
 
 export type PurchasableSubscriptionPlan = 'Starter' | 'Pro'
@@ -80,6 +82,9 @@ export interface SubscriptionPackage {
   price: number | null
   originalPrice: number | null
   periodInMonths: number | null
+  /** SMS segments / call minutes for VoiceSms & VoiceCallMinutes top-ups. */
+  creditUnits: number | null
+  level: number | null
 }
 
 /** Wire enum from GET `/api/v1/merchant/subscriptions/my-packages` `packageType`. */
@@ -200,6 +205,8 @@ function normalizePackage(raw: unknown): SubscriptionPackage | null {
     price: readNullableNumber(item.price),
     originalPrice: readNullableNumber(item.originalPrice),
     periodInMonths: readNullableNumber(item.periodInMonths),
+    creditUnits: readNullableNumber(item.creditUnits),
+    level: readNullableNumber(item.level),
   }
 }
 
@@ -306,7 +313,8 @@ function normalizePurchaseHistoryItem(
     referenceId,
     packageCode: readString(item.packageCode),
     planName: readString(item.planName) || readString(item.packageCode),
-    periodInMonths: Math.max(0, Math.trunc(readNumber(item.periodInMonths, 1))),
+    // Credit top-ups send `0` — never coerce with `|| 1` / fallback 1 (falsy 0 → "1 month").
+    periodInMonths: Math.max(0, Math.trunc(readNumber(item.periodInMonths, 0))),
     amount: readNumber(item.amount, 0),
     currency: readString(item.currency, 'USD') || 'USD',
     paymentStatus,

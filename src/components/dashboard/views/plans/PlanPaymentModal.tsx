@@ -200,10 +200,12 @@ export default function PlanPaymentModal({
       { packageId: selection.packageId, symbol: selectedPayment.symbol },
       {
         onSuccess: (result) => {
-          const statusToast = PURCHASE_STATUS_TOAST[result.paymentStatus]
-          if (statusToast) {
-            showToast(t(`${TK}.${statusToast.key}`), statusToast.type)
-            if (result.paymentStatus === SubscriptionPaymentStatus.Failed) return
+          if (result.paymentStatus !== SubscriptionPaymentStatus.Paid) {
+            const statusToast = PURCHASE_STATUS_TOAST[result.paymentStatus]
+            if (statusToast) {
+              showToast(t(`${TK}.${statusToast.key}`), statusToast.type)
+            }
+            return
           }
           onSuccess(selection, selectedPayment)
         },
