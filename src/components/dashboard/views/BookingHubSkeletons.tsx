@@ -539,7 +539,7 @@ export function BookingPackageHistoryTableSkeleton({ rows = 5 }: { rows?: number
   )
 }
 
-export function BookingPackageHistorySkeleton() {
+export function BookingPackageHistorySkeleton({ rows = 5 }: { rows?: number } = {}) {
   const { t } = useTranslation()
 
   return (
@@ -567,7 +567,7 @@ export function BookingPackageHistorySkeleton() {
             </tr>
           </thead>
           <tbody>
-            <BookingPackageHistoryTableSkeleton rows={5} />
+            <BookingPackageHistoryTableSkeleton rows={rows} />
           </tbody>
         </table>
       </div>

@@ -1,4 +1,4 @@
-import { useEffect, useMemo } from 'react'
+import { useEffect } from 'react'
 import { useTranslation } from '../../../../contexts/LanguageContext'
 import { getErrorI18nKey } from '../../../../data/errorCodes'
 import { useSubscriptionPurchaseHistory } from '../../../../data/hooks/useSubscriptionPayments'
@@ -28,12 +28,11 @@ import {
 import { type PackageManagementTabQueryOptions } from '../packageManagement/constants'
 
 const TK = 'components.dashboard.views.BookingHubView.plans'
-const PACKAGE_HISTORY_SKELETON_ROWS = 5
 const HISTORY_COL_SPAN = 7
 
 /**
- * Package purchase history table (VoiceAI / TipPlatform orders).
- * Client-side pagination — API returns the full list today.
+ * Package purchase history table (VoiceAI / TipPlatform / credit top-ups).
+ * Server-side pagination via GET purchase-history `Page` / `PageSize`.
  */
 export default function PackageHistoryPanel({
   queryOptions,
@@ -42,42 +41,43 @@ export default function PackageHistoryPanel({
   queryOptions?: PackageManagementTabQueryOptions
 } = {}) {
   const { t, currentLanguage } = useTranslation()
-  const {
-    data: rows = [],
-    dataUpdatedAt,
-    isLoading,
-    isFetching,
-    isError,
-    error,
-    refetch,
-  } = useSubscriptionPurchaseHistory(queryOptions ?? {})
-
-  const { pageNumber, pageSize, setPage, reset } = usePagination({
+  const { pageNumber, pageSize, setPage } = usePagination({
     pageSize: PACKAGE_HISTORY_PAGE_SIZE,
   })
 
-  useEffect(() => {
-    reset()
-  }, [dataUpdatedAt, reset])
+  const {
+    data,
+    isLoading,
+    isFetching,
+    isPlaceholderData,
+    isError,
+    error,
+    refetch,
+  } = useSubscriptionPurchaseHistory({
+    pageNumber,
+    pageSize,
+    ...(queryOptions ?? {}),
+  })
 
-  const totalCount = rows.length
-  const totalPages = Math.max(1, Math.ceil(totalCount / pageSize) || 1)
+  const rows = data?.items ?? []
+  const totalCount = data?.totalCount ?? 0
+  const totalPages = Math.max(1, data?.totalPages ?? 1)
+  const hasNextPage = data?.hasNextPage ?? pageNumber < totalPages
+  const hasPreviousPage = data?.hasPreviousPage ?? pageNumber > 1
 
   useEffect(() => {
     if (pageNumber > totalPages) setPage(totalPages)
   }, [pageNumber, totalPages, setPage])
 
-  const pageRows = useMemo(() => {
-    const start = (pageNumber - 1) * pageSize
-    return rows.slice(start, start + pageSize)
-  }, [rows, pageNumber, pageSize])
+  // Full-page skeleton on first load; row skeleton when paging / refetching.
+  const showFullSkeleton = isLoading && !data
+  const showTableSkeleton =
+    isFetching && (isPlaceholderData || rows.length === 0)
+  const skeletonRowCount = Math.min(Math.max(1, pageSize), PACKAGE_HISTORY_PAGE_SIZE)
+  const showPagination = Boolean(data) && totalCount > 0
 
-  const showSkeleton = isLoading && rows.length === 0
-  const showTableSkeleton = isFetching && rows.length === 0
-  const showPagination = !isLoading && totalCount > 0
-
-  if (showSkeleton) {
-    return <BookingPackageHistorySkeleton />
+  if (showFullSkeleton) {
+    return <BookingPackageHistorySkeleton rows={skeletonRowCount} />
   }
 
   return (
@@ -109,7 +109,7 @@ export default function PackageHistoryPanel({
           </thead>
           <tbody>
             {showTableSkeleton ? (
-              <BookingPackageHistoryTableSkeleton rows={PACKAGE_HISTORY_SKELETON_ROWS} />
+              <BookingPackageHistoryTableSkeleton rows={skeletonRowCount} />
             ) : isError && rows.length === 0 ? (
               <tr>
                 <td className="booking-empty-cell" colSpan={HISTORY_COL_SPAN}>
@@ -130,7 +130,7 @@ export default function PackageHistoryPanel({
                 </td>
               </tr>
             ) : (
-              pageRows.map((row) => {
+              rows.map((row) => {
                 const displayAt = resolvePackageHistoryDisplayAt(row)
                 const purchased = formatBookingHubDateTimeParts(displayAt, currentLanguage)
                 const validUntil = row.validUntil
@@ -206,8 +206,8 @@ export default function PackageHistoryPanel({
           pageSize={pageSize}
           totalPages={totalPages}
           totalCount={totalCount}
-          hasNextPage={pageNumber < totalPages}
-          hasPreviousPage={pageNumber > 1}
+          hasNextPage={hasNextPage}
+          hasPreviousPage={hasPreviousPage}
           onPageChange={setPage}
           isLoading={isFetching}
           className={`${BOOKING_HUB_PAGINATION_CLASSNAME} package-history-pagination`}

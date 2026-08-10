@@ -127,7 +127,9 @@ export interface SubscriptionPurchaseHistoryItem {
   referenceId: string
   packageCode: string
   planName: string
+  packageType: SubscriptionPackageType | null
   periodInMonths: number
+  creditUnits: number | null
   amount: number
   currency: string
   paymentStatus: SubscriptionPaymentStatus
@@ -135,6 +137,22 @@ export interface SubscriptionPurchaseHistoryItem {
   paidAt: string | null
   validUntil: string | null
   uiStatus: PackageHistoryUiStatus
+}
+
+/** Query for GET purchase-history (1-based page). */
+export type SubscriptionPurchaseHistoryQuery = {
+  pageNumber?: number
+  pageSize?: number
+}
+
+/** Paged GET `/api/v1/merchant/subscriptions/purchase-history` response. */
+export type SubscriptionPurchaseHistoryPage = {
+  items: SubscriptionPurchaseHistoryItem[]
+  pageNumber: number
+  totalPages: number
+  totalCount: number
+  hasPreviousPage: boolean
+  hasNextPage: boolean
 }
 
 function readString(value: unknown, fallback = ''): string {
@@ -301,6 +319,15 @@ function normalizePaymentMethods(res: unknown): SubscriptionPaymentMethod[] {
     .filter((method): method is SubscriptionPaymentMethod => method != null)
 }
 
+function normalizePackageType(value: unknown): SubscriptionPackageType | null {
+  const raw = String(value ?? '').trim()
+  if (!raw) return null
+  const match = Object.values(SubscriptionPackageType).find(
+    (type) => type.toLowerCase() === raw.toLowerCase(),
+  )
+  return match ?? null
+}
+
 function normalizePurchaseHistoryItem(
   raw: unknown,
 ): SubscriptionPurchaseHistoryItem | null {
@@ -318,8 +345,10 @@ function normalizePurchaseHistoryItem(
     referenceId,
     packageCode: readString(item.packageCode),
     planName: readString(item.planName) || readString(item.packageCode),
+    packageType: normalizePackageType(item.packageType),
     // Credit top-ups send `0` — never coerce with `|| 1` / fallback 1 (falsy 0 → "1 month").
     periodInMonths: Math.max(0, Math.trunc(readNumber(item.periodInMonths, 0))),
+    creditUnits: readNullableNumber(item.creditUnits),
     amount: readNumber(item.amount, 0),
     currency: readString(item.currency, 'USD') || 'USD',
     paymentStatus,
@@ -330,13 +359,49 @@ function normalizePurchaseHistoryItem(
   }
 }
 
-function normalizePurchaseHistory(
+function normalizePurchaseHistoryPage(
   res: unknown,
-): SubscriptionPurchaseHistoryItem[] {
-  const list = Array.isArray(res) ? res : []
-  return list
+  requestedPageNumber: number,
+): SubscriptionPurchaseHistoryPage {
+  if (Array.isArray(res)) {
+    const items = res
+      .map(normalizePurchaseHistoryItem)
+      .filter((row): row is SubscriptionPurchaseHistoryItem => row != null)
+    return {
+      items,
+      pageNumber: requestedPageNumber,
+      totalPages: 1,
+      totalCount: items.length,
+      hasPreviousPage: false,
+      hasNextPage: false,
+    }
+  }
+
+  const body = res && typeof res === 'object' ? (res as Record<string, unknown>) : {}
+  const rawItems = Array.isArray(body.items) ? body.items : []
+  const items = rawItems
     .map(normalizePurchaseHistoryItem)
     .filter((row): row is SubscriptionPurchaseHistoryItem => row != null)
+  const pageNumber = Math.max(1, Math.trunc(readNumber(body.pageNumber, requestedPageNumber)))
+  const totalPages = Math.max(1, Math.trunc(readNumber(body.totalPages, 1)))
+  const totalCount = Math.max(0, Math.trunc(readNumber(body.totalCount, items.length)))
+  const hasPreviousPage =
+    typeof body.hasPreviousPage === 'boolean'
+      ? body.hasPreviousPage
+      : pageNumber > 1
+  const hasNextPage =
+    typeof body.hasNextPage === 'boolean'
+      ? body.hasNextPage
+      : pageNumber < totalPages
+
+  return {
+    items,
+    pageNumber,
+    totalPages,
+    totalCount,
+    hasPreviousPage,
+    hasNextPage,
+  }
 }
 
 function normalizePurchaseResult(raw: unknown): PurchaseSubscriptionResult {
@@ -467,12 +532,22 @@ export function createSubscriptionPaymentsRepository(client: HttpClient = httpCl
       return normalizeInitializeCardPaymentResult(res)
     },
 
-    /** GET `/api/v1/merchant/subscriptions/purchase-history` */
-    async getPurchaseHistory(): Promise<SubscriptionPurchaseHistoryItem[]> {
+    /** GET `/api/v1/merchant/subscriptions/purchase-history?Page=&PageSize=` */
+    async getPurchaseHistory(
+      query: SubscriptionPurchaseHistoryQuery = {},
+    ): Promise<SubscriptionPurchaseHistoryPage> {
+      const pageNumber = Math.max(1, Math.trunc(query.pageNumber ?? 1))
+      const pageSize = Math.max(1, Math.trunc(query.pageSize ?? 10))
       const res = await client.get<unknown>(
         '/api/v1/merchant/subscriptions/purchase-history',
+        {
+          params: {
+            Page: pageNumber,
+            PageSize: pageSize,
+          },
+        },
       )
-      return normalizePurchaseHistory(res)
+      return normalizePurchaseHistoryPage(res, pageNumber)
     },
   }
 }
