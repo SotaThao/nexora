@@ -4542,6 +4542,7 @@
             },
             "status": {
               "active": "Đang hoạt động",
+              "trialing": "Đang dùng thử",
               "expiring": "Sắp hết hạn",
               "expired": "Đã hết hạn"
             },

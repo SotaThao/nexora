@@ -1,4 +1,4 @@
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
+import { keepPreviousData, useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import type { QueryClient } from '@tanstack/react-query'
 import { qk } from '../queryKeys'
 import subscriptionPaymentsRepository, {
@@ -11,8 +11,13 @@ import subscriptionPaymentsRepository, {
   type SubscriptionMyPackage,
   type SubscriptionPaymentMethod,
   type SubscriptionPurchaseHistoryItem,
+  type SubscriptionPurchaseHistoryPage,
+  type SubscriptionPurchaseHistoryQuery,
   type UpdateSubscriptionAutoRenewResult,
 } from '../repositories/subscriptionPayments'
+
+/** Page size used when polling purchase-history for a single order status. */
+const ORDER_STATUS_POLL_HISTORY_PAGE_SIZE = 50
 
 const CARD_PAYMENT_POLL_INTERVAL_MS = 2_000
 
@@ -154,19 +159,25 @@ export function useSubscriptionPaymentMethods({ enabled = true } = {}) {
   })
 }
 
-/** GET `/api/v1/merchant/subscriptions/purchase-history` */
+/** GET `/api/v1/merchant/subscriptions/purchase-history` (server-paged). */
 export function useSubscriptionPurchaseHistory({
   enabled = true,
+  pageNumber = 1,
+  pageSize = 10,
   staleTime = 30_000,
   refetchOnMount,
   gcTime,
 }: {
   enabled?: boolean
+  pageNumber?: number
+  pageSize?: number
 } & SubscriptionQueryCacheOptions = {}) {
-  return useQuery<SubscriptionPurchaseHistoryItem[]>({
-    queryKey: qk.merchantSubscriptionPurchaseHistory(),
-    queryFn: () => subscriptionPaymentsRepository.getPurchaseHistory(),
+  const query: SubscriptionPurchaseHistoryQuery = { pageNumber, pageSize }
+  return useQuery<SubscriptionPurchaseHistoryPage>({
+    queryKey: qk.merchantSubscriptionPurchaseHistory({ pageNumber, pageSize }),
+    queryFn: () => subscriptionPaymentsRepository.getPurchaseHistory(query),
     enabled,
+    placeholderData: keepPreviousData,
     ...withOptionalGcTime({ staleTime, refetchOnMount, gcTime }),
   })
 }
@@ -274,8 +285,12 @@ export function useSubscriptionOrderStatusPoll(orderId: string | null, { enabled
   return useQuery<SubscriptionPurchaseHistoryItem | undefined>({
     queryKey: qk.merchantSubscriptionOrderStatus(orderId ?? ''),
     queryFn: async () => {
-      const history = await subscriptionPaymentsRepository.getPurchaseHistory()
-      return findPurchaseHistoryItemByOrderRef(history, orderId ?? '')
+      // Newest orders land on page 1 — enough to resolve card webhook status.
+      const history = await subscriptionPaymentsRepository.getPurchaseHistory({
+        pageNumber: 1,
+        pageSize: ORDER_STATUS_POLL_HISTORY_PAGE_SIZE,
+      })
+      return findPurchaseHistoryItemByOrderRef(history.items, orderId ?? '')
     },
     enabled: enabled && !!orderId,
     refetchInterval: (query) => {

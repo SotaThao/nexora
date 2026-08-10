@@ -199,7 +199,13 @@ export const qk = {
       ? (['merchantSubscriptions', 'packages', packageType] as const)
       : (['merchantSubscriptions', 'packages'] as const),
   merchantSubscriptionPaymentMethods: () => ['merchantSubscriptions', 'paymentMethods'],
-  merchantSubscriptionPurchaseHistory: () => ['merchantSubscriptions', 'purchaseHistory'],
+  merchantSubscriptionPurchaseHistory: (page?: {
+    pageNumber: number
+    pageSize: number
+  }) =>
+    page
+      ? (['merchantSubscriptions', 'purchaseHistory', page] as const)
+      : (['merchantSubscriptions', 'purchaseHistory'] as const),
   merchantSubscriptionMyPackages: () => ['merchantSubscriptions', 'myPackages'],
   publicSubscriptionPackages: (packageType?: import('./repositories/subscriptionPayments').SubscriptionPackageType) =>
     packageType

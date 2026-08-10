@@ -203,6 +203,10 @@
   color: #c2410c;
 }
 
+.package-management-view .package-status.is-trialing {
+  color: #2563eb;
+}
+
 .package-management-view .package-status.is-expired {
   color: #c2410c;
 }

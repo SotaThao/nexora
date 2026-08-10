@@ -4542,6 +4542,7 @@
             },
             "status": {
               "active": "Active",
+              "trialing": "Trialing",
               "expiring": "Expiring soon",
               "expired": "Expired"
             },

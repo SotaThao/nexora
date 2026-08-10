@@ -107,6 +107,7 @@ export function isKnownPackageManagementTab(
 /** Overview tab only lists these my-packages wire statuses. */
 export const PACKAGE_OVERVIEW_VISIBLE_STATUSES = new Set<SubscriptionMyPackageStatus>([
   SubscriptionMyPackageStatus.Active,
+  SubscriptionMyPackageStatus.Trialing,
 ])
 
 export function isPackageOverviewVisibleStatus(
@@ -288,6 +289,8 @@ export type PackageOverviewOwnedItem = {
   activatedAt: string
   expiresAt: string
   autoRenew: boolean
+  /** Wire status from GET my-packages (`Active` | `Trialing` | …). */
+  wireStatus: SubscriptionMyPackageStatus
 }
 
 type OwnedPackagePlanResolver = (pkg: {
@@ -334,6 +337,7 @@ export function mapMyPackageToOwnedItem(
     activatedAt,
     expiresAt,
     autoRenew: Boolean(pkg.autoRenew),
+    wireStatus: pkg.status,
   }
 }
 
@@ -353,6 +357,7 @@ export const PACKAGE_OVERVIEW_OWNED_MOCK: PackageOverviewOwnedItem[] = [
     activatedAt: shiftIsoDate(-14),
     expiresAt: shiftIsoDate(30, true),
     autoRenew: true,
+    wireStatus: SubscriptionMyPackageStatus.Active,
   },
   {
     id: 'voice-pro',
@@ -368,6 +373,7 @@ export const PACKAGE_OVERVIEW_OWNED_MOCK: PackageOverviewOwnedItem[] = [
     activatedAt: shiftIsoDate(-7),
     expiresAt: shiftIsoDate(21, true),
     autoRenew: false,
+    wireStatus: SubscriptionMyPackageStatus.Active,
   },
   {
     id: 'nexora-starter-lapsed',
@@ -382,6 +388,7 @@ export const PACKAGE_OVERVIEW_OWNED_MOCK: PackageOverviewOwnedItem[] = [
     activatedAt: shiftIsoDate(-90),
     expiresAt: shiftIsoDate(-10, true),
     autoRenew: false,
+    wireStatus: SubscriptionMyPackageStatus.Active,
   },
 ]
 
@@ -504,7 +511,7 @@ export const PACKAGE_COUNTDOWN_UNITS = [
 
 export type PackageCountdownUnit = (typeof PACKAGE_COUNTDOWN_UNITS)[number]
 
-export type PackageOverviewStatus = 'active' | 'expiring' | 'expired'
+export type PackageOverviewStatus = 'active' | 'trialing' | 'expiring' | 'expired'
 
 const OVERVIEW_EXPIRING_WITHIN_DAYS = 7
 
@@ -559,13 +566,20 @@ export function formatPackageCountdownParts(expiresAtIso: string, now = Date.now
   return { years, months, days, hours, minutes, seconds, expired: false as const }
 }
 
+/**
+ * Badge status for Overview cards.
+ * Time-expired wins; otherwise Trialing wire status shows as Trialing;
+ * else Active / Expiring soon from remaining days.
+ */
 export function getPackageOverviewStatus(
   expiresAtIso: string,
   now = Date.now(),
+  wireStatus?: SubscriptionMyPackageStatus,
 ): PackageOverviewStatus {
   const endDate = parseApiUtcDateTime(expiresAtIso)
   const end = endDate?.getTime() ?? NaN
   if (!Number.isFinite(end) || end <= now) return 'expired'
+  if (wireStatus === SubscriptionMyPackageStatus.Trialing) return 'trialing'
   const daysLeft = (end - now) / 86400000
   if (daysLeft <= OVERVIEW_EXPIRING_WITHIN_DAYS) return 'expiring'
   return 'active'

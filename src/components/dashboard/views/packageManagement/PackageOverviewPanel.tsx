@@ -55,7 +55,7 @@ function OwnedPackageCard({
   onRenewPackage: (productKey: PackageOverviewProductKey) => void
 }) {
   const { t, currentLanguage } = useTranslation()
-  const status = getPackageOverviewStatus(item.expiresAt, now)
+  const status = getPackageOverviewStatus(item.expiresAt, now, item.wireStatus)
   const countdown = formatPackageCountdownParts(item.expiresAt, now)
   const statusLabel = t(`${TK}.overview.status.${status}`)
   const productLabel = t(`${TK}.overview.product.${item.productKey}`)
