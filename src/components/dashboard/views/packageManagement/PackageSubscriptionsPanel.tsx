@@ -89,7 +89,6 @@ export default function PackageSubscriptionsPanel({
     tipPlatformSubscription,
     comparePlanId,
     packages,
-    billingDefaults,
     paymentPlan,
     selectedPackage,
     paymentPlanPrice,
@@ -119,7 +118,6 @@ export default function PackageSubscriptionsPanel({
         paymentPlan={paymentPlan}
         selectedPackage={selectedPackage}
         paymentPlanPrice={paymentPlanPrice}
-        billingDefaults={billingDefaults}
         onClose={clearCheckout}
       />
     </>

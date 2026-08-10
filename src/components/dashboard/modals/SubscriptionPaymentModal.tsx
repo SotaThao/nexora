@@ -1,14 +1,18 @@
-import { useCallback, useEffect, useRef, useState } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
+import { useQueryClient } from '@tanstack/react-query'
 import { X, Loader2 } from 'lucide-react'
 import { useTranslation } from '../../../contexts/LanguageContext'
 import { useNotification } from '../../../contexts/NotificationContext'
+import { useProfileSettings } from '../../../data/hooks/useProfileSettings'
 import { useSubscriptionCardOrderPoll } from '../../../data/hooks/useSubscriptionCardOrderPoll'
 import {
+  invalidateSubscriptionPurchaseQueries,
   useSubscriptionPaymentMethods,
   usePurchaseSubscription,
   useInitializeCardPayment,
 } from '../../../data/hooks/useSubscriptionPayments'
 import { resolveTranslatedApiError } from '../../../utils/resolveTranslatedApiError'
+import { resolveSubscriptionBillingDefaults } from '../../../utils/subscriptionBillingDefaults'
 import type {
   PurchasableSubscriptionPlan,
   SubscriptionPaymentMethod,
@@ -19,19 +23,19 @@ import SubscriptionCardPaymentForm, {
   type SubscriptionCardPaymentFormHandle,
 } from './SubscriptionCardPaymentForm'
 import {
+  PURCHASABLE_PLAN_I18N_ID,
   SUBSCRIPTION_PAYMENT_MODAL_TK,
+  SubscriptionPaymentTab,
+  type SubscriptionPaymentTabValue,
+  WalletPurchaseNextStep,
+  resolveWalletPurchaseNextStep,
   subscriptionModalKey,
+  tryBeginOrderStatusPolling,
 } from './subscriptionPaymentConstants'
-
-const PLAN_ID: Record<PurchasableSubscriptionPlan, string> = {
-  Starter: 'starter',
-  Pro: 'pro',
-}
+import '../views/booking-hub.css'
 
 /** Stable fallback — avoid `data ?? []` allocating a new array each render. */
 const EMPTY_PAYMENT_METHODS: SubscriptionPaymentMethod[] = []
-
-type PaymentTab = 'wallet' | 'card'
 
 type Props = {
   isOpen: boolean
@@ -54,38 +58,63 @@ export default function SubscriptionPaymentModal({
 }: Props) {
   const { t } = useTranslation()
   const { showToast } = useNotification()
+  const queryClient = useQueryClient()
   const [selectedSymbol, setSelectedSymbol] = useState<string | null>(null)
-  const [paymentTab, setPaymentTab] = useState<PaymentTab>('wallet')
+  const [paymentTab, setPaymentTab] = useState<SubscriptionPaymentTabValue>(
+    SubscriptionPaymentTab.Wallet,
+  )
   const [cardSubmitting, setCardSubmitting] = useState(false)
   const cardFormRef = useRef<SubscriptionCardPaymentFormHandle | null>(null)
 
-  const handleCardOrderPaid = useCallback(() => {
+  const refreshSubscriptionCaches = useCallback(() => {
+    invalidateSubscriptionPurchaseQueries(queryClient)
+  }, [queryClient])
+
+  const finishCheckoutSuccess = useCallback(() => {
+    refreshSubscriptionCaches()
     showToast(t(subscriptionModalKey('paymentSuccess')), 'success')
     onClose()
     onSuccess?.()
-  }, [onClose, onSuccess, showToast, t])
+  }, [onClose, onSuccess, refreshSubscriptionCaches, showToast, t])
+
+  const handleCardOrderTimeout = useCallback(() => {
+    // Webhook may still flip Paid — refresh UI and close so the merchant sees the new plan if active.
+    refreshSubscriptionCaches()
+    onClose()
+    onSuccess?.()
+  }, [onClose, onSuccess, refreshSubscriptionCaches])
 
   const {
     isPolling: isCardOrderPolling,
     beginPolling: beginCardOrderPolling,
     resetPolling: resetCardOrderPolling,
-  } = useSubscriptionCardOrderPoll({ onPaid: handleCardOrderPaid })
+  } = useSubscriptionCardOrderPoll({
+    onPaid: finishCheckoutSuccess,
+    onTimeout: handleCardOrderTimeout,
+  })
 
   const {
     data: methodsData,
     isLoading: isMethodsLoading,
     isError: isMethodsError,
     refetch: refetchMethods,
-  } = useSubscriptionPaymentMethods({ enabled: isOpen && paymentTab === 'wallet' })
+  } = useSubscriptionPaymentMethods({
+    enabled: isOpen && paymentTab === SubscriptionPaymentTab.Wallet,
+  })
   const methods = methodsData ?? EMPTY_PAYMENT_METHODS
 
   const purchaseMutation = usePurchaseSubscription()
   const initializeCardMutation = useInitializeCardPayment()
+  const { data: profile } = useProfileSettings({ enabled: isOpen })
+  const resolvedBillingDefaults = useMemo(
+    () => resolveSubscriptionBillingDefaults(billingDefaults, profile),
+    [billingDefaults, profile],
+  )
 
   useEffect(() => {
     if (isOpen) return
     setSelectedSymbol(null)
-    setPaymentTab('wallet')
+    setPaymentTab(SubscriptionPaymentTab.Wallet)
     resetCardOrderPolling()
     initializeCardMutation.reset()
     // eslint-disable-next-line react-hooks/exhaustive-deps -- run on open→closed only
@@ -99,7 +128,11 @@ export default function SubscriptionPaymentModal({
   }, [isOpen, methods, selectedSymbol])
 
   useEffect(() => {
-    if (paymentTab !== 'card' || initializeCardMutation.data || initializeCardMutation.isPending) {
+    if (
+      paymentTab !== SubscriptionPaymentTab.Card
+      || initializeCardMutation.data
+      || initializeCardMutation.isPending
+    ) {
       return
     }
     initializeCardMutation.mutate(packageId)
@@ -108,40 +141,54 @@ export default function SubscriptionPaymentModal({
 
   if (!isOpen) return null
 
-  const isCardTab = paymentTab === 'card'
+  const isCardTab = paymentTab === SubscriptionPaymentTab.Card
   const modalKey = (suffix: string) => `${SUBSCRIPTION_PAYMENT_MODAL_TK}.${suffix}`
+  const planNameKey = `manage_plan.plans.${PURCHASABLE_PLAN_I18N_ID[plan]}.name`
 
   const handleWalletConfirm = () => {
     if (!selectedSymbol) return
     purchaseMutation.mutate(
       { packageId, symbol: selectedSymbol },
       {
-        onSuccess: () => {
-          showToast(t(subscriptionModalKey('paymentSuccess')), 'success')
-          onClose()
-          onSuccess?.()
+        onSuccess: (result) => {
+          const nextStep = resolveWalletPurchaseNextStep(result)
+          if (nextStep === WalletPurchaseNextStep.Failed) {
+            showToast(t(subscriptionModalKey('paymentFailed')), 'error')
+            return
+          }
+          if (nextStep === WalletPurchaseNextStep.PollOrder) {
+            beginCardOrderPolling(result.orderId)
+            return
+          }
+          finishCheckoutSuccess()
         },
         onError: (err) => {
           showToast(
             resolveTranslatedApiError(t, err, 'errors.unknown_error'),
             'error',
           )
+          // Purchase may have applied before the client saw the error — refresh active plan.
+          refreshSubscriptionCaches()
         },
       },
     )
   }
 
   const handleCardSuccess = () => {
-    if (!initializeCardMutation.data) return
-    beginCardOrderPolling(initializeCardMutation.data.orderId)
+    tryBeginOrderStatusPolling(initializeCardMutation.data?.orderId, beginCardOrderPolling)
   }
 
   const handleCardError = (message: string) => {
+    // Client-side Stripe errors can fire after the bank already authorized —
+    // always verify against purchase-history when we have an orderId.
+    if (tryBeginOrderStatusPolling(initializeCardMutation.data?.orderId, beginCardOrderPolling)) {
+      return
+    }
     showToast(message, 'error')
   }
 
   const canConfirmWallet =
-    paymentTab === 'wallet'
+    paymentTab === SubscriptionPaymentTab.Wallet
     && Boolean(selectedSymbol)
     && !purchaseMutation.isPending
     && !isMethodsLoading
@@ -172,7 +219,10 @@ export default function SubscriptionPaymentModal({
       <div
         role="dialog"
         aria-labelledby="subscription-payment-title"
-        className="relative w-full max-w-md max-h-[90vh] overflow-y-auto rounded-2xl border border-nexoraBorder bg-white p-5 shadow-2xl sm:p-6"
+        className={[
+          'relative w-full max-h-[90vh] overflow-y-auto rounded-2xl border border-nexoraBorder bg-white p-5 shadow-2xl sm:p-6',
+          isCardTab ? 'max-w-lg' : 'max-w-md',
+        ].join(' ')}
       >
         <button
           type="button"
@@ -193,17 +243,19 @@ export default function SubscriptionPaymentModal({
         <div className="mt-5 grid grid-cols-2 gap-2 rounded-xl bg-nexoraSurfaceMuted p-1">
           <button
             type="button"
-            onClick={() => setPaymentTab('wallet')}
+            onClick={() => setPaymentTab(SubscriptionPaymentTab.Wallet)}
             className={[
               'h-9 rounded-lg text-xs font-bold transition',
-              paymentTab === 'wallet' ? 'bg-white text-nexoraText shadow-sm' : 'text-nexoraMuted',
+              paymentTab === SubscriptionPaymentTab.Wallet
+                ? 'bg-white text-nexoraText shadow-sm'
+                : 'text-nexoraMuted',
             ].join(' ')}
           >
             {t(modalKey('subscription_payment_tab_wallet'))}
           </button>
           <button
             type="button"
-            onClick={() => setPaymentTab('card')}
+            onClick={() => setPaymentTab(SubscriptionPaymentTab.Card)}
             className={[
               'h-9 rounded-lg text-xs font-bold transition',
               isCardTab ? 'bg-white text-nexoraText shadow-sm' : 'text-nexoraMuted',
@@ -213,7 +265,7 @@ export default function SubscriptionPaymentModal({
           </button>
         </div>
 
-        {paymentTab === 'wallet' ? (
+        {paymentTab === SubscriptionPaymentTab.Wallet ? (
           <div className="mt-3">
             {isMethodsLoading ? (
               <div className="mt-2 flex items-center gap-2 rounded-xl border border-nexoraBorder p-4 text-xs text-nexoraMuted">
@@ -284,7 +336,7 @@ export default function SubscriptionPaymentModal({
           </p>
           <div className="mt-3 flex items-center justify-between text-sm">
             <span className="text-nexoraMuted">{t(modalKey('subscription_service_plan'))}</span>
-            <span className="font-bold text-nexoraText">{t(`manage_plan.plans.${PLAN_ID[plan]}.name`)}</span>
+            <span className="font-bold text-nexoraText">{t(planNameKey)}</span>
           </div>
           <div className="my-3 h-px w-full bg-nexoraBorder" />
           <div className="flex items-center justify-between">
@@ -324,7 +376,7 @@ export default function SubscriptionPaymentModal({
                 ref={cardFormRef}
                 clientSecret={initializeCardMutation.data.clientSecret}
                 publishableKey={initializeCardMutation.data.publishableKey}
-                billingDefaults={billingDefaults}
+                billingDefaults={resolvedBillingDefaults}
                 hideFooter
                 onSubmittingChange={setCardSubmitting}
                 onCancel={onClose}

@@ -1,9 +1,11 @@
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import type { SetURLSearchParams } from 'react-router-dom'
 import { SubscriptionPackageType } from '../../../../data/repositories/subscriptionPayments'
-import type { PurchasableSubscriptionPlan } from '../../../../data/repositories/subscriptionPayments'
+import type {
+  PurchasableSubscriptionPlan,
+  SubscriptionPackage,
+} from '../../../../data/repositories/subscriptionPayments'
 import { useSubscriptionPackages } from '../../../../data/hooks/useSubscriptionPayments'
-import { buildSubscriptionBillingDefaultsFromProfile } from '../../../../utils/subscriptionBillingDefaults'
 import {
   getTipPlatformSubscription,
   resolveTipPlatformPlanId,
@@ -59,10 +61,13 @@ export function useTipPlatformCheckout({
   const comparePlanId = toComparePlanId(currentTipPlanId)
 
   const [paymentPlan, setPaymentPlan] = useState<PurchasableSubscriptionPlan | null>(null)
+  /** Snapshot at open — keeps the payment modal mounted if the catalog briefly refetches empty. */
+  const [checkoutPackage, setCheckoutPackage] = useState<SubscriptionPackage | null>(null)
 
   const {
     data: packages = [],
     isLoading: isPackagesLoading,
+    isFetching: isPackagesFetching,
     isFetched: isPackagesFetched,
   } = useSubscriptionPackages({
     enabled: packagesEnabled || paymentPlan != null,
@@ -70,24 +75,29 @@ export function useTipPlatformCheckout({
     ...PACKAGE_MANAGEMENT_TAB_QUERY,
   })
 
-  const billingDefaults = useMemo(
-    () => buildSubscriptionBillingDefaultsFromProfile(profile),
-    [profile],
-  )
-
-  const selectedPackage = paymentPlan
-    ? findTipPlatformPackage(packages, paymentPlan)
-    : undefined
+  const selectedPackage = checkoutPackage
+    ?? (paymentPlan ? findTipPlatformPackage(packages, paymentPlan) : undefined)
 
   const clearCheckout = useCallback(() => {
     setPaymentPlan(null)
+    setCheckoutPackage(null)
     const next = stripPlanQueryParam(searchParams)
     if (next) setSearchParams(next, { replace: true })
   }, [searchParams, setSearchParams])
 
+  const openCheckout = useCallback(
+    (plan: PurchasableSubscriptionPlan) => {
+      const pkg = findTipPlatformPackage(packages, plan)
+      setCheckoutPackage(pkg ?? null)
+      setPaymentPlan(plan)
+    },
+    [packages],
+  )
+
   useEffect(() => {
     if (!deepLinkEnabled) {
       setPaymentPlan(null)
+      setCheckoutPackage(null)
       return
     }
     const deepLinkPlan = planIdToPurchasablePlan(
@@ -101,8 +111,8 @@ export function useTipPlatformCheckout({
       if (next) setSearchParams(next, { replace: true })
       return
     }
-    setPaymentPlan(deepLinkPlan)
-  }, [deepLinkEnabled, searchParams, currentTipPlanId, setSearchParams])
+    openCheckout(deepLinkPlan)
+  }, [deepLinkEnabled, searchParams, currentTipPlanId, setSearchParams, openCheckout])
 
   const trySelectPlan = useCallback(
     (planId: string): TipPlatformCheckoutResultValue => {
@@ -111,10 +121,10 @@ export function useTipPlatformCheckout({
       }
       const purchasablePlan = planIdToPurchasablePlan(planId)
       if (!purchasablePlan) return TipPlatformCheckoutResult.ContactSupport
-      setPaymentPlan(purchasablePlan)
+      openCheckout(purchasablePlan)
       return TipPlatformCheckoutResult.Opened
     },
-    [currentTipPlanId],
+    [currentTipPlanId, openCheckout],
   )
 
   return {
@@ -122,17 +132,17 @@ export function useTipPlatformCheckout({
     currentTipPlanId,
     comparePlanId,
     packages,
-    billingDefaults,
     paymentPlan,
     selectedPackage,
     paymentPlanPrice: selectedPackage?.price ?? 0,
     clearCheckout,
     trySelectPlan,
-    /** True when checkout was requested but catalog row is missing after fetch. */
+    /** True when checkout was requested but catalog row is missing after a settled fetch. */
     isCheckoutPackageMissing:
       Boolean(paymentPlan)
       && isPackagesFetched
       && !isPackagesLoading
+      && !isPackagesFetching
       && !selectedPackage,
   }
 }

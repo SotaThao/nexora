@@ -1146,7 +1146,6 @@ export function SubscriptionsRoute() {
   const {
     tipPlatformSubscription,
     packages,
-    billingDefaults,
     paymentPlan,
     selectedPackage,
     paymentPlanPrice,
@@ -1171,7 +1170,6 @@ export function SubscriptionsRoute() {
         paymentPlan={paymentPlan}
         selectedPackage={selectedPackage}
         paymentPlanPrice={paymentPlanPrice}
-        billingDefaults={billingDefaults}
         onClose={clearCheckout}
       />
     </>

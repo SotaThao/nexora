@@ -903,6 +903,7 @@
       "subscription_card_cvc_label": "CVC",
       "subscription_card_init_error": "Could not start card payment. Please try again.",
       "subscription_card_payment_error": "Your card was declined. Please try another card.",
+      "subscription_payment_failed": "Payment failed. Please try again or choose a different payment method.",
       "subscription_card_payment_processing": "Confirming your payment…",
       "subscription_card_payment_processing_timeout": "This is taking longer than usual. You can close this and check back shortly."
     },
