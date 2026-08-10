@@ -187,6 +187,23 @@ export function usePurchaseSubscription() {
   })
 }
 
+/**
+ * After VoiceAI plan Paid: refresh profile/packages and tenant status so AI Hub
+ * unlocks Booking / Customers / Call log / SMS / Settings (gated on hasVoiceTenant).
+ */
+export function invalidateVoiceAiPlanPurchaseQueries(queryClient: QueryClient) {
+  queryClient.invalidateQueries({ queryKey: qk.userProfile() })
+  queryClient.invalidateQueries({ queryKey: qk.merchantSubscriptionPaymentMethods() })
+  queryClient.invalidateQueries({ queryKey: qk.merchantSubscriptionPurchaseHistory() })
+  queryClient.invalidateQueries({
+    queryKey: qk.merchantSubscriptionPackages(SubscriptionPackageType.VoiceAI),
+  })
+  queryClient.invalidateQueries({ queryKey: qk.merchantVoiceCreditWallet() })
+  queryClient.invalidateQueries({ queryKey: qk.merchantSubscriptionMyPackages() })
+  queryClient.invalidateQueries({ queryKey: qk.merchantVoiceTenantStatus() })
+  queryClient.invalidateQueries({ queryKey: qk.merchantVoiceMyTenant() })
+}
+
 /** VoiceAI MD purchase — body `{ packageId, symbol }`. */
 export function usePurchaseVoiceAiPackage() {
   const queryClient = useQueryClient()
@@ -198,11 +215,45 @@ export function usePurchaseVoiceAiPackage() {
     mutationFn: ({ packageId, symbol }) =>
       subscriptionPaymentsRepository.purchaseByPackageId(packageId, symbol),
     onSuccess: () => {
-      invalidateSubscriptionPurchaseQueries(queryClient)
-      void queryClient.invalidateQueries({
-        queryKey: qk.merchantSubscriptionPackages(SubscriptionPackageType.VoiceAI),
-      })
-      void queryClient.invalidateQueries({ queryKey: qk.merchantVoiceCreditWallet() })
+      invalidateVoiceAiPlanPurchaseQueries(queryClient)
+    },
+  })
+}
+
+/**
+ * Refresh wallet / history after VoiceSms or VoiceCallMinutes top-up
+ * (wallet purchase mutation or card order Paid).
+ */
+export function invalidateCreditTopUpQueries(
+  queryClient: QueryClient,
+  packageType: SubscriptionPackageType,
+) {
+  queryClient.invalidateQueries({ queryKey: qk.userProfile() })
+  queryClient.invalidateQueries({ queryKey: qk.merchantSubscriptionPaymentMethods() })
+  queryClient.invalidateQueries({ queryKey: qk.merchantSubscriptionPurchaseHistory() })
+  queryClient.invalidateQueries({
+    queryKey: qk.merchantSubscriptionPackages(packageType),
+  })
+  queryClient.invalidateQueries({ queryKey: qk.merchantVoiceCreditWallet() })
+  queryClient.invalidateQueries({ queryKey: qk.merchantVoiceUsageActivityRoot() })
+
+  if (packageType === SubscriptionPackageType.VoiceSms) {
+    queryClient.invalidateQueries({ queryKey: qk.merchantVoiceSmsCampaignDashboard() })
+    queryClient.invalidateQueries({ queryKey: qk.merchantVoiceSmsCreditsRoot() })
+  }
+}
+
+export function usePurchaseCreditTopUp(packageType: SubscriptionPackageType) {
+  const queryClient = useQueryClient()
+  return useMutation<
+    PurchasePackageByIdResult,
+    Error,
+    { packageId: string; symbol: string }
+  >({
+    mutationFn: ({ packageId, symbol }) =>
+      subscriptionPaymentsRepository.purchaseByPackageId(packageId, symbol),
+    onSuccess: () => {
+      invalidateCreditTopUpQueries(queryClient, packageType)
     },
   })
 }

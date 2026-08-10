@@ -1,4 +1,4 @@
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
+import { useMutation, useQuery, useQueryClient, type QueryClient } from '@tanstack/react-query'
 import { qk } from '../queryKeys'
 import {
   type MerchantVoiceBusinessStaffFilter,
@@ -47,6 +47,33 @@ export function useMerchantVoiceTenantStatus({ enabled = true } = {}) {
     queryFn: () => merchantVoiceRepository.getTenantStatus(),
     enabled,
   })
+}
+
+/**
+ * Refetch tenant status until `hasVoiceTenant` is true (or attempts exhausted).
+ * After VoiceAI plan Paid, AI Hub / sidebar re-render with all tabs — no page reload.
+ */
+export async function refetchVoiceTenantUntilReady(
+  queryClient: QueryClient,
+  {
+    maxAttempts = 8,
+    intervalMs = 750,
+  }: { maxAttempts?: number; intervalMs?: number } = {},
+): Promise<boolean> {
+  for (let attempt = 0; attempt < maxAttempts; attempt++) {
+    const status = await queryClient.fetchQuery({
+      queryKey: qk.merchantVoiceTenantStatus(),
+      queryFn: () => merchantVoiceRepository.getTenantStatus(),
+      staleTime: 0,
+    })
+    if (status.hasVoiceTenant) return true
+    if (attempt < maxAttempts - 1) {
+      await new Promise((resolve) => {
+        window.setTimeout(resolve, intervalMs)
+      })
+    }
+  }
+  return false
 }
 
 export function useMerchantVoiceMyTenant({ enabled = true } = {}) {

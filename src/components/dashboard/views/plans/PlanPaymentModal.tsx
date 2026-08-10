@@ -35,9 +35,11 @@ import {
   PLAN_CARD_PAYMENT_SYMBOL,
   formatPlanMonthlyTotal,
   formatWalletBalanceUsd,
+  hasEnoughWalletBalance,
   isPlanCardPaymentSymbol,
   type VoiceAiCheckoutSelection,
 } from './constants'
+import { getErrorI18nKey } from '../../../../data/errorCodes'
 
 const TK = 'components.dashboard.views.BookingHubView.plans'
 
@@ -203,14 +205,21 @@ export default function PlanPaymentModal({
   const handleWalletConfirm = () => {
     if (!selection?.packageId || !selectedPayment) return
 
+    if (!hasEnoughWalletBalance(selectedPayment, selection.price)) {
+      showToast(t(getErrorI18nKey('InsufficientBalance')), 'error')
+      return
+    }
+
     purchaseMutation.mutate(
       { packageId: selection.packageId, symbol: selectedPayment.symbol },
       {
         onSuccess: (result) => {
-          const statusToast = PURCHASE_STATUS_TOAST[result.paymentStatus]
-          if (statusToast) {
-            showToast(t(`${TK}.${statusToast.key}`), statusToast.type)
-            if (result.paymentStatus === SubscriptionPaymentStatus.Failed) return
+          if (result.paymentStatus !== SubscriptionPaymentStatus.Paid) {
+            const statusToast = PURCHASE_STATUS_TOAST[result.paymentStatus]
+            if (statusToast) {
+              showToast(t(`${TK}.${statusToast.key}`), statusToast.type)
+            }
+            return
           }
           onSuccess(selection, selectedPayment)
         },

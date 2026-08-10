@@ -13372,13 +13372,6 @@ body.booking-appointment-panel-modal-open {
   line-height: 1.5;
 }
 
-.booking-hub-view .credits-voice-warning .credits-actions {
-  width: auto;
-  flex: 0 0 auto;
-  align-self: center;
-  margin-top: 2px;
-}
-
 .booking-hub-view .credits-card-head {
   display: flex;
   min-width: 0;
@@ -13535,6 +13528,20 @@ body.booking-appointment-panel-modal-open {
   line-height: 1.35;
 }
 
+.booking-hub-view .credits-topup-balance-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 12px;
+  margin-top: auto;
+}
+
+.booking-hub-view .credits-topup-balance-row .credits-plan-remaining {
+  flex: 1 1 auto;
+  margin-top: 0;
+}
+
 .booking-hub-view .credits-actions {
   display: flex;
   flex-wrap: wrap;
@@ -13542,6 +13549,49 @@ body.booking-appointment-panel-modal-open {
   justify-content: flex-end;
   gap: 8px;
   margin-top: 10px;
+}
+
+.booking-hub-view .credits-topup-actions {
+  flex: 0 0 auto;
+  justify-content: flex-end;
+  margin-top: 0;
+}
+
+.booking-hub-view .credits-topup-actions .credits-action {
+  flex: 0 0 auto;
+  min-width: 0;
+  border-radius: 7px;
+  padding: 6px 8px;
+  font-size: clamp(0.625rem, 0.6rem + 0.1vw, 0.6875rem); /* 10–11px */
+  font-weight: 700;
+}
+
+.booking-hub-view .credits-topup-actions .credits-action-voice {
+  border-color: #1264df;
+  background: #1264df;
+  color: #fff;
+  box-shadow: 0 5px 12px rgba(18, 100, 223, 0.2);
+}
+
+.booking-hub-view .credits-topup-actions .credits-action-voice:hover,
+.booking-hub-view .credits-topup-actions .credits-action-voice:focus-visible {
+  border-color: #0f57c7;
+  background: #0f57c7;
+  color: #fff;
+}
+
+.booking-hub-view .credits-topup-actions .credits-action-sms {
+  border-color: #168b55;
+  background: #168b55;
+  color: #fff;
+  box-shadow: 0 5px 12px rgba(22, 139, 85, 0.2);
+}
+
+.booking-hub-view .credits-topup-actions .credits-action-sms:hover,
+.booking-hub-view .credits-topup-actions .credits-action-sms:focus-visible {
+  border-color: #0f7446;
+  background: #0f7446;
+  color: #fff;
 }
 
 .booking-hub-view .credits-label {
@@ -13874,15 +13924,17 @@ body.booking-appointment-panel-modal-open {
     align-items: stretch;
   }
 
-  .booking-hub-view .credits-voice-warning .credits-actions {
-    width: 100%;
-    align-self: stretch;
-    justify-content: stretch;
-    margin-top: 4px;
+  .booking-hub-view .credits-topup-balance-row {
+    align-items: stretch;
   }
 
-  .booking-hub-view .credits-voice-warning .credits-action {
-    flex: 1 1 calc(50% - 4px);
+  .booking-hub-view .credits-topup-actions {
+    width: 100%;
+    justify-content: flex-end;
+  }
+
+  .booking-hub-view .credits-topup-actions .credits-action {
+    width: auto;
   }
 }
 
@@ -13995,13 +14047,18 @@ body.booking-appointment-panel-modal-open {
     font-size: 11px;
   }
 
-  .booking-hub-view .credits-voice-warning .credits-actions {
-    flex-direction: column;
+  .booking-hub-view .credits-topup-actions {
+    align-items: center;
+    flex-direction: row;
+    width: 100%;
+    justify-content: flex-end;
   }
 
-  .booking-hub-view .credits-voice-warning .credits-action {
-    flex: 1 1 auto;
-    width: 100%;
+  .booking-hub-view .credits-topup-actions .credits-action {
+    flex: 0 0 auto;
+    width: auto;
+    padding: 5px 7px;
+    font-size: 11px;
   }
 
   .booking-hub-view .credits-history-table th,

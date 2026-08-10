@@ -442,8 +442,12 @@ export const qk = {
   ],
   merchantVoiceSmsCreditSummary: () => ['merchantVoice', 'smsCredits', 'summary'],
   merchantVoiceSmsCreditHistory: (filters = EMPTY) => ['merchantVoice', 'smsCredits', 'history', filters],
+  /** Prefix — invalidate all smsCredits queries (summary + history variants). */
+  merchantVoiceSmsCreditsRoot: () => ['merchantVoice', 'smsCredits'] as const,
   merchantVoiceCreditWallet: () => ['merchantVoice', 'credits', 'wallet'],
   merchantVoiceUsageActivity: (filters = EMPTY) => ['merchantVoice', 'usage', 'activity', filters],
+  /** Prefix — invalidate all usage-activity filter variants. */
+  merchantVoiceUsageActivityRoot: () => ['merchantVoice', 'usage', 'activity'] as const,
 
   // Nexora Voice trial (merchant)
   voiceTrialRequestMe: () => ['nexora-voice', 'trial-request', 'me'],
