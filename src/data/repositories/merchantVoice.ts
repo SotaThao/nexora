@@ -116,7 +116,6 @@ export {
   normalizeVoiceCreditType,
   normalizeVoicePlanStatus,
   normalizeVoicePlanTier,
-  hasJoinedVoicePlan,
   parseBookingHubMainTab,
   parseBookingHubSubTab,
   isBookingHubMainTabVisible,

@@ -34,6 +34,8 @@ export function useDashboardNavigation() {
     activeMenu === DASHBOARD_MENU.BookingHub,
   )
   const [isPosMobileExpanded, setIsPosMobileExpanded] = useState(activeMenu === DASHBOARD_MENU.Pos)
+  const [isPackageManagementMobileExpanded, setIsPackageManagementMobileExpanded] =
+    useState(activeMenu === DASHBOARD_MENU.PackageManagement)
   const [isGiftCardCenterMobileExpanded, setIsGiftCardCenterMobileExpanded] = useState(false)
   const [settingsTab, setSettingsTab] = useState('profile')
   const [isProfileExpanded, setIsProfileExpanded] = useState(false)
@@ -57,6 +59,9 @@ export function useDashboardNavigation() {
     setIsTouchpointsMobileExpanded(activeMenu === DASHBOARD_MENU.Touchpoints)
     setIsBookingHubMobileExpanded(activeMenu === DASHBOARD_MENU.BookingHub)
     setIsPosMobileExpanded(activeMenu === DASHBOARD_MENU.Pos)
+    setIsPackageManagementMobileExpanded(
+      activeMenu === DASHBOARD_MENU.PackageManagement,
+    )
   }, [isMobileMenuOpen, activeMenu, isPaymentsPayoutsActive])
   useEffect(() => {
     if (isPaymentsPayoutsActive) {
@@ -65,10 +70,14 @@ export function useDashboardNavigation() {
       setIsTaxIqMobileExpanded(false)
       setIsBookingHubMobileExpanded(false)
       setIsPosMobileExpanded(false)
+      setIsPackageManagementMobileExpanded(false)
       setIsGiftCardCenterMobileExpanded(false)
     }
     if (activeMenu === DASHBOARD_MENU.BookingHub) {
       setIsBookingHubMobileExpanded(true)
+    }
+    if (activeMenu === DASHBOARD_MENU.PackageManagement) {
+      setIsPackageManagementMobileExpanded(true)
     }
   }, [activeMenu, isPaymentsPayoutsActive])
 
@@ -114,6 +123,8 @@ export function useDashboardNavigation() {
     setIsBookingHubMobileExpanded,
     isPosMobileExpanded,
     setIsPosMobileExpanded,
+    isPackageManagementMobileExpanded,
+    setIsPackageManagementMobileExpanded,
     isGiftCardCenterMobileExpanded,
     setIsGiftCardCenterMobileExpanded,
     settingsTab,

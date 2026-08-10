@@ -16,7 +16,6 @@ import {
 import { useMerchantVoiceMyTenant } from '../../../../data/hooks/useMerchantVoiceBookings'
 import {
   useCancelMerchantVoiceSmsCampaign,
-  useCreateMerchantVoiceSmsCreditPurchase,
   useDeleteMerchantVoiceSmsCampaign,
   useMerchantVoiceSmsCampaignAudienceSummary,
   useMerchantVoiceSmsCampaignDashboard,
@@ -52,8 +51,6 @@ import {
   SMS_CREDITS_LOW_THRESHOLD,
   formatSmsCostUsd,
   type SmsCampaignSegmentAccent,
-  type SmsCreditPackageMock,
-  type SmsCreditPaymentMock,
 } from './constants'
 import SmsBuyCreditsModal from './SmsBuyCreditsModal'
 import SmsCreateCampaignModal from './SmsCreateCampaignModal'
@@ -114,7 +111,6 @@ export default function BookingSmsCampaignsPanel() {
 
   const cancelMutation = useCancelMerchantVoiceSmsCampaign()
   const deleteMutation = useDeleteMerchantVoiceSmsCampaign()
-  const purchaseMutation = useCreateMerchantVoiceSmsCreditPurchase()
 
   const [buyOpen, setBuyOpen] = useState(false)
   const [composerOpen, setComposerOpen] = useState(false)
@@ -131,7 +127,6 @@ export default function BookingSmsCampaignsPanel() {
   const isBusy =
     cancelMutation.isPending
     || deleteMutation.isPending
-    || purchaseMutation.isPending
 
   const toastApiError = (error: unknown) => {
     showToast(t(getErrorI18nKey(getApiErrorCode(error))), 'error')
@@ -209,22 +204,6 @@ export default function BookingSmsCampaignsPanel() {
       toastApiError(error)
     } finally {
       setPendingActionId(null)
-    }
-  }
-
-  const handleBuyConfirm = async (pkg: SmsCreditPackageMock, payment: SmsCreditPaymentMock) => {
-    try {
-      await purchaseMutation.mutateAsync({ packageCode: pkg.id })
-      setBuyOpen(false)
-      showToast(
-        t(`${TK}.buySuccess`, {
-          credits: pkg.credits.toLocaleString(),
-          payment: payment.label,
-        }),
-        'success',
-      )
-    } catch (error) {
-      toastApiError(error)
     }
   }
 
@@ -458,12 +437,8 @@ export default function BookingSmsCampaignsPanel() {
       <div id="nx-campaign-root">
         <SmsBuyCreditsModal
           open={buyOpen}
-          submitting={purchaseMutation.isPending}
           preserveBodyLock={composerOpen}
-          onClose={() => {
-            if (!purchaseMutation.isPending) setBuyOpen(false)
-          }}
-          onConfirm={handleBuyConfirm}
+          onClose={() => setBuyOpen(false)}
         />
         <SmsCreateCampaignModal
           open={composerOpen}

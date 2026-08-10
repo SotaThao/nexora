@@ -193,6 +193,26 @@ export const qk = {
   publicPhysicalCardHelp: (helpCode?: string | null, authMode?: string | null) =>
     ['publicPhysicalCardHelp', helpCode ?? '', authMode ?? ''],
 
+  // Merchant Subscriptions (billing)
+  merchantSubscriptionPackages: (packageType?: import('./repositories/subscriptionPayments').SubscriptionPackageType) =>
+    packageType
+      ? (['merchantSubscriptions', 'packages', packageType] as const)
+      : (['merchantSubscriptions', 'packages'] as const),
+  merchantSubscriptionPaymentMethods: () => ['merchantSubscriptions', 'paymentMethods'],
+  merchantSubscriptionPurchaseHistory: (page?: {
+    pageNumber: number
+    pageSize: number
+  }) =>
+    page
+      ? (['merchantSubscriptions', 'purchaseHistory', page] as const)
+      : (['merchantSubscriptions', 'purchaseHistory'] as const),
+  merchantSubscriptionMyPackages: () => ['merchantSubscriptions', 'myPackages'],
+  publicSubscriptionPackages: (packageType?: import('./repositories/subscriptionPayments').SubscriptionPackageType) =>
+    packageType
+      ? (['publicSubscriptions', 'packages', packageType] as const)
+      : (['publicSubscriptions', 'packages'] as const),
+  merchantSubscriptionOrderStatus: (orderId: string) => ['merchantSubscriptions', 'orderStatus', orderId],
+
   // Merchant Payment Methods
   merchantPaymentMethods: ()   => ['merchantPaymentMethods'],
   supportedPaymentMethods: ()  => ['supportedPaymentMethods'],
@@ -428,8 +448,12 @@ export const qk = {
   ],
   merchantVoiceSmsCreditSummary: () => ['merchantVoice', 'smsCredits', 'summary'],
   merchantVoiceSmsCreditHistory: (filters = EMPTY) => ['merchantVoice', 'smsCredits', 'history', filters],
+  /** Prefix — invalidate all smsCredits queries (summary + history variants). */
+  merchantVoiceSmsCreditsRoot: () => ['merchantVoice', 'smsCredits'] as const,
   merchantVoiceCreditWallet: () => ['merchantVoice', 'credits', 'wallet'],
   merchantVoiceUsageActivity: (filters = EMPTY) => ['merchantVoice', 'usage', 'activity', filters],
+  /** Prefix — invalidate all usage-activity filter variants. */
+  merchantVoiceUsageActivityRoot: () => ['merchantVoice', 'usage', 'activity'] as const,
 
   // Nexora Voice trial (merchant)
   voiceTrialRequestMe: () => ['nexora-voice', 'trial-request', 'me'],

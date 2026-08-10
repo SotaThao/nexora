@@ -166,15 +166,6 @@ export function normalizeVoicePlanStatus(value: unknown): VoicePlanStatus | null
   return match ?? null
 }
 
-/** True when merchant has joined a voice plan (or active trial) — used to gate Credit Usage. */
-export function hasJoinedVoicePlan(wallet: {
-  planTier: VoicePlanTier | null
-  isTrial: boolean
-} | null | undefined): boolean {
-  if (!wallet) return false
-  return wallet.planTier != null || wallet.isTrial
-}
-
 export function normalizeVoiceCreditActivityKind(value: unknown): VoiceCreditActivityKind {
   const normalized = String(value ?? '').trim()
   const match = Object.values(VoiceCreditActivityKind).find(

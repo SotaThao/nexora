@@ -6,7 +6,7 @@ import CustomSelect from '../../CustomSelect'
 import ImageFileInput from '../../ui/ImageFileInput'
 import CountryCodeSelect, { formatNationalNumber, parsePhone } from '../../CountryCodeSelect'
 import { renderTextWithGoldStars } from '../constants'
-import { renderLabel } from '../../../contexts/LanguageContext'
+import { renderLabel } from '../../../utils/renderLabel'
 
 
 export default function Step1BusinessInfo({

@@ -1,9 +1,9 @@
-import React, { useEffect, useRef, useState } from 'react'
+import React, { useEffect, useMemo, useState } from 'react'
 import {
   Crown,
+  History,
   Layers3,
-  MessageCircle,
-  PhoneCall,
+  Lock,
   RefreshCw,
   ShieldCheck,
   ShoppingBag,
@@ -15,6 +15,7 @@ import { getErrorI18nKey } from '../../../data/errorCodes'
 import {
   useMerchantVoiceCreditWallet,
   useMerchantVoiceUsageActivity,
+  refetchVoiceTenantUntilReady,
 } from '../../../data/hooks/useMerchantVoiceBookings'
 import { useMyVoiceTrialRequest } from '../../../data/hooks/useMyVoiceTrialRequest'
 import {
@@ -23,13 +24,26 @@ import {
   VoiceCreditActivityKind,
   VoiceCreditType,
   VoicePlanStatus,
+  VoicePlanTier,
   VOICE_CREDIT_TYPE_TO_PRODUCT,
-  hasJoinedVoicePlan,
   mapCreditsUsageHistoryFilterToCreditType,
   type VoiceUsageActivityDto,
 } from '../../../data/repositories/merchantVoice'
+import {
+  SubscriptionPackageType,
+  type SubscriptionPackage,
+  type SubscriptionPaymentMethod,
+} from '../../../data/repositories/subscriptionPayments'
+import { PACKAGE_MANAGEMENT_TAB_QUERY } from './packageManagement/constants'
+import {
+  invalidateVoiceAiPlanPurchaseQueries,
+  useSubscriptionPackages,
+} from '../../../data/hooks/useSubscriptionPayments'
+import { useProfileSettings } from '../../../data/hooks/useProfileSettings'
+import { qk } from '../../../data/queryKeys'
 import { usePagination } from '../../../hooks/usePagination'
 import { getApiErrorCode } from '../../../types/domain'
+import { useQueryClient } from '@tanstack/react-query'
 import Pagination from '../../ui/Pagination'
 import {
   BOOKING_HUB_EMPTY_CELL,
@@ -37,6 +51,7 @@ import {
   formatBookingHubDateTimeParts,
 } from './bookingHubFormatters'
 import {
+  BookingBuyPackageSkeleton,
   BookingCreditsHistoryTableSkeleton,
   BookingCreditsUsageSkeleton,
 } from './BookingHubSkeletons'
@@ -45,30 +60,43 @@ import BookingTrialModal from './BookingTrialModal'
 import SmsBuyCreditsModal from './smsCampaigns/SmsBuyCreditsModal'
 import VoiceBuyCreditsModal from './voiceCredits/VoiceBuyCreditsModal'
 import PlanPaymentModal from './plans/PlanPaymentModal'
+import PackageHistoryPanel from './plans/PackageHistoryPanel'
 import {
-  isPaidServicePlanId,
+  PAID_SERVICE_PLAN_ORDER,
+  PAID_SERVICE_PLAN_TITLE_KEY,
+  PLAN_FALLBACK_FEATURES,
+  PlansView,
+  SHOW_PACKAGE_HISTORY_TAB,
   SERVICE_PLAN_MONTHLY_PRICE,
+  CREDITS_LOW_BANNER_COPY,
+  CreditsLowBannerKind,
+  VOICE_AI_HUB_UNLOCK_POLL_ATTEMPTS,
+  VOICE_AI_HUB_UNLOCK_POLL_INTERVAL_MS,
+  formatPlanPrice,
+  indexVoiceAiPackagesByPlan,
+  isPaidServicePlanId,
+  isVoiceAiPlanBelowCurrent,
+  resolveCreditsLowBannerKind,
+  resolveVoiceAiPlanId,
   type PaidServicePlanId,
+  type VoiceAiCheckoutSelection,
 } from './plans/constants'
+import { BOOKING_PLANS_CREDITS_TK } from './creditCheckout/constants'
+import { BOOKING_HUB_PLANS_TK } from './packageManagement/constants'
 import { useNotification } from '../../../contexts/NotificationContext'
+import { getSmsCreditNumberLocale } from './smsCampaigns/constants'
 import {
-  SMS_CAMPAIGN_TK,
-  getSmsCreditNumberLocale,
-  getSmsCreditPaymentLabel,
-  type SmsCreditPaymentMock,
-} from './smsCampaigns/constants'
+  getSubscriptionPlanRenewLabel,
+  getVoiceAiSubscription,
+  isUserSubscriptionActive,
+} from '../../../utils/subscriptionDisplay'
 
 const CREDITS_HISTORY_PAGE_SIZE = 10
+const TK = BOOKING_HUB_PLANS_TK
 
-const TK = 'components.dashboard.views.BookingHubView.plans'
-
-type PlanId = 'Starter' | 'Pro' | 'Elite'
-type PlansView = 'package' | 'credits'
-
-const PLAN_BUTTON_LABEL_KEY: Record<PlanId, string> = {
-  Starter: 'selectStarter',
-  Pro: 'startTrial',
-  Elite: 'selectElite',
+const PLAN_BUTTON_LABEL_KEY: Record<PaidServicePlanId, string> = {
+  ...PAID_SERVICE_PLAN_TITLE_KEY,
+  [VoicePlanTier.Pro]: 'startTrial',
 }
 
 const HISTORY_FILTERS: { id: CreditsUsageHistoryFilter; labelKey: string }[] = [
@@ -94,7 +122,9 @@ const ACTIVITY_KIND_I18N_KEY: Record<VoiceCreditActivityKind, string> = {
 function PlanFeature({ included, children }: { included: boolean; children: React.ReactNode }) {
   return (
     <div className="plan-feature">
-      <span className={`plan-check ${included ? '' : 'muted'}`}>{included ? '✓' : '—'}</span>
+      <span className={`plan-check ${included ? '' : 'muted'}`}>
+        {included ? '✓' : BOOKING_HUB_EMPTY_CELL}
+      </span>
       <span>{children}</span>
     </div>
   )
@@ -113,7 +143,7 @@ function resolveActivityLabel(
 
 function CreditsUsagePanel() {
   const { t, currentLanguage } = useTranslation()
-  const CTK = `${TK}.credits`
+  const CTK = BOOKING_PLANS_CREDITS_TK
   const voiceEnabled = useBookingHubVoiceEnabled()
   const [historyFilter, setHistoryFilter] = useState<CreditsUsageHistoryFilter>(
     CreditsUsageHistoryFilter.All,
@@ -164,20 +194,20 @@ function CreditsUsagePanel() {
   const voiceAvailable = wallet?.callMinutes.available ?? 0
   const smsAvailable = wallet?.smsSegments.available ?? 0
   /**
-   * GET /credits — banner from wallet flags:
-   * - CallMinutes.isLow / isBlocked → “AI Voice running low”
-   * - SmsSegments.isLow / isBlocked (and voice ok) → “Need more credits?”
-   * - neither → hide
+   * GET /credits — banner from wallet flags (HTML `data-credits-voice-warning`):
+   * Voice low wins over SMS; neither → hide (buy CTAs live on the top-up card).
    */
-  const isVoiceLow = Boolean(
-    wallet?.callMinutes.isLow || wallet?.callMinutes.isBlocked,
+  const creditsLowBannerKind = resolveCreditsLowBannerKind(
+    Boolean(wallet?.callMinutes.isLow || wallet?.callMinutes.isBlocked),
+    Boolean(wallet?.smsSegments.isLow || wallet?.smsSegments.isBlocked),
   )
-  const isSmsLow = Boolean(
-    wallet?.smsSegments.isLow || wallet?.smsSegments.isBlocked,
-  )
-  const showCreditsPrompt = isVoiceLow || isSmsLow
-  const showVoiceWarning = isVoiceLow
-  const showNeedMoreCredits = !isVoiceLow && isSmsLow
+  const creditsLowBanner = creditsLowBannerKind
+    ? CREDITS_LOW_BANNER_COPY[creditsLowBannerKind]
+    : null
+  const creditsLowBannerRemaining =
+    creditsLowBanner?.remainingSource === 'sms' ? smsAvailable : voiceAvailable
+  const CreditsLowBannerIcon =
+    creditsLowBannerKind === CreditsLowBannerKind.Voice ? AlertTriangle : Wallet
 
   const planName = wallet?.planTier ?? t(`${CTK}.planNameFallback`)
   const planStatus = wallet?.planStatus
@@ -305,77 +335,61 @@ function CreditsUsagePanel() {
             </span>
           </div>
 
-          <div
-            className="credits-plan-remaining credits-topup-remaining"
-            aria-label={t(`${CTK}.remainingTopupAria`)}
-          >
-            <span className="credits-label">{t(`${CTK}.remaining`)}</span>
-            <div className="credits-plan-remaining-values">
-              <strong>{voiceTopupBalance.toLocaleString(numberLocale)}</strong>
-              <span className="credits-plan-remaining-unit">{t(`${CTK}.unitMin`)}</span>
-              <span className="credits-plan-remaining-separator" aria-hidden="true">
-                ·
-              </span>
-              <strong>{smsTopupBalance.toLocaleString(numberLocale)}</strong>
-              <span className="credits-plan-remaining-unit">{t(`${CTK}.unitSms`)}</span>
+          <div className="credits-topup-balance-row">
+            <div
+              className="credits-plan-remaining credits-topup-remaining"
+              aria-label={t(`${CTK}.remainingTopupAria`)}
+            >
+              <span className="credits-label">{t(`${CTK}.remaining`)}</span>
+              <div className="credits-plan-remaining-values">
+                <strong>{voiceTopupBalance.toLocaleString(numberLocale)}</strong>
+                <span className="credits-plan-remaining-unit">{t(`${CTK}.unitMin`)}</span>
+                <span className="credits-plan-remaining-separator" aria-hidden="true">
+                  ·
+                </span>
+                <strong>{smsTopupBalance.toLocaleString(numberLocale)}</strong>
+                <span className="credits-plan-remaining-unit">{t(`${CTK}.unitSms`)}</span>
+              </div>
+            </div>
+
+            <div className="credits-actions credits-topup-actions" aria-label={t(`${CTK}.buyActionsAria`)}>
+              <button
+                className="credits-action credits-action-secondary credits-action-voice"
+                type="button"
+                onClick={() => setVoiceBuyOpen(true)}
+              >
+                <span>{t(`${CTK}.buyVoice`)}</span>
+              </button>
+              <button
+                className="credits-action credits-action-secondary credits-action-sms"
+                type="button"
+                onClick={() => setSmsBuyOpen(true)}
+              >
+                <span>{t(`${CTK}.buySms`)}</span>
+              </button>
             </div>
           </div>
         </article>
       </div>
 
-      {showCreditsPrompt ? (
+      {creditsLowBanner ? (
         <div
-          className={`credits-voice-warning${showVoiceWarning ? '' : ' is-neutral'}`}
+          className={`credits-voice-warning${creditsLowBanner.tone === 'warning' ? '' : ' is-neutral'}`}
           role="status"
           aria-live="polite"
         >
-          {showVoiceWarning ? (
-            <div className="credits-voice-warning-content">
-              <div className="credits-voice-warning-icon">
-                <AlertTriangle aria-hidden="true" />
-              </div>
-              <div>
-                <strong>{t(`${CTK}.voiceWarningTitle`)}</strong>
-                <p>
-                  {t(`${CTK}.voiceWarningBody`, {
-                    remaining: voiceAvailable.toLocaleString(numberLocale),
-                  })}
-                </p>
-              </div>
+          <div className="credits-voice-warning-content">
+            <div className="credits-voice-warning-icon">
+              <CreditsLowBannerIcon aria-hidden="true" />
             </div>
-          ) : null}
-          {showNeedMoreCredits ? (
-            <div className="credits-voice-warning-content">
-              <div className="credits-voice-warning-icon">
-                <Wallet aria-hidden="true" />
-              </div>
-              <div>
-                <strong>{t(`${CTK}.buyBarTitle`)}</strong>
-                <p>
-                  {t(`${CTK}.buyBarBodySms`, {
-                    remaining: smsAvailable.toLocaleString(numberLocale),
-                  })}
-                </p>
-              </div>
+            <div>
+              <strong>{t(`${CTK}.${creditsLowBanner.titleKey}`)}</strong>
+              <p>
+                {t(`${CTK}.${creditsLowBanner.bodyKey}`, {
+                  remaining: creditsLowBannerRemaining.toLocaleString(numberLocale),
+                })}
+              </p>
             </div>
-          ) : null}
-          <div className="credits-actions" aria-label={t(`${CTK}.buyActionsAria`)}>
-            <button
-              className="credits-action credits-action-secondary"
-              type="button"
-              onClick={() => setVoiceBuyOpen(true)}
-            >
-              <PhoneCall aria-hidden="true" />
-              <span>{t(`${CTK}.buyVoice`)}</span>
-            </button>
-            <button
-              className="credits-action credits-action-secondary"
-              type="button"
-              onClick={() => setSmsBuyOpen(true)}
-            >
-              <MessageCircle aria-hidden="true" />
-              <span>{t(`${CTK}.buySms`)}</span>
-            </button>
           </div>
         </div>
       ) : null}
@@ -505,201 +519,381 @@ function CreditsUsagePanel() {
   )
 }
 
-export default function BookingPlansPanel() {
-  const { t } = useTranslation()
+function resolvePackageFeatures(
+  pkg: SubscriptionPackage | undefined,
+  language: string,
+): string[] {
+  if (!pkg) return []
+  const isVi = language.toLowerCase().startsWith('vi')
+  const primary = isVi ? pkg.featuresVi : pkg.featuresEn
+  const fallback = isVi ? pkg.featuresEn : pkg.featuresVi
+  if (primary.length > 0) return primary
+  return fallback
+}
+
+function FallbackPlanFeatures({
+  planId,
+  t,
+}: {
+  planId: PaidServicePlanId
+  t: (key: string) => string
+}) {
+  return (
+    <>
+      {PLAN_FALLBACK_FEATURES[planId].map((item) =>
+        item.kind === 'aio' ? (
+          <div className="plan-aio" key={item.key}>
+            {t(`${TK}.${item.key}`)}
+          </div>
+        ) : (
+          <PlanFeature key={item.key} included={item.included}>
+            {t(`${TK}.${item.key}`)}
+          </PlanFeature>
+        ),
+      )}
+    </>
+  )
+}
+
+export default function BookingPlansPanel({ buyOnlyMode = false }: { buyOnlyMode?: boolean } = {}) {
+  const { t, currentLanguage } = useTranslation()
   const { showToast } = useNotification()
+  const queryClient = useQueryClient()
   const voiceEnabled = useBookingHubVoiceEnabled()
   const { data: myTrialRequest, isLoading: isTrialRequestLoading } = useMyVoiceTrialRequest()
-  const { data: creditWallet, isSuccess: isCreditWalletReady } = useMerchantVoiceCreditWallet({
-    enabled: voiceEnabled,
-  })
-  const [selectedPlan, setSelectedPlan] = useState<PlanId | null>(null)
+  const { data: profile } = useProfileSettings()
   const [trialOpen, setTrialOpen] = useState(false)
-  const [paymentPlan, setPaymentPlan] = useState<PaidServicePlanId | null>(null)
-  const [plansView, setPlansView] = useState<PlansView>('package')
-  const hasAutoOpenedTrialRef = useRef(false)
+  const [checkoutSelection, setCheckoutSelection] = useState<VoiceAiCheckoutSelection | null>(null)
+  const [plansView, setPlansView] = useState<PlansView>(PlansView.Package)
+  const effectivePlansView = buyOnlyMode ? PlansView.Package : plansView
+
+  const {
+    data: voicePackages = [],
+    isLoading: isPackagesLoading,
+    isFetching: isPackagesFetching,
+    isError: isPackagesError,
+    error: packagesError,
+    refetch: refetchPackages,
+  } = useSubscriptionPackages({
+    enabled: buyOnlyMode || plansView === PlansView.Package,
+    packageType: SubscriptionPackageType.VoiceAI,
+    ...(buyOnlyMode
+      ? PACKAGE_MANAGEMENT_TAB_QUERY
+      : {
+          staleTime: 0,
+          refetchOnMount: 'always' as const,
+        }),
+  })
+
+  const packagesByPlan = useMemo(
+    () => indexVoiceAiPackagesByPlan(voicePackages),
+    [voicePackages],
+  )
+
+  const voiceAiSubscription = useMemo(() => getVoiceAiSubscription(profile), [profile])
+  const currentVoicePlanId = useMemo(() => {
+    if (!voiceAiSubscription || !isUserSubscriptionActive(voiceAiSubscription)) return null
+    return resolveVoiceAiPlanId({
+      packageCode: voiceAiSubscription.packageCode ?? '',
+      name: voiceAiSubscription.name,
+      plan: voiceAiSubscription.name,
+    })
+  }, [voiceAiSubscription])
+  const voiceRenewLabel = useMemo(
+    () => getSubscriptionPlanRenewLabel(voiceAiSubscription, t, currentLanguage),
+    [voiceAiSubscription, t, currentLanguage],
+  )
 
   const hasExistingTrialRequest = myTrialRequest != null
-  const showCreditUsageTab = isCreditWalletReady && hasJoinedVoicePlan(creditWallet)
+  // Hide Credit Usage when AI Hub only has Plans (no voice tenant).
+  const showCreditUsageTab = voiceEnabled
+  const showPackageHistoryTab = SHOW_PACKAGE_HISTORY_TAB
+  const showPackageSkeleton =
+    (isPackagesLoading || isPackagesFetching) && voicePackages.length === 0
+  const hasMappedPackages = Object.keys(packagesByPlan).length > 0
 
   useEffect(() => {
-    if (!showCreditUsageTab && plansView === 'credits') {
-      setPlansView('package')
+    if (buyOnlyMode) return
+    if (!showCreditUsageTab && plansView === PlansView.Credits) {
+      setPlansView(PlansView.Package)
+      return
     }
-  }, [showCreditUsageTab, plansView])
+    if (!showPackageHistoryTab && plansView === PlansView.History) {
+      setPlansView(PlansView.Package)
+    }
+  }, [buyOnlyMode, showCreditUsageTab, showPackageHistoryTab, plansView])
 
+  // Leaving Buy Package marks catalog stale/invalid so the next visit always re-calls
+  // GET .../packages?packageType=VoiceAI.
   useEffect(() => {
-    if (hasAutoOpenedTrialRef.current) return
-    if (isTrialRequestLoading) return
-    if (hasExistingTrialRequest || showCreditUsageTab) return
+    if (buyOnlyMode || plansView === PlansView.Package) return
+    void queryClient.invalidateQueries({
+      queryKey: qk.merchantSubscriptionPackages(SubscriptionPackageType.VoiceAI),
+    })
+  }, [buyOnlyMode, plansView, queryClient])
 
-    hasAutoOpenedTrialRef.current = true
-    setTrialOpen(true)
-  }, [hasExistingTrialRequest, isTrialRequestLoading, showCreditUsageTab])
-
-  const getPlanButtonLabel = (plan: PlanId) => {
-    if (plan === 'Pro' && hasExistingTrialRequest) {
+  const getPlanButtonLabel = (plan: PaidServicePlanId) => {
+    if (plan === VoicePlanTier.Pro && hasExistingTrialRequest) {
       return t(`${TK}.trialRequestSubmitted`)
-    }
-    if (selectedPlan === plan) {
-      return t(`${TK}.planSelected`, { plan })
     }
     return t(`${TK}.${PLAN_BUTTON_LABEL_KEY[plan]}`)
   }
 
-  const isPlanButtonPrimary = (plan: PlanId) => {
-    if (selectedPlan) return selectedPlan === plan
-    return plan === 'Pro'
+  const handleTrialClick = () => {
+    if (hasExistingTrialRequest || isTrialRequestLoading) return
+    setTrialOpen(true)
   }
 
-  const handlePlanClick = (plan: PlanId) => {
-    // Match HTML: Pro opens trial modal; Starter/Elite open payment checkout.
-    if (plan === 'Pro') {
-      if (hasExistingTrialRequest || isTrialRequestLoading) return
-      setTrialOpen(true)
+  const openCheckoutForPlan = (plan: PaidServicePlanId) => {
+    if (!isPaidServicePlanId(plan)) return
+    if (currentVoicePlanId === plan) return
+    if (isVoiceAiPlanBelowCurrent(plan, currentVoicePlanId)) return
+    const pkg = packagesByPlan[plan]
+    if (!pkg?.id) {
+      showToast(t(`${TK}.planPackageUnavailable`), 'error')
       return
     }
-    if (isPaidServicePlanId(plan)) {
-      setPaymentPlan(plan)
-    }
+    setCheckoutSelection({
+      planId: plan,
+      packageId: pkg.id,
+      packageCode: pkg.packageCode,
+      name: pkg.name || plan,
+      price: pkg.price ?? SERVICE_PLAN_MONTHLY_PRICE[plan],
+    })
   }
 
-  const handlePlanPaymentConfirm = (
-    plan: PaidServicePlanId,
-    payment: SmsCreditPaymentMock,
+  const handleBuyPlanClick = (plan: PaidServicePlanId) => {
+    openCheckoutForPlan(plan)
+  }
+
+  const handlePlanClick = (plan: PaidServicePlanId) => {
+    if (currentVoicePlanId === plan) return
+    if (isVoiceAiPlanBelowCurrent(plan, currentVoicePlanId)) return
+    // Match HTML: Starter/Elite open payment; Pro trial is a separate CTA.
+    if (plan === VoicePlanTier.Pro) {
+      handleTrialClick()
+      return
+    }
+    handleBuyPlanClick(plan)
+  }
+
+  const handlePlanPaymentSuccess = (
+    selection: VoiceAiCheckoutSelection,
+    payment: SubscriptionPaymentMethod,
   ) => {
-    const price = SERVICE_PLAN_MONTHLY_PRICE[plan]
-    const paymentLabel = getSmsCreditPaymentLabel(
-      payment,
-      t(`${SMS_CAMPAIGN_TK}.cardMethodLabel`),
-    )
-    setSelectedPlan(plan)
-    setPaymentPlan(null)
+    const paymentLabel = payment.name || payment.symbol
+    setCheckoutSelection(null)
+    // Unlock AI Hub tabs (Booking, Customers, …) gated on hasVoiceTenant — no full reload.
+    // Panels mount + fetch only when the user opens each tab.
+    invalidateVoiceAiPlanPurchaseQueries(queryClient)
     showToast(
       t(`${TK}.planPaymentSuccess`, {
-        plan,
-        price,
+        plan: selection.planId,
+        price: selection.price,
         payment: paymentLabel,
       }),
       'success',
     )
+    void refetchVoiceTenantUntilReady(queryClient, {
+      maxAttempts: VOICE_AI_HUB_UNLOCK_POLL_ATTEMPTS,
+      intervalMs: VOICE_AI_HUB_UNLOCK_POLL_INTERVAL_MS,
+    })
   }
+
+  const renderPlanFeatures = (planId: PaidServicePlanId, pkg?: SubscriptionPackage) => {
+    const features = resolvePackageFeatures(pkg, currentLanguage)
+    if (features.length === 0) {
+      return <FallbackPlanFeatures planId={planId} t={t} />
+    }
+    return features.map((feature) => (
+      <PlanFeature key={feature} included>
+        {feature}
+      </PlanFeature>
+    ))
+  }
+
+  const renderPlanPrice = (planId: PaidServicePlanId, pkg?: SubscriptionPackage) => {
+    const price = pkg?.price ?? SERVICE_PLAN_MONTHLY_PRICE[planId]
+    const original = pkg?.originalPrice
+    return (
+      <>
+        <div className="service-plan-price">
+          {formatPlanPrice(price)}
+          <span>{t(`${TK}.perMonth`)}</span>
+        </div>
+        {original != null && original > price ? (
+          <div className="service-plan-cross">{formatPlanPrice(original)}</div>
+        ) : null}
+      </>
+    )
+  }
+
+  const renderCurrentActivePlanCta = () => (
+    <div className="plan-action-stack is-current-actions">
+      {voiceRenewLabel ? (
+        <span className="plan-renew-label">{voiceRenewLabel}</span>
+      ) : (
+        <span className="plan-renew-label is-spacer" aria-hidden="true" />
+      )}
+      <button
+        className="plan-select-button is-current"
+        type="button"
+        disabled
+      >
+        {t(`${TK}.currentActivePlan`)}
+      </button>
+    </div>
+  )
+
+  const renderLockedPlanCta = () => (
+    <div className="plan-action-stack is-locked-actions">
+      <span className="plan-renew-label is-spacer" aria-hidden="true" />
+      <button
+        className="plan-select-button is-locked"
+        type="button"
+        disabled
+        aria-label={t(`${TK}.planLocked`)}
+      >
+        <Lock aria-hidden="true" className="plan-lock-icon" />
+        {t(`${TK}.planLocked`)}
+      </button>
+    </div>
+  )
 
   return (
     <>
       <div className="plans-panel-shell">
-        {showCreditUsageTab ? (
-          <div className="booking-view-switch" role="group" aria-label={t(`${TK}.viewMode`)}>
+        {!buyOnlyMode ? (
+        <div className="booking-view-switch" role="group" aria-label={t(`${TK}.viewMode`)}>
+          <button
+            className={`booking-view-button${plansView === PlansView.Package ? ' is-active' : ''}`}
+            type="button"
+            aria-pressed={plansView === PlansView.Package}
+            onClick={() => setPlansView(PlansView.Package)}
+          >
+            <ShoppingBag aria-hidden="true" />
+            {t(`${TK}.buyPackage`)}
+          </button>
+          {showCreditUsageTab ? (
             <button
-              className={`booking-view-button${plansView === 'package' ? ' is-active' : ''}`}
+              className={`booking-view-button${plansView === PlansView.Credits ? ' is-active' : ''}`}
               type="button"
-              aria-pressed={plansView === 'package'}
-              onClick={() => setPlansView('package')}
-            >
-              <ShoppingBag aria-hidden="true" />
-              {t(`${TK}.buyPackage`)}
-            </button>
-            <button
-              className={`booking-view-button${plansView === 'credits' ? ' is-active' : ''}`}
-              type="button"
-              aria-pressed={plansView === 'credits'}
-              onClick={() => setPlansView('credits')}
+              aria-pressed={plansView === PlansView.Credits}
+              onClick={() => setPlansView(PlansView.Credits)}
             >
               <Wallet aria-hidden="true" />
               {t(`${TK}.creditUsage`)}
             </button>
-          </div>
+          ) : null}
+          {showPackageHistoryTab ? (
+            <button
+              className={`booking-view-button${plansView === PlansView.History ? ' is-active' : ''}`}
+              type="button"
+              aria-pressed={plansView === PlansView.History}
+              onClick={() => setPlansView(PlansView.History)}
+            >
+              <History aria-hidden="true" />
+              {t(`${TK}.packageHistory`)}
+            </button>
+          ) : null}
+        </div>
         ) : null}
 
-        {plansView === 'credits' && showCreditUsageTab ? (
+        {effectivePlansView === PlansView.Credits && showCreditUsageTab ? (
           <CreditsUsagePanel />
+        ) : effectivePlansView === PlansView.History && showPackageHistoryTab ? (
+          <PackageHistoryPanel />
+        ) : showPackageSkeleton ? (
+          <BookingBuyPackageSkeleton />
+        ) : isPackagesError && !hasMappedPackages ? (
+          <div className="plans-stack">
+            <div className="booking-empty-cell">
+              <div>{t(getErrorI18nKey(getApiErrorCode(packagesError)))}</div>
+              <button
+                className="booking-mini-button"
+                type="button"
+                onClick={() => void refetchPackages()}
+              >
+                {t(`${TK}.buyPackageRetry`)}
+              </button>
+            </div>
+          </div>
+        ) : !hasMappedPackages ? (
+          <div className="plans-stack">
+            <div className="booking-empty-cell">{t(`${TK}.buyPackageEmpty`)}</div>
+          </div>
         ) : (
           <div className="plans-stack">
             <div className="plans-hero">{t(`${TK}.hero`)}</div>
 
             <div className="plans-grid">
-              <article
-                className={`service-plan-card ${selectedPlan === 'Starter' ? 'is-selected' : ''}`}
-                data-plan-card="starter"
-              >
-                <div className="plan-rec" aria-hidden="true" />
-                <div className="service-plan-name">Starter</div>
-                <div className="service-plan-price">
-                  $99
-                  <span>{t(`${TK}.perMonth`)}</span>
-                </div>
-                <div className="service-plan-cross">{t(`${TK}.crossPriceStarter`)}</div>
-                <div className="plan-features">
-                  <PlanFeature included>{t(`${TK}.featVoice247`)}</PlanFeature>
-                  <PlanFeature included>{t(`${TK}.featMissedCallSms`)}</PlanFeature>
-                  <PlanFeature included>{t(`${TK}.featStarterUsage`)}</PlanFeature>
-                  <PlanFeature included={false}>{t(`${TK}.dashboardInPro`)}</PlanFeature>
-                  <PlanFeature included={false}>{t(`${TK}.googleReviewInPro`)}</PlanFeature>
-                </div>
-                <button
-                  className={`plan-select-button ${isPlanButtonPrimary('Starter') ? 'is-primary' : ''}`}
-                  type="button"
-                  onClick={() => handlePlanClick('Starter')}
-                >
-                  {getPlanButtonLabel('Starter')}
-                </button>
-              </article>
-
-              <article
-                className={`service-plan-card is-recommended ${selectedPlan === 'Pro' ? 'is-selected' : ''}`}
-                data-plan-card="pro"
-              >
-                <div className="plan-rec">{t(`${TK}.recommended`)}</div>
-                <div className="service-plan-name">Pro</div>
-                <div className="service-plan-price">
-                  $199
-                  <span>{t(`${TK}.perMonth`)}</span>
-                </div>
-                <div className="service-plan-cross">{t(`${TK}.crossPricePro`)}</div>
-                <div className="plan-features">
-                  <PlanFeature included>{t(`${TK}.featVoiceSmsCampaigns`)}</PlanFeature>
-                  <PlanFeature included>{t(`${TK}.featOwnerDashboard`)}</PlanFeature>
-                  <PlanFeature included>{t(`${TK}.featAutoGoogleReview`)}</PlanFeature>
-                  <PlanFeature included>{t(`${TK}.landingPagesAiDesign`)}</PlanFeature>
-                  <PlanFeature included>{t(`${TK}.featProUsage`)}</PlanFeature>
-                  <div className="plan-aio">{t(`${TK}.aioEngine`)}</div>
-                </div>
-                <button
-                  className={`plan-select-button ${isPlanButtonPrimary('Pro') ? 'is-primary' : ''}`}
-                  type="button"
-                  disabled={hasExistingTrialRequest || isTrialRequestLoading}
-                  onClick={() => handlePlanClick('Pro')}
-                >
-                  {getPlanButtonLabel('Pro')}
-                </button>
-              </article>
-
-              <article
-                className={`service-plan-card ${selectedPlan === 'Elite' ? 'is-selected' : ''}`}
-                data-plan-card="elite"
-              >
-                <div className="plan-rec" aria-hidden="true" />
-                <div className="service-plan-name">Elite</div>
-                <div className="service-plan-price">
-                  $349
-                  <span>{t(`${TK}.perMonth`)}</span>
-                </div>
-                <div className="service-plan-cross">{t(`${TK}.crossPriceElite`)}</div>
-                <div className="plan-features">
-                  <PlanFeature included>{t(`${TK}.everythingInPro`)}</PlanFeature>
-                  <div className="plan-aio">{t(`${TK}.aioMax`)}</div>
-                  <PlanFeature included>{t(`${TK}.featStaffDashboardTaxIq`)}</PlanFeature>
-                  <PlanFeature included>{t(`${TK}.eliteUsage`)}</PlanFeature>
-                  <PlanFeature included>{t(`${TK}.emailMarketingWinback`)}</PlanFeature>
-                </div>
-                <button
-                  className={`plan-select-button ${isPlanButtonPrimary('Elite') ? 'is-primary' : ''}`}
-                  type="button"
-                  onClick={() => handlePlanClick('Elite')}
-                >
-                  {getPlanButtonLabel('Elite')}
-                </button>
-              </article>
+              {PAID_SERVICE_PLAN_ORDER.map((planId) => {
+                const pkg = packagesByPlan[planId]
+                if (!pkg) return null
+                const isPro = planId === VoicePlanTier.Pro
+                const isCurrent = currentVoicePlanId === planId
+                const isLocked = isVoiceAiPlanBelowCurrent(planId, currentVoicePlanId)
+                return (
+                  <article
+                    key={pkg.id || planId}
+                    className={[
+                      'service-plan-card',
+                      isPro && !isCurrent && !isLocked ? 'is-recommended' : '',
+                      isCurrent ? 'is-current-plan' : '',
+                      isLocked ? 'is-locked-plan' : '',
+                    ]
+                      .filter(Boolean)
+                      .join(' ')}
+                    data-plan-card={planId.toLowerCase()}
+                  >
+                    <div className="plan-rec" aria-hidden={!isPro && !isCurrent}>
+                      {isCurrent
+                        ? t(`${TK}.currentActivePlan`)
+                        : isPro && !isLocked
+                          ? t(`${TK}.recommended`)
+                          : null}
+                    </div>
+                    <div className="service-plan-name">{pkg.name || planId}</div>
+                    {renderPlanPrice(planId, pkg)}
+                    <div className="plan-features">{renderPlanFeatures(planId, pkg)}</div>
+                    {isCurrent ? (
+                      renderCurrentActivePlanCta()
+                    ) : isLocked ? (
+                      renderLockedPlanCta()
+                    ) : isPro ? (
+                      <div className="plan-action-stack">
+                        <span className="plan-renew-label is-spacer" aria-hidden="true" />
+                        <button
+                          className="plan-select-button is-primary"
+                          type="button"
+                          disabled={hasExistingTrialRequest || isTrialRequestLoading}
+                          onClick={handleTrialClick}
+                        >
+                          {getPlanButtonLabel(VoicePlanTier.Pro)}
+                        </button>
+                        <button
+                          className="plan-select-button plan-buy-button"
+                          type="button"
+                          onClick={() => handleBuyPlanClick(VoicePlanTier.Pro)}
+                        >
+                          {t(`${TK}.selectPro`)}
+                        </button>
+                      </div>
+                    ) : (
+                      <div className="plan-action-stack">
+                        <span className="plan-renew-label is-spacer" aria-hidden="true" />
+                        <button
+                          className="plan-select-button"
+                          type="button"
+                          onClick={() => handlePlanClick(planId)}
+                        >
+                          {getPlanButtonLabel(planId)}
+                        </button>
+                      </div>
+                    )}
+                  </article>
+                )
+              })}
             </div>
 
             <article className="roi-panel">
@@ -713,7 +907,9 @@ export default function BookingPlansPanel() {
                   <div className="roi-label">{t(`${TK}.lostPerMonth`)}</div>
                 </div>
                 <div className="roi-metric is-cost">
-                  <div className="roi-value">$199</div>
+                  <div className="roi-value">
+                    {formatPlanPrice(packagesByPlan[VoicePlanTier.Pro]?.price ?? SERVICE_PLAN_MONTHLY_PRICE[VoicePlanTier.Pro])}
+                  </div>
                   <div className="roi-label">{t(`${TK}.nexoraCost`)}</div>
                 </div>
                 <div className="roi-metric is-gain">
@@ -734,9 +930,7 @@ export default function BookingPlansPanel() {
               </div>
               <div className="guarantee-grid">
                 <div>✓ {t(`${TK}.pilotFree`)}</div>
-                <div>✓ {t(`${TK}.noCreditCard`)}</div>
                 <div>✓ {t(`${TK}.setup24h`)}</div>
-                <div>✓ {t(`${TK}.cancelAnytime`)}</div>
               </div>
             </article>
           </div>
@@ -751,10 +945,10 @@ export default function BookingPlansPanel() {
       {/* Class (not id) — CreditsUsageView already owns `#nx-campaign-root` when mounted. */}
       <div className="nx-campaign-root">
         <PlanPaymentModal
-          open={paymentPlan != null}
-          plan={paymentPlan}
-          onClose={() => setPaymentPlan(null)}
-          onConfirm={handlePlanPaymentConfirm}
+          open={checkoutSelection != null}
+          selection={checkoutSelection}
+          onClose={() => setCheckoutSelection(null)}
+          onSuccess={handlePlanPaymentSuccess}
         />
       </div>
     </>

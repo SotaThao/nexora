@@ -2,6 +2,12 @@
 import { useHomePageBridge } from '../context/HomePageBridgeContext'
 import { useTranslation } from '../../../contexts/LanguageContext'
 import { homepageTranslations, type HomePageTranslationKey } from '../i18n/homepageTranslations'
+import { usePublicSubscriptionPackages } from '../../../data/hooks/useSubscriptionPayments'
+import {
+  SubscriptionPackageType,
+  type SubscriptionPackage,
+} from '../../../data/repositories/subscriptionPayments'
+import Skeleton from '../../ui/skeleton/Skeleton'
 
 type TextCell = { type: 'text'; key: HomePageTranslationKey }
 type BoolCell = { type: 'bool'; value: boolean }
@@ -137,12 +143,89 @@ function ComparisonCell({ cell, t }: { cell: CmpCell; t: (key: HomePageTranslati
   return <span className="text-slate-300 font-bold text-base" aria-label="Not included">—</span>
 }
 
+function getPlanFields(
+  packages: SubscriptionPackage[] | undefined,
+  planId: 'lite' | 'starter' | 'pro',
+  isVietnamese: boolean,
+  base: string,
+  featureCount: number,
+  t: (key: HomePageTranslationKey) => string,
+) {
+  const pkg = packages?.find((p) => (p.plan ?? '').toLowerCase() === planId)
+  const pkgFeatures = isVietnamese ? pkg?.featuresVi : pkg?.featuresEn
+  const features = pkgFeatures?.length
+    ? pkgFeatures
+    : Array.from({ length: featureCount }, (_, i) => t(`${base}-feat-${i + 1}` as HomePageTranslationKey))
+  return {
+    name: pkg?.name || t(`${base}-title` as HomePageTranslationKey),
+    features,
+    price: pkg?.price != null ? `$${pkg.price}` : null,
+  }
+}
+
+function PricingCardSkeleton({ elevated = false }: { elevated?: boolean }) {
+  return (
+    <div
+      className={[
+        'rounded-[32px] border border-slate-200/80 bg-slate-50 p-6 flex flex-col gap-6 ds-pricing-card',
+        elevated ? 'border-2 border-purple/30 lg:-translate-y-4' : '',
+      ].join(' ')}
+      aria-hidden="true"
+    >
+      <div className="space-y-3">
+        <Skeleton width="42%" height={22} borderRadius={8} />
+        <Skeleton width="78%" height={12} borderRadius={6} />
+      </div>
+      <Skeleton width="36%" height={36} borderRadius={8} />
+      <div className="space-y-3 border-t border-slate-200/80 pt-6">
+        <Skeleton width="92%" height={12} borderRadius={6} />
+        <Skeleton width="86%" height={12} borderRadius={6} />
+        <Skeleton width="80%" height={12} borderRadius={6} />
+        <Skeleton width="74%" height={12} borderRadius={6} />
+      </div>
+      <Skeleton className="mt-auto" width="100%" height={44} borderRadius={999} />
+    </div>
+  )
+}
+
+function PricingCompareSkeleton() {
+  return (
+    <div className="nx-pricing-compare overflow-hidden rounded-[24px] border border-slate-200/80 bg-white p-4 sm:p-6" aria-hidden="true">
+      <div className="space-y-3">
+        <Skeleton width="100%" height={36} borderRadius={8} />
+        {Array.from({ length: 6 }).map((_, index) => (
+          <Skeleton key={index} width="100%" height={28} borderRadius={6} />
+        ))}
+      </div>
+    </div>
+  )
+}
+
 export default function HomePagePricingSection() {
-  const { planCta } = useHomePageBridge()
+  const { planCta, isLoggedIn } = useHomePageBridge()
   const { currentLanguage } = useTranslation()
   const lang = currentLanguage === 'vi' ? 'vi' : 'en'
+  const isVietnamese = lang === 'vi'
   const t = (key: HomePageTranslationKey) =>
     homepageTranslations[lang][key] ?? homepageTranslations.en[key]
+
+  // Home pricing = Nexora Touch catalog (default TipPlatform). Not VoiceAI.
+  const {
+    data: packages,
+    isLoading,
+    isFetching,
+    isError,
+    refetch,
+  } = usePublicSubscriptionPackages({
+    packageType: SubscriptionPackageType.TipPlatform,
+  })
+
+  const showSkeleton = (isLoading || isFetching) && !packages?.length
+  const cardCount = isLoggedIn ? 3 : 4
+
+  const lite = getPlanFields(packages, 'lite', isVietnamese, 'plan-free', 4, t)
+  const starter = getPlanFields(packages, 'starter', isVietnamese, 'plan-1', 4, t)
+  const pro = getPlanFields(packages, 'pro', isVietnamese, 'plan-2', 5, t)
 
   return (
     <section className="py-16 sm:py-24 bg-white ds-section" id="pricing">
@@ -159,93 +242,114 @@ export default function HomePagePricingSection() {
           </p>
         </div>
 
-        <div className="grid grid-cols-2 md:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-6 xl:gap-8 items-stretch">
-          <div className="bg-gradient-to-b from-slate-50 to-white border border-slate-200/80 rounded-[32px] p-6 flex flex-col justify-between hover:shadow-xl transition-all relative overflow-hidden ds-surface ds-pricing-card">
-            <div className="absolute -top-10 -right-10 w-24 h-24 bg-green/5 rounded-full blur-xl" />
-            <div className="space-y-6">
-              <div className="flex justify-between items-start">
-                <div className="ds-content-card">
-                  <h3 className="text-xl font-extrabold text-navy" data-i18n="plan-free-title">Lite Pack (Free)</h3>
-                  <p className="text-[11px] text-slate-500 mt-1 leading-normal" data-i18n="plan-free-desc">For salons with 5 staff or fewer. Requires a quick business identity check.</p>
+        {showSkeleton ? (
+          <div
+            className={`grid grid-cols-2 md:grid-cols-2 gap-3 sm:gap-6 xl:gap-8 items-stretch ${isLoggedIn ? 'lg:grid-cols-3' : 'lg:grid-cols-4'}`}
+            aria-busy="true"
+            aria-label={t('pr-loading')}
+          >
+            {Array.from({ length: cardCount }).map((_, index) => (
+              <PricingCardSkeleton key={index} elevated={index === (isLoggedIn ? 1 : 2)} />
+            ))}
+          </div>
+        ) : isError && !packages?.length ? (
+          <div className="rounded-[24px] border border-red-200 bg-red-50 px-6 py-10 text-center">
+            <p className="text-sm font-semibold text-red-700">{t('pr-error')}</p>
+            <button
+              type="button"
+              className="mt-4 inline-flex items-center justify-center rounded-full bg-purple px-5 py-2.5 text-xs font-extrabold text-white transition hover:bg-indigo-700 ds-control ds-button"
+              onClick={() => void refetch()}
+            >
+              {t('pr-retry')}
+            </button>
+          </div>
+        ) : (
+          <div className={`grid grid-cols-2 md:grid-cols-2 gap-3 sm:gap-6 xl:gap-8 items-stretch ${isLoggedIn ? 'lg:grid-cols-3' : 'lg:grid-cols-4'}`}>
+            {!isLoggedIn && (
+              <div className="bg-gradient-to-b from-slate-50 to-white border border-slate-200/80 rounded-[32px] p-6 flex flex-col justify-between hover:shadow-xl transition-all relative overflow-hidden ds-surface ds-pricing-card">
+                <div className="absolute -top-10 -right-10 w-24 h-24 bg-green/5 rounded-full blur-xl" />
+                <div className="space-y-6">
+                  <div className="flex justify-between items-start">
+                    <div className="ds-content-card">
+                      <h3 className="text-xl font-extrabold text-navy">{lite.name}</h3>
+                      <p className="text-[11px] text-slate-500 mt-1 leading-normal">{t('plan-free-desc')}</p>
+                    </div>
+                    <span className="bg-green/10 text-green text-xs font-extrabold px-2 py-0.5 rounded-full uppercase tracking-wider">Free</span>
+                  </div>
+                  <div className="flex items-baseline gap-1">
+                    <span className="text-3xl sm:text-4xl font-black text-navy">{lite.price ?? '$0'}</span>
+                    <span className="text-xs text-slate-500 font-bold">/ <span data-i18n="calc-mo">mo</span></span>
+                  </div>
+                  <ul className="space-y-3.5 text-xs text-slate-600 font-semibold border-t border-slate-200/80 pt-6">
+                    {lite.features.map((feature, i) => (
+                      <li key={i} className="flex items-center gap-2"><span className={i === 0 ? 'text-green font-bold' : 'text-purple'}>✓</span> <span>{feature}</span></li>
+                    ))}
+                  </ul>
                 </div>
-                <span className="bg-green/10 text-green text-xs font-extrabold px-2 py-0.5 rounded-full uppercase tracking-wider">Free</span>
+                <button className="w-full mt-8 bg-green hover:bg-green/95 text-white font-extrabold py-3 rounded-full text-xs tracking-wide transition-all shadow-md shadow-green/10 ds-control ds-button" data-i18n="btn-plan-free" onClick={() => planCta('lite')}>Sign Up Free (Identity Check Required)</button>
               </div>
-              <div className="flex items-baseline gap-1">
-                <span className="text-3xl sm:text-4xl font-black text-navy">$0</span>
-                <span className="text-xs text-slate-500 font-bold">/ <span data-i18n="calc-mo">mo</span></span>
-              </div>
-              <ul className="space-y-3.5 text-xs text-slate-600 font-semibold border-t border-slate-200/80 pt-6">
-                <li className="flex items-center gap-2 text-green"><span className="font-bold">✓</span> <span data-i18n="plan-free-feat-1">Up to 5 active specialists</span></li>
-                <li className="flex items-center gap-2"><span className="text-purple">✓</span> <span data-i18n="plan-free-feat-2">Quick business identity check</span></li>
-                <li className="flex items-center gap-2"><span className="text-purple">✓</span> <span data-i18n="plan-free-feat-3">Basic tabletop Smart QR</span></li>
-                <li className="flex items-center gap-2"><span className="text-purple">✓</span> <span data-i18n="plan-free-feat-4">Direct peer-to-peer tip routing</span></li>
-              </ul>
-            </div>
-            <button className="w-full mt-8 bg-green hover:bg-green/95 text-white font-extrabold py-3 rounded-full text-xs tracking-wide transition-all shadow-md shadow-green/10 ds-control ds-button" data-i18n="btn-plan-free" onClick={planCta}>Sign Up Free (Identity Check Required)</button>
-          </div>
+            )}
 
-          <div className="bg-slate-50 border border-slate-200/60 rounded-[32px] p-6 flex flex-col justify-between hover:shadow-xl transition-all ds-surface ds-pricing-card">
-            <div className="space-y-6">
-              <div className="ds-content-card">
-                <h3 className="text-xl font-extrabold text-navy" data-i18n="plan-1-title">Starter Pack</h3>
-                <p className="text-xs text-slate-500 mt-1" data-i18n="plan-1-desc">Perfect for micro booths &amp; independent practitioners</p>
+            <div className="bg-slate-50 border border-slate-200/60 rounded-[32px] p-6 flex flex-col justify-between hover:shadow-xl transition-all ds-surface ds-pricing-card">
+              <div className="space-y-6">
+                <div className="ds-content-card">
+                  <h3 className="text-xl font-extrabold text-navy">{starter.name}</h3>
+                  <p className="text-xs text-slate-500 mt-1">{t('plan-1-desc')}</p>
+                </div>
+                <div className="flex items-baseline gap-1">
+                  <span className="text-3xl sm:text-4xl font-black text-navy">{starter.price ?? '$29'}</span>
+                  <span className="text-xs text-slate-500 font-bold">/ <span data-i18n="calc-mo">mo</span></span>
+                </div>
+                <ul className="space-y-3.5 text-xs text-slate-600 font-semibold border-t border-slate-200/80 pt-6">
+                  {starter.features.map((feature, i) => (
+                    <li key={i} className="flex items-center gap-2"><span className="text-purple">✓</span> <span>{feature}</span></li>
+                  ))}
+                </ul>
               </div>
-              <div className="flex items-baseline gap-1">
-                <span className="text-3xl sm:text-4xl font-black text-navy">$29</span>
-                <span className="text-xs text-slate-500 font-bold">/ <span data-i18n="calc-mo">mo</span></span>
-              </div>
-              <ul className="space-y-3.5 text-xs text-slate-600 font-semibold border-t border-slate-200/80 pt-6">
-                <li className="flex items-center gap-2"><span className="text-purple">✓</span> <span data-i18n="plan-1-feat-1">Branded tabletop QR placements</span></li>
-                <li className="flex items-center gap-2"><span className="text-purple">✓</span> <span data-i18n="plan-1-feat-2">Instant peer tip direct routing</span></li>
-                <li className="flex items-center gap-2"><span className="text-purple">✓</span> <span data-i18n="plan-1-feat-3">Google review automated channels</span></li>
-                <li className="flex items-center gap-2"><span className="text-purple">✓</span> <span data-i18n="plan-1-feat-4">Basic monthly transactional reviews</span></li>
-              </ul>
+              <button className="w-full mt-8 bg-white border border-slate-300 hover:bg-slate-100 text-slate-700 font-extrabold py-3 rounded-full text-xs tracking-wide transition-all ds-control ds-button" data-i18n="btn-plan-start" onClick={() => planCta('starter')}>Get Started Now</button>
             </div>
-            <button className="w-full mt-8 bg-white border border-slate-300 hover:bg-slate-100 text-slate-700 font-extrabold py-3 rounded-full text-xs tracking-wide transition-all ds-control ds-button" data-i18n="btn-plan-start" onClick={planCta}>Get Started Now</button>
-          </div>
 
-          <div className="bg-gradient-to-b from-indigo-50/50 to-white border-2 border-purple rounded-[32px] p-6 flex flex-col justify-between hover:shadow-2xl transition-all relative transform lg:-translate-y-4 ds-pricing-card">
-            <div className="absolute top-0 right-1/2 transform translate-x-1/2 -translate-y-1/2 bg-purple text-white text-xs font-black tracking-widest uppercase py-1.5 px-4 rounded-full shadow-md text-center w-[85%]" data-i18n="plan-pro-badge">RECOMMENDED FOR SALONS</div>
-            <div className="space-y-6 pt-3 lg:pt-0">
-              <div className="ds-content-card">
-                <h3 className="text-xl font-extrabold text-navy" data-i18n="plan-2-title">Professional Pro</h3>
-                <p className="text-xs text-slate-500 mt-1" data-i18n="plan-2-desc">Brilliant choice for growing teams &amp; local boutique hubs</p>
+            <div className="bg-gradient-to-b from-indigo-50/50 to-white border-2 border-purple rounded-[32px] p-6 flex flex-col justify-between hover:shadow-2xl transition-all relative transform lg:-translate-y-4 ds-pricing-card">
+              <div className="absolute top-0 right-1/2 transform translate-x-1/2 -translate-y-1/2 bg-purple text-white text-xs font-black tracking-widest uppercase py-1.5 px-4 rounded-full shadow-md text-center w-[85%]" data-i18n="plan-pro-badge">RECOMMENDED FOR SALONS</div>
+              <div className="space-y-6 pt-3 lg:pt-0">
+                <div className="ds-content-card">
+                  <h3 className="text-xl font-extrabold text-navy">{pro.name}</h3>
+                  <p className="text-xs text-slate-500 mt-1">{t('plan-2-desc')}</p>
+                </div>
+                <div className="flex items-baseline gap-1">
+                  <span className="text-3xl sm:text-4xl font-black text-navy">{pro.price ?? '$79'}</span>
+                  <span className="text-xs text-slate-500 font-bold">/ <span data-i18n="calc-mo">mo</span></span>
+                </div>
+                <ul className="space-y-3.5 text-xs text-slate-600 font-semibold border-t border-slate-200/80 pt-6">
+                  {pro.features.map((feature, i) => (
+                    <li key={i} className="flex items-center gap-2"><span className="text-purple">✓</span> <span>{feature}</span></li>
+                  ))}
+                </ul>
               </div>
-              <div className="flex items-baseline gap-1">
-                <span className="text-3xl sm:text-4xl font-black text-navy">$79</span>
-                <span className="text-xs text-slate-500 font-bold">/ <span data-i18n="calc-mo">mo</span></span>
-              </div>
-              <ul className="space-y-3.5 text-xs text-slate-600 font-semibold border-t border-slate-200/80 pt-6">
-                <li className="flex items-center gap-2"><span className="text-purple">✓</span> <span data-i18n="plan-2-feat-1">Includes every Starter plan feature</span></li>
-                <li className="flex items-center gap-2"><span className="text-purple">✓</span> <span data-i18n="plan-2-feat-2">Custom technician roster logins</span></li>
-                <li className="flex items-center gap-2"><span className="text-purple">✓</span> <span data-i18n="plan-2-feat-3">Automatic direct tip processing pipelines</span></li>
-                <li className="flex items-center gap-2"><span className="text-purple">✓</span> <span data-i18n="plan-2-feat-4">Adjustable B2B rewards rules panel</span></li>
-                <li className="flex items-center gap-2"><span className="text-purple">✓</span> <span data-i18n="plan-2-feat-5">Client profile classification tool</span></li>
-              </ul>
+              <button className="w-full mt-8 bg-purple hover:bg-indigo-700 text-white font-extrabold py-3.5 rounded-full text-xs tracking-wide shadow-lg shadow-purple/20 transition-all hover:scale-[1.01] ds-control ds-button" data-i18n="btn-plan-pro" onClick={() => planCta('pro')}>Select Pro Tier</button>
             </div>
-            <button className="w-full mt-8 bg-purple hover:bg-indigo-700 text-white font-extrabold py-3.5 rounded-full text-xs tracking-wide shadow-lg shadow-purple/20 transition-all hover:scale-[1.01] ds-control ds-button" data-i18n="btn-plan-pro" onClick={planCta}>Select Pro Tier</button>
-          </div>
 
-          <div className="bg-slate-50 border border-slate-200/60 rounded-[32px] p-6 flex flex-col justify-between hover:shadow-xl transition-all ds-surface ds-pricing-card">
-            <div className="space-y-6">
-              <div className="ds-content-card">
-                <h3 className="text-xl font-extrabold text-navy" data-i18n="plan-3-title">Enterprise Group</h3>
-                <p className="text-xs text-slate-500 mt-1" data-i18n="plan-3-desc">Tailored for prominent multi-location boutique franchises</p>
+            <div className="bg-slate-50 border border-slate-200/60 rounded-[32px] p-6 flex flex-col justify-between hover:shadow-xl transition-all ds-surface ds-pricing-card">
+              <div className="space-y-6">
+                <div className="ds-content-card">
+                  <h3 className="text-xl font-extrabold text-navy" data-i18n="plan-3-title">Enterprise Group</h3>
+                  <p className="text-xs text-slate-500 mt-1" data-i18n="plan-3-desc">Tailored for prominent multi-location boutique franchises</p>
+                </div>
+                <div className="flex items-baseline gap-1">
+                  <span className="text-3xl sm:text-4xl font-black text-navy" data-i18n="plan-3-price">Custom Scale</span>
+                  <span className="text-xs text-slate-500 font-bold">/ <span data-i18n="plan-3-price-sub">tailored quote</span></span>
+                </div>
+                <ul className="space-y-3.5 text-xs text-slate-600 font-semibold border-t border-slate-200/80 pt-6">
+                  <li className="flex items-center gap-2"><span className="text-purple">✓</span> <span data-i18n="plan-3-feat-1">Full multi-location organizational dashboards</span></li>
+                  <li className="flex items-center gap-2"><span className="text-purple">✓</span> <span data-i18n="plan-3-feat-2">Direct API checkout point-of-sale syncs</span></li>
+                  <li className="flex items-center gap-2"><span className="text-purple">✓</span> <span data-i18n="plan-3-feat-3">Premium solid brass NFC station plaques</span></li>
+                  <li className="flex items-center gap-2"><span className="text-purple">✓</span> <span data-i18n="plan-3-feat-4">24/7 dedicated enterprise success managers</span></li>
+                </ul>
               </div>
-              <div className="flex items-baseline gap-1">
-                <span className="text-3xl sm:text-4xl font-black text-navy" data-i18n="plan-3-price">Custom Scale</span>
-                <span className="text-xs text-slate-500 font-bold">/ <span data-i18n="plan-3-price-sub">tailored quote</span></span>
-              </div>
-              <ul className="space-y-3.5 text-xs text-slate-600 font-semibold border-t border-slate-200/80 pt-6">
-                <li className="flex items-center gap-2"><span className="text-purple">✓</span> <span data-i18n="plan-3-feat-1">Full multi-location organizational dashboards</span></li>
-                <li className="flex items-center gap-2"><span className="text-purple">✓</span> <span data-i18n="plan-3-feat-2">Direct API checkout point-of-sale syncs</span></li>
-                <li className="flex items-center gap-2"><span className="text-purple">✓</span> <span data-i18n="plan-3-feat-3">Premium solid brass NFC station plaques</span></li>
-                <li className="flex items-center gap-2"><span className="text-purple">✓</span> <span data-i18n="plan-3-feat-4">24/7 dedicated enterprise success managers</span></li>
-              </ul>
+              <button className="w-full mt-8 bg-navy hover:bg-slate-800 text-white font-extrabold py-3 rounded-full text-xs tracking-wide transition-all ds-control ds-button" data-i18n="btn-plan-ent" onClick={() => planCta('enterprise')}>Contact Success Sales</button>
             </div>
-            <button className="w-full mt-8 bg-navy hover:bg-slate-800 text-white font-extrabold py-3 rounded-full text-xs tracking-wide transition-all ds-control ds-button" data-i18n="btn-plan-ent" onClick={planCta}>Contact Success Sales</button>
           </div>
-        </div>
+        )}
 
         <div className="mt-14 sm:mt-16">
           <h3
@@ -255,56 +359,61 @@ export default function HomePagePricingSection() {
             {t('pr-table-title')}
           </h3>
 
-          <div className="nx-pricing-compare overflow-x-auto rounded-[24px] border border-slate-200/80 shadow-sm bg-white">
-            <table className="w-full min-w-[640px] border-collapse text-left">
-              <thead>
-                <tr className="border-b border-slate-200 bg-slate-50/80">
-                  <th
-                    scope="col"
-                    className="px-4 sm:px-6 py-4 text-xs sm:text-sm font-extrabold text-slate-500 uppercase tracking-wide"
-                    data-i18n="pr-cmp-feature"
-                  >
-                    {t('pr-cmp-feature')}
-                  </th>
-                  {PLAN_COLUMN_KEYS.map((key) => (
+          {showSkeleton ? (
+            <PricingCompareSkeleton />
+          ) : (
+            <div className="nx-pricing-compare overflow-x-auto rounded-[24px] border border-slate-200/80 shadow-sm bg-white">
+              <table className="w-full min-w-[640px] border-collapse text-left">
+                <caption className="sr-only">{t('pr-table-title')}</caption>
+                <thead>
+                  <tr className="border-b border-slate-200 bg-slate-50/80">
                     <th
-                      key={key}
                       scope="col"
-                      className={`px-3 sm:px-4 py-4 text-xs sm:text-sm font-extrabold text-navy text-center ${
-                        key === 'pr-cmp-col-pro' ? 'bg-purple/5 text-purple' : ''
-                      }`}
-                      data-i18n={key}
+                      className="px-4 sm:px-6 py-4 text-xs sm:text-sm font-extrabold text-slate-500 uppercase tracking-wide"
+                      data-i18n="pr-cmp-feature"
                     >
-                      {t(key)}
+                      {t('pr-cmp-feature')}
                     </th>
-                  ))}
-                </tr>
-              </thead>
-              <tbody>
-                {PRICING_COMPARISON_ROWS.map((row) => (
-                  <tr key={row.labelKey} className="border-b border-slate-100 last:border-b-0">
-                    <th
-                      scope="row"
-                      className="px-4 sm:px-6 py-3.5 text-xs sm:text-sm font-bold text-slate-700"
-                      data-i18n={row.labelKey}
-                    >
-                      {t(row.labelKey)}
-                    </th>
-                    {row.cells.map((cell, index) => (
-                      <td
-                        key={`${row.labelKey}-${index}`}
-                        className={`px-3 sm:px-4 py-3.5 text-center ${
-                          index === 2 ? 'bg-purple/[0.03]' : ''
+                    {PLAN_COLUMN_KEYS.map((key) => (
+                      <th
+                        key={key}
+                        scope="col"
+                        className={`px-3 sm:px-4 py-4 text-xs sm:text-sm font-extrabold text-navy text-center ${
+                          key === 'pr-cmp-col-pro' ? 'bg-purple/5 text-purple' : ''
                         }`}
+                        data-i18n={key}
                       >
-                        <ComparisonCell cell={cell} t={t} />
-                      </td>
+                        {t(key)}
+                      </th>
                     ))}
                   </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
+                </thead>
+                <tbody>
+                  {PRICING_COMPARISON_ROWS.map((row) => (
+                    <tr key={row.labelKey} className="border-b border-slate-100 last:border-b-0">
+                      <th
+                        scope="row"
+                        className="px-4 sm:px-6 py-3.5 text-xs sm:text-sm font-bold text-slate-700"
+                        data-i18n={row.labelKey}
+                      >
+                        {t(row.labelKey)}
+                      </th>
+                      {row.cells.map((cell, index) => (
+                        <td
+                          key={`${row.labelKey}-${index}`}
+                          className={`px-3 sm:px-4 py-3.5 text-center ${
+                            index === 2 ? 'bg-purple/[0.03]' : ''
+                          }`}
+                        >
+                          <ComparisonCell cell={cell} t={t} />
+                        </td>
+                      ))}
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
         </div>
       </div>
     </section>
