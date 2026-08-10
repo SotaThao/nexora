@@ -18,6 +18,8 @@ import type {
   SubscriptionPaymentMethod,
 } from '../../../data/repositories/subscriptionPayments'
 import { formatCurrency } from '../utils'
+import { hasEnoughWalletBalance } from '../views/plans/constants'
+import { getErrorI18nKey } from '../../../data/errorCodes'
 import SubscriptionCardPaymentForm, {
   type SubscriptionBillingDetails,
   type SubscriptionCardPaymentFormHandle,
@@ -148,6 +150,14 @@ export default function SubscriptionPaymentModal({
 
   const handleWalletConfirm = () => {
     if (!selectedSymbol) return
+    const selectedPayment = methods.find((method) => method.symbol === selectedSymbol)
+    if (!selectedPayment) return
+
+    if (!hasEnoughWalletBalance(selectedPayment, price)) {
+      showToast(t(getErrorI18nKey('InsufficientBalance')), 'error')
+      return
+    }
+
     purchaseMutation.mutate(
       { packageId, symbol: selectedSymbol },
       {

@@ -21,9 +21,11 @@ import { resolveTranslatedApiError } from '../../../../utils/resolveTranslatedAp
 import type { SubscriptionCardPaymentFormHandle } from '../../modals/SubscriptionCardPaymentForm'
 import {
   PLAN_CARD_PAYMENT_SYMBOL,
+  hasEnoughWalletBalance,
   isPlanCardPaymentSymbol,
 } from '../plans/constants'
 import { CREDIT_TOP_UP_CARD_COPY_TK } from './constants'
+import { getErrorI18nKey } from '../../../../data/errorCodes'
 
 /** Stable fallback — avoids new `[]` each render that retriggers effects. */
 export const EMPTY_CREDIT_PACKAGES: SubscriptionPackage[] = []
@@ -251,6 +253,11 @@ export function useCreditTopUpCheckout({
 
   const handleWalletConfirm = useCallback(() => {
     if (!selectedPackage?.id || !selectedPayment || !canConfirmWallet) return
+
+    if (!hasEnoughWalletBalance(selectedPayment, selectedPackage.price)) {
+      showToast(t(getErrorI18nKey('InsufficientBalance')), 'error')
+      return
+    }
 
     purchaseMutation.mutate(
       { packageId: selectedPackage.id, symbol: selectedPayment.symbol },

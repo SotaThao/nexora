@@ -154,9 +154,27 @@ export function formatPackageHistoryAmount(amount: number, currency = 'USD'): st
 
 /** Wallet row balance in USD (balance × rate). */
 export function formatWalletBalanceUsd(method: SubscriptionPaymentMethod): string {
-  const usd = method.balance * (method.rate || 1)
+  const usd = getWalletBalanceUsd(method)
   if (!Number.isFinite(usd)) return BOOKING_HUB_EMPTY_CELL
   return formatCurrency(usd)
+}
+
+/** Wallet available amount in USD (balance × rate). */
+export function getWalletBalanceUsd(method: SubscriptionPaymentMethod): number {
+  const usd = method.balance * (method.rate || 1)
+  return Number.isFinite(usd) ? usd : 0
+}
+
+/** True when wallet USD covers `priceUsd` (cent-safe compare). */
+export function hasEnoughWalletBalance(
+  method: SubscriptionPaymentMethod,
+  priceUsd: number | null | undefined,
+): boolean {
+  const price = Number(priceUsd)
+  if (!Number.isFinite(price) || price <= 0) return true
+  const balanceCents = Math.round(getWalletBalanceUsd(method) * 100)
+  const priceCents = Math.round(price * 100)
+  return balanceCents >= priceCents
 }
 
 /**
