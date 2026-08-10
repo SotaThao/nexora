@@ -29,6 +29,7 @@ import {
 import {
   BookingHubMainTab,
   BookingHubSubTab,
+  isBookingHubMainTabVisible,
   parseBookingHubMainTab,
   parseBookingHubSubTab,
 } from '../../../data/repositories/merchantVoice'
@@ -96,6 +97,18 @@ export default function BookingHubView() {
 
       const nextParams = new URLSearchParams(searchParams)
       nextParams.set('tab', defaultTab)
+      nextParams.delete('view')
+      setSearchParams(nextParams, { replace: true })
+      return
+    }
+
+    // Hidden tabs (e.g. QR Codes) — redirect to the default voice tab.
+    if (!isBookingHubMainTabVisible(parsedMainTab)) {
+      const fallbackTab = getDefaultBookingHubTab(hasVoiceTenant)
+      setActiveMainTab(fallbackTab)
+      setActiveSubtab(BookingHubSubTab.Today)
+      const nextParams = new URLSearchParams(searchParams)
+      nextParams.set('tab', fallbackTab)
       nextParams.delete('view')
       setSearchParams(nextParams, { replace: true })
       return

@@ -889,6 +889,15 @@ export function parseBookingHubMainTab(value: string | null): BookingHubMainTab 
   return BookingHubMainTab.Booking
 }
 
+/** AI Hub main tabs hidden from chrome (legacy URLs redirect away). */
+export const BOOKING_HUB_HIDDEN_MAIN_TABS: ReadonlySet<BookingHubMainTab> = new Set([
+  BookingHubMainTab.QrCodes,
+])
+
+export function isBookingHubMainTabVisible(tab: BookingHubMainTab): boolean {
+  return !BOOKING_HUB_HIDDEN_MAIN_TABS.has(tab)
+}
+
 const BOOKING_HUB_SUB_TAB_VALUES = new Set<string>(Object.values(BookingHubSubTab))
 
 export function parseBookingHubSubTab(value: string | null): BookingHubSubTab {

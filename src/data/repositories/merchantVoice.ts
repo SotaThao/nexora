@@ -118,6 +118,7 @@ export {
   normalizeVoicePlanTier,
   parseBookingHubMainTab,
   parseBookingHubSubTab,
+  isBookingHubMainTabVisible,
   VoiceCreditActivityKind,
   VoiceCreditType,
   VoicePlanStatus,
@@ -391,6 +392,7 @@ export interface CreateMerchantVoiceCustomerRequest {
 }
 
 export interface UpdateMerchantVoiceCustomerRequest {
+  phoneNumber: string
   name?: string | null
   email?: string | null
   address?: string | null
@@ -1655,9 +1657,18 @@ export function createMerchantVoiceRepository(client: HttpClient = httpClient) {
     },
 
     async updateCustomer(id: string, body: UpdateMerchantVoiceCustomerRequest): Promise<void> {
+      const command: UpdateMerchantVoiceCustomerRequest = {
+        phoneNumber: String(body.phoneNumber ?? '').trim(),
+        name: body.name?.trim() ? body.name.trim() : null,
+        email: body.email?.trim() ? body.email.trim() : null,
+        address: body.address?.trim() ? body.address.trim() : null,
+        dateOfBirth: body.dateOfBirth?.trim() ? body.dateOfBirth.trim() : null,
+        type: body.type,
+        status: body.status,
+      }
       await client.put<void>(
         `${MERCHANT_VOICE_BASE}/customers/${encodeURIComponent(id)}`,
-        body,
+        command,
         { headers: MERCHANT_VOICE_HEADERS },
       )
     },
