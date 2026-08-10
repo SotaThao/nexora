@@ -159,6 +159,28 @@ type ServiceModalDraft = {
   duration: string
 }
 
+type InlineServiceDraft = {
+  name: string
+  price: string
+  duration: string
+}
+
+function buildInlineServiceDraft(service: ServiceRow): InlineServiceDraft {
+  return {
+    name: service.name,
+    price: formatWholeNumberInputValue(service.price),
+    duration: formatWholeNumberInputValue(service.duration),
+  }
+}
+
+function parseInlineServicePrice(raw: string): string {
+  const cleaned = raw.replace(/[^\d.]/g, "")
+  const parts = cleaned.split(".")
+  return parts.length <= 1
+    ? cleaned
+    : `${parts[0]}.${parts.slice(1).join("").slice(0, 2)}`
+}
+
 interface CategoryDraft {
   id: string | null
   name: string
@@ -185,7 +207,8 @@ function normalizeServiceCategoryIds(
   const cleaned = [
     ...new Set(
       (categoryIds || [])
-        .map((id) => String(id || "").trim())
+        .filter((id): id is string => typeof id === "string")
+        .map((id) => id.trim())
         .filter(Boolean),
     ),
   ]
@@ -196,15 +219,34 @@ function primaryCategoryId(categoryIds: string[], fallbackId: string): string {
   return categoryIds[0] || fallbackId
 }
 
+function isOtherServicesCategory(category: {
+  id: string;
+  isSystem?: boolean;
+}): boolean {
+  return (
+    category.isSystem === true || category.id === OTHER_SERVICES_CATEGORY_ID
+  );
+}
+
 /** Real category ids for API. Default "Other services" is built-in — never send its id. */
 function categoryIdsForApi(categoryIds: string[]): string[] {
   return [
     ...new Set(
       categoryIds
-        .map((id) => String(id || "").trim())
+        .filter((id): id is string => typeof id === "string")
+        .map((id) => id.trim())
         .filter((id) => id && id !== OTHER_SERVICES_CATEGORY_ID),
     ),
   ]
+}
+
+/**
+ * API payload for service categories.
+ * Built-in Other is never sent as an id — Other-only → `null`.
+ */
+function categoryIdsPayloadForApi(categoryIds: string[]): string[] | null {
+  const ids = categoryIdsForApi(categoryIds)
+  return ids.length > 0 ? ids : null
 }
 
 function sameCategoryIds(left: string[], right: string[]): boolean {
@@ -847,6 +889,7 @@ export default function BookingSettingsPanel() {
     },
   );
   const [serviceModalError, setServiceModalError] = useState("");
+  const [serviceModalCategoriesError, setServiceModalCategoriesError] = useState("");
   const [categoryDrafts, setCategoryDrafts] = useState<CategoryDraft[]>([]);
   const [categoryModalError, setCategoryModalError] = useState("");
   const [isSavingCategories, setIsSavingCategories] = useState(false);
@@ -857,6 +900,13 @@ export default function BookingSettingsPanel() {
   const [highlightServiceId, setHighlightServiceId] = useState<string | null>(
     null,
   );
+  const [inlineServiceDrafts, setInlineServiceDrafts] = useState<
+    Record<string, InlineServiceDraft>
+  >({});
+  const [inlineServiceErrors, setInlineServiceErrors] = useState<
+    Record<string, string>
+  >({});
+  const inlineServiceDraftsRef = useRef(inlineServiceDrafts);
   const [openServiceCategoryIds, setOpenServiceCategoryIds] = useState(
     () => new Set<string>(),
   );
@@ -917,6 +967,10 @@ export default function BookingSettingsPanel() {
     sun: "",
   });
   const settingsShellRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    inlineServiceDraftsRef.current = inlineServiceDrafts;
+  }, [inlineServiceDrafts]);
 
   const isCollapsed = (cardId: string) => collapsedCards[cardId] === true;
   const salonPhoneParsed = useMemo(() => parsePhone(salonPhone), [salonPhone]);
@@ -1332,7 +1386,7 @@ export default function BookingSettingsPanel() {
     note: null as string | null,
     icon: service.icon?.trim() || null,
     isActive: true,
-    categoryIds: categoryIdsForApi(service.categoryIds),
+    categoryIds: categoryIdsPayloadForApi(service.categoryIds),
   });
 
   const serviceModalCategoryOptions = useMemo(() => {
@@ -1388,38 +1442,77 @@ export default function BookingSettingsPanel() {
     });
   }, [categories, categoriesData]);
 
+  const serviceModalCategorySelection = useMemo(() => {
+    const realCategories = serviceModalCategoryOptions.filter(
+      (category) => !isOtherServicesCategory(category),
+    );
+    const onlyOther =
+      realCategories.length === 0 && serviceModalCategoryOptions.length > 0;
+    return { realCategories, onlyOther, hasRealCategories: realCategories.length > 0 };
+  }, [serviceModalCategoryOptions]);
+
+  useEffect(() => {
+    if (!serviceModalOpen || !serviceModalCategorySelection.onlyOther) return;
+    setServiceModalDraft((prev) => {
+      if (prev.categoryIds.includes(OTHER_SERVICES_CATEGORY_ID)) return prev;
+      return { ...prev, categoryIds: [OTHER_SERVICES_CATEGORY_ID] };
+    });
+  }, [serviceModalOpen, serviceModalCategorySelection.onlyOther]);
+
   const openServiceModal = (categoryId?: string) => {
-    const preferredCategoryIds = categoryId
-      ? categoryIdsForApi([categoryId])
-      : [];
+    const preferredId =
+      typeof categoryId === "string" ? categoryId.trim() : "";
+    const { onlyOther } = serviceModalCategorySelection;
+    // Only Other in catalog → auto-check. Else global Add → none; from group → that category.
+    const initialCategoryIds = onlyOther
+      ? [OTHER_SERVICES_CATEGORY_ID]
+      : !preferredId
+        ? []
+        : preferredId === OTHER_SERVICES_CATEGORY_ID
+          ? [OTHER_SERVICES_CATEGORY_ID]
+          : categoryIdsForApi([preferredId]);
     setServiceModalDraft({
       mode: "create",
       serviceId: null,
-      categoryIds: preferredCategoryIds,
+      categoryIds: initialCategoryIds,
       name: "",
       price: "",
       duration: "",
     });
     setServiceModalError("");
+    setServiceModalCategoriesError("");
     setServiceModalOpen(true);
   };
 
   const openEditServiceModal = (service: ServiceRow) => {
+    const draft = resolveInlineServiceDraft(service);
+    const assignedCategoryIds = categoryIdsForApi(service.categoryIds);
     setServiceModalDraft({
       mode: "edit",
       serviceId: service.id,
-      // Other services is built-in / not assignable — only real categories.
-      categoryIds: categoryIdsForApi(service.categoryIds),
-      name: service.name,
-      price: formatWholeNumberInputValue(service.price),
-      duration: formatWholeNumberInputValue(service.duration),
+      categoryIds:
+        assignedCategoryIds.length > 0
+          ? assignedCategoryIds
+          : [OTHER_SERVICES_CATEGORY_ID],
+      name: draft.name,
+      price: draft.price,
+      duration: draft.duration,
     });
     setServiceModalError("");
+    setServiceModalCategoriesError("");
     setServiceModalOpen(true);
   };
 
   const toggleServiceModalCategory = (categoryId: string) => {
+    const category = serviceModalCategoryOptions.find(
+      (item) => item.id === categoryId,
+    );
+    const isOther = category ? isOtherServicesCategory(category) : false;
+    if (isOther) {
+      return;
+    }
     setServiceModalError("");
+    setServiceModalCategoriesError("");
     setServiceModalDraft((prev) => {
       const selected = prev.categoryIds.includes(categoryId);
       if (selected) {
@@ -1430,7 +1523,10 @@ export default function BookingSettingsPanel() {
       }
       return {
         ...prev,
-        categoryIds: [...prev.categoryIds, categoryId],
+        categoryIds: [
+          ...prev.categoryIds.filter((id) => id !== OTHER_SERVICES_CATEGORY_ID),
+          categoryId,
+        ],
       };
     });
   };
@@ -1546,12 +1642,19 @@ export default function BookingSettingsPanel() {
     const selectedCategoryIds = [
       ...new Set(
         serviceModalDraft.categoryIds
-          .map((id) => String(id || "").trim())
+          .filter((id): id is string => typeof id === "string")
+          .map((id) => id.trim())
           .filter(Boolean),
       ),
     ];
-    // UI requires a selection; Other alone maps to [] on the API (built-in group).
-    const categoryIds = categoryIdsForApi(selectedCategoryIds);
+    // Other alone → null on the API (built-in uncategorised group).
+    const categoryIds = categoryIdsPayloadForApi(selectedCategoryIds);
+    setServiceModalCategoriesError("");
+    if (selectedCategoryIds.length === 0) {
+      setServiceModalCategoriesError(t(`${TK}.serviceModalCategoryRequired`));
+      setServiceModalError("");
+      return;
+    }
     if (!name) {
       setServiceModalError(t(`${TK}.serviceModalNameRequired`));
       return;
@@ -1564,14 +1667,10 @@ export default function BookingSettingsPanel() {
       setServiceModalError(t(`${TK}.serviceModalDurationInvalid`));
       return;
     }
-    if (selectedCategoryIds.length === 0) {
-      setServiceModalError(t(`${TK}.serviceModalCategoryRequired`));
-      return;
-    }
 
     const preferredId = primaryCategoryId(
       selectedCategoryIds,
-      selectedCategoryIds[0],
+      OTHER_SERVICES_CATEGORY_ID,
     );
     const linked =
       categories.find((item) => item.id === preferredId) ||
@@ -1603,9 +1702,10 @@ export default function BookingSettingsPanel() {
           snapshot.duration === nextRow.duration &&
           sameCategoryIds(
             categoryIdsForApi(snapshot.categoryIds),
-            categoryIds,
+            categoryIds ?? [],
           )
         ) {
+          clearInlineServiceDraft(serviceId);
           setServiceModalOpen(false);
           return;
         }
@@ -1618,6 +1718,7 @@ export default function BookingSettingsPanel() {
             row.id === serviceId ? nextRow : row,
           );
           serviceSnapshotRef.current.set(serviceId, { ...nextRow });
+          clearInlineServiceDraft(serviceId);
           setServiceModalOpen(false);
           return;
         }
@@ -1626,6 +1727,7 @@ export default function BookingSettingsPanel() {
           id: serviceId,
           body: buildServiceApiPayload(nextRow),
         });
+        clearInlineServiceDraft(serviceId);
         setServiceModalOpen(false);
         await refreshServicesCatalog();
         setHighlightServiceId(serviceId);
@@ -1648,7 +1750,7 @@ export default function BookingSettingsPanel() {
         note: null,
         icon: null,
         isActive: true,
-        categoryIds: categoryIdsForApi(categoryIds),
+        categoryIds,
       });
       setServiceModalOpen(false);
       await refreshServicesCatalog();
@@ -1670,6 +1772,143 @@ export default function BookingSettingsPanel() {
       showToast(message, "error");
     } finally {
       setIsSavingService(false);
+    }
+  };
+
+  const openServiceModalFromCategory = (categoryId: string) => {
+    setCategoryModalOpen(false);
+    openServiceModal(categoryId);
+  };
+
+  const resolveInlineServiceDraft = (service: ServiceRow): InlineServiceDraft =>
+    inlineServiceDraftsRef.current[service.id] ??
+    buildInlineServiceDraft(service);
+
+  const updateInlineServiceDraft = (
+    service: ServiceRow,
+    field: keyof InlineServiceDraft,
+    value: string,
+  ) => {
+    setInlineServiceErrors((prev) => {
+      if (!prev[service.id]) return prev;
+      const next = { ...prev };
+      delete next[service.id];
+      return next;
+    });
+    setInlineServiceDrafts((prev) => ({
+      ...prev,
+      [service.id]: {
+        ...(prev[service.id] ?? buildInlineServiceDraft(service)),
+        [field]: value,
+      },
+    }));
+  };
+
+  const isInlineServiceDraftDirty = (
+    service: ServiceRow,
+    draft: InlineServiceDraft,
+  ): boolean => {
+    const snapshot = serviceSnapshotRef.current.get(service.id) ?? service;
+    const price = Number(draft.price);
+    const duration = Number(draft.duration);
+    if (draft.name.trim() !== snapshot.name.trim()) return true;
+    if (!Number.isFinite(price) || price !== snapshot.price) return true;
+    if (
+      !Number.isFinite(duration) ||
+      clampMerchantVoiceServiceDurationMinutes(duration) !== snapshot.duration
+    ) {
+      return true;
+    }
+    return false;
+  };
+
+  const isInlineServiceDirty = (service: ServiceRow): boolean =>
+    isInlineServiceDraftDirty(service, resolveInlineServiceDraft(service));
+
+  const clearInlineServiceDraft = (serviceId: string) => {
+    setInlineServiceDrafts((prev) => {
+      if (!prev[serviceId]) return prev;
+      const next = { ...prev };
+      delete next[serviceId];
+      return next;
+    });
+  };
+
+  const saveInlineService = async (serviceId: string) => {
+    const service = servicesRef.current.find((row) => row.id === serviceId);
+    if (!service || pendingServiceActionId === serviceId) return;
+
+    if (!isInlineServiceDirty(service)) {
+      clearInlineServiceDraft(serviceId);
+      return;
+    }
+
+    const draft = resolveInlineServiceDraft(service);
+    const name = draft.name.trim();
+    const price = Number(draft.price);
+    const duration = Number(draft.duration);
+
+    if (!name) {
+      setInlineServiceErrors((prev) => ({
+        ...prev,
+        [serviceId]: t(`${TK}.serviceModalNameRequired`),
+      }));
+      return;
+    }
+    if (!Number.isFinite(price) || price < 0) {
+      setInlineServiceErrors((prev) => ({
+        ...prev,
+        [serviceId]: t(`${TK}.serviceModalPriceInvalid`),
+      }));
+      return;
+    }
+    if (!Number.isFinite(duration) || duration <= 0) {
+      setInlineServiceErrors((prev) => ({
+        ...prev,
+        [serviceId]: t(`${TK}.serviceModalDurationInvalid`),
+      }));
+      return;
+    }
+
+    const nextRow: ServiceRow = {
+      ...service,
+      name,
+      price,
+      duration: clampMerchantVoiceServiceDurationMinutes(duration),
+    };
+
+    setPendingServiceActionId(serviceId);
+    setInlineServiceErrors((prev) => {
+      if (!prev[serviceId]) return prev;
+      const next = { ...prev };
+      delete next[serviceId];
+      return next;
+    });
+
+    try {
+      if (!isPersistedServiceId(serviceId)) {
+        setServices((prev) =>
+          prev.map((row) => (row.id === serviceId ? nextRow : row)),
+        );
+        servicesRef.current = servicesRef.current.map((row) =>
+          row.id === serviceId ? nextRow : row,
+        );
+        serviceSnapshotRef.current.set(serviceId, { ...nextRow });
+      } else {
+        await updateServiceMutation.mutateAsync({
+          id: serviceId,
+          body: buildServiceApiPayload(nextRow),
+        });
+        await refreshServicesCatalog();
+      }
+      clearInlineServiceDraft(serviceId);
+      showToast(t(`${TK}.serviceUpdated`, { name }), "success");
+    } catch (error) {
+      const message = t(getErrorI18nKey(getApiErrorCode(error)));
+      setInlineServiceErrors((prev) => ({ ...prev, [serviceId]: message }));
+      showToast(message, "error");
+    } finally {
+      setPendingServiceActionId(null);
     }
   };
 
@@ -2053,7 +2292,7 @@ export default function BookingSettingsPanel() {
     return sections;
   }, [categories, services]);
 
-  // Keep accordion ids valid; seed first category open once when catalog first loads.
+  // Keep accordion ids valid when catalog changes; all categories start collapsed.
   useEffect(() => {
     if (catalogSections.length === 0) {
       setOpenServiceCategoryIds(new Set());
@@ -2061,9 +2300,7 @@ export default function BookingSettingsPanel() {
     }
     setOpenServiceCategoryIds((prev) => {
       const validIds = new Set(catalogSections.map((section) => section.id));
-      const next = new Set([...prev].filter((id) => validIds.has(id)));
-      if (next.size > 0) return next;
-      return new Set([catalogSections[0].id]);
+      return new Set([...prev].filter((id) => validIds.has(id)));
     });
   }, [catalogSections]);
 
@@ -3192,7 +3429,7 @@ export default function BookingSettingsPanel() {
             <button
               className="booking-primary-button"
               type="button"
-              onClick={openServiceModal}
+              onClick={() => openServiceModal()}
             >
               <PlusLgIcon />
               {t(`${TK}.enterManually`)}
@@ -3206,7 +3443,7 @@ export default function BookingSettingsPanel() {
                 <button
                   className="booking-primary-button"
                   type="button"
-                  onClick={openServiceModal}
+                  onClick={() => openServiceModal()}
                 >
                   <PlusLgIcon />
                   {t(`${TK}.servicesEmptyCta`)}
@@ -3297,13 +3534,34 @@ export default function BookingSettingsPanel() {
                         categoryServices.map((service) => {
                           const isPending =
                             pendingServiceActionId === service.id;
+                          const draft =
+                            inlineServiceDrafts[service.id] ??
+                            buildInlineServiceDraft(service);
+                          const isDirty = isInlineServiceDraftDirty(
+                            service,
+                            draft,
+                          );
+                          const inlineError = inlineServiceErrors[service.id];
                           return (
                             <div
-                              className={`settings-service-row is-compact${highlightServiceId === service.id ? " is-highlight" : ""}`}
+                              className={`settings-service-row is-compact${isDirty ? " is-editing" : ""}${highlightServiceId === service.id ? " is-highlight" : ""}`}
                               data-service-row-id={service.id}
                               key={`${section.id}-${service.id}`}
                             >
-                              <div className="settings-service-edit-grid">
+                              <div
+                                className="settings-service-edit-grid"
+                                onBlur={(event) => {
+                                  const nextTarget =
+                                    event.relatedTarget as Node | null;
+                                  if (
+                                    nextTarget &&
+                                    event.currentTarget.contains(nextTarget)
+                                  ) {
+                                    return;
+                                  }
+                                  void saveInlineService(service.id);
+                                }}
+                              >
                                 <span
                                   className={`settings-service-visual ${service.tone}`}
                                   aria-hidden="true"
@@ -3311,19 +3569,20 @@ export default function BookingSettingsPanel() {
                                   {service.icon}
                                 </span>
                                 <input
-                                  className="settings-service-input is-readonly-trigger"
+                                  className="settings-service-input"
                                   type="text"
-                                  value={service.name}
+                                  value={draft.name}
                                   placeholder={t(
                                     `${TK}.placeholderServiceName`,
                                   )}
                                   aria-label={t(`${TK}.serviceNameAria`)}
-                                  readOnly
                                   disabled={isPending}
-                                  onClick={() => openEditServiceModal(service)}
-                                  onFocus={(event) => {
-                                    event.currentTarget.blur();
-                                    openEditServiceModal(service);
+                                  onChange={(event) => {
+                                    updateInlineServiceDraft(
+                                      service,
+                                      "name",
+                                      event.target.value,
+                                    );
                                   }}
                                 />
                                 <div className="settings-service-input-wrap">
@@ -3331,51 +3590,46 @@ export default function BookingSettingsPanel() {
                                     $
                                   </span>
                                   <input
-                                    className="settings-service-input price is-readonly-trigger"
+                                    className="settings-service-input price"
                                     type="text"
-                                    inputMode="numeric"
-                                    pattern="[0-9]*"
-                                    value={formatWholeNumberInputValue(
-                                      service.price,
-                                    )}
+                                    inputMode="decimal"
+                                    value={draft.price}
                                     placeholder={t(
                                       `${TK}.placeholderServicePrice`,
                                     )}
                                     aria-label={t(`${TK}.servicePriceAria`)}
-                                    readOnly
                                     disabled={isPending}
-                                    onClick={() =>
-                                      openEditServiceModal(service)
-                                    }
-                                    onFocus={(event) => {
-                                      event.currentTarget.blur();
-                                      openEditServiceModal(service);
+                                    onChange={(event) => {
+                                      updateInlineServiceDraft(
+                                        service,
+                                        "price",
+                                        parseInlineServicePrice(
+                                          event.target.value,
+                                        ),
+                                      );
                                     }}
                                   />
                                 </div>
                                 <div className="settings-service-input-wrap">
                                   <input
-                                    className="settings-service-input duration is-readonly-trigger"
+                                    className="settings-service-input duration"
                                     type="text"
                                     inputMode="numeric"
                                     pattern="[0-9]*"
-                                    value={formatWholeNumberInputValue(
-                                      service.duration,
-                                    )}
+                                    value={draft.duration}
                                     placeholder={t(
                                       `${TK}.placeholderServiceDuration`,
                                     )}
                                     aria-label={t(
                                       `${TK}.serviceDurationAria`,
                                     )}
-                                    readOnly
                                     disabled={isPending}
-                                    onClick={() =>
-                                      openEditServiceModal(service)
-                                    }
-                                    onFocus={(event) => {
-                                      event.currentTarget.blur();
-                                      openEditServiceModal(service);
+                                    onChange={(event) => {
+                                      updateInlineServiceDraft(
+                                        service,
+                                        "duration",
+                                        event.target.value.replace(/\D/g, ""),
+                                      );
                                     }}
                                   />
                                   <span className="settings-service-suffix">
@@ -3383,14 +3637,34 @@ export default function BookingSettingsPanel() {
                                   </span>
                                 </div>
                                 <div className="settings-service-row-actions">
+                                  {isDirty ? (
+                                    <button
+                                      className="settings-service-confirm"
+                                      type="button"
+                                      aria-label={t(
+                                        `${TK}.serviceConfirmUpdateAria`,
+                                      )}
+                                      disabled={isPending || isSavingService}
+                                      onMouseDown={(event) => {
+                                        event.preventDefault();
+                                      }}
+                                      onClick={() => {
+                                        void saveInlineService(service.id);
+                                      }}
+                                    >
+                                      {isPending ? (
+                                        <SpinnerIcon className="booking-inline-spinner" />
+                                      ) : (
+                                        <CheckCircleFillIcon className="settings-service-confirm-icon" />
+                                      )}
+                                    </button>
+                                  ) : null}
                                   <button
                                     className="settings-service-edit"
                                     type="button"
                                     aria-label={t(`${TK}.serviceEditAria`)}
                                     disabled={isPending || isSavingService}
-                                    onClick={() =>
-                                      openEditServiceModal(service)
-                                    }
+                                    onClick={() => openEditServiceModal(service)}
                                   >
                                     <PencilIcon className="settings-service-edit-icon" />
                                   </button>
@@ -3414,6 +3688,14 @@ export default function BookingSettingsPanel() {
                                   </button>
                                 </div>
                               </div>
+                              {inlineError ? (
+                                <p
+                                  className="settings-service-row-error"
+                                  role="alert"
+                                >
+                                  {inlineError}
+                                </p>
+                              ) : null}
                             </div>
                           );
                         })
@@ -3497,13 +3779,28 @@ export default function BookingSettingsPanel() {
             </div>
             <div className="settings-service-modal-body">
               <div className="settings-service-modal-grid">
-                <div className="settings-field settings-service-modal-field-name">
+                <div
+                  className={`settings-field settings-service-modal-field-name${
+                    serviceModalCategoriesError ? " has-error" : ""
+                  }`}
+                >
                   <span className="settings-label">
                     {t(`${TK}.serviceModalCategories`)}
+                    <span className="settings-required-mark" aria-hidden="true">
+                      *
+                    </span>
                   </span>
                   <div
-                    className="settings-service-modal-categories"
+                    className={`settings-service-modal-categories${
+                      serviceModalCategoriesError ? " has-error" : ""
+                    }`}
                     role="group"
+                    aria-invalid={serviceModalCategoriesError ? "true" : undefined}
+                    aria-describedby={
+                      serviceModalCategoriesError
+                        ? "settings-service-modal-categories-error"
+                        : undefined
+                    }
                     aria-label={t(`${TK}.serviceModalCategories`)}
                   >
                     {serviceModalCategoryOptions.length === 0 ? (
@@ -3512,23 +3809,25 @@ export default function BookingSettingsPanel() {
                       </div>
                     ) : (
                       serviceModalCategoryOptions.map((category) => {
-                        const isOtherCategory =
-                          category.isSystem ||
-                          category.id === OTHER_SERVICES_CATEGORY_ID;
-                        const checked =
-                          !isOtherCategory &&
-                          serviceModalDraft.categoryIds.includes(category.id);
+                        const isOther = isOtherServicesCategory(category);
+                        const { onlyOther, hasRealCategories } =
+                          serviceModalCategorySelection;
+                        const disabled =
+                          isOther && (onlyOther || hasRealCategories);
+                        const checked = isOther
+                          ? onlyOther ||
+                            serviceModalDraft.categoryIds.includes(category.id)
+                          : serviceModalDraft.categoryIds.includes(category.id);
                         return (
                           <label
                             key={category.id}
-                            className={`settings-service-modal-category-option${checked ? " is-selected" : ""}${isOtherCategory ? " is-disabled" : ""}`}
+                            className={`settings-service-modal-category-option${checked ? " is-selected" : ""}${disabled ? " is-disabled" : ""}`}
                           >
                             <input
                               type="checkbox"
                               checked={checked}
-                              disabled={isOtherCategory}
+                              disabled={disabled}
                               onChange={() => {
-                                if (isOtherCategory) return;
                                 toggleServiceModalCategory(category.id);
                               }}
                             />
@@ -3538,9 +3837,19 @@ export default function BookingSettingsPanel() {
                       })
                     )}
                   </div>
-                  <span className="settings-help">
-                    {t(`${TK}.serviceModalCategoriesHelp`)}
-                  </span>
+                  {serviceModalCategoriesError ? (
+                    <span
+                      id="settings-service-modal-categories-error"
+                      className="settings-field-error"
+                      role="alert"
+                    >
+                      {serviceModalCategoriesError}
+                    </span>
+                  ) : (
+                    <span className="settings-help">
+                      {t(`${TK}.serviceModalCategoriesHelp`)}
+                    </span>
+                  )}
                 </div>
                 <label className="settings-field settings-service-modal-field-name">
                   <span className="settings-label">
@@ -3726,46 +4035,53 @@ export default function BookingSettingsPanel() {
                         >
                           <div className="settings-category-row-main">
                             <FolderTreeIcon className="settings-category-row-icon" />
-                            <input
-                              ref={isActiveRow ? categoryInputRef : undefined}
-                              className="settings-category-name-input"
-                              type="text"
-                              value={draft.name}
-                              disabled={
-                                draft.isSystem ||
-                                (!draft.isNew && !draft.isEditing) ||
-                                isSavingCategories
-                              }
-                              placeholder={
-                                draft.isNew
-                                  ? t(`${TK}.categoryNamePlaceholder`)
-                                  : undefined
-                              }
-                              aria-label={t(`${TK}.categoryModalCategories`)}
-                              onChange={(event) =>
-                                updateCategoryDraft(index, event.target.value)
-                              }
-                              onKeyDown={(event) => {
-                                if (event.key === "Enter") {
-                                  event.preventDefault();
-                                  if (draft.isNew) {
-                                    void confirmCreateCategory(index);
-                                  } else if (draft.isEditing) {
-                                    void confirmRenameCategory(index);
+                            <div className="settings-category-row-label">
+                              <input
+                                ref={isActiveRow ? categoryInputRef : undefined}
+                                className="settings-category-name-input"
+                                type="text"
+                                value={draft.name}
+                                size={
+                                  draft.isNew || draft.isEditing
+                                    ? undefined
+                                    : Math.max(draft.name.length, 1)
+                                }
+                                disabled={
+                                  draft.isSystem ||
+                                  (!draft.isNew && !draft.isEditing) ||
+                                  isSavingCategories
+                                }
+                                placeholder={
+                                  draft.isNew
+                                    ? t(`${TK}.categoryNamePlaceholder`)
+                                    : undefined
+                                }
+                                aria-label={t(`${TK}.categoryModalCategories`)}
+                                onChange={(event) =>
+                                  updateCategoryDraft(index, event.target.value)
+                                }
+                                onKeyDown={(event) => {
+                                  if (event.key === "Enter") {
+                                    event.preventDefault();
+                                    if (draft.isNew) {
+                                      void confirmCreateCategory(index);
+                                    } else if (draft.isEditing) {
+                                      void confirmRenameCategory(index);
+                                    }
                                   }
-                                }
-                                if (event.key === "Escape" && isActiveRow) {
-                                  event.preventDefault();
-                                  cancelCategoryRow(index);
-                                }
-                              }}
-                            />
-                            <span
-                              className="settings-category-count"
-                              title={formatCategoryServiceCount(serviceCount)}
-                            >
-                              {formatCategoryServiceCount(serviceCount)}
-                            </span>
+                                  if (event.key === "Escape" && isActiveRow) {
+                                    event.preventDefault();
+                                    cancelCategoryRow(index);
+                                  }
+                                }}
+                              />
+                              <span
+                                className="settings-category-count"
+                                title={formatCategoryServiceCount(serviceCount)}
+                              >
+                                {formatCategoryServiceCount(serviceCount)}
+                              </span>
+                            </div>
                           </div>
                           <div className="settings-category-row-actions">
                             {draft.isNew || draft.isEditing ? (
@@ -3805,6 +4121,20 @@ export default function BookingSettingsPanel() {
                               </>
                             ) : (
                               <>
+                                {draft.id ? (
+                                  <button
+                                    className="settings-category-row-add-service"
+                                    type="button"
+                                    disabled={isSavingCategories}
+                                    aria-label={t(`${TK}.addService`)}
+                                    onClick={() => {
+                                      openServiceModalFromCategory(draft.id);
+                                    }}
+                                  >
+                                    <PlusLgIcon />
+                                    {t(`${TK}.addService`)}
+                                  </button>
+                                ) : null}
                                 {canEdit ? (
                                   <button
                                     className="settings-category-row-action"
