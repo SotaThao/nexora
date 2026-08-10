@@ -41,10 +41,10 @@ export default function PosRolesView() {
     <div className="space-y-6">
       <section className="flex items-start justify-between gap-3 px-0.5">
         <div className="space-y-1">
-          <h1 className="text-base font-semibold leading-tight text-nexoraText">
+          <h1 className="text-2xl font-bold leading-tight text-nexoraText">
             {t('dashboard.menu.pos_roles')}
           </h1>
-          <p className="text-xs text-nexoraMuted">
+          <p className="text-sm font-medium text-nexoraMuted">
             {t('components.dashboard.views.pos.PosRolesView.description')}
           </p>
         </div>
@@ -158,7 +158,7 @@ function PosRoleCard({ role }: { role: PosRoleApiDto }) {
 
   return (
     <div className="rounded-xl border border-nexoraBorder bg-white p-6 shadow-sm">
-      <div className="mb-4 flex flex-wrap items-center justify-between gap-2 border-b border-nexoraRule pb-3">
+      <div className="mb-4 flex flex-wrap items-center justify-between gap-2 border-b border-nexoraBorder pb-3">
         <div className="flex items-center gap-2">
           <h4 className="text-xs font-black uppercase tracking-wider text-nexoraText">{role.name}</h4>
           {role.isOwnerRole && (
@@ -217,7 +217,7 @@ function PosRoleCard({ role }: { role: PosRoleApiDto }) {
       </div>
 
       {role.isOwnerRole && (
-        <p className="mb-3 flex items-center gap-1.5 text-[11px] font-medium italic text-nexoraSubtle">
+        <p className="mb-3 flex items-center gap-1.5 text-[11px] font-medium italic text-nexoraMuted">
           <ShieldCheck className="h-3.5 w-3.5" />
           {t('components.dashboard.views.pos.PosRolesView.ownerRoleNote')}
         </p>

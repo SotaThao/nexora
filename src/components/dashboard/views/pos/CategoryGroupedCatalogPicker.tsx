@@ -6,8 +6,8 @@
 // Owner-only and this picker must also work for a Staff caller with Operations access.
 //
 // `variant="grid"` (POS iPad redesign — Order Workspace only) swaps the thin item-row list
-// for a touch-sized card grid with sticky category headers, on the posFd color tokens —
-// approved after 4 rounds of wireframe review (see project memory). `variant="list"`
+// for a touch-sized card grid with sticky category headers, on the shared nexora* color
+// tokens — approved after 4 rounds of wireframe review (see project memory). `variant="list"`
 // (default) is untouched and keeps the Booking pickers pixel-identical, since they weren't
 // part of that review and live inside more space-constrained modals.
 import { useMemo, useState } from 'react'
@@ -88,12 +88,12 @@ export default function CategoryGroupedCatalogPicker({
       type="button"
       onClick={() => onAdd(item.id)}
       disabled={isPending}
-      className="flex min-h-[76px] flex-col justify-between gap-2 rounded-2xl border border-posFdBorder bg-posFdSurface p-3 text-left hover:border-posFdAccent disabled:opacity-60"
+      className="flex min-h-[76px] flex-col justify-between gap-2 rounded-2xl border border-nexoraBorder bg-nexoraSurface p-3 text-left hover:border-nexoraBrand disabled:opacity-60"
     >
-      <span className="line-clamp-2 text-sm font-bold leading-snug text-posFdText">{item.name}</span>
+      <span className="line-clamp-2 text-sm font-bold leading-snug text-nexoraText">{item.name}</span>
       <div className="flex items-center justify-between">
-        <span className="text-sm font-bold text-posFdText">${item.price.toFixed(2)}</span>
-        <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-lg bg-posFdCanvas text-base font-bold text-posFdAccentDark">
+        <span className="text-sm font-bold text-nexoraText">${item.price.toFixed(2)}</span>
+        <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-lg bg-nexoraCanvas text-base font-bold text-nexoraBrandDark">
           +
         </span>
       </div>
@@ -131,7 +131,7 @@ export default function CategoryGroupedCatalogPicker({
       <div className="relative">
         <Search
           className={`pointer-events-none absolute left-2.5 top-1/2 h-3.5 w-3.5 -translate-y-1/2 ${
-            isGrid ? 'text-posFdMuted' : 'text-nexoraMuted'
+            isGrid ? 'text-nexoraMuted' : 'text-nexoraMuted'
           }`}
         />
         <input
@@ -141,7 +141,7 @@ export default function CategoryGroupedCatalogPicker({
           placeholder={searchPlaceholder}
           className={
             isGrid
-              ? 'h-11 w-full rounded-xl border border-posFdBorder bg-white pl-8 pr-2.5 text-sm text-posFdText outline-none focus:border-posFdAccent'
+              ? 'h-11 w-full rounded-xl border border-nexoraBorder bg-white pl-8 pr-2.5 text-sm text-nexoraText outline-none focus:border-nexoraBrand'
               : 'h-8 w-full rounded-lg border border-nexoraBorder bg-white pl-8 pr-2.5 text-[11px] text-nexoraText outline-none focus:border-nexoraBrand'
           }
         />
@@ -156,8 +156,8 @@ export default function CategoryGroupedCatalogPicker({
               isGrid
                 ? `rounded-full px-3.5 py-2 text-xs font-bold transition ${
                     selectedCategoryId === ''
-                      ? 'bg-posFdAccent text-white'
-                      : 'bg-posFdCanvas text-posFdMuted hover:text-posFdText'
+                      ? 'bg-nexoraBrand text-white'
+                      : 'bg-nexoraCanvas text-nexoraMuted hover:text-nexoraText'
                   }`
                 : `rounded-full px-2.5 py-1 text-[10px] font-bold transition ${
                     selectedCategoryId === ''
@@ -177,8 +177,8 @@ export default function CategoryGroupedCatalogPicker({
                 isGrid
                   ? `rounded-full px-3.5 py-2 text-xs font-bold transition ${
                       selectedCategoryId === category.id
-                        ? 'bg-posFdAccent text-white'
-                        : 'bg-posFdCanvas text-posFdMuted hover:text-posFdText'
+                        ? 'bg-nexoraBrand text-white'
+                        : 'bg-nexoraCanvas text-nexoraMuted hover:text-nexoraText'
                     }`
                   : `rounded-full px-2.5 py-1 text-[10px] font-bold transition ${
                       selectedCategoryId === category.id
@@ -194,13 +194,13 @@ export default function CategoryGroupedCatalogPicker({
       )}
 
       {isEmpty ? (
-        <p className={isGrid ? 'text-xs text-posFdMuted' : 'text-[11px] text-nexoraMuted'}>{emptyLabel}</p>
+        <p className={isGrid ? 'text-xs text-nexoraMuted' : 'text-[11px] text-nexoraMuted'}>{emptyLabel}</p>
       ) : selectedCategoryId === '' ? (
         isGrid ? (
-          <div className="max-h-[480px] overflow-y-auto rounded-xl border border-posFdBorder">
+          <div className="max-h-[480px] overflow-y-auto rounded-xl border border-nexoraBorder">
             {groupedSections!.map((section) => (
               <div key={section.category.id}>
-                <h4 className="sticky top-0 z-[1] border-b border-posFdBorder bg-posFdCanvas px-3 py-1.5 text-[10px] font-black uppercase tracking-wider text-posFdMuted">
+                <h4 className="sticky top-0 z-[1] border-b border-nexoraBorder bg-nexoraCanvas px-3 py-1.5 text-[10px] font-black uppercase tracking-wider text-nexoraMuted">
                   {section.category.name}
                 </h4>
                 <div className="grid grid-cols-2 gap-2 p-2 sm:grid-cols-3">{section.items.map(renderItemCard)}</div>
@@ -220,7 +220,7 @@ export default function CategoryGroupedCatalogPicker({
           </div>
         )
       ) : isGrid ? (
-        <div className="grid max-h-[480px] grid-cols-2 gap-2 overflow-y-auto rounded-xl border border-posFdBorder p-2 sm:grid-cols-3">
+        <div className="grid max-h-[480px] grid-cols-2 gap-2 overflow-y-auto rounded-xl border border-nexoraBorder p-2 sm:grid-cols-3">
           {flatItems.map(renderItemCard)}
         </div>
       ) : (

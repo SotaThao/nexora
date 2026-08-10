@@ -707,7 +707,7 @@ export default function PosOrderWorkspace({
           else on this screen. */}
       {!isCreateMode ? (
         <div className="flex items-center justify-between gap-3">
-          <h1 className="text-base font-semibold leading-tight text-nexoraText">
+          <h1 className="text-2xl font-bold leading-tight text-nexoraText">
             {t('components.dashboard.views.pos.PosOrderWorkspace.titleUpdate', {
               orderNumber: order?.orderNumber ?? '',
               customerName: order?.customerName ?? '',
@@ -717,7 +717,7 @@ export default function PosOrderWorkspace({
             <button
               type="button"
               onClick={onClose}
-              className="flex h-11 shrink-0 items-center gap-1.5 rounded-lg border border-posFdBorder px-4 text-sm font-bold text-posFdText hover:border-posFdAccent"
+              className="flex h-11 shrink-0 items-center gap-1.5 rounded-lg border border-nexoraBorder px-4 text-sm font-bold text-nexoraText hover:border-nexoraBrand"
             >
               <ArrowLeft className="h-4 w-4" />
               {t('components.dashboard.views.pos.PosOrderWorkspace.backButton')}
@@ -763,7 +763,7 @@ export default function PosOrderWorkspace({
                 onClick={() => setCatalogTab('services')}
                 className={`px-3 py-1.5 text-xs font-bold ${
                   catalogTab === 'services'
-                    ? 'border-b-2 border-posFdAccent text-posFdAccent'
+                    ? 'border-b-2 border-nexoraBrand text-nexoraBrand'
                     : 'text-nexoraMuted hover:text-nexoraText'
                 }`}
               >
@@ -774,7 +774,7 @@ export default function PosOrderWorkspace({
                 onClick={() => setCatalogTab('products')}
                 className={`px-3 py-1.5 text-xs font-bold ${
                   catalogTab === 'products'
-                    ? 'border-b-2 border-posFdAccent text-posFdAccent'
+                    ? 'border-b-2 border-nexoraBrand text-nexoraBrand'
                     : 'text-nexoraMuted hover:text-nexoraText'
                 }`}
               >
@@ -815,13 +815,13 @@ export default function PosOrderWorkspace({
           </div>
 
           <div className="space-y-4 lg:col-span-2">
-            <div className="space-y-3 rounded-xl border border-posFdBorder bg-posFdSurface p-4">
-              <h3 className="text-[10px] font-black uppercase tracking-wider text-posFdMuted">
+            <div className="space-y-3 rounded-xl border border-nexoraBorder bg-nexoraSurface p-4">
+              <h3 className="text-[10px] font-black uppercase tracking-wider text-nexoraMuted">
                 {t('components.dashboard.views.pos.PosOrderWorkspace.orderDetailTitle')}
               </h3>
 
               {visibleLines.length === 0 ? (
-                <p className="text-[11px] text-posFdMuted">
+                <p className="text-[11px] text-nexoraMuted">
                   {t('components.dashboard.views.pos.PosOrderWorkspace.noLines')}
                 </p>
               ) : (
@@ -830,20 +830,20 @@ export default function PosOrderWorkspace({
                 <div className="max-h-[320px] space-y-2 overflow-y-auto pr-1">
                   {visibleLines.map((line) =>
                     line.itemType === 'Service' ? (
-                      <div key={line.key} className="space-y-2 rounded-2xl border border-posFdBorder bg-white p-3">
+                      <div key={line.key} className="space-y-2 rounded-2xl border border-nexoraBorder bg-white p-3">
                         <div className="flex items-start gap-3">
-                          <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-posFdLavender/20 text-xs font-bold text-posFdAccentDark">
+                          <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-nexoraLavender/20 text-xs font-bold text-nexoraBrandDark">
                             {initials(
                               line.technicianName ?? t('components.dashboard.views.pos.PosOrderWorkspace.nextAvailable'),
                             )}
                           </div>
                           <div className="min-w-0 flex-1">
-                            <p className="text-sm font-bold leading-tight text-posFdText">{line.serviceName}</p>
-                            <p className="text-xs leading-tight text-posFdMuted">
+                            <p className="text-sm font-bold leading-tight text-nexoraText">{line.serviceName}</p>
+                            <p className="text-xs leading-tight text-nexoraMuted">
                               {line.technicianName ?? t('components.dashboard.views.pos.PosOrderWorkspace.nextAvailable')}
                             </p>
                           </div>
-                          <span className="shrink-0 text-sm font-bold text-posFdText">
+                          <span className="shrink-0 text-sm font-bold text-nexoraText">
                             ${lineTotal(line).toFixed(2)}
                           </span>
                         </div>
@@ -851,7 +851,7 @@ export default function PosOrderWorkspace({
                           <button
                             type="button"
                             onClick={() => handleEditServiceLine(line)}
-                            className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl text-posFdMuted hover:bg-posFdCanvas hover:text-posFdAccentDark"
+                            className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl text-nexoraMuted hover:bg-nexoraCanvas hover:text-nexoraBrandDark"
                             aria-label={t('components.dashboard.views.pos.PosOrderWorkspace.editLine')}
                           >
                             <Pencil className="h-4 w-4" />
@@ -859,7 +859,7 @@ export default function PosOrderWorkspace({
                           <button
                             type="button"
                             onClick={() => handleDeleteLine(line)}
-                            className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl text-posFdMuted hover:bg-posFdDangerBg hover:text-posFdDanger"
+                            className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl text-nexoraMuted hover:bg-red-50 hover:text-nexoraDanger"
                             aria-label={t('components.dashboard.views.pos.PosOrderWorkspace.deleteLine')}
                           >
                             <Trash2 className="h-4 w-4" />
@@ -867,16 +867,16 @@ export default function PosOrderWorkspace({
                         </div>
                       </div>
                     ) : (
-                      <div key={line.key} className="space-y-2 rounded-2xl border border-posFdBorder bg-white p-3">
+                      <div key={line.key} className="space-y-2 rounded-2xl border border-nexoraBorder bg-white p-3">
                         <div className="flex items-start gap-3">
-                          <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-posFdCanvas text-posFdAccentDark">
+                          <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-nexoraCanvas text-nexoraBrandDark">
                             <Package className="h-4 w-4" />
                           </div>
                           <div className="min-w-0 flex-1">
-                            <p className="text-sm font-bold leading-tight text-posFdText">{line.productName}</p>
-                            <p className="text-xs leading-tight text-posFdMuted">${line.unitPrice.toFixed(2)} each</p>
+                            <p className="text-sm font-bold leading-tight text-nexoraText">{line.productName}</p>
+                            <p className="text-xs leading-tight text-nexoraMuted">${line.unitPrice.toFixed(2)} each</p>
                           </div>
-                          <span className="shrink-0 text-sm font-bold text-posFdText">
+                          <span className="shrink-0 text-sm font-bold text-nexoraText">
                             ${lineTotal(line).toFixed(2)}
                           </span>
                         </div>
@@ -885,16 +885,16 @@ export default function PosOrderWorkspace({
                             <button
                               type="button"
                               onClick={() => applyQuantityDelta(line, -1)}
-                              className="flex h-9 w-9 items-center justify-center rounded-xl border border-posFdBorder text-posFdText hover:border-posFdAccent"
+                              className="flex h-9 w-9 items-center justify-center rounded-xl border border-nexoraBorder text-nexoraText hover:border-nexoraBrand"
                               aria-label={t('components.dashboard.views.pos.PosOrderWorkspace.decreaseQty')}
                             >
                               −
                             </button>
-                            <span className="w-5 text-center text-sm font-bold text-posFdText">{line.quantity}</span>
+                            <span className="w-5 text-center text-sm font-bold text-nexoraText">{line.quantity}</span>
                             <button
                               type="button"
                               onClick={() => applyQuantityDelta(line, 1)}
-                              className="flex h-9 w-9 items-center justify-center rounded-xl border border-posFdBorder text-posFdText hover:border-posFdAccent"
+                              className="flex h-9 w-9 items-center justify-center rounded-xl border border-nexoraBorder text-nexoraText hover:border-nexoraBrand"
                               aria-label={t('components.dashboard.views.pos.PosOrderWorkspace.increaseQty')}
                             >
                               +
@@ -903,7 +903,7 @@ export default function PosOrderWorkspace({
                           <button
                             type="button"
                             onClick={() => handleDeleteLine(line)}
-                            className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl text-posFdMuted hover:bg-posFdDangerBg hover:text-posFdDanger"
+                            className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl text-nexoraMuted hover:bg-red-50 hover:text-nexoraDanger"
                             aria-label={t('components.dashboard.views.pos.PosOrderWorkspace.deleteLine')}
                           >
                             <Trash2 className="h-4 w-4" />
@@ -916,11 +916,11 @@ export default function PosOrderWorkspace({
               )}
 
               {noteLines.length > 0 ? (
-                <div className="rounded-xl bg-posFdCanvas p-3">
-                  <h4 className="mb-1 text-[10px] font-black uppercase tracking-wider text-posFdMuted">
+                <div className="rounded-xl bg-nexoraCanvas p-3">
+                  <h4 className="mb-1 text-[10px] font-black uppercase tracking-wider text-nexoraMuted">
                     {t('components.dashboard.views.pos.PosOrderWorkspace.noteTitle')}
                   </h4>
-                  <ul className="space-y-0.5 text-[11px] text-posFdText">
+                  <ul className="space-y-0.5 text-[11px] text-nexoraText">
                     {noteLines.map((line) => (
                       <li key={line.key}>
                         <span className="font-semibold">{line.serviceName}:</span> {line.note}
@@ -931,11 +931,11 @@ export default function PosOrderWorkspace({
               ) : null}
 
               {!showPaymentSection ? (
-                <div className="flex justify-between border-t border-posFdBorder pt-2 text-xs">
-                  <span className="font-black uppercase text-posFdText">
+                <div className="flex justify-between border-t border-nexoraBorder pt-2 text-xs">
+                  <span className="font-black uppercase text-nexoraText">
                     {t('components.dashboard.views.pos.PosOrderWorkspace.estimatedTotal')}
                   </span>
-                  <span className="font-black text-posFdText">${draftSubtotal.toFixed(2)}</span>
+                  <span className="font-black text-nexoraText">${draftSubtotal.toFixed(2)}</span>
                 </div>
               ) : null}
             </div>
@@ -947,7 +947,7 @@ export default function PosOrderWorkspace({
                     type="button"
                     onClick={handleStartService}
                     disabled={isBusy}
-                    className="h-11 flex-1 rounded-lg border border-posFdBorder text-sm font-bold text-posFdText hover:border-posFdAccent disabled:opacity-60"
+                    className="h-11 flex-1 rounded-lg border border-nexoraBorder text-sm font-bold text-nexoraText hover:border-nexoraBrand disabled:opacity-60"
                   >
                     {startOrderService.isPending ? (
                       <Loader2 className="mx-auto h-4 w-4 animate-spin" />
@@ -960,7 +960,7 @@ export default function PosOrderWorkspace({
                   type="button"
                   onClick={handleCheckoutFromUpdate}
                   disabled={isBusy}
-                  className="h-11 flex-1 rounded-lg bg-posFdAccent text-sm font-bold text-white hover:bg-posFdAccentDark disabled:opacity-60"
+                  className="h-11 flex-1 rounded-lg bg-nexoraBrand text-sm font-bold text-white hover:bg-nexoraBrandDark disabled:opacity-60"
                 >
                   {t('components.dashboard.views.pos.PosOrderWorkspace.checkoutButton')}
                 </button>
@@ -972,7 +972,7 @@ export default function PosOrderWorkspace({
                 <button
                   type="button"
                   onClick={resetCreateDraft}
-                  className="h-11 rounded-lg border border-posFdBorder px-4 text-sm font-bold text-posFdText hover:border-posFdAccent"
+                  className="h-11 rounded-lg border border-nexoraBorder px-4 text-sm font-bold text-nexoraText hover:border-nexoraBrand"
                 >
                   {t('components.dashboard.views.pos.PosOrderWorkspace.cancelButton')}
                 </button>
@@ -980,7 +980,7 @@ export default function PosOrderWorkspace({
                   type="button"
                   onClick={isProductOnlyCheckout ? handleCheckoutFromCreate : handleCheckIn}
                   disabled={isBusy || visibleLines.length === 0}
-                  className="h-11 flex-1 rounded-lg bg-posFdAccent text-sm font-bold text-white hover:bg-posFdAccentDark disabled:opacity-60"
+                  className="h-11 flex-1 rounded-lg bg-nexoraBrand text-sm font-bold text-white hover:bg-nexoraBrandDark disabled:opacity-60"
                 >
                   {isBusy ? (
                     <Loader2 className="mx-auto h-4 w-4 animate-spin" />
@@ -1003,7 +1003,7 @@ export default function PosOrderWorkspace({
                     <button
                       type="button"
                       onClick={() => setCustomerFacingMode(true)}
-                      className="rounded-lg border border-posFdAccent px-2.5 py-1 text-[10px] font-bold text-posFdAccentDark hover:bg-posFdAccent hover:text-white"
+                      className="rounded-lg border border-nexoraBrand px-2.5 py-1 text-[10px] font-bold text-nexoraBrandDark hover:bg-nexoraBrand hover:text-white"
                     >
                       {t('components.dashboard.views.pos.PosOrderWorkspace.turnToCustomerButton')}
                     </button>
@@ -1014,8 +1014,8 @@ export default function PosOrderWorkspace({
                       onClick={() => applyTip('noTip', 0)}
                       className={`h-9 rounded-lg border text-xs font-bold ${
                         tipMode === 'noTip'
-                          ? 'border-posFdAccent bg-posFdAccent text-white'
-                          : 'border-nexoraBorder text-nexoraText hover:border-posFdAccent'
+                          ? 'border-nexoraBrand bg-nexoraBrand text-white'
+                          : 'border-nexoraBorder text-nexoraText hover:border-nexoraBrand'
                       }`}
                     >
                       {t('components.dashboard.views.pos.PosOrderWorkspace.noTipButton')}
@@ -1025,8 +1025,8 @@ export default function PosOrderWorkspace({
                       onClick={() => applyTip('fixed10', 10)}
                       className={`h-9 rounded-lg border text-xs font-bold ${
                         tipMode === 'fixed10'
-                          ? 'border-posFdAccent bg-posFdAccent text-white'
-                          : 'border-nexoraBorder text-nexoraText hover:border-posFdAccent'
+                          ? 'border-nexoraBrand bg-nexoraBrand text-white'
+                          : 'border-nexoraBorder text-nexoraText hover:border-nexoraBrand'
                       }`}
                     >
                       $10
@@ -1036,8 +1036,8 @@ export default function PosOrderWorkspace({
                       onClick={() => applyTip('fixed15', 15)}
                       className={`h-9 rounded-lg border text-xs font-bold ${
                         tipMode === 'fixed15'
-                          ? 'border-posFdAccent bg-posFdAccent text-white'
-                          : 'border-nexoraBorder text-nexoraText hover:border-posFdAccent'
+                          ? 'border-nexoraBrand bg-nexoraBrand text-white'
+                          : 'border-nexoraBorder text-nexoraText hover:border-nexoraBrand'
                       }`}
                     >
                       $15
@@ -1047,8 +1047,8 @@ export default function PosOrderWorkspace({
                       onClick={() => applyTip('pct10', round2(order.servicesSubtotal * TIP_PERCENT_BY_MODE.pct10!))}
                       className={`h-9 rounded-lg border text-xs font-bold ${
                         tipMode === 'pct10'
-                          ? 'border-posFdAccent bg-posFdAccent text-white'
-                          : 'border-nexoraBorder text-nexoraText hover:border-posFdAccent'
+                          ? 'border-nexoraBrand bg-nexoraBrand text-white'
+                          : 'border-nexoraBorder text-nexoraText hover:border-nexoraBrand'
                       }`}
                     >
                       10%
@@ -1058,8 +1058,8 @@ export default function PosOrderWorkspace({
                       onClick={() => applyTip('pct20', round2(order.servicesSubtotal * TIP_PERCENT_BY_MODE.pct20!))}
                       className={`h-9 rounded-lg border text-xs font-bold ${
                         tipMode === 'pct20'
-                          ? 'border-posFdAccent bg-posFdAccent text-white'
-                          : 'border-nexoraBorder text-nexoraText hover:border-posFdAccent'
+                          ? 'border-nexoraBrand bg-nexoraBrand text-white'
+                          : 'border-nexoraBorder text-nexoraText hover:border-nexoraBrand'
                       }`}
                     >
                       20%
@@ -1082,7 +1082,7 @@ export default function PosOrderWorkspace({
                         }}
                         placeholder={t('components.dashboard.views.pos.PosOrderWorkspace.customTipPlaceholder')}
                         className={`h-9 w-full rounded-lg border px-2 text-xs text-nexoraText outline-none ${
-                          tipMode === 'custom' ? 'border-posFdAccent' : 'border-nexoraBorder'
+                          tipMode === 'custom' ? 'border-nexoraBrand' : 'border-nexoraBorder'
                         }`}
                       />
                     </div>
@@ -1106,7 +1106,7 @@ export default function PosOrderWorkspace({
                           onChange={(e) =>
                             setTipSplitInputs((prev) => ({ ...prev, [share.posStaffProfileId]: e.target.value }))
                           }
-                          className="h-9 w-24 rounded-lg border border-nexoraBorder px-2 text-xs text-nexoraText outline-none focus:border-posFdAccent"
+                          className="h-9 w-24 rounded-lg border border-nexoraBorder px-2 text-xs text-nexoraText outline-none focus:border-nexoraBrand"
                         />
                       </div>
                     ))}
@@ -1125,7 +1125,7 @@ export default function PosOrderWorkspace({
                         type="button"
                         onClick={handleSaveTipSplit}
                         disabled={!isTipSplitBalanced || setStaffTipSplit.isPending}
-                        className="rounded-lg border border-nexoraBorder px-3 py-1.5 text-[10px] font-bold text-nexoraText hover:border-posFdAccent disabled:opacity-60"
+                        className="rounded-lg border border-nexoraBorder px-3 py-1.5 text-[10px] font-bold text-nexoraText hover:border-nexoraBrand disabled:opacity-60"
                       >
                         {t('components.dashboard.views.pos.PosOrderWorkspace.saveTipSplitButton')}
                       </button>
@@ -1145,8 +1145,8 @@ export default function PosOrderWorkspace({
                         onClick={() => setPaymentMethod(method)}
                         className={`h-9 rounded-lg border text-xs font-bold ${
                           paymentMethod === method
-                            ? 'border-posFdAccent bg-posFdAccent text-white'
-                            : 'border-nexoraBorder text-nexoraText hover:border-posFdAccent'
+                            ? 'border-nexoraBrand bg-nexoraBrand text-white'
+                            : 'border-nexoraBorder text-nexoraText hover:border-nexoraBrand'
                         }`}
                       >
                         {t(`components.dashboard.views.pos.PosOrderWorkspace.paymentMethod.${method}`)}
@@ -1164,8 +1164,8 @@ export default function PosOrderWorkspace({
                         disabled={!order?.customerPhone}
                         className={`flex h-14 flex-col items-center justify-center gap-0.5 rounded-lg border text-xs font-bold disabled:cursor-not-allowed disabled:opacity-40 ${
                           receiptChoice === 'sms'
-                            ? 'border-posFdAccent bg-posFdAccent text-white'
-                            : 'border-nexoraBorder text-nexoraText hover:border-posFdAccent'
+                            ? 'border-nexoraBrand bg-nexoraBrand text-white'
+                            : 'border-nexoraBorder text-nexoraText hover:border-nexoraBrand'
                         }`}
                       >
                         <span>{t('components.dashboard.views.pos.PosOrderWorkspace.receiptSendSms')}</span>
@@ -1180,8 +1180,8 @@ export default function PosOrderWorkspace({
                         onClick={() => setReceiptChoice('none')}
                         className={`h-14 rounded-lg border text-xs font-bold ${
                           receiptChoice === 'none'
-                            ? 'border-posFdAccent bg-posFdAccent text-white'
-                            : 'border-nexoraBorder text-nexoraText hover:border-posFdAccent'
+                            ? 'border-nexoraBrand bg-nexoraBrand text-white'
+                            : 'border-nexoraBorder text-nexoraText hover:border-nexoraBrand'
                         }`}
                       >
                         {t('components.dashboard.views.pos.PosOrderWorkspace.receiptNone')}
@@ -1238,7 +1238,7 @@ export default function PosOrderWorkspace({
                   type="button"
                   onClick={handleComplete}
                   disabled={completeOrder.isPending}
-                  className="h-11 w-full rounded-lg bg-posFdAccent text-sm font-bold text-white hover:bg-posFdAccentDark disabled:opacity-60"
+                  className="h-11 w-full rounded-lg bg-nexoraBrand text-sm font-bold text-white hover:bg-nexoraBrandDark disabled:opacity-60"
                 >
                   {completeOrder.isPending ? (
                     <Loader2 className="mx-auto h-4 w-4 animate-spin" />
@@ -1268,9 +1268,9 @@ export default function PosOrderWorkspace({
       ) : null}
 
       {customerFacingMode && order ? (
-        <div className="fixed inset-0 z-[70] flex flex-col bg-posFdSurface p-6">
+        <div className="fixed inset-0 z-[70] flex flex-col bg-nexoraSurface p-6">
           <div className="flex-1 space-y-6 overflow-y-auto text-center">
-            <p className="text-lg font-bold text-posFdText">
+            <p className="text-lg font-bold text-nexoraText">
               {t('components.dashboard.views.pos.PosOrderWorkspace.customerFacingTitle')}
             </p>
             <p className="text-sm text-nexoraMuted">
@@ -1282,8 +1282,8 @@ export default function PosOrderWorkspace({
                 onClick={() => applyTip('noTip', 0)}
                 className={`h-20 rounded-2xl border-2 text-lg font-black ${
                   tipMode === 'noTip'
-                    ? 'border-posFdAccent bg-posFdAccent text-white'
-                    : 'border-posFdBorder text-posFdText'
+                    ? 'border-nexoraBrand bg-nexoraBrand text-white'
+                    : 'border-nexoraBorder text-nexoraText'
                 }`}
               >
                 {t('components.dashboard.views.pos.PosOrderWorkspace.noTipButton')}
@@ -1293,8 +1293,8 @@ export default function PosOrderWorkspace({
                 onClick={() => applyTip('fixed10', 10)}
                 className={`h-20 rounded-2xl border-2 text-2xl font-black ${
                   tipMode === 'fixed10'
-                    ? 'border-posFdAccent bg-posFdAccent text-white'
-                    : 'border-posFdBorder text-posFdText'
+                    ? 'border-nexoraBrand bg-nexoraBrand text-white'
+                    : 'border-nexoraBorder text-nexoraText'
                 }`}
               >
                 $10
@@ -1304,8 +1304,8 @@ export default function PosOrderWorkspace({
                 onClick={() => applyTip('fixed15', 15)}
                 className={`h-20 rounded-2xl border-2 text-2xl font-black ${
                   tipMode === 'fixed15'
-                    ? 'border-posFdAccent bg-posFdAccent text-white'
-                    : 'border-posFdBorder text-posFdText'
+                    ? 'border-nexoraBrand bg-nexoraBrand text-white'
+                    : 'border-nexoraBorder text-nexoraText'
                 }`}
               >
                 $15
@@ -1315,8 +1315,8 @@ export default function PosOrderWorkspace({
                 onClick={() => applyTip('pct10', round2(order.servicesSubtotal * TIP_PERCENT_BY_MODE.pct10!))}
                 className={`h-20 rounded-2xl border-2 text-2xl font-black ${
                   tipMode === 'pct10'
-                    ? 'border-posFdAccent bg-posFdAccent text-white'
-                    : 'border-posFdBorder text-posFdText'
+                    ? 'border-nexoraBrand bg-nexoraBrand text-white'
+                    : 'border-nexoraBorder text-nexoraText'
                 }`}
               >
                 10%
@@ -1326,8 +1326,8 @@ export default function PosOrderWorkspace({
                 onClick={() => applyTip('pct20', round2(order.servicesSubtotal * TIP_PERCENT_BY_MODE.pct20!))}
                 className={`h-20 rounded-2xl border-2 text-2xl font-black ${
                   tipMode === 'pct20'
-                    ? 'border-posFdAccent bg-posFdAccent text-white'
-                    : 'border-posFdBorder text-posFdText'
+                    ? 'border-nexoraBrand bg-nexoraBrand text-white'
+                    : 'border-nexoraBorder text-nexoraText'
                 }`}
               >
                 20%
@@ -1344,8 +1344,8 @@ export default function PosOrderWorkspace({
                 onFocus={() => setTipMode('custom')}
                 onBlur={handleCustomTipCommit}
                 placeholder={t('components.dashboard.views.pos.PosOrderWorkspace.customTipPlaceholder')}
-                className={`h-14 w-full rounded-2xl border-2 px-4 text-xl text-posFdText outline-none ${
-                  tipMode === 'custom' ? 'border-posFdAccent' : 'border-posFdBorder'
+                className={`h-14 w-full rounded-2xl border-2 px-4 text-xl text-nexoraText outline-none ${
+                  tipMode === 'custom' ? 'border-nexoraBrand' : 'border-nexoraBorder'
                 }`}
               />
             </div>
@@ -1356,7 +1356,7 @@ export default function PosOrderWorkspace({
           <button
             type="button"
             onClick={() => setCustomerFacingMode(false)}
-            className="h-14 w-full shrink-0 rounded-xl border-2 border-posFdBorder text-base font-bold text-posFdText"
+            className="h-14 w-full shrink-0 rounded-xl border-2 border-nexoraBorder text-base font-bold text-nexoraText"
           >
             {t('components.dashboard.views.pos.PosOrderWorkspace.backToStaffButton')}
           </button>
