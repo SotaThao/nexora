@@ -3,6 +3,7 @@ import { useQueryClient } from '@tanstack/react-query'
 import { X, Loader2 } from 'lucide-react'
 import { useTranslation } from '../../../contexts/LanguageContext'
 import { useNotification } from '../../../contexts/NotificationContext'
+import { useHasStoreSetup } from '../../../data/hooks/useHasStoreSetup'
 import { useProfileSettings } from '../../../data/hooks/useProfileSettings'
 import { useSubscriptionCardOrderPoll } from '../../../data/hooks/useSubscriptionCardOrderPoll'
 import {
@@ -20,6 +21,7 @@ import type {
 import { formatCurrency } from '../utils'
 import { hasEnoughWalletBalance } from '../views/plans/constants'
 import { getErrorI18nKey } from '../../../data/errorCodes'
+import CompleteStoreSetupCardPrompt from './CompleteStoreSetupCardPrompt'
 import SubscriptionCardPaymentForm, {
   type SubscriptionBillingDetails,
   type SubscriptionCardPaymentFormHandle,
@@ -108,6 +110,9 @@ export default function SubscriptionPaymentModal({
 
   const purchaseMutation = usePurchaseSubscription()
   const initializeCardMutation = useInitializeCardPayment()
+  const { hasSetup, isLoading: isSetupLoading, isResolved: isSetupResolved } = useHasStoreSetup({
+    enabled: isOpen,
+  })
   const { data: profile } = useProfileSettings({ enabled: isOpen })
   const resolvedBillingDefaults = useMemo(
     () => resolveSubscriptionBillingDefaults(billingDefaults, profile),
@@ -131,16 +136,23 @@ export default function SubscriptionPaymentModal({
   }, [isOpen, methods, selectedSymbol])
 
   useEffect(() => {
-    if (
-      paymentTab !== SubscriptionPaymentTab.Card
-      || initializeCardMutation.data
-      || initializeCardMutation.isPending
-    ) {
-      return
-    }
+    if (paymentTab !== SubscriptionPaymentTab.Card) return
+    if (!isSetupResolved || !hasSetup) return
+    if (initializeCardMutation.data || initializeCardMutation.isPending) return
     initializeCardMutation.mutate(packageId)
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [paymentTab, packageId])
+  }, [paymentTab, packageId, hasSetup, isSetupResolved])
+
+  useEffect(() => {
+    if (
+      paymentTab === SubscriptionPaymentTab.Card
+      && isSetupResolved
+      && !hasSetup
+    ) {
+      initializeCardMutation.reset()
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [paymentTab, hasSetup, isSetupResolved])
 
   if (!isOpen) return null
 
@@ -207,6 +219,7 @@ export default function SubscriptionPaymentModal({
 
   const canConfirmCard =
     isCardTab
+    && hasSetup
     && Boolean(initializeCardMutation.data)
     && !initializeCardMutation.isPending
     && !isCardOrderPolling
@@ -366,7 +379,14 @@ export default function SubscriptionPaymentModal({
 
         {isCardTab ? (
           <div className="mt-4">
-            {initializeCardMutation.isPending ? (
+            {isSetupLoading || !isSetupResolved ? (
+              <div className="mt-2 flex items-center gap-2 rounded-xl border border-nexoraBorder p-4 text-xs text-nexoraMuted">
+                <Loader2 className="h-4 w-4 animate-spin" />
+                {t(modalKey('subscription_payment_methods_loading'))}
+              </div>
+            ) : !hasSetup ? (
+              <CompleteStoreSetupCardPrompt onBeforeNavigate={onClose} />
+            ) : initializeCardMutation.isPending ? (
               <div className="mt-2 flex items-center gap-2 rounded-xl border border-nexoraBorder p-4 text-xs text-nexoraMuted">
                 <Loader2 className="h-4 w-4 animate-spin" />
                 {t(modalKey('subscription_payment_methods_loading'))}

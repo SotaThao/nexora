@@ -1,4 +1,5 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react'
+import { useHasStoreSetup } from '../../../../data/hooks/useHasStoreSetup'
 import { useProfileSettings } from '../../../../data/hooks/useProfileSettings'
 import { useSubscriptionCardOrderPoll } from '../../../../data/hooks/useSubscriptionCardOrderPoll'
 import {
@@ -15,6 +16,7 @@ import {
   SubscriptionPaymentStatus,
   type SubscriptionPaymentMethod,
 } from '../../../../data/repositories/subscriptionPayments'
+import CompleteStoreSetupCardPrompt from '../../modals/CompleteStoreSetupCardPrompt'
 import SubscriptionCardPaymentForm, {
   type SubscriptionBillingDetails,
   type SubscriptionCardPaymentFormHandle,
@@ -114,6 +116,9 @@ export default function PlanPaymentModal({
     [billingDefaults, profile],
   )
   const isCardPayment = isPlanCardPaymentSymbol(selectedSymbol)
+  const { hasSetup, isLoading: isSetupLoading, isResolved: isSetupResolved } = useHasStoreSetup({
+    enabled: isOpen,
+  })
   const purchaseMutation = usePurchaseVoiceAiPackage()
   const initializeCardMutation = useInitializeCardPayment()
 
@@ -159,10 +164,18 @@ export default function PlanPaymentModal({
 
   useEffect(() => {
     if (!isOpen || !isCardPayment || !selection?.packageId) return
+    if (!isSetupResolved || !hasSetup) return
     if (initializeCardMutation.data || initializeCardMutation.isPending) return
     initializeCardMutation.mutate(selection.packageId)
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [isOpen, isCardPayment, selection?.packageId])
+  }, [isOpen, isCardPayment, selection?.packageId, hasSetup, isSetupResolved])
+
+  useEffect(() => {
+    if (isCardPayment && isSetupResolved && !hasSetup) {
+      initializeCardMutation.reset()
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isCardPayment, hasSetup, isSetupResolved])
 
   const selectedPayment = useMemo(
     () => methods.find((method) => method.symbol === selectedSymbol) ?? null,
@@ -192,6 +205,7 @@ export default function PlanPaymentModal({
 
   const canConfirmCard =
     isCardPayment
+    && hasSetup
     && Boolean(initializeCardMutation.data)
     && !initializeCardMutation.isPending
     && !isCardOrderPolling
@@ -385,7 +399,11 @@ export default function PlanPaymentModal({
 
                 {isCardPayment ? (
                   <div className="mt-4">
-                    {initializeCardMutation.isPending ? (
+                    {isSetupLoading || !isSetupResolved ? (
+                      <PlanPaymentMethodsSkeleton />
+                    ) : !hasSetup ? (
+                      <CompleteStoreSetupCardPrompt onBeforeNavigate={onClose} />
+                    ) : initializeCardMutation.isPending ? (
                       <PlanPaymentMethodsSkeleton />
                     ) : initializeCardMutation.isError ? (
                       <div className="booking-empty-cell plan-payment-methods-state">

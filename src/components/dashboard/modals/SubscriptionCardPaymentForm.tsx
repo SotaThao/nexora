@@ -25,11 +25,16 @@ import {
 import { SMS_CAMPAIGN_TK } from '../views/smsCampaigns/constants'
 import {
   STRIPE_CARD_ELEMENT_STYLE,
+  SUBSCRIPTION_CARD_BILLING_REQUIRED_FIELDS,
   SUBSCRIPTION_CARD_FORM_CLASS,
+  SUBSCRIPTION_CARD_STRIPE_REQUIRED_FIELDS,
+  SubscriptionCardField,
+  type SubscriptionCardFieldKey,
   isStripePaymentIntentConfirmed,
   readStripeConfirmPaymentIntentStatus,
   subscriptionModalKey,
 } from './subscriptionPaymentConstants'
+import '../views/booking-hub.css'
 
 export interface SubscriptionBillingDetails {
   name?: string
@@ -45,7 +50,25 @@ export type SubscriptionCardPaymentFormHandle = {
   submit: () => Promise<void>
 }
 
+function RequiredMark() {
+  return <span>*</span>
+}
+
 type BillingFormState = ReturnType<typeof buildSubscriptionBillingFormState>
+
+type FieldErrors = Partial<Record<SubscriptionCardFieldKey, string>>
+
+type StripeCompleteState = {
+  [SubscriptionCardField.CardNumber]: boolean
+  [SubscriptionCardField.CardExpiry]: boolean
+  [SubscriptionCardField.CardCvc]: boolean
+}
+
+const STRIPE_COMPLETE_EMPTY: StripeCompleteState = {
+  [SubscriptionCardField.CardNumber]: false,
+  [SubscriptionCardField.CardExpiry]: false,
+  [SubscriptionCardField.CardCvc]: false,
+}
 
 type CardPaymentInnerProps = {
   clientSecret: string
@@ -79,10 +102,14 @@ const CardPaymentInner = forwardRef<SubscriptionCardPaymentFormHandle, CardPayme
     const [billing, setBilling] = useState<BillingFormState>(() =>
       buildSubscriptionBillingFormState(billingDefaults),
     )
+    const [fieldErrors, setFieldErrors] = useState<FieldErrors>({})
+    const [formError, setFormError] = useState('')
+    const [stripeComplete, setStripeComplete] = useState<StripeCompleteState>(STRIPE_COMPLETE_EMPTY)
 
     const cardNumberPlaceholder = t(`${placeholderTk}.cardNumberPlaceholder`)
     const cardExpiryPlaceholder = t(`${placeholderTk}.cardExpiryPlaceholder`)
     const cardCvcPlaceholder = t(`${placeholderTk}.cardCvcPlaceholder`)
+    const fieldRequiredMessage = t(subscriptionModalKey('cardFieldRequired'))
 
     const cardNumberOptions = useMemo(
       () => ({
@@ -110,21 +137,92 @@ const CardPaymentInner = forwardRef<SubscriptionCardPaymentFormHandle, CardPayme
 
     useEffect(() => {
       setBilling(buildSubscriptionBillingFormState(billingDefaults))
+      setFieldErrors({})
+      setFormError('')
+      setStripeComplete(STRIPE_COMPLETE_EMPTY)
     }, [billingDefaults])
 
     useEffect(() => {
       onSubmittingChange?.(isSubmitting)
     }, [isSubmitting, onSubmittingChange])
 
-    const updateBilling = (field: keyof BillingFormState) => (e: ChangeEvent<HTMLInputElement>) =>
+    const clearFieldError = useCallback((field: SubscriptionCardFieldKey) => {
+      setFieldErrors((prev) => {
+        if (!prev[field]) return prev
+        const next = { ...prev }
+        delete next[field]
+        return next
+      })
+      setFormError('')
+    }, [])
+
+    const updateBilling = (field: keyof BillingFormState) => (e: ChangeEvent<HTMLInputElement>) => {
       setBilling((prev) => ({ ...prev, [field]: e.target.value }))
+      clearFieldError(field as SubscriptionCardFieldKey)
+    }
+
+    const onStripeNumberChange = useCallback(
+      (event: { complete: boolean }) => {
+        setStripeComplete((prev) => ({
+          ...prev,
+          [SubscriptionCardField.CardNumber]: event.complete,
+        }))
+        clearFieldError(SubscriptionCardField.CardNumber)
+      },
+      [clearFieldError],
+    )
+
+    const onStripeExpiryChange = useCallback(
+      (event: { complete: boolean }) => {
+        setStripeComplete((prev) => ({
+          ...prev,
+          [SubscriptionCardField.CardExpiry]: event.complete,
+        }))
+        clearFieldError(SubscriptionCardField.CardExpiry)
+      },
+      [clearFieldError],
+    )
+
+    const onStripeCvcChange = useCallback(
+      (event: { complete: boolean }) => {
+        setStripeComplete((prev) => ({
+          ...prev,
+          [SubscriptionCardField.CardCvc]: event.complete,
+        }))
+        clearFieldError(SubscriptionCardField.CardCvc)
+      },
+      [clearFieldError],
+    )
+
+    const validateBeforeSubmit = useCallback((): boolean => {
+      const nextErrors: FieldErrors = {}
+
+      for (const field of SUBSCRIPTION_CARD_BILLING_REQUIRED_FIELDS) {
+        if (!billing[field]?.trim()) {
+          nextErrors[field] = fieldRequiredMessage
+        }
+      }
+
+      for (const field of SUBSCRIPTION_CARD_STRIPE_REQUIRED_FIELDS) {
+        if (!stripeComplete[field]) {
+          nextErrors[field] = fieldRequiredMessage
+        }
+      }
+
+      setFieldErrors(nextErrors)
+      setFormError('')
+      return Object.keys(nextErrors).length === 0
+    }, [billing, fieldRequiredMessage, stripeComplete])
 
     const handleSubmit = useCallback(async () => {
       if (!stripe || !elements) return
+      if (!validateBeforeSubmit()) return
+
       const cardNumberElement = elements.getElement(CardNumberElement)
       if (!cardNumberElement) return
 
       setIsSubmitting(true)
+      setFormError('')
       const result = await stripe.confirmCardPayment(clientSecret, {
         payment_method: {
           card: cardNumberElement,
@@ -152,12 +250,16 @@ const CardPaymentInner = forwardRef<SubscriptionCardPaymentFormHandle, CardPayme
       }
 
       if (result.error) {
+        const message = result.error.message || t(subscriptionModalKey('cardPaymentError'))
+        setFormError(message)
         // Still ask parent to verify via purchase-history — webhook may have paid.
-        onError(result.error.message || t(subscriptionModalKey('cardPaymentError')))
+        onError(message)
         return
       }
 
-      onError(t(subscriptionModalKey('cardPaymentError')))
+      const fallback = t(subscriptionModalKey('cardPaymentError'))
+      setFormError(fallback)
+      onError(fallback)
     }, [
       stripe,
       elements,
@@ -168,6 +270,7 @@ const CardPaymentInner = forwardRef<SubscriptionCardPaymentFormHandle, CardPayme
       onError,
       onSuccess,
       t,
+      validateBeforeSubmit,
     ])
 
     useImperativeHandle(ref, () => ({ submit: handleSubmit }), [handleSubmit])
@@ -175,6 +278,9 @@ const CardPaymentInner = forwardRef<SubscriptionCardPaymentFormHandle, CardPayme
     const placeholderLabel = (key: string) => t(`${placeholderTk}.${key}`)
     const modalLabel = (field: Parameters<typeof subscriptionModalKey>[0]) =>
       t(subscriptionModalKey(field))
+
+    const fieldError = (field: SubscriptionCardFieldKey) => fieldErrors[field]
+    const isInvalid = (field: SubscriptionCardFieldKey) => Boolean(fieldErrors[field]) || undefined
 
     return (
       <div className={SUBSCRIPTION_CARD_FORM_CLASS.root}>
@@ -185,13 +291,13 @@ const CardPaymentInner = forwardRef<SubscriptionCardPaymentFormHandle, CardPayme
           ].join(' ')}
         >
           <div className="sms-credit-card-required-note">
-            <strong>*</strong> {placeholderLabel('cardRequiredNote')}
+            <strong>*</strong> {modalLabel('cardRequiredNote')}
           </div>
           <div className="sms-credit-card-fields">
             <div className="sms-credit-card-row">
               <label className="sms-credit-card-field">
                 <span className="sms-credit-card-label">
-                  {modalLabel('cardholderName')} <span>*</span>
+                  {modalLabel('cardholderName')} <RequiredMark />
                 </span>
                 <input
                   className="sms-credit-card-input"
@@ -200,39 +306,87 @@ const CardPaymentInner = forwardRef<SubscriptionCardPaymentFormHandle, CardPayme
                   placeholder={placeholderLabel('cardNamePlaceholder')}
                   value={billing.name}
                   disabled={isSubmitting}
+                  aria-invalid={isInvalid(SubscriptionCardField.Name)}
                   onChange={updateBilling('name')}
                 />
+                {fieldError(SubscriptionCardField.Name) ? (
+                  <span className="sms-credit-card-field-error" role="alert">
+                    {fieldError(SubscriptionCardField.Name)}
+                  </span>
+                ) : null}
               </label>
               <div className="sms-credit-card-field">
                 <span className="sms-credit-card-label">
-                  {modalLabel('cardNumber')} <span>*</span>
+                  {modalLabel('cardNumber')} <RequiredMark />
                 </span>
-                <div className="subscription-stripe-card-field">
-                  <CardNumberElement options={cardNumberOptions} />
+                <div
+                  className={[
+                    'subscription-stripe-card-field',
+                    isInvalid(SubscriptionCardField.CardNumber) ? 'is-invalid' : '',
+                  ]
+                    .filter(Boolean)
+                    .join(' ')}
+                >
+                  <CardNumberElement
+                    options={cardNumberOptions}
+                    onChange={onStripeNumberChange}
+                  />
                 </div>
+                {fieldError(SubscriptionCardField.CardNumber) ? (
+                  <span className="sms-credit-card-field-error" role="alert">
+                    {fieldError(SubscriptionCardField.CardNumber)}
+                  </span>
+                ) : null}
               </div>
             </div>
             <div className="sms-credit-card-row">
               <div className="sms-credit-card-field">
                 <span className="sms-credit-card-label">
-                  {modalLabel('cardExpiry')} <span>*</span>
+                  {modalLabel('cardExpiry')} <RequiredMark />
                 </span>
-                <div className="subscription-stripe-card-field">
-                  <CardExpiryElement options={cardExpiryOptions} />
+                <div
+                  className={[
+                    'subscription-stripe-card-field',
+                    isInvalid(SubscriptionCardField.CardExpiry) ? 'is-invalid' : '',
+                  ]
+                    .filter(Boolean)
+                    .join(' ')}
+                >
+                  <CardExpiryElement
+                    options={cardExpiryOptions}
+                    onChange={onStripeExpiryChange}
+                  />
                 </div>
+                {fieldError(SubscriptionCardField.CardExpiry) ? (
+                  <span className="sms-credit-card-field-error" role="alert">
+                    {fieldError(SubscriptionCardField.CardExpiry)}
+                  </span>
+                ) : null}
               </div>
               <div className="sms-credit-card-field">
                 <span className="sms-credit-card-label">
-                  {modalLabel('cardCvc')} <span>*</span>
+                  {modalLabel('cardCvc')} <RequiredMark />
                 </span>
-                <div className="subscription-stripe-card-field">
-                  <CardCvcElement options={cardCvcOptions} />
+                <div
+                  className={[
+                    'subscription-stripe-card-field',
+                    isInvalid(SubscriptionCardField.CardCvc) ? 'is-invalid' : '',
+                  ]
+                    .filter(Boolean)
+                    .join(' ')}
+                >
+                  <CardCvcElement options={cardCvcOptions} onChange={onStripeCvcChange} />
                 </div>
+                {fieldError(SubscriptionCardField.CardCvc) ? (
+                  <span className="sms-credit-card-field-error" role="alert">
+                    {fieldError(SubscriptionCardField.CardCvc)}
+                  </span>
+                ) : null}
               </div>
             </div>
             <label className="sms-credit-card-field">
               <span className="sms-credit-card-label">
-                {modalLabel('billingAddress')} <span>*</span>
+                {modalLabel('billingAddress')} <RequiredMark />
               </span>
               <input
                 className="sms-credit-card-input"
@@ -241,13 +395,19 @@ const CardPaymentInner = forwardRef<SubscriptionCardPaymentFormHandle, CardPayme
                 placeholder={placeholderLabel('cardAddressPlaceholder')}
                 value={billing.address}
                 disabled={isSubmitting}
+                aria-invalid={isInvalid(SubscriptionCardField.Address)}
                 onChange={updateBilling('address')}
               />
+              {fieldError(SubscriptionCardField.Address) ? (
+                <span className="sms-credit-card-field-error" role="alert">
+                  {fieldError(SubscriptionCardField.Address)}
+                </span>
+              ) : null}
             </label>
             <div className="sms-credit-card-row">
               <label className="sms-credit-card-field">
                 <span className="sms-credit-card-label">
-                  {modalLabel('billingCity')} <span>*</span>
+                  {modalLabel('billingCity')} <RequiredMark />
                 </span>
                 <input
                   className="sms-credit-card-input"
@@ -256,12 +416,18 @@ const CardPaymentInner = forwardRef<SubscriptionCardPaymentFormHandle, CardPayme
                   placeholder={placeholderLabel('cardCityPlaceholder')}
                   value={billing.city}
                   disabled={isSubmitting}
+                  aria-invalid={isInvalid(SubscriptionCardField.City)}
                   onChange={updateBilling('city')}
                 />
+                {fieldError(SubscriptionCardField.City) ? (
+                  <span className="sms-credit-card-field-error" role="alert">
+                    {fieldError(SubscriptionCardField.City)}
+                  </span>
+                ) : null}
               </label>
               <label className="sms-credit-card-field">
                 <span className="sms-credit-card-label">
-                  {modalLabel('billingState')} <span>*</span>
+                  {modalLabel('billingState')} <RequiredMark />
                 </span>
                 <input
                   className="sms-credit-card-input"
@@ -270,13 +436,19 @@ const CardPaymentInner = forwardRef<SubscriptionCardPaymentFormHandle, CardPayme
                   placeholder={placeholderLabel('cardStatePlaceholder')}
                   value={billing.state}
                   disabled={isSubmitting}
+                  aria-invalid={isInvalid(SubscriptionCardField.State)}
                   onChange={updateBilling('state')}
                 />
+                {fieldError(SubscriptionCardField.State) ? (
+                  <span className="sms-credit-card-field-error" role="alert">
+                    {fieldError(SubscriptionCardField.State)}
+                  </span>
+                ) : null}
               </label>
             </div>
             <label className="sms-credit-card-field">
               <span className="sms-credit-card-label">
-                {modalLabel('billingZipCode')} <span>*</span>
+                {modalLabel('billingZipCode')} <RequiredMark />
               </span>
               <input
                 className="sms-credit-card-input"
@@ -285,9 +457,18 @@ const CardPaymentInner = forwardRef<SubscriptionCardPaymentFormHandle, CardPayme
                 placeholder={placeholderLabel('cardZipPlaceholder')}
                 value={billing.zipCode}
                 disabled={isSubmitting}
+                aria-invalid={isInvalid(SubscriptionCardField.ZipCode)}
                 onChange={updateBilling('zipCode')}
               />
+              {fieldError(SubscriptionCardField.ZipCode) ? (
+                <span className="sms-credit-card-field-error" role="alert">
+                  {fieldError(SubscriptionCardField.ZipCode)}
+                </span>
+              ) : null}
             </label>
+            <div className="sms-credit-card-error" role="alert" aria-live="polite">
+              {formError}
+            </div>
           </div>
         </div>
 

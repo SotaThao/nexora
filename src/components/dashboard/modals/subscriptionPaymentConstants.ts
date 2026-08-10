@@ -71,6 +71,9 @@ export function readStripeConfirmPaymentIntentStatus(
 }
 
 export const SUBSCRIPTION_CARD_FIELD_I18N = {
+  cardFormTitle: 'subscription_card_form_title',
+  cardRequiredNote: 'subscription_card_required_note',
+  cardFieldRequired: 'subscription_card_field_required',
   cardholderName: 'subscription_cardholder_name_label',
   cardNumber: 'subscription_card_number_label',
   cardExpiry: 'subscription_card_expiry_label',
@@ -88,6 +91,35 @@ export const SUBSCRIPTION_CARD_FIELD_I18N = {
   paymentSuccess: 'subscription_payment_success',
   walletBalance: 'subscription_wallet_balance_label',
 } as const
+
+/** Billing + Stripe fields validated before confirmCardPayment. */
+export const SubscriptionCardField = {
+  Name: 'name',
+  CardNumber: 'cardNumber',
+  CardExpiry: 'cardExpiry',
+  CardCvc: 'cardCvc',
+  Address: 'address',
+  City: 'city',
+  State: 'state',
+  ZipCode: 'zipCode',
+} as const
+
+export type SubscriptionCardFieldKey =
+  (typeof SubscriptionCardField)[keyof typeof SubscriptionCardField]
+
+export const SUBSCRIPTION_CARD_BILLING_REQUIRED_FIELDS = [
+  SubscriptionCardField.Name,
+  SubscriptionCardField.Address,
+  SubscriptionCardField.City,
+  SubscriptionCardField.State,
+  SubscriptionCardField.ZipCode,
+] as const
+
+export const SUBSCRIPTION_CARD_STRIPE_REQUIRED_FIELDS = [
+  SubscriptionCardField.CardNumber,
+  SubscriptionCardField.CardExpiry,
+  SubscriptionCardField.CardCvc,
+] as const
 
 export function subscriptionModalKey(
   field: keyof typeof SUBSCRIPTION_CARD_FIELD_I18N,
