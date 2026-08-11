@@ -5,6 +5,7 @@ import { LogOut, ChevronLeft, ChevronDown, ChevronUp } from 'lucide-react'
 import { useTranslation } from '../../../contexts/LanguageContext'
 import {
   STAFF_MENU_ITEMS,
+  STAFF_SIDEBAR_HIDDEN_MENU_IDS,
   STAFF_WORKSPACE_MENU_ITEM,
   STAFF_WORKSPACE_SUBMENU,
   STAFF_TAXIQ_MENU_CHILD_MODULE,
@@ -74,7 +75,9 @@ export default function StaffSidebar({ activeScreen, isHomeActive = false, mobil
   }
 
   const dashboardMenuItem = STAFF_MENU_ITEMS.find((item) => item.id === 'home')
-  const sidebarMenuItems = STAFF_MENU_ITEMS.filter((item) => item.id !== 'home')
+  const sidebarMenuItems = STAFF_MENU_ITEMS.filter(
+    (item) => item.id !== 'home' && !STAFF_SIDEBAR_HIDDEN_MENU_IDS.includes(item.id),
+  )
   const taxIqMenuItem = STAFF_MENU_ITEMS.find((item) => item.id === 'taxiq')
 
   const handleTaxIqToggle = () => {

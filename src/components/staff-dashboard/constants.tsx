@@ -36,6 +36,11 @@ export const STAFF_MENU_ITEMS = [
   { id: 'profile', icon: Settings, labelKey: 'staff_dashboard.nav.profile' },
 ]
 
+// Hidden for this go-live — mirrors MERCHANT_SIDEBAR_HIDDEN_MENU_IDS in
+// dashboard/constants.tsx. Routes/data are untouched, only the sidebar entry
+// is hidden.
+export const STAFF_SIDEBAR_HIDDEN_MENU_IDS: string[] = ['taxiq']
+
 export const STAFF_WORKSPACE_MENU_ITEM = {
   id: 'workspace',
   icon: Briefcase,
