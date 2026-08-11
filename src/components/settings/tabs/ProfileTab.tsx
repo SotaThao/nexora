@@ -1,5 +1,4 @@
 import React, { useMemo, useState } from 'react'
-import { createPortal } from 'react-dom'
 import { useTranslation } from '../../../contexts/LanguageContext'
 import { useNotification } from '../../../contexts/NotificationContext'
 import { buildAffiliateReferralUrl, getProfileReferralCode } from '../../../utils/affiliateReferral'
@@ -19,17 +18,12 @@ import {
   Wallet,
   Globe,
   HelpCircle,
-  Camera,
-  FolderOpen,
-  AlertTriangle,
-  X,
   QrCode,
+  Eye,
 } from 'lucide-react'
 import ToggleSwitch from '../../ui/ToggleSwitch'
 import { isValidEmail, isValidPhone } from '../../../utils/validation'
-import { validatePayoutAccount } from '../../payout/validatePayoutAccount'
 import CountryCodeSelect, { formatNationalNumber, parsePhone } from '../../CountryCodeSelect'
-import CameraCapture from '../../ui/CameraCapture'
 import {
   getPaymentMethodDisplayName,
   payoutTypeToUiKey,
@@ -38,7 +32,8 @@ import {
   toPayoutAccountNameDto,
 } from '../../../data/paymentMethodTypes'
 import { formatPaymentMethodAccountDisplay } from '../../payout/bankWireAccount'
-import PayoutAccountNameField from '../../payout/PayoutAccountNameField'
+import PayoutMethodDetailModal from '../../payout/PayoutMethodDetailModal'
+import PayoutSetupModal from '../../payout/PayoutSetupModal'
 import SettingsTipQrPanel from '../SettingsTipQrPanel'
 import BusinessInfoCard from '../BusinessInfoCard'
 import type { PaymentMethodDto } from '../../../types/domain'
@@ -196,16 +191,10 @@ export default function ProfileTab({
   const toggleMutation = useToggleMerchantPaymentMethod()
   const updateMutation = useUpdateMerchantPaymentMethod()
 
-  // Local state for the payment method edit modal
+  // Local state for the shared payment method setup/edit modal.
   const [editingMethod, setEditingMethod] = useState<any | null>(null)
-  const [editValue, setEditValue] = useState('')
-  const [editAccountName, setEditAccountName] = useState('')
-  const [editQrCode, setEditQrCode] = useState<any | null>(null)
-  const [editQrFile, setEditQrFile] = useState(null)
-  const [isCapturing, setIsCapturing] = useState(false)
-  const [isCameraOpen, setIsCameraOpen] = useState(false)
-  const [modalError, setModalError] = useState('')
   const [payoutCardTab, setPayoutCardTab] = useState<'methods' | 'paymentQr'>('methods')
+  const [viewingMethod, setViewingMethod] = useState<PaymentMethodDto | null>(null)
 
   const getMethodUiKey = (method: PaymentMethodDto) =>
     method.uiKey || payoutTypeToUiKey(method.type || '')
@@ -243,22 +232,15 @@ export default function ProfileTab({
   }
 
   const handleEditPayoutAccount = (key) => {
-    const methodData = getMethod(key)
     setEditingMethod(key)
-    setEditValue(methodData.accountInfo || '')
-    setEditAccountName(methodData.accountName || '')
-    setEditQrCode(methodData.imageUrl || null)
-    setEditQrFile(null)
-    setModalError('')
   }
 
-  const savePayoutAccount = (e) => {
-    e.preventDefault()
-    const validationError = validatePayoutAccount(editingMethod, editValue)
-    if (validationError) {
-      setModalError(validationMessage(validationError))
-      return
-    }
+  const handleSavePayoutAccount = (
+    value: string,
+    qrCode: string,
+    accountName: string,
+    qrFile?: File | null,
+  ) => {
     const methodData = getMethod(editingMethod)
     if (!methodData.id) {
       showToast(t('components.settings.tabs.ProfileTab.methodIdMissing'), 'error')
@@ -267,10 +249,10 @@ export default function ProfileTab({
     updateMutation.mutate(
       {
         id: methodData.id,
-        accountInfo: editValue.trim(),
-        accountName: toPayoutAccountNameDto(editingMethod, editAccountName),
-        imageUrl: editQrFile ? null : (editQrCode || null),
-        imageFile: editQrFile || undefined,
+        accountInfo: value.trim(),
+        accountName: toPayoutAccountNameDto(editingMethod, accountName),
+        imageUrl: qrFile ? null : (qrCode || null),
+        imageFile: qrFile || undefined,
       },
       {
         onSuccess: () => {
@@ -283,27 +265,7 @@ export default function ProfileTab({
     )
   }
 
-  const handleModalFileChange = (e) => {
-    const file = e.target.files?.[0]
-    if (!file) return
-    if (editQrCode?.startsWith?.('blob:')) {
-      URL.revokeObjectURL(editQrCode)
-    }
-    setEditQrFile(file)
-    setEditQrCode(URL.createObjectURL(file))
-  }
-
-  const handleModalTakePhoto = () => {
-    setIsCameraOpen(true)
-  }
-
-  const handleModalClearQr = () => {
-    if (editQrCode?.startsWith?.('blob:')) {
-      URL.revokeObjectURL(editQrCode)
-    }
-    setEditQrFile(null)
-    setEditQrCode(null)
-  }
+  const editingMethodData = editingMethod ? getMethod(editingMethod) : null
  
 
   return (
@@ -498,9 +460,9 @@ export default function ProfileTab({
                 return (
                 <div
                   key={method.id || uiKey}
-                  className="flex items-center justify-between rounded-xl border border-nexoraBorder bg-white px-3 py-2.5 shadow-sm"
+                  className="flex flex-col gap-3 rounded-xl border border-nexoraBorder bg-white px-3 py-2.5 shadow-sm sm:flex-row sm:items-center sm:justify-between"
                 >
-                  <div className="flex items-center gap-3 min-w-0">
+                  <div className="flex w-full min-w-0 items-center gap-3 sm:flex-1">
                     <ToggleSwitch
                       checked={!!method.isActive}
                       onChange={() => handleToggleMethod(uiKey, !!method.isActive)}
@@ -510,14 +472,14 @@ export default function ProfileTab({
                     />
 
                     {/* Logo and Label */}
-                    <div className="flex items-center gap-2.5 min-w-0">
+                    <div className="flex min-w-0 flex-1 items-center gap-2.5">
                       <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg border border-nexoraBorder bg-nexoraCanvas">
                         {PayoutLogos[uiKey]}
                       </span>
-                      <div className="min-w-0">
+                      <div className="min-w-0 flex-1">
                         <div className="text-xs font-bold text-nexoraText">{label}</div>
                         {method.isConfigured ? (
-                          <div className="mt-0.5 max-w-[110px] truncate font-mono text-[10px] text-nexoraMuted sm:max-w-[150px]">
+                          <div className="mt-0.5 max-w-full truncate font-mono text-[10px] text-nexoraMuted sm:max-w-[150px]">
                             {supportsPayoutAccountName(uiKey) && method.accountName ? (
                               <span className="font-sans font-semibold">{method.accountName} · </span>
                             ) : null}
@@ -532,16 +494,26 @@ export default function ProfileTab({
                     </div>
                   </div>
 
-                  {/* Edit button */}
-                  <button
-                    type="button"
-                    onClick={() => handleEditPayoutAccount(uiKey)}
-                    aria-label={`Edit ${label} Payout Account`}
-                    className="ml-2 flex shrink-0 items-center gap-1 rounded-lg border border-amber-200 bg-amber-50 px-2 py-1.5 text-[10px] font-bold text-amber-700"
-                  >
-                    <Edit2 className="h-3 w-3" />
-                    <span>{t('components.settings.tabs.ProfileTab.payoutAccount')}</span>
-                  </button>
+                  <div className="grid w-full grid-cols-2 gap-2 sm:ml-2 sm:flex sm:w-auto sm:shrink-0 sm:items-center sm:gap-1.5">
+                    <button
+                      type="button"
+                      onClick={() => setViewingMethod(method)}
+                      aria-label={`View ${label} Payout Details`}
+                      className="flex min-w-0 items-center justify-center gap-1 rounded-lg border border-sky-200 bg-sky-50 px-2 py-1.5 text-[10px] font-bold text-sky-700"
+                    >
+                      <Eye className="h-3 w-3" />
+                      <span className="truncate">{t('components.settings.tabs.ProfileTab.view')}</span>
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => handleEditPayoutAccount(uiKey)}
+                      aria-label={`Edit ${label} Payout Account`}
+                      className="flex min-w-0 items-center justify-center gap-1 rounded-lg border border-amber-200 bg-amber-50 px-2 py-1.5 text-[10px] font-bold text-amber-700"
+                    >
+                      <Edit2 className="h-3 w-3" />
+                      <span className="truncate">{t('components.settings.tabs.ProfileTab.payoutAccount')}</span>
+                    </button>
+                  </div>
                 </div>
               )})}
             </div>
@@ -1021,186 +993,22 @@ export default function ProfileTab({
 
       </div>
 
-      {/* Payout Account Edit Custom Modal Popup */}
-      {editingMethod && (() => {
-        const walletNames = {
-          zelle: 'Zelle',
-          bankwire: 'Bank Wire',
-          paypal: 'PayPal',
-          venmo: 'Venmo',
-          cashapp: 'Cash App',
-          applecash: 'Apple Cash',
-          vlinkpay: 'VLINKPAY Wallet',
-        }
+      <PayoutMethodDetailModal
+        method={viewingMethod}
+        logo={viewingMethod ? PayoutLogos[getMethodUiKey(viewingMethod)] : null}
+        onClose={() => setViewingMethod(null)}
+      />
 
-        const walletFields = {
-          zelle: t('components.settings.tabs.ProfileTab.emailPhone'),
-          bankwire: t('components.settings.tabs.ProfileTab.details'),
-          paypal: 'email',
-          venmo: '@username',
-          cashapp: '$cashtag',
-    applecash: t('common.phone_number_short')
-        }
-
-        const walletPlaceholders = {
-          zelle: t('components.settings.tabs.ProfileTab.enterZelleEmailPhone'),
-          bankwire: t('components.settings.tabs.ProfileTab.enterBankWireRouting'),
-          paypal: t('components.settings.tabs.ProfileTab.enterPaypalEmail'),
-          venmo: t('components.settings.tabs.ProfileTab.enterVenmoUsername'),
-          cashapp: t('components.settings.tabs.ProfileTab.enterCashAppCashtag'),
-          applecash: t('components.settings.tabs.ProfileTab.enterAppleCashPhone'),
-          vlinkpay: t('components.dashboard.modals.PayoutSetupModal.placeholderVlinkpay'),
-        }
-
-        return createPortal(
-          <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-[100] flex items-center justify-center p-4">
-            <div className={`bg-white rounded-3xl border border-slate-100 max-w-sm w-full shadow-2xl relative overflow-hidden animate-scaleIn text-left ${isCameraOpen ? 'h-[480px]' : 'p-6 space-y-4.5'}`}>
-
-              {/* Header */}
-              <div className="flex items-center gap-3.5 border-b border-slate-100 pb-3">
-                <span className="h-11 w-11 rounded-xl bg-slate-50 border border-slate-100 flex items-center justify-center shrink-0 shadow-sm">
-                  {PayoutLogos[editingMethod]}
-                </span>
-                <div>
-                  <h3 className="text-sm font-black text-slate-800 uppercase tracking-wider">
-                    {currentLanguage === 'vi'
-                      ? `CẤU HÌNH ${walletNames[editingMethod]?.toUpperCase()}`
-                      : `CONFIGURE ${walletNames[editingMethod]?.toUpperCase()}`}
-                  </h3>
-                  <p className="text-[10px] text-slate-400 font-medium">
-                    {t('components.settings.tabs.ProfileTab.specifyReceivingTargetIdentifier')}
-                  </p>
-                </div>
-              </div>
-
-              {/* Form Content */}
-              <form onSubmit={savePayoutAccount} noValidate className="space-y-4">
-                <PayoutAccountNameField
-                  walletKey={editingMethod}
-                  value={editAccountName}
-                  onChange={setEditAccountName}
-                />
-
-                {/* Account Identifier Input */}
-                <div>
-                  <label className="block text-[10px] font-extrabold uppercase text-slate-500 tracking-wider mb-2">
-                    {currentLanguage === 'vi'
-                      ? `${walletNames[editingMethod]?.toUpperCase()} EMAIL/SĐT CỦA BẠN *`
-                      : `YOUR ${walletNames[editingMethod]?.toUpperCase()} EMAIL/PHONE *`}
-                  </label>
-                  <input
-                    type="text"
-                    autoFocus
-                    value={editValue}
-                    aria-invalid={Boolean(modalError)}
-                    aria-describedby={modalError ? 'settings-payout-error' : undefined}
-                    onChange={(e) => {
-                      setEditValue(e.target.value)
-                      setModalError('')
-                    }}
-                    placeholder={walletPlaceholders[editingMethod]}
-                    className={`w-full bg-slate-50 border border-slate-200 focus:border-nexoraBrand focus:ring-2 focus:ring-nexoraBrand/20 focus:bg-white rounded-xl px-3.5 h-11 text-xs text-slate-800 focus:outline-none transition-all ${
-                      modalError ? 'border-rose-500 focus:border-rose-500 focus:ring-rose-500/20' : ''
-                    }`}
-                  />
-                  {modalError && <p id="settings-payout-error" role="alert" className="mt-1 text-[10px] font-bold text-rose-500">{modalError}</p>}
-                </div>
-
-                {/* QR Code Optional Upload */}
-                <div>
-                  <label className="block text-[10px] font-extrabold uppercase text-slate-500 tracking-wider mb-2">
-                    {t('components.settings.tabs.ProfileTab.qrCodeOptional')}
-                  </label>
-
-                  {isCapturing ? (
-                    <div className="flex h-44 w-full flex-col items-center justify-center rounded-xl border border-slate-200 bg-slate-50">
-                      <div className="h-6 w-6 border-2 border-nexoraBrand/20 border-t-nexoraBrand rounded-full animate-spin"></div>
-                      <span className="mt-2 text-xs font-semibold text-slate-500">
-              {t('setup.taking_photo')}
-                      </span>
-                    </div>
-                  ) : editQrCode ? (
-                    <div className="relative flex flex-col items-center rounded-xl border border-slate-200 bg-white p-4 shadow-sm">
-                      <button
-                        type="button"
-                        onClick={handleModalClearQr}
-                        className="absolute right-2 top-2 rounded-full p-1 text-slate-400 hover:bg-slate-100 hover:text-slate-600 transition"
-                        title="Remove image"
-                      >
-                        <X className="h-4 w-4" />
-                      </button>
-                      <div className="text-center">
-                        <div className="text-sm font-extrabold text-slate-800">{walletNames[editingMethod]}</div>
-                        <div className="text-[10px] font-semibold text-slate-400 mt-0.5">{editValue}</div>
-                      </div>
-                      <div className="my-3 flex h-28 w-28 items-center justify-center border border-slate-100 bg-white p-1 rounded-lg">
-                        <img src={editQrCode} alt="Payout QR Code" className="h-full w-full object-contain" />
-                      </div>
-                    </div>
-                  ) : (
-                    <div className="grid grid-cols-2 gap-3">
-                      <button
-                        type="button"
-                        onClick={handleModalTakePhoto}
-                        className="flex flex-col items-center justify-center py-5 border border-dashed border-slate-200 hover:border-nexoraBrand rounded-xl bg-slate-50 hover:bg-slate-50/50 transition gap-1.5"
-                      >
-                        <Camera className="w-5 h-5 text-nexoraBrand" />
-                        <span className="text-[11px] font-bold text-slate-600">
-                          {t('components.settings.tabs.ProfileTab.takePhoto')}
-                        </span>
-                      </button>
-                      <label
-                        className="flex flex-col items-center justify-center py-5 border border-dashed border-slate-200 hover:border-nexoraBrand rounded-xl bg-slate-50 hover:bg-slate-50/50 transition gap-1.5 cursor-pointer"
-                      >
-                        <FolderOpen className="w-5 h-5 text-nexoraBrand" />
-                        <span className="text-[11px] font-bold text-slate-600">
-                          {t('components.settings.tabs.ProfileTab.chooseFile')}
-                        </span>
-                        <input type="file" accept="image/*" className="sr-only" onChange={handleModalFileChange} />
-                      </label>
-                    </div>
-                  )}
-                </div>
-
-                {/* Warning box */}
-                <div className="rounded-lg bg-blue-50/50 border border-blue-100 p-3 text-[10px] leading-relaxed text-blue-800 flex gap-2">
-                  <AlertTriangle className="h-4 w-4 text-blue-500 shrink-0 mt-0.5" />
-                  <span>
-                    {t('components.settings.tabs.ProfileTab.pleaseEnterTheCorrect')}
-                  </span>
-                </div>
-
-                {/* Footer Action Buttons */}
-                <div className="flex justify-end gap-2.5 pt-2.5 border-t border-slate-100">
-                  <button
-                    type="button"
-                    onClick={() => setEditingMethod(null)}
-                    className="px-5 py-2.5 border border-slate-200 hover:bg-slate-50 text-slate-500 text-xs font-bold uppercase tracking-wider rounded-lg transition"
-                  >
-                    {t('components.settings.tabs.ProfileTab.cancel')}
-                  </button>
-                  <button
-                    type="submit"
-                    className="px-5 py-2.5 bg-amber-600 hover:bg-amber-700 text-white text-xs font-bold uppercase tracking-wider rounded-lg shadow-sm transition"
-                  >
-                    {t('components.settings.tabs.ProfileTab.save')}
-                  </button>
-                </div>
-              </form>
-
-              {isCameraOpen && (
-                <CameraCapture
-                  onCapture={(dataUrl) => {
-                    setEditQrCode(dataUrl)
-                    setIsCameraOpen(false)
-                  }}
-                  onCancel={() => setIsCameraOpen(false)}
-                />
-              )}
-            </div>
-          </div>
-        , document.body);
-      })()}
+      <PayoutSetupModal
+        open={Boolean(editingMethod)}
+        walletKey={editingMethod || ''}
+        initialValue={editingMethodData?.accountInfo || ''}
+        initialQrCode={editingMethodData?.imageUrl || ''}
+        initialAccountName={editingMethodData?.accountName || ''}
+        onClose={() => setEditingMethod(null)}
+        onSubmit={handleSavePayoutAccount}
+        isSaving={updateMutation.isPending}
+      />
     </>
   )
 }

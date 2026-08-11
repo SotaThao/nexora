@@ -2480,7 +2480,8 @@
     "payout": {
       "accountNameField": {
         "label": "Tên chủ tài khoản",
-        "placeholder": "VD: Anna Smith"
+        "placeholder": "VD: Anna Smith",
+        "required": "Vui lòng nhập tên chủ tài khoản."
       },
       "bankWireForm": {
         "title": "Thiết lập tài khoản ngân hàng",
@@ -2661,11 +2662,18 @@
           "placeholderZelle": "Nhập email hoặc SĐT Zelle...",
           "placeholderBankWire": "Số tài khoản & số routing",
           "placeholderPaypal": "email@paypal.com",
-          "placeholderAppleCash": "Nhập số điện thoại...",
+          "placeholderVenmo": "Nhập Venmo @username...",
+          "placeholderAppleCash": "Nhập email hoặc SĐT Apple Cash...",
+          "placeholderCashApp": "Nhập Cash App $cashtag, email hoặc SĐT...",
           "placeholderVlinkpay": "Nhập VLINKPAY ID (vd: MIA0123)...",
           "placeholderCrypto": "Nhập địa chỉ BTC, ETH, hoặc USDT...",
           "specifyReceivingTargetIdentifier": "Chỉ định thông tin tài khoản nhận tiền",
           "accountIdentifier": "THÔNG TIN TÀI KHOẢN *",
+          "accountIdentifierForMethod": "{wallet} {field} CỦA BẠN *",
+          "fieldEmailPhone": "email/SĐT",
+          "fieldEmail": "email",
+          "fieldVenmoHandle": "@username",
+          "fieldCashAppIdentifier": "$cashtag, email hoặc SĐT",
           "qrCodeOptional": "MÃ QR (TÙY CHỌN)",
           "noQrCodeUploaded": "Thợ chưa tải lên mã QR",
           "thisInformationWasEntered": "Thông tin này được nhập bởi Kỹ thuật viên khi tham gia Salon. Salon Owner chỉ có thể xem.",
@@ -4853,7 +4861,13 @@
           "payoutMethodsTab": "Phương thức nhận tiền",
           "paymentQrTab": "QR Thanh toán",
           "tipQrTab": "QR Thanh toán",
-          "payoutAccount": "Tài khoản",
+          "view": "Xem",
+          "payoutAccount": "Sửa",
+          "customerPaymentDetails": "Thông tin thanh toán",
+          "scanToPay": "Quét để thanh toán",
+          "payTo": "Tên chủ tài khoản",
+          "accountDetails": "Thông tin tài khoản",
+          "noQrCode": "Chưa tải mã QR.",
           "methodNotConfigured": "Phương thức chưa được cấu hình.",
           "pleaseEnterAccountDetails": "Vui lòng nhập thông tin tài khoản.",
           "methodIdMissing": "Lỗi hệ thống: Thiếu ID phương thức",
@@ -4899,12 +4913,15 @@
           "reviewLinks": "Liên kết đánh giá",
           "emailPhone": "email hoặc SĐT",
           "details": "chi tiết",
+          "cashAppIdentifier": "$cashtag, email hoặc SĐT",
           "enterZelleEmailPhone": "Nhập email hoặc SĐT Zelle...",
           "enterBankWireRouting": "Số tài khoản & Số Routing...",
           "enterPaypalEmail": "Nhập PayPal email...",
           "enterVenmoUsername": "Nhập Venmo @username...",
           "enterCashAppCashtag": "Nhập Cash App $cashtag...",
+          "enterCashAppCashtagEmailPhone": "Nhập Cash App $cashtag, email hoặc SĐT...",
           "enterAppleCashPhone": "Nhập số điện thoại...",
+          "enterAppleCashEmailPhone": "Nhập email hoặc SĐT Apple Cash...",
           "specifyReceivingTargetIdentifier": "Chỉ định thông tin tài khoản nhận tiền",
           "qrCodeOptional": "MÃ QR (TÙY CHỌN)",
           "takePhoto": "CHỤP HÌNH",
@@ -5061,7 +5078,8 @@
           "openTippingPageSimulate": "Mở trang tip (Giả lập khách) ›"
         },
         "StaffPay": {
-          "editAccount": "Cấu hình"
+          "editAccount": "Sửa",
+          "view": "Xem"
         },
         "StaffProfile": {
           "accountChangesSavedSuccessfully": "Đã lưu thay đổi tài khoản!",

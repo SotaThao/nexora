@@ -2480,7 +2480,8 @@
     "payout": {
       "accountNameField": {
         "label": "Account Holder Name",
-        "placeholder": "e.g. Anna Smith"
+        "placeholder": "e.g. Anna Smith",
+        "required": "Account holder name is required."
       },
       "bankWireForm": {
         "title": "Set Up Bank Account",
@@ -2661,11 +2662,18 @@
           "placeholderZelle": "Enter Zelle email or phone...",
           "placeholderBankWire": "Account & Routing numbers",
           "placeholderPaypal": "email@paypal.com",
-          "placeholderAppleCash": "Enter phone number...",
+          "placeholderVenmo": "Enter Venmo @username...",
+          "placeholderAppleCash": "Enter Apple Cash email or phone...",
+          "placeholderCashApp": "Enter Cash App $cashtag, email, or phone...",
           "placeholderVlinkpay": "Enter VLINKPAY ID (e.g. MIA0123)...",
           "placeholderCrypto": "Enter BTC, ETH, or USDT address...",
           "specifyReceivingTargetIdentifier": "Specify receiving target identifier",
           "accountIdentifier": "Account Identifier *",
+          "accountIdentifierForMethod": "YOUR {wallet} {field} *",
+          "fieldEmailPhone": "email/phone",
+          "fieldEmail": "email",
+          "fieldVenmoHandle": "@username",
+          "fieldCashAppIdentifier": "$cashtag, email, or phone",
           "qrCodeOptional": "QR Code (optional)",
           "noQrCodeUploaded": "No QR code uploaded",
           "thisInformationWasEntered": "This information was entered by the technician. Salon Owner has view-only access.",
@@ -4857,7 +4865,13 @@
           "payoutMethodsTab": "Payout Methods",
           "paymentQrTab": "Payment QR",
           "tipQrTab": "Payment QR",
-          "payoutAccount": "Payout account",
+          "view": "View",
+          "payoutAccount": "Edit",
+          "customerPaymentDetails": "Payment details",
+          "scanToPay": "Scan to pay",
+          "payTo": "Account holder name",
+          "accountDetails": "Account details",
+          "noQrCode": "No QR code uploaded.",
           "methodNotConfigured": "Method is not configured.",
           "pleaseEnterAccountDetails": "Please enter account details.",
           "methodIdMissing": "System Error: Method ID missing",
@@ -4903,12 +4917,15 @@
           "reviewLinks": "Review Links",
           "emailPhone": "email or phone",
           "details": "details",
+          "cashAppIdentifier": "$cashtag, email, or phone",
           "enterZelleEmailPhone": "Enter Zelle email or phone...",
           "enterBankWireRouting": "Enter Bank Wire routing - account...",
           "enterPaypalEmail": "Enter PayPal email...",
           "enterVenmoUsername": "Enter Venmo @username...",
           "enterCashAppCashtag": "Enter Cash App $cashtag...",
+          "enterCashAppCashtagEmailPhone": "Enter Cash App $cashtag, email, or phone...",
           "enterAppleCashPhone": "Enter Apple Cash phone number...",
+          "enterAppleCashEmailPhone": "Enter Apple Cash email or phone...",
           "specifyReceivingTargetIdentifier": "Specify receiving target identifier",
           "qrCodeOptional": "QR CODE (OPTIONAL)",
           "takePhoto": "TAKE PHOTO",
@@ -5066,7 +5083,8 @@
           "openTippingPageSimulate": "Open Tipping Page (Simulate) ›"
         },
         "StaffPay": {
-          "editAccount": "Edit account"
+          "editAccount": "Edit",
+          "view": "View"
         },
         "StaffProfile": {
           "accountChangesSavedSuccessfully": "Account changes saved successfully!",
