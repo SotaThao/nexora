@@ -741,6 +741,23 @@ function normalizeConfigResponse(response: unknown): MerchantVoiceConfigDto {
 
   const body = response as Record<string, unknown>
   const operatingHoursRaw = Array.isArray(body.operatingHours) ? body.operatingHours : []
+  const firstStringField = (
+    obj: Record<string, unknown>,
+    keys: string[],
+  ): string => {
+    for (const key of keys) {
+      const value = obj[key]
+      if (typeof value === "string") return value
+    }
+    return ""
+  }
+
+  const welcomeGreeting = firstStringField(body, [
+    "welcomeGreeting",
+    "greeting",
+    "greetingScript",
+    "welcomeMessage",
+  ])
   const operatingHours = operatingHoursRaw.map((item) => {
     const row = (item && typeof item === 'object') ? item as Record<string, unknown> : {}
     return {
@@ -773,7 +790,7 @@ function normalizeConfigResponse(response: unknown): MerchantVoiceConfigDto {
     sendSmsPromoEnabled: readBool(body.sendSmsPromoEnabled, true),
     timeZone: String(body.timeZone ?? ''),
     language: String(body.language ?? MerchantVoiceConfigLanguage.EnUS),
-    welcomeGreeting: String(body.welcomeGreeting ?? ''),
+    welcomeGreeting,
     operatingHours,
   }
 }
