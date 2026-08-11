@@ -145,6 +145,20 @@ export const errorCodeToI18nKey = {
   POS_STAFF_SCHEDULE_DUPLICATE_DAY: 'errors.pos_staff_schedule_duplicate_day',
   POS_STAFF_SCHEDULE_INVALID_TIME_RANGE: 'errors.pos_staff_schedule_invalid_time_range',
 
+  // POS Front Desk — Time Clock (rotating QR, clock in/out, beep)
+  POS_STAFF_CLOCK_PROFILE_NOT_SET_UP: 'errors.pos_staff_clock_profile_not_set_up',
+  POS_STAFF_CLOCK_ACCESS_DENIED: 'errors.pos_staff_clock_access_denied',
+  POS_STAFF_CLOCK_ACCOUNT_LOCKED: 'errors.pos_staff_clock_account_locked',
+  POS_STAFF_CLOCK_ALREADY_CLOCKED_IN: 'errors.pos_staff_clock_already_clocked_in',
+  POS_STAFF_CLOCK_NOT_CLOCKED_IN: 'errors.pos_staff_clock_not_clocked_in',
+  POS_STAFF_CLOCK_ENTRY_NOT_FOUND: 'errors.pos_staff_clock_entry_not_found',
+  POS_STAFF_CLOCK_CORRECTION_INVALID: 'errors.pos_staff_clock_correction_invalid',
+  POS_STAFF_CLOCK_QR_TOKEN_INVALID: 'errors.pos_staff_clock_qr_token_invalid',
+  POS_STAFF_CLOCK_QR_TOKEN_EXPIRED: 'errors.pos_staff_clock_qr_token_expired',
+  POS_STAFF_CLOCK_QR_BUSINESS_MISMATCH: 'errors.pos_staff_clock_qr_business_mismatch',
+  POS_STAFF_CLOCK_TOO_SOON: 'errors.pos_staff_clock_too_soon',
+  POS_STAFF_CLOCK_BEEP_TARGET_INVALID: 'errors.pos_staff_clock_beep_target_invalid',
+
   // POS Merchant Ops — Check-in, Turn Board & Checkout (US-12..US-17)
   POS_ORDER_NOT_FOUND: 'errors.pos_order_not_found',
   POS_ORDER_NOT_WAITING: 'errors.pos_order_not_waiting',

@@ -164,6 +164,24 @@ export const qk = {
   },
   // POS Merchant Ops — Turn Board Assign & Break (US-13)
   merchantPosTurnBoard: (businessId?: string) => ['merchantSettings', 'posTurnBoard', businessId ?? ''],
+  // POS Front Desk — Time Clock tab. Roster/log keys carry the local day being shown so switching
+  // day (or crossing midnight on an iPad left open) refetches instead of serving yesterday's board.
+  // `dayKey` is only appended when passed: an invalidateQueries call omitting it must yield a real
+  // prefix of the rendered key. Defaulting it to '' instead would build a 4th element that matches
+  // no live query, and the invalidation would silently do nothing.
+  merchantPosTimeClockQr: (businessId?: string) => ['merchantSettings', 'posTimeClockQr', businessId ?? ''],
+  merchantPosTimeClockRoster: (businessId?: string, dayKey?: string) => {
+    const key: unknown[] = ['merchantSettings', 'posTimeClockRoster', businessId ?? '']
+    if (dayKey) key.push(dayKey)
+    return key
+  },
+  merchantPosTimeClockLog: (businessId?: string, dayKey?: string) => {
+    const key: unknown[] = ['merchantSettings', 'posTimeClockLog', businessId ?? '']
+    if (dayKey) key.push(dayKey)
+    return key
+  },
+  staffClockScanPreview: (businessId?: string, token?: string) =>
+    ['staffClockScanPreview', businessId ?? '', token ?? ''],
   // POS Merchant Ops — Checkout (US-14 / US-025, refactored to Order in US-026)
   merchantPosInServiceOrders: (businessId?: string) => ['merchantSettings', 'posInServiceOrders', businessId ?? ''],
   merchantPosOrderDetail: (businessId?: string, orderId?: string) =>
@@ -182,6 +200,19 @@ export const qk = {
   },
   merchantPosBookingDetail: (businessId?: string, bookingId?: string) =>
     ['merchantSettings', 'posBookingDetail', businessId ?? '', bookingId ?? ''],
+  // POS Front Desk — Customer tab (US-043), read-only list/detail/order-history.
+  merchantPosCustomerList: (businessId?: string, filters?: object) => {
+    const key: unknown[] = ['merchantSettings', 'posCustomerList', businessId ?? '']
+    if (filters) key.push(filters)
+    return key
+  },
+  merchantPosCustomerDetail: (businessId?: string, customerId?: string) =>
+    ['merchantSettings', 'posCustomerDetail', businessId ?? '', customerId ?? ''],
+  merchantPosCustomerOrders: (businessId?: string, customerId?: string, filters?: object) => {
+    const key: unknown[] = ['merchantSettings', 'posCustomerOrders', businessId ?? '', customerId ?? '']
+    if (filters) key.push(filters)
+    return key
+  },
 
   // Merchant Touchpoints
   merchantTouchpoints: ()      => ['merchantTouchpoints'],
