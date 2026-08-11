@@ -458,7 +458,7 @@ export default function PlanPaymentModal({
             <button
               className="btn-outline"
               type="button"
-              disabled={purchaseMutation.isPending || cardSubmitting}
+              disabled={purchaseMutation.isPending || cardSubmitting || isCardOrderPolling}
               onClick={onClose}
             >
               {t(`${TK}.planPaymentCancel`)}

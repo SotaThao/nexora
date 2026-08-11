@@ -468,7 +468,7 @@ export default function SubscriptionPaymentModal({
           <button
             className="btn-outline"
             type="button"
-            disabled={purchaseMutation.isPending || cardSubmitting}
+            disabled={purchaseMutation.isPending || cardSubmitting || isCardOrderPolling}
             onClick={onClose}
           >
             {t('common.cancel')}
