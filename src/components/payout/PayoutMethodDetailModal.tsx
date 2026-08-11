@@ -77,9 +77,6 @@ export default function PayoutMethodDetailModal({
           <h3 id={dialogTitleId} className="mt-2 text-xl font-black leading-tight text-nexoraText">
             {label}
           </h3>
-          <p className="mt-0.5 text-[10px] font-extrabold uppercase tracking-wide text-nexoraMuted">
-            {t('components.settings.tabs.ProfileTab.customerPaymentDetails')}
-          </p>
 
           <div className="mt-3">
             {hasQrCode ? (
