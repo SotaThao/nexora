@@ -2839,7 +2839,8 @@
             "open": "Open",
             "join": "Join",
             "details": "Details",
-            "preview": "Preview"
+            "preview": "Preview",
+            "loadMore": "Load more"
           }
         },
         "StaffView": {

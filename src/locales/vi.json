@@ -2839,7 +2839,8 @@
             "open": "Mở",
             "join": "Tham gia",
             "details": "Chi tiết",
-            "preview": "Xem trước"
+            "preview": "Xem trước",
+            "loadMore": "Tải thêm"
           }
         },
         "StaffView": {

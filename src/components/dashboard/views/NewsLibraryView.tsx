@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState, type KeyboardEvent, type ReactNode } from
 import DOMPurify from 'dompurify'
 import {
   CalendarDays,
+  ChevronDown,
   Clock,
   ExternalLink,
   FileText,
@@ -82,6 +83,7 @@ declare global {
 }
 
 const SWEETALERT_SCRIPT_URL = 'https://cdn.jsdelivr.net/npm/sweetalert2@11'
+const CHANNEL_VIDEOS_PAGE_SIZE = 6
 
 const EMPTY_CONTENT: NewsLibraryContent = {
   featuredVideos: [],
@@ -789,6 +791,13 @@ function NewsPanel({
   onVideoPreview: OpenVideoPreview
 }) {
   const { t } = useTranslation()
+  const [visibleChannelVideoCount, setVisibleChannelVideoCount] = useState(
+    CHANNEL_VIDEOS_PAGE_SIZE,
+  )
+
+  useEffect(() => {
+    setVisibleChannelVideoCount(CHANNEL_VIDEOS_PAGE_SIZE)
+  }, [content.channelVideos])
 
   if (status !== 'ready') {
     return <LibraryState status={status} labelKey="labels.newsContent" />
@@ -796,6 +805,8 @@ function NewsPanel({
 
   const hasContent = content.featuredVideos.length > 0 || content.channelVideos.length > 0
   if (!hasContent) return <EmptyState label={t(`${TK}.labels.newsContent`)} />
+  const visibleChannelVideos = content.channelVideos.slice(0, visibleChannelVideoCount)
+  const hasMoreChannelVideos = visibleChannelVideos.length < content.channelVideos.length
 
   return (
     <div className="space-y-6">
@@ -816,7 +827,7 @@ function NewsPanel({
       {content.channelVideos.length > 0 && (
         <LibraryBlock title={t(`${TK}.blocks.moreFromChannel`)}>
           <div className="grid gap-2.5">
-            {content.channelVideos.map((item, index) => (
+            {visibleChannelVideos.map((item, index) => (
               <InlineMediaCard
                 key={`${item.title}-${index}`}
                 item={item}
@@ -825,6 +836,22 @@ function NewsPanel({
               />
             ))}
           </div>
+          {hasMoreChannelVideos && (
+            <div className="mt-3 flex justify-center">
+              <button
+                type="button"
+                onClick={() =>
+                  setVisibleChannelVideoCount((count) =>
+                    Math.min(count + CHANNEL_VIDEOS_PAGE_SIZE, content.channelVideos.length),
+                  )
+                }
+                className="inline-flex min-h-9 items-center justify-center gap-1.5 rounded-lg border border-nexoraBrandSoft bg-nexoraCanvas px-4 text-xs font-black text-nexoraBrand transition hover:border-nexoraBrand hover:bg-nexoraBrandSoft"
+              >
+                <ChevronDown className="h-4 w-4" aria-hidden />
+                {t(`${TK}.actions.loadMore`)}
+              </button>
+            </div>
+          )}
         </LibraryBlock>
       )}
     </div>
