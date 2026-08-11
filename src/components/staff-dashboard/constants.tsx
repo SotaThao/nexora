@@ -14,7 +14,7 @@ import {
 // Bottom-nav / sidebar items. Icons align with merchant dashboard MENU_ITEMS.
 // 'taxiq' carries `children` (Tax IQ sub-nav) — StaffSidebar renders it as an
 // expandable group, mirroring the Owner Dashboard's MENU_ITEMS.taxiq pattern.
-export const STAFF_MENU_ITEMS = [
+const STAFF_ALL_MENU_ITEMS = [
   { id: 'home', icon: LayoutDashboard, labelKey: 'staff_dashboard.nav.home' },
   { id: 'tips', icon: CircleDollarSign, labelKey: 'staff_dashboard.nav.tips' },
   { id: 'payments', icon: ReceiptText, labelKey: 'staff_dashboard.nav.payments' },
@@ -35,6 +35,17 @@ export const STAFF_MENU_ITEMS = [
   },
   { id: 'profile', icon: Settings, labelKey: 'staff_dashboard.nav.profile' },
 ]
+
+export const STAFF_SIDEBAR_HIDDEN_MENU_IDS = [
+  // Hidden for this go-live — routes/data remain available, only menu discovery is hidden.
+  'taxiq',
+] as const
+
+const STAFF_SIDEBAR_HIDDEN_MENU_ID_SET = new Set<string>(STAFF_SIDEBAR_HIDDEN_MENU_IDS)
+
+export const STAFF_MENU_ITEMS = STAFF_ALL_MENU_ITEMS.filter(
+  (item) => !STAFF_SIDEBAR_HIDDEN_MENU_ID_SET.has(item.id),
+)
 
 export const STAFF_WORKSPACE_MENU_ITEM = {
   id: 'workspace',
