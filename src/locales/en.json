@@ -2469,7 +2469,8 @@
     "payout": {
       "accountNameField": {
         "label": "Account Holder Name",
-        "placeholder": "e.g. Anna Smith"
+        "placeholder": "e.g. Anna Smith",
+        "required": "Account holder name is required."
       },
       "bankWireForm": {
         "title": "Set Up Bank Account",

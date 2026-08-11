@@ -2469,7 +2469,8 @@
     "payout": {
       "accountNameField": {
         "label": "Tên chủ tài khoản",
-        "placeholder": "VD: Anna Smith"
+        "placeholder": "VD: Anna Smith",
+        "required": "Vui lòng nhập tên chủ tài khoản."
       },
       "bankWireForm": {
         "title": "Thiết lập tài khoản ngân hàng",

@@ -15,6 +15,7 @@ import {
   isBankWireAccountComplete,
 } from './bankWireAccount'
 import { validatePayoutAccount } from './validatePayoutAccount'
+import { supportsPayoutAccountName } from '../../data/paymentMethodTypes'
 
 interface PayoutSetupModalProps {
   open: boolean
@@ -55,6 +56,7 @@ function PayoutSetupModal({
   const [isCapturing, setIsCapturing] = useState(false)
   const [isCameraOpen, setIsCameraOpen] = useState(false)
   const [error, setError] = useState('')
+  const [accountNameError, setAccountNameError] = useState('')
   const [uploadError, setUploadError] = useState('')
 
   useEffect(() => {
@@ -63,6 +65,7 @@ function PayoutSetupModal({
     setQrFile(null)
     setAccountName(initialAccountName || staffName || '')
     setError('')
+    setAccountNameError('')
     setUploadError('')
     setIsCameraOpen(false)
   }, [open, walletKey, initialValue, initialQrCode, initialAccountName, staffName])
@@ -86,6 +89,7 @@ function PayoutSetupModal({
 
   if (!open) return null
   const isBankWire = walletKey === 'bankwire'
+  const requiresAccountName = !isBankWire && supportsPayoutAccountName(walletKey)
 
   const walletNames = {
     zelle: 'Zelle',
@@ -172,6 +176,11 @@ function PayoutSetupModal({
       onSubmit(value, '', getBankWireBeneficiaryName(value) || accountName)
       return
     }
+    const trimmedAccountName = accountName.trim()
+    if (requiresAccountName && !trimmedAccountName) {
+      setAccountNameError(t('components.payout.accountNameField.required'))
+      return
+    }
     const validationKey = allowQrOnly && qrCode
       ? ''
       : validatePayoutAccount(walletKey, value)
@@ -179,7 +188,7 @@ function PayoutSetupModal({
       setError(t(`components.settings.tabs.ProfileTab.validation.${validationKey}`))
       return
     }
-    onSubmit(value, qrCode, accountName, qrFile)
+    onSubmit(value, qrCode, trimmedAccountName, qrFile)
   }
 
   const PayoutLogos = {
@@ -272,8 +281,12 @@ function PayoutSetupModal({
           <PayoutAccountNameField
             walletKey={walletKey}
             value={accountName}
-            onChange={setAccountName}
+            onChange={(nextValue) => {
+              setAccountName(nextValue)
+              setAccountNameError('')
+            }}
             disabled={readOnly}
+            error={accountNameError}
           />
 
           <div>
