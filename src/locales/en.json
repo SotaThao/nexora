@@ -890,6 +890,7 @@
       "subscription_confirm_payment": "Confirm payment",
       "subscription_payment_success": "Package purchased successfully.",
       "subscription_price_note_month": "month",
+      "subscription_price_note_year": "year",
       "subscription_payment_tab_wallet": "VlinkPay Wallet",
       "subscription_payment_tab_card": "Credit/Debit Card",
       "subscription_card_form_title": "Credit or Debit Card",
@@ -5414,6 +5415,12 @@
     "plan_locked_badge": "Unavailable",
     "upgrade_to_pro": "Upgrade to Pro",
     "price_note_months": "/ {{count}} months",
+    "price_note_year": "/ yr",
+    "billing_cycle_label": "Billing cycle",
+    "billing_monthly": "Monthly",
+    "billing_yearly": "Yearly",
+    "yearly_coming_soon": "Yearly billing coming soon",
+    "yearly_discount_upto": "Up to -{{percent}}%",
     "plans": {
       "lite": {
         "name": "Lite Pack (Free)",

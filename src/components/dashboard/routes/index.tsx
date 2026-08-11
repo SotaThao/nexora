@@ -1149,6 +1149,7 @@ export function SubscriptionsRoute() {
     paymentPlan,
     selectedPackage,
     paymentPlanPrice,
+    checkoutBillingCycle,
     clearCheckout,
     handleSelectPlan,
   } = useTipPlatformCheckoutFlow({
@@ -1170,6 +1171,7 @@ export function SubscriptionsRoute() {
         paymentPlan={paymentPlan}
         selectedPackage={selectedPackage}
         paymentPlanPrice={paymentPlanPrice}
+        billingCycle={checkoutBillingCycle}
         onClose={clearCheckout}
       />
     </>

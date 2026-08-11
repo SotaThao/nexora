@@ -2,6 +2,7 @@ import { keepPreviousData, useMutation, useQuery, useQueryClient } from '@tansta
 import type { QueryClient } from '@tanstack/react-query'
 import { qk } from '../queryKeys'
 import subscriptionPaymentsRepository, {
+  SubscriptionBillingCycle,
   SubscriptionPackageType,
   SubscriptionPaymentStatus,
   type InitializeCardPaymentResult,
@@ -182,16 +183,16 @@ export function useSubscriptionPurchaseHistory({
   })
 }
 
-/** Tip Platform wallet purchase — body `{ packageId, symbol }`. */
+/** Tip Platform wallet purchase — body `{ packageId, symbol, billingCycle? }`. */
 export function usePurchaseSubscription() {
   const queryClient = useQueryClient()
   return useMutation<
     PurchaseSubscriptionResult,
     Error,
-    { packageId: string; symbol: string }
+    { packageId: string; symbol: string; billingCycle?: SubscriptionBillingCycle }
   >({
-    mutationFn: ({ packageId, symbol }) =>
-      subscriptionPaymentsRepository.purchase(packageId, symbol),
+    mutationFn: ({ packageId, symbol, billingCycle }) =>
+      subscriptionPaymentsRepository.purchase(packageId, symbol, billingCycle),
     onSuccess: () => {
       invalidateSubscriptionPurchaseQueries(queryClient)
     },
@@ -270,8 +271,13 @@ export function usePurchaseCreditTopUp(packageType: SubscriptionPackageType) {
 }
 
 export function useInitializeCardPayment() {
-  return useMutation<InitializeCardPaymentResult, Error, string>({
-    mutationFn: (packageId) => subscriptionPaymentsRepository.initializeCardPayment(packageId),
+  return useMutation<
+    InitializeCardPaymentResult,
+    Error,
+    { packageId: string; billingCycle?: SubscriptionBillingCycle }
+  >({
+    mutationFn: ({ packageId, billingCycle }) =>
+      subscriptionPaymentsRepository.initializeCardPayment(packageId, billingCycle),
   })
 }
 

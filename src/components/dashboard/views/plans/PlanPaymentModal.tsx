@@ -166,7 +166,7 @@ export default function PlanPaymentModal({
     if (!isOpen || !isCardPayment || !selection?.packageId) return
     if (!isSetupResolved || !hasSetup) return
     if (initializeCardMutation.data || initializeCardMutation.isPending) return
-    initializeCardMutation.mutate(selection.packageId)
+    initializeCardMutation.mutate({ packageId: selection.packageId })
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isOpen, isCardPayment, selection?.packageId, hasSetup, isSetupResolved])
 
@@ -412,7 +412,7 @@ export default function PlanPaymentModal({
                           className="booking-mini-button"
                           type="button"
                           onClick={() => {
-                            if (selection.packageId) initializeCardMutation.mutate(selection.packageId)
+                            if (selection.packageId) initializeCardMutation.mutate({ packageId: selection.packageId })
                           }}
                         >
                           {t(`${TK}.planPaymentMethodsRetry`)}

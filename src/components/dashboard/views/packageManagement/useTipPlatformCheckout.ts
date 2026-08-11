@@ -1,6 +1,9 @@
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import type { SetURLSearchParams } from 'react-router-dom'
-import { SubscriptionPackageType } from '../../../../data/repositories/subscriptionPayments'
+import {
+  SubscriptionBillingCycle,
+  SubscriptionPackageType,
+} from '../../../../data/repositories/subscriptionPayments'
 import type {
   PurchasableSubscriptionPlan,
   SubscriptionPackage,
@@ -63,6 +66,9 @@ export function useTipPlatformCheckout({
   const [paymentPlan, setPaymentPlan] = useState<PurchasableSubscriptionPlan | null>(null)
   /** Snapshot at open — keeps the payment modal mounted if the catalog briefly refetches empty. */
   const [checkoutPackage, setCheckoutPackage] = useState<SubscriptionPackage | null>(null)
+  const [checkoutBillingCycle, setCheckoutBillingCycle] = useState<SubscriptionBillingCycle>(
+    SubscriptionBillingCycle.Monthly,
+  )
 
   const {
     data: packages = [],
@@ -81,15 +87,17 @@ export function useTipPlatformCheckout({
   const clearCheckout = useCallback(() => {
     setPaymentPlan(null)
     setCheckoutPackage(null)
+    setCheckoutBillingCycle(SubscriptionBillingCycle.Monthly)
     const next = stripPlanQueryParam(searchParams)
     if (next) setSearchParams(next, { replace: true })
   }, [searchParams, setSearchParams])
 
   const openCheckout = useCallback(
-    (plan: PurchasableSubscriptionPlan) => {
+    (plan: PurchasableSubscriptionPlan, billingCycle: SubscriptionBillingCycle = SubscriptionBillingCycle.Monthly) => {
       const pkg = findTipPlatformPackage(packages, plan)
       setCheckoutPackage(pkg ?? null)
       setPaymentPlan(plan)
+      setCheckoutBillingCycle(billingCycle)
     },
     [packages],
   )
@@ -115,17 +123,22 @@ export function useTipPlatformCheckout({
   }, [deepLinkEnabled, searchParams, currentTipPlanId, setSearchParams, openCheckout])
 
   const trySelectPlan = useCallback(
-    (planId: string): TipPlatformCheckoutResultValue => {
+    (
+      planId: string,
+      billingCycle: SubscriptionBillingCycle = SubscriptionBillingCycle.Monthly,
+    ): TipPlatformCheckoutResultValue => {
       if (!canOpenTipPlatformCheckout(planId, currentTipPlanId)) {
         return TipPlatformCheckoutResult.Blocked
       }
       const purchasablePlan = planIdToPurchasablePlan(planId)
       if (!purchasablePlan) return TipPlatformCheckoutResult.ContactSupport
-      openCheckout(purchasablePlan)
+      openCheckout(purchasablePlan, billingCycle)
       return TipPlatformCheckoutResult.Opened
     },
     [currentTipPlanId, openCheckout],
   )
+
+  const isYearlyCheckout = checkoutBillingCycle === SubscriptionBillingCycle.Yearly
 
   return {
     tipPlatformSubscription,
@@ -134,7 +147,9 @@ export function useTipPlatformCheckout({
     packages,
     paymentPlan,
     selectedPackage,
-    paymentPlanPrice: selectedPackage?.price ?? 0,
+    checkoutBillingCycle,
+    paymentPlanPrice:
+      (isYearlyCheckout ? selectedPackage?.yearlyPrice : selectedPackage?.price) ?? 0,
     clearCheckout,
     trySelectPlan,
     /** True when checkout was requested but catalog row is missing after a settled fetch. */

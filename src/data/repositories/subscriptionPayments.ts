@@ -20,6 +20,11 @@ export enum SubscriptionPackageType {
 
 export type PurchasableSubscriptionPlan = 'Starter' | 'Pro'
 
+export enum SubscriptionBillingCycle {
+  Monthly = 'Monthly',
+  Yearly = 'Yearly',
+}
+
 /** Wire enum — POST purchase / GET purchase-history `paymentStatus`. */
 export enum SubscriptionPaymentStatus {
   Pending = 'Pending',
@@ -82,6 +87,12 @@ export interface SubscriptionPackage {
   price: number | null
   originalPrice: number | null
   periodInMonths: number | null
+  /** Annual price for the same tier — null when this package has no yearly option yet. */
+  yearlyPrice: number | null
+  /** Undiscounted reference (typically monthly x12) shown struck through next to `yearlyPrice`. */
+  yearlyOriginalPrice: number | null
+  /** % cheaper than `yearlyOriginalPrice`, pre-rounded to 2 decimals by BE. Null/0 when no discount. */
+  yearlyDiscountPercent: number | null
   /** SMS segments / call minutes for VoiceSms & VoiceCallMinutes top-ups. */
   creditUnits: number | null
   level: number | null
@@ -228,6 +239,9 @@ function normalizePackage(raw: unknown): SubscriptionPackage | null {
     price: readNullableNumber(item.price),
     originalPrice: readNullableNumber(item.originalPrice),
     periodInMonths: readNullableNumber(item.periodInMonths),
+    yearlyPrice: readNullableNumber(item.yearlyPrice),
+    yearlyOriginalPrice: readNullableNumber(item.yearlyOriginalPrice),
+    yearlyDiscountPercent: readNullableNumber(item.yearlyDiscountPercent),
     creditUnits: readNullableNumber(item.creditUnits),
     level: readNullableNumber(item.level),
   }
@@ -500,14 +514,15 @@ export function createSubscriptionPaymentsRepository(client: HttpClient = httpCl
       return normalizePaymentMethods(res)
     },
 
-    /** Tip Platform / wallet: body `{ packageId, symbol }`. */
+    /** Tip Platform / wallet: body `{ packageId, symbol, billingCycle? }`. */
     async purchase(
       packageId: string,
       symbol: string,
+      billingCycle?: SubscriptionBillingCycle,
     ): Promise<PurchaseSubscriptionResult> {
       const res = await client.post<unknown>(
         '/api/v1/merchant/subscriptions/purchase',
-        { packageId, symbol },
+        { packageId, symbol, ...(billingCycle ? { billingCycle } : {}) },
       )
       return normalizePurchaseResult(res)
     },
@@ -524,10 +539,13 @@ export function createSubscriptionPaymentsRepository(client: HttpClient = httpCl
       return normalizePurchaseResult(res)
     },
 
-    async initializeCardPayment(packageId: string): Promise<InitializeCardPaymentResult> {
+    async initializeCardPayment(
+      packageId: string,
+      billingCycle?: SubscriptionBillingCycle,
+    ): Promise<InitializeCardPaymentResult> {
       const res = await client.post<unknown>(
         '/api/v1/merchant/subscriptions/purchase/card/initialize',
-        { packageId },
+        { packageId, ...(billingCycle ? { billingCycle } : {}) },
       )
       return normalizeInitializeCardPaymentResult(res)
     },

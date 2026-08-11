@@ -92,6 +92,7 @@ export default function PackageSubscriptionsPanel({
     paymentPlan,
     selectedPackage,
     paymentPlanPrice,
+    checkoutBillingCycle,
     clearCheckout,
     handleSelectPlan,
   } = useTipPlatformCheckoutFlow({
@@ -118,6 +119,7 @@ export default function PackageSubscriptionsPanel({
         paymentPlan={paymentPlan}
         selectedPackage={selectedPackage}
         paymentPlanPrice={paymentPlanPrice}
+        billingCycle={checkoutBillingCycle}
         onClose={clearCheckout}
       />
     </>

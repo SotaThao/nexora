@@ -14,9 +14,10 @@ import {
 } from '../../../data/hooks/useSubscriptionPayments'
 import { resolveTranslatedApiError } from '../../../utils/resolveTranslatedApiError'
 import { resolveSubscriptionBillingDefaults } from '../../../utils/subscriptionBillingDefaults'
-import type {
-  PurchasableSubscriptionPlan,
-  SubscriptionPaymentMethod,
+import {
+  SubscriptionBillingCycle,
+  type PurchasableSubscriptionPlan,
+  type SubscriptionPaymentMethod,
 } from '../../../data/repositories/subscriptionPayments'
 import { formatCurrency } from '../utils'
 import { hasEnoughWalletBalance } from '../views/plans/constants'
@@ -47,6 +48,7 @@ type Props = {
   plan: PurchasableSubscriptionPlan
   packageId: string
   price: number
+  billingCycle?: SubscriptionBillingCycle
   billingDefaults?: SubscriptionBillingDetails
   onClose: () => void
   onSuccess?: () => void
@@ -57,6 +59,7 @@ export default function SubscriptionPaymentModal({
   plan,
   packageId,
   price,
+  billingCycle,
   billingDefaults,
   onClose,
   onSuccess,
@@ -139,9 +142,9 @@ export default function SubscriptionPaymentModal({
     if (paymentTab !== SubscriptionPaymentTab.Card) return
     if (!isSetupResolved || !hasSetup) return
     if (initializeCardMutation.data || initializeCardMutation.isPending) return
-    initializeCardMutation.mutate(packageId)
+    initializeCardMutation.mutate({ packageId, billingCycle })
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [paymentTab, packageId, hasSetup, isSetupResolved])
+  }, [paymentTab, packageId, billingCycle, hasSetup, isSetupResolved])
 
   useEffect(() => {
     if (
@@ -171,7 +174,7 @@ export default function SubscriptionPaymentModal({
     }
 
     purchaseMutation.mutate(
-      { packageId, symbol: selectedSymbol },
+      { packageId, symbol: selectedSymbol, billingCycle },
       {
         onSuccess: (result) => {
           const nextStep = resolveWalletPurchaseNextStep(result)
@@ -371,7 +374,13 @@ export default function SubscriptionPaymentModal({
               {formatCurrency(price)}
               <span className="text-xs font-semibold text-nexoraMuted">
                 {' / '}
-                {t(modalKey('subscription_price_note_month'))}
+                {t(
+                  modalKey(
+                    billingCycle === SubscriptionBillingCycle.Yearly
+                      ? 'subscription_price_note_year'
+                      : 'subscription_price_note_month',
+                  ),
+                )}
               </span>
             </span>
           </div>
@@ -396,7 +405,7 @@ export default function SubscriptionPaymentModal({
                 <p>{t(subscriptionModalKey('cardInitError'))}</p>
                 <button
                   type="button"
-                  onClick={() => initializeCardMutation.mutate(packageId)}
+                  onClick={() => initializeCardMutation.mutate({ packageId, billingCycle })}
                   className="mt-2 font-bold underline"
                 >
                   {t(modalKey('subscription_payment_methods_retry'))}

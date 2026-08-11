@@ -2,6 +2,7 @@ import { useCallback, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useTranslation } from '../../../../contexts/LanguageContext'
 import { useNotification } from '../../../../contexts/NotificationContext'
+import type { SubscriptionBillingCycle } from '../../../../data/repositories/subscriptionPayments'
 import { buildDashboardMenuPath, DASHBOARD_MENU_ID } from '../../constants'
 import { BOOKING_HUB_PLANS_TK } from './constants'
 import {
@@ -41,8 +42,8 @@ export function useTipPlatformCheckoutFlow({
   }, [isCheckoutPackageMissing, clearCheckout, notifyOnMissingPackage, showToast, t])
 
   const handleSelectPlan = useCallback(
-    (planId: string) => {
-      const result = trySelectPlan(planId)
+    (planId: string, billingCycle?: SubscriptionBillingCycle) => {
+      const result = trySelectPlan(planId, billingCycle)
       if (result === TipPlatformCheckoutResult.ContactSupport) {
         navigate(DASHBOARD_SUPPORT_PATH)
       }
