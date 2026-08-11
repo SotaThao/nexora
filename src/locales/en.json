@@ -2805,6 +2805,43 @@
           "tippingLinkCopiedTo": "Tipping link copied to clipboard!",
           "shareLink": "Share Link"
         },
+        "NewsLibraryView": {
+          "documentTitle": "NEXORA TOUCH - News & Library",
+          "mainAria": "News & Library content",
+          "title": "News & Library",
+          "description": "Keep NEXORA TOUCH news and Zoom schedules in one owner workspace.",
+          "tablistAria": "News and library sections",
+          "durationAria": "Duration {duration}",
+          "tabs": {
+            "news": "News",
+            "eventZoomSchedule": "Event & Zoom Schedule",
+            "compensationPlan": "Compensation Plan"
+          },
+          "state": {
+            "loading": "Loading News Library...",
+            "error": "Unable to load News Library content. Please check the network connection and refresh.",
+            "empty": "No {label} yet"
+          },
+          "labels": {
+            "newsContent": "news content",
+            "compensationPlanContent": "compensation plan content",
+            "eventContent": "event content"
+          },
+          "blocks": {
+            "featuredVideos": "Featured videos",
+            "moreFromChannel": "More from channel",
+            "coreTopics": "Core topics",
+            "upcomingZoomSessions": "Upcoming Zoom sessions"
+          },
+          "actions": {
+            "openPdf": "Open PDF",
+            "watch": "Watch",
+            "open": "Open",
+            "join": "Join",
+            "details": "Details",
+            "preview": "Preview"
+          }
+        },
         "StaffView": {
           "linkCopiedToClipboard": "Link copied to clipboard for sharing!",
           "shareTitle": "Join Nexora Touch",

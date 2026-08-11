@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState, type KeyboardEvent, type ReactNode } from
 import DOMPurify from 'dompurify'
 import {
   CalendarDays,
+  Clock,
   ExternalLink,
   FileText,
   HandCoins,
@@ -16,6 +17,10 @@ import {
 } from 'lucide-react'
 
 import { useTranslation } from '../../../contexts/LanguageContext'
+import {
+  NEWS_LIBRARY_DATA_URLS,
+  getNewsLibraryDataUrl,
+} from '../../../constants/newsLibrary'
 import IconButton from '../../ui/IconButton'
 import type { ReceiptVaultItem } from '../../../data/repositories/taxiqReceipts'
 
@@ -68,15 +73,12 @@ type PdfPreviewState = {
   title: string
 }
 
+const TK = 'components.dashboard.views.NewsLibraryView'
+
 declare global {
   interface Window {
     Swal?: SweetAlertGlobal
   }
-}
-
-const NEWS_LIBRARY_FILE = {
-  vi: 'https://raw.githubusercontent.com/vlink-group/VlinkPay/main/news-library/nexora-news-library-data-vi.json',
-  en: 'https://raw.githubusercontent.com/vlink-group/VlinkPay/main/news-library/nexora-news-library-data.json',
 }
 
 const SWEETALERT_SCRIPT_URL = 'https://cdn.jsdelivr.net/npm/sweetalert2@11'
@@ -95,10 +97,10 @@ const EMPTY_CONTENT: NewsLibraryContent = {
   videoZoomHistory: [],
 }
 
-const TABS: Array<{ id: TabId; label: string; Icon: LucideIcon }> = [
-  { id: 'news', label: 'News', Icon: Newspaper },
-  { id: 'event-zoom-schedule', label: 'Event & Zoom Schedule', Icon: CalendarDays },
-  { id: 'compensation-plan', label: 'Compensation Plan', Icon: HandCoins },
+const TABS: Array<{ id: TabId; labelKey: string; Icon: LucideIcon }> = [
+  { id: 'news', labelKey: 'tabs.news', Icon: Newspaper },
+  { id: 'event-zoom-schedule', labelKey: 'tabs.eventZoomSchedule', Icon: CalendarDays },
+  { id: 'compensation-plan', labelKey: 'tabs.compensationPlan', Icon: HandCoins },
 ]
 
 function isTabId(value: string | null): value is TabId {
@@ -234,10 +236,10 @@ function isVideoUrl(url: string): boolean {
   return !!toYoutubeEmbedUrl(url)
 }
 
-function actionLabel(url: string): string {
-  if (isPdfUrl(url)) return 'Open PDF'
-  if (isVideoUrl(url)) return 'Watch'
-  return 'Open'
+function actionLabel(url: string, t: (key: string) => string): string {
+  if (isPdfUrl(url)) return t(`${TK}.actions.openPdf`)
+  if (isVideoUrl(url)) return t(`${TK}.actions.watch`)
+  return t(`${TK}.actions.open`)
 }
 
 function ActionIcon({ url, className = 'h-4 w-4' }: { url: string; className?: string }) {
@@ -278,14 +280,14 @@ function loadSweetAlert(): Promise<SweetAlertGlobal | null> {
   })
 }
 
-async function openSweetAlertDetails(title: string, htmlContent: string) {
+async function openSweetAlertDetails(title: string, htmlContent: string, fallbackTitle: string) {
   if (!htmlContent) return
 
   const swal = await loadSweetAlert()
   if (!swal?.fire) return
 
   swal.fire({
-    title: title || 'Details',
+    title: title || fallbackTitle,
     html: `<div class="news-library-swal-content">${DOMPurify.sanitize(htmlContent)}</div>`,
     width: 860,
     showConfirmButton: false,
@@ -301,14 +303,19 @@ async function openSweetAlertDetails(title: string, htmlContent: string) {
   })
 }
 
-async function openSweetAlertFrame(title: string, src: string, frameClass: string) {
+async function openSweetAlertFrame(
+  title: string,
+  src: string,
+  frameClass: string,
+  fallbackTitle: string,
+) {
   if (!src) return false
 
   const swal = await loadSweetAlert()
   if (!swal?.fire) return false
 
   const isDocument = frameClass === 'is-document'
-  const modalTitle = title || 'Preview'
+  const modalTitle = title || fallbackTitle
 
   swal.fire({
     title: modalTitle,
@@ -411,7 +418,7 @@ function NewsLibraryPdfPreviewModal({
             className="inline-flex items-center justify-center gap-1.5 self-start rounded-lg bg-nexoraBrand px-4 py-2 text-xs font-bold text-white"
           >
             <ExternalLink className="h-3.5 w-3.5" />
-            {t('taxiq.receiptVault.previewModal.openPdf')}
+            {t(`${TK}.actions.openPdf`)}
           </a>
         </div>
       </div>
@@ -427,11 +434,13 @@ function LibraryShell({ children }: { children: ReactNode }) {
   )
 }
 
-function LibraryState({ status, label }: { status: LoadStatus; label: string }) {
+function LibraryState({ status, labelKey }: { status: LoadStatus; labelKey: string }) {
+  const { t } = useTranslation()
+
   if (status === 'loading') {
     return (
       <div className="grid min-h-44 place-items-center rounded-lg border border-dashed border-nexoraBorder bg-nexoraCanvas p-6 text-center text-sm font-bold text-nexoraMuted">
-        Loading News Library...
+        {t(`${TK}.state.loading`)}
       </div>
     )
   }
@@ -439,15 +448,17 @@ function LibraryState({ status, label }: { status: LoadStatus; label: string }) 
   if (status === 'error') {
     return (
       <div className="grid min-h-44 place-items-center rounded-lg border border-dashed border-nexoraDanger bg-nexoraSurfaceMuted p-6 text-center text-sm font-bold text-nexoraDanger">
-        Unable to load News Library content. Please check the network connection and refresh.
+        {t(`${TK}.state.error`)}
       </div>
     )
   }
 
-  return <EmptyState label={label} />
+  return <EmptyState label={t(`${TK}.${labelKey}`)} />
 }
 
 function EmptyState({ label }: { label: string }) {
+  const { t } = useTranslation()
+
   return (
     <div className="grid min-h-72 place-items-center rounded-lg border border-dashed border-nexoraBorder bg-nexoraCanvas p-7 text-center">
       <div>
@@ -455,7 +466,7 @@ function EmptyState({ label }: { label: string }) {
           <Inbox className="h-5 w-5" aria-hidden />
         </span>
         <p className="mt-3 text-base font-black leading-snug text-nexoraText">
-          No {label} yet
+          {t(`${TK}.state.empty`, { label })}
         </p>
       </div>
     </div>
@@ -513,7 +524,25 @@ function MetaLine({ parts }: { parts: Array<string | undefined> }) {
   )
 }
 
+function DurationMeta({ duration }: { duration?: string }) {
+  const { t } = useTranslation()
+  const label = textValue(duration).trim()
+  if (!label) return null
+
+  return (
+    <div
+      aria-label={t(`${TK}.durationAria`, { duration: label })}
+      className="mb-1 inline-flex items-center gap-1 text-xs font-extrabold leading-4 text-nexoraBrand"
+    >
+      <Clock className="h-3.5 w-3.5" aria-hidden />
+      <span>{label}</span>
+    </div>
+  )
+}
+
 function ActionPill({ url, primary = false, children }: { url: string; primary?: boolean; children?: ReactNode }) {
+  const { t } = useTranslation()
+
   return (
     <span
       className={[
@@ -524,7 +553,7 @@ function ActionPill({ url, primary = false, children }: { url: string; primary?:
       ].join(' ')}
     >
       <ActionIcon url={url} />
-      {children || actionLabel(url)}
+      {children || actionLabel(url, t)}
     </span>
   )
 }
@@ -606,7 +635,7 @@ function VideoCard({
     >
       <ImageFrame item={item} className="aspect-video overflow-hidden bg-nexoraSurfaceMuted" />
       <div className="space-y-2 p-3.5">
-        <MetaLine parts={[item.badge, item.duration, item.timeAgo, item.views]} />
+        <DurationMeta duration={item.duration} />
         <h3 className="text-sm font-black leading-snug text-nexoraText">{textValue(item.title)}</h3>
         {item.description && (
           <p className="text-xs font-medium leading-relaxed text-nexoraMuted">
@@ -641,7 +670,7 @@ function InlineMediaCard({
         className="aspect-video overflow-hidden rounded-lg bg-nexoraSurfaceMuted sm:h-18 sm:w-28"
       />
       <div>
-        <MetaLine parts={[item.duration, item.timeAgo, item.views]} />
+        <DurationMeta duration={item.duration} />
         <h3 className="text-sm font-black leading-snug text-nexoraText">{textValue(item.title)}</h3>
         {item.description && (
           <p className="mt-1 text-xs font-medium leading-relaxed text-nexoraMuted">
@@ -693,6 +722,7 @@ function EventCard({
   item: NewsLibraryItem
   onDetails: (title: string, html: string) => void
 }) {
+  const { t } = useTranslation()
   const url = safeExternalUrl(item.link || item.url)
   const hasDetails = !!item.htmlContent
 
@@ -722,18 +752,23 @@ function EventCard({
           {url && (
             <a href={url} target="_blank" rel="noopener noreferrer" className="no-underline">
               <ActionPill url={url} primary>
-                {item.primaryAction || 'Join'}
+                {item.primaryAction || t(`${TK}.actions.join`)}
               </ActionPill>
             </a>
           )}
           {hasDetails && (
             <button
               type="button"
-              onClick={() => onDetails(textValue(item.title) || 'Details', item.htmlContent || '')}
+              onClick={() =>
+                onDetails(
+                  textValue(item.title) || t(`${TK}.actions.details`),
+                  item.htmlContent || '',
+                )
+              }
               className="inline-flex min-h-9 items-center justify-center gap-1.5 rounded-lg border border-nexoraBrandSoft bg-nexoraCanvas px-3 text-xs font-black text-nexoraBrand"
             >
               <Info className="h-4 w-4" aria-hidden />
-              {item.secondaryAction || 'Details'}
+              {item.secondaryAction || t(`${TK}.actions.details`)}
             </button>
           )}
         </div>
@@ -753,15 +788,19 @@ function NewsPanel({
   onPdfPreview: OpenPdfPreview
   onVideoPreview: OpenVideoPreview
 }) {
-  if (status !== 'ready') return <LibraryState status={status} label="news content" />
+  const { t } = useTranslation()
+
+  if (status !== 'ready') {
+    return <LibraryState status={status} labelKey="labels.newsContent" />
+  }
 
   const hasContent = content.featuredVideos.length > 0 || content.channelVideos.length > 0
-  if (!hasContent) return <EmptyState label="news content" />
+  if (!hasContent) return <EmptyState label={t(`${TK}.labels.newsContent`)} />
 
   return (
     <div className="space-y-6">
       {content.featuredVideos.length > 0 && (
-        <LibraryBlock title="Featured videos">
+        <LibraryBlock title={t(`${TK}.blocks.featuredVideos`)}>
           <div className="grid gap-3 md:grid-cols-2">
             {content.featuredVideos.map((item, index) => (
               <VideoCard
@@ -775,7 +814,7 @@ function NewsPanel({
         </LibraryBlock>
       )}
       {content.channelVideos.length > 0 && (
-        <LibraryBlock title="More from channel">
+        <LibraryBlock title={t(`${TK}.blocks.moreFromChannel`)}>
           <div className="grid gap-2.5">
             {content.channelVideos.map((item, index) => (
               <InlineMediaCard
@@ -803,11 +842,17 @@ function CompensationPanel({
   onPdfPreview: OpenPdfPreview
   onVideoPreview: OpenVideoPreview
 }) {
-  if (status !== 'ready') return <LibraryState status={status} label="compensation plan content" />
-  if (!content.planTopics.length) return <EmptyState label="compensation plan content" />
+  const { t } = useTranslation()
+
+  if (status !== 'ready') {
+    return <LibraryState status={status} labelKey="labels.compensationPlanContent" />
+  }
+  if (!content.planTopics.length) {
+    return <EmptyState label={t(`${TK}.labels.compensationPlanContent`)} />
+  }
 
   return (
-    <LibraryBlock title="Core topics">
+    <LibraryBlock title={t(`${TK}.blocks.coreTopics`)}>
       <div className="grid gap-3 md:grid-cols-2">
         {content.planTopics.map((item, index) => (
           <TopicCard
@@ -831,13 +876,17 @@ function EventZoomPanel({
   content: NewsLibraryContent
   onDetails: (title: string, html: string) => void
 }) {
-  if (status !== 'ready') return <LibraryState status={status} label="event content" />
+  const { t } = useTranslation()
+
+  if (status !== 'ready') {
+    return <LibraryState status={status} labelKey="labels.eventContent" />
+  }
 
   const events = [...content.upcomingSessions, ...content.upcomingEvents]
-  if (!events.length) return <EmptyState label="event content" />
+  if (!events.length) return <EmptyState label={t(`${TK}.labels.eventContent`)} />
 
   return (
-    <LibraryBlock title="Upcoming Zoom sessions">
+    <LibraryBlock title={t(`${TK}.blocks.upcomingZoomSessions`)}>
       <div className="grid gap-2.5">
         {events.map((item, index) => (
           <EventCard
@@ -852,7 +901,8 @@ function EventZoomPanel({
 }
 
 export default function NewsLibraryView() {
-  const { currentLanguage } = useTranslation()
+  const { currentLanguage, t } = useTranslation()
+  const documentTitle = t(`${TK}.documentTitle`)
   const [activeTab, setActiveTab] = useState<TabId>(() => initialTab())
   const [status, setStatus] = useState<LoadStatus>('loading')
   const [content, setContent] = useState<NewsLibraryContent>(EMPTY_CONTENT)
@@ -860,11 +910,11 @@ export default function NewsLibraryView() {
 
   useEffect(() => {
     const previousTitle = document.title
-    document.title = 'NEXORA TOUCH - News & Library'
+    document.title = documentTitle
     return () => {
       document.title = previousTitle
     }
-  }, [])
+  }, [documentTitle])
 
   useEffect(() => {
     let cancelled = false
@@ -883,15 +933,15 @@ export default function NewsLibraryView() {
       }
 
       setStatus('loading')
-      const primaryUrl = currentLanguage === 'vi' ? NEWS_LIBRARY_FILE.vi : NEWS_LIBRARY_FILE.en
+      const primaryUrl = getNewsLibraryDataUrl(currentLanguage)
 
       try {
         let nextContent: unknown
         try {
           nextContent = await fetchContent(primaryUrl)
         } catch (error) {
-          if (primaryUrl === NEWS_LIBRARY_FILE.en) throw error
-          nextContent = await fetchContent(NEWS_LIBRARY_FILE.en)
+          if (primaryUrl === NEWS_LIBRARY_DATA_URLS.en) throw error
+          nextContent = await fetchContent(NEWS_LIBRARY_DATA_URLS.en)
         }
 
         if (!cancelled) {
@@ -945,21 +995,26 @@ export default function NewsLibraryView() {
     const youtubeEmbedUrl = toYoutubeEmbedUrl(url)
     if (!youtubeEmbedUrl) return
 
-    void openSweetAlertFrame(textValue(item.title) || 'Preview', youtubeEmbedUrl, 'is-video')
+    void openSweetAlertFrame(
+      textValue(item.title) || t(`${TK}.actions.preview`),
+      youtubeEmbedUrl,
+      'is-video',
+      t(`${TK}.actions.preview`),
+    )
   }
 
   return (
-    <main className="space-y-5 px-1 py-2" aria-label="News & Library content">
+    <main className="space-y-5 px-1 py-2" aria-label={t(`${TK}.mainAria`)}>
       <div className="mx-auto flex max-w-6xl items-start justify-between gap-4">
         <header className="max-w-2xl">
           <h1
             id="news-library-title"
             className="text-2xl font-black leading-tight text-nexoraText"
           >
-            News & Library
+            {t(`${TK}.title`)}
           </h1>
           <p className="mt-2 text-sm font-medium leading-relaxed text-nexoraMuted">
-            Keep NEXORA TOUCH news and Zoom schedules in one owner workspace.
+            {t(`${TK}.description`)}
           </p>
         </header>
       </div>
@@ -971,10 +1026,11 @@ export default function NewsLibraryView() {
         <div
           className="grid grid-cols-3 gap-1 sm:flex sm:flex-wrap"
           role="tablist"
-          aria-label="News and library sections"
+          aria-label={t(`${TK}.tablistAria`)}
         >
-          {TABS.map(({ id, label, Icon }, index) => {
+          {TABS.map(({ id, labelKey, Icon }, index) => {
             const isActive = id === activeTab
+            const label = t(`${TK}.${labelKey}`)
             return (
               <button
                 key={id}
@@ -1038,7 +1094,7 @@ export default function NewsLibraryView() {
                   status={status}
                   content={content}
                   onDetails={(title, html) => {
-                    void openSweetAlertDetails(title, html)
+                    void openSweetAlertDetails(title, html, t(`${TK}.actions.details`))
                   }}
                 />
               )}

@@ -1,5 +1,9 @@
 import { fireEvent, render, screen, waitFor } from '@testing-library/react'
 
+import {
+  NEWS_LIBRARY_DATA_URLS,
+  getNewsLibraryDataUrl,
+} from '../../../constants/newsLibrary'
 import NewsLibraryView from './NewsLibraryView'
 
 describe('NewsLibraryView', () => {
@@ -12,6 +16,12 @@ describe('NewsLibraryView', () => {
 
   afterEach(() => {
     vi.unstubAllGlobals()
+  })
+
+  it('resolves the News Library JSON data source from shared config', () => {
+    expect(getNewsLibraryDataUrl('vi')).toBe(NEWS_LIBRARY_DATA_URLS.vi)
+    expect(getNewsLibraryDataUrl('en')).toBe(NEWS_LIBRARY_DATA_URLS.en)
+    expect(getNewsLibraryDataUrl('fr')).toBe(NEWS_LIBRARY_DATA_URLS.en)
   })
 
   it('renders the requested page title and description', () => {
@@ -70,7 +80,7 @@ describe('NewsLibraryView', () => {
 
     await waitFor(() => {
       expect(fetchMock).toHaveBeenCalledWith(
-        'https://raw.githubusercontent.com/vlink-group/VlinkPay/main/news-library/nexora-news-library-data.json',
+        NEWS_LIBRARY_DATA_URLS.en,
         expect.objectContaining({ cache: 'no-store' }),
       )
     })
@@ -90,10 +100,141 @@ describe('NewsLibraryView', () => {
 
     await waitFor(() => {
       expect(fetchMock).toHaveBeenCalledWith(
-        'https://raw.githubusercontent.com/vlink-group/VlinkPay/main/news-library/nexora-news-library-data-vi.json',
+        NEWS_LIBRARY_DATA_URLS.vi,
         expect.objectContaining({ cache: 'no-store' }),
       )
     })
+  })
+
+  it('renders News Library static UI copy in Vietnamese', async () => {
+    localStorage.setItem('nexora_lang', 'vi')
+    vi.stubGlobal(
+      'fetch',
+      vi.fn(() =>
+        Promise.resolve({
+          ok: true,
+          json: () =>
+            Promise.resolve({
+              featuredVideos: [
+                {
+                  title: 'Video giới thiệu',
+                  description: 'Nội dung video',
+                  url: 'https://www.youtube.com/watch?v=abc123XYZ_0',
+                },
+              ],
+              channelVideos: [
+                {
+                  title: 'Tài liệu PDF',
+                  description: 'Tải tài liệu',
+                  url: 'https://cdn.example.com/library/news.pdf',
+                },
+              ],
+              planTopics: [
+                {
+                  title: 'Tổng quan hoa hồng',
+                  description: 'Tài liệu PDF',
+                  url: 'https://cdn.example.com/library/plan.pdf',
+                },
+              ],
+              upcomingSessions: [
+                {
+                  day: 'T2',
+                  date: '12',
+                  time: '10:00',
+                  type: 'Zoom',
+                  title: 'Đào tạo chủ tiệm',
+                  description: 'Buổi hướng dẫn live',
+                  link: 'https://zoom.example.com/join',
+                  htmlContent: '<p>Chi tiết</p>',
+                },
+              ],
+            }),
+        }),
+      ),
+    )
+
+    render(<NewsLibraryView />)
+
+    expect(document.title).toBe('NEXORA TOUCH - Tin tức & Thư viện')
+    expect(
+      screen.getByRole('main', { name: 'Nội dung Tin tức & Thư viện' }),
+    ).toBeInTheDocument()
+    expect(
+      await screen.findByRole('heading', { name: 'Tin tức & Thư viện' }),
+    ).toBeInTheDocument()
+    expect(
+      screen.getByText(
+        'Cập nhật tin tức NEXORA TOUCH và lịch Zoom trong một không gian dành cho chủ tiệm.',
+      ),
+    ).toBeInTheDocument()
+    expect(screen.getByRole('tab', { name: /tin tức/i })).toBeInTheDocument()
+    expect(
+      screen.getByRole('tab', { name: /lịch sự kiện & zoom/i }),
+    ).toBeInTheDocument()
+    expect(
+      screen.getByRole('tab', { name: /kế hoạch thưởng/i }),
+    ).toBeInTheDocument()
+    expect(screen.getByRole('heading', { name: 'Video nổi bật' })).toBeInTheDocument()
+    expect(screen.getByText('Xem')).toBeInTheDocument()
+    expect(screen.getByText('Mở PDF')).toBeInTheDocument()
+
+    fireEvent.click(screen.getByRole('tab', { name: /kế hoạch thưởng/i }))
+    expect(screen.getByRole('heading', { name: 'Chủ đề chính' })).toBeInTheDocument()
+
+    fireEvent.click(screen.getByRole('tab', { name: /lịch sự kiện & zoom/i }))
+    expect(
+      screen.getByRole('heading', { name: 'Các buổi Zoom sắp tới' }),
+    ).toBeInTheDocument()
+    expect(screen.getByText('Tham gia')).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: /chi tiết/i })).toBeInTheDocument()
+  })
+
+  it('shows only duration metadata on video media cards', async () => {
+    vi.stubGlobal(
+      'fetch',
+      vi.fn(() =>
+        Promise.resolve({
+          ok: true,
+          json: () =>
+            Promise.resolve({
+              featuredVideos: [
+                {
+                  badge: 'FEATURED',
+                  duration: '4:08',
+                  timeAgo: '2 days ago',
+                  views: '4 views',
+                  title: 'Owner welcome',
+                  description: 'Intro video',
+                  url: 'https://www.youtube.com/watch?v=abc123XYZ_0',
+                },
+              ],
+              channelVideos: [
+                {
+                  duration: '5:12',
+                  timeAgo: 'Yesterday',
+                  views: '20 views',
+                  title: 'Training replay',
+                  description: 'Replay video',
+                  url: 'https://www.youtube.com/watch?v=def456XYZ_0',
+                },
+              ],
+            }),
+        }),
+      ),
+    )
+
+    render(<NewsLibraryView />)
+
+    expect(await screen.findByText('4:08')).toBeInTheDocument()
+    const featureDuration = screen.getByLabelText('Duration 4:08')
+    expect(featureDuration).toBeInTheDocument()
+    expect(featureDuration.querySelector('.lucide-clock')).toBeInTheDocument()
+    expect(screen.getByLabelText('Duration 5:12')).toBeInTheDocument()
+    expect(screen.queryByText('FEATURED')).not.toBeInTheDocument()
+    expect(screen.queryByText('2 days ago')).not.toBeInTheDocument()
+    expect(screen.queryByText('4 views')).not.toBeInTheDocument()
+    expect(screen.queryByText('Yesterday')).not.toBeInTheDocument()
+    expect(screen.queryByText('20 views')).not.toBeInTheDocument()
   })
 
   it('opens event details with Swal.fire', async () => {
