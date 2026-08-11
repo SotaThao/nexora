@@ -45,7 +45,7 @@ export function useRegisterForm({ ssoEmail, onBackToLogin, onRegisterSuccess, on
     setConfirmEmail(email)
   }, [email])
   const [password, setPassword] = useState(resumePassword || '')
-  const [showPassword, setShowPassword] = useState(false)
+  const [showPassword, setShowPassword] = useState(true)
   const [referralCode, setReferralCode] = useState(initialRefCode)
   const [leg, setLeg] = useState(initialLeg)
   const [nickname, setNickname] = useState('')
