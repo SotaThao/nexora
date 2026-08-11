@@ -694,11 +694,11 @@ function TopicCard({
   onPdfPreview: OpenPdfPreview
   onVideoPreview: OpenVideoPreview
 }) {
-  const url = safeExternalUrl(item.url)
+  const url = safeExternalUrl(item.url || item.link)
   return (
     <CardLink
       item={item}
-      className="grid grid-cols-[2.375rem_minmax(0,1fr)] gap-3 p-3.5"
+      className="grid grid-cols-[2.375rem_minmax(0,1fr)] gap-3 p-3.5 sm:grid-cols-[2.375rem_minmax(0,1fr)_auto] sm:items-center"
       onPdfPreview={onPdfPreview}
       onVideoPreview={onVideoPreview}
     >
@@ -713,6 +713,11 @@ function TopicCard({
           </p>
         )}
       </div>
+      {url && (
+        <div className="col-start-2 sm:col-auto sm:justify-self-end">
+          <ActionPill url={url} />
+        </div>
+      )}
     </CardLink>
   )
 }
