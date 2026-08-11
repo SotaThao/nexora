@@ -61,6 +61,8 @@ import SmsBuyCreditsModal from './smsCampaigns/SmsBuyCreditsModal'
 import VoiceBuyCreditsModal from './voiceCredits/VoiceBuyCreditsModal'
 import PlanPaymentModal from './plans/PlanPaymentModal'
 import PackageHistoryPanel from './plans/PackageHistoryPanel'
+import CompleteStoreSetupGateModal from '../modals/CompleteStoreSetupGateModal'
+import { useStoreSetupPurchaseGate } from '../../../data/hooks/useStoreSetupPurchaseGate'
 import {
   PAID_SERVICE_PLAN_ORDER,
   PAID_SERVICE_PLAN_TITLE_KEY,
@@ -566,6 +568,11 @@ export default function BookingPlansPanel({ buyOnlyMode = false }: { buyOnlyMode
   const [checkoutSelection, setCheckoutSelection] = useState<VoiceAiCheckoutSelection | null>(null)
   const [plansView, setPlansView] = useState<PlansView>(PlansView.Package)
   const effectivePlansView = buyOnlyMode ? PlansView.Package : plansView
+  const {
+    requireSetup,
+    gateOpen: storeSetupGateOpen,
+    closeGate: closeStoreSetupGate,
+  } = useStoreSetupPurchaseGate()
 
   const {
     data: voicePackages = [],
@@ -653,12 +660,14 @@ export default function BookingPlansPanel({ buyOnlyMode = false }: { buyOnlyMode
       showToast(t(`${TK}.planPackageUnavailable`), 'error')
       return
     }
-    setCheckoutSelection({
-      planId: plan,
-      packageId: pkg.id,
-      packageCode: pkg.packageCode,
-      name: pkg.name || plan,
-      price: pkg.price ?? SERVICE_PLAN_MONTHLY_PRICE[plan],
+    requireSetup(() => {
+      setCheckoutSelection({
+        planId: plan,
+        packageId: pkg.id,
+        packageCode: pkg.packageCode,
+        name: pkg.name || plan,
+        price: pkg.price ?? SERVICE_PLAN_MONTHLY_PRICE[plan],
+      })
     })
   }
 
@@ -951,6 +960,10 @@ export default function BookingPlansPanel({ buyOnlyMode = false }: { buyOnlyMode
           onSuccess={handlePlanPaymentSuccess}
         />
       </div>
+      <CompleteStoreSetupGateModal
+        open={storeSetupGateOpen}
+        onClose={closeStoreSetupGate}
+      />
     </>
   )
 }

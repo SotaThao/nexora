@@ -10646,6 +10646,28 @@ body.booking-appointment-panel-modal-open {
   gap: 8px;
 }
 
+/* Package Management / TipPlatform checkout — same icon sizing outside Booking Hub. */
+:is(#nx-campaign-root, .nx-campaign-root) .marketing-icon {
+  width: 18px;
+  height: 18px;
+  flex: 0 0 18px;
+  display: block;
+  stroke-width: 2;
+}
+
+:is(#nx-campaign-root, .nx-campaign-root) .marketing-icon.is-compact {
+  width: 16px;
+  height: 16px;
+  flex-basis: 16px;
+}
+
+:is(#nx-campaign-root, .nx-campaign-root) .sms-credit-card-method-icon.marketing-icon {
+  width: 28px;
+  height: 28px;
+  flex-basis: 28px;
+  box-sizing: border-box;
+}
+
 .booking-hub-view .panel-sms-campaigns {
   --cyan: #0891b2;
   --green: var(--nexora-success);
