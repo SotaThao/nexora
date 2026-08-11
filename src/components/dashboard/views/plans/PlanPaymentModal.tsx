@@ -9,6 +9,7 @@ import {
 } from '../../../../data/hooks/useSubscriptionPayments'
 import { resolveSubscriptionBillingDefaults } from '../../../../utils/subscriptionBillingDefaults'
 import { resolveTranslatedApiError } from '../../../../utils/resolveTranslatedApiError'
+import { formatCurrentPlanLabel, getVoiceAiSubscription } from '../../../../utils/subscriptionDisplay'
 import { Loader2 } from 'lucide-react'
 import { useTranslation } from '../../../../contexts/LanguageContext'
 import { useNotification } from '../../../../contexts/NotificationContext'
@@ -21,7 +22,11 @@ import SubscriptionCardPaymentForm, {
   type SubscriptionBillingDetails,
   type SubscriptionCardPaymentFormHandle,
 } from '../../modals/SubscriptionCardPaymentForm'
-import { subscriptionModalKey, tryBeginOrderStatusPolling } from '../../modals/subscriptionPaymentConstants'
+import {
+  SUBSCRIPTION_PAYMENT_MODAL_TK,
+  subscriptionModalKey,
+  tryBeginOrderStatusPolling,
+} from '../../modals/subscriptionPaymentConstants'
 import {
   CloseIcon,
   CreditCardIcon,
@@ -115,6 +120,7 @@ export default function PlanPaymentModal({
     () => resolveSubscriptionBillingDefaults(billingDefaults, profile),
     [billingDefaults, profile],
   )
+  const currentPlanLabel = formatCurrentPlanLabel(getVoiceAiSubscription(profile))
   const isCardPayment = isPlanCardPaymentSymbol(selectedSymbol)
   const { hasSetup, isLoading: isSetupLoading, isResolved: isSetupResolved } = useHasStoreSetup({
     enabled: isOpen,
@@ -456,6 +462,11 @@ export default function PlanPaymentModal({
                     {formatPlanMonthlyTotal(selection.price, t(`${TK}.perMonth`))}
                   </strong>
                 </div>
+                {currentPlanLabel ? (
+                  <p className="mt-3 text-xs font-semibold text-red-600">
+                    {t(`${SUBSCRIPTION_PAYMENT_MODAL_TK}.subscription_forfeit_warning`, { plan: currentPlanLabel })}
+                  </p>
+                ) : null}
               </section>
 
               <div className="sr-only" aria-live="polite">

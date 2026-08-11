@@ -1172,6 +1172,7 @@ export function SubscriptionsRoute() {
         selectedPackage={selectedPackage}
         paymentPlanPrice={paymentPlanPrice}
         billingCycle={checkoutBillingCycle}
+        currentSubscription={tipPlatformSubscription}
         onClose={clearCheckout}
       />
     </>

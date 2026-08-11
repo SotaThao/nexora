@@ -14,11 +14,13 @@ import {
 } from '../../../data/hooks/useSubscriptionPayments'
 import { resolveTranslatedApiError } from '../../../utils/resolveTranslatedApiError'
 import { resolveSubscriptionBillingDefaults } from '../../../utils/subscriptionBillingDefaults'
+import { formatCurrentPlanLabel } from '../../../utils/subscriptionDisplay'
 import {
   SubscriptionBillingCycle,
   type PurchasableSubscriptionPlan,
   type SubscriptionPaymentMethod,
 } from '../../../data/repositories/subscriptionPayments'
+import type { UserSubscription } from '../../../types/domain'
 import { formatCurrency } from '../utils'
 import { hasEnoughWalletBalance } from '../views/plans/constants'
 import { getErrorI18nKey } from '../../../data/errorCodes'
@@ -49,6 +51,7 @@ type Props = {
   packageId: string
   price: number
   billingCycle?: SubscriptionBillingCycle
+  currentSubscription?: UserSubscription | null
   billingDefaults?: SubscriptionBillingDetails
   onClose: () => void
   onSuccess?: () => void
@@ -60,6 +63,7 @@ export default function SubscriptionPaymentModal({
   packageId,
   price,
   billingCycle,
+  currentSubscription,
   billingDefaults,
   onClose,
   onSuccess,
@@ -162,6 +166,7 @@ export default function SubscriptionPaymentModal({
   const isCardTab = paymentTab === SubscriptionPaymentTab.Card
   const modalKey = (suffix: string) => `${SUBSCRIPTION_PAYMENT_MODAL_TK}.${suffix}`
   const planNameKey = `manage_plan.plans.${PURCHASABLE_PLAN_I18N_ID[plan]}.name`
+  const currentPlanLabel = formatCurrentPlanLabel(currentSubscription)
 
   const handleWalletConfirm = () => {
     if (!selectedSymbol) return
@@ -384,6 +389,11 @@ export default function SubscriptionPaymentModal({
               </span>
             </span>
           </div>
+          {currentPlanLabel ? (
+            <p className="mt-3 text-xs font-semibold text-red-600">
+              {t(modalKey('subscription_forfeit_warning'), { plan: currentPlanLabel })}
+            </p>
+          ) : null}
         </div>
 
         {isCardTab ? (

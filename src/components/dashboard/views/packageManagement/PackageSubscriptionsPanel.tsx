@@ -120,6 +120,7 @@ export default function PackageSubscriptionsPanel({
         selectedPackage={selectedPackage}
         paymentPlanPrice={paymentPlanPrice}
         billingCycle={checkoutBillingCycle}
+        currentSubscription={tipPlatformSubscription}
         onClose={clearCheckout}
       />
     </>
