@@ -15,7 +15,7 @@ interface BankWireAccountFormProps {
 }
 
 const fieldClass =
-  'h-8 w-full rounded-lg border border-slate-200 bg-white px-3 text-sm text-slate-800 outline-none transition focus:border-nexoraBrand focus:ring-2 focus:ring-nexoraBrand/20 disabled:bg-slate-100 disabled:text-slate-400 disabled:cursor-not-allowed'
+  'mt-auto h-8 w-full rounded-lg border border-slate-200 bg-white px-3 text-sm text-slate-800 outline-none transition focus:border-nexoraBrand focus:ring-2 focus:ring-nexoraBrand/20 disabled:bg-slate-100 disabled:text-slate-400 disabled:cursor-not-allowed'
 
 export default function BankWireAccountForm({
   value,
@@ -40,8 +40,13 @@ export default function BankWireAccountForm({
     }
   }
 
-  const renderInput = (field: keyof BankWireAccountDetails, labelKey: string, placeholderKey?: string) => (
-    <div>
+  const renderInput = (
+    field: keyof BankWireAccountDetails,
+    labelKey: string,
+    placeholderKey?: string,
+    containerClass = '',
+  ) => (
+    <div className={`flex min-w-0 flex-col ${containerClass}`}>
       <label className="mb-1.5 block text-xs font-bold text-slate-600">
         {t(labelKey)} <span className="text-rose-500">*</span>
       </label>
@@ -57,23 +62,26 @@ export default function BankWireAccountForm({
   )
 
   return (
-    <div className="space-y-3">
+    <div data-testid="bank-wire-account-form" className="grid grid-cols-2 gap-x-3 gap-y-2.5">
       {renderInput('beneficiaryName', 'components.payout.bankWireForm.beneficiaryName')}
       {renderInput('bankName', 'components.payout.bankWireForm.bankName')}
       {renderInput('routingNumber', 'components.payout.bankWireForm.routingNumber')}
       {renderInput('accountNumber', 'components.payout.bankWireForm.accountNumber')}
-      {renderInput('bankAddress', 'components.payout.bankWireForm.bankAddress')}
-
-      <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-        {renderInput('city', 'components.payout.bankWireForm.city')}
-        {renderInput('state', 'components.payout.bankWireForm.state')}
-      </div>
-
-      <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-        {renderInput('zipCode', 'components.payout.bankWireForm.zipCode')}
-        {renderInput('country', 'components.payout.bankWireForm.country', 'components.payout.bankWireForm.selectCountry')}
-      </div>
-      {error && <p className="text-[10px] font-bold text-rose-500">{error}</p>}
+      {renderInput(
+        'bankAddress',
+        'components.payout.bankWireForm.bankAddress',
+        undefined,
+        'col-span-2',
+      )}
+      {renderInput('city', 'components.payout.bankWireForm.city')}
+      {renderInput('state', 'components.payout.bankWireForm.state')}
+      {renderInput('zipCode', 'components.payout.bankWireForm.zipCode')}
+      {renderInput(
+        'country',
+        'components.payout.bankWireForm.country',
+        'components.payout.bankWireForm.selectCountry',
+      )}
+      {error && <p className="col-span-2 text-[10px] font-bold text-rose-500">{error}</p>}
     </div>
   )
 }

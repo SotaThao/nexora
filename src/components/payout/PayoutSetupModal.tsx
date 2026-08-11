@@ -53,7 +53,6 @@ function PayoutSetupModal({
   const [qrCode, setQrCode] = useState(initialQrCode || '')
   const [qrFile, setQrFile] = useState(null)
   const [accountName, setAccountName] = useState(initialAccountName || staffName || '')
-  const [isCapturing, setIsCapturing] = useState(false)
   const [isCameraOpen, setIsCameraOpen] = useState(false)
   const [error, setError] = useState('')
   const [accountNameError, setAccountNameError] = useState('')
@@ -101,6 +100,7 @@ function PayoutSetupModal({
     vlinkpay: 'VLINKPAY Wallet',
     crypto: 'Crypto Wallet'
   }
+  const walletName = String(walletNames[walletKey] || walletKey)
 
   const walletFields = {
     zelle: t('components.dashboard.modals.PayoutSetupModal.fieldEmailPhone'),
@@ -126,7 +126,7 @@ function PayoutSetupModal({
   const accountIdentifierLabel = t(
     'components.dashboard.modals.PayoutSetupModal.accountIdentifierForMethod',
     {
-      wallet: walletNames[walletKey]?.toUpperCase() || walletKey.toUpperCase(),
+      wallet: walletName.toUpperCase(),
       field: String(walletFields[walletKey] || '').toUpperCase(),
     },
   )
@@ -252,7 +252,7 @@ function PayoutSetupModal({
           {isBankWire
             ? t('components.payout.bankWireForm.title')
             : t('components.dashboard.modals.PayoutSetupModal.walletAccountTitle', {
-                wallet: walletNames[walletKey]?.toUpperCase(),
+                wallet: walletName.toUpperCase(),
               })}
         </h3>
         <p className="text-[10px] font-medium text-slate-400">
@@ -319,7 +319,8 @@ function PayoutSetupModal({
                     type="button"
                     onClick={handleClearQr}
                     className="absolute right-2 top-2 rounded-full p-1 text-slate-400 transition hover:bg-slate-100 hover:text-slate-600"
-                    title="Remove image"
+                    aria-label={t('common.delete')}
+                    title={t('common.delete')}
                   >
                     <X className="h-4 w-4" />
                   </button>
@@ -338,7 +339,7 @@ function PayoutSetupModal({
                 </div>
               </div>
             ) : readOnly ? (
-              <div className="flex h-24 w-full flex-col items-center justify-center rounded-xl border border-slate-150 bg-slate-50 text-xs font-semibold text-slate-400">
+              <div className="flex h-24 w-full flex-col items-center justify-center rounded-xl border border-slate-200 bg-slate-50 text-xs font-semibold text-slate-400">
                 {t('components.dashboard.modals.PayoutSetupModal.noQrCodeUploaded')}
               </div>
             ) : (
@@ -346,8 +347,7 @@ function PayoutSetupModal({
                 <button
                   type="button"
                   onClick={handleTakePhoto}
-                  disabled={isCapturing}
-                  className="flex flex-col items-center justify-center gap-1.5 rounded-xl border border-dashed border-slate-200 bg-slate-50 py-5 transition hover:border-nexoraBrand hover:bg-slate-50/50 disabled:opacity-60"
+                  className="flex flex-col items-center justify-center gap-1.5 rounded-xl border border-dashed border-slate-200 bg-slate-50 py-5 transition hover:border-nexoraBrand hover:bg-slate-50/50"
                 >
                   <Camera className="h-5 w-5 text-nexoraBrand" />
                   <span className="text-[11px] font-bold text-slate-600">{t('setup.take_photo')}</span>
@@ -412,13 +412,15 @@ function PayoutSetupModal({
     </div>
   )
 
-  const panelClass = `relative w-full overflow-hidden rounded-3xl border border-slate-100 bg-white shadow-2xl animate-scaleUp ${
-    isCameraOpen ? 'h-[480px] max-w-sm' : `space-y-4.5 p-6 ${isBankWire ? 'max-w-md' : 'max-w-sm'}`
+  const panelClass = `relative w-full max-h-[calc(100dvh-1rem)] rounded-3xl border border-slate-100 bg-white shadow-2xl animate-scaleUp ${
+    isCameraOpen
+      ? 'h-[min(480px,calc(100dvh-1rem))] max-w-sm overflow-hidden'
+      : `overflow-x-hidden overflow-y-auto space-y-3 p-4 sm:space-y-4.5 sm:p-6 ${isBankWire ? 'max-w-md' : 'max-w-sm'}`
   }`
 
   const overlayClass = lockBackground
-    ? 'fixed inset-0 z-[100] flex h-dvh items-center justify-center overflow-hidden bg-slate-900/60 modal-overlay-safe text-left backdrop-blur-sm'
-    : 'fixed inset-0 z-[60] flex items-center justify-center bg-slate-900/60 modal-overlay-safe text-left backdrop-blur-sm'
+    ? 'fixed inset-0 z-[100] flex h-dvh items-center justify-center overflow-hidden bg-slate-900/60 p-2 modal-overlay-safe text-left backdrop-blur-sm sm:p-4'
+    : 'fixed inset-0 z-[60] flex h-dvh items-center justify-center overflow-hidden bg-slate-900/60 p-2 modal-overlay-safe text-left backdrop-blur-sm sm:p-4'
 
   const modal = (
     <div className={overlayClass}>
