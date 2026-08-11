@@ -139,7 +139,7 @@ describe('NewsLibraryView', () => {
     })
   })
 
-  it('opens PDF media in the existing PDF preview modal', async () => {
+  it('opens PDF media in the full document preview modal', async () => {
     const pdfBlob = new Blob(['%PDF-1.4'], { type: 'application/pdf' })
     const createObjectURL = vi.fn(() => 'blob:http://localhost/owner-guide')
     const revokeObjectURL = vi.fn()
@@ -180,11 +180,17 @@ describe('NewsLibraryView', () => {
     render(<NewsLibraryView />)
     fireEvent.click(await screen.findByRole('button', { name: /owner guide/i }))
 
-    expect(screen.getByRole('heading', { name: 'Owner guide' })).toBeInTheDocument()
-    expect(
-      await screen.findByRole('heading', { name: 'owner-guide.pdf' }),
-    ).toBeInTheDocument()
-    expect(createObjectURL).not.toHaveBeenCalled()
+    expect(screen.getAllByRole('heading', { name: 'Owner guide' })).toHaveLength(2)
+    await waitFor(() => {
+      expect(screen.queryByText('owner-guide.pdf')).not.toBeInTheDocument()
+    })
+    await waitFor(() => {
+      expect(createObjectURL).toHaveBeenCalledWith(pdfBlob)
+      expect(screen.getByTitle('owner-guide.pdf')).toHaveAttribute(
+        'src',
+        'blob:http://localhost/owner-guide',
+      )
+    })
     expect(
       screen.getByRole('link', { name: /open pdf/i }),
     ).toHaveAttribute('href', 'https://cdn.example.com/library/owner-guide.pdf')
