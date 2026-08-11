@@ -1,0 +1,116 @@
+import type { ReactNode } from 'react'
+import { createPortal } from 'react-dom'
+import { X } from 'lucide-react'
+import { useTranslation } from '../../contexts/LanguageContext'
+import {
+  getPaymentMethodDisplayName,
+  payoutTypeToUiKey,
+} from '../../data/paymentMethodTypes'
+import type { PaymentMethodDto } from '../../types/domain'
+import { formatPaymentMethodAccountDisplay } from './bankWireAccount'
+
+interface PayoutMethodDetailModalProps {
+  method: PaymentMethodDto | null
+  logo?: ReactNode
+  onClose: () => void
+}
+
+export default function PayoutMethodDetailModal({
+  method,
+  logo,
+  onClose,
+}: PayoutMethodDetailModalProps) {
+  const { t } = useTranslation()
+
+  if (!method || typeof document === 'undefined') return null
+
+  const uiKey = method.uiKey || payoutTypeToUiKey(method.type || '')
+  const label = method.name || getPaymentMethodDisplayName(method.type || '')
+  const accountDisplay = formatPaymentMethodAccountDisplay(uiKey, method.accountInfo)
+  const hasAccountInfo = Boolean(accountDisplay?.trim())
+  const hasAccountName = Boolean(method.accountName?.trim())
+  const dialogTitleId = 'payout-method-detail-title'
+
+  return createPortal(
+    <div className="fixed inset-0 z-[100] flex items-center justify-center bg-slate-950/70 p-4 backdrop-blur-sm">
+      <div
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby={dialogTitleId}
+        className="max-h-[calc(100dvh-1rem)] w-full max-w-[340px] overflow-hidden rounded-2xl border border-white/80 bg-white text-center shadow-2xl animate-scaleIn"
+      >
+        <div className="relative px-4 pb-4 pt-4">
+          <button
+            type="button"
+            onClick={onClose}
+            aria-label={t('common.close')}
+            className="absolute right-2 top-2 rounded-full p-1 text-slate-400 transition hover:bg-slate-100 hover:text-slate-600"
+          >
+            <X className="h-4 w-4" />
+          </button>
+
+          <div className="mx-auto flex h-10 w-10 items-center justify-center rounded-xl border border-nexoraBorder bg-nexoraCanvas">
+            {logo}
+          </div>
+          <h3 id={dialogTitleId} className="mt-2 text-xl font-black leading-tight text-nexoraText">
+            {label}
+          </h3>
+          <p className="mt-0.5 text-[10px] font-extrabold uppercase tracking-wide text-nexoraMuted">
+            {t('components.settings.tabs.ProfileTab.customerPaymentDetails')}
+          </p>
+
+          <div className="mt-3">
+            <div className="mb-2 text-[10px] font-extrabold uppercase tracking-wide text-nexoraMuted">
+              {t('components.settings.tabs.ProfileTab.scanToPay')}
+            </div>
+            {method.imageUrl ? (
+              <div className="mx-auto flex h-44 w-44 items-center justify-center rounded-xl border border-slate-200 bg-white p-2.5 shadow-sm">
+                <img
+                  src={method.imageUrl}
+                  alt={`${label} QR code`}
+                  className="h-full w-full rounded-lg object-contain"
+                />
+              </div>
+            ) : (
+              <div className="rounded-xl border border-dashed border-slate-200 bg-slate-50 px-4 py-6 text-xs font-semibold text-nexoraMuted">
+                {t('components.settings.tabs.ProfileTab.noQrCode')}
+              </div>
+            )}
+          </div>
+
+          <div className="mt-4 divide-y divide-slate-100 border-y border-slate-100 text-left">
+            {hasAccountName && (
+              <div className="py-2">
+                <div className="text-[9px] font-extrabold uppercase tracking-wide text-nexoraMuted">
+                  {t('components.settings.tabs.ProfileTab.payTo')}
+                </div>
+                <div className="mt-0.5 break-words text-xs font-black text-nexoraText">
+                  {method.accountName}
+                </div>
+              </div>
+            )}
+            <div className="py-2">
+              <div className="text-[9px] font-extrabold uppercase tracking-wide text-nexoraMuted">
+                {t('components.settings.tabs.ProfileTab.accountDetails')}
+              </div>
+              <div className="mt-0.5 break-words font-mono text-xs font-black text-nexoraText">
+                {hasAccountInfo
+                  ? accountDisplay
+                  : t('components.settings.tabs.ProfileTab.notConfigured')}
+              </div>
+            </div>
+          </div>
+
+          <button
+            type="button"
+            onClick={onClose}
+            className="mt-4 w-full rounded-xl bg-nexoraBrand px-4 py-2.5 text-xs font-extrabold uppercase text-white transition hover:bg-nexoraBrandDark"
+          >
+            {t('common.close')}
+          </button>
+        </div>
+      </div>
+    </div>,
+    document.body,
+  )
+}
