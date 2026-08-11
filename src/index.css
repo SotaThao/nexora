@@ -72,6 +72,108 @@ html.capacitor-native {
   margin: 0 !important;
 }
 
+.news-library-swal-popup {
+  box-sizing: border-box;
+  display: flex !important;
+  flex-direction: column;
+  gap: 12px;
+  width: min(960px, calc(100vw - 32px)) !important;
+  max-width: calc(100vw - 32px);
+  padding: 16px !important;
+  overflow: hidden;
+  border: 1px solid theme("colors.nexoraBorder");
+  border-radius: 8px;
+  background: #fff;
+  box-shadow: 0 24px 70px rgba(15, 23, 42, 0.24);
+  color: theme("colors.nexoraText");
+  font-family: Inter, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+}
+
+.news-library-swal-title {
+  margin: 0;
+  padding: 0 32px 0 0;
+  color: theme("colors.nexoraText");
+  font-size: 18px;
+  font-weight: 850;
+  line-height: 24px;
+  text-align: left;
+}
+
+.news-library-swal-close {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  display: grid;
+  width: 32px;
+  height: 32px;
+  place-items: center;
+  border: 0;
+  background: transparent;
+  color: theme("colors.nexoraMuted");
+  cursor: pointer;
+  outline: none;
+}
+
+.news-library-swal-html {
+  width: 100%;
+  margin: 0;
+  padding: 0;
+  overflow: visible;
+  text-align: left;
+}
+
+.news-library-swal-frame {
+  width: 100%;
+  aspect-ratio: 16 / 9;
+  overflow: hidden;
+  border-radius: 8px;
+  background: #0b1220;
+}
+
+.news-library-swal-frame.is-document {
+  height: min(72vh, 680px);
+  aspect-ratio: auto;
+  background: #fff;
+}
+
+.news-library-swal-frame iframe {
+  display: block;
+  width: 100%;
+  height: 100%;
+  border: 0;
+}
+
+.news-library-swal-content {
+  background: #fff;
+  padding: 18px;
+  color: theme("colors.nexoraText");
+  font-size: 14px;
+  line-height: 1.6;
+  text-align: left;
+}
+
+.news-library-swal-content img {
+  max-width: 100%;
+  height: auto;
+}
+
+.news-library-swal-popup .swal2-actions,
+.news-library-swal-popup .swal2-loader {
+  display: none !important;
+}
+
+@media (max-width: 480px) {
+  .news-library-swal-popup {
+    width: calc(100vw - 32px) !important;
+    padding: 14px !important;
+  }
+
+  .news-library-swal-title {
+    font-size: 15px;
+    line-height: 20px;
+  }
+}
+
 /* Prevent iOS WKWebView rubber-band overscroll that reveals white native background */
 html, body {
   overscroll-behavior: none;

@@ -1,6 +1,7 @@
 import { useSearchParams } from 'react-router-dom'
 import ManagePlanView from '../ManagePlanView'
 import { useTranslation } from '../../../../contexts/LanguageContext'
+import CompleteStoreSetupGateModal from '../../modals/CompleteStoreSetupGateModal'
 import {
   formatCompareCellDisplay,
   PACKAGE_MANAGEMENT_TK,
@@ -94,6 +95,8 @@ export default function PackageSubscriptionsPanel({
     paymentPlanPrice,
     clearCheckout,
     handleSelectPlan,
+    storeSetupGateOpen,
+    closeStoreSetupGate,
   } = useTipPlatformCheckoutFlow({
     profile,
     searchParams,
@@ -119,6 +122,10 @@ export default function PackageSubscriptionsPanel({
         selectedPackage={selectedPackage}
         paymentPlanPrice={paymentPlanPrice}
         onClose={clearCheckout}
+      />
+      <CompleteStoreSetupGateModal
+        open={storeSetupGateOpen}
+        onClose={closeStoreSetupGate}
       />
     </>
   )
