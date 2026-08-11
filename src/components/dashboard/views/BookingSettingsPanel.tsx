@@ -728,7 +728,7 @@ function greetingI18nKey(language: Language) {
 }
 
 function defaultGreetingI18nKey(language: Language) {
-  return language === MerchantVoiceUiLanguage.Auto ? "greetingEn" : greetingI18nKey(language)
+  return greetingI18nKey(language)
 }
 
 function translateKnownGreeting(text: string, language: Language) {
@@ -1462,6 +1462,7 @@ export default function BookingSettingsPanel() {
 
   useEffect(() => {
     if (!merchantSetupData?.reviewLinks) return;
+    setGoogleReviewUrl(merchantSetupData.reviewLinks.googleReview || "");
     setFacebookUrl(merchantSetupData.reviewLinks.facebookReview || "");
     setYelpUrl(merchantSetupData.reviewLinks.yelpReview || "");
   }, [merchantSetupData]);
@@ -3699,7 +3700,7 @@ export default function BookingSettingsPanel() {
             </div>
           </div>
           <button
-            className={`booking-secondary-button settings-preview-button settings-preview-button-hidden ${isPreviewPlaying ? "is-playing" : ""}`}
+            className={`booking-secondary-button settings-preview-button ${isPreviewPlaying ? "is-playing" : ""}`}
             type="button"
             aria-pressed={isPreviewPlaying}
             onClick={handlePreview}
