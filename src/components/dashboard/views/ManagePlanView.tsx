@@ -22,7 +22,7 @@ import { PACKAGE_MANAGEMENT_TK as PACKAGE_MGMT_TK, TipPlatformUiPlanId } from '.
 import type { TipPlatformUiPlanIdValue } from './packageManagement/constants'
 
 type PlanId = TipPlatformUiPlanIdValue
-type BillingCycle = 'monthly' | 'yearly'
+export type ManagePlanBillingCycle = 'monthly' | 'yearly'
 
 interface ManagePlanViewProps {
   /** Active TipPlatform subscription from /userprofile/me. */
@@ -33,6 +33,10 @@ interface ManagePlanViewProps {
   packages?: SubscriptionPackage[]
   /** Stretch plan cards to the content column (Package Management). */
   wide?: boolean
+  /** Controlled toggle state — pass with `onBillingCycleChange` to share it with a sibling
+   * (e.g. the Compare Plans table). Uncontrolled (own state, defaults to monthly) when omitted. */
+  billingCycle?: ManagePlanBillingCycle
+  onBillingCycleChange?: (cycle: ManagePlanBillingCycle) => void
 }
 
 interface PlanConfig {
@@ -58,6 +62,8 @@ function ManagePlanView({
   onSelectPlan,
   packages,
   wide = false,
+  billingCycle: billingCycleProp,
+  onBillingCycleChange,
 }: ManagePlanViewProps) {
   const { t, currentLanguage } = useTranslation()
   const isVietnamese = currentLanguage === 'vi'
@@ -71,7 +77,9 @@ function ManagePlanView({
     [currentSubscription],
   )
 
-  const [billingCycle, setBillingCycle] = useState<BillingCycle>('monthly')
+  const [localBillingCycle, setLocalBillingCycle] = useState<ManagePlanBillingCycle>('monthly')
+  const billingCycle = billingCycleProp ?? localBillingCycle
+  const setBillingCycle = onBillingCycleChange ?? setLocalBillingCycle
   const isYearly = billingCycle === 'yearly'
   const yearlyDiscountBadge = useMemo(() => {
     const percents = (packages ?? [])
@@ -112,6 +120,7 @@ function ManagePlanView({
               type="button"
               role="tab"
               aria-selected={!isYearly}
+              tabIndex={!isYearly ? 0 : -1}
               onClick={() => setBillingCycle('monthly')}
               className={[
                 'rounded-md px-4 py-1.5 text-xs font-bold transition-colors',
@@ -124,6 +133,7 @@ function ManagePlanView({
               type="button"
               role="tab"
               aria-selected={isYearly}
+              tabIndex={isYearly ? 0 : -1}
               onClick={() => setBillingCycle('yearly')}
               className={[
                 'flex items-center gap-1.5 rounded-md px-4 py-1.5 text-xs font-bold transition-colors',

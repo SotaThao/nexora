@@ -4607,6 +4607,7 @@
               "enterprise": "Enterprise"
             },
             "monthlyPrice": "Monthly price",
+            "yearlyPrice": "Yearly price",
             "activeStaff": "Active staff",
             "qrTipping": "QR code tipping",
             "directTips": "Direct staff tips",
@@ -5421,7 +5422,7 @@
     "billing_monthly": "Monthly",
     "billing_yearly": "Yearly",
     "yearly_coming_soon": "Yearly billing coming soon",
-    "yearly_discount_upto": "Up to -{{percent}}%",
+    "yearly_discount_upto": "Up to {{percent}}%",
     "plans": {
       "lite": {
         "name": "Lite Pack (Free)",

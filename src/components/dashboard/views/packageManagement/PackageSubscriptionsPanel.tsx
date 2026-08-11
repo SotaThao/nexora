@@ -1,7 +1,10 @@
+import { useMemo, useState } from 'react'
 import { useSearchParams } from 'react-router-dom'
-import ManagePlanView from '../ManagePlanView'
+import ManagePlanView, { type ManagePlanBillingCycle } from '../ManagePlanView'
 import { useTranslation } from '../../../../contexts/LanguageContext'
+import type { SubscriptionPackage } from '../../../../data/repositories/subscriptionPayments'
 import {
+  CompareCellToken,
   formatCompareCellDisplay,
   PACKAGE_MANAGEMENT_TK,
   TIP_PLATFORM_COMPARE_PLAN_IDS,
@@ -17,12 +20,40 @@ type PackageSubscriptionsPanelProps = {
   profile: LooseObject | null | undefined
 }
 
+/** Live price for the compare table's price row — falls back to the static marketing copy
+ * when the catalog hasn't loaded yet or this tier has no yearly price. */
+function resolveComparePrice(
+  packages: SubscriptionPackage[] | undefined,
+  packageCode: string,
+  isYearly: boolean,
+  fallback: string,
+): string {
+  const pkg = packages?.find((p) => (p.packageCode ?? '').toLowerCase() === packageCode)
+  const price = isYearly ? pkg?.yearlyPrice : pkg?.price
+  return price != null ? `$${price}` : fallback
+}
+
 function PlanComparisonTable({
   currentPlanId,
+  packages,
+  isYearly,
 }: {
   currentPlanId?: TipPlatformComparePlanId | null
+  packages?: SubscriptionPackage[]
+  isYearly: boolean
 }) {
   const { t } = useTranslation()
+
+  const rows = useMemo(() => {
+    const [priceRow, ...restRows] = TIP_PLATFORM_COMPARE_ROWS
+    const livePriceRow = {
+      ...priceRow,
+      featureKey: isYearly ? 'compare.yearlyPrice' : 'compare.monthlyPrice',
+      starter: resolveComparePrice(packages, 'starter', isYearly, CompareCellToken.PriceStarter),
+      pro: resolveComparePrice(packages, 'pro', isYearly, CompareCellToken.PricePro),
+    }
+    return [livePriceRow, ...restRows]
+  }, [packages, isYearly])
 
   return (
     <section className="nexora-compare-section" aria-labelledby="nexora-compare-title">
@@ -51,7 +82,7 @@ function PlanComparisonTable({
             </tr>
           </thead>
           <tbody>
-            {TIP_PLATFORM_COMPARE_ROWS.map((row) => (
+            {rows.map((row) => (
               <tr key={row.featureKey}>
                 <th scope="row">{t(`${TK}.${row.featureKey}`)}</th>
                 {TIP_PLATFORM_COMPARE_PLAN_IDS.map((planId) => {
@@ -84,6 +115,7 @@ export default function PackageSubscriptionsPanel({
   profile,
 }: PackageSubscriptionsPanelProps) {
   const [searchParams, setSearchParams] = useSearchParams()
+  const [billingCycle, setBillingCycle] = useState<ManagePlanBillingCycle>('monthly')
 
   const {
     tipPlatformSubscription,
@@ -110,9 +142,15 @@ export default function PackageSubscriptionsPanel({
           currentSubscription={tipPlatformSubscription}
           packages={packages}
           onSelectPlan={handleSelectPlan}
+          billingCycle={billingCycle}
+          onBillingCycleChange={setBillingCycle}
           wide
         />
-        <PlanComparisonTable currentPlanId={comparePlanId} />
+        <PlanComparisonTable
+          currentPlanId={comparePlanId}
+          packages={packages}
+          isYearly={billingCycle === 'yearly'}
+        />
       </div>
 
       <TipPlatformCheckoutModal

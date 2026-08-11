@@ -4607,6 +4607,7 @@
               "enterprise": "Enterprise"
             },
             "monthlyPrice": "Giá tháng",
+            "yearlyPrice": "Giá năm",
             "activeStaff": "Nhân viên đang hoạt động",
             "qrTipping": "Tip qua mã QR",
             "directTips": "Tip trực tiếp nhân viên",
