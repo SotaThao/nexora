@@ -739,7 +739,7 @@ function EventCard({
         </span>
       </span>
       <div>
-        <MetaLine parts={[item.time, item.type]} />
+        <MetaLine parts={[item.time]} />
         <h3 className="text-sm font-black leading-snug text-nexoraText">{textValue(item.title)}</h3>
         {item.description && (
           <p className="mt-1 text-xs font-medium leading-relaxed text-nexoraMuted">
