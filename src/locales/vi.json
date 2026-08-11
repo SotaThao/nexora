@@ -4812,8 +4812,8 @@
           "payoutMethodsTab": "Phương thức nhận tiền",
           "paymentQrTab": "QR Thanh toán",
           "tipQrTab": "QR Thanh toán",
-          "view": "View",
-          "payoutAccount": "Edit",
+          "view": "Xem",
+          "payoutAccount": "Sửa",
           "customerPaymentDetails": "Thông tin thanh toán",
           "scanToPay": "Quét để thanh toán",
           "payTo": "Tên chủ tài khoản",
@@ -5029,8 +5029,8 @@
           "openTippingPageSimulate": "Mở trang tip (Giả lập khách) ›"
         },
         "StaffPay": {
-          "editAccount": "Edit",
-          "view": "View"
+          "editAccount": "Sửa",
+          "view": "Xem"
         },
         "StaffProfile": {
           "accountChangesSavedSuccessfully": "Đã lưu thay đổi tài khoản!",
