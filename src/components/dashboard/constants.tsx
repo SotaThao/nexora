@@ -329,6 +329,7 @@ export const MERCHANT_SIDEBAR_HIDDEN_MENU_IDS: DashboardMenuId[] = [
   // Hidden for this go-live — users don't need to discover Tax IQ yet. Routes/data are
   // untouched, only the sidebar/mobile-drawer entry is hidden (same as Tips/Reports above).
   DASHBOARD_MENU_ID.taxiq,
+  DASHBOARD_MENU_ID.packageManagement,
 ];
 
 /** Temporarily hide Hardware Devices submenu/tab until the feature is ready. */
