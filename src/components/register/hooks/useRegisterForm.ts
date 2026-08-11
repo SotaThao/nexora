@@ -39,6 +39,11 @@ export function useRegisterForm({ ssoEmail, onBackToLogin, onRegisterSuccess, on
   // Step 1 states
   const [email, setEmail] = useState(resumeEmail || ssoEmail || '')
   const [confirmEmail, setConfirmEmail] = useState(resumeEmail || '')
+  // Confirm Email input is hidden in StepCredentials (SHOW_CONFIRM_EMAIL_FIELD = false there);
+  // keep it silently mirroring email so its still-active validation never blocks submit.
+  useEffect(() => {
+    setConfirmEmail(email)
+  }, [email])
   const [password, setPassword] = useState(resumePassword || '')
   const [showPassword, setShowPassword] = useState(false)
   const [referralCode, setReferralCode] = useState(initialRefCode)
