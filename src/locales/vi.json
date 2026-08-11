@@ -710,6 +710,7 @@
       "business_setting": "Cài đặt",
       "scan": "Quét QR",
       "kyb": "Xác minh doanh nghiệp",
+      "news_library": "Tin tức & Thư viện",
       "support": "Hỗ Trợ"
     },
     "header": {
@@ -2814,6 +2815,44 @@
           "tippingLinkCopiedTo": "Đã sao chép liên kết nhận típ!",
           "shareLink": "Chia sẻ liên kết"
         },
+        "NewsLibraryView": {
+          "documentTitle": "NEXORA TOUCH - Tin tức & Thư viện",
+          "mainAria": "Nội dung Tin tức & Thư viện",
+          "title": "Tin tức & Thư viện",
+          "description": "Cập nhật tin tức NEXORA TOUCH và lịch Zoom trong một không gian dành cho chủ tiệm.",
+          "tablistAria": "Các mục Tin tức & Thư viện",
+          "durationAria": "Thời lượng {duration}",
+          "tabs": {
+            "news": "Tin tức",
+            "eventZoomSchedule": "Lịch sự kiện & Zoom",
+            "compensationPlan": "Kế hoạch thưởng"
+          },
+          "state": {
+            "loading": "Đang tải Tin tức & Thư viện...",
+            "error": "Không thể tải nội dung Tin tức & Thư viện. Vui lòng kiểm tra kết nối mạng và tải lại.",
+            "empty": "Chưa có {label}"
+          },
+          "labels": {
+            "newsContent": "nội dung tin tức",
+            "compensationPlanContent": "nội dung kế hoạch thưởng",
+            "eventContent": "nội dung sự kiện"
+          },
+          "blocks": {
+            "featuredVideos": "Video nổi bật",
+            "moreFromChannel": "Thêm từ kênh",
+            "coreTopics": "Chủ đề chính",
+            "upcomingZoomSessions": "Các buổi Zoom sắp tới"
+          },
+          "actions": {
+            "openPdf": "Mở PDF",
+            "watch": "Xem",
+            "open": "Mở",
+            "join": "Tham gia",
+            "details": "Chi tiết",
+            "preview": "Xem trước",
+            "loadMore": "Tải thêm"
+          }
+        },
         "StaffView": {
           "linkCopiedToClipboard": "Đã sao chép liên kết để chia sẻ!",
           "shareTitle": "Gia nhập Nexora Touch",
@@ -3344,7 +3383,7 @@
           "ariaPlansPanel": "Bảng gói dịch vụ",
           "ariaSettingsPanel": "Bảng cấu hình tiệm",
           "tabs": {
-            "booking": "Booking Book",
+            "booking": "Booking",
             "customers": "Khách hàng",
             "callLog": "Lịch sử gọi",
             "smsCampaigns": "Chiến dịch SMS",

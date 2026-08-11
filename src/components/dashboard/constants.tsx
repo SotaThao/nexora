@@ -18,6 +18,7 @@ import {
   Store,
   Package,
   Boxes,
+  Newspaper,
 } from 'lucide-react'
 import {
   BookingHubMainTab,
@@ -165,6 +166,7 @@ export const DASHBOARD_MENU_ID = {
   subscriptions: 'subscriptions',
   payments: 'payments',
   pos: 'pos',
+  newsLibrary: 'news-library',
 } as const
 
 export type DashboardMenuId = (typeof DASHBOARD_MENU_ID)[keyof typeof DASHBOARD_MENU_ID]
@@ -320,6 +322,11 @@ export const MENU_ITEMS = [
   },
   { id: DASHBOARD_MENU_ID.analytics, label: 'Analytics', icon: BarChart3 },
   { id: DASHBOARD_MENU_ID.settings, label: 'Settings', icon: Settings },
+  {
+    id: DASHBOARD_MENU_ID.newsLibrary,
+    label: 'News & Library',
+    icon: Newspaper,
+  },
   { id: DASHBOARD_MENU_ID.support, label: 'Support', icon: HelpCircle },
 ]
 
@@ -329,6 +336,7 @@ export const MERCHANT_SIDEBAR_HIDDEN_MENU_IDS: DashboardMenuId[] = [
   // Hidden for this go-live — users don't need to discover Tax IQ yet. Routes/data are
   // untouched, only the sidebar/mobile-drawer entry is hidden (same as Tips/Reports above).
   DASHBOARD_MENU_ID.taxiq,
+  DASHBOARD_MENU_ID.packageManagement,
 ];
 
 /** Temporarily hide Hardware Devices submenu/tab until the feature is ready. */
@@ -477,6 +485,7 @@ export const DASHBOARD_MENU_LABEL_KEYS: Record<string, string> = {
   [DASHBOARD_MENU.TaxIq]: 'dashboard.menu.tax_iq',
   [DASHBOARD_MENU_ID.analytics]: "dashboard.menu.analytics",
   [DASHBOARD_MENU_ID.settings]: "dashboard.menu.settings",
+  [DASHBOARD_MENU_ID.newsLibrary]: "dashboard.menu.news_library",
   [DASHBOARD_MENU_ID.support]: "dashboard.menu.support",
   [DASHBOARD_MENU_ID.pos]: "dashboard.menu.pos",
 };
