@@ -272,7 +272,11 @@ export default function MobileMenuDrawer({
 
         <nav className={`${SIDEBAR_NAV_CLASS} mt-0 flex-1`}>
           <HomepageLink variant="menu" active={isHomeActive} onNavigate={onClose} />
-          {menuItemsToDisplay.filter((item) => item.id !== DASHBOARD_MENU_ID.settings).map((item) => {
+          {menuItemsToDisplay.filter(
+            (item) =>
+              item.id !== DASHBOARD_MENU_ID.settings &&
+              item.id !== DASHBOARD_MENU_ID.staff,
+          ).map((item) => {
             const { id, label } = item
             const isActive = activeMenu === id
             const localizedLabel = getDashboardMenuLocalizedLabel(id, t, label)
@@ -326,7 +330,7 @@ export default function MobileMenuDrawer({
                   ) : null}
                 </button>
 
-                {userRole !== 'staff' && id === DASHBOARD_MENU_ID.staff && (
+                {userRole !== 'staff' && id === DASHBOARD_MENU_ID.overview && (
                   <PaymentsPayoutsMenuSection
                     activeMenu={activeMenu}
                     tabParam={activeSubTab}
