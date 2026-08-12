@@ -1,4 +1,4 @@
-import { useCallback, useMemo, useState } from 'react'
+import { useCallback, useEffect, useMemo, useState } from 'react'
 import { ChevronDown, Loader2, MapPin, Store, X } from 'lucide-react'
 import { useNavigate } from 'react-router-dom'
 import { useTranslation } from '../../../contexts/LanguageContext'
@@ -80,6 +80,7 @@ interface SkillCatalogGroup {
 }
 
 function buildSkillCatalog(
+  t: TFunction,
   categories: WorkSkillCategory[],
   services: WorkSkillService[],
 ): SkillCatalogGroup[] {
@@ -98,7 +99,7 @@ function buildSkillCatalog(
   }
   const result = [...catMap.values()].filter((g) => g.services.length > 0)
   if (uncategorized.length > 0) {
-    result.push({ key: '__uncategorized__', label: 'Other', services: uncategorized })
+    result.push({ key: '__uncategorized__', label: t('staff_salons.skill_other'), services: uncategorized })
   }
   return result
 }
@@ -143,8 +144,8 @@ function EditWorkSkillModal({
   const isError = categoriesQuery.isError || servicesQuery.isError || assignmentsQuery.isError
   const catalog = useMemo(() => {
     if (!categoriesQuery.data || !servicesQuery.data) return []
-    return buildSkillCatalog(categoriesQuery.data, servicesQuery.data)
-  }, [categoriesQuery.data, servicesQuery.data])
+    return buildSkillCatalog(t, categoriesQuery.data, servicesQuery.data)
+  }, [categoriesQuery.data, servicesQuery.data, t])
   const totalServices = useMemo(() => catalog.reduce((sum, g) => sum + g.services.length, 0), [catalog])
   const isEmpty = !isLoading && !isError && totalServices === 0
 
@@ -152,12 +153,14 @@ function EditWorkSkillModal({
   const [openGroups, setOpenGroups] = useState<Set<string>>(new Set())
   const [initialized, setInitialized] = useState(false)
 
-  // Sync selection from API once data loads
-  if (!initialized && assignmentsQuery.data && catalog.length > 0) {
-    setSelected(new Set(assignmentsQuery.data))
-    setOpenGroups(new Set())
-    setInitialized(true)
-  }
+  // Sync selection from API once data loads (effect avoids setState-during-render)
+  useEffect(() => {
+    if (!initialized && assignmentsQuery.data && catalog.length > 0) {
+      setSelected(new Set(assignmentsQuery.data))
+      setOpenGroups(new Set())
+      setInitialized(true)
+    }
+  }, [initialized, assignmentsQuery.data, catalog.length])
 
   // Reset state when modal closes
   const handleClose = useCallback(() => {
@@ -233,7 +236,6 @@ function EditWorkSkillModal({
   return (
     <div
       className="fixed inset-0 z-[1000] flex items-center justify-center bg-slate-900/55 p-5"
-      onClick={(e) => { if (e.target === e.currentTarget) handleClose() }}
       role="presentation"
     >
       <div

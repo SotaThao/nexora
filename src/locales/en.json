@@ -1792,6 +1792,7 @@
     "skill_cancel": "Cancel",
     "skill_loading": "Loading services…",
     "skill_empty": "This salon has no services set up yet.",
+    "skill_other": "Other",
     "skill_error": "Unable to load services. Please try again.",
     "skill_save_success": "Work skills updated successfully.",
     "skill_save_error": "Could not save work skills. Please try again."
