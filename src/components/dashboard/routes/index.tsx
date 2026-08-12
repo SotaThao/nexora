@@ -19,6 +19,8 @@ import AiVoiceSetupGuideView from '../views/AiVoiceSetupGuideView'
 import PackageManagementView from '../views/packageManagement/PackageManagementView'
 import TipPlatformCheckoutModal from '../views/packageManagement/TipPlatformCheckoutModal'
 import { useTipPlatformCheckoutFlow } from '../views/packageManagement/useTipPlatformCheckoutFlow'
+import CompleteStoreSetupGateModal from '../modals/CompleteStoreSetupGateModal'
+import NewsLibraryView from '../views/NewsLibraryView'
 import StaffDetailView from '../../StaffDetailView'
 import { useMerchantStaffByCode } from '../../../data/hooks/useMerchantStaff'
 import { useOpenProductManagement } from '../../../data/hooks/useOpenProductManagement'
@@ -367,6 +369,10 @@ export function ProductManagementRoute() {
 
 export function AnalyticsRoute() {
   return <AnalyticsView />
+}
+
+export function NewsLibraryRoute() {
+  return <NewsLibraryView />
 }
 
 export function SettingsRoute() {
@@ -1152,6 +1158,8 @@ export function SubscriptionsRoute() {
     checkoutBillingCycle,
     clearCheckout,
     handleSelectPlan,
+    storeSetupGateOpen,
+    closeStoreSetupGate,
   } = useTipPlatformCheckoutFlow({
     profile: ctx?.profile,
     searchParams,
@@ -1174,6 +1182,10 @@ export function SubscriptionsRoute() {
         billingCycle={checkoutBillingCycle}
         currentSubscription={tipPlatformSubscription}
         onClose={clearCheckout}
+      />
+      <CompleteStoreSetupGateModal
+        open={storeSetupGateOpen}
+        onClose={closeStoreSetupGate}
       />
     </>
   )

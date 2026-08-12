@@ -1,5 +1,7 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react'
-import { useHasStoreSetup } from '../../../../data/hooks/useHasStoreSetup'
+import { Loader2 } from 'lucide-react'
+import { useTranslation } from '../../../../contexts/LanguageContext'
+import { useNotification } from '../../../../contexts/NotificationContext'
 import { useProfileSettings } from '../../../../data/hooks/useProfileSettings'
 import { useSubscriptionCardOrderPoll } from '../../../../data/hooks/useSubscriptionCardOrderPoll'
 import {
@@ -10,20 +12,17 @@ import {
 import { resolveSubscriptionBillingDefaults } from '../../../../utils/subscriptionBillingDefaults'
 import { resolveTranslatedApiError } from '../../../../utils/resolveTranslatedApiError'
 import { formatCurrentPlanLabel, getVoiceAiSubscription } from '../../../../utils/subscriptionDisplay'
-import { Loader2 } from 'lucide-react'
-import { useTranslation } from '../../../../contexts/LanguageContext'
-import { useNotification } from '../../../../contexts/NotificationContext'
 import {
   SubscriptionPaymentStatus,
   type SubscriptionPaymentMethod,
 } from '../../../../data/repositories/subscriptionPayments'
-import CompleteStoreSetupCardPrompt from '../../modals/CompleteStoreSetupCardPrompt'
 import SubscriptionCardPaymentForm, {
   type SubscriptionBillingDetails,
   type SubscriptionCardPaymentFormHandle,
 } from '../../modals/SubscriptionCardPaymentForm'
 import {
   SUBSCRIPTION_PAYMENT_MODAL_TK,
+  resolveCheckoutPaymentLabel,
   subscriptionModalKey,
   tryBeginOrderStatusPolling,
 } from '../../modals/subscriptionPaymentConstants'
@@ -36,7 +35,6 @@ import {
 import { BOOKING_HUB_EMPTY_CELL } from '../bookingHubFormatters'
 import { useCheckoutModalLock } from '../creditCheckout/useCheckoutModalLock'
 import { PlanPaymentMethodsSkeleton } from '../BookingHubSkeletons'
-import { SMS_CAMPAIGN_TK } from '../smsCampaigns/constants'
 import {
   PAID_SERVICE_PLAN_TITLE_KEY,
   PLAN_CARD_PAYMENT_SYMBOL,
@@ -89,7 +87,7 @@ export default function PlanPaymentModal({
   const [cardSubmitting, setCardSubmitting] = useState(false)
 
   const isOpen = open && selection != null
-  const cardPaymentLabel = t(`${SMS_CAMPAIGN_TK}.cardMethodLabel`)
+  const cardPaymentLabel = t(subscriptionModalKey('cardMethodLabel'))
 
   const handleCardOrderPaid = useCallback(() => {
     if (!selection) return
@@ -122,9 +120,6 @@ export default function PlanPaymentModal({
   )
   const currentPlanLabel = formatCurrentPlanLabel(getVoiceAiSubscription(profile))
   const isCardPayment = isPlanCardPaymentSymbol(selectedSymbol)
-  const { hasSetup, isLoading: isSetupLoading, isResolved: isSetupResolved } = useHasStoreSetup({
-    enabled: isOpen,
-  })
   const purchaseMutation = usePurchaseVoiceAiPackage()
   const initializeCardMutation = useInitializeCardPayment()
 
@@ -170,29 +165,22 @@ export default function PlanPaymentModal({
 
   useEffect(() => {
     if (!isOpen || !isCardPayment || !selection?.packageId) return
-    if (!isSetupResolved || !hasSetup) return
     if (initializeCardMutation.data || initializeCardMutation.isPending) return
     initializeCardMutation.mutate({ packageId: selection.packageId })
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [isOpen, isCardPayment, selection?.packageId, hasSetup, isSetupResolved])
-
-  useEffect(() => {
-    if (isCardPayment && isSetupResolved && !hasSetup) {
-      initializeCardMutation.reset()
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [isCardPayment, hasSetup, isSetupResolved])
+  }, [isOpen, isCardPayment, selection?.packageId])
 
   const selectedPayment = useMemo(
     () => methods.find((method) => method.symbol === selectedSymbol) ?? null,
     [methods, selectedSymbol],
   )
 
-  const paymentLabel = isCardPayment
-    ? cardPaymentLabel
-    : selectedPayment
-      ? selectedPayment.name || selectedPayment.symbol
-      : BOOKING_HUB_EMPTY_CELL
+  const paymentLabel = resolveCheckoutPaymentLabel({
+    isCardPayment,
+    cardPaymentLabel,
+    selectedPayment,
+    emptyLabel: BOOKING_HUB_EMPTY_CELL,
+  })
   const planTitleKey = selection ? PAID_SERVICE_PLAN_TITLE_KEY[selection.planId] : null
   const methodsErrorMessage = resolveTranslatedApiError(
     t,
@@ -211,7 +199,6 @@ export default function PlanPaymentModal({
 
   const canConfirmCard =
     isCardPayment
-    && hasSetup
     && Boolean(initializeCardMutation.data)
     && !initializeCardMutation.isPending
     && !isCardOrderPolling
@@ -405,11 +392,7 @@ export default function PlanPaymentModal({
 
                 {isCardPayment ? (
                   <div className="mt-4">
-                    {isSetupLoading || !isSetupResolved ? (
-                      <PlanPaymentMethodsSkeleton />
-                    ) : !hasSetup ? (
-                      <CompleteStoreSetupCardPrompt onBeforeNavigate={onClose} />
-                    ) : initializeCardMutation.isPending ? (
+                    {initializeCardMutation.isPending ? (
                       <PlanPaymentMethodsSkeleton />
                     ) : initializeCardMutation.isError ? (
                       <div className="booking-empty-cell plan-payment-methods-state">
@@ -483,7 +466,7 @@ export default function PlanPaymentModal({
             <button
               className="btn-outline"
               type="button"
-              disabled={purchaseMutation.isPending || cardSubmitting}
+              disabled={purchaseMutation.isPending || cardSubmitting || isCardOrderPolling}
               onClick={onClose}
             >
               {t(`${TK}.planPaymentCancel`)}

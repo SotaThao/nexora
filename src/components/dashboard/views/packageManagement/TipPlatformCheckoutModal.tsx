@@ -26,15 +26,17 @@ export default function TipPlatformCheckoutModal({
   if (!paymentPlan || !selectedPackage) return null
 
   return (
-    <SubscriptionPaymentModal
-      isOpen
-      plan={paymentPlan}
-      packageId={selectedPackage.id}
-      price={paymentPlanPrice}
-      billingCycle={billingCycle}
-      currentSubscription={currentSubscription}
-      onClose={onClose}
-      onSuccess={onClose}
-    />
+    <div className="nx-campaign-root">
+      <SubscriptionPaymentModal
+        isOpen
+        plan={paymentPlan}
+        packageId={selectedPackage.id}
+        price={paymentPlanPrice}
+        billingCycle={billingCycle}
+        currentSubscription={currentSubscription}
+        onClose={onClose}
+        onSuccess={onClose}
+      />
+    </div>
   )
 }

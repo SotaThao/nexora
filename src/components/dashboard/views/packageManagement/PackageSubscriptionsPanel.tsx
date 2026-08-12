@@ -3,6 +3,7 @@ import { useSearchParams } from 'react-router-dom'
 import ManagePlanView, { type ManagePlanBillingCycle } from '../ManagePlanView'
 import { useTranslation } from '../../../../contexts/LanguageContext'
 import type { SubscriptionPackage } from '../../../../data/repositories/subscriptionPayments'
+import CompleteStoreSetupGateModal from '../../modals/CompleteStoreSetupGateModal'
 import {
   CompareCellToken,
   formatCompareCellDisplay,
@@ -127,6 +128,8 @@ export default function PackageSubscriptionsPanel({
     checkoutBillingCycle,
     clearCheckout,
     handleSelectPlan,
+    storeSetupGateOpen,
+    closeStoreSetupGate,
   } = useTipPlatformCheckoutFlow({
     profile,
     searchParams,
@@ -160,6 +163,10 @@ export default function PackageSubscriptionsPanel({
         billingCycle={checkoutBillingCycle}
         currentSubscription={tipPlatformSubscription}
         onClose={clearCheckout}
+      />
+      <CompleteStoreSetupGateModal
+        open={storeSetupGateOpen}
+        onClose={closeStoreSetupGate}
       />
     </>
   )

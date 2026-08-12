@@ -4,6 +4,7 @@ import {
   useEffect,
   useImperativeHandle,
   useMemo,
+  useRef,
   useState,
   type ChangeEvent,
 } from 'react'
@@ -22,7 +23,6 @@ import {
   buildSubscriptionBillingFormState,
   resolveStripeCountryCode,
 } from '../../../utils/subscriptionBillingDefaults'
-import { SMS_CAMPAIGN_TK } from '../views/smsCampaigns/constants'
 import {
   STRIPE_CARD_ELEMENT_STYLE,
   SUBSCRIPTION_CARD_BILLING_REQUIRED_FIELDS,
@@ -74,11 +74,37 @@ type CardPaymentInnerProps = {
   clientSecret: string
   billingDefaults?: SubscriptionBillingDetails
   hideFooter?: boolean
+  /** Optional SMS-campaign i18n namespace; defaults to `dashboard.modals` placeholders. */
   placeholderTk?: string
   onCancel: () => void
   onSuccess: () => void
   onError: (message: string) => void
   onSubmittingChange?: (isSubmitting: boolean) => void
+}
+
+type CardPlaceholderField =
+  | 'cardNamePlaceholder'
+  | 'cardNumberPlaceholder'
+  | 'cardExpiryPlaceholder'
+  | 'cardCvcPlaceholder'
+  | 'cardAddressPlaceholder'
+  | 'cardCityPlaceholder'
+  | 'cardStatePlaceholder'
+  | 'cardZipPlaceholder'
+
+function billingDefaultsFingerprint(defaults?: SubscriptionBillingDetails): string {
+  if (!defaults) return ''
+  return [
+    defaults.name,
+    defaults.email,
+    defaults.address,
+    defaults.city,
+    defaults.state,
+    defaults.zipCode,
+    defaults.country,
+  ]
+    .map((value) => value?.trim() ?? '')
+    .join('|')
 }
 
 const CardPaymentInner = forwardRef<SubscriptionCardPaymentFormHandle, CardPaymentInnerProps>(
@@ -87,7 +113,7 @@ const CardPaymentInner = forwardRef<SubscriptionCardPaymentFormHandle, CardPayme
       clientSecret,
       billingDefaults,
       hideFooter = false,
-      placeholderTk = SMS_CAMPAIGN_TK,
+      placeholderTk,
       onCancel,
       onSuccess,
       onError,
@@ -105,10 +131,19 @@ const CardPaymentInner = forwardRef<SubscriptionCardPaymentFormHandle, CardPayme
     const [fieldErrors, setFieldErrors] = useState<FieldErrors>({})
     const [formError, setFormError] = useState('')
     const [stripeComplete, setStripeComplete] = useState<StripeCompleteState>(STRIPE_COMPLETE_EMPTY)
+    const seededDefaultsFingerprintRef = useRef<string | null>(null)
 
-    const cardNumberPlaceholder = t(`${placeholderTk}.cardNumberPlaceholder`)
-    const cardExpiryPlaceholder = t(`${placeholderTk}.cardExpiryPlaceholder`)
-    const cardCvcPlaceholder = t(`${placeholderTk}.cardCvcPlaceholder`)
+    const resolvePlaceholder = useCallback(
+      (field: CardPlaceholderField) => {
+        if (placeholderTk) return t(`${placeholderTk}.${field}`)
+        return t(subscriptionModalKey(field))
+      },
+      [placeholderTk, t],
+    )
+
+    const cardNumberPlaceholder = resolvePlaceholder('cardNumberPlaceholder')
+    const cardExpiryPlaceholder = resolvePlaceholder('cardExpiryPlaceholder')
+    const cardCvcPlaceholder = resolvePlaceholder('cardCvcPlaceholder')
     const fieldRequiredMessage = t(subscriptionModalKey('cardFieldRequired'))
 
     const cardNumberOptions = useMemo(
@@ -135,11 +170,24 @@ const CardPaymentInner = forwardRef<SubscriptionCardPaymentFormHandle, CardPayme
       [cardCvcPlaceholder],
     )
 
+    // Reset form when a new PaymentIntent starts; hydrate billing once when
+    // defaults arrive so async profile fetch does not wipe in-progress typing.
     useEffect(() => {
+      const fingerprint = billingDefaultsFingerprint(billingDefaults)
+      seededDefaultsFingerprintRef.current = fingerprint || null
       setBilling(buildSubscriptionBillingFormState(billingDefaults))
       setFieldErrors({})
       setFormError('')
       setStripeComplete(STRIPE_COMPLETE_EMPTY)
+      // eslint-disable-next-line react-hooks/exhaustive-deps -- seed from clientSecret only
+    }, [clientSecret])
+
+    useEffect(() => {
+      const fingerprint = billingDefaultsFingerprint(billingDefaults)
+      if (!fingerprint) return
+      if (seededDefaultsFingerprintRef.current != null) return
+      setBilling(buildSubscriptionBillingFormState(billingDefaults))
+      seededDefaultsFingerprintRef.current = fingerprint
     }, [billingDefaults])
 
     useEffect(() => {
@@ -275,7 +323,6 @@ const CardPaymentInner = forwardRef<SubscriptionCardPaymentFormHandle, CardPayme
 
     useImperativeHandle(ref, () => ({ submit: handleSubmit }), [handleSubmit])
 
-    const placeholderLabel = (key: string) => t(`${placeholderTk}.${key}`)
     const modalLabel = (field: Parameters<typeof subscriptionModalKey>[0]) =>
       t(subscriptionModalKey(field))
 
@@ -303,7 +350,7 @@ const CardPaymentInner = forwardRef<SubscriptionCardPaymentFormHandle, CardPayme
                   className="sms-credit-card-input"
                   type="text"
                   autoComplete="cc-name"
-                  placeholder={placeholderLabel('cardNamePlaceholder')}
+                  placeholder={resolvePlaceholder('cardNamePlaceholder')}
                   value={billing.name}
                   disabled={isSubmitting}
                   aria-invalid={isInvalid(SubscriptionCardField.Name)}
@@ -392,7 +439,7 @@ const CardPaymentInner = forwardRef<SubscriptionCardPaymentFormHandle, CardPayme
                 className="sms-credit-card-input"
                 type="text"
                 autoComplete="address-line1"
-                placeholder={placeholderLabel('cardAddressPlaceholder')}
+                placeholder={resolvePlaceholder('cardAddressPlaceholder')}
                 value={billing.address}
                 disabled={isSubmitting}
                 aria-invalid={isInvalid(SubscriptionCardField.Address)}
@@ -413,7 +460,7 @@ const CardPaymentInner = forwardRef<SubscriptionCardPaymentFormHandle, CardPayme
                   className="sms-credit-card-input"
                   type="text"
                   autoComplete="address-level2"
-                  placeholder={placeholderLabel('cardCityPlaceholder')}
+                  placeholder={resolvePlaceholder('cardCityPlaceholder')}
                   value={billing.city}
                   disabled={isSubmitting}
                   aria-invalid={isInvalid(SubscriptionCardField.City)}
@@ -433,7 +480,7 @@ const CardPaymentInner = forwardRef<SubscriptionCardPaymentFormHandle, CardPayme
                   className="sms-credit-card-input"
                   type="text"
                   autoComplete="address-level1"
-                  placeholder={placeholderLabel('cardStatePlaceholder')}
+                  placeholder={resolvePlaceholder('cardStatePlaceholder')}
                   value={billing.state}
                   disabled={isSubmitting}
                   aria-invalid={isInvalid(SubscriptionCardField.State)}
@@ -454,7 +501,7 @@ const CardPaymentInner = forwardRef<SubscriptionCardPaymentFormHandle, CardPayme
                 className="sms-credit-card-input"
                 type="text"
                 autoComplete="postal-code"
-                placeholder={placeholderLabel('cardZipPlaceholder')}
+                placeholder={resolvePlaceholder('cardZipPlaceholder')}
                 value={billing.zipCode}
                 disabled={isSubmitting}
                 aria-invalid={isInvalid(SubscriptionCardField.ZipCode)}

@@ -710,6 +710,7 @@
       "business_setting": "Cài đặt",
       "scan": "Quét QR",
       "kyb": "Xác minh doanh nghiệp",
+      "news_library": "Tin tức & Thư viện",
       "support": "Hỗ Trợ"
     },
     "header": {
@@ -883,9 +884,11 @@
       "subscription_payment_methods_loading": "Đang tải phương thức thanh toán…",
       "subscription_payment_methods_error": "Không thể tải số dư ví.",
       "subscription_payment_methods_retry": "Thử tải lại phương thức thanh toán",
+      "subscription_payment_methods_empty": "Không có phương thức thanh toán ví nào.",
       "subscription_wallet_balance_label": "Số dư",
       "subscription_invoice_summary": "Chi tiết hóa đơn",
       "subscription_service_plan": "Gói dịch vụ:",
+      "subscription_invoice_payment": "Phương thức:",
       "subscription_total_due": "Tổng cộng:",
       "subscription_confirm_payment": "Xác nhận thanh toán",
       "subscription_payment_success": "Mua gói thành công.",
@@ -895,19 +898,29 @@
       "subscription_payment_tab_wallet": "Ví VlinkPay",
       "subscription_payment_tab_card": "Thẻ tín dụng/ghi nợ",
       "subscription_card_form_title": "Thẻ tín dụng hoặc ghi nợ",
+      "subscription_card_method_label": "Thẻ tín dụng hoặc ghi nợ",
       "subscription_card_required_note": "bắt buộc",
       "subscription_card_field_required": "Trường này là bắt buộc.",
-      "subscription_card_needs_store_setup_title": "Hoàn tất cài đặt cửa hàng để thanh toán bằng thẻ",
-      "subscription_card_needs_store_setup_body": "Thêm hồ sơ doanh nghiệp trước. Thanh toán thẻ cần thông tin cửa hàng để lập hóa đơn.",
+      "subscription_purchase_needs_store_setup_title": "Hoàn tất cài đặt cửa hàng để mua gói",
+      "subscription_purchase_needs_store_setup_body": "Thêm hồ sơ doanh nghiệp trước. Hệ thống cần thông tin cửa hàng trước khi bạn mua gói.",
+      "subscription_purchase_needs_store_setup_cta": "Đến cài đặt cửa hàng",
       "subscription_cardholder_name_label": "Tên chủ thẻ",
+      "subscription_card_name_placeholder": "vd. Nguyen Van A",
       "subscription_billing_address_label": "Địa chỉ",
+      "subscription_card_address_placeholder": "vd. 123 Đường ABC",
       "subscription_billing_city_label": "Thành phố",
+      "subscription_card_city_placeholder": "vd. Hồ Chí Minh",
       "subscription_billing_state_label": "Tỉnh/Bang",
+      "subscription_card_state_placeholder": "vd. TX",
       "subscription_billing_zip_code_label": "Mã bưu điện",
+      "subscription_card_zip_placeholder": "vd. 700000",
       "subscription_billing_country_label": "Quốc gia",
       "subscription_card_number_label": "Số thẻ",
+      "subscription_card_number_placeholder": "1234 1234 1234 1234",
       "subscription_card_expiry_label": "Ngày hết hạn",
+      "subscription_card_expiry_placeholder": "MM/YY",
       "subscription_card_cvc_label": "CVC",
+      "subscription_card_cvc_placeholder": "CVC",
       "subscription_card_init_error": "Không thể khởi tạo thanh toán bằng thẻ. Vui lòng thử lại.",
       "subscription_card_payment_error": "Thẻ của bạn bị từ chối. Vui lòng thử thẻ khác.",
       "subscription_payment_failed": "Thanh toán thất bại. Vui lòng thử lại hoặc chọn phương thức khác.",
@@ -2805,6 +2818,44 @@
           "scanToTipThis": "Quét để chuyển khoản tiền típ cho nhân viên này",
           "tippingLinkCopiedTo": "Đã sao chép liên kết nhận típ!",
           "shareLink": "Chia sẻ liên kết"
+        },
+        "NewsLibraryView": {
+          "documentTitle": "NEXORA TOUCH - Tin tức & Thư viện",
+          "mainAria": "Nội dung Tin tức & Thư viện",
+          "title": "Tin tức & Thư viện",
+          "description": "Cập nhật tin tức NEXORA TOUCH và lịch Zoom trong một không gian dành cho chủ tiệm.",
+          "tablistAria": "Các mục Tin tức & Thư viện",
+          "durationAria": "Thời lượng {duration}",
+          "tabs": {
+            "news": "Tin tức",
+            "eventZoomSchedule": "Lịch sự kiện & Zoom",
+            "compensationPlan": "Kế hoạch thưởng"
+          },
+          "state": {
+            "loading": "Đang tải Tin tức & Thư viện...",
+            "error": "Không thể tải nội dung Tin tức & Thư viện. Vui lòng kiểm tra kết nối mạng và tải lại.",
+            "empty": "Chưa có {label}"
+          },
+          "labels": {
+            "newsContent": "nội dung tin tức",
+            "compensationPlanContent": "nội dung kế hoạch thưởng",
+            "eventContent": "nội dung sự kiện"
+          },
+          "blocks": {
+            "featuredVideos": "Video nổi bật",
+            "moreFromChannel": "Thêm từ kênh",
+            "coreTopics": "Chủ đề chính",
+            "upcomingZoomSessions": "Các buổi Zoom sắp tới"
+          },
+          "actions": {
+            "openPdf": "Mở PDF",
+            "watch": "Xem",
+            "open": "Mở",
+            "join": "Tham gia",
+            "details": "Chi tiết",
+            "preview": "Xem trước",
+            "loadMore": "Tải thêm"
+          }
         },
         "StaffView": {
           "linkCopiedToClipboard": "Đã sao chép liên kết để chia sẻ!",

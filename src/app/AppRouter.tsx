@@ -25,6 +25,7 @@ import {
   SubscriptionsRoute,
   SupportRoute,
   PackageManagementRoute,
+  NewsLibraryRoute,
   TipsRoute,
   TouchpointsRoute,
   TaxIqOverviewRoute, TaxIqDeductionsRoute, TaxIqIncomeRoute, TaxIqReceiptsRoute, TaxIqEquipmentRoute,
@@ -333,6 +334,7 @@ export default function AppRouter() {
             <Route path={`${DASHBOARD_MENU_ID.settings}/:tab`} element={<SettingsRoute />} />
             <Route path={DASHBOARD_MENU_ID.subscriptions} element={<SubscriptionsRoute />} />
             <Route path={DASHBOARD_MENU_ID.packageManagement} element={<PackageManagementRoute />} />
+            <Route path={DASHBOARD_MENU_ID.newsLibrary} element={<NewsLibraryRoute />} />
             <Route path={DASHBOARD_MENU_ID.support} element={<SupportRoute />} />
             <Route path="*" element={<FallbackRoute />} />
           </Route>

@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom'
 import { useTranslation } from '../../../../contexts/LanguageContext'
 import { useNotification } from '../../../../contexts/NotificationContext'
 import type { SubscriptionBillingCycle } from '../../../../data/repositories/subscriptionPayments'
+import { useStoreSetupPurchaseGate } from '../../../../data/hooks/useStoreSetupPurchaseGate'
 import { buildDashboardMenuPath, DASHBOARD_MENU_ID } from '../../constants'
 import { BOOKING_HUB_PLANS_TK } from './constants'
 import {
@@ -25,11 +26,24 @@ export function useTipPlatformCheckoutFlow({
   const { t } = useTranslation()
   const { showToast } = useNotification()
   const navigate = useNavigate()
+  const storeSetupGate = useStoreSetupPurchaseGate({
+    enabled: checkoutArgs.packagesEnabled !== false,
+  })
+  const {
+    requireSetup,
+    gateOpen: storeSetupGateOpen,
+    closeGate: closeStoreSetupGate,
+    hasSetup,
+    isSetupLoading,
+    isSetupResolved,
+    openGate,
+  } = storeSetupGate
 
   const {
     isCheckoutPackageMissing,
     clearCheckout,
     trySelectPlan,
+    paymentPlan,
     ...checkout
   } = useTipPlatformCheckout(checkoutArgs)
 
@@ -41,20 +55,41 @@ export function useTipPlatformCheckoutFlow({
     clearCheckout()
   }, [isCheckoutPackageMissing, clearCheckout, notifyOnMissingPackage, showToast, t])
 
+  // Deep-link / race: checkout opened before setup resolved → close and show gate.
+  useEffect(() => {
+    if (!paymentPlan) return
+    if (!isSetupResolved || isSetupLoading) return
+    if (hasSetup) return
+    clearCheckout()
+    openGate()
+  }, [
+    paymentPlan,
+    clearCheckout,
+    hasSetup,
+    isSetupLoading,
+    isSetupResolved,
+    openGate,
+  ])
+
   const handleSelectPlan = useCallback(
     (planId: string, billingCycle?: SubscriptionBillingCycle) => {
-      const result = trySelectPlan(planId, billingCycle)
-      if (result === TipPlatformCheckoutResult.ContactSupport) {
-        navigate(DASHBOARD_SUPPORT_PATH)
-      }
+      requireSetup(() => {
+        const result = trySelectPlan(planId, billingCycle)
+        if (result === TipPlatformCheckoutResult.ContactSupport) {
+          navigate(DASHBOARD_SUPPORT_PATH)
+        }
+      })
     },
-    [trySelectPlan, navigate],
+    [trySelectPlan, navigate, requireSetup],
   )
 
   return {
     ...checkout,
+    paymentPlan,
     clearCheckout,
     trySelectPlan,
     handleSelectPlan,
+    storeSetupGateOpen,
+    closeStoreSetupGate,
   }
 }
