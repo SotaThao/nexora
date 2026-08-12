@@ -22,7 +22,12 @@ import CompleteStoreSetupGateModal from '../modals/CompleteStoreSetupGateModal'
 import NewsLibraryView from '../views/NewsLibraryView'
 import StaffDetailView from '../../StaffDetailView'
 import { useOpenProductManagement } from '../../../data/hooks/useOpenProductManagement'
-import { DASHBOARD_MENU_ID, DASHBOARD_ROOT_PATH } from '../constants'
+import {
+  buildDashboardSettingsPath,
+  DASHBOARD_MENU_ID,
+  DASHBOARD_ROOT_PATH,
+  DASHBOARD_SETTINGS_TAB,
+} from '../constants'
 import { SkeletonList } from '../../ui/skeleton'
 import { useMerchantSetup } from '../../../data/hooks/useMerchantSetup'
 import { useOwnerTaxYearByBusiness } from '../../../data/hooks/useTaxiqOwnerTaxYear'
@@ -306,7 +311,7 @@ export function SettingsRoute() {
   const ctx = useOutletContext<LooseObject>()
   const { tab = 'profile', staffId } = useParams()
   const navigate = useNavigate()
-  const isStaffTab = tab === 'staff'
+  const isStaffTab = tab === DASHBOARD_SETTINGS_TAB.staff
   const settings = (
     <SettingsView
       {...({ onBlockedFeatureClick: ctx.requireKyb } as any)}
@@ -316,7 +321,7 @@ export function SettingsRoute() {
       userEmail={ctx.userEmail}
       onKybRequired={ctx.requireKyb}
       initialTab={tab}
-      onTabChange={(nextTab) => navigate(`/dashboard/settings/${nextTab}`)}
+      onTabChange={(nextTab) => navigate(buildDashboardSettingsPath(nextTab))}
       onKybSuccess={ctx.onKybSuccess}
       staffContent={isStaffTab
         ? staffId

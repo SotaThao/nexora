@@ -36,7 +36,7 @@ import {
   PosGeneralSettingsRoute, PosRolesRoute, PosCategoriesRoute, PosServicesRoute, PosProductsRoute,
   PosStaffProfileRoute, PosFrontDeskRoute
 } from "../components/dashboard/routes";
-import { DASHBOARD_MENU_ID, BOOKING_HUB_PATH, BOOKING_HUB_LEGACY_PATH_SEGMENT, buildDashboardReportsPath, DASHBOARD_REPORTS_TAB } from "../components/dashboard/constants";
+import { DASHBOARD_MENU_ID, DASHBOARD_SETTINGS_TAB, BOOKING_HUB_PATH, BOOKING_HUB_LEGACY_PATH_SEGMENT, buildDashboardReportsPath, DASHBOARD_REPORTS_TAB } from "../components/dashboard/constants";
 import ErrorBoundary from "../components/ui/ErrorBoundary";
 import { isDemoToolsEnabled } from "./demoTools";
 import lazyWithRetry from "./lazyWithRetry";
@@ -339,7 +339,7 @@ export default function AppRouter() {
             <Route path={DASHBOARD_MENU_ID.analytics} element={<AnalyticsRoute />} />
             <Route path={DASHBOARD_MENU_ID.settings} element={<SettingsRoute />} />
             <Route path={`${DASHBOARD_MENU_ID.settings}/:tab`} element={<SettingsRoute />} />
-            <Route path={`${DASHBOARD_MENU_ID.settings}/staff/:staffId`} element={<SettingsRoute />} />
+            <Route path={`${DASHBOARD_MENU_ID.settings}/${DASHBOARD_SETTINGS_TAB.staff}/:staffId`} element={<SettingsRoute />} />
             <Route path={DASHBOARD_MENU_ID.subscriptions} element={<SubscriptionsRoute />} />
             <Route path={DASHBOARD_MENU_ID.packageManagement} element={<PackageManagementRoute />} />
             <Route path={DASHBOARD_MENU_ID.newsLibrary} element={<NewsLibraryRoute />} />
