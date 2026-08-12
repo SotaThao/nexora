@@ -150,6 +150,9 @@ const VoiceCallPlanPage = lazyWithRetry(
 const SmsConsentReferencePage = lazyWithRetry(
   () => import("../components/public/SmsConsentReferencePage"),
 );
+const PublicNewsLibraryPage = lazyWithRetry(
+  () => import("../components/public/PublicNewsLibraryPage"),
+);
 
 // Bridges the URL (path token / legacy ?flow=staff-invite biz) to the wizard's
 // inviteData prop. A real token → API-backed invite; otherwise the legacy
@@ -211,10 +214,36 @@ function StaffTransactionsLegacyRedirect() {
 }
 
 function ScrollToTop() {
-  const { pathname, search } = useLocation();
+  const { pathname, search, hash } = useLocation();
   useEffect(() => {
+    if (hash) {
+      const targetId = decodeURIComponent(hash.slice(1));
+      let observer: MutationObserver | null = null;
+
+      const scrollToHashTarget = () => {
+        const target = document.getElementById(targetId);
+        if (!target) return false;
+
+        target.scrollIntoView({ behavior: 'auto', block: 'start' });
+        return true;
+      };
+
+      if (!scrollToHashTarget()) {
+        observer = new MutationObserver(() => {
+          if (scrollToHashTarget()) observer?.disconnect();
+        });
+        observer.observe(document.getElementById('root') ?? document.body, {
+          childList: true,
+          subtree: true,
+        });
+      }
+
+      return () => observer?.disconnect();
+    }
+
     scrollToPageTop();
-  }, [pathname, search]);
+    return undefined;
+  }, [pathname, search, hash]);
   return null;
 }
 
@@ -252,6 +281,7 @@ export default function AppRouter() {
           <Route path="/privacy-policy" element={<PrivacyPolicyPage />} />
           <Route path="/terms-of-service" element={<TermsOfServicePage />} />
           <Route path="/sms-consent" element={<SmsConsentReferencePage />} />
+          <Route path="/news-library" element={<PublicNewsLibraryPage />} />
           <Route
             path={VoiceCallPlanRoute.path}
             element={<VoiceCallPlanPage />}

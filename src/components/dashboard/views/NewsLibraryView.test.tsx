@@ -82,6 +82,29 @@ describe('NewsLibraryView mobile PDF topics', () => {
     ).toHaveClass('hidden', 'sm:block')
   })
 
+  it('shows the view heading on mobile when requested by the public shell', async () => {
+    setViewportWidth(430)
+    stubCoarsePointer(false)
+    stubNewsLibraryContent()
+
+    render(<NewsLibraryView showMobileHeading />)
+
+    expect(
+      await screen.findByRole('heading', { name: 'News & Library' }),
+    ).not.toHaveClass('hidden')
+  })
+
+  it('gives inactive tabs a readable hover surface', async () => {
+    window.history.replaceState(null, '', '/news-library?tab=news')
+    stubNewsLibraryContent()
+
+    render(<NewsLibraryView showMobileHeading />)
+
+    expect(
+      await screen.findByRole('tab', { name: 'Event & Zoom Schedule' }),
+    ).toHaveClass('hover:bg-nexoraSurfaceMuted', 'hover:text-nexoraText')
+  })
+
   it('preloads the shared PDF runtime after News Library content is ready', async () => {
     stubNewsLibraryContent()
 

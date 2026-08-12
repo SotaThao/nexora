@@ -406,7 +406,7 @@ html.homepage-active {
 }
 
 /* Simulator tabs and choice chips */
-.nx-homepage [id^="tab-"]:hover:not(.bg-purple) {
+.nx-homepage #simulator [id^="tab-"]:hover:not(.bg-purple) {
   background: rgba(255, 255, 255, 0.06);
   color: #fff !important;
 }
@@ -671,12 +671,12 @@ html.homepage-active {
 }
 
 /* Simulator tabs: make inactive hover obvious */
-.nx-homepage [id^="tab-"] {
+.nx-homepage #simulator [id^="tab-"] {
   min-height: 40px;
 }
 
-.nx-homepage [id^="tab-"]:hover:not(.bg-purple),
-.nx-homepage [id^="tab-"]:focus-visible:not(.bg-purple) {
+.nx-homepage #simulator [id^="tab-"]:hover:not(.bg-purple),
+.nx-homepage #simulator [id^="tab-"]:focus-visible:not(.bg-purple) {
   background: rgba(255, 255, 255, 0.10) !important;
   color: #ffffff !important;
   box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.08);
@@ -915,7 +915,7 @@ html.homepage-active {
     padding: 0.875rem !important;
   }
 
-  [id^="tab-"] {
+  .nx-homepage #simulator [id^="tab-"] {
     min-height: 38px;
     padding-left: 0.25rem;
     padding-right: 0.25rem;

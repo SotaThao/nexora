@@ -815,7 +815,13 @@ function EventZoomPanel({
   )
 }
 
-export default function NewsLibraryView() {
+interface NewsLibraryViewProps {
+  showMobileHeading?: boolean
+}
+
+export default function NewsLibraryView({
+  showMobileHeading = false,
+}: NewsLibraryViewProps) {
   const { currentLanguage, t } = useTranslation()
   const documentTitle = t(`${TK}.documentTitle`)
   const [activeTab, setActiveTab] = useState<TabId>(() => initialTab())
@@ -939,7 +945,10 @@ export default function NewsLibraryView() {
         <header className="max-w-2xl">
           <h1
             id="news-library-title"
-            className="hidden text-2xl font-black leading-tight text-nexoraText sm:block"
+            className={[
+              'text-2xl font-black leading-tight text-nexoraText',
+              showMobileHeading ? 'block' : 'hidden sm:block',
+            ].join(' ')}
           >
             {t(`${TK}.title`)}
           </h1>
@@ -976,7 +985,7 @@ export default function NewsLibraryView() {
                   'inline-flex min-h-12 min-w-0 flex-col items-center justify-center gap-1 rounded-lg border px-1 py-1.5 text-center text-xs font-bold leading-tight transition sm:min-h-11 sm:flex-row sm:px-3 sm:py-2',
                   isActive
                     ? 'border-transparent bg-nexoraBrand text-white shadow-nexora-soft'
-                    : 'border-nexoraBorder bg-nexoraSurface text-nexoraMuted hover:border-nexoraLavender hover:text-nexoraText',
+                    : 'border-nexoraBorder bg-nexoraSurface text-nexoraMuted hover:border-nexoraLavender hover:bg-nexoraSurfaceMuted hover:text-nexoraText',
                 ].join(' ')}
               >
                 <span
