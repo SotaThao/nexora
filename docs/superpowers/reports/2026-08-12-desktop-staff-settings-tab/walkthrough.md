@@ -41,3 +41,14 @@ Verified against the authenticated local desktop app:
 - No dependencies were added.
 - Existing unrelated workspace edits and public News Library work were not staged or modified by this feature.
 - The report remains local to the repository; no external message or vault export was authorized.
+
+## Follow-up: active panel surface
+
+- L1/P3 component test passed after first proving RED against the old background, shadow, and padding utilities.
+- Settings integration test remained green.
+- Browser computed-style verification at `/dashboard/settings/staff` confirmed:
+  - padding on all four sides: `0px`
+  - background: `rgba(0, 0, 0, 0)`
+  - box shadow: `none`
+  - panel classes: `overflow-hidden rounded-lg border border-nexoraBorder`
+- No browser console warnings or errors were observed.

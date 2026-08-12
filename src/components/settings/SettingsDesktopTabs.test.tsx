@@ -27,7 +27,7 @@ function Harness() {
 }
 
 describe('SettingsDesktopTabs', () => {
-  it('renders text-only News Library-style tabs and a centered panel shell', () => {
+  it('renders text-only tabs and an unpadded transparent panel without shadow', () => {
     render(<Harness />)
     const tablist = screen.getByRole('tablist', { name: 'Settings sections' })
     const renderedTabs = within(tablist).getAllByRole('tab')
@@ -52,11 +52,10 @@ describe('SettingsDesktopTabs', () => {
       'bg-nexoraSurface',
     )
     expect(tablist.parentElement).toHaveClass('mx-auto', 'max-w-6xl')
-    expect(screen.getByRole('tabpanel')).toHaveClass(
-      'rounded-lg',
-      'border-nexoraBorder',
-      'shadow-nexora-card',
-    )
+    const panel = screen.getByRole('tabpanel')
+    expect(panel).toHaveClass('rounded-lg', 'border-nexoraBorder')
+    expect(panel).not.toHaveClass('bg-nexoraSurface', 'shadow-nexora-card')
+    expect(panel.firstElementChild).not.toHaveClass('p-4', 'sm:p-5')
   })
 
   it('activates, focuses, and wraps adjacent tabs with Left and Right arrows', () => {

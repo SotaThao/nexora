@@ -4,6 +4,10 @@
 
 Move merchant Staff management into desktop Settings while retaining legacy Staff routes and all mobile navigation/UI behavior. Refresh every desktop Settings tab with the shared text-only News Library visual language.
 
+### Follow-up: active panel surface
+
+- **P3 / L1:** `settings-active-panel` keeps its accessible tabpanel structure and border radius, but has no content padding, background utility, or shadow utility.
+
 ## Risk priorities
 
 - **P0:** Desktop/mobile responsive redirects preserve list/detail identity and replace incompatible route families.

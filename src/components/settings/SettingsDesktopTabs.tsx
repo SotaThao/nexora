@@ -71,9 +71,9 @@ export default function SettingsDesktopTabs({
         role="tabpanel"
         aria-labelledby={`settings-tab-${activeTab}`}
         tabIndex={0}
-        className="overflow-hidden rounded-lg border border-nexoraBorder bg-nexoraSurface shadow-nexora-card"
+        className="overflow-hidden rounded-lg border border-nexoraBorder"
       >
-        <div className="p-4 sm:p-5">{children}</div>
+        {children}
       </section>
     </section>
   )
