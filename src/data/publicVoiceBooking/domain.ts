@@ -108,6 +108,12 @@ export interface CreateOnlineBookingRequest {
   date: string
   startTime: string
   notes?: string | null
+  // SMS consent (A2P 10DLC / TCPA) — see CreatePublicBookingPayload for the contract.
+  transactionalConsent?: boolean
+  marketingConsent?: boolean
+  disclosureVersion?: string
+  locale?: string
+  sourceUrl?: string
 }
 
 export interface CreateOnlineBookingResultDto {
