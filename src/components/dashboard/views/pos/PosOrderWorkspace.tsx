@@ -12,7 +12,7 @@
 //   The bottom action button is only ever the *next status transition* (Start Service /
 //   Checkout) or the final Complete payment.
 import { useEffect, useMemo, useRef, useState } from 'react'
-import { ArrowLeft, Loader2, Package, Pencil, Trash2 } from 'lucide-react'
+import { ArrowLeft, ChevronDown, Loader2, Package, Pencil, Trash2 } from 'lucide-react'
 import { useTranslation } from '../../../../contexts/LanguageContext'
 import { useNotification } from '../../../../contexts/NotificationContext'
 import { getErrorMessage } from '../../../../data/errorCodes'
@@ -29,8 +29,14 @@ import {
   useSetOrderTip,
   useUpdateOrderProductLineQuantity,
 } from '../../../../data/hooks/usePosCheckout'
-import { useAssignStaffToServiceLine, useCheckInOrder, useStartOrderService } from '../../../../data/hooks/usePosOrders'
+import {
+  useAssignableServicesForStaff,
+  useAssignStaffToServiceLine,
+  useCheckInOrder,
+  useStartOrderService,
+} from '../../../../data/hooks/usePosOrders'
 import { useBookingDetail, useBookingList } from '../../../../data/hooks/usePosBooking'
+import { useTurnBoard } from '../../../../data/hooks/usePosTurnBoard'
 import { formatLocalDateIso } from '../../../../utils/localDate'
 import { PosOrderStatus } from '../../../../constants/posOrderStatus'
 import type {
@@ -165,9 +171,26 @@ export default function PosOrderWorkspace({
   const [customerPhone, setCustomerPhone] = useState('')
   const [customerEmail, setCustomerEmail] = useState('')
 
+  // Check-in Step 2, technician-first flow — one technician applies to every service line
+  // in this check-in (undefined posStaffProfileId = "First available", resolved server-
+  // side same as today). Update mode keeps the old per-line technician picker untouched.
+  const [checkinTechnicianId, setCheckinTechnicianId] = useState<string | undefined>(undefined)
+  const [checkinTechnicianName, setCheckinTechnicianName] = useState<string | undefined>(undefined)
+  const [checkinNote, setCheckinNote] = useState('')
+  const [noteExpanded, setNoteExpanded] = useState(false)
+  // Tracks the technician selection already applied to draftLines — 'FIRST_AVAILABLE'
+  // matches the initial (undefined) state so the restamp/filter effect below is a no-op
+  // on mount and only reacts to an actual staff-initiated change.
+  const appliedTechnicianRef = useRef<string>('FIRST_AVAILABLE')
+
   const { data: order, isLoading: isOrderLoading } = useOrderDetail(businessId, effectiveOrderId ?? undefined)
   const { data: serviceCatalog = [] } = useCheckoutServiceCatalog(businessId)
   const { data: productCatalog = [] } = useCheckoutProductCatalog(businessId)
+  const { data: turnBoardStations = [] } = useTurnBoard(isCreateMode ? businessId : undefined)
+  const { data: assignableServiceIds } = useAssignableServicesForStaff(
+    businessId,
+    isCreateMode ? checkinTechnicianId : undefined,
+  )
 
   // Phone-first Check-in prefill — once Step 1 hands off a phone number, look for a Pending/
   // Confirmed booking today for that same phone and, if found, prefill Step 2 (name/email/
@@ -255,6 +278,11 @@ export default function PosOrderWorkspace({
     setCustomerFacingMode(false)
     setReceiptChoice('sms')
     setTipSplitInputs({})
+    setCheckinTechnicianId(undefined)
+    setCheckinTechnicianName(undefined)
+    setCheckinNote('')
+    setNoteExpanded(false)
+    appliedTechnicianRef.current = 'FIRST_AVAILABLE'
     initializedOrderIdRef.current = null
     appliedBookingPhoneRef.current = null
   }
@@ -372,6 +400,61 @@ export default function PosOrderWorkspace({
     )
   }, [order])
 
+  // Check-in Step 2 — one technician applies to every service line, so a technician
+  // change re-stamps every already-selected service line to the new technician and drops
+  // any that technician can't perform (PosStaffServiceAssignment is a strict allow-list).
+  // Waits for assignableServiceIds to resolve for the *current* checkinTechnicianId before
+  // acting — otherwise a fast technician switch could filter against the previous
+  // technician's assignable list for one render.
+  useEffect(() => {
+    if (!isCreateMode) return
+    if (checkinTechnicianId && assignableServiceIds === undefined) return
+    const appliedKey = checkinTechnicianId ?? 'FIRST_AVAILABLE'
+    if (appliedTechnicianRef.current === appliedKey) return
+    appliedTechnicianRef.current = appliedKey
+
+    setDraftLines((prev) => {
+      let removedCount = 0
+      const next = prev.reduce<DisplayLine[]>((acc, line) => {
+        if (line.itemType !== 'Service') {
+          acc.push(line)
+          return acc
+        }
+        if (checkinTechnicianId && assignableServiceIds && !assignableServiceIds.includes(line.posServiceId)) {
+          removedCount += 1
+          return acc
+        }
+        acc.push({ ...line, posStaffProfileId: checkinTechnicianId, technicianName: checkinTechnicianName })
+        return acc
+      }, [])
+      if (removedCount > 0) {
+        showToast(
+          t('components.dashboard.views.pos.PosOrderWorkspace.technicianChangedServicesRemoved', {
+            count: removedCount,
+          }),
+        )
+      }
+      return next
+    })
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isCreateMode, checkinTechnicianId, checkinTechnicianName, assignableServiceIds])
+
+  const handleSelectCheckinTechnician = (posStaffProfileId?: string, technicianName?: string) => {
+    setCheckinTechnicianId(posStaffProfileId)
+    setCheckinTechnicianName(technicianName)
+  }
+
+  // Feeds CategoryGroupedCatalogPicker's toggle-selected/disabled visuals for Check-in
+  // Step 2's service grid — First Available (no checkinTechnicianId) means no filtering.
+  const checkinSelectedServiceIds = useMemo(
+    () => draftLines.filter((l): l is DisplayServiceLine => l.itemType === 'Service').map((l) => l.posServiceId),
+    [draftLines],
+  )
+  const checkinDisabledServiceIds = useMemo(() => {
+    if (!checkinTechnicianId || !assignableServiceIds) return []
+    return serviceCatalog.filter((s) => !assignableServiceIds.includes(s.id)).map((s) => s.id)
+  }, [checkinTechnicianId, assignableServiceIds, serviceCatalog])
+
   const hasServiceLines = visibleLines.some((l) => l.itemType === 'Service')
   const draftSubtotal = visibleLines.reduce((sum, l) => sum + lineTotal(l), 0)
   // This is the Check-in screen, so the primary action defaults to "Check In" — including
@@ -388,7 +471,29 @@ export default function PosOrderWorkspace({
     showToast(getErrorMessage(err, t, 'ERROR'), 'error')
   }
 
+  // Create mode: technician is already picked upfront (checkinTechnicianId), so tapping a
+  // service card toggles it straight into/out of draftLines — no per-line technician
+  // drawer. Update mode is unchanged: still opens SelectTechniciansModal to pick a
+  // technician for this specific new line.
   const handleCatalogServiceClick = (service: CheckoutServiceCatalogItemApiDto) => {
+    if (isCreateMode) {
+      setDraftLines((prev) => {
+        const existing = prev.find((l) => l.itemType === 'Service' && l.posServiceId === service.id)
+        if (existing) return prev.filter((l) => l.key !== existing.key)
+        const newLine: DisplayServiceLine = {
+          key: crypto.randomUUID(),
+          itemType: 'Service',
+          posServiceId: service.id,
+          serviceName: service.name,
+          unitPrice: service.price,
+          posStaffProfileId: checkinTechnicianId,
+          technicianName: checkinTechnicianName,
+          completedAt: null,
+        }
+        return [...prev, newLine]
+      })
+      return
+    }
     setTechnicianModal({ posServiceId: service.id, serviceName: service.name, unitPrice: service.price })
   }
 
@@ -433,35 +538,11 @@ export default function PosOrderWorkspace({
     })
   }
 
+  // Update mode only — Create mode's service picks go through handleCatalogServiceClick's
+  // isCreateMode branch above (technician chosen upfront, no per-line drawer).
   const handleTechnicianConfirm = (selection: SelectTechniciansSelection) => {
     if (!technicianModal) return
     const { editingKey, posServiceId, serviceName, unitPrice } = technicianModal
-
-    if (isCreateMode) {
-      setDraftLines((prev) => {
-        if (editingKey) {
-          return prev.map((l) =>
-            l.key === editingKey && l.itemType === 'Service'
-              ? { ...l, posStaffProfileId: selection.posStaffProfileId, technicianName: selection.technicianName, note: selection.note }
-              : l,
-          )
-        }
-        const newLine: DisplayServiceLine = {
-          key: crypto.randomUUID(),
-          itemType: 'Service',
-          posServiceId,
-          serviceName,
-          unitPrice,
-          posStaffProfileId: selection.posStaffProfileId,
-          technicianName: selection.technicianName,
-          note: selection.note,
-          completedAt: null,
-        }
-        return [...prev, newLine]
-      })
-      setTechnicianModal(null)
-      return
-    }
 
     if (!effectiveOrderId) {
       setTechnicianModal(null)
@@ -539,7 +620,9 @@ export default function PosOrderWorkspace({
             itemType: 'Service',
             id: line.posServiceId,
             posStaffProfileId: line.posStaffProfileId,
-            note: line.note,
+            // Create mode's single check-in Note (Update mode still carries its own
+            // per-line note, set via the technician drawer, untouched here).
+            note: isCreateMode ? checkinNote.trim() || undefined : line.note,
           }
         : { itemType: 'Product', id: line.posProductId, quantity: line.quantity },
     )
@@ -750,6 +833,56 @@ export default function PosOrderWorkspace({
         />
       ) : null}
 
+      {isCreateMode ? (
+        <div className="space-y-2 rounded-xl border border-nexoraBorder bg-nexoraSurface p-4">
+          <div>
+            <h3 className="text-sm font-extrabold text-nexoraText">
+              {t('components.dashboard.views.pos.PosOrderWorkspace.technicianSectionTitle')}
+            </h3>
+            <p className="text-[11px] text-nexoraMuted">
+              {t('components.dashboard.views.pos.PosOrderWorkspace.technicianSectionHint')}
+            </p>
+          </div>
+          <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
+            <button
+              type="button"
+              onClick={() => handleSelectCheckinTechnician(undefined, undefined)}
+              className={`flex flex-col items-center justify-center gap-0.5 rounded-xl border p-3 text-center ${
+                !checkinTechnicianId ? 'border-nexoraBrand bg-nexoraBrand/5' : 'border-nexoraBorder hover:border-nexoraBrand'
+              }`}
+            >
+              <span className="text-sm font-bold text-nexoraText">
+                {t('components.dashboard.views.pos.PosOrderWorkspace.firstAvailableLabel')}
+              </span>
+              <span className="text-[10px] text-nexoraMuted">
+                {t('components.dashboard.views.pos.PosOrderWorkspace.firstAvailableHint')}
+              </span>
+            </button>
+            {turnBoardStations.map((station) => {
+              const stationIsBusy = station.currentStatus === PosOrderStatus.InService
+              const isSelected = checkinTechnicianId === station.posStaffProfileId
+              return (
+                <button
+                  key={station.posStaffProfileId}
+                  type="button"
+                  onClick={() => handleSelectCheckinTechnician(station.posStaffProfileId, station.displayName)}
+                  className={`flex flex-col items-center justify-center gap-0.5 rounded-xl border p-3 text-center ${
+                    isSelected ? 'border-nexoraBrand bg-nexoraBrand/5' : 'border-nexoraBorder hover:border-nexoraBrand'
+                  }`}
+                >
+                  <span className="truncate text-sm font-bold text-nexoraText">{station.displayName}</span>
+                  <span className={`text-[10px] font-semibold ${stationIsBusy ? 'text-rose-600' : 'text-emerald-600'}`}>
+                    {stationIsBusy
+                      ? t('components.dashboard.views.pos.PosOrderWorkspace.technicianBusy')
+                      : t('components.dashboard.views.pos.PosOrderWorkspace.technicianAvailable')}
+                  </span>
+                </button>
+              )
+            })}
+          </div>
+        </div>
+      ) : null}
+
       {!isCreateMode && isOrderLoading ? (
         <div className="nexora-card p-6">
           <SkeletonList count={4} lines={2} />
@@ -790,6 +923,8 @@ export default function PosOrderWorkspace({
                   const service = serviceCatalog.find((s) => s.id === itemId)
                   if (service) handleCatalogServiceClick(service)
                 }}
+                selectedItemIds={isCreateMode ? checkinSelectedServiceIds : undefined}
+                disabledItemIds={isCreateMode ? checkinDisabledServiceIds : undefined}
                 addLabel={t('components.dashboard.views.pos.PosOrderWorkspace.addButton')}
                 emptyLabel={t('components.dashboard.views.pos.PosOrderWorkspace.noServicesInCategory')}
                 allCategoryLabel={t('components.dashboard.views.pos.PosOrderWorkspace.allCategories')}
@@ -848,14 +983,16 @@ export default function PosOrderWorkspace({
                           </span>
                         </div>
                         <div className="flex justify-end gap-1.5">
-                          <button
-                            type="button"
-                            onClick={() => handleEditServiceLine(line)}
-                            className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl text-nexoraMuted hover:bg-nexoraCanvas hover:text-nexoraBrandDark"
-                            aria-label={t('components.dashboard.views.pos.PosOrderWorkspace.editLine')}
-                          >
-                            <Pencil className="h-4 w-4" />
-                          </button>
+                          {!isCreateMode ? (
+                            <button
+                              type="button"
+                              onClick={() => handleEditServiceLine(line)}
+                              className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl text-nexoraMuted hover:bg-nexoraCanvas hover:text-nexoraBrandDark"
+                              aria-label={t('components.dashboard.views.pos.PosOrderWorkspace.editLine')}
+                            >
+                              <Pencil className="h-4 w-4" />
+                            </button>
+                          ) : null}
                           <button
                             type="button"
                             onClick={() => handleDeleteLine(line)}
@@ -915,7 +1052,7 @@ export default function PosOrderWorkspace({
                 </div>
               )}
 
-              {noteLines.length > 0 ? (
+              {!isCreateMode && noteLines.length > 0 ? (
                 <div className="rounded-xl bg-nexoraCanvas p-3">
                   <h4 className="mb-1 text-[10px] font-black uppercase tracking-wider text-nexoraMuted">
                     {t('components.dashboard.views.pos.PosOrderWorkspace.noteTitle')}
@@ -927,6 +1064,32 @@ export default function PosOrderWorkspace({
                       </li>
                     ))}
                   </ul>
+                </div>
+              ) : null}
+
+              {isCreateMode ? (
+                <div className="rounded-xl border border-nexoraBorder">
+                  <button
+                    type="button"
+                    onClick={() => setNoteExpanded((prev) => !prev)}
+                    className="flex w-full items-center justify-between px-3 py-2 text-left"
+                  >
+                    <span className="text-[11px] font-bold text-nexoraText">
+                      {t('components.dashboard.views.pos.PosOrderWorkspace.noteFieldLabel')}
+                      {checkinNote.trim() ? ` · ${checkinNote.trim()}` : ''}
+                    </span>
+                    <ChevronDown className={`h-4 w-4 shrink-0 text-nexoraMuted transition ${noteExpanded ? 'rotate-180' : ''}`} />
+                  </button>
+                  {noteExpanded ? (
+                    <textarea
+                      value={checkinNote}
+                      onChange={(e) => setCheckinNote(e.target.value)}
+                      maxLength={500}
+                      rows={2}
+                      placeholder={t('components.dashboard.views.pos.PosOrderWorkspace.notePlaceholder')}
+                      className="w-full rounded-b-xl border-t border-nexoraBorder bg-white px-3 py-2 text-xs text-nexoraText outline-none focus:border-nexoraBrand"
+                    />
+                  ) : null}
                 </div>
               ) : null}
 
@@ -968,29 +1131,36 @@ export default function PosOrderWorkspace({
             ) : null}
 
             {isCreateMode ? (
-              <div className="flex gap-2">
-                <button
-                  type="button"
-                  onClick={resetCreateDraft}
-                  className="h-11 rounded-lg border border-nexoraBorder px-4 text-sm font-bold text-nexoraText hover:border-nexoraBrand"
-                >
-                  {t('components.dashboard.views.pos.PosOrderWorkspace.cancelButton')}
-                </button>
-                <button
-                  type="button"
-                  onClick={isProductOnlyCheckout ? handleCheckoutFromCreate : handleCheckIn}
-                  disabled={isBusy || visibleLines.length === 0}
-                  className="h-11 flex-1 rounded-lg bg-nexoraBrand text-sm font-bold text-white hover:bg-nexoraBrandDark disabled:opacity-60"
-                >
-                  {isBusy ? (
-                    <Loader2 className="mx-auto h-4 w-4 animate-spin" />
-                  ) : isProductOnlyCheckout ? (
-                    t('components.dashboard.views.pos.PosOrderWorkspace.checkoutButton')
-                  ) : (
-                    t('components.dashboard.views.pos.PosOrderWorkspace.checkInButton')
-                  )}
-                </button>
-              </div>
+              <>
+                <p className="text-[10px] leading-snug text-nexoraMuted">
+                  {t('components.dashboard.views.pos.PosOrderWorkspace.smsConsentNotice', {
+                    businessName: businessName || t('components.dashboard.views.pos.PosOrderWorkspace.smsConsentBusinessFallback'),
+                  })}
+                </p>
+                <div className="flex gap-2">
+                  <button
+                    type="button"
+                    onClick={resetCreateDraft}
+                    className="h-11 rounded-lg border border-nexoraBorder px-4 text-sm font-bold text-nexoraText hover:border-nexoraBrand"
+                  >
+                    {t('components.dashboard.views.pos.PosOrderWorkspace.cancelButton')}
+                  </button>
+                  <button
+                    type="button"
+                    onClick={isProductOnlyCheckout ? handleCheckoutFromCreate : handleCheckIn}
+                    disabled={isBusy || visibleLines.length === 0}
+                    className="h-11 flex-1 rounded-lg bg-nexoraBrand text-sm font-bold text-white hover:bg-nexoraBrandDark disabled:opacity-60"
+                  >
+                    {isBusy ? (
+                      <Loader2 className="mx-auto h-4 w-4 animate-spin" />
+                    ) : isProductOnlyCheckout ? (
+                      t('components.dashboard.views.pos.PosOrderWorkspace.checkoutButton')
+                    ) : (
+                      t('components.dashboard.views.pos.PosOrderWorkspace.checkInButton')
+                    )}
+                  </button>
+                </div>
+              </>
             ) : null}
 
             {showPaymentSection && order ? (

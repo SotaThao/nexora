@@ -123,6 +123,17 @@ export function createPosOrdersRepository(client: HttpClient = httpClient) {
       )
       return res ?? []
     },
+
+    // Inverse of getAssignableStaffForService — which services can this technician
+    // perform. Used by Check-in Step 2's technician-first flow to disable services the
+    // chosen technician isn't assigned to (PosStaffServiceAssignment is a strict
+    // allow-list — no rows means no services).
+    async getAssignableServicesForStaff(businessId: string, posStaffProfileId: string): Promise<string[]> {
+      const res = await client.get<string[]>(
+        `/api/v1/merchant/pos/${businessId}/orders/staff/${posStaffProfileId}/assignable-services`,
+      )
+      return res ?? []
+    },
   }
 }
 

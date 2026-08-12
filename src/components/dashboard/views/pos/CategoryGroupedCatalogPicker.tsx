@@ -11,7 +11,7 @@
 // (default) is untouched and keeps the Booking pickers pixel-identical, since they weren't
 // part of that review and live inside more space-constrained modals.
 import { useMemo, useState } from 'react'
-import { Search } from 'lucide-react'
+import { Check, Search } from 'lucide-react'
 
 export interface CatalogPickerItem {
   id: string
@@ -30,6 +30,8 @@ export default function CategoryGroupedCatalogPicker({
   uncategorizedLabel,
   searchPlaceholder,
   variant = 'list',
+  selectedItemIds,
+  disabledItemIds,
 }: {
   items: CatalogPickerItem[]
   onAdd: (itemId: string) => void
@@ -42,9 +44,20 @@ export default function CategoryGroupedCatalogPicker({
   uncategorizedLabel: string
   searchPlaceholder?: string
   variant?: 'list' | 'grid'
+  // Check-in Step 2's technician-first flow (grid variant only) — when provided, the "+"
+  // affordance becomes a checked/unchecked toggle indicator and `onAdd` is called on every
+  // tap (caller decides add-vs-remove). Omitted by every other caller (Update-mode catalog,
+  // Booking pickers), which keep the original tap-to-add-then-modal behavior untouched.
+  selectedItemIds?: string[]
+  // Cards for these ids render disabled (e.g. a service the chosen technician can't
+  // perform) — grid variant only, omitted elsewhere.
+  disabledItemIds?: string[]
 }) {
   const [selectedCategoryId, setSelectedCategoryId] = useState('')
   const [searchQuery, setSearchQuery] = useState('')
+
+  const selectedIdSet = useMemo(() => new Set(selectedItemIds ?? []), [selectedItemIds])
+  const disabledIdSet = useMemo(() => new Set(disabledItemIds ?? []), [disabledItemIds])
 
   const categories = useMemo(() => {
     const byId = new Map<string, string>()
@@ -82,23 +95,39 @@ export default function CategoryGroupedCatalogPicker({
   // several rows per screen (the whole point of this redesign was cutting scroll distance),
   // but big enough to tap comfortably. No duration/subtitle line: the real catalog DTOs
   // (CheckoutServiceCatalogItemApiDto/CheckoutProductCatalogItemApiDto) don't carry one.
-  const renderItemCard = (item: CatalogPickerItem) => (
-    <button
-      key={item.id}
-      type="button"
-      onClick={() => onAdd(item.id)}
-      disabled={isPending}
-      className="flex min-h-[76px] flex-col justify-between gap-2 rounded-2xl border border-nexoraBorder bg-nexoraSurface p-3 text-left hover:border-nexoraBrand disabled:opacity-60"
-    >
-      <span className="line-clamp-2 text-sm font-bold leading-snug text-nexoraText">{item.name}</span>
-      <div className="flex items-center justify-between">
-        <span className="text-sm font-bold text-nexoraText">${item.price.toFixed(2)}</span>
-        <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-lg bg-nexoraCanvas text-base font-bold text-nexoraBrandDark">
-          +
-        </span>
-      </div>
-    </button>
-  )
+  const renderItemCard = (item: CatalogPickerItem) => {
+    const isSelected = selectedIdSet.has(item.id)
+    const isDisabled = Boolean(isPending) || disabledIdSet.has(item.id)
+    return (
+      <button
+        key={item.id}
+        type="button"
+        onClick={() => onAdd(item.id)}
+        disabled={isDisabled}
+        className={`flex min-h-[76px] flex-col justify-between gap-2 rounded-2xl border bg-nexoraSurface p-3 text-left disabled:opacity-40 ${
+          isSelected ? 'border-nexoraBrand bg-nexoraBrand/5' : 'border-nexoraBorder hover:border-nexoraBrand'
+        }`}
+      >
+        <span className="line-clamp-2 text-sm font-bold leading-snug text-nexoraText">{item.name}</span>
+        <div className="flex items-center justify-between">
+          <span className="text-sm font-bold text-nexoraText">${item.price.toFixed(2)}</span>
+          {selectedItemIds ? (
+            <span
+              className={`flex h-5 w-5 shrink-0 items-center justify-center rounded-full border-2 ${
+                isSelected ? 'border-nexoraBrand bg-nexoraBrand text-white' : 'border-nexoraBorder'
+              }`}
+            >
+              {isSelected ? <Check className="h-3 w-3" /> : null}
+            </span>
+          ) : (
+            <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-lg bg-nexoraCanvas text-base font-bold text-nexoraBrandDark">
+              +
+            </span>
+          )}
+        </div>
+      </button>
+    )
+  }
 
   const groupedSections = useMemo(() => {
     if (selectedCategoryId !== '') return null
