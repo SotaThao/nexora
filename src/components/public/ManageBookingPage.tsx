@@ -11,10 +11,14 @@ import { useNotification } from '../../contexts/NotificationContext'
 import {
   useCancelManageBooking,
   useManageBooking,
+  useManageBookingConsent,
   useRescheduleManageBooking,
+  useUpdateManageBookingConsent,
 } from '../../data/hooks/usePublicBooking'
 import { PosOrderStatus } from '../../constants/posOrderStatus'
+import { SMS_CONSENT_MODE } from '../../constants/smsConsent'
 import DateTimeStep from '../booking-public/DateTimeStep'
+import SmsConsentPanel from './booking/SmsConsentPanel'
 
 type ViewMode = 'view' | 'confirmCancel' | 'reschedule'
 
@@ -55,6 +59,22 @@ export default function ManageBookingPage() {
   const { data, isLoading, isError } = useManageBooking(manageToken)
   const cancelMutation = useCancelManageBooking(manageToken)
   const rescheduleMutation = useRescheduleManageBooking(manageToken)
+  const { data: consent } = useManageBookingConsent(manageToken)
+  const updateConsent = useUpdateManageBookingConsent(manageToken)
+
+  // Unlike the booking form, pre-checking here is correct: the manage token already authenticates
+  // this customer, so the panel shows their real current state rather than a blank slate.
+  const [consentDraft, setConsentDraft] = useState({ transactional: false, marketing: false })
+  const [consentSyncedFor, setConsentSyncedFor] = useState<string | null>(null)
+  if (consent && consentSyncedFor !== manageToken) {
+    setConsentDraft({ transactional: consent.transactionalGranted, marketing: consent.marketingGranted })
+    setConsentSyncedFor(manageToken ?? null)
+  }
+
+  const consentChanged =
+    Boolean(consent)
+    && (consentDraft.transactional !== consent!.transactionalGranted
+      || consentDraft.marketing !== consent!.marketingGranted)
   const [mode, setMode] = useState<ViewMode>('view')
 
   if (isLoading) {
@@ -184,6 +204,41 @@ export default function ManageBookingPage() {
             </button>
           </div>
         )}
+
+        {/* The only place a customer can withdraw consent themselves — the booking form grants
+            only, so without this they would have to reply STOP to opt back out. */}
+        <SmsConsentPanel
+          transactional={consentDraft.transactional}
+          marketing={consentDraft.marketing}
+          onChange={setConsentDraft}
+          mode={SMS_CONSENT_MODE.editable}
+          disabled={updateConsent.isPending}
+        />
+        {consentChanged ? (
+          <button
+            type="button"
+            onClick={() =>
+              updateConsent.mutate(
+                {
+                  transactionalGranted: consentDraft.transactional,
+                  marketingGranted: consentDraft.marketing,
+                },
+                {
+                  onSuccess: () => showToast(t('public.smsConsent.saveSuccess'), 'success'),
+                  onError: () => showToast(t('public.smsConsent.saveFailed'), 'error'),
+                },
+              )
+            }
+            disabled={updateConsent.isPending}
+            className="h-10 w-full rounded-lg bg-nexoraBrand text-xs font-bold text-white hover:bg-nexoraBrandDark disabled:opacity-60"
+          >
+            {updateConsent.isPending ? (
+              <Loader2 className="mx-auto h-4 w-4 animate-spin" />
+            ) : (
+              t('public.smsConsent.saveButton')
+            )}
+          </button>
+        ) : null}
       </div>
     </Shell>
   )

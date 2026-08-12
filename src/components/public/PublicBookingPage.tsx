@@ -26,6 +26,8 @@ import type {
 } from '../../types/repositories'
 import DateTimeStep from '../booking-public/DateTimeStep'
 import ConfirmationScreen from '../booking-public/ConfirmationScreen'
+import SmsConsentPanel from './booking/SmsConsentPanel'
+import { SMS_CONSENT_DISCLOSURE_VERSION } from '../../constants/smsConsent'
 
 type WizardStep = 'discovery' | 'datetime' | 'contact' | 'confirmation'
 
@@ -370,7 +372,7 @@ function PublicBookingShell({
 
 export default function PublicBookingPage() {
   const { businessSlug } = useParams<{ businessSlug: string }>()
-  const { t } = useTranslation()
+  const { t, currentLanguage } = useTranslation()
   const { showToast } = useNotification()
   const { data, isLoading, isError } = usePublicBookingPage(businessSlug)
   const createBooking = useCreatePublicBooking(businessSlug)
@@ -385,6 +387,9 @@ export default function PublicBookingPage() {
   const [selectedTime, setSelectedTime] = useState('')
   const [customerName, setCustomerName] = useState('')
   const [customerPhone, setCustomerPhone] = useState('')
+  // Always starts unticked and is never seeded from a previous booking — a pre-ticked consent box
+  // is not consent, and the customer-lookup endpoint deliberately does not expose consent state.
+  const [smsConsent, setSmsConsent] = useState({ transactional: false, marketing: false })
   const [customerEmail, setCustomerEmail] = useState('')
   const [contactFieldErrors, setContactFieldErrors] = useState<{ name?: string; phone?: string }>({})
   const [bookingResult, setBookingResult] = useState<CreatePublicBookingResultApiDto | null>(null)
@@ -558,6 +563,11 @@ export default function PublicBookingPage() {
         customerEmail: customerEmail.trim() || undefined,
         scheduledAt,
         items: selectedLines.map((l) => ({ posServiceId: l.posServiceId, posStaffProfileId: l.posStaffProfileId })),
+        transactionalConsent: smsConsent.transactional,
+        marketingConsent: smsConsent.marketing,
+        disclosureVersion: SMS_CONSENT_DISCLOSURE_VERSION,
+        locale: currentLanguage,
+        sourceUrl: window.location.href,
       },
       {
         onSuccess: (result) => {
@@ -595,6 +605,7 @@ export default function PublicBookingPage() {
           totalPrice={selectedLines.reduce((sum, l) => sum + l.unitPrice, 0)}
           bookingId={bookingResult.bookingId}
           manageToken={bookingResult.manageToken}
+          smsOptedOut={!smsConsent.transactional}
           onDone={() => {
             setSelectedLines([])
             setSelectedDate('')
@@ -602,6 +613,7 @@ export default function PublicBookingPage() {
             setCustomerName('')
             setCustomerPhone('')
             setCustomerEmail('')
+            setSmsConsent({ transactional: false, marketing: false })
             setContactFieldErrors({})
             setBookingResult(null)
             setStep('discovery')
@@ -713,6 +725,11 @@ export default function PublicBookingPage() {
               className="h-10 w-full rounded-lg border border-nexoraBorder bg-white px-3.5 text-xs text-nexoraText outline-none focus:border-nexoraBrand"
             />
           </div>
+          <SmsConsentPanel
+            transactional={smsConsent.transactional}
+            marketing={smsConsent.marketing}
+            onChange={setSmsConsent}
+          />
           <div className="flex gap-2">
             <button
               type="button"

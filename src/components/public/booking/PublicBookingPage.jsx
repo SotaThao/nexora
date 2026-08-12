@@ -27,6 +27,8 @@ import {
   PUBLIC_BOOKING_THEME_COLOR,
   PUBLIC_BOOKING_VALIDATION_ERROR,
 } from './constants'
+import SmsConsentPanel from './SmsConsentPanel'
+import { SMS_CONSENT_DISCLOSURE_VERSION } from '../../../constants/smsConsent'
 import {
   bookingLocaleFromLang,
   buildCreateBookingBody,
@@ -113,6 +115,10 @@ export default function PublicBookingPage() {
     enabled: Boolean(businessKey),
   })
   const createMutation = useCreatePublicOnlineBooking()
+
+  // Always starts unticked and is never seeded from the ?phone= prefill lookup — a pre-ticked
+  // consent box is not consent.
+  const [smsConsent, setSmsConsent] = useState({ transactional: false, marketing: false })
 
   const defaultSlot = useMemo(() => getDefaultBookingSlot(), [])
   const [state, setState] = useState(() => {
@@ -362,7 +368,12 @@ export default function PublicBookingPage() {
     try {
       const result = await createMutation.mutateAsync({
         businessKey,
-        body: buildCreateBookingBody(state),
+        body: buildCreateBookingBody(state, {
+          ...smsConsent,
+          disclosureVersion: SMS_CONSENT_DISCLOSURE_VERSION,
+          locale: lang,
+          sourceUrl: window.location.href,
+        }),
         source: bookingSource,
       })
       const selectedNames = state.selectedServiceIds
@@ -535,6 +546,13 @@ export default function PublicBookingPage() {
                     {phoneError}
                   </p>
                 </label>
+
+                <SmsConsentPanel
+                  transactional={smsConsent.transactional}
+                  marketing={smsConsent.marketing}
+                  onChange={setSmsConsent}
+                  lang={lang}
+                />
 
                 <label
                   className="form-field"
