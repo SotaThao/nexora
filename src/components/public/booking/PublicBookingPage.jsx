@@ -399,6 +399,7 @@ export default function PublicBookingPage() {
 
   const resetBooking = () => {
     setState(createDefaultBookingState(getDefaultBookingSlot()))
+    setSmsConsent({ transactional: false, marketing: false })
     setErrors([])
     setStatusMessage('')
     createMutation.reset()
@@ -546,13 +547,6 @@ export default function PublicBookingPage() {
                     {phoneError}
                   </p>
                 </label>
-
-                <SmsConsentPanel
-                  transactional={smsConsent.transactional}
-                  marketing={smsConsent.marketing}
-                  onChange={setSmsConsent}
-                  lang={lang}
-                />
 
                 <label
                   className="form-field"
@@ -939,6 +933,19 @@ export default function PublicBookingPage() {
               <p className="field-error" id="review-error" role="alert">
                 {reviewError}
               </p>
+
+              {/* Sits on the review step rather than beside the phone field: this screen already
+                  shows the phone number back to the customer, so the phone, both unchecked boxes,
+                  the full disclosure and the submit button all appear in one view — which is what
+                  Twilio asks to see in a single screenshot for A2P registration. */}
+              <div className="mt-4">
+                <SmsConsentPanel
+                  transactional={smsConsent.transactional}
+                  marketing={smsConsent.marketing}
+                  onChange={setSmsConsent}
+                  lang={lang}
+                />
+              </div>
 
               <div className="action-row">
                 <button
