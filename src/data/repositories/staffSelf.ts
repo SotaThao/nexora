@@ -397,6 +397,28 @@ export function normalizeStaffLinkRequestDetail(dto: StaffLinkRequestDetailApiDt
   }
 }
 
+export interface WorkSkillCategory {
+  id: string
+  name: string
+  description?: string | null
+  displayOrder?: number
+}
+
+export interface WorkSkillService {
+  id: string
+  name: string
+  price?: number
+  duration?: number
+  description?: string | null
+  status?: string
+  categoryIds?: string[]
+}
+
+export interface WorkSkillSaveResult {
+  businessId: string
+  posServiceIds: string[]
+}
+
 export function createStaffSelfRepository(client: HttpClient = httpClient) {
   return {
     async getMyProfile(): Promise<StaffProfile | null> {
@@ -569,6 +591,29 @@ export function createStaffSelfRepository(client: HttpClient = httpClient) {
 
     async unlinkBusiness(businessId: string): Promise<void> {
       await client.del(`/api/v1/staff/businesses/${encodeURIComponent(businessId)}`)
+    },
+
+    // ── Work Skill (US-18) ──
+
+    async getWorkSkillCategories(businessId: string): Promise<WorkSkillCategory[]> {
+      const res = await client.get(`/api/v1/staff/businesses/${encodeURIComponent(businessId)}/categories`)
+      return Array.isArray(res) ? res : []
+    },
+
+    async getWorkSkillServices(businessId: string): Promise<WorkSkillService[]> {
+      const res = await client.get(`/api/v1/staff/businesses/${encodeURIComponent(businessId)}/services`)
+      return Array.isArray(res) ? res : []
+    },
+
+    async getWorkSkillAssignments(businessId: string): Promise<string[]> {
+      const res = await client.get(`/api/v1/staff/businesses/${encodeURIComponent(businessId)}/service-assignments`)
+      return Array.isArray(res) ? res : []
+    },
+
+    async saveWorkSkillAssignments(businessId: string, posServiceIds: string[]): Promise<WorkSkillSaveResult> {
+      return client.put(`/api/v1/staff/businesses/${encodeURIComponent(businessId)}/service-assignments`, {
+        posServiceIds,
+      })
     },
   }
 }
