@@ -800,9 +800,6 @@ export default function BookingCreateAppointmentModal({
     <div
       className="booking-create-modal"
       role="presentation"
-      onClick={() => {
-        if (!createMutation.isPending) onClose()
-      }}
     >
       <div
         ref={dialogRef}
@@ -810,7 +807,6 @@ export default function BookingCreateAppointmentModal({
         role="dialog"
         aria-modal="true"
         aria-labelledby="booking-create-title"
-        onClick={(event) => event.stopPropagation()}
       >
         <div className="booking-create-head">
           <div>

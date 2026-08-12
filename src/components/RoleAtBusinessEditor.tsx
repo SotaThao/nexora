@@ -170,6 +170,8 @@ export default function RoleAtBusinessEditor({
     if (!isOpen) return
 
     const handleMouseDown = (event: MouseEvent) => {
+      // Mobile uses a full-screen sheet dialog — do not dismiss on outside click.
+      if (isMobile) return
       const target = event.target as Node
       if (triggerRef.current?.contains(target) || panelRef.current?.contains(target)) return
       closeEditor()
@@ -187,7 +189,7 @@ export default function RoleAtBusinessEditor({
       document.removeEventListener('mousedown', handleMouseDown)
       document.removeEventListener('keydown', handleKeyDown)
     }
-  }, [closeEditor, isOpen])
+  }, [closeEditor, isMobile, isOpen])
 
   useEffect(() => {
     if (!isOpen || !isMobile || typeof document === 'undefined') return
@@ -401,9 +403,6 @@ export default function RoleAtBusinessEditor({
   const mobileEditor = (
     <div
       className='fixed inset-0 z-[100] flex items-end bg-nexoraText/60'
-      onMouseDown={(event) => {
-        if (event.target === event.currentTarget) closeEditor()
-      }}
     >
       <div
         ref={panelRef}

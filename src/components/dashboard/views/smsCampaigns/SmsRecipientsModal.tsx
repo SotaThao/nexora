@@ -130,9 +130,6 @@ export default function SmsRecipientsModal({
     <div
       className="sms-recipients-modal"
       role="presentation"
-      onClick={(event) => {
-        if (event.target === event.currentTarget) onClose()
-      }}
     >
       <div
         className="sms-recipients-dialog"

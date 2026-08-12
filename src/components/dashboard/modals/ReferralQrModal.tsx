@@ -71,11 +71,9 @@ export default function ReferralQrModal({ open, onClose }: ReferralQrModalProps)
   return createPortal(
     <div
       className="fixed inset-0 z-[100] flex items-center justify-center overflow-y-auto bg-nexoraText/70 modal-overlay-safe backdrop-blur-sm qr-modal-backdrop"
-      onClick={onClose}
     >
       <div
         className="relative w-full max-w-md rounded-xl bg-white p-6 shadow-2xl animate-scaleUp qr-modal-container"
-        onClick={(event) => event.stopPropagation()}
       >
         <button
           type="button"
