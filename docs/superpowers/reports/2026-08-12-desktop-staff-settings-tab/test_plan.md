@@ -6,7 +6,7 @@ Move merchant Staff management into desktop Settings while retaining legacy Staf
 
 ### Follow-up: active panel surface
 
-- **P3 / L1:** `settings-active-panel` keeps its accessible tabpanel structure and border radius, but has no content padding, background utility, or shadow utility.
+- **P3 / L1:** `settings-active-panel` keeps its accessible tabpanel structure and border radius, but has no content padding, border, background utility, or shadow utility.
 
 ## Risk priorities
 

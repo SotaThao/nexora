@@ -30,7 +30,7 @@ Verified against the authenticated local desktop app:
 - Settings tab order is Account, Staff, Business Verification, Affiliate Link, Terms & Privacy.
 - Staff is selected at `/dashboard/settings/staff`; all five tabs contain text only and zero SVG nodes.
 - Tab widths are intrinsic, the tablist wraps with flex behavior, and the active panel measures 1,152 px inside the centered `max-w-6xl` shell at the inspected viewport.
-- Staff list content renders inside the shared bordered panel without redesigning the list itself.
+- Staff list content renders inside the shared active panel without redesigning the list itself.
 - `/dashboard/staff` redirects to `/dashboard/settings/staff` with Staff selected.
 - ArrowRight from Staff moves selection and route to `/dashboard/settings/kyb`.
 - No app console errors or warnings were observed during the Staff screen inspection.
@@ -44,11 +44,12 @@ Verified against the authenticated local desktop app:
 
 ## Follow-up: active panel surface
 
-- L1/P3 component test passed after first proving RED against the old background, shadow, and padding utilities.
+- L1/P3 component test passed after first proving RED against the old border utility.
 - Settings integration test remained green.
 - Browser computed-style verification at `/dashboard/settings/staff` confirmed:
+  - border width on all four sides: `0px`
   - padding on all four sides: `0px`
   - background: `rgba(0, 0, 0, 0)`
   - box shadow: `none`
-  - panel classes: `overflow-hidden rounded-lg border border-nexoraBorder`
+  - panel classes: `overflow-hidden rounded-lg`
 - No browser console warnings or errors were observed.

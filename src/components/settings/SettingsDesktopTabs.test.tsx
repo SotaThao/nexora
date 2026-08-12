@@ -27,7 +27,7 @@ function Harness() {
 }
 
 describe('SettingsDesktopTabs', () => {
-  it('renders text-only tabs and an unpadded transparent panel without shadow', () => {
+  it('renders text-only tabs and an unpadded borderless transparent panel without shadow', () => {
     render(<Harness />)
     const tablist = screen.getByRole('tablist', { name: 'Settings sections' })
     const renderedTabs = within(tablist).getAllByRole('tab')
@@ -53,8 +53,11 @@ describe('SettingsDesktopTabs', () => {
     )
     expect(tablist.parentElement).toHaveClass('mx-auto', 'max-w-6xl')
     const panel = screen.getByRole('tabpanel')
-    expect(panel).toHaveClass('rounded-lg', 'border-nexoraBorder')
-    expect(panel).not.toHaveClass('bg-nexoraSurface', 'shadow-nexora-card')
+    expect(panel).toHaveClass('rounded-lg')
+    expect(panel).not.toHaveClass('border')
+    expect(panel).not.toHaveClass('border-nexoraBorder')
+    expect(panel).not.toHaveClass('bg-nexoraSurface')
+    expect(panel).not.toHaveClass('shadow-nexora-card')
     expect(panel.firstElementChild).not.toHaveClass('p-4', 'sm:p-5')
   })
 
