@@ -424,7 +424,7 @@ function SalonCard({
   const canUnlink = isActive && typeof onUnlink === 'function'
 
   return (
-    <article className="flex flex-col gap-4 rounded-2xl border border-nexoraBorder bg-white px-4 py-5 shadow-sm sm:px-6">
+    <article className="flex flex-col gap-4 rounded-2xl border border-nexoraBorder bg-white px-6 py-5 shadow-sm max-[480px]:p-4">
       {/* Top: identity + status */}
       <div className="flex flex-wrap items-start justify-between gap-4">
         <div className="flex min-w-0 items-center gap-3.5">
@@ -470,17 +470,17 @@ function SalonCard({
         </div>
       </div>
 
-      {/* Bottom: nickname + actions */}
+      {/* Bottom: nickname + actions — matches my-salons.html (≤480px: full-width equal buttons) */}
       {isActive && (
-        <div className="flex flex-col gap-3 border-t border-nexoraBorder/60 pt-4 sm:flex-row sm:flex-wrap sm:items-center sm:justify-between">
-          <div className="flex items-center gap-1 text-sm">
+        <div className="flex flex-wrap items-center justify-between gap-3 border-t border-nexoraBorder/60 pt-4">
+          <div className="text-sm">
             <span className="font-semibold text-nexoraMuted">{t('staff_salons.nickname_badge')}:</span>
             <span className="ml-1 text-[15px] font-extrabold text-nexoraText">
               {nicknameValue || '—'}
             </span>
           </div>
 
-          <div className="flex flex-wrap items-center gap-2.5">
+          <div className="flex flex-wrap items-center gap-2.5 max-[480px]:w-full">
             {canUnlink && (
               <button
                 type="button"
@@ -488,7 +488,7 @@ function SalonCard({
                 onKeyDown={(event) => event.stopPropagation()}
                 onKeyUp={(event) => event.stopPropagation()}
                 disabled={isUnlinking}
-                className="inline-flex h-[38px] items-center justify-center gap-1.5 rounded-[10px] border border-nexoraDanger/35 bg-white px-4 text-[13px] font-bold text-nexoraDanger transition hover:bg-nexoraDanger/5 disabled:cursor-not-allowed disabled:opacity-60"
+                className="inline-flex h-[38px] items-center justify-center gap-1.5 whitespace-nowrap rounded-[10px] border border-nexoraDanger/35 bg-white px-4 text-[13px] font-bold text-nexoraDanger transition hover:bg-nexoraDanger/5 disabled:cursor-not-allowed disabled:opacity-60 max-[480px]:flex-1"
               >
                 {t('staff_salons.unlink_button')}
               </button>
@@ -496,7 +496,7 @@ function SalonCard({
             <button
               type="button"
               onClick={(event) => { event.stopPropagation(); setSkillModalOpen(true) }}
-              className="inline-flex h-[38px] items-center justify-center gap-1.5 rounded-[10px] border border-nexoraBrand bg-white px-4 text-[13px] font-bold text-nexoraBrand transition hover:bg-nexoraBrand/5"
+              className="inline-flex h-[38px] items-center justify-center gap-1.5 whitespace-nowrap rounded-[10px] border border-nexoraBrand bg-white px-4 text-[13px] font-bold text-nexoraBrand transition hover:bg-nexoraBrand/5 max-[480px]:flex-1"
             >
               {t('staff_salons.edit_work_skill')}
             </button>
@@ -508,8 +508,8 @@ function SalonCard({
               helperText={t('staff_salons.nickname_helper_staff')}
               onRefresh={onRefreshNickname}
               onSave={onSaveNickname}
-              triggerVariant="outline-brand"
-              containerClassName=""
+              triggerVariant="solid"
+              containerClassName="max-[480px]:flex-1 max-[480px]:[&_button]:w-full [&_button]:whitespace-nowrap"
             />
           </div>
         </div>
