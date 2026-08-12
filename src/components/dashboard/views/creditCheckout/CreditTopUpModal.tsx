@@ -136,10 +136,6 @@ export default function CreditTopUpModal({
       className="sms-credit-modal"
       role="presentation"
       {...overlayProps}
-      onClick={(event) => {
-        if (event.target !== event.currentTarget || isSubmitting) return
-        onClose()
-      }}
     >
       <div
         className="sms-credit-dialog"
