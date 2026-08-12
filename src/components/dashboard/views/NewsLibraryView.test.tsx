@@ -105,6 +105,37 @@ describe('NewsLibraryView mobile PDF topics', () => {
     ).toHaveClass('hover:bg-nexoraSurfaceMuted', 'hover:text-nexoraText')
   })
 
+  it('keeps paired event actions equal-width on mobile', async () => {
+    window.history.replaceState(
+      null,
+      '',
+      '/news-library?tab=event-zoom-schedule',
+    )
+    stubNewsLibraryContent({
+      upcomingSessions: [
+        {
+          day: 'Weekly',
+          date: 'Tuesday',
+          time: '9:00 PM',
+          title: 'Agent training',
+          link: 'https://zoom.us/j/123456789',
+          htmlContent: '<p>Session details</p>',
+          primaryAction: 'Join Zoom',
+          secondaryAction: 'View Details',
+        },
+      ],
+    })
+
+    render(<NewsLibraryView showMobileHeading />)
+
+    const joinAction = await screen.findByRole('link', { name: 'Join Zoom' })
+    const detailsAction = screen.getByRole('button', { name: 'View Details' })
+
+    expect(joinAction.parentElement).toHaveClass('grid', 'grid-cols-2', 'sm:flex')
+    expect(joinAction).toHaveClass('h-9', 'w-full', 'sm:w-auto')
+    expect(detailsAction).toHaveClass('h-9', 'w-full', 'sm:w-auto')
+  })
+
   it('preloads the shared PDF runtime after News Library content is ready', async () => {
     stubNewsLibraryContent()
 
