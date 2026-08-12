@@ -478,6 +478,9 @@ export interface CheckoutServiceCatalogItemApiDto {
   id: string
   name: string
   price: number
+  durationMinutes: number
+  description?: string | null
+  photoUrl?: string | null
   categories: CatalogCategoryApiDto[]
 }
 

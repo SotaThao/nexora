@@ -10,14 +10,25 @@
 // tokens — approved after 4 rounds of wireframe review (see project memory). `variant="list"`
 // (default) is untouched and keeps the Booking pickers pixel-identical, since they weren't
 // part of that review and live inside more space-constrained modals.
-import { useMemo, useState } from 'react'
-import { Search } from 'lucide-react'
+import { useEffect, useMemo, useRef, useState } from 'react'
+import { Check, Search, X } from 'lucide-react'
+import IconButton from '../../../ui/IconButton'
+
+// Sentinel category id for "Others" (items with zero real categories) in Check-in Step
+// 2's chip row — that mode has no "All" chip to fall back on, so without an explicit chip
+// for it, an uncategorized service becomes permanently unreachable.
+const UNCATEGORIZED_CHIP_ID = '__uncategorized__'
 
 export interface CatalogPickerItem {
   id: string
   name: string
   price: number
   categories: { id: string; name: string }[]
+  // Check-in Step 2's service card redesign only (see selectedItemIds) — every other
+  // caller's DTO either doesn't carry these or they're simply unused there.
+  durationMinutes?: number
+  description?: string | null
+  photoUrl?: string | null
 }
 
 export default function CategoryGroupedCatalogPicker({
@@ -30,6 +41,10 @@ export default function CategoryGroupedCatalogPicker({
   uncategorizedLabel,
   searchPlaceholder,
   variant = 'list',
+  selectedItemIds,
+  disabledItemIds,
+  viewDetailsLabel,
+  closeDetailsLabel,
 }: {
   items: CatalogPickerItem[]
   onAdd: (itemId: string) => void
@@ -42,15 +57,56 @@ export default function CategoryGroupedCatalogPicker({
   uncategorizedLabel: string
   searchPlaceholder?: string
   variant?: 'list' | 'grid'
+  // Check-in Step 2's technician-first flow (grid variant only) — when provided, this
+  // switches on the whole "enhanced service card" treatment (top-right toggle circle,
+  // duration next to price, category chip counts, defaulting to the first category
+  // instead of "All", and a "View details" button when the item has a description/photo).
+  // Omitted by every other caller (Update-mode catalog, Products, Booking pickers), which
+  // keep the original plain "+ Add" card and "All"-first category behavior untouched.
+  selectedItemIds?: string[]
+  // Cards for these ids render disabled (e.g. a service the chosen technician can't
+  // perform) — grid variant only, omitted elsewhere.
+  disabledItemIds?: string[]
+  // Required (in practice) alongside selectedItemIds to show the "View details" button —
+  // optional in the type only so callers that never pass selectedItemIds don't need it.
+  viewDetailsLabel?: string
+  closeDetailsLabel?: string
 }) {
   const [selectedCategoryId, setSelectedCategoryId] = useState('')
   const [searchQuery, setSearchQuery] = useState('')
+  const [detailItem, setDetailItem] = useState<CatalogPickerItem | null>(null)
+
+  const isCheckinServiceMode = selectedItemIds !== undefined
+  const selectedIdSet = useMemo(() => new Set(selectedItemIds ?? []), [selectedItemIds])
+  const disabledIdSet = useMemo(() => new Set(disabledItemIds ?? []), [disabledItemIds])
 
   const categories = useMemo(() => {
-    const byId = new Map<string, string>()
-    items.forEach((item) => item.categories.forEach((c) => byId.set(c.id, c.name)))
-    return Array.from(byId, ([id, name]) => ({ id, name }))
-  }, [items])
+    const byId = new Map<string, { name: string; count: number }>()
+    items.forEach((item) =>
+      item.categories.forEach((c) => {
+        const existing = byId.get(c.id)
+        byId.set(c.id, { name: c.name, count: (existing?.count ?? 0) + 1 })
+      }),
+    )
+    const result = Array.from(byId, ([id, v]) => ({ id, name: v.name, count: v.count }))
+    if (isCheckinServiceMode) {
+      const uncategorizedCount = items.filter((item) => item.categories.length === 0).length
+      if (uncategorizedCount > 0) {
+        result.push({ id: UNCATEGORIZED_CHIP_ID, name: uncategorizedLabel, count: uncategorizedCount })
+      }
+    }
+    return result
+  }, [items, isCheckinServiceMode, uncategorizedLabel])
+
+  // Check-in Step 2's service grid defaults to the first category (not "All") — matches
+  // the reference layout, where a category is always active. Only applied once, the first
+  // time categories become available, so it doesn't fight the staff's own later picks.
+  const hasDefaultedCategoryRef = useRef(false)
+  useEffect(() => {
+    if (!isCheckinServiceMode || hasDefaultedCategoryRef.current || categories.length === 0) return
+    hasDefaultedCategoryRef.current = true
+    setSelectedCategoryId(categories[0].id)
+  }, [isCheckinServiceMode, categories])
 
   const searchedItems = useMemo(() => {
     const query = searchQuery.trim().toLowerCase()
@@ -80,25 +136,80 @@ export default function CategoryGroupedCatalogPicker({
 
   // Touch-sized card (POS iPad redesign) — compact enough that a long catalog still fits
   // several rows per screen (the whole point of this redesign was cutting scroll distance),
-  // but big enough to tap comfortably. No duration/subtitle line: the real catalog DTOs
-  // (CheckoutServiceCatalogItemApiDto/CheckoutProductCatalogItemApiDto) don't carry one.
-  const renderItemCard = (item: CatalogPickerItem) => (
-    <button
-      key={item.id}
-      type="button"
-      onClick={() => onAdd(item.id)}
-      disabled={isPending}
-      className="flex min-h-[76px] flex-col justify-between gap-2 rounded-2xl border border-nexoraBorder bg-nexoraSurface p-3 text-left hover:border-nexoraBrand disabled:opacity-60"
-    >
-      <span className="line-clamp-2 text-sm font-bold leading-snug text-nexoraText">{item.name}</span>
-      <div className="flex items-center justify-between">
-        <span className="text-sm font-bold text-nexoraText">${item.price.toFixed(2)}</span>
-        <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-lg bg-nexoraCanvas text-base font-bold text-nexoraBrandDark">
-          +
-        </span>
-      </div>
-    </button>
-  )
+  // but big enough to tap comfortably.
+  const renderItemCard = (item: CatalogPickerItem) => {
+    const isSelected = selectedIdSet.has(item.id)
+    // Never disable an already-selected card — the current default technician (top
+    // picker) can change after this service was added with a *different* technician (see
+    // CheckinServiceTechnicianSelect), and the staff must still be able to tap it to
+    // remove it even if the current default couldn't perform it.
+    const isDisabled = Boolean(isPending) || (disabledIdSet.has(item.id) && !isSelected)
+    const hasDetails = Boolean(viewDetailsLabel && (item.description || item.photoUrl))
+
+    if (isCheckinServiceMode) {
+      return (
+        <div
+          key={item.id}
+          className={`flex flex-col gap-1.5 rounded-2xl border bg-nexoraSurface p-3 ${
+            isDisabled ? 'opacity-40' : ''
+          } ${isSelected ? 'border-nexoraBrand bg-nexoraBrand/5' : 'border-nexoraBorder'}`}
+        >
+          <button
+            type="button"
+            onClick={() => onAdd(item.id)}
+            disabled={isDisabled}
+            className="flex w-full flex-col gap-1.5 text-left disabled:cursor-not-allowed"
+          >
+            <div className="flex items-start justify-between gap-2">
+              <span className="line-clamp-2 text-sm font-bold leading-snug text-nexoraText">{item.name}</span>
+              <span
+                className={`flex h-5 w-5 shrink-0 items-center justify-center rounded-full border-2 ${
+                  isSelected ? 'border-nexoraBrand bg-nexoraBrand text-white' : 'border-nexoraBorder'
+                }`}
+              >
+                {isSelected ? <Check className="h-3 w-3" /> : null}
+              </span>
+            </div>
+            <div className="flex items-baseline gap-1.5">
+              <span className="text-sm font-bold text-nexoraText">${item.price.toFixed(2)}</span>
+              {item.durationMinutes ? (
+                <span className="text-xs text-nexoraMuted">· {item.durationMinutes} min</span>
+              ) : null}
+            </div>
+          </button>
+          {hasDetails ? (
+            <button
+              type="button"
+              onClick={() => setDetailItem(item)}
+              className="self-start text-[11px] font-bold text-nexoraBrandDark hover:underline"
+            >
+              {viewDetailsLabel}
+            </button>
+          ) : null}
+        </div>
+      )
+    }
+
+    return (
+      <button
+        key={item.id}
+        type="button"
+        onClick={() => onAdd(item.id)}
+        disabled={isDisabled}
+        className={`flex min-h-[76px] flex-col justify-between gap-2 rounded-2xl border bg-nexoraSurface p-3 text-left disabled:opacity-40 ${
+          isSelected ? 'border-nexoraBrand bg-nexoraBrand/5' : 'border-nexoraBorder hover:border-nexoraBrand'
+        }`}
+      >
+        <span className="line-clamp-2 text-sm font-bold leading-snug text-nexoraText">{item.name}</span>
+        <div className="flex items-center justify-between">
+          <span className="text-sm font-bold text-nexoraText">${item.price.toFixed(2)}</span>
+          <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-lg bg-nexoraCanvas text-base font-bold text-nexoraBrandDark">
+            +
+          </span>
+        </div>
+      </button>
+    )
+  }
 
   const groupedSections = useMemo(() => {
     if (selectedCategoryId !== '') return null
@@ -113,7 +224,7 @@ export default function CategoryGroupedCatalogPicker({
     // otherwise an uncategorized item silently disappears from the picker entirely.
     const uncategorizedItems = searchedItems.filter((item) => item.categories.length === 0)
     if (uncategorizedItems.length > 0) {
-      sections.push({ category: { id: '', name: uncategorizedLabel }, items: uncategorizedItems })
+      sections.push({ category: { id: '', name: uncategorizedLabel, count: uncategorizedItems.length }, items: uncategorizedItems })
     }
     return sections
   }, [categories, searchedItems, selectedCategoryId, uncategorizedLabel])
@@ -121,7 +232,9 @@ export default function CategoryGroupedCatalogPicker({
   const flatItems =
     selectedCategoryId === ''
       ? searchedItems
-      : searchedItems.filter((item) => item.categories.some((c) => c.id === selectedCategoryId))
+      : selectedCategoryId === UNCATEGORIZED_CHIP_ID
+        ? searchedItems.filter((item) => item.categories.length === 0)
+        : searchedItems.filter((item) => item.categories.some((c) => c.id === selectedCategoryId))
 
   const isEmpty =
     selectedCategoryId === '' ? (groupedSections?.length ?? 0) === 0 : flatItems.length === 0
@@ -149,25 +262,27 @@ export default function CategoryGroupedCatalogPicker({
 
       {categories.length > 0 && (
         <div className="flex flex-wrap gap-1.5">
-          <button
-            type="button"
-            onClick={() => setSelectedCategoryId('')}
-            className={
-              isGrid
-                ? `rounded-full px-3.5 py-2 text-xs font-bold transition ${
-                    selectedCategoryId === ''
-                      ? 'bg-nexoraBrand text-white'
-                      : 'bg-nexoraCanvas text-nexoraMuted hover:text-nexoraText'
-                  }`
-                : `rounded-full px-2.5 py-1 text-[10px] font-bold transition ${
-                    selectedCategoryId === ''
-                      ? 'bg-nexoraBrand text-white'
-                      : 'bg-nexoraCanvas text-nexoraMuted hover:text-nexoraText'
-                  }`
-            }
-          >
-            {allCategoryLabel}
-          </button>
+          {isCheckinServiceMode ? null : (
+            <button
+              type="button"
+              onClick={() => setSelectedCategoryId('')}
+              className={
+                isGrid
+                  ? `rounded-full px-3.5 py-2 text-xs font-bold transition ${
+                      selectedCategoryId === ''
+                        ? 'bg-nexoraBrand text-white'
+                        : 'bg-nexoraCanvas text-nexoraMuted hover:text-nexoraText'
+                    }`
+                  : `rounded-full px-2.5 py-1 text-[10px] font-bold transition ${
+                      selectedCategoryId === ''
+                        ? 'bg-nexoraBrand text-white'
+                        : 'bg-nexoraCanvas text-nexoraMuted hover:text-nexoraText'
+                    }`
+              }
+            >
+              {allCategoryLabel}
+            </button>
+          )}
           {categories.map((category) => (
             <button
               key={category.id}
@@ -188,6 +303,15 @@ export default function CategoryGroupedCatalogPicker({
               }
             >
               {category.name}
+              {isCheckinServiceMode ? (
+                <span
+                  className={`ml-1 rounded-full px-1.5 py-0.5 text-[10px] ${
+                    selectedCategoryId === category.id ? 'bg-white/20' : 'bg-nexoraBorder/70 text-nexoraMuted'
+                  }`}
+                >
+                  {category.count}
+                </span>
+              ) : null}
             </button>
           ))}
         </div>
@@ -228,6 +352,37 @@ export default function CategoryGroupedCatalogPicker({
           {flatItems.map(renderItemRow)}
         </div>
       )}
+
+      {detailItem ? (
+        <div
+          className="fixed inset-0 z-[70] flex items-center justify-center bg-nexoraText/70 p-4"
+          onClick={() => setDetailItem(null)}
+        >
+          <div
+            onClick={(e) => e.stopPropagation()}
+            className="flex max-h-[90vh] w-full max-w-md flex-col overflow-hidden rounded-2xl bg-nexoraSurface"
+          >
+            <div className="flex shrink-0 items-center justify-between border-b border-nexoraBorder p-4">
+              <h3 className="text-sm font-extrabold text-nexoraText">{detailItem.name}</h3>
+              <IconButton label={closeDetailsLabel ?? ''} onClick={() => setDetailItem(null)}>
+                <X className="h-4 w-4" />
+              </IconButton>
+            </div>
+            <div className="flex-1 space-y-3 overflow-y-auto p-4">
+              {detailItem.photoUrl ? (
+                <img src={detailItem.photoUrl} alt="" className="h-40 w-full rounded-xl object-cover" />
+              ) : null}
+              <div className="flex items-baseline gap-1.5">
+                <span className="text-base font-bold text-nexoraText">${detailItem.price.toFixed(2)}</span>
+                {detailItem.durationMinutes ? (
+                  <span className="text-xs text-nexoraMuted">· {detailItem.durationMinutes} min</span>
+                ) : null}
+              </div>
+              {detailItem.description ? <p className="text-sm text-nexoraText">{detailItem.description}</p> : null}
+            </div>
+          </div>
+        </div>
+      ) : null}
     </div>
   )
 }
