@@ -62,6 +62,10 @@ import InviteShareModal from './dashboard/modals/InviteShareModal'
 import AddTouchpointModal from './dashboard/modals/AddTouchpointModal'
 import { usePagination } from '../hooks/usePagination'
 import { DEFAULT_PAGE_SIZE, STAFF_FILTER_LIST_PAGE_SIZE } from '../constants/pagination'
+import {
+  isStaffManagementPath,
+  resolveMerchantDataMenu,
+} from './dashboard/routes/staffRoutePaths'
 
 
 export default function Dashboard({
@@ -77,6 +81,7 @@ export default function Dashboard({
 }) {
   const { currentLanguage, t } = useTranslation()
   const { requireKyb } = useKybGate()
+  const location = useLocation()
   const {
     activeMenu,
     isMobileMenuOpen, setIsMobileMenuOpen,
@@ -110,11 +115,14 @@ export default function Dashboard({
   const [reviewsPageNumber, setReviewsPageNumber] = useState(1)
 
   const hasSearchQuery = Boolean(searchQuery.trim())
+  const isStaffManagementScreen = isStaffManagementPath(location.pathname)
+  const merchantDataMenu = resolveMerchantDataMenu(location.pathname, activeMenu)
   const needsMerchantStaffList =
     hasSearchQuery ||
     isAddTouchpointModalOpen ||
-    ['overview', 'staff', 'reviews', 'reports', 'tips', 'analytics', 'touchpoints'].includes(activeMenu)
-  const needsPendingStaffList = activeMenu === 'overview' || activeMenu === 'staff'
+    isStaffManagementScreen ||
+    ['overview', 'reviews', 'reports', 'tips', 'analytics', 'touchpoints'].includes(activeMenu)
+  const needsPendingStaffList = activeMenu === 'overview' || isStaffManagementScreen
   const needsNotificationsList = isNotiDropdownOpen
   const needsTransactions =
     hasSearchQuery ||
@@ -124,12 +132,12 @@ export default function Dashboard({
     activeMenu === 'overview' ||
     activeMenu === 'reviews' ||
     hasSearchQuery ||
-    activeMenu === 'staff'
-  const needsInviteLink = activeMenu === 'staff'
-  const isStaffTab = activeMenu === 'staff'
+    isStaffManagementScreen
+  const needsInviteLink = isStaffManagementScreen
+  const isStaffTab = isStaffManagementScreen
   const isReviewsTab = activeMenu === 'reviews'
   const isTouchpointsTab = activeMenu === 'touchpoints'
-  useRefetchMerchantMenuQueries(activeMenu)
+  useRefetchMerchantMenuQueries(merchantDataMenu)
   const staffPagination = usePagination({ pageSize: DEFAULT_PAGE_SIZE })
   const reviewsPagination = usePagination({ pageSize: DEFAULT_PAGE_SIZE })
 
@@ -213,7 +221,7 @@ export default function Dashboard({
     pageSize: 50,
   })
   const { data: waitingStaffPage } = useMerchantStaff({
-    enabled: needsPendingStaffList && activeMenu === 'staff',
+    enabled: needsPendingStaffList && isStaffManagementScreen,
     statusFilter: StatusFilter.WaitingStaffAcceptance,
     pageNumber: 1,
     pageSize: 50,
