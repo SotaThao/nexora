@@ -4,7 +4,7 @@
 
 ## Goal
 
-Move merchant Staff management from the desktop dashboard sidebar into a Staff tab under Settings without changing the mobile Staff experience.
+Move merchant Staff management from the desktop dashboard sidebar into a Staff tab under Settings, and refresh the full desktop Settings tab UI using the News Library visual language without changing the mobile Staff experience.
 
 ## Scope
 
@@ -12,6 +12,7 @@ Move merchant Staff management from the desktop dashboard sidebar into a Staff t
 
 - Remove the Staff entry from the desktop owner sidebar only.
 - Add a Staff tab to the desktop Settings page, immediately after Account.
+- Restyle the complete desktop Settings tab bar and content shell using the established News Library patterns.
 - Show the existing Staff list, pending requests, actions, pagination, and staff detail experience inside that tab.
 - Add desktop Settings routes for the Staff list and detail views.
 - Preserve existing Staff routes as compatibility and mobile routes.
@@ -21,7 +22,9 @@ Move merchant Staff management from the desktop dashboard sidebar into a Staff t
 ### Out of scope
 
 - Redesigning Staff list or detail UI.
+- Adding icons to Settings tabs or forcing the tabs into equal-width grid columns.
 - Changing Staff APIs, permissions, mutations, or business rules.
+- Restyling mobile Settings.
 - Changing any mobile bottom-navigation item.
 - Moving POS Staff or personal staff-dashboard screens.
 
@@ -42,9 +45,23 @@ React Router will declare the two-segment detail route explicitly. The existing 
 
 ## Desktop Navigation and Settings UI
 
-The desktop sidebar filters out Staff at render time. The shared `MENU_ITEMS` and `MERCHANT_SIDEBAR_MENU_ITEMS` collections remain unchanged because the mobile drawer still consumes them.
+The desktop sidebar filters out Staff at render time. The shared `MENU_ITEMS` and `MERCHANT_SIDEBAR_MENU_ITEMS` collections remain unchanged because the mobile drawer still consumes them. The desktop Payments & Payouts group currently renders after Staff; move that desktop-only anchor to Dashboard so the group remains visible after Staff is removed.
 
 Desktop Settings adds `staff` to its local tab resolver and renders the tab after Account. Selecting the tab navigates to `/dashboard/settings/staff`. The Staff content reuses the existing Staff list and detail components and their existing callbacks; it does not duplicate API or mutation logic.
+
+### Settings tab visual design
+
+Apply the News Library visual language to the complete desktop Settings tab set: Account, Staff, KYB, Affiliate, and Privacy. The optional Notification tab receives the same styling whenever its existing feature flag is enabled.
+
+- Tabs contain text only; no tab icon is rendered.
+- The tab list uses a wrapping flex layout rather than equal-width grid columns.
+- Each tab is a compact rounded card with a light border, comfortable horizontal padding, and a clear hover/focus state.
+- The active tab uses the NEXORA brand background, white text, a transparent border, and the existing soft NEXORA shadow.
+- Inactive tabs use the surface background, muted text, and border; hover moves toward lavender border/text treatment.
+- The page header, tab list, and content use the News Library `max-w-6xl` centered width so their edges align.
+- The active panel is placed inside a rounded surface card with border, internal spacing, clipped overflow, and the existing card shadow. Existing Staff/Profile/KYB/Affiliate/Privacy content remains functionally unchanged inside that shell.
+
+Use semantic tab behavior equivalent to News Library: `tablist`, `tab`, and `tabpanel` roles; `aria-selected`, `aria-controls`, and roving `tabIndex`; Left/Right arrow keys move focus and activate the adjacent route-backed tab. Clicking or keyboard activation uses the existing Settings route callback, keeping browser navigation and tab state in sync.
 
 On Staff Settings routes:
 
@@ -98,6 +115,10 @@ Focused automated tests will cover:
 6. Staff data gates are enabled for both route families and remain disabled on unrelated Settings tabs.
 7. Invalid detail IDs return to the correct list route for the active layout.
 8. Existing Staff actions and pagination remain wired to the current handlers.
+9. All desktop Settings tabs use the text-only News Library-style tab treatment and render in the required order.
+10. Mouse and Left/Right keyboard navigation update the active route-backed Settings tab and its ARIA state.
+11. The active Settings panel uses the shared centered card shell while mobile Settings remains unchanged.
+12. Removing desktop Staff does not remove the Payments & Payouts group.
 
 After focused tests pass, run type checking and the relevant broader test suite selected by the repository's impact-test tooling.
 
@@ -105,6 +126,11 @@ After focused tests pass, run type checking and the relevant broader test suite 
 
 - Desktop users no longer see Staff as a top-level sidebar item.
 - Desktop users can manage Staff and open Staff details from the Settings > Staff tab.
+- Desktop Settings presents Account, Staff, KYB, Affiliate, and Privacy as text-only News Library-style tabs inside a centered `max-w-6xl` layout.
+- The active desktop Settings panel is visually contained by the shared News Library-style card shell.
+- Desktop Settings tabs support mouse and Left/Right keyboard navigation with correct tab ARIA state.
 - Mobile bottom navigation, mobile drawer, and mobile Staff screens behave exactly as before.
+- Mobile Settings styling remains unchanged.
+- Payments & Payouts remains available in the desktop sidebar after Staff is removed.
 - Existing `/dashboard/staff...` links continue to work on both layouts.
 - No Staff query, pending request, invite, pagination, or action functionality regresses.
