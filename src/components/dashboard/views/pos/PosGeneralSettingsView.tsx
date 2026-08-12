@@ -61,10 +61,10 @@ export default function PosGeneralSettingsView({
   return (
     <div className="space-y-6">
       <section className="space-y-1 px-0.5">
-        <h1 className="text-base font-semibold leading-tight text-nexoraText">
+        <h1 className="text-2xl font-bold leading-tight text-nexoraText">
           {t('dashboard.menu.pos_settings')}
         </h1>
-        <p className="text-xs text-nexoraMuted">
+        <p className="text-sm font-medium text-nexoraMuted">
           {t('components.dashboard.views.pos.PosGeneralSettingsView.description')}
         </p>
       </section>
@@ -96,7 +96,7 @@ export default function PosGeneralSettingsView({
         />
 
         <div className="rounded-xl border border-nexoraBorder bg-white shadow-sm p-6 relative">
-          <div className="flex justify-between items-center border-b border-nexoraRule pb-3 mb-4">
+          <div className="flex justify-between items-center border-b border-nexoraBorder pb-3 mb-4">
             <h4 className="text-xs font-black uppercase text-nexoraText tracking-wider flex items-center gap-2">
               <Clock className="h-4 w-4 text-amber-500" />
               {t('components.settings.tabs.ProfileTab.businessHours.title')}
@@ -151,7 +151,7 @@ export default function PosGeneralSettingsView({
                       />
                     </div>
                   ) : (
-                    <span className="text-[11px] font-medium italic text-nexoraSubtle">
+                    <span className="text-[11px] font-medium italic text-nexoraMuted">
                       {t('components.settings.tabs.ProfileTab.businessHours.closed')}
                     </span>
                   )}

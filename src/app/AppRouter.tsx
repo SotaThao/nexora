@@ -110,6 +110,9 @@ const StaffMyEarnings = lazyWithRetry(
 const StaffMySalons = lazyWithRetry(
   () => import("../components/staff-dashboard/views/StaffMySalons"),
 );
+const StaffClockScan = lazyWithRetry(
+  () => import("../components/staff-dashboard/views/StaffClockScan"),
+);
 const StaffFrontDesk = lazyWithRetry(
   () => import("../components/staff-dashboard/views/StaffFrontDesk"),
 );
@@ -371,6 +374,8 @@ export default function AppRouter() {
             <Route path="earnings" element={<StaffMyEarnings />} />
             <Route path="salons" element={<StaffMySalons />} />
             <Route path="salons/:businessId/front-desk" element={<StaffFrontDesk />} />
+            {/* Landing page for the rotating clock-in QR — salon id and token arrive as ?b=&t= */}
+            <Route path="clock-scan" element={<StaffClockScan />} />
             <Route path="profile" element={<StaffProfile />} />
             <Route path="notifications" element={<StaffNotifications />} />
             <Route path="*" element={<StaffFallbackRoute />} />

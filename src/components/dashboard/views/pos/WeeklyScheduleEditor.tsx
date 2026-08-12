@@ -75,7 +75,7 @@ export default function WeeklyScheduleEditor({
               />
             </div>
           ) : (
-            <span className="text-[11px] font-medium italic text-nexoraSubtle">{offLabel}</span>
+            <span className="text-[11px] font-medium italic text-nexoraMuted">{offLabel}</span>
           )}
           {day.error && (
             <p role="alert" className="mt-1 text-[10px] font-bold text-rose-500">

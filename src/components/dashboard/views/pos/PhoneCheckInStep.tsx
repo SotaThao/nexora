@@ -78,9 +78,9 @@ export default function PhoneCheckInStep({
   }, [digits])
 
   return (
-    <div className="mx-auto w-full max-w-sm space-y-6 rounded-2xl border border-posFdBorder bg-posFdSurface p-6 text-center">
+    <div className="mx-auto w-full max-w-sm space-y-6 rounded-2xl border border-nexoraBorder bg-nexoraSurface p-6 text-center">
       <div>
-        <h1 className="text-xl font-black text-posFdText">
+        <h1 className="text-xl font-black text-nexoraText">
           {businessName
             ? t('components.dashboard.views.pos.PhoneCheckInStep.welcomeTitleWithBusiness', { businessName })
             : t('components.dashboard.views.pos.PhoneCheckInStep.welcomeTitleGeneric')}
@@ -90,8 +90,8 @@ export default function PhoneCheckInStep({
         </p>
       </div>
 
-      <div className="border-b-2 border-posFdAccent pb-3">
-        <span className="font-mono text-2xl font-bold tracking-widest text-posFdText">
+      <div className="border-b-2 border-nexoraBrand pb-3">
+        <span className="font-mono text-2xl font-bold tracking-widest text-nexoraText">
           {renderDigitSlots(digits)}
         </span>
       </div>
@@ -102,7 +102,7 @@ export default function PhoneCheckInStep({
             key={digit}
             type="button"
             onClick={() => handleDigitPress(digit)}
-            className="h-16 rounded-xl border border-posFdBorder bg-white text-2xl font-bold text-posFdText hover:border-posFdAccent active:bg-posFdCanvas"
+            className="h-16 rounded-xl border border-nexoraBorder bg-white text-2xl font-bold text-nexoraText hover:border-nexoraBrand active:bg-nexoraCanvas"
           >
             {digit}
           </button>
@@ -110,21 +110,21 @@ export default function PhoneCheckInStep({
         <button
           type="button"
           onClick={handleClear}
-          className="h-16 rounded-xl border border-posFdBorder bg-white text-sm font-bold text-nexoraMuted hover:border-posFdAccent active:bg-posFdCanvas"
+          className="h-16 rounded-xl border border-nexoraBorder bg-white text-sm font-bold text-nexoraMuted hover:border-nexoraBrand active:bg-nexoraCanvas"
         >
           {t('components.dashboard.views.pos.PhoneCheckInStep.clearButton')}
         </button>
         <button
           type="button"
           onClick={() => handleDigitPress('0')}
-          className="h-16 rounded-xl border border-posFdBorder bg-white text-2xl font-bold text-posFdText hover:border-posFdAccent active:bg-posFdCanvas"
+          className="h-16 rounded-xl border border-nexoraBorder bg-white text-2xl font-bold text-nexoraText hover:border-nexoraBrand active:bg-nexoraCanvas"
         >
           0
         </button>
         <button
           type="button"
           onClick={handleBackspace}
-          className="h-16 rounded-xl border border-posFdBorder bg-white text-xl font-bold text-posFdText hover:border-posFdAccent active:bg-posFdCanvas"
+          className="h-16 rounded-xl border border-nexoraBorder bg-white text-xl font-bold text-nexoraText hover:border-nexoraBrand active:bg-nexoraCanvas"
         >
           ⌫
         </button>

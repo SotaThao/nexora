@@ -123,10 +123,10 @@ export default function PosCategoriesView() {
   return (
     <div className="space-y-6">
       <section className="space-y-1 px-0.5">
-        <h1 className="text-base font-semibold leading-tight text-nexoraText">
+        <h1 className="text-2xl font-bold leading-tight text-nexoraText">
           {t('dashboard.menu.pos_categories')}
         </h1>
-        <p className="text-xs text-nexoraMuted">
+        <p className="text-sm font-medium text-nexoraMuted">
           {t('components.dashboard.views.pos.PosCategoriesView.description')}
         </p>
       </section>
@@ -188,7 +188,7 @@ export default function PosCategoriesView() {
       </div>
 
       {!isReorderable && items.length > 0 && (
-        <p className="px-0.5 text-[11px] italic text-nexoraSubtle">
+        <p className="px-0.5 text-[11px] italic text-nexoraMuted">
           {t('components.dashboard.views.pos.PosCategoriesView.dragDisabledHint')}
         </p>
       )}

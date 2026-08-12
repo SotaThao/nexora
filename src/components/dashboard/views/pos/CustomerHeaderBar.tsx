@@ -63,31 +63,31 @@ export default function CustomerHeaderBar({
       <button
         type="button"
         onClick={() => setCollapsed(false)}
-        className="flex w-full items-center gap-2 rounded-xl border border-posFdBorder bg-posFdSurface px-4 py-2.5 text-left hover:border-posFdAccent"
+        className="flex w-full items-center gap-2 rounded-xl border border-nexoraBorder bg-nexoraSurface px-4 py-2.5 text-left hover:border-nexoraBrand"
       >
-        <User className="h-4 w-4 shrink-0 text-posFdAccentDark" />
-        <span className="truncate text-sm font-bold text-posFdText">{customerName}</span>
+        <User className="h-4 w-4 shrink-0 text-nexoraBrandDark" />
+        <span className="truncate text-sm font-bold text-nexoraText">{customerName}</span>
         <span className="shrink-0 text-xs text-nexoraMuted">· {customerPhone}</span>
       </button>
     )
   }
 
   return (
-    <div className="space-y-2 rounded-xl border border-posFdBorder bg-posFdSurface p-4">
+    <div className="space-y-2 rounded-xl border border-nexoraBorder bg-nexoraSurface p-4">
       <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
         <div>
           <label className="text-[10px] font-extrabold uppercase text-nexoraMuted">
             {t('components.dashboard.views.pos.PosFrontDeskView.customerPhone')}
           </label>
-          <div className="mt-1 flex h-11 items-center justify-between rounded-lg border border-posFdBorder bg-posFdCanvas px-3 text-sm text-posFdText">
+          <div className="mt-1 flex h-11 items-center justify-between rounded-lg border border-nexoraBorder bg-nexoraCanvas px-3 text-sm text-nexoraText">
             <span className="flex items-center gap-1.5 truncate">
-              <Phone className="h-3.5 w-3.5 shrink-0 text-posFdAccentDark" />
+              <Phone className="h-3.5 w-3.5 shrink-0 text-nexoraBrandDark" />
               {customerPhone}
             </span>
             <button
               type="button"
               onClick={onChangePhoneNumber}
-              className="shrink-0 text-[10px] font-bold uppercase text-posFdAccentDark hover:underline"
+              className="shrink-0 text-[10px] font-bold uppercase text-nexoraBrandDark hover:underline"
             >
               {t('components.dashboard.views.pos.CustomerHeaderBar.changeNumber')}
             </button>
@@ -103,7 +103,7 @@ export default function CustomerHeaderBar({
             onChange={(e) => onChangeName(e.target.value)}
             onBlur={handleFieldBlur}
             placeholder={t('components.dashboard.views.pos.CustomerHeaderBar.namePlaceholder')}
-            className="mt-1 h-11 w-full rounded-lg border border-posFdBorder bg-white px-3 text-sm text-posFdText outline-none focus:border-posFdAccent"
+            className="mt-1 h-11 w-full rounded-lg border border-nexoraBorder bg-white px-3 text-sm text-nexoraText outline-none focus:border-nexoraBrand"
           />
         </div>
         <div>
@@ -115,14 +115,14 @@ export default function CustomerHeaderBar({
             value={customerEmail}
             onChange={(e) => onChangeEmail(e.target.value)}
             placeholder={t('components.dashboard.views.pos.CustomerHeaderBar.emailPlaceholder')}
-            className="mt-1 h-11 w-full rounded-lg border border-posFdBorder bg-white px-3 text-sm text-posFdText outline-none focus:border-posFdAccent"
+            className="mt-1 h-11 w-full rounded-lg border border-nexoraBorder bg-white px-3 text-sm text-nexoraText outline-none focus:border-nexoraBrand"
           />
         </div>
       </div>
 
       {lookup ? (
-        <div className="flex items-center justify-between gap-3 rounded-lg bg-posFdCanvas px-3 py-2">
-          <p className="min-w-0 truncate text-[11px] font-semibold text-posFdText">
+        <div className="flex items-center justify-between gap-3 rounded-lg bg-nexoraCanvas px-3 py-2">
+          <p className="min-w-0 truncate text-[11px] font-semibold text-nexoraText">
             {t('components.dashboard.views.pos.CustomerHeaderBar.returningCustomer', {
               name: lookup.customerName,
               summary:
@@ -137,7 +137,7 @@ export default function CustomerHeaderBar({
             <button
               type="button"
               onClick={() => onApplyLastVisit(lookup.serviceLines)}
-              className="flex shrink-0 items-center gap-1 rounded-lg border border-posFdAccent px-2.5 py-1 text-[10px] font-bold text-posFdAccentDark hover:bg-posFdAccent hover:text-white"
+              className="flex shrink-0 items-center gap-1 rounded-lg border border-nexoraBrand px-2.5 py-1 text-[10px] font-bold text-nexoraBrandDark hover:bg-nexoraBrand hover:text-white"
             >
               <Check className="h-3 w-3" />
               {t('components.dashboard.views.pos.CustomerHeaderBar.useLastVisit')}
