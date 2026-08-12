@@ -5607,6 +5607,26 @@
       "cancelSuccess": "Your booking has been cancelled.",
       "rescheduleSuccess": "Your booking has been rescheduled.",
       "backToView": "Back"
+    },
+    "smsConsent": {
+      "heading": "Text message preferences",
+      "intro": "Choose which messages you want to receive. Each choice is optional and can be changed later.",
+      "transactionalTitle": "Appointment and service messages",
+      "transactionalBadge": "Recommended",
+      "transactionalCopy": "I agree to receive recurring automated transactional text messages from this salon and NEXORA TOUCH about booking confirmations, appointment reminders, schedule changes, and customer support.",
+      "marketingTitle": "Offers and salon updates",
+      "marketingBadge": "Optional",
+      "marketingCopy": "I agree to receive recurring automated marketing text messages from this salon and NEXORA TOUCH about promotions, special offers, review requests, and salon news.",
+      "disclosure": "Message frequency varies. Message and data rates may apply. Reply STOP to opt out or HELP for help. Consent is not a condition of purchase. View our",
+      "termsLink": "Terms of Service",
+      "disclosureAnd": "and",
+      "privacyLink": "Privacy Policy",
+      "saveButton": "Save preferences",
+      "saveSuccess": "Your text message preferences have been updated.",
+      "saveFailed": "Could not update your preferences. Please try again.",
+      "noSmsNotice": "You chose not to receive text messages, so save this link — it is how you manage this booking.",
+      "copyLink": "Copy link",
+      "copiedLink": "Link copied"
     }
   },
   "homepage": {

@@ -470,6 +470,8 @@ export const qk = {
     ['publicBookingPage', 'customerLookup', businessSlug ?? '', phone ?? ''],
   // POS Booking — customer self-service Manage Booking page (Ticket 8)
   manageBooking: (manageToken?: string) => ['manageBooking', manageToken ?? ''],
+  // Nested under the manageBooking prefix so invalidating the booking also refreshes consent.
+  manageBookingConsent: (manageToken?: string) => ['manageBooking', manageToken ?? '', 'consent'],
   publicPaymentStatus: (paymentId: string) => ['publicPayment', 'status', paymentId],
   publicVoiceBookingPage: (
     businessKey?: string | null,

@@ -76,6 +76,7 @@ export default function ConfirmationScreen({
   totalPrice,
   bookingId,
   manageToken,
+  smsOptedOut = false,
   onDone,
 }: {
   businessName: string
@@ -89,6 +90,9 @@ export default function ConfirmationScreen({
   totalPrice: number
   bookingId: string
   manageToken: string
+  // True when the customer declined transactional SMS: no confirmation text will arrive, so this
+  // link is their only way back to the booking and the screen has to say so.
+  smsOptedOut?: boolean
   onDone: () => void
 }) {
   const { t } = useTranslation()
@@ -152,6 +156,11 @@ export default function ConfirmationScreen({
           {t('public.booking.manageBookingTitle')}
         </h3>
         <p className="mt-1 text-xs text-nexoraMuted">{t('public.booking.manageBookingDesc')}</p>
+        {smsOptedOut ? (
+          <p className="mt-2 rounded-lg bg-amber-50 px-2.5 py-2 text-[11px] font-semibold text-amber-800">
+            {t('public.smsConsent.noSmsNotice')}
+          </p>
+        ) : null}
         <a href={manageUrl} className="mt-2 block break-all text-xs font-semibold text-nexoraBrand underline">
           {manageUrl}
         </a>

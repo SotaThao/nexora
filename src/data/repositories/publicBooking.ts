@@ -4,6 +4,7 @@
  */
 import httpClient from '../../lib/httpClient'
 import type {
+  BookingConsentApiDto,
   CreatePublicBookingPayload,
   CreatePublicBookingResultApiDto,
   CustomerLookupResultApiDto,
@@ -68,6 +69,21 @@ export function createPublicBookingRepository(client: HttpClient = httpClient) {
       await client.post<void>(
         `/api/v1/booking/manage/${encodeURIComponent(manageToken)}/cancel`,
         {},
+        { anonymous: true },
+      )
+    },
+
+    async getBookingConsent(manageToken: string): Promise<BookingConsentApiDto> {
+      return await client.get<BookingConsentApiDto>(
+        `/api/v1/booking/manage/${encodeURIComponent(manageToken)}/consent`,
+        { anonymous: true },
+      )
+    },
+
+    async updateBookingConsent(manageToken: string, payload: BookingConsentApiDto): Promise<void> {
+      await client.put<void>(
+        `/api/v1/booking/manage/${encodeURIComponent(manageToken)}/consent`,
+        payload,
         { anonymous: true },
       )
     },

@@ -526,6 +526,20 @@ export interface CreatePublicBookingPayload {
   // unshifted (see NewBookingForm.tsx / feedback_frontend_datetime_timezone_naive memory).
   scheduledAt: string
   items: CreatePublicBookingItemPayload[]
+  // SMS consent (A2P 10DLC / TCPA). Both default false; the server records an append-only consent
+  // event only for the scopes actually ticked. ipAddress / userAgent are captured server-side and
+  // must not be sent from here.
+  transactionalConsent: boolean
+  marketingConsent: boolean
+  disclosureVersion: string
+  locale: string
+  sourceUrl: string
+}
+
+/** Current SMS consent for the phone on a booking, read/written via the manage-booking token. */
+export interface BookingConsentApiDto {
+  transactionalGranted: boolean
+  marketingGranted: boolean
 }
 
 export interface CreatePublicBookingResultApiDto {

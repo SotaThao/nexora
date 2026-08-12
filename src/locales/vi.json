@@ -5602,6 +5602,26 @@
       "cancelSuccess": "Lịch hẹn của bạn đã được hủy.",
       "rescheduleSuccess": "Lịch hẹn của bạn đã được đổi lịch.",
       "backToView": "Quay lại"
+    },
+    "smsConsent": {
+      "heading": "Tùy chọn tin nhắn SMS",
+      "intro": "Chọn loại tin nhắn bạn muốn nhận. Mỗi lựa chọn đều không bắt buộc và có thể thay đổi sau.",
+      "transactionalTitle": "Tin nhắn về lịch hẹn và dịch vụ",
+      "transactionalBadge": "Nên chọn",
+      "transactionalCopy": "Tôi đồng ý nhận tin nhắn giao dịch tự động định kỳ từ tiệm này và NEXORA TOUCH về xác nhận đặt lịch, nhắc lịch hẹn, thay đổi lịch và hỗ trợ khách hàng.",
+      "marketingTitle": "Ưu đãi và tin tức từ tiệm",
+      "marketingBadge": "Tùy chọn",
+      "marketingCopy": "Tôi đồng ý nhận tin nhắn quảng cáo tự động định kỳ từ tiệm này và NEXORA TOUCH về khuyến mãi, ưu đãi đặc biệt, yêu cầu đánh giá và tin tức của tiệm.",
+      "disclosure": "Tần suất tin nhắn thay đổi tùy thời điểm. Có thể phát sinh cước tin nhắn và dữ liệu. Nhắn STOP để ngừng nhận hoặc HELP để được trợ giúp. Việc đồng ý không phải là điều kiện để sử dụng dịch vụ. Xem",
+      "termsLink": "Điều khoản dịch vụ",
+      "disclosureAnd": "và",
+      "privacyLink": "Chính sách bảo mật",
+      "saveButton": "Lưu tùy chọn",
+      "saveSuccess": "Đã cập nhật tùy chọn tin nhắn của bạn.",
+      "saveFailed": "Không thể cập nhật tùy chọn. Vui lòng thử lại.",
+      "noSmsNotice": "Bạn đã chọn không nhận tin nhắn SMS, hãy lưu lại đường link này — đây là cách bạn quản lý lịch hẹn.",
+      "copyLink": "Sao chép link",
+      "copiedLink": "Đã sao chép link"
     }
   },
   "homepage": {
