@@ -589,6 +589,9 @@ export default function BookingCustomersPanel() {
         <div
           className="cust-modal-overlay"
           role="presentation"
+          onClick={(event) => {
+            if (event.target === event.currentTarget && !isSaving) closeModal()
+          }}
         >
           <div
             ref={custModalRef}
@@ -596,6 +599,7 @@ export default function BookingCustomersPanel() {
             role="dialog"
             aria-modal="true"
             aria-labelledby="cust-modal-title"
+            onClick={(event) => event.stopPropagation()}
           >
             <div className="cust-modal-head">
               <h3 id="cust-modal-title">

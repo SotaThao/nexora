@@ -267,10 +267,12 @@ function InviteShareModal({
           backdrop escapes any transformed ancestor and covers the full viewport */}
       {largeQrOpen && publicInviteEnabled && createPortal(
         <div
-          className="fixed inset-0 z-[100] flex items-center justify-center bg-black/60 backdrop-blur-sm modal-overlay-safe animate-fadeIn"
+          className="fixed inset-0 z-[100] flex items-center justify-center bg-black/60 backdrop-blur-sm modal-overlay-safe cursor-zoom-out animate-fadeIn"
+          onClick={() => setLargeQrOpen(false)}
         >
           <div
-            className="w-full max-w-md rounded-2xl bg-white p-6 shadow-2xl border border-slate-100 flex flex-col items-center animate-scaleUp"
+            className="w-full max-w-md rounded-2xl bg-white p-6 shadow-2xl border border-slate-100 flex flex-col items-center cursor-default animate-scaleUp"
+            onClick={(e) => e.stopPropagation()}
           >
             <div className="w-full flex justify-between items-center mb-4">
               <h3 className="text-xs font-black uppercase text-slate-800 tracking-wider font-sans">

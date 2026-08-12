@@ -31,6 +31,9 @@ export default function CompleteStoreSetupGateModal({ open, onClose }: Props) {
     <div
       className="fixed inset-0 z-[160] flex items-end justify-center bg-slate-900/55 p-4 backdrop-blur-sm sm:items-center"
       role="presentation"
+      onClick={(event) => {
+        if (event.target === event.currentTarget) onClose()
+      }}
     >
       <div
         role="dialog"

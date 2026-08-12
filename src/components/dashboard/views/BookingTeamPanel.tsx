@@ -1240,6 +1240,7 @@ export default function BookingTeamPanel({ embedded = false }: Props) {
           className="tech-modal"
           data-tech-mode={modalMode}
           role="presentation"
+          onClick={closeModal}
         >
           <div
             ref={techDialogRef}
@@ -1247,6 +1248,7 @@ export default function BookingTeamPanel({ embedded = false }: Props) {
             role="dialog"
             aria-modal="true"
             aria-labelledby="tech-modal-title"
+            onClick={(event) => event.stopPropagation()}
           >
             <div className="tech-modal-head">
               <div className="tech-modal-heading">

@@ -1466,6 +1466,7 @@ export default function BookingTodayPanel({
             className="booking-appointment-backdrop"
             data-booking-appointment-backdrop
             hidden={!calendarCreateAsOverlay}
+            onClick={closeCreateModal}
           />
           <aside
             className="booking-appointment-panel overview-card"
@@ -1512,12 +1513,14 @@ export default function BookingTodayPanel({
         <div
           className="booking-detail-modal"
           role="presentation"
+          onClick={() => setDetailBooking(null)}
         >
           <div
             className="booking-detail-dialog"
             role="dialog"
             aria-modal="true"
             aria-labelledby="booking-detail-title"
+            onClick={(event) => event.stopPropagation()}
           >
             <div className="booking-detail-head">
               <div>

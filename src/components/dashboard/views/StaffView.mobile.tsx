@@ -776,10 +776,12 @@ function StaffView({
           transformed ancestor and covers the full viewport (incl. header) */}
       {largeJoinQrOpen && publicInviteEnabled && createPortal(
         <div
-          className="fixed inset-0 z-[100] flex items-center justify-center bg-black/60 backdrop-blur-sm modal-overlay-safe"
+          className="fixed inset-0 z-[100] flex items-center justify-center bg-black/60 backdrop-blur-sm modal-overlay-safe cursor-zoom-out"
+          onClick={() => setLargeJoinQrOpen(false)}
         >
           <div
-            className="w-full max-w-md rounded-2xl bg-white p-6 shadow-2xl border border-slate-100 flex flex-col items-center animate-scaleUp"
+            className="w-full max-w-md rounded-2xl bg-white p-6 shadow-2xl border border-slate-100 flex flex-col items-center cursor-default animate-scaleUp"
+            onClick={(e) => e.stopPropagation()}
           >
             <div className="w-full flex justify-between items-center mb-4">
               <h3 className="text-xs font-black uppercase text-slate-800 tracking-wider">

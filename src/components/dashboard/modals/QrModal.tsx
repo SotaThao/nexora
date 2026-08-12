@@ -36,9 +36,11 @@ function QrGatewayPreviewLayout({
   return createPortal(
     <div
       className="fixed inset-0 z-[100] flex items-start justify-center overflow-y-auto bg-nexoraText/70 modal-overlay-safe backdrop-blur-sm sm:items-center qr-modal-backdrop"
+      onClick={onClose}
     >
       <div
         className="relative w-full max-w-md rounded-xl bg-white px-6 pb-6 pt-12 text-center shadow-2xl animate-scaleUp qr-modal-container"
+        onClick={(event) => event.stopPropagation()}
       >
         <button
           type="button"
@@ -225,9 +227,11 @@ function QrModal({ target, businessName, onClose }) {
         paddingLeft: 'max(1rem, var(--app-safe-area-left))',
         paddingRight: 'max(1rem, var(--app-safe-area-right))',
       }}
+      onClick={onClose}
     >
       <div
         className="qr-modal-container flex w-full max-w-md max-h-[min(92dvh,calc(100dvh-var(--app-safe-area-top)-var(--app-safe-area-bottom)-1.5rem))] flex-col overflow-hidden rounded-t-2xl bg-white shadow-2xl animate-scaleUp sm:rounded-xl"
+        onClick={(event) => event.stopPropagation()}
       >
         <div className="flex shrink-0 items-start justify-between gap-3 border-b border-nexoraBorder/60 px-4 py-3 no-print sm:px-6 sm:py-4">
           <div className="min-w-0 text-left">

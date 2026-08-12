@@ -61,9 +61,11 @@ export default function DirectPaymentQrPreviewModal({
   return createPortal(
     <div
       className="fixed inset-0 z-[100] flex items-start justify-center overflow-y-auto bg-nexoraText/70 modal-overlay-safe backdrop-blur-sm sm:items-center qr-modal-backdrop"
+      onClick={onClose}
     >
       <div
         className="relative w-full max-w-md rounded-xl bg-white px-6 pb-6 pt-12 text-center shadow-2xl animate-scaleUp qr-modal-container"
+        onClick={(event) => event.stopPropagation()}
       >
         <button
           type="button"

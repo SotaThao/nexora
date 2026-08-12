@@ -74,7 +74,7 @@ export default function SelectTechniciansModal({
 
   return (
     <div className="fixed inset-0 z-[60] flex justify-end">
-      <div className="absolute inset-0 bg-nexoraText/70 backdrop-blur-sm" aria-hidden="true" />
+      <div className="absolute inset-0 bg-nexoraText/70 backdrop-blur-sm" onClick={onClose} aria-hidden="true" />
       <div className="relative flex h-full w-full max-w-md flex-col bg-posFdSurface p-4 shadow-xl">
         <div className="mb-4 flex shrink-0 items-center justify-between">
           <h2 className="text-sm font-extrabold text-nexoraText">
