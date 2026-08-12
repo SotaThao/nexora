@@ -1,4 +1,12 @@
-import { useEffect, useMemo, useState, type KeyboardEvent, type ReactNode } from 'react'
+import {
+  lazy,
+  Suspense,
+  useEffect,
+  useMemo,
+  useState,
+  type KeyboardEvent,
+  type ReactNode,
+} from 'react'
 import DOMPurify from 'dompurify'
 import {
   CalendarDays,
@@ -9,11 +17,9 @@ import {
   HandCoins,
   Inbox,
   Info,
-  Loader2,
   Newspaper,
   Play,
   Video,
-  X,
   type LucideIcon,
 } from 'lucide-react'
 
@@ -22,8 +28,6 @@ import {
   NEWS_LIBRARY_DATA_URLS,
   getNewsLibraryDataUrl,
 } from '../../../constants/newsLibrary'
-import IconButton from '../../ui/IconButton'
-import type { ReceiptVaultItem } from '../../../data/repositories/taxiqReceipts'
 
 type TabId = 'news' | 'event-zoom-schedule' | 'compensation-plan'
 type LoadStatus = 'loading' | 'ready' | 'error'
@@ -70,11 +74,15 @@ type SweetAlertGlobal = {
 type OpenPdfPreview = (item: NewsLibraryItem, url: string) => void
 type OpenVideoPreview = (item: NewsLibraryItem, url: string) => void
 type PdfPreviewState = {
-  receipt: ReceiptVaultItem
+  url: string
   title: string
 }
 
 const TK = 'components.dashboard.views.NewsLibraryView'
+const loadNewsLibraryPdfPreviewModal = () => import('./NewsLibraryPdfPreviewModal')
+const NewsLibraryPdfPreviewModal = lazy(
+  loadNewsLibraryPdfPreviewModal,
+)
 
 declare global {
   interface Window {
@@ -199,41 +207,6 @@ function escapeHtml(value: unknown): string {
   })
 }
 
-function fileNameFromPdfUrl(url: string, fallbackTitle?: string): string {
-  try {
-    const pathname = new URL(url).pathname
-    const fileName = decodeURIComponent(pathname.split('/').filter(Boolean).pop() || '')
-    if (fileName.toLowerCase().endsWith('.pdf')) return fileName
-  } catch {
-    // Fall through to title fallback.
-  }
-
-  const title = textValue(fallbackTitle).trim()
-  return title.toLowerCase().endsWith('.pdf')
-    ? title
-    : `${title || 'news-library-document'}.pdf`
-}
-
-function buildPdfPreviewReceipt(item: NewsLibraryItem, url: string): ReceiptVaultItem {
-  return {
-    id: `news-library-${url}`,
-    fileName: fileNameFromPdfUrl(url, item.title),
-    url,
-    qualityStatus: 'Valid',
-    isDuplicate: false,
-    duplicateResolution: null,
-    aiExtractedVendor: null,
-    aiExtractedDate: null,
-    aiExtractedAmount: null,
-    aiExtractedCategory: null,
-    linkedEntityType: 'Standalone',
-    deductionRecordId: null,
-    payoutRecordId: null,
-    selfReportedIncomeId: null,
-    createdAt: '',
-  }
-}
-
 function isVideoUrl(url: string): boolean {
   return !!toYoutubeEmbedUrl(url)
 }
@@ -336,96 +309,6 @@ async function openSweetAlertFrame(
   })
 
   return true
-}
-
-function NewsLibraryPdfPreviewModal({
-  receipt,
-  title,
-  onClose,
-}: {
-  receipt: ReceiptVaultItem
-  title: string
-  onClose: () => void
-}) {
-  const { t } = useTranslation()
-  const [pdfPreviewUrl, setPdfPreviewUrl] = useState('')
-  const previewTitle = title.trim() || receipt.fileName
-
-  useEffect(() => {
-    let objectUrl = ''
-    const controller = new AbortController()
-
-    setPdfPreviewUrl('')
-
-    async function loadPdfPreview() {
-      try {
-        if (typeof fetch !== 'function' || typeof URL.createObjectURL !== 'function') {
-          throw new Error('PDF blob preview is not available.')
-        }
-
-        const response = await fetch(receipt.url, { signal: controller.signal })
-        if (!response.ok) throw new Error('Unable to load PDF preview.')
-
-        const blob = await response.blob()
-        if (controller.signal.aborted) return
-
-        const pdfBlob = blob.type === 'application/pdf'
-          ? blob
-          : new Blob([blob], { type: 'application/pdf' })
-        objectUrl = URL.createObjectURL(pdfBlob)
-        setPdfPreviewUrl(objectUrl)
-      } catch {
-        if (!controller.signal.aborted) {
-          setPdfPreviewUrl(receipt.url)
-        }
-      }
-    }
-
-    void loadPdfPreview()
-
-    return () => {
-      controller.abort()
-      if (objectUrl && typeof URL.revokeObjectURL === 'function') {
-        URL.revokeObjectURL(objectUrl)
-      }
-    }
-  }, [receipt.url])
-
-  return (
-    <div className="fixed inset-0 z-[60] flex items-center justify-center bg-nexoraText/70 p-4 backdrop-blur-sm">
-      <div className="nexora-modal-card h-[90vh] max-w-5xl">
-        <div className="mb-4 flex items-center justify-between gap-3">
-          <h2 className="truncate text-sm font-extrabold text-nexoraText">{previewTitle}</h2>
-          <IconButton label={t('common.cancel')} onClick={onClose}>
-            <X className="h-4 w-4" />
-          </IconButton>
-        </div>
-
-        <div className="flex min-h-0 flex-1 flex-col gap-3">
-          {pdfPreviewUrl ? (
-            <iframe
-              src={pdfPreviewUrl}
-              title={receipt.fileName}
-              className="min-h-[60vh] flex-1 rounded-xl border border-nexoraBorder bg-white"
-            />
-          ) : (
-            <div className="grid min-h-[60vh] flex-1 place-items-center rounded-xl border border-nexoraBorder bg-nexoraCanvas text-nexoraMuted">
-              <Loader2 className="h-6 w-6 animate-spin" aria-hidden />
-            </div>
-          )}
-          <a
-            href={receipt.url}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="inline-flex items-center justify-center gap-1.5 self-start rounded-lg bg-nexoraBrand px-4 py-2 text-xs font-bold text-white"
-          >
-            <ExternalLink className="h-3.5 w-3.5" />
-            {t(`${TK}.actions.openPdf`)}
-          </a>
-        </div>
-      </div>
-    </div>
-  )
 }
 
 function LibraryShell({ children }: { children: ReactNode }) {
@@ -949,6 +832,22 @@ export default function NewsLibraryView() {
   }, [documentTitle])
 
   useEffect(() => {
+    if (status !== 'ready') return undefined
+
+    let cancelled = false
+    const preloadTimer = window.setTimeout(() => {
+      void loadNewsLibraryPdfPreviewModal().then(({ preloadPdfWorker }) => {
+        if (!cancelled) void preloadPdfWorker()
+      })
+    }, 0)
+
+    return () => {
+      cancelled = true
+      window.clearTimeout(preloadTimer)
+    }
+  }, [status])
+
+  useEffect(() => {
     let cancelled = false
     const controller = new AbortController()
 
@@ -1016,10 +915,9 @@ export default function NewsLibraryView() {
   }
 
   const openPdfPreview: OpenPdfPreview = (item, url) => {
-    const receipt = buildPdfPreviewReceipt(item, url)
     setPreviewingPdf({
-      receipt,
-      title: textValue(item.title) || receipt.fileName,
+      url,
+      title: textValue(item.title) || t(`${TK}.actions.preview`),
     })
   }
 
@@ -1041,7 +939,7 @@ export default function NewsLibraryView() {
         <header className="max-w-2xl">
           <h1
             id="news-library-title"
-            className="text-2xl font-black leading-tight text-nexoraText"
+            className="hidden text-2xl font-black leading-tight text-nexoraText sm:block"
           >
             {t(`${TK}.title`)}
           </h1>
@@ -1136,11 +1034,20 @@ export default function NewsLibraryView() {
       </section>
 
       {previewingPdf && (
-        <NewsLibraryPdfPreviewModal
-          onClose={() => setPreviewingPdf(null)}
-          receipt={previewingPdf.receipt}
-          title={previewingPdf.title}
-        />
+        <Suspense
+          fallback={
+            <div className="fixed inset-0 z-[60] grid place-items-center bg-nexoraText/70 text-white">
+              {t(`${TK}.pdfViewer.loading`)}
+            </div>
+          }
+        >
+          <NewsLibraryPdfPreviewModal
+            open
+            onClose={() => setPreviewingPdf(null)}
+            title={previewingPdf.title}
+            url={previewingPdf.url}
+          />
+        </Suspense>
       )}
     </main>
   )

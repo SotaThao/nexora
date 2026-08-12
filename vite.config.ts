@@ -1,10 +1,19 @@
 import { defineConfig } from 'vite'
 import react from '@vitejs/plugin-react'
+import { fileURLToPath, URL } from 'node:url'
 
 // https://vitejs.dev/config/
 export default defineConfig({
   plugins: [react()],
   resolve: {
+    alias: [
+      {
+        find: /^pdfjs-dist$/,
+        replacement: fileURLToPath(
+          new URL('./node_modules/pdfjs-dist/legacy/build/pdf.mjs', import.meta.url),
+        ),
+      },
+    ],
     dedupe: ['react', 'react-dom', 'react/jsx-runtime'],
   },
   optimizeDeps: {
