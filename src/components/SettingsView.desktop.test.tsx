@@ -37,8 +37,12 @@ describe('SettingsViewDesktop navigation', () => {
     render(
       <MemoryRouter>
         <SettingsViewDesktop
+          setupData={null}
+          userEmail="owner@example.com"
+          onKybRequired={vi.fn()}
           initialTab="profile"
           onTabChange={onTabChange}
+          onKybSuccess={vi.fn()}
           staffContent={<div>Staff management content</div>}
         />
       </MemoryRouter>,

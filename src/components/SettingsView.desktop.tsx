@@ -236,11 +236,12 @@ export default function SettingsViewDesktop({
   ]
 
   const activateTab = (nextTab: string) => {
-    setTab(nextTab)
+    const resolvedTab = resolveDesktopTab(nextTab)
+    setTab(resolvedTab)
     onTabChange?.(
-      nextTab === SettingsDesktopTab.Account
+      resolvedTab === SettingsDesktopTab.Account
         ? 'profile'
-        : nextTab,
+        : resolvedTab,
     )
   }
 
