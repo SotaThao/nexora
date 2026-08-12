@@ -387,9 +387,13 @@ export default function PublicBookingPage() {
   const [selectedTime, setSelectedTime] = useState('')
   const [customerName, setCustomerName] = useState('')
   const [customerPhone, setCustomerPhone] = useState('')
-  // Always starts unticked and is never seeded from a previous booking — a pre-ticked consent box
-  // is not consent, and the customer-lookup endpoint deliberately does not expose consent state.
-  const [smsConsent, setSmsConsent] = useState({ transactional: false, marketing: false })
+  // Transactional starts pre-checked and required — PO decision overriding the earlier opt-in-only
+  // design (unticking blocks submit below). Marketing stays unticked/optional; the customer-lookup
+  // endpoint deliberately does not expose consent state, so this never reflects a previous booking.
+  // Note: a pre-checked box is generally not valid opt-in consent under TCPA and diverges from the
+  // "unticked checkbox" evidence Twilio's A2P reviewers expect — see
+  // docs/business/sms-consent/sms-consent-technical.md.
+  const [smsConsent, setSmsConsent] = useState({ transactional: true, marketing: false })
   const [customerEmail, setCustomerEmail] = useState('')
   const [contactFieldErrors, setContactFieldErrors] = useState<{ name?: string; phone?: string }>({})
   const [bookingResult, setBookingResult] = useState<CreatePublicBookingResultApiDto | null>(null)
@@ -613,7 +617,7 @@ export default function PublicBookingPage() {
             setCustomerName('')
             setCustomerPhone('')
             setCustomerEmail('')
-            setSmsConsent({ transactional: false, marketing: false })
+            setSmsConsent({ transactional: true, marketing: false })
             setContactFieldErrors({})
             setBookingResult(null)
             setStep('discovery')
@@ -741,7 +745,7 @@ export default function PublicBookingPage() {
             <button
               type="button"
               onClick={handleSubmit}
-              disabled={createBooking.isPending}
+              disabled={createBooking.isPending || !smsConsent.transactional}
               className="h-10 flex-1 rounded-lg bg-nexoraBrand text-xs font-bold text-white hover:bg-nexoraBrandDark disabled:opacity-60"
             >
               {createBooking.isPending ? (

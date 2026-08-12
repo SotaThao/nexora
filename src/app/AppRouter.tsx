@@ -147,6 +147,9 @@ const PublicBookingPage = lazyWithRetry(
 const VoiceCallPlanPage = lazyWithRetry(
   () => import("../components/public/VoiceCallPlanPage"),
 );
+const SmsConsentReferencePage = lazyWithRetry(
+  () => import("../components/public/SmsConsentReferencePage"),
+);
 
 // Bridges the URL (path token / legacy ?flow=staff-invite biz) to the wizard's
 // inviteData prop. A real token → API-backed invite; otherwise the legacy
@@ -248,6 +251,7 @@ export default function AppRouter() {
           <Route path="/w4-invite" element={<StaffW4InvitePage />} />
           <Route path="/privacy-policy" element={<PrivacyPolicyPage />} />
           <Route path="/terms-of-service" element={<TermsOfServicePage />} />
+          <Route path="/sms-consent" element={<SmsConsentReferencePage />} />
           <Route
             path={VoiceCallPlanRoute.path}
             element={<VoiceCallPlanPage />}

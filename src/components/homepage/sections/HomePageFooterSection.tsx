@@ -39,6 +39,7 @@ export default function HomePageFooterSection() {
               <div className="flex flex-wrap items-center justify-center gap-x-2 gap-y-0.5 sm:gap-x-5 sm:gap-y-2">
                 <Link to="/terms-of-service" className="text-[10px] sm:text-xs text-slate-400 hover:text-white transition-colors ds-control ds-link" data-i18n="footer-link-tos">Terms of Service</Link>
                 <Link to="/privacy-policy" className="text-[10px] sm:text-xs text-slate-400 hover:text-white transition-colors ds-control ds-link" data-i18n="footer-link-1">Privacy Policy</Link>
+                <Link to="/sms-consent" className="text-[10px] sm:text-xs text-slate-400 hover:text-white transition-colors ds-control ds-link" data-i18n="footer-link-sms-consent">SMS Consent</Link>
                 <a className="text-[10px] sm:text-xs text-slate-400 hover:text-white transition-colors ds-control ds-link" data-i18n="footer-link-2" href="#">Ecosystem Guidelines</a>
                 <a className="text-[10px] sm:text-xs text-slate-400 hover:text-white transition-colors ds-control ds-link" data-i18n="footer-link-3" href="https://cryptomap360.com/#ecosystem" target="_blank" rel="noopener">VLINKPAY Financial Infrastructure</a>
               </div>
