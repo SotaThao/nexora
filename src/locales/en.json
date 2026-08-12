@@ -857,7 +857,7 @@
     },
     "modals": {
       "add_tp_title": "Add New Station",
-      "tp_name_label": "Station Name (e.g. Manicure Chair 05)",
+      "tp_name_label": "Station Name (optional — defaults to station type)",
       "tp_name_placeholder": "e.g. Manicure Chair 05",
       "device_id_label": "Hardware Serial or NFC ID",
       "device_id_placeholder": "e.g. NFC-105, QR-Table-01",

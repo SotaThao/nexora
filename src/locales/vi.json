@@ -857,7 +857,7 @@
     },
     "modals": {
       "add_tp_title": "Thêm trạm mới",
-      "tp_name_label": "Tên trạm (vd. Ghế Manicure 05)",
+      "tp_name_label": "Tên trạm (không bắt buộc — mặc định lấy tên loại trạm)",
       "tp_name_placeholder": "Ví dụ: Ghế Manicure 05",
       "device_id_label": "Serial thiết bị hoặc Mã NFC",
       "device_id_placeholder": "Ví dụ: NFC-105, QR-Table-01",
