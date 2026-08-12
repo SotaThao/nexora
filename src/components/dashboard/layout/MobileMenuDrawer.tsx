@@ -17,7 +17,7 @@ import {
   SIDEBAR_PROFILE_CARD_CLASS,
   SIDEBAR_AVATAR_IMAGE_CLASS,
   SIDEBAR_AVATAR_FALLBACK_CLASS,
-  SIDEBAR_SIGN_OUT_WRAP_CLASS,
+  SIDEBAR_MOBILE_SIGN_OUT_WRAP_CLASS,
   SIDEBAR_SUBMENU_WRAP_CLASS,
   sidebarMenuItemBetweenClass,
   sidebarSubmenuItemClass,
@@ -494,7 +494,7 @@ export default function MobileMenuDrawer({
             />
           )}
 
-          <div className={`${SIDEBAR_SIGN_OUT_WRAP_CLASS} border-t-0 pt-0`}>
+          <div className={SIDEBAR_MOBILE_SIGN_OUT_WRAP_CLASS}>
             <button
               onClick={onLogout}
               className="flex items-center gap-2 px-3 py-2.5 text-sm font-bold text-white/65 transition hover:text-white w-full"

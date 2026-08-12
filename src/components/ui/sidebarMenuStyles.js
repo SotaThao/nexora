@@ -54,3 +54,5 @@ export function sidebarSubmenuItemClass(isActive) {
 }
 
 export const SIDEBAR_SIGN_OUT_WRAP_CLASS = 'mt-auto border-t border-white/15 pt-4 shrink-0'
+
+export const SIDEBAR_MOBILE_SIGN_OUT_WRAP_CLASS = 'mt-0 border-t-0 pt-0 shrink-0'
