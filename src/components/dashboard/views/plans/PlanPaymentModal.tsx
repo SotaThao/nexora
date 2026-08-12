@@ -11,6 +11,7 @@ import {
 } from '../../../../data/hooks/useSubscriptionPayments'
 import { resolveSubscriptionBillingDefaults } from '../../../../utils/subscriptionBillingDefaults'
 import { resolveTranslatedApiError } from '../../../../utils/resolveTranslatedApiError'
+import { formatCurrentPlanLabel, getVoiceAiSubscription } from '../../../../utils/subscriptionDisplay'
 import {
   SubscriptionPaymentStatus,
   type SubscriptionPaymentMethod,
@@ -20,6 +21,7 @@ import SubscriptionCardPaymentForm, {
   type SubscriptionCardPaymentFormHandle,
 } from '../../modals/SubscriptionCardPaymentForm'
 import {
+  SUBSCRIPTION_PAYMENT_MODAL_TK,
   resolveCheckoutPaymentLabel,
   subscriptionModalKey,
   tryBeginOrderStatusPolling,
@@ -116,6 +118,7 @@ export default function PlanPaymentModal({
     () => resolveSubscriptionBillingDefaults(billingDefaults, profile),
     [billingDefaults, profile],
   )
+  const currentPlanLabel = formatCurrentPlanLabel(getVoiceAiSubscription(profile))
   const isCardPayment = isPlanCardPaymentSymbol(selectedSymbol)
   const purchaseMutation = usePurchaseVoiceAiPackage()
   const initializeCardMutation = useInitializeCardPayment()
@@ -163,7 +166,7 @@ export default function PlanPaymentModal({
   useEffect(() => {
     if (!isOpen || !isCardPayment || !selection?.packageId) return
     if (initializeCardMutation.data || initializeCardMutation.isPending) return
-    initializeCardMutation.mutate(selection.packageId)
+    initializeCardMutation.mutate({ packageId: selection.packageId })
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isOpen, isCardPayment, selection?.packageId])
 
@@ -398,7 +401,7 @@ export default function PlanPaymentModal({
                           className="booking-mini-button"
                           type="button"
                           onClick={() => {
-                            if (selection.packageId) initializeCardMutation.mutate(selection.packageId)
+                            if (selection.packageId) initializeCardMutation.mutate({ packageId: selection.packageId })
                           }}
                         >
                           {t(`${TK}.planPaymentMethodsRetry`)}
@@ -442,6 +445,11 @@ export default function PlanPaymentModal({
                     {formatPlanMonthlyTotal(selection.price, t(`${TK}.perMonth`))}
                   </strong>
                 </div>
+                {currentPlanLabel ? (
+                  <p className="mt-3 text-xs font-semibold text-red-600">
+                    {t(`${SUBSCRIPTION_PAYMENT_MODAL_TK}.subscription_forfeit_warning`, { plan: currentPlanLabel })}
+                  </p>
+                ) : null}
               </section>
 
               <div className="sr-only" aria-live="polite">

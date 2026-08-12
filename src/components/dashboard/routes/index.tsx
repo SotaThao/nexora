@@ -1155,6 +1155,7 @@ export function SubscriptionsRoute() {
     paymentPlan,
     selectedPackage,
     paymentPlanPrice,
+    checkoutBillingCycle,
     clearCheckout,
     handleSelectPlan,
     storeSetupGateOpen,
@@ -1178,6 +1179,8 @@ export function SubscriptionsRoute() {
         paymentPlan={paymentPlan}
         selectedPackage={selectedPackage}
         paymentPlanPrice={paymentPlanPrice}
+        billingCycle={checkoutBillingCycle}
+        currentSubscription={tipPlatformSubscription}
         onClose={clearCheckout}
       />
       <CompleteStoreSetupGateModal

@@ -168,3 +168,10 @@ export function getSubscriptionPlanRenewLabel(subscription, t, locale = 'en') {
   if (!date) return null
   return t('dashboard.sidebar.expires_on', { date })
 }
+
+/** e.g. "Starter" — current plan name for the checkout forfeit-warning. */
+export function formatCurrentPlanLabel(subscription) {
+  const code = String(subscription?.packageCode ?? '').trim()
+  if (!code) return null
+  return code.charAt(0).toUpperCase() + code.slice(1)
+}
