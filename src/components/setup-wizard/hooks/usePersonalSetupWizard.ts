@@ -168,15 +168,19 @@ export default function usePersonalSetupWizard({ onBackToLogin }) {
     setModalError('')
   }
 
-  const savePayoutAccount = () => {
+  const savePayoutAccount = (payload?: { value?: string; qrCode?: string; accountName?: string }) => {
     if (!editingMethod) return
-    if (!editValue.trim() && !editQrCode) {
+    const nextValue = payload?.value ?? editValue
+    const nextQrCode = payload?.qrCode ?? editQrCode
+    const nextAccountName = payload?.accountName ?? editAccountName
+
+    if (!nextValue.trim() && !nextQrCode) {
       setModalError(t('components.register.modals.PayoutEditModal.pleaseEnterHandleOrQr'))
       return
     }
 
-    if (editValue.trim()) {
-      const validationMessage = getPayoutValidationMessage(t, editingMethod, editValue)
+    if (nextValue.trim()) {
+      const validationMessage = getPayoutValidationMessage(t, editingMethod, nextValue)
       if (validationMessage) {
         setModalError(validationMessage)
         return
@@ -187,9 +191,9 @@ export default function usePersonalSetupWizard({ onBackToLogin }) {
       ...prev,
       [editingMethod]: {
         enabled: true,
-        value: editValue.trim(),
-        qrCode: editQrCode,
-        accountName: editAccountName.trim()
+        value: nextValue.trim(),
+        qrCode: nextQrCode,
+        accountName: nextAccountName.trim()
       }
     }))
     setEditingMethod(null)

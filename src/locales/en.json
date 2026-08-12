@@ -710,6 +710,7 @@
       "business_setting": "Setting",
       "scan": "Scan",
       "kyb": "Business Verification",
+      "news_library": "News & Library",
       "support": "Support"
     },
     "header": {
@@ -856,7 +857,7 @@
     },
     "modals": {
       "add_tp_title": "Add New Station",
-      "tp_name_label": "Station Name (e.g. Manicure Chair 05)",
+      "tp_name_label": "Station Name (optional)",
       "tp_name_placeholder": "e.g. Manicure Chair 05",
       "device_id_label": "Hardware Serial or NFC ID",
       "device_id_placeholder": "e.g. NFC-105, QR-Table-01",
@@ -883,29 +884,39 @@
       "subscription_payment_methods_loading": "Loading payment methods…",
       "subscription_payment_methods_error": "Could not load your wallet balances.",
       "subscription_payment_methods_retry": "Retry loading payment methods",
+      "subscription_payment_methods_empty": "No wallet payment methods available.",
       "subscription_wallet_balance_label": "Balance",
       "subscription_invoice_summary": "Invoice summary",
       "subscription_service_plan": "Service plan:",
+      "subscription_invoice_payment": "Payment method:",
       "subscription_total_due": "Total due:",
       "subscription_confirm_payment": "Confirm payment",
       "subscription_payment_success": "Package purchased successfully.",
       "subscription_price_note_month": "month",
-      "subscription_payment_tab_wallet": "VlinkPay Wallet",
-      "subscription_payment_tab_card": "Credit/Debit Card",
+      "subscription_card_method_label": "Credit or Debit Card",
       "subscription_card_form_title": "Credit or Debit Card",
       "subscription_card_required_note": "required",
       "subscription_card_field_required": "This field is required.",
-      "subscription_card_needs_store_setup_title": "Complete store setup to pay by card",
-      "subscription_card_needs_store_setup_body": "Add your business profile first. Card checkout needs your store details for billing.",
+      "subscription_purchase_needs_store_setup_title": "Complete store setup to purchase",
+      "subscription_purchase_needs_store_setup_body": "Add your business profile first. Package checkout needs your store details before you can buy a plan.",
+      "subscription_purchase_needs_store_setup_cta": "Go to store setup",
       "subscription_cardholder_name_label": "Cardholder name",
+      "subscription_card_name_placeholder": "e.g. Jane Doe",
       "subscription_billing_address_label": "Address",
+      "subscription_card_address_placeholder": "e.g. 123 Main St",
       "subscription_billing_city_label": "City",
+      "subscription_card_city_placeholder": "e.g. Austin",
       "subscription_billing_state_label": "State/Province",
+      "subscription_card_state_placeholder": "e.g. TX",
       "subscription_billing_zip_code_label": "Zip code",
+      "subscription_card_zip_placeholder": "e.g. 78701",
       "subscription_billing_country_label": "Country",
       "subscription_card_number_label": "Card number",
+      "subscription_card_number_placeholder": "1234 1234 1234 1234",
       "subscription_card_expiry_label": "Expiry date",
+      "subscription_card_expiry_placeholder": "MM/YY",
       "subscription_card_cvc_label": "CVC",
+      "subscription_card_cvc_placeholder": "CVC",
       "subscription_card_init_error": "Could not start card payment. Please try again.",
       "subscription_card_payment_error": "Your card was declined. Please try another card.",
       "subscription_payment_failed": "Payment failed. Please try again or choose a different payment method.",
@@ -2481,7 +2492,8 @@
     "payout": {
       "accountNameField": {
         "label": "Account Holder Name",
-        "placeholder": "e.g. Anna Smith"
+        "placeholder": "e.g. Anna Smith",
+        "required": "Account holder name is required."
       },
       "bankWireForm": {
         "title": "Set Up Bank Account",
@@ -2662,11 +2674,18 @@
           "placeholderZelle": "Enter Zelle email or phone...",
           "placeholderBankWire": "Account & Routing numbers",
           "placeholderPaypal": "email@paypal.com",
-          "placeholderAppleCash": "Enter phone number...",
+          "placeholderVenmo": "Enter Venmo @username...",
+          "placeholderAppleCash": "Enter Apple Cash email or phone...",
+          "placeholderCashApp": "Enter Cash App $cashtag, email, or phone...",
           "placeholderVlinkpay": "Enter VLINKPAY ID (e.g. MIA0123)...",
           "placeholderCrypto": "Enter BTC, ETH, or USDT address...",
           "specifyReceivingTargetIdentifier": "Specify receiving target identifier",
           "accountIdentifier": "Account Identifier *",
+          "accountIdentifierForMethod": "YOUR {wallet} {field} *",
+          "fieldEmailPhone": "email/phone",
+          "fieldEmail": "email",
+          "fieldVenmoHandle": "@username",
+          "fieldCashAppIdentifier": "$cashtag, email, or phone",
           "qrCodeOptional": "QR Code (optional)",
           "noQrCodeUploaded": "No QR code uploaded",
           "thisInformationWasEntered": "This information was entered by the technician. Salon Owner has view-only access.",
@@ -2815,6 +2834,44 @@
           "scanToTipThis": "Scan to tip this staff member",
           "tippingLinkCopiedTo": "Tipping link copied to clipboard!",
           "shareLink": "Share Link"
+        },
+        "NewsLibraryView": {
+          "documentTitle": "NEXORA TOUCH - News & Library",
+          "mainAria": "News & Library content",
+          "title": "News & Library",
+          "description": "Keep NEXORA TOUCH news and Zoom schedules in one owner workspace.",
+          "tablistAria": "News and library sections",
+          "durationAria": "Duration {duration}",
+          "tabs": {
+            "news": "News",
+            "eventZoomSchedule": "Event & Zoom Schedule",
+            "compensationPlan": "Compensation Plan"
+          },
+          "state": {
+            "loading": "Loading News Library...",
+            "error": "Unable to load News Library content. Please check the network connection and refresh.",
+            "empty": "No {label} yet"
+          },
+          "labels": {
+            "newsContent": "news content",
+            "compensationPlanContent": "compensation plan content",
+            "eventContent": "event content"
+          },
+          "blocks": {
+            "featuredVideos": "Featured videos",
+            "moreFromChannel": "More from channel",
+            "coreTopics": "Core topics",
+            "upcomingZoomSessions": "Upcoming Zoom sessions"
+          },
+          "actions": {
+            "openPdf": "Open PDF",
+            "watch": "Watch",
+            "open": "Open",
+            "join": "Join",
+            "details": "Details",
+            "preview": "Preview",
+            "loadMore": "Load more"
+          }
         },
         "StaffView": {
           "linkCopiedToClipboard": "Link copied to clipboard for sharing!",
@@ -3456,7 +3513,7 @@
           "ariaPlansPanel": "Service plans panel",
           "ariaSettingsPanel": "Salon settings panel",
           "tabs": {
-            "booking": "Booking Book",
+            "booking": "Booking",
             "customers": "Customers",
             "callLog": "Call Log",
             "smsCampaigns": "SMS Campaigns",
@@ -4930,7 +4987,13 @@
           "payoutMethodsTab": "Payout Methods",
           "paymentQrTab": "Payment QR",
           "tipQrTab": "Payment QR",
-          "payoutAccount": "Payout account",
+          "view": "View",
+          "payoutAccount": "Edit",
+          "customerPaymentDetails": "Payment details",
+          "scanToPay": "Scan to pay",
+          "payTo": "Account holder name",
+          "accountDetails": "Account details",
+          "noQrCode": "No QR code uploaded.",
           "methodNotConfigured": "Method is not configured.",
           "pleaseEnterAccountDetails": "Please enter account details.",
           "methodIdMissing": "System Error: Method ID missing",
@@ -4976,12 +5039,15 @@
           "reviewLinks": "Review Links",
           "emailPhone": "email or phone",
           "details": "details",
+          "cashAppIdentifier": "$cashtag, email, or phone",
           "enterZelleEmailPhone": "Enter Zelle email or phone...",
           "enterBankWireRouting": "Enter Bank Wire routing - account...",
           "enterPaypalEmail": "Enter PayPal email...",
           "enterVenmoUsername": "Enter Venmo @username...",
           "enterCashAppCashtag": "Enter Cash App $cashtag...",
+          "enterCashAppCashtagEmailPhone": "Enter Cash App $cashtag, email, or phone...",
           "enterAppleCashPhone": "Enter Apple Cash phone number...",
+          "enterAppleCashEmailPhone": "Enter Apple Cash email or phone...",
           "specifyReceivingTargetIdentifier": "Specify receiving target identifier",
           "qrCodeOptional": "QR CODE (OPTIONAL)",
           "takePhoto": "TAKE PHOTO",
@@ -5139,7 +5205,8 @@
           "openTippingPageSimulate": "Open Tipping Page (Simulate) ›"
         },
         "StaffPay": {
-          "editAccount": "Edit account"
+          "editAccount": "Edit",
+          "view": "View"
         },
         "StaffProfile": {
           "accountChangesSavedSuccessfully": "Account changes saved successfully!",
@@ -5680,6 +5747,26 @@
       "cancelSuccess": "Your booking has been cancelled.",
       "rescheduleSuccess": "Your booking has been rescheduled.",
       "backToView": "Back"
+    },
+    "smsConsent": {
+      "heading": "Text message preferences",
+      "intro": "Choose which messages you want to receive. Each choice is optional and can be changed later.",
+      "transactionalTitle": "Appointment and service messages",
+      "transactionalBadge": "Recommended",
+      "transactionalCopy": "I agree to receive recurring automated transactional text messages from this salon and NEXORA TOUCH about booking confirmations, appointment reminders, schedule changes, and customer support.",
+      "marketingTitle": "Offers and salon updates",
+      "marketingBadge": "Optional",
+      "marketingCopy": "I agree to receive recurring automated marketing text messages from this salon and NEXORA TOUCH about promotions, special offers, review requests, and salon news.",
+      "disclosure": "Message frequency varies. Message and data rates may apply. Reply STOP to opt out or HELP for help. Consent is not a condition of purchase. View our",
+      "termsLink": "Terms of Service",
+      "disclosureAnd": "and",
+      "privacyLink": "Privacy Policy",
+      "saveButton": "Save preferences",
+      "saveSuccess": "Your text message preferences have been updated.",
+      "saveFailed": "Could not update your preferences. Please try again.",
+      "noSmsNotice": "You chose not to receive text messages, so save this link — it is how you manage this booking.",
+      "copyLink": "Copy link",
+      "copiedLink": "Link copied"
     }
   },
   "homepage": {

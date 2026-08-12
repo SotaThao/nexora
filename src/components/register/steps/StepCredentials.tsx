@@ -2,6 +2,11 @@ import React from 'react'
 import { createPortal } from 'react-dom'
 import { Mail, Lock, Eye, EyeOff, ArrowLeft, ArrowRight, Copy, Loader2, AlertTriangle } from 'lucide-react'
 
+// Confirm Email field is hidden from the UI to reduce signup friction, but its
+// state/validation stays intact (kept in sync with email in useRegisterForm)
+// so it can be re-enabled by flipping this flag back to true.
+const SHOW_CONFIRM_EMAIL_FIELD = false
+
 export default function StepCredentials(props) {
   const {
     // form state
@@ -239,30 +244,32 @@ export default function StepCredentials(props) {
             </div>
 
             {/* Confirm Email Input */}
-            <div>
-              <label className="block text-[10px] font-bold text-nexoraText uppercase tracking-wider mb-2">
-                {renderLabel(t('register.confirm_email_label'))}
-              </label>
-              <div className="relative">
-                <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-nexoraSubtle" />
-                <input
-                  type="email"
-                  placeholder={t('register.confirm_email_placeholder')}
-                  className={`w-full bg-nexoraCanvas border ${errors.confirmEmail ? 'border-red-300 focus:border-red-500' : 'border-nexoraBorder focus:border-nexoraBrand focus:bg-white'} rounded-lg pl-10 pr-4 py-2.5 text-sm text-nexoraText focus:outline-none transition-all`}
-                  value={confirmEmail}
-                  onChange={(e) => {
-                    setConfirmEmail(e.target.value)
-                    if (errors.confirmEmail) setErrors(prev => ({ ...prev, confirmEmail: '' }))
-                  }}
-                  onBlur={(e) => {
-                    if (e.target.value.trim() && e.target.value.trim().toLowerCase() !== email.trim().toLowerCase()) {
-                      setErrors(prev => ({ ...prev, confirmEmail: 'register.errors.email_mismatch' }))
-                    }
-                  }}
-                />
+            {SHOW_CONFIRM_EMAIL_FIELD && (
+              <div>
+                <label className="block text-[10px] font-bold text-nexoraText uppercase tracking-wider mb-2">
+                  {renderLabel(t('register.confirm_email_label'))}
+                </label>
+                <div className="relative">
+                  <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-nexoraSubtle" />
+                  <input
+                    type="email"
+                    placeholder={t('register.confirm_email_placeholder')}
+                    className={`w-full bg-nexoraCanvas border ${errors.confirmEmail ? 'border-red-300 focus:border-red-500' : 'border-nexoraBorder focus:border-nexoraBrand focus:bg-white'} rounded-lg pl-10 pr-4 py-2.5 text-sm text-nexoraText focus:outline-none transition-all`}
+                    value={confirmEmail}
+                    onChange={(e) => {
+                      setConfirmEmail(e.target.value)
+                      if (errors.confirmEmail) setErrors(prev => ({ ...prev, confirmEmail: '' }))
+                    }}
+                    onBlur={(e) => {
+                      if (e.target.value.trim() && e.target.value.trim().toLowerCase() !== email.trim().toLowerCase()) {
+                        setErrors(prev => ({ ...prev, confirmEmail: 'register.errors.email_mismatch' }))
+                      }
+                    }}
+                  />
+                </div>
+                {errors.confirmEmail && <span className="text-xs text-red-500 mt-1 block">{t(errors.confirmEmail)}</span>}
               </div>
-              {errors.confirmEmail && <span className="text-xs text-red-500 mt-1 block">{t(errors.confirmEmail)}</span>}
-            </div>
+            )}
 
             {/* Password Input */}
             <div>

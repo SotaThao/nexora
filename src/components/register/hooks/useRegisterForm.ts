@@ -39,8 +39,13 @@ export function useRegisterForm({ ssoEmail, onBackToLogin, onRegisterSuccess, on
   // Step 1 states
   const [email, setEmail] = useState(resumeEmail || ssoEmail || '')
   const [confirmEmail, setConfirmEmail] = useState(resumeEmail || '')
+  // Confirm Email input is hidden in StepCredentials (SHOW_CONFIRM_EMAIL_FIELD = false there);
+  // keep it silently mirroring email so its still-active validation never blocks submit.
+  useEffect(() => {
+    setConfirmEmail(email)
+  }, [email])
   const [password, setPassword] = useState(resumePassword || '')
-  const [showPassword, setShowPassword] = useState(false)
+  const [showPassword, setShowPassword] = useState(true)
   const [referralCode, setReferralCode] = useState(initialRefCode)
   const [leg, setLeg] = useState(initialLeg)
   const [nickname, setNickname] = useState('')
@@ -421,14 +426,19 @@ export function useRegisterForm({ ssoEmail, onBackToLogin, onRegisterSuccess, on
     setIsCapturing(false)
   }
 
-  const savePayoutAccount = (e) => {
-    if (e) e.preventDefault()
-    if (!editValue.trim()) {
+  const savePayoutAccount = (eventOrPayload = null) => {
+    const payload = eventOrPayload && !eventOrPayload.preventDefault ? eventOrPayload : null
+    if (eventOrPayload?.preventDefault) eventOrPayload.preventDefault()
+    const nextValue = payload?.value ?? editValue
+    const nextQrCode = payload?.qrCode ?? editQrCode
+    const nextAccountName = payload?.accountName ?? editAccountName
+
+    if (!nextValue.trim()) {
       setModalError(t('components.register.hooks.useRegisterForm.thisFieldIsRequired'))
       return
     }
 
-    const validationMessage = getPayoutValidationMessage(t, editingMethod, editValue)
+    const validationMessage = getPayoutValidationMessage(t, editingMethod, nextValue)
     if (validationMessage) {
       setModalError(validationMessage)
       return
@@ -438,9 +448,9 @@ export function useRegisterForm({ ssoEmail, onBackToLogin, onRegisterSuccess, on
       ...prev,
       [editingMethod]: {
         enabled: true,
-        value: editValue.trim(),
-        qrCode: editQrCode,
-        accountName: editAccountName.trim()
+        value: nextValue.trim(),
+        qrCode: nextQrCode,
+        accountName: nextAccountName.trim()
       }
     }))
     setEditingMethod(null)

@@ -136,8 +136,10 @@ export function isDirectP2pMethod(apiType: string): boolean {
 /** UI keys whose PUT payment-methods payload carries an editable accountName. */
 export const ACCOUNT_NAME_UI_KEYS = new Set([
   'zelle',
+  'venmo',
   'cashapp',
   'paypal',
+  'applecash',
 ])
 
 export function supportsPayoutAccountName(uiKey = ''): boolean {
