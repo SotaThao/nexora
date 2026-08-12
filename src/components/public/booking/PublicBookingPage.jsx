@@ -116,9 +116,11 @@ export default function PublicBookingPage() {
   })
   const createMutation = useCreatePublicOnlineBooking()
 
-  // Always starts unticked and is never seeded from the ?phone= prefill lookup — a pre-ticked
-  // consent box is not consent.
-  const [smsConsent, setSmsConsent] = useState({ transactional: false, marketing: false })
+  // Transactional starts pre-checked and required — PO decision overriding the earlier opt-in-only
+  // design (unticking blocks submit below). Marketing stays unticked/optional. Note: a pre-checked
+  // box is generally not valid opt-in consent under TCPA and diverges from the "unticked checkbox"
+  // evidence Twilio's A2P reviewers expect — see docs/business/sms-consent/sms-consent-technical.md.
+  const [smsConsent, setSmsConsent] = useState({ transactional: true, marketing: false })
 
   const defaultSlot = useMemo(() => getDefaultBookingSlot(), [])
   const [state, setState] = useState(() => {
@@ -399,7 +401,7 @@ export default function PublicBookingPage() {
 
   const resetBooking = () => {
     setState(createDefaultBookingState(getDefaultBookingSlot()))
-    setSmsConsent({ transactional: false, marketing: false })
+    setSmsConsent({ transactional: true, marketing: false })
     setErrors([])
     setStatusMessage('')
     createMutation.reset()
@@ -935,9 +937,9 @@ export default function PublicBookingPage() {
               </p>
 
               {/* Sits on the review step rather than beside the phone field: this screen already
-                  shows the phone number back to the customer, so the phone, both unchecked boxes,
-                  the full disclosure and the submit button all appear in one view — which is what
-                  Twilio asks to see in a single screenshot for A2P registration. */}
+                  shows the phone number back to the customer, so the phone, both boxes, the full
+                  disclosure and the submit button all appear in one view — which is what Twilio
+                  asks to see in a single screenshot for A2P registration. */}
               <div className="mt-4">
                 <SmsConsentPanel
                   transactional={smsConsent.transactional}
@@ -962,7 +964,7 @@ export default function PublicBookingPage() {
                   className="primary-button"
                   type="button"
                   data-action="submit-booking"
-                  disabled={createMutation.isPending}
+                  disabled={createMutation.isPending || !smsConsent.transactional}
                   onClick={submitBooking}
                 >
                   {createMutation.isPending ? copy.submitting : copy.submit}
