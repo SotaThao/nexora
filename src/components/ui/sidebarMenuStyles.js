@@ -8,12 +8,12 @@ export const SIDEBAR_MOBILE_DRAWER_CLASS =
 
 export const SIDEBAR_NAV_CLASS = 'mt-6 flex-1 space-y-1.5 overflow-y-auto pr-1'
 
-export const SIDEBAR_PROFILE_CARD_CLASS = 'rounded-xl border border-white/15 bg-white/5 p-4 shrink-0'
+export const SIDEBAR_PROFILE_CARD_CLASS = 'rounded-xl border border-white/15 bg-white/5 p-2 shrink-0'
 
-export const SIDEBAR_AVATAR_IMAGE_CLASS = 'h-11 w-11 rounded-full border border-white/15 object-cover'
+export const SIDEBAR_AVATAR_IMAGE_CLASS = 'h-9 w-9 rounded-full border border-white/15 object-cover'
 
 export const SIDEBAR_AVATAR_FALLBACK_CLASS =
-  'flex h-11 w-11 items-center justify-center rounded-full bg-white/10 text-base font-extrabold'
+  'flex h-9 w-9 items-center justify-center rounded-full bg-white/10 text-sm font-extrabold'
 
 export const SIDEBAR_MENU_ITEM_ROW_CLASS =
   'flex h-12 w-full items-center gap-3 rounded-lg px-4 text-left text-sm font-bold transition'
