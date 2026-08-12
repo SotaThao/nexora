@@ -495,6 +495,7 @@ export const DASHBOARD_SETTINGS_TAB = {
   staff: "staff",
   kyb: "kyb",
   affiliate: "affiliate",
+  privacy: "privacy",
 } as const;
 
 export function buildDashboardSettingsPath(tab: string): string {
@@ -505,7 +506,8 @@ export function normalizeDashboardSettingsTab(tab: string): string {
   if (
     tab === DASHBOARD_SETTINGS_TAB.staff ||
     tab === DASHBOARD_SETTINGS_TAB.kyb ||
-    tab === DASHBOARD_SETTINGS_TAB.affiliate
+    tab === DASHBOARD_SETTINGS_TAB.affiliate ||
+    tab === DASHBOARD_SETTINGS_TAB.privacy
   ) {
     return tab;
   }
