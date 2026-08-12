@@ -31,6 +31,7 @@ import {
 } from '../../../../data/hooks/usePosCheckout'
 import {
   useAssignableServicesForStaff,
+  useAssignableStaffForService,
   useAssignStaffToServiceLine,
   useCheckInOrder,
   useStartOrderService,
@@ -118,6 +119,58 @@ function lineTotal(line: DisplayLine): number {
   return line.itemType === 'Service' ? line.unitPrice : line.unitPrice * line.quantity
 }
 
+const NEXT_AVAILABLE_VALUE = '__next_available__'
+
+// Check-in Step 2 — per-line technician override. A separate component (not inline in the
+// line-list map) so each line's own useAssignableStaffForService(posServiceId) call is a
+// real, independently-mounted hook instance rather than a hook called a variable number of
+// times inside a loop.
+function CheckinServiceTechnicianSelect({
+  businessId,
+  posServiceId,
+  value,
+  currentTechnicianName,
+  onChange,
+  nextAvailableLabel,
+}: {
+  businessId: string
+  posServiceId: string
+  value?: string
+  // Carried over as-is when set via "Use last visit"/booking prefill — that staff may not
+  // be in this service's assignable list (removed/reassigned since that prior visit), so a
+  // synthetic option keeps the dropdown showing the real current value instead of silently
+  // resetting to blank.
+  currentTechnicianName?: string
+  onChange: (posStaffProfileId?: string, technicianName?: string) => void
+  nextAvailableLabel: string
+}) {
+  const { data: assignableStaff = [] } = useAssignableStaffForService(businessId, posServiceId)
+  const currentNotInList = Boolean(value) && !assignableStaff.some((s) => s.posStaffProfileId === value)
+  return (
+    <select
+      value={value ?? NEXT_AVAILABLE_VALUE}
+      onChange={(e) => {
+        const staffId = e.target.value
+        if (staffId === NEXT_AVAILABLE_VALUE) {
+          onChange(undefined, undefined)
+          return
+        }
+        const staff = assignableStaff.find((s) => s.posStaffProfileId === staffId)
+        onChange(staffId, staff?.displayName)
+      }}
+      className="h-7 w-full max-w-[160px] rounded-md border border-nexoraBorder bg-white px-1.5 text-xs text-nexoraMuted outline-none focus:border-nexoraBrand"
+    >
+      <option value={NEXT_AVAILABLE_VALUE}>{nextAvailableLabel}</option>
+      {currentNotInList && value ? <option value={value}>{currentTechnicianName ?? value}</option> : null}
+      {assignableStaff.map((staff) => (
+        <option key={staff.posStaffProfileId} value={staff.posStaffProfileId}>
+          {staff.displayName}
+        </option>
+      ))}
+    </select>
+  )
+}
+
 export default function PosOrderWorkspace({
   businessId,
   businessName,
@@ -171,17 +224,15 @@ export default function PosOrderWorkspace({
   const [customerPhone, setCustomerPhone] = useState('')
   const [customerEmail, setCustomerEmail] = useState('')
 
-  // Check-in Step 2, technician-first flow — one technician applies to every service line
-  // in this check-in (undefined posStaffProfileId = "First available", resolved server-
-  // side same as today). Update mode keeps the old per-line technician picker untouched.
+  // Check-in Step 2, technician-first flow — the top picker sets the *default*
+  // technician applied to a service the moment it's added (undefined posStaffProfileId =
+  // "First available", resolved server-side same as today). Each service line can then be
+  // changed independently via its own dropdown (see handleChangeServiceLineTechnician)
+  // without affecting the others or being overwritten by a later top-picker change.
   const [checkinTechnicianId, setCheckinTechnicianId] = useState<string | undefined>(undefined)
   const [checkinTechnicianName, setCheckinTechnicianName] = useState<string | undefined>(undefined)
   const [checkinNote, setCheckinNote] = useState('')
   const [noteExpanded, setNoteExpanded] = useState(false)
-  // Tracks the technician selection already applied to draftLines — 'FIRST_AVAILABLE'
-  // matches the initial (undefined) state so the restamp/filter effect below is a no-op
-  // on mount and only reacts to an actual staff-initiated change.
-  const appliedTechnicianRef = useRef<string>('FIRST_AVAILABLE')
 
   const { data: order, isLoading: isOrderLoading } = useOrderDetail(businessId, effectiveOrderId ?? undefined)
   const { data: serviceCatalog = [] } = useCheckoutServiceCatalog(businessId)
@@ -282,7 +333,6 @@ export default function PosOrderWorkspace({
     setCheckinTechnicianName(undefined)
     setCheckinNote('')
     setNoteExpanded(false)
-    appliedTechnicianRef.current = 'FIRST_AVAILABLE'
     initializedOrderIdRef.current = null
     appliedBookingPhoneRef.current = null
   }
@@ -400,48 +450,20 @@ export default function PosOrderWorkspace({
     )
   }, [order])
 
-  // Check-in Step 2 — one technician applies to every service line, so a technician
-  // change re-stamps every already-selected service line to the new technician and drops
-  // any that technician can't perform (PosStaffServiceAssignment is a strict allow-list).
-  // Waits for assignableServiceIds to resolve for the *current* checkinTechnicianId before
-  // acting — otherwise a fast technician switch could filter against the previous
-  // technician's assignable list for one render.
-  useEffect(() => {
-    if (!isCreateMode) return
-    if (checkinTechnicianId && assignableServiceIds === undefined) return
-    const appliedKey = checkinTechnicianId ?? 'FIRST_AVAILABLE'
-    if (appliedTechnicianRef.current === appliedKey) return
-    appliedTechnicianRef.current = appliedKey
-
-    setDraftLines((prev) => {
-      let removedCount = 0
-      const next = prev.reduce<DisplayLine[]>((acc, line) => {
-        if (line.itemType !== 'Service') {
-          acc.push(line)
-          return acc
-        }
-        if (checkinTechnicianId && assignableServiceIds && !assignableServiceIds.includes(line.posServiceId)) {
-          removedCount += 1
-          return acc
-        }
-        acc.push({ ...line, posStaffProfileId: checkinTechnicianId, technicianName: checkinTechnicianName })
-        return acc
-      }, [])
-      if (removedCount > 0) {
-        showToast(
-          t('components.dashboard.views.pos.PosOrderWorkspace.technicianChangedServicesRemoved', {
-            count: removedCount,
-          }),
-        )
-      }
-      return next
-    })
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [isCreateMode, checkinTechnicianId, checkinTechnicianName, assignableServiceIds])
-
+  // Check-in Step 2 — the top Technician picker is only the *default* applied to a
+  // service when it's added (see handleCatalogServiceClick's isCreateMode branch below).
+  // Changing it does NOT retroactively touch services already in the list — each line
+  // keeps its own technician independently, changeable per-line via the dropdown next to
+  // it (handleChangeServiceLineTechnician) instead of a single order-wide value.
   const handleSelectCheckinTechnician = (posStaffProfileId?: string, technicianName?: string) => {
     setCheckinTechnicianId(posStaffProfileId)
     setCheckinTechnicianName(technicianName)
+  }
+
+  const handleChangeServiceLineTechnician = (lineKey: string, posStaffProfileId?: string, technicianName?: string) => {
+    setDraftLines((prev) =>
+      prev.map((l) => (l.key === lineKey && l.itemType === 'Service' ? { ...l, posStaffProfileId, technicianName } : l)),
+    )
   }
 
   // Feeds CategoryGroupedCatalogPicker's toggle-selected/disabled visuals for Check-in
@@ -915,6 +937,17 @@ export default function PosOrderWorkspace({
               </button>
             </div>
 
+            {isCreateMode && catalogTab === 'services' ? (
+              <div>
+                <h3 className="text-sm font-extrabold text-nexoraText">
+                  {t('components.dashboard.views.pos.PosOrderWorkspace.chooseServicesTitle')}
+                </h3>
+                <p className="text-[11px] text-nexoraMuted">
+                  {t('components.dashboard.views.pos.PosOrderWorkspace.chooseServicesHint')}
+                </p>
+              </div>
+            ) : null}
+
             {catalogTab === 'services' ? (
               <CategoryGroupedCatalogPicker
                 variant="grid"
@@ -925,6 +958,8 @@ export default function PosOrderWorkspace({
                 }}
                 selectedItemIds={isCreateMode ? checkinSelectedServiceIds : undefined}
                 disabledItemIds={isCreateMode ? checkinDisabledServiceIds : undefined}
+                viewDetailsLabel={isCreateMode ? t('components.dashboard.views.pos.PosOrderWorkspace.viewDetailsButton') : undefined}
+                closeDetailsLabel={isCreateMode ? t('components.dashboard.views.pos.PosOrderWorkspace.closeDetailsButton') : undefined}
                 addLabel={t('components.dashboard.views.pos.PosOrderWorkspace.addButton')}
                 emptyLabel={t('components.dashboard.views.pos.PosOrderWorkspace.noServicesInCategory')}
                 allCategoryLabel={t('components.dashboard.views.pos.PosOrderWorkspace.allCategories')}
@@ -974,9 +1009,22 @@ export default function PosOrderWorkspace({
                           </div>
                           <div className="min-w-0 flex-1">
                             <p className="text-sm font-bold leading-tight text-nexoraText">{line.serviceName}</p>
-                            <p className="text-xs leading-tight text-nexoraMuted">
-                              {line.technicianName ?? t('components.dashboard.views.pos.PosOrderWorkspace.nextAvailable')}
-                            </p>
+                            {isCreateMode ? (
+                              <CheckinServiceTechnicianSelect
+                                businessId={businessId}
+                                posServiceId={line.posServiceId}
+                                value={line.posStaffProfileId}
+                                currentTechnicianName={line.technicianName}
+                                onChange={(posStaffProfileId, technicianName) =>
+                                  handleChangeServiceLineTechnician(line.key, posStaffProfileId, technicianName)
+                                }
+                                nextAvailableLabel={t('components.dashboard.views.pos.PosOrderWorkspace.nextAvailable')}
+                              />
+                            ) : (
+                              <p className="text-xs leading-tight text-nexoraMuted">
+                                {line.technicianName ?? t('components.dashboard.views.pos.PosOrderWorkspace.nextAvailable')}
+                              </p>
+                            )}
                           </div>
                           <span className="shrink-0 text-sm font-bold text-nexoraText">
                             ${lineTotal(line).toFixed(2)}
