@@ -336,6 +336,11 @@ body:not(.homepage-active):not(.public-booking-active) a:focus-visible {
     max-height: 90dvh;
   }
 
+  .news-library-pdf-modal-card {
+    height: 90vh;
+    height: 90dvh;
+  }
+
   .nexora-icon-button {
     @apply inline-flex h-10 w-10 items-center justify-center rounded-lg text-nexoraText transition hover:bg-nexoraSurfaceMuted;
   }

@@ -2871,6 +2871,11 @@
             "details": "Chi tiết",
             "preview": "Xem trước",
             "loadMore": "Tải thêm"
+          },
+          "pdfViewer": {
+            "loading": "Đang tải tài liệu...",
+            "error": "Không thể hiển thị tài liệu này.",
+            "pageAria": "Trang {page} trên {total}"
           }
         },
         "StaffView": {
