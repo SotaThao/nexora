@@ -492,24 +492,22 @@ export const DASHBOARD_MENU_LABEL_KEYS: Record<string, string> = {
 
 export const DASHBOARD_SETTINGS_TAB = {
   profile: "profile",
+  staff: "staff",
   kyb: "kyb",
   affiliate: "affiliate",
+  privacy: "privacy",
 } as const;
 
 export function buildDashboardSettingsPath(tab: string): string {
-  if (tab === DASHBOARD_SETTINGS_TAB.kyb) {
-    return `${DASHBOARD_ROOT_PATH}/settings/${DASHBOARD_SETTINGS_TAB.kyb}`;
-  }
-  if (tab === DASHBOARD_SETTINGS_TAB.affiliate) {
-    return `${DASHBOARD_ROOT_PATH}/settings/${DASHBOARD_SETTINGS_TAB.affiliate}`;
-  }
-  return `${DASHBOARD_ROOT_PATH}/settings/${DASHBOARD_SETTINGS_TAB.profile}`;
+  return `${DASHBOARD_ROOT_PATH}/settings/${normalizeDashboardSettingsTab(tab)}`;
 }
 
 export function normalizeDashboardSettingsTab(tab: string): string {
   if (
+    tab === DASHBOARD_SETTINGS_TAB.staff ||
     tab === DASHBOARD_SETTINGS_TAB.kyb ||
-    tab === DASHBOARD_SETTINGS_TAB.affiliate
+    tab === DASHBOARD_SETTINGS_TAB.affiliate ||
+    tab === DASHBOARD_SETTINGS_TAB.privacy
   ) {
     return tab;
   }
@@ -559,6 +557,13 @@ export const POS_SUBMENU: { id: string; labelKey: string }[] =
 export const MERCHANT_SIDEBAR_MENU_ITEMS = MENU_ITEMS.filter(
   (item) => !MERCHANT_SIDEBAR_HIDDEN_MENU_IDS.includes(item.id),
 );
+
+export const DESKTOP_MERCHANT_SIDEBAR_MENU_ITEMS =
+  MERCHANT_SIDEBAR_MENU_ITEMS.filter(
+    (item) => item.id !== DASHBOARD_MENU_ID.staff,
+  );
+
+export const DESKTOP_PAYMENTS_PAYOUTS_ANCHOR_ID = DASHBOARD_MENU_ID.overview;
 
 export const PAYMENTS_PAYOUTS_MENU_ITEM = {
   id: "payments_payouts",

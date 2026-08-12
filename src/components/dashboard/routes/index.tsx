@@ -1,10 +1,9 @@
-import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react'
-import { useOutletContext, useNavigate, useParams, Navigate, useSearchParams } from 'react-router-dom'
+import React, { useCallback, useEffect, useRef, useState } from 'react'
+import { useOutletContext, useNavigate, useParams, useSearchParams } from 'react-router-dom'
 import { useTranslation } from '../../../contexts/LanguageContext'
 import { SHOW_HARDWARE_DEVICES } from '../constants'
 
 import Overview from '../overview/Overview'
-import StaffView from '../views/StaffView'
 import TouchpointsView from '../../TouchpointsView'
 import ReviewsView from '../views/ReviewsView'
 import TipsView from '../../TipsView'
@@ -22,10 +21,13 @@ import { useTipPlatformCheckoutFlow } from '../views/packageManagement/useTipPla
 import CompleteStoreSetupGateModal from '../modals/CompleteStoreSetupGateModal'
 import NewsLibraryView from '../views/NewsLibraryView'
 import StaffDetailView from '../../StaffDetailView'
-import { useMerchantStaffByCode } from '../../../data/hooks/useMerchantStaff'
 import { useOpenProductManagement } from '../../../data/hooks/useOpenProductManagement'
-import { DASHBOARD_MENU_ID, DASHBOARD_ROOT_PATH } from '../constants'
-import { normaliseMember } from '../hooks/useStaffManagement'
+import {
+  buildDashboardSettingsPath,
+  DASHBOARD_MENU_ID,
+  DASHBOARD_ROOT_PATH,
+  DASHBOARD_SETTINGS_TAB,
+} from '../constants'
 import { SkeletonList } from '../../ui/skeleton'
 import { useMerchantSetup } from '../../../data/hooks/useMerchantSetup'
 import { useOwnerTaxYearByBusiness } from '../../../data/hooks/useTaxiqOwnerTaxYear'
@@ -59,6 +61,12 @@ import PosServicesView from '../views/pos/PosServicesView'
 import PosProductsView from '../views/pos/PosProductsView'
 import PosStaffProfileView from '../views/pos/PosStaffProfileView'
 import PosFrontDeskView from '../views/pos/PosFrontDeskView'
+import ResponsiveStaffRoute from './ResponsiveStaffRoute'
+import {
+  StaffDetailRouteContent,
+  StaffListRouteContent,
+} from './StaffManagementRouteContent'
+import { STAFF_ROUTE_FAMILY } from './staffRoutePaths'
 
 export function OverviewRoute() {
   const ctx = useOutletContext<LooseObject>()
@@ -110,95 +118,19 @@ export function OverviewRoute() {
 
 
 export function StaffRoute() {
-  const ctx = useOutletContext<LooseObject>()
-  const navigate = useNavigate()
   return (
-    <StaffView
-      staff={ctx.filteredStaff}
-      pendingStaff={ctx.pendingStaff}
-      allStaff={ctx.staff}
-      isLoading={ctx.staffListLoading ?? ctx.staffLoading}
-      isFetching={ctx.staffListFetching}
-      onApproveClick={ctx.openApproveStaff}
-      onAdd={ctx.openAddStaff}
-      onViewStaff={ctx.openViewStaff}
-      onDelete={ctx.deleteStaff}
-      onQr={ctx.previewQr}
-      onToggle={ctx.toggleStaff}
-      onToggleTipsFlow={ctx.toggleStaffTipsFlow}
-      onViewDetail={(member) => navigate(`/dashboard/staff/${member.staffCode || member.id}`)}
-      onResendInvite={ctx.handleResendInvite}
-      businessName={ctx.businessName}
-      businessSlug={ctx.businessSlug}
-      inviteLinkSetting={ctx.inviteLinkSetting}
-      isInviteLinkSettingLoading={ctx.isInviteLinkSettingLoading}
-      onAcceptJoin={ctx.handleAcceptJoinRequest}
-      onDeclineJoin={ctx.handleDeclineJoinRequest}
-      onAcceptUnlink={ctx.handleAcceptUnlinkRequest}
-      onDeclineUnlink={ctx.handleDeclineUnlinkRequest}
-      onOpenInviteShare={() => {
-        ctx.setInviteShareDefaultName('')
-        ctx.setInviteShareDefaultContact('')
-        ctx.setIsInviteShareOpen(true)
-      }}
-      // Pagination props
-      pageNumber={ctx.activeStaffPage}
-      pageSize={ctx.activeStaffPageSize}
-      totalPages={ctx.activeStaffTotalPages}
-      totalCount={ctx.activeStaffTotalCount}
-      hasNextPage={ctx.activeStaffHasNext}
-      hasPreviousPage={ctx.activeStaffHasPrev}
-      onPageChange={ctx.setActiveStaffPage}
-      togglingStaffId={ctx.togglingStaffId}
-    />
+    <ResponsiveStaffRoute family={STAFF_ROUTE_FAMILY.Legacy}>
+      <StaffListRouteContent routeFamily={STAFF_ROUTE_FAMILY.Legacy} />
+    </ResponsiveStaffRoute>
   )
 }
 
 export function StaffDetailRoute() {
-  const ctx = useOutletContext<LooseObject>()
-  const { staffId: staffKey } = useParams()
-  const navigate = useNavigate()
-
-  const {
-    data: staffMember,
-    isLoading: isStaffDetailLoading,
-    isError: isStaffDetailError,
-  } = useMerchantStaffByCode(staffKey)
-
-  const fallbackMember = useMemo(
-    () => ctx.staff.find((m) =>
-      String(m.id) === String(staffKey) ||
-      String(m.staffProfileId) === String(staffKey) ||
-      String(m.staffCode) === String(staffKey) ||
-      String(m.linkId) === String(staffKey),
-    ),
-    [ctx.staff, staffKey],
-  )
-
-  const resolvedMember = staffMember ?? fallbackMember
-  const staffProfileId = resolvedMember?.staffProfileId ?? null
-
-  if (isStaffDetailLoading || (!resolvedMember && ctx.staffLoading)) {
-    return (
-      <div className="nexora-card p-6">
-        <SkeletonList count={3} showAvatar lines={2} />
-      </div>
-    )
-  }
-
-  if ((isStaffDetailError && !fallbackMember) || !resolvedMember) {
-    return <Navigate to="/dashboard/staff" replace />
-  }
-
+  const { staffId } = useParams()
   return (
-    <StaffDetailView
-      staffMember={normaliseMember(resolvedMember)}
-      staffProfileId={staffProfileId}
-      onBack={null}
-      onViewStaff={ctx.openViewStaff}
-      onQr={ctx.previewQr}
-      onDelete={ctx.deleteStaff}
-    />
+    <ResponsiveStaffRoute family={STAFF_ROUTE_FAMILY.Legacy} staffId={staffId}>
+      <StaffDetailRouteContent routeFamily={STAFF_ROUTE_FAMILY.Legacy} />
+    </ResponsiveStaffRoute>
   )
 }
 
@@ -377,10 +309,10 @@ export function NewsLibraryRoute() {
 
 export function SettingsRoute() {
   const ctx = useOutletContext<LooseObject>()
-  const { tab = 'profile' } = useParams()
+  const { tab = 'profile', staffId } = useParams()
   const navigate = useNavigate()
-
-  return (
+  const isStaffTab = tab === DASHBOARD_SETTINGS_TAB.staff
+  const settings = (
     <SettingsView
       {...({ onBlockedFeatureClick: ctx.requireKyb } as any)}
       setupData={ctx.setupData}
@@ -389,10 +321,21 @@ export function SettingsRoute() {
       userEmail={ctx.userEmail}
       onKybRequired={ctx.requireKyb}
       initialTab={tab}
-      onTabChange={(nextTab) => navigate(`/dashboard/settings/${nextTab}`)}
+      onTabChange={(nextTab) => navigate(buildDashboardSettingsPath(nextTab))}
       onKybSuccess={ctx.onKybSuccess}
+      staffContent={isStaffTab
+        ? staffId
+          ? <StaffDetailRouteContent routeFamily={STAFF_ROUTE_FAMILY.Settings} />
+          : <StaffListRouteContent routeFamily={STAFF_ROUTE_FAMILY.Settings} />
+        : null}
     />
   )
+
+  return isStaffTab ? (
+    <ResponsiveStaffRoute family={STAFF_ROUTE_FAMILY.Settings} staffId={staffId}>
+      {settings}
+    </ResponsiveStaffRoute>
+  ) : settings
 }
 
 // POS Owner Setup — sidebar group (US-014). Business Info and Business Hours

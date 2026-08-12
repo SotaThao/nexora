@@ -615,6 +615,11 @@ function EventCard({
   const { t } = useTranslation()
   const url = safeExternalUrl(item.link || item.url)
   const hasDetails = !!item.htmlContent
+  const hasPairedActions = Boolean(url && hasDetails)
+  const actionClassName = [
+    'inline-flex h-9 items-center justify-center gap-1.5 rounded-lg border px-3 text-xs font-black no-underline',
+    hasPairedActions ? 'w-full sm:w-auto' : '',
+  ].join(' ')
 
   return (
     <div className="grid gap-3 rounded-lg border border-nexoraRule bg-nexoraSurface p-3 transition hover:border-nexoraLavender hover:bg-nexoraCanvas hover:shadow-nexora-soft sm:grid-cols-[4.75rem_minmax(0,1fr)_auto] sm:items-center">
@@ -638,12 +643,20 @@ function EventCard({
         )}
       </div>
       {(url || hasDetails) && (
-        <div className="flex flex-wrap gap-2 sm:justify-end">
+        <div
+          className={hasPairedActions
+            ? 'grid grid-cols-2 gap-2 sm:flex sm:flex-wrap sm:justify-end'
+            : 'flex flex-wrap gap-2 sm:justify-end'}
+        >
           {url && (
-            <a href={url} target="_blank" rel="noopener noreferrer" className="no-underline">
-              <ActionPill url={url} primary>
-                {item.primaryAction || t(`${TK}.actions.join`)}
-              </ActionPill>
+            <a
+              href={url}
+              target="_blank"
+              rel="noopener noreferrer"
+              className={`${actionClassName} border-transparent bg-nexoraBrand text-white`}
+            >
+              <ActionIcon url={url} />
+              {item.primaryAction || t(`${TK}.actions.join`)}
             </a>
           )}
           {hasDetails && (
@@ -655,7 +668,7 @@ function EventCard({
                   item.htmlContent || '',
                 )
               }
-              className="inline-flex min-h-9 items-center justify-center gap-1.5 rounded-lg border border-nexoraBrandSoft bg-nexoraCanvas px-3 text-xs font-black text-nexoraBrand"
+              className={`${actionClassName} border-nexoraBrandSoft bg-nexoraCanvas text-nexoraBrand`}
             >
               <Info className="h-4 w-4" aria-hidden />
               {item.secondaryAction || t(`${TK}.actions.details`)}
@@ -815,7 +828,13 @@ function EventZoomPanel({
   )
 }
 
-export default function NewsLibraryView() {
+interface NewsLibraryViewProps {
+  showMobileHeading?: boolean
+}
+
+export default function NewsLibraryView({
+  showMobileHeading = false,
+}: NewsLibraryViewProps) {
   const { currentLanguage, t } = useTranslation()
   const documentTitle = t(`${TK}.documentTitle`)
   const [activeTab, setActiveTab] = useState<TabId>(() => initialTab())
@@ -939,7 +958,10 @@ export default function NewsLibraryView() {
         <header className="max-w-2xl">
           <h1
             id="news-library-title"
-            className="hidden text-2xl font-black leading-tight text-nexoraText sm:block"
+            className={[
+              'text-2xl font-black leading-tight text-nexoraText',
+              showMobileHeading ? 'block' : 'hidden sm:block',
+            ].join(' ')}
           >
             {t(`${TK}.title`)}
           </h1>
@@ -976,7 +998,7 @@ export default function NewsLibraryView() {
                   'inline-flex min-h-12 min-w-0 flex-col items-center justify-center gap-1 rounded-lg border px-1 py-1.5 text-center text-xs font-bold leading-tight transition sm:min-h-11 sm:flex-row sm:px-3 sm:py-2',
                   isActive
                     ? 'border-transparent bg-nexoraBrand text-white shadow-nexora-soft'
-                    : 'border-nexoraBorder bg-nexoraSurface text-nexoraMuted hover:border-nexoraLavender hover:text-nexoraText',
+                    : 'border-nexoraBorder bg-nexoraSurface text-nexoraMuted hover:border-nexoraLavender hover:bg-nexoraSurfaceMuted hover:text-nexoraText',
                 ].join(' ')}
               >
                 <span

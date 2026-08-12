@@ -7,7 +7,8 @@ import { useTranslation } from '../../../contexts/LanguageContext'
 import { useOpenProductManagement } from '../../../data/hooks/useOpenProductManagement'
 import { 
 	visibleMenuItems, 
-	MERCHANT_SIDEBAR_MENU_ITEMS, 
+	DESKTOP_MERCHANT_SIDEBAR_MENU_ITEMS,
+	DESKTOP_PAYMENTS_PAYOUTS_ANCHOR_ID,
 	TAXIQ_SUBMENU, 
 	TAXIQ_MENU_CHILD_MODULE, 
 	POS_SUBMENU, 
@@ -278,7 +279,7 @@ export default function DashboardSidebar({
                 { id: DASHBOARD_MENU_ID.overview, label: t('components.dashboard.layout.DashboardSidebar.myDashboard'), icon: visibleMenuItems.find(i => i.id === DASHBOARD_MENU_ID.overview)?.icon },
                 { id: DASHBOARD_MENU_ID.support, label: t('dashboard.menu.support'), icon: visibleMenuItems.find(i => i.id === DASHBOARD_MENU_ID.support)?.icon }
               ]
-            : MERCHANT_SIDEBAR_MENU_ITEMS
+            : DESKTOP_MERCHANT_SIDEBAR_MENU_ITEMS
 
           return menuItemsToDisplay.map((item) => {
           const { id, label } = item
@@ -330,7 +331,7 @@ export default function DashboardSidebar({
                 ) : null}
               </button>
 
-              {userRole !== 'staff' && id === DASHBOARD_MENU_ID.staff && (
+              {userRole !== 'staff' && id === DESKTOP_PAYMENTS_PAYOUTS_ANCHOR_ID && (
                 <PaymentsPayoutsMenuSection
                   activeMenu={activeMenu}
                   tabParam={activeSubTab}

@@ -17,7 +17,7 @@ import {
   SIDEBAR_PROFILE_CARD_CLASS,
   SIDEBAR_AVATAR_IMAGE_CLASS,
   SIDEBAR_AVATAR_FALLBACK_CLASS,
-  SIDEBAR_SIGN_OUT_WRAP_CLASS,
+  SIDEBAR_MOBILE_SIGN_OUT_WRAP_CLASS,
   SIDEBAR_SUBMENU_WRAP_CLASS,
   sidebarMenuItemBetweenClass,
   sidebarSubmenuItemClass,
@@ -272,7 +272,11 @@ export default function MobileMenuDrawer({
 
         <nav className={`${SIDEBAR_NAV_CLASS} mt-0 flex-1`}>
           <HomepageLink variant="menu" active={isHomeActive} onNavigate={onClose} />
-          {menuItemsToDisplay.filter((item) => item.id !== DASHBOARD_MENU_ID.settings).map((item) => {
+          {menuItemsToDisplay.filter(
+            (item) =>
+              item.id !== DASHBOARD_MENU_ID.settings &&
+              item.id !== DASHBOARD_MENU_ID.staff,
+          ).map((item) => {
             const { id, label } = item
             const isActive = activeMenu === id
             const localizedLabel = getDashboardMenuLocalizedLabel(id, t, label)
@@ -326,7 +330,7 @@ export default function MobileMenuDrawer({
                   ) : null}
                 </button>
 
-                {userRole !== 'staff' && id === DASHBOARD_MENU_ID.staff && (
+                {userRole !== 'staff' && id === DASHBOARD_MENU_ID.overview && (
                   <PaymentsPayoutsMenuSection
                     activeMenu={activeMenu}
                     tabParam={activeSubTab}
@@ -494,7 +498,7 @@ export default function MobileMenuDrawer({
             />
           )}
 
-          <div className={`${SIDEBAR_SIGN_OUT_WRAP_CLASS} border-t-0 pt-0`}>
+          <div className={SIDEBAR_MOBILE_SIGN_OUT_WRAP_CLASS}>
             <button
               onClick={onLogout}
               className="flex items-center gap-2 px-3 py-2.5 text-sm font-bold text-white/65 transition hover:text-white w-full"
