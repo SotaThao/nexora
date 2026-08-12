@@ -2841,6 +2841,11 @@
             "details": "Details",
             "preview": "Preview",
             "loadMore": "Load more"
+          },
+          "pdfViewer": {
+            "loading": "Loading document...",
+            "error": "Unable to display this document.",
+            "pageAria": "Page {page} of {total}"
           }
         },
         "StaffView": {
