@@ -428,7 +428,7 @@ export default function TouchpointsView({
                   <div className={`absolute top-0 left-0 right-0 h-1 transition-colors ${isPointActive ? 'bg-gradient-to-r from-nexoraBrand to-floxElectricViolet' : 'bg-nexoraBorder'}`} />
                   <div
                     role="group"
-                    aria-label={`${point.name}: Station`}
+                    aria-label={point.name}
                     className="flex flex-col gap-2.5"
                   >
                     <div className="flex items-start gap-3">
@@ -445,7 +445,7 @@ export default function TouchpointsView({
                         >
                           <QrImage
                             src={qrImageSrc}
-                            alt="Scan QR"
+                            alt={t('staff_dashboard.qr.scan_qr_alt')}
                             className={`h-full w-full transition-opacity duration-200 ${isPointActive ? 'opacity-100' : 'opacity-30 filter grayscale'}`}
                           />
                           {!isPointActive && (

@@ -126,7 +126,7 @@ export default function AffiliateLinkPanel({ className = '' }: AffiliateLinkPane
           {qrImageUrl ? (
             <QrImage
               src={qrImageUrl}
-              alt="Referral Link QR Code"
+              alt={t('dashboard.touchpoints.stations_sections.referral')}
               className="h-full w-full rounded-lg"
             />
           ) : (
