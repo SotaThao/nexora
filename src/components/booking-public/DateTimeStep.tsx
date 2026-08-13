@@ -68,7 +68,13 @@ export default function DateTimeStep({
         ) : (availability.data?.availableTimes.length ?? 0) === 0 ? (
           <p className="py-4 text-center text-xs text-nexoraMuted">
             {availability.data?.holidayReason
-              ? t('public.booking.closedForHoliday', { reason: availability.data.holidayReason })
+              ? availability.data.adjustedOpenTime && availability.data.adjustedCloseTime
+                ? t('public.booking.adjustedHoursNoSlots', {
+                    reason: availability.data.holidayReason,
+                    open: formatHHmmTo12Hour(availability.data.adjustedOpenTime, timeLocale),
+                    close: formatHHmmTo12Hour(availability.data.adjustedCloseTime, timeLocale),
+                  })
+                : t('public.booking.closedForHoliday', { reason: availability.data.holidayReason })
               : t('public.booking.noSlotsAvailable')}
           </p>
         ) : (

@@ -2,6 +2,8 @@ import { useMemo, useState } from "react";
 import { useTranslation } from "../../../contexts/LanguageContext";
 import { useNotification } from "../../../contexts/NotificationContext";
 import { getErrorI18nKey } from "../../../data/errorCodes";
+import { useMerchantSetup } from "../../../data/hooks/useMerchantSetup";
+import { useBookingSettings, useUpdateBookingSettings } from "../../../data/hooks/usePosBookingSettings";
 import {
   useAffectedBookingsCount,
   useCreateMerchantVoiceHoliday,
@@ -33,7 +35,6 @@ type HolidayFormState = {
   type: HolidayType;
   adjustedOpenTime: string;
   adjustedCloseTime: string;
-  autoNotify: boolean;
 };
 
 const EMPTY_FORM: HolidayFormState = {
@@ -42,7 +43,6 @@ const EMPTY_FORM: HolidayFormState = {
   type: HOLIDAY_TYPE.CLOSED,
   adjustedOpenTime: "09:00",
   adjustedCloseTime: "19:00",
-  autoNotify: false,
 };
 
 export default function HolidayClosuresCard() {
@@ -61,9 +61,29 @@ export default function HolidayClosuresCard() {
   const [formError, setFormError] = useState("");
   const [pendingDeleteId, setPendingDeleteId] = useState<string | null>(null);
 
-  // Card-level default shown next to the list; not yet wired to any backend
-  // behavior (BusinessHoliday.AutoNotify is persisted per-date but unused).
-  const [autoNotifyDefault, setAutoNotifyDefault] = useState(true);
+  // One toggle per Business — lives on PosBookingSettings, not per-holiday-record.
+  const { data: merchantSetupData } = useMerchantSetup();
+  const businessId = merchantSetupData?.businessInfo?.businessId;
+  const { data: bookingSettings } = useBookingSettings(businessId);
+  const updateBookingSettingsMutation = useUpdateBookingSettings(businessId);
+  const holidayAutoNotifyEnabled = bookingSettings?.holidayAutoNotifyEnabled ?? true;
+
+  const toggleHolidayAutoNotify = async () => {
+    try {
+      await updateBookingSettingsMutation.mutateAsync({
+        autoConfirmEnabled: bookingSettings?.autoConfirmEnabled ?? true,
+        minLeadTimeMinutes: bookingSettings?.minLeadTimeMinutes ?? 15,
+        maxAdvanceDays: bookingSettings?.maxAdvanceDays ?? 7,
+        reminderHoursBefore: bookingSettings?.reminderHoursBefore ?? 12,
+        notifyCustomerSmsEnabled: bookingSettings?.notifyCustomerSmsEnabled ?? true,
+        notifyBusinessSmsEnabled: bookingSettings?.notifyBusinessSmsEnabled ?? true,
+        notifyAssignedStaffSmsEnabled: bookingSettings?.notifyAssignedStaffSmsEnabled ?? true,
+        holidayAutoNotifyEnabled: !holidayAutoNotifyEnabled,
+      });
+    } catch (err) {
+      showToast(t(getErrorI18nKey(getApiErrorCode(err))), "error");
+    }
+  };
 
   const { data: affectedCount = 0 } = useAffectedBookingsCount(form.holidayDate, {
     enabled: modalOpen && modalMode !== "view" && Boolean(form.holidayDate),
@@ -71,7 +91,13 @@ export default function HolidayClosuresCard() {
 
   const isViewOnly = modalMode === "view";
   const isSaving = createMutation.isPending || updateMutation.isPending;
-  const today = useMemo(() => new Date().toISOString().slice(0, 10), []);
+  const today = useMemo(() => {
+    const d = new Date();
+    const yyyy = d.getFullYear();
+    const mm = String(d.getMonth() + 1).padStart(2, "0");
+    const dd = String(d.getDate()).padStart(2, "0");
+    return `${yyyy}-${mm}-${dd}`;
+  }, []);
 
   const openAddModal = () => {
     setModalMode("add");
@@ -90,7 +116,6 @@ export default function HolidayClosuresCard() {
       type: holiday.type,
       adjustedOpenTime: holiday.adjustedOpenTime ?? "09:00",
       adjustedCloseTime: holiday.adjustedCloseTime ?? "19:00",
-      autoNotify: holiday.autoNotify,
     });
     setFormError("");
     setModalOpen(true);
@@ -105,7 +130,6 @@ export default function HolidayClosuresCard() {
       type: holiday.type,
       adjustedOpenTime: holiday.adjustedOpenTime ?? "09:00",
       adjustedCloseTime: holiday.adjustedCloseTime ?? "19:00",
-      autoNotify: holiday.autoNotify,
     });
     setFormError("");
     setModalOpen(true);
@@ -142,7 +166,6 @@ export default function HolidayClosuresCard() {
       type: form.type,
       adjustedOpenTime: form.type === HOLIDAY_TYPE.ADJUSTED ? form.adjustedOpenTime : null,
       adjustedCloseTime: form.type === HOLIDAY_TYPE.ADJUSTED ? form.adjustedCloseTime : null,
-      autoNotify: form.autoNotify,
     };
 
     try {
@@ -267,12 +290,13 @@ export default function HolidayClosuresCard() {
         <div className="settings-holiday-toggle-row">
           <span className="settings-holiday-toggle-label">{t(`${TK}.holidayCardAutoNotify`)}</span>
           <button
-            className={`toggle-pill${autoNotifyDefault ? " is-on" : ""}`}
+            className={`toggle-pill${holidayAutoNotifyEnabled ? " is-on" : ""}`}
             type="button"
             role="switch"
-            aria-checked={autoNotifyDefault}
+            aria-checked={holidayAutoNotifyEnabled}
             aria-label={t(`${TK}.holidayCardAutoNotify`)}
-            onClick={() => setAutoNotifyDefault((prev) => !prev)}
+            disabled={updateBookingSettingsMutation.isPending}
+            onClick={() => void toggleHolidayAutoNotify()}
           />
         </div>
       ) : null}

@@ -5767,6 +5767,7 @@
       "loadingSlots": "Loading available times...",
       "noSlotsAvailable": "No available times on this date. Please try another date.",
       "closedForHoliday": "The salon is closed on this date ({{reason}}). Please try another date.",
+      "adjustedHoursNoSlots": "The salon has adjusted hours on this date ({{reason}}): {{open}} - {{close}}, but no available times fit your selected service duration. Please try another date.",
       "contactTitle": "Your Information",
       "customerName": "Full name",
       "customerPhone": "Phone number",

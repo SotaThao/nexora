@@ -5762,6 +5762,7 @@
       "loadingSlots": "Đang tải khung giờ trống...",
       "noSlotsAvailable": "Không có khung giờ trống vào ngày này. Vui lòng chọn ngày khác.",
       "closedForHoliday": "Salon đóng cửa vào ngày này ({{reason}}). Vui lòng chọn ngày khác.",
+      "adjustedHoursNoSlots": "Salon làm việc giờ điều chỉnh vào ngày này ({{reason}}): {{open}} - {{close}}, nhưng không có khung giờ nào phù hợp với thời lượng dịch vụ đã chọn. Vui lòng chọn ngày khác.",
       "contactTitle": "Thông tin của bạn",
       "customerName": "Họ và tên",
       "customerPhone": "Số điện thoại",

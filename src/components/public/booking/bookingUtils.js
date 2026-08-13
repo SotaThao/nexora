@@ -153,6 +153,10 @@ export function validateBookingDraft(draft, catalog, minDate) {
   const operatingHours = catalog?.operatingHours || []
   const holidays = catalog?.holidays || []
   const catalogIds = new Set(services.map((service) => service.id))
+  const totalDurationMinutes = selectedServiceIds
+    .map((id) => services.find((service) => service.id === id))
+    .filter(Boolean)
+    .reduce((sum, service) => sum + (service.durationMinutes || 0), 0)
 
   if (!isValidPhoneE164(phoneRaw, dialCode)) {
     errors.push(PUBLIC_BOOKING_VALIDATION_ERROR.phone)
@@ -191,9 +195,14 @@ export function validateBookingDraft(draft, catalog, minDate) {
       draft.selectedTime,
       operatingHours,
       holidays,
+      totalDurationMinutes,
     )
   ) {
-    errors.push(PUBLIC_BOOKING_VALIDATION_ERROR.slot)
+    if (findHolidayForDate(draft.selectedDate, holidays)) {
+      errors.push(PUBLIC_BOOKING_VALIDATION_ERROR.closedDay)
+    } else {
+      errors.push(PUBLIC_BOOKING_VALIDATION_ERROR.slot)
+    }
   }
 
   return { ok: errors.length === 0, errors }

@@ -2498,6 +2498,7 @@ export default function BookingSettingsPanel() {
             minLeadTimeMinutes: posBookingSettingsData?.minLeadTimeMinutes ?? 15,
             maxAdvanceDays: posBookingSettingsData?.maxAdvanceDays ?? 7,
             reminderHoursBefore: posBookingSettingsData?.reminderHoursBefore ?? 12,
+            holidayAutoNotifyEnabled: posBookingSettingsData?.holidayAutoNotifyEnabled ?? true,
             ...bookingSmsSettingsPayloadFromEnabled(bookingSmsEnabled),
           }),
         );

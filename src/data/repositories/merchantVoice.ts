@@ -629,7 +629,6 @@ export interface MerchantVoiceHolidayDto {
   type: HolidayType
   adjustedOpenTime: string | null
   adjustedCloseTime: string | null
-  autoNotify: boolean
   affectedBookingsCount: number
 }
 
@@ -639,7 +638,6 @@ export interface CreateMerchantVoiceHolidayRequest {
   type: HolidayType
   adjustedOpenTime?: string | null
   adjustedCloseTime?: string | null
-  autoNotify: boolean
 }
 
 export type UpdateMerchantVoiceHolidayRequest = CreateMerchantVoiceHolidayRequest
@@ -811,7 +809,6 @@ function normalizeHolidayDto(raw: unknown): MerchantVoiceHolidayDto | null {
     type: row.type === HOLIDAY_TYPE.ADJUSTED ? HOLIDAY_TYPE.ADJUSTED : HOLIDAY_TYPE.CLOSED,
     adjustedOpenTime: row.adjustedOpenTime ? String(row.adjustedOpenTime) : null,
     adjustedCloseTime: row.adjustedCloseTime ? String(row.adjustedCloseTime) : null,
-    autoNotify: row.autoNotify === true,
     affectedBookingsCount: typeof row.affectedBookingsCount === 'number' ? row.affectedBookingsCount : 0,
   }
 }
@@ -1550,7 +1547,6 @@ export function createMerchantVoiceRepository(client: HttpClient = httpClient) {
         type: body.type,
         adjustedOpenTime: body.adjustedOpenTime ?? null,
         adjustedCloseTime: body.adjustedCloseTime ?? null,
-        autoNotify: body.autoNotify,
         affectedBookingsCount: 0,
       }
     },
@@ -1568,7 +1564,6 @@ export function createMerchantVoiceRepository(client: HttpClient = httpClient) {
         type: body.type,
         adjustedOpenTime: body.adjustedOpenTime ?? null,
         adjustedCloseTime: body.adjustedCloseTime ?? null,
-        autoNotify: body.autoNotify,
         affectedBookingsCount: 0,
       }
     },

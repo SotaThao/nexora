@@ -510,6 +510,7 @@ export interface PosBookingSettingsApiDto {
   notifyCustomerSmsEnabled: boolean
   notifyBusinessSmsEnabled: boolean
   notifyAssignedStaffSmsEnabled: boolean
+  holidayAutoNotifyEnabled: boolean
 }
 
 // POS Booking — Staff/Owner creates a booking directly (Ticket 3). Always Confirmed
@@ -654,6 +655,8 @@ export interface PublicAvailabilityRequestPayload {
 export interface PublicAvailabilityApiDto {
   availableTimes: string[] // "HH:mm", local to the salon's own hours
   holidayReason?: string | null
+  adjustedOpenTime?: string | null
+  adjustedCloseTime?: string | null
 }
 
 export interface CreatePublicBookingItemPayload {

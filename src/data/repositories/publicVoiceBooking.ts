@@ -464,15 +464,18 @@ export function isSlotWithinOperatingHours(
   timeHmm: string,
   operatingHours: PublicBookingOperatingHour[],
   holidays: PublicBookingHoliday[] = [],
+  durationMinutes = 0,
 ): boolean {
   const holiday = findHolidayForDate(dateIso, holidays)
+  const start = timeToMinutes(timeHmm)
+  const end = start != null ? start + Math.max(0, durationMinutes) : null
+
   if (holiday != null) {
     if (holiday.type === HOLIDAY_TYPE.CLOSED) return false
-    const start = timeToMinutes(timeHmm)
     const open = timeToMinutes(holiday.adjustedOpenTime)
     const close = timeToMinutes(holiday.adjustedCloseTime)
-    if (start == null || open == null || close == null) return false
-    return start >= open && start < close
+    if (start == null || end == null || open == null || close == null) return false
+    return start >= open && end <= close
   }
 
   if (!Array.isArray(operatingHours) || operatingHours.length === 0) {
@@ -480,11 +483,10 @@ export function isSlotWithinOperatingHours(
   }
   const hour = findOperatingHourForDate(dateIso, operatingHours)
   if (!hour || !hour.isOpen) return false
-  const start = timeToMinutes(timeHmm)
   const open = timeToMinutes(hour.openTime)
   const close = timeToMinutes(hour.closeTime)
-  if (start == null || open == null || close == null) return false
-  return start >= open && start < close
+  if (start == null || end == null || open == null || close == null) return false
+  return start >= open && end <= close
 }
 
 export function formatServicePrice(price: number | null | undefined): string {
