@@ -133,7 +133,7 @@ export default function Dashboard({
     activeMenu === 'reviews' ||
     hasSearchQuery ||
     isStaffManagementScreen
-  const needsInviteLink = isStaffManagementScreen
+  const needsInviteLink = isStaffManagementScreen || activeMenu === 'touchpoints'
   const isStaffTab = isStaffManagementScreen
   const isReviewsTab = activeMenu === 'reviews'
   const isTouchpointsTab = activeMenu === 'touchpoints'

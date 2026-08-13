@@ -973,12 +973,23 @@
         "devices": "Hardware Devices"
       },
       "stations_sections": {
-        "tip": "Tip QR",
-        "payment": "Payment QR",
+        "tip": "Receive Tips",
+        "payment": "Accept Payment",
+        "referral": "Referral Link",
+        "staff_invite": "Staff Invite QR",
         "tip_desc": "Create and manage tip stations. Customers scan to tip your staff.",
-        "payment_desc": "Your store's direct payment QR. Customers pay your business directly — separate from tip stations."
+        "payment_desc": "Use your direct payment QR and manage the payout methods available to customers.",
+        "referral_desc": "Share your affiliate link and choose where new members are placed in your network.",
+        "affiliate_copy_link": "Copy Link",
+        "staff_invite_desc": "Share this QR or join link to invite staff to your business."
       },
       "open_link": "Test station flow",
+      "station_actions": {
+        "view": "View QR",
+        "copy_link": "Copy",
+        "open_link": "Open Link",
+        "remove": "Remove"
+      },
       "empty_title": "No QR stations yet",
       "empty_desc": "Create your first station to start receiving scans and tips.",
       "paper_qr_only": "Paper QR Only",
@@ -4978,7 +4989,8 @@
         "activeMethodsLabel": "{{count}} active payout method(s) shown to customers",
         "previewQr": "Preview QR",
         "btn_open": "Open QR",
-        "copyLink": "Copy payment link",
+        "viewQr": "View QR",
+        "copyLink": "Copy link",
         "downloadQr": "Download QR",
         "viewHistory": "View payment history",
         "emptyTitle": "Configure payout methods first",
@@ -5533,7 +5545,7 @@
     },
     "SettingsView": {
       "qrCodeDownloaded": "QR code downloaded!",
-      "settingsConfiguration": "Account Settings",
+      "settingsConfiguration": "Settings",
       "manageYourOwnerCredentials": "Manage your account info, payout methods, business details, and compliance verification.",
       "account": "Account",
       "kyb": "Business Verification",

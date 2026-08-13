@@ -973,12 +973,23 @@
         "devices": "Thiết Bị Vật Lý"
       },
       "stations_sections": {
-        "tip": "QR Nhận tip",
-        "payment": "QR Thanh toán",
+        "tip": "Nhận Tip",
+        "payment": "Nhận Thanh Toán",
+        "referral": "Liên Kết Giới Thiệu",
+        "staff_invite": "QR Mời Nhân Viên",
         "tip_desc": "Tạo và quản lý trạm QR nhận tip. Khách quét để tip cho nhân viên.",
-        "payment_desc": "QR thanh toán trực tiếp cho tiệm. Khách trả tiền cho doanh nghiệp — tách biệt với QR tip."
+        "payment_desc": "Dùng QR thanh toán trực tiếp và quản lý các phương thức chi trả dành cho khách hàng.",
+        "referral_desc": "Chia sẻ liên kết affiliate và chọn vị trí xếp thành viên mới trong mạng lưới của bạn.",
+        "affiliate_copy_link": "Sao chép liên kết",
+        "staff_invite_desc": "Chia sẻ QR hoặc liên kết tham gia này để mời nhân viên vào doanh nghiệp của bạn."
       },
       "open_link": "Thử nghiệm luồng trạm",
+      "station_actions": {
+        "view": "Xem QR",
+        "copy_link": "Sao chép",
+        "open_link": "Mở link",
+        "remove": "Xóa"
+      },
       "empty_title": "Chưa có trạm QR nào",
       "empty_desc": "Tạo trạm đầu tiên để bắt đầu nhận lượt quét và tip.",
       "paper_qr_only": "Chỉ dùng QR in giấy",
@@ -4974,7 +4985,8 @@
         "activeMethodsLabel": "{{count}} phương thức nhận tiền đang hiển thị cho khách",
         "previewQr": "Xem QR",
         "btn_open": "Xem mã QR",
-        "copyLink": "Sao chép link thanh toán",
+        "viewQr": "Xem QR",
+        "copyLink": "Sao chép link",
         "downloadQr": "Tải QR",
         "viewHistory": "Xem lịch sử thanh toán",
         "emptyTitle": "Cần cấu hình phương thức nhận tiền trước",
@@ -5528,7 +5540,7 @@
     },
     "SettingsView": {
       "qrCodeDownloaded": "Đã tải xuống mã QR!",
-      "settingsConfiguration": "Cài đặt tài khoản",
+      "settingsConfiguration": "Cài đặt",
       "manageYourOwnerCredentials": "Quản lý thông tin tài khoản, phương thức chi trả, thông tin doanh nghiệp và xác minh tuân thủ.",
       "account": "Tài khoản",
       "kyb": "Xác minh doanh nghiệp",
