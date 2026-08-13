@@ -5,7 +5,6 @@ import {
   Copy,
   Check,
   Download,
-  Eye,
   Loader2,
   ExternalLink,
   Wallet,
@@ -182,7 +181,7 @@ export default function SettingsTipQrPanel({
           disabled={!paymentPageUrl}
           className={`${gatewayActionBtnClass} bg-white border border-nexoraBorder text-nexoraText hover:bg-nexoraSurfaceMuted disabled:cursor-not-allowed disabled:opacity-60`}
         >
-          <Eye className="h-4 w-4 shrink-0" />
+          <QrCode className="h-4 w-4 shrink-0" />
           <span className="truncate">{t('dashboard.master_gateway.btn_open')}</span>
         </button>
         <button
@@ -426,11 +425,11 @@ export default function SettingsTipQrPanel({
             type="button"
             disabled={!paymentPageUrl}
             onClick={() => setShowPreview(true)}
-            aria-label={`${t('components.settings.tabs.ProfileTab.view')} ${t('components.settings.SettingsTipQrPanel.defaultQrTitle')}`}
+            aria-label={t('components.settings.SettingsTipQrPanel.viewQr')}
             className="flex w-full cursor-pointer flex-row items-center justify-center gap-2 rounded-lg border border-sky-200 bg-sky-50 px-3 py-3.5 text-[11px] font-bold leading-snug text-sky-700 transition hover:bg-sky-100 disabled:cursor-not-allowed disabled:opacity-50"
           >
-            <Eye className="h-4 w-4 shrink-0" />
-            <span>{t('components.settings.tabs.ProfileTab.view')}</span>
+            <QrCode className="h-4 w-4 shrink-0" />
+            <span>{t('components.settings.SettingsTipQrPanel.viewQr')}</span>
           </button>
           <button
             type="button"
