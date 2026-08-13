@@ -13,7 +13,6 @@ import {
   Languages,
   Lock,
   LogOut,
-  QrCode,
   ShieldCheck,
   Star,
   UserCircle,
@@ -581,13 +580,6 @@ export default function SettingsViewMobile({
 
         {form.activeTab === 'affiliate' && (
           <div className="rounded-xl border border-nexoraBorder bg-white shadow-sm p-6 max-w-xl mx-auto animate-fadeIn select-none space-y-6">
-            <div className="flex justify-between items-center border-b border-nexoraRule pb-3">
-              <h4 className="text-xs font-black uppercase text-nexoraText tracking-wider flex items-center gap-2">
-                <QrCode className="h-4 w-4 text-nexoraBrand" />
-                {t('components.SettingsView.affiliateLink2')}
-              </h4>
-            </div>
-            
             {/* QR Section (Inline) */}
             <div className="flex flex-col items-center">
               {/* QR Code Container */}
