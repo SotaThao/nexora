@@ -3,6 +3,7 @@
  * Contract: nexora-voice-booking-api.md
  */
 import httpClient from '../../lib/httpClient'
+import { HOLIDAY_TYPE } from '../../constants/holiday'
 import {
   BOOKING_DAY_OF_WEEK,
   OTHER_SERVICES_CATEGORY_ID,
@@ -15,6 +16,7 @@ import {
   type CreateOnlineBookingResultDto,
   type PublicBookingCreateResult,
   type PublicBookingCustomer,
+  type PublicBookingHoliday,
   type PublicBookingOperatingHour,
   type PublicBookingPageData,
   type PublicBookingService,
@@ -139,6 +141,27 @@ function normalizeOperatingHour(raw: unknown): PublicBookingOperatingHour | null
   }
 }
 
+function normalizeHoliday(raw: unknown): PublicBookingHoliday | null {
+  const dto = asRecord(raw)
+  const holidayDate = String(readField(dto, 'holidayDate', 'HolidayDate') ?? '').trim()
+  if (!holidayDate) return null
+  return {
+    holidayDate,
+    reason: String(readField(dto, 'reason', 'Reason') ?? '').trim(),
+    type: readField(dto, 'type', 'Type') === HOLIDAY_TYPE.ADJUSTED
+      ? HOLIDAY_TYPE.ADJUSTED
+      : HOLIDAY_TYPE.CLOSED,
+    adjustedOpenTime: (() => {
+      const v = readField(dto, 'adjustedOpenTime', 'AdjustedOpenTime')
+      return v == null || v === '' ? null : String(v)
+    })(),
+    adjustedCloseTime: (() => {
+      const v = readField(dto, 'adjustedCloseTime', 'AdjustedCloseTime')
+      return v == null || v === '' ? null : String(v)
+    })(),
+  }
+}
+
 function normalizeCustomer(raw: unknown): PublicBookingCustomer | null {
   if (raw == null) return null
   const dto = asRecord(raw)
@@ -185,6 +208,7 @@ export function normalizeBookingPageData(
   const categoriesRaw = readField<unknown[]>(raw, 'categories', 'Categories')
   const staffRaw = readField<unknown[]>(raw, 'staff', 'Staff')
   const hoursRaw = readField<unknown[]>(raw, 'operatingHours', 'OperatingHours')
+  const holidaysRaw = readField<unknown[]>(raw, 'holidays', 'Holidays')
 
   const categories = Array.isArray(categoriesRaw)
     ? (categoriesRaw.map(normalizeCategory).filter(Boolean) as PublicBookingServiceCategory[])
@@ -253,6 +277,9 @@ export function normalizeBookingPageData(
       : [],
     operatingHours: Array.isArray(hoursRaw)
       ? (hoursRaw.map(normalizeOperatingHour).filter(Boolean) as PublicBookingOperatingHour[])
+      : [],
+    holidays: Array.isArray(holidaysRaw)
+      ? (holidaysRaw.map(normalizeHoliday).filter(Boolean) as PublicBookingHoliday[])
       : [],
     customer: normalizeCustomer(readField(raw, 'customer', 'Customer')),
   }
@@ -416,11 +443,38 @@ export function findOperatingHourForDate(
   )
 }
 
+export function findHolidayForDate(
+  dateIso: string,
+  holidays: PublicBookingHoliday[],
+): PublicBookingHoliday | null {
+  if (!Array.isArray(holidays) || holidays.length === 0) return null
+  return holidays.find((holiday) => holiday.holidayDate === dateIso) || null
+}
+
+export function isDateClosedByHoliday(
+  dateIso: string,
+  holidays: PublicBookingHoliday[],
+): boolean {
+  const holiday = findHolidayForDate(dateIso, holidays)
+  return holiday != null && holiday.type === HOLIDAY_TYPE.CLOSED
+}
+
 export function isSlotWithinOperatingHours(
   dateIso: string,
   timeHmm: string,
   operatingHours: PublicBookingOperatingHour[],
+  holidays: PublicBookingHoliday[] = [],
 ): boolean {
+  const holiday = findHolidayForDate(dateIso, holidays)
+  if (holiday != null) {
+    if (holiday.type === HOLIDAY_TYPE.CLOSED) return false
+    const start = timeToMinutes(timeHmm)
+    const open = timeToMinutes(holiday.adjustedOpenTime)
+    const close = timeToMinutes(holiday.adjustedCloseTime)
+    if (start == null || open == null || close == null) return false
+    return start >= open && start < close
+  }
+
   if (!Array.isArray(operatingHours) || operatingHours.length === 0) {
     return Boolean(dateIso && timeHmm)
   }

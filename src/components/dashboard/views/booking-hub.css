@@ -1013,6 +1013,313 @@ body.booking-appointment-panel-modal-open {
   color: var(--nexora-warning);
 }
 
+.booking-hub-view .badge-danger {
+  background: rgba(239, 68, 68, 0.12);
+  color: var(--nexora-danger, #dc2626);
+}
+
+.booking-hub-view .settings-holiday-badge {
+  display: inline-flex;
+  align-items: center;
+  border-radius: 999px;
+  padding: 3px 8px;
+  font-size: 11px;
+  font-weight: 700;
+}
+
+.booking-hub-view .settings-holiday-badge.is-adjusted {
+  background: #fffbeb;
+  color: #92400e;
+}
+
+.booking-hub-view .settings-holiday-badge.is-closed {
+  background: #fef2f2;
+  color: #991b1b;
+}
+
+.booking-hub-view .settings-holiday-stack {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  min-width: 0;
+}
+
+.booking-hub-view .settings-holiday-stack [data-settings-card="holidays"],
+.booking-hub-view .settings-holiday-stack [data-settings-card="bookingSms"] {
+  height: fit-content;
+}
+
+.booking-hub-view .settings-holiday-card-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 14px;
+}
+
+.booking-hub-view .settings-holiday-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.booking-hub-view .settings-holiday-table th:last-child,
+.booking-hub-view .settings-holiday-table td:last-child {
+  width: 1%;
+  white-space: nowrap;
+}
+
+.booking-hub-view .settings-holiday-table th {
+  text-align: left;
+  padding: 0 10px 10px 0;
+  color: var(--nexora-subtle);
+  font-size: 11px;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.02em;
+  border-bottom: 1px solid var(--nexora-rule);
+}
+
+.booking-hub-view .settings-holiday-table td {
+  padding: 12px 10px 12px 0;
+  border-bottom: 1px solid var(--nexora-rule);
+  font-size: 13px;
+  color: var(--nexora-text);
+  vertical-align: middle;
+}
+
+.booking-hub-view .settings-holiday-table tr:last-child td {
+  border-bottom: 0;
+}
+
+.booking-hub-view .settings-holiday-table-date,
+.booking-hub-view .settings-holiday-table-reason {
+  font-weight: 700;
+}
+
+.booking-hub-view .settings-holiday-table-actions {
+  display: flex;
+  align-items: center;
+  gap: 40px;
+}
+
+.booking-hub-view .settings-holiday-link-action {
+  border: 0;
+  background: transparent;
+  padding: 0;
+  color: var(--nexora-muted);
+  font-size: 11px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.booking-hub-view .settings-holiday-link-action:hover {
+  color: var(--nexora-brand);
+}
+
+.booking-hub-view .settings-holiday-empty {
+  padding: 20px;
+  text-align: center;
+  color: var(--nexora-muted);
+  font-size: 13px;
+}
+
+.booking-hub-view .settings-holiday-warning {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  padding: 10px 12px;
+  border-radius: 10px;
+  background: rgba(245, 158, 11, 0.12);
+  color: var(--nexora-warning);
+  font-size: 13px;
+  line-height: 1.4;
+}
+
+.booking-hub-view .settings-holiday-modal {
+  position: fixed;
+  inset: 0;
+  z-index: 125;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(8, 18, 38, 0.54);
+  padding: 18px;
+  backdrop-filter: blur(10px);
+}
+
+.booking-hub-view .settings-holiday-dialog {
+  width: min(100%, 620px);
+  display: flex;
+  flex-direction: column;
+  max-height: 90vh;
+  max-height: 90dvh;
+  border: 1px solid var(--nexora-border);
+  border-radius: 16px;
+  background: #fff;
+  box-shadow: 0 28px 80px rgba(8, 18, 38, 0.28);
+}
+
+.booking-hub-view .settings-holiday-modal-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+  flex-shrink: 0;
+  border-bottom: 1px solid var(--nexora-rule);
+  padding: 18px;
+}
+
+.booking-hub-view .settings-holiday-modal-title {
+  color: var(--nexora-text);
+  font-size: 16px;
+  font-weight: 800;
+  line-height: 1.3;
+}
+
+.booking-hub-view .settings-holiday-modal-sub {
+  margin-top: 4px;
+  color: var(--nexora-muted);
+  font-size: 12px;
+  font-weight: 500;
+  line-height: 1.45;
+}
+
+.booking-hub-view .settings-holiday-modal-close {
+  display: inline-flex;
+  width: 28px;
+  height: 28px;
+  flex-shrink: 0;
+  align-items: center;
+  justify-content: center;
+  margin-top: 1px;
+  border: 1px solid var(--nexora-border);
+  border-radius: 8px;
+  background: var(--nexora-surface-muted);
+  color: var(--nexora-muted);
+  cursor: pointer;
+  line-height: 0;
+  padding: 0;
+}
+
+.booking-hub-view .settings-holiday-modal-close svg {
+  width: 12px;
+  height: 12px;
+  display: block;
+}
+
+.booking-hub-view .settings-holiday-modal-close:hover {
+  border-color: rgba(70, 72, 216, 0.28);
+  color: var(--nexora-brand);
+  background: #f6f7ff;
+}
+
+.booking-hub-view .settings-holiday-modal-body {
+  flex: 1;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  padding: 18px;
+}
+
+.booking-hub-view .settings-holiday-field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.booking-hub-view .settings-holiday-field-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 10px;
+}
+
+@media (min-width: 480px) {
+  .booking-hub-view .settings-holiday-field-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+.booking-hub-view .settings-holiday-radio-group {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.booking-hub-view .settings-holiday-radio-option {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 12px;
+  border: 1px solid var(--nexora-border);
+  border-radius: 10px;
+  cursor: pointer;
+  font-size: 13px;
+  color: var(--nexora-text);
+}
+
+.booking-hub-view .settings-holiday-radio-option.is-selected {
+  border-color: var(--nexora-brand);
+  background: rgba(70, 72, 216, 0.08);
+  color: var(--nexora-brand);
+  font-weight: 700;
+}
+
+.booking-hub-view .settings-holiday-suggestion-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.booking-hub-view .settings-holiday-suggestion-chip {
+  display: inline-flex;
+  align-items: center;
+  padding: 6px 12px;
+  border: 1px solid rgba(70, 72, 216, 0.28);
+  border-radius: 999px;
+  background: #fff;
+  color: var(--nexora-brand);
+  font-size: 11px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.booking-hub-view .settings-holiday-suggestion-chip:hover {
+  background: rgba(70, 72, 216, 0.08);
+}
+
+.booking-hub-view .settings-holiday-toggle-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-top: 16px;
+  padding-top: 16px;
+  border-top: 1px solid var(--nexora-rule);
+}
+
+.booking-hub-view .settings-holiday-toggle-label {
+  color: var(--nexora-text);
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.booking-hub-view .settings-holiday-error {
+  color: var(--nexora-danger, #dc2626);
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.booking-hub-view .settings-holiday-modal-actions {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 10px;
+  flex-shrink: 0;
+  border-top: 1px solid var(--nexora-rule);
+  padding: 16px 18px;
+}
+
 .booking-hub-view .badge-soft {
   display: inline-flex;
   align-items: center;
@@ -4563,6 +4870,10 @@ body.booking-appointment-panel-modal-open {
   height: 17px;
 }
 
+.booking-hub-view [data-settings-card="holidays"] .settings-card-title-icon svg {
+  margin-top: -2px;
+}
+
 .booking-hub-view .settings-action-icon {
   width: 14px;
   height: 14px;
@@ -4711,6 +5022,14 @@ body.booking-appointment-panel-modal-open {
 .booking-hub-view .settings-select {
   min-height: 42px;
   padding: 0 12px;
+}
+
+.booking-hub-view .settings-input:disabled,
+.booking-hub-view .settings-select:disabled,
+.booking-hub-view .settings-textarea:disabled {
+  background: var(--nexora-canvas);
+  color: var(--nexora-muted);
+  cursor: not-allowed;
 }
 
 .booking-hub-view .settings-input-ai {
@@ -6686,6 +7005,30 @@ body.booking-appointment-panel-modal-open {
   .booking-hub-view .settings-grid,
   .booking-hub-view .settings-two-grid {
     grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  /* Holiday & Closures and Booking SMS Notifications are grouped into one flex
+     stack (.settings-holiday-stack) so they sit flush against each other in the
+     left column, regardless of how tall AI Voice is in the right column. */
+  .booking-hub-view .settings-grid > [data-settings-card="salon"] {
+    grid-column: 1;
+    grid-row: 1;
+  }
+
+  .booking-hub-view .settings-grid > [data-settings-card="hours"] {
+    grid-column: 2;
+    grid-row: 1;
+  }
+
+  .booking-hub-view .settings-grid > .settings-holiday-stack {
+    grid-column: 1;
+    grid-row: 2;
+    align-self: start;
+  }
+
+  .booking-hub-view .settings-grid > [data-settings-card="voice"] {
+    grid-column: 2;
+    grid-row: 2;
   }
 
   .booking-hub-view .settings-save-bar {

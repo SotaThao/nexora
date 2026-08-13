@@ -653,6 +653,7 @@ export interface PublicAvailabilityRequestPayload {
 
 export interface PublicAvailabilityApiDto {
   availableTimes: string[] // "HH:mm", local to the salon's own hours
+  holidayReason?: string | null
 }
 
 export interface CreatePublicBookingItemPayload {

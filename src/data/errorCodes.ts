@@ -281,6 +281,7 @@ export const errorCodeToI18nKey = {
   // POS Booking — Staff/Owner creates a booking (Ticket 3)
   POS_BOOKING_SERVICE_INVALID: 'errors.pos_booking_service_invalid',
   POS_BOOKING_OUTSIDE_BUSINESS_HOURS: 'errors.pos_booking_outside_business_hours',
+  POS_BOOKING_BUSINESS_CLOSED_ON_DATE: 'errors.pos_booking_business_closed_on_date',
   POS_BOOKING_LEAD_TIME_VIOLATION: 'errors.pos_booking_lead_time_violation',
   POS_BOOKING_ADVANCE_LIMIT_EXCEEDED: 'errors.pos_booking_advance_limit_exceeded',
   POS_BOOKING_STAFF_OUTSIDE_SCHEDULE: 'errors.pos_booking_staff_outside_schedule',

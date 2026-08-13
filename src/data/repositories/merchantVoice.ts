@@ -1,5 +1,6 @@
 import httpClient from '../../lib/httpClient'
 import { BOOKING_HUB_PAGE_SIZE, BOOKING_HUB_STATUS_COLLECT_MAX_PAGES, BOOKING_HUB_STATUS_COLLECT_PAGE_SIZE } from '../../constants/pagination'
+import { HOLIDAY_TYPE, type HolidayType } from '../../constants/holiday'
 import {
   mapStaffStatusToActivityApi,
   MerchantVoiceBookingSearchField,
@@ -621,6 +622,28 @@ export interface UpdateMerchantVoiceConfigRequest {
   }>
 }
 
+export interface MerchantVoiceHolidayDto {
+  id: string
+  holidayDate: string
+  reason: string
+  type: HolidayType
+  adjustedOpenTime: string | null
+  adjustedCloseTime: string | null
+  autoNotify: boolean
+  affectedBookingsCount: number
+}
+
+export interface CreateMerchantVoiceHolidayRequest {
+  holidayDate: string
+  reason: string
+  type: HolidayType
+  adjustedOpenTime?: string | null
+  adjustedCloseTime?: string | null
+  autoNotify: boolean
+}
+
+export type UpdateMerchantVoiceHolidayRequest = CreateMerchantVoiceHolidayRequest
+
 export interface MerchantVoiceStaffScheduleEntry {
   dayOfWeek: MerchantVoiceDayOfWeek
   isDayOff: boolean
@@ -776,6 +799,28 @@ function normalizeConfigResponse(response: unknown): MerchantVoiceConfigDto {
     welcomeGreeting: String(body.welcomeGreeting ?? ''),
     operatingHours,
   }
+}
+
+function normalizeHolidayDto(raw: unknown): MerchantVoiceHolidayDto | null {
+  if (!raw || typeof raw !== 'object') return null
+  const row = raw as Record<string, unknown>
+  return {
+    id: String(row.id ?? ''),
+    holidayDate: String(row.holidayDate ?? ''),
+    reason: String(row.reason ?? ''),
+    type: row.type === HOLIDAY_TYPE.ADJUSTED ? HOLIDAY_TYPE.ADJUSTED : HOLIDAY_TYPE.CLOSED,
+    adjustedOpenTime: row.adjustedOpenTime ? String(row.adjustedOpenTime) : null,
+    adjustedCloseTime: row.adjustedCloseTime ? String(row.adjustedCloseTime) : null,
+    autoNotify: row.autoNotify === true,
+    affectedBookingsCount: typeof row.affectedBookingsCount === 'number' ? row.affectedBookingsCount : 0,
+  }
+}
+
+function normalizeHolidaysResponse(response: unknown): MerchantVoiceHolidayDto[] {
+  const list = Array.isArray(response) ? response : []
+  return list
+    .map(normalizeHolidayDto)
+    .filter((item): item is MerchantVoiceHolidayDto => item !== null)
 }
 
 function sanitizeCategoryIdsForWire(value: unknown): string[] {
@@ -1471,6 +1516,66 @@ export function createMerchantVoiceRepository(client: HttpClient = httpClient) {
       await client.put<void>(
         `${MERCHANT_VOICE_BASE}/config`,
         body,
+        { headers: MERCHANT_VOICE_HEADERS },
+      )
+    },
+
+    async getHolidays(): Promise<MerchantVoiceHolidayDto[]> {
+      const response = await client.get<unknown>(
+        `${SHARED_CATALOG_BASE}/business-holidays`,
+        { headers: MERCHANT_VOICE_HEADERS },
+      )
+      return normalizeHolidaysResponse(response)
+    },
+
+    async getAffectedBookingsCount(date: string): Promise<number> {
+      const response = await client.get<unknown>(
+        `${SHARED_CATALOG_BASE}/business-holidays/affected-bookings-count?date=${encodeURIComponent(date)}`,
+        { headers: MERCHANT_VOICE_HEADERS },
+      )
+      const body = (response && typeof response === 'object') ? response as Record<string, unknown> : {}
+      return typeof body.count === 'number' ? body.count : 0
+    },
+
+    async createHoliday(body: CreateMerchantVoiceHolidayRequest): Promise<MerchantVoiceHolidayDto> {
+      const response = await client.post<unknown>(
+        `${SHARED_CATALOG_BASE}/business-holidays`,
+        body,
+        { headers: MERCHANT_VOICE_HEADERS },
+      )
+      return normalizeHolidayDto(response) ?? {
+        id: '',
+        holidayDate: body.holidayDate,
+        reason: body.reason,
+        type: body.type,
+        adjustedOpenTime: body.adjustedOpenTime ?? null,
+        adjustedCloseTime: body.adjustedCloseTime ?? null,
+        autoNotify: body.autoNotify,
+        affectedBookingsCount: 0,
+      }
+    },
+
+    async updateHoliday(id: string, body: UpdateMerchantVoiceHolidayRequest): Promise<MerchantVoiceHolidayDto> {
+      const response = await client.put<unknown>(
+        `${SHARED_CATALOG_BASE}/business-holidays/${encodeURIComponent(id)}`,
+        body,
+        { headers: MERCHANT_VOICE_HEADERS },
+      )
+      return normalizeHolidayDto(response) ?? {
+        id,
+        holidayDate: body.holidayDate,
+        reason: body.reason,
+        type: body.type,
+        adjustedOpenTime: body.adjustedOpenTime ?? null,
+        adjustedCloseTime: body.adjustedCloseTime ?? null,
+        autoNotify: body.autoNotify,
+        affectedBookingsCount: 0,
+      }
+    },
+
+    async deleteHoliday(id: string): Promise<void> {
+      await client.del<void>(
+        `${SHARED_CATALOG_BASE}/business-holidays/${encodeURIComponent(id)}`,
         { headers: MERCHANT_VOICE_HEADERS },
       )
     },

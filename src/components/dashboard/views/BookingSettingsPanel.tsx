@@ -83,6 +83,7 @@ import {
   XLgIcon,
 } from "./BookingHubIcons";
 import { BookingSettingsSkeleton } from "./BookingHubSkeletons";
+import HolidayClosuresCard from "./HolidayClosuresCard";
 import BookingTeamPanel from "./BookingTeamPanel";
 import { useBookingHubVoiceEnabled } from "./BookingHubVoiceContext";
 import { applyAiHubProgressiveValidation } from "./bookingHubDialogValidation";
@@ -3126,6 +3127,85 @@ export default function BookingSettingsPanel() {
           </div>
         </SettingsCard>
 
+        <div className="settings-holiday-stack">
+        <HolidayClosuresCard />
+
+        <SettingsCard
+          cardId="bookingSms"
+          collapsed={isCollapsed("bookingSms")}
+          onToggle={toggleCard}
+          title={
+            <>
+              <span className="settings-card-title-icon">
+                <MessageSquareIcon />
+              </span>
+              {t(`${TK}.bookingSmsTitle`)}
+            </>
+          }
+          subtitle={t(`${TK}.bookingSmsSub`)}
+        >
+          <div className="settings-config-stack">
+            {BOOKING_SMS_RECIPIENTS.map((item) => {
+              const enabled = bookingSmsEnabled[item.id];
+              return (
+                <div className="settings-booking-sms-row" key={item.id}>
+                  <div className="settings-booking-sms-copy">
+                    <div className="settings-config-title">
+                      {t(`${TK}.${item.titleKey}`)}
+                    </div>
+                    <div className="settings-config-desc">
+                      {t(`${TK}.${item.descKey}`)}
+                    </div>
+                  </div>
+                  <div className="settings-booking-sms-control">
+                    <span
+                      className={`settings-booking-sms-status${enabled ? "" : " is-off"}`}
+                      aria-live="polite"
+                    >
+                      {enabled
+                        ? t(`${TK}.bookingSmsStatusOn`)
+                        : t(`${TK}.bookingSmsStatusOff`)}
+                    </span>
+                    <button
+                      className={`toggle-pill${enabled ? " is-on" : ""}`}
+                      type="button"
+                      role="switch"
+                      aria-checked={enabled}
+                      disabled={
+                        !voiceEnabled ||
+                        isConfigLoading ||
+                        updateConfigMutation.isPending ||
+                        updateBookingSettingsMutation.isPending
+                      }
+                      aria-label={
+                        enabled
+                          ? t(`${TK}.${item.disableAriaKey}`)
+                          : t(`${TK}.${item.enableAriaKey}`)
+                      }
+                      onClick={() => {
+                        setBookingSmsEnabled((prev) => {
+                          const next = !prev[item.id];
+                          setStatus(
+                            next
+                              ? t(`${TK}.bookingSmsRecipientEnabled`, {
+                                  recipient: t(`${TK}.${item.titleKey}`),
+                                })
+                              : t(`${TK}.bookingSmsRecipientDisabled`, {
+                                  recipient: t(`${TK}.${item.titleKey}`),
+                                }),
+                          );
+                          return { ...prev, [item.id]: next };
+                        });
+                      }}
+                    />
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        </SettingsCard>
+        </div>
+
         <SettingsCard
           cardId="voice"
           collapsed={isCollapsed("voice")}
@@ -3303,81 +3383,6 @@ export default function BookingSettingsPanel() {
                 />
               </div>
             </div>
-          </div>
-        </SettingsCard>
-
-        <SettingsCard
-          cardId="bookingSms"
-          collapsed={isCollapsed("bookingSms")}
-          onToggle={toggleCard}
-          title={
-            <>
-              <span className="settings-card-title-icon">
-                <MessageSquareIcon />
-              </span>
-              {t(`${TK}.bookingSmsTitle`)}
-            </>
-          }
-          subtitle={t(`${TK}.bookingSmsSub`)}
-        >
-          <div className="settings-config-stack">
-            {BOOKING_SMS_RECIPIENTS.map((item) => {
-              const enabled = bookingSmsEnabled[item.id];
-              return (
-                <div className="settings-booking-sms-row" key={item.id}>
-                  <div className="settings-booking-sms-copy">
-                    <div className="settings-config-title">
-                      {t(`${TK}.${item.titleKey}`)}
-                    </div>
-                    <div className="settings-config-desc">
-                      {t(`${TK}.${item.descKey}`)}
-                    </div>
-                  </div>
-                  <div className="settings-booking-sms-control">
-                    <span
-                      className={`settings-booking-sms-status${enabled ? "" : " is-off"}`}
-                      aria-live="polite"
-                    >
-                      {enabled
-                        ? t(`${TK}.bookingSmsStatusOn`)
-                        : t(`${TK}.bookingSmsStatusOff`)}
-                    </span>
-                    <button
-                      className={`toggle-pill${enabled ? " is-on" : ""}`}
-                      type="button"
-                      role="switch"
-                      aria-checked={enabled}
-                      disabled={
-                        !voiceEnabled ||
-                        isConfigLoading ||
-                        updateConfigMutation.isPending ||
-                        updateBookingSettingsMutation.isPending
-                      }
-                      aria-label={
-                        enabled
-                          ? t(`${TK}.${item.disableAriaKey}`)
-                          : t(`${TK}.${item.enableAriaKey}`)
-                      }
-                      onClick={() => {
-                        setBookingSmsEnabled((prev) => {
-                          const next = !prev[item.id];
-                          setStatus(
-                            next
-                              ? t(`${TK}.bookingSmsRecipientEnabled`, {
-                                  recipient: t(`${TK}.${item.titleKey}`),
-                                })
-                              : t(`${TK}.bookingSmsRecipientDisabled`, {
-                                  recipient: t(`${TK}.${item.titleKey}`),
-                                }),
-                          );
-                          return { ...prev, [item.id]: next };
-                        });
-                      }}
-                    />
-                  </div>
-                </div>
-              );
-            })}
           </div>
         </SettingsCard>
       </div>
