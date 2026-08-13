@@ -216,16 +216,16 @@ export function invalidateVoiceAiPlanPurchaseQueries(queryClient: QueryClient) {
   queryClient.invalidateQueries({ queryKey: qk.merchantVoiceMyTenant() })
 }
 
-/** VoiceAI MD purchase — body `{ packageId, symbol }`. */
+/** VoiceAI MD purchase — body `{ packageId, symbol, billingCycle? }`. */
 export function usePurchaseVoiceAiPackage() {
   const queryClient = useQueryClient()
   return useMutation<
     PurchasePackageByIdResult,
     Error,
-    { packageId: string; symbol: string }
+    { packageId: string; symbol: string; billingCycle?: SubscriptionBillingCycle }
   >({
-    mutationFn: ({ packageId, symbol }) =>
-      subscriptionPaymentsRepository.purchaseByPackageId(packageId, symbol),
+    mutationFn: ({ packageId, symbol, billingCycle }) =>
+      subscriptionPaymentsRepository.purchaseByPackageId(packageId, symbol, billingCycle),
     onSuccess: () => {
       invalidateVoiceAiPlanPurchaseQueries(queryClient)
     },

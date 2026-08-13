@@ -3713,6 +3713,7 @@
               }
             },
             "perMonth": "/mo",
+            "perYear": "/yr",
             "crossPriceStarter": "$149/mo",
             "crossPricePro": "$299/mo",
             "crossPriceElite": "$499/mo",
