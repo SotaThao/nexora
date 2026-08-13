@@ -430,6 +430,17 @@ export default function StaffDetailView({
 
   return (
     <div className="space-y-6 select-none">
+      {onBack && (
+        <button
+          type="button"
+          onClick={onBack}
+          className="inline-flex h-10 items-center gap-2 rounded-lg border border-nexoraBorder bg-white px-3 text-sm font-bold text-nexoraText shadow-sm transition hover:bg-nexoraSurfaceMuted"
+        >
+          <ArrowLeft className="h-4 w-4" aria-hidden="true" />
+          <span>{t('common.back')}</span>
+        </button>
+      )}
+
       {/* 1. HEADER PROFILE CARD */}
       <div className="relative overflow-hidden nexora-card p-5 shadow-nexora-soft">
         {/* Glow backdrop decorative bubbles */}
@@ -440,16 +451,6 @@ export default function StaffDetailView({
           <div className="flex flex-col gap-4 min-w-0 flex-1">
             {/* Top row: Avatar, Name, Badges */}
             <div className="flex min-w-0 items-center gap-3 sm:gap-4">
-              {onBack && (
-                <button
-                  onClick={onBack}
-                  className="inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-lg border border-nexoraBorder bg-white text-nexoraText hover:bg-nexoraSurfaceMuted transition"
-                  title={t('common.back')}
-                >
-                  <ArrowLeft className="h-4 w-4" />
-                </button>
-              )}
-
               {staffMember.avatar ? (
                 <img
                   src={staffMember.avatar}
