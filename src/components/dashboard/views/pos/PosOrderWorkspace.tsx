@@ -119,7 +119,7 @@ function lineTotal(line: DisplayLine): number {
   return line.itemType === 'Service' ? line.unitPrice : line.unitPrice * line.quantity
 }
 
-const NEXT_AVAILABLE_VALUE = '__next_available__'
+const FIRST_AVAILABLE_VALUE = '__first_available__'
 
 // Check-in Step 2 — per-line technician override. A separate component (not inline in the
 // line-list map) so each line's own useAssignableStaffForService(posServiceId) call is a
@@ -131,7 +131,7 @@ function CheckinServiceTechnicianSelect({
   value,
   currentTechnicianName,
   onChange,
-  nextAvailableLabel,
+  firstAvailableLabel,
 }: {
   businessId: string
   posServiceId: string
@@ -142,16 +142,16 @@ function CheckinServiceTechnicianSelect({
   // resetting to blank.
   currentTechnicianName?: string
   onChange: (posStaffProfileId?: string, technicianName?: string) => void
-  nextAvailableLabel: string
+  firstAvailableLabel: string
 }) {
   const { data: assignableStaff = [] } = useAssignableStaffForService(businessId, posServiceId)
   const currentNotInList = Boolean(value) && !assignableStaff.some((s) => s.posStaffProfileId === value)
   return (
     <select
-      value={value ?? NEXT_AVAILABLE_VALUE}
+      value={value ?? FIRST_AVAILABLE_VALUE}
       onChange={(e) => {
         const staffId = e.target.value
-        if (staffId === NEXT_AVAILABLE_VALUE) {
+        if (staffId === FIRST_AVAILABLE_VALUE) {
           onChange(undefined, undefined)
           return
         }
@@ -160,7 +160,7 @@ function CheckinServiceTechnicianSelect({
       }}
       className="h-7 w-full max-w-[160px] rounded-md border border-nexoraBorder bg-white px-1.5 text-xs text-nexoraMuted outline-none focus:border-nexoraBrand"
     >
-      <option value={NEXT_AVAILABLE_VALUE}>{nextAvailableLabel}</option>
+      <option value={FIRST_AVAILABLE_VALUE}>{firstAvailableLabel}</option>
       {currentNotInList && value ? <option value={value}>{currentTechnicianName ?? value}</option> : null}
       {assignableStaff.map((staff) => (
         <option key={staff.posStaffProfileId} value={staff.posStaffProfileId}>
@@ -688,7 +688,7 @@ export default function PosOrderWorkspace({
   // "Use last visit" (Ticket 2) — only re-adds lines whose service still exists in
   // today's catalog; a service the salon has since removed is silently skipped rather
   // than adding a line that would fail at Check-in time. Technician is carried over as-is
-  // (Next Available/skill-mismatch is re-validated server-side same as any other pick).
+  // (First available/skill-mismatch is re-validated server-side same as any other pick).
   const handleApplyLastVisit = (serviceLines: CustomerLookupServiceLineApiDto[]) => {
     const validLines = serviceLines.filter((line) => serviceCatalog.some((s) => s.id === line.posServiceId))
     if (validLines.length === 0) return
@@ -1004,7 +1004,8 @@ export default function PosOrderWorkspace({
                         <div className="flex items-start gap-3">
                           <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-nexoraLavender/20 text-xs font-bold text-nexoraBrandDark">
                             {initials(
-                              line.technicianName ?? t('components.dashboard.views.pos.PosOrderWorkspace.nextAvailable'),
+                              line.technicianName ??
+                                t('components.dashboard.views.pos.PosOrderWorkspace.firstAvailableLabel'),
                             )}
                           </div>
                           <div className="min-w-0 flex-1">
@@ -1018,11 +1019,14 @@ export default function PosOrderWorkspace({
                                 onChange={(posStaffProfileId, technicianName) =>
                                   handleChangeServiceLineTechnician(line.key, posStaffProfileId, technicianName)
                                 }
-                                nextAvailableLabel={t('components.dashboard.views.pos.PosOrderWorkspace.nextAvailable')}
+                                firstAvailableLabel={t(
+                                  'components.dashboard.views.pos.PosOrderWorkspace.firstAvailableLabel',
+                                )}
                               />
                             ) : (
                               <p className="text-xs leading-tight text-nexoraMuted">
-                                {line.technicianName ?? t('components.dashboard.views.pos.PosOrderWorkspace.nextAvailable')}
+                                {line.technicianName ??
+                                  t('components.dashboard.views.pos.PosOrderWorkspace.firstAvailableLabel')}
                               </p>
                             )}
                           </div>
