@@ -509,55 +509,56 @@ export default function TouchpointsView({
                           </div>
                         </div>
 
-                        <div
-                          role="group"
-                          aria-label={`${point.name}: Primary actions`}
-                          className={`mt-2 grid gap-1.5 ${
-                            point.type !== 'FrontDesk' && point.slug !== 'master-store'
-                              ? 'grid-cols-3'
-                              : 'grid-cols-2'
-                          }`}
-                        >
-                          <button
-                            type="button"
-                            disabled={!isPointActive}
-                            onClick={() => onQr?.(point)}
-                            className="inline-flex h-8 min-w-0 items-center justify-center gap-1 rounded-lg border border-sky-200 bg-sky-50 px-2 text-[10px] font-bold text-sky-700 transition hover:bg-sky-100 disabled:cursor-not-allowed disabled:opacity-50"
-                          >
-                            <QrCode className="h-3.5 w-3.5 shrink-0" />
-                            <span className="truncate">
-                              {t('dashboard.touchpoints.station_actions.view')}
-                            </span>
-                          </button>
-                          <button
-                            type="button"
-                            disabled={!qrUrl}
-                            onClick={() => handleCopy(qrUrl, `station-link-${point.id}`)}
-                            className="inline-flex h-8 min-w-0 items-center justify-center gap-1 rounded-lg border border-nexoraBorder bg-white px-2 text-[10px] font-bold text-nexoraText transition hover:bg-nexoraSurfaceMuted disabled:cursor-not-allowed disabled:opacity-50 dark:bg-luxuryCoal"
-                          >
-                            {copiedId === `station-link-${point.id}` ? (
-                              <Check className="h-3.5 w-3.5 shrink-0 text-nexoraSuccess" />
-                            ) : (
-                              <Copy className="h-3.5 w-3.5 shrink-0" />
-                            )}
-                            <span className="truncate">
-                              {t('dashboard.touchpoints.station_actions.copy_link')}
-                            </span>
-                          </button>
-                          {point.type !== 'FrontDesk' && point.slug !== 'master-store' ? (
-                            <button
-                              type="button"
-                              onClick={() => setDeleteConfirmId(point.id)}
-                              className="inline-flex h-8 min-w-0 items-center justify-center gap-1 rounded-lg border border-nexoraDanger/20 px-2 text-[10px] font-bold text-nexoraDanger transition hover:bg-nexoraDanger/5"
-                            >
-                              <Trash2 className="h-3.5 w-3.5 shrink-0" />
-                              <span className="truncate">
-                                {t('dashboard.touchpoints.station_actions.remove')}
-                              </span>
-                            </button>
-                          ) : null}
-                        </div>
                       </div>
+                    </div>
+
+                    <div
+                      role="group"
+                      aria-label={`${point.name}: Primary actions`}
+                      className={`grid w-full gap-1.5 ${
+                        point.type !== 'FrontDesk' && point.slug !== 'master-store'
+                          ? 'grid-cols-3'
+                          : 'grid-cols-2'
+                      }`}
+                    >
+                      <button
+                        type="button"
+                        disabled={!isPointActive}
+                        onClick={() => onQr?.(point)}
+                        className="inline-flex h-8 min-w-0 items-center justify-center gap-1 rounded-lg border border-sky-200 bg-sky-50 px-2 text-[10px] font-bold text-sky-700 transition hover:bg-sky-100 disabled:cursor-not-allowed disabled:opacity-50"
+                      >
+                        <QrCode className="h-3.5 w-3.5 shrink-0" />
+                        <span className="truncate">
+                          {t('dashboard.touchpoints.station_actions.view')}
+                        </span>
+                      </button>
+                      <button
+                        type="button"
+                        disabled={!qrUrl}
+                        onClick={() => handleCopy(qrUrl, `station-link-${point.id}`)}
+                        className="inline-flex h-8 min-w-0 items-center justify-center gap-1 rounded-lg border border-nexoraBorder bg-white px-2 text-[10px] font-bold text-nexoraText transition hover:bg-nexoraSurfaceMuted disabled:cursor-not-allowed disabled:opacity-50 dark:bg-luxuryCoal"
+                      >
+                        {copiedId === `station-link-${point.id}` ? (
+                          <Check className="h-3.5 w-3.5 shrink-0 text-nexoraSuccess" />
+                        ) : (
+                          <Copy className="h-3.5 w-3.5 shrink-0" />
+                        )}
+                        <span className="truncate">
+                          {t('dashboard.touchpoints.station_actions.copy_link')}
+                        </span>
+                      </button>
+                      {point.type !== 'FrontDesk' && point.slug !== 'master-store' ? (
+                        <button
+                          type="button"
+                          onClick={() => setDeleteConfirmId(point.id)}
+                          className="inline-flex h-8 min-w-0 items-center justify-center gap-1 rounded-lg border border-nexoraDanger/20 px-2 text-[10px] font-bold text-nexoraDanger transition hover:bg-nexoraDanger/5"
+                        >
+                          <Trash2 className="h-3.5 w-3.5 shrink-0" />
+                          <span className="truncate">
+                            {t('dashboard.touchpoints.station_actions.remove')}
+                          </span>
+                        </button>
+                      ) : null}
                     </div>
 
                     {/* QR configuration */}

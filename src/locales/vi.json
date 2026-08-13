@@ -986,7 +986,7 @@
       "open_link": "Thử nghiệm luồng trạm",
       "station_actions": {
         "view": "Xem QR",
-        "copy_link": "Sao chép",
+        "copy_link": "Sao chép liên kết",
         "open_link": "Mở link",
         "remove": "Xóa"
       },

@@ -986,7 +986,7 @@
       "open_link": "Test station flow",
       "station_actions": {
         "view": "View QR",
-        "copy_link": "Copy",
+        "copy_link": "Copy link",
         "open_link": "Open Link",
         "remove": "Remove"
       },
