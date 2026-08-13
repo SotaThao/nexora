@@ -4,6 +4,7 @@ import { X } from 'lucide-react'
 import { useTranslation } from '../../contexts/LanguageContext'
 import {
   getPayoutAccountDisplayLabel,
+  getPayoutAccountHolderDisplayLabel,
   getPaymentMethodDisplayName,
   payoutTypeToUiKey,
 } from '../../data/paymentMethodTypes'
@@ -32,6 +33,7 @@ export default function PayoutMethodDetailModal({
   const label = method.name || getPaymentMethodDisplayName(method.type || '')
   const isBankWire = uiKey === 'bankwire'
   const accountDisplayLabel = getPayoutAccountDisplayLabel(uiKey, t)
+  const accountHolderDisplayLabel = getPayoutAccountHolderDisplayLabel(uiKey, t)
   const bankWireDetails = isBankWire ? parseBankWireAccount(method.accountInfo) : null
   const accountName = isBankWire
     ? bankWireDetails?.beneficiaryName.trim() || method.accountName?.trim() || ''
@@ -105,7 +107,7 @@ export default function PayoutMethodDetailModal({
             {hasAccountName && (
               <div className="py-2">
                 <div className="text-[9px] font-extrabold uppercase tracking-wide text-nexoraMuted">
-                  {t('components.settings.tabs.ProfileTab.payTo')}
+                  {accountHolderDisplayLabel}
                 </div>
                 <div className="mt-0.5 break-words text-xs font-black text-nexoraText">
                   {accountName}
@@ -115,7 +117,7 @@ export default function PayoutMethodDetailModal({
             {isBankWire ? (
               <div className="py-2">
                 <div className="text-[9px] font-extrabold uppercase tracking-wide text-nexoraMuted">
-                  {t('components.settings.tabs.ProfileTab.accountDetails')}
+                  {accountDisplayLabel}
                 </div>
                 {bankWireRows.length > 0 ? (
                   <div className="mt-1.5 grid grid-cols-2 gap-x-3 gap-y-2">

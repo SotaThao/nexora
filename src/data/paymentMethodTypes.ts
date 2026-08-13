@@ -37,8 +37,18 @@ const PAYOUT_ACCOUNT_FIELD_LABELS: Record<string, string> = {
   crypto: 'BTC/USDT Address',
 }
 
-const PAYOUT_DISPLAY_WALLET_LABELS: Record<string, string> = {
-  crypto: 'Wallet',
+const PAYOUT_ACCOUNT_DISPLAY_FIELD_TRANSLATION_KEYS: Record<string, string> = {
+  zelle: 'components.customer_flow.steps.WalletDetails.emailPhone',
+  paypal: 'components.customer_flow.steps.WalletDetails.paypalEmailPhone',
+  venmo: 'components.customer_flow.steps.WalletDetails.venmoUsername',
+  cashapp: 'components.customer_flow.steps.WalletDetails.cashTag',
+  applecash: 'components.customer_flow.steps.WalletDetails.emailPhone',
+  bankwire: 'components.customer_flow.steps.WalletDetails.bankDetails',
+}
+
+const PAYOUT_ACCOUNT_DISPLAY_FIELD_LABELS: Record<string, string> = {
+  vlinkpay: 'VLINKPAY ID',
+  crypto: 'Wallet BTC/USDT Address',
 }
 
 export function getPayoutWalletDisplayName(uiKey = ''): string {
@@ -75,14 +85,25 @@ export function getPayoutAccountDisplayLabel(
   t: PaymentLabelTranslator,
 ): string {
   const normalizedKey = uiKey.toLowerCase()
-  const walletName = PAYOUT_DISPLAY_WALLET_LABELS[normalizedKey]
-    ?? getPayoutWalletDisplayName(normalizedKey)
-  const fieldLabel = getPayoutAccountFieldLabel(normalizedKey, t)
+  const displayFieldTranslationKey = PAYOUT_ACCOUNT_DISPLAY_FIELD_TRANSLATION_KEYS[normalizedKey]
+  const fieldLabel = displayFieldTranslationKey
+    ? t(displayFieldTranslationKey)
+    : PAYOUT_ACCOUNT_DISPLAY_FIELD_LABELS[normalizedKey]
+      ?? t('components.customer_flow.steps.WalletDetails.account')
 
-  return [walletName, fieldLabel]
-    .filter(Boolean)
-    .join(' ')
-    .toUpperCase()
+  return String(fieldLabel || '').toUpperCase()
+}
+
+export function getPayoutAccountHolderDisplayLabel(
+  uiKey = '',
+  t: PaymentLabelTranslator,
+): string {
+  const normalizedKey = uiKey.toLowerCase()
+  const walletName = getPayoutWalletDisplayName(normalizedKey)
+
+  return t('components.customer_flow.steps.WalletDetails.accountHolder', {
+    wallet: walletName,
+  }).toUpperCase()
 }
 
 export const PAYOUT_UI_DISPLAY_ORDER = [

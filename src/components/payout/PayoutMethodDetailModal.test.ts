@@ -24,11 +24,57 @@ describe('PayoutMethodDetailModal', () => {
   })
 
   it.each([
-    ['Zelle', makeMethod({ type: 'Zelle', uiKey: 'zelle' }), 'ZELLE EMAIL/PHONE'],
+    [
+      'Zelle',
+      makeMethod({
+        type: 'Zelle',
+        uiKey: 'zelle',
+        name: 'Zelle',
+        accountName: 'Jade',
+        accountInfo: '8956523659',
+      }),
+      'ZELLE REGISTERED NAME',
+      'EMAIL OR PHONE',
+    ],
     [
       'Cash App',
       makeMethod({ type: 'CashApp', uiKey: 'cashapp', accountInfo: '$LuxuryNails' }),
-      'CASH APP $CASHTAG, EMAIL, OR PHONE',
+      'CASH APP REGISTERED NAME',
+      'CASH TAG',
+    ],
+    [
+      'PayPal',
+      makeMethod({
+        type: 'PayPal',
+        uiKey: 'paypal',
+        name: 'PayPal',
+        accountInfo: 'owner@example.com',
+      }),
+      'PAYPAL REGISTERED NAME',
+      'PAYPAL EMAIL OR PHONE',
+    ],
+    [
+      'Apple Cash',
+      makeMethod({
+        type: 'AppleCash',
+        uiKey: 'applecash',
+        name: 'Apple Cash',
+        accountInfo: '5551234567',
+      }),
+      'APPLE CASH REGISTERED NAME',
+      'EMAIL OR PHONE',
+    ],
+    [
+      'Bank Wire',
+      makeMethod({
+        type: 'BankWire',
+        uiKey: 'bankwire',
+        name: 'Bank Wire',
+        accountInfo: 'bankwire:{"beneficiaryName":"Jade","bankName":"Bank of America","routingNumber":"123456789","accountNumber":"987654321","bankAddress":"","city":"","state":"","zipCode":"","country":""}',
+        accountName: null,
+      }),
+      'BANK WIRE REGISTERED NAME',
+      'BANK DETAILS',
     ],
     [
       'Crypto Wallet',
@@ -39,9 +85,15 @@ describe('PayoutMethodDetailModal', () => {
         accountInfo: 'bitcoinnaillbar@nexoratouch.com',
         accountName: null,
       }),
+      null,
       'WALLET BTC/USDT ADDRESS',
     ],
-  ])('shows the read-only account label for %s without YOUR or required marker', (_label, method, expectedLabel) => {
+  ])('shows the read-only account labels for %s without YOUR or required marker', (
+    _label,
+    method,
+    expectedAccountHolderLabel,
+    expectedAccountLabel,
+  ) => {
     render(
       React.createElement(PayoutMethodDetailModal, {
         method,
@@ -50,7 +102,10 @@ describe('PayoutMethodDetailModal', () => {
       }),
     )
 
-    expect(screen.getByText(expectedLabel)).toBeInTheDocument()
+    if (expectedAccountHolderLabel) {
+      expect(screen.getByText(expectedAccountHolderLabel)).toBeInTheDocument()
+    }
+    expect(screen.getByText(expectedAccountLabel)).toBeInTheDocument()
     expect(screen.queryByText(/^YOUR /)).not.toBeInTheDocument()
     expect(screen.queryByText(/\*$/)).not.toBeInTheDocument()
     expect(screen.queryByText('Account details')).not.toBeInTheDocument()
