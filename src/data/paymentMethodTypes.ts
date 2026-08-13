@@ -21,6 +21,70 @@ export const PAYOUT_UI_LABELS: Record<string, string> = {
   crypto: 'Crypto Wallet',
 }
 
+type PaymentLabelTranslator = (key: string, variables?: Record<string, string>) => string
+
+const PAYOUT_ACCOUNT_FIELD_TRANSLATION_KEYS: Record<string, string> = {
+  zelle: 'components.dashboard.modals.PayoutSetupModal.fieldEmailPhone',
+  paypal: 'components.dashboard.modals.PayoutSetupModal.fieldEmail',
+  venmo: 'components.dashboard.modals.PayoutSetupModal.fieldVenmoHandle',
+  cashapp: 'components.dashboard.modals.PayoutSetupModal.fieldCashAppIdentifier',
+  applecash: 'components.dashboard.modals.PayoutSetupModal.fieldEmailPhone',
+}
+
+const PAYOUT_ACCOUNT_FIELD_LABELS: Record<string, string> = {
+  bankwire: 'details',
+  vlinkpay: 'VLINKPAY ID',
+  crypto: 'BTC/USDT Address',
+}
+
+const PAYOUT_DISPLAY_WALLET_LABELS: Record<string, string> = {
+  crypto: 'Wallet',
+}
+
+export function getPayoutWalletDisplayName(uiKey = ''): string {
+  return PAYOUT_UI_LABELS[uiKey] ?? uiKey
+}
+
+function getPayoutAccountFieldLabel(
+  uiKey: string,
+  t: PaymentLabelTranslator,
+): string {
+  const fieldTranslationKey = PAYOUT_ACCOUNT_FIELD_TRANSLATION_KEYS[uiKey]
+  return fieldTranslationKey
+    ? t(fieldTranslationKey)
+    : PAYOUT_ACCOUNT_FIELD_LABELS[uiKey]
+      ?? t('components.dashboard.modals.PayoutSetupModal.accountIdentifier').replace(/\s*\*$/, '')
+}
+
+export function getPayoutAccountIdentifierLabel(
+  uiKey = '',
+  t: PaymentLabelTranslator,
+): string {
+  const normalizedKey = uiKey.toLowerCase()
+  const walletName = getPayoutWalletDisplayName(normalizedKey)
+  const fieldLabel = getPayoutAccountFieldLabel(normalizedKey, t)
+
+  return t('components.dashboard.modals.PayoutSetupModal.accountIdentifierForMethod', {
+    wallet: walletName.toUpperCase(),
+    field: String(fieldLabel || '').toUpperCase(),
+  })
+}
+
+export function getPayoutAccountDisplayLabel(
+  uiKey = '',
+  t: PaymentLabelTranslator,
+): string {
+  const normalizedKey = uiKey.toLowerCase()
+  const walletName = PAYOUT_DISPLAY_WALLET_LABELS[normalizedKey]
+    ?? getPayoutWalletDisplayName(normalizedKey)
+  const fieldLabel = getPayoutAccountFieldLabel(normalizedKey, t)
+
+  return [walletName, fieldLabel]
+    .filter(Boolean)
+    .join(' ')
+    .toUpperCase()
+}
+
 export const PAYOUT_UI_DISPLAY_ORDER = [
   'zelle',
   'paypal',

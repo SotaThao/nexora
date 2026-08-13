@@ -15,7 +15,11 @@ import {
   isBankWireAccountComplete,
 } from './bankWireAccount'
 import { validatePayoutAccount } from './validatePayoutAccount'
-import { supportsPayoutAccountName } from '../../data/paymentMethodTypes'
+import {
+  getPayoutAccountIdentifierLabel,
+  getPayoutWalletDisplayName,
+  supportsPayoutAccountName,
+} from '../../data/paymentMethodTypes'
 
 interface PayoutSetupModalProps {
   open: boolean
@@ -90,28 +94,7 @@ function PayoutSetupModal({
   const isBankWire = walletKey === 'bankwire'
   const requiresAccountName = !isBankWire && supportsPayoutAccountName(walletKey)
 
-  const walletNames = {
-    zelle: 'Zelle',
-    bankwire: 'Bank Wire',
-    paypal: 'PayPal',
-    venmo: 'Venmo',
-    cashapp: 'Cash App',
-    applecash: 'Apple Cash',
-    vlinkpay: 'VLINKPAY Wallet',
-    crypto: 'Crypto Wallet'
-  }
-  const walletName = String(walletNames[walletKey] || walletKey)
-
-  const walletFields = {
-    zelle: t('components.dashboard.modals.PayoutSetupModal.fieldEmailPhone'),
-    bankwire: 'details',
-    paypal: t('components.dashboard.modals.PayoutSetupModal.fieldEmail'),
-    venmo: t('components.dashboard.modals.PayoutSetupModal.fieldVenmoHandle'),
-    cashapp: t('components.dashboard.modals.PayoutSetupModal.fieldCashAppIdentifier'),
-    applecash: t('components.dashboard.modals.PayoutSetupModal.fieldEmailPhone'),
-    vlinkpay: 'VLINKPAY ID',
-    crypto: 'BTC/USDT Address'
-  }
+  const walletName = getPayoutWalletDisplayName(walletKey)
 
   const walletPlaceholders = {
     zelle: t('components.dashboard.modals.PayoutSetupModal.placeholderZelle'),
@@ -123,13 +106,7 @@ function PayoutSetupModal({
     vlinkpay: t('components.dashboard.modals.PayoutSetupModal.placeholderVlinkpay'),
     crypto: t('components.dashboard.modals.PayoutSetupModal.placeholderCrypto')
   }
-  const accountIdentifierLabel = t(
-    'components.dashboard.modals.PayoutSetupModal.accountIdentifierForMethod',
-    {
-      wallet: walletName.toUpperCase(),
-      field: String(walletFields[walletKey] || '').toUpperCase(),
-    },
-  )
+  const accountIdentifierLabel = getPayoutAccountIdentifierLabel(walletKey, t)
 
   const handleImageFilePick = async (file: File) => {
     if (readOnly || !file) return
