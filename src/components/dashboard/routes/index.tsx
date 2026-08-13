@@ -312,6 +312,15 @@ export function SettingsRoute() {
   const { tab = 'profile', staffId } = useParams()
   const navigate = useNavigate()
   const isStaffTab = tab === DASHBOARD_SETTINGS_TAB.staff
+
+  if (staffId) {
+    return (
+      <ResponsiveStaffRoute family={STAFF_ROUTE_FAMILY.Settings} staffId={staffId}>
+        <StaffDetailRouteContent routeFamily={STAFF_ROUTE_FAMILY.Settings} />
+      </ResponsiveStaffRoute>
+    )
+  }
+
   const settings = (
     <SettingsView
       {...({ onBlockedFeatureClick: ctx.requireKyb } as any)}
@@ -324,9 +333,7 @@ export function SettingsRoute() {
       onTabChange={(nextTab) => navigate(buildDashboardSettingsPath(nextTab))}
       onKybSuccess={ctx.onKybSuccess}
       staffContent={isStaffTab
-        ? staffId
-          ? <StaffDetailRouteContent routeFamily={STAFF_ROUTE_FAMILY.Settings} />
-          : <StaffListRouteContent routeFamily={STAFF_ROUTE_FAMILY.Settings} />
+        ? <StaffListRouteContent routeFamily={STAFF_ROUTE_FAMILY.Settings} />
         : null}
     />
   )
