@@ -21,6 +21,7 @@ const DEFAULT_SETTINGS: PosBookingSettingsApiDto = {
   notifyCustomerSmsEnabled: true,
   notifyBusinessSmsEnabled: true,
   notifyAssignedStaffSmsEnabled: true,
+  holidayAutoNotifyEnabled: true,
 }
 
 export default function PosBookingSettingsPanel({

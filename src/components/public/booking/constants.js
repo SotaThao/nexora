@@ -130,6 +130,8 @@ const COPY_BY_LANG = {
     slotUnavailable:
       'That time is outside salon hours or unavailable. Please choose another.',
     closedDayError: 'The salon is closed on this day. Please choose another date.',
+    closedDayReasonError: 'The salon is closed on this day ({{reason}}). Please choose another date.',
+    adjustedHoursError: 'The salon has adjusted hours on this day ({{reason}}): {{open}} - {{close}}. Please choose a time within this range.',
     reviewError: 'Please fix the missing details before submitting your booking.',
     statusSent: (id) => `Booking request ${id} has been sent.`,
     emDash: PUBLIC_BOOKING_EM_DASH,
@@ -208,6 +210,8 @@ const COPY_BY_LANG = {
     slotUnavailable:
       'Khung giờ này ngoài giờ mở cửa hoặc không khả dụng. Vui lòng lựa chọn lại.',
     closedDayError: 'Tiệm đóng cửa vào ngày này. Vui lòng chọn ngày khác.',
+    closedDayReasonError: 'Tiệm đóng cửa vào ngày này ({{reason}}). Vui lòng chọn ngày khác.',
+    adjustedHoursError: 'Tiệm làm việc giờ điều chỉnh vào ngày này ({{reason}}): {{open}} - {{close}}. Vui lòng chọn giờ trong khung này.',
     reviewError:
       'Vui lòng kiểm tra lại các thông tin còn thiếu trước khi gửi yêu cầu đặt lịch.',
     statusSent: (id) => `Yêu cầu đặt lịch ${id} đã được gửi.`,

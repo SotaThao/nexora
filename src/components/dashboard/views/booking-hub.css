@@ -1013,6 +1013,23 @@ body.booking-appointment-panel-modal-open {
   color: var(--nexora-warning);
 }
 
+.booking-hub-view .badge-danger {
+  background: rgba(239, 68, 68, 0.12);
+  color: var(--nexora-danger, #dc2626);
+}
+
+.booking-hub-view .settings-holiday-stack {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  min-width: 0;
+}
+
+.booking-hub-view .settings-holiday-stack [data-settings-card="holidays"],
+.booking-hub-view .settings-holiday-stack [data-settings-card="bookingSms"] {
+  height: fit-content;
+}
+
 .booking-hub-view .badge-soft {
   display: inline-flex;
   align-items: center;
@@ -4563,6 +4580,10 @@ body.booking-appointment-panel-modal-open {
   height: 17px;
 }
 
+.booking-hub-view [data-settings-card="holidays"] .settings-card-title-icon svg {
+  margin-top: -2px;
+}
+
 .booking-hub-view .settings-action-icon {
   width: 14px;
   height: 14px;
@@ -4711,6 +4732,14 @@ body.booking-appointment-panel-modal-open {
 .booking-hub-view .settings-select {
   min-height: 42px;
   padding: 0 12px;
+}
+
+.booking-hub-view .settings-input:disabled,
+.booking-hub-view .settings-select:disabled,
+.booking-hub-view .settings-textarea:disabled {
+  background: var(--nexora-canvas);
+  color: var(--nexora-muted);
+  cursor: not-allowed;
 }
 
 .booking-hub-view .settings-input-ai {
@@ -6686,6 +6715,30 @@ body.booking-appointment-panel-modal-open {
   .booking-hub-view .settings-grid,
   .booking-hub-view .settings-two-grid {
     grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  /* Holiday & Closures and Booking SMS Notifications are grouped into one flex
+     stack (.settings-holiday-stack) so they sit flush against each other in the
+     left column, regardless of how tall AI Voice is in the right column. */
+  .booking-hub-view .settings-grid > [data-settings-card="salon"] {
+    grid-column: 1;
+    grid-row: 1;
+  }
+
+  .booking-hub-view .settings-grid > [data-settings-card="hours"] {
+    grid-column: 2;
+    grid-row: 1;
+  }
+
+  .booking-hub-view .settings-grid > .settings-holiday-stack {
+    grid-column: 1;
+    grid-row: 2;
+    align-self: start;
+  }
+
+  .booking-hub-view .settings-grid > [data-settings-card="voice"] {
+    grid-column: 2;
+    grid-row: 2;
   }
 
   .booking-hub-view .settings-save-bar {
