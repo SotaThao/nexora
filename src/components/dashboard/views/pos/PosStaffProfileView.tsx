@@ -401,7 +401,9 @@ export default function PosStaffProfileView() {
                   type="button"
                   onClick={() => linkId && handleSelect(linkId)}
                   className={`flex w-full items-center gap-2 px-3 py-2.5 text-left text-xs font-semibold transition ${
-                    isSelected ? 'bg-nexoraBrand/10 text-nexoraBrand' : 'text-white hover:bg-nexoraCanvas'
+                    isSelected
+                      ? 'bg-nexoraBrand/10 text-nexoraBrand'
+                      : 'text-nexoraText hover:bg-nexoraCanvas'
                   }`}
                 >
                   {member.avatar ? (

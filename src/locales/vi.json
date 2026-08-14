@@ -3155,6 +3155,8 @@
             },
             "viewModeList": "Xem dạng danh sách",
             "viewModeCard": "Xem dạng thẻ",
+            "scrollTabsLeft": "Cuộn tab sang trái",
+            "scrollTabsRight": "Cuộn tab sang phải",
             "cancelButton": "Hủy",
             "startServiceButton": "Bắt đầu phục vụ",
             "startServiceSuccess": "Đã bắt đầu phục vụ.",
