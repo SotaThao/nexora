@@ -289,7 +289,7 @@ export default function StaffPay() {
                       <div className="min-w-0 flex-1">
                         <div className="text-xs font-bold text-nexoraText">{label}</div>
                         {isPaymentMethodConfigured(method) ? (
-                          <div className="mt-0.5 max-w-[120px] truncate font-mono text-[10px] text-nexoraMuted sm:max-w-[200px]">
+                          <div className="mt-0.5 min-w-0 truncate font-mono text-[10px] text-nexoraMuted">
                             {supportsPayoutAccountName(uiKey) && method.accountName ? (
                               <span className="font-sans font-semibold">{method.accountName} · </span>
                             ) : null}
