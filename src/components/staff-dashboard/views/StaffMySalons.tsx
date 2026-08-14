@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from 'react'
-import { ChevronDown, Loader2, MapPin, Store, X } from 'lucide-react'
+import { ChevronDown, Loader2, X } from 'lucide-react'
 import { useNavigate } from 'react-router-dom'
 import { useTranslation } from '../../../contexts/LanguageContext'
 import { useNotification } from '../../../contexts/NotificationContext'
@@ -412,7 +412,6 @@ function SalonCard({
   onUnlink?: () => void
   isUnlinking?: boolean
 }) {
-  const [skillModalOpen, setSkillModalOpen] = useState(false)
   const statusLabel = resolveStaffBusinessLinkStatusLabel(business)
   const status = getSalonDisplayStatus(business, t)
   const statusHelp = getSalonStatusHelp(statusLabel, t)
@@ -421,107 +420,95 @@ function SalonCard({
   const initials = business.logoUrl ? null : getSalonInitials(business.businessName)
   const isActive = statusLabel.trim().toLowerCase() === STAFF_BUSINESS_LINK_STATUS.active
   const nicknameValue = business.nicknameAtBusiness?.trim() ?? ''
+  const nicknameDisplayValue = nicknameValue || t('staff_salons.nickname_not_set')
   const canUnlink = isActive && typeof onUnlink === 'function'
 
   return (
-    <article className="flex flex-col gap-4 rounded-2xl border border-nexoraBorder bg-white px-6 py-5 shadow-sm max-[480px]:p-4">
-      {/* Top: identity + status */}
-      <div className="flex flex-wrap items-start justify-between gap-4">
-        <div className="flex min-w-0 items-center gap-3.5">
-          {business.logoUrl ? (
-            <img
-              src={business.logoUrl}
-              alt=""
-              className="h-14 w-14 shrink-0 rounded-full object-cover"
-            />
-          ) : (
-            <span
-              className={`grid h-14 w-14 shrink-0 place-items-center rounded-full text-[15px] font-extrabold ${getSalonAvatarClass(index)}`}
-            >
-              {initials}
-            </span>
-          )}
-          <div className="min-w-0">
-            <h3 className="truncate text-[17px] font-extrabold text-nexoraText">
+    <div className="w-full rounded-2xl border border-nexoraBorder/80 bg-white p-4 text-left shadow-sm transition hover:border-nexoraBrand/20 hover:shadow-md">
+      <div className="flex w-full gap-3 text-left">
+        {business.logoUrl ? (
+          <img
+            src={business.logoUrl}
+            alt=""
+            className="h-12 w-12 shrink-0 rounded-full object-cover"
+          />
+        ) : (
+          <span
+            className={`grid h-12 w-12 shrink-0 place-items-center rounded-full text-xs font-extrabold ${getSalonAvatarClass(index)}`}
+          >
+            {initials}
+          </span>
+        )}
+
+        <div className="flex min-w-0 flex-1 flex-col gap-1">
+          <div className="flex items-start justify-between gap-2">
+            <h3 className="truncate text-sm font-extrabold uppercase tracking-wide text-nexoraText">
               {business.businessName}
             </h3>
-            {location && (
-              <p className="mt-1 flex items-center gap-1 text-[13px] font-semibold text-nexoraMuted">
-                <MapPin className="h-3.5 w-3.5 shrink-0 text-nexoraDanger" />
-                <span className="truncate">{location}</span>
-              </p>
-            )}
-            {timeline && (
-              <p className="mt-0.5 text-xs font-medium text-nexoraSubtle">{timeline}</p>
-            )}
-          </div>
-        </div>
-
-        <div className="flex shrink-0 items-center gap-2">
-          <span className={`inline-flex h-[26px] items-center rounded-full px-3.5 text-xs font-extrabold ${status.className}`}>
-            {status.label}
-          </span>
-          <Tooltip
-            content={statusHelp}
-            ariaLabel={t('staff_salons.status_help_aria')}
-            align="end"
-            placement="top"
-          />
-        </div>
-      </div>
-
-      {/* Bottom: nickname + actions — matches my-salons.html (≤480px: full-width equal buttons) */}
-      {isActive && (
-        <div className="flex flex-wrap items-center justify-between gap-3 border-t border-nexoraBorder/60 pt-4">
-          <div className="text-sm">
-            <span className="font-semibold text-nexoraMuted">{t('staff_salons.nickname_badge')}:</span>
-            <span className="ml-1 text-[15px] font-extrabold text-nexoraText">
-              {nicknameValue || '—'}
+            <span className="flex shrink-0 items-center gap-1">
+              <span className={`rounded-full px-2.5 py-0.5 text-[10px] font-bold ${status.className}`}>
+                {status.label}
+              </span>
+              <Tooltip
+                content={statusHelp}
+                ariaLabel={t('staff_salons.status_help_aria')}
+                align="end"
+                placement="top"
+              />
             </span>
           </div>
-
-          <div className="flex flex-wrap items-center gap-2.5 max-[480px]:w-full">
-            {canUnlink && (
+          {location ? (
+            <p className="truncate text-xs font-medium text-nexoraMuted">{location}</p>
+          ) : null}
+          <div className="flex items-center justify-between gap-2 pt-0.5">
+            {canUnlink ? (
               <button
                 type="button"
-                onClick={(event) => { event.stopPropagation(); onUnlink?.() }}
-                onKeyDown={(event) => event.stopPropagation()}
-                onKeyUp={(event) => event.stopPropagation()}
+                onClick={() => onUnlink?.()}
                 disabled={isUnlinking}
-                className="inline-flex h-[38px] items-center justify-center gap-1.5 whitespace-nowrap rounded-[10px] border border-nexoraDanger/35 bg-white px-4 text-[13px] font-bold text-nexoraDanger transition hover:bg-nexoraDanger/5 disabled:cursor-not-allowed disabled:opacity-60 max-[480px]:flex-1"
+                className="shrink-0 rounded-lg border border-nexoraDanger/25 bg-white px-2.5 py-1 text-[10px] font-extrabold uppercase tracking-wide text-nexoraDanger transition hover:bg-nexoraDanger/5 disabled:cursor-not-allowed disabled:opacity-60"
               >
                 {t('staff_salons.unlink_button')}
               </button>
+            ) : (
+              <span />
             )}
-            <button
-              type="button"
-              onClick={(event) => { event.stopPropagation(); setSkillModalOpen(true) }}
-              className="inline-flex h-[38px] items-center justify-center gap-1.5 whitespace-nowrap rounded-[10px] border border-nexoraBrand bg-white px-4 text-[13px] font-bold text-nexoraBrand transition hover:bg-nexoraBrand/5 max-[480px]:flex-1"
-            >
-              {t('staff_salons.edit_work_skill')}
-            </button>
-            <NicknameEditor
-              value={business.nicknameAtBusiness}
-              originalName={originalName}
-              triggerLabel={t('staff_salons.nickname_edit_action')}
-              fieldLabel={t('staff_salons.nickname_badge')}
-              helperText={t('staff_salons.nickname_helper_staff')}
-              onRefresh={onRefreshNickname}
-              onSave={onSaveNickname}
-              triggerVariant="solid"
-              containerClassName="max-[480px]:flex-1 max-[480px]:[&_button]:w-full [&_button]:whitespace-nowrap"
-            />
+            {timeline ? (
+              <p className="text-right text-[11px] font-semibold text-nexoraMuted">{timeline}</p>
+            ) : null}
           </div>
         </div>
-      )}
-      <EditWorkSkillModal
-        open={skillModalOpen}
-        onClose={() => setSkillModalOpen(false)}
-        businessId={business.businessId}
-        salonName={business.businessName}
-        t={t}
-      />
-    </article>
+      </div>
+
+      {isActive ? (
+        <div className="mt-2 flex min-w-0 items-center gap-2">
+          <div className="flex min-w-0 flex-1 items-center gap-2 py-1">
+            <span className="shrink-0 rounded-full border border-dashed border-nexoraLavender bg-nexoraBrandSoft px-2 py-0.5 text-[10px] font-extrabold uppercase text-nexoraBrand">
+              {t('staff_salons.nickname_badge')}
+            </span>
+            <span
+              className={`min-w-0 flex-1 truncate text-xs text-nexoraText ${nicknameValue ? 'font-semibold' : 'italic text-nexoraMuted'}`}
+              title={nicknameDisplayValue}
+              aria-label={nicknameDisplayValue}
+            >
+              {nicknameDisplayValue}
+            </span>
+          </div>
+          <NicknameEditor
+            value={business.nicknameAtBusiness}
+            originalName={originalName}
+            triggerLabel={t('staff_salons.nickname_edit_action')}
+            fieldLabel={t('staff_salons.nickname_badge')}
+            helperText={t('staff_salons.nickname_helper_staff')}
+            onRefresh={onRefreshNickname}
+            onSave={onSaveNickname}
+            triggerVariant="icon"
+            containerClassName="shrink-0"
+            stopPropagation
+          />
+        </div>
+      ) : null}
+    </div>
   )
 }
 
@@ -580,10 +567,10 @@ export default function StaffMySalons() {
   }
 
   return (
-    <div className="space-y-5">
+    <div className="space-y-4">
       <div>
-        <h1 className="text-2xl font-extrabold text-nexoraText sm:text-[30px] sm:leading-9">{t('staff_salons.title')}</h1>
-        <p className="mt-2 text-sm font-medium text-nexoraMuted">{t('staff_salons.subtitle')}</p>
+        <h2 className="text-xl font-extrabold text-nexoraText">{t('staff_salons.title')}</h2>
+        <p className="mt-1 text-xs leading-relaxed text-nexoraMuted">{t('staff_salons.subtitle')}</p>
       </div>
 
       {pendingLinkRequests.length > 0 && (
@@ -604,19 +591,19 @@ export default function StaffMySalons() {
           <Loader2 className="h-8 w-8 animate-spin text-nexoraBrand" />
         </div>
       ) : salons.length === 0 ? (
-        <div className="mx-auto flex max-w-[960px] flex-col items-center justify-center gap-2.5 rounded-2xl border border-dashed border-nexoraBorder bg-white px-6 py-12 text-center">
-          <Store className="h-7 w-7 text-nexoraSubtle" />
-          <p className="text-sm font-semibold text-nexoraSubtle">{t('staff_salons.empty_title')}</p>
+        <div className="rounded-2xl border border-dashed border-nexoraBorder bg-white px-4 py-12 text-center">
+          <p className="text-sm font-semibold text-nexoraText">{t('staff_salons.empty_title')}</p>
+          <p className="mt-1 text-xs text-nexoraMuted">{t('staff_dashboard.qr.no_linked_businesses')}</p>
           <button
             type="button"
             onClick={() => navigate('/staff/qr?tab=tipping')}
-            className="mt-2 inline-flex h-9 items-center justify-center rounded-lg bg-nexoraBrand px-4 text-xs font-bold text-white"
+            className="mt-4 inline-flex h-9 items-center justify-center rounded-lg bg-nexoraBrand px-4 text-xs font-bold text-white"
           >
             {t('staff_salons.link_salon_cta')}
           </button>
         </div>
       ) : (
-        <div className="mx-auto flex max-w-[960px] flex-col gap-4">
+        <div className="space-y-3">
           {salons.map((business, index) => (
             <SalonCard
               key={business.businessId}

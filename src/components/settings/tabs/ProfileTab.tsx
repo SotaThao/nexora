@@ -470,7 +470,11 @@ export default function ProfileTab({
               {displayedPaymentMethods.map((method) => {
                 const uiKey = getMethodUiKey(method)
                 const label = method.name || getPaymentMethodDisplayName(method.type || '')
-                const accountDisplay = formatPaymentMethodAccountDisplay(uiKey, method.accountInfo)
+                const accountDisplay = formatPaymentMethodAccountDisplay(
+                  uiKey,
+                  method.accountInfo,
+                  method.cryptoAddresses,
+                )
                 return (
                 <div
                   key={method.id || uiKey}
@@ -492,7 +496,7 @@ export default function ProfileTab({
                       </span>
                       <div className="min-w-0 flex-1">
                         <div className="text-xs font-bold text-nexoraText">{label}</div>
-                        {method.isConfigured ? (
+                        {isPaymentMethodConfigured(method) ? (
                           <div className="mt-0.5 max-w-full truncate font-mono text-[10px] text-nexoraMuted sm:max-w-[150px]">
                             {supportsPayoutAccountName(uiKey) && method.accountName ? (
                               <span className="font-sans font-semibold">{method.accountName} · </span>
