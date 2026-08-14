@@ -17,6 +17,7 @@ import {
 import { POS_BOOKING_STATUS_OPTIONS } from '../../../../../constants/posOrderStatus'
 import type { TurnBoardStationApiDto } from '../../../../../types/repositories'
 import { SkeletonList } from '../../../../ui/skeleton'
+import { formatCustomerPhone } from '../customer/customerFormatters'
 import BookingTable from './BookingTable'
 import BookingCards from './BookingCards'
 import BookingCalendar from './BookingCalendar'
@@ -419,7 +420,7 @@ export default function BookingTab({
                       <p className="text-[10px] font-extrabold uppercase text-nexoraMuted">
                         {t(p + 'viewDetailPhone')}
                       </p>
-                      <p className="text-xs text-nexoraText">{viewDetail.data.customerPhone || t(p + 'viewDetailNotProvided')}</p>
+                      <p className="text-xs text-nexoraText">{formatCustomerPhone(viewDetail.data.customerPhone, viewDetail.data.customerPhoneE164) || t(p + 'viewDetailNotProvided')}</p>
                     </div>
                     <div>
                       <p className="text-[10px] font-extrabold uppercase text-nexoraMuted">

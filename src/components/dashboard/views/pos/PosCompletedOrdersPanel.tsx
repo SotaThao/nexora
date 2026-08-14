@@ -12,6 +12,7 @@ import { useOrderDetail } from '../../../../data/hooks/usePosCheckout'
 import { qk } from '../../../../data/queryKeys'
 import { SkeletonList } from '../../../ui/skeleton'
 import { formatPosDateTime } from './posDateTime'
+import { formatCustomerPhone } from './customer/customerFormatters'
 
 const PAGE_SIZE = 10
 
@@ -157,7 +158,7 @@ export default function PosCompletedOrdersPanel({ businessId }: { businessId: st
                   <tr key={order.id} className="border-t border-nexoraBorder">
                     <td className="py-2 pr-3 font-mono font-bold text-nexoraMuted">#{order.orderNumber}</td>
                     <td className="py-2 pr-3 font-bold text-nexoraText">{order.customerName}</td>
-                    <td className="py-2 pr-3 text-nexoraMuted">{order.customerPhone || '—'}</td>
+                    <td className="py-2 pr-3 text-nexoraMuted">{formatCustomerPhone(order.customerPhone, order.customerPhoneE164) || '—'}</td>
                     <td className="py-2 pr-3 text-nexoraMuted">{formatDateTime(order.completedAt)}</td>
                     <td className="py-2 pr-3 text-nexoraMuted">
                       {order.technicianNames.length > 0 ? order.technicianNames.join(', ') : '—'}
@@ -235,7 +236,8 @@ export default function PosCompletedOrdersPanel({ businessId }: { businessId: st
                         {t('components.dashboard.views.pos.PosCompletedOrdersPanel.viewDetailPhone')}
                       </p>
                       <p className="text-xs text-nexoraText">
-                        {viewDetail.data.customerPhone || t('components.dashboard.views.pos.PosCompletedOrdersPanel.viewDetailNotProvided')}
+                        {formatCustomerPhone(viewDetail.data.customerPhone, viewDetail.data.customerPhoneE164)
+                          || t('components.dashboard.views.pos.PosCompletedOrdersPanel.viewDetailNotProvided')}
                       </p>
                     </div>
                     <div>

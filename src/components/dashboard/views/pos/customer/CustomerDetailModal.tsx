@@ -65,7 +65,7 @@ export default function CustomerDetailModal({
   const detailFields: { label: string; value: string }[] = customer
     ? [
         { label: t(p + 'viewDetailName'), value: customer.name || notProvided },
-        { label: t(p + 'viewDetailPhone'), value: formatCustomerPhone(customer.phone) },
+        { label: t(p + 'viewDetailPhone'), value: formatCustomerPhone(customer.phone, customer.phoneE164) },
         { label: t(p + 'viewDetailEmail'), value: customer.email || notProvided },
         { label: t(p + 'viewDetailAddress'), value: customer.address || notProvided },
         {

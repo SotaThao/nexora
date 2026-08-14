@@ -48,6 +48,7 @@ import type {
   PosCheckoutPaymentMethodType,
 } from '../../../../types/repositories'
 import { SkeletonList } from '../../../ui/skeleton'
+import { formatCustomerPhone } from './customer/customerFormatters'
 import CategoryGroupedCatalogPicker from './CategoryGroupedCatalogPicker'
 import CustomerHeaderBar from './CustomerHeaderBar'
 import PhoneCheckInStep from './PhoneCheckInStep'
@@ -787,7 +788,9 @@ export default function PosOrderWorkspace({
         orderId: effectiveOrderId,
         payload: {
           paymentMethodType: paymentMethod,
-          receiptPhone: receiptChoice === 'sms' ? order?.customerPhone ?? undefined : undefined,
+          // E.164, not the bare national number: the backend re-parses this value and only a
+          // full number tells it which country the receipt SMS is addressed to.
+          receiptPhone: receiptChoice === 'sms' ? order?.customerPhoneE164 ?? undefined : undefined,
         },
       },
       {
@@ -1383,7 +1386,7 @@ export default function PosOrderWorkspace({
                       <button
                         type="button"
                         onClick={() => setReceiptChoice('sms')}
-                        disabled={!order?.customerPhone}
+                        disabled={!order?.customerPhoneE164}
                         className={`flex h-14 flex-col items-center justify-center gap-0.5 rounded-lg border text-xs font-bold disabled:cursor-not-allowed disabled:opacity-40 ${
                           receiptChoice === 'sms'
                             ? 'border-nexoraBrand bg-nexoraBrand text-white'
@@ -1393,7 +1396,7 @@ export default function PosOrderWorkspace({
                         <span>{t('components.dashboard.views.pos.PosOrderWorkspace.receiptSendSms')}</span>
                         {order?.customerPhone ? (
                           <span className={`text-[9px] font-normal ${receiptChoice === 'sms' ? 'text-white/80' : 'text-nexoraMuted'}`}>
-                            {order.customerPhone}
+                            {formatCustomerPhone(order.customerPhone, order.customerPhoneE164)}
                           </span>
                         ) : null}
                       </button>
