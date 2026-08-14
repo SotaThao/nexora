@@ -1,6 +1,6 @@
 // StaffMyQR — personal share QR (ref + staff) + per-business tipping QR tab.
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
-import { Share2, Copy, QrCode, X, Loader2, Store, Clock, Link2, Download, CreditCard, Gift, BadgeCheck, Eye, Star, Heart, Bell } from 'lucide-react'
+import { Share2, Copy, QrCode, X, Loader2, Store, Clock, Link2, Download, CreditCard, Gift, Eye, Star, Heart, Bell } from 'lucide-react'
 import jsQR from 'jsqr'
 import { useNavigate, useSearchParams } from 'react-router-dom'
 import { useTranslation } from '../../../contexts/LanguageContext'
@@ -12,13 +12,15 @@ import { useStaffBusinessTipQrs } from '../../../data/hooks/useStaffSelf'
 import { useNotification } from '../../../contexts/NotificationContext'
 import { useJoinPublicInvite } from '../../../data/hooks/useStaffInvites'
 import { isApiError } from '../../../types/domain'
-import type { StaffBusinessTipQr } from '../../../types/domain'
+import type { PaymentMethodDto, StaffBusinessTipQr } from '../../../types/domain'
 import { shareUrl } from '../../../utils/shareUrl'
 import { buildQrImageUrl, resolveStaffDirectPaymentPageUrl } from '../../../utils/staffTipUrl'
 import { useStaffPaymentQr } from '../../../data/hooks/useStaffPayments'
 import { useStaffPaymentMethods } from '../../../data/hooks/useStaffPaymentMethods'
 import { SkeletonLayout } from '../../ui/skeleton'
 import QrImage from '../../ui/QrImage'
+import PayoutMethodDetailModal from '../../payout/PayoutMethodDetailModal'
+import { WalletLogos } from '../../dashboard/constants'
 
 type LooseObject = Record<string, any>
 
@@ -287,6 +289,7 @@ export default function StaffMyQR() {
   const [scannerCameraState, setScannerCameraState] = useState<ScannerCameraState>('loading')
   const [isSubmittingScan, setIsSubmittingScan] = useState(false)
   const [zoomedQr, setZoomedQr] = useState<ZoomedQr | null>(null)
+  const [viewingMethod, setViewingMethod] = useState<PaymentMethodDto | null>(null)
   const [isSavingQr, setIsSavingQr] = useState(false)
   const [selectedBusinessId, setSelectedBusinessId] = useState<string | null>(null)
   const scannerVideoRef = useRef<HTMLVideoElement | null>(null)
@@ -342,6 +345,10 @@ export default function StaffMyQR() {
   )
 
   const isPaymentTabLoading = isPaymentQrLoading || isPaymentMethodsLoading
+
+  const viewingMethodLogo = viewingMethod
+    ? WalletLogos[(viewingMethod.uiKey || '') as keyof typeof WalletLogos] || <CreditCard className="h-[18px] w-[18px] text-nexoraBrand" />
+    : null
 
   const activeTipQrs = useMemo(() => businessTipQrs.filter(isBusinessActive), [businessTipQrs])
 
@@ -1153,16 +1160,28 @@ export default function StaffMyQR() {
                   return (
                     <div key={method.id || label} className="grid grid-cols-[32px_minmax(0,1fr)_auto] items-center gap-2 rounded-lg border border-[#EEE9FF] bg-white px-2 py-2">
                       <span className="grid h-8 w-8 place-items-center rounded-lg bg-nexoraBrand/10 text-nexoraBrandDark">
-                        <CreditCard className="h-4 w-4" />
+                        {WalletLogos[(method.uiKey || '') as keyof typeof WalletLogos] || <CreditCard className="h-4 w-4" />}
                       </span>
                       <div className="min-w-0 text-left">
-                        <p className="truncate text-[12px] font-semibold text-nexoraText">{label}</p>
+                        <div className="flex min-w-0 items-center gap-1.5">
+                          <p className="min-w-0 truncate text-[12px] font-semibold text-nexoraText">{label}</p>
+                          <span className="shrink-0 rounded-full bg-nexoraSuccess/10 px-1.5 py-0.5 text-[8px] font-bold leading-none text-nexoraSuccess">
+                            {t('components.staff_dashboard.views.StaffMyQR.active')}
+                          </span>
+                        </div>
                         <p className="truncate text-[10px] font-medium text-nexoraMuted">{method.accountInfo}</p>
                       </div>
-                      <span className="inline-flex items-center gap-1 rounded-full bg-nexoraSuccess/10 px-2 py-1 text-[10px] font-semibold text-nexoraSuccess">
-                        <BadgeCheck className="h-3 w-3" />
-                        Active
-                      </span>
+                      <div className="flex items-center justify-end gap-1.5">
+                        <button
+                          type="button"
+                          onClick={() => setViewingMethod(method)}
+                          aria-label={`View ${label} Payout Details`}
+                          className="inline-flex h-7 items-center justify-center gap-1 rounded-full border border-sky-200 bg-sky-50 px-2 text-[10px] font-semibold text-sky-700 transition hover:bg-sky-100 hover:text-sky-800"
+                        >
+                          <Eye className="h-3 w-3" />
+                          <span>{t('components.staff_dashboard.views.StaffPay.view')}</span>
+                        </button>
+                      </div>
                     </div>
                   )
                 })}
@@ -1386,6 +1405,12 @@ export default function StaffMyQR() {
           </div>
         </div>
       )}
+
+      <PayoutMethodDetailModal
+        method={viewingMethod}
+        logo={viewingMethodLogo}
+        onClose={() => setViewingMethod(null)}
+      />
     </div>
   )
 }
