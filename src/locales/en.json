@@ -893,8 +893,12 @@
       "subscription_confirm_payment": "Confirm payment",
       "subscription_payment_success": "Package purchased successfully.",
       "subscription_price_note_month": "month",
-      "subscription_card_method_label": "Credit or Debit Card",
+      "subscription_price_note_year": "year",
+      "subscription_forfeit_warning": "This will immediately replace your current plan ({{plan}}) — any time left on it will be lost.",
+      "subscription_payment_tab_wallet": "VlinkPay Wallet",
+      "subscription_payment_tab_card": "Credit/Debit Card",
       "subscription_card_form_title": "Credit or Debit Card",
+      "subscription_card_method_label": "Credit or Debit Card",
       "subscription_card_required_note": "required",
       "subscription_card_field_required": "This field is required.",
       "subscription_purchase_needs_store_setup_title": "Complete store setup to purchase",
@@ -2503,7 +2507,8 @@
     "payout": {
       "accountNameField": {
         "label": "Account Holder Name",
-        "placeholder": "e.g. Anna Smith"
+        "placeholder": "e.g. Anna Smith",
+        "required": "Account holder name is required."
       },
       "bankWireForm": {
         "title": "Set Up Bank Account",
@@ -2700,12 +2705,19 @@
           "placeholderZelle": "Enter Zelle email or phone...",
           "placeholderBankWire": "Account & Routing numbers",
           "placeholderPaypal": "email@paypal.com",
-          "placeholderAppleCash": "Enter phone number...",
+          "placeholderVenmo": "Enter Venmo @username...",
+          "placeholderAppleCash": "Enter Apple Cash email or phone...",
+          "placeholderCashApp": "Enter Cash App $cashtag, email, or phone...",
           "placeholderVlinkpay": "Enter VLINKPAY ID (e.g. MIA0123)...",
           "placeholderVlinkpayWallet": "Paste VRC20 address…",
           "placeholderCrypto": "Enter BTC, ETH, or USDT address...",
           "specifyReceivingTargetIdentifier": "Specify receiving target identifier",
           "accountIdentifier": "Account Identifier *",
+          "accountIdentifierForMethod": "YOUR {wallet} {field} *",
+          "fieldEmailPhone": "email/phone",
+          "fieldEmail": "email",
+          "fieldVenmoHandle": "@username",
+          "fieldCashAppIdentifier": "$cashtag, email, or phone",
           "qrCodeOptional": "QR Code (optional)",
           "noQrCodeUploaded": "No QR code uploaded",
           "thisInformationWasEntered": "This information was entered by the technician. Salon Owner has view-only access.",
@@ -3756,6 +3768,7 @@
               }
             },
             "perMonth": "/mo",
+            "perYear": "/yr",
             "crossPriceStarter": "$149/mo",
             "crossPricePro": "$299/mo",
             "crossPriceElite": "$499/mo",
@@ -4709,6 +4722,7 @@
               "enterprise": "Enterprise"
             },
             "monthlyPrice": "Monthly price",
+            "yearlyPrice": "Yearly price",
             "activeStaff": "Active staff",
             "qrTipping": "QR code tipping",
             "directTips": "Direct staff tips",
@@ -4912,7 +4926,13 @@
           "payoutMethodsTab": "Payout Methods",
           "paymentQrTab": "Payment QR",
           "tipQrTab": "Payment QR",
-          "payoutAccount": "Payout account",
+          "view": "View",
+          "payoutAccount": "Edit",
+          "customerPaymentDetails": "Payment details",
+          "scanToPay": "Scan to pay",
+          "payTo": "Account holder name",
+          "accountDetails": "Account details",
+          "noQrCode": "No QR code uploaded.",
           "methodNotConfigured": "Method is not configured.",
           "pleaseEnterAccountDetails": "Please enter account details.",
           "methodIdMissing": "System Error: Method ID missing",
@@ -4958,12 +4978,15 @@
           "reviewLinks": "Review Links",
           "emailPhone": "email or phone",
           "details": "details",
+          "cashAppIdentifier": "$cashtag, email, or phone",
           "enterZelleEmailPhone": "Enter Zelle email or phone...",
           "enterBankWireRouting": "Enter Bank Wire routing - account...",
           "enterPaypalEmail": "Enter PayPal email...",
           "enterVenmoUsername": "Enter Venmo @username...",
           "enterCashAppCashtag": "Enter Cash App $cashtag...",
+          "enterCashAppCashtagEmailPhone": "Enter Cash App $cashtag, email, or phone...",
           "enterAppleCashPhone": "Enter Apple Cash phone number...",
+          "enterAppleCashEmailPhone": "Enter Apple Cash email or phone...",
           "specifyReceivingTargetIdentifier": "Specify receiving target identifier",
           "qrCodeOptional": "QR CODE (OPTIONAL)",
           "takePhoto": "TAKE PHOTO",
@@ -5122,7 +5145,8 @@
           "openTippingPageSimulate": "Open Tipping Page (Simulate) ›"
         },
         "StaffPay": {
-          "editAccount": "Edit account"
+          "editAccount": "Edit",
+          "view": "View"
         },
         "StaffProfile": {
           "accountChangesSavedSuccessfully": "Account changes saved successfully!",
@@ -5519,6 +5543,12 @@
     "plan_locked_badge": "Unavailable",
     "upgrade_to_pro": "Upgrade to Pro",
     "price_note_months": "/ {{count}} months",
+    "price_note_year": "/ yr",
+    "billing_cycle_label": "Billing cycle",
+    "billing_monthly": "Monthly",
+    "billing_yearly": "Yearly",
+    "yearly_coming_soon": "Yearly billing coming soon",
+    "yearly_discount_upto": "Up to {{percent}}%",
     "plans": {
       "lite": {
         "name": "Lite Pack (Free)",

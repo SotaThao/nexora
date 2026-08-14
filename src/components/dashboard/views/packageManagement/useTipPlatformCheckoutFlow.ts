@@ -2,6 +2,7 @@ import { useCallback, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useTranslation } from '../../../../contexts/LanguageContext'
 import { useNotification } from '../../../../contexts/NotificationContext'
+import type { SubscriptionBillingCycle } from '../../../../data/repositories/subscriptionPayments'
 import { useStoreSetupPurchaseGate } from '../../../../data/hooks/useStoreSetupPurchaseGate'
 import { buildDashboardMenuPath, DASHBOARD_MENU_ID } from '../../constants'
 import { BOOKING_HUB_PLANS_TK } from './constants'
@@ -71,9 +72,9 @@ export function useTipPlatformCheckoutFlow({
   ])
 
   const handleSelectPlan = useCallback(
-    (planId: string) => {
+    (planId: string, billingCycle?: SubscriptionBillingCycle) => {
       requireSetup(() => {
-        const result = trySelectPlan(planId)
+        const result = trySelectPlan(planId, billingCycle)
         if (result === TipPlatformCheckoutResult.ContactSupport) {
           navigate(DASHBOARD_SUPPORT_PATH)
         }

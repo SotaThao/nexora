@@ -129,6 +129,7 @@ export default function PersonalSetupWizard({ wizard }) {
           handleModalImagePick: wizard.handleModalImagePick,
           handleModalTakePhoto: wizard.handleModalTakePhoto,
           handleModalClearQr: wizard.handleModalClearQr,
+          allowQrOnly: true,
         })}
 
       </div>

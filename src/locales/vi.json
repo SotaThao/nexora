@@ -893,8 +893,12 @@
       "subscription_confirm_payment": "Xác nhận thanh toán",
       "subscription_payment_success": "Mua gói thành công.",
       "subscription_price_note_month": "tháng",
-      "subscription_card_method_label": "Thẻ tín dụng hoặc ghi nợ",
+      "subscription_price_note_year": "năm",
+      "subscription_forfeit_warning": "Việc này sẽ thay thế ngay gói hiện tại của bạn ({{plan}}) — thời hạn còn lại sẽ bị mất.",
+      "subscription_payment_tab_wallet": "Ví VlinkPay",
+      "subscription_payment_tab_card": "Thẻ tín dụng/ghi nợ",
       "subscription_card_form_title": "Thẻ tín dụng hoặc ghi nợ",
+      "subscription_card_method_label": "Thẻ tín dụng hoặc ghi nợ",
       "subscription_card_required_note": "bắt buộc",
       "subscription_card_field_required": "Trường này là bắt buộc.",
       "subscription_purchase_needs_store_setup_title": "Hoàn tất cài đặt cửa hàng để mua gói",
@@ -2503,7 +2507,8 @@
     "payout": {
       "accountNameField": {
         "label": "Tên chủ tài khoản",
-        "placeholder": "VD: Anna Smith"
+        "placeholder": "VD: Anna Smith",
+        "required": "Vui lòng nhập tên chủ tài khoản."
       },
       "bankWireForm": {
         "title": "Thiết lập tài khoản ngân hàng",
@@ -2700,12 +2705,19 @@
           "placeholderZelle": "Nhập email hoặc SĐT Zelle...",
           "placeholderBankWire": "Số tài khoản & số routing",
           "placeholderPaypal": "email@paypal.com",
-          "placeholderAppleCash": "Nhập số điện thoại...",
+          "placeholderVenmo": "Nhập Venmo @username...",
+          "placeholderAppleCash": "Nhập email hoặc SĐT Apple Cash...",
+          "placeholderCashApp": "Nhập Cash App $cashtag, email hoặc SĐT...",
           "placeholderVlinkpay": "Nhập VLINKPAY ID (vd: MIA0123)...",
           "placeholderVlinkpayWallet": "Dán địa chỉ VRC20…",
           "placeholderCrypto": "Nhập địa chỉ BTC, ETH, hoặc USDT...",
           "specifyReceivingTargetIdentifier": "Chỉ định thông tin tài khoản nhận tiền",
           "accountIdentifier": "THÔNG TIN TÀI KHOẢN *",
+          "accountIdentifierForMethod": "{wallet} {field} CỦA BẠN *",
+          "fieldEmailPhone": "email/SĐT",
+          "fieldEmail": "email",
+          "fieldVenmoHandle": "@username",
+          "fieldCashAppIdentifier": "$cashtag, email hoặc SĐT",
           "qrCodeOptional": "MÃ QR (TÙY CHỌN)",
           "noQrCodeUploaded": "Thợ chưa tải lên mã QR",
           "thisInformationWasEntered": "Thông tin này được nhập bởi Kỹ thuật viên khi tham gia Salon. Salon Owner chỉ có thể xem.",
@@ -3756,6 +3768,7 @@
               }
             },
             "perMonth": "/tháng",
+            "perYear": "/năm",
             "crossPriceStarter": "$149/tháng",
             "crossPricePro": "$299/tháng",
             "crossPriceElite": "$499/tháng",
@@ -4709,6 +4722,7 @@
               "enterprise": "Enterprise"
             },
             "monthlyPrice": "Giá tháng",
+            "yearlyPrice": "Giá năm",
             "activeStaff": "Nhân viên đang hoạt động",
             "qrTipping": "Tip qua mã QR",
             "directTips": "Tip trực tiếp nhân viên",
@@ -4908,7 +4922,13 @@
           "payoutMethodsTab": "Phương thức nhận tiền",
           "paymentQrTab": "QR Thanh toán",
           "tipQrTab": "QR Thanh toán",
-          "payoutAccount": "Tài khoản",
+          "view": "Xem",
+          "payoutAccount": "Sửa",
+          "customerPaymentDetails": "Thông tin thanh toán",
+          "scanToPay": "Quét để thanh toán",
+          "payTo": "Tên chủ tài khoản",
+          "accountDetails": "Thông tin tài khoản",
+          "noQrCode": "Chưa tải mã QR.",
           "methodNotConfigured": "Phương thức chưa được cấu hình.",
           "pleaseEnterAccountDetails": "Vui lòng nhập thông tin tài khoản.",
           "methodIdMissing": "Lỗi hệ thống: Thiếu ID phương thức",
@@ -4954,12 +4974,15 @@
           "reviewLinks": "Liên kết đánh giá",
           "emailPhone": "email hoặc SĐT",
           "details": "chi tiết",
+          "cashAppIdentifier": "$cashtag, email hoặc SĐT",
           "enterZelleEmailPhone": "Nhập email hoặc SĐT Zelle...",
           "enterBankWireRouting": "Số tài khoản & Số Routing...",
           "enterPaypalEmail": "Nhập PayPal email...",
           "enterVenmoUsername": "Nhập Venmo @username...",
           "enterCashAppCashtag": "Nhập Cash App $cashtag...",
+          "enterCashAppCashtagEmailPhone": "Nhập Cash App $cashtag, email hoặc SĐT...",
           "enterAppleCashPhone": "Nhập số điện thoại...",
+          "enterAppleCashEmailPhone": "Nhập email hoặc SĐT Apple Cash...",
           "specifyReceivingTargetIdentifier": "Chỉ định thông tin tài khoản nhận tiền",
           "qrCodeOptional": "MÃ QR (TÙY CHỌN)",
           "takePhoto": "CHỤP HÌNH",
@@ -5117,7 +5140,8 @@
           "openTippingPageSimulate": "Mở trang tip (Giả lập khách) ›"
         },
         "StaffPay": {
-          "editAccount": "Cấu hình"
+          "editAccount": "Sửa",
+          "view": "Xem"
         },
         "StaffProfile": {
           "accountChangesSavedSuccessfully": "Đã lưu thay đổi tài khoản!",
@@ -5514,6 +5538,12 @@
     "plan_locked_badge": "Không khả dụng",
     "upgrade_to_pro": "Nâng cấp lên Pro",
     "price_note_months": "/ {{count}} tháng",
+    "price_note_year": "/ năm",
+    "billing_cycle_label": "Kỳ thanh toán",
+    "billing_monthly": "Hàng tháng",
+    "billing_yearly": "Hàng năm",
+    "yearly_coming_soon": "Thanh toán theo năm sắp ra mắt",
+    "yearly_discount_upto": "Giảm tới {{percent}}%",
     "plans": {
       "lite": {
         "name": "Gói Lite (Miễn Phí)",
