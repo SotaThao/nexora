@@ -1,5 +1,6 @@
 import type { ApiError } from './api'
 import type { LooseObject } from './domain'
+import type { PosOrderStatus } from '../constants/posOrderStatus'
 import type {
   MerchantSetup,
   NotificationRecord,
@@ -1127,6 +1128,21 @@ export interface LocalStaffCreateParams {
 }
 
 export interface LocalStaffUpdateParams extends LocalStaffCreateParams {}
+
+/**
+ * One order/booking still open against a local staff member, blocking their deletion
+ * (backend LOCAL_STAFF_HAS_ACTIVE_WORK). `scheduledAt` is set only when `isBooking`.
+ */
+export interface LocalStaffActiveWorkItem {
+  orderId: string
+  orderNumber: string
+  customerName: string
+  status: PosOrderStatus
+  isBooking: boolean
+  scheduledAt: string | null
+  source: string | null
+  checkedInAt: string
+}
 
 export interface StaffSearchResultApiDto {
   staffProfileId: string

@@ -58,6 +58,7 @@ import AppDownloadLinks from './ui/AppDownloadLinks'
 import StaffModal from './dashboard/modals/StaffModal'
 import AddStaffModal from './dashboard/modals/AddStaffModal'
 import QrModal from './dashboard/modals/QrModal'
+import StaffActiveWorkModal from './dashboard/modals/StaffActiveWorkModal'
 import InviteShareModal from './dashboard/modals/InviteShareModal'
 import AddTouchpointModal from './dashboard/modals/AddTouchpointModal'
 import { usePagination } from '../hooks/usePagination'
@@ -409,6 +410,7 @@ export default function Dashboard({
     handleResendInvite,
     handleAcceptJoinRequest, handleDeclineJoinRequest, deleteStaff, toggleStaff, toggleStaffTipsFlow,
     handleAcceptUnlinkRequest, handleDeclineUnlinkRequest,
+    activeWorkBlocker, setActiveWorkBlocker,
     inviteStaffMutation,
     linkRequestMutation,
     updateStatusMutation,
@@ -979,6 +981,14 @@ export default function Dashboard({
         merchantSetupData={merchantSetupData}
       />
       <QrModal target={qrTarget} businessName={businessName} onClose={() => setQrTarget(null)} />
+
+      {activeWorkBlocker && (
+        <StaffActiveWorkModal
+          staffProfileId={activeWorkBlocker.staffProfileId}
+          staffName={activeWorkBlocker.staffName}
+          onClose={() => setActiveWorkBlocker(null)}
+        />
+      )}
 
       <AddTouchpointModal
         open={isAddTouchpointModalOpen}
