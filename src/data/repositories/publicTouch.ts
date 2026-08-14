@@ -7,6 +7,7 @@ import type { CreateReviewVars, CreateTipVars, SkipTipVars } from '../../types/h
 import type { PaymentMethodDto } from '../../types/domain'
 import { normalizeTouchPageData } from './normalizeTouchPage'
 import { normalizePaymentMethodDto } from './paymentMethodDto'
+import { toVlinkpayCryptoSymbolWire } from '../../components/payout/vlinkpayWallet'
 
 type HttpClient = typeof httpClient
 
@@ -70,7 +71,7 @@ export function createPublicTouchRepository(client: HttpClient = httpClient) {
         method: toWireMethod(method),
         amount,
       }
-      const symbol = String(cryptoSymbol || '').trim()
+      const symbol = toVlinkpayCryptoSymbolWire(cryptoSymbol)
       if (symbol) params.cryptoSymbol = symbol
       return client.get<LooseObject>('/api/v1/touch/payment-link', {
         anonymous: true,
@@ -86,7 +87,7 @@ export function createPublicTouchRepository(client: HttpClient = httpClient) {
         paymentMethod: toWireMethod(args.paymentMethod),
         sessionId: args.sessionId,
       }
-      const symbol = String(args.cryptoSymbol || '').trim()
+      const symbol = toVlinkpayCryptoSymbolWire(args.cryptoSymbol)
       if (symbol) body.cryptoSymbol = symbol
       return client.post<LooseObject>('/api/v1/touch/tip', body, { anonymous: true })
     },

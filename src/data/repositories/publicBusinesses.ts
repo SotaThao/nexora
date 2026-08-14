@@ -9,6 +9,7 @@ import {
   normalizePaymentMethodDto,
   type PaymentMethodApiDtoLike,
 } from './paymentMethodDto'
+import { toVlinkpayCryptoSymbolWire } from '../../components/payout/vlinkpayWallet'
 
 type HttpClient = typeof httpClient
 
@@ -47,7 +48,7 @@ export function createPublicBusinessesRepository(client: HttpClient = httpClient
         businessPaymentMethodId: args.businessPaymentMethodId,
         tipItems: args.tipItems,
       }
-      const symbol = String(args.cryptoSymbol || '').trim()
+      const symbol = toVlinkpayCryptoSymbolWire(args.cryptoSymbol)
       if (symbol) body.cryptoSymbol = symbol
       return client.post<LooseObject>(
         '/api/v1/tips/multi-staff',

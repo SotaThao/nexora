@@ -133,8 +133,8 @@ function PayoutSetupModal({
     zelle: t('components.dashboard.modals.PayoutSetupModal.placeholderZelle'),
     bankwire: t('components.dashboard.modals.PayoutSetupModal.placeholderBankWire'),
     paypal: t('components.dashboard.modals.PayoutSetupModal.placeholderPaypal'),
-    venmo: '@username-venmo',
-    cashapp: '$cashtag',
+    venmo: t('components.dashboard.modals.PayoutSetupModal.placeholderVenmo'),
+    cashapp: t('components.dashboard.modals.PayoutSetupModal.placeholderCashApp'),
     applecash: t('components.dashboard.modals.PayoutSetupModal.placeholderAppleCash'),
     vlinkpay: t('components.dashboard.modals.PayoutSetupModal.placeholderVlinkpayWallet'),
     crypto: t('components.dashboard.modals.PayoutSetupModal.placeholderCrypto')
@@ -376,7 +376,7 @@ function PayoutSetupModal({
                     </div>
                   </div>
                 ) : readOnly ? (
-                  <div className="flex h-24 w-full flex-col items-center justify-center rounded-xl border border-slate-150 bg-slate-50 text-xs font-semibold text-slate-400">
+                  <div className="flex h-24 w-full flex-col items-center justify-center rounded-xl border border-slate-200 bg-slate-50 text-xs font-semibold text-slate-400">
                     {t('components.dashboard.modals.PayoutSetupModal.noQrCodeUploaded')}
                   </div>
                 ) : (

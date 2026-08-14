@@ -52,8 +52,8 @@ export default function PayoutEditModal({
     zelle: t('components.register.modals.PayoutEditModal.enterZelleEmailPhone'),
     bankwire: t('components.register.modals.PayoutEditModal.accountAndRoutingNumbers'),
     paypal: 'email@paypal.com',
-    venmo: '@username-venmo',
-    cashapp: '$cashtag',
+    venmo: t('components.dashboard.modals.PayoutSetupModal.placeholderVenmo'),
+    cashapp: t('components.dashboard.modals.PayoutSetupModal.placeholderCashApp'),
     applecash: t('components.register.modals.PayoutEditModal.enterPhoneNumber')
   }
 

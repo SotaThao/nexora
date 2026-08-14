@@ -1,4 +1,4 @@
-import { useEffect, useState, type ReactNode } from 'react'
+import { useEffect, useLayoutEffect, useRef, useState, type ReactNode } from 'react'
 import { createPortal } from 'react-dom'
 import { Check, Copy, X } from 'lucide-react'
 import { useTranslation } from '../../contexts/LanguageContext'
@@ -33,6 +33,74 @@ interface PayoutMethodDetailModalProps {
   onClose: () => void
 }
 
+const ADDRESS_COPY_BTN_WIDTH = 92
+const ADDRESS_ROW_GAP = 8
+
+function VlinkpayAddressCopyRow({
+  address,
+  copied,
+  onCopy,
+  copyLabel,
+}: {
+  address: string
+  copied: boolean
+  onCopy: () => void
+  copyLabel: string
+}) {
+  const hostRef = useRef<HTMLDivElement>(null)
+  const [stackCopy, setStackCopy] = useState(false)
+
+  useLayoutEffect(() => {
+    const host = hostRef.current
+    if (!host) return undefined
+
+    const measure = () => {
+      const probe = document.createElement('span')
+      probe.textContent = address
+      probe.style.cssText = [
+        'position:absolute',
+        'visibility:hidden',
+        'white-space:nowrap',
+        'font: 500 11px/20px ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace',
+      ].join(';')
+      host.appendChild(probe)
+      const available = host.clientWidth - ADDRESS_COPY_BTN_WIDTH - ADDRESS_ROW_GAP
+      setStackCopy(probe.offsetWidth > available)
+      host.removeChild(probe)
+    }
+
+    measure()
+    const observer = new ResizeObserver(measure)
+    observer.observe(host)
+    return () => observer.disconnect()
+  }, [address])
+
+  return (
+    <div
+      ref={hostRef}
+      className={stackCopy ? 'mt-1.5 flex flex-col gap-2' : 'mt-1.5 flex items-center gap-2'}
+    >
+      <p
+        className={`min-w-0 rounded-xl border border-nexoraBorder bg-white px-3 py-2.5 font-mono text-[11px] font-medium leading-5 text-nexoraText sm:text-xs sm:leading-5 ${
+          stackCopy ? 'break-all' : 'flex-1 truncate'
+        }`}
+      >
+        {address}
+      </p>
+      <button
+        type="button"
+        onClick={onCopy}
+        className={`inline-flex shrink-0 items-center justify-center gap-1.5 rounded-xl border border-nexoraBrand/30 bg-white text-xs font-bold text-nexoraBrand transition hover:bg-nexoraBrandSoft ${
+          stackCopy ? 'min-h-10 w-full' : 'h-10 min-w-[84px] px-2.5'
+        }`}
+      >
+        {copied ? <Check className="h-3.5 w-3.5" strokeWidth={3} /> : <Copy className="h-3.5 w-3.5" />}
+        {copyLabel}
+      </button>
+    </div>
+  )
+}
+
 function VlinkpayAddressCards({ addresses }: { addresses: VlinkpayAddresses }) {
   const { t } = useTranslation()
   const { showToast } = useNotification()
@@ -44,7 +112,7 @@ function VlinkpayAddressCards({ addresses }: { addresses: VlinkpayAddresses }) {
       setCopiedKey(coin)
       showToast(t('common.copied'), 'success')
     } catch {
-      showToast(t('common.copied'), 'error')
+      showToast(t('errors.generic'), 'error')
     }
   }
 
@@ -92,17 +160,12 @@ function VlinkpayAddressCards({ addresses }: { addresses: VlinkpayAddresses }) {
             <p className="mt-3 text-[10px] font-bold uppercase tracking-wide text-nexoraMuted">
               {t(`${SETUP_TK}.vlinkpayWalletAddressLabel`)}
             </p>
-            <p className="mt-1.5 break-all rounded-xl border border-nexoraBorder bg-white px-3 py-2.5 font-mono text-[11px] font-medium leading-5 text-nexoraText sm:text-xs sm:leading-5">
-              {address}
-            </p>
-            <button
-              type="button"
-              onClick={() => copyAddress(coin.key, address)}
-              className="mt-2 inline-flex min-h-10 w-full items-center justify-center gap-1.5 rounded-xl border border-nexoraBrand/30 bg-white text-xs font-bold text-nexoraBrand transition hover:bg-nexoraBrandSoft"
-            >
-              {copied ? <Check className="h-3.5 w-3.5" strokeWidth={3} /> : <Copy className="h-3.5 w-3.5" />}
-              {t(copied ? 'common.copied' : 'common.copy')}
-            </button>
+            <VlinkpayAddressCopyRow
+              address={address}
+              copied={copied}
+              onCopy={() => copyAddress(coin.key, address)}
+              copyLabel={t(copied ? 'common.copied' : 'common.copy')}
+            />
           </div>
         )
       })}

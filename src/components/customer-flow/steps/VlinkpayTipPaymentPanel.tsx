@@ -153,9 +153,13 @@ export default function VlinkpayTipPaymentPanel({
         </p>
         <button
           type="button"
-          onClick={() => {
-            navigator.clipboard.writeText(receiveAddress)
-            showToast(t('common.copied'), 'success')
+          onClick={async () => {
+            try {
+              await navigator.clipboard.writeText(receiveAddress)
+              showToast(t('common.copied'), 'success')
+            } catch {
+              showToast(t('errors.generic'), 'error')
+            }
           }}
           className="inline-flex shrink-0 items-center gap-1 rounded-xl border border-nexoraBrand/30 bg-white px-2.5 py-1.5 text-[10px] font-bold text-nexoraBrand transition hover:bg-nexoraBrandSoft"
         >
@@ -170,7 +174,7 @@ export default function VlinkpayTipPaymentPanel({
   ) : null
 
   const goBackToSelect = () => {
-    if (busy) return
+    if (busy || tipReady) return
     onChangeAsset?.()
     setPhase('select')
   }
@@ -287,6 +291,7 @@ export default function VlinkpayTipPaymentPanel({
                 </span>
               </p>
             </div>
+            {tipReady ? null : (
             <button
               type="button"
               disabled={busy}
@@ -295,6 +300,7 @@ export default function VlinkpayTipPaymentPanel({
             >
               {t(`${TK}.vlinkpayChangeAsset`)}
             </button>
+            )}
           </div>
         ) : null}
 
@@ -329,7 +335,7 @@ export default function VlinkpayTipPaymentPanel({
 
         <button
           type="button"
-          onClick={goBackToSelect}
+          onClick={tipReady ? onBack : goBackToSelect}
           disabled={busy}
           className="w-full rounded-xl border border-nexoraBorder bg-nexoraCanvas py-3 text-xs font-extrabold uppercase tracking-wider text-nexoraMuted transition hover:bg-nexoraSurfaceMuted disabled:opacity-60"
         >
