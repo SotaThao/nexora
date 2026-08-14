@@ -1,6 +1,6 @@
 /** Homepage section component */
 import { useMemo, useState } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { Link, useLocation, useNavigate } from 'react-router-dom'
 import { Globe, ChevronDown, LayoutDashboard, LogOut } from 'lucide-react'
 import { useHomePageBridge } from '../context/HomePageBridgeContext'
 import { useHomePageLayout } from '../context/HomePageLayoutContext'
@@ -12,12 +12,15 @@ import HeaderEcosystem from '../../dashboard/layout/HeaderEcosystem'
 
 export default function HomePageHeaderSection() {
   const navigate = useNavigate()
+  const { pathname } = useLocation()
   const { hp, onLogout } = useHomePageBridge()
   const { hasMobileMenu, openSidebarMenu } = useHomePageLayout()
   const { session, status } = useAuth()
   const [homepageLang, setHomepageLang] = useState<HomePageLang>(getInitialHomePageLanguage)
 
   const copy = homepageTranslations[homepageLang]
+  const homeAnchorPrefix = pathname === '/' ? '' : '/'
+  const homeHref = pathname === '/' ? '#' : '/'
   const isAuthenticated = status === 'authenticated' && Boolean(session)
   const dashboardPath = useMemo(
     () => (session ? dashboardPathForSession(session) : '/dashboard'),
@@ -59,7 +62,7 @@ export default function HomePageHeaderSection() {
               </svg>
             </button>
 
-            <a className="hidden sm:flex items-center group shrink-0 ds-control ds-link" href="#" aria-label="NEXORA TOUCH">
+            <a className="hidden sm:flex items-center group shrink-0 ds-control ds-link" href={homeHref} aria-label="NEXORA TOUCH">
               <picture>
                 <source media="(max-width: 767px)" srcSet="/homepage/assets/images/icon-nexora.png" />
                 <img alt="NEXORA TOUCH" className="homepage-header-logo-img h-8 sm:h-10 w-auto group-hover:scale-105 transition-transform" src="/homepage/assets/images/logo-light-mode.png" />
@@ -68,14 +71,17 @@ export default function HomePageHeaderSection() {
           </div>
 
           <nav className="hidden lg:flex items-center gap-4 xl:gap-8 text-sm font-semibold text-slate-600">
-            <a className="hover:text-purple transition-colors ds-control ds-link ds-nav-link" data-i18n="nav-features" href="#features">Features</a>
+            <a className="hover:text-purple transition-colors ds-control ds-link ds-nav-link" data-i18n="nav-features" href={`${homeAnchorPrefix}#features`}>{copy['nav-features']}</a>
             <a className="hover:text-purple transition-colors ds-control ds-link ds-nav-link" href="https://taxiq.nexoratouch.com/" target="_blank" rel="noopener noreferrer">
-              <span data-i18n="nav-simulator">Live Demo</span>
+              <span data-i18n="nav-simulator">{copy['nav-simulator']}</span>
             </a>
-            <a className="hover:text-purple transition-colors ds-control ds-link ds-nav-link" data-i18n="nav-tax-iq" href="#tax-iq">Tax IQ Assistant</a>
-            <a className="hover:text-purple transition-colors ds-control ds-link ds-nav-link" data-i18n="nav-rewards" href="#customer-rewards">Customer Portal</a>
-            <a className="hover:text-purple transition-colors ds-control ds-link ds-nav-link" data-i18n="nav-calculator" href="#calculator">Calculator</a>
-            <a className="hover:text-purple transition-colors ds-control ds-link ds-nav-link" data-i18n="nav-pricing" href="#pricing">Pricing</a>
+            <a className="hover:text-purple transition-colors ds-control ds-link ds-nav-link" data-i18n="nav-tax-iq" href={`${homeAnchorPrefix}#tax-iq`}>{copy['nav-tax-iq']}</a>
+            <a className="hover:text-purple transition-colors ds-control ds-link ds-nav-link" data-i18n="nav-rewards" href={`${homeAnchorPrefix}#customer-rewards`}>{copy['nav-rewards']}</a>
+            <a className="hover:text-purple transition-colors ds-control ds-link ds-nav-link" data-i18n="nav-calculator" href={`${homeAnchorPrefix}#calculator`}>{copy['nav-calculator']}</a>
+            <a className="hover:text-purple transition-colors ds-control ds-link ds-nav-link" data-i18n="nav-pricing" href={`${homeAnchorPrefix}#pricing`}>{copy['nav-pricing']}</a>
+            <Link className="hover:text-purple transition-colors ds-control ds-link ds-nav-link" data-i18n="nav-news-library" to="/news-library">
+              {copy['nav-news-library']}
+            </Link>
           </nav>
 
           <div className="flex items-center gap-2 sm:gap-2.5 shrink-0">
@@ -171,12 +177,15 @@ export default function HomePageHeaderSection() {
 
         {!hasMobileMenu && (
           <div className="mobile-menu-panel hidden lg:hidden animate-fadeIn p-2 space-y-1 font-extrabold text-xs sm:text-sm text-slate-600" id="mobile-navigation-menu">
-            <a className="flex px-3 py-2 hover:text-purple transition-colors ds-control ds-link" data-i18n="nav-features" href="#features" onClick={() => { hp.toggleMobileMenu() }}>Features</a>
-            <a className="flex px-3 py-2 hover:text-purple transition-colors ds-control ds-link" data-i18n="nav-simulator" href="https://taxiq.nexoratouch.com/" target="_blank" rel="noopener noreferrer" onClick={() => { hp.toggleMobileMenu() }}>Live Demo</a>
-            <a className="flex px-3 py-2 hover:text-purple transition-colors ds-control ds-link" data-i18n="nav-tax-iq" href="#tax-iq" onClick={() => { hp.toggleMobileMenu() }}>Tax IQ Assistant</a>
-            <a className="flex px-3 py-2 hover:text-purple transition-colors ds-control ds-link" data-i18n="nav-rewards" href="#customer-rewards" onClick={() => { hp.toggleMobileMenu() }}>Customer Portal</a>
-            <a className="flex px-3 py-2 hover:text-purple transition-colors ds-control ds-link" data-i18n="nav-calculator" href="#calculator" onClick={() => { hp.toggleMobileMenu() }}>Calculator</a>
-            <a className="flex px-3 py-2 hover:text-purple transition-colors ds-control ds-link" data-i18n="nav-pricing" href="#pricing" onClick={() => { hp.toggleMobileMenu() }}>Pricing</a>
+            <a className="flex px-3 py-2 hover:text-purple transition-colors ds-control ds-link" data-i18n="nav-features" href={`${homeAnchorPrefix}#features`} onClick={() => { hp.toggleMobileMenu() }}>{copy['nav-features']}</a>
+            <a className="flex px-3 py-2 hover:text-purple transition-colors ds-control ds-link" data-i18n="nav-simulator" href="https://taxiq.nexoratouch.com/" target="_blank" rel="noopener noreferrer" onClick={() => { hp.toggleMobileMenu() }}>{copy['nav-simulator']}</a>
+            <a className="flex px-3 py-2 hover:text-purple transition-colors ds-control ds-link" data-i18n="nav-tax-iq" href={`${homeAnchorPrefix}#tax-iq`} onClick={() => { hp.toggleMobileMenu() }}>{copy['nav-tax-iq']}</a>
+            <a className="flex px-3 py-2 hover:text-purple transition-colors ds-control ds-link" data-i18n="nav-rewards" href={`${homeAnchorPrefix}#customer-rewards`} onClick={() => { hp.toggleMobileMenu() }}>{copy['nav-rewards']}</a>
+            <a className="flex px-3 py-2 hover:text-purple transition-colors ds-control ds-link" data-i18n="nav-calculator" href={`${homeAnchorPrefix}#calculator`} onClick={() => { hp.toggleMobileMenu() }}>{copy['nav-calculator']}</a>
+            <a className="flex px-3 py-2 hover:text-purple transition-colors ds-control ds-link" data-i18n="nav-pricing" href={`${homeAnchorPrefix}#pricing`} onClick={() => { hp.toggleMobileMenu() }}>{copy['nav-pricing']}</a>
+            <Link className="flex px-3 py-2 hover:text-purple transition-colors ds-control ds-link" data-i18n="nav-news-library" to="/news-library" onClick={() => { hp.toggleMobileMenu() }}>
+              {copy['nav-news-library']}
+            </Link>
           </div>
         )}
       </header>

@@ -1,6 +1,7 @@
 /** Owner settings tab keys (desktop SettingsView). */
 export const SettingsDesktopTab = {
   Account: 'account',
+  Staff: 'staff',
   Kyb: 'kyb',
   Affiliate: 'affiliate',
   Notification: 'notification',

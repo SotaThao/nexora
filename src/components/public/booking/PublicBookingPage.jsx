@@ -27,6 +27,8 @@ import {
   PUBLIC_BOOKING_THEME_COLOR,
   PUBLIC_BOOKING_VALIDATION_ERROR,
 } from './constants'
+import SmsConsentPanel from './SmsConsentPanel'
+import { SMS_CONSENT_DISCLOSURE_VERSION } from '../../../constants/smsConsent'
 import {
   bookingLocaleFromLang,
   buildCreateBookingBody,
@@ -113,6 +115,12 @@ export default function PublicBookingPage() {
     enabled: Boolean(businessKey),
   })
   const createMutation = useCreatePublicOnlineBooking()
+
+  // Transactional starts pre-checked and required — PO decision overriding the earlier opt-in-only
+  // design (unticking blocks submit below). Marketing stays unticked/optional. Note: a pre-checked
+  // box is generally not valid opt-in consent under TCPA and diverges from the "unticked checkbox"
+  // evidence Twilio's A2P reviewers expect — see docs/business/sms-consent/sms-consent-technical.md.
+  const [smsConsent, setSmsConsent] = useState({ transactional: true, marketing: false })
 
   const defaultSlot = useMemo(() => getDefaultBookingSlot(), [])
   const [state, setState] = useState(() => {
@@ -362,7 +370,12 @@ export default function PublicBookingPage() {
     try {
       const result = await createMutation.mutateAsync({
         businessKey,
-        body: buildCreateBookingBody(state),
+        body: buildCreateBookingBody(state, {
+          ...smsConsent,
+          disclosureVersion: SMS_CONSENT_DISCLOSURE_VERSION,
+          locale: lang,
+          sourceUrl: window.location.href,
+        }),
         source: bookingSource,
       })
       const selectedNames = state.selectedServiceIds
@@ -388,6 +401,7 @@ export default function PublicBookingPage() {
 
   const resetBooking = () => {
     setState(createDefaultBookingState(getDefaultBookingSlot()))
+    setSmsConsent({ transactional: true, marketing: false })
     setErrors([])
     setStatusMessage('')
     createMutation.reset()
@@ -922,6 +936,19 @@ export default function PublicBookingPage() {
                 {reviewError}
               </p>
 
+              {/* Sits on the review step rather than beside the phone field: this screen already
+                  shows the phone number back to the customer, so the phone, both boxes, the full
+                  disclosure and the submit button all appear in one view — which is what Twilio
+                  asks to see in a single screenshot for A2P registration. */}
+              <div className="mt-4">
+                <SmsConsentPanel
+                  transactional={smsConsent.transactional}
+                  marketing={smsConsent.marketing}
+                  onChange={setSmsConsent}
+                  lang={lang}
+                />
+              </div>
+
               <div className="action-row">
                 <button
                   className="secondary-button"
@@ -937,7 +964,7 @@ export default function PublicBookingPage() {
                   className="primary-button"
                   type="button"
                   data-action="submit-booking"
-                  disabled={createMutation.isPending}
+                  disabled={createMutation.isPending || !smsConsent.transactional}
                   onClick={submitBooking}
                 >
                   {createMutation.isPending ? copy.submitting : copy.submit}

@@ -75,7 +75,7 @@ export default function SelectTechniciansModal({
   return (
     <div className="fixed inset-0 z-[60] flex justify-end">
       <div className="absolute inset-0 bg-nexoraText/70 backdrop-blur-sm" onClick={onClose} aria-hidden="true" />
-      <div className="relative flex h-full w-full max-w-md flex-col bg-posFdSurface p-4 shadow-xl">
+      <div className="relative flex h-full w-full max-w-md flex-col bg-nexoraSurface p-4 shadow-xl">
         <div className="mb-4 flex shrink-0 items-center justify-between">
           <h2 className="text-sm font-extrabold text-nexoraText">
             {t('components.dashboard.views.pos.SelectTechniciansModal.title', { serviceName })}
@@ -93,7 +93,7 @@ export default function SelectTechniciansModal({
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               placeholder={t('components.dashboard.views.pos.SelectTechniciansModal.searchPlaceholder')}
-              className="h-9 w-full rounded-lg border border-nexoraBorder bg-white pl-8 pr-2.5 text-xs text-nexoraText outline-none focus:border-posFdAccent"
+              className="h-9 w-full rounded-lg border border-nexoraBorder bg-white pl-8 pr-2.5 text-xs text-nexoraText outline-none focus:border-nexoraBrand"
             />
           </div>
 
@@ -107,8 +107,8 @@ export default function SelectTechniciansModal({
               onClick={() => setSelectedStaffId(NEXT_AVAILABLE)}
               className={`flex flex-col items-center gap-1 rounded-xl border p-3 text-center ${
                 selectedStaffId === NEXT_AVAILABLE
-                  ? 'border-posFdAccent bg-posFdAccent/5'
-                  : 'border-nexoraBorder hover:border-posFdAccent'
+                  ? 'border-nexoraBrand bg-nexoraBrand/5'
+                  : 'border-nexoraBorder hover:border-nexoraBrand'
               }`}
             >
               <span className="flex h-9 w-9 items-center justify-center rounded-full bg-nexoraCanvas text-[11px] font-bold text-nexoraText">
@@ -132,8 +132,8 @@ export default function SelectTechniciansModal({
                   onClick={() => setSelectedStaffId(staff.posStaffProfileId)}
                   className={`flex flex-col items-center gap-1 rounded-xl border p-3 text-center ${
                     selectedStaffId === staff.posStaffProfileId
-                      ? 'border-posFdAccent bg-posFdAccent/5'
-                      : 'border-nexoraBorder hover:border-posFdAccent'
+                      ? 'border-nexoraBrand bg-nexoraBrand/5'
+                      : 'border-nexoraBorder hover:border-nexoraBrand'
                   }`}
                 >
                   <span className="relative flex h-9 w-9 items-center justify-center rounded-full bg-nexoraCanvas text-[11px] font-bold text-nexoraText">
@@ -181,7 +181,7 @@ export default function SelectTechniciansModal({
               maxLength={500}
               rows={2}
               placeholder={t('components.dashboard.views.pos.SelectTechniciansModal.notePlaceholder')}
-              className="w-full rounded-lg border border-nexoraBorder bg-white px-2.5 py-2 text-xs text-nexoraText outline-none focus:border-posFdAccent"
+              className="w-full rounded-lg border border-nexoraBorder bg-white px-2.5 py-2 text-xs text-nexoraText outline-none focus:border-nexoraBrand"
             />
           </div>
         </div>
@@ -190,14 +190,14 @@ export default function SelectTechniciansModal({
           <button
             type="button"
             onClick={onClose}
-            className="h-10 flex-1 rounded-lg border border-nexoraBorder text-xs font-bold text-nexoraText hover:border-posFdAccent"
+            className="h-10 flex-1 rounded-lg border border-nexoraBorder text-xs font-bold text-nexoraText hover:border-nexoraBrand"
           >
             {t('components.dashboard.views.pos.SelectTechniciansModal.cancel')}
           </button>
           <button
             type="button"
             onClick={handleConfirm}
-            className="h-10 flex-1 rounded-lg bg-posFdAccent text-xs font-bold text-white hover:bg-posFdAccentDark"
+            className="h-10 flex-1 rounded-lg bg-nexoraBrand text-xs font-bold text-white hover:bg-nexoraBrandDark"
           >
             {t('components.dashboard.views.pos.SelectTechniciansModal.ok')}
           </button>

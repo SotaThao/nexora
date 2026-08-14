@@ -4,6 +4,8 @@ import { Check, Copy, X } from 'lucide-react'
 import { useTranslation } from '../../contexts/LanguageContext'
 import { useNotification } from '../../contexts/NotificationContext'
 import {
+  getPayoutAccountDisplayLabel,
+  getPayoutAccountHolderDisplayLabel,
   getPaymentMethodDisplayName,
   payoutTypeToUiKey,
 } from '../../data/paymentMethodTypes'
@@ -187,6 +189,8 @@ export default function PayoutMethodDetailModal({
   const isBankWire = uiKey === PayoutUiKey.BankWire
   const isVlinkpay = uiKey === PayoutUiKey.VlinkPay
   const vlinkpayAddresses = isVlinkpay ? parseVlinkpayAddressesFromMethod(method) : null
+  const accountDisplayLabel = getPayoutAccountDisplayLabel(uiKey, t)
+  const accountHolderDisplayLabel = getPayoutAccountHolderDisplayLabel(uiKey, t)
   const bankWireDetails = isBankWire ? parseBankWireAccount(method.accountInfo) : null
   const accountName = isBankWire
     ? bankWireDetails?.beneficiaryName.trim() || method.accountName?.trim() || ''
@@ -280,7 +284,7 @@ export default function PayoutMethodDetailModal({
             {hasAccountName && (
               <div className="py-2">
                 <div className="text-[9px] font-extrabold uppercase tracking-wide text-nexoraMuted">
-                  {t(`${PROFILE_TK}.payTo`)}
+                  {accountHolderDisplayLabel}
                 </div>
                 <div className="mt-0.5 break-words text-xs font-black text-nexoraText">
                   {accountName}
@@ -290,7 +294,7 @@ export default function PayoutMethodDetailModal({
             {isBankWire ? (
               <div className="py-2">
                 <div className="text-[9px] font-extrabold uppercase tracking-wide text-nexoraMuted">
-                  {t(`${PROFILE_TK}.accountDetails`)}
+                  {accountDisplayLabel}
                 </div>
                 {bankWireRows.length > 0 ? (
                   <div className="mt-1.5 grid grid-cols-2 gap-x-3 gap-y-2">
@@ -321,7 +325,7 @@ export default function PayoutMethodDetailModal({
             ) : (
               <div className="py-2">
                 <div className="text-[9px] font-extrabold uppercase tracking-wide text-nexoraMuted">
-                  {t(`${PROFILE_TK}.accountDetails`)}
+                  {accountDisplayLabel}
                 </div>
                 <div className="mt-0.5 break-words font-mono text-xs font-black text-nexoraText">
                   {hasAccountInfo

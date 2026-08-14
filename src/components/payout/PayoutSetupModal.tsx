@@ -65,7 +65,6 @@ function PayoutSetupModal({
   const [qrCode, setQrCode] = useState(initialQrCode || '')
   const [qrFile, setQrFile] = useState(null)
   const [accountName, setAccountName] = useState(initialAccountName || staffName || '')
-  const [isCapturing, setIsCapturing] = useState(false)
   const [isCameraOpen, setIsCameraOpen] = useState(false)
   const [error, setError] = useState('')
   const [accountNameError, setAccountNameError] = useState('')
@@ -116,17 +115,6 @@ function PayoutSetupModal({
     applecash: 'Apple Cash',
     vlinkpay: 'VLINKPAY Wallet',
     crypto: 'Crypto Wallet'
-  }
-
-  const walletFields = {
-    zelle: 'email/phone',
-    bankwire: 'details',
-    paypal: 'email',
-    venmo: '@username',
-    cashapp: '$cashtag',
-    applecash: 'phone number',
-    vlinkpay: 'VLINKPAY ID',
-    crypto: 'BTC/USDT Address'
   }
 
   const walletPlaceholders = {
@@ -384,7 +372,6 @@ function PayoutSetupModal({
                     <button
                       type="button"
                       onClick={handleTakePhoto}
-                      disabled={isCapturing}
                       className="flex flex-col items-center justify-center gap-1.5 rounded-xl border border-dashed border-slate-200 bg-slate-50 py-5 transition hover:border-nexoraBrand hover:bg-slate-50/50 disabled:opacity-60"
                     >
                       <Camera className="h-5 w-5 text-nexoraBrand" />

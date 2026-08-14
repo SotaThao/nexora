@@ -7,8 +7,8 @@ RUN corepack enable && corepack prepare pnpm@10 --activate
 # Set the working directory in the container
 WORKDIR /app
 
-# Copy lockfile and manifests first for better layer caching
-COPY package.json pnpm-lock.yaml ./
+# Copy lockfile, manifests, and pnpm config first for better layer caching
+COPY package.json pnpm-lock.yaml .npmrc ./
 
 # Install dependencies using frozen lockfile
 RUN pnpm install --frozen-lockfile

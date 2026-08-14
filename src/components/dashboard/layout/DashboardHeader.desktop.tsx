@@ -245,7 +245,6 @@ export default function DashboardHeader({
                     type="button"
                     onClick={() => {
                       onViewStaffDetail(member.id)
-                      onNavigateMenu('staff')
                       setIsSearchFocused(false)
                       setSearchQuery('')
                     }}

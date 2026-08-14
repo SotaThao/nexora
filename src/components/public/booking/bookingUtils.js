@@ -193,7 +193,7 @@ export function validateBookingDraft(draft, catalog, minDate) {
  * Build POST body for `CreateOnlineBookingRequest` (OpenAPI: `serviceIds` array).
  * Slot conversion always uses the device timezone (ignores tenant timeZone).
  */
-export function buildCreateBookingBody(draft) {
+export function buildCreateBookingBody(draft, consent = null) {
   const staffId = String(draft?.selectedStaffId || '').trim()
   const notes = String(draft?.note || '').trim()
   const phoneRaw = String(draft?.customer?.phone || '').trim()
@@ -216,6 +216,17 @@ export function buildCreateBookingBody(draft) {
 
   if (staffId && staffId !== PUBLIC_BOOKING_ANY_STAFF_ID) body.staffId = staffId
   if (notes) body.notes = notes
+
+  // SMS consent (A2P 10DLC / TCPA). Always sent, including when both are false — the server needs
+  // the explicit false to know the customer declined rather than that an old client omitted it.
+  if (consent) {
+    body.transactionalConsent = Boolean(consent.transactional)
+    body.marketingConsent = Boolean(consent.marketing)
+    body.disclosureVersion = consent.disclosureVersion
+    body.locale = consent.locale
+    body.sourceUrl = consent.sourceUrl
+  }
+
   return body
 }
 

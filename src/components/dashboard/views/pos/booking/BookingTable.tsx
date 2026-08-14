@@ -28,13 +28,13 @@ export default function BookingTable({
       <table className="w-full min-w-[720px] text-left text-xs">
         <thead>
           <tr className="border-b border-nexoraBorder bg-nexoraCanvas text-[10px] font-black uppercase tracking-wider text-nexoraMuted">
-            <th className="px-3 py-2">{t(p + 'columnCustomer')}</th>
-            <th className="px-3 py-2">{t(p + 'columnCreated')}</th>
-            <th className="px-3 py-2">{t(p + 'columnDateTime')}</th>
-            <th className="px-3 py-2">{t(p + 'columnServices')}</th>
-            <th className="px-3 py-2">{t(p + 'columnTechnician')}</th>
-            <th className="px-3 py-2">{t(p + 'columnStatus')}</th>
-            <th className="px-3 py-2">{t(p + 'columnActions')}</th>
+            <th className="text-xs font-black px-3 py-2">{t(p + 'columnCustomer')}</th>
+            <th className="text-xs font-black px-3 py-2">{t(p + 'columnCreated')}</th>
+            <th className="text-xs font-black px-3 py-2">{t(p + 'columnDateTime')}</th>
+            <th className="text-xs font-black px-3 py-2">{t(p + 'columnServices')}</th>
+            <th className="text-xs font-black px-3 py-2">{t(p + 'columnTechnician')}</th>
+            <th className="text-xs font-black px-3 py-2">{t(p + 'columnStatus')}</th>
+            <th className="text-xs font-black px-3 py-2">{t(p + 'columnActions')}</th>
           </tr>
         </thead>
         <tbody>
