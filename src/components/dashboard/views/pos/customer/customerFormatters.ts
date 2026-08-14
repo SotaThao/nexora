@@ -1,5 +1,5 @@
 // Shared formatting helpers for the POS Front Desk "Customer" tab (US-043).
-import { formatNationalNumber, parsePhone, PhoneDialCode } from '@/components/CountryCodeSelect'
+import { formatNationalNumber, parsePhone, PhoneDialCode } from '../../../../CountryCodeSelect'
 
 // The backend stores the country code separately from the national number, and returns the
 // assembled E.164 form alongside it. Always format off the E.164 value — never off the national
