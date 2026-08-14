@@ -253,6 +253,9 @@ export const qk = {
   staffTransactionsPaginated: (filters = EMPTY) => ['staffTransactions', 'paginated', filters],
   staffLinkRequest:    (linkId: string | null | undefined) => ['staffLinkRequest', linkId ?? 'unknown'],
   staffLinkRequestsList: (filters = EMPTY) => ['staffLinkRequests', 'list', filters],
+  staffWorkSkillCategories:  (businessId: string) => ['staffWorkSkill', businessId, 'categories'],
+  staffWorkSkillServices:    (businessId: string) => ['staffWorkSkill', businessId, 'services'],
+  staffWorkSkillAssignments: (businessId: string) => ['staffWorkSkill', businessId, 'assignments'],
 
   // Tax IQ — Owner Tax Year (prefixed with 'taxiqOwnerTaxYear' so invalidating
   // qk.taxiqOwnerTaxYear() also clears the byId cache below).

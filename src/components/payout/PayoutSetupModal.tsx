@@ -1,12 +1,14 @@
 import { useState, useEffect } from 'react'
 import { createPortal } from 'react-dom'
-import { X, Camera, FolderOpen, AlertTriangle, Bitcoin } from 'lucide-react'
+import { X, Camera, FolderOpen, AlertTriangle, Bitcoin, Loader2 } from 'lucide-react'
 import { useTranslation } from '../../contexts/LanguageContext'
+import { PayoutUiKey } from '../../data/payoutUiKeys'
 import { renderLabel } from '../../utils/renderLabel'
 import ImageFileInput from '../ui/ImageFileInput'
 import BankWireAccountForm from './BankWireAccountForm'
 import PayoutAccountIdentifierInput from './PayoutAccountIdentifierInput'
 import PayoutAccountNameField from './PayoutAccountNameField'
+import VlinkpayWalletFields from './VlinkpayWalletFields'
 import { formatPayoutPhoneDisplay } from './payoutPhone'
 import CameraCapture from '../ui/CameraCapture'
 import { readImageFileAsDataUrl } from '../../utils/imageFile'
@@ -14,6 +16,13 @@ import {
   getBankWireBeneficiaryName,
   isBankWireAccountComplete,
 } from './bankWireAccount'
+import {
+  parseVlinkpayAddresses,
+  serializeVlinkpayAddresses,
+  getVlinkpayAddressValidationError,
+  type VlinkpayAddresses,
+  type VlinkpayCoinKey,
+} from './vlinkpayWallet'
 import { validatePayoutAccount } from './validatePayoutAccount'
 import { supportsPayoutAccountName } from '../../data/paymentMethodTypes'
 
@@ -50,16 +59,22 @@ function PayoutSetupModal({
 }: PayoutSetupModalProps) {
   const { t } = useTranslation()
   const [value, setValue] = useState(initialValue || '')
+  const [vlinkpayAddresses, setVlinkpayAddresses] = useState<VlinkpayAddresses>(() =>
+    parseVlinkpayAddresses(initialValue),
+  )
   const [qrCode, setQrCode] = useState(initialQrCode || '')
   const [qrFile, setQrFile] = useState(null)
   const [accountName, setAccountName] = useState(initialAccountName || staffName || '')
+  const [isCapturing, setIsCapturing] = useState(false)
   const [isCameraOpen, setIsCameraOpen] = useState(false)
   const [error, setError] = useState('')
   const [accountNameError, setAccountNameError] = useState('')
   const [uploadError, setUploadError] = useState('')
+  const [isGuideOpen, setIsGuideOpen] = useState(true)
 
   useEffect(() => {
     setValue(initialValue || '')
+    setVlinkpayAddresses(parseVlinkpayAddresses(initialValue))
     setQrCode(initialQrCode || '')
     setQrFile(null)
     setAccountName(initialAccountName || staffName || '')
@@ -67,6 +82,7 @@ function PayoutSetupModal({
     setAccountNameError('')
     setUploadError('')
     setIsCameraOpen(false)
+    setIsGuideOpen(true)
   }, [open, walletKey, initialValue, initialQrCode, initialAccountName, staffName])
 
   useEffect(() => {
@@ -87,8 +103,9 @@ function PayoutSetupModal({
   }, [qrCode])
 
   if (!open) return null
-  const isBankWire = walletKey === 'bankwire'
-  const requiresAccountName = !isBankWire && supportsPayoutAccountName(walletKey)
+  const isBankWire = walletKey === PayoutUiKey.BankWire
+  const isVlinkpay = walletKey === PayoutUiKey.VlinkPay
+  const requiresAccountName = supportsPayoutAccountName(walletKey)
 
   const walletNames = {
     zelle: 'Zelle',
@@ -100,15 +117,14 @@ function PayoutSetupModal({
     vlinkpay: 'VLINKPAY Wallet',
     crypto: 'Crypto Wallet'
   }
-  const walletName = String(walletNames[walletKey] || walletKey)
 
   const walletFields = {
-    zelle: t('components.dashboard.modals.PayoutSetupModal.fieldEmailPhone'),
+    zelle: 'email/phone',
     bankwire: 'details',
-    paypal: t('components.dashboard.modals.PayoutSetupModal.fieldEmail'),
-    venmo: t('components.dashboard.modals.PayoutSetupModal.fieldVenmoHandle'),
-    cashapp: t('components.dashboard.modals.PayoutSetupModal.fieldCashAppIdentifier'),
-    applecash: t('components.dashboard.modals.PayoutSetupModal.fieldEmailPhone'),
+    paypal: 'email',
+    venmo: '@username',
+    cashapp: '$cashtag',
+    applecash: 'phone number',
     vlinkpay: 'VLINKPAY ID',
     crypto: 'BTC/USDT Address'
   }
@@ -120,16 +136,9 @@ function PayoutSetupModal({
     venmo: t('components.dashboard.modals.PayoutSetupModal.placeholderVenmo'),
     cashapp: t('components.dashboard.modals.PayoutSetupModal.placeholderCashApp'),
     applecash: t('components.dashboard.modals.PayoutSetupModal.placeholderAppleCash'),
-    vlinkpay: t('components.dashboard.modals.PayoutSetupModal.placeholderVlinkpay'),
+    vlinkpay: t('components.dashboard.modals.PayoutSetupModal.placeholderVlinkpayWallet'),
     crypto: t('components.dashboard.modals.PayoutSetupModal.placeholderCrypto')
   }
-  const accountIdentifierLabel = t(
-    'components.dashboard.modals.PayoutSetupModal.accountIdentifierForMethod',
-    {
-      wallet: walletName.toUpperCase(),
-      field: String(walletFields[walletKey] || '').toUpperCase(),
-    },
-  )
 
   const handleImageFilePick = async (file: File) => {
     if (readOnly || !file) return
@@ -177,6 +186,15 @@ function PayoutSetupModal({
       return
     }
     const trimmedAccountName = accountName.trim()
+    if (isVlinkpay) {
+      const vlinkpayError = getVlinkpayAddressValidationError(vlinkpayAddresses)
+      if (vlinkpayError) {
+        setError(t(`components.settings.tabs.ProfileTab.validation.${vlinkpayError}`))
+        return
+      }
+      onSubmit(serializeVlinkpayAddresses(vlinkpayAddresses), qrCode, trimmedAccountName, qrFile)
+      return
+    }
     if (requiresAccountName && !trimmedAccountName) {
       setAccountNameError(t('components.payout.accountNameField.required'))
       return
@@ -243,20 +261,24 @@ function PayoutSetupModal({
   }[walletKey] || { text: walletKey, color: 'text-slate-800', fontClass: 'font-bold' }
 
   const header = (
-    <div className="flex items-center gap-3.5 border-b border-slate-100 pb-3">
-      <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl border border-slate-100 bg-slate-50 shadow-sm">
+    <div className={`flex items-center gap-3 ${isVlinkpay ? '' : 'gap-3.5 border-b border-slate-100 pb-3'}`}>
+      <span className={`flex shrink-0 items-center justify-center border border-slate-100 shadow-sm ${isVlinkpay ? 'h-9 w-9 rounded-lg bg-white sm:h-10 sm:w-10' : 'h-11 w-11 rounded-xl bg-slate-50'}`}>
         {PayoutLogos[walletKey]}
       </span>
       <div className="min-w-0 flex-1">
-        <h3 className="text-sm font-black uppercase tracking-wider text-slate-800">
+        <h3 className={`font-sans font-black uppercase tracking-wider text-slate-800 ${isVlinkpay ? 'text-xs leading-4 sm:text-sm sm:leading-5' : 'text-sm'}`}>
           {isBankWire
             ? t('components.payout.bankWireForm.title')
-            : t('components.dashboard.modals.PayoutSetupModal.walletAccountTitle', {
-                wallet: walletName.toUpperCase(),
+            : isVlinkpay
+              ? t('components.dashboard.modals.PayoutSetupModal.vlinkpaySetupTitle')
+              : t('components.dashboard.modals.PayoutSetupModal.walletAccountTitle', {
+                wallet: walletNames[walletKey]?.toUpperCase(),
               })}
         </h3>
-        <p className="text-[10px] font-medium text-slate-400">
-          {t('components.dashboard.modals.PayoutSetupModal.specifyReceivingTargetIdentifier')}
+        <p className={`font-sans ${isVlinkpay ? 'mt-0.5 text-[10px] text-slate-500 sm:text-[11px]' : 'text-[10px] font-medium text-slate-400'}`}>
+          {isVlinkpay
+            ? t('components.dashboard.modals.PayoutSetupModal.vlinkpaySetupSubtitle')
+            : t('components.dashboard.modals.PayoutSetupModal.specifyReceivingTargetIdentifier')}
         </p>
       </div>
     </div>
@@ -278,122 +300,145 @@ function PayoutSetupModal({
       )}
       {!isBankWire && (
         <>
-          <PayoutAccountNameField
-            walletKey={walletKey}
-            value={accountName}
-            onChange={(nextValue) => {
-              setAccountName(nextValue)
-              setAccountNameError('')
-            }}
-            disabled={readOnly}
-            error={accountNameError}
-          />
-
-          <div>
-            <label className="mb-2 block text-[10px] font-extrabold uppercase tracking-wider text-slate-500">
-              {renderLabel(accountIdentifierLabel)}
-            </label>
-            <PayoutAccountIdentifierInput
-              walletKey={walletKey}
-              disabled={readOnly}
-              value={value}
-              hasError={Boolean(error)}
-              placeholder={walletPlaceholders[walletKey]}
-              onChange={(nextValue) => {
-                setValue(nextValue)
+          {isVlinkpay ? (
+            <VlinkpayWalletFields
+              addresses={vlinkpayAddresses}
+              onChange={(coin: VlinkpayCoinKey, nextValue: string) => {
+                setVlinkpayAddresses((prev) => ({ ...prev, [coin]: nextValue }))
                 setError('')
               }}
+              guideOpen={isGuideOpen}
+              onToggleGuide={() => setIsGuideOpen((prev) => !prev)}
+              disabled={readOnly}
+              error={error}
+              placeholder={walletPlaceholders.vlinkpay}
             />
-            {error && <p className="mt-1 text-[10px] font-bold text-rose-500">{error}</p>}
-          </div>
+          ) : (
+            <>
+              <PayoutAccountNameField
+                walletKey={walletKey}
+                value={accountName}
+                onChange={(nextValue) => {
+                  setAccountName(nextValue)
+                  setAccountNameError('')
+                }}
+                disabled={readOnly}
+                error={accountNameError}
+              />
 
-          <div>
-            <label className="mb-2 block text-[10px] font-extrabold uppercase tracking-wider text-slate-500">
-              {t('components.dashboard.modals.PayoutSetupModal.qrCodeOptional')}
-            </label>
-
-            {qrCode ? (
-              <div className="relative flex flex-col items-center rounded-xl border border-slate-200 bg-white p-4.5 shadow-sm">
-                {!readOnly && (
-                  <button
-                    type="button"
-                    onClick={handleClearQr}
-                    className="absolute right-2 top-2 rounded-full p-1 text-slate-400 transition hover:bg-slate-100 hover:text-slate-600"
-                    aria-label={t('common.delete')}
-                    title={t('common.delete')}
-                  >
-                    <X className="h-4 w-4" />
-                  </button>
-                )}
-                <div className="text-center">
-                  <div className="text-sm font-extrabold text-slate-800">{accountName}</div>
-                  <div className="mt-0.5 text-[10px] font-semibold text-slate-400">
-                    {formatPayoutPhoneDisplay(value) || value}
-                  </div>
-                </div>
-                <div className="my-3 flex h-28 w-28 items-center justify-center rounded-lg border border-slate-100 bg-white p-1">
-                  <img src={qrCode} alt="Payout QR Code" className="h-full w-full object-contain" />
-                </div>
-                <div className={`${brandStyles.color} ${brandStyles.fontClass}`}>
-                  {brandStyles.text}
-                </div>
-              </div>
-            ) : readOnly ? (
-              <div className="flex h-24 w-full flex-col items-center justify-center rounded-xl border border-slate-200 bg-slate-50 text-xs font-semibold text-slate-400">
-                {t('components.dashboard.modals.PayoutSetupModal.noQrCodeUploaded')}
-              </div>
-            ) : (
-              <div className="grid grid-cols-2 gap-3">
-                <button
-                  type="button"
-                  onClick={handleTakePhoto}
-                  className="flex flex-col items-center justify-center gap-1.5 rounded-xl border border-dashed border-slate-200 bg-slate-50 py-5 transition hover:border-nexoraBrand hover:bg-slate-50/50"
-                >
-                  <Camera className="h-5 w-5 text-nexoraBrand" />
-                  <span className="text-[11px] font-bold text-slate-600">{t('setup.take_photo')}</span>
-                </button>
-                <ImageFileInput
-                  as="label"
-                  className="flex cursor-pointer flex-col items-center justify-center gap-1.5 rounded-xl border border-dashed border-slate-200 bg-slate-50 py-5 transition hover:border-nexoraBrand hover:bg-slate-50/50"
-                  onPickFile={handleImageFilePick}
+              <div>
+                <label className="mb-2 block text-[10px] font-extrabold uppercase tracking-wider text-slate-500">
+                  {renderLabel(t('components.dashboard.modals.PayoutSetupModal.accountIdentifier'))}
+                </label>
+                <PayoutAccountIdentifierInput
+                  walletKey={walletKey}
                   disabled={readOnly}
-                >
-                  <FolderOpen className="h-5 w-5 text-nexoraBrand" />
-                  <span className="text-[11px] font-bold text-slate-600">{t('setup.choose_file')}</span>
-                </ImageFileInput>
+                  value={value}
+                  hasError={Boolean(error)}
+                  placeholder={walletPlaceholders[walletKey]}
+                  onChange={(nextValue) => {
+                    setValue(nextValue)
+                    setError('')
+                  }}
+                />
+                {error && <p className="mt-1 text-[10px] font-bold text-rose-500">{error}</p>}
               </div>
-            )}
-            {!qrCode && !readOnly && (
-              <p className="mt-2 text-[10px] leading-normal text-slate-400">
-                {t('setup.uploader_hint')}
-              </p>
-            )}
-            {uploadError ? (
-              <p className="mt-1 text-[10px] font-bold text-rose-500">{uploadError}</p>
-            ) : null}
-          </div>
+
+              <div>
+                <label className="mb-2 block text-[10px] font-extrabold uppercase tracking-wider text-slate-500">
+                  {t('components.dashboard.modals.PayoutSetupModal.qrCodeOptional')}
+                </label>
+
+                {qrCode ? (
+                  <div className="relative flex flex-col items-center rounded-xl border border-slate-200 bg-white p-4.5 shadow-sm">
+                    {!readOnly && (
+                      <button
+                        type="button"
+                        onClick={handleClearQr}
+                        className="absolute right-2 top-2 rounded-full p-1 text-slate-400 transition hover:bg-slate-100 hover:text-slate-600"
+                        aria-label={t('common.delete')}
+                        title={t('common.delete')}
+                      >
+                        <X className="h-4 w-4" />
+                      </button>
+                    )}
+                    <div className="text-center">
+                      <div className="text-sm font-extrabold text-slate-800">{accountName}</div>
+                      <div className="mt-0.5 text-[10px] font-semibold text-slate-400">
+                        {formatPayoutPhoneDisplay(value) || value}
+                      </div>
+                    </div>
+                    <div className="my-3 flex h-28 w-28 items-center justify-center rounded-lg border border-slate-100 bg-white p-1">
+                      <img src={qrCode} alt="Payout QR Code" className="h-full w-full object-contain" />
+                    </div>
+                    <div className={`${brandStyles.color} ${brandStyles.fontClass}`}>
+                      {brandStyles.text}
+                    </div>
+                  </div>
+                ) : readOnly ? (
+                  <div className="flex h-24 w-full flex-col items-center justify-center rounded-xl border border-slate-200 bg-slate-50 text-xs font-semibold text-slate-400">
+                    {t('components.dashboard.modals.PayoutSetupModal.noQrCodeUploaded')}
+                  </div>
+                ) : (
+                  <div className="grid grid-cols-2 gap-3">
+                    <button
+                      type="button"
+                      onClick={handleTakePhoto}
+                      disabled={isCapturing}
+                      className="flex flex-col items-center justify-center gap-1.5 rounded-xl border border-dashed border-slate-200 bg-slate-50 py-5 transition hover:border-nexoraBrand hover:bg-slate-50/50 disabled:opacity-60"
+                    >
+                      <Camera className="h-5 w-5 text-nexoraBrand" />
+                      <span className="text-[11px] font-bold text-slate-600">{t('setup.take_photo')}</span>
+                    </button>
+                    <ImageFileInput
+                      as="label"
+                      className="flex cursor-pointer flex-col items-center justify-center gap-1.5 rounded-xl border border-dashed border-slate-200 bg-slate-50 py-5 transition hover:border-nexoraBrand hover:bg-slate-50/50"
+                      onPickFile={handleImageFilePick}
+                      disabled={readOnly}
+                    >
+                      <FolderOpen className="h-5 w-5 text-nexoraBrand" />
+                      <span className="text-[11px] font-bold text-slate-600">{t('setup.choose_file')}</span>
+                    </ImageFileInput>
+                  </div>
+                )}
+                {!qrCode && !readOnly && (
+                  <p className="mt-2 text-[10px] leading-normal text-slate-400">
+                    {t('setup.uploader_hint')}
+                  </p>
+                )}
+                {uploadError ? (
+                  <p className="mt-1 text-[10px] font-bold text-rose-500">{uploadError}</p>
+                ) : null}
+              </div>
+            </>
+          )}
         </>
       )}
 
-      <div className="flex gap-2 rounded-lg border border-blue-100 bg-blue-50/50 p-3 text-[10.5px] leading-relaxed text-blue-800">
-        <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0 text-blue-500" />
-        <span>
-          {readOnly
-            ? t('components.dashboard.modals.PayoutSetupModal.thisInformationWasEntered')
-            : isBankWire
-              ? t('components.payout.bankWireForm.warning')
-              : t('setup.payout_warning')}
-        </span>
-      </div>
+      {!isVlinkpay && (
+        <div className="flex gap-2 rounded-lg border border-blue-100 bg-blue-50/50 p-3 text-[10.5px] leading-relaxed text-blue-800">
+          <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0 text-blue-500" />
+          <span>
+            {readOnly
+              ? t('components.dashboard.modals.PayoutSetupModal.thisInformationWasEntered')
+              : isBankWire
+                ? t('components.payout.bankWireForm.warning')
+                : t('setup.payout_warning')}
+          </span>
+        </div>
+      )}
     </div>
   )
 
   const footer = (
-    <div className="flex justify-end gap-2.5 border-t border-slate-100 pt-2.5">
+    <div className={`flex justify-end gap-2.5 ${isVlinkpay ? 'pt-1' : 'border-t border-slate-100 pt-2.5'}`}>
       <button
         type="button"
         onClick={onClose}
-        className={`rounded-lg border border-slate-200 px-5 py-2.5 text-xs font-bold uppercase tracking-wider text-slate-500 transition hover:bg-slate-50 ${
+        disabled={isSaving}
+        className={`rounded-lg border border-slate-200 px-5 py-2.5 text-xs font-bold uppercase tracking-wider transition disabled:cursor-not-allowed disabled:opacity-60 ${
+          isVlinkpay ? 'min-w-[60px] text-slate-500 hover:bg-slate-50' : 'text-slate-500 hover:bg-slate-50'
+        } ${
           readOnly ? 'w-full text-center' : ''
         }`}
       >
@@ -404,29 +449,49 @@ function PayoutSetupModal({
           type="button"
           onClick={handleSubmit}
           disabled={isSaving || Boolean(uploadError)}
-          className="rounded-lg bg-amber-600 px-5 py-2.5 text-xs font-bold uppercase tracking-wider text-white shadow-sm transition hover:bg-amber-700 disabled:cursor-not-allowed disabled:opacity-60"
+          aria-busy={isSaving}
+          className={`inline-flex items-center justify-center gap-1.5 rounded-lg px-5 py-2.5 text-xs font-bold uppercase tracking-wider text-white shadow-sm transition disabled:cursor-not-allowed disabled:opacity-60 ${
+            isVlinkpay
+              ? 'min-w-[62px] bg-[#ff8a00] hover:bg-[#f07f00]'
+              : 'bg-amber-600 hover:bg-amber-700'
+          }`}
         >
-          {t(isBankWire ? 'common.update' : 'components.dashboard.modals.PayoutSetupModal.save')}
+          {isSaving ? (
+            <>
+              <Loader2 className="h-3.5 w-3.5 shrink-0 animate-spin" aria-hidden="true" />
+              <span>{t('common.saving')}</span>
+            </>
+          ) : (
+            t(isBankWire ? 'common.update' : 'components.dashboard.modals.PayoutSetupModal.save')
+          )}
         </button>
       )}
     </div>
   )
 
-  const panelClass = `relative w-full max-h-[calc(100dvh-1rem)] rounded-3xl border border-slate-100 bg-white shadow-2xl animate-scaleUp ${
+  const panelClass = `relative w-full rounded-3xl border border-slate-100 bg-white font-sans shadow-2xl animate-scaleUp ${
     isCameraOpen
-      ? 'h-[min(480px,calc(100dvh-1rem))] max-w-sm overflow-hidden'
-      : `overflow-x-hidden overflow-y-auto space-y-3 p-4 sm:space-y-4.5 sm:p-6 ${isBankWire ? 'max-w-md' : 'max-w-sm'}`
+      ? 'h-[480px] max-w-sm overflow-hidden'
+      : isVlinkpay
+        ? 'payout-setup-modal-scroll flex flex-col gap-3 p-3.5 max-w-[420px] rounded-[18px] sm:gap-3.5 sm:p-4'
+        : `overflow-hidden space-y-4.5 p-6 ${isBankWire ? 'max-w-md' : 'max-w-sm'}`
   }`
 
   const overlayClass = lockBackground
-    ? 'fixed inset-0 z-[100] flex h-dvh items-center justify-center overflow-hidden bg-slate-900/60 p-2 modal-overlay-safe text-left backdrop-blur-sm sm:p-4'
-    : 'fixed inset-0 z-[60] flex h-dvh items-center justify-center overflow-hidden bg-slate-900/60 p-2 modal-overlay-safe text-left backdrop-blur-sm sm:p-4'
+    ? 'fixed inset-0 z-[100] flex h-dvh items-center justify-center overflow-hidden bg-slate-900/60 modal-overlay-safe text-left backdrop-blur-sm'
+    : 'fixed inset-0 z-[60] flex items-center justify-center bg-slate-900/60 modal-overlay-safe text-left backdrop-blur-sm'
 
   const modal = (
     <div className={overlayClass}>
       <div data-testid="payout-setup-modal" className={panelClass}>
         {header}
-        {body}
+        {/* VLINKPAY's guide can expand past the viewport on mobile — only the
+            body scrolls so the header/footer (incl. the Save button) stay pinned. */}
+        {isVlinkpay ? (
+          <div className="min-h-0 flex-1 overflow-y-auto">{body}</div>
+        ) : (
+          body
+        )}
         {footer}
         {isCameraOpen && (
           <CameraCapture

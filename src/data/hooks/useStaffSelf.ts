@@ -11,6 +11,11 @@ import {
 } from '@tanstack/react-query'
 import { qk } from '../queryKeys'
 import staffSelfRepository from '../repositories/staffSelf'
+import type {
+  WorkSkillCategory,
+  WorkSkillService,
+  WorkSkillSaveResult,
+} from '../repositories/staffSelf'
 import { useSessionRole } from '../../auth/useSessionRole'
 import { useNotification } from '../../contexts/NotificationContext'
 import { useTranslation } from '../../contexts/LanguageContext'
@@ -357,6 +362,46 @@ export function useUnlinkStaffBusiness() {
       // query (see useStaffBusinessTipQrs above), so invalidating this one key
       // refreshes both the salon list and the tip QR list.
       void queryClient.invalidateQueries({ queryKey: qk.staffBusinesses() })
+    },
+  })
+}
+
+// ── Work Skill (US-18) ──
+
+export function useStaffWorkSkillCategories(businessId: string | undefined) {
+  const { isStaff } = useSessionRole()
+  return useQuery<WorkSkillCategory[]>({
+    queryKey: qk.staffWorkSkillCategories(businessId!),
+    queryFn: () => staffSelfRepository.getWorkSkillCategories(businessId!),
+    enabled: isStaff && !!businessId,
+  })
+}
+
+export function useStaffWorkSkillServices(businessId: string | undefined) {
+  const { isStaff } = useSessionRole()
+  return useQuery<WorkSkillService[]>({
+    queryKey: qk.staffWorkSkillServices(businessId!),
+    queryFn: () => staffSelfRepository.getWorkSkillServices(businessId!),
+    enabled: isStaff && !!businessId,
+  })
+}
+
+export function useStaffWorkSkillAssignments(businessId: string | undefined) {
+  const { isStaff } = useSessionRole()
+  return useQuery<string[]>({
+    queryKey: qk.staffWorkSkillAssignments(businessId!),
+    queryFn: () => staffSelfRepository.getWorkSkillAssignments(businessId!),
+    enabled: isStaff && !!businessId,
+  })
+}
+
+export function useSaveStaffWorkSkillAssignments() {
+  const queryClient = useQueryClient()
+  return useMutation<WorkSkillSaveResult, unknown, { businessId: string; posServiceIds: string[] }>({
+    mutationFn: ({ businessId, posServiceIds }) =>
+      staffSelfRepository.saveWorkSkillAssignments(businessId, posServiceIds),
+    onSuccess: (_data, { businessId }) => {
+      void queryClient.invalidateQueries({ queryKey: qk.staffWorkSkillAssignments(businessId) })
     },
   })
 }

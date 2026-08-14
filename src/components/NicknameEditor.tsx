@@ -28,7 +28,7 @@ interface NicknameEditorProps {
   helperText: string
   onRefresh: () => Promise<string | null>
   onSave: (nickname: string | null) => Promise<NicknameEditorSaveResult>
-  triggerVariant?: 'text' | 'icon'
+  triggerVariant?: 'text' | 'icon' | 'outline-brand' | 'solid'
   containerClassName?: string
   stopPropagation?: boolean
 }
@@ -286,9 +286,13 @@ export default function NicknameEditor({
     if (stopPropagation) event.stopPropagation()
   }
 
-  const triggerClassName = triggerVariant === 'icon'
-    ? 'inline-flex h-11 w-11 shrink-0 items-center justify-center rounded-lg text-nexoraBrand transition hover:bg-nexoraBrandSoft focus:outline-none focus:ring-2 focus:ring-nexoraBrand/30'
-    : 'inline-flex h-10 items-center justify-center gap-2 rounded-lg border border-nexoraBorder bg-white px-4 text-xs font-bold text-nexoraText shadow-sm transition hover:bg-nexoraSurfaceMuted focus:outline-none focus:ring-2 focus:ring-nexoraBrand/30'
+  const triggerClassMap: Record<string, string> = {
+    icon: 'inline-flex h-11 w-11 shrink-0 items-center justify-center rounded-lg text-nexoraBrand transition hover:bg-nexoraBrandSoft focus:outline-none focus:ring-2 focus:ring-nexoraBrand/30',
+    text: 'inline-flex h-10 items-center justify-center gap-2 rounded-lg border border-nexoraBorder bg-white px-4 text-xs font-bold text-nexoraText shadow-sm transition hover:bg-nexoraSurfaceMuted focus:outline-none focus:ring-2 focus:ring-nexoraBrand/30',
+    'outline-brand': 'inline-flex h-[38px] items-center justify-center gap-1.5 rounded-[10px] border border-nexoraBrand bg-white px-4 text-[13px] font-bold text-nexoraBrand transition hover:bg-nexoraBrand/5 focus:outline-none focus:ring-2 focus:ring-nexoraBrand/30',
+    solid: 'inline-flex h-[38px] items-center justify-center gap-1.5 rounded-[10px] border border-transparent bg-nexoraBrand px-4 text-[13px] font-bold text-white shadow-md transition hover:bg-nexoraBrand/90 hover:-translate-y-px focus:outline-none focus:ring-2 focus:ring-nexoraBrand/30',
+  }
+  const triggerClassName = triggerClassMap[triggerVariant] || triggerClassMap.text
 
   const trigger = (
     <button
@@ -312,10 +316,7 @@ export default function NicknameEditor({
           <Pencil className='h-4 w-4' aria-hidden='true' />
         </span>
       ) : (
-        <>
-          <Pencil className='h-4 w-4 text-nexoraBrand' aria-hidden='true' />
-          <span>{triggerLabel}</span>
-        </>
+        <span>{triggerLabel}</span>
       )}
     </button>
   )

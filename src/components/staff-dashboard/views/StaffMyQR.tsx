@@ -17,6 +17,8 @@ import { shareUrl } from '../../../utils/shareUrl'
 import { buildQrImageUrl, resolveStaffDirectPaymentPageUrl } from '../../../utils/staffTipUrl'
 import { useStaffPaymentQr } from '../../../data/hooks/useStaffPayments'
 import { useStaffPaymentMethods } from '../../../data/hooks/useStaffPaymentMethods'
+import { isPaymentMethodConfigured } from '../../../data/paymentMethodTypes'
+import { formatPaymentMethodAccountDisplay } from '../../payout/bankWireAccount'
 import { SkeletonLayout } from '../../ui/skeleton'
 import QrImage from '../../ui/QrImage'
 
@@ -322,7 +324,7 @@ export default function StaffMyQR() {
   const readyStaffPaymentMethods = useMemo(
     () =>
       staffPaymentMethods.filter(
-        (method) => Boolean(method.isActive && method.isConfigured && method.accountInfo?.trim()),
+        (method) => Boolean(method.isActive && isPaymentMethodConfigured(method)),
       ),
     [staffPaymentMethods],
   )
@@ -1157,7 +1159,13 @@ export default function StaffMyQR() {
                       </span>
                       <div className="min-w-0 text-left">
                         <p className="truncate text-[12px] font-semibold text-nexoraText">{label}</p>
-                        <p className="truncate text-[10px] font-medium text-nexoraMuted">{method.accountInfo}</p>
+                        <p className="truncate text-[10px] font-medium text-nexoraMuted">
+                          {formatPaymentMethodAccountDisplay(
+                            method.uiKey || '',
+                            method.accountInfo,
+                            method.cryptoAddresses,
+                          )}
+                        </p>
                       </div>
                       <span className="inline-flex items-center gap-1 rounded-full bg-nexoraSuccess/10 px-2 py-1 text-[10px] font-semibold text-nexoraSuccess">
                         <BadgeCheck className="h-3 w-3" />

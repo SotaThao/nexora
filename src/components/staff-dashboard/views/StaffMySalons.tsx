@@ -1,5 +1,5 @@
-import { useMemo, useState } from 'react'
-import { Loader2 } from 'lucide-react'
+import { useCallback, useEffect, useMemo, useState } from 'react'
+import { ChevronDown, Loader2, X } from 'lucide-react'
 import { useNavigate } from 'react-router-dom'
 import { useTranslation } from '../../../contexts/LanguageContext'
 import { useNotification } from '../../../contexts/NotificationContext'
@@ -9,8 +9,11 @@ import {
   useStaffLinkRequestsList,
   useStaffProfile,
   useUnlinkStaffBusiness,
+  useStaffWorkSkillCategories,
+  useStaffWorkSkillServices,
+  useStaffWorkSkillAssignments,
+  useSaveStaffWorkSkillAssignments,
 } from '../../../data/hooks/useStaffSelf'
-import { usePosAccess } from '../../../data/hooks/usePosAccess'
 import errorCodeToI18nKey from '../../../data/errorCodes'
 import { isApiError } from '../../../types/domain'
 import type { StaffBusinessLink } from '../../../types/domain'
@@ -30,6 +33,7 @@ import {
 import Tooltip from '../../ui/Tooltip'
 import NicknameEditor, { type NicknameEditorSaveResult } from '../../NicknameEditor'
 import StaffLinkRequestCard from './StaffLinkRequestCard'
+import type { WorkSkillCategory, WorkSkillService } from '../../../data/repositories/staffSelf'
 
 function getSalonStatusHelp(
   statusLabel: string,
@@ -69,6 +73,324 @@ function getSalonStatusHelp(
   return t('staff_salons.status_help.default')
 }
 
+interface SkillCatalogGroup {
+  key: string
+  label: string
+  services: { id: string; name: string }[]
+}
+
+function buildSkillCatalog(
+  t: TFunction,
+  categories: WorkSkillCategory[],
+  services: WorkSkillService[],
+): SkillCatalogGroup[] {
+  const catMap = new Map<string, SkillCatalogGroup>()
+  for (const cat of categories) {
+    catMap.set(cat.id, { key: cat.id, label: cat.name, services: [] })
+  }
+  const uncategorized: { id: string; name: string }[] = []
+  for (const svc of services) {
+    let placed = false
+    for (const catId of svc.categoryIds ?? []) {
+      const group = catMap.get(catId)
+      if (group) { group.services.push({ id: svc.id, name: svc.name }); placed = true }
+    }
+    if (!placed) uncategorized.push({ id: svc.id, name: svc.name })
+  }
+  const result = [...catMap.values()].filter((g) => g.services.length > 0)
+  if (uncategorized.length > 0) {
+    result.push({ key: '__uncategorized__', label: t('staff_salons.skill_other'), services: uncategorized })
+  }
+  return result
+}
+
+function SkillTreeSkeleton() {
+  return (
+    <div className="animate-pulse space-y-2">
+      {[1, 2, 3].map((i) => (
+        <div key={i} className="rounded-[10px] border border-nexoraBorder/50 bg-white p-2.5">
+          <div className="h-3 w-1/3 rounded bg-nexoraBorder/40" />
+          <div className="mt-2 grid grid-cols-2 gap-1.5">
+            {[1, 2, 3, 4].map((j) => (
+              <div key={j} className="h-[34px] rounded-[9px] bg-nexoraBorder/30" />
+            ))}
+          </div>
+        </div>
+      ))}
+    </div>
+  )
+}
+
+function EditWorkSkillModal({
+  open,
+  onClose,
+  businessId,
+  salonName,
+  t,
+}: {
+  open: boolean
+  onClose: () => void
+  businessId: string
+  salonName: string
+  t: TFunction
+}) {
+  const { showToast } = useNotification()
+  const categoriesQuery = useStaffWorkSkillCategories(open ? businessId : undefined)
+  const servicesQuery = useStaffWorkSkillServices(open ? businessId : undefined)
+  const assignmentsQuery = useStaffWorkSkillAssignments(open ? businessId : undefined)
+  const saveMutation = useSaveStaffWorkSkillAssignments()
+
+  const isLoading = categoriesQuery.isPending || servicesQuery.isPending || assignmentsQuery.isPending
+  const isError = categoriesQuery.isError || servicesQuery.isError || assignmentsQuery.isError
+  const catalog = useMemo(() => {
+    if (!categoriesQuery.data || !servicesQuery.data) return []
+    return buildSkillCatalog(t, categoriesQuery.data, servicesQuery.data)
+  }, [categoriesQuery.data, servicesQuery.data, t])
+  const totalServices = useMemo(() => catalog.reduce((sum, g) => sum + g.services.length, 0), [catalog])
+  const isEmpty = !isLoading && !isError && totalServices === 0
+
+  const [selected, setSelected] = useState<Set<string>>(new Set())
+  const [openGroups, setOpenGroups] = useState<Set<string>>(new Set())
+  const [initialized, setInitialized] = useState(false)
+
+  // Sync selection from API once data loads (effect avoids setState-during-render)
+  useEffect(() => {
+    if (!initialized && assignmentsQuery.data && catalog.length > 0) {
+      setSelected(new Set(assignmentsQuery.data))
+      setOpenGroups(new Set())
+      setInitialized(true)
+    }
+  }, [initialized, assignmentsQuery.data, catalog.length])
+
+  // Reset state when modal closes
+  const handleClose = useCallback(() => {
+    setInitialized(false)
+    onClose()
+  }, [onClose])
+
+  const toggleService = useCallback((id: string) => {
+    setSelected((prev) => {
+      const next = new Set(prev)
+      if (next.has(id)) next.delete(id)
+      else next.add(id)
+      return next
+    })
+  }, [])
+
+  const toggleCategory = useCallback((catKey: string, checked: boolean) => {
+    const cat = catalog.find((c) => c.key === catKey)
+    if (!cat) return
+    setSelected((prev) => {
+      const next = new Set(prev)
+      for (const s of cat.services) {
+        if (checked) next.add(s.id)
+        else next.delete(s.id)
+      }
+      return next
+    })
+  }, [catalog])
+
+  const toggleAll = useCallback((checked: boolean) => {
+    if (checked) {
+      setSelected(new Set(catalog.flatMap((c) => c.services.map((s) => s.id))))
+    } else {
+      setSelected(new Set())
+    }
+  }, [catalog])
+
+  const toggleGroup = useCallback((key: string) => {
+    setOpenGroups((prev) => {
+      const next = new Set(prev)
+      if (next.has(key)) next.delete(key)
+      else next.add(key)
+      return next
+    })
+  }, [])
+
+  const handleSave = useCallback(() => {
+    saveMutation.mutate(
+      { businessId, posServiceIds: Array.from(selected) },
+      {
+        onSuccess: () => {
+          showToast(t('staff_salons.skill_save_success'), 'success')
+          handleClose()
+        },
+        onError: (err) => {
+          const apiErr = isApiError(err) ? err : null
+          const errorCode = apiErr?.errorCode
+          const mappedKey = errorCode && Object.prototype.hasOwnProperty.call(errorCodeToI18nKey, errorCode)
+            ? errorCodeToI18nKey[errorCode as keyof typeof errorCodeToI18nKey]
+            : null
+          const message = mappedKey ? t(mappedKey) : t('staff_salons.skill_save_error')
+          showToast(message, 'error')
+        },
+      },
+    )
+  }, [businessId, selected, saveMutation, showToast, t, handleClose])
+
+  const allChecked = totalServices > 0 && selected.size === totalServices
+  const anyChecked = selected.size > 0
+
+  if (!open) return null
+
+  return (
+    <div
+      className="fixed inset-0 z-[1000] flex items-center justify-center bg-slate-900/55 p-5"
+      role="presentation"
+    >
+      <div
+        className="flex w-full max-w-[420px] flex-col rounded-[20px] bg-white shadow-2xl"
+        style={{ maxHeight: 'calc(100vh - 40px)' }}
+        role="dialog"
+        aria-modal="true"
+        aria-label={`${t('staff_salons.edit_work_skill')} — ${salonName}`}
+      >
+        {/* Header */}
+        <div className="flex items-center justify-between gap-3 px-6 pb-0 pt-6">
+          <h2 className="text-lg font-extrabold text-nexoraText">{t('staff_salons.edit_work_skill')}</h2>
+          <button
+            type="button"
+            onClick={handleClose}
+            className="inline-flex h-7 w-7 shrink-0 items-center justify-center rounded-lg text-nexoraSubtle transition hover:bg-nexoraSurfaceMuted hover:text-nexoraText"
+            aria-label="Close"
+          >
+            <X className="h-4 w-4" />
+          </button>
+        </div>
+
+        <div className="mx-6 my-4 h-px bg-nexoraBorder/60" />
+
+        {/* Skill tree */}
+        <div className="flex-1 overflow-y-auto px-6" style={{ maxHeight: 340 }}>
+          {isLoading ? (
+            <SkillTreeSkeleton />
+          ) : isError ? (
+            <div className="rounded-[9px] border border-dashed border-nexoraBorder bg-white px-3.5 py-4 text-center text-xs font-bold text-nexoraDanger">
+              {t('staff_salons.skill_error')}
+            </div>
+          ) : isEmpty ? (
+            <div className="rounded-[9px] border border-dashed border-nexoraBorder bg-white px-3.5 py-4 text-center text-xs font-bold text-nexoraMuted">
+              {t('staff_salons.skill_empty')}
+            </div>
+          ) : (
+            <>
+              {/* Select all toolbar */}
+              <button
+                type="button"
+                onClick={() => toggleAll(!allChecked)}
+                className="mb-2 flex w-full cursor-pointer items-center justify-between gap-2 rounded-[9px] border border-nexoraBrand/28 bg-nexoraBrand/5 px-2.5 py-2 text-[11px] font-black text-nexoraText"
+              >
+                <span className="inline-flex items-center gap-1.5 whitespace-nowrap">
+                  <input
+                    type="checkbox"
+                    className="pointer-events-none h-3.5 w-3.5 accent-nexoraBrand"
+                    checked={allChecked}
+                    ref={(el) => { if (el) el.indeterminate = !allChecked && anyChecked }}
+                    readOnly
+                  />
+                  <span>{t('staff_salons.skill_select_all')}</span>
+                </span>
+                <span className="shrink-0 rounded-full bg-[#e9edff] px-1.5 py-0.5 text-[10px] font-extrabold text-nexoraBrand">
+                  {totalServices}
+                </span>
+              </button>
+
+              {/* Category groups */}
+              {catalog.map((cat) => {
+                const catCheckedCount = cat.services.filter((s) => selected.has(s.id)).length
+                const catAllChecked = catCheckedCount === cat.services.length
+                const catPartial = catCheckedCount > 0 && !catAllChecked
+                const isOpen = openGroups.has(cat.key)
+
+                return (
+                  <div key={cat.key} className="mb-2 overflow-hidden rounded-[10px] border border-nexoraBorder bg-white last:mb-0">
+                    <button
+                      type="button"
+                      onClick={() => toggleGroup(cat.key)}
+                      className="flex w-full items-center gap-2 bg-[#f8faff] px-2.5 py-2"
+                    >
+                      <input
+                        type="checkbox"
+                        className="h-3.5 w-3.5 shrink-0 accent-nexoraBrand"
+                        checked={catAllChecked}
+                        ref={(el) => { if (el) el.indeterminate = catPartial }}
+                        onClick={(e) => e.stopPropagation()}
+                        onChange={(e) => toggleCategory(cat.key, e.target.checked)}
+                      />
+                      <span className="min-w-0 truncate text-[10px] font-black uppercase tracking-wider text-nexoraText">
+                        {cat.label}
+                      </span>
+                      <span className="shrink-0 rounded-full bg-[#e9edff] px-1.5 py-0.5 text-[10px] font-extrabold text-nexoraBrand">
+                        {cat.services.length}
+                      </span>
+                      <ChevronDown
+                        className={`ml-auto h-3.5 w-3.5 shrink-0 text-nexoraSubtle transition-transform duration-150 ${isOpen ? '' : '-rotate-90'}`}
+                      />
+                    </button>
+
+                    <div
+                      className="overflow-hidden transition-[grid-template-rows] duration-200 ease-in-out"
+                      style={{ display: 'grid', gridTemplateRows: isOpen ? '1fr' : '0fr' }}
+                    >
+                      <div className="min-h-0">
+                        <div className="grid grid-cols-[repeat(auto-fit,minmax(150px,1fr))] gap-1.5 border-t border-nexoraBorder/50 p-2">
+                          {cat.services.map((service) => {
+                            const checked = selected.has(service.id)
+                            return (
+                              <label
+                                key={service.id}
+                                className={`flex min-h-[34px] cursor-pointer items-center gap-1.5 rounded-[9px] border px-2 py-1.5 text-[11px] font-bold transition ${
+                                  checked
+                                    ? 'border-nexoraBrand/40 bg-nexoraBrand/[.07] text-nexoraText'
+                                    : 'border-nexoraBorder bg-white text-nexoraMuted'
+                                }`}
+                              >
+                                <input
+                                  type="checkbox"
+                                  className="h-3.5 w-3.5 shrink-0 accent-nexoraBrand"
+                                  checked={checked}
+                                  onChange={() => toggleService(service.id)}
+                                />
+                                <span>{service.name}</span>
+                              </label>
+                            )
+                          })}
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                )
+              })}
+            </>
+          )}
+        </div>
+
+        <div className="mx-6 my-4 h-px bg-nexoraBorder/60" />
+
+        {/* Footer */}
+        <div className="flex items-center justify-end gap-2.5 px-6 pb-6">
+          <button
+            type="button"
+            onClick={handleClose}
+            className="inline-flex h-10 items-center justify-center rounded-[10px] border border-nexoraBorder bg-white px-5 text-[13px] font-bold text-nexoraMuted transition hover:bg-nexoraSurfaceMuted hover:text-nexoraText"
+          >
+            {t('staff_salons.skill_cancel')}
+          </button>
+          <button
+            type="button"
+            onClick={handleSave}
+            disabled={saveMutation.isPending || isLoading || isEmpty}
+            className="inline-flex h-10 items-center justify-center gap-1.5 rounded-[10px] border border-transparent bg-nexoraBrand px-5 text-[13px] font-bold text-white shadow-md transition hover:bg-nexoraBrand/90 hover:-translate-y-px disabled:cursor-not-allowed disabled:opacity-60"
+          >
+            {saveMutation.isPending && <Loader2 className="h-3.5 w-3.5 animate-spin" />}
+            {t('staff_salons.skill_save')}
+          </button>
+        </div>
+      </div>
+    </div>
+  )
+}
+
 function SalonCard({
   business,
   index,
@@ -90,7 +412,6 @@ function SalonCard({
   onUnlink?: () => void
   isUnlinking?: boolean
 }) {
-  const navigate = useNavigate()
   const statusLabel = resolveStaffBusinessLinkStatusLabel(business)
   const status = getSalonDisplayStatus(business, t)
   const statusHelp = getSalonStatusHelp(statusLabel, t)
@@ -102,81 +423,66 @@ function SalonCard({
   const nicknameDisplayValue = nicknameValue || t('staff_salons.nickname_not_set')
   const canUnlink = isActive && typeof onUnlink === 'function'
 
-  // Only worth checking Operations access for a link the Staff can actually act
-  // on (Active); pending/rejected/inactive links keep the old tipping-page tap target.
-  const isActiveLink = statusLabel.trim().toLowerCase() === STAFF_BUSINESS_LINK_STATUS.active
-  const { data: access } = usePosAccess(isActiveLink ? business.businessId : undefined)
-
-  const onOpen = () => {
-    if (isActiveLink && access?.canManageOperations) {
-      navigate(`/staff/salons/${business.businessId}/front-desk`)
-      return
-    }
-    navigate('/staff/qr?tab=tipping')
-  }
-
   return (
-    <div className="w-full rounded-2xl border border-nexoraBorder/80 bg-white p-4 text-left shadow-sm">
+    <div className="w-full rounded-2xl border border-nexoraBorder/80 bg-white p-4 text-left shadow-sm transition hover:border-nexoraBrand/20 hover:shadow-md">
       <div className="flex w-full gap-3 text-left">
-      {business.logoUrl ? (
-        <img
-          src={business.logoUrl}
-          alt=""
-          className="h-12 w-12 shrink-0 rounded-full object-cover"
-        />
-      ) : (
-        <span
-          className={`grid h-12 w-12 shrink-0 place-items-center rounded-full text-xs font-extrabold ${getSalonAvatarClass(index)}`}
-        >
-          {initials}
-        </span>
-      )}
-
-      <div className="flex min-w-0 flex-1 flex-col gap-1">
-        <div className="flex items-start justify-between gap-2">
-          <h3 className="truncate text-sm font-extrabold tracking-wide text-nexoraText">
-            {business.businessName}
-          </h3>
-          <span className="flex shrink-0 items-center gap-1">
-            <span className={`rounded-full px-2.5 py-0.5 text-[10px] font-bold ${status.className}`}>
-              {status.label}
-            </span>
-            <Tooltip
-              content={statusHelp}
-              ariaLabel={t('staff_salons.status_help_aria')}
-              align="end"
-              placement="top"
-            />
+        {business.logoUrl ? (
+          <img
+            src={business.logoUrl}
+            alt=""
+            className="h-12 w-12 shrink-0 rounded-full object-cover"
+          />
+        ) : (
+          <span
+            className={`grid h-12 w-12 shrink-0 place-items-center rounded-full text-xs font-extrabold ${getSalonAvatarClass(index)}`}
+          >
+            {initials}
           </span>
-        </div>
-        <p className="truncate text-xs font-medium text-nexoraMuted">{location}</p>
-        <div className="flex items-center justify-between gap-2 pt-0.5">
-          {canUnlink ? (
-            <button
-              type="button"
-              onClick={(event) => {
-                event.stopPropagation()
-                onUnlink?.()
-              }}
-              onKeyDown={(event) => event.stopPropagation()}
-              onKeyUp={(event) => event.stopPropagation()}
-              disabled={isUnlinking}
-              className="shrink-0 rounded-lg border border-nexoraDanger/25 bg-white px-2.5 py-1 text-[10px] font-extrabold uppercase tracking-wide text-nexoraDanger transition hover:bg-nexoraDanger/5 disabled:cursor-not-allowed disabled:opacity-60"
-            >
-              {t('staff_salons.unlink_button')}
-            </button>
-          ) : (
-            <span />
-          )}
-          {timeline ? (
-            <p className="text-right text-[11px] font-semibold text-nexoraMuted">{timeline}</p>
+        )}
+
+        <div className="flex min-w-0 flex-1 flex-col gap-1">
+          <div className="flex items-start justify-between gap-2">
+            <h3 className="truncate text-sm font-extrabold uppercase tracking-wide text-nexoraText">
+              {business.businessName}
+            </h3>
+            <span className="flex shrink-0 items-center gap-1">
+              <span className={`rounded-full px-2.5 py-0.5 text-[10px] font-bold ${status.className}`}>
+                {status.label}
+              </span>
+              <Tooltip
+                content={statusHelp}
+                ariaLabel={t('staff_salons.status_help_aria')}
+                align="end"
+                placement="top"
+              />
+            </span>
+          </div>
+          {location ? (
+            <p className="truncate text-xs font-medium text-nexoraMuted">{location}</p>
           ) : null}
+          <div className="flex items-center justify-between gap-2 pt-0.5">
+            {canUnlink ? (
+              <button
+                type="button"
+                onClick={() => onUnlink?.()}
+                disabled={isUnlinking}
+                className="shrink-0 rounded-lg border border-nexoraDanger/25 bg-white px-2.5 py-1 text-[10px] font-extrabold uppercase tracking-wide text-nexoraDanger transition hover:bg-nexoraDanger/5 disabled:cursor-not-allowed disabled:opacity-60"
+              >
+                {t('staff_salons.unlink_button')}
+              </button>
+            ) : (
+              <span />
+            )}
+            {timeline ? (
+              <p className="text-right text-[11px] font-semibold text-nexoraMuted">{timeline}</p>
+            ) : null}
+          </div>
         </div>
       </div>
-      </div>
+
       {isActive ? (
         <div className="mt-2 flex min-w-0 items-center gap-2">
-          <div className="flex min-w-0 flex-1 items-center gap-2 rounded-lg py-1 text-left">
+          <div className="flex min-w-0 flex-1 items-center gap-2 py-1">
             <span className="shrink-0 rounded-full border border-dashed border-nexoraLavender bg-nexoraBrandSoft px-2 py-0.5 text-[10px] font-extrabold uppercase text-nexoraBrand">
               {t('staff_salons.nickname_badge')}
             </span>
@@ -198,6 +504,7 @@ function SalonCard({
             onSave={onSaveNickname}
             triggerVariant="icon"
             containerClassName="shrink-0"
+            stopPropagation
           />
         </div>
       ) : null}
@@ -214,7 +521,7 @@ export default function StaffMySalons() {
   const { data: pendingLinkRequests = [] } = useStaffLinkRequestsList()
   const unlinkBusiness = useUnlinkStaffBusiness()
   const [unlinkError, setUnlinkError] = useState<{ title: string; message: string } | null>(null)
-  const { data: businesses = [], isPending, isFetching, refetch: refetchBusinesses } = useStaffBusinesses()
+  const { data: businesses = [], isPending, refetch: refetchBusinesses } = useStaffBusinesses()
   const salons = useMemo(() => {
     const visibleBusinesses = businesses.filter((business) => {
       const statusLabel = resolveStaffBusinessLinkStatusLabel(business).trim().toLowerCase()

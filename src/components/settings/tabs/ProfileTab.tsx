@@ -28,15 +28,23 @@ import {
   getPaymentMethodDisplayName,
   payoutTypeToUiKey,
   isHiddenPayoutConfigType,
+  isPaymentMethodConfigured,
   supportsPayoutAccountName,
   toPayoutAccountNameDto,
 } from '../../../data/paymentMethodTypes'
 import { formatPaymentMethodAccountDisplay } from '../../payout/bankWireAccount'
+import {
+  parseVlinkpayAddresses,
+  parseVlinkpayAddressesFromMethod,
+  serializeVlinkpayAddresses,
+  toVlinkpayCryptoAddressesPayload,
+} from '../../payout/vlinkpayWallet'
 import PayoutMethodDetailModal from '../../payout/PayoutMethodDetailModal'
 import PayoutSetupModal from '../../payout/PayoutSetupModal'
 import SettingsTipQrPanel from '../SettingsTipQrPanel'
 import BusinessInfoCard from '../BusinessInfoCard'
 import type { PaymentMethodDto } from '../../../types/domain'
+import { PayoutUiKey } from '../../../data/payoutUiKeys'
 
 const PayoutLogos = {
   zelle: (
@@ -200,7 +208,7 @@ export default function ProfileTab({
     method.uiKey || payoutTypeToUiKey(method.type || '')
 
   const displayedPaymentMethods = apiPaymentMethods.filter(
-    (m) => getMethodUiKey(m) !== 'bankwire' && !isHiddenPayoutConfigType(m),
+    (m) => getMethodUiKey(m) !== PayoutUiKey.BankWire && !isHiddenPayoutConfigType(m),
   )
 
   const getMethod = (key: string) =>
@@ -218,7 +226,7 @@ export default function ProfileTab({
     const methodData = getMethod(key)
     const nextActive = !isCurrentlyActive
 
-    if (nextActive && !(methodData.isConfigured && methodData.accountInfo?.trim())) {
+    if (nextActive && !isPaymentMethodConfigured(methodData)) {
       handleEditPayoutAccount(key)
       return
     }
@@ -246,10 +254,16 @@ export default function ProfileTab({
       showToast(t('components.settings.tabs.ProfileTab.methodIdMissing'), 'error')
       return
     }
+    const isVlinkpay = editingMethod === PayoutUiKey.VlinkPay
+    const cryptoAddresses = isVlinkpay
+      ? toVlinkpayCryptoAddressesPayload(parseVlinkpayAddresses(value))
+      : undefined
     updateMutation.mutate(
       {
         id: methodData.id,
-        accountInfo: value.trim(),
+        ...(isVlinkpay
+          ? { accountInfo: null, cryptoAddresses }
+          : { accountInfo: value.trim() }),
         accountName: toPayoutAccountNameDto(editingMethod, accountName),
         imageUrl: qrFile ? null : (qrCode || null),
         imageFile: qrFile || undefined,
@@ -456,7 +470,11 @@ export default function ProfileTab({
               {displayedPaymentMethods.map((method) => {
                 const uiKey = getMethodUiKey(method)
                 const label = method.name || getPaymentMethodDisplayName(method.type || '')
-                const accountDisplay = formatPaymentMethodAccountDisplay(uiKey, method.accountInfo)
+                const accountDisplay = formatPaymentMethodAccountDisplay(
+                  uiKey,
+                  method.accountInfo,
+                  method.cryptoAddresses,
+                )
                 return (
                 <div
                   key={method.id || uiKey}
@@ -478,7 +496,7 @@ export default function ProfileTab({
                       </span>
                       <div className="min-w-0 flex-1">
                         <div className="text-xs font-bold text-nexoraText">{label}</div>
-                        {method.isConfigured ? (
+                        {isPaymentMethodConfigured(method) ? (
                           <div className="mt-0.5 max-w-full truncate font-mono text-[10px] text-nexoraMuted sm:max-w-[150px]">
                             {supportsPayoutAccountName(uiKey) && method.accountName ? (
                               <span className="font-sans font-semibold">{method.accountName} · </span>
@@ -1002,7 +1020,11 @@ export default function ProfileTab({
       <PayoutSetupModal
         open={Boolean(editingMethod)}
         walletKey={editingMethod || ''}
-        initialValue={editingMethodData?.accountInfo || ''}
+        initialValue={
+          editingMethod === PayoutUiKey.VlinkPay
+            ? serializeVlinkpayAddresses(parseVlinkpayAddressesFromMethod(editingMethodData))
+            : (editingMethodData?.accountInfo || '')
+        }
         initialQrCode={editingMethodData?.imageUrl || ''}
         initialAccountName={editingMethodData?.accountName || ''}
         onClose={() => setEditingMethod(null)}

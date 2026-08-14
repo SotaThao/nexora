@@ -9,6 +9,7 @@ import StaffBottomNav from './layout/StaffBottomNav'
 import AppDownloadLinks from '../ui/AppDownloadLinks'
 import { useTranslation } from '../../contexts/LanguageContext'
 import { useStaffPaymentMethods } from '../../data/hooks/useStaffPaymentMethods'
+import { isPaymentMethodConfigured } from '../../data/paymentMethodTypes'
 import { useRefetchStaffMenuQueries } from '../../data/hooks/useRefetchOnMenuChange'
 import { useAuth } from '../../auth/useAuth'
 import { useProfileSettings } from '../../data/hooks/useProfileSettings'
@@ -36,7 +37,7 @@ export default function StaffDashboard({ staffId = null, onLogout }) {
   const isKYCVerified =
     userProfile?.isKYCVerified === true || userProfile?.isKycVerified === true
   const hasConfiguredPayout = Boolean(
-    paymentMethods?.some((method) => method.isActive && method.isConfigured && method.accountInfo),
+    paymentMethods?.some((method) => method.isActive && isPaymentMethodConfigured(method)),
   )
   
   const handleNavigate = (screen, params?: Record<string, string>) => {

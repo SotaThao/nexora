@@ -18,10 +18,11 @@ export function useDirectPaymentPage(businessId?: string | null) {
 
 export function useCreateDirectPayment() {
   return useMutation<CreateDirectPaymentResult, Error, CreateDirectPaymentVars>({
-    mutationFn: ({ businessId, businessPaymentMethodId, amount }) =>
+    mutationFn: ({ businessId, businessPaymentMethodId, amount, cryptoSymbol }) =>
       publicDirectPaymentRepository.createPayment(businessId, {
         businessPaymentMethodId,
         amount,
+        cryptoSymbol,
       }),
   })
 }

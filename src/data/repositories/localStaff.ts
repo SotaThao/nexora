@@ -1,7 +1,8 @@
 import httpClient from '../../lib/httpClient'
-import type { PaymentMethodDto } from '../../types/domain'
+import type { PaymentMethodCryptoAddressDto, PaymentMethodDto } from '../../types/domain'
 import type { LocalStaffApiDto, LocalStaffCreateParams, LocalStaffUpdateParams } from '../../types/repositories'
 import { PAYOUT_UI_LABELS, payoutTypeToUiKey } from '../paymentMethodTypes'
+import { normalizeCryptoAddresses, type UpdatePaymentMethodDto } from './paymentMethodDto'
 
 type HttpClient = typeof httpClient
 
@@ -13,6 +14,7 @@ interface LocalStaffPaymentMethodApiDto {
   imageUrl?: string | null
   isActive?: boolean
   isConfigured?: boolean
+  cryptoAddresses?: PaymentMethodCryptoAddressDto[] | null
 }
 
 function toLocalStaffRequestBody(params: LocalStaffCreateParams) {
@@ -39,6 +41,7 @@ function normalizeLocalStaffPaymentMethod(dto: LocalStaffPaymentMethodApiDto): P
     accountInfo: dto.accountInfo ?? null,
     accountName: dto.accountName ?? null,
     imageUrl: dto.imageUrl ?? null,
+    cryptoAddresses: normalizeCryptoAddresses(dto.cryptoAddresses),
     isActive: Boolean(dto.isActive),
     isConfigured: Boolean(dto.isConfigured),
   }
@@ -71,7 +74,7 @@ export function createLocalStaffRepository(client: HttpClient = httpClient) {
     async updatePaymentMethod(
       staffProfileId: string,
       paymentMethodId: string,
-      dto: { accountInfo?: string | null; accountName?: string | null; imageUrl?: string | null },
+      dto: UpdatePaymentMethodDto,
     ): Promise<PaymentMethodDto> {
       const res = await client.put<LocalStaffPaymentMethodApiDto>(
         `/api/v1/merchant/local-staff/${encodeURIComponent(staffProfileId)}/payment-methods/${encodeURIComponent(paymentMethodId)}`,
