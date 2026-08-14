@@ -365,8 +365,8 @@ export default function PosStaffProfileView() {
     <div className="space-y-6">
       <section className="flex items-start justify-between gap-3 px-0.5">
         <div className="space-y-1">
-          <h1 className="text-base font-semibold leading-tight text-nexoraText">{t('dashboard.menu.pos_staff')}</h1>
-          <p className="text-xs text-nexoraMuted">
+          <h1 className="text-2xl font-bold leading-tight text-nexoraText">{t('dashboard.menu.pos_staff')}</h1>
+          <p className="text-sm font-medium text-nexoraMuted">
             {t('components.dashboard.views.pos.PosStaffProfileView.description')}
           </p>
         </div>
@@ -381,7 +381,7 @@ export default function PosStaffProfileView() {
       </section>
 
       <div className="grid grid-cols-1 gap-4 lg:items-start lg:grid-cols-[260px_1fr]">
-        <div className="nexora-card min-h-[420px] divide-y divide-nexoraRule overflow-hidden p-0">
+        <div className="nexora-card min-h-[420px] divide-y divide-nexoraBorder overflow-hidden p-0">
           {staffListQuery.isLoading ? (
             <div className="p-4">
               <SkeletonList count={4} lines={1} />
@@ -401,7 +401,9 @@ export default function PosStaffProfileView() {
                   type="button"
                   onClick={() => linkId && handleSelect(linkId)}
                   className={`flex w-full items-center gap-2 px-3 py-2.5 text-left text-xs font-semibold transition ${
-                    isSelected ? 'bg-nexoraBrand/10 text-nexoraBrand' : 'text-nexoraText hover:bg-nexoraCanvas'
+                    isSelected
+                      ? 'bg-nexoraBrand/10 text-nexoraBrand'
+                      : 'text-nexoraText hover:bg-nexoraCanvas'
                   }`}
                 >
                   {member.avatar ? (

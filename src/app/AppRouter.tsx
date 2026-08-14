@@ -36,7 +36,7 @@ import {
   PosGeneralSettingsRoute, PosRolesRoute, PosCategoriesRoute, PosServicesRoute, PosProductsRoute,
   PosStaffProfileRoute, PosFrontDeskRoute
 } from "../components/dashboard/routes";
-import { DASHBOARD_MENU_ID, BOOKING_HUB_PATH, BOOKING_HUB_LEGACY_PATH_SEGMENT, buildDashboardReportsPath, DASHBOARD_REPORTS_TAB } from "../components/dashboard/constants";
+import { DASHBOARD_MENU_ID, DASHBOARD_SETTINGS_TAB, BOOKING_HUB_PATH, BOOKING_HUB_LEGACY_PATH_SEGMENT, buildDashboardReportsPath, DASHBOARD_REPORTS_TAB } from "../components/dashboard/constants";
 import ErrorBoundary from "../components/ui/ErrorBoundary";
 import { isDemoToolsEnabled } from "./demoTools";
 import lazyWithRetry from "./lazyWithRetry";
@@ -110,6 +110,9 @@ const StaffMyEarnings = lazyWithRetry(
 const StaffMySalons = lazyWithRetry(
   () => import("../components/staff-dashboard/views/StaffMySalons"),
 );
+const StaffClockScan = lazyWithRetry(
+  () => import("../components/staff-dashboard/views/StaffClockScan"),
+);
 const StaffFrontDesk = lazyWithRetry(
   () => import("../components/staff-dashboard/views/StaffFrontDesk"),
 );
@@ -146,6 +149,9 @@ const VoiceCallPlanPage = lazyWithRetry(
 );
 const SmsConsentReferencePage = lazyWithRetry(
   () => import("../components/public/SmsConsentReferencePage"),
+);
+const PublicNewsLibraryPage = lazyWithRetry(
+  () => import("../components/public/PublicNewsLibraryPage"),
 );
 
 // Bridges the URL (path token / legacy ?flow=staff-invite biz) to the wizard's
@@ -208,10 +214,36 @@ function StaffTransactionsLegacyRedirect() {
 }
 
 function ScrollToTop() {
-  const { pathname, search } = useLocation();
+  const { pathname, search, hash } = useLocation();
   useEffect(() => {
+    if (hash) {
+      const targetId = decodeURIComponent(hash.slice(1));
+      let observer: MutationObserver | null = null;
+
+      const scrollToHashTarget = () => {
+        const target = document.getElementById(targetId);
+        if (!target) return false;
+
+        target.scrollIntoView({ behavior: 'auto', block: 'start' });
+        return true;
+      };
+
+      if (!scrollToHashTarget()) {
+        observer = new MutationObserver(() => {
+          if (scrollToHashTarget()) observer?.disconnect();
+        });
+        observer.observe(document.getElementById('root') ?? document.body, {
+          childList: true,
+          subtree: true,
+        });
+      }
+
+      return () => observer?.disconnect();
+    }
+
     scrollToPageTop();
-  }, [pathname, search]);
+    return undefined;
+  }, [pathname, search, hash]);
   return null;
 }
 
@@ -249,6 +281,7 @@ export default function AppRouter() {
           <Route path="/privacy-policy" element={<PrivacyPolicyPage />} />
           <Route path="/terms-of-service" element={<TermsOfServicePage />} />
           <Route path="/sms-consent" element={<SmsConsentReferencePage />} />
+          <Route path="/news-library" element={<PublicNewsLibraryPage />} />
           <Route
             path={VoiceCallPlanRoute.path}
             element={<VoiceCallPlanPage />}
@@ -336,6 +369,7 @@ export default function AppRouter() {
             <Route path={DASHBOARD_MENU_ID.analytics} element={<AnalyticsRoute />} />
             <Route path={DASHBOARD_MENU_ID.settings} element={<SettingsRoute />} />
             <Route path={`${DASHBOARD_MENU_ID.settings}/:tab`} element={<SettingsRoute />} />
+            <Route path={`${DASHBOARD_MENU_ID.settings}/${DASHBOARD_SETTINGS_TAB.staff}/:staffId`} element={<SettingsRoute />} />
             <Route path={DASHBOARD_MENU_ID.subscriptions} element={<SubscriptionsRoute />} />
             <Route path={DASHBOARD_MENU_ID.packageManagement} element={<PackageManagementRoute />} />
             <Route path={DASHBOARD_MENU_ID.newsLibrary} element={<NewsLibraryRoute />} />
@@ -375,6 +409,8 @@ export default function AppRouter() {
             <Route path="earnings" element={<StaffMyEarnings />} />
             <Route path="salons" element={<StaffMySalons />} />
             <Route path="salons/:businessId/front-desk" element={<StaffFrontDesk />} />
+            {/* Landing page for the rotating clock-in QR — salon id and token arrive as ?b=&t= */}
+            <Route path="clock-scan" element={<StaffClockScan />} />
             <Route path="profile" element={<StaffProfile />} />
             <Route path="notifications" element={<StaffNotifications />} />
             <Route path="*" element={<StaffFallbackRoute />} />

@@ -1,5 +1,6 @@
 import type { ApiError } from './api'
 import type { LooseObject } from './domain'
+import type { PosOrderStatus } from '../constants/posOrderStatus'
 import type {
   MerchantSetup,
   NotificationRecord,
@@ -255,6 +256,75 @@ export interface CompletedOrdersPage {
   hasPreviousPage: boolean
 }
 
+// POS Front Desk — Customer tab (US-043). Read-only: list, detail, order/booking history.
+export interface PosCustomerListItemApiDto {
+  id: string
+  name?: string | null
+  phone: string
+  status: string
+  totalVisit: number
+  lastVisit?: string | null
+  createdAt: string
+}
+
+export interface PosCustomerListQuery {
+  pageNumber?: number
+  pageSize?: number
+  searchTerm?: string
+  sortDescending?: boolean
+}
+
+export interface PosCustomerListPage {
+  items: PosCustomerListItemApiDto[]
+  pageNumber: number
+  totalPages: number
+  totalCount: number
+  hasNextPage: boolean
+  hasPreviousPage: boolean
+}
+
+export interface PosCustomerDetailApiDto {
+  id: string
+  name?: string | null
+  phone: string
+  email?: string | null
+  address?: string | null
+  dateOfBirth?: string | null
+  type: string
+  status: string
+  source: string
+  totalVisit: number
+  lastVisit?: string | null
+  createdAt: string
+}
+
+// A history row can be a completed/waiting/in-service order OR a not-yet-checked-in booking
+// (PosBooking is a TPT subtype of PosOrder on the backend) — isBooking + status distinguish them.
+export interface PosCustomerOrderHistoryItemApiDto {
+  id: string
+  orderNumber: string
+  isBooking: boolean
+  status: string
+  occurredAt: string
+  serviceNames: string[]
+  technicianNames: string[]
+  total: number
+}
+
+export interface PosCustomerOrderHistoryQuery {
+  pageNumber?: number
+  pageSize?: number
+}
+
+export interface PosCustomerOrderHistoryPage {
+  items: PosCustomerOrderHistoryItemApiDto[]
+  pageNumber: number
+  totalPages: number
+  totalCount: number
+  hasNextPage: boolean
+  hasPreviousPage: boolean
+}
+
 // POS Merchant Ops — Turn Board Assign & Break (US-13, refactored in US-026)
 export interface TurnBoardStationApiDto {
   posStaffProfileId: string
@@ -266,6 +336,79 @@ export interface TurnBoardStationApiDto {
   currentCustomerName?: string | null
   currentServiceNames: string[]
   assignedAt?: string | null
+}
+
+// POS Front Desk — Time Clock tab
+export interface ClockQrTokenApiDto {
+  businessId: string
+  token: string
+  rotationNumber: number
+  issuedAt: string
+  expiresAt: string
+  scanUrl: string
+  // PNG data URI rendered server-side — the dashboard has no QR-drawing library.
+  qrImageDataUri: string
+}
+
+export interface TimeClockRosterRowApiDto {
+  posStaffProfileId: string
+  businessStaffLinkId: string
+  displayName: string
+  roleName: string
+  photoUrl?: string | null
+  isClockedIn: boolean
+  clockInAt?: string | null
+  hoursToday: number
+  // Null for anyone who has not clocked in today; fixed for the rest of the day once set.
+  turnRank?: number | null
+  turnsToday: number
+  currentOrderId?: string | null
+  currentOrderNumber?: string | null
+  currentCustomerName?: string | null
+  lastBeepAt?: string | null
+  // Open shift started before today — forgot to clock out, nightly job has not run yet.
+  hasForgottenEntry: boolean
+  forgottenEntryClockInAt?: string | null
+}
+
+export interface TimeClockRosterApiDto {
+  onShiftCount: number
+  rows: TimeClockRosterRowApiDto[]
+}
+
+export interface TimeClockLogEntryApiDto {
+  id: string
+  posStaffProfileId: string
+  displayName: string
+  clockInAt: string
+  clockOutAt?: string | null
+  isOpen: boolean
+  hours: number
+  clockInSource: string
+  clockOutSource?: string | null
+}
+
+export interface BeepStaffResultApiDto {
+  beepedAt: string
+  // False when the tech has no account to notify — the front desk still needs to know.
+  delivered: boolean
+}
+
+export interface ClockScanPreviewApiDto {
+  businessId: string
+  businessName: string
+  businessStaffLinkId: string
+  displayName: string
+  isClockedIn: boolean
+  clockInAt?: string | null
+  hoursSoFar: number
+}
+
+export interface ScanClockQrResultApiDto {
+  action: string
+  businessName: string
+  occurredAt: string
+  hours: number
 }
 
 // POS Merchant Ops — Checkout (US-14 / US-025, refactored to Order + multi-staff + products in US-026)
@@ -336,6 +479,9 @@ export interface CheckoutServiceCatalogItemApiDto {
   id: string
   name: string
   price: number
+  durationMinutes: number
+  description?: string | null
+  photoUrl?: string | null
   categories: CatalogCategoryApiDto[]
 }
 
@@ -985,6 +1131,21 @@ export interface LocalStaffCreateParams {
 }
 
 export interface LocalStaffUpdateParams extends LocalStaffCreateParams {}
+
+/**
+ * One order/booking still open against a local staff member, blocking their deletion
+ * (backend LOCAL_STAFF_HAS_ACTIVE_WORK). `scheduledAt` is set only when `isBooking`.
+ */
+export interface LocalStaffActiveWorkItem {
+  orderId: string
+  orderNumber: string
+  customerName: string
+  status: PosOrderStatus
+  isBooking: boolean
+  scheduledAt: string | null
+  source: string | null
+  checkedInAt: string
+}
 
 export interface StaffSearchResultApiDto {
   staffProfileId: string

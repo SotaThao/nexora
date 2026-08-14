@@ -13,7 +13,6 @@ import {
   Languages,
   Lock,
   LogOut,
-  QrCode,
   ShieldCheck,
   Star,
   UserCircle,
@@ -231,6 +230,7 @@ export default function SettingsViewMobile({
   initialTab = 'profile',
   onTabChange,
   onKybSuccess,
+  staffContent = null,
   verificationStatus = hasKyb ? 'kyb_approved' : 'basic'
 }) {
   const { currentLanguage, setLanguage, t } = useTranslation()
@@ -353,6 +353,11 @@ export default function SettingsViewMobile({
                   : t('staff_dashboard.profile.menu_personal_information')}
                 onClick={() => openProfileSection('personal')}
               />
+              <MerchantProfileMenuItem
+                icon={Users}
+                label={t('dashboard.menu.staff')}
+                onClick={() => handleTabChange('staff')}
+              />
               <MerchantVerificationMenuItem
                 label={t('staff_dashboard.profile.menu_verification')}
                 status={kybStatusLabel}
@@ -389,6 +394,16 @@ export default function SettingsViewMobile({
               <LogOut className="h-4.5 w-4.5 shrink-0" />
               <span className="truncate">{t('dashboard.sidebar.sign_out')}</span>
             </button>
+          </>
+        )}
+
+        {form.activeTab === 'staff' && (
+          <>
+            <MerchantProfileSectionHeader
+              title={t('dashboard.menu.staff')}
+              onBack={() => handleTabChange('profile')}
+            />
+            {staffContent}
           </>
         )}
 
@@ -581,13 +596,6 @@ export default function SettingsViewMobile({
 
         {form.activeTab === 'affiliate' && (
           <div className="rounded-xl border border-nexoraBorder bg-white shadow-sm p-6 max-w-xl mx-auto animate-fadeIn select-none space-y-6">
-            <div className="flex justify-between items-center border-b border-nexoraRule pb-3">
-              <h4 className="text-xs font-black uppercase text-nexoraText tracking-wider flex items-center gap-2">
-                <QrCode className="h-4 w-4 text-nexoraBrand" />
-                {t('components.SettingsView.affiliateLink2')}
-              </h4>
-            </div>
-            
             {/* QR Section (Inline) */}
             <div className="flex flex-col items-center">
               {/* QR Code Container */}

@@ -1,9 +1,26 @@
 import httpClient from '../../lib/httpClient'
+import type { PosOrderStatus } from '../../constants/posOrderStatus'
 import type { PaymentMethodDto } from '../../types/domain'
-import type { LocalStaffApiDto, LocalStaffCreateParams, LocalStaffUpdateParams } from '../../types/repositories'
+import type {
+  LocalStaffActiveWorkItem,
+  LocalStaffApiDto,
+  LocalStaffCreateParams,
+  LocalStaffUpdateParams,
+} from '../../types/repositories'
 import { PAYOUT_UI_LABELS, payoutTypeToUiKey } from '../paymentMethodTypes'
 
 type HttpClient = typeof httpClient
+
+interface LocalStaffActiveWorkApiDto {
+  orderId?: string
+  orderNumber?: string
+  customerName?: string
+  status?: string
+  isBooking?: boolean
+  scheduledAt?: string | null
+  source?: string | null
+  checkedInAt?: string
+}
 
 interface LocalStaffPaymentMethodApiDto {
   id?: string
@@ -25,6 +42,21 @@ function toLocalStaffRequestBody(params: LocalStaffCreateParams) {
     email: params.email ?? null,
     firstName: params.firstName,
     lastName: params.lastName,
+  }
+}
+
+// The one allowed place to touch the raw backend status literal — everything downstream
+// compares against the PosOrderStatus enum.
+function normalizeLocalStaffActiveWork(dto: LocalStaffActiveWorkApiDto): LocalStaffActiveWorkItem {
+  return {
+    orderId: dto.orderId ?? '',
+    orderNumber: dto.orderNumber ?? '',
+    customerName: dto.customerName ?? '',
+    status: (dto.status ?? '') as PosOrderStatus,
+    isBooking: Boolean(dto.isBooking),
+    scheduledAt: dto.scheduledAt ?? null,
+    source: dto.source ?? null,
+    checkedInAt: dto.checkedInAt ?? '',
   }
 }
 
@@ -59,6 +91,13 @@ export function createLocalStaffRepository(client: HttpClient = httpClient) {
 
     async remove(staffProfileId: string): Promise<void> {
       await client.del(`/api/v1/merchant/local-staff/${encodeURIComponent(staffProfileId)}`)
+    },
+
+    async getActiveWork(staffProfileId: string): Promise<LocalStaffActiveWorkItem[]> {
+      const res = await client.get<LocalStaffActiveWorkApiDto[]>(
+        `/api/v1/merchant/local-staff/${encodeURIComponent(staffProfileId)}/active-work`,
+      )
+      return Array.isArray(res) ? res.map(normalizeLocalStaffActiveWork) : []
     },
 
     async getPaymentMethods(staffProfileId: string): Promise<PaymentMethodDto[]> {

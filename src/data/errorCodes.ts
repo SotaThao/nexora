@@ -1,5 +1,8 @@
 import { getApiErrorCode, isApiError } from '../types/domain'
 
+/** Deleting a local staff member is blocked by open orders/bookings still assigned to them. */
+export const LOCAL_STAFF_HAS_ACTIVE_WORK = 'LOCAL_STAFF_HAS_ACTIVE_WORK'
+
 export const errorCodeToI18nKey = {
   // Auth
   USER_LOGIN_INVALID_USERNAME_OR_PASSWORD: 'errors.user_login_invalid_username_or_password',
@@ -79,6 +82,9 @@ export const errorCodeToI18nKey = {
   STAFF_LIMIT_REACHED: 'errors.staff_limit_reached',
   LOCAL_STAFF_NOT_FOUND: 'errors.local_staff_not_found',
   LOCAL_STAFF_NOT_OWNED: 'errors.local_staff_not_owned',
+  // Normally surfaced as StaffActiveWorkModal, not a toast — this mapping is the fallback
+  // for any other caller that only shows a message.
+  [LOCAL_STAFF_HAS_ACTIVE_WORK]: 'errors.local_staff_has_active_work',
   STAFF_LINK_HAS_OUTSTANDING_DEBT: 'errors.staff_link_has_outstanding_debt',
   STAFF_PAYMENT_METHOD_NOT_FOUND: 'errors.staff_payment_method_not_found',
   STAFF_PAYMENT_METHOD_ACCESS_DENIED: 'errors.staff_payment_method_access_denied',
@@ -136,6 +142,7 @@ export const errorCodeToI18nKey = {
   POS_STAFF_NO_LINKED_ACCOUNT: 'errors.pos_staff_no_linked_account',
   POS_STAFF_PROFILE_NOT_FOUND: 'errors.pos_staff_profile_not_found',
   POS_STAFF_SERVICE_ASSIGNMENT_SERVICE_INVALID: 'errors.pos_staff_service_assignment_service_invalid',
+  POS_STAFF_NO_USABLE_ROLE: 'errors.pos_staff_no_usable_role',
   POS_STAFF_STATUS_INVALID: 'errors.pos_staff_status_invalid',
   POS_STAFF_STATUS_NOT_ACTIVE: 'errors.pos_staff_status_not_active',
   POS_STAFF_CANNOT_CHANGE_STATUS_WHILE_IN_SERVICE: 'errors.pos_staff_cannot_change_status_while_in_service',
@@ -144,6 +151,20 @@ export const errorCodeToI18nKey = {
   // POS Owner Setup — Staff Weekly Schedule (US-09/US-021)
   POS_STAFF_SCHEDULE_DUPLICATE_DAY: 'errors.pos_staff_schedule_duplicate_day',
   POS_STAFF_SCHEDULE_INVALID_TIME_RANGE: 'errors.pos_staff_schedule_invalid_time_range',
+
+  // POS Front Desk — Time Clock (rotating QR, clock in/out, beep)
+  POS_STAFF_CLOCK_PROFILE_NOT_SET_UP: 'errors.pos_staff_clock_profile_not_set_up',
+  POS_STAFF_CLOCK_ACCESS_DENIED: 'errors.pos_staff_clock_access_denied',
+  POS_STAFF_CLOCK_ACCOUNT_LOCKED: 'errors.pos_staff_clock_account_locked',
+  POS_STAFF_CLOCK_ALREADY_CLOCKED_IN: 'errors.pos_staff_clock_already_clocked_in',
+  POS_STAFF_CLOCK_NOT_CLOCKED_IN: 'errors.pos_staff_clock_not_clocked_in',
+  POS_STAFF_CLOCK_ENTRY_NOT_FOUND: 'errors.pos_staff_clock_entry_not_found',
+  POS_STAFF_CLOCK_CORRECTION_INVALID: 'errors.pos_staff_clock_correction_invalid',
+  POS_STAFF_CLOCK_QR_TOKEN_INVALID: 'errors.pos_staff_clock_qr_token_invalid',
+  POS_STAFF_CLOCK_QR_TOKEN_EXPIRED: 'errors.pos_staff_clock_qr_token_expired',
+  POS_STAFF_CLOCK_QR_BUSINESS_MISMATCH: 'errors.pos_staff_clock_qr_business_mismatch',
+  POS_STAFF_CLOCK_TOO_SOON: 'errors.pos_staff_clock_too_soon',
+  POS_STAFF_CLOCK_BEEP_TARGET_INVALID: 'errors.pos_staff_clock_beep_target_invalid',
 
   // POS Merchant Ops — Check-in, Turn Board & Checkout (US-12..US-17)
   POS_ORDER_NOT_FOUND: 'errors.pos_order_not_found',

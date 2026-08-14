@@ -10,7 +10,6 @@ import {
   Download,
   FileText,
   Lock,
-  QrCode,
   ShieldCheck,
   Star,
   Users,
@@ -36,6 +35,7 @@ import {
   SETTINGS_SHOW_NOTIFICATION_TAB,
   SettingsDesktopTab,
 } from './settings/constants'
+import SettingsDesktopTabs from './settings/SettingsDesktopTabs'
 
 const notificationPanel =
   'rounded-2xl border border-nexoraBorder bg-nexoraSurface p-4 shadow-sm sm:p-5'
@@ -155,6 +155,7 @@ export default function SettingsViewDesktop({
   initialTab = 'profile',
   onTabChange,
   onKybSuccess,
+  staffContent = null,
   verificationStatus = hasKyb ? 'kyb_approved' : 'basic'
 }) {
   const { t } = useTranslation()
@@ -174,11 +175,12 @@ export default function SettingsViewDesktop({
   })
 
   const resolveDesktopTab = (nextTab) => {
-    if (nextTab === 'affiliate') return 'affiliate'
-    if (nextTab === 'kyb') return 'kyb'
-    if (nextTab === 'notification') return 'notification'
-    if (nextTab === 'privacy') return 'privacy'
-    return 'account'
+    if (nextTab === SettingsDesktopTab.Staff) return SettingsDesktopTab.Staff
+    if (nextTab === SettingsDesktopTab.Affiliate) return SettingsDesktopTab.Affiliate
+    if (nextTab === SettingsDesktopTab.Kyb) return SettingsDesktopTab.Kyb
+    if (nextTab === SettingsDesktopTab.Notification) return SettingsDesktopTab.Notification
+    if (nextTab === SettingsDesktopTab.Privacy) return SettingsDesktopTab.Privacy
+    return SettingsDesktopTab.Account
   }
 
   const [tab, setTab] = useState(() => resolveDesktopTab(initialTab))
@@ -221,9 +223,10 @@ export default function SettingsViewDesktop({
     }
   }
 
-  const TABS = [
+  const tabs = [
     { key: SettingsDesktopTab.Account, label: t('components.SettingsView.account') },
-    { key: SettingsDesktopTab.Kyb, label: isBusinessAccount ? t('components.SettingsView.kyb') : t('staff_dashboard.profile.kyc_label'), disabled: true },
+    { key: SettingsDesktopTab.Staff, label: t('dashboard.menu.staff') },
+    { key: SettingsDesktopTab.Kyb, label: isBusinessAccount ? t('components.SettingsView.kyb') : t('staff_dashboard.profile.kyc_label') },
     { key: SettingsDesktopTab.Affiliate, label: t('components.SettingsView.affiliateLink') },
     ...(SETTINGS_SHOW_NOTIFICATION_TAB
       ? [{ key: SettingsDesktopTab.Notification, label: t('staff_dashboard.profile.menu_notification_preferences') }]
@@ -231,45 +234,34 @@ export default function SettingsViewDesktop({
     { key: SettingsDesktopTab.Privacy, label: t('staff_dashboard.profile.menu_privacy_security') },
   ]
 
+  const activateTab = (nextTab: string) => {
+    const resolvedTab = resolveDesktopTab(nextTab)
+    setTab(resolvedTab)
+    onTabChange?.(
+      resolvedTab === SettingsDesktopTab.Account
+        ? 'profile'
+        : resolvedTab,
+    )
+  }
+
   return (
-    <div className="w-full space-y-6 animate-fadeIn select-none">
-      {/* Header */}
-      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between border-b border-nexoraRule pb-4">
-        <div>
-          <h2 className="text-xl font-extrabold text-nexoraText">
-            {t('components.SettingsView.settingsConfiguration')}
-          </h2>
-          <p className="mt-1 text-xs text-nexoraMuted">
-            {t('components.SettingsView.manageYourOwnerCredentials')}
-          </p>
-        </div>
-      </div>
+    <div className="w-full space-y-5 px-1 py-2 animate-fadeIn select-none">
+      <header className="mx-auto max-w-6xl border-b border-nexoraRule pb-4">
+        <h1 className="text-2xl font-black leading-tight text-nexoraText">
+          {t('components.SettingsView.settingsConfiguration')}
+        </h1>
+        <p className="mt-2 text-sm font-medium leading-relaxed text-nexoraMuted">
+          {t('components.SettingsView.manageYourOwnerCredentials')}
+        </p>
+      </header>
 
-      {/* Tab Navigation */}
-      <div className="flex flex-wrap gap-2 pb-2">
-        {TABS.map((item) => (
-          <button
-            key={item.key}
-            type="button"
-            onClick={() => {
-              setTab(item.key)
-              if (onTabChange) {
-                onTabChange(item.key === 'account' ? 'profile' : item.key)
-              }
-            }}
-            className={`px-4 py-2 rounded-lg text-xs font-extrabold uppercase transition ${
-              tab === item.key
-                ? 'bg-nexoraBrand text-white shadow-sm'
-                : 'bg-nexoraSurfaceMuted text-nexoraMuted hover:bg-slate-200'
-            }`}
-          >
-            {item.label}
-          </button>
-        ))}
-      </div>
-
-      {/* Content Area */}
-      <div className="space-y-6">
+      <SettingsDesktopTabs
+        tabs={tabs}
+        activeTab={tab}
+        onTabChange={activateTab}
+        ariaLabel={t('components.SettingsView.settingsConfiguration')}
+      >
+        {tab === SettingsDesktopTab.Staff && staffContent}
 
         {tab === 'account' && (
           <ProfileTab
@@ -349,13 +341,6 @@ export default function SettingsViewDesktop({
 
         {tab === 'affiliate' && (
           <div className="rounded-xl border border-nexoraBorder bg-white shadow-sm p-6 max-w-xl mx-auto animate-fadeIn select-none space-y-6">
-            <div className="flex justify-between items-center border-b border-nexoraRule pb-3">
-              <h4 className="text-xs font-black uppercase text-nexoraText tracking-wider flex items-center gap-2">
-                <QrCode className="h-4 w-4 text-nexoraBrand" />
-                {t('components.SettingsView.affiliateLink2')}
-              </h4>
-            </div>
-
             {/* Select Placement Leg */}
             <div className="bg-slate-50 border border-slate-100 rounded-xl p-3">
               <span className="text-[10px] font-extrabold uppercase text-slate-500 tracking-wider mb-2 block text-center">
@@ -519,7 +504,7 @@ export default function SettingsViewDesktop({
           </section>
         )}
 
-      </div>
+      </SettingsDesktopTabs>
 
       {/* Show QR Code Modal Popup — portaled to body so the backdrop escapes any
           transformed ancestor and covers the full viewport (incl. header) */}

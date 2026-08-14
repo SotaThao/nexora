@@ -299,6 +299,20 @@ body:not(.homepage-active):not(.public-booking-active) a:focus-visible {
   border-radius: 99px;
 }
 
+/* Opt-out of the styled scrollbar above for horizontally-scrolling strips (e.g. the POS
+   Front Desk tab bar on phone widths), where the 6px cyan track sits directly on top of
+   the active-tab underline. The strip is still scrollable — by touch drag, wheel, and
+   keyboard focus moving through the tabs. Homepage has its own identical `.no-scrollbar`
+   in homepage.css; that stylesheet is only imported by the homepage/news routes, so it is
+   not available here. */
+.nexora-no-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+.nexora-no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+
 .dark ::-webkit-scrollbar-thumb,
 .bg-luxuryBlack ::-webkit-scrollbar-thumb,
 .bg-neutral-950 ::-webkit-scrollbar-thumb,
@@ -334,6 +348,11 @@ body:not(.homepage-active):not(.public-booking-active) a:focus-visible {
     @apply nexora-card flex w-full flex-col p-6;
     max-height: 90vh;
     max-height: 90dvh;
+  }
+
+  .news-library-pdf-modal-card {
+    height: 90vh;
+    height: 90dvh;
   }
 
   .nexora-icon-button {

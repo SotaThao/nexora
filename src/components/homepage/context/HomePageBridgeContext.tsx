@@ -20,6 +20,7 @@ import {
   navigateHomePagePlanCta,
   syncHomePageAuthHeader,
 } from '../useHomePageAuth'
+import { setStoredAppLanguage } from '../../../utils/appLanguage'
 
 type HomePageHandlers = ReturnType<typeof getHomePageHandlers>
 
@@ -34,21 +35,40 @@ const HomePageBridgeContext = createContext<HomePageBridgeValue | null>(null)
 
 interface HomePageBridgeProviderProps {
   children: ReactNode
+  mode?: 'full' | 'header-only'
 }
 
-export function HomePageBridgeProvider({ children }: HomePageBridgeProviderProps) {
+export function HomePageBridgeProvider({
+  children,
+  mode = 'full',
+}: HomePageBridgeProviderProps) {
   const navigate = useNavigate()
   const { logout, session, status } = useAuth()
   const authRef = useRef({ logout, session, status, navigate })
   authRef.current = { logout, session, status, navigate }
 
-  const hp = useMemo(() => getHomePageHandlers(), [])
+  const hp = useMemo<HomePageHandlers>(() => {
+    const handlers = getHomePageHandlers()
+    if (mode === 'full') return handlers
+
+    return {
+      ...handlers,
+      selectLanguage: (lang: 'en' | 'vi') => {
+        handlers.toggleLanguageDropdown()
+        setStoredAppLanguage(lang)
+        document.documentElement.lang = lang
+      },
+    }
+  }, [mode])
 
   useLayoutEffect(() => {
+    if (mode === 'header-only') return
     changeLanguage(getInitialHomePageLanguage())
-  }, [])
+  }, [mode])
 
   useLayoutEffect(() => {
+    if (mode === 'header-only') return undefined
+
     let cancelled = false
 
     const boot = async () => {
@@ -75,7 +95,7 @@ export function HomePageBridgeProvider({ children }: HomePageBridgeProviderProps
       cancelled = true
       teardownHomePage()
     }
-  }, [])
+  }, [mode])
 
   useLayoutEffect(() => {
     syncHomePageAuthHeader(session, status, navigate)

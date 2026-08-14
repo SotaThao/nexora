@@ -4,6 +4,7 @@ import {
   buildDashboardMenuPath,
   DASHBOARD_MENU,
   DASHBOARD_MENU_ID,
+  normalizeDashboardSettingsTab,
 } from '../constants'
 
 type NavigateMenuOptions = {
@@ -44,11 +45,7 @@ export function useDashboardNavigation() {
   useEffect(() => {
     if (activeMenu !== DASHBOARD_MENU_ID.settings) return
     const tabFromPath = location.pathname.split('/')[3]
-    if (tabFromPath === 'kyb' || tabFromPath === 'profile' || tabFromPath === 'affiliate') {
-      setSettingsTab(tabFromPath)
-    } else if (!tabFromPath) {
-      setSettingsTab('profile')
-    }
+    setSettingsTab(normalizeDashboardSettingsTab(tabFromPath || 'profile'))
   }, [activeMenu, location.pathname])
 
   // When the drawer opens, reflect the current route's expandable section.

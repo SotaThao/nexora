@@ -75,10 +75,6 @@ export default function AddTouchpointModal({
     if (isSubmitting) return
 
     const trimmedName = name.trim()
-    if (!trimmedName) {
-      setError(t('dashboard.modals.tp_name_required'))
-      return
-    }
     if (showStaffSelect && !assignedStaffProfileId) {
       setError(t('dashboard.modals.tp_staff_required'))
       return
@@ -93,7 +89,8 @@ export default function AddTouchpointModal({
         deviceId.trim(),
         showStaffSelect ? assignedStaffProfileId : undefined,
       )
-      showToast(t('dashboard.modals.tp_added_success', { name: trimmedName }), 'success')
+      const displayName = trimmedName || type
+      showToast(t('dashboard.modals.tp_added_success', { name: displayName }), 'success')
       onClose()
     } catch (err) {
       const fallbackMessage = t('dashboard.modals.tp_add_failed')
@@ -152,11 +149,7 @@ export default function AddTouchpointModal({
                 if (event.key === 'Enter') void handleSubmit()
               }}
               placeholder={t('dashboard.modals.tp_name_placeholder')}
-              className={`mt-1 h-11 w-full rounded-lg border px-3 text-sm text-nexoraText outline-none transition-colors ${
-                error && !name.trim()
-                  ? 'border-nexoraDanger focus:border-nexoraDanger'
-                  : 'border-nexoraBorder focus:border-nexoraBrand'
-              }`}
+              className="mt-1 h-11 w-full rounded-lg border border-nexoraBorder px-3 text-sm text-nexoraText outline-none transition-colors focus:border-nexoraBrand"
             />
           </div>
 
