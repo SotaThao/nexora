@@ -2498,7 +2498,8 @@
     "pos_staff_clock_qr_token_expired": "Mã QR đã đổi — quét lại mã đang hiển thị.",
     "pos_staff_clock_qr_business_mismatch": "Bạn không phải nhân viên đang hoạt động của tiệm này.",
     "pos_staff_clock_too_soon": "Vừa ghi nhận xong — đợi một chút rồi hãy đổi trạng thái ca.",
-    "pos_staff_clock_beep_target_invalid": "Không gọi được thợ này lúc này."
+    "pos_staff_clock_beep_target_invalid": "Không gọi được thợ này lúc này.",
+    "local_staff_has_active_work": "Nhân viên này vẫn đang được gán vào order hoặc booking chưa đóng. Hãy xử lý xong trước."
   },
   "components": {
     "common": {
@@ -2814,6 +2815,13 @@
           "recipients": "{count} người nhận",
           "multiStaffTip": "Giao dịch tip nhiều nhân viên",
           "singleStaffTip": "Giao dịch tip một nhân viên"
+        },
+        "StaffActiveWorkModal": {
+          "title": "Không thể xoá {{name}}",
+          "description": "Nhân viên này vẫn đang được gán vào các order và booking dưới đây. Hãy hoàn tất, huỷ, hoặc chuyển sang nhân viên khác rồi thử xoá lại.",
+          "booking": "Booking",
+          "empty": "Không còn mục nào đang mở với nhân viên này. Bạn có thể đóng hộp thoại và thử xoá lại.",
+          "close": "Đóng"
         }
       },
       "overview": {

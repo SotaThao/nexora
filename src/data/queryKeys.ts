@@ -68,6 +68,8 @@ export const qk = {
     ['merchantStaff', 'stats', staffProfileId, filters],
   localStaffPaymentMethods: (staffProfileId?: string | null) =>
     ['merchantStaff', 'localStaffPaymentMethods', staffProfileId ?? ''],
+  localStaffActiveWork: (staffProfileId?: string | null) =>
+    ['merchantStaff', 'localStaffActiveWork', staffProfileId ?? ''],
   staffInvite:         (token)   => ['staffInvite', token],
   publicMerchantInvite: (ref)    => ['publicMerchantInvite', ref],
   merchantInviteLink:  ()      => ['merchantSettings', 'inviteLink'],

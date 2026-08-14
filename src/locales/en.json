@@ -2498,7 +2498,8 @@
     "pos_staff_clock_qr_token_expired": "The QR code has already changed — scan the current one.",
     "pos_staff_clock_qr_business_mismatch": "You are not an active staff member of this salon.",
     "pos_staff_clock_too_soon": "That was just recorded — wait a moment before changing shift status again.",
-    "pos_staff_clock_beep_target_invalid": "This staff member cannot be beeped right now."
+    "pos_staff_clock_beep_target_invalid": "This staff member cannot be beeped right now.",
+    "local_staff_has_active_work": "This staff member is still assigned to open orders or bookings. Close or reassign them first."
   },
   "components": {
     "common": {
@@ -2814,6 +2815,13 @@
           "recipients": "{count} recipients",
           "multiStaffTip": "Multi-staff tip transaction",
           "singleStaffTip": "Single-staff tip transaction"
+        },
+        "StaffActiveWorkModal": {
+          "title": "Cannot delete {{name}}",
+          "description": "This staff member is still assigned to the orders and bookings below. Complete, cancel, or reassign them, then try deleting again.",
+          "booking": "Booking",
+          "empty": "Nothing is open against this staff member anymore. You can close this dialog and try deleting again.",
+          "close": "Close"
         }
       },
       "overview": {

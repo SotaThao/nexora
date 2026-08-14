@@ -1,5 +1,8 @@
 import { getApiErrorCode, isApiError } from '../types/domain'
 
+/** Deleting a local staff member is blocked by open orders/bookings still assigned to them. */
+export const LOCAL_STAFF_HAS_ACTIVE_WORK = 'LOCAL_STAFF_HAS_ACTIVE_WORK'
+
 export const errorCodeToI18nKey = {
   // Auth
   USER_LOGIN_INVALID_USERNAME_OR_PASSWORD: 'errors.user_login_invalid_username_or_password',
@@ -79,6 +82,9 @@ export const errorCodeToI18nKey = {
   STAFF_LIMIT_REACHED: 'errors.staff_limit_reached',
   LOCAL_STAFF_NOT_FOUND: 'errors.local_staff_not_found',
   LOCAL_STAFF_NOT_OWNED: 'errors.local_staff_not_owned',
+  // Normally surfaced as StaffActiveWorkModal, not a toast — this mapping is the fallback
+  // for any other caller that only shows a message.
+  [LOCAL_STAFF_HAS_ACTIVE_WORK]: 'errors.local_staff_has_active_work',
   STAFF_LINK_HAS_OUTSTANDING_DEBT: 'errors.staff_link_has_outstanding_debt',
   STAFF_PAYMENT_METHOD_NOT_FOUND: 'errors.staff_payment_method_not_found',
   STAFF_PAYMENT_METHOD_ACCESS_DENIED: 'errors.staff_payment_method_access_denied',

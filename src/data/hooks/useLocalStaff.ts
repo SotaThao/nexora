@@ -7,7 +7,7 @@ import { resolvePaymentMethodImageUrl } from '../../utils/resolvePaymentMethodIm
 import { dataUrlToFile } from '../../utils/imageFile'
 import { splitFullName } from '../../utils/staffName'
 import type { ManualStaffFormPayload } from '../../components/dashboard/modals/AddManualStaffTab'
-import type { LocalStaffUpdateParams } from '../../types/repositories'
+import type { LocalStaffActiveWorkItem, LocalStaffUpdateParams } from '../../types/repositories'
 import type { PaymentMethodDto } from '../../types/domain'
 
 export async function resolveStaffAvatarUrl(avatar: string, avatarFile?: File | null): Promise<string | null> {
@@ -120,6 +120,18 @@ export function useDeleteLocalStaff() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: qk.merchantStaff() })
     },
+  })
+}
+
+/**
+ * Orders/bookings still open against a local staff member. Only fetched once a delete has
+ * already been rejected with LOCAL_STAFF_HAS_ACTIVE_WORK, to populate the blocking dialog.
+ */
+export function useLocalStaffActiveWork(staffProfileId?: string | null) {
+  return useQuery<LocalStaffActiveWorkItem[]>({
+    queryKey: qk.localStaffActiveWork(staffProfileId),
+    queryFn: () => localStaffRepository.getActiveWork(staffProfileId!),
+    enabled: Boolean(staffProfileId),
   })
 }
 
