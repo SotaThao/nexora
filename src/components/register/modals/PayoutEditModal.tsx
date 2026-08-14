@@ -1,6 +1,7 @@
 import React, { useState } from 'react'
 import { X, Camera, FolderOpen, AlertTriangle } from 'lucide-react'
 import { useTranslation } from '../../../contexts/LanguageContext'
+import { PayoutUiKey } from '../../../data/payoutUiKeys'
 import { PayoutLogos } from '../constants'
 import ImageFileInput from '../../ui/ImageFileInput'
 import BankWireAccountForm from '../../payout/BankWireAccountForm'
@@ -27,7 +28,7 @@ export default function PayoutEditModal({
   const [isCameraOpen, setIsCameraOpen] = useState(false)
 
   if (!editingMethod) return null
-  const isBankWire = editingMethod === 'bankwire'
+  const isBankWire = editingMethod === PayoutUiKey.BankWire
 
   const walletNames = {
     zelle: 'Zelle',

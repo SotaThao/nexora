@@ -38,6 +38,7 @@ import { useStaffInviteInfo, useAcceptStaffInvite, usePublicMerchantInvite } fro
 import { apiAuthAdapter } from '../../../auth/adapters/apiAuthAdapter'
 import { getSignupOtp } from '../../../auth/signupOtp'
 import { staffPaymentMethodsRepository } from '../../../data/repositories/staffPaymentMethods'
+import { PayoutUiKey } from '../../../data/payoutUiKeys'
 import { payoutTypeToUiKey, toPayoutAccountNameDto } from '../../../data/paymentMethodTypes'
 import { staffInvitesRepository } from '../../../data/repositories/staffInvites'
 import profileSettingsRepository from '../../../data/repositories/profileSettings'
@@ -880,7 +881,9 @@ export default function useStaffRegistration({ inviteData }) {
       })
       setStaffPaymentMethods(paymentMethods)
 
-      const vlinkpayMethod = paymentMethods.find(m => m.type.toLowerCase() === 'vlinkpay')
+      const vlinkpayMethod = paymentMethods.find(
+        (m) => payoutTypeToUiKey(m.type || '') === PayoutUiKey.VlinkPay,
+      )
       const vlinkpayIdVal = vlinkpayMethod ? vlinkpayMethod.accountInfo : ''
 
       setSearchId(

@@ -1,20 +1,10 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 import profileSettingsRepository from '../repositories/profileSettings'
 import staffPaymentMethodsRepository from '../repositories/staffPaymentMethods'
-import { toPayoutAccountNameDto } from '../paymentMethodTypes'
+import { toPayoutAccountNameDto, PAYOUT_UI_KEY_TO_API_TYPE } from '../paymentMethodTypes'
 import { logger } from '../../utils/logger'
 import type { PaymentMethodDto } from '../../types/domain'
 import type { PersonalOnboardingInput } from '../../types/hooks'
-
-const METHOD_TYPE_BY_UI_KEY: Record<string, string> = {
-  zelle: 'Zelle',
-  venmo: 'Venmo',
-  cashapp: 'CashApp',
-  paypal: 'PayPal',
-  vlinkpay: 'VlinkPay',
-  applecash: 'AppleCash',
-  bankwire: 'BankWire',
-}
 
 export function useCompletePersonalOnboarding() {
   const queryClient = useQueryClient()
@@ -54,7 +44,7 @@ export function useCompletePersonalOnboarding() {
         const accountInfo = payoutData.value?.trim()
         if (!accountInfo) continue
 
-        const backendType = METHOD_TYPE_BY_UI_KEY[uiKey]
+        const backendType = PAYOUT_UI_KEY_TO_API_TYPE[uiKey]
         if (!backendType) continue
 
         const targetMethod = methods.find((m) => m.type === backendType)

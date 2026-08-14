@@ -17,9 +17,17 @@ import ToggleSwitch from '../../ui/ToggleSwitch'
 import { formatPaymentMethodAccountDisplay } from '../../payout/bankWireAccount'
 import {
   isHiddenPayoutConfigType,
+  isPaymentMethodConfigured,
   supportsPayoutAccountName,
   toPayoutAccountNameDto,
 } from '../../../data/paymentMethodTypes'
+import {
+  parseVlinkpayAddresses,
+  parseVlinkpayAddressesFromMethod,
+  serializeVlinkpayAddresses,
+  toVlinkpayCryptoAddressesPayload,
+} from '../../payout/vlinkpayWallet'
+import { PayoutUiKey } from '../../../data/payoutUiKeys'
 import { getUserProfileImageUrl } from '../../../utils/userProfileImage'
 import { useQueryClient } from '@tanstack/react-query'
 import { qk } from '../../../data/queryKeys'
@@ -105,11 +113,10 @@ export default function StaffPay() {
   const hasUnconfiguredPayout =
     visiblePaymentMethods.length > 0 &&
     !visiblePaymentMethods.some(
-      (method) => method.isActive && method.isConfigured && method.accountInfo?.trim(),
+      (method) => method.isActive && isPaymentMethodConfigured(method),
     )
 
-  const isMethodSetUp = (method: PaymentMethodDto) =>
-    Boolean(method.isConfigured && method.accountInfo?.trim())
+  const isMethodSetUp = (method: PaymentMethodDto) => isPaymentMethodConfigured(method)
 
   const handleToggleMethod = (method: PaymentMethodDto, nextActive: boolean) => {
     if (!method.id) return
@@ -137,11 +144,18 @@ export default function StaffPay() {
 
   const handleSavePayout = (value, qrCode, accountName, qrFile) => {
     if (!activeMethod?.id) return
+    const uiKey = activeMethod.uiKey || ''
+    const isVlinkpay = uiKey === PayoutUiKey.VlinkPay
+    const cryptoAddresses = isVlinkpay
+      ? toVlinkpayCryptoAddressesPayload(parseVlinkpayAddresses(value))
+      : undefined
     updateMutation.mutate(
       {
         id: activeMethod.id,
-        accountInfo: value.trim(),
-        accountName: toPayoutAccountNameDto(activeMethod.uiKey || '', accountName),
+        ...(isVlinkpay
+          ? { accountInfo: null, cryptoAddresses }
+          : { accountInfo: value.trim() }),
+        accountName: toPayoutAccountNameDto(uiKey, accountName),
         imageUrl: qrFile ? null : (qrCode || null),
         imageFile: qrFile || undefined,
       },
@@ -272,12 +286,16 @@ export default function StaffPay() {
                       </span>
                       <div className="min-w-0">
                         <div className="text-xs font-bold text-nexoraText">{label}</div>
-                        {method.isConfigured && method.accountInfo ? (
+                        {isPaymentMethodConfigured(method) ? (
                           <div className="mt-0.5 max-w-[120px] truncate font-mono text-[10px] text-nexoraMuted sm:max-w-[200px]">
                             {supportsPayoutAccountName(uiKey) && method.accountName ? (
                               <span className="font-sans font-semibold">{method.accountName} · </span>
                             ) : null}
-                            {formatPaymentMethodAccountDisplay(method.uiKey || '', method.accountInfo)}
+                            {formatPaymentMethodAccountDisplay(
+                              method.uiKey || '',
+                              method.accountInfo,
+                              method.cryptoAddresses,
+                            )}
                           </div>
                         ) : (
                           <div className="mt-0.5 text-[10px] font-medium italic text-slate-300">
@@ -310,7 +328,11 @@ export default function StaffPay() {
           open={Boolean(activeMethod)}
           walletKey={activeMethod.uiKey}
           initialAccountName={activeMethod.accountName || ''}
-          initialValue={activeMethod.accountInfo || ''}
+          initialValue={
+            activeMethod.uiKey === PayoutUiKey.VlinkPay
+              ? serializeVlinkpayAddresses(parseVlinkpayAddressesFromMethod(activeMethod))
+              : (activeMethod.accountInfo || '')
+          }
           initialQrCode={activeMethod.imageUrl || ''}
           onClose={handleCloseModal}
           onSubmit={handleSavePayout}

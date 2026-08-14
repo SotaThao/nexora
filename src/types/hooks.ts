@@ -14,6 +14,8 @@ export interface UpdatePaymentMethodVars {
   accountInfo?: string | null
   /** Only sent for methods in ACCOUNT_NAME_UI_KEYS; undefined omits the key from the payload. */
   accountName?: string | null
+  /** VlinkPay only (US-98). When set, sent instead of accountInfo for crypto receive addresses. */
+  cryptoAddresses?: Array<{ network: string; symbol: string; address: string }> | null
   imageUrl?: string | null
   /** When set, file is uploaded via POST /api/v1/images/upload before PUT payment-methods. */
   imageFile?: File | null
@@ -78,18 +80,24 @@ export interface CreateTipVars {
   amount: number
   paymentMethod: string
   sessionId: string
+  /** Required when paymentMethod is VlinkPay — resolves CryptoAddresses by symbol. */
+  cryptoSymbol?: string
 }
 
 export interface CreateDirectPaymentVars {
   businessId: string
   businessPaymentMethodId: string
   amount: number
+  /** Required when the selected method is VlinkPay. */
+  cryptoSymbol?: string
 }
 
 export interface CreateStaffDirectPaymentVars {
   staffProfileId: string
   staffPaymentMethodId: string
   amount: number
+  /** Required when the selected method is VlinkPay. */
+  cryptoSymbol?: string
 }
 
 export interface SkipTipVars {
@@ -113,6 +121,8 @@ export interface CreateMultiStaffTipVars {
   touchPointId: string
   businessPaymentMethodId: string
   tipItems: Array<{ staffProfileId: string; amount: number }>
+  /** Required when business payment method is VlinkPay — resolves CryptoAddresses by symbol. */
+  cryptoSymbol?: string
 }
 
 export interface CustomerTouchPageVars {

@@ -16,10 +16,16 @@ import {
   useToggleLocalStaffPaymentMethod,
   useUpdateLocalStaffPaymentMethod,
 } from '../../../data/hooks/useLocalStaff'
+import { PayoutUiKey } from '../../../data/payoutUiKeys'
 import { PAYOUT_UI_LABELS, orderedPayoutUiKeysFromMethods, toPayoutAccountNameDto } from '../../../data/paymentMethodTypes'
 import { getApiErrorCode } from '../../../types/domain'
 import { getErrorI18nKey } from '../../../data/errorCodes'
 import { buildStaffReviewSummary } from './staffModalReviewUtils'
+import {
+  parseVlinkpayAddresses,
+  serializeVlinkpayAddresses,
+  toVlinkpayCryptoAddressesPayload,
+} from '../../payout/vlinkpayWallet'
 
 function StaffModal({
   open,
@@ -253,17 +259,26 @@ function StaffModal({
       if (!staffProfileId) return
 
       const trimmed = value.trim()
+      const isVlinkpay = payoutSetupWallet === PayoutUiKey.VlinkPay
+      const cryptoAddresses = isVlinkpay
+        ? toVlinkpayCryptoAddressesPayload(parseVlinkpayAddresses(trimmed))
+        : undefined
       updateLocalPaymentMutation.mutate(
         {
           staffProfileId,
           uiKey: payoutSetupWallet,
-          accountInfo: trimmed,
+          ...(isVlinkpay
+            ? { accountInfo: null, cryptoAddresses }
+            : { accountInfo: trimmed }),
           accountName: toPayoutAccountNameDto(payoutSetupWallet, accountName),
           imageUrl: qrCode || null,
           imageFile: qrFile,
         },
         {
           onSuccess: (updated) => {
+            const displayValue = isVlinkpay
+              ? serializeVlinkpayAddresses(parseVlinkpayAddresses(trimmed))
+              : trimmed
             setForm((prev) => {
               const configs = prev.payoutConfigs || DEFAULT_PAYOUT_CONFIGS
               return {
@@ -272,7 +287,7 @@ function StaffModal({
                   ...configs,
                   [payoutSetupWallet]: {
                     enabled: updated.isActive || Boolean(trimmed),
-                    value: trimmed,
+                    value: displayValue,
                     qrCode: updated.imageUrl || qrCode || '',
                     accountName: accountName.trim() || prev.fullName || '',
                   },
@@ -510,7 +525,7 @@ function StaffModal({
                         type="button"
                         style={{ display: 'none' }}
                         title={t('components.dashboard.modals.StaffModal.scanVlinkpayQrCode')}
-                        onClick={() => handleScanQr('vlinkpay')}
+                        onClick={() => handleScanQr(PayoutUiKey.VlinkPay)}
                       />
                       <button
                         type="button"

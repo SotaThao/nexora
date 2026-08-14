@@ -1,14 +1,9 @@
 import httpClient from '../../lib/httpClient'
-import type { PaymentMethodDto } from '../../types/domain'
+import type { PaymentMethodCryptoAddressDto, PaymentMethodDto } from '../../types/domain'
 import { PAYOUT_UI_LABELS, payoutTypeToUiKey } from '../paymentMethodTypes'
+import { normalizeCryptoAddresses, type UpdatePaymentMethodDto } from './paymentMethodDto'
 
 type HttpClient = typeof httpClient
-
-interface UpdatePaymentMethodDto {
-  accountInfo?: string | null
-  accountName?: string | null
-  imageUrl?: string | null
-}
 
 interface MerchantPaymentMethodApiDto {
   id?: string
@@ -20,6 +15,7 @@ interface MerchantPaymentMethodApiDto {
   isConfigured?: boolean
   businessKybStatus?: string | null
   name?: string
+  cryptoAddresses?: PaymentMethodCryptoAddressDto[] | null
 }
 
 function normalizeMerchantPaymentMethod(dto: MerchantPaymentMethodApiDto): PaymentMethodDto {
@@ -33,6 +29,7 @@ function normalizeMerchantPaymentMethod(dto: MerchantPaymentMethodApiDto): Payme
     accountInfo: dto.accountInfo ?? null,
     accountName: dto.accountName ?? null,
     imageUrl: dto.imageUrl ?? null,
+    cryptoAddresses: normalizeCryptoAddresses(dto.cryptoAddresses),
     isActive: Boolean(dto.isActive),
     isConfigured: Boolean(dto.isConfigured),
     businessKybStatus: dto.businessKybStatus ?? null,

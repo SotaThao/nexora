@@ -1,18 +1,63 @@
-import { payoutTypeToUiKey } from '../paymentMethodTypes'
-import type { PaymentMethodDto } from '../../types/domain'
+import type { PaymentMethodCryptoAddressDto, PaymentMethodDto } from '../../types/domain'
+import {
+  normalizeCryptoAddresses,
+  normalizePaymentMethodDto as normalizeSharedPaymentMethodDto,
+} from './paymentMethodDto'
 
 function normalizePaymentMethodDto(raw: LooseObject): PaymentMethodDto {
-  const type = String(raw.type || raw.name || '')
-  return {
-    id: raw.id,
-    type,
-    uiKey: payoutTypeToUiKey(type),
-    accountInfo: raw.accountInfo ?? raw.account_info ?? null,
-    accountName: raw.accountName ?? raw.account_name ?? null,
-    imageUrl: raw.imageUrl ?? null,
+  return normalizeSharedPaymentMethodDto({
+    id: raw.id as string | undefined,
+    type: String(raw.type || raw.name || ''),
+    accountInfo: (raw.accountInfo ?? raw.account_info ?? null) as string | null,
+    accountName: (raw.accountName ?? raw.account_name ?? null) as string | null,
+    imageUrl: (raw.imageUrl as string | null | undefined) ?? null,
     isActive: raw.isActive !== false,
-    name: raw.name,
+    isConfigured: raw.isConfigured as boolean | undefined,
+    name: raw.name as string | undefined,
+    cryptoAddresses: (raw.cryptoAddresses ?? raw.CryptoAddresses) as
+      | Array<{ network?: string; symbol?: string; address?: string }>
+      | null
+      | undefined,
+  })
+}
+
+/** Touch-page staff field for VlinkPay address picker (BE: vlinkPayCryptoAddresses). */
+function normalizeStaffVlinkPayCryptoAddresses(
+  staff: LooseObject,
+): PaymentMethodCryptoAddressDto[] | null {
+  const raw =
+    staff.vlinkPayCryptoAddresses ??
+    staff.VlinkPayCryptoAddresses ??
+    staff.vlinkpayCryptoAddresses ??
+    null
+  return normalizeCryptoAddresses(
+    raw as Array<{ network?: string; symbol?: string; address?: string }> | null,
+  )
+}
+
+function normalizeTouchStaffList(rawStaff: unknown): unknown {
+  if (Array.isArray(rawStaff)) {
+    return (rawStaff as LooseObject[]).map((staff) => ({
+      ...staff,
+      vlinkPayCryptoAddresses: normalizeStaffVlinkPayCryptoAddresses(staff),
+    }))
   }
+
+  if (rawStaff && typeof rawStaff === 'object') {
+    const container = rawStaff as LooseObject
+    const items = container.items
+    if (Array.isArray(items)) {
+      return {
+        ...container,
+        items: (items as LooseObject[]).map((staff) => ({
+          ...staff,
+          vlinkPayCryptoAddresses: normalizeStaffVlinkPayCryptoAddresses(staff),
+        })),
+      }
+    }
+  }
+
+  return rawStaff
 }
 
 function readBusinessIdFromObject(value: LooseObject | null | undefined): string | null {
@@ -108,10 +153,13 @@ export function normalizeTouchPageData(raw: LooseObject | null | undefined): Loo
     rootReviewLinks.feedbackEmail,
   )
 
+  const normalizedStaff = normalizeTouchStaffList(raw.staff)
+
   return {
     ...raw,
     businessId: resolvedBusinessId,
     businessPaymentMethods,
+    staff: normalizedStaff,
     business: {
       ...business,
       id: resolvedBusinessId || readBusinessIdFromObject(business),

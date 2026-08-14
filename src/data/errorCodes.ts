@@ -82,6 +82,28 @@ export const errorCodeToI18nKey = {
   STAFF_LINK_HAS_OUTSTANDING_DEBT: 'errors.staff_link_has_outstanding_debt',
   STAFF_PAYMENT_METHOD_NOT_FOUND: 'errors.staff_payment_method_not_found',
   STAFF_PAYMENT_METHOD_ACCESS_DENIED: 'errors.staff_payment_method_access_denied',
+  STAFF_PAYMENT_METHOD_CRYPTO_ADDRESSES_ONLY_FOR_VLINKPAY:
+    'errors.staff_payment_method_crypto_addresses_only_for_vlinkpay',
+  STAFF_PAYMENT_METHOD_CRYPTO_ADDRESS_UNSUPPORTED_NETWORK:
+    'errors.staff_payment_method_crypto_address_unsupported_network',
+  STAFF_PAYMENT_METHOD_CRYPTO_ADDRESS_UNSUPPORTED_SYMBOL:
+    'errors.staff_payment_method_crypto_address_unsupported_symbol',
+  STAFF_PAYMENT_METHOD_CRYPTO_ADDRESS_DUPLICATE_SYMBOL:
+    'errors.staff_payment_method_crypto_address_duplicate_symbol',
+  STAFF_PAYMENT_METHOD_CRYPTO_ADDRESS_INVALID: 'errors.staff_payment_method_crypto_address_invalid',
+  BUSINESS_PAYMENT_METHOD_CRYPTO_ADDRESSES_ONLY_FOR_VLINKPAY:
+    'errors.business_payment_method_crypto_addresses_only_for_vlinkpay',
+  BUSINESS_PAYMENT_METHOD_CRYPTO_ADDRESS_UNSUPPORTED_NETWORK:
+    'errors.business_payment_method_crypto_address_unsupported_network',
+  BUSINESS_PAYMENT_METHOD_CRYPTO_ADDRESS_UNSUPPORTED_SYMBOL:
+    'errors.business_payment_method_crypto_address_unsupported_symbol',
+  BUSINESS_PAYMENT_METHOD_CRYPTO_ADDRESS_DUPLICATE_SYMBOL:
+    'errors.business_payment_method_crypto_address_duplicate_symbol',
+  BUSINESS_PAYMENT_METHOD_CRYPTO_ADDRESS_INVALID: 'errors.business_payment_method_crypto_address_invalid',
+
+  // Tip crypto symbol (VlinkPay wallet tip / payment-link)
+  TIP_CRYPTO_SYMBOL_REQUIRED: 'errors.TIP_CRYPTO_SYMBOL_REQUIRED',
+  TIP_CRYPTO_ADDRESS_NOT_FOUND: 'errors.TIP_CRYPTO_ADDRESS_NOT_FOUND',
 
   // Physical cards (QR/NFC hardware)
   PHYSICAL_CARD_NOT_FOUND: 'errors.physical_card_not_found',

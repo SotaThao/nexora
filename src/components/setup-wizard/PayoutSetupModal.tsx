@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react'
 import { AlertTriangle, Camera, FolderOpen, X } from 'lucide-react'
 import { useTranslation } from '../../contexts/LanguageContext'
+import { PayoutUiKey } from '../../data/payoutUiKeys'
 import { WalletLogos } from './constants'
 import ImageFileInput from '../ui/ImageFileInput'
 import { captureQrImage } from '../../utils/qrCode'
@@ -30,7 +31,7 @@ export default function PayoutSetupModal({ open, walletKey, initialValue, initia
   }, [open, walletKey, initialValue, initialQrCode, initialAccountName])
 
   if (!open) return null
-  const isBankWire = walletKey === 'bankwire'
+  const isBankWire = walletKey === PayoutUiKey.BankWire
 
   const walletNames = {
     zelle: 'Zelle',

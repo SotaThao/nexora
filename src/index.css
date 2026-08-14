@@ -336,6 +336,12 @@ body:not(.homepage-active):not(.public-booking-active) a:focus-visible {
     max-height: 90dvh;
   }
 
+  /* Payout setup modal (VLINKPAY variant has variable-length content: guide steps expand/collapse). */
+  .payout-setup-modal-scroll {
+    max-height: 90vh;
+    max-height: 90dvh;
+  }
+
   .nexora-icon-button {
     @apply inline-flex h-10 w-10 items-center justify-center rounded-lg text-nexoraText transition hover:bg-nexoraSurfaceMuted;
   }

@@ -26,11 +26,11 @@ import {
   DASHBOARD_REPORTS_TAB,
 } from '../dashboard/constants'
 import { downloadQrCode, QR_IMAGE_SIZES } from '../../utils/qrUtils'
-import { payoutTypeToUiKey, getPaymentMethodDisplayName } from '../../data/paymentMethodTypes'
+import { payoutTypeToUiKey, getPaymentMethodDisplayName, isPaymentMethodConfigured } from '../../data/paymentMethodTypes'
 import QrImage from '../ui/QrImage'
 
 function isReadyForCustomerPayment(method) {
-  return Boolean(method?.isActive && method?.accountInfo?.trim())
+  return Boolean(method?.isActive && isPaymentMethodConfigured(method))
 }
 
 export default function SettingsTipQrPanel({

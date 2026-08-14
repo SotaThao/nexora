@@ -6,7 +6,12 @@ import { useTranslation } from '../../contexts/LanguageContext'
 import type { PaymentMethodDto } from '../../types/domain'
 import type { PayoutConfigMap, UpdatePaymentMethodVars } from '../../types/hooks'
 import { resolvePaymentMethodImageUrl } from '../../utils/resolvePaymentMethodImageUrl'
-import { toPayoutAccountNameDto } from '../paymentMethodTypes'
+import { toPayoutAccountNameDto, PAYOUT_UI_KEY_TO_API_TYPE } from '../paymentMethodTypes'
+import { PayoutApiType, PayoutUiKey } from '../payoutUiKeys'
+import {
+  parseVlinkpayAddresses,
+  toVlinkpayCryptoAddressesPayload,
+} from '../../components/payout/vlinkpayWallet'
 
 export function useMerchantPaymentMethods({ enabled = true } = {}) {
   return useQuery<PaymentMethodDto[]>({
@@ -23,11 +28,12 @@ export function useUpdateMerchantPaymentMethod() {
   const { t } = useTranslation()
 
   return useMutation<PaymentMethodDto, Error, UpdatePaymentMethodVars>({
-    mutationFn: async ({ id, accountInfo, accountName, imageUrl, imageFile }) => {
+    mutationFn: async ({ id, accountInfo, accountName, cryptoAddresses, imageUrl, imageFile }) => {
       const resolvedImageUrl = await resolvePaymentMethodImageUrl({ imageFile, imageUrl })
       return merchantPaymentMethodsRepository.update(id, {
         accountInfo,
         accountName,
+        cryptoAddresses,
         imageUrl: resolvedImageUrl,
       })
     },
@@ -42,16 +48,6 @@ export function useUpdateMerchantPaymentMethod() {
   })
 }
 
-const METHOD_TYPE_BY_UI_KEY: Record<string, string> = {
-  zelle: 'Zelle',
-  bankwire: 'BankWire',
-  paypal: 'PayPal',
-  venmo: 'Venmo',
-  cashapp: 'CashApp',
-  applecash: 'AppleCash',
-  vlinkpay: 'VlinkPay',
-}
-
 export function useSaveMerchantPayoutConfigs() {
   const queryClient = useQueryClient()
 
@@ -61,7 +57,7 @@ export function useSaveMerchantPayoutConfigs() {
       const tasks: Promise<void>[] = []
 
       for (const [uiKey, config] of Object.entries(payoutConfigs || {})) {
-        const backendType = METHOD_TYPE_BY_UI_KEY[uiKey]
+        const backendType = PAYOUT_UI_KEY_TO_API_TYPE[uiKey]
         if (!backendType) continue
 
         const method = methods.find((m) => m.type === backendType)
@@ -70,16 +66,26 @@ export function useSaveMerchantPayoutConfigs() {
         const accountInfo = config.value?.trim() || ''
         const wantsActive = !!(config.enabled && accountInfo)
         const accountName = toPayoutAccountNameDto(uiKey, config.accountName)
+        const isVlinkpay = uiKey === PayoutUiKey.VlinkPay
 
         tasks.push(
           (async () => {
             const accountNameChanged =
               accountName !== undefined && accountName !== (method.accountName ?? null)
-            if (accountInfo && (accountInfo !== method.accountInfo || accountNameChanged)) {
+            if (isVlinkpay && accountInfo) {
+              const cryptoAddresses = toVlinkpayCryptoAddressesPayload(
+                parseVlinkpayAddresses(accountInfo),
+              )
+              await merchantPaymentMethodsRepository.update(method.id, {
+                accountInfo: null,
+                cryptoAddresses,
+                accountName,
+              })
+            } else if (accountInfo && (accountInfo !== method.accountInfo || accountNameChanged)) {
               await merchantPaymentMethodsRepository.update(method.id, { accountInfo, accountName })
             }
             if (method.isActive !== wantsActive) {
-              if (backendType === 'VlinkPay') return
+              if (backendType === PayoutApiType.VlinkPay) return
               await merchantPaymentMethodsRepository.toggle(method.id)
             }
           })(),
@@ -107,9 +113,15 @@ export function useToggleMerchantPaymentMethod() {
   >({
     mutationFn: (vars) =>
       merchantPaymentMethodsRepository.toggle(typeof vars === 'string' ? vars : vars.id),
-    onSuccess: () => {
+    onSuccess: (method, vars) => {
       queryClient.invalidateQueries({ queryKey: qk.merchantPaymentMethods() })
       queryClient.invalidateQueries({ queryKey: qk.merchantPaymentQr() })
+      const silentSuccessToast = typeof vars === 'string' ? false : Boolean(vars.silentSuccessToast)
+      if (silentSuccessToast) return
+      showToast(
+        t(method.isActive ? 'payment_methods.toggle_enabled' : 'payment_methods.toggle_disabled'),
+        'success',
+      )
     },
     onError: (err) => {
       showToast(err.message || t('payment_methods.toggle_failed'), 'error')

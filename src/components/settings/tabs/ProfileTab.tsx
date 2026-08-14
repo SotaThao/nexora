@@ -24,6 +24,7 @@ import {
   AlertTriangle,
   X,
   QrCode,
+  Loader2,
 } from 'lucide-react'
 import ToggleSwitch from '../../ui/ToggleSwitch'
 import { isValidEmail, isValidPhone } from '../../../utils/validation'
@@ -34,14 +35,24 @@ import {
   getPaymentMethodDisplayName,
   payoutTypeToUiKey,
   isHiddenPayoutConfigType,
+  isPaymentMethodConfigured,
   supportsPayoutAccountName,
   toPayoutAccountNameDto,
 } from '../../../data/paymentMethodTypes'
 import { formatPaymentMethodAccountDisplay } from '../../payout/bankWireAccount'
 import PayoutAccountNameField from '../../payout/PayoutAccountNameField'
+import VlinkpayWalletFields from '../../payout/VlinkpayWalletFields'
+import {
+  getVlinkpayAddressValidationError,
+  parseVlinkpayAddressesFromMethod,
+  toVlinkpayCryptoAddressesPayload,
+  VlinkpayCoin,
+  type VlinkpayAddresses,
+} from '../../payout/vlinkpayWallet'
 import SettingsTipQrPanel from '../SettingsTipQrPanel'
 import BusinessInfoCard from '../BusinessInfoCard'
 import type { PaymentMethodDto } from '../../../types/domain'
+import { PayoutUiKey } from '../../../data/payoutUiKeys'
 
 const PayoutLogos = {
   zelle: (
@@ -199,12 +210,17 @@ export default function ProfileTab({
   // Local state for the payment method edit modal
   const [editingMethod, setEditingMethod] = useState<any | null>(null)
   const [editValue, setEditValue] = useState('')
+  const [editVlinkpayAddresses, setEditVlinkpayAddresses] = useState<VlinkpayAddresses>({
+    [VlinkpayCoin.Usdv]: '',
+    [VlinkpayCoin.Usdt]: '',
+  })
   const [editAccountName, setEditAccountName] = useState('')
   const [editQrCode, setEditQrCode] = useState<any | null>(null)
   const [editQrFile, setEditQrFile] = useState(null)
   const [isCapturing, setIsCapturing] = useState(false)
   const [isCameraOpen, setIsCameraOpen] = useState(false)
   const [modalError, setModalError] = useState('')
+  const [vlinkpayGuideOpen, setVlinkpayGuideOpen] = useState(true)
   const [payoutCardTab, setPayoutCardTab] = useState<'methods' | 'paymentQr'>('methods')
 
   const getMethodUiKey = (method: PaymentMethodDto) =>
@@ -229,7 +245,7 @@ export default function ProfileTab({
     const methodData = getMethod(key)
     const nextActive = !isCurrentlyActive
 
-    if (nextActive && !(methodData.isConfigured && methodData.accountInfo?.trim())) {
+    if (nextActive && !isPaymentMethodConfigured(methodData)) {
       handleEditPayoutAccount(key)
       return
     }
@@ -246,18 +262,30 @@ export default function ProfileTab({
     const methodData = getMethod(key)
     setEditingMethod(key)
     setEditValue(methodData.accountInfo || '')
+    setEditVlinkpayAddresses(parseVlinkpayAddressesFromMethod(methodData))
     setEditAccountName(methodData.accountName || '')
     setEditQrCode(methodData.imageUrl || null)
     setEditQrFile(null)
     setModalError('')
+    if (key === PayoutUiKey.VlinkPay) setVlinkpayGuideOpen(true)
   }
 
   const savePayoutAccount = (e) => {
     e.preventDefault()
-    const validationError = validatePayoutAccount(editingMethod, editValue)
-    if (validationError) {
-      setModalError(validationMessage(validationError))
-      return
+    if (updateMutation.isPending || toggleMutation.isPending) return
+    const isVlinkpay = editingMethod === PayoutUiKey.VlinkPay
+    if (isVlinkpay) {
+      const vlinkpayError = getVlinkpayAddressValidationError(editVlinkpayAddresses)
+      if (vlinkpayError) {
+        setModalError(validationMessage(vlinkpayError))
+        return
+      }
+    } else {
+      const validationError = validatePayoutAccount(editingMethod, editValue.trim())
+      if (validationError) {
+        setModalError(validationMessage(validationError))
+        return
+      }
     }
     const methodData = getMethod(editingMethod)
     if (!methodData.id) {
@@ -267,7 +295,14 @@ export default function ProfileTab({
     updateMutation.mutate(
       {
         id: methodData.id,
-        accountInfo: editValue.trim(),
+        ...(isVlinkpay
+          ? {
+              accountInfo: null,
+              cryptoAddresses: toVlinkpayCryptoAddressesPayload(editVlinkpayAddresses),
+            }
+          : {
+              accountInfo: editValue.trim(),
+            }),
         accountName: toPayoutAccountNameDto(editingMethod, editAccountName),
         imageUrl: editQrFile ? null : (editQrCode || null),
         imageFile: editQrFile || undefined,
@@ -308,10 +343,10 @@ export default function ProfileTab({
 
   return (
     <>
-      <div className={`grid grid-cols-1 gap-6 animate-fadeIn ${focusPayoutMethods ? '' : 'lg:grid-cols-3'}`}>
+      <div className={`grid grid-cols-1 gap-6 animate-fadeIn ${focusPayoutMethods ? '' : 'xl:grid-cols-3'}`}>
 
         {/* Left Column (Owner Profile + Payout Methods) */}
-        <div className={`${focusPayoutMethods ? '' : 'lg:col-span-1'} space-y-6`}>
+        <div className={`${focusPayoutMethods ? '' : 'xl:col-span-1'} space-y-6`}>
 
           {/* Owner Profile Card */}
           <div className={`rounded-xl border border-nexoraBorder bg-white shadow-sm p-6 flex flex-col items-center text-center relative ${focusPayoutMethods ? 'hidden' : ''}`}>
@@ -341,14 +376,14 @@ export default function ProfileTab({
             </span>
 
             <div className="w-full mt-6 space-y-3.5 text-xs text-left border-t border-nexoraRule pt-4">
-              <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center py-2 sm:py-1 gap-1">
-                <span className="text-nexoraMuted font-bold">{t('components.settings.tabs.ProfileTab.username')}:</span>
-                <span className="text-nexoraText font-extrabold">{profile.username}</span>
+              <div className="flex flex-col gap-1 py-2 sm:flex-row sm:items-center sm:justify-between sm:gap-3 sm:py-1">
+                <span className="shrink-0 text-nexoraMuted font-bold">{t('components.settings.tabs.ProfileTab.username')}:</span>
+                <span className="min-w-0 break-words text-nexoraText font-extrabold sm:text-right">{profile.username}</span>
               </div>
 
-              <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center py-2 sm:py-1 border-t border-slate-50 gap-1">
-                <span className="text-nexoraMuted font-bold">{t('components.settings.tabs.ProfileTab.email')}:</span>
-                <span className="text-nexoraText font-extrabold truncate" title={profile.email}>{profile.email}</span>
+              <div className="flex flex-col gap-1 border-t border-slate-50 py-2 sm:flex-row sm:items-center sm:justify-between sm:gap-3 sm:py-1">
+                <span className="shrink-0 text-nexoraMuted font-bold">{t('components.settings.tabs.ProfileTab.email')}:</span>
+                <span className="min-w-0 truncate text-nexoraText font-extrabold sm:text-right" title={profile.email}>{profile.email}</span>
               </div>
 
               {inlineReferral ? (
@@ -494,13 +529,17 @@ export default function ProfileTab({
               {displayedPaymentMethods.map((method) => {
                 const uiKey = getMethodUiKey(method)
                 const label = method.name || getPaymentMethodDisplayName(method.type || '')
-                const accountDisplay = formatPaymentMethodAccountDisplay(uiKey, method.accountInfo)
+                const accountDisplay = formatPaymentMethodAccountDisplay(
+                  uiKey,
+                  method.accountInfo,
+                  method.cryptoAddresses,
+                )
                 return (
                 <div
                   key={method.id || uiKey}
-                  className="flex items-center justify-between rounded-xl border border-nexoraBorder bg-white px-3 py-2.5 shadow-sm"
+                  className="flex items-center gap-2 rounded-xl border border-nexoraBorder bg-white px-3 py-2.5 shadow-sm"
                 >
-                  <div className="flex items-center gap-3 min-w-0">
+                  <div className="flex min-w-0 flex-1 items-center gap-2.5 sm:gap-3">
                     <ToggleSwitch
                       checked={!!method.isActive}
                       onChange={() => handleToggleMethod(uiKey, !!method.isActive)}
@@ -510,14 +549,14 @@ export default function ProfileTab({
                     />
 
                     {/* Logo and Label */}
-                    <div className="flex items-center gap-2.5 min-w-0">
+                    <div className="flex min-w-0 flex-1 items-center gap-2 sm:gap-2.5">
                       <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg border border-nexoraBorder bg-nexoraCanvas">
                         {PayoutLogos[uiKey]}
                       </span>
-                      <div className="min-w-0">
-                        <div className="text-xs font-bold text-nexoraText">{label}</div>
-                        {method.isConfigured ? (
-                          <div className="mt-0.5 max-w-[110px] truncate font-mono text-[10px] text-nexoraMuted sm:max-w-[150px]">
+                      <div className="min-w-0 flex-1">
+                        <div className="truncate text-xs font-bold text-nexoraText">{label}</div>
+                        {isPaymentMethodConfigured(method) ? (
+                          <div className="mt-0.5 truncate font-mono text-[10px] text-nexoraMuted">
                             {supportsPayoutAccountName(uiKey) && method.accountName ? (
                               <span className="font-sans font-semibold">{method.accountName} · </span>
                             ) : null}
@@ -537,10 +576,12 @@ export default function ProfileTab({
                     type="button"
                     onClick={() => handleEditPayoutAccount(uiKey)}
                     aria-label={`Edit ${label} Payout Account`}
-                    className="ml-2 flex shrink-0 items-center gap-1 rounded-lg border border-amber-200 bg-amber-50 px-2 py-1.5 text-[10px] font-bold text-amber-700"
+                    className="ml-auto flex shrink-0 items-center gap-1 rounded-lg border border-amber-200 bg-amber-50 px-2 py-1.5 text-[10px] font-bold text-amber-700"
                   >
-                    <Edit2 className="h-3 w-3" />
-                    <span>{t('components.settings.tabs.ProfileTab.payoutAccount')}</span>
+                    <Edit2 className="h-3 w-3 shrink-0" />
+                    <span className="max-w-[5.5rem] truncate sm:max-w-none">
+                      {t('components.settings.tabs.ProfileTab.payoutAccount')}
+                    </span>
                   </button>
                 </div>
               )})}
@@ -553,7 +594,7 @@ export default function ProfileTab({
         </div>
 
         {/* Right Column (Basic Info + Address Details + Business Info + Map/Sponsor Grid) */}
-        <div className={`lg:col-span-2 grid grid-cols-1 md:grid-cols-2 gap-6 content-start ${focusPayoutMethods ? 'hidden' : ''}`}>
+        <div className={`xl:col-span-2 grid grid-cols-1 gap-6 content-start md:grid-cols-2 ${focusPayoutMethods ? 'hidden' : ''}`}>
 
           {/* Basic Information */}
           <div className="rounded-xl border border-nexoraBorder bg-white shadow-sm p-6 relative">
@@ -686,17 +727,17 @@ export default function ProfileTab({
               </form>
             ) : (
               <div className="space-y-3.5 text-xs">
-                <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center py-2 sm:py-1 gap-1">
-                  <span className="text-nexoraMuted font-bold">{t('components.settings.tabs.ProfileTab.fullName')}</span>
-                  <span className="text-nexoraText font-extrabold">{profile.fullName}</span>
+                <div className="flex flex-col gap-1 py-2 sm:flex-row sm:items-center sm:justify-between sm:gap-3 sm:py-1">
+                  <span className="shrink-0 text-nexoraMuted font-bold">{t('components.settings.tabs.ProfileTab.fullName')}</span>
+                  <span className="min-w-0 break-words text-nexoraText font-extrabold sm:text-right">{profile.fullName}</span>
                 </div>
-                <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center py-2 sm:py-1 border-t border-slate-50 gap-1">
-                  <span className="text-nexoraMuted font-bold">{t('components.settings.tabs.ProfileTab.dateOfBirth')}</span>
-                  <span className="text-nexoraText font-extrabold">{formatDOB(profile.dob)}</span>
+                <div className="flex flex-col gap-1 border-t border-slate-50 py-2 sm:flex-row sm:items-center sm:justify-between sm:gap-3 sm:py-1">
+                  <span className="shrink-0 text-nexoraMuted font-bold">{t('components.settings.tabs.ProfileTab.dateOfBirth')}</span>
+                  <span className="min-w-0 break-words text-nexoraText font-extrabold sm:text-right">{formatDOB(profile.dob)}</span>
                 </div>
-                <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center py-2 sm:py-1 border-t border-slate-50 gap-1">
-                  <span className="text-nexoraMuted font-bold">{t('components.settings.tabs.ProfileTab.phoneNumber')}</span>
-                  <span className="text-nexoraText font-extrabold">{profile.phone}</span>
+                <div className="flex flex-col gap-1 border-t border-slate-50 py-2 sm:flex-row sm:items-center sm:justify-between sm:gap-3 sm:py-1">
+                  <span className="shrink-0 text-nexoraMuted font-bold">{t('components.settings.tabs.ProfileTab.phoneNumber')}</span>
+                  <span className="min-w-0 break-words text-nexoraText font-extrabold sm:text-right">{profile.phone}</span>
                 </div>
               </div>
             )}
@@ -834,25 +875,25 @@ export default function ProfileTab({
               </form>
             ) : (
               <div className="space-y-3.5 text-xs">
-                <div className="flex flex-col sm:flex-row sm:justify-between sm:items-start py-2 sm:py-1 gap-1">
-                  <span className="text-nexoraMuted font-bold shrink-0">{t('components.settings.tabs.ProfileTab.street')}</span>
-                  <span className="text-nexoraText font-extrabold sm:text-right break-words max-w-full sm:max-w-[180px]">{profile.street}</span>
+                <div className="flex flex-col gap-1 py-2 sm:flex-row sm:items-start sm:justify-between sm:gap-3 sm:py-1">
+                  <span className="shrink-0 text-nexoraMuted font-bold">{t('components.settings.tabs.ProfileTab.street')}</span>
+                  <span className="min-w-0 break-words text-nexoraText font-extrabold sm:text-right">{profile.street}</span>
                 </div>
-                <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center py-2 sm:py-1 border-t border-slate-50 gap-1">
-                <span className="text-nexoraMuted font-bold">{t('common.city')}</span>
-                  <span className="text-nexoraText font-extrabold">{profile.city}</span>
+                <div className="flex flex-col gap-1 border-t border-slate-50 py-2 sm:flex-row sm:items-center sm:justify-between sm:gap-3 sm:py-1">
+                  <span className="shrink-0 text-nexoraMuted font-bold">{t('common.city')}</span>
+                  <span className="min-w-0 break-words text-nexoraText font-extrabold sm:text-right">{profile.city}</span>
                 </div>
-                <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center py-2 sm:py-1 border-t border-slate-50 gap-1">
-                  <span className="text-nexoraMuted font-bold">{t('components.settings.tabs.ProfileTab.state')}</span>
-                  <span className="text-nexoraText font-extrabold">{profile.state || 'N/A'}</span>
+                <div className="flex flex-col gap-1 border-t border-slate-50 py-2 sm:flex-row sm:items-center sm:justify-between sm:gap-3 sm:py-1">
+                  <span className="shrink-0 text-nexoraMuted font-bold">{t('components.settings.tabs.ProfileTab.state')}</span>
+                  <span className="min-w-0 break-words text-nexoraText font-extrabold sm:text-right">{profile.state || 'N/A'}</span>
                 </div>
-                <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center py-2 sm:py-1 border-t border-slate-50 gap-1">
-                  <span className="text-nexoraMuted font-bold">{t('components.settings.tabs.ProfileTab.zipCode')}</span>
-                  <span className="text-nexoraText font-extrabold font-mono">{profile.zipCode}</span>
+                <div className="flex flex-col gap-1 border-t border-slate-50 py-2 sm:flex-row sm:items-center sm:justify-between sm:gap-3 sm:py-1">
+                  <span className="shrink-0 text-nexoraMuted font-bold">{t('components.settings.tabs.ProfileTab.zipCode')}</span>
+                  <span className="min-w-0 break-words text-nexoraText font-extrabold font-mono sm:text-right">{profile.zipCode}</span>
                 </div>
-                <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center py-2 sm:py-1 border-t border-slate-50 gap-1">
-                  <span className="text-nexoraMuted font-bold">{t('components.settings.tabs.ProfileTab.country')}</span>
-                  <span className="text-nexoraText font-extrabold">{profile.country}</span>
+                <div className="flex flex-col gap-1 border-t border-slate-50 py-2 sm:flex-row sm:items-center sm:justify-between sm:gap-3 sm:py-1">
+                  <span className="shrink-0 text-nexoraMuted font-bold">{t('components.settings.tabs.ProfileTab.country')}</span>
+                  <span className="min-w-0 break-words text-nexoraText font-extrabold sm:text-right">{profile.country}</span>
                 </div>
               </div>
             )}
@@ -1023,6 +1064,7 @@ export default function ProfileTab({
 
       {/* Payout Account Edit Custom Modal Popup */}
       {editingMethod && (() => {
+        const isVlinkpayModal = editingMethod === PayoutUiKey.VlinkPay
         const walletNames = {
           zelle: 'Zelle',
           bankwire: 'Bank Wire',
@@ -1049,26 +1091,30 @@ export default function ProfileTab({
           venmo: t('components.settings.tabs.ProfileTab.enterVenmoUsername'),
           cashapp: t('components.settings.tabs.ProfileTab.enterCashAppCashtag'),
           applecash: t('components.settings.tabs.ProfileTab.enterAppleCashPhone'),
-          vlinkpay: t('components.dashboard.modals.PayoutSetupModal.placeholderVlinkpay'),
+          vlinkpay: t('components.dashboard.modals.PayoutSetupModal.placeholderVlinkpayWallet'),
         }
 
         return createPortal(
           <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-[100] flex items-center justify-center p-4">
-            <div className={`bg-white rounded-3xl border border-slate-100 max-w-sm w-full shadow-2xl relative overflow-hidden animate-scaleIn text-left ${isCameraOpen ? 'h-[480px]' : 'p-6 space-y-4.5'}`}>
+            <div className={`bg-white rounded-3xl border border-slate-100 font-sans ${isVlinkpayModal ? 'max-w-[420px] max-h-[90vh] overflow-y-auto' : 'max-w-sm'} w-full shadow-2xl relative overflow-hidden animate-scaleIn text-left ${isCameraOpen ? 'h-[480px]' : isVlinkpayModal ? 'space-y-3 p-3.5 sm:space-y-3.5 sm:p-4' : 'p-6 space-y-4.5'}`}>
 
               {/* Header */}
-              <div className="flex items-center gap-3.5 border-b border-slate-100 pb-3">
-                <span className="h-11 w-11 rounded-xl bg-slate-50 border border-slate-100 flex items-center justify-center shrink-0 shadow-sm">
+              <div className={`flex items-center border-b border-slate-100 pb-3 ${isVlinkpayModal ? 'gap-3' : 'gap-3.5'}`}>
+                <span className={`rounded-xl bg-slate-50 border border-slate-100 flex items-center justify-center shrink-0 shadow-sm ${isVlinkpayModal ? 'h-9 w-9 sm:h-10 sm:w-10' : 'h-11 w-11'}`}>
                   {PayoutLogos[editingMethod]}
                 </span>
-                <div>
-                  <h3 className="text-sm font-black text-slate-800 uppercase tracking-wider">
-                    {currentLanguage === 'vi'
-                      ? `CẤU HÌNH ${walletNames[editingMethod]?.toUpperCase()}`
-                      : `CONFIGURE ${walletNames[editingMethod]?.toUpperCase()}`}
+                <div className="min-w-0">
+                  <h3 className={`font-sans font-black text-slate-800 uppercase tracking-wider ${isVlinkpayModal ? 'text-xs leading-4 sm:text-sm sm:leading-5' : 'text-sm'}`}>
+                    {isVlinkpayModal
+                      ? t('components.dashboard.modals.PayoutSetupModal.vlinkpaySetupTitle')
+                      : currentLanguage === 'vi'
+                        ? `CẤU HÌNH ${walletNames[editingMethod]?.toUpperCase()}`
+                        : `CONFIGURE ${walletNames[editingMethod]?.toUpperCase()}`}
                   </h3>
-                  <p className="text-[10px] text-slate-400 font-medium">
-                    {t('components.settings.tabs.ProfileTab.specifyReceivingTargetIdentifier')}
+                  <p className={`font-sans font-medium text-slate-400 ${isVlinkpayModal ? 'mt-0.5 text-[10px] sm:text-[11px]' : 'text-[10px]'}`}>
+                    {isVlinkpayModal
+                      ? t('components.dashboard.modals.PayoutSetupModal.vlinkpaySetupSubtitle')
+                      : t('components.settings.tabs.ProfileTab.specifyReceivingTargetIdentifier')}
                   </p>
                 </div>
               </div>
@@ -1081,109 +1127,137 @@ export default function ProfileTab({
                   onChange={setEditAccountName}
                 />
 
-                {/* Account Identifier Input */}
-                <div>
-                  <label className="block text-[10px] font-extrabold uppercase text-slate-500 tracking-wider mb-2">
-                    {currentLanguage === 'vi'
-                      ? `${walletNames[editingMethod]?.toUpperCase()} EMAIL/SĐT CỦA BẠN *`
-                      : `YOUR ${walletNames[editingMethod]?.toUpperCase()} EMAIL/PHONE *`}
-                  </label>
-                  <input
-                    type="text"
-                    autoFocus
-                    value={editValue}
-                    aria-invalid={Boolean(modalError)}
-                    aria-describedby={modalError ? 'settings-payout-error' : undefined}
-                    onChange={(e) => {
-                      setEditValue(e.target.value)
+                {isVlinkpayModal ? (
+                  <VlinkpayWalletFields
+                    addresses={editVlinkpayAddresses}
+                    onChange={(coin, nextValue) => {
+                      setEditVlinkpayAddresses((prev) => ({ ...prev, [coin]: nextValue }))
                       setModalError('')
                     }}
-                    placeholder={walletPlaceholders[editingMethod]}
-                    className={`w-full bg-slate-50 border border-slate-200 focus:border-nexoraBrand focus:ring-2 focus:ring-nexoraBrand/20 focus:bg-white rounded-xl px-3.5 h-11 text-xs text-slate-800 focus:outline-none transition-all ${
-                      modalError ? 'border-rose-500 focus:border-rose-500 focus:ring-rose-500/20' : ''
-                    }`}
+                    guideOpen={vlinkpayGuideOpen}
+                    onToggleGuide={() => setVlinkpayGuideOpen((open) => !open)}
+                    disabled={updateMutation.isPending || toggleMutation.isPending}
+                    error={modalError}
+                    placeholder={t('components.dashboard.modals.PayoutSetupModal.placeholderVlinkpayWallet')}
                   />
-                  {modalError && <p id="settings-payout-error" role="alert" className="mt-1 text-[10px] font-bold text-rose-500">{modalError}</p>}
-                </div>
+                ) : (
+                  <>
+                    {/* Account Identifier Input */}
+                    <div>
+                      <label className="block text-[10px] font-extrabold uppercase text-slate-500 tracking-wider mb-2">
+                        {currentLanguage === 'vi'
+                          ? `${walletNames[editingMethod]?.toUpperCase()} EMAIL/SĐT CỦA BẠN *`
+                          : `YOUR ${walletNames[editingMethod]?.toUpperCase()} EMAIL/PHONE *`}
+                      </label>
+                      <input
+                        type="text"
+                        autoFocus
+                        value={editValue}
+                        aria-invalid={Boolean(modalError)}
+                        aria-describedby={modalError ? 'settings-payout-error' : undefined}
+                        onChange={(e) => {
+                          setEditValue(e.target.value)
+                          setModalError('')
+                        }}
+                        placeholder={walletPlaceholders[editingMethod]}
+                        className={`w-full bg-slate-50 border border-slate-200 focus:border-nexoraBrand focus:ring-2 focus:ring-nexoraBrand/20 focus:bg-white rounded-xl px-3.5 h-11 text-xs text-slate-800 focus:outline-none transition-all ${
+                          modalError ? 'border-rose-500 focus:border-rose-500 focus:ring-rose-500/20' : ''
+                        }`}
+                      />
+                      {modalError && <p id="settings-payout-error" role="alert" className="mt-1 text-[10px] font-bold text-rose-500">{modalError}</p>}
+                    </div>
 
-                {/* QR Code Optional Upload */}
-                <div>
-                  <label className="block text-[10px] font-extrabold uppercase text-slate-500 tracking-wider mb-2">
-                    {t('components.settings.tabs.ProfileTab.qrCodeOptional')}
-                  </label>
+                    {/* QR Code Optional Upload */}
+                    <div>
+                      <label className="block text-[10px] font-extrabold uppercase text-slate-500 tracking-wider mb-2">
+                        {t('components.settings.tabs.ProfileTab.qrCodeOptional')}
+                      </label>
 
-                  {isCapturing ? (
-                    <div className="flex h-44 w-full flex-col items-center justify-center rounded-xl border border-slate-200 bg-slate-50">
-                      <div className="h-6 w-6 border-2 border-nexoraBrand/20 border-t-nexoraBrand rounded-full animate-spin"></div>
-                      <span className="mt-2 text-xs font-semibold text-slate-500">
-              {t('setup.taking_photo')}
+                      {isCapturing ? (
+                        <div className="flex h-44 w-full flex-col items-center justify-center rounded-xl border border-slate-200 bg-slate-50">
+                          <div className="h-6 w-6 border-2 border-nexoraBrand/20 border-t-nexoraBrand rounded-full animate-spin"></div>
+                          <span className="mt-2 text-xs font-semibold text-slate-500">
+                          {t('setup.taking_photo')}
+                          </span>
+                        </div>
+                      ) : editQrCode ? (
+                        <div className="relative flex flex-col items-center rounded-xl border border-slate-200 bg-white p-4 shadow-sm">
+                          <button
+                            type="button"
+                            onClick={handleModalClearQr}
+                            className="absolute right-2 top-2 rounded-full p-1 text-slate-400 hover:bg-slate-100 hover:text-slate-600 transition"
+                            title="Remove image"
+                          >
+                            <X className="h-4 w-4" />
+                          </button>
+                          <div className="text-center">
+                            <div className="text-sm font-extrabold text-slate-800">{walletNames[editingMethod]}</div>
+                            <div className="text-[10px] font-semibold text-slate-400 mt-0.5">{editValue}</div>
+                          </div>
+                          <div className="my-3 flex h-28 w-28 items-center justify-center border border-slate-100 bg-white p-1 rounded-lg">
+                            <img src={editQrCode} alt="Payout QR Code" className="h-full w-full object-contain" />
+                          </div>
+                        </div>
+                      ) : (
+                        <div className="grid grid-cols-2 gap-3">
+                          <button
+                            type="button"
+                            onClick={handleModalTakePhoto}
+                            className="flex flex-col items-center justify-center py-5 border border-dashed border-slate-200 hover:border-nexoraBrand rounded-xl bg-slate-50 hover:bg-slate-50/50 transition gap-1.5"
+                          >
+                            <Camera className="w-5 h-5 text-nexoraBrand" />
+                            <span className="text-[11px] font-bold text-slate-600">
+                              {t('components.settings.tabs.ProfileTab.takePhoto')}
+                            </span>
+                          </button>
+                          <label
+                            className="flex flex-col items-center justify-center py-5 border border-dashed border-slate-200 hover:border-nexoraBrand rounded-xl bg-slate-50 hover:bg-slate-50/50 transition gap-1.5 cursor-pointer"
+                          >
+                            <FolderOpen className="w-5 h-5 text-nexoraBrand" />
+                            <span className="text-[11px] font-bold text-slate-600">
+                              {t('components.settings.tabs.ProfileTab.chooseFile')}
+                            </span>
+                            <input type="file" accept="image/*" className="sr-only" onChange={handleModalFileChange} />
+                          </label>
+                        </div>
+                      )}
+                    </div>
+
+                    {/* Warning box */}
+                    <div className="rounded-lg bg-blue-50/50 border border-blue-100 p-3 text-[10px] leading-relaxed text-blue-800 flex gap-2">
+                      <AlertTriangle className="h-4 w-4 text-blue-500 shrink-0 mt-0.5" />
+                      <span>
+                        {t('components.settings.tabs.ProfileTab.pleaseEnterTheCorrect')}
                       </span>
                     </div>
-                  ) : editQrCode ? (
-                    <div className="relative flex flex-col items-center rounded-xl border border-slate-200 bg-white p-4 shadow-sm">
-                      <button
-                        type="button"
-                        onClick={handleModalClearQr}
-                        className="absolute right-2 top-2 rounded-full p-1 text-slate-400 hover:bg-slate-100 hover:text-slate-600 transition"
-                        title="Remove image"
-                      >
-                        <X className="h-4 w-4" />
-                      </button>
-                      <div className="text-center">
-                        <div className="text-sm font-extrabold text-slate-800">{walletNames[editingMethod]}</div>
-                        <div className="text-[10px] font-semibold text-slate-400 mt-0.5">{editValue}</div>
-                      </div>
-                      <div className="my-3 flex h-28 w-28 items-center justify-center border border-slate-100 bg-white p-1 rounded-lg">
-                        <img src={editQrCode} alt="Payout QR Code" className="h-full w-full object-contain" />
-                      </div>
-                    </div>
-                  ) : (
-                    <div className="grid grid-cols-2 gap-3">
-                      <button
-                        type="button"
-                        onClick={handleModalTakePhoto}
-                        className="flex flex-col items-center justify-center py-5 border border-dashed border-slate-200 hover:border-nexoraBrand rounded-xl bg-slate-50 hover:bg-slate-50/50 transition gap-1.5"
-                      >
-                        <Camera className="w-5 h-5 text-nexoraBrand" />
-                        <span className="text-[11px] font-bold text-slate-600">
-                          {t('components.settings.tabs.ProfileTab.takePhoto')}
-                        </span>
-                      </button>
-                      <label
-                        className="flex flex-col items-center justify-center py-5 border border-dashed border-slate-200 hover:border-nexoraBrand rounded-xl bg-slate-50 hover:bg-slate-50/50 transition gap-1.5 cursor-pointer"
-                      >
-                        <FolderOpen className="w-5 h-5 text-nexoraBrand" />
-                        <span className="text-[11px] font-bold text-slate-600">
-                          {t('components.settings.tabs.ProfileTab.chooseFile')}
-                        </span>
-                        <input type="file" accept="image/*" className="sr-only" onChange={handleModalFileChange} />
-                      </label>
-                    </div>
-                  )}
-                </div>
-
-                {/* Warning box */}
-                <div className="rounded-lg bg-blue-50/50 border border-blue-100 p-3 text-[10px] leading-relaxed text-blue-800 flex gap-2">
-                  <AlertTriangle className="h-4 w-4 text-blue-500 shrink-0 mt-0.5" />
-                  <span>
-                    {t('components.settings.tabs.ProfileTab.pleaseEnterTheCorrect')}
-                  </span>
-                </div>
+                  </>
+                )}
 
                 {/* Footer Action Buttons */}
                 <div className="flex justify-end gap-2.5 pt-2.5 border-t border-slate-100">
                   <button
                     type="button"
                     onClick={() => setEditingMethod(null)}
-                    className="px-5 py-2.5 border border-slate-200 hover:bg-slate-50 text-slate-500 text-xs font-bold uppercase tracking-wider rounded-lg transition"
+                    disabled={updateMutation.isPending || toggleMutation.isPending}
+                    className="px-5 py-2.5 border border-slate-200 hover:bg-slate-50 text-slate-500 text-xs font-bold uppercase tracking-wider rounded-lg transition disabled:cursor-not-allowed disabled:opacity-60"
                   >
                     {t('components.settings.tabs.ProfileTab.cancel')}
                   </button>
                   <button
                     type="submit"
-                    className="px-5 py-2.5 bg-amber-600 hover:bg-amber-700 text-white text-xs font-bold uppercase tracking-wider rounded-lg shadow-sm transition"
+                    disabled={updateMutation.isPending || toggleMutation.isPending}
+                    className={`inline-flex items-center justify-center gap-1.5 px-5 py-2.5 ${
+                      isVlinkpayModal ? 'bg-[#ff8a00] hover:bg-[#f07f00]' : 'bg-amber-600 hover:bg-amber-700'
+                    } text-white text-xs font-bold uppercase tracking-wider rounded-lg shadow-sm transition disabled:cursor-not-allowed disabled:opacity-60`}
                   >
-                    {t('components.settings.tabs.ProfileTab.save')}
+                    {(updateMutation.isPending || toggleMutation.isPending) ? (
+                      <>
+                        <Loader2 className="h-3.5 w-3.5 shrink-0 animate-spin" aria-hidden="true" />
+                        <span>{t('common.saving')}</span>
+                      </>
+                    ) : (
+                      t('components.settings.tabs.ProfileTab.save')
+                    )}
                   </button>
                 </div>
               </form>
