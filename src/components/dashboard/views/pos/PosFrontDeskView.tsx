@@ -8,10 +8,10 @@
 // component, no per-shell duplication. `canManageOperations` (from usePosAccess)
 // decides whether the actionable UI renders at all; the caller (Owner vs Staff
 // route wrapper) is responsible for only linking here when access is expected.
-import { useState } from 'react'
+import { useCallback, useEffect, useRef, useState, type ReactNode } from 'react'
 import { useSearchParams } from 'react-router-dom'
 import { useQueryClient } from '@tanstack/react-query'
-import { LayoutGrid, List as ListIcon } from 'lucide-react'
+import { ChevronLeft, ChevronRight, LayoutGrid, List as ListIcon } from 'lucide-react'
 import { useTranslation } from '../../../../contexts/LanguageContext'
 import { useNotification } from '../../../../contexts/NotificationContext'
 import { storage } from '../../../../utils/storage'
@@ -63,6 +63,85 @@ const SCROLL_PANEL_MAX_HEIGHT = 'max-h-[560px]'
 // unmounted, whenever the Check-in tab isn't active) specifically so a staff member's
 // in-progress phone/name/services entry survives tapping over to another tab and back.
 type UpdateWorkspaceState = { orderId: string }
+
+// Sub-pixel rounding makes scrollLeft land a fraction short of its true maximum, so an exact
+// comparison would leave the "scroll right" arrow enabled forever at the end of the strip.
+const TAB_SCROLL_EDGE_TOLERANCE_PX = 2
+// One arrow tap moves just under a full strip width, keeping the last visible tab on screen
+// as a visual anchor for where the user just came from.
+const TAB_SCROLL_STEP_RATIO = 0.8
+
+// The 7 Front Desk tabs are wider than a phone viewport, so the strip scrolls horizontally
+// (see index.css `.nexora-no-scrollbar` — the app's styled scrollbar would otherwise sit on
+// top of the active-tab underline). A silent scroll area reads as a cut-off list, so each
+// edge gets an arrow. The arrow slots only exist while the strip actually overflows; within
+// that, an arrow at its edge goes `invisible` rather than unmounting, so scrolling never
+// shifts the tabs sideways.
+function ScrollableTabStrip({ children }: { children: ReactNode }) {
+  const { t } = useTranslation()
+  const stripRef = useRef<HTMLDivElement>(null)
+  const [canScrollLeft, setCanScrollLeft] = useState(false)
+  const [canScrollRight, setCanScrollRight] = useState(false)
+
+  const syncArrows = useCallback(() => {
+    const strip = stripRef.current
+    if (!strip) return
+    const maxScrollLeft = strip.scrollWidth - strip.clientWidth
+    setCanScrollLeft(strip.scrollLeft > TAB_SCROLL_EDGE_TOLERANCE_PX)
+    setCanScrollRight(strip.scrollLeft < maxScrollLeft - TAB_SCROLL_EDGE_TOLERANCE_PX)
+  }, [])
+
+  useEffect(() => {
+    const strip = stripRef.current
+    if (!strip) return
+    syncArrows()
+    // Observing the tabs themselves as well as the strip: a tab's own width changes when its
+    // count badge does (e.g. "Order List (0)" → "Order List (12)"), which changes whether the
+    // strip overflows without the strip itself ever being resized.
+    const resizeObserver = new ResizeObserver(syncArrows)
+    resizeObserver.observe(strip)
+    for (const tab of Array.from(strip.children)) resizeObserver.observe(tab)
+    return () => resizeObserver.disconnect()
+  }, [syncArrows, children])
+
+  const scrollByStep = (direction: -1 | 1) => {
+    const strip = stripRef.current
+    if (!strip) return
+    strip.scrollBy({ left: direction * strip.clientWidth * TAB_SCROLL_STEP_RATIO, behavior: 'smooth' })
+  }
+
+  const isOverflowing = canScrollLeft || canScrollRight
+  const arrowClass =
+    'flex h-8 w-6 shrink-0 items-center justify-center self-stretch text-nexoraMuted hover:text-nexoraText'
+
+  return (
+    <div className="flex items-center border-b border-nexoraBorder">
+      {isOverflowing && (
+        <button
+          type="button"
+          aria-label={t(tk('scrollTabsLeft'))}
+          onClick={() => scrollByStep(-1)}
+          className={`${arrowClass} ${canScrollLeft ? '' : 'invisible'}`}
+        >
+          <ChevronLeft className="h-4 w-4" />
+        </button>
+      )}
+      <div ref={stripRef} onScroll={syncArrows} className="nexora-no-scrollbar flex flex-1 gap-1 overflow-x-auto">
+        {children}
+      </div>
+      {isOverflowing && (
+        <button
+          type="button"
+          aria-label={t(tk('scrollTabsRight'))}
+          onClick={() => scrollByStep(1)}
+          className={`${arrowClass} ${canScrollRight ? '' : 'invisible'}`}
+        >
+          <ChevronRight className="h-4 w-4" />
+        </button>
+      )}
+    </div>
+  )
+}
 
 export default function PosFrontDeskView({
   businessId,
@@ -253,7 +332,7 @@ export default function PosFrontDeskView({
       ) : null}
 
       {/* Tab bar uses the shared nexora* color tokens — see tailwind.config.js. */}
-      <div className="flex gap-1 border-b border-nexoraBorder">
+      <ScrollableTabStrip>
         {POS_FRONT_DESK_TABS.map((tab) => (
           <button
             key={tab}
@@ -270,7 +349,7 @@ export default function PosFrontDeskView({
               }
               setActiveTab(tab)
             }}
-            className={`px-3 py-2 text-xs font-bold ${
+            className={`shrink-0 whitespace-nowrap px-3 py-2 text-xs font-bold ${
               !updateWorkspace && activeTab === tab
                 ? 'border-b-2 border-nexoraBrand text-nexoraBrandDark'
                 : 'text-nexoraMuted hover:text-nexoraText'
@@ -280,7 +359,7 @@ export default function PosFrontDeskView({
             {typeof tabBadges[tab] === 'number' ? ` (${tabBadges[tab]})` : ''}
           </button>
         ))}
-      </div>
+      </ScrollableTabStrip>
 
       {updateWorkspace ? (
         <PosOrderWorkspace

@@ -3144,6 +3144,8 @@
             },
             "viewModeList": "List view",
             "viewModeCard": "Card view",
+            "scrollTabsLeft": "Scroll tabs left",
+            "scrollTabsRight": "Scroll tabs right",
             "cancelButton": "Cancel",
             "startServiceButton": "Start Service",
             "startServiceSuccess": "Service started.",
