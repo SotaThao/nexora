@@ -23,8 +23,6 @@ export default function HomePageOwnerSidebarLayout({
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
   const [settingsTab, setSettingsTab] = useState('profile')
   const [isProfileExpanded, setIsProfileExpanded] = useState(false)
-  const [tipsTab, setTipsTab] = useState('overview')
-  const [touchpointsTab, setTouchpointsTab] = useState('stations')
   const [isPaymentsPayoutsMobileExpanded, setIsPaymentsPayoutsMobileExpanded] = useState(false)
   const [isTouchpointsMobileExpanded, setIsTouchpointsMobileExpanded] = useState(false)
   const [isBookingHubMobileExpanded, setIsBookingHubMobileExpanded] = useState(false)
@@ -112,10 +110,6 @@ export default function HomePageOwnerSidebarLayout({
           setSettingsTab={setSettingsTab}
           isProfileExpanded={isProfileExpanded}
           setIsProfileExpanded={setIsProfileExpanded}
-          tipsTab={tipsTab}
-          setTipsTab={setTipsTab}
-          touchpointsTab={touchpointsTab}
-          setTouchpointsTab={setTouchpointsTab}
           isPaymentsPayoutsMobileExpanded={isPaymentsPayoutsMobileExpanded}
           setIsPaymentsPayoutsMobileExpanded={setIsPaymentsPayoutsMobileExpanded}
           isTouchpointsMobileExpanded={isTouchpointsMobileExpanded}

@@ -13,7 +13,6 @@ import {
   Languages,
   Lock,
   LogOut,
-  QrCode,
   ShieldCheck,
   Star,
   UserCircle,
@@ -231,6 +230,7 @@ export default function SettingsViewMobile({
   initialTab = 'profile',
   onTabChange,
   onKybSuccess,
+  staffContent = null,
   verificationStatus = hasKyb ? 'kyb_approved' : 'basic'
 }) {
   const { currentLanguage, setLanguage, t } = useTranslation()
@@ -284,10 +284,8 @@ export default function SettingsViewMobile({
 
   const handleSaveQr = async (qrUrl) => {
     try {
-      const result = await downloadQrCode(qrUrl, `referral-qr-${selectedLeg}.png`)
-      if (result !== 'cancelled') {
-        form.showToast(t('components.SettingsView.qrCodeDownloaded'))
-      }
+      await downloadQrCode(qrUrl, `referral-qr-${selectedLeg}.png`)
+      form.showToast(t('components.SettingsView.qrCodeDownloaded'))
     } catch {
       window.open(qrUrl, '_blank')
     }
@@ -353,6 +351,11 @@ export default function SettingsViewMobile({
                   : t('staff_dashboard.profile.menu_personal_information')}
                 onClick={() => openProfileSection('personal')}
               />
+              <MerchantProfileMenuItem
+                icon={Users}
+                label={t('dashboard.menu.staff')}
+                onClick={() => handleTabChange('staff')}
+              />
               <MerchantVerificationMenuItem
                 label={t('staff_dashboard.profile.menu_verification')}
                 status={kybStatusLabel}
@@ -392,6 +395,16 @@ export default function SettingsViewMobile({
           </>
         )}
 
+        {form.activeTab === 'staff' && (
+          <>
+            <MerchantProfileSectionHeader
+              title={t('dashboard.menu.staff')}
+              onBack={() => handleTabChange('profile')}
+            />
+            {staffContent}
+          </>
+        )}
+
         {form.activeTab === 'profile' && activeSection === 'personal' && (
           <>
           <MerchantProfileSectionHeader
@@ -421,6 +434,9 @@ export default function SettingsViewMobile({
             setBusinessForm={form.setBusinessForm}
             businessErrors={form.businessErrors}
             setBusinessErrors={form.setBusinessErrors}
+            logoUrl={form.logoUrl}
+            handleLogoChange={form.handleLogoChange}
+            isUploadingLogo={form.isUploadingLogo}
             isEditingReviews={form.isEditingReviews}
             setIsEditingReviews={form.setIsEditingReviews}
             reviewsForm={form.reviewsForm}
@@ -476,6 +492,9 @@ export default function SettingsViewMobile({
               setBusinessForm={form.setBusinessForm}
               businessErrors={form.businessErrors}
               setBusinessErrors={form.setBusinessErrors}
+              logoUrl={form.logoUrl}
+              handleLogoChange={form.handleLogoChange}
+              isUploadingLogo={form.isUploadingLogo}
               isEditingReviews={form.isEditingReviews}
               setIsEditingReviews={form.setIsEditingReviews}
               reviewsForm={form.reviewsForm}
@@ -581,13 +600,6 @@ export default function SettingsViewMobile({
 
         {form.activeTab === 'affiliate' && (
           <div className="rounded-xl border border-nexoraBorder bg-white shadow-sm p-6 max-w-xl mx-auto animate-fadeIn select-none space-y-6">
-            <div className="flex justify-between items-center border-b border-nexoraRule pb-3">
-              <h4 className="text-xs font-black uppercase text-nexoraText tracking-wider flex items-center gap-2">
-                <QrCode className="h-4 w-4 text-nexoraBrand" />
-                {t('components.SettingsView.affiliateLink2')}
-              </h4>
-            </div>
-            
             {/* QR Section (Inline) */}
             <div className="flex flex-col items-center">
               {/* QR Code Container */}

@@ -6,6 +6,7 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { qk } from '../queryKeys'
 import publicBookingRepository from '../repositories/publicBooking'
 import type {
+  BookingConsentApiDto,
   CreatePublicBookingPayload,
   CreatePublicBookingResultApiDto,
   CustomerLookupResultApiDto,
@@ -71,6 +72,25 @@ export function useCancelManageBooking(manageToken?: string) {
     mutationFn: () => publicBookingRepository.cancelManageBooking(manageToken as string),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: qk.manageBooking(manageToken) })
+    },
+  })
+}
+
+export function useManageBookingConsent(manageToken?: string) {
+  return useQuery<BookingConsentApiDto>({
+    queryKey: qk.manageBookingConsent(manageToken),
+    queryFn: () => publicBookingRepository.getBookingConsent(manageToken as string),
+    enabled: Boolean(manageToken),
+    retry: false,
+  })
+}
+
+export function useUpdateManageBookingConsent(manageToken?: string) {
+  const queryClient = useQueryClient()
+  return useMutation<void, Error, BookingConsentApiDto>({
+    mutationFn: (payload) => publicBookingRepository.updateBookingConsent(manageToken as string, payload),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: qk.manageBookingConsent(manageToken) })
     },
   })
 }

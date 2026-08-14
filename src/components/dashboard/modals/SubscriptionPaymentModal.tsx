@@ -278,11 +278,6 @@ export default function SubscriptionPaymentModal({
     <div
       className="sms-credit-modal plan-payment-modal"
       role="presentation"
-      onClick={(event) => {
-        if (event.target !== event.currentTarget) return
-        if (purchaseMutation.isPending || isCardOrderPolling) return
-        onClose()
-      }}
     >
       <div
         className="sms-credit-dialog"

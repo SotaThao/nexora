@@ -7,7 +7,8 @@ import { useTranslation } from '../../../contexts/LanguageContext'
 import { useOpenProductManagement } from '../../../data/hooks/useOpenProductManagement'
 import { 
 	visibleMenuItems, 
-	MERCHANT_SIDEBAR_MENU_ITEMS, 
+	DESKTOP_MERCHANT_SIDEBAR_MENU_ITEMS,
+	DESKTOP_PAYMENTS_PAYOUTS_ANCHOR_ID,
 	TAXIQ_SUBMENU, 
 	TAXIQ_MENU_CHILD_MODULE, 
 	POS_SUBMENU, 
@@ -99,7 +100,9 @@ export default function DashboardSidebar({
   const taxiqBusinessId = merchantSetupData?.businessInfo?.businessId
   const { data: ownerTaxYearPage } = useOwnerTaxYearByBusiness(taxiqBusinessId, new Date().getFullYear())
   const enabledTaxiqModules = ownerTaxYearPage?.items?.[0]?.enabledModules
-  const [isTouchpointsExpanded, setIsTouchpointsExpanded] = useState(activeMenu === DASHBOARD_MENU.Touchpoints)
+  const [isTouchpointsExpanded, setIsTouchpointsExpanded] = useState(
+    activeMenu === DASHBOARD_MENU.Touchpoints && VISIBLE_TOUCHPOINTS_SUBMENU.length > 0,
+  )
   const [isBookingHubExpanded, setIsBookingHubExpanded] = useState(activeMenu === DASHBOARD_MENU.BookingHub)
   const [isPackageManagementExpanded, setIsPackageManagementExpanded] = useState(
     activeMenu === DASHBOARD_MENU.PackageManagement,
@@ -110,7 +113,9 @@ export default function DashboardSidebar({
     if (isPaymentsPayoutsActive) {
       setIsPaymentsPayoutsExpanded(true)
     }
-    setIsTouchpointsExpanded(activeMenu === DASHBOARD_MENU.Touchpoints)
+    setIsTouchpointsExpanded(
+      activeMenu === DASHBOARD_MENU.Touchpoints && VISIBLE_TOUCHPOINTS_SUBMENU.length > 0,
+    )
     setIsTaxIqExpanded(activeMenu === DASHBOARD_MENU.TaxIq)
     setIsPosExpanded(activeMenu === DASHBOARD_MENU.Pos)
     setIsBookingHubExpanded(activeMenu === DASHBOARD_MENU.BookingHub)
@@ -155,11 +160,13 @@ export default function DashboardSidebar({
             })
           },
         },
-        {
-          id: DASHBOARD_MENU.Touchpoints,
-          setExpanded: setIsTouchpointsExpanded,
-          enter: () => setActiveMenu(DASHBOARD_MENU.Touchpoints),
-        },
+        ...(VISIBLE_TOUCHPOINTS_SUBMENU.length > 0
+          ? [{
+              id: DASHBOARD_MENU.Touchpoints,
+              setExpanded: setIsTouchpointsExpanded,
+              enter: () => setActiveMenu(DASHBOARD_MENU.Touchpoints),
+            }]
+          : []),
         {
           id: DASHBOARD_MENU.TaxIq,
           setExpanded: setIsTaxIqExpanded,
@@ -278,7 +285,7 @@ export default function DashboardSidebar({
                 { id: DASHBOARD_MENU_ID.overview, label: t('components.dashboard.layout.DashboardSidebar.myDashboard'), icon: visibleMenuItems.find(i => i.id === DASHBOARD_MENU_ID.overview)?.icon },
                 { id: DASHBOARD_MENU_ID.support, label: t('dashboard.menu.support'), icon: visibleMenuItems.find(i => i.id === DASHBOARD_MENU_ID.support)?.icon }
               ]
-            : MERCHANT_SIDEBAR_MENU_ITEMS
+            : DESKTOP_MERCHANT_SIDEBAR_MENU_ITEMS
 
           return menuItemsToDisplay.map((item) => {
           const { id, label } = item
@@ -330,7 +337,7 @@ export default function DashboardSidebar({
                 ) : null}
               </button>
 
-              {userRole !== 'staff' && id === DASHBOARD_MENU_ID.staff && (
+              {userRole !== 'staff' && id === DESKTOP_PAYMENTS_PAYOUTS_ANCHOR_ID && (
                 <PaymentsPayoutsMenuSection
                   activeMenu={activeMenu}
                   tabParam={activeSubTab}
@@ -416,24 +423,26 @@ export default function DashboardSidebar({
                 </div>
               )}
 
-              {id === DASHBOARD_MENU.Touchpoints && isTouchpointsExpanded && (
-                <div className={SIDEBAR_SUBMENU_WRAP_CLASS}>
-                  {VISIBLE_TOUCHPOINTS_SUBMENU.map((sub) => {
-                    const isSubActive = activeMenu === DASHBOARD_MENU.Touchpoints && (activeSubTab || 'stations') === sub.id
-                    return (
-                      <button
-                        key={sub.id}
-                        type="button"
-                        onClick={() => {
-                          navigate(`/dashboard/touchpoints?tab=${sub.id}`, { replace: true })
-                        }}
-                        className={sidebarSubmenuItemClass(isSubActive)}
-                      >
-                        <div className={`h-1.5 w-1.5 rounded-full ${isSubActive ? 'bg-brandCyan shadow-sm' : 'bg-white/30'}`} />
-                        <span>{t(sub.labelKey)}</span>
-                      </button>
-                    )
-                  })}
+              {id === DASHBOARD_MENU.Touchpoints &&
+                VISIBLE_TOUCHPOINTS_SUBMENU.length > 0 &&
+                isTouchpointsExpanded && (
+                  <div className={SIDEBAR_SUBMENU_WRAP_CLASS}>
+                    {VISIBLE_TOUCHPOINTS_SUBMENU.map((sub) => {
+                      const isSubActive = activeMenu === DASHBOARD_MENU.Touchpoints && (activeSubTab || 'stations') === sub.id
+                      return (
+                        <button
+                          key={sub.id}
+                          type="button"
+                          onClick={() => {
+                            navigate(`/dashboard/touchpoints?tab=${sub.id}`, { replace: true })
+                          }}
+                          className={sidebarSubmenuItemClass(isSubActive)}
+                        >
+                          <div className={`h-1.5 w-1.5 rounded-full ${isSubActive ? 'bg-brandCyan shadow-sm' : 'bg-white/30'}`} />
+                          <span>{t(sub.labelKey)}</span>
+                        </button>
+                      )
+                    })}
                 </div>
               )}
 

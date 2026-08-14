@@ -26,6 +26,8 @@ import type {
 } from '../../types/repositories'
 import DateTimeStep from '../booking-public/DateTimeStep'
 import ConfirmationScreen from '../booking-public/ConfirmationScreen'
+import SmsConsentPanel from './booking/SmsConsentPanel'
+import { SMS_CONSENT_DISCLOSURE_VERSION } from '../../constants/smsConsent'
 
 type WizardStep = 'discovery' | 'datetime' | 'contact' | 'confirmation'
 
@@ -370,7 +372,7 @@ function PublicBookingShell({
 
 export default function PublicBookingPage() {
   const { businessSlug } = useParams<{ businessSlug: string }>()
-  const { t } = useTranslation()
+  const { t, currentLanguage } = useTranslation()
   const { showToast } = useNotification()
   const { data, isLoading, isError } = usePublicBookingPage(businessSlug)
   const createBooking = useCreatePublicBooking(businessSlug)
@@ -385,6 +387,13 @@ export default function PublicBookingPage() {
   const [selectedTime, setSelectedTime] = useState('')
   const [customerName, setCustomerName] = useState('')
   const [customerPhone, setCustomerPhone] = useState('')
+  // Transactional starts pre-checked and required — PO decision overriding the earlier opt-in-only
+  // design (unticking blocks submit below). Marketing stays unticked/optional; the customer-lookup
+  // endpoint deliberately does not expose consent state, so this never reflects a previous booking.
+  // Note: a pre-checked box is generally not valid opt-in consent under TCPA and diverges from the
+  // "unticked checkbox" evidence Twilio's A2P reviewers expect — see
+  // docs/business/sms-consent/sms-consent-technical.md.
+  const [smsConsent, setSmsConsent] = useState({ transactional: true, marketing: false })
   const [customerEmail, setCustomerEmail] = useState('')
   const [contactFieldErrors, setContactFieldErrors] = useState<{ name?: string; phone?: string }>({})
   const [bookingResult, setBookingResult] = useState<CreatePublicBookingResultApiDto | null>(null)
@@ -558,6 +567,11 @@ export default function PublicBookingPage() {
         customerEmail: customerEmail.trim() || undefined,
         scheduledAt,
         items: selectedLines.map((l) => ({ posServiceId: l.posServiceId, posStaffProfileId: l.posStaffProfileId })),
+        transactionalConsent: smsConsent.transactional,
+        marketingConsent: smsConsent.marketing,
+        disclosureVersion: SMS_CONSENT_DISCLOSURE_VERSION,
+        locale: currentLanguage,
+        sourceUrl: window.location.href,
       },
       {
         onSuccess: (result) => {
@@ -595,6 +609,7 @@ export default function PublicBookingPage() {
           totalPrice={selectedLines.reduce((sum, l) => sum + l.unitPrice, 0)}
           bookingId={bookingResult.bookingId}
           manageToken={bookingResult.manageToken}
+          smsOptedOut={!smsConsent.transactional}
           onDone={() => {
             setSelectedLines([])
             setSelectedDate('')
@@ -602,6 +617,7 @@ export default function PublicBookingPage() {
             setCustomerName('')
             setCustomerPhone('')
             setCustomerEmail('')
+            setSmsConsent({ transactional: true, marketing: false })
             setContactFieldErrors({})
             setBookingResult(null)
             setStep('discovery')
@@ -713,6 +729,11 @@ export default function PublicBookingPage() {
               className="h-10 w-full rounded-lg border border-nexoraBorder bg-white px-3.5 text-xs text-nexoraText outline-none focus:border-nexoraBrand"
             />
           </div>
+          <SmsConsentPanel
+            transactional={smsConsent.transactional}
+            marketing={smsConsent.marketing}
+            onChange={setSmsConsent}
+          />
           <div className="flex gap-2">
             <button
               type="button"
@@ -724,7 +745,7 @@ export default function PublicBookingPage() {
             <button
               type="button"
               onClick={handleSubmit}
-              disabled={createBooking.isPending}
+              disabled={createBooking.isPending || !smsConsent.transactional}
               className="h-10 flex-1 rounded-lg bg-nexoraBrand text-xs font-bold text-white hover:bg-nexoraBrandDark disabled:opacity-60"
             >
               {createBooking.isPending ? (

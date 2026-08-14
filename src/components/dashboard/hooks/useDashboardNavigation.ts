@@ -1,9 +1,11 @@
 import { useState, useEffect } from 'react'
 import { useLocation, useNavigate } from 'react-router-dom'
+import { useOpenProductManagement } from '../../../data/hooks/useOpenProductManagement'
 import {
   buildDashboardMenuPath,
   DASHBOARD_MENU,
   DASHBOARD_MENU_ID,
+  normalizeDashboardSettingsTab,
 } from '../constants'
 
 type NavigateMenuOptions = {
@@ -14,6 +16,7 @@ type NavigateMenuOptions = {
 export function useDashboardNavigation() {
   const location = useLocation()
   const navigate = useNavigate()
+  const { openProductManagement } = useOpenProductManagement()
 
   const activeMenu = location.pathname.split('/')[2] || DASHBOARD_MENU_ID.overview
   const isPaymentsPayoutsActive =
@@ -44,11 +47,7 @@ export function useDashboardNavigation() {
   useEffect(() => {
     if (activeMenu !== DASHBOARD_MENU_ID.settings) return
     const tabFromPath = location.pathname.split('/')[3]
-    if (tabFromPath === 'kyb' || tabFromPath === 'profile' || tabFromPath === 'affiliate') {
-      setSettingsTab(tabFromPath)
-    } else if (!tabFromPath) {
-      setSettingsTab('profile')
-    }
+    setSettingsTab(normalizeDashboardSettingsTab(tabFromPath || 'profile'))
   }, [activeMenu, location.pathname])
 
   // When the drawer opens, reflect the current route's expandable section.

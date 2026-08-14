@@ -144,6 +144,20 @@ export function useAssignableStaffForService(businessId?: string, posServiceId?:
   })
 }
 
+// Inverse of useAssignableStaffForService — which services the chosen technician can
+// perform, used by Check-in Step 2 to disable services outside that technician's skill
+// set. Undefined posStaffProfileId (First Available) means no filtering — caller should
+// simply not pass it, leaving every service enabled.
+export function useAssignableServicesForStaff(businessId?: string, posStaffProfileId?: string) {
+  const { isAuthenticated } = useSessionRole()
+  return useQuery<string[]>({
+    queryKey: qk.merchantPosAssignableServices(businessId, posStaffProfileId),
+    queryFn: () => posOrdersRepository.getAssignableServicesForStaff(businessId as string, posStaffProfileId as string),
+    enabled: isAuthenticated && Boolean(businessId) && Boolean(posStaffProfileId),
+    retry: false,
+  })
+}
+
 // US-026 — frees the assigned staff on this line immediately, independent of the
 // rest of the order.
 export function useMarkServiceLineDone(businessId?: string) {

@@ -199,7 +199,7 @@ export default function BookingTab({
               type="button"
               onClick={() => setViewMode(mode)}
               className={`rounded-md px-2.5 py-1 text-[11px] font-bold ${
-                viewMode === mode ? 'bg-nexoraBrand text-white' : 'text-nexoraMuted hover:text-nexoraText'
+                viewMode === mode ? 'bg-nexoraBrand text-white' : 'text-nexoraMuted hover:text-white'
               }`}
             >
               {t(p + `view${mode.charAt(0).toUpperCase()}${mode.slice(1)}`)}
