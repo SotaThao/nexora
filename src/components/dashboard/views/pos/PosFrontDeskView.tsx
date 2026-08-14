@@ -618,6 +618,8 @@ export default function PosFrontDeskView({
         onCreated={() => {
           setIsBookingModalOpen(false)
           refreshFrontDeskLists()
+          // Land on the Bookings tab so the staff sees the booking they just created.
+          setActiveTab(PosFrontDeskTab.Booking)
         }}
       />
     </div>
