@@ -70,6 +70,13 @@ export interface PaginatedResponse<T> {
   hasPreviousPage: boolean
 }
 
+/** VlinkPay crypto receive address row (US-98). */
+export interface PaymentMethodCryptoAddressDto {
+  network: string
+  symbol: string
+  address: string
+}
+
 export interface PaymentMethodDto {
   id?: string
   type: string
@@ -78,6 +85,8 @@ export interface PaymentMethodDto {
   accountInfo: string | null
   imageUrl?: string | null
   accountName?: string | null
+  /** Present for VlinkPay only — source of truth for isConfigured when accountInfo is null. */
+  cryptoAddresses?: PaymentMethodCryptoAddressDto[] | null
   isActive: boolean
   isConfigured?: boolean
   businessKybStatus?: string | null
@@ -104,6 +113,7 @@ export interface PublicDirectPaymentMethod {
   accountInfo: string
   accountName?: string | null
   imageUrl?: string | null
+  cryptoAddresses?: PaymentMethodCryptoAddressDto[] | null
 }
 
 export interface PublicDirectPaymentPage {

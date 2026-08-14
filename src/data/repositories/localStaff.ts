@@ -1,9 +1,27 @@
 import httpClient from '../../lib/httpClient'
-import type { PaymentMethodDto } from '../../types/domain'
-import type { LocalStaffApiDto, LocalStaffCreateParams, LocalStaffUpdateParams } from '../../types/repositories'
+import type { PaymentMethodCryptoAddressDto, PaymentMethodDto } from '../../types/domain'
+import type { PosOrderStatus } from '../../constants/posOrderStatus'
+import type {
+  LocalStaffActiveWorkItem,
+  LocalStaffApiDto,
+  LocalStaffCreateParams,
+  LocalStaffUpdateParams,
+} from '../../types/repositories'
 import { PAYOUT_UI_LABELS, payoutTypeToUiKey } from '../paymentMethodTypes'
+import { normalizeCryptoAddresses, type UpdatePaymentMethodDto } from './paymentMethodDto'
 
 type HttpClient = typeof httpClient
+
+interface LocalStaffActiveWorkApiDto {
+  orderId?: string
+  orderNumber?: string
+  customerName?: string
+  status?: string
+  isBooking?: boolean
+  scheduledAt?: string | null
+  source?: string | null
+  checkedInAt?: string
+}
 
 interface LocalStaffPaymentMethodApiDto {
   id?: string
@@ -13,6 +31,7 @@ interface LocalStaffPaymentMethodApiDto {
   imageUrl?: string | null
   isActive?: boolean
   isConfigured?: boolean
+  cryptoAddresses?: PaymentMethodCryptoAddressDto[] | null
 }
 
 function toLocalStaffRequestBody(params: LocalStaffCreateParams) {
@@ -28,6 +47,21 @@ function toLocalStaffRequestBody(params: LocalStaffCreateParams) {
   }
 }
 
+// The one allowed place to touch the raw backend status literal — everything downstream
+// compares against the PosOrderStatus enum.
+function normalizeLocalStaffActiveWork(dto: LocalStaffActiveWorkApiDto): LocalStaffActiveWorkItem {
+  return {
+    orderId: dto.orderId ?? '',
+    orderNumber: dto.orderNumber ?? '',
+    customerName: dto.customerName ?? '',
+    status: (dto.status ?? '') as PosOrderStatus,
+    isBooking: Boolean(dto.isBooking),
+    scheduledAt: dto.scheduledAt ?? null,
+    source: dto.source ?? null,
+    checkedInAt: dto.checkedInAt ?? '',
+  }
+}
+
 function normalizeLocalStaffPaymentMethod(dto: LocalStaffPaymentMethodApiDto): PaymentMethodDto {
   const type = dto.type || ''
   const uiKey = payoutTypeToUiKey(type)
@@ -39,6 +73,7 @@ function normalizeLocalStaffPaymentMethod(dto: LocalStaffPaymentMethodApiDto): P
     accountInfo: dto.accountInfo ?? null,
     accountName: dto.accountName ?? null,
     imageUrl: dto.imageUrl ?? null,
+    cryptoAddresses: normalizeCryptoAddresses(dto.cryptoAddresses),
     isActive: Boolean(dto.isActive),
     isConfigured: Boolean(dto.isConfigured),
   }
@@ -61,6 +96,13 @@ export function createLocalStaffRepository(client: HttpClient = httpClient) {
       await client.del(`/api/v1/merchant/local-staff/${encodeURIComponent(staffProfileId)}`)
     },
 
+    async getActiveWork(staffProfileId: string): Promise<LocalStaffActiveWorkItem[]> {
+      const res = await client.get<LocalStaffActiveWorkApiDto[]>(
+        `/api/v1/merchant/local-staff/${encodeURIComponent(staffProfileId)}/active-work`,
+      )
+      return Array.isArray(res) ? res.map(normalizeLocalStaffActiveWork) : []
+    },
+
     async getPaymentMethods(staffProfileId: string): Promise<PaymentMethodDto[]> {
       const res = await client.get<LocalStaffPaymentMethodApiDto[]>(
         `/api/v1/merchant/local-staff/${encodeURIComponent(staffProfileId)}/payment-methods`,
@@ -71,7 +113,7 @@ export function createLocalStaffRepository(client: HttpClient = httpClient) {
     async updatePaymentMethod(
       staffProfileId: string,
       paymentMethodId: string,
-      dto: { accountInfo?: string | null; accountName?: string | null; imageUrl?: string | null },
+      dto: UpdatePaymentMethodDto,
     ): Promise<PaymentMethodDto> {
       const res = await client.put<LocalStaffPaymentMethodApiDto>(
         `/api/v1/merchant/local-staff/${encodeURIComponent(staffProfileId)}/payment-methods/${encodeURIComponent(paymentMethodId)}`,

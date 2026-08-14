@@ -1,11 +1,10 @@
-import React, { useCallback, useMemo, useState } from 'react'
+import { useCallback, useMemo, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import {
   QrCode,
   Copy,
   Check,
   Download,
-  Eye,
   Loader2,
   ExternalLink,
   Wallet,
@@ -26,11 +25,12 @@ import {
   DASHBOARD_REPORTS_TAB,
 } from '../dashboard/constants'
 import { downloadQrCode, QR_IMAGE_SIZES } from '../../utils/qrUtils'
-import { payoutTypeToUiKey, getPaymentMethodDisplayName } from '../../data/paymentMethodTypes'
+import { payoutTypeToUiKey, isPaymentMethodConfigured } from '../../data/paymentMethodTypes'
+import { PayoutUiKey } from '../../data/payoutUiKeys'
 import QrImage from '../ui/QrImage'
 
 function isReadyForCustomerPayment(method) {
-  return Boolean(method?.isActive && method?.accountInfo?.trim())
+  return Boolean(method?.isActive && isPaymentMethodConfigured(method))
 }
 
 export default function SettingsTipQrPanel({
@@ -71,7 +71,7 @@ export default function SettingsTipQrPanel({
   const readyPaymentMethods = useMemo(
     () =>
       paymentMethods.filter(
-        (method) => payoutTypeToUiKey(method.type || '') !== 'bankwire' && isReadyForCustomerPayment(method),
+        (method) => payoutTypeToUiKey(method.type || '') !== PayoutUiKey.BankWire && isReadyForCustomerPayment(method),
       ),
     [paymentMethods],
   )
@@ -89,8 +89,6 @@ export default function SettingsTipQrPanel({
     () => (paymentPageUrl ? buildPublicQrImageUrl(paymentPageUrl, QR_IMAGE_SIZES.panel) : ''),
     [paymentPageUrl],
   )
-
-  const previewQrUrl = qrPreviewUrl
 
   const handleDownloadQr = useCallback(async () => {
     if (!paymentPageUrl) return
@@ -182,7 +180,7 @@ export default function SettingsTipQrPanel({
           disabled={!paymentPageUrl}
           className={`${gatewayActionBtnClass} bg-white border border-nexoraBorder text-nexoraText hover:bg-nexoraSurfaceMuted disabled:cursor-not-allowed disabled:opacity-60`}
         >
-          <Eye className="h-4 w-4 shrink-0" />
+          <QrCode className="h-4 w-4 shrink-0" />
           <span className="truncate">{t('dashboard.master_gateway.btn_open')}</span>
         </button>
         <button
@@ -271,7 +269,7 @@ export default function SettingsTipQrPanel({
           onClose={() => setShowPreview(false)}
           title={t('dashboard.master_gateway.payment_title')}
           businessName={businessName}
-          previewQrUrl={previewQrUrl}
+          previewQrUrl={qrPreviewUrl}
           paymentPageUrl={paymentPageUrl}
           scanCaption={t('components.settings.SettingsTipQrPanel.scanCaption')}
         />
@@ -283,30 +281,8 @@ export default function SettingsTipQrPanel({
     return (
       <>
         <div className="space-y-3">
-          <div className="flex flex-wrap items-center gap-1.5">
-            <span className="text-[9px] font-extrabold uppercase tracking-wide text-emerald-700">
-              {t('components.settings.SettingsTipQrPanel.activeMethodsLabel', {
-                count: readyPaymentMethods.length,
-              })}
-            </span>
-            {readyPaymentMethods.map((method) => (
-              <span
-                key={method.id || method.type}
-                className="rounded-full border border-emerald-200 bg-emerald-50 px-2 py-0.5 text-[9px] font-bold text-emerald-800"
-              >
-                {method.name || getPaymentMethodDisplayName(method.type || '')}
-              </span>
-            ))}
-          </div>
-
           <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:gap-5">
-            <button
-              type="button"
-              onClick={() => setShowPreview(true)}
-              disabled={!paymentPageUrl}
-              className="group relative mx-auto flex h-[120px] w-[120px] shrink-0 items-center justify-center self-center rounded-xl border border-nexoraBorder bg-white p-2 shadow-sm transition hover:border-nexoraBrand hover:scale-[1.02] active:scale-95 disabled:cursor-not-allowed disabled:opacity-50 sm:mx-0"
-              title={t('components.settings.SettingsTipQrPanel.previewQr')}
-            >
+            <div className="relative mx-auto flex h-[120px] w-[120px] shrink-0 items-center justify-center self-center rounded-xl border border-nexoraBorder bg-white p-2 shadow-sm sm:mx-0">
               {qrPreviewUrl ? (
                 <QrImage
                   src={qrPreviewUrl}
@@ -316,13 +292,7 @@ export default function SettingsTipQrPanel({
               ) : (
                 <QrCode className="h-12 w-12 text-slate-300" />
               )}
-              <div className="absolute inset-0 flex flex-col items-center justify-center gap-0.5 rounded-xl bg-nexoraBrand/85 text-white opacity-0 transition-opacity group-hover:opacity-100 group-focus-within:opacity-100">
-                <Eye className="h-4 w-4" />
-                <span className="text-[8px] font-black uppercase tracking-wider">
-                  {t('components.settings.SettingsTipQrPanel.previewQr')}
-                </span>
-              </div>
-            </button>
+            </div>
 
             <div className="flex min-w-0 flex-1 flex-col gap-3">
               <div className="space-y-1.5">
@@ -347,7 +317,19 @@ export default function SettingsTipQrPanel({
                 </p>
               </div>
 
-              <div className="grid grid-cols-1 gap-2 md:grid-cols-2 xl:grid-cols-3">
+              <div className="grid grid-cols-2 gap-2 xl:grid-cols-4">
+                <button
+                  type="button"
+                  disabled={!paymentPageUrl}
+                  onClick={() => setShowPreview(true)}
+                  aria-label={t('components.settings.SettingsTipQrPanel.viewQr')}
+                  className="inline-flex h-9 w-full items-center justify-center gap-1.5 rounded-lg border border-sky-200 bg-sky-50 px-3 text-[11px] font-bold text-sky-700 transition hover:bg-sky-100 disabled:cursor-not-allowed disabled:opacity-50"
+                >
+                  <QrCode className="h-3.5 w-3.5" />
+                  <span className="truncate">
+                    {t('components.settings.SettingsTipQrPanel.viewQr')}
+                  </span>
+                </button>
                 <button
                   type="button"
                   disabled={!paymentPageUrl}
@@ -399,7 +381,7 @@ export default function SettingsTipQrPanel({
           onClose={() => setShowPreview(false)}
           title={t('components.settings.SettingsTipQrPanel.defaultQrTitle')}
           businessName={businessName}
-          previewQrUrl={previewQrUrl}
+          previewQrUrl={qrPreviewUrl}
           paymentPageUrl={paymentPageUrl}
           scanCaption={t('components.settings.SettingsTipQrPanel.scanCaption')}
         />
@@ -441,6 +423,16 @@ export default function SettingsTipQrPanel({
           <button
             type="button"
             disabled={!paymentPageUrl}
+            onClick={() => setShowPreview(true)}
+            aria-label={t('components.settings.SettingsTipQrPanel.viewQr')}
+            className="flex w-full cursor-pointer flex-row items-center justify-center gap-2 rounded-lg border border-sky-200 bg-sky-50 px-3 py-3.5 text-[11px] font-bold leading-snug text-sky-700 transition hover:bg-sky-100 disabled:cursor-not-allowed disabled:opacity-50"
+          >
+            <QrCode className="h-4 w-4 shrink-0" />
+            <span>{t('components.settings.SettingsTipQrPanel.viewQr')}</span>
+          </button>
+          <button
+            type="button"
+            disabled={!paymentPageUrl}
             onClick={() => handleCopy(paymentPageUrl, 'direct-payment-url')}
             className="flex w-full cursor-pointer flex-row items-center justify-center gap-2 rounded-lg border border-nexoraBorder bg-white px-3 py-3.5 text-[11px] font-bold leading-snug text-nexoraText transition hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-50"
           >
@@ -469,19 +461,28 @@ export default function SettingsTipQrPanel({
             )}
             <span>{t('components.settings.SettingsTipQrPanel.downloadQr')}</span>
           </button>
+          <button
+            type="button"
+            onClick={() =>
+              navigate(buildDashboardReportsPath({ tab: DASHBOARD_REPORTS_TAB.directPayments }))
+            }
+            className="flex w-full cursor-pointer flex-row items-center justify-center gap-2 rounded-lg border border-nexoraBrand/20 bg-nexoraBrandSoft px-3 py-3.5 text-[11px] font-bold leading-snug text-nexoraBrand transition hover:bg-nexoraBrand/10"
+          >
+            <ClipboardList className="h-4 w-4 shrink-0" />
+            <span>{t('components.settings.SettingsTipQrPanel.viewHistory')}</span>
+          </button>
         </div>
-
-        <button
-          type="button"
-          onClick={() =>
-            navigate(buildDashboardReportsPath({ tab: DASHBOARD_REPORTS_TAB.directPayments }))
-          }
-          className="flex w-full cursor-pointer items-center justify-center gap-2 rounded-lg border border-nexoraBrand/20 bg-nexoraBrandSoft px-4 py-3 text-xs font-bold text-nexoraBrand transition hover:bg-nexoraBrand/10"
-        >
-          <ClipboardList className="h-4 w-4 shrink-0" />
-          {t('components.settings.SettingsTipQrPanel.viewHistory')}
-        </button>
       </div>
+
+      <DirectPaymentQrPreviewModal
+        open={showPreview && Boolean(paymentPageUrl)}
+        onClose={() => setShowPreview(false)}
+        title={t('components.settings.SettingsTipQrPanel.defaultQrTitle')}
+        businessName={businessName}
+        previewQrUrl={qrPreviewUrl}
+        paymentPageUrl={paymentPageUrl}
+        scanCaption={t('components.settings.SettingsTipQrPanel.scanCaption')}
+      />
     </>
   )
 }

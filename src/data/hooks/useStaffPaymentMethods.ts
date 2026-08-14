@@ -36,11 +36,12 @@ export function useUpdateStaffPaymentMethod() {
   const { t } = useTranslation()
 
   return useMutation<PaymentMethodDto, Error, UpdatePaymentMethodVars>({
-    mutationFn: async ({ id, accountInfo, accountName, imageUrl, imageFile }) => {
+    mutationFn: async ({ id, accountInfo, accountName, cryptoAddresses, imageUrl, imageFile }) => {
       const resolvedImageUrl = await resolvePaymentMethodImageUrl({ imageFile, imageUrl })
       return staffPaymentMethodsRepository.update(id, {
         accountInfo,
         accountName,
+        cryptoAddresses,
         imageUrl: resolvedImageUrl,
       })
     },

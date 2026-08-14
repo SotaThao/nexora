@@ -3,11 +3,16 @@ import { qk } from '../queryKeys'
 import localStaffRepository from '../repositories/localStaff'
 import { imagesRepository } from '../repositories/images'
 import { payoutTypeToUiKey, toPayoutAccountNameDto } from '../paymentMethodTypes'
+import { PayoutUiKey } from '../payoutUiKeys'
 import { resolvePaymentMethodImageUrl } from '../../utils/resolvePaymentMethodImageUrl'
 import { dataUrlToFile } from '../../utils/imageFile'
 import { splitFullName } from '../../utils/staffName'
+import {
+  parseVlinkpayAddresses,
+  toVlinkpayCryptoAddressesPayload,
+} from '../../components/payout/vlinkpayWallet'
 import type { ManualStaffFormPayload } from '../../components/dashboard/modals/AddManualStaffTab'
-import type { LocalStaffUpdateParams } from '../../types/repositories'
+import type { LocalStaffActiveWorkItem, LocalStaffUpdateParams } from '../../types/repositories'
 import type { PaymentMethodDto } from '../../types/domain'
 
 export async function resolveStaffAvatarUrl(avatar: string, avatarFile?: File | null): Promise<string | null> {
@@ -51,8 +56,14 @@ async function configureLocalStaffPaymentMethods(
       imageUrl: config.qrCode,
     })
 
+    const isVlinkpay = uiKey === PayoutUiKey.VlinkPay
     await localStaffRepository.updatePaymentMethod(staffProfileId, method.id, {
-      accountInfo,
+      ...(isVlinkpay
+        ? {
+            accountInfo: null,
+            cryptoAddresses: toVlinkpayCryptoAddressesPayload(parseVlinkpayAddresses(accountInfo)),
+          }
+        : { accountInfo }),
       accountName: toPayoutAccountNameDto(uiKey, config.accountName),
       imageUrl,
     })
@@ -123,6 +134,18 @@ export function useDeleteLocalStaff() {
   })
 }
 
+/**
+ * Orders/bookings still open against a local staff member. Only fetched once a delete has
+ * already been rejected with LOCAL_STAFF_HAS_ACTIVE_WORK, to populate the blocking dialog.
+ */
+export function useLocalStaffActiveWork(staffProfileId?: string | null) {
+  return useQuery<LocalStaffActiveWorkItem[]>({
+    queryKey: qk.localStaffActiveWork(staffProfileId),
+    queryFn: () => localStaffRepository.getActiveWork(staffProfileId!),
+    enabled: Boolean(staffProfileId),
+  })
+}
+
 export function useLocalStaffPaymentMethods(
   staffProfileId?: string | null,
   { enabled = true } = {},
@@ -174,6 +197,7 @@ export function useUpdateLocalStaffPaymentMethod() {
       uiKey,
       accountInfo,
       accountName,
+      cryptoAddresses,
       imageUrl,
       imageFile,
     }: {
@@ -182,6 +206,7 @@ export function useUpdateLocalStaffPaymentMethod() {
       uiKey?: string
       accountInfo?: string | null
       accountName?: string | null
+      cryptoAddresses?: Array<{ network: string; symbol: string; address: string }> | null
       imageUrl?: string | null
       imageFile?: File | null
     }) => {
@@ -190,6 +215,7 @@ export function useUpdateLocalStaffPaymentMethod() {
       return localStaffRepository.updatePaymentMethod(staffProfileId, methodId, {
         accountInfo,
         accountName,
+        cryptoAddresses,
         imageUrl: resolvedImageUrl,
       })
     },

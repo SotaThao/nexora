@@ -26,6 +26,14 @@ import type {
 import type { ReviewRecord, TransactionRecord } from '../../types/domain'
 
 import { resolveStaffFullNameFromApi } from '../../utils/staffName'
+import {
+  formatVlinkpayMethodDisplay,
+  parseVlinkpayAddressesFromMethod,
+  serializeVlinkpayAddresses,
+} from '../../components/payout/vlinkpayWallet'
+import { normalizeCryptoAddresses } from './paymentMethodDto'
+import { isPaymentMethodConfigured, PAYOUT_TYPE_TO_UI_KEY, payoutTypeToUiKey } from '../paymentMethodTypes'
+import { PayoutUiKey } from '../payoutUiKeys'
 
 type HttpClient = typeof httpClient
 
@@ -51,15 +59,7 @@ export interface StaffRoleUpdateResult {
   roleAtBusiness: string
 }
 
-const PAYOUT_TYPE_TO_KEY: Record<string, string> = {
-  Zelle: 'zelle',
-  BankWire: 'bankwire',
-  PayPal: 'paypal',
-  Venmo: 'venmo',
-  CashApp: 'cashapp',
-  AppleCash: 'applecash',
-  VlinkPay: 'vlinkpay',
-}
+const EMPTY_PAYOUT_CONFIG = { enabled: false, value: '', qrCode: '', accountName: '' }
 
 const normalizeDateTime = (value?: string | null) => {
   if (!value) return null
@@ -71,12 +71,13 @@ export function normalizePaymentMethods(
   displayName = '',
 ) {
   const payoutConfigs: Record<string, { enabled: boolean; value: string; qrCode: string; accountName: string }> = {
-    zelle: { enabled: false, value: '', qrCode: '', accountName: '' },
-    bankwire: { enabled: false, value: '', qrCode: '', accountName: '' },
-    paypal: { enabled: false, value: '', qrCode: '', accountName: '' },
-    venmo: { enabled: false, value: '', qrCode: '', accountName: '' },
-    cashapp: { enabled: false, value: '', qrCode: '', accountName: '' },
-    applecash: { enabled: false, value: '', qrCode: '', accountName: '' },
+    [PayoutUiKey.Zelle]: { ...EMPTY_PAYOUT_CONFIG },
+    [PayoutUiKey.BankWire]: { ...EMPTY_PAYOUT_CONFIG },
+    [PayoutUiKey.PayPal]: { ...EMPTY_PAYOUT_CONFIG },
+    [PayoutUiKey.Venmo]: { ...EMPTY_PAYOUT_CONFIG },
+    [PayoutUiKey.CashApp]: { ...EMPTY_PAYOUT_CONFIG },
+    [PayoutUiKey.AppleCash]: { ...EMPTY_PAYOUT_CONFIG },
+    [PayoutUiKey.VlinkPay]: { ...EMPTY_PAYOUT_CONFIG },
   }
   // Build account map in API array order (object key insertion order).
   const paymentAccounts: Record<string, string> = {}
@@ -84,23 +85,38 @@ export function normalizePaymentMethods(
 
   for (const method of paymentMethods ?? []) {
     const type = method?.type ?? ''
-    const key = PAYOUT_TYPE_TO_KEY[type]
+    const key = PAYOUT_TYPE_TO_UI_KEY[type]
     if (!key) continue
-    const value = method.accountInfo ?? ''
-    paymentAccounts[key] = value
-    normalizedMethods.push({
+    const cryptoAddresses = normalizeCryptoAddresses(method.cryptoAddresses ?? null)
+    const accountInfo = method.accountInfo ?? null
+    const isVlinkpay = key === PayoutUiKey.VlinkPay
+    const valueForEditor =
+      isVlinkpay
+        ? serializeVlinkpayAddresses(
+            parseVlinkpayAddressesFromMethod({ accountInfo, cryptoAddresses }),
+          )
+        : (accountInfo ?? '')
+    paymentAccounts[key] =
+      isVlinkpay
+        ? formatVlinkpayMethodDisplay({ accountInfo, cryptoAddresses })
+        : (accountInfo ?? '')
+    const normalized: PaymentMethodDto = {
       type,
       uiKey: key,
-      accountInfo: value || null,
+      accountInfo,
       accountName: method.accountName ?? null,
       imageUrl: method.imageUrl ?? null,
+      cryptoAddresses,
       isActive: !!method.isActive,
-      isConfigured: Boolean(value.trim() || method.imageUrl),
-    })
-    if (key === 'vlinkpay') continue
+      isConfigured: Boolean(method.isConfigured),
+    }
+    if (!normalized.isConfigured) {
+      normalized.isConfigured = isPaymentMethodConfigured(normalized)
+    }
+    normalizedMethods.push(normalized)
     payoutConfigs[key] = {
       enabled: !!method.isActive,
-      value,
+      value: valueForEditor,
       qrCode: method.imageUrl ?? '',
       accountName: method.accountName ?? displayName ?? '',
     }
@@ -224,14 +240,20 @@ export function normalizeStaffSearchResult(dto: StaffSearchResultApiDto): StaffS
     const type = method?.type ?? ''
     const accountInfo = method?.accountInfo ?? null
     const imageUrl = method?.imageUrl ?? null
-    return {
+    const cryptoAddresses = normalizeCryptoAddresses(method?.cryptoAddresses ?? null)
+    const normalized: PaymentMethodDto = {
       type,
-      uiKey: PAYOUT_TYPE_TO_KEY[type],
+      uiKey: PAYOUT_TYPE_TO_UI_KEY[type] || payoutTypeToUiKey(type),
       isActive: !!method?.isActive,
       accountInfo,
       imageUrl,
-      isConfigured: Boolean((accountInfo && String(accountInfo).trim()) || (imageUrl && String(imageUrl).trim())),
+      cryptoAddresses,
+      isConfigured: Boolean(method?.isConfigured),
     }
+    if (!normalized.isConfigured) {
+      normalized.isConfigured = isPaymentMethodConfigured(normalized)
+    }
+    return normalized
   })
 
   return {

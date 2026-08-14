@@ -68,6 +68,8 @@ export const qk = {
     ['merchantStaff', 'stats', staffProfileId, filters],
   localStaffPaymentMethods: (staffProfileId?: string | null) =>
     ['merchantStaff', 'localStaffPaymentMethods', staffProfileId ?? ''],
+  localStaffActiveWork: (staffProfileId?: string | null) =>
+    ['merchantStaff', 'localStaffActiveWork', staffProfileId ?? ''],
   staffInvite:         (token)   => ['staffInvite', token],
   publicMerchantInvite: (ref)    => ['publicMerchantInvite', ref],
   merchantInviteLink:  ()      => ['merchantSettings', 'inviteLink'],
@@ -462,6 +464,8 @@ export const qk = {
   merchantVoiceStaffById: (id?: string | null) => ['merchantVoice', 'staff', 'detail', id ?? ''],
   merchantVoiceBusinessStaff: (filters = EMPTY) => ['merchantVoice', 'staff', 'businessStaff', filters],
   merchantVoiceConfig: () => ['merchantVoice', 'config'],
+  merchantVoiceHolidays: () => ['merchantVoice', 'holidays'],
+  merchantVoiceHolidaysAffectedCount: (date: string) => ['merchantVoice', 'holidays', 'affected-count', date],
   merchantVoiceServiceCategories: () => ['merchantVoice', 'service-categories'],
   merchantVoiceServices: () => ['merchantVoice', 'services'],
   merchantVoiceTenantStatus: () => ['merchantVoice', 'tenant', 'status'],

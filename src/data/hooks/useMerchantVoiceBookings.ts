@@ -8,6 +8,9 @@ import {
   type MerchantVoiceBusinessStaffDto,
   type MerchantVoiceConfigDto,
   type UpdateMerchantVoiceConfigRequest,
+  type MerchantVoiceHolidayDto,
+  type CreateMerchantVoiceHolidayRequest,
+  type UpdateMerchantVoiceHolidayRequest,
   type MerchantVoiceServiceCategoryDto,
   type MerchantVoiceServiceDto,
   type CreateMerchantVoiceServiceCategoryRequest,
@@ -234,6 +237,52 @@ export function useUpdateMerchantVoiceConfig() {
     mutationFn: (body) => merchantVoiceRepository.updateConfig(body),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: qk.merchantVoiceConfig() })
+    },
+  })
+}
+
+export function useMerchantVoiceHolidays({ enabled = true } = {}) {
+  return useQuery<MerchantVoiceHolidayDto[]>({
+    queryKey: qk.merchantVoiceHolidays(),
+    queryFn: () => merchantVoiceRepository.getHolidays(),
+    enabled,
+  })
+}
+
+export function useAffectedBookingsCount(date: string, { enabled = true } = {}) {
+  return useQuery<number>({
+    queryKey: qk.merchantVoiceHolidaysAffectedCount(date),
+    queryFn: () => merchantVoiceRepository.getAffectedBookingsCount(date),
+    enabled: enabled && Boolean(date),
+  })
+}
+
+export function useCreateMerchantVoiceHoliday() {
+  const queryClient = useQueryClient()
+  return useMutation<MerchantVoiceHolidayDto, Error, CreateMerchantVoiceHolidayRequest>({
+    mutationFn: (body) => merchantVoiceRepository.createHoliday(body),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: qk.merchantVoiceHolidays() })
+    },
+  })
+}
+
+export function useUpdateMerchantVoiceHoliday() {
+  const queryClient = useQueryClient()
+  return useMutation<MerchantVoiceHolidayDto, Error, { id: string; body: UpdateMerchantVoiceHolidayRequest }>({
+    mutationFn: ({ id, body }) => merchantVoiceRepository.updateHoliday(id, body),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: qk.merchantVoiceHolidays() })
+    },
+  })
+}
+
+export function useDeleteMerchantVoiceHoliday() {
+  const queryClient = useQueryClient()
+  return useMutation<void, Error, string>({
+    mutationFn: (id) => merchantVoiceRepository.deleteHoliday(id),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: qk.merchantVoiceHolidays() })
     },
   })
 }

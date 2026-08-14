@@ -7,6 +7,12 @@ export default defineConfig({
   plugins: [react()],
   resolve: {
     alias: [
+      // Mirrors the "@/*" -> "src/*" path in tsconfig.json. Without it tsc resolves the
+      // alias but rollup does not, so an "@/..." import typechecks and then fails the build.
+      {
+        find: /^@\//,
+        replacement: fileURLToPath(new URL('./src/', import.meta.url)),
+      },
       {
         find: /^pdfjs-dist$/,
         replacement: fileURLToPath(

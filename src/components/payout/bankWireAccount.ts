@@ -1,4 +1,9 @@
 import { formatPayoutPhoneDisplay, shouldUsePayoutPhoneInput } from './payoutPhone'
+import { WALLET_KEYS } from '../customer-flow/constants'
+import {
+  formatVlinkpayMethodDisplay,
+  type VlinkpayCryptoAddressDto,
+} from './vlinkpayWallet'
 
 export interface BankWireAccountDetails {
   beneficiaryName: string
@@ -71,11 +76,16 @@ export function formatBankWireAccountSummary(value?: string | null): string {
 export function formatPaymentMethodAccountDisplay(
   uiKey: string,
   accountInfo?: string | null,
+  cryptoAddresses?: VlinkpayCryptoAddressDto[] | null,
 ): string {
+  if (uiKey === WALLET_KEYS.VLINKPAY) {
+    return formatVlinkpayMethodDisplay({ accountInfo, cryptoAddresses }) || ''
+  }
+
   const raw = String(accountInfo || '').trim()
   if (!raw) return ''
 
-  if (uiKey === 'bankwire' || raw.startsWith(BANK_WIRE_PREFIX)) {
+  if (uiKey === WALLET_KEYS.BANKWIRE || raw.startsWith(BANK_WIRE_PREFIX)) {
     const beneficiaryName = getBankWireBeneficiaryName(raw)
     if (beneficiaryName) return beneficiaryName
     return formatBankWireAccountSummary(raw) || raw

@@ -5,6 +5,7 @@ import { SHOW_HARDWARE_DEVICES } from '../constants'
 
 import Overview from '../overview/Overview'
 import TouchpointsView from '../../TouchpointsView'
+import { normalizeTouchpointSection } from '../../touchpoints/touchpointSections'
 import ReviewsView from '../views/ReviewsView'
 import TipsView from '../../TipsView'
 import ReportsView from '../views/ReportsView'
@@ -167,7 +168,7 @@ export function TouchpointsRoute() {
   const [sp, setSp] = useSearchParams()
   const tab = sp.get('tab') || 'stations'
   const activeSubTab = SHOW_HARDWARE_DEVICES && tab === 'devices' ? 'devices' : 'stations'
-  const stationsSection = sp.get('section') === 'payment' ? 'payment' : 'tip'
+  const stationsSection = normalizeTouchpointSection(sp.get('section'))
 
   useEffect(() => {
     if (!SHOW_HARDWARE_DEVICES && tab === 'devices') {
@@ -188,6 +189,9 @@ export function TouchpointsRoute() {
       onLinkDevice={ctx.linkDevice}
       transactions={ctx.transactions}
       businessName={ctx.businessName}
+      businessSlug={ctx.businessSlug}
+      inviteLinkSetting={ctx.inviteLinkSetting}
+      isInviteLinkSettingLoading={ctx.isInviteLinkSettingLoading}
       devices={ctx.devices}
       onAddDevice={ctx.handleAddDevice}
       onDeleteDevice={ctx.handleDeleteDevice}
@@ -200,7 +204,7 @@ export function TouchpointsRoute() {
       onTabChange={(nextTab) => {
         const resolvedTab = nextTab === 'devices' && !SHOW_HARDWARE_DEVICES ? 'stations' : nextTab
         if (resolvedTab === 'stations') {
-          const section = sp.get('section') === 'payment' ? 'payment' : 'tip'
+          const section = normalizeTouchpointSection(sp.get('section'))
           setSp({ tab: resolvedTab, section }, { replace: true })
         } else {
           setSp({ tab: resolvedTab }, { replace: true })
@@ -312,6 +316,15 @@ export function SettingsRoute() {
   const { tab = 'profile', staffId } = useParams()
   const navigate = useNavigate()
   const isStaffTab = tab === DASHBOARD_SETTINGS_TAB.staff
+
+  if (staffId) {
+    return (
+      <ResponsiveStaffRoute family={STAFF_ROUTE_FAMILY.Settings} staffId={staffId}>
+        <StaffDetailRouteContent routeFamily={STAFF_ROUTE_FAMILY.Settings} />
+      </ResponsiveStaffRoute>
+    )
+  }
+
   const settings = (
     <SettingsView
       {...({ onBlockedFeatureClick: ctx.requireKyb } as any)}
@@ -324,9 +337,7 @@ export function SettingsRoute() {
       onTabChange={(nextTab) => navigate(buildDashboardSettingsPath(nextTab))}
       onKybSuccess={ctx.onKybSuccess}
       staffContent={isStaffTab
-        ? staffId
-          ? <StaffDetailRouteContent routeFamily={STAFF_ROUTE_FAMILY.Settings} />
-          : <StaffListRouteContent routeFamily={STAFF_ROUTE_FAMILY.Settings} />
+        ? <StaffListRouteContent routeFamily={STAFF_ROUTE_FAMILY.Settings} />
         : null}
     />
   )
@@ -1098,6 +1109,7 @@ export function SubscriptionsRoute() {
     paymentPlan,
     selectedPackage,
     paymentPlanPrice,
+    checkoutBillingCycle,
     clearCheckout,
     handleSelectPlan,
     storeSetupGateOpen,
@@ -1121,6 +1133,8 @@ export function SubscriptionsRoute() {
         paymentPlan={paymentPlan}
         selectedPackage={selectedPackage}
         paymentPlanPrice={paymentPlanPrice}
+        billingCycle={checkoutBillingCycle}
+        currentSubscription={tipPlatformSubscription}
         onClose={clearCheckout}
       />
       <CompleteStoreSetupGateModal

@@ -1,5 +1,6 @@
 import type { ApiError } from './api'
 import type { LooseObject } from './domain'
+import type { PosOrderStatus } from '../constants/posOrderStatus'
 import type {
   MerchantSetup,
   NotificationRecord,
@@ -533,6 +534,7 @@ export interface PosBookingSettingsApiDto {
   notifyCustomerSmsEnabled: boolean
   notifyBusinessSmsEnabled: boolean
   notifyAssignedStaffSmsEnabled: boolean
+  holidayAutoNotifyEnabled: boolean
 }
 
 // POS Booking — Staff/Owner creates a booking directly (Ticket 3). Always Confirmed
@@ -686,6 +688,9 @@ export interface PublicAvailabilityRequestPayload {
 
 export interface PublicAvailabilityApiDto {
   availableTimes: string[] // "HH:mm", local to the salon's own hours
+  holidayReason?: string | null
+  adjustedOpenTime?: string | null
+  adjustedCloseTime?: string | null
 }
 
 export interface CreatePublicBookingItemPayload {
@@ -1082,12 +1087,20 @@ export interface DashboardReviewsQuery {
   pageSize?: number
 }
 
+export interface StaffPaymentMethodCryptoAddressApiDto {
+  network?: string
+  symbol?: string
+  address?: string
+}
+
 export interface StaffPaymentMethodApiDto {
   type?: string
   isActive?: boolean
   accountInfo?: string | null
   accountName?: string | null
   imageUrl?: string | null
+  isConfigured?: boolean
+  cryptoAddresses?: StaffPaymentMethodCryptoAddressApiDto[] | null
 }
 
 export interface StaffInviteSummaryApiDto {
@@ -1160,6 +1173,21 @@ export interface LocalStaffCreateParams {
 }
 
 export interface LocalStaffUpdateParams extends LocalStaffCreateParams {}
+
+/**
+ * One order/booking still open against a local staff member, blocking their deletion
+ * (backend LOCAL_STAFF_HAS_ACTIVE_WORK). `scheduledAt` is set only when `isBooking`.
+ */
+export interface LocalStaffActiveWorkItem {
+  orderId: string
+  orderNumber: string
+  customerName: string
+  status: PosOrderStatus
+  isBooking: boolean
+  scheduledAt: string | null
+  source: string | null
+  checkedInAt: string
+}
 
 export interface StaffSearchResultApiDto {
   staffProfileId: string

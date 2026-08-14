@@ -4,7 +4,10 @@
 
 import httpClient from '../../lib/httpClient'
 import type { CreateReviewVars, CreateTipVars, SkipTipVars } from '../../types/hooks'
+import type { PaymentMethodDto } from '../../types/domain'
 import { normalizeTouchPageData } from './normalizeTouchPage'
+import { normalizePaymentMethodDto } from './paymentMethodDto'
+import { toVlinkpayCryptoSymbolWire } from '../../components/payout/vlinkpayWallet'
 
 type HttpClient = typeof httpClient
 
@@ -16,6 +19,8 @@ const PAYMENT_METHOD_MAP: Record<string, string> = {
   AppleCash: 'AppleCash',
   BankWire: 'BankWire',
   bankwire: 'BankWire',
+  VlinkPay: 'VlinkPay',
+  vlinkpay: 'VlinkPay',
 }
 
 function toWireMethod(uiMethod: string): string {
@@ -40,40 +45,51 @@ export function createPublicTouchRepository(client: HttpClient = httpClient) {
       return normalizeTouchPageData(raw)
     },
 
-    async getTipPaymentMethods(tipId: string) {
-      return client.get<Array<{ id: string; type: string; accountInfo: string; accountName?: string | null; imageUrl: string }>>(
+    async getTipPaymentMethods(tipId: string): Promise<PaymentMethodDto[]> {
+      const raw = await client.get<Array<Record<string, unknown>>>(
         `/api/v1/tips/${encodeURIComponent(tipId)}/payment-methods`,
         { anonymous: true },
       )
+      if (!Array.isArray(raw)) return []
+      return raw.map((item) => normalizePaymentMethodDto(item as Parameters<typeof normalizePaymentMethodDto>[0]))
     },
 
     async getPaymentLink({
       staffId,
       method,
       amount,
+      cryptoSymbol,
     }: {
       staffId: string
       method: string
       amount: number
+      /** Required when method is VlinkPay. */
+      cryptoSymbol?: string
     }) {
+      const params: Record<string, string | number> = {
+        staffId,
+        method: toWireMethod(method),
+        amount,
+      }
+      const symbol = toVlinkpayCryptoSymbolWire(cryptoSymbol)
+      if (symbol) params.cryptoSymbol = symbol
       return client.get<LooseObject>('/api/v1/touch/payment-link', {
         anonymous: true,
-        params: { staffId, method: toWireMethod(method), amount },
+        params,
       })
     },
 
     async createTip(args: CreateTipVars) {
-      return client.post<LooseObject>(
-        '/api/v1/touch/tip',
-        {
-          touchPointId: args.touchPointId,
-          staffProfileId: args.staffProfileId,
-          amount: args.amount,
-          paymentMethod: toWireMethod(args.paymentMethod),
-          sessionId: args.sessionId,
-        },
-        { anonymous: true },
-      )
+      const body: Record<string, unknown> = {
+        touchPointId: args.touchPointId,
+        staffProfileId: args.staffProfileId,
+        amount: args.amount,
+        paymentMethod: toWireMethod(args.paymentMethod),
+        sessionId: args.sessionId,
+      }
+      const symbol = toVlinkpayCryptoSymbolWire(args.cryptoSymbol)
+      if (symbol) body.cryptoSymbol = symbol
+      return client.post<LooseObject>('/api/v1/touch/tip', body, { anonymous: true })
     },
 
     async confirmTip(tipId: string) {

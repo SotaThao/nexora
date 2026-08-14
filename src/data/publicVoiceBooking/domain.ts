@@ -95,8 +95,17 @@ export interface BookingPageDataDto {
   categories: BookingServiceCategoryDto[]
   staff: BookingStaffDto[]
   operatingHours: BookingOperatingHourDto[]
+  holidays?: BookingHolidayDto[]
   /** Recognised active customer when `phone` query matches; otherwise null/omitted. */
   customer?: BookingCustomerDto | null
+}
+
+export interface BookingHolidayDto {
+  holidayDate: string
+  reason: string
+  type: string
+  adjustedOpenTime: string | null
+  adjustedCloseTime: string | null
 }
 
 /** Public create body — matches OpenAPI `CreateOnlineBookingRequest`. */
@@ -167,6 +176,14 @@ export interface PublicBookingCustomer {
   phoneNumber: string
 }
 
+export interface PublicBookingHoliday {
+  holidayDate: string
+  reason: string
+  type: string
+  adjustedOpenTime: string | null
+  adjustedCloseTime: string | null
+}
+
 export interface PublicBookingPageData {
   businessKey: string
   businessName: string
@@ -175,6 +192,7 @@ export interface PublicBookingPageData {
   categories: PublicBookingServiceCategory[]
   staff: PublicBookingStaff[]
   operatingHours: PublicBookingOperatingHour[]
+  holidays: PublicBookingHoliday[]
   customer: PublicBookingCustomer | null
 }
 

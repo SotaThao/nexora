@@ -253,7 +253,7 @@ function QrModal({ target, businessName, onClose }) {
             </div>
           )}
 
-          <div className="mx-auto flex aspect-[2/3] w-full max-w-[22rem] min-w-0 flex-col items-center justify-between rounded-2xl bg-nexoraCanvas border border-nexoraBorder/80 p-3 text-nexoraText shadow-md qr-print-card sm:p-4">
+          <div className="mx-auto flex w-full max-w-[18rem] min-w-0 flex-col items-center gap-3 rounded-2xl bg-nexoraCanvas border border-nexoraBorder/80 p-3 text-nexoraText shadow-md qr-print-card sm:p-4">
             <div className="flex items-center gap-1 justify-center qr-print-brand-header">
               <img src="/assets/nexora-logo.png" alt="Nexora Logo" className="h-3.5 w-3.5 object-contain qr-print-brand-logo" />
               <span className="text-[8px] font-black tracking-wider text-slate-800 qr-print-brand-text">NEXORA</span>
@@ -268,7 +268,7 @@ function QrModal({ target, businessName, onClose }) {
               </div>
             </div>
 
-            <div className="flex aspect-square w-full max-w-full min-w-0 items-center justify-center overflow-hidden rounded-lg border border-nexoraBorder/60 bg-white p-2 shadow-inner qr-print-qr-wrapper">
+            <div className="flex aspect-square w-full max-w-[13rem] min-w-0 shrink-0 items-center justify-center overflow-hidden rounded-lg border border-nexoraBorder/60 bg-white p-2 shadow-inner qr-print-qr-wrapper">
               <QrImage
                 src={buildQrImageUrl(qrUrl, QR_IMAGE_SIZES.print, target.qrImageUrl)}
                 alt="Scan QR code to tip and review"
@@ -276,7 +276,7 @@ function QrModal({ target, businessName, onClose }) {
               />
             </div>
 
-            <div className="text-[8px] font-extrabold uppercase text-nexoraMuted tracking-wider qr-print-scan-text leading-tight mx-auto">
+            <div className="text-[7.5px] font-extrabold uppercase text-nexoraMuted tracking-wider qr-print-scan-text leading-tight mx-auto">
               {t('customer.scan_to_tip_review')}
             </div>
 

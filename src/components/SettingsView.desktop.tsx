@@ -10,7 +10,6 @@ import {
   Download,
   FileText,
   Lock,
-  QrCode,
   ShieldCheck,
   Star,
   Users,
@@ -215,10 +214,8 @@ export default function SettingsViewDesktop({
 
   const handleSaveQr = async (qrUrl) => {
     try {
-      const result = await downloadQrCode(qrUrl, `referral-qr-${selectedLeg}.png`)
-      if (result !== 'cancelled') {
-        form.showToast(t('components.SettingsView.qrCodeDownloaded'))
-      }
+      await downloadQrCode(qrUrl, `referral-qr-${selectedLeg}.png`)
+      form.showToast(t('components.SettingsView.qrCodeDownloaded'))
     } catch {
       window.open(qrUrl, '_blank')
     }
@@ -286,6 +283,9 @@ export default function SettingsViewDesktop({
             setBusinessForm={form.setBusinessForm}
             businessErrors={form.businessErrors}
             setBusinessErrors={form.setBusinessErrors}
+            logoUrl={form.logoUrl}
+            handleLogoChange={form.handleLogoChange}
+            isUploadingLogo={form.isUploadingLogo}
             isEditingReviews={form.isEditingReviews}
             setIsEditingReviews={form.setIsEditingReviews}
             reviewsForm={form.reviewsForm}
@@ -342,13 +342,6 @@ export default function SettingsViewDesktop({
 
         {tab === 'affiliate' && (
           <div className="rounded-xl border border-nexoraBorder bg-white shadow-sm p-6 max-w-xl mx-auto animate-fadeIn select-none space-y-6">
-            <div className="flex justify-between items-center border-b border-nexoraRule pb-3">
-              <h4 className="text-xs font-black uppercase text-nexoraText tracking-wider flex items-center gap-2">
-                <QrCode className="h-4 w-4 text-nexoraBrand" />
-                {t('components.SettingsView.affiliateLink2')}
-              </h4>
-            </div>
-
             {/* Select Placement Leg */}
             <div className="bg-slate-50 border border-slate-100 rounded-xl p-3">
               <span className="text-[10px] font-extrabold uppercase text-slate-500 tracking-wider mb-2 block text-center">

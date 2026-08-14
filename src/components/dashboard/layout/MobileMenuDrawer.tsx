@@ -152,11 +152,13 @@ export default function MobileMenuDrawer({
           setExpanded: setIsTaxIqMobileExpanded,
           enter: () => navigateMenu(DASHBOARD_MENU.TaxIq, { closeDrawer: false }),
         },
-        {
-          id: DASHBOARD_MENU.Touchpoints,
-          setExpanded: setIsTouchpointsMobileExpanded,
-          enter: () => navigateMenu(DASHBOARD_MENU.Touchpoints, { closeDrawer: false }),
-        },
+        ...(VISIBLE_TOUCHPOINTS_SUBMENU.length > 0
+          ? [{
+              id: DASHBOARD_MENU.Touchpoints,
+              setExpanded: setIsTouchpointsMobileExpanded,
+              enter: () => navigateMenu(DASHBOARD_MENU.Touchpoints, { closeDrawer: false }),
+            }]
+          : []),
         {
           id: DASHBOARD_MENU.BookingHub,
           setExpanded: setIsBookingHubMobileExpanded,
@@ -311,7 +313,7 @@ export default function MobileMenuDrawer({
                         <ChevronDown className="h-4 w-4" />
                       )}
                     </div>
-                  ) : id === DASHBOARD_MENU.Touchpoints ? (
+                  ) : id === DASHBOARD_MENU.Touchpoints && VISIBLE_TOUCHPOINTS_SUBMENU.length > 0 ? (
                     <div className="text-white/65 shrink-0">
                       {isTouchpointsMobileExpanded ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
                     </div>
@@ -439,7 +441,9 @@ export default function MobileMenuDrawer({
                     })}
                   </div>
                 )}
-                {id === DASHBOARD_MENU.Touchpoints && isTouchpointsMobileExpanded && (
+                {id === DASHBOARD_MENU.Touchpoints &&
+                  VISIBLE_TOUCHPOINTS_SUBMENU.length > 0 &&
+                  isTouchpointsMobileExpanded && (
                   <div className={SIDEBAR_SUBMENU_WRAP_CLASS}>
                     {VISIBLE_TOUCHPOINTS_SUBMENU.map((sub) => {
                       const isSubActive = activeMenu === DASHBOARD_MENU.Touchpoints && (activeSubTab || 'stations') === sub.id

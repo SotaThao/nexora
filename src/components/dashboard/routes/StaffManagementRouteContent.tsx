@@ -67,6 +67,7 @@ export function StaffDetailRouteContent({
   routeFamily: StaffRouteFamily
 }) {
   const ctx = useOutletContext<LooseObject>()
+  const navigate = useNavigate()
   const { staffId: staffKey } = useParams()
   const {
     data: staffMember,
@@ -100,7 +101,7 @@ export function StaffDetailRouteContent({
     <StaffDetailView
       staffMember={normaliseMember(resolvedMember)}
       staffProfileId={resolvedMember.staffProfileId ?? null}
-      onBack={null}
+      onBack={() => navigate(buildStaffRoutePath(routeFamily))}
       onViewStaff={ctx.openViewStaff}
       onQr={ctx.previewQr}
       onDelete={ctx.deleteStaff}

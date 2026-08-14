@@ -1,3 +1,5 @@
+import { PayoutUiKey } from '../../data/payoutUiKeys'
+
 /**
  * Shared constants for the customer tipping flow.
  */
@@ -8,10 +10,11 @@
  * on a wallet so the values stay consistent in one place.
  */
 export const WALLET_KEYS = Object.freeze({
-  ZELLE: 'zelle',
-  BANKWIRE: 'bankwire',
-  PAYPAL: 'paypal',
-  VENMO: 'venmo',
-  CASHAPP: 'cashapp',
-  APPLECASH: 'applecash',
+  ZELLE: PayoutUiKey.Zelle,
+  BANKWIRE: PayoutUiKey.BankWire,
+  PAYPAL: PayoutUiKey.PayPal,
+  VENMO: PayoutUiKey.Venmo,
+  CASHAPP: PayoutUiKey.CashApp,
+  APPLECASH: PayoutUiKey.AppleCash,
+  VLINKPAY: PayoutUiKey.VlinkPay,
 })
