@@ -230,6 +230,7 @@ export default function SettingsViewMobile({
   initialTab = 'profile',
   onTabChange,
   onKybSuccess,
+  staffContent = null,
   verificationStatus = hasKyb ? 'kyb_approved' : 'basic'
 }) {
   const { currentLanguage, setLanguage, t } = useTranslation()
@@ -352,6 +353,11 @@ export default function SettingsViewMobile({
                   : t('staff_dashboard.profile.menu_personal_information')}
                 onClick={() => openProfileSection('personal')}
               />
+              <MerchantProfileMenuItem
+                icon={Users}
+                label={t('dashboard.menu.staff')}
+                onClick={() => handleTabChange('staff')}
+              />
               <MerchantVerificationMenuItem
                 label={t('staff_dashboard.profile.menu_verification')}
                 status={kybStatusLabel}
@@ -388,6 +394,16 @@ export default function SettingsViewMobile({
               <LogOut className="h-4.5 w-4.5 shrink-0" />
               <span className="truncate">{t('dashboard.sidebar.sign_out')}</span>
             </button>
+          </>
+        )}
+
+        {form.activeTab === 'staff' && (
+          <>
+            <MerchantProfileSectionHeader
+              title={t('dashboard.menu.staff')}
+              onBack={() => handleTabChange('profile')}
+            />
+            {staffContent}
           </>
         )}
 
