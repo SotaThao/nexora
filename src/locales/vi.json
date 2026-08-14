@@ -3713,6 +3713,7 @@
               }
             },
             "perMonth": "/tháng",
+            "perYear": "/năm",
             "crossPriceStarter": "$149/tháng",
             "crossPricePro": "$299/tháng",
             "crossPriceElite": "$499/tháng",

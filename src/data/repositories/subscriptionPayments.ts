@@ -84,6 +84,10 @@ export interface SubscriptionPackage {
   plan: string | null
   featuresEn: string[]
   featuresVi: string[]
+  /** Yearly card bullets — empty when the package has no dedicated yearly copy (fall back to `featuresEn`). */
+  yearlyFeaturesEn: string[]
+  /** Vietnamese counterpart of `yearlyFeaturesEn`. */
+  yearlyFeaturesVi: string[]
   price: number | null
   originalPrice: number | null
   periodInMonths: number | null
@@ -235,6 +239,12 @@ function normalizePackage(raw: unknown): SubscriptionPackage | null {
       : [],
     featuresVi: Array.isArray(item.featuresVi)
       ? item.featuresVi.filter((f): f is string => typeof f === 'string')
+      : [],
+    yearlyFeaturesEn: Array.isArray(item.yearlyFeaturesEn)
+      ? item.yearlyFeaturesEn.filter((f): f is string => typeof f === 'string')
+      : [],
+    yearlyFeaturesVi: Array.isArray(item.yearlyFeaturesVi)
+      ? item.yearlyFeaturesVi.filter((f): f is string => typeof f === 'string')
       : [],
     price: readNullableNumber(item.price),
     originalPrice: readNullableNumber(item.originalPrice),
@@ -527,14 +537,15 @@ export function createSubscriptionPaymentsRepository(client: HttpClient = httpCl
       return normalizePurchaseResult(res)
     },
 
-    /** VoiceAI MD: body `{ packageId, symbol }`. */
+    /** VoiceAI MD: body `{ packageId, symbol, billingCycle? }`. */
     async purchaseByPackageId(
       packageId: string,
       symbol: string,
+      billingCycle?: SubscriptionBillingCycle,
     ): Promise<PurchasePackageByIdResult> {
       const res = await client.post<unknown>(
         '/api/v1/merchant/subscriptions/purchase',
-        { packageId, symbol },
+        { packageId, symbol, ...(billingCycle ? { billingCycle } : {}) },
       )
       return normalizePurchaseResult(res)
     },
