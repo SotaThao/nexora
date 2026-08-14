@@ -3049,6 +3049,51 @@ body.booking-appointment-panel-modal-open {
   font-weight: 900;
 }
 
+.booking-hub-view .plans-billing-toggle {
+  display: flex;
+  align-items: center;
+  margin: 4px 0 2px;
+}
+
+.booking-hub-view .plans-billing-tablist {
+  display: inline-flex;
+  border-radius: 10px;
+  border: 1px solid var(--nexora-border);
+  background: var(--nexora-surface-muted, #f5f4fb);
+  padding: 4px;
+  gap: 2px;
+}
+
+.booking-hub-view .plans-billing-tab {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  border: none;
+  background: transparent;
+  border-radius: 8px;
+  padding: 6px 14px;
+  font-size: 12px;
+  font-weight: 800;
+  color: var(--nexora-muted);
+  cursor: pointer;
+  transition: color 0.15s ease, background 0.15s ease, box-shadow 0.15s ease;
+}
+
+.booking-hub-view .plans-billing-tab.is-active {
+  background: #fff;
+  color: var(--nexora-brand);
+  box-shadow: var(--nexora-soft-shadow);
+}
+
+.booking-hub-view .plans-billing-discount-badge {
+  border-radius: 999px;
+  background: rgba(244, 63, 94, 0.12);
+  color: #e11d48;
+  font-size: 10px;
+  font-weight: 900;
+  padding: 2px 6px;
+}
+
 .booking-hub-view .plans-grid {
   display: grid;
   grid-template-columns: 1fr;

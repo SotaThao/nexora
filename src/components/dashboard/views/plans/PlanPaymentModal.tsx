@@ -11,7 +11,9 @@ import {
 } from '../../../../data/hooks/useSubscriptionPayments'
 import { resolveSubscriptionBillingDefaults } from '../../../../utils/subscriptionBillingDefaults'
 import { resolveTranslatedApiError } from '../../../../utils/resolveTranslatedApiError'
+import { formatCurrentPlanLabel, getVoiceAiSubscription } from '../../../../utils/subscriptionDisplay'
 import {
+  SubscriptionBillingCycle,
   SubscriptionPaymentStatus,
   type SubscriptionPaymentMethod,
 } from '../../../../data/repositories/subscriptionPayments'
@@ -20,6 +22,7 @@ import SubscriptionCardPaymentForm, {
   type SubscriptionCardPaymentFormHandle,
 } from '../../modals/SubscriptionCardPaymentForm'
 import {
+  SUBSCRIPTION_PAYMENT_MODAL_TK,
   resolveCheckoutPaymentLabel,
   subscriptionModalKey,
   tryBeginOrderStatusPolling,
@@ -116,6 +119,7 @@ export default function PlanPaymentModal({
     () => resolveSubscriptionBillingDefaults(billingDefaults, profile),
     [billingDefaults, profile],
   )
+  const currentPlanLabel = formatCurrentPlanLabel(getVoiceAiSubscription(profile))
   const isCardPayment = isPlanCardPaymentSymbol(selectedSymbol)
   const purchaseMutation = usePurchaseVoiceAiPackage()
   const initializeCardMutation = useInitializeCardPayment()
@@ -163,9 +167,9 @@ export default function PlanPaymentModal({
   useEffect(() => {
     if (!isOpen || !isCardPayment || !selection?.packageId) return
     if (initializeCardMutation.data || initializeCardMutation.isPending) return
-    initializeCardMutation.mutate(selection.packageId)
+    initializeCardMutation.mutate({ packageId: selection.packageId, billingCycle: selection.billingCycle })
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [isOpen, isCardPayment, selection?.packageId])
+  }, [isOpen, isCardPayment, selection?.packageId, selection?.billingCycle])
 
   const selectedPayment = useMemo(
     () => methods.find((method) => method.symbol === selectedSymbol) ?? null,
@@ -215,7 +219,11 @@ export default function PlanPaymentModal({
     }
 
     purchaseMutation.mutate(
-      { packageId: selection.packageId, symbol: selectedPayment.symbol },
+      {
+        packageId: selection.packageId,
+        symbol: selectedPayment.symbol,
+        billingCycle: selection.billingCycle,
+      },
       {
         onSuccess: (result) => {
           if (result.paymentStatus !== SubscriptionPaymentStatus.Paid) {
@@ -393,7 +401,12 @@ export default function PlanPaymentModal({
                           className="booking-mini-button"
                           type="button"
                           onClick={() => {
-                            if (selection.packageId) initializeCardMutation.mutate(selection.packageId)
+                            if (selection.packageId) {
+                              initializeCardMutation.mutate({
+                                packageId: selection.packageId,
+                                billingCycle: selection.billingCycle,
+                              })
+                            }
                           }}
                         >
                           {t(`${TK}.planPaymentMethodsRetry`)}
@@ -434,9 +447,19 @@ export default function PlanPaymentModal({
                 <div className="sms-credit-invoice-row sms-credit-invoice-total">
                   <span>{t(`${TK}.planInvoiceTotal`)}</span>
                   <strong>
-                    {formatPlanMonthlyTotal(selection.price, t(`${TK}.perMonth`))}
+                    {formatPlanMonthlyTotal(
+                      selection.price,
+                      selection.billingCycle === SubscriptionBillingCycle.Yearly
+                        ? t(`${TK}.perYear`)
+                        : t(`${TK}.perMonth`),
+                    )}
                   </strong>
                 </div>
+                {currentPlanLabel ? (
+                  <p className="mt-3 text-xs font-semibold text-red-600">
+                    {t(`${SUBSCRIPTION_PAYMENT_MODAL_TK}.subscription_forfeit_warning`, { plan: currentPlanLabel })}
+                  </p>
+                ) : null}
               </section>
 
               <div className="sr-only" aria-live="polite">

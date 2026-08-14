@@ -976,6 +976,8 @@ export default function Dashboard({
           setIsApproveModalOpen(false)
         }}
         onOpenInviteShare={() => {}}
+        onLinkStaff={handleLinkStaff}
+        onToggleTipsFlow={toggleStaffTipsFlow}
         isLoadingDetail={isStaffDetailLoading}
         reviews={reviews}
         merchantSetupData={merchantSetupData}

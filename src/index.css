@@ -350,6 +350,11 @@ body:not(.homepage-active):not(.public-booking-active) a:focus-visible {
     max-height: 90dvh;
   }
 
+  /* Payout setup modal (VLINKPAY variant has variable-length content: guide steps expand/collapse). */
+  .payout-setup-modal-scroll {
+    max-height: 90vh;
+    max-height: 90dvh;
+  }
   .news-library-pdf-modal-card {
     height: 90vh;
     height: 90dvh;

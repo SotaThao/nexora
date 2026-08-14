@@ -1,10 +1,16 @@
 import SubscriptionPaymentModal from '../../modals/SubscriptionPaymentModal'
-import type { PurchasableSubscriptionPlan } from '../../../../data/repositories/subscriptionPayments'
+import type {
+  PurchasableSubscriptionPlan,
+  SubscriptionBillingCycle,
+} from '../../../../data/repositories/subscriptionPayments'
+import type { UserSubscription } from '../../../../types/domain'
 
 type TipPlatformCheckoutModalProps = {
   paymentPlan: PurchasableSubscriptionPlan | null
   selectedPackage: { id: string } | undefined
   paymentPlanPrice: number
+  billingCycle?: SubscriptionBillingCycle
+  currentSubscription?: UserSubscription | null
   onClose: () => void
 }
 
@@ -13,6 +19,8 @@ export default function TipPlatformCheckoutModal({
   paymentPlan,
   selectedPackage,
   paymentPlanPrice,
+  billingCycle,
+  currentSubscription,
   onClose,
 }: TipPlatformCheckoutModalProps) {
   if (!paymentPlan || !selectedPackage) return null
@@ -24,6 +32,8 @@ export default function TipPlatformCheckoutModal({
         plan={paymentPlan}
         packageId={selectedPackage.id}
         price={paymentPlanPrice}
+        billingCycle={billingCycle}
+        currentSubscription={currentSubscription}
         onClose={onClose}
         onSuccess={onClose}
       />

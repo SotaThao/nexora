@@ -3,10 +3,8 @@ import { AlertTriangle } from 'lucide-react'
 import { getErrorI18nKey } from '../data/errorCodes'
 import { getApiErrorCode, isApiError } from '../types/domain'
 import useStaffDirectPaymentFlow from './staff-direct-payment/hooks/useStaffDirectPaymentFlow'
-import {
-  DIRECT_PAYMENT_MIN_AMOUNT,
-  STAFF_DIRECT_PAYMENT_MAX_AMOUNT,
-} from '../utils/currencyInput'
+import { DIRECT_PAYMENT_MIN_AMOUNT, STAFF_DIRECT_PAYMENT_MAX_AMOUNT } from '../utils/currencyInput'
+import { DIRECT_PAYMENT_STEP } from './direct-payment/paymentFlowShared'
 import DirectPaymentReview from './direct-payment/steps/DirectPaymentReview'
 import WalletDetails from './customer-flow/steps/WalletDetails'
 import Processing from './customer-flow/steps/Processing'
@@ -33,10 +31,14 @@ export default function StaffDirectPaymentFlow() {
     selectedWallet,
     staffRecipient,
     tipPaymentMethodsData,
+    businessVlinkpayCryptoAddresses,
     currentPaymentId,
     activePaymentMethod,
     handleSelectWallet,
+    handleCreateVlinkpayPayment,
+    handleResetVlinkpayPayment,
     handleConfirmPayment,
+    isCreating,
     isConfirming,
   } = flow
 
@@ -109,7 +111,7 @@ export default function StaffDirectPaymentFlow() {
 
           {pageQuery.isSuccess ? (
             <>
-              {step === 'review' ? (
+              {step === DIRECT_PAYMENT_STEP.Review ? (
                 <DirectPaymentReview
                   t={t}
                   businessName={displayName}
@@ -132,11 +134,11 @@ export default function StaffDirectPaymentFlow() {
                 />
               ) : null}
 
-              {step === 'processing' ? (
+              {step === DIRECT_PAYMENT_STEP.Processing ? (
                 <Processing t={t} selectedWallet={selectedWallet} />
               ) : null}
 
-              {step === 'wallet_details' && selectedWalletObj ? (
+              {step === DIRECT_PAYMENT_STEP.WalletDetails && selectedWalletObj ? (
                 <WalletDetails
                   t={t}
                   currentLanguage={currentLanguage}
@@ -148,23 +150,27 @@ export default function StaffDirectPaymentFlow() {
                   activeTipAmount={activeAmount}
                   qrCodeVal={activePaymentMethod?.imageUrl || null}
                   businessPaymentAccounts={{}}
+                  businessVlinkpayCryptoAddresses={businessVlinkpayCryptoAddresses}
                   tipRefNumber={currentPaymentId ? String(currentPaymentId).slice(0, 8).toUpperCase() : 'PAY'}
                   currentTipId={currentPaymentId}
                   showToast={showToast}
                   handlePay={() => {}}
                   handleConfirmTip={handleConfirmPayment}
                   isConfirming={isConfirming}
+                  isProcessing={isCreating}
                   isApiMode
                   setStep={setStep}
-                  backStep="review"
+                  backStep={DIRECT_PAYMENT_STEP.Review}
                   paymentMode
                   paymentCopyScope="staff"
                   paymentLinkData={null}
                   tipPaymentMethodsData={tipPaymentMethodsData}
+                  onCreateVlinkpayTip={handleCreateVlinkpayPayment}
+                  onResetVlinkpayTip={handleResetVlinkpayPayment}
                 />
               ) : null}
 
-              {step === 'success' ? (
+              {step === DIRECT_PAYMENT_STEP.Success ? (
                 <DirectPaymentSuccess
                   t={t}
                   businessName={displayName}

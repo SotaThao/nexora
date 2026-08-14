@@ -282,40 +282,42 @@ export default function BusinessInfoCard({
         </form>
       ) : (
         <div className="space-y-3.5 text-xs">
-          <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center py-2 sm:py-1 gap-1">
-            <span className="text-nexoraMuted font-bold">{t('components.settings.tabs.ProfileTab.businessName')}</span>
-            <span className="text-nexoraText font-extrabold">{businessName}</span>
+          <div className="flex flex-col gap-1 py-2 sm:flex-row sm:items-center sm:justify-between sm:gap-3 sm:py-1">
+            <span className="shrink-0 text-nexoraMuted font-bold">{t('components.settings.tabs.ProfileTab.businessName')}</span>
+            <span className="min-w-0 break-words text-nexoraText font-extrabold sm:text-right">{businessName}</span>
           </div>
-          <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center py-2 sm:py-1 border-t border-slate-50 gap-1">
-            <span className="text-nexoraMuted font-bold">{t('components.settings.tabs.ProfileTab.phone')}</span>
-            <span className="text-nexoraText font-extrabold">{businessPhone}</span>
+          <div className="flex flex-col gap-1 border-t border-slate-50 py-2 sm:flex-row sm:items-center sm:justify-between sm:gap-3 sm:py-1">
+            <span className="shrink-0 text-nexoraMuted font-bold">{t('components.settings.tabs.ProfileTab.phone')}</span>
+            <span className="min-w-0 break-words text-nexoraText font-extrabold sm:text-right">{businessPhone}</span>
           </div>
-          <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center py-2 sm:py-1 border-t border-slate-50 gap-1">
-            <span className="text-nexoraMuted font-bold">{t('components.settings.tabs.ProfileTab.email')}</span>
-            <span className="text-nexoraText font-extrabold">{businessEmail || '-'}</span>
+          <div className="flex flex-col gap-1 border-t border-slate-50 py-2 sm:flex-row sm:items-center sm:justify-between sm:gap-3 sm:py-1">
+            <span className="shrink-0 text-nexoraMuted font-bold">{t('components.settings.tabs.ProfileTab.email')}</span>
+            <span className="min-w-0 truncate text-nexoraText font-extrabold sm:text-right" title={businessEmail || undefined}>{businessEmail || '-'}</span>
           </div>
-          <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center py-2 sm:py-1 border-t border-slate-50 gap-1">
-            <span className="text-nexoraMuted font-bold">{t('components.settings.tabs.ProfileTab.website')}</span>
+          <div className="flex flex-col gap-1 border-t border-slate-50 py-2 sm:flex-row sm:items-center sm:justify-between sm:gap-3 sm:py-1">
+            <span className="shrink-0 text-nexoraMuted font-bold">{t('components.settings.tabs.ProfileTab.website')}</span>
             {businessWebsite ? (
               <a
                 href={businessWebsite}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="text-nexoraBrand hover:underline font-extrabold flex items-center gap-0.5"
+                className="flex min-w-0 items-center gap-0.5 font-extrabold text-nexoraBrand hover:underline sm:justify-end sm:text-right"
+                title={businessWebsite}
               >
-                {businessWebsite.replace(/^https?:\/\//, '')} <ExternalLink className="h-3 w-3" />
+                <span className="min-w-0 truncate">{businessWebsite.replace(/^https?:\/\//, '')}</span>
+                <ExternalLink className="h-3 w-3 shrink-0" />
               </a>
             ) : (
-              <span className="text-nexoraText font-extrabold">-</span>
+              <span className="min-w-0 text-nexoraText font-extrabold sm:text-right">-</span>
             )}
           </div>
-          <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center py-2 sm:py-1 border-t border-slate-50 gap-1">
-            <span className="text-nexoraMuted font-bold">{t('components.settings.tabs.ProfileTab.bookingNotificationPhone')}</span>
-            <span className="text-nexoraText font-extrabold">{bookingNotificationPhone || '-'}</span>
+          <div className="flex flex-col gap-1 border-t border-slate-50 py-2 sm:flex-row sm:items-center sm:justify-between sm:gap-3 sm:py-1">
+            <span className="shrink-0 text-nexoraMuted font-bold">{t('components.settings.tabs.ProfileTab.bookingNotificationPhone')}</span>
+            <span className="min-w-0 break-words text-nexoraText font-extrabold sm:text-right">{bookingNotificationPhone || '-'}</span>
           </div>
-          <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center py-2 sm:py-1 border-t border-slate-50 gap-1">
-            <span className="text-nexoraMuted font-bold">{t('components.settings.tabs.ProfileTab.salesTaxRatePercent')}</span>
-            <span className="text-nexoraText font-extrabold">{salesTaxRatePercent ? `${salesTaxRatePercent}%` : '-'}</span>
+          <div className="flex flex-col gap-1 border-t border-slate-50 py-2 sm:flex-row sm:items-center sm:justify-between sm:gap-3 sm:py-1">
+            <span className="shrink-0 text-nexoraMuted font-bold">{t('components.settings.tabs.ProfileTab.salesTaxRatePercent')}</span>
+            <span className="min-w-0 break-words text-nexoraText font-extrabold sm:text-right">{salesTaxRatePercent ? `${salesTaxRatePercent}%` : '-'}</span>
           </div>
         </div>
       )}

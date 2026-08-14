@@ -158,13 +158,13 @@ export default function LoginScreen() {
 
               <div className="space-y-4">
                 <div>
-                  <label className="block text-[10px] font-bold text-nexoraText uppercase tracking-wider mb-2">{t('login.email_label')}</label>
+                  <label className="mb-2 block font-sans text-xs font-semibold text-nexoraText">{t('login.email_label')}</label>
                   <div className="relative">
                     <Mail className="absolute left-3 top-3 w-4 h-4 text-nexoraSubtle" />
                     <input
                       type="text"
                       placeholder={t('login.email_placeholder')}
-                      className={`w-full bg-nexoraCanvas border ${fieldErrorKeys.email ? 'border-red-300 focus:border-red-500' : 'border-nexoraBorder focus:border-nexoraBrand focus:bg-white'} rounded-lg pl-10 pr-4 py-2.5 text-sm text-nexoraText focus:outline-none placeholder-nexoraSubtle transition-all`}
+                      className={`w-full bg-nexoraCanvas border ${fieldErrorKeys.email ? 'border-red-300 focus:border-red-500' : 'border-nexoraBorder focus:border-nexoraBrand focus:bg-white'} rounded-lg pl-10 pr-4 py-2.5 font-sans text-sm text-nexoraText focus:outline-none placeholder-nexoraSubtle transition-all`}
                       value={email}
                       disabled={isLoading}
                       onChange={(e) => {
@@ -178,7 +178,7 @@ export default function LoginScreen() {
 
                 <div>
                   <div className="flex justify-between items-center mb-2">
-                    <label className="block text-[10px] font-bold text-nexoraText uppercase tracking-wider">{t('login.password_label')}</label>
+                    <label className="block font-sans text-xs font-semibold text-nexoraText">{t('login.password_label')}</label>
                     <button
                       type="button"
                       disabled={isLoading}
@@ -193,7 +193,7 @@ export default function LoginScreen() {
                     <input
                       type={showPassword ? "text" : "password"}
                       placeholder={t('login.password_placeholder')}
-                      className={`w-full bg-nexoraCanvas border ${fieldErrorKeys.password ? 'border-red-300 focus:border-red-500' : 'border-nexoraBorder focus:border-nexoraBrand focus:bg-white'} rounded-lg pl-10 pr-10 py-2.5 text-sm text-nexoraText focus:outline-none placeholder-nexoraSubtle transition-all`}
+                      className={`w-full bg-nexoraCanvas border ${fieldErrorKeys.password ? 'border-red-300 focus:border-red-500' : 'border-nexoraBorder focus:border-nexoraBrand focus:bg-white'} rounded-lg pl-10 pr-10 py-2.5 font-sans text-sm text-nexoraText focus:outline-none placeholder-nexoraSubtle transition-all`}
                       value={password}
                       disabled={isLoading}
                       onChange={(e) => {

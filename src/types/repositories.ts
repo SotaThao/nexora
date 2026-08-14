@@ -1057,12 +1057,20 @@ export interface DashboardReviewsQuery {
   pageSize?: number
 }
 
+export interface StaffPaymentMethodCryptoAddressApiDto {
+  network?: string
+  symbol?: string
+  address?: string
+}
+
 export interface StaffPaymentMethodApiDto {
   type?: string
   isActive?: boolean
   accountInfo?: string | null
   accountName?: string | null
   imageUrl?: string | null
+  isConfigured?: boolean
+  cryptoAddresses?: StaffPaymentMethodCryptoAddressApiDto[] | null
 }
 
 export interface StaffInviteSummaryApiDto {

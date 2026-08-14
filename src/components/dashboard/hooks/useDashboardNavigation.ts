@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react'
 import { useLocation, useNavigate } from 'react-router-dom'
+import { useOpenProductManagement } from '../../../data/hooks/useOpenProductManagement'
 import {
   buildDashboardMenuPath,
   DASHBOARD_MENU,
@@ -15,6 +16,7 @@ type NavigateMenuOptions = {
 export function useDashboardNavigation() {
   const location = useLocation()
   const navigate = useNavigate()
+  const { openProductManagement } = useOpenProductManagement()
 
   const activeMenu = location.pathname.split('/')[2] || DASHBOARD_MENU_ID.overview
   const isPaymentsPayoutsActive =

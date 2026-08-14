@@ -214,10 +214,8 @@ export default function SettingsViewDesktop({
 
   const handleSaveQr = async (qrUrl) => {
     try {
-      const result = await downloadQrCode(qrUrl, `referral-qr-${selectedLeg}.png`)
-      if (result !== 'cancelled') {
-        form.showToast(t('components.SettingsView.qrCodeDownloaded'))
-      }
+      await downloadQrCode(qrUrl, `referral-qr-${selectedLeg}.png`)
+      form.showToast(t('components.SettingsView.qrCodeDownloaded'))
     } catch {
       window.open(qrUrl, '_blank')
     }
@@ -285,6 +283,9 @@ export default function SettingsViewDesktop({
             setBusinessForm={form.setBusinessForm}
             businessErrors={form.businessErrors}
             setBusinessErrors={form.setBusinessErrors}
+            logoUrl={form.logoUrl}
+            handleLogoChange={form.handleLogoChange}
+            isUploadingLogo={form.isUploadingLogo}
             isEditingReviews={form.isEditingReviews}
             setIsEditingReviews={form.setIsEditingReviews}
             reviewsForm={form.reviewsForm}

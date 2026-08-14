@@ -412,6 +412,7 @@ export type TipPlatformCompareCell =
   | boolean
   | null
   | CompareCellTokenValue
+  | string
 
 export type TipPlatformCompareRow = {
   featureKey: string

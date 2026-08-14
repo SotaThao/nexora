@@ -8,10 +8,9 @@ import {
   useStaffDirectPaymentPage,
 } from '../../../data/hooks/usePublicStaffPayment'
 import { getErrorI18nKey } from '../../../data/errorCodes'
-import { payoutTypeToUiKey, sortPaymentMethodsByUiOrder } from '../../../data/paymentMethodTypes'
 import { getApiErrorCode } from '../../../types/domain'
 import { logger } from '../../../utils/logger'
-import { getWalletOptions } from '../../customer-flow/steps/Payment'
+import { toVlinkpayCryptoSymbolWire } from '../../payout/vlinkpayWallet'
 import {
   DIRECT_PAYMENT_MIN_AMOUNT,
   STAFF_DIRECT_PAYMENT_MAX_AMOUNT,
@@ -19,6 +18,15 @@ import {
   parseDirectPaymentAmountInput,
   sanitizeDirectPaymentAmountInput,
 } from '../../../utils/currencyInput'
+import {
+  DIRECT_PAYMENT_STEP,
+  type DirectPaymentStep,
+  isVlinkpayWallet,
+  mapPageMethodsToWalletOptions,
+  mergeCreatedPaymentMethod,
+  resolveWalletVlinkpayCryptoAddresses,
+  toWalletTipPaymentMethodsData,
+} from '../../direct-payment/paymentFlowShared'
 
 const MIN_AMOUNT = DIRECT_PAYMENT_MIN_AMOUNT
 const MAX_AMOUNT = STAFF_DIRECT_PAYMENT_MAX_AMOUNT
@@ -32,7 +40,7 @@ export default function useStaffDirectPaymentFlow() {
   const createPaymentMutation = useCreateStaffDirectPayment()
   const confirmPaymentMutation = useConfirmStaffDirectPayment()
 
-  const [step, setStep] = useState('review')
+  const [step, setStep] = useState<DirectPaymentStep>(DIRECT_PAYMENT_STEP.Review)
   const [customAmount, setCustomAmount] = useState('')
   const [selectedWalletObj, setSelectedWalletObj] = useState<any>(null)
   const [selectedWallet, setSelectedWallet] = useState('')
@@ -48,26 +56,10 @@ export default function useStaffDirectPaymentFlow() {
     [customAmount],
   )
 
-  const walletOptions = useMemo(() => {
-    const methods = sortPaymentMethodsByUiOrder(
-      (pageData?.paymentMethods ?? []).map((method) => ({
-        ...method,
-        uiKey: method.uiKey || payoutTypeToUiKey(method.type),
-      })),
-    ).filter((method) => method.uiKey !== 'bankwire')
-
-    return methods
-      .map((method) => {
-        const wallet = getWalletOptions([method.uiKey || ''])[0]
-        if (!wallet) return null
-        return {
-          ...wallet,
-          methodId: method.id,
-          apiMethod: method,
-        }
-      })
-      .filter(Boolean)
-  }, [pageData?.paymentMethods])
+  const walletOptions = useMemo(
+    () => mapPageMethodsToWalletOptions(pageData?.paymentMethods),
+    [pageData?.paymentMethods],
+  )
 
   const staffRecipient = useMemo(
     () => [
@@ -82,16 +74,15 @@ export default function useStaffDirectPaymentFlow() {
     [displayName, staffProfileId, t],
   )
 
-  const tipPaymentMethodsData = useMemo(() => {
-    if (!activePaymentMethod) return null
-    return [
-      {
-        type: activePaymentMethod.type,
-        accountInfo: activePaymentMethod.accountInfo,
-        accountName: activePaymentMethod.accountName ?? null,
-      },
-    ]
-  }, [activePaymentMethod])
+  const tipPaymentMethodsData = useMemo(
+    () => toWalletTipPaymentMethodsData(activePaymentMethod),
+    [activePaymentMethod],
+  )
+
+  const businessVlinkpayCryptoAddresses = useMemo(
+    () => resolveWalletVlinkpayCryptoAddresses(activePaymentMethod, selectedWalletObj),
+    [activePaymentMethod, selectedWalletObj],
+  )
 
   const validateAmount = useCallback(() => {
     if (Number.isNaN(activeAmount) || activeAmount < MIN_AMOUNT) {
@@ -109,6 +100,36 @@ export default function useStaffDirectPaymentFlow() {
     setCustomAmount(sanitizeDirectPaymentAmountInput(raw, MAX_AMOUNT))
   }, [])
 
+  const createPaymentForWallet = useCallback(
+    async (
+      wallet: { methodId?: string; name?: string; apiMethod?: unknown },
+      cryptoSymbol?: string,
+    ) => {
+      if (!wallet.methodId) {
+        showToast(t('errors.generic'), 'error')
+        return false
+      }
+
+      const result = await createPaymentMutation.mutateAsync({
+        staffProfileId,
+        staffPaymentMethodId: wallet.methodId,
+        amount: activeAmount,
+        ...(cryptoSymbol ? { cryptoSymbol } : {}),
+      })
+
+      if (!result.paymentId) {
+        throw new Error('Missing paymentId')
+      }
+
+      setCurrentPaymentId(result.paymentId)
+      setActivePaymentMethod(
+        mergeCreatedPaymentMethod(wallet.apiMethod as any, result.paymentMethod),
+      )
+      return true
+    },
+    [activeAmount, createPaymentMutation, showToast, staffProfileId, t],
+  )
+
   const handleSelectWallet = useCallback(
     async (wallet: { methodId?: string; name?: string; key?: string; apiMethod?: unknown }) => {
       if (!validateAmount()) return
@@ -119,55 +140,58 @@ export default function useStaffDirectPaymentFlow() {
 
       setSelectedWalletObj(wallet)
       setSelectedWallet(wallet.name || '')
-      setStep('processing')
 
+      if (isVlinkpayWallet(wallet)) {
+        setCurrentPaymentId(null)
+        setActivePaymentMethod(wallet.apiMethod || null)
+        setStep(DIRECT_PAYMENT_STEP.WalletDetails)
+        return
+      }
+
+      setStep(DIRECT_PAYMENT_STEP.Processing)
       try {
-        const result = await createPaymentMutation.mutateAsync({
-          staffProfileId,
-          staffPaymentMethodId: wallet.methodId,
-          amount: activeAmount,
-        })
-
-        if (!result.paymentId) {
-          throw new Error('Missing paymentId')
-        }
-
-        setCurrentPaymentId(result.paymentId)
-        // Prefer create-response method, but keep page accountName when create payload omits it.
-        const pageMethod = wallet.apiMethod as { accountName?: string | null } | undefined
-        const createdMethod = result.paymentMethod
-        setActivePaymentMethod(
-          createdMethod
-            ? {
-                ...pageMethod,
-                ...createdMethod,
-                accountName: createdMethod.accountName ?? pageMethod?.accountName ?? null,
-              }
-            : pageMethod,
-        )
-        setStep('wallet_details')
+        await createPaymentForWallet(wallet)
+        setStep(DIRECT_PAYMENT_STEP.WalletDetails)
       } catch (err) {
         logger.error('Failed to create staff direct payment', err)
         showToast(t(getErrorI18nKey(getApiErrorCode(err, 'unknown_error'))), 'error')
-        setStep('review')
+        setStep(DIRECT_PAYMENT_STEP.Review)
       }
     },
-    [
-      activeAmount,
-      createPaymentMutation,
-      showToast,
-      staffProfileId,
-      t,
-      validateAmount,
-    ],
+    [createPaymentForWallet, showToast, t, validateAmount],
   )
+
+  const handleCreateVlinkpayPayment = useCallback(async (cryptoSymbol: string) => {
+    if (!selectedWalletObj?.methodId) {
+      showToast(t('errors.generic'), 'error')
+      return false
+    }
+    if (!toVlinkpayCryptoSymbolWire(cryptoSymbol)) {
+      showToast(t('errors.TIP_CRYPTO_SYMBOL_REQUIRED'), 'error')
+      return false
+    }
+    if (currentPaymentId) return true
+
+    try {
+      await createPaymentForWallet(selectedWalletObj, cryptoSymbol)
+      return true
+    } catch (err) {
+      logger.error('Failed to create VlinkPay staff direct payment', err)
+      showToast(t(getErrorI18nKey(getApiErrorCode(err, 'unknown_error'))), 'error')
+      return false
+    }
+  }, [createPaymentForWallet, currentPaymentId, selectedWalletObj, showToast, t])
+
+  const handleResetVlinkpayPayment = useCallback(() => {
+    setCurrentPaymentId(null)
+  }, [])
 
   const handleConfirmPayment = useCallback(async () => {
     if (!currentPaymentId || confirmPaymentMutation.isPending) return
 
     try {
       await confirmPaymentMutation.mutateAsync(currentPaymentId)
-      setStep('success')
+      setStep(DIRECT_PAYMENT_STEP.Success)
     } catch (err) {
       logger.error('Failed to confirm staff direct payment', err)
       showToast(t(getErrorI18nKey(getApiErrorCode(err, 'unknown_error'))), 'error')
@@ -197,9 +221,12 @@ export default function useStaffDirectPaymentFlow() {
     selectedWallet,
     staffRecipient,
     tipPaymentMethodsData,
+    businessVlinkpayCryptoAddresses,
     currentPaymentId,
     activePaymentMethod,
     handleSelectWallet,
+    handleCreateVlinkpayPayment,
+    handleResetVlinkpayPayment,
     handleConfirmPayment,
     isCreating: createPaymentMutation.isPending,
     isConfirming: confirmPaymentMutation.isPending,

@@ -99,6 +99,8 @@ export const SUBSCRIPTION_MODAL_I18N = {
   invoicePayment: 'subscription_invoice_payment',
   totalDue: 'subscription_total_due',
   priceNoteMonth: 'subscription_price_note_month',
+  priceNoteYear: 'subscription_price_note_year',
+  forfeitWarning: 'subscription_forfeit_warning',
   cardMethodLabel: 'subscription_card_method_label',
   cardFormTitle: 'subscription_card_form_title',
   cardRequiredNote: 'subscription_card_required_note',
