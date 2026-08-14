@@ -10,16 +10,24 @@ import {
 import {
   getPaymentMethodDisplayName,
   isHiddenPayoutConfigType,
+  isPaymentMethodConfigured,
   payoutTypeToUiKey,
   supportsPayoutAccountName,
   toPayoutAccountNameDto,
 } from '../../data/paymentMethodTypes'
+import { PayoutUiKey } from '../../data/payoutUiKeys'
 import type { PaymentMethodDto } from '../../types/domain'
 import { WalletLogos } from '../dashboard/constants'
 import ToggleSwitch from '../ui/ToggleSwitch'
 import { formatPaymentMethodAccountDisplay } from './bankWireAccount'
 import PayoutMethodDetailModal from './PayoutMethodDetailModal'
 import PayoutSetupModal from './PayoutSetupModal'
+import {
+  parseVlinkpayAddresses,
+  parseVlinkpayAddressesFromMethod,
+  serializeVlinkpayAddresses,
+  toVlinkpayCryptoAddressesPayload,
+} from './vlinkpayWallet'
 
 interface MerchantPayoutMethodsPanelProps {
   className?: string
@@ -59,7 +67,7 @@ export default function MerchantPayoutMethodsPanel({
 
   const displayedPaymentMethods = paymentMethods.filter(
     (method) =>
-      getMethodUiKey(method) !== 'bankwire' && !isHiddenPayoutConfigType(method),
+      getMethodUiKey(method) !== PayoutUiKey.BankWire && !isHiddenPayoutConfigType(method),
   )
 
   const getMethod = (key: string): PaymentMethodDto =>
@@ -71,6 +79,7 @@ export default function MerchantPayoutMethodsPanel({
       id: undefined,
       imageUrl: null,
       accountName: null,
+      cryptoAddresses: null,
     }
 
   const handleEdit = (key: string) => setEditingMethod(key)
@@ -79,7 +88,7 @@ export default function MerchantPayoutMethodsPanel({
     const method = getMethod(key)
     const nextActive = !isCurrentlyActive
 
-    if (nextActive && !(method.isConfigured && method.accountInfo?.trim())) {
+    if (nextActive && !isPaymentMethodConfigured(method)) {
       handleEdit(key)
       return
     }
@@ -106,10 +115,17 @@ export default function MerchantPayoutMethodsPanel({
       return
     }
 
+    const isVlinkpay = editingMethod === PayoutUiKey.VlinkPay
+    const cryptoAddresses = isVlinkpay
+      ? toVlinkpayCryptoAddressesPayload(parseVlinkpayAddresses(value))
+      : undefined
+
     updateMutation.mutate(
       {
         id: method.id,
-        accountInfo: value.trim(),
+        ...(isVlinkpay
+          ? { accountInfo: null, cryptoAddresses }
+          : { accountInfo: value.trim() }),
         accountName: toPayoutAccountNameDto(editingMethod, accountName),
         imageUrl: qrFile ? null : qrCode || null,
         imageFile: qrFile || undefined,
@@ -146,6 +162,7 @@ export default function MerchantPayoutMethodsPanel({
             const accountDisplay = formatPaymentMethodAccountDisplay(
               uiKey,
               method.accountInfo,
+              method.cryptoAddresses,
             )
 
             return (
@@ -166,8 +183,14 @@ export default function MerchantPayoutMethodsPanel({
                     <PayoutMethodLogo method={method} />
                     <div className="min-w-0 flex-1">
                       <div className="text-xs font-bold text-nexoraText">{label}</div>
-                      {method.isConfigured ? (
-                        <div className="mt-0.5 max-w-full truncate font-mono text-[10px] text-nexoraMuted sm:max-w-[220px]">
+                      {isPaymentMethodConfigured(method) ? (
+                        <div
+                          className={`mt-0.5 max-w-full font-mono text-[10px] text-nexoraMuted ${
+                            uiKey === PayoutUiKey.VlinkPay
+                              ? 'break-all whitespace-normal'
+                              : 'truncate'
+                          }`}
+                        >
                           {supportsPayoutAccountName(uiKey) && method.accountName ? (
                             <span className="font-sans font-semibold">
                               {method.accountName} ·{' '}
@@ -223,7 +246,11 @@ export default function MerchantPayoutMethodsPanel({
       <PayoutSetupModal
         open={Boolean(editingMethod)}
         walletKey={editingMethod || ''}
-        initialValue={editingMethodData?.accountInfo || ''}
+        initialValue={
+          editingMethod === PayoutUiKey.VlinkPay
+            ? serializeVlinkpayAddresses(parseVlinkpayAddressesFromMethod(editingMethodData))
+            : (editingMethodData?.accountInfo || '')
+        }
         initialQrCode={editingMethodData?.imageUrl || ''}
         initialAccountName={editingMethodData?.accountName || ''}
         onClose={() => setEditingMethod(null)}
