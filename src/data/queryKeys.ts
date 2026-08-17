@@ -171,6 +171,25 @@ export const qk = {
   // `dayKey` is only appended when passed: an invalidateQueries call omitting it must yield a real
   // prefix of the rendered key. Defaulting it to '' instead would build a 4th element that matches
   // no live query, and the invalidation would silently do nothing.
+  merchantPosDevicePairingQr: (businessId?: string) =>
+    ['merchantSettings', 'posDevicePairingQr', businessId ?? ''],
+  // Carries the token itself: a new code is a different question, and the answer to the old one
+  // ("used") must never be served for it.
+  merchantPosDevicePairingQrStatus: (businessId?: string, token?: string) =>
+    ['merchantSettings', 'posDevicePairingQrStatus', businessId ?? '', token ?? ''],
+  // `status` only appended when passed, for the same reason as the time-clock keys below: an
+  // invalidateQueries call omitting the filter must stay a real prefix of the rendered key.
+  merchantPosDevices: (businessId?: string, status?: string) => {
+    const key: unknown[] = ['merchantSettings', 'posDevices', businessId ?? '']
+    if (status) key.push(status)
+    return key
+  },
+  // Self Check-In kiosk. No businessId anywhere in these keys on purpose — the tablet only ever
+  // talks to the one salon its token belongs to, so there is nothing to scope by.
+  posSelfCheckInCatalog: () => ['posSelfCheckIn', 'catalog'],
+  posSelfCheckInCustomerName: (phone?: string) => ['posSelfCheckIn', 'customerName', phone ?? ''],
+  posSelfCheckInActiveVisit: (phone?: string) => ['posSelfCheckIn', 'activeVisit', phone ?? ''],
+  posSelfCheckInTechnicians: (serviceId?: string) => ['posSelfCheckIn', 'technicians', serviceId ?? ''],
   merchantPosTimeClockQr: (businessId?: string) => ['merchantSettings', 'posTimeClockQr', businessId ?? ''],
   merchantPosTimeClockRoster: (businessId?: string, dayKey?: string) => {
     const key: unknown[] = ['merchantSettings', 'posTimeClockRoster', businessId ?? '']

@@ -62,6 +62,7 @@ import PosServicesView from '../views/pos/PosServicesView'
 import PosProductsView from '../views/pos/PosProductsView'
 import PosStaffProfileView from '../views/pos/PosStaffProfileView'
 import PosFrontDeskView from '../views/pos/PosFrontDeskView'
+import PosDevicesView from '../views/pos/devices/PosDevicesView'
 import ResponsiveStaffRoute from './ResponsiveStaffRoute'
 import {
   StaffDetailRouteContent,
@@ -406,6 +407,21 @@ export function PosFrontDeskRoute() {
     )
   }
   return <PosFrontDeskView businessId={businessId} businessName={businessName} businessSlug={businessSlug} />
+}
+
+// Check-In Devices (POS Self Check-In) — pairing and managing the tablets customers use to check
+// themselves in. Gated server-side on manage_checkin_devices, not on being the Owner.
+export function PosDevicesRoute() {
+  const { data: merchantSetupData } = useMerchantSetup()
+  const businessId = merchantSetupData?.businessInfo?.businessId
+  if (!businessId) {
+    return (
+      <div className="nexora-card p-6">
+        <SkeletonList count={3} lines={1} />
+      </div>
+    )
+  }
+  return <PosDevicesView businessId={businessId} />
 }
 
 export function TaxIqOverviewRoute() {

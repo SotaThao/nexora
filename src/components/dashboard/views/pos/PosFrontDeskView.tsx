@@ -52,6 +52,18 @@ const tk = (suffix: string) => `${I18N_PREFIX}.${suffix}`
 // view toggle above stay put instead of the whole page scrolling.
 const SCROLL_PANEL_MAX_HEIGHT = 'max-h-[560px]'
 
+// An order the front desk has to finish by hand. Kept as one predicate because both the sort and
+// the row highlight must agree on what "needs attention" means.
+const needsFrontDeskAttention = (order: OrderListItemApiDto) =>
+  order.hasUnassignedService || order.hasNoServiceLine
+
+// Flagged orders first, everything else untouched. The server already returns the list ordered by
+// check-in time and Array.prototype.sort is stable, so within each group that order survives.
+const sortByAttentionFirst = (orders: OrderListItemApiDto[]) =>
+  [...orders].sort(
+    (a, b) => Number(needsFrontDeskAttention(b)) - Number(needsFrontDeskAttention(a)),
+  )
+
 // POS iPad redesign — Create mode no longer carries a pre-filled customerDraft;
 // PosOrderWorkspace now collects it itself via its own 2-step Check-in
 // (PhoneCheckInStep for phone, then CustomerHeaderBar for name/email/catalog).
@@ -450,11 +462,52 @@ export default function PosFrontDeskView({
             </div>
 
             {(() => {
-              const filteredOrderList = orderList.filter((order) => {
-                if (orderListFilter === OrderListFilter.Waiting) return order.status === PosOrderStatus.Waiting
-                if (orderListFilter === OrderListFilter.InService) return order.status === PosOrderStatus.InService
-                return true
-              })
+              const filteredOrderList = sortByAttentionFirst(
+                orderList.filter((order) => {
+                  if (orderListFilter === OrderListFilter.Waiting) return order.status === PosOrderStatus.Waiting
+                  if (orderListFilter === OrderListFilter.InService) return order.status === PosOrderStatus.InService
+                  return true
+                }),
+              )
+
+              // Counted over the filtered list, not the whole queue: a badge saying "3 awaiting
+              // technician" while the active filter hides all three would send staff looking for
+              // rows that aren't on screen.
+              const awaitingTechnicianCount = filteredOrderList.filter((o) => o.hasUnassignedService).length
+              const noServiceCount = filteredOrderList.filter((o) => o.hasNoServiceLine).length
+
+              const attentionBadges =
+                awaitingTechnicianCount + noServiceCount > 0 ? (
+                  <div className="flex flex-wrap gap-2">
+                    {awaitingTechnicianCount > 0 ? (
+                      <span className="rounded-full bg-nexoraWarning/15 px-3 py-1 text-[11px] font-bold text-nexoraWarning">
+                        {t(tk('orderListAwaitingTechnicianBadge'), { count: awaitingTechnicianCount })}
+                      </span>
+                    ) : null}
+                    {noServiceCount > 0 ? (
+                      <span className="rounded-full bg-nexoraLavender/25 px-3 py-1 text-[11px] font-bold text-nexoraBrandDark">
+                        {t(tk('orderListNoServiceBadge'), { count: noServiceCount })}
+                      </span>
+                    ) : null}
+                  </div>
+                ) : null
+
+              // Same two labels the badges above count, repeated on the row itself — the count
+              // tells staff how many, the row tells them which.
+              const renderRowFlags = (order: OrderListItemApiDto) => (
+                <>
+                  {order.hasUnassignedService ? (
+                    <span className="shrink-0 rounded-full bg-nexoraWarning/15 px-2 py-0.5 text-[10px] font-black uppercase text-nexoraWarning">
+                      {t(tk('orderListAwaitingTechnicianFlag'))}
+                    </span>
+                  ) : null}
+                  {order.hasNoServiceLine ? (
+                    <span className="shrink-0 rounded-full bg-nexoraLavender/25 px-2 py-0.5 text-[10px] font-black uppercase text-nexoraBrandDark">
+                      {t(tk('orderListNoServiceFlag'))}
+                    </span>
+                  ) : null}
+                </>
+              )
 
               if (filteredOrderList.length === 0) {
                 return (
@@ -496,6 +549,8 @@ export default function PosFrontDeskView({
 
               if (viewMode === OrderListViewMode.Card) {
                 return (
+                  <div className="space-y-3">
+                  {attentionBadges}
                   <div
                     className={`grid ${SCROLL_PANEL_MAX_HEIGHT} grid-cols-1 gap-3 overflow-y-auto pr-1 sm:grid-cols-2 lg:grid-cols-3`}
                   >
@@ -503,7 +558,11 @@ export default function PosFrontDeskView({
                       <div
                         key={order.id}
                         onClick={() => setUpdateWorkspace({ orderId: order.id })}
-                        className="cursor-pointer space-y-2 rounded-2xl border border-nexoraBorder bg-nexoraSurface p-4 hover:border-nexoraBrand"
+                        className={`cursor-pointer space-y-2 rounded-2xl border bg-nexoraSurface p-4 hover:border-nexoraBrand ${
+                          needsFrontDeskAttention(order)
+                            ? 'border-nexoraWarning bg-nexoraWarning/5'
+                            : 'border-nexoraBorder'
+                        }`}
                       >
                         <div className="flex items-center justify-between gap-2">
                           <span className="font-mono text-[11px] font-bold text-nexoraMuted">#{order.orderNumber}</span>
@@ -511,6 +570,7 @@ export default function PosFrontDeskView({
                             {order.status}
                           </span>
                         </div>
+                        <div className="flex flex-wrap gap-1.5">{renderRowFlags(order)}</div>
                         <p className="truncate text-sm font-bold text-nexoraText">{order.customerName}</p>
                         <p className="truncate text-[11px] text-nexoraMuted">{joinOrEmpty(order.serviceNames)}</p>
                         <p className="truncate text-[11px] text-nexoraMuted">{joinOrEmpty(order.technicianNames)}</p>
@@ -526,10 +586,13 @@ export default function PosFrontDeskView({
                       </div>
                     ))}
                   </div>
+                  </div>
                 )
               }
 
               return (
+                <div className="space-y-3">
+                {attentionBadges}
                 <div
                   className={`${SCROLL_PANEL_MAX_HEIGHT} overflow-y-auto rounded-xl border border-nexoraBorder bg-nexoraSurface p-4`}
                 >
@@ -550,14 +613,19 @@ export default function PosFrontDeskView({
                         <tr
                           key={order.id}
                           onClick={() => setUpdateWorkspace({ orderId: order.id })}
-                          className="cursor-pointer border-t border-nexoraBorder hover:bg-nexoraCanvas"
+                          className={`cursor-pointer border-t border-nexoraBorder hover:bg-nexoraCanvas ${
+                            needsFrontDeskAttention(order) ? 'bg-nexoraWarning/5' : ''
+                          }`}
                         >
                           <td className="py-2 pr-3 font-mono font-bold text-nexoraMuted">#{order.orderNumber}</td>
                           <td className="py-2 pr-3 font-bold text-nexoraText">{order.customerName}</td>
                           <td className="py-2 pr-3">
-                            <span className="rounded-full bg-nexoraCanvas px-2 py-0.5 text-[10px] font-black uppercase text-nexoraBrandDark">
-                              {order.status}
-                            </span>
+                            <div className="flex flex-wrap items-center gap-1.5">
+                              <span className="rounded-full bg-nexoraCanvas px-2 py-0.5 text-[10px] font-black uppercase text-nexoraBrandDark">
+                                {order.status}
+                              </span>
+                              {renderRowFlags(order)}
+                            </div>
                           </td>
                           <td className="py-2 pr-3 text-nexoraMuted">{joinOrEmpty(order.technicianNames)}</td>
                           <td className="py-2 pr-3 text-nexoraMuted">{joinOrEmpty(order.serviceNames)}</td>
@@ -574,6 +642,7 @@ export default function PosFrontDeskView({
                       ))}
                     </tbody>
                   </table>
+                </div>
                 </div>
               )
             })()}

@@ -223,6 +223,13 @@ export interface OrderListItemApiDto {
   elapsedMinutes: number
   serviceNames: string[]
   technicianNames: string[]
+  // Self check-in leaves these for the front desk to resolve: a customer who picked "First
+  // Available" has no technician on the line, and one who skipped the menu has no service line at
+  // all. Both are legitimate orders, and both need a person to finish them. Computed server-side
+  // over every order, not just kiosk ones — a line the front desk itself cleared needs the same
+  // flag.
+  hasUnassignedService: boolean
+  hasNoServiceLine: boolean
 }
 
 // POS Merchant Ops — Completed Orders panel (US-17 follow-up), paginated + filterable.
@@ -339,6 +346,74 @@ export interface TurnBoardStationApiDto {
 }
 
 // POS Front Desk — Time Clock tab
+export interface PosDevicePairingQrApiDto {
+  businessId: string
+  token: string
+  rotationNumber: number
+  issuedAt: string
+  expiresAt: string
+  // Full URL the tablet's camera opens. Carries the operator who generated it.
+  pairingUrl: string
+  // PNG data URI rendered server-side — the dashboard has no QR-drawing library.
+  qrImageDataUri: string
+}
+
+export interface PosDevicePairingQrStatusApiDto {
+  // Flips once a tablet pairs with this exact token, and never flips back — the dashboard stops
+  // polling and asks for a fresh code the moment it does.
+  used: boolean
+}
+
+export type PosDeviceStatusApi = 'Active' | 'Revoked' | 'Expired'
+
+export interface PosDeviceListItemApiDto {
+  id: string
+  name: string
+  // Sent computed by the server. Never re-derive "expired" from lastSeenAt on the client — the
+  // nightly sweep owns that transition and the two would disagree for up to a day.
+  status: PosDeviceStatusApi
+  deviceType: string
+  pairedAt: string
+  pairedByName: string | null
+  lastSeenAt: string
+  userAgent: string | null
+  revokedAt: string | null
+  revokedByName: string | null
+  expiredAt: string | null
+  // True when the tablet signed itself out rather than an operator revoking it.
+  signedOutOnDevice: boolean
+}
+
+// Self Check-In kiosk — everything below is served under the device token, never a user session.
+export interface SelfCheckInContextApiDto {
+  businessName: string
+  logoUrl: string | null
+  deviceName: string
+}
+
+export interface SelfCheckInServiceApiDto {
+  id: string
+  name: string
+  price: number
+  durationMinutes: number
+  description: string | null
+  photoUrl: string | null
+  categories: { id: string; name: string }[]
+}
+
+export interface SelfCheckInTechnicianApiDto {
+  posStaffProfileId: string
+  displayName: string
+  photoUrl: string | null
+  // Deliberately no `isBusy`: who is mid-service is floor information for staff, not something
+  // to show a waiting customer.
+}
+
+export interface SelfCheckInOrderResultApiDto {
+  orderId: string
+  orderNumber: string
+}
+
 export interface ClockQrTokenApiDto {
   businessId: string
   token: string
