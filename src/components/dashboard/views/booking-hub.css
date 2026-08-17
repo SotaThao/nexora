@@ -14139,9 +14139,49 @@ body.booking-appointment-panel-modal-open {
   min-width: 960px;
 }
 
+.booking-hub-view .package-history-section .credits-history-scroll {
+  overflow-x: auto;
+  border: 1px solid var(--nexora-border);
+  border-radius: 14px;
+  background: var(--nexora-surface);
+  box-shadow: var(--nexora-card-shadow);
+}
+
+.booking-hub-view .package-history-plan-table th {
+  background: var(--nexora-surface-muted);
+  color: var(--nexora-muted);
+  font-weight: 800;
+  letter-spacing: 0.04em;
+}
+
 .booking-hub-view .package-history-plan-amount {
   color: var(--nexora-text);
   font-weight: 900 !important;
+}
+
+.booking-hub-view .package-history-package {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.booking-hub-view .package-history-package > strong {
+  color: var(--nexora-text);
+  font-size: 13px;
+  font-weight: 800;
+}
+
+.booking-hub-view .package-history-term {
+  display: inline-flex;
+  align-items: center;
+  border-radius: 999px;
+  background: #eef2ff;
+  padding: 4px 8px;
+  color: var(--nexora-brand);
+  font-size: 10px;
+  font-weight: 800;
+  white-space: nowrap;
 }
 
 .booking-hub-view .package-history-status {

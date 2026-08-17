@@ -102,9 +102,9 @@ export default function PackageHistoryPanel({
               <th scope="col">{t(`${TK}.packageHistoryColAmount`)}</th>
               <th scope="col">{t(`${TK}.packageHistoryColPackage`)}</th>
               <th scope="col">{t(`${TK}.packageHistoryColTerm`)}</th>
-              <th scope="col">{t(`${TK}.packageHistoryColValidUntil`)}</th>
               <th scope="col">{t(`${TK}.packageHistoryColStatus`)}</th>
               <th scope="col">{t(`${TK}.packageHistoryColTransaction`)}</th>
+              <th scope="col">{t(`${TK}.packageHistoryColAction`)}</th>
             </tr>
           </thead>
           <tbody>
@@ -133,21 +133,18 @@ export default function PackageHistoryPanel({
               rows.map((row) => {
                 const displayAt = resolvePackageHistoryDisplayAt(row)
                 const purchased = formatBookingHubDateTimeParts(displayAt, currentLanguage)
-                const validUntil = row.validUntil
-                  ? formatBookingHubDateTimeParts(row.validUntil, currentLanguage)?.date
-                    ?? BOOKING_HUB_EMPTY_CELL
-                  : BOOKING_HUB_EMPTY_CELL
                 const statusClass = PACKAGE_HISTORY_STATUS_CLASS[row.uiStatus]
                 const statusLabel = t(
                   `${TK}.${PACKAGE_HISTORY_STATUS_LABEL_KEY[row.uiStatus]}`,
                 )
                 const packageLabel = formatPackageHistoryPackageLabel(row.planName)
-                // `periodInMonths === 0` (credit top-up) → no "Monthly subscription", term "—"
+                // `periodInMonths === 0` (credit top-up) → term "_"
                 // Do not use `periodInMonths || 1` — 0 is falsy and would show "1 month".
-                const showSubscriptionSubtitle = isPackageHistorySubscriptionTerm(
-                  row.periodInMonths,
-                )
+                const showTermBadge = isPackageHistorySubscriptionTerm(row.periodInMonths)
                 const termLabel = formatPackageHistoryTerm(row.periodInMonths, t, TK)
+                const transactionId = formatPackageHistoryTransactionId(
+                  row.referenceId || row.orderId,
+                )
                 return (
                   <tr key={row.orderId || row.referenceId}>
                     <td>
@@ -160,23 +157,17 @@ export default function PackageHistoryPanel({
                       {formatPackageHistoryAmount(row.amount, row.currency)}
                     </td>
                     <td>
-                      <span className="credits-history-activity">
+                      <div className="package-history-package">
                         <strong>{packageLabel}</strong>
-                        {showSubscriptionSubtitle ? (
-                          <small>{t(`${TK}.packageHistoryMonthlySub`)}</small>
-                        ) : null}
-                      </span>
+                      </div>
                     </td>
                     <td>
-                      {showSubscriptionSubtitle ? (
-                        <span className="credits-product-badge credits-product-badge-voice">
-                          {termLabel}
-                        </span>
+                      {showTermBadge ? (
+                        <span className="package-history-term">{termLabel}</span>
                       ) : (
                         termLabel
                       )}
                     </td>
-                    <td>{validUntil}</td>
                     <td>
                       <span className={`package-history-status ${statusClass}`}>
                         {statusLabel}
@@ -185,12 +176,17 @@ export default function PackageHistoryPanel({
                     <td>
                       <span
                         className="package-history-transaction"
-                        title={row.referenceId || row.orderId || undefined}
+                        title={
+                          transactionId !== BOOKING_HUB_EMPTY_CELL
+                            ? row.referenceId || row.orderId || undefined
+                            : undefined
+                        }
                       >
-                        {formatPackageHistoryTransactionId(
-                          row.referenceId || row.orderId,
-                        )}
+                        {transactionId}
                       </span>
+                    </td>
+                    <td className="package-history-action">
+                      {BOOKING_HUB_EMPTY_CELL}
                     </td>
                   </tr>
                 )

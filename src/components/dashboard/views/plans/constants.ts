@@ -227,11 +227,11 @@ export function indexVoiceAiPackagesByPlan(
 
 export const PACKAGE_HISTORY_PAGE_SIZE = 10
 
-/** Em dash for missing term (e.g. credit top-up with `periodInMonths: 0`). */
-export const PACKAGE_HISTORY_EMPTY_TERM = '—' as const
+/** Placeholder for missing term (e.g. credit top-up with `periodInMonths: 0`). */
+export const PACKAGE_HISTORY_EMPTY_TERM = BOOKING_HUB_EMPTY_CELL
 
 /**
- * Term column label. `periodInMonths <= 0` (credit packs) → em dash.
+ * Term column label. `periodInMonths <= 0` (credit packs) → `_`.
  * Positive months → localized “N month(s)”.
  */
 export function formatPackageHistoryTerm(
