@@ -1,4 +1,13 @@
-import { payoutTypeToUiKey, sortPaymentMethodsByUiOrder } from '../../data/paymentMethodTypes'
+import { payoutTypeToUiKey } from '../../data/paymentMethodTypes'
+import {
+  formatVlinkpayViaLabel,
+  getSingleConfiguredVlinkpayCoin,
+  listAvailableVlinkpayCoins,
+  normalizeVlinkpayCryptoSymbol,
+  resolveVlinkpayAddresses,
+  withWalletCryptoSymbol,
+  type VlinkpayCryptoAddressDto,
+} from '../payout/vlinkpayWallet'
 import { WALLET_KEYS } from '../customer-flow/constants'
 import { getWalletOptions } from '../customer-flow/steps/Payment'
 
@@ -25,16 +34,35 @@ type SelectedWallet = {
   methodId?: string
   name?: string
   key?: string
+  cryptoSymbol?: string
   apiMethod?: PagePaymentMethod
 }
 
+type PaymentFlowWallet = SelectedWallet & {
+  apiMethod?: PagePaymentMethod | unknown
+}
+
+type SelectWalletFlowDeps = {
+  validateAmount: () => boolean
+  setSelectedWalletObj: (wallet: PaymentFlowWallet) => void
+  setSelectedWallet: (name: string) => void
+  setStep: (step: DirectPaymentStep) => void
+  createPaymentForWallet: (
+    wallet: PaymentFlowWallet,
+    cryptoSymbol?: string,
+  ) => Promise<boolean>
+  onCreatePaymentError: (err: unknown) => void
+  onVlinkpayAwaitAsset: (wallet: PaymentFlowWallet) => void
+  logCreatePaymentError: (err: unknown) => void
+}
+
 export function mapPageMethodsToWalletOptions(methods: PagePaymentMethod[] | null | undefined) {
-  const ordered = sortPaymentMethodsByUiOrder(
-    (methods ?? []).map((method) => ({
+  const ordered = (methods ?? [])
+    .map((method) => ({
       ...method,
       uiKey: method.uiKey || payoutTypeToUiKey(method.type),
-    })),
-  ).filter((method) => method.uiKey !== WALLET_KEYS.BANKWIRE)
+    }))
+    .filter((method) => method.uiKey !== WALLET_KEYS.BANKWIRE)
 
   return ordered
     .map((method) => {
@@ -85,5 +113,106 @@ export function resolveWalletVlinkpayCryptoAddresses(
 }
 
 export function isVlinkpayWallet(wallet?: { key?: string } | null): boolean {
-  return wallet?.key === WALLET_KEYS.VLINKPAY
+  return String(wallet?.key || '').toLowerCase() === WALLET_KEYS.VLINKPAY
+}
+
+/** Count configured VlinkPay assets on a public payment-page method row. */
+export function listVlinkpayCoinsFromPageMethod(method?: PagePaymentMethod | null) {
+  if (!method) return []
+  return listAvailableVlinkpayCoins(resolvePageMethodVlinkpayAddresses(method))
+}
+
+function resolvePageMethodVlinkpayAddresses(method?: PagePaymentMethod | null) {
+  return resolveVlinkpayAddresses({
+    accountInfo: method?.accountInfo ?? null,
+    cryptoAddresses: method?.cryptoAddresses as VlinkpayCryptoAddressDto[] | null | undefined,
+  })
+}
+
+/** Sole configured coin on a payment-page method row, if any. */
+export function getSingleConfiguredVlinkpayCoinFromPageMethod(method?: PagePaymentMethod | null) {
+  return getSingleConfiguredVlinkpayCoin(resolvePageMethodVlinkpayAddresses(method))
+}
+
+/** Apply create-payment result onto wallet + selected-crypto state. */
+export function applyCreatedPaymentWalletState<T extends Record<string, unknown>>(
+  wallet: T,
+  cryptoSymbol: string | null | undefined,
+  setters: {
+    setSelectedCryptoSymbol: (symbol: string | null) => void
+    setSelectedWalletObj: (wallet: T & { cryptoSymbol?: string }) => void
+  },
+) {
+  const normalized = cryptoSymbol ? normalizeVlinkpayCryptoSymbol(cryptoSymbol) : null
+  setters.setSelectedCryptoSymbol(normalized)
+  setters.setSelectedWalletObj(withWalletCryptoSymbol(wallet, normalized) ?? wallet)
+}
+
+/**
+ * Shared wallet-select branch for merchant/staff direct payment:
+ * single VLINKPAY asset → create payment immediately; multiple → asset picker.
+ */
+export async function runDirectPaymentWalletSelect(
+  wallet: PaymentFlowWallet,
+  deps: SelectWalletFlowDeps,
+): Promise<void> {
+  if (!deps.validateAmount()) return
+  if (!wallet.methodId) return
+
+  deps.setSelectedWalletObj(wallet)
+  deps.setSelectedWallet(wallet.name || '')
+
+  if (isVlinkpayWallet(wallet)) {
+    const singleCoin = getSingleConfiguredVlinkpayCoinFromPageMethod(
+      wallet.apiMethod as PagePaymentMethod | null | undefined,
+    )
+
+    if (singleCoin) {
+      deps.setStep(DIRECT_PAYMENT_STEP.Processing)
+      try {
+        await deps.createPaymentForWallet(wallet, singleCoin.symbol)
+        deps.setStep(DIRECT_PAYMENT_STEP.WalletDetails)
+      } catch (err) {
+        deps.logCreatePaymentError(err)
+        deps.onCreatePaymentError(err)
+        deps.setStep(DIRECT_PAYMENT_STEP.Review)
+      }
+      return
+    }
+
+    deps.onVlinkpayAwaitAsset(wallet)
+    deps.setStep(DIRECT_PAYMENT_STEP.WalletDetails)
+    return
+  }
+
+  deps.setStep(DIRECT_PAYMENT_STEP.Processing)
+  try {
+    await deps.createPaymentForWallet(wallet)
+    deps.setStep(DIRECT_PAYMENT_STEP.WalletDetails)
+  } catch (err) {
+    deps.logCreatePaymentError(err)
+    deps.onCreatePaymentError(err)
+    deps.setStep(DIRECT_PAYMENT_STEP.Review)
+  }
+}
+
+/** Method name shown opposite VIA — VLINKPAY · USDV (VRC20) when a coin is selected. */
+export function resolvePaymentMethodViaDisplay(
+  wallet?: {
+    key?: string
+    name?: string
+    cryptoSymbol?: string
+    apiMethod?: PagePaymentMethod
+  } | null,
+  cryptoSymbol?: string | null,
+): string {
+  if (!wallet) return ''
+  if (!isVlinkpayWallet(wallet)) return wallet.name || ''
+
+  const selected = normalizeVlinkpayCryptoSymbol(cryptoSymbol || wallet.cryptoSymbol)
+  if (selected) return formatVlinkpayViaLabel(selected)
+
+  const singleCoin = getSingleConfiguredVlinkpayCoinFromPageMethod(wallet.apiMethod ?? null)
+  if (singleCoin) return formatVlinkpayViaLabel(singleCoin.symbol)
+  return formatVlinkpayViaLabel(null)
 }

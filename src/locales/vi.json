@@ -2628,7 +2628,7 @@
           "vlinkpayConfirmAsset": "Xác nhận",
           "vlinkpaySelectedAsset": "Tài sản đã chọn",
           "vlinkpayChangeAsset": "Đổi",
-          "vlinkpayFixedNetwork": "Mạng cố định: {{network}}",
+          "vlinkpayFixedNetwork": "Mạng: {{network}}",
           "vlinkpayReceiveAddress": "Địa chỉ ví nhận",
           "vlinkpayApproxUsd": "≈ ${{amount}}",
           "vlinkpayStepCopyAddress": "Sao chép địa chỉ ví nhận.",

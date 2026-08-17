@@ -21,6 +21,15 @@ export const VLINKPAY_SYMBOL = {
   [VlinkpayCoin.Usdt]: 'USDT',
 } as const
 
+export const VLINKPAY_COIN_NAME = {
+  [VlinkpayCoin.Usdv]: 'USD VLINK',
+  [VlinkpayCoin.Usdt]: 'USD Tether',
+} as const
+
+/** Shared input class for VLINKPAY wallet-address fields (mobile compact override in index.css). */
+export const VLINKPAY_ADDRESS_INPUT_CLASS =
+  'vlinkpay-address-input h-8 w-full rounded-lg border bg-white px-2.5 font-sans text-[11px] text-slate-800 outline-none transition placeholder:text-[11px] placeholder:text-slate-400 focus:border-[#3657db] focus:ring-2 focus:ring-[#3657db]/15 sm:h-9'
+
 /** Wire value for create-payment / tip `cryptoSymbol` (BE example: "usdv"). */
 export function toVlinkpayCryptoSymbolWire(symbol?: string | null): string {
   return String(symbol || '').trim().toLowerCase()
@@ -34,13 +43,13 @@ export const VLINKPAY_COIN_ASSET = {
 export const VLINKPAY_COINS = [
   {
     key: VlinkpayCoin.Usdv,
-    name: 'USD VLINK',
+    name: VLINKPAY_COIN_NAME[VlinkpayCoin.Usdv],
     symbol: VLINKPAY_SYMBOL[VlinkpayCoin.Usdv],
     asset: VLINKPAY_COIN_ASSET[VlinkpayCoin.Usdv],
   },
   {
     key: VlinkpayCoin.Usdt,
-    name: 'Tether USD',
+    name: VLINKPAY_COIN_NAME[VlinkpayCoin.Usdt],
     symbol: VLINKPAY_SYMBOL[VlinkpayCoin.Usdt],
     asset: VLINKPAY_COIN_ASSET[VlinkpayCoin.Usdt],
   },
@@ -218,9 +227,58 @@ export function mergeVlinkpayAddresses(...sources: VlinkpayAddresses[]): Vlinkpa
   }
 }
 
+/**
+ * Prefer the primary source when it has any address.
+ * Useful for single-staff flows where staff config should override business fallback.
+ */
+export function resolvePreferredVlinkpayAddresses(
+  primary: VlinkpayAddresses,
+  ...fallbacks: VlinkpayAddresses[]
+): VlinkpayAddresses {
+  if (hasAtLeastOneVlinkpayAddress(primary)) return primary
+  return mergeVlinkpayAddresses(...fallbacks)
+}
+
 export function firstAvailableVlinkpayCoin(addresses: VlinkpayAddresses): VlinkpayCoinKey | null {
-  const coin = VLINKPAY_COINS.find((item) => addresses[item.key].trim())
+  const coin = listAvailableVlinkpayCoins(addresses)[0]
   return coin?.key ?? null
+}
+
+export function listAvailableVlinkpayCoins(addresses: VlinkpayAddresses) {
+  return VLINKPAY_COINS.filter((coin) => addresses[coin.key].trim())
+}
+
+/** The sole configured coin when count === 1; otherwise null. */
+export function getSingleConfiguredVlinkpayCoin(addresses: VlinkpayAddresses) {
+  const coins = listAvailableVlinkpayCoins(addresses)
+  return coins.length === 1 ? coins[0] : null
+}
+
+/** Normalize wire/UI crypto symbol to uppercase display form. */
+export function normalizeVlinkpayCryptoSymbol(symbol?: string | null): string {
+  return String(symbol || '').trim().toUpperCase()
+}
+
+/** Merge crypto symbol onto a selected wallet object for success/VIA display. */
+export function withWalletCryptoSymbol<T extends Record<string, unknown>>(
+  wallet: T | null | undefined,
+  cryptoSymbol?: string | null,
+): T | null {
+  if (!wallet) return null
+  const normalized = normalizeVlinkpayCryptoSymbol(cryptoSymbol)
+  if (!normalized) {
+    const next = { ...wallet }
+    delete (next as { cryptoSymbol?: string }).cryptoSymbol
+    return next
+  }
+  return { ...wallet, cryptoSymbol: normalized }
+}
+
+/** Success-screen VIA label, e.g. `VLINKPAY · USDV (VRC20)`. */
+export function formatVlinkpayViaLabel(symbol?: string | null): string {
+  const normalized = normalizeVlinkpayCryptoSymbol(symbol)
+  if (!normalized) return VLINKPAY_BRAND
+  return `${VLINKPAY_BRAND} · ${normalized} (${VLINKPAY_NETWORK})`
 }
 
 export function formatVlinkpayAccountDisplay(value?: string | null): string {

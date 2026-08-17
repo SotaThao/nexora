@@ -34,6 +34,7 @@ export default function DirectPaymentFlow() {
     businessVlinkpayCryptoAddresses,
     currentPaymentId,
     activePaymentMethod,
+    selectedCryptoSymbol,
     handleSelectWallet,
     handleCreateVlinkpayPayment,
     handleResetVlinkpayPayment,
@@ -176,6 +177,7 @@ export default function DirectPaymentFlow() {
                   businessName={businessName}
                   activeAmount={activeAmount}
                   selectedWalletObj={selectedWalletObj}
+                  cryptoSymbol={selectedCryptoSymbol}
                 />
               ) : null}
             </>

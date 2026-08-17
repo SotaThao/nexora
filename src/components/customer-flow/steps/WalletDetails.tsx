@@ -5,6 +5,7 @@ import VlinkpayTipPaymentPanel from './VlinkpayTipPaymentPanel'
 import {
   emptyVlinkpayAddresses,
   mergeVlinkpayAddresses,
+  resolvePreferredVlinkpayAddresses,
   resolveVlinkpayAddresses,
   type VlinkpayAddresses,
 } from '../../payout/vlinkpayWallet'
@@ -259,8 +260,12 @@ export default function WalletDetails({
         })
       : empty
 
+    const base = !isMultiStaff
+      ? resolvePreferredVlinkpayAddresses(fromStaff, fromBusiness)
+      : fromBusiness
+
     // Prefer real cryptoAddresses only — never raw accountInfo/page URLs.
-    return mergeVlinkpayAddresses(fromStaff, fromBusiness, fromTip, fromLink)
+    return mergeVlinkpayAddresses(base, fromTip, fromLink)
   }, [
     isVlinkpay,
     isMultiStaff,
