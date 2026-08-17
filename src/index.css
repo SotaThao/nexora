@@ -265,6 +265,11 @@ body:not(.homepage-active):not(.public-booking-active) input.vlinkpay-address-in
     font-size: 16px !important;
   }
 
+  /* VLINKPAY wallet-address inputs — keep compact height; 16px prevents iOS focus zoom. */
+  body:not(.homepage-active):not(.public-booking-active) input.vlinkpay-address-input:not([type="checkbox"]):not([type="radio"]):not([type="submit"]):not([type="button"]):not([type="file"]) {
+    font-size: 16px !important;
+  }
+
   /* AI Hub Update Customer dialog — compact values (override 16px floor above). */
   body:not(.homepage-active):not(.public-booking-active) .booking-hub-view .cust-modal input:not([type="checkbox"]):not([type="radio"]):not([type="submit"]):not([type="button"]):not([type="file"]),
   body:not(.homepage-active):not(.public-booking-active) .booking-hub-view .cust-modal select {

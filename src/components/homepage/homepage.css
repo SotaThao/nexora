@@ -69,8 +69,12 @@
 }
 
 .nx-pricing-compare thead th:not(:first-child),
-.nx-pricing-compare tbody td {
+.nx-pricing-compare tbody td:not(:first-child) {
   text-align: center;
+}
+
+.nx-pricing-compare tbody td:first-child {
+  text-align: left;
 }
 
 .nx-pricing-compare tbody tr:hover {

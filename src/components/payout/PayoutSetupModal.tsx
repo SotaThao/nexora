@@ -85,13 +85,13 @@ function PayoutSetupModal({
   }, [open, walletKey, initialValue, initialQrCode, initialAccountName, staffName])
 
   useEffect(() => {
-    if (!open || typeof document === 'undefined') return undefined
+    if (!open || !lockBackground || typeof document === 'undefined') return undefined
     const previousOverflow = document.body.style.overflow
     document.body.style.overflow = 'hidden'
     return () => {
       document.body.style.overflow = previousOverflow
     }
-  }, [open])
+  }, [open, lockBackground])
 
   useEffect(() => {
     return () => {
@@ -496,7 +496,7 @@ function PayoutSetupModal({
     </div>
   )
 
-  if (typeof document !== 'undefined') {
+  if (lockBackground && typeof document !== 'undefined') {
     return createPortal(modal, document.body)
   }
 
