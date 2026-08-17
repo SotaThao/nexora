@@ -9,6 +9,7 @@
  */
 import posDeviceHttpClient from '../../lib/posDeviceHttpClient'
 import type {
+  SelfCheckInBookingApiDto,
   SelfCheckInContextApiDto,
   SelfCheckInOrderResultApiDto,
   SelfCheckInServiceApiDto,
@@ -32,6 +33,13 @@ export interface CreateSelfCheckInOrderPayload {
   items: SelfCheckInOrderItemPayload[]
 }
 
+export interface CheckInSelfCheckInBookingPayload {
+  bookingId: string
+  customerName: string | null
+  // Replaces the booking's own lines: the guest may have edited them on the overview screen.
+  items: SelfCheckInOrderItemPayload[]
+}
+
 export function createPosSelfCheckInRepository(client: Client = posDeviceHttpClient) {
   return {
     async getContext(): Promise<SelfCheckInContextApiDto | null> {
@@ -49,6 +57,11 @@ export function createPosSelfCheckInRepository(client: Client = posDeviceHttpCli
       return res?.displayName ?? null
     },
 
+    // Today's appointment for this number, if the guest booked and has not arrived yet.
+    async getTodaysBooking(phone: string): Promise<SelfCheckInBookingApiDto | null> {
+      return client.get<SelfCheckInBookingApiDto>(`${BASE}/booking`, { params: { phone } })
+    },
+
     async getActiveVisitOrderNumber(phone: string): Promise<string | null> {
       const res = await client.get<{ orderNumber: string }>(`${BASE}/active-visit`, {
         params: { phone },
@@ -56,16 +69,23 @@ export function createPosSelfCheckInRepository(client: Client = posDeviceHttpCli
       return res?.orderNumber ?? null
     },
 
-    async getTechnicians(serviceId: string): Promise<SelfCheckInTechnicianApiDto[]> {
-      return (
-        (await client.get<SelfCheckInTechnicianApiDto[]>(`${BASE}/technicians`, {
-          params: { serviceId },
-        })) ?? []
-      )
+    // Every clocked-in technician who can perform at least one service, each carrying the services
+    // they are assigned to. Fetched once per visit — the kiosk asks who you would like before it
+    // asks what you want, so there is no service to filter by at that point.
+    async getTechnicians(): Promise<SelfCheckInTechnicianApiDto[]> {
+      return (await client.get<SelfCheckInTechnicianApiDto[]>(`${BASE}/technicians`)) ?? []
     },
 
     async createOrder(payload: CreateSelfCheckInOrderPayload): Promise<SelfCheckInOrderResultApiDto> {
       const res = await client.post<SelfCheckInOrderResultApiDto>(`${BASE}/orders`, payload)
+      if (!res) throw new Error('Check-in returned no order number')
+      return res
+    },
+
+    // A booked guest converts their appointment rather than creating a second order beside it, so
+    // this is a different endpoint, not a flag on createOrder.
+    async checkInBooking(payload: CheckInSelfCheckInBookingPayload): Promise<SelfCheckInOrderResultApiDto> {
+      const res = await client.post<SelfCheckInOrderResultApiDto>(`${BASE}/bookings/check-in`, payload)
       if (!res) throw new Error('Check-in returned no order number')
       return res
     },

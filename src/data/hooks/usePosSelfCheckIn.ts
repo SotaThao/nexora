@@ -11,9 +11,11 @@
 import { useMutation, useQuery } from '@tanstack/react-query'
 import { qk } from '../queryKeys'
 import posSelfCheckInRepository, {
+  type CheckInSelfCheckInBookingPayload,
   type CreateSelfCheckInOrderPayload,
 } from '../repositories/posSelfCheckIn'
 import type {
+  SelfCheckInBookingApiDto,
   SelfCheckInOrderResultApiDto,
   SelfCheckInServiceApiDto,
   SelfCheckInTechnicianApiDto,
@@ -45,6 +47,17 @@ export function useSelfCheckInCustomerName(phone?: string) {
   })
 }
 
+export function useSelfCheckInTodaysBooking(phone?: string) {
+  return useQuery<SelfCheckInBookingApiDto | null>({
+    queryKey: qk.posSelfCheckInBooking(phone),
+    queryFn: () => posSelfCheckInRepository.getTodaysBooking(phone as string),
+    enabled: Boolean(phone),
+    retry: false,
+    gcTime: 0,
+    staleTime: 0,
+  })
+}
+
 export function useSelfCheckInActiveVisit(phone?: string) {
   return useQuery<string | null>({
     queryKey: qk.posSelfCheckInActiveVisit(phone),
@@ -56,11 +69,11 @@ export function useSelfCheckInActiveVisit(phone?: string) {
   })
 }
 
-export function useSelfCheckInTechnicians(serviceId?: string) {
+export function useSelfCheckInTechnicians(enabled = true) {
   return useQuery<SelfCheckInTechnicianApiDto[]>({
-    queryKey: qk.posSelfCheckInTechnicians(serviceId),
-    queryFn: () => posSelfCheckInRepository.getTechnicians(serviceId as string),
-    enabled: Boolean(serviceId),
+    queryKey: qk.posSelfCheckInTechnicians(),
+    queryFn: () => posSelfCheckInRepository.getTechnicians(),
+    enabled,
     retry: false,
     // Who is clocked in changes through the day, and a customer must not be offered someone who
     // went home an hour ago.
@@ -71,6 +84,13 @@ export function useSelfCheckInTechnicians(serviceId?: string) {
 export function useCreateSelfCheckInOrder() {
   return useMutation<SelfCheckInOrderResultApiDto, Error, CreateSelfCheckInOrderPayload>({
     mutationFn: (payload) => posSelfCheckInRepository.createOrder(payload),
+    retry: false,
+  })
+}
+
+export function useCheckInSelfCheckInBooking() {
+  return useMutation<SelfCheckInOrderResultApiDto, Error, CheckInSelfCheckInBookingPayload>({
+    mutationFn: (payload) => posSelfCheckInRepository.checkInBooking(payload),
     retry: false,
   })
 }

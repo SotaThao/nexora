@@ -9654,7 +9654,7 @@ body.booking-appointment-panel-modal-open {
   }
 }
 
-/* Content-pane aware: wins over viewport media when sidebar leaves a narrow panel */
+/* Content-pane aware: wins Overviewport media when sidebar leaves a narrow panel */
 @container booking-panel (max-width: 640px) {
   .booking-hub-view .booking-controls {
     grid-template-columns: minmax(0, 1fr);

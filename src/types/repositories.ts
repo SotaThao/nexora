@@ -405,6 +405,10 @@ export interface SelfCheckInTechnicianApiDto {
   posStaffProfileId: string
   displayName: string
   photoUrl: string | null
+  // Services this technician is assigned to. Lets the kiosk decide on the spot whether the
+  // technician the customer picked up front can actually do what they then chose — no round trip
+  // per service, and the same data drives the per-service dropdown on the overview.
+  serviceIds: string[]
   // Deliberately no `isBusy`: who is mid-service is floor information for staff, not something
   // to show a waiting customer.
 }
@@ -412,6 +416,20 @@ export interface SelfCheckInTechnicianApiDto {
 export interface SelfCheckInOrderResultApiDto {
   orderId: string
   orderNumber: string
+}
+
+export interface SelfCheckInBookingItemApiDto {
+  posServiceId: string
+  posStaffProfileId: string | null
+}
+
+export interface SelfCheckInBookingApiDto {
+  bookingId: string
+  // Wall clock at the salon, already resolved server-side — the raw stored value means different
+  // things depending on which flow created the booking.
+  scheduledAt: string
+  customerName: string
+  items: SelfCheckInBookingItemApiDto[]
 }
 
 export interface ClockQrTokenApiDto {
