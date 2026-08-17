@@ -528,7 +528,7 @@ export function BookingPackageHistoryTableSkeleton({ rows = 5 }: { rows?: number
             <Skeleton width={120} height={22} borderRadius={6} />
           </td>
           <td>
-            <Skeleton width={24} height={14} borderRadius={6} />
+            <Skeleton width={132} height={36} borderRadius={8} />
           </td>
         </tr>
       ))}

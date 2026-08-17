@@ -5,6 +5,7 @@ import {
 import {
   PackageHistoryUiStatus,
   SubscriptionBillingCycle,
+  SubscriptionPaymentStatus,
   type SubscriptionPackage,
   type SubscriptionPaymentMethod,
 } from '../../../../data/repositories/subscriptionPayments'
@@ -151,6 +152,20 @@ export function formatPackageHistoryAmount(amount: number, currency = 'USD'): st
   if (currency.toUpperCase() === 'USD') return formatUsdAmount(amount)
   if (!Number.isFinite(amount)) return BOOKING_HUB_EMPTY_CELL
   return `${amount.toFixed(2)} ${currency}`
+}
+
+export function formatPackageBillingMoney(amount: number, currency = 'USD'): string {
+  if (!Number.isFinite(amount)) return BOOKING_HUB_EMPTY_CELL
+  try {
+    return new Intl.NumberFormat('en-US', {
+      style: 'currency',
+      currency: currency || 'USD',
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2,
+    }).format(amount)
+  } catch {
+    return formatPackageHistoryAmount(amount, currency)
+  }
 }
 
 /** Wallet row balance in USD (balance × rate). */
@@ -319,6 +334,49 @@ export function resolvePackageHistoryDisplayAt(item: {
   createdAt: string
 }): string {
   return item.paidAt || item.createdAt
+}
+
+/** Table Action: paid → view invoice; otherwise payment details. */
+export enum PackageHistoryRowAction {
+  ViewInvoice = 'viewInvoice',
+  PaymentDetails = 'paymentDetails',
+}
+
+export function resolvePackageHistoryRowAction(
+  paymentStatus: SubscriptionPaymentStatus,
+): PackageHistoryRowAction {
+  return paymentStatus === SubscriptionPaymentStatus.Paid
+    ? PackageHistoryRowAction.ViewInvoice
+    : PackageHistoryRowAction.PaymentDetails
+}
+
+export const PACKAGE_HISTORY_ROW_ACTION_LABEL_KEY: Record<
+  PackageHistoryRowAction,
+  string
+> = {
+  [PackageHistoryRowAction.ViewInvoice]: 'packageHistoryActionViewInvoice',
+  [PackageHistoryRowAction.PaymentDetails]: 'packageHistoryActionPaymentDetails',
+}
+
+export enum PackageHistoryDocumentKind {
+  Invoice = 'invoice',
+  Receipt = 'receipt',
+}
+
+export function packageHistoryTransactionKey(
+  item: { orderId: string; referenceId: string },
+): string {
+  return item.referenceId || item.orderId
+}
+
+export function packageHistoryDocumentFileName(
+  kind: PackageHistoryDocumentKind,
+  transactionId: string,
+): string {
+  const id = transactionId.trim().replace(/[^\w.-]+/g, '-') || 'document'
+  const prefix =
+    kind === PackageHistoryDocumentKind.Invoice ? 'Invoice' : 'Receipt'
+  return `${prefix}-${id}.html`
 }
 
 /** Fallback feature list when VoiceAI catalog omits featuresEn/Vi. */
