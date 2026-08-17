@@ -248,6 +248,15 @@ body:not(.homepage-active) input.country-code-search-input:focus-visible {
   border: none !important;
 }
 
+/* Compact VLINKPAY wallet-address inputs — overrides the 16px mobile input floor below. */
+body:not(.homepage-active):not(.public-booking-active) input.vlinkpay-address-input:not([type="checkbox"]):not([type="radio"]):not([type="submit"]):not([type="button"]):not([type="file"]) {
+  font-size: 11px !important;
+  height: 2rem !important;
+  line-height: 1.2 !important;
+  padding-top: 0 !important;
+  padding-bottom: 0 !important;
+}
+
 /* Prevent iOS Safari from zooming on input focus by ensuring font-size is at least 16px on iOS devices (portrait and landscape) */
 @supports (-webkit-touch-callout: none) {
   body:not(.homepage-active):not(.public-booking-active) input:not([type="checkbox"]):not([type="radio"]):not([type="submit"]):not([type="button"]):not([type="file"]),
@@ -350,10 +359,11 @@ body:not(.homepage-active):not(.public-booking-active) a:focus-visible {
     max-height: 90dvh;
   }
 
-  /* Payout setup modal (VLINKPAY variant has variable-length content: guide steps expand/collapse). */
+  /* Payout setup modal — fit inside the padded overlay so Save/Cancel stay visible. */
   .payout-setup-modal-scroll {
-    max-height: 90vh;
-    max-height: 90dvh;
+    max-height: 100%;
+    max-height: min(90vh, 100%);
+    max-height: min(90dvh, 100%);
   }
   .news-library-pdf-modal-card {
     height: 90vh;

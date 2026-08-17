@@ -85,13 +85,13 @@ function PayoutSetupModal({
   }, [open, walletKey, initialValue, initialQrCode, initialAccountName, staffName])
 
   useEffect(() => {
-    if (!open || !lockBackground || typeof document === 'undefined') return undefined
+    if (!open || typeof document === 'undefined') return undefined
     const previousOverflow = document.body.style.overflow
     document.body.style.overflow = 'hidden'
     return () => {
       document.body.style.overflow = previousOverflow
     }
-  }, [open, lockBackground])
+  }, [open])
 
   useEffect(() => {
     return () => {
@@ -249,7 +249,7 @@ function PayoutSetupModal({
   }[walletKey] || { text: walletKey, color: 'text-slate-800', fontClass: 'font-bold' }
 
   const header = (
-    <div className={`flex items-center gap-3 ${isVlinkpay ? '' : 'gap-3.5 border-b border-slate-100 pb-3'}`}>
+    <div className={`flex shrink-0 items-center gap-3 ${isVlinkpay ? '' : 'gap-3.5 border-b border-slate-100 pb-3'}`}>
       <span className={`flex shrink-0 items-center justify-center border border-slate-100 shadow-sm ${isVlinkpay ? 'h-9 w-9 rounded-lg bg-white sm:h-10 sm:w-10' : 'h-11 w-11 rounded-xl bg-slate-50'}`}>
         {PayoutLogos[walletKey]}
       </span>
@@ -418,68 +418,71 @@ function PayoutSetupModal({
   )
 
   const footer = (
-    <div className={`flex justify-end gap-2.5 ${isVlinkpay ? 'pt-1' : 'border-t border-slate-100 pt-2.5'}`}>
-      <button
-        type="button"
-        onClick={onClose}
-        disabled={isSaving}
-        className={`rounded-lg border border-slate-200 px-5 py-2.5 text-xs font-bold uppercase tracking-wider transition disabled:cursor-not-allowed disabled:opacity-60 ${
-          isVlinkpay ? 'min-w-[60px] text-slate-500 hover:bg-slate-50' : 'text-slate-500 hover:bg-slate-50'
-        } ${
-          readOnly ? 'w-full text-center' : ''
-        }`}
-      >
-        {t(readOnly || isBankWire ? 'setup.close' : 'common.cancel')}
-      </button>
-      {!readOnly && (
+    <div
+      className={`shrink-0 bg-white ${
+        isVlinkpay ? 'pt-1' : 'border-t border-slate-100 pt-2.5'
+      }`}
+    >
+      <div className={`flex gap-2.5 ${readOnly ? '' : 'justify-end'}`}>
         <button
           type="button"
-          onClick={handleSubmit}
-          disabled={isSaving || Boolean(uploadError)}
-          aria-busy={isSaving}
-          className={`inline-flex items-center justify-center gap-1.5 rounded-lg px-5 py-2.5 text-xs font-bold uppercase tracking-wider text-white shadow-sm transition disabled:cursor-not-allowed disabled:opacity-60 ${
-            isVlinkpay
-              ? 'min-w-[62px] bg-[#ff8a00] hover:bg-[#f07f00]'
-              : 'bg-amber-600 hover:bg-amber-700'
-          }`}
+          onClick={onClose}
+          disabled={isSaving}
+          className={`rounded-lg border border-slate-200 px-5 py-2.5 text-xs font-bold uppercase tracking-wider transition disabled:cursor-not-allowed disabled:opacity-60 ${
+            isVlinkpay ? 'min-w-[60px] text-slate-500 hover:bg-slate-50' : 'text-slate-500 hover:bg-slate-50'
+          } ${readOnly ? 'w-full text-center' : 'w-auto'}`}
         >
-          {isSaving ? (
-            <>
-              <Loader2 className="h-3.5 w-3.5 shrink-0 animate-spin" aria-hidden="true" />
-              <span>{t('common.saving')}</span>
-            </>
-          ) : (
-            t(isBankWire ? 'common.update' : 'components.dashboard.modals.PayoutSetupModal.save')
-          )}
+          {t(readOnly || isBankWire ? 'setup.close' : 'common.cancel')}
         </button>
-      )}
+        {!readOnly && (
+          <button
+            type="button"
+            onClick={handleSubmit}
+            disabled={isSaving || Boolean(uploadError)}
+            aria-busy={isSaving}
+            className={`inline-flex w-auto items-center justify-center gap-1.5 rounded-lg px-5 py-2.5 text-xs font-bold uppercase tracking-wider text-white shadow-sm transition disabled:cursor-not-allowed disabled:opacity-60 ${
+              isVlinkpay
+                ? 'min-w-[62px] bg-[#ff8a00] hover:bg-[#f07f00]'
+                : 'bg-amber-600 hover:bg-amber-700'
+            }`}
+          >
+            {isSaving ? (
+              <>
+                <Loader2 className="h-3.5 w-3.5 shrink-0 animate-spin" aria-hidden="true" />
+                <span>{t('common.saving')}</span>
+              </>
+            ) : (
+              t(isBankWire ? 'common.update' : 'components.dashboard.modals.PayoutSetupModal.save')
+            )}
+          </button>
+        )}
+      </div>
     </div>
   )
 
-  const panelClass = `relative w-full rounded-3xl border border-slate-100 bg-white font-sans shadow-2xl animate-scaleUp ${
+  const panelClass = `relative w-full min-h-0 rounded-3xl border border-slate-100 bg-white font-sans shadow-2xl animate-scaleUp ${
     isCameraOpen
       ? 'h-[480px] max-w-sm overflow-hidden'
-      : isVlinkpay
-        ? 'payout-setup-modal-scroll flex flex-col gap-3 p-3.5 max-w-[420px] rounded-[18px] sm:gap-3.5 sm:p-4'
-        : `overflow-hidden space-y-4.5 p-6 ${isBankWire ? 'max-w-md' : 'max-w-sm'}`
+      : `payout-setup-modal-scroll flex max-h-full flex-col overflow-hidden ${
+          isVlinkpay
+            ? 'gap-3 p-3.5 max-w-[420px] rounded-[18px] sm:gap-3.5 sm:p-4'
+            : `gap-4.5 p-6 ${isBankWire ? 'max-w-md' : 'max-w-sm'}`
+        }`
   }`
 
-  const overlayClass = lockBackground
-    ? 'fixed inset-0 z-[100] flex h-dvh items-center justify-center overflow-hidden bg-slate-900/60 modal-overlay-safe text-left backdrop-blur-sm'
-    : 'fixed inset-0 z-[60] flex items-center justify-center bg-slate-900/60 modal-overlay-safe text-left backdrop-blur-sm'
+  const overlayClass = `fixed inset-0 flex h-dvh items-center justify-center overflow-hidden bg-slate-900/60 modal-overlay-safe text-left backdrop-blur-sm ${
+    lockBackground ? 'z-[100]' : 'z-[60]'
+  }`
 
   const modal = (
     <div className={overlayClass}>
       <div data-testid="payout-setup-modal" className={panelClass}>
         {header}
-        {/* VLINKPAY's guide can expand past the viewport on mobile — only the
-            body scrolls so the header/footer (incl. the Save button) stay pinned. */}
-        {isVlinkpay ? (
-          <div className="min-h-0 flex-1 overflow-y-auto">{body}</div>
-        ) : (
-          body
+        {/* Body scrolls; header/footer (Save / Cancel) stay pinned on small screens. */}
+        {!isCameraOpen && (
+          <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain">{body}</div>
         )}
-        {footer}
+        {!isCameraOpen && footer}
         {isCameraOpen && (
           <CameraCapture
             onCapture={(dataUrl) => {
@@ -493,7 +496,7 @@ function PayoutSetupModal({
     </div>
   )
 
-  if (lockBackground && typeof document !== 'undefined') {
+  if (typeof document !== 'undefined') {
     return createPortal(modal, document.body)
   }
 

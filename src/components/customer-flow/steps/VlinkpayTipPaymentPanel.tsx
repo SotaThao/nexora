@@ -7,6 +7,7 @@ import {
   VLINKPAY_WALLET_LABEL,
   firstAvailableVlinkpayCoin,
   hasAtLeastOneVlinkpayAddress,
+  listAvailableVlinkpayCoins,
   type VlinkpayAddresses,
   type VlinkpayCoinKey,
 } from '../../payout/vlinkpayWallet'
@@ -69,7 +70,7 @@ export default function VlinkpayTipPaymentPanel({
   isConfirming = false,
 }: Props) {
   const availableCoins = useMemo(
-    () => VLINKPAY_COINS.filter((coin) => addresses[coin.key].trim()),
+    () => listAvailableVlinkpayCoins(addresses),
     [addresses],
   )
   const [phase, setPhase] = useState<PanelPhase>(tipReady ? 'overview' : 'select')
@@ -144,9 +145,14 @@ export default function VlinkpayTipPaymentPanel({
 
   const receiveAddressCard = receiveAddress ? (
     <div className="space-y-2">
-      <p className="text-[10px] font-bold uppercase tracking-wider text-nexoraSubtle">
-        {t(`${TK}.vlinkpayReceiveAddress`)}
-      </p>
+      <div className="flex items-center justify-between gap-2">
+        <p className="text-[10px] font-bold uppercase tracking-wider text-nexoraSubtle">
+          {t(`${TK}.vlinkpayReceiveAddress`)}
+        </p>
+        <p className="text-[10px] font-bold uppercase tracking-wide text-nexoraSubtle">
+          {t(`${TK}.vlinkpayFixedNetwork`, { network: VLINKPAY_NETWORK })}
+        </p>
+      </div>
       <div className="flex items-center gap-2 rounded-2xl border border-nexoraBorder bg-white px-3.5 py-3 shadow-sm">
         <p className="min-w-0 flex-1 break-all font-mono text-[12px] font-semibold leading-snug text-nexoraText sm:text-sm">
           {receiveAddress}
@@ -167,9 +173,6 @@ export default function VlinkpayTipPaymentPanel({
           {t('common.copy')}
         </button>
       </div>
-      <p className="text-[10px] font-bold uppercase tracking-wide text-nexoraSubtle">
-        {t(`${TK}.vlinkpayFixedNetwork`, { network: VLINKPAY_NETWORK })}
-      </p>
     </div>
   ) : null
 

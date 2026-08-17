@@ -50,9 +50,27 @@
   -webkit-overflow-scrolling: touch;
 }
 
+.nx-pricing-compare table {
+  table-layout: fixed;
+  width: 100%;
+}
+
+.nx-pricing-compare col.feature-col {
+  width: 34%;
+}
+
+.nx-pricing-compare col.plan-col {
+  width: 22%;
+}
+
 .nx-pricing-compare table th,
 .nx-pricing-compare table td {
   vertical-align: middle;
+}
+
+.nx-pricing-compare thead th:not(:first-child),
+.nx-pricing-compare tbody td {
+  text-align: center;
 }
 
 .nx-pricing-compare tbody tr:hover {
