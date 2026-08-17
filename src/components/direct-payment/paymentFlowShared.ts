@@ -1,4 +1,4 @@
-import { payoutTypeToUiKey, sortPaymentMethodsByUiOrder } from '../../data/paymentMethodTypes'
+import { payoutTypeToUiKey } from '../../data/paymentMethodTypes'
 import {
   formatVlinkpayViaLabel,
   getSingleConfiguredVlinkpayCoin,
@@ -57,12 +57,12 @@ type SelectWalletFlowDeps = {
 }
 
 export function mapPageMethodsToWalletOptions(methods: PagePaymentMethod[] | null | undefined) {
-  const ordered = sortPaymentMethodsByUiOrder(
-    (methods ?? []).map((method) => ({
+  const ordered = (methods ?? [])
+    .map((method) => ({
       ...method,
       uiKey: method.uiKey || payoutTypeToUiKey(method.type),
-    })),
-  ).filter((method) => method.uiKey !== WALLET_KEYS.BANKWIRE)
+    }))
+    .filter((method) => method.uiKey !== WALLET_KEYS.BANKWIRE)
 
   return ordered
     .map((method) => {

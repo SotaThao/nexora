@@ -228,14 +228,15 @@ export function mergeVlinkpayAddresses(...sources: VlinkpayAddresses[]): Vlinkpa
 }
 
 /**
- * Prefer the primary source per coin, filling any missing coins from fallbacks.
+ * Prefer the primary source when it has any address.
  * Useful for single-staff flows where staff config should override business fallback.
  */
 export function resolvePreferredVlinkpayAddresses(
   primary: VlinkpayAddresses,
   ...fallbacks: VlinkpayAddresses[]
 ): VlinkpayAddresses {
-  return mergeVlinkpayAddresses(primary, ...fallbacks)
+  if (hasAtLeastOneVlinkpayAddress(primary)) return primary
+  return mergeVlinkpayAddresses(...fallbacks)
 }
 
 export function firstAvailableVlinkpayCoin(addresses: VlinkpayAddresses): VlinkpayCoinKey | null {
