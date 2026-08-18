@@ -1,6 +1,14 @@
-import React from 'react'
+import React, { useMemo } from 'react'
 import { CheckCircle, Copy, Loader2 } from 'lucide-react'
 import { WALLET_KEYS } from '../constants'
+import VlinkpayTipPaymentPanel from './VlinkpayTipPaymentPanel'
+import {
+  emptyVlinkpayAddresses,
+  mergeVlinkpayAddresses,
+  resolvePreferredVlinkpayAddresses,
+  resolveVlinkpayAddresses,
+  type VlinkpayAddresses,
+} from '../../payout/vlinkpayWallet'
 
 function getMemberTipAmount(
   memberId: string,
@@ -143,6 +151,7 @@ export default function WalletDetails({
   activeTipAmount,
   qrCodeVal,
   businessPaymentAccounts,
+  businessVlinkpayCryptoAddresses,
   tipRefNumber,
   currentTipId,
   showToast,
@@ -156,6 +165,9 @@ export default function WalletDetails({
   paymentMode = false,
   paymentCopyScope = 'merchant',
   isConfirming = false,
+  isProcessing = false,
+  onCreateVlinkpayTip,
+  onResetVlinkpayTip,
 }) {
   const isMultiStaff = selectedStaffMembers.length > 1
   const accentColor = walletAccentColor(selectedWalletObj.key)
@@ -172,10 +184,12 @@ export default function WalletDetails({
   // Prefer account info from the tip payment methods API response
   const tipApiMethod = (() => {
     if (!Array.isArray(tipPaymentMethodsData) || tipPaymentMethodsData.length === 0) return null
-    return tipPaymentMethodsData.find(
-      (pm) => (pm.type || '').toLowerCase() === selectedWalletObj.key.toLowerCase()
-        || (pm.type || '').toLowerCase().replace(/\s+/g, '') === selectedWalletObj.key.toLowerCase(),
-    ) || null
+    const walletKey = String(selectedWalletObj.key || '').toLowerCase()
+    return tipPaymentMethodsData.find((pm) => {
+      const uiKey = String(pm.uiKey || '').toLowerCase()
+      const typeKey = String(pm.type || '').toLowerCase().replace(/\s+/g, '')
+      return uiKey === walletKey || typeKey === walletKey
+    }) || null
   })()
   const tipApiAccountVal = tipApiMethod?.accountInfo || null
   const accountHolderName = tipApiMethod?.accountName || null
@@ -212,6 +226,96 @@ export default function WalletDetails({
   const recipientName = isMultiStaff
     ? bizName
     : selectedStaffMembers[0].nickname
+
+  const isVlinkpay = selectedWalletObj.key === WALLET_KEYS.VLINKPAY
+  const vlinkpayAddresses = useMemo(() => {
+    if (!isVlinkpay) return null
+
+    const empty = emptyVlinkpayAddresses()
+
+    const fromStaff = !isMultiStaff
+      ? resolveVlinkpayAddresses({
+          cryptoAddresses: selectedStaffMembers[0]?.vlinkPayCryptoAddresses,
+        })
+      : empty
+
+    const fromBusiness = resolveVlinkpayAddresses({
+      cryptoAddresses: businessVlinkpayCryptoAddresses,
+    })
+
+    const fromTip = tipApiMethod
+      ? resolveVlinkpayAddresses({
+          cryptoAddresses: tipApiMethod.cryptoAddresses,
+        })
+      : empty
+
+    const linkAddress = paymentLinkData?.cryptoAddress
+    const fromLink = linkAddress?.address && linkAddress?.symbol
+      ? resolveVlinkpayAddresses({
+          cryptoAddresses: [{
+            network: linkAddress.network || '',
+            symbol: linkAddress.symbol,
+            address: linkAddress.address,
+          }],
+        })
+      : empty
+
+    const base = !isMultiStaff
+      ? resolvePreferredVlinkpayAddresses(fromStaff, fromBusiness)
+      : fromBusiness
+
+    // Prefer real cryptoAddresses only — never raw accountInfo/page URLs.
+    return mergeVlinkpayAddresses(base, fromTip, fromLink)
+  }, [
+    isVlinkpay,
+    isMultiStaff,
+    tipApiMethod,
+    selectedStaffMembers,
+    businessVlinkpayCryptoAddresses,
+    paymentLinkData,
+  ])
+
+  const confirmLabel = t(
+    paymentMode
+      ? 'direct_payment.confirm_sent'
+      : 'components.customer_flow.steps.WalletDetails.yesISentTheTip',
+  )
+  const paySubtitleKey = paymentMode
+    ? 'components.customer_flow.steps.WalletDetails.vlinkpayPaySubtitlePayment'
+    : 'components.customer_flow.steps.WalletDetails.vlinkpayPaySubtitle'
+
+  if (isVlinkpay && vlinkpayAddresses) {
+    return (
+      <VlinkpayTipPaymentPanel
+        t={t}
+        logo={selectedWalletObj.logo}
+        amount={activeTipAmount}
+        addresses={vlinkpayAddresses}
+        showToast={showToast}
+        confirmLabel={confirmLabel}
+        paySubtitleKey={paySubtitleKey}
+        tipReady={Boolean(currentTipId)}
+        isCreatingTip={Boolean(isApiMode && isProcessing)}
+        isConfirming={Boolean(isApiMode && isConfirming)}
+        onConfirmAsset={
+          isApiMode && typeof onCreateVlinkpayTip === 'function'
+            ? onCreateVlinkpayTip
+            : async () => true
+        }
+        onConfirmSent={() => {
+          if (!isApiMode) {
+            handlePay(selectedWalletObj.name)
+            return
+          }
+          handleConfirmTip()
+        }}
+        onChangeAsset={() => {
+          if (typeof onResetVlinkpayTip === 'function') onResetVlinkpayTip()
+        }}
+        onBack={() => setStep(backStep)}
+      />
+    )
+  }
 
   const accountFieldStyle = {
     backgroundColor: `${accentColor}0D`,

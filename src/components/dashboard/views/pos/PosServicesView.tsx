@@ -135,10 +135,10 @@ export default function PosServicesView() {
     <div className="space-y-6">
       <section className="flex items-start justify-between gap-3 px-0.5">
         <div className="space-y-1">
-          <h1 className="text-base font-semibold leading-tight text-nexoraText">
+          <h1 className="text-2xl font-bold leading-tight text-nexoraText">
             {t('dashboard.menu.pos_services')}
           </h1>
-          <p className="text-xs text-nexoraMuted">
+          <p className="text-sm font-medium text-nexoraMuted">
             {t('components.dashboard.views.pos.PosServicesView.description')}
           </p>
         </div>

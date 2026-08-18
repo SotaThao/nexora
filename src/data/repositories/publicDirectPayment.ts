@@ -1,5 +1,6 @@
 import httpClient from '../../lib/httpClient'
 import { payoutTypeToUiKey } from '../paymentMethodTypes'
+import { VLINKPAY_NETWORK, toVlinkpayCryptoSymbolWire } from '../../components/payout/vlinkpayWallet'
 import type {
   CreateDirectPaymentResult,
   DirectPaymentStatusSnapshot,
@@ -8,6 +9,7 @@ import type {
 } from '../../types/domain'
 import { PaymentType } from '../../types/domain'
 import { normalizePaymentStatusValue } from '../../utils/directPaymentStatus'
+import { normalizeCryptoAddresses } from './paymentMethodDto'
 
 type HttpClient = typeof httpClient
 
@@ -15,12 +17,38 @@ function readField<T>(raw: Record<string, unknown>, camel: string, pascal: strin
   return (raw[camel] ?? raw[pascal]) as T | undefined
 }
 
-function normalizePaymentMethod(raw: Record<string, unknown> | null | undefined): PublicDirectPaymentMethod | null {
+export function normalizePublicPaymentMethod(
+  raw: Record<string, unknown> | null | undefined,
+): PublicDirectPaymentMethod | null {
   if (!raw) return null
   const id = readField<string>(raw, 'id', 'Id') ?? ''
   const type = readField<string>(raw, 'type', 'Type') ?? ''
   const accountInfo = readField<string>(raw, 'accountInfo', 'AccountInfo') ?? ''
-  if (!id || !type || !accountInfo.trim()) return null
+  const listedAddresses = normalizeCryptoAddresses(
+    (raw.cryptoAddresses ?? raw.CryptoAddresses) as
+      | Array<{ network?: string; symbol?: string; address?: string }>
+      | null
+      | undefined,
+  )
+  const selectedAddress = String(
+    readField<string>(raw, 'cryptoAddress', 'CryptoAddress') || '',
+  ).trim()
+  const selectedSymbol = String(
+    readField<string>(raw, 'cryptoSymbol', 'CryptoSymbol') || '',
+  ).trim()
+  const selectedNetwork = String(
+    readField<string>(raw, 'cryptoNetwork', 'CryptoNetwork') || '',
+  ).trim() || VLINKPAY_NETWORK
+  const selectedRow = selectedAddress && selectedSymbol
+    ? normalizeCryptoAddresses([{
+        network: selectedNetwork,
+        symbol: selectedSymbol,
+        address: selectedAddress,
+      }])
+    : null
+  const cryptoAddresses = selectedRow?.length ? selectedRow : listedAddresses
+  const hasCrypto = Boolean(cryptoAddresses?.length)
+  if (!id || !type || (!accountInfo.trim() && !hasCrypto)) return null
 
   return {
     id,
@@ -29,6 +57,7 @@ function normalizePaymentMethod(raw: Record<string, unknown> | null | undefined)
     accountInfo,
     accountName: readField<string | null>(raw, 'accountName', 'AccountName') ?? null,
     imageUrl: readField<string | null>(raw, 'imageUrl', 'ImageUrl') ?? null,
+    cryptoAddresses,
   }
 }
 
@@ -36,7 +65,7 @@ function normalizePaymentPage(raw: Record<string, unknown> | null | undefined): 
   const source = raw ?? {}
   const methodsRaw = (source.paymentMethods ?? source.PaymentMethods ?? []) as Record<string, unknown>[]
   const paymentMethods = methodsRaw
-    .map((item) => normalizePaymentMethod(item))
+    .map((item) => normalizePublicPaymentMethod(item))
     .filter((item): item is PublicDirectPaymentMethod => Boolean(item))
 
   return {
@@ -51,7 +80,7 @@ function normalizePaymentPage(raw: Record<string, unknown> | null | undefined): 
 function normalizeCreatePaymentResult(raw: Record<string, unknown> | null | undefined): CreateDirectPaymentResult {
   const source = raw ?? {}
   const paymentMethodSource = (source.paymentMethod ?? source.PaymentMethod) as Record<string, unknown> | undefined
-  const paymentMethod = normalizePaymentMethod(paymentMethodSource)
+  const paymentMethod = normalizePublicPaymentMethod(paymentMethodSource)
 
   return {
     paymentId: readField<string>(source, 'paymentId', 'PaymentId')
@@ -65,9 +94,12 @@ function normalizeCreatePaymentResult(raw: Record<string, unknown> | null | unde
       accountInfo: '',
       accountName: null,
       imageUrl: null,
+      cryptoAddresses: null,
     },
   }
 }
+
+export { normalizeCreatePaymentResult }
 
 function normalizePaymentType(value: unknown): number {
   if (value === 'StaffDirectPayment' || value === 1 || value === '1') return PaymentType.StaffDirectPayment
@@ -107,14 +139,17 @@ export function createPublicDirectPaymentRepository(client: HttpClient = httpCli
 
     async createPayment(
       businessId: string,
-      payload: { businessPaymentMethodId: string; amount: number },
+      payload: { businessPaymentMethodId: string; amount: number; cryptoSymbol?: string },
     ): Promise<CreateDirectPaymentResult> {
+      const body: Record<string, unknown> = {
+        businessPaymentMethodId: payload.businessPaymentMethodId,
+        amount: payload.amount,
+      }
+      const cryptoSymbol = toVlinkpayCryptoSymbolWire(payload.cryptoSymbol)
+      if (cryptoSymbol) body.cryptoSymbol = cryptoSymbol
       const res = await client.post<Record<string, unknown>>(
         `/api/v1/public/merchant/${encodeURIComponent(businessId)}/payments`,
-        {
-          businessPaymentMethodId: payload.businessPaymentMethodId,
-          amount: payload.amount,
-        },
+        body,
         { anonymous: true },
       )
       return normalizeCreatePaymentResult(res)

@@ -1013,6 +1013,23 @@ body.booking-appointment-panel-modal-open {
   color: var(--nexora-warning);
 }
 
+.booking-hub-view .badge-danger {
+  background: rgba(239, 68, 68, 0.12);
+  color: var(--nexora-danger, #dc2626);
+}
+
+.booking-hub-view .settings-holiday-stack {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  min-width: 0;
+}
+
+.booking-hub-view .settings-holiday-stack [data-settings-card="holidays"],
+.booking-hub-view .settings-holiday-stack [data-settings-card="bookingSms"] {
+  height: fit-content;
+}
+
 .booking-hub-view .badge-soft {
   display: inline-flex;
   align-items: center;
@@ -3032,6 +3049,51 @@ body.booking-appointment-panel-modal-open {
   font-weight: 900;
 }
 
+.booking-hub-view .plans-billing-toggle {
+  display: flex;
+  align-items: center;
+  margin: 4px 0 2px;
+}
+
+.booking-hub-view .plans-billing-tablist {
+  display: inline-flex;
+  border-radius: 10px;
+  border: 1px solid var(--nexora-border);
+  background: var(--nexora-surface-muted, #f5f4fb);
+  padding: 4px;
+  gap: 2px;
+}
+
+.booking-hub-view .plans-billing-tab {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  border: none;
+  background: transparent;
+  border-radius: 8px;
+  padding: 6px 14px;
+  font-size: 12px;
+  font-weight: 800;
+  color: var(--nexora-muted);
+  cursor: pointer;
+  transition: color 0.15s ease, background 0.15s ease, box-shadow 0.15s ease;
+}
+
+.booking-hub-view .plans-billing-tab.is-active {
+  background: #fff;
+  color: var(--nexora-brand);
+  box-shadow: var(--nexora-soft-shadow);
+}
+
+.booking-hub-view .plans-billing-discount-badge {
+  border-radius: 999px;
+  background: rgba(244, 63, 94, 0.12);
+  color: #e11d48;
+  font-size: 10px;
+  font-weight: 900;
+  padding: 2px 6px;
+}
+
 .booking-hub-view .plans-grid {
   display: grid;
   grid-template-columns: 1fr;
@@ -4563,6 +4625,10 @@ body.booking-appointment-panel-modal-open {
   height: 17px;
 }
 
+.booking-hub-view [data-settings-card="holidays"] .settings-card-title-icon svg {
+  margin-top: -2px;
+}
+
 .booking-hub-view .settings-action-icon {
   width: 14px;
   height: 14px;
@@ -4732,6 +4798,14 @@ body.booking-appointment-panel-modal-open {
 .booking-hub-view .settings-select {
   min-height: 42px;
   padding: 0 12px;
+}
+
+.booking-hub-view .settings-input:disabled,
+.booking-hub-view .settings-select:disabled,
+.booking-hub-view .settings-textarea:disabled {
+  background: var(--nexora-canvas);
+  color: var(--nexora-muted);
+  cursor: not-allowed;
 }
 
 .booking-hub-view .settings-input-ai {
@@ -6737,6 +6811,30 @@ body.booking-appointment-panel-modal-open {
   .booking-hub-view .settings-grid,
   .booking-hub-view .settings-two-grid {
     grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  /* Holiday & Closures and Booking SMS Notifications are grouped into one flex
+     stack (.settings-holiday-stack) so they sit flush against each other in the
+     left column, regardless of how tall AI Voice is in the right column. */
+  .booking-hub-view .settings-grid > [data-settings-card="salon"] {
+    grid-column: 1;
+    grid-row: 1;
+  }
+
+  .booking-hub-view .settings-grid > [data-settings-card="hours"] {
+    grid-column: 2;
+    grid-row: 1;
+  }
+
+  .booking-hub-view .settings-grid > .settings-holiday-stack {
+    grid-column: 1;
+    grid-row: 2;
+    align-self: start;
+  }
+
+  .booking-hub-view .settings-grid > [data-settings-card="voice"] {
+    grid-column: 2;
+    grid-row: 2;
   }
 
   .booking-hub-view .settings-save-bar {
@@ -10695,6 +10793,28 @@ body.booking-appointment-panel-modal-open {
   display: inline-flex;
   align-items: center;
   gap: 8px;
+}
+
+/* Package Management / TipPlatform checkout — same icon sizing outside Booking Hub. */
+:is(#nx-campaign-root, .nx-campaign-root) .marketing-icon {
+  width: 18px;
+  height: 18px;
+  flex: 0 0 18px;
+  display: block;
+  stroke-width: 2;
+}
+
+:is(#nx-campaign-root, .nx-campaign-root) .marketing-icon.is-compact {
+  width: 16px;
+  height: 16px;
+  flex-basis: 16px;
+}
+
+:is(#nx-campaign-root, .nx-campaign-root) .sms-credit-card-method-icon.marketing-icon {
+  width: 28px;
+  height: 28px;
+  flex-basis: 28px;
+  box-sizing: border-box;
 }
 
 .booking-hub-view .panel-sms-campaigns {

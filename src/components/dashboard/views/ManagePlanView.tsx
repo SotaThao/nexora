@@ -5,9 +5,12 @@
 // CTAs delegate to the optional onSelectPlan callback. Highlights the merchant's
 // current TipPlatform plan from GET /userprofile/me → business.subscriptions.
 import { Check, Lock } from 'lucide-react'
-import { useMemo } from 'react'
+import { useMemo, useState } from 'react'
 import { useTranslation } from '../../../contexts/LanguageContext'
-import type { SubscriptionPackage } from '../../../data/repositories/subscriptionPayments'
+import {
+  SubscriptionBillingCycle,
+  type SubscriptionPackage,
+} from '../../../data/repositories/subscriptionPayments'
 import type { UserSubscription } from '../../../types/domain'
 import {
   getSubscriptionPlanRenewLabel,
@@ -19,16 +22,21 @@ import { PACKAGE_MANAGEMENT_TK as PACKAGE_MGMT_TK, TipPlatformUiPlanId } from '.
 import type { TipPlatformUiPlanIdValue } from './packageManagement/constants'
 
 type PlanId = TipPlatformUiPlanIdValue
+export type ManagePlanBillingCycle = 'monthly' | 'yearly'
 
 interface ManagePlanViewProps {
   /** Active TipPlatform subscription from /userprofile/me. */
   currentSubscription?: UserSubscription | null
-  /** Invoked with the chosen plan id when a CTA is pressed. */
-  onSelectPlan?: (planId: PlanId) => void
+  /** Invoked with the chosen plan id + billing cycle when a CTA is pressed. */
+  onSelectPlan?: (planId: PlanId, billingCycle: SubscriptionBillingCycle) => void
   /** Packages from the API — undefined while loading. */
   packages?: SubscriptionPackage[]
   /** Stretch plan cards to the content column (Package Management). */
   wide?: boolean
+  /** Controlled toggle state — pass with `onBillingCycleChange` to share it with a sibling
+   * (e.g. the Compare Plans table). Uncontrolled (own state, defaults to monthly) when omitted. */
+  billingCycle?: ManagePlanBillingCycle
+  onBillingCycleChange?: (cycle: ManagePlanBillingCycle) => void
 }
 
 interface PlanConfig {
@@ -54,6 +62,8 @@ function ManagePlanView({
   onSelectPlan,
   packages,
   wide = false,
+  billingCycle: billingCycleProp,
+  onBillingCycleChange,
 }: ManagePlanViewProps) {
   const { t, currentLanguage } = useTranslation()
   const isVietnamese = currentLanguage === 'vi'
@@ -66,6 +76,21 @@ function ManagePlanView({
     () => resolveTipPlatformPlanId(currentSubscription),
     [currentSubscription],
   )
+
+  const [localBillingCycle, setLocalBillingCycle] = useState<ManagePlanBillingCycle>('monthly')
+  const billingCycle = billingCycleProp ?? localBillingCycle
+  const setBillingCycle = onBillingCycleChange ?? setLocalBillingCycle
+  const isYearly = billingCycle === 'yearly'
+  const yearlyDiscountBadge = useMemo(() => {
+    const percents = (packages ?? [])
+      .filter((p) => p.yearlyPrice != null)
+      .map((p) => Math.round(p.yearlyDiscountPercent ?? 0))
+    if (percents.length === 0) return null
+    const max = Math.max(...percents)
+    if (max <= 0) return null
+    const allEqual = percents.every((pct) => pct === percents[0])
+    return { percent: max, isUpTo: !allEqual }
+  }, [packages])
 
   return (
     <div className="relative w-full min-w-0">
@@ -81,6 +106,50 @@ function ManagePlanView({
           <span className="nexora-package-note">
             {t(`${PACKAGE_MGMT_TK}.subscriptions.note`)}
           </span>
+        </div>
+      ) : null}
+
+      {wide ? (
+        <div className="mb-5 mt-1 flex items-center">
+          <div
+            role="tablist"
+            aria-label={t('manage_plan.billing_cycle_label')}
+            className="inline-flex rounded-lg border border-nexoraBorder bg-nexoraSurfaceMuted p-1"
+          >
+            <button
+              type="button"
+              role="tab"
+              aria-selected={!isYearly}
+              tabIndex={!isYearly ? 0 : -1}
+              onClick={() => setBillingCycle('monthly')}
+              className={[
+                'rounded-md px-4 py-1.5 text-xs font-bold transition-colors',
+                !isYearly ? 'bg-nexoraSurface text-nexoraBrand shadow-sm' : 'text-nexoraMuted',
+              ].join(' ')}
+            >
+              {t('manage_plan.billing_monthly')}
+            </button>
+            <button
+              type="button"
+              role="tab"
+              aria-selected={isYearly}
+              tabIndex={isYearly ? 0 : -1}
+              onClick={() => setBillingCycle('yearly')}
+              className={[
+                'flex items-center gap-1.5 rounded-md px-4 py-1.5 text-xs font-bold transition-colors',
+                isYearly ? 'bg-nexoraSurface text-nexoraBrand shadow-sm' : 'text-nexoraMuted',
+              ].join(' ')}
+            >
+              {t('manage_plan.billing_yearly')}
+              {yearlyDiscountBadge ? (
+                <span className="rounded-full bg-rose-100 px-1.5 py-0.5 text-[10px] font-extrabold text-rose-600">
+                  {yearlyDiscountBadge.isUpTo
+                    ? t('manage_plan.yearly_discount_upto', { percent: yearlyDiscountBadge.percent })
+                    : `-${yearlyDiscountBadge.percent}%`}
+                </span>
+              ) : null}
+            </button>
+          </div>
         </div>
       ) : (
         <>
@@ -111,20 +180,29 @@ function ManagePlanView({
       >
         {PLAN_CONFIG.map((plan) => {
           const base = `manage_plan.plans.${plan.id}`
+          // `plan` isn't a real BE field — packageCode is the only reliable catalog match.
           const pkg = packages?.find(
-            (p) => (p.plan ?? '').toLowerCase() === plan.id,
+            (p) => (p.packageCode ?? '').toLowerCase() === plan.id,
           )
           const pkgFeatures = isVietnamese ? pkg?.featuresVi : pkg?.featuresEn
           const features = pkgFeatures?.length
             ? pkgFeatures
             : Array.from({ length: plan.featureCount }, (_, i) => t(`${base}.f${i + 1}`))
-          const priceLabel = pkg?.price != null ? `$${pkg.price}` : t(`${base}.price`)
-          const priceNote =
-            pkg && pkg.periodInMonths !== 1
+          const yearlyAvailable = isYearly && pkg?.yearlyPrice != null
+          const effectivePrice = yearlyAvailable ? pkg?.yearlyPrice : pkg?.price
+          const priceLabel = effectivePrice != null ? `$${effectivePrice}` : t(`${base}.price`)
+          const originalPrice = yearlyAvailable ? pkg?.yearlyOriginalPrice : undefined
+          const showOriginalPrice =
+            originalPrice != null && effectivePrice != null && originalPrice > effectivePrice
+          const priceNote = yearlyAvailable
+            ? t('manage_plan.price_note_year')
+            : pkg && pkg.periodInMonths !== 1
               ? t('manage_plan.price_note_months', { count: pkg.periodInMonths })
               : t(`${base}.price_note`)
           const isCurrent = isTipPlatformPlanCurrent(currentSubscription, plan.id)
           const isLocked = isTipPlatformPlanBelowCurrent(plan.id, currentPlanId)
+          const yearlyCheckoutDisabled =
+            isYearly && !!pkg && pkg.yearlyPrice == null && plan.id !== TipPlatformUiPlanId.Enterprise
 
           return (
             <article
@@ -166,6 +244,11 @@ function ManagePlanView({
                   {priceNote}
                 </span>
               </div>
+              {showOriginalPrice ? (
+                <div className="mt-0.5 text-xs font-extrabold text-nexoraSubtle line-through">
+                  ${originalPrice}
+                </div>
+              ) : null}
 
               <div className="my-3.5 h-px w-full bg-nexoraRule sm:my-5" />
 
@@ -214,10 +297,24 @@ function ManagePlanView({
                     <Lock className="h-4 w-4 shrink-0" strokeWidth={2.5} />
                     {t('manage_plan.plan_locked')}
                   </button>
+                ) : yearlyCheckoutDisabled ? (
+                  <button
+                    type="button"
+                    disabled
+                    aria-label={t('manage_plan.yearly_coming_soon')}
+                    className="flex h-10 w-full cursor-not-allowed items-center justify-center rounded-xl border border-nexoraBorder bg-nexoraSurfaceMuted text-xs font-extrabold text-nexoraMuted opacity-100 shadow-none sm:h-11 sm:text-[13px]"
+                  >
+                    {t('manage_plan.yearly_coming_soon')}
+                  </button>
                 ) : (
                   <button
                     type="button"
-                    onClick={() => onSelectPlan?.(plan.id)}
+                    onClick={() =>
+                      onSelectPlan?.(
+                        plan.id,
+                        isYearly ? SubscriptionBillingCycle.Yearly : SubscriptionBillingCycle.Monthly,
+                      )
+                    }
                     className={[
                       'h-10 w-full rounded-xl text-[13px] font-bold transition-all active:scale-[0.98] sm:h-11 sm:text-sm',
                       plan.featured

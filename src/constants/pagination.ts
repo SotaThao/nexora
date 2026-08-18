@@ -1,5 +1,6 @@
 export const DEFAULT_PAGE_NUMBER = 1
 export const DEFAULT_PAGE_SIZE = 10
+export const PAGINATION_ELLIPSIS = '…'
 export const BOOKING_HUB_PAGE_SIZE = 20
 /** Page size when collecting bookings for client-side status-filter paging (BE has no Status query). */
 export const BOOKING_HUB_STATUS_COLLECT_PAGE_SIZE = 100

@@ -50,9 +50,31 @@
   -webkit-overflow-scrolling: touch;
 }
 
+.nx-pricing-compare table {
+  table-layout: fixed;
+  width: 100%;
+}
+
+.nx-pricing-compare col.feature-col {
+  width: 34%;
+}
+
+.nx-pricing-compare col.plan-col {
+  width: 22%;
+}
+
 .nx-pricing-compare table th,
 .nx-pricing-compare table td {
   vertical-align: middle;
+}
+
+.nx-pricing-compare thead th:not(:first-child),
+.nx-pricing-compare tbody td:not(:first-child) {
+  text-align: center;
+}
+
+.nx-pricing-compare tbody td:first-child {
+  text-align: left;
 }
 
 .nx-pricing-compare tbody tr:hover {
@@ -406,7 +428,7 @@ html.homepage-active {
 }
 
 /* Simulator tabs and choice chips */
-.nx-homepage [id^="tab-"]:hover:not(.bg-purple) {
+.nx-homepage #simulator [id^="tab-"]:hover:not(.bg-purple) {
   background: rgba(255, 255, 255, 0.06);
   color: #fff !important;
 }
@@ -671,12 +693,12 @@ html.homepage-active {
 }
 
 /* Simulator tabs: make inactive hover obvious */
-.nx-homepage [id^="tab-"] {
+.nx-homepage #simulator [id^="tab-"] {
   min-height: 40px;
 }
 
-.nx-homepage [id^="tab-"]:hover:not(.bg-purple),
-.nx-homepage [id^="tab-"]:focus-visible:not(.bg-purple) {
+.nx-homepage #simulator [id^="tab-"]:hover:not(.bg-purple),
+.nx-homepage #simulator [id^="tab-"]:focus-visible:not(.bg-purple) {
   background: rgba(255, 255, 255, 0.10) !important;
   color: #ffffff !important;
   box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.08);
@@ -820,7 +842,7 @@ html.homepage-active {
     padding-right: 0.7rem !important;
   }
 
-  .nx-homepage section {
+  .nx-homepage .ds-section {
     padding-top: 3rem !important;
     padding-bottom: 3rem !important;
   }
@@ -915,7 +937,7 @@ html.homepage-active {
     padding: 0.875rem !important;
   }
 
-  [id^="tab-"] {
+  .nx-homepage #simulator [id^="tab-"] {
     min-height: 38px;
     padding-left: 0.25rem;
     padding-right: 0.25rem;

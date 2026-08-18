@@ -30,6 +30,7 @@ import {
   type VoiceUsageActivityDto,
 } from '../../../data/repositories/merchantVoice'
 import {
+  SubscriptionBillingCycle,
   SubscriptionPackageType,
   type SubscriptionPackage,
   type SubscriptionPaymentMethod,
@@ -61,6 +62,8 @@ import SmsBuyCreditsModal from './smsCampaigns/SmsBuyCreditsModal'
 import VoiceBuyCreditsModal from './voiceCredits/VoiceBuyCreditsModal'
 import PlanPaymentModal from './plans/PlanPaymentModal'
 import PackageHistoryPanel from './plans/PackageHistoryPanel'
+import CompleteStoreSetupGateModal from '../modals/CompleteStoreSetupGateModal'
+import { useStoreSetupPurchaseGate } from '../../../data/hooks/useStoreSetupPurchaseGate'
 import {
   PAID_SERVICE_PLAN_ORDER,
   PAID_SERVICE_PLAN_TITLE_KEY,
@@ -76,8 +79,12 @@ import {
   indexVoiceAiPackagesByPlan,
   isPaidServicePlanId,
   isVoiceAiPlanBelowCurrent,
+  isVoiceAiYearlyUnavailable,
   resolveCreditsLowBannerKind,
+  resolvePlanBillingPeriodSuffix,
+  resolveVoiceAiPeriodInMonths,
   resolveVoiceAiPlanId,
+  resolveVoiceAiPlanPrice,
   type PaidServicePlanId,
   type VoiceAiCheckoutSelection,
 } from './plans/constants'
@@ -519,12 +526,24 @@ function CreditsUsagePanel() {
   )
 }
 
+/**
+ * Feature bullets for the plan card. On Yearly, prefers the package's dedicated yearly copy
+ * (usage numbers already multiplied by 12 server-side) and falls back to the monthly bullets
+ * when the package has none yet (e.g. TipPlatform, whose bullets don't change with billing cycle).
+ */
 function resolvePackageFeatures(
   pkg: SubscriptionPackage | undefined,
   language: string,
+  billingCycle: SubscriptionBillingCycle,
 ): string[] {
   if (!pkg) return []
   const isVi = language.toLowerCase().startsWith('vi')
+  if (billingCycle === SubscriptionBillingCycle.Yearly) {
+    const yearlyPrimary = isVi ? pkg.yearlyFeaturesVi : pkg.yearlyFeaturesEn
+    const yearlyFallback = isVi ? pkg.yearlyFeaturesEn : pkg.yearlyFeaturesVi
+    if (yearlyPrimary.length > 0) return yearlyPrimary
+    if (yearlyFallback.length > 0) return yearlyFallback
+  }
   const primary = isVi ? pkg.featuresVi : pkg.featuresEn
   const fallback = isVi ? pkg.featuresEn : pkg.featuresVi
   if (primary.length > 0) return primary
@@ -565,7 +584,16 @@ export default function BookingPlansPanel({ buyOnlyMode = false }: { buyOnlyMode
   const [trialOpen, setTrialOpen] = useState(false)
   const [checkoutSelection, setCheckoutSelection] = useState<VoiceAiCheckoutSelection | null>(null)
   const [plansView, setPlansView] = useState<PlansView>(PlansView.Package)
+  const [billingCycle, setBillingCycle] = useState<SubscriptionBillingCycle>(
+    SubscriptionBillingCycle.Monthly,
+  )
+  const isYearlyBilling = billingCycle === SubscriptionBillingCycle.Yearly
   const effectivePlansView = buyOnlyMode ? PlansView.Package : plansView
+  const {
+    requireSetup,
+    gateOpen: storeSetupGateOpen,
+    closeGate: closeStoreSetupGate,
+  } = useStoreSetupPurchaseGate()
 
   const {
     data: voicePackages = [],
@@ -589,6 +617,17 @@ export default function BookingPlansPanel({ buyOnlyMode = false }: { buyOnlyMode
     () => indexVoiceAiPackagesByPlan(voicePackages),
     [voicePackages],
   )
+
+  const yearlyDiscountBadge = useMemo(() => {
+    const percents = voicePackages
+      .filter((p) => p.yearlyPrice != null)
+      .map((p) => Math.round(p.yearlyDiscountPercent ?? 0))
+    if (percents.length === 0) return null
+    const max = Math.max(...percents)
+    if (max <= 0) return null
+    const allEqual = percents.every((pct) => pct === percents[0])
+    return { percent: max, isUpTo: !allEqual }
+  }, [voicePackages])
 
   const voiceAiSubscription = useMemo(() => getVoiceAiSubscription(profile), [profile])
   const currentVoicePlanId = useMemo(() => {
@@ -653,12 +692,18 @@ export default function BookingPlansPanel({ buyOnlyMode = false }: { buyOnlyMode
       showToast(t(`${TK}.planPackageUnavailable`), 'error')
       return
     }
-    setCheckoutSelection({
-      planId: plan,
-      packageId: pkg.id,
-      packageCode: pkg.packageCode,
-      name: pkg.name || plan,
-      price: pkg.price ?? SERVICE_PLAN_MONTHLY_PRICE[plan],
+    if (isVoiceAiYearlyUnavailable(pkg, billingCycle)) return
+    const { price } = resolveVoiceAiPlanPrice(pkg, billingCycle, SERVICE_PLAN_MONTHLY_PRICE[plan])
+    requireSetup(() => {
+      setCheckoutSelection({
+        planId: plan,
+        packageId: pkg.id,
+        packageCode: pkg.packageCode,
+        name: pkg.name || plan,
+        price,
+        billingCycle,
+        periodInMonths: resolveVoiceAiPeriodInMonths(billingCycle),
+      })
     })
   }
 
@@ -682,6 +727,7 @@ export default function BookingPlansPanel({ buyOnlyMode = false }: { buyOnlyMode
     payment: SubscriptionPaymentMethod,
   ) => {
     const paymentLabel = payment.name || payment.symbol
+    const periodSuffix = resolvePlanBillingPeriodSuffix(selection.billingCycle, t, TK)
     setCheckoutSelection(null)
     // Unlock AI Hub tabs (Booking, Customers, …) gated on hasVoiceTenant — no full reload.
     // Panels mount + fetch only when the user opens each tab.
@@ -690,6 +736,7 @@ export default function BookingPlansPanel({ buyOnlyMode = false }: { buyOnlyMode
       t(`${TK}.planPaymentSuccess`, {
         plan: selection.planId,
         price: selection.price,
+        period: periodSuffix,
         payment: paymentLabel,
       }),
       'success',
@@ -701,7 +748,7 @@ export default function BookingPlansPanel({ buyOnlyMode = false }: { buyOnlyMode
   }
 
   const renderPlanFeatures = (planId: PaidServicePlanId, pkg?: SubscriptionPackage) => {
-    const features = resolvePackageFeatures(pkg, currentLanguage)
+    const features = resolvePackageFeatures(pkg, currentLanguage, billingCycle)
     if (features.length === 0) {
       return <FallbackPlanFeatures planId={planId} t={t} />
     }
@@ -713,16 +760,19 @@ export default function BookingPlansPanel({ buyOnlyMode = false }: { buyOnlyMode
   }
 
   const renderPlanPrice = (planId: PaidServicePlanId, pkg?: SubscriptionPackage) => {
-    const price = pkg?.price ?? SERVICE_PLAN_MONTHLY_PRICE[planId]
-    const original = pkg?.originalPrice
+    const { price, originalPrice } = resolveVoiceAiPlanPrice(
+      pkg,
+      billingCycle,
+      SERVICE_PLAN_MONTHLY_PRICE[planId],
+    )
     return (
       <>
         <div className="service-plan-price">
           {formatPlanPrice(price)}
-          <span>{t(`${TK}.perMonth`)}</span>
+          <span>{resolvePlanBillingPeriodSuffix(billingCycle, t, TK)}</span>
         </div>
-        {original != null && original > price ? (
-          <div className="service-plan-cross">{formatPlanPrice(original)}</div>
+        {originalPrice != null && originalPrice > price ? (
+          <div className="service-plan-cross">{formatPlanPrice(originalPrice)}</div>
         ) : null}
       </>
     )
@@ -741,6 +791,20 @@ export default function BookingPlansPanel({ buyOnlyMode = false }: { buyOnlyMode
         disabled
       >
         {t(`${TK}.currentActivePlan`)}
+      </button>
+    </div>
+  )
+
+  const renderYearlyUnavailableCta = () => (
+    <div className="plan-action-stack">
+      <span className="plan-renew-label is-spacer" aria-hidden="true" />
+      <button
+        className="plan-select-button is-locked"
+        type="button"
+        disabled
+        aria-label={t('manage_plan.yearly_coming_soon')}
+      >
+        {t('manage_plan.yearly_coming_soon')}
       </button>
     </div>
   )
@@ -826,6 +890,42 @@ export default function BookingPlansPanel({ buyOnlyMode = false }: { buyOnlyMode
           <div className="plans-stack">
             <div className="plans-hero">{t(`${TK}.hero`)}</div>
 
+            <div className="plans-billing-toggle">
+              <div
+                role="tablist"
+                aria-label={t('manage_plan.billing_cycle_label')}
+                className="plans-billing-tablist"
+              >
+                <button
+                  type="button"
+                  role="tab"
+                  aria-selected={!isYearlyBilling}
+                  tabIndex={!isYearlyBilling ? 0 : -1}
+                  className={`plans-billing-tab${!isYearlyBilling ? ' is-active' : ''}`}
+                  onClick={() => setBillingCycle(SubscriptionBillingCycle.Monthly)}
+                >
+                  {t('manage_plan.billing_monthly')}
+                </button>
+                <button
+                  type="button"
+                  role="tab"
+                  aria-selected={isYearlyBilling}
+                  tabIndex={isYearlyBilling ? 0 : -1}
+                  className={`plans-billing-tab${isYearlyBilling ? ' is-active' : ''}`}
+                  onClick={() => setBillingCycle(SubscriptionBillingCycle.Yearly)}
+                >
+                  {t('manage_plan.billing_yearly')}
+                  {yearlyDiscountBadge ? (
+                    <span className="plans-billing-discount-badge">
+                      {yearlyDiscountBadge.isUpTo
+                        ? t('manage_plan.yearly_discount_upto', { percent: yearlyDiscountBadge.percent })
+                        : `-${yearlyDiscountBadge.percent}%`}
+                    </span>
+                  ) : null}
+                </button>
+              </div>
+            </div>
+
             <div className="plans-grid">
               {PAID_SERVICE_PLAN_ORDER.map((planId) => {
                 const pkg = packagesByPlan[planId]
@@ -833,6 +933,7 @@ export default function BookingPlansPanel({ buyOnlyMode = false }: { buyOnlyMode
                 const isPro = planId === VoicePlanTier.Pro
                 const isCurrent = currentVoicePlanId === planId
                 const isLocked = isVoiceAiPlanBelowCurrent(planId, currentVoicePlanId)
+                const isYearlyUnavailable = isVoiceAiYearlyUnavailable(pkg, billingCycle)
                 return (
                   <article
                     key={pkg.id || planId}
@@ -860,6 +961,8 @@ export default function BookingPlansPanel({ buyOnlyMode = false }: { buyOnlyMode
                       renderCurrentActivePlanCta()
                     ) : isLocked ? (
                       renderLockedPlanCta()
+                    ) : isYearlyUnavailable ? (
+                      renderYearlyUnavailableCta()
                     ) : isPro ? (
                       <div className="plan-action-stack">
                         <span className="plan-renew-label is-spacer" aria-hidden="true" />
@@ -951,6 +1054,10 @@ export default function BookingPlansPanel({ buyOnlyMode = false }: { buyOnlyMode
           onSuccess={handlePlanPaymentSuccess}
         />
       </div>
+      <CompleteStoreSetupGateModal
+        open={storeSetupGateOpen}
+        onClose={closeStoreSetupGate}
+      />
     </>
   )
 }

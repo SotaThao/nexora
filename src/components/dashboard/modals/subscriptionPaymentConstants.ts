@@ -5,6 +5,12 @@ import { TipPlatformUiPlanId } from '../views/packageManagement/constants'
 /** Shared i18n namespace for subscription checkout modals (`dashboard.modals.*`). */
 export const SUBSCRIPTION_PAYMENT_MODAL_TK = 'dashboard.modals' as const
 
+/** TipPlatform plan name copy lives under `manage_plan.plans.<id>.name`. */
+export const TIP_PLATFORM_PLAN_I18N_TK = 'manage_plan.plans' as const
+
+/** Merchant store-setup wizard route (dashboard SetupGuideBanner destination). */
+export const STORE_SETUP_ONBOARDING_PATH = '/onboarding' as const
+
 export const ORDER_STATUS_POLL_TIMEOUT_MS = 30_000
 
 /** CSS hooks for card form layout (see booking-hub.css). */
@@ -16,16 +22,19 @@ export const SUBSCRIPTION_CARD_FORM_CLASS = {
   checkoutVariant: 'is-subscription-checkout',
 } as const
 
-export const SubscriptionPaymentTab = {
-  Wallet: 'wallet',
-  Card: 'card',
+/** Stable DOM ids for Package Payment dialog a11y hooks. */
+export const SUBSCRIPTION_PAYMENT_DOM_ID = {
+  title: 'subscription-payment-title',
+  description: 'subscription-payment-description',
+  methodTitle: 'subscription-payment-method-title',
+  invoiceTitle: 'subscription-payment-invoice-title',
 } as const
 
-export type SubscriptionPaymentTabValue =
-  (typeof SubscriptionPaymentTab)[keyof typeof SubscriptionPaymentTab]
-
-/** Same dialog width for Wallet + Card tabs so switching tabs does not resize. */
-export const SUBSCRIPTION_PAYMENT_DIALOG_MAX_WIDTH_CLASS = 'max-w-lg' as const
+/** Stable DOM ids for the pre-checkout store-setup gate dialog. */
+export const STORE_SETUP_GATE_DOM_ID = {
+  title: 'store-setup-gate-title',
+  description: 'store-setup-gate-desc',
+} as const
 
 /** Purchasable TipPlatform plan → `manage_plan.plans.*` i18n segment. */
 export const PURCHASABLE_PLAN_I18N_ID: Record<
@@ -34,6 +43,12 @@ export const PURCHASABLE_PLAN_I18N_ID: Record<
 > = {
   Starter: TipPlatformUiPlanId.Starter,
   Pro: TipPlatformUiPlanId.Pro,
+}
+
+export function tipPlatformPlanNameI18nKey(
+  plan: keyof typeof PURCHASABLE_PLAN_I18N_ID,
+): string {
+  return `${TIP_PLATFORM_PLAN_I18N_TK}.${PURCHASABLE_PLAN_I18N_ID[plan]}.name`
 }
 
 /** Stripe Elements style — matches `.sms-credit-card-input` in booking-hub.css. */
@@ -70,18 +85,45 @@ export function readStripeConfirmPaymentIntentStatus(
   return result.paymentIntent?.status ?? result.error?.payment_intent?.status
 }
 
-export const SUBSCRIPTION_CARD_FIELD_I18N = {
+/** All `dashboard.modals.subscription_*` keys used by checkout / gate UI. */
+export const SUBSCRIPTION_MODAL_I18N = {
+  paymentTitle: 'subscription_payment_title',
+  paymentSubtitle: 'subscription_payment_subtitle',
+  paymentMethodLabel: 'subscription_payment_method_label',
+  paymentMethodsLoading: 'subscription_payment_methods_loading',
+  paymentMethodsError: 'subscription_payment_methods_error',
+  paymentMethodsRetry: 'subscription_payment_methods_retry',
+  paymentMethodsEmpty: 'subscription_payment_methods_empty',
+  invoiceSummary: 'subscription_invoice_summary',
+  servicePlan: 'subscription_service_plan',
+  invoicePayment: 'subscription_invoice_payment',
+  totalDue: 'subscription_total_due',
+  priceNoteMonth: 'subscription_price_note_month',
+  priceNoteYear: 'subscription_price_note_year',
+  forfeitWarning: 'subscription_forfeit_warning',
+  cardMethodLabel: 'subscription_card_method_label',
   cardFormTitle: 'subscription_card_form_title',
   cardRequiredNote: 'subscription_card_required_note',
   cardFieldRequired: 'subscription_card_field_required',
+  purchaseNeedsStoreSetupTitle: 'subscription_purchase_needs_store_setup_title',
+  purchaseNeedsStoreSetupBody: 'subscription_purchase_needs_store_setup_body',
+  purchaseNeedsStoreSetupCta: 'subscription_purchase_needs_store_setup_cta',
   cardholderName: 'subscription_cardholder_name_label',
+  cardNamePlaceholder: 'subscription_card_name_placeholder',
   cardNumber: 'subscription_card_number_label',
+  cardNumberPlaceholder: 'subscription_card_number_placeholder',
   cardExpiry: 'subscription_card_expiry_label',
+  cardExpiryPlaceholder: 'subscription_card_expiry_placeholder',
   cardCvc: 'subscription_card_cvc_label',
+  cardCvcPlaceholder: 'subscription_card_cvc_placeholder',
   billingAddress: 'subscription_billing_address_label',
+  cardAddressPlaceholder: 'subscription_card_address_placeholder',
   billingCity: 'subscription_billing_city_label',
+  cardCityPlaceholder: 'subscription_card_city_placeholder',
   billingState: 'subscription_billing_state_label',
+  cardStatePlaceholder: 'subscription_card_state_placeholder',
   billingZipCode: 'subscription_billing_zip_code_label',
+  cardZipPlaceholder: 'subscription_card_zip_placeholder',
   cardPaymentError: 'subscription_card_payment_error',
   paymentFailed: 'subscription_payment_failed',
   confirmPayment: 'subscription_confirm_payment',
@@ -122,9 +164,28 @@ export const SUBSCRIPTION_CARD_STRIPE_REQUIRED_FIELDS = [
 ] as const
 
 export function subscriptionModalKey(
-  field: keyof typeof SUBSCRIPTION_CARD_FIELD_I18N,
+  field: keyof typeof SUBSCRIPTION_MODAL_I18N,
 ): string {
-  return `${SUBSCRIPTION_PAYMENT_MODAL_TK}.${SUBSCRIPTION_CARD_FIELD_I18N[field]}`
+  return `${SUBSCRIPTION_PAYMENT_MODAL_TK}.${SUBSCRIPTION_MODAL_I18N[field]}`
+}
+
+type CheckoutPaymentMethodLike = {
+  name?: string
+  symbol: string
+}
+
+/** Invoice / status label for the selected wallet row or card method. */
+export function resolveCheckoutPaymentLabel(args: {
+  isCardPayment: boolean
+  cardPaymentLabel: string
+  selectedPayment: CheckoutPaymentMethodLike | null
+  emptyLabel: string
+}): string {
+  if (args.isCardPayment) return args.cardPaymentLabel
+  if (args.selectedPayment) {
+    return args.selectedPayment.name || args.selectedPayment.symbol
+  }
+  return args.emptyLabel
 }
 
 /** Next UI step after a wallet/crypto purchase response settles. */

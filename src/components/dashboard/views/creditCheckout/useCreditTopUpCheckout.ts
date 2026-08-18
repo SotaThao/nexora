@@ -199,7 +199,7 @@ export function useCreditTopUpCheckout({
   useEffect(() => {
     if (!open || !isCardPayment || !selectedPackage?.id) return
     if (initializeCardMutation.data || initializeCardMutation.isPending) return
-    initializeCardMutation.mutate(selectedPackage.id)
+    initializeCardMutation.mutate({ packageId: selectedPackage.id })
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [
     open,
@@ -315,7 +315,7 @@ export function useCreditTopUpCheckout({
 
   const retryCardInit = useCallback(() => {
     if (!selectedPackage?.id) return
-    initializeCardMutation.mutate(selectedPackage.id)
+    initializeCardMutation.mutate({ packageId: selectedPackage.id })
   }, [initializeCardMutation, selectedPackage?.id])
 
   return {

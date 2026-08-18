@@ -1,14 +1,8 @@
 import httpClient from '../../lib/httpClient'
-import type { PaymentMethodDto } from '../../types/domain'
-import { PAYOUT_UI_LABELS, payoutTypeToUiKey } from '../paymentMethodTypes'
+import type { PaymentMethodCryptoAddressDto, PaymentMethodDto } from '../../types/domain'
+import { normalizePaymentMethodDto, type UpdatePaymentMethodDto } from './paymentMethodDto'
 
 type HttpClient = typeof httpClient
-
-interface UpdatePaymentMethodDto {
-  accountInfo?: string | null
-  accountName?: string | null
-  imageUrl?: string | null
-}
 
 interface MerchantPaymentMethodApiDto {
   id?: string
@@ -20,21 +14,13 @@ interface MerchantPaymentMethodApiDto {
   isConfigured?: boolean
   businessKybStatus?: string | null
   name?: string
+  cryptoAddresses?: PaymentMethodCryptoAddressDto[] | null
 }
 
 function normalizeMerchantPaymentMethod(dto: MerchantPaymentMethodApiDto): PaymentMethodDto {
-  const type = dto.type || ''
-  const uiKey = payoutTypeToUiKey(type)
   return {
-    id: dto.id,
-    type,
-    uiKey,
-    name: PAYOUT_UI_LABELS[uiKey] || dto.name || type,
-    accountInfo: dto.accountInfo ?? null,
-    accountName: dto.accountName ?? null,
-    imageUrl: dto.imageUrl ?? null,
+    ...normalizePaymentMethodDto(dto),
     isActive: Boolean(dto.isActive),
-    isConfigured: Boolean(dto.isConfigured),
     businessKybStatus: dto.businessKybStatus ?? null,
   }
 }

@@ -21,6 +21,7 @@ const DEFAULT_SETTINGS: PosBookingSettingsApiDto = {
   notifyCustomerSmsEnabled: true,
   notifyBusinessSmsEnabled: true,
   notifyAssignedStaffSmsEnabled: true,
+  holidayAutoNotifyEnabled: true,
 }
 
 export default function PosBookingSettingsPanel({
@@ -60,7 +61,7 @@ export default function PosBookingSettingsPanel({
 
   return (
     <div className="rounded-xl border border-nexoraBorder bg-white shadow-sm p-6 relative">
-      <div className="flex justify-between items-center border-b border-nexoraRule pb-3 mb-4">
+      <div className="flex justify-between items-center border-b border-nexoraBorder pb-3 mb-4">
         <h4 className="text-xs font-black uppercase text-nexoraText tracking-wider flex items-center gap-2">
           <CalendarClock className="h-4 w-4 text-amber-500" />
           {t('components.dashboard.views.pos.PosBookingSettingsPanel.title')}

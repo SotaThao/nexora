@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom'
 import { AlertCircle, ArrowRight, Settings } from 'lucide-react'
 import { useTranslation } from '../../../contexts/LanguageContext'
 import { useMerchantPaymentMethods } from '../../../data/hooks/useMerchantPaymentMethods'
+import { isPaymentMethodConfigured } from '../../../data/paymentMethodTypes'
 import { AuthContext } from '../../../auth/AuthContext'
 import {
   buildDashboardSettingsQueryPath,
@@ -22,7 +23,9 @@ export default function PayoutSetupWarningBanner() {
   })
 
   // If not owner, or still loading, or already has an active payment method, don't show the warning
-  const hasActivePaymentMethod = paymentMethods.some(pm => pm.isActive && pm.accountInfo)
+  const hasActivePaymentMethod = paymentMethods.some(
+    (pm) => pm.isActive && isPaymentMethodConfigured(pm),
+  )
 
   if (!isOwner || isLoading || hasActivePaymentMethod) {
     return null

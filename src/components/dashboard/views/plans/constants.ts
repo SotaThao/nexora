@@ -4,6 +4,7 @@ import {
 } from '../../../../data/merchantVoice/domain'
 import {
   PackageHistoryUiStatus,
+  SubscriptionBillingCycle,
   type SubscriptionPackage,
   type SubscriptionPaymentMethod,
 } from '../../../../data/repositories/subscriptionPayments'
@@ -141,9 +142,20 @@ export function formatPlanPrice(price: number): string {
   return formatUsdAmount(price)
 }
 
-/** Invoice total: `$199` + localized `/mo` (pass `t(...perMonth)`). */
+/** Invoice total: `$199` + localized `/month` (pass `t(...perMonth)`). */
 export function formatPlanMonthlyTotal(price: number, perMonthSuffix: string): string {
   return `${formatUsdAmount(price)}${perMonthSuffix}`
+}
+
+/** Localized billing-period suffix for plan cards, checkout, and toasts. */
+export function resolvePlanBillingPeriodSuffix(
+  billingCycle: SubscriptionBillingCycle,
+  translate: (key: string) => string,
+  plansTranslationKey: string,
+): string {
+  return billingCycle === SubscriptionBillingCycle.Yearly
+    ? translate(`${plansTranslationKey}.perYear`)
+    : translate(`${plansTranslationKey}.perMonth`)
 }
 
 export function formatPackageHistoryAmount(amount: number, currency = 'USD'): string {
@@ -257,6 +269,43 @@ export type VoiceAiCheckoutSelection = {
   packageCode: string
   name: string
   price: number
+  billingCycle: SubscriptionBillingCycle
+  periodInMonths: number
+}
+
+/**
+ * Monthly vs. yearly price for a VoiceAI package — same rule as `ManagePlanView`'s
+ * TipPlatform pricing: yearly only kicks in when the catalog row has a `yearlyPrice`.
+ */
+export function resolveVoiceAiPlanPrice(
+  pkg: Pick<SubscriptionPackage, 'price' | 'originalPrice' | 'yearlyPrice' | 'yearlyOriginalPrice'> | undefined,
+  billingCycle: SubscriptionBillingCycle,
+  fallbackMonthlyPrice: number,
+): { price: number; originalPrice?: number } {
+  const yearlyAvailable = billingCycle === SubscriptionBillingCycle.Yearly && pkg?.yearlyPrice != null
+  if (yearlyAvailable) {
+    return {
+      price: pkg!.yearlyPrice as number,
+      originalPrice: pkg?.yearlyOriginalPrice ?? undefined,
+    }
+  }
+  return {
+    price: pkg?.price ?? fallbackMonthlyPrice,
+    originalPrice: pkg?.originalPrice ?? undefined,
+  }
+}
+
+/** True when a yearly purchase isn't possible for this package yet (no `yearlyPrice` on the catalog row). */
+export function isVoiceAiYearlyUnavailable(
+  pkg: Pick<SubscriptionPackage, 'yearlyPrice'> | undefined,
+  billingCycle: SubscriptionBillingCycle,
+): boolean {
+  return billingCycle === SubscriptionBillingCycle.Yearly && (!pkg || pkg.yearlyPrice == null)
+}
+
+/** `PeriodInMonths` to send with the purchase for the selected billing cycle. */
+export function resolveVoiceAiPeriodInMonths(billingCycle: SubscriptionBillingCycle): number {
+  return billingCycle === SubscriptionBillingCycle.Yearly ? 12 : 1
 }
 
 /** CSS modifier for Package History status badge. */

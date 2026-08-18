@@ -38,6 +38,7 @@ import { useStaffInviteInfo, useAcceptStaffInvite, usePublicMerchantInvite } fro
 import { apiAuthAdapter } from '../../../auth/adapters/apiAuthAdapter'
 import { getSignupOtp } from '../../../auth/signupOtp'
 import { staffPaymentMethodsRepository } from '../../../data/repositories/staffPaymentMethods'
+import { PayoutUiKey } from '../../../data/payoutUiKeys'
 import { payoutTypeToUiKey, toPayoutAccountNameDto } from '../../../data/paymentMethodTypes'
 import { staffInvitesRepository } from '../../../data/repositories/staffInvites'
 import profileSettingsRepository from '../../../data/repositories/profileSettings'
@@ -652,14 +653,19 @@ export default function useStaffRegistration({ inviteData }) {
     setIsCapturing(false)
   }
 
-  const savePayoutAccount = (e) => {
-    if (e) e.preventDefault()
-    if (!editValue.trim()) {
+  const savePayoutAccount = (eventOrPayload = null) => {
+    const payload = eventOrPayload && !eventOrPayload.preventDefault ? eventOrPayload : null
+    if (eventOrPayload?.preventDefault) eventOrPayload.preventDefault()
+    const nextValue = payload?.value ?? editValue
+    const nextQrCode = payload?.qrCode ?? editQrCode
+    const nextAccountName = payload?.accountName ?? editAccountName
+
+    if (!nextValue.trim()) {
       setModalError(t('components.staff_registration.hooks.useStaffRegistration.thisFieldIsRequired'))
       return
     }
 
-    const validationMessage = getPayoutValidationMessage(t, editingMethod, editValue)
+    const validationMessage = getPayoutValidationMessage(t, editingMethod, nextValue)
     if (validationMessage) {
       setModalError(validationMessage)
       return
@@ -669,9 +675,9 @@ export default function useStaffRegistration({ inviteData }) {
       ...prev,
       [editingMethod]: {
         enabled: true,
-        value: editValue.trim(),
-        qrCode: editQrCode,
-        accountName: editAccountName.trim()
+        value: nextValue.trim(),
+        qrCode: nextQrCode,
+        accountName: nextAccountName.trim()
       }
     }))
     setEditingMethod(null)
@@ -880,7 +886,9 @@ export default function useStaffRegistration({ inviteData }) {
       })
       setStaffPaymentMethods(paymentMethods)
 
-      const vlinkpayMethod = paymentMethods.find(m => m.type.toLowerCase() === 'vlinkpay')
+      const vlinkpayMethod = paymentMethods.find(
+        (m) => payoutTypeToUiKey(m.type || '') === PayoutUiKey.VlinkPay,
+      )
       const vlinkpayIdVal = vlinkpayMethod ? vlinkpayMethod.accountInfo : ''
 
       setSearchId(

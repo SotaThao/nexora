@@ -27,7 +27,7 @@ import {
 import type { ManualStaffFormPayload } from '../modals/AddManualStaffTab'
 import { EMPTY_STAFF_FORM, type StaffFormState } from '../../../types/forms'
 import { getApiErrorCode } from '../../../types/domain'
-import { getErrorI18nKey } from '../../../data/errorCodes'
+import { getErrorI18nKey, LOCAL_STAFF_HAS_ACTIVE_WORK } from '../../../data/errorCodes'
 import { isValidEmail } from '../../../utils/validation'
 import { resolveStaffDisplayNames, splitFullName } from '../../../utils/staffName'
 import { resolveStaffRoleLabel } from '../../../utils/staffBusinessRole'
@@ -63,7 +63,7 @@ function mergeStaffModalMember(detail, listMember) {
     phone: pickNonEmptyString(detail.phone, list?.phone),
     email: pickNonEmptyString(detail.email, list?.email),
     bio: names.formBio,
-    staffCode: detail.staffCode ?? list?.staffCode ?? '',
+    staffCode: pickNonEmptyString(detail.staffCode, list?.staffCode),
     staffProfileId: detail.staffProfileId ?? list?.staffProfileId ?? '',
     averageRating: detail.averageRating ?? list?.averageRating ?? 0,
     showInTipsFlow: detail.showInTipsFlow ?? list?.showInTipsFlow ?? true,
@@ -150,6 +150,10 @@ export function useStaffManagement({
   const createLocalStaffMutation = useCreateLocalStaff()
   const updateLocalStaffMutation = useUpdateLocalStaff()
   const deleteLocalStaffMutation = useDeleteLocalStaff()
+  const [activeWorkBlocker, setActiveWorkBlocker] = useState<{
+    staffProfileId: string
+    staffName: string
+  } | null>(null)
   const updateStaffRoleMutation = useUpdateMerchantStaffRole()
 
   // Map an API error to a localized, human-readable message (US-014 AC #11/#12).
@@ -263,8 +267,8 @@ export function useStaffManagement({
       cashapp: member.paymentAccounts?.cashapp || '',
       zelle: member.paymentAccounts?.zelle || '',
       vlinkpay: member.paymentAccounts?.vlinkpay || '',
-      nexoraStaffId: member.staffCode || '',
-      staffCode: member.staffCode || '',
+      nexoraStaffId: pickNonEmptyString(member.staffCode, member.nexoraStaffId),
+      staffCode: pickNonEmptyString(member.staffCode, member.nexoraStaffId),
       staffProfileId: member.staffProfileId || '',
       averageRating: member.averageRating ?? 0,
       showInTipsFlow: member.showInTipsFlow !== false,
@@ -674,6 +678,15 @@ export function useStaffManagement({
           }), 'success')
         },
         onError: (err) => {
+          // Staff still on open orders/bookings gets the blocking list dialog instead of a
+          // toast — the merchant needs to know which items to close out first.
+          if (getApiErrorCode(err) === LOCAL_STAFF_HAS_ACTIVE_WORK) {
+            setActiveWorkBlocker({
+              staffProfileId: member.staffProfileId,
+              staffName: member.fullName || member.nickname,
+            })
+            return
+          }
           showToast(t('components.dashboard.hooks.useStaffManagement.localStaffDeleteFailed', {
             error: errMsg(err),
           }), 'error')
@@ -800,6 +813,7 @@ export function useStaffManagement({
     handleResendInvite, handleCancelInvite,
     handleAcceptJoinRequest, handleDeclineJoinRequest, deleteStaff, toggleStaff, toggleStaffTipsFlow,
     handleAcceptUnlinkRequest, handleDeclineUnlinkRequest,
+    activeWorkBlocker, setActiveWorkBlocker,
     // Expose mutation states for loading indicators
     inviteStaffMutation,
     resendInviteMutation,

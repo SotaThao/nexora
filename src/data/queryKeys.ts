@@ -68,6 +68,8 @@ export const qk = {
     ['merchantStaff', 'stats', staffProfileId, filters],
   localStaffPaymentMethods: (staffProfileId?: string | null) =>
     ['merchantStaff', 'localStaffPaymentMethods', staffProfileId ?? ''],
+  localStaffActiveWork: (staffProfileId?: string | null) =>
+    ['merchantStaff', 'localStaffActiveWork', staffProfileId ?? ''],
   staffInvite:         (token)   => ['staffInvite', token],
   publicMerchantInvite: (ref)    => ['publicMerchantInvite', ref],
   merchantInviteLink:  ()      => ['merchantSettings', 'inviteLink'],
@@ -164,6 +166,24 @@ export const qk = {
   },
   // POS Merchant Ops — Turn Board Assign & Break (US-13)
   merchantPosTurnBoard: (businessId?: string) => ['merchantSettings', 'posTurnBoard', businessId ?? ''],
+  // POS Front Desk — Time Clock tab. Roster/log keys carry the local day being shown so switching
+  // day (or crossing midnight on an iPad left open) refetches instead of serving yesterday's board.
+  // `dayKey` is only appended when passed: an invalidateQueries call omitting it must yield a real
+  // prefix of the rendered key. Defaulting it to '' instead would build a 4th element that matches
+  // no live query, and the invalidation would silently do nothing.
+  merchantPosTimeClockQr: (businessId?: string) => ['merchantSettings', 'posTimeClockQr', businessId ?? ''],
+  merchantPosTimeClockRoster: (businessId?: string, dayKey?: string) => {
+    const key: unknown[] = ['merchantSettings', 'posTimeClockRoster', businessId ?? '']
+    if (dayKey) key.push(dayKey)
+    return key
+  },
+  merchantPosTimeClockLog: (businessId?: string, dayKey?: string) => {
+    const key: unknown[] = ['merchantSettings', 'posTimeClockLog', businessId ?? '']
+    if (dayKey) key.push(dayKey)
+    return key
+  },
+  staffClockScanPreview: (businessId?: string, token?: string) =>
+    ['staffClockScanPreview', businessId ?? '', token ?? ''],
   // POS Merchant Ops — Checkout (US-14 / US-025, refactored to Order in US-026)
   merchantPosInServiceOrders: (businessId?: string) => ['merchantSettings', 'posInServiceOrders', businessId ?? ''],
   merchantPosOrderDetail: (businessId?: string, orderId?: string) =>
@@ -174,6 +194,8 @@ export const qk = {
     ['merchantSettings', 'posCheckoutProductCatalog', businessId ?? ''],
   merchantPosAssignableStaff: (businessId?: string, posServiceId?: string) =>
     ['merchantSettings', 'posAssignableStaff', businessId ?? '', posServiceId ?? ''],
+  merchantPosAssignableServices: (businessId?: string, posStaffProfileId?: string) =>
+    ['merchantSettings', 'posAssignableServices', businessId ?? '', posStaffProfileId ?? ''],
   // POS Booking — Booking Management screen (Ticket 9)
   merchantPosBookingList: (businessId?: string, filters?: object) => {
     const key: unknown[] = ['merchantSettings', 'posBookingList', businessId ?? '']
@@ -182,6 +204,19 @@ export const qk = {
   },
   merchantPosBookingDetail: (businessId?: string, bookingId?: string) =>
     ['merchantSettings', 'posBookingDetail', businessId ?? '', bookingId ?? ''],
+  // POS Front Desk — Customer tab (US-043), read-only list/detail/order-history.
+  merchantPosCustomerList: (businessId?: string, filters?: object) => {
+    const key: unknown[] = ['merchantSettings', 'posCustomerList', businessId ?? '']
+    if (filters) key.push(filters)
+    return key
+  },
+  merchantPosCustomerDetail: (businessId?: string, customerId?: string) =>
+    ['merchantSettings', 'posCustomerDetail', businessId ?? '', customerId ?? ''],
+  merchantPosCustomerOrders: (businessId?: string, customerId?: string, filters?: object) => {
+    const key: unknown[] = ['merchantSettings', 'posCustomerOrders', businessId ?? '', customerId ?? '']
+    if (filters) key.push(filters)
+    return key
+  },
 
   // Merchant Touchpoints
   merchantTouchpoints: ()      => ['merchantTouchpoints'],
@@ -253,6 +288,9 @@ export const qk = {
   staffTransactionsPaginated: (filters = EMPTY) => ['staffTransactions', 'paginated', filters],
   staffLinkRequest:    (linkId: string | null | undefined) => ['staffLinkRequest', linkId ?? 'unknown'],
   staffLinkRequestsList: (filters = EMPTY) => ['staffLinkRequests', 'list', filters],
+  staffWorkSkillCategories:  (businessId: string) => ['staffWorkSkill', businessId, 'categories'],
+  staffWorkSkillServices:    (businessId: string) => ['staffWorkSkill', businessId, 'services'],
+  staffWorkSkillAssignments: (businessId: string) => ['staffWorkSkill', businessId, 'assignments'],
 
   // Tax IQ — Owner Tax Year (prefixed with 'taxiqOwnerTaxYear' so invalidating
   // qk.taxiqOwnerTaxYear() also clears the byId cache below).
@@ -426,6 +464,8 @@ export const qk = {
   merchantVoiceStaffById: (id?: string | null) => ['merchantVoice', 'staff', 'detail', id ?? ''],
   merchantVoiceBusinessStaff: (filters = EMPTY) => ['merchantVoice', 'staff', 'businessStaff', filters],
   merchantVoiceConfig: () => ['merchantVoice', 'config'],
+  merchantVoiceHolidays: () => ['merchantVoice', 'holidays'],
+  merchantVoiceHolidaysAffectedCount: (date: string) => ['merchantVoice', 'holidays', 'affected-count', date],
   merchantVoiceServiceCategories: () => ['merchantVoice', 'service-categories'],
   merchantVoiceServices: () => ['merchantVoice', 'services'],
   merchantVoiceTenantStatus: () => ['merchantVoice', 'tenant', 'status'],
@@ -470,6 +510,8 @@ export const qk = {
     ['publicBookingPage', 'customerLookup', businessSlug ?? '', phone ?? ''],
   // POS Booking — customer self-service Manage Booking page (Ticket 8)
   manageBooking: (manageToken?: string) => ['manageBooking', manageToken ?? ''],
+  // Nested under the manageBooking prefix so invalidating the booking also refreshes consent.
+  manageBookingConsent: (manageToken?: string) => ['manageBooking', manageToken ?? '', 'consent'],
   publicPaymentStatus: (paymentId: string) => ['publicPayment', 'status', paymentId],
   publicVoiceBookingPage: (
     businessKey?: string | null,

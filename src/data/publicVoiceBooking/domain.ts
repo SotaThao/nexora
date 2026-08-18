@@ -95,8 +95,17 @@ export interface BookingPageDataDto {
   categories: BookingServiceCategoryDto[]
   staff: BookingStaffDto[]
   operatingHours: BookingOperatingHourDto[]
+  holidays?: BookingHolidayDto[]
   /** Recognised active customer when `phone` query matches; otherwise null/omitted. */
   customer?: BookingCustomerDto | null
+}
+
+export interface BookingHolidayDto {
+  holidayDate: string
+  reason: string
+  type: string
+  adjustedOpenTime: string | null
+  adjustedCloseTime: string | null
 }
 
 /** Public create body — matches OpenAPI `CreateOnlineBookingRequest`. */
@@ -108,6 +117,12 @@ export interface CreateOnlineBookingRequest {
   date: string
   startTime: string
   notes?: string | null
+  // SMS consent (A2P 10DLC / TCPA) — see CreatePublicBookingPayload for the contract.
+  transactionalConsent?: boolean
+  marketingConsent?: boolean
+  disclosureVersion?: string
+  locale?: string
+  sourceUrl?: string
 }
 
 export interface CreateOnlineBookingResultDto {
@@ -161,6 +176,14 @@ export interface PublicBookingCustomer {
   phoneNumber: string
 }
 
+export interface PublicBookingHoliday {
+  holidayDate: string
+  reason: string
+  type: string
+  adjustedOpenTime: string | null
+  adjustedCloseTime: string | null
+}
+
 export interface PublicBookingPageData {
   businessKey: string
   businessName: string
@@ -169,6 +192,7 @@ export interface PublicBookingPageData {
   categories: PublicBookingServiceCategory[]
   staff: PublicBookingStaff[]
   operatingHours: PublicBookingOperatingHour[]
+  holidays: PublicBookingHoliday[]
   customer: PublicBookingCustomer | null
 }
 

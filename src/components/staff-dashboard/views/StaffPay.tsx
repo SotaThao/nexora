@@ -1,7 +1,7 @@
 // StaffPay — staff self-managed payout methods (owner cannot edit these).
 import { useState, useMemo } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { Bitcoin, Edit2, Wallet, ArrowRight, AlertCircle, Loader2 } from 'lucide-react'
+import { Bitcoin, Edit2, Wallet, ArrowRight, AlertCircle, Loader2, Eye } from 'lucide-react'
 import { useTranslation } from '../../../contexts/LanguageContext'
 import {
   useStaffPaymentMethods,
@@ -12,17 +12,26 @@ import { useStaffProfile } from '../../../data/hooks/useStaffSelf'
 import { useCreateStaffProfile, useProfileSettings } from '../../../data/hooks/useProfileSettings'
 import type { PaymentMethodDto } from '../../../types/domain'
 import { SkeletonLayout } from '../../ui/skeleton'
-import PayoutSetupModal from '../../dashboard/modals/PayoutSetupModal'
+import PayoutSetupModal from '../../payout/PayoutSetupModal'
 import ToggleSwitch from '../../ui/ToggleSwitch'
 import { formatPaymentMethodAccountDisplay } from '../../payout/bankWireAccount'
 import {
   isHiddenPayoutConfigType,
+  isPaymentMethodConfigured,
   supportsPayoutAccountName,
   toPayoutAccountNameDto,
 } from '../../../data/paymentMethodTypes'
+import {
+  parseVlinkpayAddresses,
+  parseVlinkpayAddressesFromMethod,
+  serializeVlinkpayAddresses,
+  toVlinkpayCryptoAddressesPayload,
+} from '../../payout/vlinkpayWallet'
+import { PayoutUiKey } from '../../../data/payoutUiKeys'
 import { getUserProfileImageUrl } from '../../../utils/userProfileImage'
 import { useQueryClient } from '@tanstack/react-query'
 import { qk } from '../../../data/queryKeys'
+import PayoutMethodDetailModal from '../../payout/PayoutMethodDetailModal'
 
 const panel = 'rounded-2xl border border-nexoraBorder bg-nexoraSurface p-4 shadow-sm'
 
@@ -86,6 +95,7 @@ export default function StaffPay() {
   const updateMutation = useUpdateStaffPaymentMethod()
 
   const [activeMethod, setActiveMethod] = useState<PaymentMethodDto | null>(null)
+  const [viewingMethod, setViewingMethod] = useState<PaymentMethodDto | null>(null)
 
   const visiblePaymentMethods = useMemo(
     () => apiPaymentMethods.filter((method) => !isHiddenPayoutConfigType(method)),
@@ -105,11 +115,10 @@ export default function StaffPay() {
   const hasUnconfiguredPayout =
     visiblePaymentMethods.length > 0 &&
     !visiblePaymentMethods.some(
-      (method) => method.isActive && method.isConfigured && method.accountInfo?.trim(),
+      (method) => method.isActive && isPaymentMethodConfigured(method),
     )
 
-  const isMethodSetUp = (method: PaymentMethodDto) =>
-    Boolean(method.isConfigured && method.accountInfo?.trim())
+  const isMethodSetUp = (method: PaymentMethodDto) => isPaymentMethodConfigured(method)
 
   const handleToggleMethod = (method: PaymentMethodDto, nextActive: boolean) => {
     if (!method.id) return
@@ -137,11 +146,18 @@ export default function StaffPay() {
 
   const handleSavePayout = (value, qrCode, accountName, qrFile) => {
     if (!activeMethod?.id) return
+    const uiKey = activeMethod.uiKey || ''
+    const isVlinkpay = uiKey === PayoutUiKey.VlinkPay
+    const cryptoAddresses = isVlinkpay
+      ? toVlinkpayCryptoAddressesPayload(parseVlinkpayAddresses(value))
+      : undefined
     updateMutation.mutate(
       {
         id: activeMethod.id,
-        accountInfo: value.trim(),
-        accountName: toPayoutAccountNameDto(activeMethod.uiKey || '', accountName),
+        ...(isVlinkpay
+          ? { accountInfo: null, cryptoAddresses }
+          : { accountInfo: value.trim() }),
+        accountName: toPayoutAccountNameDto(uiKey, accountName),
         imageUrl: qrFile ? null : (qrCode || null),
         imageFile: qrFile || undefined,
       },
@@ -256,8 +272,8 @@ export default function StaffPay() {
               const uiKey = method.uiKey || ''
               const label = method.name || method.type
               return (
-                <div key={method.id} className="flex items-center justify-between py-3">
-                  <div className="flex items-center gap-3 min-w-0">
+                <div key={method.id} className="flex flex-col gap-3 py-3 sm:flex-row sm:items-center sm:justify-between">
+                  <div className="flex w-full min-w-0 items-center gap-3 sm:flex-1">
                     <ToggleSwitch
                       checked={!!method.isActive}
                       onChange={() => handleToggleMethod(method, !method.isActive)}
@@ -266,18 +282,22 @@ export default function StaffPay() {
                       inactiveColor="bg-nexoraBorder"
                     />
 
-                    <div className="flex items-center gap-2.5 min-w-0">
+                    <div className="flex min-w-0 flex-1 items-center gap-2.5">
                       <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg border border-nexoraBorder bg-nexoraCanvas">
                         {PayoutLogos[uiKey] || <Bitcoin className="h-[18px] w-[18px] shrink-0 text-amber-500" />}
                       </span>
-                      <div className="min-w-0">
+                      <div className="min-w-0 flex-1">
                         <div className="text-xs font-bold text-nexoraText">{label}</div>
-                        {method.isConfigured && method.accountInfo ? (
-                          <div className="mt-0.5 max-w-[120px] truncate font-mono text-[10px] text-nexoraMuted sm:max-w-[200px]">
+                        {isPaymentMethodConfigured(method) ? (
+                          <div className="mt-0.5 min-w-0 truncate font-mono text-[10px] text-nexoraMuted">
                             {supportsPayoutAccountName(uiKey) && method.accountName ? (
                               <span className="font-sans font-semibold">{method.accountName} · </span>
                             ) : null}
-                            {formatPaymentMethodAccountDisplay(method.uiKey || '', method.accountInfo)}
+                            {formatPaymentMethodAccountDisplay(
+                              method.uiKey || '',
+                              method.accountInfo,
+                              method.cryptoAddresses,
+                            )}
                           </div>
                         ) : (
                           <div className="mt-0.5 text-[10px] font-medium italic text-slate-300">
@@ -288,15 +308,26 @@ export default function StaffPay() {
                     </div>
                   </div>
 
-                  <button
-                    type="button"
-                    onClick={() => handleEditPayout(method)}
-                    aria-label={`Edit ${label} Payout Account`}
-                    className="ml-2 flex shrink-0 items-center gap-1 text-[10px] font-bold text-amber-600 transition hover:text-amber-700"
-                  >
-                    <Edit2 className="h-3 w-3" />
-                    <span>{t('components.staff_dashboard.views.StaffPay.editAccount')}</span>
-                  </button>
+                  <div className="grid w-full grid-cols-2 gap-2 sm:ml-2 sm:flex sm:w-auto sm:shrink-0 sm:items-center sm:gap-1.5">
+                    <button
+                      type="button"
+                      onClick={() => setViewingMethod(method)}
+                      aria-label={`View ${label} Payout Details`}
+                      className="flex min-w-0 items-center justify-center gap-1 rounded-lg border border-sky-200 bg-sky-50 px-2 py-1.5 text-[10px] font-bold text-sky-700 transition hover:text-sky-800"
+                    >
+                      <Eye className="h-3 w-3" />
+                      <span className="truncate">{t('components.staff_dashboard.views.StaffPay.view')}</span>
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => handleEditPayout(method)}
+                      aria-label={`Edit ${label} Payout Account`}
+                      className="flex min-w-0 items-center justify-center gap-1 rounded-lg border border-amber-200 bg-amber-50 px-2 py-1.5 text-[10px] font-bold text-amber-700 transition hover:text-amber-800"
+                    >
+                      <Edit2 className="h-3 w-3" />
+                      <span className="truncate">{t('components.staff_dashboard.views.StaffPay.editAccount')}</span>
+                    </button>
+                  </div>
                 </div>
               )
             })}
@@ -310,7 +341,11 @@ export default function StaffPay() {
           open={Boolean(activeMethod)}
           walletKey={activeMethod.uiKey}
           initialAccountName={activeMethod.accountName || ''}
-          initialValue={activeMethod.accountInfo || ''}
+          initialValue={
+            activeMethod.uiKey === PayoutUiKey.VlinkPay
+              ? serializeVlinkpayAddresses(parseVlinkpayAddressesFromMethod(activeMethod))
+              : (activeMethod.accountInfo || '')
+          }
           initialQrCode={activeMethod.imageUrl || ''}
           onClose={handleCloseModal}
           onSubmit={handleSavePayout}
@@ -318,6 +353,12 @@ export default function StaffPay() {
           isSaving={updateMutation.isPending}
         />
       )}
+
+      <PayoutMethodDetailModal
+        method={viewingMethod}
+        logo={viewingMethod ? PayoutLogos[viewingMethod.uiKey || ''] : null}
+        onClose={() => setViewingMethod(null)}
+      />
     </div>
   )
 }

@@ -1,9 +1,8 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { useQueryClient } from '@tanstack/react-query'
-import { X, Loader2 } from 'lucide-react'
+import { Loader2 } from 'lucide-react'
 import { useTranslation } from '../../../contexts/LanguageContext'
 import { useNotification } from '../../../contexts/NotificationContext'
-import { useHasStoreSetup } from '../../../data/hooks/useHasStoreSetup'
 import { useProfileSettings } from '../../../data/hooks/useProfileSettings'
 import { useSubscriptionCardOrderPoll } from '../../../data/hooks/useSubscriptionCardOrderPoll'
 import {
@@ -14,29 +13,43 @@ import {
 } from '../../../data/hooks/useSubscriptionPayments'
 import { resolveTranslatedApiError } from '../../../utils/resolveTranslatedApiError'
 import { resolveSubscriptionBillingDefaults } from '../../../utils/subscriptionBillingDefaults'
-import type {
-  PurchasableSubscriptionPlan,
-  SubscriptionPaymentMethod,
+import { formatCurrentPlanLabel } from '../../../utils/subscriptionDisplay'
+import {
+  SubscriptionBillingCycle,
+  type PurchasableSubscriptionPlan,
+  type SubscriptionPaymentMethod,
 } from '../../../data/repositories/subscriptionPayments'
-import { formatCurrency } from '../utils'
-import { hasEnoughWalletBalance } from '../views/plans/constants'
+import type { UserSubscription } from '../../../types/domain'
 import { getErrorI18nKey } from '../../../data/errorCodes'
-import CompleteStoreSetupCardPrompt from './CompleteStoreSetupCardPrompt'
 import SubscriptionCardPaymentForm, {
   type SubscriptionBillingDetails,
   type SubscriptionCardPaymentFormHandle,
 } from './SubscriptionCardPaymentForm'
 import {
-  PURCHASABLE_PLAN_I18N_ID,
-  SUBSCRIPTION_PAYMENT_DIALOG_MAX_WIDTH_CLASS,
-  SUBSCRIPTION_PAYMENT_MODAL_TK,
-  SubscriptionPaymentTab,
-  type SubscriptionPaymentTabValue,
+  SUBSCRIPTION_PAYMENT_DOM_ID,
   WalletPurchaseNextStep,
+  resolveCheckoutPaymentLabel,
   resolveWalletPurchaseNextStep,
   subscriptionModalKey,
+  tipPlatformPlanNameI18nKey,
   tryBeginOrderStatusPolling,
 } from './subscriptionPaymentConstants'
+import {
+  CloseIcon,
+  CreditCardIcon,
+  ShieldCheckIcon,
+  WalletCardsIcon,
+} from '../views/BookingHubIcons'
+import { PlanPaymentMethodsSkeleton } from '../views/BookingHubSkeletons'
+import { BOOKING_HUB_EMPTY_CELL } from '../views/bookingHubFormatters'
+import { useCheckoutModalLock } from '../views/creditCheckout/useCheckoutModalLock'
+import {
+  PLAN_CARD_PAYMENT_SYMBOL,
+  formatPlanMonthlyTotal,
+  formatWalletBalanceUsd,
+  hasEnoughWalletBalance,
+  isPlanCardPaymentSymbol,
+} from '../views/plans/constants'
 import '../views/booking-hub.css'
 
 /** Stable fallback — avoid `data ?? []` allocating a new array each render. */
@@ -47,6 +60,8 @@ type Props = {
   plan: PurchasableSubscriptionPlan
   packageId: string
   price: number
+  billingCycle?: SubscriptionBillingCycle
+  currentSubscription?: UserSubscription | null
   billingDefaults?: SubscriptionBillingDetails
   onClose: () => void
   onSuccess?: () => void
@@ -57,6 +72,8 @@ export default function SubscriptionPaymentModal({
   plan,
   packageId,
   price,
+  billingCycle,
+  currentSubscription,
   billingDefaults,
   onClose,
   onSuccess,
@@ -64,12 +81,14 @@ export default function SubscriptionPaymentModal({
   const { t } = useTranslation()
   const { showToast } = useNotification()
   const queryClient = useQueryClient()
-  const [selectedSymbol, setSelectedSymbol] = useState<string | null>(null)
-  const [paymentTab, setPaymentTab] = useState<SubscriptionPaymentTabValue>(
-    SubscriptionPaymentTab.Wallet,
-  )
-  const [cardSubmitting, setCardSubmitting] = useState(false)
+  const closeBtnRef = useRef<HTMLButtonElement | null>(null)
   const cardFormRef = useRef<SubscriptionCardPaymentFormHandle | null>(null)
+  const [selectedSymbol, setSelectedSymbol] = useState<string | null>(null)
+  const [cardSubmitting, setCardSubmitting] = useState(false)
+
+  const cardPaymentLabel = t(subscriptionModalKey('cardMethodLabel'))
+  const isCardPayment = isPlanCardPaymentSymbol(selectedSymbol)
+  const planNameKey = tipPlatformPlanNameI18nKey(plan)
 
   const refreshSubscriptionCaches = useCallback(() => {
     invalidateSubscriptionPurchaseQueries(queryClient)
@@ -83,7 +102,6 @@ export default function SubscriptionPaymentModal({
   }, [onClose, onSuccess, refreshSubscriptionCaches, showToast, t])
 
   const handleCardOrderTimeout = useCallback(() => {
-    // Webhook may still flip Paid — refresh UI and close so the merchant sees the new plan if active.
     refreshSubscriptionCaches()
     onClose()
     onSuccess?.()
@@ -102,27 +120,31 @@ export default function SubscriptionPaymentModal({
     data: methodsData,
     isLoading: isMethodsLoading,
     isError: isMethodsError,
+    error: methodsError,
     refetch: refetchMethods,
   } = useSubscriptionPaymentMethods({
-    enabled: isOpen && paymentTab === SubscriptionPaymentTab.Wallet,
+    enabled: isOpen && !isCardPayment,
   })
   const methods = methodsData ?? EMPTY_PAYMENT_METHODS
 
   const purchaseMutation = usePurchaseSubscription()
   const initializeCardMutation = useInitializeCardPayment()
-  const { hasSetup, isLoading: isSetupLoading, isResolved: isSetupResolved } = useHasStoreSetup({
-    enabled: isOpen,
-  })
   const { data: profile } = useProfileSettings({ enabled: isOpen })
   const resolvedBillingDefaults = useMemo(
     () => resolveSubscriptionBillingDefaults(billingDefaults, profile),
     [billingDefaults, profile],
   )
 
+  useCheckoutModalLock({
+    open: isOpen,
+    onClose,
+    locked: purchaseMutation.isPending || isCardOrderPolling,
+    closeButtonRef: closeBtnRef,
+  })
+
   useEffect(() => {
     if (isOpen) return
     setSelectedSymbol(null)
-    setPaymentTab(SubscriptionPaymentTab.Wallet)
     resetCardOrderPolling()
     initializeCardMutation.reset()
     // eslint-disable-next-line react-hooks/exhaustive-deps -- run on open→closed only
@@ -130,48 +152,62 @@ export default function SubscriptionPaymentModal({
 
   useEffect(() => {
     if (!isOpen) return
-    if (!selectedSymbol && methods.length > 0) {
+    if (selectedSymbol) return
+    if (methods.length > 0) {
       setSelectedSymbol(methods[0].symbol)
+      return
     }
-  }, [isOpen, methods, selectedSymbol])
+    if (!isMethodsLoading && !isMethodsError) {
+      setSelectedSymbol(PLAN_CARD_PAYMENT_SYMBOL)
+    }
+  }, [isOpen, methods, isMethodsLoading, isMethodsError, selectedSymbol])
 
   useEffect(() => {
-    if (paymentTab !== SubscriptionPaymentTab.Card) return
-    if (!isSetupResolved || !hasSetup) return
+    if (!isOpen || !isCardPayment) return
     if (initializeCardMutation.data || initializeCardMutation.isPending) return
-    initializeCardMutation.mutate(packageId)
+    initializeCardMutation.mutate({ packageId, billingCycle })
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [paymentTab, packageId, hasSetup, isSetupResolved])
+  }, [isOpen, isCardPayment, packageId, billingCycle])
 
-  useEffect(() => {
-    if (
-      paymentTab === SubscriptionPaymentTab.Card
-      && isSetupResolved
-      && !hasSetup
-    ) {
+  const selectedPayment = useMemo(
+    () => methods.find((method) => method.symbol === selectedSymbol) ?? null,
+    [methods, selectedSymbol],
+  )
+
+  const paymentLabel = resolveCheckoutPaymentLabel({
+    isCardPayment,
+    cardPaymentLabel,
+    selectedPayment,
+    emptyLabel: BOOKING_HUB_EMPTY_CELL,
+  })
+
+  const methodsErrorMessage = resolveTranslatedApiError(
+    t,
+    methodsError,
+    subscriptionModalKey('paymentMethodsError'),
+  )
+
+  const handleSelectPayment = (symbol: string) => {
+    setSelectedSymbol(symbol)
+    if (!isPlanCardPaymentSymbol(symbol)) {
       initializeCardMutation.reset()
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [paymentTab, hasSetup, isSetupResolved])
+  }
 
-  if (!isOpen) return null
-
-  const isCardTab = paymentTab === SubscriptionPaymentTab.Card
-  const modalKey = (suffix: string) => `${SUBSCRIPTION_PAYMENT_MODAL_TK}.${suffix}`
-  const planNameKey = `manage_plan.plans.${PURCHASABLE_PLAN_I18N_ID[plan]}.name`
+  const currentPlanLabel = formatCurrentPlanLabel(currentSubscription)
 
   const handleWalletConfirm = () => {
-    if (!selectedSymbol) return
-    const selectedPayment = methods.find((method) => method.symbol === selectedSymbol)
-    if (!selectedPayment) return
+    if (!selectedSymbol || isCardPayment) return
+    const method = methods.find((item) => item.symbol === selectedSymbol)
+    if (!method) return
 
-    if (!hasEnoughWalletBalance(selectedPayment, price)) {
+    if (!hasEnoughWalletBalance(method, price)) {
       showToast(t(getErrorI18nKey('InsufficientBalance')), 'error')
       return
     }
 
     purchaseMutation.mutate(
-      { packageId, symbol: selectedSymbol },
+      { packageId, symbol: selectedSymbol, billingCycle },
       {
         onSuccess: (result) => {
           const nextStep = resolveWalletPurchaseNextStep(result)
@@ -190,7 +226,6 @@ export default function SubscriptionPaymentModal({
             resolveTranslatedApiError(t, err, 'errors.unknown_error'),
             'error',
           )
-          // Purchase may have applied before the client saw the error — refresh active plan.
           refreshSubscriptionCaches()
         },
       },
@@ -202,8 +237,6 @@ export default function SubscriptionPaymentModal({
   }
 
   const handleCardError = (message: string) => {
-    // Client-side Stripe errors can fire after the bank already authorized —
-    // always verify against purchase-history when we have an orderId.
     if (tryBeginOrderStatusPolling(initializeCardMutation.data?.orderId, beginCardOrderPolling)) {
       return
     }
@@ -211,234 +244,267 @@ export default function SubscriptionPaymentModal({
   }
 
   const canConfirmWallet =
-    paymentTab === SubscriptionPaymentTab.Wallet
+    !isCardPayment
     && Boolean(selectedSymbol)
+    && Boolean(selectedPayment)
     && !purchaseMutation.isPending
     && !isMethodsLoading
     && !isMethodsError
+    && !isCardOrderPolling
 
   const canConfirmCard =
-    isCardTab
-    && hasSetup
+    isCardPayment
     && Boolean(initializeCardMutation.data)
     && !initializeCardMutation.isPending
     && !isCardOrderPolling
     && !cardSubmitting
 
-  const canConfirm = isCardTab ? canConfirmCard : canConfirmWallet
-  const isConfirmPending = isCardTab
+  const canConfirm = isCardPayment ? canConfirmCard : canConfirmWallet
+  const isConfirmPending = isCardPayment
     ? cardSubmitting || isCardOrderPolling
     : purchaseMutation.isPending
 
-  const handleFooterConfirm = () => {
-    if (isCardTab) {
+  const handleConfirm = () => {
+    if (isCardPayment) {
       void cardFormRef.current?.submit()
       return
     }
     handleWalletConfirm()
   }
 
+  if (!isOpen) return null
+
   return (
-    <div className="fixed inset-0 z-[60] flex items-end justify-center bg-slate-900/55 p-4 backdrop-blur-sm sm:items-center">
+    <div
+      className="sms-credit-modal plan-payment-modal"
+      role="presentation"
+    >
       <div
+        className="sms-credit-dialog"
         role="dialog"
-        aria-labelledby="subscription-payment-title"
-        className={[
-          'relative w-full max-h-[90vh] overflow-y-auto rounded-2xl border border-nexoraBorder bg-white p-5 shadow-2xl sm:p-6',
-          SUBSCRIPTION_PAYMENT_DIALOG_MAX_WIDTH_CLASS,
-        ].join(' ')}
+        aria-modal="true"
+        aria-labelledby={SUBSCRIPTION_PAYMENT_DOM_ID.title}
+        aria-describedby={SUBSCRIPTION_PAYMENT_DOM_ID.description}
       >
-        <button
-          type="button"
-          onClick={onClose}
-          className="absolute right-3 top-3 flex h-8 w-8 items-center justify-center rounded-full text-nexoraMuted transition hover:bg-slate-100 hover:text-nexoraText"
-          aria-label={t('common.close')}
-        >
-          <X className="h-4 w-4" />
-        </button>
-
-        <h2 id="subscription-payment-title" className="text-lg font-extrabold text-nexoraText">
-          {t(modalKey('subscription_payment_title'))}
-        </h2>
-        <p className="mt-1 text-xs text-nexoraMuted">
-          {t(modalKey('subscription_payment_subtitle'))}
-        </p>
-
-        <div className="mt-5 grid grid-cols-2 gap-2 rounded-xl bg-nexoraSurfaceMuted p-1">
+        <div className="sms-credit-modal-head">
+          <div>
+            <div className="sms-credit-modal-title" id={SUBSCRIPTION_PAYMENT_DOM_ID.title}>
+              <WalletCardsIcon className="marketing-icon" />
+              <span>{t(subscriptionModalKey('paymentTitle'))}</span>
+            </div>
+            <div
+              className="sms-credit-modal-sub"
+              id={SUBSCRIPTION_PAYMENT_DOM_ID.description}
+            >
+              {t(subscriptionModalKey('paymentSubtitle'))}
+            </div>
+          </div>
           <button
+            ref={closeBtnRef}
+            className="sms-credit-close"
             type="button"
-            onClick={() => setPaymentTab(SubscriptionPaymentTab.Wallet)}
-            className={[
-              'h-9 rounded-lg text-xs font-bold transition',
-              paymentTab === SubscriptionPaymentTab.Wallet
-                ? 'bg-white text-nexoraText shadow-sm'
-                : 'text-nexoraMuted',
-            ].join(' ')}
-          >
-            {t(modalKey('subscription_payment_tab_wallet'))}
-          </button>
-          <button
-            type="button"
-            onClick={() => setPaymentTab(SubscriptionPaymentTab.Card)}
-            className={[
-              'h-9 rounded-lg text-xs font-bold transition',
-              isCardTab ? 'bg-white text-nexoraText shadow-sm' : 'text-nexoraMuted',
-            ].join(' ')}
-          >
-            {t(modalKey('subscription_payment_tab_card'))}
-          </button>
-        </div>
-
-        {paymentTab === SubscriptionPaymentTab.Wallet ? (
-          <div className="mt-3">
-            {isMethodsLoading ? (
-              <div className="mt-2 flex items-center gap-2 rounded-xl border border-nexoraBorder p-4 text-xs text-nexoraMuted">
-                <Loader2 className="h-4 w-4 animate-spin" />
-                {t(modalKey('subscription_payment_methods_loading'))}
-              </div>
-            ) : isMethodsError ? (
-              <div className="mt-2 rounded-xl border border-red-200 bg-red-50 p-4 text-xs text-red-700">
-                <p>{t(modalKey('subscription_payment_methods_error'))}</p>
-                <button
-                  type="button"
-                  onClick={() => refetchMethods()}
-                  className="mt-2 font-bold underline"
-                >
-                  {t(modalKey('subscription_payment_methods_retry'))}
-                </button>
-              </div>
-            ) : (
-              <div className="mt-2 space-y-2">
-                {methods.map((method) => (
-                  <label
-                    key={method.symbol}
-                    className={[
-                      'flex items-center justify-between rounded-xl border p-3 text-sm transition cursor-pointer',
-                      selectedSymbol === method.symbol
-                        ? 'border-nexoraBrand bg-nexoraBrand/5'
-                        : 'border-nexoraBorder hover:border-nexoraBrand/40',
-                    ].join(' ')}
-                  >
-                    <span className="flex items-center gap-2">
-                      <input
-                        type="radio"
-                        name="subscription-payment-symbol"
-                        checked={selectedSymbol === method.symbol}
-                        onChange={() => setSelectedSymbol(method.symbol)}
-                        className="h-4 w-4"
-                      />
-                      {method.icon ? (
-                        <img
-                          src={method.icon}
-                          alt=""
-                          className="h-5 w-5 shrink-0 rounded-full"
-                          onError={(e) => {
-                            e.currentTarget.style.display = 'none'
-                          }}
-                        />
-                      ) : null}
-                      <span className="font-bold text-nexoraText">{method.symbol}</span>
-                    </span>
-                    <span className="text-right">
-                      <span className="block text-[10px] uppercase text-nexoraMuted">
-                        {t(subscriptionModalKey('walletBalance'))}
-                      </span>
-                      <span className="font-bold text-nexoraText">
-                        {formatCurrency(method.balance * method.rate)}
-                      </span>
-                    </span>
-                  </label>
-                ))}
-              </div>
-            )}
-          </div>
-        ) : null}
-
-        <div className="mt-5">
-          <p className="text-[11px] font-bold uppercase tracking-wide text-nexoraMuted">
-            {t(modalKey('subscription_invoice_summary'))}
-          </p>
-          <div className="mt-3 flex items-center justify-between text-sm">
-            <span className="text-nexoraMuted">{t(modalKey('subscription_service_plan'))}</span>
-            <span className="font-bold text-nexoraText">{t(planNameKey)}</span>
-          </div>
-          <div className="my-3 h-px w-full bg-nexoraBorder" />
-          <div className="flex items-center justify-between">
-            <span className="text-sm font-bold text-nexoraText">
-              {t(modalKey('subscription_total_due'))}
-            </span>
-            <span className="text-lg font-black text-nexoraBrand">
-              {formatCurrency(price)}
-              <span className="text-xs font-semibold text-nexoraMuted">
-                {' / '}
-                {t(modalKey('subscription_price_note_month'))}
-              </span>
-            </span>
-          </div>
-        </div>
-
-        {isCardTab ? (
-          <div className="mt-4">
-            {isSetupLoading || !isSetupResolved ? (
-              <div className="mt-2 flex items-center gap-2 rounded-xl border border-nexoraBorder p-4 text-xs text-nexoraMuted">
-                <Loader2 className="h-4 w-4 animate-spin" />
-                {t(modalKey('subscription_payment_methods_loading'))}
-              </div>
-            ) : !hasSetup ? (
-              <CompleteStoreSetupCardPrompt onBeforeNavigate={onClose} />
-            ) : initializeCardMutation.isPending ? (
-              <div className="mt-2 flex items-center gap-2 rounded-xl border border-nexoraBorder p-4 text-xs text-nexoraMuted">
-                <Loader2 className="h-4 w-4 animate-spin" />
-                {t(modalKey('subscription_payment_methods_loading'))}
-              </div>
-            ) : initializeCardMutation.isError ? (
-              <div className="mt-2 rounded-xl border border-red-200 bg-red-50 p-4 text-xs text-red-700">
-                <p>{t(subscriptionModalKey('cardInitError'))}</p>
-                <button
-                  type="button"
-                  onClick={() => initializeCardMutation.mutate(packageId)}
-                  className="mt-2 font-bold underline"
-                >
-                  {t(modalKey('subscription_payment_methods_retry'))}
-                </button>
-              </div>
-            ) : initializeCardMutation.data ? (
-              <SubscriptionCardPaymentForm
-                ref={cardFormRef}
-                clientSecret={initializeCardMutation.data.clientSecret}
-                publishableKey={initializeCardMutation.data.publishableKey}
-                billingDefaults={resolvedBillingDefaults}
-                hideFooter
-                onSubmittingChange={setCardSubmitting}
-                onCancel={onClose}
-                onSuccess={handleCardSuccess}
-                onError={handleCardError}
-              />
-            ) : null}
-          </div>
-        ) : null}
-
-        <div className="mt-4 grid grid-cols-1 gap-3 sm:grid-cols-[1fr_2fr]">
-          <button
-            type="button"
+            aria-label={t('common.close')}
+            disabled={purchaseMutation.isPending || isCardOrderPolling}
             onClick={onClose}
-            disabled={isConfirmPending}
-            className="inline-flex h-11 items-center justify-center rounded-lg border border-nexoraBorder bg-white px-4 text-sm font-bold text-nexoraMuted transition hover:bg-slate-50 disabled:opacity-50"
+          >
+            <CloseIcon className="marketing-icon is-compact" />
+          </button>
+        </div>
+
+        <div className="sms-credit-modal-body">
+          <section
+            className="sms-credit-section"
+            aria-labelledby={SUBSCRIPTION_PAYMENT_DOM_ID.methodTitle}
+          >
+            <div
+              className="sms-credit-section-label"
+              id={SUBSCRIPTION_PAYMENT_DOM_ID.methodTitle}
+            >
+              {t(subscriptionModalKey('paymentMethodLabel'))}
+            </div>
+
+            {isMethodsLoading && !isCardPayment ? (
+              <PlanPaymentMethodsSkeleton />
+            ) : (
+              <>
+                {isMethodsError && !isCardPayment ? (
+                  <div className="booking-empty-cell plan-payment-methods-state">
+                    <div>{methodsErrorMessage}</div>
+                    <button
+                      className="booking-mini-button"
+                      type="button"
+                      onClick={() => void refetchMethods()}
+                    >
+                      {t(subscriptionModalKey('paymentMethodsRetry'))}
+                    </button>
+                  </div>
+                ) : null}
+
+                {!isMethodsError && methods.length === 0 && !isCardPayment ? (
+                  <div className="booking-empty-cell plan-payment-methods-state">
+                    {t(subscriptionModalKey('paymentMethodsEmpty'))}
+                  </div>
+                ) : null}
+
+                <div className="sms-credit-payment-list">
+                  {methods.map((method) => {
+                    const selected = method.symbol === selectedSymbol
+                    return (
+                      <button
+                        key={method.symbol}
+                        className={`sms-credit-payment${selected ? ' is-selected' : ''}`}
+                        type="button"
+                        aria-pressed={selected}
+                        disabled={purchaseMutation.isPending || isCardOrderPolling}
+                        onClick={() => handleSelectPayment(method.symbol)}
+                      >
+                        <span className="sms-credit-payment-main">
+                          <span className="sms-credit-radio" aria-hidden="true" />
+                          {method.icon ? (
+                            <img
+                              className="sms-credit-token"
+                              src={method.icon}
+                              alt=""
+                              width={28}
+                              height={28}
+                              aria-hidden="true"
+                              onError={(event) => {
+                                event.currentTarget.style.display = 'none'
+                              }}
+                            />
+                          ) : null}
+                          <span className="sms-credit-payment-name">
+                            {method.name || method.symbol}
+                          </span>
+                        </span>
+                        <span className="sms-credit-payment-balance">
+                          <span>{t(subscriptionModalKey('walletBalance'))}</span>
+                          <strong>{formatWalletBalanceUsd(method)}</strong>
+                        </span>
+                      </button>
+                    )
+                  })}
+
+                  <button
+                    className={`sms-credit-payment${isCardPayment ? ' is-selected' : ''}`}
+                    type="button"
+                    aria-pressed={isCardPayment}
+                    disabled={purchaseMutation.isPending || isCardOrderPolling}
+                    onClick={() => handleSelectPayment(PLAN_CARD_PAYMENT_SYMBOL)}
+                  >
+                    <span className="sms-credit-payment-main">
+                      <span className="sms-credit-radio" aria-hidden="true" />
+                      <CreditCardIcon className="marketing-icon sms-credit-card-method-icon" />
+                      <span className="sms-credit-payment-name">{cardPaymentLabel}</span>
+                    </span>
+                  </button>
+                </div>
+
+                {isCardPayment ? (
+                  <div className="mt-4">
+                    {initializeCardMutation.isPending ? (
+                      <PlanPaymentMethodsSkeleton />
+                    ) : initializeCardMutation.isError ? (
+                      <div className="booking-empty-cell plan-payment-methods-state">
+                        <div>{t(subscriptionModalKey('cardInitError'))}</div>
+                        <button
+                          className="booking-mini-button"
+                          type="button"
+                          onClick={() => initializeCardMutation.mutate({ packageId, billingCycle })}
+                        >
+                          {t(subscriptionModalKey('paymentMethodsRetry'))}
+                        </button>
+                      </div>
+                    ) : initializeCardMutation.data ? (
+                      <SubscriptionCardPaymentForm
+                        ref={cardFormRef}
+                        clientSecret={initializeCardMutation.data.clientSecret}
+                        publishableKey={initializeCardMutation.data.publishableKey}
+                        billingDefaults={resolvedBillingDefaults}
+                        hideFooter
+                        onSubmittingChange={setCardSubmitting}
+                        onCancel={onClose}
+                        onSuccess={handleCardSuccess}
+                        onError={handleCardError}
+                      />
+                    ) : null}
+                  </div>
+                ) : null}
+              </>
+            )}
+          </section>
+
+          <section
+            className="sms-credit-section sms-credit-invoice"
+            aria-labelledby={SUBSCRIPTION_PAYMENT_DOM_ID.invoiceTitle}
+          >
+            <div
+              className="sms-credit-section-label"
+              id={SUBSCRIPTION_PAYMENT_DOM_ID.invoiceTitle}
+            >
+              {t(subscriptionModalKey('invoiceSummary'))}
+            </div>
+            <div className="sms-credit-invoice-row">
+              <span>{t(subscriptionModalKey('servicePlan'))}</span>
+              <strong>{t(planNameKey)}</strong>
+            </div>
+            <div className="sms-credit-invoice-row">
+              <span>{t(subscriptionModalKey('invoicePayment'))}</span>
+              <strong>{paymentLabel}</strong>
+            </div>
+            <div className="sms-credit-invoice-row sms-credit-invoice-total">
+              <span>{t(subscriptionModalKey('totalDue'))}</span>
+              <strong>
+                {formatPlanMonthlyTotal(
+                  price,
+                  ` / ${t(
+                    subscriptionModalKey(
+                      billingCycle === SubscriptionBillingCycle.Yearly
+                        ? 'priceNoteYear'
+                        : 'priceNoteMonth',
+                    ),
+                  )}`,
+                )}
+              </strong>
+            </div>
+            {currentPlanLabel ? (
+              <p className="mt-3 text-xs font-semibold text-red-600">
+                {t(subscriptionModalKey('forfeitWarning'), { plan: currentPlanLabel })}
+              </p>
+            ) : null}
+          </section>
+
+          <div className="sr-only" aria-live="polite">
+            {isConfirmPending ? t(subscriptionModalKey('cardPaymentProcessing')) : null}
+          </div>
+        </div>
+
+        <div className="sms-credit-modal-foot">
+          <button
+            className="btn-outline"
+            type="button"
+            disabled={purchaseMutation.isPending || cardSubmitting || isCardOrderPolling}
+            onClick={onClose}
           >
             {t('common.cancel')}
           </button>
           <button
+            className="btn-primary"
             type="button"
-            onClick={handleFooterConfirm}
             disabled={!canConfirm || isConfirmPending}
-            className="inline-flex h-11 items-center justify-center gap-2 rounded-lg bg-nexoraBrand px-4 text-sm font-bold text-white transition hover:bg-nexoraBrand/90 disabled:opacity-50"
+            onClick={handleConfirm}
           >
-            {isConfirmPending ? <Loader2 className="h-4 w-4 animate-spin" /> : null}
-            {t(subscriptionModalKey('confirmPayment'))}
+            {isConfirmPending ? (
+              <Loader2 className="marketing-icon is-compact animate-spin" aria-hidden="true" />
+            ) : (
+              <ShieldCheckIcon className="marketing-icon is-compact" />
+            )}
+            <span>
+              {isConfirmPending
+                ? t(subscriptionModalKey('cardPaymentProcessing'))
+                : t(subscriptionModalKey('confirmPayment'))}
+            </span>
           </button>
-        </div>
-        <div className="sr-only" aria-live="polite">
-          {isConfirmPending ? t(subscriptionModalKey('cardPaymentProcessing')) : null}
         </div>
       </div>
     </div>

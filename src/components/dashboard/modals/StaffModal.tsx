@@ -1,5 +1,5 @@
 import { useState, useEffect, useMemo } from 'react'
-import { X, Upload, Eye, AlertTriangle, QrCode, Loader2, CheckCircle2, XCircle, Star, HelpCircle, Plus, Pencil } from 'lucide-react'
+import { X, Upload, Eye, AlertTriangle, QrCode, Loader2, CheckCircle2, XCircle, Star, HelpCircle, Edit2, Plus } from 'lucide-react'
 import IconButton from '../../ui/IconButton'
 import ImageFileInput from '../../ui/ImageFileInput'
 import CountryCodeSelect, { normalizePhoneE164, parsePhone, formatNationalNumber, PhoneDialCode } from '../../CountryCodeSelect'
@@ -16,10 +16,32 @@ import {
   useToggleLocalStaffPaymentMethod,
   useUpdateLocalStaffPaymentMethod,
 } from '../../../data/hooks/useLocalStaff'
-import { PAYOUT_UI_LABELS, orderedPayoutUiKeysFromMethods, toPayoutAccountNameDto } from '../../../data/paymentMethodTypes'
-import { getApiErrorCode } from '../../../types/domain'
+import { PayoutUiKey } from '../../../data/payoutUiKeys'
+import {
+  buildPaymentMethodFromPayoutConfig,
+  EMPTY_STAFF_PAYOUT_CONFIG,
+  isPaymentMethodConfigured,
+  mergeStaffPaymentMethodWithConfig,
+  orderedPayoutUiKeysFromMethods,
+  PAYOUT_UI_LABELS,
+  payoutTypeToUiKey,
+  supportsPayoutAccountName,
+  toPayoutAccountNameDto,
+} from '../../../data/paymentMethodTypes'
+import { getApiErrorCode, type PaymentMethodDto } from '../../../types/domain'
+import PayoutMethodDetailModal from '../../payout/PayoutMethodDetailModal'
+import { formatPaymentMethodAccountDisplay } from '../../payout/bankWireAccount'
 import { getErrorI18nKey } from '../../../data/errorCodes'
 import { buildStaffReviewSummary } from './staffModalReviewUtils'
+import {
+  parseVlinkpayAddresses,
+  serializeVlinkpayAddresses,
+  toVlinkpayCryptoAddressesPayload,
+} from '../../payout/vlinkpayWallet'
+
+function resolveStaffIdDisplay(form: { nexoraStaffId?: string; staffCode?: string } | null | undefined) {
+  return String(form?.nexoraStaffId || form?.staffCode || '').trim()
+}
 
 function StaffModal({
   open,
@@ -50,6 +72,7 @@ function StaffModal({
   const [payoutSetupOpen, setPayoutSetupOpen] = useState(false)
   const [payoutSetupWallet, setPayoutSetupWallet] = useState('venmo')
   const [tempPayoutValues, setTempPayoutValues] = useState({ value: '', qrCode: '', accountName: '' })
+  const [viewingMethod, setViewingMethod] = useState<PaymentMethodDto | null>(null)
 
   // Scanner states
   const [showScanner, setShowScanner] = useState(false)
@@ -60,9 +83,7 @@ function StaffModal({
   const isIdReadOnly = isReviewOnly || isLocalStaff
   const canManageLocalPayouts = isLocalStaff && !viewOnly && !isApproveMode
 
-  const [idInput, setIdInput] = useState(() =>
-    isReviewOnly ? (form.nexoraStaffId || form.vlinkpay || '') : (form.vlinkpay || form.nexoraStaffId || ''),
-  )
+  const [idInput, setIdInput] = useState(() => resolveStaffIdDisplay(form))
   const [searchQuery, setSearchQuery] = useState('')
   const [lastHandledSearchQuery, setLastHandledSearchQuery] = useState('')
   const readOnlyInputClass = 'border-nexoraBorder bg-nexoraCanvas cursor-not-allowed'
@@ -78,12 +99,13 @@ function StaffModal({
   }
 
   useEffect(() => {
-    setIdInput(
-      isReviewOnly
-        ? (form.nexoraStaffId || form.vlinkpay || '')
-        : (form.vlinkpay || form.nexoraStaffId || ''),
-    )
-  }, [form.vlinkpay, form.nexoraStaffId, isReviewOnly])
+    const staffCode = resolveStaffIdDisplay(form)
+    if (editing || isReviewOnly || isLocalStaff) {
+      setIdInput(staffCode)
+      return
+    }
+    if (staffCode) setIdInput(staffCode)
+  }, [editing, form.nexoraStaffId, form.staffCode, isLocalStaff, isReviewOnly])
 
   // Verification states
   const [vlinkpayStatus, setVlinkpayStatus] = useState('idle') // 'idle' | 'checking' | 'success' | 'error'
@@ -116,7 +138,22 @@ function StaffModal({
   }, [form?.paymentMethods])
 
   const getFormPayoutConfig = (walletKey: string) =>
-    (form.payoutConfigs && form.payoutConfigs[walletKey]) || { enabled: false, value: '', qrCode: '' }
+    (form.payoutConfigs && form.payoutConfigs[walletKey]) || EMPTY_STAFF_PAYOUT_CONFIG
+
+  const getPaymentMethodForWallet = (walletKey: string): PaymentMethodDto => {
+    const methods = Array.isArray(form?.paymentMethods) ? form.paymentMethods : []
+    const fromApi = methods.find(
+      (method) => (method.uiKey || payoutTypeToUiKey(method.type || '')) === walletKey,
+    )
+    const config = getFormPayoutConfig(walletKey)
+    if (fromApi) {
+      return mergeStaffPaymentMethodWithConfig(fromApi, walletKey, config)
+    }
+    return buildPaymentMethodFromPayoutConfig(walletKey, config, form.fullName || '')
+  }
+
+  const payoutMethodHasAccount = (walletKey: string) =>
+    isPaymentMethodConfigured(getPaymentMethodForWallet(walletKey))
 
   const showLocalPaymentError = (err: unknown) => {
     showToast(t(getErrorI18nKey(getApiErrorCode(err))), 'error')
@@ -253,17 +290,26 @@ function StaffModal({
       if (!staffProfileId) return
 
       const trimmed = value.trim()
+      const isVlinkpay = payoutSetupWallet === PayoutUiKey.VlinkPay
+      const cryptoAddresses = isVlinkpay
+        ? toVlinkpayCryptoAddressesPayload(parseVlinkpayAddresses(trimmed))
+        : undefined
       updateLocalPaymentMutation.mutate(
         {
           staffProfileId,
           uiKey: payoutSetupWallet,
-          accountInfo: trimmed,
+          ...(isVlinkpay
+            ? { accountInfo: null, cryptoAddresses }
+            : { accountInfo: trimmed }),
           accountName: toPayoutAccountNameDto(payoutSetupWallet, accountName),
           imageUrl: qrCode || null,
           imageFile: qrFile,
         },
         {
           onSuccess: (updated) => {
+            const displayValue = isVlinkpay
+              ? serializeVlinkpayAddresses(parseVlinkpayAddresses(trimmed))
+              : trimmed
             setForm((prev) => {
               const configs = prev.payoutConfigs || DEFAULT_PAYOUT_CONFIGS
               return {
@@ -272,7 +318,7 @@ function StaffModal({
                   ...configs,
                   [payoutSetupWallet]: {
                     enabled: updated.isActive || Boolean(trimmed),
-                    value: trimmed,
+                    value: displayValue,
                     qrCode: updated.imageUrl || qrCode || '',
                     accountName: accountName.trim() || prev.fullName || '',
                   },
@@ -510,7 +556,7 @@ function StaffModal({
                         type="button"
                         style={{ display: 'none' }}
                         title={t('components.dashboard.modals.StaffModal.scanVlinkpayQrCode')}
-                        onClick={() => handleScanQr('vlinkpay')}
+                        onClick={() => handleScanQr(PayoutUiKey.VlinkPay)}
                       />
                       <button
                         type="button"
@@ -701,84 +747,94 @@ function StaffModal({
           <div className="space-y-4">
             <div>
               <label className="text-[10px] font-extrabold uppercase text-nexoraMuted">{t('setup.payout_methods')}</label>
-              <div className="mt-2 space-y-4">
-                <div className="divide-y divide-nexoraRule rounded-xl border border-nexoraBorder bg-white px-4">
-                  {staffPayoutKeys.map((walletKey) => {
+              <div className="mt-2 space-y-2">
+                {staffPayoutKeys.map((walletKey) => {
                     const walletName = PAYOUT_UI_LABELS[walletKey] || walletKey
                     const config = getFormPayoutConfig(walletKey)
+                    const method = getPaymentMethodForWallet(walletKey)
+                    const hasAccount = payoutMethodHasAccount(walletKey)
+                    const accountDisplay = formatPaymentMethodAccountDisplay(
+                      walletKey,
+                      method.accountInfo,
+                      method.cryptoAddresses,
+                    )
+
+                    const actionLabel = hasAccount
+                      ? t('components.settings.tabs.ProfileTab.payoutAccount')
+                      : t('components.dashboard.modals.AddStaffModal.manual_add_account')
 
                     return (
-                      <div key={walletKey} className="flex items-center justify-between py-3">
-                        <div className="flex items-center gap-3 min-w-0">
-                          <button
-                            type="button"
-                            role="switch"
-                            aria-checked={config.enabled}
-                            aria-label={`${walletName} — ${t('setup.payout_methods')}`}
-                            disabled={!canManageLocalPayouts || isLocalPaymentSaving}
-                            onClick={canManageLocalPayouts ? () => handleToggleLocalPayment(walletKey) : undefined}
-                            className={`relative inline-flex h-6 w-11 shrink-0 rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus-visible:ring-2 focus-visible:ring-nexoraBrand/40 focus-visible:ring-offset-1 ${
-                              config.enabled ? 'bg-nexoraBrand' : 'bg-nexoraBorder'
-                            } ${
-                              !canManageLocalPayouts
-                                ? 'cursor-not-allowed'
-                                : isLocalPaymentSaving
-                                  ? 'cursor-not-allowed opacity-70'
-                                  : 'cursor-pointer'
-                            }`}
-                          >
-                            <span
-                              className={`pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out ${
-                                config.enabled ? 'translate-x-5' : 'translate-x-0'
-                              }`}
-                            />
-                          </button>
-                          <div className="flex items-center gap-2 min-w-0">
-                            <span className="flex h-7 w-7 items-center justify-center rounded-lg bg-nexoraCanvas shrink-0">
+                      <div
+                        key={walletKey}
+                        className="flex min-w-0 items-center justify-between gap-2 rounded-xl border border-nexoraBorder bg-white px-3 py-2.5 shadow-sm"
+                      >
+                        <div className="flex min-w-0 flex-1 items-center gap-3">
+                          <ToggleSwitch
+                            checked={Boolean(config.enabled)}
+                            onChange={() => handleToggleLocalPayment(walletKey)}
+                            ariaLabel={`Toggle ${walletName}`}
+                            disabled={!canManageLocalPayouts}
+                            loading={isLocalPaymentSaving}
+                            activeColor="bg-amber-600"
+                            inactiveColor="bg-slate-200"
+                          />
+
+                          <div className="flex min-w-0 flex-1 items-center gap-2.5">
+                            <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg border border-nexoraBorder bg-nexoraCanvas">
                               {WalletLogos[walletKey]}
                             </span>
-                            <div className="min-w-0">
-                              <span className="text-xs font-bold text-nexoraText">{walletName}</span>
-                              {config.value ? (
-                                <div className="mt-0.5 truncate text-[10px] font-mono text-nexoraMuted">
-                                  {config.value}
+                            <div className="min-w-0 flex-1">
+                              <div className="truncate text-xs font-bold text-nexoraText">{walletName}</div>
+                              {hasAccount ? (
+                                <div className="mt-0.5 truncate font-mono text-[10px] text-nexoraMuted">
+                                  {supportsPayoutAccountName(walletKey) && (method.accountName || config.accountName) ? (
+                                    <span className="font-sans font-semibold">
+                                      {method.accountName || config.accountName} ·{' '}
+                                    </span>
+                                  ) : null}
+                                  {accountDisplay}
                                 </div>
-                              ) : null}
+                              ) : (
+                                <div className="mt-0.5 truncate text-[10px] font-medium italic text-nexoraSubtle">
+                                  {t('components.settings.tabs.ProfileTab.notConfigured')}
+                                </div>
+                              )}
                             </div>
                           </div>
                         </div>
-                        {canManageLocalPayouts ? (
-                          <button
-                            type="button"
-                            onClick={() => openPayoutSetup(walletKey)}
-                            disabled={isLocalPaymentSaving}
-                            className="inline-flex shrink-0 items-center gap-1 text-[11px] font-bold text-nexoraBrand transition hover:text-nexoraBrandDark disabled:cursor-not-allowed disabled:opacity-60"
-                          >
-                            {config.value ? (
-                              <Pencil className="h-3 w-3 stroke-[2.5]" />
-                            ) : (
-                              <Plus className="h-3 w-3 stroke-[2.5]" />
-                            )}
-                            <span>
-                              {config.value
-                                ? t('components.dashboard.modals.StaffModal.editAccount')
-                                : t('components.dashboard.modals.AddStaffModal.manual_add_account')}
-                            </span>
-                          </button>
-                        ) : (
-                          <button
-                            type="button"
-                            onClick={() => openPayoutSetup(walletKey)}
-                            className="flex items-center gap-1.5 text-[11px] font-bold text-nexoraMuted transition hover:text-nexoraText"
-                          >
-                            <Eye className="h-3.5 w-3.5" />
-                            <span>{t('components.dashboard.modals.StaffModal.viewAccount')}</span>
-                          </button>
-                        )}
+
+                        <div className="flex shrink-0 items-center gap-1.5">
+                          {hasAccount ? (
+                            <button
+                              type="button"
+                              onClick={() => setViewingMethod(method)}
+                              aria-label={`View ${walletName} Payout Details`}
+                              className="inline-flex max-w-[7.5rem] items-center justify-center gap-1 rounded-lg border border-sky-200 bg-sky-50 px-2 py-1.5 text-[10px] font-bold text-sky-700 transition hover:text-sky-800"
+                            >
+                              <Eye className="h-3 w-3 shrink-0" />
+                              <span className="truncate">{t('components.settings.tabs.ProfileTab.view')}</span>
+                            </button>
+                          ) : null}
+                          {canManageLocalPayouts ? (
+                            <button
+                              type="button"
+                              onClick={() => openPayoutSetup(walletKey)}
+                              disabled={isLocalPaymentSaving}
+                              aria-label={actionLabel}
+                              className="inline-flex max-w-[8.5rem] items-center justify-center gap-1 rounded-lg border border-amber-200 bg-amber-50 px-2 py-1.5 text-[10px] font-bold text-amber-700 transition hover:text-amber-800 disabled:cursor-not-allowed disabled:opacity-60"
+                            >
+                              {hasAccount ? (
+                                <Edit2 className="h-3 w-3 shrink-0" />
+                              ) : (
+                                <Plus className="h-3 w-3 shrink-0" />
+                              )}
+                              <span className="truncate">{actionLabel}</span>
+                            </button>
+                          ) : null}
+                        </div>
                       </div>
                     )
-                  })}
-                </div>
+                })}
               </div>
               {errors.payment && <p className="mt-2 flex items-center gap-1 text-xs font-bold text-nexoraDanger"><AlertTriangle className="h-3.5 w-3.5" />{errors.payment}</p>}
             </div>
@@ -875,6 +931,18 @@ function StaffModal({
         onSubmit={handlePayoutSubmit}
         readOnly={!isLocalStaff}
         isSaving={isLocalPaymentSaving}
+      />
+
+      <PayoutMethodDetailModal
+        method={viewingMethod}
+        logo={
+          viewingMethod ? (
+            <span className="flex h-7 w-7 items-center justify-center">
+              {WalletLogos[viewingMethod.uiKey || payoutTypeToUiKey(viewingMethod.type || '')]}
+            </span>
+          ) : null
+        }
+        onClose={() => setViewingMethod(null)}
       />
 
       <StaffReviewsDetailModal
