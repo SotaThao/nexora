@@ -17,6 +17,7 @@ import posDeviceHttpClient, {
 import PosDeviceRevokedPage from './PosDeviceRevokedPage'
 import SelfCheckInFlow from './SelfCheckInFlow'
 import SelfCheckInSettings from './SelfCheckInSettings'
+import type { PosCheckInLayout } from '../../types/repositories'
 
 const K = 'components.posDevice.SelfCheckInPage'
 
@@ -24,6 +25,7 @@ interface SelfCheckInContext {
   businessName: string
   logoUrl: string | null
   deviceName: string
+  checkInLayout: PosCheckInLayout
 }
 
 type LoadState = 'loading' | 'ready' | 'unpaired' | 'revoked' | 'offline'
@@ -133,6 +135,9 @@ export default function SelfCheckInPage() {
         businessName={context?.businessName ?? ''}
         logoUrl={context?.logoUrl ?? null}
         deviceName={context?.deviceName ?? ''}
+        // Owner-configurable per business — a salon that trained its staff on the step flow can
+        // keep it while the default moved to the one-page form.
+        layout={context?.checkInLayout ?? 'SinglePage'}
         // Ending a check-in returns to a fresh keypad rather than a home screen, so the tablet is
         // ready for the next person with nothing of the last one left on it.
         onExit={() => setSessionKey((prev) => prev + 1)}

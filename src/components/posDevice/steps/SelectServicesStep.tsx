@@ -4,9 +4,9 @@
 // tap-to-toggle) so the kiosk and the front desk present the same menu the same way. Selecting
 // nothing is a supported outcome — "just get me in the queue, I'll explain in person" — so the
 // primary button changes label rather than being disabled.
-import { useMemo } from 'react'
-import { Loader2 } from 'lucide-react'
+import { useMemo, type ReactNode } from 'react'
 import { useTranslation } from '../../../contexts/LanguageContext'
+import CheckInStepFrame from '../../checkin/parts/CheckInStepFrame'
 import CategoryGroupedCatalogPicker, {
   type CatalogPickerItem,
 } from '../../dashboard/views/pos/CategoryGroupedCatalogPicker'
@@ -26,6 +26,10 @@ export default function SelectServicesStep({
   onToggle,
   onBack,
   onContinue,
+  header,
+  footerNote,
+  disabledItemIds,
+  primaryLabel,
 }: {
   services: SelfCheckInServiceApiDto[]
   isLoading: boolean
@@ -35,6 +39,12 @@ export default function SelectServicesStep({
   onToggle: (serviceId: string) => void
   onBack: () => void
   onContinue: () => void
+  // Front desk only: a Services/Products tab strip above the same picker, and a running total
+  // below it. The kiosk sells no products and shows no totals, so it passes neither.
+  header?: ReactNode
+  footerNote?: ReactNode
+  disabledItemIds?: string[]
+  primaryLabel?: string
 }) {
   const { t } = useTranslation()
 
@@ -55,11 +65,21 @@ export default function SelectServicesStep({
   const selectedCount = selectedServiceIds.length
 
   return (
-    <div className="mx-auto w-full max-w-3xl space-y-4 rounded-2xl border border-nexoraBorder bg-nexoraSurface p-6">
-      <div className="text-center">
-        <h1 className="text-xl font-black text-nexoraText">{t(`${K}.servicesTitle`)}</h1>
-        <p className="mt-1 text-sm text-nexoraMuted">{t(`${K}.servicesSubtitle`)}</p>
-      </div>
+    <CheckInStepFrame
+      title={t(`${K}.servicesTitle`)}
+      subtitle={t(`${K}.servicesSubtitle`)}
+      backLabel={t(`${K}.back`)}
+      onBack={onBack}
+      primaryLabel={
+        primaryLabel ??
+        (selectedCount === 0
+          ? t(`${K}.servicesSkip`)
+          : t(`${K}.servicesContinue`, { count: String(selectedCount) }))
+      }
+      onPrimary={onContinue}
+      isSubmitting={isSubmitting}
+    >
+      {header}
 
       {isLoading ? (
         <SkeletonList count={6} lines={2} />
@@ -69,6 +89,7 @@ export default function SelectServicesStep({
           onAdd={onToggle}
           variant="grid"
           selectedItemIds={selectedServiceIds}
+          disabledItemIds={disabledItemIds}
           addLabel={t(`${K}.catalogAdd`)}
           emptyLabel={t(`${K}.catalogEmpty`)}
           allCategoryLabel={t(`${K}.catalogAll`)}
@@ -79,31 +100,11 @@ export default function SelectServicesStep({
         />
       )}
 
+      {footerNote}
+
       {errorMessage ? (
         <p className="rounded-lg bg-red-50 px-3 py-2 text-sm font-medium text-nexoraDanger">{errorMessage}</p>
       ) : null}
-
-      <div className="flex gap-2">
-        <button
-          type="button"
-          onClick={onBack}
-          disabled={isSubmitting}
-          className="h-14 flex-1 rounded-lg border border-nexoraBorder text-base font-bold text-nexoraText hover:border-nexoraBrand disabled:opacity-60"
-        >
-          {t(`${K}.back`)}
-        </button>
-        <button
-          type="button"
-          onClick={onContinue}
-          disabled={isSubmitting}
-          className="flex h-14 flex-[2] items-center justify-center gap-2 rounded-lg bg-nexoraBrand text-base font-bold text-white hover:bg-nexoraBrandDark disabled:opacity-60"
-        >
-          {isSubmitting ? <Loader2 className="h-5 w-5 animate-spin" /> : null}
-          {selectedCount === 0
-            ? t(`${K}.servicesSkip`)
-            : t(`${K}.servicesContinue`, { count: String(selectedCount) })}
-        </button>
-      </div>
-    </div>
+    </CheckInStepFrame>
   )
 }

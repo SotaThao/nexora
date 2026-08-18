@@ -4,8 +4,9 @@
 // not assigned to the service. The dropdown is the escape hatch for the customer who wants someone
 // different for one item — inline rather than behind an overlay, because the point of this screen
 // is seeing every line at once, and an overlay hides exactly that.
-import { Loader2 } from 'lucide-react'
 import { useTranslation } from '../../../contexts/LanguageContext'
+import CheckInStepFrame from '../../checkin/parts/CheckInStepFrame'
+import CheckInServiceLineRow from '../../checkin/parts/CheckInServiceLineRow'
 import { initialsOf } from './technicianDisplay'
 import type { SelfCheckInServiceApiDto, SelfCheckInTechnicianApiDto } from '../../../types/repositories'
 
@@ -22,6 +23,7 @@ export default function OverviewStep({
   customerPhone,
   bookingTime,
   isSubmitting,
+  primaryDisabled,
   errorMessage,
   onChoose,
   onBack,
@@ -36,6 +38,9 @@ export default function OverviewStep({
   // Set only when this visit came from an appointment.
   bookingTime: string | null
   isSubmitting: boolean
+  // Set when check-in's own rules are not met yet (a missing name, an unticked consent box) — the
+  // button says so rather than silently doing nothing.
+  primaryDisabled?: boolean
   errorMessage: string | null
   onChoose: (serviceId: string, posStaffProfileId: string | null) => void
   onBack: () => void
@@ -44,11 +49,16 @@ export default function OverviewStep({
   const { t } = useTranslation()
 
   return (
-    <div className="mx-auto w-full max-w-2xl space-y-4 rounded-2xl border border-nexoraBorder bg-nexoraSurface p-6">
-      <div className="text-center">
-        <h1 className="text-xl font-black text-nexoraText">{t(`${K}.overviewTitle`)}</h1>
-        <p className="mt-1 text-sm text-nexoraMuted">{t(`${K}.overviewSubtitle`)}</p>
-      </div>
+    <CheckInStepFrame
+      title={t(`${K}.overviewTitle`)}
+      subtitle={t(`${K}.overviewSubtitle`)}
+      backLabel={t(`${K}.back`)}
+      onBack={onBack}
+      primaryLabel={t(`${K}.submit`)}
+      onPrimary={onSubmit}
+      primaryDisabled={primaryDisabled}
+      isSubmitting={isSubmitting}
+    >
 
       {/* Last chance to notice the tablet has the wrong person — worth the space on a screen a
           stranger types their own number into. */}
@@ -73,37 +83,31 @@ export default function OverviewStep({
           const selected = eligible.find((tech) => tech.posStaffProfileId === selectedId)
 
           return (
-            <div
+            <CheckInServiceLineRow
               key={service.id}
-              className="flex items-center justify-between gap-3 rounded-2xl border border-nexoraBorder p-3"
-            >
-              <div className="flex min-w-0 items-center gap-3">
-                <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-nexoraCanvas text-xs font-bold text-nexoraText">
-                  {selected ? initialsOf(selected.displayName) : '⚡'}
-                </span>
-                <div className="min-w-0">
-                  <p className="truncate text-sm font-bold text-nexoraText">{service.name}</p>
-                  <p className="truncate text-xs text-nexoraMuted">
-                    ${service.price.toFixed(2)}
-                    {service.durationMinutes ? ` · ${service.durationMinutes} min` : ''}
-                  </p>
-                </div>
-              </div>
-
-              <select
-                value={selectedId ?? ANYONE}
-                aria-label={t(`${K}.technicianForService`, { serviceName: service.name })}
-                onChange={(e) => onChoose(service.id, e.target.value === ANYONE ? null : e.target.value)}
-                className="h-11 max-w-[45%] shrink-0 rounded-lg border border-nexoraBorder bg-white px-3 text-sm font-bold text-nexoraText outline-none focus:border-nexoraBrand"
-              >
-                <option value={ANYONE}>{t(`${K}.anyone`)}</option>
-                {eligible.map((tech) => (
-                  <option key={tech.posStaffProfileId} value={tech.posStaffProfileId}>
-                    {tech.displayName}
-                  </option>
-                ))}
-              </select>
-            </div>
+              serviceName={service.name}
+              price={service.price}
+              durationMinutes={service.durationMinutes}
+              technicianInitials={selected ? initialsOf(selected.displayName) : null}
+              technicianSelect={
+                <select
+                  value={selectedId ?? ANYONE}
+                  aria-label={t(`${K}.technicianForService`, { serviceName: service.name })}
+                  onChange={(e) => onChoose(service.id, e.target.value === ANYONE ? null : e.target.value)}
+                  // A fixed width, not a percentage: this select sits inside a shrink-0 flex
+                  // container whose own width comes from its content, so a percentage max-width
+                  // resolves against an indefinite parent and collapses the control to its arrow.
+                  className="h-11 w-40 rounded-lg border border-nexoraBorder bg-white px-3 text-sm font-bold text-nexoraText outline-none focus:border-nexoraBrand"
+                >
+                  <option value={ANYONE}>{t(`${K}.anyone`)}</option>
+                  {eligible.map((tech) => (
+                    <option key={tech.posStaffProfileId} value={tech.posStaffProfileId}>
+                      {tech.displayName}
+                    </option>
+                  ))}
+                </select>
+              }
+            />
           )
         })}
       </div>
@@ -112,25 +116,6 @@ export default function OverviewStep({
         <p className="rounded-lg bg-red-50 px-3 py-2 text-sm font-medium text-nexoraDanger">{errorMessage}</p>
       ) : null}
 
-      <div className="flex gap-2">
-        <button
-          type="button"
-          onClick={onBack}
-          disabled={isSubmitting}
-          className="h-14 flex-1 rounded-lg border border-nexoraBorder text-base font-bold text-nexoraText hover:border-nexoraBrand disabled:opacity-60"
-        >
-          {t(`${K}.back`)}
-        </button>
-        <button
-          type="button"
-          onClick={onSubmit}
-          disabled={isSubmitting}
-          className="flex h-14 flex-[2] items-center justify-center gap-2 rounded-lg bg-nexoraBrand text-base font-bold text-white hover:bg-nexoraBrandDark disabled:opacity-60"
-        >
-          {isSubmitting ? <Loader2 className="h-5 w-5 animate-spin" /> : null}
-          {t(`${K}.submit`)}
-        </button>
-      </div>
-    </div>
+    </CheckInStepFrame>
   )
 }

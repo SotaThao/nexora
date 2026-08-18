@@ -191,6 +191,11 @@ export const qk = {
   posSelfCheckInActiveVisit: (phone?: string) => ['posSelfCheckIn', 'activeVisit', phone ?? ''],
   posSelfCheckInBooking: (phone?: string) => ['posSelfCheckIn', 'booking', phone ?? ''],
   posSelfCheckInTechnicians: () => ['posSelfCheckIn', 'technicians'],
+  merchantPosCheckInTechnicians: (businessId?: string) => ['merchantSettings', 'posCheckInTechnicians', businessId ?? ''],
+  merchantPosCheckInActiveVisit: (businessId?: string, phone?: string) => [
+    'merchantSettings', 'posCheckInActiveVisit', businessId ?? '', phone ?? '',
+  ],
+  merchantPosCheckInSettings: (businessId?: string) => ['merchantSettings', 'posCheckInSettings', businessId ?? ''],
   merchantPosTimeClockQr: (businessId?: string) => ['merchantSettings', 'posTimeClockQr', businessId ?? ''],
   merchantPosTimeClockRoster: (businessId?: string, dayKey?: string) => {
     const key: unknown[] = ['merchantSettings', 'posTimeClockRoster', businessId ?? '']
@@ -214,8 +219,6 @@ export const qk = {
     ['merchantSettings', 'posCheckoutProductCatalog', businessId ?? ''],
   merchantPosAssignableStaff: (businessId?: string, posServiceId?: string) =>
     ['merchantSettings', 'posAssignableStaff', businessId ?? '', posServiceId ?? ''],
-  merchantPosAssignableServices: (businessId?: string, posStaffProfileId?: string) =>
-    ['merchantSettings', 'posAssignableServices', businessId ?? '', posStaffProfileId ?? ''],
   // POS Booking — Booking Management screen (Ticket 9)
   merchantPosBookingList: (businessId?: string, filters?: object) => {
     const key: unknown[] = ['merchantSettings', 'posBookingList', businessId ?? '']

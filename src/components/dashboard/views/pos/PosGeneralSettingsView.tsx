@@ -14,6 +14,7 @@ import BusinessInfoCard from '../../../settings/BusinessInfoCard'
 import ToggleSwitch from '../../../ui/ToggleSwitch'
 import useBusinessHoursForm from './hooks/useBusinessHoursForm'
 import PosBookingSettingsPanel from './PosBookingSettingsPanel'
+import PosCheckInSettingsPanel from './PosCheckInSettingsPanel'
 import HolidayClosuresCard from '../HolidayClosuresCard'
 
 type SettingsFormErrors = Record<string, string>
@@ -197,6 +198,8 @@ export default function PosGeneralSettingsView({
         </div>
 
         <HolidayClosuresCard />
+
+        <PosCheckInSettingsPanel businessId={businessId} />
 
         <PosBookingSettingsPanel businessId={businessId} businessSlug={businessSlug} />
       </div>

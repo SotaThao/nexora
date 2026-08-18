@@ -37,6 +37,7 @@ import type { OrderListItemApiDto, TurnBoardStationApiDto } from '../../../../ty
 import { SkeletonList } from '../../../ui/skeleton'
 import { getInitials, joinOrEmpty } from './posDisplay'
 import PosOrderWorkspace from './PosOrderWorkspace'
+import PosCheckInTab from './PosCheckInTab'
 import PosCompletedOrdersPanel from './PosCompletedOrdersPanel'
 import NewBookingForm from './booking/NewBookingForm'
 import BookingTab from './booking/BookingTab'
@@ -376,7 +377,6 @@ export default function PosFrontDeskView({
       {updateWorkspace ? (
         <PosOrderWorkspace
           businessId={businessId}
-          businessName={businessName}
           orderId={updateWorkspace.orderId}
           onClose={() => {
             setUpdateWorkspace(null)
@@ -390,22 +390,23 @@ export default function PosFrontDeskView({
       ) : (
         <>
       {/* Always mounted (hidden via CSS, not unmounted) so the in-progress phone/name/
-          services draft survives switching to another tab and back — PosOrderWorkspace
-          resets its own local state back to Step 1 only after a successful Check-In/
-          Checkout, or via its own Cancel button. See top-of-file note. */}
+          services draft survives switching to another tab and back — the check-in session
+          resets itself only after a successful check-in, or via its own Cancel button.
+          See top-of-file note. */}
       <div className={activeTab === PosFrontDeskTab.CheckIn ? '' : 'hidden'}>
-        <PosOrderWorkspace
+        <PosCheckInTab
           businessId={businessId}
           businessName={businessName}
-          orderId={null}
-          onCheckedIn={() => {
+          onCheckedIn={refreshFrontDeskLists}
+          onFinished={() => {
             // The old standalone Waitlist tab is gone (folded into Order List as a filter) — land
-            // on Order List pre-filtered to Waiting so the just-created ticket is visible.
+            // on Order List pre-filtered to Waiting so the just-created ticket is visible. Fires on
+            // Done rather than on check-in itself: the operator reads the number off the thank-you
+            // screen, so the screen stays until they are finished with it.
             setActiveTab(PosFrontDeskTab.OrderList)
             setOrderListFilter(OrderListFilter.Waiting)
             refreshFrontDeskLists()
           }}
-          onCompleted={refreshFrontDeskLists}
         />
       </div>
 

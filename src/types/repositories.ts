@@ -385,10 +385,15 @@ export interface PosDeviceListItemApiDto {
 }
 
 // Self Check-In kiosk — everything below is served under the device token, never a user session.
+export type PosCheckInLayout = 'SinglePage' | 'Wizard'
+
 export interface SelfCheckInContextApiDto {
   businessName: string
   logoUrl: string | null
   deviceName: string
+  // The tablet has no merchant session, so the layout it should render rides along with the
+  // branding it already fetches rather than coming from the settings endpoint.
+  checkInLayout: PosCheckInLayout
 }
 
 export interface SelfCheckInServiceApiDto {
@@ -409,11 +414,38 @@ export interface SelfCheckInTechnicianApiDto {
   // technician the customer picked up front can actually do what they then chose — no round trip
   // per service, and the same data drives the per-service dropdown on the overview.
   serviceIds: string[]
-  // Deliberately no `isBusy`: who is mid-service is floor information for staff, not something
-  // to show a waiting customer.
+  // Informational, never a block — a busy technician can still be asked for. Shown on both
+  // surfaces since the one-page check-in renders the identical grid.
+  isBusy: boolean
 }
 
 export interface SelfCheckInOrderResultApiDto {
+  orderId: string
+  orderNumber: string
+}
+
+// Front desk twin of SelfCheckInTechnicianApiDto — same rules, merchant session instead of a
+// device token.
+export interface CheckInTechnicianApiDto {
+  posStaffProfileId: string
+  displayName: string
+  photoUrl: string | null
+  serviceIds: string[]
+  isBusy: boolean
+}
+
+export interface CheckInActiveVisitApiDto {
+  orderNumber: string
+}
+
+export interface PosCheckInSettingsApiDto {
+  kioskCheckInLayout: PosCheckInLayout
+  frontDeskCheckInLayout: PosCheckInLayout
+}
+
+// Both front-desk check-in paths answer with this: a walk-in opening a new order and a booked
+// guest converting their appointment.
+export interface PosCheckInResultApiDto {
   orderId: string
   orderNumber: string
 }

@@ -3295,16 +3295,10 @@
             "backToMonth": "Về xem tháng"
           },
           "PosOrderWorkspace": {
-            "bookingPrefilled": "Đã tự động điền theo lịch hẹn hôm nay của {{name}}",
             "titleUpdate": "Order #{{orderNumber}} · {{customerName}}",
             "backButton": "Quay lại",
-            "cancelButton": "Hủy",
             "tabServices": "Dịch vụ",
             "tabProducts": "Sản phẩm",
-            "chooseServicesTitle": "Chọn dịch vụ",
-            "chooseServicesHint": "Không bắt buộc: chạm chip danh mục, sau đó chạm thẻ dịch vụ để chọn hoặc bỏ chọn.",
-            "viewDetailsButton": "Xem chi tiết",
-            "closeDetailsButton": "Đóng",
             "addButton": "+ Thêm",
             "noServicesInCategory": "Không có dịch vụ nào trong danh mục này.",
             "noProductsInCategory": "Không có sản phẩm nào trong danh mục này.",
@@ -3320,18 +3314,7 @@
             "increaseQty": "Tăng số lượng",
             "noteTitle": "Ghi chú",
             "estimatedTotal": "Tổng ước tính",
-            "technicianSectionTitle": "Thợ",
-            "technicianSectionHint": "không bắt buộc, \"Thợ đầu tiên\" nhanh nhất",
             "firstAvailableLabel": "Thợ đầu tiên",
-            "firstAvailableHint": "chờ ít nhất",
-            "technicianAvailable": "đang trống",
-            "technicianBusy": "đang bận",
-            "noteFieldLabel": "Ghi chú",
-            "notePlaceholder": "Thêm ghi chú (không bắt buộc)…",
-            "smsConsentNotice": "Bằng cách nhấn Check Me In, tôi đồng ý nhận tin nhắn từ {{businessName}} (ưu đãi, nhắc lịch & tích điểm). Có thể áp dụng phí SMS/data. Trả lời STOP để ngừng nhận bất cứ lúc nào.",
-            "smsConsentBusinessFallback": "tiệm này",
-            "checkInButton": "Check Me In",
-            "checkInSuccess": "Đã check-in khách.",
             "checkoutButton": "Checkout",
             "startServiceButton": "Bắt đầu phục vụ",
             "startServiceSuccess": "Đã bắt đầu phục vụ.",
@@ -3366,14 +3349,6 @@
             "summarySalesTax": "Thuế bán hàng",
             "summaryTotal": "Tổng cộng",
             "completeButton": "Hoàn tất ${{amount}}"
-          },
-          "CustomerHeaderBar": {
-            "namePlaceholder": "vd. Amy Nguyễn",
-            "emailPlaceholder": "vd. amy@example.com",
-            "changeNumber": "Đổi số",
-            "returningCustomer": "Khách quen: {{name}} — lần trước: {{summary}}",
-            "noServicesLastVisit": "chưa có dịch vụ nào",
-            "useLastVisit": "Dùng lại lựa chọn cũ"
           },
           "PhoneCheckInStep": {
             "welcomeTitleWithBusiness": "Chào mừng đến {{businessName}}",
@@ -3640,6 +3615,22 @@
               "tokenLine": "Mã {{token}} · vòng {{rotation}}",
               "rotatesIn": "Mã mới sau {{time}}",
               "qrUnavailable": "Không lấy được mã ghép nối. Tải lại trang để thử lại."
+            }
+          },
+          "PosCheckInSettingsPanel": {
+            "title": "Bố cục Check-in",
+            "editAriaLabel": "Sửa bố cục Check-in",
+            "surface": {
+              "frontDeskCheckInLayout": "Quầy lễ tân",
+              "kioskCheckInLayout": "Máy tự check-in"
+            },
+            "surfaceHint": {
+              "frontDeskCheckInLayout": "Giao diện nhân viên thấy ở tab Check-in.",
+              "kioskCheckInLayout": "Giao diện khách thấy trên máy đặt ở cửa."
+            },
+            "layout": {
+              "SinglePage": "Một trang",
+              "Wizard": "Từng bước"
             }
           }
         },
@@ -5816,7 +5807,7 @@
         "nameTitle": "Chúng tôi nên gọi bạn là gì?",
         "nameLabel": "Tên của bạn",
         "namePlaceholder": "ví dụ: Jamie",
-        "nameOptionalHint": "Không bắt buộc — bạn có thể bỏ qua và báo lễ tân sau.",
+        "nameRequiredHint": "Chúng tôi dùng tên này để gọi khi tới lượt bạn.",
         "activeVisitTitle": "Bạn đang có lượt {{orderNumber}}",
         "activeVisitBody": "Nếu đúng là bạn thì không cần check-in lại. Check-in cho người khác bằng cùng số điện thoại cũng được.",
         "activeVisitExit": "Đúng là tôi — thoát",
@@ -5848,7 +5839,9 @@
         "overviewSubtitle": "Chạm vào dịch vụ để đổi thợ, hoặc bấm Quay lại để sửa những gì bạn đã chọn.",
         "technicianForService": "Thợ cho {{serviceName}}",
         "overviewNoName": "Khách",
-        "overviewBookingAt": "Lịch hẹn lúc {{time}}"
+        "overviewBookingAt": "Lịch hẹn lúc {{time}}",
+        "technicianBusy": "đang bận",
+        "technicianAvailable": "đang rảnh"
       },
       "SelfCheckInSettings": {
         "pinTitle": "Nhập mã PIN thiết bị",
@@ -5865,6 +5858,71 @@
         "signOutConfirmButton": "Đăng xuất",
         "signOutError": "Đăng xuất chưa thành công. Kiểm tra kết nối rồi thử lại.",
         "done": "Xong"
+      }
+    },
+    "checkin": {
+      "CheckInSurface": {
+        "submitError": "Check-in chưa thành công. Vui lòng thử lại hoặc báo quầy lễ tân."
+      },
+      "CustomerIdentityCard": {
+        "title": "Rất vui được gặp bạn!",
+        "subtitle": "Cho chúng tôi biết bạn là ai nhé.",
+        "changePhone": "Đổi số",
+        "nameLabel": "Tên",
+        "namePlaceholder": "VD: Nguyễn Thị Mai",
+        "smsConsent": "Nhận tin ưu đãi, nhắc lịch & quà tặng từ {{businessName}} qua SMS. Có thể phát sinh cước tin nhắn và dữ liệu."
+      },
+      "ServiceCatalogSection": {
+        "title": "Chọn dịch vụ",
+        "subtitle": "Không bắt buộc: chạm vào nhóm dịch vụ, rồi chạm vào thẻ dịch vụ để thêm.",
+        "add": "Thêm",
+        "empty": "Không có dịch vụ phù hợp.",
+        "allCategories": "Tất cả",
+        "uncategorized": "Khác",
+        "searchPlaceholder": "Tìm dịch vụ",
+        "viewDetails": "Xem chi tiết",
+        "closeDetails": "Đóng",
+        "noteLabel": "Ghi chú cho quầy lễ tân",
+        "notePlaceholder": "Bạn muốn nhắn gì thêm không?"
+      },
+      "SelectedServicesSummary": {
+        "title": "Dịch vụ đã chọn",
+        "empty": "Chưa chọn gì — không sao, bạn có thể nói trực tiếp với quầy.",
+        "remove": "Bỏ {{serviceName}}",
+        "servicesCount": "Dịch vụ",
+        "totalTime": "Tổng thời gian",
+        "total": "Tổng tiền",
+        "minutes": "{{minutes}} phút"
+      },
+      "ActiveVisitInterstitial": {
+        "title": "Bạn đang có lượt {{orderNumber}}",
+        "body": "Nếu là bạn thì không cần check-in lại. Nếu check-in cho người khác cùng số điện thoại thì vẫn được nhé.",
+        "exit": "Đúng là tôi — xong rồi",
+        "newGuest": "Check-in cho khách khác"
+      },
+      "ThankYouScreen": {
+        "title": "Đã check-in xong",
+        "titleNamed": "Cảm ơn {{customerName}}",
+        "body": "Mời bạn ngồi chờ — chúng tôi sẽ gọi ngay.",
+        "numberLabel": "Số thứ tự của bạn",
+        "done": "Xong",
+        "doneCountdown": "Xong ({{seconds}}s)"
+      },
+      "SinglePageCheckInLayout": {
+        "cancel": "Huỷ",
+        "bookingAt": "Lịch hẹn lúc {{time}}",
+        "technicianTitle": "Thợ",
+        "technicianSubtitle": "Không bắt buộc — chọn \"Thợ trống trước\" là nhanh nhất.",
+        "firstAvailable": "Thợ trống trước",
+        "firstAvailableHint": "chờ ít nhất",
+        "technicianSearchPlaceholder": "Tìm theo tên",
+        "noTechnicians": "Hiện chưa có thợ nào rảnh — vẫn chọn \"Thợ trống trước\" được.",
+        "technicianBusy": "đang bận",
+        "technicianAvailable": "đang rảnh",
+        "submit": "Check-in cho tôi ({{count}} dịch vụ)"
+      },
+      "WizardCheckInLayout": {
+        "cancel": "Huỷ"
       }
     }
   },
