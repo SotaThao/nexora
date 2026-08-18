@@ -2,9 +2,11 @@ import { useLayoutEffect, useRef, useState } from 'react'
 import { AlertTriangle, ChevronDown, Info } from 'lucide-react'
 import { useTranslation } from '../../contexts/LanguageContext'
 import {
+  VLINKPAY_ADDRESS_MAX_LENGTH,
   VLINKPAY_COINS,
   VLINKPAY_NETWORK,
   VLINKPAY_ADDRESS_INPUT_CLASS,
+  stripVlinkpayWalletAddressInput,
   type VlinkpayAddresses,
   type VlinkpayCoinKey,
 } from './vlinkpayWallet'
@@ -118,9 +120,15 @@ export default function VlinkpayWalletFields({
               disabled={disabled}
               value={addresses[coin.key]}
               autoComplete="off"
+              autoCapitalize="none"
+              autoCorrect="off"
               spellCheck={false}
+              maxLength={VLINKPAY_ADDRESS_MAX_LENGTH}
               placeholder={placeholder}
-              onChange={(event) => onChange(coin.key, event.target.value)}
+              onKeyDown={(event) => {
+                if (event.key === ' ' || event.code === 'Space') event.preventDefault()
+              }}
+              onChange={(event) => onChange(coin.key, stripVlinkpayWalletAddressInput(event.target.value))}
               className={`${VLINKPAY_ADDRESS_INPUT_CLASS} ${
                 error ? 'border-rose-400' : 'border-slate-200'
               } ${disabled ? 'cursor-not-allowed bg-slate-100 text-slate-400' : ''}`}
