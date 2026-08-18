@@ -65,7 +65,7 @@
       "taxiq": "Tax IQ",
       "earnings": "My Earnings",
       "salons": "My Salons",
-      "report": "Salon Report",
+      "report": "Report",
       "profile": "Settings",
       "notifications": "Notifications"
     },
@@ -1811,7 +1811,7 @@
     "skill_save_error": "Could not save work skills. Please try again."
   },
   "staff_salon_report": {
-    "title": "Salon Report",
+    "title": "Report",
     "subtitle": "Review your service activity and estimated take-home pay by period.",
     "preview_badge": "Preview data",
     "period_label": "Report period",

@@ -75,7 +75,7 @@
       "taxiq": "Tax IQ",
       "earnings": "Thu nhập của tôi",
       "salons": "Salon của tôi",
-      "report": "Báo cáo salon",
+      "report": "Báo cáo",
       "profile": "Cài đặt",
       "notifications": "Thông báo"
     },
@@ -1811,7 +1811,7 @@
     "skill_save_error": "Không thể lưu kỹ năng. Vui lòng thử lại."
   },
   "staff_salon_report": {
-    "title": "Báo cáo salon",
+    "title": "Báo cáo",
     "subtitle": "Xem hoạt động dịch vụ và thu nhập ước tính của bạn theo từng kỳ.",
     "preview_badge": "Dữ liệu xem trước",
     "period_label": "Kỳ báo cáo",

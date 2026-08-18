@@ -65,7 +65,8 @@ describe('StaffSalonReport', () => {
   it('renders the daily report with the requested metrics and a date filter', () => {
     renderReport()
 
-    expect(screen.getByRole('heading', { name: 'Salon Report' })).toBeInTheDocument()
+    expect(screen.getByRole('heading', { name: 'Report' })).toBeInTheDocument()
+    expect(screen.queryByRole('heading', { name: 'Salon Report' })).not.toBeInTheDocument()
     expect(screen.getByRole('tab', { name: 'Daily' })).toHaveAttribute('aria-selected', 'true')
     expect(screen.getByLabelText('Date')).toHaveAttribute('type', 'date')
 
