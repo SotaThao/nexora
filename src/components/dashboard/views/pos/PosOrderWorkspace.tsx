@@ -12,7 +12,7 @@
 //   The bottom action button is only ever the *next status transition* (Start Service /
 //   Checkout) or the final Complete payment.
 import { useEffect, useMemo, useRef, useState } from 'react'
-import { ArrowLeft, ChevronDown, Loader2, Package } from 'lucide-react'
+import { ArrowLeft, ChevronDown, Loader2 } from 'lucide-react'
 import { useTranslation } from '../../../../contexts/LanguageContext'
 import { useNotification } from '../../../../contexts/NotificationContext'
 import { getErrorMessage } from '../../../../data/errorCodes'
@@ -77,15 +77,6 @@ function samePhoneDigits(a: string, b: string): boolean {
   const digitsA = a.replace(/\D/g, '').slice(-10)
   const digitsB = b.replace(/\D/g, '').slice(-10)
   return digitsA.length === 10 && digitsA === digitsB
-}
-
-function initials(name: string) {
-  return name
-    .split(' ')
-    .filter(Boolean)
-    .slice(0, 2)
-    .map((part) => part[0]?.toUpperCase())
-    .join('')
 }
 
 interface DisplayServiceLine {
@@ -985,7 +976,11 @@ export default function PosOrderWorkspace({
           </div>
 
           <div className="space-y-4 lg:col-span-2">
-            <div className="space-y-3 rounded-xl border border-nexoraBorder bg-nexoraSurface p-4">
+            <div
+              className="space-y-3 rounded-xl border border-nexoraBorder bg-nexoraSurface p-4"
+              role="region"
+              aria-label={t('components.dashboard.views.pos.PosOrderWorkspace.orderDetailTitle')}
+            >
               <h3 className="text-[10px] font-black uppercase tracking-wider text-nexoraMuted">
                 {t('components.dashboard.views.pos.PosOrderWorkspace.orderDetailTitle')}
               </h3>
@@ -997,19 +992,25 @@ export default function PosOrderWorkspace({
               ) : (
                 // Bounded height + internal scroll: a long order scrolls its line items in
                 // place, keeping Note/Estimated Total/Start Service/Checkout below always visible.
-                <div className="max-h-[320px] space-y-2 overflow-y-auto pr-1">
+                <div className="max-h-[320px] space-y-2 overflow-y-auto pr-1" role="list">
                   {visibleLines.map((line) =>
                     line.itemType === 'Service' ? (
-                      <div key={line.key} className="space-y-2 rounded-2xl border border-nexoraBorder bg-white p-3">
-                        <div className="flex items-start gap-3">
-                          <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-nexoraLavender/20 text-xs font-bold text-nexoraBrandDark">
-                            {initials(
-                              line.technicianName ??
-                                t('components.dashboard.views.pos.PosOrderWorkspace.firstAvailableLabel'),
-                            )}
-                          </div>
+                      <div
+                        key={line.key}
+                        className="space-y-1 rounded-xl border border-nexoraBorder bg-white p-2"
+                        role="listitem"
+                        aria-label={line.serviceName}
+                      >
+                        <div className="flex items-center justify-between gap-2">
+                          <p className="min-w-0 truncate text-sm font-bold leading-tight text-nexoraText">
+                            {line.serviceName}
+                          </p>
+                          <span className="shrink-0 text-sm font-bold text-nexoraText">
+                            ${lineTotal(line).toFixed(2)}
+                          </span>
+                        </div>
+                        <div className="flex items-center justify-between gap-2">
                           <div className="min-w-0 flex-1">
-                            <p className="text-sm font-bold leading-tight text-nexoraText">{line.serviceName}</p>
                             {isCreateMode ? (
                               <CheckinServiceTechnicianSelect
                                 businessId={businessId}
@@ -1024,47 +1025,45 @@ export default function PosOrderWorkspace({
                                 )}
                               />
                             ) : (
-                              <p className="text-xs leading-tight text-nexoraMuted">
+                              <p className="truncate text-xs leading-tight text-nexoraMuted">
                                 {line.technicianName ??
                                   t('components.dashboard.views.pos.PosOrderWorkspace.firstAvailableLabel')}
                               </p>
                             )}
                           </div>
-                          <span className="shrink-0 text-sm font-bold text-nexoraText">
-                            ${lineTotal(line).toFixed(2)}
-                          </span>
-                        </div>
-                        <div className="flex justify-end gap-1.5">
-                          {!isCreateMode ? (
+                          <div className="flex shrink-0 items-center gap-1.5">
+                            {!isCreateMode ? (
+                              <button
+                                type="button"
+                                onClick={() => handleEditServiceLine(line)}
+                                className="inline-flex h-8 shrink-0 items-center justify-center rounded-lg border border-nexoraBrand px-2.5 text-xs font-bold text-nexoraBrandDark hover:bg-nexoraLavender/20"
+                                aria-label={t('components.dashboard.views.pos.PosOrderWorkspace.editLine')}
+                              >
+                                {t('components.dashboard.views.pos.PosOrderWorkspace.editLine')}
+                              </button>
+                            ) : null}
                             <button
                               type="button"
-                              onClick={() => handleEditServiceLine(line)}
-                              className="inline-flex h-9 shrink-0 items-center justify-center rounded-xl border border-nexoraBrand px-3 text-xs font-bold text-nexoraBrandDark hover:bg-nexoraLavender/20"
-                              aria-label={t('components.dashboard.views.pos.PosOrderWorkspace.editLine')}
+                              onClick={() => handleDeleteLine(line)}
+                              className="inline-flex h-8 shrink-0 items-center justify-center rounded-lg border border-nexoraDanger px-2.5 text-xs font-bold text-nexoraDanger hover:bg-red-50"
+                              aria-label={t('components.dashboard.views.pos.PosOrderWorkspace.deleteLine')}
                             >
-                              {t('components.dashboard.views.pos.PosOrderWorkspace.editLine')}
+                              {t('components.dashboard.views.pos.PosOrderWorkspace.deleteLine')}
                             </button>
-                          ) : null}
-                          <button
-                            type="button"
-                            onClick={() => handleDeleteLine(line)}
-                            className="inline-flex h-9 shrink-0 items-center justify-center rounded-xl border border-nexoraDanger px-3 text-xs font-bold text-nexoraDanger hover:bg-red-50"
-                            aria-label={t('components.dashboard.views.pos.PosOrderWorkspace.deleteLine')}
-                          >
-                            {t('components.dashboard.views.pos.PosOrderWorkspace.deleteLine')}
-                          </button>
+                          </div>
                         </div>
                       </div>
                     ) : (
-                      <div key={line.key} className="space-y-2 rounded-2xl border border-nexoraBorder bg-white p-3">
-                        <div className="flex items-start gap-3">
-                          <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-nexoraCanvas text-nexoraBrandDark">
-                            <Package className="h-4 w-4" />
-                          </div>
-                          <div className="min-w-0 flex-1">
-                            <p className="text-sm font-bold leading-tight text-nexoraText">{line.productName}</p>
-                            <p className="text-xs leading-tight text-nexoraMuted">${line.unitPrice.toFixed(2)} each</p>
-                          </div>
+                      <div
+                        key={line.key}
+                        className="space-y-1 rounded-xl border border-nexoraBorder bg-white p-2"
+                        role="listitem"
+                        aria-label={line.productName}
+                      >
+                        <div className="flex items-center justify-between gap-2">
+                          <p className="min-w-0 truncate text-sm font-bold leading-tight text-nexoraText">
+                            {line.productName}
+                          </p>
                           <span className="shrink-0 text-sm font-bold text-nexoraText">
                             ${lineTotal(line).toFixed(2)}
                           </span>
@@ -1074,7 +1073,7 @@ export default function PosOrderWorkspace({
                             <button
                               type="button"
                               onClick={() => applyQuantityDelta(line, -1)}
-                              className="flex h-9 w-9 items-center justify-center rounded-xl border border-nexoraBorder text-nexoraText hover:border-nexoraBrand"
+                              className="flex h-8 w-8 items-center justify-center rounded-lg border border-nexoraBorder text-nexoraText hover:border-nexoraBrand"
                               aria-label={t('components.dashboard.views.pos.PosOrderWorkspace.decreaseQty')}
                             >
                               −
@@ -1083,7 +1082,7 @@ export default function PosOrderWorkspace({
                             <button
                               type="button"
                               onClick={() => applyQuantityDelta(line, 1)}
-                              className="flex h-9 w-9 items-center justify-center rounded-xl border border-nexoraBorder text-nexoraText hover:border-nexoraBrand"
+                              className="flex h-8 w-8 items-center justify-center rounded-lg border border-nexoraBorder text-nexoraText hover:border-nexoraBrand"
                               aria-label={t('components.dashboard.views.pos.PosOrderWorkspace.increaseQty')}
                             >
                               +
@@ -1092,7 +1091,7 @@ export default function PosOrderWorkspace({
                           <button
                             type="button"
                             onClick={() => handleDeleteLine(line)}
-                            className="inline-flex h-9 shrink-0 items-center justify-center rounded-xl border border-nexoraDanger px-3 text-xs font-bold text-nexoraDanger hover:bg-red-50"
+                            className="inline-flex h-8 shrink-0 items-center justify-center rounded-lg border border-nexoraDanger px-2.5 text-xs font-bold text-nexoraDanger hover:bg-red-50"
                             aria-label={t('components.dashboard.views.pos.PosOrderWorkspace.deleteLine')}
                           >
                             {t('components.dashboard.views.pos.PosOrderWorkspace.deleteLine')}
