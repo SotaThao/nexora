@@ -3363,13 +3363,16 @@
             "customerFacingSubtitle": "Chạm chọn 1 mức, sau đó đưa iPad lại cho lễ tân.",
             "backToStaffButton": "Quay lại lễ tân",
             "summaryTitle": "Hoá đơn tổng kết",
+            "summaryItem": "Hạng mục",
+            "summaryQuantity": "SL",
+            "summaryPrice": "Giá",
             "summaryServices": "Dịch vụ",
             "summaryProducts": "Sản phẩm",
             "summaryTip": "Tip",
             "summaryDiscount": "Giảm giá",
             "summarySalesTax": "Thuế bán hàng",
             "summaryTotal": "Tổng cộng",
-            "completeButton": "Hoàn tất ${{amount}}"
+            "completeButton": "Đánh dấu đã thanh toán · ${{amount}}"
           },
           "CustomerHeaderBar": {
             "namePlaceholder": "vd. Amy Nguyễn",

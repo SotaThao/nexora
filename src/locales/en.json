@@ -3363,13 +3363,16 @@
             "customerFacingSubtitle": "Tap an amount, then hand the iPad back to the front desk.",
             "backToStaffButton": "Back to Staff",
             "summaryTitle": "Payment Summary",
+            "summaryItem": "Item",
+            "summaryQuantity": "Qty",
+            "summaryPrice": "Price",
             "summaryServices": "Services",
             "summaryProducts": "Products",
             "summaryTip": "Tip",
             "summaryDiscount": "Discount",
             "summarySalesTax": "Sales tax",
             "summaryTotal": "Total",
-            "completeButton": "Complete ${{amount}}"
+            "completeButton": "Mark as Paid · ${{amount}}"
           },
           "CustomerHeaderBar": {
             "namePlaceholder": "e.g. Amy Nguyen",

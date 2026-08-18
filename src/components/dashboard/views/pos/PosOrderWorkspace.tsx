@@ -12,7 +12,7 @@
 //   The bottom action button is only ever the *next status transition* (Start Service /
 //   Checkout) or the final Complete payment.
 import { useEffect, useMemo, useRef, useState } from 'react'
-import { ArrowLeft, ChevronDown, Loader2, Package, Pencil, Trash2 } from 'lucide-react'
+import { ArrowLeft, ChevronDown, Loader2, Package } from 'lucide-react'
 import { useTranslation } from '../../../../contexts/LanguageContext'
 import { useNotification } from '../../../../contexts/NotificationContext'
 import { getErrorMessage } from '../../../../data/errorCodes'
@@ -1039,19 +1039,19 @@ export default function PosOrderWorkspace({
                             <button
                               type="button"
                               onClick={() => handleEditServiceLine(line)}
-                              className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl text-nexoraMuted hover:bg-nexoraCanvas hover:text-nexoraBrandDark"
+                              className="inline-flex h-9 shrink-0 items-center justify-center rounded-xl border border-nexoraBrand px-3 text-xs font-bold text-nexoraBrandDark hover:bg-nexoraLavender/20"
                               aria-label={t('components.dashboard.views.pos.PosOrderWorkspace.editLine')}
                             >
-                              <Pencil className="h-4 w-4" />
+                              {t('components.dashboard.views.pos.PosOrderWorkspace.editLine')}
                             </button>
                           ) : null}
                           <button
                             type="button"
                             onClick={() => handleDeleteLine(line)}
-                            className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl text-nexoraMuted hover:bg-red-50 hover:text-nexoraDanger"
+                            className="inline-flex h-9 shrink-0 items-center justify-center rounded-xl border border-nexoraDanger px-3 text-xs font-bold text-nexoraDanger hover:bg-red-50"
                             aria-label={t('components.dashboard.views.pos.PosOrderWorkspace.deleteLine')}
                           >
-                            <Trash2 className="h-4 w-4" />
+                            {t('components.dashboard.views.pos.PosOrderWorkspace.deleteLine')}
                           </button>
                         </div>
                       </div>
@@ -1092,10 +1092,10 @@ export default function PosOrderWorkspace({
                           <button
                             type="button"
                             onClick={() => handleDeleteLine(line)}
-                            className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl text-nexoraMuted hover:bg-red-50 hover:text-nexoraDanger"
+                            className="inline-flex h-9 shrink-0 items-center justify-center rounded-xl border border-nexoraDanger px-3 text-xs font-bold text-nexoraDanger hover:bg-red-50"
                             aria-label={t('components.dashboard.views.pos.PosOrderWorkspace.deleteLine')}
                           >
-                            <Trash2 className="h-4 w-4" />
+                            {t('components.dashboard.views.pos.PosOrderWorkspace.deleteLine')}
                           </button>
                         </div>
                       </div>
@@ -1420,10 +1420,46 @@ export default function PosOrderWorkspace({
                   </div>
                 </div>
 
-                <div className="nexora-card space-y-1 p-4">
-                  <h3 className="mb-1 text-[10px] font-black uppercase tracking-wider text-nexoraMuted">
+                <div
+                  className="nexora-card space-y-3 p-4"
+                  role="region"
+                  aria-label={t('components.dashboard.views.pos.PosOrderWorkspace.summaryTitle')}
+                >
+                  <h3 className="text-[10px] font-black uppercase tracking-wider text-nexoraMuted">
                     {t('components.dashboard.views.pos.PosOrderWorkspace.summaryTitle')}
                   </h3>
+                  <div className="overflow-hidden rounded-lg border border-nexoraBorder">
+                    <table className="w-full text-left text-[11px]">
+                      <thead className="bg-nexoraCanvas text-[10px] font-black uppercase tracking-wide text-nexoraMuted">
+                        <tr>
+                          <th className="px-3 py-2" scope="col">
+                            {t('components.dashboard.views.pos.PosOrderWorkspace.summaryItem')}
+                          </th>
+                          <th className="px-2 py-2 text-center" scope="col">
+                            {t('components.dashboard.views.pos.PosOrderWorkspace.summaryQuantity')}
+                          </th>
+                          <th className="px-3 py-2 text-right" scope="col">
+                            {t('components.dashboard.views.pos.PosOrderWorkspace.summaryPrice')}
+                          </th>
+                        </tr>
+                      </thead>
+                      <tbody className="divide-y divide-nexoraBorder">
+                        {visibleLines.map((line) => (
+                          <tr key={line.key}>
+                            <td className="px-3 py-2 font-semibold text-nexoraText">
+                              {line.itemType === 'Service' ? line.serviceName : line.productName}
+                            </td>
+                            <td className="px-2 py-2 text-center text-nexoraMuted">
+                              {line.itemType === 'Service' ? 1 : line.quantity}
+                            </td>
+                            <td className="px-3 py-2 text-right font-semibold text-nexoraText">
+                              ${lineTotal(line).toFixed(2)}
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
                   <dl className="space-y-1 text-xs">
                     <div className="flex justify-between">
                       <dt className="text-nexoraMuted">{t('components.dashboard.views.pos.PosOrderWorkspace.summaryServices')}</dt>
