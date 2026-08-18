@@ -14,6 +14,7 @@ import subscriptionPaymentsRepository, {
   type SubscriptionPurchaseHistoryItem,
   type SubscriptionPurchaseHistoryPage,
   type SubscriptionPurchaseHistoryQuery,
+  type SubscriptionReceiptDetail,
   type UpdateSubscriptionAutoRenewResult,
 } from '../repositories/subscriptionPayments'
 
@@ -232,6 +233,17 @@ export function usePurchaseHistoryItem(
         pageNumber += 1
       }
     },
+  })
+}
+
+/** GET `/api/v1/merchant/subscriptions/purchase-history/{orderId}/receipt-detail`. */
+export function useReceiptDetail(orderId: string | undefined) {
+  const id = String(orderId ?? '').trim()
+  return useQuery<SubscriptionReceiptDetail>({
+    queryKey: qk.merchantSubscriptionReceiptDetail(id),
+    queryFn: () => subscriptionPaymentsRepository.getReceiptDetail(id),
+    enabled: Boolean(id),
+    staleTime: 60_000,
   })
 }
 

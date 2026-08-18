@@ -243,6 +243,8 @@ export const qk = {
       : (['merchantSubscriptions', 'purchaseHistory'] as const),
   merchantSubscriptionPurchaseHistoryItem: (transactionId: string) =>
     ['merchantSubscriptions', 'purchaseHistoryItem', transactionId] as const,
+  merchantSubscriptionReceiptDetail: (orderId: string) =>
+    ['merchantSubscriptions', 'receiptDetail', orderId] as const,
   merchantSubscriptionMyPackages: () => ['merchantSubscriptions', 'myPackages'],
   publicSubscriptionPackages: (packageType?: import('./repositories/subscriptionPayments').SubscriptionPackageType) =>
     packageType

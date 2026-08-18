@@ -3961,7 +3961,7 @@
             "packageHistoryPackageBrand": "AI Voice",
             "packageHistoryTermMonths": "{count} tháng",
             "packageHistoryTermMonthsPlural": "{count} tháng",
-            "packageHistoryStatusActive": "Đang dùng",
+            "packageHistoryStatusActive": "Đã thanh toán",
             "packageHistoryStatusExpired": "Hết hạn",
             "packageHistoryStatusPending": "Đang chờ",
             "packageHistoryStatusFailed": "Thất bại",

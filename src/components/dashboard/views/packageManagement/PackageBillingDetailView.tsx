@@ -9,14 +9,13 @@ import {
   Mail,
   ReceiptText,
 } from 'lucide-react'
-import { Link, useLocation, useOutletContext, useSearchParams } from 'react-router-dom'
+import { Link, useSearchParams } from 'react-router-dom'
 import { useTranslation } from '../../../../contexts/LanguageContext'
 import { useNotification } from '../../../../contexts/NotificationContext'
 import { getErrorI18nKey } from '../../../../data/errorCodes'
-import { usePurchaseHistoryItem } from '../../../../data/hooks/useSubscriptionPayments'
-import {
-  SubscriptionPaymentStatus,
-  type SubscriptionPurchaseHistoryItem,
+import { useReceiptDetail } from '../../../../data/hooks/useSubscriptionPayments'
+import subscriptionPaymentsRepository, {
+  type SubscriptionReceiptDetail,
 } from '../../../../data/repositories/subscriptionPayments'
 import { getApiErrorCode } from '../../../../types/domain'
 import {
@@ -26,29 +25,16 @@ import {
 import { parseApiDateTime } from '../../utils'
 import { BOOKING_HUB_EMPTY_CELL } from '../bookingHubFormatters'
 import {
-  PACKAGE_HISTORY_STATUS_LABEL_KEY,
-  PackageHistoryDocumentKind,
   formatPackageBillingMoney,
   formatPackageHistoryPackageLabel,
   formatPackageHistoryTerm,
   isPackageHistorySubscriptionTerm,
-  packageHistoryTransactionKey,
-  resolvePackageHistoryDisplayAt,
 } from '../plans/constants'
-import {
-  downloadPackageHistoryDocument,
-  type PackageHistoryDocumentCopy,
-  type PackageHistoryDocumentValues,
-} from '../plans/packageHistoryDocuments'
 import { PackageManagementTab } from './constants'
 import './package-billing-detail.css'
 
 const PLANS_TK = 'components.dashboard.views.BookingHubView.plans'
 const TK = 'components.dashboard.views.PackageManagementView.billing'
-
-export type PackageBillingLocationState = {
-  purchaseHistoryItem?: SubscriptionPurchaseHistoryItem
-}
 
 function formatBillingDate(
   value: string | null | undefined,
@@ -71,23 +57,106 @@ function displayOrEmpty(value: string | null | undefined): string {
   return trimmed || BOOKING_HUB_EMPTY_CELL
 }
 
+function SkeletonBlock({ className }: { className?: string }) {
+  return (
+    <span
+      className={`billing-detail-skeleton ${className ?? ''}`}
+      aria-hidden="true"
+    />
+  )
+}
+
+function BillingDetailSkeleton({ historyPath, t }: { historyPath: string; t: (key: string) => string }) {
+  return (
+    <section className="package-billing-detail-page" aria-busy="true" aria-labelledby="billing-detail-title">
+      <Link className="billing-detail-back" to={historyPath}>
+        <ArrowLeft aria-hidden="true" />
+        <span>{t(`${TK}.back`)}</span>
+      </Link>
+      <h1 className="sr-only" id="billing-detail-title">{t(`${TK}.pageTitle`)}</h1>
+
+      <div className="package-billing-detail-root">
+        <article className="billing-detail-summary">
+          <div className="billing-detail-summary-main">
+            <div>
+              <SkeletonBlock className="skel-eyebrow" />
+              <SkeletonBlock className="skel-amount" />
+              <SkeletonBlock className="skel-date" />
+            </div>
+            <SkeletonBlock className="skel-icon" />
+          </div>
+
+          <div className="billing-detail-actions">
+            <SkeletonBlock className="skel-btn" />
+            <SkeletonBlock className="skel-btn" />
+            <SkeletonBlock className="skel-btn" />
+          </div>
+
+          <dl className="billing-detail-meta">
+            {Array.from({ length: 6 }, (_, i) => (
+              <div key={i}>
+                <dt><SkeletonBlock className="skel-meta-label" /></dt>
+                <dd><SkeletonBlock className="skel-meta-value" /></dd>
+              </div>
+            ))}
+          </dl>
+        </article>
+
+        <article className="billing-detail-document">
+          <div className="billing-detail-document-head">
+            <div>
+              <SkeletonBlock className="skel-kicker" />
+              <SkeletonBlock className="skel-heading" />
+            </div>
+          </div>
+          <div className="billing-detail-table-wrap">
+            <table className="billing-detail-table">
+              <thead>
+                <tr>
+                  <th><SkeletonBlock className="skel-th" /></th>
+                  <th><SkeletonBlock className="skel-th-short" /></th>
+                  <th><SkeletonBlock className="skel-th-short" /></th>
+                  <th><SkeletonBlock className="skel-th-short" /></th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td><SkeletonBlock className="skel-td" /></td>
+                  <td><SkeletonBlock className="skel-td-short" /></td>
+                  <td><SkeletonBlock className="skel-td-short" /></td>
+                  <td><SkeletonBlock className="skel-td-short" /></td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+          <dl className="billing-detail-totals">
+            {Array.from({ length: 5 }, (_, i) => (
+              <div key={i}>
+                <dt><SkeletonBlock className="skel-total-label" /></dt>
+                <dd><SkeletonBlock className="skel-total-value" /></dd>
+              </div>
+            ))}
+          </dl>
+        </article>
+      </div>
+    </section>
+  )
+}
+
 export default function PackageBillingDetailView() {
   const { t, currentLanguage } = useTranslation()
   const { showToast } = useNotification()
-  const ctx = useOutletContext<LooseObject>()
-  const location = useLocation()
   const [searchParams] = useSearchParams()
   const transactionId = searchParams.get(PACKAGE_BILLING_QUERY_PARAM.transaction)?.trim() || ''
-  const locationItem = (location.state as PackageBillingLocationState | null)?.purchaseHistoryItem
   const {
-    data: item,
+    data: receipt,
     isLoading,
     isError,
     error,
-  } = usePurchaseHistoryItem(transactionId || undefined, locationItem)
+  } = useReceiptDetail(transactionId || undefined)
   const historyPath = packageManagementPath(PackageManagementTab.History)
 
-  if (!transactionId || (!isLoading && !item)) {
+  if (!transactionId || (!isLoading && !receipt)) {
     return (
       <section className="package-billing-detail-page" aria-labelledby="billing-detail-title">
         <Link className="billing-detail-back" to={historyPath}>
@@ -109,20 +178,11 @@ export default function PackageBillingDetailView() {
     )
   }
 
-  if (isLoading && !item) {
-    return (
-      <section className="package-billing-detail-page" aria-busy="true" aria-labelledby="billing-detail-title">
-        <Link className="billing-detail-back" to={historyPath}>
-          <ArrowLeft aria-hidden="true" />
-          <span>{t(`${TK}.back`)}</span>
-        </Link>
-        <h1 className="sr-only" id="billing-detail-title">{t(`${TK}.pageTitle`)}</h1>
-        <p className="billing-detail-date">{t(`${TK}.loading`)}</p>
-      </section>
-    )
+  if (isLoading) {
+    return <BillingDetailSkeleton historyPath={historyPath} t={t} />
   }
 
-  if (isError && !item) {
+  if (isError && !receipt) {
     return (
       <section className="package-billing-detail-page" aria-labelledby="billing-detail-title">
         <Link className="billing-detail-back" to={historyPath}>
@@ -140,55 +200,57 @@ export default function PackageBillingDetailView() {
     )
   }
 
-  const record = item as SubscriptionPurchaseHistoryItem
-  const paid = record.paymentStatus === SubscriptionPaymentStatus.Paid
-  const overdue = record.paymentStatus === SubscriptionPaymentStatus.Failed
-  const money = formatPackageBillingMoney(record.amount, record.currency)
+  const record = receipt as SubscriptionReceiptDetail
+  const paid = Boolean(record.paidAt)
+  const money = formatPackageBillingMoney(record.amountPaid || record.total, record.currency)
+  const subtotal = formatPackageBillingMoney(record.subtotal, record.currency)
+  const taxMoney = formatPackageBillingMoney(record.tax, record.currency)
+  const totalMoney = formatPackageBillingMoney(record.total, record.currency)
   const packageLabel = formatPackageHistoryPackageLabel(record.planName)
   const termLabel = isPackageHistorySubscriptionTerm(record.periodInMonths)
     ? formatPackageHistoryTerm(record.periodInMonths, t, PLANS_TK)
     : BOOKING_HUB_EMPTY_CELL
-  const transactionKey = packageHistoryTransactionKey(record) || BOOKING_HUB_EMPTY_CELL
-  const statusLabel = t(`${PLANS_TK}.${PACKAGE_HISTORY_STATUS_LABEL_KEY[record.uiStatus]}`)
-  const issuedAt = formatBillingDate(record.createdAt, currentLanguage)
+  const issuedAt = formatBillingDate(record.issuedAt, currentLanguage)
   const paidAt = formatBillingDate(record.paidAt, currentLanguage, true)
-  const dueAt = formatBillingDate(record.validUntil, currentLanguage)
-  const billToName = displayOrEmpty(ctx?.profile?.businessName || ctx?.profile?.fullName)
-  const billToEmail = displayOrEmpty(ctx?.profile?.email)
-  const documentNumber = transactionKey
-  const sellerName = t(`${TK}.sellerName`)
-  const sellerEmail = t(`${TK}.sellerEmail`)
+  const dueAt = formatBillingDate(record.issuedAt, currentLanguage)
+  const sellerName = displayOrEmpty(record.sellerName)
+  const sellerEmail = displayOrEmpty(record.sellerEmail)
+  const sellerPhone = displayOrEmpty(record.sellerPhone)
+  const billToName = displayOrEmpty(record.billToName)
+  const billToEmail = displayOrEmpty(record.billToEmail)
+  const invoiceNumber = displayOrEmpty(record.invoiceNumber)
+  const receiptNumber = displayOrEmpty(record.receiptNumber)
+  const paymentMethodLabel = displayOrEmpty(record.paymentMethodLabel)
+  const processorName = displayOrEmpty(record.processorName)
+  const providerTransactionId = displayOrEmpty(record.providerTransactionId)
+  const transactionRef = displayOrEmpty(record.referenceId || record.orderId)
 
-  const documentValues: PackageHistoryDocumentValues = {
-    packageName: packageLabel,
-    term: termLabel,
-    transactionId: transactionKey,
-    date: paid ? paidAt : issuedAt,
-    status: statusLabel,
-    amount: money,
+  const sendEmail = async () => {
+    try {
+      await subscriptionPaymentsRepository.sendReceiptEmail(record.orderId)
+      showToast(
+        t(paid ? `${TK}.emailResent` : `${TK}.reminderSent`, { email: billToEmail }),
+        'success',
+      )
+    } catch {
+      showToast(t(`${PLANS_TK}.packageHistoryDocumentDownloadFailed`), 'error')
+    }
   }
 
-  const documentCopy = (kind: PackageHistoryDocumentKind): PackageHistoryDocumentCopy => ({
-    documentLabel:
-      kind === PackageHistoryDocumentKind.Invoice
-        ? t(`${PLANS_TK}.packageHistoryDocumentInvoice`)
-        : t(`${PLANS_TK}.packageHistoryDocumentReceipt`),
-    sellerName,
-    descriptionLabel: t(`${TK}.colDescription`),
-    qtyLabel: t(`${TK}.colQty`),
-    unitLabel: t(`${TK}.colUnit`),
-    amountLabel: t(`${TK}.colAmount`),
-    totalLabel: t(`${TK}.total`),
-    packageLabel: t(`${PLANS_TK}.packageHistoryColPackage`),
-    termLabel: t(`${PLANS_TK}.packageHistoryColTerm`),
-    transactionLabel: t(`${PLANS_TK}.packageHistoryColTransaction`),
-    dateLabel: t(`${PLANS_TK}.packageHistoryColDate`),
-    statusLabel: t(`${PLANS_TK}.packageHistoryColStatus`),
-  })
-
-  const download = (kind: PackageHistoryDocumentKind) => {
+  const downloadPdf = async (type: 'Invoice' | 'Receipt') => {
     try {
-      downloadPackageHistoryDocument(kind, documentCopy(kind), documentValues)
+      const { blob, filename } = await subscriptionPaymentsRepository.downloadReceiptPdf(
+        record.orderId,
+        type,
+      )
+      const href = URL.createObjectURL(blob)
+      const link = document.createElement('a')
+      link.href = href
+      link.download = filename
+      document.body.appendChild(link)
+      link.click()
+      document.body.removeChild(link)
+      URL.revokeObjectURL(href)
       showToast(t(`${PLANS_TK}.packageHistoryDocumentDownloaded`), 'success')
     } catch {
       showToast(t(`${PLANS_TK}.packageHistoryDocumentDownloadFailed`), 'error')
@@ -224,127 +286,137 @@ export default function PackageBillingDetailView() {
             </span>
           </div>
 
-          {overdue ? (
-            <div className="billing-detail-overdue-notice">
-              <AlertTriangle aria-hidden="true" />
-              <span>{t(`${TK}.overdueNotice`)}</span>
-            </div>
-          ) : null}
-
-          <div
-            className="billing-detail-actions"
-            aria-label={t(paid ? `${TK}.documentActions` : `${TK}.invoiceActions`)}
-          >
-            <button
-              className="billing-detail-action"
-              type="button"
-              onClick={() => download(PackageHistoryDocumentKind.Invoice)}
-            >
-              <Download aria-hidden="true" />
-              <span>{t(`${PLANS_TK}.packageHistoryActionDownloadInvoice`)}</span>
-            </button>
-            {paid ? (
+          {paid ? (
+            <div className="billing-detail-actions" aria-label={t(`${TK}.documentActions`)}>
               <button
                 className="billing-detail-action"
                 type="button"
-                onClick={() => download(PackageHistoryDocumentKind.Receipt)}
+                onClick={() => void downloadPdf('Invoice')}
+              >
+                <Download aria-hidden="true" />
+                <span>{t(`${PLANS_TK}.packageHistoryActionDownloadInvoice`)}</span>
+              </button>
+              <button
+                className="billing-detail-action"
+                type="button"
+                onClick={() => void downloadPdf('Receipt')}
               >
                 <Download aria-hidden="true" />
                 <span>{t(`${PLANS_TK}.packageHistoryActionDownloadReceipt`)}</span>
               </button>
-            ) : null}
-            <button
-              className="billing-detail-action"
-              type="button"
-              onClick={() =>
-                showToast(
-                  t(paid ? `${TK}.emailResent` : `${TK}.reminderSent`, {
-                    email: billToEmail,
-                  }),
-                  'success',
-                )
-              }
-            >
-              {paid ? <Mail aria-hidden="true" /> : <Bell aria-hidden="true" />}
-              <span>{t(paid ? `${TK}.resendEmail` : `${TK}.sendReminder`)}</span>
-            </button>
-            {!paid ? (
               <button
-                className="billing-detail-action is-primary"
+                className="billing-detail-action"
                 type="button"
-                onClick={() => showToast(t(`${TK}.payUnavailable`), 'info')}
+                onClick={() => void sendEmail()}
               >
-                <CreditCard aria-hidden="true" />
-                <span>{t(`${TK}.payNow`)}</span>
+                <Mail aria-hidden="true" />
+                <span>{t(`${TK}.resendEmail`)}</span>
               </button>
-            ) : null}
-          </div>
+            </div>
+          ) : (
+            <>
+              <div className="billing-detail-overdue-notice">
+                <AlertTriangle aria-hidden="true" />
+                <span>{t(`${TK}.overdueNotice`)}</span>
+              </div>
+              <div className="billing-detail-actions" aria-label={t(`${TK}.invoiceActions`)}>
+                <button
+                  className="billing-detail-action"
+                  type="button"
+                  onClick={() => void downloadPdf('Invoice')}
+                >
+                  <Download aria-hidden="true" />
+                  <span>{t(`${PLANS_TK}.packageHistoryActionDownloadInvoice`)}</span>
+                </button>
+                <button
+                  className="billing-detail-action"
+                  type="button"
+                  onClick={() => void sendEmail()}
+                >
+                  <Bell aria-hidden="true" />
+                  <span>{t(`${TK}.sendReminder`)}</span>
+                </button>
+                <button
+                  className="billing-detail-action is-primary"
+                  type="button"
+                  onClick={() => showToast(t(`${TK}.payUnavailable`), 'info')}
+                >
+                  <CreditCard aria-hidden="true" />
+                  <span>{t(`${TK}.payNow`)}</span>
+                </button>
+              </div>
+            </>
+          )}
 
-          <dl className="billing-detail-meta">
-            {paid ? (
+          {paid ? (
+            <dl className="billing-detail-meta">
               <div>
                 <dt>{t(`${TK}.receiptNumber`)}</dt>
-                <dd>{documentNumber}</dd>
+                <dd>{receiptNumber}</dd>
               </div>
-            ) : null}
-            <div>
-              <dt>{t(`${TK}.invoiceNumber`)}</dt>
-              <dd>{documentNumber}</dd>
-            </div>
-            {paid ? (
+              <div>
+                <dt>{t(`${TK}.invoiceNumber`)}</dt>
+                <dd>{invoiceNumber}</dd>
+              </div>
               <div>
                 <dt>{t(`${TK}.paymentMethod`)}</dt>
-                <dd>{BOOKING_HUB_EMPTY_CELL}</dd>
+                <dd>{paymentMethodLabel}</dd>
               </div>
-            ) : (
+              <div>
+                <dt>{t(`${TK}.processor`)}</dt>
+                <dd>{processorName}</dd>
+              </div>
+              <div>
+                <dt>{t(`${TK}.transactionId`)}</dt>
+                <dd>{transactionRef}</dd>
+              </div>
+              <div>
+                <dt>{t(`${TK}.processorTransactionId`)}</dt>
+                <dd>{providerTransactionId}</dd>
+              </div>
+              <div>
+                <dt>{t(`${TK}.billTo`)}</dt>
+                <dd>
+                  {billToName}
+                  <span>{billToEmail}</span>
+                </dd>
+              </div>
+            </dl>
+          ) : (
+            <dl className="billing-detail-meta">
+              <div>
+                <dt>{t(`${TK}.invoiceNumber`)}</dt>
+                <dd>{invoiceNumber}</dd>
+              </div>
               <div>
                 <dt>{t(`${TK}.dateIssued`)}</dt>
                 <dd>{issuedAt}</dd>
               </div>
-            )}
-            {paid ? (
-              <div>
-                <dt>{t(`${TK}.processor`)}</dt>
-                <dd>{BOOKING_HUB_EMPTY_CELL}</dd>
-              </div>
-            ) : (
               <div>
                 <dt>{t(`${TK}.dueDate`)}</dt>
                 <dd>{dueAt}</dd>
               </div>
-            )}
-            <div>
-              <dt>{t(`${TK}.transactionId`)}</dt>
-              <dd>{transactionKey}</dd>
-            </div>
-            {paid ? (
-              <div>
-                <dt>{t(`${TK}.processorTransactionId`)}</dt>
-                <dd>{displayOrEmpty(record.orderId)}</dd>
-              </div>
-            ) : (
               <div>
                 <dt>{t(`${TK}.seller`)}</dt>
                 <dd>
                   {sellerName}
+                  <span>{sellerPhone}</span>
                   <span>{sellerEmail}</span>
                 </dd>
               </div>
-            )}
-            <div>
-              <dt>{t(`${TK}.billTo`)}</dt>
-              <dd>
-                {billToName}
-                <span>{billToEmail}</span>
-              </dd>
-            </div>
-            {!paid ? (
+              <div>
+                <dt>{t(`${TK}.billTo`)}</dt>
+                <dd>
+                  {billToName}
+                  <span>{billToEmail}</span>
+                </dd>
+              </div>
               <div>
                 <dt>{t(`${TK}.billingTerm`)}</dt>
                 <dd>{termLabel}</dd>
               </div>
-            ) : null}
-          </dl>
+            </dl>
+          )}
         </article>
 
         <article className="billing-detail-document" aria-labelledby="billing-document-title">
@@ -355,8 +427,8 @@ export default function PackageBillingDetailView() {
               </span>
               <h2 id="billing-document-title">
                 {paid
-                  ? t(`${TK}.receiptHeading`, { number: documentNumber })
-                  : t(`${TK}.invoiceHeading`, { number: documentNumber })}
+                  ? t(`${TK}.receiptHeading`, { number: receiptNumber })
+                  : t(`${TK}.invoiceHeading`, { number: invoiceNumber })}
               </h2>
             </div>
           </div>
@@ -379,9 +451,9 @@ export default function PackageBillingDetailView() {
                     <span>{termLabel}</span>
                   </td>
                   <td>1</td>
-                  <td>{money}</td>
+                  <td>{formatPackageBillingMoney(record.amount, record.currency)}</td>
                   <td>
-                    <strong>{money}</strong>
+                    <strong>{formatPackageBillingMoney(record.amount, record.currency)}</strong>
                   </td>
                 </tr>
               </tbody>
@@ -391,19 +463,19 @@ export default function PackageBillingDetailView() {
           <dl className="billing-detail-totals">
             <div>
               <dt>{t(`${TK}.subtotal`)}</dt>
-              <dd>{money}</dd>
+              <dd>{subtotal}</dd>
             </div>
             <div>
               <dt>{t(`${TK}.totalExcludingTax`)}</dt>
-              <dd>{money}</dd>
+              <dd>{subtotal}</dd>
             </div>
             <div className="is-muted">
               <dt>{t(`${TK}.tax`)}</dt>
-              <dd>{formatPackageBillingMoney(0, record.currency)}</dd>
+              <dd>{taxMoney}</dd>
             </div>
             <div className="is-total">
               <dt>{t(`${TK}.total`)}</dt>
-              <dd>{money}</dd>
+              <dd>{totalMoney}</dd>
             </div>
             <div className="is-final">
               <dt>{t(paid ? `${TK}.amountPaid` : `${TK}.amountDueLabel`)}</dt>

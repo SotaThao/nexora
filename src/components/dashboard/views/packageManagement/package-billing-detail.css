@@ -335,6 +335,35 @@
   line-height: 1.55;
 }
 
+/* Skeleton loading */
+@keyframes billing-skeleton-pulse {
+  0%, 100% { opacity: 0.35; }
+  50% { opacity: 0.12; }
+}
+
+.billing-detail-skeleton {
+  display: inline-block;
+  border-radius: 6px;
+  background: var(--nexora-border, #dde5ef);
+  animation: billing-skeleton-pulse 1.4s ease-in-out infinite;
+}
+
+.billing-detail-skeleton.skel-eyebrow { width: 180px; height: 14px; }
+.billing-detail-skeleton.skel-amount { display: block; width: 220px; height: 38px; margin-top: 7px; }
+.billing-detail-skeleton.skel-date { display: block; width: 160px; height: 13px; margin-top: 6px; }
+.billing-detail-skeleton.skel-icon { width: 72px; height: 82px; border-radius: 13px; }
+.billing-detail-skeleton.skel-btn { width: 140px; height: 38px; border-radius: 10px; }
+.billing-detail-skeleton.skel-meta-label { width: 70px; height: 10px; }
+.billing-detail-skeleton.skel-meta-value { display: block; width: 120px; height: 12px; margin-top: 6px; }
+.billing-detail-skeleton.skel-kicker { width: 100px; height: 10px; }
+.billing-detail-skeleton.skel-heading { display: block; width: 240px; height: 20px; margin-top: 6px; }
+.billing-detail-skeleton.skel-th { width: 80px; height: 10px; }
+.billing-detail-skeleton.skel-th-short { width: 40px; height: 10px; }
+.billing-detail-skeleton.skel-td { width: 120px; height: 14px; }
+.billing-detail-skeleton.skel-td-short { width: 50px; height: 14px; }
+.billing-detail-skeleton.skel-total-label { width: 100px; height: 12px; }
+.billing-detail-skeleton.skel-total-value { width: 60px; height: 12px; }
+
 @media (max-width: 760px) {
   .package-billing-detail-page .billing-detail-summary,
   .package-billing-detail-page .billing-detail-document {
