@@ -8,7 +8,6 @@ import { DIRECT_PAYMENT_STEP } from './direct-payment/paymentFlowShared'
 import DirectPaymentReview from './direct-payment/steps/DirectPaymentReview'
 import SelectServerModal from './direct-payment/modals/SelectServerModal'
 import WalletDetails from './customer-flow/steps/WalletDetails'
-import Processing from './customer-flow/steps/Processing'
 import DirectPaymentSuccess from './direct-payment/steps/DirectPaymentSuccess'
 
 export default function DirectPaymentFlow() {
@@ -29,11 +28,11 @@ export default function DirectPaymentFlow() {
     activeAmount,
     walletOptions,
     selectedWalletObj,
-    selectedWallet,
     businessRecipient,
     tipPaymentMethodsData,
     businessVlinkpayCryptoAddresses,
     currentPaymentId,
+    confirmedAmount,
     activePaymentMethod,
     selectedCryptoSymbol,
     handleSelectWallet,
@@ -144,11 +143,8 @@ export default function DirectPaymentFlow() {
                   tipTotal={tipTotal}
                   totalAmount={totalAmount}
                   perStaffTipAmount={perStaffTipAmount}
+                  isProcessing={isCreating}
                 />
-              ) : null}
-
-              {step === DIRECT_PAYMENT_STEP.Processing ? (
-                <Processing t={t} selectedWallet={selectedWallet} />
               ) : null}
 
               {step === DIRECT_PAYMENT_STEP.WalletDetails && selectedWalletObj ? (

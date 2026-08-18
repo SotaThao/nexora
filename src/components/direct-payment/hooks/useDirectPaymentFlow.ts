@@ -75,6 +75,7 @@ export default function useDirectPaymentFlow() {
   const [selectedWalletObj, setSelectedWalletObj] = useState<any>(null)
   const [selectedWallet, setSelectedWallet] = useState('')
   const [currentPaymentId, setCurrentPaymentId] = useState<string | null>(null)
+  const [confirmedAmount, setConfirmedAmount] = useState<number | null>(null)
   const [activePaymentMethod, setActivePaymentMethod] = useState<any>(null)
   const [selectedCryptoSymbol, setSelectedCryptoSymbol] = useState<string | null>(null)
   const [currentTipId, setCurrentTipId] = useState<string | null>(null)
@@ -221,6 +222,7 @@ export default function useDirectPaymentFlow() {
       }
 
       setCurrentPaymentId(result.paymentId)
+      setConfirmedAmount(result.amount)
       setActivePaymentMethod(
         mergeCreatedPaymentMethod(wallet.apiMethod as any, result.paymentMethod),
       )
@@ -247,11 +249,13 @@ export default function useDirectPaymentFlow() {
 
   const handleSelectWallet = useCallback(
     async (wallet: { methodId?: string; name?: string; key?: string; apiMethod?: unknown }) => {
+      if (createPaymentMutation.isPending) return
       if (!wallet.methodId) {
         showToast(t('errors.generic'), 'error')
         return
       }
 
+      setConfirmedAmount(null)
       await runDirectPaymentWalletSelect(wallet, {
         validateAmount,
         setSelectedWalletObj,
@@ -273,7 +277,7 @@ export default function useDirectPaymentFlow() {
         },
       })
     },
-    [createPaymentForWallet, showToast, t, validateAmount],
+    [createPaymentForWallet, createPaymentMutation.isPending, showToast, t, validateAmount],
   )
 
   const handleCreateVlinkpayPayment = useCallback(async (cryptoSymbol: string) => {
@@ -362,6 +366,7 @@ export default function useDirectPaymentFlow() {
     tipPaymentMethodsData,
     businessVlinkpayCryptoAddresses,
     currentPaymentId,
+    confirmedAmount,
     activePaymentMethod,
     selectedCryptoSymbol,
     handleSelectWallet,

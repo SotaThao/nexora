@@ -168,14 +168,12 @@ export async function runDirectPaymentWalletSelect(
     )
 
     if (singleCoin) {
-      deps.setStep(DIRECT_PAYMENT_STEP.Processing)
       try {
         await deps.createPaymentForWallet(wallet, singleCoin.symbol)
         deps.setStep(DIRECT_PAYMENT_STEP.WalletDetails)
       } catch (err) {
         deps.logCreatePaymentError(err)
         deps.onCreatePaymentError(err)
-        deps.setStep(DIRECT_PAYMENT_STEP.Review)
       }
       return
     }
@@ -185,14 +183,12 @@ export async function runDirectPaymentWalletSelect(
     return
   }
 
-  deps.setStep(DIRECT_PAYMENT_STEP.Processing)
   try {
     await deps.createPaymentForWallet(wallet)
     deps.setStep(DIRECT_PAYMENT_STEP.WalletDetails)
   } catch (err) {
     deps.logCreatePaymentError(err)
     deps.onCreatePaymentError(err)
-    deps.setStep(DIRECT_PAYMENT_STEP.Review)
   }
 }
 
