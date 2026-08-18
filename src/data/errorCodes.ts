@@ -114,6 +114,18 @@ export const errorCodeToI18nKey = {
   // Physical cards (QR/NFC hardware)
   PHYSICAL_CARD_NOT_FOUND: 'errors.physical_card_not_found',
 
+  // Business Holidays & Closures
+  HOLIDAY_NOT_FOUND: 'errors.holiday_not_found',
+  HOLIDAY_DATE_ALREADY_EXISTS: 'errors.holiday_date_already_exists',
+  HOLIDAY_REASON_REQUIRED: 'errors.holiday_reason_required',
+  HOLIDAY_REASON_TOO_LONG: 'errors.holiday_reason_too_long',
+  HOLIDAY_INVALID_TYPE: 'errors.holiday_invalid_type',
+  HOLIDAY_ADJUSTED_TIME_REQUIRED: 'errors.holiday_adjusted_time_required',
+  HOLIDAY_ADJUSTED_INVALID_TIME_RANGE: 'errors.holiday_adjusted_invalid_time_range',
+  HOLIDAY_CLOSED_TIME_MUST_BE_NULL: 'errors.holiday_closed_time_must_be_null',
+  HOLIDAY_DATE_IN_PAST: 'errors.holiday_date_in_past',
+  HOLIDAY_ADJUSTED_TIME_ALREADY_PASSED: 'errors.holiday_adjusted_time_already_passed',
+
   // POS Owner Setup — Roles & Permissions (US-015)
   POS_ROLE_NOT_FOUND: 'errors.pos_role_not_found',
   POS_ROLE_NAME_REQUIRED: 'errors.pos_role_name_required',
