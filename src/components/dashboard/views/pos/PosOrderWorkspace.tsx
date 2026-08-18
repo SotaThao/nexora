@@ -807,17 +807,17 @@ export default function PosOrderWorkspace({
     <div className="space-y-4">
       {/* Create mode drops its own heading — the Phone/Name/Email fields (and, on the
           phone step, PhoneCheckInStep's own welcome heading) already show who this order
-          is for, so "New Order · New Guest" was pure vertical space with no unique info.
-          Update mode keeps its heading since order #/customer name isn't shown anywhere
-          else on this screen. */}
+          is for. Update mode keeps a compact customer identity header. */}
       {!isCreateMode ? (
         <div className="flex items-center justify-between gap-3">
-          <h1 className="text-2xl font-bold leading-tight text-nexoraText">
-            {t('components.dashboard.views.pos.PosOrderWorkspace.titleUpdate', {
-              orderNumber: order?.orderNumber ?? '',
-              customerName: order?.customerName ?? '',
-            })}
-          </h1>
+          <div className="min-w-0">
+            <h1 className="truncate text-2xl font-bold leading-tight text-nexoraText">
+              {order?.customerName ?? ''}
+            </h1>
+            {order?.customerPhone ? (
+              <p className="mt-1 text-sm font-medium text-nexoraMuted">{order.customerPhone}</p>
+            ) : null}
+          </div>
           {onClose ? (
             <button
               type="button"
@@ -1428,37 +1428,38 @@ export default function PosOrderWorkspace({
                   <h3 className="text-[10px] font-black uppercase tracking-wider text-nexoraMuted">
                     {t('components.dashboard.views.pos.PosOrderWorkspace.summaryTitle')}
                   </h3>
-                  <div className="overflow-hidden rounded-lg border border-nexoraBorder">
-                    <table className="w-full text-left text-[11px]">
-                      <thead className="bg-nexoraCanvas text-[10px] font-black uppercase tracking-wide text-nexoraMuted">
-                        <tr>
-                          <th className="px-3 py-2" scope="col">
-                            {t('components.dashboard.views.pos.PosOrderWorkspace.summaryItem')}
-                          </th>
-                          <th className="px-2 py-2 text-center" scope="col">
-                            {t('components.dashboard.views.pos.PosOrderWorkspace.summaryQuantity')}
-                          </th>
-                          <th className="px-3 py-2 text-right" scope="col">
-                            {t('components.dashboard.views.pos.PosOrderWorkspace.summaryPrice')}
-                          </th>
-                        </tr>
-                      </thead>
-                      <tbody className="divide-y divide-nexoraBorder">
-                        {visibleLines.map((line) => (
-                          <tr key={line.key}>
-                            <td className="px-3 py-2 font-semibold text-nexoraText">
-                              {line.itemType === 'Service' ? line.serviceName : line.productName}
-                            </td>
-                            <td className="px-2 py-2 text-center text-nexoraMuted">
+                  <div className="space-y-2 text-[11px]">
+                    <div className="grid grid-cols-[minmax(0,1fr)_3rem_5rem] gap-2 text-[10px] font-black uppercase tracking-wide text-nexoraMuted">
+                      <span>{t('components.dashboard.views.pos.PosOrderWorkspace.summaryItem')}</span>
+                      <span className="text-center">
+                        {t('components.dashboard.views.pos.PosOrderWorkspace.summaryQuantity')}
+                      </span>
+                      <span className="text-right">
+                        {t('components.dashboard.views.pos.PosOrderWorkspace.summaryPrice')}
+                      </span>
+                    </div>
+                    <div className="space-y-1.5" role="list">
+                      {visibleLines.map((line) => {
+                        const itemName = line.itemType === 'Service' ? line.serviceName : line.productName
+
+                        return (
+                          <div
+                            key={line.key}
+                            className="grid grid-cols-[minmax(0,1fr)_3rem_5rem] gap-2"
+                            role="listitem"
+                            aria-label={itemName}
+                          >
+                            <span className="truncate font-semibold text-nexoraText">{itemName}</span>
+                            <span className="text-center tabular-nums text-nexoraMuted">
                               {line.itemType === 'Service' ? 1 : line.quantity}
-                            </td>
-                            <td className="px-3 py-2 text-right font-semibold text-nexoraText">
+                            </span>
+                            <span className="text-right font-semibold tabular-nums text-nexoraText">
                               ${lineTotal(line).toFixed(2)}
-                            </td>
-                          </tr>
-                        ))}
-                      </tbody>
-                    </table>
+                            </span>
+                          </div>
+                        )
+                      })}
+                    </div>
                   </div>
                   <dl className="space-y-1 text-xs">
                     <div className="flex justify-between">
