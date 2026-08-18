@@ -372,7 +372,9 @@ export default function TransactionDetailModal({
                 <span className="text-[10px] font-bold text-nexoraMuted block">
                   {t('dashboard.activity_log.col_tp')}
                 </span>
-                <span className="font-semibold text-nexoraText block mt-0.5">{selectedTx.touchpoint || '—'}</span>
+                <span className="font-semibold text-nexoraText block mt-0.5">
+                  {selectedTx.touchpoint || selectedTx.touchPointName || '—'}
+                </span>
               </div>
               {/* Row 3 (single-staff only): Staff */}
               {!isMultiStaff && !isStaffAudience ? (

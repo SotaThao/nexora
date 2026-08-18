@@ -167,6 +167,13 @@ export const PaymentStatus = {
 export type PaymentTypeValue = (typeof PaymentType)[keyof typeof PaymentType]
 export type PaymentStatusValue = (typeof PaymentStatus)[keyof typeof PaymentStatus]
 
+/** VlinkPay receive wallet on GET merchant/staff payments/{id}. */
+export interface PaymentCryptoWallet {
+  network: string
+  symbol: string
+  address: string
+}
+
 /** Merchant payment ledger item — GET /api/v1/merchant/payments */
 export interface MerchantPaymentRecord {
   id: string
@@ -179,6 +186,7 @@ export interface MerchantPaymentRecord {
   merchantConfirmedAt?: string | null
   accountInfo?: string | null
   imageUrl?: string | null
+  cryptoWallet?: PaymentCryptoWallet | null
 }
 
 export interface MerchantPaymentsListPage {
@@ -231,6 +239,7 @@ export interface StaffPaymentRecord {
   staffConfirmedAt?: string | null
   accountInfo?: string | null
   imageUrl?: string | null
+  cryptoWallet?: PaymentCryptoWallet | null
 }
 
 export interface StaffPaymentsListPage {

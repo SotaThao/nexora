@@ -364,11 +364,12 @@ body:not(.homepage-active):not(.public-booking-active) a:focus-visible {
     max-height: 90dvh;
   }
 
-  /* Payout setup modal — fit inside the padded overlay so Save/Cancel stay visible. */
+  /* Payout setup modal — keep Save/Cancel on-screen; vh then dvh (iOS address bar). */
   .payout-setup-modal-scroll {
-    max-height: 100%;
-    max-height: min(90vh, 100%);
-    max-height: min(90dvh, 100%);
+    max-height: 90vh;
+    max-height: 90dvh;
+    max-height: calc(100vh - 2rem - var(--app-safe-area-top, 0px) - var(--app-safe-area-bottom, 0px));
+    max-height: calc(100dvh - 2rem - var(--app-safe-area-top, 0px) - var(--app-safe-area-bottom, 0px));
   }
   .news-library-pdf-modal-card {
     height: 90vh;
