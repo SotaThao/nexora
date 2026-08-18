@@ -11,7 +11,17 @@
 import { useCallback, useEffect, useRef, useState, type ReactNode } from 'react'
 import { useSearchParams } from 'react-router-dom'
 import { useQueryClient } from '@tanstack/react-query'
-import { ChevronLeft, ChevronRight, LayoutGrid, List as ListIcon } from 'lucide-react'
+import {
+  ChevronLeft,
+  ChevronRight,
+  DollarSign,
+  LayoutGrid,
+  List as ListIcon,
+  PencilLine,
+  Phone,
+  Play,
+  X,
+} from 'lucide-react'
 import { useTranslation } from '../../../../contexts/LanguageContext'
 import { useNotification } from '../../../../contexts/NotificationContext'
 import { storage } from '../../../../utils/storage'
@@ -51,6 +61,20 @@ const tk = (suffix: string) => `${I18N_PREFIX}.${suffix}`
 // Bounded height + internal scroll so a long queue/roster scrolls in place — the filter chips and
 // view toggle above stay put instead of the whole page scrolling.
 const SCROLL_PANEL_MAX_HEIGHT = 'max-h-[560px]'
+
+// Mirror the subtle status-tinted rows in AI Hub's Appointments Overview: enough color to scan
+// the queue quickly without competing with the order content or action buttons.
+function orderListStatusSurfaceClass(status: string) {
+  if (status === PosOrderStatus.Waiting) return 'bg-amber-50/40 hover:bg-amber-50/70'
+  if (status === PosOrderStatus.InService) return 'bg-cyan-50/40 hover:bg-cyan-50/70'
+  return 'bg-nexoraSurface hover:bg-nexoraCanvas'
+}
+
+function orderListStatusBadgeClass(status: string) {
+  if (status === PosOrderStatus.Waiting) return 'bg-amber-100 text-amber-700'
+  if (status === PosOrderStatus.InService) return 'bg-cyan-100 text-cyan-700'
+  return 'bg-nexoraCanvas text-nexoraBrandDark'
+}
 
 // POS iPad redesign — Create mode no longer carries a pre-filled customerDraft;
 // PosOrderWorkspace now collects it itself via its own 2-step Check-in
@@ -277,8 +301,16 @@ export default function PosFrontDeskView({
 
         {station.currentStatus === PosOrderStatus.InService && (
           <div className="space-y-2 rounded-lg bg-nexoraCanvas p-3">
-            <div className="flex items-center justify-between gap-2">
-              <p className="truncate text-xs font-bold text-nexoraText">{station.currentCustomerName}</p>
+            <div className="flex items-start justify-between gap-2">
+              <div className="min-w-0">
+                <p className="truncate text-xs font-bold text-nexoraText">{station.currentCustomerName}</p>
+                {station.currentCustomerPhone ? (
+                  <p className="mt-0.5 flex items-center gap-1 text-[11px] text-nexoraMuted">
+                    <Phone className="h-3 w-3 shrink-0" aria-hidden="true" />
+                    <span className="truncate">{station.currentCustomerPhone}</span>
+                  </p>
+                ) : null}
+              </div>
               {station.currentOrderNumber ? (
                 <span className="shrink-0 font-mono text-[11px] font-bold text-nexoraMuted">
                   #{station.currentOrderNumber}
@@ -450,7 +482,15 @@ export default function PosFrontDeskView({
             </div>
 
             {(() => {
+              const today = new Date()
               const filteredOrderList = orderList.filter((order) => {
+                const checkedInAt = new Date(order.checkedInAt)
+                const isCheckedInToday =
+                  !Number.isNaN(checkedInAt.getTime()) &&
+                  checkedInAt.getFullYear() === today.getFullYear() &&
+                  checkedInAt.getMonth() === today.getMonth() &&
+                  checkedInAt.getDate() === today.getDate()
+                if (!isCheckedInToday) return false
                 if (orderListFilter === OrderListFilter.Waiting) return order.status === PosOrderStatus.Waiting
                 if (orderListFilter === OrderListFilter.InService) return order.status === PosOrderStatus.InService
                 return true
@@ -473,8 +513,9 @@ export default function PosFrontDeskView({
                       handleCancel(order.id, order.customerName)
                     }}
                     disabled={cancelOrder.isPending}
-                    className="shrink-0 rounded-lg border border-nexoraBorder px-2.5 py-1 text-[10px] font-bold text-nexoraMuted hover:border-nexoraDanger hover:bg-red-50 hover:text-nexoraDanger disabled:opacity-60"
+                    className="inline-flex shrink-0 items-center gap-1 rounded-lg border border-rose-400 bg-transparent px-2.5 py-1 text-[10px] font-bold text-rose-600 hover:bg-rose-50 disabled:opacity-60"
                   >
+                    <X className="h-3 w-3" aria-hidden="true" />
                     {t(tk('cancelButton'))}
                   </button>
                 ) : null
@@ -488,9 +529,41 @@ export default function PosFrontDeskView({
                       handleStartService(order.id)
                     }}
                     disabled={startOrderService.isPending}
-                    className="shrink-0 rounded-lg border border-nexoraBrand bg-nexoraBrand px-2.5 py-1 text-[10px] font-bold text-white hover:bg-nexoraBrandDark disabled:opacity-60"
+                    className="inline-flex shrink-0 items-center gap-1 rounded-lg border border-emerald-500 bg-transparent px-2.5 py-1 text-[10px] font-bold text-emerald-700 hover:bg-emerald-50 disabled:opacity-60"
                   >
+                    <Play className="h-3 w-3" aria-hidden="true" />
                     {t(tk('startServiceButton'))}
+                  </button>
+                ) : null
+
+              const renderEditButton = (order: OrderListItemApiDto) => (
+                <button
+                  type="button"
+                  onClick={(e) => {
+                    e.stopPropagation()
+                    setUpdateWorkspace({ orderId: order.id })
+                  }}
+                  className="inline-flex shrink-0 items-center gap-1 rounded-lg border border-nexoraBrand bg-transparent px-2.5 py-1 text-[10px] font-bold text-nexoraBrandDark hover:bg-nexoraLavender/20"
+                >
+                  <PencilLine className="h-3 w-3" aria-hidden="true" />
+                  {t(tk('editButton'))}
+                </button>
+              )
+
+              const renderCheckoutButton = (order: OrderListItemApiDto) =>
+                order.status === PosOrderStatus.InService ? (
+                  <button
+                    type="button"
+                    aria-label={t(tk('checkoutButton'))}
+                    title={t(tk('checkoutButton'))}
+                    onClick={(e) => {
+                      e.stopPropagation()
+                      setUpdateWorkspace({ orderId: order.id })
+                    }}
+                    className="inline-flex shrink-0 items-center gap-1 rounded-lg border border-violet-500 bg-transparent px-2.5 py-1 text-[10px] font-bold text-violet-700 hover:bg-violet-50"
+                  >
+                    <DollarSign className="h-3 w-3" aria-hidden="true" />
+                    {t(tk('checkoutButton'))}
                   </button>
                 ) : null
 
@@ -502,16 +575,25 @@ export default function PosFrontDeskView({
                     {filteredOrderList.map((order) => (
                       <div
                         key={order.id}
+                        data-order-status={order.status}
                         onClick={() => setUpdateWorkspace({ orderId: order.id })}
-                        className="cursor-pointer space-y-2 rounded-2xl border border-nexoraBorder bg-nexoraSurface p-4 hover:border-nexoraBrand"
+                        className={`cursor-pointer space-y-2 rounded-2xl border border-nexoraBorder p-4 hover:border-nexoraBrand ${orderListStatusSurfaceClass(order.status)}`}
                       >
                         <div className="flex items-center justify-between gap-2">
                           <span className="font-mono text-[11px] font-bold text-nexoraMuted">#{order.orderNumber}</span>
-                          <span className="rounded-full bg-nexoraCanvas px-2 py-0.5 text-[10px] font-black uppercase text-nexoraBrandDark">
+                          <span className={`rounded-full px-2 py-0.5 text-[10px] font-black uppercase ${orderListStatusBadgeClass(order.status)}`}>
                             {order.status}
                           </span>
                         </div>
-                        <p className="truncate text-sm font-bold text-nexoraText">{order.customerName}</p>
+                        <div className="min-w-0">
+                          <p className="truncate text-sm font-bold text-nexoraText">{order.customerName}</p>
+                          {order.customerPhone ? (
+                            <p className="mt-0.5 flex items-center gap-1 text-[11px] text-nexoraMuted">
+                              <Phone className="h-3 w-3 shrink-0" aria-hidden="true" />
+                              <span className="truncate">{order.customerPhone}</span>
+                            </p>
+                          ) : null}
+                        </div>
                         <p className="truncate text-[11px] text-nexoraMuted">{joinOrEmpty(order.serviceNames)}</p>
                         <p className="truncate text-[11px] text-nexoraMuted">{joinOrEmpty(order.technicianNames)}</p>
                         <div className="flex items-center justify-between gap-2 border-t border-nexoraBorder pt-2">
@@ -519,6 +601,8 @@ export default function PosFrontDeskView({
                             {t(tk('waitMinutes'), { minutes: order.elapsedMinutes })}
                           </span>
                           <div className="flex shrink-0 items-center gap-1.5">
+                            {renderEditButton(order)}
+                            {renderCheckoutButton(order)}
                             {renderStartServiceButton(order)}
                             {renderCancelButton(order)}
                           </div>
@@ -538,10 +622,11 @@ export default function PosFrontDeskView({
                       <tr className="text-[10px] font-black uppercase tracking-wider text-nexoraMuted">
                         <th className="text-xs font-black pb-2 pr-3">{t(tk('orderListColumnOrder'))}</th>
                         <th className="text-xs font-black pb-2 pr-3">{t(tk('orderListColumnGuest'))}</th>
+                        <th className="text-xs font-black pb-2 pr-3">{t(tk('orderListColumnCheckInAt'))}</th>
                         <th className="text-xs font-black pb-2 pr-3">{t(tk('orderListColumnStatus'))}</th>
                         <th className="text-xs font-black pb-2 pr-3">{t(tk('orderListColumnTechnician'))}</th>
                         <th className="text-xs font-black pb-2 pr-3">{t(tk('orderListColumnServices'))}</th>
-                        <th className="text-xs font-black pb-2 pr-3 text-right">{t(tk('orderListColumnElapsed'))}</th>
+                        <th className="text-xs font-black pb-2 pr-3 text-right">{t(tk('orderListColumnWaitTime'))}</th>
                         <th className="text-xs font-black pb-2 text-right"></th>
                       </tr>
                     </thead>
@@ -550,12 +635,23 @@ export default function PosFrontDeskView({
                         <tr
                           key={order.id}
                           onClick={() => setUpdateWorkspace({ orderId: order.id })}
-                          className="cursor-pointer border-t border-nexoraBorder hover:bg-nexoraCanvas"
+                          className={`cursor-pointer border-t border-nexoraBorder ${orderListStatusSurfaceClass(order.status)}`}
                         >
                           <td className="py-2 pr-3 font-mono font-bold text-nexoraMuted">#{order.orderNumber}</td>
-                          <td className="py-2 pr-3 font-bold text-nexoraText">{order.customerName}</td>
                           <td className="py-2 pr-3">
-                            <span className="rounded-full bg-nexoraCanvas px-2 py-0.5 text-[10px] font-black uppercase text-nexoraBrandDark">
+                            <p className="font-bold text-nexoraText">{order.customerName}</p>
+                            {order.customerPhone ? (
+                              <p className="mt-0.5 flex items-center gap-1 text-[11px] text-nexoraMuted">
+                                <Phone className="h-3 w-3 shrink-0" aria-hidden="true" />
+                                <span>{order.customerPhone}</span>
+                              </p>
+                            ) : null}
+                          </td>
+                          <td className="whitespace-nowrap py-2 pr-3 text-nexoraMuted">
+                            {formatPosTime(order.checkedInAt, currentLanguage)}
+                          </td>
+                          <td className="py-2 pr-3">
+                            <span className={`rounded-full px-2 py-0.5 text-[10px] font-black uppercase ${orderListStatusBadgeClass(order.status)}`}>
                               {order.status}
                             </span>
                           </td>
@@ -566,6 +662,8 @@ export default function PosFrontDeskView({
                           </td>
                           <td className="py-2 text-right">
                             <div className="flex justify-end gap-1.5">
+                              {renderEditButton(order)}
+                              {renderCheckoutButton(order)}
                               {renderStartServiceButton(order)}
                               {renderCancelButton(order)}
                             </div>
