@@ -3195,10 +3195,10 @@
               "checkin": "Check-in",
               "orderlist": "Danh sách Order",
               "turnboard": "Turn Board",
-              "completed": "Order Hoàn Tất",
+              "completed": "Dịch vụ hoàn tất",
               "booking": "Lịch hẹn",
               "customer": "Khách hàng",
-              "timeclock": "Chấm công"
+              "timeclock": "Chấm công nhân viên"
             },
             "customerName": "Tên khách",
             "customerPhone": "Số điện thoại",
@@ -3214,6 +3214,7 @@
             "scrollTabsLeft": "Cuộn tab sang trái",
             "scrollTabsRight": "Cuộn tab sang phải",
             "cancelButton": "Hủy",
+            "editButton": "Chỉnh sửa",
             "startServiceButton": "Bắt đầu phục vụ",
             "startServiceSuccess": "Đã bắt đầu phục vụ.",
             "confirmCancelTitle": "Gỡ khỏi hàng đợi?",
@@ -3228,10 +3229,11 @@
             "orderListEmpty": "Chưa có order nào đang mở.",
             "orderListColumnOrder": "Order",
             "orderListColumnGuest": "Khách",
+            "orderListColumnCheckInAt": "Giờ check-in",
             "orderListColumnStatus": "Trạng thái",
             "orderListColumnTechnician": "Thợ",
             "orderListColumnServices": "Dịch vụ",
-            "orderListColumnElapsed": "Thời gian"
+            "orderListColumnWaitTime": "Thời gian chờ"
           },
           "BookingTab": {
             "viewTable": "Bảng",
@@ -3550,7 +3552,7 @@
             "useName": "Dùng tên này"
           },
           "TimeClock": {
-            "tabLabel": "Chấm công",
+            "tabLabel": "Chấm công nhân viên",
             "title": "QR chấm công — thợ quét bằng app Nexora Staff",
             "subtitle": "Đăng nhập chứng minh danh tính; mã xoay chứng minh thợ có mặt tại tiệm.",
             "rotatesIn": "Đổi mã sau {{seconds}}s — quét là vào ca hoặc ra ca.",

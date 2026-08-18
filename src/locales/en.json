@@ -3195,15 +3195,15 @@
               "checkin": "Check-in",
               "orderlist": "Order List",
               "turnboard": "Turn Board",
-              "completed": "Completed Orders",
+              "completed": "Completed Services",
               "booking": "Bookings",
               "customer": "Customers",
-              "timeclock": "Time Clock"
+              "timeclock": "Staff Clock"
             },
             "customerName": "Customer Name",
             "customerPhone": "Phone",
             "customerEmail": "Email",
-            "waitMinutes": "{{minutes}}m",
+            "waitMinutes": "{{minutes}} min",
             "orderListFilter": {
               "all": "All",
               "waiting": "Waiting",
@@ -3214,6 +3214,7 @@
             "scrollTabsLeft": "Scroll tabs left",
             "scrollTabsRight": "Scroll tabs right",
             "cancelButton": "Cancel",
+            "editButton": "Edit",
             "startServiceButton": "Start Service",
             "startServiceSuccess": "Service started.",
             "confirmCancelTitle": "Remove from waitlist?",
@@ -3228,10 +3229,11 @@
             "orderListEmpty": "No open orders yet.",
             "orderListColumnOrder": "Order",
             "orderListColumnGuest": "Guest",
+            "orderListColumnCheckInAt": "Check-in At",
             "orderListColumnStatus": "Status",
             "orderListColumnTechnician": "Technician",
             "orderListColumnServices": "Services",
-            "orderListColumnElapsed": "Elapsed"
+            "orderListColumnWaitTime": "Wait Time"
           },
           "BookingTab": {
             "viewTable": "Table",
@@ -3550,7 +3552,7 @@
             "useName": "Use name"
           },
           "TimeClock": {
-            "tabLabel": "Time Clock",
+            "tabLabel": "Staff Clock",
             "title": "Clock-in QR — techs scan with the Nexora Staff app",
             "subtitle": "Signing in proves who they are; the rotating code proves they are in the salon.",
             "rotatesIn": "Rotates in {{seconds}}s — scanning clocks the tech in or out.",

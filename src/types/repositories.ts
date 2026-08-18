@@ -218,6 +218,7 @@ export interface OrderListItemApiDto {
   id: string
   orderNumber: string
   customerName: string
+  customerPhone?: string | null
   status: string
   checkedInAt: string
   elapsedMinutes: number
@@ -334,6 +335,7 @@ export interface TurnBoardStationApiDto {
   currentOrderId?: string | null
   currentOrderNumber?: string | null
   currentCustomerName?: string | null
+  currentCustomerPhone?: string | null
   currentServiceNames: string[]
   assignedAt?: string | null
 }
