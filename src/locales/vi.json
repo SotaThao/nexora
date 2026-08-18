@@ -4113,6 +4113,7 @@
             "placeholderFacebook": "https://facebook.com/tiem-cua-ban",
             "placeholderInstagram": "https://instagram.com/tiem-cua-ban",
             "placeholderYelp": "https://yelp.com/biz/tiem-cua-ban",
+            "invalidUrl": "Vui lòng nhập đường dẫn hợp lệ (ví dụ: https://example.com).",
             "suggestLabel": "Gợi ý",
             "placeholderServiceName": "Ví dụ: Gel manicure",
             "placeholderServicePrice": "0.00",

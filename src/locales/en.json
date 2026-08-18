@@ -4113,6 +4113,7 @@
             "placeholderFacebook": "https://facebook.com/your-salon",
             "placeholderInstagram": "https://instagram.com/your-salon",
             "placeholderYelp": "https://yelp.com/biz/your-salon",
+            "invalidUrl": "Please enter a valid URL (e.g. https://example.com).",
             "suggestLabel": "Suggestion",
             "placeholderServiceName": "e.g. Gel manicure",
             "placeholderServicePrice": "0.00",

@@ -4561,12 +4561,13 @@ body.booking-appointment-panel-modal-open {
   min-height: 0;
   height: 100%;
   max-width: 100%;
-  overflow: hidden;
+  overflow: visible;
   opacity: 1;
   transition: opacity 0.22s ease;
 }
 
 .booking-hub-view .settings-card.is-collapsed .settings-card-body-inner {
+  overflow: hidden;
   opacity: 0;
   pointer-events: none;
 }
@@ -4764,13 +4765,27 @@ body.booking-appointment-panel-modal-open {
 
 .booking-hub-view .settings-social-grid {
   display: grid;
-  grid-template-columns: 1fr;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 10px;
+  align-items: start;
+}
+
+.booking-hub-view .settings-social-grid > .settings-field {
+  align-content: start;
+  align-items: start;
 }
 
 .booking-hub-view .settings-field {
   display: grid;
   gap: 6px;
+  min-width: 0;
+  overflow: visible;
+}
+
+/* Lift focused fields above neighbors so focus rings are not clipped by overlap. */
+.booking-hub-view .settings-field:focus-within {
+  position: relative;
+  z-index: 2;
 }
 
 .booking-hub-view .settings-label {
@@ -4815,6 +4830,8 @@ body.booking-appointment-panel-modal-open {
 .booking-hub-view .settings-input:focus,
 .booking-hub-view .settings-select:focus,
 .booking-hub-view .settings-textarea:focus {
+  position: relative;
+  z-index: 1;
   border-color: rgba(70, 72, 216, 0.42);
   box-shadow: 0 0 0 3px rgba(70, 72, 216, 0.1);
 }
@@ -4975,6 +4992,11 @@ body.booking-appointment-panel-modal-open {
   cursor: pointer;
 }
 
+.booking-hub-view .settings-hour-row:focus-within {
+  position: relative;
+  z-index: 2;
+}
+
 .booking-hub-view .settings-hour-times {
   display: grid;
   grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
@@ -5021,6 +5043,11 @@ body.booking-appointment-panel-modal-open {
   min-width: 0;
   width: 100%;
   cursor: pointer;
+}
+
+.booking-hub-view .settings-time-box:focus-within {
+  position: relative;
+  z-index: 2;
 }
 
 .booking-hub-view .settings-time-box .settings-hour-input {
@@ -5459,6 +5486,8 @@ body.booking-appointment-panel-modal-open {
 }
 
 .booking-hub-view .settings-service-input:focus {
+  position: relative;
+  z-index: 1;
   border-color: rgba(70, 72, 216, 0.42);
   box-shadow: 0 0 0 3px rgba(70, 72, 216, 0.1);
 }
@@ -6787,7 +6816,7 @@ body.booking-appointment-panel-modal-open {
   }
 
   .booking-hub-view .settings-social-grid {
-    grid-template-columns: repeat(3, minmax(0, 1fr));
+    grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 
   .booking-hub-view .settings-sync-grid {

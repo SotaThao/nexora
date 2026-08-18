@@ -1091,7 +1091,6 @@ export default function BookingSettingsPanel() {
   const [website, setWebsite] = useState("");
   const [facebookUrl, setFacebookUrl] = useState("");
   const [instagramUrl, setInstagramUrl] = useState("");
-  const [yelpUrl, setYelpUrl] = useState("");
   const [description, setDescription] = useState("");
   const [timeZone, setTimeZone] = useState<string>(DEFAULT_SETTINGS_TIMEZONE);
   const [timeZoneManual, setTimeZoneManual] = useState(false);
@@ -1120,6 +1119,10 @@ export default function BookingSettingsPanel() {
     zip?: string;
     country?: string;
     greeting?: string;
+    googleReviewUrl?: string;
+    website?: string;
+    facebookUrl?: string;
+    instagramUrl?: string;
   }>({});
   const [hoursErrorByDay, setHoursErrorByDay] = useState<
     Record<DayKey, string>
@@ -1465,7 +1468,6 @@ export default function BookingSettingsPanel() {
     if (!merchantSetupData?.reviewLinks) return;
     setGoogleReviewUrl(merchantSetupData.reviewLinks.googleReview || "");
     setFacebookUrl(merchantSetupData.reviewLinks.facebookReview || "");
-    setYelpUrl(merchantSetupData.reviewLinks.yelpReview || "");
   }, [merchantSetupData]);
 
   // Booking SMS Notifications now live on PosBookingSettings — a separate query/resource
@@ -2637,17 +2639,7 @@ export default function BookingSettingsPanel() {
     const requiredMessage = t(
       "components.dashboard.views.BookingHubView.team.requiredField",
     );
-    const nextErrors: {
-      salonName?: string;
-      salonPhone?: string;
-      bookingNotifyPhone?: string;
-      street?: string;
-      city?: string;
-      state?: string;
-      zip?: string;
-      country?: string;
-      greeting?: string;
-    } = {};
+    const nextErrors: typeof formErrors = {};
     if (!salonName.trim()) nextErrors.salonName = requiredMessage;
     // Salon phone + booking notify phone are optional; validate format only when entered.
     if (
@@ -2669,6 +2661,21 @@ export default function BookingSettingsPanel() {
     if (!location.country.trim()) nextErrors.country = requiredMessage;
     if (!greeting.trim()) nextErrors.greeting = requiredMessage;
 
+    const invalidUrlMsg = t(`${TK}.invalidUrl`);
+    const isValidUrl = (v: string) => {
+      if (!v.trim()) return true;
+      try {
+        const u = new URL(v.trim());
+        return u.protocol === "http:" || u.protocol === "https:";
+      } catch {
+        return false;
+      }
+    };
+    if (!isValidUrl(googleReviewUrl)) nextErrors.googleReviewUrl = invalidUrlMsg;
+    if (!isValidUrl(website)) nextErrors.website = invalidUrlMsg;
+    if (!isValidUrl(facebookUrl)) nextErrors.facebookUrl = invalidUrlMsg;
+    if (!isValidUrl(instagramUrl)) nextErrors.instagramUrl = invalidUrlMsg;
+
     if (
       applyAiHubProgressiveValidation({
         allErrors: nextErrors,
@@ -2685,6 +2692,10 @@ export default function BookingSettingsPanel() {
           zip: t(`${TK}.zip`),
           country: t(`${TK}.country`),
           greeting: t(`${TK}.greetingScript`),
+          googleReviewUrl: t(`${TK}.googleReviewLink`),
+          website: t(`${TK}.website`),
+          facebookUrl: t(`${TK}.facebook`),
+          instagramUrl: t(`${TK}.instagram`),
         },
         hubTk: TK_HUB,
         t,
@@ -2749,7 +2760,6 @@ export default function BookingSettingsPanel() {
       savePromises.push(
         merchantsRepository.updateReviewLinks({
           googleReviewUrl: googleReviewUrl.trim() || null,
-          yelpUrl: yelpUrl.trim() || null,
           facebookUrl: facebookUrl.trim() || null,
         }),
       );
@@ -3193,19 +3203,31 @@ export default function BookingSettingsPanel() {
                 </span>
               </label>
             </div>
-            <label className="settings-field settings-span-full">
+            <label className="settings-field settings-span-full" data-ai-hub-field="googleReviewUrl">
               <span className="settings-label">
                 {t(`${TK}.googleReviewLink`)}
               </span>
               <input
                 className="settings-input"
-                type="text"
+                type="url"
                 value={googleReviewUrl}
                 placeholder={t(`${TK}.placeholderGoogleReviewLink`)}
-                onChange={(event) => setGoogleReviewUrl(event.target.value)}
+                autoComplete="url"
+                inputMode="url"
+                aria-invalid={Boolean(formErrors.googleReviewUrl)}
+                onChange={(event) => {
+                  setGoogleReviewUrl(event.target.value);
+                  if (formErrors.googleReviewUrl)
+                    setFormErrors((prev) => ({ ...prev, googleReviewUrl: undefined }));
+                }}
               />
+              <span className="settings-field-error-slot">
+                {formErrors.googleReviewUrl ? (
+                  <span className="settings-field-error">{formErrors.googleReviewUrl}</span>
+                ) : null}
+              </span>
             </label>
-            <label className="settings-field settings-span-full">
+            <label className="settings-field settings-span-full" data-ai-hub-field="website">
               <span className="settings-label">{t(`${TK}.website`)}</span>
               <input
                 className="settings-input"
@@ -3214,15 +3236,25 @@ export default function BookingSettingsPanel() {
                 placeholder={t(`${TK}.placeholderWebsite`)}
                 autoComplete="url"
                 inputMode="url"
-                onChange={(event) => setWebsite(event.target.value)}
+                aria-invalid={Boolean(formErrors.website)}
+                onChange={(event) => {
+                  setWebsite(event.target.value);
+                  if (formErrors.website)
+                    setFormErrors((prev) => ({ ...prev, website: undefined }));
+                }}
               />
+              <span className="settings-field-error-slot">
+                {formErrors.website ? (
+                  <span className="settings-field-error">{formErrors.website}</span>
+                ) : null}
+              </span>
             </label>
             <div className="settings-social-links">
               <div className="settings-social-links-title">
                 {t(`${TK}.socialLinksTitle`)}
               </div>
               <div className="settings-social-grid">
-                <label className="settings-field">
+                <label className="settings-field" data-ai-hub-field="facebookUrl">
                   <span className="settings-label">{t(`${TK}.facebook`)}</span>
                   <input
                     className="settings-input"
@@ -3231,10 +3263,20 @@ export default function BookingSettingsPanel() {
                     placeholder={t(`${TK}.placeholderFacebook`)}
                     autoComplete="url"
                     inputMode="url"
-                    onChange={(event) => setFacebookUrl(event.target.value)}
+                    aria-invalid={Boolean(formErrors.facebookUrl)}
+                    onChange={(event) => {
+                      setFacebookUrl(event.target.value);
+                      if (formErrors.facebookUrl)
+                        setFormErrors((prev) => ({ ...prev, facebookUrl: undefined }));
+                    }}
                   />
+                  <span className="settings-field-error-slot">
+                    {formErrors.facebookUrl ? (
+                      <span className="settings-field-error">{formErrors.facebookUrl}</span>
+                    ) : null}
+                  </span>
                 </label>
-                <label className="settings-field">
+                <label className="settings-field" data-ai-hub-field="instagramUrl">
                   <span className="settings-label">{t(`${TK}.instagram`)}</span>
                   <input
                     className="settings-input"
@@ -3243,20 +3285,18 @@ export default function BookingSettingsPanel() {
                     placeholder={t(`${TK}.placeholderInstagram`)}
                     autoComplete="url"
                     inputMode="url"
-                    onChange={(event) => setInstagramUrl(event.target.value)}
+                    aria-invalid={Boolean(formErrors.instagramUrl)}
+                    onChange={(event) => {
+                      setInstagramUrl(event.target.value);
+                      if (formErrors.instagramUrl)
+                        setFormErrors((prev) => ({ ...prev, instagramUrl: undefined }));
+                    }}
                   />
-                </label>
-                <label className="settings-field">
-                  <span className="settings-label">{t(`${TK}.yelp`)}</span>
-                  <input
-                    className="settings-input"
-                    type="url"
-                    value={yelpUrl}
-                    placeholder={t(`${TK}.placeholderYelp`)}
-                    autoComplete="url"
-                    inputMode="url"
-                    onChange={(event) => setYelpUrl(event.target.value)}
-                  />
+                  <span className="settings-field-error-slot">
+                    {formErrors.instagramUrl ? (
+                      <span className="settings-field-error">{formErrors.instagramUrl}</span>
+                    ) : null}
+                  </span>
                 </label>
               </div>
             </div>
