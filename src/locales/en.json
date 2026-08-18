@@ -51,7 +51,8 @@
       "my_qr_code": "My QR",
       "my_earnings": "My Earnings",
       "my_reviews": "My Reviews",
-      "my_salons": "My Salons"
+      "my_salons": "My Salons",
+      "report": "Report"
     },
     "titles": {
       "home": "Dashboard",
@@ -64,6 +65,7 @@
       "taxiq": "Tax IQ",
       "earnings": "My Earnings",
       "salons": "My Salons",
+      "report": "Salon Report",
       "profile": "Settings",
       "notifications": "Notifications"
     },
@@ -1807,6 +1809,41 @@
     "skill_error": "Unable to load services. Please try again.",
     "skill_save_success": "Work skills updated successfully.",
     "skill_save_error": "Could not save work skills. Please try again."
+  },
+  "staff_salon_report": {
+    "title": "Salon Report",
+    "subtitle": "Review your service activity and estimated take-home pay by period.",
+    "preview_badge": "Preview data",
+    "period_label": "Report period",
+    "salon_filter_title": "Salon",
+    "filter_title": "Reporting period",
+    "tabs": {
+      "daily": "Daily",
+      "weekly": "Weekly",
+      "monthly": "Monthly",
+      "yearly": "Yearly"
+    },
+    "filters": {
+      "salon": "Salon",
+      "salon_group": "Salon filter",
+      "all_salons": "All salons",
+      "loading_salons": "Loading salons…",
+      "no_linked_salons": "No linked salons",
+      "date": "Date",
+      "week": "Week",
+      "week_option": "Week {{week}}",
+      "month": "Month",
+      "year": "Year"
+    },
+    "metrics": {
+      "turns": "Turns",
+      "hours": "Hours",
+      "service": "Service",
+      "commission": "Commission",
+      "tip": "Tip",
+      "commissionPercent": "Comm %",
+      "techTakes": "Tech takes"
+    }
   },
   "staff_payouts": {
     "description": "Track payouts sent to you, confirm receipt, and review unpaid tip balance by business.",

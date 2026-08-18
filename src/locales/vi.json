@@ -61,7 +61,8 @@
       "my_qr_code": "Mã QR",
       "my_earnings": "Thu nhập của tôi",
       "my_reviews": "Đánh giá của tôi",
-      "my_salons": "Salon của tôi"
+      "my_salons": "Salon của tôi",
+      "report": "Báo cáo"
     },
     "titles": {
       "home": "Dashboard",
@@ -74,6 +75,7 @@
       "taxiq": "Tax IQ",
       "earnings": "Thu nhập của tôi",
       "salons": "Salon của tôi",
+      "report": "Báo cáo salon",
       "profile": "Cài đặt",
       "notifications": "Thông báo"
     },
@@ -1807,6 +1809,41 @@
     "skill_error": "Không thể tải dịch vụ. Vui lòng thử lại.",
     "skill_save_success": "Đã cập nhật kỹ năng thành công.",
     "skill_save_error": "Không thể lưu kỹ năng. Vui lòng thử lại."
+  },
+  "staff_salon_report": {
+    "title": "Báo cáo salon",
+    "subtitle": "Xem hoạt động dịch vụ và thu nhập ước tính của bạn theo từng kỳ.",
+    "preview_badge": "Dữ liệu xem trước",
+    "period_label": "Kỳ báo cáo",
+    "salon_filter_title": "Salon",
+    "filter_title": "Thời gian báo cáo",
+    "tabs": {
+      "daily": "Ngày",
+      "weekly": "Tuần",
+      "monthly": "Tháng",
+      "yearly": "Năm"
+    },
+    "filters": {
+      "salon": "Salon",
+      "salon_group": "Bộ lọc salon",
+      "all_salons": "Tất cả salon",
+      "loading_salons": "Đang tải salon…",
+      "no_linked_salons": "Chưa liên kết salon nào",
+      "date": "Ngày",
+      "week": "Tuần",
+      "week_option": "Tuần {{week}}",
+      "month": "Tháng",
+      "year": "Năm"
+    },
+    "metrics": {
+      "turns": "Lượt",
+      "hours": "Giờ",
+      "service": "Dịch vụ",
+      "commission": "Hoa hồng",
+      "tip": "Tip",
+      "commissionPercent": "Tỷ lệ HH",
+      "techTakes": "Thợ nhận"
+    }
   },
   "staff_payouts": {
     "description": "Theo dõi khoản chi trả tiệm gửi cho bạn, xác nhận đã nhận tiền và xem số dư tip chưa nhận theo từng tiệm.",
