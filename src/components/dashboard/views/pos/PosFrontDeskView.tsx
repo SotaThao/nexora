@@ -14,7 +14,7 @@ import { useQueryClient } from '@tanstack/react-query'
 import {
   ChevronLeft,
   ChevronRight,
-  CreditCard,
+  DollarSign,
   LayoutGrid,
   List as ListIcon,
   PencilLine,
@@ -554,14 +554,15 @@ export default function PosFrontDeskView({
                 order.status === PosOrderStatus.InService ? (
                   <button
                     type="button"
+                    aria-label={t(tk('checkoutButton'))}
+                    title={t(tk('checkoutButton'))}
                     onClick={(e) => {
                       e.stopPropagation()
                       setUpdateWorkspace({ orderId: order.id })
                     }}
-                    className="inline-flex shrink-0 items-center gap-1 rounded-lg border border-violet-500 bg-transparent px-2.5 py-1 text-[10px] font-bold text-violet-700 hover:bg-violet-50"
+                    className="inline-flex h-7 w-7 shrink-0 items-center justify-center rounded-lg border border-violet-500 bg-transparent text-violet-700 hover:bg-violet-50"
                   >
-                    <CreditCard className="h-3 w-3" aria-hidden="true" />
-                    {t(tk('checkoutButton'))}
+                    <DollarSign className="h-4 w-4" aria-hidden="true" />
                   </button>
                 ) : null
 
