@@ -1,5 +1,6 @@
 import React, { useEffect, useRef } from 'react'
 import { formatUsdAmount } from '../../../utils/currencyInput'
+import PaymentTipSection from './PaymentTipSection'
 
 export default function DirectPaymentReview({
   t,
@@ -20,6 +21,10 @@ export default function DirectPaymentReview({
   onSelectWallet,
   disablePaymentSelection,
   totalPaymentLabel,
+  tip = null,
+  tipTotal = 0,
+  totalAmount = null,
+  perStaffTipAmount = 0,
 }) {
   const amountInputRef = useRef(null)
   const name = recipientName || businessName || t('direct_payment.default_business')
@@ -31,6 +36,10 @@ export default function DirectPaymentReview({
   const desc = reviewDesc || t('direct_payment.review_payment_desc')
   const emptyMethodsTitle = noMethodsTitle || t('direct_payment.no_methods_title')
   const emptyMethodsDesc = noMethodsDesc || t('direct_payment.no_methods_desc')
+  // Bill + tips — the single amount the customer transfers.
+  const payableTotal = Number.isFinite(totalAmount)
+    ? totalAmount
+    : (activeAmount || 0) + (tipTotal || 0)
 
   useEffect(() => {
     const input = amountInputRef.current
@@ -94,6 +103,23 @@ export default function DirectPaymentReview({
           </div>
         </div>
 
+        {tip ? (
+          <PaymentTipSection t={t} tip={tip} perStaffAmount={perStaffTipAmount} />
+        ) : null}
+
+        {tipTotal > 0 ? (
+          <div className="space-y-1 border-t border-nexoraBorder/70 px-3.5 py-2.5">
+            <div className="flex items-center justify-between text-xs font-semibold text-nexoraMuted">
+              <span>{t('direct_payment.tip_bill_label')}</span>
+              <span>{formatUsdAmount(activeAmount > 0 ? activeAmount : 0)}</span>
+            </div>
+            <div className="flex items-center justify-between text-xs font-semibold text-nexoraMuted">
+              <span>{t('direct_payment.tip_tips_label')}</span>
+              <span>{formatUsdAmount(tipTotal)}</span>
+            </div>
+          </div>
+        ) : null}
+
         <div className="flex items-center justify-between border-t border-nexoraBrandSoft bg-nexoraBrandSoft/35 px-3.5 py-3">
           <div>
             <h4 className="text-[11px] font-extrabold uppercase tracking-wider text-slate-800">
@@ -106,7 +132,7 @@ export default function DirectPaymentReview({
             ) : null}
           </div>
           <div className="text-lg font-black text-nexoraBrand">
-            {formatUsdAmount(activeAmount > 0 ? activeAmount : 0)}
+            {formatUsdAmount(payableTotal > 0 ? payableTotal : 0)}
           </div>
         </div>
       </div>
