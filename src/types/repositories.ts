@@ -514,6 +514,7 @@ export interface PosBookingSettingsApiDto {
   notifyCustomerSmsEnabled: boolean
   notifyBusinessSmsEnabled: boolean
   notifyAssignedStaffSmsEnabled: boolean
+  holidayAutoNotifyEnabled: boolean
 }
 
 // POS Booking — Staff/Owner creates a booking directly (Ticket 3). Always Confirmed
@@ -657,6 +658,9 @@ export interface PublicAvailabilityRequestPayload {
 
 export interface PublicAvailabilityApiDto {
   availableTimes: string[] // "HH:mm", local to the salon's own hours
+  holidayReason?: string | null
+  adjustedOpenTime?: string | null
+  adjustedCloseTime?: string | null
 }
 
 export interface CreatePublicBookingItemPayload {
@@ -1053,12 +1057,20 @@ export interface DashboardReviewsQuery {
   pageSize?: number
 }
 
+export interface StaffPaymentMethodCryptoAddressApiDto {
+  network?: string
+  symbol?: string
+  address?: string
+}
+
 export interface StaffPaymentMethodApiDto {
   type?: string
   isActive?: boolean
   accountInfo?: string | null
   accountName?: string | null
   imageUrl?: string | null
+  isConfigured?: boolean
+  cryptoAddresses?: StaffPaymentMethodCryptoAddressApiDto[] | null
 }
 
 export interface StaffInviteSummaryApiDto {
@@ -1102,7 +1114,7 @@ export interface StaffListItemApiDto {
   paymentMethods?: StaffPaymentMethodApiDto[]
   invites?: StaffInviteSummaryApiDto[]
   isLocalStaff?: boolean
-  staffProfile?: { phoneNumber?: string; phone?: string; email?: string }
+  staffProfile?: { staffCode?: string | null; phoneNumber?: string; phone?: string; email?: string }
   user?: { phoneNumber?: string; phone?: string; email?: string }
 }
 

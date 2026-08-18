@@ -6,10 +6,13 @@ import {
   PhoneDialCode,
 } from '../../CountryCodeSelect'
 import {
+  findHolidayForDate,
   findOperatingHourForDate,
+  isDateClosedByHoliday,
   isSlotWithinOperatingHours,
   toUtcBookingSlot,
 } from '../../../data/repositories/publicVoiceBooking'
+import { HOLIDAY_TYPE } from '../../../constants/holiday'
 import {
   PUBLIC_BOOKING_ANY_STAFF_ID,
   PUBLIC_BOOKING_EM_DASH,
@@ -123,11 +126,13 @@ export function formatBookingSlot(date, time, locale = 'en-US') {
   return `${formatBookingDateDisplay(date, locale)} · ${formatBookingTimeDisplay(time, locale)}`
 }
 
-export function isBookableDate(value, minDate, operatingHours = []) {
+export function isBookableDate(value, minDate, operatingHours = [], holidays = []) {
   if (!/^\d{4}-\d{2}-\d{2}$/.test(String(value || ''))) return false
   const date = new Date(`${value}T12:00:00`)
   if (Number.isNaN(date.getTime()) || localDateIso(date) !== value) return false
   if (value < minDate) return false
+  if (isDateClosedByHoliday(value, holidays)) return false
+  if (findHolidayForDate(value, holidays)) return true
   if (!Array.isArray(operatingHours) || operatingHours.length === 0) return true
   const hour = findOperatingHourForDate(value, operatingHours)
   return Boolean(hour?.isOpen)
@@ -146,7 +151,12 @@ export function validateBookingDraft(draft, catalog, minDate) {
   const services = catalog?.services || []
   const staff = catalog?.staff || []
   const operatingHours = catalog?.operatingHours || []
+  const holidays = catalog?.holidays || []
   const catalogIds = new Set(services.map((service) => service.id))
+  const totalDurationMinutes = selectedServiceIds
+    .map((id) => services.find((service) => service.id === id))
+    .filter(Boolean)
+    .reduce((sum, service) => sum + (service.durationMinutes || 0), 0)
 
   if (!isValidPhoneE164(phoneRaw, dialCode)) {
     errors.push(PUBLIC_BOOKING_VALIDATION_ERROR.phone)
@@ -170,10 +180,13 @@ export function validateBookingDraft(draft, catalog, minDate) {
 
   if (!draft?.selectedDate) {
     errors.push(PUBLIC_BOOKING_VALIDATION_ERROR.slot)
-  } else if (!isBookableDate(draft.selectedDate, minDate, operatingHours)) {
+  } else if (!isBookableDate(draft.selectedDate, minDate, operatingHours, holidays)) {
     const hour = findOperatingHourForDate(draft.selectedDate, operatingHours)
-    if (hour && !hour.isOpen) errors.push(PUBLIC_BOOKING_VALIDATION_ERROR.closedDay)
-    else errors.push(PUBLIC_BOOKING_VALIDATION_ERROR.slot)
+    if (isDateClosedByHoliday(draft.selectedDate, holidays) || (hour && !hour.isOpen)) {
+      errors.push(PUBLIC_BOOKING_VALIDATION_ERROR.closedDay)
+    } else {
+      errors.push(PUBLIC_BOOKING_VALIDATION_ERROR.slot)
+    }
   } else if (!draft?.selectedTime) {
     errors.push(PUBLIC_BOOKING_VALIDATION_ERROR.slot)
   } else if (
@@ -181,9 +194,15 @@ export function validateBookingDraft(draft, catalog, minDate) {
       draft.selectedDate,
       draft.selectedTime,
       operatingHours,
+      holidays,
+      totalDurationMinutes,
     )
   ) {
-    errors.push(PUBLIC_BOOKING_VALIDATION_ERROR.slot)
+    if (findHolidayForDate(draft.selectedDate, holidays)) {
+      errors.push(PUBLIC_BOOKING_VALIDATION_ERROR.closedDay)
+    } else {
+      errors.push(PUBLIC_BOOKING_VALIDATION_ERROR.slot)
+    }
   }
 
   return { ok: errors.length === 0, errors }
@@ -241,7 +260,7 @@ export function resolveBookingServiceNames(booking, selectedNames = []) {
 }
 
 /** Map validation error keys → field-level copy for the form step. */
-export function resolveBookingFieldErrors(errorKeys, draft, copy) {
+export function resolveBookingFieldErrors(errorKeys, draft, copy, holidays = [], locale = 'en-US') {
   const errors = Array.isArray(errorKeys) ? errorKeys : []
   const has = (key) => errors.includes(key)
   const selectedDate = draft?.selectedDate
@@ -249,7 +268,17 @@ export function resolveBookingFieldErrors(errorKeys, draft, copy) {
 
   let dateError = ''
   if (has(PUBLIC_BOOKING_VALIDATION_ERROR.closedDay)) {
-    dateError = copy.closedDayError
+    const holiday = selectedDate ? findHolidayForDate(selectedDate, holidays) : null
+    if (holiday?.type === HOLIDAY_TYPE.ADJUSTED && holiday.adjustedOpenTime && holiday.adjustedCloseTime) {
+      dateError = copy.adjustedHoursError
+        .replace('{{reason}}', holiday.reason || '')
+        .replace('{{open}}', formatBookingTimeDisplay(holiday.adjustedOpenTime, locale))
+        .replace('{{close}}', formatBookingTimeDisplay(holiday.adjustedCloseTime, locale))
+    } else if (holiday?.reason) {
+      dateError = copy.closedDayReasonError.replace('{{reason}}', holiday.reason)
+    } else {
+      dateError = copy.closedDayError
+    }
   } else if (has(PUBLIC_BOOKING_VALIDATION_ERROR.slot) && !selectedDate) {
     dateError = copy.dateError
   }

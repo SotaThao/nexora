@@ -1,4 +1,4 @@
-import { useState, useMemo, useEffect, useRef } from 'react'
+import { useState, useMemo, useEffect, useRef, useCallback } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import { useTranslation } from '../../../contexts/LanguageContext'
 import { useNotification } from '../../../contexts/NotificationContext'
@@ -21,12 +21,22 @@ import {
   usePublicBusinessPaymentMethods,
 } from '../../../data/hooks/usePublicTouch'
 import { PAYOUT_UI_LABELS, payoutTypeToUiKey } from '../../../data/paymentMethodTypes'
+import { formatPaymentMethodAccountDisplay } from '../../payout/bankWireAccount'
 import type { PaymentMethodDto, ReviewLinks } from '../../../types/domain'
 import {
   isTouchPaymentIntent,
   resolvePaymentCopyScope,
   resolveTouchpointRedirectUrl,
 } from '../../../utils/customerFlowKind'
+import { WALLET_KEYS } from '../constants'
+import {
+  emptyVlinkpayAddresses,
+  getSingleConfiguredVlinkpayCoin,
+  normalizeVlinkpayCryptoSymbol,
+  resolvePreferredVlinkpayAddresses,
+  resolveVlinkpayAddresses,
+  withWalletCryptoSymbol,
+} from '../../payout/vlinkpayWallet'
 
 function walletNameToKey(walletName: string): string {
   const match = Object.entries(PAYOUT_UI_LABELS).find(([, label]) => label === walletName)
@@ -304,11 +314,13 @@ export default function useCustomerFlow() {
   const [selectedWallet, setSelectedWallet] = useState('')
   const [isProcessing, setIsProcessing] = useState(false)
   const [selectedWalletObj, setSelectedWalletObj] = useState<any | null>(null)
+  const [selectedCryptoSymbol, setSelectedCryptoSymbol] = useState<string | null>(null)
   const [tipRefNumber, setTipRefNumber] = useState('')
   const [currentTipId, setCurrentTipId] = useState<any | null>(null)
   const [currentReviewId, setCurrentReviewId] = useState<any | null>(null)
   const [paymentLinkData, setPaymentLinkData] = useState<any | null>(null)
   const [tipPaymentMethodsData, setTipPaymentMethodsData] = useState<any[] | null>(null)
+  const vlinkpayCreateInFlightRef = useRef(false)
 
   const paymentCopyScope = useMemo(
     () => resolvePaymentCopyScope(isPaymentFlow, selectedStaffMembers.length),
@@ -413,10 +425,40 @@ export default function useCustomerFlow() {
     const accounts: Record<string, string> = {}
     for (const pm of effectivePaymentMethods) {
       const key = payoutTypeToUiKey(pm.type || pm.name || '')
-      accounts[key] = pm.accountInfo || ''
+      accounts[key] = formatPaymentMethodAccountDisplay(
+        key,
+        pm.accountInfo,
+        pm.cryptoAddresses,
+      ) || pm.accountInfo || ''
     }
     return accounts
   }, [effectivePaymentMethods])
+
+  const businessVlinkpayCryptoAddresses = useMemo(() => {
+    const isVlinkpayMethod = (method: PaymentMethodDto) => {
+      if (!method.id) return false
+      const key = payoutTypeToUiKey(method.type || method.name || method.uiKey || '')
+      return key === WALLET_KEYS.VLINKPAY && Array.isArray(method.cryptoAddresses) && method.cryptoAddresses.length > 0
+    }
+    const active = effectivePaymentMethods.find((method) => isVlinkpayMethod(method) && method.isActive !== false)
+    return (active || effectivePaymentMethods.find(isVlinkpayMethod))?.cryptoAddresses ?? null
+  }, [effectivePaymentMethods])
+
+  const customerVlinkpayAddresses = useMemo(() => {
+    const empty = emptyVlinkpayAddresses()
+    const fromStaff =
+      !isMultiStaffSelection && selectedStaffMembers.length === 1
+        ? resolveVlinkpayAddresses({
+            cryptoAddresses: selectedStaffMembers[0]?.vlinkPayCryptoAddresses,
+          })
+        : empty
+    const fromBusiness = resolveVlinkpayAddresses({
+      cryptoAddresses: businessVlinkpayCryptoAddresses,
+    })
+    return !isMultiStaffSelection
+      ? resolvePreferredVlinkpayAddresses(fromStaff, fromBusiness)
+      : fromBusiness
+  }, [isMultiStaffSelection, selectedStaffMembers, businessVlinkpayCryptoAddresses])
 
   const availablePaymentWalletKeys = useMemo(
     () => buildAvailablePaymentWalletKeys(
@@ -574,79 +616,134 @@ export default function useCustomerFlow() {
     })
   }
 
+  const createTipForWallet = useCallback(async (walletKey: string, cryptoSymbol?: string) => {
+    if (selectedStaffMembers.length > 1) {
+      const touchPointId = touchPageData?.touchPoint?.id
+      if (!touchPointId) {
+        showToast(t('customer.multi_staff_missing_touchpoint'), 'error')
+        return null
+      }
+      if (!businessId) {
+        showToast(t('customer.multi_staff_missing_business'), 'error')
+        return null
+      }
+
+      const businessPaymentMethodId = resolveBusinessPaymentMethodId(
+        effectivePaymentMethods,
+        walletKey,
+      )
+      if (!businessPaymentMethodId) {
+        showToast(t('customer.multi_staff_missing_payment_method'), 'error')
+        return null
+      }
+
+      const tipItems = selectedStaffMembers.map((member) => ({
+        staffProfileId: member.id,
+        amount: getStaffTipAmount(member.id, selectedTips, customTips),
+      }))
+
+      const result = await createMultiStaffTipMutation.mutateAsync({
+        businessId,
+        touchPointId,
+        businessPaymentMethodId,
+        tipItems,
+        ...(cryptoSymbol ? { cryptoSymbol } : {}),
+      })
+      const tipId = String(result?.tipId || result?.id || '')
+      setPaymentLinkData(
+        cryptoSymbol && result?.cryptoAddress
+          ? { cryptoAddress: result.cryptoAddress }
+          : null,
+      )
+      return tipId || null
+    }
+
+    const member = selectedStaffMembers[0]
+    const amount = getStaffTipAmount(member.id, selectedTips, customTips)
+    const result = await createTipMutation.mutateAsync({
+      touchPointId: touchPageData?.touchPoint?.id,
+      staffProfileId: member.id,
+      amount,
+      paymentMethod: walletKey,
+      sessionId,
+      ...(cryptoSymbol ? { cryptoSymbol } : {}),
+    })
+    return String(result?.id || result?.tipId || '') || null
+  }, [
+    businessId,
+    createMultiStaffTipMutation,
+    createTipMutation,
+    customTips,
+    effectivePaymentMethods,
+    selectedStaffMembers,
+    selectedTips,
+    sessionId,
+    showToast,
+    t,
+    touchPageData,
+  ])
+
+  const loadTipPaymentMethods = useCallback(async (tipId: string) => {
+    try {
+      const methods = await publicTouchRepository.getTipPaymentMethods(tipId)
+      setTipPaymentMethodsData(Array.isArray(methods) ? methods : null)
+    } catch (methodsErr) {
+      logger.error('Failed to fetch tip payment methods', methodsErr)
+      setTipPaymentMethodsData(null)
+    }
+  }, [])
+
   /**
    * Handles wallet selection and initiates tip payment.
    * Single staff → POST /api/v1/touch/tip
    * Multi staff  → POST /api/v1/tips/multi-staff
-   * @param {string} walletName - Payment wallet display name.
-   * @param {string} [walletKey] - Wallet key for business payment method lookup.
+   * VlinkPay with one configured asset → create tip immediately and skip asset picker.
+   * VlinkPay with multiple assets → asset picker first, tip created on Confirm.
    */
-  const handlePay = async (walletName, walletKey?: string) => {
+  const handlePay = useCallback(async (walletName, walletKey?: string) => {
     setSelectedWallet(walletName)
-    setIsProcessing(true)
     const resolvedWalletKey = walletKey || walletNameToKey(walletName)
 
-    try {
-      if (selectedStaffMembers.length > 1) {
-        const touchPointId = touchPageData?.touchPoint?.id
-        if (!touchPointId) {
-          showToast(t('customer.multi_staff_missing_touchpoint'), 'error')
-          return
-        }
-        if (!businessId) {
-          showToast(t('customer.multi_staff_missing_business'), 'error')
-          return
-        }
+    if (resolvedWalletKey === WALLET_KEYS.VLINKPAY) {
+      const singleCoin = getSingleConfiguredVlinkpayCoin(customerVlinkpayAddresses)
 
-        const businessPaymentMethodId = resolveBusinessPaymentMethodId(
-          effectivePaymentMethods,
-          resolvedWalletKey,
-        )
-        if (!businessPaymentMethodId) {
-          showToast(t('customer.multi_staff_missing_payment_method'), 'error')
-          return
-        }
-
-        const tipItems = selectedStaffMembers.map((member) => ({
-          staffProfileId: member.id,
-          amount: getStaffTipAmount(member.id, selectedTips, customTips),
-        }))
-
-        const result = await createMultiStaffTipMutation.mutateAsync({
-          businessId,
-          touchPointId,
-          businessPaymentMethodId,
-          tipItems,
-        })
-        const tipId = result?.tipId || result?.id
-        setCurrentTipId(tipId)
-        setPaymentLinkData(null)
+      if (singleCoin) {
+        const symbol = singleCoin.symbol
+        setIsProcessing(true)
         try {
-          const methods = await publicTouchRepository.getTipPaymentMethods(String(tipId))
-          setTipPaymentMethodsData(Array.isArray(methods) ? methods : null)
-        } catch (methodsErr) {
-          logger.error('Failed to fetch tip payment methods', methodsErr)
-          setTipPaymentMethodsData(null)
+          const tipId = await createTipForWallet(WALLET_KEYS.VLINKPAY, symbol)
+          if (!tipId) return
+          setCurrentTipId(tipId)
+          setSelectedCryptoSymbol(symbol)
+          setSelectedWalletObj((current) => withWalletCryptoSymbol(current, symbol))
+          await loadTipPaymentMethods(tipId)
+          setStep('wallet_details')
+        } catch (err) {
+          logger.error('Failed to create VlinkPay tip', err)
+          showToast(getApiErrorMessage(err, t('errors.generic'), t), 'error')
+        } finally {
+          setIsProcessing(false)
         }
-        setStep('wallet_details')
         return
       }
 
-      const member = selectedStaffMembers[0]
-      const amount = getStaffTipAmount(member.id, selectedTips, customTips)
-      const result = await createTipMutation.mutateAsync({
-        touchPointId: touchPageData?.touchPoint?.id, staffProfileId: member.id,
-        amount, paymentMethod: resolvedWalletKey, sessionId,
-      })
-      const tipId = result?.id || result?.tipId
+      vlinkpayCreateInFlightRef.current = false
+      setPaymentLinkData(null)
+      setTipPaymentMethodsData(null)
+      setCurrentTipId(null)
+      setSelectedCryptoSymbol(null)
+      setStep('wallet_details')
+      return
+    }
+
+    setIsProcessing(true)
+    setSelectedCryptoSymbol(null)
+
+    try {
+      const tipId = await createTipForWallet(resolvedWalletKey)
+      if (!tipId) return
       setCurrentTipId(tipId)
-      try {
-        const methods = await publicTouchRepository.getTipPaymentMethods(String(tipId))
-        setTipPaymentMethodsData(Array.isArray(methods) ? methods : null)
-      } catch (methodsErr) {
-        logger.error('Failed to fetch tip payment methods', methodsErr)
-        setTipPaymentMethodsData(null)
-      }
+      await loadTipPaymentMethods(String(tipId))
       setStep('wallet_details')
     } catch (err) {
       logger.error('Failed to create tip', err)
@@ -654,7 +751,50 @@ export default function useCustomerFlow() {
     } finally {
       setIsProcessing(false)
     }
-  }
+  }, [createTipForWallet, customerVlinkpayAddresses, loadTipPaymentMethods, showToast, t])
+
+  /**
+   * VlinkPay asset Confirm: POST /touch/tip (or multi-staff) with cryptoSymbol.
+   */
+  const handleCreateVlinkpayTip = useCallback(async (cryptoSymbol: string) => {
+    const normalizedSymbol = normalizeVlinkpayCryptoSymbol(cryptoSymbol)
+    if (!normalizedSymbol) {
+      showToast(t('errors.TIP_CRYPTO_SYMBOL_REQUIRED'), 'error')
+      return false
+    }
+    if (vlinkpayCreateInFlightRef.current) return false
+
+    vlinkpayCreateInFlightRef.current = true
+    setIsProcessing(true)
+
+    try {
+      const tipId = await createTipForWallet(WALLET_KEYS.VLINKPAY, normalizedSymbol)
+      if (!tipId) return false
+
+      setCurrentTipId(tipId)
+      setSelectedCryptoSymbol(normalizedSymbol)
+      setSelectedWalletObj((current) => withWalletCryptoSymbol(current, normalizedSymbol))
+      await loadTipPaymentMethods(tipId)
+      return true
+    } catch (err) {
+      logger.error('Failed to create VlinkPay tip', err)
+      showToast(getApiErrorMessage(err, t('errors.generic'), t), 'error')
+      setCurrentTipId(null)
+      return false
+    } finally {
+      vlinkpayCreateInFlightRef.current = false
+      setIsProcessing(false)
+    }
+  }, [createTipForWallet, loadTipPaymentMethods, showToast, t])
+
+  const handleResetVlinkpayTip = useCallback(() => {
+    vlinkpayCreateInFlightRef.current = false
+    setCurrentTipId(null)
+    setTipPaymentMethodsData(null)
+    setPaymentLinkData(null)
+    setSelectedCryptoSymbol(null)
+    setSelectedWalletObj((current) => withWalletCryptoSymbol(current, null))
+  }, [])
 
   /** Confirms that customer completed external wallet payment. */
   const handleConfirmTip = async () => {
@@ -723,6 +863,7 @@ export default function useCustomerFlow() {
     isApiMode: true, touchPageQuery,
     bizName, activeStaffList,
     initialStaffMember, reviewLinks, businessPaymentAccounts,
+    businessVlinkpayCryptoAddresses,
     availablePaymentWalletKeys, isPaymentMethodsLoading, multiStaffPaymentBlocked,
     selectedStaffHasAnyPayment, qrCodeVal, filteredStaff,
     positiveTagKeys, negativeTagKeys, activeTipAmount, tipScreenTitle,
@@ -731,6 +872,7 @@ export default function useCustomerFlow() {
     customTips, setCustomTips, rating, setRating, comment, setComment,
     selectedTags, setSelectedTags, selectedWallet, setSelectedWallet,
     isProcessing, setIsProcessing, selectedWalletObj, setSelectedWalletObj,
+    selectedCryptoSymbol,
     tipRefNumber, setTipRefNumber, currentTipId, currentReviewId,
     handleTagToggle, handleRatingChange, handleToggleStaff,
     handlePay, handleConfirmTip, handleSkipTip, handleSubmitFeedback,
@@ -739,5 +881,7 @@ export default function useCustomerFlow() {
     canSelectMultipleStaff,
     isPaymentFlow,
     paymentCopyScope,
+    handleCreateVlinkpayTip,
+    handleResetVlinkpayTip,
   }
 }

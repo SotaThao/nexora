@@ -18,10 +18,11 @@ export function useStaffDirectPaymentPage(staffProfileId?: string | null) {
 
 export function useCreateStaffDirectPayment() {
   return useMutation<CreateDirectPaymentResult, Error, CreateStaffDirectPaymentVars>({
-    mutationFn: ({ staffProfileId, staffPaymentMethodId, amount }) =>
+    mutationFn: ({ staffProfileId, staffPaymentMethodId, amount, cryptoSymbol }) =>
       publicStaffPaymentRepository.createPayment(staffProfileId, {
         staffPaymentMethodId,
         amount,
+        cryptoSymbol,
       }),
   })
 }

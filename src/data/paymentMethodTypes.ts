@@ -1,24 +1,37 @@
+import { PayoutApiType, PayoutUiKey } from './payoutUiKeys'
+import type { PaymentMethodDto } from '../types/domain'
+import {
+  VLINKPAY_WALLET_LABEL,
+  isVlinkpayMethodConfigured,
+  parseVlinkpayAddresses,
+  toVlinkpayCryptoAddressesPayload,
+} from '../components/payout/vlinkpayWallet'
+
 /** Maps backend payment-method `type` strings to UI keys used in payout components. */
 export const PAYOUT_TYPE_TO_UI_KEY: Record<string, string> = {
-  Zelle: 'zelle',
-  BankWire: 'bankwire',
-  PayPal: 'paypal',
-  Venmo: 'venmo',
-  CashApp: 'cashapp',
-  AppleCash: 'applecash',
-  VlinkPay: 'vlinkpay',
-  Crypto: 'crypto',
+  [PayoutApiType.Zelle]: PayoutUiKey.Zelle,
+  [PayoutApiType.BankWire]: PayoutUiKey.BankWire,
+  [PayoutApiType.PayPal]: PayoutUiKey.PayPal,
+  [PayoutApiType.Venmo]: PayoutUiKey.Venmo,
+  [PayoutApiType.CashApp]: PayoutUiKey.CashApp,
+  [PayoutApiType.AppleCash]: PayoutUiKey.AppleCash,
+  [PayoutApiType.VlinkPay]: PayoutUiKey.VlinkPay,
+  [PayoutApiType.Crypto]: PayoutUiKey.Crypto,
 }
 
+export const PAYOUT_UI_KEY_TO_API_TYPE: Record<string, string> = Object.fromEntries(
+  Object.entries(PAYOUT_TYPE_TO_UI_KEY).map(([apiType, uiKey]) => [uiKey, apiType]),
+)
+
 export const PAYOUT_UI_LABELS: Record<string, string> = {
-  zelle: 'Zelle',
-  paypal: 'PayPal',
-  venmo: 'Venmo',
-  cashapp: 'Cash App',
-  applecash: 'Apple Cash',
-  vlinkpay: 'VLINKPAY Wallet',
-  bankwire: 'Bank Wire',
-  crypto: 'Crypto Wallet',
+  [PayoutUiKey.Zelle]: 'Zelle',
+  [PayoutUiKey.PayPal]: 'PayPal',
+  [PayoutUiKey.Venmo]: 'Venmo',
+  [PayoutUiKey.CashApp]: 'Cash App',
+  [PayoutUiKey.AppleCash]: 'Apple Cash',
+  [PayoutUiKey.VlinkPay]: VLINKPAY_WALLET_LABEL,
+  [PayoutUiKey.BankWire]: 'Bank Wire',
+  [PayoutUiKey.Crypto]: 'Crypto Wallet',
 }
 
 type PaymentLabelTranslator = (key: string, variables?: Record<string, string>) => string
@@ -107,24 +120,24 @@ export function getPayoutAccountHolderDisplayLabel(
 }
 
 export const PAYOUT_UI_DISPLAY_ORDER = [
-  'zelle',
-  'paypal',
-  'venmo',
-  'cashapp',
-  'applecash',
-  'vlinkpay',
-  'bankwire',
-  'crypto',
+  PayoutUiKey.Zelle,
+  PayoutUiKey.PayPal,
+  PayoutUiKey.Venmo,
+  PayoutUiKey.CashApp,
+  PayoutUiKey.AppleCash,
+  PayoutUiKey.VlinkPay,
+  PayoutUiKey.BankWire,
+  PayoutUiKey.Crypto,
 ] as const
 
 /** Staff create/edit surfaces — excludes bankwire/crypto (not configured on staff wallets). */
 export const STAFF_CONFIGURABLE_PAYOUT_UI_KEYS = [
-  'zelle',
-  'paypal',
-  'venmo',
-  'cashapp',
-  'applecash',
-  'vlinkpay',
+  PayoutUiKey.Zelle,
+  PayoutUiKey.PayPal,
+  PayoutUiKey.Venmo,
+  PayoutUiKey.CashApp,
+  PayoutUiKey.AppleCash,
+  PayoutUiKey.VlinkPay,
 ] as const
 
 export type StaffConfigurablePayoutUiKey = (typeof STAFF_CONFIGURABLE_PAYOUT_UI_KEYS)[number]
@@ -190,7 +203,7 @@ export function payoutTypeToUiKey(type = ''): string {
 /** Hide catch-all "Other" payout type from merchant/staff configuration UIs. */
 export function isHiddenPayoutConfigType(method: { type?: string; uiKey?: string }): boolean {
   const uiKey = method.uiKey || payoutTypeToUiKey(method.type || '')
-  return uiKey === 'other'
+  return uiKey === PayoutUiKey.Other
 }
 
 export function sortPaymentMethodsByUiOrder<T extends { uiKey?: string }>(methods: T[]): T[] {
@@ -202,12 +215,12 @@ export function sortPaymentMethodsByUiOrder<T extends { uiKey?: string }>(method
 }
 
 /** UI keys whose payment flow routes directly P2P (no platform processing fee). */
-export const DIRECT_P2P_UI_KEYS = new Set([
-  'zelle',
-  'venmo',
-  'cashapp',
-  'applecash',
-  'vlinkpay',
+export const DIRECT_P2P_UI_KEYS = new Set<string>([
+  PayoutUiKey.Zelle,
+  PayoutUiKey.Venmo,
+  PayoutUiKey.CashApp,
+  PayoutUiKey.AppleCash,
+  PayoutUiKey.VlinkPay,
 ])
 
 /**
@@ -219,12 +232,12 @@ export function isDirectP2pMethod(apiType: string): boolean {
 }
 
 /** UI keys whose PUT payment-methods payload carries an editable accountName. */
-export const ACCOUNT_NAME_UI_KEYS = new Set([
-  'zelle',
-  'venmo',
-  'cashapp',
-  'paypal',
-  'applecash',
+export const ACCOUNT_NAME_UI_KEYS = new Set<string>([
+  PayoutUiKey.Zelle,
+  PayoutUiKey.Venmo,
+  PayoutUiKey.CashApp,
+  PayoutUiKey.PayPal,
+  PayoutUiKey.AppleCash,
 ])
 
 export function supportsPayoutAccountName(uiKey = ''): boolean {
@@ -252,4 +265,91 @@ export function toPayoutAccountNameDto(
 export function getPaymentMethodDisplayName(apiType: string): string {
   const uiKey = payoutTypeToUiKey(apiType)
   return PAYOUT_UI_LABELS[uiKey] ?? apiType
+}
+
+export type StaffPayoutConfigDraft = {
+  enabled: boolean
+  value: string
+  qrCode: string
+  accountName: string
+}
+
+export const EMPTY_STAFF_PAYOUT_CONFIG: StaffPayoutConfigDraft = {
+  enabled: false,
+  value: '',
+  qrCode: '',
+  accountName: '',
+}
+
+/** Build a staff payout method row from modal form state (manual add / draft). */
+export function buildPaymentMethodFromPayoutConfig(
+  walletKey: string,
+  config: StaffPayoutConfigDraft,
+  staffName = '',
+): PaymentMethodDto {
+  const isVlinkpay = walletKey === PayoutUiKey.VlinkPay
+  const cryptoAddresses = isVlinkpay
+    ? toVlinkpayCryptoAddressesPayload(parseVlinkpayAddresses(config.value))
+    : null
+  const method: PaymentMethodDto = {
+    type: walletKey,
+    uiKey: walletKey,
+    name: PAYOUT_UI_LABELS[walletKey] || walletKey,
+    accountInfo: isVlinkpay ? null : (config.value || null),
+    accountName: config.accountName || null,
+    imageUrl: config.qrCode || null,
+    cryptoAddresses,
+    isActive: config.enabled,
+  }
+  const isConfigured = isPaymentMethodConfigured(method)
+  return {
+    ...method,
+    accountName: method.accountName || (isConfigured ? staffName || null : null),
+    isConfigured,
+  }
+}
+
+/** Overlay staff modal form edits onto an API payment-method row. */
+export function mergeStaffPaymentMethodWithConfig(
+  fromApi: PaymentMethodDto,
+  walletKey: string,
+  config: StaffPayoutConfigDraft,
+): PaymentMethodDto {
+  const merged: PaymentMethodDto = {
+    ...fromApi,
+    uiKey: fromApi.uiKey || walletKey,
+    accountInfo: config.value || fromApi.accountInfo,
+    accountName: config.accountName || fromApi.accountName,
+    imageUrl: config.qrCode || fromApi.imageUrl,
+    isActive: Boolean(config.enabled),
+    name: fromApi.name || PAYOUT_UI_LABELS[walletKey] || walletKey,
+  }
+  return {
+    ...merged,
+    isConfigured: isPaymentMethodConfigured(merged),
+  }
+}
+
+/**
+ * Whether a payment method has enough account data to be considered set up.
+ * Prefer BE `isConfigured` for fiat methods. VlinkPay is configured only when
+ * at least one USDV/USDT address exists — empty JSON / a BE `isConfigured`
+ * flag with no addresses must not count as set up.
+ */
+export function isPaymentMethodConfigured(method?: {
+  uiKey?: string
+  type?: string
+  isConfigured?: boolean
+  accountInfo?: string | null
+  cryptoAddresses?: Array<{ network?: string; symbol?: string; address?: string }> | null
+} | null): boolean {
+  if (!method) return false
+
+  const uiKey = method.uiKey || payoutTypeToUiKey(method.type || '')
+  if (uiKey === PayoutUiKey.VlinkPay) {
+    return isVlinkpayMethodConfigured(method)
+  }
+
+  if (method.isConfigured) return true
+  return Boolean(String(method.accountInfo || '').trim())
 }

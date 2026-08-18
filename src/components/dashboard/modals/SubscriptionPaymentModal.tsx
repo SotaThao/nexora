@@ -13,10 +13,13 @@ import {
 } from '../../../data/hooks/useSubscriptionPayments'
 import { resolveTranslatedApiError } from '../../../utils/resolveTranslatedApiError'
 import { resolveSubscriptionBillingDefaults } from '../../../utils/subscriptionBillingDefaults'
-import type {
-  PurchasableSubscriptionPlan,
-  SubscriptionPaymentMethod,
+import { formatCurrentPlanLabel } from '../../../utils/subscriptionDisplay'
+import {
+  SubscriptionBillingCycle,
+  type PurchasableSubscriptionPlan,
+  type SubscriptionPaymentMethod,
 } from '../../../data/repositories/subscriptionPayments'
+import type { UserSubscription } from '../../../types/domain'
 import { getErrorI18nKey } from '../../../data/errorCodes'
 import SubscriptionCardPaymentForm, {
   type SubscriptionBillingDetails,
@@ -57,6 +60,8 @@ type Props = {
   plan: PurchasableSubscriptionPlan
   packageId: string
   price: number
+  billingCycle?: SubscriptionBillingCycle
+  currentSubscription?: UserSubscription | null
   billingDefaults?: SubscriptionBillingDetails
   onClose: () => void
   onSuccess?: () => void
@@ -67,6 +72,8 @@ export default function SubscriptionPaymentModal({
   plan,
   packageId,
   price,
+  billingCycle,
+  currentSubscription,
   billingDefaults,
   onClose,
   onSuccess,
@@ -158,9 +165,9 @@ export default function SubscriptionPaymentModal({
   useEffect(() => {
     if (!isOpen || !isCardPayment) return
     if (initializeCardMutation.data || initializeCardMutation.isPending) return
-    initializeCardMutation.mutate(packageId)
+    initializeCardMutation.mutate({ packageId, billingCycle })
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [isOpen, isCardPayment, packageId])
+  }, [isOpen, isCardPayment, packageId, billingCycle])
 
   const selectedPayment = useMemo(
     () => methods.find((method) => method.symbol === selectedSymbol) ?? null,
@@ -187,6 +194,8 @@ export default function SubscriptionPaymentModal({
     }
   }
 
+  const currentPlanLabel = formatCurrentPlanLabel(currentSubscription)
+
   const handleWalletConfirm = () => {
     if (!selectedSymbol || isCardPayment) return
     const method = methods.find((item) => item.symbol === selectedSymbol)
@@ -198,7 +207,7 @@ export default function SubscriptionPaymentModal({
     }
 
     purchaseMutation.mutate(
-      { packageId, symbol: selectedSymbol },
+      { packageId, symbol: selectedSymbol, billingCycle },
       {
         onSuccess: (result) => {
           const nextStep = resolveWalletPurchaseNextStep(result)
@@ -401,7 +410,7 @@ export default function SubscriptionPaymentModal({
                         <button
                           className="booking-mini-button"
                           type="button"
-                          onClick={() => initializeCardMutation.mutate(packageId)}
+                          onClick={() => initializeCardMutation.mutate({ packageId, billingCycle })}
                         >
                           {t(subscriptionModalKey('paymentMethodsRetry'))}
                         </button>
@@ -448,10 +457,21 @@ export default function SubscriptionPaymentModal({
               <strong>
                 {formatPlanMonthlyTotal(
                   price,
-                  ` / ${t(subscriptionModalKey('priceNoteMonth'))}`,
+                  ` / ${t(
+                    subscriptionModalKey(
+                      billingCycle === SubscriptionBillingCycle.Yearly
+                        ? 'priceNoteYear'
+                        : 'priceNoteMonth',
+                    ),
+                  )}`,
                 )}
               </strong>
             </div>
+            {currentPlanLabel ? (
+              <p className="mt-3 text-xs font-semibold text-red-600">
+                {t(subscriptionModalKey('forfeitWarning'), { plan: currentPlanLabel })}
+              </p>
+            ) : null}
           </section>
 
           <div className="sr-only" aria-live="polite">

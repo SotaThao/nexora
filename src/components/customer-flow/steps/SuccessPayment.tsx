@@ -1,11 +1,13 @@
 import React from 'react'
 import { CheckCircle, Star } from 'lucide-react'
+import { resolvePaymentMethodViaDisplay } from '../../direct-payment/paymentFlowShared'
 
 export default function SuccessPayment({
   t,
   selectedStaffMembers,
   activeTipAmount,
   selectedWalletObj,
+  cryptoSymbol,
   setStep,
   paymentMode = false,
 }) {
@@ -67,7 +69,7 @@ export default function SuccessPayment({
                 </span>
               ) : null}
               <span className="truncate">
-                {selectedWalletObj.label || selectedWalletObj.name || selectedWalletObj.key || '-'}
+                {resolvePaymentMethodViaDisplay(selectedWalletObj, cryptoSymbol) || '-'}
               </span>
             </span>
           </div>

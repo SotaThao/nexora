@@ -1,6 +1,7 @@
 import React from 'react'
 import { Bitcoin } from 'lucide-react'
 import { PAYOUT_UI_LABELS } from '../../../data/paymentMethodTypes'
+import { WALLET_KEYS } from '../constants'
 
 export const WalletLogos = {
   venmo: (
@@ -55,8 +56,8 @@ const WALLET_CATALOG = {
     logo: WalletLogos.applecash
   },
   vlinkpay: {
-    name: 'VLINKPAY Wallet',
-    key: 'vlinkpay',
+    name: PAYOUT_UI_LABELS[WALLET_KEYS.VLINKPAY],
+    key: WALLET_KEYS.VLINKPAY,
     color: 'bg-nexoraCanvas border border-nexoraBorder text-nexoraText',
     logo: WalletLogos.vlinkpay
   },

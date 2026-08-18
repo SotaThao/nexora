@@ -8,6 +8,7 @@ import type {
   PaymentStatusValue,
 } from '../../types/domain'
 import { normalizePaymentStats } from './paymentStatsNormalization'
+import { parsePaymentCryptoWallet } from '../../components/payout/vlinkpayWallet'
 
 type HttpClient = typeof httpClient
 
@@ -56,6 +57,7 @@ function normalizeMerchantPayment(raw: Record<string, unknown> | null | undefine
     merchantConfirmedAt: readField<string | null>(raw, 'merchantConfirmedAt', 'MerchantConfirmedAt') ?? null,
     accountInfo: readField<string | null>(raw, 'accountInfo', 'AccountInfo') ?? null,
     imageUrl: readField<string | null>(raw, 'imageUrl', 'ImageUrl') ?? null,
+    cryptoWallet: parsePaymentCryptoWallet(readField(raw, 'cryptoWallet', 'CryptoWallet')),
   }
 }
 

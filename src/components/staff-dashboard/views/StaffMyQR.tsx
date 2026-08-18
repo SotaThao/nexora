@@ -17,6 +17,8 @@ import { shareUrl } from '../../../utils/shareUrl'
 import { buildQrImageUrl, resolveStaffDirectPaymentPageUrl } from '../../../utils/staffTipUrl'
 import { useStaffPaymentQr } from '../../../data/hooks/useStaffPayments'
 import { useStaffPaymentMethods } from '../../../data/hooks/useStaffPaymentMethods'
+import { isPaymentMethodConfigured } from '../../../data/paymentMethodTypes'
+import { formatPaymentMethodAccountDisplay } from '../../payout/bankWireAccount'
 import { SkeletonLayout } from '../../ui/skeleton'
 import QrImage from '../../ui/QrImage'
 import PayoutMethodDetailModal from '../../payout/PayoutMethodDetailModal'
@@ -325,7 +327,7 @@ export default function StaffMyQR() {
   const readyStaffPaymentMethods = useMemo(
     () =>
       staffPaymentMethods.filter(
-        (method) => Boolean(method.isActive && method.isConfigured && method.accountInfo?.trim()),
+        (method) => Boolean(method.isActive && isPaymentMethodConfigured(method)),
       ),
     [staffPaymentMethods],
   )
@@ -1163,13 +1165,14 @@ export default function StaffMyQR() {
                         {WalletLogos[(method.uiKey || '') as keyof typeof WalletLogos] || <CreditCard className="h-4 w-4" />}
                       </span>
                       <div className="min-w-0 text-left">
-                        <div className="flex min-w-0 items-center gap-1.5">
-                          <p className="min-w-0 truncate text-[12px] font-semibold text-nexoraText">{label}</p>
-                          <span className="shrink-0 rounded-full bg-nexoraSuccess/10 px-1.5 py-0.5 text-[8px] font-bold leading-none text-nexoraSuccess">
-                            {t('components.staff_dashboard.views.StaffMyQR.active')}
-                          </span>
-                        </div>
-                        <p className="truncate text-[10px] font-medium text-nexoraMuted">{method.accountInfo}</p>
+                        <p className="truncate text-[12px] font-semibold text-nexoraText">{label}</p>
+                        <p className="truncate text-[10px] font-medium text-nexoraMuted">
+                          {formatPaymentMethodAccountDisplay(
+                            method.uiKey || '',
+                            method.accountInfo,
+                            method.cryptoAddresses,
+                          )}
+                        </p>
                       </div>
                       <div className="flex items-center justify-end gap-1.5">
                         <button

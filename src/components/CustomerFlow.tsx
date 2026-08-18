@@ -27,9 +27,11 @@ export default function CustomerFlow() {
     selectedTips, setSelectedTips, customTips, setCustomTips,
     activeTipAmount, initialStaffMember,
     businessPaymentAccounts,
+    businessVlinkpayCryptoAddresses,
     availablePaymentWalletKeys, isPaymentMethodsLoading, multiStaffPaymentBlocked,
     setSelectedWalletObj, setSelectedWallet, setTipRefNumber,
     selectedWalletObj, qrCodeVal, tipRefNumber, handlePay,
+    selectedCryptoSymbol,
     paymentLinkData, tipPaymentMethodsData, currentTipId,
     isProcessing,
     rating, handleRatingChange,
@@ -42,6 +44,8 @@ export default function CustomerFlow() {
     canSelectMultipleStaff,
     isPaymentFlow,
     paymentCopyScope,
+    handleCreateVlinkpayTip,
+    handleResetVlinkpayTip,
   } = flow
 
   const { canBackToDashboard } = useBackToDashboard()
@@ -181,6 +185,7 @@ export default function CustomerFlow() {
                   activeTipAmount={activeTipAmount}
                   qrCodeVal={qrCodeVal}
                   businessPaymentAccounts={businessPaymentAccounts}
+                  businessVlinkpayCryptoAddresses={businessVlinkpayCryptoAddresses}
                   tipRefNumber={tipRefNumber}
                   currentTipId={currentTipId}
                   showToast={showToast}
@@ -192,6 +197,9 @@ export default function CustomerFlow() {
                   tipPaymentMethodsData={tipPaymentMethodsData}
                   paymentMode={isPaymentFlow}
                   paymentCopyScope={paymentCopyScope ?? 'merchant'}
+                  isProcessing={isProcessing}
+                  onCreateVlinkpayTip={handleCreateVlinkpayTip}
+                  onResetVlinkpayTip={handleResetVlinkpayTip}
                 />
               )}
 
@@ -201,6 +209,7 @@ export default function CustomerFlow() {
                   selectedStaffMembers={selectedStaffMembers}
                   activeTipAmount={activeTipAmount}
                   selectedWalletObj={selectedWalletObj}
+                  cryptoSymbol={selectedCryptoSymbol}
                   setStep={setStep}
                   paymentMode={isPaymentFlow}
                 />

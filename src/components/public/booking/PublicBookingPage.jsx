@@ -148,6 +148,7 @@ export default function PublicBookingPage() {
       categories: pageData?.categories || [],
       staff: pageData?.staff || [],
       operatingHours: pageData?.operatingHours || [],
+      holidays: pageData?.holidays || [],
     }),
     [pageData],
   )
@@ -415,7 +416,7 @@ export default function PublicBookingPage() {
     dateError,
     timeError,
     reviewError,
-  } = resolveBookingFieldErrors(errors, state, copy)
+  } = resolveBookingFieldErrors(errors, state, copy, catalog.holidays, locale)
 
   const booking = state.booking
   const serviceNames = selectedServices.map((service) => service.name)

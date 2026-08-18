@@ -88,6 +88,28 @@ export const errorCodeToI18nKey = {
   STAFF_LINK_HAS_OUTSTANDING_DEBT: 'errors.staff_link_has_outstanding_debt',
   STAFF_PAYMENT_METHOD_NOT_FOUND: 'errors.staff_payment_method_not_found',
   STAFF_PAYMENT_METHOD_ACCESS_DENIED: 'errors.staff_payment_method_access_denied',
+  STAFF_PAYMENT_METHOD_CRYPTO_ADDRESSES_ONLY_FOR_VLINKPAY:
+    'errors.staff_payment_method_crypto_addresses_only_for_vlinkpay',
+  STAFF_PAYMENT_METHOD_CRYPTO_ADDRESS_UNSUPPORTED_NETWORK:
+    'errors.staff_payment_method_crypto_address_unsupported_network',
+  STAFF_PAYMENT_METHOD_CRYPTO_ADDRESS_UNSUPPORTED_SYMBOL:
+    'errors.staff_payment_method_crypto_address_unsupported_symbol',
+  STAFF_PAYMENT_METHOD_CRYPTO_ADDRESS_DUPLICATE_SYMBOL:
+    'errors.staff_payment_method_crypto_address_duplicate_symbol',
+  STAFF_PAYMENT_METHOD_CRYPTO_ADDRESS_INVALID: 'errors.staff_payment_method_crypto_address_invalid',
+  BUSINESS_PAYMENT_METHOD_CRYPTO_ADDRESSES_ONLY_FOR_VLINKPAY:
+    'errors.business_payment_method_crypto_addresses_only_for_vlinkpay',
+  BUSINESS_PAYMENT_METHOD_CRYPTO_ADDRESS_UNSUPPORTED_NETWORK:
+    'errors.business_payment_method_crypto_address_unsupported_network',
+  BUSINESS_PAYMENT_METHOD_CRYPTO_ADDRESS_UNSUPPORTED_SYMBOL:
+    'errors.business_payment_method_crypto_address_unsupported_symbol',
+  BUSINESS_PAYMENT_METHOD_CRYPTO_ADDRESS_DUPLICATE_SYMBOL:
+    'errors.business_payment_method_crypto_address_duplicate_symbol',
+  BUSINESS_PAYMENT_METHOD_CRYPTO_ADDRESS_INVALID: 'errors.business_payment_method_crypto_address_invalid',
+
+  // Tip crypto symbol (VlinkPay wallet tip / payment-link)
+  TIP_CRYPTO_SYMBOL_REQUIRED: 'errors.TIP_CRYPTO_SYMBOL_REQUIRED',
+  TIP_CRYPTO_ADDRESS_NOT_FOUND: 'errors.TIP_CRYPTO_ADDRESS_NOT_FOUND',
 
   // Physical cards (QR/NFC hardware)
   PHYSICAL_CARD_NOT_FOUND: 'errors.physical_card_not_found',
@@ -287,6 +309,7 @@ export const errorCodeToI18nKey = {
   // POS Booking — Staff/Owner creates a booking (Ticket 3)
   POS_BOOKING_SERVICE_INVALID: 'errors.pos_booking_service_invalid',
   POS_BOOKING_OUTSIDE_BUSINESS_HOURS: 'errors.pos_booking_outside_business_hours',
+  POS_BOOKING_BUSINESS_CLOSED_ON_DATE: 'errors.pos_booking_business_closed_on_date',
   POS_BOOKING_LEAD_TIME_VIOLATION: 'errors.pos_booking_lead_time_violation',
   POS_BOOKING_ADVANCE_LIMIT_EXCEEDED: 'errors.pos_booking_advance_limit_exceeded',
   POS_BOOKING_STAFF_OUTSIDE_SCHEDULE: 'errors.pos_booking_staff_outside_schedule',

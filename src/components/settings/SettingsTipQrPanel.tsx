@@ -1,4 +1,4 @@
-import React, { useCallback, useMemo, useState } from 'react'
+import { useCallback, useMemo, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import {
   QrCode,
@@ -25,11 +25,12 @@ import {
   DASHBOARD_REPORTS_TAB,
 } from '../dashboard/constants'
 import { downloadQrCode, QR_IMAGE_SIZES } from '../../utils/qrUtils'
-import { payoutTypeToUiKey } from '../../data/paymentMethodTypes'
+import { payoutTypeToUiKey, isPaymentMethodConfigured } from '../../data/paymentMethodTypes'
+import { PayoutUiKey } from '../../data/payoutUiKeys'
 import QrImage from '../ui/QrImage'
 
 function isReadyForCustomerPayment(method) {
-  return Boolean(method?.isActive && method?.accountInfo?.trim())
+  return Boolean(method?.isActive && isPaymentMethodConfigured(method))
 }
 
 export default function SettingsTipQrPanel({
@@ -70,7 +71,7 @@ export default function SettingsTipQrPanel({
   const readyPaymentMethods = useMemo(
     () =>
       paymentMethods.filter(
-        (method) => payoutTypeToUiKey(method.type || '') !== 'bankwire' && isReadyForCustomerPayment(method),
+        (method) => payoutTypeToUiKey(method.type || '') !== PayoutUiKey.BankWire && isReadyForCustomerPayment(method),
       ),
     [paymentMethods],
   )
@@ -88,8 +89,6 @@ export default function SettingsTipQrPanel({
     () => (paymentPageUrl ? buildPublicQrImageUrl(paymentPageUrl, QR_IMAGE_SIZES.panel) : ''),
     [paymentPageUrl],
   )
-
-  const previewQrUrl = qrPreviewUrl
 
   const handleDownloadQr = useCallback(async () => {
     if (!paymentPageUrl) return
@@ -270,7 +269,7 @@ export default function SettingsTipQrPanel({
           onClose={() => setShowPreview(false)}
           title={t('dashboard.master_gateway.payment_title')}
           businessName={businessName}
-          previewQrUrl={previewQrUrl}
+          previewQrUrl={qrPreviewUrl}
           paymentPageUrl={paymentPageUrl}
           scanCaption={t('components.settings.SettingsTipQrPanel.scanCaption')}
         />
@@ -382,7 +381,7 @@ export default function SettingsTipQrPanel({
           onClose={() => setShowPreview(false)}
           title={t('components.settings.SettingsTipQrPanel.defaultQrTitle')}
           businessName={businessName}
-          previewQrUrl={previewQrUrl}
+          previewQrUrl={qrPreviewUrl}
           paymentPageUrl={paymentPageUrl}
           scanCaption={t('components.settings.SettingsTipQrPanel.scanCaption')}
         />
@@ -480,7 +479,7 @@ export default function SettingsTipQrPanel({
         onClose={() => setShowPreview(false)}
         title={t('components.settings.SettingsTipQrPanel.defaultQrTitle')}
         businessName={businessName}
-        previewQrUrl={previewQrUrl}
+        previewQrUrl={qrPreviewUrl}
         paymentPageUrl={paymentPageUrl}
         scanCaption={t('components.settings.SettingsTipQrPanel.scanCaption')}
       />
