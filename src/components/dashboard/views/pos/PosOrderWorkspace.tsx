@@ -1429,11 +1429,8 @@ export default function PosOrderWorkspace({
                     {t('components.dashboard.views.pos.PosOrderWorkspace.summaryTitle')}
                   </h3>
                   <div className="space-y-2 text-[11px]">
-                    <div className="grid grid-cols-[minmax(0,1fr)_3rem_5rem] gap-2 text-[10px] font-black uppercase tracking-wide text-nexoraMuted">
+                    <div className="grid grid-cols-[minmax(0,1fr)_5rem] gap-2 text-[10px] font-black uppercase tracking-wide text-nexoraMuted">
                       <span>{t('components.dashboard.views.pos.PosOrderWorkspace.summaryItem')}</span>
-                      <span className="text-center">
-                        {t('components.dashboard.views.pos.PosOrderWorkspace.summaryQuantity')}
-                      </span>
                       <span className="text-right">
                         {t('components.dashboard.views.pos.PosOrderWorkspace.summaryPrice')}
                       </span>
@@ -1445,14 +1442,11 @@ export default function PosOrderWorkspace({
                         return (
                           <div
                             key={line.key}
-                            className="grid grid-cols-[minmax(0,1fr)_3rem_5rem] gap-2"
+                            className="grid grid-cols-[minmax(0,1fr)_5rem] gap-2"
                             role="listitem"
                             aria-label={itemName}
                           >
                             <span className="truncate font-semibold text-nexoraText">{itemName}</span>
-                            <span className="text-center tabular-nums text-nexoraMuted">
-                              {line.itemType === 'Service' ? 1 : line.quantity}
-                            </span>
                             <span className="text-right font-semibold tabular-nums text-nexoraText">
                               ${lineTotal(line).toFixed(2)}
                             </span>
@@ -1461,14 +1455,13 @@ export default function PosOrderWorkspace({
                       })}
                     </div>
                   </div>
+                  <div className="h-px bg-nexoraBorder" role="separator" />
                   <dl className="space-y-1 text-xs">
                     <div className="flex justify-between">
-                      <dt className="text-nexoraMuted">{t('components.dashboard.views.pos.PosOrderWorkspace.summaryServices')}</dt>
-                      <dd className="font-semibold text-nexoraText">${order.servicesSubtotal.toFixed(2)}</dd>
-                    </div>
-                    <div className="flex justify-between">
-                      <dt className="text-nexoraMuted">{t('components.dashboard.views.pos.PosOrderWorkspace.summaryProducts')}</dt>
-                      <dd className="font-semibold text-nexoraText">${order.productsSubtotal.toFixed(2)}</dd>
+                      <dt className="text-nexoraMuted">{t('components.dashboard.views.pos.PosOrderWorkspace.summarySubtotal')}</dt>
+                      <dd className="font-semibold text-nexoraText">
+                        ${(order.servicesSubtotal + order.productsSubtotal).toFixed(2)}
+                      </dd>
                     </div>
                     <div className="flex justify-between">
                       <dt className="text-nexoraMuted">{t('components.dashboard.views.pos.PosOrderWorkspace.summaryTip')}</dt>
