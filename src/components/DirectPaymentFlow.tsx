@@ -7,7 +7,6 @@ import { DIRECT_PAYMENT_MAX_AMOUNT, DIRECT_PAYMENT_MIN_AMOUNT } from '../utils/c
 import { DIRECT_PAYMENT_STEP } from './direct-payment/paymentFlowShared'
 import DirectPaymentReview from './direct-payment/steps/DirectPaymentReview'
 import WalletDetails from './customer-flow/steps/WalletDetails'
-import Processing from './customer-flow/steps/Processing'
 import DirectPaymentSuccess from './direct-payment/steps/DirectPaymentSuccess'
 
 export default function DirectPaymentFlow() {
@@ -28,11 +27,11 @@ export default function DirectPaymentFlow() {
     activeAmount,
     walletOptions,
     selectedWalletObj,
-    selectedWallet,
     businessRecipient,
     tipPaymentMethodsData,
     businessVlinkpayCryptoAddresses,
     currentPaymentId,
+    confirmedAmount,
     activePaymentMethod,
     selectedCryptoSymbol,
     handleSelectWallet,
@@ -47,6 +46,7 @@ export default function DirectPaymentFlow() {
     activeAmount < DIRECT_PAYMENT_MIN_AMOUNT
     || activeAmount > DIRECT_PAYMENT_MAX_AMOUNT
     || Number.isNaN(activeAmount)
+  const paymentAmount = confirmedAmount || activeAmount
 
   const pageErrorContent = useMemo(() => {
     if (!pageQuery.isError) return null
@@ -132,11 +132,8 @@ export default function DirectPaymentFlow() {
                   isLoadingMethods={false}
                   onSelectWallet={handleSelectWallet}
                   disablePaymentSelection={disablePaymentSelection}
+                  isProcessing={isCreating}
                 />
-              ) : null}
-
-              {step === DIRECT_PAYMENT_STEP.Processing ? (
-                <Processing t={t} selectedWallet={selectedWallet} />
               ) : null}
 
               {step === DIRECT_PAYMENT_STEP.WalletDetails && selectedWalletObj ? (
@@ -148,7 +145,7 @@ export default function DirectPaymentFlow() {
                   selectedTips={{}}
                   customTips={{}}
                   bizName={businessName}
-                  activeTipAmount={activeAmount}
+                  activeTipAmount={paymentAmount}
                   qrCodeVal={activePaymentMethod?.imageUrl || null}
                   businessPaymentAccounts={{}}
                   businessVlinkpayCryptoAddresses={businessVlinkpayCryptoAddresses}
@@ -175,7 +172,7 @@ export default function DirectPaymentFlow() {
                 <DirectPaymentSuccess
                   t={t}
                   businessName={businessName}
-                  activeAmount={activeAmount}
+                  activeAmount={paymentAmount}
                   selectedWalletObj={selectedWalletObj}
                   cryptoSymbol={selectedCryptoSymbol}
                 />
