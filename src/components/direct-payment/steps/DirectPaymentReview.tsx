@@ -22,8 +22,8 @@ export default function DirectPaymentReview({
   isProcessing = false,
   totalPaymentLabel,
 }) {
-  const amountInputRef = useRef(null)
-  const [pendingWalletKey, setPendingWalletKey] = useState(null)
+  const amountInputRef = useRef<HTMLInputElement | null>(null)
+  const [pendingWalletKey, setPendingWalletKey] = useState<string | null>(null)
   const name = recipientName || businessName || t('direct_payment.default_business')
   const subtitle = recipientSubtitle === null
     ? null
@@ -43,9 +43,16 @@ export default function DirectPaymentReview({
     return () => window.cancelAnimationFrame(frame)
   }, [])
 
-  const handleSelectWallet = (wallet) => {
+  useEffect(() => {
+    if (isProcessing) {
+      amountInputRef.current?.blur()
+    }
+  }, [isProcessing])
+
+  const handleSelectWallet = (wallet: { methodId?: string; key?: string }) => {
     if (disablePaymentSelection || isProcessing) return
-    setPendingWalletKey(wallet.methodId || wallet.key)
+    amountInputRef.current?.blur()
+    setPendingWalletKey(wallet.methodId || wallet.key || null)
     onSelectWallet(wallet)
   }
 
@@ -135,6 +142,7 @@ export default function DirectPaymentReview({
             <button
               key={walletKey}
               type="button"
+              aria-busy={isPendingWallet}
               disabled={disablePaymentSelection || isProcessing}
               onClick={() => handleSelectWallet(wallet)}
               className="flex w-full items-center justify-between rounded-xl border border-nexoraBorder bg-white p-3 text-sm font-bold text-nexoraText shadow-sm disabled:cursor-not-allowed disabled:opacity-60"
@@ -146,7 +154,13 @@ export default function DirectPaymentReview({
                 <span>{wallet.name}</span>
               </div>
               {isPendingWallet ? (
-                <div className="h-4 w-4 border-2 border-nexoraSubtle border-t-transparent rounded-full animate-spin" />
+                <>
+                  <div
+                    aria-hidden="true"
+                    className="h-4 w-4 border-2 border-nexoraSubtle border-t-transparent rounded-full animate-spin"
+                  />
+                  <span className="sr-only">{t('common.loading') || 'Processing...'}</span>
+                </>
               ) : (
                 <span className="text-xs font-medium text-nexoraSubtle">{t('customer.choose_chevron')}</span>
               )}
