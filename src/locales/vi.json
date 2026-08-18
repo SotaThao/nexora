@@ -1560,7 +1560,6 @@
     "pay_via": "{name}",
     "choose_chevron": "Chọn ›",
     "not_supported": "Không hỗ trợ",
-    "processing_payment": "Đang xử lý kết nối ví {name}...",
     "payment_success_title": "Cảm ơn bạn!",
     "payment_success_desc": "Khoản tiền típ {amount} của bạn đã được gửi tới {name}.",
     "share_review_title": "Cảm ơn bạn!",

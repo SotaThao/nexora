@@ -1560,7 +1560,6 @@
     "pay_via": "{name}",
     "choose_chevron": "Select ›",
     "not_supported": "Not Supported",
-    "processing_payment": "Processing payment connection to {name}...",
     "payment_success_title": "Thank You!",
     "payment_success_desc": "Your tip of {amount} has been sent to {name}.",
     "share_review_title": "Thank You!",
