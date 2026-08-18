@@ -14,6 +14,7 @@ import { useQueryClient } from '@tanstack/react-query'
 import {
   ChevronLeft,
   ChevronRight,
+  CreditCard,
   LayoutGrid,
   List as ListIcon,
   PencilLine,
@@ -549,6 +550,21 @@ export default function PosFrontDeskView({
                 </button>
               )
 
+              const renderCheckoutButton = (order: OrderListItemApiDto) =>
+                order.status === PosOrderStatus.InService ? (
+                  <button
+                    type="button"
+                    onClick={(e) => {
+                      e.stopPropagation()
+                      setUpdateWorkspace({ orderId: order.id })
+                    }}
+                    className="inline-flex shrink-0 items-center gap-1 rounded-lg border border-violet-500 bg-transparent px-2.5 py-1 text-[10px] font-bold text-violet-700 hover:bg-violet-50"
+                  >
+                    <CreditCard className="h-3 w-3" aria-hidden="true" />
+                    {t(tk('checkoutButton'))}
+                  </button>
+                ) : null
+
               if (viewMode === OrderListViewMode.Card) {
                 return (
                   <div
@@ -584,6 +600,7 @@ export default function PosFrontDeskView({
                           </span>
                           <div className="flex shrink-0 items-center gap-1.5">
                             {renderEditButton(order)}
+                            {renderCheckoutButton(order)}
                             {renderStartServiceButton(order)}
                             {renderCancelButton(order)}
                           </div>
@@ -644,6 +661,7 @@ export default function PosFrontDeskView({
                           <td className="py-2 text-right">
                             <div className="flex justify-end gap-1.5">
                               {renderEditButton(order)}
+                              {renderCheckoutButton(order)}
                               {renderStartServiceButton(order)}
                               {renderCancelButton(order)}
                             </div>
