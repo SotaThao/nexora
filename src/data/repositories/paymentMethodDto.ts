@@ -99,8 +99,6 @@ export function normalizePaymentMethodDto(dto: PaymentMethodApiDtoLike): Payment
     isConfigured: Boolean(dto.isConfigured),
     businessKybStatus: dto.businessKybStatus ?? null,
   }
-  if (!normalized.isConfigured) {
-    normalized.isConfigured = isPaymentMethodConfigured(normalized)
-  }
+  normalized.isConfigured = isPaymentMethodConfigured(normalized)
   return normalized
 }

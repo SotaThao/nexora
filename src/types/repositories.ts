@@ -1114,7 +1114,7 @@ export interface StaffListItemApiDto {
   paymentMethods?: StaffPaymentMethodApiDto[]
   invites?: StaffInviteSummaryApiDto[]
   isLocalStaff?: boolean
-  staffProfile?: { phoneNumber?: string; phone?: string; email?: string }
+  staffProfile?: { staffCode?: string | null; phoneNumber?: string; phone?: string; email?: string }
   user?: { phoneNumber?: string; phone?: string; email?: string }
 }
 

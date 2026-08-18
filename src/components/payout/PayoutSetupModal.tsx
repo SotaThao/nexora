@@ -39,7 +39,7 @@ interface PayoutSetupModalProps {
   readOnly?: boolean
   isSaving?: boolean
   allowQrOnly?: boolean
-  /** Portal to body and lock page scroll — for use inside another scrollable modal. */
+  /** Higher overlay z-index when opened inside another modal. */
   lockBackground?: boolean
 }
 
@@ -85,13 +85,13 @@ function PayoutSetupModal({
   }, [open, walletKey, initialValue, initialQrCode, initialAccountName, staffName])
 
   useEffect(() => {
-    if (!open || !lockBackground || typeof document === 'undefined') return undefined
+    if (!open || typeof document === 'undefined') return undefined
     const previousOverflow = document.body.style.overflow
     document.body.style.overflow = 'hidden'
     return () => {
       document.body.style.overflow = previousOverflow
     }
-  }, [open, lockBackground])
+  }, [open])
 
   useEffect(() => {
     return () => {
@@ -463,14 +463,14 @@ function PayoutSetupModal({
   const panelClass = `relative w-full min-h-0 rounded-3xl border border-slate-100 bg-white font-sans shadow-2xl animate-scaleUp ${
     isCameraOpen
       ? 'h-[480px] max-w-sm overflow-hidden'
-      : `payout-setup-modal-scroll flex max-h-full flex-col overflow-hidden ${
+      : `payout-setup-modal-scroll flex flex-col overflow-hidden ${
           isVlinkpay
             ? 'gap-3 p-3.5 max-w-[420px] rounded-[18px] sm:gap-3.5 sm:p-4'
             : `gap-4.5 p-6 ${isBankWire ? 'max-w-md' : 'max-w-sm'}`
         }`
   }`
 
-  const overlayClass = `fixed inset-0 flex h-dvh items-center justify-center overflow-hidden bg-slate-900/60 modal-overlay-safe text-left backdrop-blur-sm ${
+  const overlayClass = `fixed inset-0 flex min-h-0 items-center justify-center overflow-hidden bg-slate-900/60 modal-overlay-safe text-left backdrop-blur-sm ${
     lockBackground ? 'z-[100]' : 'z-[60]'
   }`
 
@@ -496,7 +496,7 @@ function PayoutSetupModal({
     </div>
   )
 
-  if (lockBackground && typeof document !== 'undefined') {
+  if (typeof document !== 'undefined') {
     return createPortal(modal, document.body)
   }
 
