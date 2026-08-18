@@ -20,6 +20,7 @@ import {
   parseVlinkpayAddresses,
   serializeVlinkpayAddresses,
   getVlinkpayAddressValidationError,
+  stripVlinkpayWalletAddressInput,
   type VlinkpayAddresses,
   type VlinkpayCoinKey,
 } from './vlinkpayWallet'
@@ -292,7 +293,10 @@ function PayoutSetupModal({
             <VlinkpayWalletFields
               addresses={vlinkpayAddresses}
               onChange={(coin: VlinkpayCoinKey, nextValue: string) => {
-                setVlinkpayAddresses((prev) => ({ ...prev, [coin]: nextValue }))
+                setVlinkpayAddresses((prev) => ({
+                  ...prev,
+                  [coin]: stripVlinkpayWalletAddressInput(nextValue),
+                }))
                 setError('')
               }}
               guideOpen={isGuideOpen}
