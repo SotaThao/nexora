@@ -15,9 +15,7 @@ import { useTranslation } from '../../../../contexts/LanguageContext'
 import { useNotification } from '../../../../contexts/NotificationContext'
 import { getErrorMessage } from '../../../../data/errorCodes'
 import {
-  useAddOrderProductLine,
   useAddOrderServiceLine,
-  useCheckoutProductCatalog,
   useCheckoutServiceCatalog,
   useCompleteOrder,
   useOrderDetail,
@@ -33,7 +31,6 @@ import {
 } from '../../../../data/hooks/usePosOrders'
 import { PosOrderStatus } from '../../../../constants/posOrderStatus'
 import type {
-  CheckoutProductCatalogItemApiDto,
   CheckoutServiceCatalogItemApiDto,
   PosCheckoutPaymentMethodType,
 } from '../../../../types/repositories'
@@ -42,7 +39,6 @@ import CategoryGroupedCatalogPicker from './CategoryGroupedCatalogPicker'
 import SelectTechniciansModal, { type SelectTechniciansSelection } from './modals/SelectTechniciansModal'
 
 type TipMode = 'noTip' | 'fixed10' | 'fixed15' | 'pct10' | 'pct20' | 'custom'
-type CatalogTab = 'services' | 'products'
 
 const PAYMENT_METHODS: PosCheckoutPaymentMethodType[] = ['Card', 'Cash', 'GiftCard', 'SplitPay']
 
@@ -116,11 +112,9 @@ export default function PosOrderWorkspace({
 
   const { data: order, isLoading: isOrderLoading } = useOrderDetail(businessId, orderId)
   const { data: serviceCatalog = [] } = useCheckoutServiceCatalog(businessId)
-  const { data: productCatalog = [] } = useCheckoutProductCatalog(businessId)
 
   const addServiceLine = useAddOrderServiceLine(businessId)
   const removeServiceLine = useRemoveOrderServiceLine(businessId)
-  const addProductLine = useAddOrderProductLine(businessId)
   const removeProductLine = useRemoveOrderProductLine(businessId)
   const updateProductQuantity = useUpdateOrderProductLineQuantity(businessId)
   const assignStaffToServiceLine = useAssignStaffToServiceLine(businessId)
@@ -129,7 +123,6 @@ export default function PosOrderWorkspace({
   const setStaffTipSplit = useSetOrderStaffTipSplit(businessId)
   const completeOrder = useCompleteOrder(businessId)
 
-  const [catalogTab, setCatalogTab] = useState<CatalogTab>('services')
   const [showPaymentSection, setShowPaymentSection] = useState(false)
   const [technicianModal, setTechnicianModal] = useState<{
     posServiceId: string
@@ -227,6 +220,12 @@ export default function PosOrderWorkspace({
   }, [order])
 
   const hasServiceLines = visibleLines.some((l) => l.itemType === 'Service')
+  // "First available" leaves a line unassigned on purpose — a person on the floor decides who
+  // takes it. StartOrderService and CompleteOrder both refuse an order in that state, so the two
+  // buttons are disabled rather than left to fail with a red toast at the worst moment.
+  const hasUnassignedServiceLine = visibleLines.some(
+    (l) => l.itemType === 'Service' && !l.posStaffProfileId,
+  )
   const draftSubtotal = visibleLines.reduce((sum, l) => sum + lineTotal(l), 0)
 
   const noteLines = visibleLines.filter(
@@ -240,15 +239,6 @@ export default function PosOrderWorkspace({
   // Opens SelectTechniciansModal to pick a technician for this specific new line.
   const handleCatalogServiceClick = (service: CheckoutServiceCatalogItemApiDto) => {
     setTechnicianModal({ posServiceId: service.id, serviceName: service.name, unitPrice: service.price })
-  }
-
-  const handleCatalogProductClick = (product: CheckoutProductCatalogItemApiDto) => {
-    // Live — AddOrderProductLineCommand merges Qty server-side if this product already
-    // has a line on the order, so no local duplicate-check is needed here.
-    addProductLine.mutate(
-      { orderId, posProductId: product.id, quantity: 1, unitPrice: product.price, productName: product.name },
-      { onError: reportError },
-    )
   }
 
   const handleEditServiceLine = (line: DisplayServiceLine) => {
@@ -412,64 +402,29 @@ export default function PosOrderWorkspace({
 
   const isBusy = startOrderService.isPending
 
+  // Services only. The Products tab is hidden rather than deleted — the picker, the
+  // AddOrderProductLine endpoint and the Products catalog screen all stay, so retail selling is one
+  // JSX block away from coming back. Nothing sells products anywhere while it is hidden: check-in
+  // dropped them with the one-page redesign, and this was the last surface.
   const catalogPanel = (
           <div className="nexora-card space-y-3 p-4 lg:col-span-3">
-            <div className="flex gap-1 border-b border-nexoraBorder pb-2">
-              <button
-                type="button"
-                onClick={() => setCatalogTab('services')}
-                className={`px-3 py-1.5 text-xs font-bold ${
-                  catalogTab === 'services'
-                    ? 'border-b-2 border-nexoraBrand text-nexoraBrand'
-                    : 'text-nexoraMuted hover:text-nexoraText'
-                }`}
-              >
-                {t('components.dashboard.views.pos.PosOrderWorkspace.tabServices')}
-              </button>
-              <button
-                type="button"
-                onClick={() => setCatalogTab('products')}
-                className={`px-3 py-1.5 text-xs font-bold ${
-                  catalogTab === 'products'
-                    ? 'border-b-2 border-nexoraBrand text-nexoraBrand'
-                    : 'text-nexoraMuted hover:text-nexoraText'
-                }`}
-              >
-                {t('components.dashboard.views.pos.PosOrderWorkspace.tabProducts')}
-              </button>
-            </div>
+            <h3 className="border-b border-nexoraBorder pb-2 text-xs font-black uppercase tracking-wider text-nexoraMuted">
+              {t('components.dashboard.views.pos.PosOrderWorkspace.tabServices')}
+            </h3>
 
-            {catalogTab === 'services' ? (
-              <CategoryGroupedCatalogPicker
-                variant="grid"
-                items={serviceCatalog}
-                onAdd={(itemId) => {
-                  const service = serviceCatalog.find((s) => s.id === itemId)
-                  if (service) handleCatalogServiceClick(service)
-                }}
-                addLabel={t('components.dashboard.views.pos.PosOrderWorkspace.addButton')}
-                emptyLabel={t('components.dashboard.views.pos.PosOrderWorkspace.noServicesInCategory')}
-                allCategoryLabel={t('components.dashboard.views.pos.PosOrderWorkspace.allCategories')}
-                uncategorizedLabel={t('components.dashboard.views.pos.PosOrderWorkspace.uncategorized')}
-                searchPlaceholder={t('components.dashboard.views.pos.PosOrderWorkspace.searchServicesPlaceholder')}
-              />
-            ) : (
-              <CategoryGroupedCatalogPicker
-                variant="grid"
-                items={productCatalog}
-                onAdd={(itemId) => {
-                  const product = productCatalog.find((p) => p.id === itemId)
-                  if (product) handleCatalogProductClick(product)
-                }}
-                isPending={addProductLine.isPending}
-                addLabel={t('components.dashboard.views.pos.PosOrderWorkspace.addButton')}
-                emptyLabel={t('components.dashboard.views.pos.PosOrderWorkspace.noProductsInCategory')}
-                allCategoryLabel={t('components.dashboard.views.pos.PosOrderWorkspace.allCategories')}
-                uncategorizedLabel={t('components.dashboard.views.pos.PosOrderWorkspace.uncategorized')}
-                searchPlaceholder={t('components.dashboard.views.pos.PosOrderWorkspace.searchProductsPlaceholder')}
-              />
-            )}
-
+            <CategoryGroupedCatalogPicker
+              variant="grid"
+              items={serviceCatalog}
+              onAdd={(itemId) => {
+                const service = serviceCatalog.find((s) => s.id === itemId)
+                if (service) handleCatalogServiceClick(service)
+              }}
+              addLabel={t('components.dashboard.views.pos.PosOrderWorkspace.addButton')}
+              emptyLabel={t('components.dashboard.views.pos.PosOrderWorkspace.noServicesInCategory')}
+              allCategoryLabel={t('components.dashboard.views.pos.PosOrderWorkspace.allCategories')}
+              uncategorizedLabel={t('components.dashboard.views.pos.PosOrderWorkspace.uncategorized')}
+              searchPlaceholder={t('components.dashboard.views.pos.PosOrderWorkspace.searchServicesPlaceholder')}
+            />
           </div>
   )
 
@@ -608,7 +563,12 @@ export default function PosOrderWorkspace({
                   <button
                     type="button"
                     onClick={handleStartService}
-                    disabled={isBusy}
+                    disabled={isBusy || hasUnassignedServiceLine}
+                    title={
+                      hasUnassignedServiceLine
+                        ? t('components.dashboard.views.pos.PosOrderWorkspace.assignTechnicianFirst')
+                        : undefined
+                    }
                     className="h-11 flex-1 rounded-lg border border-nexoraBorder text-sm font-bold text-nexoraText hover:border-nexoraBrand disabled:opacity-60"
                   >
                     {startOrderService.isPending ? (
@@ -618,14 +578,19 @@ export default function PosOrderWorkspace({
                     )}
                   </button>
                 ) : null}
-                <button
-                  type="button"
-                  onClick={handleCheckoutFromUpdate}
-                  disabled={isBusy}
-                  className="h-11 flex-1 rounded-lg bg-nexoraBrand text-sm font-bold text-white hover:bg-nexoraBrandDark disabled:opacity-60"
-                >
-                  {t('components.dashboard.views.pos.PosOrderWorkspace.checkoutButton')}
-                </button>
+                {/* Checkout is the next step only once service is under way — a Waiting order's
+                    next step is Start Service, and offering both made the order of operations
+                    look optional. */}
+                {order?.status === PosOrderStatus.InService ? (
+                  <button
+                    type="button"
+                    onClick={handleCheckoutFromUpdate}
+                    disabled={isBusy}
+                    className="h-11 flex-1 rounded-lg bg-nexoraBrand text-sm font-bold text-white hover:bg-nexoraBrandDark disabled:opacity-60"
+                  >
+                    {t('components.dashboard.views.pos.PosOrderWorkspace.checkoutButton')}
+                  </button>
+                ) : null}
               </div>
             ) : null}
 
@@ -873,7 +838,12 @@ export default function PosOrderWorkspace({
                 <button
                   type="button"
                   onClick={handleComplete}
-                  disabled={completeOrder.isPending}
+                  disabled={completeOrder.isPending || hasUnassignedServiceLine}
+                  title={
+                    hasUnassignedServiceLine
+                      ? t('components.dashboard.views.pos.PosOrderWorkspace.assignTechnicianFirst')
+                      : undefined
+                  }
                   className="h-11 w-full rounded-lg bg-nexoraBrand text-sm font-bold text-white hover:bg-nexoraBrandDark disabled:opacity-60"
                 >
                   {completeOrder.isPending ? (

@@ -3059,7 +3059,7 @@
             "cancel": "Cancel",
             "searchPlaceholder": "Search categories...",
             "sortLabel": "Sort",
-            "sortCustom": "Custom (drag order)",
+            "sortCustom": "Custom (drag to reorder)",
             "sortNameAsc": "Name A-Z",
             "sortNameDesc": "Name Z-A",
             "dragDisabledHint": "Drag-and-drop is only available in Custom sort with no search filter.",
@@ -3068,7 +3068,7 @@
             "createdSuccess": "Category created.",
             "updatedSuccess": "Category updated.",
             "deletedSuccess": "Category deleted.",
-            "reorderFailed": "Could not save the new order. Please try again.",
+            "reorderFailed": "Could not save the new arrangement. Please try again.",
             "deleteConfirmTitle": "Delete this category?",
             "deleteConfirmBody": "\"{{name}}\" cannot be deleted while a Service or Product still uses it."
           },
@@ -3097,7 +3097,7 @@
             "noServices": "No services found.",
             "createdSuccess": "Service created.",
             "updatedSuccess": "Service updated.",
-            "reorderFailed": "Could not save the new order. Please try again.",
+            "reorderFailed": "Could not save the new arrangement. Please try again.",
             "revisitAssignmentNudge": "You may need to revisit staff service assignments to include this new service."
           },
           "PosProductsView": {
@@ -3123,7 +3123,7 @@
             "noProducts": "No products found.",
             "createdSuccess": "Product created.",
             "updatedSuccess": "Product updated.",
-            "reorderFailed": "Could not save the new order. Please try again."
+            "reorderFailed": "Could not save the new arrangement. Please try again."
           },
           "PosStaffProfileView": {
             "description": "Set a staff member's POS role, pay structure, and tip preference, and confirm their tax filing type.",
@@ -3183,16 +3183,16 @@
             "scheduleSavedSuccess": "Weekly schedule saved."
           },
           "PosFrontDeskView": {
-            "description": "Check in guests, manage open orders, and run the turn board.",
+            "description": "Check in guests, manage open tickets, and run the turn board.",
             "noAccess": "You don't have permission to manage Front Desk operations for this business.",
             "tabs": {
               "checkin": "Check-in",
-              "orderlist": "Order List",
+              "orderlist": "Tickets",
               "turnboard": "Turn Board",
-              "completed": "Completed Orders",
-              "booking": "Bookings",
+              "completed": "History",
+              "booking": "Appointments",
               "customer": "Customers",
-              "timeclock": "Time Clock"
+              "timeclock": "Staffs Clock"
             },
             "customerName": "Customer Name",
             "customerPhone": "Phone",
@@ -3200,9 +3200,14 @@
             "waitMinutes": "{{minutes}}m",
             "orderListFilter": {
               "all": "All",
+              "notarrived": "Not Arrived",
               "waiting": "Waiting",
               "inservice": "In Service"
             },
+            "notArrivedEmpty": "No appointments are still expected today.",
+            "notArrivedCheckInAction": "Check In",
+            "notArrivedCheckInSuccess": "Checked in. The ticket is now waiting.",
+            "orderListColumnTime": "Time",
             "viewModeList": "List view",
             "viewModeCard": "Card view",
             "scrollTabsLeft": "Scroll tabs left",
@@ -3219,17 +3224,19 @@
             },
             "servingSince": "Serving since {{time}}",
             "checkoutButton": "Checkout",
-            "orderListEmpty": "No open orders yet.",
+            "orderListEmpty": "No open tickets yet.",
             "orderListAwaitingTechnicianBadge": "{{count}} awaiting technician",
             "orderListNoServiceBadge": "{{count}} with no services chosen",
             "orderListAwaitingTechnicianFlag": "Needs technician",
             "orderListNoServiceFlag": "No services",
-            "orderListColumnOrder": "Order",
-            "orderListColumnGuest": "Guest",
+            "orderListColumnNumber": "Number",
+            "orderListColumnCustomer": "Customer",
             "orderListColumnStatus": "Status",
             "orderListColumnTechnician": "Technician",
             "orderListColumnServices": "Services",
-            "orderListColumnElapsed": "Elapsed"
+            "orderListColumnElapsed": "Elapsed",
+            "assignTechnicianFirst": "Assign a technician to every service first.",
+            "addServiceFirst": "Add at least one service first."
           },
           "BookingTab": {
             "viewTable": "Table",
@@ -3256,7 +3263,7 @@
             "viewDetailCustomer": "Customer",
             "viewDetailPhone": "Phone",
             "viewDetailEmail": "Email",
-            "viewDetailOrderNumber": "Order Number",
+            "viewDetailOrderNumber": "Ticket Number",
             "viewDetailCreatedAt": "Created",
             "viewDetailScheduledAt": "Scheduled For",
             "viewDetailStatus": "Status",
@@ -3295,7 +3302,7 @@
             "backToMonth": "Back to month"
           },
           "PosOrderWorkspace": {
-            "titleUpdate": "Order #{{orderNumber}} · {{customerName}}",
+            "titleUpdate": "Ticket #{{orderNumber}} · {{customerName}}",
             "backButton": "Back",
             "tabServices": "Services",
             "tabProducts": "Products",
@@ -3306,7 +3313,7 @@
             "uncategorized": "Other",
             "searchServicesPlaceholder": "Search services…",
             "searchProductsPlaceholder": "Search products…",
-            "orderDetailTitle": "Order Detail",
+            "orderDetailTitle": "Ticket Detail",
             "noLines": "No services or products added yet.",
             "editLine": "Edit",
             "deleteLine": "Delete",
@@ -3316,7 +3323,7 @@
             "estimatedTotal": "Estimated Total",
             "firstAvailableLabel": "First available",
             "checkoutButton": "Checkout",
-            "startServiceButton": "In Service",
+            "startServiceButton": "Start Service",
             "startServiceSuccess": "Service started.",
             "completeSuccess": "Payment recorded — staff released.",
             "tipTitle": "Tip",
@@ -3348,7 +3355,8 @@
             "summaryDiscount": "Discount",
             "summarySalesTax": "Sales tax",
             "summaryTotal": "Total",
-            "completeButton": "Complete ${{amount}}"
+            "completeButton": "Complete ${{amount}}",
+            "assignTechnicianFirst": "Assign a technician to every service first."
           },
           "PhoneCheckInStep": {
             "welcomeTitleWithBusiness": "Welcome to {{businessName}}",
@@ -3360,13 +3368,14 @@
             "title": "Select Technician · {{serviceName}}",
             "close": "Close",
             "searchPlaceholder": "Search technicians…",
-            "nextAvailable": "Next Available",
+            "nextAvailable": "First available",
             "busy": "Busy",
             "noStaff": "No technician trained for this service yet.",
             "noteLabel": "Note",
             "notePlaceholder": "Add a note for this service…",
             "cancel": "Cancel",
-            "ok": "OK"
+            "ok": "OK",
+            "nextAvailableHint": "Leave for the front desk to assign"
           },
           "PosCompletedOrdersPanel": {
             "dateFrom": "From",
@@ -3376,9 +3385,9 @@
             "customerPhone": "Phone",
             "customerPhonePlaceholder": "Search by phone…",
             "applyFiltersButton": "Filter",
-            "empty": "No completed orders in this range.",
-            "columnOrder": "Order",
-            "columnGuest": "Guest",
+            "empty": "No completed tickets in this range.",
+            "columnNumber": "Number",
+            "columnCustomer": "Customer",
             "columnPhone": "Phone",
             "columnCompletedAt": "Completed",
             "columnTechnician": "Technician",
@@ -3387,15 +3396,15 @@
             "columnTotal": "Total",
             "columnActions": "Actions",
             "viewDetailAction": "View",
-            "pageSummary": "Page {{page}} of {{totalPages}} — {{totalCount}} orders",
+            "pageSummary": "Page {{page}} of {{totalPages}} — {{totalCount}} tickets",
             "previousPage": "Previous",
             "nextPage": "Next",
-            "viewDetailModalTitle": "Order Detail",
+            "viewDetailModalTitle": "Ticket Detail",
             "viewDetailCustomer": "Customer",
             "viewDetailPhone": "Phone",
             "viewDetailEmail": "Email",
             "viewDetailNotProvided": "Not provided",
-            "viewDetailOrderNumber": "Order Number",
+            "viewDetailOrderNumber": "Ticket Number",
             "viewDetailCompletedAt": "Completed",
             "viewDetailStatus": "Status",
             "viewDetailPaymentMethod": "Payment Method",
@@ -3462,8 +3471,8 @@
             "viewDetailLastVisit": "Last Visit",
             "viewDetailCreatedAt": "Created",
             "viewDetailNotProvided": "Not provided",
-            "viewDetailHistoryTitle": "Order & Booking History",
-            "viewDetailHistoryEmpty": "No orders or bookings yet.",
+            "viewDetailHistoryTitle": "Ticket & Appointment History",
+            "viewDetailHistoryEmpty": "No tickets or appointments yet.",
             "viewDetailUnassigned": "Unassigned",
             "historyBadgeBooking": "Booking",
             "historyBadgeWalkin": "Walk-in",
@@ -3530,7 +3539,7 @@
             "tokenLine": "Token {{token}} · rotation {{rotation}}",
             "qrAlt": "Clock-in QR code",
             "qrUnavailable": "QR code is not available right now.",
-            "rosterTitle": "Today's shift — turn order follows clock-in time",
+            "rosterTitle": "Today's shift — turn sequence follows clock-in time",
             "onShift": "{{count}} on shift",
             "viewModeTable": "Table",
             "viewModeCard": "Card",
@@ -5813,10 +5822,6 @@
         "nameLabel": "Your name",
         "namePlaceholder": "e.g. Jamie",
         "nameRequiredHint": "We'll use this to call you when it's your turn.",
-        "activeVisitTitle": "You already have visit {{orderNumber}}",
-        "activeVisitBody": "If this is you, no need to check in again. Checking in for someone else on the same phone is fine too.",
-        "activeVisitExit": "That's me — I'm all set",
-        "activeVisitNewGuest": "Check in another guest",
         "servicesTitle": "What are you here for?",
         "servicesSubtitle": "Pick as many as you like, or skip and tell the front desk.",
         "servicesContinue": "Continue with {{count}}",
@@ -5900,7 +5905,7 @@
         "minutes": "{{minutes}} min"
       },
       "ActiveVisitInterstitial": {
-        "title": "You already have visit {{orderNumber}}",
+        "title": "You already have ticket {{orderNumber}}",
         "body": "If this is you, no need to check in again. Checking in for someone else on the same phone is fine too.",
         "exit": "That's me — I'm all set",
         "newGuest": "Check in another guest"

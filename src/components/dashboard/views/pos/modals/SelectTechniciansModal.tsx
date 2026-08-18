@@ -97,10 +97,13 @@ export default function SelectTechniciansModal({
             />
           </div>
 
-          {/* "Next Available" doesn't depend on the assignable-staff query at all, so it
+          {/* "First available" doesn't depend on the assignable-staff query at all, so it
               must not sit behind its loading skeleton — previously it did, meaning a tap
               right after opening this modal (before that query resolves) landed on the
-              skeleton instead of a button and appeared to do nothing. */}
+              skeleton instead of a button and appeared to do nothing.
+
+              Picking it clears the line's technician rather than choosing one: the hint spells
+              that out, because "available" on its own reads like the system will pick someone. */}
           <div className="grid grid-cols-2 gap-2 sm:grid-cols-3">
             <button
               type="button"
@@ -116,6 +119,9 @@ export default function SelectTechniciansModal({
               </span>
               <span className="text-[11px] font-bold text-nexoraText">
                 {t('components.dashboard.views.pos.SelectTechniciansModal.nextAvailable')}
+              </span>
+              <span className="text-[10px] leading-tight text-nexoraMuted">
+                {t('components.dashboard.views.pos.SelectTechniciansModal.nextAvailableHint')}
               </span>
             </button>
 
