@@ -500,7 +500,7 @@ export function BookingCreditsHistoryTableSkeleton({ rows = 5 }: { rows?: number
   )
 }
 
-/** Skeleton rows for Package History (7 columns — matches HTML table). */
+/** Skeleton rows for Package History (7 columns — Date, Amount, Package, Term, Status, Transaction, Action). */
 export function BookingPackageHistoryTableSkeleton({ rows = 5 }: { rows?: number }) {
   return (
     <>
@@ -516,22 +516,19 @@ export function BookingPackageHistoryTableSkeleton({ rows = 5 }: { rows?: number
             <Skeleton width={72} height={14} borderRadius={6} />
           </td>
           <td>
-            <BookingSkeletonStack>
-              <Skeleton width="70%" height={14} borderRadius={6} />
-              <Skeleton width="45%" height={11} borderRadius={6} />
-            </BookingSkeletonStack>
+            <Skeleton width="70%" height={14} borderRadius={6} />
           </td>
           <td>
             <Skeleton width={72} height={22} borderRadius={999} />
-          </td>
-          <td>
-            <Skeleton width={88} height={14} borderRadius={6} />
           </td>
           <td>
             <Skeleton width={64} height={22} borderRadius={999} />
           </td>
           <td>
             <Skeleton width={120} height={22} borderRadius={6} />
+          </td>
+          <td>
+            <Skeleton width={132} height={36} borderRadius={8} />
           </td>
         </tr>
       ))}

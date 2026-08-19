@@ -17,6 +17,7 @@ import ManagePlanView from '../views/ManagePlanView'
 import BookingHubView from '../views/BookingHubView'
 import AiVoiceSetupGuideView from '../views/AiVoiceSetupGuideView'
 import PackageManagementView from '../views/packageManagement/PackageManagementView'
+import PackageBillingDetailView from '../views/packageManagement/PackageBillingDetailView'
 import TipPlatformCheckoutModal from '../views/packageManagement/TipPlatformCheckoutModal'
 import { useTipPlatformCheckoutFlow } from '../views/packageManagement/useTipPlatformCheckoutFlow'
 import CompleteStoreSetupGateModal from '../modals/CompleteStoreSetupGateModal'
@@ -1097,6 +1098,10 @@ export function SupportRoute() {
 
 export function PackageManagementRoute() {
   return <PackageManagementView />
+}
+
+export function PackageBillingDetailRoute() {
+  return <PackageBillingDetailView />
 }
 
 export function SubscriptionsRoute() {
