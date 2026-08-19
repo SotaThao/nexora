@@ -146,6 +146,10 @@ export default function useDirectPaymentFlow() {
       showToast(t('direct_payment.amount_too_high', { max: formatUsdAmount(MAX_AMOUNT) }), 'error')
       return false
     }
+    if (tipError === 'required') {
+      showToast(t('direct_payment.tip_amount_required'), 'error')
+      return false
+    }
     if (tipError === 'min_item') {
       showToast(
         t('direct_payment.tip_min_item_error', {

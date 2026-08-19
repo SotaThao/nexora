@@ -161,7 +161,13 @@ export default function PaymentTipSection({ t, tip, perStaffAmount }: PaymentTip
             </div>
           ) : null}
 
-          {tip.tipError ? (
+          {tip.tipError === 'required' ? (
+            <p className="text-xs font-semibold text-nexoraWarning">
+              {t('direct_payment.tip_amount_required')}
+            </p>
+          ) : null}
+
+          {tip.tipError === 'min_item' || tip.tipError === 'max_total' ? (
             <p className="text-xs font-semibold text-nexoraDanger">
               {tip.tipError === 'min_item'
                 ? t('direct_payment.tip_min_item_error', {

@@ -1654,6 +1654,7 @@
     "tip_custom_placeholder": "Ví dụ: 12.00",
     "tip_bill_label": "Hoá đơn",
     "tip_tips_label": "Tiền típ",
+    "tip_amount_required": "Chọn số tiền típ cho nhân viên đã chọn, hoặc bấm SKIP.",
     "tip_min_item_error": "Mỗi người phải nhận tối thiểu {{min}}.",
     "tip_max_total_error": "Tổng tiền típ không được vượt quá {{max}}.",
     "tip_failed": "Đã tạo thanh toán nhưng chưa lưu được tiền típ. Vui lòng thử lại."

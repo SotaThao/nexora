@@ -1654,6 +1654,7 @@
     "tip_custom_placeholder": "e.g. 12.00",
     "tip_bill_label": "Bill",
     "tip_tips_label": "Tips",
+    "tip_amount_required": "Pick a tip amount for the people you selected, or tap SKIP.",
     "tip_min_item_error": "Each person must receive at least {{min}}.",
     "tip_max_total_error": "Total tips cannot exceed {{max}}.",
     "tip_failed": "Payment created, but the tip could not be saved. Please try again."

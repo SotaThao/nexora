@@ -57,11 +57,13 @@ export default function useDirectPaymentTip(
   const perStaffAmount = tipItems.length ? tipItems[tipItems.length - 1].amount : 0
 
   const tipError: TipErrorCode | null = useMemo(() => {
-    if (!tipItems.length) return null
+    if (!selectedStaffIds.length) return null
+    // Đã chọn người phục vụ thì phải chọn số tiền — nếu không, tip sẽ không được tạo.
+    if (!(tipTotal > 0)) return 'required'
     if (tipTotal > constraints.maxTotalAmount) return 'max_total'
     if (perStaffAmount < constraints.minItemAmount) return 'min_item'
     return null
-  }, [constraints, perStaffAmount, tipItems.length, tipTotal])
+  }, [constraints, perStaffAmount, selectedStaffIds.length, tipTotal])
 
   const openPicker = useCallback(() => setIsPickerOpen(true), [])
   const closePicker = useCallback(() => setIsPickerOpen(false), [])

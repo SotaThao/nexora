@@ -24,6 +24,9 @@
   **When** bấm preset `$15`
   **Then** UI hiện `$7.50 EACH` trên từng dòng, breakdown `Bill $60.00 / Tips $15.00`, `TOTAL $75.00`.
 
+- **Given** khách đã chọn nhân viên nhưng **chưa chọn số tiền típ**
+  **Then** hiện nhắc `tip_amount_required` ("Chọn số tiền típ… hoặc bấm SKIP") và **khoá** toàn bộ nút chọn ví — không cho submit, tránh trường hợp khách tưởng đã típ nhưng không có bản ghi tip nào được tạo.
+
 - **Given** tổng típ chia ra dưới mức tối thiểu mỗi người (vd 6 người, tip $5)
   **Then** hiện lỗi `tip_min_item_error` và **khoá** việc chọn phương thức thanh toán.
 
