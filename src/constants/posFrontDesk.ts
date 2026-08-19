@@ -38,12 +38,21 @@ export const POS_FRONT_DESK_TAB_PARAM = 'tab'
  */
 export enum OrderListFilter {
   All = 'all',
+  NotArrived = 'notarrived',
   Waiting = 'waiting',
   InService = 'inservice',
 }
 
+/**
+ * Guest-journey order: not arrived -> waiting -> in service.
+ *
+ * NotArrived is the odd one out — it is not a ticket status. A booking only becomes a ticket at
+ * check-in, so that chip reads today's booking list while the other three filter the order list,
+ * and its count is therefore not part of All.
+ */
 export const ORDER_LIST_FILTERS: OrderListFilter[] = [
   OrderListFilter.All,
+  OrderListFilter.NotArrived,
   OrderListFilter.Waiting,
   OrderListFilter.InService,
 ]

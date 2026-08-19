@@ -35,3 +35,10 @@ export function formatPosDateTime(
   const vietnamese = isVietnamese(language)
   return `${formatDatePart(date, vietnamese, { timeZone, withYear })} ${formatTimePart(date, vietnamese, timeZone)}`
 }
+
+/** Time-only display for a wall-clock `HH:mm` / `HH:mm:ss` string (e.g. Business Hours open/close). */
+export function formatPosClockTime(hhmm: string | null | undefined, language: string = 'en'): string {
+  const [hours, minutes] = String(hhmm ?? '').split(':').map(Number)
+  if (!Number.isFinite(hours) || !Number.isFinite(minutes)) return ''
+  return formatTimePart(new Date(1970, 0, 1, hours, minutes, 0, 0), isVietnamese(language))
+}

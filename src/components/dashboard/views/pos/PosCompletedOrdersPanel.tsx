@@ -141,8 +141,8 @@ export default function PosCompletedOrdersPanel({ businessId }: { businessId: st
             <table className="w-full text-left text-xs">
               <thead>
                 <tr className="text-[10px] font-black uppercase tracking-wider text-nexoraMuted">
-                  <th className="text-xs font-black pb-2 pr-3">{t('components.dashboard.views.pos.PosCompletedOrdersPanel.columnOrder')}</th>
-                  <th className="text-xs font-black pb-2 pr-3">{t('components.dashboard.views.pos.PosCompletedOrdersPanel.columnGuest')}</th>
+                  <th className="text-xs font-black pb-2 pr-3">{t('components.dashboard.views.pos.PosCompletedOrdersPanel.columnNumber')}</th>
+                  <th className="text-xs font-black pb-2 pr-3">{t('components.dashboard.views.pos.PosCompletedOrdersPanel.columnCustomer')}</th>
                   <th className="text-xs font-black pb-2 pr-3">{t('components.dashboard.views.pos.PosCompletedOrdersPanel.columnPhone')}</th>
                   <th className="text-xs font-black pb-2 pr-3">{t('components.dashboard.views.pos.PosCompletedOrdersPanel.columnCompletedAt')}</th>
                   <th className="text-xs font-black pb-2 pr-3">{t('components.dashboard.views.pos.PosCompletedOrdersPanel.columnTechnician')}</th>

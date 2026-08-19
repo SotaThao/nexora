@@ -171,6 +171,31 @@ export const qk = {
   // `dayKey` is only appended when passed: an invalidateQueries call omitting it must yield a real
   // prefix of the rendered key. Defaulting it to '' instead would build a 4th element that matches
   // no live query, and the invalidation would silently do nothing.
+  merchantPosDevicePairingQr: (businessId?: string) =>
+    ['merchantSettings', 'posDevicePairingQr', businessId ?? ''],
+  // Carries the token itself: a new code is a different question, and the answer to the old one
+  // ("used") must never be served for it.
+  merchantPosDevicePairingQrStatus: (businessId?: string, token?: string) =>
+    ['merchantSettings', 'posDevicePairingQrStatus', businessId ?? '', token ?? ''],
+  // `status` only appended when passed, for the same reason as the time-clock keys below: an
+  // invalidateQueries call omitting the filter must stay a real prefix of the rendered key.
+  merchantPosDevices: (businessId?: string, status?: string) => {
+    const key: unknown[] = ['merchantSettings', 'posDevices', businessId ?? '']
+    if (status) key.push(status)
+    return key
+  },
+  // Self Check-In kiosk. No businessId anywhere in these keys on purpose — the tablet only ever
+  // talks to the one salon its token belongs to, so there is nothing to scope by.
+  posSelfCheckInCatalog: () => ['posSelfCheckIn', 'catalog'],
+  posSelfCheckInCustomerName: (phone?: string) => ['posSelfCheckIn', 'customerName', phone ?? ''],
+  posSelfCheckInActiveVisit: (phone?: string) => ['posSelfCheckIn', 'activeVisit', phone ?? ''],
+  posSelfCheckInBooking: (phone?: string) => ['posSelfCheckIn', 'booking', phone ?? ''],
+  posSelfCheckInTechnicians: () => ['posSelfCheckIn', 'technicians'],
+  merchantPosCheckInTechnicians: (businessId?: string) => ['merchantSettings', 'posCheckInTechnicians', businessId ?? ''],
+  merchantPosCheckInActiveVisit: (businessId?: string, phone?: string) => [
+    'merchantSettings', 'posCheckInActiveVisit', businessId ?? '', phone ?? '',
+  ],
+  merchantPosCheckInSettings: (businessId?: string) => ['merchantSettings', 'posCheckInSettings', businessId ?? ''],
   merchantPosTimeClockQr: (businessId?: string) => ['merchantSettings', 'posTimeClockQr', businessId ?? ''],
   merchantPosTimeClockRoster: (businessId?: string, dayKey?: string) => {
     const key: unknown[] = ['merchantSettings', 'posTimeClockRoster', businessId ?? '']
@@ -194,8 +219,6 @@ export const qk = {
     ['merchantSettings', 'posCheckoutProductCatalog', businessId ?? ''],
   merchantPosAssignableStaff: (businessId?: string, posServiceId?: string) =>
     ['merchantSettings', 'posAssignableStaff', businessId ?? '', posServiceId ?? ''],
-  merchantPosAssignableServices: (businessId?: string, posStaffProfileId?: string) =>
-    ['merchantSettings', 'posAssignableServices', businessId ?? '', posStaffProfileId ?? ''],
   // POS Booking — Booking Management screen (Ticket 9)
   merchantPosBookingList: (businessId?: string, filters?: object) => {
     const key: unknown[] = ['merchantSettings', 'posBookingList', businessId ?? '']
@@ -504,6 +527,7 @@ export const qk = {
   publicDirectPaymentPage: (businessId) => ['publicDirectPaymentPage', businessId],
   publicStaffDirectPaymentPage: (staffProfileId: string) => ['publicStaffDirectPaymentPage', staffProfileId],
   // POS Booking — Public Booking Page discovery (Ticket 4)
+  publicReceipt: (receiptToken?: string) => ['publicReceipt', receiptToken ?? ''],
   publicBookingPage: (businessSlug?: string) => ['publicBookingPage', businessSlug ?? ''],
   // Customer entity unification — public contact-step "returning customer" lookup by phone.
   publicBookingCustomerLookup: (businessSlug?: string, phone?: string) =>
