@@ -16,8 +16,6 @@ type BusinessInfoCardProps = {
   businessWebsite?: string
   bookingNotificationPhone?: string
   salesTaxRatePercent?: string
-  /** POS > General Settings also shows Google/Yelp review links + Facebook/Instagram inside this
-   * same card; Settings > Profile keeps its own separate Review Links card, so this defaults to off. */
   showReviewLinks?: boolean
   googleReview?: string
   yelpReview?: string

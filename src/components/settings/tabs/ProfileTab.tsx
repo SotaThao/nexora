@@ -956,7 +956,7 @@ export default function ProfileTab({
                     <FieldError id="settings-yelp-review-error" error={reviewsErrors.yelpReview} />
                   </div>
                   <div>
-                    <label className="text-[10px] font-extrabold uppercase text-nexoraMuted">{t('components.settings.tabs.ProfileTab.facebook')}</label>
+                    <label htmlFor="settings-facebook-review" className="text-[10px] font-extrabold uppercase text-nexoraMuted">{t('components.settings.tabs.ProfileTab.facebook')}</label>
                     <input
                       id="settings-facebook-review"
                       type="url"
@@ -973,7 +973,7 @@ export default function ProfileTab({
                     <FieldError id="settings-facebook-review-error" error={reviewsErrors.facebookReview} />
                   </div>
                   <div>
-                    <label className="text-[10px] font-extrabold uppercase text-nexoraMuted">{t('components.settings.tabs.ProfileTab.instagram')}</label>
+                    <label htmlFor="settings-instagram-review" className="text-[10px] font-extrabold uppercase text-nexoraMuted">{t('components.settings.tabs.ProfileTab.instagram')}</label>
                     <input
                       id="settings-instagram-review"
                       type="url"
