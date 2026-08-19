@@ -4104,6 +4104,7 @@
             "country": "Quốc gia *",
             "googleReviewLink": "Link Google Review",
             "placeholderGoogleReviewLink": "Ví dụ: https://g.page/r/ten-tiem",
+            "yelpReviewLink": "Link Yelp Review",
             "website": "Website",
             "placeholderWebsite": "https://bitcoinnailbar.com",
             "socialLinksTitle": "Liên kết mạng xã hội",

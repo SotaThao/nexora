@@ -585,6 +585,9 @@ export interface MerchantVoiceConfigDto {
   zipCode: string
   country: string
   googleReviewUrl: string
+  facebookUrl: string
+  instagramUrl: string
+  yelpUrl: string
   website: string
   description: string
   promotion: string
@@ -606,6 +609,9 @@ export interface UpdateMerchantVoiceConfigRequest {
   zipCode: string | null
   country: string | null
   googleReviewUrl: string
+  facebookUrl: string | null
+  instagramUrl: string | null
+  yelpUrl: string | null
   website: string | null
   description: string | null
   promotion: string | null
@@ -734,6 +740,11 @@ function normalizeMyTenantResponse(response: unknown): MerchantVoiceTenantDto {
   }
 }
 
+function readConfigString(value: unknown): string {
+  if (value == null) return ''
+  return String(value)
+}
+
 function normalizeConfigResponse(response: unknown): MerchantVoiceConfigDto {
   if (!response || typeof response !== 'object') {
     return {
@@ -748,6 +759,9 @@ function normalizeConfigResponse(response: unknown): MerchantVoiceConfigDto {
       zipCode: '',
       country: '',
       googleReviewUrl: '',
+      facebookUrl: '',
+      instagramUrl: '',
+      yelpUrl: '',
       website: '',
       description: '',
       promotion: '',
@@ -799,17 +813,20 @@ function normalizeConfigResponse(response: unknown): MerchantVoiceConfigDto {
     aiPhoneNumber: String(body.aiPhoneNumber ?? ''),
     bookingNotifyPhone: String(body.bookingNotifyPhone ?? ''),
     address: String(body.address ?? ''),
-    city: String(body.city ?? ''),
-    state: String(body.state ?? ''),
-    zipCode: String(body.zipCode ?? ''),
-    country: String(body.country ?? ''),
-    googleReviewUrl: String(body.googleReviewUrl ?? ''),
-    website: String(body.website ?? ''),
-    description: String(body.description ?? ''),
-    promotion: String(body.promotion ?? ''),
-    promoSms: String(body.promoSms ?? ''),
+    city: readConfigString(body.city),
+    state: readConfigString(body.state),
+    zipCode: readConfigString(body.zipCode),
+    country: readConfigString(body.country),
+    googleReviewUrl: readConfigString(body.googleReviewUrl),
+    facebookUrl: readConfigString(body.facebookUrl),
+    instagramUrl: readConfigString(body.instagramUrl),
+    yelpUrl: readConfigString(body.yelpUrl),
+    website: readConfigString(body.website),
+    description: readConfigString(body.description),
+    promotion: readConfigString(body.promotion),
+    promoSms: readConfigString(body.promoSms),
     sendSmsPromoEnabled: readBool(body.sendSmsPromoEnabled, true),
-    timeZone: String(body.timeZone ?? ''),
+    timeZone: readConfigString(body.timeZone),
     language: String(body.language ?? MerchantVoiceConfigLanguage.EnUS),
     welcomeGreeting,
     operatingHours,

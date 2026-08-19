@@ -4104,6 +4104,7 @@
             "country": "Country *",
             "googleReviewLink": "Google Review Link",
             "placeholderGoogleReviewLink": "e.g. https://g.page/r/your-salon",
+            "yelpReviewLink": "Yelp Review Link",
             "website": "Website",
             "placeholderWebsite": "https://bitcoinnailbar.com",
             "socialLinksTitle": "Social Links",
