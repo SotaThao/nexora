@@ -350,7 +350,7 @@ export default function PosFrontDeskView({
         type="button"
         onClick={() => handleCheckInBooking(booking.bookingId)}
         disabled={checkInBooking.isPending}
-        className="shrink-0 rounded-lg border border-nexoraBrand bg-nexoraBrand px-2.5 py-1 text-[10px] font-bold text-white hover:bg-nexoraBrandDark disabled:opacity-60"
+        className="shrink-0 rounded-lg border border-nexoraBrand bg-nexoraBrand h-9 px-3 text-[11px] font-bold text-white hover:bg-nexoraBrandDark disabled:opacity-60"
       >
         {t(tk('notArrivedCheckInAction'))}
       </button>
@@ -669,6 +669,21 @@ export default function PosFrontDeskView({
                 )
               }
 
+              // The row is already tappable, but a tap target with no label is a rule staff have to
+              // be told. This states it, and is the only action every row has regardless of status.
+              const renderEditButton = (order: OrderListItemApiDto) => (
+                <button
+                  type="button"
+                  onClick={(e) => {
+                    e.stopPropagation()
+                    setUpdateWorkspace({ orderId: order.id })
+                  }}
+                  className="shrink-0 rounded-lg border border-nexoraBorder h-9 px-3 text-[11px] font-bold text-nexoraMuted hover:border-nexoraBrand hover:text-nexoraBrand"
+                >
+                  {t(tk('editButton'))}
+                </button>
+              )
+
               const renderCancelButton = (order: OrderListItemApiDto) =>
                 order.status === PosOrderStatus.Waiting ? (
                   <button
@@ -678,7 +693,7 @@ export default function PosFrontDeskView({
                       handleCancel(order.id, order.customerName)
                     }}
                     disabled={cancelOrder.isPending}
-                    className="shrink-0 rounded-lg border border-nexoraBorder px-2.5 py-1 text-[10px] font-bold text-nexoraMuted hover:border-nexoraDanger hover:bg-red-50 hover:text-nexoraDanger disabled:opacity-60"
+                    className="shrink-0 rounded-lg border border-nexoraBorder h-9 px-3 text-[11px] font-bold text-nexoraMuted hover:border-nexoraDanger hover:bg-red-50 hover:text-nexoraDanger disabled:opacity-60"
                   >
                     {t(tk('cancelButton'))}
                   </button>
@@ -706,7 +721,7 @@ export default function PosFrontDeskView({
                     }}
                     disabled={startOrderService.isPending || blockedReason !== undefined}
                     title={blockedReason}
-                    className="shrink-0 rounded-lg border border-nexoraBrand bg-nexoraBrand px-2.5 py-1 text-[10px] font-bold text-white hover:bg-nexoraBrandDark disabled:opacity-60"
+                    className="shrink-0 rounded-lg border border-nexoraBrand bg-nexoraBrand h-9 px-3 text-[11px] font-bold text-white hover:bg-nexoraBrandDark disabled:opacity-60"
                   >
                     {t(tk('startServiceButton'))}
                   </button>
@@ -724,7 +739,7 @@ export default function PosFrontDeskView({
                       e.stopPropagation()
                       setUpdateWorkspace({ orderId: order.id })
                     }}
-                    className="shrink-0 rounded-lg border border-nexoraBrand bg-nexoraBrand px-2.5 py-1 text-[10px] font-bold text-white hover:bg-nexoraBrandDark"
+                    className="shrink-0 rounded-lg border border-nexoraBrand bg-nexoraBrand h-9 px-3 text-[11px] font-bold text-white hover:bg-nexoraBrandDark"
                   >
                     {t(tk('checkoutButton'))}
                   </button>
@@ -757,11 +772,12 @@ export default function PosFrontDeskView({
                         <p className="truncate text-sm font-bold text-nexoraText">{order.customerName}</p>
                         <p className="truncate text-[11px] text-nexoraMuted">{joinOrEmpty(order.serviceNames)}</p>
                         <p className="truncate text-[11px] text-nexoraMuted">{joinOrEmpty(order.technicianNames)}</p>
-                        <div className="flex items-center justify-between gap-2 border-t border-nexoraBorder pt-2">
+                        <div className="flex flex-wrap items-center justify-between gap-2 border-t border-nexoraBorder pt-2">
                           <span className="text-[11px] text-nexoraMuted">
                             {t(tk('waitMinutes'), { minutes: order.elapsedMinutes })}
                           </span>
-                          <div className="flex shrink-0 items-center gap-1.5">
+                          <div className="ml-auto flex flex-wrap items-center justify-end gap-1.5">
+                            {renderEditButton(order)}
                             {renderStartServiceButton(order)}
                             {renderCheckoutButton(order)}
                             {renderCancelButton(order)}
@@ -817,7 +833,8 @@ export default function PosFrontDeskView({
                             {t(tk('waitMinutes'), { minutes: order.elapsedMinutes })}
                           </td>
                           <td className="py-2 text-right">
-                            <div className="flex justify-end gap-1.5">
+                            <div className="flex flex-wrap justify-end gap-1.5">
+                              {renderEditButton(order)}
                               {renderStartServiceButton(order)}
                               {renderCheckoutButton(order)}
                               {renderCancelButton(order)}

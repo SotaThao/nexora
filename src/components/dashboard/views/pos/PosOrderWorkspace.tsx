@@ -10,7 +10,7 @@
 // Creating an order is no longer done here: the Check-in tab renders the shared check-in
 // page (PosCheckInTab / CheckInSurface), the same one the customer kiosk runs.
 import { useEffect, useMemo, useRef, useState } from 'react'
-import { ArrowLeft, ChevronDown, Loader2, Package, Pencil, Trash2 } from 'lucide-react'
+import { ArrowLeft, Loader2, Package, Pencil, Trash2 } from 'lucide-react'
 import { useTranslation } from '../../../../contexts/LanguageContext'
 import { useNotification } from '../../../../contexts/NotificationContext'
 import { getErrorMessage } from '../../../../data/errorCodes'
@@ -21,6 +21,7 @@ import {
   useOrderDetail,
   useRemoveOrderProductLine,
   useRemoveOrderServiceLine,
+  useUpdateOrderServiceLine,
   useSetOrderStaffTipSplit,
   useSetOrderTip,
   useUpdateOrderProductLineQuantity,
@@ -29,6 +30,7 @@ import {
   useAssignStaffToServiceLine,
   useStartOrderService,
 } from '../../../../data/hooks/usePosOrders'
+import { useCheckInTechnicians } from '../../../../data/hooks/usePosCheckIn'
 import { PosOrderStatus } from '../../../../constants/posOrderStatus'
 import type {
   CheckoutServiceCatalogItemApiDto,
@@ -36,7 +38,8 @@ import type {
 } from '../../../../types/repositories'
 import { SkeletonList } from '../../../ui/skeleton'
 import CategoryGroupedCatalogPicker from './CategoryGroupedCatalogPicker'
-import SelectTechniciansModal, { type SelectTechniciansSelection } from './modals/SelectTechniciansModal'
+import ChangeServiceModal from './modals/ChangeServiceModal'
+import ChangeTechnicianModal from './modals/ChangeTechnicianModal'
 
 type TipMode = 'noTip' | 'fixed10' | 'fixed15' | 'pct10' | 'pct20' | 'custom'
 
@@ -112,9 +115,15 @@ export default function PosOrderWorkspace({
 
   const { data: order, isLoading: isOrderLoading } = useOrderDetail(businessId, orderId)
   const { data: serviceCatalog = [] } = useCheckoutServiceCatalog(businessId)
+  // One query for every technician plus the services each can perform, rather than the drawer's
+  // per-service query: with the picker inline, several lines can ask the same question at once.
+  // Same population either way — both endpoints require an Active staff link and an Active POS
+  // profile, and both mark busy from an InService line.
+  const { data: allTechnicians = [], isPending: areTechniciansPending } = useCheckInTechnicians(businessId)
 
   const addServiceLine = useAddOrderServiceLine(businessId)
   const removeServiceLine = useRemoveOrderServiceLine(businessId)
+  const updateServiceLine = useUpdateOrderServiceLine(businessId)
   const removeProductLine = useRemoveOrderProductLine(businessId)
   const updateProductQuantity = useUpdateOrderProductLineQuantity(businessId)
   const assignStaffToServiceLine = useAssignStaffToServiceLine(businessId)
@@ -124,13 +133,22 @@ export default function PosOrderWorkspace({
   const completeOrder = useCompleteOrder(businessId)
 
   const [showPaymentSection, setShowPaymentSection] = useState(false)
-  const [technicianModal, setTechnicianModal] = useState<{
-    posServiceId: string
+  // The line whose technician is being picked. Carries the values the popup needs to open and the
+  // ones the save has to send back unchanged, so it never reaches into the list again.
+  const [technicianTarget, setTechnicianTarget] = useState<{
+    serviceLineId: string
     serviceName: string
-    unitPrice: number
-    editingKey?: string
-    initialStaffId?: string
-    initialNote?: string
+    posServiceId: string
+    posStaffProfileId?: string
+    note?: string
+  } | null>(null)
+  const [noteDraft, setNoteDraft] = useState('')
+  // The line whose service is being swapped. Held as id + name so the popup can title itself
+  // without reaching back into the list.
+  const [changeServiceTarget, setChangeServiceTarget] = useState<{
+    serviceLineId: string
+    serviceName: string
+    posServiceId: string
   } | null>(null)
   const [tipMode, setTipMode] = useState<TipMode>('noTip')
   const [customTipInput, setCustomTipInput] = useState('')
@@ -228,6 +246,16 @@ export default function PosOrderWorkspace({
   )
   const draftSubtotal = visibleLines.reduce((sum, l) => sum + lineTotal(l), 0)
 
+  // AssignStaffToServiceLine only accepts a Waiting or InService order, so a closed ticket shows
+  // its technicians as text instead of offering a picker every tap of which would fail.
+  const canEditLines =
+    order?.status === PosOrderStatus.Waiting || order?.status === PosOrderStatus.InService
+
+  // Never offer someone the service is not assigned to — the rule the per-service endpoint applied
+  // server-side, now applied to the one list this screen holds.
+  const techniciansForService = (posServiceId: string) =>
+    allTechnicians.filter((tech) => tech.serviceIds.includes(posServiceId))
+
   const noteLines = visibleLines.filter(
     (l): l is DisplayServiceLine => l.itemType === 'Service' && Boolean(l.note?.trim()),
   )
@@ -236,58 +264,87 @@ export default function PosOrderWorkspace({
     showToast(getErrorMessage(err, t, 'ERROR'), 'error')
   }
 
-  // Opens SelectTechniciansModal to pick a technician for this specific new line.
+  // The line is added unassigned and its picker opens on the new row, so the technician question
+  // is still asked immediately — it just no longer blocks the catalog behind an overlay. Leaving it
+  // unanswered is a valid state ("First available"); Start Service is what refuses to proceed.
   const handleCatalogServiceClick = (service: CheckoutServiceCatalogItemApiDto) => {
-    setTechnicianModal({ posServiceId: service.id, serviceName: service.name, unitPrice: service.price })
+    addServiceLine.mutate(
+      { orderId, posServiceId: service.id, unitPrice: service.price, serviceName: service.name },
+      {
+        onSuccess: (newServiceLineId) => {
+          setTechnicianTarget({
+            serviceLineId: newServiceLineId,
+            serviceName: service.name,
+            posServiceId: service.id,
+          })
+          setNoteDraft('')
+        },
+        onError: reportError,
+      },
+    )
   }
 
-  const handleEditServiceLine = (line: DisplayServiceLine) => {
-    setTechnicianModal({
-      posServiceId: line.posServiceId,
+  const openTechnicianModal = (line: DisplayServiceLine) => {
+    if (!line.existingId) return
+    setTechnicianTarget({
+      serviceLineId: line.existingId,
       serviceName: line.serviceName,
-      unitPrice: line.unitPrice,
-      editingKey: line.existingId ?? line.key,
-      initialStaffId: line.posStaffProfileId,
-      initialNote: line.note,
+      posServiceId: line.posServiceId,
+      posStaffProfileId: line.posStaffProfileId,
+      note: line.note,
     })
+    setNoteDraft(line.note ?? '')
   }
 
-  const handleTechnicianConfirm = (selection: SelectTechniciansSelection) => {
-    if (!technicianModal) return
-    const { editingKey, posServiceId, serviceName, unitPrice } = technicianModal
+  // One call, so the line keeps its technician, its note and its position. Deleting and re-adding
+  // — what the front desk had to do before — lost all three and cost two steps.
+  const handleChangeService = (posServiceId: string) => {
+    const target = changeServiceTarget
+    setChangeServiceTarget(null)
+    if (!target || posServiceId === target.posServiceId) return
 
-    if (editingKey) {
-      // editingKey is the real serviceLineId once a line exists server-side (Update mode
-      // never carries an un-persisted line — every add already calls the API immediately).
-      assignStaffToServiceLine.mutate(
-        {
-          orderId,
-          serviceLineId: editingKey,
-          posStaffProfileId: selection.posStaffProfileId,
-          note: selection.note,
-        },
-        { onError: reportError },
-      )
-    } else {
-      addServiceLine.mutate(
-        { orderId, posServiceId, unitPrice, serviceName },
-        {
-          onSuccess: (newServiceLineId) => {
-            assignStaffToServiceLine.mutate(
-              {
-                orderId,
-                serviceLineId: newServiceLineId,
-                posStaffProfileId: selection.posStaffProfileId,
-                note: selection.note,
-              },
-              { onError: reportError },
-            )
-          },
-          onError: reportError,
-        },
-      )
-    }
-    setTechnicianModal(null)
+    const service = serviceCatalog.find((s) => s.id === posServiceId)
+    if (!service) return
+    updateServiceLine.mutate(
+      {
+        orderId,
+        serviceLineId: target.serviceLineId,
+        posServiceId,
+        unitPrice: service.price,
+        serviceName: service.name,
+      },
+      { onError: reportError },
+    )
+  }
+
+  // AssignStaffToServiceLine overwrites Note unconditionally, so both values travel together on
+  // every call — sending only the technician would silently wipe the note.
+  const saveServiceLine = (serviceLineId: string, posStaffProfileId: string | undefined, note: string) => {
+    assignStaffToServiceLine.mutate(
+      {
+        orderId,
+        serviceLineId,
+        posStaffProfileId,
+        note: note.trim() || undefined,
+      },
+      { onError: reportError },
+    )
+  }
+
+  const handleSelectTechnician = (posStaffProfileId: string | null) => {
+    const target = technicianTarget
+    setTechnicianTarget(null)
+    if (!target) return
+    saveServiceLine(target.serviceLineId, posStaffProfileId ?? undefined, noteDraft)
+  }
+
+  // Closing without picking anyone still keeps a note the operator typed — it is saved against
+  // whoever the line already had, since the endpoint writes both fields together.
+  const handleCloseTechnicianModal = () => {
+    const target = technicianTarget
+    setTechnicianTarget(null)
+    if (!target || noteDraft.trim() === (target.note ?? '').trim()) return
+    saveServiceLine(target.serviceLineId, target.posStaffProfileId, noteDraft)
   }
 
   const handleDeleteLine = (line: DisplayLine) => {
@@ -445,44 +502,78 @@ export default function PosOrderWorkspace({
                 <div className="max-h-[320px] space-y-2 overflow-y-auto pr-1">
                   {visibleLines.map((line) =>
                     line.itemType === 'Service' ? (
-                      <div key={line.key} className="space-y-2 rounded-2xl border border-nexoraBorder bg-white p-3">
-                        <div className="flex items-start gap-3">
+                      (() => {
+                        const technicianLabel =
+                          line.technicianName ??
+                          t('components.dashboard.views.pos.PosOrderWorkspace.firstAvailableLabel')
+                        // A service that is already done keeps its name as text: the work was
+                        // performed and may already count toward commission, so the backend refuses
+                        // to swap it. Its technician stays editable.
+                        const canChangeService = canEditLines && !line.completedAt && !!line.existingId
+                        return (
+                      <div key={line.key} className="space-y-2 rounded-2xl border border-nexoraBorder bg-white p-2.5">
+                        <div className="flex items-start gap-2.5">
                           <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-nexoraLavender/20 text-xs font-bold text-nexoraBrandDark">
-                            {initials(
-                              line.technicianName ??
-                                t('components.dashboard.views.pos.PosOrderWorkspace.firstAvailableLabel'),
+                            {initials(technicianLabel)}
+                          </div>
+                          <div className="min-w-0 flex-1 space-y-1">
+                            {/* Opens a popup, so this carries a pencil rather than the technician
+                                field's caret — the two controls sit on top of each other and must
+                                not look like they do the same thing. */}
+                            {canChangeService ? (
+                              <button
+                                type="button"
+                                onClick={() =>
+                                  setChangeServiceTarget({
+                                    serviceLineId: line.existingId as string,
+                                    serviceName: line.serviceName,
+                                    posServiceId: line.posServiceId,
+                                  })
+                                }
+                                aria-label={t('components.dashboard.views.pos.PosOrderWorkspace.changeService')}
+                                className="flex h-9 w-full items-center justify-between gap-2 rounded-lg border border-nexoraBorder px-2.5 text-sm font-bold text-nexoraText hover:border-nexoraBrand"
+                              >
+                                <span className="truncate">{line.serviceName}</span>
+                                <Pencil className="h-3.5 w-3.5 shrink-0 text-nexoraMuted" />
+                              </button>
+                            ) : (
+                              <p className="text-sm font-bold leading-tight text-nexoraText">{line.serviceName}</p>
+                            )}
+                            {/* Styled as a field rather than plain text: the technician is the one
+                                thing on this row an operator changes, and the ticket-list feedback
+                                was that an unlabelled tap target is a rule nobody gets told. A
+                                closed ticket shows the same value as text — the backend refuses
+                                edits there, so there is nothing to offer. */}
+                            {canEditLines ? (
+                              <button
+                                type="button"
+                                onClick={() => openTechnicianModal(line)}
+                                aria-label={t('components.dashboard.views.pos.PosOrderWorkspace.changeTechnician')}
+                                className="flex h-9 w-full items-center justify-between gap-2 rounded-lg border border-nexoraBorder px-2.5 text-xs font-bold text-nexoraText hover:border-nexoraBrand"
+                              >
+                                <span className="truncate">{technicianLabel}</span>
+                                <Pencil className="h-3.5 w-3.5 shrink-0 text-nexoraMuted" />
+                              </button>
+                            ) : (
+                              <p className="text-xs leading-tight text-nexoraMuted">{technicianLabel}</p>
                             )}
                           </div>
-                          <div className="min-w-0 flex-1">
-                            <p className="text-sm font-bold leading-tight text-nexoraText">{line.serviceName}</p>
-                            <p className="text-xs leading-tight text-nexoraMuted">
-                              {line.technicianName ??
-                                t('components.dashboard.views.pos.PosOrderWorkspace.firstAvailableLabel')}
-                            </p>
+                          <div className="flex shrink-0 flex-col items-end gap-1">
+                            <span className="text-sm font-bold text-nexoraText">${lineTotal(line).toFixed(2)}</span>
+                            <button
+                              type="button"
+                              onClick={() => handleDeleteLine(line)}
+                              className="flex h-9 w-9 items-center justify-center rounded-xl text-nexoraMuted hover:bg-red-50 hover:text-nexoraDanger"
+                              aria-label={t('components.dashboard.views.pos.PosOrderWorkspace.deleteLine')}
+                            >
+                              <Trash2 className="h-4 w-4" />
+                            </button>
                           </div>
-                          <span className="shrink-0 text-sm font-bold text-nexoraText">
-                            ${lineTotal(line).toFixed(2)}
-                          </span>
                         </div>
-                        <div className="flex justify-end gap-1.5">
-                          <button
-                            type="button"
-                            onClick={() => handleEditServiceLine(line)}
-                            className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl text-nexoraMuted hover:bg-nexoraCanvas hover:text-nexoraBrandDark"
-                            aria-label={t('components.dashboard.views.pos.PosOrderWorkspace.editLine')}
-                          >
-                            <Pencil className="h-4 w-4" />
-                          </button>
-                          <button
-                            type="button"
-                            onClick={() => handleDeleteLine(line)}
-                            className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl text-nexoraMuted hover:bg-red-50 hover:text-nexoraDanger"
-                            aria-label={t('components.dashboard.views.pos.PosOrderWorkspace.deleteLine')}
-                          >
-                            <Trash2 className="h-4 w-4" />
-                          </button>
-                        </div>
+
                       </div>
+                        )
+                      })()
                     ) : (
                       <div key={line.key} className="space-y-2 rounded-2xl border border-nexoraBorder bg-white p-3">
                         <div className="flex items-start gap-3">
@@ -889,18 +980,25 @@ export default function PosOrderWorkspace({
         </div>
       )}
 
-      {technicianModal ? (
-        <SelectTechniciansModal
-          open
-          businessId={businessId}
-          posServiceId={technicianModal.posServiceId}
-          serviceName={technicianModal.serviceName}
-          initialStaffId={technicianModal.initialStaffId}
-          initialNote={technicianModal.initialNote}
-          onConfirm={handleTechnicianConfirm}
-          onClose={() => setTechnicianModal(null)}
-        />
-      ) : null}
+      <ChangeTechnicianModal
+        open={technicianTarget !== null}
+        serviceName={technicianTarget?.serviceName ?? ''}
+        technicians={techniciansForService(technicianTarget?.posServiceId ?? '')}
+        isLoading={areTechniciansPending}
+        selectedStaffId={technicianTarget?.posStaffProfileId ?? null}
+        note={noteDraft}
+        onChangeNote={setNoteDraft}
+        onSelect={handleSelectTechnician}
+        onClose={handleCloseTechnicianModal}
+      />
+
+      <ChangeServiceModal
+        open={changeServiceTarget !== null}
+        serviceName={changeServiceTarget?.serviceName ?? ''}
+        services={serviceCatalog}
+        onSelect={handleChangeService}
+        onClose={() => setChangeServiceTarget(null)}
+      />
 
       {customerFacingMode && order ? (
         <div className="fixed inset-0 z-[70] flex flex-col bg-nexoraSurface p-6">
