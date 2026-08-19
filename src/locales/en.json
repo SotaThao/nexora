@@ -5122,6 +5122,7 @@
         "useSettingsForm": {
           "kybVerificationSuccessful": "KYB verification successful!",
           "settingsUpdatedSuccessfully": "Settings updated successfully!",
+          "partialSaveFailed": "Some changes were saved, but others failed. Please review and try again.",
           "copiedToClipboard": "Copied to clipboard!",
           "basicAccountStatus": "ACCOUNT VERIFICATION STATUS",
           "yourProfileIsActive": "Your profile is active for direct tipping (Venmo, Cash App, Zelle) and customer reviews. Advanced financial features (VLINKPAY Wallet, credit card processing, Merchant ATM) require verification to unlock.",
@@ -5266,6 +5267,11 @@
           "save": "SAVE",
           "phGoogleReviewUrl": "https://g.page/r/.../review",
           "phYelpUrl": "https://www.yelp.com/biz/...",
+          "socialLinks": "Social Links",
+          "facebook": "Facebook",
+          "instagram": "Instagram",
+          "phFacebookUrl": "https://facebook.com/your-salon",
+          "phInstagramUrl": "https://instagram.com/your-salon",
           "validation": {
             "required": "This field is required.",
             "invalid": "Please enter a valid value.",

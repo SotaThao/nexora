@@ -5118,6 +5118,7 @@
         "useSettingsForm": {
           "kybVerificationSuccessful": "Xác thực KYB thành công!",
           "settingsUpdatedSuccessfully": "Đã cập nhật cài đặt thành công!",
+          "partialSaveFailed": "Một số thay đổi đã được lưu, một số khác thất bại. Vui lòng kiểm tra lại và thử lại.",
           "copiedToClipboard": "Đã sao chép vào bộ nhớ tạm!",
           "basicAccountStatus": "TRẠNG THÁI XÁC MINH TÀI KHOẢN",
           "yourProfileIsActive": "Hồ sơ của bạn đang hoạt động cho tip trực tiếp (Venmo, Cash App, Zelle) và đánh giá khách hàng. Các tính năng tài chính nâng cao (Ví VLINKPAY, xử lý thẻ tín dụng, Merchant ATM) cần xác minh để mở khóa.",
@@ -5262,6 +5263,11 @@
           "save": "LƯU LẠI",
           "phGoogleReviewUrl": "https://g.page/r/.../review",
           "phYelpUrl": "https://www.yelp.com/biz/...",
+          "socialLinks": "Liên kết mạng xã hội",
+          "facebook": "Facebook",
+          "instagram": "Instagram",
+          "phFacebookUrl": "https://facebook.com/salon-cua-ban",
+          "phInstagramUrl": "https://instagram.com/salon-cua-ban",
           "validation": {
             "required": "Vui lòng nhập trường này.",
             "invalid": "Vui lòng nhập giá trị hợp lệ.",

@@ -9,7 +9,7 @@ import { useState } from 'react'
 import { useNotification } from '../../../contexts/NotificationContext'
 import { useTranslation } from '../../../contexts/LanguageContext'
 import { resolveEffectiveKybStatus } from '../../../utils/kybStatus'
-import { useUpdateBusinessInfo, useUpdateBusinessLogo } from '../../../data/hooks/useMerchantSetup'
+import { useUpdateBusinessInfo, useUpdateBusinessLogo, useUpdateReviewLinks } from '../../../data/hooks/useMerchantSetup'
 import { useVerifiedStatus } from '../../../data/hooks/useProfileSettings'
 import { getApiErrorCode } from '../../../types/domain'
 import { getErrorI18nKey } from '../../../data/errorCodes'
@@ -21,7 +21,7 @@ const formValue = (input: unknown) => String(input ?? '').trim()
 
 const KYB_EDITABLE_STATUSES = new Set(['basic', 'kyb_rejected', 'rejected'])
 
-const validateBusinessForm = (form: LooseObject): SettingsFormErrors => {
+const validateBusinessForm = (form: LooseObject, includeReviewLinks?: boolean): SettingsFormErrors => {
   const errors: SettingsFormErrors = {}
   if (!formValue(form.businessName)) errors.businessName = 'required'
   else if (formValue(form.businessName).length < 2) errors.businessName = 'invalid'
@@ -31,6 +31,12 @@ const validateBusinessForm = (form: LooseObject): SettingsFormErrors => {
   else if (!isValidEmail(form.businessEmail)) errors.businessEmail = 'email'
   if (formValue(form.businessWebsite) && !isValidHttpUrl(form.businessWebsite)) {
     errors.businessWebsite = 'url'
+  }
+  if (includeReviewLinks) {
+    if (formValue(form.googleReview) && !isValidHttpUrl(form.googleReview)) errors.googleReview = 'url'
+    if (formValue(form.yelpReview) && !isValidHttpUrl(form.yelpReview)) errors.yelpReview = 'url'
+    if (formValue(form.facebookReview) && !isValidHttpUrl(form.facebookReview)) errors.facebookReview = 'url'
+    if (formValue(form.instagramReview) && !isValidHttpUrl(form.instagramReview)) errors.instagramReview = 'url'
   }
   if (formValue(form.salesTaxRatePercent)) {
     const rate = Number(form.salesTaxRatePercent)
@@ -46,18 +52,25 @@ type BusinessInfo = {
   businessWebsite: string
   bookingNotificationPhone: string
   salesTaxRatePercent: string
+  googleReview: string
+  yelpReview: string
+  facebookReview: string
+  instagramReview: string
 }
 
 export default function useBusinessInfoForm({
   setupData,
   verificationStatus,
+  includeReviewLinks,
 }: {
   setupData?: LooseObject | null
   verificationStatus?: string
+  includeReviewLinks?: boolean
 }) {
   const { t } = useTranslation()
   const { showToast: notify } = useNotification()
   const updateBusinessInfoMutation = useUpdateBusinessInfo()
+  const updateReviewLinksMutation = useUpdateReviewLinks()
   const updateBusinessLogoMutation = useUpdateBusinessLogo()
   const { data: verifiedStatusData } = useVerifiedStatus()
 
@@ -81,6 +94,10 @@ export default function useBusinessInfoForm({
       setupData?.businessInfo?.salesTaxRatePercent != null
         ? String(setupData.businessInfo.salesTaxRatePercent)
         : '',
+    googleReview: includeReviewLinks ? setupData?.reviewLinks?.googleReview || '' : '',
+    yelpReview: includeReviewLinks ? setupData?.reviewLinks?.yelpReview || '' : '',
+    facebookReview: includeReviewLinks ? setupData?.reviewLinks?.facebookReview || '' : '',
+    instagramReview: includeReviewLinks ? setupData?.reviewLinks?.instagramReview || '' : '',
   }
 
   const logoUrl: string | null = setupData?.businessInfo?.logo || null
@@ -109,10 +126,10 @@ export default function useBusinessInfoForm({
     setIsEditingBusiness(true)
   }
 
-  const saveBusiness = (e: { preventDefault: () => void }, onSaved?: (next: BusinessInfo) => void) => {
+  const saveBusiness = async (e: { preventDefault: () => void }, onSaved?: (next: BusinessInfo) => void) => {
     e.preventDefault()
     if (!canEditProfile) return
-    const errors = validateBusinessForm(businessForm)
+    const errors = validateBusinessForm(businessForm, includeReviewLinks)
     setBusinessErrors(errors)
     if (Object.keys(errors).length > 0) return
 
@@ -123,24 +140,46 @@ export default function useBusinessInfoForm({
       businessWebsite: formValue(businessForm.businessWebsite),
       bookingNotificationPhone: formValue(businessForm.bookingNotificationPhone),
       salesTaxRatePercent: formValue(businessForm.salesTaxRatePercent),
+      googleReview: formValue(businessForm.googleReview),
+      yelpReview: formValue(businessForm.yelpReview),
+      facebookReview: formValue(businessForm.facebookReview),
+      instagramReview: formValue(businessForm.instagramReview),
     }
-    updateBusinessInfoMutation.mutate(
-      {
+    const savePromises: Array<Promise<unknown>> = [
+      updateBusinessInfoMutation.mutateAsync({
         name: next.businessName,
         phone: next.businessPhone || undefined,
         feedbackEmail: next.businessEmail || undefined,
         website: next.businessWebsite || undefined,
         bookingNotificationPhone: next.bookingNotificationPhone || undefined,
         salesTaxRatePercent: next.salesTaxRatePercent ? Number(next.salesTaxRatePercent) : undefined,
-      },
-      {
-        onSuccess: () => {
-          notify(t('components.settings.hooks.useSettingsForm.settingsUpdatedSuccessfully'))
-          setIsEditingBusiness(false)
-          onSaved?.(next)
-        },
-      },
+      }),
+    ]
+    if (includeReviewLinks) {
+      savePromises.push(
+        updateReviewLinksMutation.mutateAsync({
+          googleReviewUrl: next.googleReview || undefined,
+          yelpUrl: next.yelpReview || undefined,
+          facebookUrl: next.facebookReview || undefined,
+          instagramUrl: next.instagramReview || undefined,
+        }),
+      )
+    }
+
+    const results = await Promise.allSettled(savePromises)
+    const failures = results.filter(
+      (result): result is PromiseRejectedResult => result.status === 'rejected',
     )
+
+    if (failures.length === 0) {
+      notify(t('components.settings.hooks.useSettingsForm.settingsUpdatedSuccessfully'))
+      setIsEditingBusiness(false)
+      onSaved?.(next)
+    } else if (failures.length === results.length) {
+      notify(t(getErrorI18nKey(getApiErrorCode(failures[0].reason))), 'error')
+    } else {
+      notify(t('components.settings.hooks.useSettingsForm.partialSaveFailed'), 'error')
+    }
   }
 
   return {

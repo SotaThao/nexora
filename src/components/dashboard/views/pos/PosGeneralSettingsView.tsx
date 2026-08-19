@@ -28,7 +28,7 @@ export default function PosGeneralSettingsView({
   const { t } = useTranslation()
   const { data: setupData } = useMerchantSetup()
   const businessSlug = setupData?.businessInfo?.slug
-  const businessInfoForm = useBusinessInfoForm({ setupData, verificationStatus })
+  const businessInfoForm = useBusinessInfoForm({ setupData, verificationStatus, includeReviewLinks: true })
   const {
     businessHours,
     isEditingHours,
@@ -82,6 +82,11 @@ export default function PosGeneralSettingsView({
           businessWebsite={businessInfoForm.businessInfo.businessWebsite}
           bookingNotificationPhone={businessInfoForm.businessInfo.bookingNotificationPhone}
           salesTaxRatePercent={businessInfoForm.businessInfo.salesTaxRatePercent}
+          showReviewLinks
+          googleReview={businessInfoForm.businessInfo.googleReview}
+          yelpReview={businessInfoForm.businessInfo.yelpReview}
+          facebookReview={businessInfoForm.businessInfo.facebookReview}
+          instagramReview={businessInfoForm.businessInfo.instagramReview}
           logoUrl={businessInfoForm.logoUrl}
           onLogoChange={businessInfoForm.handleLogoChange}
           isUploadingLogo={businessInfoForm.isUploadingLogo}
