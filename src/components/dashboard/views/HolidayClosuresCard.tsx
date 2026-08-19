@@ -20,6 +20,7 @@ import {
 import type { MerchantVoiceHolidayDto } from "../../../data/repositories/merchantVoice";
 import { getApiErrorCode } from "../../../types/domain";
 import { HOLIDAY_TYPE, type HolidayType } from "../../../constants/holiday";
+import { TWELVE_HOUR_INPUT_LANG } from "../../../constants/timeFormat";
 import { formatBookingHubDateDisplay } from "./bookingHubFormatters";
 import ToggleSwitch from "../../ui/ToggleSwitch";
 
@@ -399,7 +400,7 @@ export default function HolidayClosuresCard() {
                   </span>
                   <input
                     type="time"
-                    lang="en-US-u-hc-h12"
+                    lang={TWELVE_HOUR_INPUT_LANG}
                     step={60}
                     disabled={isViewOnly || form.type === HOLIDAY_TYPE.CLOSED}
                     value={form.type === HOLIDAY_TYPE.CLOSED ? "00:00" : form.adjustedOpenTime}
@@ -415,7 +416,7 @@ export default function HolidayClosuresCard() {
                   </span>
                   <input
                     type="time"
-                    lang="en-US-u-hc-h12"
+                    lang={TWELVE_HOUR_INPUT_LANG}
                     step={60}
                     disabled={isViewOnly || form.type === HOLIDAY_TYPE.CLOSED}
                     value={form.type === HOLIDAY_TYPE.CLOSED ? "23:59" : form.adjustedCloseTime}

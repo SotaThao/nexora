@@ -19,6 +19,7 @@ import type { PosDeviceListItemApiDto } from '../../../../../types/repositories'
 import { SkeletonList } from '../../../../ui/skeleton'
 import PosDevicePairingQrPanel from './PosDevicePairingQrPanel'
 import EditPosDeviceModal from './EditPosDeviceModal'
+import { formatPosDateTime } from '../posDateTime'
 
 const K = 'components.dashboard.views.pos.devices.PosDevicesView'
 
@@ -30,11 +31,6 @@ const STATUS_STYLES: Record<string, string> = {
   Expired: 'bg-nexoraCanvas text-nexoraMuted',
 }
 
-function formatDateTime(value?: string | null): string {
-  if (!value) return '—'
-  return new Date(value).toLocaleString()
-}
-
 // The full UA string is unreadable in a table cell; the leading product token is what actually
 // tells two tablets apart.
 function shortenUserAgent(userAgent?: string | null): string {
@@ -44,7 +40,7 @@ function shortenUserAgent(userAgent?: string | null): string {
 }
 
 export default function PosDevicesView({ businessId }: { businessId: string }) {
-  const { t } = useTranslation()
+  const { t, currentLanguage } = useTranslation()
   const { showToast } = useNotification()
 
   const [statusFilter, setStatusFilter] = useState<PosDeviceStatusFilter>('All')
@@ -164,10 +160,10 @@ export default function PosDevicesView({ businessId }: { businessId: string }) {
                         {device.pairedByName ?? '—'}
                       </td>
                       <td className="py-2.5 pr-3 text-xs text-nexoraMuted">
-                        {formatDateTime(device.pairedAt)}
+                        {formatPosDateTime(device.pairedAt, currentLanguage)}
                       </td>
                       <td className="py-2.5 pr-3 text-xs text-nexoraMuted">
-                        {formatDateTime(device.lastSeenAt)}
+                        {formatPosDateTime(device.lastSeenAt, currentLanguage)}
                       </td>
                       <td className="py-2.5 pr-3 text-xs text-nexoraMuted">
                         {shortenUserAgent(device.userAgent)}
@@ -201,7 +197,7 @@ export default function PosDevicesView({ businessId }: { businessId: string }) {
                           </div>
                         ) : (
                           <span className="text-[11px] text-nexoraMuted">
-                            {formatDateTime(device.revokedAt ?? device.expiredAt)}
+                            {formatPosDateTime(device.revokedAt ?? device.expiredAt, currentLanguage)}
                           </span>
                         )}
                       </td>

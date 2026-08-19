@@ -23,6 +23,7 @@ import {
   toStartTimeApi,
 } from '../../../data/repositories/publicVoiceBooking'
 import { getApiErrorCode } from '../../../types/domain'
+import { toTwelveHourLangTag } from '../../../constants/timeFormat'
 import CountryCodeSelect, {
   formatNationalNumber,
   getNationalPhonePlaceholder,
@@ -147,7 +148,7 @@ export default function BookingCreateAppointmentModal({
   const dialogRef = useRef<HTMLDivElement>(null)
 
   const phoneParsed = useMemo(() => parsePhone(phone), [phone])
-  const localeTag = `${locale}-u-hc-h12`
+  const localeTag = toTwelveHourLangTag(locale)
 
   const clearFieldError = (field: BookingCreateField) => {
     setFieldErrors((prev) => {
