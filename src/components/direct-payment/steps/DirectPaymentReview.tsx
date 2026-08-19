@@ -1,4 +1,4 @@
-import React, { useEffect, useRef } from 'react'
+import React, { useEffect, useRef, useState } from 'react'
 import { formatUsdAmount } from '../../../utils/currencyInput'
 
 export default function DirectPaymentReview({
@@ -19,9 +19,11 @@ export default function DirectPaymentReview({
   isLoadingMethods,
   onSelectWallet,
   disablePaymentSelection,
+  isProcessing = false,
   totalPaymentLabel,
 }) {
-  const amountInputRef = useRef(null)
+  const amountInputRef = useRef<HTMLInputElement | null>(null)
+  const [pendingWalletKey, setPendingWalletKey] = useState<string | null>(null)
   const name = recipientName || businessName || t('direct_payment.default_business')
   const subtitle = recipientSubtitle === null
     ? null
@@ -40,6 +42,19 @@ export default function DirectPaymentReview({
     })
     return () => window.cancelAnimationFrame(frame)
   }, [])
+
+  useEffect(() => {
+    if (isProcessing) {
+      amountInputRef.current?.blur()
+    }
+  }, [isProcessing])
+
+  const handleSelectWallet = (wallet: { methodId?: string; key?: string }) => {
+    if (disablePaymentSelection || isProcessing) return
+    amountInputRef.current?.blur()
+    setPendingWalletKey(wallet.methodId || wallet.key || null)
+    onSelectWallet(wallet)
+  }
 
   return (
     <div className="space-y-4 animate-fadeIn">
@@ -85,8 +100,9 @@ export default function DirectPaymentReview({
               ref={amountInputRef}
               type="text"
               inputMode="decimal"
+              disabled={isProcessing}
               placeholder={t('direct_payment.custom_amount_placeholder')}
-              className="h-12 w-full rounded-xl border border-nexoraBorder bg-white py-3 pl-8 pr-3 text-sm font-extrabold text-nexoraText outline-none transition-all focus:border-nexoraBrand"
+              className="h-12 w-full rounded-xl border border-nexoraBorder bg-white py-3 pl-8 pr-3 text-sm font-extrabold text-nexoraText outline-none transition-all focus:border-nexoraBrand disabled:cursor-not-allowed disabled:opacity-60"
               value={customAmount}
               onChange={(event) => onCustomAmountChange(event.target.value)}
               aria-label={t('direct_payment.amount_label')}
@@ -119,23 +135,38 @@ export default function DirectPaymentReview({
           </div>
         ) : null}
 
-        {walletOptions.map((wallet) => (
-          <button
-            key={wallet.methodId || wallet.key}
-            type="button"
-            disabled={disablePaymentSelection}
-            onClick={() => onSelectWallet(wallet)}
-            className="flex w-full items-center justify-between rounded-xl border border-nexoraBorder bg-white p-3 text-sm font-bold text-nexoraText shadow-sm disabled:cursor-not-allowed disabled:opacity-60"
-          >
-            <div className="flex items-center gap-3">
-              <span className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-lg ${wallet.color}`}>
-                {wallet.logo}
-              </span>
-              <span>{wallet.name}</span>
-            </div>
-            <span className="text-xs font-medium text-nexoraSubtle">{t('customer.choose_chevron')}</span>
-          </button>
-        ))}
+        {walletOptions.map((wallet) => {
+          const walletKey = wallet.methodId || wallet.key
+          const isPendingWallet = isProcessing && pendingWalletKey === walletKey
+          return (
+            <button
+              key={walletKey}
+              type="button"
+              aria-busy={isPendingWallet}
+              disabled={disablePaymentSelection || isProcessing}
+              onClick={() => handleSelectWallet(wallet)}
+              className="flex w-full items-center justify-between rounded-xl border border-nexoraBorder bg-white p-3 text-sm font-bold text-nexoraText shadow-sm disabled:cursor-not-allowed disabled:opacity-60"
+            >
+              <div className="flex items-center gap-3">
+                <span className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-lg ${wallet.color}`}>
+                  {wallet.logo}
+                </span>
+                <span>{wallet.name}</span>
+              </div>
+              {isPendingWallet ? (
+                <>
+                  <div
+                    aria-hidden="true"
+                    className="h-4 w-4 border-2 border-nexoraSubtle border-t-transparent rounded-full animate-spin"
+                  />
+                  <span className="sr-only">{t('common.loading') || 'Processing...'}</span>
+                </>
+              ) : (
+                <span className="text-xs font-medium text-nexoraSubtle">{t('customer.choose_chevron')}</span>
+              )}
+            </button>
+          )
+        })}
 
         {!isLoadingMethods && walletOptions.length === 0 ? (
           <div className="rounded-xl border border-nexoraBorder bg-nexoraCanvas/70 px-4 py-3 text-center">
