@@ -244,7 +244,7 @@ export default function StaffSalonReport() {
           </div>
         </div>
 
-        <div className="flex flex-col gap-3 bg-nexoraSurfaceMuted/60 p-4 sm:flex-row sm:items-end sm:justify-between sm:px-5">
+        <div className="flex flex-wrap items-center gap-3 bg-nexoraSurfaceMuted/60 p-4 sm:px-5">
           <div className="flex items-center gap-2 text-xs font-extrabold uppercase tracking-wider text-nexoraMuted">
             <CalendarDays className="h-4 w-4 text-nexoraBrand" aria-hidden="true" />
             {t('staff_salon_report.filter_title')}
