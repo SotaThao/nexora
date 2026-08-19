@@ -5021,7 +5021,8 @@
             "total": "Tổng",
             "amountPaid": "Số tiền đã trả",
             "amountDueLabel": "Số tiền phải trả",
-            "support": "Cần hỗ trợ? Liên hệ"
+            "support": "Cần hỗ trợ? Liên hệ",
+            "emailSendFailed": "Không thể gửi email. Vui lòng thử lại."
           }
         }
       }

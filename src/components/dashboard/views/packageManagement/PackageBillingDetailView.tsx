@@ -212,7 +212,7 @@ export default function PackageBillingDetailView() {
     : BOOKING_HUB_EMPTY_CELL
   const issuedAt = formatBillingDate(record.issuedAt, currentLanguage)
   const paidAt = formatBillingDate(record.paidAt, currentLanguage, true)
-  const dueAt = formatBillingDate(record.issuedAt, currentLanguage)
+  const dueAt = BOOKING_HUB_EMPTY_CELL
   const sellerName = displayOrEmpty(record.sellerName)
   const sellerEmail = displayOrEmpty(record.sellerEmail)
   const sellerPhone = displayOrEmpty(record.sellerPhone)
@@ -233,7 +233,7 @@ export default function PackageBillingDetailView() {
         'success',
       )
     } catch {
-      showToast(t(`${PLANS_TK}.packageHistoryDocumentDownloadFailed`), 'error')
+      showToast(t(`${TK}.emailSendFailed`), 'error')
     }
   }
 
@@ -250,7 +250,7 @@ export default function PackageBillingDetailView() {
       document.body.appendChild(link)
       link.click()
       document.body.removeChild(link)
-      URL.revokeObjectURL(href)
+      setTimeout(() => URL.revokeObjectURL(href), 1000)
       showToast(t(`${PLANS_TK}.packageHistoryDocumentDownloaded`), 'success')
     } catch {
       showToast(t(`${PLANS_TK}.packageHistoryDocumentDownloadFailed`), 'error')

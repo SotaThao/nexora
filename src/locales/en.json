@@ -5021,7 +5021,8 @@
             "total": "Total",
             "amountPaid": "Amount paid",
             "amountDueLabel": "Amount due",
-            "support": "Questions? Contact"
+            "support": "Questions? Contact",
+            "emailSendFailed": "Could not send email. Please try again."
           }
         }
       }
