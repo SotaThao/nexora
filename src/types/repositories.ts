@@ -663,6 +663,41 @@ export interface CreateBookingPayload {
 }
 
 // POS Booking — Staff/Owner Booking Management screen (Ticket 9)
+export interface ReceiptServiceLineApiDto {
+  serviceName: string
+  // Null when the line was never assigned — the page shows its "First available" label.
+  technicianName: string | null
+  unitPrice: number
+  quantity: number
+  lineTotal: number
+}
+
+export interface ReceiptProductLineApiDto {
+  productName: string
+  unitPrice: number
+  quantity: number
+  lineTotal: number
+}
+
+export interface ReceiptApiDto {
+  salonName: string
+  ticketNumber: string
+  // UTC instant; rendered in `timeZone` by the page.
+  completedAt: string
+  // The salon's IANA zone id, or null when the business has none set.
+  timeZone: string | null
+  customerName: string
+  serviceLines: ReceiptServiceLineApiDto[]
+  productLines: ReceiptProductLineApiDto[]
+  servicesSubtotal: number
+  productsSubtotal: number
+  tipAmount: number
+  discountAmount: number
+  salesTaxAmount: number
+  total: number
+  paymentMethodType: string | null
+}
+
 export interface BookingListItemApiDto {
   bookingId: string
   customerName: string

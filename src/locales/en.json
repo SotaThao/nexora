@@ -6010,6 +6010,27 @@
     }
   },
   "public": {
+    "receipt": {
+      "ticketNumber": "Ticket #{{number}}",
+      "servicesTitle": "Services",
+      "productsTitle": "Products",
+      "firstAvailable": "First available",
+      "servicesSubtotal": "Services",
+      "productsSubtotal": "Products",
+      "tip": "Tip",
+      "discount": "Discount",
+      "salesTax": "Sales tax",
+      "total": "Total",
+      "paidWith": "Paid with {{method}}",
+      "paymentMethod": {
+        "Card": "Card",
+        "Cash": "Cash",
+        "GiftCard": "Gift Card",
+        "SplitPay": "Split Pay"
+      },
+      "notFoundTitle": "Receipt not found",
+      "notFoundBody": "This link may be incorrect or no longer valid. Please contact the salon if you need a copy."
+    },
     "qr": {
       "invalid_code_title": "Invalid QR Code",
       "invalid_code_desc": "This link is missing a device code. Please scan the QR code again.",

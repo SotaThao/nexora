@@ -527,6 +527,7 @@ export const qk = {
   publicDirectPaymentPage: (businessId) => ['publicDirectPaymentPage', businessId],
   publicStaffDirectPaymentPage: (staffProfileId: string) => ['publicStaffDirectPaymentPage', staffProfileId],
   // POS Booking — Public Booking Page discovery (Ticket 4)
+  publicReceipt: (receiptToken?: string) => ['publicReceipt', receiptToken ?? ''],
   publicBookingPage: (businessSlug?: string) => ['publicBookingPage', businessSlug ?? ''],
   // Customer entity unification — public contact-step "returning customer" lookup by phone.
   publicBookingCustomerLookup: (businessSlug?: string, phone?: string) =>

@@ -6005,6 +6005,27 @@
     }
   },
   "public": {
+    "receipt": {
+      "ticketNumber": "Phiếu #{{number}}",
+      "servicesTitle": "Dịch vụ",
+      "productsTitle": "Sản phẩm",
+      "firstAvailable": "Thợ trống trước",
+      "servicesSubtotal": "Dịch vụ",
+      "productsSubtotal": "Sản phẩm",
+      "tip": "Tip",
+      "discount": "Giảm giá",
+      "salesTax": "Thuế bán hàng",
+      "total": "Tổng cộng",
+      "paidWith": "Thanh toán bằng {{method}}",
+      "paymentMethod": {
+        "Card": "Thẻ",
+        "Cash": "Tiền mặt",
+        "GiftCard": "Gift Card",
+        "SplitPay": "Chia nhiều hình thức"
+      },
+      "notFoundTitle": "Không tìm thấy hóa đơn",
+      "notFoundBody": "Link có thể không đúng hoặc không còn hiệu lực. Vui lòng liên hệ salon nếu bạn cần bản sao."
+    },
     "qr": {
       "invalid_code_title": "Mã QR không hợp lệ",
       "invalid_code_desc": "Liên kết này thiếu mã thiết bị. Vui lòng quét lại mã QR.",

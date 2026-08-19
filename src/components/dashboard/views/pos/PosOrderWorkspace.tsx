@@ -158,11 +158,14 @@ export default function PosOrderWorkspace({
   // the customer confirms — front desk must explicitly tap "Back to Staff" once they have
   // the device back (brainstorm decision: avoid stray taps landing on the next screen).
   const [customerFacingMode, setCustomerFacingMode] = useState(false)
-  // POS iPad redesign, Ticket 6 — receipt delivery is now a single choice (digital-first):
-  // Send SMS (using the phone already on file — mandatory since Ticket 2, so always
-  // available) or No Receipt. Email option dropped from this screen entirely; physical
-  // Print stays as a disabled placeholder button (no printer integration yet).
-  const [receiptChoice, setReceiptChoice] = useState<'sms' | 'none'>('sms')
+  // POS iPad redesign, Ticket 6 — receipt delivery is a single choice: Send SMS (using the phone
+  // already on file — mandatory since Ticket 2, so always available) or No Receipt. Email option
+  // dropped from this screen entirely; physical Print stays as a disabled placeholder button (no
+  // printer integration yet).
+  //
+  // Defaults to No Receipt: a receipt costs an SMS and most walk-ins do not ask for one, so it is
+  // opted into per checkout rather than sent unless someone remembers to turn it off.
+  const [receiptChoice, setReceiptChoice] = useState<'sms' | 'none'>('none')
   const [tipSplitInputs, setTipSplitInputs] = useState<Record<string, string>>({})
   const initializedOrderIdRef = useRef<string | null>(null)
 
@@ -212,7 +215,7 @@ export default function PosOrderWorkspace({
         order.status === PosOrderStatus.Completed ||
         (order.status === PosOrderStatus.Waiting && order.serviceLines.length === 0),
     )
-    setReceiptChoice('sms')
+    setReceiptChoice('none')
     setPaymentMethod('Cash')
 
     if (order.tipAmount === 0) {

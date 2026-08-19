@@ -145,6 +145,9 @@ const PublicPosBookingPage = lazyWithRetry(
 const ManageBookingPage = lazyWithRetry(
   () => import("../components/public/ManageBookingPage"),
 );
+const ReceiptPage = lazyWithRetry(
+  () => import("../components/public/ReceiptPage"),
+);
 const PublicBookingPage = lazyWithRetry(
   () => import("../components/public/booking/PublicBookingPage"),
 );
@@ -279,6 +282,7 @@ export default function AppRouter() {
           <Route path={PUBLIC_BOOKING_ROUTE.path} element={<PublicBookingPage />} />
           <Route path="/booking/:businessSlug" element={<PublicPosBookingPage />} />
           <Route path="/booking/manage/:manageToken" element={<ManageBookingPage />} />
+          <Route path="/receipt/:receiptToken" element={<ReceiptPage />} />
           <Route path="/cpa/access" element={<CpaViewerPage />} />
           <Route path="/share/access" element={<ShareLinkViewerPage />} />
           <Route path="/w4-invite" element={<StaffW4InvitePage />} />
