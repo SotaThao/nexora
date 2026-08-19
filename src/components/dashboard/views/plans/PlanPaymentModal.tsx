@@ -13,7 +13,6 @@ import { resolveSubscriptionBillingDefaults } from '../../../../utils/subscripti
 import { resolveTranslatedApiError } from '../../../../utils/resolveTranslatedApiError'
 import { formatCurrentPlanLabel, getVoiceAiSubscription } from '../../../../utils/subscriptionDisplay'
 import {
-  SubscriptionBillingCycle,
   SubscriptionPaymentStatus,
   type SubscriptionPaymentMethod,
 } from '../../../../data/repositories/subscriptionPayments'
@@ -43,6 +42,7 @@ import {
   formatWalletBalanceUsd,
   hasEnoughWalletBalance,
   isPlanCardPaymentSymbol,
+  resolvePlanBillingPeriodSuffix,
   type VoiceAiCheckoutSelection,
 } from './constants'
 import { getErrorI18nKey } from '../../../../data/errorCodes'
@@ -449,9 +449,7 @@ export default function PlanPaymentModal({
                   <strong>
                     {formatPlanMonthlyTotal(
                       selection.price,
-                      selection.billingCycle === SubscriptionBillingCycle.Yearly
-                        ? t(`${TK}.perYear`)
-                        : t(`${TK}.perMonth`),
+                      resolvePlanBillingPeriodSuffix(selection.billingCycle, t, TK),
                     )}
                   </strong>
                 </div>

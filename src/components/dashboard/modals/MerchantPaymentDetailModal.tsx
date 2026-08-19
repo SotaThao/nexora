@@ -4,6 +4,7 @@ import { WalletLogos } from '../constants'
 import { formatCurrency, formatTransactionDateTime } from '../utils'
 import type { MerchantPaymentRecord } from '../../../types/domain'
 import { PaymentStatus } from '../../../types/domain'
+import DirectPaymentAccountField from '../../payout/DirectPaymentAccountField'
 import {
   DirectPaymentStatusBadge,
 } from '../direct-payments/DirectPaymentStatusBadge'
@@ -128,14 +129,12 @@ export default function MerchantPaymentDetailModal({
                   <span className="font-semibold text-nexoraText">{payment.paymentMethodType || '—'}</span>
                 </div>
               </div>
-              <div>
-                <span className="block text-[10px] font-bold text-nexoraMuted">
-                  {t('merchant_payments.account_info')}
-                </span>
-                <span className="mt-0.5 block break-all font-semibold text-nexoraText">
-                  {payment.accountInfo || '—'}
-                </span>
-              </div>
+              <DirectPaymentAccountField
+                accountLabel={t('merchant_payments.account_info')}
+                assetLabel={t('merchant_payments.asset')}
+                accountInfo={payment.accountInfo}
+                cryptoWallet={payment.cryptoWallet}
+              />
               {payment.customerConfirmedAt || payment.merchantConfirmedAt ? (
                 <>
                   <div>

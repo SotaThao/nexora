@@ -84,6 +84,20 @@ const sortByAttentionFirst = (orders: OrderListItemApiDto[]) =>
   [...orders].sort(
     (a, b) => Number(needsFrontDeskAttention(b)) - Number(needsFrontDeskAttention(a)),
   )
+  
+// Mirror the subtle status-tinted rows in AI Hub's Appointments Overview: enough color to scan
+// the queue quickly without competing with the order content or action buttons.
+function orderListStatusSurfaceClass(status: string) {
+  if (status === PosOrderStatus.Waiting) return 'bg-amber-50/40 hover:bg-amber-50/70'
+  if (status === PosOrderStatus.InService) return 'bg-cyan-50/40 hover:bg-cyan-50/70'
+  return 'bg-nexoraSurface hover:bg-nexoraCanvas'
+}
+
+function orderListStatusBadgeClass(status: string) {
+  if (status === PosOrderStatus.Waiting) return 'bg-amber-100 text-amber-700'
+  if (status === PosOrderStatus.InService) return 'bg-cyan-100 text-cyan-700'
+  return 'bg-nexoraCanvas text-nexoraBrandDark'
+}
 
 // POS iPad redesign — Create mode no longer carries a pre-filled customerDraft;
 // PosOrderWorkspace now collects it itself via its own 2-step Check-in

@@ -29,6 +29,14 @@ import {
   resolveTouchpointRedirectUrl,
 } from '../../../utils/customerFlowKind'
 import { WALLET_KEYS } from '../constants'
+import {
+  emptyVlinkpayAddresses,
+  getSingleConfiguredVlinkpayCoin,
+  normalizeVlinkpayCryptoSymbol,
+  resolvePreferredVlinkpayAddresses,
+  resolveVlinkpayAddresses,
+  withWalletCryptoSymbol,
+} from '../../payout/vlinkpayWallet'
 
 function walletNameToKey(walletName: string): string {
   const match = Object.entries(PAYOUT_UI_LABELS).find(([, label]) => label === walletName)
@@ -306,6 +314,7 @@ export default function useCustomerFlow() {
   const [selectedWallet, setSelectedWallet] = useState('')
   const [isProcessing, setIsProcessing] = useState(false)
   const [selectedWalletObj, setSelectedWalletObj] = useState<any | null>(null)
+  const [selectedCryptoSymbol, setSelectedCryptoSymbol] = useState<string | null>(null)
   const [tipRefNumber, setTipRefNumber] = useState('')
   const [currentTipId, setCurrentTipId] = useState<any | null>(null)
   const [currentReviewId, setCurrentReviewId] = useState<any | null>(null)
@@ -434,6 +443,22 @@ export default function useCustomerFlow() {
     const active = effectivePaymentMethods.find((method) => isVlinkpayMethod(method) && method.isActive !== false)
     return (active || effectivePaymentMethods.find(isVlinkpayMethod))?.cryptoAddresses ?? null
   }, [effectivePaymentMethods])
+
+  const customerVlinkpayAddresses = useMemo(() => {
+    const empty = emptyVlinkpayAddresses()
+    const fromStaff =
+      !isMultiStaffSelection && selectedStaffMembers.length === 1
+        ? resolveVlinkpayAddresses({
+            cryptoAddresses: selectedStaffMembers[0]?.vlinkPayCryptoAddresses,
+          })
+        : empty
+    const fromBusiness = resolveVlinkpayAddresses({
+      cryptoAddresses: businessVlinkpayCryptoAddresses,
+    })
+    return !isMultiStaffSelection
+      ? resolvePreferredVlinkpayAddresses(fromStaff, fromBusiness)
+      : fromBusiness
+  }, [isMultiStaffSelection, selectedStaffMembers, businessVlinkpayCryptoAddresses])
 
   const availablePaymentWalletKeys = useMemo(
     () => buildAvailablePaymentWalletKeys(
@@ -672,22 +697,47 @@ export default function useCustomerFlow() {
    * Handles wallet selection and initiates tip payment.
    * Single staff → POST /api/v1/touch/tip
    * Multi staff  → POST /api/v1/tips/multi-staff
-   * VlinkPay opens asset picker first — tip is created later on Confirm.
+   * VlinkPay with one configured asset → create tip immediately and skip asset picker.
+   * VlinkPay with multiple assets → asset picker first, tip created on Confirm.
    */
   const handlePay = useCallback(async (walletName, walletKey?: string) => {
     setSelectedWallet(walletName)
     const resolvedWalletKey = walletKey || walletNameToKey(walletName)
 
     if (resolvedWalletKey === WALLET_KEYS.VLINKPAY) {
+      const singleCoin = getSingleConfiguredVlinkpayCoin(customerVlinkpayAddresses)
+
+      if (singleCoin) {
+        const symbol = singleCoin.symbol
+        setIsProcessing(true)
+        try {
+          const tipId = await createTipForWallet(WALLET_KEYS.VLINKPAY, symbol)
+          if (!tipId) return
+          setCurrentTipId(tipId)
+          setSelectedCryptoSymbol(symbol)
+          setSelectedWalletObj((current) => withWalletCryptoSymbol(current, symbol))
+          await loadTipPaymentMethods(tipId)
+          setStep('wallet_details')
+        } catch (err) {
+          logger.error('Failed to create VlinkPay tip', err)
+          showToast(getApiErrorMessage(err, t('errors.generic'), t), 'error')
+        } finally {
+          setIsProcessing(false)
+        }
+        return
+      }
+
       vlinkpayCreateInFlightRef.current = false
       setPaymentLinkData(null)
       setTipPaymentMethodsData(null)
       setCurrentTipId(null)
+      setSelectedCryptoSymbol(null)
       setStep('wallet_details')
       return
     }
 
     setIsProcessing(true)
+    setSelectedCryptoSymbol(null)
 
     try {
       const tipId = await createTipForWallet(resolvedWalletKey)
@@ -701,13 +751,13 @@ export default function useCustomerFlow() {
     } finally {
       setIsProcessing(false)
     }
-  }, [createTipForWallet, loadTipPaymentMethods, showToast, t])
+  }, [createTipForWallet, customerVlinkpayAddresses, loadTipPaymentMethods, showToast, t])
 
   /**
    * VlinkPay asset Confirm: POST /touch/tip (or multi-staff) with cryptoSymbol.
    */
   const handleCreateVlinkpayTip = useCallback(async (cryptoSymbol: string) => {
-    const normalizedSymbol = String(cryptoSymbol || '').trim().toUpperCase()
+    const normalizedSymbol = normalizeVlinkpayCryptoSymbol(cryptoSymbol)
     if (!normalizedSymbol) {
       showToast(t('errors.TIP_CRYPTO_SYMBOL_REQUIRED'), 'error')
       return false
@@ -722,6 +772,8 @@ export default function useCustomerFlow() {
       if (!tipId) return false
 
       setCurrentTipId(tipId)
+      setSelectedCryptoSymbol(normalizedSymbol)
+      setSelectedWalletObj((current) => withWalletCryptoSymbol(current, normalizedSymbol))
       await loadTipPaymentMethods(tipId)
       return true
     } catch (err) {
@@ -740,6 +792,8 @@ export default function useCustomerFlow() {
     setCurrentTipId(null)
     setTipPaymentMethodsData(null)
     setPaymentLinkData(null)
+    setSelectedCryptoSymbol(null)
+    setSelectedWalletObj((current) => withWalletCryptoSymbol(current, null))
   }, [])
 
   /** Confirms that customer completed external wallet payment. */
@@ -818,6 +872,7 @@ export default function useCustomerFlow() {
     customTips, setCustomTips, rating, setRating, comment, setComment,
     selectedTags, setSelectedTags, selectedWallet, setSelectedWallet,
     isProcessing, setIsProcessing, selectedWalletObj, setSelectedWalletObj,
+    selectedCryptoSymbol,
     tipRefNumber, setTipRefNumber, currentTipId, currentReviewId,
     handleTagToggle, handleRatingChange, handleToggleStaff,
     handlePay, handleConfirmTip, handleSkipTip, handleSubmitFeedback,

@@ -34,6 +34,7 @@ export default function StaffDirectPaymentFlow() {
     businessVlinkpayCryptoAddresses,
     currentPaymentId,
     activePaymentMethod,
+    selectedCryptoSymbol,
     handleSelectWallet,
     handleCreateVlinkpayPayment,
     handleResetVlinkpayPayment,
@@ -176,6 +177,7 @@ export default function StaffDirectPaymentFlow() {
                   businessName={displayName}
                   activeAmount={activeAmount}
                   selectedWalletObj={selectedWalletObj}
+                  cryptoSymbol={selectedCryptoSymbol}
                   successDescKey="staff_direct_payment.success_desc"
                 />
               ) : null}

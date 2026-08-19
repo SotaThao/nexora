@@ -14,17 +14,17 @@ type BoolCell = { type: 'bool'; value: boolean }
 type CmpCell = TextCell | BoolCell
 
 const PLAN_COLUMN_KEYS: HomePageTranslationKey[] = [
-  'pr-cmp-col-lite',
   'pr-cmp-col-starter',
   'pr-cmp-col-pro',
   'pr-cmp-col-enterprise',
 ]
 
+const COMPARE_PRO_COLUMN_KEY: HomePageTranslationKey = 'pr-cmp-col-pro'
+
 const PRICING_COMPARISON_ROWS: { labelKey: HomePageTranslationKey; cells: CmpCell[] }[] = [
   {
     labelKey: 'pr-cmp-monthly',
     cells: [
-      { type: 'text', key: 'pr-cmp-free-price' },
       { type: 'text', key: 'pr-cmp-starter-price' },
       { type: 'text', key: 'pr-cmp-pro-price' },
       { type: 'text', key: 'pr-cmp-custom' },
@@ -33,7 +33,6 @@ const PRICING_COMPARISON_ROWS: { labelKey: HomePageTranslationKey; cells: CmpCel
   {
     labelKey: 'pr-cmp-staff',
     cells: [
-      { type: 'text', key: 'pr-cmp-staff-free' },
       { type: 'text', key: 'pr-cmp-unlimited' },
       { type: 'text', key: 'pr-cmp-unlimited' },
       { type: 'text', key: 'pr-cmp-unlimited' },
@@ -42,7 +41,6 @@ const PRICING_COMPARISON_ROWS: { labelKey: HomePageTranslationKey; cells: CmpCel
   {
     labelKey: 'pr-cmp-kyb',
     cells: [
-      { type: 'text', key: 'pr-cmp-required' },
       { type: 'bool', value: false },
       { type: 'bool', value: false },
       { type: 'bool', value: false },
@@ -51,7 +49,6 @@ const PRICING_COMPARISON_ROWS: { labelKey: HomePageTranslationKey; cells: CmpCel
   {
     labelKey: 'pr-cmp-qr',
     cells: [
-      { type: 'text', key: 'pr-cmp-qr-basic' },
       { type: 'text', key: 'pr-cmp-qr-branded' },
       { type: 'text', key: 'pr-cmp-qr-branded' },
       { type: 'text', key: 'pr-cmp-qr-premium' },
@@ -63,13 +60,11 @@ const PRICING_COMPARISON_ROWS: { labelKey: HomePageTranslationKey; cells: CmpCel
       { type: 'bool', value: true },
       { type: 'bool', value: true },
       { type: 'bool', value: true },
-      { type: 'bool', value: true },
     ],
   },
   {
     labelKey: 'pr-cmp-reviews',
     cells: [
-      { type: 'bool', value: false },
       { type: 'bool', value: true },
       { type: 'bool', value: true },
       { type: 'bool', value: true },
@@ -79,7 +74,6 @@ const PRICING_COMPARISON_ROWS: { labelKey: HomePageTranslationKey; cells: CmpCel
     labelKey: 'pr-cmp-staff-accts',
     cells: [
       { type: 'bool', value: false },
-      { type: 'bool', value: false },
       { type: 'bool', value: true },
       { type: 'bool', value: true },
     ],
@@ -88,7 +82,6 @@ const PRICING_COMPARISON_ROWS: { labelKey: HomePageTranslationKey; cells: CmpCel
     labelKey: 'pr-cmp-rewards',
     cells: [
       { type: 'bool', value: false },
-      { type: 'bool', value: false },
       { type: 'bool', value: true },
       { type: 'bool', value: true },
     ],
@@ -96,7 +89,6 @@ const PRICING_COMPARISON_ROWS: { labelKey: HomePageTranslationKey; cells: CmpCel
   {
     labelKey: 'pr-cmp-coop',
     cells: [
-      { type: 'bool', value: false },
       { type: 'bool', value: false },
       { type: 'bool', value: true },
       { type: 'bool', value: true },
@@ -107,7 +99,6 @@ const PRICING_COMPARISON_ROWS: { labelKey: HomePageTranslationKey; cells: CmpCel
     cells: [
       { type: 'bool', value: false },
       { type: 'bool', value: false },
-      { type: 'bool', value: false },
       { type: 'bool', value: true },
     ],
   },
@@ -116,14 +107,12 @@ const PRICING_COMPARISON_ROWS: { labelKey: HomePageTranslationKey; cells: CmpCel
     cells: [
       { type: 'bool', value: false },
       { type: 'bool', value: false },
-      { type: 'bool', value: false },
       { type: 'bool', value: true },
     ],
   },
   {
     labelKey: 'pr-cmp-support',
     cells: [
-      { type: 'text', key: 'pr-cmp-support-email' },
       { type: 'text', key: 'pr-cmp-support-email' },
       { type: 'text', key: 'pr-cmp-support-priority' },
       { type: 'text', key: 'pr-cmp-support-247' },
@@ -363,8 +352,14 @@ export default function HomePagePricingSection() {
             <PricingCompareSkeleton />
           ) : (
             <div className="nx-pricing-compare overflow-x-auto rounded-[24px] border border-slate-200/80 shadow-sm bg-white">
-              <table className="w-full min-w-[640px] border-collapse text-left">
+              <table className="w-full border-collapse text-left">
                 <caption className="sr-only">{t('pr-table-title')}</caption>
+                <colgroup>
+                  <col className="feature-col" />
+                  {PLAN_COLUMN_KEYS.map((key) => (
+                    <col key={key} className="plan-col" />
+                  ))}
+                </colgroup>
                 <thead>
                   <tr className="border-b border-slate-200 bg-slate-50/80">
                     <th
@@ -379,7 +374,7 @@ export default function HomePagePricingSection() {
                         key={key}
                         scope="col"
                         className={`px-3 sm:px-4 py-4 text-xs sm:text-sm font-extrabold text-navy text-center ${
-                          key === 'pr-cmp-col-pro' ? 'bg-purple/5 text-purple' : ''
+                          key === COMPARE_PRO_COLUMN_KEY ? 'bg-purple/5 text-purple' : ''
                         }`}
                         data-i18n={key}
                       >
@@ -402,7 +397,7 @@ export default function HomePagePricingSection() {
                         <td
                           key={`${row.labelKey}-${index}`}
                           className={`px-3 sm:px-4 py-3.5 text-center ${
-                            index === 2 ? 'bg-purple/[0.03]' : ''
+                            PLAN_COLUMN_KEYS[index] === COMPARE_PRO_COLUMN_KEY ? 'bg-purple/[0.03]' : ''
                           }`}
                         >
                           <ComparisonCell cell={cell} t={t} />
