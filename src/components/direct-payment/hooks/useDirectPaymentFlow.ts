@@ -6,9 +6,20 @@ import {
   useConfirmDirectPayment,
   useCreateDirectPayment,
   useDirectPaymentPage,
+  useDirectPaymentTipContext,
 } from '../../../data/hooks/usePublicDirectPayment'
+import {
+  useConfirmMultiStaffTip,
+  useConfirmTip,
+  useCreateMultiStaffTip,
+  useCreateTip,
+} from '../../../data/hooks/usePublicTouch'
+import { MULTI_STAFF_TIP_MIN_COUNT } from '../../../constants/tipPresets'
+import useDirectPaymentTip from './useDirectPaymentTip'
 import { getErrorI18nKey } from '../../../data/errorCodes'
 import { getApiErrorCode } from '../../../types/domain'
+import type { PublicDirectPaymentStaff } from '../../../types/domain'
+import type { TipItem } from './useDirectPaymentTip'
 import { logger } from '../../../utils/logger'
 import { toVlinkpayCryptoSymbolWire } from '../../payout/vlinkpayWallet'
 import {
@@ -31,15 +42,33 @@ import {
 
 const MIN_AMOUNT = DIRECT_PAYMENT_MIN_AMOUNT
 const MAX_AMOUNT = DIRECT_PAYMENT_MAX_AMOUNT
+const EMPTY_TIP_STAFF: PublicDirectPaymentStaff[] = []
+const EMPTY_TIP_ITEMS: TipItem[] = []
 
 export default function useDirectPaymentFlow() {
   const { businessId = '' } = useParams()
   const { currentLanguage, setLanguage, t } = useTranslation()
   const { showToast } = useNotification()
 
+  /** Touchpoint context forwarded by /touch → /pay; source of the tippable staff list. */
+  const touchContext = useMemo(() => {
+    const params = new URLSearchParams(window.location.search)
+    const businessSlug = params.get('businessSlug') || ''
+    const touchPointSlug = params.get('touchPointSlug') || ''
+    return {
+      businessSlug,
+      touchPointSlug,
+      sessionId: params.get('sessionId') || crypto.randomUUID(),
+    }
+  }, [])
+
   const pageQuery = useDirectPaymentPage(businessId)
   const createPaymentMutation = useCreateDirectPayment()
   const confirmPaymentMutation = useConfirmDirectPayment()
+  const createMultiStaffTipMutation = useCreateMultiStaffTip()
+  const confirmMultiStaffTipMutation = useConfirmMultiStaffTip()
+  const createSingleTipMutation = useCreateTip()
+  const confirmSingleTipMutation = useConfirmTip()
 
   const [step, setStep] = useState<DirectPaymentStep>(DIRECT_PAYMENT_STEP.Review)
   const [customAmount, setCustomAmount] = useState('')
@@ -49,15 +78,36 @@ export default function useDirectPaymentFlow() {
   const [confirmedAmount, setConfirmedAmount] = useState<number | null>(null)
   const [activePaymentMethod, setActivePaymentMethod] = useState<any>(null)
   const [selectedCryptoSymbol, setSelectedCryptoSymbol] = useState<string | null>(null)
+  const [currentTipId, setCurrentTipId] = useState<string | null>(null)
+  /** Which endpoint created the tip — decides the matching confirm call. */
+  const [currentTipKind, setCurrentTipKind] = useState<'single' | 'multi' | null>(null)
 
   const pageData = pageQuery.data
   const businessName = pageData?.businessName || ''
   const logoUrl = pageData?.logoUrl || null
 
+  const tipContext = useDirectPaymentTipContext({
+    page: pageData,
+    businessSlug: touchContext.businessSlug,
+    touchPointSlug: touchContext.touchPointSlug,
+    sessionId: touchContext.sessionId,
+  })
+  const tipStaff = tipContext.staff.length ? tipContext.staff : EMPTY_TIP_STAFF
+  const touchPointId = tipContext.touchPointId
+  const tip = useDirectPaymentTip(tipStaff, tipContext.tipConstraints)
+  /** Tipping needs both a staff list and the touch point the tip is booked against. */
+  const canTip = tipStaff.length > 0 && Boolean(touchPointId)
+  const tipTotal = canTip ? tip.tipTotal : 0
+  const tipItems = canTip ? tip.tipItems : EMPTY_TIP_ITEMS
+  const tipError = canTip ? tip.tipError : null
+
   const activeAmount = useMemo(
     () => parseDirectPaymentAmountInput(customAmount),
     [customAmount],
   )
+
+  /** Bill + tips — the single amount the customer transfers. */
+  const totalAmount = activeAmount + tipTotal
 
   const walletOptions = useMemo(
     () => mapPageMethodsToWalletOptions(pageData?.paymentMethods),
@@ -96,8 +146,30 @@ export default function useDirectPaymentFlow() {
       showToast(t('direct_payment.amount_too_high', { max: formatUsdAmount(MAX_AMOUNT) }), 'error')
       return false
     }
+    if (tipError === 'required') {
+      showToast(t('direct_payment.tip_amount_required'), 'error')
+      return false
+    }
+    if (tipError === 'min_item') {
+      showToast(
+        t('direct_payment.tip_min_item_error', {
+          min: formatUsdAmount(tip.constraints.minItemAmount),
+        }),
+        'error',
+      )
+      return false
+    }
+    if (tipError === 'max_total') {
+      showToast(
+        t('direct_payment.tip_max_total_error', {
+          max: formatUsdAmount(tip.constraints.maxTotalAmount),
+        }),
+        'error',
+      )
+      return false
+    }
     return true
-  }, [activeAmount, showToast, t])
+  }, [activeAmount, showToast, t, tip.constraints, tipError])
 
   const handleCustomAmountChange = useCallback((raw: string) => {
     setCustomAmount(sanitizeDirectPaymentAmountInput(raw, MAX_AMOUNT))
@@ -105,12 +177,41 @@ export default function useDirectPaymentFlow() {
 
   const createPaymentForWallet = useCallback(
     async (
-      wallet: { methodId?: string; name?: string; apiMethod?: unknown },
+      wallet: { methodId?: string; name?: string; key?: string; apiMethod?: unknown },
       cryptoSymbol?: string,
     ) => {
       if (!wallet.methodId) {
         showToast(t('errors.generic'), 'error')
         return false
+      }
+
+      // Tip first — a rejected tip must not leave an orphan payment behind.
+      // 2+ recipients → POST /api/v1/tips/multi-staff (business account, even split).
+      // Exactly 1 → POST /api/v1/touch/tip (multi-staff rejects a single recipient).
+      if (!currentTipId && tipItems.length > 0) {
+        if (tipItems.length >= MULTI_STAFF_TIP_MIN_COUNT) {
+          const tipResult = await createMultiStaffTipMutation.mutateAsync({
+            businessId,
+            touchPointId,
+            businessPaymentMethodId: wallet.methodId,
+            tipItems,
+            ...(cryptoSymbol ? { cryptoSymbol } : {}),
+          })
+          setCurrentTipId(String(tipResult?.tipId || tipResult?.id || '') || null)
+          setCurrentTipKind('multi')
+        } else {
+          const [singleItem] = tipItems
+          const tipResult = await createSingleTipMutation.mutateAsync({
+            touchPointId,
+            staffProfileId: singleItem.staffProfileId,
+            amount: singleItem.amount,
+            paymentMethod: wallet.key || '',
+            sessionId: touchContext.sessionId,
+            ...(cryptoSymbol ? { cryptoSymbol } : {}),
+          })
+          setCurrentTipId(String(tipResult?.tipId || tipResult?.id || '') || null)
+          setCurrentTipKind('single')
+        }
       }
 
       const result = await createPaymentMutation.mutateAsync({
@@ -135,7 +236,19 @@ export default function useDirectPaymentFlow() {
       })
       return true
     },
-    [activeAmount, businessId, createPaymentMutation, showToast, t],
+    [
+      activeAmount,
+      businessId,
+      createMultiStaffTipMutation,
+      createPaymentMutation,
+      createSingleTipMutation,
+      currentTipId,
+      showToast,
+      t,
+      tipItems,
+      touchContext.sessionId,
+      touchPointId,
+    ],
   )
 
   const handleSelectWallet = useCallback(
@@ -158,6 +271,8 @@ export default function useDirectPaymentFlow() {
         },
         onVlinkpayAwaitAsset: (selected) => {
           setCurrentPaymentId(null)
+          setCurrentTipId(null)
+          setCurrentTipKind(null)
           setActivePaymentMethod(selected.apiMethod || null)
           setSelectedCryptoSymbol(null)
         },
@@ -192,6 +307,8 @@ export default function useDirectPaymentFlow() {
 
   const handleResetVlinkpayPayment = useCallback(() => {
     setCurrentPaymentId(null)
+    setCurrentTipId(null)
+    setCurrentTipKind(null)
     setSelectedCryptoSymbol(null)
   }, [])
 
@@ -200,12 +317,33 @@ export default function useDirectPaymentFlow() {
 
     try {
       await confirmPaymentMutation.mutateAsync(currentPaymentId)
+      if (currentTipId) {
+        // Best-effort: the payment is already confirmed, the tip confirm can be retried by BE ops.
+        try {
+          if (currentTipKind === 'single') {
+            await confirmSingleTipMutation.mutateAsync(currentTipId)
+          } else {
+            await confirmMultiStaffTipMutation.mutateAsync(currentTipId)
+          }
+        } catch (tipErr) {
+          logger.error('Failed to confirm tip', tipErr)
+        }
+      }
       setStep(DIRECT_PAYMENT_STEP.Success)
     } catch (err) {
       logger.error('Failed to confirm direct payment', err)
       showToast(t(getErrorI18nKey(getApiErrorCode(err, 'unknown_error'))), 'error')
     }
-  }, [confirmPaymentMutation, currentPaymentId, showToast, t])
+  }, [
+    confirmMultiStaffTipMutation,
+    confirmPaymentMutation,
+    confirmSingleTipMutation,
+    currentPaymentId,
+    currentTipId,
+    currentTipKind,
+    showToast,
+    t,
+  ])
 
   return {
     businessId,
@@ -239,7 +377,17 @@ export default function useDirectPaymentFlow() {
     handleCreateVlinkpayPayment,
     handleResetVlinkpayPayment,
     handleConfirmPayment,
-    isCreating: createPaymentMutation.isPending,
+    isCreating: createPaymentMutation.isPending
+      || createMultiStaffTipMutation.isPending
+      || createSingleTipMutation.isPending,
     isConfirming: confirmPaymentMutation.isPending,
+    tip,
+    canTip,
+    tipTotal,
+    tipItems,
+    tipError,
+    totalAmount,
+    perStaffTipAmount: canTip ? tip.perStaffAmount : 0,
+    currentTipId,
   }
 }

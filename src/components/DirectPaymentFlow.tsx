@@ -6,6 +6,7 @@ import useDirectPaymentFlow from './direct-payment/hooks/useDirectPaymentFlow'
 import { DIRECT_PAYMENT_MAX_AMOUNT, DIRECT_PAYMENT_MIN_AMOUNT } from '../utils/currencyInput'
 import { DIRECT_PAYMENT_STEP } from './direct-payment/paymentFlowShared'
 import DirectPaymentReview from './direct-payment/steps/DirectPaymentReview'
+import SelectServerModal from './direct-payment/modals/SelectServerModal'
 import WalletDetails from './customer-flow/steps/WalletDetails'
 import DirectPaymentSuccess from './direct-payment/steps/DirectPaymentSuccess'
 
@@ -40,13 +41,19 @@ export default function DirectPaymentFlow() {
     handleConfirmPayment,
     isCreating,
     isConfirming,
+    tip,
+    canTip,
+    tipTotal,
+    tipError,
+    totalAmount,
+    perStaffTipAmount,
   } = flow
 
   const disablePaymentSelection =
     activeAmount < DIRECT_PAYMENT_MIN_AMOUNT
     || activeAmount > DIRECT_PAYMENT_MAX_AMOUNT
     || Number.isNaN(activeAmount)
-  const paymentAmount = confirmedAmount || activeAmount
+    || Boolean(tipError)
 
   const pageErrorContent = useMemo(() => {
     if (!pageQuery.isError) return null
@@ -132,6 +139,10 @@ export default function DirectPaymentFlow() {
                   isLoadingMethods={false}
                   onSelectWallet={handleSelectWallet}
                   disablePaymentSelection={disablePaymentSelection}
+                  tip={canTip ? tip : null}
+                  tipTotal={tipTotal}
+                  totalAmount={totalAmount}
+                  perStaffTipAmount={perStaffTipAmount}
                   isProcessing={isCreating}
                 />
               ) : null}
@@ -145,7 +156,7 @@ export default function DirectPaymentFlow() {
                   selectedTips={{}}
                   customTips={{}}
                   bizName={businessName}
-                  activeTipAmount={paymentAmount}
+                  activeTipAmount={totalAmount}
                   qrCodeVal={activePaymentMethod?.imageUrl || null}
                   businessPaymentAccounts={{}}
                   businessVlinkpayCryptoAddresses={businessVlinkpayCryptoAddresses}
@@ -172,7 +183,7 @@ export default function DirectPaymentFlow() {
                 <DirectPaymentSuccess
                   t={t}
                   businessName={businessName}
-                  activeAmount={paymentAmount}
+                  activeAmount={totalAmount}
                   selectedWalletObj={selectedWalletObj}
                   cryptoSymbol={selectedCryptoSymbol}
                 />
@@ -185,6 +196,16 @@ export default function DirectPaymentFlow() {
       <footer className="relative z-10 space-y-2 text-center">
         <p className="text-[10px] text-nexoraSubtle/70">{t('customer.copyright')}</p>
       </footer>
+
+      {canTip && tip.isPickerOpen ? (
+        <SelectServerModal
+          t={t}
+          staff={tip.staff}
+          selectedStaffIds={tip.selectedStaffIds}
+          onSelect={tip.selectStaff}
+          onClose={tip.closePicker}
+        />
+      ) : null}
     </div>
   )
 }

@@ -249,12 +249,17 @@ export default function useCustomerFlow() {
 
   useEffect(() => {
     if (!touchPageQuery.isSuccess || !touchPageData) return
-    const redirectPath = resolveTouchpointRedirectUrl(touchPageData)
+    // Carry the touch context so /pay can load this touchpoint's tippable staff.
+    const redirectPath = resolveTouchpointRedirectUrl(touchPageData, undefined, {
+      businessSlug: touchRoute?.businessSlug,
+      touchPointSlug: touchRoute?.touchPointSlug,
+      sessionId,
+    })
     if (!redirectPath) return
     const currentPath = `${window.location.pathname}${window.location.search}`
     if (currentPath === redirectPath) return
     window.location.replace(redirectPath)
-  }, [touchPageQuery.isSuccess, touchPageData])
+  }, [touchPageQuery.isSuccess, touchPageData, touchRoute, sessionId])
 
   // ── API mutations ──
   const createTipMutation = useCreateTip()

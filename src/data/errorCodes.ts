@@ -111,6 +111,10 @@ export const errorCodeToI18nKey = {
   TIP_CRYPTO_SYMBOL_REQUIRED: 'errors.TIP_CRYPTO_SYMBOL_REQUIRED',
   TIP_CRYPTO_ADDRESS_NOT_FOUND: 'errors.TIP_CRYPTO_ADDRESS_NOT_FOUND',
 
+  // Multi-staff tip (POST /api/v1/tips/multi-staff)
+  TIP_MINIMUM_STAFF_COUNT: 'errors.tip_minimum_staff_count',
+  TIP_BUSINESS_PAYMENT_METHOD_REQUIRED: 'errors.tip_business_payment_method_required',
+
   // Physical cards (QR/NFC hardware)
   PHYSICAL_CARD_NOT_FOUND: 'errors.physical_card_not_found',
 
