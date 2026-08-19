@@ -5262,6 +5262,11 @@
           "save": "LƯU LẠI",
           "phGoogleReviewUrl": "https://g.page/r/.../review",
           "phYelpUrl": "https://www.yelp.com/biz/...",
+          "socialLinks": "Liên kết mạng xã hội",
+          "facebook": "Facebook",
+          "instagram": "Instagram",
+          "phFacebookUrl": "https://facebook.com/salon-cua-ban",
+          "phInstagramUrl": "https://instagram.com/salon-cua-ban",
           "validation": {
             "required": "Vui lòng nhập trường này.",
             "invalid": "Vui lòng nhập giá trị hợp lệ.",

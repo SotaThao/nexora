@@ -9,7 +9,7 @@ import { useState } from 'react'
 import { useNotification } from '../../../contexts/NotificationContext'
 import { useTranslation } from '../../../contexts/LanguageContext'
 import { resolveEffectiveKybStatus } from '../../../utils/kybStatus'
-import { useUpdateBusinessInfo, useUpdateBusinessLogo } from '../../../data/hooks/useMerchantSetup'
+import { useUpdateBusinessInfo, useUpdateBusinessLogo, useUpdateReviewLinks } from '../../../data/hooks/useMerchantSetup'
 import { useVerifiedStatus } from '../../../data/hooks/useProfileSettings'
 import { getApiErrorCode } from '../../../types/domain'
 import { getErrorI18nKey } from '../../../data/errorCodes'
@@ -32,6 +32,10 @@ const validateBusinessForm = (form: LooseObject): SettingsFormErrors => {
   if (formValue(form.businessWebsite) && !isValidHttpUrl(form.businessWebsite)) {
     errors.businessWebsite = 'url'
   }
+  if (formValue(form.googleReview) && !isValidHttpUrl(form.googleReview)) errors.googleReview = 'url'
+  if (formValue(form.yelpReview) && !isValidHttpUrl(form.yelpReview)) errors.yelpReview = 'url'
+  if (formValue(form.facebookReview) && !isValidHttpUrl(form.facebookReview)) errors.facebookReview = 'url'
+  if (formValue(form.instagramReview) && !isValidHttpUrl(form.instagramReview)) errors.instagramReview = 'url'
   if (formValue(form.salesTaxRatePercent)) {
     const rate = Number(form.salesTaxRatePercent)
     if (Number.isNaN(rate) || rate < 0 || rate > 100) errors.salesTaxRatePercent = 'range'
@@ -46,18 +50,27 @@ type BusinessInfo = {
   businessWebsite: string
   bookingNotificationPhone: string
   salesTaxRatePercent: string
+  googleReview: string
+  yelpReview: string
+  facebookReview: string
+  instagramReview: string
 }
 
 export default function useBusinessInfoForm({
   setupData,
   verificationStatus,
+  includeReviewLinks,
 }: {
   setupData?: LooseObject | null
   verificationStatus?: string
+  /** POS > General Settings shows review/social links inside this same card; Settings > Profile
+   * keeps its own separate Review Links card, so this defaults to off there. */
+  includeReviewLinks?: boolean
 }) {
   const { t } = useTranslation()
   const { showToast: notify } = useNotification()
   const updateBusinessInfoMutation = useUpdateBusinessInfo()
+  const updateReviewLinksMutation = useUpdateReviewLinks()
   const updateBusinessLogoMutation = useUpdateBusinessLogo()
   const { data: verifiedStatusData } = useVerifiedStatus()
 
@@ -81,6 +94,10 @@ export default function useBusinessInfoForm({
       setupData?.businessInfo?.salesTaxRatePercent != null
         ? String(setupData.businessInfo.salesTaxRatePercent)
         : '',
+    googleReview: setupData?.reviewLinks?.googleReview || '',
+    yelpReview: setupData?.reviewLinks?.yelpReview || '',
+    facebookReview: setupData?.reviewLinks?.facebookReview || '',
+    instagramReview: setupData?.reviewLinks?.instagramReview || '',
   }
 
   const logoUrl: string | null = setupData?.businessInfo?.logo || null
@@ -109,7 +126,7 @@ export default function useBusinessInfoForm({
     setIsEditingBusiness(true)
   }
 
-  const saveBusiness = (e: { preventDefault: () => void }, onSaved?: (next: BusinessInfo) => void) => {
+  const saveBusiness = async (e: { preventDefault: () => void }, onSaved?: (next: BusinessInfo) => void) => {
     e.preventDefault()
     if (!canEditProfile) return
     const errors = validateBusinessForm(businessForm)
@@ -123,24 +140,40 @@ export default function useBusinessInfoForm({
       businessWebsite: formValue(businessForm.businessWebsite),
       bookingNotificationPhone: formValue(businessForm.bookingNotificationPhone),
       salesTaxRatePercent: formValue(businessForm.salesTaxRatePercent),
+      googleReview: formValue(businessForm.googleReview),
+      yelpReview: formValue(businessForm.yelpReview),
+      facebookReview: formValue(businessForm.facebookReview),
+      instagramReview: formValue(businessForm.instagramReview),
     }
-    updateBusinessInfoMutation.mutate(
-      {
+    const savePromises: Array<Promise<unknown>> = [
+      updateBusinessInfoMutation.mutateAsync({
         name: next.businessName,
         phone: next.businessPhone || undefined,
         feedbackEmail: next.businessEmail || undefined,
         website: next.businessWebsite || undefined,
         bookingNotificationPhone: next.bookingNotificationPhone || undefined,
         salesTaxRatePercent: next.salesTaxRatePercent ? Number(next.salesTaxRatePercent) : undefined,
-      },
-      {
-        onSuccess: () => {
-          notify(t('components.settings.hooks.useSettingsForm.settingsUpdatedSuccessfully'))
-          setIsEditingBusiness(false)
-          onSaved?.(next)
-        },
-      },
-    )
+      }),
+    ]
+    if (includeReviewLinks) {
+      savePromises.push(
+        updateReviewLinksMutation.mutateAsync({
+          googleReviewUrl: next.googleReview || undefined,
+          yelpUrl: next.yelpReview || undefined,
+          facebookUrl: next.facebookReview || undefined,
+          instagramUrl: next.instagramReview || undefined,
+        }),
+      )
+    }
+
+    try {
+      await Promise.all(savePromises)
+      notify(t('components.settings.hooks.useSettingsForm.settingsUpdatedSuccessfully'))
+      setIsEditingBusiness(false)
+      onSaved?.(next)
+    } catch (err: unknown) {
+      notify(t(getErrorI18nKey(getApiErrorCode(err))), 'error')
+    }
   }
 
   return {

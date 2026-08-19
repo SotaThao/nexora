@@ -38,6 +38,7 @@ export interface BusinessApiDto {
   googleReviewUrl?: string
   yelpUrl?: string
   facebookUrl?: string
+  instagramUrl?: string
   feedbackEmail?: string
   isPublic?: boolean
   onboardingStep?: number

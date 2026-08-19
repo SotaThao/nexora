@@ -5266,6 +5266,11 @@
           "save": "SAVE",
           "phGoogleReviewUrl": "https://g.page/r/.../review",
           "phYelpUrl": "https://www.yelp.com/biz/...",
+          "socialLinks": "Social Links",
+          "facebook": "Facebook",
+          "instagram": "Instagram",
+          "phFacebookUrl": "https://facebook.com/your-salon",
+          "phInstagramUrl": "https://instagram.com/your-salon",
           "validation": {
             "required": "This field is required.",
             "invalid": "Please enter a valid value.",

@@ -49,6 +49,7 @@ export interface ReviewLinks {
   googleReview?: string
   yelpReview?: string
   facebookReview?: string
+  instagramReview?: string
   feedbackEmail?: string
 }
 

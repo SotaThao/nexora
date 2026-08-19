@@ -16,6 +16,13 @@ type BusinessInfoCardProps = {
   businessWebsite?: string
   bookingNotificationPhone?: string
   salesTaxRatePercent?: string
+  /** POS > General Settings also shows Google/Yelp review links + Facebook/Instagram inside this
+   * same card; Settings > Profile keeps its own separate Review Links card, so this defaults to off. */
+  showReviewLinks?: boolean
+  googleReview?: string
+  yelpReview?: string
+  facebookReview?: string
+  instagramReview?: string
   logoUrl?: string | null
   onLogoChange?: (e: ChangeEvent<HTMLInputElement>) => void
   isUploadingLogo?: boolean
@@ -37,6 +44,11 @@ export default function BusinessInfoCard({
   businessWebsite,
   bookingNotificationPhone,
   salesTaxRatePercent,
+  showReviewLinks,
+  googleReview,
+  yelpReview,
+  facebookReview,
+  instagramReview,
   logoUrl,
   onLogoChange,
   isUploadingLogo,
@@ -53,7 +65,7 @@ export default function BusinessInfoCard({
   const { t } = useTranslation()
 
   const inputClass = (error?: string) =>
-    `mt-1 h-10 w-full rounded-lg border bg-nexoraCanvas focus:bg-white px-3.5 text-xs text-nexoraText outline-none transition-all ${
+    `mt-1 h-10 w-full rounded-lg border bg-white px-3.5 text-xs text-nexoraText outline-none transition-all ${
       error
         ? 'border-rose-500 focus:border-rose-500 focus:ring-2 focus:ring-rose-500/15'
         : 'border-nexoraBorder focus:border-nexoraBrand'
@@ -208,6 +220,87 @@ export default function BusinessInfoCard({
             />
             <FieldError id="settings-business-website-error" error={businessErrors.businessWebsite} />
           </div>
+          {showReviewLinks && (
+            <>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <div>
+                  <label className="text-[10px] font-extrabold uppercase text-nexoraMuted">{t('components.settings.tabs.ProfileTab.googleReviewLink')}</label>
+                  <input
+                    id="settings-business-google-review"
+                    type="url"
+                    className={inputClass(businessErrors.googleReview)}
+                    value={businessForm.googleReview}
+                    placeholder={t('components.settings.tabs.ProfileTab.phGoogleReviewUrl')}
+                    aria-invalid={Boolean(businessErrors.googleReview)}
+                    aria-describedby={businessErrors.googleReview ? 'settings-business-google-review-error' : undefined}
+                    onChange={(e) => {
+                      setBusinessForm({ ...businessForm, googleReview: e.target.value })
+                      clearError(setBusinessErrors, 'googleReview')
+                    }}
+                  />
+                  <FieldError id="settings-business-google-review-error" error={businessErrors.googleReview} />
+                </div>
+                <div>
+                  <label className="text-[10px] font-extrabold uppercase text-nexoraMuted">{t('components.settings.tabs.ProfileTab.yelpReviewLink')}</label>
+                  <input
+                    id="settings-business-yelp-review"
+                    type="url"
+                    className={inputClass(businessErrors.yelpReview)}
+                    value={businessForm.yelpReview}
+                    placeholder={t('components.settings.tabs.ProfileTab.phYelpUrl')}
+                    aria-invalid={Boolean(businessErrors.yelpReview)}
+                    aria-describedby={businessErrors.yelpReview ? 'settings-business-yelp-review-error' : undefined}
+                    onChange={(e) => {
+                      setBusinessForm({ ...businessForm, yelpReview: e.target.value })
+                      clearError(setBusinessErrors, 'yelpReview')
+                    }}
+                  />
+                  <FieldError id="settings-business-yelp-review-error" error={businessErrors.yelpReview} />
+                </div>
+              </div>
+              <div className="border-t border-nexoraRule pt-3">
+                <div className="text-[10px] font-black uppercase text-nexoraMuted tracking-wider mb-3">
+                  {t('components.settings.tabs.ProfileTab.socialLinks')}
+                </div>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  <div>
+                    <label className="text-[10px] font-extrabold uppercase text-nexoraMuted">{t('components.settings.tabs.ProfileTab.facebook')}</label>
+                    <input
+                      id="settings-business-facebook"
+                      type="url"
+                      className={inputClass(businessErrors.facebookReview)}
+                      value={businessForm.facebookReview}
+                      placeholder={t('components.settings.tabs.ProfileTab.phFacebookUrl')}
+                      aria-invalid={Boolean(businessErrors.facebookReview)}
+                      aria-describedby={businessErrors.facebookReview ? 'settings-business-facebook-error' : undefined}
+                      onChange={(e) => {
+                        setBusinessForm({ ...businessForm, facebookReview: e.target.value })
+                        clearError(setBusinessErrors, 'facebookReview')
+                      }}
+                    />
+                    <FieldError id="settings-business-facebook-error" error={businessErrors.facebookReview} />
+                  </div>
+                  <div>
+                    <label className="text-[10px] font-extrabold uppercase text-nexoraMuted">{t('components.settings.tabs.ProfileTab.instagram')}</label>
+                    <input
+                      id="settings-business-instagram"
+                      type="url"
+                      className={inputClass(businessErrors.instagramReview)}
+                      value={businessForm.instagramReview}
+                      placeholder={t('components.settings.tabs.ProfileTab.phInstagramUrl')}
+                      aria-invalid={Boolean(businessErrors.instagramReview)}
+                      aria-describedby={businessErrors.instagramReview ? 'settings-business-instagram-error' : undefined}
+                      onChange={(e) => {
+                        setBusinessForm({ ...businessForm, instagramReview: e.target.value })
+                        clearError(setBusinessErrors, 'instagramReview')
+                      }}
+                    />
+                    <FieldError id="settings-business-instagram-error" error={businessErrors.instagramReview} />
+                  </div>
+                </div>
+              </div>
+            </>
+          )}
           <div>
             <label className="flex items-center text-[10px] font-extrabold uppercase text-nexoraMuted gap-1">
               <span>{t('components.settings.tabs.ProfileTab.bookingNotificationPhone')}</span>
@@ -311,6 +404,37 @@ export default function BusinessInfoCard({
               <span className="min-w-0 text-nexoraText font-extrabold sm:text-right">-</span>
             )}
           </div>
+          {showReviewLinks && (
+            <>
+              {[
+                { label: 'googleReviewLink', href: googleReview },
+                { label: 'yelpReviewLink', href: yelpReview },
+                { label: 'facebook', href: facebookReview },
+                { label: 'instagram', href: instagramReview },
+              ].map(({ label, href }) => (
+                <div
+                  key={label}
+                  className="flex flex-col gap-1 border-t border-slate-50 py-2 sm:flex-row sm:items-center sm:justify-between sm:gap-3 sm:py-1"
+                >
+                  <span className="shrink-0 text-nexoraMuted font-bold">{t(`components.settings.tabs.ProfileTab.${label}`)}</span>
+                  {href ? (
+                    <a
+                      href={href}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="flex min-w-0 items-center gap-0.5 font-extrabold text-nexoraBrand hover:underline sm:justify-end sm:text-right"
+                      title={href}
+                    >
+                      <span className="min-w-0 truncate">{href}</span>
+                      <ExternalLink className="h-3 w-3 shrink-0" />
+                    </a>
+                  ) : (
+                    <span className="min-w-0 text-nexoraText font-extrabold sm:text-right">-</span>
+                  )}
+                </div>
+              ))}
+            </>
+          )}
           <div className="flex flex-col gap-1 border-t border-slate-50 py-2 sm:flex-row sm:items-center sm:justify-between sm:gap-3 sm:py-1">
             <span className="shrink-0 text-nexoraMuted font-bold">{t('components.settings.tabs.ProfileTab.bookingNotificationPhone')}</span>
             <span className="min-w-0 break-words text-nexoraText font-extrabold sm:text-right">{bookingNotificationPhone || '-'}</span>

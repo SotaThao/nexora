@@ -41,6 +41,7 @@ export function mapBusinessApiDtoToSetup(res: BusinessApiDto): MerchantSetup {
       googleReview: res.googleReviewUrl || '',
       yelpReview: res.yelpUrl || '',
       facebookReview: res.facebookUrl || '',
+      instagramReview: res.instagramUrl || '',
       feedbackEmail: res.feedbackEmail || '',
     },
     staffList: [],
