@@ -366,7 +366,7 @@ export enum PackageHistoryDocumentKind {
 export function packageHistoryTransactionKey(
   item: { orderId: string; referenceId: string },
 ): string {
-  return item.referenceId || item.orderId
+  return item.orderId
 }
 
 export function packageHistoryDocumentFileName(

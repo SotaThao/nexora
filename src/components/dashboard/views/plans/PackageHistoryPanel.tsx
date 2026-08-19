@@ -8,6 +8,7 @@ import { usePagination } from '../../../../hooks/usePagination'
 import { getApiErrorCode } from '../../../../types/domain'
 import Pagination from '../../../ui/Pagination'
 import { packageBillingDetailPath } from '../../constants'
+import { PackageHistoryUiStatus } from '../../../../data/repositories/subscriptionPayments'
 import {
   BOOKING_HUB_EMPTY_CELL,
   BOOKING_HUB_PAGINATION_CLASSNAME,
@@ -149,7 +150,11 @@ export default function PackageHistoryPanel({
                 const showTermBadge = isPackageHistorySubscriptionTerm(row.periodInMonths)
                 const termLabel = formatPackageHistoryTerm(row.periodInMonths, t, TK)
                 const transactionKey = packageHistoryTransactionKey(row)
-                const transactionId = formatPackageHistoryTransactionId(transactionKey)
+                // Display short reference id in the table, but use `orderId` in URL
+                // so detail endpoints can call `.../purchase-history/{orderId}/...`.
+                const transactionId = formatPackageHistoryTransactionId(
+                  row.referenceId || row.orderId,
+                )
                 const rowAction = resolvePackageHistoryRowAction(row.paymentStatus)
                 const actionLabel = t(
                   `${TK}.${PACKAGE_HISTORY_ROW_ACTION_LABEL_KEY[rowAction]}`,
@@ -195,7 +200,9 @@ export default function PackageHistoryPanel({
                       </span>
                     </td>
                     <td className="package-history-action">
-                      {transactionKey ? (
+                      {row.uiStatus === PackageHistoryUiStatus.Pending ? (
+                        BOOKING_HUB_EMPTY_CELL
+                      ) : transactionKey ? (
                         <Link
                           className="package-history-action-link"
                           to={packageBillingDetailPath(transactionKey)}
