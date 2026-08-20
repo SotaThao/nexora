@@ -5101,7 +5101,7 @@
         "stepScan": "Customer scans this QR code",
         "stepAmount": "Customer enters the payment amount",
         "stepMethod": "Customer chooses one of the payment methods you accept",
-        "stepConfirm": "Customer confirms they sent the payment; you acknowledge receipt in Payment Activity",
+        "stepConfirm": "Customer confirms they sent the payment; you acknowledge receipt in payment activity",
         "activeMethodsLabel": "{{count}} active payment method(s) shown to customers",
         "previewQr": "Preview QR",
         "btn_open": "Open QR",

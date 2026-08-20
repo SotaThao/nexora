@@ -5097,7 +5097,7 @@
         "stepScan": "Khách quét mã QR này",
         "stepAmount": "Khách nhập số tiền thanh toán",
         "stepMethod": "Khách chọn một phương thức nhận tiền đang bật",
-        "stepConfirm": "Khách xác nhận đã chuyển khoản; bạn xác nhận đã nhận tiền trong Hoạt động thanh toán",
+        "stepConfirm": "Khách xác nhận đã chuyển khoản; bạn xác nhận đã nhận tiền trong hoạt động thanh toán",
         "activeMethodsLabel": "{{count}} phương thức nhận tiền đang hiển thị cho khách",
         "previewQr": "Xem QR",
         "btn_open": "Xem mã QR",
