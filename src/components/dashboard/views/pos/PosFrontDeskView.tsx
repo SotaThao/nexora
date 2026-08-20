@@ -29,6 +29,7 @@ import { getErrorI18nKey } from '../../../../data/errorCodes'
 import { qk } from '../../../../data/queryKeys'
 import { usePosAccess } from '../../../../data/hooks/usePosAccess'
 import { useStaffBusinesses } from '../../../../data/hooks/useStaffSelf'
+import { useWeeklyPayroll } from '../../../../data/hooks/useWeeklyPayroll'
 import { formatPosTime } from './posDateTime'
 import { useCancelOrder, useOrderList, useStartOrderService } from '../../../../data/hooks/usePosOrders'
 import { useInServiceOrders } from '../../../../data/hooks/usePosCheckout'
@@ -58,6 +59,7 @@ import { formatBookingWallClockTime, resolveBookingWallClockParts } from './book
 import CustomerTab from './customer/CustomerTab'
 import { formatCustomerPhone } from './customer/customerFormatters'
 import TimeClockTab from './timeclock/TimeClockTab'
+import { formatCurrency } from '../../utils'
 
 // Every string this screen passes to t() lives under one namespace — building them through tk()
 // keeps the prefix in a single place instead of repeating it two dozen times inline.
@@ -245,6 +247,9 @@ export default function PosFrontDeskView({
   const initialTab: PosFrontDeskTab =
     tabFromUrl && POS_FRONT_DESK_TABS.includes(tabFromUrl) ? tabFromUrl : DEFAULT_POS_FRONT_DESK_TAB
   const [activeTab, setActiveTabState] = useState<PosFrontDeskTab>(initialTab)
+  const weeklyPayrollQuery = useWeeklyPayroll(businessId, undefined, {
+    enabled: activeTab === PosFrontDeskTab.Report,
+  })
   const setActiveTab = (tab: PosFrontDeskTab) => {
     setActiveTabState(tab)
     setSearchParams(
@@ -594,6 +599,76 @@ export default function PosFrontDeskView({
             )
           })}
         </div>
+      </section>
+    )
+  }
+
+  const renderReportPanel = () => {
+    const payroll = weeklyPayrollQuery.data
+    const rows = payroll?.staff ?? []
+
+    if (weeklyPayrollQuery.isPending && weeklyPayrollQuery.fetchStatus !== 'idle') {
+      return (
+        <div className="rounded-xl border border-nexoraBorder bg-nexoraSurface p-6">
+          <SkeletonList count={3} lines={2} />
+        </div>
+      )
+    }
+
+    if (weeklyPayrollQuery.isError) {
+      return (
+        <div className="rounded-xl border border-nexoraBorder bg-nexoraSurface p-8 text-center text-xs text-nexoraMuted">
+          {t(tk('reportError'))}
+        </div>
+      )
+    }
+
+    return (
+      <section className="space-y-3" aria-label={t(tk('reportTitle'))} data-testid="report-panel">
+        <div className="flex flex-wrap items-end justify-between gap-2">
+          <div>
+            <h2 className="text-sm font-bold text-nexoraText">{t(tk('reportTitle'))}</h2>
+            <p className="mt-0.5 text-xs text-nexoraMuted">{t(tk('reportThisWeek'))}</p>
+          </div>
+          {payroll ? (
+            <span className="text-[11px] font-semibold tabular-nums text-nexoraMuted">
+              {payroll.weekStart} — {payroll.weekEnd}
+            </span>
+          ) : null}
+        </div>
+
+        {rows.length === 0 ? (
+          <div className="rounded-xl border border-nexoraBorder bg-nexoraSurface p-8 text-center text-xs text-nexoraMuted">
+            {t(tk('reportEmpty'))}
+          </div>
+        ) : (
+          <div className="overflow-x-auto rounded-xl border border-nexoraBorder bg-nexoraSurface">
+            <table className="w-full min-w-[720px] text-left text-xs">
+              <thead className="bg-nexoraCanvas text-[10px] font-extrabold uppercase tracking-wide text-nexoraMuted">
+                <tr>
+                  <th className="px-4 py-3">{t(tk('reportColumnTechnician'))}</th>
+                  <th className="px-4 py-3 text-right">{t(tk('reportColumnHours'))}</th>
+                  <th className="px-4 py-3 text-right">{t(tk('reportColumnService'))}</th>
+                  <th className="px-4 py-3 text-right">{t(tk('reportColumnCommission'))}</th>
+                  <th className="px-4 py-3 text-right">{t(tk('reportColumnTip'))}</th>
+                  <th className="px-4 py-3 text-right">{t(tk('reportColumnTechTakes'))}</th>
+                </tr>
+              </thead>
+              <tbody>
+                {rows.map((row) => (
+                  <tr key={row.businessStaffLinkId} className="border-t border-nexoraBorder/70">
+                    <td className="px-4 py-3 font-bold text-nexoraText">{row.displayName}</td>
+                    <td className="px-4 py-3 text-right tabular-nums text-nexoraText">{row.hours.toFixed(1)}h</td>
+                    <td className="px-4 py-3 text-right tabular-nums text-nexoraText">{formatCurrency(row.sales)}</td>
+                    <td className="px-4 py-3 text-right tabular-nums text-nexoraText">{formatCurrency(row.commission)}</td>
+                    <td className="px-4 py-3 text-right tabular-nums text-nexoraText">{formatCurrency(row.tips)}</td>
+                    <td className="px-4 py-3 text-right tabular-nums font-bold text-nexoraText">{formatCurrency(row.takeHome)}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
       </section>
     )
   }
@@ -1026,8 +1101,7 @@ export default function PosFrontDeskView({
 
       {activeTab === PosFrontDeskTab.Customer && <CustomerTab businessId={businessId} />}
 
-      {/* Reserved Front Desk workspace — reporting content will be added here next. */}
-      {activeTab === PosFrontDeskTab.Report && <div data-testid="report-panel" />}
+      {activeTab === PosFrontDeskTab.Report && renderReportPanel()}
         </>
       )}
 
