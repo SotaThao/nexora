@@ -24,6 +24,7 @@ import IconButton from '../../ui/IconButton'
 import LanguageSwitcher from '../../ui/LanguageSwitcher'
 import { truncateTransactionId } from '../../ui/CopyableTransactionId'
 import HeaderEcosystem from './HeaderEcosystem'
+import { HeaderMessages, HeaderMessagesVariant } from '../../header-messages'
 import {
   buildDashboardReportsPath,
   DASHBOARD_REPORTS_TAB,
@@ -541,6 +542,8 @@ export default function DashboardHeader({
             </div>
           )}
         </div>
+
+        <HeaderMessages variant={HeaderMessagesVariant.Desktop} />
 
         <div className="order-4">
           <LanguageSwitcher variant="header-plain" />

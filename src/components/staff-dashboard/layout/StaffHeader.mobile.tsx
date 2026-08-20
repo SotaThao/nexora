@@ -14,6 +14,7 @@ import { formatNotificationDateTime } from '../../dashboard/utils'
 import { navigateStaffNotification } from '../constants'
 import LanguageSwitcher from '../../ui/LanguageSwitcher'
 import HeaderEcosystem from '../../dashboard/layout/HeaderEcosystem'
+import { HeaderMessages, HeaderMessagesVariant } from '../../header-messages'
 
 export default function StaffHeader({ activeScreen, onNavigate, onOpenMobileMenu }) {
   const { t, currentLanguage } = useTranslation()
@@ -199,6 +200,8 @@ export default function StaffHeader({ activeScreen, onNavigate, onOpenMobileMenu
             )}
           </div>
 
+          <HeaderMessages variant={HeaderMessagesVariant.Mobile} />
+
           <LanguageSwitcher variant="header-plain" />
           <HeaderEcosystem plain />
         </div>
@@ -320,6 +323,8 @@ export default function StaffHeader({ activeScreen, onNavigate, onOpenMobileMenu
               </div>
             )}
           </div>
+
+          <HeaderMessages variant={HeaderMessagesVariant.Desktop} />
 
           <button
             type="button"
