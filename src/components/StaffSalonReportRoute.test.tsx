@@ -1,8 +1,16 @@
-import { render, screen } from '@testing-library/react'
+import { fireEvent, render, screen, waitFor, within } from '@testing-library/react'
 import { MemoryRouter } from 'react-router-dom'
 
 import AppRouter from '../app/AppRouter'
 import StaffHeaderDesktop from './staff-dashboard/layout/StaffHeader.desktop'
+
+const staffSelfRepositoryMock = vi.hoisted(() => ({
+  getMyBusinesses: vi.fn(),
+}))
+
+const staffIncomeReportRepositoryMock = vi.hoisted(() => ({
+  getIncomeReport: vi.fn(),
+}))
 
 vi.mock('../auth/useAuth', () => ({
   useAuth: () => ({
@@ -36,8 +44,19 @@ vi.mock('../components/staff-dashboard/StaffDashboard', async () => {
   return { default: () => <Outlet /> }
 })
 
-vi.mock('../components/staff-dashboard/views/StaffSalonReport', () => ({
-  default: () => <div>Salon report route content</div>,
+vi.mock('../auth/useSessionRole', () => ({
+  useSessionRole: () => ({
+    isStaff: true,
+    session: { id: 'staff-user-1' },
+  }),
+}))
+
+vi.mock('../data/repositories/staffSelf', () => ({
+  default: staffSelfRepositoryMock,
+}))
+
+vi.mock('../data/repositories/staffIncomeReport', () => ({
+  default: staffIncomeReportRepositoryMock,
 }))
 
 vi.mock('../contexts/StaffAccountContext', () => ({
@@ -60,13 +79,49 @@ vi.mock('../data/hooks/useNotifications', () => ({
 }))
 
 beforeEach(() => {
+  vi.clearAllMocks()
+  staffSelfRepositoryMock.getMyBusinesses.mockResolvedValue([
+    {
+      businessId: 'salon-bliss',
+      businessName: 'Bliss Nails',
+      linkStatus: '1',
+      linkStatusLabel: 'Active',
+    },
+  ])
+  staffIncomeReportRepositoryMock.getIncomeReport.mockResolvedValue({
+    filter: { scope: 'All', period: 'Daily' },
+    summary: {
+      income: 306.5,
+      pay: 192,
+      tip: 86.5,
+      otherIncome: 28,
+      paidAmount: 200,
+      totalHours: 8,
+      isEstimatedPay: true,
+      turns: 6,
+      service: 480,
+      commission: 192,
+      commissionPercent: 40,
+      techTakes: 278.5,
+    },
+    sources: {
+      posPay: 192,
+      posTips: 3,
+      qrTips: 83.5,
+      manualTips: 0,
+      directPayments: 0,
+      selfReportedIncome: 28,
+    },
+    breakdown: [],
+    businessBreakdown: [],
+  })
   Object.defineProperty(window, 'scrollTo', {
     configurable: true,
     value: vi.fn(),
   })
 })
 
-it('renders the staff salon report route for an authenticated staff member', async () => {
+it('runs the authenticated report route through source and period changes', async () => {
   render(
     <MemoryRouter
       initialEntries={['/staff/salons/report']}
@@ -76,7 +131,47 @@ it('renders the staff salon report route for an authenticated staff member', asy
     </MemoryRouter>,
   )
 
-  expect(await screen.findByText('Salon report route content')).toBeInTheDocument()
+  const table = await screen.findByRole('table')
+  expect(screen.getByRole('heading', { name: 'Income Report' })).toBeInTheDocument()
+  expect(within(table).getAllByRole('columnheader').map((header) => header.textContent)).toEqual([
+    'Income',
+    'Pay',
+    'Tip',
+    'Other Income',
+    'Paid Amount',
+  ])
+  expect(within(table).getAllByRole('cell').map((cell) => cell.textContent)).toEqual([
+    '$306.50',
+    '$192.00',
+    '$86.50',
+    '$28.00',
+    '$200.00',
+  ])
+
+  const sourceFilter = await screen.findByRole('combobox', { name: 'Report Scope' })
+  await screen.findByRole('option', { name: 'Bliss Nails' })
+  fireEvent.change(sourceFilter, { target: { value: 'salon-bliss' } })
+  fireEvent.click(screen.getByRole('tab', { name: 'Weekly' }))
+
+  await waitFor(() => expect(staffIncomeReportRepositoryMock.getIncomeReport).toHaveBeenLastCalledWith(
+    expect.objectContaining({
+      scope: 'Business',
+      businessId: 'salon-bliss',
+      period: 'Weekly',
+    }),
+  ))
+  await waitFor(() => expect(
+    within(screen.getByRole('table')).getAllByRole('columnheader').map((header) => header.textContent),
+  ).toEqual([
+    'Turns',
+    'Hours',
+    'Service',
+    'Pay',
+    'Commission',
+    'Comm %',
+    'Tip',
+    'Tech Takes',
+  ]))
 })
 
 it('shows Report as the staff header title', () => {

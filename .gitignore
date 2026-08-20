@@ -56,6 +56,14 @@ pr_body.md
 
 *.test.tsx
 *.test.ts
+!src/data/hooks/useStaffIncomeReport.test.tsx
+!src/data/repositories/staffIncomeReport.test.ts
+
+# Version the approved US-045 QA contract and execution record.
+!reports/
+reports/*
+!reports/US-045-staff-income-report-test_plan.md
+!reports/US-045-staff-income-report-walkthrough.md
 
 package-lock.json
 

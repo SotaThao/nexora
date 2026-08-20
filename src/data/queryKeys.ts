@@ -282,6 +282,11 @@ export const qk = {
   staffProfile:        ()      => ['staffProfile'],
   staffBusinesses:     ()      => ['staffBusinesses'],
   staffDashboardSummary: ()    => ['staffDashboardSummary'],
+  staffIncomeReport: (sessionId: string, params: unknown) => [
+    'staffIncomeReport',
+    sessionId,
+    params,
+  ],
   staffDashboardStatistics: () => ['staffDashboardStatistics'],
   staffReviews:          (filters = EMPTY) => ['staffReviews', filters],
   staffTips:             (filters = EMPTY) => ['staffTips', filters],
