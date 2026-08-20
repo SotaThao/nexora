@@ -18,9 +18,12 @@ import {
 } from '../../../data/hooks/useLocalStaff'
 import { PayoutUiKey } from '../../../data/payoutUiKeys'
 import {
-  PAYOUT_UI_LABELS,
+  buildPaymentMethodFromPayoutConfig,
+  EMPTY_STAFF_PAYOUT_CONFIG,
   isPaymentMethodConfigured,
+  mergeStaffPaymentMethodWithConfig,
   orderedPayoutUiKeysFromMethods,
+  PAYOUT_UI_LABELS,
   payoutTypeToUiKey,
   supportsPayoutAccountName,
   toPayoutAccountNameDto,
@@ -35,6 +38,10 @@ import {
   serializeVlinkpayAddresses,
   toVlinkpayCryptoAddressesPayload,
 } from '../../payout/vlinkpayWallet'
+
+function resolveStaffIdDisplay(form: { nexoraStaffId?: string; staffCode?: string } | null | undefined) {
+  return String(form?.nexoraStaffId || form?.staffCode || '').trim()
+}
 
 function StaffModal({
   open,
@@ -76,9 +83,7 @@ function StaffModal({
   const isIdReadOnly = isReviewOnly || isLocalStaff
   const canManageLocalPayouts = isLocalStaff && !viewOnly && !isApproveMode
 
-  const [idInput, setIdInput] = useState(() =>
-    isReviewOnly ? (form.nexoraStaffId || form.vlinkpay || '') : (form.vlinkpay || form.nexoraStaffId || ''),
-  )
+  const [idInput, setIdInput] = useState(() => resolveStaffIdDisplay(form))
   const [searchQuery, setSearchQuery] = useState('')
   const [lastHandledSearchQuery, setLastHandledSearchQuery] = useState('')
   const readOnlyInputClass = 'border-nexoraBorder bg-nexoraCanvas cursor-not-allowed'
@@ -94,12 +99,13 @@ function StaffModal({
   }
 
   useEffect(() => {
-    setIdInput(
-      isReviewOnly
-        ? (form.nexoraStaffId || form.vlinkpay || '')
-        : (form.vlinkpay || form.nexoraStaffId || ''),
-    )
-  }, [form.vlinkpay, form.nexoraStaffId, isReviewOnly])
+    const staffCode = resolveStaffIdDisplay(form)
+    if (editing || isReviewOnly || isLocalStaff) {
+      setIdInput(staffCode)
+      return
+    }
+    if (staffCode) setIdInput(staffCode)
+  }, [editing, form.nexoraStaffId, form.staffCode, isLocalStaff, isReviewOnly])
 
   // Verification states
   const [vlinkpayStatus, setVlinkpayStatus] = useState('idle') // 'idle' | 'checking' | 'success' | 'error'
@@ -132,7 +138,7 @@ function StaffModal({
   }, [form?.paymentMethods])
 
   const getFormPayoutConfig = (walletKey: string) =>
-    (form.payoutConfigs && form.payoutConfigs[walletKey]) || { enabled: false, value: '', qrCode: '', accountName: '' }
+    (form.payoutConfigs && form.payoutConfigs[walletKey]) || EMPTY_STAFF_PAYOUT_CONFIG
 
   const getPaymentMethodForWallet = (walletKey: string): PaymentMethodDto => {
     const methods = Array.isArray(form?.paymentMethods) ? form.paymentMethods : []
@@ -141,33 +147,13 @@ function StaffModal({
     )
     const config = getFormPayoutConfig(walletKey)
     if (fromApi) {
-      return {
-        ...fromApi,
-        uiKey: fromApi.uiKey || walletKey,
-        accountInfo: config.value || fromApi.accountInfo,
-        accountName: config.accountName || fromApi.accountName,
-        imageUrl: config.qrCode || fromApi.imageUrl,
-        isActive: Boolean(config.enabled),
-        name: fromApi.name || PAYOUT_UI_LABELS[walletKey] || walletKey,
-      }
+      return mergeStaffPaymentMethodWithConfig(fromApi, walletKey, config)
     }
-    return {
-      type: walletKey,
-      uiKey: walletKey,
-      accountInfo: config.value || '',
-      accountName: config.accountName || null,
-      imageUrl: config.qrCode || null,
-      isActive: Boolean(config.enabled),
-      isConfigured: Boolean(String(config.value || '').trim()),
-      name: PAYOUT_UI_LABELS[walletKey] || walletKey,
-    }
+    return buildPaymentMethodFromPayoutConfig(walletKey, config, form.fullName || '')
   }
 
-  const payoutMethodHasAccount = (walletKey: string) => {
-    const config = getFormPayoutConfig(walletKey)
-    if (String(config.value || '').trim()) return true
-    return isPaymentMethodConfigured(getPaymentMethodForWallet(walletKey))
-  }
+  const payoutMethodHasAccount = (walletKey: string) =>
+    isPaymentMethodConfigured(getPaymentMethodForWallet(walletKey))
 
   const showLocalPaymentError = (err: unknown) => {
     showToast(t(getErrorI18nKey(getApiErrorCode(err))), 'error')

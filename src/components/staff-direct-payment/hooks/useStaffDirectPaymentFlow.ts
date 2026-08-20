@@ -21,9 +21,10 @@ import {
 import {
   DIRECT_PAYMENT_STEP,
   type DirectPaymentStep,
-  isVlinkpayWallet,
+  applyCreatedPaymentWalletState,
   mapPageMethodsToWalletOptions,
   mergeCreatedPaymentMethod,
+  runDirectPaymentWalletSelect,
   resolveWalletVlinkpayCryptoAddresses,
   toWalletTipPaymentMethodsData,
 } from '../../direct-payment/paymentFlowShared'
@@ -45,7 +46,9 @@ export default function useStaffDirectPaymentFlow() {
   const [selectedWalletObj, setSelectedWalletObj] = useState<any>(null)
   const [selectedWallet, setSelectedWallet] = useState('')
   const [currentPaymentId, setCurrentPaymentId] = useState<string | null>(null)
+  const [confirmedAmount, setConfirmedAmount] = useState<number | null>(null)
   const [activePaymentMethod, setActivePaymentMethod] = useState<any>(null)
+  const [selectedCryptoSymbol, setSelectedCryptoSymbol] = useState<string | null>(null)
 
   const pageData = pageQuery.data
   const displayName = pageData?.displayName || ''
@@ -122,9 +125,14 @@ export default function useStaffDirectPaymentFlow() {
       }
 
       setCurrentPaymentId(result.paymentId)
+      setConfirmedAmount(result.amount)
       setActivePaymentMethod(
         mergeCreatedPaymentMethod(wallet.apiMethod as any, result.paymentMethod),
       )
+      applyCreatedPaymentWalletState(wallet, cryptoSymbol, {
+        setSelectedCryptoSymbol,
+        setSelectedWalletObj,
+      })
       return true
     },
     [activeAmount, createPaymentMutation, showToast, staffProfileId, t],
@@ -132,33 +140,33 @@ export default function useStaffDirectPaymentFlow() {
 
   const handleSelectWallet = useCallback(
     async (wallet: { methodId?: string; name?: string; key?: string; apiMethod?: unknown }) => {
-      if (!validateAmount()) return
+      if (createPaymentMutation.isPending) return
       if (!wallet.methodId) {
         showToast(t('errors.generic'), 'error')
         return
       }
 
-      setSelectedWalletObj(wallet)
-      setSelectedWallet(wallet.name || '')
-
-      if (isVlinkpayWallet(wallet)) {
-        setCurrentPaymentId(null)
-        setActivePaymentMethod(wallet.apiMethod || null)
-        setStep(DIRECT_PAYMENT_STEP.WalletDetails)
-        return
-      }
-
-      setStep(DIRECT_PAYMENT_STEP.Processing)
-      try {
-        await createPaymentForWallet(wallet)
-        setStep(DIRECT_PAYMENT_STEP.WalletDetails)
-      } catch (err) {
-        logger.error('Failed to create staff direct payment', err)
-        showToast(t(getErrorI18nKey(getApiErrorCode(err, 'unknown_error'))), 'error')
-        setStep(DIRECT_PAYMENT_STEP.Review)
-      }
+      setConfirmedAmount(null)
+      await runDirectPaymentWalletSelect(wallet, {
+        validateAmount,
+        setSelectedWalletObj,
+        setSelectedWallet,
+        setStep,
+        createPaymentForWallet,
+        onCreatePaymentError: (err) => {
+          showToast(t(getErrorI18nKey(getApiErrorCode(err, 'unknown_error'))), 'error')
+        },
+        onVlinkpayAwaitAsset: (selected) => {
+          setCurrentPaymentId(null)
+          setActivePaymentMethod(selected.apiMethod || null)
+          setSelectedCryptoSymbol(null)
+        },
+        logCreatePaymentError: (err) => {
+          logger.error('Failed to create staff direct payment', err)
+        },
+      })
     },
-    [createPaymentForWallet, showToast, t, validateAmount],
+    [createPaymentForWallet, createPaymentMutation.isPending, showToast, t, validateAmount],
   )
 
   const handleCreateVlinkpayPayment = useCallback(async (cryptoSymbol: string) => {
@@ -184,6 +192,7 @@ export default function useStaffDirectPaymentFlow() {
 
   const handleResetVlinkpayPayment = useCallback(() => {
     setCurrentPaymentId(null)
+    setSelectedCryptoSymbol(null)
   }, [])
 
   const handleConfirmPayment = useCallback(async () => {
@@ -223,7 +232,9 @@ export default function useStaffDirectPaymentFlow() {
     tipPaymentMethodsData,
     businessVlinkpayCryptoAddresses,
     currentPaymentId,
+    confirmedAmount,
     activePaymentMethod,
+    selectedCryptoSymbol,
     handleSelectWallet,
     handleCreateVlinkpayPayment,
     handleResetVlinkpayPayment,

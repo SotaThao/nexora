@@ -4,6 +4,7 @@
 // built first for the business's own hours. Only new callers (Staff Weekly
 // Schedule, US-09) use this shared version, to avoid regressing that screen.
 import ToggleSwitch from '../../../ui/ToggleSwitch'
+import { TWELVE_HOUR_INPUT_LANG } from '../../../../constants/timeFormat'
 
 export interface WeeklyScheduleEditorDay {
   dayOfWeek: string // "Sunday".."Saturday"
@@ -60,6 +61,7 @@ export default function WeeklyScheduleEditor({
             <div className="flex items-center gap-2">
               <input
                 type="time"
+                lang={TWELVE_HOUR_INPUT_LANG}
                 aria-label={`${dayLabel(day.dayOfWeek)} start time`}
                 className={inputClass(day.error)}
                 value={day.startTime}
@@ -68,6 +70,7 @@ export default function WeeklyScheduleEditor({
               <span className="text-nexoraMuted text-xs">–</span>
               <input
                 type="time"
+                lang={TWELVE_HOUR_INPUT_LANG}
                 aria-label={`${dayLabel(day.dayOfWeek)} end time`}
                 className={inputClass(day.error)}
                 value={day.endTime}

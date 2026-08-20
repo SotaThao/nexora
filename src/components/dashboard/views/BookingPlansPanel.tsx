@@ -81,6 +81,7 @@ import {
   isVoiceAiPlanBelowCurrent,
   isVoiceAiYearlyUnavailable,
   resolveCreditsLowBannerKind,
+  resolvePlanBillingPeriodSuffix,
   resolveVoiceAiPeriodInMonths,
   resolveVoiceAiPlanId,
   resolveVoiceAiPlanPrice,
@@ -726,6 +727,7 @@ export default function BookingPlansPanel({ buyOnlyMode = false }: { buyOnlyMode
     payment: SubscriptionPaymentMethod,
   ) => {
     const paymentLabel = payment.name || payment.symbol
+    const periodSuffix = resolvePlanBillingPeriodSuffix(selection.billingCycle, t, TK)
     setCheckoutSelection(null)
     // Unlock AI Hub tabs (Booking, Customers, …) gated on hasVoiceTenant — no full reload.
     // Panels mount + fetch only when the user opens each tab.
@@ -734,6 +736,7 @@ export default function BookingPlansPanel({ buyOnlyMode = false }: { buyOnlyMode
       t(`${TK}.planPaymentSuccess`, {
         plan: selection.planId,
         price: selection.price,
+        period: periodSuffix,
         payment: paymentLabel,
       }),
       'success',
@@ -766,7 +769,7 @@ export default function BookingPlansPanel({ buyOnlyMode = false }: { buyOnlyMode
       <>
         <div className="service-plan-price">
           {formatPlanPrice(price)}
-          <span>{isYearlyBilling ? t(`${TK}.perYear`) : t(`${TK}.perMonth`)}</span>
+          <span>{resolvePlanBillingPeriodSuffix(billingCycle, t, TK)}</span>
         </div>
         {originalPrice != null && originalPrice > price ? (
           <div className="service-plan-cross">{formatPlanPrice(originalPrice)}</div>

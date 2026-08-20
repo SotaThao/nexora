@@ -1,0 +1,136 @@
+// The "who would you like?" grid, shared by the kiosk and the front desk.
+//
+// Both screens ask the same question of the same people, so they show the same cards: an avatar
+// over a name, with "First available" first and a busy/available badge underneath. The badge used
+// to be front-desk-only on the grounds that floor state is noise for a waiting customer; the
+// one-page spec reversed that, and the badge now lives in the grid itself rather than in a slot
+// each caller fills differently.
+import { useMemo, useState } from 'react'
+import { Search } from 'lucide-react'
+import { SkeletonList } from '../../ui/skeleton'
+
+export interface TechnicianOption {
+  posStaffProfileId: string
+  displayName: string
+  photoUrl?: string | null
+  isBusy?: boolean
+}
+
+// Above this many people the grid becomes hard to scan, and a name is faster to type than to hunt.
+const SEARCH_THRESHOLD = 6
+
+function initialsOf(displayName: string) {
+  return displayName
+    .split(' ')
+    .filter(Boolean)
+    .slice(0, 2)
+    .map((part) => part[0]?.toUpperCase())
+    .join('')
+}
+
+export default function TechnicianPickerGrid({
+  technicians,
+  isLoading,
+  selectedStaffId,
+  onSelect,
+  anyoneLabel,
+  anyoneHint,
+  searchPlaceholder,
+  emptyLabel,
+  busyLabel,
+  availableLabel,
+}: {
+  technicians: TechnicianOption[]
+  isLoading?: boolean
+  // null = Anyone / First available.
+  selectedStaffId: string | null
+  onSelect: (posStaffProfileId: string | null) => void
+  anyoneLabel: string
+  anyoneHint?: string
+  searchPlaceholder: string
+  emptyLabel: string
+  // Omitted together by callers that have no busy information to show (the wizard's own step still
+  // passes neither, so its cards stay exactly as they were).
+  busyLabel?: string
+  availableLabel?: string
+}) {
+  const [searchQuery, setSearchQuery] = useState('')
+
+  const filtered = useMemo(() => {
+    const query = searchQuery.trim().toLowerCase()
+    return query === ''
+      ? technicians
+      : technicians.filter((s) => s.displayName.toLowerCase().includes(query))
+  }, [technicians, searchQuery])
+
+  const cardClass = (isSelected: boolean) =>
+    `flex flex-col items-center gap-1 rounded-xl border p-3 text-center ${
+      isSelected ? 'border-nexoraBrand bg-nexoraBrand/5' : 'border-nexoraBorder hover:border-nexoraBrand'
+    }`
+
+  const renderBadge = (staff: TechnicianOption) => {
+    if (!busyLabel || !availableLabel || staff.isBusy === undefined) return null
+    return (
+      <span className={`text-[10px] font-semibold ${staff.isBusy ? 'text-rose-600' : 'text-emerald-600'}`}>
+        {staff.isBusy ? busyLabel : availableLabel}
+      </span>
+    )
+  }
+
+  return (
+    <div className="space-y-3">
+      {technicians.length > SEARCH_THRESHOLD ? (
+        <div className="relative">
+          <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-nexoraMuted" />
+          <input
+            type="text"
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            placeholder={searchPlaceholder}
+            className="h-11 w-full rounded-lg border border-nexoraBorder bg-white pl-9 pr-3 text-sm text-nexoraText outline-none focus:border-nexoraBrand"
+          />
+        </div>
+      ) : null}
+
+      <div className="grid grid-cols-2 gap-2 sm:grid-cols-3">
+        {/* Outside the loading branch: "Anyone" needs no data, so it is tappable immediately. */}
+        <button type="button" onClick={() => onSelect(null)} className={cardClass(selectedStaffId === null)}>
+          <span className="flex h-11 w-11 items-center justify-center rounded-full bg-nexoraCanvas text-base">⚡</span>
+          <span className="text-xs font-bold text-nexoraText">{anyoneLabel}</span>
+          {anyoneHint ? <span className="text-[10px] text-nexoraMuted">{anyoneHint}</span> : null}
+        </button>
+
+        {isLoading ? (
+          <div className="col-span-full">
+            <SkeletonList count={4} lines={1} />
+          </div>
+        ) : (
+          <>
+            {filtered.map((staff) => (
+              <button
+                key={staff.posStaffProfileId}
+                type="button"
+                onClick={() => onSelect(staff.posStaffProfileId)}
+                className={cardClass(selectedStaffId === staff.posStaffProfileId)}
+              >
+                <span className="flex h-11 w-11 items-center justify-center rounded-full bg-nexoraCanvas text-xs font-bold text-nexoraText">
+                  {staff.photoUrl ? (
+                    <img src={staff.photoUrl} alt="" className="h-11 w-11 rounded-full object-cover" />
+                  ) : (
+                    initialsOf(staff.displayName)
+                  )}
+                </span>
+                <span className="w-full truncate text-xs font-bold text-nexoraText">{staff.displayName}</span>
+                {renderBadge(staff)}
+              </button>
+            ))}
+
+            {filtered.length === 0 ? (
+              <p className="col-span-full text-xs text-nexoraMuted">{emptyLabel}</p>
+            ) : null}
+          </>
+        )}
+      </div>
+    </div>
+  )
+}

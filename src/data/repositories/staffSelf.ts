@@ -293,6 +293,7 @@ interface StaffTipItemApiDto {
   paymentMethod?: string | null
   isMultiStaff?: boolean
   touchPointName?: string | null
+  TouchPointName?: string | null
   businessName?: string | null
   createdAt?: string | null
   confirmedAt?: string | null
@@ -364,7 +365,7 @@ function normalizeTipItem(dto: StaffTipItemApiDto): StaffTipItem {
     statusLabel: dto.statusLabel ?? null,
     paymentMethod: dto.paymentMethod ?? null,
     isMultiStaff: Boolean(dto.isMultiStaff),
-    touchPointName: dto.touchPointName ?? null,
+    touchPointName: dto.touchPointName ?? dto.TouchPointName ?? null,
     businessName: dto.businessName ?? null,
     createdAt: dto.createdAt ?? null,
     confirmedAt: dto.confirmedAt ?? null,

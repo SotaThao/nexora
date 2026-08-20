@@ -35,7 +35,7 @@ import {
   TaxIqExceptionsRoute, TaxIqDataQualityRoute, TaxIqJurisdictionsRoute, TaxIqShareLinksRoute,
   TaxIqForm1099NecRoute, TaxIqTipLedgerRoute, TaxIqFormsReportsRoute, TaxIqTaxEstimateRoute,
   PosGeneralSettingsRoute, PosRolesRoute, PosCategoriesRoute, PosServicesRoute, PosProductsRoute,
-  PosStaffProfileRoute, PosFrontDeskRoute
+  PosStaffProfileRoute, PosFrontDeskRoute, PosDevicesRoute
 } from "../components/dashboard/routes";
 import { DASHBOARD_MENU_ID, DASHBOARD_SETTINGS_TAB, BOOKING_HUB_PATH, BOOKING_HUB_LEGACY_PATH_SEGMENT, buildDashboardReportsPath, DASHBOARD_REPORTS_TAB } from "../components/dashboard/constants";
 import ErrorBoundary from "../components/ui/ErrorBoundary";
@@ -105,6 +105,10 @@ const StaffTaxIqExportRoute = lazyWithRetry(() => import('../components/staff-da
 const CpaViewerPage = lazyWithRetry(() => import('../components/taxiq/CpaViewer/CpaViewerPage'))
 const ShareLinkViewerPage = lazyWithRetry(() => import('../components/taxiq/ShareLinkViewer/ShareLinkViewerPage'))
 const StaffW4InvitePage = lazyWithRetry(() => import('../components/taxiq/W4Invite/StaffW4InvitePage'))
+// Self Check-In kiosk. Both routes sit outside the auth gate on purpose — a paired tablet
+// authenticates with its own device token and never has a user session.
+const PosDevicePairPage = lazyWithRetry(() => import('../components/posDevice/PosDevicePairPage'))
+const SelfCheckInPage = lazyWithRetry(() => import('../components/posDevice/SelfCheckInPage'))
 const StaffMyEarnings = lazyWithRetry(
   () => import("../components/staff-dashboard/views/StaffMyEarnings"),
 );
@@ -141,6 +145,9 @@ const PublicPosBookingPage = lazyWithRetry(
 );
 const ManageBookingPage = lazyWithRetry(
   () => import("../components/public/ManageBookingPage"),
+);
+const ReceiptPage = lazyWithRetry(
+  () => import("../components/public/ReceiptPage"),
 );
 const PublicBookingPage = lazyWithRetry(
   () => import("../components/public/booking/PublicBookingPage"),
@@ -276,9 +283,12 @@ export default function AppRouter() {
           <Route path={PUBLIC_BOOKING_ROUTE.path} element={<PublicBookingPage />} />
           <Route path="/booking/:businessSlug" element={<PublicPosBookingPage />} />
           <Route path="/booking/manage/:manageToken" element={<ManageBookingPage />} />
+          <Route path="/receipt/:receiptToken" element={<ReceiptPage />} />
           <Route path="/cpa/access" element={<CpaViewerPage />} />
           <Route path="/share/access" element={<ShareLinkViewerPage />} />
           <Route path="/w4-invite" element={<StaffW4InvitePage />} />
+          <Route path="/pos-device/pair" element={<PosDevicePairPage />} />
+          <Route path="/self-checkin" element={<SelfCheckInPage />} />
           <Route path="/privacy-policy" element={<PrivacyPolicyPage />} />
           <Route path="/terms-of-service" element={<TermsOfServicePage />} />
           <Route path="/sms-consent" element={<SmsConsentReferencePage />} />
@@ -365,6 +375,7 @@ export default function AppRouter() {
               <Route path={`${DASHBOARD_MENU_ID.pos}/services`} element={<PosServicesRoute />} />
               <Route path={`${DASHBOARD_MENU_ID.pos}/products`} element={<PosProductsRoute />} />
               <Route path={`${DASHBOARD_MENU_ID.pos}/staff`} element={<PosStaffProfileRoute />} />
+              <Route path={`${DASHBOARD_MENU_ID.pos}/devices`} element={<PosDevicesRoute />} />
             </Route>
             <Route path={DASHBOARD_MENU_ID.touchpoints} element={<TouchpointsRoute />} />
             <Route path={DASHBOARD_MENU_ID.analytics} element={<AnalyticsRoute />} />

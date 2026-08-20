@@ -18,6 +18,7 @@ import {
 import {
   emptyVlinkpayAddresses,
   parseVlinkpayAddressesFromMethod,
+  stripVlinkpayWalletAddressInput,
   VLINKPAY_COINS,
   VLINKPAY_NETWORK,
   VLINKPAY_WALLET_LABEL,
@@ -124,7 +125,9 @@ function VlinkpayAddressCards({ addresses }: { addresses: VlinkpayAddresses }) {
     return () => window.clearTimeout(timer)
   }, [copiedKey])
 
-  const configuredCoins = VLINKPAY_COINS.filter((coin) => addresses[coin.key].trim())
+  const configuredCoins = VLINKPAY_COINS.filter((coin) =>
+    stripVlinkpayWalletAddressInput(addresses[coin.key]),
+  )
 
   if (!configuredCoins.length) {
     return (
@@ -137,7 +140,7 @@ function VlinkpayAddressCards({ addresses }: { addresses: VlinkpayAddresses }) {
   return (
     <div className="space-y-3">
       {configuredCoins.map((coin) => {
-        const address = addresses[coin.key].trim()
+        const address = stripVlinkpayWalletAddressInput(addresses[coin.key])
         const copied = copiedKey === coin.key
         return (
           <div
