@@ -30,6 +30,10 @@ export interface BusinessApiDto {
   businessSlug?: string
   businessType?: string
   address?: string
+  city?: string
+  state?: string
+  zipCode?: string
+  country?: string
   phone?: string
   website?: string
   logoUrl?: string | null

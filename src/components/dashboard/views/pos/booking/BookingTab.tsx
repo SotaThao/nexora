@@ -14,7 +14,7 @@ import {
   useCheckInBookingFromList,
   useRescheduleBooking,
 } from '../../../../../data/hooks/usePosBooking'
-import { POS_BOOKING_STATUS_OPTIONS } from '../../../../../constants/posOrderStatus'
+import { POS_BOOKING_STATUS_OPTIONS, PosOrderStatus } from '../../../../../constants/posOrderStatus'
 import { TWELVE_HOUR_INPUT_LANG } from '../../../../../constants/timeFormat'
 import type { TurnBoardStationApiDto } from '../../../../../types/repositories'
 import { SkeletonList } from '../../../../ui/skeleton'
@@ -75,6 +75,7 @@ export default function BookingTab({
 
   const effectiveDateFrom = viewMode === 'calendar' ? monthBounds.from : dateFrom || undefined
   const effectiveDateTo = viewMode === 'calendar' ? monthBounds.to : dateTo || undefined
+  const p = 'components.dashboard.views.pos.BookingTab.'
 
   const { data, isLoading } = useBookingList(businessId, {
     status: status || undefined,
@@ -107,8 +108,6 @@ export default function BookingTab({
       )
     }
   }, [rescheduleDetail.data, rescheduleTargetId])
-
-  const p = 'components.dashboard.views.pos.BookingTab.'
 
   const handleCheckIn = async (bookingId: string) => {
     setCheckingInId(bookingId)
@@ -199,8 +198,10 @@ export default function BookingTab({
               key={mode}
               type="button"
               onClick={() => setViewMode(mode)}
-              className={`rounded-md px-2.5 py-1 text-[11px] font-bold ${
-                viewMode === mode ? 'bg-nexoraBrand text-white' : 'text-nexoraMuted hover:text-white'
+              className={`rounded-md px-2.5 py-1 text-[11px] font-bold transition-colors ${
+                viewMode === mode
+                  ? 'bg-nexoraBrand text-white'
+                  : 'text-nexoraMuted hover:bg-nexoraBrandSoft hover:text-nexoraBrandDark'
               }`}
             >
               {t(p + `view${mode.charAt(0).toUpperCase()}${mode.slice(1)}`)}

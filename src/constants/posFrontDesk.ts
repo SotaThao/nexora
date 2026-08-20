@@ -9,22 +9,26 @@
 export enum PosFrontDeskTab {
   CheckIn = 'checkin',
   OrderList = 'orderlist',
+  CheckoutCustomer = 'checkoutcustomer',
   TurnBoard = 'turnboard',
   Completed = 'completed',
   Booking = 'booking',
   TimeClock = 'timeclock',
   Customer = 'customer',
+  Report = 'report',
 }
 
 /** Render order of the tab bar. */
 export const POS_FRONT_DESK_TABS: PosFrontDeskTab[] = [
   PosFrontDeskTab.CheckIn,
   PosFrontDeskTab.OrderList,
+  PosFrontDeskTab.CheckoutCustomer,
   PosFrontDeskTab.TurnBoard,
   PosFrontDeskTab.Completed,
   PosFrontDeskTab.Booking,
   PosFrontDeskTab.TimeClock,
   PosFrontDeskTab.Customer,
+  PosFrontDeskTab.Report,
 ]
 
 export const DEFAULT_POS_FRONT_DESK_TAB = PosFrontDeskTab.OrderList

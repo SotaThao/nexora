@@ -12,6 +12,7 @@ import { useOrderDetail } from '../../../../data/hooks/usePosCheckout'
 import { qk } from '../../../../data/queryKeys'
 import { SkeletonList } from '../../../ui/skeleton'
 import { formatPosDateTime } from './posDateTime'
+import { formatCustomerPhone } from './customer/customerFormatters'
 
 const PAGE_SIZE = 10
 
@@ -62,64 +63,46 @@ export default function PosCompletedOrdersPanel({ businessId }: { businessId: st
 
   return (
     <div className="space-y-4">
-      <div className="grid grid-cols-1 gap-3 rounded-xl border border-nexoraBorder bg-nexoraSurface p-4 sm:grid-cols-2 lg:grid-cols-5">
-        <div>
-          <label className="mb-1 block text-[10px] font-extrabold uppercase text-nexoraMuted">
-            {t('components.dashboard.views.pos.PosCompletedOrdersPanel.dateFrom')}
-          </label>
-          <input
-            type="date"
-            value={dateFrom}
-            onChange={(e) => setDateFrom(e.target.value)}
-            className="h-9 w-full rounded-lg border border-nexoraBorder bg-white px-2.5 text-xs text-nexoraText outline-none focus:border-nexoraBrand"
-          />
-        </div>
-        <div>
-          <label className="mb-1 block text-[10px] font-extrabold uppercase text-nexoraMuted">
-            {t('components.dashboard.views.pos.PosCompletedOrdersPanel.dateTo')}
-          </label>
-          <input
-            type="date"
-            value={dateTo}
-            onChange={(e) => setDateTo(e.target.value)}
-            className="h-9 w-full rounded-lg border border-nexoraBorder bg-white px-2.5 text-xs text-nexoraText outline-none focus:border-nexoraBrand"
-          />
-        </div>
-        <div>
-          <label className="mb-1 block text-[10px] font-extrabold uppercase text-nexoraMuted">
-            {t('components.dashboard.views.pos.PosCompletedOrdersPanel.customerName')}
-          </label>
-          <input
-            type="text"
-            value={customerNameInput}
-            onChange={(e) => setCustomerNameInput(e.target.value)}
-            onKeyDown={(e) => e.key === 'Enter' && handleApplyFilters()}
-            placeholder={t('components.dashboard.views.pos.PosCompletedOrdersPanel.customerNamePlaceholder')}
-            className="h-9 w-full rounded-lg border border-nexoraBorder bg-white px-2.5 text-xs text-nexoraText outline-none focus:border-nexoraBrand"
-          />
-        </div>
-        <div>
-          <label className="mb-1 block text-[10px] font-extrabold uppercase text-nexoraMuted">
-            {t('components.dashboard.views.pos.PosCompletedOrdersPanel.customerPhone')}
-          </label>
-          <input
-            type="tel"
-            value={customerPhoneInput}
-            onChange={(e) => setCustomerPhoneInput(e.target.value)}
-            onKeyDown={(e) => e.key === 'Enter' && handleApplyFilters()}
-            placeholder={t('components.dashboard.views.pos.PosCompletedOrdersPanel.customerPhonePlaceholder')}
-            className="h-9 w-full rounded-lg border border-nexoraBorder bg-white px-2.5 text-xs text-nexoraText outline-none focus:border-nexoraBrand"
-          />
-        </div>
-        <div className="flex items-end">
-          <button
-            type="button"
-            onClick={handleApplyFilters}
-            className="h-9 w-full rounded-lg bg-nexoraBrand text-xs font-bold text-white hover:bg-nexoraBrandDark"
-          >
-            {t('components.dashboard.views.pos.PosCompletedOrdersPanel.applyFiltersButton')}
-          </button>
-        </div>
+      <div data-testid="completed-order-filters" className="flex flex-wrap items-center gap-2">
+        <input
+          type="date"
+          value={dateFrom}
+          onChange={(e) => setDateFrom(e.target.value)}
+          aria-label={t('components.dashboard.views.pos.PosCompletedOrdersPanel.dateFrom')}
+          className="h-8 w-[140px] rounded-lg border border-nexoraBorder bg-white px-2 text-[11px] text-nexoraText outline-none focus:border-nexoraBrand"
+        />
+        <input
+          type="date"
+          value={dateTo}
+          onChange={(e) => setDateTo(e.target.value)}
+          aria-label={t('components.dashboard.views.pos.PosCompletedOrdersPanel.dateTo')}
+          className="h-8 w-[140px] rounded-lg border border-nexoraBorder bg-white px-2 text-[11px] text-nexoraText outline-none focus:border-nexoraBrand"
+        />
+        <input
+          type="text"
+          value={customerNameInput}
+          onChange={(e) => setCustomerNameInput(e.target.value)}
+          onKeyDown={(e) => e.key === 'Enter' && handleApplyFilters()}
+          aria-label={t('components.dashboard.views.pos.PosCompletedOrdersPanel.customerName')}
+          placeholder={t('components.dashboard.views.pos.PosCompletedOrdersPanel.customerNamePlaceholder')}
+          className="h-8 min-w-[160px] flex-1 rounded-lg border border-nexoraBorder bg-white px-2 text-[11px] text-nexoraText outline-none focus:border-nexoraBrand"
+        />
+        <input
+          type="tel"
+          value={customerPhoneInput}
+          onChange={(e) => setCustomerPhoneInput(e.target.value)}
+          onKeyDown={(e) => e.key === 'Enter' && handleApplyFilters()}
+          aria-label={t('components.dashboard.views.pos.PosCompletedOrdersPanel.customerPhone')}
+          placeholder={t('components.dashboard.views.pos.PosCompletedOrdersPanel.customerPhonePlaceholder')}
+          className="h-8 min-w-[160px] flex-1 rounded-lg border border-nexoraBorder bg-white px-2 text-[11px] text-nexoraText outline-none focus:border-nexoraBrand"
+        />
+        <button
+          type="button"
+          onClick={handleApplyFilters}
+          className="h-8 rounded-lg bg-nexoraBrand px-3 text-[11px] font-bold text-white hover:bg-nexoraBrandDark"
+        >
+          {t('components.dashboard.views.pos.PosCompletedOrdersPanel.applyFiltersButton')}
+        </button>
       </div>
 
       {isLoading ? (
@@ -157,7 +140,9 @@ export default function PosCompletedOrdersPanel({ businessId }: { businessId: st
                   <tr key={order.id} className="border-t border-nexoraBorder">
                     <td className="py-2 pr-3 font-mono font-bold text-nexoraMuted">#{order.orderNumber}</td>
                     <td className="py-2 pr-3 font-bold text-nexoraText">{order.customerName}</td>
-                    <td className="py-2 pr-3 text-nexoraMuted">{order.customerPhone || '—'}</td>
+                    <td className="py-2 pr-3 text-nexoraMuted">
+                      {order.customerPhone ? formatCustomerPhone(order.customerPhone) : '—'}
+                    </td>
                     <td className="py-2 pr-3 text-nexoraMuted">{formatDateTime(order.completedAt)}</td>
                     <td className="py-2 pr-3 text-nexoraMuted">
                       {order.technicianNames.length > 0 ? order.technicianNames.join(', ') : '—'}
@@ -235,7 +220,9 @@ export default function PosCompletedOrdersPanel({ businessId }: { businessId: st
                         {t('components.dashboard.views.pos.PosCompletedOrdersPanel.viewDetailPhone')}
                       </p>
                       <p className="text-xs text-nexoraText">
-                        {viewDetail.data.customerPhone || t('components.dashboard.views.pos.PosCompletedOrdersPanel.viewDetailNotProvided')}
+                        {viewDetail.data.customerPhone
+                          ? formatCustomerPhone(viewDetail.data.customerPhone)
+                          : t('components.dashboard.views.pos.PosCompletedOrdersPanel.viewDetailNotProvided')}
                       </p>
                     </div>
                     <div>

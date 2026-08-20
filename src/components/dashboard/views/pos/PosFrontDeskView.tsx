@@ -11,7 +11,16 @@
 import { useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from 'react'
 import { useSearchParams } from 'react-router-dom'
 import { useQueryClient } from '@tanstack/react-query'
-import { ChevronLeft, ChevronRight, LayoutGrid, List as ListIcon } from 'lucide-react'
+import {
+  ChevronLeft,
+  ChevronRight,
+  DollarSign,
+  LayoutGrid,
+  List as ListIcon,
+  PencilLine,
+  Play,
+  X,
+} from 'lucide-react'
 import { useTranslation } from '../../../../contexts/LanguageContext'
 import { useNotification } from '../../../../contexts/NotificationContext'
 import { storage } from '../../../../utils/storage'
@@ -19,6 +28,7 @@ import { getApiErrorCode } from '../../../../types/domain'
 import { getErrorI18nKey } from '../../../../data/errorCodes'
 import { qk } from '../../../../data/queryKeys'
 import { usePosAccess } from '../../../../data/hooks/usePosAccess'
+import { useStaffBusinesses } from '../../../../data/hooks/useStaffSelf'
 import { formatPosTime } from './posDateTime'
 import { useCancelOrder, useOrderList, useStartOrderService } from '../../../../data/hooks/usePosOrders'
 import { useBookingList, useCheckInBookingFromList } from '../../../../data/hooks/usePosBooking'
@@ -118,7 +128,7 @@ const TAB_SCROLL_EDGE_TOLERANCE_PX = 2
 // as a visual anchor for where the user just came from.
 const TAB_SCROLL_STEP_RATIO = 0.8
 
-// The 7 Front Desk tabs are wider than a phone viewport, so the strip scrolls horizontally
+// The Front Desk tabs are wider than a phone viewport, so the strip scrolls horizontally
 // (see index.css `.nexora-no-scrollbar` — the app's styled scrollbar would otherwise sit on
 // top of the active-tab underline). A silent scroll area reads as a cut-off list, so each
 // edge gets an arrow. The arrow slots only exist while the strip actually overflows; within
@@ -193,22 +203,35 @@ function ScrollableTabStrip({ children }: { children: ReactNode }) {
 export default function PosFrontDeskView({
   businessId,
   businessName,
+  businessAddress,
+  businessPhone,
   businessSlug,
 }: {
   businessId: string
   // Shown on Check-in Step 1's welcome message — optional since the Staff dashboard route
   // doesn't have it readily available; PhoneCheckInStep falls back to a generic greeting.
   businessName?: string
+  businessAddress?: string
+  businessPhone?: string
   businessSlug?: string
 }) {
   const { t, currentLanguage } = useTranslation()
   const { showToast, showConfirm } = useNotification()
   const queryClient = useQueryClient()
   const { data: access, isLoading: isAccessLoading } = usePosAccess(businessId)
+  const { data: staffBusinesses = [] } = useStaffBusinesses()
   const { data: orderList = [], isLoading: isOrderListLoading } = useOrderList(businessId)
   const { data: turnBoard = [], isLoading: isTurnBoardLoading } = useTurnBoard(businessId)
   const cancelOrder = useCancelOrder(businessId)
   const startOrderService = useStartOrderService(businessId)
+  const linkedStaffBusiness = staffBusinesses.find((business) => business.businessId === businessId)
+  const receiptBusinessName = businessName || linkedStaffBusiness?.businessName || undefined
+  const receiptBusinessAddress =
+    businessAddress ||
+    [linkedStaffBusiness?.address, linkedStaffBusiness?.city, linkedStaffBusiness?.state]
+      .filter(Boolean)
+      .join(', ') ||
+    undefined
 
   // Deep-link support for the Owner Dashboard's "Total Bookings" KPI card (Ticket 10),
   // which navigates here with ?tab=booking to land straight on the Bookings tab. Also
@@ -541,6 +564,9 @@ export default function PosFrontDeskView({
         <PosOrderWorkspace
           businessId={businessId}
           orderId={updateWorkspace.orderId}
+          businessName={receiptBusinessName}
+          businessAddress={receiptBusinessAddress}
+          businessPhone={businessPhone}
           onClose={() => {
             setUpdateWorkspace(null)
             refreshFrontDeskLists()
@@ -692,8 +718,9 @@ export default function PosFrontDeskView({
                     e.stopPropagation()
                     setUpdateWorkspace({ orderId: order.id })
                   }}
-                  className="shrink-0 rounded-lg border border-nexoraBorder h-9 px-3 text-[11px] font-bold text-nexoraMuted hover:border-nexoraBrand hover:text-nexoraBrand"
+                  className="inline-flex h-9 shrink-0 items-center gap-1.5 rounded-lg border border-nexoraLavender bg-transparent px-3 text-[11px] font-bold text-nexoraBrandDark hover:bg-nexoraLavender/10"
                 >
+                  <PencilLine className="h-3.5 w-3.5" aria-hidden="true" />
                   {t(tk('editButton'))}
                 </button>
               )
@@ -707,8 +734,9 @@ export default function PosFrontDeskView({
                       handleCancel(order.id, order.customerName)
                     }}
                     disabled={cancelOrder.isPending}
-                    className="shrink-0 rounded-lg border border-nexoraBorder h-9 px-3 text-[11px] font-bold text-nexoraMuted hover:border-nexoraDanger hover:bg-red-50 hover:text-nexoraDanger disabled:opacity-60"
+                    className="inline-flex h-9 shrink-0 items-center gap-1.5 rounded-lg border border-rose-200 bg-transparent px-3 text-[11px] font-bold text-rose-500 hover:bg-rose-50/70 disabled:cursor-not-allowed disabled:opacity-60"
                   >
+                    <X className="h-3.5 w-3.5" aria-hidden="true" />
                     {t(tk('cancelButton'))}
                   </button>
                 ) : null
@@ -735,8 +763,9 @@ export default function PosFrontDeskView({
                     }}
                     disabled={startOrderService.isPending || blockedReason !== undefined}
                     title={blockedReason}
-                    className="shrink-0 rounded-lg border border-nexoraBrand bg-nexoraBrand h-9 px-3 text-[11px] font-bold text-white hover:bg-nexoraBrandDark disabled:opacity-60"
+                    className="inline-flex h-9 shrink-0 items-center gap-1.5 rounded-lg border border-emerald-200 bg-transparent px-3 text-[11px] font-bold text-emerald-600 hover:bg-emerald-50/70 disabled:cursor-not-allowed disabled:opacity-60"
                   >
+                    <Play className="h-3.5 w-3.5" aria-hidden="true" />
                     {t(tk('startServiceButton'))}
                   </button>
                 )
@@ -753,8 +782,11 @@ export default function PosFrontDeskView({
                       e.stopPropagation()
                       setUpdateWorkspace({ orderId: order.id })
                     }}
-                    className="shrink-0 rounded-lg border border-nexoraBrand bg-nexoraBrand h-9 px-3 text-[11px] font-bold text-white hover:bg-nexoraBrandDark"
+                    aria-label={t(tk('checkoutButton'))}
+                    title={t(tk('checkoutButton'))}
+                    className="inline-flex h-9 shrink-0 items-center gap-1.5 rounded-lg border border-violet-200 bg-transparent px-3 text-[11px] font-bold text-violet-600 hover:bg-violet-50/70"
                   >
+                    <DollarSign className="h-3.5 w-3.5" aria-hidden="true" />
                     {t(tk('checkoutButton'))}
                   </button>
                 ) : null
@@ -769,16 +801,17 @@ export default function PosFrontDeskView({
                     {filteredOrderList.map((order) => (
                       <div
                         key={order.id}
+                        data-order-status={order.status}
                         onClick={() => setUpdateWorkspace({ orderId: order.id })}
-                        className={`cursor-pointer space-y-2 rounded-2xl border bg-nexoraSurface p-4 hover:border-nexoraBrand ${
+                        className={`cursor-pointer space-y-2 rounded-2xl border p-4 hover:border-nexoraBrand ${orderListStatusSurfaceClass(order.status)} ${
                           needsFrontDeskAttention(order)
-                            ? 'border-nexoraWarning bg-nexoraWarning/5'
+                            ? 'border-nexoraWarning'
                             : 'border-nexoraBorder'
                         }`}
                       >
                         <div className="flex items-center justify-between gap-2">
                           <span className="font-mono text-[11px] font-bold text-nexoraMuted">#{order.orderNumber}</span>
-                          <span className="rounded-full bg-nexoraCanvas px-2 py-0.5 text-[10px] font-black uppercase text-nexoraBrandDark">
+                          <span className={`rounded-full px-2 py-0.5 text-[10px] font-black uppercase ${orderListStatusBadgeClass(order.status)}`}>
                             {order.status}
                           </span>
                         </div>
@@ -815,10 +848,11 @@ export default function PosFrontDeskView({
                       <tr className="text-[10px] font-black uppercase tracking-wider text-nexoraMuted">
                         <th className="text-xs font-black pb-2 pr-3">{t(tk('orderListColumnNumber'))}</th>
                         <th className="text-xs font-black pb-2 pr-3">{t(tk('orderListColumnCustomer'))}</th>
+                        <th className="text-xs font-black pb-2 pr-3">{t(tk('orderListColumnCheckInAt'))}</th>
                         <th className="text-xs font-black pb-2 pr-3">{t(tk('orderListColumnStatus'))}</th>
                         <th className="text-xs font-black pb-2 pr-3">{t(tk('orderListColumnTechnician'))}</th>
                         <th className="text-xs font-black pb-2 pr-3">{t(tk('orderListColumnServices'))}</th>
-                        <th className="text-xs font-black pb-2 pr-3 text-right">{t(tk('orderListColumnElapsed'))}</th>
+                        <th className="text-xs font-black pb-2 pr-3 text-right">{t(tk('orderListColumnWaitTime'))}</th>
                         <th className="text-xs font-black pb-2 text-right"></th>
                       </tr>
                     </thead>
@@ -827,15 +861,18 @@ export default function PosFrontDeskView({
                         <tr
                           key={order.id}
                           onClick={() => setUpdateWorkspace({ orderId: order.id })}
-                          className={`cursor-pointer border-t border-nexoraBorder hover:bg-nexoraCanvas ${
-                            needsFrontDeskAttention(order) ? 'bg-nexoraWarning/5' : ''
+                          className={`cursor-pointer border-t border-nexoraBorder ${orderListStatusSurfaceClass(order.status)} ${
+                            needsFrontDeskAttention(order) ? 'border-l-2 border-l-nexoraWarning' : ''
                           }`}
                         >
                           <td className="py-2 pr-3 font-mono font-bold text-nexoraMuted">#{order.orderNumber}</td>
                           <td className="py-2 pr-3 font-bold text-nexoraText">{order.customerName}</td>
+                          <td className="whitespace-nowrap py-2 pr-3 tabular-nums text-nexoraMuted">
+                            {formatPosTime(order.checkedInAt, currentLanguage) || '—'}
+                          </td>
                           <td className="py-2 pr-3">
                             <div className="flex flex-wrap items-center gap-1.5">
-                              <span className="rounded-full bg-nexoraCanvas px-2 py-0.5 text-[10px] font-black uppercase text-nexoraBrandDark">
+                              <span className={`rounded-full px-2 py-0.5 text-[10px] font-black uppercase ${orderListStatusBadgeClass(order.status)}`}>
                                 {order.status}
                               </span>
                               {renderRowFlags(order)}
@@ -866,6 +903,9 @@ export default function PosFrontDeskView({
         )
       )}
 
+      {/* Reserved Front Desk workspace — the checkout flow will be added here next. */}
+      {activeTab === PosFrontDeskTab.CheckoutCustomer && <div data-testid="checkout-customer-panel" />}
+
       {activeTab === PosFrontDeskTab.TurnBoard && (
         isTurnBoardLoading ? (
           <div className="rounded-xl border border-nexoraBorder bg-nexoraSurface p-6">
@@ -893,6 +933,9 @@ export default function PosFrontDeskView({
       {activeTab === PosFrontDeskTab.TimeClock && <TimeClockTab businessId={businessId} />}
 
       {activeTab === PosFrontDeskTab.Customer && <CustomerTab businessId={businessId} />}
+
+      {/* Reserved Front Desk workspace — reporting content will be added here next. */}
+      {activeTab === PosFrontDeskTab.Report && <div data-testid="report-panel" />}
         </>
       )}
 

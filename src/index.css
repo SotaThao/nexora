@@ -744,6 +744,259 @@ body:not(.homepage-active):not(.public-booking-active) a:focus-visible {
   display: none;
 }
 
+/* POS checkout invoice/receipt preview is rendered in a body-level portal so it can be printed
+   independently from the dashboard shell. */
+.pos-receipt-print {
+  width: min(100%, 360px);
+  box-sizing: border-box;
+  margin: 0 auto;
+  padding: 14px 14px;
+  background: #ffffff;
+  color: #000000;
+  font-weight: 400;
+  font-family: "Inter", system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+}
+
+.pos-receipt-business {
+  display: grid;
+  gap: 1px;
+  margin: 3px 0 4px;
+  text-align: center;
+}
+
+.pos-receipt-business h2 {
+  margin: 0;
+  color: #000000;
+  font-size: 15px;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  line-height: 1.15;
+  text-transform: uppercase;
+}
+
+.pos-receipt-business p {
+  margin: 0;
+  color: #000000;
+  font-size: 10px;
+  font-weight: 400;
+  line-height: 1.2;
+  white-space: pre-line;
+}
+
+.pos-invoice-modal-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 100;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow-y: auto;
+  padding: 20px;
+  background: rgba(15, 23, 42, 0.45);
+}
+
+.pos-invoice-modal {
+  display: flex;
+  width: min(100%, 520px);
+  max-height: min(92vh, 900px);
+  flex-direction: column;
+  overflow: hidden;
+  border: 1px solid #dbe3f0;
+  border-radius: 18px;
+  background: #f8fafc;
+  box-shadow: 0 24px 70px rgba(15, 23, 42, 0.22);
+  page: pos-invoice;
+}
+
+.pos-invoice-modal-header,
+.pos-invoice-modal-actions {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 14px 16px;
+  background: #ffffff;
+}
+
+.pos-invoice-modal-header {
+  justify-content: space-between;
+  border-bottom: 1px solid #e2e8f0;
+}
+
+.pos-invoice-modal-actions {
+  border-top: 1px solid #e2e8f0;
+}
+
+.pos-invoice-modal-body {
+  min-height: 0;
+  overflow-y: auto;
+  padding: 18px;
+}
+
+.pos-receipt-print-header {
+  padding-bottom: 8px;
+  text-align: center;
+}
+
+.pos-receipt-print-header p {
+  margin: 0;
+  color: #000000;
+  font-size: 10px;
+  font-weight: 400;
+  line-height: 1.2;
+}
+
+.pos-receipt-print-header .pos-receipt-ticket {
+  display: inline-block;
+  margin: 0 auto 3px;
+  border-radius: 0;
+  background: #000000;
+  padding: 2px 6px;
+  color: #ffffff;
+  font-size: 15px;
+  font-weight: 800;
+  letter-spacing: 0.03em;
+  line-height: 1;
+}
+
+.pos-receipt-meta {
+  display: grid;
+  gap: 6px;
+  margin: 14px 0;
+  font-size: 12px;
+}
+
+.pos-receipt-meta > div,
+.pos-receipt-group-lines > div,
+.pos-receipt-totals > div {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.pos-receipt-meta dt {
+  color: #000000;
+  font-weight: 500;
+}
+
+.pos-receipt-meta dd {
+  margin: 0;
+  color: #000000;
+  font-weight: 600;
+  text-align: right;
+}
+
+.pos-receipt-lines {
+  display: grid;
+  gap: 6px;
+  padding: 8px 0;
+  font-size: 12px;
+}
+
+.pos-receipt-tech-group {
+  display: grid;
+  gap: 3px;
+}
+
+.pos-receipt-tech-heading {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin: 0;
+  color: #000000;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  line-height: 1.2;
+}
+
+.pos-receipt-tech-heading::before {
+  flex: 0 0 24px;
+  min-width: 24px;
+  border-bottom: 1px dashed #cbd5e1;
+  content: '';
+}
+
+.pos-receipt-tech-heading::after {
+  flex: 1;
+  min-width: 24px;
+  border-bottom: 1px dashed #cbd5e1;
+  content: '';
+}
+
+.pos-receipt-group-lines {
+  display: grid;
+  gap: 3px;
+}
+
+.pos-receipt-group-lines > div > span:first-child {
+  min-width: 0;
+  overflow-wrap: anywhere;
+  color: #000000;
+  font-weight: 400;
+}
+
+.pos-receipt-group-lines > div > span:last-child {
+  flex-shrink: 0;
+  color: #000000;
+  font-weight: 500;
+}
+
+.pos-receipt-lines > p {
+  margin: 0;
+  color: #000000;
+  text-align: center;
+}
+
+.pos-receipt-totals {
+  display: grid;
+  gap: 5px;
+  margin: 10px 0 0;
+  font-size: 11px;
+}
+
+.pos-receipt-totals dt {
+  color: #000000;
+}
+
+.pos-receipt-totals dd {
+  margin: 0;
+  color: #000000;
+  font-weight: 600;
+}
+
+.pos-receipt-totals .pos-receipt-total {
+  margin-top: 5px;
+  padding-top: 9px;
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.pos-receipt-totals .pos-receipt-total dt,
+.pos-receipt-totals .pos-receipt-total dd {
+  color: #000000;
+  font-weight: 700;
+}
+
+.pos-receipt-payment {
+  margin: 10px 0 0;
+  border-top: 1px solid #cbd5e1;
+  padding-top: 10px;
+  color: #000000;
+  font-size: 11px;
+  font-weight: 500;
+  text-align: center;
+}
+
+.pos-receipt-thank-you {
+  margin: 16px 0 0;
+  padding-top: 8px;
+  color: #000000;
+  font-size: 11px;
+  font-weight: 500;
+  text-align: center;
+}
+
 /* Print styles for QR Code Stand
    Scoped so other print surfaces (e.g. AI Voice setup guide) are not wiped blank. */
 @media print {
@@ -762,6 +1015,86 @@ body:not(.homepage-active):not(.public-booking-active) a:focus-visible {
 
   .print-only-container {
     display: flex !important;
+  }
+
+  .pos-receipt-print {
+    display: block !important;
+    width: 80mm !important;
+    max-width: 80mm !important;
+    min-height: 0 !important;
+    margin: 0 !important;
+    padding: 3mm 4mm !important;
+    box-sizing: border-box !important;
+    page: pos-invoice;
+    color: #0f172a !important;
+    font-family: "Inter", system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif !important;
+  }
+
+  body.printing-pos-invoice .pos-receipt-ink-black,
+  body.printing-pos-invoice .pos-receipt-ink-black * {
+    color: #000000 !important;
+  }
+
+  /* Keep the ticket number's high-contrast badge readable while all normal receipt copy uses
+     solid black ink. */
+  body.printing-pos-invoice .pos-receipt-ink-black .pos-receipt-ticket {
+    background: #000000 !important;
+    color: #ffffff !important;
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+
+  @page pos-invoice {
+    size: 80mm auto;
+    margin: 0;
+  }
+
+  body.printing-pos-invoice {
+    width: 80mm !important;
+    height: auto !important;
+    min-height: 0 !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    background: #ffffff !important;
+  }
+
+  /* The dashboard shell contains min-height: 100dvh wrappers. Hide it entirely while the
+     body-level print portal is active, otherwise that shell creates a blank second sheet. */
+  body.printing-pos-invoice > #root {
+    display: none !important;
+  }
+
+  body.printing-pos-invoice .pos-invoice-modal-backdrop {
+    position: static !important;
+    display: block !important;
+    width: 80mm !important;
+    min-height: 0 !important;
+    padding: 0 !important;
+    overflow: visible !important;
+    background: #ffffff !important;
+  }
+
+  body.printing-pos-invoice .pos-invoice-modal {
+    display: block !important;
+    width: 80mm !important;
+    max-width: 80mm !important;
+    max-height: none !important;
+    overflow: visible !important;
+    border: 0 !important;
+    border-radius: 0 !important;
+    background: #ffffff !important;
+    box-shadow: none !important;
+  }
+
+  body.printing-pos-invoice .pos-invoice-modal-header,
+  body.printing-pos-invoice .pos-invoice-modal-actions {
+    display: none !important;
+  }
+
+  body.printing-pos-invoice .pos-invoice-modal-body {
+    width: 80mm !important;
+    padding: 0 !important;
+    overflow: visible !important;
   }
 
   /* Reset body and html for print */
