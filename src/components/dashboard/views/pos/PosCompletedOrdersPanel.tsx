@@ -85,7 +85,7 @@ export default function PosCompletedOrdersPanel({ businessId }: { businessId: st
           onKeyDown={(e) => e.key === 'Enter' && handleApplyFilters()}
           aria-label={t('components.dashboard.views.pos.PosCompletedOrdersPanel.customerName')}
           placeholder={t('components.dashboard.views.pos.PosCompletedOrdersPanel.customerNamePlaceholder')}
-          className="h-8 min-w-[160px] flex-1 rounded-lg border border-nexoraBorder bg-white px-2 text-[11px] text-nexoraText outline-none focus:border-nexoraBrand"
+          className="h-8 min-w-[160px] flex-1 rounded-lg border border-nexoraBorder bg-white px-2 text-[11px] text-nexoraText outline-none focus:border-nexoraBrand lg:w-[260px] lg:flex-none"
         />
         <input
           type="tel"
@@ -94,7 +94,7 @@ export default function PosCompletedOrdersPanel({ businessId }: { businessId: st
           onKeyDown={(e) => e.key === 'Enter' && handleApplyFilters()}
           aria-label={t('components.dashboard.views.pos.PosCompletedOrdersPanel.customerPhone')}
           placeholder={t('components.dashboard.views.pos.PosCompletedOrdersPanel.customerPhonePlaceholder')}
-          className="h-8 min-w-[160px] flex-1 rounded-lg border border-nexoraBorder bg-white px-2 text-[11px] text-nexoraText outline-none focus:border-nexoraBrand"
+          className="h-8 min-w-[160px] flex-1 rounded-lg border border-nexoraBorder bg-white px-2 text-[11px] text-nexoraText outline-none focus:border-nexoraBrand lg:w-[260px] lg:flex-none"
         />
         <button
           type="button"
