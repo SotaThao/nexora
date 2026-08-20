@@ -995,7 +995,7 @@
       },
       "open_link": "Test station flow",
       "station_actions": {
-        "view": "View & Download QR",
+        "view": "View QR to Download",
         "copy_link": "Copy link",
         "open_link": "Open Link",
         "remove": "Remove"
@@ -5105,7 +5105,7 @@
         "activeMethodsLabel": "{{count}} active payment method(s) shown to customers",
         "previewQr": "Preview QR",
         "btn_open": "Open QR",
-        "viewQr": "View & Download QR",
+        "viewQr": "View QR to Download",
         "copyLink": "Copy Payment Link",
         "downloadQr": "Download QR",
         "viewHistory": "Payment Activity",

@@ -995,7 +995,7 @@
       },
       "open_link": "Thử nghiệm luồng trạm",
       "station_actions": {
-        "view": "Xem và tải QR",
+        "view": "Xem QR để tải xuống",
         "copy_link": "Sao chép liên kết",
         "open_link": "Mở link",
         "remove": "Xóa"
@@ -5101,7 +5101,7 @@
         "activeMethodsLabel": "{{count}} phương thức nhận tiền đang hiển thị cho khách",
         "previewQr": "Xem QR",
         "btn_open": "Xem mã QR",
-        "viewQr": "Xem và tải QR",
+        "viewQr": "Xem QR để tải xuống",
         "copyLink": "Sao chép link thanh toán",
         "downloadQr": "Tải QR",
         "viewHistory": "Hoạt động thanh toán",
