@@ -31,6 +31,7 @@ import { usePosAccess } from '../../../../data/hooks/usePosAccess'
 import { useStaffBusinesses } from '../../../../data/hooks/useStaffSelf'
 import { formatPosTime } from './posDateTime'
 import { useCancelOrder, useOrderList, useStartOrderService } from '../../../../data/hooks/usePosOrders'
+import { useInServiceOrders } from '../../../../data/hooks/usePosCheckout'
 import { useBookingList, useCheckInBookingFromList } from '../../../../data/hooks/usePosBooking'
 import { useTurnBoard } from '../../../../data/hooks/usePosTurnBoard'
 import { formatLocalDateIso } from '../../../../utils/localDate'
@@ -221,6 +222,7 @@ export default function PosFrontDeskView({
   const { data: access, isLoading: isAccessLoading } = usePosAccess(businessId)
   const { data: staffBusinesses = [] } = useStaffBusinesses()
   const { data: orderList = [], isLoading: isOrderListLoading } = useOrderList(businessId)
+  const { data: inServiceOrders = [], isLoading: isInServiceOrdersLoading } = useInServiceOrders(businessId)
   const { data: turnBoard = [], isLoading: isTurnBoardLoading } = useTurnBoard(businessId)
   const cancelOrder = useCancelOrder(businessId)
   const startOrderService = useStartOrderService(businessId)
@@ -502,6 +504,85 @@ export default function PosFrontDeskView({
           </div>
         )}
       </div>
+    )
+  }
+
+  const renderCheckoutCustomerPanel = () => {
+    if (isInServiceOrdersLoading) {
+      return (
+        <div className="rounded-xl border border-nexoraBorder bg-nexoraSurface p-6">
+          <SkeletonList count={3} lines={2} />
+        </div>
+      )
+    }
+
+    if (inServiceOrders.length === 0) {
+      return (
+        <div className="rounded-xl border border-nexoraBorder bg-nexoraSurface p-8 text-center">
+          <p className="text-sm font-bold text-nexoraText">{t(tk('checkoutCustomerEmpty'))}</p>
+          <p className="mt-1 text-xs text-nexoraMuted">{t(tk('checkoutCustomerEmptyHint'))}</p>
+        </div>
+      )
+    }
+
+    return (
+      <section className="space-y-3" aria-label={t(tk('checkoutCustomerTitle'))}>
+        <div className="flex items-center justify-between gap-3">
+          <div>
+            <h2 className="text-sm font-bold text-nexoraText">{t(tk('checkoutCustomerTitle'))}</h2>
+            <p className="mt-0.5 text-xs text-nexoraMuted">{t(tk('checkoutCustomerHint'))}</p>
+          </div>
+          <span className="rounded-full bg-cyan-100 px-2.5 py-1 text-[10px] font-black uppercase text-cyan-700">
+            {t(tk('checkoutCustomerCount'), { count: inServiceOrders.length })}
+          </span>
+        </div>
+
+        <div className={`${SCROLL_PANEL_MAX_HEIGHT} overflow-auto rounded-xl border border-nexoraBorder bg-nexoraSurface`}>
+          <table className="w-full min-w-[760px] text-left text-xs">
+            <thead>
+              <tr className="border-b border-nexoraBorder text-[10px] font-black uppercase tracking-wider text-nexoraMuted">
+                <th className="px-4 py-3 pr-3">{t(tk('checkoutCustomerColumnTicket'))}</th>
+                <th className="px-4 py-3 pr-3">{t(tk('checkoutCustomerColumnCustomer'))}</th>
+                <th className="px-4 py-3 pr-3">{t(tk('checkoutCustomerColumnServices'))}</th>
+                <th className="px-4 py-3 pr-3">{t(tk('checkoutCustomerColumnTechnician'))}</th>
+                <th className="px-4 py-3 pr-3">{t(tk('checkoutCustomerColumnStatus'))}</th>
+                <th className="px-4 py-3 pr-3">{t(tk('checkoutCustomerColumnStarted'))}</th>
+                <th className="px-4 py-3 text-right">{t(tk('checkoutCustomerColumnAction'))}</th>
+              </tr>
+            </thead>
+            <tbody>
+              {inServiceOrders.map((order) => (
+                <tr key={order.id} data-testid={`checkout-customer-${order.id}`} className="border-t border-nexoraBorder/70 hover:bg-cyan-50/30">
+                  <td className="whitespace-nowrap px-4 py-3 font-mono font-bold text-nexoraMuted">#{order.orderNumber}</td>
+                  <td className="px-4 py-3">
+                    <p className="font-bold text-nexoraText">{order.customerName}</p>
+                  </td>
+                  <td className="max-w-[220px] truncate px-4 py-3 text-nexoraMuted">{joinOrEmpty(order.serviceNames)}</td>
+                  <td className="max-w-[180px] truncate px-4 py-3 text-nexoraMuted">{joinOrEmpty(order.technicianNames)}</td>
+                  <td className="px-4 py-3">
+                    <span className="rounded-full bg-cyan-100 px-2 py-1 text-[10px] font-black uppercase text-cyan-700">
+                      {t(tk('checkoutCustomerStatus'))}
+                    </span>
+                  </td>
+                  <td className="whitespace-nowrap px-4 py-3 tabular-nums text-nexoraMuted">
+                    {order.firstAssignedAt ? formatPosTime(order.firstAssignedAt, currentLanguage) : '—'}
+                  </td>
+                  <td className="px-4 py-3 text-right">
+                    <button
+                      type="button"
+                      onClick={() => setUpdateWorkspace({ orderId: order.id })}
+                      className="inline-flex h-8 items-center gap-1.5 rounded-lg border border-violet-200 bg-violet-50/40 px-3 text-[11px] font-bold text-violet-700 hover:bg-violet-50"
+                    >
+                      <DollarSign className="h-3.5 w-3.5" aria-hidden="true" />
+                      {t(tk('checkoutButton'))}
+                    </button>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      </section>
     )
   }
 
@@ -903,8 +984,7 @@ export default function PosFrontDeskView({
         )
       )}
 
-      {/* Reserved Front Desk workspace — the checkout flow will be added here next. */}
-      {activeTab === PosFrontDeskTab.CheckoutCustomer && <div data-testid="checkout-customer-panel" />}
+      {activeTab === PosFrontDeskTab.CheckoutCustomer && renderCheckoutCustomerPanel()}
 
       {activeTab === PosFrontDeskTab.TurnBoard && (
         isTurnBoardLoading ? (
