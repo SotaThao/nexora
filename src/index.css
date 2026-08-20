@@ -212,6 +212,18 @@ body:not(.homepage-active) select:focus {
   transition: all 0.15s ease-in-out;
 }
 
+/**
+ * Payment amount field below the minimum/above the maximum keeps its danger ring
+ * even while focused — the global focus rule above wins with !important, so this
+ * needs the extra class for specificity. Scoped to the payment screens on
+ * purpose: other forms already using aria-invalid keep their current look.
+ */
+body:not(.homepage-active) input.payment-amount-input[aria-invalid="true"],
+body:not(.homepage-active) input.payment-amount-input[aria-invalid="true"]:focus {
+  box-shadow: 0 0 0 2px rgba(239, 68, 68, 0.2) !important; /* nexoraDanger/20 */
+  border-color: theme("colors.nexoraDanger") !important;
+}
+
 /* Borderless inputs (e.g. country code search inside dropdown) */
 body:not(.homepage-active) input.country-code-search-input,
 body:not(.homepage-active) input.country-code-search-input:focus,

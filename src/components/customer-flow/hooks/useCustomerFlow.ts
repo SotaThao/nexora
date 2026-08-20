@@ -29,6 +29,7 @@ import {
   resolveTouchpointRedirectUrl,
 } from '../../../utils/customerFlowKind'
 import { WALLET_KEYS } from '../constants'
+import { randomUuid } from '../../../utils/uuid'
 import {
   emptyVlinkpayAddresses,
   getSingleConfiguredVlinkpayCoin,
@@ -214,7 +215,7 @@ export default function useCustomerFlow() {
 
   const sessionId = useMemo(() => {
     const params = new URLSearchParams(window.location.search)
-    return params.get('sessionId') || crypto.randomUUID()
+    return params.get('sessionId') || randomUuid()
   }, [])
 
   const touchSearchParams = useMemo(

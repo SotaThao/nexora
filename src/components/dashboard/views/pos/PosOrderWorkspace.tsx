@@ -52,6 +52,7 @@ import CategoryGroupedCatalogPicker from './CategoryGroupedCatalogPicker'
 import CustomerHeaderBar from './CustomerHeaderBar'
 import PhoneCheckInStep from './PhoneCheckInStep'
 import SelectTechniciansModal, { type SelectTechniciansSelection } from './modals/SelectTechniciansModal'
+import { randomUuid } from '../../../../utils/uuid'
 
 type TipMode = 'noTip' | 'fixed10' | 'fixed15' | 'pct10' | 'pct20' | 'custom'
 type CatalogTab = 'services' | 'products'
@@ -357,7 +358,7 @@ export default function PosOrderWorkspace({
         ...validServices.map((s): DisplayServiceLine => {
           const service = serviceCatalog.find((cat) => cat.id === s.posServiceId)!
           return {
-            key: crypto.randomUUID(),
+            key: randomUuid(),
             itemType: 'Service',
             posServiceId: service.id,
             serviceName: service.name,
@@ -503,7 +504,7 @@ export default function PosOrderWorkspace({
         const existing = prev.find((l) => l.itemType === 'Service' && l.posServiceId === service.id)
         if (existing) return prev.filter((l) => l.key !== existing.key)
         const newLine: DisplayServiceLine = {
-          key: crypto.randomUUID(),
+          key: randomUuid(),
           itemType: 'Service',
           posServiceId: service.id,
           serviceName: service.name,
@@ -529,7 +530,7 @@ export default function PosOrderWorkspace({
           return prev.map((l) => (l.key === existing.key ? { ...existing, quantity: existing.quantity + 1 } : l))
         }
         const newLine: DisplayProductLine = {
-          key: crypto.randomUUID(),
+          key: randomUuid(),
           itemType: 'Product',
           posProductId: product.id,
           productName: product.name,
@@ -697,7 +698,7 @@ export default function PosOrderWorkspace({
       ...validLines.map((line): DisplayServiceLine => {
         const service = serviceCatalog.find((s) => s.id === line.posServiceId)!
         return {
-          key: crypto.randomUUID(),
+          key: randomUuid(),
           itemType: 'Service',
           posServiceId: service.id,
           serviceName: service.name,

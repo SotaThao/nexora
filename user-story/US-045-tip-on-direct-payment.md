@@ -21,14 +21,14 @@
   **Then** modal chọn nhân viên mở ra (search theo tên, chọn nhiều người, nút Done), `GET /api/v1/touch/{businessSlug}/{touchPointSlug}` (hoặc block `staff` trong payment page) là nguồn dữ liệu.
 
 - **Given** khách đã chọn 2 nhân viên
-  **When** bấm preset `$15`
-  **Then** UI hiện `$7.50 EACH` trên từng dòng, breakdown `Bill $60.00 / Tips $15.00`, `TOTAL $75.00`.
+  **When** chọn `$10` cho Maria và `$10` cho Tony (mỗi người có hàng chips riêng)
+  **Then** breakdown `Bill $60.00 / Tips $20.00`, `TOTAL $80.00`. Số tiền là **của từng người**, không chia đều một tổng — chọn `$10` + `$20` thì Tips = `$30.00`.
 
-- **Given** khách đã chọn nhân viên nhưng **chưa chọn số tiền típ**
+- **Given** khách đã chọn nhân viên nhưng **còn người chưa chọn số tiền típ**
   **Then** hiện nhắc `tip_amount_required` ("Chọn số tiền típ… hoặc bấm SKIP") và **khoá** toàn bộ nút chọn ví — không cho submit, tránh trường hợp khách tưởng đã típ nhưng không có bản ghi tip nào được tạo.
 
-- **Given** tổng típ chia ra dưới mức tối thiểu mỗi người (vd 6 người, tip $5)
-  **Then** hiện lỗi `tip_min_item_error` và **khoá** việc chọn phương thức thanh toán.
+- **Given** một người có số tiền dưới mức tối thiểu (vd nhập $0.50) hoặc tổng vượt mức tối đa
+  **Then** hiện `tip_min_item_error` / `tip_max_total_error` và **khoá** việc chọn phương thức thanh toán.
 
 - **Given** khách bấm SKIP
   **Then** danh sách chọn + số tiền típ bị xoá, tổng quay lại đúng tiền hoá đơn, không còn breakdown.
@@ -36,12 +36,10 @@
 - **Given** khách chọn ví (vd Zelle)
   **When** flow tạo giao dịch
   **Then** tạo tip **trước**, rồi `POST /api/v1/public/merchant/{businessId}/payments` với **amount = tiền hoá đơn** (không cộng típ); màn wallet hiển thị "Send exactly $75.00".
-  Endpoint tip theo số người chọn:
-  - **≥ 2 người** → `POST /api/v1/tips/multi-staff` (tipItems đã chia đều, vào tài khoản tiệm)
-  - **đúng 1 người** → `POST /api/v1/touch/tip` (`{ touchPointId, staffProfileId, amount, paymentMethod, sessionId }`) — vì multi-staff chặn 1 người
+  Mọi tip — **kể cả khi chỉ chọn 1 người** — đều đi qua `POST /api/v1/tips/multi-staff`; `tipItems` mang đúng số tiền từng người đã chọn.
 
 - **Given** khách bấm "Yes, I've paid"
-  **Then** `PATCH /api/v1/public/payments/{paymentId}/confirm`, rồi confirm tip đúng loại: `PATCH /api/v1/tips/{tipId}/confirm` (multi) hoặc `POST /api/v1/touch/tip/{tipId}/confirm` (single) — best-effort, lỗi tip không chặn màn Success.
+  **Then** `PATCH /api/v1/public/payments/{paymentId}/confirm`, rồi `PATCH /api/v1/tips/{tipId}/confirm` — best-effort, lỗi tip không chặn màn Success.
 
 ## API Mapping
 
@@ -51,10 +49,8 @@
 |---|---|---|---|---|---|
 | GET | `/api/v1/public/merchant/{businessId}/payment` | ANON | — | `MerchantPaymentPageDto` (**hiện KHÔNG có `staff` / `touchPoint` / `tipConstraints`**) | (L) |
 | GET | `/api/v1/touch/{businessSlug}/{touchPointSlug}?sessionId=` | ANON | — | `TouchPageDataDto` — `staff[]`, `touchPoint.id`, `tipConstraints` | (L) |
-| POST | `/api/v1/tips/multi-staff` | ANON | `{ businessId, touchPointId, businessPaymentMethodId, cryptoSymbol?, tipItems: [{ staffProfileId, amount }] }` — **≥ 2 tipItems** | 201 `{ tipId, totalAmount, paymentMethodType, cryptoAddress?, tipItems[] }` | (L) |
+| POST | `/api/v1/tips/multi-staff` | ANON | `{ businessId, touchPointId, businessPaymentMethodId, cryptoSymbol?, minStaffCount?, tipItems: [{ staffProfileId, amount }] }` — dùng cho **mọi** số lượng người; gửi `minStaffCount: 1` khi chỉ tip 1 người | 201 `{ tipId, totalAmount, paymentMethodType, cryptoAddress?, tipItems[] }` | (L) |
 | PATCH | `/api/v1/tips/{id}/confirm` | ANON | `{}` | 200 | (S) |
-| POST | `/api/v1/touch/tip` | ANON | `{ touchPointId, staffProfileId, amount, paymentMethod, sessionId, cryptoSymbol? }` — dùng khi chỉ chọn **1** nhân viên | 201 `{ tipId }` | (S) |
-| POST | `/api/v1/touch/tip/{tipId}/confirm` | ANON | `{}` | 200 | (S) |
 | POST | `/api/v1/public/merchant/{businessId}/payments` | ANON | `{ businessPaymentMethodId, amount, cryptoSymbol? }` | 201 `{ paymentId, amount, type, paymentMethod }` | (L) |
 | PATCH | `/api/v1/public/payments/{paymentId}/confirm` | ANON | `{}` | 200 | (L) |
 
@@ -67,9 +63,11 @@
 
    FE resolve staff theo thứ tự: (1) block tip trong payment page → (2) `businessSlug`/`touchPointSlug` query param (QR touchpoint redirect) → (3) slug do payment page trả về. Không có nguồn nào thì khối tip **ẩn hoàn toàn** (đúng hành vi hiện tại khi mở thẳng `/pay/{guid}`).
 
-2. ⚠️ **`POST /api/v1/tips/multi-staff` bắt buộc ≥ 2 nhân viên** — probe với 1 `tipItem` trả `400 TIP_MINIMUM_STAFF_COUNT` (amount 0.1 / 1 / 5 đều lỗi; 2 item thì qua validation).
-   **Quyết định (2026-08-18):** chọn đúng 1 người thì FE gọi `POST /api/v1/touch/tip` thay vì multi-staff — không chờ BE nữa.
-   ⚠️ Khác biệt cần biết: tip qua `/touch/tip` gắn với **payment method của chính nhân viên** (tip trả thẳng cho staff), còn multi-staff đi vào tài khoản tiệm. Nếu muốn 1 người cũng đi qua tài khoản tiệm thì vẫn cần BE hạ `TIP_MINIMUM_STAFF_COUNT` xuống 1. `errors.tip_minimum_staff_count` giữ lại làm lưới an toàn.
+2. ⏳ **Ràng buộc ≥ 2 nhân viên của `/tips/multi-staff` — BE báo đã bỏ, chờ deploy.**
+   **Quyết định (2026-08-19):** FE bỏ nhánh `/touch/tip`, mọi tip (1 hay nhiều người) đều gọi `/tips/multi-staff` để tiền luôn vào tài khoản tiệm và chỉ còn một luồng duy nhất.
+   Theo BE, tip 1 người cần gửi kèm `minStaffCount: 1` trong payload → FE gửi field này khi `tipItems.length === 1` (bỏ qua khi ≥2).
+   ⚠️ Probe lúc 2026-08-19 trên **cả 4 env** (`test-api`, `test2-api`, `staging-api`, `api` prod) với 1 `tipItem` vẫn trả `400 TIP_MINIMUM_STAFF_COUNT`, kể cả khi gửi `minStaffCount`/`MinStaffCount` — và field này chưa có trong `CreateMultiStaffTipCommand` của Swagger. Tức bản BE mới chưa lên env nào; `errors.tip_minimum_staff_count` giữ lại để hiện thông báo rõ ràng cho tới lúc đó.
+   FE gửi camelCase `minStaffCount` (đồng bộ với các field khác trong body; ASP.NET Core bind case-insensitive). Nếu BE yêu cầu đúng `MinStaffCount` thì sửa 1 dòng trong `publicBusinesses.createMultiStaffTip`.
 
 3. ⚠️ `touchPointId` là bắt buộc trong `CreateMultiStaffTipCommand` (probe: `'Touch Point Id' must not be empty`) — phụ thuộc điểm 1.
 
@@ -80,14 +78,16 @@
 | Component | `src/components/DirectPaymentFlow.tsx` | truyền `tip`/`tipTotal`/`totalAmount`/`perStaffTipAmount`, render `SelectServerModal`, wallet + success dùng `totalAmount` |
 | Component | `src/components/direct-payment/steps/DirectPaymentReview.tsx` | thêm khối tip + breakdown Bill/Tips/Total (props tip là optional — staff payment flow không đổi) |
 | Component | `src/components/direct-payment/steps/PaymentTipSection.tsx` 🆕 | khối "ADD A TIP": prompt chọn người, danh sách người đã chọn, preset chips, custom, SKIP |
-| Component | `src/components/direct-payment/modals/SelectServerModal.tsx` 🆕 | modal "Who served you today?" (search + multi-select + Done), `.nexora-modal-card` + body `flex-1 overflow-y-auto` |
-| Hook (feature) | `src/components/direct-payment/hooks/useDirectPaymentTip.ts` 🆕 | state chọn staff + tip total → `tipItems` chia đều, `tipError` |
+| Component | `src/components/direct-payment/modals/SelectServerModal.tsx` 🆕 | modal "Who served you today?" (search + multi-select + Done), `.nexora-modal-card` + body `flex-1 overflow-y-auto`, bám `visualViewport` để bàn phím iOS không che |
+| Hook (shared) | `src/hooks/useVisualViewportRect.ts` 🆕 | theo dõi visual viewport (chiều cao vùng không bị bàn phím che) |
+| Hook (shared) | `src/hooks/useBodyScrollLock.ts` 🆕 | khoá scroll trang nền khi modal mở (iOS cần `position: fixed`, không đủ với `overflow: hidden`) |
+| Hook (feature) | `src/components/direct-payment/hooks/useDirectPaymentTip.ts` 🆕 | state chọn staff + **số tiền tip riêng cho từng người** (`entries` map) → `tipItems`, `tipTotal` = tổng, `tipError` |
 | Hook (feature) | `src/components/direct-payment/hooks/useDirectPaymentFlow.ts` | tạo tip trước payment, confirm tip sau confirm payment, chặn chọn ví khi tip lỗi |
 | Data hook | `src/data/hooks/usePublicDirectPayment.ts` | `useDirectPaymentTipContext` — ưu tiên block tip trên payment page, fallback touch page. Query key: `qk.publicDirectPaymentPage`, `qk.customerTouch` |
 | Data hook | `src/data/hooks/usePublicTouch.ts` | dùng lại `useCreateMultiStaffTip` / `useConfirmMultiStaffTip` (đã có từ luồng touch) |
 | Repository | `src/data/repositories/tipStaffDto.ts` 🆕 | `toTipStaffList` / `toTipConstraints` (normalize `staff[]` + `tipConstraints` cho cả touch page và payment page) |
 | Repository | `src/data/repositories/publicDirectPayment.ts` | normalize thêm `touchPointId`, `staff`, `tipConstraints` |
-| Utils | `src/utils/tipSplit.ts` 🆕 | chia đều theo cent, tổng luôn khớp |
+
 | Utils | `src/utils/customerFlowKind.ts` | `resolveTouchpointRedirectUrl(..., context)` forward `businessSlug`/`touchPointSlug`/`sessionId` sang `/pay` |
 | Constants | `src/constants/tipPresets.ts` 🆕 | preset `[5,10,15,20]`, `TIP_MIN_ITEM_AMOUNT=1`, `TIP_MAX_TOTAL_AMOUNT=500`, `MULTI_STAFF_TIP_MIN_COUNT=2` |
 | i18n | `src/locales/en.json`, `vi.json` | `direct_payment.tip_*`, `errors.tip_minimum_staff_count`, `errors.tip_business_payment_method_required` |
@@ -104,9 +104,14 @@
 
 ## Ghi chú phiên thực thi
 
+- 2026-08-19 (bug iPhone #2): mở modal thấy **2 thanh scroll** (trang nền + danh sách). Fix: `useBodyScrollLock` khoá trang nền khi sheet mở — `overflow: hidden` một mình bị iOS Safari bỏ qua nên phải pin `position: fixed; top: -scrollY` và khôi phục vị trí cuộn khi đóng. Logic này vốn đã có trong `BookingCreateAppointmentModal`, nay tách ra hook dùng chung.
+- 2026-08-19 (bug iPhone): modal chọn nhân viên bị bàn phím che. iOS Safari **không** thu nhỏ layout viewport khi bàn phím bật (và `100dvh` cũng không trừ bàn phím), nên overlay `fixed inset-0` giữ nguyên chiều cao, nửa dưới nằm sau bàn phím. Fix: `useVisualViewportRect` set `height` + `translateY(offsetTop)` cho overlay và `maxHeight: 100%` cho card, ghi đè giới hạn `90dvh` của `.nexora-modal-card`. Trình duyệt không hỗ trợ `visualViewport` thì giữ nguyên cách cũ. **Các modal khác trong app vẫn còn lỗi này** — dùng lại hook trên khi đụng tới.
+
 - Tiền hoá đơn và tiền típ là **2 bản ghi tách biệt**: payment = tiền bill, tip = bản ghi multi-staff. Màn wallet cộng lại để khách chuyển 1 lần ("Send exactly $75.00"). Không cộng típ vào `amount` của payment để tránh đếm trùng doanh thu.
-- Endpoint tip chọn theo số người (`MULTI_STAFF_TIP_MIN_COUNT = 2`), loại tip được nhớ trong `currentTipKind` để confirm đúng endpoint. `paymentMethod` gửi lên `/touch/tip` là enum PascalCase — `toWireMethod` trong `publicTouch.ts` nay map cả ui key lowercase (`zelle` → `Zelle`) qua `PAYOUT_UI_KEY_TO_API_TYPE`.
+- 2026-08-19: gỡ nhánh single-tip (`/touch/tip`) — chỉ còn `/tips/multi-staff` cho mọi số lượng người, nên `currentTipKind` và hằng số `MULTI_STAFF_TIP_MIN_COUNT` đã bị xoá. Bản mở rộng `toWireMethod` trong `publicTouch.ts` (map ui key lowercase → enum PascalCase) giữ nguyên vì luồng touch vẫn dùng.
 - Thứ tự gọi API: **tip trước, payment sau** — tip bị từ chối thì chưa tạo payment nào (không để lại payment mồ côi). Ngược lại nếu payment lỗi, tip vẫn ở trạng thái chưa confirm (vô hại).
-- Preset là **tổng tiền típ**, chia đều theo cent; cent lẻ dồn cho những người đầu danh sách để tổng luôn khớp (`tipSplit.ts`).
-- `perStaffAmount` chỉ hiện khi chọn ≥ 2 người (1 người thì số tiền đã nằm ở dòng Tips).
-- Nút "Change" trên 1 dòng = bỏ người đó rồi mở lại modal để chọn người khác; "Add another person" giữ nguyên lựa chọn cũ.
+- 2026-08-19: đổi từ "một tổng chia đều" sang **số tiền riêng cho từng nhân viên** — mỗi dòng có hàng chips `$5/$10/$15/$20/Other` của riêng mình, `Tips` = tổng các số tiền đó. `src/utils/tipSplit.ts` (chia đều theo cent) đã bị xoá vì không còn ai dùng.
+- 2026-08-19 (bug fix): "Change" **chỉ mở lại modal**, không tự bỏ ai. Danh sách tick trong modal là nguồn chân lý duy nhất — Done áp dụng đúng những gì đang tick, Close không đổi gì. Trước đó Change đánh dấu "đang thay người này" rồi loại họ khi Done (kể cả khi vẫn tick) và bản đầu còn xoá ngay lúc bấm Change → nhân viên đã chọn bị mất ngoài ý muốn. Muốn đổi người: bỏ tick người cũ + tick người mới; muốn bỏ nhanh: nút X trên dòng (`tip_remove`). Nút Done không còn bị disable khi không tick ai (= không tip).
+
+- 2026-08-19 (payment amount): nhập < $1 nay **báo lỗi validate inline** ngay dưới ô Amount (viền đỏ + `role="alert"` + `aria-invalid`), thay vì chỉ khoá nút chọn ví trong im lặng. Logic thuần `resolveDirectPaymentAmountError` trong `paymentFlowShared.ts` (im lặng khi chưa nhập, `too_low` khi < min, `too_high` khi > max) dùng chung cho cả màn merchant và staff. CSS toàn cục `input:focus` dùng `!important` nên phải thêm rule riêng cho `input.payment-amount-input[aria-invalid="true"]` để viền đỏ không bị viền tím focus ghi đè.
+- 2026-08-19 (payment amount): giữ ngưỡng tối thiểu **$1.00** (`DIRECT_PAYMENT_MIN_AMOUNT = 1`) đúng theo BE — probe staging: `amount: 0.99` → `400 PAYMENT_AMOUNT_TOO_LOW` (GreaterThanOrEqualValidator), `amount: 1.00` qua validator. Đã thử hạ xuống 0.01 rồi revert vì FE phải bắt lỗi trước, không để BE từ chối muộn.

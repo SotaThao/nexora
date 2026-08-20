@@ -11,18 +11,36 @@ import {
   parseDirectPaymentAmountInput,
   sanitizeDirectPaymentAmountInput,
 } from '../../../utils/currencyInput'
-import { buildTipItems, type TipSplitItem } from '../../../utils/tipSplit'
 
-export type TipItem = TipSplitItem
+export interface TipItem {
+  staffProfileId: string
+  amount: number
+}
+
+/** Per-staff tip choice: a preset chip, or a typed custom amount. */
+interface TipEntry {
+  preset: number | null
+  isCustom: boolean
+  customInput: string
+}
+
+const EMPTY_ENTRY: TipEntry = { preset: null, isCustom: false, customInput: '' }
 
 const DEFAULT_CONSTRAINTS: TipConstraints = {
   minItemAmount: TIP_MIN_ITEM_AMOUNT,
   maxTotalAmount: TIP_MAX_TOTAL_AMOUNT,
 }
 
+function entryAmount(entry: TipEntry | undefined): number {
+  if (!entry) return 0
+  if (entry.isCustom) return parseDirectPaymentAmountInput(entry.customInput)
+  return entry.preset ?? 0
+}
+
 /**
- * Tip state for the review screen: who served the customer, how much in total,
- * and the even split posted to POST /api/v1/tips/multi-staff.
+ * Tip state for the review screen: who served the customer and how much EACH of
+ * them gets. Every recipient carries their own amount — the tip total is just
+ * the sum, and it is posted per staff member to POST /api/v1/tips/multi-staff.
  */
 export default function useDirectPaymentTip(
   staff: PublicDirectPaymentStaff[],
@@ -30,9 +48,7 @@ export default function useDirectPaymentTip(
 ) {
   const [selectedStaffIds, setSelectedStaffIds] = useState<string[]>([])
   const [isPickerOpen, setIsPickerOpen] = useState(false)
-  const [presetAmount, setPresetAmount] = useState<number | null>(null)
-  const [isCustom, setIsCustom] = useState(false)
-  const [customInput, setCustomInputState] = useState('')
+  const [entries, setEntries] = useState<Record<string, TipEntry>>({})
 
   const staffList = staff ?? []
 
@@ -43,68 +59,101 @@ export default function useDirectPaymentTip(
     [selectedStaffIds, staffList],
   )
 
-  const tipTotal = useMemo(() => {
-    if (!selectedStaffIds.length) return 0
-    if (isCustom) return parseDirectPaymentAmountInput(customInput)
-    return presetAmount ?? 0
-  }, [customInput, isCustom, presetAmount, selectedStaffIds.length])
-
-  const tipItems = useMemo(
-    () => (tipTotal > 0 ? buildTipItems(selectedStaffIds, tipTotal) : []),
-    [selectedStaffIds, tipTotal],
+  /** Amounts in selection order — the row order the customer sees. */
+  const amounts = useMemo(
+    () => selectedStaffIds.map((id) => ({ id, amount: entryAmount(entries[id]) })),
+    [entries, selectedStaffIds],
   )
 
-  const perStaffAmount = tipItems.length ? tipItems[tipItems.length - 1].amount : 0
+  const tipItems: TipItem[] = useMemo(
+    () => amounts
+      .filter((row) => row.amount > 0)
+      .map((row) => ({ staffProfileId: row.id, amount: row.amount })),
+    [amounts],
+  )
+
+  const tipTotal = useMemo(
+    () => Math.round(amounts.reduce((sum, row) => sum + row.amount, 0) * 100) / 100,
+    [amounts],
+  )
 
   const tipError: TipErrorCode | null = useMemo(() => {
     if (!selectedStaffIds.length) return null
-    // Đã chọn người phục vụ thì phải chọn số tiền — nếu không, tip sẽ không được tạo.
-    if (!(tipTotal > 0)) return 'required'
+    // Everyone picked must carry an amount, otherwise their tip is silently dropped.
+    if (amounts.some((row) => !(row.amount > 0))) return 'required'
     if (tipTotal > constraints.maxTotalAmount) return 'max_total'
-    if (perStaffAmount < constraints.minItemAmount) return 'min_item'
+    if (amounts.some((row) => row.amount < constraints.minItemAmount)) return 'min_item'
     return null
-  }, [constraints, perStaffAmount, selectedStaffIds.length, tipTotal])
+  }, [amounts, constraints, selectedStaffIds.length, tipTotal])
 
   const openPicker = useCallback(() => setIsPickerOpen(true), [])
+
+  /** Close without committing — the current selection stays exactly as it was. */
   const closePicker = useCallback(() => setIsPickerOpen(false), [])
 
-  /** Commit the picker selection (draft ids) and close it. */
+  /**
+   * Commit the picker selection and close it. What is ticked in the picker IS the
+   * selection — no row is ever dropped behind the customer's back. Amounts of
+   * people who stay selected are kept.
+   */
   const selectStaff = useCallback((ids: string[]) => {
     setSelectedStaffIds(ids)
+    setEntries((prev) => {
+      const next: Record<string, TipEntry> = {}
+      ids.forEach((id) => {
+        if (prev[id]) next[id] = prev[id]
+      })
+      return next
+    })
     setIsPickerOpen(false)
-  }, [])
-
-  /** "Change" on a row — drop that person, then reopen the picker to pick another. */
-  const changeStaff = useCallback((staffId: string) => {
-    setSelectedStaffIds((prev) => prev.filter((id) => id !== staffId))
-    setIsPickerOpen(true)
   }, [])
 
   const removeStaff = useCallback((staffId: string) => {
     setSelectedStaffIds((prev) => prev.filter((id) => id !== staffId))
+    setEntries((prev) => {
+      const { [staffId]: _dropped, ...rest } = prev
+      return rest
+    })
   }, [])
 
-  const selectPreset = useCallback((amount: number) => {
-    setPresetAmount(amount)
-    setIsCustom(false)
-    setCustomInputState('')
+  const getEntry = useCallback(
+    (staffId: string): TipEntry => entries[staffId] ?? EMPTY_ENTRY,
+    [entries,
+    ],
+  )
+
+  /** Amount this staff member receives right now (0 when nothing picked yet). */
+  const getStaffAmount = useCallback(
+    (staffId: string) => entryAmount(entries[staffId]),
+    [entries],
+  )
+
+  const selectPreset = useCallback((staffId: string, amount: number) => {
+    setEntries((prev) => ({
+      ...prev,
+      [staffId]: { preset: amount, isCustom: false, customInput: '' },
+    }))
   }, [])
 
-  const startCustom = useCallback(() => {
-    setIsCustom(true)
-    setPresetAmount(null)
+  const startCustom = useCallback((staffId: string) => {
+    setEntries((prev) => ({
+      ...prev,
+      [staffId]: { preset: null, isCustom: true, customInput: prev[staffId]?.customInput ?? '' },
+    }))
   }, [])
 
-  const setCustomInput = useCallback((raw: string) => {
-    setCustomInputState(sanitizeDirectPaymentAmountInput(raw, constraints.maxTotalAmount))
+  const setCustomInput = useCallback((staffId: string, raw: string) => {
+    const sanitized = sanitizeDirectPaymentAmountInput(raw, constraints.maxTotalAmount)
+    setEntries((prev) => ({
+      ...prev,
+      [staffId]: { preset: null, isCustom: true, customInput: sanitized },
+    }))
   }, [constraints.maxTotalAmount])
 
   /** SKIP — no tip, back to the "who served you today?" prompt. */
   const skip = useCallback(() => {
     setSelectedStaffIds([])
-    setPresetAmount(null)
-    setIsCustom(false)
-    setCustomInputState('')
+    setEntries({})
     setIsPickerOpen(false)
   }, [])
 
@@ -115,17 +164,14 @@ export default function useDirectPaymentTip(
     selectedStaffIds,
     selectedStaff,
     isPickerOpen,
-    isCustom,
-    customInput,
-    presetAmount,
     tipItems,
     tipTotal,
-    perStaffAmount,
     tipError,
+    getEntry,
+    getStaffAmount,
     openPicker,
     closePicker,
     selectStaff,
-    changeStaff,
     removeStaff,
     selectPreset,
     startCustom,
