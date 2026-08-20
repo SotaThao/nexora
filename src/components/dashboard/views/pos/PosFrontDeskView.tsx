@@ -575,7 +575,7 @@ export default function PosFrontDeskView({
                     </p>
                     <p className="mt-1 text-xs font-semibold text-nexoraText">{joinOrEmpty(order.technicianNames)}</p>
                   </div>
-                  <div className="flex items-center justify-between gap-3 border-t border-nexoraBorder/70 pt-2">
+                  <div className="flex items-center justify-between gap-3">
                     <p className="text-[10px] font-black uppercase tracking-wider text-nexoraMuted">
                       {t(tk('checkoutCustomerStatusLabel'))}
                     </p>
