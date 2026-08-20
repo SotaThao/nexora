@@ -239,7 +239,12 @@ export interface CompletedOrderListItemApiDto {
   id: string
   orderNumber: string
   customerName: string
+  /** National number only, digits without the country code. */
   customerPhone?: string | null
+  /** Dial code with a leading "+" (e.g. "+1"). Null when the backend could not resolve the number. */
+  customerPhoneCountryCode?: string | null
+  /** Full E.164 number. Null when the backend could not resolve the number. */
+  customerPhoneE164?: string | null
   completedAt?: string | null
   serviceNames: string[]
   technicianNames: string[]
@@ -269,7 +274,12 @@ export interface CompletedOrdersPage {
 export interface PosCustomerListItemApiDto {
   id: string
   name?: string | null
+  /** National number only, digits without the country code. */
   phone: string
+  /** Dial code with a leading "+" (e.g. "+1"). Null when the backend could not resolve the number. */
+  phoneCountryCode?: string | null
+  /** Full E.164 number. Null when the backend could not resolve the number. */
+  phoneE164?: string | null
   status: string
   totalVisit: number
   lastVisit?: string | null
@@ -295,7 +305,12 @@ export interface PosCustomerListPage {
 export interface PosCustomerDetailApiDto {
   id: string
   name?: string | null
+  /** National number only, digits without the country code. */
   phone: string
+  /** Dial code with a leading "+" (e.g. "+1"). Null when the backend could not resolve the number. */
+  phoneCountryCode?: string | null
+  /** Full E.164 number. Null when the backend could not resolve the number. */
+  phoneE164?: string | null
   email?: string | null
   address?: string | null
   dateOfBirth?: string | null
@@ -581,7 +596,12 @@ export interface OrderDetailApiDto {
   orderNumber: string
   customerName: string
   customerEmail?: string | null
+  /** National number only, digits without the country code. */
   customerPhone?: string | null
+  /** Dial code with a leading "+" (e.g. "+1"). Null when the backend could not resolve the number. */
+  customerPhoneCountryCode?: string | null
+  /** Full E.164 number. Null when the backend could not resolve the number. */
+  customerPhoneE164?: string | null
   status: string
   serviceLines: OrderServiceLineApiDto[]
   productLines: OrderProductLineApiDto[]
@@ -704,7 +724,12 @@ export interface ReceiptApiDto {
 export interface BookingListItemApiDto {
   bookingId: string
   customerName: string
+  /** National number only, digits without the country code. */
   customerPhone?: string | null
+  /** Dial code with a leading "+" (e.g. "+1"). Null when the backend could not resolve the number. */
+  customerPhoneCountryCode?: string | null
+  /** Full E.164 number. Null when the backend could not resolve the number. */
+  customerPhoneE164?: string | null
   // ISO 8601, always read via UTC getters (see feedback_frontend_datetime_timezone_naive).
   createdAt: string
   // ISO 8601 with offset — always read via UTC getters (see feedback_frontend_datetime_timezone_naive).
@@ -744,7 +769,12 @@ export interface BookingDetailServiceApiDto {
 export interface BookingDetailApiDto {
   bookingId: string
   customerName: string
+  /** National number only, digits without the country code. */
   customerPhone?: string | null
+  /** Dial code with a leading "+" (e.g. "+1"). Null when the backend could not resolve the number. */
+  customerPhoneCountryCode?: string | null
+  /** Full E.164 number. Null when the backend could not resolve the number. */
+  customerPhoneE164?: string | null
   customerEmail?: string | null
   // ISO 8601, always read via UTC getters (see feedback_frontend_datetime_timezone_naive).
   createdAt: string

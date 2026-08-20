@@ -1,4 +1,4 @@
-import React, { useMemo } from 'react'
+import { useMemo } from 'react'
 import { ArrowLeft, ArrowRight } from 'lucide-react'
 import { PayoutLogos, getSortedPayoutMethods } from '../constants'
 import { useSupportedPaymentMethods } from '../../../data/hooks/useSupportedPaymentMethods'
@@ -11,7 +11,6 @@ export default function StepPayoutSetup({
   generatedStaffId,
   setCurrentStep,
   handlePersonalRegisterSubmit,
-  currentLanguage,
   t,
   errors,
 }) {

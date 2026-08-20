@@ -52,7 +52,7 @@ export default function CustomerTable({
                   {t(p + statusLabelKey(customer.status))} · {formatDateTime(customer.createdAt)}
                 </p>
               </td>
-              <td className="py-2 pr-3 text-nexoraMuted">{formatCustomerPhone(customer.phone)}</td>
+              <td className="py-2 pr-3 text-nexoraMuted">{formatCustomerPhone(customer.phone, customer.phoneE164)}</td>
               <td className="hidden md:table-cell py-2 pr-3 text-nexoraMuted">
                 {t(p + statusLabelKey(customer.status))}
               </td>

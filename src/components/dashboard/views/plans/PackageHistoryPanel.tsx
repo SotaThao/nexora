@@ -1,10 +1,14 @@
+import { FileText } from 'lucide-react'
 import { useEffect } from 'react'
+import { Link } from 'react-router-dom'
 import { useTranslation } from '../../../../contexts/LanguageContext'
 import { getErrorI18nKey } from '../../../../data/errorCodes'
 import { useSubscriptionPurchaseHistory } from '../../../../data/hooks/useSubscriptionPayments'
 import { usePagination } from '../../../../hooks/usePagination'
 import { getApiErrorCode } from '../../../../types/domain'
 import Pagination from '../../../ui/Pagination'
+import { packageBillingDetailPath } from '../../constants'
+import { PackageHistoryUiStatus } from '../../../../data/repositories/subscriptionPayments'
 import {
   BOOKING_HUB_EMPTY_CELL,
   BOOKING_HUB_PAGINATION_CLASSNAME,
@@ -16,6 +20,7 @@ import {
 } from '../BookingHubSkeletons'
 import {
   PACKAGE_HISTORY_PAGE_SIZE,
+  PACKAGE_HISTORY_ROW_ACTION_LABEL_KEY,
   PACKAGE_HISTORY_STATUS_CLASS,
   PACKAGE_HISTORY_STATUS_LABEL_KEY,
   formatPackageHistoryAmount,
@@ -23,7 +28,9 @@ import {
   formatPackageHistoryTerm,
   formatPackageHistoryTransactionId,
   isPackageHistorySubscriptionTerm,
+  packageHistoryTransactionKey,
   resolvePackageHistoryDisplayAt,
+  resolvePackageHistoryRowAction,
 } from './constants'
 import { type PackageManagementTabQueryOptions } from '../packageManagement/constants'
 
@@ -102,9 +109,9 @@ export default function PackageHistoryPanel({
               <th scope="col">{t(`${TK}.packageHistoryColAmount`)}</th>
               <th scope="col">{t(`${TK}.packageHistoryColPackage`)}</th>
               <th scope="col">{t(`${TK}.packageHistoryColTerm`)}</th>
-              <th scope="col">{t(`${TK}.packageHistoryColValidUntil`)}</th>
               <th scope="col">{t(`${TK}.packageHistoryColStatus`)}</th>
               <th scope="col">{t(`${TK}.packageHistoryColTransaction`)}</th>
+              <th scope="col">{t(`${TK}.packageHistoryColAction`)}</th>
             </tr>
           </thead>
           <tbody>
@@ -133,21 +140,25 @@ export default function PackageHistoryPanel({
               rows.map((row) => {
                 const displayAt = resolvePackageHistoryDisplayAt(row)
                 const purchased = formatBookingHubDateTimeParts(displayAt, currentLanguage)
-                const validUntil = row.validUntil
-                  ? formatBookingHubDateTimeParts(row.validUntil, currentLanguage)?.date
-                    ?? BOOKING_HUB_EMPTY_CELL
-                  : BOOKING_HUB_EMPTY_CELL
                 const statusClass = PACKAGE_HISTORY_STATUS_CLASS[row.uiStatus]
                 const statusLabel = t(
                   `${TK}.${PACKAGE_HISTORY_STATUS_LABEL_KEY[row.uiStatus]}`,
                 )
                 const packageLabel = formatPackageHistoryPackageLabel(row.planName)
-                // `periodInMonths === 0` (credit top-up) → no "Monthly subscription", term "—"
+                // `periodInMonths === 0` (credit top-up) → term "_"
                 // Do not use `periodInMonths || 1` — 0 is falsy and would show "1 month".
-                const showSubscriptionSubtitle = isPackageHistorySubscriptionTerm(
-                  row.periodInMonths,
-                )
+                const showTermBadge = isPackageHistorySubscriptionTerm(row.periodInMonths)
                 const termLabel = formatPackageHistoryTerm(row.periodInMonths, t, TK)
+                const transactionKey = packageHistoryTransactionKey(row)
+                // Display short reference id in the table, but use `orderId` in URL
+                // so detail endpoints can call `.../purchase-history/{orderId}/...`.
+                const transactionId = formatPackageHistoryTransactionId(
+                  row.referenceId || row.orderId,
+                )
+                const rowAction = resolvePackageHistoryRowAction(row.paymentStatus)
+                const actionLabel = t(
+                  `${TK}.${PACKAGE_HISTORY_ROW_ACTION_LABEL_KEY[rowAction]}`,
+                )
                 return (
                   <tr key={row.orderId || row.referenceId}>
                     <td>
@@ -160,23 +171,17 @@ export default function PackageHistoryPanel({
                       {formatPackageHistoryAmount(row.amount, row.currency)}
                     </td>
                     <td>
-                      <span className="credits-history-activity">
+                      <div className="package-history-package">
                         <strong>{packageLabel}</strong>
-                        {showSubscriptionSubtitle ? (
-                          <small>{t(`${TK}.packageHistoryMonthlySub`)}</small>
-                        ) : null}
-                      </span>
+                      </div>
                     </td>
                     <td>
-                      {showSubscriptionSubtitle ? (
-                        <span className="credits-product-badge credits-product-badge-voice">
-                          {termLabel}
-                        </span>
+                      {showTermBadge ? (
+                        <span className="package-history-term">{termLabel}</span>
                       ) : (
                         termLabel
                       )}
                     </td>
-                    <td>{validUntil}</td>
                     <td>
                       <span className={`package-history-status ${statusClass}`}>
                         {statusLabel}
@@ -185,12 +190,31 @@ export default function PackageHistoryPanel({
                     <td>
                       <span
                         className="package-history-transaction"
-                        title={row.referenceId || row.orderId || undefined}
+                        title={
+                          transactionId !== BOOKING_HUB_EMPTY_CELL
+                            ? row.referenceId || row.orderId || undefined
+                            : undefined
+                        }
                       >
-                        {formatPackageHistoryTransactionId(
-                          row.referenceId || row.orderId,
-                        )}
+                        {transactionId}
                       </span>
+                    </td>
+                    <td className="package-history-action">
+                      {row.uiStatus === PackageHistoryUiStatus.Pending ? (
+                        BOOKING_HUB_EMPTY_CELL
+                      ) : transactionKey ? (
+                        <Link
+                          className="package-history-action-link"
+                          to={packageBillingDetailPath(transactionKey)}
+                          state={{ purchaseHistoryItem: row }}
+                          aria-label={`${actionLabel} ${transactionKey}`}
+                        >
+                          <FileText aria-hidden="true" />
+                          <span>{actionLabel}</span>
+                        </Link>
+                      ) : (
+                        BOOKING_HUB_EMPTY_CELL
+                      )}
                     </td>
                   </tr>
                 )

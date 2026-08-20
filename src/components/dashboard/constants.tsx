@@ -189,6 +189,21 @@ export function packageManagementPath(tab?: string) {
   return `${PACKAGE_MANAGEMENT_PATH}?tab=${encodeURIComponent(tab)}`;
 }
 
+export const PACKAGE_BILLING_PATH_SEGMENT = 'billing';
+
+export const PACKAGE_BILLING_QUERY_PARAM = {
+  transaction: 'transaction',
+} as const;
+
+export function packageBillingDetailPath(transactionId: string) {
+  return `${PACKAGE_MANAGEMENT_PATH}/${PACKAGE_BILLING_PATH_SEGMENT}?${PACKAGE_BILLING_QUERY_PARAM.transaction}=${encodeURIComponent(transactionId)}`;
+}
+
+export function isPackageBillingDetailPath(pathname: string) {
+  return pathname === `${PACKAGE_MANAGEMENT_PATH}/${PACKAGE_BILLING_PATH_SEGMENT}`
+    || pathname.endsWith(`/${DASHBOARD_MENU_ID.packageManagement}/${PACKAGE_BILLING_PATH_SEGMENT}`);
+}
+
 export const DASHBOARD_REPORTS_PATH = buildDashboardMenuPath(
   DASHBOARD_MENU_ID.reports,
 );
@@ -454,8 +469,12 @@ export function isPackageManagementSubActive(
   activeMenu: string,
   tabParam: string | null,
   subId: string,
+  pathname?: string,
 ): boolean {
   if (activeMenu !== DASHBOARD_MENU_ID.packageManagement) return false;
+  if (pathname && isPackageBillingDetailPath(pathname)) {
+    return subId === PackageManagementTab.History;
+  }
   const activeTab = parsePackageManagementTab(tabParam);
   return activeTab === subId;
 }
