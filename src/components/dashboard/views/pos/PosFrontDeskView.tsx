@@ -35,7 +35,7 @@ import { useCancelOrder, useOrderList, useStartOrderService } from '../../../../
 import { useInServiceOrders } from '../../../../data/hooks/usePosCheckout'
 import { useBookingList, useCheckInBookingFromList } from '../../../../data/hooks/usePosBooking'
 import { useTurnBoard } from '../../../../data/hooks/usePosTurnBoard'
-import { formatLocalDateIso } from '../../../../utils/localDate'
+import { formatDatePart, formatLocalDateIso } from '../../../../utils/localDate'
 import { PosOrderStatus } from '../../../../constants/posOrderStatus'
 import {
   DEFAULT_POS_FRONT_DESK_TAB,
@@ -73,6 +73,12 @@ const SCROLL_PANEL_MAX_HEIGHT = 'max-h-[560px]'
 // One salon's appointments for one day never approach this; it exists so the chip's count is the
 // real total rather than a first page.
 const TODAY_BOOKING_PAGE_SIZE = 200
+
+function formatReportDate(isoDate: string, language: string) {
+  const date = new Date(`${isoDate}T00:00:00Z`)
+  if (Number.isNaN(date.getTime())) return isoDate
+  return formatDatePart(date, language.toLowerCase().startsWith('vi'), { timeZone: 'UTC' })
+}
 
 // scheduledAt means different things depending on which flow created the booking, so the sort
 // runs on the resolved wall clock rather than the raw ISO string. Minutes-of-day is enough: the
@@ -632,7 +638,7 @@ export default function PosFrontDeskView({
           </div>
           {payroll ? (
             <span className="text-[11px] font-semibold tabular-nums text-nexoraMuted">
-              {payroll.weekStart} — {payroll.weekEnd}
+              {formatReportDate(payroll.weekStart, currentLanguage)} — {formatReportDate(payroll.weekEnd, currentLanguage)}
             </span>
           ) : null}
         </div>
