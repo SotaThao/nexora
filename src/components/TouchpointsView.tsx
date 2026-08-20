@@ -1,5 +1,4 @@
 import React, { useState, useEffect, useMemo, useCallback } from 'react'
-import { useNavigate } from 'react-router-dom'
 import {
   Plus,
   Trash2,
@@ -16,6 +15,7 @@ import {
   Loader2,
   Eye,
   Coins,
+  ExternalLink,
 } from 'lucide-react'
 import { useTranslation } from '../contexts/LanguageContext'
 import { useNotification } from '../contexts/NotificationContext'
@@ -35,15 +35,12 @@ import { getWebUrlOrigin } from '../utils/webUrlBase'
 import ToggleSwitch from './ui/ToggleSwitch'
 import { formatCurrency, formatTransactionDateTime } from './dashboard/utils'
 import {
-  DASHBOARD_SETTINGS_QUERY_TAB,
   SHOW_HARDWARE_DEVICES,
-  buildDashboardSettingsQueryPath,
 } from './dashboard/constants'
 import PhysicalCardDetailModal from './dashboard/modals/PhysicalCardDetailModal'
-import MerchantPayoutMethodsPanel from './payout/MerchantPayoutMethodsPanel'
+import ReceivePaymentsQrContent from './payments/ReceivePaymentsQrContent'
 import StaffInviteQrPanel from './staff/StaffInviteQrPanel'
 import AffiliateLinkPanel from './settings/AffiliateLinkPanel'
-import SettingsTipQrPanel from './settings/SettingsTipQrPanel'
 import TouchpointSectionTabs from './touchpoints/TouchpointSectionTabs'
 import { normalizeTouchpointSection } from './touchpoints/touchpointSections'
 import QrImage from './ui/QrImage'
@@ -106,7 +103,6 @@ export default function TouchpointsView({
 }) {
   const { t, currentLanguage } = useTranslation()
   const { showToast } = useNotification()
-  const navigate = useNavigate()
   const [copiedId, setCopiedId] = useState(null)
   const [localActiveSubTab, setLocalActiveSubTab] = useState('stations')
   const activeSubTab = propActiveSubTab !== undefined ? propActiveSubTab : localActiveSubTab
@@ -473,9 +469,23 @@ export default function TouchpointsView({
                           <h3 className="truncate text-sm font-extrabold leading-snug text-nexoraText" title={point.name}>
                             {point.name}
                           </h3>
-                          <p className="truncate font-mono text-[9.5px] text-nexoraSubtle select-all">
-                            {qrUrl.replace(/^https?:\/\//, '')}
-                          </p>
+                          <div className="flex min-w-0 items-center gap-1">
+                            <p className="min-w-0 flex-1 truncate font-mono text-[9.5px] text-nexoraSubtle select-all">
+                              {qrUrl.replace(/^https?:\/\//, '')}
+                            </p>
+                            {qrUrl ? (
+                              <a
+                                href={qrUrl}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                aria-label={t('dashboard.touchpoints.station_actions.open_link')}
+                                title={t('dashboard.touchpoints.station_actions.open_link')}
+                                className="inline-flex h-5 w-5 shrink-0 items-center justify-center rounded text-nexoraSubtle transition hover:bg-nexoraSurfaceMuted hover:text-nexoraBrand"
+                              >
+                                <ExternalLink className="h-3 w-3" aria-hidden="true" />
+                              </a>
+                            ) : null}
+                          </div>
                         </div>
 
                         <div className="mt-2 flex items-center justify-start gap-1.5">
@@ -772,27 +782,7 @@ export default function TouchpointsView({
               aria-labelledby="touchpoint-section-tab-payment"
               className="space-y-4"
             >
-              <p className="text-xs leading-relaxed text-nexoraMuted">
-                {t('dashboard.touchpoints.stations_sections.payment_desc')}
-              </p>
-              <Panel className="p-4 sm:p-6">
-                <SettingsTipQrPanel
-                  variant="compact"
-                  businessName={businessName}
-                  showToast={showToast}
-                  handleCopy={handleCopy}
-                  copiedId={copiedId}
-                  t={t}
-                  onConfigurePayoutMethods={() =>
-                    navigate(
-                      buildDashboardSettingsQueryPath(
-                        DASHBOARD_SETTINGS_QUERY_TAB.payout,
-                      ),
-                    )
-                  }
-                />
-              </Panel>
-              <MerchantPayoutMethodsPanel />
+              <ReceivePaymentsQrContent businessName={businessName} />
             </section>
           )}
 

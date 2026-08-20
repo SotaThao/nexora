@@ -55,6 +55,7 @@ export default function PaymentsPayoutsMenuSection({
               <button
                 key={item.id}
                 type="button"
+                aria-current={isSubActive ? 'page' : undefined}
                 onClick={() => onNavigate(item.screen, item.params?.tab)}
                 className={sidebarSubmenuItemClass(isSubActive)}
               >

@@ -60,7 +60,7 @@ export default function PayoutSetupWarningBanner() {
         >
           <Settings className="h-4 w-4 transition-transform group-hover:rotate-90" />
           <span>
-            {t('dashboard.setup_payout_btn') || 'SET UP PAYOUT METHODS'}
+            {t('dashboard.setup_payout_btn') || 'SET UP WAYS TO RECEIVE PAYMENTS'}
           </span>
           <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-1" />
         </button>

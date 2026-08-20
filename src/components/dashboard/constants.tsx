@@ -598,6 +598,12 @@ export const PAYMENTS_PAYOUTS_SUBMENU = [
     params: { tab: "overview" },
   },
   {
+    id: "receive_payments_qr",
+    screen: DASHBOARD_MENU_ID.reports,
+    labelKey: "dashboard.menu.payments_payouts_receive_payments_qr",
+    params: { tab: "receive_payments" },
+  },
+  {
     id: "customer_payments",
     screen: DASHBOARD_MENU_ID.reports,
     labelKey: "dashboard.menu.payments_payouts_customer_payments",
