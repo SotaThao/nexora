@@ -58,6 +58,19 @@ export function createPosCheckoutRepository(client: HttpClient = httpClient) {
       )
     },
 
+    // Swaps which service a line is for, keeping the line's technician, note and position.
+    async updateOrderServiceLine(
+      businessId: string,
+      orderId: string,
+      serviceLineId: string,
+      posServiceId: string,
+    ): Promise<boolean> {
+      return await client.put<boolean>(
+        `/api/v1/merchant/pos/${businessId}/checkout/${orderId}/services/${serviceLineId}`,
+        { posServiceId },
+      )
+    },
+
     async removeOrderServiceLine(businessId: string, orderId: string, serviceLineId: string): Promise<boolean> {
       return await client.del<boolean>(
         `/api/v1/merchant/pos/${businessId}/checkout/${orderId}/services/${serviceLineId}`,

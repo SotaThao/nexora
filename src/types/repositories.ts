@@ -219,11 +219,19 @@ export interface OrderListItemApiDto {
   id: string
   orderNumber: string
   customerName: string
+  customerPhone?: string | null
   status: string
   checkedInAt: string
   elapsedMinutes: number
   serviceNames: string[]
   technicianNames: string[]
+  // Self check-in leaves these for the front desk to resolve: a customer who picked "First
+  // Available" has no technician on the line, and one who skipped the menu has no service line at
+  // all. Both are legitimate orders, and both need a person to finish them. Computed server-side
+  // over every order, not just kiosk ones — a line the front desk itself cleared needs the same
+  // flag.
+  hasUnassignedService: boolean
+  hasNoServiceLine: boolean
 }
 
 // POS Merchant Ops — Completed Orders panel (US-17 follow-up), paginated + filterable.
@@ -231,7 +239,12 @@ export interface CompletedOrderListItemApiDto {
   id: string
   orderNumber: string
   customerName: string
+  /** National number only, digits without the country code. */
   customerPhone?: string | null
+  /** Dial code with a leading "+" (e.g. "+1"). Null when the backend could not resolve the number. */
+  customerPhoneCountryCode?: string | null
+  /** Full E.164 number. Null when the backend could not resolve the number. */
+  customerPhoneE164?: string | null
   completedAt?: string | null
   serviceNames: string[]
   technicianNames: string[]
@@ -261,7 +274,12 @@ export interface CompletedOrdersPage {
 export interface PosCustomerListItemApiDto {
   id: string
   name?: string | null
+  /** National number only, digits without the country code. */
   phone: string
+  /** Dial code with a leading "+" (e.g. "+1"). Null when the backend could not resolve the number. */
+  phoneCountryCode?: string | null
+  /** Full E.164 number. Null when the backend could not resolve the number. */
+  phoneE164?: string | null
   status: string
   totalVisit: number
   lastVisit?: string | null
@@ -287,7 +305,12 @@ export interface PosCustomerListPage {
 export interface PosCustomerDetailApiDto {
   id: string
   name?: string | null
+  /** National number only, digits without the country code. */
   phone: string
+  /** Dial code with a leading "+" (e.g. "+1"). Null when the backend could not resolve the number. */
+  phoneCountryCode?: string | null
+  /** Full E.164 number. Null when the backend could not resolve the number. */
+  phoneE164?: string | null
   email?: string | null
   address?: string | null
   dateOfBirth?: string | null
@@ -335,11 +358,130 @@ export interface TurnBoardStationApiDto {
   currentOrderId?: string | null
   currentOrderNumber?: string | null
   currentCustomerName?: string | null
+  currentCustomerPhone?: string | null
   currentServiceNames: string[]
   assignedAt?: string | null
 }
 
 // POS Front Desk — Time Clock tab
+export interface PosDevicePairingQrApiDto {
+  businessId: string
+  token: string
+  rotationNumber: number
+  issuedAt: string
+  expiresAt: string
+  // Full URL the tablet's camera opens. Carries the operator who generated it.
+  pairingUrl: string
+  // PNG data URI rendered server-side — the dashboard has no QR-drawing library.
+  qrImageDataUri: string
+}
+
+export interface PosDevicePairingQrStatusApiDto {
+  // Flips once a tablet pairs with this exact token, and never flips back — the dashboard stops
+  // polling and asks for a fresh code the moment it does.
+  used: boolean
+}
+
+export type PosDeviceStatusApi = 'Active' | 'Revoked' | 'Expired'
+
+export interface PosDeviceListItemApiDto {
+  id: string
+  name: string
+  // Sent computed by the server. Never re-derive "expired" from lastSeenAt on the client — the
+  // nightly sweep owns that transition and the two would disagree for up to a day.
+  status: PosDeviceStatusApi
+  deviceType: string
+  pairedAt: string
+  pairedByName: string | null
+  lastSeenAt: string
+  userAgent: string | null
+  revokedAt: string | null
+  revokedByName: string | null
+  expiredAt: string | null
+  // True when the tablet signed itself out rather than an operator revoking it.
+  signedOutOnDevice: boolean
+}
+
+// Self Check-In kiosk — everything below is served under the device token, never a user session.
+export type PosCheckInLayout = 'SinglePage' | 'Wizard'
+
+export interface SelfCheckInContextApiDto {
+  businessName: string
+  logoUrl: string | null
+  deviceName: string
+  // The tablet has no merchant session, so the layout it should render rides along with the
+  // branding it already fetches rather than coming from the settings endpoint.
+  checkInLayout: PosCheckInLayout
+}
+
+export interface SelfCheckInServiceApiDto {
+  id: string
+  name: string
+  price: number
+  durationMinutes: number
+  description: string | null
+  photoUrl: string | null
+  categories: { id: string; name: string }[]
+}
+
+export interface SelfCheckInTechnicianApiDto {
+  posStaffProfileId: string
+  displayName: string
+  photoUrl: string | null
+  // Services this technician is assigned to. Lets the kiosk decide on the spot whether the
+  // technician the customer picked up front can actually do what they then chose — no round trip
+  // per service, and the same data drives the per-service dropdown on the overview.
+  serviceIds: string[]
+  // Informational, never a block — a busy technician can still be asked for. Shown on both
+  // surfaces since the one-page check-in renders the identical grid.
+  isBusy: boolean
+}
+
+export interface SelfCheckInOrderResultApiDto {
+  orderId: string
+  orderNumber: string
+}
+
+// Front desk twin of SelfCheckInTechnicianApiDto — same rules, merchant session instead of a
+// device token.
+export interface CheckInTechnicianApiDto {
+  posStaffProfileId: string
+  displayName: string
+  photoUrl: string | null
+  serviceIds: string[]
+  isBusy: boolean
+}
+
+export interface CheckInActiveVisitApiDto {
+  orderNumber: string
+}
+
+export interface PosCheckInSettingsApiDto {
+  kioskCheckInLayout: PosCheckInLayout
+  frontDeskCheckInLayout: PosCheckInLayout
+}
+
+// Both front-desk check-in paths answer with this: a walk-in opening a new order and a booked
+// guest converting their appointment.
+export interface PosCheckInResultApiDto {
+  orderId: string
+  orderNumber: string
+}
+
+export interface SelfCheckInBookingItemApiDto {
+  posServiceId: string
+  posStaffProfileId: string | null
+}
+
+export interface SelfCheckInBookingApiDto {
+  bookingId: string
+  // Wall clock at the salon, already resolved server-side — the raw stored value means different
+  // things depending on which flow created the booking.
+  scheduledAt: string
+  customerName: string
+  items: SelfCheckInBookingItemApiDto[]
+}
+
 export interface ClockQrTokenApiDto {
   businessId: string
   token: string
@@ -454,7 +596,12 @@ export interface OrderDetailApiDto {
   orderNumber: string
   customerName: string
   customerEmail?: string | null
+  /** National number only, digits without the country code. */
   customerPhone?: string | null
+  /** Dial code with a leading "+" (e.g. "+1"). Null when the backend could not resolve the number. */
+  customerPhoneCountryCode?: string | null
+  /** Full E.164 number. Null when the backend could not resolve the number. */
+  customerPhoneE164?: string | null
   status: string
   serviceLines: OrderServiceLineApiDto[]
   productLines: OrderProductLineApiDto[]
@@ -539,10 +686,50 @@ export interface CreateBookingPayload {
 }
 
 // POS Booking — Staff/Owner Booking Management screen (Ticket 9)
+export interface ReceiptServiceLineApiDto {
+  serviceName: string
+  // Null when the line was never assigned — the page shows its "First available" label.
+  technicianName: string | null
+  unitPrice: number
+  quantity: number
+  lineTotal: number
+}
+
+export interface ReceiptProductLineApiDto {
+  productName: string
+  unitPrice: number
+  quantity: number
+  lineTotal: number
+}
+
+export interface ReceiptApiDto {
+  salonName: string
+  ticketNumber: string
+  // UTC instant; rendered in `timeZone` by the page.
+  completedAt: string
+  // The salon's IANA zone id, or null when the business has none set.
+  timeZone: string | null
+  customerName: string
+  serviceLines: ReceiptServiceLineApiDto[]
+  productLines: ReceiptProductLineApiDto[]
+  servicesSubtotal: number
+  productsSubtotal: number
+  tipAmount: number
+  discountAmount: number
+  salesTaxAmount: number
+  total: number
+  paymentMethodType: string | null
+}
+
 export interface BookingListItemApiDto {
   bookingId: string
   customerName: string
+  /** National number only, digits without the country code. */
   customerPhone?: string | null
+  /** Dial code with a leading "+" (e.g. "+1"). Null when the backend could not resolve the number. */
+  customerPhoneCountryCode?: string | null
+  /** Full E.164 number. Null when the backend could not resolve the number. */
+  customerPhoneE164?: string | null
   // ISO 8601, always read via UTC getters (see feedback_frontend_datetime_timezone_naive).
   createdAt: string
   // ISO 8601 with offset — always read via UTC getters (see feedback_frontend_datetime_timezone_naive).
@@ -582,7 +769,12 @@ export interface BookingDetailServiceApiDto {
 export interface BookingDetailApiDto {
   bookingId: string
   customerName: string
+  /** National number only, digits without the country code. */
   customerPhone?: string | null
+  /** Dial code with a leading "+" (e.g. "+1"). Null when the backend could not resolve the number. */
+  customerPhoneCountryCode?: string | null
+  /** Full E.164 number. Null when the backend could not resolve the number. */
+  customerPhoneE164?: string | null
   customerEmail?: string | null
   // ISO 8601, always read via UTC getters (see feedback_frontend_datetime_timezone_naive).
   createdAt: string

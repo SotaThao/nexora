@@ -9,7 +9,13 @@ import { useParams } from 'react-router-dom'
 import { Check, ChevronDown, Loader2, Plus, Search, Users, X } from 'lucide-react'
 import { useTranslation } from '../../contexts/LanguageContext'
 import { useNotification } from '../../contexts/NotificationContext'
-import { formatNationalNumber, getNationalPhonePlaceholder, isValidPhoneE164, PhoneDialCode } from '../CountryCodeSelect'
+import CountryCodeSelect, {
+  formatNationalNumber,
+  getNationalPhonePlaceholder,
+  isValidPhoneE164,
+  normalizePhoneE164,
+  PhoneDialCode,
+} from '../CountryCodeSelect'
 import { getApiErrorCode } from '../../types/domain'
 import { getErrorI18nKey } from '../../data/errorCodes'
 import { matchesSearchQuery } from '../../utils/bookingSearch'
@@ -388,6 +394,9 @@ export default function PublicBookingPage() {
   const [selectedTime, setSelectedTime] = useState('')
   const [customerName, setCustomerName] = useState('')
   const [customerPhone, setCustomerPhone] = useState('')
+  // The backend is the only phone parser now, and the dial code is the only way it can know
+  // which country the number belongs to — a bare national number defaults to US.
+  const [dialCode, setDialCode] = useState<string>(PhoneDialCode.US)
   // Transactional starts pre-checked and required — PO decision overriding the earlier opt-in-only
   // design (unticking blocks submit below). Marketing stays unticked/optional; the customer-lookup
   // endpoint deliberately does not expose consent state, so this never reflects a previous booking.
@@ -549,7 +558,7 @@ export default function PublicBookingPage() {
     const errors: { name?: string; phone?: string } = {}
     if (!name) errors.name = t('public.booking.nameRequired')
     if (!phone) errors.phone = t('public.booking.phoneRequired')
-    else if (!isValidPhoneE164(phone, PhoneDialCode.US)) errors.phone = t('public.booking.invalidPhone')
+    else if (!isValidPhoneE164(phone, dialCode)) errors.phone = t('public.booking.invalidPhone')
 
     setContactFieldErrors(errors)
     if (errors.name || errors.phone) {
@@ -564,7 +573,7 @@ export default function PublicBookingPage() {
     createBooking.mutate(
       {
         customerName: name,
-        customerPhone: phone,
+        customerPhone: normalizePhoneE164(phone, dialCode),
         customerEmail: customerEmail.trim() || undefined,
         scheduledAt,
         items: selectedLines.map((l) => ({ posServiceId: l.posServiceId, posStaffProfileId: l.posStaffProfileId })),
@@ -683,12 +692,20 @@ export default function PublicBookingPage() {
             <label className="mb-1 block text-[10px] font-extrabold uppercase text-nexoraMuted">
               {t('public.booking.customerPhone')}
             </label>
+            <div className="flex items-stretch gap-2">
+              <CountryCodeSelect
+                value={dialCode}
+                onChange={(code) => {
+                  setDialCode(code)
+                  setCustomerPhone(formatNationalNumber(customerPhone, code))
+                }}
+              />
             <input
               id={CONTACT_FIELD_ID.phone}
               type="tel"
               value={customerPhone}
-              onChange={(e) => setCustomerPhone(formatNationalNumber(e.target.value, PhoneDialCode.US))}
-              placeholder={getNationalPhonePlaceholder(PhoneDialCode.US)}
+              onChange={(e) => setCustomerPhone(formatNationalNumber(e.target.value, dialCode))}
+              placeholder={getNationalPhonePlaceholder(dialCode)}
               inputMode="numeric"
               autoComplete="tel-national"
               aria-invalid={Boolean(contactFieldErrors.phone)}
@@ -697,6 +714,7 @@ export default function PublicBookingPage() {
                 contactFieldErrors.phone ? 'border-rose-400' : 'border-nexoraBorder'
               }`}
             />
+            </div>
             {contactFieldErrors.phone ? (
               <p id={`${CONTACT_FIELD_ID.phone}-error`} role="alert" className="mt-1 text-[10px] font-bold text-rose-500">
                 {contactFieldErrors.phone}

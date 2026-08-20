@@ -11,7 +11,7 @@ import { qk } from '../../../../../data/queryKeys'
 import { isApiError } from '../../../../../types/domain'
 import { getErrorI18nKey } from '../../../../../data/errorCodes'
 import { SkeletonList } from '../../../../ui/skeleton'
-import { formatCurrency } from '../../../utils'
+import { formatCurrency, formatTransactionDateTime } from '../../../utils'
 import { PayrollRunStatusBadge } from '../PayrollRunsView'
 import CancelPayrollRunModal from './CancelPayrollRunModal'
 
@@ -42,7 +42,7 @@ const CANCELLABLE_STATUSES = ['ValidationFailed', 'ReviewRequired', 'Approved']
 const RERUNNABLE_STATUSES = ['ValidationFailed', 'ReviewRequired', 'Approved']
 
 export default function PayrollRunDetailModal({ businessId, payrollRunId, onClose, onFinalize, onCreateCorrection, onOpenRun }: Props) {
-  const { t } = useTranslation()
+  const { t, currentLanguage } = useTranslation()
   const { showToast } = useNotification()
   const queryClient = useQueryClient()
   const runQuery = usePayrollRun(payrollRunId)
@@ -265,7 +265,7 @@ export default function PayrollRunDetailModal({ businessId, payrollRunId, onClos
                 <ul className="space-y-1">
                   {run.auditTrail.map((entry, idx) => (
                     <li key={idx} className="text-[11px] text-nexoraMuted">
-                      <span className="font-bold text-nexoraText">{entry.action}</span> — {new Date(entry.at).toLocaleString()}
+                      <span className="font-bold text-nexoraText">{entry.action}</span> — {formatTransactionDateTime(entry.at, currentLanguage)}
                       {entry.notes && <span> — {entry.notes}</span>}
                     </li>
                   ))}

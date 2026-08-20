@@ -10,7 +10,9 @@ import type {
   BookingListFilters,
   BookingListResultApiDto,
   CancelBookingPayload,
+  CheckInOrderItemPayload,
   CreateBookingPayload,
+  PosCheckInResultApiDto,
   RescheduleBookingPayload,
 } from '../../types/repositories'
 
@@ -43,8 +45,22 @@ export function createPosBookingRepository(client: HttpClient = httpClient) {
       return await client.get<BookingDetailApiDto>(`/api/v1/merchant/pos/${businessId}/bookings/${bookingId}`)
     },
 
-    async checkInBooking(businessId: string, bookingId: string): Promise<string> {
-      return await client.post<string>(`/api/v1/merchant/pos/${businessId}/bookings/${bookingId}/check-in`, {})
+    // `items` replaces the appointment's own lines and is only sent by the Check-in tab, where the
+    // operator may have changed them at the counter. The Bookings tab omits it and the booking
+    // keeps what was booked.
+    async checkInBooking(
+      businessId: string,
+      bookingId: string,
+      draft?: { items: CheckInOrderItemPayload[]; customerName?: string; customerEmail?: string },
+    ): Promise<PosCheckInResultApiDto> {
+      return await client.post<PosCheckInResultApiDto>(
+        `/api/v1/merchant/pos/${businessId}/bookings/${bookingId}/check-in`,
+        {
+          items: draft?.items ?? null,
+          customerName: draft?.customerName ?? null,
+          customerEmail: draft?.customerEmail ?? null,
+        },
+      )
     },
 
     async cancelBooking(businessId: string, bookingId: string, payload: CancelBookingPayload): Promise<void> {

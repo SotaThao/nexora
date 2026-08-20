@@ -15,8 +15,10 @@ import {
   useRescheduleBooking,
 } from '../../../../../data/hooks/usePosBooking'
 import { POS_BOOKING_STATUS_OPTIONS } from '../../../../../constants/posOrderStatus'
+import { TWELVE_HOUR_INPUT_LANG } from '../../../../../constants/timeFormat'
 import type { TurnBoardStationApiDto } from '../../../../../types/repositories'
 import { SkeletonList } from '../../../../ui/skeleton'
+import { formatCustomerPhone } from '../customer/customerFormatters'
 import BookingTable from './BookingTable'
 import BookingCards from './BookingCards'
 import BookingCalendar from './BookingCalendar'
@@ -361,6 +363,7 @@ export default function BookingTab({
                   </label>
                   <input
                     type="time"
+                    lang={TWELVE_HOUR_INPUT_LANG}
                     value={rescheduleTime}
                     onChange={(e) => setRescheduleTime(e.target.value)}
                     className="mt-1 h-10 w-full rounded-lg border border-nexoraBorder bg-nexoraCanvas px-2.5 text-xs text-nexoraText outline-none focus:border-nexoraBrand focus:bg-white"
@@ -420,7 +423,7 @@ export default function BookingTab({
                       <p className="text-[10px] font-extrabold uppercase text-nexoraMuted">
                         {t(p + 'viewDetailPhone')}
                       </p>
-                      <p className="text-xs text-nexoraText">{viewDetail.data.customerPhone || t(p + 'viewDetailNotProvided')}</p>
+                      <p className="text-xs text-nexoraText">{formatCustomerPhone(viewDetail.data.customerPhone, viewDetail.data.customerPhoneE164) || t(p + 'viewDetailNotProvided')}</p>
                     </div>
                     <div>
                       <p className="text-[10px] font-extrabold uppercase text-nexoraMuted">

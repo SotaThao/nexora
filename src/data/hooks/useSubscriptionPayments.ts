@@ -14,6 +14,7 @@ import subscriptionPaymentsRepository, {
   type SubscriptionPurchaseHistoryItem,
   type SubscriptionPurchaseHistoryPage,
   type SubscriptionPurchaseHistoryQuery,
+  type SubscriptionReceiptDetail,
   type UpdateSubscriptionAutoRenewResult,
 } from '../repositories/subscriptionPayments'
 
@@ -180,6 +181,69 @@ export function useSubscriptionPurchaseHistory({
     enabled,
     placeholderData: keepPreviousData,
     ...withOptionalGcTime({ staleTime, refetchOnMount, gcTime }),
+  })
+}
+
+const HISTORY_ITEM_LOOKUP_PAGE_SIZE = 50
+const HISTORY_ITEM_LOOKUP_MAX_PAGES = 20
+
+/** Resolve one purchase-history row by orderId or referenceId (URL `transaction=`). */
+export function usePurchaseHistoryItem(
+  transactionId: string | undefined,
+  initialItem?: SubscriptionPurchaseHistoryItem | null,
+) {
+  const queryClient = useQueryClient()
+  const id = String(transactionId ?? '').trim()
+  const initialMatches =
+    initialItem &&
+    id &&
+    (initialItem.orderId === id || initialItem.referenceId === id)
+      ? initialItem
+      : undefined
+
+  return useQuery<SubscriptionPurchaseHistoryItem | null>({
+    queryKey: qk.merchantSubscriptionPurchaseHistoryItem(id),
+    enabled: Boolean(id),
+    initialData: initialMatches,
+    staleTime: 30_000,
+    queryFn: async () => {
+      const cached = queryClient.getQueriesData<SubscriptionPurchaseHistoryPage>({
+        queryKey: qk.merchantSubscriptionPurchaseHistory(),
+      })
+      for (const [, page] of cached) {
+        const found = findPurchaseHistoryItemByOrderRef(page?.items ?? [], id)
+        if (found) return found
+      }
+
+      let pageNumber = 1
+      for (;;) {
+        const page = await subscriptionPaymentsRepository.getPurchaseHistory({
+          pageNumber,
+          pageSize: HISTORY_ITEM_LOOKUP_PAGE_SIZE,
+        })
+        const found = findPurchaseHistoryItemByOrderRef(page.items, id)
+        if (found) return found
+        if (
+          !page.hasNextPage ||
+          pageNumber >= page.totalPages ||
+          pageNumber >= HISTORY_ITEM_LOOKUP_MAX_PAGES
+        ) {
+          return null
+        }
+        pageNumber += 1
+      }
+    },
+  })
+}
+
+/** GET `/api/v1/merchant/subscriptions/purchase-history/{orderId}/receipt-detail`. */
+export function useReceiptDetail(orderId: string | undefined) {
+  const id = String(orderId ?? '').trim()
+  return useQuery<SubscriptionReceiptDetail>({
+    queryKey: qk.merchantSubscriptionReceiptDetail(id),
+    queryFn: () => subscriptionPaymentsRepository.getReceiptDetail(id),
+    enabled: Boolean(id),
+    staleTime: 60_000,
   })
 }
 

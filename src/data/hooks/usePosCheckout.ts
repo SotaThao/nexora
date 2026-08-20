@@ -150,6 +150,47 @@ export function useAddOrderServiceLine(businessId?: string) {
   })
 }
 
+// Changing the service re-prices the line from the catalog server-side, and drops the technician
+// when they are not trained on the new service — so the turn board is invalidated too, and the
+// optimistic patch deliberately touches only name and price rather than guessing at the assignment.
+export function useUpdateOrderServiceLine(businessId?: string) {
+  const queryClient = useQueryClient()
+  return useMutation<
+    boolean,
+    Error,
+    { orderId: string; serviceLineId: string; posServiceId: string; unitPrice: number; serviceName: string },
+    OrderMutationContext
+  >({
+    mutationFn: ({ orderId, serviceLineId, posServiceId }) =>
+      posCheckoutRepository.updateOrderServiceLine(businessId as string, orderId, serviceLineId, posServiceId),
+    onMutate: async ({ orderId, serviceLineId, posServiceId, unitPrice, serviceName }) => {
+      const context = await snapshotOrderDetail(queryClient, businessId, orderId)
+      const previousLine = context.previousOrder?.serviceLines.find((l) => l.id === serviceLineId)
+      if (context.previousOrder && previousLine) {
+        const lineTotal = roundCurrency(unitPrice * previousLine.quantity)
+        queryClient.setQueryData<OrderDetailApiDto>(context.queryKey, {
+          ...applyOrderTotalsPatch(context.previousOrder, {
+            servicesSubtotal: roundCurrency(
+              context.previousOrder.servicesSubtotal - previousLine.lineTotal + lineTotal,
+            ),
+          }),
+          serviceLines: context.previousOrder.serviceLines.map((l) =>
+            l.id === serviceLineId ? { ...l, posServiceId, serviceName, unitPrice, lineTotal } : l,
+          ),
+        })
+      }
+      return context
+    },
+    onError: (_err, _vars, context) => rollbackOrderDetail(queryClient, context),
+    onSuccess: (_result, { orderId }) => {
+      queryClient.invalidateQueries({ queryKey: qk.merchantPosOrderDetail(businessId, orderId) })
+      queryClient.invalidateQueries({ queryKey: qk.merchantPosInServiceOrders(businessId) })
+      queryClient.invalidateQueries({ queryKey: qk.merchantPosOrderList(businessId) })
+      queryClient.invalidateQueries({ queryKey: qk.merchantPosTurnBoard(businessId) })
+    },
+  })
+}
+
 export function useRemoveOrderServiceLine(businessId?: string) {
   const queryClient = useQueryClient()
   return useMutation<boolean, Error, { orderId: string; serviceLineId: string }, OrderMutationContext>({

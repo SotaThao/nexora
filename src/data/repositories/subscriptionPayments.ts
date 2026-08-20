@@ -154,6 +154,66 @@ export interface SubscriptionPurchaseHistoryItem {
   uiStatus: PackageHistoryUiStatus
 }
 
+/** GET `/api/v1/merchant/subscriptions/purchase-history/{orderId}/receipt-detail`. */
+export interface SubscriptionReceiptDetail {
+  orderId: string
+  referenceId: string
+  invoiceNumber: string
+  receiptNumber: string
+  providerTransactionId: string
+  issuedAt: string
+  paidAt: string | null
+  sellerName: string
+  sellerAddress: string
+  sellerEmail: string
+  sellerPhone: string
+  billToName: string
+  billToAddress: string
+  billToEmail: string
+  planName: string
+  periodInMonths: number
+  amount: number
+  currency: string
+  subtotal: number
+  tax: number
+  total: number
+  amountPaid: number
+  paymentMethodLabel: string
+  processorName: string
+  receiptAccessToken: string
+}
+
+function normalizeReceiptDetail(raw: unknown): SubscriptionReceiptDetail {
+  const item = raw && typeof raw === 'object' ? (raw as Record<string, unknown>) : {}
+  return {
+    orderId: readString(item.orderId),
+    referenceId: readString(item.referenceId),
+    invoiceNumber: readString(item.invoiceNumber),
+    receiptNumber: readString(item.receiptNumber),
+    providerTransactionId: readString(item.providerTransactionId),
+    issuedAt: readString(item.issuedAt),
+    paidAt: readNullableString(item.paidAt),
+    sellerName: readString(item.sellerName),
+    sellerAddress: readString(item.sellerAddress),
+    sellerEmail: readString(item.sellerEmail),
+    sellerPhone: readString(item.sellerPhone),
+    billToName: readString(item.billToName),
+    billToAddress: readString(item.billToAddress),
+    billToEmail: readString(item.billToEmail),
+    planName: readString(item.planName),
+    periodInMonths: Math.max(0, Math.trunc(readNumber(item.periodInMonths, 0))),
+    amount: readNumber(item.amount, 0),
+    currency: readString(item.currency, 'USD') || 'USD',
+    subtotal: readNumber(item.subtotal, 0),
+    tax: readNumber(item.tax, 0),
+    total: readNumber(item.total, 0),
+    amountPaid: readNumber(item.amountPaid, 0),
+    paymentMethodLabel: readString(item.paymentMethodLabel),
+    processorName: readString(item.processorName),
+    receiptAccessToken: readString(item.receiptAccessToken),
+  }
+}
+
 /** Query for GET purchase-history (1-based page). */
 export type SubscriptionPurchaseHistoryQuery = {
   pageNumber?: number
@@ -577,6 +637,35 @@ export function createSubscriptionPaymentsRepository(client: HttpClient = httpCl
         },
       )
       return normalizePurchaseHistoryPage(res, pageNumber)
+    },
+
+    /** GET `/api/v1/merchant/subscriptions/purchase-history/{orderId}/receipt-detail` */
+    async getReceiptDetail(orderId: string): Promise<SubscriptionReceiptDetail> {
+      const res = await client.get<unknown>(
+        `/api/v1/merchant/subscriptions/purchase-history/${encodeURIComponent(orderId)}/receipt-detail`,
+      )
+      return normalizeReceiptDetail(res)
+    },
+
+    /** POST `/api/v1/merchant/subscriptions/purchase-history/{orderId}/send-receipt-email` */
+    async sendReceiptEmail(orderId: string): Promise<void> {
+      await client.post(
+        `/api/v1/merchant/subscriptions/purchase-history/${encodeURIComponent(orderId)}/send-receipt-email`,
+        {},
+      )
+    },
+
+    /** GET `/api/v1/merchant/subscriptions/purchase-history/{orderId}/receipt-pdf?type=Invoice|Receipt` */
+    async downloadReceiptPdf(
+      orderId: string,
+      type: 'Invoice' | 'Receipt',
+    ): Promise<{ blob: Blob; filename: string }> {
+      const blob = await client.getBlob(
+        `/api/v1/merchant/subscriptions/purchase-history/${encodeURIComponent(orderId)}/receipt-pdf`,
+        { params: { type } },
+      )
+      const fallbackName = `${type}-${orderId}.pdf`
+      return { blob, filename: fallbackName }
     },
   }
 }

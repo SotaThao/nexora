@@ -40,6 +40,7 @@ import {
   stopBookingPreview,
 } from "../../../utils/bookingVoicePreview";
 import { formatWholeNumberInputValue } from "../../../utils/numericInput";
+import { TWELVE_HOUR_INPUT_LANG } from "../../../constants/timeFormat";
 import CountryCodeSelect, {
   formatNationalNumber,
   getNationalPhonePlaceholder,
@@ -3389,7 +3390,7 @@ export default function BookingSettingsPanel() {
                       <input
                         className="settings-hour-input"
                         type="time"
-                        lang="en-US-u-hc-h12"
+                        lang={TWELVE_HOUR_INPUT_LANG}
                         step={60}
                         value={row.openTime}
                         disabled={!row.open}
@@ -3432,7 +3433,7 @@ export default function BookingSettingsPanel() {
                       <input
                         className="settings-hour-input"
                         type="time"
-                        lang="en-US-u-hc-h12"
+                        lang={TWELVE_HOUR_INPUT_LANG}
                         step={60}
                         value={row.closeTime}
                         disabled={!row.open}
