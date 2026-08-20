@@ -3239,6 +3239,7 @@
             "checkoutCustomerCount": "{{count}} in service",
             "checkoutCustomerEmpty": "No customers are currently in service.",
             "checkoutCustomerEmptyHint": "Customers will appear here after a service starts.",
+            "checkoutCustomerStatusLabel": "Status",
             "checkoutCustomerStatus": "In Service",
             "checkoutCustomerColumnTicket": "Ticket",
             "checkoutCustomerColumnCustomer": "Customer",

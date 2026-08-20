@@ -56,6 +56,7 @@ import NewBookingForm from './booking/NewBookingForm'
 import BookingTab from './booking/BookingTab'
 import { formatBookingWallClockTime, resolveBookingWallClockParts } from './booking/bookingFormatters'
 import CustomerTab from './customer/CustomerTab'
+import { formatCustomerPhone } from './customer/customerFormatters'
 import TimeClockTab from './timeclock/TimeClockTab'
 
 // Every string this screen passes to t() lives under one namespace — building them through tk()
@@ -537,50 +538,69 @@ export default function PosFrontDeskView({
           </span>
         </div>
 
-        <div className={`${SCROLL_PANEL_MAX_HEIGHT} overflow-auto rounded-xl border border-nexoraBorder bg-nexoraSurface`}>
-          <table className="w-full min-w-[760px] text-left text-xs">
-            <thead>
-              <tr className="border-b border-nexoraBorder text-[10px] font-black uppercase tracking-wider text-nexoraMuted">
-                <th className="px-4 py-3 pr-3">{t(tk('checkoutCustomerColumnTicket'))}</th>
-                <th className="px-4 py-3 pr-3">{t(tk('checkoutCustomerColumnCustomer'))}</th>
-                <th className="px-4 py-3 pr-3">{t(tk('checkoutCustomerColumnServices'))}</th>
-                <th className="px-4 py-3 pr-3">{t(tk('checkoutCustomerColumnTechnician'))}</th>
-                <th className="px-4 py-3 pr-3">{t(tk('checkoutCustomerColumnStatus'))}</th>
-                <th className="px-4 py-3 pr-3">{t(tk('checkoutCustomerColumnStarted'))}</th>
-                <th className="px-4 py-3 text-right">{t(tk('checkoutCustomerColumnAction'))}</th>
-              </tr>
-            </thead>
-            <tbody>
-              {inServiceOrders.map((order) => (
-                <tr key={order.id} data-testid={`checkout-customer-${order.id}`} className="border-t border-nexoraBorder/70 hover:bg-cyan-50/30">
-                  <td className="whitespace-nowrap px-4 py-3 font-mono font-bold text-nexoraMuted">#{order.orderNumber}</td>
-                  <td className="px-4 py-3">
-                    <p className="font-bold text-nexoraText">{order.customerName}</p>
-                  </td>
-                  <td className="max-w-[220px] truncate px-4 py-3 text-nexoraMuted">{joinOrEmpty(order.serviceNames)}</td>
-                  <td className="max-w-[180px] truncate px-4 py-3 text-nexoraMuted">{joinOrEmpty(order.technicianNames)}</td>
-                  <td className="px-4 py-3">
+        <div className={`grid ${SCROLL_PANEL_MAX_HEIGHT} grid-cols-1 gap-3 overflow-y-auto pr-1 sm:grid-cols-2 lg:grid-cols-3`}>
+          {inServiceOrders.map((order) => {
+            const orderSummary = orderList.find((item) => item.id === order.id)
+            const customerPhone = orderSummary?.customerPhone
+              ? formatCustomerPhone(orderSummary.customerPhone)
+              : null
+
+            return (
+              <article
+                key={order.id}
+                data-testid={`checkout-customer-${order.id}`}
+                className="flex flex-col gap-3 rounded-2xl border border-nexoraBorder bg-nexoraSurface p-4 transition-colors hover:border-cyan-200 hover:bg-cyan-50/20"
+              >
+                <div className="flex items-start justify-between gap-3">
+                  <div className="min-w-0">
+                    <p className="truncate text-sm font-bold text-nexoraText">{order.customerName}</p>
+                    {customerPhone ? <p className="mt-0.5 text-xs tabular-nums text-nexoraMuted">{customerPhone}</p> : null}
+                    <p className="mt-1 font-mono text-[11px] font-bold text-nexoraMuted">#{order.orderNumber}</p>
+                  </div>
+                  <span className="shrink-0 rounded-full bg-cyan-100 px-2 py-1 text-[10px] font-black uppercase text-cyan-700">
+                    {t(tk('checkoutCustomerStatus'))}
+                  </span>
+                </div>
+
+                <div className="space-y-2 rounded-xl bg-nexoraCanvas/70 p-3">
+                  <div>
+                    <p className="text-[10px] font-black uppercase tracking-wider text-nexoraMuted">
+                      {t(tk('checkoutCustomerColumnServices'))}
+                    </p>
+                    <p className="mt-1 text-xs font-semibold text-nexoraText">{joinOrEmpty(order.serviceNames)}</p>
+                  </div>
+                  <div>
+                    <p className="text-[10px] font-black uppercase tracking-wider text-nexoraMuted">
+                      {t(tk('checkoutCustomerColumnTechnician'))}
+                    </p>
+                    <p className="mt-1 text-xs font-semibold text-nexoraText">{joinOrEmpty(order.technicianNames)}</p>
+                  </div>
+                  <div className="flex items-center justify-between gap-3 border-t border-nexoraBorder/70 pt-2">
+                    <p className="text-[10px] font-black uppercase tracking-wider text-nexoraMuted">
+                      {t(tk('checkoutCustomerStatusLabel'))}
+                    </p>
                     <span className="rounded-full bg-cyan-100 px-2 py-1 text-[10px] font-black uppercase text-cyan-700">
                       {t(tk('checkoutCustomerStatus'))}
                     </span>
-                  </td>
-                  <td className="whitespace-nowrap px-4 py-3 tabular-nums text-nexoraMuted">
-                    {order.firstAssignedAt ? formatPosTime(order.firstAssignedAt, currentLanguage) : '—'}
-                  </td>
-                  <td className="px-4 py-3 text-right">
-                    <button
-                      type="button"
-                      onClick={() => setUpdateWorkspace({ orderId: order.id })}
-                      className="inline-flex h-8 items-center gap-1.5 rounded-lg border border-violet-200 bg-violet-50/40 px-3 text-[11px] font-bold text-violet-700 hover:bg-violet-50"
-                    >
-                      <DollarSign className="h-3.5 w-3.5" aria-hidden="true" />
-                      {t(tk('checkoutButton'))}
-                    </button>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
+                  </div>
+                  {order.firstAssignedAt ? (
+                    <p className="text-[11px] tabular-nums text-nexoraMuted">
+                      {t(tk('servingSince'), { time: formatPosTime(order.firstAssignedAt, currentLanguage) })}
+                    </p>
+                  ) : null}
+                </div>
+
+                <button
+                  type="button"
+                  onClick={() => setUpdateWorkspace({ orderId: order.id })}
+                  className="inline-flex h-9 w-full items-center justify-center gap-1.5 rounded-lg border border-violet-200 bg-violet-50/40 px-3 text-[11px] font-bold text-violet-700 hover:bg-violet-50"
+                >
+                  <DollarSign className="h-3.5 w-3.5" aria-hidden="true" />
+                  {t(tk('checkoutButton'))}
+                </button>
+              </article>
+            )
+          })}
         </div>
       </section>
     )

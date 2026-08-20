@@ -3239,6 +3239,7 @@
             "checkoutCustomerCount": "{{count}} khách đang phục vụ",
             "checkoutCustomerEmpty": "Hiện không có khách nào đang được phục vụ.",
             "checkoutCustomerEmptyHint": "Khách sẽ xuất hiện ở đây sau khi bắt đầu dịch vụ.",
+            "checkoutCustomerStatusLabel": "Trạng thái",
             "checkoutCustomerStatus": "Đang phục vụ",
             "checkoutCustomerColumnTicket": "Phiếu",
             "checkoutCustomerColumnCustomer": "Khách hàng",
