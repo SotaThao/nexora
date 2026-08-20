@@ -296,13 +296,13 @@ export default function SettingsTipQrPanel({
                 </p>
               </div>
 
-              <div className="grid grid-cols-1 gap-2 sm:grid-cols-3">
+              <div className="flex flex-wrap items-center justify-start gap-2">
                 <button
                   type="button"
                   disabled={!paymentPageUrl}
                   onClick={() => setShowPreview(true)}
                   aria-label={t('components.settings.SettingsTipQrPanel.viewQr')}
-                  className="inline-flex h-9 w-full items-center justify-center gap-1.5 rounded-lg border border-sky-200 bg-sky-50 px-3 text-[11px] font-bold text-sky-700 transition hover:bg-sky-100 disabled:cursor-not-allowed disabled:opacity-50"
+                  className="inline-flex h-9 items-center justify-center gap-1.5 rounded-lg border border-sky-200 bg-sky-50 px-3 text-[11px] font-bold text-sky-700 transition hover:bg-sky-100 disabled:cursor-not-allowed disabled:opacity-50"
                 >
                   <QrCode className="h-3.5 w-3.5" />
                   <span className="truncate">
@@ -313,7 +313,7 @@ export default function SettingsTipQrPanel({
                   type="button"
                   disabled={!paymentPageUrl}
                   onClick={() => handleCopy(paymentPageUrl, 'direct-payment-url')}
-                  className="inline-flex h-9 w-full items-center justify-center gap-1.5 rounded-lg border border-nexoraBorder bg-white px-3 text-[11px] font-bold text-nexoraText transition hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-50"
+                  className="inline-flex h-9 items-center justify-center gap-1.5 rounded-lg border border-nexoraBorder bg-white px-3 text-[11px] font-bold text-nexoraText transition hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-50"
                 >
                   {copiedId === 'direct-payment-url' ? (
                     <>
@@ -332,7 +332,7 @@ export default function SettingsTipQrPanel({
                   onClick={() =>
                     navigate(buildDashboardReportsPath({ tab: DASHBOARD_REPORTS_TAB.directPayments }))
                   }
-                  className="inline-flex h-9 w-full items-center justify-center gap-1.5 rounded-lg border border-nexoraBrand/20 bg-nexoraBrandSoft px-3 text-[11px] font-bold text-nexoraBrand transition hover:bg-nexoraBrand/10"
+                  className="inline-flex h-9 items-center justify-center gap-1.5 rounded-lg border border-nexoraBrand/20 bg-nexoraBrandSoft px-3 text-[11px] font-bold text-nexoraBrand transition hover:bg-nexoraBrand/10"
                 >
                   <ClipboardList className="h-3.5 w-3.5" />
                   <span className="truncate">{t('components.settings.SettingsTipQrPanel.viewHistory')}</span>
