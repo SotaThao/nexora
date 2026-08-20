@@ -16,6 +16,7 @@ import {
   Loader2,
   Eye,
   Coins,
+  ExternalLink,
 } from 'lucide-react'
 import { useTranslation } from '../contexts/LanguageContext'
 import { useNotification } from '../contexts/NotificationContext'
@@ -473,9 +474,23 @@ export default function TouchpointsView({
                           <h3 className="truncate text-sm font-extrabold leading-snug text-nexoraText" title={point.name}>
                             {point.name}
                           </h3>
-                          <p className="truncate font-mono text-[9.5px] text-nexoraSubtle select-all">
-                            {qrUrl.replace(/^https?:\/\//, '')}
-                          </p>
+                          <div className="flex min-w-0 items-center gap-1">
+                            <p className="min-w-0 flex-1 truncate font-mono text-[9.5px] text-nexoraSubtle select-all">
+                              {qrUrl.replace(/^https?:\/\//, '')}
+                            </p>
+                            {qrUrl ? (
+                              <a
+                                href={qrUrl}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                aria-label={t('dashboard.touchpoints.station_actions.open_link')}
+                                title={t('dashboard.touchpoints.station_actions.open_link')}
+                                className="inline-flex h-5 w-5 shrink-0 items-center justify-center rounded text-nexoraSubtle transition hover:bg-nexoraSurfaceMuted hover:text-nexoraBrand"
+                              >
+                                <ExternalLink className="h-3 w-3" aria-hidden="true" />
+                              </a>
+                            ) : null}
+                          </div>
                         </div>
 
                         <div className="mt-2 flex items-center justify-start gap-1.5">

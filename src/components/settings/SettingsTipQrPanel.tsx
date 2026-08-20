@@ -1,10 +1,9 @@
-import { useCallback, useMemo, useState } from 'react'
+import { useMemo, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import {
   QrCode,
   Copy,
   Check,
-  Download,
   Loader2,
   ExternalLink,
   Wallet,
@@ -24,7 +23,7 @@ import {
   buildDashboardReportsPath,
   DASHBOARD_REPORTS_TAB,
 } from '../dashboard/constants'
-import { downloadQrCode, QR_IMAGE_SIZES } from '../../utils/qrUtils'
+import { QR_IMAGE_SIZES } from '../../utils/qrUtils'
 import { payoutTypeToUiKey, isPaymentMethodConfigured } from '../../data/paymentMethodTypes'
 import { PayoutUiKey } from '../../data/payoutUiKeys'
 import QrImage from '../ui/QrImage'
@@ -66,7 +65,6 @@ export default function SettingsTipQrPanel({
   )
 
   const [showPreview, setShowPreview] = useState(false)
-  const [isDownloading, setIsDownloading] = useState(false)
 
   const readyPaymentMethods = useMemo(
     () =>
@@ -89,20 +87,9 @@ export default function SettingsTipQrPanel({
     () => (paymentPageUrl ? buildPublicQrImageUrl(paymentPageUrl, QR_IMAGE_SIZES.panel) : ''),
     [paymentPageUrl],
   )
-
-  const handleDownloadQr = useCallback(async () => {
-    if (!paymentPageUrl) return
-
-    setIsDownloading(true)
-    try {
-      await downloadQrCode(buildPublicQrImageUrl(paymentPageUrl, QR_IMAGE_SIZES.print), 'direct-payment-qr.png')
-      showToast(t('components.SettingsView.qrCodeDownloaded'), 'success')
-    } catch {
-      showToast(t('components.dashboard.overview.Overview.qr_download_failed'), 'error')
-    } finally {
-      setIsDownloading(false)
-    }
-  }, [paymentPageUrl, showToast, t])
+  const scanCaption = businessName
+    ? t('components.settings.SettingsTipQrPanel.scanCaption', { businessName })
+    : t('components.settings.SettingsTipQrPanel.scanCaptionFallback')
 
   const isLoading = isProfileLoading || isQrLoading || isMethodsLoading
 
@@ -173,26 +160,16 @@ export default function SettingsTipQrPanel({
 
   if (isGateway) {
     const gatewayActionButtons = (
-      <>
-        <button
-          type="button"
-          onClick={() => setShowPreview(true)}
-          disabled={!paymentPageUrl}
-          className={`${gatewayActionBtnClass} bg-white border border-nexoraBorder text-nexoraText hover:bg-nexoraSurfaceMuted disabled:cursor-not-allowed disabled:opacity-60`}
-        >
-          <QrCode className="h-4 w-4 shrink-0" />
-          <span className="truncate">{t('dashboard.master_gateway.btn_open')}</span>
-        </button>
-        <button
-          type="button"
-          onClick={handleDownloadQr}
-          disabled={!paymentPageUrl || isDownloading}
-          className={`${gatewayActionBtnClass} bg-nexoraBrand text-white hover:bg-nexoraBrandDark disabled:cursor-not-allowed disabled:opacity-60`}
-        >
-          <Download className="h-4 w-4 shrink-0" />
-          <span className="truncate">{t('dashboard.master_gateway.btn_download')}</span>
-        </button>
-      </>
+      <button
+        type="button"
+        onClick={() => setShowPreview(true)}
+        disabled={!paymentPageUrl}
+        aria-label={t('components.settings.SettingsTipQrPanel.viewQr')}
+        className={`${gatewayActionBtnClass} border border-sky-200 bg-sky-50 text-sky-700 hover:bg-sky-100 disabled:cursor-not-allowed disabled:opacity-60`}
+      >
+        <QrCode className="h-4 w-4 shrink-0" />
+        <span className="truncate">{t('components.settings.SettingsTipQrPanel.viewQr')}</span>
+      </button>
     )
 
     return (
@@ -209,7 +186,9 @@ export default function SettingsTipQrPanel({
                 </h3>
               </div>
               <p className="mt-3 text-xs leading-normal text-nexoraMuted">
-                {t('dashboard.master_gateway.payment_body')}
+                {businessName
+                  ? t('dashboard.master_gateway.payment_body', { businessName })
+                  : scanCaption}
               </p>
             </div>
 
@@ -248,7 +227,7 @@ export default function SettingsTipQrPanel({
               type="button"
               disabled={!paymentPageUrl}
               onClick={() => handleCopy(paymentPageUrl, 'direct-payment-url')}
-              aria-label={t('dashboard.master_gateway.btn_copy_link')}
+              aria-label={t('components.settings.SettingsTipQrPanel.copyLink')}
               className="flex h-7 w-7 shrink-0 items-center justify-center rounded-md text-nexoraMuted transition hover:bg-nexoraSurfaceMuted hover:text-nexoraBrand disabled:cursor-not-allowed disabled:opacity-40"
             >
               {copiedId === 'direct-payment-url' ? (
@@ -271,7 +250,7 @@ export default function SettingsTipQrPanel({
           businessName={businessName}
           previewQrUrl={qrPreviewUrl}
           paymentPageUrl={paymentPageUrl}
-          scanCaption={t('components.settings.SettingsTipQrPanel.scanCaption')}
+          scanCaption={scanCaption}
         />
       </>
     )
@@ -313,11 +292,11 @@ export default function SettingsTipQrPanel({
                   ) : null
                 )}
                 <p className="text-[10px] text-nexoraMuted">
-                  {t('components.settings.SettingsTipQrPanel.scanCaption')}
+                  {scanCaption}
                 </p>
               </div>
 
-              <div className="grid grid-cols-2 gap-2 xl:grid-cols-4">
+              <div className="grid grid-cols-1 gap-2 sm:grid-cols-3">
                 <button
                   type="button"
                   disabled={!paymentPageUrl}
@@ -350,19 +329,6 @@ export default function SettingsTipQrPanel({
                 </button>
                 <button
                   type="button"
-                  disabled={!paymentPageUrl || isDownloading}
-                  onClick={handleDownloadQr}
-                  className="inline-flex h-9 w-full items-center justify-center gap-1.5 rounded-lg bg-amber-600 px-3 text-[11px] font-bold text-white transition hover:bg-amber-700 disabled:cursor-not-allowed disabled:opacity-50"
-                >
-                  {isDownloading ? (
-                    <Loader2 className="h-3.5 w-3.5 animate-spin" />
-                  ) : (
-                    <Download className="h-3.5 w-3.5" />
-                  )}
-                  <span className="truncate">{t('components.settings.SettingsTipQrPanel.downloadQr')}</span>
-                </button>
-                <button
-                  type="button"
                   onClick={() =>
                     navigate(buildDashboardReportsPath({ tab: DASHBOARD_REPORTS_TAB.directPayments }))
                   }
@@ -383,7 +349,7 @@ export default function SettingsTipQrPanel({
           businessName={businessName}
           previewQrUrl={qrPreviewUrl}
           paymentPageUrl={paymentPageUrl}
-          scanCaption={t('components.settings.SettingsTipQrPanel.scanCaption')}
+          scanCaption={scanCaption}
         />
       </>
     )
@@ -414,12 +380,12 @@ export default function SettingsTipQrPanel({
               {businessName || t('components.settings.SettingsTipQrPanel.defaultQrTitle')}
             </p>
             <p className="text-[10px] font-bold uppercase tracking-wide text-nexoraMuted">
-              {t('components.settings.SettingsTipQrPanel.scanCaption')}
+              {scanCaption}
             </p>
           </div>
         </div>
 
-        <div className="grid grid-cols-2 gap-3">
+        <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
           <button
             type="button"
             disabled={!paymentPageUrl}
@@ -450,19 +416,6 @@ export default function SettingsTipQrPanel({
           </button>
           <button
             type="button"
-            disabled={!paymentPageUrl || isDownloading}
-            onClick={handleDownloadQr}
-            className="flex w-full cursor-pointer flex-row items-center justify-center gap-2 rounded-lg bg-amber-600 px-3 py-3.5 text-[11px] font-bold leading-snug text-white transition hover:bg-amber-700 disabled:cursor-not-allowed disabled:opacity-50"
-          >
-            {isDownloading ? (
-              <Loader2 className="h-4 w-4 shrink-0 animate-spin" />
-            ) : (
-              <Download className="h-4 w-4 shrink-0" />
-            )}
-            <span>{t('components.settings.SettingsTipQrPanel.downloadQr')}</span>
-          </button>
-          <button
-            type="button"
             onClick={() =>
               navigate(buildDashboardReportsPath({ tab: DASHBOARD_REPORTS_TAB.directPayments }))
             }
@@ -481,7 +434,7 @@ export default function SettingsTipQrPanel({
         businessName={businessName}
         previewQrUrl={qrPreviewUrl}
         paymentPageUrl={paymentPageUrl}
-        scanCaption={t('components.settings.SettingsTipQrPanel.scanCaption')}
+        scanCaption={scanCaption}
       />
     </>
   )
