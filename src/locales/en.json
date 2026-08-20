@@ -745,6 +745,8 @@
         "emptyDescription": "Open the Chat app on mobile to find new users.",
         "emptySearch": "No matching conversations found.",
         "groupsEmptyTitle": "No groups found",
+        "loading": "Loading conversations…",
+        "loadError": "Could not load conversations. Please try again.",
         "chat": {
           "inputPlaceholder": "Type a message...",
           "attachImage": "Attach image",
@@ -761,6 +763,10 @@
           "close": "Close chat",
           "loaded": "{{count}} messages loaded",
           "directChatSubtitle": "1:1 conversation",
+          "groupChatSubtitle": "Group conversation",
+          "lastMessageFallback": "Open to view messages",
+          "loadError": "Could not load messages. Please try again.",
+          "sendError": "Could not send your message. Please try again.",
           "newChatWelcomeTitle": "Say hi to {{name}}",
           "newChatWelcomeSubtitle": "This is a private 1:1 conversation on Nexora Community.",
           "newChatHint": "Pick a quick start or type your own message below.",
@@ -1594,7 +1600,24 @@
     "role_error_required": "Enter a job title. This field cannot be empty or whitespace.",
     "role_error_too_long": "Job title cannot be longer than 100 characters.",
     "role_error_network": "Couldn't save job title, try again.",
-    "no_chart_data": "No chart data available."
+    "no_chart_data": "No chart data available.",
+    "chat_open": "Chat",
+    "chat_title": "Community Chat",
+    "chat_subtitle": "Private 1:1 with {{name}}",
+    "chat_modal_title": "Chat with {{name}}",
+    "chat_loading": "Loading conversation…",
+    "chat_load_error": "Could not load chat. Please try again.",
+    "chat_start_error": "Could not start chat. Please try again.",
+    "chat_send_error": "Could not send your message. Please try again.",
+    "chat_unavailable": "Chat is not available for this staff member.",
+    "chat_no_account": "This staff member does not have a Nexora login yet, so chat cannot be started.",
+    "chat_no_staff_profile": "Staff profile ID is missing, so chat cannot be started.",
+    "chat_empty_title": "No messages yet",
+    "chat_empty_subtitle": "Send the first message to start the conversation.",
+    "chat_input_placeholder": "Type a message…",
+    "chat_attach_image": "Attach image",
+    "chat_send": "Send message",
+    "chat_image_alt": "Chat image"
   },
   "customer": {
     "header_subtitle": "Nexora Touch Secure Gate",
@@ -2581,7 +2604,17 @@
     "pos_staff_clock_qr_business_mismatch": "You are not an active staff member of this salon.",
     "pos_staff_clock_too_soon": "That was just recorded — wait a moment before changing shift status again.",
     "pos_staff_clock_beep_target_invalid": "This staff member cannot be beeped right now.",
-    "local_staff_has_active_work": "This staff member is still assigned to open orders or bookings. Close or reassign them first."
+    "local_staff_has_active_work": "This staff member is still assigned to open orders or bookings. Close or reassign them first.",
+    "chat_session_not_found": "This chat was not found.",
+    "chat_not_a_participant": "You are not a member of this chat.",
+    "chat_not_allowed_to_manage_group": "Only the owner or a manager can manage this group chat.",
+    "chat_participant_must_have_account": "That person is not an active member of this business.",
+    "chat_message_not_found": "This message was not found.",
+    "chat_cannot_delete_others_message": "You can only delete your own messages.",
+    "chat_image_invalid_extension": "Only JPG and PNG images are allowed.",
+    "chat_image_too_large": "Image must be 10 MB or smaller.",
+    "chat_cannot_remove_self": "To leave the chat, use Leave instead of removing yourself.",
+    "chat_rename_only_for_group": "Only group chats can be renamed."
   },
   "components": {
     "common": {
@@ -3073,6 +3106,8 @@
           "scanToJoinAlt": "Scan to Join",
           "preview": "Preview",
           "manage_edit_profile": "Edit Profile",
+          "manage_chat": "Chat with staff",
+          "chat_short": "Chat",
           "manage_view_qr": "View QR Code",
           "manage_preview_customer": "Preview Customer View",
           "manage_remove_staff": "Remove Staff"

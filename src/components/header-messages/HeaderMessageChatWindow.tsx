@@ -16,18 +16,25 @@ import {
 } from 'lucide-react'
 import { useEffect, useMemo, useRef, useState, type ChangeEvent, type ReactElement } from 'react'
 import { createPortal } from 'react-dom'
+import { CommunityChatType } from '../../constants/communityChat'
+import {
+  useCommunityChatMessages,
+  useMarkCommunityChatSessionRead,
+  useSendCommunityChatImage,
+  useSendCommunityChatMessage,
+} from '../../data/hooks/useCommunityChat'
+import { sendCommunityChatHubMessage } from '../../lib/communityChatHub'
+import { useNotification } from '../../contexts/NotificationContext'
 import { useTranslation } from '../../contexts/LanguageContext'
+import { resolveTranslatedApiError } from '../../utils/resolveTranslatedApiError'
 import {
   HEADER_MESSAGES_CHAT_I18N,
   HEADER_MESSAGES_I18N,
-  HEADER_MESSAGES_MOCK_THREADS,
-  HEADER_MESSAGE_CHAT_LOADING_MS,
   HEADER_MESSAGE_CHAT_ROOT_ATTR,
   HEADER_MESSAGE_DESKTOP_CHAT_Z_BASE,
   HEADER_MESSAGE_DESKTOP_CHAT_Z_FOCUSED,
   HEADER_MESSAGE_DESKTOP_EDGE_INSET_PX,
   HEADER_MESSAGE_NEW_CHAT_STARTER_KEYS,
-  HEADER_MESSAGE_RECEIPT_READ_MS,
   HEADER_MESSAGE_REPLY_PREVIEW_MAX,
   HeaderChatMessageDirection,
   HeaderChatMessageReceiptStatus,
@@ -37,6 +44,15 @@ import {
   type HeaderMessageConversation,
 } from './headerMessagesConstants'
 import {
+  joinCommunityChatHubSession,
+  leaveCommunityChatHubSession,
+  getCommunityChatHubConnection,
+} from './communityChatRealtime'
+import {
+  mapCommunityChatMessageToThreadMessage,
+  sortThreadMessagesForDisplay,
+} from './headerMessagesMappers'
+import {
   formatHeaderMessageChatTime,
   formatHeaderMessageDateTime,
 } from './headerMessagesFormatters'
@@ -44,6 +60,7 @@ import './header-messages.css'
 
 interface HeaderMessageChatWindowProps {
   conversation: HeaderMessageConversation
+  currentUserProfileId: string
   layout: HeaderMessageChatLayout
   minimized?: boolean
   stackRightPx?: number
@@ -96,7 +113,7 @@ function getMessageSenderName(
 function getOutgoingReceiptStatus(
   message: HeaderChatThreadMessage,
 ): HeaderChatMessageReceiptStatus {
-  return message.receiptStatus ?? HeaderChatMessageReceiptStatus.Read
+  return message.receiptStatus ?? HeaderChatMessageReceiptStatus.Sent
 }
 
 function MessageReceiptIndicator({
@@ -238,6 +255,7 @@ function NewDirectChatWelcome({
 
 function HeaderMessageChatWindow({
   conversation,
+  currentUserProfileId,
   layout,
   minimized = false,
   stackRightPx = 0,
@@ -248,31 +266,57 @@ function HeaderMessageChatWindow({
   onBack,
 }: HeaderMessageChatWindowProps) {
   const { t, currentLanguage } = useTranslation()
+  const { showToast } = useNotification()
   const threadRef = useRef<HTMLDivElement>(null)
   const fileInputRef = useRef<HTMLInputElement>(null)
   const [draft, setDraft] = useState('')
   const [previewImageUrl, setPreviewImageUrl] = useState<string | null>(null)
-  const [isLoading, setIsLoading] = useState(true)
-  const [localMessages, setLocalMessages] = useState<HeaderChatThreadMessage[]>([])
+  const [isSending, setIsSending] = useState(false)
   const [replyDraft, setReplyDraft] = useState<HeaderChatReplyDraft | null>(null)
+
+  const sessionId = conversation.id
+  const isGroupChat = conversation.chatType === CommunityChatType.Group
+
+  const {
+    data: messagesPage,
+    isLoading,
+    isError: isMessagesError,
+  } = useCommunityChatMessages(sessionId, { pageNumber: 1, pageSize: 50 }, {
+    enabled: Boolean(sessionId) && !minimized,
+  })
+
+  const sendMessageMutation = useSendCommunityChatMessage(sessionId)
+  const sendImageMutation = useSendCommunityChatImage(sessionId)
+  const markReadMutation = useMarkCommunityChatSessionRead()
 
   const chatTk = HEADER_MESSAGES_CHAT_I18N
   const isFloating = layout === HeaderMessageChatLayout.Floating
   const isMobileFullscreen = layout === HeaderMessageChatLayout.Fullscreen
 
+  const localMessages = useMemo(
+    () => sortThreadMessagesForDisplay(
+      (messagesPage?.items ?? []).map((message) => (
+        mapCommunityChatMessageToThreadMessage(message, currentUserProfileId)
+      )),
+    ),
+    [currentUserProfileId, messagesPage?.items],
+  )
+
   useEffect(() => {
-    setIsLoading(true)
-    setLocalMessages([])
+    if (!sessionId || minimized) return undefined
+
+    void joinCommunityChatHubSession(sessionId)
+    markReadMutation.mutate(sessionId)
+
+    return () => {
+      void leaveCommunityChatHubSession(sessionId)
+    }
+  }, [minimized, sessionId])
+
+  useEffect(() => {
     setReplyDraft(null)
     setDraft('')
     setPreviewImageUrl(null)
-
-    const timer = window.setTimeout(() => {
-      setLocalMessages(HEADER_MESSAGES_MOCK_THREADS[conversation.id] ?? [])
-      setIsLoading(false)
-    }, HEADER_MESSAGE_CHAT_LOADING_MS)
-
-    return () => window.clearTimeout(timer)
   }, [conversation.id])
 
   useEffect(() => {
@@ -309,68 +353,46 @@ function HeaderMessageChatWindow({
     })
   }
 
-  const upgradeReceiptStatus = (
-    messageId: string,
-    receiptStatus: HeaderChatMessageReceiptStatus,
-  ) => {
-    setLocalMessages((current) => current.map((message) => (
-      message.id === messageId ? { ...message, receiptStatus } : message
-    )))
-  }
-
-  const scheduleReceiptProgress = (messageId: string) => {
-    window.setTimeout(
-      () => upgradeReceiptStatus(messageId, HeaderChatMessageReceiptStatus.Read),
-      HEADER_MESSAGE_RECEIPT_READ_MS,
-    )
-  }
-
-  const handleSend = () => {
+  const handleSend = async () => {
     const text = draft.trim()
-    if (!text || isLoading) return
+    if (!text || isLoading || isSending) return
 
-    const replyTo: HeaderChatMessageReplyTo | undefined = replyDraft
-      ? {
-          messageId: replyDraft.messageId,
-          senderName: replyDraft.senderName,
-          previewText: replyDraft.previewText,
-        }
-      : undefined
-
-    const messageId = `local-${Date.now()}`
-    setLocalMessages((current) => [
-      ...current,
-      {
-        id: messageId,
-        direction: HeaderChatMessageDirection.Outgoing,
-        sentAt: new Date().toISOString(),
-        bodyText: text,
-        replyTo,
-        receiptStatus: HeaderChatMessageReceiptStatus.Sent,
-      },
-    ])
-    scheduleReceiptProgress(messageId)
-    setDraft('')
-    clearReply()
+    setIsSending(true)
+    try {
+      const connection = await getCommunityChatHubConnection()
+      if (connection?.state === 'Connected') {
+        await sendCommunityChatHubMessage(connection, { sessionId, content: text })
+      } else {
+        await sendMessageMutation.mutateAsync({ content: text })
+      }
+      setDraft('')
+      clearReply()
+    } catch (error) {
+      showToast(
+        resolveTranslatedApiError(t, error, `${chatTk}.sendError`),
+        'error',
+      )
+    } finally {
+      setIsSending(false)
+    }
   }
 
-  const handleImagePick = (event: ChangeEvent<HTMLInputElement>) => {
+  const handleImagePick = async (event: ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0]
     event.target.value = ''
-    if (!file || isLoading || !file.type.startsWith('image/')) return
+    if (!file || isLoading || isSending || !file.type.startsWith('image/')) return
 
-    const messageId = `local-img-${Date.now()}`
-    setLocalMessages((current) => [
-      ...current,
-      {
-        id: messageId,
-        direction: HeaderChatMessageDirection.Outgoing,
-        sentAt: new Date().toISOString(),
-        imageUrl: URL.createObjectURL(file),
-        receiptStatus: HeaderChatMessageReceiptStatus.Sent,
-      },
-    ])
-    scheduleReceiptProgress(messageId)
+    setIsSending(true)
+    try {
+      await sendImageMutation.mutateAsync(file)
+    } catch (error) {
+      showToast(
+        resolveTranslatedApiError(t, error, `${chatTk}.sendError`),
+        'error',
+      )
+    } finally {
+      setIsSending(false)
+    }
   }
 
   const renderBubbleBody = (message: HeaderChatThreadMessage, bodyText: string) => {
@@ -537,7 +559,8 @@ function HeaderMessageChatWindow({
     return nodes
   }, [chatTk, conversation.initials, conversation.name, currentLanguage, localMessages, t])
 
-  const isThreadEmpty = !isLoading && localMessages.length === 0
+  const isThreadEmpty = !isLoading && !isMessagesError && localMessages.length === 0
+  const chatSubtitleKey = isGroupChat ? 'groupChatSubtitle' : 'directChatSubtitle'
 
   const floatingStackStyle = isFloating
     ? {
@@ -647,7 +670,7 @@ function HeaderMessageChatWindow({
             <span className="header-message-chat-head-name">{conversation.name}</span>
             <span className="header-message-chat-head-subtitle">
               <User className="h-3.5 w-3.5" aria-hidden="true" />
-              <span>{t(`${chatTk}.directChatSubtitle`)}</span>
+              <span>{t(`${chatTk}.${chatSubtitleKey}`)}</span>
             </span>
           </div>
         </div>
@@ -702,6 +725,10 @@ function HeaderMessageChatWindow({
       >
         {isLoading ? (
           <ChatThreadSkeleton mobile={isMobileFullscreen} />
+        ) : isMessagesError ? (
+          <div className="header-message-chat-error" role="alert">
+            {t(`${chatTk}.loadError`)}
+          </div>
         ) : isThreadEmpty ? (
           <NewDirectChatWelcome
             conversation={conversation}
@@ -765,7 +792,7 @@ function HeaderMessageChatWindow({
           type="button"
           className="header-message-chat-attach"
           aria-label={t(`${chatTk}.attachImage`)}
-          disabled={isLoading}
+          disabled={isLoading || isSending}
           onClick={() => fileInputRef.current?.click()}
         >
           <ImagePlus className="h-5 w-5" aria-hidden="true" />
@@ -777,13 +804,13 @@ function HeaderMessageChatWindow({
           onChange={(event) => setDraft(event.target.value)}
           placeholder={t(`${chatTk}.inputPlaceholder`)}
           aria-label={t(`${chatTk}.inputPlaceholder`)}
-          disabled={isLoading}
+          disabled={isLoading || isSending}
         />
         <button
           type="submit"
           className="header-message-chat-send"
           aria-label={t(`${chatTk}.send`)}
-          disabled={!draft.trim() || isLoading}
+          disabled={!draft.trim() || isLoading || isSending}
         >
           <Send className="h-4 w-4" aria-hidden="true" />
         </button>

@@ -11,11 +11,13 @@ import {
   Trash2,
   Wallet,
   Phone,
-  Mail
+  Mail,
+  MessagesSquare,
 } from 'lucide-react'
 import { useTranslation } from '../contexts/LanguageContext'
 import { logger } from '../utils/logger'
 import CopyableTransactionId from './ui/CopyableTransactionId'
+import IconButton from './ui/IconButton'
 import { DateTimeCell, formatCurrency, formatTransactionDateTime } from './dashboard/utils'
 import { buildChartPoints, getBezierPath } from './dashboard/overview/chartUtils'
 import {
@@ -28,6 +30,7 @@ import { staffRecordMatchesMember } from '../utils/staffRecordMatch'
 import { orderedPayoutUiKeysFromMethods, PAYOUT_UI_LABELS } from '../data/paymentMethodTypes'
 import NicknameEditor from './NicknameEditor'
 import RoleAtBusinessEditor from './RoleAtBusinessEditor'
+import StaffCommunityChatModal from './staff/StaffCommunityChatModal'
 import { STAFF_ROLE_ERROR_KEYS } from './staff/constants'
 
 const RANGE_DAY_OFFSETS = {
@@ -179,6 +182,7 @@ export default function StaffDetailView({
   const [reviewFilter, setReviewFilter] = useState('all') // 'all' | 'google' | 'private'
   const [hoverIndex, setHoverIndex] = useState<any | null>(null)
   const chartRef = useRef(null)
+  const [chatOpen, setChatOpen] = useState(false)
 
   const initialRange = getRangeDates('7 Days')
   const [range, setRange] = useState('7 Days')
@@ -428,6 +432,10 @@ export default function StaffDetailView({
 
   const activePoint = hoverIndex !== null && chartPoints.length > 0 ? chartPoints[hoverIndex] : null
 
+  const openStaffChat = () => {
+    setChatOpen(true)
+  }
+
   return (
     <div className="space-y-6 select-none">
       {onBack && (
@@ -580,6 +588,13 @@ export default function StaffDetailView({
                 }}
               />
             ) : null}
+            <IconButton
+              label={t('staff_detail.chat_open')}
+              onClick={openStaffChat}
+              className="h-10 w-10 hover:text-nexoraBrand"
+            >
+              <MessagesSquare className="h-4 w-4" />
+            </IconButton>
             <button
               onClick={() => onQr(staffMember)}
               className="inline-flex h-10 w-full sm:w-auto items-center justify-center gap-1.5 rounded-lg border border-nexoraBorder bg-white px-2 text-[11px] font-bold text-nexoraText shadow-sm transition hover:bg-nexoraSurfaceMuted sm:gap-2 sm:px-4 sm:text-xs"
@@ -607,6 +622,13 @@ export default function StaffDetailView({
           </div>
         </div>
       </div>
+
+      {chatOpen ? (
+        <StaffCommunityChatModal
+          staffMember={staffMember}
+          onClose={() => setChatOpen(false)}
+        />
+      ) : null}
 
       {/* 2. KPI METRICS CARDS */}
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-3">

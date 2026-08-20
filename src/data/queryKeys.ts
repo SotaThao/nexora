@@ -499,6 +499,13 @@ export const qk = {
   /** Prefix — invalidate all usage-activity filter variants. */
   merchantVoiceUsageActivityRoot: () => ['merchantVoice', 'usage', 'activity'] as const,
 
+  // Community Chat (US-101 → US-107)
+  communityChatSessions: () => ['communityChat', 'sessions'] as const,
+  communityChatSession: (sessionId?: string | null) => ['communityChat', 'session', sessionId ?? ''] as const,
+  communityChatMessagesRoot: (sessionId?: string | null) => ['communityChat', 'messages', sessionId ?? ''] as const,
+  communityChatMessages: (sessionId?: string | null, filters = EMPTY) =>
+    ['communityChat', 'messages', sessionId ?? '', filters] as const,
+
   // Nexora Voice trial (merchant)
   voiceTrialRequestMe: () => ['nexora-voice', 'trial-request', 'me'],
 

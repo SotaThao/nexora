@@ -1,3 +1,5 @@
+import { CommunityChatType } from '../../constants/communityChat'
+
 export enum HeaderMessagesTab {
   Messages = 'messages',
   Groups = 'groups',
@@ -38,6 +40,7 @@ export interface HeaderMessageConversation {
   id: string
   name: string
   initials: string
+  chatType?: CommunityChatType
   /** Fallback list preview when no last message is available yet. */
   previewKey: HeaderMessageListPreviewKey
   /** i18n key under `dashboard.header.messages.chat` for the latest message preview. */

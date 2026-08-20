@@ -1116,6 +1116,8 @@ export interface StaffListItemApiDto {
   inviteId?: string
   staffLinkId?: string
   staffProfileId?: string | null
+  userProfileId?: string | null
+  userId?: string | null
   staffCode?: string | null
   refCode?: string | null
   source?: string | null
@@ -1145,7 +1147,7 @@ export interface StaffListItemApiDto {
   invites?: StaffInviteSummaryApiDto[]
   isLocalStaff?: boolean
   staffProfile?: { phoneNumber?: string; phone?: string; email?: string }
-  user?: { phoneNumber?: string; phone?: string; email?: string }
+  user?: { id?: string; userProfileId?: string; phoneNumber?: string; phone?: string; email?: string }
 }
 
 export interface LocalStaffApiDto {

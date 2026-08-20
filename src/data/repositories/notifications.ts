@@ -90,6 +90,7 @@ const TYPE_TO_LINK_TAB: Record<string, string> = {
   taxiqpayoutdisputed: 'taxiq/payroll', // TaxIqPayoutDisputed
   voicecreditlow: 'booking-hub', // VoiceCreditLow
   voicecreditexhausted: 'booking-hub', // VoiceCreditExhausted
+  communitynewchatmessage: 'community-chat', // CommunityNewChatMessage (enum = 25)
 }
 
 /**

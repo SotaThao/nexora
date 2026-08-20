@@ -745,6 +745,8 @@
         "emptyDescription": "Mở ứng dụng Chat trên mobile để tìm người dùng mới.",
         "emptySearch": "Không tìm thấy cuộc trò chuyện phù hợp.",
         "groupsEmptyTitle": "Không tìm thấy nhóm",
+        "loading": "Đang tải cuộc trò chuyện…",
+        "loadError": "Không thể tải danh sách trò chuyện. Vui lòng thử lại.",
         "chat": {
           "inputPlaceholder": "Nhắn tin...",
           "attachImage": "Đính kèm hình ảnh",
@@ -761,6 +763,10 @@
           "close": "Đóng chat",
           "loaded": "Đã tải {{count}} tin nhắn",
           "directChatSubtitle": "Trò chuyện 1:1",
+          "groupChatSubtitle": "Trò chuyện nhóm",
+          "lastMessageFallback": "Mở để xem tin nhắn",
+          "loadError": "Không thể tải tin nhắn. Vui lòng thử lại.",
+          "sendError": "Không thể gửi tin nhắn. Vui lòng thử lại.",
           "newChatWelcomeTitle": "Gửi lời chào tới {{name}}",
           "newChatWelcomeSubtitle": "Đây là cuộc trò chuyện riêng 1:1 trên Nexora Community.",
           "newChatHint": "Chọn gợi ý nhanh hoặc nhập tin nhắn của bạn bên dưới.",
@@ -1594,7 +1600,24 @@
     "role_error_required": "Vui lòng nhập chức danh. Không được để trống hoặc chỉ có khoảng trắng.",
     "role_error_too_long": "Chức danh không được dài hơn 100 ký tự.",
     "role_error_network": "Không lưu được chức danh, thử lại.",
-    "no_chart_data": "Không có dữ liệu biểu đồ."
+    "no_chart_data": "Không có dữ liệu biểu đồ.",
+    "chat_open": "Chat",
+    "chat_title": "Community Chat",
+    "chat_subtitle": "Trò chuyện 1:1 với {{name}}",
+    "chat_modal_title": "Chat với {{name}}",
+    "chat_loading": "Đang tải cuộc trò chuyện…",
+    "chat_load_error": "Không thể tải chat. Vui lòng thử lại.",
+    "chat_start_error": "Không thể bắt đầu chat. Vui lòng thử lại.",
+    "chat_send_error": "Không thể gửi tin nhắn. Vui lòng thử lại.",
+    "chat_unavailable": "Chat không khả dụng cho nhân viên này.",
+    "chat_no_account": "Nhân viên này chưa có tài khoản đăng nhập Nexora nên chưa thể chat.",
+    "chat_no_staff_profile": "Thiếu Staff Profile ID nên chưa thể bắt đầu chat.",
+    "chat_empty_title": "Chưa có tin nhắn",
+    "chat_empty_subtitle": "Gửi tin nhắn đầu tiên để bắt đầu trò chuyện.",
+    "chat_input_placeholder": "Nhập tin nhắn…",
+    "chat_attach_image": "Đính kèm ảnh",
+    "chat_send": "Gửi tin nhắn",
+    "chat_image_alt": "Ảnh trong chat"
   },
   "customer": {
     "header_subtitle": "Cổng Kết Nối Thanh Toán An Toàn Nexora",
@@ -2581,7 +2604,17 @@
     "pos_staff_clock_qr_business_mismatch": "Bạn không phải nhân viên đang hoạt động của tiệm này.",
     "pos_staff_clock_too_soon": "Vừa ghi nhận xong — đợi một chút rồi hãy đổi trạng thái ca.",
     "pos_staff_clock_beep_target_invalid": "Không gọi được thợ này lúc này.",
-    "local_staff_has_active_work": "Nhân viên này vẫn đang được gán vào order hoặc booking chưa đóng. Hãy xử lý xong trước."
+    "local_staff_has_active_work": "Nhân viên này vẫn đang được gán vào order hoặc booking chưa đóng. Hãy xử lý xong trước.",
+    "chat_session_not_found": "Không tìm thấy cuộc trò chuyện này.",
+    "chat_not_a_participant": "Bạn không phải thành viên của cuộc trò chuyện này.",
+    "chat_not_allowed_to_manage_group": "Chỉ chủ salon hoặc quản lý mới có thể quản lý nhóm chat này.",
+    "chat_participant_must_have_account": "Người này không phải thành viên đang hoạt động của salon.",
+    "chat_message_not_found": "Không tìm thấy tin nhắn này.",
+    "chat_cannot_delete_others_message": "Bạn chỉ có thể xóa tin nhắn của chính mình.",
+    "chat_image_invalid_extension": "Chỉ chấp nhận ảnh JPG và PNG.",
+    "chat_image_too_large": "Ảnh phải nhỏ hơn hoặc bằng 10 MB.",
+    "chat_cannot_remove_self": "Để rời nhóm, hãy dùng chức năng Rời thay vì xóa chính mình.",
+    "chat_rename_only_for_group": "Chỉ nhóm chat mới có thể đổi tên."
   },
   "components": {
     "common": {
@@ -3073,6 +3106,8 @@
           "scanToJoinAlt": "Quét để gia nhập",
           "preview": "Xem trước",
           "manage_edit_profile": "Sửa hồ sơ",
+          "manage_chat": "Chat với nhân viên",
+          "chat_short": "Chat",
           "manage_view_qr": "Xem mã QR",
           "manage_preview_customer": "Xem trước góc nhìn khách hàng",
           "manage_remove_staff": "Xóa nhân viên"
