@@ -575,14 +575,6 @@ export default function PosFrontDeskView({
                     </p>
                     <p className="mt-1 text-xs font-semibold text-nexoraText">{joinOrEmpty(order.technicianNames)}</p>
                   </div>
-                  <div className="space-y-1">
-                    <p className="text-[10px] font-black uppercase tracking-wider text-nexoraMuted">
-                      {t(tk('checkoutCustomerStatusLabel'))}
-                    </p>
-                    <span className="rounded-full bg-cyan-100 px-2 py-1 text-[10px] font-black uppercase text-cyan-700">
-                      {t(tk('checkoutCustomerStatus'))}
-                    </span>
-                  </div>
                   {order.firstAssignedAt ? (
                     <p className="text-[11px] tabular-nums text-nexoraMuted">
                       {t(tk('servingSince'), { time: formatPosTime(order.firstAssignedAt, currentLanguage) })}
