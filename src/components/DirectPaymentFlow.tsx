@@ -46,7 +46,7 @@ export default function DirectPaymentFlow() {
     tipTotal,
     tipError,
     totalAmount,
-    perStaffTipAmount,
+    amountErrorText,
   } = flow
 
   const disablePaymentSelection =
@@ -135,6 +135,7 @@ export default function DirectPaymentFlow() {
                   customAmount={customAmount}
                   onCustomAmountChange={handleCustomAmountChange}
                   activeAmount={activeAmount}
+                  amountErrorText={amountErrorText}
                   walletOptions={walletOptions}
                   isLoadingMethods={false}
                   onSelectWallet={handleSelectWallet}
@@ -142,7 +143,6 @@ export default function DirectPaymentFlow() {
                   tip={canTip ? tip : null}
                   tipTotal={tipTotal}
                   totalAmount={totalAmount}
-                  perStaffTipAmount={perStaffTipAmount}
                   isProcessing={isCreating}
                 />
               ) : null}

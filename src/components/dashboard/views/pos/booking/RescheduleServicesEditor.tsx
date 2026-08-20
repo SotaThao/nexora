@@ -7,6 +7,7 @@ import { useTranslation } from '../../../../../contexts/LanguageContext'
 import { useCheckoutServiceCatalog } from '../../../../../data/hooks/usePosCheckout'
 import CategoryGroupedCatalogPicker from '../CategoryGroupedCatalogPicker'
 import { TechnicianSelect } from './NewBookingForm'
+import { randomUuid } from '../../../../../utils/uuid'
 
 export interface RescheduleLineDraft {
   key: string
@@ -32,7 +33,7 @@ export default function RescheduleServicesEditor({
   const handleAdd = (itemId: string) => {
     const service = serviceCatalog.find((s) => s.id === itemId)
     if (!service) return
-    onChange([...lines, { key: crypto.randomUUID(), posServiceId: service.id, serviceName: service.name }])
+    onChange([...lines, { key: randomUuid(), posServiceId: service.id, serviceName: service.name }])
   }
 
   const handleRemove = (key: string) => {

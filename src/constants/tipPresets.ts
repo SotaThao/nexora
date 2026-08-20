@@ -15,8 +15,5 @@ export const TIP_MIN_ITEM_AMOUNT = 1
 /** Maximum tip total accepted on one payment. */
 export const TIP_MAX_TOTAL_AMOUNT = 500
 
-/** POST /api/v1/tips/multi-staff rejects fewer recipients (TIP_MINIMUM_STAFF_COUNT). */
-export const MULTI_STAFF_TIP_MIN_COUNT = 2
-
 /** `required` = staff đã chọn nhưng chưa chọn số tiền típ → chặn submit. */
 export type TipErrorCode = 'required' | 'min_item' | 'max_total'

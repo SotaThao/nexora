@@ -20,6 +20,7 @@ import { useAssignableStaffForService, useCustomerLookupByPhone } from '../../..
 import { useCreateStaffBooking } from '../../../../../data/hooks/usePosBooking'
 import IconButton from '../../../../ui/IconButton'
 import CategoryGroupedCatalogPicker from '../CategoryGroupedCatalogPicker'
+import { randomUuid } from '../../../../../utils/uuid'
 import { TWELVE_HOUR_INPUT_LANG } from '../../../../../constants/timeFormat'
 
 interface BookingLineDraft {
@@ -155,7 +156,7 @@ export default function NewBookingForm({
     if (!service) return
     setLines((prev) => [
       ...prev,
-      { key: crypto.randomUUID(), posServiceId: service.id, serviceName: service.name, unitPrice: service.price },
+      { key: randomUuid(), posServiceId: service.id, serviceName: service.name, unitPrice: service.price },
     ])
     clearFieldError(NewBookingFormField.Services)
   }

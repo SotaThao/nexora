@@ -26,6 +26,7 @@ import RescheduleServicesEditor, { type RescheduleLineDraft } from './Reschedule
 import BookingLinkShare from './BookingLinkShare'
 import { formatBookingWallClock, resolveBookingWallClockParts, statusLabelKey } from './bookingFormatters'
 import { formatPosDateTime } from '../posDateTime'
+import { randomUuid } from '../../../../../utils/uuid'
 
 type ViewMode = 'table' | 'cards' | 'calendar'
 
@@ -100,7 +101,7 @@ export default function BookingTab({
           // real posServiceId to reschedule against — Staff must add a concrete service instead.
           .filter((s): s is typeof s & { posServiceId: string } => !!s.posServiceId)
           .map((s) => ({
-            key: crypto.randomUUID(),
+            key: randomUuid(),
             posServiceId: s.posServiceId,
             serviceName: s.serviceName,
             posStaffProfileId: s.posStaffProfileId ?? undefined,

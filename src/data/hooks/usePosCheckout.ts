@@ -8,6 +8,7 @@ import { useQuery, useMutation, useQueryClient, type QueryKey } from '@tanstack/
 import { qk } from '../queryKeys'
 import { useSessionRole } from '../../auth/useSessionRole'
 import posCheckoutRepository from '../repositories/posCheckout'
+import { randomUuid } from '../../utils/uuid'
 import type {
   CheckoutProductCatalogItemApiDto,
   CheckoutServiceCatalogItemApiDto,
@@ -127,7 +128,7 @@ export function useAddOrderServiceLine(businessId?: string) {
           serviceLines: [
             ...context.previousOrder.serviceLines,
             {
-              id: `optimistic-${crypto.randomUUID()}`,
+              id: `optimistic-${randomUuid()}`,
               posServiceId,
               serviceName,
               unitPrice,
@@ -246,7 +247,7 @@ export function useAddOrderProductLine(businessId?: string) {
           : [
               ...context.previousOrder.productLines,
               {
-                id: `optimistic-${crypto.randomUUID()}`,
+                id: `optimistic-${randomUuid()}`,
                 productName,
                 unitPrice,
                 quantity,

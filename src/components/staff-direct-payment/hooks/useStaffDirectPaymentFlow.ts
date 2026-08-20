@@ -27,6 +27,7 @@ import {
   runDirectPaymentWalletSelect,
   resolveWalletVlinkpayCryptoAddresses,
   toWalletTipPaymentMethodsData,
+  resolveDirectPaymentAmountError,
 } from '../../direct-payment/paymentFlowShared'
 
 const MIN_AMOUNT = DIRECT_PAYMENT_MIN_AMOUNT
@@ -86,6 +87,22 @@ export default function useStaffDirectPaymentFlow() {
     () => resolveWalletVlinkpayCryptoAddresses(activePaymentMethod, selectedWalletObj),
     [activePaymentMethod, selectedWalletObj],
   )
+
+  const amountError = resolveDirectPaymentAmountError(
+    customAmount,
+    activeAmount,
+    MIN_AMOUNT,
+    MAX_AMOUNT,
+  )
+  const amountErrorText = useMemo(() => {
+    if (amountError === 'too_low') {
+      return t('staff_direct_payment.amount_too_low', { min: formatUsdAmount(MIN_AMOUNT) })
+    }
+    if (amountError === 'too_high') {
+      return t('staff_direct_payment.amount_too_high', { max: formatUsdAmount(MAX_AMOUNT) })
+    }
+    return null
+  }, [amountError, t])
 
   const validateAmount = useCallback(() => {
     if (Number.isNaN(activeAmount) || activeAmount < MIN_AMOUNT) {
@@ -208,6 +225,8 @@ export default function useStaffDirectPaymentFlow() {
   }, [confirmPaymentMutation, currentPaymentId, showToast, t])
 
   return {
+    amountError,
+    amountErrorText,
     staffProfileId,
     currentLanguage,
     setLanguage,

@@ -1,5 +1,5 @@
 import React from 'react'
-import { Plus } from 'lucide-react'
+import { Plus, X } from 'lucide-react'
 
 import { formatUsdAmount } from '../../../utils/currencyInput'
 import type { TFunction } from '../../../types/contexts'
@@ -8,17 +8,14 @@ import type { DirectPaymentTip } from '../hooks/useDirectPaymentTip'
 interface PaymentTipSectionProps {
   t: TFunction
   tip: DirectPaymentTip
-  /** Even share each selected staff member receives — shown only for 2+ people. */
-  perStaffAmount: number
 }
 
 /**
- * "Add a tip" block on the review screen: pick who served you, then a tip total
- * that is split evenly across everyone picked.
+ * "Add a tip" block on the review screen: pick who served you, then a tip amount
+ * per person. The tip total is the sum of those amounts.
  */
-export default function PaymentTipSection({ t, tip, perStaffAmount }: PaymentTipSectionProps) {
+export default function PaymentTipSection({ t, tip }: PaymentTipSectionProps) {
   const hasSelection = tip.selectedStaff.length > 0
-  const showPerStaff = tip.selectedStaff.length > 1 && perStaffAmount > 0
 
   return (
     <div className="space-y-2.5 border-t border-nexoraBorder/70 px-3.5 py-3">
@@ -51,58 +48,111 @@ export default function PaymentTipSection({ t, tip, perStaffAmount }: PaymentTip
       ) : null}
 
       {hasSelection ? (
-        <div className="space-y-2">
-          {tip.selectedStaff.map((member) => (
-            <div
-              key={member.id}
-              className="flex items-center justify-between gap-3 rounded-xl border border-nexoraBorder bg-white p-2.5"
-            >
-              <div className="flex min-w-0 items-center gap-2.5">
-                {member.photoUrl ? (
-                  <img
-                    src={member.photoUrl}
-                    alt=""
-                    className="h-9 w-9 shrink-0 rounded-full border border-nexoraBorder object-cover"
-                  />
-                ) : (
-                  <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-gradient-to-tr from-nexoraElectric to-nexoraViolet text-xs font-black text-white">
-                    {(member.nickname || member.displayName).charAt(0).toUpperCase()}
-                  </span>
-                )}
-                <span className="min-w-0">
-                  <span className="block truncate text-sm font-extrabold text-nexoraText">
-                    {member.displayName}
-                  </span>
-                  <span className="mt-0.5 flex items-baseline gap-1 text-xs font-semibold text-nexoraSubtle">
-                    {member.position ? (
-                      <span className="truncate">{member.position}</span>
-                    ) : null}
-                    {showPerStaff ? (
-                      <>
-                        {member.position ? <span aria-hidden="true">·</span> : null}
-                        <span className="shrink-0 font-black text-nexoraText">
-                          {formatUsdAmount(perStaffAmount)}
+        <div className="space-y-3">
+          {tip.selectedStaff.map((member) => {
+            const entry = tip.getEntry(member.id)
+            return (
+              <div key={member.id} className="space-y-1.5">
+                <div className="flex items-center justify-between gap-3 rounded-xl border border-nexoraBorder bg-white p-2.5">
+                  <div className="flex min-w-0 items-center gap-2.5">
+                    {member.photoUrl ? (
+                      <img
+                        src={member.photoUrl}
+                        alt=""
+                        className="h-9 w-9 shrink-0 rounded-full border border-nexoraBorder object-cover"
+                      />
+                    ) : (
+                      <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-gradient-to-tr from-nexoraElectric to-nexoraViolet text-xs font-black text-white">
+                        {(member.nickname || member.displayName).charAt(0).toUpperCase()}
+                      </span>
+                    )}
+                    <span className="min-w-0">
+                      <span className="block truncate text-sm font-extrabold text-nexoraText">
+                        {member.displayName}
+                      </span>
+                      {member.position ? (
+                        <span className="mt-0.5 block truncate text-xs font-semibold text-nexoraSubtle">
+                          {member.position}
                         </span>
-                        <span className="shrink-0 text-[10px] uppercase">
-                          {t('direct_payment.tip_each')}
-                        </span>
-                      </>
-                    ) : null}
-                  </span>
-                </span>
-              </div>
+                      ) : null}
+                    </span>
+                  </div>
 
-              <div className="flex shrink-0 items-center gap-2">
-                <button
-                  type="button"
-                  onClick={() => tip.changeStaff(member.id)}
-                  className="text-xs font-bold text-nexoraBrand hover:text-nexoraBrandDark"
+                  <div className="flex shrink-0 items-center gap-1">
+                    <button
+                      type="button"
+                      onClick={tip.openPicker}
+                      className="px-1 text-xs font-bold text-nexoraBrand hover:text-nexoraBrandDark"
+                    >
+                      {t('direct_payment.tip_change')}
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => tip.removeStaff(member.id)}
+                      aria-label={t('direct_payment.tip_remove')}
+                      title={t('direct_payment.tip_remove')}
+                      className="flex h-8 w-8 items-center justify-center rounded-full text-nexoraSubtle transition hover:bg-red-50 hover:text-nexoraDanger"
+                    >
+                      <X className="h-4 w-4 stroke-[2.5px]" />
+                    </button>
+                  </div>
+                </div>
+
+                {/* Amount for THIS person — every recipient picks their own. */}
+                <div
+                  role="group"
+                  aria-label={t('direct_payment.tip_amount_for', { name: member.displayName })}
+                  className="grid grid-cols-5 gap-1.5"
                 >
-                  {t('direct_payment.tip_change')}
-                </button>
+                  {tip.presets.map((preset) => {
+                    const isActive = !entry.isCustom && entry.preset === preset
+                    return (
+                      <button
+                        key={preset}
+                        type="button"
+                        onClick={() => tip.selectPreset(member.id, preset)}
+                        className={`h-10 rounded-lg text-[11px] font-black transition ${
+                          isActive
+                            ? 'bg-nexoraBrand text-white shadow shadow-nexoraBrand/30'
+                            : 'border border-nexoraBorder bg-white text-nexoraText hover:border-nexoraBrand/50'
+                        }`}
+                      >
+                        {'$' + preset}
+                      </button>
+                    )
+                  })}
+                  <button
+                    type="button"
+                    onClick={() => tip.startCustom(member.id)}
+                    className={`h-10 rounded-lg text-[11px] font-black transition ${
+                      entry.isCustom
+                        ? 'bg-nexoraBrand text-white shadow shadow-nexoraBrand/30'
+                        : 'border border-nexoraBorder bg-white text-nexoraText hover:border-nexoraBrand/50'
+                    }`}
+                  >
+                    {t('customer.custom_tip_btn')}
+                  </button>
+                </div>
+
+                {entry.isCustom ? (
+                  <div className="relative">
+                    <span className="absolute left-3.5 top-1/2 -translate-y-1/2 text-sm font-extrabold text-nexoraSubtle">
+                      $
+                    </span>
+                    <input
+                      type="text"
+                      inputMode="decimal"
+                      value={entry.customInput}
+                      onChange={(event) => tip.setCustomInput(member.id, event.target.value)}
+                      aria-label={t('direct_payment.tip_amount_for', { name: member.displayName })}
+                      placeholder={t('direct_payment.tip_custom_placeholder')}
+                      className="h-11 w-full rounded-xl border border-nexoraBorder bg-white py-2.5 pl-8 pr-3 text-sm font-extrabold text-nexoraText outline-none transition focus:border-nexoraBrand"
+                    />
+                  </div>
+                ) : null}
               </div>
-            </div>
-          ))}
+            )
+          })}
 
           <button
             type="button"
@@ -112,54 +162,6 @@ export default function PaymentTipSection({ t, tip, perStaffAmount }: PaymentTip
             <Plus className="h-3.5 w-3.5 stroke-[3px]" />
             {t('direct_payment.tip_add_another')}
           </button>
-
-          <div className="grid grid-cols-5 gap-1.5">
-            {tip.presets.map((preset) => {
-              const isActive = !tip.isCustom && tip.presetAmount === preset
-              return (
-                <button
-                  key={preset}
-                  type="button"
-                  onClick={() => tip.selectPreset(preset)}
-                  className={`h-10 rounded-lg text-[11px] font-black transition ${
-                    isActive
-                      ? 'bg-nexoraBrand text-white shadow shadow-nexoraBrand/30'
-                      : 'border border-nexoraBorder bg-white text-nexoraText hover:border-nexoraBrand/50'
-                  }`}
-                >
-                  {'$' + preset}
-                </button>
-              )
-            })}
-            <button
-              type="button"
-              onClick={tip.startCustom}
-              className={`h-10 rounded-lg text-[11px] font-black transition ${
-                tip.isCustom
-                  ? 'bg-nexoraBrand text-white shadow shadow-nexoraBrand/30'
-                  : 'border border-nexoraBorder bg-white text-nexoraText hover:border-nexoraBrand/50'
-              }`}
-            >
-              {t('customer.custom_tip_btn')}
-            </button>
-          </div>
-
-          {tip.isCustom ? (
-            <div className="relative">
-              <span className="absolute left-3.5 top-1/2 -translate-y-1/2 text-sm font-extrabold text-nexoraSubtle">
-                $
-              </span>
-              <input
-                type="text"
-                inputMode="decimal"
-                value={tip.customInput}
-                onChange={(event) => tip.setCustomInput(event.target.value)}
-                aria-label={t('direct_payment.tip_section_label')}
-                placeholder={t('direct_payment.tip_custom_placeholder')}
-                className="h-11 w-full rounded-xl border border-nexoraBorder bg-white py-2.5 pl-8 pr-3 text-sm font-extrabold text-nexoraText outline-none transition focus:border-nexoraBrand"
-              />
-            </div>
-          ) : null}
 
           {tip.tipError === 'required' ? (
             <p className="text-xs font-semibold text-nexoraWarning">
