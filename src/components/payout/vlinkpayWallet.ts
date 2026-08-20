@@ -21,6 +21,15 @@ export const VLINKPAY_SYMBOL = {
   [VlinkpayCoin.Usdt]: 'USDT',
 } as const
 
+export const VLINKPAY_COIN_NAME = {
+  [VlinkpayCoin.Usdv]: 'USD VLINK',
+  [VlinkpayCoin.Usdt]: 'USD Tether',
+} as const
+
+/** Shared input class for VLINKPAY wallet-address fields (mobile compact override in index.css). */
+export const VLINKPAY_ADDRESS_INPUT_CLASS =
+  'vlinkpay-address-input h-8 w-full rounded-lg border bg-white px-2.5 font-sans text-[11px] text-slate-800 outline-none transition placeholder:text-[11px] placeholder:text-slate-400 focus:border-[#3657db] focus:ring-2 focus:ring-[#3657db]/15 sm:h-9'
+
 /** Wire value for create-payment / tip `cryptoSymbol` (BE example: "usdv"). */
 export function toVlinkpayCryptoSymbolWire(symbol?: string | null): string {
   return String(symbol || '').trim().toLowerCase()
@@ -34,13 +43,13 @@ export const VLINKPAY_COIN_ASSET = {
 export const VLINKPAY_COINS = [
   {
     key: VlinkpayCoin.Usdv,
-    name: 'USD VLINK',
+    name: VLINKPAY_COIN_NAME[VlinkpayCoin.Usdv],
     symbol: VLINKPAY_SYMBOL[VlinkpayCoin.Usdv],
     asset: VLINKPAY_COIN_ASSET[VlinkpayCoin.Usdv],
   },
   {
     key: VlinkpayCoin.Usdt,
-    name: 'Tether USD',
+    name: VLINKPAY_COIN_NAME[VlinkpayCoin.Usdt],
     symbol: VLINKPAY_SYMBOL[VlinkpayCoin.Usdt],
     asset: VLINKPAY_COIN_ASSET[VlinkpayCoin.Usdt],
   },
@@ -72,18 +81,22 @@ export function emptyVlinkpayAddresses(): VlinkpayAddresses {
   return { ...EMPTY_ADDRESSES }
 }
 
+/** Wallet addresses are a single token — strip all whitespace (typed, pasted, or stored). */
+export function stripVlinkpayWalletAddressInput(value?: string | null): string {
+  return String(value || '').replace(/\s+/g, '')
+}
+
 /** Reject page URLs / empty junk that must never be treated as a crypto receive address. */
 export function isPlausibleVlinkpayWalletAddress(value?: string | null): boolean {
-  const raw = String(value || '').trim()
+  const raw = stripVlinkpayWalletAddressInput(value)
   if (!raw) return false
   if (/^https?:\/\//i.test(raw)) return false
-  if (/\s/.test(raw)) return false
   if (raw.length > VLINKPAY_ADDRESS_MAX_LENGTH) return false
   return true
 }
 
 function sanitizeAddress(value?: string | null): string {
-  const raw = String(value || '').trim()
+  const raw = stripVlinkpayWalletAddressInput(value)
   return isPlausibleVlinkpayWalletAddress(raw) ? raw : ''
 }
 
@@ -104,8 +117,12 @@ export function parseVlinkpayAddresses(value?: string | null): VlinkpayAddresses
     // Legacy single-string accountInfo — keep it on USDV when it looks like a wallet address.
   }
 
-  if (!isPlausibleVlinkpayWalletAddress(raw)) return emptyVlinkpayAddresses()
-  return { [VlinkpayCoin.Usdv]: raw, [VlinkpayCoin.Usdt]: '' }
+  // Display strings like "USDV 0xabc · USDT 0xdef" contain spaces by design.
+  if (/^(USDV|USDT)\b/i.test(raw) || raw.includes('·')) return emptyVlinkpayAddresses()
+
+  const address = sanitizeAddress(raw)
+  if (!address) return emptyVlinkpayAddresses()
+  return { [VlinkpayCoin.Usdv]: address, [VlinkpayCoin.Usdt]: '' }
 }
 
 /** Parse BE cryptoAddresses[] into UI address map. */
@@ -147,7 +164,7 @@ export function toVlinkpayCryptoAddressesPayload(
 ): VlinkpayCryptoAddressDto[] {
   const payload: VlinkpayCryptoAddressDto[] = []
   for (const coin of VLINKPAY_COINS) {
-    const address = addresses[coin.key].trim()
+    const address = sanitizeAddress(addresses[coin.key])
     if (!address) continue
     payload.push({
       network: VLINKPAY_NETWORK,
@@ -160,14 +177,25 @@ export function toVlinkpayCryptoAddressesPayload(
 
 /** @deprecated Prefer toVlinkpayCryptoAddressesPayload for API writes. */
 export function serializeVlinkpayAddresses(addresses: VlinkpayAddresses): string {
+  if (!hasAtLeastOneVlinkpayAddress(addresses)) return ''
   return JSON.stringify({
-    [VlinkpayCoin.Usdv]: addresses[VlinkpayCoin.Usdv].trim(),
-    [VlinkpayCoin.Usdt]: addresses[VlinkpayCoin.Usdt].trim(),
+    [VlinkpayCoin.Usdv]: sanitizeAddress(addresses[VlinkpayCoin.Usdv]),
+    [VlinkpayCoin.Usdt]: sanitizeAddress(addresses[VlinkpayCoin.Usdt]),
   })
 }
 
 export function hasAtLeastOneVlinkpayAddress(addresses: VlinkpayAddresses): boolean {
-  return Boolean(addresses[VlinkpayCoin.Usdv].trim() || addresses[VlinkpayCoin.Usdt].trim())
+  return Boolean(
+    stripVlinkpayWalletAddressInput(addresses[VlinkpayCoin.Usdv])
+    || stripVlinkpayWalletAddressInput(addresses[VlinkpayCoin.Usdt]),
+  )
+}
+
+/** True when a draft/saved VlinkPay payout `value` string has at least one address. */
+export function isVlinkpayPayoutValueConfigured(value?: string | null): boolean {
+  const trimmed = String(value || '').trim()
+  if (!trimmed) return false
+  return hasAtLeastOneVlinkpayAddress(parseVlinkpayAddresses(trimmed))
 }
 
 /**
@@ -213,24 +241,108 @@ export function resolveVlinkpayAddresses(methodOrValue?: {
 /** First source that has an address for each coin wins. */
 export function mergeVlinkpayAddresses(...sources: VlinkpayAddresses[]): VlinkpayAddresses {
   return {
-    [VlinkpayCoin.Usdv]: sources.map((source) => source[VlinkpayCoin.Usdv].trim()).find(Boolean) || '',
-    [VlinkpayCoin.Usdt]: sources.map((source) => source[VlinkpayCoin.Usdt].trim()).find(Boolean) || '',
+    [VlinkpayCoin.Usdv]:
+      sources.map((source) => sanitizeAddress(source[VlinkpayCoin.Usdv])).find(Boolean) || '',
+    [VlinkpayCoin.Usdt]:
+      sources.map((source) => sanitizeAddress(source[VlinkpayCoin.Usdt])).find(Boolean) || '',
   }
 }
 
+/**
+ * Prefer the primary source when it has any address.
+ * Useful for single-staff flows where staff config should override business fallback.
+ */
+export function resolvePreferredVlinkpayAddresses(
+  primary: VlinkpayAddresses,
+  ...fallbacks: VlinkpayAddresses[]
+): VlinkpayAddresses {
+  if (hasAtLeastOneVlinkpayAddress(primary)) return primary
+  return mergeVlinkpayAddresses(...fallbacks)
+}
+
 export function firstAvailableVlinkpayCoin(addresses: VlinkpayAddresses): VlinkpayCoinKey | null {
-  const coin = VLINKPAY_COINS.find((item) => addresses[item.key].trim())
+  const coin = listAvailableVlinkpayCoins(addresses)[0]
   return coin?.key ?? null
+}
+
+export function listAvailableVlinkpayCoins(addresses: VlinkpayAddresses) {
+  return VLINKPAY_COINS.filter((coin) => sanitizeAddress(addresses[coin.key]))
+}
+
+/** The sole configured coin when count === 1; otherwise null. */
+export function getSingleConfiguredVlinkpayCoin(addresses: VlinkpayAddresses) {
+  const coins = listAvailableVlinkpayCoins(addresses)
+  return coins.length === 1 ? coins[0] : null
+}
+
+/** Normalize wire/UI crypto symbol to uppercase display form. */
+export function normalizeVlinkpayCryptoSymbol(symbol?: string | null): string {
+  return String(symbol || '').trim().toUpperCase()
+}
+
+export function getVlinkpayCoinBySymbol(symbol?: string | null) {
+  const key = SYMBOL_TO_COIN[normalizeVlinkpayCryptoSymbol(symbol)]
+  if (!key) return null
+  return VLINKPAY_COINS.find((coin) => coin.key === key) ?? null
+}
+
+/** Merge crypto symbol onto a selected wallet object for success/VIA display. */
+export function withWalletCryptoSymbol<T extends Record<string, unknown>>(
+  wallet: T | null | undefined,
+  cryptoSymbol?: string | null,
+): T | null {
+  if (!wallet) return null
+  const normalized = normalizeVlinkpayCryptoSymbol(cryptoSymbol)
+  if (!normalized) {
+    const next = { ...wallet }
+    delete (next as { cryptoSymbol?: string }).cryptoSymbol
+    return next
+  }
+  return { ...wallet, cryptoSymbol: normalized }
+}
+
+/** Success-screen VIA label, e.g. `VLINKPAY · USDV (VRC20)`. */
+export function formatVlinkpayViaLabel(symbol?: string | null): string {
+  const normalized = normalizeVlinkpayCryptoSymbol(symbol)
+  if (!normalized) return VLINKPAY_BRAND
+  return `${VLINKPAY_BRAND} · ${normalized} (${VLINKPAY_NETWORK})`
 }
 
 export function formatVlinkpayAccountDisplay(value?: string | null): string {
   return formatVlinkpayAddressesDisplay(parseVlinkpayAddresses(value))
 }
 
+export function parsePaymentCryptoWallet(raw: unknown): VlinkpayCryptoAddressDto | null {
+  if (!raw || typeof raw !== 'object') return null
+  const source = raw as Record<string, unknown>
+  const network = String(source.network ?? source.Network ?? '').trim()
+  const symbol = String(source.symbol ?? source.Symbol ?? '').trim()
+  const address = stripVlinkpayWalletAddressInput(source.address ?? source.Address)
+  if (!network && !symbol && !address) return null
+  return { network, symbol, address }
+}
+
+export function formatVlinkpayCryptoWalletDisplay(
+  wallet?: Pick<VlinkpayCryptoAddressDto, 'symbol' | 'address'> | null,
+): string {
+  const address = stripVlinkpayWalletAddressInput(wallet?.address)
+  if (!address) return ''
+  const symbol = normalizeVlinkpayCryptoSymbol(wallet?.symbol)
+  return symbol ? `${symbol} ${address}` : address
+}
+
+/** Account shown on payment detail: VlinkPay uses cryptoWallet; others use accountInfo. */
+export function resolveDirectPaymentAccountDisplay(payment?: {
+  accountInfo?: string | null
+  cryptoWallet?: Pick<VlinkpayCryptoAddressDto, 'symbol' | 'address'> | null
+} | null): string {
+  return formatVlinkpayCryptoWalletDisplay(payment?.cryptoWallet) || String(payment?.accountInfo || '').trim()
+}
+
 export function formatVlinkpayAddressesDisplay(addresses: VlinkpayAddresses): string {
   const parts = VLINKPAY_COINS
     .map((coin) => {
-      const address = addresses[coin.key].trim()
+      const address = sanitizeAddress(addresses[coin.key])
       return address ? `${coin.symbol} ${address}` : ''
     })
     .filter(Boolean)
@@ -244,14 +356,13 @@ export function formatVlinkpayMethodDisplay(method?: {
   return formatVlinkpayAddressesDisplay(parseVlinkpayAddressesFromMethod(method))
 }
 
-/** True when BE marks configured OR at least one crypto address is present. */
+/** True when at least one USDV/USDT address is present. */
 export function isVlinkpayMethodConfigured(method?: {
   isConfigured?: boolean
   accountInfo?: string | null
-  cryptoAddresses?: VlinkpayCryptoAddressDto[] | null
+  cryptoAddresses?: Array<{ network?: string; symbol?: string; address?: string }> | null
 } | null): boolean {
   if (!method) return false
-  if (method.isConfigured) return true
   return hasAtLeastOneVlinkpayAddress(parseVlinkpayAddressesFromMethod(method))
 }
 
@@ -261,8 +372,8 @@ export function getVlinkpayAddressValidationError(
 ): 'required' | 'vlinkpay_address_invalid' | '' {
   if (!hasAtLeastOneVlinkpayAddress(addresses)) return 'required'
   for (const coin of VLINKPAY_COINS) {
-    const address = addresses[coin.key].trim()
-    if (address && address.length > VLINKPAY_ADDRESS_MAX_LENGTH) {
+    const address = stripVlinkpayWalletAddressInput(addresses[coin.key])
+    if (address && !isPlausibleVlinkpayWalletAddress(address)) {
       return 'vlinkpay_address_invalid'
     }
   }

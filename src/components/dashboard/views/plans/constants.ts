@@ -143,9 +143,20 @@ export function formatPlanPrice(price: number): string {
   return formatUsdAmount(price)
 }
 
-/** Invoice total: `$199` + localized `/mo` (pass `t(...perMonth)`). */
+/** Invoice total: `$199` + localized `/month` (pass `t(...perMonth)`). */
 export function formatPlanMonthlyTotal(price: number, perMonthSuffix: string): string {
   return `${formatUsdAmount(price)}${perMonthSuffix}`
+}
+
+/** Localized billing-period suffix for plan cards, checkout, and toasts. */
+export function resolvePlanBillingPeriodSuffix(
+  billingCycle: SubscriptionBillingCycle,
+  translate: (key: string) => string,
+  plansTranslationKey: string,
+): string {
+  return billingCycle === SubscriptionBillingCycle.Yearly
+    ? translate(`${plansTranslationKey}.perYear`)
+    : translate(`${plansTranslationKey}.perMonth`)
 }
 
 export function formatPackageHistoryAmount(amount: number, currency = 'USD'): string {

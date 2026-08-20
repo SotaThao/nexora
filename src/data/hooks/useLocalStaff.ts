@@ -8,6 +8,7 @@ import { resolvePaymentMethodImageUrl } from '../../utils/resolvePaymentMethodIm
 import { dataUrlToFile } from '../../utils/imageFile'
 import { splitFullName } from '../../utils/staffName'
 import {
+  isVlinkpayPayoutValueConfigured,
   parseVlinkpayAddresses,
   toVlinkpayCryptoAddressesPayload,
 } from '../../components/payout/vlinkpayWallet'
@@ -51,12 +52,16 @@ async function configureLocalStaffPaymentMethods(
     const accountInfo = config?.value?.trim()
     if (!accountInfo || !method.id) continue
 
+    const isVlinkpay = uiKey === PayoutUiKey.VlinkPay
+    if (isVlinkpay && !isVlinkpayPayoutValueConfigured(accountInfo)) {
+      continue
+    }
+
     const imageUrl = await resolvePaymentMethodImageUrl({
       imageFile: config.qrFile,
       imageUrl: config.qrCode,
     })
 
-    const isVlinkpay = uiKey === PayoutUiKey.VlinkPay
     await localStaffRepository.updatePaymentMethod(staffProfileId, method.id, {
       ...(isVlinkpay
         ? {

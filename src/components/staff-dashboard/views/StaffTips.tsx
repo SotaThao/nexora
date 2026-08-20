@@ -27,9 +27,6 @@ const STATUS_STYLE: Partial<Record<TipStatus, string>> = {
 }
 
 // Maps the flat StaffTipItem into the shape TransactionDetailModal expects.
-// touchpoint/staff-breakdown fields are intentionally omitted — the staff tips
-// endpoint doesn't return them, and the modal already hides sections it has no
-// data for (see StaffTips.tsx design notes / TransactionDetailModal isStaffAudience).
 function toTransactionDetail(tip: StaffTipItem) {
   return {
     id: tip.id,
@@ -40,6 +37,7 @@ function toTransactionDetail(tip: StaffTipItem) {
     isMultiStaff: tip.isMultiStaff,
     merchantConfirmedAt: tip.merchantConfirmedAt,
     staffConfirmedAt: tip.staffConfirmedAt,
+    touchpoint: tip.touchPointName || '',
     tipItems: [],
   }
 }

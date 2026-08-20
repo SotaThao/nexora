@@ -25,6 +25,7 @@ import { useNotification } from '../../../../contexts/NotificationContext'
 import { buildPublicQrImageUrl } from '../../../../data/repositories/publicQr'
 import { downloadQrCode, QR_IMAGE_SIZES } from '../../../../utils/qrUtils'
 import { buildQrPosterHtml, buildQrPreviewHtml } from './buildQrPreviewHtml'
+import { formatBookingHubTimestampTime } from '../bookingHubFormatters'
 import {
   buildQrAbsoluteUrl,
   buildQrPublicPath,
@@ -196,10 +197,7 @@ export default function BookingQrCodesPanel() {
   }
 
   const markCodeUsed = (code: string) => {
-    const usedAt = new Date().toLocaleTimeString(currentLanguage === 'vi' ? 'vi-VN' : 'en-US', {
-      hour: '2-digit',
-      minute: '2-digit',
-    })
+    const usedAt = formatBookingHubTimestampTime(new Date().toISOString(), currentLanguage)
     let markedLead: QrLeadMock | undefined
     setLeads((prev) =>
       prev.map((lead) => {

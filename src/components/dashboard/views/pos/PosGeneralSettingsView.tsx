@@ -14,7 +14,10 @@ import BusinessInfoCard from '../../../settings/BusinessInfoCard'
 import ToggleSwitch from '../../../ui/ToggleSwitch'
 import useBusinessHoursForm from './hooks/useBusinessHoursForm'
 import PosBookingSettingsPanel from './PosBookingSettingsPanel'
+import PosCheckInSettingsPanel from './PosCheckInSettingsPanel'
 import HolidayClosuresCard from '../HolidayClosuresCard'
+import { formatPosClockTime } from './posDateTime'
+import { TWELVE_HOUR_INPUT_LANG } from '../../../../constants/timeFormat'
 
 type SettingsFormErrors = Record<string, string>
 
@@ -25,10 +28,10 @@ export default function PosGeneralSettingsView({
   verificationStatus?: string
   businessId?: string
 }) {
-  const { t } = useTranslation()
+  const { t, currentLanguage } = useTranslation()
   const { data: setupData } = useMerchantSetup()
   const businessSlug = setupData?.businessInfo?.slug
-  const businessInfoForm = useBusinessInfoForm({ setupData, verificationStatus })
+  const businessInfoForm = useBusinessInfoForm({ setupData, verificationStatus, includeReviewLinks: true })
   const {
     businessHours,
     isEditingHours,
@@ -82,6 +85,11 @@ export default function PosGeneralSettingsView({
           businessWebsite={businessInfoForm.businessInfo.businessWebsite}
           bookingNotificationPhone={businessInfoForm.businessInfo.bookingNotificationPhone}
           salesTaxRatePercent={businessInfoForm.businessInfo.salesTaxRatePercent}
+          showReviewLinks
+          googleReview={businessInfoForm.businessInfo.googleReview}
+          yelpReview={businessInfoForm.businessInfo.yelpReview}
+          facebookReview={businessInfoForm.businessInfo.facebookReview}
+          instagramReview={businessInfoForm.businessInfo.instagramReview}
           logoUrl={businessInfoForm.logoUrl}
           onLogoChange={businessInfoForm.handleLogoChange}
           isUploadingLogo={businessInfoForm.isUploadingLogo}
@@ -137,6 +145,7 @@ export default function PosGeneralSettingsView({
                     <div className="flex items-center gap-2">
                       <input
                         type="time"
+                        lang={TWELVE_HOUR_INPUT_LANG}
                         aria-label={`${day.dayOfWeek} open time`}
                         className={inputClass((hoursErrors as SettingsFormErrors)[day.dayOfWeek])}
                         value={day.openTime || ''}
@@ -145,6 +154,7 @@ export default function PosGeneralSettingsView({
                       <span className="text-nexoraMuted text-xs">–</span>
                       <input
                         type="time"
+                        lang={TWELVE_HOUR_INPUT_LANG}
                         aria-label={`${day.dayOfWeek} close time`}
                         className={inputClass((hoursErrors as SettingsFormErrors)[day.dayOfWeek])}
                         value={day.closeTime || ''}
@@ -187,7 +197,7 @@ export default function PosGeneralSettingsView({
                   </span>
                   <span className="text-nexoraText font-extrabold">
                     {day.isOpen
-                      ? `${(day.openTime || '').slice(0, 5)} – ${(day.closeTime || '').slice(0, 5)}`
+                      ? `${formatPosClockTime(day.openTime, currentLanguage)} – ${formatPosClockTime(day.closeTime, currentLanguage)}`
                       : t('components.settings.tabs.ProfileTab.businessHours.closed')}
                   </span>
                 </div>
@@ -197,6 +207,8 @@ export default function PosGeneralSettingsView({
         </div>
 
         <HolidayClosuresCard />
+
+        <PosCheckInSettingsPanel businessId={businessId} />
 
         <PosBookingSettingsPanel businessId={businessId} businessSlug={businessSlug} />
       </div>

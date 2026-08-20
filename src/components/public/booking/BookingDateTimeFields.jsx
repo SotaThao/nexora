@@ -5,6 +5,7 @@ import {
   openDateTimePicker,
 } from './bookingUtils'
 import { PUBLIC_BOOKING_FIELD_ID } from './constants'
+import { toTwelveHourLangTag } from '../../../constants/timeFormat'
 
 /**
  * Date + time fields — same UX as SMS Create Campaign → Send schedule:
@@ -24,7 +25,7 @@ export default function BookingDateTimeFields({
 }) {
   const locale = bookingLocaleFromLang(lang)
   // Force 12-hour clock cycle (hc-h12), same as campaign schedule controls.
-  const localeTag = `${locale}-u-hc-h12`
+  const localeTag = toTwelveHourLangTag(locale)
 
   return (
     <div className="booking-select-grid">

@@ -6,6 +6,7 @@ import httpClient from '../../lib/httpClient'
 import type { CreateReviewVars, CreateTipVars, SkipTipVars } from '../../types/hooks'
 import type { PaymentMethodDto } from '../../types/domain'
 import { normalizeTouchPageData } from './normalizeTouchPage'
+import { PAYOUT_UI_KEY_TO_API_TYPE } from '../paymentMethodTypes'
 import { normalizePaymentMethodDto } from './paymentMethodDto'
 import { toVlinkpayCryptoSymbolWire } from '../../components/payout/vlinkpayWallet'
 
@@ -24,7 +25,10 @@ const PAYMENT_METHOD_MAP: Record<string, string> = {
 }
 
 function toWireMethod(uiMethod: string): string {
-  return PAYMENT_METHOD_MAP[uiMethod] ?? uiMethod
+  // UI keys are lowercase (zelle, cashapp…); the wire enum is PascalCase.
+  return PAYMENT_METHOD_MAP[uiMethod]
+    ?? PAYOUT_UI_KEY_TO_API_TYPE[String(uiMethod || '').toLowerCase()]
+    ?? uiMethod
 }
 
 export function createPublicTouchRepository(client: HttpClient = httpClient) {

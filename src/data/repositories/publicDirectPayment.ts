@@ -10,6 +10,7 @@ import type {
 import { PaymentType } from '../../types/domain'
 import { normalizePaymentStatusValue } from '../../utils/directPaymentStatus'
 import { normalizeCryptoAddresses } from './paymentMethodDto'
+import { toTipConstraints, toTipStaffList } from './tipStaffDto'
 
 type HttpClient = typeof httpClient
 
@@ -68,12 +69,25 @@ function normalizePaymentPage(raw: Record<string, unknown> | null | undefined): 
     .map((item) => normalizePublicPaymentMethod(item))
     .filter((item): item is PublicDirectPaymentMethod => Boolean(item))
 
+  const touchPoint = (source.touchPoint ?? source.TouchPoint) as Record<string, unknown> | undefined
+
   return {
     businessId: readField<string>(source, 'businessId', 'BusinessId') ?? '',
     businessName: readField<string>(source, 'businessName', 'BusinessName') ?? '',
     logoUrl: readField<string | null>(source, 'logoUrl', 'LogoUrl') ?? null,
     paymentUrl: readField<string>(source, 'paymentUrl', 'PaymentUrl') ?? '',
     paymentMethods,
+    // Tip block — present once BE extends the payment page DTO (US-045).
+    touchPointId: (touchPoint ? readField<string>(touchPoint, 'id', 'Id') : undefined)
+      ?? readField<string>(source, 'touchPointId', 'TouchPointId')
+      ?? null,
+    // Slugs let the page load staff from the touch endpoint without a QR redirect.
+    businessSlug: readField<string>(source, 'businessSlug', 'BusinessSlug') ?? null,
+    touchPointSlug: (touchPoint ? readField<string>(touchPoint, 'slug', 'Slug') : undefined)
+      ?? readField<string>(source, 'touchPointSlug', 'TouchPointSlug')
+      ?? null,
+    staff: toTipStaffList(source),
+    tipConstraints: toTipConstraints(source),
   }
 }
 

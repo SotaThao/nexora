@@ -12,6 +12,7 @@ import type {
   CompletedOrdersPage,
   CustomerLookupResultApiDto,
   OrderListItemApiDto,
+  PosCheckInResultApiDto,
   PosWaitlistOrderApiDto,
 } from '../../types/repositories'
 
@@ -64,8 +65,10 @@ export function createPosOrdersRepository(client: HttpClient = httpClient) {
       return res ?? EMPTY_COMPLETED_ORDERS_PAGE
     },
 
-    async checkInOrder(businessId: string, payload: CheckInOrderPayload): Promise<string> {
-      return await client.post<string>(`/api/v1/merchant/pos/${businessId}/orders`, payload)
+    // Answers with the order number as well as the id — the thank-you screen shows it the instant
+    // check-in succeeds, and the guest is standing there while it loads.
+    async checkInOrder(businessId: string, payload: CheckInOrderPayload): Promise<PosCheckInResultApiDto> {
+      return await client.post<PosCheckInResultApiDto>(`/api/v1/merchant/pos/${businessId}/orders`, payload)
     },
 
     // Check-in "returning customer" suggestion (Ticket 2) — null means no prior order
@@ -120,17 +123,6 @@ export function createPosOrdersRepository(client: HttpClient = httpClient) {
     async getAssignableStaffForService(businessId: string, posServiceId: string): Promise<AssignableStaffApiDto[]> {
       const res = await client.get<AssignableStaffApiDto[]>(
         `/api/v1/merchant/pos/${businessId}/orders/services/${posServiceId}/assignable-staff`,
-      )
-      return res ?? []
-    },
-
-    // Inverse of getAssignableStaffForService — which services can this technician
-    // perform. Used by Check-in Step 2's technician-first flow to disable services the
-    // chosen technician isn't assigned to (PosStaffServiceAssignment is a strict
-    // allow-list — no rows means no services).
-    async getAssignableServicesForStaff(businessId: string, posStaffProfileId: string): Promise<string[]> {
-      const res = await client.get<string[]>(
-        `/api/v1/merchant/pos/${businessId}/orders/staff/${posStaffProfileId}/assignable-services`,
       )
       return res ?? []
     },

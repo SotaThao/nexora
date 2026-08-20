@@ -1,5 +1,6 @@
 import React, { useEffect, useMemo, useRef, useState } from "react";
 import { BOOKING_HUB_PAGE_SIZE } from "../../../constants/pagination";
+import { TWELVE_HOUR_INPUT_LANG } from "../../../constants/timeFormat";
 import { BOOKING_HUB_PAGINATION_CLASSNAME } from "./bookingHubFormatters";
 import { applyAiHubProgressiveValidation } from "./bookingHubDialogValidation";
 import { useTranslation } from "../../../contexts/LanguageContext";
@@ -523,7 +524,7 @@ function TechScheduleTimeBox({
         className="settings-hour-input"
         type="time"
         value={value}
-        lang="en-US-u-hc-h12"
+        lang={TWELVE_HOUR_INPUT_LANG}
         step={60}
         disabled={disabled}
         aria-invalid={invalid}
@@ -1684,7 +1685,7 @@ export default function BookingTeamPanel({ embedded = false }: Props) {
                             </label>
                             <span
                               className="tech-schedule-time"
-                              lang="en-US-u-hc-h12"
+                              lang={TWELVE_HOUR_INPUT_LANG}
                             >
                               <TechScheduleTimeBox
                                 value={row.start}
