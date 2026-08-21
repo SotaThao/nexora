@@ -57,10 +57,10 @@ function formatAppointmentParts(iso: string, source: string, language: string) {
   }
 }
 
-function formatBookingPhone(phone?: string | null): string | null {
-  if (!phone?.trim()) return null
-  const formatted = formatCustomerPhone(phone)
-  return formatted || phone
+function formatBookingPhone(phone?: string | null, e164?: string | null): string | null {
+  if (!phone?.trim() && !e164?.trim()) return null
+  const formatted = formatCustomerPhone(phone, e164)
+  return formatted || phone || e164 || null
 }
 
 export default function BookingTable({
@@ -109,7 +109,7 @@ export default function BookingTable({
             const canAct = booking.status === PosOrderStatus.Pending || booking.status === PosOrderStatus.Confirmed
             const statusStyle = STATUS_STYLES[booking.status] ?? DEFAULT_STATUS_STYLE
             const appointment = formatAppointmentParts(booking.scheduledAt, booking.source, currentLanguage)
-            const phone = formatBookingPhone(booking.customerPhone)
+            const phone = formatBookingPhone(booking.customerPhone, booking.customerPhoneE164)
             return (
               <tr
                 key={booking.bookingId}

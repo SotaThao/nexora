@@ -1,12 +1,18 @@
-// Shared formatting helpers for the POS Front Desk "Customer" tab (US-043).
-//
-// Customer.Phone is stored digits-only (10-digit US) on the backend — see
-// CustomerMatchHelper / PhoneHelper.NormalizePhone — unlike PosOrder.CustomerPhone, which is
-// stored pre-formatted. This only formats for display; it never touches what's sent to the API.
-export function formatCustomerPhone(phone: string): string {
-  const digits = phone.replace(/\D/g, '')
-  if (digits.length !== 10) return phone
-  return `(${digits.slice(0, 3)}) ${digits.slice(3, 6)}-${digits.slice(6)}`
+// Shared formatting helpers for POS customer/booking/staff displays (US-043).
+// Keep display formatting identical to AI Hub so a phone does not change shape when staff move
+// between the Booking and Front Desk screens.
+import { formatVoicePhoneDisplay } from '../../bookingHubFormatters'
+
+// The backend stores the country code separately from the national number, and returns the
+// assembled E.164 form alongside it. Prefer that canonical value; when it is unavailable, use
+// AI Hub's validated national/raw fallback so a 10-digit US value still gets display formatting.
+export function formatCustomerPhone(
+  nationalNumber: string | null | undefined,
+  e164?: string | null,
+): string {
+  // Prefer the canonical E.164 value when the API resolved it; otherwise apply the same
+  // validation/fallback path AI Hub uses for a national/raw phone value.
+  return formatVoicePhoneDisplay(e164?.trim() || nationalNumber?.trim(), '') ?? ''
 }
 
 // DateOfBirth is a backend DateOnly ("YYYY-MM-DD", no time component) — a calendar date with

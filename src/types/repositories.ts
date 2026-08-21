@@ -223,6 +223,10 @@ export interface OrderListItemApiDto {
   orderNumber: string
   customerName: string
   customerPhone?: string | null
+  /** Dial code with a leading "+" when the backend resolved the number. */
+  customerPhoneCountryCode?: string | null
+  /** Full E.164 number when the backend resolved the number. */
+  customerPhoneE164?: string | null
   status: string
   checkedInAt: string
   elapsedMinutes: number
@@ -585,6 +589,7 @@ export interface OrderDetailApiDto {
   customerName: string
   customerEmail?: string | null
   customerPhone?: string | null
+  customerPhoneE164?: string | null
   status: string
   serviceLines: OrderServiceLineApiDto[]
   productLines: OrderProductLineApiDto[]
@@ -708,6 +713,7 @@ export interface BookingListItemApiDto {
   bookingId: string
   customerName: string
   customerPhone?: string | null
+  customerPhoneE164?: string | null
   // ISO 8601, always read via UTC getters (see feedback_frontend_datetime_timezone_naive).
   createdAt: string
   // ISO 8601 with offset — always read via UTC getters (see feedback_frontend_datetime_timezone_naive).
@@ -748,6 +754,7 @@ export interface BookingDetailApiDto {
   bookingId: string
   customerName: string
   customerPhone?: string | null
+  customerPhoneE164?: string | null
   customerEmail?: string | null
   // ISO 8601, always read via UTC getters (see feedback_frontend_datetime_timezone_naive).
   createdAt: string

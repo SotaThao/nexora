@@ -561,8 +561,8 @@ export default function PosFrontDeskView({
         <div className={`grid ${SCROLL_PANEL_MAX_HEIGHT} grid-cols-1 gap-3 overflow-y-auto pr-1 sm:grid-cols-2 lg:grid-cols-3`}>
           {inServiceOrders.map((order) => {
             const orderSummary = orderList.find((item) => item.id === order.id)
-            const customerPhone = orderSummary?.customerPhone
-              ? formatCustomerPhone(orderSummary.customerPhone)
+            const customerPhone = orderSummary?.customerPhone || orderSummary?.customerPhoneE164
+              ? formatCustomerPhone(orderSummary.customerPhone, orderSummary.customerPhoneE164)
               : null
 
             return (

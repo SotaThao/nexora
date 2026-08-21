@@ -220,8 +220,8 @@ export default function PosCompletedOrdersPanel({ businessId }: { businessId: st
                         {t('components.dashboard.views.pos.PosCompletedOrdersPanel.viewDetailPhone')}
                       </p>
                       <p className="text-xs text-nexoraText">
-                        {viewDetail.data.customerPhone
-                          ? formatCustomerPhone(viewDetail.data.customerPhone)
+                        {viewDetail.data.customerPhone || viewDetail.data.customerPhoneE164
+                          ? formatCustomerPhone(viewDetail.data.customerPhone, viewDetail.data.customerPhoneE164)
                           : t('components.dashboard.views.pos.PosCompletedOrdersPanel.viewDetailNotProvided')}
                       </p>
                     </div>
