@@ -278,6 +278,7 @@ export interface PosCustomerListItemApiDto {
   id: string
   name?: string | null
   phone: string
+  phoneE164?: string | null
   status: string
   totalVisit: number
   lastVisit?: string | null
