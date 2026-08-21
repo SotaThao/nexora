@@ -73,6 +73,8 @@ interface HeaderMessageChatWindowProps {
   isConversationLoading?: boolean
   /** Lazy-create session before first send (new staff chats with no prior thread). */
   ensureSessionId?: () => Promise<string>
+  /** Cover the whole viewport including app header (staff page open on mobile). */
+  immersive?: boolean
   onToggleMinimize: () => void
   onClose: () => void
   onBack?: () => void
@@ -242,6 +244,7 @@ function HeaderMessageChatWindow({
   isFocused = false,
   isConversationLoading = false,
   ensureSessionId,
+  immersive = false,
   onToggleMinimize,
   onClose,
   onBack,
@@ -639,7 +642,8 @@ function HeaderMessageChatWindow({
       className={[
         'header-message-chat',
         isFloating ? 'header-message-chat--floating' : 'header-message-chat--fullscreen',
-      ].join(' ')}
+        !isFloating && immersive ? 'is-immersive' : '',
+      ].filter(Boolean).join(' ')}
       style={floatingStackStyle}
       {...{ [HEADER_MESSAGE_CHAT_ROOT_ATTR]: '' }}
       role="dialog"
@@ -648,7 +652,7 @@ function HeaderMessageChatWindow({
     >
       <div className={`header-message-chat-head${isMobileFullscreen ? ' header-message-chat-head--mobile' : ''}`}>
         <div className="header-message-chat-head-main">
-          {isMobileFullscreen && onBack ? (
+          {isMobileFullscreen && onBack && !immersive ? (
             <button
               type="button"
               className="header-message-chat-back"
@@ -705,6 +709,17 @@ function HeaderMessageChatWindow({
               onClick={onClose}
             >
               <X className="h-4 w-4" aria-hidden="true" />
+            </button>
+          </div>
+        ) : immersive ? (
+          <div className="header-message-chat-head-actions">
+            <button
+              type="button"
+              className="header-message-chat-icon-btn header-message-chat-icon-btn--close"
+              aria-label={t(`${chatTk}.close`)}
+              onClick={onClose}
+            >
+              <X className="h-5 w-5" aria-hidden="true" />
             </button>
           </div>
         ) : null}

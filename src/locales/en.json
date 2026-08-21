@@ -3153,6 +3153,7 @@
           "preview": "Preview",
           "manage_edit_profile": "Edit Profile",
           "manage_chat": "Chat with staff",
+          "manage_chat_unread": "Chat with staff ({{count}} unread)",
           "chat_short": "Chat",
           "manage_view_qr": "View QR Code",
           "manage_preview_customer": "Preview Customer View",

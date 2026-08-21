@@ -1,10 +1,18 @@
 import { ArrowLeft, MessagesSquare, Search, Users, X } from 'lucide-react'
-import { useEffect, useMemo, useRef, useState } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { createPortal } from 'react-dom'
 import { useAuth } from '../../auth/useAuth'
 import { useSessionRole } from '../../auth/useSessionRole'
-import { CommunityChatType } from '../../constants/communityChat'
-import { useCommunityChatSession, useCommunityChatSessions, useMarkCommunityChatSessionRead } from '../../data/hooks/useCommunityChat'
+import {
+  CommunityChatType,
+  isPendingCommunityChatSessionId,
+} from '../../constants/communityChat'
+import {
+  useCommunityChatSession,
+  useCommunityChatSessions,
+  useCreateCommunityChatSession,
+  useMarkCommunityChatSessionRead,
+} from '../../data/hooks/useCommunityChat'
 import { useHydrateCommunityChatLastMessagePreviews } from '../../data/hooks/useHydrateCommunityChatLastMessagePreviews'
 import { useProfileSettings } from '../../data/hooks/useProfileSettings'
 import { useStaffBusinesses } from '../../data/hooks/useStaffSelf'
@@ -14,6 +22,11 @@ import {
 } from '../../data/communityChatSessionUtils'
 import { useTranslation } from '../../contexts/LanguageContext'
 import { useNotification } from '../../contexts/NotificationContext'
+import {
+  buildStaffChatConversation,
+  findStaffCommunityChatSession,
+} from '../staff/staffCommunityChatUtils'
+import { STAFF_CHAT_ENSURE_SESSION_PRECONDITION_ERROR } from '../staff/constants'
 import IconButton from '../ui/IconButton'
 import HeaderMessageChatWindow from './HeaderMessageChatWindow'
 import HeaderMessagesEmptyState from './HeaderMessagesEmptyState'
@@ -36,7 +49,9 @@ import {
 } from './headerMessagesMappers'
 import {
   OPEN_COMMUNITY_CHAT_SESSION_EVENT,
+  OPEN_STAFF_COMMUNITY_CHAT_EVENT,
   type OpenCommunityChatSessionDetail,
+  type OpenStaffCommunityChatDetail,
 } from './openCommunityChatSession'
 import { useCommunityChatRealtime } from './useCommunityChatRealtime'
 import { useDesktopChatSessions } from './useDesktopChatSessions'
@@ -80,6 +95,9 @@ export default function HeaderMessages({ variant }: HeaderMessagesProps) {
   const [searchQuery, setSearchQuery] = useState('')
   const [mobileActiveConversation, setMobileActiveConversation] = useState<HeaderMessageConversation | null>(null)
   const [pendingOpenSessionId, setPendingOpenSessionId] = useState<string | null>(null)
+  const [pendingStaffChat, setPendingStaffChat] = useState<OpenStaffCommunityChatDetail | null>(null)
+  /** Mobile staff/non-header open → true edge-to-edge chat (covers app header). */
+  const [mobileImmersiveChat, setMobileImmersiveChat] = useState(false)
 
   const currentUserProfileId = session?.id ?? ''
   const isAuthenticated = status === 'authenticated'
@@ -100,16 +118,23 @@ export default function HeaderMessages({ variant }: HeaderMessagesProps) {
   const canLoadMessenger = isAuthenticated && (
     open
     || Boolean(pendingOpenSessionId)
+    || Boolean(pendingStaffChat)
     || desktopChatSessions.length > 0
   )
 
   useCommunityChatRealtime({ enabled: canLoadMessenger })
 
+  const shouldLoadSessionList = canLoadMessenger && (
+    open
+    || Boolean(pendingOpenSessionId)
+    || Boolean(pendingStaffChat)
+  )
+
   const {
     data: chatSessions = [],
     isLoading: isSessionsLoading,
     isError: isSessionsError,
-  } = useCommunityChatSessions({ enabled: canLoadMessenger && open })
+  } = useCommunityChatSessions({ enabled: shouldLoadSessionList })
 
   const { data: pendingSession, isError: isPendingSessionError, isFetched: isPendingSessionFetched } = useCommunityChatSession(
     pendingOpenSessionId,
@@ -123,6 +148,11 @@ export default function HeaderMessages({ variant }: HeaderMessagesProps) {
     enabled: canLoadMessenger && !isStaff,
   })
 
+  const createSessionMutation = useCreateCommunityChatSession()
+  const merchantBusinessId = String(
+    profile?.business?.businessId ?? profile?.business?.id ?? '',
+  ).trim()
+
   const businessNameById = useMemo(() => {
     const map = new Map<string, string>()
 
@@ -132,14 +162,14 @@ export default function HeaderMessages({ variant }: HeaderMessagesProps) {
       if (id && name) map.set(id, name)
     })
 
-    const merchantBusinessId = String(
+    const businessId = String(
       profile?.business?.businessId ?? profile?.business?.id ?? '',
     ).trim()
     const merchantBusinessName = String(
       profile?.business?.businessName ?? profile?.business?.name ?? '',
     ).trim()
-    if (merchantBusinessId && merchantBusinessName) {
-      map.set(merchantBusinessId, merchantBusinessName)
+    if (businessId && merchantBusinessName) {
+      map.set(businessId, merchantBusinessName)
     }
 
     return map
@@ -200,6 +230,115 @@ export default function HeaderMessages({ variant }: HeaderMessagesProps) {
       window.removeEventListener(OPEN_COMMUNITY_CHAT_SESSION_EVENT, handleOpenCommunityChatSession)
     }
   }, [isDesktop])
+
+  useEffect(() => {
+    function isDesktopViewport(): boolean {
+      return window.matchMedia('(min-width: 1024px)').matches
+    }
+
+    function handleOpenStaffCommunityChat(event: Event) {
+      // Mobile + desktop HeaderMessages can both be mounted; only the
+      // viewport-matching instance should open.
+      if (isDesktop !== isDesktopViewport()) return
+
+      const detail = (event as CustomEvent<OpenStaffCommunityChatDetail>).detail
+      const peerUserProfileId = String(detail?.peerUserProfileId ?? '').trim()
+      if (!peerUserProfileId) return
+      const displayName = String(detail?.displayName ?? '').trim() || peerUserProfileId
+
+      const optimistic = buildStaffChatConversation({
+        chatSessionId: null,
+        windowKey: peerUserProfileId,
+        displayName,
+        peerUserProfileId,
+      })
+
+      if (isDesktop) {
+        // Desktop: floating messenger window (same as header conversation open).
+        ensureDesktopConversationOpen(optimistic)
+      } else {
+        // Non-header entry (staff page, etc.): true fullscreen over app chrome.
+        setMobileImmersiveChat(true)
+        setMobileActiveConversation(optimistic)
+        setOpen(true)
+        setActiveTab(HeaderMessagesTab.Messages)
+      }
+      setPendingStaffChat({ peerUserProfileId, displayName })
+    }
+
+    window.addEventListener(OPEN_STAFF_COMMUNITY_CHAT_EVENT, handleOpenStaffCommunityChat)
+    return () => {
+      window.removeEventListener(OPEN_STAFF_COMMUNITY_CHAT_EVENT, handleOpenStaffCommunityChat)
+    }
+  }, [ensureDesktopConversationOpen, isDesktop])
+
+  useEffect(() => {
+    if (!pendingStaffChat) return
+    if (isSessionsLoading) return
+
+    const existing = findStaffCommunityChatSession(
+      {
+        userProfileId: pendingStaffChat.peerUserProfileId,
+        fullName: pendingStaffChat.displayName,
+      },
+      dedupedChatSessions,
+      currentUserProfileId,
+    )
+
+    if (existing?.id) {
+      const conversation = mapCommunityChatSessionToConversation(
+        existing,
+        currentUserProfileId,
+        listPreviewKey,
+        titleMapOptions,
+      )
+      markSessionReadMutation.mutate(conversation.id)
+      if (isDesktop) {
+        ensureDesktopConversationOpen(conversation)
+      } else {
+        setMobileActiveConversation(conversation)
+      }
+    }
+
+    setPendingStaffChat(null)
+    // Intentionally omit markSessionReadMutation — use .mutate only.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [
+    currentUserProfileId,
+    dedupedChatSessions,
+    ensureDesktopConversationOpen,
+    isDesktop,
+    isSessionsLoading,
+    listPreviewKey,
+    pendingStaffChat,
+    titleMapOptions,
+  ])
+
+  const ensureStaffPeerSession = useCallback(async (conversation: HeaderMessageConversation) => {
+    if (!isPendingCommunityChatSessionId(conversation.id)) return conversation.id
+    const peerUserProfileId = String(conversation.peerUserProfileId ?? '').trim()
+    if (!peerUserProfileId || !merchantBusinessId) {
+      throw new Error(STAFF_CHAT_ENSURE_SESSION_PRECONDITION_ERROR)
+    }
+
+    const session = await createSessionMutation.mutateAsync({
+      businessId: merchantBusinessId,
+      participantUserProfileIds: [peerUserProfileId],
+    })
+
+    const nextConversation: HeaderMessageConversation = {
+      ...conversation,
+      id: session.id,
+      peerUserProfileId: null,
+    }
+
+    if (isDesktop) {
+      ensureDesktopConversationOpen(nextConversation)
+    } else {
+      setMobileActiveConversation(nextConversation)
+    }
+    return session.id
+  }, [createSessionMutation, ensureDesktopConversationOpen, isDesktop, merchantBusinessId])
 
   useEffect(() => {
     if (!pendingOpenSessionId) return
@@ -324,6 +463,7 @@ export default function HeaderMessages({ variant }: HeaderMessagesProps) {
   const closePanel = () => {
     setOpen(false)
     setSearchQuery('')
+    setMobileImmersiveChat(false)
     if (!isDesktop) {
       setMobileActiveConversation(null)
     }
@@ -337,6 +477,7 @@ export default function HeaderMessages({ variant }: HeaderMessagesProps) {
     markConversationRead(conversation.id)
 
     if (!isDesktop) {
+      setMobileImmersiveChat(false)
       if (mobileActiveConversation?.id === conversation.id) {
         setMobileActiveConversation(null)
         return
@@ -349,10 +490,18 @@ export default function HeaderMessages({ variant }: HeaderMessagesProps) {
   }
 
   const backToConversationList = () => {
+    if (mobileImmersiveChat) {
+      closePanel()
+      return
+    }
     setMobileActiveConversation(null)
   }
 
   const closeMobileConversation = () => {
+    if (mobileImmersiveChat) {
+      closePanel()
+      return
+    }
     setMobileActiveConversation(null)
   }
 
@@ -361,6 +510,7 @@ export default function HeaderMessages({ variant }: HeaderMessagesProps) {
       closePanel()
       return
     }
+    setMobileImmersiveChat(false)
     setOpen(true)
   }
 
@@ -521,6 +671,17 @@ export default function HeaderMessages({ variant }: HeaderMessagesProps) {
             conversation={mobileActiveConversation}
             currentUserProfileId={currentUserProfileId}
             layout={HeaderMessageChatLayout.Fullscreen}
+            immersive={mobileImmersiveChat}
+            isConversationLoading={
+              Boolean(pendingStaffChat)
+              && isSessionsLoading
+              && isPendingCommunityChatSessionId(mobileActiveConversation.id)
+            }
+            ensureSessionId={
+              isPendingCommunityChatSessionId(mobileActiveConversation.id)
+                ? () => ensureStaffPeerSession(mobileActiveConversation)
+                : undefined
+            }
             onToggleMinimize={() => undefined}
             onClose={closeMobileConversation}
             onBack={backToConversationList}
@@ -533,20 +694,30 @@ export default function HeaderMessages({ variant }: HeaderMessagesProps) {
     : null
 
   const desktopChatWindows = isDesktop
-    ? desktopChatSessions.map((sessionItem, sessionIndex) => (
-      <HeaderMessageChatWindow
-        key={sessionItem.conversation.id}
-        conversation={sessionItem.conversation}
-        currentUserProfileId={currentUserProfileId}
-        layout={HeaderMessageChatLayout.Floating}
-        minimized={sessionItem.minimized}
-        stackRightPx={getHeaderMessageChatStackRightPx(desktopChatSessions, sessionIndex)}
-        stackIndex={sessionIndex}
-        isFocused={desktopChatFocusId === sessionItem.conversation.id}
-        onToggleMinimize={() => toggleDesktopChatMinimize(sessionItem.conversation.id)}
-        onClose={() => closeDesktopChat(sessionItem.conversation.id)}
-      />
-    ))
+    ? desktopChatSessions.map((sessionItem, sessionIndex) => {
+      const conversation = sessionItem.conversation
+      const isPendingPeer = isPendingCommunityChatSessionId(conversation.id)
+      return (
+        <HeaderMessageChatWindow
+          key={conversation.id}
+          conversation={conversation}
+          currentUserProfileId={currentUserProfileId}
+          layout={HeaderMessageChatLayout.Floating}
+          minimized={sessionItem.minimized}
+          stackRightPx={getHeaderMessageChatStackRightPx(desktopChatSessions, sessionIndex)}
+          stackIndex={sessionIndex}
+          isFocused={desktopChatFocusId === conversation.id}
+          isConversationLoading={Boolean(pendingStaffChat) && isSessionsLoading && isPendingPeer}
+          ensureSessionId={
+            isPendingPeer
+              ? () => ensureStaffPeerSession(conversation)
+              : undefined
+          }
+          onToggleMinimize={() => toggleDesktopChatMinimize(conversation.id)}
+          onClose={() => closeDesktopChat(conversation.id)}
+        />
+      )
+    })
     : null
 
   return (

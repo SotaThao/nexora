@@ -1,7 +1,6 @@
 import {
   expandDesktopChatSessionInPlace,
   normalizeDesktopChatSessions,
-  promoteDesktopChatSession,
   type HeaderDesktopChatSession,
   type HeaderMessageConversation,
 } from './headerMessagesConstants'
@@ -42,51 +41,28 @@ export function minimizeDesktopChatSessionInPlace(
 export function resolveDesktopConversationOpen(
   sessions: HeaderDesktopChatSession[],
   conversation: HeaderMessageConversation,
-  context: DesktopChatLayoutContext,
+  _context: DesktopChatLayoutContext,
 ): HeaderDesktopChatSession[] {
-  const existingIndex = sessions.findIndex(
+  const existing = sessions.find(
     (session) => session.conversation.id === conversation.id,
   )
 
-  if (existingIndex < 0) {
-    return layoutDesktopChatSessions(
-      promoteDesktopChatSession(sessions, conversation),
-      { ...context, keepExpandedConversationId: conversation.id },
-    )
+  // Single floating chat only — opening another conversation replaces the current one.
+  if (existing && !existing.minimized) {
+    return [{ conversation, minimized: true }]
   }
 
-  const existing = sessions[existingIndex]
-  if (!existing.minimized) {
-    return minimizeDesktopChatSessionInPlace(sessions, conversation.id)
-  }
-
-  return layoutDesktopChatSessions(
-    expandDesktopChatSessionInPlace(sessions, conversation.id),
-    { ...context, keepExpandedConversationId: conversation.id },
-  )
+  return [{ conversation, minimized: false }]
 }
 
 /** Always expand (never toggle-minimize). Used when opening from a notification. */
 export function resolveDesktopConversationForceOpen(
-  sessions: HeaderDesktopChatSession[],
+  _sessions: HeaderDesktopChatSession[],
   conversation: HeaderMessageConversation,
-  context: DesktopChatLayoutContext,
+  _context: DesktopChatLayoutContext,
 ): HeaderDesktopChatSession[] {
-  const existingIndex = sessions.findIndex(
-    (session) => session.conversation.id === conversation.id,
-  )
-
-  if (existingIndex < 0) {
-    return layoutDesktopChatSessions(
-      promoteDesktopChatSession(sessions, conversation),
-      { ...context, keepExpandedConversationId: conversation.id },
-    )
-  }
-
-  return layoutDesktopChatSessions(
-    expandDesktopChatSessionInPlace(sessions, conversation.id),
-    { ...context, keepExpandedConversationId: conversation.id },
-  )
+  // Single floating chat — replace any previously open window.
+  return [{ conversation, minimized: false }]
 }
 
 export function resolveDesktopConversationExpand(

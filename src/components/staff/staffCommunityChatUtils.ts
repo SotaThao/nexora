@@ -5,6 +5,7 @@ import {
 import {
   getOneOnOnePeerParticipant,
   isSameCommunityChatProfileId,
+  normalizeCommunityChatProfileId,
   preferCommunityChatSession,
 } from '../../data/communityChatSessionUtils'
 import type { CommunityChatSession } from '../../types/communityChat'
@@ -74,8 +75,10 @@ export function buildStaffChatConversation(params: {
   chatSessionId: string | null | undefined
   windowKey: string
   displayName: string
+  peerUserProfileId?: string | null
 }): HeaderMessageConversation {
   const displayName = params.displayName
+  const peerUserProfileId = String(params.peerUserProfileId ?? '').trim() || null
   return {
     id: params.chatSessionId || buildPendingCommunityChatSessionId(params.windowKey),
     name: displayName,
@@ -84,6 +87,7 @@ export function buildStaffChatConversation(params: {
     previewKey: HeaderMessageListPreviewKey.Desktop,
     updatedAt: '',
     unreadCount: 0,
+    peerUserProfileId,
   }
 }
 
@@ -175,4 +179,35 @@ export function findStaffCommunityChatSession(
 
   if (matches.length === 0) return null
   return matches.reduce(preferCommunityChatSession)
+}
+
+/** Map of normalized peer userProfileId → unreadCount for 1:1 sessions. */
+export function buildStaffChatUnreadCountByPeerId(
+  sessions: CommunityChatSession[],
+  currentUserProfileId: string,
+): Map<string, number> {
+  const unreadByPeerId = new Map<string, number>()
+
+  sessions.forEach((session) => {
+    if (session.chatType !== CommunityChatType.OneOnOne) return
+    const unread = Number(session.unreadCount) || 0
+    if (unread <= 0) return
+
+    const peer = getOneOnOnePeerParticipant(session, currentUserProfileId)
+    const peerId = normalizeCommunityChatProfileId(peer?.userProfileId)
+    if (!peerId) return
+
+    unreadByPeerId.set(peerId, Math.max(unreadByPeerId.get(peerId) ?? 0, unread))
+  })
+
+  return unreadByPeerId
+}
+
+export function getStaffMemberChatUnreadCount(
+  unreadByPeerId: ReadonlyMap<string, number>,
+  member: StaffChatMemberLike | null | undefined,
+): number {
+  const peerId = normalizeCommunityChatProfileId(member?.userProfileId)
+  if (!peerId) return 0
+  return unreadByPeerId.get(peerId) ?? 0
 }

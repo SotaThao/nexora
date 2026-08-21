@@ -96,6 +96,11 @@ export function useDesktopChatSessions({
     ))
   }, [])
 
+  const closeAllConversations = useCallback(() => {
+    setFocusConversationId(null)
+    setSessions([])
+  }, [])
+
   return {
     sessions,
     focusConversationId,
@@ -103,5 +108,6 @@ export function useDesktopChatSessions({
     ensureConversationOpen,
     toggleMinimize,
     closeConversation,
+    closeAllConversations,
   }
 }

@@ -29,9 +29,12 @@ import { staffRecordMatchesMember } from '../utils/staffRecordMatch'
 import { orderedPayoutUiKeysFromMethods, PAYOUT_UI_LABELS } from '../data/paymentMethodTypes'
 import NicknameEditor from './NicknameEditor'
 import RoleAtBusinessEditor from './RoleAtBusinessEditor'
-import StaffCommunityChatModal from './staff/StaffCommunityChatModal'
-import { canStaffMemberUseCommunityChat } from './staff/staffCommunityChatUtils'
+import {
+  canStaffMemberUseCommunityChat,
+  getStaffChatDisplayName,
+} from './staff/staffCommunityChatUtils'
 import { STAFF_ROLE_ERROR_KEYS } from './staff/constants'
+import { openStaffCommunityChat } from './header-messages/openCommunityChatSession'
 
 const RANGE_DAY_OFFSETS = {
   '7 Days': 6,
@@ -182,7 +185,6 @@ export default function StaffDetailView({
   const [reviewFilter, setReviewFilter] = useState('all') // 'all' | 'google' | 'private'
   const [hoverIndex, setHoverIndex] = useState<any | null>(null)
   const chartRef = useRef(null)
-  const [chatOpen, setChatOpen] = useState(false)
 
   const initialRange = getRangeDates('7 Days')
   const [range, setRange] = useState('7 Days')
@@ -433,7 +435,10 @@ export default function StaffDetailView({
   const activePoint = hoverIndex !== null && chartPoints.length > 0 ? chartPoints[hoverIndex] : null
 
   const openStaffChat = () => {
-    setChatOpen(true)
+    openStaffCommunityChat({
+      peerUserProfileId: String(staffMember?.userProfileId ?? '').trim(),
+      displayName: getStaffChatDisplayName(staffMember),
+    })
   }
 
   return (
@@ -626,13 +631,6 @@ export default function StaffDetailView({
           </div>
         </div>
       </div>
-
-      {chatOpen ? (
-        <StaffCommunityChatModal
-          staffMember={staffMember}
-          onClose={() => setChatOpen(false)}
-        />
-      ) : null}
 
       {/* 2. KPI METRICS CARDS */}
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-3">

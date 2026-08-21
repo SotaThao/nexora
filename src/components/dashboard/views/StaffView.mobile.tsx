@@ -1,10 +1,11 @@
 import { useState, useMemo } from 'react'
 import { createPortal } from 'react-dom'
-import { AlertCircle, Plus, HelpCircle, Trash2, User, QrCode, Eye, Link, Copy, X, Share2, Loader2, MessagesSquare } from 'lucide-react'
+import { AlertCircle, Plus, HelpCircle, Trash2, User, QrCode, Eye, Link, Copy, X, Share2, Loader2 } from 'lucide-react'
 import { useTranslation } from '../../../contexts/LanguageContext'
 import { useNotification } from '../../../contexts/NotificationContext'
-import StaffCommunityChatModal from '../../staff/StaffCommunityChatModal'
 import { canStaffMemberUseCommunityChat } from '../../staff/staffCommunityChatUtils'
+import StaffCommunityChatActionButton from '../../staff/StaffCommunityChatActionButton'
+import { useStaffCommunityChatUnreadByPeerId } from '../../staff/useStaffCommunityChatUnreadByPeerId'
 import { StatusFilter } from '../../../data/hooks/useMerchantStaff'
 import { buildPublicInviteLink } from '../../../utils/inviteRef'
 import { getWebUrlOrigin } from '../../../utils/webUrlBase'
@@ -77,7 +78,7 @@ function StaffMemberCard({
   onDeclineUnlink,
   onQr,
   onViewStaff,
-  onChat,
+  chatUnreadCount = 0,
 }) {
   const waitingStaffResponse = isWaitingStaffAcceptance(member)
   const isLocalStaffMember = Boolean(member.isLocalStaff)
@@ -300,13 +301,10 @@ function StaffMemberCard({
           {!isPending && (
             <>
               {canStaffMemberUseCommunityChat(member) && (
-                <IconButton
-                  label={t('components.dashboard.views.StaffView.manage_chat')}
-                  onClick={() => onChat(member)}
-                  className="hover:text-nexoraBrand"
-                >
-                  <MessagesSquare className="h-4 w-4" />
-                </IconButton>
+                <StaffCommunityChatActionButton
+                  member={member}
+                  unreadCount={chatUnreadCount}
+                />
               )}
               <IconButton label={t('components.dashboard.views.StaffView.manage_edit_profile')} onClick={() => onViewDetail(member)} className="hover:text-nexoraBrand">
                 <User className="h-4 w-4" />
@@ -366,7 +364,7 @@ function StaffView({
   const { showToast } = useNotification()
   const [largeJoinQrOpen, setLargeJoinQrOpen] = useState(false)
   const [sortBy, setSortBy] = useState('name-asc') // 'name-asc' | 'name-desc' | 'date-newest' | 'date-oldest' | 'status-active'
-  const [chatMember, setChatMember] = useState(null)
+  const { getUnreadCount: getStaffChatUnreadCount } = useStaffCommunityChatUnreadByPeerId()
 
   const publicInviteEnabled = Boolean(inviteLinkSetting?.isEnabled && inviteLinkSetting?.referralCode)
   const publicInviteLink = useMemo(
@@ -763,7 +761,7 @@ function StaffView({
                     onDeclineUnlink={onDeclineUnlink}
                     onQr={onQr}
                     onViewStaff={onViewStaff}
-                    onChat={setChatMember}
+                    chatUnreadCount={getStaffChatUnreadCount(member)}
                   />
                 )
               })}
@@ -842,13 +840,6 @@ function StaffView({
         </div>,
         document.body,
       )}
-
-      {chatMember ? (
-        <StaffCommunityChatModal
-          staffMember={chatMember}
-          onClose={() => setChatMember(null)}
-        />
-      ) : null}
 
     </div>
   )

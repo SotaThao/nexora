@@ -31,6 +31,10 @@ export enum StaffChatUnavailableReason {
   NoUserProfile = 'no_user_profile',
 }
 
+/** Staff roster chat-icon unread indicator (peer messaged, not yet read). */
+export const STAFF_CHAT_UNREAD_DOT_CLASS =
+  'absolute -top-0.5 -right-0.5 h-2 w-2 rounded-full bg-red-500 ring-2 ring-white' as const
+
 export const STAFF_CHAT_I18N = {
   title: 'staff_detail.chat_title',
   subtitle: 'staff_detail.chat_subtitle',

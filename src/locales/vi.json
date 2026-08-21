@@ -3153,6 +3153,7 @@
           "preview": "Xem trước",
           "manage_edit_profile": "Sửa hồ sơ",
           "manage_chat": "Chat với nhân viên",
+          "manage_chat_unread": "Chat với nhân viên ({{count}} chưa đọc)",
           "chat_short": "Chat",
           "manage_view_qr": "Xem mã QR",
           "manage_preview_customer": "Xem trước góc nhìn khách hàng",

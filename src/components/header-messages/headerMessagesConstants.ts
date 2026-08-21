@@ -57,6 +57,8 @@ export interface HeaderMessageConversation {
   lastMessageSenderId?: string | null
   updatedAt: string
   unreadCount?: number
+  /** Peer profile for lazy POST /community/chat/sessions (staff roster open, no thread yet). */
+  peerUserProfileId?: string | null
 }
 
 export interface HeaderChatMessageReplyTo {

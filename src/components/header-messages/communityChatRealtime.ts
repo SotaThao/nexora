@@ -122,6 +122,15 @@ export function subscribeCommunityChatHub(): () => void {
   }
 }
 
+function rollbackJoinRefCount(sessionId: string) {
+  const count = joinedSessionRefCounts.get(sessionId) ?? 0
+  if (count <= 1) {
+    joinedSessionRefCounts.delete(sessionId)
+    return
+  }
+  joinedSessionRefCounts.set(sessionId, count - 1)
+}
+
 export async function joinCommunityChatHubSession(sessionId: string): Promise<void> {
   const id = String(sessionId ?? '').trim()
   if (!id) return
@@ -130,21 +139,23 @@ export async function joinCommunityChatHubSession(sessionId: string): Promise<vo
   joinedSessionRefCounts.set(id, previousCount + 1)
   if (previousCount > 0) return
 
-  const connection = await ensureHubStarted()
+  let connection: HubConnection | null
+  try {
+    connection = await ensureHubStarted()
+  } catch (error) {
+    rollbackJoinRefCount(id)
+    throw error
+  }
+
   if (!connection) {
-    joinedSessionRefCounts.delete(id)
+    rollbackJoinRefCount(id)
     return
   }
 
   try {
     await joinCommunityChatSession(connection, id)
   } catch (error) {
-    // Roll back only if nobody else joined while we were failing.
-    if ((joinedSessionRefCounts.get(id) ?? 0) <= 1) {
-      joinedSessionRefCounts.delete(id)
-    } else {
-      joinedSessionRefCounts.set(id, (joinedSessionRefCounts.get(id) ?? 1) - 1)
-    }
+    rollbackJoinRefCount(id)
     throw error
   }
 }

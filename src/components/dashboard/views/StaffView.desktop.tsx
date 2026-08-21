@@ -1,12 +1,11 @@
 import { useState, useMemo } from 'react'
 import { createPortal } from 'react-dom'
-import { AlertCircle, Plus, HelpCircle, Trash2, User, QrCode, Eye, Link, Copy, X, Share2, Loader2, MessagesSquare } from 'lucide-react'
+import { AlertCircle, Plus, HelpCircle, Trash2, User, QrCode, Eye, Link, Copy, X, Share2, Loader2 } from 'lucide-react'
 import { useTranslation } from '../../../contexts/LanguageContext'
 import { useNotification } from '../../../contexts/NotificationContext'
-import StaffCommunityChatModal from '../../staff/StaffCommunityChatModal'
-import { canStaffMemberUseCommunityChat, getStaffChatWindowKey } from '../../staff/staffCommunityChatUtils'
-import { useStaffCommunityChatWindows } from '../../staff/useStaffCommunityChatWindows'
-import { HeaderMessageChatLayout } from '../../header-messages/headerMessagesConstants'
+import { canStaffMemberUseCommunityChat } from '../../staff/staffCommunityChatUtils'
+import StaffCommunityChatActionButton from '../../staff/StaffCommunityChatActionButton'
+import { useStaffCommunityChatUnreadByPeerId } from '../../staff/useStaffCommunityChatUnreadByPeerId'
 import { buildPublicInviteLink } from '../../../utils/inviteRef'
 import { getWebUrlOrigin } from '../../../utils/webUrlBase'
 import { buildPublicQrImageUrl } from '../../../data/repositories/publicQr'
@@ -71,15 +70,7 @@ function StaffView({
   const { showToast } = useNotification()
   const [largeJoinQrOpen, setLargeJoinQrOpen] = useState(false)
   const [sortBy, setSortBy] = useState('name-asc') // 'name-asc' | 'name-desc' | 'date-newest' | 'date-oldest' | 'status-active'
-  const {
-    windows: chatWindows,
-    focusKey: chatFocusKey,
-    openWindow: openStaffChat,
-    closeWindow: closeStaffChat,
-    toggleMinimize: toggleStaffChatMinimize,
-    focusWindow: focusStaffChat,
-    getStackRightPx: getStaffChatStackRightPx,
-  } = useStaffCommunityChatWindows()
+  const { getUnreadCount: getStaffChatUnreadCount } = useStaffCommunityChatUnreadByPeerId()
 
   const publicInviteEnabled = Boolean(inviteLinkSetting?.isEnabled && inviteLinkSetting?.referralCode)
   const publicInviteLink = useMemo(
@@ -601,13 +592,10 @@ function StaffView({
                       {!isPending && (
                         <div className="flex justify-end gap-1.5">
                           {canStaffMemberUseCommunityChat(member) && (
-                            <IconButton
-                              label={t('components.dashboard.views.StaffView.manage_chat')}
-                              onClick={() => openStaffChat(member)}
-                              className="hover:text-nexoraBrand"
-                            >
-                              <MessagesSquare className="h-4 w-4" />
-                            </IconButton>
+                            <StaffCommunityChatActionButton
+                              member={member}
+                              unreadCount={getStaffChatUnreadCount(member)}
+                            />
                           )}
                           <IconButton label={t('components.dashboard.views.StaffView.manage_edit_profile')} onClick={() => onViewDetail(member)} className="hover:text-nexoraBrand">
                             <User className="h-4 w-4" />
@@ -703,24 +691,6 @@ function StaffView({
         </div>,
         document.body,
       )}
-
-      {chatWindows.map((chatWindow, chatIndex) => {
-        const windowKey = getStaffChatWindowKey(chatWindow.member)
-        return (
-          <StaffCommunityChatModal
-            key={windowKey || chatIndex}
-            staffMember={chatWindow.member}
-            layout={HeaderMessageChatLayout.Floating}
-            minimized={chatWindow.minimized}
-            stackRightPx={getStaffChatStackRightPx(chatIndex)}
-            stackIndex={chatIndex}
-            isFocused={chatFocusKey === windowKey}
-            onToggleMinimize={() => toggleStaffChatMinimize(chatWindow.member)}
-            onFocus={() => focusStaffChat(chatWindow.member)}
-            onClose={() => closeStaffChat(chatWindow.member)}
-          />
-        )
-      })}
 
     </div>
   )

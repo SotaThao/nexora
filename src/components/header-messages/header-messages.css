@@ -1,3 +1,8 @@
+/* Offset below sticky dashboard/staff header (safe-area + min-h-16). */
+:root {
+  --header-messages-mobile-header-offset: calc(var(--app-safe-area-top, 0px) + 4rem);
+}
+
 .header-messages-panel {
   @apply flex flex-col overflow-hidden bg-white;
 }
@@ -8,14 +13,20 @@
 }
 
 .header-messages-panel--mobile {
-  @apply fixed inset-x-0 bottom-0 z-[90] flex flex-col overflow-hidden bg-nexoraCanvas;
-  top: calc(var(--app-safe-area-top, 0px) + 4rem);
-  height: calc(100dvh - var(--app-safe-area-top, 0px) - 4rem);
-  max-height: calc(100dvh - var(--app-safe-area-top, 0px) - 4rem);
+  /* Above bottom nav (z-30); starts below sticky header so app header stays visible. */
+  @apply fixed inset-x-0 bottom-0 z-[100] flex flex-col overflow-hidden bg-nexoraCanvas;
+  top: var(--header-messages-mobile-header-offset, calc(var(--app-safe-area-top, 0px) + 4rem));
+  height: calc(100dvh - var(--header-messages-mobile-header-offset, calc(var(--app-safe-area-top, 0px) + 4rem)));
+  max-height: calc(100dvh - var(--header-messages-mobile-header-offset, calc(var(--app-safe-area-top, 0px) + 4rem)));
+  overscroll-behavior: none;
+  touch-action: manipulation;
 }
 
 .header-messages-list--mobile {
   @apply min-h-0 flex-1 space-y-3 overflow-y-auto overscroll-contain bg-nexoraCanvas px-4 py-3;
+  -webkit-overflow-scrolling: touch;
+  overscroll-behavior: contain;
+  touch-action: pan-y;
 }
 
 .header-messages-list--empty {
@@ -233,14 +244,30 @@
 }
 
 .header-message-chat--fullscreen {
-  @apply fixed inset-x-0 bottom-0 z-[90] flex flex-col overflow-hidden bg-white;
-  top: calc(var(--app-safe-area-top, 0px) + 4rem);
-  height: calc(100dvh - var(--app-safe-area-top, 0px) - 4rem);
-  max-height: calc(100dvh - var(--app-safe-area-top, 0px) - 4rem);
+  /* Under app header — used when opening from the header messenger icon. */
+  @apply fixed inset-x-0 bottom-0 z-[100] flex flex-col overflow-hidden bg-white;
+  top: var(--header-messages-mobile-header-offset, calc(var(--app-safe-area-top, 0px) + 4rem));
+  height: calc(100dvh - var(--header-messages-mobile-header-offset, calc(var(--app-safe-area-top, 0px) + 4rem)));
+  max-height: calc(100dvh - var(--header-messages-mobile-header-offset, calc(var(--app-safe-area-top, 0px) + 4rem)));
+  overscroll-behavior: none;
+  touch-action: manipulation;
+}
+
+/* Staff / non-header entry: edge-to-edge over the app chrome. */
+.header-message-chat--fullscreen.is-immersive {
+  top: 0;
+  height: 100dvh;
+  max-height: 100dvh;
+  z-index: 120;
+  padding-top: var(--app-safe-area-top, 0px);
 }
 
 .header-message-chat-head--mobile {
-  @apply shrink-0 items-center border-t border-b border-nexoraBorder bg-white px-3 py-3;
+  @apply shrink-0 items-center border-b border-nexoraBorder bg-white px-3 py-3;
+}
+
+.header-message-chat--fullscreen.is-immersive .header-message-chat-head--mobile {
+  @apply border-t-0;
 }
 
 .header-message-chat-back {
@@ -258,6 +285,8 @@
 .header-message-chat-thread--mobile {
   @apply min-h-0 flex-1 overflow-y-auto overscroll-contain bg-nexoraCanvas px-3 pt-2 pb-2;
   -webkit-overflow-scrolling: touch;
+  overscroll-behavior: contain;
+  touch-action: pan-y;
 }
 
 .header-message-chat-date-sep {
@@ -410,9 +439,21 @@
 }
 
 html.header-messages-mobile-open,
-html.header-messages-mobile-open body {
-  overflow: hidden;
+html.header-messages-mobile-open body,
+body.header-messages-mobile-open {
+  overflow: hidden !important;
   overscroll-behavior: none;
+  touch-action: none;
+}
+
+/* Keep only the sticky app header visible — hide bottom nav while messenger is open. */
+html.header-messages-mobile-open [data-mobile-bottom-nav] {
+  display: none !important;
+}
+
+/* App header stays above the messenger shell (clickable hamburger / icons). */
+html.header-messages-mobile-open header.sticky {
+  z-index: 110;
 }
 
 .header-message-chat-head {
@@ -437,6 +478,10 @@ html.header-messages-mobile-open body {
 
 .header-message-chat-icon-btn {
   @apply inline-flex h-8 w-8 items-center justify-center rounded-lg text-nexoraMuted transition hover:bg-nexoraSurfaceMuted hover:text-nexoraText disabled:cursor-not-allowed disabled:opacity-35 disabled:hover:bg-transparent disabled:hover:text-nexoraMuted;
+}
+
+.header-message-chat--fullscreen.is-immersive .header-message-chat-icon-btn--close {
+  @apply h-10 w-10 rounded-xl text-nexoraText;
 }
 
 .header-message-chat-thread {
