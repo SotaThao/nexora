@@ -232,9 +232,6 @@ export default function PosFrontDeskView({
   const queryClient = useQueryClient()
   const { data: access, isLoading: isAccessLoading } = usePosAccess(businessId)
   const { data: staffBusinesses = [] } = useStaffBusinesses()
-  const { data: orderList = [], isLoading: isOrderListLoading } = useOrderList(businessId)
-  const { data: inServiceOrders = [], isLoading: isInServiceOrdersLoading } = useInServiceOrders(businessId)
-  const { data: turnBoard = [], isLoading: isTurnBoardLoading } = useTurnBoard(businessId)
   const cancelOrder = useCancelOrder(businessId)
   const startOrderService = useStartOrderService(businessId)
   const linkedStaffBusiness = staffBusinesses.find((business) => business.businessId === businessId)
@@ -255,11 +252,29 @@ export default function PosFrontDeskView({
   const initialTab: PosFrontDeskTab =
     tabFromUrl && POS_FRONT_DESK_TABS.includes(tabFromUrl) ? tabFromUrl : DEFAULT_POS_FRONT_DESK_TAB
   const [activeTab, setActiveTabState] = useState<PosFrontDeskTab>(initialTab)
-  // The Turn Board's summary uses the same local-day roster as Staffs Clock. Keep this query
-  // scoped to the Turn Board so the other POS tabs do not start a second 15s polling stream.
+  const previousActiveTabRef = useRef<PosFrontDeskTab | null>(null)
+  // Each Front Desk data set is loaded only while its tab is open. Leaving a tab disables its
+  // observer; returning to it or reloading triggers a fresh request instead of background polls.
+  const { data: orderList = [], isLoading: isOrderListLoading } = useOrderList(businessId, {
+    enabled: activeTab === PosFrontDeskTab.OrderList,
+    refetchInterval: false,
+  })
+  const { data: inServiceOrders = [], isLoading: isInServiceOrdersLoading } = useInServiceOrders(businessId, {
+    enabled: activeTab === PosFrontDeskTab.CheckoutCustomer,
+    refetchInterval: false,
+  })
+  const turnBoardQuery = useTurnBoard(businessId, {
+    enabled: activeTab === PosFrontDeskTab.TurnBoard || activeTab === PosFrontDeskTab.Booking,
+    refetchInterval: false,
+  })
+  const turnBoard = turnBoardQuery.data ?? []
+  const isTurnBoardLoading = turnBoardQuery.isLoading
+  // The Turn Board's summary uses the same local-day roster as Staffs Clock, but fetches once
+  // per tab visit rather than maintaining a second 15s polling stream.
   const todayTurnWindow = getLocalDayWindow()
   const todayRosterQuery = useTimeClockRoster(businessId, todayTurnWindow, {
     enabled: activeTab === PosFrontDeskTab.TurnBoard,
+    refetchInterval: false,
   })
   // Today’s Turns needs the services completed during the same local calendar day. The
   // completed-orders endpoint supplies the ticket IDs; each detail response supplies the
@@ -274,7 +289,7 @@ export default function PosFrontDeskView({
     },
     {
       enabled: activeTab === PosFrontDeskTab.TurnBoard,
-      refetchInterval: 15000,
+      refetchInterval: false,
     },
   )
   const todayCompletedOrderItems = todayCompletedOrdersQuery.data?.items ?? []
@@ -296,6 +311,27 @@ export default function PosFrontDeskView({
   const todayCompletedOrderDetails = useOrderDetails(businessId, todayMultiTechnicianOrderIds, {
     enabled: activeTab === PosFrontDeskTab.TurnBoard,
   })
+  // The tab stays mounted while the user moves around Front Desk, so explicitly refresh all
+  // Turn Board sources on each visit. Query observers may remain enabled (e.g. Booking also uses
+  // the station board), therefore relying on enable/disable alone would serve stale data.
+  useEffect(() => {
+    if (isAccessLoading || !access) return
+    const enteringTurnBoard =
+      activeTab === PosFrontDeskTab.TurnBoard && previousActiveTabRef.current !== PosFrontDeskTab.TurnBoard
+    previousActiveTabRef.current = activeTab
+    if (!enteringTurnBoard) return
+
+    if (!turnBoardQuery.isFetching) void turnBoardQuery.refetch()
+    if (!todayRosterQuery.isFetching) void todayRosterQuery.refetch()
+    if (!todayCompletedOrdersQuery.isFetching) void todayCompletedOrdersQuery.refetch()
+  }, [
+    activeTab,
+    access,
+    isAccessLoading,
+    todayCompletedOrdersQuery,
+    todayRosterQuery,
+    turnBoardQuery,
+  ])
   const weeklyPayrollQuery = useWeeklyPayroll(businessId, undefined, {
     enabled: activeTab === PosFrontDeskTab.Report,
   })

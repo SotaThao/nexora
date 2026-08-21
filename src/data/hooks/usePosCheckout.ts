@@ -64,15 +64,18 @@ function rollbackOrderDetail(queryClient: ReturnType<typeof useQueryClient>, con
   }
 }
 
-export function useInServiceOrders(businessId?: string) {
+export function useInServiceOrders(
+  businessId?: string,
+  options?: { enabled?: boolean; refetchInterval?: number | false },
+) {
   const { isAuthenticated } = useSessionRole()
   return useQuery<InServiceOrderApiDto[]>({
     queryKey: qk.merchantPosInServiceOrders(businessId),
     queryFn: () => posCheckoutRepository.getInServiceOrders(businessId as string),
-    enabled: isAuthenticated && Boolean(businessId),
+    enabled: isAuthenticated && Boolean(businessId) && (options?.enabled ?? true),
     retry: false,
     // Checkout list should stay fresh without a manual refresh.
-    refetchInterval: 15000,
+    refetchInterval: options?.refetchInterval ?? 15000,
   })
 }
 

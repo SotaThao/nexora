@@ -65,14 +65,17 @@ export function useCustomerLookupByPhone(businessId?: string, phone?: string) {
 }
 
 // Order List tab (US-17) — Waiting + InService combined.
-export function useOrderList(businessId?: string) {
+export function useOrderList(
+  businessId?: string,
+  options?: { enabled?: boolean; refetchInterval?: number | false },
+) {
   const { isAuthenticated } = useSessionRole()
   return useQuery<OrderListItemApiDto[]>({
     queryKey: qk.merchantPosOrderList(businessId),
     queryFn: () => posOrdersRepository.getOrderList(businessId as string),
-    enabled: isAuthenticated && Boolean(businessId),
+    enabled: isAuthenticated && Boolean(businessId) && (options?.enabled ?? true),
     retry: false,
-    refetchInterval: 15000,
+    refetchInterval: options?.refetchInterval ?? 15000,
   })
 }
 
