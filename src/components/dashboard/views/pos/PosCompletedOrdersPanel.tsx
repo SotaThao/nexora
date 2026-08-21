@@ -328,10 +328,12 @@ export default function PosCompletedOrdersPanel({ businessId }: { businessId: st
                       <span>{t('components.dashboard.views.pos.PosCompletedOrdersPanel.viewDetailServicesSubtotal')}</span>
                       <span className="tabular-nums">${viewDetail.data.servicesSubtotal.toFixed(2)}</span>
                     </div>
-                    <div className="flex justify-between text-nexoraMuted">
-                      <span>{t('components.dashboard.views.pos.PosCompletedOrdersPanel.viewDetailProductsSubtotal')}</span>
-                      <span className="tabular-nums">${viewDetail.data.productsSubtotal.toFixed(2)}</span>
-                    </div>
+                    {viewDetail.data.productsSubtotal > 0 ? (
+                      <div className="flex justify-between text-nexoraMuted">
+                        <span>{t('components.dashboard.views.pos.PosCompletedOrdersPanel.viewDetailProductsSubtotal')}</span>
+                        <span className="tabular-nums">${viewDetail.data.productsSubtotal.toFixed(2)}</span>
+                      </div>
+                    ) : null}
                     {viewDetail.data.discountAmount > 0 ? (
                       <div className="flex justify-between text-nexoraMuted">
                         <span>{t('components.dashboard.views.pos.PosCompletedOrdersPanel.viewDetailDiscount')}</span>

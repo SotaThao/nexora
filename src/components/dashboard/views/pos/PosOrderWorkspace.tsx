@@ -897,14 +897,11 @@ export default function PosOrderWorkspace({
                   <h3 className="mb-1 text-[10px] font-black uppercase tracking-wider text-nexoraMuted">
                     {t('components.dashboard.views.pos.PosOrderWorkspace.summaryTitle')}
                   </h3>
+                  {/* No Products subtotal row while retail selling is hidden — see catalogPanel note. */}
                   <dl className="space-y-1 text-xs">
                     <div className="flex justify-between">
                       <dt className="text-nexoraMuted">{t('components.dashboard.views.pos.PosOrderWorkspace.summaryServices')}</dt>
                       <dd className="font-semibold text-nexoraText">${order.servicesSubtotal.toFixed(2)}</dd>
-                    </div>
-                    <div className="flex justify-between">
-                      <dt className="text-nexoraMuted">{t('components.dashboard.views.pos.PosOrderWorkspace.summaryProducts')}</dt>
-                      <dd className="font-semibold text-nexoraText">${order.productsSubtotal.toFixed(2)}</dd>
                     </div>
                     <div className="flex justify-between">
                       <dt className="text-nexoraMuted">{t('components.dashboard.views.pos.PosOrderWorkspace.summaryTip')}</dt>
