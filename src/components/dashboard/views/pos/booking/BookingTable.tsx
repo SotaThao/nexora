@@ -134,13 +134,13 @@ export default function BookingTable({
                 </td>
                 <td className="px-4 py-3 align-middle">
                   <div className="grid gap-0.5 whitespace-nowrap">
-                    <span className="font-extrabold text-nexoraText">{created?.date ?? '—'}</span>
+                    <span className="font-normal text-nexoraText">{created?.date ?? '—'}</span>
                     <span className="text-[11px] font-semibold text-nexoraMuted">{created?.time ?? '—'}</span>
                   </div>
                 </td>
                 <td className="px-4 py-3 align-middle">
                   <div className="grid gap-0.5 whitespace-nowrap">
-                    <span className="font-extrabold text-nexoraText">{appointment.date}</span>
+                    <span className="font-normal text-nexoraText">{appointment.date}</span>
                     <span className="text-[11px] font-semibold text-nexoraMuted">{appointment.time}</span>
                   </div>
                 </td>

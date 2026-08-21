@@ -148,7 +148,7 @@ export default function PosCompletedOrdersPanel({ businessId }: { businessId: st
                       </td>
                       <td className="py-2 pr-3 align-middle">
                         <div className="grid gap-0.5 whitespace-nowrap">
-                          <span className="font-extrabold text-nexoraText">{completed?.date ?? '—'}</span>
+                          <span className="font-normal text-nexoraText">{completed?.date ?? '—'}</span>
                           <span className="text-[11px] font-semibold text-nexoraMuted">{completed?.time ?? '—'}</span>
                         </div>
                       </td>
