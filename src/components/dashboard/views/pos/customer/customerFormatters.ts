@@ -3,6 +3,13 @@
 // between the Booking and Front Desk screens.
 import { formatVoicePhoneDisplay } from '../../bookingHubFormatters'
 
+const US_DISPLAY_PHONE_PATTERN = /^\+1 (\d{3})-(\d{3})-(\d{4})$/
+
+function formatUsPhoneForPos(value: string): string {
+  const match = US_DISPLAY_PHONE_PATTERN.exec(value)
+  return match ? `+1 (${match[1]}) ${match[2]}-${match[3]}` : value
+}
+
 // The backend stores the country code separately from the national number, and returns the
 // assembled E.164 form alongside it. Prefer that canonical value; when it is unavailable, use
 // AI Hub's validated national/raw fallback so a 10-digit US value still gets display formatting.
@@ -12,7 +19,8 @@ export function formatCustomerPhone(
 ): string {
   // Prefer the canonical E.164 value when the API resolved it; otherwise apply the same
   // validation/fallback path AI Hub uses for a national/raw phone value.
-  return formatVoicePhoneDisplay(e164?.trim() || nationalNumber?.trim(), '') ?? ''
+  const formatted = formatVoicePhoneDisplay(e164?.trim() || nationalNumber?.trim(), '') ?? ''
+  return formatUsPhoneForPos(formatted)
 }
 
 // DateOfBirth is a backend DateOnly ("YYYY-MM-DD", no time component) — a calendar date with
