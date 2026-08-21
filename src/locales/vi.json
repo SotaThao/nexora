@@ -3083,6 +3083,7 @@
               "Products": "Sản Phẩm",
               "Staff": "Nhân Viên",
               "RolesPermissions": "Vai Trò & Quyền",
+              "Devices": "Thiết Bị Check-In",
               "Operations": "Vận Hành"
             }
           },
@@ -3721,10 +3722,11 @@
             },
             "PosDevicePairingQrPanel": {
               "title": "Mã ghép nối",
-              "subtitle": "Mở camera trên máy tính bảng và quét mã này. Mã chỉ dùng được một lần — ngay khi có máy quét, mã mới sẽ hiện ở đây.",
+              "subtitle": "Mở camera trên máy tính bảng và quét mã này. Mã chỉ dùng được một lần và sống 15 phút — ngay khi có máy quét, mã mới sẽ hiện ở đây.",
               "qrAlt": "Mã QR ghép nối máy tính bảng",
               "tokenLine": "Mã {{token}} · vòng {{rotation}}",
-              "rotatesIn": "Mã mới sau {{time}}",
+              "rotatesIn": "Mã này hết hạn sau {{time}}",
+              "newCodeButton": "Lấy mã mới",
               "qrUnavailable": "Không lấy được mã ghép nối. Tải lại trang để thử lại."
             }
           },
