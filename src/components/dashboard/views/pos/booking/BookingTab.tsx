@@ -14,9 +14,11 @@ import {
   useCheckInBookingFromList,
   useRescheduleBooking,
 } from '../../../../../data/hooks/usePosBooking'
-import { POS_BOOKING_STATUS_OPTIONS } from '../../../../../constants/posOrderStatus'
+import { POS_BOOKING_STATUS_OPTIONS, PosOrderStatus } from '../../../../../constants/posOrderStatus'
+import { TWELVE_HOUR_INPUT_LANG } from '../../../../../constants/timeFormat'
 import type { TurnBoardStationApiDto } from '../../../../../types/repositories'
 import { SkeletonList } from '../../../../ui/skeleton'
+import { formatCustomerPhone } from '../customer/customerFormatters'
 import BookingTable from './BookingTable'
 import BookingCards from './BookingCards'
 import BookingCalendar from './BookingCalendar'
@@ -24,6 +26,7 @@ import RescheduleServicesEditor, { type RescheduleLineDraft } from './Reschedule
 import BookingLinkShare from './BookingLinkShare'
 import { formatBookingWallClock, resolveBookingWallClockParts, statusLabelKey } from './bookingFormatters'
 import { formatPosDateTime } from '../posDateTime'
+import { randomUuid } from '../../../../../utils/uuid'
 
 type ViewMode = 'table' | 'cards' | 'calendar'
 
@@ -74,6 +77,7 @@ export default function BookingTab({
 
   const effectiveDateFrom = viewMode === 'calendar' ? monthBounds.from : dateFrom || undefined
   const effectiveDateTo = viewMode === 'calendar' ? monthBounds.to : dateTo || undefined
+  const p = 'components.dashboard.views.pos.BookingTab.'
 
   const { data, isLoading } = useBookingList(businessId, {
     status: status || undefined,
@@ -98,7 +102,7 @@ export default function BookingTab({
           // real posServiceId to reschedule against — Staff must add a concrete service instead.
           .filter((s): s is typeof s & { posServiceId: string } => !!s.posServiceId)
           .map((s) => ({
-            key: crypto.randomUUID(),
+            key: randomUuid(),
             posServiceId: s.posServiceId,
             serviceName: s.serviceName,
             posStaffProfileId: s.posStaffProfileId ?? undefined,
@@ -106,8 +110,6 @@ export default function BookingTab({
       )
     }
   }, [rescheduleDetail.data, rescheduleTargetId])
-
-  const p = 'components.dashboard.views.pos.BookingTab.'
 
   const handleCheckIn = async (bookingId: string) => {
     setCheckingInId(bookingId)
@@ -198,8 +200,10 @@ export default function BookingTab({
               key={mode}
               type="button"
               onClick={() => setViewMode(mode)}
-              className={`rounded-md px-2.5 py-1 text-[11px] font-bold ${
-                viewMode === mode ? 'bg-nexoraBrand text-white' : 'text-nexoraMuted hover:text-white'
+              className={`rounded-md px-2.5 py-1 text-[11px] font-bold transition-colors ${
+                viewMode === mode
+                  ? 'bg-nexoraBrand text-white'
+                  : 'text-nexoraMuted hover:bg-nexoraBrandSoft hover:text-nexoraBrandDark'
               }`}
             >
               {t(p + `view${mode.charAt(0).toUpperCase()}${mode.slice(1)}`)}
@@ -360,6 +364,7 @@ export default function BookingTab({
                   </label>
                   <input
                     type="time"
+                    lang={TWELVE_HOUR_INPUT_LANG}
                     value={rescheduleTime}
                     onChange={(e) => setRescheduleTime(e.target.value)}
                     className="mt-1 h-10 w-full rounded-lg border border-nexoraBorder bg-nexoraCanvas px-2.5 text-xs text-nexoraText outline-none focus:border-nexoraBrand focus:bg-white"
@@ -419,7 +424,10 @@ export default function BookingTab({
                       <p className="text-[10px] font-extrabold uppercase text-nexoraMuted">
                         {t(p + 'viewDetailPhone')}
                       </p>
-                      <p className="text-xs text-nexoraText">{viewDetail.data.customerPhone || t(p + 'viewDetailNotProvided')}</p>
+                      <p className="text-xs text-nexoraText">
+                        {formatCustomerPhone(viewDetail.data.customerPhone, viewDetail.data.customerPhoneE164)
+                          || t(p + 'viewDetailNotProvided')}
+                      </p>
                     </div>
                     <div>
                       <p className="text-[10px] font-extrabold uppercase text-nexoraMuted">

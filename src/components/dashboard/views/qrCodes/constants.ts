@@ -50,7 +50,7 @@ export type QrLeadMock = {
   phone: string
   code: string
   status: QrLeadStatus
-  /** Clock time only, e.g. "15:20" — formatted via i18n when shown. */
+  /** Clock time only, e.g. "3:20 PM" — formatted via i18n when shown. */
   usedAt?: string
 }
 
@@ -92,7 +92,7 @@ export const QR_PROMOS_MOCK: QrPromoMock[] = [
 export const QR_LEADS_MOCK: QrLeadMock[] = [
   {
     id: 'lead-1',
-    timeVi: 'Hôm nay 15:20',
+    timeVi: 'Hôm nay 3:20 Chiều',
     timeEn: 'Today 3:20 PM',
     name: 'Hằng Phạm',
     phone: '(281) 774-3358',
@@ -101,7 +101,7 @@ export const QR_LEADS_MOCK: QrLeadMock[] = [
   },
   {
     id: 'lead-2',
-    timeVi: 'Hôm nay 12:41',
+    timeVi: 'Hôm nay 12:41 Chiều',
     timeEn: 'Today 12:41 PM',
     name: 'Kelly Trương',
     phone: '(832) 615-0442',
@@ -110,7 +110,7 @@ export const QR_LEADS_MOCK: QrLeadMock[] = [
   },
   {
     id: 'lead-3',
-    timeVi: 'Hôm qua 17:05',
+    timeVi: 'Hôm qua 5:05 Chiều',
     timeEn: 'Yesterday 5:05 PM',
     name: 'Sarah Johnson',
     phone: '(713) 225-7809',
@@ -119,7 +119,7 @@ export const QR_LEADS_MOCK: QrLeadMock[] = [
   },
   {
     id: 'lead-4',
-    timeVi: 'Hôm qua 13:30',
+    timeVi: 'Hôm qua 1:30 Chiều',
     timeEn: 'Yesterday 1:30 PM',
     name: 'Vy Lâm',
     phone: '(346) 887-2210',

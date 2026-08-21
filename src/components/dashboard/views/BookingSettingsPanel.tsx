@@ -30,6 +30,7 @@ import {
   OTHER_SERVICES_CATEGORY_ID,
   type MerchantVoiceServiceCategoryDto,
 } from "../../../data/repositories/merchantVoice";
+import { merchantsRepository } from "../../../data/repositories/merchants";
 import { qk } from "../../../data/queryKeys";
 import { useQueryClient } from "@tanstack/react-query";
 import { getApiErrorCode } from "../../../types/domain";
@@ -39,6 +40,7 @@ import {
   stopBookingPreview,
 } from "../../../utils/bookingVoicePreview";
 import { formatWholeNumberInputValue } from "../../../utils/numericInput";
+import { TWELVE_HOUR_INPUT_LANG } from "../../../constants/timeFormat";
 import CountryCodeSelect, {
   formatNationalNumber,
   getNationalPhonePlaceholder,
@@ -598,10 +600,12 @@ function bookingSmsSettingsPayloadFromEnabled(
   )
 }
 
+const SALON_NAME_TEMPLATE_TOKEN = "Bitcoin Nail Bar";
+
 const PROMO_TEMPLATES = {
   "reward-yourself": {
     labelKey: "promoTemplateRewardLabel",
-    text: [
+    enText: [
       "Promotion 1: Reward Yourself",
       "Offer: Free $25 e-gift card.",
       "Eligibility: Book any pedicure service of $55 or more.",
@@ -609,8 +613,105 @@ const PROMO_TEMPLATES = {
       "Rules: One free $25 e-gift card per qualifying visit. For future services only, not redeemable for cash, and cannot be used for gratuity. Cannot combine with other promotions, discounts, coupons, rewards, or special offers. One promotional offer per customer per visit.",
       "General rule: The salon may modify or end any promotion at any time.",
     ].join("\n"),
+    viText: [
+      "Khuyến mãi 1: Tự thưởng cho mình",
+      "Ưu đãi: Tặng thẻ quà tặng điện tử trị giá $25 miễn phí.",
+      "Điều kiện: Đặt lịch làm dịch vụ chăm sóc chân (pedicure) từ $55 trở lên.",
+      "Thời gian: Thứ Hai–Thứ Bảy, chỉ nhận theo lịch hẹn.",
+      "Quy định: Mỗi lần đủ điều kiện được tặng 1 thẻ quà tặng $25. Chỉ áp dụng cho dịch vụ trong tương lai, không quy đổi tiền mặt và không dùng để tip. Không kết hợp với các ưu đãi/giảm giá/quà tặng khác. Mỗi khách chỉ nhận 1 ưu đãi/1 lượt ghé.",
+      "Quy tắc chung: Tiệm có thể thay đổi hoặc kết thúc ưu đãi bất cứ lúc nào.",
+    ].join("\n"),
+  },
+  "first-visit": {
+    labelKey: "promoTemplateFirstVisitLabel",
+    enText: [
+      "Promotion 2: First-Visit Special",
+      "Offer: 20% off any service for new customers.",
+      "Eligibility: First-time customers only, valid on their first visit.",
+      "Availability: Monday–Saturday, by appointment only.",
+      "Rules: One 20% discount per new customer. Cannot combine with other promotions, discounts, coupons, rewards, or special offers.",
+      "General rule: The salon may modify or end any promotion at any time.",
+    ].join("\n"),
+    viText: [
+      "Khuyến mãi 2: Ưu đãi lần đầu",
+      "Ưu đãi: Giảm 20% cho bất kỳ dịch vụ nào dành cho khách mới.",
+      "Điều kiện: Chỉ áp dụng cho khách lần đầu, có hiệu lực trong lần ghé đầu tiên.",
+      "Thời gian: Thứ Hai–Thứ Bảy, chỉ nhận theo lịch hẹn.",
+      "Quy định: Mỗi khách mới chỉ nhận 1 lần giảm 20%. Không kết hợp với các ưu đãi/giảm giá/quà tặng khác.",
+      "Quy tắc chung: Tiệm có thể thay đổi hoặc kết thúc ưu đãi bất cứ lúc nào.",
+    ].join("\n"),
+  },
+  "refer-a-friend": {
+    labelKey: "promoTemplateReferLabel",
+    enText: [
+      "Promotion 3: Refer-a-Friend",
+      "Offer: $15 credit for you and your friend.",
+      "Eligibility: Referred friend must book and complete a service of $40 or more.",
+      "Availability: Ongoing, by appointment only.",
+      "Rules: Credit is issued after the referred friend’s visit is complete. Cannot combine with other promotions, discounts, coupons, rewards, or special offers.",
+      "General rule: The salon may modify or end any promotion at any time.",
+    ].join("\n"),
+    viText: [
+      "Khuyến mãi 3: Giới thiệu bạn bè",
+      "Ưu đãi: Tặng $15 tiền ưu đãi cho bạn và người bạn giới thiệu.",
+      "Điều kiện: Người được giới thiệu phải đặt lịch và hoàn tất dịch vụ từ $40 trở lên.",
+      "Thời gian: Áp dụng liên tục, chỉ nhận theo lịch hẹn.",
+      "Quy định: Tiền ưu đãi được ghi nhận sau khi người được giới thiệu hoàn tất lần ghé. Không kết hợp với các ưu đãi/giảm giá/quà tặng khác.",
+      "Quy tắc chung: Tiệm có thể thay đổi hoặc kết thúc ưu đãi bất cứ lúc nào.",
+    ].join("\n"),
   },
 } as const;
+
+const GREETING_TEMPLATES = {
+  "warm-welcome": {
+    labelKey: "greetingTemplateWarmLabel",
+    enText: "Hi! Thanks for calling Bitcoin Nail Bar. I'm your AI assistant — I can help you book an appointment, check pricing, or answer questions. How can I help today?",
+    viText: "Xin chào! Cảm ơn bạn đã gọi Bitcoin Nail Bar. Tôi là trợ lý AI của tiệm — tôi có thể giúp bạn đặt lịch, xem giá, hoặc trả lời các câu hỏi. Hôm nay bạn cần hỗ trợ gì ạ?",
+  },
+  "quick-booking": {
+    labelKey: "greetingTemplateQuickLabel",
+    enText: "Hello! You've reached Bitcoin Nail Bar. I can book your appointment right now, check today's availability, or answer a quick pricing question — what would you like to do?",
+    viText: "Chào bạn! Bạn đã gọi đến Bitcoin Nail Bar. Tôi có thể giúp bạn đặt lịch ngay bây giờ, kiểm tra tình trạng trống hôm nay, hoặc trả lời nhanh về giá — bạn muốn làm gì ạ?",
+  },
+  bilingual: {
+    labelKey: "greetingTemplateBilingualLabel",
+    enText: "Xin chào! Bạn đã gọi đến Bitcoin Nail Bar. / Hi! You've reached Bitcoin Nail Bar. Tôi có thể giúp đặt lịch, kiểm tra giá, hoặc trả lời câu hỏi. How can I help you today?",
+    viText: "Xin chào! Bạn đã gọi đến Bitcoin Nail Bar. / Hi! You've reached Bitcoin Nail Bar. Tôi có thể giúp đặt lịch, kiểm tra giá, hoặc trả lời câu hỏi. How can I help you today?",
+  },
+} as const;
+
+const FIRST_CALL_SMS_TEMPLATES = {
+  "thanks-booking": {
+    labelKey: "firstCallSmsTemplateThanksLabel",
+    enText: "Thanks for booking with Bitcoin Nail Bar! We're excited to see you. Reply to this text with any questions or to learn about our current promotions.",
+    viText: "Cảm ơn bạn đã đặt lịch tại Bitcoin Nail Bar! Chúng tôi rất mong được gặp bạn. Bạn có thể trả lời tin nhắn này nếu có câu hỏi, hoặc để biết thêm về các ưu đãi hiện tại của tiệm.",
+  },
+  "first-time-welcome": {
+    labelKey: "firstCallSmsTemplateWelcomeLabel",
+    enText: "Thanks for calling Bitcoin Nail Bar! We're glad to have you. Reply here anytime with questions, or ask about booking your next visit.",
+    viText: "Cảm ơn bạn đã gọi đến Bitcoin Nail Bar! Chúng tôi rất vui khi được phục vụ bạn. Bạn cứ trả lời tin nhắn này bất cứ lúc nào nếu có câu hỏi, hoặc nhờ chúng tôi hỗ trợ đặt lịch cho lần ghé tiếp theo nhé.",
+  },
+  "promo-teaser": {
+    labelKey: "firstCallSmsTemplatePromoLabel",
+    enText: "Thanks for calling Bitcoin Nail Bar! Ask us about this month's promotions on your next visit — reply to this text with any questions.",
+    viText: "Cảm ơn bạn đã gọi đến Bitcoin Nail Bar! Lần ghé tới bạn hỏi giúp chúng tôi về các ưu đãi trong tháng này nhé — bạn cứ trả lời tin nhắn này nếu có câu hỏi.",
+  },
+} as const;
+
+const AI_HUB_SUGGESTIONS = {
+  greeting: GREETING_TEMPLATES,
+  promo: PROMO_TEMPLATES,
+  firstCallSms: FIRST_CALL_SMS_TEMPLATES,
+} as const;
+
+type GreetingSuggestKey = keyof typeof AI_HUB_SUGGESTIONS.greeting;
+type PromoSuggestKey = keyof typeof AI_HUB_SUGGESTIONS.promo;
+type FirstCallSmsSuggestKey = keyof typeof AI_HUB_SUGGESTIONS.firstCallSms;
+
+function applySalonNameToTemplate(text: string, salonName: string) {
+  const resolvedName = salonName.trim() || SALON_NAME_TEMPLATE_TOKEN;
+  return text.split(SALON_NAME_TEMPLATE_TOKEN).join(resolvedName);
+}
 
 const GREETING_I18N_KEY_BY_LANGUAGE: Record<Language, string> = {
   [MerchantVoiceUiLanguage.Auto]: "greetingAuto",
@@ -626,6 +727,51 @@ const LANGUAGE_BUTTON_LABEL_KEY_BY_LANGUAGE: Record<Language, string> = {
 
 function greetingI18nKey(language: Language) {
   return GREETING_I18N_KEY_BY_LANGUAGE[language]
+}
+
+function defaultGreetingI18nKey(language: Language) {
+  return greetingI18nKey(language)
+}
+
+function translateKnownGreeting(text: string, language: Language) {
+  const normalized = text.replace(/\s+/g, " ").trim();
+  const enPattern =
+    /^Hello\s+\{\{\s*customerName\s*\}\}\.\s+Thank you for calling\s+(.+?)\.\s+How can I help you today\?$/i;
+  const viPattern =
+    /^Xin chào\s+\{\{\s*customerName\s*\}\}\.\s+Cảm ơn bạn đã gọi\s+(.+?)\.\s+Tôi có thể giúp gì cho bạn hôm nay\?$/i;
+
+  const enMatch = normalized.match(enPattern);
+  if (enMatch) {
+    const salon = enMatch[1]?.trim() || SALON_NAME_TEMPLATE_TOKEN;
+    if (language === MerchantVoiceUiLanguage.Vi) {
+      return `Xin chào {{customerName}}. Cảm ơn bạn đã gọi ${salon}. Tôi có thể giúp gì cho bạn hôm nay?`;
+    }
+    return `Hello {{customerName}}. Thank you for calling ${salon}. How can I help you today?`;
+  }
+
+  const viMatch = normalized.match(viPattern);
+  if (viMatch) {
+    const salon = viMatch[1]?.trim() || SALON_NAME_TEMPLATE_TOKEN;
+    if (language === MerchantVoiceUiLanguage.Vi) {
+      return `Xin chào {{customerName}}. Cảm ơn bạn đã gọi ${salon}. Tôi có thể giúp gì cho bạn hôm nay?`;
+    }
+    return `Hello {{customerName}}. Thank you for calling ${salon}. How can I help you today?`;
+  }
+
+  return null;
+}
+
+function shouldSyncGreetingForLanguageChange(
+  currentGreeting: string,
+  loadedGreeting: string,
+  fallbackGreetings: string[],
+) {
+  const normalize = (s: string) => s.replace(/\s+/g, " ").trim();
+  const current = normalize(currentGreeting);
+  const loaded = normalize(loadedGreeting);
+  if (!current) return true;
+  if (loaded && current === loaded) return true;
+  return fallbackGreetings.map((item) => normalize(item)).includes(current);
 }
 
 function languageButtonLabelKey(language: Language) {
@@ -778,6 +924,16 @@ function SettingsInfoTooltip({
   );
 }
 
+function SettingsSuggestLabel() {
+  const { t } = useTranslation();
+  return (
+    <span className="settings-suggest-label">
+      <StarsIcon className="settings-promo-suggest-icon" aria-hidden="true" />
+      {t(`${TK}.suggestLabel`)}
+    </span>
+  );
+}
+
 function SettingsCard({
   cardId,
   collapsed,
@@ -916,6 +1072,13 @@ export default function BookingSettingsPanel() {
     MerchantVoiceUiLanguage.Auto,
   );
   const [greeting, setGreeting] = useState(() => t(`${TK}.greetingEn`));
+  const loadedGreetingRef = useRef("");
+  const [selectedGreetingSuggestKey, setSelectedGreetingSuggestKey] =
+    useState<GreetingSuggestKey | null>(null);
+  const [selectedPromoSuggestKey, setSelectedPromoSuggestKey] =
+    useState<PromoSuggestKey | null>(null);
+  const [selectedFirstCallSmsSuggestKey, setSelectedFirstCallSmsSuggestKey] =
+    useState<FirstCallSmsSuggestKey | null>(null);
   const [promotion, setPromotion] = useState("");
   const [salonName, setSalonName] = useState("");
   const [salonPhone, setSalonPhone] = useState("");
@@ -926,7 +1089,10 @@ export default function BookingSettingsPanel() {
     [],
   );
   const [googleReviewUrl, setGoogleReviewUrl] = useState("");
+  const [yelpReviewUrl, setYelpReviewUrl] = useState("");
   const [website, setWebsite] = useState("");
+  const [facebookUrl, setFacebookUrl] = useState("");
+  const [instagramUrl, setInstagramUrl] = useState("");
   const [description, setDescription] = useState("");
   const [timeZone, setTimeZone] = useState<string>(DEFAULT_SETTINGS_TIMEZONE);
   const [timeZoneManual, setTimeZoneManual] = useState(false);
@@ -955,6 +1121,11 @@ export default function BookingSettingsPanel() {
     zip?: string;
     country?: string;
     greeting?: string;
+    googleReviewUrl?: string;
+    yelpReviewUrl?: string;
+    website?: string;
+    facebookUrl?: string;
+    instagramUrl?: string;
   }>({});
   const [hoursErrorByDay, setHoursErrorByDay] = useState<
     Record<DayKey, string>
@@ -1268,6 +1439,9 @@ export default function BookingSettingsPanel() {
       setTimeZoneManual(false);
     }
     setGoogleReviewUrl(configData.googleReviewUrl || "");
+    setYelpReviewUrl(configData.yelpUrl || "");
+    setFacebookUrl(configData.facebookUrl || "");
+    setInstagramUrl(configData.instagramUrl || "");
     setWebsite(configData.website || "");
     setDescription(configData.description || "");
     setPromoSms((configData.promoSms || "").slice(0, FIRST_CALL_SMS_MAX_LENGTH));
@@ -1275,10 +1449,11 @@ export default function BookingSettingsPanel() {
     setPromotion((configData.promotion || "").slice(0, PROMO_MAX_LENGTH));
     const resolvedLang = mapConfigLanguageToUiLanguage(configData.language);
     setLanguage(resolvedLang);
-    setGreeting(
+    const loadedGreeting =
       configData.welcomeGreeting ||
-        t(`${TK}.${greetingI18nKey(resolvedLang)}`),
-    );
+      t(`${TK}.${defaultGreetingI18nKey(resolvedLang)}`);
+    loadedGreetingRef.current = loadedGreeting;
+    setGreeting(loadedGreeting);
 
     const nextHours = { ...INITIAL_HOURS };
     configData.operatingHours.forEach((item) => {
@@ -2317,7 +2492,58 @@ export default function BookingSettingsPanel() {
   const handleLanguageSelect = (next: Language) => {
     const resolved = next;
     setLanguage(resolved);
-    setGreeting(t(`${TK}.${greetingI18nKey(resolved)}`));
+
+    // Greeting
+    if (selectedGreetingSuggestKey) {
+      const template = AI_HUB_SUGGESTIONS.greeting[selectedGreetingSuggestKey];
+      const nextText =
+        resolved === MerchantVoiceUiLanguage.Vi ? template.viText : template.enText;
+      setGreeting(applySalonNameToTemplate(nextText, salonName));
+    } else {
+      const translatedKnownGreeting =
+        translateKnownGreeting(greeting, resolved) ||
+        translateKnownGreeting(loadedGreetingRef.current, resolved);
+      if (translatedKnownGreeting) {
+        setGreeting(translatedKnownGreeting);
+      } else {
+      const shouldSyncGreeting = shouldSyncGreetingForLanguageChange(
+        greeting,
+        loadedGreetingRef.current,
+        [
+          t(`${TK}.greetingEn`),
+          t(`${TK}.greetingVi`),
+          t(`${TK}.greetingAuto`),
+        ],
+      );
+      if (shouldSyncGreeting) {
+        const translatedGreeting = t(`${TK}.${defaultGreetingI18nKey(resolved)}`);
+        setGreeting(translatedGreeting);
+      }
+      }
+    }
+
+    // Promo
+    if (selectedPromoSuggestKey) {
+      const template = AI_HUB_SUGGESTIONS.promo[selectedPromoSuggestKey];
+      const nextText =
+        resolved === MerchantVoiceUiLanguage.Vi ? template.viText : template.enText;
+      setPromotion(nextText.slice(0, PROMO_MAX_LENGTH));
+    }
+
+    // First-call SMS
+    if (selectedFirstCallSmsSuggestKey) {
+      const template =
+        AI_HUB_SUGGESTIONS.firstCallSms[selectedFirstCallSmsSuggestKey];
+      const nextText =
+        resolved === MerchantVoiceUiLanguage.Vi ? template.viText : template.enText;
+      setPromoSms(
+        applySalonNameToTemplate(nextText, salonName).slice(
+          0,
+          FIRST_CALL_SMS_MAX_LENGTH,
+        ),
+      );
+    }
+
     setStatus(
       t(`${TK}.languageSelected`, {
         language: t(`${TK}.languageLabels.${resolved}`),
@@ -2327,14 +2553,49 @@ export default function BookingSettingsPanel() {
 
   const handlePromoChange = (value: string) => {
     setPromotion(value.slice(0, PROMO_MAX_LENGTH));
+    setSelectedPromoSuggestKey(null);
   };
 
-  const handlePromoSuggest = (key: keyof typeof PROMO_TEMPLATES) => {
-    const template = PROMO_TEMPLATES[key];
+  const handlePromoSuggest = (key: PromoSuggestKey) => {
+    const template = AI_HUB_SUGGESTIONS.promo[key];
     if (!template) return;
-    setPromotion(template.text.slice(0, PROMO_MAX_LENGTH));
+    const nextText =
+      language === MerchantVoiceUiLanguage.Vi ? template.viText : template.enText;
+    setPromotion(nextText.slice(0, PROMO_MAX_LENGTH));
+    setSelectedPromoSuggestKey(key);
     setStatus(
       t(`${TK}.promoFilled`, { name: t(`${TK}.${template.labelKey}`) }),
+    );
+  };
+
+  const handleGreetingSuggest = (key: GreetingSuggestKey) => {
+    const template = AI_HUB_SUGGESTIONS.greeting[key];
+    if (!template) return;
+    const nextText =
+      language === MerchantVoiceUiLanguage.Vi ? template.viText : template.enText;
+    setGreeting(applySalonNameToTemplate(nextText, salonName));
+    setSelectedGreetingSuggestKey(key);
+    if (formErrors.greeting)
+      setFormErrors((prev) => ({ ...prev, greeting: undefined }));
+    setStatus(
+      t(`${TK}.greetingFilled`, { name: t(`${TK}.${template.labelKey}`) }),
+    );
+  };
+
+  const handleFirstCallSmsSuggest = (
+    key: FirstCallSmsSuggestKey,
+  ) => {
+    const template = AI_HUB_SUGGESTIONS.firstCallSms[key];
+    if (!template) return;
+    setPromoSms(
+      applySalonNameToTemplate(
+        language === MerchantVoiceUiLanguage.Vi ? template.viText : template.enText,
+        salonName,
+      ).slice(0, FIRST_CALL_SMS_MAX_LENGTH),
+    );
+    setSelectedFirstCallSmsSuggestKey(key);
+    setStatus(
+      t(`${TK}.firstCallSmsFilled`, { name: t(`${TK}.${template.labelKey}`) }),
     );
   };
 
@@ -2378,17 +2639,7 @@ export default function BookingSettingsPanel() {
     const requiredMessage = t(
       "components.dashboard.views.BookingHubView.team.requiredField",
     );
-    const nextErrors: {
-      salonName?: string;
-      salonPhone?: string;
-      bookingNotifyPhone?: string;
-      street?: string;
-      city?: string;
-      state?: string;
-      zip?: string;
-      country?: string;
-      greeting?: string;
-    } = {};
+    const nextErrors: typeof formErrors = {};
     if (!salonName.trim()) nextErrors.salonName = requiredMessage;
     // Salon phone + booking notify phone are optional; validate format only when entered.
     if (
@@ -2410,6 +2661,22 @@ export default function BookingSettingsPanel() {
     if (!location.country.trim()) nextErrors.country = requiredMessage;
     if (!greeting.trim()) nextErrors.greeting = requiredMessage;
 
+    const invalidUrlMsg = t(`${TK}.invalidUrl`);
+    const isValidUrl = (v: string) => {
+      if (!v.trim()) return true;
+      try {
+        const u = new URL(v.trim());
+        return u.protocol === "http:" || u.protocol === "https:";
+      } catch {
+        return false;
+      }
+    };
+    if (!isValidUrl(googleReviewUrl)) nextErrors.googleReviewUrl = invalidUrlMsg;
+    if (!isValidUrl(yelpReviewUrl)) nextErrors.yelpReviewUrl = invalidUrlMsg;
+    if (!isValidUrl(website)) nextErrors.website = invalidUrlMsg;
+    if (!isValidUrl(facebookUrl)) nextErrors.facebookUrl = invalidUrlMsg;
+    if (!isValidUrl(instagramUrl)) nextErrors.instagramUrl = invalidUrlMsg;
+
     if (
       applyAiHubProgressiveValidation({
         allErrors: nextErrors,
@@ -2426,6 +2693,11 @@ export default function BookingSettingsPanel() {
           zip: t(`${TK}.zip`),
           country: t(`${TK}.country`),
           greeting: t(`${TK}.greetingScript`),
+          googleReviewUrl: t(`${TK}.googleReviewLink`),
+          yelpReviewUrl: t(`${TK}.yelpReviewLink`),
+          website: t(`${TK}.website`),
+          facebookUrl: t(`${TK}.facebook`),
+          instagramUrl: t(`${TK}.instagram`),
         },
         hubTk: TK_HUB,
         t,
@@ -2461,6 +2733,9 @@ export default function BookingSettingsPanel() {
           zipCode: location.zip.trim() || null,
           country: location.country.trim() || null,
           googleReviewUrl: googleReviewUrl.trim(),
+          facebookUrl: facebookUrl.trim() || null,
+          instagramUrl: instagramUrl.trim() || null,
+          yelpUrl: yelpReviewUrl.trim() || null,
           website: website.trim() || null,
           description: description.trim() || null,
           promotion: promotion.trim().slice(0, PROMO_MAX_LENGTH) || null,
@@ -2487,6 +2762,14 @@ export default function BookingSettingsPanel() {
         }),
       ];
 
+      savePromises.push(
+        merchantsRepository.updateReviewLinks({
+          googleReviewUrl: googleReviewUrl.trim() || null,
+          yelpUrl: yelpReviewUrl.trim() || null,
+          facebookUrl: facebookUrl.trim() || null,
+        }),
+      );
+
       // Booking SMS Notifications live on PosBookingSettings now — saved as a second,
       // independent request alongside the Nexora Voice config above. Non-SMS fields on
       // that resource (auto-confirm, lead time, etc.) aren't shown on this panel, so they
@@ -2505,6 +2788,8 @@ export default function BookingSettingsPanel() {
       }
 
       await Promise.all(savePromises);
+
+      await queryClient.invalidateQueries({ queryKey: qk.merchantSetup() });
 
       setStatus(t(`${TK}.saveSuccess`));
       setFormErrors({});
@@ -2566,7 +2851,7 @@ export default function BookingSettingsPanel() {
           subtitle={t(`${TK}.salonInfoSub`)}
         >
           <div className="settings-field-grid settings-business-grid">
-            <label className="settings-field" data-ai-hub-field="salonName">
+            <label className="settings-field settings-salon-name-field" data-ai-hub-field="salonName">
               <span className="settings-label">{t(`${TK}.salonName`)}</span>
               <input
                 className="settings-input"
@@ -2773,7 +3058,7 @@ export default function BookingSettingsPanel() {
                   className="settings-input"
                   type="text"
                   value={location.street}
-                  placeholder={t(`${TK}.placeholderStreetFull`)}
+                  placeholder={t(`${TK}.placeholderStreet`)}
                   autoComplete="street-address"
                   aria-invalid={Boolean(formErrors.street)}
                   onChange={(event) => {
@@ -2924,19 +3209,7 @@ export default function BookingSettingsPanel() {
                 </span>
               </label>
             </div>
-            <label className="settings-field settings-span-full">
-              <span className="settings-label">
-                {t(`${TK}.googleReviewLink`)}
-              </span>
-              <input
-                className="settings-input"
-                type="text"
-                value={googleReviewUrl}
-                placeholder={t(`${TK}.placeholderGoogleReviewLink`)}
-                onChange={(event) => setGoogleReviewUrl(event.target.value)}
-              />
-            </label>
-            <label className="settings-field settings-span-full">
+            <label className="settings-field settings-span-full" data-ai-hub-field="website">
               <span className="settings-label">{t(`${TK}.website`)}</span>
               <input
                 className="settings-input"
@@ -2945,9 +3218,118 @@ export default function BookingSettingsPanel() {
                 placeholder={t(`${TK}.placeholderWebsite`)}
                 autoComplete="url"
                 inputMode="url"
-                onChange={(event) => setWebsite(event.target.value)}
+                aria-invalid={Boolean(formErrors.website)}
+                onChange={(event) => {
+                  setWebsite(event.target.value);
+                  if (formErrors.website)
+                    setFormErrors((prev) => ({ ...prev, website: undefined }));
+                }}
               />
+              <span className="settings-field-error-slot">
+                {formErrors.website ? (
+                  <span className="settings-field-error">{formErrors.website}</span>
+                ) : null}
+              </span>
             </label>
+            <label className="settings-field" data-ai-hub-field="googleReviewUrl">
+              <span className="settings-label">
+                {t(`${TK}.googleReviewLink`)}
+              </span>
+              <input
+                className="settings-input"
+                type="url"
+                value={googleReviewUrl}
+                placeholder={t(`${TK}.placeholderGoogleReviewLink`)}
+                autoComplete="url"
+                inputMode="url"
+                aria-invalid={Boolean(formErrors.googleReviewUrl)}
+                onChange={(event) => {
+                  setGoogleReviewUrl(event.target.value);
+                  if (formErrors.googleReviewUrl)
+                    setFormErrors((prev) => ({ ...prev, googleReviewUrl: undefined }));
+                }}
+              />
+              <span className="settings-field-error-slot">
+                {formErrors.googleReviewUrl ? (
+                  <span className="settings-field-error">{formErrors.googleReviewUrl}</span>
+                ) : null}
+              </span>
+            </label>
+            <label className="settings-field" data-ai-hub-field="yelpReviewUrl">
+              <span className="settings-label">
+                {t(`${TK}.yelpReviewLink`)}
+              </span>
+              <input
+                className="settings-input"
+                type="url"
+                value={yelpReviewUrl}
+                placeholder={t(`${TK}.placeholderYelp`)}
+                autoComplete="url"
+                inputMode="url"
+                aria-invalid={Boolean(formErrors.yelpReviewUrl)}
+                onChange={(event) => {
+                  setYelpReviewUrl(event.target.value);
+                  if (formErrors.yelpReviewUrl)
+                    setFormErrors((prev) => ({ ...prev, yelpReviewUrl: undefined }));
+                }}
+              />
+              <span className="settings-field-error-slot">
+                {formErrors.yelpReviewUrl ? (
+                  <span className="settings-field-error">{formErrors.yelpReviewUrl}</span>
+                ) : null}
+              </span>
+            </label>
+            <div className="settings-social-links">
+              <div className="settings-social-links-title">
+                {t(`${TK}.socialLinksTitle`)}
+              </div>
+              <div className="settings-social-grid">
+                <label className="settings-field" data-ai-hub-field="facebookUrl">
+                  <span className="settings-label">{t(`${TK}.facebook`)}</span>
+                  <input
+                    className="settings-input"
+                    type="url"
+                    value={facebookUrl}
+                    placeholder={t(`${TK}.placeholderFacebook`)}
+                    autoComplete="url"
+                    inputMode="url"
+                    aria-invalid={Boolean(formErrors.facebookUrl)}
+                    onChange={(event) => {
+                      setFacebookUrl(event.target.value);
+                      if (formErrors.facebookUrl)
+                        setFormErrors((prev) => ({ ...prev, facebookUrl: undefined }));
+                    }}
+                  />
+                  <span className="settings-field-error-slot">
+                    {formErrors.facebookUrl ? (
+                      <span className="settings-field-error">{formErrors.facebookUrl}</span>
+                    ) : null}
+                  </span>
+                </label>
+                <label className="settings-field" data-ai-hub-field="instagramUrl">
+                  <span className="settings-label">{t(`${TK}.instagram`)}</span>
+                  <input
+                    className="settings-input"
+                    type="url"
+                    value={instagramUrl}
+                    placeholder={t(`${TK}.placeholderInstagram`)}
+                    autoComplete="url"
+                    inputMode="url"
+                    aria-invalid={Boolean(formErrors.instagramUrl)}
+                    onChange={(event) => {
+                      setInstagramUrl(event.target.value);
+                      if (formErrors.instagramUrl)
+                        setFormErrors((prev) => ({ ...prev, instagramUrl: undefined }));
+                    }}
+                  />
+                  <span className="settings-field-error-slot">
+                    {formErrors.instagramUrl ? (
+                      <span className="settings-field-error">{formErrors.instagramUrl}</span>
+                    ) : null}
+                  </span>
+                </label>
+              </div>
+            </div>
           </div>
         </SettingsCard>
 
@@ -3008,7 +3390,7 @@ export default function BookingSettingsPanel() {
                       <input
                         className="settings-hour-input"
                         type="time"
-                        lang="en-US-u-hc-h12"
+                        lang={TWELVE_HOUR_INPUT_LANG}
                         step={60}
                         value={row.openTime}
                         disabled={!row.open}
@@ -3051,7 +3433,7 @@ export default function BookingSettingsPanel() {
                       <input
                         className="settings-hour-input"
                         type="time"
-                        lang="en-US-u-hc-h12"
+                        lang={TWELVE_HOUR_INPUT_LANG}
                         step={60}
                         value={row.closeTime}
                         disabled={!row.open}
@@ -3246,7 +3628,10 @@ export default function BookingSettingsPanel() {
                 {t(`${TK}.languageStatus.${language}`)}
               </div>
             </div>
-            <div className="settings-field settings-span-full" data-ai-hub-field="greeting">
+            <label
+              className="settings-field settings-span-full"
+              data-ai-hub-field="greeting"
+            >
               <span className="settings-label" id="settings-greeting-label">
                 {t(`${TK}.greetingScript`)}
               </span>
@@ -3258,6 +3643,7 @@ export default function BookingSettingsPanel() {
                 aria-invalid={Boolean(formErrors.greeting)}
                 onChange={(event) => {
                   setGreeting(event.target.value);
+                  setSelectedGreetingSuggestKey(null);
                   if (formErrors.greeting)
                     setFormErrors((prev) => ({ ...prev, greeting: undefined }));
                 }}
@@ -3269,17 +3655,37 @@ export default function BookingSettingsPanel() {
                   </span>
                 ) : null}
               </span>
-              <button
-                className={`booking-secondary-button settings-preview-button ${isPreviewPlaying ? "is-playing" : ""}`}
-                type="button"
-                aria-pressed={isPreviewPlaying}
-                onClick={handlePreview}
-              >
-                {isPreviewPlaying
-                  ? t(`${TK}.previewVoiceStop`)
-                  : t(`${TK}.previewVoice`)}
-              </button>
-            </div>
+              <div className="settings-promo-suggest-row">
+                <SettingsSuggestLabel />
+                <button
+                  className={`settings-promo-suggest${
+                    selectedGreetingSuggestKey === "warm-welcome" ? " is-active" : ""
+                  }`}
+                  type="button"
+                  onClick={() => handleGreetingSuggest("warm-welcome")}
+                >
+                  {t(`${TK}.greetingSuggestWarm`)}
+                </button>
+                <button
+                  className={`settings-promo-suggest${
+                    selectedGreetingSuggestKey === "quick-booking" ? " is-active" : ""
+                  }`}
+                  type="button"
+                  onClick={() => handleGreetingSuggest("quick-booking")}
+                >
+                  {t(`${TK}.greetingSuggestQuick`)}
+                </button>
+                <button
+                  className={`settings-promo-suggest${
+                    selectedGreetingSuggestKey === "bilingual" ? " is-active" : ""
+                  }`}
+                  type="button"
+                  onClick={() => handleGreetingSuggest("bilingual")}
+                >
+                  {t(`${TK}.greetingSuggestBilingual`)}
+                </button>
+              </div>
+            </label>
 
             <label className="settings-field settings-span-full">
               <span className="settings-label settings-label-with-tooltip">
@@ -3304,21 +3710,41 @@ export default function BookingSettingsPanel() {
                 }
               />
               <div className="settings-promo-meta">
-                <div className="settings-promo-suggest-row">
-                  <button
-                    className="settings-promo-suggest"
-                    type="button"
-                    onClick={() => handlePromoSuggest("reward-yourself")}
-                  >
-                    <StarsIcon className="settings-promo-suggest-icon" />
-                    {t(`${TK}.promoSuggestReward`)}
-                  </button>
-                </div>
                 <div
                   id="settings-promo-count"
                   className={`settings-promo-count ${promotion.length >= PROMO_MAX_LENGTH ? "is-max" : ""}`}
                 >
                   <span>{promotion.length}</span>/{PROMO_MAX_LENGTH}
+                </div>
+                <div className="settings-promo-suggest-row">
+                  <SettingsSuggestLabel />
+                  <button
+                    className={`settings-promo-suggest${
+                      selectedPromoSuggestKey === "reward-yourself" ? " is-active" : ""
+                    }`}
+                    type="button"
+                    onClick={() => handlePromoSuggest("reward-yourself")}
+                  >
+                    {t(`${TK}.promoSuggestReward`)}
+                  </button>
+                  <button
+                    className={`settings-promo-suggest${
+                      selectedPromoSuggestKey === "first-visit" ? " is-active" : ""
+                    }`}
+                    type="button"
+                    onClick={() => handlePromoSuggest("first-visit")}
+                  >
+                    {t(`${TK}.promoSuggestFirstVisit`)}
+                  </button>
+                  <button
+                    className={`settings-promo-suggest${
+                      selectedPromoSuggestKey === "refer-a-friend" ? " is-active" : ""
+                    }`}
+                    type="button"
+                    onClick={() => handlePromoSuggest("refer-a-friend")}
+                  >
+                    {t(`${TK}.promoSuggestRefer`)}
+                  </button>
                 </div>
               </div>
             </label>
@@ -3376,15 +3802,64 @@ export default function BookingSettingsPanel() {
                   maxLength={FIRST_CALL_SMS_MAX_LENGTH}
                   placeholder={t(`${TK}.firstCallSmsPlaceholder`)}
                   aria-label={t(`${TK}.firstCallSmsMessageLabel`)}
-                  onChange={(event) =>
+                  onChange={(event) => {
+                    setSelectedFirstCallSmsSuggestKey(null);
                     setPromoSms(
                       event.target.value.slice(0, FIRST_CALL_SMS_MAX_LENGTH),
-                    )
-                  }
+                    );
+                  }}
                 />
+                <div className="settings-promo-suggest-row">
+                  <SettingsSuggestLabel />
+                  <button
+                    className={`settings-promo-suggest${
+                      selectedFirstCallSmsSuggestKey === "thanks-booking"
+                        ? " is-active"
+                        : ""
+                    }`}
+                    type="button"
+                    onClick={() => handleFirstCallSmsSuggest("thanks-booking")}
+                  >
+                    {t(`${TK}.firstCallSmsSuggestThanks`)}
+                  </button>
+                  <button
+                    className={`settings-promo-suggest${
+                      selectedFirstCallSmsSuggestKey === "first-time-welcome"
+                        ? " is-active"
+                        : ""
+                    }`}
+                    type="button"
+                    onClick={() =>
+                      handleFirstCallSmsSuggest("first-time-welcome")
+                    }
+                  >
+                    {t(`${TK}.firstCallSmsSuggestWelcome`)}
+                  </button>
+                  <button
+                    className={`settings-promo-suggest${
+                      selectedFirstCallSmsSuggestKey === "promo-teaser"
+                        ? " is-active"
+                        : ""
+                    }`}
+                    type="button"
+                    onClick={() => handleFirstCallSmsSuggest("promo-teaser")}
+                  >
+                    {t(`${TK}.firstCallSmsSuggestPromo`)}
+                  </button>
+                </div>
               </div>
             </div>
           </div>
+          <button
+            className={`booking-secondary-button settings-preview-button ${isPreviewPlaying ? "is-playing" : ""}`}
+            type="button"
+            aria-pressed={isPreviewPlaying}
+            onClick={handlePreview}
+          >
+            {isPreviewPlaying
+              ? t(`${TK}.previewVoiceStop`)
+              : t(`${TK}.previewVoice`)}
+          </button>
         </SettingsCard>
       </div>
 

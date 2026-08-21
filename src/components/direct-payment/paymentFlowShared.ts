@@ -212,3 +212,23 @@ export function resolvePaymentMethodViaDisplay(
   if (singleCoin) return formatVlinkpayViaLabel(singleCoin.symbol)
   return formatVlinkpayViaLabel(null)
 }
+
+export type DirectPaymentAmountError = 'too_low' | 'too_high' | null
+
+/**
+ * Inline validation for the amount field, shared by the merchant and staff
+ * payment screens. Stays silent while the field is untouched — an empty input
+ * is "not filled in yet", not an error — then flags anything the API would
+ * reject (min $1.00, max $10,000.00) as the customer types.
+ */
+export function resolveDirectPaymentAmountError(
+  rawInput: string,
+  amount: number,
+  minAmount: number,
+  maxAmount: number,
+): DirectPaymentAmountError {
+  if (!String(rawInput ?? '').trim()) return null
+  if (!Number.isFinite(amount) || amount < minAmount) return 'too_low'
+  if (amount > maxAmount) return 'too_high'
+  return null
+}

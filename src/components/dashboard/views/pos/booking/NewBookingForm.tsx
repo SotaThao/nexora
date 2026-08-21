@@ -7,7 +7,12 @@ import { useState } from 'react'
 import { Check, Loader2, Trash2, X } from 'lucide-react'
 import { useTranslation } from '../../../../../contexts/LanguageContext'
 import { useNotification } from '../../../../../contexts/NotificationContext'
-import { formatNationalNumber, getNationalPhonePlaceholder, PhoneDialCode } from '../../../../CountryCodeSelect'
+import CountryCodeSelect, {
+  formatNationalNumber,
+  getNationalPhonePlaceholder,
+  normalizePhoneE164,
+  PhoneDialCode,
+} from '../../../../CountryCodeSelect'
 import { getApiErrorCode } from '../../../../../types/domain'
 import { getErrorI18nKey } from '../../../../../data/errorCodes'
 import { useCheckoutServiceCatalog } from '../../../../../data/hooks/usePosCheckout'
@@ -15,6 +20,8 @@ import { useAssignableStaffForService, useCustomerLookupByPhone } from '../../..
 import { useCreateStaffBooking } from '../../../../../data/hooks/usePosBooking'
 import IconButton from '../../../../ui/IconButton'
 import CategoryGroupedCatalogPicker from '../CategoryGroupedCatalogPicker'
+import { randomUuid } from '../../../../../utils/uuid'
+import { TWELVE_HOUR_INPUT_LANG } from '../../../../../constants/timeFormat'
 
 interface BookingLineDraft {
   key: string
@@ -100,6 +107,9 @@ export default function NewBookingForm({
 
   const [customerName, setCustomerName] = useState('')
   const [customerPhone, setCustomerPhone] = useState('')
+  // The backend is the only phone parser now, and the dial code is the only way it can know
+  // which country the number belongs to — a bare national number defaults to US.
+  const [dialCode, setDialCode] = useState<string>(PhoneDialCode.US)
   const [customerEmail, setCustomerEmail] = useState('')
   const [scheduledDate, setScheduledDate] = useState('')
   const [scheduledTime, setScheduledTime] = useState('')
@@ -146,7 +156,7 @@ export default function NewBookingForm({
     if (!service) return
     setLines((prev) => [
       ...prev,
-      { key: crypto.randomUUID(), posServiceId: service.id, serviceName: service.name, unitPrice: service.price },
+      { key: randomUuid(), posServiceId: service.id, serviceName: service.name, unitPrice: service.price },
     ])
     clearFieldError(NewBookingFormField.Services)
   }
@@ -200,7 +210,7 @@ export default function NewBookingForm({
     createBooking.mutate(
       {
         customerName: name,
-        customerPhone: phone,
+        customerPhone: normalizePhoneE164(phone, dialCode),
         customerEmail: customerEmail.trim() || undefined,
         scheduledAt,
         items: lines.map((l) => ({ posServiceId: l.posServiceId, posStaffProfileId: l.posStaffProfileId })),
@@ -247,22 +257,40 @@ export default function NewBookingForm({
               <FieldError message={fieldErrors.name} />
             </div>
             <div>
-              <label className="text-[10px] font-extrabold uppercase text-nexoraMuted">
-                {t('components.dashboard.views.pos.NewBookingForm.customerPhone')}
-              </label>
-              <input
-                type="tel"
-                value={customerPhone}
-                onChange={(e) => {
-                  setCustomerPhone(formatNationalNumber(e.target.value, PhoneDialCode.US))
-                  clearFieldError(NewBookingFormField.Phone)
-                }}
-                placeholder={getNationalPhonePlaceholder(PhoneDialCode.US)}
-                inputMode="numeric"
-                autoComplete="tel-national"
-                aria-invalid={Boolean(fieldErrors.phone)}
-                className={`mt-1 h-10 w-full rounded-lg border bg-nexoraCanvas px-3.5 text-xs text-nexoraText outline-none transition-all focus:bg-white ${fieldErrors.phone ? 'border-rose-400 focus:border-rose-400' : 'border-nexoraBorder focus:border-nexoraBrand'}`}
-              />
+              <div className="flex items-stretch gap-2">
+                <div>
+                  <label className="text-[10px] font-extrabold uppercase text-nexoraMuted">
+                    {t('components.dashboard.views.pos.NewBookingForm.countryCode')}
+                  </label>
+                  <div className="mt-1">
+                    <CountryCodeSelect
+                      value={dialCode}
+                      onChange={(code) => {
+                        setDialCode(code)
+                        setCustomerPhone(formatNationalNumber(customerPhone, code))
+                      }}
+                    />
+                  </div>
+                </div>
+                <div className="flex-1">
+                  <label className="text-[10px] font-extrabold uppercase text-nexoraMuted">
+                    {t('components.dashboard.views.pos.NewBookingForm.customerPhone')}
+                  </label>
+                  <input
+                    type="tel"
+                    value={customerPhone}
+                    onChange={(e) => {
+                      setCustomerPhone(formatNationalNumber(e.target.value, dialCode))
+                      clearFieldError(NewBookingFormField.Phone)
+                    }}
+                    placeholder={getNationalPhonePlaceholder(dialCode)}
+                    inputMode="numeric"
+                    autoComplete="tel-national"
+                    aria-invalid={Boolean(fieldErrors.phone)}
+                    className={`mt-1 h-10 w-full rounded-lg border bg-nexoraCanvas px-3.5 text-xs text-nexoraText outline-none transition-all focus:bg-white ${fieldErrors.phone ? 'border-rose-400 focus:border-rose-400' : 'border-nexoraBorder focus:border-nexoraBrand'}`}
+                  />
+                </div>
+              </div>
               <FieldError message={fieldErrors.phone} />
             </div>
             <div>
@@ -304,6 +332,7 @@ export default function NewBookingForm({
                 </label>
                 <input
                   type="time"
+                  lang={TWELVE_HOUR_INPUT_LANG}
                   value={scheduledTime}
                   onChange={(e) => {
                     setScheduledTime(e.target.value)

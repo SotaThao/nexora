@@ -49,6 +49,7 @@ import {
   getServiceNameHighlightParts,
   validateBookingDraft,
 } from './bookingUtils'
+import { toTwelveHourLangTag } from '../../../constants/timeFormat'
 import BookingDateTimeFields from './BookingDateTimeFields'
 import './public-booking.css'
 import PublicBookingSkeleton from './PublicBookingSkeleton'
@@ -257,7 +258,7 @@ export default function PublicBookingPage() {
     document.body.classList.add(PUBLIC_BOOKING_BODY_CLASS)
     const previousHtmlLang = document.documentElement.lang
     // Force 12-hour clock page-wide while booking is open (SMS schedule uses the same u-hc-h12 tag).
-    document.documentElement.lang = `${locale}-u-hc-h12`
+    document.documentElement.lang = toTwelveHourLangTag(locale)
     const meta = document.querySelector('meta[name="theme-color"]')
     const previousTheme = meta?.getAttribute('content')
     if (meta) meta.setAttribute('content', PUBLIC_BOOKING_THEME_COLOR)

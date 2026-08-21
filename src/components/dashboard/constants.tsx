@@ -189,6 +189,21 @@ export function packageManagementPath(tab?: string) {
   return `${PACKAGE_MANAGEMENT_PATH}?tab=${encodeURIComponent(tab)}`;
 }
 
+export const PACKAGE_BILLING_PATH_SEGMENT = 'billing';
+
+export const PACKAGE_BILLING_QUERY_PARAM = {
+  transaction: 'transaction',
+} as const;
+
+export function packageBillingDetailPath(transactionId: string) {
+  return `${PACKAGE_MANAGEMENT_PATH}/${PACKAGE_BILLING_PATH_SEGMENT}?${PACKAGE_BILLING_QUERY_PARAM.transaction}=${encodeURIComponent(transactionId)}`;
+}
+
+export function isPackageBillingDetailPath(pathname: string) {
+  return pathname === `${PACKAGE_MANAGEMENT_PATH}/${PACKAGE_BILLING_PATH_SEGMENT}`
+    || pathname.endsWith(`/${DASHBOARD_MENU_ID.packageManagement}/${PACKAGE_BILLING_PATH_SEGMENT}`);
+}
+
 export const DASHBOARD_REPORTS_PATH = buildDashboardMenuPath(
   DASHBOARD_MENU_ID.reports,
 );
@@ -312,7 +327,8 @@ export const MENU_ITEMS = [
       { id: 'categories', labelKey: 'dashboard.menu.pos_categories' },
       { id: 'services', labelKey: 'dashboard.menu.pos_services' },
       { id: 'products', labelKey: 'dashboard.menu.pos_products' },
-      { id: 'staff', labelKey: 'dashboard.menu.pos_staff' }
+      { id: 'staff', labelKey: 'dashboard.menu.pos_staff' },
+      { id: 'devices', labelKey: 'dashboard.menu.pos_devices' }
     ]
   },
   {
@@ -453,8 +469,12 @@ export function isPackageManagementSubActive(
   activeMenu: string,
   tabParam: string | null,
   subId: string,
+  pathname?: string,
 ): boolean {
   if (activeMenu !== DASHBOARD_MENU_ID.packageManagement) return false;
+  if (pathname && isPackageBillingDetailPath(pathname)) {
+    return subId === PackageManagementTab.History;
+  }
   const activeTab = parsePackageManagementTab(tabParam);
   return activeTab === subId;
 }
@@ -576,6 +596,12 @@ export const PAYMENTS_PAYOUTS_SUBMENU = [
     screen: DASHBOARD_MENU_ID.tips,
     labelKey: "dashboard.tips.tabs.overview",
     params: { tab: "overview" },
+  },
+  {
+    id: "receive_payments_qr",
+    screen: DASHBOARD_MENU_ID.reports,
+    labelKey: "dashboard.menu.payments_payouts_receive_payments_qr",
+    params: { tab: "receive_payments" },
   },
   {
     id: "customer_payments",

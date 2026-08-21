@@ -173,7 +173,7 @@ export default function ProfileTab({
   )
 
   const inputClass = (error?: string) =>
-    `mt-1 h-10 w-full rounded-lg border bg-nexoraCanvas focus:bg-white px-3.5 text-xs text-nexoraText outline-none transition-all ${
+    `mt-1 h-10 w-full rounded-lg border bg-white px-3.5 text-xs text-nexoraText outline-none transition-all ${
       error
         ? 'border-rose-500 focus:border-rose-500 focus:ring-2 focus:ring-rose-500/15'
         : 'border-nexoraBorder focus:border-nexoraBrand'
@@ -432,7 +432,7 @@ export default function ProfileTab({
                   role="tab"
                   aria-selected={payoutCardTab === 'methods'}
                   onClick={() => setPayoutCardTab('methods')}
-                  className={`flex-1 rounded-lg px-3 py-2 text-[10px] font-extrabold uppercase tracking-wide transition ${
+                  className={`flex-1 rounded-lg px-3 py-2 text-[10px] font-extrabold tracking-wide transition ${
                     payoutCardTab === 'methods'
                       ? 'bg-nexoraBrand text-white shadow-md shadow-nexoraBrand/25 ring-2 ring-nexoraBrand/20'
                       : 'bg-transparent text-nexoraMuted hover:bg-white/70 hover:text-nexoraText'
@@ -445,7 +445,7 @@ export default function ProfileTab({
                   role="tab"
                   aria-selected={payoutCardTab === 'paymentQr'}
                   onClick={() => setPayoutCardTab('paymentQr')}
-                  className={`flex-1 rounded-lg px-3 py-2 text-[10px] font-extrabold uppercase tracking-wide transition ${
+                  className={`flex-1 rounded-lg px-3 py-2 text-[10px] font-extrabold tracking-wide transition ${
                     payoutCardTab === 'paymentQr'
                       ? 'bg-nexoraBrand text-white shadow-md shadow-nexoraBrand/25 ring-2 ring-nexoraBrand/20'
                       : 'bg-transparent text-nexoraMuted hover:bg-white/70 hover:text-nexoraText'
@@ -955,6 +955,40 @@ export default function ProfileTab({
                     />
                     <FieldError id="settings-yelp-review-error" error={reviewsErrors.yelpReview} />
                   </div>
+                  <div>
+                    <label htmlFor="settings-facebook-review" className="text-[10px] font-extrabold uppercase text-nexoraMuted">{t('components.settings.tabs.ProfileTab.facebook')}</label>
+                    <input
+                      id="settings-facebook-review"
+                      type="url"
+                      className={inputClass(reviewsErrors.facebookReview)}
+                      value={reviewsForm.facebookReview}
+                      aria-invalid={Boolean(reviewsErrors.facebookReview)}
+                      aria-describedby={reviewsErrors.facebookReview ? 'settings-facebook-review-error' : undefined}
+                      onChange={(e) => {
+                        setReviewsForm({ ...reviewsForm, facebookReview: e.target.value })
+                        clearError(setReviewsErrors, 'facebookReview')
+                      }}
+                      placeholder={t('components.settings.tabs.ProfileTab.phFacebookUrl')}
+                    />
+                    <FieldError id="settings-facebook-review-error" error={reviewsErrors.facebookReview} />
+                  </div>
+                  <div>
+                    <label htmlFor="settings-instagram-review" className="text-[10px] font-extrabold uppercase text-nexoraMuted">{t('components.settings.tabs.ProfileTab.instagram')}</label>
+                    <input
+                      id="settings-instagram-review"
+                      type="url"
+                      className={inputClass(reviewsErrors.instagramReview)}
+                      value={reviewsForm.instagramReview}
+                      aria-invalid={Boolean(reviewsErrors.instagramReview)}
+                      aria-describedby={reviewsErrors.instagramReview ? 'settings-instagram-review-error' : undefined}
+                      onChange={(e) => {
+                        setReviewsForm({ ...reviewsForm, instagramReview: e.target.value })
+                        clearError(setReviewsErrors, 'instagramReview')
+                      }}
+                      placeholder={t('components.settings.tabs.ProfileTab.phInstagramUrl')}
+                    />
+                    <FieldError id="settings-instagram-review-error" error={reviewsErrors.instagramReview} />
+                  </div>
                   <div className="flex gap-2 pt-2 justify-end">
                     <button
                       type="button"
@@ -998,6 +1032,36 @@ export default function ProfileTab({
                         className="text-nexoraBrand hover:underline font-extrabold flex items-center gap-0.5 break-all text-[11px]"
                       >
                         {profile.yelpReview} <ExternalLink className="h-3 w-3 shrink-0" />
+                      </a>
+                    ) : (
+                      <span className="text-nexoraSubtle font-medium">{t('components.settings.tabs.ProfileTab.notConfigured')}</span>
+                    )}
+                  </div>
+                  <div className="flex flex-col py-1.5 border-b border-slate-50 gap-1">
+                    <span className="text-nexoraMuted font-bold">{t('components.settings.tabs.ProfileTab.facebook')}</span>
+                    {profile.facebookReview ? (
+                      <a
+                        href={profile.facebookReview}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="text-nexoraBrand hover:underline font-extrabold flex items-center gap-0.5 break-all text-[11px]"
+                      >
+                        {profile.facebookReview} <ExternalLink className="h-3 w-3 shrink-0" />
+                      </a>
+                    ) : (
+                      <span className="text-nexoraSubtle font-medium">{t('components.settings.tabs.ProfileTab.notConfigured')}</span>
+                    )}
+                  </div>
+                  <div className="flex flex-col py-1.5 gap-1">
+                    <span className="text-nexoraMuted font-bold">{t('components.settings.tabs.ProfileTab.instagram')}</span>
+                    {profile.instagramReview ? (
+                      <a
+                        href={profile.instagramReview}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="text-nexoraBrand hover:underline font-extrabold flex items-center gap-0.5 break-all text-[11px]"
+                      >
+                        {profile.instagramReview} <ExternalLink className="h-3 w-3 shrink-0" />
                       </a>
                     ) : (
                       <span className="text-nexoraSubtle font-medium">{t('components.settings.tabs.ProfileTab.notConfigured')}</span>

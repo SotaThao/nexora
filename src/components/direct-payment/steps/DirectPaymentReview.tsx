@@ -1,5 +1,6 @@
 import React, { useEffect, useRef, useState } from 'react'
 import { formatUsdAmount } from '../../../utils/currencyInput'
+import PaymentTipSection from './PaymentTipSection'
 
 export default function DirectPaymentReview({
   t,
@@ -21,6 +22,10 @@ export default function DirectPaymentReview({
   disablePaymentSelection,
   isProcessing = false,
   totalPaymentLabel,
+  tip = null,
+  tipTotal = 0,
+  totalAmount = null,
+  amountErrorText = null,
 }) {
   const amountInputRef = useRef<HTMLInputElement | null>(null)
   const [pendingWalletKey, setPendingWalletKey] = useState<string | null>(null)
@@ -33,6 +38,10 @@ export default function DirectPaymentReview({
   const desc = reviewDesc || t('direct_payment.review_payment_desc')
   const emptyMethodsTitle = noMethodsTitle || t('direct_payment.no_methods_title')
   const emptyMethodsDesc = noMethodsDesc || t('direct_payment.no_methods_desc')
+  // Bill + tips — the single amount the customer transfers.
+  const payableTotal = Number.isFinite(totalAmount)
+    ? totalAmount
+    : (activeAmount || 0) + (tipTotal || 0)
 
   useEffect(() => {
     const input = amountInputRef.current
@@ -102,13 +111,44 @@ export default function DirectPaymentReview({
               inputMode="decimal"
               disabled={isProcessing}
               placeholder={t('direct_payment.custom_amount_placeholder')}
-              className="h-12 w-full rounded-xl border border-nexoraBorder bg-white py-3 pl-8 pr-3 text-sm font-extrabold text-nexoraText outline-none transition-all focus:border-nexoraBrand disabled:cursor-not-allowed disabled:opacity-60"
+              className={`payment-amount-input h-12 w-full rounded-xl border bg-white py-3 pl-8 pr-3 text-sm font-extrabold text-nexoraText outline-none transition-all disabled:cursor-not-allowed disabled:opacity-60 ${
+                amountErrorText
+                  ? 'border-nexoraDanger focus:border-nexoraDanger'
+                  : 'border-nexoraBorder focus:border-nexoraBrand'
+              }`}
               value={customAmount}
               onChange={(event) => onCustomAmountChange(event.target.value)}
               aria-label={t('direct_payment.amount_label')}
+              aria-invalid={Boolean(amountErrorText)}
+              aria-describedby={amountErrorText ? 'payment-amount-error' : undefined}
             />
           </div>
+
+          {amountErrorText ? (
+            <p
+              id="payment-amount-error"
+              role="alert"
+              className="text-xs font-semibold text-nexoraDanger"
+            >
+              {amountErrorText}
+            </p>
+          ) : null}
         </div>
+
+        {tip ? <PaymentTipSection t={t} tip={tip} /> : null}
+
+        {tipTotal > 0 ? (
+          <div className="space-y-1 border-t border-nexoraBorder/70 px-3.5 py-2.5">
+            <div className="flex items-center justify-between text-xs font-semibold text-nexoraMuted">
+              <span>{t('direct_payment.tip_bill_label')}</span>
+              <span>{formatUsdAmount(activeAmount > 0 ? activeAmount : 0)}</span>
+            </div>
+            <div className="flex items-center justify-between text-xs font-semibold text-nexoraMuted">
+              <span>{t('direct_payment.tip_tips_label')}</span>
+              <span>{formatUsdAmount(tipTotal)}</span>
+            </div>
+          </div>
+        ) : null}
 
         <div className="flex items-center justify-between border-t border-nexoraBrandSoft bg-nexoraBrandSoft/35 px-3.5 py-3">
           <div>
@@ -122,7 +162,7 @@ export default function DirectPaymentReview({
             ) : null}
           </div>
           <div className="text-lg font-black text-nexoraBrand">
-            {formatUsdAmount(activeAmount > 0 ? activeAmount : 0)}
+            {formatUsdAmount(payableTotal > 0 ? payableTotal : 0)}
           </div>
         </div>
       </div>

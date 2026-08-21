@@ -29,6 +29,7 @@ import ReportsTableSkeleton from './ReportsTableSkeleton'
 import CopyableTransactionId from '../../ui/CopyableTransactionId'
 import ReportsDirectPaymentsTab from './ReportsDirectPaymentsTab'
 import PaymentsPayoutsHeader from '../PaymentsPayoutsHeader'
+import ReceivePaymentsQrContent from '../../payments/ReceivePaymentsQrContent'
 
 const TIP_STATUS_FILTER_VALUES = new Set<string>([
   TipStatus.Initiated,
@@ -42,6 +43,7 @@ const TIP_STATUS_FILTER_VALUES = new Set<string>([
 // Initiated/Pending/Processing tips must still respect that ownership.
 const REPORTS_TAB_TIPS = 'tips'
 const REPORTS_TAB_DIRECT_PAYMENTS = 'direct_payments'
+const REPORTS_TAB_RECEIVE_PAYMENTS = 'receive_payments'
 
 function toIsoDate(date: Date) {
   return date.toISOString().split('T')[0]
@@ -138,10 +140,13 @@ function ReportsView({
     setSelectedTx(tx)
   }, [])
 
-  const activeTab =
-    !isStaffAudience && searchParams.get('tab') === REPORTS_TAB_DIRECT_PAYMENTS
-      ? REPORTS_TAB_DIRECT_PAYMENTS
-      : REPORTS_TAB_TIPS
+  const requestedTab = searchParams.get('tab')
+  const activeTab = !isStaffAudience && (
+    requestedTab === REPORTS_TAB_DIRECT_PAYMENTS ||
+    requestedTab === REPORTS_TAB_RECEIVE_PAYMENTS
+  )
+    ? requestedTab
+    : REPORTS_TAB_TIPS
   const selectedPaymentId = searchParams.get('paymentId')
 
   // Deep-link from a "TipReceived" notification click (issue #419): the
@@ -575,7 +580,9 @@ function ReportsView({
     <div className="space-y-5">
       {showPageHeader && !isStaffAudience ? <PaymentsPayoutsHeader /> : null}
 
-      {!isStaffAudience && activeTab === REPORTS_TAB_DIRECT_PAYMENTS ? (
+      {!isStaffAudience && activeTab === REPORTS_TAB_RECEIVE_PAYMENTS ? (
+        <ReceivePaymentsQrContent businessName={businessName} />
+      ) : !isStaffAudience && activeTab === REPORTS_TAB_DIRECT_PAYMENTS ? (
         <ReportsDirectPaymentsTab
           selectedPaymentId={selectedPaymentId}
           onOpenPayment={openDirectPayment}

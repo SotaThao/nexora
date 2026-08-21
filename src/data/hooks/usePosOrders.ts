@@ -14,6 +14,7 @@ import type {
   CompletedOrdersPage,
   CustomerLookupResultApiDto,
   OrderListItemApiDto,
+  PosCheckInResultApiDto,
   PosWaitlistOrderApiDto,
 } from '../../types/repositories'
 
@@ -35,7 +36,7 @@ export function useWaitlist(businessId?: string) {
 
 export function useCheckInOrder(businessId?: string) {
   const queryClient = useQueryClient()
-  return useMutation<string, Error, CheckInOrderPayload>({
+  return useMutation<PosCheckInResultApiDto, Error, CheckInOrderPayload>({
     mutationFn: (payload) => posOrdersRepository.checkInOrder(businessId as string, payload),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: qk.merchantPosWaitlist(businessId) })
@@ -45,8 +46,8 @@ export function useCheckInOrder(businessId?: string) {
 }
 
 // Check-in "returning customer" suggestion (Ticket 2) — only fires once `phone` has
-// enough digits to plausibly be a real number; caller (CustomerHeaderBar) is responsible
-// for debouncing keystrokes before this becomes enabled.
+// enough digits to plausibly be a real number; the caller is responsible for debouncing
+// keystrokes before this becomes enabled.
 export function useCustomerLookupByPhone(businessId?: string, phone?: string) {
   const { isAuthenticated } = useSessionRole()
   const digitCount = (phone ?? '').replace(/\D/g, '').length
@@ -55,33 +56,45 @@ export function useCustomerLookupByPhone(businessId?: string, phone?: string) {
     queryFn: () => posOrdersRepository.getCustomerLookupByPhone(businessId as string, phone as string),
     enabled: isAuthenticated && Boolean(businessId) && digitCount >= CUSTOMER_LOOKUP_MIN_DIGITS,
     retry: false,
-    staleTime: 30000,
+    // Never cached beyond the visit it belongs to. The key already includes the full phone, so a
+    // staleTime deduped nothing across guests — it only served a stale answer back for the same
+    // number, which is how a guest who checked in minutes ago came back as "no name on file".
+    gcTime: 0,
+    staleTime: 0,
   })
 }
 
 // Order List tab (US-17) — Waiting + InService combined.
-export function useOrderList(businessId?: string) {
+export function useOrderList(
+  businessId?: string,
+  options?: { enabled?: boolean; refetchInterval?: number | false },
+) {
   const { isAuthenticated } = useSessionRole()
   return useQuery<OrderListItemApiDto[]>({
     queryKey: qk.merchantPosOrderList(businessId),
     queryFn: () => posOrdersRepository.getOrderList(businessId as string),
-    enabled: isAuthenticated && Boolean(businessId),
+    enabled: isAuthenticated && Boolean(businessId) && (options?.enabled ?? true),
     retry: false,
-    refetchInterval: 15000,
+    refetchInterval: options?.refetchInterval ?? 15000,
   })
 }
 
 // Completed Orders panel (US-17 follow-up) — paginated + filterable by date range/
 // customer name/phone. keepPreviousData avoids a flicker back to an empty list while the
 // user is paging or adjusting filters.
-export function useCompletedOrders(businessId: string | undefined, filters: CompletedOrdersListQuery) {
+export function useCompletedOrders(
+  businessId: string | undefined,
+  filters: CompletedOrdersListQuery,
+  options?: { enabled?: boolean; refetchInterval?: number | false },
+) {
   const { isAuthenticated } = useSessionRole()
   return useQuery<CompletedOrdersPage>({
     queryKey: qk.merchantPosCompletedOrders(businessId, filters),
     queryFn: () => posOrdersRepository.getCompletedOrders(businessId as string, filters),
-    enabled: isAuthenticated && Boolean(businessId),
+    enabled: isAuthenticated && Boolean(businessId) && (options?.enabled ?? true),
     placeholderData: keepPreviousData,
     retry: false,
+    refetchInterval: options?.refetchInterval,
   })
 }
 
@@ -140,20 +153,6 @@ export function useAssignableStaffForService(businessId?: string, posServiceId?:
     queryKey: qk.merchantPosAssignableStaff(businessId, posServiceId),
     queryFn: () => posOrdersRepository.getAssignableStaffForService(businessId as string, posServiceId as string),
     enabled: isAuthenticated && Boolean(businessId) && Boolean(posServiceId),
-    retry: false,
-  })
-}
-
-// Inverse of useAssignableStaffForService — which services the chosen technician can
-// perform, used by Check-in Step 2 to disable services outside that technician's skill
-// set. Undefined posStaffProfileId (First Available) means no filtering — caller should
-// simply not pass it, leaving every service enabled.
-export function useAssignableServicesForStaff(businessId?: string, posStaffProfileId?: string) {
-  const { isAuthenticated } = useSessionRole()
-  return useQuery<string[]>({
-    queryKey: qk.merchantPosAssignableServices(businessId, posStaffProfileId),
-    queryFn: () => posOrdersRepository.getAssignableServicesForStaff(businessId as string, posStaffProfileId as string),
-    enabled: isAuthenticated && Boolean(businessId) && Boolean(posStaffProfileId),
     retry: false,
   })
 }

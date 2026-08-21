@@ -4,10 +4,11 @@
  * Usable by both Owner and Staff sessions (gated server-side via
  * IPosOperationsAccessService) — see usePosAccess for the FE show/hide check.
  */
-import { useQuery, useMutation, useQueryClient, type QueryKey } from '@tanstack/react-query'
+import { useQueries, useQuery, useMutation, useQueryClient, type QueryKey } from '@tanstack/react-query'
 import { qk } from '../queryKeys'
 import { useSessionRole } from '../../auth/useSessionRole'
 import posCheckoutRepository from '../repositories/posCheckout'
+import { randomUuid } from '../../utils/uuid'
 import type {
   CheckoutProductCatalogItemApiDto,
   CheckoutServiceCatalogItemApiDto,
@@ -64,15 +65,18 @@ function rollbackOrderDetail(queryClient: ReturnType<typeof useQueryClient>, con
   }
 }
 
-export function useInServiceOrders(businessId?: string) {
+export function useInServiceOrders(
+  businessId?: string,
+  options?: { enabled?: boolean; refetchInterval?: number | false },
+) {
   const { isAuthenticated } = useSessionRole()
   return useQuery<InServiceOrderApiDto[]>({
     queryKey: qk.merchantPosInServiceOrders(businessId),
     queryFn: () => posCheckoutRepository.getInServiceOrders(businessId as string),
-    enabled: isAuthenticated && Boolean(businessId),
+    enabled: isAuthenticated && Boolean(businessId) && (options?.enabled ?? true),
     retry: false,
     // Checkout list should stay fresh without a manual refresh.
-    refetchInterval: 15000,
+    refetchInterval: options?.refetchInterval ?? 15000,
   })
 }
 
@@ -83,6 +87,33 @@ export function useOrderDetail(businessId?: string, orderId?: string) {
     queryFn: () => posCheckoutRepository.getOrderDetail(businessId as string, orderId as string),
     enabled: isAuthenticated && Boolean(businessId) && Boolean(orderId),
     retry: false,
+  })
+}
+
+/**
+ * Loads order details for a list of tickets while reusing React Query's per-order
+ * cache. The completed-order list only exposes aggregated service and technician
+ * names; the detail response is the source of truth for the technician assigned
+ * to each individual service line.
+ */
+export function useOrderDetails(
+  businessId: string | undefined,
+  orderIds: string[],
+  options?: { enabled?: boolean },
+) {
+  const { isAuthenticated } = useSessionRole()
+  const enabled = options?.enabled ?? true
+
+  return useQueries({
+    queries: orderIds.map((orderId) => ({
+      queryKey: qk.merchantPosOrderDetail(businessId, orderId),
+      queryFn: () => posCheckoutRepository.getOrderDetail(businessId as string, orderId),
+      enabled: enabled && isAuthenticated && Boolean(businessId),
+      retry: false,
+      // Completed tickets do not change after payment; keep the detail cache warm while the
+      // Turn Board's 15-second roster/list poll continues.
+      staleTime: 5 * 60 * 1000,
+    })),
   })
 }
 
@@ -127,7 +158,7 @@ export function useAddOrderServiceLine(businessId?: string) {
           serviceLines: [
             ...context.previousOrder.serviceLines,
             {
-              id: `optimistic-${crypto.randomUUID()}`,
+              id: `optimistic-${randomUuid()}`,
               posServiceId,
               serviceName,
               unitPrice,
@@ -145,6 +176,47 @@ export function useAddOrderServiceLine(businessId?: string) {
       queryClient.invalidateQueries({ queryKey: qk.merchantPosOrderDetail(businessId, orderId) })
       queryClient.invalidateQueries({ queryKey: qk.merchantPosInServiceOrders(businessId) })
       queryClient.invalidateQueries({ queryKey: qk.merchantPosOrderList(businessId) })
+    },
+  })
+}
+
+// Changing the service re-prices the line from the catalog server-side, and drops the technician
+// when they are not trained on the new service — so the turn board is invalidated too, and the
+// optimistic patch deliberately touches only name and price rather than guessing at the assignment.
+export function useUpdateOrderServiceLine(businessId?: string) {
+  const queryClient = useQueryClient()
+  return useMutation<
+    boolean,
+    Error,
+    { orderId: string; serviceLineId: string; posServiceId: string; unitPrice: number; serviceName: string },
+    OrderMutationContext
+  >({
+    mutationFn: ({ orderId, serviceLineId, posServiceId }) =>
+      posCheckoutRepository.updateOrderServiceLine(businessId as string, orderId, serviceLineId, posServiceId),
+    onMutate: async ({ orderId, serviceLineId, posServiceId, unitPrice, serviceName }) => {
+      const context = await snapshotOrderDetail(queryClient, businessId, orderId)
+      const previousLine = context.previousOrder?.serviceLines.find((l) => l.id === serviceLineId)
+      if (context.previousOrder && previousLine) {
+        const lineTotal = roundCurrency(unitPrice * previousLine.quantity)
+        queryClient.setQueryData<OrderDetailApiDto>(context.queryKey, {
+          ...applyOrderTotalsPatch(context.previousOrder, {
+            servicesSubtotal: roundCurrency(
+              context.previousOrder.servicesSubtotal - previousLine.lineTotal + lineTotal,
+            ),
+          }),
+          serviceLines: context.previousOrder.serviceLines.map((l) =>
+            l.id === serviceLineId ? { ...l, posServiceId, serviceName, unitPrice, lineTotal } : l,
+          ),
+        })
+      }
+      return context
+    },
+    onError: (_err, _vars, context) => rollbackOrderDetail(queryClient, context),
+    onSuccess: (_result, { orderId }) => {
+      queryClient.invalidateQueries({ queryKey: qk.merchantPosOrderDetail(businessId, orderId) })
+      queryClient.invalidateQueries({ queryKey: qk.merchantPosInServiceOrders(businessId) })
+      queryClient.invalidateQueries({ queryKey: qk.merchantPosOrderList(businessId) })
+      queryClient.invalidateQueries({ queryKey: qk.merchantPosTurnBoard(businessId) })
     },
   })
 }
@@ -205,7 +277,7 @@ export function useAddOrderProductLine(businessId?: string) {
           : [
               ...context.previousOrder.productLines,
               {
-                id: `optimistic-${crypto.randomUUID()}`,
+                id: `optimistic-${randomUuid()}`,
                 productName,
                 unitPrice,
                 quantity,
