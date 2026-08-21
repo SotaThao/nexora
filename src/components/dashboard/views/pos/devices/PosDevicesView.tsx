@@ -41,7 +41,7 @@ function shortenUserAgent(userAgent?: string | null): string {
 
 export default function PosDevicesView({ businessId }: { businessId: string }) {
   const { t, currentLanguage } = useTranslation()
-  const { showToast } = useNotification()
+  const { showToast, showConfirm } = useNotification()
 
   const [statusFilter, setStatusFilter] = useState<PosDeviceStatusFilter>('All')
   const [editing, setEditing] = useState<PosDeviceListItemApiDto | null>(null)
@@ -67,7 +67,11 @@ export default function PosDevicesView({ businessId }: { businessId: string }) {
   const handleRevoke = async (device: PosDeviceListItemApiDto) => {
     // Names the device in the prompt on purpose — "are you sure?" on a list of near-identical
     // iPads is how the wrong one gets cut off.
-    if (!window.confirm(t(`${K}.revokeConfirm`, { name: device.name }))) return
+    const confirmed = await showConfirm(
+      t(`${K}.revokeConfirm`, { name: device.name }),
+      t(`${K}.revokeConfirmTitle`),
+    )
+    if (!confirmed) return
     setRevokingId(device.id)
     try {
       await revokeDevice.mutateAsync(device.id)

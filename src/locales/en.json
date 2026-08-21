@@ -3704,6 +3704,7 @@
               "colActions": "Actions",
               "edit": "Edit",
               "revoke": "Revoke",
+              "revokeConfirmTitle": "Revoke device access",
               "revokeConfirm": "Cut off \"{{name}}\"? It loses access on its very next action and must be paired again.",
               "revokedSuccess": "Tablet access revoked.",
               "savedSuccess": "Tablet updated.",

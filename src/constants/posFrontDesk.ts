@@ -51,8 +51,9 @@ export enum OrderListFilter {
  * Guest-journey order: not arrived -> waiting -> in service.
  *
  * NotArrived is the odd one out — it is not a ticket status. A booking only becomes a ticket at
- * check-in, so that chip reads today's booking list while the other three filter the order list,
- * and its count is therefore not part of All.
+ * check-in, so that chip reads today's booking list while the other three filter the order list.
+ * All (= the whole day's guests) counts and lists them too, after its tickets, in a row shape of
+ * their own — a booking has no ticket number, status or elapsed time to put in those columns.
  */
 export const ORDER_LIST_FILTERS: OrderListFilter[] = [
   OrderListFilter.All,
