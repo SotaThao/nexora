@@ -357,6 +357,8 @@ export interface NotificationRecord {
   paymentId?: string
   /** Tip transaction id (referenceId) to auto-open in the Tips list modal. */
   transactionId?: string
+  /** Community chat session id for CommunityNewChatMessage notifications. */
+  chatSessionId?: string
   [key: string]: unknown
 }
 

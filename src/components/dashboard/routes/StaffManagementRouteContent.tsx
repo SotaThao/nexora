@@ -1,6 +1,7 @@
 import { useMemo } from 'react'
 import { Navigate, useNavigate, useOutletContext, useParams } from 'react-router-dom'
-import { useMerchantStaffByCode } from '../../../data/hooks/useMerchantStaff'
+import { useMerchantStaff, useMerchantStaffByCode } from '../../../data/hooks/useMerchantStaff'
+import { enrichStaffMemberChatIdentity } from '../../staff/staffCommunityChatUtils'
 import StaffDetailView from '../../StaffDetailView'
 import { SkeletonList } from '../../ui/skeleton'
 import { normaliseMember } from '../hooks/useStaffManagement'
@@ -9,6 +10,20 @@ import {
   buildStaffRoutePath,
   type StaffRouteFamily,
 } from './staffRoutePaths'
+
+function staffMemberMatchesRouteKey(member: {
+  id?: string | null
+  staffProfileId?: string | null
+  staffCode?: string | null
+  linkId?: string | null
+}, staffKey: string) {
+  return (
+    String(member.id) === String(staffKey)
+    || String(member.staffProfileId) === String(staffKey)
+    || String(member.staffCode) === String(staffKey)
+    || String(member.linkId) === String(staffKey)
+  )
+}
 
 export function StaffListRouteContent({
   routeFamily,
@@ -76,14 +91,34 @@ export function StaffDetailRouteContent({
   } = useMerchantStaffByCode(staffKey)
 
   const fallbackMember = useMemo(
-    () => ctx.staff.find((member) =>
-      String(member.id) === String(staffKey) ||
-      String(member.staffProfileId) === String(staffKey) ||
-      String(member.staffCode) === String(staffKey) ||
-      String(member.linkId) === String(staffKey)),
+    () => ctx.staff.find((member) => staffMemberMatchesRouteKey(member, staffKey)),
     [ctx.staff, staffKey],
   )
-  const resolvedMember = staffMember ?? fallbackMember
+
+  // Fallback when detail has no userProfileId (e.g. local staff / older payloads).
+  const detailMissingUserProfileId = Boolean(
+    staffMember && !String(staffMember.userProfileId ?? '').trim(),
+  )
+  const { data: staffListLookup } = useMerchantStaff({
+    keyword: staffKey || undefined,
+    pageSize: 10,
+    enabled: Boolean(staffKey)
+      && detailMissingUserProfileId
+      && staffMember?.isLocalStaff !== true
+      && !fallbackMember?.userProfileId,
+  })
+
+  const listIdentityMember = useMemo(() => {
+    const fromLookup = staffListLookup?.items?.find((member) =>
+      staffMemberMatchesRouteKey(member, staffKey),
+    )
+    return fromLookup ?? fallbackMember ?? null
+  }, [staffListLookup?.items, fallbackMember, staffKey])
+
+  const resolvedMember = useMemo(
+    () => enrichStaffMemberChatIdentity(staffMember, listIdentityMember) ?? listIdentityMember,
+    [staffMember, listIdentityMember],
+  )
 
   if (isLoading || (!resolvedMember && ctx.staffLoading)) {
     return (
