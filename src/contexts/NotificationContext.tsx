@@ -1,8 +1,9 @@
-import { AlertTriangle, CheckCircle2, Info, X, XCircle } from "lucide-react";
+import { AlertTriangle, CheckCircle2, Info, XCircle } from "lucide-react";
 import {
   createContext,
   useCallback,
   useContext,
+  useEffect,
   useState,
   type ReactNode,
 } from "react";
@@ -30,20 +31,38 @@ interface NotificationProviderProps {
 }
 
 export function NotificationProvider({ children }: NotificationProviderProps) {
-  const [toasts, setToasts] = useState<ToastItem[]>([]);
+  const [toastQueue, setToastQueue] = useState<ToastItem[]>([]);
+  const [activeToast, setActiveToast] = useState<ToastItem | null>(null);
   const [confirmState, setConfirmState] = useState<ConfirmState | null>(null);
   const { t } = useTranslation();
 
+  // Toast messages are shown one at a time as a blocking popup; queue holds the rest.
+  useEffect(() => {
+    if (activeToast || toastQueue.length === 0) return;
+    setActiveToast(toastQueue[0]);
+    setToastQueue((prev) => prev.slice(1));
+  }, [activeToast, toastQueue]);
+
   const showToast = useCallback<NotificationContextValue["showToast"]>(
-    (message, type = "success", duration = 3000) => {
+    (message, type = "success") => {
       const id = Date.now() + Math.random();
-      setToasts((prev) => [...prev, { id, message, type }]);
-      setTimeout(() => {
-        setToasts((prev) => prev.filter((t) => t.id !== id));
-      }, duration);
+      setToastQueue((prev) => [...prev, { id, message, type }]);
     },
     [],
   );
+
+  const dismissToast = useCallback(() => {
+    setActiveToast(null);
+  }, []);
+
+  useEffect(() => {
+    if (!activeToast) return;
+    const onKeyDown = (e: KeyboardEvent) => {
+      if (e.key === "Escape") dismissToast();
+    };
+    document.addEventListener("keydown", onKeyDown);
+    return () => document.removeEventListener("keydown", onKeyDown);
+  }, [activeToast, dismissToast]);
 
   const showConfirm = useCallback<NotificationContextValue["showConfirm"]>(
     (message, title = "") => {
@@ -61,72 +80,62 @@ export function NotificationProvider({ children }: NotificationProviderProps) {
     [],
   );
 
-  const removeToast = useCallback((id) => {
-    setToasts((prev) => prev.filter((t) => t.id !== id));
-  }, []);
+  const toastIcon =
+    {
+      success: CheckCircle2,
+      error: XCircle,
+      warning: AlertTriangle,
+      info: Info,
+    }[activeToast?.type ?? "info"] || Info;
+
+  // Circular tinted badge, matching the Nexora success/notice screen convention
+  // (DirectPaymentSuccess.tsx / StepSuccess.tsx) rather than a bare icon.
+  const toastBadgeColor =
+    {
+      success: "bg-emerald-50 border-emerald-100 text-emerald-600",
+      error: "bg-rose-50 border-rose-100 text-rose-600",
+      warning: "bg-amber-50 border-amber-100 text-amber-600",
+      info: "bg-indigo-50 border-indigo-100 text-indigo-600",
+    }[activeToast?.type ?? "info"] || "bg-slate-50 border-slate-100 text-slate-600";
+
+  const ToastIcon = toastIcon;
 
   return (
     <NotificationContext.Provider value={{ showToast, showConfirm }}>
       {children}
 
-      {/* Sleek Premium Toast Overlay */}
-      <div
-        className="fixed inset-x-0 z-[99999] flex flex-col gap-3 px-3 pointer-events-none sm:inset-x-auto sm:right-5 sm:w-full sm:max-w-sm sm:px-0"
-        style={{ top: 'calc(var(--app-safe-area-top) + 0.75rem)' }}
-      >
-        {toasts.map((toast) => {
-          const Icon =
-            {
-              success: CheckCircle2,
-              error: XCircle,
-              warning: AlertTriangle,
-              info: Info,
-            }[toast.type] || Info;
-
-          const colors =
-            {
-              success:
-                "border-emerald-100 bg-emerald-50/95 text-emerald-950 shadow-emerald-100/20",
-              error:
-                "border-rose-100 bg-rose-50/95 text-rose-950 shadow-rose-100/20",
-              warning:
-                "border-amber-100 bg-amber-50/95 text-amber-950 shadow-amber-100/20",
-              info: "border-indigo-100 bg-indigo-50/95 text-indigo-950 shadow-indigo-100/20",
-            }[toast.type] ||
-            "border-slate-100 bg-white/95 text-slate-900 shadow-slate-100/20";
-
-          const iconColor =
-            {
-              success: "text-emerald-500",
-              error: "text-rose-500",
-              warning: "text-amber-500",
-              info: "text-indigo-500",
-            }[toast.type] || "text-slate-500";
-
-          return (
+      {/* Notification popup — blocks interaction until dismissed, one at a time via toastQueue */}
+      {activeToast && (
+        <div
+          className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-[99999] flex items-center justify-center p-4"
+          onClick={dismissToast}
+        >
+          <div
+            className="nexora-toast-card bg-white border border-nexoraBorder shadow-2xl rounded-2xl max-w-sm w-full overflow-hidden p-6 flex flex-col items-center text-center transform transition-all duration-300"
+            style={{
+              animation:
+                "confirmScaleIn 0.25s cubic-bezier(0.16, 1, 0.3, 1) forwards",
+            }}
+            onClick={(e) => e.stopPropagation()}
+          >
             <div
-              key={toast.id}
-              className={`flex gap-3 items-start p-4 rounded-xl border shadow-xl backdrop-blur-md pointer-events-auto transform transition-all duration-300 animate-slide-in-right ${colors}`}
-              style={{
-                animation:
-                  "toastSlideIn 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards",
-              }}
+              className={`flex h-14 w-14 shrink-0 items-center justify-center rounded-full border mb-4 ${toastBadgeColor}`}
             >
-              <Icon className={`h-5 w-5 shrink-0 ${iconColor}`} />
-              <p className="text-xs font-bold leading-normal flex-grow">
-                {toast.message}
-              </p>
-              <button
-                type="button"
-                onClick={() => removeToast(toast.id)}
-                className="text-slate-400 hover:text-slate-600 transition-colors shrink-0"
-              >
-                <X className="h-4 w-4" />
-              </button>
+              <ToastIcon className="h-6 w-6" />
             </div>
-          );
-        })}
-      </div>
+            <p className="text-xs font-semibold text-nexoraMuted leading-relaxed mb-6 overflow-y-auto">
+              {activeToast.message}
+            </p>
+            <button
+              type="button"
+              onClick={dismissToast}
+              className="px-4.5 py-2.5 rounded-xl bg-nexoraBrand text-white text-[10px] font-extrabold uppercase tracking-wider hover:bg-nexoraBrand/90 transition-colors shadow-sm"
+            >
+              {t("common.close") || "Đóng"}
+            </button>
+          </div>
+        </div>
+      )}
 
       {/* Sleek Premium Confirm Dialog Overlay */}
       {confirmState && (
@@ -168,15 +177,9 @@ export function NotificationProvider({ children }: NotificationProviderProps) {
 
       {/* CSS Keyframes injected directly for compatibility */}
       <style>{`
-        @keyframes toastSlideIn {
-          from {
-            opacity: 0;
-            transform: translateX(100px) scale(0.9);
-          }
-          to {
-            opacity: 1;
-            transform: translateX(0) scale(1);
-          }
+        .nexora-toast-card {
+          max-height: 90vh;
+          max-height: 90dvh;
         }
         @keyframes confirmScaleIn {
           from {
