@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react'
-import { HelpCircle, Loader2, Pencil, Plus, Upload } from 'lucide-react'
+import { Edit2, Eye, HelpCircle, Loader2, Plus, Upload } from 'lucide-react'
 import CountryCodeSelect, {
   formatNationalNumber,
   isValidPhoneE164,
@@ -10,15 +10,23 @@ import CountryCodeSelect, {
 import { useTranslation } from '../../../contexts/LanguageContext'
 import { renderLabel } from '../../../utils/renderLabel'
 import { WalletLogos } from '../constants'
+import ToggleSwitch from '../../ui/ToggleSwitch'
 import {
+  buildPaymentMethodFromPayoutConfig,
+  EMPTY_STAFF_PAYOUT_CONFIG,
+  isPaymentMethodConfigured,
   orderedStaffPayoutUiKeysFromSupported,
   PAYOUT_UI_LABELS,
   STAFF_CONFIGURABLE_PAYOUT_UI_KEYS,
+  supportsPayoutAccountName,
 } from '../../../data/paymentMethodTypes'
 import { useSupportedPaymentMethods } from '../../../data/hooks/useSupportedPaymentMethods'
 import { getErrorI18nKey } from '../../../data/errorCodes'
 import { getStaffDisplayNameErrorCode } from '../../../utils/staffDisplayName'
 import { isValidEmail } from '../../../utils/validation'
+import type { PaymentMethodDto } from '../../../types/domain'
+import { formatPaymentMethodAccountDisplay } from '../../payout/bankWireAccount'
+import PayoutMethodDetailModal from '../../payout/PayoutMethodDetailModal'
 import PayoutSetupModal from './PayoutSetupModal'
 
 type PayoutConfig = {
@@ -89,6 +97,7 @@ function AddManualStaffTab({
   )
   const [errors, setErrors] = useState<Record<string, string>>({})
   const [editingWalletKey, setEditingWalletKey] = useState<string | null>(null)
+  const [viewingMethod, setViewingMethod] = useState<PaymentMethodDto | null>(null)
 
   const phoneParsed = parsePhone(
     phone.trim().startsWith('+') ? phone : `${dialCode}${phone.replace(/\D/g, '')}`,
@@ -107,6 +116,7 @@ function AddManualStaffTab({
     setPayoutConfigs(createEmptyPayoutConfigs(manualStaffPayoutKeys))
     setErrors({})
     setEditingWalletKey(null)
+    setViewingMethod(null)
     // Only reset when the modal opens — not when payment-method order arrives from API.
     // eslint-disable-next-line react-hooks/exhaustive-deps -- intentional: avoid wiping form when keys update
   }, [open, defaultDialCode])
@@ -391,70 +401,88 @@ function AddManualStaffTab({
           <div className="space-y-4">
             <div>
               <label className={fieldLabelClass}>{t('setup.payout_methods')}</label>
-              <div className="mt-2 space-y-4">
-                <div className="divide-y divide-nexoraRule rounded-xl border border-nexoraBorder bg-white px-4">
-                  {manualStaffPayoutKeys.map((walletKey) => {
-                    const config = payoutConfigs[walletKey] || {
-                      enabled: false,
-                      value: '',
-                      qrCode: '',
-                      accountName: '',
-                    }
-                    const label = PAYOUT_UI_LABELS[walletKey] || walletKey
+              <div className="mt-2 space-y-2">
+                {manualStaffPayoutKeys.map((walletKey) => {
+                  const config = payoutConfigs[walletKey] || EMPTY_STAFF_PAYOUT_CONFIG
+                  const walletName = PAYOUT_UI_LABELS[walletKey] || walletKey
+                  const method = buildPaymentMethodFromPayoutConfig(
+                    walletKey,
+                    config,
+                    displayNickname || fullName,
+                  )
+                  const accountDisplay = formatPaymentMethodAccountDisplay(
+                    walletKey,
+                    method.accountInfo,
+                    method.cryptoAddresses,
+                  )
+                  const hasAccount = isPaymentMethodConfigured(method)
+                  const actionLabel = hasAccount
+                    ? t('components.settings.tabs.ProfileTab.payoutAccount')
+                    : t('components.dashboard.modals.AddStaffModal.manual_add_account')
 
-                    return (
-                      <div key={walletKey} className="flex items-center justify-between py-3">
-                        <div className="flex min-w-0 items-center gap-3">
-                          <button
-                            type="button"
-                            role="switch"
-                            aria-checked={config.enabled}
-                            aria-label={`${label} — ${t('setup.payout_methods')}`}
-                            onClick={() => handleToggleWallet(walletKey)}
-                            className={`relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus-visible:ring-2 focus-visible:ring-nexoraBrand/40 focus-visible:ring-offset-1 ${
-                              config.enabled ? 'bg-nexoraBrand' : 'bg-nexoraBorder'
-                            }`}
-                          >
-                            <span
-                              className={`pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out ${
-                                config.enabled ? 'translate-x-5' : 'translate-x-0'
-                              }`}
-                            />
-                          </button>
-                          <div className="flex min-w-0 items-center gap-2">
-                            <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-nexoraCanvas">
-                              {WalletLogos[walletKey]}
-                            </span>
-                            <div className="min-w-0">
-                              <span className="text-xs font-bold text-nexoraText">{label}</span>
-                              {config.value ? (
-                                <div className="mt-0.5 truncate text-[10px] font-mono text-nexoraMuted">
-                                  {config.value}
-                                </div>
-                              ) : null}
-                            </div>
+                  return (
+                    <div
+                      key={walletKey}
+                      className="flex min-w-0 items-center justify-between gap-2 rounded-xl border border-nexoraBorder bg-white px-3 py-2.5 shadow-sm"
+                    >
+                      <div className="flex min-w-0 flex-1 items-center gap-3">
+                        <ToggleSwitch
+                          checked={Boolean(config.enabled)}
+                          onChange={() => handleToggleWallet(walletKey)}
+                          ariaLabel={`Toggle ${walletName}`}
+                          activeColor="bg-amber-600"
+                          inactiveColor="bg-slate-200"
+                        />
+                        <div className="flex min-w-0 flex-1 items-center gap-2.5">
+                          <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg border border-nexoraBorder bg-nexoraCanvas">
+                            {WalletLogos[walletKey]}
+                          </span>
+                          <div className="min-w-0 flex-1">
+                            <div className="truncate text-xs font-bold text-nexoraText">{walletName}</div>
+                            {hasAccount ? (
+                              <div className="mt-0.5 truncate font-mono text-[10px] text-nexoraMuted">
+                                {supportsPayoutAccountName(walletKey) && config.accountName ? (
+                                  <span className="font-sans font-semibold">
+                                    {config.accountName} ·{' '}
+                                  </span>
+                                ) : null}
+                                {accountDisplay}
+                              </div>
+                            ) : (
+                              <div className="mt-0.5 truncate text-[10px] font-medium italic text-nexoraSubtle">
+                                {t('components.settings.tabs.ProfileTab.notConfigured')}
+                              </div>
+                            )}
                           </div>
                         </div>
+                      </div>
+                      <div className="flex shrink-0 items-center gap-1.5">
+                        {hasAccount ? (
+                          <button
+                            type="button"
+                            onClick={() => setViewingMethod(method)}
+                            className="inline-flex max-w-[7.5rem] items-center justify-center gap-1 rounded-lg border border-sky-200 bg-sky-50 px-2 py-1.5 text-[10px] font-bold text-sky-700 transition hover:text-sky-800"
+                          >
+                            <Eye className="h-3 w-3 shrink-0" />
+                            <span className="truncate">{t('components.settings.tabs.ProfileTab.view')}</span>
+                          </button>
+                        ) : null}
                         <button
                           type="button"
                           onClick={() => setEditingWalletKey(walletKey)}
-                          className="inline-flex shrink-0 items-center gap-1 text-[11px] font-bold text-nexoraBrand transition hover:text-nexoraBrandDark"
+                          className="inline-flex max-w-[8.5rem] items-center justify-center gap-1 rounded-lg border border-amber-200 bg-amber-50 px-2 py-1.5 text-[10px] font-bold text-amber-700 transition hover:text-amber-800"
                         >
-                          {config.value ? (
-                            <Pencil className="h-3 w-3 stroke-[2.5]" />
+                          {hasAccount ? (
+                            <Edit2 className="h-3 w-3 shrink-0" />
                           ) : (
-                            <Plus className="h-3 w-3 stroke-[2.5]" />
+                            <Plus className="h-3 w-3 shrink-0" />
                           )}
-                          <span>
-                            {config.value
-                              ? t('components.dashboard.modals.StaffModal.editAccount')
-                              : t('components.dashboard.modals.AddStaffModal.manual_add_account')}
-                          </span>
+                          <span className="truncate">{actionLabel}</span>
                         </button>
                       </div>
-                    )
-                  })}
-                </div>
+                    </div>
+                  )
+                })}
               </div>
             </div>
           </div>
@@ -489,6 +517,18 @@ function AddManualStaffTab({
         initialAccountName={editingConfig?.accountName || ''}
         onClose={() => setEditingWalletKey(null)}
         onSubmit={handlePayoutSubmit}
+      />
+
+      <PayoutMethodDetailModal
+        method={viewingMethod}
+        logo={
+          viewingMethod ? (
+            <span className="flex h-7 w-7 items-center justify-center">
+              {WalletLogos[viewingMethod.uiKey || '']}
+            </span>
+          ) : null
+        }
+        onClose={() => setViewingMethod(null)}
       />
     </>
   )

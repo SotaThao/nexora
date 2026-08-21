@@ -1,12 +1,14 @@
 import React from 'react'
 import { CheckCircle } from 'lucide-react'
 import { useNavigate } from 'react-router-dom'
+import { resolvePaymentMethodViaDisplay } from '../paymentFlowShared'
 
 export default function DirectPaymentSuccess({
   t,
   businessName,
   activeAmount,
   selectedWalletObj,
+  cryptoSymbol,
   successDescKey = 'direct_payment.success_desc',
 }) {
   const navigate = useNavigate()
@@ -15,6 +17,7 @@ export default function DirectPaymentSuccess({
     minimumFractionDigits: 2,
     maximumFractionDigits: 2,
   })
+  const methodLabel = resolvePaymentMethodViaDisplay(selectedWalletObj, cryptoSymbol)
 
   return (
     <div className="flex animate-fadeIn flex-col items-center space-y-6 py-4 text-center">
@@ -56,7 +59,7 @@ export default function DirectPaymentSuccess({
                   {selectedWalletObj.logo}
                 </span>
               ) : null}
-              <span className="truncate">{selectedWalletObj.name}</span>
+              <span className="truncate">{methodLabel || '-'}</span>
             </span>
           </div>
         ) : null}

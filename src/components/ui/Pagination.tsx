@@ -1,8 +1,9 @@
 import { ChevronLeft, ChevronRight, Loader2 } from 'lucide-react'
-import { useEffect, useRef } from 'react'
+import { useEffect, useId, useRef, useState } from 'react'
 import { useTranslation } from '../../contexts/LanguageContext'
-import { DEFAULT_PAGE_SIZE } from '../../constants/pagination'
+import { DEFAULT_PAGE_SIZE, PAGINATION_ELLIPSIS } from '../../constants/pagination'
 import { isMobileScrollContext, scrollToPageTop } from '../../utils/scrollToPageTop'
+import { buildPaginationRange, type PaginationRangeEllipsis } from '../../utils/paginationRange'
 
 type PaginationProps = {
   pageNumber: number
@@ -15,6 +16,108 @@ type PaginationProps = {
   isLoading?: boolean
   variant?: 'simple' | 'detailed'
   className?: string
+}
+
+const PAGE_BUTTON_CLASS =
+  'inline-flex h-9 min-w-9 items-center justify-center rounded-lg border px-2.5 text-xs font-bold transition'
+
+function PaginationPageJumpPopover({
+  ellipsis,
+  totalPages,
+  isLoading,
+  onGo,
+}: {
+  ellipsis: PaginationRangeEllipsis
+  totalPages: number
+  isLoading: boolean
+  onGo: (page: number) => void
+}) {
+  const { t } = useTranslation()
+  const inputId = useId()
+  const rootRef = useRef<HTMLDivElement>(null)
+  const [open, setOpen] = useState(false)
+  const [draftPage, setDraftPage] = useState('')
+
+  useEffect(() => {
+    if (!open) return
+
+    const midpoint = Math.floor((ellipsis.fromPage + ellipsis.toPage) / 2)
+    setDraftPage(String(midpoint))
+
+    const handlePointerDown = (event: MouseEvent) => {
+      if (rootRef.current && !rootRef.current.contains(event.target as Node)) {
+        setOpen(false)
+      }
+    }
+
+    document.addEventListener('mousedown', handlePointerDown)
+    return () => document.removeEventListener('mousedown', handlePointerDown)
+  }, [ellipsis.fromPage, ellipsis.toPage, open])
+
+  const submit = () => {
+    const parsed = Number.parseInt(draftPage, 10)
+    if (!Number.isFinite(parsed)) return
+    const nextPage = Math.min(Math.max(parsed, 1), totalPages)
+    setOpen(false)
+    onGo(nextPage)
+  }
+
+  return (
+    <div ref={rootRef} className="relative">
+      <button
+        type="button"
+        aria-label={t('common.pagination_go_to_page')}
+        aria-expanded={open}
+        disabled={isLoading}
+        onClick={() => setOpen((prev) => !prev)}
+        className={`${PAGE_BUTTON_CLASS} border-slate-200 bg-white text-slate-500 hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-50`}
+      >
+        {PAGINATION_ELLIPSIS}
+      </button>
+
+      {open ? (
+        <div className="absolute bottom-full right-0 z-20 mb-2 w-52 rounded-xl border border-slate-200 bg-white p-3 shadow-lg">
+          <label htmlFor={inputId} className="block text-[10px] font-bold uppercase tracking-wide text-slate-500">
+            {t('common.pagination_go_to_page')}
+          </label>
+          <p className="mt-1 text-[11px] font-medium text-slate-400">
+            {t('common.pagination_hidden_pages', {
+              from: ellipsis.fromPage,
+              to: ellipsis.toPage,
+            })}
+          </p>
+          <div className="mt-2 flex items-center gap-2">
+            <input
+              id={inputId}
+              type="number"
+              min={1}
+              max={totalPages}
+              value={draftPage}
+              onChange={(event) => setDraftPage(event.target.value)}
+              onKeyDown={(event) => {
+                if (event.key === 'Enter') {
+                  event.preventDefault()
+                  submit()
+                }
+                if (event.key === 'Escape') {
+                  setOpen(false)
+                }
+              }}
+              className="h-9 w-full rounded-lg border border-slate-200 px-2.5 text-xs font-semibold text-slate-800 outline-none focus:border-nexoraBrand focus:ring-2 focus:ring-nexoraBrand/15"
+              placeholder={t('common.pagination_page_number_placeholder')}
+            />
+            <button
+              type="button"
+              onClick={submit}
+              className="inline-flex h-9 shrink-0 items-center justify-center rounded-lg bg-nexoraBrand px-3 text-xs font-bold text-white transition hover:bg-nexoraBrandDark"
+            >
+              {t('common.pagination_go')}
+            </button>
+          </div>
+        </div>
+      ) : null}
+    </div>
+  )
 }
 
 export default function Pagination({
@@ -38,6 +141,7 @@ export default function Pagination({
   const canGoNext = hasNextPage ?? (effectiveTotalPages > 0 && pageNumber < effectiveTotalPages)
   const rangeStart = totalCount > 0 ? (pageNumber - 1) * pageSize + 1 : 0
   const rangeEnd = totalCount > 0 ? Math.min(pageNumber * pageSize, totalCount) : 0
+  const paginationItems = buildPaginationRange(pageNumber, effectiveTotalPages)
 
   useEffect(() => {
     if (!scrollAfterPageChangeRef.current) return
@@ -101,6 +205,10 @@ export default function Pagination({
         >
           {t('common.previous')}
         </button>
+        <span className="inline-flex items-center gap-2 self-center text-xs font-semibold text-slate-500">
+          {isLoading ? <Loader2 className="h-4 w-4 animate-spin text-nexoraBrand" /> : null}
+          {t('staff_dashboard.tips.page_of', { page: pageNumber, total: effectiveTotalPages })}
+        </span>
         <button
           type="button"
           onClick={() => handlePageChange(pageNumber + 1)}
@@ -113,9 +221,9 @@ export default function Pagination({
         </button>
       </div>
 
-      <div className="hidden sm:flex sm:flex-1 sm:items-center sm:justify-between">
-        <p className="inline-flex items-center gap-2 text-xs text-slate-500 font-semibold">
-          {isLoading ? <Loader2 className="h-4 w-4 animate-spin text-nexoraBrand" /> : null}
+      <div className="hidden sm:flex sm:flex-1 sm:items-center sm:justify-between sm:gap-4">
+        <p className="inline-flex min-w-0 items-center gap-2 text-xs text-slate-500 font-semibold">
+          {isLoading ? <Loader2 className="h-4 w-4 shrink-0 animate-spin text-nexoraBrand" /> : null}
           {t('common.pagination_showing')}{' '}
           <span className="font-extrabold text-slate-800">{rangeStart}</span> {t('common.pagination_to')}{' '}
           <span className="font-extrabold text-slate-800">{rangeEnd}</span> {t('common.pagination_of')}{' '}
@@ -123,41 +231,57 @@ export default function Pagination({
         </p>
 
         <nav
-          className="isolate inline-flex -space-x-px rounded-lg shadow-sm border border-slate-200 overflow-hidden bg-white"
-          aria-label="Pagination"
+          className="flex shrink-0 items-center gap-1.5"
+          aria-label={t('common.pagination_nav')}
         >
           <button
             type="button"
             onClick={() => handlePageChange(pageNumber - 1)}
             disabled={!canGoPrev || isLoading}
-            className={`relative inline-flex items-center px-3 py-2 text-slate-400 hover:bg-slate-50 transition ${
-              !canGoPrev || isLoading ? 'opacity-50 cursor-not-allowed' : ''
-            }`}
+            aria-label={t('common.previous')}
+            className={`${PAGE_BUTTON_CLASS} border-slate-200 bg-slate-100 text-slate-400 hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-60`}
           >
             <ChevronLeft className="h-4 w-4" />
           </button>
-          {Array.from({ length: effectiveTotalPages }, (_, index) => index + 1).map((page) => (
-            <button
-              key={page}
-              type="button"
-              onClick={() => handlePageChange(page)}
-              disabled={isLoading}
-              className={`relative inline-flex items-center px-3.5 py-2 text-xs font-bold transition ${
-                page === pageNumber
-                  ? 'bg-nexoraBrand text-white'
-                  : 'text-slate-700 hover:bg-slate-50 border-l border-slate-100'
-              } ${isLoading ? 'opacity-70 cursor-not-allowed' : ''}`}
-            >
-              {page}
-            </button>
-          ))}
+
+          {paginationItems.map((item) => {
+            if (item.type === 'ellipsis') {
+              return (
+                <PaginationPageJumpPopover
+                  key={item.key}
+                  ellipsis={item}
+                  totalPages={effectiveTotalPages}
+                  isLoading={isLoading}
+                  onGo={handlePageChange}
+                />
+              )
+            }
+
+            const isActive = item.page === pageNumber
+            return (
+              <button
+                key={item.page}
+                type="button"
+                onClick={() => handlePageChange(item.page)}
+                disabled={isLoading}
+                aria-current={isActive ? 'page' : undefined}
+                className={`${PAGE_BUTTON_CLASS} ${
+                  isActive
+                    ? 'border-nexoraBrand bg-white text-nexoraBrand shadow-sm'
+                    : 'border-slate-200 bg-white text-slate-700 hover:bg-slate-50'
+                } ${isLoading ? 'cursor-not-allowed opacity-70' : ''}`}
+              >
+                {item.page}
+              </button>
+            )
+          })}
+
           <button
             type="button"
             onClick={() => handlePageChange(pageNumber + 1)}
             disabled={!canGoNext || isLoading}
-            className={`relative inline-flex items-center px-3 py-2 text-slate-400 hover:bg-slate-50 transition border-l border-slate-100 ${
-              !canGoNext || isLoading ? 'opacity-50 cursor-not-allowed' : ''
-            }`}
+            aria-label={t('common.next')}
+            className={`${PAGE_BUTTON_CLASS} border-slate-200 bg-white text-slate-700 hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-50`}
           >
             {isLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : <ChevronRight className="h-4 w-4" />}
           </button>

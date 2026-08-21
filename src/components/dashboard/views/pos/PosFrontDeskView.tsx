@@ -8,7 +8,7 @@
 // component, no per-shell duplication. `canManageOperations` (from usePosAccess)
 // decides whether the actionable UI renders at all; the caller (Owner vs Staff
 // route wrapper) is responsible for only linking here when access is expected.
-import { useCallback, useEffect, useRef, useState, type ReactNode } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from 'react'
 import { useSearchParams } from 'react-router-dom'
 import { useQueryClient } from '@tanstack/react-query'
 import { ChevronLeft, ChevronRight, LayoutGrid, List as ListIcon } from 'lucide-react'
@@ -21,7 +21,9 @@ import { qk } from '../../../../data/queryKeys'
 import { usePosAccess } from '../../../../data/hooks/usePosAccess'
 import { formatPosTime } from './posDateTime'
 import { useCancelOrder, useOrderList, useStartOrderService } from '../../../../data/hooks/usePosOrders'
+import { useBookingList, useCheckInBookingFromList } from '../../../../data/hooks/usePosBooking'
 import { useTurnBoard } from '../../../../data/hooks/usePosTurnBoard'
+import { formatLocalDateIso } from '../../../../utils/localDate'
 import { PosOrderStatus } from '../../../../constants/posOrderStatus'
 import {
   DEFAULT_POS_FRONT_DESK_TAB,
@@ -33,13 +35,15 @@ import {
   POS_FRONT_DESK_TABS,
   PosFrontDeskTab,
 } from '../../../../constants/posFrontDesk'
-import type { OrderListItemApiDto, TurnBoardStationApiDto } from '../../../../types/repositories'
+import type { BookingListItemApiDto, OrderListItemApiDto, TurnBoardStationApiDto } from '../../../../types/repositories'
 import { SkeletonList } from '../../../ui/skeleton'
 import { getInitials, joinOrEmpty } from './posDisplay'
 import PosOrderWorkspace from './PosOrderWorkspace'
+import PosCheckInTab from './PosCheckInTab'
 import PosCompletedOrdersPanel from './PosCompletedOrdersPanel'
 import NewBookingForm from './booking/NewBookingForm'
 import BookingTab from './booking/BookingTab'
+import { formatBookingWallClockTime, resolveBookingWallClockParts } from './booking/bookingFormatters'
 import CustomerTab from './customer/CustomerTab'
 import TimeClockTab from './timeclock/TimeClockTab'
 
@@ -51,6 +55,49 @@ const tk = (suffix: string) => `${I18N_PREFIX}.${suffix}`
 // Bounded height + internal scroll so a long queue/roster scrolls in place — the filter chips and
 // view toggle above stay put instead of the whole page scrolling.
 const SCROLL_PANEL_MAX_HEIGHT = 'max-h-[560px]'
+
+// One salon's appointments for one day never approach this; it exists so the chip's count is the
+// real total rather than a first page.
+const TODAY_BOOKING_PAGE_SIZE = 200
+
+// scheduledAt means different things depending on which flow created the booking, so the sort
+// runs on the resolved wall clock rather than the raw ISO string. Minutes-of-day is enough: the
+// list only ever holds one day.
+const bookingMinuteOfDay = (booking: BookingListItemApiDto) => {
+  const { hours, minutes } = resolveBookingWallClockParts(booking.scheduledAt, booking.source)
+  return hours * 60 + minutes
+}
+
+// A booking that has not become a ticket yet. Cancelled/Completed and anything already checked in
+// are excluded by status, which is what makes this list "still expected today".
+const isAwaitingArrival = (booking: BookingListItemApiDto) =>
+  booking.status === PosOrderStatus.Pending || booking.status === PosOrderStatus.Confirmed
+
+// An order the front desk has to finish by hand. Kept as one predicate because both the sort and
+// the row highlight must agree on what "needs attention" means.
+const needsFrontDeskAttention = (order: OrderListItemApiDto) =>
+  order.hasUnassignedService || order.hasNoServiceLine
+
+// Flagged orders first, everything else untouched. The server already returns the list ordered by
+// check-in time and Array.prototype.sort is stable, so within each group that order survives.
+const sortByAttentionFirst = (orders: OrderListItemApiDto[]) =>
+  [...orders].sort(
+    (a, b) => Number(needsFrontDeskAttention(b)) - Number(needsFrontDeskAttention(a)),
+  )
+  
+// Mirror the subtle status-tinted rows in AI Hub's Appointments Overview: enough color to scan
+// the queue quickly without competing with the order content or action buttons.
+function orderListStatusSurfaceClass(status: string) {
+  if (status === PosOrderStatus.Waiting) return 'bg-amber-50/40 hover:bg-amber-50/70'
+  if (status === PosOrderStatus.InService) return 'bg-cyan-50/40 hover:bg-cyan-50/70'
+  return 'bg-nexoraSurface hover:bg-nexoraCanvas'
+}
+
+function orderListStatusBadgeClass(status: string) {
+  if (status === PosOrderStatus.Waiting) return 'bg-amber-100 text-amber-700'
+  if (status === PosOrderStatus.InService) return 'bg-cyan-100 text-cyan-700'
+  return 'bg-nexoraCanvas text-nexoraBrandDark'
+}
 
 // POS iPad redesign — Create mode no longer carries a pre-filled customerDraft;
 // PosOrderWorkspace now collects it itself via its own 2-step Check-in
@@ -199,6 +246,24 @@ export default function PosFrontDeskView({
   // in, cancelling, and rescheduling existing bookings.
   const [isBookingModalOpen, setIsBookingModalOpen] = useState(false)
 
+  // Today's appointments, for the Not Arrived chip. Fetched only while the Tickets tab is open —
+  // the Bookings tab runs its own filtered copy of this query and the two must not fight over
+  // one cache entry, so the filters here are deliberately narrower than any the tab can produce.
+  const todayIso = useMemo(() => formatLocalDateIso(new Date()), [])
+  const { data: todayBookings, isPending: isTodayBookingsPending } = useBookingList(
+    businessId,
+    { dateFrom: todayIso, dateTo: todayIso, pageSize: TODAY_BOOKING_PAGE_SIZE },
+    { enabled: activeTab === PosFrontDeskTab.OrderList },
+  )
+  const notArrivedBookings = useMemo(
+    () =>
+      (todayBookings?.items ?? [])
+        .filter(isAwaitingArrival)
+        .sort((a, b) => bookingMinuteOfDay(a) - bookingMinuteOfDay(b)),
+    [todayBookings],
+  )
+  const checkInBooking = useCheckInBookingFromList(businessId)
+
   if (isAccessLoading) {
     return (
       <div className="nexora-card p-6">
@@ -247,10 +312,121 @@ export default function PosFrontDeskView({
     }
   }
 
+  // One tap converts the appointment into a ticket with the lines it was booked with, the same
+  // call the Bookings tab makes. An operator who needs to change those lines checks the guest in
+  // from the Check-in tab instead, which finds the same appointment by phone.
+  const handleCheckInBooking = async (bookingId: string) => {
+    try {
+      await checkInBooking.mutateAsync(bookingId)
+      showToast(t(tk('notArrivedCheckInSuccess')))
+    } catch (err: unknown) {
+      showToast(t(getErrorI18nKey(getApiErrorCode(err, 'ERROR'))), 'error')
+    }
+  }
+
   // Tab id doubles as its own i18n suffix (tabs.<id>) and as the ?tab= value, so the bar is
   // derived from POS_FRONT_DESK_TABS rather than re-listing all seven by hand.
+  const orderListFilterCounts: Record<OrderListFilter, number> = {
+    [OrderListFilter.All]: orderList.length,
+    // Not part of All on purpose — see ORDER_LIST_FILTERS.
+    [OrderListFilter.NotArrived]: notArrivedBookings.length,
+    [OrderListFilter.Waiting]: orderList.filter((o) => o.status === PosOrderStatus.Waiting).length,
+    [OrderListFilter.InService]: orderList.filter((o) => o.status === PosOrderStatus.InService).length,
+  }
+
   const tabBadges: Partial<Record<PosFrontDeskTab, number>> = {
     [PosFrontDeskTab.OrderList]: orderList.length,
+  }
+
+  // The Not Arrived chip's list. A different shape from the other three chips because these are
+  // not tickets: there is no number to read out, nothing has started, and the only useful column
+  // is when the guest is due. The row is not tappable for the same reason — there is no ticket to
+  // open until Check In is pressed.
+  const renderNotArrivedList = () => {
+    if (isTodayBookingsPending) {
+      return (
+        <div className="rounded-xl border border-nexoraBorder bg-nexoraSurface p-6">
+          <SkeletonList count={3} lines={1} />
+        </div>
+      )
+    }
+
+    if (notArrivedBookings.length === 0) {
+      return (
+        <div className="rounded-xl border border-nexoraBorder bg-nexoraSurface p-6 text-center text-xs text-nexoraMuted">
+          {t(tk('notArrivedEmpty'))}
+        </div>
+      )
+    }
+
+    const renderCheckInButton = (booking: BookingListItemApiDto) => (
+      <button
+        type="button"
+        onClick={() => handleCheckInBooking(booking.bookingId)}
+        disabled={checkInBooking.isPending}
+        className="shrink-0 rounded-lg border border-nexoraBrand bg-nexoraBrand h-9 px-3 text-[11px] font-bold text-white hover:bg-nexoraBrandDark disabled:opacity-60"
+      >
+        {t(tk('notArrivedCheckInAction'))}
+      </button>
+    )
+
+    if (viewMode === OrderListViewMode.Card) {
+      return (
+        <div
+          className={`grid ${SCROLL_PANEL_MAX_HEIGHT} grid-cols-1 gap-3 overflow-y-auto pr-1 sm:grid-cols-2 lg:grid-cols-3`}
+        >
+          {notArrivedBookings.map((booking) => (
+            <div
+              key={booking.bookingId}
+              className="space-y-2 rounded-2xl border border-nexoraBorder bg-nexoraSurface p-4"
+            >
+              <span className="text-[11px] font-bold tabular-nums text-nexoraMuted">
+                {formatBookingWallClockTime(booking.scheduledAt, booking.source)}
+              </span>
+              <p className="truncate text-sm font-bold text-nexoraText">{booking.customerName}</p>
+              <p className="truncate text-[11px] text-nexoraMuted">{joinOrEmpty(booking.serviceNames)}</p>
+              <p className="truncate text-[11px] text-nexoraMuted">{joinOrEmpty(booking.technicianNames)}</p>
+              <div className="flex justify-end border-t border-nexoraBorder pt-2">
+                {renderCheckInButton(booking)}
+              </div>
+            </div>
+          ))}
+        </div>
+      )
+    }
+
+    return (
+      <div
+        className={`${SCROLL_PANEL_MAX_HEIGHT} overflow-y-auto rounded-xl border border-nexoraBorder bg-nexoraSurface p-4`}
+      >
+        <table className="w-full text-left text-xs">
+          <thead>
+            <tr className="text-[10px] font-black uppercase tracking-wider text-nexoraMuted">
+              <th className="text-xs font-black pb-2 pr-3">{t(tk('orderListColumnTime'))}</th>
+              <th className="text-xs font-black pb-2 pr-3">{t(tk('orderListColumnCustomer'))}</th>
+              <th className="text-xs font-black pb-2 pr-3">{t(tk('orderListColumnTechnician'))}</th>
+              <th className="text-xs font-black pb-2 pr-3">{t(tk('orderListColumnServices'))}</th>
+              <th className="text-xs font-black pb-2 text-right"></th>
+            </tr>
+          </thead>
+          <tbody>
+            {notArrivedBookings.map((booking) => (
+              <tr key={booking.bookingId} className="border-t border-nexoraBorder">
+                <td className="py-2 pr-3 font-bold tabular-nums text-nexoraMuted">
+                  {formatBookingWallClockTime(booking.scheduledAt, booking.source)}
+                </td>
+                <td className="py-2 pr-3 font-bold text-nexoraText">{booking.customerName}</td>
+                <td className="py-2 pr-3 text-nexoraMuted">{joinOrEmpty(booking.technicianNames)}</td>
+                <td className="py-2 pr-3 text-nexoraMuted">{joinOrEmpty(booking.serviceNames)}</td>
+                <td className="py-2 text-right">
+                  <div className="flex justify-end">{renderCheckInButton(booking)}</div>
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+    )
   }
 
   const renderStationCard = (station: TurnBoardStationApiDto) => {
@@ -364,7 +540,6 @@ export default function PosFrontDeskView({
       {updateWorkspace ? (
         <PosOrderWorkspace
           businessId={businessId}
-          businessName={businessName}
           orderId={updateWorkspace.orderId}
           onClose={() => {
             setUpdateWorkspace(null)
@@ -378,22 +553,23 @@ export default function PosFrontDeskView({
       ) : (
         <>
       {/* Always mounted (hidden via CSS, not unmounted) so the in-progress phone/name/
-          services draft survives switching to another tab and back — PosOrderWorkspace
-          resets its own local state back to Step 1 only after a successful Check-In/
-          Checkout, or via its own Cancel button. See top-of-file note. */}
+          services draft survives switching to another tab and back — the check-in session
+          resets itself only after a successful check-in, or via its own Cancel button.
+          See top-of-file note. */}
       <div className={activeTab === PosFrontDeskTab.CheckIn ? '' : 'hidden'}>
-        <PosOrderWorkspace
+        <PosCheckInTab
           businessId={businessId}
           businessName={businessName}
-          orderId={null}
-          onCheckedIn={() => {
+          onCheckedIn={refreshFrontDeskLists}
+          onFinished={() => {
             // The old standalone Waitlist tab is gone (folded into Order List as a filter) — land
-            // on Order List pre-filtered to Waiting so the just-created ticket is visible.
+            // on Order List pre-filtered to Waiting so the just-created ticket is visible. Fires on
+            // Done rather than on check-in itself: the operator reads the number off the thank-you
+            // screen, so the screen stays until they are finished with it.
             setActiveTab(PosFrontDeskTab.OrderList)
             setOrderListFilter(OrderListFilter.Waiting)
             refreshFrontDeskLists()
           }}
-          onCompleted={refreshFrontDeskLists}
         />
       </div>
 
@@ -417,7 +593,9 @@ export default function PosFrontDeskView({
                         : 'border border-nexoraBorder text-nexoraMuted hover:text-nexoraText'
                     }`}
                   >
-                    {t(tk(`orderListFilter.${filter}`))}
+                    {/* Counted over the whole queue, not the active filter — the point of the
+                        number is deciding which chip to tap next. */}
+                    {t(tk(`orderListFilter.${filter}`))} ({orderListFilterCounts[filter]})
                   </button>
                 ))}
               </div>
@@ -449,12 +627,53 @@ export default function PosFrontDeskView({
               </div>
             </div>
 
-            {(() => {
-              const filteredOrderList = orderList.filter((order) => {
-                if (orderListFilter === OrderListFilter.Waiting) return order.status === PosOrderStatus.Waiting
-                if (orderListFilter === OrderListFilter.InService) return order.status === PosOrderStatus.InService
-                return true
-              })
+            {orderListFilter === OrderListFilter.NotArrived ? renderNotArrivedList() : (() => {
+              const filteredOrderList = sortByAttentionFirst(
+                orderList.filter((order) => {
+                  if (orderListFilter === OrderListFilter.Waiting) return order.status === PosOrderStatus.Waiting
+                  if (orderListFilter === OrderListFilter.InService) return order.status === PosOrderStatus.InService
+                  return true
+                }),
+              )
+
+              // Counted over the filtered list, not the whole queue: a badge saying "3 awaiting
+              // technician" while the active filter hides all three would send staff looking for
+              // rows that aren't on screen.
+              const awaitingTechnicianCount = filteredOrderList.filter((o) => o.hasUnassignedService).length
+              const noServiceCount = filteredOrderList.filter((o) => o.hasNoServiceLine).length
+
+              const attentionBadges =
+                awaitingTechnicianCount + noServiceCount > 0 ? (
+                  <div className="flex flex-wrap gap-2">
+                    {awaitingTechnicianCount > 0 ? (
+                      <span className="rounded-full bg-nexoraWarning/15 px-3 py-1 text-[11px] font-bold text-nexoraWarning">
+                        {t(tk('orderListAwaitingTechnicianBadge'), { count: awaitingTechnicianCount })}
+                      </span>
+                    ) : null}
+                    {noServiceCount > 0 ? (
+                      <span className="rounded-full bg-nexoraLavender/25 px-3 py-1 text-[11px] font-bold text-nexoraBrandDark">
+                        {t(tk('orderListNoServiceBadge'), { count: noServiceCount })}
+                      </span>
+                    ) : null}
+                  </div>
+                ) : null
+
+              // Same two labels the badges above count, repeated on the row itself — the count
+              // tells staff how many, the row tells them which.
+              const renderRowFlags = (order: OrderListItemApiDto) => (
+                <>
+                  {order.hasUnassignedService ? (
+                    <span className="shrink-0 rounded-full bg-nexoraWarning/15 px-2 py-0.5 text-[10px] font-black uppercase text-nexoraWarning">
+                      {t(tk('orderListAwaitingTechnicianFlag'))}
+                    </span>
+                  ) : null}
+                  {order.hasNoServiceLine ? (
+                    <span className="shrink-0 rounded-full bg-nexoraLavender/25 px-2 py-0.5 text-[10px] font-black uppercase text-nexoraBrandDark">
+                      {t(tk('orderListNoServiceFlag'))}
+                    </span>
+                  ) : null}
+                </>
+              )
 
               if (filteredOrderList.length === 0) {
                 return (
@@ -463,6 +682,21 @@ export default function PosFrontDeskView({
                   </div>
                 )
               }
+
+              // The row is already tappable, but a tap target with no label is a rule staff have to
+              // be told. This states it, and is the only action every row has regardless of status.
+              const renderEditButton = (order: OrderListItemApiDto) => (
+                <button
+                  type="button"
+                  onClick={(e) => {
+                    e.stopPropagation()
+                    setUpdateWorkspace({ orderId: order.id })
+                  }}
+                  className="shrink-0 rounded-lg border border-nexoraBorder h-9 px-3 text-[11px] font-bold text-nexoraMuted hover:border-nexoraBrand hover:text-nexoraBrand"
+                >
+                  {t(tk('editButton'))}
+                </button>
+              )
 
               const renderCancelButton = (order: OrderListItemApiDto) =>
                 order.status === PosOrderStatus.Waiting ? (
@@ -473,29 +707,62 @@ export default function PosFrontDeskView({
                       handleCancel(order.id, order.customerName)
                     }}
                     disabled={cancelOrder.isPending}
-                    className="shrink-0 rounded-lg border border-nexoraBorder px-2.5 py-1 text-[10px] font-bold text-nexoraMuted hover:border-nexoraDanger hover:bg-red-50 hover:text-nexoraDanger disabled:opacity-60"
+                    className="shrink-0 rounded-lg border border-nexoraBorder h-9 px-3 text-[11px] font-bold text-nexoraMuted hover:border-nexoraDanger hover:bg-red-50 hover:text-nexoraDanger disabled:opacity-60"
                   >
                     {t(tk('cancelButton'))}
                   </button>
                 ) : null
 
-              const renderStartServiceButton = (order: OrderListItemApiDto) =>
-                order.status === PosOrderStatus.Waiting ? (
+              // The two things StartOrderService refuses, spelled out on the button instead of
+              // waiting for a red toast: a line with no technician ("First available" leaves it
+              // that way on purpose until someone assigns) and an order with nothing to serve.
+              // Disabled rather than hidden — the row's own warning flag says which one it is.
+              const startServiceBlockedReason = (order: OrderListItemApiDto) => {
+                if (order.hasNoServiceLine) return t(tk('addServiceFirst'))
+                if (order.hasUnassignedService) return t(tk('assignTechnicianFirst'))
+                return undefined
+              }
+
+              const renderStartServiceButton = (order: OrderListItemApiDto) => {
+                if (order.status !== PosOrderStatus.Waiting) return null
+                const blockedReason = startServiceBlockedReason(order)
+                return (
                   <button
                     type="button"
                     onClick={(e) => {
                       e.stopPropagation()
                       handleStartService(order.id)
                     }}
-                    disabled={startOrderService.isPending}
-                    className="shrink-0 rounded-lg border border-nexoraBrand bg-nexoraBrand px-2.5 py-1 text-[10px] font-bold text-white hover:bg-nexoraBrandDark disabled:opacity-60"
+                    disabled={startOrderService.isPending || blockedReason !== undefined}
+                    title={blockedReason}
+                    className="shrink-0 rounded-lg border border-nexoraBrand bg-nexoraBrand h-9 px-3 text-[11px] font-bold text-white hover:bg-nexoraBrandDark disabled:opacity-60"
                   >
                     {t(tk('startServiceButton'))}
+                  </button>
+                )
+              }
+
+              // Opens the same workspace a row tap opens — an InService order already lands there
+              // with the payment section expanded. The button exists so the row states its own next
+              // action instead of the operator having to know a tap gets them there.
+              const renderCheckoutButton = (order: OrderListItemApiDto) =>
+                order.status === PosOrderStatus.InService ? (
+                  <button
+                    type="button"
+                    onClick={(e) => {
+                      e.stopPropagation()
+                      setUpdateWorkspace({ orderId: order.id })
+                    }}
+                    className="shrink-0 rounded-lg border border-nexoraBrand bg-nexoraBrand h-9 px-3 text-[11px] font-bold text-white hover:bg-nexoraBrandDark"
+                  >
+                    {t(tk('checkoutButton'))}
                   </button>
                 ) : null
 
               if (viewMode === OrderListViewMode.Card) {
                 return (
+                  <div className="space-y-3">
+                  {attentionBadges}
                   <div
                     className={`grid ${SCROLL_PANEL_MAX_HEIGHT} grid-cols-1 gap-3 overflow-y-auto pr-1 sm:grid-cols-2 lg:grid-cols-3`}
                   >
@@ -503,7 +770,11 @@ export default function PosFrontDeskView({
                       <div
                         key={order.id}
                         onClick={() => setUpdateWorkspace({ orderId: order.id })}
-                        className="cursor-pointer space-y-2 rounded-2xl border border-nexoraBorder bg-nexoraSurface p-4 hover:border-nexoraBrand"
+                        className={`cursor-pointer space-y-2 rounded-2xl border bg-nexoraSurface p-4 hover:border-nexoraBrand ${
+                          needsFrontDeskAttention(order)
+                            ? 'border-nexoraWarning bg-nexoraWarning/5'
+                            : 'border-nexoraBorder'
+                        }`}
                       >
                         <div className="flex items-center justify-between gap-2">
                           <span className="font-mono text-[11px] font-bold text-nexoraMuted">#{order.orderNumber}</span>
@@ -511,33 +782,39 @@ export default function PosFrontDeskView({
                             {order.status}
                           </span>
                         </div>
+                        <div className="flex flex-wrap gap-1.5">{renderRowFlags(order)}</div>
                         <p className="truncate text-sm font-bold text-nexoraText">{order.customerName}</p>
                         <p className="truncate text-[11px] text-nexoraMuted">{joinOrEmpty(order.serviceNames)}</p>
                         <p className="truncate text-[11px] text-nexoraMuted">{joinOrEmpty(order.technicianNames)}</p>
-                        <div className="flex items-center justify-between gap-2 border-t border-nexoraBorder pt-2">
+                        <div className="flex flex-wrap items-center justify-between gap-2 border-t border-nexoraBorder pt-2">
                           <span className="text-[11px] text-nexoraMuted">
                             {t(tk('waitMinutes'), { minutes: order.elapsedMinutes })}
                           </span>
-                          <div className="flex shrink-0 items-center gap-1.5">
+                          <div className="ml-auto flex flex-wrap items-center justify-end gap-1.5">
+                            {renderEditButton(order)}
                             {renderStartServiceButton(order)}
+                            {renderCheckoutButton(order)}
                             {renderCancelButton(order)}
                           </div>
                         </div>
                       </div>
                     ))}
                   </div>
+                  </div>
                 )
               }
 
               return (
+                <div className="space-y-3">
+                {attentionBadges}
                 <div
                   className={`${SCROLL_PANEL_MAX_HEIGHT} overflow-y-auto rounded-xl border border-nexoraBorder bg-nexoraSurface p-4`}
                 >
                   <table className="w-full text-left text-xs">
                     <thead>
                       <tr className="text-[10px] font-black uppercase tracking-wider text-nexoraMuted">
-                        <th className="text-xs font-black pb-2 pr-3">{t(tk('orderListColumnOrder'))}</th>
-                        <th className="text-xs font-black pb-2 pr-3">{t(tk('orderListColumnGuest'))}</th>
+                        <th className="text-xs font-black pb-2 pr-3">{t(tk('orderListColumnNumber'))}</th>
+                        <th className="text-xs font-black pb-2 pr-3">{t(tk('orderListColumnCustomer'))}</th>
                         <th className="text-xs font-black pb-2 pr-3">{t(tk('orderListColumnStatus'))}</th>
                         <th className="text-xs font-black pb-2 pr-3">{t(tk('orderListColumnTechnician'))}</th>
                         <th className="text-xs font-black pb-2 pr-3">{t(tk('orderListColumnServices'))}</th>
@@ -550,14 +827,19 @@ export default function PosFrontDeskView({
                         <tr
                           key={order.id}
                           onClick={() => setUpdateWorkspace({ orderId: order.id })}
-                          className="cursor-pointer border-t border-nexoraBorder hover:bg-nexoraCanvas"
+                          className={`cursor-pointer border-t border-nexoraBorder hover:bg-nexoraCanvas ${
+                            needsFrontDeskAttention(order) ? 'bg-nexoraWarning/5' : ''
+                          }`}
                         >
                           <td className="py-2 pr-3 font-mono font-bold text-nexoraMuted">#{order.orderNumber}</td>
                           <td className="py-2 pr-3 font-bold text-nexoraText">{order.customerName}</td>
                           <td className="py-2 pr-3">
-                            <span className="rounded-full bg-nexoraCanvas px-2 py-0.5 text-[10px] font-black uppercase text-nexoraBrandDark">
-                              {order.status}
-                            </span>
+                            <div className="flex flex-wrap items-center gap-1.5">
+                              <span className="rounded-full bg-nexoraCanvas px-2 py-0.5 text-[10px] font-black uppercase text-nexoraBrandDark">
+                                {order.status}
+                              </span>
+                              {renderRowFlags(order)}
+                            </div>
                           </td>
                           <td className="py-2 pr-3 text-nexoraMuted">{joinOrEmpty(order.technicianNames)}</td>
                           <td className="py-2 pr-3 text-nexoraMuted">{joinOrEmpty(order.serviceNames)}</td>
@@ -565,8 +847,10 @@ export default function PosFrontDeskView({
                             {t(tk('waitMinutes'), { minutes: order.elapsedMinutes })}
                           </td>
                           <td className="py-2 text-right">
-                            <div className="flex justify-end gap-1.5">
+                            <div className="flex flex-wrap justify-end gap-1.5">
+                              {renderEditButton(order)}
                               {renderStartServiceButton(order)}
+                              {renderCheckoutButton(order)}
                               {renderCancelButton(order)}
                             </div>
                           </td>
@@ -574,6 +858,7 @@ export default function PosFrontDeskView({
                       ))}
                     </tbody>
                   </table>
+                </div>
                 </div>
               )
             })()}

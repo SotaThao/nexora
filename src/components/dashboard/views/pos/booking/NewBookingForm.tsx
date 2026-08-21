@@ -20,6 +20,7 @@ import { useAssignableStaffForService, useCustomerLookupByPhone } from '../../..
 import { useCreateStaffBooking } from '../../../../../data/hooks/usePosBooking'
 import IconButton from '../../../../ui/IconButton'
 import CategoryGroupedCatalogPicker from '../CategoryGroupedCatalogPicker'
+import { TWELVE_HOUR_INPUT_LANG } from '../../../../../constants/timeFormat'
 
 interface BookingLineDraft {
   key: string
@@ -321,6 +322,7 @@ export default function NewBookingForm({
                 </label>
                 <input
                   type="time"
+                  lang={TWELVE_HOUR_INPUT_LANG}
                   value={scheduledTime}
                   onChange={(e) => {
                     setScheduledTime(e.target.value)

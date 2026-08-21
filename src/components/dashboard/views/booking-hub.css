@@ -4561,12 +4561,13 @@ body.booking-appointment-panel-modal-open {
   min-height: 0;
   height: 100%;
   max-width: 100%;
-  overflow: hidden;
+  overflow: visible;
   opacity: 1;
   transition: opacity 0.22s ease;
 }
 
 .booking-hub-view .settings-card.is-collapsed .settings-card-body-inner {
+  overflow: hidden;
   opacity: 0;
   pointer-events: none;
 }
@@ -4747,9 +4748,44 @@ body.booking-appointment-panel-modal-open {
   grid-column: 1 / -1;
 }
 
+.booking-hub-view .settings-social-links {
+  display: grid;
+  grid-column: 1 / -1;
+  gap: 10px;
+  border-top: 1px solid var(--nexora-border);
+  margin-top: 2px;
+  padding-top: 12px;
+}
+
+.booking-hub-view .settings-social-links-title {
+  color: var(--nexora-text);
+  font-size: 12px;
+  font-weight: 900;
+}
+
+.booking-hub-view .settings-social-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 10px;
+  align-items: start;
+}
+
+.booking-hub-view .settings-social-grid > .settings-field {
+  align-content: start;
+  align-items: start;
+}
+
 .booking-hub-view .settings-field {
   display: grid;
   gap: 6px;
+  min-width: 0;
+  overflow: visible;
+}
+
+/* Lift focused fields above neighbors so focus rings are not clipped by overlap. */
+.booking-hub-view .settings-field:focus-within {
+  position: relative;
+  z-index: 2;
 }
 
 .booking-hub-view .settings-label {
@@ -4794,6 +4830,8 @@ body.booking-appointment-panel-modal-open {
 .booking-hub-view .settings-input:focus,
 .booking-hub-view .settings-select:focus,
 .booking-hub-view .settings-textarea:focus {
+  position: relative;
+  z-index: 1;
   border-color: rgba(70, 72, 216, 0.42);
   box-shadow: 0 0 0 3px rgba(70, 72, 216, 0.1);
 }
@@ -4954,6 +4992,11 @@ body.booking-appointment-panel-modal-open {
   cursor: pointer;
 }
 
+.booking-hub-view .settings-hour-row:focus-within {
+  position: relative;
+  z-index: 2;
+}
+
 .booking-hub-view .settings-hour-times {
   display: grid;
   grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
@@ -5000,6 +5043,11 @@ body.booking-appointment-panel-modal-open {
   min-width: 0;
   width: 100%;
   cursor: pointer;
+}
+
+.booking-hub-view .settings-time-box:focus-within {
+  position: relative;
+  z-index: 2;
 }
 
 .booking-hub-view .settings-time-box .settings-hour-input {
@@ -5438,6 +5486,8 @@ body.booking-appointment-panel-modal-open {
 }
 
 .booking-hub-view .settings-service-input:focus {
+  position: relative;
+  z-index: 1;
   border-color: rgba(70, 72, 216, 0.42);
   box-shadow: 0 0 0 3px rgba(70, 72, 216, 0.1);
 }
@@ -5787,6 +5837,20 @@ body.booking-appointment-panel-modal-open {
   min-width: 0;
 }
 
+.booking-hub-view .settings-promo-meta .settings-promo-suggest-row {
+  margin-top: 0;
+}
+
+.booking-hub-view .settings-suggest-label {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  color: var(--nexora-muted);
+  font-size: 11px;
+  font-weight: 800;
+  white-space: nowrap;
+}
+
 .booking-hub-view .settings-promo-count {
   flex: 0 1 auto;
   order: 2;
@@ -5835,6 +5899,13 @@ body.booking-appointment-panel-modal-open {
   background: color-mix(in srgb, var(--nexora-brand) 12%, white);
 }
 
+.booking-hub-view .settings-promo-suggest.is-active {
+  border-style: solid;
+  border-color: rgba(70, 72, 216, 0.55);
+  background: color-mix(in srgb, var(--nexora-brand) 22%, white);
+  color: var(--nexora-text);
+}
+
 .booking-hub-view .settings-promo-suggest-icon {
   width: 12px;
   height: 12px;
@@ -5859,6 +5930,11 @@ body.booking-appointment-panel-modal-open {
   min-height: 30px;
   padding: 4px 10px;
   font-size: 11px;
+}
+
+.booking-hub-view .settings-preview-button-hidden {
+  display: none;
+  margin-top: 10px;
 }
 
 .booking-hub-view .settings-save-bar {
@@ -6736,6 +6812,10 @@ body.booking-appointment-panel-modal-open {
   }
 
   .booking-hub-view .settings-location-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .booking-hub-view .settings-social-grid {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 
@@ -9654,7 +9734,7 @@ body.booking-appointment-panel-modal-open {
   }
 }
 
-/* Content-pane aware: wins over viewport media when sidebar leaves a narrow panel */
+/* Content-pane aware: wins Overviewport media when sidebar leaves a narrow panel */
 @container booking-panel (max-width: 640px) {
   .booking-hub-view .booking-controls {
     grid-template-columns: minmax(0, 1fr);

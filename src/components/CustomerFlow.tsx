@@ -31,6 +31,7 @@ export default function CustomerFlow() {
     availablePaymentWalletKeys, isPaymentMethodsLoading, multiStaffPaymentBlocked,
     setSelectedWalletObj, setSelectedWallet, setTipRefNumber,
     selectedWalletObj, qrCodeVal, tipRefNumber, handlePay,
+    selectedCryptoSymbol,
     paymentLinkData, tipPaymentMethodsData, currentTipId,
     isProcessing,
     rating, handleRatingChange,
@@ -208,6 +209,7 @@ export default function CustomerFlow() {
                   selectedStaffMembers={selectedStaffMembers}
                   activeTipAmount={activeTipAmount}
                   selectedWalletObj={selectedWalletObj}
+                  cryptoSymbol={selectedCryptoSymbol}
                   setStep={setStep}
                   paymentMode={isPaymentFlow}
                 />

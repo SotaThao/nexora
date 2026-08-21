@@ -4,6 +4,7 @@ import { WalletLogos } from '../../dashboard/constants'
 import { formatCurrency, formatTransactionDateTime } from '../../dashboard/utils'
 import type { StaffPaymentRecord } from '../../../types/domain'
 import { PaymentStatus } from '../../../types/domain'
+import DirectPaymentAccountField from '../../payout/DirectPaymentAccountField'
 import { DirectPaymentStatusBadge } from '../../dashboard/direct-payments/DirectPaymentStatusBadge'
 import {
   getDirectPaymentStatusDescKey,
@@ -126,14 +127,12 @@ export default function StaffPaymentDetailModal({
                   <span className="font-semibold text-nexoraText">{payment.paymentMethodType || '—'}</span>
                 </div>
               </div>
-              <div>
-                <span className="block text-[10px] font-bold text-nexoraMuted">
-                  {t('staff_payments.account_info')}
-                </span>
-                <span className="mt-0.5 block break-all font-semibold text-nexoraText">
-                  {payment.accountInfo || '—'}
-                </span>
-              </div>
+              <DirectPaymentAccountField
+                accountLabel={t('staff_payments.account_info')}
+                assetLabel={t('staff_payments.asset')}
+                accountInfo={payment.accountInfo}
+                cryptoWallet={payment.cryptoWallet}
+              />
               {payment.customerConfirmedAt || payment.staffConfirmedAt ? (
                 <>
                   <div>

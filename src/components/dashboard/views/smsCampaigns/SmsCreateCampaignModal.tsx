@@ -21,6 +21,7 @@ import type {
 } from "../../../../data/repositories/merchantVoiceSmsCampaigns";
 import { getApiErrorCode } from "../../../../types/domain";
 import { getWebUrlOrigin } from "../../../../utils/webUrlBase";
+import { toTwelveHourLangTag } from "../../../../constants/timeFormat";
 import { parseApiDateTime } from "../../utils";
 import {
   applyAiHubProgressiveValidation,
@@ -984,7 +985,7 @@ export default function SmsCreateCampaignModal({
                 />
                 <div
                   className={`schedule-datetime-shell${scheduleTime ? " has-value" : " is-empty"}`}
-                  lang={`${numberLocale}-u-hc-h12`}
+                  lang={toTwelveHourLangTag(numberLocale)}
                 >
                   <span
                     className="schedule-datetime-display"
@@ -997,7 +998,7 @@ export default function SmsCreateCampaignModal({
                   <input
                     className={`form-input schedule-datetime-input${scheduleTime ? " has-value" : " is-empty"}`}
                     type="time"
-                    lang={`${numberLocale}-u-hc-h12`}
+                    lang={toTwelveHourLangTag(numberLocale)}
                     step={60}
                     value={scheduleTime}
                     min={minScheduleTime}

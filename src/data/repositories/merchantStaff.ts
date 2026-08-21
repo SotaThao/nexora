@@ -109,17 +109,15 @@ export function normalizePaymentMethods(
       imageUrl: method.imageUrl ?? null,
       cryptoAddresses,
       isActive: !!method.isActive,
-      isConfigured: Boolean(method.isConfigured),
+      isConfigured: false,
     }
-    if (!normalized.isConfigured) {
-      normalized.isConfigured = isPaymentMethodConfigured(normalized)
-    }
+    normalized.isConfigured = isPaymentMethodConfigured(normalized)
     normalizedMethods.push(normalized)
     payoutConfigs[key] = {
       enabled: !!method.isActive,
       value: valueForEditor,
       qrCode: method.imageUrl ?? '',
-      accountName: method.accountName ?? displayName ?? '',
+      accountName: method.accountName ?? (normalized.isConfigured ? displayName : '') ?? '',
     }
   }
 
@@ -254,9 +252,7 @@ export function normalizeStaffSearchResult(dto: StaffSearchResultApiDto): StaffS
       cryptoAddresses,
       isConfigured: Boolean(method?.isConfigured),
     }
-    if (!normalized.isConfigured) {
-      normalized.isConfigured = isPaymentMethodConfigured(normalized)
-    }
+    normalized.isConfigured = isPaymentMethodConfigured(normalized)
     return normalized
   })
 

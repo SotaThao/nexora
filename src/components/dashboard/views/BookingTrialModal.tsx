@@ -12,6 +12,7 @@ import {
   type SubmitVoiceTrialRequest,
 } from "../../../data/voiceTrial/domain";
 import { getApiErrorCode, isApiError } from "../../../types/domain";
+import { toTwelveHourLangTag } from "../../../constants/timeFormat";
 import CountryCodeSelect, {
   formatNationalNumber,
   getNationalPhonePlaceholder,
@@ -411,7 +412,7 @@ export default function BookingTrialModal({
 }: BookingTrialModalProps) {
   const { t, currentLanguage } = useTranslation();
   const locale = currentLanguage === "vi" ? "vi" : "en";
-  const localeTag = `${locale === "vi" ? "vi-VN" : "en-US"}-u-hc-h12`;
+  const localeTag = toTwelveHourLangTag(locale);
   const { showToast } = useNotification();
   const submitTrial = useSubmitVoiceTrialRequest({
     anonymous: anonymousSubmit,

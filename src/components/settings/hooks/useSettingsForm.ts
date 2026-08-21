@@ -99,6 +99,8 @@ const validateReviewsForm = (form: LooseObject): SettingsFormErrors => {
   const errors: SettingsFormErrors = {};
   if (formValue(form.googleReview) && !isValidHttpUrl(form.googleReview)) errors.googleReview = "url";
   if (formValue(form.yelpReview) && !isValidHttpUrl(form.yelpReview)) errors.yelpReview = "url";
+  if (formValue(form.facebookReview) && !isValidHttpUrl(form.facebookReview)) errors.facebookReview = "url";
+  if (formValue(form.instagramReview) && !isValidHttpUrl(form.instagramReview)) errors.instagramReview = "url";
   return errors;
 };
 
@@ -152,6 +154,8 @@ const DEFAULT_PROFILE = {
   },
   googleReview: "",
   yelpReview: "",
+  facebookReview: "",
+  instagramReview: "",
   createdAt: "",
 };
 
@@ -291,6 +295,8 @@ export default function useSettingsForm({
   const [reviewsForm, setReviewsForm] = useState({
     googleReview: "",
     yelpReview: "",
+    facebookReview: "",
+    instagramReview: "",
   });
   const [reviewsErrors, setReviewsErrors] = useState<SettingsFormErrors>({});
 
@@ -355,6 +361,8 @@ export default function useSettingsForm({
           street: next.street || setupData.businessInfo?.address || "",
           googleReview: setupData.reviewLinks?.googleReview || "",
           yelpReview: setupData.reviewLinks?.yelpReview || "",
+          facebookReview: setupData.reviewLinks?.facebookReview || "",
+          instagramReview: setupData.reviewLinks?.instagramReview || "",
           paymentAccounts:
             setupData.businessInfo?.paymentAccounts || next.paymentAccounts,
           payoutQrCodes:
@@ -514,6 +522,8 @@ export default function useSettingsForm({
     setReviewsForm({
       googleReview: profile.googleReview || "",
       yelpReview: profile.yelpReview || "",
+      facebookReview: profile.facebookReview || "",
+      instagramReview: profile.instagramReview || "",
     });
     setIsEditingReviews(true);
   };
@@ -526,10 +536,14 @@ export default function useSettingsForm({
 
     const googleReview = reviewsForm.googleReview.trim();
     const yelpReview = reviewsForm.yelpReview.trim();
+    const facebookReview = reviewsForm.facebookReview.trim();
+    const instagramReview = reviewsForm.instagramReview.trim();
     updateReviewLinksMutation.mutate(
       {
         googleReviewUrl: googleReview,
         yelpUrl: yelpReview,
+        facebookUrl: facebookReview,
+        instagramUrl: instagramReview,
       },
       {
         onSuccess: () => {
@@ -537,6 +551,8 @@ export default function useSettingsForm({
             ...profile,
             googleReview,
             yelpReview,
+            facebookReview,
+            instagramReview,
           });
           showToast(t("components.settings.hooks.useSettingsForm.settingsUpdatedSuccessfully"));
           setIsEditingReviews(false);

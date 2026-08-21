@@ -7,6 +7,7 @@ import {
   setStoredAppLanguage,
 } from '../utils/appLanguage'
 import { renderLabel } from '../utils/renderLabel'
+import { resolveTranslation } from '../utils/translate'
 import type { AppLanguage, LanguageContextValue, TranslationVariables } from '../types/contexts'
 
 const translations = { en, vi }
@@ -41,33 +42,10 @@ export function LanguageProvider({ children }: LanguageProviderProps) {
     }
   }
 
-  // Translation helper with dot notation and interpolation support
-  const t: LanguageContextValue['t'] = (key, variables: TranslationVariables = {}) => {
-    const dictionary = translations[currentLanguage] || translations.en
-    const keys = key.split('.')
-    let value: unknown = dictionary
-    
-    for (const k of keys) {
-      if (value && typeof value === 'object' && k in (value as Record<string, unknown>)) {
-        value = (value as Record<string, unknown>)[k]
-      } else {
-        value = key
-        break
-      }
-    }
-
-    if (typeof value === 'string') {
-      return Object.entries(variables ?? {}).reduce((acc, [k, v]) => {
-        const replacement = String(v)
-        // Support both {{key}} (i18next-style) and {key} placeholders.
-        return acc
-          .replace(new RegExp(`{{\\s*${k}\\s*}}`, 'g'), replacement)
-          .replace(new RegExp(`{\\s*${k}\\s*}`, 'g'), replacement)
-      }, value)
-    }
-
-    return String(value)
-  }
+  // Dot notation + interpolation live in resolveTranslation, shared with screens that pin
+  // themselves to one language (see utils/translate.ts).
+  const t: LanguageContextValue['t'] = (key, variables: TranslationVariables = {}) =>
+    resolveTranslation(translations[currentLanguage] || translations.en, key, variables)
 
   return (
     <LanguageContext.Provider value={{ currentLanguage, setLanguage, t, renderLabel }}>
