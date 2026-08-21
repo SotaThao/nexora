@@ -3235,7 +3235,7 @@
             "todayTurnsNoNext": "No upcoming turn",
             "todayTurnsColumnTechnician": "Tech",
             "todayTurnsColumnTurns": "Turns",
-            "todayTurnsColumnServices": "Completed services",
+            "todayTurnsColumnServices": "Services performed",
             "todayTurnsEmpty": "No turn data recorded today.",
             "todayTurnsError": "Could not load today's turns.",
             "stationStatus": {
