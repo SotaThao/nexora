@@ -257,30 +257,39 @@ export default function NewBookingForm({
               <FieldError message={fieldErrors.name} />
             </div>
             <div>
-              <label className="text-[10px] font-extrabold uppercase text-nexoraMuted">
-                {t('components.dashboard.views.pos.NewBookingForm.customerPhone')}
-              </label>
-              <div className="mt-1 flex items-stretch gap-2">
-                <CountryCodeSelect
-                  value={dialCode}
-                  onChange={(code) => {
-                    setDialCode(code)
-                    setCustomerPhone(formatNationalNumber(customerPhone, code))
-                  }}
-                />
-              <input
-                type="tel"
-                value={customerPhone}
-                onChange={(e) => {
-                  setCustomerPhone(formatNationalNumber(e.target.value, dialCode))
-                  clearFieldError(NewBookingFormField.Phone)
-                }}
-                placeholder={getNationalPhonePlaceholder(dialCode)}
-                inputMode="numeric"
-                autoComplete="tel-national"
-                aria-invalid={Boolean(fieldErrors.phone)}
-                className={`h-10 w-full rounded-lg border bg-nexoraCanvas px-3.5 text-xs text-nexoraText outline-none transition-all focus:bg-white ${fieldErrors.phone ? 'border-rose-400 focus:border-rose-400' : 'border-nexoraBorder focus:border-nexoraBrand'}`}
-              />
+              <div className="flex items-stretch gap-2">
+                <div>
+                  <label className="text-[10px] font-extrabold uppercase text-nexoraMuted">
+                    {t('components.dashboard.views.pos.NewBookingForm.countryCode')}
+                  </label>
+                  <div className="mt-1">
+                    <CountryCodeSelect
+                      value={dialCode}
+                      onChange={(code) => {
+                        setDialCode(code)
+                        setCustomerPhone(formatNationalNumber(customerPhone, code))
+                      }}
+                    />
+                  </div>
+                </div>
+                <div className="flex-1">
+                  <label className="text-[10px] font-extrabold uppercase text-nexoraMuted">
+                    {t('components.dashboard.views.pos.NewBookingForm.customerPhone')}
+                  </label>
+                  <input
+                    type="tel"
+                    value={customerPhone}
+                    onChange={(e) => {
+                      setCustomerPhone(formatNationalNumber(e.target.value, dialCode))
+                      clearFieldError(NewBookingFormField.Phone)
+                    }}
+                    placeholder={getNationalPhonePlaceholder(dialCode)}
+                    inputMode="numeric"
+                    autoComplete="tel-national"
+                    aria-invalid={Boolean(fieldErrors.phone)}
+                    className={`mt-1 h-10 w-full rounded-lg border bg-nexoraCanvas px-3.5 text-xs text-nexoraText outline-none transition-all focus:bg-white ${fieldErrors.phone ? 'border-rose-400 focus:border-rose-400' : 'border-nexoraBorder focus:border-nexoraBrand'}`}
+                  />
+                </div>
               </div>
               <FieldError message={fieldErrors.phone} />
             </div>
