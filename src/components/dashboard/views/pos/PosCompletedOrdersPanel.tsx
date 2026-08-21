@@ -13,6 +13,7 @@ import { qk } from '../../../../data/queryKeys'
 import { SkeletonList } from '../../../ui/skeleton'
 import { formatPosDateTime } from './posDateTime'
 import { formatCustomerPhone } from './customer/customerFormatters'
+import { formatBookingHubDateTimeParts } from '../bookingHubFormatters'
 
 const PAGE_SIZE = 10
 
@@ -136,33 +137,41 @@ export default function PosCompletedOrdersPanel({ businessId }: { businessId: st
                 </tr>
               </thead>
               <tbody>
-                {items.map((order) => (
-                  <tr key={order.id} className="border-t border-nexoraBorder">
-                    <td className="py-2 pr-3 font-mono font-bold text-nexoraMuted">#{order.orderNumber}</td>
-                    <td className="py-2 pr-3 font-bold text-nexoraText">{order.customerName}</td>
-                    <td className="py-2 pr-3 text-nexoraMuted">
-                      {order.customerPhone ? formatCustomerPhone(order.customerPhone) : '—'}
-                    </td>
-                    <td className="py-2 pr-3 text-nexoraMuted">{formatDateTime(order.completedAt)}</td>
-                    <td className="py-2 pr-3 text-nexoraMuted">
-                      {order.technicianNames.length > 0 ? order.technicianNames.join(', ') : '—'}
-                    </td>
-                    <td className="py-2 pr-3 text-nexoraMuted">
-                      {order.serviceNames.length > 0 ? order.serviceNames.join(', ') : '—'}
-                    </td>
-                    <td className="py-2 pr-3 text-nexoraMuted">{order.paymentMethodType || '—'}</td>
-                    <td className="py-2 pr-3 text-right font-bold tabular-nums text-nexoraText">${order.total.toFixed(2)}</td>
-                    <td className="py-2 text-right">
-                      <button
-                        type="button"
-                        onClick={() => setViewDetailTargetId(order.id)}
-                        className="rounded-lg border border-nexoraBorder px-2.5 py-1 text-[11px] font-bold text-nexoraText hover:border-nexoraBrand"
-                      >
-                        {t('components.dashboard.views.pos.PosCompletedOrdersPanel.viewDetailAction')}
-                      </button>
-                    </td>
-                  </tr>
-                ))}
+                {items.map((order) => {
+                  const completed = formatBookingHubDateTimeParts(order.completedAt, currentLanguage)
+                  return (
+                    <tr key={order.id} className="border-t border-nexoraBorder">
+                      <td className="py-2 pr-3 font-mono font-bold text-nexoraMuted">#{order.orderNumber}</td>
+                      <td className="py-2 pr-3 font-bold text-nexoraText">{order.customerName}</td>
+                      <td className="py-2 pr-3 text-nexoraMuted">
+                        {formatCustomerPhone(order.customerPhone, order.customerPhoneE164) || '—'}
+                      </td>
+                      <td className="py-2 pr-3 align-middle">
+                        <div className="grid gap-0.5 whitespace-nowrap">
+                          <span className="font-extrabold text-nexoraText">{completed?.date ?? '—'}</span>
+                          <span className="text-[11px] font-semibold text-nexoraMuted">{completed?.time ?? '—'}</span>
+                        </div>
+                      </td>
+                      <td className="py-2 pr-3 text-nexoraMuted">
+                        {order.technicianNames.length > 0 ? order.technicianNames.join(', ') : '—'}
+                      </td>
+                      <td className="py-2 pr-3 text-nexoraMuted">
+                        {order.serviceNames.length > 0 ? order.serviceNames.join(', ') : '—'}
+                      </td>
+                      <td className="py-2 pr-3 text-nexoraMuted">{order.paymentMethodType || '—'}</td>
+                      <td className="py-2 pr-3 text-right font-bold tabular-nums text-nexoraText">${order.total.toFixed(2)}</td>
+                      <td className="py-2 text-right">
+                        <button
+                          type="button"
+                          onClick={() => setViewDetailTargetId(order.id)}
+                          className="rounded-lg border border-nexoraBorder px-2.5 py-1 text-[11px] font-bold text-nexoraText hover:border-nexoraBrand"
+                        >
+                          {t('components.dashboard.views.pos.PosCompletedOrdersPanel.viewDetailAction')}
+                        </button>
+                      </td>
+                    </tr>
+                  )
+                })}
               </tbody>
             </table>
           </div>

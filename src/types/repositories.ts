@@ -247,6 +247,7 @@ export interface CompletedOrderListItemApiDto {
   orderNumber: string
   customerName: string
   customerPhone?: string | null
+  customerPhoneE164?: string | null
   completedAt?: string | null
   serviceNames: string[]
   technicianNames: string[]
