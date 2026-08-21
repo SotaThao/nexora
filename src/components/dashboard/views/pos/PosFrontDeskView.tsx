@@ -713,11 +713,15 @@ export default function PosFrontDeskView({
       return a.turnRank - b.turnRank
     })
     const totalTurnsToday = rows.reduce((total, row) => total + Math.max(0, row.turnsToday ?? 0), 0)
-    // The next turn is the first clocked-in technician in today's turn order who is not already
-    // serving. A busy tech is intentionally skipped until their station is available again.
-    const nextTechnician = rows.find(
-      (row) => row.isClockedIn && !row.currentOrderId && row.turnRank != null,
-    )
+    // Rows are already sorted by the server-provided turn rank above. Prefer a clocked-in,
+    // available technician, but do not require turnRank here: older roster responses can omit
+    // that field even though the technician is clocked in. If every clocked-in technician is
+    // currently serving, keep showing the first one in turn order instead of a misleading
+    // "No upcoming turn" state.
+    const nextTechnician =
+      rows.find((row) => row.isClockedIn && !row.currentOrderId) ??
+      rows.find((row) => row.isClockedIn && row.turnRank != null) ??
+      rows.find((row) => row.isClockedIn)
     const servicesByTechnician = new Map<string, Set<string>>()
     for (const order of todayCompletedOrdersQuery.data?.items ?? []) {
       const serviceNames = (order.serviceNames ?? []).map((service) => service.trim()).filter(Boolean)
