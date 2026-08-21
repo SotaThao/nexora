@@ -3083,6 +3083,7 @@
               "Products": "Products",
               "Staff": "Staff",
               "RolesPermissions": "Roles & Permissions",
+              "Devices": "Check-In Devices",
               "Operations": "Operations"
             }
           },
@@ -3721,10 +3722,11 @@
             },
             "PosDevicePairingQrPanel": {
               "title": "Pairing code",
-              "subtitle": "Open the tablet's camera and scan this code. It works once — as soon as a tablet uses it, a new code appears here.",
+              "subtitle": "Open the tablet's camera and scan this code. It works once and lasts 15 minutes — as soon as a tablet uses it, a new code appears here.",
               "qrAlt": "Tablet pairing QR code",
               "tokenLine": "Code {{token}} · rotation {{rotation}}",
-              "rotatesIn": "New code in {{time}}",
+              "rotatesIn": "This code expires in {{time}}",
+              "newCodeButton": "New code",
               "qrUnavailable": "Pairing code unavailable. Refresh the page to try again."
             }
           },
