@@ -6,7 +6,7 @@ import type { BookingListItemApiDto } from '../../../../../types/repositories'
 import { formatCustomerPhone } from '../customer/customerFormatters'
 import {
   formatBookingHubDateDisplay,
-  formatBookingHubDateTime,
+  formatBookingHubDateTimeParts,
   formatBookingHubTimeDisplay,
 } from '../../bookingHubFormatters'
 import { resolveBookingWallClockParts, statusLabelKey } from './bookingFormatters'
@@ -109,6 +109,7 @@ export default function BookingTable({
             const canAct = booking.status === PosOrderStatus.Pending || booking.status === PosOrderStatus.Confirmed
             const statusStyle = STATUS_STYLES[booking.status] ?? DEFAULT_STATUS_STYLE
             const appointment = formatAppointmentParts(booking.scheduledAt, booking.source, currentLanguage)
+            const created = formatBookingHubDateTimeParts(booking.createdAt, currentLanguage)
             const phone = formatBookingPhone(booking.customerPhone, booking.customerPhoneE164)
             return (
               <tr
@@ -131,8 +132,11 @@ export default function BookingTable({
                     </span>
                   </div>
                 </td>
-                <td className="px-4 py-3 align-middle text-[11px] font-semibold leading-5 text-nexoraMuted">
-                  {formatBookingHubDateTime(booking.createdAt, currentLanguage)}
+                <td className="px-4 py-3 align-middle">
+                  <div className="grid gap-0.5 whitespace-nowrap">
+                    <span className="font-extrabold text-nexoraText">{created?.date ?? '—'}</span>
+                    <span className="text-[11px] font-semibold text-nexoraMuted">{created?.time ?? '—'}</span>
+                  </div>
                 </td>
                 <td className="px-4 py-3 align-middle">
                   <div className="grid gap-0.5 whitespace-nowrap">
