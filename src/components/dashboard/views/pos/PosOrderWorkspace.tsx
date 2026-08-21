@@ -38,10 +38,10 @@ import type {
   PosCheckoutPaymentMethodType,
 } from '../../../../types/repositories'
 import { SkeletonList } from '../../../ui/skeleton'
+import { formatCustomerPhone } from './customer/customerFormatters'
 import CategoryGroupedCatalogPicker from './CategoryGroupedCatalogPicker'
 import ChangeServiceModal from './modals/ChangeServiceModal'
 import ChangeTechnicianModal from './modals/ChangeTechnicianModal'
-import { formatCustomerPhone } from './customer/customerFormatters'
 import { formatPosDateTime } from './posDateTime'
 
 type TipMode = 'noTip' | 'fixed10' | 'fixed15' | 'pct10' | 'pct20' | 'custom'
@@ -1071,7 +1071,7 @@ export default function PosOrderWorkspace({
                       <div className="pos-receipt-business">
                         {printableBusinessName ? <h2>{printableBusinessName}</h2> : null}
                         {printableBusinessAddress ? <p>{printableBusinessAddress}</p> : null}
-                        {printableBusinessPhone ? <p>{formatCustomerPhone(printableBusinessPhone)}</p> : null}
+                        {printableBusinessPhone ? <p>{formatCustomerPhone(printableBusinessPhone, printableBusinessPhone)}</p> : null}
                       </div>
                     ) : null}
                     <p>{formatPosDateTime(order.completedAt ?? new Date().toISOString(), currentLanguage)}</p>
