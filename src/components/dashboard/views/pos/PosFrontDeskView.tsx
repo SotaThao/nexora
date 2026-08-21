@@ -265,7 +265,7 @@ export default function PosFrontDeskView({
   })
   const turnBoardQuery = useTurnBoard(businessId, {
     enabled: activeTab === PosFrontDeskTab.TurnBoard || activeTab === PosFrontDeskTab.Booking,
-    refetchInterval: false,
+    refetchInterval: 15000,
   })
   const turnBoard = turnBoardQuery.data ?? []
   const isTurnBoardLoading = turnBoardQuery.isLoading
