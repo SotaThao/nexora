@@ -176,10 +176,9 @@ export default function StaffSalonReport() {
   const metrics: ReportMetric[] = selectedSourceValue === ALL_SOURCES_VALUE
     ? [
         { key: 'income', value: summary?.income ?? null, format: 'currency' },
-        { key: 'pay', value: summary?.pay ?? null, format: 'currency' },
+        { key: 'service', value: summary?.pay ?? null, format: 'currency' },
         { key: 'tip', value: summary?.tip ?? null, format: 'currency' },
         { key: 'otherIncome', value: summary?.otherIncome ?? null, format: 'currency' },
-        { key: 'paidAmount', value: summary?.paidAmount ?? null, format: 'currency' },
       ]
     : selectedSourceValue === INDEPENDENT_SOURCE_VALUE
       ? [
