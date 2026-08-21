@@ -10,6 +10,7 @@ import {
   CommunityChatType,
 } from '../../constants/communityChat'
 import httpClient from '../../lib/httpClient'
+import { parseApiUtcDateTime } from '../../utils/localDate'
 import type {
   AddCommunityChatParticipantInput,
   CommunityChatMessage,
@@ -23,12 +24,26 @@ import type {
 
 type HttpClient = typeof httpClient
 
+/** API datetimes are UTC; normalize bare ISO to `...Z` so clients parse consistently. */
+function normalizeCommunityChatTimestamp(value: string | null | undefined): string | null {
+  if (value == null) return null
+  const trimmed = String(value).trim()
+  if (!trimmed) return null
+  const date = parseApiUtcDateTime(trimmed)
+  return date ? date.toISOString() : trimmed
+}
+
 interface CommunityChatParticipantApiDto {
   userProfileId?: string
+  UserProfileId?: string
   fullName?: string | null
+  FullName?: string | null
   avatarUrl?: string | null
+  AvatarUrl?: string | null
   isActive?: boolean
+  IsActive?: boolean
   joinedAt?: string | null
+  JoinedAt?: string | null
 }
 
 interface CommunityChatSessionApiDto {
@@ -45,12 +60,19 @@ interface CommunityChatSessionApiDto {
 
 interface CommunityChatMessageApiDto {
   id?: string
+  Id?: string
   chatSessionId?: string
+  ChatSessionId?: string
   senderId?: string
+  SenderId?: string
   content?: string
+  Content?: string
   messageType?: string
+  MessageType?: string
   sentAt?: string
+  SentAt?: string
   editedAt?: string | null
+  EditedAt?: string | null
 }
 
 interface CommunityChatMessagesPageApiDto {
@@ -89,11 +111,11 @@ export function normalizeCommunityChatParticipant(
   dto: CommunityChatParticipantApiDto,
 ): CommunityChatParticipant {
   return {
-    userProfileId: dto.userProfileId ?? '',
-    fullName: (dto.fullName ?? '').trim(),
-    avatarUrl: dto.avatarUrl ?? null,
-    isActive: dto.isActive !== false,
-    joinedAt: dto.joinedAt ?? null,
+    userProfileId: String(dto.userProfileId ?? dto.UserProfileId ?? '').trim(),
+    fullName: String(dto.fullName ?? dto.FullName ?? '').trim(),
+    avatarUrl: dto.avatarUrl ?? dto.AvatarUrl ?? null,
+    isActive: (dto.isActive ?? dto.IsActive) !== false,
+    joinedAt: normalizeCommunityChatTimestamp(dto.joinedAt ?? dto.JoinedAt),
   }
 }
 
@@ -107,7 +129,7 @@ export function normalizeCommunityChatSession(
     chatType: normalizeChatType(dto.chatType),
     status: normalizeChatStatus(dto.status),
     createdByUserProfileId: dto.createdByUserProfileId ?? '',
-    lastMessageAt: dto.lastMessageAt ?? null,
+    lastMessageAt: normalizeCommunityChatTimestamp(dto.lastMessageAt),
     unreadCount: dto.unreadCount ?? 0,
     participants: (dto.participants ?? []).map(normalizeCommunityChatParticipant),
   }
@@ -117,13 +139,13 @@ export function normalizeCommunityChatMessage(
   dto: CommunityChatMessageApiDto,
 ): CommunityChatMessage {
   return {
-    id: dto.id ?? '',
-    chatSessionId: dto.chatSessionId ?? '',
-    senderId: dto.senderId ?? '',
-    content: dto.content ?? '',
-    messageType: normalizeMessageType(dto.messageType),
-    sentAt: dto.sentAt ?? '',
-    editedAt: dto.editedAt ?? null,
+    id: String(dto.id ?? dto.Id ?? '').trim(),
+    chatSessionId: String(dto.chatSessionId ?? dto.ChatSessionId ?? '').trim(),
+    senderId: String(dto.senderId ?? dto.SenderId ?? '').trim(),
+    content: String(dto.content ?? dto.Content ?? ''),
+    messageType: normalizeMessageType(dto.messageType ?? dto.MessageType),
+    sentAt: normalizeCommunityChatTimestamp(dto.sentAt ?? dto.SentAt) ?? '',
+    editedAt: normalizeCommunityChatTimestamp(dto.editedAt ?? dto.EditedAt),
   }
 }
 

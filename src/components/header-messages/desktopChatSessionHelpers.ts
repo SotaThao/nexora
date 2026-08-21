@@ -66,6 +66,29 @@ export function resolveDesktopConversationOpen(
   )
 }
 
+/** Always expand (never toggle-minimize). Used when opening from a notification. */
+export function resolveDesktopConversationForceOpen(
+  sessions: HeaderDesktopChatSession[],
+  conversation: HeaderMessageConversation,
+  context: DesktopChatLayoutContext,
+): HeaderDesktopChatSession[] {
+  const existingIndex = sessions.findIndex(
+    (session) => session.conversation.id === conversation.id,
+  )
+
+  if (existingIndex < 0) {
+    return layoutDesktopChatSessions(
+      promoteDesktopChatSession(sessions, conversation),
+      { ...context, keepExpandedConversationId: conversation.id },
+    )
+  }
+
+  return layoutDesktopChatSessions(
+    expandDesktopChatSessionInPlace(sessions, conversation.id),
+    { ...context, keepExpandedConversationId: conversation.id },
+  )
+}
+
 export function resolveDesktopConversationExpand(
   sessions: HeaderDesktopChatSession[],
   conversationId: string,

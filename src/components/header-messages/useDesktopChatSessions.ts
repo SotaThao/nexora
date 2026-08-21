@@ -2,6 +2,7 @@ import { useCallback, useEffect, useState } from 'react'
 import {
   layoutDesktopChatSessions,
   resolveDesktopConversationExpand,
+  resolveDesktopConversationForceOpen,
   resolveDesktopConversationMinimize,
   resolveDesktopConversationOpen,
   type DesktopChatLayoutContext,
@@ -52,6 +53,15 @@ export function useDesktopChatSessions({
     ))
   }, [buildLayoutContext])
 
+  const ensureConversationOpen = useCallback((conversation: HeaderMessageConversation) => {
+    setFocusConversationId(conversation.id)
+    setSessions((current) => resolveDesktopConversationForceOpen(
+      current,
+      conversation,
+      buildLayoutContext(conversation.id),
+    ))
+  }, [buildLayoutContext])
+
   const toggleMinimize = useCallback((conversationId: string) => {
     setSessions((current) => {
       const session = current.find((item) => item.conversation.id === conversationId)
@@ -90,6 +100,7 @@ export function useDesktopChatSessions({
     sessions,
     focusConversationId,
     openConversation,
+    ensureConversationOpen,
     toggleMinimize,
     closeConversation,
   }

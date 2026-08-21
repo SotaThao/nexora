@@ -17,7 +17,6 @@ import {
 import { useTranslation } from '../contexts/LanguageContext'
 import { logger } from '../utils/logger'
 import CopyableTransactionId from './ui/CopyableTransactionId'
-import IconButton from './ui/IconButton'
 import { DateTimeCell, formatCurrency, formatTransactionDateTime } from './dashboard/utils'
 import { buildChartPoints, getBezierPath } from './dashboard/overview/chartUtils'
 import {
@@ -31,6 +30,7 @@ import { orderedPayoutUiKeysFromMethods, PAYOUT_UI_LABELS } from '../data/paymen
 import NicknameEditor from './NicknameEditor'
 import RoleAtBusinessEditor from './RoleAtBusinessEditor'
 import StaffCommunityChatModal from './staff/StaffCommunityChatModal'
+import { canStaffMemberUseCommunityChat } from './staff/staffCommunityChatUtils'
 import { STAFF_ROLE_ERROR_KEYS } from './staff/constants'
 
 const RANGE_DAY_OFFSETS = {
@@ -588,14 +588,18 @@ export default function StaffDetailView({
                 }}
               />
             ) : null}
-            <IconButton
-              label={t('staff_detail.chat_open')}
-              onClick={openStaffChat}
-              className="h-10 w-10 hover:text-nexoraBrand"
-            >
-              <MessagesSquare className="h-4 w-4" />
-            </IconButton>
+            {canStaffMemberUseCommunityChat(staffMember) ? (
+              <button
+                type="button"
+                onClick={openStaffChat}
+                className="inline-flex h-10 w-full sm:w-auto items-center justify-center gap-1.5 rounded-lg border border-nexoraBorder bg-white px-2 text-[11px] font-bold text-nexoraText shadow-sm transition hover:bg-nexoraSurfaceMuted sm:gap-2 sm:px-4 sm:text-xs"
+              >
+                <MessagesSquare className="h-4 w-4 text-nexoraBrand" aria-hidden="true" />
+                <span className="truncate">{t('staff_detail.chat_open')}</span>
+              </button>
+            ) : null}
             <button
+              type="button"
               onClick={() => onQr(staffMember)}
               className="inline-flex h-10 w-full sm:w-auto items-center justify-center gap-1.5 rounded-lg border border-nexoraBorder bg-white px-2 text-[11px] font-bold text-nexoraText shadow-sm transition hover:bg-nexoraSurfaceMuted sm:gap-2 sm:px-4 sm:text-xs"
             >

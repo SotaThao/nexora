@@ -12,12 +12,27 @@ import type {
   RenameCommunityChatSessionInput,
   SendCommunityChatMessageInput,
 } from '../../types/communityChat'
+import {
+  mergeCommunityChatSessionPreviews,
+  patchCommunityChatMessagesCache,
+  patchCommunityChatSessionLastMessage,
+  removeCommunityChatMessageFromCache,
+} from '../communityChatCache'
 
 export function useCommunityChatSessions({ enabled = true } = {}) {
+  const queryClient = useQueryClient()
+
   return useQuery<CommunityChatSession[]>({
     queryKey: qk.communityChatSessions(),
-    queryFn: () => communityChatRepository.listSessions(),
+    queryFn: async () => {
+      const fresh = await communityChatRepository.listSessions()
+      const previous = queryClient.getQueryData<CommunityChatSession[]>(
+        qk.communityChatSessions(),
+      )
+      return mergeCommunityChatSessionPreviews(fresh, previous)
+    },
     enabled,
+    staleTime: 30_000,
   })
 }
 
@@ -41,6 +56,7 @@ export function useCommunityChatMessages(
     queryKey: qk.communityChatMessages(sessionId, params),
     queryFn: () => communityChatRepository.listMessages(sessionId!, params),
     enabled: enabled && Boolean(sessionId),
+    staleTime: 15_000,
   })
 }
 
@@ -49,8 +65,15 @@ export function useCreateCommunityChatSession() {
 
   return useMutation<CommunityChatSession, Error, CreateCommunityChatSessionInput>({
     mutationFn: (input) => communityChatRepository.createSession(input),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: qk.communityChatSessions() })
+    onSuccess: (session) => {
+      queryClient.setQueryData<CommunityChatSession[]>(
+        qk.communityChatSessions(),
+        (current) => {
+          if (!current) return [session]
+          if (current.some((item) => item.id === session.id)) return current
+          return [session, ...current]
+        },
+      )
     },
   })
 }
@@ -60,9 +83,9 @@ export function useSendCommunityChatMessage(sessionId: string) {
 
   return useMutation<CommunityChatMessage, Error, SendCommunityChatMessageInput>({
     mutationFn: (input) => communityChatRepository.sendMessage(sessionId, input),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: qk.communityChatSessions() })
-      queryClient.invalidateQueries({ queryKey: qk.communityChatMessagesRoot(sessionId) })
+    onSuccess: (message) => {
+      patchCommunityChatMessagesCache(queryClient, message)
+      patchCommunityChatSessionLastMessage(queryClient, message)
       queryClient.invalidateQueries({ queryKey: qk.communityChatSession(sessionId) })
     },
   })
@@ -73,10 +96,9 @@ export function useSendCommunityChatImage(sessionId: string) {
 
   return useMutation<CommunityChatMessage, Error, File>({
     mutationFn: (file) => communityChatRepository.sendImage(sessionId, file),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: qk.communityChatSessions() })
-      queryClient.invalidateQueries({ queryKey: qk.communityChatMessagesRoot(sessionId) })
-      queryClient.invalidateQueries({ queryKey: qk.communityChatSession(sessionId) })
+    onSuccess: (message) => {
+      patchCommunityChatMessagesCache(queryClient, message)
+      patchCommunityChatSessionLastMessage(queryClient, message)
     },
   })
 }
@@ -87,8 +109,21 @@ export function useMarkCommunityChatSessionRead() {
   return useMutation<void, Error, string>({
     mutationFn: (sessionId) => communityChatRepository.markSessionRead(sessionId),
     onSuccess: (_data, sessionId) => {
-      queryClient.invalidateQueries({ queryKey: qk.communityChatSessions() })
-      queryClient.invalidateQueries({ queryKey: qk.communityChatSession(sessionId) })
+      // Patch unread locally — do not invalidate sessions (avoids refetch storms).
+      queryClient.setQueryData<CommunityChatSession[]>(
+        qk.communityChatSessions(),
+        (current) => (
+          current
+            ? current.map((session) => (
+              session.id === sessionId ? { ...session, unreadCount: 0 } : session
+            ))
+            : current
+        ),
+      )
+      queryClient.setQueryData<CommunityChatSession>(
+        qk.communityChatSession(sessionId),
+        (current) => (current ? { ...current, unreadCount: 0 } : current),
+      )
     },
   })
 }
@@ -98,8 +133,8 @@ export function useDeleteCommunityChatMessage() {
 
   return useMutation<void, Error, { messageId: string; sessionId: string }>({
     mutationFn: ({ messageId }) => communityChatRepository.deleteMessage(messageId),
-    onSuccess: (_data, { sessionId }) => {
-      queryClient.invalidateQueries({ queryKey: qk.communityChatMessagesRoot(sessionId) })
+    onSuccess: (_data, { sessionId, messageId }) => {
+      removeCommunityChatMessageFromCache(queryClient, sessionId, messageId)
     },
   })
 }

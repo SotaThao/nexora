@@ -79,9 +79,9 @@ export default function StaffCommunityChatModal({
       return
     }
 
-    if (unavailableReason === 'no_staff_profile' && !isBootstrapping && !isReady) {
+    if (unavailableReason === 'no_user_profile' && !isBootstrapping && !isReady) {
       closedForErrorRef.current = true
-      showToast(t('staff_detail.chat_no_staff_profile'), 'warning')
+      showToast(t('staff_detail.chat_no_user_profile'), 'warning')
       onClose()
       return
     }

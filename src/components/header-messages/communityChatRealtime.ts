@@ -1,42 +1,53 @@
 import type { HubConnection } from '@microsoft/signalr'
 import type { QueryClient } from '@tanstack/react-query'
-import { qk } from '../../data/queryKeys'
+import { isSameCommunityChatProfileId } from '../../data/communityChatSessionUtils'
 import {
-  CommunityChatHubEvent,
   createCommunityChatHubConnection,
   joinCommunityChatSession,
   leaveCommunityChatSession,
 } from '../../lib/communityChatHub'
+import {
+  patchCommunityChatMessagesCache,
+  patchCommunityChatSessionLastMessage,
+} from '../../data/communityChatCache'
 import { normalizeCommunityChatMessage } from '../../data/repositories/communityChat'
 import type { CommunityChatMessage } from '../../types/communityChat'
 import { logger } from '../../utils/logger'
+
+export const COMMUNITY_CHAT_HUB_MESSAGE_ERROR_EVENT = 'nexora:community-chat-message-error' as const
 
 let hubConnection: HubConnection | null = null
 let hubStartPromise: Promise<void> | null = null
 let hubSubscriberCount = 0
 let queryClientRef: QueryClient | null = null
-const joinedSessionIds = new Set<string>()
+let currentUserProfileIdRef = ''
+
+/** Ref-count of UI surfaces that need a session's SignalR group. */
+const joinedSessionRefCounts = new Map<string, number>()
 
 function handleIncomingMessage(rawMessage: CommunityChatMessage) {
   const message = normalizeCommunityChatMessage(rawMessage)
   const sessionId = message.chatSessionId
   if (!sessionId || !queryClientRef) return
 
-  queryClientRef.setQueriesData(
-    { queryKey: qk.communityChatMessagesRoot(sessionId) },
-    (current: { items?: CommunityChatMessage[]; totalCount?: number } | undefined) => {
-      if (!current?.items) return current
-      if (current.items.some((item) => item.id === message.id)) return current
-      return {
-        ...current,
-        items: [message, ...current.items],
-        totalCount: (current.totalCount ?? current.items.length) + 1,
-      }
-    },
-  )
+  patchCommunityChatMessagesCache(queryClientRef, message)
 
-  queryClientRef.invalidateQueries({ queryKey: qk.communityChatSessions() })
-  queryClientRef.invalidateQueries({ queryKey: qk.communityChatSession(sessionId) })
+  const isOwnMessage = isSameCommunityChatProfileId(message.senderId, currentUserProfileIdRef)
+  const sessionIsOpen = (joinedSessionRefCounts.get(sessionId) ?? 0) > 0
+
+  // Keep list preview fresh without invalidating sessions (avoids refetch storms).
+  // Only bump unread for someone else's message on a session that is not currently open.
+  patchCommunityChatSessionLastMessage(queryClientRef, message, {
+    bumpUnread: !isOwnMessage && !sessionIsOpen,
+  })
+}
+
+function emitHubMessageError(message: string) {
+  const text = String(message ?? '').trim()
+  if (!text || typeof window === 'undefined') return
+  window.dispatchEvent(
+    new CustomEvent(COMMUNITY_CHAT_HUB_MESSAGE_ERROR_EVENT, { detail: { message: text } }),
+  )
 }
 
 async function ensureHubStarted(): Promise<HubConnection | null> {
@@ -48,6 +59,7 @@ async function ensureHubStarted(): Promise<HubConnection | null> {
         onReceiveMessage: handleIncomingMessage,
         onMessageError: (message) => {
           logger.warn('Community chat hub send error', message)
+          emitHubMessageError(message)
         },
       },
     })
@@ -69,7 +81,7 @@ async function stopHubIfIdle() {
   if (hubSubscriberCount > 0) return
 
   hubStartPromise = null
-  joinedSessionIds.clear()
+  joinedSessionRefCounts.clear()
 
   if (!hubConnection) return
 
@@ -83,7 +95,18 @@ async function stopHubIfIdle() {
 }
 
 export function setCommunityChatQueryClient(queryClient: QueryClient | null) {
-  queryClientRef = queryClient
+  if (queryClient) {
+    queryClientRef = queryClient
+    return
+  }
+  // Only clear when no subscribers remain — avoid wiping shared client on modal unmount.
+  if (hubSubscriberCount <= 0) {
+    queryClientRef = null
+  }
+}
+
+export function setCommunityChatCurrentUserProfileId(userProfileId: string | null | undefined) {
+  currentUserProfileIdRef = String(userProfileId ?? '').trim()
 }
 
 export function subscribeCommunityChatHub(): () => void {
@@ -100,26 +123,80 @@ export function subscribeCommunityChatHub(): () => void {
 }
 
 export async function joinCommunityChatHubSession(sessionId: string): Promise<void> {
-  if (!sessionId || joinedSessionIds.has(sessionId)) return
+  const id = String(sessionId ?? '').trim()
+  if (!id) return
+
+  const previousCount = joinedSessionRefCounts.get(id) ?? 0
+  joinedSessionRefCounts.set(id, previousCount + 1)
+  if (previousCount > 0) return
 
   const connection = await ensureHubStarted()
-  if (!connection) return
+  if (!connection) {
+    joinedSessionRefCounts.delete(id)
+    return
+  }
 
-  await joinCommunityChatSession(connection, sessionId)
-  joinedSessionIds.add(sessionId)
+  try {
+    await joinCommunityChatSession(connection, id)
+  } catch (error) {
+    // Roll back only if nobody else joined while we were failing.
+    if ((joinedSessionRefCounts.get(id) ?? 0) <= 1) {
+      joinedSessionRefCounts.delete(id)
+    } else {
+      joinedSessionRefCounts.set(id, (joinedSessionRefCounts.get(id) ?? 1) - 1)
+    }
+    throw error
+  }
+}
+
+/**
+ * Ensure the hub group is joined without changing UI ref-counts when already open.
+ * Safe to call before SendMessage.
+ */
+export async function ensureCommunityChatHubSessionJoined(sessionId: string): Promise<void> {
+  const id = String(sessionId ?? '').trim()
+  if (!id) return
+
+  if ((joinedSessionRefCounts.get(id) ?? 0) > 0) {
+    const connection = await ensureHubStarted()
+    if (!connection || connection.state !== 'Connected') return
+    await joinCommunityChatSession(connection, id)
+    return
+  }
+
+  await joinCommunityChatHubSession(id)
 }
 
 export async function leaveCommunityChatHubSession(sessionId: string): Promise<void> {
-  if (!sessionId || !joinedSessionIds.has(sessionId)) return
+  const id = String(sessionId ?? '').trim()
+  if (!id) return
 
-  joinedSessionIds.delete(sessionId)
+  const previousCount = joinedSessionRefCounts.get(id) ?? 0
+  if (previousCount <= 0) return
+
+  const nextCount = previousCount - 1
+  if (nextCount > 0) {
+    joinedSessionRefCounts.set(id, nextCount)
+    return
+  }
+
+  joinedSessionRefCounts.delete(id)
 
   if (!hubConnection || hubConnection.state !== 'Connected') return
 
   try {
-    await leaveCommunityChatSession(hubConnection, sessionId)
+    await leaveCommunityChatSession(hubConnection, id)
   } catch (error) {
     logger.warn('Community chat hub leave failed', error)
+  }
+
+  // Remount/expand may have joined again while Leave was in flight — restore group membership.
+  if ((joinedSessionRefCounts.get(id) ?? 0) > 0 && hubConnection?.state === 'Connected') {
+    try {
+      await joinCommunityChatSession(hubConnection, id)
+    } catch (error) {
+      logger.warn('Community chat hub re-join after leave race failed', error)
+    }
   }
 }
 
@@ -131,4 +208,4 @@ export async function getCommunityChatHubConnection(): Promise<HubConnection | n
   }
 }
 
-export { CommunityChatHubEvent }
+export { CommunityChatHubEvent } from '../../lib/communityChatHub'

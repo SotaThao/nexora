@@ -23,6 +23,12 @@ export interface CommunityChatSession {
   lastMessageAt: string | null
   unreadCount: number
   participants: CommunityChatParticipant[]
+  /**
+   * Client-enriched preview — session list DTO has no last-message body.
+   * Filled from latest messages fetch / realtime / send.
+   */
+  lastMessageContent?: string | null
+  lastMessageType?: CommunityChatMessageType | null
 }
 
 export interface CommunityChatMessage {

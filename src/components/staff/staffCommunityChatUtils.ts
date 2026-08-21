@@ -1,9 +1,27 @@
 import { CommunityChatType } from '../../constants/communityChat'
+import {
+  getOneOnOnePeerParticipant,
+  isSameCommunityChatProfileId,
+  preferCommunityChatSession,
+} from '../../data/communityChatSessionUtils'
 import type { CommunityChatSession } from '../../types/communityChat'
+
+/** Fallback when staff nickname/displayName/fullName are all empty. */
+export const STAFF_CHAT_FALLBACK_DISPLAY_NAME = 'Staff' as const
+
+/** Staff statuses that cannot open community chat yet. */
+export const STAFF_CHAT_BLOCKED_STATUSES = new Set([
+  'Pending',
+  'Pending Setup',
+  'Pending Acceptance',
+  'WaitingStaffAcceptance',
+  'StaffRejected',
+])
 
 export interface StaffChatMemberLike {
   id?: string
   staffProfileId?: string | null
+  userProfileId?: string | null
   staffCode?: string | null
   fullName?: string
   nickname?: string
@@ -15,38 +33,67 @@ export interface StaffChatMemberLike {
   itemType?: string | null
 }
 
-function normalizeStaffDisplayName(member: StaffChatMemberLike): string {
-  return String(member.nickname || member.displayName || member.fullName || '').trim().toLowerCase()
-}
-
 export function getStaffChatDisplayName(member: StaffChatMemberLike): string {
-  return String(member.nickname || member.displayName || member.fullName || '').trim() || 'Staff'
+  return String(member.nickname || member.displayName || member.fullName || '').trim()
+    || STAFF_CHAT_FALLBACK_DISPLAY_NAME
 }
 
-/** Soft gate for UI — only block invites / pending. API decides account eligibility. */
+function normalizeStaffDisplayName(member: StaffChatMemberLike): string {
+  return getStaffChatDisplayName(member).toLowerCase()
+}
+
+/**
+ * Soft gate for UI chat affordance.
+ * Local staff (no Nexora account) and members without userProfileId cannot chat.
+ */
 export function canStaffMemberUseCommunityChat(member: StaffChatMemberLike | null | undefined): boolean {
   if (!member) return false
   if (member.itemType === 'invite') return false
+  if (member.isLocalStaff) return false
+  if (!String(member.userProfileId ?? '').trim()) return false
 
   const status = String(member.status ?? member.apiStatus ?? '').trim()
-  if (
-    status === 'Pending'
-    || status === 'Pending Setup'
-    || status === 'Pending Acceptance'
-    || status === 'WaitingStaffAcceptance'
-    || status === 'StaffRejected'
-  ) {
-    return false
-  }
+  if (STAFF_CHAT_BLOCKED_STATUSES.has(status)) return false
 
-  return Boolean(String(member.staffProfileId ?? '').trim())
+  return true
 }
 
+/**
+ * StaffDetailByCodeDto does not include `userProfileId` (list DTO does).
+ * Prefer detail fields, but fill chat identity from a list/cache match when missing.
+ */
+export function enrichStaffMemberChatIdentity<T extends StaffChatMemberLike>(
+  detail: T | null | undefined,
+  listItem: StaffChatMemberLike | null | undefined,
+): T | StaffChatMemberLike | null {
+  if (!detail && !listItem) return null
+  if (!detail) return listItem ?? null
+  if (!listItem) return detail
+
+  const detailUserProfileId = String(detail.userProfileId ?? '').trim()
+  const listUserProfileId = String(listItem.userProfileId ?? '').trim()
+
+  return {
+    ...listItem,
+    ...detail,
+    userProfileId: detailUserProfileId || listUserProfileId || null,
+    isLocalStaff: detail.isLocalStaff ?? listItem.isLocalStaff ?? false,
+  }
+}
+
+/** `userProfileId` from GET /merchant/staff — required by POST /community/chat/sessions. */
+export function resolveStaffChatParticipantUserProfileId(
+  member: StaffChatMemberLike,
+): string | null {
+  const userProfileId = String(member.userProfileId ?? '').trim()
+  return userProfileId || null
+}
+
+/** @deprecated Use resolveStaffChatParticipantUserProfileId — sessions expect userProfileId, not staffProfileId. */
 export function resolveStaffChatParticipantStaffProfileId(
   member: StaffChatMemberLike,
 ): string | null {
-  const staffProfileId = String(member.staffProfileId ?? '').trim()
-  return staffProfileId || null
+  return resolveStaffChatParticipantUserProfileId(member)
 }
 
 export function findStaffCommunityChatSession(
@@ -54,15 +101,20 @@ export function findStaffCommunityChatSession(
   sessions: CommunityChatSession[],
   currentUserProfileId: string,
 ): CommunityChatSession | null {
+  const participantUserProfileId = resolveStaffChatParticipantUserProfileId(member)
   const staffName = normalizeStaffDisplayName(member)
-  if (!staffName) return null
+  if (!participantUserProfileId && !staffName) return null
 
-  return sessions.find((session) => {
+  const matches = sessions.filter((session) => {
     if (session.chatType !== CommunityChatType.OneOnOne) return false
-    const other = session.participants.find(
-      (participant) => participant.isActive && participant.userProfileId !== currentUserProfileId,
-    )
+    const other = getOneOnOnePeerParticipant(session, currentUserProfileId)
     if (!other) return false
+    if (participantUserProfileId) {
+      return isSameCommunityChatProfileId(other.userProfileId, participantUserProfileId)
+    }
     return normalizeStaffDisplayName({ fullName: other.fullName }) === staffName
-  }) ?? null
+  })
+
+  if (matches.length === 0) return null
+  return matches.reduce(preferCommunityChatSession)
 }

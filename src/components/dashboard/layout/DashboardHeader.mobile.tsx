@@ -25,6 +25,10 @@ import { truncateTransactionId } from '../../ui/CopyableTransactionId'
 import HeaderEcosystem from './HeaderEcosystem'
 import { HeaderMessages, HeaderMessagesVariant } from '../../header-messages'
 import {
+  isCommunityChatNotificationLinkTab,
+  openCommunityChatFromNotification,
+} from '../../header-messages/openCommunityChatSession'
+import {
   buildDashboardReportsPath,
   DASHBOARD_REPORTS_TAB,
 } from '../constants'
@@ -124,6 +128,8 @@ export default function DashboardHeader({
       }
       if (item.paymentId) params.paymentId = String(item.paymentId)
       navigate(buildDashboardReportsPath(params))
+    } else if (isCommunityChatNotificationLinkTab(item.linkTab)) {
+      openCommunityChatFromNotification(item)
     } else if (item.linkTab) {
       onNavigateMenu(item.linkTab)
     }

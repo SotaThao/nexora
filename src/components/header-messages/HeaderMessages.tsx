@@ -2,12 +2,19 @@ import { ArrowLeft, MessagesSquare, Search, Users, X } from 'lucide-react'
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { createPortal } from 'react-dom'
 import { useAuth } from '../../auth/useAuth'
+import { useSessionRole } from '../../auth/useSessionRole'
 import { CommunityChatType } from '../../constants/communityChat'
-import { useCommunityChatSessions, useMarkCommunityChatSessionRead } from '../../data/hooks/useCommunityChat'
+import { useCommunityChatSession, useCommunityChatSessions, useMarkCommunityChatSessionRead } from '../../data/hooks/useCommunityChat'
+import { useHydrateCommunityChatLastMessagePreviews } from '../../data/hooks/useHydrateCommunityChatLastMessagePreviews'
+import { useProfileSettings } from '../../data/hooks/useProfileSettings'
+import { useStaffBusinesses } from '../../data/hooks/useStaffSelf'
+import { dedupeCommunityChatSessions } from '../../data/communityChatSessionUtils'
 import { useTranslation } from '../../contexts/LanguageContext'
+import { useNotification } from '../../contexts/NotificationContext'
 import IconButton from '../ui/IconButton'
 import HeaderMessageChatWindow from './HeaderMessageChatWindow'
 import HeaderMessagesEmptyState from './HeaderMessagesEmptyState'
+import HeaderMessagesListSkeleton from './HeaderMessagesListSkeleton'
 import {
   formatHeaderMessagesUnreadCount,
   HEADER_MESSAGES_I18N,
@@ -24,6 +31,10 @@ import { formatHeaderMessageDateTime } from './headerMessagesFormatters'
 import {
   mapCommunityChatSessionToConversation,
 } from './headerMessagesMappers'
+import {
+  OPEN_COMMUNITY_CHAT_SESSION_EVENT,
+  type OpenCommunityChatSessionDetail,
+} from './openCommunityChatSession'
 import { useCommunityChatRealtime } from './useCommunityChatRealtime'
 import { useDesktopChatSessions } from './useDesktopChatSessions'
 import './header-messages.css'
@@ -35,7 +46,6 @@ interface HeaderMessagesProps {
 
 function getConversationPreview(
   conversation: HeaderMessageConversation,
-  previewKey: HeaderMessageListPreviewKey,
   t: (key: string) => string,
 ): string {
   if (conversation.lastMessagePreviewText) {
@@ -44,39 +54,29 @@ function getConversationPreview(
   if (conversation.lastMessagePreviewKey) {
     return t(`${HEADER_MESSAGES_I18N}.chat.${conversation.lastMessagePreviewKey}`)
   }
-  if (conversation.updatedAt) {
-    return t(`${HEADER_MESSAGES_I18N}.chat.lastMessageFallback`)
-  }
-  return t(`${HEADER_MESSAGES_I18N}.${previewKey}`)
+  return ''
 }
 
 export default function HeaderMessages({ variant }: HeaderMessagesProps) {
   const { t, currentLanguage } = useTranslation()
+  const { showToast } = useNotification()
   const { session, status } = useAuth()
   const containerRef = useRef<HTMLDivElement>(null)
   const [open, setOpen] = useState(false)
   const [activeTab, setActiveTab] = useState<HeaderMessagesTab>(HeaderMessagesTab.Messages)
   const [searchQuery, setSearchQuery] = useState('')
   const [mobileActiveConversation, setMobileActiveConversation] = useState<HeaderMessageConversation | null>(null)
+  const [pendingOpenSessionId, setPendingOpenSessionId] = useState<string | null>(null)
 
   const currentUserProfileId = session?.id ?? ''
   const isAuthenticated = status === 'authenticated'
-
-  useCommunityChatRealtime()
-
-  const {
-    data: chatSessions = [],
-    isLoading: isSessionsLoading,
-    isError: isSessionsError,
-  } = useCommunityChatSessions({ enabled: isAuthenticated })
-
-  const markSessionReadMutation = useMarkCommunityChatSessionRead()
-
+  const { isStaff } = useSessionRole()
   const isDesktop = variant === HeaderMessagesVariant.Desktop
   const {
     sessions: desktopChatSessions,
     focusConversationId: desktopChatFocusId,
     openConversation: openDesktopConversation,
+    ensureConversationOpen: ensureDesktopConversationOpen,
     toggleMinimize: toggleDesktopChatMinimize,
     closeConversation: closeDesktopChat,
   } = useDesktopChatSessions({
@@ -84,16 +84,156 @@ export default function HeaderMessages({ variant }: HeaderMessagesProps) {
     messagesPanelOpen: open,
   })
 
+  const canLoadMessenger = isAuthenticated && (
+    open
+    || Boolean(pendingOpenSessionId)
+    || desktopChatSessions.length > 0
+  )
+
+  useCommunityChatRealtime({ enabled: canLoadMessenger })
+
+  const {
+    data: chatSessions = [],
+    isLoading: isSessionsLoading,
+    isError: isSessionsError,
+  } = useCommunityChatSessions({ enabled: canLoadMessenger && open })
+
+  const { data: pendingSession, isError: isPendingSessionError, isFetched: isPendingSessionFetched } = useCommunityChatSession(
+    pendingOpenSessionId,
+    { enabled: Boolean(pendingOpenSessionId) },
+  )
+
+  const { data: staffBusinesses = [] } = useStaffBusinesses({
+    enabled: canLoadMessenger && isStaff,
+  })
+  const { data: profile } = useProfileSettings({
+    enabled: canLoadMessenger && !isStaff,
+  })
+
+  const businessNameById = useMemo(() => {
+    const map = new Map<string, string>()
+
+    staffBusinesses.forEach((business) => {
+      const id = String(business.businessId ?? '').trim()
+      const name = String(business.businessName ?? '').trim()
+      if (id && name) map.set(id, name)
+    })
+
+    const merchantBusinessId = String(
+      profile?.business?.businessId ?? profile?.business?.id ?? '',
+    ).trim()
+    const merchantBusinessName = String(
+      profile?.business?.businessName ?? profile?.business?.name ?? '',
+    ).trim()
+    if (merchantBusinessId && merchantBusinessName) {
+      map.set(merchantBusinessId, merchantBusinessName)
+    }
+
+    return map
+  }, [staffBusinesses, profile?.business])
+
+  const titleMapOptions = useMemo(() => ({
+    businessNameById,
+    untitledDirectLabel: t(`${HEADER_MESSAGES_I18N}.untitledDirectChat`),
+    untitledGroupLabel: t(`${HEADER_MESSAGES_I18N}.untitledGroupChat`),
+  }), [businessNameById, t])
+
+  const dedupedChatSessions = useMemo(
+    () => dedupeCommunityChatSessions(chatSessions, currentUserProfileId),
+    [chatSessions, currentUserProfileId],
+  )
+
+  useHydrateCommunityChatLastMessagePreviews(dedupedChatSessions, {
+    enabled: canLoadMessenger && open,
+  })
+
+  const markSessionReadMutation = useMarkCommunityChatSessionRead()
+
   const listPreviewKey = isDesktop
     ? HeaderMessageListPreviewKey.Desktop
     : HeaderMessageListPreviewKey.Mobile
 
   const conversations = useMemo(
-    () => chatSessions.map((chatSession) => (
-      mapCommunityChatSessionToConversation(chatSession, currentUserProfileId, listPreviewKey)
+    () => dedupedChatSessions.map((chatSession) => (
+      mapCommunityChatSessionToConversation(
+        chatSession,
+        currentUserProfileId,
+        listPreviewKey,
+        titleMapOptions,
+      )
     )),
-    [chatSessions, currentUserProfileId, listPreviewKey],
+    [dedupedChatSessions, currentUserProfileId, listPreviewKey, titleMapOptions],
   )
+
+  useEffect(() => {
+    function isDesktopViewport(): boolean {
+      return window.matchMedia('(min-width: 1024px)').matches
+    }
+
+    function handleOpenCommunityChatSession(event: Event) {
+      // Mobile + desktop HeaderMessages can both be mounted; only the
+      // viewport-matching instance should open the session.
+      if (isDesktop !== isDesktopViewport()) return
+
+      const detail = (event as CustomEvent<OpenCommunityChatSessionDetail>).detail
+      const sessionId = String(detail?.sessionId ?? '').trim()
+      if (!sessionId) return
+      setPendingOpenSessionId(sessionId)
+      if (!isDesktop) setOpen(true)
+    }
+
+    window.addEventListener(OPEN_COMMUNITY_CHAT_SESSION_EVENT, handleOpenCommunityChatSession)
+    return () => {
+      window.removeEventListener(OPEN_COMMUNITY_CHAT_SESSION_EVENT, handleOpenCommunityChatSession)
+    }
+  }, [isDesktop])
+
+  useEffect(() => {
+    if (!pendingOpenSessionId) return
+
+    if (isPendingSessionError && isPendingSessionFetched) {
+      showToast(t(`${HEADER_MESSAGES_I18N}.chat.openSessionError`), 'error')
+      setPendingOpenSessionId(null)
+      return
+    }
+
+    const fromList = dedupedChatSessions.find((sessionItem) => sessionItem.id === pendingOpenSessionId)
+    const sessionToOpen = fromList ?? pendingSession
+    if (!sessionToOpen?.id) return
+
+    const conversation = mapCommunityChatSessionToConversation(
+      sessionToOpen,
+      currentUserProfileId,
+      listPreviewKey,
+      titleMapOptions,
+    )
+
+    markSessionReadMutation.mutate(conversation.id)
+
+    if (isDesktop) {
+      ensureDesktopConversationOpen(conversation)
+    } else {
+      setMobileActiveConversation(conversation)
+      setOpen(true)
+    }
+
+    setPendingOpenSessionId(null)
+    // Intentionally omit markSessionReadMutation — use .mutate only.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [
+    currentUserProfileId,
+    dedupedChatSessions,
+    ensureDesktopConversationOpen,
+    isDesktop,
+    isPendingSessionError,
+    isPendingSessionFetched,
+    listPreviewKey,
+    pendingOpenSessionId,
+    pendingSession,
+    showToast,
+    t,
+    titleMapOptions,
+  ])
 
   const directConversations = useMemo(
     () => conversations.filter((conversation) => (
@@ -218,9 +358,7 @@ export default function HeaderMessages({ variant }: HeaderMessagesProps) {
       : HeaderMessagesEmptyVariant.Messages
 
   const conversationList = isSessionsLoading ? (
-    <div className="header-messages-list-loading" role="status">
-      {t(`${HEADER_MESSAGES_I18N}.loading`)}
-    </div>
+    <HeaderMessagesListSkeleton t={t} />
   ) : isSessionsError ? (
     <div className="header-messages-list-error" role="alert">
       {t(`${HEADER_MESSAGES_I18N}.loadError`)}
@@ -228,12 +366,15 @@ export default function HeaderMessages({ variant }: HeaderMessagesProps) {
   ) : filteredConversations.length > 0 ? (
     filteredConversations.map((conversation) => {
       const rowUnread = conversation.unreadCount ?? 0
+      const preview = getConversationPreview(conversation, t)
+      const hasPreview = Boolean(preview.trim())
       return (
         <button
           key={conversation.id}
           type="button"
           className={[
             'header-messages-item',
+            hasPreview ? '' : 'is-name-only',
             rowUnread > 0 ? 'is-unread' : '',
             (isConversationActive(conversation.id) ? 'is-active' : ''),
           ].filter(Boolean).join(' ')}
@@ -251,9 +392,9 @@ export default function HeaderMessages({ variant }: HeaderMessagesProps) {
                 </span>
               ) : null}
             </span>
-            <span className="header-messages-item-preview">
-              {getConversationPreview(conversation, listPreviewKey, t)}
-            </span>
+            {hasPreview ? (
+              <span className="header-messages-item-preview">{preview}</span>
+            ) : null}
           </span>
           {rowUnread > 0 && (
             <span className="header-messages-item-unread-badge" aria-hidden="true">

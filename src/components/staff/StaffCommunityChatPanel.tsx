@@ -1,22 +1,29 @@
 import { ImagePlus, MessagesSquare, Send } from 'lucide-react'
-import { useEffect, useMemo, useRef, useState, type ChangeEvent, type FormEvent } from 'react'
+import { useMemo, useRef, useState, type ChangeEvent, type FormEvent } from 'react'
 import { useAuth } from '../../auth/useAuth'
 import {
-  useCommunityChatMessages,
-  useMarkCommunityChatSessionRead,
+  COMMUNITY_CHAT_IMAGE_ACCEPT,
+  isAllowedCommunityChatImageFile,
+} from '../../constants/communityChat'
+import {
   useSendCommunityChatImage,
   useSendCommunityChatMessage,
 } from '../../data/hooks/useCommunityChat'
+import { useCommunityChatMessagesInfinite } from '../../data/hooks/useCommunityChatMessageThread'
 import { useStaffCommunityChatSession } from '../../data/hooks/useStaffCommunityChatSession'
 import { sendCommunityChatHubMessage } from '../../lib/communityChatHub'
 import { useNotification } from '../../contexts/NotificationContext'
 import { useTranslation } from '../../contexts/LanguageContext'
 import { resolveTranslatedApiError } from '../../utils/resolveTranslatedApiError'
 import {
-  joinCommunityChatHubSession,
-  leaveCommunityChatHubSession,
+  ensureCommunityChatHubSessionJoined,
   getCommunityChatHubConnection,
 } from '../header-messages/communityChatRealtime'
+import HeaderMessageChatBubbleMenu from '../header-messages/HeaderMessageChatBubbleMenu'
+import { useCommunityChatDeleteMessage } from '../header-messages/useCommunityChatDeleteMessage'
+import { useCommunityChatHubSendErrorToast } from '../header-messages/useCommunityChatHubSendErrorToast'
+import { useCommunityChatSessionOpen } from '../header-messages/useCommunityChatSessionOpen'
+import { useCommunityChatThreadScroll } from '../header-messages/useCommunityChatThreadScroll'
 import {
   mapCommunityChatMessageToThreadMessage,
   sortThreadMessagesForDisplay,
@@ -24,20 +31,17 @@ import {
 import { useCommunityChatRealtime } from '../header-messages/useCommunityChatRealtime'
 import { formatHeaderMessageChatTime } from '../header-messages/headerMessagesFormatters'
 import {
+  HEADER_MESSAGES_CHAT_I18N,
   HeaderChatMessageDirection,
   type HeaderChatThreadMessage,
 } from '../header-messages/headerMessagesConstants'
-import type { StaffChatMemberLike } from './staffCommunityChatUtils'
+import { getStaffChatDisplayName, type StaffChatMemberLike } from './staffCommunityChatUtils'
 import '../header-messages/header-messages.css'
 
 interface StaffCommunityChatPanelProps {
   staffMember: StaffChatMemberLike
   enabled?: boolean
   compact?: boolean
-}
-
-function getStaffDisplayName(member: StaffChatMemberLike): string {
-  return String(member.nickname || member.displayName || member.fullName || '').trim() || 'Staff'
 }
 
 export default function StaffCommunityChatPanel({
@@ -53,6 +57,7 @@ export default function StaffCommunityChatPanel({
   const fileInputRef = useRef<HTMLInputElement>(null)
   const [draft, setDraft] = useState('')
   const [isSending, setIsSending] = useState(false)
+  const [menuMessageId, setMenuMessageId] = useState<string | null>(null)
 
   useCommunityChatRealtime()
 
@@ -67,41 +72,47 @@ export default function StaffCommunityChatPanel({
   } = useStaffCommunityChatSession(staffMember, { enabled })
 
   const {
-    data: messagesPage,
+    messages: rawMessages,
     isLoading: isMessagesLoading,
     isError: isMessagesError,
-  } = useCommunityChatMessages(chatSessionId, { pageNumber: 1, pageSize: 50 }, {
+    hasOlderMessages,
+    isFetchingOlderMessages,
+    fetchOlderMessages,
+  } = useCommunityChatMessagesInfinite(chatSessionId, {
     enabled: enabled && isReady && Boolean(chatSessionId),
   })
 
   const sendMessageMutation = useSendCommunityChatMessage(chatSessionId ?? '')
   const sendImageMutation = useSendCommunityChatImage(chatSessionId ?? '')
-  const markReadMutation = useMarkCommunityChatSessionRead()
+  const { deletingMessageId, deleteMessage } = useCommunityChatDeleteMessage({
+    sessionId: chatSessionId,
+    onDeleted: () => setMenuMessageId(null),
+  })
+
+  useCommunityChatSessionOpen(chatSessionId, enabled && isReady && Boolean(chatSessionId))
+  useCommunityChatHubSendErrorToast({ fallbackErrorKey: 'staff_detail.chat_send_error' })
+
+  const chatTk = HEADER_MESSAGES_CHAT_I18N
 
   const messages = useMemo(
     () => sortThreadMessagesForDisplay(
-      (messagesPage?.items ?? []).map((message) => (
+      rawMessages.map((message) => (
         mapCommunityChatMessageToThreadMessage(message, currentUserProfileId)
       )),
     ),
-    [currentUserProfileId, messagesPage?.items],
+    [currentUserProfileId, rawMessages],
   )
 
-  useEffect(() => {
-    if (!chatSessionId || !enabled) return undefined
+  const { handleThreadScroll } = useCommunityChatThreadScroll(threadRef, {
+    enabled: enabled && isReady && Boolean(chatSessionId),
+    threadKey: chatSessionId,
+    messageCount: messages.length,
+    hasOlderMessages,
+    isFetchingOlderMessages,
+    isInitialLoading: isMessagesLoading,
+    onLoadOlder: fetchOlderMessages,
+  })
 
-    void joinCommunityChatHubSession(chatSessionId)
-    markReadMutation.mutate(chatSessionId)
-
-    return () => {
-      void leaveCommunityChatHubSession(chatSessionId)
-    }
-  }, [chatSessionId, enabled])
-
-  useEffect(() => {
-    if (!threadRef.current || isMessagesLoading) return
-    threadRef.current.scrollTop = threadRef.current.scrollHeight
-  }, [isMessagesLoading, messages.length])
 
   const handleSend = async (event?: FormEvent) => {
     event?.preventDefault()
@@ -110,6 +121,7 @@ export default function StaffCommunityChatPanel({
 
     setIsSending(true)
     try {
+      await ensureCommunityChatHubSessionJoined(chatSessionId)
       const connection = await getCommunityChatHubConnection()
       if (connection?.state === 'Connected') {
         await sendCommunityChatHubMessage(connection, { sessionId: chatSessionId, content: text })
@@ -130,7 +142,11 @@ export default function StaffCommunityChatPanel({
   const handleImagePick = async (event: ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0]
     event.target.value = ''
-    if (!file || !chatSessionId || isSending || !file.type.startsWith('image/')) return
+    if (!file || !chatSessionId || isSending) return
+    if (!isAllowedCommunityChatImageFile(file)) {
+      showToast(t(`${chatTk}.imageInvalid`), 'error')
+      return
+    }
 
     setIsSending(true)
     try {
@@ -157,8 +173,20 @@ export default function StaffCommunityChatPanel({
       >
         {!isOutgoing ? (
           <span className="header-message-chat-row-avatar" aria-hidden="true">
-            {getStaffDisplayName(staffMember).slice(0, 2).toUpperCase()}
+            {getStaffChatDisplayName(staffMember).slice(0, 2).toUpperCase()}
           </span>
+        ) : null}
+        {isOutgoing ? (
+          <HeaderMessageChatBubbleMenu
+            open={menuMessageId === message.id}
+            onOpenChange={(open) => setMenuMessageId(open ? message.id : null)}
+            disabled={Boolean(deletingMessageId) || isSending}
+            menuLabel={t(`${chatTk}.messageMenu`)}
+            deleteLabel={t(`${chatTk}.delete`)}
+            deletingLabel={t(`${chatTk}.deleting`)}
+            isDeleting={deletingMessageId === message.id}
+            onDelete={() => void deleteMessage(message)}
+          />
         ) : null}
         <div
           className={[
@@ -200,10 +228,10 @@ export default function StaffCommunityChatPanel({
     )
   }
 
-  if (unavailableReason === 'no_staff_profile' && !isBootstrapping && !isReady) {
+  if (unavailableReason === 'no_user_profile' && !isBootstrapping && !isReady) {
     return (
       <div className="rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-800">
-        {t('staff_detail.chat_no_staff_profile')}
+        {t('staff_detail.chat_no_user_profile')}
       </div>
     )
   }
@@ -223,7 +251,7 @@ export default function StaffCommunityChatPanel({
         <div>
           <h2 className="text-sm font-extrabold text-nexoraText">{t('staff_detail.chat_title')}</h2>
           <p className="text-xs text-nexoraMuted">
-            {t('staff_detail.chat_subtitle', { name: getStaffDisplayName(staffMember) })}
+            {t('staff_detail.chat_subtitle', { name: getStaffChatDisplayName(staffMember) })}
           </p>
         </div>
       </div>
@@ -231,7 +259,8 @@ export default function StaffCommunityChatPanel({
       <div
         ref={threadRef}
         className={`header-message-chat-thread bg-nexoraCanvas/40 px-3 py-3${compact ? ' max-h-72' : ' max-h-[28rem]'}`}
-        aria-busy={isBootstrapping || isMessagesLoading}
+        aria-busy={isBootstrapping || isMessagesLoading || isFetchingOlderMessages}
+        onScroll={handleThreadScroll}
       >
         {isBootstrapping || isMessagesLoading ? (
           <div className="flex h-32 items-center justify-center text-sm text-nexoraMuted">
@@ -247,9 +276,16 @@ export default function StaffCommunityChatPanel({
             <p className="text-xs">{t('staff_detail.chat_empty_subtitle')}</p>
           </div>
         ) : (
-          <div className="header-message-chat-thread-list space-y-2">
-            {messages.map(renderMessage)}
-          </div>
+          <>
+            {isFetchingOlderMessages ? (
+              <div className="header-message-chat-load-older" role="status">
+                {t(`${chatTk}.loadingOlder`)}
+              </div>
+            ) : null}
+            <div className="header-message-chat-thread-list space-y-2">
+              {messages.map(renderMessage)}
+            </div>
+          </>
         )}
       </div>
 
@@ -260,7 +296,7 @@ export default function StaffCommunityChatPanel({
         <input
           ref={fileInputRef}
           type="file"
-          accept="image/jpeg,image/png,image/jpg"
+          accept={COMMUNITY_CHAT_IMAGE_ACCEPT}
           className="sr-only"
           tabIndex={-1}
           aria-hidden="true"

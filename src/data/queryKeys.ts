@@ -505,6 +505,8 @@ export const qk = {
   communityChatMessagesRoot: (sessionId?: string | null) => ['communityChat', 'messages', sessionId ?? ''] as const,
   communityChatMessages: (sessionId?: string | null, filters = EMPTY) =>
     ['communityChat', 'messages', sessionId ?? '', filters] as const,
+  communityChatMessagesInfinite: (sessionId?: string | null, pageSize?: number) =>
+    ['communityChat', 'messages', sessionId ?? '', 'infinite', pageSize ?? 20] as const,
 
   // Nexora Voice trial (merchant)
   voiceTrialRequestMe: () => ['nexora-voice', 'trial-request', 'me'],

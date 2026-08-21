@@ -4,6 +4,7 @@ import { AlertCircle, Plus, HelpCircle, Trash2, User, QrCode, Eye, Link, Copy, X
 import { useTranslation } from '../../../contexts/LanguageContext'
 import { useNotification } from '../../../contexts/NotificationContext'
 import StaffCommunityChatModal from '../../staff/StaffCommunityChatModal'
+import { canStaffMemberUseCommunityChat } from '../../staff/staffCommunityChatUtils'
 import { StatusFilter } from '../../../data/hooks/useMerchantStaff'
 import { buildPublicInviteLink } from '../../../utils/inviteRef'
 import { getWebUrlOrigin } from '../../../utils/webUrlBase'
@@ -298,13 +299,15 @@ function StaffMemberCard({
           )}
           {!isPending && (
             <>
-              <IconButton
-                label={t('components.dashboard.views.StaffView.manage_chat')}
-                onClick={() => onChat(member)}
-                className="hover:text-nexoraBrand"
-              >
-                <MessagesSquare className="h-4 w-4" />
-              </IconButton>
+              {canStaffMemberUseCommunityChat(member) && (
+                <IconButton
+                  label={t('components.dashboard.views.StaffView.manage_chat')}
+                  onClick={() => onChat(member)}
+                  className="hover:text-nexoraBrand"
+                >
+                  <MessagesSquare className="h-4 w-4" />
+                </IconButton>
+              )}
               <IconButton label={t('components.dashboard.views.StaffView.manage_edit_profile')} onClick={() => onViewDetail(member)} className="hover:text-nexoraBrand">
                 <User className="h-4 w-4" />
               </IconButton>

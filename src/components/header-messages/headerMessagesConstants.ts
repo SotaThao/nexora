@@ -36,6 +36,12 @@ export enum HeaderChatMessageReceiptStatus {
   Read = 'read',
 }
 
+/** Floating message-actions menu (⋮) layout tokens. */
+export const HEADER_MESSAGE_CHAT_MENU_PANEL_WIDTH_PX = 152
+export const HEADER_MESSAGE_CHAT_MENU_GAP_PX = 6
+export const HEADER_MESSAGE_CHAT_MENU_Z_INDEX = 100_000
+export const HEADER_MESSAGE_CHAT_MENU_OPEN_ABOVE_MIN_TOP_PX = 120
+
 export interface HeaderMessageConversation {
   id: string
   name: string
@@ -193,6 +199,7 @@ export const HEADER_MESSAGES_CHAT_I18N = `${HEADER_MESSAGES_I18N}.chat` as const
 
 export const HEADER_MESSAGES_UNREAD_BADGE_MAX = 99
 export const HEADER_MESSAGES_UNREAD_BADGE_OVERFLOW_LABEL = '99+'
+export const HEADER_MESSAGES_LIST_SKELETON_COUNT = 5
 
 export const HEADER_MESSAGE_CHAT_LOADING_MS = 900
 export const HEADER_MESSAGE_RECEIPT_READ_MS = 2800

@@ -150,6 +150,7 @@ export function normalizeStaffListItem(dto: StaffListItemApiDto): StaffMember {
     staffLinkId: itemType === 'link' ? (dto.staffLinkId ?? dto.linkId ?? dto.id) : null,
     inviteId: itemType === 'invite' ? (dto.inviteId ?? dto.id) : null,
     staffProfileId: dto.staffProfileId ?? null,
+    userProfileId: dto.userProfileId ?? dto.user?.userProfileId ?? null,
     staffCode: dto.staffCode ?? null,
     refCode: dto.refCode ?? null,
     source: dto.source ?? dto.inviteSource ?? null,
@@ -232,6 +233,8 @@ export function normalizeInviteToStaffMember(invite: MerchantStaffInvite): Staff
     paymentAccounts,
     payoutConfigs,
     paymentMethods,
+    userProfileId: null,
+    isLocalStaff: false,
   }
 }
 
@@ -446,8 +449,9 @@ export function createMerchantStaffRepository(client: HttpClient = httpClient) {
     },
 
     async getByStaffCode(staffCode: string): Promise<StaffMember> {
-      // StaffDetailByCodeDto is a superset of StaffListItemDto, so the existing
-      // list normalizer covers the shared fields.
+      // StaffDetailByCodeDto is a superset of shared list fields but omits
+      // userProfileId (present on StaffListItemDto). Callers that need chat
+      // identity must enrich from the staff list.
       const dto = await client.get<StaffListItemApiDto>(
         `/api/v1/merchant/staff/${encodeURIComponent(staffCode)}`,
       )
