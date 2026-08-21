@@ -32,7 +32,7 @@ import { useStaffBusinesses } from '../../../../data/hooks/useStaffSelf'
 import { useWeeklyPayroll } from '../../../../data/hooks/useWeeklyPayroll'
 import { formatPosTime } from './posDateTime'
 import { useCancelOrder, useCompletedOrders, useOrderList, useStartOrderService } from '../../../../data/hooks/usePosOrders'
-import { useInServiceOrders } from '../../../../data/hooks/usePosCheckout'
+import { useInServiceOrders, useOrderDetails } from '../../../../data/hooks/usePosCheckout'
 import { useBookingList, useCheckInBookingFromList } from '../../../../data/hooks/usePosBooking'
 import { useTurnBoard } from '../../../../data/hooks/usePosTurnBoard'
 import { useTimeClockRoster } from '../../../../data/hooks/usePosTimeClock'
@@ -262,8 +262,8 @@ export default function PosFrontDeskView({
     enabled: activeTab === PosFrontDeskTab.TurnBoard,
   })
   // Today’s Turns needs the services completed during the same local calendar day. The
-  // completed-orders endpoint already exposes service and technician names, so keep this
-  // scoped to Turn Board and poll alongside the roster instead of adding another backend API.
+  // completed-orders endpoint supplies the ticket IDs; each detail response supplies the
+  // technician assigned to each individual service line.
   const todayCompletedOrdersQuery = useCompletedOrders(
     businessId,
     {
@@ -277,6 +277,10 @@ export default function PosFrontDeskView({
       refetchInterval: 15000,
     },
   )
+  const todayCompletedOrderIds = (todayCompletedOrdersQuery.data?.items ?? []).map((order) => order.id)
+  const todayCompletedOrderDetails = useOrderDetails(businessId, todayCompletedOrderIds, {
+    enabled: activeTab === PosFrontDeskTab.TurnBoard,
+  })
   const weeklyPayrollQuery = useWeeklyPayroll(businessId, undefined, {
     enabled: activeTab === PosFrontDeskTab.Report,
   })
@@ -724,18 +728,66 @@ export default function PosFrontDeskView({
       rows.find((row) => row.isClockedIn && !row.currentOrderId) ??
       rows.find((row) => row.isClockedIn && row.turnRank != null) ??
       rows.find((row) => row.isClockedIn)
-    const servicesByTechnician = new Map<string, Set<string>>()
-    for (const order of todayCompletedOrdersQuery.data?.items ?? []) {
-      const serviceNames = (order.serviceNames ?? []).map((service) => service.trim()).filter(Boolean)
-      if (serviceNames.length === 0) continue
-      const ticketServiceSummary = `#${order.orderNumber}: ${serviceNames.join(', ')}`
-      for (const technicianName of order.technicianNames ?? []) {
-        const technicianKey = technicianName.trim().toLocaleLowerCase()
-        if (!technicianKey) continue
-        const services = servicesByTechnician.get(technicianKey) ?? new Set<string>()
-        services.add(ticketServiceSummary)
-        servicesByTechnician.set(technicianKey, services)
+    // The completed-order list has ticket-level technician/service aggregates. They cannot
+    // tell us which technician performed which service when a ticket has multiple techs, so
+    // build the table from each order detail's serviceLines instead. Keep both identifiers as
+    // lookup keys because older responses may omit one of the display fields.
+    type TicketServices = Map<string, { orderNumber: string; services: Set<string> }>
+    const servicesByTechnicianId = new Map<string, TicketServices>()
+    const servicesByTechnicianName = new Map<string, TicketServices>()
+    const addService = (
+      target: Map<string, TicketServices>,
+      technicianKey: string | null | undefined,
+      orderId: string,
+      orderNumber: string,
+      serviceName: string,
+    ) => {
+      const key = technicianKey?.trim()
+      if (!key) return
+      const ticketServices = target.get(key) ?? new Map<string, { orderNumber: string; services: Set<string> }>()
+      const ticket = ticketServices.get(orderId) ?? { orderNumber, services: new Set<string>() }
+      ticket.services.add(serviceName)
+      ticketServices.set(orderId, ticket)
+      target.set(key, ticketServices)
+    }
+
+    for (const orderQuery of todayCompletedOrderDetails) {
+      const order = orderQuery.data
+      if (!order) continue
+      for (const line of order.serviceLines ?? []) {
+        const serviceName = line.serviceName?.trim()
+        if (!serviceName) continue
+        addService(
+          servicesByTechnicianId,
+          line.assignedPosStaffProfileId,
+          order.id,
+          order.orderNumber,
+          serviceName,
+        )
+        addService(
+          servicesByTechnicianName,
+          line.technicianName?.trim().toLocaleLowerCase(),
+          order.id,
+          order.orderNumber,
+          serviceName,
+        )
       }
+    }
+
+    const getServicesForTechnician = (row: (typeof rows)[number]) => {
+      const summaries = new Map<string, string>()
+      const technicianNameKey = row.displayName.trim().toLocaleLowerCase()
+      const ticketGroups = [
+        ...(row.posStaffProfileId ? [servicesByTechnicianId.get(row.posStaffProfileId)] : []),
+        servicesByTechnicianName.get(technicianNameKey),
+      ]
+      for (const ticketServices of ticketGroups) {
+        if (!ticketServices) continue
+        for (const [orderId, ticket] of ticketServices) {
+          summaries.set(orderId, `#${ticket.orderNumber}: ${Array.from(ticket.services).join(', ')}`)
+        }
+      }
+      return Array.from(summaries.values())
     }
 
     return (
@@ -792,9 +844,7 @@ export default function PosFrontDeskView({
               <tbody>
                 {rows.map((row) => {
                   const isNext = row.posStaffProfileId === nextTechnician?.posStaffProfileId
-                  const services = Array.from(
-                    servicesByTechnician.get(row.displayName.trim().toLocaleLowerCase()) ?? [],
-                  )
+                  const services = getServicesForTechnician(row)
                   return (
                     <tr
                       key={row.posStaffProfileId}
