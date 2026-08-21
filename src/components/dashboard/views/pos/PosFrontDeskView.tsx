@@ -121,6 +121,10 @@ function orderListStatusBadgeClass(status: string) {
   return 'bg-nexoraCanvas text-nexoraBrandDark'
 }
 
+// Not-arrived guests are bookings, not tickets, so their badge in a mixed list uses the neutral
+// fallback of the helper above rather than a Waiting/InService tint — nothing has started yet.
+const NOT_ARRIVED_BADGE_CLASS = 'bg-nexoraCanvas text-nexoraBrandDark'
+
 // POS iPad redesign — Create mode no longer carries a pre-filled customerDraft;
 // PosOrderWorkspace now collects it itself via its own 2-step Check-in
 // (PhoneCheckInStep for phone, then CustomerHeaderBar for name/email/catalog).
@@ -255,10 +259,32 @@ export default function PosFrontDeskView({
   const previousActiveTabRef = useRef<PosFrontDeskTab | null>(null)
   // Each Front Desk data set is loaded only while its tab is open. Leaving a tab disables its
   // observer; returning to it or reloading triggers a fresh request instead of background polls.
-  const { data: orderList = [], isLoading: isOrderListLoading } = useOrderList(businessId, {
-    enabled: activeTab === PosFrontDeskTab.OrderList,
-    refetchInterval: false,
+  // The ticket queue is the exception: its count is on the always-visible tab badge and the
+  // Checkout Customer cards read phone numbers out of it, so gating it on the Tickets tab made a
+  // reload on any other tab render "Tickets (0)". It loads on every tab; the effect below still
+  // refetches it on each visit to the Tickets tab, so there are no background polls either.
+  const orderListQuery = useOrderList(businessId, { refetchInterval: false })
+  const orderList = orderListQuery.data ?? []
+  const isOrderListLoading = orderListQuery.isLoading
+  // Today's appointments, for the Not Arrived chip and for the ticket counts, which include
+  // guests who have not arrived yet. Loaded on every tab for the same reason as the queue above.
+  // The filters here are deliberately narrower than any the Bookings tab can produce, so its own
+  // copy of this query keeps a separate cache entry instead of fighting over this one.
+  const todayIso = useMemo(() => formatLocalDateIso(new Date()), [])
+  const todayBookingsQuery = useBookingList(businessId, {
+    dateFrom: todayIso,
+    dateTo: todayIso,
+    pageSize: TODAY_BOOKING_PAGE_SIZE,
   })
+  const todayBookings = todayBookingsQuery.data
+  const isTodayBookingsPending = todayBookingsQuery.isPending
+  const notArrivedBookings = useMemo(
+    () =>
+      (todayBookings?.items ?? [])
+        .filter(isAwaitingArrival)
+        .sort((a, b) => bookingMinuteOfDay(a) - bookingMinuteOfDay(b)),
+    [todayBookings],
+  )
   const { data: inServiceOrders = [], isLoading: isInServiceOrdersLoading } = useInServiceOrders(businessId, {
     enabled: activeTab === PosFrontDeskTab.CheckoutCustomer,
     refetchInterval: false,
@@ -316,10 +342,18 @@ export default function PosFrontDeskView({
   // the station board), therefore relying on enable/disable alone would serve stale data.
   useEffect(() => {
     if (isAccessLoading || !access) return
-    const enteringTurnBoard =
-      activeTab === PosFrontDeskTab.TurnBoard && previousActiveTabRef.current !== PosFrontDeskTab.TurnBoard
+    const previousTab = previousActiveTabRef.current
     previousActiveTabRef.current = activeTab
-    if (!enteringTurnBoard) return
+    if (activeTab === previousTab) return
+
+    if (activeTab === PosFrontDeskTab.OrderList) {
+      // First activation is each query's own mount fetch — only a return visit needs a refetch.
+      if (previousTab === null) return
+      if (!orderListQuery.isFetching) void orderListQuery.refetch()
+      if (!todayBookingsQuery.isFetching) void todayBookingsQuery.refetch()
+      return
+    }
+    if (activeTab !== PosFrontDeskTab.TurnBoard) return
 
     if (!turnBoardQuery.isFetching) void turnBoardQuery.refetch()
     if (!todayRosterQuery.isFetching) void todayRosterQuery.refetch()
@@ -328,6 +362,8 @@ export default function PosFrontDeskView({
     activeTab,
     access,
     isAccessLoading,
+    orderListQuery,
+    todayBookingsQuery,
     todayCompletedOrdersQuery,
     todayRosterQuery,
     turnBoardQuery,
@@ -362,22 +398,6 @@ export default function PosFrontDeskView({
   // in, cancelling, and rescheduling existing bookings.
   const [isBookingModalOpen, setIsBookingModalOpen] = useState(false)
 
-  // Today's appointments, for the Not Arrived chip. Fetched only while the Tickets tab is open —
-  // the Bookings tab runs its own filtered copy of this query and the two must not fight over
-  // one cache entry, so the filters here are deliberately narrower than any the tab can produce.
-  const todayIso = useMemo(() => formatLocalDateIso(new Date()), [])
-  const { data: todayBookings, isPending: isTodayBookingsPending } = useBookingList(
-    businessId,
-    { dateFrom: todayIso, dateTo: todayIso, pageSize: TODAY_BOOKING_PAGE_SIZE },
-    { enabled: activeTab === PosFrontDeskTab.OrderList },
-  )
-  const notArrivedBookings = useMemo(
-    () =>
-      (todayBookings?.items ?? [])
-        .filter(isAwaitingArrival)
-        .sort((a, b) => bookingMinuteOfDay(a) - bookingMinuteOfDay(b)),
-    [todayBookings],
-  )
   const checkInBooking = useCheckInBookingFromList(businessId)
 
   if (isAccessLoading) {
@@ -443,22 +463,87 @@ export default function PosFrontDeskView({
 
   // Tab id doubles as its own i18n suffix (tabs.<id>) and as the ?tab= value, so the bar is
   // derived from POS_FRONT_DESK_TABS rather than re-listing all seven by hand.
+  // All counts every guest on the books today, tickets plus the appointments that have not
+  // arrived yet, so the number reads as the floor's whole workload — and its list shows them all
+  // too (see notArrivedRows below).
   const orderListFilterCounts: Record<OrderListFilter, number> = {
-    [OrderListFilter.All]: orderList.length,
-    // Not part of All on purpose — see ORDER_LIST_FILTERS.
+    [OrderListFilter.All]: orderList.length + notArrivedBookings.length,
     [OrderListFilter.NotArrived]: notArrivedBookings.length,
     [OrderListFilter.Waiting]: orderList.filter((o) => o.status === PosOrderStatus.Waiting).length,
     [OrderListFilter.InService]: orderList.filter((o) => o.status === PosOrderStatus.InService).length,
   }
 
   const tabBadges: Partial<Record<PosFrontDeskTab, number>> = {
-    [PosFrontDeskTab.OrderList]: orderList.length,
+    [PosFrontDeskTab.OrderList]: orderListFilterCounts[OrderListFilter.All],
   }
 
-  // The Not Arrived chip's list. A different shape from the other three chips because these are
-  // not tickets: there is no number to read out, nothing has started, and the only useful column
-  // is when the guest is due. The row is not tappable for the same reason — there is no ticket to
-  // open until Check In is pressed.
+  // Shared by the Not Arrived chip and by All, which lists these guests after its tickets. They
+  // are not tickets: there is no number to read out, nothing has started, and the row is not
+  // tappable — there is nothing to open until Check In is pressed.
+  const renderNotArrivedCheckInButton = (booking: BookingListItemApiDto) => (
+    <button
+      type="button"
+      onClick={() => handleCheckInBooking(booking.bookingId)}
+      disabled={checkInBooking.isPending}
+      className="shrink-0 rounded-lg border border-nexoraBrand bg-nexoraBrand h-9 px-3 text-[11px] font-bold text-white hover:bg-nexoraBrandDark disabled:opacity-60"
+    >
+      {t(tk('notArrivedCheckInAction'))}
+    </button>
+  )
+
+  const notArrivedLabel = t(tk(`orderListFilter.${OrderListFilter.NotArrived}`))
+
+  // The badge only earns its place where ticket cards sit next to these — under the Not Arrived
+  // chip every card would repeat the chip's own label.
+  const renderNotArrivedCard = (booking: BookingListItemApiDto, withStatusBadge = false) => (
+    <div
+      key={booking.bookingId}
+      className="space-y-2 rounded-2xl border border-nexoraBorder bg-nexoraSurface p-4"
+    >
+      <div className="flex items-center justify-between gap-2">
+        <span className="text-[11px] font-bold tabular-nums text-nexoraMuted">
+          {formatBookingWallClockTime(booking.scheduledAt, booking.source)}
+        </span>
+        {withStatusBadge ? (
+          <span className={`rounded-full px-2 py-0.5 text-[10px] font-black uppercase ${NOT_ARRIVED_BADGE_CLASS}`}>
+            {notArrivedLabel}
+          </span>
+        ) : null}
+      </div>
+      <p className="truncate text-sm font-bold text-nexoraText">{booking.customerName}</p>
+      <p className="truncate text-[11px] text-nexoraMuted">{joinOrEmpty(booking.serviceNames)}</p>
+      <p className="truncate text-[11px] text-nexoraMuted">{joinOrEmpty(booking.technicianNames)}</p>
+      <div className="flex justify-end border-t border-nexoraBorder pt-2">
+        {renderNotArrivedCheckInButton(booking)}
+      </div>
+    </div>
+  )
+
+  // The ticket table's eight columns, filled in for a booking: no ticket number, no elapsed time,
+  // and the "checked in at" slot carries the time the guest is due instead.
+  const renderNotArrivedOrderRow = (booking: BookingListItemApiDto) => (
+    <tr key={booking.bookingId} className="border-t border-nexoraBorder">
+      <td className="py-2 pr-3 font-mono font-bold text-nexoraMuted">—</td>
+      <td className="py-2 pr-3 font-bold text-nexoraText">{booking.customerName}</td>
+      <td className="whitespace-nowrap py-2 pr-3 tabular-nums text-nexoraMuted">
+        {formatBookingWallClockTime(booking.scheduledAt, booking.source)}
+      </td>
+      <td className="py-2 pr-3">
+        <span className={`rounded-full px-2 py-0.5 text-[10px] font-black uppercase ${NOT_ARRIVED_BADGE_CLASS}`}>
+          {notArrivedLabel}
+        </span>
+      </td>
+      <td className="py-2 pr-3 text-nexoraMuted">{joinOrEmpty(booking.technicianNames)}</td>
+      <td className="py-2 pr-3 text-nexoraMuted">{joinOrEmpty(booking.serviceNames)}</td>
+      <td className="py-2 pr-3 text-right tabular-nums text-nexoraMuted">—</td>
+      <td className="py-2 text-right">
+        <div className="flex justify-end">{renderNotArrivedCheckInButton(booking)}</div>
+      </td>
+    </tr>
+  )
+
+  // The Not Arrived chip's own list, where every row is a booking: fewer columns, since a ticket
+  // number, a status and an elapsed time would all be blank.
   const renderNotArrivedList = () => {
     if (isTodayBookingsPending) {
       return (
@@ -476,38 +561,12 @@ export default function PosFrontDeskView({
       )
     }
 
-    const renderCheckInButton = (booking: BookingListItemApiDto) => (
-      <button
-        type="button"
-        onClick={() => handleCheckInBooking(booking.bookingId)}
-        disabled={checkInBooking.isPending}
-        className="shrink-0 rounded-lg border border-nexoraBrand bg-nexoraBrand h-9 px-3 text-[11px] font-bold text-white hover:bg-nexoraBrandDark disabled:opacity-60"
-      >
-        {t(tk('notArrivedCheckInAction'))}
-      </button>
-    )
-
     if (viewMode === OrderListViewMode.Card) {
       return (
         <div
           className={`grid ${SCROLL_PANEL_MAX_HEIGHT} grid-cols-1 gap-3 overflow-y-auto pr-1 sm:grid-cols-2 lg:grid-cols-3`}
         >
-          {notArrivedBookings.map((booking) => (
-            <div
-              key={booking.bookingId}
-              className="space-y-2 rounded-2xl border border-nexoraBorder bg-nexoraSurface p-4"
-            >
-              <span className="text-[11px] font-bold tabular-nums text-nexoraMuted">
-                {formatBookingWallClockTime(booking.scheduledAt, booking.source)}
-              </span>
-              <p className="truncate text-sm font-bold text-nexoraText">{booking.customerName}</p>
-              <p className="truncate text-[11px] text-nexoraMuted">{joinOrEmpty(booking.serviceNames)}</p>
-              <p className="truncate text-[11px] text-nexoraMuted">{joinOrEmpty(booking.technicianNames)}</p>
-              <div className="flex justify-end border-t border-nexoraBorder pt-2">
-                {renderCheckInButton(booking)}
-              </div>
-            </div>
-          ))}
+          {notArrivedBookings.map((booking) => renderNotArrivedCard(booking))}
         </div>
       )
     }
@@ -536,7 +595,7 @@ export default function PosFrontDeskView({
                 <td className="py-2 pr-3 text-nexoraMuted">{joinOrEmpty(booking.technicianNames)}</td>
                 <td className="py-2 pr-3 text-nexoraMuted">{joinOrEmpty(booking.serviceNames)}</td>
                 <td className="py-2 text-right">
-                  <div className="flex justify-end">{renderCheckInButton(booking)}</div>
+                  <div className="flex justify-end">{renderNotArrivedCheckInButton(booking)}</div>
                 </td>
               </tr>
             ))}
@@ -1036,12 +1095,13 @@ export default function PosFrontDeskView({
           businessName={businessName}
           onCheckedIn={refreshFrontDeskLists}
           onFinished={() => {
-            // The old standalone Waitlist tab is gone (folded into Order List as a filter) — land
-            // on Order List pre-filtered to Waiting so the just-created ticket is visible. Fires on
-            // Done rather than on check-in itself: the operator reads the number off the thank-you
-            // screen, so the screen stays until they are finished with it.
+            // Land on the Tickets tab with the All filter: the just-created ticket is visible there
+            // together with everything else in the queue, so the operator keeps the whole floor in
+            // view instead of only the waiting guests. Fires on Done rather than on check-in itself:
+            // the operator reads the number off the thank-you screen, so the screen stays until they
+            // are finished with it.
             setActiveTab(PosFrontDeskTab.OrderList)
-            setOrderListFilter(OrderListFilter.Waiting)
+            setOrderListFilter(OrderListFilter.All)
             refreshFrontDeskLists()
           }}
         />
@@ -1110,6 +1170,12 @@ export default function PosFrontDeskView({
                 }),
               )
 
+              // All is the whole day's guests, so the appointments that have not arrived yet are
+              // listed as well as counted. They come after the tickets: nothing has started on
+              // them, and the Not Arrived chip still exists for looking at them on their own.
+              const notArrivedRows =
+                orderListFilter === OrderListFilter.All ? notArrivedBookings : []
+
               // Counted over the filtered list, not the whole queue: a badge saying "3 awaiting
               // technician" while the active filter hides all three would send staff looking for
               // rows that aren't on screen.
@@ -1149,7 +1215,7 @@ export default function PosFrontDeskView({
                 </>
               )
 
-              if (filteredOrderList.length === 0) {
+              if (filteredOrderList.length === 0 && notArrivedRows.length === 0) {
                 return (
                   <div className="rounded-xl border border-nexoraBorder bg-nexoraSurface p-6 text-center text-xs text-nexoraMuted">
                     {t(tk('orderListEmpty'))}
@@ -1280,6 +1346,7 @@ export default function PosFrontDeskView({
                         </div>
                       </div>
                     ))}
+                    {notArrivedRows.map((booking) => renderNotArrivedCard(booking, true))}
                   </div>
                   </div>
                 )
@@ -1341,6 +1408,7 @@ export default function PosFrontDeskView({
                           </td>
                         </tr>
                       ))}
+                      {notArrivedRows.map(renderNotArrivedOrderRow)}
                     </tbody>
                   </table>
                 </div>

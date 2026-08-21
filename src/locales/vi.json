@@ -3704,6 +3704,7 @@
               "colActions": "Thao tác",
               "edit": "Sửa",
               "revoke": "Thu hồi",
+              "revokeConfirmTitle": "Thu hồi quyền thiết bị",
               "revokeConfirm": "Thu hồi \"{{name}}\"? Thiết bị mất quyền ngay ở thao tác kế tiếp và phải ghép nối lại.",
               "revokedSuccess": "Đã thu hồi quyền của thiết bị.",
               "savedSuccess": "Đã cập nhật thiết bị.",
