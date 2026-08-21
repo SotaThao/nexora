@@ -46,6 +46,10 @@ import {
 import { CommunityChat } from "../components/community/CommunityChat";
 import { CommunityDirectChat } from "../components/community/CommunityDirectChat";
 
+const PosMenuUpsellPreviewPage = lazyWithRetry(
+  () => import("../components/public/booking/PosMenuUpsellPreviewPage"),
+);
+
 const scrollStoragePrefix = "nexora:route-scroll:";
 
 function routeScrollStorageKey(pathname: string, search: string) {
@@ -250,6 +254,8 @@ export default function AppRouter() {
           <Route path="/merchant/payments/:paymentId" element={<PaymentsRedirect />} />
           <Route path="/qr/:code" element={<QrRedirectPage />} />
           <Route path="/help/qr/:code" element={<HelpQrPage />} />
+          <Route path="/preview/menu" element={<PosMenuUpsellPreviewPage />} />
+          <Route path="/booking/preview" element={<PosMenuUpsellPreviewPage />} />
           <Route path="/privacy-policy" element={<PrivacyPolicyPage />} />
           <Route path="/terms-of-service" element={<TermsOfServicePage />} />
           <Route path="/design-demo/community" element={<CommunityDesignDemo />} />
