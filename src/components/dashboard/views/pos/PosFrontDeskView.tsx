@@ -707,14 +707,16 @@ export default function PosFrontDeskView({
   const renderTodayTurnsPanel = () => {
     const rosterRows = todayRosterQuery.data?.rows ?? []
     const rows = [...rosterRows].sort((a, b) => {
+      const turnsDifference = (a.turnsToday ?? 0) - (b.turnsToday ?? 0)
+      if (turnsDifference !== 0) return turnsDifference
       if (a.turnRank == null && b.turnRank == null) return a.displayName.localeCompare(b.displayName)
       if (a.turnRank == null) return 1
       if (b.turnRank == null) return -1
       return a.turnRank - b.turnRank
     })
     const totalTurnsToday = rows.reduce((total, row) => total + Math.max(0, row.turnsToday ?? 0), 0)
-    // Rows are already sorted by the server-provided turn rank above. Prefer a clocked-in,
-    // available technician, but do not require turnRank here: older roster responses can omit
+    // Rows are sorted by today's turn count above, so the first available technician has the
+    // fairest next turn. Do not require turnRank here: older roster responses can omit
     // that field even though the technician is clocked in. If every clocked-in technician is
     // currently serving, keep showing the first one in turn order instead of a misleading
     // "No upcoming turn" state.
