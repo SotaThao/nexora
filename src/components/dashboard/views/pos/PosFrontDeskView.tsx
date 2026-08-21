@@ -35,6 +35,7 @@ import { useCancelOrder, useOrderList, useStartOrderService } from '../../../../
 import { useInServiceOrders } from '../../../../data/hooks/usePosCheckout'
 import { useBookingList, useCheckInBookingFromList } from '../../../../data/hooks/usePosBooking'
 import { useTurnBoard } from '../../../../data/hooks/usePosTurnBoard'
+import { useTimeClockRoster } from '../../../../data/hooks/usePosTimeClock'
 import { formatDatePart, formatLocalDateIso } from '../../../../utils/localDate'
 import { PosOrderStatus } from '../../../../constants/posOrderStatus'
 import {
@@ -59,6 +60,7 @@ import { formatBookingWallClockTime, resolveBookingWallClockParts } from './book
 import CustomerTab from './customer/CustomerTab'
 import { formatCustomerPhone } from './customer/customerFormatters'
 import TimeClockTab from './timeclock/TimeClockTab'
+import { getLocalDayWindow } from './timeclock/timeClockDay'
 import { formatCurrency } from '../../utils'
 
 // Every string this screen passes to t() lives under one namespace — building them through tk()
@@ -253,6 +255,12 @@ export default function PosFrontDeskView({
   const initialTab: PosFrontDeskTab =
     tabFromUrl && POS_FRONT_DESK_TABS.includes(tabFromUrl) ? tabFromUrl : DEFAULT_POS_FRONT_DESK_TAB
   const [activeTab, setActiveTabState] = useState<PosFrontDeskTab>(initialTab)
+  // The Turn Board's summary uses the same local-day roster as Staffs Clock. Keep this query
+  // scoped to the Turn Board so the other POS tabs do not start a second 15s polling stream.
+  const todayTurnWindow = getLocalDayWindow()
+  const todayRosterQuery = useTimeClockRoster(businessId, todayTurnWindow, {
+    enabled: activeTab === PosFrontDeskTab.TurnBoard,
+  })
   const weeklyPayrollQuery = useWeeklyPayroll(businessId, undefined, {
     enabled: activeTab === PosFrontDeskTab.Report,
   })
@@ -325,6 +333,7 @@ export default function PosFrontDeskView({
     queryClient.invalidateQueries({ queryKey: qk.merchantPosWaitlist(businessId) })
     queryClient.invalidateQueries({ queryKey: qk.merchantPosOrderList(businessId) })
     queryClient.invalidateQueries({ queryKey: qk.merchantPosTurnBoard(businessId) })
+    queryClient.invalidateQueries({ queryKey: qk.merchantPosTimeClockRoster(businessId) })
     queryClient.invalidateQueries({ queryKey: qk.merchantPosCompletedOrders(businessId) })
   }
 
@@ -671,6 +680,100 @@ export default function PosFrontDeskView({
                     <td className="px-4 py-3 text-right tabular-nums font-bold text-nexoraText">{formatCurrency(row.takeHome)}</td>
                   </tr>
                 ))}
+              </tbody>
+            </table>
+          </div>
+        )}
+      </section>
+    )
+  }
+
+  const renderTodayTurnsPanel = () => {
+    const rosterRows = todayRosterQuery.data?.rows ?? []
+    const rows = [...rosterRows].sort((a, b) => {
+      if (a.turnRank == null && b.turnRank == null) return a.displayName.localeCompare(b.displayName)
+      if (a.turnRank == null) return 1
+      if (b.turnRank == null) return -1
+      return a.turnRank - b.turnRank
+    })
+    const totalTurnsToday = rows.reduce((total, row) => total + Math.max(0, row.turnsToday ?? 0), 0)
+    // The next turn is the first clocked-in technician in today's turn order who is not already
+    // serving. A busy tech is intentionally skipped until their station is available again.
+    const nextTechnician = rows.find(
+      (row) => row.isClockedIn && !row.currentOrderId && row.turnRank != null,
+    )
+
+    return (
+      <section
+        className="space-y-3 rounded-xl border border-nexoraBorder bg-nexoraSurface p-4"
+        aria-label={t(tk('todayTurnsTitle'))}
+        data-testid="today-turns-panel"
+      >
+        <div className="flex flex-wrap items-start justify-between gap-3">
+          <div>
+            <h2 className="text-sm font-bold text-nexoraText">{t(tk('todayTurnsTitle'))}</h2>
+            <p className="mt-0.5 text-xs text-nexoraMuted">{t(tk('todayTurnsHint'))}</p>
+          </div>
+          <div className="flex flex-wrap gap-2">
+            <div className="rounded-lg bg-nexoraCanvas px-3 py-2">
+              <p className="text-[10px] font-black uppercase tracking-wide text-nexoraMuted">
+                {t(tk('todayTurnsTotal'))}
+              </p>
+              <p className="mt-0.5 text-sm font-bold tabular-nums text-nexoraText" data-testid="today-turns-total">
+                {totalTurnsToday}
+              </p>
+            </div>
+            <div className="rounded-lg bg-nexoraCanvas px-3 py-2">
+              <p className="text-[10px] font-black uppercase tracking-wide text-nexoraMuted">
+                {t(tk('todayTurnsNext'))}
+              </p>
+              <p className="mt-0.5 max-w-[150px] truncate text-sm font-bold text-nexoraText" data-testid="today-turns-next">
+                {nextTechnician?.displayName ?? t(tk('todayTurnsNoNext'))}
+              </p>
+            </div>
+          </div>
+        </div>
+
+        {todayRosterQuery.isPending && !todayRosterQuery.data ? (
+          <SkeletonList count={3} lines={1} />
+        ) : todayRosterQuery.isError ? (
+          <p className="rounded-lg bg-nexoraCanvas p-5 text-center text-xs text-nexoraMuted">
+            {t(tk('todayTurnsError'))}
+          </p>
+        ) : rows.length === 0 ? (
+          <p className="rounded-lg bg-nexoraCanvas p-5 text-center text-xs text-nexoraMuted">
+            {t(tk('todayTurnsEmpty'))}
+          </p>
+        ) : (
+          <div className="overflow-x-auto rounded-lg border border-nexoraBorder">
+            <table className="w-full text-left text-xs">
+              <thead className="bg-nexoraCanvas text-[10px] font-black uppercase tracking-wide text-nexoraMuted">
+                <tr>
+                  <th className="px-3 py-2.5">{t(tk('todayTurnsColumnTechnician'))}</th>
+                  <th className="px-3 py-2.5 text-right">{t(tk('todayTurnsColumnTurns'))}</th>
+                </tr>
+              </thead>
+              <tbody>
+                {rows.map((row) => {
+                  const isNext = row.posStaffProfileId === nextTechnician?.posStaffProfileId
+                  return (
+                    <tr
+                      key={row.posStaffProfileId}
+                      data-testid={`today-turn-row-${row.posStaffProfileId}`}
+                      className={`border-t border-nexoraBorder/70 ${isNext ? 'bg-emerald-50/40' : ''}`}
+                    >
+                      <td className="px-3 py-2.5 font-semibold text-nexoraText">
+                        <span>{row.displayName}</span>
+                        {row.turnRank != null ? (
+                          <span className="ml-2 text-[10px] font-bold text-nexoraMuted">#{row.turnRank}</span>
+                        ) : null}
+                      </td>
+                      <td className="px-3 py-2.5 text-right font-bold tabular-nums text-nexoraText">
+                        {row.turnsToday}
+                      </td>
+                    </tr>
+                  )
+                })}
               </tbody>
             </table>
           </div>
@@ -1080,21 +1183,24 @@ export default function PosFrontDeskView({
       {activeTab === PosFrontDeskTab.CheckoutCustomer && renderCheckoutCustomerPanel()}
 
       {activeTab === PosFrontDeskTab.TurnBoard && (
-        isTurnBoardLoading ? (
-          <div className="rounded-xl border border-nexoraBorder bg-nexoraSurface p-6">
-            <SkeletonList count={3} lines={2} />
-          </div>
-        ) : turnBoard.length === 0 ? (
-          <div className="rounded-xl border border-nexoraBorder bg-nexoraSurface p-6 text-center text-xs text-nexoraMuted">
-            {t(tk('turnBoardEmpty'))}
-          </div>
-        ) : (
-          <div
-            className={`grid ${SCROLL_PANEL_MAX_HEIGHT} grid-cols-1 gap-4 overflow-y-auto pr-1 sm:grid-cols-2 lg:grid-cols-3`}
-          >
-            {turnBoard.map(renderStationCard)}
-          </div>
-        )
+        <div className="space-y-4">
+          {isTurnBoardLoading ? (
+            <div className="rounded-xl border border-nexoraBorder bg-nexoraSurface p-6">
+              <SkeletonList count={3} lines={2} />
+            </div>
+          ) : turnBoard.length === 0 ? (
+            <div className="rounded-xl border border-nexoraBorder bg-nexoraSurface p-6 text-center text-xs text-nexoraMuted">
+              {t(tk('turnBoardEmpty'))}
+            </div>
+          ) : (
+            <div
+              className={`grid ${SCROLL_PANEL_MAX_HEIGHT} grid-cols-1 gap-4 overflow-y-auto pr-1 sm:grid-cols-2 lg:grid-cols-3`}
+            >
+              {turnBoard.map(renderStationCard)}
+            </div>
+          )}
+          {renderTodayTurnsPanel()}
+        </div>
       )}
 
       {activeTab === PosFrontDeskTab.Completed && <PosCompletedOrdersPanel businessId={businessId} />}

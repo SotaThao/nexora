@@ -3228,6 +3228,15 @@
             "confirmCancelTitle": "Gỡ khỏi hàng đợi?",
             "confirmCancelBody": "\"{{name}}\" sẽ bị gỡ khỏi hàng đợi check-in.",
             "turnBoardEmpty": "Chưa có trạm thợ nào — thiết lập hồ sơ POS cho thợ trước.",
+            "todayTurnsTitle": "Lượt hôm nay",
+            "todayTurnsHint": "Số lượt và thợ đang rảnh có lượt kế tiếp hôm nay.",
+            "todayTurnsTotal": "Tổng lượt hôm nay",
+            "todayTurnsNext": "Thợ kế tiếp",
+            "todayTurnsNoNext": "Chưa có lượt sắp tới",
+            "todayTurnsColumnTechnician": "Thợ",
+            "todayTurnsColumnTurns": "Lượt",
+            "todayTurnsEmpty": "Hôm nay chưa có dữ liệu lượt.",
+            "todayTurnsError": "Không thể tải lượt hôm nay.",
             "stationStatus": {
               "Empty": "Đang trống",
               "InService": "Đang phục vụ"
