@@ -51,8 +51,10 @@ export interface HeaderMessageConversation {
   previewKey: HeaderMessageListPreviewKey
   /** i18n key under `dashboard.header.messages.chat` for the latest message preview. */
   lastMessagePreviewKey?: string
-  /** Mock-only plain preview until API returns last message text. */
+  /** Plain preview from API `lastMessagePreview` (or client patch). */
   lastMessagePreviewText?: string
+  /** API `lastMessageSenderId` — used for “You: …” prefix in the list. */
+  lastMessageSenderId?: string | null
   updatedAt: string
   unreadCount?: number
 }

@@ -8,7 +8,10 @@ import { useCommunityChatSession, useCommunityChatSessions, useMarkCommunityChat
 import { useHydrateCommunityChatLastMessagePreviews } from '../../data/hooks/useHydrateCommunityChatLastMessagePreviews'
 import { useProfileSettings } from '../../data/hooks/useProfileSettings'
 import { useStaffBusinesses } from '../../data/hooks/useStaffSelf'
-import { dedupeCommunityChatSessions } from '../../data/communityChatSessionUtils'
+import {
+  dedupeCommunityChatSessions,
+  isSameCommunityChatProfileId,
+} from '../../data/communityChatSessionUtils'
 import { useTranslation } from '../../contexts/LanguageContext'
 import { useNotification } from '../../contexts/NotificationContext'
 import IconButton from '../ui/IconButton'
@@ -46,15 +49,25 @@ interface HeaderMessagesProps {
 
 function getConversationPreview(
   conversation: HeaderMessageConversation,
-  t: (key: string) => string,
+  currentUserProfileId: string,
+  t: (key: string, params?: Record<string, string | number>) => string,
 ): string {
+  const chatTk = `${HEADER_MESSAGES_I18N}.chat`
+  let preview = ''
   if (conversation.lastMessagePreviewText) {
-    return conversation.lastMessagePreviewText
+    preview = conversation.lastMessagePreviewText
+  } else if (conversation.lastMessagePreviewKey) {
+    preview = t(`${chatTk}.${conversation.lastMessagePreviewKey}`)
+  } else if (conversation.updatedAt) {
+    preview = t(`${chatTk}.lastMessageFallback`)
   }
-  if (conversation.lastMessagePreviewKey) {
-    return t(`${HEADER_MESSAGES_I18N}.chat.${conversation.lastMessagePreviewKey}`)
+
+  if (!preview) return ''
+
+  if (isSameCommunityChatProfileId(conversation.lastMessageSenderId, currentUserProfileId)) {
+    return `${t(`${chatTk}.you`)}: ${preview}`
   }
-  return ''
+  return preview
 }
 
 export default function HeaderMessages({ variant }: HeaderMessagesProps) {
@@ -366,7 +379,7 @@ export default function HeaderMessages({ variant }: HeaderMessagesProps) {
   ) : filteredConversations.length > 0 ? (
     filteredConversations.map((conversation) => {
       const rowUnread = conversation.unreadCount ?? 0
-      const preview = getConversationPreview(conversation, t)
+      const preview = getConversationPreview(conversation, currentUserProfileId, t)
       const hasPreview = Boolean(preview.trim())
       return (
         <button

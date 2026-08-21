@@ -3,6 +3,7 @@ import { qk } from '../queryKeys'
 import communityChatRepository, {
   type ListCommunityChatMessagesParams,
 } from '../repositories/communityChat'
+import { COMMUNITY_CHAT_MISSING_SESSION_ERROR } from '../../constants/communityChatErrors'
 import type {
   AddCommunityChatParticipantInput,
   CommunityChatMessage,
@@ -81,12 +82,21 @@ export function useCreateCommunityChatSession() {
 export function useSendCommunityChatMessage(sessionId: string) {
   const queryClient = useQueryClient()
 
-  return useMutation<CommunityChatMessage, Error, SendCommunityChatMessageInput>({
-    mutationFn: (input) => communityChatRepository.sendMessage(sessionId, input),
-    onSuccess: (message) => {
+  return useMutation<
+    CommunityChatMessage,
+    Error,
+    SendCommunityChatMessageInput & { sessionId?: string }
+  >({
+    mutationFn: (input) => {
+      const id = String(input.sessionId || sessionId || '').trim()
+      if (!id) return Promise.reject(new Error(COMMUNITY_CHAT_MISSING_SESSION_ERROR))
+      return communityChatRepository.sendMessage(id, { content: input.content })
+    },
+    onSuccess: (message, variables) => {
+      const id = message.chatSessionId || variables.sessionId || sessionId
       patchCommunityChatMessagesCache(queryClient, message)
       patchCommunityChatSessionLastMessage(queryClient, message)
-      queryClient.invalidateQueries({ queryKey: qk.communityChatSession(sessionId) })
+      queryClient.invalidateQueries({ queryKey: qk.communityChatSession(id) })
     },
   })
 }
@@ -94,8 +104,19 @@ export function useSendCommunityChatMessage(sessionId: string) {
 export function useSendCommunityChatImage(sessionId: string) {
   const queryClient = useQueryClient()
 
-  return useMutation<CommunityChatMessage, Error, File>({
-    mutationFn: (file) => communityChatRepository.sendImage(sessionId, file),
+  return useMutation<
+    CommunityChatMessage,
+    Error,
+    File | { file: File; sessionId?: string }
+  >({
+    mutationFn: (input) => {
+      const file = input instanceof File ? input : input.file
+      const id = String(
+        (input instanceof File ? sessionId : input.sessionId) || sessionId || '',
+      ).trim()
+      if (!id) return Promise.reject(new Error(COMMUNITY_CHAT_MISSING_SESSION_ERROR))
+      return communityChatRepository.sendImage(id, file)
+    },
     onSuccess: (message) => {
       patchCommunityChatMessagesCache(queryClient, message)
       patchCommunityChatSessionLastMessage(queryClient, message)

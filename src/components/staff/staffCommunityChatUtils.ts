@@ -1,22 +1,36 @@
-import { CommunityChatType } from '../../constants/communityChat'
+import {
+  CommunityChatType,
+  buildPendingCommunityChatSessionId,
+} from '../../constants/communityChat'
 import {
   getOneOnOnePeerParticipant,
   isSameCommunityChatProfileId,
   preferCommunityChatSession,
 } from '../../data/communityChatSessionUtils'
 import type { CommunityChatSession } from '../../types/communityChat'
+import {
+  HeaderMessageListPreviewKey,
+  type HeaderMessageConversation,
+} from '../header-messages/headerMessagesConstants'
+import { getHeaderMessageContactInitials } from '../header-messages/headerMessagesMappers'
+import {
+  STAFF_CHAT_BLOCKED_STATUSES,
+  STAFF_CHAT_FALLBACK_DISPLAY_NAME,
+  STAFF_CHAT_WINDOW_KEY_FALLBACK,
+  StaffChatUnavailableReason,
+} from './constants'
 
-/** Fallback when staff nickname/displayName/fullName are all empty. */
-export const STAFF_CHAT_FALLBACK_DISPLAY_NAME = 'Staff' as const
+export {
+  STAFF_CHAT_BLOCKED_STATUSES,
+  STAFF_CHAT_FALLBACK_DISPLAY_NAME,
+  STAFF_CHAT_WINDOW_KEY_FALLBACK,
+  StaffChatUnavailableReason,
+} from './constants'
 
-/** Staff statuses that cannot open community chat yet. */
-export const STAFF_CHAT_BLOCKED_STATUSES = new Set([
-  'Pending',
-  'Pending Setup',
-  'Pending Acceptance',
-  'WaitingStaffAcceptance',
-  'StaffRejected',
-])
+export {
+  isPendingCommunityChatSessionId as isPendingStaffChatSessionId,
+  buildPendingCommunityChatSessionId as buildPendingStaffChatSessionId,
+} from '../../constants/communityChat'
 
 export interface StaffChatMemberLike {
   id?: string
@@ -38,6 +52,41 @@ export function getStaffChatDisplayName(member: StaffChatMemberLike): string {
     || STAFF_CHAT_FALLBACK_DISPLAY_NAME
 }
 
+/** Stable key for multi-window staff chat (dedupe open windows). */
+export function getStaffChatWindowKey(member: StaffChatMemberLike | null | undefined): string {
+  if (!member) return ''
+  return String(
+    member.userProfileId
+      || member.staffCode
+      || member.staffProfileId
+      || member.id
+      || '',
+  ).trim()
+}
+
+export function resolveStaffChatWindowKey(
+  member: StaffChatMemberLike | null | undefined,
+): string {
+  return getStaffChatWindowKey(member) || STAFF_CHAT_WINDOW_KEY_FALLBACK
+}
+
+export function buildStaffChatConversation(params: {
+  chatSessionId: string | null | undefined
+  windowKey: string
+  displayName: string
+}): HeaderMessageConversation {
+  const displayName = params.displayName
+  return {
+    id: params.chatSessionId || buildPendingCommunityChatSessionId(params.windowKey),
+    name: displayName,
+    initials: getHeaderMessageContactInitials(displayName),
+    chatType: CommunityChatType.OneOnOne,
+    previewKey: HeaderMessageListPreviewKey.Desktop,
+    updatedAt: '',
+    unreadCount: 0,
+  }
+}
+
 function normalizeStaffDisplayName(member: StaffChatMemberLike): string {
   return getStaffChatDisplayName(member).toLowerCase()
 }
@@ -53,14 +102,23 @@ export function canStaffMemberUseCommunityChat(member: StaffChatMemberLike | nul
   if (!String(member.userProfileId ?? '').trim()) return false
 
   const status = String(member.status ?? member.apiStatus ?? '').trim()
-  if (STAFF_CHAT_BLOCKED_STATUSES.has(status)) return false
+  return !STAFF_CHAT_BLOCKED_STATUSES.has(status)
+}
 
-  return true
+export function resolveStaffChatUnavailableReason(params: {
+  chatAvailable: boolean
+  participantUserProfileId: string | null
+  hasExistingSession: boolean
+}): StaffChatUnavailableReason | null {
+  if (!params.chatAvailable) return StaffChatUnavailableReason.Ineligible
+  if (!params.participantUserProfileId && !params.hasExistingSession) {
+    return StaffChatUnavailableReason.NoUserProfile
+  }
+  return null
 }
 
 /**
- * StaffDetailByCodeDto does not include `userProfileId` (list DTO does).
- * Prefer detail fields, but fill chat identity from a list/cache match when missing.
+ * Prefer detail fields; if detail omits `userProfileId`, fill from list/cache match.
  */
 export function enrichStaffMemberChatIdentity<T extends StaffChatMemberLike>(
   detail: T | null | undefined,

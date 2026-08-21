@@ -1,11 +1,14 @@
-import { useEffect, useMemo, useRef, useState } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { useAuth } from '../../auth/useAuth'
 import {
   canStaffMemberUseCommunityChat,
   findStaffCommunityChatSession,
+  getStaffChatWindowKey,
   resolveStaffChatParticipantUserProfileId,
+  resolveStaffChatUnavailableReason,
   type StaffChatMemberLike,
 } from '../../components/staff/staffCommunityChatUtils'
+import { STAFF_CHAT_ENSURE_SESSION_PRECONDITION_ERROR } from '../../components/staff/constants'
 import type { CommunityChatSession } from '../../types/communityChat'
 import { useProfileSettings } from './useProfileSettings'
 import { useCommunityChatSessions, useCreateCommunityChatSession } from './useCommunityChat'
@@ -19,6 +22,15 @@ const pendingSessionCreates = new Map<string, Promise<CommunityChatSession>>()
 
 function getStaffChatCreateKey(businessId: string, participantUserProfileId: string) {
   return `${businessId}:${participantUserProfileId}`
+}
+
+function attachSessionId(
+  sessionId: string,
+  setChatSessionId: (id: string | null) => void,
+  chatSessionIdRef: { current: string | null },
+) {
+  chatSessionIdRef.current = sessionId
+  setChatSessionId(sessionId)
 }
 
 export function useStaffCommunityChatSession(
@@ -36,14 +48,9 @@ export function useStaffCommunityChatSession(
   })
 
   const createSessionMutation = useCreateCommunityChatSession()
-  const bootstrapAttemptedRef = useRef(false)
 
   const participantUserProfileId = useMemo(
-    () => (
-      staffMember
-        ? resolveStaffChatParticipantUserProfileId(staffMember)
-        : null
-    ),
+    () => (staffMember ? resolveStaffChatParticipantUserProfileId(staffMember) : null),
     [staffMember],
   )
 
@@ -51,10 +58,10 @@ export function useStaffCommunityChatSession(
     () => (
       staffMember
         ? findStaffCommunityChatSession(
-            staffMember,
-            sessionsQuery.data ?? [],
-            currentUserProfileId,
-          )
+          staffMember,
+          sessionsQuery.data ?? [],
+          currentUserProfileId,
+        )
         : null
     ),
     [currentUserProfileId, sessionsQuery.data, staffMember],
@@ -62,30 +69,35 @@ export function useStaffCommunityChatSession(
 
   const [chatSessionId, setChatSessionId] = useState<string | null>(null)
   const [bootstrapError, setBootstrapError] = useState<unknown>(null)
-
-  const staffKey = staffMember?.userProfileId
-    ?? staffMember?.staffProfileId
-    ?? staffMember?.staffCode
-    ?? staffMember?.id
-    ?? ''
+  const chatSessionIdRef = useRef<string | null>(null)
+  const staffKey = getStaffChatWindowKey(staffMember)
 
   useEffect(() => {
-    bootstrapAttemptedRef.current = false
+    chatSessionIdRef.current = null
     setChatSessionId(null)
     setBootstrapError(null)
   }, [staffKey])
 
   useEffect(() => {
     if (!chatAvailable || sessionsQuery.isLoading || sessionsQuery.isFetching) return
+    if (!existingSession?.id) return
+    attachSessionId(existingSession.id, setChatSessionId, chatSessionIdRef)
+  }, [
+    chatAvailable,
+    existingSession?.id,
+    sessionsQuery.isFetching,
+    sessionsQuery.isLoading,
+  ])
 
+  const ensureSession = useCallback(async (): Promise<string> => {
+    if (chatSessionIdRef.current) return chatSessionIdRef.current
     if (existingSession?.id) {
-      setChatSessionId(existingSession.id)
-      return
+      attachSessionId(existingSession.id, setChatSessionId, chatSessionIdRef)
+      return existingSession.id
     }
-
-    if (!participantUserProfileId || !businessId) return
-    if (bootstrapAttemptedRef.current) return
-    bootstrapAttemptedRef.current = true
+    if (!participantUserProfileId || !businessId) {
+      throw new Error(STAFF_CHAT_ENSURE_SESSION_PRECONDITION_ERROR)
+    }
 
     const createKey = getStaffChatCreateKey(businessId, participantUserProfileId)
     let createPromise = pendingSessionCreates.get(createKey)
@@ -100,46 +112,46 @@ export function useStaffCommunityChatSession(
       })
     }
 
-    createPromise
-      .then((session) => setChatSessionId(session.id))
-      .catch((error) => {
-        bootstrapAttemptedRef.current = false
-        setBootstrapError(error)
-      })
-    // createSessionMutation identity is stable; omit to avoid re-bootstrap loops.
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+    try {
+      const session = await createPromise
+      attachSessionId(session.id, setChatSessionId, chatSessionIdRef)
+      setBootstrapError(null)
+      return session.id
+    } catch (error) {
+      setBootstrapError(error)
+      throw error
+    }
   }, [
     businessId,
-    chatAvailable,
+    createSessionMutation,
     existingSession?.id,
     participantUserProfileId,
-    sessionsQuery.isFetching,
-    sessionsQuery.isLoading,
   ])
 
-  const unavailableReason = !chatAvailable
-    ? 'ineligible'
-    : !participantUserProfileId && !existingSession
-      ? 'no_user_profile'
-      : null
+  const unavailableReason = resolveStaffChatUnavailableReason({
+    chatAvailable,
+    participantUserProfileId,
+    hasExistingSession: Boolean(existingSession),
+  })
 
-  const isBootstrapping = chatAvailable && (
-    sessionsQuery.isLoading
-    || sessionsQuery.isFetching
-    || createSessionMutation.isPending
-    || (
-      !chatSessionId
-      && !bootstrapError
-      && Boolean(participantUserProfileId && businessId)
-    )
+  const canComposeNew = Boolean(participantUserProfileId && businessId)
+  const sessionsSettled = !sessionsQuery.isLoading && !sessionsQuery.isFetching
+
+  /** Sessions list loaded — existing thread attached, or new chat can compose without create yet. */
+  const isReady = chatAvailable && sessionsSettled && (
+    Boolean(chatSessionId)
+    || (canComposeNew && !sessionsQuery.isError)
   )
+
+  const isBootstrapping = chatAvailable && !sessionsSettled
 
   return {
     chatSessionId,
     chatAvailable,
-    isReady: Boolean(chatSessionId),
+    isReady,
     isBootstrapping,
     bootstrapError,
+    ensureSession,
     participantUserProfileId,
     /** @deprecated Prefer participantUserProfileId */
     participantStaffProfileId: participantUserProfileId,

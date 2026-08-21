@@ -18,3 +18,6 @@ export const CommunityChatErrorCode = {
 
 export type CommunityChatErrorCodeValue =
   (typeof CommunityChatErrorCode)[keyof typeof CommunityChatErrorCode]
+
+/** Client guard when send/create is attempted without a session id. */
+export const COMMUNITY_CHAT_MISSING_SESSION_ERROR = 'Missing chat session' as const

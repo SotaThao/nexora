@@ -70,6 +70,17 @@ export function isAllowedCommunityChatImageFile(file: File | null | undefined): 
   return hasAllowedExtension || hasAllowedMime
 }
 
+/** Client-only conversation id until POST /community/chat/sessions runs. */
+export const COMMUNITY_CHAT_PENDING_SESSION_ID_PREFIX = 'pending:' as const
+
+export function buildPendingCommunityChatSessionId(windowKey: string): string {
+  return `${COMMUNITY_CHAT_PENDING_SESSION_ID_PREFIX}${windowKey}`
+}
+
+export function isPendingCommunityChatSessionId(sessionId: string | null | undefined): boolean {
+  return String(sessionId ?? '').startsWith(COMMUNITY_CHAT_PENDING_SESSION_ID_PREFIX)
+}
+
 /** Deep-link path segment for push notification actionUrl. */
 export const COMMUNITY_CHAT_SESSION_PATH_PREFIX = '/community-chat/sessions'
 

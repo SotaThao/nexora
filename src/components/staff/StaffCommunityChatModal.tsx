@@ -1,39 +1,47 @@
-import { Loader2 } from 'lucide-react'
 import { useEffect, useMemo, useRef, useState } from 'react'
-import { createPortal } from 'react-dom'
 import { useAuth } from '../../auth/useAuth'
-import { CommunityChatType } from '../../constants/communityChat'
 import { useStaffCommunityChatSession } from '../../data/hooks/useStaffCommunityChatSession'
 import { useNotification } from '../../contexts/NotificationContext'
 import { useTranslation } from '../../contexts/LanguageContext'
-import { resolveTranslatedApiError } from '../../utils/resolveTranslatedApiError'
 import HeaderMessageChatWindow from '../header-messages/HeaderMessageChatWindow'
-import { getHeaderMessageContactInitials } from '../header-messages/headerMessagesMappers'
 import { useCommunityChatRealtime } from '../header-messages/useCommunityChatRealtime'
 import { useMobileMessengerScrollLock } from '../header-messages/useMobileMessengerScrollLock'
+import { HeaderMessageChatLayout } from '../header-messages/headerMessagesConstants'
 import {
-  HEADER_MESSAGE_DESKTOP_EDGE_INSET_PX,
-  HeaderMessageChatLayout,
-  HeaderMessageListPreviewKey,
-  type HeaderMessageConversation,
-} from '../header-messages/headerMessagesConstants'
+  STAFF_CHAT_CLOSE_TOAST_BY_REASON,
+  STAFF_CHAT_DESKTOP_MESSENGER_MEDIA_QUERY,
+  StaffChatUnavailableReason,
+} from './constants'
 import {
+  buildStaffChatConversation,
   getStaffChatDisplayName,
+  resolveStaffChatWindowKey,
   type StaffChatMemberLike,
 } from './staffCommunityChatUtils'
 
 interface StaffCommunityChatModalProps {
   staffMember: StaffChatMemberLike
   onClose: () => void
+  /** Desktop floating stack — fullscreen on mobile single-chat. */
+  layout?: HeaderMessageChatLayout
+  /** Controlled minimize (multi-window stack). Uncontrolled when omitted. */
+  minimized?: boolean
+  stackRightPx?: number
+  stackIndex?: number
+  isFocused?: boolean
+  onToggleMinimize?: () => void
+  onFocus?: () => void
 }
 
 function useIsDesktopMessengerViewport() {
   const [isDesktop, setIsDesktop] = useState(() => (
-    typeof window !== 'undefined' ? window.matchMedia('(min-width: 640px)').matches : true
+    typeof window !== 'undefined'
+      ? window.matchMedia(STAFF_CHAT_DESKTOP_MESSENGER_MEDIA_QUERY).matches
+      : true
   ))
 
   useEffect(() => {
-    const media = window.matchMedia('(min-width: 640px)')
+    const media = window.matchMedia(STAFF_CHAT_DESKTOP_MESSENGER_MEDIA_QUERY)
     const onChange = () => setIsDesktop(media.matches)
     onChange()
     media.addEventListener('change', onChange)
@@ -43,66 +51,78 @@ function useIsDesktopMessengerViewport() {
   return isDesktop
 }
 
+function resolveStaffChatCloseReason(params: {
+  sessionsError: boolean
+  unavailableReason: StaffChatUnavailableReason | null
+  isBootstrapping: boolean
+  isReady: boolean
+}): 'sessionsError' | StaffChatUnavailableReason | null {
+  if (params.sessionsError) return 'sessionsError'
+  if (params.isBootstrapping || params.isReady) return null
+  if (
+    params.unavailableReason === StaffChatUnavailableReason.NoUserProfile
+    || params.unavailableReason === StaffChatUnavailableReason.Ineligible
+  ) {
+    return params.unavailableReason
+  }
+  return null
+}
+
 export default function StaffCommunityChatModal({
   staffMember,
   onClose,
+  layout,
+  minimized: minimizedProp,
+  stackRightPx = 0,
+  stackIndex = 0,
+  isFocused = true,
+  onToggleMinimize,
+  onFocus,
 }: StaffCommunityChatModalProps) {
   const { t } = useTranslation()
   const { showToast } = useNotification()
   const { session } = useAuth()
   const currentUserProfileId = session?.id ?? ''
-  const isDesktop = useIsDesktopMessengerViewport()
-  const [minimized, setMinimized] = useState(false)
+  const isDesktopViewport = useIsDesktopMessengerViewport()
+  const resolvedLayout = layout
+    ?? (isDesktopViewport ? HeaderMessageChatLayout.Floating : HeaderMessageChatLayout.Fullscreen)
+  const isFullscreen = resolvedLayout === HeaderMessageChatLayout.Fullscreen
+  const [localMinimized, setLocalMinimized] = useState(false)
+  const isControlledMinimize = typeof onToggleMinimize === 'function'
+  const minimized = isControlledMinimize ? Boolean(minimizedProp) : localMinimized
   const closedForErrorRef = useRef(false)
 
   useCommunityChatRealtime()
-  useMobileMessengerScrollLock(!isDesktop)
+  useMobileMessengerScrollLock(isFullscreen)
 
   const {
     chatSessionId,
     isReady,
     isBootstrapping,
-    bootstrapError,
+    ensureSession,
     unavailableReason,
     sessionsError,
   } = useStaffCommunityChatSession(staffMember)
 
   const displayName = getStaffChatDisplayName(staffMember)
+  const windowKey = resolveStaffChatWindowKey(staffMember)
 
   useEffect(() => {
     if (closedForErrorRef.current) return
 
-    if (sessionsError) {
-      closedForErrorRef.current = true
-      showToast(t('staff_detail.chat_load_error'), 'error')
-      onClose()
-      return
-    }
+    const closeReason = resolveStaffChatCloseReason({
+      sessionsError,
+      unavailableReason,
+      isBootstrapping,
+      isReady,
+    })
+    if (!closeReason) return
 
-    if (unavailableReason === 'no_user_profile' && !isBootstrapping && !isReady) {
-      closedForErrorRef.current = true
-      showToast(t('staff_detail.chat_no_user_profile'), 'warning')
-      onClose()
-      return
-    }
-
-    if (unavailableReason === 'ineligible' && !isBootstrapping && !isReady) {
-      closedForErrorRef.current = true
-      showToast(t('staff_detail.chat_unavailable'), 'warning')
-      onClose()
-      return
-    }
-
-    if (bootstrapError) {
-      closedForErrorRef.current = true
-      showToast(
-        resolveTranslatedApiError(t, bootstrapError, 'staff_detail.chat_start_error'),
-        'error',
-      )
-      onClose()
-    }
+    const toast = STAFF_CHAT_CLOSE_TOAST_BY_REASON[closeReason]
+    closedForErrorRef.current = true
+    showToast(t(toast.messageKey), toast.tone)
+    onClose()
   }, [
-    bootstrapError,
     isBootstrapping,
     isReady,
     onClose,
@@ -112,45 +132,29 @@ export default function StaffCommunityChatModal({
     unavailableReason,
   ])
 
-  const conversation = useMemo<HeaderMessageConversation | null>(() => {
-    if (!chatSessionId) return null
-    return {
-      id: chatSessionId,
-      name: displayName,
-      initials: getHeaderMessageContactInitials(displayName),
-      chatType: CommunityChatType.OneOnOne,
-      previewKey: HeaderMessageListPreviewKey.Desktop,
-      updatedAt: '',
-      unreadCount: 0,
-    }
-  }, [chatSessionId, displayName])
-
-  if (!conversation) {
-    return createPortal(
-      <div
-        className="fixed bottom-4 z-[200] flex items-center gap-2 rounded-2xl border border-nexoraBorder bg-white px-4 py-3 text-sm font-semibold text-nexoraText shadow-xl"
-        style={{ right: HEADER_MESSAGE_DESKTOP_EDGE_INSET_PX }}
-        role="status"
-        aria-live="polite"
-      >
-        <Loader2 className="h-4 w-4 animate-spin text-nexoraBrand" aria-hidden="true" />
-        <span>{t('staff_detail.chat_loading')}</span>
-      </div>,
-      document.body,
-    )
-  }
+  const conversation = useMemo(() => buildStaffChatConversation({
+    chatSessionId,
+    windowKey,
+    displayName,
+  }), [chatSessionId, displayName, windowKey])
 
   return (
     <HeaderMessageChatWindow
-      key={conversation.id}
+      key={windowKey}
       conversation={conversation}
       currentUserProfileId={currentUserProfileId}
-      layout={isDesktop ? HeaderMessageChatLayout.Floating : HeaderMessageChatLayout.Fullscreen}
-      minimized={isDesktop ? minimized : false}
-      stackRightPx={0}
-      stackIndex={0}
-      isFocused
-      onToggleMinimize={() => setMinimized((current) => !current)}
+      layout={resolvedLayout}
+      minimized={isFullscreen ? false : minimized}
+      stackRightPx={stackRightPx}
+      stackIndex={stackIndex}
+      isFocused={isFocused}
+      isConversationLoading={isBootstrapping}
+      ensureSessionId={ensureSession}
+      onToggleMinimize={() => {
+        onFocus?.()
+        if (isControlledMinimize) onToggleMinimize?.()
+        else setLocalMinimized((current) => !current)
+      }}
       onClose={onClose}
       onBack={onClose}
     />

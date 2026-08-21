@@ -4,7 +4,9 @@ import { AlertCircle, Plus, HelpCircle, Trash2, User, QrCode, Eye, Link, Copy, X
 import { useTranslation } from '../../../contexts/LanguageContext'
 import { useNotification } from '../../../contexts/NotificationContext'
 import StaffCommunityChatModal from '../../staff/StaffCommunityChatModal'
-import { canStaffMemberUseCommunityChat } from '../../staff/staffCommunityChatUtils'
+import { canStaffMemberUseCommunityChat, getStaffChatWindowKey } from '../../staff/staffCommunityChatUtils'
+import { useStaffCommunityChatWindows } from '../../staff/useStaffCommunityChatWindows'
+import { HeaderMessageChatLayout } from '../../header-messages/headerMessagesConstants'
 import { buildPublicInviteLink } from '../../../utils/inviteRef'
 import { getWebUrlOrigin } from '../../../utils/webUrlBase'
 import { buildPublicQrImageUrl } from '../../../data/repositories/publicQr'
@@ -69,7 +71,15 @@ function StaffView({
   const { showToast } = useNotification()
   const [largeJoinQrOpen, setLargeJoinQrOpen] = useState(false)
   const [sortBy, setSortBy] = useState('name-asc') // 'name-asc' | 'name-desc' | 'date-newest' | 'date-oldest' | 'status-active'
-  const [chatMember, setChatMember] = useState(null)
+  const {
+    windows: chatWindows,
+    focusKey: chatFocusKey,
+    openWindow: openStaffChat,
+    closeWindow: closeStaffChat,
+    toggleMinimize: toggleStaffChatMinimize,
+    focusWindow: focusStaffChat,
+    getStackRightPx: getStaffChatStackRightPx,
+  } = useStaffCommunityChatWindows()
 
   const publicInviteEnabled = Boolean(inviteLinkSetting?.isEnabled && inviteLinkSetting?.referralCode)
   const publicInviteLink = useMemo(
@@ -593,7 +603,7 @@ function StaffView({
                           {canStaffMemberUseCommunityChat(member) && (
                             <IconButton
                               label={t('components.dashboard.views.StaffView.manage_chat')}
-                              onClick={() => setChatMember(member)}
+                              onClick={() => openStaffChat(member)}
                               className="hover:text-nexoraBrand"
                             >
                               <MessagesSquare className="h-4 w-4" />
@@ -694,12 +704,23 @@ function StaffView({
         document.body,
       )}
 
-      {chatMember ? (
-        <StaffCommunityChatModal
-          staffMember={chatMember}
-          onClose={() => setChatMember(null)}
-        />
-      ) : null}
+      {chatWindows.map((chatWindow, chatIndex) => {
+        const windowKey = getStaffChatWindowKey(chatWindow.member)
+        return (
+          <StaffCommunityChatModal
+            key={windowKey || chatIndex}
+            staffMember={chatWindow.member}
+            layout={HeaderMessageChatLayout.Floating}
+            minimized={chatWindow.minimized}
+            stackRightPx={getStaffChatStackRightPx(chatIndex)}
+            stackIndex={chatIndex}
+            isFocused={chatFocusKey === windowKey}
+            onToggleMinimize={() => toggleStaffChatMinimize(chatWindow.member)}
+            onFocus={() => focusStaffChat(chatWindow.member)}
+            onClose={() => closeStaffChat(chatWindow.member)}
+          />
+        )
+      })}
 
     </div>
   )

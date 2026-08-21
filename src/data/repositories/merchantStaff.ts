@@ -14,6 +14,7 @@ import type {
   StaffInviteResult,
   StaffInvitesQuery,
   StaffLinkRequestParams,
+  StaffDetailByCodeApiDto,
   StaffListItemApiDto,
   StaffPaymentMethodApiDto,
   StaffPeriodStatsApiDto,
@@ -449,10 +450,9 @@ export function createMerchantStaffRepository(client: HttpClient = httpClient) {
     },
 
     async getByStaffCode(staffCode: string): Promise<StaffMember> {
-      // StaffDetailByCodeDto is a superset of shared list fields but omits
-      // userProfileId (present on StaffListItemDto). Callers that need chat
-      // identity must enrich from the staff list.
-      const dto = await client.get<StaffListItemApiDto>(
+      // StaffDetailByCodeDto shares list fields and includes userProfileId +
+      // paymentMethods (with VlinkPay cryptoAddresses when configured).
+      const dto = await client.get<StaffDetailByCodeApiDto>(
         `/api/v1/merchant/staff/${encodeURIComponent(staffCode)}`,
       )
       return normalizeStaffListItem(dto)

@@ -71,9 +71,10 @@ export function mapCommunityChatSessionToConversation(
   options: MapCommunityChatSessionOptions = {},
 ): HeaderMessageConversation {
   const name = resolveCommunityChatSessionTitle(session, currentUserProfileId, options)
+  const apiPreview = String(session.lastMessagePreview ?? '').trim()
   const isImagePreview = session.lastMessageType === CommunityChatMessageType.Image
   const textPreview = formatCommunityChatLastMessagePreview(
-    session.lastMessageContent,
+    session.lastMessagePreview,
     session.lastMessageType,
   )
 
@@ -83,8 +84,9 @@ export function mapCommunityChatSessionToConversation(
     initials: getHeaderMessageContactInitials(name),
     chatType: session.chatType,
     previewKey,
-    lastMessagePreviewKey: isImagePreview ? 'imageReplyPreview' : undefined,
+    lastMessagePreviewKey: isImagePreview && !apiPreview ? 'imageReplyPreview' : undefined,
     lastMessagePreviewText: textPreview ?? undefined,
+    lastMessageSenderId: session.lastMessageSenderId ?? null,
     updatedAt: session.lastMessageAt ?? '',
     unreadCount: session.unreadCount,
   }

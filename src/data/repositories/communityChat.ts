@@ -44,6 +44,8 @@ interface CommunityChatParticipantApiDto {
   IsActive?: boolean
   joinedAt?: string | null
   JoinedAt?: string | null
+  lastReadAt?: string | null
+  LastReadAt?: string | null
 }
 
 interface CommunityChatSessionApiDto {
@@ -54,6 +56,9 @@ interface CommunityChatSessionApiDto {
   status?: string
   createdByUserProfileId?: string
   lastMessageAt?: string | null
+  lastMessagePreview?: string | null
+  lastMessageType?: string | null
+  lastMessageSenderId?: string | null
   unreadCount?: number
   participants?: CommunityChatParticipantApiDto[]
 }
@@ -107,6 +112,21 @@ function normalizeMessageType(raw: string | undefined): CommunityChatMessageType
   }
 }
 
+function normalizeOptionalMessageType(
+  raw: string | null | undefined,
+): CommunityChatMessageType | null {
+  if (raw == null) return null
+  const trimmed = String(raw).trim()
+  if (!trimmed) return null
+  return normalizeMessageType(trimmed)
+}
+
+function normalizeOptionalPreview(raw: string | null | undefined): string | null {
+  if (raw == null) return null
+  const trimmed = String(raw).trim()
+  return trimmed || null
+}
+
 export function normalizeCommunityChatParticipant(
   dto: CommunityChatParticipantApiDto,
 ): CommunityChatParticipant {
@@ -116,6 +136,7 @@ export function normalizeCommunityChatParticipant(
     avatarUrl: dto.avatarUrl ?? dto.AvatarUrl ?? null,
     isActive: (dto.isActive ?? dto.IsActive) !== false,
     joinedAt: normalizeCommunityChatTimestamp(dto.joinedAt ?? dto.JoinedAt),
+    lastReadAt: normalizeCommunityChatTimestamp(dto.lastReadAt ?? dto.LastReadAt),
   }
 }
 
@@ -130,6 +151,9 @@ export function normalizeCommunityChatSession(
     status: normalizeChatStatus(dto.status),
     createdByUserProfileId: dto.createdByUserProfileId ?? '',
     lastMessageAt: normalizeCommunityChatTimestamp(dto.lastMessageAt),
+    lastMessagePreview: normalizeOptionalPreview(dto.lastMessagePreview),
+    lastMessageType: normalizeOptionalMessageType(dto.lastMessageType),
+    lastMessageSenderId: String(dto.lastMessageSenderId ?? '').trim() || null,
     unreadCount: dto.unreadCount ?? 0,
     participants: (dto.participants ?? []).map(normalizeCommunityChatParticipant),
   }

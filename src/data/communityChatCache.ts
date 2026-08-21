@@ -111,7 +111,7 @@ export function patchCommunityChatSessionLastMessage(
   )
 }
 
-/** Keep client-enriched last-message fields across sessions list refetches. */
+/** Prefer server preview fields; only fill gaps from previous client cache. */
 export function mergeCommunityChatSessionPreviews(
   fresh: CommunityChatSession[],
   previous: CommunityChatSession[] | undefined,
@@ -120,19 +120,30 @@ export function mergeCommunityChatSessionPreviews(
 
   const previewById = new Map(
     previous
-      .filter((session) => session.lastMessageContent != null || session.lastMessageType != null)
+      .filter((session) => (
+        session.lastMessagePreview != null
+        || session.lastMessageType != null
+        || session.lastMessageSenderId != null
+      ))
       .map((session) => [
         session.id,
         {
-          lastMessageContent: session.lastMessageContent,
+          lastMessagePreview: session.lastMessagePreview,
           lastMessageType: session.lastMessageType,
+          lastMessageSenderId: session.lastMessageSenderId,
         },
       ]),
   )
 
   return fresh.map((session) => {
-    const preview = previewById.get(session.id)
-    return preview ? { ...session, ...preview } : session
+    const previousPreview = previewById.get(session.id)
+    if (!previousPreview) return session
+    return {
+      ...session,
+      lastMessagePreview: session.lastMessagePreview ?? previousPreview.lastMessagePreview,
+      lastMessageType: session.lastMessageType ?? previousPreview.lastMessageType,
+      lastMessageSenderId: session.lastMessageSenderId ?? previousPreview.lastMessageSenderId,
+    }
   })
 }
 
@@ -182,8 +193,9 @@ function clearSessionLastMessage(
   return {
     ...session,
     lastMessageAt: null,
-    lastMessageContent: null,
+    lastMessagePreview: null,
     lastMessageType: null,
+    lastMessageSenderId: null,
   }
 }
 

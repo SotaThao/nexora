@@ -11,6 +11,7 @@ export interface CommunityChatParticipant {
   avatarUrl: string | null
   isActive: boolean
   joinedAt: string | null
+  lastReadAt: string | null
 }
 
 export interface CommunityChatSession {
@@ -21,14 +22,12 @@ export interface CommunityChatSession {
   status: CommunityChatStatus
   createdByUserProfileId: string
   lastMessageAt: string | null
+  /** Server list preview (text / “Sent a photo” / deleted, etc.). */
+  lastMessagePreview: string | null
+  lastMessageType: CommunityChatMessageType | null
+  lastMessageSenderId: string | null
   unreadCount: number
   participants: CommunityChatParticipant[]
-  /**
-   * Client-enriched preview — session list DTO has no last-message body.
-   * Filled from latest messages fetch / realtime / send.
-   */
-  lastMessageContent?: string | null
-  lastMessageType?: CommunityChatMessageType | null
 }
 
 export interface CommunityChatMessage {

@@ -19,13 +19,13 @@ import {
   CommunityChatType,
   COMMUNITY_CHAT_IMAGE_ACCEPT,
   isAllowedCommunityChatImageFile,
+  isPendingCommunityChatSessionId,
 } from '../../constants/communityChat'
 import { useCommunityChatMessagesInfinite } from '../../data/hooks/useCommunityChatMessageThread'
 import {
   useSendCommunityChatImage,
   useSendCommunityChatMessage,
 } from '../../data/hooks/useCommunityChat'
-import { sendCommunityChatHubMessage } from '../../lib/communityChatHub'
 import { useNotification } from '../../contexts/NotificationContext'
 import { useTranslation } from '../../contexts/LanguageContext'
 import { resolveTranslatedApiError } from '../../utils/resolveTranslatedApiError'
@@ -47,12 +47,9 @@ import {
 import HeaderMessageChatBubbleMenu from './HeaderMessageChatBubbleMenu'
 import { useCommunityChatDeleteMessage } from './useCommunityChatDeleteMessage'
 import { useCommunityChatHubSendErrorToast } from './useCommunityChatHubSendErrorToast'
-import {
-  ensureCommunityChatHubSessionJoined,
-  getCommunityChatHubConnection,
-} from './communityChatRealtime'
 import { useCommunityChatSessionOpen } from './useCommunityChatSessionOpen'
 import { useCommunityChatThreadScroll } from './useCommunityChatThreadScroll'
+import { sendCommunityChatOutboundText } from './sendCommunityChatOutboundText'
 import {
   mapCommunityChatMessageToThreadMessage,
   sortThreadMessagesForDisplay,
@@ -72,6 +69,10 @@ interface HeaderMessageChatWindowProps {
   stackRightPx?: number
   stackIndex?: number
   isFocused?: boolean
+  /** Show thread bubble skeleton while session/bootstrap resolves (staff open). */
+  isConversationLoading?: boolean
+  /** Lazy-create session before first send (new staff chats with no prior thread). */
+  ensureSessionId?: () => Promise<string>
   onToggleMinimize: () => void
   onClose: () => void
   onBack?: () => void
@@ -239,6 +240,8 @@ function HeaderMessageChatWindow({
   stackRightPx = 0,
   stackIndex = 0,
   isFocused = false,
+  isConversationLoading = false,
+  ensureSessionId,
   onToggleMinimize,
   onClose,
   onBack,
@@ -253,6 +256,7 @@ function HeaderMessageChatWindow({
   const [menuMessageId, setMenuMessageId] = useState<string | null>(null)
 
   const sessionId = conversation.id
+  const isPendingSession = isPendingCommunityChatSessionId(sessionId)
   const isGroupChat = conversation.chatType === CommunityChatType.Group
 
   const {
@@ -262,23 +266,27 @@ function HeaderMessageChatWindow({
     hasOlderMessages,
     isFetchingOlderMessages,
     fetchOlderMessages,
-  } = useCommunityChatMessagesInfinite(sessionId, {
-    enabled: Boolean(sessionId) && !minimized,
+  } = useCommunityChatMessagesInfinite(isPendingSession ? null : sessionId, {
+    enabled: Boolean(sessionId) && !isPendingSession && !minimized && !isConversationLoading,
   })
 
-  const sendMessageMutation = useSendCommunityChatMessage(sessionId)
-  const sendImageMutation = useSendCommunityChatImage(sessionId)
+  const sendMessageMutation = useSendCommunityChatMessage(isPendingSession ? '' : sessionId)
+  const sendImageMutation = useSendCommunityChatImage(isPendingSession ? '' : sessionId)
   const { deletingMessageId, deleteMessage } = useCommunityChatDeleteMessage({
-    sessionId,
+    sessionId: isPendingSession ? null : sessionId,
     onDeleted: () => setMenuMessageId(null),
   })
 
-  useCommunityChatSessionOpen(sessionId, Boolean(sessionId) && !minimized)
+  useCommunityChatSessionOpen(
+    isPendingSession ? null : sessionId,
+    Boolean(sessionId) && !isPendingSession && !minimized && !isConversationLoading,
+  )
   useCommunityChatHubSendErrorToast()
 
   const chatTk = HEADER_MESSAGES_CHAT_I18N
   const isFloating = layout === HeaderMessageChatLayout.Floating
   const isMobileFullscreen = layout === HeaderMessageChatLayout.Fullscreen
+  const isThreadLoading = isConversationLoading || isLoading
 
   const localMessages = useMemo(
     () => sortThreadMessagesForDisplay(
@@ -290,16 +298,24 @@ function HeaderMessageChatWindow({
   )
 
   const { handleThreadScroll } = useCommunityChatThreadScroll(threadRef, {
-    enabled: Boolean(sessionId) && !minimized,
+    enabled: Boolean(sessionId) && !isPendingSession && !minimized && !isConversationLoading,
     threadKey: sessionId,
     messageCount: localMessages.length,
     hasOlderMessages,
     isFetchingOlderMessages,
-    isInitialLoading: isLoading,
+    isInitialLoading: isThreadLoading,
     onLoadOlder: fetchOlderMessages,
   })
 
+  const previousConversationIdRef = useRef(conversation.id)
+
   useEffect(() => {
+    const previousId = previousConversationIdRef.current
+    previousConversationIdRef.current = conversation.id
+    // Keep composer text when a pending new chat receives its real session id.
+    if (isPendingCommunityChatSessionId(previousId) && !isPendingCommunityChatSessionId(conversation.id)) {
+      return
+    }
     setDraft('')
     setPreviewImageUrl(null)
     setMenuMessageId(null)
@@ -320,19 +336,23 @@ function HeaderMessageChatWindow({
     setDraft(text)
   }
 
+  const resolveActiveSessionId = async () => {
+    if (ensureSessionId) return ensureSessionId()
+    return sessionId
+  }
+
   const handleSend = async () => {
     const text = draft.trim()
-    if (!text || isLoading || isSending) return
+    if (!text || isThreadLoading || isSending) return
 
     setIsSending(true)
     try {
-      await ensureCommunityChatHubSessionJoined(sessionId)
-      const connection = await getCommunityChatHubConnection()
-      if (connection?.state === 'Connected') {
-        await sendCommunityChatHubMessage(connection, { sessionId, content: text })
-      } else {
-        await sendMessageMutation.mutateAsync({ content: text })
-      }
+      const activeSessionId = await resolveActiveSessionId()
+      await sendCommunityChatOutboundText({
+        sessionId: activeSessionId,
+        content: text,
+        sendViaRest: (input) => sendMessageMutation.mutateAsync(input),
+      })
       setDraft('')
     } catch (error) {
       showToast(
@@ -347,7 +367,7 @@ function HeaderMessageChatWindow({
   const handleImagePick = async (event: ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0]
     event.target.value = ''
-    if (!file || isLoading || isSending) return
+    if (!file || isThreadLoading || isSending) return
     if (!isAllowedCommunityChatImageFile(file)) {
       showToast(t(`${chatTk}.imageInvalid`), 'error')
       return
@@ -355,7 +375,8 @@ function HeaderMessageChatWindow({
 
     setIsSending(true)
     try {
-      await sendImageMutation.mutateAsync(file)
+      const activeSessionId = await resolveActiveSessionId()
+      await sendImageMutation.mutateAsync({ file, sessionId: activeSessionId })
     } catch (error) {
       showToast(
         resolveTranslatedApiError(t, error, `${chatTk}.sendError`),
@@ -533,7 +554,7 @@ function HeaderMessageChatWindow({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [chatTk, conversation.initials, conversation.name, currentLanguage, deletingMessageId, isSending, localMessages, menuMessageId, t])
 
-  const isThreadEmpty = !isLoading && !isMessagesError && localMessages.length === 0
+  const isThreadEmpty = !isThreadLoading && !isMessagesError && localMessages.length === 0
   const chatSubtitleKey = isGroupChat ? 'groupChatSubtitle' : 'directChatSubtitle'
 
   const floatingStackStyle = isFloating
@@ -622,7 +643,7 @@ function HeaderMessageChatWindow({
       style={floatingStackStyle}
       {...{ [HEADER_MESSAGE_CHAT_ROOT_ATTR]: '' }}
       role="dialog"
-      aria-busy={isLoading}
+        aria-busy={isThreadLoading}
       aria-label={conversation.name}
     >
       <div className={`header-message-chat-head${isMobileFullscreen ? ' header-message-chat-head--mobile' : ''}`}>
@@ -698,7 +719,7 @@ function HeaderMessageChatWindow({
         ref={threadRef}
         onScroll={handleThreadScroll}
       >
-        {isLoading ? (
+        {isThreadLoading ? (
           <ChatThreadSkeleton mobile={isMobileFullscreen} />
         ) : isMessagesError ? (
           <div className="header-message-chat-error" role="alert">
@@ -753,7 +774,7 @@ function HeaderMessageChatWindow({
           type="button"
           className="header-message-chat-attach"
           aria-label={t(`${chatTk}.attachImage`)}
-          disabled={isLoading || isSending}
+          disabled={isThreadLoading || isSending}
           onClick={() => fileInputRef.current?.click()}
         >
           <ImagePlus className="h-5 w-5" aria-hidden="true" />
@@ -765,13 +786,13 @@ function HeaderMessageChatWindow({
           onChange={(event) => setDraft(event.target.value)}
           placeholder={t(`${chatTk}.inputPlaceholder`)}
           aria-label={t(`${chatTk}.inputPlaceholder`)}
-          disabled={isLoading || isSending}
+          disabled={isThreadLoading || isSending}
         />
         <button
           type="submit"
           className="header-message-chat-send"
           aria-label={t(`${chatTk}.send`)}
-          disabled={!draft.trim() || isLoading || isSending}
+          disabled={!draft.trim() || isThreadLoading || isSending}
         >
           <Send className="h-4 w-4" aria-hidden="true" />
         </button>

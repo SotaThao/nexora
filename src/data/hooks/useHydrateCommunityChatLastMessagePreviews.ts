@@ -10,14 +10,15 @@ const LATEST_MESSAGE_PAGE = { pageNumber: 1, pageSize: 1 } as const
 
 function sessionNeedsLastMessageHydration(session: CommunityChatSession): boolean {
   if (!session.lastMessageAt) return false
+  if (String(session.lastMessagePreview ?? '').trim()) return false
+  // Image rows usually ship a server preview ("Sent a photo"); skip extra fetch.
   if (session.lastMessageType === CommunityChatMessageType.Image) return false
-  if (String(session.lastMessageContent ?? '').trim()) return false
   return true
 }
 
 /**
- * Session list DTO has lastMessageAt but no body — fetch newest message (pageSize 1)
- * and patch the sessions cache for list previews.
+ * Fallback when session list has lastMessageAt but empty lastMessagePreview —
+ * fetch newest message (pageSize 1) and patch the sessions cache.
  */
 export function useHydrateCommunityChatLastMessagePreviews(
   sessions: CommunityChatSession[],

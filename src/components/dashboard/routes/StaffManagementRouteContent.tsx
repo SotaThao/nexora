@@ -95,7 +95,7 @@ export function StaffDetailRouteContent({
     [ctx.staff, staffKey],
   )
 
-  // StaffDetailByCodeDto omits userProfileId; list DTO includes it for chat.
+  // Fallback when detail has no userProfileId (e.g. local staff / older payloads).
   const detailMissingUserProfileId = Boolean(
     staffMember && !String(staffMember.userProfileId ?? '').trim(),
   )

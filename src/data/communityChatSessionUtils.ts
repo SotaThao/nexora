@@ -133,12 +133,14 @@ export function dedupeCommunityChatSessions(
 }
 
 export function formatCommunityChatLastMessagePreview(
-  content: string | null | undefined,
+  preview: string | null | undefined,
   messageType: CommunityChatMessageType | null | undefined,
 ): string | null {
+  const text = String(preview ?? '').trim()
+  if (text) return text
+  // Image with empty preview — UI falls back to i18n key.
   if (messageType === CommunityChatMessageType.Image) return null
-  const text = String(content ?? '').trim()
-  return text || null
+  return null
 }
 
 export function applyLastMessageToSession(
@@ -146,10 +148,16 @@ export function applyLastMessageToSession(
   message: CommunityChatMessage,
 ): CommunityChatSession {
   if (session.id !== message.chatSessionId) return session
+  // Image body is often a URL — keep list preview empty so UI uses i18n "Image"
+  // until the next sessions refetch returns server lastMessagePreview.
+  const preview = message.messageType === CommunityChatMessageType.Image
+    ? null
+    : (String(message.content ?? '').trim() || null)
   return {
     ...session,
     lastMessageAt: message.sentAt || session.lastMessageAt,
-    lastMessageContent: message.content,
+    lastMessagePreview: preview,
     lastMessageType: message.messageType,
+    lastMessageSenderId: message.senderId || session.lastMessageSenderId,
   }
 }
