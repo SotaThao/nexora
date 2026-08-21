@@ -224,8 +224,8 @@ export default function TimeClockRoster({
             <div key={row.posStaffProfileId} className="space-y-3 rounded-2xl border border-nexoraBorder p-4">
               {renderAvatar(row)}
               {renderShiftCell(row)}
-              <div className="flex items-center justify-between gap-2 text-xs text-nexoraMuted">
-                <span className="truncate">{row.currentCustomerName ?? EMPTY_VALUE}</span>
+              <div className="flex items-center justify-between gap-2 text-xs">
+                <span className="truncate font-semibold text-nexoraText">{row.currentCustomerName ?? EMPTY_VALUE}</span>
                 {renderTurnsCell(row)}
               </div>
               {renderActions(row)}
@@ -262,7 +262,7 @@ export default function TimeClockRoster({
                 <tr key={row.posStaffProfileId} className="border-t border-nexoraBorder align-top">
                   <td className="py-2 pr-3">{renderAvatar(row)}</td>
                   <td className="py-2 pr-3">{renderShiftCell(row)}</td>
-                  <td className="py-2 pr-3 text-nexoraMuted">
+                  <td className="py-2 pr-3 font-semibold text-nexoraText">
                     {row.currentCustomerName ? (
                       <span className="font-bold text-nexoraWarning">{row.currentCustomerName}</span>
                     ) : (
@@ -273,7 +273,7 @@ export default function TimeClockRoster({
                     ) : null}
                   </td>
                   <td className="py-2 pr-3">{renderTurnsCell(row)}</td>
-                  <td className="py-2 pr-3 text-nexoraMuted">
+                  <td className="py-2 pr-3 font-semibold text-nexoraText">
                     {row.lastBeepAt
                       ? t(tk('beepedAt'), {
                           time: formatPosTime(row.lastBeepAt, currentLanguage),

@@ -734,7 +734,9 @@
       "search_view_detail": "View Detail ›",
       "search_view_transaction": "View ›",
       "search_view": "View ›",
-      "search_no_results": "No matching results found."
+      "search_no_results": "No matching results found.",
+      "collapse_menu": "Collapse menu",
+      "expand_menu": "Expand menu"
     },
     "back_to_dashboard": "Back to Dashboard",
     "back_short": "Back",
@@ -3236,7 +3238,7 @@
               "turnboard": "Turn Board",
               "completed": "Completed Services",
               "booking": "Appointments",
-              "customer": "Customers",
+              "customer": "Customer History",
               "timeclock": "Staffs Clock",
               "report": "Report"
             },
@@ -3265,6 +3267,11 @@
             "confirmCancelTitle": "Remove from waitlist?",
             "confirmCancelBody": "\"{{name}}\" will be removed from the check-in queue.",
             "turnBoardEmpty": "No staff stations yet — set up staff POS profiles first.",
+            "beep": "Beep",
+            "beepAria": "Beep {{name}}",
+            "beepPending": "Sending…",
+            "beepSent": "Beeped {{name}}",
+            "beepNotDelivered": "{{name}} has no app account — nothing was sent.",
             "todayTurnsTitle": "Today's Turns",
             "todayTurnsHint": "Turn count and the technician with the next turn today.",
             "todayTurnsTotal": "Total turns today",
@@ -6137,7 +6144,7 @@
         "noTechnicians": "Nobody is available right now — First available still works.",
         "technicianBusy": "busy now",
         "technicianAvailable": "available",
-        "submit": "Check me in ({{count}} selected)"
+        "submit": "Check in"
       },
       "WizardCheckInLayout": {
         "cancel": "Cancel"

@@ -28,6 +28,7 @@ export default function CheckInSurface({
   onFinished,
   onCancelled,
   idleSlot,
+  compactTechnicianCards = false,
 }: {
   useSource: CheckInSourceHook
   layout: PosCheckInLayout
@@ -48,6 +49,8 @@ export default function CheckInSurface({
   // Kiosk only: the salon's logo, plus the device name and settings gear (both fixed-positioned,
   // so where they sit in this subtree does not matter). Shown on the keypad and nowhere else.
   idleSlot?: React.ReactNode
+  // Front-desk-only density option. Kiosk callers omit it and retain avatar cards.
+  compactTechnicianCards?: boolean
 }) {
   const { t } = useTranslation()
 
@@ -113,8 +116,18 @@ export default function CheckInSurface({
   }
 
   return layout === 'Wizard' ? (
-    <WizardCheckInLayout session={session} businessName={businessName} onCancel={abandon} />
+    <WizardCheckInLayout
+      session={session}
+      businessName={businessName}
+      onCancel={abandon}
+      compactTechnicianCards={compactTechnicianCards}
+    />
   ) : (
-    <SinglePageCheckInLayout session={session} businessName={businessName} onCancel={abandon} />
+    <SinglePageCheckInLayout
+      session={session}
+      businessName={businessName}
+      onCancel={abandon}
+      compactTechnicianCards={compactTechnicianCards}
+    />
   )
 }

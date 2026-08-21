@@ -135,11 +135,11 @@ export default function CustomerDetailModal({
                         ${item.total.toFixed(2)}
                       </span>
                     </div>
-                    <p className="mt-1 text-[11px] text-nexoraMuted">{formatDateTime(item.occurredAt)}</p>
+                    <p className="mt-1 text-[11px] font-semibold text-nexoraText">{formatDateTime(item.occurredAt)}</p>
                     {item.serviceNames.length > 0 ? (
-                      <p className="mt-1 truncate text-xs text-nexoraText">{item.serviceNames.join(', ')}</p>
+                      <p className="mt-1 truncate text-xs font-semibold text-nexoraText">{item.serviceNames.join(', ')}</p>
                     ) : null}
-                    <p className="text-[11px] text-nexoraMuted">
+                    <p className="text-[11px] font-semibold text-nexoraText">
                       {item.technicianNames.length > 0 ? item.technicianNames.join(', ') : t(p + 'viewDetailUnassigned')}
                     </p>
                   </div>

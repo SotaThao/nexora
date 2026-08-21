@@ -134,14 +134,14 @@ export default function BookingTable({
                 </td>
                 <td className="px-4 py-3 align-middle">
                   <div className="grid gap-0.5 whitespace-nowrap">
-                    <span className="font-normal text-nexoraText">{created?.date ?? '—'}</span>
-                    <span className="text-[11px] font-semibold text-nexoraMuted">{created?.time ?? '—'}</span>
+                    <span className="font-semibold text-nexoraText">{created?.date ?? '—'}</span>
+                    <span className="text-[11px] font-semibold text-nexoraText">{created?.time ?? '—'}</span>
                   </div>
                 </td>
                 <td className="px-4 py-3 align-middle">
                   <div className="grid gap-0.5 whitespace-nowrap">
-                    <span className="font-normal text-nexoraText">{appointment.date}</span>
-                    <span className="text-[11px] font-semibold text-nexoraMuted">{appointment.time}</span>
+                    <span className="font-semibold text-nexoraText">{appointment.date}</span>
+                    <span className="text-[11px] font-semibold text-nexoraText">{appointment.time}</span>
                   </div>
                 </td>
                 <td className="px-4 py-3 align-middle">
@@ -161,7 +161,7 @@ export default function BookingTable({
                   </div>
                 </td>
                 <td className="px-4 py-3 align-middle">
-                  <span className="inline-flex max-w-full items-center rounded-full border border-cyan-200 bg-cyan-50 px-2.5 py-1 text-[11px] font-bold text-cyan-700">
+                  <span className="inline-flex max-w-full items-center rounded-full border border-cyan-200 bg-cyan-50 px-2.5 py-1 text-[11px] font-bold text-nexoraText">
                     <span className="truncate">
                       {booking.technicianNames.length > 0 ? booking.technicianNames.join(', ') : t(p + 'unassigned')}
                     </span>

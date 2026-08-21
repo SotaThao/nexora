@@ -157,11 +157,12 @@ export default function BookingCalendar({
                       {t(p + statusLabelKey(booking.status))}
                     </span>
                   </div>
-                  <p className="text-[11px] text-nexoraMuted">{formatBookingWallClock(booking.scheduledAt, booking.source)}</p>
-                  <p className="text-[11px] text-nexoraMuted">
-                    {t(p + 'columnCreated')}: {formatPosDateTime(booking.createdAt, currentLanguage)}
+                  <p className="text-[11px] font-semibold text-nexoraText">{formatBookingWallClock(booking.scheduledAt, booking.source)}</p>
+                  <p className="text-[11px]">
+                    <span className="text-nexoraMuted">{t(p + 'columnCreated')}:</span>{' '}
+                    <span className="font-semibold text-nexoraText">{formatPosDateTime(booking.createdAt, currentLanguage)}</span>
                   </p>
-                  <p className="text-[11px] text-nexoraMuted">{booking.serviceNames.join(', ')}</p>
+                  <p className="text-[11px] font-semibold text-nexoraText">{booking.serviceNames.join(', ')}</p>
                   <div className="mt-2 flex flex-wrap gap-1.5">
                     {canAct ? (
                       <>

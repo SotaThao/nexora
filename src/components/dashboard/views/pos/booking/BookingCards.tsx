@@ -36,12 +36,13 @@ export default function BookingCards({
                 {t(p + statusLabelKey(booking.status))}
               </span>
             </div>
-            <p className="text-xs text-nexoraMuted">{formatBookingWallClock(booking.scheduledAt, booking.source)}</p>
-            <p className="text-[11px] text-nexoraMuted">
-              {t(p + 'columnCreated')}: {formatPosDateTime(booking.createdAt, currentLanguage)}
+            <p className="text-xs font-semibold text-nexoraText">{formatBookingWallClock(booking.scheduledAt, booking.source)}</p>
+            <p className="text-[11px]">
+              <span className="text-nexoraMuted">{t(p + 'columnCreated')}:</span>{' '}
+              <span className="font-semibold text-nexoraText">{formatPosDateTime(booking.createdAt, currentLanguage)}</span>
             </p>
-            <p className="text-xs text-nexoraMuted">{booking.serviceNames.join(', ')}</p>
-            <p className="text-xs text-nexoraMuted">
+            <p className="text-xs font-semibold text-nexoraText">{booking.serviceNames.join(', ')}</p>
+            <p className="text-xs font-semibold text-nexoraText">
               {booking.technicianNames.length > 0 ? booking.technicianNames.join(', ') : t(p + 'unassigned')}
             </p>
             <div className="flex flex-wrap gap-1.5 pt-1">

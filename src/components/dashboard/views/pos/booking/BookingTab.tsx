@@ -1,7 +1,7 @@
 // BookingTab — Ticket 9, Booking Management sub-tab inside Front Desk. View-mode switcher
 // (Table/Cards/Calendar) sharing one filtered list query, plus the Check-in/Cancel/Reschedule
-// actions each view calls back into. "Create" is handled by the page-level "+ New Booking"
-// button already wired in PosFrontDeskView (Ticket 3) — no need to duplicate it here.
+// actions each view calls back into. The create action lives beside the view selector so
+// front-desk staff can reach it where they manage appointments.
 import { useEffect, useMemo, useState } from 'react'
 import { useTranslation } from '../../../../../contexts/LanguageContext'
 import { useNotification } from '../../../../../contexts/NotificationContext'
@@ -42,10 +42,12 @@ export default function BookingTab({
   businessId,
   businessSlug,
   turnBoardStaff,
+  onNewBooking,
 }: {
   businessId: string
   businessSlug?: string
   turnBoardStaff: TurnBoardStationApiDto[]
+  onNewBooking: () => void
 }) {
   const { t, currentLanguage } = useTranslation()
   const { showToast } = useNotification()
@@ -210,6 +212,14 @@ export default function BookingTab({
             </button>
           ))}
         </div>
+
+        <button
+          type="button"
+          onClick={onNewBooking}
+          className="h-8 shrink-0 rounded-lg bg-nexoraBrand px-3 text-[11px] font-bold text-white transition-colors hover:bg-nexoraBrandDark"
+        >
+          {t('components.dashboard.views.pos.NewBookingForm.newBookingButton')}
+        </button>
 
         <select
           value={status}
@@ -445,13 +455,13 @@ export default function BookingTab({
                       <p className="text-[10px] font-extrabold uppercase text-nexoraMuted">
                         {t(p + 'viewDetailCreatedAt')}
                       </p>
-                      <p className="text-xs text-nexoraText">{formatPosDateTime(viewDetail.data.createdAt, currentLanguage)}</p>
+                      <p className="text-xs font-semibold text-nexoraText">{formatPosDateTime(viewDetail.data.createdAt, currentLanguage)}</p>
                     </div>
                     <div>
                       <p className="text-[10px] font-extrabold uppercase text-nexoraMuted">
                         {t(p + 'viewDetailScheduledAt')}
                       </p>
-                      <p className="text-xs text-nexoraText">{formatBookingWallClock(viewDetail.data.scheduledAt, viewDetail.data.source)}</p>
+                      <p className="text-xs font-semibold text-nexoraText">{formatBookingWallClock(viewDetail.data.scheduledAt, viewDetail.data.source)}</p>
                     </div>
                     <div>
                       <p className="text-[10px] font-extrabold uppercase text-nexoraMuted">

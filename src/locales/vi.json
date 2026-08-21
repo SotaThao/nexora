@@ -734,7 +734,9 @@
       "search_view_detail": "Xem chi tiết ›",
       "search_view_transaction": "Xem GD ›",
       "search_view": "Xem ›",
-      "search_no_results": "Không tìm thấy kết quả nào trùng khớp."
+      "search_no_results": "Không tìm thấy kết quả nào trùng khớp.",
+      "collapse_menu": "Thu gọn menu",
+      "expand_menu": "Mở rộng menu"
     },
     "back_to_dashboard": "Quay lại Bảng Điều Khiển",
     "back_short": "Quay lại",
@@ -3236,7 +3238,7 @@
               "turnboard": "Turn Board",
               "completed": "Dịch vụ đã hoàn thành",
               "booking": "Lịch hẹn",
-              "customer": "Khách hàng",
+              "customer": "Lịch sử khách hàng",
               "timeclock": "Chấm công",
               "report": "Báo cáo"
             },
@@ -3265,6 +3267,11 @@
             "confirmCancelTitle": "Gỡ khỏi hàng đợi?",
             "confirmCancelBody": "\"{{name}}\" sẽ bị gỡ khỏi hàng đợi check-in.",
             "turnBoardEmpty": "Chưa có trạm thợ nào — thiết lập hồ sơ POS cho thợ trước.",
+            "beep": "Gọi",
+            "beepAria": "Gọi {{name}}",
+            "beepPending": "Đang gửi…",
+            "beepSent": "Đã gọi {{name}}",
+            "beepNotDelivered": "{{name}} chưa có tài khoản app — chưa gửi được.",
             "todayTurnsTitle": "Lượt hôm nay",
             "todayTurnsHint": "Số lượt và thợ có lượt kế tiếp hôm nay.",
             "todayTurnsTotal": "Tổng lượt hôm nay",
@@ -6132,7 +6139,7 @@
         "noTechnicians": "Hiện chưa có thợ nào rảnh — vẫn chọn \"Thợ trống trước\" được.",
         "technicianBusy": "đang bận",
         "technicianAvailable": "đang rảnh",
-        "submit": "Check-in cho tôi ({{count}} dịch vụ)"
+        "submit": "Check-in"
       },
       "WizardCheckInLayout": {
         "cancel": "Huỷ"

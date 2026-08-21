@@ -148,14 +148,14 @@ export default function PosCompletedOrdersPanel({ businessId }: { businessId: st
                       </td>
                       <td className="py-2 pr-3 align-middle">
                         <div className="grid gap-0.5 whitespace-nowrap">
-                          <span className="font-normal text-nexoraText">{completed?.date ?? '—'}</span>
-                          <span className="text-[11px] font-semibold text-nexoraMuted">{completed?.time ?? '—'}</span>
+                          <span className="font-semibold text-nexoraText">{completed?.date ?? '—'}</span>
+                          <span className="text-[11px] font-semibold text-nexoraText">{completed?.time ?? '—'}</span>
                         </div>
                       </td>
-                      <td className="py-2 pr-3 text-nexoraMuted">
+                      <td className="py-2 pr-3 font-semibold text-nexoraText">
                         {order.technicianNames.length > 0 ? order.technicianNames.join(', ') : '—'}
                       </td>
-                      <td className="py-2 pr-3 text-nexoraMuted">
+                      <td className="py-2 pr-3 font-semibold text-nexoraText">
                         {order.serviceNames.length > 0 ? order.serviceNames.join(', ') : '—'}
                       </td>
                       <td className="py-2 pr-3 text-nexoraMuted">{order.paymentMethodType || '—'}</td>
@@ -251,7 +251,7 @@ export default function PosCompletedOrdersPanel({ businessId }: { businessId: st
                       <p className="text-[10px] font-extrabold uppercase text-nexoraMuted">
                         {t('components.dashboard.views.pos.PosCompletedOrdersPanel.viewDetailCompletedAt')}
                       </p>
-                      <p className="text-xs text-nexoraText">{formatDateTime(viewDetail.data.completedAt)}</p>
+                      <p className="text-xs font-semibold text-nexoraText">{formatDateTime(viewDetail.data.completedAt)}</p>
                     </div>
                     <div>
                       <p className="text-[10px] font-extrabold uppercase text-nexoraMuted">
@@ -283,7 +283,7 @@ export default function PosCompletedOrdersPanel({ businessId }: { businessId: st
                                 ${line.lineTotal.toFixed(2)}
                               </p>
                             </div>
-                            <p className="text-[11px] text-nexoraMuted">
+                            <p className="text-[11px] font-semibold text-nexoraText">
                               {line.technicianName || t('components.dashboard.views.pos.PosCompletedOrdersPanel.viewDetailUnassigned')}
                             </p>
                             {line.note ? (

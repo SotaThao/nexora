@@ -49,7 +49,7 @@ export default function CustomerTable({
               <tr key={customer.id} className="border-t border-nexoraBorder">
                 <td className="py-2 pr-3">
                   <p className="font-bold text-nexoraText">{customer.name || t(p + 'unnamedCustomer')}</p>
-                  <p className="mt-0.5 text-[11px] text-nexoraMuted md:hidden">
+                  <p className="mt-0.5 text-[11px] font-semibold text-nexoraText md:hidden">
                     {t(p + statusLabelKey(customer.status))} · {created ? `${created.date} ${created.time}` : '—'}
                   </p>
                 </td>
@@ -60,14 +60,14 @@ export default function CustomerTable({
                 <td className="py-2 pr-3 text-right font-bold tabular-nums text-nexoraText">{customer.totalVisit}</td>
                 <td className="py-2 pr-3 align-middle">
                   <div className="grid gap-0.5 whitespace-nowrap">
-                    <span className="font-normal text-nexoraText">{lastVisit?.date ?? '—'}</span>
-                    <span className="text-[11px] font-semibold text-nexoraMuted">{lastVisit?.time ?? '—'}</span>
+                    <span className="font-semibold text-nexoraText">{lastVisit?.date ?? '—'}</span>
+                    <span className="text-[11px] font-semibold text-nexoraText">{lastVisit?.time ?? '—'}</span>
                   </div>
                 </td>
                 <td className="hidden md:table-cell py-2 pr-3 align-middle">
                   <div className="grid gap-0.5 whitespace-nowrap">
-                    <span className="font-normal text-nexoraText">{created?.date ?? '—'}</span>
-                    <span className="text-[11px] font-semibold text-nexoraMuted">{created?.time ?? '—'}</span>
+                    <span className="font-semibold text-nexoraText">{created?.date ?? '—'}</span>
+                    <span className="text-[11px] font-semibold text-nexoraText">{created?.time ?? '—'}</span>
                   </div>
                 </td>
                 <td className="py-2 text-right">
