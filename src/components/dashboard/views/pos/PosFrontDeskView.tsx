@@ -11,7 +11,16 @@
 import { useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from 'react'
 import { useSearchParams } from 'react-router-dom'
 import { useQueryClient } from '@tanstack/react-query'
-import { ChevronLeft, ChevronRight, LayoutGrid, List as ListIcon } from 'lucide-react'
+import {
+  ChevronLeft,
+  ChevronRight,
+  DollarSign,
+  LayoutGrid,
+  List as ListIcon,
+  PencilLine,
+  Play,
+  X,
+} from 'lucide-react'
 import { useTranslation } from '../../../../contexts/LanguageContext'
 import { useNotification } from '../../../../contexts/NotificationContext'
 import { storage } from '../../../../utils/storage'
@@ -19,11 +28,15 @@ import { getApiErrorCode } from '../../../../types/domain'
 import { getErrorI18nKey } from '../../../../data/errorCodes'
 import { qk } from '../../../../data/queryKeys'
 import { usePosAccess } from '../../../../data/hooks/usePosAccess'
+import { useStaffBusinesses } from '../../../../data/hooks/useStaffSelf'
+import { useWeeklyPayroll } from '../../../../data/hooks/useWeeklyPayroll'
 import { formatPosTime } from './posDateTime'
-import { useCancelOrder, useOrderList, useStartOrderService } from '../../../../data/hooks/usePosOrders'
+import { useCancelOrder, useCompletedOrders, useOrderList, useStartOrderService } from '../../../../data/hooks/usePosOrders'
+import { useInServiceOrders, useOrderDetails } from '../../../../data/hooks/usePosCheckout'
 import { useBookingList, useCheckInBookingFromList } from '../../../../data/hooks/usePosBooking'
 import { useTurnBoard } from '../../../../data/hooks/usePosTurnBoard'
-import { formatLocalDateIso } from '../../../../utils/localDate'
+import { useTimeClockRoster } from '../../../../data/hooks/usePosTimeClock'
+import { formatDatePart, formatLocalDateIso } from '../../../../utils/localDate'
 import { PosOrderStatus } from '../../../../constants/posOrderStatus'
 import {
   DEFAULT_POS_FRONT_DESK_TAB,
@@ -45,7 +58,10 @@ import NewBookingForm from './booking/NewBookingForm'
 import BookingTab from './booking/BookingTab'
 import { formatBookingWallClockTime, resolveBookingWallClockParts } from './booking/bookingFormatters'
 import CustomerTab from './customer/CustomerTab'
+import { formatCustomerPhone } from './customer/customerFormatters'
 import TimeClockTab from './timeclock/TimeClockTab'
+import { getLocalDayWindow } from './timeclock/timeClockDay'
+import { formatCurrency } from '../../utils'
 
 // Every string this screen passes to t() lives under one namespace — building them through tk()
 // keeps the prefix in a single place instead of repeating it two dozen times inline.
@@ -59,6 +75,12 @@ const SCROLL_PANEL_MAX_HEIGHT = 'max-h-[560px]'
 // One salon's appointments for one day never approach this; it exists so the chip's count is the
 // real total rather than a first page.
 const TODAY_BOOKING_PAGE_SIZE = 200
+
+function formatReportDate(isoDate: string, language: string) {
+  const date = new Date(`${isoDate}T00:00:00Z`)
+  if (Number.isNaN(date.getTime())) return isoDate
+  return formatDatePart(date, language.toLowerCase().startsWith('vi'), { timeZone: 'UTC' })
+}
 
 // scheduledAt means different things depending on which flow created the booking, so the sort
 // runs on the resolved wall clock rather than the raw ISO string. Minutes-of-day is enough: the
@@ -118,7 +140,7 @@ const TAB_SCROLL_EDGE_TOLERANCE_PX = 2
 // as a visual anchor for where the user just came from.
 const TAB_SCROLL_STEP_RATIO = 0.8
 
-// The 7 Front Desk tabs are wider than a phone viewport, so the strip scrolls horizontally
+// The Front Desk tabs are wider than a phone viewport, so the strip scrolls horizontally
 // (see index.css `.nexora-no-scrollbar` — the app's styled scrollbar would otherwise sit on
 // top of the active-tab underline). A silent scroll area reads as a cut-off list, so each
 // edge gets an arrow. The arrow slots only exist while the strip actually overflows; within
@@ -193,22 +215,33 @@ function ScrollableTabStrip({ children }: { children: ReactNode }) {
 export default function PosFrontDeskView({
   businessId,
   businessName,
+  businessAddress,
+  businessPhone,
   businessSlug,
 }: {
   businessId: string
   // Shown on Check-in Step 1's welcome message — optional since the Staff dashboard route
   // doesn't have it readily available; PhoneCheckInStep falls back to a generic greeting.
   businessName?: string
+  businessAddress?: string
+  businessPhone?: string
   businessSlug?: string
 }) {
   const { t, currentLanguage } = useTranslation()
   const { showToast, showConfirm } = useNotification()
   const queryClient = useQueryClient()
   const { data: access, isLoading: isAccessLoading } = usePosAccess(businessId)
-  const { data: orderList = [], isLoading: isOrderListLoading } = useOrderList(businessId)
-  const { data: turnBoard = [], isLoading: isTurnBoardLoading } = useTurnBoard(businessId)
+  const { data: staffBusinesses = [] } = useStaffBusinesses()
   const cancelOrder = useCancelOrder(businessId)
   const startOrderService = useStartOrderService(businessId)
+  const linkedStaffBusiness = staffBusinesses.find((business) => business.businessId === businessId)
+  const receiptBusinessName = businessName || linkedStaffBusiness?.businessName || undefined
+  const receiptBusinessAddress =
+    businessAddress ||
+    [linkedStaffBusiness?.address, linkedStaffBusiness?.city, linkedStaffBusiness?.state]
+      .filter(Boolean)
+      .join(', ') ||
+    undefined
 
   // Deep-link support for the Owner Dashboard's "Total Bookings" KPI card (Ticket 10),
   // which navigates here with ?tab=booking to land straight on the Bookings tab. Also
@@ -219,6 +252,89 @@ export default function PosFrontDeskView({
   const initialTab: PosFrontDeskTab =
     tabFromUrl && POS_FRONT_DESK_TABS.includes(tabFromUrl) ? tabFromUrl : DEFAULT_POS_FRONT_DESK_TAB
   const [activeTab, setActiveTabState] = useState<PosFrontDeskTab>(initialTab)
+  const previousActiveTabRef = useRef<PosFrontDeskTab | null>(null)
+  // Each Front Desk data set is loaded only while its tab is open. Leaving a tab disables its
+  // observer; returning to it or reloading triggers a fresh request instead of background polls.
+  const { data: orderList = [], isLoading: isOrderListLoading } = useOrderList(businessId, {
+    enabled: activeTab === PosFrontDeskTab.OrderList,
+    refetchInterval: false,
+  })
+  const { data: inServiceOrders = [], isLoading: isInServiceOrdersLoading } = useInServiceOrders(businessId, {
+    enabled: activeTab === PosFrontDeskTab.CheckoutCustomer,
+    refetchInterval: false,
+  })
+  const turnBoardQuery = useTurnBoard(businessId, {
+    enabled: activeTab === PosFrontDeskTab.TurnBoard || activeTab === PosFrontDeskTab.Booking,
+    refetchInterval: 15000,
+  })
+  const turnBoard = turnBoardQuery.data ?? []
+  const isTurnBoardLoading = turnBoardQuery.isLoading
+  // The Turn Board's summary uses the same local-day roster as Staffs Clock, but fetches once
+  // per tab visit rather than maintaining a second 15s polling stream.
+  const todayTurnWindow = getLocalDayWindow()
+  const todayRosterQuery = useTimeClockRoster(businessId, todayTurnWindow, {
+    enabled: activeTab === PosFrontDeskTab.TurnBoard,
+    refetchInterval: false,
+  })
+  // Today’s Turns needs the services completed during the same local calendar day. The
+  // completed-orders endpoint supplies the ticket IDs; each detail response supplies the
+  // technician assigned to each individual service line.
+  const todayCompletedOrdersQuery = useCompletedOrders(
+    businessId,
+    {
+      dateFrom: todayTurnWindow.dayKey,
+      dateTo: todayTurnWindow.dayKey,
+      pageNumber: 1,
+      pageSize: 200,
+    },
+    {
+      enabled: activeTab === PosFrontDeskTab.TurnBoard,
+      refetchInterval: false,
+    },
+  )
+  const todayCompletedOrderItems = todayCompletedOrdersQuery.data?.items ?? []
+  // A ticket with one technician is already unambiguous from the list response. Only fetch
+  // details for multi-technician tickets, where the list's aggregated arrays cannot identify
+  // which service line belongs to which technician.
+  const todayMultiTechnicianOrderIds = useMemo(
+    () =>
+      todayCompletedOrderItems
+        .filter(
+          (order) =>
+            new Set(
+              order.technicianNames.map((name) => name.trim().toLocaleLowerCase()).filter(Boolean),
+            ).size > 1,
+        )
+        .map((order) => order.id),
+    [todayCompletedOrderItems],
+  )
+  const todayCompletedOrderDetails = useOrderDetails(businessId, todayMultiTechnicianOrderIds, {
+    enabled: activeTab === PosFrontDeskTab.TurnBoard,
+  })
+  // The tab stays mounted while the user moves around Front Desk, so explicitly refresh all
+  // Turn Board sources on each visit. Query observers may remain enabled (e.g. Booking also uses
+  // the station board), therefore relying on enable/disable alone would serve stale data.
+  useEffect(() => {
+    if (isAccessLoading || !access) return
+    const enteringTurnBoard =
+      activeTab === PosFrontDeskTab.TurnBoard && previousActiveTabRef.current !== PosFrontDeskTab.TurnBoard
+    previousActiveTabRef.current = activeTab
+    if (!enteringTurnBoard) return
+
+    if (!turnBoardQuery.isFetching) void turnBoardQuery.refetch()
+    if (!todayRosterQuery.isFetching) void todayRosterQuery.refetch()
+    if (!todayCompletedOrdersQuery.isFetching) void todayCompletedOrdersQuery.refetch()
+  }, [
+    activeTab,
+    access,
+    isAccessLoading,
+    todayCompletedOrdersQuery,
+    todayRosterQuery,
+    turnBoardQuery,
+  ])
+  const weeklyPayrollQuery = useWeeklyPayroll(businessId, undefined, {
+    enabled: activeTab === PosFrontDeskTab.Report,
+  })
   const setActiveTab = (tab: PosFrontDeskTab) => {
     setActiveTabState(tab)
     setSearchParams(
@@ -288,6 +404,7 @@ export default function PosFrontDeskView({
     queryClient.invalidateQueries({ queryKey: qk.merchantPosWaitlist(businessId) })
     queryClient.invalidateQueries({ queryKey: qk.merchantPosOrderList(businessId) })
     queryClient.invalidateQueries({ queryKey: qk.merchantPosTurnBoard(businessId) })
+    queryClient.invalidateQueries({ queryKey: qk.merchantPosTimeClockRoster(businessId) })
     queryClient.invalidateQueries({ queryKey: qk.merchantPosCompletedOrders(businessId) })
   }
 
@@ -482,6 +599,360 @@ export default function PosFrontDeskView({
     )
   }
 
+  const renderCheckoutCustomerPanel = () => {
+    if (isInServiceOrdersLoading) {
+      return (
+        <div className="rounded-xl border border-nexoraBorder bg-nexoraSurface p-6">
+          <SkeletonList count={3} lines={2} />
+        </div>
+      )
+    }
+
+    if (inServiceOrders.length === 0) {
+      return (
+        <div className="rounded-xl border border-nexoraBorder bg-nexoraSurface p-8 text-center">
+          <p className="text-sm font-bold text-nexoraText">{t(tk('checkoutCustomerEmpty'))}</p>
+          <p className="mt-1 text-xs text-nexoraMuted">{t(tk('checkoutCustomerEmptyHint'))}</p>
+        </div>
+      )
+    }
+
+    return (
+      <section className="space-y-3" aria-label={t(tk('checkoutCustomerTitle'))}>
+        <div className="flex items-center justify-between gap-3">
+          <div>
+            <h2 className="text-sm font-bold text-nexoraText">{t(tk('checkoutCustomerTitle'))}</h2>
+            <p className="mt-0.5 text-xs text-nexoraMuted">{t(tk('checkoutCustomerHint'))}</p>
+          </div>
+          <span className="rounded-full bg-cyan-100 px-2.5 py-1 text-[10px] font-black uppercase text-cyan-700">
+            {t(tk('checkoutCustomerCount'), { count: inServiceOrders.length })}
+          </span>
+        </div>
+
+        <div className={`grid ${SCROLL_PANEL_MAX_HEIGHT} grid-cols-1 gap-3 overflow-y-auto pr-1 sm:grid-cols-2 lg:grid-cols-3`}>
+          {inServiceOrders.map((order) => {
+            const orderSummary = orderList.find((item) => item.id === order.id)
+            const customerPhone = orderSummary?.customerPhone || orderSummary?.customerPhoneE164
+              ? formatCustomerPhone(orderSummary.customerPhone, orderSummary.customerPhoneE164)
+              : null
+
+            return (
+              <article
+                key={order.id}
+                data-testid={`checkout-customer-${order.id}`}
+                className="flex flex-col gap-3 rounded-2xl border border-nexoraBorder bg-nexoraSurface p-4 transition-colors hover:border-cyan-200 hover:bg-cyan-50/20"
+              >
+                <div className="flex items-start justify-between gap-3">
+                  <div className="min-w-0">
+                    <p className="truncate text-sm font-bold text-nexoraText">{order.customerName}</p>
+                    {customerPhone ? <p className="mt-0.5 text-xs tabular-nums text-nexoraMuted">{customerPhone}</p> : null}
+                    <p className="mt-1 font-mono text-[11px] font-bold text-nexoraMuted">#{order.orderNumber}</p>
+                  </div>
+                  <span className="shrink-0 rounded-full bg-cyan-100 px-2 py-1 text-[10px] font-black uppercase text-cyan-700">
+                    {t(tk('checkoutCustomerStatus'))}
+                  </span>
+                </div>
+
+                <div className="space-y-2 rounded-xl bg-nexoraCanvas/70 p-3">
+                  <div>
+                    <p className="text-[10px] font-black uppercase tracking-wider text-nexoraMuted">
+                      {t(tk('checkoutCustomerColumnServices'))}
+                    </p>
+                    <p className="mt-1 text-xs font-semibold text-nexoraText">{joinOrEmpty(order.serviceNames)}</p>
+                  </div>
+                  <div>
+                    <p className="text-[10px] font-black uppercase tracking-wider text-nexoraMuted">
+                      {t(tk('checkoutCustomerColumnTechnician'))}
+                    </p>
+                    <p className="mt-1 text-xs font-semibold text-nexoraText">{joinOrEmpty(order.technicianNames)}</p>
+                  </div>
+                  {order.firstAssignedAt ? (
+                    <p className="text-[11px] tabular-nums text-nexoraMuted">
+                      {t(tk('servingSince'), { time: formatPosTime(order.firstAssignedAt, currentLanguage) })}
+                    </p>
+                  ) : null}
+                </div>
+
+                <button
+                  type="button"
+                  onClick={() => setUpdateWorkspace({ orderId: order.id })}
+                  className="inline-flex h-9 w-full items-center justify-center gap-1.5 rounded-lg border border-violet-200 bg-violet-50/40 px-3 text-[11px] font-bold text-violet-700 hover:bg-violet-50"
+                >
+                  <DollarSign className="h-3.5 w-3.5" aria-hidden="true" />
+                  {t(tk('checkoutButton'))}
+                </button>
+              </article>
+            )
+          })}
+        </div>
+      </section>
+    )
+  }
+
+  const renderReportPanel = () => {
+    const payroll = weeklyPayrollQuery.data
+    const rows = payroll?.staff ?? []
+
+    if (weeklyPayrollQuery.isPending && weeklyPayrollQuery.fetchStatus !== 'idle') {
+      return (
+        <div className="rounded-xl border border-nexoraBorder bg-nexoraSurface p-6">
+          <SkeletonList count={3} lines={2} />
+        </div>
+      )
+    }
+
+    if (weeklyPayrollQuery.isError) {
+      return (
+        <div className="rounded-xl border border-nexoraBorder bg-nexoraSurface p-8 text-center text-xs text-nexoraMuted">
+          {t(tk('reportError'))}
+        </div>
+      )
+    }
+
+    return (
+      <section className="space-y-3" aria-label={t(tk('reportTitle'))} data-testid="report-panel">
+        <div className="flex flex-wrap items-end justify-between gap-2">
+          <div>
+            <h2 className="text-sm font-bold text-nexoraText">{t(tk('reportTitle'))}</h2>
+            <p className="mt-0.5 text-xs text-nexoraMuted">{t(tk('reportThisWeek'))}</p>
+          </div>
+          {payroll ? (
+            <span className="text-[11px] font-semibold tabular-nums text-nexoraMuted">
+              {formatReportDate(payroll.weekStart, currentLanguage)} — {formatReportDate(payroll.weekEnd, currentLanguage)}
+            </span>
+          ) : null}
+        </div>
+
+        {rows.length === 0 ? (
+          <div className="rounded-xl border border-nexoraBorder bg-nexoraSurface p-8 text-center text-xs text-nexoraMuted">
+            {t(tk('reportEmpty'))}
+          </div>
+        ) : (
+          <div className="overflow-x-auto rounded-xl border border-nexoraBorder bg-nexoraSurface">
+            <table className="w-full min-w-[720px] text-left text-xs">
+              <thead className="bg-nexoraCanvas text-[10px] font-extrabold uppercase tracking-wide text-nexoraMuted">
+                <tr>
+                  <th className="px-4 py-3">{t(tk('reportColumnTechnician'))}</th>
+                  <th className="px-4 py-3 text-right">{t(tk('reportColumnHours'))}</th>
+                  <th className="px-4 py-3 text-right">{t(tk('reportColumnService'))}</th>
+                  <th className="px-4 py-3 text-right">{t(tk('reportColumnCommission'))}</th>
+                  <th className="px-4 py-3 text-right">{t(tk('reportColumnTip'))}</th>
+                  <th className="px-4 py-3 text-right">{t(tk('reportColumnTechTakes'))}</th>
+                </tr>
+              </thead>
+              <tbody>
+                {rows.map((row) => (
+                  <tr key={row.businessStaffLinkId} className="border-t border-nexoraBorder/70">
+                    <td className="px-4 py-3 font-bold text-nexoraText">{row.displayName}</td>
+                    <td className="px-4 py-3 text-right tabular-nums text-nexoraText">{row.hours.toFixed(1)}h</td>
+                    <td className="px-4 py-3 text-right tabular-nums text-nexoraText">{formatCurrency(row.sales)}</td>
+                    <td className="px-4 py-3 text-right tabular-nums text-nexoraText">{formatCurrency(row.commission)}</td>
+                    <td className="px-4 py-3 text-right tabular-nums text-nexoraText">{formatCurrency(row.tips)}</td>
+                    <td className="px-4 py-3 text-right tabular-nums font-bold text-nexoraText">{formatCurrency(row.takeHome)}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
+      </section>
+    )
+  }
+
+  const renderTodayTurnsPanel = () => {
+    const rosterRows = todayRosterQuery.data?.rows ?? []
+    const rows = [...rosterRows].sort((a, b) => {
+      const turnsDifference = (a.turnsToday ?? 0) - (b.turnsToday ?? 0)
+      if (turnsDifference !== 0) return turnsDifference
+      if (a.turnRank == null && b.turnRank == null) return a.displayName.localeCompare(b.displayName)
+      if (a.turnRank == null) return 1
+      if (b.turnRank == null) return -1
+      return a.turnRank - b.turnRank
+    })
+    const totalTurnsToday = rows.reduce((total, row) => total + Math.max(0, row.turnsToday ?? 0), 0)
+    // Rows are sorted by today's turn count above, so the first available technician has the
+    // fairest next turn. Do not require turnRank here: older roster responses can omit
+    // that field even though the technician is clocked in. If every clocked-in technician is
+    // currently serving, keep showing the first one in turn order instead of a misleading
+    // "No upcoming turn" state.
+    const nextTechnician =
+      rows.find((row) => row.isClockedIn && !row.currentOrderId) ??
+      rows.find((row) => row.isClockedIn && row.turnRank != null) ??
+      rows.find((row) => row.isClockedIn)
+    // The completed-order list has ticket-level technician/service aggregates. They cannot
+    // tell us which technician performed which service when a ticket has multiple techs, so
+    // build the table from each order detail's serviceLines instead. Keep both identifiers as
+    // lookup keys because older responses may omit one of the display fields.
+    type TicketServices = Map<string, { orderNumber: string; services: Set<string> }>
+    const servicesByTechnicianId = new Map<string, TicketServices>()
+    const servicesByTechnicianName = new Map<string, TicketServices>()
+    const addService = (
+      target: Map<string, TicketServices>,
+      technicianKey: string | null | undefined,
+      orderId: string,
+      orderNumber: string,
+      serviceName: string,
+    ) => {
+      const key = technicianKey?.trim()
+      if (!key) return
+      const ticketServices = target.get(key) ?? new Map<string, { orderNumber: string; services: Set<string> }>()
+      const ticket = ticketServices.get(orderId) ?? { orderNumber, services: new Set<string>() }
+      ticket.services.add(serviceName)
+      ticketServices.set(orderId, ticket)
+      target.set(key, ticketServices)
+    }
+
+    // For a single-technician ticket the list response is sufficient and avoids a detail call.
+    for (const order of todayCompletedOrderItems) {
+      const technicianNames = Array.from(
+        new Set(order.technicianNames.map((name) => name.trim()).filter(Boolean)),
+      )
+      if (technicianNames.length !== 1) continue
+      const serviceNames = order.serviceNames.map((service) => service.trim()).filter(Boolean)
+      for (const serviceName of serviceNames) {
+        addService(
+          servicesByTechnicianName,
+          technicianNames[0].toLocaleLowerCase(),
+          order.id,
+          order.orderNumber,
+          serviceName,
+        )
+      }
+    }
+
+    // Multi-technician tickets use the detail response so each line remains attributed to the
+    // correct technician instead of repeating every service under every name on the ticket.
+    for (const orderQuery of todayCompletedOrderDetails) {
+      const order = orderQuery.data
+      if (!order) continue
+      for (const line of order.serviceLines ?? []) {
+        const serviceName = line.serviceName?.trim()
+        if (!serviceName) continue
+        addService(
+          servicesByTechnicianId,
+          line.assignedPosStaffProfileId,
+          order.id,
+          order.orderNumber,
+          serviceName,
+        )
+        addService(
+          servicesByTechnicianName,
+          line.technicianName?.trim().toLocaleLowerCase(),
+          order.id,
+          order.orderNumber,
+          serviceName,
+        )
+      }
+    }
+
+    const getServicesForTechnician = (row: (typeof rows)[number]) => {
+      const summaries = new Map<string, string>()
+      const technicianNameKey = row.displayName.trim().toLocaleLowerCase()
+      const ticketGroups = [
+        ...(row.posStaffProfileId ? [servicesByTechnicianId.get(row.posStaffProfileId)] : []),
+        servicesByTechnicianName.get(technicianNameKey),
+      ]
+      for (const ticketServices of ticketGroups) {
+        if (!ticketServices) continue
+        for (const [orderId, ticket] of ticketServices) {
+          summaries.set(orderId, `#${ticket.orderNumber}: ${Array.from(ticket.services).join(', ')}`)
+        }
+      }
+      return Array.from(summaries.values())
+    }
+
+    return (
+      <section
+        className="space-y-3 rounded-xl border border-nexoraBorder bg-nexoraSurface p-4"
+        aria-label={t(tk('todayTurnsTitle'))}
+        data-testid="today-turns-panel"
+      >
+        <div className="flex flex-wrap items-start justify-between gap-3">
+          <div>
+            <h2 className="text-sm font-bold text-nexoraText">{t(tk('todayTurnsTitle'))}</h2>
+            <p className="mt-0.5 text-xs text-nexoraMuted">{t(tk('todayTurnsHint'))}</p>
+          </div>
+          <div className="flex flex-wrap gap-2">
+            <div className="rounded-lg bg-nexoraCanvas px-3 py-2">
+              <p className="text-[10px] font-black uppercase tracking-wide text-nexoraMuted">
+                {t(tk('todayTurnsTotal'))}
+              </p>
+              <p className="mt-0.5 text-sm font-bold tabular-nums text-nexoraText" data-testid="today-turns-total">
+                {totalTurnsToday}
+              </p>
+            </div>
+            <div className="rounded-lg bg-nexoraCanvas px-3 py-2">
+              <p className="text-[10px] font-black uppercase tracking-wide text-nexoraMuted">
+                {t(tk('todayTurnsNext'))}
+              </p>
+              <p className="mt-0.5 max-w-[150px] truncate text-sm font-bold text-nexoraText" data-testid="today-turns-next">
+                {nextTechnician?.displayName ?? t(tk('todayTurnsNoNext'))}
+              </p>
+            </div>
+          </div>
+        </div>
+
+        {todayRosterQuery.isPending && !todayRosterQuery.data ? (
+          <SkeletonList count={3} lines={1} />
+        ) : todayRosterQuery.isError ? (
+          <p className="rounded-lg bg-nexoraCanvas p-5 text-center text-xs text-nexoraMuted">
+            {t(tk('todayTurnsError'))}
+          </p>
+        ) : rows.length === 0 ? (
+          <p className="rounded-lg bg-nexoraCanvas p-5 text-center text-xs text-nexoraMuted">
+            {t(tk('todayTurnsEmpty'))}
+          </p>
+        ) : (
+          <div className="overflow-x-auto rounded-lg border border-nexoraBorder">
+            <table className="w-full text-left text-xs">
+              <thead className="bg-nexoraCanvas text-[10px] font-black uppercase tracking-wide text-nexoraMuted">
+                <tr>
+                  <th className="px-3 py-2.5">{t(tk('todayTurnsColumnTechnician'))}</th>
+                  <th className="px-3 py-2.5 text-right">{t(tk('todayTurnsColumnTurns'))}</th>
+                  <th className="px-3 py-2.5">{t(tk('todayTurnsColumnServices'))}</th>
+                </tr>
+              </thead>
+              <tbody>
+                {rows.map((row) => {
+                  const isNext = row.posStaffProfileId === nextTechnician?.posStaffProfileId
+                  const services = getServicesForTechnician(row)
+                  return (
+                    <tr
+                      key={row.posStaffProfileId}
+                      data-testid={`today-turn-row-${row.posStaffProfileId}`}
+                      className={`border-t border-nexoraBorder/70 ${isNext ? 'bg-emerald-50/40' : ''}`}
+                    >
+                      <td className="px-3 py-2.5 font-semibold text-nexoraText">
+                        <span>{row.displayName}</span>
+                        {row.turnRank != null ? (
+                          <span className="ml-2 text-[10px] font-bold text-nexoraMuted">#{row.turnRank}</span>
+                        ) : null}
+                      </td>
+                      <td className="px-3 py-2.5 text-right font-bold tabular-nums text-nexoraText">
+                        {row.turnsToday}
+                      </td>
+                      <td className="max-w-[320px] px-3 py-2.5 text-nexoraMuted">
+                        {services.length > 0 ? (
+                          <div className="space-y-0.5">
+                            {services.map((service) => (
+                              <span key={service} className="block whitespace-normal">
+                                {service}
+                              </span>
+                            ))}
+                          </div>
+                        ) : '—'}
+                      </td>
+                    </tr>
+                  )
+                })}
+              </tbody>
+            </table>
+          </div>
+        )}
+      </section>
+    )
+  }
+
   return (
     <div className="space-y-6">
       {/* Hidden while an Order Workspace is open (Check-in draft or editing an existing
@@ -541,6 +1012,9 @@ export default function PosFrontDeskView({
         <PosOrderWorkspace
           businessId={businessId}
           orderId={updateWorkspace.orderId}
+          businessName={receiptBusinessName}
+          businessAddress={receiptBusinessAddress}
+          businessPhone={businessPhone}
           onClose={() => {
             setUpdateWorkspace(null)
             refreshFrontDeskLists()
@@ -692,8 +1166,9 @@ export default function PosFrontDeskView({
                     e.stopPropagation()
                     setUpdateWorkspace({ orderId: order.id })
                   }}
-                  className="shrink-0 rounded-lg border border-nexoraBorder h-9 px-3 text-[11px] font-bold text-nexoraMuted hover:border-nexoraBrand hover:text-nexoraBrand"
+                  className="inline-flex h-9 shrink-0 items-center gap-1.5 rounded-lg border border-nexoraLavender bg-transparent px-3 text-[11px] font-bold text-nexoraBrandDark hover:bg-nexoraLavender/10"
                 >
+                  <PencilLine className="h-3.5 w-3.5" aria-hidden="true" />
                   {t(tk('editButton'))}
                 </button>
               )
@@ -707,8 +1182,9 @@ export default function PosFrontDeskView({
                       handleCancel(order.id, order.customerName)
                     }}
                     disabled={cancelOrder.isPending}
-                    className="shrink-0 rounded-lg border border-nexoraBorder h-9 px-3 text-[11px] font-bold text-nexoraMuted hover:border-nexoraDanger hover:bg-red-50 hover:text-nexoraDanger disabled:opacity-60"
+                    className="inline-flex h-9 shrink-0 items-center gap-1.5 rounded-lg border border-rose-200 bg-transparent px-3 text-[11px] font-bold text-rose-500 hover:bg-rose-50/70 disabled:cursor-not-allowed disabled:opacity-60"
                   >
+                    <X className="h-3.5 w-3.5" aria-hidden="true" />
                     {t(tk('cancelButton'))}
                   </button>
                 ) : null
@@ -735,8 +1211,9 @@ export default function PosFrontDeskView({
                     }}
                     disabled={startOrderService.isPending || blockedReason !== undefined}
                     title={blockedReason}
-                    className="shrink-0 rounded-lg border border-nexoraBrand bg-nexoraBrand h-9 px-3 text-[11px] font-bold text-white hover:bg-nexoraBrandDark disabled:opacity-60"
+                    className="inline-flex h-9 shrink-0 items-center gap-1.5 rounded-lg border border-emerald-200 bg-transparent px-3 text-[11px] font-bold text-emerald-600 hover:bg-emerald-50/70 disabled:cursor-not-allowed disabled:opacity-60"
                   >
+                    <Play className="h-3.5 w-3.5" aria-hidden="true" />
                     {t(tk('startServiceButton'))}
                   </button>
                 )
@@ -753,8 +1230,11 @@ export default function PosFrontDeskView({
                       e.stopPropagation()
                       setUpdateWorkspace({ orderId: order.id })
                     }}
-                    className="shrink-0 rounded-lg border border-nexoraBrand bg-nexoraBrand h-9 px-3 text-[11px] font-bold text-white hover:bg-nexoraBrandDark"
+                    aria-label={t(tk('checkoutButton'))}
+                    title={t(tk('checkoutButton'))}
+                    className="inline-flex h-9 shrink-0 items-center gap-1.5 rounded-lg border border-violet-200 bg-transparent px-3 text-[11px] font-bold text-violet-600 hover:bg-violet-50/70"
                   >
+                    <DollarSign className="h-3.5 w-3.5" aria-hidden="true" />
                     {t(tk('checkoutButton'))}
                   </button>
                 ) : null
@@ -769,16 +1249,17 @@ export default function PosFrontDeskView({
                     {filteredOrderList.map((order) => (
                       <div
                         key={order.id}
+                        data-order-status={order.status}
                         onClick={() => setUpdateWorkspace({ orderId: order.id })}
-                        className={`cursor-pointer space-y-2 rounded-2xl border bg-nexoraSurface p-4 hover:border-nexoraBrand ${
+                        className={`cursor-pointer space-y-2 rounded-2xl border p-4 hover:border-nexoraBrand ${orderListStatusSurfaceClass(order.status)} ${
                           needsFrontDeskAttention(order)
-                            ? 'border-nexoraWarning bg-nexoraWarning/5'
+                            ? 'border-nexoraWarning'
                             : 'border-nexoraBorder'
                         }`}
                       >
                         <div className="flex items-center justify-between gap-2">
                           <span className="font-mono text-[11px] font-bold text-nexoraMuted">#{order.orderNumber}</span>
-                          <span className="rounded-full bg-nexoraCanvas px-2 py-0.5 text-[10px] font-black uppercase text-nexoraBrandDark">
+                          <span className={`rounded-full px-2 py-0.5 text-[10px] font-black uppercase ${orderListStatusBadgeClass(order.status)}`}>
                             {order.status}
                           </span>
                         </div>
@@ -815,10 +1296,11 @@ export default function PosFrontDeskView({
                       <tr className="text-[10px] font-black uppercase tracking-wider text-nexoraMuted">
                         <th className="text-xs font-black pb-2 pr-3">{t(tk('orderListColumnNumber'))}</th>
                         <th className="text-xs font-black pb-2 pr-3">{t(tk('orderListColumnCustomer'))}</th>
+                        <th className="text-xs font-black pb-2 pr-3">{t(tk('orderListColumnCheckInAt'))}</th>
                         <th className="text-xs font-black pb-2 pr-3">{t(tk('orderListColumnStatus'))}</th>
                         <th className="text-xs font-black pb-2 pr-3">{t(tk('orderListColumnTechnician'))}</th>
                         <th className="text-xs font-black pb-2 pr-3">{t(tk('orderListColumnServices'))}</th>
-                        <th className="text-xs font-black pb-2 pr-3 text-right">{t(tk('orderListColumnElapsed'))}</th>
+                        <th className="text-xs font-black pb-2 pr-3 text-right">{t(tk('orderListColumnWaitTime'))}</th>
                         <th className="text-xs font-black pb-2 text-right"></th>
                       </tr>
                     </thead>
@@ -827,15 +1309,18 @@ export default function PosFrontDeskView({
                         <tr
                           key={order.id}
                           onClick={() => setUpdateWorkspace({ orderId: order.id })}
-                          className={`cursor-pointer border-t border-nexoraBorder hover:bg-nexoraCanvas ${
-                            needsFrontDeskAttention(order) ? 'bg-nexoraWarning/5' : ''
+                          className={`cursor-pointer border-t border-nexoraBorder ${orderListStatusSurfaceClass(order.status)} ${
+                            needsFrontDeskAttention(order) ? 'border-l-2 border-l-nexoraWarning' : ''
                           }`}
                         >
                           <td className="py-2 pr-3 font-mono font-bold text-nexoraMuted">#{order.orderNumber}</td>
                           <td className="py-2 pr-3 font-bold text-nexoraText">{order.customerName}</td>
+                          <td className="whitespace-nowrap py-2 pr-3 tabular-nums text-nexoraMuted">
+                            {formatPosTime(order.checkedInAt, currentLanguage) || '—'}
+                          </td>
                           <td className="py-2 pr-3">
                             <div className="flex flex-wrap items-center gap-1.5">
-                              <span className="rounded-full bg-nexoraCanvas px-2 py-0.5 text-[10px] font-black uppercase text-nexoraBrandDark">
+                              <span className={`rounded-full px-2 py-0.5 text-[10px] font-black uppercase ${orderListStatusBadgeClass(order.status)}`}>
                                 {order.status}
                               </span>
                               {renderRowFlags(order)}
@@ -866,22 +1351,27 @@ export default function PosFrontDeskView({
         )
       )}
 
+      {activeTab === PosFrontDeskTab.CheckoutCustomer && renderCheckoutCustomerPanel()}
+
       {activeTab === PosFrontDeskTab.TurnBoard && (
-        isTurnBoardLoading ? (
-          <div className="rounded-xl border border-nexoraBorder bg-nexoraSurface p-6">
-            <SkeletonList count={3} lines={2} />
-          </div>
-        ) : turnBoard.length === 0 ? (
-          <div className="rounded-xl border border-nexoraBorder bg-nexoraSurface p-6 text-center text-xs text-nexoraMuted">
-            {t(tk('turnBoardEmpty'))}
-          </div>
-        ) : (
-          <div
-            className={`grid ${SCROLL_PANEL_MAX_HEIGHT} grid-cols-1 gap-4 overflow-y-auto pr-1 sm:grid-cols-2 lg:grid-cols-3`}
-          >
-            {turnBoard.map(renderStationCard)}
-          </div>
-        )
+        <div className="space-y-4">
+          {isTurnBoardLoading ? (
+            <div className="rounded-xl border border-nexoraBorder bg-nexoraSurface p-6">
+              <SkeletonList count={3} lines={2} />
+            </div>
+          ) : turnBoard.length === 0 ? (
+            <div className="rounded-xl border border-nexoraBorder bg-nexoraSurface p-6 text-center text-xs text-nexoraMuted">
+              {t(tk('turnBoardEmpty'))}
+            </div>
+          ) : (
+            <div
+              className={`grid ${SCROLL_PANEL_MAX_HEIGHT} grid-cols-1 gap-4 overflow-y-auto pr-1 sm:grid-cols-2 lg:grid-cols-3`}
+            >
+              {turnBoard.map(renderStationCard)}
+            </div>
+          )}
+          {renderTodayTurnsPanel()}
+        </div>
       )}
 
       {activeTab === PosFrontDeskTab.Completed && <PosCompletedOrdersPanel businessId={businessId} />}
@@ -893,6 +1383,8 @@ export default function PosFrontDeskView({
       {activeTab === PosFrontDeskTab.TimeClock && <TimeClockTab businessId={businessId} />}
 
       {activeTab === PosFrontDeskTab.Customer && <CustomerTab businessId={businessId} />}
+
+      {activeTab === PosFrontDeskTab.Report && renderReportPanel()}
         </>
       )}
 

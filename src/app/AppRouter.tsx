@@ -1,4 +1,4 @@
-import { Suspense, useEffect } from "react";
+import { Suspense, useEffect, useRef } from "react";
 import {
   Navigate,
   Route,
@@ -221,9 +221,27 @@ function StaffTransactionsLegacyRedirect() {
   return <Navigate to="/staff/payments?tab=tips" replace />;
 }
 
+function isTabOnlySearchChange(previousSearch: string, nextSearch: string) {
+  if (previousSearch === nextSearch) return false;
+
+  const previous = new URLSearchParams(previousSearch);
+  const next = new URLSearchParams(nextSearch);
+  const previousTab = previous.get('tab');
+  const nextTab = next.get('tab');
+  previous.delete('tab');
+  next.delete('tab');
+
+  return previousTab !== nextTab && previous.toString() === next.toString();
+}
+
 function ScrollToTop() {
   const { pathname, search, hash } = useLocation();
+  const previousLocationRef = useRef<{ pathname: string; search: string; hash: string } | null>(null);
+
   useEffect(() => {
+    const previousLocation = previousLocationRef.current;
+    previousLocationRef.current = { pathname, search, hash };
+
     if (hash) {
       const targetId = decodeURIComponent(hash.slice(1));
       let observer: MutationObserver | null = null;
@@ -247,6 +265,14 @@ function ScrollToTop() {
       }
 
       return () => observer?.disconnect();
+    }
+
+    if (
+      previousLocation?.pathname === pathname &&
+      previousLocation.hash === hash &&
+      isTabOnlySearchChange(previousLocation.search, search)
+    ) {
+      return undefined;
     }
 
     scrollToPageTop();

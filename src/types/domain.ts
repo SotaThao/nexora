@@ -11,6 +11,10 @@ export interface MerchantBusinessInfo {
   slug?: string
   industry?: string
   address?: string
+  city?: string
+  state?: string
+  zipCode?: string
+  country?: string
   phone?: string
   website?: string
   logo?: string | null

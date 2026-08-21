@@ -49,17 +49,17 @@ export function resolveBookingWallClockParts(iso: string, source?: string): Book
 
 export function formatBookingWallClock(iso: string, source?: string): string {
   const { year, month, day, hours, minutes } = resolveBookingWallClockParts(iso, source)
-  const period = hours >= 12 ? 'PM' : 'AM'
+  const period = hours >= 12 ? 'pm' : 'am'
   const hours12 = hours % 12 === 0 ? 12 : hours % 12
-  return `${MONTH_NAMES_SHORT[month - 1]} ${day}, ${year} ${hours12}:${pad(minutes)} ${period}`
+  return `${MONTH_NAMES_SHORT[month - 1]} ${day}, ${year} ${pad(hours12)}:${pad(minutes)} ${period}`
 }
 
 /** Just the time half of formatBookingWallClock — what check-in shows above the guest's details. */
 export function formatBookingWallClockTime(iso: string, source?: string): string {
   const { hours, minutes } = resolveBookingWallClockParts(iso, source)
-  const period = hours >= 12 ? 'PM' : 'AM'
+  const period = hours >= 12 ? 'pm' : 'am'
   const hours12 = hours % 12 === 0 ? 12 : hours % 12
-  return `${hours12}:${pad(minutes)} ${period}`
+  return `${pad(hours12)}:${pad(minutes)} ${period}`
 }
 
 export function bookingDateKey(iso: string, source?: string): string {
