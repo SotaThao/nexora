@@ -722,11 +722,12 @@ export default function PosFrontDeskView({
     for (const order of todayCompletedOrdersQuery.data?.items ?? []) {
       const serviceNames = (order.serviceNames ?? []).map((service) => service.trim()).filter(Boolean)
       if (serviceNames.length === 0) continue
+      const ticketServiceSummary = `#${order.orderNumber}: ${serviceNames.join(', ')}`
       for (const technicianName of order.technicianNames ?? []) {
         const technicianKey = technicianName.trim().toLocaleLowerCase()
         if (!technicianKey) continue
         const services = servicesByTechnician.get(technicianKey) ?? new Set<string>()
-        for (const serviceName of serviceNames) services.add(serviceName)
+        services.add(ticketServiceSummary)
         servicesByTechnician.set(technicianKey, services)
       }
     }
@@ -804,7 +805,15 @@ export default function PosFrontDeskView({
                         {row.turnsToday}
                       </td>
                       <td className="max-w-[320px] px-3 py-2.5 text-nexoraMuted">
-                        {services.length > 0 ? services.join(', ') : '—'}
+                        {services.length > 0 ? (
+                          <div className="space-y-0.5">
+                            {services.map((service) => (
+                              <span key={service} className="block whitespace-normal">
+                                {service}
+                              </span>
+                            ))}
+                          </div>
+                        ) : '—'}
                       </td>
                     </tr>
                   )
