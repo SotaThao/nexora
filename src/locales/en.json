@@ -3604,6 +3604,7 @@
             "title": "New Booking",
             "close": "Close",
             "customerName": "Customer name",
+            "countryCode": "Country code",
             "customerPhone": "Phone number",
             "customerEmail": "Email (optional)",
             "date": "Date",

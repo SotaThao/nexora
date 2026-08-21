@@ -3604,6 +3604,7 @@
             "title": "Lịch hẹn mới",
             "close": "Đóng",
             "customerName": "Tên khách hàng",
+            "countryCode": "Mã quốc gia",
             "customerPhone": "Số điện thoại",
             "customerEmail": "Email (không bắt buộc)",
             "date": "Ngày",
