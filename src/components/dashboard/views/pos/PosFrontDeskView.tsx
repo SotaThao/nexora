@@ -31,7 +31,7 @@ import { usePosAccess } from '../../../../data/hooks/usePosAccess'
 import { useStaffBusinesses } from '../../../../data/hooks/useStaffSelf'
 import { useWeeklyPayroll } from '../../../../data/hooks/useWeeklyPayroll'
 import { formatPosTime } from './posDateTime'
-import { useCancelOrder, useOrderList, useStartOrderService } from '../../../../data/hooks/usePosOrders'
+import { useCancelOrder, useCompletedOrders, useOrderList, useStartOrderService } from '../../../../data/hooks/usePosOrders'
 import { useInServiceOrders } from '../../../../data/hooks/usePosCheckout'
 import { useBookingList, useCheckInBookingFromList } from '../../../../data/hooks/usePosBooking'
 import { useTurnBoard } from '../../../../data/hooks/usePosTurnBoard'
@@ -261,6 +261,22 @@ export default function PosFrontDeskView({
   const todayRosterQuery = useTimeClockRoster(businessId, todayTurnWindow, {
     enabled: activeTab === PosFrontDeskTab.TurnBoard,
   })
+  // Today’s Turns needs the services completed during the same local calendar day. The
+  // completed-orders endpoint already exposes service and technician names, so keep this
+  // scoped to Turn Board and poll alongside the roster instead of adding another backend API.
+  const todayCompletedOrdersQuery = useCompletedOrders(
+    businessId,
+    {
+      dateFrom: todayTurnWindow.dayKey,
+      dateTo: todayTurnWindow.dayKey,
+      pageNumber: 1,
+      pageSize: 200,
+    },
+    {
+      enabled: activeTab === PosFrontDeskTab.TurnBoard,
+      refetchInterval: 15000,
+    },
+  )
   const weeklyPayrollQuery = useWeeklyPayroll(businessId, undefined, {
     enabled: activeTab === PosFrontDeskTab.Report,
   })
@@ -702,6 +718,18 @@ export default function PosFrontDeskView({
     const nextTechnician = rows.find(
       (row) => row.isClockedIn && !row.currentOrderId && row.turnRank != null,
     )
+    const servicesByTechnician = new Map<string, Set<string>>()
+    for (const order of todayCompletedOrdersQuery.data?.items ?? []) {
+      const serviceNames = (order.serviceNames ?? []).map((service) => service.trim()).filter(Boolean)
+      if (serviceNames.length === 0) continue
+      for (const technicianName of order.technicianNames ?? []) {
+        const technicianKey = technicianName.trim().toLocaleLowerCase()
+        if (!technicianKey) continue
+        const services = servicesByTechnician.get(technicianKey) ?? new Set<string>()
+        for (const serviceName of serviceNames) services.add(serviceName)
+        servicesByTechnician.set(technicianKey, services)
+      }
+    }
 
     return (
       <section
@@ -751,11 +779,15 @@ export default function PosFrontDeskView({
                 <tr>
                   <th className="px-3 py-2.5">{t(tk('todayTurnsColumnTechnician'))}</th>
                   <th className="px-3 py-2.5 text-right">{t(tk('todayTurnsColumnTurns'))}</th>
+                  <th className="px-3 py-2.5">{t(tk('todayTurnsColumnServices'))}</th>
                 </tr>
               </thead>
               <tbody>
                 {rows.map((row) => {
                   const isNext = row.posStaffProfileId === nextTechnician?.posStaffProfileId
+                  const services = Array.from(
+                    servicesByTechnician.get(row.displayName.trim().toLocaleLowerCase()) ?? [],
+                  )
                   return (
                     <tr
                       key={row.posStaffProfileId}
@@ -770,6 +802,9 @@ export default function PosFrontDeskView({
                       </td>
                       <td className="px-3 py-2.5 text-right font-bold tabular-nums text-nexoraText">
                         {row.turnsToday}
+                      </td>
+                      <td className="max-w-[320px] px-3 py-2.5 text-nexoraMuted">
+                        {services.length > 0 ? services.join(', ') : '—'}
                       </td>
                     </tr>
                   )

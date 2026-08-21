@@ -79,14 +79,19 @@ export function useOrderList(businessId?: string) {
 // Completed Orders panel (US-17 follow-up) — paginated + filterable by date range/
 // customer name/phone. keepPreviousData avoids a flicker back to an empty list while the
 // user is paging or adjusting filters.
-export function useCompletedOrders(businessId: string | undefined, filters: CompletedOrdersListQuery) {
+export function useCompletedOrders(
+  businessId: string | undefined,
+  filters: CompletedOrdersListQuery,
+  options?: { enabled?: boolean; refetchInterval?: number | false },
+) {
   const { isAuthenticated } = useSessionRole()
   return useQuery<CompletedOrdersPage>({
     queryKey: qk.merchantPosCompletedOrders(businessId, filters),
     queryFn: () => posOrdersRepository.getCompletedOrders(businessId as string, filters),
-    enabled: isAuthenticated && Boolean(businessId),
+    enabled: isAuthenticated && Boolean(businessId) && (options?.enabled ?? true),
     placeholderData: keepPreviousData,
     retry: false,
+    refetchInterval: options?.refetchInterval,
   })
 }
 

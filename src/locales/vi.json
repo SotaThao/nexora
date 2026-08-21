@@ -3235,6 +3235,7 @@
             "todayTurnsNoNext": "Chưa có lượt sắp tới",
             "todayTurnsColumnTechnician": "Thợ",
             "todayTurnsColumnTurns": "Lượt",
+            "todayTurnsColumnServices": "Dịch vụ",
             "todayTurnsEmpty": "Hôm nay chưa có dữ liệu lượt.",
             "todayTurnsError": "Không thể tải lượt hôm nay.",
             "stationStatus": {
