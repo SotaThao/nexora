@@ -277,8 +277,23 @@ export default function PosFrontDeskView({
       refetchInterval: 15000,
     },
   )
-  const todayCompletedOrderIds = (todayCompletedOrdersQuery.data?.items ?? []).map((order) => order.id)
-  const todayCompletedOrderDetails = useOrderDetails(businessId, todayCompletedOrderIds, {
+  const todayCompletedOrderItems = todayCompletedOrdersQuery.data?.items ?? []
+  // A ticket with one technician is already unambiguous from the list response. Only fetch
+  // details for multi-technician tickets, where the list's aggregated arrays cannot identify
+  // which service line belongs to which technician.
+  const todayMultiTechnicianOrderIds = useMemo(
+    () =>
+      todayCompletedOrderItems
+        .filter(
+          (order) =>
+            new Set(
+              order.technicianNames.map((name) => name.trim().toLocaleLowerCase()).filter(Boolean),
+            ).size > 1,
+        )
+        .map((order) => order.id),
+    [todayCompletedOrderItems],
+  )
+  const todayCompletedOrderDetails = useOrderDetails(businessId, todayMultiTechnicianOrderIds, {
     enabled: activeTab === PosFrontDeskTab.TurnBoard,
   })
   const weeklyPayrollQuery = useWeeklyPayroll(businessId, undefined, {
@@ -751,6 +766,26 @@ export default function PosFrontDeskView({
       target.set(key, ticketServices)
     }
 
+    // For a single-technician ticket the list response is sufficient and avoids a detail call.
+    for (const order of todayCompletedOrderItems) {
+      const technicianNames = Array.from(
+        new Set(order.technicianNames.map((name) => name.trim()).filter(Boolean)),
+      )
+      if (technicianNames.length !== 1) continue
+      const serviceNames = order.serviceNames.map((service) => service.trim()).filter(Boolean)
+      for (const serviceName of serviceNames) {
+        addService(
+          servicesByTechnicianName,
+          technicianNames[0].toLocaleLowerCase(),
+          order.id,
+          order.orderNumber,
+          serviceName,
+        )
+      }
+    }
+
+    // Multi-technician tickets use the detail response so each line remains attributed to the
+    // correct technician instead of repeating every service under every name on the ticket.
     for (const orderQuery of todayCompletedOrderDetails) {
       const order = orderQuery.data
       if (!order) continue

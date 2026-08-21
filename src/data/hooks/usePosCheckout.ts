@@ -106,6 +106,9 @@ export function useOrderDetails(
       queryFn: () => posCheckoutRepository.getOrderDetail(businessId as string, orderId),
       enabled: enabled && isAuthenticated && Boolean(businessId),
       retry: false,
+      // Completed tickets do not change after payment; keep the detail cache warm while the
+      // Turn Board's 15-second roster/list poll continues.
+      staleTime: 5 * 60 * 1000,
     })),
   })
 }
