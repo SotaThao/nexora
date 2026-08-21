@@ -102,7 +102,7 @@ export default function SinglePageCheckInLayout({
         type="button"
         onClick={session.submit}
         disabled={!session.canSubmit || session.isSubmitting}
-        className="flex h-14 w-full items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-nexoraBrand to-nexoraLavender text-base font-black text-white hover:from-nexoraBrandDark hover:to-nexoraBrand disabled:opacity-60"
+        className="flex h-14 w-full items-center justify-center gap-2 rounded-xl bg-nexoraBrand text-base font-black text-white hover:bg-nexoraBrandDark disabled:opacity-60"
       >
         {session.isSubmitting ? <Loader2 className="h-5 w-5 animate-spin" /> : null}
         {t(`${K}.submit`, { count: String(session.selectedServiceIds.length) })}

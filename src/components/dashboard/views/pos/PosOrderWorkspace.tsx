@@ -214,13 +214,11 @@ export default function PosOrderWorkspace({
     if (!order || initializedOrderIdRef.current === order.id) return
     initializedOrderIdRef.current = order.id
 
-    // A product-only order (zero service lines) never transitions through InService — it
-    // completes straight from Waiting (see CompleteOrderCommand) — so treat Waiting the same
-    // as InService for payment-section visibility when there's nothing to serve.
+    // A Waiting ticket has nothing to charge for yet — payment stays hidden until a service is
+    // added and started. (Waiting used to open payment when there were zero service lines, for
+    // product-only orders; nothing sells products while retail is hidden.)
     setShowPaymentSection(
-      order.status === PosOrderStatus.InService ||
-        order.status === PosOrderStatus.Completed ||
-        (order.status === PosOrderStatus.Waiting && order.serviceLines.length === 0),
+      order.status === PosOrderStatus.InService || order.status === PosOrderStatus.Completed,
     )
     setReceiptChoice('none')
     setPaymentMethod('Cash')
@@ -382,9 +380,9 @@ export default function PosOrderWorkspace({
   }
 
   const handleCheckoutFromUpdate = () => {
-    // Only start service first if there's actually a service to serve — a product-only
-    // Waiting order has nothing to start (StartOrderService rejects it) and can go straight
-    // to payment.
+    // Only start service first if there's actually a service to serve — StartOrderService
+    // rejects an order with no service line. Reached from the InService Checkout button; a
+    // Waiting ticket with no service has nothing to charge and offers neither button.
     if (order?.status === PosOrderStatus.Waiting && hasServiceLines) {
       startOrderService.mutate(orderId, {
         onSuccess: () => setShowPaymentSection(true),
