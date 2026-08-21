@@ -13,13 +13,17 @@ import weeklyPayrollRepository, {
 } from '../repositories/weeklyPayroll'
 import { AuthContext } from '../../auth/AuthContext'
 
-export function useWeeklyPayroll(businessId: string | undefined, weekStart?: string) {
+export function useWeeklyPayroll(
+  businessId: string | undefined,
+  weekStart?: string,
+  options?: { enabled?: boolean },
+) {
   const auth = useContext(AuthContext)
   const isOwner = auth?.status === 'authenticated' && auth?.session?.role === 'owner'
   return useQuery<WeeklyPayroll>({
     queryKey: qk.merchantPosWeeklyPayroll(businessId, weekStart),
     queryFn: () => weeklyPayrollRepository.getWeeklyPayroll(weekStart),
-    enabled: isOwner && !!businessId,
+    enabled: isOwner && !!businessId && (options?.enabled ?? true),
     placeholderData: keepPreviousData,
   })
 }

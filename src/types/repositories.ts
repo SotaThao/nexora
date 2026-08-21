@@ -30,6 +30,10 @@ export interface BusinessApiDto {
   businessSlug?: string
   businessType?: string
   address?: string
+  city?: string
+  state?: string
+  zipCode?: string
+  country?: string
   phone?: string
   website?: string
   logoUrl?: string | null
@@ -220,6 +224,10 @@ export interface OrderListItemApiDto {
   orderNumber: string
   customerName: string
   customerPhone?: string | null
+  /** Dial code with a leading "+" when the backend resolved the number. */
+  customerPhoneCountryCode?: string | null
+  /** Full E.164 number when the backend resolved the number. */
+  customerPhoneE164?: string | null
   status: string
   checkedInAt: string
   elapsedMinutes: number

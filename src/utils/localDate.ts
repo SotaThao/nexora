@@ -51,11 +51,11 @@ export function formatMemberSinceDate(
   return date.toLocaleDateString(locale, { month: 'short', year: 'numeric' })
 }
 
-/** Sáng/Chiều (VI) or AM/PM (EN) for the given date's local hour. Shared by every date+time formatter below so the Sáng/Chiều cutoff (hour < 12) never drifts between them. */
+/** Sáng/Chiều (VI) or am/pm (EN) for the given date's local hour. Shared by every date+time formatter below so the Sáng/Chiều cutoff (hour < 12) never drifts between them. */
 export function getMeridiem(date: Date, isVietnamese: boolean): string {
   return date.getHours() < 12
-    ? (isVietnamese ? 'Sáng' : 'AM')
-    : (isVietnamese ? 'Chiều' : 'PM')
+    ? (isVietnamese ? 'Sáng' : 'am')
+    : (isVietnamese ? 'Chiều' : 'pm')
 }
 
 /**

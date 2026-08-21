@@ -5,7 +5,7 @@
 // instead — same "responsive collapse, don't remove data" principle as elsewhere in POS.
 import { useTranslation } from '../../../../../contexts/LanguageContext'
 import type { PosCustomerListItemApiDto } from '../../../../../types/repositories'
-import { formatPosDateTime } from '../posDateTime'
+import { formatBookingHubDateTimeParts } from '../../bookingHubFormatters'
 import { formatCustomerPhone } from './customerFormatters'
 
 const CUSTOMER_STATUS_LABEL_KEYS: Record<string, string> = {
@@ -26,8 +26,6 @@ export default function CustomerTable({
 }) {
   const { t, currentLanguage } = useTranslation()
   const p = 'components.dashboard.views.pos.CustomerTab.'
-  const formatDateTime = (iso: string | null | undefined) =>
-    formatPosDateTime(iso, currentLanguage, { withYear: false })
 
   return (
     <div className="max-h-[560px] overflow-auto">
@@ -44,32 +42,46 @@ export default function CustomerTable({
           </tr>
         </thead>
         <tbody>
-          {customers.map((customer) => (
-            <tr key={customer.id} className="border-t border-nexoraBorder">
-              <td className="py-2 pr-3">
-                <p className="font-bold text-nexoraText">{customer.name || t(p + 'unnamedCustomer')}</p>
-                <p className="mt-0.5 text-[11px] text-nexoraMuted md:hidden">
-                  {t(p + statusLabelKey(customer.status))} · {formatDateTime(customer.createdAt)}
-                </p>
-              </td>
-              <td className="py-2 pr-3 text-nexoraMuted">{formatCustomerPhone(customer.phone, customer.phoneE164)}</td>
-              <td className="hidden md:table-cell py-2 pr-3 text-nexoraMuted">
-                {t(p + statusLabelKey(customer.status))}
-              </td>
-              <td className="py-2 pr-3 text-right font-bold tabular-nums text-nexoraText">{customer.totalVisit}</td>
-              <td className="py-2 pr-3 text-nexoraMuted">{formatDateTime(customer.lastVisit)}</td>
-              <td className="hidden md:table-cell py-2 pr-3 text-nexoraMuted">{formatDateTime(customer.createdAt)}</td>
-              <td className="py-2 text-right">
-                <button
-                  type="button"
-                  onClick={() => onView(customer.id)}
-                  className="rounded-lg border border-nexoraBorder px-2.5 py-1 text-[11px] font-bold text-nexoraText hover:border-nexoraBrand"
-                >
-                  {t(p + 'viewAction')}
-                </button>
-              </td>
-            </tr>
-          ))}
+          {customers.map((customer) => {
+            const lastVisit = formatBookingHubDateTimeParts(customer.lastVisit, currentLanguage)
+            const created = formatBookingHubDateTimeParts(customer.createdAt, currentLanguage)
+            return (
+              <tr key={customer.id} className="border-t border-nexoraBorder">
+                <td className="py-2 pr-3">
+                  <p className="font-bold text-nexoraText">{customer.name || t(p + 'unnamedCustomer')}</p>
+                  <p className="mt-0.5 text-[11px] text-nexoraMuted md:hidden">
+                    {t(p + statusLabelKey(customer.status))} · {created ? `${created.date} ${created.time}` : '—'}
+                  </p>
+                </td>
+                <td className="py-2 pr-3 text-nexoraMuted">{formatCustomerPhone(customer.phone, customer.phoneE164)}</td>
+                <td className="hidden md:table-cell py-2 pr-3 text-nexoraMuted">
+                  {t(p + statusLabelKey(customer.status))}
+                </td>
+                <td className="py-2 pr-3 text-right font-bold tabular-nums text-nexoraText">{customer.totalVisit}</td>
+                <td className="py-2 pr-3 align-middle">
+                  <div className="grid gap-0.5 whitespace-nowrap">
+                    <span className="font-normal text-nexoraText">{lastVisit?.date ?? '—'}</span>
+                    <span className="text-[11px] font-semibold text-nexoraMuted">{lastVisit?.time ?? '—'}</span>
+                  </div>
+                </td>
+                <td className="hidden md:table-cell py-2 pr-3 align-middle">
+                  <div className="grid gap-0.5 whitespace-nowrap">
+                    <span className="font-normal text-nexoraText">{created?.date ?? '—'}</span>
+                    <span className="text-[11px] font-semibold text-nexoraMuted">{created?.time ?? '—'}</span>
+                  </div>
+                </td>
+                <td className="py-2 text-right">
+                  <button
+                    type="button"
+                    onClick={() => onView(customer.id)}
+                    className="rounded-lg border border-nexoraBorder px-2.5 py-1 text-[11px] font-bold text-nexoraText hover:border-nexoraBrand"
+                  >
+                    {t(p + 'viewAction')}
+                  </button>
+                </td>
+              </tr>
+            )
+          })}
         </tbody>
       </table>
     </div>

@@ -34,14 +34,18 @@ export function useClockQrToken(businessId?: string, enabled = true) {
   })
 }
 
-export function useTimeClockRoster(businessId?: string, window?: { fromUtc: string; toUtc: string; dayKey: string }) {
+export function useTimeClockRoster(
+  businessId?: string,
+  window?: { fromUtc: string; toUtc: string; dayKey: string },
+  options: { enabled?: boolean; refetchInterval?: number | false } = {},
+) {
   const { isAuthenticated } = useSessionRole()
   return useQuery<TimeClockRosterApiDto>({
     queryKey: qk.merchantPosTimeClockRoster(businessId, window?.dayKey),
     queryFn: () => posTimeClockRepository.getRoster(businessId as string, window!.fromUtc, window!.toUtc),
-    enabled: isAuthenticated && Boolean(businessId) && Boolean(window),
+    enabled: (options.enabled ?? true) && isAuthenticated && Boolean(businessId) && Boolean(window),
     retry: false,
-    refetchInterval: ROSTER_REFETCH_MS,
+    refetchInterval: options.refetchInterval ?? ROSTER_REFETCH_MS,
     // Keeps the previous board on screen while a poll is in flight instead of flashing skeletons.
     placeholderData: (previous) => previous,
   })

@@ -4,7 +4,7 @@
  * Usable by both Owner and Staff sessions (gated server-side via
  * IPosOperationsAccessService) — see usePosAccess for the FE show/hide check.
  */
-import { useQuery, useMutation, useQueryClient, type QueryKey } from '@tanstack/react-query'
+import { useQueries, useQuery, useMutation, useQueryClient, type QueryKey } from '@tanstack/react-query'
 import { qk } from '../queryKeys'
 import { useSessionRole } from '../../auth/useSessionRole'
 import posCheckoutRepository from '../repositories/posCheckout'
@@ -65,15 +65,18 @@ function rollbackOrderDetail(queryClient: ReturnType<typeof useQueryClient>, con
   }
 }
 
-export function useInServiceOrders(businessId?: string) {
+export function useInServiceOrders(
+  businessId?: string,
+  options?: { enabled?: boolean; refetchInterval?: number | false },
+) {
   const { isAuthenticated } = useSessionRole()
   return useQuery<InServiceOrderApiDto[]>({
     queryKey: qk.merchantPosInServiceOrders(businessId),
     queryFn: () => posCheckoutRepository.getInServiceOrders(businessId as string),
-    enabled: isAuthenticated && Boolean(businessId),
+    enabled: isAuthenticated && Boolean(businessId) && (options?.enabled ?? true),
     retry: false,
     // Checkout list should stay fresh without a manual refresh.
-    refetchInterval: 15000,
+    refetchInterval: options?.refetchInterval ?? 15000,
   })
 }
 
@@ -84,6 +87,33 @@ export function useOrderDetail(businessId?: string, orderId?: string) {
     queryFn: () => posCheckoutRepository.getOrderDetail(businessId as string, orderId as string),
     enabled: isAuthenticated && Boolean(businessId) && Boolean(orderId),
     retry: false,
+  })
+}
+
+/**
+ * Loads order details for a list of tickets while reusing React Query's per-order
+ * cache. The completed-order list only exposes aggregated service and technician
+ * names; the detail response is the source of truth for the technician assigned
+ * to each individual service line.
+ */
+export function useOrderDetails(
+  businessId: string | undefined,
+  orderIds: string[],
+  options?: { enabled?: boolean },
+) {
+  const { isAuthenticated } = useSessionRole()
+  const enabled = options?.enabled ?? true
+
+  return useQueries({
+    queries: orderIds.map((orderId) => ({
+      queryKey: qk.merchantPosOrderDetail(businessId, orderId),
+      queryFn: () => posCheckoutRepository.getOrderDetail(businessId as string, orderId),
+      enabled: enabled && isAuthenticated && Boolean(businessId),
+      retry: false,
+      // Completed tickets do not change after payment; keep the detail cache warm while the
+      // Turn Board's 15-second roster/list poll continues.
+      staleTime: 5 * 60 * 1000,
+    })),
   })
 }
 

@@ -13,13 +13,14 @@ import { qk } from '../../../../data/queryKeys'
 import { SkeletonList } from '../../../ui/skeleton'
 import { formatPosDateTime } from './posDateTime'
 import { formatCustomerPhone } from './customer/customerFormatters'
+import { formatBookingHubDateTimeParts } from '../bookingHubFormatters'
 
 const PAGE_SIZE = 10
 
 export default function PosCompletedOrdersPanel({ businessId }: { businessId: string }) {
   const { t, currentLanguage } = useTranslation()
   const formatDateTime = (iso: string | null | undefined) =>
-    formatPosDateTime(iso, currentLanguage, { withYear: false })
+    formatPosDateTime(iso, currentLanguage)
   const queryClient = useQueryClient()
   const [dateFrom, setDateFrom] = useState('')
   const [dateTo, setDateTo] = useState('')
@@ -63,64 +64,46 @@ export default function PosCompletedOrdersPanel({ businessId }: { businessId: st
 
   return (
     <div className="space-y-4">
-      <div className="grid grid-cols-1 gap-3 rounded-xl border border-nexoraBorder bg-nexoraSurface p-4 sm:grid-cols-2 lg:grid-cols-5">
-        <div>
-          <label className="mb-1 block text-[10px] font-extrabold uppercase text-nexoraMuted">
-            {t('components.dashboard.views.pos.PosCompletedOrdersPanel.dateFrom')}
-          </label>
-          <input
-            type="date"
-            value={dateFrom}
-            onChange={(e) => setDateFrom(e.target.value)}
-            className="h-9 w-full rounded-lg border border-nexoraBorder bg-white px-2.5 text-xs text-nexoraText outline-none focus:border-nexoraBrand"
-          />
-        </div>
-        <div>
-          <label className="mb-1 block text-[10px] font-extrabold uppercase text-nexoraMuted">
-            {t('components.dashboard.views.pos.PosCompletedOrdersPanel.dateTo')}
-          </label>
-          <input
-            type="date"
-            value={dateTo}
-            onChange={(e) => setDateTo(e.target.value)}
-            className="h-9 w-full rounded-lg border border-nexoraBorder bg-white px-2.5 text-xs text-nexoraText outline-none focus:border-nexoraBrand"
-          />
-        </div>
-        <div>
-          <label className="mb-1 block text-[10px] font-extrabold uppercase text-nexoraMuted">
-            {t('components.dashboard.views.pos.PosCompletedOrdersPanel.customerName')}
-          </label>
-          <input
-            type="text"
-            value={customerNameInput}
-            onChange={(e) => setCustomerNameInput(e.target.value)}
-            onKeyDown={(e) => e.key === 'Enter' && handleApplyFilters()}
-            placeholder={t('components.dashboard.views.pos.PosCompletedOrdersPanel.customerNamePlaceholder')}
-            className="h-9 w-full rounded-lg border border-nexoraBorder bg-white px-2.5 text-xs text-nexoraText outline-none focus:border-nexoraBrand"
-          />
-        </div>
-        <div>
-          <label className="mb-1 block text-[10px] font-extrabold uppercase text-nexoraMuted">
-            {t('components.dashboard.views.pos.PosCompletedOrdersPanel.customerPhone')}
-          </label>
-          <input
-            type="tel"
-            value={customerPhoneInput}
-            onChange={(e) => setCustomerPhoneInput(e.target.value)}
-            onKeyDown={(e) => e.key === 'Enter' && handleApplyFilters()}
-            placeholder={t('components.dashboard.views.pos.PosCompletedOrdersPanel.customerPhonePlaceholder')}
-            className="h-9 w-full rounded-lg border border-nexoraBorder bg-white px-2.5 text-xs text-nexoraText outline-none focus:border-nexoraBrand"
-          />
-        </div>
-        <div className="flex items-end">
-          <button
-            type="button"
-            onClick={handleApplyFilters}
-            className="h-9 w-full rounded-lg bg-nexoraBrand text-xs font-bold text-white hover:bg-nexoraBrandDark"
-          >
-            {t('components.dashboard.views.pos.PosCompletedOrdersPanel.applyFiltersButton')}
-          </button>
-        </div>
+      <div data-testid="completed-order-filters" className="flex flex-wrap items-center gap-2">
+        <input
+          type="date"
+          value={dateFrom}
+          onChange={(e) => setDateFrom(e.target.value)}
+          aria-label={t('components.dashboard.views.pos.PosCompletedOrdersPanel.dateFrom')}
+          className="h-8 w-[140px] rounded-lg border border-nexoraBorder bg-white px-2 text-[11px] text-nexoraText outline-none focus:border-nexoraBrand"
+        />
+        <input
+          type="date"
+          value={dateTo}
+          onChange={(e) => setDateTo(e.target.value)}
+          aria-label={t('components.dashboard.views.pos.PosCompletedOrdersPanel.dateTo')}
+          className="h-8 w-[140px] rounded-lg border border-nexoraBorder bg-white px-2 text-[11px] text-nexoraText outline-none focus:border-nexoraBrand"
+        />
+        <input
+          type="text"
+          value={customerNameInput}
+          onChange={(e) => setCustomerNameInput(e.target.value)}
+          onKeyDown={(e) => e.key === 'Enter' && handleApplyFilters()}
+          aria-label={t('components.dashboard.views.pos.PosCompletedOrdersPanel.customerName')}
+          placeholder={t('components.dashboard.views.pos.PosCompletedOrdersPanel.customerNamePlaceholder')}
+          className="h-8 min-w-[160px] flex-1 rounded-lg border border-nexoraBorder bg-white px-2 text-[11px] text-nexoraText outline-none focus:border-nexoraBrand lg:w-[260px] lg:flex-none"
+        />
+        <input
+          type="tel"
+          value={customerPhoneInput}
+          onChange={(e) => setCustomerPhoneInput(e.target.value)}
+          onKeyDown={(e) => e.key === 'Enter' && handleApplyFilters()}
+          aria-label={t('components.dashboard.views.pos.PosCompletedOrdersPanel.customerPhone')}
+          placeholder={t('components.dashboard.views.pos.PosCompletedOrdersPanel.customerPhonePlaceholder')}
+          className="h-8 min-w-[160px] flex-1 rounded-lg border border-nexoraBorder bg-white px-2 text-[11px] text-nexoraText outline-none focus:border-nexoraBrand lg:w-[260px] lg:flex-none"
+        />
+        <button
+          type="button"
+          onClick={handleApplyFilters}
+          className="h-8 rounded-lg bg-nexoraBrand px-3 text-[11px] font-bold text-white hover:bg-nexoraBrandDark"
+        >
+          {t('components.dashboard.views.pos.PosCompletedOrdersPanel.applyFiltersButton')}
+        </button>
       </div>
 
       {isLoading ? (
@@ -154,31 +137,41 @@ export default function PosCompletedOrdersPanel({ businessId }: { businessId: st
                 </tr>
               </thead>
               <tbody>
-                {items.map((order) => (
-                  <tr key={order.id} className="border-t border-nexoraBorder">
-                    <td className="py-2 pr-3 font-mono font-bold text-nexoraMuted">#{order.orderNumber}</td>
-                    <td className="py-2 pr-3 font-bold text-nexoraText">{order.customerName}</td>
-                    <td className="py-2 pr-3 text-nexoraMuted">{formatCustomerPhone(order.customerPhone, order.customerPhoneE164) || '—'}</td>
-                    <td className="py-2 pr-3 text-nexoraMuted">{formatDateTime(order.completedAt)}</td>
-                    <td className="py-2 pr-3 text-nexoraMuted">
-                      {order.technicianNames.length > 0 ? order.technicianNames.join(', ') : '—'}
-                    </td>
-                    <td className="py-2 pr-3 text-nexoraMuted">
-                      {order.serviceNames.length > 0 ? order.serviceNames.join(', ') : '—'}
-                    </td>
-                    <td className="py-2 pr-3 text-nexoraMuted">{order.paymentMethodType || '—'}</td>
-                    <td className="py-2 pr-3 text-right font-bold tabular-nums text-nexoraText">${order.total.toFixed(2)}</td>
-                    <td className="py-2 text-right">
-                      <button
-                        type="button"
-                        onClick={() => setViewDetailTargetId(order.id)}
-                        className="rounded-lg border border-nexoraBorder px-2.5 py-1 text-[11px] font-bold text-nexoraText hover:border-nexoraBrand"
-                      >
-                        {t('components.dashboard.views.pos.PosCompletedOrdersPanel.viewDetailAction')}
-                      </button>
-                    </td>
-                  </tr>
-                ))}
+                {items.map((order) => {
+                  const completed = formatBookingHubDateTimeParts(order.completedAt, currentLanguage)
+                  return (
+                    <tr key={order.id} className="border-t border-nexoraBorder">
+                      <td className="py-2 pr-3 font-mono font-bold text-nexoraMuted">#{order.orderNumber}</td>
+                      <td className="py-2 pr-3 font-bold text-nexoraText">{order.customerName}</td>
+                      <td className="py-2 pr-3 text-nexoraMuted">
+                        {formatCustomerPhone(order.customerPhone, order.customerPhoneE164) || '—'}
+                      </td>
+                      <td className="py-2 pr-3 align-middle">
+                        <div className="grid gap-0.5 whitespace-nowrap">
+                          <span className="font-normal text-nexoraText">{completed?.date ?? '—'}</span>
+                          <span className="text-[11px] font-semibold text-nexoraMuted">{completed?.time ?? '—'}</span>
+                        </div>
+                      </td>
+                      <td className="py-2 pr-3 text-nexoraMuted">
+                        {order.technicianNames.length > 0 ? order.technicianNames.join(', ') : '—'}
+                      </td>
+                      <td className="py-2 pr-3 text-nexoraMuted">
+                        {order.serviceNames.length > 0 ? order.serviceNames.join(', ') : '—'}
+                      </td>
+                      <td className="py-2 pr-3 text-nexoraMuted">{order.paymentMethodType || '—'}</td>
+                      <td className="py-2 pr-3 text-right font-bold tabular-nums text-nexoraText">${order.total.toFixed(2)}</td>
+                      <td className="py-2 text-right">
+                        <button
+                          type="button"
+                          onClick={() => setViewDetailTargetId(order.id)}
+                          className="rounded-lg border border-nexoraBorder px-2.5 py-1 text-[11px] font-bold text-nexoraText hover:border-nexoraBrand"
+                        >
+                          {t('components.dashboard.views.pos.PosCompletedOrdersPanel.viewDetailAction')}
+                        </button>
+                      </td>
+                    </tr>
+                  )
+                })}
               </tbody>
             </table>
           </div>
