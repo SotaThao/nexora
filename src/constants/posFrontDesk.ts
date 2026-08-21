@@ -22,8 +22,8 @@ export enum PosFrontDeskTab {
 export const POS_FRONT_DESK_TABS: PosFrontDeskTab[] = [
   PosFrontDeskTab.CheckIn,
   PosFrontDeskTab.OrderList,
-  PosFrontDeskTab.CheckoutCustomer,
   PosFrontDeskTab.TurnBoard,
+  PosFrontDeskTab.CheckoutCustomer,
   PosFrontDeskTab.Completed,
   PosFrontDeskTab.Booking,
   PosFrontDeskTab.TimeClock,
