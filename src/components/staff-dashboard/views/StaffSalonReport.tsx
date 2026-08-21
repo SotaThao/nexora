@@ -191,7 +191,6 @@ export default function StaffSalonReport() {
           { key: 'turns', value: summary?.turns ?? null, format: 'number' },
           { key: 'totalHours', value: summary?.totalHours ?? null, format: 'decimal' },
           { key: 'service', value: summary?.service ?? null, format: 'currency' },
-          { key: 'pay', value: summary?.pay ?? null, format: 'currency' },
           { key: 'commission', value: summary?.commission ?? null, format: 'currency' },
           { key: 'commissionPercent', value: summary?.commissionPercent ?? null, format: 'percent' },
           { key: 'tip', value: summary?.tip ?? null, format: 'currency' },
