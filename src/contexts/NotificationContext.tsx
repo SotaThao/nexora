@@ -4,6 +4,7 @@ import {
   useCallback,
   useContext,
   useEffect,
+  useRef,
   useState,
   type ReactNode,
 } from "react";
@@ -55,13 +56,43 @@ export function NotificationProvider({ children }: NotificationProviderProps) {
     setActiveToast(null);
   }, []);
 
+  const toastCardRef = useRef<HTMLDivElement>(null);
+  const toastCloseButtonRef = useRef<HTMLButtonElement>(null);
+  const toastPreviousFocusRef = useRef<HTMLElement | null>(null);
+
+  // Focus management: move focus into the popup on open, trap Tab within it
+  // (the backdrop otherwise leaves focus on the trigger, letting keyboard/SR
+  // users reach controls behind the overlay), and restore focus on close.
   useEffect(() => {
     if (!activeToast) return;
+    toastPreviousFocusRef.current = document.activeElement as HTMLElement | null;
+    toastCloseButtonRef.current?.focus();
+
     const onKeyDown = (e: KeyboardEvent) => {
-      if (e.key === "Escape") dismissToast();
+      if (e.key === "Escape") {
+        dismissToast();
+        return;
+      }
+      if (e.key !== "Tab" || !toastCardRef.current) return;
+      const focusable = toastCardRef.current.querySelectorAll<HTMLElement>(
+        'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])',
+      );
+      if (focusable.length === 0) return;
+      const first = focusable[0];
+      const last = focusable[focusable.length - 1];
+      if (e.shiftKey && document.activeElement === first) {
+        e.preventDefault();
+        last.focus();
+      } else if (!e.shiftKey && document.activeElement === last) {
+        e.preventDefault();
+        first.focus();
+      }
     };
     document.addEventListener("keydown", onKeyDown);
-    return () => document.removeEventListener("keydown", onKeyDown);
+    return () => {
+      document.removeEventListener("keydown", onKeyDown);
+      toastPreviousFocusRef.current?.focus();
+    };
   }, [activeToast, dismissToast]);
 
   const showConfirm = useCallback<NotificationContextValue["showConfirm"]>(
@@ -111,6 +142,10 @@ export function NotificationProvider({ children }: NotificationProviderProps) {
           onClick={dismissToast}
         >
           <div
+            ref={toastCardRef}
+            role="alertdialog"
+            aria-modal="true"
+            aria-label={activeToast.message}
             className="nexora-toast-card bg-white border border-nexoraBorder shadow-2xl rounded-2xl max-w-sm w-full overflow-hidden p-6 flex flex-col items-center text-center transform transition-all duration-300"
             style={{
               animation:
@@ -128,6 +163,7 @@ export function NotificationProvider({ children }: NotificationProviderProps) {
             </p>
             <button
               type="button"
+              ref={toastCloseButtonRef}
               onClick={dismissToast}
               className="px-4.5 py-2.5 rounded-xl bg-nexoraBrand text-white text-[10px] font-extrabold uppercase tracking-wider hover:bg-nexoraBrand/90 transition-colors shadow-sm"
             >
