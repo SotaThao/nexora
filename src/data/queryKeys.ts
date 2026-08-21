@@ -171,8 +171,10 @@ export const qk = {
   // `dayKey` is only appended when passed: an invalidateQueries call omitting it must yield a real
   // prefix of the rendered key. Defaulting it to '' instead would build a 4th element that matches
   // no live query, and the invalidation would silently do nothing.
-  merchantPosDevicePairingQr: (businessId?: string) =>
-    ['merchantSettings', 'posDevicePairingQr', businessId ?? ''],
+  merchantPosDevicePairingQr: (businessId?: string, excludeTokens?: string) => {
+    const key = ['merchantSettings', 'posDevicePairingQr', businessId ?? '']
+    return excludeTokens ? [...key, excludeTokens] : key
+  },
   // Carries the token itself: a new code is a different question, and the answer to the old one
   // ("used") must never be served for it.
   merchantPosDevicePairingQrStatus: (businessId?: string, token?: string) =>
