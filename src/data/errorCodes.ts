@@ -1,3 +1,4 @@
+import { CatalogErrorCode } from '../constants/catalogErrorCode'
 import { getApiErrorCode, isApiError } from '../types/domain'
 
 /** Deleting a local staff member is blocked by open orders/bookings still assigned to them. */
@@ -157,6 +158,10 @@ export const errorCodeToI18nKey = {
   POS_SERVICE_TAG_TOO_LONG: 'errors.pos_service_tag_too_long',
   POS_SERVICE_CATEGORY_INVALID: 'errors.pos_service_category_invalid',
   POS_SERVICE_PHOTO_INVALID_TYPE: 'errors.pos_service_photo_invalid_type',
+
+  // Shared Catalog — Categories & Services (delete guards)
+  [CatalogErrorCode.ServiceInUse]: 'errors.catalog_service_in_use',
+  [CatalogErrorCode.CategoryInUse]: 'errors.catalog_category_in_use',
 
   // POS Owner Setup — Products (US-018)
   POS_PRODUCT_NOT_FOUND: 'errors.pos_product_not_found',

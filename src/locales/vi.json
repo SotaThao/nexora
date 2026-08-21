@@ -2231,6 +2231,8 @@
     "pos_category_name_required": "Vui lòng nhập tên danh mục.",
     "pos_category_name_too_long": "Tên danh mục tối đa 100 ký tự.",
     "pos_category_in_use": "Danh mục này vẫn đang được gán cho một hoặc nhiều dịch vụ/sản phẩm.",
+    "catalog_service_in_use": "Dịch vụ này đã có lịch sử đơn hàng hoặc gán nhân viên nên không thể xóa.",
+    "catalog_category_in_use": "Danh mục này vẫn đang được gán cho một hoặc nhiều dịch vụ/sản phẩm.",
     "pos_service_not_found": "Không tìm thấy dịch vụ này.",
     "pos_service_name_required": "Vui lòng nhập tên dịch vụ.",
     "pos_service_name_too_long": "Tên dịch vụ tối đa 200 ký tự.",

@@ -2231,6 +2231,8 @@
     "pos_category_name_required": "Category name is required.",
     "pos_category_name_too_long": "Category name must be 100 characters or fewer.",
     "pos_category_in_use": "This category is still assigned to one or more services or products.",
+    "catalog_service_in_use": "This service has order or staff-assignment history and cannot be deleted.",
+    "catalog_category_in_use": "This category is still assigned to one or more services or products.",
     "pos_service_not_found": "This service could not be found.",
     "pos_service_name_required": "Service name is required.",
     "pos_service_name_too_long": "Service name must be 200 characters or fewer.",
