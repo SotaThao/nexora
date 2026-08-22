@@ -196,7 +196,7 @@ export default function BookingTab({
       <BookingLinkShare businessSlug={businessSlug} />
 
       <div className="flex flex-wrap items-center gap-2">
-        <div className="flex gap-1 rounded-lg border border-nexoraBorder p-1">
+        <div className="inline-flex gap-1 rounded-xl border border-nexoraBorder bg-nexoraCanvas/70 p-1">
           {(['table', 'cards', 'calendar'] as ViewMode[]).map((mode) => (
             <button
               key={mode}
@@ -204,7 +204,7 @@ export default function BookingTab({
               onClick={() => setViewMode(mode)}
               className={`rounded-md px-2.5 py-1 text-[11px] font-bold transition-colors ${
                 viewMode === mode
-                  ? 'bg-nexoraBrand text-white'
+                  ? 'bg-white text-nexoraBrandDark shadow-sm ring-1 ring-inset ring-nexoraBorder/70'
                   : 'text-nexoraMuted hover:bg-nexoraBrandSoft hover:text-nexoraBrandDark'
               }`}
             >
@@ -492,7 +492,7 @@ export default function BookingTab({
                     </h4>
                     <div className="space-y-2">
                       {viewDetail.data.services.map((service, index) => (
-                        <div key={`${service.posServiceId ?? 'unresolved'}-${index}`} className="rounded-lg border border-nexoraBorder p-2.5">
+                        <div key={`${service.posServiceId ?? 'unresolved'}-${index}`} className="rounded-xl border border-nexoraBorder bg-white p-2.5 shadow-sm transition-all hover:-translate-y-0.5 hover:border-nexoraBrand/40 hover:shadow-md">
                           <div className="flex items-start justify-between gap-2">
                             <p className="text-xs font-bold text-nexoraText">{service.serviceName}</p>
                             <p className="shrink-0 text-xs font-bold text-nexoraText">${service.price.toFixed(2)}</p>

@@ -120,7 +120,7 @@ export default function CustomerDetailModal({
             ) : (
               <div className={`space-y-2 ${isHistoryFetching ? 'opacity-60' : ''}`}>
                 {historyItems.map((item) => (
-                  <div key={item.id} className="rounded-lg border border-nexoraBorder p-2.5">
+                  <div key={item.id} className="rounded-xl border border-nexoraBorder bg-white p-2.5 shadow-sm transition-all hover:-translate-y-0.5 hover:border-nexoraBrand/40 hover:shadow-md">
                     <div className="flex flex-wrap items-center justify-between gap-2">
                       <div className="flex flex-wrap items-center gap-2">
                         <span className="font-mono text-[11px] font-bold text-nexoraMuted">#{item.orderNumber}</span>

@@ -150,7 +150,7 @@ export default function BookingCalendar({
             selectedBookings.map((booking) => {
               const canAct = booking.status === PosOrderStatus.Pending || booking.status === PosOrderStatus.Confirmed
               return (
-                <div key={booking.bookingId} className="rounded-lg border border-nexoraBorder p-3">
+                <div key={booking.bookingId} className="rounded-xl border border-nexoraBorder bg-white p-3 shadow-sm transition-all hover:-translate-y-0.5 hover:border-nexoraBrand/40 hover:shadow-md">
                   <div className="flex items-start justify-between gap-2">
                     <p className="text-xs font-bold text-nexoraText">{booking.customerName}</p>
                     <span className="rounded-full bg-nexoraCanvas px-2 py-0.5 text-[10px] font-bold text-nexoraText">

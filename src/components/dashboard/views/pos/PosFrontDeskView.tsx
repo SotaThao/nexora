@@ -78,6 +78,28 @@ const SCROLL_PANEL_MAX_HEIGHT = 'max-h-[560px]'
 // real total rather than a first page.
 const TODAY_BOOKING_PAGE_SIZE = 200
 
+const renderServiceChips = (serviceNames: string[]) =>
+  serviceNames.length > 0 ? (
+    <div className="flex flex-wrap gap-1.5">
+      {serviceNames.map((service, index) => (
+        <span
+          key={`${service}-${index}`}
+          className="inline-flex max-w-full items-center rounded-full border border-nexoraBrand/15 bg-white px-2 py-1 text-[11px] font-bold text-nexoraText"
+        >
+          <span className="truncate">{service}</span>
+        </span>
+      ))}
+    </div>
+  ) : (
+    <span className="text-[11px] text-nexoraMuted">—</span>
+  )
+
+const renderTechnicianChip = (technicianNames: string[]) => (
+  <span className="inline-flex max-w-full rounded-full bg-cyan-100/70 px-2.5 py-1 text-[11px] font-extrabold text-cyan-800">
+    <span className="truncate">{joinOrEmpty(technicianNames)}</span>
+  </span>
+)
+
 function formatReportDate(isoDate: string, language: string) {
   const date = new Date(`${isoDate}T00:00:00Z`)
   if (Number.isNaN(date.getTime())) return isoDate
@@ -114,18 +136,37 @@ const sortByAttentionFirst = (orders: OrderListItemApiDto[]) =>
 function orderListStatusSurfaceClass(status: string) {
   if (status === PosOrderStatus.Waiting) return 'bg-amber-50/40 hover:bg-amber-50/70'
   if (status === PosOrderStatus.InService) return 'bg-cyan-50/40 hover:bg-cyan-50/70'
-  return 'bg-nexoraSurface hover:bg-nexoraCanvas'
+  return 'bg-nexoraSurface hover:bg-violet-50/35'
 }
 
 function orderListStatusBadgeClass(status: string) {
-  if (status === PosOrderStatus.Waiting) return 'bg-amber-100 text-amber-700'
-  if (status === PosOrderStatus.InService) return 'bg-cyan-100 text-cyan-700'
-  return 'bg-nexoraCanvas text-nexoraBrandDark'
+  if (status === PosOrderStatus.Waiting) return 'border-amber-200 bg-amber-100 text-amber-700'
+  if (status === PosOrderStatus.InService) return 'border-cyan-200 bg-cyan-100 text-cyan-700'
+  return 'border-nexoraBorder bg-nexoraCanvas text-nexoraBrandDark'
 }
 
 // Not-arrived guests are bookings, not tickets, so their badge in a mixed list uses the neutral
 // fallback of the helper above rather than a Waiting/InService tint — nothing has started yet.
-const NOT_ARRIVED_BADGE_CLASS = 'bg-nexoraCanvas text-nexoraBrandDark'
+const NOT_ARRIVED_BADGE_CLASS = 'border-sky-200 bg-sky-50 text-sky-700'
+
+const ORDER_LIST_FILTER_STYLES: Record<OrderListFilter, { active: string; inactive: string }> = {
+  [OrderListFilter.All]: {
+    active: 'border-nexoraBrand bg-nexoraBrand text-white shadow-sm',
+    inactive: 'border-violet-200 bg-violet-50/60 text-violet-700 hover:bg-violet-100/70',
+  },
+  [OrderListFilter.NotArrived]: {
+    active: 'border-sky-600 bg-sky-600 text-white shadow-sm',
+    inactive: 'border-sky-200 bg-sky-50/60 text-sky-700 hover:bg-sky-100/70',
+  },
+  [OrderListFilter.Waiting]: {
+    active: 'border-amber-600 bg-amber-600 text-white shadow-sm',
+    inactive: 'border-amber-200 bg-amber-50/60 text-amber-700 hover:bg-amber-100/70',
+  },
+  [OrderListFilter.InService]: {
+    active: 'border-cyan-600 bg-cyan-600 text-white shadow-sm',
+    inactive: 'border-cyan-200 bg-cyan-50/60 text-cyan-700 hover:bg-cyan-100/70',
+  },
+}
 
 // POS iPad redesign — Create mode no longer carries a pre-filled customerDraft;
 // PosOrderWorkspace now collects it itself via its own 2-step Check-in
@@ -187,10 +228,10 @@ function ScrollableTabStrip({ children }: { children: ReactNode }) {
 
   const isOverflowing = canScrollLeft || canScrollRight
   const arrowClass =
-    'flex h-8 w-6 shrink-0 items-center justify-center self-stretch text-nexoraMuted hover:text-nexoraText'
+    'flex h-9 w-8 shrink-0 items-center justify-center self-stretch rounded-lg text-nexoraMuted transition-colors hover:bg-nexoraCanvas hover:text-nexoraText'
 
   return (
-    <div className="flex items-center border-b border-nexoraBorder">
+    <div className="flex items-center gap-1">
       {isOverflowing && (
         <button
           type="button"
@@ -489,7 +530,7 @@ export default function PosFrontDeskView({
       type="button"
       onClick={() => handleCheckInBooking(booking.bookingId)}
       disabled={checkInBooking.isPending}
-      className="shrink-0 rounded-lg border border-nexoraBrand bg-nexoraBrand h-9 px-3 text-[11px] font-bold text-white hover:bg-nexoraBrandDark disabled:opacity-60"
+      className="h-9 shrink-0 rounded-lg border border-emerald-200 bg-emerald-50 px-3 text-[11px] font-extrabold text-emerald-700 transition-colors hover:border-emerald-300 hover:bg-emerald-100 disabled:opacity-60"
     >
       {t(tk('notArrivedCheckInAction'))}
     </button>
@@ -502,21 +543,21 @@ export default function PosFrontDeskView({
   const renderNotArrivedCard = (booking: BookingListItemApiDto, withStatusBadge = false) => (
     <div
       key={booking.bookingId}
-      className="space-y-2 rounded-2xl border border-nexoraBorder bg-nexoraSurface p-4"
+      className="space-y-2 rounded-xl border border-nexoraBorder bg-white p-4 shadow-sm transition-all hover:-translate-y-0.5 hover:border-nexoraBrand/40 hover:shadow-md"
     >
       <div className="flex items-center justify-between gap-2">
         <span className="text-[11px] font-semibold tabular-nums text-nexoraText">
           {formatBookingWallClockTime(booking.scheduledAt, booking.source)}
         </span>
         {withStatusBadge ? (
-          <span className={`rounded-full px-2 py-0.5 text-[10px] font-black uppercase ${NOT_ARRIVED_BADGE_CLASS}`}>
+          <span className={`rounded-full border px-2 py-0.5 text-[10px] font-black uppercase ${NOT_ARRIVED_BADGE_CLASS}`}>
             {notArrivedLabel}
           </span>
         ) : null}
       </div>
       <p className="truncate text-sm font-bold text-nexoraText">{booking.customerName}</p>
-      <p className="truncate text-[11px] font-semibold text-nexoraText">{joinOrEmpty(booking.serviceNames)}</p>
-      <p className="truncate text-[11px] font-semibold text-nexoraText">{joinOrEmpty(booking.technicianNames)}</p>
+      {renderServiceChips(booking.serviceNames)}
+      <div>{renderTechnicianChip(booking.technicianNames)}</div>
       <div className="flex justify-end border-t border-nexoraBorder pt-2">
         {renderNotArrivedCheckInButton(booking)}
       </div>
@@ -526,21 +567,21 @@ export default function PosFrontDeskView({
   // The ticket table's eight columns, filled in for a booking: no ticket number, no elapsed time,
   // and the "checked in at" slot carries the time the guest is due instead.
   const renderNotArrivedOrderRow = (booking: BookingListItemApiDto) => (
-    <tr key={booking.bookingId} className="border-t border-nexoraBorder">
-      <td className="py-2 pr-3 font-mono font-bold text-nexoraMuted">—</td>
-      <td className="py-2 pr-3 font-bold text-nexoraText">{booking.customerName}</td>
-      <td className="whitespace-nowrap py-2 pr-3 font-semibold tabular-nums text-nexoraText">
+    <tr key={booking.bookingId} className="border-t border-nexoraBorder/70 bg-sky-50/20 transition-colors hover:bg-sky-50/45">
+      <td className="px-4 py-3 font-mono font-bold text-nexoraMuted">—</td>
+      <td className="px-4 py-3 font-bold text-nexoraText">{booking.customerName}</td>
+      <td className="whitespace-nowrap px-4 py-3 font-semibold tabular-nums text-nexoraText">
         {formatBookingWallClockTime(booking.scheduledAt, booking.source)}
       </td>
-      <td className="py-2 pr-3">
-        <span className={`rounded-full px-2 py-0.5 text-[10px] font-black uppercase ${NOT_ARRIVED_BADGE_CLASS}`}>
+      <td className="px-4 py-3">
+        <span className={`rounded-full border px-2 py-0.5 text-[10px] font-black uppercase ${NOT_ARRIVED_BADGE_CLASS}`}>
           {notArrivedLabel}
         </span>
       </td>
-      <td className="py-2 pr-3 font-semibold text-nexoraText">{joinOrEmpty(booking.technicianNames)}</td>
-      <td className="py-2 pr-3 font-semibold text-nexoraText">{joinOrEmpty(booking.serviceNames)}</td>
-      <td className="py-2 pr-3 text-right tabular-nums text-nexoraMuted">—</td>
-      <td className="py-2 text-right">
+      <td className="px-4 py-3">{renderTechnicianChip(booking.technicianNames)}</td>
+      <td className="px-4 py-3">{renderServiceChips(booking.serviceNames)}</td>
+      <td className="px-4 py-3 text-right tabular-nums text-nexoraMuted">—</td>
+      <td className="px-4 py-3 text-right">
         <div className="flex justify-end">{renderNotArrivedCheckInButton(booking)}</div>
       </td>
     </tr>
@@ -551,7 +592,7 @@ export default function PosFrontDeskView({
   const renderNotArrivedList = () => {
     if (isTodayBookingsPending) {
       return (
-        <div className="rounded-xl border border-nexoraBorder bg-nexoraSurface p-6">
+        <div className="py-6">
           <SkeletonList count={3} lines={1} />
         </div>
       )
@@ -559,7 +600,7 @@ export default function PosFrontDeskView({
 
     if (notArrivedBookings.length === 0) {
       return (
-        <div className="rounded-xl border border-nexoraBorder bg-nexoraSurface p-6 text-center text-xs text-nexoraMuted">
+        <div className="py-8 text-center text-xs text-nexoraMuted">
           {t(tk('notArrivedEmpty'))}
         </div>
       )
@@ -577,28 +618,28 @@ export default function PosFrontDeskView({
 
     return (
       <div
-        className={`${SCROLL_PANEL_MAX_HEIGHT} overflow-y-auto rounded-xl border border-nexoraBorder bg-nexoraSurface p-4`}
+        className={`${SCROLL_PANEL_MAX_HEIGHT} overflow-y-auto rounded-xl border border-nexoraBorder bg-white`}
       >
         <table className="w-full text-left text-xs">
-          <thead>
+          <thead className="sticky top-0 z-[1] bg-nexoraCanvas/90">
             <tr className="text-[10px] font-black uppercase tracking-wider text-nexoraMuted">
-              <th className="text-xs font-black pb-2 pr-3">{t(tk('orderListColumnTime'))}</th>
-              <th className="text-xs font-black pb-2 pr-3">{t(tk('orderListColumnCustomer'))}</th>
-              <th className="text-xs font-black pb-2 pr-3">{t(tk('orderListColumnTechnician'))}</th>
-              <th className="text-xs font-black pb-2 pr-3">{t(tk('orderListColumnServices'))}</th>
-              <th className="text-xs font-black pb-2 text-right"></th>
+              <th className="px-4 py-3 text-xs font-black">{t(tk('orderListColumnTime'))}</th>
+              <th className="px-4 py-3 text-xs font-black">{t(tk('orderListColumnCustomer'))}</th>
+              <th className="px-4 py-3 text-xs font-black">{t(tk('orderListColumnTechnician'))}</th>
+              <th className="px-4 py-3 text-xs font-black">{t(tk('orderListColumnServices'))}</th>
+              <th className="px-4 py-3 text-right text-xs font-black"></th>
             </tr>
           </thead>
           <tbody>
             {notArrivedBookings.map((booking) => (
-              <tr key={booking.bookingId} className="border-t border-nexoraBorder">
-                <td className="py-2 pr-3 font-semibold tabular-nums text-nexoraText">
+              <tr key={booking.bookingId} className="border-t border-nexoraBorder/70 bg-sky-50/20 transition-colors hover:bg-sky-50/45">
+                <td className="px-4 py-3 font-semibold tabular-nums text-nexoraText">
                   {formatBookingWallClockTime(booking.scheduledAt, booking.source)}
                 </td>
-                <td className="py-2 pr-3 font-bold text-nexoraText">{booking.customerName}</td>
-                <td className="py-2 pr-3 font-semibold text-nexoraText">{joinOrEmpty(booking.technicianNames)}</td>
-                <td className="py-2 pr-3 font-semibold text-nexoraText">{joinOrEmpty(booking.serviceNames)}</td>
-                <td className="py-2 text-right">
+                <td className="px-4 py-3 font-bold text-nexoraText">{booking.customerName}</td>
+                <td className="px-4 py-3">{renderTechnicianChip(booking.technicianNames)}</td>
+                <td className="px-4 py-3">{renderServiceChips(booking.serviceNames)}</td>
+                <td className="px-4 py-3 text-right">
                   <div className="flex justify-end">{renderNotArrivedCheckInButton(booking)}</div>
                 </td>
               </tr>
@@ -632,7 +673,7 @@ export default function PosFrontDeskView({
       <div
         key={station.posStaffProfileId}
         data-testid={`turn-board-station-${station.posStaffProfileId}`}
-        className="space-y-3 rounded-xl border border-nexoraBorder bg-nexoraSurface p-4"
+        className="space-y-3 rounded-xl border border-nexoraBorder bg-white p-4 shadow-sm transition-all hover:-translate-y-0.5 hover:border-nexoraBrand/40 hover:shadow-md"
       >
         <div className="flex items-center gap-3">
           <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-nexoraLavender/20 text-[11px] font-bold text-nexoraBrandDark">
@@ -644,16 +685,20 @@ export default function PosFrontDeskView({
           </div>
           <div className="min-w-0 flex-1">
             <p className="truncate text-sm font-bold text-nexoraText">{station.displayName}</p>
-            <p className="text-[11px] font-extrabold uppercase text-nexoraMuted">
+            <span className={`mt-1 inline-flex rounded-full border px-2 py-0.5 text-[10px] font-extrabold ${
+              station.currentStatus === PosOrderStatus.InService
+                ? 'border-cyan-200 bg-cyan-50 text-cyan-700'
+                : 'border-emerald-200 bg-emerald-50 text-emerald-700'
+            }`}>
               {t(tk(`stationStatus.${station.currentStatus}`))}
-            </p>
+            </span>
           </div>
           <button
             type="button"
             onClick={() => void handleBeepStation(station)}
             disabled={beepingStaffId !== null}
             aria-label={t(tk('beepAria'), { name: station.displayName })}
-            className="flex h-9 shrink-0 items-center gap-1 rounded-lg border border-nexoraBrand px-2.5 text-[11px] font-bold text-nexoraBrandDark transition-colors hover:bg-nexoraBrandSoft disabled:opacity-60"
+            className="flex h-9 shrink-0 items-center gap-1 rounded-lg border border-amber-200 bg-amber-50 px-2.5 text-[11px] font-extrabold text-amber-700 transition-colors hover:border-amber-300 hover:bg-amber-100 disabled:opacity-60"
           >
             {isBeeping ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Bell className="h-3.5 w-3.5" />}
             {isBeeping ? t(tk('beepPending')) : t(tk('beep'))}
@@ -661,7 +706,7 @@ export default function PosFrontDeskView({
         </div>
 
         {station.currentStatus === PosOrderStatus.InService && (
-          <div className="space-y-2 rounded-lg bg-nexoraCanvas p-3">
+          <div className="space-y-2 rounded-xl bg-nexoraCanvas/70 p-3">
             <div className="flex items-center justify-between gap-2">
               <p className="truncate text-xs font-bold text-nexoraText">{station.currentCustomerName}</p>
               {station.currentOrderNumber ? (
@@ -700,7 +745,7 @@ export default function PosFrontDeskView({
   const renderCheckoutCustomerPanel = () => {
     if (isInServiceOrdersLoading) {
       return (
-        <div className="rounded-xl border border-nexoraBorder bg-nexoraSurface p-6">
+        <div className="py-6">
           <SkeletonList count={3} lines={2} />
         </div>
       )
@@ -708,7 +753,7 @@ export default function PosFrontDeskView({
 
     if (inServiceOrders.length === 0) {
       return (
-        <div className="rounded-xl border border-nexoraBorder bg-nexoraSurface p-8 text-center">
+        <div className="py-10 text-center">
           <p className="text-sm font-bold text-nexoraText">{t(tk('checkoutCustomerEmpty'))}</p>
           <p className="mt-1 text-xs text-nexoraMuted">{t(tk('checkoutCustomerEmptyHint'))}</p>
         </div>
@@ -738,7 +783,7 @@ export default function PosFrontDeskView({
               <article
                 key={order.id}
                 data-testid={`checkout-customer-${order.id}`}
-                className="flex flex-col gap-3 rounded-2xl border border-nexoraBorder bg-nexoraSurface p-4 transition-colors hover:border-cyan-200 hover:bg-cyan-50/20"
+                className="flex flex-col gap-3 rounded-xl border border-nexoraBorder bg-white p-4 shadow-sm transition-all hover:-translate-y-0.5 hover:border-cyan-300 hover:shadow-md"
               >
                 <div className="flex items-start justify-between gap-3">
                   <div className="min-w-0">
@@ -793,7 +838,7 @@ export default function PosFrontDeskView({
 
     if (weeklyPayrollQuery.isPending && weeklyPayrollQuery.fetchStatus !== 'idle') {
       return (
-        <div className="rounded-xl border border-nexoraBorder bg-nexoraSurface p-6">
+        <div className="py-6">
           <SkeletonList count={3} lines={2} />
         </div>
       )
@@ -801,7 +846,7 @@ export default function PosFrontDeskView({
 
     if (weeklyPayrollQuery.isError) {
       return (
-        <div className="rounded-xl border border-nexoraBorder bg-nexoraSurface p-8 text-center text-xs text-nexoraMuted">
+        <div className="py-10 text-center text-xs text-nexoraMuted">
           {t(tk('reportError'))}
         </div>
       )
@@ -815,18 +860,18 @@ export default function PosFrontDeskView({
             <p className="mt-0.5 text-xs text-nexoraMuted">{t(tk('reportThisWeek'))}</p>
           </div>
           {payroll ? (
-            <span className="text-[11px] font-semibold tabular-nums text-nexoraText">
+            <span className="rounded-full bg-violet-50 px-3 py-1.5 text-[11px] font-bold tabular-nums text-violet-700">
               {formatReportDate(payroll.weekStart, currentLanguage)} — {formatReportDate(payroll.weekEnd, currentLanguage)}
             </span>
           ) : null}
         </div>
 
         {rows.length === 0 ? (
-          <div className="rounded-xl border border-nexoraBorder bg-nexoraSurface p-8 text-center text-xs text-nexoraMuted">
+          <div className="py-10 text-center text-xs text-nexoraMuted">
             {t(tk('reportEmpty'))}
           </div>
         ) : (
-          <div className="overflow-x-auto rounded-xl border border-nexoraBorder bg-nexoraSurface">
+          <div className="overflow-x-auto rounded-xl border border-nexoraBorder bg-white">
             <table className="w-full min-w-[720px] text-left text-xs">
               <thead className="bg-nexoraCanvas text-[10px] font-extrabold uppercase tracking-wide text-nexoraMuted">
                 <tr>
@@ -840,13 +885,27 @@ export default function PosFrontDeskView({
               </thead>
               <tbody>
                 {rows.map((row) => (
-                  <tr key={row.businessStaffLinkId} className="border-t border-nexoraBorder/70">
-                    <td className="px-4 py-3 font-bold text-nexoraText">{row.displayName}</td>
-                    <td className="px-4 py-3 text-right tabular-nums text-nexoraText">{row.hours.toFixed(1)}h</td>
-                    <td className="px-4 py-3 text-right tabular-nums text-nexoraText">{formatCurrency(row.sales)}</td>
-                    <td className="px-4 py-3 text-right tabular-nums text-nexoraText">{formatCurrency(row.commission)}</td>
-                    <td className="px-4 py-3 text-right tabular-nums text-nexoraText">{formatCurrency(row.tips)}</td>
-                    <td className="px-4 py-3 text-right tabular-nums font-bold text-nexoraText">{formatCurrency(row.takeHome)}</td>
+                  <tr key={row.businessStaffLinkId} className="border-t border-nexoraBorder/70 transition-colors even:bg-violet-50/15 hover:bg-violet-50/40">
+                    <td className="px-4 py-3 font-bold text-nexoraText">
+                      <span className="inline-flex max-w-full rounded-full bg-cyan-100/70 px-2.5 py-1 text-cyan-800">
+                        <span className="truncate">{row.displayName}</span>
+                      </span>
+                    </td>
+                    <td className="px-4 py-3 text-right tabular-nums text-nexoraText">
+                      <span className="rounded-full bg-sky-50 px-2.5 py-1 font-semibold text-sky-700">{row.hours.toFixed(1)}h</span>
+                    </td>
+                    <td className="px-4 py-3 text-right tabular-nums text-nexoraText">
+                      <span className="rounded-full bg-emerald-50 px-2.5 py-1 font-semibold text-emerald-700">{formatCurrency(row.sales)}</span>
+                    </td>
+                    <td className="px-4 py-3 text-right tabular-nums text-nexoraText">
+                      <span className="rounded-full bg-violet-50 px-2.5 py-1 font-semibold text-violet-700">{formatCurrency(row.commission)}</span>
+                    </td>
+                    <td className="px-4 py-3 text-right tabular-nums text-nexoraText">
+                      <span className="rounded-full bg-amber-50 px-2.5 py-1 font-semibold text-amber-700">{formatCurrency(row.tips)}</span>
+                    </td>
+                    <td className="px-4 py-3 text-right tabular-nums font-bold text-nexoraText">
+                      <span className="rounded-full bg-nexoraBrandSoft px-2.5 py-1 text-nexoraBrandDark">{formatCurrency(row.takeHome)}</span>
+                    </td>
                   </tr>
                 ))}
               </tbody>
@@ -961,7 +1020,7 @@ export default function PosFrontDeskView({
 
     return (
       <section
-        className="space-y-3 rounded-xl border border-nexoraBorder bg-nexoraSurface p-4"
+        className="space-y-3"
         aria-label={t(tk('todayTurnsTitle'))}
         data-testid="today-turns-panel"
       >
@@ -1001,7 +1060,7 @@ export default function PosFrontDeskView({
             {t(tk('todayTurnsEmpty'))}
           </p>
         ) : (
-          <div className="overflow-x-auto rounded-lg border border-nexoraBorder">
+          <div className="overflow-x-auto rounded-xl border border-nexoraBorder bg-white">
             <table className="w-full text-left text-xs">
               <thead className="bg-nexoraCanvas text-[10px] font-black uppercase tracking-wide text-nexoraMuted">
                 <tr>
@@ -1018,10 +1077,12 @@ export default function PosFrontDeskView({
                     <tr
                       key={row.posStaffProfileId}
                       data-testid={`today-turn-row-${row.posStaffProfileId}`}
-                      className={`border-t border-nexoraBorder/70 ${isNext ? 'bg-emerald-50/40' : ''}`}
+                      className={`border-t border-nexoraBorder/70 transition-colors ${isNext ? 'bg-emerald-50/40 hover:bg-emerald-50/65' : 'hover:bg-violet-50/35'}`}
                     >
                       <td className="px-3 py-2.5 font-semibold text-nexoraText">
-                        <span>{row.displayName}</span>
+                        <span className="inline-flex max-w-full rounded-full bg-cyan-100/70 px-2.5 py-1 text-cyan-800">
+                          <span className="truncate">{row.displayName}</span>
+                        </span>
                         {row.turnRank != null ? (
                           <span className="ml-2 text-[10px] font-bold text-nexoraMuted">#{row.turnRank}</span>
                         ) : null}
@@ -1030,15 +1091,7 @@ export default function PosFrontDeskView({
                         {row.turnsToday}
                       </td>
                       <td className="max-w-[320px] px-3 py-2.5 font-semibold text-nexoraText">
-                        {services.length > 0 ? (
-                          <div className="space-y-0.5">
-                            {services.map((service) => (
-                              <span key={service} className="block whitespace-normal">
-                                {service}
-                              </span>
-                            ))}
-                          </div>
-                        ) : '—'}
+                        {renderServiceChips(services)}
                       </td>
                     </tr>
                   )
@@ -1052,7 +1105,7 @@ export default function PosFrontDeskView({
   }
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4">
       {/* Hidden while an Order Workspace is open (Check-in draft or editing an existing
           order) — iPad space optimization: this title/description block is
           "where am I" chrome that's redundant once the staff is heads-down on one
@@ -1061,10 +1114,10 @@ export default function PosFrontDeskView({
       {!updateWorkspace && activeTab !== PosFrontDeskTab.CheckIn ? (
         <section className="px-0.5">
           <div className="space-y-1">
-            <h1 className="text-2xl font-bold leading-tight text-nexoraText">
+            <h1 className="text-xl font-extrabold leading-tight tracking-tight text-nexoraText">
               {t('dashboard.menu.pos_board')}
             </h1>
-            <p className="text-sm font-medium text-nexoraMuted">{t(tk('description'))}</p>
+            <p className="text-xs font-medium text-nexoraMuted">{t(tk('description'))}</p>
           </div>
         </section>
       ) : null}
@@ -1087,14 +1140,24 @@ export default function PosFrontDeskView({
               }
               setActiveTab(tab)
             }}
-            className={`shrink-0 whitespace-nowrap px-3 py-2 text-xs font-bold ${
+            className={`flex h-9 shrink-0 items-center gap-1.5 whitespace-nowrap rounded-xl px-3 text-xs font-bold transition-all ${
               !updateWorkspace && activeTab === tab
-                ? 'border-b-2 border-nexoraBrand text-nexoraBrandDark'
-                : 'text-nexoraMuted hover:text-nexoraText'
+                ? 'bg-nexoraBrand text-white shadow-sm'
+                : 'bg-nexoraSurface text-nexoraMuted shadow-sm ring-1 ring-inset ring-nexoraBorder/80 hover:bg-nexoraCanvas hover:text-nexoraText hover:ring-nexoraBrand/30'
             }`}
           >
             {t(tk(`tabs.${tab}`))}
-            {typeof tabBadges[tab] === 'number' ? ` (${tabBadges[tab]})` : ''}
+            {typeof tabBadges[tab] === 'number' ? (
+              <span
+                className={`rounded-full px-1.5 py-0.5 text-[10px] tabular-nums ${
+                  !updateWorkspace && activeTab === tab
+                    ? 'bg-white/20 text-white'
+                    : 'bg-nexoraCanvas text-nexoraMuted'
+                }`}
+              >
+                {tabBadges[tab]}
+              </span>
+            ) : null}
           </button>
         ))}
       </ScrollableTabStrip>
@@ -1142,22 +1205,22 @@ export default function PosFrontDeskView({
 
       {activeTab === PosFrontDeskTab.OrderList && (
         isOrderListLoading ? (
-          <div className="rounded-xl border border-nexoraBorder bg-nexoraSurface p-6">
+          <div className="py-6">
             <SkeletonList count={3} lines={1} />
           </div>
         ) : (
           <div className="space-y-3">
-            <div className="flex items-center justify-between gap-2">
-              <div className="flex gap-2">
+            <div className="flex flex-wrap items-center justify-between gap-3">
+              <div className="flex flex-wrap gap-1.5 rounded-xl border border-nexoraBorder bg-nexoraCanvas/70 p-1.5">
                 {ORDER_LIST_FILTERS.map((filter) => (
                   <button
                     key={filter}
                     type="button"
                     onClick={() => setOrderListFilter(filter)}
-                    className={`rounded-full px-3 py-1.5 text-[11px] font-bold ${
+                    className={`rounded-lg border px-3 py-1.5 text-[11px] font-bold transition-all ${
                       orderListFilter === filter
-                        ? 'bg-nexoraBrand text-white'
-                        : 'border border-nexoraBorder text-nexoraMuted hover:text-nexoraText'
+                        ? ORDER_LIST_FILTER_STYLES[filter].active
+                        : ORDER_LIST_FILTER_STYLES[filter].inactive
                     }`}
                   >
                     {/* Counted over the whole queue, not the active filter — the point of the
@@ -1166,15 +1229,15 @@ export default function PosFrontDeskView({
                   </button>
                 ))}
               </div>
-              <div className="flex gap-1 rounded-lg border border-nexoraBorder p-0.5">
+              <div className="flex gap-1 rounded-xl border border-nexoraBorder bg-nexoraCanvas/70 p-1">
                 <button
                   type="button"
                   onClick={() => handleChangeViewMode(OrderListViewMode.List)}
                   aria-label={t(tk('viewModeList'))}
-                  className={`rounded-md p-1.5 ${
+                  className={`rounded-lg p-1.5 transition-all ${
                     viewMode === OrderListViewMode.List
-                      ? 'bg-nexoraBrand text-white'
-                      : 'text-nexoraMuted hover:text-white'
+                      ? 'bg-white text-nexoraBrandDark shadow-sm ring-1 ring-inset ring-nexoraBorder/70'
+                      : 'text-nexoraMuted hover:bg-white/80 hover:text-nexoraText'
                   }`}
                 >
                   <ListIcon className="h-4 w-4" />
@@ -1183,10 +1246,10 @@ export default function PosFrontDeskView({
                   type="button"
                   onClick={() => handleChangeViewMode(OrderListViewMode.Card)}
                   aria-label={t(tk('viewModeCard'))}
-                  className={`rounded-md p-1.5 ${
+                  className={`rounded-lg p-1.5 transition-all ${
                     viewMode === OrderListViewMode.Card
-                      ? 'bg-nexoraBrand text-white'
-                      : 'text-nexoraMuted hover:text-white'
+                      ? 'bg-white text-nexoraBrandDark shadow-sm ring-1 ring-inset ring-nexoraBorder/70'
+                      : 'text-nexoraMuted hover:bg-white/80 hover:text-nexoraText'
                   }`}
                 >
                   <LayoutGrid className="h-4 w-4" />
@@ -1250,7 +1313,7 @@ export default function PosFrontDeskView({
 
               if (filteredOrderList.length === 0 && notArrivedRows.length === 0) {
                 return (
-                  <div className="rounded-xl border border-nexoraBorder bg-nexoraSurface p-6 text-center text-xs text-nexoraMuted">
+                  <div className="py-10 text-center text-xs text-nexoraMuted">
                     {t(tk('orderListEmpty'))}
                   </div>
                 )
@@ -1265,7 +1328,7 @@ export default function PosFrontDeskView({
                     e.stopPropagation()
                     setUpdateWorkspace({ orderId: order.id, mode: 'edit' })
                   }}
-                  className="inline-flex h-9 shrink-0 items-center gap-1.5 rounded-lg border border-nexoraLavender bg-transparent px-3 text-[11px] font-bold text-nexoraBrandDark hover:bg-nexoraLavender/10"
+                  className="inline-flex h-9 shrink-0 items-center gap-1.5 rounded-lg border border-nexoraLavender bg-violet-50 px-3 text-[11px] font-extrabold text-violet-700 transition-colors hover:bg-violet-100"
                 >
                   <PencilLine className="h-3.5 w-3.5" aria-hidden="true" />
                   {t(tk('editButton'))}
@@ -1281,7 +1344,7 @@ export default function PosFrontDeskView({
                       handleCancel(order.id, order.customerName)
                     }}
                     disabled={cancelOrder.isPending}
-                    className="inline-flex h-9 shrink-0 items-center gap-1.5 rounded-lg border border-rose-200 bg-transparent px-3 text-[11px] font-bold text-rose-500 hover:bg-rose-50/70 disabled:cursor-not-allowed disabled:opacity-60"
+                    className="inline-flex h-9 shrink-0 items-center gap-1.5 rounded-lg border border-rose-200 bg-rose-50 px-3 text-[11px] font-extrabold text-rose-600 transition-colors hover:border-rose-300 hover:bg-rose-100 disabled:cursor-not-allowed disabled:opacity-60"
                   >
                     <X className="h-3.5 w-3.5" aria-hidden="true" />
                     {t(tk('cancelButton'))}
@@ -1310,7 +1373,7 @@ export default function PosFrontDeskView({
                     }}
                     disabled={startOrderService.isPending || blockedReason !== undefined}
                     title={blockedReason}
-                    className="inline-flex h-9 shrink-0 items-center gap-1.5 rounded-lg border border-emerald-200 bg-transparent px-3 text-[11px] font-bold text-emerald-600 hover:bg-emerald-50/70 disabled:cursor-not-allowed disabled:opacity-60"
+                    className="inline-flex h-9 shrink-0 items-center gap-1.5 rounded-lg border border-emerald-200 bg-emerald-50 px-3 text-[11px] font-extrabold text-emerald-700 transition-colors hover:border-emerald-300 hover:bg-emerald-100 disabled:cursor-not-allowed disabled:opacity-60"
                   >
                     <Play className="h-3.5 w-3.5" aria-hidden="true" />
                     {t(tk('startServiceButton'))}
@@ -1330,7 +1393,7 @@ export default function PosFrontDeskView({
                     }}
                     aria-label={t(tk('checkoutButton'))}
                     title={t(tk('checkoutButton'))}
-                    className="inline-flex h-9 shrink-0 items-center gap-1.5 rounded-lg border border-violet-200 bg-transparent px-3 text-[11px] font-bold text-violet-600 hover:bg-violet-50/70"
+                    className="inline-flex h-9 shrink-0 items-center gap-1.5 rounded-lg border border-violet-200 bg-violet-50 px-3 text-[11px] font-extrabold text-violet-700 transition-colors hover:border-violet-300 hover:bg-violet-100"
                   >
                     <DollarSign className="h-3.5 w-3.5" aria-hidden="true" />
                     {t(tk('checkoutButton'))}
@@ -1349,7 +1412,7 @@ export default function PosFrontDeskView({
                         key={order.id}
                         data-order-status={order.status}
                         onClick={() => setUpdateWorkspace({ orderId: order.id, mode: 'edit' })}
-                        className={`cursor-pointer space-y-2 rounded-2xl border p-4 hover:border-nexoraBrand ${orderListStatusSurfaceClass(order.status)} ${
+                        className={`cursor-pointer space-y-2 rounded-2xl border p-4 shadow-sm transition-all hover:-translate-y-0.5 hover:border-nexoraBrand hover:shadow-md ${orderListStatusSurfaceClass(order.status)} ${
                           needsFrontDeskAttention(order)
                             ? 'border-nexoraWarning'
                             : 'border-nexoraBorder'
@@ -1357,14 +1420,14 @@ export default function PosFrontDeskView({
                       >
                         <div className="flex items-center justify-between gap-2">
                           <span className="font-mono text-[11px] font-bold text-nexoraMuted">#{order.orderNumber}</span>
-                          <span className={`rounded-full px-2 py-0.5 text-[10px] font-black uppercase ${orderListStatusBadgeClass(order.status)}`}>
+                          <span className={`rounded-full border px-2 py-0.5 text-[10px] font-black uppercase ${orderListStatusBadgeClass(order.status)}`}>
                             {order.status}
                           </span>
                         </div>
                         <div className="flex flex-wrap gap-1.5">{renderRowFlags(order)}</div>
                         <p className="truncate text-sm font-bold text-nexoraText">{order.customerName}</p>
-                        <p className="truncate text-[11px] font-semibold text-nexoraText">{joinOrEmpty(order.serviceNames)}</p>
-                        <p className="truncate text-[11px] font-semibold text-nexoraText">{joinOrEmpty(order.technicianNames)}</p>
+                        {renderServiceChips(order.serviceNames)}
+                        <div>{renderTechnicianChip(order.technicianNames)}</div>
                         <div className="flex flex-wrap items-center justify-between gap-2 border-t border-nexoraBorder pt-2">
                           <span className="text-[11px] text-nexoraMuted">
                             {t(tk('waitMinutes'), { minutes: order.elapsedMinutes })}
@@ -1388,19 +1451,19 @@ export default function PosFrontDeskView({
                 <div className="space-y-3">
                 {attentionBadges}
                 <div
-                  className={`${SCROLL_PANEL_MAX_HEIGHT} overflow-y-auto rounded-xl border border-nexoraBorder bg-nexoraSurface p-4`}
+                  className={`${SCROLL_PANEL_MAX_HEIGHT} overflow-y-auto rounded-xl border border-nexoraBorder bg-white`}
                 >
                   <table className="w-full text-left text-xs">
-                    <thead>
+                    <thead className="sticky top-0 z-[1] bg-nexoraCanvas/90">
                       <tr className="text-[10px] font-black uppercase tracking-wider text-nexoraMuted">
-                        <th className="text-xs font-black pb-2 pr-3">{t(tk('orderListColumnNumber'))}</th>
-                        <th className="text-xs font-black pb-2 pr-3">{t(tk('orderListColumnCustomer'))}</th>
-                        <th className="text-xs font-black pb-2 pr-3">{t(tk('orderListColumnCheckInAt'))}</th>
-                        <th className="text-xs font-black pb-2 pr-3">{t(tk('orderListColumnStatus'))}</th>
-                        <th className="text-xs font-black pb-2 pr-3">{t(tk('orderListColumnTechnician'))}</th>
-                        <th className="text-xs font-black pb-2 pr-3">{t(tk('orderListColumnServices'))}</th>
-                        <th className="text-xs font-black pb-2 pr-3 text-right">{t(tk('orderListColumnWaitTime'))}</th>
-                        <th className="text-xs font-black pb-2 text-right"></th>
+                        <th className="px-4 py-3 text-xs font-black">{t(tk('orderListColumnNumber'))}</th>
+                        <th className="px-4 py-3 text-xs font-black">{t(tk('orderListColumnCustomer'))}</th>
+                        <th className="px-4 py-3 text-xs font-black">{t(tk('orderListColumnCheckInAt'))}</th>
+                        <th className="px-4 py-3 text-xs font-black">{t(tk('orderListColumnStatus'))}</th>
+                        <th className="px-4 py-3 text-xs font-black">{t(tk('orderListColumnTechnician'))}</th>
+                        <th className="px-4 py-3 text-xs font-black">{t(tk('orderListColumnServices'))}</th>
+                        <th className="px-4 py-3 text-right text-xs font-black">{t(tk('orderListColumnWaitTime'))}</th>
+                        <th className="px-4 py-3 text-right text-xs font-black"></th>
                       </tr>
                     </thead>
                     <tbody>
@@ -1408,29 +1471,29 @@ export default function PosFrontDeskView({
                         <tr
                           key={order.id}
                           onClick={() => setUpdateWorkspace({ orderId: order.id, mode: 'edit' })}
-                          className={`cursor-pointer border-t border-nexoraBorder ${orderListStatusSurfaceClass(order.status)} ${
+                          className={`cursor-pointer border-t border-nexoraBorder/70 transition-colors ${orderListStatusSurfaceClass(order.status)} ${
                             needsFrontDeskAttention(order) ? 'border-l-2 border-l-nexoraWarning' : ''
                           }`}
                         >
-                          <td className="py-2 pr-3 font-mono font-bold text-nexoraMuted">#{order.orderNumber}</td>
-                          <td className="py-2 pr-3 font-bold text-nexoraText">{order.customerName}</td>
-                          <td className="whitespace-nowrap py-2 pr-3 font-semibold tabular-nums text-nexoraText">
+                          <td className="px-4 py-3 font-mono font-bold text-nexoraMuted">#{order.orderNumber}</td>
+                          <td className="px-4 py-3 font-bold text-nexoraText">{order.customerName}</td>
+                          <td className="whitespace-nowrap px-4 py-3 font-semibold tabular-nums text-nexoraText">
                             {formatPosTime(order.checkedInAt, currentLanguage) || '—'}
                           </td>
-                          <td className="py-2 pr-3">
+                          <td className="px-4 py-3">
                             <div className="flex flex-wrap items-center gap-1.5">
-                              <span className={`rounded-full px-2 py-0.5 text-[10px] font-black uppercase ${orderListStatusBadgeClass(order.status)}`}>
+                              <span className={`rounded-full border px-2 py-0.5 text-[10px] font-black uppercase ${orderListStatusBadgeClass(order.status)}`}>
                                 {order.status}
                               </span>
                               {renderRowFlags(order)}
                             </div>
                           </td>
-                          <td className="py-2 pr-3 font-semibold text-nexoraText">{joinOrEmpty(order.technicianNames)}</td>
-                          <td className="py-2 pr-3 font-semibold text-nexoraText">{joinOrEmpty(order.serviceNames)}</td>
-                          <td className="py-2 pr-3 text-right tabular-nums text-nexoraMuted">
+                          <td className="px-4 py-3">{renderTechnicianChip(order.technicianNames)}</td>
+                          <td className="px-4 py-3">{renderServiceChips(order.serviceNames)}</td>
+                          <td className="px-4 py-3 text-right tabular-nums text-nexoraMuted">
                             {t(tk('waitMinutes'), { minutes: order.elapsedMinutes })}
                           </td>
-                          <td className="py-2 text-right">
+                          <td className="px-4 py-3 text-right">
                             <div className="flex flex-wrap justify-end gap-1.5">
                               {renderEditButton(order)}
                               {renderStartServiceButton(order)}
@@ -1456,11 +1519,11 @@ export default function PosFrontDeskView({
       {activeTab === PosFrontDeskTab.TurnBoard && (
         <div className="space-y-4">
           {isTurnBoardLoading ? (
-            <div className="rounded-xl border border-nexoraBorder bg-nexoraSurface p-6">
+            <div className="py-6">
               <SkeletonList count={3} lines={2} />
             </div>
           ) : turnBoard.length === 0 ? (
-            <div className="rounded-xl border border-nexoraBorder bg-nexoraSurface p-6 text-center text-xs text-nexoraMuted">
+            <div className="py-8 text-center text-xs text-nexoraMuted">
               {t(tk('turnBoardEmpty'))}
             </div>
           ) : (

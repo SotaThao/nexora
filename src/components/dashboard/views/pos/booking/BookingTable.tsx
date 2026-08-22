@@ -82,7 +82,7 @@ export default function BookingTable({
   const p = 'components.dashboard.views.pos.BookingTab.'
 
   return (
-    <div className="overflow-x-auto rounded-2xl border border-nexoraBorder bg-white shadow-sm">
+    <div className="overflow-x-auto rounded-xl border border-nexoraBorder bg-white">
       <table className="w-full min-w-[980px] table-fixed text-left text-xs">
         <colgroup>
           <col className="w-[17%]" />

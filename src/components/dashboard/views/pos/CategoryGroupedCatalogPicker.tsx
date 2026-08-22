@@ -149,9 +149,9 @@ export default function CategoryGroupedCatalogPicker({
       return (
         <div
           key={item.id}
-          className={`flex flex-col gap-1 rounded-xl border bg-nexoraSurface p-2.5 ${
-            isDisabled ? 'opacity-40' : ''
-          } ${isSelected ? 'border-nexoraBrand bg-nexoraBrand/5' : 'border-nexoraBorder'}`}
+          className={`flex flex-col gap-1 rounded-xl border bg-white p-2.5 shadow-sm transition-all ${
+            isDisabled ? 'opacity-40' : 'hover:-translate-y-0.5 hover:shadow-md'
+          } ${isSelected ? 'border-nexoraBrand bg-nexoraBrand/5' : 'border-nexoraBorder hover:border-nexoraBrand/40'}`}
         >
           <button
             type="button"
@@ -195,7 +195,7 @@ export default function CategoryGroupedCatalogPicker({
         type="button"
         onClick={() => onAdd(item.id)}
         disabled={isDisabled}
-        className={`flex min-h-[76px] flex-col justify-between gap-2 rounded-2xl border bg-nexoraSurface p-3 text-left disabled:opacity-40 ${
+        className={`flex min-h-[76px] flex-col justify-between gap-2 rounded-xl border bg-white p-3 text-left shadow-sm transition-all hover:-translate-y-0.5 hover:shadow-md disabled:opacity-40 disabled:hover:translate-y-0 disabled:hover:shadow-sm ${
           isSelected ? 'border-nexoraBrand bg-nexoraBrand/5' : 'border-nexoraBorder hover:border-nexoraBrand'
         }`}
       >
