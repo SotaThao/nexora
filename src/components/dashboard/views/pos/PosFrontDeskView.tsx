@@ -70,9 +70,10 @@ import { formatCurrency } from '../../utils'
 const I18N_PREFIX = 'components.dashboard.views.pos.PosFrontDeskView'
 const tk = (suffix: string) => `${I18N_PREFIX}.${suffix}`
 
-// Bounded height + internal scroll so a long queue/roster scrolls in place — the filter chips and
-// view toggle above stay put instead of the whole page scrolling.
-const SCROLL_PANEL_MAX_HEIGHT = 'max-h-[560px]'
+// Keep long queues inside the currently available viewport, rather than using a fixed pixel cap.
+// The reserved space accounts for the dashboard header, Front Desk title/tabs, and list controls.
+const SCROLL_PANEL_MAX_HEIGHT = 'max-h-[calc(100dvh-18rem)]'
+const ORDER_LIST_FILL_MAIN_HEIGHT = 'min-h-0 flex-1'
 
 // One salon's appointments for one day never approach this; it exists so the chip's count is the
 // real total rather than a first page.
@@ -442,6 +443,12 @@ export default function PosFrontDeskView({
   // action; Ticket 9 added the "Bookings" tab/management screen below for viewing, checking
   // in, cancelling, and rescheduling existing bookings.
   const [isBookingModalOpen, setIsBookingModalOpen] = useState(false)
+  const [bookingSlot, setBookingSlot] = useState<{
+    date: string
+    time: string
+    staffName?: string | null
+    posStaffProfileId?: string | null
+  } | null>(null)
 
   const checkInBooking = useCheckInBookingFromList(businessId)
 
@@ -609,7 +616,7 @@ export default function PosFrontDeskView({
     if (viewMode === OrderListViewMode.Card) {
       return (
         <div
-          className={`grid ${SCROLL_PANEL_MAX_HEIGHT} grid-cols-1 gap-3 overflow-y-auto pr-1 sm:grid-cols-2 lg:grid-cols-3`}
+          className={`grid ${ORDER_LIST_FILL_MAIN_HEIGHT} grid-cols-1 gap-3 overflow-y-auto pr-1 sm:grid-cols-2 lg:grid-cols-3`}
         >
           {notArrivedBookings.map((booking) => renderNotArrivedCard(booking))}
         </div>
@@ -618,7 +625,7 @@ export default function PosFrontDeskView({
 
     return (
       <div
-        className={`${SCROLL_PANEL_MAX_HEIGHT} overflow-y-auto rounded-xl border border-nexoraBorder bg-white`}
+        className={`${ORDER_LIST_FILL_MAIN_HEIGHT} overflow-y-auto rounded-xl border border-nexoraBorder bg-white`}
       >
         <table className="w-full text-left text-xs">
           <thead className="sticky top-0 z-[1] bg-nexoraCanvas/90">
@@ -1105,7 +1112,7 @@ export default function PosFrontDeskView({
   }
 
   return (
-    <div className="space-y-4">
+    <div className="flex h-full min-h-0 flex-col gap-4">
       {/* Hidden while an Order Workspace is open (Check-in draft or editing an existing
           order) — iPad space optimization: this title/description block is
           "where am I" chrome that's redundant once the staff is heads-down on one
@@ -1209,7 +1216,7 @@ export default function PosFrontDeskView({
             <SkeletonList count={3} lines={1} />
           </div>
         ) : (
-          <div className="space-y-3">
+          <div className="flex min-h-0 flex-1 flex-col gap-3">
             <div className="flex flex-wrap items-center justify-between gap-3">
               <div className="flex flex-wrap gap-1.5 rounded-xl bg-nexoraCanvas/70 p-1.5">
                 {ORDER_LIST_FILTERS.map((filter) => (
@@ -1402,10 +1409,10 @@ export default function PosFrontDeskView({
 
               if (viewMode === OrderListViewMode.Card) {
                 return (
-                  <div className="space-y-3">
+                  <div className="flex min-h-0 flex-1 flex-col gap-3">
                   {attentionBadges}
                   <div
-                    className={`grid ${SCROLL_PANEL_MAX_HEIGHT} grid-cols-1 gap-3 overflow-y-auto pr-1 sm:grid-cols-2 lg:grid-cols-3`}
+                    className={`grid ${ORDER_LIST_FILL_MAIN_HEIGHT} grid-cols-1 gap-3 overflow-y-auto pr-1 sm:grid-cols-2 lg:grid-cols-3`}
                   >
                     {filteredOrderList.map((order) => (
                       <div
@@ -1448,10 +1455,10 @@ export default function PosFrontDeskView({
               }
 
               return (
-                <div className="space-y-3">
+                <div className="flex min-h-0 flex-1 flex-col gap-3">
                 {attentionBadges}
                 <div
-                  className={`${SCROLL_PANEL_MAX_HEIGHT} overflow-y-auto rounded-xl border border-nexoraBorder bg-white`}
+                  className={`${ORDER_LIST_FILL_MAIN_HEIGHT} overflow-y-auto rounded-xl border border-nexoraBorder bg-white`}
                 >
                   <table className="w-full text-left text-xs">
                     <thead className="sticky top-0 z-[1] bg-nexoraCanvas/90">
@@ -1544,7 +1551,15 @@ export default function PosFrontDeskView({
           businessId={businessId}
           businessSlug={businessSlug}
           turnBoardStaff={turnBoard}
-          onNewBooking={() => setIsBookingModalOpen(true)}
+          onNewBooking={(slot) => {
+            setBookingSlot(slot ? {
+              date: slot.date,
+              time: slot.time,
+              staffName: slot.staffName,
+              posStaffProfileId: slot.posStaffProfileId,
+            } : null)
+            setIsBookingModalOpen(true)
+          }}
         />
       )}
 
@@ -1558,10 +1573,12 @@ export default function PosFrontDeskView({
 
       <NewBookingForm
         open={isBookingModalOpen}
+        initialSlot={bookingSlot}
         businessId={businessId}
-        onClose={() => setIsBookingModalOpen(false)}
+        onClose={() => { setIsBookingModalOpen(false); setBookingSlot(null) }}
         onCreated={() => {
           setIsBookingModalOpen(false)
+          setBookingSlot(null)
           refreshFrontDeskLists()
           // Land on the Bookings tab so the staff sees the booking they just created.
           setActiveTab(PosFrontDeskTab.Booking)

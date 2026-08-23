@@ -6,9 +6,9 @@
 //
 // Keypad, interstitial and thank-you screen live here rather than in a layout because they are the
 // same on every layout — a layout only owns the middle, where the questions are asked.
-import { Loader2 } from 'lucide-react'
 import { useTranslation } from '../../contexts/LanguageContext'
 import PhoneCheckInStep from '../dashboard/views/pos/PhoneCheckInStep'
+import { Skeleton, SkeletonText } from '../ui/skeleton'
 import SinglePageCheckInLayout from './layouts/SinglePageCheckInLayout'
 import WizardCheckInLayout from './layouts/WizardCheckInLayout'
 import ActiveVisitInterstitial from './parts/ActiveVisitInterstitial'
@@ -99,8 +99,19 @@ export default function CheckInSurface({
 
   if (session.phase === 'lookingUp') {
     return (
-      <div className="flex min-h-[240px] items-center justify-center">
-        <Loader2 className="h-8 w-8 animate-spin text-nexoraBrand" />
+      <div
+        className="mx-auto flex min-h-[240px] w-full max-w-xl items-center"
+        data-testid="check-in-lookup-skeleton"
+      >
+        <div className="w-full rounded-2xl border border-nexoraBorder bg-white p-5 shadow-sm">
+          <Skeleton width="38%" height={13} borderRadius={6} />
+          <Skeleton width="64%" height={24} borderRadius={8} className="mt-3" />
+          <SkeletonText count={2} height={12} className="mt-4" />
+          <div className="mt-5 grid grid-cols-2 gap-3">
+            <Skeleton height={42} borderRadius={10} />
+            <Skeleton height={42} borderRadius={10} />
+          </div>
+        </div>
       </div>
     )
   }
