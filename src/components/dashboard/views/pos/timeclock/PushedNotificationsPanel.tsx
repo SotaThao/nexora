@@ -28,7 +28,7 @@ export default function PushedNotificationsPanel({ rows }: { rows: TimeClockRost
       ) : (
         <ul className="mt-3 space-y-2">
           {beeped.map((row) => (
-            <li key={row.posStaffProfileId} className="text-[11px] text-nexoraMuted">
+            <li key={row.posStaffProfileId} className="text-[11px] font-semibold text-nexoraText">
               {t(tk('pushLine'), {
                 name: row.displayName,
                 time: formatPosTime(row.lastBeepAt, currentLanguage),

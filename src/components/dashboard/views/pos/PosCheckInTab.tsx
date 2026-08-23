@@ -38,6 +38,7 @@ export default function PosCheckInTab({
       autoReturnSeconds={null}
       onCheckedIn={onCheckedIn}
       onFinished={onFinished}
+      compactTechnicianCards
     />
   )
 }

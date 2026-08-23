@@ -21,10 +21,12 @@ export default function SinglePageCheckInLayout({
   session,
   businessName,
   onCancel,
+  compactTechnicianCards = false,
 }: {
   session: CheckInSession
   businessName: string
   onCancel: () => void
+  compactTechnicianCards?: boolean
 }) {
   const { t } = useTranslation()
 
@@ -73,6 +75,7 @@ export default function SinglePageCheckInLayout({
           emptyLabel={t(`${K}.noTechnicians`)}
           busyLabel={t(`${K}.technicianBusy`)}
           availableLabel={t(`${K}.technicianAvailable`)}
+          compact={compactTechnicianCards}
         />
       </section>
 
@@ -105,7 +108,7 @@ export default function SinglePageCheckInLayout({
         className="flex h-14 w-full items-center justify-center gap-2 rounded-xl bg-nexoraBrand text-base font-black text-white hover:bg-nexoraBrandDark disabled:opacity-60"
       >
         {session.isSubmitting ? <Loader2 className="h-5 w-5 animate-spin" /> : null}
-        {t(`${K}.submit`, { count: String(session.selectedServiceIds.length) })}
+        {t(`${K}.submit`)}
       </button>
     </div>
   )

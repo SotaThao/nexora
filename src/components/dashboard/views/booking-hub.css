@@ -7240,7 +7240,7 @@ body.booking-appointment-panel-modal-open {
   .calendar_default_cell.is-past-slot
   .calendar_default_cell_inner {
   cursor: not-allowed;
-  background: #f1f5f9 !important;
+  background: #fff !important;
 }
 
 .booking-hub-view
@@ -7268,11 +7268,7 @@ body.booking-appointment-panel-modal-open {
 
 .booking-hub-view .booking-team-calendar .calendar_default_cell_inner {
   border-color: #edf1f6;
-  background: linear-gradient(
-    90deg,
-    rgba(248, 250, 252, 0.34),
-    rgba(255, 255, 255, 0) 24px
-  );
+  background: #fff;
 }
 
 .booking-hub-view .booking-team-calendar .booking-cell-add {
