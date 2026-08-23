@@ -1211,7 +1211,7 @@ export default function PosFrontDeskView({
         ) : (
           <div className="space-y-3">
             <div className="flex flex-wrap items-center justify-between gap-3">
-              <div className="flex flex-wrap gap-1.5 rounded-xl border border-nexoraBorder bg-nexoraCanvas/70 p-1.5">
+              <div className="flex flex-wrap gap-1.5 rounded-xl bg-nexoraCanvas/70 p-1.5">
                 {ORDER_LIST_FILTERS.map((filter) => (
                   <button
                     key={filter}
