@@ -31,28 +31,30 @@ export default function BookingLinkShare({ businessSlug }: { businessSlug?: stri
   }
 
   return (
-    <div className="rounded-lg border border-nexoraBorder bg-nexoraCanvas p-2.5">
-      <p className="mb-1.5 text-[10px] font-extrabold uppercase tracking-wide text-nexoraMuted">
-        {t(p + 'title')}
-      </p>
-      <div className="flex items-center justify-between gap-2 rounded-lg border border-nexoraBorder bg-white p-2">
-        <a
-          href={url}
-          target="_blank"
-          rel="noreferrer"
-          className="min-w-0 flex-1 truncate pl-1 text-left font-mono text-[11px] text-nexoraMuted hover:text-nexoraBrand"
-        >
-          {url.replace(/^https?:\/\//, '')}
-        </a>
-        <button
-          type="button"
-          onClick={() => void handleCopy()}
-          className="flex shrink-0 items-center gap-1.5 rounded-full px-2 py-1 text-[11px] font-extrabold uppercase tracking-wide text-nexoraBrand transition hover:opacity-80"
-        >
-          {isCopied ? <Check className="h-3.5 w-3.5 text-emerald-600" /> : <Copy className="h-3.5 w-3.5" />}
-          <span>{t('common.copy')}</span>
-        </button>
-      </div>
+    <div
+      role="group"
+      aria-label={t(p + 'title')}
+      className="flex flex-wrap items-center justify-start gap-x-2 gap-y-1 rounded-lg border border-nexoraBorder bg-nexoraCanvas px-3 py-2 text-left"
+    >
+      <span className="text-[10px] font-extrabold uppercase tracking-wide text-nexoraMuted">
+        {t(p + 'title')}:
+      </span>
+      <a
+        href={url}
+        target="_blank"
+        rel="noreferrer"
+        className="min-w-0 max-w-full truncate text-left font-mono text-[11px] text-nexoraMuted hover:text-nexoraBrand"
+      >
+        {url.replace(/^https?:\/\//, '')}
+      </a>
+      <button
+        type="button"
+        onClick={() => void handleCopy()}
+        className="inline-flex h-8 shrink-0 items-center gap-1.5 rounded-lg border border-nexoraBrand/15 bg-white px-2.5 text-left text-[11px] font-extrabold uppercase tracking-wide text-nexoraBrand transition hover:border-nexoraBrand/30 hover:bg-nexoraBrandSoft"
+      >
+        {isCopied ? <Check className="h-3.5 w-3.5 text-emerald-600" /> : <Copy className="h-3.5 w-3.5" />}
+        <span>{t('common.copy')}</span>
+      </button>
     </div>
   )
 }

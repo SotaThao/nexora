@@ -124,7 +124,11 @@ export default function PosOrderWorkspace({
   // per-service query: with the picker inline, several lines can ask the same question at once.
   // Same population either way — both endpoints require an Active staff link and an Active POS
   // profile, and both mark busy from an InService line.
-  const { data: allTechnicians = [], isPending: areTechniciansPending } = useCheckInTechnicians(businessId)
+  const {
+    data: allTechnicians = [],
+    isPending: areTechniciansPending,
+    isFetching: areTechniciansFetching,
+  } = useCheckInTechnicians(businessId)
 
   const addServiceLine = useAddOrderServiceLine(businessId)
   const removeServiceLine = useRemoveOrderServiceLine(businessId)
@@ -211,6 +215,22 @@ export default function PosOrderWorkspace({
     ]
   }, [order])
 
+  // A ticket handled by one technician should stay with that technician as services are added.
+  // When several technicians are already involved there is no safe default, so the new line stays
+  // unassigned and the operator chooses explicitly.
+  const assignedTechnicianIds = useMemo(() => {
+    const uniqueIds = new Set(
+      visibleLines
+        .filter((line): line is DisplayServiceLine => line.itemType === 'Service')
+        .map((line) => line.posStaffProfileId)
+        .filter((id): id is string => Boolean(id)),
+    )
+    return [...uniqueIds]
+  }, [visibleLines])
+  const isTechnicianRosterLoading = areTechniciansPending || areTechniciansFetching
+  const isServiceCatalogPending =
+    addServiceLine.isPending || (assignedTechnicianIds.length === 1 && isTechnicianRosterLoading)
+
   // Initializes local UI-only state (tip mode, receipt fields, payment-section visibility)
   // from the server exactly once per order id — later refetches (from this cashier's own
   // live edits or another tab) must not reset what the user is currently doing with tip/
@@ -276,14 +296,31 @@ export default function PosOrderWorkspace({
     showToast(getErrorMessage(err, t, 'ERROR'), 'error')
   }
 
-  // Adding a service uses the backend's auto-pick behavior (omitted technician id), so the first
-  // available technician is assigned without interrupting the catalog with a picker modal.
+  // Keep a single-technician ticket with the same technician. Ambiguous/multi-technician tickets
+  // skip assignment so a floor operator can choose instead of inheriting arbitrarily.
   const handleCatalogServiceClick = (service: CheckoutServiceCatalogItemApiDto) => {
+    // Qualification must be known before inheriting a sole technician. The picker is disabled
+    // during this window; this guard also protects programmatic/stale click handlers.
+    if (assignedTechnicianIds.length === 1 && isTechnicianRosterLoading) return
+
     addServiceLine.mutate(
       { orderId, posServiceId: service.id, unitPrice: service.price, serviceName: service.name },
       {
         onSuccess: (newServiceLineId) => {
-          saveServiceLine(newServiceLineId, undefined, '')
+          // Preserve the original no-technician behavior: the assign endpoint auto-picks.
+          if (assignedTechnicianIds.length === 0) {
+            saveServiceLine(newServiceLineId, undefined, '')
+            return
+          }
+
+          // More than one existing technician is ambiguous. A sole technician is inherited only
+          // when the live roster confirms they can perform the newly selected service.
+          if (assignedTechnicianIds.length !== 1) return
+          const inheritedTechnicianId = assignedTechnicianIds[0]
+          const canPerformService = techniciansForService(service.id).some(
+            (technician) => technician.posStaffProfileId === inheritedTechnicianId,
+          )
+          if (canPerformService) saveServiceLine(newServiceLineId, inheritedTechnicianId, '')
         },
         onError: reportError,
       },
@@ -505,6 +542,7 @@ export default function PosOrderWorkspace({
             <CategoryGroupedCatalogPicker
               variant="grid"
               items={serviceCatalog}
+              isPending={isServiceCatalogPending}
               onAdd={(itemId) => {
                 const service = serviceCatalog.find((s) => s.id === itemId)
                 if (service) handleCatalogServiceClick(service)
@@ -1208,7 +1246,7 @@ export default function PosOrderWorkspace({
         open={technicianTarget !== null}
         serviceName={technicianTarget?.serviceName ?? ''}
         technicians={techniciansForService(technicianTarget?.posServiceId ?? '')}
-        isLoading={areTechniciansPending}
+        isLoading={isTechnicianRosterLoading}
         selectedStaffId={technicianTarget?.posStaffProfileId ?? null}
         note={noteDraft}
         onChangeNote={setNoteDraft}

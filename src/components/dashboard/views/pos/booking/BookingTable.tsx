@@ -147,9 +147,9 @@ export default function BookingTable({
                 <td className="px-4 py-3 align-middle">
                   <div className="flex flex-wrap gap-1.5">
                     {booking.serviceNames.length > 0 ? (
-                      booking.serviceNames.map((service) => (
+                      booking.serviceNames.map((service, index) => (
                         <span
-                          key={service}
+                          key={`${service}-${index}`}
                           className="inline-flex max-w-full items-center rounded-full border border-nexoraBrand/15 bg-white px-2 py-1 text-[11px] font-bold text-nexoraText"
                         >
                           <span className="truncate">{service}</span>
