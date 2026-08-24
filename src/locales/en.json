@@ -3572,6 +3572,11 @@
               "PosCheckIn": "POS Check-in"
             },
             "viewDetailModalTitle": "Customer Detail",
+            "viewDetailOverviewTitle": "Customer overview",
+            "viewDetailContentLabel": "Customer profile content",
+            "viewDetailContactTitle": "Contact Information",
+            "viewDetailProfileTitle": "Customer Profile",
+            "viewDetailCustomerSince": "Customer Since",
             "viewDetailName": "Name",
             "viewDetailPhone": "Phone",
             "viewDetailEmail": "Email",
@@ -3589,7 +3594,8 @@
             "viewDetailUnassigned": "Unassigned",
             "historyBadgeBooking": "Booking",
             "historyBadgeWalkin": "Walk-in",
-            "viewDetailClose": "Close"
+            "viewDetailClose": "Close",
+            "viewDetailCloseAria": "Close customer detail"
           },
           "PosBookingSettingsPanel": {
             "title": "Booking Settings",

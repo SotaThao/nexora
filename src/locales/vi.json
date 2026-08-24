@@ -3572,6 +3572,11 @@
               "PosCheckIn": "Check-in tại POS"
             },
             "viewDetailModalTitle": "Chi tiết khách hàng",
+            "viewDetailOverviewTitle": "Tổng quan khách hàng",
+            "viewDetailContentLabel": "Nội dung hồ sơ khách hàng",
+            "viewDetailContactTitle": "Thông tin liên hệ",
+            "viewDetailProfileTitle": "Hồ sơ khách hàng",
+            "viewDetailCustomerSince": "Khách hàng từ",
             "viewDetailName": "Tên",
             "viewDetailPhone": "Số điện thoại",
             "viewDetailEmail": "Email",
@@ -3589,7 +3594,8 @@
             "viewDetailUnassigned": "Chưa gán",
             "historyBadgeBooking": "Lịch hẹn",
             "historyBadgeWalkin": "Khách vãng lai",
-            "viewDetailClose": "Đóng"
+            "viewDetailClose": "Đóng",
+            "viewDetailCloseAria": "Đóng chi tiết khách hàng"
           },
           "PosBookingSettingsPanel": {
             "title": "Cài đặt Đặt lịch",
