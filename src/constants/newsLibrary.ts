@@ -9,6 +9,22 @@ export const DEFAULT_NEWS_LIBRARY_DATA_LANGUAGE: NewsLibraryDataLanguage = 'en'
 
 /** Self-hosted IOU Reward Policy (multi-language HTML). */
 export const NEWS_LIBRARY_IOU_REWARD_POLICY_PATH = '/news-library/iou-reward-policy.html'
+export const NEWS_LIBRARY_IOU_REWARD_POLICY_LANG_PARAM = 'lang'
+
+export function getIouRewardPolicyUrl(language: string): string {
+  const lang = language === 'vi' ? 'vi' : DEFAULT_NEWS_LIBRARY_DATA_LANGUAGE
+  return `${NEWS_LIBRARY_IOU_REWARD_POLICY_PATH}?${NEWS_LIBRARY_IOU_REWARD_POLICY_LANG_PARAM}=${lang}`
+}
+
+function isIouRewardPolicyHref(href: string | undefined): boolean {
+  if (!href) return false
+  try {
+    const parsed = new URL(href, 'https://nexoratouch.local')
+    return parsed.pathname === NEWS_LIBRARY_IOU_REWARD_POLICY_PATH
+  } catch {
+    return href === NEWS_LIBRARY_IOU_REWARD_POLICY_PATH
+  }
+}
 
 export interface NewsLibraryPlanTopicLink {
   title?: string
@@ -27,17 +43,16 @@ export function getNewsLibraryDataUrl(language: string): string {
 export function prependIouRewardPolicyTopic(
   planTopics: NewsLibraryPlanTopicLink[],
   copy: { title: string; description: string },
+  language: string,
 ): NewsLibraryPlanTopicLink[] {
   const alreadyLinked = planTopics.some(
-    (topic) =>
-      topic.url === NEWS_LIBRARY_IOU_REWARD_POLICY_PATH ||
-      topic.link === NEWS_LIBRARY_IOU_REWARD_POLICY_PATH,
+    (topic) => isIouRewardPolicyHref(topic.url) || isIouRewardPolicyHref(topic.link),
   )
   if (alreadyLinked) return planTopics
 
   return [
     {
-      url: NEWS_LIBRARY_IOU_REWARD_POLICY_PATH,
+      url: getIouRewardPolicyUrl(language),
       title: copy.title,
       description: copy.description,
     },

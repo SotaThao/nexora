@@ -899,10 +899,14 @@ export default function NewsLibraryView({
           const normalized = normalizeContent(nextContent)
           setContent({
             ...normalized,
-            planTopics: prependIouRewardPolicyTopic(normalized.planTopics, {
-              title: t(`${TK}.iouRewardPolicy.title`),
-              description: t(`${TK}.iouRewardPolicy.description`),
-            }),
+            planTopics: prependIouRewardPolicyTopic(
+              normalized.planTopics,
+              {
+                title: t(`${TK}.iouRewardPolicy.title`),
+                description: t(`${TK}.iouRewardPolicy.description`),
+              },
+              currentLanguage,
+            ),
           })
           setStatus('ready')
         }

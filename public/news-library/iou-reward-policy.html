@@ -15,7 +15,7 @@
   *{box-sizing:border-box}
   html{scroll-behavior:smooth}
   body{margin:0;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Helvetica Neue",Arial,"Noto Sans",sans-serif;
-    color:var(--ink);background:var(--bg);line-height:1.55;-webkit-font-smoothing:antialiased}
+    color:var(--ink);background:var(--bg);line-height:1.55;-webkit-font-smoothing:antialiased;overflow-x:hidden}
   .wrap{max-width:820px;margin:0 auto;padding:0 18px}
   h1,h2,h3{line-height:1.2;letter-spacing:-.01em;margin:0}
   .eyebrow{font-size:12px;font-weight:800;letter-spacing:.14em;text-transform:uppercase;color:var(--blue)}
@@ -45,8 +45,11 @@
   .grid{display:grid;gap:14px}
   .g2{grid-template-columns:repeat(2,1fr)}
   .g4{grid-template-columns:repeat(4,1fr)}
-  @media(max-width:640px){.g4{grid-template-columns:repeat(2,1fr)}}
-  .card{background:var(--panel);border:1px solid var(--line);border-radius:var(--radius);padding:18px}
+  @media(max-width:640px){
+    .g2{grid-template-columns:1fr}
+    .g4{grid-template-columns:repeat(2,1fr)}
+  }
+  .card{background:var(--panel);border:1px solid var(--line);border-radius:var(--radius);padding:18px;min-width:0}
   .card .k{font-size:12px;font-weight:800;letter-spacing:.06em;color:var(--blue)}
   .card .t{font-weight:800;font-size:16px;margin:6px 0 4px}
   .card .d{font-size:13.5px;color:var(--muted)}
@@ -57,7 +60,8 @@
   label{display:block;font-size:13px;font-weight:700;color:var(--ink);margin:16px 0 8px}
   .pkgs{display:flex;flex-wrap:wrap;gap:8px}
   .pkg{flex:1 1 auto;min-width:76px;text-align:center;padding:11px 8px;border-radius:12px;border:1.5px solid var(--line);
-    background:#fff;font-weight:800;font-size:14px;cursor:pointer;transition:.15s}
+    background:#fff;font-weight:800;font-size:14px;cursor:pointer;transition:.15s;
+    appearance:none;-webkit-appearance:none;font-family:inherit;color:inherit;margin:0;line-height:inherit}
   .pkg:hover{border-color:var(--blue)}
   .pkg.active{background:var(--blue);border-color:var(--blue);color:#fff;box-shadow:0 6px 16px rgba(47,107,237,.28)}
   .pkg.locked{opacity:.5;background:#f2f3f6;border-style:dashed;border-color:#d5dae4;color:var(--muted);cursor:not-allowed}
@@ -83,6 +87,7 @@
     font-weight:700;background:#fff;color:var(--ink)}
   input[type=number]:focus{outline:none;border-color:var(--blue)}
   .two{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+  @media(max-width:640px){.two{grid-template-columns:1fr}}
   .binres{margin-top:16px;background:#fff;border:1px solid var(--line);border-radius:14px;padding:16px;display:grid;
     grid-template-columns:repeat(3,1fr);gap:10px;text-align:center}
   @media(max-width:520px){.binres{grid-template-columns:1fr;text-align:left}}
@@ -94,13 +99,21 @@
   .bar > i{display:block;height:100%;background:linear-gradient(90deg,var(--cyan),var(--blue));width:0;transition:.4s}
   .note{font-size:12.5px;color:var(--muted);margin-top:8px}
 
-  .tblwrap{overflow-x:auto;border:1px solid var(--line);border-radius:16px}
+  .tblwrap{overflow-x:auto;border:1px solid var(--line);border-radius:16px;-webkit-overflow-scrolling:touch}
   table{border-collapse:collapse;width:100%;min-width:520px;font-size:14px}
   th,td{padding:12px 14px;text-align:right;border-bottom:1px solid var(--line);white-space:nowrap}
   th:first-child,td:first-child{text-align:left}
   thead th{background:var(--panel2);font-weight:800;color:var(--ink);font-size:12.5px;text-transform:uppercase;letter-spacing:.04em}
   tbody tr:last-child td{border-bottom:none}
   tbody tr.big td{background:#fbfcff;font-weight:800}
+  .card .tblwrap table{min-width:0}
+  .card .tblwrap th,
+  .card .tblwrap td{white-space:normal;word-break:break-word}
+  @media(max-width:640px){
+    .card .tblwrap table{font-size:13px}
+    .card .tblwrap th,
+    .card .tblwrap td{padding:10px 8px}
+  }
   .pill{display:inline-block;background:var(--cyan-l);color:#0f6a80;font-weight:800;padding:3px 9px;border-radius:999px;font-size:12.5px}
 
   .flow{display:grid;grid-template-columns:repeat(4,1fr);gap:10px}
@@ -216,8 +229,8 @@
         <input type="checkbox" id="lic">
         <span data-i18n="lic_label"></span>
       </label>
-      <label data-i18n="lbl_pkg"></label>
-      <div class="pkgs" id="pkgs"></div>
+      <label id="pkg-label" data-i18n="lbl_pkg"></label>
+      <div class="pkgs" id="pkgs" role="group" aria-labelledby="pkg-label"></div>
       <div class="note" id="lockNote"></div>
       <div class="out" id="pkgOut"></div>
       <label style="margin-top:22px" data-i18n="lbl_captarget"></label>
@@ -227,8 +240,8 @@
       <h3 style="margin-top:18px" data-i18n="calc_s2"></h3>
       <div class="muted" style="font-size:13px" data-i18n="calc_s2d"></div>
       <div class="two" style="margin-top:14px">
-        <div><label style="margin:0 0 8px" data-i18n="lbl_left"></label><input type="number" id="left" value="2000" min="0" step="100"></div>
-        <div><label style="margin:0 0 8px" data-i18n="lbl_right"></label><input type="number" id="right" value="1500" min="0" step="100"></div>
+        <div><label for="left" style="margin:0 0 8px" data-i18n="lbl_left"></label><input type="number" id="left" value="2000" min="0" step="100"></div>
+        <div><label for="right" style="margin:0 0 8px" data-i18n="lbl_right"></label><input type="number" id="right" value="1500" min="0" step="100"></div>
       </div>
       <div class="binres">
         <div><div class="lab" data-i18n="bin_matched"></div><div class="val" id="matched">—</div></div>
@@ -518,7 +531,14 @@
     ['nl','Nederlands'],['pl','Polski'],['fa','فارسی']
   ];
   const IMPL=['vi','en','es','zh','ko','ja'];
-  let LANG='vi';
+  const LANG_CODES=LANGS.map(([c])=>c);
+  function langFromQuery(){
+    try{
+      const code=new URLSearchParams(location.search).get('lang');
+      return code && LANG_CODES.includes(code) ? code : '';
+    }catch{return '';}
+  }
+  let LANG=langFromQuery()||'vi';
 
   const I18N={
     hero_h1:{vi:`Chính sách thưởng — rõ ràng để cùng phát triển`,en:`Reward Policy — clear rules so we grow together`,es:`Política de recompensas — reglas claras para crecer juntos`,zh:`奖励政策 — 规则清晰，共同成长`,ko:`보상 정책 — 함께 성장하는 명확한 규칙`,ja:`報酬ポリシー — 明確なルールで共に成長`},
@@ -707,9 +727,12 @@
     pkgWrap.innerHTML='';
     TIERS.forEach((tt,i)=>{
       const locked=tt.p>=LIC_MIN && !lic;
-      const b=document.createElement('div');
+      const b=document.createElement('button');
+      b.type='button';
       b.className='pkg'+(i===active?' active':'')+(locked?' locked':'');
       b.textContent=(locked?'🔒 ':'')+lbl(tt.p);
+      b.setAttribute('aria-pressed', i===active ? 'true' : 'false');
+      if(locked) b.setAttribute('aria-disabled','true');
       b.onclick=()=>{
         if(locked){document.getElementById('lockNote').innerHTML=t('lock_need').replace('{lbl}',lbl(tt.p));return;}
         document.getElementById('lockNote').textContent='';
@@ -814,6 +837,7 @@
   // language
   const sel=document.getElementById('lang');
   sel.innerHTML=LANGS.map(([c,n])=>`<option value="${c}">${n}${IMPL.includes(c)?'':' · auto'}</option>`).join('');
+  sel.value=LANG;
   function applyI18n(){
     document.querySelectorAll('[data-i18n]').forEach(el=>{el.innerHTML=t(el.dataset.i18n);});
     document.documentElement.lang=LANG;
@@ -822,7 +846,15 @@
     else{note.style.display='block';note.textContent=I18N.i18n_fallback[LANG]||I18N.i18n_fallback.en;}
   }
   function rerender(){renderCaps();renderDirect();renderDaily();renderLead();renderPkgs();render();updateLock();}
-  sel.addEventListener('change',e=>{LANG=e.target.value;applyI18n();rerender();});
+  sel.addEventListener('change',e=>{
+    LANG=e.target.value;
+    try{
+      const url=new URL(location.href);
+      url.searchParams.set('lang',LANG);
+      history.replaceState(null,'',url);
+    }catch{}
+    applyI18n();rerender();
+  });
 
   applyI18n(); rerender();
 </script>
