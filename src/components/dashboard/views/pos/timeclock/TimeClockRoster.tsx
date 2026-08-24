@@ -14,6 +14,7 @@ import { useBeepStaff, useClockInStaff, useClockOutStaff } from '../../../../../
 import type { TimeClockRosterRowApiDto } from '../../../../../types/repositories'
 import { formatPosDateTime, formatPosTime } from '../posDateTime'
 import { EMPTY_VALUE, getInitials } from '../posDisplay'
+import BeepMessageModal from './BeepMessageModal'
 import { formatHours } from './timeClockDay'
 import { tk } from './timeClockI18n'
 
@@ -50,6 +51,9 @@ export default function TimeClockRoster({
     storage.setItem(ROSTER_VIEW_MODE_STORAGE_KEY, mode)
   }
 
+  const [beepTarget, setBeepTarget] = useState<TimeClockRosterRowApiDto | null>(null)
+  const [beepMessage, setBeepMessage] = useState('')
+
   const isBusy = clockIn.isPending || clockOut.isPending || beep.isPending
 
   const handleClockIn = async (row: TimeClockRosterRowApiDto) => {
@@ -83,9 +87,25 @@ export default function TimeClockRoster({
     }
   }
 
-  const handleBeep = async (row: TimeClockRosterRowApiDto) => {
+  const openBeepModal = (row: TimeClockRosterRowApiDto) => {
+    setBeepTarget(row)
+    setBeepMessage('')
+  }
+
+  const closeBeepModal = () => {
+    setBeepTarget(null)
+    setBeepMessage('')
+  }
+
+  const handleBeep = async () => {
+    if (!beepTarget) return
+    const row = beepTarget
     try {
-      const result = await beep.mutateAsync(row.posStaffProfileId)
+      const result = await beep.mutateAsync({
+        posStaffProfileId: row.posStaffProfileId,
+        message: beepMessage.trim() || undefined,
+      })
+      closeBeepModal()
       showToast(
         result.delivered
           ? t(tk('beepSent'), { name: row.displayName })
@@ -149,7 +169,7 @@ export default function TimeClockRoster({
       </button>
       <button
         type="button"
-        onClick={() => handleBeep(row)}
+        onClick={() => openBeepModal(row)}
         disabled={isBusy}
         className="flex h-9 shrink-0 items-center gap-1 rounded-lg bg-nexoraBrand px-2.5 text-[11px] font-bold text-white hover:bg-nexoraBrandDark disabled:opacity-60"
       >
@@ -176,7 +196,9 @@ export default function TimeClockRoster({
   )
 
   return (
-    <section className="space-y-3 rounded-xl border border-nexoraBorder bg-nexoraSurface p-4">
+     <>
+    <section className="space-y-3">
+ 
       <div className="flex flex-wrap items-center justify-between gap-2">
         <h3 className="text-sm font-bold text-nexoraText">
           {t(tk('rosterTitle'))}
@@ -288,5 +310,15 @@ export default function TimeClockRoster({
         </div>
       )}
     </section>
+    <BeepMessageModal
+      open={beepTarget !== null}
+      staffName={beepTarget?.displayName ?? ''}
+      message={beepMessage}
+      isPending={beep.isPending}
+      onChangeMessage={setBeepMessage}
+      onSend={handleBeep}
+      onClose={closeBeepModal}
+    />
+    </>
   )
 }
