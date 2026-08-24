@@ -578,7 +578,21 @@ export interface OrderServiceLineApiDto {
   serviceName: string
   unitPrice: number
   quantity: number
+  /** Original price of the line, before any discount. Commission and tip weight use this. */
   lineTotal: number
+  /** 'Percent' | 'Amount' — see PosServiceDiscountType. Null when the line is not discounted. */
+  discountType?: string | null
+  discountValue?: number | null
+  discountAmount: number
+  /** 'Salon' | 'Staff' | 'Split' — see PosDiscountBearer. */
+  discountBearer?: string | null
+  /** The part of discountAmount deducted from the technician's pay. */
+  staffDiscountShare: number
+  discountNote?: string | null
+  /** What the customer pays for this line. */
+  lineTotalAfterDiscount: number
+  /** False when the assigned technician is on hourly/fixed pay, or nobody is assigned yet. */
+  canAssignDiscountToStaff: boolean
   assignedPosStaffProfileId?: string | null
   technicianName?: string | null
   note?: string | null
@@ -591,6 +605,15 @@ export interface OrderProductLineApiDto {
   unitPrice: number
   quantity: number
   lineTotal: number
+}
+
+export interface SetOrderServiceLineDiscountPayload {
+  /** 'Percent' | 'Amount'. Null clears the discount on the line. */
+  discountType: string | null
+  discountValue: number | null
+  /** 'Salon' | 'Staff' | 'Split'. Required whenever discountType is set. */
+  discountBearer: string | null
+  discountNote: string | null
 }
 
 export interface OrderStaffTipShareApiDto {
@@ -616,7 +639,10 @@ export interface OrderDetailApiDto {
   servicesSubtotal: number
   productsSubtotal: number
   tipAmount: number
+  /** Sum of every service-line discount on this order. */
   discountAmount: number
+  /** servicesSubtotal less discountAmount — the figure sales tax is charged on. */
+  servicesNet: number
   salesTaxAmount: number
   total: number
   staffTipShares: OrderStaffTipShareApiDto[]
@@ -700,7 +726,12 @@ export interface ReceiptServiceLineApiDto {
   technicianName: string | null
   unitPrice: number
   quantity: number
+  /** Original price of the line, before any discount. */
   lineTotal: number
+  /** Zero when this line was not discounted. Who absorbed it is deliberately not on the receipt. */
+  discountAmount: number
+  /** What the customer paid for this line. */
+  lineTotalAfterDiscount: number
 }
 
 export interface ReceiptProductLineApiDto {

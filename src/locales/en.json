@@ -3470,7 +3470,29 @@
             "summarySalesTax": "Sales tax",
             "summaryTotal": "Total",
             "completeButton": "Pay · ${{amount}}",
-            "assignTechnicianFirst": "Assign a technician to every service first."
+            "assignTechnicianFirst": "Assign a technician to every service first.",
+            "addDiscount": "Discount",
+            "editDiscount": "Discount ✓",
+            "discountModalTitle": "Discount — {{serviceName}}",
+            "discountModalClose": "Close discount",
+            "discountOriginalPrice": "Original price ${{amount}}",
+            "discountTypeLabel": "Discount as",
+            "discountTypeAmount": "Amount ($)",
+            "discountTypePercent": "Percent (%)",
+            "discountValueLabel": "Value",
+            "discountBearerLabel": "Who absorbs the cost",
+            "discountBearerSalon": "Salon",
+            "discountBearerStaff": "Technician",
+            "discountBearerSplit": "50/50",
+            "discountBearerLockedHint": "This technician is not on commission pay, so only the salon can absorb the discount.",
+            "discountNoteLabel": "Reason (optional)",
+            "discountNotePlaceholder": "e.g. redo — polish chipped",
+            "discountPreviewCustomer": "Customer pays ${{amount}} for this service",
+            "discountPreviewDiscount": "Discount ${{amount}}",
+            "discountPreviewSplit": "Technician absorbs ${{staff}} · salon absorbs ${{salon}}",
+            "discountSaveButton": "Save discount",
+            "discountRemoveButton": "Remove",
+            "discountLineSummary": "Discount ${{amount}} · {{bearer}} absorbs"
           },
           "PhoneCheckInStep": {
             "welcomeTitleWithBusiness": "Welcome to {{businessName}}",
@@ -3519,7 +3541,8 @@
             "viewDetailSalesTax": "Sales tax",
             "viewDetailTip": "Tip",
             "viewDetailTotal": "Total",
-            "viewDetailClose": "Close"
+            "viewDetailClose": "Close",
+            "viewDetailLineDiscount": "Discount ${{amount}} · {{bearer}} absorbs"
           },
           "CustomerTab": {
             "searchLabel": "Search",
@@ -7983,6 +8006,7 @@
         "commission": "Commission",
         "bonus": "Bonus",
         "tips": "Tips",
+        "discountBorne": "Discount Borne",
         "takeHome": "Take-Home",
         "actions": "Actions"
       },
@@ -8026,6 +8050,7 @@
           "hours": "Hours",
           "sales": "Sales",
           "tips": "Tips",
+          "discountBorne": "Discount Borne",
           "estimatedPay": "Estimated Pay"
         },
         "weekTotal": "Week Total",

@@ -280,12 +280,34 @@ export default function PosCompletedOrdersPanel({ businessId }: { businessId: st
                             <div className="flex items-start justify-between gap-2">
                               <p className="text-xs font-bold text-nexoraText">{line.serviceName}</p>
                               <p className="shrink-0 text-xs font-bold tabular-nums text-nexoraText">
-                                ${line.lineTotal.toFixed(2)}
+                                {line.discountAmount > 0 ? (
+                                  <>
+                                    <span className="mr-1 font-normal text-nexoraMuted line-through">
+                                      ${line.lineTotal.toFixed(2)}
+                                    </span>
+                                    ${line.lineTotalAfterDiscount.toFixed(2)}
+                                  </>
+                                ) : (
+                                  `$${line.lineTotal.toFixed(2)}`
+                                )}
                               </p>
                             </div>
                             <p className="text-[11px] text-nexoraMuted">
                               {line.technicianName || t('components.dashboard.views.pos.PosCompletedOrdersPanel.viewDetailUnassigned')}
                             </p>
+                            {/* Who absorbed the discount stays visible here, where a pay dispute is
+                                actually settled — it is deliberately never on the customer receipt. */}
+                            {line.discountAmount > 0 ? (
+                              <p className="mt-1 text-[11px] text-amber-700">
+                                {t('components.dashboard.views.pos.PosCompletedOrdersPanel.viewDetailLineDiscount', {
+                                  amount: line.discountAmount.toFixed(2),
+                                  bearer: t(
+                                    `components.dashboard.views.pos.PosOrderWorkspace.discountBearer${line.discountBearer}`,
+                                  ),
+                                })}
+                                {line.discountNote ? ` — ${line.discountNote}` : ''}
+                              </p>
+                            ) : null}
                             {line.note ? (
                               <p className="mt-1 rounded bg-nexoraCanvas p-1.5 text-[11px] italic text-nexoraMuted">{line.note}</p>
                             ) : null}
