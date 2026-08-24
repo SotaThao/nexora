@@ -195,7 +195,7 @@ export default function StaffSalonReport() {
           { key: 'tip', value: summary?.tip ?? null, format: 'currency' },
           { key: 'techTakes', value: summary?.techTakes ?? null, format: 'currency' },
         ]
-  const controlClass = 'h-10 min-w-36 rounded-xl border border-nexoraBorder bg-white px-3 text-sm font-bold text-nexoraText outline-none transition focus:border-nexoraBrand focus:ring-2 focus:ring-nexoraBrand/15'
+  const controlClass = 'h-11 min-w-0 rounded-xl border border-nexoraBrand/25 bg-white px-3 text-sm font-bold text-nexoraText outline-none transition focus:border-nexoraBrand focus:ring-2 focus:ring-nexoraBrand/15'
 
   const formatMetric = (metric: ReportMetric) => {
     if (metric.value === null) return '—'
@@ -230,13 +230,13 @@ export default function StaffSalonReport() {
     onChange: (value: string) => void,
     options = years,
   ) => (
-    <label className="flex min-w-36 flex-col gap-1.5 text-xs font-bold text-nexoraMuted">
+    <label className="flex w-auto min-w-0 flex-col gap-1.5 text-xs font-bold text-nexoraMuted">
       <span className="sr-only">{t('staff_salon_report.year')}</span>
       <select
         aria-label={t('staff_salon_report.year')}
         value={value}
         onChange={(event) => onChange(event.target.value)}
-        className={controlClass}
+        className={`${controlClass} w-auto`}
       >
         {options.map((year) => <option key={year} value={year}>{year}</option>)}
       </select>
@@ -244,28 +244,30 @@ export default function StaffSalonReport() {
   )
 
   return (
-    <div className="space-y-5">
+    <div className="space-y-4 sm:space-y-5">
       <div>
         <div>
-          <div className="mb-2 flex items-center gap-2">
-            <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-nexoraBrandSoft text-nexoraBrand">
-              <BarChart3 className="h-5 w-5" aria-hidden="true" />
+          <div className="mb-1.5 flex items-center gap-2 sm:mb-2">
+            <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-nexoraBrandSoft text-nexoraBrand sm:h-9 sm:w-9 sm:rounded-xl">
+              <BarChart3 className="h-4 w-4 sm:h-5 sm:w-5" aria-hidden="true" />
             </span>
-            <h1 className="text-2xl font-extrabold text-nexoraText sm:text-[30px] sm:leading-9">
+            <h1 className="text-xl font-extrabold leading-tight text-nexoraText sm:text-[30px] sm:leading-9">
               {t('staff_salon_report.title')}
             </h1>
           </div>
-          <p className="text-sm font-medium text-nexoraMuted">{t('staff_salon_report.subtitle')}</p>
+          <p className="text-xs font-medium leading-5 text-nexoraMuted sm:text-sm">
+            {t('staff_salon_report.subtitle')}
+          </p>
         </div>
       </div>
 
-      <section className="overflow-hidden rounded-2xl border border-nexoraBorder bg-white shadow-sm">
+      <section className="overflow-hidden rounded-2xl border border-nexoraBrand/15 bg-white shadow-sm">
         <div
           role="group"
           aria-label={t('staff_salon_report.scope')}
-          className="flex flex-wrap items-center gap-3 border-b border-nexoraBorder bg-nexoraSurfaceMuted/60 p-4 sm:px-5"
+          className="flex flex-col items-stretch gap-2 border-b border-nexoraBrand/15 bg-gradient-to-r from-nexoraBrand/10 via-white to-nexoraBrandSoft p-3.5 sm:flex-row sm:items-center sm:gap-3 sm:px-5 sm:py-4"
         >
-          <div className="flex items-center gap-2 text-xs font-extrabold uppercase tracking-wider text-nexoraMuted">
+          <div className="flex items-center gap-2 text-[11px] font-extrabold uppercase tracking-wider text-nexoraBrand sm:text-xs">
             <Store className="h-4 w-4 text-nexoraBrand" aria-hidden="true" />
             {t('staff_salon_report.scope')}
           </div>
@@ -274,7 +276,7 @@ export default function StaffSalonReport() {
             aria-label={t('staff_salon_report.scope')}
             value={selectedSourceValue}
             onChange={(event) => setSelectedSource(event.target.value)}
-            className={`${controlClass} w-64 max-w-full`}
+            className={`${controlClass} w-full sm:w-64`}
           >
             <option value={ALL_SOURCES_VALUE}>{t('staff_salon_report.all')}</option>
             <option value={INDEPENDENT_SOURCE_VALUE}>
@@ -288,8 +290,12 @@ export default function StaffSalonReport() {
           </select>
         </div>
 
-        <div className="border-b border-nexoraBorder px-4 pt-3 sm:px-5">
-          <div className="flex gap-1 overflow-x-auto" role="tablist" aria-label={t('staff_salon_report.period')}>
+        <div className="border-b border-nexoraBrand/15 bg-white p-3 sm:px-5 sm:py-3.5">
+          <div
+            className="grid grid-cols-4 gap-1 rounded-xl bg-nexoraBrandSoft p-1"
+            role="tablist"
+            aria-label={t('staff_salon_report.period')}
+          >
             {REPORT_TABS.map((tab) => {
               const isActive = activeTab === tab
               return (
@@ -301,29 +307,28 @@ export default function StaffSalonReport() {
                   aria-selected={isActive}
                   aria-controls="staff-report-panel"
                   onClick={() => setActiveTab(tab)}
-                  className={`relative min-w-24 px-4 py-3 text-sm font-extrabold transition ${
+                  className={`min-h-11 min-w-0 rounded-lg px-1 py-2 text-xs font-extrabold leading-4 transition sm:px-3 sm:text-sm ${
                     isActive
-                      ? 'text-nexoraBrand'
-                      : 'text-nexoraMuted hover:text-nexoraText'
+                      ? 'bg-nexoraBrand text-white shadow-sm'
+                      : 'text-nexoraBrand hover:bg-white/70 hover:text-nexoraBrandDark'
                   }`}
                 >
                   {t(`staff_salon_report.${tab}`)}
-                  {isActive && <span className="absolute inset-x-3 bottom-0 h-0.5 rounded-full bg-nexoraBrand" />}
                 </button>
               )
             })}
           </div>
         </div>
 
-        <div className="flex flex-wrap items-center gap-3 bg-nexoraSurfaceMuted/60 p-4 sm:px-5">
-          <div className="flex items-center gap-2 text-xs font-extrabold uppercase tracking-wider text-nexoraMuted">
+        <div className="flex flex-row items-center gap-2 border-b border-violet-100 bg-violet-50/70 p-3.5 sm:gap-3 sm:px-5 sm:py-4">
+          <div className="flex shrink-0 items-center gap-2 text-[11px] font-extrabold uppercase tracking-wider text-violet-700 sm:text-xs">
             <CalendarDays className="h-4 w-4 text-nexoraBrand" aria-hidden="true" />
             {t('staff_salon_report.period')}
           </div>
 
-          <div className="flex flex-wrap gap-3">
+          <div className="flex w-auto min-w-0 flex-nowrap gap-2">
             {activeTab === 'daily' && (
-              <label className="flex min-w-44 flex-col gap-1.5 text-xs font-bold text-nexoraMuted">
+              <label className="flex w-auto min-w-0 flex-col gap-1.5 text-xs font-bold text-nexoraMuted">
                 <span className="sr-only">{t('staff_salon_report.date')}</span>
                 <input
                   type="date"
@@ -332,20 +337,20 @@ export default function StaffSalonReport() {
                   onChange={(event) => {
                     if (event.target.value) setSelectedDate(event.target.value)
                   }}
-                  className={controlClass}
+                  className={`${controlClass} w-auto`}
                 />
               </label>
             )}
 
             {activeTab === 'weekly' && (
               <>
-                <label className="flex min-w-36 flex-col gap-1.5 text-xs font-bold text-nexoraMuted">
+                <label className="flex w-auto min-w-0 flex-col gap-1.5 text-xs font-bold text-nexoraMuted">
                   <span className="sr-only">{t('staff_salon_report.week')}</span>
                   <select
                     aria-label={t('staff_salon_report.week')}
                     value={selectedWeek}
                     onChange={(event) => setSelectedWeek(event.target.value)}
-                    className={controlClass}
+                    className={`${controlClass} w-auto`}
                   >
                     {availableWeeks.map((week) => (
                       <option key={week} value={week}>
@@ -360,13 +365,13 @@ export default function StaffSalonReport() {
 
             {activeTab === 'monthly' && (
               <>
-                <label className="flex min-w-40 flex-col gap-1.5 text-xs font-bold text-nexoraMuted">
+                <label className="flex w-auto min-w-0 flex-col gap-1.5 text-xs font-bold text-nexoraMuted">
                   <span className="sr-only">{t('staff_salon_report.month')}</span>
                   <select
                     aria-label={t('staff_salon_report.month')}
                     value={selectedMonth}
                     onChange={(event) => setSelectedMonth(event.target.value)}
-                    className={controlClass}
+                    className={`${controlClass} w-auto`}
                   >
                     {months.map((month) => (
                       <option key={month.value} value={month.value}>{month.label}</option>
@@ -377,7 +382,11 @@ export default function StaffSalonReport() {
               </>
             )}
 
-            {activeTab === 'yearly' && renderYearSelect(selectedYear, setSelectedYear)}
+            {activeTab === 'yearly' && (
+              <div className="w-auto">
+                {renderYearSelect(selectedYear, setSelectedYear)}
+              </div>
+            )}
           </div>
         </div>
 
@@ -385,7 +394,7 @@ export default function StaffSalonReport() {
           id="staff-report-panel"
           role="tabpanel"
           aria-labelledby={`staff-report-tab-${activeTab}`}
-          className="p-4 sm:p-5"
+          className="bg-gradient-to-b from-white to-nexoraBrandSoft/20 p-3.5 sm:p-5"
         >
           {reportQuery.isPending ? (
             <div
@@ -409,21 +418,44 @@ export default function StaffSalonReport() {
             </div>
           ) : (
             <>
-              <div className="hidden overflow-x-auto rounded-xl border border-nexoraBorder md:block">
-                <table className="w-full min-w-[920px] table-fixed text-left">
-                  <thead className="bg-nexoraCanvas">
+              <div className="hidden overflow-x-auto rounded-xl border border-nexoraBrand/15 bg-white md:block">
+                <table
+                  className={`w-full table-fixed text-left ${
+                    metrics.length > 5 ? 'min-w-[840px]' : 'min-w-[560px]'
+                  }`}
+                >
+                  <thead>
                     <tr>
-                      {metrics.map((metric) => (
-                        <th key={metric.key} scope="col" className="px-4 py-3 text-[10px] font-extrabold uppercase tracking-wider text-nexoraMuted">
-                          {t(`staff_salon_report.${metric.key}`)}
-                        </th>
-                      ))}
+                      {metrics.map((metric) => {
+                        const isPrimary = metric.key === 'income' || metric.key === 'techTakes'
+                        const isActivity = metric.key === 'turns' || metric.key === 'totalHours'
+                        const isService = metric.key === 'service'
+                          || metric.key === 'pay'
+                          || metric.key === 'commission'
+                          || metric.key === 'commissionPercent'
+                        const isTip = metric.key === 'tip'
+                        const headerTone = isPrimary
+                          ? 'bg-nexoraBrandSoft text-nexoraBrand'
+                          : isActivity
+                            ? 'bg-sky-50 text-sky-700'
+                            : isService
+                              ? 'bg-violet-50 text-violet-700'
+                              : isTip
+                                ? 'bg-emerald-50 text-emerald-700'
+                                : 'bg-amber-50 text-amber-700'
+
+                        return (
+                          <th key={metric.key} scope="col" className={`px-4 py-3.5 text-xs font-extrabold uppercase tracking-wide ${headerTone}`}>
+                            {t(`staff_salon_report.${metric.key}`)}
+                          </th>
+                        )
+                      })}
                     </tr>
                   </thead>
                   <tbody>
                     <tr className="border-t border-nexoraBorder">
                       {metrics.map((metric) => (
-                        <td key={metric.key} className="px-4 py-5 text-sm font-extrabold text-nexoraText">
+                        <td key={metric.key} className="px-4 py-5 text-base font-extrabold text-nexoraText">
                           {formatMetric(metric)}
                         </td>
                       ))}
@@ -432,21 +464,65 @@ export default function StaffSalonReport() {
                 </table>
               </div>
 
-              <div className="grid grid-cols-2 gap-3 md:hidden">
-                {metrics.map((metric, index) => (
-                  <div
-                    key={metric.key}
-                    className={`rounded-xl border border-nexoraBorder bg-nexoraSurfaceMuted/60 p-3 ${
-                      index === metrics.length - 1 ? 'col-span-2' : ''
-                    }`}
-                  >
-                    <div className="text-[10px] font-extrabold uppercase tracking-wider text-nexoraMuted">
-                      {t(`staff_salon_report.${metric.key}`)}
+              <dl
+                role="list"
+                aria-label={t('staff_salon_report.summary')}
+                className="grid grid-cols-2 gap-2.5 md:hidden"
+              >
+                {metrics.map((metric) => {
+                  const isFullWidth = selectedSourceValue === ALL_SOURCES_VALUE
+                    ? metric.key === 'income' || metric.key === 'otherIncome'
+                    : selectedSourceValue === INDEPENDENT_SOURCE_VALUE
+                      ? metric.key === 'income'
+                      : metric.key === 'service'
+                  const isPrimary = metric.key === 'income' || metric.key === 'techTakes'
+                  const isActivity = metric.key === 'turns' || metric.key === 'totalHours'
+                  const isService = metric.key === 'service'
+                    || metric.key === 'pay'
+                    || metric.key === 'commission'
+                    || metric.key === 'commissionPercent'
+                  const isTip = metric.key === 'tip'
+                  const cardTone = isPrimary
+                    ? 'border-nexoraBrand bg-nexoraBrand shadow-sm'
+                    : isActivity
+                      ? 'border-sky-200 bg-sky-50'
+                      : isService
+                        ? 'border-violet-200 bg-violet-50'
+                        : isTip
+                          ? 'border-emerald-200 bg-emerald-50'
+                          : 'border-amber-200 bg-amber-50'
+                  const labelTone = isPrimary
+                    ? 'text-white/80'
+                    : isActivity
+                      ? 'text-sky-700'
+                      : isService
+                        ? 'text-violet-700'
+                        : isTip
+                          ? 'text-emerald-700'
+                          : 'text-amber-700'
+
+                  return (
+                    <div
+                      key={metric.key}
+                      role="listitem"
+                      className={`min-w-0 rounded-xl border p-3.5 ${
+                        isFullWidth ? 'col-span-2' : ''
+                      } ${cardTone}`}
+                    >
+                      <dt className={`text-[11px] font-extrabold uppercase leading-4 tracking-wide ${labelTone}`}>
+                        {t(`staff_salon_report.${metric.key}`)}
+                      </dt>
+                      <dd className={`mt-2 break-words font-black leading-tight ${
+                        isPrimary ? 'text-white' : 'text-nexoraText'
+                      } ${
+                        isFullWidth ? 'text-2xl' : 'text-lg'
+                      }`}>
+                        {formatMetric(metric)}
+                      </dd>
                     </div>
-                    <div className="mt-1.5 text-base font-black text-nexoraText">{formatMetric(metric)}</div>
-                  </div>
-                ))}
-              </div>
+                  )
+                })}
+              </dl>
             </>
           )}
         </div>
