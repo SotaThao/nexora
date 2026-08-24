@@ -18,6 +18,7 @@ import { createPortal } from 'react-dom'
 import {
   CommunityChatType,
   COMMUNITY_CHAT_IMAGE_ACCEPT,
+  COMMUNITY_CHAT_MAX_MESSAGE_LENGTH,
   isAllowedCommunityChatImageFile,
   isPendingCommunityChatSessionId,
 } from '../../constants/communityChat'
@@ -348,6 +349,15 @@ function HeaderMessageChatWindow({
     const text = draft.trim()
     if (!text || isThreadLoading || isSending) return
 
+    // Validate message length before sending
+    if (text.length > COMMUNITY_CHAT_MAX_MESSAGE_LENGTH) {
+      showToast(
+        t(`${chatTk}.messageTooLong`, { maxLength: COMMUNITY_CHAT_MAX_MESSAGE_LENGTH }),
+        'error',
+      )
+      return
+    }
+
     setIsSending(true)
     try {
       const activeSessionId = await resolveActiveSessionId()
@@ -558,7 +568,6 @@ function HeaderMessageChatWindow({
   }, [chatTk, conversation.initials, conversation.name, currentLanguage, deletingMessageId, isSending, localMessages, menuMessageId, t])
 
   const isThreadEmpty = !isThreadLoading && !isMessagesError && localMessages.length === 0
-  const chatSubtitleKey = isGroupChat ? 'groupChatSubtitle' : 'directChatSubtitle'
 
   const floatingStackStyle = isFloating
     ? {
@@ -667,10 +676,6 @@ function HeaderMessageChatWindow({
           </span>
           <div className="header-message-chat-head-copy">
             <span className="header-message-chat-head-name">{conversation.name}</span>
-            <span className="header-message-chat-head-subtitle">
-              <User className="h-3.5 w-3.5" aria-hidden="true" />
-              <span>{t(`${chatTk}.${chatSubtitleKey}`)}</span>
-            </span>
           </div>
         </div>
 

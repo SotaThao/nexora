@@ -38,6 +38,9 @@ export const COMMUNITY_CHAT_THREAD_SCROLL_LOAD_THRESHOLD_PX = 72
 /** Max group title length (characters). */
 export const COMMUNITY_CHAT_MAX_TITLE_LENGTH = 200
 
+/** Max message content length (characters). */
+export const COMMUNITY_CHAT_MAX_MESSAGE_LENGTH = 2000
+
 /** Max image upload size in bytes (10 MB). */
 export const COMMUNITY_CHAT_MAX_IMAGE_BYTES = 10_000_000
 

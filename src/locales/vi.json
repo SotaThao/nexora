@@ -776,6 +776,7 @@
           "lastMessageFallback": "Mở để xem tin nhắn",
           "loadError": "Không thể tải tin nhắn. Vui lòng thử lại.",
           "sendError": "Không thể gửi tin nhắn. Vui lòng thử lại.",
+          "messageTooLong": "Tin nhắn quá dài. Vui lòng giữ dưới {{maxLength}} ký tự.",
           "openSessionError": "Không thể mở cuộc trò chuyện này. Có thể phiên chat không còn tồn tại.",
           "imageInvalid": "Vui lòng chọn ảnh JPG hoặc PNG tối đa 10MB.",
           "newChatWelcomeTitle": "Gửi lời chào tới {{name}}",
