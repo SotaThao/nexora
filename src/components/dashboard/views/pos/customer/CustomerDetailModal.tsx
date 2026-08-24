@@ -120,7 +120,7 @@ export default function CustomerDetailModal({
             ) : (
               <div className={`space-y-2 ${isHistoryFetching ? 'opacity-60' : ''}`}>
                 {historyItems.map((item) => (
-                  <div key={item.id} className="rounded-lg border border-nexoraBorder p-2.5">
+                  <div key={item.id} className="rounded-xl border border-nexoraBorder bg-white p-2.5 shadow-sm transition-all hover:-translate-y-0.5 hover:border-nexoraBrand/40 hover:shadow-md">
                     <div className="flex flex-wrap items-center justify-between gap-2">
                       <div className="flex flex-wrap items-center gap-2">
                         <span className="font-mono text-[11px] font-bold text-nexoraMuted">#{item.orderNumber}</span>
@@ -135,11 +135,11 @@ export default function CustomerDetailModal({
                         ${item.total.toFixed(2)}
                       </span>
                     </div>
-                    <p className="mt-1 text-[11px] text-nexoraMuted">{formatDateTime(item.occurredAt)}</p>
+                    <p className="mt-1 text-[11px] font-semibold text-nexoraText">{formatDateTime(item.occurredAt)}</p>
                     {item.serviceNames.length > 0 ? (
-                      <p className="mt-1 truncate text-xs text-nexoraText">{item.serviceNames.join(', ')}</p>
+                      <p className="mt-1 truncate text-xs font-semibold text-nexoraText">{item.serviceNames.join(', ')}</p>
                     ) : null}
-                    <p className="text-[11px] text-nexoraMuted">
+                    <p className="text-[11px] font-semibold text-nexoraText">
                       {item.technicianNames.length > 0 ? item.technicianNames.join(', ') : t(p + 'viewDetailUnassigned')}
                     </p>
                   </div>

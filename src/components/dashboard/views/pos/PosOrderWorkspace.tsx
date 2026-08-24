@@ -45,6 +45,7 @@ import ChangeTechnicianModal from './modals/ChangeTechnicianModal'
 import { formatPosDateTime } from './posDateTime'
 
 type TipMode = 'noTip' | 'fixed10' | 'fixed15' | 'pct10' | 'pct20' | 'custom'
+export type PosOrderWorkspaceMode = 'edit' | 'checkout'
 
 const PAYMENT_METHODS: PosCheckoutPaymentMethodType[] = ['Card', 'Cash', 'GiftCard', 'SplitPay']
 
@@ -95,6 +96,7 @@ function lineTotal(line: DisplayLine): number {
 export default function PosOrderWorkspace({
   businessId,
   orderId,
+  mode = 'edit',
   onClose,
   onCompleted,
   businessName,
@@ -103,6 +105,9 @@ export default function PosOrderWorkspace({
 }: {
   businessId: string
   orderId: string
+  // Edit is operational order maintenance. Checkout is the only entry mode that reveals
+  // tip, payment method, receipt and payment summary immediately.
+  mode?: PosOrderWorkspaceMode
   // Renders a "Back" button next to the title.
   onClose?: () => void
   onCompleted?: () => void
@@ -132,7 +137,7 @@ export default function PosOrderWorkspace({
   const setStaffTipSplit = useSetOrderStaffTipSplit(businessId)
   const completeOrder = useCompleteOrder(businessId)
 
-  const [showPaymentSection, setShowPaymentSection] = useState(false)
+  const [showPaymentSection, setShowPaymentSection] = useState(mode === 'checkout')
   // The line whose technician is being picked. Carries the values the popup needs to open and the
   // ones the save has to send back unchanged, so it never reaches into the list again.
   const [technicianTarget, setTechnicianTarget] = useState<{
@@ -167,7 +172,7 @@ export default function PosOrderWorkspace({
   const [receiptChoice, setReceiptChoice] = useState<'sms' | 'none'>('none')
   const [printPreviewOpen, setPrintPreviewOpen] = useState(false)
   const [tipSplitInputs, setTipSplitInputs] = useState<Record<string, string>>({})
-  const initializedOrderIdRef = useRef<string | null>(null)
+  const initializedWorkspaceRef = useRef<string | null>(null)
   const printCleanupRef = useRef<(() => void) | null>(null)
 
   useEffect(() => {
@@ -211,15 +216,14 @@ export default function PosOrderWorkspace({
   // live edits or another tab) must not reset what the user is currently doing with tip/
   // payment-method inputs mid-checkout.
   useEffect(() => {
-    if (!order || initializedOrderIdRef.current === order.id) return
-    initializedOrderIdRef.current = order.id
+    if (!order) return
+    const workspaceKey = `${order.id}:${mode}`
+    if (initializedWorkspaceRef.current === workspaceKey) return
+    initializedWorkspaceRef.current = workspaceKey
 
-    // A Waiting ticket has nothing to charge for yet — payment stays hidden until a service is
-    // added and started. (Waiting used to open payment when there were zero service lines, for
-    // product-only orders; nothing sells products while retail is hidden.)
-    setShowPaymentSection(
-      order.status === PosOrderStatus.InService || order.status === PosOrderStatus.Completed,
-    )
+    // Status never reveals checkout information by itself. An InService order reached through
+    // Edit still opens as an operational ticket; only an explicit Checkout entry reveals payment.
+    setShowPaymentSection(mode === 'checkout')
     setReceiptChoice('none')
     setPaymentMethod('Cash')
 
@@ -236,7 +240,7 @@ export default function PosOrderWorkspace({
       else setTipMode('custom')
       setCustomTipInput(String(order.tipAmount))
     }
-  }, [order])
+  }, [order, mode])
 
   useEffect(() => {
     if (!order) return
@@ -579,8 +583,8 @@ export default function PosOrderWorkspace({
                                   ) : null}
                                 </div>
                                 <div className="mt-1 flex items-center gap-2">
-                                  <span className="min-w-0 truncate text-xs leading-tight text-nexoraMuted">
-                                    <span className="text-[10px]">
+                                  <span className="min-w-0 truncate text-xs font-semibold leading-tight text-nexoraText">
+                                    <span className="text-[10px] font-normal text-nexoraMuted">
                                       {t('components.dashboard.views.pos.PosOrderWorkspace.technicianPrefix')}
                                     </span>{' '}
                                     {technicianLabel}

@@ -29,19 +29,20 @@ export default function BookingCards({
       {bookings.map((booking) => {
         const canAct = booking.status === PosOrderStatus.Pending || booking.status === PosOrderStatus.Confirmed
         return (
-          <div key={booking.bookingId} className="nexora-card space-y-2 p-4">
+          <div key={booking.bookingId} className="space-y-2 rounded-xl border border-nexoraBorder bg-white p-4 shadow-sm transition-all hover:-translate-y-0.5 hover:border-nexoraBrand/40 hover:shadow-md">
             <div className="flex items-start justify-between gap-2">
               <p className="text-sm font-bold text-nexoraText">{booking.customerName}</p>
               <span className="shrink-0 whitespace-nowrap rounded-full bg-nexoraCanvas px-2 py-0.5 text-[10px] font-bold text-nexoraText">
                 {t(p + statusLabelKey(booking.status))}
               </span>
             </div>
-            <p className="text-xs text-nexoraMuted">{formatBookingWallClock(booking.scheduledAt, booking.source)}</p>
-            <p className="text-[11px] text-nexoraMuted">
-              {t(p + 'columnCreated')}: {formatPosDateTime(booking.createdAt, currentLanguage)}
+            <p className="text-xs font-semibold text-nexoraText">{formatBookingWallClock(booking.scheduledAt, booking.source)}</p>
+            <p className="text-[11px]">
+              <span className="text-nexoraMuted">{t(p + 'columnCreated')}:</span>{' '}
+              <span className="font-semibold text-nexoraText">{formatPosDateTime(booking.createdAt, currentLanguage)}</span>
             </p>
-            <p className="text-xs text-nexoraMuted">{booking.serviceNames.join(', ')}</p>
-            <p className="text-xs text-nexoraMuted">
+            <p className="text-xs font-semibold text-nexoraText">{booking.serviceNames.join(', ')}</p>
+            <p className="text-xs font-semibold text-nexoraText">
               {booking.technicianNames.length > 0 ? booking.technicianNames.join(', ') : t(p + 'unassigned')}
             </p>
             <div className="flex flex-wrap gap-1.5 pt-1">

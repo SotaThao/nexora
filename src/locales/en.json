@@ -734,7 +734,9 @@
       "search_view_detail": "View Detail ›",
       "search_view_transaction": "View ›",
       "search_view": "View ›",
-      "search_no_results": "No matching results found."
+      "search_no_results": "No matching results found.",
+      "collapse_menu": "Collapse menu",
+      "expand_menu": "Expand menu"
     },
     "back_to_dashboard": "Back to Dashboard",
     "back_short": "Back",
@@ -2993,6 +2995,10 @@
             "loading": "Loading document...",
             "error": "Unable to display this document.",
             "pageAria": "Page {page} of {total}"
+          },
+          "iouRewardPolicy": {
+            "title": "VLINKPAY IOU Reward Policy",
+            "description": "Interactive guide to IOU reward streams — Daily, Direct, Binary, and Leadership — with a built-in calculator. Available in multiple languages."
           }
         },
         "StaffView": {
@@ -3236,7 +3242,7 @@
               "turnboard": "Turn Board",
               "completed": "Completed Services",
               "booking": "Appointments",
-              "customer": "Customers",
+              "customer": "Customer History",
               "timeclock": "Staffs Clock",
               "report": "Report"
             },
@@ -3265,6 +3271,11 @@
             "confirmCancelTitle": "Remove from waitlist?",
             "confirmCancelBody": "\"{{name}}\" will be removed from the check-in queue.",
             "turnBoardEmpty": "No staff stations yet — set up staff POS profiles first.",
+            "beep": "Beep",
+            "beepAria": "Beep {{name}}",
+            "beepPending": "Sending…",
+            "beepSent": "Beeped {{name}}",
+            "beepNotDelivered": "{{name}} has no app account — nothing was sent.",
             "todayTurnsTitle": "Today's Turns",
             "todayTurnsHint": "Turn count and the technician with the next turn today.",
             "todayTurnsTotal": "Total turns today",
@@ -3383,6 +3394,11 @@
             "statusWaiting": "Checked In",
             "statusInService": "In Service",
             "statusCompleted": "Completed",
+            "calendarTitle": "Team calendar",
+            "calendarSubtitle": "9:00 AM – 7:00 PM · appointments grouped by technician",
+            "calendarToday": "Today",
+            "calendarPrevDay": "Previous day",
+            "calendarNextDay": "Next day",
             "calendarPrevMonth": "Previous month",
             "calendarNextMonth": "Next month",
             "calendarBookingsOnDay": "{{count}} booking(s)",
@@ -6149,7 +6165,7 @@
         "noTechnicians": "Nobody is available right now — First available still works.",
         "technicianBusy": "busy now",
         "technicianAvailable": "available",
-        "submit": "Check me in ({{count}} selected)"
+        "submit": "Check in"
       },
       "WizardCheckInLayout": {
         "cancel": "Cancel"
