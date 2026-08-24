@@ -3427,7 +3427,7 @@
             "changeServiceModalTitle": "Change Service · {{serviceName}}",
             "changeServiceModalClose": "Close",
             "selectServiceButton": "Select",
-            "assignTechnician": "Assign",
+            "assignTechnician": "Choose Technician",
             "changeTechnician": "Change",
             "changeTechnicianModalTitle": "Change Technician · {{serviceName}}",
             "changeTechnicianModalClose": "Close",
@@ -3440,7 +3440,7 @@
             "noteLabel": "Note",
             "notePlaceholder": "Add a note for this service…",
             "checkoutButton": "Checkout",
-            "startServiceButton": "Start Service",
+            "startServiceButton": "Assign Services",
             "startServiceSuccess": "Service started.",
             "completeSuccess": "Payment recorded — staff released.",
             "tipTitle": "Tip",
@@ -3576,6 +3576,11 @@
               "PosCheckIn": "POS Check-in"
             },
             "viewDetailModalTitle": "Customer Detail",
+            "viewDetailOverviewTitle": "Customer overview",
+            "viewDetailContentLabel": "Customer profile content",
+            "viewDetailContactTitle": "Contact Information",
+            "viewDetailProfileTitle": "Customer Profile",
+            "viewDetailCustomerSince": "Customer Since",
             "viewDetailName": "Name",
             "viewDetailPhone": "Phone",
             "viewDetailEmail": "Email",
@@ -3593,7 +3598,8 @@
             "viewDetailUnassigned": "Unassigned",
             "historyBadgeBooking": "Booking",
             "historyBadgeWalkin": "Walk-in",
-            "viewDetailClose": "Close"
+            "viewDetailClose": "Close",
+            "viewDetailCloseAria": "Close customer detail"
           },
           "PosBookingSettingsPanel": {
             "title": "Booking Settings",
