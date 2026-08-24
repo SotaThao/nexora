@@ -104,9 +104,9 @@ export function useClockOutStaff(businessId?: string) {
 
 export function useBeepStaff(businessId?: string) {
   const invalidate = useTimeClockInvalidation(businessId)
-  return useMutation<BeepStaffResultApiDto, unknown, string>({
-    mutationFn: (posStaffProfileId: string) =>
-      posTimeClockRepository.beepStaff(businessId as string, posStaffProfileId),
+  return useMutation<BeepStaffResultApiDto, unknown, { posStaffProfileId: string; message?: string }>({
+    mutationFn: ({ posStaffProfileId, message }) =>
+      posTimeClockRepository.beepStaff(businessId as string, posStaffProfileId, message),
     onSuccess: invalidate,
   })
 }
