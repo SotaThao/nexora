@@ -215,9 +215,8 @@ export default function PosOrderWorkspace({
     ]
   }, [order])
 
-  // A ticket handled by one technician should stay with that technician as services are added.
-  // When several technicians are already involved there is no safe default, so the new line stays
-  // unassigned and the operator chooses explicitly.
+  // Preserve service-line order while deduplicating staff. When several technicians are already
+  // involved, the first assigned technician becomes the deterministic default for a new service.
   const assignedTechnicianIds = useMemo(() => {
     const uniqueIds = new Set(
       visibleLines
@@ -296,8 +295,7 @@ export default function PosOrderWorkspace({
     showToast(getErrorMessage(err, t, 'ERROR'), 'error')
   }
 
-  // Keep a single-technician ticket with the same technician. Ambiguous/multi-technician tickets
-  // skip assignment so a floor operator can choose instead of inheriting arbitrarily.
+  // Keep an existing ticket with an already assigned technician when services are added.
   const handleCatalogServiceClick = (service: CheckoutServiceCatalogItemApiDto) => {
     // Qualification must be known before inheriting a sole technician. The picker is disabled
     // during this window; this guard also protects programmatic/stale click handlers.
@@ -313,10 +311,16 @@ export default function PosOrderWorkspace({
             return
           }
 
-          // More than one existing technician is ambiguous. A sole technician is inherited only
-          // when the live roster confirms they can perform the newly selected service.
-          if (assignedTechnicianIds.length !== 1) return
           const inheritedTechnicianId = assignedTechnicianIds[0]
+
+          // Multi-technician tickets inherit their first assigned technician in service-line order.
+          if (assignedTechnicianIds.length > 1) {
+            saveServiceLine(newServiceLineId, inheritedTechnicianId, '')
+            return
+          }
+
+          // A sole technician is inherited only when the live roster confirms they can perform
+          // the newly selected service.
           const canPerformService = techniciansForService(service.id).some(
             (technician) => technician.posStaffProfileId === inheritedTechnicianId,
           )
