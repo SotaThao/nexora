@@ -1,0 +1,830 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>VLINKPAY • IOU — Reward Policy</title>
+<style>
+  :root{
+    --ink:#0d1526; --bg:#ffffff; --panel:#f3f6fc; --panel2:#eef2fa;
+    --blue:#2f6bed; --blue-d:#1f4fc4; --cyan:#22a7c9; --cyan-l:#e6f6fb;
+    --accent:#ffe14d; --muted:#5b6576; --line:#e2e8f4; --ok:#12996b; --warn:#c85a3a;
+    --shadow:0 1px 2px rgba(13,21,38,.05),0 8px 24px rgba(13,21,38,.06);
+    --radius:18px;
+  }
+  *{box-sizing:border-box}
+  html{scroll-behavior:smooth}
+  body{margin:0;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Helvetica Neue",Arial,"Noto Sans",sans-serif;
+    color:var(--ink);background:var(--bg);line-height:1.55;-webkit-font-smoothing:antialiased}
+  .wrap{max-width:820px;margin:0 auto;padding:0 18px}
+  h1,h2,h3{line-height:1.2;letter-spacing:-.01em;margin:0}
+  .eyebrow{font-size:12px;font-weight:800;letter-spacing:.14em;text-transform:uppercase;color:var(--blue)}
+  .muted{color:var(--muted)}
+
+  /* LANG BAR */
+  .langbar{position:sticky;top:0;z-index:50;background:rgba(13,21,38,.92);backdrop-filter:blur(6px);
+    display:flex;align-items:center;justify-content:flex-end;gap:8px;padding:8px 14px;border-bottom:1px solid rgba(255,255,255,.08)}
+  .langbar span{color:#9fb4dd;font-size:12px;font-weight:700}
+  #lang{background:#12203c;color:#fff;border:1px solid rgba(255,255,255,.18);border-radius:9px;
+    padding:7px 10px;font-size:13px;font-weight:700;cursor:pointer}
+  #i18nNote{display:none;background:#fff8ee;border-bottom:1px solid #f2e2c4;color:#7a5a20;
+    font-size:12.5px;padding:8px 14px;text-align:center}
+
+  header.hero{background:linear-gradient(180deg,#0d1526,#111d38);color:#fff;padding:44px 0 40px}
+  header.hero .eyebrow{color:#8fb4ff}
+  header.hero h1{font-size:clamp(28px,7vw,44px);font-weight:850;margin:10px 0 14px}
+  header.hero p{color:#c3ccdd;max-width:640px;margin:0}
+  .chips{display:flex;flex-wrap:wrap;gap:8px;margin-top:20px}
+  .chip{background:rgba(255,255,255,.09);border:1px solid rgba(255,255,255,.16);color:#dbe4f5;
+    font-size:12px;font-weight:700;padding:6px 12px;border-radius:999px}
+
+  section{padding:40px 0;border-bottom:1px solid var(--line)}
+  .sec-head{margin-bottom:22px}
+  .sec-head h2{font-size:clamp(20px,4.5vw,27px);font-weight:820;margin-top:8px}
+
+  .grid{display:grid;gap:14px}
+  .g2{grid-template-columns:repeat(2,1fr)}
+  .g4{grid-template-columns:repeat(4,1fr)}
+  @media(max-width:640px){.g4{grid-template-columns:repeat(2,1fr)}}
+  .card{background:var(--panel);border:1px solid var(--line);border-radius:var(--radius);padding:18px}
+  .card .k{font-size:12px;font-weight:800;letter-spacing:.06em;color:var(--blue)}
+  .card .t{font-weight:800;font-size:16px;margin:6px 0 4px}
+  .card .d{font-size:13.5px;color:var(--muted)}
+
+  .calc{background:linear-gradient(180deg,#f6f9ff,#eef3fc);border:1px solid #d9e4fb;
+    border-radius:22px;padding:22px;box-shadow:var(--shadow)}
+  .calc h3{font-size:18px;font-weight:820;margin-bottom:4px}
+  label{display:block;font-size:13px;font-weight:700;color:var(--ink);margin:16px 0 8px}
+  .pkgs{display:flex;flex-wrap:wrap;gap:8px}
+  .pkg{flex:1 1 auto;min-width:76px;text-align:center;padding:11px 8px;border-radius:12px;border:1.5px solid var(--line);
+    background:#fff;font-weight:800;font-size:14px;cursor:pointer;transition:.15s}
+  .pkg:hover{border-color:var(--blue)}
+  .pkg.active{background:var(--blue);border-color:var(--blue);color:#fff;box-shadow:0 6px 16px rgba(47,107,237,.28)}
+  .pkg.locked{opacity:.5;background:#f2f3f6;border-style:dashed;border-color:#d5dae4;color:var(--muted);cursor:not-allowed}
+  .pkg.locked:hover{border-color:#d5dae4}
+  label.lic{display:flex;align-items:center;gap:10px;cursor:pointer;margin:16px 0 4px;padding:12px 14px;
+    background:#fff;border:1.5px solid var(--line);border-radius:12px;font-size:13.5px;font-weight:600}
+  label.lic:has(input:checked){border-color:var(--ok);background:#f1fbf6}
+  label.lic input{width:18px;height:18px;flex:none;accent-color:var(--ok)}
+  label.lic .muted{font-weight:500}
+  .out{display:grid;grid-template-columns:repeat(2,1fr);gap:10px;margin-top:18px}
+  @media(max-width:520px){.out{grid-template-columns:1fr}}
+  .stat{background:#fff;border:1px solid var(--line);border-radius:14px;padding:14px 16px}
+  .stat .lab{font-size:12px;font-weight:700;color:var(--muted)}
+  .stat .val{font-size:22px;font-weight:850;margin-top:3px;letter-spacing:-.02em}
+  .stat .val small{font-size:13px;font-weight:700;color:var(--muted)}
+  .stat.hl{background:var(--ink);border-color:var(--ink)}
+  .stat.hl .lab{color:#9fb4dd}.stat.hl .val{color:#fff}
+  .stat.hl .val small{color:#9fb4dd}
+  .stat.cy{background:var(--cyan-l);border-color:#c5e8f1}
+  .stat.cy .val{color:#0f6a80}
+
+  input[type=number]{width:100%;padding:12px 14px;border:1.5px solid var(--line);border-radius:12px;font-size:16px;
+    font-weight:700;background:#fff;color:var(--ink)}
+  input[type=number]:focus{outline:none;border-color:var(--blue)}
+  .two{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+  .binres{margin-top:16px;background:#fff;border:1px solid var(--line);border-radius:14px;padding:16px;display:grid;
+    grid-template-columns:repeat(3,1fr);gap:10px;text-align:center}
+  @media(max-width:520px){.binres{grid-template-columns:1fr;text-align:left}}
+  .binres .lab{font-size:12px;font-weight:700;color:var(--muted)}
+  .binres .val{font-size:19px;font-weight:850;margin-top:2px}
+  .binres .val.pay{color:var(--ok)}
+
+  .bar{height:14px;border-radius:999px;background:#e4ebf7;overflow:hidden;margin-top:10px}
+  .bar > i{display:block;height:100%;background:linear-gradient(90deg,var(--cyan),var(--blue));width:0;transition:.4s}
+  .note{font-size:12.5px;color:var(--muted);margin-top:8px}
+
+  .tblwrap{overflow-x:auto;border:1px solid var(--line);border-radius:16px}
+  table{border-collapse:collapse;width:100%;min-width:520px;font-size:14px}
+  th,td{padding:12px 14px;text-align:right;border-bottom:1px solid var(--line);white-space:nowrap}
+  th:first-child,td:first-child{text-align:left}
+  thead th{background:var(--panel2);font-weight:800;color:var(--ink);font-size:12.5px;text-transform:uppercase;letter-spacing:.04em}
+  tbody tr:last-child td{border-bottom:none}
+  tbody tr.big td{background:#fbfcff;font-weight:800}
+  .pill{display:inline-block;background:var(--cyan-l);color:#0f6a80;font-weight:800;padding:3px 9px;border-radius:999px;font-size:12.5px}
+
+  .flow{display:grid;grid-template-columns:repeat(4,1fr);gap:10px}
+  @media(max-width:640px){.flow{grid-template-columns:1fr 1fr}}
+  .step{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:14px}
+  .step .n{width:26px;height:26px;border-radius:8px;background:var(--ink);color:#fff;display:flex;
+    align-items:center;justify-content:center;font-weight:800;font-size:13px}
+  .step .st{font-weight:800;font-size:13.5px;margin:9px 0 3px}
+  .step .sd{font-size:12.5px;color:var(--muted)}
+
+  .callout{background:var(--ink);color:#fff;border-radius:16px;padding:16px 18px;font-weight:600;font-size:14.5px;margin-top:16px}
+  .callout b{color:var(--accent)}
+
+  .btree{margin:2px 0 20px}
+  .blegs{display:grid;grid-template-columns:1fr auto 1fr;gap:12px;align-items:center}
+  @media(max-width:640px){.blegs{grid-template-columns:1fr}}
+  .bleg{background:var(--panel);border:1px solid var(--line);border-radius:16px;padding:16px;text-align:center}
+  .blegttl{font-size:12px;font-weight:800;letter-spacing:.06em;color:var(--muted)}
+  .btreepic{display:flex;flex-direction:column;align-items:center;gap:6px;margin:12px 0}
+  .brow{display:flex;gap:8px}
+  .brow i{width:18px;height:18px;border-radius:50%;background:var(--blue);display:block}
+  .bleg.right .brow i{background:var(--cyan)}
+  .bbv{font-size:22px;font-weight:850;color:var(--blue);margin-top:4px}
+  .bleg.right .bbv{color:var(--cyan)}
+  .bmatch{background:var(--ink);color:#fff;border-radius:16px;padding:16px 14px;text-align:center}
+  .bmatch .lbl{font-size:11px;font-weight:800;letter-spacing:.08em;color:#9fb4dd}
+  .bmatch .bbig{font-size:23px;font-weight:850;margin:3px 0}
+  .bmatch .bpay{color:var(--accent);font-weight:850;font-size:18px;margin-top:4px}
+  .bmatch .bx{font-size:12.5px;color:#c3ccdd;margin-top:2px}
+  @media(max-width:640px){.bmatch{padding:12px}}
+
+  .assume{margin-top:22px;background:#fffaf0;border:1px solid #f0e0bf;border-radius:18px;padding:20px}
+  .atag{display:inline-block;background:#f4c430;color:#402f00;font-size:11px;font-weight:800;letter-spacing:.05em;
+    padding:5px 11px;border-radius:999px;margin-bottom:12px}
+  .assume h3{font-size:17px;font-weight:820}
+  .assume table{min-width:460px}
+  input.wc{width:118px;padding:8px 10px;border:1.5px solid #e2d9c2;border-radius:9px;font-size:14px;font-weight:800;
+    text-align:right;background:#fff;color:var(--ink)}
+  input.wc:focus{outline:none;border-color:var(--blue)}
+
+  ul.clean{list-style:none;padding:0;margin:0;display:grid;gap:10px}
+  ul.clean li{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:12px 14px;font-size:14px}
+  ul.clean li b{display:block;font-weight:800;margin-bottom:2px}
+
+  .disclaimer{font-size:12.5px;color:var(--muted);background:#fff8ee;border:1px solid #f2e2c4;border-radius:14px;padding:14px 16px}
+  footer{padding:34px 0 46px;text-align:center;color:var(--muted);font-size:13px}
+  .lead{font-size:15.5px;color:var(--muted);max-width:640px}
+</style>
+</head>
+<body>
+
+<div class="langbar">
+  <span>🌐</span>
+  <select id="lang" aria-label="Language"></select>
+</div>
+<div id="i18nNote"></div>
+
+<header class="hero">
+  <div class="wrap">
+    <div class="eyebrow">VLINKPAY • IOU</div>
+    <h1 data-i18n="hero_h1"></h1>
+    <p data-i18n="hero_p"></p>
+    <div class="chips">
+      <span class="chip">Daily</span><span class="chip">Direct</span><span class="chip">Binary</span>
+      <span class="chip">Leadership</span><span class="chip">PV / BV</span><span class="chip">FIFO</span>
+    </div>
+  </div>
+</header>
+
+<!-- 4 SOURCES -->
+<section>
+  <div class="wrap">
+    <div class="sec-head">
+      <div class="eyebrow" data-i18n="ov_eye"></div>
+      <h2 data-i18n="ov_h2"></h2>
+    </div>
+    <div class="grid g4">
+      <div class="card"><div class="k">DAILY</div><div class="t" data-i18n="s_daily_t"></div><div class="d" data-i18n="s_daily_d"></div></div>
+      <div class="card"><div class="k">DIRECT</div><div class="t" data-i18n="s_direct_t"></div><div class="d" data-i18n="s_direct_d"></div></div>
+      <div class="card"><div class="k">BINARY</div><div class="t" data-i18n="s_bin_t"></div><div class="d" data-i18n="s_bin_d"></div></div>
+      <div class="card"><div class="k">LEADERSHIP</div><div class="t" data-i18n="s_lead_t"></div><div class="d" data-i18n="s_lead_d"></div></div>
+    </div>
+    <div class="callout" data-i18n="ov_call"></div>
+  </div>
+</section>
+
+<!-- PV/BV -->
+<section>
+  <div class="wrap">
+    <div class="sec-head">
+      <div class="eyebrow" data-i18n="pv_eye"></div>
+      <h2 data-i18n="pv_h2"></h2>
+    </div>
+    <p class="lead" style="margin-bottom:18px" data-i18n="pv_lead"></p>
+    <div class="grid g2">
+      <div class="card"><div class="k" data-i18n="pv_c1_k"></div><div class="t">$2 = 1 PV + 1 BV</div><div class="d">Token IOU</div></div>
+      <div class="card"><div class="k" data-i18n="pv_c2_k"></div><div class="t">$1 = 1 PV + 1 BV</div><div class="d">AI Voice • SMS • Subscription • Franchise License</div></div>
+    </div>
+  </div>
+</section>
+
+<!-- CALCULATOR -->
+<section id="calc">
+  <div class="wrap">
+    <div class="sec-head">
+      <div class="eyebrow" data-i18n="calc_eye"></div>
+      <h2 data-i18n="calc_h2"></h2>
+    </div>
+    <div class="calc">
+      <h3 data-i18n="calc_s1"></h3>
+      <div class="muted" style="font-size:13px" data-i18n="calc_s1d"></div>
+      <label class="lic" for="lic">
+        <input type="checkbox" id="lic">
+        <span data-i18n="lic_label"></span>
+      </label>
+      <label data-i18n="lbl_pkg"></label>
+      <div class="pkgs" id="pkgs"></div>
+      <div class="note" id="lockNote"></div>
+      <div class="out" id="pkgOut"></div>
+      <label style="margin-top:22px" data-i18n="lbl_captarget"></label>
+      <div class="bar"><i id="capBar"></i></div>
+      <div class="note" id="capNote"></div>
+      <hr style="border:none;border-top:1px dashed #cdd8ee;margin:26px 0 4px">
+      <h3 style="margin-top:18px" data-i18n="calc_s2"></h3>
+      <div class="muted" style="font-size:13px" data-i18n="calc_s2d"></div>
+      <div class="two" style="margin-top:14px">
+        <div><label style="margin:0 0 8px" data-i18n="lbl_left"></label><input type="number" id="left" value="2000" min="0" step="100"></div>
+        <div><label style="margin:0 0 8px" data-i18n="lbl_right"></label><input type="number" id="right" value="1500" min="0" step="100"></div>
+      </div>
+      <div class="binres">
+        <div><div class="lab" data-i18n="bin_matched"></div><div class="val" id="matched">—</div></div>
+        <div><div class="lab" data-i18n="bin_pay"></div><div class="val pay" id="payout">—</div></div>
+        <div><div class="lab" data-i18n="bin_carry"></div><div class="val" id="carry">—</div></div>
+      </div>
+      <div class="note" id="capCmp"></div>
+      <div class="note" data-i18n="bin_example"></div>
+    </div>
+  </div>
+</section>
+
+<!-- PASSIVE VS ACTIVE -->
+<section id="pa">
+  <div class="wrap">
+    <div class="sec-head">
+      <div class="eyebrow" data-i18n="pa_eye"></div>
+      <h2 data-i18n="pa_h2"></h2>
+    </div>
+    <p class="lead" style="margin-bottom:18px" data-i18n="pa_lead"></p>
+    <div class="grid g2">
+      <div class="card">
+        <div class="k" style="color:var(--muted)" data-i18n="pa_left_k"></div>
+        <div class="t" id="paPkg">—</div>
+        <div class="out" style="margin-top:12px">
+          <div class="stat"><div class="lab" data-i18n="pa_daily_lab"></div><div class="val" id="paDaily">—</div></div>
+          <div class="stat"><div class="lab" data-i18n="pa_be_lab"></div><div class="val" id="paBe"></div></div>
+          <div class="stat"><div class="lab" data-i18n="pa_300_lab"></div><div class="val" id="pa300"></div></div>
+          <div class="stat"><div class="lab" data-i18n="pa_net_lab"></div><div class="val" style="color:var(--ok)" id="paNet">—</div></div>
+        </div>
+        <div class="note" style="margin-top:12px" data-i18n="pa_left_note"></div>
+      </div>
+      <div class="card" style="border-color:#cfe0ff;background:#f6f9ff">
+        <div class="k" data-i18n="pa_right_k"></div>
+        <div class="t" id="paPkg2">—</div>
+        <div class="out" style="margin-top:12px">
+          <div class="stat cy"><div class="lab" data-i18n="pa_afast_lab"></div><div class="val" id="aFast">—</div></div>
+          <div class="stat"><div class="lab" data-i18n="pa_atotal_lab"></div><div class="val" id="aTotal">—</div></div>
+        </div>
+        <ul class="clean" style="margin-top:12px">
+          <li data-i18n="pa_li_direct"></li>
+          <li data-i18n="pa_li_bin"></li>
+          <li data-i18n="pa_li_lead"></li>
+        </ul>
+        <div class="note" style="margin-top:10px" data-i18n="pa_right_note"></div>
+      </div>
+    </div>
+    <div style="margin-top:24px">
+      <h3 style="font-size:17px;font-weight:820;margin-bottom:4px" data-i18n="daily_h3"></h3>
+      <p class="muted" style="font-size:13px;margin:4px 0 12px" data-i18n="daily_note"></p>
+      <div class="tblwrap">
+        <table>
+          <thead><tr><th data-i18n="th_pkg"></th><th data-i18n="th_dday"></th><th data-i18n="th_dmonth"></th><th data-i18n="th_d12"></th><th data-i18n="th_dpct"></th></tr></thead>
+          <tbody id="dailytbl"></tbody>
+        </table>
+      </div>
+    </div>
+    <div class="callout" data-i18n="pa_call"></div>
+  </div>
+</section>
+
+<!-- DIRECT TABLE -->
+<section>
+  <div class="wrap">
+    <div class="sec-head">
+      <div class="eyebrow">Direct Bonus</div>
+      <h2 data-i18n="direct_h2"></h2>
+    </div>
+    <p class="lead" style="margin-bottom:16px" data-i18n="direct_lead"></p>
+    <div class="tblwrap">
+      <table>
+        <thead><tr><th data-i18n="th_pkgiou"></th><th>PV</th><th>BV</th><th>Direct</th><th data-i18n="th_directcomm"></th></tr></thead>
+        <tbody id="dtbl"></tbody>
+      </table>
+    </div>
+  </div>
+</section>
+
+<!-- BINARY / WEEKLY -->
+<section>
+  <div class="wrap">
+    <div class="sec-head">
+      <div class="eyebrow" data-i18n="bin_eye"></div>
+      <h2 data-i18n="bin_h2"></h2>
+    </div>
+    <div class="btree">
+      <p class="lead" style="margin-bottom:14px" data-i18n="btree_lead"></p>
+      <div class="blegs">
+        <div class="bleg">
+          <div class="blegttl" data-i18n="bleg_left"></div>
+          <div class="btreepic"><div class="brow"><i></i></div><div class="brow"><i></i><i></i></div><div class="brow"><i></i><i></i><i></i><i></i></div></div>
+          <div class="bbv">2.000 BV</div>
+        </div>
+        <div class="bmatch">
+          <div class="lbl" data-i18n="bmatch_lbl"></div>
+          <div class="bbig">1.500 BV</div>
+          <div class="bx">× 7%</div>
+          <div class="bpay">= 105 USDV</div>
+        </div>
+        <div class="bleg right">
+          <div class="blegttl" data-i18n="bleg_right"></div>
+          <div class="btreepic"><div class="brow"><i></i></div><div class="brow"><i></i><i></i></div><div class="brow"><i></i><i></i><i></i><i></i></div></div>
+          <div class="bbv">1.500 BV</div>
+        </div>
+      </div>
+      <div class="note" style="margin-top:10px" data-i18n="btree_note"></div>
+    </div>
+    <div class="flow">
+      <div class="step"><div class="n">1</div><div class="st" data-i18n="fl1_t"></div><div class="sd" data-i18n="fl1_d"></div></div>
+      <div class="step"><div class="n">2</div><div class="st" data-i18n="fl2_t"></div><div class="sd" data-i18n="fl2_d"></div></div>
+      <div class="step"><div class="n">3</div><div class="st" data-i18n="fl3_t"></div><div class="sd" data-i18n="fl3_d"></div></div>
+      <div class="step"><div class="n">4</div><div class="st" data-i18n="fl4_t"></div><div class="sd" data-i18n="fl4_d"></div></div>
+    </div>
+    <div class="callout" data-i18n="bin_call"></div>
+    <div class="assume">
+      <div class="atag" data-i18n="assume_tag"></div>
+      <h3 data-i18n="assume_h3"></h3>
+      <p class="muted" style="font-size:13.5px;margin:6px 0 14px" data-i18n="assume_p"></p>
+      <div class="tblwrap">
+        <table>
+          <thead><tr><th data-i18n="th_pkgiou"></th><th data-i18n="th_capwk"></th><th data-i18n="th_capmo"></th><th data-i18n="th_cappct"></th></tr></thead>
+          <tbody id="captbl"></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- LEADERSHIP -->
+<section>
+  <div class="wrap">
+    <div class="sec-head">
+      <div class="eyebrow" data-i18n="lead_eye"></div>
+      <h2 data-i18n="lead_h2"></h2>
+    </div>
+    <p class="lead" style="margin-bottom:16px" data-i18n="lead_lead"></p>
+    <div class="tblwrap">
+      <table>
+        <thead><tr><th data-i18n="th_gen"></th><th>Bronze</th><th>Silver</th><th>Gold</th><th>Platinum</th><th>Diamond</th></tr></thead>
+        <tbody id="leadtbl"></tbody>
+      </table>
+    </div>
+    <div class="note" style="margin-top:10px" data-i18n="lead_note"></div>
+  </div>
+</section>
+
+<!-- RANK CONDITIONS -->
+<section>
+  <div class="wrap">
+    <div class="sec-head">
+      <div class="eyebrow" data-i18n="rank_eye"></div>
+      <h2 data-i18n="rank_h2"></h2>
+    </div>
+    <p class="lead" style="margin-bottom:16px" data-i18n="rank_lead"></p>
+    <div class="tblwrap">
+      <table>
+        <thead><tr><th data-i18n="th_rank"></th><th data-i18n="th_rankreq"></th></tr></thead>
+        <tbody>
+          <tr><td><b>Super Star</b></td><td>50.000 BV + Star</td></tr>
+          <tr><td><b>Bronze</b></td><td>200.000 BV + Super Star</td></tr>
+          <tr><td><b>Silver</b></td><td>400.000 BV + Bronze</td></tr>
+          <tr><td><b>Gold</b></td><td>800.000 BV + Silver</td></tr>
+          <tr><td><b>Platinum</b></td><td>1.600.000 BV + Gold</td></tr>
+          <tr><td><b>Diamond</b></td><td>3.200.000 BV + Platinum</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <div class="note" style="margin-top:10px" data-i18n="rank_note"></div>
+  </div>
+</section>
+
+<!-- TITLE + PERFORMANCE BONUS -->
+<section>
+  <div class="wrap">
+    <div class="sec-head">
+      <div class="eyebrow" data-i18n="bonus_eye"></div>
+      <h2 data-i18n="bonus_h2"></h2>
+    </div>
+    <p class="lead" style="margin-bottom:18px" data-i18n="bonus_lead"></p>
+    <div class="grid g2">
+      <div class="card">
+        <div class="k" data-i18n="title_k"></div>
+        <div class="tblwrap" style="margin-top:12px">
+          <table style="min-width:auto"><tbody>
+            <tr><td>Super Star</td><td>$500</td></tr>
+            <tr><td>Bronze</td><td>$2.000</td></tr>
+            <tr><td>Silver</td><td>$5.000</td></tr>
+            <tr><td>Gold</td><td>$15.000</td></tr>
+            <tr><td>Platinum</td><td>$30.000</td></tr>
+            <tr><td>Diamond</td><td>$50.000</td></tr>
+          </tbody></table>
+        </div>
+        <div class="note" style="margin-top:10px" data-i18n="title_note"></div>
+      </div>
+      <div class="card">
+        <div class="k" data-i18n="perf_k"></div>
+        <div class="tblwrap" style="margin-top:12px">
+          <table style="min-width:auto">
+            <thead><tr><th data-i18n="th_rank"></th><th data-i18n="th_permonth"></th><th data-i18n="th_pvmonth"></th></tr></thead>
+            <tbody>
+              <tr><td>Bronze</td><td>$600</td><td>2.000</td></tr>
+              <tr><td>Silver</td><td>$1.000</td><td>4.000</td></tr>
+              <tr><td>Gold</td><td>$1.500</td><td>6.000</td></tr>
+              <tr><td>Platinum</td><td>$2.000</td><td>8.000</td></tr>
+              <tr><td>Diamond</td><td>$4.000</td><td>10.000</td></tr>
+            </tbody>
+          </table>
+        </div>
+        <div class="note" style="margin-top:10px" data-i18n="perf_note"></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- MAX OUT -->
+<section>
+  <div class="wrap">
+    <div class="sec-head">
+      <div class="eyebrow" data-i18n="mo_eye"></div>
+      <h2 data-i18n="mo_h2"></h2>
+    </div>
+    <div class="grid g2">
+      <div class="card" style="border-color:#cfe0ff;background:#f6f9ff">
+        <div class="k" data-i18n="mo_in_k"></div>
+        <ul class="clean" style="margin-top:12px">
+          <li data-i18n="mo_in_1"></li><li data-i18n="mo_in_2"></li>
+          <li><b>Direct</b></li><li><b>Binary</b></li><li><b>Leadership</b></li>
+        </ul>
+        <div class="note" style="margin-top:10px" data-i18n="mo_in_note"></div>
+      </div>
+      <div class="card" style="border-color:#cdeee0;background:#f1fbf6">
+        <div class="k" style="color:var(--ok)" data-i18n="mo_out_k"></div>
+        <ul class="clean" style="margin-top:12px">
+          <li data-i18n="mo_out_1"></li><li data-i18n="mo_out_2"></li>
+        </ul>
+        <div class="note" style="margin-top:10px" data-i18n="mo_out_note"></div>
+      </div>
+    </div>
+    <div class="callout" data-i18n="mo_call"></div>
+  </div>
+</section>
+
+<!-- FIFO + REFUND -->
+<section>
+  <div class="wrap">
+    <div class="sec-head">
+      <div class="eyebrow" data-i18n="rule_eye"></div>
+      <h2 data-i18n="rule_h2"></h2>
+    </div>
+    <div class="grid g2">
+      <div class="card"><div class="k">FIFO</div><div class="t" data-i18n="fifo_t"></div><div class="d" data-i18n="fifo_d"></div></div>
+      <div class="card"><div class="k">CANCEL / REFUND</div><div class="t" data-i18n="refund_t"></div><div class="d" data-i18n="refund_d"></div></div>
+    </div>
+  </div>
+</section>
+
+<!-- 4 CONDITIONS -->
+<section>
+  <div class="wrap">
+    <div class="sec-head">
+      <div class="eyebrow" data-i18n="cond_eye"></div>
+      <h2 data-i18n="cond_h2"></h2>
+    </div>
+    <ul class="clean">
+      <li data-i18n="cond_1"></li>
+      <li data-i18n="cond_2"></li>
+      <li data-i18n="cond_3"></li>
+      <li data-i18n="cond_4"></li>
+    </ul>
+    <div class="disclaimer" style="margin-top:18px" data-i18n="disclaimer"></div>
+  </div>
+</section>
+
+<footer>
+  <div class="wrap">
+    <div style="font-weight:800;color:var(--ink);font-size:15px;margin-bottom:6px">VLINKPAY • IOU</div>
+    <span data-i18n="footer_line"></span>
+  </div>
+</footer>
+
+<script>
+  const LANGS=[
+    ['vi','Tiếng Việt'],['en','English'],['es','Español'],['zh','中文'],['ko','한국어'],['ja','日本語'],
+    ['th','ไทย'],['id','Bahasa Indonesia'],['ms','Bahasa Melayu'],['fil','Filipino'],['hi','हिन्दी'],
+    ['km','ភាសាខ្មែរ'],['lo','ລາວ'],['my','မြန်မာ'],['zh-TW','繁體中文'],['fr','Français'],['de','Deutsch'],
+    ['ru','Русский'],['pt','Português'],['ar','العربية'],['tr','Türkçe'],['it','Italiano'],
+    ['nl','Nederlands'],['pl','Polski'],['fa','فارسی']
+  ];
+  const IMPL=['vi','en','es','zh','ko','ja'];
+  let LANG='vi';
+
+  const I18N={
+    hero_h1:{vi:`Chính sách thưởng — rõ ràng để cùng phát triển`,en:`Reward Policy — clear rules so we grow together`,es:`Política de recompensas — reglas claras para crecer juntos`,zh:`奖励政策 — 规则清晰，共同成长`,ko:`보상 정책 — 함께 성장하는 명확한 규칙`,ja:`報酬ポリシー — 明確なルールで共に成長`},
+    hero_p:{vi:`Một gói IOU, bốn nguồn quyền lợi cùng cộng về mục tiêu tối đa <b style="color:#fff">300%</b> (đã gồm vốn ban đầu). Trang này giải thích cách tính và cho bạn <b style="color:#fff">tự bấm thử</b> con số theo gói của mình.`,en:`One IOU package, four benefit streams all counting toward a max of <b style="color:#fff">300%</b> (capital included). This page explains the math and lets you <b style="color:#fff">try the numbers</b> for your own package.`,es:`Un paquete IOU, cuatro fuentes de beneficios que suman hasta un máximo de <b style="color:#fff">300%</b> (capital incluido). Esta página explica el cálculo y te deja <b style="color:#fff">probar los números</b> de tu paquete.`,zh:`一个 IOU 套餐，四种收益来源共同累计至最高 <b style="color:#fff">300%</b>（含本金）。本页说明算法，并可让你<b style="color:#fff">试算</b>自己套餐的数字。`,ko:`하나의 IOU 패키지, 네 가지 혜택이 모두 최대 <b style="color:#fff">300%</b>(원금 포함)까지 합산됩니다. 이 페이지에서 계산 방식을 설명하고 <b style="color:#fff">직접 숫자를 계산</b>해 볼 수 있습니다.`,ja:`1つのIOUパッケージ、4つの報酬が合算され最大 <b style="color:#fff">300%</b>（元本込み）まで。本ページは計算方法を説明し、ご自身のパッケージで<b style="color:#fff">試算</b>できます。`},
+
+    ov_eye:{vi:`Tổng quan`,en:`Overview`,es:`Resumen`,zh:`概览`,ko:`개요`,ja:`概要`},
+    ov_h2:{vi:`Một gói IOU — bốn nguồn quyền lợi`,en:`One IOU package — four benefit streams`,es:`Un paquete IOU — cuatro fuentes de beneficios`,zh:`一个 IOU 套餐 — 四种收益来源`,ko:`하나의 IOU 패키지 — 네 가지 혜택`,ja:`1つのIOUパッケージ — 4つの報酬`},
+    s_daily_t:{vi:`Ghi nhận mỗi ngày`,en:`Accrues every day`,es:`Se acumula cada día`,zh:`每日累计`,ko:`매일 적립`,ja:`毎日積立`},
+    s_daily_d:{vi:`Dòng thưởng nền, chạy đều theo thời gian.`,en:`Baseline reward that runs steadily over time.`,es:`Recompensa base que avanza de forma constante.`,zh:`基础奖励，随时间稳定累积。`,ko:`시간에 따라 꾸준히 쌓이는 기본 보상.`,ja:`時間とともに着実に増える基本報酬。`},
+    s_direct_t:{vi:`Giới thiệu trực tiếp`,en:`Direct referral`,es:`Referido directo`,zh:`直接推荐`,ko:`직접 추천`,ja:`直接紹介`},
+    s_direct_d:{vi:`Trả cho người giới thiệu trực tiếp, theo cấp gói.`,en:`Paid to the direct referrer, by package tier.`,es:`Se paga al referidor directo, según el nivel del paquete.`,zh:`按套餐等级支付给直接推荐人。`,ko:`패키지 등급에 따라 직접 추천인에게 지급.`,ja:`パッケージ等級に応じて直接紹介者に支払い。`},
+    s_bin_t:{vi:`Ghép hai nhánh 1:1`,en:`Match two legs 1:1`,es:`Empareja dos ramas 1:1`,zh:`两条线 1:1 配对`,ko:`두 라인 1:1 매칭`,ja:`2つのレッグを1:1でマッチ`},
+    s_bin_d:{vi:`7% trên phần BV ghép được; BV dư bảo lưu.`,en:`7% on matched BV; leftover BV carries over.`,es:`7% sobre el BV emparejado; el BV sobrante se conserva.`,zh:`按配对 BV 的 7%；剩余 BV 结转。`,ko:`매칭된 BV의 7%; 남은 BV는 이월.`,ja:`マッチしたBVの7%、余剰BVは繰越。`},
+    s_lead_t:{vi:`Theo chức danh`,en:`By rank`,es:`Por rango`,zh:`按职级`,ko:`직급별`,ja:`役職別`},
+    s_lead_d:{vi:`Thưởng thêm theo cấp bậc trong hệ thống.`,en:`Extra reward based on your rank in the system.`,es:`Recompensa extra según tu rango en el sistema.`,zh:`根据系统内职级获得额外奖励。`,ko:`시스템 내 직급에 따른 추가 보상.`,ja:`システム内の役職に応じた追加報酬。`},
+    ov_call:{vi:`Tất cả cùng cộng vào mục tiêu tối đa <b>300%</b> — đã bao gồm vốn ban đầu.`,en:`All streams add up toward a max of <b>300%</b> — capital included.`,es:`Todas las fuentes suman hasta un máximo de <b>300%</b> — capital incluido.`,zh:`所有来源共同累计至最高 <b>300%</b> — 含本金。`,ko:`모든 혜택이 최대 <b>300%</b>까지 합산 — 원금 포함.`,ja:`すべて合算し最大 <b>300%</b> — 元本込み。`},
+
+    pv_eye:{vi:`Cơ chế điểm`,en:`Points mechanics`,es:`Mecánica de puntos`,zh:`积分机制`,ko:`포인트 방식`,ja:`ポイントの仕組み`},
+    pv_h2:{vi:`Một giao dịch tạo hai loại điểm`,en:`One transaction creates two point types`,es:`Una transacción crea dos tipos de puntos`,zh:`一笔交易生成两种积分`,ko:`한 거래가 두 종류의 포인트 생성`,ja:`1取引で2種類のポイントが発生`},
+    pv_lead:{vi:`Mỗi giao dịch hợp lệ sinh ra <b>PV</b> (đi theo người giới thiệu → tính Direct) và <b>BV</b> (đi theo cây Binary → ghép trái/phải). Cả hai được tạo cùng lúc.`,en:`Every valid transaction generates <b>PV</b> (follows the referrer → Direct) and <b>BV</b> (follows the Binary tree → left/right matching). Both are created at once.`,es:`Cada transacción válida genera <b>PV</b> (sigue al referidor → Direct) y <b>BV</b> (sigue el árbol Binary → emparejamiento izq./der.). Ambos se crean a la vez.`,zh:`每笔有效交易同时生成 <b>PV</b>（跟随推荐人 → 计入 Direct）与 <b>BV</b>（进入 Binary 树 → 左右配对）。`,ko:`유효한 거래마다 <b>PV</b>(추천인을 따라 → Direct)와 <b>BV</b>(바이너리 트리 → 좌우 매칭)가 동시에 생성됩니다.`,ja:`有効な取引ごとに <b>PV</b>（紹介者に従い→Direct）と <b>BV</b>（バイナリーツリー→左右マッチ）が同時に発生します。`},
+    pv_c1_k:{vi:`QUY ĐỔI • IOU`,en:`CONVERSION • IOU`,es:`CONVERSIÓN • IOU`,zh:`兑换 • IOU`,ko:`전환 • IOU`,ja:`換算 • IOU`},
+    pv_c2_k:{vi:`QUY ĐỔI • SẢN PHẨM & LICENSE`,en:`CONVERSION • PRODUCTS & LICENSE`,es:`CONVERSIÓN • PRODUCTOS Y LICENCIA`,zh:`兑换 • 产品与授权`,ko:`전환 • 제품 & 라이선스`,ja:`換算 • 製品 & ライセンス`},
+
+    calc_eye:{vi:`Công cụ tương tác`,en:`Interactive tool`,es:`Herramienta interactiva`,zh:`互动工具`,ko:`인터랙티브 도구`,ja:`インタラクティブ計算`},
+    calc_h2:{vi:`Máy tính quyền lợi theo gói`,en:`Package benefit calculator`,es:`Calculadora de beneficios por paquete`,zh:`套餐收益计算器`,ko:`패키지 혜택 계산기`,ja:`パッケージ報酬計算機`},
+    calc_s1:{vi:`1 · Chọn gói IOU của bạn`,en:`1 · Choose your IOU package`,es:`1 · Elige tu paquete IOU`,zh:`1 · 选择你的 IOU 套餐`,ko:`1 · IOU 패키지 선택`,ja:`1 · IOUパッケージを選択`},
+    calc_s1d:{vi:`Xem ngay PV, BV, hoa hồng Direct và mục tiêu 300%.`,en:`Instantly see PV, BV, Direct commission and the 300% target.`,es:`Ve al instante PV, BV, comisión Direct y la meta del 300%.`,zh:`即时查看 PV、BV、Direct 佣金与 300% 目标。`,ko:`PV, BV, Direct 커미션, 300% 목표를 즉시 확인.`,ja:`PV・BV・Directコミッション・300%目標を即時表示。`},
+    lic_label:{vi:`Tôi có <b>Franchise License</b> <span class="muted">— bắt buộc để mở gói từ $20K trở lên</span>`,en:`I have a <b>Franchise License</b> <span class="muted">— required to unlock $20K+ packages</span>`,es:`Tengo <b>Franchise License</b> <span class="muted">— requerida para paquetes de $20K o más</span>`,zh:`我拥有 <b>Franchise License</b> <span class="muted">— 解锁 $20K 及以上套餐必需</span>`,ko:`<b>Franchise License</b> 보유 <span class="muted">— $20K 이상 패키지 해제에 필요</span>`,ja:`<b>Franchise License</b> を保有 <span class="muted">— $20K以上のパッケージ解除に必要</span>`},
+    lbl_pkg:{vi:`Gói IOU`,en:`IOU package`,es:`Paquete IOU`,zh:`IOU 套餐`,ko:`IOU 패키지`,ja:`IOUパッケージ`},
+    lbl_captarget:{vi:`Mục tiêu tối đa (300% giá gói, gồm vốn)`,en:`Maximum target (300% of package, capital included)`,es:`Meta máxima (300% del paquete, capital incluido)`,zh:`最高目标（套餐价 300%，含本金）`,ko:`최대 목표 (패키지의 300%, 원금 포함)`,ja:`最大目標（パッケージの300%、元本込み）`},
+    calc_s2:{vi:`2 · Thử ghép nhánh Binary`,en:`2 · Try a Binary match`,es:`2 · Prueba un emparejamiento Binary`,zh:`2 · 试算 Binary 配对`,ko:`2 · Binary 매칭 시뮬레이션`,ja:`2 · Binaryマッチを試す`},
+    calc_s2d:{vi:`Nhập BV đã xác nhận (Confirmed) mỗi nhánh. Binary trả 7% trên phần ghép 1:1.`,en:`Enter Confirmed BV for each leg. Binary pays 7% on the 1:1 matched amount.`,es:`Ingresa el BV Confirmado de cada rama. Binary paga 7% sobre el emparejamiento 1:1.`,zh:`输入每条线的已确认（Confirmed）BV。Binary 按 1:1 配对部分的 7% 支付。`,ko:`각 라인의 Confirmed BV를 입력하세요. Binary는 1:1 매칭분의 7%를 지급합니다.`,ja:`各レッグのConfirmed BVを入力。Binaryは1:1マッチ分の7%を支払います。`},
+    lbl_left:{vi:`BV nhánh trái`,en:`Left-leg BV`,es:`BV rama izquierda`,zh:`左线 BV`,ko:`왼쪽 라인 BV`,ja:`左レッグ BV`},
+    lbl_right:{vi:`BV nhánh phải`,en:`Right-leg BV`,es:`BV rama derecha`,zh:`右线 BV`,ko:`오른쪽 라인 BV`,ja:`右レッグ BV`},
+    bin_matched:{vi:`BV ghép (1:1)`,en:`Matched BV (1:1)`,es:`BV emparejado (1:1)`,zh:`配对 BV (1:1)`,ko:`매칭 BV (1:1)`,ja:`マッチBV (1:1)`},
+    bin_pay:{vi:`Binary trả (7%)`,en:`Binary pays (7%)`,es:`Binary paga (7%)`,zh:`Binary 支付 (7%)`,ko:`Binary 지급 (7%)`,ja:`Binary支払 (7%)`},
+    bin_carry:{vi:`BV còn bảo lưu`,en:`BV carried over`,es:`BV conservado`,zh:`结转 BV`,ko:`이월 BV`,ja:`繰越BV`},
+    bin_example:{vi:`Ví dụ mẫu: Trái 2.000 & Phải 1.500 → ghép 1.500 → 1.500 × 7% = <b>105 USDV</b>, nhánh trái còn 500 BV.`,en:`Example: Left 2,000 & Right 1,500 → match 1,500 → 1,500 × 7% = <b>105 USDV</b>, left leg keeps 500 BV.`,es:`Ejemplo: Izq. 2.000 y Der. 1.500 → empareja 1.500 → 1.500 × 7% = <b>105 USDV</b>, la izq. conserva 500 BV.`,zh:`示例：左 2,000、右 1,500 → 配对 1,500 → 1,500 × 7% = <b>105 USDV</b>，左线剩 500 BV。`,ko:`예: 왼쪽 2,000 & 오른쪽 1,500 → 매칭 1,500 → 1,500 × 7% = <b>105 USDV</b>, 왼쪽 500 BV 이월.`,ja:`例：左2,000・右1,500 → マッチ1,500 → 1,500 × 7% = <b>105 USDV</b>、左レッグは500 BV繰越。`},
+
+    pa_eye:{vi:`Chỉ tham gia vs Phát triển`,en:`Passive vs Building`,es:`Solo participar vs Desarrollar`,zh:`仅参与 vs 拓展`,ko:`단순 참여 vs 조직 구축`,ja:`参加のみ vs 拡大`},
+    pa_h2:{vi:`Cùng trần 300% — khác nhau ở tốc độ`,en:`Same 300% cap — the difference is speed`,es:`Mismo tope del 300% — la diferencia es la velocidad`,zh:`同样 300% 上限 — 区别在速度`,ko:`동일한 300% 상한 — 차이는 속도`,ja:`同じ300%上限 — 違いは速さ`},
+    pa_lead:{vi:`Trần tối đa là <b>300% giá gói</b> (gồm vốn) cho cả hai kiểu. Phát triển <b>không nâng trần</b> — chỉ rút ngắn thời gian về đích. Số dưới đây theo gói bạn đang chọn ở máy tính.`,en:`The max cap is <b>300% of the package</b> (capital included) for both. Building <b>does not raise the cap</b> — it only shortens the time to reach it. Figures below follow the package selected in the calculator.`,es:`El tope máximo es <b>300% del paquete</b> (capital incluido) en ambos casos. Desarrollar <b>no sube el tope</b> — solo acorta el tiempo. Las cifras siguen el paquete elegido.`,zh:`两种方式上限都是<b>套餐价的 300%</b>（含本金）。拓展<b>不会提高上限</b>，只会缩短到达时间。下方数字随计算器所选套餐变化。`,ko:`두 방식 모두 상한은 <b>패키지의 300%</b>(원금 포함)입니다. 조직 구축은 <b>상한을 올리지 않고</b> 도달 시간만 단축합니다. 아래 수치는 계산기에서 선택한 패키지 기준입니다.`,ja:`上限はどちらも<b>パッケージの300%</b>（元本込み）。拡大しても<b>上限は上がらず</b>、到達までの時間が短くなるだけです。以下の数値は計算機で選択したパッケージに連動します。`},
+    pa_left_k:{vi:`CHỈ THAM GIA · chỉ Daily`,en:`PASSIVE · Daily only`,es:`PASIVO · solo Daily`,zh:`仅参与 · 仅 Daily`,ko:`단순 참여 · Daily만`,ja:`参加のみ · Dailyのみ`},
+    pa_daily_lab:{vi:`Daily nhận / tháng`,en:`Daily received / month`,es:`Daily recibido / mes`,zh:`每月 Daily`,ko:`월 Daily 수령`,ja:`Daily受取 / 月`},
+    pa_be_lab:{vi:`Hòa vốn (lấy lại 100%)`,en:`Break-even (recover 100%)`,es:`Punto de equilibrio (recuperar 100%)`,zh:`回本（收回 100%）`,ko:`손익분기 (100% 회수)`,ja:`損益分岐（100%回収）`},
+    pa_300_lab:{vi:`Đủ 300%`,en:`Reach 300%`,es:`Llegar al 300%`,zh:`达到 300%`,ko:`300% 도달`,ja:`300%到達`},
+    pa_net_lab:{vi:`Lãi ròng khi đủ 300%`,en:`Net profit at 300%`,es:`Ganancia neta al 300%`,zh:`达到 300% 时净利`,ko:`300% 시 순이익`,ja:`300%時の純利益`},
+    pa_left_note:{vi:`Không cần xây nhánh. Chỉ chờ Daily chạy đều tới trần.`,en:`No team-building needed. Just let Daily accrue to the cap.`,es:`Sin construir equipo. Solo deja que Daily llegue al tope.`,zh:`无需拓展团队。仅等待 Daily 累积到上限。`,ko:`조직 구축 불필요. Daily가 상한까지 쌓이길 기다리면 됩니다.`,ja:`組織構築は不要。Dailyが上限まで積み上がるのを待つだけ。`},
+    pa_right_k:{vi:`THAM GIA & PHÁT TRIỂN · Daily + Direct + Binary + Leadership`,en:`PARTICIPATE & BUILD · Daily + Direct + Binary + Leadership`,es:`PARTICIPAR Y DESARROLLAR · Daily + Direct + Binary + Leadership`,zh:`参与并拓展 · Daily + Direct + Binary + Leadership`,ko:`참여 & 구축 · Daily + Direct + Binary + Leadership`,ja:`参加＆拡大 · Daily + Direct + Binary + Leadership`},
+    pa_afast_lab:{vi:`Về đích 300% nhanh nhất*`,en:`Fastest to 300%*`,es:`Más rápido al 300%*`,zh:`最快达 300%*`,ko:`300% 최단 도달*`,ja:`300%最速到達*`},
+    pa_atotal_lab:{vi:`Tổng nhận tối đa`,en:`Max total received`,es:`Total máximo recibido`,zh:`最高总收`,ko:`최대 총수령`,ja:`最大受取総額`},
+    pa_li_direct:{vi:`<b>Direct</b>10–20% PV của người bạn giới thiệu trực tiếp, trả ngay.`,en:`<b>Direct</b>10–20% of the PV of people you directly refer, paid immediately.`,es:`<b>Direct</b>10–20% del PV de tus referidos directos, pago inmediato.`,zh:`<b>Direct</b>直接推荐者 PV 的 10–20%，即时支付。`,ko:`<b>Direct</b>직접 추천한 사람 PV의 10–20%, 즉시 지급.`,ja:`<b>Direct</b>直接紹介者のPVの10–20%、即時支払。`},
+    pa_li_bin:{vi:`<b>Binary</b>7% BV ghép mỗi tuần, tới trần tuần của gói.`,en:`<b>Binary</b>7% of matched BV weekly, up to the package weekly cap.`,es:`<b>Binary</b>7% del BV emparejado semanal, hasta el tope semanal.`,zh:`<b>Binary</b>每周配对 BV 的 7%，至套餐每周上限。`,ko:`<b>Binary</b>매주 매칭 BV의 7%, 패키지 주간 상한까지.`,ja:`<b>Binary</b>毎週マッチBVの7%、パッケージの週上限まで。`},
+    pa_li_lead:{vi:`<b>Leadership</b>Thưởng thêm theo chức danh/cấp bậc.`,en:`<b>Leadership</b>Extra reward by rank/title.`,es:`<b>Leadership</b>Recompensa extra por rango/título.`,zh:`<b>Leadership</b>按职级/头衔的额外奖励。`,ko:`<b>Leadership</b>직급/타이틀별 추가 보상.`,ja:`<b>Leadership</b>役職・タイトルによる追加報酬。`},
+    pa_right_note:{vi:`*Nếu chạm trần Binary đều mỗi tuần (Daily + Binary). Có thêm Direct & Leadership sẽ nhanh hơn nữa. Đây là mức tối đa, phụ thuộc bạn xây được nhánh cân — không phải cam kết.`,en:`*If you hit the Binary cap every week (Daily + Binary). Adding Direct & Leadership is even faster. This is a maximum, depends on building balanced legs — not a guarantee.`,es:`*Si alcanzas el tope Binary cada semana (Daily + Binary). Con Direct y Leadership es aún más rápido. Es un máximo, depende de ramas equilibradas — no es una garantía.`,zh:`*前提是每周都触及 Binary 上限（Daily + Binary）。再加 Direct 与 Leadership 会更快。这是最高值，取决于两线是否均衡 — 并非承诺。`,ko:`*매주 Binary 상한에 도달할 경우(Daily + Binary). Direct와 Leadership을 더하면 더 빨라집니다. 최대치이며 균형 잡힌 라인 구축에 달려 있음 — 보장 아님.`,ja:`*毎週Binary上限に達した場合（Daily + Binary）。Direct・Leadershipを加えるとさらに速い。最大値であり、バランスの取れたレッグ次第 — 保証ではありません。`},
+    daily_h3:{vi:`Daily theo từng gói — ngày · tháng · 12 tháng`,en:`Daily by package — day · month · 12 months`,es:`Daily por paquete — día · mes · 12 meses`,zh:`各套餐 Daily — 日 · 月 · 12 个月`,ko:`패키지별 Daily — 일 · 월 · 12개월`,ja:`パッケージ別Daily — 日・月・12ヶ月`},
+    daily_note:{vi:`Chỉ tính Daily (~7,1% giá gói/tháng ≈ 0,238%/ngày). Chưa gồm Direct / Binary / Leadership. Hòa vốn ~14 tháng, đủ 300% ~42 tháng.`,en:`Daily only (~7.1% of package/month ≈ 0.238%/day). Excludes Direct / Binary / Leadership. Break-even ~14 months, 300% ~42 months.`,es:`Solo Daily (~7,1% del paquete/mes ≈ 0,238%/día). Sin Direct / Binary / Leadership. Equilibrio ~14 meses, 300% ~42 meses.`,zh:`仅 Daily（约套餐 7.1%/月 ≈ 0.238%/日）。不含 Direct / Binary / Leadership。回本约 14 个月，300% 约 42 个月。`,ko:`Daily만 (~월 7.1% ≈ 일 0.238%). Direct / Binary / Leadership 제외. 손익분기 ~14개월, 300% ~42개월.`,ja:`Dailyのみ（月約7.1% ≈ 日0.238%）。Direct / Binary / Leadership を除く。損益分岐約14ヶ月、300%約42ヶ月。`},
+    pa_call:{vi:`Chốt lại: Daily/Direct/Binary/Leadership của một gói tối đa <b>3× vốn</b> (cap 300%). Phát triển rút ngắn <b>thời gian</b> về đích. Ngoài ra, người phát triển còn nhận <b>Thưởng Hiệu suất + Danh hiệu nằm NGOÀI cap 300%</b> — đây mới là phần "kiếm nhiều hơn", không chỉ nhanh hơn. Đạt 300% → mở gói mới.`,en:`Bottom line: Daily/Direct/Binary/Leadership of one package max out at <b>3× capital</b> (300% cap). Building shortens the <b>time</b> to get there. Builders also earn <b>Performance + Title bonuses OUTSIDE the 300% cap</b> — that's the real "earn more", not just faster. Hit 300% → open a new package.`,es:`En resumen: Daily/Direct/Binary/Leadership de un paquete llegan a <b>3× capital</b> (tope 300%). Desarrollar acorta el <b>tiempo</b>. Además, quienes desarrollan ganan <b>bonos de Rendimiento + Título FUERA del tope 300%</b> — eso es "ganar más", no solo más rápido. Al llegar al 300% → abre un nuevo paquete.`,zh:`总结：单个套餐的 Daily/Direct/Binary/Leadership 上限为 <b>3 倍本金</b>（300% 上限）。拓展缩短的是<b>时间</b>。此外，拓展者还获得 <b>300% 上限之外的绩效奖 + 头衔奖</b> — 这才是"赚更多"，而不仅是更快。达到 300% → 开新套餐。`,ko:`요약: 한 패키지의 Daily/Direct/Binary/Leadership 상한은 <b>원금의 3배</b>(300%). 구축은 도달 <b>시간</b>을 단축합니다. 또한 구축자는 <b>300% 상한 밖의 성과 보너스 + 타이틀 보너스</b>를 받습니다 — 이것이 단순히 빠른 게 아닌 "더 버는" 부분입니다. 300% 도달 → 새 패키지 개설.`,ja:`要点：1パッケージのDaily/Direct/Binary/Leadershipは<b>元本の3倍</b>（300%上限）。拡大は到達までの<b>時間</b>を短縮します。さらに拡大者は<b>300%上限の外にある実績ボーナス＋タイトルボーナス</b>を得ます — これが単に速いだけでなく「より稼ぐ」部分です。300%到達 → 新パッケージ開設。`},
+
+    direct_h2:{vi:`Direct tăng theo cấp gói`,en:`Direct rises with package tier`,es:`Direct sube con el nivel del paquete`,zh:`Direct 随套餐等级递增`,ko:`Direct는 패키지 등급에 따라 상승`,ja:`Directはパッケージ等級で上昇`},
+    direct_lead:{vi:`Direct <b>chỉ trả cho người giới thiệu trực tiếp</b> — không chia lại cho người tham gia. Gói càng lớn, tỷ lệ càng cao.`,en:`Direct is <b>paid only to the direct referrer</b> — not shared back to the participant. Bigger package, higher rate.`,es:`Direct se <b>paga solo al referidor directo</b> — no se reparte al participante. Paquete mayor, tasa mayor.`,zh:`Direct <b>只支付给直接推荐人</b> — 不返给参与者。套餐越大，比例越高。`,ko:`Direct는 <b>직접 추천인에게만 지급</b> — 참여자에게 환원되지 않습니다. 패키지가 클수록 비율이 높습니다.`,ja:`Directは<b>直接紹介者のみに支払い</b> — 参加者には還元されません。パッケージが大きいほど率が高い。`},
+    th_directcomm:{vi:`Hoa hồng Direct`,en:`Direct commission`,es:`Comisión Direct`,zh:`Direct 佣金`,ko:`Direct 커미션`,ja:`Directコミッション`},
+
+    bin_eye:{vi:`Binary & chu kỳ tuần`,en:`Binary & weekly cycle`,es:`Binary y ciclo semanal`,zh:`Binary 与每周周期`,ko:`Binary & 주간 사이클`,ja:`Binary＆週次サイクル`},
+    bin_h2:{vi:`BV ghi nhận liên tục — Binary chốt một lần mỗi tuần`,en:`BV accrues continuously — Binary settles once a week`,es:`El BV se acumula continuamente — Binary liquida una vez por semana`,zh:`BV 持续累计 — Binary 每周结算一次`,ko:`BV는 계속 적립 — Binary는 주 1회 정산`,ja:`BVは継続的に積立 — Binaryは週1回精算`},
+    btree_lead:{vi:`Ghép hai nhánh <b>1:1</b>, trả <b>7% trên BV ghép</b> (= nhánh yếu). <b>Qualify để nhận Binary: phải bảo trợ trực tiếp ít nhất 1 người có Franchise License</b> (người đó không cần mua thêm gói IOU). Cần có BV phát sinh ở cả nhánh Trái & Phải để ghép; BV lệch nhánh được bảo lưu.`,en:`Match two legs <b>1:1</b>, pay <b>7% on matched BV</b> (= weak leg). <b>To qualify for Binary: you must directly sponsor at least 1 person who holds a Franchise License</b> (that person doesn't need an extra IOU package). Both Left & Right legs need BV to match; leftover BV carries over.`,es:`Empareja dos ramas <b>1:1</b>, paga <b>7% sobre el BV emparejado</b> (= rama débil). <b>Para calificar a Binary: debes patrocinar directamente al menos 1 persona con Franchise License</b> (esa persona no necesita paquete IOU extra). Ambas ramas necesitan BV para emparejar; el BV sobrante se conserva.`,zh:`两条线 <b>1:1</b> 配对，按<b>配对 BV 的 7%</b>（=弱线）支付。<b>获得 Binary 资格：必须直接推荐至少 1 位拥有 Franchise License 的人</b>（该人无需额外购买 IOU 套餐）。左右两线都需产生 BV 才能配对；剩余 BV 结转。`,ko:`두 라인을 <b>1:1</b>로 매칭하고 <b>매칭 BV의 7%</b>(=약한 라인)를 지급. <b>Binary 자격: Franchise License를 보유한 사람을 최소 1명 직접 후원해야 합니다</b>(그 사람은 추가 IOU 패키지 불필요). 좌·우 라인 모두 BV가 있어야 매칭되며, 남은 BV는 이월됩니다.`,ja:`2つのレッグを<b>1:1</b>でマッチし、<b>マッチBVの7%</b>（=弱いレッグ）を支払い。<b>Binaryの資格：Franchise Licenseを持つ人を最低1名、直接スポンサーする必要があります</b>（その人は追加のIOUパッケージ不要）。左右両レッグにBVが必要、余剰BVは繰越。`},
+    bleg_left:{vi:`NHÁNH TRÁI`,en:`LEFT LEG`,es:`RAMA IZQUIERDA`,zh:`左线`,ko:`왼쪽 라인`,ja:`左レッグ`},
+    bleg_right:{vi:`NHÁNH PHẢI`,en:`RIGHT LEG`,es:`RAMA DERECHA`,zh:`右线`,ko:`오른쪽 라인`,ja:`右レッグ`},
+    bmatch_lbl:{vi:`GHÉP 1:1`,en:`MATCH 1:1`,es:`EMPAREJA 1:1`,zh:`配对 1:1`,ko:`매칭 1:1`,ja:`マッチ 1:1`},
+    btree_note:{vi:`Ví dụ: ghép 1.500 BV × 7% = <b>105 USDV</b>. Nhánh trái còn <b>500 BV</b> bảo lưu sang tuần sau.`,en:`Example: match 1,500 BV × 7% = <b>105 USDV</b>. Left leg keeps <b>500 BV</b> for next week.`,es:`Ejemplo: empareja 1.500 BV × 7% = <b>105 USDV</b>. La izq. conserva <b>500 BV</b> para la próxima semana.`,zh:`示例：配对 1,500 BV × 7% = <b>105 USDV</b>。左线剩 <b>500 BV</b> 结转下周。`,ko:`예: 매칭 1,500 BV × 7% = <b>105 USDV</b>. 왼쪽 <b>500 BV</b>는 다음 주로 이월.`,ja:`例：マッチ1,500 BV × 7% = <b>105 USDV</b>。左レッグは<b>500 BV</b>を翌週に繰越。`},
+    fl1_t:{vi:`PHÁT SINH`,en:`GENERATE`,es:`GENERAR`,zh:`产生`,ko:`발생`,ja:`発生`},
+    fl1_d:{vi:`PV/BV hiển thị trên Dashboard`,en:`PV/BV shown on Dashboard`,es:`PV/BV visible en el Dashboard`,zh:`PV/BV 显示在 Dashboard`,ko:`PV/BV가 Dashboard에 표시`,ja:`PV/BVがDashboardに表示`},
+    fl2_t:{vi:`XÁC NHẬN`,en:`CONFIRM`,es:`CONFIRMAR`,zh:`确认`,ko:`확인`,ja:`確認`},
+    fl2_d:{vi:`Pending chuyển sang Confirmed`,en:`Pending becomes Confirmed`,es:`Pending pasa a Confirmed`,zh:`Pending 转为 Confirmed`,ko:`Pending → Confirmed`,ja:`Pending→Confirmedへ`},
+    fl3_t:{vi:`QUÉT TUẦN`,en:`WEEKLY SCAN`,es:`ESCANEO SEMANAL`,zh:`每周扫描`,ko:`주간 스캔`,ja:`週次スキャン`},
+    fl3_d:{vi:`Ghép BV trái–phải và áp trần`,en:`Match left–right BV and apply cap`,es:`Empareja BV izq.–der. y aplica tope`,zh:`配对左右 BV 并应用上限`,ko:`좌–우 BV 매칭 후 상한 적용`,ja:`左右BVをマッチし上限を適用`},
+    fl4_t:{vi:`TRẢ USDV`,en:`PAY USDV`,es:`PAGAR USDV`,zh:`支付 USDV`,ko:`USDV 지급`,ja:`USDV支払`},
+    fl4_d:{vi:`Đối soát xong mới cho rút`,en:`Withdrawable after reconciliation`,es:`Retirable tras la conciliación`,zh:`对账后方可提现`,ko:`정산 후 출금 가능`,ja:`照合後に出金可`},
+    bin_call:{vi:`Khóa sổ <b>Chủ nhật 23:59 UTC</b> → Đối soát & ghi thưởng <b>Thứ Hai</b>. Binary rate <b>7%</b> trên BV ghép; trần 28 ngày = 4 × trần tuần (mức tối đa, không phải cam kết).`,en:`Lock <b>Sunday 23:59 UTC</b> → Reconcile & credit <b>Monday</b>. Binary rate <b>7%</b> on matched BV; 28-day cap = 4 × weekly cap (a maximum, not a guarantee).`,es:`Cierre <b>domingo 23:59 UTC</b> → Conciliar y acreditar <b>lunes</b>. Tasa Binary <b>7%</b> sobre BV emparejado; tope 28 días = 4 × tope semanal (máximo, no garantía).`,zh:`结账 <b>周日 23:59 UTC</b> → <b>周一</b>对账并入账。Binary 费率 <b>7%</b>（配对 BV）；28 天上限 = 4 × 每周上限（最高值，非承诺）。`,ko:`마감 <b>일요일 23:59 UTC</b> → <b>월요일</b> 정산 및 적립. Binary 요율 <b>7%</b>(매칭 BV); 28일 상한 = 4 × 주간 상한 (최대치, 보장 아님).`,ja:`締め <b>日曜 23:59 UTC</b> → <b>月曜</b>に照合・付与。Binary率 <b>7%</b>（マッチBV）；28日上限 = 4 × 週上限（最大値、保証ではない）。`},
+    assume_tag:{vi:`TRẦN BINARY THEO GÓI · KIỂM TRA TRƯỚC KHI CÔNG BỐ`,en:`BINARY CAP BY PACKAGE · VERIFY BEFORE PUBLISHING`,es:`TOPE BINARY POR PAQUETE · VERIFICAR ANTES DE PUBLICAR`,zh:`按套餐的 BINARY 上限 · 发布前请核对`,ko:`패키지별 BINARY 상한 · 공개 전 확인`,ja:`パッケージ別BINARY上限 · 公開前に確認`},
+    assume_h3:{vi:`Trần Binary theo gói — mỗi tuần & mỗi tháng`,en:`Binary cap by package — per week & per month`,es:`Tope Binary por paquete — por semana y por mes`,zh:`按套餐的 Binary 上限 — 每周与每月`,ko:`패키지별 Binary 상한 — 주간 & 월간`,ja:`パッケージ別Binary上限 — 週次＆月次`},
+    assume_p:{vi:`Trần <b>USDV/tuần</b> = % giá gói × giá gói (7% → 15% theo cấp). Cột <b>/tháng</b> tự tính = ×4 (28 ngày = 4 tuần). Ô sửa được — đổi số thì hai ô Max ở máy tính phía trên tự cập nhật.`,en:`Cap <b>USDV/week</b> = % of package × package price (7% → 15% by tier). The <b>/month</b> column auto-computes = ×4 (28 days = 4 weeks). Cells are editable — changing them updates the two Max tiles in the calculator above.`,es:`Tope <b>USDV/semana</b> = % del paquete × precio (7% → 15% por nivel). La columna <b>/mes</b> se calcula sola = ×4 (28 días = 4 semanas). Celdas editables — al cambiarlas se actualizan los dos recuadros Max de arriba.`,zh:`上限 <b>USDV/周</b> = 套餐百分比 × 套餐价（按等级 7% → 15%）。<b>/月</b> 列自动 = ×4（28 天 = 4 周）。单元格可编辑 — 修改后上方计算器的两个 Max 会自动更新。`,ko:`상한 <b>USDV/주</b> = 패키지 % × 패키지 가격 (등급별 7% → 15%). <b>/월</b> 열은 자동 = ×4 (28일 = 4주). 셀 편집 가능 — 변경 시 위 계산기의 두 Max 타일이 자동 갱신됩니다.`,ja:`上限 <b>USDV/週</b> = パッケージの% × 価格（等級別7%→15%）。<b>/月</b>列は自動 = ×4（28日 = 4週）。セルは編集可 — 変更すると上の計算機の2つのMaxが自動更新。`},
+    th_capwk:{vi:`Trần / tuần (USDV)`,en:`Cap / week (USDV)`,es:`Tope / semana (USDV)`,zh:`每周上限 (USDV)`,ko:`주간 상한 (USDV)`,ja:`週上限 (USDV)`},
+    th_capmo:{vi:`Trần / tháng · 28 ngày`,en:`Cap / month · 28 days`,es:`Tope / mes · 28 días`,zh:`每月上限 · 28 天`,ko:`월 상한 · 28일`,ja:`月上限 · 28日`},
+    th_cappct:{vi:`≈ % giá gói/tuần`,en:`≈ % of package/week`,es:`≈ % del paquete/semana`,zh:`≈ 套餐%/周`,ko:`≈ 패키지%/주`,ja:`≈ パッケージ%/週`},
+
+    lead_eye:{vi:`Nguồn quyền lợi 4 · Thưởng Lãnh đạo`,en:`Benefit 4 · Leadership Bonus`,es:`Beneficio 4 · Bono de Liderazgo`,zh:`收益 4 · 领导奖`,ko:`혜택 4 · 리더십 보너스`,ja:`報酬4 · リーダーシップボーナス`},
+    lead_h2:{vi:`Thu nhập trên thu nhập — tới 5 thế hệ`,en:`Income on income — up to 5 generations`,es:`Ingreso sobre ingreso — hasta 5 generaciones`,zh:`收益之上的收益 — 最多 5 代`,ko:`수입에 대한 수입 — 최대 5세대`,ja:`収入の上の収入 — 最大5世代`},
+    lead_lead:{vi:`Nhận <b>5% trên thu nhập</b> của tuyến dưới, mỗi thế hệ 5%, tối đa 5 thế hệ. Điều kiện: đạt danh hiệu <b>Bronze trở lên</b>. Số thế hệ mở khóa theo danh hiệu — hạng càng cao, ăn càng sâu.`,en:`Earn <b>5% of the income</b> of your downline, 5% per generation, up to 5 generations. Requirement: reach <b>Bronze or above</b>. The number of generations unlocked depends on rank — higher rank, deeper reach.`,es:`Gana <b>5% del ingreso</b> de tu línea descendente, 5% por generación, hasta 5 generaciones. Requisito: alcanzar <b>Bronze o superior</b>. Las generaciones desbloqueadas dependen del rango — mayor rango, mayor alcance.`,zh:`获得下线<b>收益的 5%</b>，每代 5%，最多 5 代。条件：达到 <b>Bronze 及以上</b>。解锁的代数取决于职级 — 职级越高，层级越深。`,ko:`하위 라인 <b>수입의 5%</b>를 세대당 5%씩 최대 5세대까지 획득. 조건: <b>Bronze 이상</b> 달성. 해제되는 세대 수는 직급에 따라 다름 — 높은 직급일수록 더 깊게.`,ja:`ダウンラインの<b>収入の5%</b>を世代ごとに5%、最大5世代まで獲得。条件：<b>Bronze以上</b>。解除される世代数は役職次第 — 上位ほど深く。`},
+    th_gen:{vi:`Thế hệ`,en:`Generation`,es:`Generación`,zh:`世代`,ko:`세대`,ja:`世代`},
+    lead_note:{vi:`5% tính trên <b>hoa hồng</b> mà thành viên thế hệ đó nhận (không phải trên doanh số). "Không giới hạn thu nhập" — nhưng phần Lãnh đạo <b>vẫn tính vào cap 300%/gói</b> (xem Max Out).`,en:`5% is on the <b>commission</b> that generation's members receive (not on sales). "Unlimited income" — but Leadership <b>still counts toward the 300%/package cap</b> (see Max Out).`,es:`El 5% es sobre la <b>comisión</b> que reciben los miembros de esa generación (no sobre ventas). "Ingreso ilimitado" — pero Leadership <b>sí cuenta para el tope 300%/paquete</b> (ver Max Out).`,zh:`5% 按该代成员所得<b>佣金</b>计算（非销售额）。"收入无上限" — 但 Leadership <b>仍计入 300%/套餐上限</b>（见 Max Out）。`,ko:`5%는 해당 세대 회원이 받는 <b>커미션</b> 기준(매출 아님). "수입 무제한" — 그러나 Leadership은 <b>여전히 300%/패키지 상한에 포함</b>(Max Out 참조).`,ja:`5%はその世代のメンバーが受け取る<b>コミッション</b>に対して（売上ではない）。「収入無制限」 — ただしLeadershipは<b>300%/パッケージ上限に含まれます</b>（Max Out参照）。`},
+
+    rank_eye:{vi:`Danh hiệu`,en:`Ranks`,es:`Rangos`,zh:`职级`,ko:`직급`,ja:`役職`},
+    rank_h2:{vi:`Điều kiện đạt danh hiệu`,en:`Rank qualification`,es:`Requisitos de rango`,zh:`职级达成条件`,ko:`직급 달성 조건`,ja:`役職達成条件`},
+    rank_lead:{vi:`Xét <b>theo tháng</b>. Điều kiện áp cho <b>mỗi nhánh (Trái & Phải)</b> — cả hai nhánh phải đồng thời đạt. Mỗi hạng yêu cầu đã đạt hạng liền trước ở mỗi nhánh.`,en:`Assessed <b>monthly</b>. Applies to <b>each leg (Left & Right)</b> — both must qualify at once. Each rank requires the previous rank in each leg.`,es:`Se evalúa <b>mensualmente</b>. Aplica a <b>cada rama (Izq. y Der.)</b> — ambas deben cumplir a la vez. Cada rango exige el rango anterior en cada rama.`,zh:`<b>按月</b>考核。适用于<b>每条线（左与右）</b> — 两线须同时达标。每一级都要求该线已达上一级。`,ko:`<b>월 단위</b> 평가. <b>각 라인(좌·우)</b>에 적용 — 두 라인이 동시에 충족해야 함. 각 등급은 각 라인에서 이전 등급을 요구.`,ja:`<b>月次</b>で判定。<b>各レッグ（左・右）</b>に適用 — 両レッグが同時に達成必要。各ランクは各レッグで前ランクを要する。`},
+    th_rank:{vi:`Danh hiệu`,en:`Rank`,es:`Rango`,zh:`职级`,ko:`직급`,ja:`役職`},
+    th_rankreq:{vi:`Mỗi nhánh cần đạt`,en:`Required per leg`,es:`Requerido por rama`,zh:`每条线需达成`,ko:`라인당 필요`,ja:`各レッグの必要条件`},
+    rank_note:{vi:`Quy đổi gói → BV: $1K=500 · $3K=1.500 · $5K=2.500 · $10K=5.000 · $20K=10.000 · $50K=25.000 · $100K=50.000 BV (BV = 50% giá gói).`,en:`Package → BV: $1K=500 · $3K=1,500 · $5K=2,500 · $10K=5,000 · $20K=10,000 · $50K=25,000 · $100K=50,000 BV (BV = 50% of package).`,es:`Paquete → BV: $1K=500 · $3K=1.500 · $5K=2.500 · $10K=5.000 · $20K=10.000 · $50K=25.000 · $100K=50.000 BV (BV = 50% del paquete).`,zh:`套餐 → BV：$1K=500 · $3K=1,500 · $5K=2,500 · $10K=5,000 · $20K=10,000 · $50K=25,000 · $100K=50,000 BV（BV = 套餐价 50%）。`,ko:`패키지 → BV: $1K=500 · $3K=1,500 · $5K=2,500 · $10K=5,000 · $20K=10,000 · $50K=25,000 · $100K=50,000 BV (BV = 패키지의 50%).`,ja:`パッケージ → BV：$1K=500 · $3K=1,500 · $5K=2,500 · $10K=5,000 · $20K=10,000 · $50K=25,000 · $100K=50,000 BV（BV = パッケージの50%）。`},
+
+    bonus_eye:{vi:`Thưởng thêm · ngoài cap 300%`,en:`Extra bonuses · outside the 300% cap`,es:`Bonos extra · fuera del tope 300%`,zh:`额外奖励 · 300% 上限之外`,ko:`추가 보너스 · 300% 상한 밖`,ja:`追加ボーナス · 300%上限の外`},
+    bonus_h2:{vi:`Thưởng Danh hiệu & Hiệu suất`,en:`Title & Performance Bonuses`,es:`Bonos de Título y Rendimiento`,zh:`头衔奖与绩效奖`,ko:`타이틀 & 성과 보너스`,ja:`タイトル＆実績ボーナス`},
+    bonus_lead:{vi:`Hai khoản này <b>không tính vào cap 300%</b> — nhận thêm bên cạnh Daily/Direct/Binary/Leadership.`,en:`These two <b>do not count toward the 300% cap</b> — earned on top of Daily/Direct/Binary/Leadership.`,es:`Estos dos <b>no cuentan para el tope 300%</b> — se ganan además de Daily/Direct/Binary/Leadership.`,zh:`这两项<b>不计入 300% 上限</b> — 在 Daily/Direct/Binary/Leadership 之外另得。`,ko:`이 두 가지는 <b>300% 상한에 포함되지 않음</b> — Daily/Direct/Binary/Leadership에 더해 지급.`,ja:`この2つは<b>300%上限に含まれません</b> — Daily/Direct/Binary/Leadershipに加えて獲得。`},
+    title_k:{vi:`THƯỞNG DANH HIỆU · nhận 1 lần duy nhất`,en:`TITLE BONUS · one time only`,es:`BONO DE TÍTULO · una sola vez`,zh:`头衔奖 · 仅一次`,ko:`타이틀 보너스 · 1회 한정`,ja:`タイトルボーナス · 1回のみ`},
+    title_note:{vi:`Thưởng một lần khi lần đầu đạt danh hiệu.`,en:`Paid once when you first reach the rank.`,es:`Se paga una vez al alcanzar el rango por primera vez.`,zh:`首次达到该职级时一次性发放。`,ko:`해당 직급 최초 달성 시 1회 지급.`,ja:`その役職に初到達時に一度だけ支給。`},
+    perf_k:{vi:`THƯỞNG HIỆU SUẤT · xe · nhà · du lịch (tiền mặt/tháng)`,en:`PERFORMANCE BONUS · car · house · travel (cash/month)`,es:`BONO DE RENDIMIENTO · auto · casa · viajes (efectivo/mes)`,zh:`绩效奖 · 车 · 房 · 旅游（现金/月）`,ko:`성과 보너스 · 차 · 집 · 여행 (현금/월)`,ja:`実績ボーナス · 車 · 家 · 旅行（現金/月）`},
+    th_permonth:{vi:`Tiền/tháng`,en:`Cash/month`,es:`Efectivo/mes`,zh:`现金/月`,ko:`현금/월`,ja:`現金/月`},
+    th_pvmonth:{vi:`PV cần/tháng`,en:`PV needed/month`,es:`PV requerido/mes`,zh:`所需 PV/月`,ko:`필요 PV/월`,ja:`必要PV/月`},
+    perf_note:{vi:`Điều kiện: <b>duy trì danh hiệu liên tiếp hàng tháng</b> + đủ <b>PV theo chức danh</b> mỗi tháng.`,en:`Requirement: <b>maintain the rank every consecutive month</b> + meet the <b>PV for your rank</b> each month.`,es:`Requisito: <b>mantener el rango cada mes consecutivo</b> + cumplir el <b>PV de tu rango</b> cada mes.`,zh:`条件：<b>每月连续维持职级</b> + 每月达到<b>该职级所需 PV</b>。`,ko:`조건: <b>매월 연속으로 직급 유지</b> + 매월 <b>직급별 PV</b> 충족.`,ja:`条件：<b>毎月連続で役職を維持</b> + 毎月<b>役職別PV</b>を満たす。`},
+
+    mo_eye:{vi:`Tối đa hóa tiền thưởng`,en:`Maximize your rewards`,es:`Maximiza tus recompensas`,zh:`最大化奖励`,ko:`보상 극대화`,ja:`報酬の最大化`},
+    mo_h2:{vi:`Cách tính Max Out`,en:`How Max Out is calculated`,es:`Cómo se calcula el Max Out`,zh:`Max Out 计算方式`,ko:`Max Out 계산 방식`,ja:`Max Outの計算方法`},
+    mo_in_k:{vi:`TÍNH VÀO CAP 300% / gói (Max Out)`,en:`COUNTS TOWARD 300% / package (Max Out)`,es:`CUENTA PARA EL 300% / paquete (Max Out)`,zh:`计入 300%/套餐上限（Max Out）`,ko:`300%/패키지에 포함 (Max Out)`,ja:`300%/パッケージに算入（Max Out）`},
+    mo_in_1:{vi:`<b>Vốn gốc</b>`,en:`<b>Principal capital</b>`,es:`<b>Capital principal</b>`,zh:`<b>本金</b>`,ko:`<b>원금</b>`,ja:`<b>元本</b>`},
+    mo_in_2:{vi:`<b>Phí bồi hoàn</b>`,en:`<b>Reimbursement fee</b>`,es:`<b>Tarifa de reembolso</b>`,zh:`<b>补偿费</b>`,ko:`<b>보전 수수료</b>`,ja:`<b>補償料</b>`},
+    mo_in_note:{vi:`Đạt 300% → gói dừng. Mở gói mới để tiếp tục nhận thưởng. Có thể tham gia nhiều gói để tối ưu.`,en:`Hit 300% → the package stops. Open a new one to keep earning. You may hold multiple packages to optimize.`,es:`Al llegar al 300% → el paquete se detiene. Abre uno nuevo para seguir ganando. Puedes tener varios paquetes.`,zh:`达到 300% → 该套餐停止。开新套餐以继续获益。可持有多个套餐以优化。`,ko:`300% 도달 → 패키지 종료. 새 패키지를 열어 계속 수령. 여러 패키지 보유로 최적화 가능.`,ja:`300%到達 → パッケージ停止。新規パッケージで継続。複数保有で最適化可。`},
+    mo_out_k:{vi:`KHÔNG tính vào cap 300%`,en:`Does NOT count toward the 300% cap`,es:`NO cuenta para el tope 300%`,zh:`不计入 300% 上限`,ko:`300% 상한에 미포함`,ja:`300%上限に算入しない`},
+    mo_out_1:{vi:`<b>Thưởng Hiệu suất</b> (xe/nhà/du lịch, tiền mặt/tháng)`,en:`<b>Performance Bonus</b> (car/house/travel, cash/month)`,es:`<b>Bono de Rendimiento</b> (auto/casa/viajes, efectivo/mes)`,zh:`<b>绩效奖</b>（车/房/旅游，现金/月）`,ko:`<b>성과 보너스</b> (차/집/여행, 현금/월)`,ja:`<b>実績ボーナス</b>（車/家/旅行、現金/月）`},
+    mo_out_2:{vi:`<b>Thưởng Danh hiệu</b> (nhận 1 lần)`,en:`<b>Title Bonus</b> (one time)`,es:`<b>Bono de Título</b> (una vez)`,zh:`<b>头衔奖</b>（一次）`,ko:`<b>타이틀 보너스</b> (1회)`,ja:`<b>タイトルボーナス</b>（1回）`},
+    mo_out_note:{vi:`Hai khoản này nằm <b>ngoài</b> trần 300% — cộng thêm, không bị giới hạn bởi cap gói.`,en:`These two are <b>outside</b> the 300% cap — added on top, not limited by the package cap.`,es:`Estos dos están <b>fuera</b> del tope 300% — se suman, sin límite del tope del paquete.`,zh:`这两项在 300% 上限<b>之外</b> — 额外累加，不受套餐上限限制。`,ko:`이 두 가지는 300% 상한 <b>밖</b> — 추가되며 패키지 상한에 제한되지 않음.`,ja:`この2つは300%上限の<b>外</b> — 上乗せされ、パッケージ上限に制限されない。`},
+    mo_call:{vi:`Cấu phần doanh số: <b>PV</b> = doanh số cá nhân · <b>BV</b> = doanh số F1 · <b>F2 trở xuống</b> = BV đội nhóm.`,en:`Sales components: <b>PV</b> = personal sales · <b>BV</b> = F1 sales · <b>F2 and below</b> = team BV.`,es:`Componentes de ventas: <b>PV</b> = ventas personales · <b>BV</b> = ventas F1 · <b>F2 y abajo</b> = BV de equipo.`,zh:`业绩构成：<b>PV</b> = 个人业绩 · <b>BV</b> = F1 业绩 · <b>F2 及以下</b> = 团队 BV。`,ko:`매출 구성: <b>PV</b> = 개인 매출 · <b>BV</b> = F1 매출 · <b>F2 이하</b> = 팀 BV.`,ja:`売上構成：<b>PV</b> = 個人売上 · <b>BV</b> = F1売上 · <b>F2以下</b> = チームBV。`},
+
+    rule_eye:{vi:`Quy tắc quan trọng`,en:`Key rules`,es:`Reglas clave`,zh:`重要规则`,ko:`핵심 규칙`,ja:`重要ルール`},
+    rule_h2:{vi:`Nhiều gói & điều chỉnh`,en:`Multiple packages & adjustments`,es:`Varios paquetes y ajustes`,zh:`多套餐与调整`,ko:`다중 패키지 & 조정`,ja:`複数パッケージ＆調整`},
+    fifo_t:{vi:`Nhiều gói cộng hạn mức`,en:`Multiple packages stack limits`,es:`Varios paquetes suman límites`,zh:`多套餐叠加额度`,ko:`다중 패키지 한도 합산`,ja:`複数パッケージで上限加算`},
+    fifo_d:{vi:`Thưởng đi theo thứ tự kích hoạt: Gói A ($10K, còn thiếu 500 USDV) hoàn tất trước, phần dư mới sang Gói B. Ví dụ 2.000 USDV → 500 vào A, 1.500 vào B. Một BV chỉ được trả Binary một lần.`,en:`Rewards follow activation order: Package A ($10K, 500 USDV short) completes first, the rest flows to Package B. E.g. 2,000 USDV → 500 to A, 1,500 to B. A BV is paid Binary only once.`,es:`Las recompensas siguen el orden de activación: el Paquete A ($10K, faltan 500 USDV) se completa primero, el resto pasa al B. Ej. 2.000 USDV → 500 a A, 1.500 a B. Un BV paga Binary solo una vez.`,zh:`奖励按激活顺序：套餐 A（$10K，尚差 500 USDV）先完成，余额再进套餐 B。例：2,000 USDV → 500 给 A，1,500 给 B。每个 BV 只支付一次 Binary。`,ko:`보상은 활성화 순서를 따름: 패키지 A($10K, 500 USDV 부족)를 먼저 채우고 나머지는 패키지 B로. 예: 2,000 USDV → A에 500, B에 1,500. BV는 Binary로 한 번만 지급.`,ja:`報酬は有効化順：パッケージA（$10K、あと500 USDV）を先に完了し、残りはBへ。例：2,000 USDV → Aに500、Bに1,500。BVはBinaryで一度のみ支払い。`},
+    refund_t:{vi:`Điều chỉnh lại điểm`,en:`Points get adjusted`,es:`Los puntos se ajustan`,zh:`积分重新调整`,ko:`포인트 재조정`,ja:`ポイントを再調整`},
+    refund_d:{vi:`Giao dịch $100 → 100 PV/100 BV. Refund $40 → còn 60 PV/60 BV. Nếu thưởng đã trả: tạo Adjustment Balance và khấu trừ vào lần nhận tiếp theo.`,en:`$100 transaction → 100 PV/100 BV. Refund $40 → 60 PV/60 BV remain. If rewards were already paid: create an Adjustment Balance and deduct from the next payout.`,es:`Transacción $100 → 100 PV/100 BV. Reembolso $40 → quedan 60 PV/60 BV. Si ya se pagó: crea un Adjustment Balance y descuenta del próximo pago.`,zh:`交易 $100 → 100 PV/100 BV。退款 $40 → 剩 60 PV/60 BV。若已发奖励：生成 Adjustment Balance，从下次发放中扣除。`,ko:`거래 $100 → 100 PV/100 BV. 환불 $40 → 60 PV/60 BV 잔여. 이미 지급된 보상은 Adjustment Balance 생성 후 다음 지급에서 차감.`,ja:`取引$100 → 100 PV/100 BV。返金$40 → 60 PV/60 BV残。支払済みの場合：Adjustment Balanceを作成し次回支払から控除。`},
+
+    cond_eye:{vi:`Điều kiện thành viên`,en:`Member requirements`,es:`Requisitos del miembro`,zh:`会员条件`,ko:`회원 조건`,ja:`会員条件`},
+    cond_h2:{vi:`Bốn việc cần làm đúng để được ghi nhận`,en:`Four things to do right to qualify`,es:`Cuatro cosas que hacer bien para calificar`,zh:`须做对的四件事才能获得资格`,ko:`자격을 얻기 위한 4가지`,ja:`資格を得るための4つの正しい行動`},
+    cond_1:{vi:`<b>1 · Duy trì gói Active</b>Gói hợp lệ và chưa đạt 300%.`,en:`<b>1 · Keep a package Active</b>A valid package that hasn't reached 300%.`,es:`<b>1 · Mantén un paquete Activo</b>Un paquete válido que no ha llegado al 300%.`,zh:`<b>1 · 保持套餐 Active</b>有效且未达 300% 的套餐。`,ko:`<b>1 · 패키지 Active 유지</b>유효하며 300%에 도달하지 않은 패키지.`,ja:`<b>1 · パッケージをActiveに維持</b>有効かつ300%未達のパッケージ。`},
+    cond_2:{vi:`<b>2 · Bảo trợ 1 người có License</b>Phải bảo trợ trực tiếp ít nhất 1 người có Franchise License (người đó không cần mua thêm gói IOU) để qualify. Hai nhánh Trái/Phải có phát sinh BV để ghép.`,en:`<b>2 · Sponsor 1 person with a License</b>You must directly sponsor at least 1 person who holds a Franchise License (they don't need an extra IOU package) to qualify. Both Left/Right legs generate BV to match.`,es:`<b>2 · Patrocina a 1 persona con Licencia</b>Debes patrocinar directamente al menos 1 persona con Franchise License (no necesita paquete IOU extra) para calificar. Ambas ramas generan BV para emparejar.`,zh:`<b>2 · 推荐 1 位持 License 者</b>须直接推荐至少 1 位拥有 Franchise License 的人（无需额外购买 IOU 套餐）才可获资格。左右两线产生 BV 用于配对。`,ko:`<b>2 · License 보유자 1명 후원</b>자격을 위해 Franchise License 보유자를 최소 1명 직접 후원해야 함(추가 IOU 패키지 불필요). 좌·우 라인이 BV를 생성해 매칭.`,ja:`<b>2 · License保有者を1名スポンサー</b>資格には、Franchise License保有者を最低1名直接スポンサーする必要（追加のIOUパッケージ不要）。左右レッグがBVを生成してマッチ。`},
+    cond_3:{vi:`<b>3 · Theo dõi Dashboard</b>Pending • Confirmed • hạn mức mỗi tuần.`,en:`<b>3 · Watch the Dashboard</b>Pending • Confirmed • weekly limits.`,es:`<b>3 · Vigila el Dashboard</b>Pending • Confirmed • límites semanales.`,zh:`<b>3 · 关注 Dashboard</b>Pending • Confirmed • 每周额度。`,ko:`<b>3 · Dashboard 확인</b>Pending • Confirmed • 주간 한도.`,ja:`<b>3 · Dashboardを確認</b>Pending • Confirmed • 週次上限。`},
+    cond_4:{vi:`<b>4 · Dùng giao dịch thật</b>Không self-referral hay lạm dụng refund.`,en:`<b>4 · Use real transactions</b>No self-referral or refund abuse.`,es:`<b>4 · Usa transacciones reales</b>Sin auto-referido ni abuso de reembolsos.`,zh:`<b>4 · 使用真实交易</b>不得自我推荐或滥用退款。`,ko:`<b>4 · 실제 거래 사용</b>셀프 추천이나 환불 남용 금지.`,ja:`<b>4 · 実取引を使用</b>自己紹介や返金の乱用は禁止。`},
+    disclaimer:{vi:`<b>Lưu ý:</b> Các con số trên trang này mang tính minh hoạ theo chính sách hiện hành. Estimated Binary chỉ là ước tính — tiền được rút sau khi kỳ tuần đã đối soát. Mốc 300% và trần tuần là mức tối đa, <b>không phải cam kết lợi nhuận</b>. Chính sách có thể thay đổi theo thông báo chính thức của VLINKPAY.`,en:`<b>Note:</b> Figures on this page are illustrative per current policy. Estimated Binary is only an estimate — funds are withdrawable after the week is reconciled. The 300% mark and weekly caps are maximums, <b>not a profit guarantee</b>. Policy may change per official VLINKPAY notice.`,es:`<b>Nota:</b> Las cifras son ilustrativas según la política actual. El Binary estimado es solo una estimación — los fondos se retiran tras la conciliación semanal. El 300% y los topes semanales son máximos, <b>no una garantía de ganancia</b>. La política puede cambiar según aviso oficial de VLINKPAY.`,zh:`<b>注意：</b>本页数字为按现行政策的示意。Estimated Binary 仅为估算 — 每周对账后方可提现。300% 与每周上限为最高值，<b>并非利润承诺</b>。政策可能依 VLINKPAY 官方通知调整。`,ko:`<b>참고:</b> 이 페이지의 수치는 현행 정책 기준 예시입니다. Estimated Binary는 추정치일 뿐 — 주간 정산 후 출금 가능. 300%와 주간 상한은 최대치이며 <b>수익 보장이 아닙니다</b>. 정책은 VLINKPAY 공식 공지에 따라 변경될 수 있습니다.`,ja:`<b>注意：</b>本ページの数値は現行ポリシーに基づく参考値です。Estimated Binaryは推定に過ぎず — 週次照合後に出金可能。300%と週上限は最大値であり<b>利益保証ではありません</b>。ポリシーはVLINKPAY公式通知により変更される場合があります。`},
+    footer_line:{vi:`Rõ cách tính · Rõ điều kiện · Rõ hành trình đến 300%.`,en:`Clear math · Clear conditions · Clear path to 300%.`,es:`Cálculo claro · Condiciones claras · Camino claro al 300%.`,zh:`算法清晰 · 条件清晰 · 通往 300% 的路径清晰。`,ko:`명확한 계산 · 명확한 조건 · 300%까지 명확한 경로.`,ja:`明快な計算 · 明快な条件 · 300%までの明快な道筋。`},
+
+    th_pkg:{vi:`Gói`,en:`Package`,es:`Paquete`,zh:`套餐`,ko:`패키지`,ja:`パッケージ`},
+    th_pkgiou:{vi:`Gói IOU`,en:`IOU package`,es:`Paquete IOU`,zh:`IOU 套餐`,ko:`IOU 패키지`,ja:`IOUパッケージ`},
+    th_dday:{vi:`Daily / ngày`,en:`Daily / day`,es:`Daily / día`,zh:`Daily / 日`,ko:`Daily / 일`,ja:`Daily / 日`},
+    th_dmonth:{vi:`Daily / tháng`,en:`Daily / month`,es:`Daily / mes`,zh:`Daily / 月`,ko:`Daily / 월`,ja:`Daily / 月`},
+    th_d12:{vi:`Daily / 12 tháng`,en:`Daily / 12 months`,es:`Daily / 12 meses`,zh:`Daily / 12 个月`,ko:`Daily / 12개월`,ja:`Daily / 12ヶ月`},
+    th_dpct:{vi:`% vốn sau 12 tháng`,en:`% of capital after 12 months`,es:`% del capital tras 12 meses`,zh:`12 个月后本金%`,ko:`12개월 후 원금%`,ja:`12ヶ月後の元本%`},
+
+    u_points:{vi:`điểm`,en:`points`,es:`puntos`,zh:`点`,ko:`포인트`,ja:`ポイント`},
+    u_month:{vi:`tháng`,en:`months`,es:`meses`,zh:`个月`,ko:`개월`,ja:`ヶ月`},
+    u_incl:{vi:`gồm vốn`,en:`incl. capital`,es:`incl. capital`,zh:`含本金`,ko:`원금 포함`,ja:`元本込み`},
+    lab_pvbv:{vi:`PV / BV mỗi loại`,en:`PV / BV each`,es:`PV / BV cada uno`,zh:`各 PV / BV`,ko:`PV / BV 각각`,ja:`PV / BV 各`},
+    lab_directrate:{vi:`Tỷ lệ Direct`,en:`Direct rate`,es:`Tasa Direct`,zh:`Direct 比例`,ko:`Direct 비율`,ja:`Direct率`},
+    lab_directcomm:{vi:`Hoa hồng Direct nhận`,en:`Direct commission earned`,es:`Comisión Direct ganada`,zh:`所得 Direct 佣金`,ko:`받는 Direct 커미션`,ja:`受取Directコミッション`},
+    lab_maxwk:{vi:`Max Binary / tuần`,en:`Max Binary / week`,es:`Max Binary / semana`,zh:`Max Binary / 周`,ko:`Max Binary / 주`,ja:`Max Binary / 週`},
+    lab_maxmo:{vi:`Max Binary / tháng · 28 ngày`,en:`Max Binary / month · 28 days`,es:`Max Binary / mes · 28 días`,zh:`Max Binary / 月 · 28 天`,ko:`Max Binary / 월 · 28일`,ja:`Max Binary / 月 · 28日`},
+    lab_target300:{vi:`Mục tiêu tối đa 300%`,en:`Maximum target 300%`,es:`Meta máxima 300%`,zh:`最高目标 300%`,ko:`최대 목표 300%`,ja:`最大目標 300%`},
+    cap_note:{vi:`Gói {p} → trần thưởng tích luỹ <b>{cap}</b> (300%, đã gồm {p} vốn). Bốn nguồn quyền lợi cùng làm giảm số dư còn lại tới mốc này.`,en:`Package {p} → cumulative reward cap <b>{cap}</b> (300%, incl. {p} capital). All four streams draw the remaining balance down to this mark.`,es:`Paquete {p} → tope acumulado <b>{cap}</b> (300%, incl. {p} de capital). Las cuatro fuentes reducen el saldo restante hasta este punto.`,zh:`套餐 {p} → 累计奖励上限 <b>{cap}</b>（300%，含 {p} 本金）。四种来源共同将余额降至该值。`,ko:`패키지 {p} → 누적 보상 상한 <b>{cap}</b> (300%, {p} 원금 포함). 네 가지 혜택이 잔액을 이 지점까지 감소시킵니다.`,ja:`パッケージ {p} → 累計報酬上限 <b>{cap}</b>（300%、{p} 元本込み）。4つの報酬が残高をこの水準まで減らします。`},
+    capcmp_over:{vi:`Trần tuần (giả định) gói <b>{label}</b> = <b>{cap} USDV</b> → tuần này chạm trần, <b style="color:var(--warn)">thực nhận {cap} USDV</b>, phần {ex} USDV vượt trần không được trả.`,en:`Weekly cap (assumed) for <b>{label}</b> = <b>{cap} USDV</b> → cap hit this week, <b style="color:var(--warn)">actually paid {cap} USDV</b>, the {ex} USDV above the cap is not paid.`,es:`Tope semanal (asumido) de <b>{label}</b> = <b>{cap} USDV</b> → se alcanzó el tope, <b style="color:var(--warn)">pagado {cap} USDV</b>, los {ex} USDV por encima no se pagan.`,zh:`<b>{label}</b> 每周上限（假定）= <b>{cap} USDV</b> → 本周触顶，<b style="color:var(--warn)">实发 {cap} USDV</b>，超出的 {ex} USDV 不予支付。`,ko:`<b>{label}</b> 주간 상한(가정) = <b>{cap} USDV</b> → 이번 주 상한 도달, <b style="color:var(--warn)">실지급 {cap} USDV</b>, 초과분 {ex} USDV는 미지급.`,ja:`<b>{label}</b> の週上限（想定）= <b>{cap} USDV</b> → 今週は上限到達、<b style="color:var(--warn)">実支給 {cap} USDV</b>、超過分 {ex} USDV は未払い。`},
+    capcmp_under:{vi:`Trần tuần (giả định) gói <b>{label}</b> = <b>{cap} USDV</b> → còn dư địa, thực nhận đủ <b style="color:var(--ok)">{pay} USDV</b>.`,en:`Weekly cap (assumed) for <b>{label}</b> = <b>{cap} USDV</b> → room left, fully paid <b style="color:var(--ok)">{pay} USDV</b>.`,es:`Tope semanal (asumido) de <b>{label}</b> = <b>{cap} USDV</b> → queda margen, pagado completo <b style="color:var(--ok)">{pay} USDV</b>.`,zh:`<b>{label}</b> 每周上限（假定）= <b>{cap} USDV</b> → 仍有余量，足额发放 <b style="color:var(--ok)">{pay} USDV</b>。`,ko:`<b>{label}</b> 주간 상한(가정) = <b>{cap} USDV</b> → 여유 있음, 전액 지급 <b style="color:var(--ok)">{pay} USDV</b>.`,ja:`<b>{label}</b> の週上限（想定）= <b>{cap} USDV</b> → 余裕あり、満額支給 <b style="color:var(--ok)">{pay} USDV</b>。`},
+    lock_need:{vi:`🔒 Gói <b>{lbl}</b> cần <b>Franchise License</b> — tích ô ở trên để mở.`,en:`🔒 Package <b>{lbl}</b> needs a <b>Franchise License</b> — check the box above to unlock.`,es:`🔒 El paquete <b>{lbl}</b> requiere <b>Franchise License</b> — marca la casilla de arriba.`,zh:`🔒 套餐 <b>{lbl}</b> 需要 <b>Franchise License</b> — 勾选上方选项以解锁。`,ko:`🔒 <b>{lbl}</b> 패키지는 <b>Franchise License</b> 필요 — 위 체크박스를 선택하세요.`,ja:`🔒 パッケージ <b>{lbl}</b> は <b>Franchise License</b> が必要 — 上のチェックで解除。`},
+    lock_default:{vi:`Chưa có Franchise License: chỉ chọn được gói $1K – $10K.`,en:`No Franchise License: only $1K – $10K packages available.`,es:`Sin Franchise License: solo paquetes de $1K – $10K.`,zh:`无 Franchise License：仅可选 $1K – $10K 套餐。`,ko:`Franchise License 없음: $1K – $10K 패키지만 선택 가능.`,ja:`Franchise Licenseなし：$1K – $10Kパッケージのみ選択可。`},
+    pa_pkg_prefix:{vi:`Gói`,en:`Package`,es:`Paquete`,zh:`套餐`,ko:`패키지`,ja:`パッケージ`},
+    pa_net_suffix:{vi:`= 2× vốn`,en:`= 2× capital`,es:`= 2× capital`,zh:`= 2× 本金`,ko:`= 원금 2배`,ja:`= 元本2倍`},
+    pa_total_suffix:{vi:`= 300%`,en:`= 300%`,es:`= 300%`,zh:`= 300%`,ko:`= 300%`,ja:`= 300%`},
+    i18n_fallback:{vi:``,en:`Translation for this language is coming soon — showing English for now.`,es:`La traducción a este idioma llegará pronto — mostrando inglés por ahora.`,zh:`该语言翻译即将推出 — 暂时显示英文。`,ko:`이 언어 번역은 곧 제공됩니다 — 현재 영어로 표시.`,ja:`この言語の翻訳は近日対応 — 現在は英語表示。`}
+  };
+
+  function t(k){const o=I18N[k]; if(!o) return k; return o[LANG]||o.en||o.vi||k;}
+
+  const TIERS=[
+    {p:1000,pv:500,bv:500,d:0.10,wcap:70},
+    {p:3000,pv:1500,bv:1500,d:0.10,wcap:240},
+    {p:5000,pv:2500,bv:2500,d:0.10,wcap:450},
+    {p:10000,pv:5000,bv:5000,d:0.14,wcap:1000},
+    {p:20000,pv:10000,bv:10000,d:0.16,wcap:2400},
+    {p:50000,pv:25000,bv:25000,d:0.18,wcap:7000},
+    {p:100000,pv:50000,bv:50000,d:0.20,wcap:15000},
+  ];
+  const nf=n=>n.toLocaleString('en-US');
+  const money=n=>'$'+nf(n);
+  const money2=n=>'$'+n.toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2});
+  const lbl=p=>(p>=1000?'$'+(p/1000)+'K':'$'+p);
+
+  const pkgWrap=document.getElementById('pkgs');
+  const LIC_MIN=20000;
+  let active=3, lic=false;
+
+  function renderPkgs(){
+    pkgWrap.innerHTML='';
+    TIERS.forEach((tt,i)=>{
+      const locked=tt.p>=LIC_MIN && !lic;
+      const b=document.createElement('div');
+      b.className='pkg'+(i===active?' active':'')+(locked?' locked':'');
+      b.textContent=(locked?'🔒 ':'')+lbl(tt.p);
+      b.onclick=()=>{
+        if(locked){document.getElementById('lockNote').innerHTML=t('lock_need').replace('{lbl}',lbl(tt.p));return;}
+        document.getElementById('lockNote').textContent='';
+        active=i; renderPkgs(); render();
+      };
+      pkgWrap.appendChild(b);
+    });
+  }
+  function updateLock(){
+    document.getElementById('lockNote').innerHTML = lic ? '' : t('lock_default');
+  }
+  document.getElementById('lic').addEventListener('change',e=>{
+    lic=e.target.checked;
+    if(!lic && TIERS[active].p>=LIC_MIN){ active=3; }
+    updateLock(); renderPkgs(); render();
+  });
+
+  function render(){
+    document.querySelectorAll('.pkg').forEach((b,i)=>b.classList.toggle('active',i===active));
+    const tt=TIERS[active];
+    const direct=Math.round(tt.d*tt.pv);
+    const cap=tt.p*3;
+    document.getElementById('pkgOut').innerHTML=`
+      <div class="stat"><div class="lab">${t('lab_pvbv')}</div><div class="val">${nf(tt.pv)} <small>${t('u_points')}</small></div></div>
+      <div class="stat"><div class="lab">${t('lab_directrate')}</div><div class="val">${(tt.d*100).toFixed(0)}%</div></div>
+      <div class="stat"><div class="lab">${t('lab_directcomm')}</div><div class="val" style="color:var(--ok)">${nf(direct)} <small>USDV</small></div></div>
+      <div class="stat cy"><div class="lab">${t('lab_maxwk')}</div><div class="val">${nf(tt.wcap)} <small>USDV</small></div></div>
+      <div class="stat cy"><div class="lab">${t('lab_maxmo')}</div><div class="val">${nf(tt.wcap*4)} <small>USDV</small></div></div>
+      <div class="stat hl"><div class="lab">${t('lab_target300')}</div><div class="val">${money(cap)} <small>${t('u_incl')}</small></div></div>`;
+    document.getElementById('capBar').style.width='100%';
+    document.getElementById('capNote').innerHTML=t('cap_note').replaceAll('{p}',money(tt.p)).replace('{cap}',money(cap));
+
+    document.getElementById('paBe').innerHTML='~14 <small>'+t('u_month')+'</small>';
+    document.getElementById('pa300').innerHTML='~42 <small>'+t('u_month')+'</small>';
+    const dailyMo=tt.p*3/42;
+    const binMoPct=(tt.wcap*4)/tt.p*100;
+    const activeMonths=300/((3/42*100)+binMoPct);
+    document.getElementById('paPkg').textContent=t('pa_pkg_prefix')+' '+lbl(tt.p);
+    document.getElementById('paPkg2').textContent=t('pa_pkg_prefix')+' '+lbl(tt.p);
+    document.getElementById('paDaily').innerHTML=money(Math.round(dailyMo));
+    document.getElementById('paNet').innerHTML=money(tt.p*2)+' <small>'+t('pa_net_suffix')+'</small>';
+    document.getElementById('aFast').innerHTML='~'+activeMonths.toFixed(1)+' <small>'+t('u_month')+'</small>';
+    document.getElementById('aTotal').innerHTML=money(tt.p*3)+' <small>'+t('pa_total_suffix')+'</small>';
+    bin();
+  }
+
+  function bin(){
+    const l=Math.max(0,+document.getElementById('left').value||0);
+    const r=Math.max(0,+document.getElementById('right').value||0);
+    const m=Math.min(l,r), pay=Math.round(m*0.07*100)/100, carry=Math.abs(l-r);
+    document.getElementById('matched').textContent=nf(m)+' BV';
+    document.getElementById('payout').textContent=nf(pay)+' USDV';
+    document.getElementById('carry').textContent=nf(carry)+' BV';
+    const tt=TIERS[active], cap=tt.wcap, label=lbl(tt.p);
+    if(pay>cap){
+      document.getElementById('capCmp').innerHTML=t('capcmp_over').replace('{label}',label).replaceAll('{cap}',nf(cap)).replace('{ex}',nf(Math.round((pay-cap)*100)/100));
+    } else {
+      document.getElementById('capCmp').innerHTML=t('capcmp_under').replace('{label}',label).replace('{cap}',nf(cap)).replace('{pay}',nf(pay));
+    }
+  }
+  document.getElementById('left').addEventListener('input',bin);
+  document.getElementById('right').addEventListener('input',bin);
+
+  function renderCaps(){
+    document.getElementById('captbl').innerHTML=TIERS.map((tt,i)=>{
+      const pct=(tt.wcap/tt.p*100);
+      return `<tr><td>${money(tt.p)}</td>
+        <td><input class="wc" type="number" min="0" step="10" data-i="${i}" value="${tt.wcap}"></td>
+        <td id="mo${i}">${nf(tt.wcap*4)} USDV</td>
+        <td id="pc${i}">${pct.toFixed(pct<1?1:0)}%</td></tr>`;
+    }).join('');
+    document.querySelectorAll('input.wc').forEach(inp=>{
+      inp.addEventListener('input',e=>{
+        const i=+e.target.dataset.i, v=Math.max(0,+e.target.value||0);
+        TIERS[i].wcap=v;
+        document.getElementById('mo'+i).textContent=nf(v*4)+' USDV';
+        const pct=v/TIERS[i].p*100;
+        document.getElementById('pc'+i).textContent=pct.toFixed(pct<1?1:0)+'%';
+        render();
+      });
+    });
+  }
+  function renderDirect(){
+    document.getElementById('dtbl').innerHTML=TIERS.map(tt=>{
+      const dc=Math.round(tt.d*tt.pv);
+      const big=tt.p>=100000?' class="big"':'';
+      return `<tr${big}><td>${money(tt.p)}</td><td>${nf(tt.pv)}</td><td>${nf(tt.bv)}</td><td><span class="pill">${(tt.d*100).toFixed(0)}%</span></td><td>${nf(dc)} USDV</td></tr>`;
+    }).join('');
+  }
+  function renderDaily(){
+    document.getElementById('dailytbl').innerHTML=TIERS.map(tt=>{
+      const mo=tt.p*3/42, day=mo/30, y=mo*12, pct=y/tt.p*100;
+      return `<tr><td>${money(tt.p)}</td><td>${money2(day)}</td><td>${money(Math.round(mo))}</td><td>${money(Math.round(y))}</td><td>${pct.toFixed(1)}%</td></tr>`;
+    }).join('');
+  }
+  function renderLead(){
+    const rows=[['F1',[1,1,1,1,1]],['F2',[1,1,1,1,1]],['F3',[0,1,1,1,1]],['F4',[0,0,1,1,1]],['F5',[0,0,0,0,1]]];
+    document.getElementById('leadtbl').innerHTML=rows.map(([g,arr])=>
+      `<tr><td><b>${g}</b></td>`+arr.map(v=>`<td>${v?'<span class="pill">5%</span>':'—'}</td>`).join('')+`</tr>`).join('');
+  }
+
+  // language
+  const sel=document.getElementById('lang');
+  sel.innerHTML=LANGS.map(([c,n])=>`<option value="${c}">${n}${IMPL.includes(c)?'':' · auto'}</option>`).join('');
+  function applyI18n(){
+    document.querySelectorAll('[data-i18n]').forEach(el=>{el.innerHTML=t(el.dataset.i18n);});
+    document.documentElement.lang=LANG;
+    const note=document.getElementById('i18nNote');
+    if(IMPL.includes(LANG)){note.style.display='none';}
+    else{note.style.display='block';note.textContent=I18N.i18n_fallback[LANG]||I18N.i18n_fallback.en;}
+  }
+  function rerender(){renderCaps();renderDirect();renderDaily();renderLead();renderPkgs();render();updateLock();}
+  sel.addEventListener('change',e=>{LANG=e.target.value;applyI18n();rerender();});
+
+  applyI18n(); rerender();
+</script>
+</body>
+</html>
