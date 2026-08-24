@@ -72,7 +72,8 @@ function getConversationPreview(
   if (conversation.lastMessagePreviewText) {
     preview = conversation.lastMessagePreviewText
   } else if (conversation.lastMessagePreviewKey) {
-    preview = t(`${chatTk}.${conversation.lastMessagePreviewKey}`)
+    // Skip showing the previewKey fallback text (e.g. "Open 1:1 conversation")
+    preview = ''
   } else if (conversation.updatedAt) {
     preview = t(`${chatTk}.lastMessageFallback`)
   }
@@ -122,13 +123,11 @@ export default function HeaderMessages({ variant }: HeaderMessagesProps) {
     || desktopChatSessions.length > 0
   )
 
-  useCommunityChatRealtime({ enabled: canLoadMessenger })
+  // Always load sessions when authenticated to show unread badge immediately
+  const shouldLoadSessionList = isAuthenticated
 
-  const shouldLoadSessionList = canLoadMessenger && (
-    open
-    || Boolean(pendingOpenSessionId)
-    || Boolean(pendingStaffChat)
-  )
+  // Enable realtime connection when authenticated to receive unread count updates
+  useCommunityChatRealtime({ enabled: isAuthenticated })
 
   const {
     data: chatSessions = [],
@@ -142,10 +141,10 @@ export default function HeaderMessages({ variant }: HeaderMessagesProps) {
   )
 
   const { data: staffBusinesses = [] } = useStaffBusinesses({
-    enabled: canLoadMessenger && isStaff,
+    enabled: isAuthenticated && isStaff,
   })
   const { data: profile } = useProfileSettings({
-    enabled: canLoadMessenger && !isStaff,
+    enabled: isAuthenticated && !isStaff,
   })
 
   const createSessionMutation = useCreateCommunityChatSession()
@@ -486,6 +485,8 @@ export default function HeaderMessages({ variant }: HeaderMessagesProps) {
       return
     }
 
+    // Close the messages panel when opening a conversation on desktop
+    setOpen(false)
     openDesktopConversation(conversation)
   }
 
