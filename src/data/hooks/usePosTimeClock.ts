@@ -1,10 +1,10 @@
 /**
  * TanStack Query hooks for the POS Front Desk Time Clock tab.
  *
- * Polling rather than realtime: the QR rotates on its own 30s cadence and the roster refreshes
- * every 15s, which is close enough for a clock board and avoids standing up a websocket hub the
- * app doesn't otherwise have. Mutations invalidate the roster/log immediately so a front-desk
- * action never waits for the next poll.
+ * Polling rather than realtime: the QR is refetched when the current token expires and the roster
+ * refreshes every 15s, which is close enough for a clock board and avoids standing up a websocket
+ * hub the app doesn't otherwise have. Mutations invalidate the roster/log immediately so a
+ * front-desk action never waits for the next poll.
  */
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { qk } from '../queryKeys'
@@ -20,8 +20,20 @@ import type {
 } from '../../types/repositories'
 
 const ROSTER_REFETCH_MS = 15000
-// One second under the 30s token window so the displayed code is replaced before it stops working.
-const QR_REFETCH_MS = 29000
+
+// The clock QR is derived from a fixed server-side window (token = HMAC of businessId + window
+// index), so a token handed out mid-window arrives with only the rest of that window left to live.
+// A fixed poll interval therefore drifts off the boundary and parks the panel on a code that has
+// already rotated. Ask for the next token when this one actually expires instead.
+const QR_REFETCH_FLOOR_MS = 2000
+// Cross the boundary before asking, so the answer is the next token and not the current one again.
+const QR_REFETCH_BUFFER_MS = 500
+
+function msUntilTokenExpiry(expiresAt?: string | null): number {
+  if (!expiresAt) return QR_REFETCH_FLOOR_MS
+  const remainingMs = new Date(expiresAt).getTime() - Date.now() + QR_REFETCH_BUFFER_MS
+  return Math.max(QR_REFETCH_FLOOR_MS, remainingMs)
+}
 
 export function useClockQrToken(businessId?: string, enabled = true) {
   const { isAuthenticated } = useSessionRole()
@@ -30,7 +42,7 @@ export function useClockQrToken(businessId?: string, enabled = true) {
     queryFn: () => posTimeClockRepository.getQrToken(businessId as string),
     enabled: enabled && isAuthenticated && Boolean(businessId),
     retry: false,
-    refetchInterval: QR_REFETCH_MS,
+    refetchInterval: (query) => msUntilTokenExpiry(query.state.data?.expiresAt),
   })
 }
 
