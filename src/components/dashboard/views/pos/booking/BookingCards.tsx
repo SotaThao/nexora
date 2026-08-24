@@ -1,6 +1,6 @@
 // BookingCards — production card-grid view for the Booking tab. It carries the same operational
 // information and actions as BookingTable, arranged for touch-friendly tablet/mobile scanning.
-import { CalendarClock, Check, Clock3, Eye, Loader2, Phone, Scissors, UserRound, X } from 'lucide-react'
+import { CalendarClock, Check, Clock3, Eye, Loader2, Phone, UserRound, X } from 'lucide-react'
 import { useTranslation } from '../../../../../contexts/LanguageContext'
 import { PosOrderStatus } from '../../../../../constants/posOrderStatus'
 import type { BookingListItemApiDto } from '../../../../../types/repositories'
@@ -137,7 +137,6 @@ export default function BookingCards({
               <div className="grid gap-3">
                 <section>
                   <div className="mb-1.5 flex items-center gap-1.5 text-[9px] font-black uppercase tracking-wider text-nexoraMuted">
-                    <Scissors className="h-3.5 w-3.5" aria-hidden="true" />
                     <span>{t(p + 'columnServices')}</span>
                   </div>
                   <div className="flex flex-wrap gap-1.5">

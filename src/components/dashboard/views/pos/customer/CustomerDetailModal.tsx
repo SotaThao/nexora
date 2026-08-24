@@ -10,7 +10,6 @@ import {
   MapPin,
   Phone,
   ReceiptText,
-  Scissors,
   UserRound,
   X,
 } from 'lucide-react'
@@ -349,7 +348,7 @@ export default function CustomerDetailModal({
                     ) : null}
 
                     <p className="mt-3 flex items-center gap-1.5 border-t border-nexoraBorder pt-2.5 text-xs font-semibold text-nexoraText">
-                      <Scissors className="h-3.5 w-3.5 text-nexoraBrand" aria-hidden="true" />
+                      <UserRound className="h-3.5 w-3.5 text-nexoraBrand" aria-hidden="true" />
                       {item.technicianNames.length > 0
                         ? item.technicianNames.join(', ')
                         : t(p + 'viewDetailUnassigned')}
