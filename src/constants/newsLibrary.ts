@@ -7,8 +7,40 @@ export type NewsLibraryDataLanguage = keyof typeof NEWS_LIBRARY_DATA_URLS
 
 export const DEFAULT_NEWS_LIBRARY_DATA_LANGUAGE: NewsLibraryDataLanguage = 'en'
 
+/** Self-hosted IOU Reward Policy (multi-language HTML). */
+export const NEWS_LIBRARY_IOU_REWARD_POLICY_PATH = '/news-library/iou-reward-policy.html'
+
+export interface NewsLibraryPlanTopicLink {
+  title?: string
+  description?: string
+  url?: string
+  link?: string
+  icon?: string
+}
+
 export function getNewsLibraryDataUrl(language: string): string {
   return language === 'vi'
     ? NEWS_LIBRARY_DATA_URLS.vi
     : NEWS_LIBRARY_DATA_URLS[DEFAULT_NEWS_LIBRARY_DATA_LANGUAGE]
+}
+
+export function prependIouRewardPolicyTopic(
+  planTopics: NewsLibraryPlanTopicLink[],
+  copy: { title: string; description: string },
+): NewsLibraryPlanTopicLink[] {
+  const alreadyLinked = planTopics.some(
+    (topic) =>
+      topic.url === NEWS_LIBRARY_IOU_REWARD_POLICY_PATH ||
+      topic.link === NEWS_LIBRARY_IOU_REWARD_POLICY_PATH,
+  )
+  if (alreadyLinked) return planTopics
+
+  return [
+    {
+      url: NEWS_LIBRARY_IOU_REWARD_POLICY_PATH,
+      title: copy.title,
+      description: copy.description,
+    },
+    ...planTopics,
+  ]
 }

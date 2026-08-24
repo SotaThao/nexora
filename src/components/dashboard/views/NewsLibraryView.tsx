@@ -27,6 +27,7 @@ import { useTranslation } from '../../../contexts/LanguageContext'
 import {
   NEWS_LIBRARY_DATA_URLS,
   getNewsLibraryDataUrl,
+  prependIouRewardPolicyTopic,
 } from '../../../constants/newsLibrary'
 
 type TabId = 'news' | 'event-zoom-schedule' | 'compensation-plan'
@@ -895,7 +896,14 @@ export default function NewsLibraryView({
         }
 
         if (!cancelled) {
-          setContent(normalizeContent(nextContent))
+          const normalized = normalizeContent(nextContent)
+          setContent({
+            ...normalized,
+            planTopics: prependIouRewardPolicyTopic(normalized.planTopics, {
+              title: t(`${TK}.iouRewardPolicy.title`),
+              description: t(`${TK}.iouRewardPolicy.description`),
+            }),
+          })
           setStatus('ready')
         }
       } catch {
@@ -912,7 +920,7 @@ export default function NewsLibraryView({
       cancelled = true
       controller.abort()
     }
-  }, [currentLanguage])
+  }, [currentLanguage, t])
 
   const activeIndex = useMemo(
     () => TABS.findIndex((tab) => tab.id === activeTab),
