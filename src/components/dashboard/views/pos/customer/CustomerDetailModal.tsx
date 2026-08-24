@@ -59,12 +59,6 @@ const HISTORY_STATUS_STYLES: Record<string, string> = {
   Cancelled: 'bg-rose-50 text-rose-700 ring-rose-200',
 }
 
-function getCustomerInitials(name: string): string {
-  const parts = name.trim().split(/\s+/).filter(Boolean)
-  if (parts.length === 0) return '?'
-  return (parts[0][0] + (parts.length > 1 ? parts[parts.length - 1][0] : '')).toUpperCase()
-}
-
 function formatProfileDate(value: string, currentLanguage: string): string {
   const match = /^(\d{4})-(\d{2})-(\d{2})/.exec(value)
   if (!match) return value
@@ -138,10 +132,6 @@ export default function CustomerDetailModal({
       >
         <header className="shrink-0 border-b border-nexoraBorder bg-gradient-to-br from-nexoraCanvas via-white to-nexoraLavender/20 p-4 sm:p-5">
           <div className="flex items-start gap-3 sm:gap-4">
-            <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-nexoraBrand text-base font-black text-white shadow-sm sm:h-14 sm:w-14 sm:text-lg">
-              {customer ? getCustomerInitials(customerName) : <UserRound className="h-6 w-6" aria-hidden="true" />}
-            </div>
-
             <div className="min-w-0 flex-1">
               <p
                 id="customer-detail-dialog-title"
