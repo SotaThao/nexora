@@ -2995,6 +2995,10 @@
             "loading": "Loading document...",
             "error": "Unable to display this document.",
             "pageAria": "Page {page} of {total}"
+          },
+          "iouRewardPolicy": {
+            "title": "VLINKPAY IOU Reward Policy",
+            "description": "Interactive guide to IOU reward streams — Daily, Direct, Binary, and Leadership — with a built-in calculator. Available in multiple languages."
           }
         },
         "StaffView": {
