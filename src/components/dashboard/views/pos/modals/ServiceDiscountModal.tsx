@@ -94,11 +94,15 @@ export default function ServiceDiscountModal({
     (discountType !== PosServiceDiscountType.Percent || parsedValue <= MAX_DISCOUNT_PERCENT)
 
   const previewAmount = hasValidValue ? resolvePreviewAmount(discountType, parsedValue, target.lineTotal) : 0
+  // Halved in whole cents, not in dollars: (1.16 / 2) * 100 is 57.99999999999999 in binary
+  // floating point, so flooring dollars showed $0.57 for a split the backend stores as $0.58.
+  // PosServiceDiscountResolver.ResolveStaffShare runs on decimal and rounds toward zero — matched
+  // here by flooring the integer cent count, which is exact.
   const previewStaffShare =
     bearer === PosDiscountBearer.Staff
       ? previewAmount
       : bearer === PosDiscountBearer.Split
-        ? Math.floor((previewAmount / 2) * 100) / 100
+        ? Math.floor(Math.round(previewAmount * 100) / 2) / 100
         : 0
 
   return (
