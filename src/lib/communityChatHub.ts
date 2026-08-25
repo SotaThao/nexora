@@ -11,6 +11,7 @@ import type {
   CommunityChatReceiveMessageEvent,
   CommunityChatTypingEvent,
   CommunityChatUserStatusChangedEvent,
+  CommunityChatMessageDeletedEvent,
 } from '../types/communityChat'
 
 /** Client → Server hub method names. */
@@ -25,6 +26,7 @@ export const CommunityChatHubMethod = {
 /** Server → Client hub event names. */
 export const CommunityChatHubEvent = {
   ReceiveMessage: 'ReceiveMessage',
+  MessageDeleted: 'MessageDeleted',
   UserStatusChanged: 'UserStatusChanged',
   UserStartedTyping: 'UserStartedTyping',
   UserStoppedTyping: 'UserStoppedTyping',
@@ -38,6 +40,7 @@ export function getCommunityChatHubUrl(): string {
 
 export interface CommunityChatHubHandlers {
   onReceiveMessage?: (message: CommunityChatReceiveMessageEvent) => void
+  onMessageDeleted?: (event: CommunityChatMessageDeletedEvent) => void
   onUserStatusChanged?: (event: CommunityChatUserStatusChangedEvent) => void
   onUserStartedTyping?: (event: CommunityChatTypingEvent) => void
   onUserStoppedTyping?: (event: CommunityChatTypingEvent) => void
@@ -75,6 +78,9 @@ export function createCommunityChatHubConnection(
 
   if (handlers.onReceiveMessage) {
     connection.on(CommunityChatHubEvent.ReceiveMessage, handlers.onReceiveMessage)
+  }
+  if (handlers.onMessageDeleted) {
+    connection.on(CommunityChatHubEvent.MessageDeleted, handlers.onMessageDeleted)
   }
   if (handlers.onUserStatusChanged) {
     connection.on(CommunityChatHubEvent.UserStatusChanged, handlers.onUserStatusChanged)

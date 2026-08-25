@@ -77,6 +77,8 @@ export interface HeaderChatThreadMessage {
   sentAt: string
   /** Outgoing only — delivery/read receipt for the recipient. */
   receiptStatus?: HeaderChatMessageReceiptStatus
+  /** True if the message has been deleted. */
+  isDeleted?: boolean
 }
 
 function applyMockOutgoingReceipts(messages: HeaderChatThreadMessage[]): HeaderChatThreadMessage[] {

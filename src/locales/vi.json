@@ -793,6 +793,7 @@
           "deleteConfirmTitle": "Xóa tin nhắn?",
           "deleteConfirm": "Xóa tin nhắn này? Thao tác không thể hoàn tác.",
           "deleteError": "Không thể xóa tin nhắn. Vui lòng thử lại.",
+          "messageDeleted": "Tin nhắn đã bị xóa",
           "receiptSent": "Đã gửi",
           "receiptRead": "Đã xem",
           "replyingTo": "Đang trả lời",

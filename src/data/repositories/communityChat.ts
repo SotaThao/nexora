@@ -78,6 +78,8 @@ interface CommunityChatMessageApiDto {
   SentAt?: string
   editedAt?: string | null
   EditedAt?: string | null
+  isDeleted?: boolean
+  IsDeleted?: boolean
 }
 
 interface CommunityChatMessagesPageApiDto {
@@ -170,6 +172,7 @@ export function normalizeCommunityChatMessage(
     messageType: normalizeMessageType(dto.messageType ?? dto.MessageType),
     sentAt: normalizeCommunityChatTimestamp(dto.sentAt ?? dto.SentAt) ?? '',
     editedAt: normalizeCommunityChatTimestamp(dto.editedAt ?? dto.EditedAt),
+    isDeleted: Boolean(dto.isDeleted ?? dto.IsDeleted),
   }
 }
 

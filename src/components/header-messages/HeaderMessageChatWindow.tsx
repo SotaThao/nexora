@@ -24,6 +24,7 @@ import {
 } from '../../constants/communityChat'
 import { useCommunityChatMessagesInfinite } from '../../data/hooks/useCommunityChatMessageThread'
 import {
+  useMarkCommunityChatSessionRead,
   useSendCommunityChatImage,
   useSendCommunityChatMessage,
 } from '../../data/hooks/useCommunityChat'
@@ -87,6 +88,9 @@ function getMessageBodyText(
   t: (key: string) => string,
   chatTk: string,
 ): string {
+  if (message.isDeleted) {
+    return t(`${chatTk}.messageDeleted`)
+  }
   return message.bodyText || (message.bodyKey ? t(`${chatTk}.${message.bodyKey}`) : '')
 }
 
@@ -276,6 +280,7 @@ function HeaderMessageChatWindow({
 
   const sendMessageMutation = useSendCommunityChatMessage(isPendingSession ? '' : sessionId)
   const sendImageMutation = useSendCommunityChatImage(isPendingSession ? '' : sessionId)
+  const markReadMutation = useMarkCommunityChatSessionRead()
   const { deletingMessageId, deleteMessage } = useCommunityChatDeleteMessage({
     sessionId: isPendingSession ? null : sessionId,
     onDeleted: () => setMenuMessageId(null),
@@ -377,6 +382,18 @@ function HeaderMessageChatWindow({
     }
   }
 
+  const handleMarkAsRead = () => {
+    // Mark all messages as read when user interacts with the chat window
+    // Allow multiple calls - API is idempotent, ensures fresh messages are marked
+    if (!isPendingSession && sessionId && !markReadMutation.isPending) {
+      markReadMutation.mutate(sessionId)
+    }
+  }
+
+  const handleInputFocus = () => {
+    handleMarkAsRead()
+  }
+
   const handleImagePick = async (event: ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0]
     event.target.value = ''
@@ -401,7 +418,7 @@ function HeaderMessageChatWindow({
   }
 
   const renderBubbleBody = (message: HeaderChatThreadMessage, bodyText: string) => {
-    if (message.imageUrl) {
+    if (message.imageUrl && !message.isDeleted) {
       return (
         <button
           type="button"
@@ -418,7 +435,11 @@ function HeaderMessageChatWindow({
       )
     }
 
-    return <p className="header-message-chat-bubble-text">{bodyText}</p>
+    const className = message.isDeleted
+      ? 'header-message-chat-bubble-text is-deleted'
+      : 'header-message-chat-bubble-text'
+
+    return <p className={className}>{bodyText}</p>
   }
 
   const renderQuote = (replyTo: HeaderChatMessageReplyTo) => (
@@ -454,6 +475,7 @@ function HeaderMessageChatWindow({
 
   const renderMessageMenu = (message: HeaderChatThreadMessage) => {
     if (message.direction !== HeaderChatMessageDirection.Outgoing) return null
+    if (message.isDeleted) return null
 
     return (
       <HeaderMessageChatBubbleMenu
@@ -656,7 +678,7 @@ function HeaderMessageChatWindow({
       style={floatingStackStyle}
       {...{ [HEADER_MESSAGE_CHAT_ROOT_ATTR]: '' }}
       role="dialog"
-        aria-busy={isThreadLoading}
+      aria-busy={isThreadLoading}
       aria-label={conversation.name}
     >
       <div className={`header-message-chat-head${isMobileFullscreen ? ' header-message-chat-head--mobile' : ''}`}>
@@ -738,6 +760,7 @@ function HeaderMessageChatWindow({
         ].filter(Boolean).join(' ')}
         ref={threadRef}
         onScroll={handleThreadScroll}
+        onClick={handleMarkAsRead}
       >
         {isThreadLoading ? (
           <ChatThreadSkeleton mobile={isMobileFullscreen} />
@@ -804,6 +827,7 @@ function HeaderMessageChatWindow({
           className="header-message-chat-input"
           value={draft}
           onChange={(event) => setDraft(event.target.value)}
+          onFocus={handleInputFocus}
           placeholder={t(`${chatTk}.inputPlaceholder`)}
           aria-label={t(`${chatTk}.inputPlaceholder`)}
           disabled={isThreadLoading || isSending}

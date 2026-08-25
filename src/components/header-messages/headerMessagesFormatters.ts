@@ -33,6 +33,7 @@ export function formatHeaderMessageDateTime(value: string, language: string): st
     year: 'numeric',
     hour: 'numeric',
     minute: '2-digit',
+    hour12: true,
     timeZone: getHeaderMessagesUserTimeZone(),
   }).format(date)
 }
@@ -42,9 +43,9 @@ export function formatHeaderMessageChatTime(value: string, language: string): st
   if (!date) return ''
 
   return new Intl.DateTimeFormat(getHeaderMessagesIntlLocale(language), {
-    hour: '2-digit',
+    hour: 'numeric',
     minute: '2-digit',
-    hour12: false,
+    hour12: true,
     timeZone: getHeaderMessagesUserTimeZone(),
   }).format(date)
 }
