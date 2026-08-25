@@ -3511,7 +3511,10 @@
             "discountPreviewSplit": "Technician absorbs ${{staff}} · salon absorbs ${{salon}}",
             "discountSaveButton": "Save discount",
             "discountRemoveButton": "Remove",
-            "discountLineSummary": "Discount ${{amount}} · {{bearer}} absorbs"
+            "discountLineSummary": "Discount ${{amount}} · {{bearer}} absorbs",
+            "discountPercentTooHigh": "Percent cannot be higher than {{max}}%.",
+            "discountAmountTooHigh": "Discount cannot be higher than the service price (${{max}}).",
+            "discountValueMustBePositive": "Enter a value greater than 0."
           },
           "PhoneCheckInStep": {
             "welcomeTitleWithBusiness": "Welcome to {{businessName}}",

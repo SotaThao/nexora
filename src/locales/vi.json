@@ -3511,7 +3511,10 @@
             "discountPreviewSplit": "Thợ chịu ${{staff}} · salon chịu ${{salon}}",
             "discountSaveButton": "Lưu giảm giá",
             "discountRemoveButton": "Xóa",
-            "discountLineSummary": "Giảm ${{amount}} · {{bearer}} chịu"
+            "discountLineSummary": "Giảm ${{amount}} · {{bearer}} chịu",
+            "discountPercentTooHigh": "Phần trăm không được lớn hơn {{max}}%.",
+            "discountAmountTooHigh": "Số tiền giảm không được lớn hơn giá dịch vụ (${{max}}).",
+            "discountValueMustBePositive": "Nhập giá trị lớn hơn 0."
           },
           "PhoneCheckInStep": {
             "welcomeTitleWithBusiness": "Chào mừng đến {{businessName}}",
