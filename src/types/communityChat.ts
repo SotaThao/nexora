@@ -38,6 +38,7 @@ export interface CommunityChatMessage {
   messageType: CommunityChatMessageType
   sentAt: string
   editedAt: string | null
+  isDeleted?: boolean
 }
 
 export type CommunityChatMessagesPage = PaginatedResponse<CommunityChatMessage>
@@ -79,4 +80,11 @@ export interface CommunityChatUserStatusChangedEvent {
 export interface CommunityChatTypingEvent {
   userId: string
   chatSessionId: string
+}
+
+/** Server → client: MessageDeleted event. */
+export interface CommunityChatMessageDeletedEvent {
+  messageId: string
+  chatSessionId: string
+  deletedByUserId: string
 }

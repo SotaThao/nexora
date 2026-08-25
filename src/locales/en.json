@@ -793,6 +793,7 @@
           "deleteConfirmTitle": "Delete message?",
           "deleteConfirm": "Delete this message? This cannot be undone.",
           "deleteError": "Could not delete this message. Please try again.",
+          "messageDeleted": "This message was deleted",
           "receiptSent": "Sent",
           "receiptRead": "Seen",
           "replyingTo": "Replying",

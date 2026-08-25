@@ -87,6 +87,9 @@ function getMessageBodyText(
   t: (key: string) => string,
   chatTk: string,
 ): string {
+  if (message.isDeleted) {
+    return t(`${chatTk}.messageDeleted`)
+  }
   return message.bodyText || (message.bodyKey ? t(`${chatTk}.${message.bodyKey}`) : '')
 }
 
@@ -401,7 +404,7 @@ function HeaderMessageChatWindow({
   }
 
   const renderBubbleBody = (message: HeaderChatThreadMessage, bodyText: string) => {
-    if (message.imageUrl) {
+    if (message.imageUrl && !message.isDeleted) {
       return (
         <button
           type="button"
@@ -418,7 +421,11 @@ function HeaderMessageChatWindow({
       )
     }
 
-    return <p className="header-message-chat-bubble-text">{bodyText}</p>
+    const className = message.isDeleted
+      ? 'header-message-chat-bubble-text is-deleted'
+      : 'header-message-chat-bubble-text'
+
+    return <p className={className}>{bodyText}</p>
   }
 
   const renderQuote = (replyTo: HeaderChatMessageReplyTo) => (
@@ -454,6 +461,7 @@ function HeaderMessageChatWindow({
 
   const renderMessageMenu = (message: HeaderChatThreadMessage) => {
     if (message.direction !== HeaderChatMessageDirection.Outgoing) return null
+    if (message.isDeleted) return null
 
     return (
       <HeaderMessageChatBubbleMenu

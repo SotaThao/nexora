@@ -598,6 +598,10 @@ html.header-messages-mobile-open header.sticky {
   @apply text-sm leading-snug;
 }
 
+.header-message-chat-bubble-text.is-deleted {
+  @apply italic text-gray-500;
+}
+
 .header-message-chat-bubble-meta {
   @apply mt-1 flex items-center justify-end gap-1 text-[10px] font-medium opacity-80;
 }

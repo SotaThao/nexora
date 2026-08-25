@@ -30,6 +30,7 @@ function handleIncomingMessage(rawMessage: CommunityChatMessage) {
   const sessionId = message.chatSessionId
   if (!sessionId || !queryClientRef) return
 
+  // Message updates (including deletions via isDeleted flag) are patched into cache
   patchCommunityChatMessagesCache(queryClientRef, message)
 
   const isOwnMessage = isSameCommunityChatProfileId(message.senderId, currentUserProfileIdRef)
