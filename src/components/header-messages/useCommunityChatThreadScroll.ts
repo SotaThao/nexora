@@ -1,6 +1,20 @@
 import { useCallback, useEffect, useRef, type RefObject } from 'react'
 import { COMMUNITY_CHAT_THREAD_SCROLL_LOAD_THRESHOLD_PX } from '../../constants/communityChat'
 
+/**
+ * Simple throttle: only run fn if at least `wait` ms have passed since last call.
+ */
+function throttle<T extends (...args: unknown[]) => void>(fn: T, wait: number): T {
+  let lastCall = 0
+  return ((...args: unknown[]) => {
+    const now = Date.now()
+    if (now - lastCall >= wait) {
+      lastCall = now
+      fn(...args)
+    }
+  }) as T
+}
+
 interface UseCommunityChatThreadScrollOptions {
   enabled?: boolean
   /** Reset scroll anchoring when the open session changes. */
@@ -63,7 +77,7 @@ export function useCommunityChatThreadScroll(
     }
   }, [enabled, isInitialLoading, messageCount, threadRef])
 
-  const handleThreadScroll = useCallback(() => {
+  const handleThreadScrollRaw = useCallback(() => {
     const node = threadRef.current
     if (!node || !enabled) return
 
@@ -92,6 +106,12 @@ export function useCommunityChatThreadScroll(
     onLoadOlder,
     threadRef,
   ])
+
+  // Throttle scroll handler to 100ms for better performance
+  const handleThreadScroll = useCallback(
+    throttle(handleThreadScrollRaw, 100),
+    [handleThreadScrollRaw]
+  )
 
   return { handleThreadScroll }
 }

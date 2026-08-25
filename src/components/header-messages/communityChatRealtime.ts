@@ -9,9 +9,10 @@ import {
 import {
   patchCommunityChatMessagesCache,
   patchCommunityChatSessionLastMessage,
+  removeCommunityChatMessageFromCache,
 } from '../../data/communityChatCache'
 import { normalizeCommunityChatMessage } from '../../data/repositories/communityChat'
-import type { CommunityChatMessage } from '../../types/communityChat'
+import type { CommunityChatMessage, CommunityChatMessageDeletedEvent } from '../../types/communityChat'
 import { logger } from '../../utils/logger'
 
 export const COMMUNITY_CHAT_HUB_MESSAGE_ERROR_EVENT = 'nexora:community-chat-message-error' as const
@@ -24,6 +25,9 @@ let currentUserProfileIdRef = ''
 
 /** Ref-count of UI surfaces that need a session's SignalR group. */
 const joinedSessionRefCounts = new Map<string, number>()
+
+/** Track sessions that have been joined (including temp joins from ensureJoined). */
+const actuallyJoinedSessions = new Set<string>()
 
 function handleIncomingMessage(rawMessage: CommunityChatMessage) {
   const message = normalizeCommunityChatMessage(rawMessage)
@@ -43,12 +47,51 @@ function handleIncomingMessage(rawMessage: CommunityChatMessage) {
   })
 }
 
+function handleMessageDeleted(event: CommunityChatMessageDeletedEvent) {
+  if (!event.chatSessionId || !event.messageId || !queryClientRef) return
+
+  // Remove message from cache for real-time deletion across all clients
+  removeCommunityChatMessageFromCache(queryClientRef, event.chatSessionId, event.messageId)
+}
+
 function emitHubMessageError(message: string) {
   const text = String(message ?? '').trim()
   if (!text || typeof window === 'undefined') return
   window.dispatchEvent(
     new CustomEvent(COMMUNITY_CHAT_HUB_MESSAGE_ERROR_EVENT, { detail: { message: text } }),
   )
+}
+
+/**
+ * Rejoin all active sessions after reconnection.
+ * SignalR automatically reconnects but does NOT restore group memberships.
+ */
+async function handleReconnected() {
+  logger.info('Community chat hub reconnected, rejoining sessions...')
+  
+  if (!hubConnection || hubConnection.state !== 'Connected') {
+    logger.warn('Cannot rejoin sessions: hub not connected')
+    return
+  }
+
+  // Rejoin all sessions that have active UI references
+  const sessionsToRejoin = Array.from(joinedSessionRefCounts.keys())
+  
+  if (sessionsToRejoin.length === 0) {
+    logger.info('No sessions to rejoin')
+    return
+  }
+
+  logger.info(`Rejoining ${sessionsToRejoin.length} active sessions`)
+  
+  for (const sessionId of sessionsToRejoin) {
+    try {
+      await joinCommunityChatSession(hubConnection, sessionId)
+      logger.info(`Rejoined session: ${sessionId}`)
+    } catch (error) {
+      logger.error(`Failed to rejoin session ${sessionId}`, error)
+    }
+  }
 }
 
 async function ensureHubStarted(): Promise<HubConnection | null> {
@@ -58,9 +101,13 @@ async function ensureHubStarted(): Promise<HubConnection | null> {
     hubConnection = createCommunityChatHubConnection({
       handlers: {
         onReceiveMessage: handleIncomingMessage,
+        onMessageDeleted: handleMessageDeleted,
         onMessageError: (message) => {
           logger.warn('Community chat hub send error', message)
           emitHubMessageError(message)
+        },
+        onReconnected: () => {
+          void handleReconnected()
         },
       },
     })
@@ -75,6 +122,22 @@ async function ensureHubStarted(): Promise<HubConnection | null> {
   }
 
   await hubStartPromise
+
+  // Wait for connection to be fully ready (state === 'Connected')
+  // This handles the case where start() completes but connection is still transitioning
+  const maxWaitMs = 5000
+  const startTime = Date.now()
+  while (hubConnection.state !== 'Connected' && Date.now() - startTime < maxWaitMs) {
+    if (hubConnection.state === 'Disconnected') {
+      throw new Error('Hub connection disconnected during startup')
+    }
+    await new Promise(resolve => setTimeout(resolve, 100))
+  }
+
+  if (hubConnection.state !== 'Connected') {
+    logger.warn('Hub connection not ready after timeout, state:', hubConnection.state)
+  }
+
   return hubConnection
 }
 
@@ -83,6 +146,7 @@ async function stopHubIfIdle() {
 
   hubStartPromise = null
   joinedSessionRefCounts.clear()
+  actuallyJoinedSessions.clear()
 
   if (!hubConnection) return
 
@@ -138,7 +202,9 @@ export async function joinCommunityChatHubSession(sessionId: string): Promise<vo
 
   const previousCount = joinedSessionRefCounts.get(id) ?? 0
   joinedSessionRefCounts.set(id, previousCount + 1)
-  if (previousCount > 0) return
+  
+  // If already joined (either from previous UI ref or temp join), just increment ref count
+  if (previousCount > 0 || actuallyJoinedSessions.has(id)) return
 
   let connection: HubConnection | null
   try {
@@ -155,6 +221,7 @@ export async function joinCommunityChatHubSession(sessionId: string): Promise<vo
 
   try {
     await joinCommunityChatSession(connection, id)
+    actuallyJoinedSessions.add(id)
   } catch (error) {
     rollbackJoinRefCount(id)
     throw error
@@ -169,14 +236,22 @@ export async function ensureCommunityChatHubSessionJoined(sessionId: string): Pr
   const id = String(sessionId ?? '').trim()
   if (!id) return
 
-  if ((joinedSessionRefCounts.get(id) ?? 0) > 0) {
-    const connection = await ensureHubStarted()
-    if (!connection || connection.state !== 'Connected') return
-    await joinCommunityChatSession(connection, id)
+  // If already joined (either from UI or previous temp join), we're done
+  if (actuallyJoinedSessions.has(id)) {
     return
   }
 
-  await joinCommunityChatHubSession(id)
+  // Not yet joined - join now without incrementing UI ref count (temp join for sending message)
+  const connection = await ensureHubStarted()
+  if (!connection) return
+
+  try {
+    await joinCommunityChatSession(connection, id)
+    actuallyJoinedSessions.add(id)
+  } catch (error) {
+    logger.warn('ensureCommunityChatHubSessionJoined failed', error)
+    throw error
+  }
 }
 
 export async function leaveCommunityChatHubSession(sessionId: string): Promise<void> {
@@ -198,6 +273,7 @@ export async function leaveCommunityChatHubSession(sessionId: string): Promise<v
 
   try {
     await leaveCommunityChatSession(hubConnection, id)
+    actuallyJoinedSessions.delete(id)
   } catch (error) {
     logger.warn('Community chat hub leave failed', error)
   }
@@ -206,6 +282,7 @@ export async function leaveCommunityChatHubSession(sessionId: string): Promise<v
   if ((joinedSessionRefCounts.get(id) ?? 0) > 0 && hubConnection?.state === 'Connected') {
     try {
       await joinCommunityChatSession(hubConnection, id)
+      actuallyJoinedSessions.add(id)
     } catch (error) {
       logger.warn('Community chat hub re-join after leave race failed', error)
     }

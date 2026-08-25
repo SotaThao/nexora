@@ -17,7 +17,6 @@ import {
   mergeCommunityChatSessionPreviews,
   patchCommunityChatMessagesCache,
   patchCommunityChatSessionLastMessage,
-  removeCommunityChatMessageFromCache,
 } from '../communityChatCache'
 
 export function useCommunityChatSessions({ enabled = true } = {}) {
@@ -150,13 +149,10 @@ export function useMarkCommunityChatSessionRead() {
 }
 
 export function useDeleteCommunityChatMessage() {
-  const queryClient = useQueryClient()
-
   return useMutation<void, Error, { messageId: string; sessionId: string }>({
     mutationFn: ({ messageId }) => communityChatRepository.deleteMessage(messageId),
-    onSuccess: (_data, { sessionId, messageId }) => {
-      removeCommunityChatMessageFromCache(queryClient, sessionId, messageId)
-    },
+    // Do NOT remove message from cache here - let SignalR "MessageDeleted" event handle it
+    // to ensure consistent state across all clients/tabs (US-110)
   })
 }
 

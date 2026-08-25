@@ -24,6 +24,7 @@ import {
 } from '../../constants/communityChat'
 import { useCommunityChatMessagesInfinite } from '../../data/hooks/useCommunityChatMessageThread'
 import {
+  useMarkCommunityChatSessionRead,
   useSendCommunityChatImage,
   useSendCommunityChatMessage,
 } from '../../data/hooks/useCommunityChat'
@@ -279,6 +280,7 @@ function HeaderMessageChatWindow({
 
   const sendMessageMutation = useSendCommunityChatMessage(isPendingSession ? '' : sessionId)
   const sendImageMutation = useSendCommunityChatImage(isPendingSession ? '' : sessionId)
+  const markReadMutation = useMarkCommunityChatSessionRead()
   const { deletingMessageId, deleteMessage } = useCommunityChatDeleteMessage({
     sessionId: isPendingSession ? null : sessionId,
     onDeleted: () => setMenuMessageId(null),
@@ -378,6 +380,18 @@ function HeaderMessageChatWindow({
     } finally {
       setIsSending(false)
     }
+  }
+
+  const handleMarkAsRead = () => {
+    // Mark all messages as read when user interacts with the chat window
+    // Allow multiple calls - API is idempotent, ensures fresh messages are marked
+    if (!isPendingSession && sessionId && !markReadMutation.isPending) {
+      markReadMutation.mutate(sessionId)
+    }
+  }
+
+  const handleInputFocus = () => {
+    handleMarkAsRead()
   }
 
   const handleImagePick = async (event: ChangeEvent<HTMLInputElement>) => {
@@ -664,7 +678,7 @@ function HeaderMessageChatWindow({
       style={floatingStackStyle}
       {...{ [HEADER_MESSAGE_CHAT_ROOT_ATTR]: '' }}
       role="dialog"
-        aria-busy={isThreadLoading}
+      aria-busy={isThreadLoading}
       aria-label={conversation.name}
     >
       <div className={`header-message-chat-head${isMobileFullscreen ? ' header-message-chat-head--mobile' : ''}`}>
@@ -746,6 +760,7 @@ function HeaderMessageChatWindow({
         ].filter(Boolean).join(' ')}
         ref={threadRef}
         onScroll={handleThreadScroll}
+        onClick={handleMarkAsRead}
       >
         {isThreadLoading ? (
           <ChatThreadSkeleton mobile={isMobileFullscreen} />
@@ -812,6 +827,7 @@ function HeaderMessageChatWindow({
           className="header-message-chat-input"
           value={draft}
           onChange={(event) => setDraft(event.target.value)}
+          onFocus={handleInputFocus}
           placeholder={t(`${chatTk}.inputPlaceholder`)}
           aria-label={t(`${chatTk}.inputPlaceholder`)}
           disabled={isThreadLoading || isSending}
