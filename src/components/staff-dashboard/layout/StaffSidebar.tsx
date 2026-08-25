@@ -180,7 +180,12 @@ export default function StaffSidebar({ activeScreen, isHomeActive = false, mobil
       {isWorkspaceExpanded && (
         <div className={SIDEBAR_SUBMENU_WRAP_CLASS}>
           {STAFF_WORKSPACE_SUBMENU.map((item) => {
-            const isSubActive = isStaffWorkspaceSubActive(activeScreen, tabParam, item)
+            const isSubActive = isStaffWorkspaceSubActive(
+              activeScreen,
+              tabParam,
+              item,
+              location.pathname,
+            )
             return (
               <button
                 key={item.id}
