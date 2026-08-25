@@ -3487,7 +3487,29 @@
             "summarySalesTax": "Thuế bán hàng",
             "summaryTotal": "Tổng cộng",
             "completeButton": "Thanh toán · ${{amount}}",
-            "assignTechnicianFirst": "Cần gán thợ cho tất cả dịch vụ trước."
+            "assignTechnicianFirst": "Cần gán thợ cho tất cả dịch vụ trước.",
+            "addDiscount": "Giảm giá",
+            "editDiscount": "Giảm giá ✓",
+            "discountModalTitle": "Giảm giá — {{serviceName}}",
+            "discountModalClose": "Đóng giảm giá",
+            "discountOriginalPrice": "Giá gốc ${{amount}}",
+            "discountTypeLabel": "Giảm theo",
+            "discountTypeAmount": "Số tiền ($)",
+            "discountTypePercent": "Phần trăm (%)",
+            "discountValueLabel": "Giá trị",
+            "discountBearerLabel": "Ai chịu chi phí",
+            "discountBearerSalon": "Salon",
+            "discountBearerStaff": "Thợ",
+            "discountBearerSplit": "50/50",
+            "discountBearerLockedHint": "Thợ này không ăn commission nên chỉ salon mới chịu được khoản giảm.",
+            "discountNoteLabel": "Lý do (không bắt buộc)",
+            "discountNotePlaceholder": "ví dụ: làm lại — sơn bị tróc",
+            "discountPreviewCustomer": "Khách trả ${{amount}} cho dịch vụ này",
+            "discountPreviewDiscount": "Giảm ${{amount}}",
+            "discountPreviewSplit": "Thợ chịu ${{staff}} · salon chịu ${{salon}}",
+            "discountSaveButton": "Lưu giảm giá",
+            "discountRemoveButton": "Xóa",
+            "discountLineSummary": "Giảm ${{amount}} · {{bearer}} chịu"
           },
           "PhoneCheckInStep": {
             "welcomeTitleWithBusiness": "Chào mừng đến {{businessName}}",
@@ -3536,7 +3558,8 @@
             "viewDetailSalesTax": "Thuế",
             "viewDetailTip": "Tip",
             "viewDetailTotal": "Tổng cộng",
-            "viewDetailClose": "Đóng"
+            "viewDetailClose": "Đóng",
+            "viewDetailLineDiscount": "Giảm ${{amount}} · {{bearer}} chịu"
           },
           "CustomerTab": {
             "searchLabel": "Tìm kiếm",
@@ -8013,6 +8036,7 @@
         "commission": "Hoa hồng",
         "bonus": "Thưởng",
         "tips": "Tips",
+        "discountBorne": "Giảm giá thợ chịu",
         "takeHome": "Take-Home",
         "actions": "Hành động"
       },
@@ -8056,6 +8080,7 @@
           "hours": "Giờ",
           "sales": "Doanh số",
           "tips": "Tips",
+          "discountBorne": "Giảm giá thợ chịu",
           "estimatedPay": "Lương ước tính"
         },
         "weekTotal": "Tổng tuần",

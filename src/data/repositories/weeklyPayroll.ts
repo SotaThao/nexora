@@ -20,6 +20,8 @@ export interface WeeklyPayrollStaffRow {
   commission: number
   bonus: number
   tips: number
+  /** Service discounts this technician agreed to absorb. Deducted from pay, never from tips. */
+  discountBorne: number
   takeHome: number
   // Ready | Review | PayrollTax | Paid
   status: string
@@ -38,12 +40,20 @@ export interface WeeklyPayroll {
   staff: WeeklyPayrollStaffRow[]
 }
 
+export interface DiscountBorneDetail {
+  serviceName: string
+  amount: number
+  note?: string | null
+}
+
 export interface DailyDetailRow {
   date: string
   services: string[]
   hours: number
   sales: number
   tips: number
+  discountBorne: number
+  discountDetails: DiscountBorneDetail[]
   estimatedPay: number
 }
 
@@ -55,6 +65,7 @@ export interface WeeklyPayrollDailyDetail {
   totalHours: number
   totalSales: number
   totalTips: number
+  totalDiscountBorne: number
   totalEstimatedPay: number
 }
 

@@ -105,8 +105,19 @@ function ReceiptBody({ receipt }: { receipt: ReceiptApiDto }) {
                   {line.quantity > 1 ? ` · ×${line.quantity}` : ''}
                 </p>
               </div>
+              {/* Both figures, so the customer can see the reduction they were promised rather than
+                  just a net amount they have to trust. */}
               <span className="shrink-0 text-sm font-bold tabular-nums text-nexoraText">
-                {money(line.lineTotal)}
+                {line.discountAmount > 0 ? (
+                  <>
+                    <span className="mr-1.5 font-normal text-nexoraMuted line-through">
+                      {money(line.lineTotal)}
+                    </span>
+                    {money(line.lineTotalAfterDiscount)}
+                  </>
+                ) : (
+                  money(line.lineTotal)
+                )}
               </span>
             </div>
           ))}
@@ -142,7 +153,7 @@ function ReceiptBody({ receipt }: { receipt: ReceiptApiDto }) {
         ) : null}
         <AmountRow label={t(`${K}.tip`)} value={money(receipt.tipAmount)} />
         {receipt.discountAmount !== 0 ? (
-          <AmountRow label={t(`${K}.discount`)} value={money(receipt.discountAmount)} />
+          <AmountRow label={t(`${K}.discount`)} value={`-${money(Math.abs(receipt.discountAmount))}`} />
         ) : null}
         <AmountRow label={t(`${K}.salesTax`)} value={money(receipt.salesTaxAmount)} />
         <div className="border-t border-nexoraBorder pt-2">

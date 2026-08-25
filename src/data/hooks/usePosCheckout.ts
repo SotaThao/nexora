@@ -16,6 +16,7 @@ import type {
   CompleteOrderResultApiDto,
   InServiceOrderApiDto,
   OrderDetailApiDto,
+  SetOrderServiceLineDiscountPayload,
   SetOrderStaffTipSplitPayload,
 } from '../../types/repositories'
 
@@ -37,16 +38,25 @@ interface OrderMutationContext {
 // always follows in onSuccess reconciles any drift, so this only needs to hold for one frame.
 function applyOrderTotalsPatch(
   order: OrderDetailApiDto,
-  patch: { servicesSubtotal?: number; productsSubtotal?: number; tipAmount?: number },
+  patch: {
+    servicesSubtotal?: number
+    productsSubtotal?: number
+    tipAmount?: number
+    discountAmount?: number
+  },
 ): OrderDetailApiDto {
   const servicesSubtotal = patch.servicesSubtotal ?? order.servicesSubtotal
   const productsSubtotal = patch.productsSubtotal ?? order.productsSubtotal
   const tipAmount = patch.tipAmount ?? order.tipAmount
-  const previousTaxableBase = order.servicesSubtotal + order.productsSubtotal
+  const discountAmount = patch.discountAmount ?? order.discountAmount
+  const servicesNet = roundCurrency(servicesSubtotal - discountAmount)
+  // Sales tax runs on the discounted figure (mirrors CompleteOrderCommand), so the rate has to be
+  // inferred from the same net base the server used, not from the gross one.
+  const previousTaxableBase = order.servicesNet + order.productsSubtotal
   const inferredTaxRate = previousTaxableBase > 0 ? order.salesTaxAmount / previousTaxableBase : 0
-  const salesTaxAmount = roundCurrency((servicesSubtotal + productsSubtotal) * inferredTaxRate)
-  const total = roundCurrency(servicesSubtotal + productsSubtotal + tipAmount + order.discountAmount + salesTaxAmount)
-  return { ...order, servicesSubtotal, productsSubtotal, tipAmount, salesTaxAmount, total }
+  const salesTaxAmount = roundCurrency((servicesNet + productsSubtotal) * inferredTaxRate)
+  const total = roundCurrency(servicesNet + productsSubtotal + tipAmount + salesTaxAmount)
+  return { ...order, servicesSubtotal, productsSubtotal, tipAmount, discountAmount, servicesNet, salesTaxAmount, total }
 }
 
 async function snapshotOrderDetail(
@@ -164,6 +174,12 @@ export function useAddOrderServiceLine(businessId?: string) {
               unitPrice,
               quantity,
               lineTotal,
+              // A brand-new line is never discounted, and the bearer choice only unlocks once a
+              // technician is assigned — the server decides that, this is just the empty shape.
+              discountAmount: 0,
+              staffDiscountShare: 0,
+              lineTotalAfterDiscount: lineTotal,
+              canAssignDiscountToStaff: false,
               completedAt: null,
             },
           ],
@@ -354,6 +370,24 @@ export function useRemoveOrderProductLine(businessId?: string) {
     onSuccess: (_result, { orderId }) => {
       queryClient.invalidateQueries({ queryKey: qk.merchantPosOrderDetail(businessId, orderId) })
       queryClient.invalidateQueries({ queryKey: qk.merchantPosOrderList(businessId) })
+    },
+  })
+}
+
+// Live line edit: sets or clears the discount on one service line. No optimistic patch — the
+// resolved dollar amount, the technician's share and any bearer fallback are all decided
+// server-side, so guessing them here would only flicker the wrong numbers onto the summary.
+export function useSetOrderServiceLineDiscount(businessId?: string) {
+  const queryClient = useQueryClient()
+  return useMutation<
+    boolean,
+    Error,
+    { orderId: string; serviceLineId: string; payload: SetOrderServiceLineDiscountPayload }
+  >({
+    mutationFn: ({ orderId, serviceLineId, payload }) =>
+      posCheckoutRepository.setOrderServiceLineDiscount(businessId as string, orderId, serviceLineId, payload),
+    onSuccess: (_result, { orderId }) => {
+      queryClient.invalidateQueries({ queryKey: qk.merchantPosOrderDetail(businessId, orderId) })
     },
   })
 }

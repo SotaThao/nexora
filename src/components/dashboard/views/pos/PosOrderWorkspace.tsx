@@ -22,6 +22,7 @@ import {
   useOrderDetail,
   useRemoveOrderProductLine,
   useRemoveOrderServiceLine,
+  useSetOrderServiceLineDiscount,
   useUpdateOrderServiceLine,
   useSetOrderStaffTipSplit,
   useSetOrderTip,
@@ -41,6 +42,10 @@ import { SkeletonList } from '../../../ui/skeleton'
 import { formatCustomerPhone } from './customer/customerFormatters'
 import CategoryGroupedCatalogPicker from './CategoryGroupedCatalogPicker'
 import ChangeServiceModal from './modals/ChangeServiceModal'
+import ServiceDiscountModal, {
+  type ServiceDiscountSubmit,
+  type ServiceDiscountTarget,
+} from './modals/ServiceDiscountModal'
 import ChangeTechnicianModal from './modals/ChangeTechnicianModal'
 import { formatPosDateTime } from './posDateTime'
 
@@ -75,6 +80,15 @@ interface DisplayServiceLine {
   technicianName?: string
   note?: string
   completedAt?: string | null
+  // Discount stays alongside the original price rather than replacing it: unitPrice/lineTotal are
+  // what commission and the tip split are measured on, discountAmount is what the customer saves.
+  discountType?: string | null
+  discountValue?: number | null
+  discountAmount: number
+  discountBearer?: string | null
+  staffDiscountShare: number
+  discountNote?: string | null
+  canAssignDiscountToStaff: boolean
 }
 
 interface DisplayProductLine {
@@ -91,6 +105,11 @@ type DisplayLine = DisplayServiceLine | DisplayProductLine
 
 function lineTotal(line: DisplayLine): number {
   return line.itemType === 'Service' ? line.unitPrice : line.unitPrice * line.quantity
+}
+
+// What the customer is charged for the line — the only figure that belongs in a total.
+function lineTotalAfterDiscount(line: DisplayLine): number {
+  return line.itemType === 'Service' ? line.unitPrice - line.discountAmount : line.unitPrice * line.quantity
 }
 
 export default function PosOrderWorkspace({
@@ -136,6 +155,7 @@ export default function PosOrderWorkspace({
   const removeProductLine = useRemoveOrderProductLine(businessId)
   const updateProductQuantity = useUpdateOrderProductLineQuantity(businessId)
   const assignStaffToServiceLine = useAssignStaffToServiceLine(businessId)
+  const setServiceLineDiscount = useSetOrderServiceLineDiscount(businessId)
   const startOrderService = useStartOrderService(businessId)
   const setTip = useSetOrderTip(businessId)
   const setStaffTipSplit = useSetOrderStaffTipSplit(businessId)
@@ -159,6 +179,9 @@ export default function PosOrderWorkspace({
     serviceName: string
     posServiceId: string
   } | null>(null)
+  // The line whose discount is being edited. Carries the figures the popup previews with, so it
+  // never has to reach back into the list while the order refetches underneath it.
+  const [discountTarget, setDiscountTarget] = useState<ServiceDiscountTarget | null>(null)
   const [tipMode, setTipMode] = useState<TipMode>('noTip')
   const [customTipInput, setCustomTipInput] = useState('')
   const [paymentMethod, setPaymentMethod] = useState<PosCheckoutPaymentMethodType>('Cash')
@@ -202,6 +225,13 @@ export default function PosOrderWorkspace({
         technicianName: l.technicianName ?? undefined,
         note: l.note ?? undefined,
         completedAt: l.completedAt,
+        discountType: l.discountType,
+        discountValue: l.discountValue,
+        discountAmount: l.discountAmount,
+        discountBearer: l.discountBearer,
+        staffDiscountShare: l.staffDiscountShare,
+        discountNote: l.discountNote,
+        canAssignDiscountToStaff: l.canAssignDiscountToStaff,
       })),
       ...order.productLines.map((l): DisplayProductLine => ({
         key: l.id,
@@ -275,7 +305,7 @@ export default function PosOrderWorkspace({
   const hasUnassignedServiceLine = visibleLines.some(
     (l) => l.itemType === 'Service' && !l.posStaffProfileId,
   )
-  const draftSubtotal = visibleLines.reduce((sum, l) => sum + lineTotal(l), 0)
+  const draftSubtotal = visibleLines.reduce((sum, l) => sum + lineTotalAfterDiscount(l), 0)
 
   // AssignStaffToServiceLine only accepts a Waiting or InService order, so a closed ticket shows
   // its technicians as text instead of offering a picker every tap of which would fail.
@@ -359,6 +389,42 @@ export default function PosOrderWorkspace({
         posServiceId,
         unitPrice: service.price,
         serviceName: service.name,
+      },
+      { onError: reportError },
+    )
+  }
+
+  // The resolved amount, the technician's share and any bearer fallback are all decided by the
+  // backend, so the popup closes on the call and the refetched order is what the screen shows.
+  const handleSaveDiscount = (submitted: ServiceDiscountSubmit) => {
+    const target = discountTarget
+    if (!target) return
+    setDiscountTarget(null)
+    setServiceLineDiscount.mutate(
+      {
+        orderId,
+        serviceLineId: target.serviceLineId,
+        payload: {
+          discountType: submitted.discountType,
+          discountValue: submitted.discountValue,
+          discountBearer: submitted.discountBearer,
+          discountNote: submitted.discountNote,
+        },
+      },
+      { onError: reportError },
+    )
+  }
+
+  // A null discountType is how the endpoint clears a discount — the same call, no second endpoint.
+  const handleRemoveDiscount = () => {
+    const target = discountTarget
+    if (!target) return
+    setDiscountTarget(null)
+    setServiceLineDiscount.mutate(
+      {
+        orderId,
+        serviceLineId: target.serviceLineId,
+        payload: { discountType: null, discountValue: null, discountBearer: null, discountNote: null },
       },
       { onError: reportError },
     )
@@ -634,6 +700,7 @@ export default function PosOrderWorkspace({
                                   {canEditLines ? (
                                     <button
                                       type="button"
+                                      data-testid={`assign-technician-${line.key}`}
                                       onClick={() => openTechnicianModal(line)}
                                       className={`h-6 shrink-0 rounded-lg border px-2 text-[10px] font-bold transition-colors ${
                                         isFirstAvailable
@@ -649,18 +716,67 @@ export default function PosOrderWorkspace({
                                     </button>
                                   ) : null}
                                 </div>
+                                {line.discountAmount > 0 ? (
+                                  <p className="mt-1 text-[11px] leading-tight text-amber-700">
+                                    {t('components.dashboard.views.pos.PosOrderWorkspace.discountLineSummary', {
+                                      amount: line.discountAmount.toFixed(2),
+                                      bearer: t(
+                                        `components.dashboard.views.pos.PosOrderWorkspace.discountBearer${line.discountBearer}`,
+                                      ),
+                                    })}
+                                    {line.discountNote ? ` — ${line.discountNote}` : ''}
+                                  </p>
+                                ) : null}
                               </div>
                               <div className="flex min-h-[3.25rem] flex-col items-end justify-between gap-2">
-                                <span className="text-sm font-bold text-nexoraText">
-                                  ${lineTotal(line).toFixed(2)}
-                                </span>
-                                <button
-                                  type="button"
-                                  onClick={() => handleDeleteLine(line)}
-                                  className="h-6 rounded-lg border border-rose-200 px-2 text-[10px] font-bold text-rose-500 hover:bg-rose-50/70"
-                                >
-                                  {t('components.dashboard.views.pos.PosOrderWorkspace.deleteLine')}
-                                </button>
+                                {line.discountAmount > 0 ? (
+                                  <div className="text-right leading-tight">
+                                    <span className="text-[11px] text-nexoraMuted line-through">
+                                      ${lineTotal(line).toFixed(2)}
+                                    </span>
+                                    <span className="ml-1.5 text-sm font-bold text-nexoraText">
+                                      ${lineTotalAfterDiscount(line).toFixed(2)}
+                                    </span>
+                                  </div>
+                                ) : (
+                                  <span className="text-sm font-bold text-nexoraText">
+                                    ${lineTotal(line).toFixed(2)}
+                                  </span>
+                                )}
+                                <div className="flex items-center gap-1.5">
+                                  {canEditLines && line.existingId ? (
+                                    <button
+                                      type="button"
+                                      onClick={() =>
+                                        setDiscountTarget({
+                                          serviceLineId: line.existingId as string,
+                                          serviceName: line.serviceName,
+                                          lineTotal: lineTotal(line),
+                                          technicianName: line.technicianName,
+                                          canAssignDiscountToStaff: line.canAssignDiscountToStaff,
+                                          discountType: line.discountType,
+                                          discountValue: line.discountValue,
+                                          discountBearer: line.discountBearer,
+                                          discountNote: line.discountNote,
+                                        })
+                                      }
+                                      className="h-6 rounded-lg border border-amber-200 bg-amber-50/50 px-2 text-[10px] font-bold text-amber-700 hover:bg-amber-50"
+                                    >
+                                      {t(
+                                        `components.dashboard.views.pos.PosOrderWorkspace.${
+                                          line.discountAmount > 0 ? 'editDiscount' : 'addDiscount'
+                                        }`,
+                                      )}
+                                    </button>
+                                  ) : null}
+                                  <button
+                                    type="button"
+                                    onClick={() => handleDeleteLine(line)}
+                                    className="h-6 rounded-lg border border-rose-200 px-2 text-[10px] font-bold text-rose-500 hover:bg-rose-50/70"
+                                  >
+                                    {t('components.dashboard.views.pos.PosOrderWorkspace.deleteLine')}
+                                  </button>
+                                </div>
                               </div>
                             </div>
                           )
@@ -1000,7 +1116,9 @@ export default function PosOrderWorkspace({
                         return (
                           <li key={line.key} aria-label={name} className="flex items-center justify-between gap-3">
                             <span className="min-w-0 truncate">{name}</span>
-                            <span className="shrink-0 font-semibold tabular-nums">${lineTotal(line).toFixed(2)}</span>
+                            <span className="shrink-0 font-semibold tabular-nums">
+                              ${lineTotalAfterDiscount(line).toFixed(2)}
+                            </span>
                           </li>
                         )
                       })}
@@ -1264,6 +1382,14 @@ export default function PosOrderWorkspace({
         services={serviceCatalog}
         onSelect={handleChangeService}
         onClose={() => setChangeServiceTarget(null)}
+      />
+
+      <ServiceDiscountModal
+        target={discountTarget}
+        isSaving={setServiceLineDiscount.isPending}
+        onSubmit={handleSaveDiscount}
+        onRemove={handleRemoveDiscount}
+        onClose={() => setDiscountTarget(null)}
       />
 
       {customerFacingMode && order ? (
