@@ -74,6 +74,10 @@ async function handleReconnected() {
     return
   }
 
+  // SignalR reconnect loses group memberships; clear join-tracking so
+  // future joins are not skipped.
+  actuallyJoinedSessions.clear()
+
   // Rejoin all sessions that have active UI references
   const sessionsToRejoin = Array.from(joinedSessionRefCounts.keys())
   

@@ -107,6 +107,7 @@ export function mapCommunityChatMessageToThreadMessage(
     bodyText: isImage ? undefined : message.content,
     imageUrl: isImage ? message.content : undefined,
     sentAt: message.sentAt,
+    isDeleted: message.isDeleted,
   }
 }
 
