@@ -305,6 +305,9 @@ export default function PosOrderWorkspace({
   const hasUnassignedServiceLine = visibleLines.some(
     (l) => l.itemType === 'Service' && !l.posStaffProfileId,
   )
+  // Removing every line leaves the ticket in InService, so the server refuses to complete it.
+  // Mirrored here so an emptied ticket cannot be checked out by tapping through.
+  const hasNoLines = visibleLines.length === 0
   const draftSubtotal = visibleLines.reduce((sum, l) => sum + lineTotalAfterDiscount(l), 0)
 
   // AssignStaffToServiceLine only accepts a Waiting or InService order, so a closed ticket shows
@@ -881,7 +884,12 @@ export default function PosOrderWorkspace({
                   <button
                     type="button"
                     onClick={handleCheckoutFromUpdate}
-                    disabled={isBusy}
+                    disabled={isBusy || hasNoLines}
+                    title={
+                      hasNoLines
+                        ? t('components.dashboard.views.pos.PosOrderWorkspace.addLineFirst')
+                        : undefined
+                    }
                     className="h-11 flex-1 rounded-lg bg-nexoraBrand text-sm font-bold text-white hover:bg-nexoraBrandDark disabled:opacity-60"
                   >
                     {t('components.dashboard.views.pos.PosOrderWorkspace.checkoutButton')}
@@ -1149,11 +1157,13 @@ export default function PosOrderWorkspace({
                 <button
                   type="button"
                   onClick={handleComplete}
-                  disabled={completeOrder.isPending || hasUnassignedServiceLine}
+                  disabled={completeOrder.isPending || hasUnassignedServiceLine || hasNoLines}
                   title={
-                    hasUnassignedServiceLine
-                      ? t('components.dashboard.views.pos.PosOrderWorkspace.assignTechnicianFirst')
-                      : undefined
+                    hasNoLines
+                      ? t('components.dashboard.views.pos.PosOrderWorkspace.addLineFirst')
+                      : hasUnassignedServiceLine
+                        ? t('components.dashboard.views.pos.PosOrderWorkspace.assignTechnicianFirst')
+                        : undefined
                   }
                   className="h-11 w-full rounded-lg bg-nexoraBrand text-sm font-bold text-white hover:bg-nexoraBrandDark disabled:opacity-60"
                 >
