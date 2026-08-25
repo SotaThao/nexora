@@ -50,7 +50,7 @@
     .g4{grid-template-columns:repeat(2,1fr)}
   }
   .card{background:var(--panel);border:1px solid var(--line);border-radius:var(--radius);padding:18px;min-width:0}
-  .card .k{font-size:12px;font-weight:800;letter-spacing:.06em;color:var(--blue)}
+  .card .k{font-size:12px;font-weight:800;letter-spacing:.06em;color:var(--blue);word-break:break-word;overflow-wrap:break-word}
   .card .t{font-weight:800;font-size:16px;margin:6px 0 4px}
   .card .d{font-size:13.5px;color:var(--muted)}
 
@@ -106,11 +106,12 @@
   thead th{background:var(--panel2);font-weight:800;color:var(--ink);font-size:12.5px;text-transform:uppercase;letter-spacing:.04em}
   tbody tr:last-child td{border-bottom:none}
   tbody tr.big td{background:#fbfcff;font-weight:800}
-  .card .tblwrap table{min-width:0}
-  .card .tblwrap th,
+  .card .tblwrap table{min-width:480px;table-layout:auto;width:100%}
+  .card .tblwrap th{white-space:nowrap;font-size:12px}
   .card .tblwrap td{white-space:normal;word-break:break-word}
   @media(max-width:640px){
     .card .tblwrap table{font-size:13px}
+    .card .tblwrap th{font-size:11px}
     .card .tblwrap th,
     .card .tblwrap td{padding:10px 8px}
   }

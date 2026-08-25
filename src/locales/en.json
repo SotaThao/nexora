@@ -65,7 +65,8 @@
       "earnings": "My Earnings",
       "salons": "My Salons",
       "profile": "Settings",
-      "notifications": "Notifications"
+      "notifications": "Notifications",
+      "clock-scan": "Clock in / out"
     },
     "missing_payout_toast": "Please set up your payout method to receive TIPS.",
     "missing_payout_title": "Action Required",
