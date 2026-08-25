@@ -82,7 +82,7 @@ export default function BookingTable({
   const p = 'components.dashboard.views.pos.BookingTab.'
 
   return (
-    <div className="overflow-x-auto rounded-2xl border border-nexoraBorder bg-white shadow-sm">
+    <div className="overflow-x-auto rounded-xl border border-nexoraBorder bg-white">
       <table className="w-full min-w-[980px] table-fixed text-left text-xs">
         <colgroup>
           <col className="w-[17%]" />
@@ -134,22 +134,22 @@ export default function BookingTable({
                 </td>
                 <td className="px-4 py-3 align-middle">
                   <div className="grid gap-0.5 whitespace-nowrap">
-                    <span className="font-normal text-nexoraText">{created?.date ?? '—'}</span>
-                    <span className="text-[11px] font-semibold text-nexoraMuted">{created?.time ?? '—'}</span>
+                    <span className="font-semibold text-nexoraText">{created?.date ?? '—'}</span>
+                    <span className="text-[11px] font-semibold text-nexoraText">{created?.time ?? '—'}</span>
                   </div>
                 </td>
                 <td className="px-4 py-3 align-middle">
                   <div className="grid gap-0.5 whitespace-nowrap">
-                    <span className="font-normal text-nexoraText">{appointment.date}</span>
-                    <span className="text-[11px] font-semibold text-nexoraMuted">{appointment.time}</span>
+                    <span className="font-semibold text-nexoraText">{appointment.date}</span>
+                    <span className="text-[11px] font-semibold text-nexoraText">{appointment.time}</span>
                   </div>
                 </td>
                 <td className="px-4 py-3 align-middle">
                   <div className="flex flex-wrap gap-1.5">
                     {booking.serviceNames.length > 0 ? (
-                      booking.serviceNames.map((service) => (
+                      booking.serviceNames.map((service, index) => (
                         <span
-                          key={service}
+                          key={`${service}-${index}`}
                           className="inline-flex max-w-full items-center rounded-full border border-nexoraBrand/15 bg-white px-2 py-1 text-[11px] font-bold text-nexoraText"
                         >
                           <span className="truncate">{service}</span>
@@ -161,7 +161,7 @@ export default function BookingTable({
                   </div>
                 </td>
                 <td className="px-4 py-3 align-middle">
-                  <span className="inline-flex max-w-full items-center rounded-full border border-cyan-200 bg-cyan-50 px-2.5 py-1 text-[11px] font-bold text-cyan-700">
+                  <span className="inline-flex max-w-full items-center rounded-full border border-cyan-200 bg-cyan-50 px-2.5 py-1 text-[11px] font-bold text-nexoraText">
                     <span className="truncate">
                       {booking.technicianNames.length > 0 ? booking.technicianNames.join(', ') : t(p + 'unassigned')}
                     </span>

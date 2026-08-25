@@ -5,6 +5,7 @@
 // since name/phone are meant to be independent filters, not scoped to whatever date range
 // happens to be selected. The date pickers are opt-in for narrowing the range.
 import { useState } from 'react'
+import { Eye } from 'lucide-react'
 import { useQueryClient } from '@tanstack/react-query'
 import { useTranslation } from '../../../../contexts/LanguageContext'
 import { useCompletedOrders } from '../../../../data/hooks/usePosOrders'
@@ -107,65 +108,88 @@ export default function PosCompletedOrdersPanel({ businessId }: { businessId: st
       </div>
 
       {isLoading ? (
-        <div className="rounded-xl border border-nexoraBorder bg-nexoraSurface p-6">
+        <div className="py-6">
           <SkeletonList count={4} lines={1} />
         </div>
       ) : items.length === 0 ? (
-        <div className="rounded-xl border border-nexoraBorder bg-nexoraSurface p-6 text-center text-xs text-nexoraMuted">
+        <div className="py-8 text-center text-xs text-nexoraMuted">
           {t('components.dashboard.views.pos.PosCompletedOrdersPanel.empty')}
         </div>
       ) : (
         <div
-          className={`rounded-xl border border-nexoraBorder bg-nexoraSurface p-4 ${isFetching ? 'opacity-60' : ''}`}
+          className={`overflow-hidden rounded-xl border border-nexoraBorder bg-white ${isFetching ? 'opacity-60' : ''}`}
         >
           {/* Bounded height + internal scroll, same principle as Order List/Turn Board —
               a full page of completed orders scrolls in place; the pagination footer
               below stays outside this box, always visible. */}
           <div className="max-h-[560px] overflow-auto">
             <table className="w-full text-left text-xs">
-              <thead>
+              <thead className="sticky top-0 z-[1] bg-nexoraCanvas/90">
                 <tr className="text-[10px] font-black uppercase tracking-wider text-nexoraMuted">
-                  <th className="text-xs font-black pb-2 pr-3">{t('components.dashboard.views.pos.PosCompletedOrdersPanel.columnNumber')}</th>
-                  <th className="text-xs font-black pb-2 pr-3">{t('components.dashboard.views.pos.PosCompletedOrdersPanel.columnCustomer')}</th>
-                  <th className="text-xs font-black pb-2 pr-3">{t('components.dashboard.views.pos.PosCompletedOrdersPanel.columnPhone')}</th>
-                  <th className="text-xs font-black pb-2 pr-3">{t('components.dashboard.views.pos.PosCompletedOrdersPanel.columnCompletedAt')}</th>
-                  <th className="text-xs font-black pb-2 pr-3">{t('components.dashboard.views.pos.PosCompletedOrdersPanel.columnTechnician')}</th>
-                  <th className="text-xs font-black pb-2 pr-3">{t('components.dashboard.views.pos.PosCompletedOrdersPanel.columnServices')}</th>
-                  <th className="text-xs font-black pb-2 pr-3">{t('components.dashboard.views.pos.PosCompletedOrdersPanel.columnPaymentMethod')}</th>
-                  <th className="text-xs font-black pb-2 pr-3 text-right">{t('components.dashboard.views.pos.PosCompletedOrdersPanel.columnTotal')}</th>
-                  <th className="text-xs font-black pb-2 text-right">{t('components.dashboard.views.pos.PosCompletedOrdersPanel.columnActions')}</th>
+                  <th className="px-4 py-3 text-xs font-black">{t('components.dashboard.views.pos.PosCompletedOrdersPanel.columnNumber')}</th>
+                  <th className="px-4 py-3 text-xs font-black">{t('components.dashboard.views.pos.PosCompletedOrdersPanel.columnCustomer')}</th>
+                  <th className="px-4 py-3 text-xs font-black">{t('components.dashboard.views.pos.PosCompletedOrdersPanel.columnPhone')}</th>
+                  <th className="px-4 py-3 text-xs font-black">{t('components.dashboard.views.pos.PosCompletedOrdersPanel.columnCompletedAt')}</th>
+                  <th className="px-4 py-3 text-xs font-black">{t('components.dashboard.views.pos.PosCompletedOrdersPanel.columnTechnician')}</th>
+                  <th className="px-4 py-3 text-xs font-black">{t('components.dashboard.views.pos.PosCompletedOrdersPanel.columnServices')}</th>
+                  <th className="px-4 py-3 text-xs font-black">{t('components.dashboard.views.pos.PosCompletedOrdersPanel.columnPaymentMethod')}</th>
+                  <th className="px-4 py-3 text-right text-xs font-black">{t('components.dashboard.views.pos.PosCompletedOrdersPanel.columnTotal')}</th>
+                  <th className="px-4 py-3 text-right text-xs font-black">{t('components.dashboard.views.pos.PosCompletedOrdersPanel.columnActions')}</th>
                 </tr>
               </thead>
               <tbody>
                 {items.map((order) => {
                   const completed = formatBookingHubDateTimeParts(order.completedAt, currentLanguage)
                   return (
-                    <tr key={order.id} className="border-t border-nexoraBorder">
-                      <td className="py-2 pr-3 font-mono font-bold text-nexoraMuted">#{order.orderNumber}</td>
-                      <td className="py-2 pr-3 font-bold text-nexoraText">{order.customerName}</td>
-                      <td className="py-2 pr-3 text-nexoraMuted">
+                    <tr key={order.id} className="border-t border-nexoraBorder/70 bg-emerald-50/20 transition-colors hover:bg-emerald-50/45">
+                      <td className="px-4 py-3">
+                        <span className="inline-flex rounded-full bg-emerald-100 px-2.5 py-1 font-mono text-[10px] font-extrabold text-emerald-700">
+                          #{order.orderNumber}
+                        </span>
+                      </td>
+                      <td className="px-4 py-3 font-bold text-nexoraText">{order.customerName}</td>
+                      <td className="px-4 py-3 text-nexoraMuted">
                         {formatCustomerPhone(order.customerPhone, order.customerPhoneE164) || '—'}
                       </td>
-                      <td className="py-2 pr-3 align-middle">
+                      <td className="px-4 py-3 align-middle">
                         <div className="grid gap-0.5 whitespace-nowrap">
-                          <span className="font-normal text-nexoraText">{completed?.date ?? '—'}</span>
-                          <span className="text-[11px] font-semibold text-nexoraMuted">{completed?.time ?? '—'}</span>
+                          <span className="font-semibold text-nexoraText">{completed?.date ?? '—'}</span>
+                          <span className="text-[11px] font-semibold text-nexoraText">{completed?.time ?? '—'}</span>
                         </div>
                       </td>
-                      <td className="py-2 pr-3 text-nexoraMuted">
-                        {order.technicianNames.length > 0 ? order.technicianNames.join(', ') : '—'}
+                      <td className="px-4 py-3 font-semibold text-nexoraText">
+                        <span className="inline-flex max-w-full rounded-full bg-cyan-100/70 px-2.5 py-1 text-cyan-800">
+                          <span className="truncate">{order.technicianNames.length > 0 ? order.technicianNames.join(', ') : '—'}</span>
+                        </span>
                       </td>
-                      <td className="py-2 pr-3 text-nexoraMuted">
-                        {order.serviceNames.length > 0 ? order.serviceNames.join(', ') : '—'}
+                      <td className="px-4 py-3 font-semibold text-nexoraText">
+                        <div className="flex flex-wrap gap-1">
+                          {order.serviceNames.length > 0
+                            ? order.serviceNames.map((service) => (
+                              <span key={service} className="rounded-full border border-nexoraBrand/15 bg-white px-2 py-1 text-[11px] font-bold text-nexoraText">
+                                {service}
+                              </span>
+                            ))
+                            : '—'}
+                        </div>
                       </td>
-                      <td className="py-2 pr-3 text-nexoraMuted">{order.paymentMethodType || '—'}</td>
-                      <td className="py-2 pr-3 text-right font-bold tabular-nums text-nexoraText">${order.total.toFixed(2)}</td>
-                      <td className="py-2 text-right">
+                      <td className="px-4 py-3">
+                        <span className="rounded-full bg-sky-50 px-2.5 py-1 text-[10px] font-extrabold text-sky-700">
+                          {order.paymentMethodType || '—'}
+                        </span>
+                      </td>
+                      <td className="px-4 py-3 text-right font-bold tabular-nums text-nexoraText">
+                        <span className="inline-flex rounded-full bg-emerald-100 px-2.5 py-1 text-emerald-700">
+                          ${order.total.toFixed(2)}
+                        </span>
+                      </td>
+                      <td className="px-4 py-3 text-right">
                         <button
                           type="button"
                           onClick={() => setViewDetailTargetId(order.id)}
-                          className="rounded-lg border border-nexoraBorder px-2.5 py-1 text-[11px] font-bold text-nexoraText hover:border-nexoraBrand"
+                          className="inline-flex h-8 items-center gap-1.5 rounded-lg border border-violet-200 bg-violet-50 px-2.5 text-[10px] font-extrabold text-violet-700 transition-colors hover:border-violet-300 hover:bg-violet-100"
                         >
+                          <Eye className="h-3.5 w-3.5" aria-hidden="true" />
                           {t('components.dashboard.views.pos.PosCompletedOrdersPanel.viewDetailAction')}
                         </button>
                       </td>
@@ -176,7 +200,7 @@ export default function PosCompletedOrdersPanel({ businessId }: { businessId: st
             </table>
           </div>
 
-          <div className="mt-3 flex items-center justify-between">
+          <div className="flex items-center justify-between border-t border-emerald-100 bg-emerald-50/30 px-4 py-3">
             <span className="text-[11px] text-nexoraMuted">
               {t('components.dashboard.views.pos.PosCompletedOrdersPanel.pageSummary', {
                 page: data?.pageNumber ?? 1,
@@ -251,13 +275,15 @@ export default function PosCompletedOrdersPanel({ businessId }: { businessId: st
                       <p className="text-[10px] font-extrabold uppercase text-nexoraMuted">
                         {t('components.dashboard.views.pos.PosCompletedOrdersPanel.viewDetailCompletedAt')}
                       </p>
-                      <p className="text-xs text-nexoraText">{formatDateTime(viewDetail.data.completedAt)}</p>
+                      <p className="text-xs font-semibold text-nexoraText">{formatDateTime(viewDetail.data.completedAt)}</p>
                     </div>
                     <div>
                       <p className="text-[10px] font-extrabold uppercase text-nexoraMuted">
                         {t('components.dashboard.views.pos.PosCompletedOrdersPanel.viewDetailStatus')}
                       </p>
-                      <p className="text-xs text-nexoraText">{viewDetail.data.status}</p>
+                      <span className="inline-flex rounded-full border border-emerald-200 bg-emerald-50 px-2.5 py-1 text-[10px] font-extrabold text-emerald-700">
+                        {viewDetail.data.status}
+                      </span>
                     </div>
                     <div>
                       <p className="text-[10px] font-extrabold uppercase text-nexoraMuted">
@@ -276,16 +302,38 @@ export default function PosCompletedOrdersPanel({ businessId }: { businessId: st
                       </h4>
                       <div className="space-y-2">
                         {viewDetail.data.serviceLines.map((line) => (
-                          <div key={line.id} className="rounded-lg border border-nexoraBorder p-2.5">
+                          <div key={line.id} className="rounded-xl border border-nexoraBorder bg-white p-2.5 shadow-sm transition-all hover:-translate-y-0.5 hover:border-nexoraBrand/40 hover:shadow-md">
                             <div className="flex items-start justify-between gap-2">
                               <p className="text-xs font-bold text-nexoraText">{line.serviceName}</p>
                               <p className="shrink-0 text-xs font-bold tabular-nums text-nexoraText">
-                                ${line.lineTotal.toFixed(2)}
+                                {line.discountAmount > 0 ? (
+                                  <>
+                                    <span className="mr-1 font-normal text-nexoraMuted line-through">
+                                      ${line.lineTotal.toFixed(2)}
+                                    </span>
+                                    ${line.lineTotalAfterDiscount.toFixed(2)}
+                                  </>
+                                ) : (
+                                  `$${line.lineTotal.toFixed(2)}`
+                                )}
                               </p>
                             </div>
-                            <p className="text-[11px] text-nexoraMuted">
+                            <p className="text-[11px] font-semibold text-nexoraText">
                               {line.technicianName || t('components.dashboard.views.pos.PosCompletedOrdersPanel.viewDetailUnassigned')}
                             </p>
+                            {/* Who absorbed the discount stays visible here, where a pay dispute is
+                                actually settled — it is deliberately never on the customer receipt. */}
+                            {line.discountAmount > 0 ? (
+                              <p className="mt-1 text-[11px] text-amber-700">
+                                {t('components.dashboard.views.pos.PosCompletedOrdersPanel.viewDetailLineDiscount', {
+                                  amount: line.discountAmount.toFixed(2),
+                                  bearer: t(
+                                    `components.dashboard.views.pos.PosOrderWorkspace.discountBearer${line.discountBearer}`,
+                                  ),
+                                })}
+                                {line.discountNote ? ` — ${line.discountNote}` : ''}
+                              </p>
+                            ) : null}
                             {line.note ? (
                               <p className="mt-1 rounded bg-nexoraCanvas p-1.5 text-[11px] italic text-nexoraMuted">{line.note}</p>
                             ) : null}
@@ -302,7 +350,7 @@ export default function PosCompletedOrdersPanel({ businessId }: { businessId: st
                       </h4>
                       <div className="space-y-2">
                         {viewDetail.data.productLines.map((line) => (
-                          <div key={line.id} className="rounded-lg border border-nexoraBorder p-2.5">
+                          <div key={line.id} className="rounded-xl border border-nexoraBorder bg-white p-2.5 shadow-sm transition-all hover:-translate-y-0.5 hover:border-nexoraBrand/40 hover:shadow-md">
                             <div className="flex items-start justify-between gap-2">
                               <p className="text-xs font-bold text-nexoraText">{line.productName}</p>
                               <p className="shrink-0 text-xs font-bold tabular-nums text-nexoraText">

@@ -12,6 +12,7 @@ import type {
   CompleteOrderResultApiDto,
   InServiceOrderApiDto,
   OrderDetailApiDto,
+  SetOrderServiceLineDiscountPayload,
   SetOrderStaffTipSplitPayload,
 } from '../../types/repositories'
 
@@ -106,6 +107,19 @@ export function createPosCheckoutRepository(client: HttpClient = httpClient) {
       return await client.put<boolean>(
         `/api/v1/merchant/pos/${businessId}/checkout/${orderId}/products/${productLineId}/quantity`,
         { quantity },
+      )
+    },
+
+    // Sets or clears the discount on one service line. A null discountType clears it.
+    async setOrderServiceLineDiscount(
+      businessId: string,
+      orderId: string,
+      serviceLineId: string,
+      payload: SetOrderServiceLineDiscountPayload,
+    ): Promise<boolean> {
+      return await client.put<boolean>(
+        `/api/v1/merchant/pos/${businessId}/checkout/${orderId}/services/${serviceLineId}/discount`,
+        payload,
       )
     },
 

@@ -115,6 +115,9 @@ const StaffMyEarnings = lazyWithRetry(
 const StaffMySalons = lazyWithRetry(
   () => import("../components/staff-dashboard/views/StaffMySalons"),
 );
+const StaffSalonReport = lazyWithRetry(
+  () => import("../components/staff-dashboard/views/StaffSalonReport"),
+);
 const StaffClockScan = lazyWithRetry(
   () => import("../components/staff-dashboard/views/StaffClockScan"),
 );
@@ -447,6 +450,7 @@ export default function AppRouter() {
             <Route path="taxiq/cpa-access" element={<StaffTaxIqCpaAccessRoute />} />
             <Route path="earnings" element={<StaffMyEarnings />} />
             <Route path="salons" element={<StaffMySalons />} />
+            <Route path="salons/report" element={<StaffSalonReport />} />
             <Route path="salons/:businessId/front-desk" element={<StaffFrontDesk />} />
             {/* Landing page for the rotating clock-in QR — salon id and token arrive as ?b=&t= */}
             <Route path="clock-scan" element={<StaffClockScan />} />

@@ -11,12 +11,12 @@
 // (default) is untouched and keeps the Booking pickers pixel-identical, since they weren't
 // part of that review and live inside more space-constrained modals.
 import { useEffect, useMemo, useRef, useState } from 'react'
-import { Check, Search, X } from 'lucide-react'
+import { Check, ChevronDown, Search, X } from 'lucide-react'
 import IconButton from '../../../ui/IconButton'
 
 // Sentinel category id for "Others" (items with zero real categories) in Check-in Step
-// 2's chip row — that mode has no "All" chip to fall back on, so without an explicit chip
-// for it, an uncategorized service becomes permanently unreachable.
+// 2's accordion — that mode has no "All" section to fall back on, so without an explicit
+// category, an uncategorized service becomes permanently unreachable.
 const UNCATEGORIZED_CHIP_ID = '__uncategorized__'
 
 export interface CatalogPickerItem {
@@ -59,7 +59,7 @@ export default function CategoryGroupedCatalogPicker({
   variant?: 'list' | 'grid'
   // Check-in Step 2's technician-first flow (grid variant only) — when provided, this
   // switches on the whole "enhanced service card" treatment (top-right toggle circle,
-  // duration next to price, category chip counts, defaulting to the first category
+  // duration next to price, compact category accordion, defaulting to the first category
   // instead of "All", and a "View details" button when the item has a description/photo).
   // Omitted by every other caller (Update-mode catalog, Products, Booking pickers), which
   // keep the original plain "+ Add" card and "All"-first category behavior untouched.
@@ -98,9 +98,8 @@ export default function CategoryGroupedCatalogPicker({
     return result
   }, [items, isCheckinServiceMode, uncategorizedLabel])
 
-  // Check-in Step 2's service grid defaults to the first category (not "All") — matches
-  // the reference layout, where a category is always active. Only applied once, the first
-  // time categories become available, so it doesn't fight the staff's own later picks.
+  // Check-in opens the first category initially to match the reference. This only runs once;
+  // after that, the operator can collapse all categories or switch between them freely.
   const hasDefaultedCategoryRef = useRef(false)
   useEffect(() => {
     if (!isCheckinServiceMode || hasDefaultedCategoryRef.current || categories.length === 0) return
@@ -150,18 +149,18 @@ export default function CategoryGroupedCatalogPicker({
       return (
         <div
           key={item.id}
-          className={`flex flex-col gap-1.5 rounded-2xl border bg-nexoraSurface p-3 ${
-            isDisabled ? 'opacity-40' : ''
-          } ${isSelected ? 'border-nexoraBrand bg-nexoraBrand/5' : 'border-nexoraBorder'}`}
+          className={`flex flex-col gap-1 rounded-xl border bg-white p-2.5 shadow-sm transition-all ${
+            isDisabled ? 'opacity-40' : 'hover:-translate-y-0.5 hover:shadow-md'
+          } ${isSelected ? 'border-nexoraBrand bg-nexoraBrand/5' : 'border-nexoraBorder hover:border-nexoraBrand/40'}`}
         >
           <button
             type="button"
             onClick={() => onAdd(item.id)}
             disabled={isDisabled}
-            className="flex w-full flex-col gap-1.5 text-left disabled:cursor-not-allowed"
+            className="flex w-full flex-col gap-1 text-left disabled:cursor-not-allowed"
           >
             <div className="flex items-start justify-between gap-2">
-              <span className="line-clamp-2 text-sm font-bold leading-snug text-nexoraText">{item.name}</span>
+              <span className="line-clamp-2 text-[13px] font-bold leading-tight text-nexoraText">{item.name}</span>
               <span
                 className={`flex h-5 w-5 shrink-0 items-center justify-center rounded-full border-2 ${
                   isSelected ? 'border-nexoraBrand bg-nexoraBrand text-white' : 'border-nexoraBorder'
@@ -171,9 +170,9 @@ export default function CategoryGroupedCatalogPicker({
               </span>
             </div>
             <div className="flex items-baseline gap-1.5">
-              <span className="text-sm font-bold text-nexoraText">${item.price.toFixed(2)}</span>
+              <span className="text-[13px] font-bold text-nexoraText">${item.price.toFixed(2)}</span>
               {item.durationMinutes ? (
-                <span className="text-xs text-nexoraMuted">· {item.durationMinutes} min</span>
+                <span className="text-[10px] text-nexoraMuted">· {item.durationMinutes} min</span>
               ) : null}
             </div>
           </button>
@@ -181,7 +180,7 @@ export default function CategoryGroupedCatalogPicker({
             <button
               type="button"
               onClick={() => setDetailItem(item)}
-              className="self-start text-[11px] font-bold text-nexoraBrandDark hover:underline"
+              className="self-start text-[10px] font-bold text-nexoraBrandDark hover:underline"
             >
               {viewDetailsLabel}
             </button>
@@ -196,7 +195,7 @@ export default function CategoryGroupedCatalogPicker({
         type="button"
         onClick={() => onAdd(item.id)}
         disabled={isDisabled}
-        className={`flex min-h-[76px] flex-col justify-between gap-2 rounded-2xl border bg-nexoraSurface p-3 text-left disabled:opacity-40 ${
+        className={`flex min-h-[76px] flex-col justify-between gap-2 rounded-xl border bg-white p-3 text-left shadow-sm transition-all hover:-translate-y-0.5 hover:shadow-md disabled:opacity-40 disabled:hover:translate-y-0 disabled:hover:shadow-sm ${
           isSelected ? 'border-nexoraBrand bg-nexoraBrand/5' : 'border-nexoraBorder hover:border-nexoraBrand'
         }`}
       >
@@ -239,6 +238,11 @@ export default function CategoryGroupedCatalogPicker({
   const isEmpty =
     selectedCategoryId === '' ? (groupedSections?.length ?? 0) === 0 : flatItems.length === 0
 
+  const itemsForCategory = (categoryId: string) =>
+    categoryId === UNCATEGORIZED_CHIP_ID
+      ? searchedItems.filter((item) => item.categories.length === 0)
+      : searchedItems.filter((item) => item.categories.some((category) => category.id === categoryId))
+
   return (
     <div className="space-y-2">
       <div className="relative">
@@ -254,103 +258,158 @@ export default function CategoryGroupedCatalogPicker({
           placeholder={searchPlaceholder}
           className={
             isGrid
-              ? 'h-11 w-full rounded-xl border border-nexoraBorder bg-white pl-8 pr-2.5 text-sm text-nexoraText outline-none focus:border-nexoraBrand'
+              ? `${isCheckinServiceMode ? 'h-9 text-xs' : 'h-11 text-sm'} w-full rounded-xl border border-nexoraBorder bg-white pl-8 pr-2.5 text-nexoraText outline-none focus:border-nexoraBrand`
               : 'h-8 w-full rounded-lg border border-nexoraBorder bg-white pl-8 pr-2.5 text-[11px] text-nexoraText outline-none focus:border-nexoraBrand'
           }
         />
       </div>
 
-      {categories.length > 0 && (
-        <div className="flex flex-wrap gap-1.5">
-          {isCheckinServiceMode ? null : (
-            <button
-              type="button"
-              onClick={() => setSelectedCategoryId('')}
-              className={
-                isGrid
-                  ? `rounded-full px-3.5 py-2 text-xs font-bold transition ${
-                      selectedCategoryId === ''
-                        ? 'bg-nexoraBrand text-white'
-                        : 'bg-nexoraCanvas text-nexoraMuted hover:text-nexoraText'
-                    }`
-                  : `rounded-full px-2.5 py-1 text-[10px] font-bold transition ${
-                      selectedCategoryId === ''
-                        ? 'bg-nexoraBrand text-white'
-                        : 'bg-nexoraCanvas text-nexoraMuted hover:text-nexoraText'
-                    }`
-              }
-            >
-              {allCategoryLabel}
-            </button>
-          )}
-          {categories.map((category) => (
-            <button
-              key={category.id}
-              type="button"
-              onClick={() => setSelectedCategoryId(category.id)}
-              className={
-                isGrid
-                  ? `rounded-full px-3.5 py-2 text-xs font-bold transition ${
-                      selectedCategoryId === category.id
-                        ? 'bg-nexoraBrand text-white'
-                        : 'bg-nexoraCanvas text-nexoraMuted hover:text-nexoraText'
-                    }`
-                  : `rounded-full px-2.5 py-1 text-[10px] font-bold transition ${
-                      selectedCategoryId === category.id
-                        ? 'bg-nexoraBrand text-white'
-                        : 'bg-nexoraCanvas text-nexoraMuted hover:text-nexoraText'
-                    }`
-              }
-            >
-              {category.name}
-              {isCheckinServiceMode ? (
-                <span
-                  className={`ml-1 rounded-full px-1.5 py-0.5 text-[10px] ${
-                    selectedCategoryId === category.id ? 'bg-white/20' : 'bg-nexoraBorder/70 text-nexoraMuted'
+      {isCheckinServiceMode ? (
+        categories.length === 0 ? (
+          <p className="text-xs text-nexoraMuted">{emptyLabel}</p>
+        ) : (
+          <div className="space-y-1.5">
+            {categories.map((category, index) => {
+              const isOpen = selectedCategoryId === category.id
+              const categoryItems = itemsForCategory(category.id)
+              const headerId = `checkin-service-category-${index}`
+              const panelId = `${headerId}-panel`
+
+              return (
+                <div
+                  key={category.id}
+                  className={`overflow-hidden rounded-xl border ${
+                    isOpen ? 'border-nexoraBrand/40 bg-nexoraBrand/5' : 'border-nexoraBorder bg-nexoraSurface'
                   }`}
                 >
-                  {category.count}
-                </span>
-              ) : null}
-            </button>
-          ))}
-        </div>
-      )}
+                  <button
+                    id={headerId}
+                    type="button"
+                    aria-expanded={isOpen}
+                    aria-controls={panelId}
+                    onClick={() => setSelectedCategoryId((current) => (current === category.id ? '' : category.id))}
+                    className="flex min-h-10 w-full items-center gap-2 px-3 py-2 text-left"
+                  >
+                    <span
+                      className={`min-w-0 flex-1 truncate text-[11px] font-black uppercase tracking-wide ${
+                        isOpen ? 'text-nexoraBrandDark' : 'text-nexoraText'
+                      }`}
+                    >
+                      {category.name}
+                    </span>
+                    <span className="shrink-0 rounded-full bg-nexoraBrandSoft px-2 py-0.5 text-[10px] font-bold text-nexoraBrandDark">
+                      {category.count}
+                    </span>
+                    <ChevronDown
+                      className={`h-4 w-4 shrink-0 text-nexoraMuted transition-transform ${isOpen ? 'rotate-180' : ''}`}
+                    />
+                  </button>
 
-      {isEmpty ? (
-        <p className={isGrid ? 'text-xs text-nexoraMuted' : 'text-[11px] text-nexoraMuted'}>{emptyLabel}</p>
-      ) : selectedCategoryId === '' ? (
-        isGrid ? (
-          <div className="max-h-[480px] overflow-y-auto rounded-xl border border-nexoraBorder">
-            {groupedSections!.map((section) => (
-              <div key={section.category.id}>
-                <h4 className="sticky top-0 z-[1] border-b border-nexoraBorder bg-nexoraCanvas px-3 py-1.5 text-[10px] font-black uppercase tracking-wider text-nexoraMuted">
-                  {section.category.name}
-                </h4>
-                <div className="grid grid-cols-2 gap-2 p-2 sm:grid-cols-3">{section.items.map(renderItemCard)}</div>
-              </div>
-            ))}
-          </div>
-        ) : (
-          <div className="max-h-72 space-y-3 overflow-y-auto rounded-lg border border-nexoraBorder p-1.5 pr-3">
-            {groupedSections!.map((section) => (
-              <div key={section.category.id}>
-                <h4 className="mb-1 px-1.5 text-[10px] font-black uppercase tracking-wider text-nexoraMuted">
-                  {section.category.name}
-                </h4>
-                <div className="space-y-1">{section.items.map(renderItemRow)}</div>
-              </div>
-            ))}
+                  {isOpen ? (
+                    <div
+                      id={panelId}
+                      role="region"
+                      aria-labelledby={headerId}
+                      className="border-t border-nexoraBorder/80 bg-nexoraSurface p-1.5"
+                    >
+                      {categoryItems.length === 0 ? (
+                        <p className="px-2 py-1.5 text-xs text-nexoraMuted">{emptyLabel}</p>
+                      ) : (
+                        <div className="grid max-h-[320px] grid-cols-2 gap-1.5 overflow-y-auto sm:grid-cols-4">
+                          {categoryItems.map(renderItemCard)}
+                        </div>
+                      )}
+                    </div>
+                  ) : null}
+                </div>
+              )
+            })}
           </div>
         )
-      ) : isGrid ? (
-        <div className="grid max-h-[480px] grid-cols-2 gap-2 overflow-y-auto rounded-xl border border-nexoraBorder p-2 sm:grid-cols-3">
-          {flatItems.map(renderItemCard)}
-        </div>
       ) : (
-        <div className="max-h-72 space-y-1 overflow-y-auto rounded-lg border border-nexoraBorder p-1.5 pr-3">
-          {flatItems.map(renderItemRow)}
-        </div>
+        <>
+          {categories.length > 0 ? (
+            <div className="flex flex-wrap gap-1.5">
+              <button
+                type="button"
+                onClick={() => setSelectedCategoryId('')}
+                className={
+                  isGrid
+                    ? `rounded-full px-3.5 py-2 text-xs font-bold transition ${
+                        selectedCategoryId === ''
+                          ? 'bg-nexoraBrand text-white'
+                          : 'bg-nexoraCanvas text-nexoraMuted hover:text-nexoraText'
+                      }`
+                    : `rounded-full px-2.5 py-1 text-[10px] font-bold transition ${
+                        selectedCategoryId === ''
+                          ? 'bg-nexoraBrand text-white'
+                          : 'bg-nexoraCanvas text-nexoraMuted hover:text-nexoraText'
+                      }`
+                }
+              >
+                {allCategoryLabel}
+              </button>
+              {categories.map((category) => (
+                <button
+                  key={category.id}
+                  type="button"
+                  onClick={() => setSelectedCategoryId(category.id)}
+                  className={
+                    isGrid
+                      ? `rounded-full px-3.5 py-2 text-xs font-bold transition ${
+                          selectedCategoryId === category.id
+                            ? 'bg-nexoraBrand text-white'
+                            : 'bg-nexoraCanvas text-nexoraMuted hover:text-nexoraText'
+                        }`
+                      : `rounded-full px-2.5 py-1 text-[10px] font-bold transition ${
+                          selectedCategoryId === category.id
+                            ? 'bg-nexoraBrand text-white'
+                            : 'bg-nexoraCanvas text-nexoraMuted hover:text-nexoraText'
+                        }`
+                  }
+                >
+                  {category.name}
+                </button>
+              ))}
+            </div>
+          ) : null}
+
+          {isEmpty ? (
+            <p className={isGrid ? 'text-xs text-nexoraMuted' : 'text-[11px] text-nexoraMuted'}>{emptyLabel}</p>
+          ) : selectedCategoryId === '' ? (
+            isGrid ? (
+              <div className="max-h-[480px] overflow-y-auto rounded-xl border border-nexoraBorder">
+                {groupedSections!.map((section) => (
+                  <div key={section.category.id}>
+                    <h4 className="sticky top-0 z-[1] border-b border-nexoraBorder bg-nexoraCanvas px-3 py-1.5 text-[10px] font-black uppercase tracking-wider text-nexoraMuted">
+                      {section.category.name}
+                    </h4>
+                    <div className="grid grid-cols-2 gap-2 p-2 sm:grid-cols-3">{section.items.map(renderItemCard)}</div>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <div className="max-h-72 space-y-3 overflow-y-auto rounded-lg border border-nexoraBorder p-1.5 pr-3">
+                {groupedSections!.map((section) => (
+                  <div key={section.category.id}>
+                    <h4 className="mb-1 px-1.5 text-[10px] font-black uppercase tracking-wider text-nexoraMuted">
+                      {section.category.name}
+                    </h4>
+                    <div className="space-y-1">{section.items.map(renderItemRow)}</div>
+                  </div>
+                ))}
+              </div>
+            )
+          ) : isGrid ? (
+            <div className="grid max-h-[480px] grid-cols-2 gap-2 overflow-y-auto rounded-xl border border-nexoraBorder p-2 sm:grid-cols-3">
+              {flatItems.map(renderItemCard)}
+            </div>
+          ) : (
+            <div className="max-h-72 space-y-1 overflow-y-auto rounded-lg border border-nexoraBorder p-1.5 pr-3">
+              {flatItems.map(renderItemRow)}
+            </div>
+          )}
+        </>
       )}
 
       {detailItem ? (

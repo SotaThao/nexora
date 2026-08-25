@@ -70,6 +70,11 @@ export const STAFF_WORKSPACE_SUBMENU = [
     screen: 'salons',
     labelKey: 'staff_dashboard.nav.my_salons',
   },
+  {
+    id: 'report',
+    screen: 'salons/report',
+    labelKey: 'staff_dashboard.nav.report',
+  },
 ]
 
 export const STAFF_WORKSPACE_SCREEN_IDS = ['qr', 'payments', 'reviews', 'tips', 'earnings', 'salons', 'taxiq']
@@ -78,7 +83,16 @@ export function isStaffWorkspaceSubActive(
   activeScreen: string,
   tabParam: string | null,
   item: (typeof STAFF_WORKSPACE_SUBMENU)[number],
+  pathname?: string,
 ): boolean {
+  const normalizedPathname = pathname?.replace(/\/+$/, '') || ''
+  const isSalonReportRoute = normalizedPathname === '/staff/salons/report'
+
+  if (item.id === 'report') return isSalonReportRoute
+  if (item.id === 'my_salons') {
+    return activeScreen === 'salons' && !isSalonReportRoute
+  }
+
   if (activeScreen !== item.screen) return false
 
   if (item.id === 'my_qr') {
@@ -88,10 +102,6 @@ export function isStaffWorkspaceSubActive(
   if (item.id === 'my_earnings') {
     if (activeScreen !== 'earnings') return false
     return !tabParam || tabParam === 'overview'
-  }
-
-  if (item.id === 'my_salons') {
-    return activeScreen === 'salons'
   }
 
   if (!item.params?.tab) return true

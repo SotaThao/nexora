@@ -1,4 +1,5 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
+import type { SetStateAction } from 'react'
 import { useLocation, useNavigate } from 'react-router-dom'
 import { useOpenProductManagement } from '../../../data/hooks/useOpenProductManagement'
 import {
@@ -11,6 +12,22 @@ import {
 type NavigateMenuOptions = {
   closeDrawer?: boolean
   tab?: string
+}
+
+export const DESKTOP_SIDEBAR_STORAGE_KEY = 'nexora:dashboard:desktop-sidebar-open'
+
+function readDesktopSidebarPreference(): boolean | null {
+  if (typeof window === 'undefined') return null
+
+  try {
+    const savedValue = window.localStorage.getItem(DESKTOP_SIDEBAR_STORAGE_KEY)
+    if (savedValue === 'true') return true
+    if (savedValue === 'false') return false
+  } catch {
+    // Storage can be unavailable in private or restricted browser contexts.
+  }
+
+  return null
 }
 
 export function useDashboardNavigation() {
@@ -26,7 +43,25 @@ export function useDashboardNavigation() {
   // Desktop sidebar collapse toggle — same open/closed mechanic as the mobile
   // drawer above, just docked instead of an overlay (see DashboardSidebar's
   // `isOpen` prop and DashboardHeader.desktop's PanelLeft toggle button).
-  const [isDesktopSidebarOpen, setIsDesktopSidebarOpen] = useState(true)
+  const [savedDesktopSidebarOpen] = useState(readDesktopSidebarPreference)
+  const [isDesktopSidebarOpen, setDesktopSidebarOpenState] = useState(
+    () => savedDesktopSidebarOpen ?? true,
+  )
+  const setIsDesktopSidebarOpen = useCallback((nextState: SetStateAction<boolean>) => {
+    setDesktopSidebarOpenState((currentState) => {
+      const nextValue = typeof nextState === 'function'
+        ? nextState(currentState)
+        : nextState
+
+      try {
+        window.localStorage.setItem(DESKTOP_SIDEBAR_STORAGE_KEY, String(nextValue))
+      } catch {
+        // Keep the menu usable when browser storage is unavailable.
+      }
+
+      return nextValue
+    })
+  }, [])
   const [isPaymentsPayoutsMobileExpanded, setIsPaymentsPayoutsMobileExpanded] = useState(isPaymentsPayoutsActive)
   const [isTaxIqMobileExpanded, setIsTaxIqMobileExpanded] = useState(activeMenu === DASHBOARD_MENU.TaxIq)
 
@@ -42,6 +77,14 @@ export function useDashboardNavigation() {
   const [isGiftCardCenterMobileExpanded, setIsGiftCardCenterMobileExpanded] = useState(false)
   const [settingsTab, setSettingsTab] = useState('profile')
   const [isProfileExpanded, setIsProfileExpanded] = useState(false)
+
+  // Front Desk is an iPad-first workspace and always needs the full content width on entry.
+  // A manual reopen remains available while the operator stays on this route.
+  useEffect(() => {
+    if (location.pathname === '/dashboard/pos') {
+      setIsDesktopSidebarOpen(false)
+    }
+  }, [location.pathname, setIsDesktopSidebarOpen])
 
   // Keep sidebar KYB/profile highlight in sync with /dashboard/settings/:tab
   useEffect(() => {

@@ -83,15 +83,15 @@ export default function CustomerTab({ businessId }: { businessId: string }) {
       </div>
 
       {isLoading ? (
-        <div className="rounded-xl border border-nexoraBorder bg-nexoraSurface p-6">
+        <div className="py-6">
           <SkeletonList count={4} lines={1} />
         </div>
       ) : customers.length === 0 ? (
-        <div className="rounded-xl border border-nexoraBorder bg-nexoraSurface p-6 text-center text-xs text-nexoraMuted">
+        <div className="py-8 text-center text-xs text-nexoraMuted">
           {appliedSearch ? t(p + 'emptySearch', { term: appliedSearch }) : t(p + 'empty')}
         </div>
       ) : (
-        <div className={`rounded-xl border border-nexoraBorder bg-nexoraSurface p-4 ${isFetching ? 'opacity-60' : ''}`}>
+        <div className={`overflow-hidden rounded-xl border border-nexoraBorder bg-white ${isFetching ? 'opacity-60' : ''}`}>
           <CustomerTable customers={customers} onView={setViewCustomerId} />
 
           {data && data.totalPages > 1 ? (

@@ -225,6 +225,7 @@ export const errorCodeToI18nKey = {
   ORDER_CLOSED_FOR_EDITS: 'errors.pos_order_closed_for_edits',
   ORDER_NOT_IN_SERVICE: 'errors.pos_order_not_in_service',
   ORDER_ALREADY_COMPLETED: 'errors.pos_order_already_completed',
+  POS_ORDER_HAS_NO_LINES: 'errors.pos_order_has_no_lines',
   SERVICE_LINE_NOT_FOUND: 'errors.pos_service_line_not_found',
   SERVICE_LINE_ALREADY_ASSIGNED: 'errors.pos_service_line_already_assigned',
   SERVICE_LINE_NOT_ASSIGNED: 'errors.pos_service_line_not_assigned',
