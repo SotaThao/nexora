@@ -660,7 +660,7 @@ export default function PosFrontDeskView({
   const handleBeepStation = async (station: TurnBoardStationApiDto) => {
     setBeepingStaffId(station.posStaffProfileId)
     try {
-      const result = await beepStaff.mutateAsync(station.posStaffProfileId)
+      const result = await beepStaff.mutateAsync({ posStaffProfileId: station.posStaffProfileId })
       showToast(
         result.delivered
           ? t(tk('beepSent'), { name: station.displayName })
