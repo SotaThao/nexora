@@ -176,7 +176,7 @@ export default function StaffSalonReport() {
   const metrics: ReportMetric[] = selectedSourceValue === ALL_SOURCES_VALUE
     ? [
         { key: 'income', value: summary?.income ?? null, format: 'currency' },
-        { key: 'service', value: summary?.pay ?? null, format: 'currency' },
+        { key: 'pay', value: summary?.pay ?? null, format: 'currency' },
         { key: 'tip', value: summary?.tip ?? null, format: 'currency' },
         { key: 'otherIncome', value: summary?.otherIncome ?? null, format: 'currency' },
       ]
@@ -229,14 +229,17 @@ export default function StaffSalonReport() {
     value: string,
     onChange: (value: string) => void,
     options = years,
+    isFullWidth = false,
   ) => (
-    <label className="flex w-auto min-w-0 flex-col gap-1.5 text-xs font-bold text-nexoraMuted">
+    <label className={`flex min-w-0 flex-col gap-1.5 text-xs font-bold text-nexoraMuted ${
+      isFullWidth ? 'w-full' : 'w-auto'
+    }`}>
       <span className="sr-only">{t('staff_salon_report.year')}</span>
       <select
         aria-label={t('staff_salon_report.year')}
         value={value}
         onChange={(event) => onChange(event.target.value)}
-        className={`${controlClass} w-auto`}
+        className={`${controlClass} ${isFullWidth ? 'w-full pl-10' : 'w-auto'}`}
       >
         {options.map((year) => <option key={year} value={year}>{year}</option>)}
       </select>
@@ -261,38 +264,49 @@ export default function StaffSalonReport() {
         </div>
       </div>
 
-      <section className="overflow-hidden rounded-2xl border border-nexoraBrand/15 bg-white shadow-sm">
+      <section className="space-y-3">
         <div
           role="group"
-          aria-label={t('staff_salon_report.scope')}
-          className="flex flex-col items-stretch gap-2 border-b border-nexoraBrand/15 bg-gradient-to-r from-nexoraBrand/10 via-white to-nexoraBrandSoft p-3.5 sm:flex-row sm:items-center sm:gap-3 sm:px-5 sm:py-4"
+          aria-label={t('staff_salon_report.filters_group')}
+          className="flex flex-col gap-3 rounded-2xl bg-white p-3.5 sm:p-5 lg:flex-row lg:items-stretch lg:gap-4"
         >
-          <div className="flex items-center gap-2 text-[11px] font-extrabold uppercase tracking-wider text-nexoraBrand sm:text-xs">
-            <Store className="h-4 w-4 text-nexoraBrand" aria-hidden="true" />
-            {t('staff_salon_report.scope')}
+          <div
+            role="group"
+            aria-label={t('staff_salon_report.scope')}
+            className="min-w-0 lg:flex-1"
+          >
+            <div className="text-[11px] font-extrabold text-nexoraBrand sm:text-xs">
+              {t('staff_salon_report.scope')}
+            </div>
+
+            <div className="relative mt-1.5">
+              <Store
+                className="pointer-events-none absolute left-3 top-1/2 z-10 h-4 w-4 -translate-y-1/2 text-nexoraBrand"
+                aria-hidden="true"
+              />
+              <select
+                aria-label={t('staff_salon_report.scope')}
+                value={selectedSourceValue}
+                onChange={(event) => setSelectedSource(event.target.value)}
+                className={`${controlClass} w-full pl-10`}
+              >
+                <option value={ALL_SOURCES_VALUE}>{t('staff_salon_report.all')}</option>
+                <option value={INDEPENDENT_SOURCE_VALUE}>
+                  {t('staff_salon_report.independent')}
+                </option>
+                {activeBusinesses.map((business) => (
+                  <option key={business.businessId} value={business.businessId}>
+                    {business.businessName}
+                  </option>
+                ))}
+              </select>
+            </div>
           </div>
 
-          <select
-            aria-label={t('staff_salon_report.scope')}
-            value={selectedSourceValue}
-            onChange={(event) => setSelectedSource(event.target.value)}
-            className={`${controlClass} w-full sm:w-64`}
-          >
-            <option value={ALL_SOURCES_VALUE}>{t('staff_salon_report.all')}</option>
-            <option value={INDEPENDENT_SOURCE_VALUE}>
-              {t('staff_salon_report.independent')}
-            </option>
-            {activeBusinesses.map((business) => (
-              <option key={business.businessId} value={business.businessId}>
-                {business.businessName}
-              </option>
-            ))}
-          </select>
-        </div>
+          <span aria-hidden="true" className="hidden w-px self-stretch bg-nexoraBorder lg:block" />
 
-        <div className="border-b border-nexoraBrand/15 bg-white p-3 sm:px-5 sm:py-3.5">
           <div
-            className="grid grid-cols-4 gap-1 rounded-xl bg-nexoraBrandSoft p-1"
+            className="flex w-fit max-w-full gap-1 rounded-xl bg-nexoraBrandSoft p-1 lg:mt-0 lg:self-end"
             role="tablist"
             aria-label={t('staff_salon_report.period')}
           >
@@ -307,7 +321,7 @@ export default function StaffSalonReport() {
                   aria-selected={isActive}
                   aria-controls="staff-report-panel"
                   onClick={() => setActiveTab(tab)}
-                  className={`min-h-11 min-w-0 rounded-lg px-1 py-2 text-xs font-extrabold leading-4 transition sm:px-3 sm:text-sm ${
+                  className={`min-h-11 flex-none rounded-lg px-2 py-2 text-xs font-extrabold leading-4 transition sm:px-3 sm:text-sm ${
                     isActive
                       ? 'bg-nexoraBrand text-white shadow-sm'
                       : 'text-nexoraBrand hover:bg-white/70 hover:text-nexoraBrandDark'
@@ -318,75 +332,82 @@ export default function StaffSalonReport() {
               )
             })}
           </div>
-        </div>
 
-        <div className="flex flex-row items-center gap-2 border-b border-violet-100 bg-violet-50/70 p-3.5 sm:gap-3 sm:px-5 sm:py-4">
-          <div className="flex shrink-0 items-center gap-2 text-[11px] font-extrabold uppercase tracking-wider text-violet-700 sm:text-xs">
-            <CalendarDays className="h-4 w-4 text-nexoraBrand" aria-hidden="true" />
-            {t('staff_salon_report.period')}
-          </div>
+          <span aria-hidden="true" className="hidden w-px self-stretch bg-nexoraBorder lg:block" />
 
-          <div className="flex w-auto min-w-0 flex-nowrap gap-2">
-            {activeTab === 'daily' && (
-              <label className="flex w-auto min-w-0 flex-col gap-1.5 text-xs font-bold text-nexoraMuted">
-                <span className="sr-only">{t('staff_salon_report.date')}</span>
-                <input
-                  type="date"
-                  aria-label={t('staff_salon_report.date')}
-                  value={selectedDate}
-                  onChange={(event) => {
-                    if (event.target.value) setSelectedDate(event.target.value)
-                  }}
-                  className={`${controlClass} w-auto`}
-                />
-              </label>
-            )}
+          <div className="min-w-0 lg:flex-1">
+            <div className="text-[11px] font-extrabold text-violet-700 sm:text-xs">
+              {t('staff_salon_report.period')}
+            </div>
 
-            {activeTab === 'weekly' && (
-              <>
-                <label className="flex w-auto min-w-0 flex-col gap-1.5 text-xs font-bold text-nexoraMuted">
-                  <span className="sr-only">{t('staff_salon_report.week')}</span>
-                  <select
-                    aria-label={t('staff_salon_report.week')}
-                    value={selectedWeek}
-                    onChange={(event) => setSelectedWeek(event.target.value)}
-                    className={`${controlClass} w-auto`}
-                  >
-                    {availableWeeks.map((week) => (
-                      <option key={week} value={week}>
-                        {t('staff_salon_report.filters.week_option', { week })}
-                      </option>
-                    ))}
-                  </select>
-                </label>
-                {renderYearSelect(selectedWeekYear, setSelectedIsoWeekYear, weekYears)}
-              </>
-            )}
+            <div className="relative mt-1.5">
+              <CalendarDays
+                className="pointer-events-none absolute left-3 top-1/2 z-10 h-4 w-4 -translate-y-1/2 text-nexoraBrand"
+                aria-hidden="true"
+              />
+              <div className={`flex min-w-0 flex-nowrap gap-2 ${
+                activeTab === 'weekly' || activeTab === 'monthly' ? 'w-auto' : 'w-full'
+              }`}>
+                {activeTab === 'daily' && (
+                  <label className="flex w-full min-w-0 flex-col gap-1.5 text-xs font-bold text-nexoraMuted">
+                    <span className="sr-only">{t('staff_salon_report.date')}</span>
+                    <input
+                      type="date"
+                      aria-label={t('staff_salon_report.date')}
+                      value={selectedDate}
+                      onChange={(event) => {
+                        if (event.target.value) setSelectedDate(event.target.value)
+                      }}
+                      className={`${controlClass} w-full pl-10`}
+                    />
+                  </label>
+                )}
 
-            {activeTab === 'monthly' && (
-              <>
-                <label className="flex w-auto min-w-0 flex-col gap-1.5 text-xs font-bold text-nexoraMuted">
-                  <span className="sr-only">{t('staff_salon_report.month')}</span>
-                  <select
-                    aria-label={t('staff_salon_report.month')}
-                    value={selectedMonth}
-                    onChange={(event) => setSelectedMonth(event.target.value)}
-                    className={`${controlClass} w-auto`}
-                  >
-                    {months.map((month) => (
-                      <option key={month.value} value={month.value}>{month.label}</option>
-                    ))}
-                  </select>
-                </label>
-                {renderYearSelect(selectedYear, setSelectedYear)}
-              </>
-            )}
+                {activeTab === 'weekly' && (
+                  <>
+                    <label className="flex w-auto min-w-0 flex-col gap-1.5 text-xs font-bold text-nexoraMuted">
+                      <span className="sr-only">{t('staff_salon_report.week')}</span>
+                      <select
+                        aria-label={t('staff_salon_report.week')}
+                        value={selectedWeek}
+                        onChange={(event) => setSelectedWeek(event.target.value)}
+                        className={`${controlClass} w-auto pl-10`}
+                      >
+                        {availableWeeks.map((week) => (
+                          <option key={week} value={week}>
+                            {t('staff_salon_report.filters.week_option', { week })}
+                          </option>
+                        ))}
+                      </select>
+                    </label>
+                    {renderYearSelect(selectedWeekYear, setSelectedIsoWeekYear, weekYears)}
+                  </>
+                )}
 
-            {activeTab === 'yearly' && (
-              <div className="w-auto">
-                {renderYearSelect(selectedYear, setSelectedYear)}
+                {activeTab === 'monthly' && (
+                  <>
+                    <label className="flex w-auto min-w-0 flex-col gap-1.5 text-xs font-bold text-nexoraMuted">
+                      <span className="sr-only">{t('staff_salon_report.month')}</span>
+                      <select
+                        aria-label={t('staff_salon_report.month')}
+                        value={selectedMonth}
+                        onChange={(event) => setSelectedMonth(event.target.value)}
+                        className={`${controlClass} w-auto pl-10`}
+                      >
+                        {months.map((month) => (
+                          <option key={month.value} value={month.value}>{month.label}</option>
+                        ))}
+                      </select>
+                    </label>
+                    {renderYearSelect(selectedYear, setSelectedYear)}
+                  </>
+                )}
+
+                {activeTab === 'yearly' && (
+                  renderYearSelect(selectedYear, setSelectedYear, years, true)
+                )}
               </div>
-            )}
+            </div>
           </div>
         </div>
 
@@ -394,7 +415,7 @@ export default function StaffSalonReport() {
           id="staff-report-panel"
           role="tabpanel"
           aria-labelledby={`staff-report-tab-${activeTab}`}
-          className="bg-gradient-to-b from-white to-nexoraBrandSoft/20 p-3.5 sm:p-5"
+          className="rounded-2xl bg-white p-3.5 sm:p-5"
         >
           {reportQuery.isPending ? (
             <div
@@ -418,7 +439,7 @@ export default function StaffSalonReport() {
             </div>
           ) : (
             <>
-              <div className="hidden overflow-x-auto rounded-xl border border-nexoraBrand/15 bg-white md:block">
+              <div className="hidden overflow-x-auto rounded-xl border border-nexoraBorder md:block">
                 <table
                   className={`w-full table-fixed text-left ${
                     metrics.length > 5 ? 'min-w-[840px]' : 'min-w-[560px]'
@@ -445,7 +466,7 @@ export default function StaffSalonReport() {
                                 : 'bg-amber-50 text-amber-700'
 
                         return (
-                          <th key={metric.key} scope="col" className={`px-4 py-3.5 text-xs font-extrabold uppercase tracking-wide ${headerTone}`}>
+                          <th key={metric.key} scope="col" className={`px-4 py-3.5 text-xs font-extrabold ${headerTone}`}>
                             {t(`staff_salon_report.${metric.key}`)}
                           </th>
                         )
@@ -483,14 +504,14 @@ export default function StaffSalonReport() {
                     || metric.key === 'commissionPercent'
                   const isTip = metric.key === 'tip'
                   const cardTone = isPrimary
-                    ? 'border-nexoraBrand bg-nexoraBrand shadow-sm'
+                    ? 'bg-nexoraBrand shadow-sm'
                     : isActivity
-                      ? 'border-sky-200 bg-sky-50'
+                      ? 'bg-sky-50'
                       : isService
-                        ? 'border-violet-200 bg-violet-50'
+                        ? 'bg-violet-50'
                         : isTip
-                          ? 'border-emerald-200 bg-emerald-50'
-                          : 'border-amber-200 bg-amber-50'
+                          ? 'bg-emerald-50'
+                          : 'bg-amber-50'
                   const labelTone = isPrimary
                     ? 'text-white/80'
                     : isActivity
@@ -505,11 +526,11 @@ export default function StaffSalonReport() {
                     <div
                       key={metric.key}
                       role="listitem"
-                      className={`min-w-0 rounded-xl border p-3.5 ${
+                      className={`min-w-0 rounded-xl p-3.5 ${
                         isFullWidth ? 'col-span-2' : ''
                       } ${cardTone}`}
                     >
-                      <dt className={`text-[11px] font-extrabold uppercase leading-4 tracking-wide ${labelTone}`}>
+                      <dt className={`text-[11px] font-extrabold leading-4 ${labelTone}`}>
                         {t(`staff_salon_report.${metric.key}`)}
                       </dt>
                       <dd className={`mt-2 break-words font-black leading-tight ${
