@@ -17,6 +17,7 @@ const K = 'components.dashboard.views.pos.PosOrderWorkspace'
 export default function ChangeServiceModal({
   open,
   serviceName,
+  addOnCount,
   services,
   onSelect,
   onClose,
@@ -24,6 +25,9 @@ export default function ChangeServiceModal({
   open: boolean
   // The line's current service, shown in the title so the operator knows which row they opened.
   serviceName: string
+  // Add-ons belong to one service, so swapping the service removes them. Warned about here rather
+  // than discovered afterwards on the ticket.
+  addOnCount: number
   services: CheckoutServiceCatalogItemApiDto[]
   onSelect: (posServiceId: string) => void
   onClose: () => void
@@ -43,6 +47,12 @@ export default function ChangeServiceModal({
             <X className="h-4 w-4" />
           </IconButton>
         </div>
+
+        {addOnCount > 0 ? (
+          <p className="mb-3 shrink-0 rounded-2xl border border-amber-200 bg-amber-50/60 px-3 py-2 text-[11px] font-bold leading-tight text-amber-800">
+            {t(`${K}.changeServiceRemovesAddOns`, { count: addOnCount })}
+          </p>
+        ) : null}
 
         {/* The picker scrolls, the header above stays put — a 50-item catalog otherwise pushes the
             close button out of reach on a phone. */}

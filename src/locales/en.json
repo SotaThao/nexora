@@ -3136,7 +3136,17 @@
             "createdSuccess": "Service created.",
             "updatedSuccess": "Service updated.",
             "reorderFailed": "Could not save the new arrangement. Please try again.",
-            "revisitAssignmentNudge": "You may need to revisit staff service assignments to include this new service."
+            "revisitAssignmentNudge": "You may need to revisit staff service assignments to include this new service.",
+            "addOnsSectionTitle": "Add-ons",
+            "addOnsSectionHint": "Extras front desk can sell against this service. Each service keeps its own list — changes here save immediately.",
+            "addOnsEmpty": "No add-ons yet.",
+            "addOnNamePlaceholder": "e.g. Paraffin Wax Treatment",
+            "addOnPricePlaceholder": "e.g. 15",
+            "addOnAddButton": "Add",
+            "addOnDeleteBlocked": "This add-on has been sold, so it can only be set inactive.",
+            "addOnCopyPlaceholder": "Copy add-ons from another service…",
+            "addOnCopyButton": "Copy",
+            "addOnCopyResult": "{{count}} add-on(s) copied."
           },
           "PosProductsView": {
             "description": "Build your retail product catalog with categories, tags, and photos, then drag to reorder.",
@@ -3492,7 +3502,13 @@
             "discountPreviewSplit": "Technician absorbs ${{staff}} · salon absorbs ${{salon}}",
             "discountSaveButton": "Save discount",
             "discountRemoveButton": "Remove",
-            "discountLineSummary": "Discount ${{amount}} · {{bearer}} absorbs"
+            "discountLineSummary": "Discount ${{amount}} · {{bearer}} absorbs",
+            "addAddOn": "+ Add-on",
+            "addOnModalTitle": "Add-ons — {{serviceName}}",
+            "addOnModalClose": "Close add-ons",
+            "addOnModalDone": "Done",
+            "noAddOnsForService": "This service has no add-ons set up yet.",
+            "changeServiceRemovesAddOns": "Changing this service will remove {{count}} add-on(s) already on this line."
           },
           "PhoneCheckInStep": {
             "welcomeTitleWithBusiness": "Welcome to {{businessName}}",

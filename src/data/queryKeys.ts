@@ -82,6 +82,9 @@ export const qk = {
   // POS Owner Setup — Services (US-017)
   merchantPosServices: ()      => ['merchantSettings', 'posServices'],
   merchantPosTags: ()          => ['merchantSettings', 'posTags'],
+  // POS Owner Setup — Service Add-Ons (owned per service, never shared)
+  merchantPosServiceAddOns: (serviceId?: string) =>
+    ['merchantSettings', 'posServiceAddOns', serviceId ?? ''],
   // POS Owner Setup — Products (US-018)
   merchantPosProducts: ()      => ['merchantSettings', 'posProducts'],
   // POS Owner Setup — Staff Profile (US-019)
@@ -221,6 +224,10 @@ export const qk = {
     ['merchantSettings', 'posCheckoutProductCatalog', businessId ?? ''],
   merchantPosAssignableStaff: (businessId?: string, posServiceId?: string) =>
     ['merchantSettings', 'posAssignableStaff', businessId ?? '', posServiceId ?? ''],
+  // Add-on picker — keyed by the service LINE, not the service: the options are scoped to the
+  // line the picker was opened from.
+  merchantPosServiceLineAddOnOptions: (businessId?: string, orderId?: string, serviceLineId?: string) =>
+    ['merchantSettings', 'posServiceLineAddOnOptions', businessId ?? '', orderId ?? '', serviceLineId ?? ''],
   // POS Booking — Booking Management screen (Ticket 9)
   merchantPosBookingList: (businessId?: string, filters?: object) => {
     const key: unknown[] = ['merchantSettings', 'posBookingList', businessId ?? '']
