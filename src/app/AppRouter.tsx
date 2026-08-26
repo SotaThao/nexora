@@ -151,6 +151,9 @@ const CommunityBusinessDemo = lazyWithRetry(
 const TemplateBuilderPreviewPage = lazyWithRetry(
   () => import("../components/public/builder/TemplateBuilderPreviewPage"),
 );
+const ManualActivityPrototypePage = lazyWithRetry(
+  () => import("../components/prototype/ManualActivityPrototypePage"),
+);
 const PublicPosBookingPage = lazyWithRetry(
   () => import("../components/public/PublicBookingPage"),
 );
@@ -267,6 +270,12 @@ export default function AppRouter() {
           <Route path="/booking/preview" element={<PosMenuUpsellPreviewPage />} />
           <Route path="/preview/builder" element={<TemplateBuilderPreviewPage />} />
           <Route path="/builder" element={<TemplateBuilderPreviewPage />} />
+          <Route path="/templatebuilder" element={<TemplateBuilderPreviewPage />} />
+          <Route path="/upsell" element={<PosMenuUpsellPreviewPage />} />
+          <Route path="/manual-activity" element={<ManualActivityPrototypePage />} />
+          <Route path="/manual-payment" element={<ManualActivityPrototypePage />} />
+          <Route path="/preview/manual-activity" element={<ManualActivityPrototypePage />} />
+          <Route path="/activity" element={<ManualActivityPrototypePage />} />
           <Route path="/preview/site" element={<Navigate to="/b/nexora-luxury" replace />} />
           <Route path="/site/:businessSlug" element={<PublicPosBookingPage />} />
           <Route path="/b/:businessSlug" element={<PublicPosBookingPage />} />

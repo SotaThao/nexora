@@ -86,8 +86,19 @@ export default function GlobalDemoQuickNav() {
             </Link>
 
             <Link
+              to="/manual-activity"
+              className={`flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-bold transition shadow-sm ${
+                path.includes('manual-activity') || path.includes('manual-payment') || path.includes('activity')
+                  ? 'bg-purple-600 text-white ring-2 ring-purple-400'
+                  : 'bg-purple-600/30 text-purple-300 hover:bg-purple-600/50 border border-purple-500/30'
+              }`}
+            >
+              <span>💳 Ghi nhận GD</span>
+            </Link>
+
+            <Link
               to="/login"
-              className="flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-bold transition shadow-sm bg-white/10 text-white/80 hover:bg-white/20 border border-white/10"
+              className="col-span-2 flex items-center justify-center gap-1.5 px-3 py-2 rounded-xl text-xs font-bold transition shadow-sm bg-white/10 text-white/80 hover:bg-white/20 border border-white/10"
             >
               <span>⚡ Đăng nhập</span>
             </Link>
