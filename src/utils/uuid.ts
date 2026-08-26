@@ -38,3 +38,23 @@ export function randomUuid(): string {
 }
 
 export default randomUuid
+
+/** Client-only cache placeholder. Never send this to the API as a line id. */
+export const OPTIMISTIC_ID_PREFIX = 'optimistic-'
+
+export function isOptimisticId(id?: string | null): boolean {
+  return typeof id === 'string' && id.startsWith(OPTIMISTIC_ID_PREFIX)
+}
+
+export function isPersistedLineId(id?: string | null): boolean {
+  return Boolean(id) && !isOptimisticId(id)
+}
+
+export function unlessOptimisticId<T>(
+  id: string | null | undefined,
+  request: () => Promise<T>,
+  skipped: T,
+): Promise<T> {
+  if (isOptimisticId(id)) return Promise.resolve(skipped)
+  return request()
+}
