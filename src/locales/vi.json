@@ -3412,16 +3412,6 @@
             "checkoutCustomerColumnStatus": "Trạng thái",
             "checkoutCustomerColumnStarted": "Bắt đầu",
             "checkoutCustomerColumnAction": "Thao tác",
-            "reportTitle": "Thu nhập thợ",
-            "reportThisWeek": "Tuần này",
-            "reportError": "Không thể tải báo cáo tuần này.",
-            "reportEmpty": "Chưa có dữ liệu lương cho tuần này.",
-            "reportColumnTechnician": "Thợ",
-            "reportColumnHours": "Giờ",
-            "reportColumnService": "Dịch vụ $",
-            "reportColumnCommission": "Hoa hồng $",
-            "reportColumnTip": "Tip",
-            "reportColumnTechTakes": "Thợ nhận",
             "orderListEmpty": "Chưa có phiếu nào đang mở.",
             "orderListAwaitingTechnicianBadge": "{{count}} chờ gán thợ",
             "orderListNoServiceBadge": "{{count}} chưa chọn dịch vụ",
@@ -3918,6 +3908,65 @@
             "layout": {
               "SinglePage": "Một trang",
               "Wizard": "Từng bước"
+            }
+          },
+          "report": {
+            "title": "Thợ & thu nhập",
+            "subtitle": "Số lượt, giờ làm và thu nhập của từng thợ theo kỳ bạn chọn.",
+            "updatedAt": "Cập nhật {{time}}",
+            "refresh": "Làm mới",
+            "refreshing": "Đang làm mới…",
+            "exportCsv": "Xuất CSV",
+            "exporting": "Đang xuất…",
+            "exportError": "Không xuất được báo cáo. Vui lòng thử lại.",
+            "error": "Không tải được báo cáo.",
+            "retry": "Thử lại",
+            "empty": "Không có dữ liệu cho kỳ này.",
+            "inactive": "Đã nghỉ",
+            "kpi": {
+              "serviceAmount": "Tổng dịch vụ",
+              "tips": "Tổng tip",
+              "techTakes": "Tổng thợ nhận",
+              "turns": "Tổng lượt"
+            },
+            "columns": {
+              "tech": "Thợ",
+              "turns": "Lượt",
+              "hours": "Giờ",
+              "serviceAmount": "Dịch vụ $",
+              "commissionPercent": "HH %",
+              "commissionPercentHint": "Tỷ lệ hoa hồng đang cấu hình hiện tại — kỳ đã qua có thể đã trả theo tỷ lệ khác.",
+              "commission": "Hoa hồng",
+              "tip": "Tip",
+              "discount": "Giảm giá",
+              "discountHint": "Chỉ phần giảm giá dịch vụ mà thợ đồng ý tự gánh.",
+              "techTakes": "Thợ nhận",
+              "weeklyGuarantee": "Bảo đảm tuần"
+            },
+            "payStructure": {
+              "commission": "Hoa hồng",
+              "weeklysalary": "Lương tuần",
+              "agreedamount": "Khoán",
+              "hourly": "Theo giờ",
+              "hybrid": "Kết hợp",
+              "tiered": "Bậc thang"
+            },
+            "picker": {
+              "modeLabel": "Kỳ báo cáo",
+              "mode": {
+                "daily": "Ngày",
+                "weekly": "Tuần",
+                "monthly": "Tháng"
+              },
+              "choose": "Chọn kỳ",
+              "prev": "Trước",
+              "next": "Sau",
+              "thisWeek": "Tuần này",
+              "remove": "Bỏ {{period}}",
+              "dailyHint": "Chạm nhiều ngày để xem gộp lại.",
+              "weeklyHint": "Chạm nhiều tuần để xem gộp lại.",
+              "limitDays": "Tối đa {{count}} ngày mỗi báo cáo.",
+              "limitWeeks": "Tối đa {{count}} tuần mỗi báo cáo."
             }
           }
         },

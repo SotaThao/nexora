@@ -31,7 +31,6 @@ import { getErrorI18nKey } from '../../../../data/errorCodes'
 import { qk } from '../../../../data/queryKeys'
 import { usePosAccess } from '../../../../data/hooks/usePosAccess'
 import { useStaffBusinesses } from '../../../../data/hooks/useStaffSelf'
-import { useWeeklyPayroll } from '../../../../data/hooks/useWeeklyPayroll'
 import { formatPosTime } from './posDateTime'
 import { useCancelOrder, useCompletedOrders, useOrderList, useStartOrderService } from '../../../../data/hooks/usePosOrders'
 import { useInServiceOrders, useOrderDetails } from '../../../../data/hooks/usePosCheckout'
@@ -47,6 +46,10 @@ import {
   OrderListFilter,
   OrderListViewMode,
   POS_FRONT_DESK_TAB_PARAM,
+  REPORT_DATES_PARAM,
+  REPORT_MODE_PARAM,
+  REPORT_MONTH_PARAM,
+  REPORT_WEEKS_PARAM,
   POS_FRONT_DESK_TABS,
   PosFrontDeskTab,
 } from '../../../../constants/posFrontDesk'
@@ -54,6 +57,15 @@ import type { BookingListItemApiDto, OrderListItemApiDto, TurnBoardStationApiDto
 import { SkeletonList } from '../../../ui/skeleton'
 import { getInitials, joinOrEmpty } from './posDisplay'
 import PosOrderWorkspace from './PosOrderWorkspace'
+import { PosReportMode } from '../../../../constants/posReportMode'
+import PosReportPanel from './report/PosReportPanel'
+import {
+  defaultSelectionFor as defaultReportSelection,
+  isSelectionComplete as isReportSelectionComplete,
+  parseIsoWeekKey,
+  parseMonthKey,
+  type PosReportSelection,
+} from './report/posReportPeriod'
 import PosCheckInTab from './PosCheckInTab'
 import PosCompletedOrdersPanel from './PosCompletedOrdersPanel'
 import NewBookingForm from './booking/NewBookingForm'
@@ -101,12 +113,6 @@ const renderTechnicianChip = (technicianNames: string[]) => (
     <span className="truncate">{joinOrEmpty(technicianNames)}</span>
   </span>
 )
-
-function formatReportDate(isoDate: string, language: string) {
-  const date = new Date(`${isoDate}T00:00:00Z`)
-  if (Number.isNaN(date.getTime())) return isoDate
-  return formatDatePart(date, language.toLowerCase().startsWith('vi'), { timeZone: 'UTC' })
-}
 
 // scheduledAt means different things depending on which flow created the booking, so the sort
 // runs on the resolved wall clock rather than the raw ISO string. Minutes-of-day is enough: the
@@ -188,6 +194,35 @@ const TAB_SCROLL_EDGE_TOLERANCE_PX = 2
 // One arrow tap moves just under a full strip width, keeping the last visible tab on screen
 // as a visual anchor for where the user just came from.
 const TAB_SCROLL_STEP_RATIO = 0.8
+
+// A hand-edited or stale link must never crash the tab: anything unparseable falls back to that
+// mode's default period (today / this week / this month).
+function readReportSelectionFromParams(params: URLSearchParams): PosReportSelection {
+  const rawMode = params.get(REPORT_MODE_PARAM)
+  const mode = Object.values(PosReportMode).includes(rawMode as PosReportMode)
+    ? (rawMode as PosReportMode)
+    : PosReportMode.Daily
+  const fallback = defaultReportSelection(mode)
+
+  if (mode === PosReportMode.Daily) {
+    const dates = (params.get(REPORT_DATES_PARAM) ?? '')
+      .split(',')
+      .map((value) => value.trim())
+      .filter((value) => /^\d{4}-\d{2}-\d{2}$/.test(value))
+    return dates.length > 0 ? { ...fallback, dates } : fallback
+  }
+
+  if (mode === PosReportMode.Weekly) {
+    const weeks = (params.get(REPORT_WEEKS_PARAM) ?? '')
+      .split(',')
+      .map((value) => value.trim())
+      .filter((value) => parseIsoWeekKey(value) !== null)
+    return weeks.length > 0 ? { ...fallback, weeks } : fallback
+  }
+
+  const month = (params.get(REPORT_MONTH_PARAM) ?? '').trim()
+  return parseMonthKey(month) ? { ...fallback, month } : fallback
+}
 
 // The Front Desk tabs are wider than a phone viewport, so the strip scrolls horizontally
 // (see index.css `.nexora-no-scrollbar` — the app's styled scrollbar would otherwise sit on
@@ -414,9 +449,35 @@ export default function PosFrontDeskView({
     todayRosterQuery,
     turnBoardQuery,
   ])
-  const weeklyPayrollQuery = useWeeklyPayroll(businessId, undefined, {
-    enabled: activeTab === PosFrontDeskTab.Report,
-  })
+  // Report period lives in the URL so a manager can deep-link "these three days" and survive F5,
+  // same convention as the ?tab= param above.
+  const [reportSelection, setReportSelectionState] = useState<PosReportSelection>(
+    () => readReportSelectionFromParams(searchParams),
+  )
+  const setReportSelection = (next: PosReportSelection) => {
+    setReportSelectionState(next)
+    setSearchParams(
+      (prev) => {
+        const params = new URLSearchParams(prev)
+        params.set(POS_FRONT_DESK_TAB_PARAM, PosFrontDeskTab.Report)
+        params.set(REPORT_MODE_PARAM, next.mode)
+        params.delete(REPORT_DATES_PARAM)
+        params.delete(REPORT_WEEKS_PARAM)
+        params.delete(REPORT_MONTH_PARAM)
+        if (next.mode === PosReportMode.Daily && next.dates.length > 0) {
+          params.set(REPORT_DATES_PARAM, [...next.dates].sort().join(','))
+        }
+        if (next.mode === PosReportMode.Weekly && next.weeks.length > 0) {
+          params.set(REPORT_WEEKS_PARAM, [...next.weeks].sort().join(','))
+        }
+        if (next.mode === PosReportMode.Monthly && next.month) {
+          params.set(REPORT_MONTH_PARAM, next.month)
+        }
+        return params
+      },
+      { replace: true },
+    )
+  }
   const setActiveTab = (tab: PosFrontDeskTab) => {
     setActiveTabState(tab)
     setSearchParams(
@@ -528,6 +589,13 @@ export default function PosFrontDeskView({
     [OrderListFilter.Waiting]: orderList.filter((o) => o.status === PosOrderStatus.Waiting).length,
     [OrderListFilter.InService]: orderList.filter((o) => o.status === PosOrderStatus.InService).length,
   }
+
+  // Report exposes every technician's earnings and is gated on its own permission, so a front-desk
+  // account without it never sees the tab. access is undefined while loading — keep the tab hidden
+  // until the answer arrives rather than flashing it and then removing it.
+  const visibleTabs = POS_FRONT_DESK_TABS.filter(
+    (tab) => tab !== PosFrontDeskTab.Report || access?.canViewReport === true,
+  )
 
   const tabBadges: Partial<Record<PosFrontDeskTab, number>> = {
     [PosFrontDeskTab.OrderList]: orderListFilterCounts[OrderListFilter.All],
@@ -856,90 +924,6 @@ export default function PosFrontDeskView({
     )
   }
 
-  const renderReportPanel = () => {
-    const payroll = weeklyPayrollQuery.data
-    const rows = payroll?.staff ?? []
-
-    if (weeklyPayrollQuery.isPending && weeklyPayrollQuery.fetchStatus !== 'idle') {
-      return (
-        <div className="py-6">
-          <SkeletonList count={3} lines={2} />
-        </div>
-      )
-    }
-
-    if (weeklyPayrollQuery.isError) {
-      return (
-        <div className="py-10 text-center text-xs text-nexoraMuted">
-          {t(tk('reportError'))}
-        </div>
-      )
-    }
-
-    return (
-      <section className="space-y-3" aria-label={t(tk('reportTitle'))} data-testid="report-panel">
-        <div className="flex flex-wrap items-end justify-between gap-2">
-          <div>
-            <h2 className="text-sm font-bold text-nexoraText">{t(tk('reportTitle'))}</h2>
-            <p className="mt-0.5 text-xs text-nexoraMuted">{t(tk('reportThisWeek'))}</p>
-          </div>
-          {payroll ? (
-            <span className="rounded-full bg-violet-50 px-3 py-1.5 text-[11px] font-bold tabular-nums text-violet-700">
-              {formatReportDate(payroll.weekStart, currentLanguage)} — {formatReportDate(payroll.weekEnd, currentLanguage)}
-            </span>
-          ) : null}
-        </div>
-
-        {rows.length === 0 ? (
-          <div className="py-10 text-center text-xs text-nexoraMuted">
-            {t(tk('reportEmpty'))}
-          </div>
-        ) : (
-          <div className="overflow-x-auto rounded-xl border border-nexoraBorder bg-white">
-            <table className="w-full min-w-[720px] text-left text-xs">
-              <thead className="bg-nexoraCanvas text-[10px] font-extrabold uppercase tracking-wide text-nexoraMuted">
-                <tr>
-                  <th className="px-4 py-3">{t(tk('reportColumnTechnician'))}</th>
-                  <th className="px-4 py-3 text-right">{t(tk('reportColumnHours'))}</th>
-                  <th className="px-4 py-3 text-right">{t(tk('reportColumnService'))}</th>
-                  <th className="px-4 py-3 text-right">{t(tk('reportColumnCommission'))}</th>
-                  <th className="px-4 py-3 text-right">{t(tk('reportColumnTip'))}</th>
-                  <th className="px-4 py-3 text-right">{t(tk('reportColumnTechTakes'))}</th>
-                </tr>
-              </thead>
-              <tbody>
-                {rows.map((row) => (
-                  <tr key={row.businessStaffLinkId} className="border-t border-nexoraBorder/70 transition-colors even:bg-violet-50/15 hover:bg-violet-50/40">
-                    <td className="px-4 py-3 font-bold text-nexoraText">
-                      <span className="inline-flex max-w-full rounded-full bg-cyan-100/70 px-2.5 py-1 text-cyan-800">
-                        <span className="truncate">{row.displayName}</span>
-                      </span>
-                    </td>
-                    <td className="px-4 py-3 text-right tabular-nums text-nexoraText">
-                      <span className="rounded-full bg-sky-50 px-2.5 py-1 font-semibold text-sky-700">{row.hours.toFixed(1)}h</span>
-                    </td>
-                    <td className="px-4 py-3 text-right tabular-nums text-nexoraText">
-                      <span className="rounded-full bg-emerald-50 px-2.5 py-1 font-semibold text-emerald-700">{formatCurrency(row.sales)}</span>
-                    </td>
-                    <td className="px-4 py-3 text-right tabular-nums text-nexoraText">
-                      <span className="rounded-full bg-violet-50 px-2.5 py-1 font-semibold text-violet-700">{formatCurrency(row.commission)}</span>
-                    </td>
-                    <td className="px-4 py-3 text-right tabular-nums text-nexoraText">
-                      <span className="rounded-full bg-amber-50 px-2.5 py-1 font-semibold text-amber-700">{formatCurrency(row.tips)}</span>
-                    </td>
-                    <td className="px-4 py-3 text-right tabular-nums font-bold text-nexoraText">
-                      <span className="rounded-full bg-nexoraBrandSoft px-2.5 py-1 text-nexoraBrandDark">{formatCurrency(row.takeHome)}</span>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        )}
-      </section>
-    )
-  }
-
   const renderTodayTurnsPanel = () => {
     const rosterRows = todayRosterQuery.data?.rows ?? []
     const rows = [...rosterRows].sort((a, b) => {
@@ -1148,7 +1132,7 @@ export default function PosFrontDeskView({
 
       {/* Tab bar uses the shared nexora* color tokens — see tailwind.config.js. */}
       <ScrollableTabStrip>
-        {POS_FRONT_DESK_TABS.map((tab) => (
+        {visibleTabs.map((tab) => (
           <button
             key={tab}
             type="button"
@@ -1584,7 +1568,14 @@ export default function PosFrontDeskView({
 
       {activeTab === PosFrontDeskTab.Customer && <CustomerTab businessId={businessId} />}
 
-      {activeTab === PosFrontDeskTab.Report && renderReportPanel()}
+      {activeTab === PosFrontDeskTab.Report && (
+        <PosReportPanel
+          businessId={businessId}
+          isActive={activeTab === PosFrontDeskTab.Report}
+          selection={reportSelection}
+          onSelectionChange={setReportSelection}
+        />
+      )}
         </>
       )}
 

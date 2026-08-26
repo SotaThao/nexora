@@ -37,6 +37,16 @@ export const DEFAULT_POS_FRONT_DESK_TAB = PosFrontDeskTab.OrderList
 export const POS_FRONT_DESK_TAB_PARAM = 'tab'
 
 /**
+ * Report period deep-link params, e.g. `?tab=report&mode=Daily&dates=2026-08-21,2026-08-23`.
+ * Multi-value params are comma-joined rather than repeated so the whole selection survives a
+ * copy-pasted link.
+ */
+export const REPORT_MODE_PARAM = 'mode'
+export const REPORT_DATES_PARAM = 'dates'
+export const REPORT_WEEKS_PARAM = 'weeks'
+export const REPORT_MONTH_PARAM = 'month'
+
+/**
  * Order List (US-17) folded the old standalone Waitlist tab in as a filter — Waiting + InService
  * both come from the same useOrderList query, so this stays a client-side filter, not a query.
  */

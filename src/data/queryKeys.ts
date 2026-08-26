@@ -113,6 +113,14 @@ export const qk = {
     if (weekStart) key.push(weekStart)
     return key
   },
+  // POS Front Desk -> Report. `selection` encodes mode + the exact periods chosen (sorted), so two
+  // different day sets are two different cache entries; omitting it yields a prefix that matches
+  // every selection for this business, same convention as merchantPosWeeklyPayroll above.
+  merchantPosReport: (businessId?: string, selection?: string) => {
+    const key: unknown[] = ['merchantSettings', 'posReport', businessId ?? '']
+    if (selection) key.push(selection)
+    return key
+  },
   merchantPosWeeklyPayrollDailyDetail: (businessStaffLinkId?: string, weekStart?: string) => {
     const key: unknown[] = ['merchantSettings', 'posWeeklyPayrollDailyDetail', businessStaffLinkId ?? '']
     if (weekStart) key.push(weekStart)

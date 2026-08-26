@@ -165,6 +165,9 @@ export interface PosStaffProfileApiDto {
 // POS Merchant Ops — Front Desk access self-check (US-12)
 export interface PosAccessApiDto {
   canManageOperations?: boolean
+  // Gated on its own `view_pos_report` permission, not on the Operations area — the report exposes
+  // every technician's earnings, so operating the front desk does not imply reading it.
+  canViewReport?: boolean
 }
 
 // POS Merchant Ops — Check-in & Waitlist (US-12, refactored to Order in US-026)
