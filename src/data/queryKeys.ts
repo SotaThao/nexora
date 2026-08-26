@@ -11,6 +11,8 @@ const EMPTY = {}
 
 export const qk = {
   merchantSetup:    ()         => ['merchantSetup'],
+  merchantSite:     (businessId?: string) => ['merchantSite', businessId ?? ''],
+  publicSite:       (slug: string) => ['publicSite', slug ?? ''],
   profileSettings:  ()         => ['profileSettings'],
   transactions:            () => ['transactions'],
   transactionsPaginated:   (filters = EMPTY) => ['transactions', 'paginated', filters],
