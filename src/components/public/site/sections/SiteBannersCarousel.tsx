@@ -71,10 +71,14 @@ export const SiteBannersCarousel: React.FC<SiteBannersCarouselProps> = ({
     align: 'start',
     slidesToScroll: 1,
     skipSnaps: false,
-    breakpoints: {
-      '(min-width: 768px)': { slidesToScroll: 2 },
-      '(min-width: 1280px)': { slidesToScroll: 2 }
-    }
+    ...(isMobileView
+      ? {}
+      : {
+          breakpoints: {
+            '(min-width: 768px)': { slidesToScroll: 2 },
+            '(min-width: 1280px)': { slidesToScroll: 2 }
+          }
+        })
   })
 
   const [selectedIndex, setSelectedIndex] = useState(0)
@@ -168,7 +172,7 @@ export const SiteBannersCarousel: React.FC<SiteBannersCarouselProps> = ({
                 <div
                   key={banner.id || idx}
                   className={`nx-banner-slide-item pr-3 sm:pr-4 ${
-                    banners.length === 1
+                    isMobileView || banners.length === 1
                       ? 'flex-[0_0_100%]'
                       : 'flex-[0_0_100%] md:flex-[0_0_50%]'
                   }`}
@@ -206,25 +210,28 @@ export const SiteBannersCarousel: React.FC<SiteBannersCarouselProps> = ({
             </div>
           </div>
 
-          {/* Left Arrow Button (Desktop only, mobile uses touch swipe) */}
-          <button
-            type="button"
-            onClick={scrollPrev}
-            aria-label="Previous banner slide"
-            className="hidden sm:flex absolute -left-2 sm:-left-3 top-1/2 -translate-y-1/2 w-8 h-8 sm:w-9 sm:h-9 rounded-full bg-black/60 hover:bg-black/90 text-white backdrop-blur-md border border-white/20 items-center justify-center opacity-80 hover:opacity-100 transition-all duration-200 z-20 hover:scale-110 shadow-xl"
-          >
-            <ChevronLeft className="w-5 h-5" />
-          </button>
+          {/* Arrow Buttons (Desktop viewport only, completely hidden on mobile view) */}
+          {!isMobileView && (
+            <>
+              <button
+                type="button"
+                onClick={scrollPrev}
+                aria-label="Previous banner slide"
+                className="hidden md:flex absolute -left-2 sm:-left-3 top-1/2 -translate-y-1/2 w-8 h-8 sm:w-9 sm:h-9 rounded-full bg-black/60 hover:bg-black/90 text-white backdrop-blur-md border border-white/20 items-center justify-center opacity-80 hover:opacity-100 transition-all duration-200 z-20 hover:scale-110 shadow-xl"
+              >
+                <ChevronLeft className="w-5 h-5" />
+              </button>
 
-          {/* Right Arrow Button (Desktop only, mobile uses touch swipe) */}
-          <button
-            type="button"
-            onClick={scrollNext}
-            aria-label="Next banner slide"
-            className="hidden sm:flex absolute -right-2 sm:-right-3 top-1/2 -translate-y-1/2 w-8 h-8 sm:w-9 sm:h-9 rounded-full bg-black/60 hover:bg-black/90 text-white backdrop-blur-md border border-white/20 items-center justify-center opacity-80 hover:opacity-100 transition-all duration-200 z-20 hover:scale-110 shadow-xl"
-          >
-            <ChevronRight className="w-5 h-5" />
-          </button>
+              <button
+                type="button"
+                onClick={scrollNext}
+                aria-label="Next banner slide"
+                className="hidden md:flex absolute -right-2 sm:-right-3 top-1/2 -translate-y-1/2 w-8 h-8 sm:w-9 sm:h-9 rounded-full bg-black/60 hover:bg-black/90 text-white backdrop-blur-md border border-white/20 items-center justify-center opacity-80 hover:opacity-100 transition-all duration-200 z-20 hover:scale-110 shadow-xl"
+              >
+                <ChevronRight className="w-5 h-5" />
+              </button>
+            </>
+          )}
 
           {/* Navigation Dots Indicator (Identical to Nexora Homepage & Bitcoin Nail Bar) */}
           {scrollSnaps.length > 1 && (
