@@ -593,7 +593,9 @@ export default function BookingQrCodesPanel() {
                     <tr key={lead.id}>
                       <td data-label={t(`${TK}.colTime`)}>{getQrLeadTime(lead, currentLanguage)}</td>
                       <td data-label={t(`${TK}.colName`)}>{lead.name}</td>
-                      <td data-label={t(`${TK}.colPhone`)}>{lead.phone}</td>
+                      <td data-label={t(`${TK}.colPhone`)}>
+                        <span className="whitespace-nowrap tabular-nums">{lead.phone}</span>
+                      </td>
                       <td className="qr-lead-code" data-label={t(`${TK}.colCode`)}>
                         {lead.code}
                       </td>

@@ -46,12 +46,12 @@ export default function CheckInStepFrame({
       className={
         bare
           ? 'w-full space-y-4'
-          : 'mx-auto w-full max-w-2xl space-y-4 rounded-2xl border border-nexoraBorder bg-nexoraSurface p-6'
+          : 'mx-auto w-full max-w-2xl space-y-4 rounded-2xl border border-nexoraBrand/20 bg-nexoraSurface p-6 shadow-sm'
       }
     >
       <div className="text-center">
-        <h1 className="text-xl font-black text-nexoraText">{title}</h1>
-        {subtitle ? <p className="mt-1 text-sm text-nexoraMuted">{subtitle}</p> : null}
+        <h1 className="text-lg font-black leading-6 text-nexoraText">{title}</h1>
+        {subtitle ? <p className="mt-1 text-xs leading-4 text-nexoraMuted">{subtitle}</p> : null}
       </div>
 
       {children}

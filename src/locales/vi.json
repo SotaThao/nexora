@@ -423,6 +423,7 @@
     "update": "Cập nhật",
     "delete": "Xóa",
     "edit": "Sửa",
+    "view": "Xem",
     "view_detail": "Xem chi tiết",
     "copy": "Sao chép",
     "copied": "Đã sao chép!",
@@ -3533,7 +3534,7 @@
             "reportEmpty": "Chưa có dữ liệu lương cho tuần này.",
             "reportColumnTechnician": "Thợ",
             "reportColumnHours": "Giờ",
-            "reportColumnService": "Dịch vụ $",
+            "reportColumnService": "Số tiền dịch vụ",
             "reportColumnCommission": "Hoa hồng $",
             "reportColumnTip": "Tip",
             "reportColumnTechTakes": "Thợ nhận",
@@ -6334,11 +6335,11 @@
         "thankYouBody": "Mời bạn ngồi nghỉ — chúng tôi sẽ gọi ngay.",
         "thankYouNumberLabel": "Số thứ tự của bạn",
         "thankYouDone": "Xong ({{seconds}}s)",
-        "anyone": "Ai cũng được",
+        "anyone": "Nhân viên bất kỳ",
         "preferredTechnicianTitle": "Bạn muốn chọn thợ nào không?",
         "preferredTechnicianSubtitle": "Chọn thợ bạn muốn. Chúng tôi sẽ xếp thợ đó cho những dịch vụ họ làm được — phần còn lại lễ tân lo.",
         "technicianSearchPlaceholder": "Tìm theo tên",
-        "noTechnicians": "Hiện không có thợ nào — vẫn chọn được \"Ai cũng được\".",
+        "noTechnicians": "Hiện không có nhân viên nào — vẫn chọn được \"Nhân viên bất kỳ\".",
         "overviewTitle": "Thông tin đã đúng chưa?",
         "overviewSubtitle": "Chạm vào dịch vụ để đổi thợ, hoặc bấm Quay lại để sửa những gì bạn đã chọn.",
         "technicianForService": "Thợ cho {{serviceName}}",
@@ -6373,6 +6374,7 @@
         "subtitle": "Cho chúng tôi biết bạn là ai nhé.",
         "changePhone": "Đổi số",
         "nameLabel": "Tên",
+        "requiredLabel": "Bắt buộc",
         "namePlaceholder": "VD: Nguyễn Thị Mai",
         "smsConsent": "Nhận tin ưu đãi, nhắc lịch & quà tặng từ {{businessName}} qua SMS. Có thể phát sinh cước tin nhắn và dữ liệu."
       },
@@ -6413,20 +6415,20 @@
         "doneCountdown": "Xong ({{seconds}}s)"
       },
       "SinglePageCheckInLayout": {
-        "cancel": "Huỷ",
+        "back": "Quay lại",
         "bookingAt": "Lịch hẹn lúc {{time}}",
         "technicianTitle": "Thợ",
-        "technicianSubtitle": "Không bắt buộc — chọn \"Thợ trống trước\" là nhanh nhất.",
-        "firstAvailable": "Thợ trống trước",
+        "technicianSubtitle": "Không bắt buộc — chọn \"Nhân viên bất kỳ\" là nhanh nhất.",
+        "firstAvailable": "Nhân viên bất kỳ",
         "firstAvailableHint": "chờ ít nhất",
         "technicianSearchPlaceholder": "Tìm theo tên",
-        "noTechnicians": "Hiện chưa có thợ nào rảnh — vẫn chọn \"Thợ trống trước\" được.",
+        "noTechnicians": "Hiện chưa có nhân viên nào rảnh — vẫn chọn \"Nhân viên bất kỳ\" được.",
         "technicianBusy": "đang bận",
         "technicianAvailable": "đang rảnh",
         "submit": "Check-in"
       },
       "WizardCheckInLayout": {
-        "cancel": "Huỷ"
+        "back": "Quay lại"
       }
     }
   },

@@ -15,7 +15,7 @@ export async function sendCommunityChatOutboundText(params: {
   sendViaRest: (input: { content: string; sessionId: string }) => Promise<unknown>
 }): Promise<void> {
   const { sessionId, content, sendViaRest } = params
-  
+
   // CRITICAL: Join session group FIRST before sending
   // This ensures we receive the broadcast reply (both SignalR and REST send trigger broadcasts)
   let joinSucceeded = false
@@ -25,12 +25,12 @@ export async function sendCommunityChatOutboundText(params: {
   } catch (error) {
     // Join failed - continue anyway, message will be sent but may not receive real-time reply
   }
-  
+
   // Try to send via SignalR Hub if connection is ready AND join succeeded
   if (joinSucceeded) {
     try {
       const connection = await getCommunityChatHubConnection()
-      
+
       if (connection?.state === 'Connected') {
         await sendCommunityChatHubMessage(connection, { sessionId, content })
         return
@@ -39,7 +39,7 @@ export async function sendCommunityChatOutboundText(params: {
       // Hub send failed - fall through to REST
     }
   }
-  
+
   // Fallback to REST when hub is not connected or join/send failed
   await sendViaRest({ content, sessionId })
 }

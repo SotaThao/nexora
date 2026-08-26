@@ -194,6 +194,22 @@ export function slugify(value) {
   return value.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '')
 }
 
+export function resolveDashboardFooterVisibility(pathname) {
+  const normalizedPathname = String(pathname ?? '').replace(/\/+$/, '')
+  const isPosRoute =
+    normalizedPathname === '/dashboard/pos' || normalizedPathname.startsWith('/dashboard/pos/')
+
+  return isPosRoute ? 'hidden min-[1200px]:block' : ''
+}
+
+export function resolveDashboardPosMobileSpacer(pathname) {
+  const normalizedPathname = String(pathname ?? '').replace(/\/+$/, '')
+  const isPosRoute =
+    normalizedPathname === '/dashboard/pos' || normalizedPathname.startsWith('/dashboard/pos/')
+
+  return isPosRoute ? 'mb-20 md:hidden' : 'hidden'
+}
+
 export function parseMetricValue(value) {
   const text = String(value)
   const number = Number(text.replace(/[^0-9.-]/g, ''))

@@ -38,7 +38,7 @@ export interface CheckInBookingPrefill {
 
 export interface CheckInItemPayload {
   posServiceId: string
-  // null is "First available" and stays null — a person on the floor decides.
+  // null is "Anyone" and stays null — a person on the floor decides.
   posStaffProfileId: string | null
   note: string | null
 }

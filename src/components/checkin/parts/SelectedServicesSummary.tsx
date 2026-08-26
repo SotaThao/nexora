@@ -1,33 +1,31 @@
-// What has been picked so far, as removable chips, with the three numbers that answer "how long
-// will this take and what will it cost".
+// What has been picked so far, as removable chips, with the service count and running total.
 //
 // Separate from the catalog above it because the catalog scrolls and this must not: the running
 // answer is what the guest and the operator both glance at while still tapping through the menu.
-import { X } from 'lucide-react'
+import { ClipboardCheck, X } from 'lucide-react'
 import { useTranslation } from '../../../contexts/LanguageContext'
 import type { CheckInService } from '../types'
+import CheckInSectionCard from './CheckInSectionCard'
 
 const K = 'components.checkin.SelectedServicesSummary'
 
 export default function SelectedServicesSummary({
   services,
-  totalMinutes,
   totalPrice,
   onRemove,
 }: {
   services: CheckInService[]
-  totalMinutes: number
   totalPrice: number
   onRemove: (serviceId: string) => void
 }) {
   const { t } = useTranslation()
 
   return (
-    <section className="space-y-3 rounded-2xl border border-nexoraBorder bg-nexoraSurface p-4">
-      <h3 className="text-[11px] font-black uppercase tracking-wider text-nexoraMuted">
-        {t(`${K}.title`)}
-      </h3>
-
+    <CheckInSectionCard
+      title={t(`${K}.title`)}
+      icon={ClipboardCheck}
+      headingAs="h3"
+    >
       {services.length === 0 ? (
         <p className="text-xs text-nexoraMuted">{t(`${K}.empty`)}</p>
       ) : (
@@ -51,7 +49,7 @@ export default function SelectedServicesSummary({
         </div>
       )}
 
-      <dl className="grid grid-cols-3 gap-2 border-t border-nexoraBorder pt-3 text-center">
+      <dl className="grid grid-cols-2 gap-2 border-t border-nexoraBorder pt-3 text-center">
         <div>
           <dt className="text-[10px] font-black uppercase tracking-wider text-nexoraMuted">
             {t(`${K}.servicesCount`)}
@@ -60,19 +58,11 @@ export default function SelectedServicesSummary({
         </div>
         <div>
           <dt className="text-[10px] font-black uppercase tracking-wider text-nexoraMuted">
-            {t(`${K}.totalTime`)}
-          </dt>
-          <dd className="text-sm font-black text-nexoraText">
-            {t(`${K}.minutes`, { minutes: String(totalMinutes) })}
-          </dd>
-        </div>
-        <div>
-          <dt className="text-[10px] font-black uppercase tracking-wider text-nexoraMuted">
             {t(`${K}.total`)}
           </dt>
           <dd className="text-sm font-black text-nexoraText">${totalPrice.toFixed(2)}</dd>
         </div>
       </dl>
-    </section>
+    </CheckInSectionCard>
   )
 }

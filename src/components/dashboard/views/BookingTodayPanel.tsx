@@ -336,11 +336,19 @@ function getInitials(name: string) {
 }
 
 function formatBookingCardContact(phone: string | null, email: string | null) {
-  const parts = [phone, email].filter(
-    (part): part is string => Boolean(part && part !== EMPTY_CELL),
+  const phoneValue = phone && phone !== EMPTY_CELL ? phone : null
+  const emailValue = email && email !== EMPTY_CELL ? email : null
+  if (!phoneValue && !emailValue) return EMPTY_CELL
+
+  return (
+    <>
+      {phoneValue ? (
+        <span className="whitespace-nowrap tabular-nums">{phoneValue}</span>
+      ) : null}
+      {phoneValue && emailValue ? ' · ' : null}
+      {emailValue}
+    </>
   )
-  if (parts.length === 0) return EMPTY_CELL
-  return parts.join(' · ')
 }
 
 function formatBookingCardCallStart(main: string, date: string) {
