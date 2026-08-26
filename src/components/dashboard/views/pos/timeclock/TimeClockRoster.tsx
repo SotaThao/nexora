@@ -17,6 +17,7 @@ import { EMPTY_VALUE, getInitials } from '../posDisplay'
 import BeepMessageModal from './BeepMessageModal'
 import { formatHours } from './timeClockDay'
 import { tk } from './timeClockI18n'
+import { POS_TABLE_HEADER_CELL_CLASS, POS_TABLE_HEADER_ROW_CLASS } from '../posTableStyles'
 
 // Table/Card is a separate preference from the Order List's List/Card toggle — the two tabs are
 // remembered independently, so they keep their own storage keys.
@@ -260,25 +261,25 @@ export default function TimeClockRoster({
         </div>
       ) : (
         <div className="max-h-[560px] overflow-x-auto overflow-y-auto rounded-xl border border-nexoraBorder bg-white">
-          <table className="w-full text-left text-xs">
+          <table className="w-full min-w-[900px] table-fixed text-left text-xs">
             <thead className="sticky top-0 z-[1] bg-nexoraCanvas/90">
-              <tr className="uppercase tracking-wider text-nexoraMuted">
-                <th className="px-4 py-3 text-xs font-black">
+              <tr className={POS_TABLE_HEADER_ROW_CLASS}>
+                <th className={POS_TABLE_HEADER_CELL_CLASS}>
                   {t(tk('columnTechnician'))}
                 </th>
-                <th className="px-4 py-3 text-xs font-black">
+                <th className={POS_TABLE_HEADER_CELL_CLASS}>
                   {t(tk('columnShift'))}
                 </th>
-                <th className="px-4 py-3 text-xs font-black">
+                <th className={POS_TABLE_HEADER_CELL_CLASS}>
                   {t(tk('columnCurrentTicket'))}
                 </th>
-                <th className="px-4 py-3 text-xs font-black">
+                <th className={POS_TABLE_HEADER_CELL_CLASS}>
                   {t(tk('columnTurns'))}
                 </th>
-                <th className="px-4 py-3 text-xs font-black">
+                <th className={POS_TABLE_HEADER_CELL_CLASS}>
                   {t(tk('columnBeeper'))}
                 </th>
-                <th className="px-4 py-3 text-right text-xs font-black">
+                <th className={`${POS_TABLE_HEADER_CELL_CLASS} text-right`}>
                   {t(tk('columnActions'))}
                 </th>
               </tr>

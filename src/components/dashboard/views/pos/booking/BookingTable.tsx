@@ -10,6 +10,7 @@ import {
   formatBookingHubTimeDisplay,
 } from '../../bookingHubFormatters'
 import { resolveBookingWallClockParts, statusLabelKey } from './bookingFormatters'
+import { POS_TABLE_HEADER_CELL_CLASS, POS_TABLE_HEADER_ROW_CLASS } from '../posTableStyles'
 
 const STATUS_STYLES: Record<string, { row: string; badge: string }> = {
   [PosOrderStatus.Pending]: {
@@ -94,14 +95,14 @@ export default function BookingTable({
           <col className="w-[25%]" />
         </colgroup>
         <thead>
-          <tr className="border-b border-nexoraBorder bg-nexoraCanvas/70 text-[10px] font-black uppercase tracking-wider text-nexoraMuted">
-            <th className="px-4 py-3">{t(p + 'columnCustomer')}</th>
-            <th className="px-4 py-3">{t(p + 'columnCreated')}</th>
-            <th className="px-4 py-3">{t(p + 'columnDateTime')}</th>
-            <th className="px-4 py-3">{t(p + 'columnServices')}</th>
-            <th className="px-4 py-3">{t(p + 'columnTechnician')}</th>
-            <th className="px-4 py-3">{t(p + 'columnStatus')}</th>
-            <th className="px-4 py-3 text-right">{t(p + 'columnActions')}</th>
+          <tr className={POS_TABLE_HEADER_ROW_CLASS}>
+            <th className={POS_TABLE_HEADER_CELL_CLASS}>{t(p + 'columnCustomer')}</th>
+            <th className={POS_TABLE_HEADER_CELL_CLASS}>{t(p + 'columnCreated')}</th>
+            <th className={POS_TABLE_HEADER_CELL_CLASS}>{t(p + 'columnDateTime')}</th>
+            <th className={POS_TABLE_HEADER_CELL_CLASS}>{t(p + 'columnServices')}</th>
+            <th className={POS_TABLE_HEADER_CELL_CLASS}>{t(p + 'columnTechnician')}</th>
+            <th className={POS_TABLE_HEADER_CELL_CLASS}>{t(p + 'columnStatus')}</th>
+            <th className={`${POS_TABLE_HEADER_CELL_CLASS} text-right`}>{t(p + 'columnActions')}</th>
           </tr>
         </thead>
         <tbody>

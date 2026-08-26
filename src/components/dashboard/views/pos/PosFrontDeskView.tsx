@@ -64,6 +64,7 @@ import { formatCustomerPhone } from './customer/customerFormatters'
 import TimeClockTab from './timeclock/TimeClockTab'
 import { getLocalDayWindow } from './timeclock/timeClockDay'
 import { formatCurrency } from '../../utils'
+import { POS_TABLE_HEADER_CELL_CLASS, POS_TABLE_HEADER_ROW_CLASS } from './posTableStyles'
 
 // Every string this screen passes to t() lives under one namespace — building them through tk()
 // keeps the prefix in a single place instead of repeating it two dozen times inline.
@@ -616,7 +617,7 @@ export default function PosFrontDeskView({
     if (viewMode === OrderListViewMode.Card) {
       return (
         <div
-          className={`grid ${ORDER_LIST_FILL_MAIN_HEIGHT} grid-cols-1 gap-3 overflow-y-auto pr-1 sm:grid-cols-2 lg:grid-cols-3`}
+          className={`grid ${ORDER_LIST_FILL_MAIN_HEIGHT} content-start grid-cols-1 gap-3 overflow-y-auto pr-1 sm:grid-cols-2 lg:grid-cols-3`}
         >
           {notArrivedBookings.map((booking) => renderNotArrivedCard(booking))}
         </div>
@@ -625,16 +626,16 @@ export default function PosFrontDeskView({
 
     return (
       <div
-        className={`${ORDER_LIST_FILL_MAIN_HEIGHT} overflow-y-auto rounded-xl border border-nexoraBorder bg-white`}
+        className={`${ORDER_LIST_FILL_MAIN_HEIGHT} overflow-auto rounded-xl border border-nexoraBorder bg-white`}
       >
-        <table className="w-full text-left text-xs">
+        <table className="w-full min-w-[720px] table-fixed text-left text-xs">
           <thead className="sticky top-0 z-[1] bg-nexoraCanvas/90">
-            <tr className="text-[10px] font-black uppercase tracking-wider text-nexoraMuted">
-              <th className="px-4 py-3 text-xs font-black">{t(tk('orderListColumnTime'))}</th>
-              <th className="px-4 py-3 text-xs font-black">{t(tk('orderListColumnCustomer'))}</th>
-              <th className="px-4 py-3 text-xs font-black">{t(tk('orderListColumnTechnician'))}</th>
-              <th className="px-4 py-3 text-xs font-black">{t(tk('orderListColumnServices'))}</th>
-              <th className="px-4 py-3 text-right text-xs font-black"></th>
+            <tr className={POS_TABLE_HEADER_ROW_CLASS}>
+              <th className={POS_TABLE_HEADER_CELL_CLASS}>{t(tk('orderListColumnTime'))}</th>
+              <th className={POS_TABLE_HEADER_CELL_CLASS}>{t(tk('orderListColumnCustomer'))}</th>
+              <th className={POS_TABLE_HEADER_CELL_CLASS}>{t(tk('orderListColumnTechnician'))}</th>
+              <th className={POS_TABLE_HEADER_CELL_CLASS}>{t(tk('orderListColumnServices'))}</th>
+              <th className={`${POS_TABLE_HEADER_CELL_CLASS} text-right`}></th>
             </tr>
           </thead>
           <tbody>
@@ -733,16 +734,6 @@ export default function PosFrontDeskView({
                 {t(tk('servingSince'), { time: formatPosTime(station.assignedAt, currentLanguage) })}
               </p>
             ) : null}
-            <button
-              type="button"
-              onClick={() =>
-                station.currentOrderId &&
-                setUpdateWorkspace({ orderId: station.currentOrderId, mode: 'checkout' })
-              }
-              className="h-9 w-full rounded-lg bg-nexoraBrand text-xs font-bold text-white hover:bg-nexoraBrandDark disabled:opacity-60"
-            >
-              {t(tk('checkoutButton'))}
-            </button>
           </div>
         )}
       </div>
@@ -879,15 +870,15 @@ export default function PosFrontDeskView({
           </div>
         ) : (
           <div className="overflow-x-auto rounded-xl border border-nexoraBorder bg-white">
-            <table className="w-full min-w-[720px] text-left text-xs">
-              <thead className="bg-nexoraCanvas text-[10px] font-extrabold uppercase tracking-wide text-nexoraMuted">
-                <tr>
-                  <th className="px-4 py-3">{t(tk('reportColumnTechnician'))}</th>
-                  <th className="px-4 py-3 text-right">{t(tk('reportColumnHours'))}</th>
-                  <th className="px-4 py-3 text-right">{t(tk('reportColumnService'))}</th>
-                  <th className="px-4 py-3 text-right">{t(tk('reportColumnCommission'))}</th>
-                  <th className="px-4 py-3 text-right">{t(tk('reportColumnTip'))}</th>
-                  <th className="px-4 py-3 text-right">{t(tk('reportColumnTechTakes'))}</th>
+            <table className="w-full min-w-[720px] table-fixed text-left text-xs">
+              <thead>
+                <tr className={POS_TABLE_HEADER_ROW_CLASS}>
+                  <th className={POS_TABLE_HEADER_CELL_CLASS}>{t(tk('reportColumnTechnician'))}</th>
+                  <th className={`${POS_TABLE_HEADER_CELL_CLASS} text-right`}>{t(tk('reportColumnHours'))}</th>
+                  <th className={`${POS_TABLE_HEADER_CELL_CLASS} text-right`}>{t(tk('reportColumnService'))}</th>
+                  <th className={`${POS_TABLE_HEADER_CELL_CLASS} text-right`}>{t(tk('reportColumnCommission'))}</th>
+                  <th className={`${POS_TABLE_HEADER_CELL_CLASS} text-right`}>{t(tk('reportColumnTip'))}</th>
+                  <th className={`${POS_TABLE_HEADER_CELL_CLASS} text-right`}>{t(tk('reportColumnTechTakes'))}</th>
                 </tr>
               </thead>
               <tbody>
@@ -1068,12 +1059,17 @@ export default function PosFrontDeskView({
           </p>
         ) : (
           <div className="overflow-x-auto rounded-xl border border-nexoraBorder bg-white">
-            <table className="w-full text-left text-xs">
-              <thead className="bg-nexoraCanvas text-[10px] font-black uppercase tracking-wide text-nexoraMuted">
-                <tr>
-                  <th className="px-3 py-2.5">{t(tk('todayTurnsColumnTechnician'))}</th>
-                  <th className="px-3 py-2.5 text-right">{t(tk('todayTurnsColumnTurns'))}</th>
-                  <th className="px-3 py-2.5">{t(tk('todayTurnsColumnServices'))}</th>
+            <table className="w-full min-w-[600px] table-fixed text-left text-xs">
+              <colgroup>
+                <col className="w-[35%]" />
+                <col className="w-[15%]" />
+                <col className="w-[50%]" />
+              </colgroup>
+              <thead>
+                <tr className={POS_TABLE_HEADER_ROW_CLASS}>
+                  <th className={POS_TABLE_HEADER_CELL_CLASS}>{t(tk('todayTurnsColumnTechnician'))}</th>
+                  <th className={`${POS_TABLE_HEADER_CELL_CLASS} text-right`}>{t(tk('todayTurnsColumnTurns'))}</th>
+                  <th className={POS_TABLE_HEADER_CELL_CLASS}>{t(tk('todayTurnsColumnServices'))}</th>
                 </tr>
               </thead>
               <tbody>
@@ -1412,7 +1408,7 @@ export default function PosFrontDeskView({
                   <div className="flex min-h-0 flex-1 flex-col gap-3">
                   {attentionBadges}
                   <div
-                    className={`grid ${ORDER_LIST_FILL_MAIN_HEIGHT} grid-cols-1 gap-3 overflow-y-auto pr-1 sm:grid-cols-2 lg:grid-cols-3`}
+                    className={`grid ${ORDER_LIST_FILL_MAIN_HEIGHT} content-start grid-cols-1 gap-3 overflow-y-auto pr-1 sm:grid-cols-2 lg:grid-cols-3`}
                   >
                     {filteredOrderList.map((order) => (
                       <div
@@ -1458,19 +1454,19 @@ export default function PosFrontDeskView({
                 <div className="flex min-h-0 flex-1 flex-col gap-3">
                 {attentionBadges}
                 <div
-                  className={`${ORDER_LIST_FILL_MAIN_HEIGHT} overflow-y-auto rounded-xl border border-nexoraBorder bg-white`}
+                  className={`${ORDER_LIST_FILL_MAIN_HEIGHT} overflow-auto rounded-xl border border-nexoraBorder bg-white`}
                 >
-                  <table className="w-full text-left text-xs">
+                  <table className="w-full min-w-[1100px] table-fixed text-left text-xs">
                     <thead className="sticky top-0 z-[1] bg-nexoraCanvas/90">
-                      <tr className="text-[10px] font-black uppercase tracking-wider text-nexoraMuted">
-                        <th className="px-4 py-3 text-xs font-black">{t(tk('orderListColumnNumber'))}</th>
-                        <th className="px-4 py-3 text-xs font-black">{t(tk('orderListColumnCustomer'))}</th>
-                        <th className="px-4 py-3 text-xs font-black">{t(tk('orderListColumnCheckInAt'))}</th>
-                        <th className="px-4 py-3 text-xs font-black">{t(tk('orderListColumnStatus'))}</th>
-                        <th className="px-4 py-3 text-xs font-black">{t(tk('orderListColumnTechnician'))}</th>
-                        <th className="px-4 py-3 text-xs font-black">{t(tk('orderListColumnServices'))}</th>
-                        <th className="px-4 py-3 text-right text-xs font-black">{t(tk('orderListColumnWaitTime'))}</th>
-                        <th className="px-4 py-3 text-right text-xs font-black"></th>
+                      <tr className={POS_TABLE_HEADER_ROW_CLASS}>
+                        <th className={POS_TABLE_HEADER_CELL_CLASS}>{t(tk('orderListColumnNumber'))}</th>
+                        <th className={POS_TABLE_HEADER_CELL_CLASS}>{t(tk('orderListColumnCustomer'))}</th>
+                        <th className={POS_TABLE_HEADER_CELL_CLASS}>{t(tk('orderListColumnCheckInAt'))}</th>
+                        <th className={POS_TABLE_HEADER_CELL_CLASS}>{t(tk('orderListColumnStatus'))}</th>
+                        <th className={POS_TABLE_HEADER_CELL_CLASS}>{t(tk('orderListColumnTechnician'))}</th>
+                        <th className={POS_TABLE_HEADER_CELL_CLASS}>{t(tk('orderListColumnServices'))}</th>
+                        <th className={`${POS_TABLE_HEADER_CELL_CLASS} text-right`}>{t(tk('orderListColumnWaitTime'))}</th>
+                        <th className={`${POS_TABLE_HEADER_CELL_CLASS} text-right`}></th>
                       </tr>
                     </thead>
                     <tbody>

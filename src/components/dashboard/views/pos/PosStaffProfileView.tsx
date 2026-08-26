@@ -9,6 +9,7 @@ import { usePagination } from '../../../../hooks/usePagination'
 import { SkeletonList } from '../../../ui/skeleton'
 import Pagination from '../../../ui/Pagination'
 import PosStaffProfileDetailModal from './modals/PosStaffProfileDetailModal'
+import { POS_TABLE_HEADER_CELL_CLASS, POS_TABLE_HEADER_ROW_CLASS } from './posTableStyles'
 
 const SEARCH_DEBOUNCE_MS = 350
 const STAFF_TABLE_PAGE_SIZE = 10
@@ -104,19 +105,19 @@ export default function PosStaffProfileView() {
               <SkeletonList count={pageSize} showAvatar lines={2} />
             </div>
           ) : (
-            <table className="w-full border-collapse text-left text-sm">
+            <table className="w-full min-w-[720px] table-fixed border-collapse text-left text-sm">
               <thead>
-                <tr className="bg-slate-50 text-[10px] font-extrabold uppercase text-nexoraMuted border-b border-nexoraRule">
-                  <th className="px-5 py-3">
+                <tr className={POS_TABLE_HEADER_ROW_CLASS}>
+                  <th className={POS_TABLE_HEADER_CELL_CLASS}>
                     {t('components.dashboard.views.pos.PosStaffProfileView.tableColumnStaff')}
                   </th>
-                  <th className="px-5 py-3">
+                  <th className={POS_TABLE_HEADER_CELL_CLASS}>
                     {t('components.dashboard.views.pos.PosStaffProfileView.tableColumnPosition')}
                   </th>
-                  <th className="px-5 py-3">
+                  <th className={POS_TABLE_HEADER_CELL_CLASS}>
                     {t('components.dashboard.views.pos.PosStaffProfileView.tableColumnContact')}
                   </th>
-                  <th className="px-5 py-3 text-center">
+                  <th className={`${POS_TABLE_HEADER_CELL_CLASS} text-center`}>
                     {t('components.dashboard.views.pos.PosStaffProfileView.tableColumnActions')}
                   </th>
                 </tr>

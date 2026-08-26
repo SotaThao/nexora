@@ -28,7 +28,7 @@ import {
   getTouchpointApiType,
   isMasterTouchpoint,
 } from '../constants/touchpoints'
-import { slugify } from './dashboard/utils'
+import { resolveDashboardFooterVisibility, slugify } from './dashboard/utils'
 import { useDashboardNavigation } from './dashboard/hooks/useDashboardNavigation'
 import { useDevices } from './dashboard/hooks/useDevices'
 import { useKybGate } from '../contexts/KybGateContext'
@@ -795,6 +795,7 @@ export default function Dashboard({
   const tabParam = searchParams.get('tab')
   const sectionParam = searchParams.get('section')
   const isPosFrontDeskRoute = location.pathname === '/dashboard/pos'
+  const footerVisibilityClass = resolveDashboardFooterVisibility(location.pathname)
   const activeMenuTitle = resolveDashboardMobileMenuTitle(
     activeMenu,
     tabParam,
@@ -869,7 +870,7 @@ export default function Dashboard({
           ) : null}
           <Outlet context={dashboardCtx} />
         </main>
-        <footer className="mb-20 border-t border-nexoraBorder bg-white px-3 py-3 sm:px-6 lg:mb-0 lg:px-7 lg:py-4">
+        <footer className={`${footerVisibilityClass} mb-20 border-t border-nexoraBorder bg-white px-3 py-3 sm:px-6 lg:mb-0 lg:px-7 lg:py-4`}>
           <div className="flex flex-wrap items-center justify-between gap-2 text-left">
             <p className="shrink-0 text-xs font-medium text-slate-700 sm:text-sm">{t('dashboard.footer.copyright')}</p>
             <AppDownloadLinks />
