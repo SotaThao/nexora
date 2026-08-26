@@ -146,6 +146,12 @@ const CommunityDesignDemo = lazyWithRetry(
 const CommunityBusinessDemo = lazyWithRetry(
   () => import("../components/community/demo/CommunityBusinessDemo"),
 );
+const TemplateBuilderPreviewPage = lazyWithRetry(
+  () => import("../components/public/builder/TemplateBuilderPreviewPage"),
+);
+const PublicPosBookingPage = lazyWithRetry(
+  () => import("../components/public/PublicBookingPage"),
+);
 
 // Bridges the URL (path token / legacy ?flow=staff-invite biz) to the wizard's
 // inviteData prop. A real token → API-backed invite; otherwise the legacy
@@ -257,6 +263,12 @@ export default function AppRouter() {
           <Route path="/help/qr/:code" element={<HelpQrPage />} />
           <Route path="/preview/menu" element={<PosMenuUpsellPreviewPage />} />
           <Route path="/booking/preview" element={<PosMenuUpsellPreviewPage />} />
+          <Route path="/preview/builder" element={<TemplateBuilderPreviewPage />} />
+          <Route path="/builder" element={<TemplateBuilderPreviewPage />} />
+          <Route path="/preview/site" element={<Navigate to="/b/nexora-luxury" replace />} />
+          <Route path="/site/:businessSlug" element={<PublicPosBookingPage />} />
+          <Route path="/b/:businessSlug" element={<PublicPosBookingPage />} />
+          <Route path="/booking/:businessSlug" element={<PublicPosBookingPage />} />
           <Route path="/pos/services" element={<PosServicesRoute />} />
           <Route path="/privacy-policy" element={<PrivacyPolicyPage />} />
           <Route path="/terms-of-service" element={<TermsOfServicePage />} />

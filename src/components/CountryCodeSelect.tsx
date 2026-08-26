@@ -14,34 +14,13 @@ import {
   buildPhonePlaceholderFromMaxDigits,
   isKnownPhoneDialCode,
 } from '../constants/phone'
+import { COUNTRY_CODES } from '../constants/countries'
 
 /** Narrow gap between phone digit groups in inputs (thinner than a normal space). */
 export const PHONE_GROUP_SEP = PhoneFormatSeparator.GroupThin
 
 export { PhoneDialCode } from '../constants/phone'
-
-export const COUNTRY_CODES = [
-  { name: 'United States', code: 'US', dialCode: PhoneDialCode.US, flag: '🇺🇸' },
-  { name: 'Canada', code: 'CA', dialCode: PhoneDialCode.US, flag: '🇨🇦' },
-  { name: 'Vietnam', code: 'VN', dialCode: PhoneDialCode.Vietnam, flag: '🇻🇳' },
-  { name: 'United Kingdom', code: 'GB', dialCode: '+44', flag: '🇬🇧' },
-  { name: 'Australia', code: 'AU', dialCode: '+61', flag: '🇦🇺' },
-  { name: 'Singapore', code: 'SG', dialCode: '+65', flag: '🇸🇬' },
-  { name: 'Japan', code: 'JP', dialCode: '+81', flag: '🇯🇵' },
-  { name: 'South Korea', code: 'KR', dialCode: '+82', flag: '🇰🇷' },
-  { name: 'Germany', code: 'DE', dialCode: '+49', flag: '🇩🇪' },
-  { name: 'France', code: 'FR', dialCode: '+33', flag: '🇫🇷' },
-  { name: 'India', code: 'IN', dialCode: '+91', flag: '🇮🇳' },
-  { name: 'China', code: 'CN', dialCode: '+86', flag: '🇨🇳' },
-  { name: 'Brazil', code: 'BR', dialCode: '+55', flag: '🇧🇷' },
-  { name: 'Mexico', code: 'MX', dialCode: '+52', flag: '🇲🇽' },
-  { name: 'Hong Kong', code: 'HK', dialCode: '+852', flag: '🇭🇰' },
-  { name: 'Taiwan', code: 'TW', dialCode: '+886', flag: '🇹🇼' },
-  { name: 'Malaysia', code: 'MY', dialCode: '+60', flag: '🇲🇾' },
-  { name: 'Thailand', code: 'TH', dialCode: '+66', flag: '🇹🇭' },
-  { name: 'Philippines', code: 'PH', dialCode: '+63', flag: '🇵🇭' },
-  { name: 'Indonesia', code: 'ID', dialCode: '+62', flag: '🇮🇩' },
-]
+export { COUNTRY_CODES } from '../constants/countries'
 
 export const parsePhone = (phoneStr) => {
   if (!phoneStr) return { countryCode: PhoneDialCode.US, nationalNumber: '' }
@@ -74,11 +53,15 @@ export const parsePhone = (phoneStr) => {
     return { countryCode: PhoneDialCode.Vietnam, nationalNumber: digits.slice(1) }
   }
 
+  // API / paste without "+": "18065551212" or "84901234567"
+  const prefixed = matchCallingCodePrefixedDigits(digits)
+  if (prefixed) return prefixed
+
   return { countryCode: PhoneDialCode.US, nationalNumber: normalized }
 }
 
 export const getCountryByDialCode = (dialCode) => {
-  return COUNTRY_CODES.find(c => c.dialCode === dialCode) || COUNTRY_CODES.find(c => c.code === 'US')
+  return COUNTRY_CODES.find(c => c.dialCode === dialCode)
 }
 
 export const getDefaultDialCode = (appLanguage) => {
@@ -129,6 +112,36 @@ export const getE164MaxNationalDigits = (dialCode: string) => {
   return getMaxNationalDigits(dialCode)
 }
 
+/**
+ * Detect country calling code embedded in digits without a leading "+".
+ * Only accepts an exact national length for that dial code so partial input
+ * and plain national numbers (e.g. 10-digit US) are not mis-parsed.
+ */
+function matchCallingCodePrefixedDigits(digits: string): {
+  countryCode: string
+  nationalNumber: string
+} | null {
+  if (!digits) return null
+
+  const candidates = [...COUNTRY_CODES]
+    .map((country) => ({
+      dialCode: country.dialCode,
+      dialDigits: country.dialCode.replace(/\D/g, ''),
+    }))
+    .filter((country) => country.dialDigits.length > 0)
+    .sort((a, b) => b.dialDigits.length - a.dialDigits.length)
+
+  for (const { dialCode, dialDigits } of candidates) {
+    if (!digits.startsWith(dialDigits)) continue
+    const nationalNumber = digits.slice(dialDigits.length)
+    if (!nationalNumber) continue
+    if (nationalNumber.length !== getE164MaxNationalDigits(dialCode)) continue
+    return { countryCode: dialCode, nationalNumber }
+  }
+
+  return null
+}
+
 /** Strip domestic trunk prefix (e.g. leading 0 for +84) before E.164 payload. */
 export const stripTrunkPrefixNational = (nationalDigits: string, dialCode: string) => {
   const digits = nationalDigits.replace(/\D/g, '')
@@ -142,16 +155,21 @@ export const normalizePhoneE164 = (value: string, fallbackDialCode: string) => {
   const trimmed = value.trim()
   if (!trimmed) return ''
 
-  const parsed = parsePhone(
-    trimmed.startsWith('+') ? trimmed : `${fallbackDialCode}${trimmed.replace(/\D/g, '')}`,
-  )
-  const digits = stripTrunkPrefixNational(parsed.nationalNumber, parsed.countryCode).slice(
+  const digits = trimmed.replace(/\D/g, '')
+  // When the value already includes a calling code without "+", do not prepend
+  // fallbackDialCode again (that produced "+1" + "1806…" → truncated junk).
+  const parsed = trimmed.startsWith('+')
+    ? parsePhone(trimmed)
+    : matchCallingCodePrefixedDigits(digits) ??
+      parsePhone(`${fallbackDialCode}${digits}`)
+
+  const nationalDigits = stripTrunkPrefixNational(parsed.nationalNumber, parsed.countryCode).slice(
     0,
     getE164MaxNationalDigits(parsed.countryCode),
   )
 
-  if (!digits) return ''
-  return `${parsed.countryCode}${digits}`
+  if (!nationalDigits) return ''
+  return `${parsed.countryCode}${nationalDigits}`
 }
 
 /** BE stores VN phones with leading 0; US keeps E.164 (+1...). */
@@ -167,6 +185,23 @@ export const normalizePhoneForApi = (value: string, fallbackDialCode: string) =>
   }
 
   return e164
+}
+
+/**
+ * Strip FE-only phone formatting before search API calls.
+ * e.g. "+1 806-388-8899" → "+18063888899". Name queries pass through unchanged.
+ */
+export const normalizePhoneSearchTerm = (value: string) => {
+  const trimmed = String(value ?? '').trim()
+  if (!trimmed) return ''
+
+  // Drop spaces / dashes / parens / thin group separators used for display only.
+  const compacted = trimmed.replace(/[\s().\-\u2009]/g, '')
+  if (/^\+?\d+$/.test(compacted)) {
+    return compacted.startsWith('+') ? `+${compacted.slice(1)}` : compacted
+  }
+
+  return trimmed
 }
 
 export const getDisplayMaxNationalDigits = (dialCode: string, nationalDigits = '') => {
@@ -234,6 +269,7 @@ export const formatNationalNumber = (nationalNumber, dialCode) => {
 
   digits = digits.slice(0, getMaxNationalDigits(dialCode))
   const country = getCountryByDialCode(dialCode)
+  if (!country) return digits
   const formatter = new AsYouType(country.code as import('libphonenumber-js').CountryCode)
   return formatter.input(digits)
 }
@@ -289,7 +325,8 @@ export default function CountryCodeSelect({
     }
   }, [showSearch, isOpen])
 
-  const selectedCountry = COUNTRY_CODES.find(c => c.dialCode === value) || COUNTRY_CODES[0]
+  const selectedCountry = COUNTRY_CODES.find(c => c.dialCode === value)
+    || { name: '', code: '', dialCode: value || PhoneDialCode.US }
 
   const filteredCountries = showSearch
     ? COUNTRY_CODES.filter(c =>
@@ -325,21 +362,25 @@ export default function CountryCodeSelect({
           embedded ? 'top-full mt-1' : 'mt-11'
         }`}>
           {showSearch ? (
-            <div className="country-code-search-wrap p-2 bg-slate-50 flex items-center gap-1.5">
-              <Search className="w-3.5 h-3.5 text-nexoraSubtle shrink-0" />
-              <input
-                type="text"
-                autoFocus
-                placeholder={t('components.CountryCodeSelect.phSearch')}
-                value={search}
-                onChange={(e) => setSearch(e.target.value)}
-                className="country-code-search-input w-full text-xs bg-transparent border-0 outline-none p-0 shadow-none focus:ring-0 focus:outline-none text-nexoraText placeholder-nexoraSubtle"
-              />
+            <div className="country-code-search-wrap p-2 bg-white border-b border-nexoraBorder">
+              <div className="country-code-search-field flex items-center gap-1.5 rounded-md border border-nexoraBorder bg-white px-2.5 py-1.5">
+                <Search className="w-3.5 h-3.5 text-nexoraMuted shrink-0" />
+                <input
+                  type="text"
+                  autoFocus
+                  placeholder={t('components.CountryCodeSelect.phSearch')}
+                  value={search}
+                  onChange={(e) => setSearch(e.target.value)}
+                  className="country-code-search-input w-full text-xs bg-transparent border-0 outline-none p-0 shadow-none focus:ring-0 focus:outline-none text-nexoraText placeholder-nexoraSubtle"
+                />
+              </div>
             </div>
           ) : null}
           <div className="country-code-list max-h-48 overflow-y-auto py-1">
             {filteredCountries.length === 0 ? (
-              <div className="p-3 text-[10px] text-nexoraSubtle text-center font-medium">No countries found</div>
+              <div className="p-3 text-[10px] text-nexoraSubtle text-center font-medium">
+                {t('components.CountryCodeSelect.emptyCountries')}
+              </div>
             ) : (
               filteredCountries.map((country) => {
                 const isSelected = country.dialCode === value && country.code === selectedCountry.code

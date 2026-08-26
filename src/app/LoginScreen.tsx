@@ -265,6 +265,37 @@ export default function LoginScreen() {
                 <span>Vào nhanh tài khoản Demo (Owner / Salon POS)</span>
               </button>
 
+              <div className="pt-1 space-y-2">
+                <button
+                  type="button"
+                  onClick={() => navigate('/preview/builder')}
+                  className="w-full min-h-11 py-2.5 bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 transition-all text-white font-extrabold text-xs uppercase tracking-wider rounded-lg flex items-center justify-center gap-2 shadow-[0_4px_16px_rgba(99,102,241,0.35)]"
+                >
+                  <span>🎨</span>
+                  <span>Vào Template Builder Studio (US-107)</span>
+                </button>
+
+                <div className="grid grid-cols-2 gap-2">
+                  <button
+                    type="button"
+                    onClick={() => navigate('/b/nexora-luxury')}
+                    className="w-full min-h-10 py-2 bg-slate-800 hover:bg-slate-700 transition-all text-emerald-400 font-bold text-[11px] rounded-lg flex items-center justify-center gap-1.5 border border-slate-700"
+                  >
+                    <span>🌐</span>
+                    <span>Website Tiệm</span>
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() => navigate('/preview/menu')}
+                    className="w-full min-h-10 py-2 bg-slate-800 hover:bg-slate-700 transition-all text-amber-400 font-bold text-[11px] rounded-lg flex items-center justify-center gap-1.5 border border-slate-700"
+                  >
+                    <span>💅</span>
+                    <span>Smart Upsell</span>
+                  </button>
+                </div>
+              </div>
+
               <div className="relative hidden py-1 text-center sm:block">
                 <div className="absolute inset-0 flex items-center"><div className="w-full border-t border-nexoraBorder"></div></div>
                 <span className="relative bg-white px-3 text-[10px] text-nexoraSubtle font-bold uppercase tracking-wider">{t('login.social_auth_divider')}</span>

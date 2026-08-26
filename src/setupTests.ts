@@ -13,6 +13,60 @@ vi.mock('./contexts/NotificationContext', () => ({
   }),
 }))
 
+Object.defineProperty(window, 'matchMedia', {
+  writable: true,
+  value: vi.fn().mockImplementation((query) => ({
+    matches: false,
+    media: query,
+    onchange: null,
+    addListener: vi.fn(),
+    removeListener: vi.fn(),
+    addEventListener: vi.fn(),
+    removeEventListener: vi.fn(),
+    dispatchEvent: vi.fn(),
+  })),
+})
+
+class MockIntersectionObserver {
+  callback: (entries: Array<{ isIntersecting: boolean; target: Element }>, observer: unknown) => void
+  constructor(callback: (entries: Array<{ isIntersecting: boolean; target: Element }>, observer: unknown) => void) {
+    this.callback = callback
+  }
+  observe = vi.fn((target: Element) => {
+    if (typeof this.callback === 'function') {
+      this.callback([{ isIntersecting: true, target }], this)
+    }
+  })
+  unobserve = vi.fn()
+  disconnect = vi.fn()
+}
+Object.defineProperty(window, 'IntersectionObserver', {
+  writable: true,
+  configurable: true,
+  value: MockIntersectionObserver,
+})
+Object.defineProperty(global, 'IntersectionObserver', {
+  writable: true,
+  configurable: true,
+  value: MockIntersectionObserver,
+})
+
+class MockResizeObserver {
+  observe = vi.fn()
+  unobserve = vi.fn()
+  disconnect = vi.fn()
+}
+Object.defineProperty(window, 'ResizeObserver', {
+  writable: true,
+  configurable: true,
+  value: MockResizeObserver,
+})
+Object.defineProperty(global, 'ResizeObserver', {
+  writable: true,
+  configurable: true,
+  value: MockResizeObserver,
+})
+
 const DOMAIN_QUERY_KEYS: Record<string, string[]> = {
   nexora_notifications: ['notifications'],
   nexora_transactions: ['transactions'],
