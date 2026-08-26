@@ -38,6 +38,7 @@ import {
 import { useCheckInTechnicians } from '../../../../data/hooks/usePosCheckIn'
 import { PosOrderStatus } from '../../../../constants/posOrderStatus'
 import { isLineBusySurface, TicketBusySurface } from '../../../../constants/posTicketAction'
+import { formatUsdAmount } from '../../../../utils/currencyInput'
 import { isPersistedLineId } from '../../../../utils/uuid'
 import type {
   CheckoutServiceCatalogItemApiDto,
@@ -284,12 +285,12 @@ export default function PosOrderWorkspace({
   // the device back (brainstorm decision: avoid stray taps landing on the next screen).
   const [customerFacingMode, setCustomerFacingMode] = useState(false)
   // POS iPad redesign, Ticket 6 — receipt delivery is a single choice: Send SMS (using the phone
-  // already on file — mandatory since Ticket 2, so always available) or No Receipt. Email option
-  // dropped from this screen entirely; physical Print opens the browser's print-ready receipt.
+  // already on file — mandatory since Ticket 2), Print, or No Receipt. Email is intentionally
+  // omitted; Print Preview remains a separate action so previewing never changes the selection.
   //
   // Defaults to No Receipt: a receipt costs an SMS and most walk-ins do not ask for one, so it is
   // opted into per checkout rather than sent unless someone remembers to turn it off.
-  const [receiptChoice, setReceiptChoice] = useState<'sms' | 'none'>('none')
+  const [receiptChoice, setReceiptChoice] = useState<'sms' | 'print' | 'none'>('none')
   const [printPreviewOpen, setPrintPreviewOpen] = useState(false)
   const [tipSplitInputs, setTipSplitInputs] = useState<Record<string, string>>({})
   const initializedWorkspaceRef = useRef<string | null>(null)
@@ -869,7 +870,9 @@ export default function PosOrderWorkspace({
                           return (
                             <div
                               data-testid={`ticket-detail-${line.key}`}
-                              className="grid grid-cols-[minmax(0,1fr)_auto] gap-x-3 gap-y-1"
+                              className={`grid grid-cols-[minmax(0,1fr)_auto] gap-x-3 gap-y-1 rounded-lg px-2 py-3 ${
+                                index % 2 === 0 ? 'bg-white' : 'bg-nexoraCanvas/70'
+                              }`}
                             >
                               <div className="min-w-0">
                                 <div className="flex items-center gap-2">
@@ -1007,11 +1010,15 @@ export default function PosOrderWorkspace({
                                   charge of its own on the receipt but never a ticket row of its own. */}
                               {line.addOns.length > 0 ? (
                                 <ul className="col-span-2 space-y-1 border-l-2 border-nexoraBorder pl-3">
-                                  {line.addOns.map((addOn) => (
+                                  {line.addOns.map((addOn, addOnIndex) => (
                                     <li
                                       key={addOn.id}
                                       data-testid={`ticket-add-on-${addOn.id}`}
-                                      className="flex items-start justify-between gap-2"
+                                      className={`flex items-start justify-between gap-2 rounded-md px-2 py-1.5 ${
+                                        addOnIndex % 2 === 0
+                                          ? 'bg-nexoraCanvas/80'
+                                          : 'bg-nexoraBrandSoft/40'
+                                      }`}
                                     >
                                       <div className="min-w-0">
                                         <p className="min-w-0 truncate text-xs font-bold leading-tight text-nexoraText">
@@ -1091,7 +1098,12 @@ export default function PosOrderWorkspace({
                           )
                         })()
                       ) : (
-                        <div data-testid={`ticket-detail-${line.key}`} className="space-y-2">
+                        <div
+                          data-testid={`ticket-detail-${line.key}`}
+                          className={`space-y-2 rounded-lg px-2 py-3 ${
+                            index % 2 === 0 ? 'bg-white' : 'bg-nexoraCanvas/70'
+                          }`}
+                        >
                           <div className="flex items-start gap-3">
                             <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-nexoraCanvas text-nexoraBrandDark">
                               <Package className="h-4 w-4" />
@@ -1394,6 +1406,7 @@ export default function PosOrderWorkspace({
                       <button
                         type="button"
                         onClick={() => setReceiptChoice('none')}
+                        aria-pressed={receiptChoice === 'none'}
                         className={`h-8 rounded-lg border text-[11px] font-semibold transition-colors ${
                           receiptChoice === 'none'
                             ? 'border-nexoraBrand/50 bg-nexoraBrandSoft text-nexoraBrandDark'
@@ -1405,6 +1418,7 @@ export default function PosOrderWorkspace({
                       <button
                         type="button"
                         onClick={() => setReceiptChoice('sms')}
+                        aria-pressed={receiptChoice === 'sms'}
                         disabled={!order?.customerPhoneE164}
                         className={`h-8 rounded-lg border text-[11px] font-semibold transition-colors disabled:cursor-not-allowed disabled:opacity-40 ${
                           receiptChoice === 'sms'
@@ -1416,10 +1430,24 @@ export default function PosOrderWorkspace({
                       </button>
                       <button
                         type="button"
-                        onClick={handleOpenPrintPreview}
-                        className="h-8 rounded-lg border border-nexoraBorder/70 bg-white text-[11px] font-semibold text-nexoraText transition-colors hover:border-nexoraBrand/50 hover:bg-nexoraBrandSoft/40"
+                        onClick={() => setReceiptChoice('print')}
+                        aria-pressed={receiptChoice === 'print'}
+                        className={`h-8 rounded-lg border text-[11px] font-semibold transition-colors ${
+                          receiptChoice === 'print'
+                            ? 'border-nexoraBrand/50 bg-nexoraBrandSoft text-nexoraBrandDark'
+                            : 'border-nexoraBorder/70 bg-white text-nexoraText hover:border-nexoraBrand/50 hover:bg-nexoraBrandSoft/40'
+                        }`}
                       >
                         {t('components.dashboard.views.pos.PosOrderWorkspace.receiptPrint')}
+                      </button>
+                    </div>
+                    <div className="mt-1 grid grid-cols-3 gap-1.5">
+                      <button
+                        type="button"
+                        onClick={handleOpenPrintPreview}
+                        className="col-start-3 justify-self-center text-[10px] font-semibold text-nexoraBrand underline underline-offset-2 hover:text-nexoraBrandDark"
+                      >
+                        {t('components.dashboard.views.pos.PosOrderWorkspace.printPreviewLabel')}
                       </button>
                     </div>
                   </div>
@@ -1587,14 +1615,14 @@ export default function PosOrderWorkspace({
                                 <Fragment key={line.key}>
                                   <div>
                                     <span>{line.serviceName}</span>
-                                    <span className="tabular-nums">${lineTotal(line).toFixed(2)}</span>
+                                    <span className="tabular-nums">{formatUsdAmount(lineTotal(line))}</span>
                                   </div>
                                   {/* Printed as its own line under the service — a customer must be
                                       able to see where an extra charge came from. */}
                                   {line.addOns.map((addOn) => (
                                     <div key={addOn.id}>
                                       <span>+ {addOn.addOnName}</span>
-                                      <span className="tabular-nums">${addOn.lineTotal.toFixed(2)}</span>
+                                      <span className="tabular-nums">{formatUsdAmount(addOn.lineTotal)}</span>
                                     </div>
                                   ))}
                                 </Fragment>
@@ -1611,7 +1639,7 @@ export default function PosOrderWorkspace({
                               {printableProductLines.map((line) => (
                                 <div key={line.key}>
                                   <span>{line.productName}</span>
-                                  <span className="tabular-nums">${lineTotal(line).toFixed(2)}</span>
+                                  <span className="tabular-nums">{formatUsdAmount(lineTotal(line))}</span>
                                 </div>
                               ))}
                             </div>
@@ -1626,15 +1654,15 @@ export default function PosOrderWorkspace({
                   <dl className="pos-receipt-totals">
                     <div>
                       <dt>{t('components.dashboard.views.pos.PosOrderWorkspace.summaryTip')}</dt>
-                      <dd>${order.tipAmount.toFixed(2)}</dd>
+                      <dd>{formatUsdAmount(order.tipAmount)}</dd>
                     </div>
                     <div>
                       <dt>{t('components.dashboard.views.pos.PosOrderWorkspace.summaryDiscount')}</dt>
-                      <dd>{order.discountAmount === 0 ? '$0.00' : `-$${Math.abs(order.discountAmount).toFixed(2)}`}</dd>
+                      <dd>{formatUsdAmount(order.discountAmount === 0 ? 0 : -Math.abs(order.discountAmount))}</dd>
                     </div>
                     <div className="pos-receipt-total">
                       <dt>{t('components.dashboard.views.pos.PosOrderWorkspace.summaryTotal')}</dt>
-                      <dd>${order.total.toFixed(2)}</dd>
+                      <dd>{formatUsdAmount(order.total)}</dd>
                     </div>
                   </dl>
 
