@@ -98,7 +98,7 @@ export default function TimeClockRoster({
   }
 
   const handleBeep = async () => {
-    if (!beepTarget) return
+    if (!beepTarget || beep.isPending) return
     const row = beepTarget
     try {
       const result = await beep.mutateAsync({
