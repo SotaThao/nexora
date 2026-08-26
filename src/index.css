@@ -27,8 +27,7 @@ body:has(.pos-front-desk-action-surface)
     summary,
     select:not(:disabled),
     input[type="checkbox"]:not(:disabled),
-    input[type="radio"]:not(:disabled),
-    label[for]
+    input[type="radio"]:not(:disabled)
   ) {
   cursor: pointer;
   touch-action: manipulation;
@@ -48,8 +47,7 @@ body:has(.pos-front-desk-action-surface)
       summary,
       select:not(:disabled),
       input[type="checkbox"]:not(:disabled),
-      input[type="radio"]:not(:disabled),
-      label[for]
+      input[type="radio"]:not(:disabled)
     ):hover {
     filter: brightness(0.97) saturate(1.06);
     box-shadow: 0 0 0 2px rgba(70, 72, 216, 0.16), 0 5px 14px rgba(15, 23, 42, 0.12);
@@ -67,8 +65,7 @@ body:has(.pos-front-desk-action-surface)
       summary,
       select:not(:disabled),
       input[type="checkbox"]:not(:disabled),
-      input[type="radio"]:not(:disabled),
-      label[for]
+      input[type="radio"]:not(:disabled)
     ):hover {
     box-shadow: none;
     translate: 0 0;
@@ -83,8 +80,7 @@ body:has(.pos-front-desk-action-surface)
     summary,
     select:not(:disabled),
     input[type="checkbox"]:not(:disabled),
-    input[type="radio"]:not(:disabled),
-    label[for]
+    input[type="radio"]:not(:disabled)
   ):active {
   filter: brightness(0.93);
   scale: 0.98;

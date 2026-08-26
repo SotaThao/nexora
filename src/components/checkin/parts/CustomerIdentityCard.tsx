@@ -57,8 +57,9 @@ export default function CustomerIdentityCard({
           className="mb-1 block text-[11px] font-black uppercase tracking-wide text-nexoraMuted"
         >
           {t(`${K}.nameLabel`)}
-          <span className="ml-1 text-[10px] font-semibold normal-case tracking-normal text-nexoraDanger">
-            {t(`${K}.requiredLabel`)}
+          {' '}
+          <span className="text-[10px] font-semibold normal-case tracking-normal text-nexoraMuted">
+            ({t(`${K}.requiredLabel`)})
           </span>
         </label>
         <input
