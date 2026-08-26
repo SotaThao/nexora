@@ -13,6 +13,7 @@ import {
   Wallet,
   Calendar,
   Package,
+  Globe,
 } from 'lucide-react'
 import { BookingHubMainTab } from '../../data/merchantVoice/domain'
 
@@ -70,6 +71,7 @@ export const MENU_ITEMS = [
   { id: 'reports', label: 'Transactions', icon: ReceiptText },
   { id: 'touchpoints', label: 'Touch Points', icon: QrCode },
   { id: 'pos/services', label: 'POS Services & Menu', icon: Package },
+  { id: 'site', label: 'Website Template Studio', icon: Globe },
   { id: 'booking-hub', label: 'AI Hub', icon: Calendar },
   { id: 'product-management', label: 'Gift Card Center', icon: Package },
   { id: 'analytics', label: 'Analytics', icon: BarChart3 },

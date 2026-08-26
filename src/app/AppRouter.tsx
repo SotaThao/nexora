@@ -17,6 +17,7 @@ import {
   FallbackRoute,
   OverviewRoute,
   PosServicesRoute,
+  SiteEditorRoute,
   ReportsRoute,
   ReviewsRoute,
   SettingsRoute,
@@ -335,6 +336,9 @@ export default function AppRouter() {
             <Route path="booking-hub" element={<BookingHubRoute />} />
             <Route path="pos/services" element={<PosServicesRoute />} />
             <Route path="pos" element={<Navigate to="/dashboard/pos/services" replace />} />
+            <Route path="site" element={<SiteEditorRoute />} />
+            <Route path="builder" element={<SiteEditorRoute />} />
+            <Route path="site/builder" element={<SiteEditorRoute />} />
             <Route path="touchpoints" element={<TouchpointsRoute />} />
             <Route path="analytics" element={<AnalyticsRoute />} />
             <Route path="settings" element={<SettingsRoute />} />

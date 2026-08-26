@@ -352,11 +352,20 @@ export function SubscriptionsRoute() {
 }
 
 const PosServicesView = React.lazy(() => import('../views/pos/PosServicesView'))
+const SiteEditorView = React.lazy(() => import('../views/site/SiteEditorView'))
 
 export function PosServicesRoute() {
   return (
     <React.Suspense fallback={<div className="p-8 text-center text-slate-400">Đang tải POS Services...</div>}>
       <PosServicesView />
+    </React.Suspense>
+  )
+}
+
+export function SiteEditorRoute() {
+  return (
+    <React.Suspense fallback={<div className="p-8 text-center text-slate-400">Đang tải Website Studio...</div>}>
+      <SiteEditorView />
     </React.Suspense>
   )
 }
