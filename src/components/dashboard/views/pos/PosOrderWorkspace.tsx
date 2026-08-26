@@ -1513,7 +1513,7 @@ export default function PosOrderWorkspace({
                       <dt className="font-black uppercase text-nexoraText">
                         {t('components.dashboard.views.pos.PosOrderWorkspace.summaryTotal')}
                       </dt>
-                      <dd className="font-black text-nexoraText">${order.total.toFixed(2)}</dd>
+                      <dd className="font-black text-nexoraText">{formatUsdAmount(order.total)}</dd>
                     </div>
                   </dl>
                 </div>
