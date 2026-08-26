@@ -42,6 +42,7 @@ export const POS_CHECKOUT_PAYMENT_METHOD_ICON_SOURCES: Partial<
   [PosCheckoutPaymentMethod.Card]: '/assets/images/pos-payment/credit-debit-card-icon.png',
   [PosCheckoutPaymentMethod.Cash]: '/assets/images/pos-payment/cash.png',
   [PosCheckoutPaymentMethod.GiftCard]: '/assets/images/pos-payment/gift_card.png',
+  [PosCheckoutPaymentMethod.SplitPay]: '/assets/images/pos-payment/split_pay.png',
   [PosCheckoutPaymentMethod.Zelle]: '/assets/images/pos-payment/zelle.png',
   [PosCheckoutPaymentMethod.CashApp]: '/assets/images/pos-payment/cash_app.png',
   [PosCheckoutPaymentMethod.Venmo]: '/assets/images/pos-payment/venmo.png',
