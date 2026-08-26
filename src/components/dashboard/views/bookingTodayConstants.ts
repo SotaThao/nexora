@@ -98,8 +98,7 @@ export const BOOKING_CALENDAR_CELL_DURATION_MINUTES = 15
 /**
  * DayPilot Calendar:
  * - `BusinessHours` enables internal vertical scroll so staff column headers stay fixed.
- * - Content is still a full 24h day (midnight→midnight); `businessBegins/EndsHour` only size the viewport.
- * - Default `initScrollPos: Auto` opens scrolled to `businessBeginsHour` (9 AM); user can scroll up/down freely.
+ * - Non-business cells are hidden so Front Desk only sees schedulable hours.
  */
 export const BOOKING_CALENDAR_DEFAULT_SCROLL_HOUR = 9
 
@@ -107,7 +106,8 @@ export const BOOKING_CALENDAR_DAYPILOT_OPTIONS = {
   viewType: 'Resources' as const,
   businessBeginsHour: BOOKING_CALENDAR_DEFAULT_SCROLL_HOUR,
   businessEndsHour: 19,
-  heightSpec: 'BusinessHours' as const,
+  showNonBusiness: false,
+  heightSpec: 'BusinessHoursNoScroll' as const,
   cellDuration: BOOKING_CALENDAR_CELL_DURATION_MINUTES,
   cellHeight: 28,
   hourWidth: 64,

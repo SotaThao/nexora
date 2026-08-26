@@ -26,10 +26,12 @@ export default function WizardCheckInLayout({
   session,
   businessName,
   onCancel,
+  compactTechnicianCards = false,
 }: {
   session: CheckInSession
   businessName: string
   onCancel: () => void
+  compactTechnicianCards?: boolean
 }) {
   const { t } = useTranslation()
   const [step, setStep] = useState<WizardStep>('name')
@@ -80,6 +82,7 @@ export default function WizardCheckInLayout({
           onSelect={session.choosePreferredStaff}
           onBack={() => setStep('name')}
           onContinue={() => setStep('services')}
+          compact={compactTechnicianCards}
         />
       ) : null}
 

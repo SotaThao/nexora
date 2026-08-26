@@ -16,6 +16,7 @@ import {
   PosDiscountBearer,
   PosServiceDiscountType,
 } from '../../../../../constants/posDiscount'
+import { sanitizeDecimalInput } from '../../../../../utils/currencyInput'
 
 const K = 'components.dashboard.views.pos.PosOrderWorkspace'
 
@@ -87,18 +88,34 @@ export default function ServiceDiscountModal({
   if (!target) return null
 
   const parsedValue = Number(valueInput)
-  const hasValidValue =
-    valueInput.trim() !== '' &&
-    Number.isFinite(parsedValue) &&
-    parsedValue > 0 &&
-    (discountType !== PosServiceDiscountType.Percent || parsedValue <= MAX_DISCOUNT_PERCENT)
+  const hasNumber = valueInput.trim() !== '' && Number.isFinite(parsedValue)
+  const isOverPercentLimit = discountType === PosServiceDiscountType.Percent && parsedValue > MAX_DISCOUNT_PERCENT
+  // A discount larger than the line itself is a typo, not a giveaway — the backend clamps it to the
+  // price, which would silently save a different number than the one that was typed.
+  const isOverLineTotal = discountType === PosServiceDiscountType.Amount && parsedValue > target.lineTotal
+  const hasValidValue = hasNumber && parsedValue > 0 && !isOverPercentLimit && !isOverLineTotal
+
+  // Only once something has actually been typed — an empty field is "not filled in yet", not wrong.
+  const validationMessage = !hasNumber
+    ? null
+    : isOverPercentLimit
+      ? t(`${K}.discountPercentTooHigh`, { max: MAX_DISCOUNT_PERCENT })
+      : isOverLineTotal
+        ? t(`${K}.discountAmountTooHigh`, { max: target.lineTotal.toFixed(2) })
+        : parsedValue <= 0
+          ? t(`${K}.discountValueMustBePositive`)
+          : null
 
   const previewAmount = hasValidValue ? resolvePreviewAmount(discountType, parsedValue, target.lineTotal) : 0
+  // Halved in whole cents, not in dollars: (1.16 / 2) * 100 is 57.99999999999999 in binary
+  // floating point, so flooring dollars showed $0.57 for a split the backend stores as $0.58.
+  // PosServiceDiscountResolver.ResolveStaffShare runs on decimal and rounds toward zero — matched
+  // here by flooring the integer cent count, which is exact.
   const previewStaffShare =
     bearer === PosDiscountBearer.Staff
       ? previewAmount
       : bearer === PosDiscountBearer.Split
-        ? Math.floor((previewAmount / 2) * 100) / 100
+        ? Math.floor(Math.round(previewAmount * 100) / 2) / 100
         : 0
 
   return (
@@ -147,18 +164,30 @@ export default function ServiceDiscountModal({
             >
               {t(`${K}.discountValueLabel`)}
             </label>
+            {/* Deliberately a text input: type="number" accepts "e"/"E"/"+"/"-" as valid
+                keystrokes, so those characters reach the field regardless of min/max. inputMode
+                still brings up the numeric keypad on the iPad. */}
             <input
               id="service-discount-value"
-              type="number"
+              type="text"
               inputMode="decimal"
-              min={0}
-              step="0.01"
-              max={discountType === PosServiceDiscountType.Percent ? MAX_DISCOUNT_PERCENT : target.lineTotal}
+              autoComplete="off"
               value={valueInput}
-              onChange={(event) => setValueInput(event.target.value)}
+              onChange={(event) => setValueInput(sanitizeDecimalInput(event.target.value))}
               placeholder={discountType === PosServiceDiscountType.Percent ? '10' : '5.00'}
-              className="h-10 w-full rounded-lg border border-nexoraBorder px-3 text-sm font-semibold text-nexoraText focus:border-nexoraBrand focus:outline-none"
+              aria-invalid={validationMessage !== null}
+              aria-describedby={validationMessage ? 'service-discount-value-error' : undefined}
+              className={`h-10 w-full rounded-lg border px-3 text-sm font-semibold text-nexoraText focus:outline-none ${
+                validationMessage
+                  ? 'border-nexoraDanger focus:border-nexoraDanger'
+                  : 'border-nexoraBorder focus:border-nexoraBrand'
+              }`}
             />
+            {validationMessage ? (
+              <p id="service-discount-value-error" role="alert" className="text-[11px] font-bold text-nexoraDanger">
+                {validationMessage}
+              </p>
+            ) : null}
           </div>
 
           <div className="space-y-1.5">

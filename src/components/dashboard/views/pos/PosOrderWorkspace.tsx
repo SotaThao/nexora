@@ -56,6 +56,7 @@ import ChangeTechnicianModal from './modals/ChangeTechnicianModal'
 import { formatPosDateTime } from './posDateTime'
 
 type TipMode = 'noTip' | 'fixed10' | 'fixed15' | 'pct10' | 'pct20' | 'custom'
+export type PosOrderWorkspaceMode = 'edit' | 'checkout'
 
 const PAYMENT_METHODS: PosCheckoutPaymentMethodType[] = ['Card', 'Cash', 'GiftCard', 'SplitPay']
 
@@ -130,6 +131,7 @@ function addOnsTotalAfterDiscount(line: DisplayLine): number {
 export default function PosOrderWorkspace({
   businessId,
   orderId,
+  mode = 'edit',
   onClose,
   onCompleted,
   businessName,
@@ -138,6 +140,9 @@ export default function PosOrderWorkspace({
 }: {
   businessId: string
   orderId: string
+  // Edit is operational order maintenance. Checkout is the only entry mode that reveals
+  // tip, payment method, receipt and payment summary immediately.
+  mode?: PosOrderWorkspaceMode
   // Renders a "Back" button next to the title.
   onClose?: () => void
   onCompleted?: () => void
@@ -154,7 +159,11 @@ export default function PosOrderWorkspace({
   // per-service query: with the picker inline, several lines can ask the same question at once.
   // Same population either way — both endpoints require an Active staff link and an Active POS
   // profile, and both mark busy from an InService line.
-  const { data: allTechnicians = [], isPending: areTechniciansPending } = useCheckInTechnicians(businessId)
+  const {
+    data: allTechnicians = [],
+    isPending: areTechniciansPending,
+    isFetching: areTechniciansFetching,
+  } = useCheckInTechnicians(businessId)
 
   const addServiceLine = useAddOrderServiceLine(businessId)
   const removeServiceLine = useRemoveOrderServiceLine(businessId)
@@ -170,7 +179,7 @@ export default function PosOrderWorkspace({
   const setStaffTipSplit = useSetOrderStaffTipSplit(businessId)
   const completeOrder = useCompleteOrder(businessId)
 
-  const [showPaymentSection, setShowPaymentSection] = useState(false)
+  const [showPaymentSection, setShowPaymentSection] = useState(mode === 'checkout')
   // The line whose technician is being picked. Carries the values the popup needs to open and the
   // ones the save has to send back unchanged, so it never reaches into the list again.
   const [technicianTarget, setTechnicianTarget] = useState<{
@@ -214,6 +223,7 @@ export default function PosOrderWorkspace({
   const [receiptChoice, setReceiptChoice] = useState<'sms' | 'none'>('none')
   const [printPreviewOpen, setPrintPreviewOpen] = useState(false)
   const [tipSplitInputs, setTipSplitInputs] = useState<Record<string, string>>({})
+  const initializedWorkspaceRef = useRef<string | null>(null)
   const initializedOrderIdRef = useRef<string | null>(null)
   const printCleanupRef = useRef<(() => void) | null>(null)
 
@@ -261,20 +271,34 @@ export default function PosOrderWorkspace({
     ]
   }, [order])
 
+  // Preserve service-line order while deduplicating staff. When several technicians are already
+  // involved, the first assigned technician becomes the deterministic default for a new service.
+  const assignedTechnicianIds = useMemo(() => {
+    const uniqueIds = new Set(
+      visibleLines
+        .filter((line): line is DisplayServiceLine => line.itemType === 'Service')
+        .map((line) => line.posStaffProfileId)
+        .filter((id): id is string => Boolean(id)),
+    )
+    return [...uniqueIds]
+  }, [visibleLines])
+  const isTechnicianRosterLoading = areTechniciansPending || areTechniciansFetching
+  const isServiceCatalogPending =
+    addServiceLine.isPending || (assignedTechnicianIds.length === 1 && isTechnicianRosterLoading)
+
   // Initializes local UI-only state (tip mode, receipt fields, payment-section visibility)
   // from the server exactly once per order id — later refetches (from this cashier's own
   // live edits or another tab) must not reset what the user is currently doing with tip/
   // payment-method inputs mid-checkout.
   useEffect(() => {
-    if (!order || initializedOrderIdRef.current === order.id) return
-    initializedOrderIdRef.current = order.id
+    if (!order) return
+    const workspaceKey = `${order.id}:${mode}`
+    if (initializedWorkspaceRef.current === workspaceKey) return
+    initializedWorkspaceRef.current = workspaceKey
 
-    // A Waiting ticket has nothing to charge for yet — payment stays hidden until a service is
-    // added and started. (Waiting used to open payment when there were zero service lines, for
-    // product-only orders; nothing sells products while retail is hidden.)
-    setShowPaymentSection(
-      order.status === PosOrderStatus.InService || order.status === PosOrderStatus.Completed,
-    )
+    // Status never reveals checkout information by itself. An InService order reached through
+    // Edit still opens as an operational ticket; only an explicit Checkout entry reveals payment.
+    setShowPaymentSection(mode === 'checkout')
     setReceiptChoice('none')
     setPaymentMethod('Cash')
 
@@ -291,7 +315,7 @@ export default function PosOrderWorkspace({
       else setTipMode('custom')
       setCustomTipInput(String(order.tipAmount))
     }
-  }, [order])
+  }, [order, mode])
 
   useEffect(() => {
     if (!order) return
@@ -307,6 +331,9 @@ export default function PosOrderWorkspace({
   const hasUnassignedServiceLine = visibleLines.some(
     (l) => l.itemType === 'Service' && !l.posStaffProfileId,
   )
+  // Removing every line leaves the ticket in InService, so the server refuses to complete it.
+  // Mirrored here so an emptied ticket cannot be checked out by tapping through.
+  const hasNoLines = visibleLines.length === 0
   const draftSubtotal = visibleLines.reduce(
     (sum, l) => sum + lineTotalAfterDiscount(l) + addOnsTotalAfterDiscount(l),
     0,
@@ -330,14 +357,36 @@ export default function PosOrderWorkspace({
     showToast(getErrorMessage(err, t, 'ERROR'), 'error')
   }
 
-  // Adding a service uses the backend's auto-pick behavior (omitted technician id), so the first
-  // available technician is assigned without interrupting the catalog with a picker modal.
+  // Keep an existing ticket with an already assigned technician when services are added.
   const handleCatalogServiceClick = (service: CheckoutServiceCatalogItemApiDto) => {
+    // Qualification must be known before inheriting a sole technician. The picker is disabled
+    // during this window; this guard also protects programmatic/stale click handlers.
+    if (assignedTechnicianIds.length === 1 && isTechnicianRosterLoading) return
+
     addServiceLine.mutate(
       { orderId, posServiceId: service.id, unitPrice: service.price, serviceName: service.name },
       {
         onSuccess: (newServiceLineId) => {
-          saveServiceLine(newServiceLineId, undefined, '')
+          // Preserve the original no-technician behavior: the assign endpoint auto-picks.
+          if (assignedTechnicianIds.length === 0) {
+            saveServiceLine(newServiceLineId, undefined, '')
+            return
+          }
+
+          const inheritedTechnicianId = assignedTechnicianIds[0]
+
+          // Multi-technician tickets inherit their first assigned technician in service-line order.
+          if (assignedTechnicianIds.length > 1) {
+            saveServiceLine(newServiceLineId, inheritedTechnicianId, '')
+            return
+          }
+
+          // A sole technician is inherited only when the live roster confirms they can perform
+          // the newly selected service.
+          const canPerformService = techniciansForService(service.id).some(
+            (technician) => technician.posStaffProfileId === inheritedTechnicianId,
+          )
+          if (canPerformService) saveServiceLine(newServiceLineId, inheritedTechnicianId, '')
         },
         onError: reportError,
       },
@@ -622,6 +671,7 @@ export default function PosOrderWorkspace({
             <CategoryGroupedCatalogPicker
               variant="grid"
               items={serviceCatalog}
+              isPending={isServiceCatalogPending}
               onAdd={(itemId) => {
                 const service = serviceCatalog.find((s) => s.id === itemId)
                 if (service) handleCatalogServiceClick(service)
@@ -701,8 +751,8 @@ export default function PosOrderWorkspace({
                                   ) : null}
                                 </div>
                                 <div className="mt-1 flex items-center gap-2">
-                                  <span className="min-w-0 truncate text-xs leading-tight text-nexoraMuted">
-                                    <span className="text-[10px]">
+                                  <span className="min-w-0 truncate text-xs font-semibold leading-tight text-nexoraText">
+                                    <span className="text-[10px] font-normal text-nexoraMuted">
                                       {t('components.dashboard.views.pos.PosOrderWorkspace.technicianPrefix')}
                                     </span>{' '}
                                     {technicianLabel}
@@ -993,7 +1043,12 @@ export default function PosOrderWorkspace({
                   <button
                     type="button"
                     onClick={handleCheckoutFromUpdate}
-                    disabled={isBusy}
+                    disabled={isBusy || hasNoLines}
+                    title={
+                      hasNoLines
+                        ? t('components.dashboard.views.pos.PosOrderWorkspace.addLineFirst')
+                        : undefined
+                    }
                     className="h-11 flex-1 rounded-lg bg-nexoraBrand text-sm font-bold text-white hover:bg-nexoraBrandDark disabled:opacity-60"
                   >
                     {t('components.dashboard.views.pos.PosOrderWorkspace.checkoutButton')}
@@ -1261,11 +1316,13 @@ export default function PosOrderWorkspace({
                 <button
                   type="button"
                   onClick={handleComplete}
-                  disabled={completeOrder.isPending || hasUnassignedServiceLine}
+                  disabled={completeOrder.isPending || hasUnassignedServiceLine || hasNoLines}
                   title={
-                    hasUnassignedServiceLine
-                      ? t('components.dashboard.views.pos.PosOrderWorkspace.assignTechnicianFirst')
-                      : undefined
+                    hasNoLines
+                      ? t('components.dashboard.views.pos.PosOrderWorkspace.addLineFirst')
+                      : hasUnassignedServiceLine
+                        ? t('components.dashboard.views.pos.PosOrderWorkspace.assignTechnicianFirst')
+                        : undefined
                   }
                   className="h-11 w-full rounded-lg bg-nexoraBrand text-sm font-bold text-white hover:bg-nexoraBrandDark disabled:opacity-60"
                 >
