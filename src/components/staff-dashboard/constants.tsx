@@ -10,6 +10,9 @@ import {
   Settings,
   Briefcase,
 } from 'lucide-react'
+import {
+  openCommunityChatFromNotification,
+} from '../header-messages/openCommunityChatSession'
 
 // Bottom-nav / sidebar items. Icons align with merchant dashboard MENU_ITEMS.
 // 'taxiq' carries `children` (Tax IQ sub-nav) — StaffSidebar renders it as an
@@ -253,10 +256,17 @@ export function resolveStaffNotificationScreen(type: string | null | undefined):
 }
 
 export function navigateStaffNotification(
-  notification: { type?: string | null; actionUrl?: string | null },
+  notification: {
+    type?: string | null
+    actionUrl?: string | null
+    referenceId?: string | null
+    chatSessionId?: string | null
+  },
   navigate: (path: string) => void,
   fallbackNavigate: (screen: string) => void,
 ) {
+  if (openCommunityChatFromNotification(notification)) return
+
   if (notification.type === 'StaffLinkRequest') {
     navigate('/staff/qr')
     return

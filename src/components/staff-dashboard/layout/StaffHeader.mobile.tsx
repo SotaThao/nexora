@@ -14,6 +14,7 @@ import { formatNotificationDateTime } from '../../dashboard/utils'
 import { navigateStaffNotification } from '../constants'
 import LanguageSwitcher from '../../ui/LanguageSwitcher'
 import HeaderEcosystem from '../../dashboard/layout/HeaderEcosystem'
+import { HeaderMessages, HeaderMessagesVariant } from '../../header-messages'
 
 export default function StaffHeader({ activeScreen, onNavigate, onOpenMobileMenu }) {
   const { t, currentLanguage } = useTranslation()
@@ -78,7 +79,7 @@ export default function StaffHeader({ activeScreen, onNavigate, onOpenMobileMenu
   }
 
   return (
-    <header className="safe-area-top sticky top-0 z-20 border-b border-nexoraBorder bg-nexoraSurface">
+    <header className="safe-area-top sticky top-0 z-40 border-b border-nexoraBorder bg-nexoraSurface">
       {/* Mobile top bar */}
       <div className="flex items-center justify-between gap-2 px-4 py-3 lg:hidden">
         <div className="flex items-center gap-2">
@@ -198,6 +199,8 @@ export default function StaffHeader({ activeScreen, onNavigate, onOpenMobileMenu
               </div>
             )}
           </div>
+
+          <HeaderMessages variant={HeaderMessagesVariant.Mobile} />
 
           <LanguageSwitcher variant="header-plain" />
           <HeaderEcosystem plain />
@@ -320,6 +323,8 @@ export default function StaffHeader({ activeScreen, onNavigate, onOpenMobileMenu
               </div>
             )}
           </div>
+
+          <HeaderMessages variant={HeaderMessagesVariant.Desktop} />
 
           <button
             type="button"

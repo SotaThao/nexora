@@ -11,7 +11,8 @@ import {
   Trash2,
   Wallet,
   Phone,
-  Mail
+  Mail,
+  MessagesSquare,
 } from 'lucide-react'
 import { useTranslation } from '../contexts/LanguageContext'
 import { logger } from '../utils/logger'
@@ -28,7 +29,12 @@ import { staffRecordMatchesMember } from '../utils/staffRecordMatch'
 import { orderedPayoutUiKeysFromMethods, PAYOUT_UI_LABELS } from '../data/paymentMethodTypes'
 import NicknameEditor from './NicknameEditor'
 import RoleAtBusinessEditor from './RoleAtBusinessEditor'
+import {
+  canStaffMemberUseCommunityChat,
+  getStaffChatDisplayName,
+} from './staff/staffCommunityChatUtils'
 import { STAFF_ROLE_ERROR_KEYS } from './staff/constants'
+import { openStaffCommunityChat } from './header-messages/openCommunityChatSession'
 
 const RANGE_DAY_OFFSETS = {
   '7 Days': 6,
@@ -428,6 +434,13 @@ export default function StaffDetailView({
 
   const activePoint = hoverIndex !== null && chartPoints.length > 0 ? chartPoints[hoverIndex] : null
 
+  const openStaffChat = () => {
+    openStaffCommunityChat({
+      peerUserProfileId: String(staffMember?.userProfileId ?? '').trim(),
+      displayName: getStaffChatDisplayName(staffMember),
+    })
+  }
+
   return (
     <div className="space-y-6 select-none">
       {onBack && (
@@ -580,7 +593,18 @@ export default function StaffDetailView({
                 }}
               />
             ) : null}
+            {canStaffMemberUseCommunityChat(staffMember) ? (
+              <button
+                type="button"
+                onClick={openStaffChat}
+                className="inline-flex h-10 w-full sm:w-auto items-center justify-center gap-1.5 rounded-lg border border-nexoraBorder bg-white px-2 text-[11px] font-bold text-nexoraText shadow-sm transition hover:bg-nexoraSurfaceMuted sm:gap-2 sm:px-4 sm:text-xs"
+              >
+                <MessagesSquare className="h-4 w-4 text-nexoraBrand" aria-hidden="true" />
+                <span className="truncate">{t('staff_detail.chat_open')}</span>
+              </button>
+            ) : null}
             <button
+              type="button"
               onClick={() => onQr(staffMember)}
               className="inline-flex h-10 w-full sm:w-auto items-center justify-center gap-1.5 rounded-lg border border-nexoraBorder bg-white px-2 text-[11px] font-bold text-nexoraText shadow-sm transition hover:bg-nexoraSurfaceMuted sm:gap-2 sm:px-4 sm:text-xs"
             >
