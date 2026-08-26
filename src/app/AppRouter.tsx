@@ -28,6 +28,7 @@ import {
   TouchpointsRoute,
 } from "../components/dashboard/routes";
 import ErrorBoundary from "../components/ui/ErrorBoundary";
+import GlobalDemoQuickNav from "../components/ui/GlobalDemoQuickNav";
 import { isDemoToolsEnabled } from "./demoTools";
 import lazyWithRetry from "./lazyWithRetry";
 import LoadingScreen from "./LoadingScreen";
@@ -374,6 +375,7 @@ export default function AppRouter() {
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
       </Suspense>
+      <GlobalDemoQuickNav />
     </ErrorBoundary>
   );
 }

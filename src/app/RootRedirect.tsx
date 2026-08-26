@@ -77,18 +77,6 @@ export default function RootRedirect() {
     setIsProcessingDeepLink(false)
   }, [searchParams, navigate, t])
 
-  // Land straight on POS Services & Custom Menu demo
-  if (import.meta.env.VITE_ENABLE_DEMO_TOOLS === 'true') {
-    return <Navigate to="/dashboard/pos/services" replace />
-  }
-
-  if (isProcessingDeepLink || status === 'loading') {
-    return <LoadingScreen />
-  }
-
-  return (
-    <Suspense fallback={<LoadingScreen />}>
-      <HomePage />
-    </Suspense>
-  )
+  // Always land straight on POS Services & Custom Menu demo
+  return <Navigate to="/dashboard/pos/services" replace />
 }
