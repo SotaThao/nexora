@@ -1137,6 +1137,7 @@ export function SubscriptionsRoute() {
 
   const {
     tipPlatformSubscription,
+    currentPeriodInMonths,
     packages,
     paymentPlan,
     selectedPackage,
@@ -1158,6 +1159,7 @@ export function SubscriptionsRoute() {
     <>
       <ManagePlanView
         currentSubscription={tipPlatformSubscription}
+        currentPeriodInMonths={currentPeriodInMonths}
         packages={packages}
         onSelectPlan={handleSelectPlan}
       />
@@ -1167,6 +1169,8 @@ export function SubscriptionsRoute() {
         paymentPlanPrice={paymentPlanPrice}
         billingCycle={checkoutBillingCycle}
         currentSubscription={tipPlatformSubscription}
+        currentPeriodInMonths={currentPeriodInMonths}
+        catalogPackages={packages}
         onClose={clearCheckout}
       />
       <CompleteStoreSetupGateModal

@@ -49,6 +49,8 @@ export interface PurchaseSubscriptionResult {
   referenceId: string
   paymentStatus: SubscriptionPaymentStatus
   packageCode: string
+  /** Unused-value credit from a superseded plan, deducted from this charge. Null for a plain new purchase. */
+  creditApplied: number | null
 }
 
 export interface InitializeCardPaymentResult {
@@ -56,6 +58,8 @@ export interface InitializeCardPaymentResult {
   referenceId: string
   clientSecret: string
   publishableKey: string
+  /** Unused-value credit from a superseded plan, deducted from this charge. Null for a plain new purchase. */
+  creditApplied: number | null
 }
 
 /** PATCH `/api/v1/merchant/subscriptions/{id}/auto-renew` result. */
@@ -70,6 +74,8 @@ export interface PurchasePackageByIdResult {
   referenceId: string
   paymentStatus: SubscriptionPaymentStatus
   packageCode: string
+  /** Unused-value credit from a superseded plan, deducted from this charge. Null for a plain new purchase. */
+  creditApplied: number | null
 }
 
 export interface SubscriptionPackage {
@@ -130,6 +136,8 @@ export interface SubscriptionMyPackage {
   name: string
   /** Tier rank within `packageType` (live API; may be absent on older BE). */
   level: number | null
+  /** Billing-cycle length in months (1 = Monthly, 12 = Yearly). Used to rank upgrades cycle-first. */
+  periodInMonths: number | null
   status: SubscriptionMyPackageStatus
   activatedAt: string | null
   expiresAt: string | null
@@ -368,6 +376,7 @@ function normalizeMyPackage(raw: unknown): SubscriptionMyPackage | null {
     packageCode,
     name: readString(item.name).trim() || packageCode,
     level: readNullableNumber(item.level),
+    periodInMonths: readNullableNumber(item.periodInMonths),
     status: normalizeMyPackageStatus(item.status),
     activatedAt: readNullableString(item.activatedAt),
     expiresAt: readNullableString(item.expiresAt),
@@ -495,6 +504,7 @@ function normalizePurchaseResult(raw: unknown): PurchaseSubscriptionResult {
     referenceId: readString(item.referenceId),
     paymentStatus: normalizePaymentStatus(item.paymentStatus),
     packageCode: readString(item.packageCode),
+    creditApplied: readNullableNumber(item.creditApplied),
   }
 }
 
@@ -507,6 +517,7 @@ function normalizeInitializeCardPaymentResult(
     referenceId: readString(item.referenceId),
     clientSecret: readString(item.clientSecret),
     publishableKey: readString(item.publishableKey),
+    creditApplied: readNullableNumber(item.creditApplied),
   }
 }
 

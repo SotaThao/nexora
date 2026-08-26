@@ -31,6 +31,8 @@ import {
 } from '../../../data/repositories/merchantVoice'
 import {
   SubscriptionBillingCycle,
+  SubscriptionMyPackageStatus,
+  SubscriptionMyPackageType,
   SubscriptionPackageType,
   type SubscriptionPackage,
   type SubscriptionPaymentMethod,
@@ -38,6 +40,7 @@ import {
 import { PACKAGE_MANAGEMENT_TAB_QUERY } from './packageManagement/constants'
 import {
   invalidateVoiceAiPlanPurchaseQueries,
+  useSubscriptionMyPackages,
   useSubscriptionPackages,
 } from '../../../data/hooks/useSubscriptionPayments'
 import { useProfileSettings } from '../../../data/hooks/useProfileSettings'
@@ -78,7 +81,8 @@ import {
   formatPlanPrice,
   indexVoiceAiPackagesByPlan,
   isPaidServicePlanId,
-  isVoiceAiPlanBelowCurrent,
+  isVoiceAiPlanCurrentCycle,
+  isVoiceAiUpgradeMove,
   isVoiceAiYearlyUnavailable,
   resolveCreditsLowBannerKind,
   resolvePlanBillingPeriodSuffix,
@@ -638,6 +642,20 @@ export default function BookingPlansPanel({ buyOnlyMode = false }: { buyOnlyMode
       plan: voiceAiSubscription.name,
     })
   }, [voiceAiSubscription])
+
+  const { data: myVoicePackages = [] } = useSubscriptionMyPackages({
+    enabled: Boolean(currentVoicePlanId),
+  })
+  const currentVoicePeriodInMonths = useMemo(() => {
+    if (!currentVoicePlanId) return null
+    const row = myVoicePackages.find(
+      (pkg) =>
+        pkg.packageType === SubscriptionMyPackageType.VoiceAI
+        && (pkg.status === SubscriptionMyPackageStatus.Active
+          || pkg.status === SubscriptionMyPackageStatus.Trialing),
+    )
+    return row?.periodInMonths ?? null
+  }, [myVoicePackages, currentVoicePlanId])
   const voiceRenewLabel = useMemo(
     () => getSubscriptionPlanRenewLabel(voiceAiSubscription, t, currentLanguage),
     [voiceAiSubscription, t, currentLanguage],
@@ -685,8 +703,16 @@ export default function BookingPlansPanel({ buyOnlyMode = false }: { buyOnlyMode
 
   const openCheckoutForPlan = (plan: PaidServicePlanId) => {
     if (!isPaidServicePlanId(plan)) return
-    if (currentVoicePlanId === plan) return
-    if (isVoiceAiPlanBelowCurrent(plan, currentVoicePlanId)) return
+    if (
+      !isVoiceAiUpgradeMove(
+        plan,
+        resolveVoiceAiPeriodInMonths(billingCycle),
+        currentVoicePlanId,
+        currentVoicePeriodInMonths,
+      )
+    ) {
+      return
+    }
     const pkg = packagesByPlan[plan]
     if (!pkg?.id) {
       showToast(t(`${TK}.planPackageUnavailable`), 'error')
@@ -712,8 +738,16 @@ export default function BookingPlansPanel({ buyOnlyMode = false }: { buyOnlyMode
   }
 
   const handlePlanClick = (plan: PaidServicePlanId) => {
-    if (currentVoicePlanId === plan) return
-    if (isVoiceAiPlanBelowCurrent(plan, currentVoicePlanId)) return
+    if (
+      !isVoiceAiUpgradeMove(
+        plan,
+        resolveVoiceAiPeriodInMonths(billingCycle),
+        currentVoicePlanId,
+        currentVoicePeriodInMonths,
+      )
+    ) {
+      return
+    }
     // Match HTML: Starter/Elite open payment; Pro trial is a separate CTA.
     if (plan === VoicePlanTier.Pro) {
       handleTrialClick()
@@ -931,8 +965,21 @@ export default function BookingPlansPanel({ buyOnlyMode = false }: { buyOnlyMode
                 const pkg = packagesByPlan[planId]
                 if (!pkg) return null
                 const isPro = planId === VoicePlanTier.Pro
-                const isCurrent = currentVoicePlanId === planId
-                const isLocked = isVoiceAiPlanBelowCurrent(planId, currentVoicePlanId)
+                const targetPeriodInMonths = resolveVoiceAiPeriodInMonths(billingCycle)
+                const isCurrent = isVoiceAiPlanCurrentCycle(
+                  planId,
+                  targetPeriodInMonths,
+                  currentVoicePlanId,
+                  currentVoicePeriodInMonths,
+                )
+                const isLocked =
+                  !isCurrent
+                  && !isVoiceAiUpgradeMove(
+                    planId,
+                    targetPeriodInMonths,
+                    currentVoicePlanId,
+                    currentVoicePeriodInMonths,
+                  )
                 const isYearlyUnavailable = isVoiceAiYearlyUnavailable(pkg, billingCycle)
                 return (
                   <article

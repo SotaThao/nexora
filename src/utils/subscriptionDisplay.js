@@ -122,6 +122,47 @@ export function isTipPlatformPlanBelowCurrent(planId, currentPlanId) {
   return planRank < currentRank
 }
 
+/** `SubscriptionBillingCycle` ('Monthly'|'Yearly') or `ManagePlanBillingCycle` ('monthly'|'yearly') → months. */
+export function periodInMonthsFromBillingCycle(cycle) {
+  return String(cycle ?? '').toLowerCase() === 'yearly' ? 12 : 1
+}
+
+/**
+ * True when moving from (currentPlanId, currentPeriodInMonths) to (planId, targetPeriodInMonths)
+ * is an allowed upgrade — mirrors the backend's cycle-first-then-tier ordering
+ * (`SubscriptionActivationService.EnsurePurchasableAndCalculateCredit`'s `isUpgrade` check):
+ * any longer billing cycle outranks any shorter one regardless of tier; within the same
+ * cycle only a strictly higher tier is allowed. False for the exact same (plan, cycle).
+ */
+export function isTipPlatformUpgradeMove(
+  planId,
+  targetPeriodInMonths,
+  currentPlanId,
+  currentPeriodInMonths,
+) {
+  if (!planId) return false
+  if (!currentPlanId) return true // no current paid plan — plain purchase, not gated here
+  const targetPeriod = targetPeriodInMonths ?? 1
+  const currentPeriod = currentPeriodInMonths ?? 1
+  if (targetPeriod > currentPeriod) return true
+  if (targetPeriod < currentPeriod) return false
+  const currentRank = TIP_PLATFORM_PLAN_ORDER.indexOf(currentPlanId)
+  const targetRank = TIP_PLATFORM_PLAN_ORDER.indexOf(planId)
+  if (currentRank < 0 || targetRank < 0) return false
+  return targetRank > currentRank
+}
+
+/** True only when `planId` + `targetPeriodInMonths` exactly match the merchant's active plan/cycle. */
+export function isTipPlatformPlanCurrentCycle(
+  planId,
+  targetPeriodInMonths,
+  currentPlanId,
+  currentPeriodInMonths,
+) {
+  if (!planId || !currentPlanId || planId !== currentPlanId) return false
+  return (targetPeriodInMonths ?? 1) === (currentPeriodInMonths ?? 1)
+}
+
 export function getSubscriptionSidebarCopy(subscription, t, locale = 'en') {
   if (!subscription?.packageCode) {
     return { planLabel: null, detailLabel: null }
