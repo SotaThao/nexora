@@ -28,7 +28,11 @@ import {
   getTouchpointApiType,
   isMasterTouchpoint,
 } from '../constants/touchpoints'
-import { resolveDashboardFooterVisibility, slugify } from './dashboard/utils'
+import {
+  resolveDashboardFooterVisibility,
+  resolveDashboardPosMobileSpacer,
+  slugify,
+} from './dashboard/utils'
 import { useDashboardNavigation } from './dashboard/hooks/useDashboardNavigation'
 import { useDevices } from './dashboard/hooks/useDevices'
 import { useKybGate } from '../contexts/KybGateContext'
@@ -796,6 +800,7 @@ export default function Dashboard({
   const sectionParam = searchParams.get('section')
   const isPosFrontDeskRoute = location.pathname === '/dashboard/pos'
   const footerVisibilityClass = resolveDashboardFooterVisibility(location.pathname)
+  const posMobileSpacerClass = resolveDashboardPosMobileSpacer(location.pathname)
   const activeMenuTitle = resolveDashboardMobileMenuTitle(
     activeMenu,
     tabParam,
@@ -876,6 +881,7 @@ export default function Dashboard({
             <AppDownloadLinks />
           </div>
         </footer>
+        <div aria-hidden="true" className={posMobileSpacerClass} />
       </div>
 
       <MobileBottomNav activeMenu={activeMenu} onNavigate={handleNavigateMenu} />
