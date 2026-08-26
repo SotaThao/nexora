@@ -314,7 +314,7 @@ export default function NewBookingForm({
               <label className="text-[10px] font-extrabold uppercase text-nexoraMuted">
                 {t('components.dashboard.views.pos.NewBookingForm.customerPhone')}
               </label>
-              <div className={`mt-1 flex h-10 overflow-hidden rounded-lg border bg-white transition-colors ${fieldErrors.phone ? 'border-rose-400' : 'border-nexoraBorder focus-within:border-nexoraBrand'}`}>
+              <div className={`relative z-20 mt-1 flex h-10 overflow-visible rounded-lg border bg-white transition-colors ${fieldErrors.phone ? 'border-rose-400' : 'border-nexoraBorder focus-within:border-nexoraBrand'}`}>
                 <CountryCodeSelect
                   embedded
                   showSearch={false}

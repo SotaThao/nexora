@@ -1332,9 +1332,9 @@ export default function PosFrontDeskView({
                     e.stopPropagation()
                     setUpdateWorkspace({ orderId: order.id, mode: 'edit' })
                   }}
-                  className="inline-flex h-9 shrink-0 items-center gap-1.5 rounded-lg border border-nexoraLavender bg-violet-50 px-3 text-[11px] font-extrabold text-violet-700 transition-colors hover:bg-violet-100"
+                  className="inline-flex h-8 shrink-0 items-center gap-1 rounded-lg border border-nexoraLavender bg-violet-50 px-2.5 text-[10px] font-extrabold text-violet-700 transition-colors hover:bg-violet-100"
                 >
-                  <PencilLine className="h-3.5 w-3.5" aria-hidden="true" />
+                  <PencilLine className="h-3 w-3" aria-hidden="true" />
                   {t(tk('editButton'))}
                 </button>
               )
@@ -1348,9 +1348,9 @@ export default function PosFrontDeskView({
                       handleCancel(order.id, order.customerName)
                     }}
                     disabled={cancelOrder.isPending}
-                    className="inline-flex h-9 shrink-0 items-center gap-1.5 rounded-lg border border-rose-200 bg-rose-50 px-3 text-[11px] font-extrabold text-rose-600 transition-colors hover:border-rose-300 hover:bg-rose-100 disabled:cursor-not-allowed disabled:opacity-60"
+                    className="inline-flex h-8 shrink-0 items-center gap-1 rounded-lg border border-rose-200 bg-rose-50 px-2.5 text-[10px] font-extrabold text-rose-600 transition-colors hover:border-rose-300 hover:bg-rose-100 disabled:cursor-not-allowed disabled:opacity-60"
                   >
-                    <X className="h-3.5 w-3.5" aria-hidden="true" />
+                    <X className="h-3 w-3" aria-hidden="true" />
                     {t(tk('cancelButton'))}
                   </button>
                 ) : null
@@ -1377,9 +1377,9 @@ export default function PosFrontDeskView({
                     }}
                     disabled={startOrderService.isPending || blockedReason !== undefined}
                     title={blockedReason}
-                    className="inline-flex h-9 shrink-0 items-center gap-1.5 rounded-lg border border-emerald-200 bg-emerald-50 px-3 text-[11px] font-extrabold text-emerald-700 transition-colors hover:border-emerald-300 hover:bg-emerald-100 disabled:cursor-not-allowed disabled:opacity-60"
+                    className="inline-flex h-8 shrink-0 items-center gap-1 rounded-lg border border-emerald-200 bg-emerald-50 px-2.5 text-[10px] font-extrabold text-emerald-700 transition-colors hover:border-emerald-300 hover:bg-emerald-100 disabled:cursor-not-allowed disabled:opacity-60"
                   >
-                    <Play className="h-3.5 w-3.5" aria-hidden="true" />
+                    <Play className="h-3 w-3" aria-hidden="true" />
                     {t(tk('startServiceButton'))}
                   </button>
                 )
@@ -1397,9 +1397,9 @@ export default function PosFrontDeskView({
                     }}
                     aria-label={t(tk('checkoutButton'))}
                     title={t(tk('checkoutButton'))}
-                    className="inline-flex h-9 shrink-0 items-center gap-1.5 rounded-lg border border-violet-200 bg-violet-50 px-3 text-[11px] font-extrabold text-violet-700 transition-colors hover:border-violet-300 hover:bg-violet-100"
+                    className="inline-flex h-8 shrink-0 items-center gap-1 rounded-lg border border-violet-200 bg-violet-50 px-2.5 text-[10px] font-extrabold text-violet-700 transition-colors hover:border-violet-300 hover:bg-violet-100"
                   >
-                    <DollarSign className="h-3.5 w-3.5" aria-hidden="true" />
+                    <DollarSign className="h-3 w-3" aria-hidden="true" />
                     {t(tk('checkoutButton'))}
                   </button>
                 ) : null
