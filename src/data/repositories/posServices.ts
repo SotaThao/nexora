@@ -2,7 +2,13 @@
  * posServicesRepository — POS Owner Setup: Services (US-017).
  */
 import httpClient from '../../lib/httpClient'
-import type { PosServiceApiDto, PosServiceStatus } from '../../types/repositories'
+import type {
+  PosServiceApiDto,
+  PosServiceStatus,
+  ServiceAddOnApiDto,
+  ServiceAddOnInput,
+  UpdateServiceAddOnInput,
+} from '../../types/repositories'
 
 type HttpClient = typeof httpClient
 
@@ -56,6 +62,40 @@ export function createPosServicesRepository(client: HttpClient = httpClient) {
 
     async reorderPosServices(items: ServiceOrderItem[]): Promise<void> {
       await client.put<void>('/api/v1/merchant/services/reorder', { items })
+    },
+
+    // Add-ons belong to one service — every route is nested under it.
+    async getServiceAddOns(serviceId: string): Promise<ServiceAddOnApiDto[]> {
+      const res = await client.get<ServiceAddOnApiDto[]>(
+        `/api/v1/merchant/services/${serviceId}/add-ons`,
+      )
+      return res ?? []
+    },
+
+    async createServiceAddOn(serviceId: string, input: ServiceAddOnInput): Promise<string> {
+      return await client.post<string>(`/api/v1/merchant/services/${serviceId}/add-ons`, input)
+    },
+
+    async updateServiceAddOn(
+      serviceId: string,
+      addOnId: string,
+      input: UpdateServiceAddOnInput,
+    ): Promise<boolean> {
+      return await client.put<boolean>(
+        `/api/v1/merchant/services/${serviceId}/add-ons/${addOnId}`,
+        input,
+      )
+    },
+
+    async deleteServiceAddOn(serviceId: string, addOnId: string): Promise<boolean> {
+      return await client.del<boolean>(`/api/v1/merchant/services/${serviceId}/add-ons/${addOnId}`)
+    },
+
+    // A one-time duplication, not a link: edits on either service afterwards stay independent.
+    async copyServiceAddOns(serviceId: string, sourceServiceId: string): Promise<number> {
+      return await client.post<number>(`/api/v1/merchant/services/${serviceId}/add-ons/copy`, {
+        sourceServiceId,
+      })
     },
   }
 }

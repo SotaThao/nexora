@@ -3239,7 +3239,17 @@
             "createdSuccess": "Đã tạo dịch vụ.",
             "updatedSuccess": "Đã cập nhật dịch vụ.",
             "reorderFailed": "Không thể lưu thứ tự mới. Vui lòng thử lại.",
-            "revisitAssignmentNudge": "Bạn có thể cần cập nhật lại phân công thợ để bao gồm dịch vụ mới này."
+            "revisitAssignmentNudge": "Bạn có thể cần cập nhật lại phân công thợ để bao gồm dịch vụ mới này.",
+            "addOnsSectionTitle": "Dịch vụ kèm",
+            "addOnsSectionHint": "Các mục bán kèm dịch vụ này tại quầy. Mỗi dịch vụ có danh sách riêng — thay đổi ở đây lưu ngay.",
+            "addOnsEmpty": "Chưa có dịch vụ kèm nào.",
+            "addOnNamePlaceholder": "vd: Paraffin Wax Treatment",
+            "addOnPricePlaceholder": "vd: 15",
+            "addOnAddButton": "Thêm",
+            "addOnDeleteBlocked": "Dịch vụ kèm này đã từng bán nên chỉ có thể tắt hoạt động.",
+            "addOnCopyPlaceholder": "Sao chép dịch vụ kèm từ dịch vụ khác…",
+            "addOnCopyButton": "Sao chép",
+            "addOnCopyResult": "Đã sao chép {{count}} dịch vụ kèm."
           },
           "PosProductsView": {
             "description": "Xây dựng danh mục sản phẩm bán lẻ với danh mục, tag và ảnh, rồi kéo-thả để sắp xếp thứ tự.",
@@ -3611,7 +3621,13 @@
             "discountLineSummary": "Giảm ${{amount}} · {{bearer}} chịu",
             "discountPercentTooHigh": "Phần trăm không được lớn hơn {{max}}%.",
             "discountAmountTooHigh": "Số tiền giảm không được lớn hơn giá dịch vụ (${{max}}).",
-            "discountValueMustBePositive": "Nhập giá trị lớn hơn 0."
+            "discountValueMustBePositive": "Nhập giá trị lớn hơn 0.",
+            "addAddOn": "+ Thêm dịch vụ kèm",
+            "addOnModalTitle": "Dịch vụ kèm — {{serviceName}}",
+            "addOnModalClose": "Đóng danh sách dịch vụ kèm",
+            "addOnModalDone": "Xong",
+            "noAddOnsForService": "Dịch vụ này chưa khai báo dịch vụ kèm nào.",
+            "changeServiceRemovesAddOns": "Đổi dịch vụ sẽ gỡ {{count}} dịch vụ kèm đang có trên dòng này."
           },
           "PhoneCheckInStep": {
             "welcomeTitleWithBusiness": "Chào mừng đến {{businessName}}",

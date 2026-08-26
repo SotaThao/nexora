@@ -597,6 +597,30 @@ export interface OrderServiceLineApiDto {
   technicianName?: string | null
   note?: string | null
   completedAt?: string | null
+  /** Extras sold against this service, in the order they were rung up. */
+  addOns: OrderServiceAddOnLineApiDto[]
+}
+
+/**
+ * An extra sold against a service line. It carries no technician of its own — the technician is
+ * always the parent service's — and no quantity: two of the same add-on are two lines.
+ */
+export interface OrderServiceAddOnLineApiDto {
+  id: string
+  serviceAddOnId: string
+  addOnName: string
+  unitPrice: number
+  lineTotal: number
+  /** 'Percent' | 'Amount'. Null when the add-on is not discounted. */
+  discountType?: string | null
+  discountValue?: number | null
+  discountAmount: number
+  /** 'Salon' | 'Staff' | 'Split'. */
+  discountBearer?: string | null
+  staffDiscountShare: number
+  discountNote?: string | null
+  lineTotalAfterDiscount: number
+  canAssignDiscountToStaff: boolean
 }
 
 export interface OrderProductLineApiDto {
@@ -650,6 +674,34 @@ export interface OrderDetailApiDto {
   receiptEmail?: string | null
   receiptPhone?: string | null
   completedAt?: string | null
+}
+
+/** One option in the "+ Add-On" picker, scoped to the service line it was opened from. */
+export interface ServiceLineAddOnOptionApiDto {
+  id: string
+  name: string
+  price: number
+}
+
+/** Settings view of a service's own add-on list — includes retired ones so they can be re-enabled. */
+export interface ServiceAddOnApiDto {
+  id: string
+  name: string
+  price: number
+  displayOrder: number
+  isActive: boolean
+  /** False once the add-on has been sold — it can then only be deactivated. */
+  canDelete: boolean
+}
+
+export interface ServiceAddOnInput {
+  name: string
+  price: number
+}
+
+export interface UpdateServiceAddOnInput extends ServiceAddOnInput {
+  displayOrder: number
+  isActive: boolean
 }
 
 export interface CatalogCategoryApiDto {
@@ -731,6 +783,15 @@ export interface ReceiptServiceLineApiDto {
   /** Zero when this line was not discounted. Who absorbed it is deliberately not on the receipt. */
   discountAmount: number
   /** What the customer paid for this line. */
+  lineTotalAfterDiscount: number
+  /** Extras performed as part of this service, each printed on its own indented line. */
+  addOns: ReceiptAddOnLineApiDto[]
+}
+
+export interface ReceiptAddOnLineApiDto {
+  addOnName: string
+  lineTotal: number
+  discountAmount: number
   lineTotalAfterDiscount: number
 }
 

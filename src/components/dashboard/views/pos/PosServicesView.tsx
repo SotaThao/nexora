@@ -187,6 +187,7 @@ export default function PosServicesView() {
         categories={categories ?? []}
         tagSuggestions={tags ?? []}
         service={modalState.service}
+        services={services ?? []}
       />
     </div>
   )

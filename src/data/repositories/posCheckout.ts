@@ -13,6 +13,7 @@ import type {
   CompleteOrderResultApiDto,
   InServiceOrderApiDto,
   OrderDetailApiDto,
+  ServiceLineAddOnOptionApiDto,
   SetOrderServiceLineDiscountPayload,
   SetOrderStaffTipSplitPayload,
 } from '../../types/repositories'
@@ -86,6 +87,43 @@ export function createPosCheckoutRepository(client: HttpClient = httpClient) {
             `/api/v1/merchant/pos/${businessId}/checkout/${orderId}/services/${serviceLineId}`,
           ),
         false,
+      )
+    },
+
+    // Scoped to the line, not the service: the picker may only ever offer the add-ons of the
+    // service line it was opened from.
+    async getServiceLineAddOnOptions(
+      businessId: string,
+      orderId: string,
+      serviceLineId: string,
+    ): Promise<ServiceLineAddOnOptionApiDto[]> {
+      const res = await client.get<ServiceLineAddOnOptionApiDto[]>(
+        `/api/v1/merchant/pos/${businessId}/checkout/${orderId}/services/${serviceLineId}/add-on-options`,
+      )
+      return res ?? []
+    },
+
+    // One call adds one line — tapping the same add-on twice is two lines, not a quantity of two.
+    async addOrderServiceAddOnLine(
+      businessId: string,
+      orderId: string,
+      serviceLineId: string,
+      serviceAddOnId: string,
+    ): Promise<string> {
+      return await client.post<string>(
+        `/api/v1/merchant/pos/${businessId}/checkout/${orderId}/services/${serviceLineId}/add-ons`,
+        { serviceAddOnId },
+      )
+    },
+
+    // An add-on line is removed through the service-line route — it is a service item too.
+    async removeOrderServiceAddOnLine(
+      businessId: string,
+      orderId: string,
+      addOnLineId: string,
+    ): Promise<boolean> {
+      return await client.del<boolean>(
+        `/api/v1/merchant/pos/${businessId}/checkout/${orderId}/services/${addOnLineId}`,
       )
     },
 
