@@ -1,6 +1,8 @@
 import React, { useMemo, useState } from 'react'
 import { Check, Search } from 'lucide-react'
 
+import useBodyScrollLock from '../../../hooks/useBodyScrollLock'
+import useVisualViewportRect from '../../../hooks/useVisualViewportRect'
 import type { TFunction } from '../../../types/contexts'
 import type { PublicDirectPaymentStaff } from '../../../types/domain'
 
@@ -25,6 +27,18 @@ export default function SelectServerModal({
 }: SelectServerModalProps) {
   const [draftIds, setDraftIds] = useState<string[]>(selectedStaffIds)
   const [query, setQuery] = useState('')
+  const viewport = useVisualViewportRect()
+
+  // Only the staff list scrolls while the sheet is open — the page behind it
+  // must not scroll (nor show its own scrollbar) next to the list's.
+  useBodyScrollLock(true)
+
+  // Pin the sheet to the visible area so the on-screen keyboard (iOS) never
+  // covers the list or the Done button. CSS-only sizing when unsupported.
+  const overlayStyle = viewport
+    ? { height: `${viewport.height}px`, transform: `translateY(${viewport.offsetTop}px)` }
+    : undefined
+  const cardStyle = viewport ? { maxHeight: '100%' } : undefined
 
   const filteredStaff = useMemo(() => {
     const needle = query.trim().toLowerCase()
@@ -42,8 +56,11 @@ export default function SelectServerModal({
   }
 
   return (
-    <div className="fixed inset-0 z-[60] flex items-end justify-center bg-black/40 p-0 sm:items-center sm:p-4">
-      <div className="nexora-modal-card w-full max-w-md rounded-b-none sm:rounded-2xl">
+    <div
+      style={overlayStyle}
+      className="fixed inset-0 z-[60] flex items-end justify-center bg-black/40 p-0 sm:items-center sm:p-4"
+    >
+      <div style={cardStyle} className="nexora-modal-card w-full max-w-md rounded-b-none sm:rounded-2xl">
         <div className="flex items-center justify-between gap-3 pb-4">
           <h3 className="text-base font-black text-nexoraText">
             {t('customer.select_staff_title')}
@@ -132,8 +149,7 @@ export default function SelectServerModal({
           <button
             type="button"
             onClick={() => onSelect(draftIds)}
-            disabled={draftIds.length === 0}
-            className="h-11 w-full rounded-xl bg-nexoraBrand text-sm font-black text-white transition hover:bg-nexoraBrandDark disabled:cursor-not-allowed disabled:opacity-50"
+            className="h-11 w-full rounded-xl bg-nexoraBrand text-sm font-black text-white transition hover:bg-nexoraBrandDark"
           >
             {t('customer.done')}
           </button>

@@ -40,6 +40,7 @@ export default function StaffDirectPaymentFlow() {
     handleConfirmPayment,
     isCreating,
     isConfirming,
+    amountErrorText,
   } = flow
 
   const disablePaymentSelection =
@@ -128,6 +129,7 @@ export default function StaffDirectPaymentFlow() {
                   customAmount={customAmount}
                   onCustomAmountChange={handleCustomAmountChange}
                   activeAmount={activeAmount}
+                  amountErrorText={amountErrorText}
                   walletOptions={walletOptions}
                   isLoadingMethods={false}
                   onSelectWallet={handleSelectWallet}

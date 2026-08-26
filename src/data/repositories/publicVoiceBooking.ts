@@ -165,9 +165,9 @@ function normalizeHoliday(raw: unknown): PublicBookingHoliday | null {
 function normalizeCustomer(raw: unknown): PublicBookingCustomer | null {
   if (raw == null) return null
   const dto = asRecord(raw)
-  const phoneNumber = String(
-    readField(dto, 'phoneNumber', 'PhoneNumber') ?? '',
-  ).trim()
+  const phoneNumber = toPublicBookingApiPhone(
+    readField(dto, 'phoneNumber', 'PhoneNumber') as string | null | undefined,
+  )
   if (!phoneNumber) return null
   const nameRaw = readField(dto, 'name', 'Name')
   return {
@@ -292,7 +292,9 @@ export function normalizeCreateOnlineBookingResult(
   return {
     leadId: String(readField(raw, 'leadId', 'LeadId') ?? '').trim(),
     customerName: String(readField(raw, 'customerName', 'CustomerName') ?? '').trim(),
-    customerPhone: String(readField(raw, 'customerPhone', 'CustomerPhone') ?? '').trim(),
+    customerPhone: toPublicBookingApiPhone(
+      readField(raw, 'customerPhone', 'CustomerPhone') as string | null | undefined,
+    ),
     serviceName: String(readField(raw, 'serviceName', 'ServiceName') ?? '').trim(),
     serviceNames: (() => {
       const names = readField(raw, 'serviceNames', 'ServiceNames')

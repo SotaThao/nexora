@@ -432,7 +432,7 @@ export default function ProfileTab({
                   role="tab"
                   aria-selected={payoutCardTab === 'methods'}
                   onClick={() => setPayoutCardTab('methods')}
-                  className={`flex-1 rounded-lg px-3 py-2 text-[10px] font-extrabold uppercase tracking-wide transition ${
+                  className={`flex-1 rounded-lg px-3 py-2 text-[10px] font-extrabold tracking-wide transition ${
                     payoutCardTab === 'methods'
                       ? 'bg-nexoraBrand text-white shadow-md shadow-nexoraBrand/25 ring-2 ring-nexoraBrand/20'
                       : 'bg-transparent text-nexoraMuted hover:bg-white/70 hover:text-nexoraText'
@@ -445,7 +445,7 @@ export default function ProfileTab({
                   role="tab"
                   aria-selected={payoutCardTab === 'paymentQr'}
                   onClick={() => setPayoutCardTab('paymentQr')}
-                  className={`flex-1 rounded-lg px-3 py-2 text-[10px] font-extrabold uppercase tracking-wide transition ${
+                  className={`flex-1 rounded-lg px-3 py-2 text-[10px] font-extrabold tracking-wide transition ${
                     payoutCardTab === 'paymentQr'
                       ? 'bg-nexoraBrand text-white shadow-md shadow-nexoraBrand/25 ring-2 ring-nexoraBrand/20'
                       : 'bg-transparent text-nexoraMuted hover:bg-white/70 hover:text-nexoraText'

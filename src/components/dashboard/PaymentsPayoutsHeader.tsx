@@ -31,6 +31,7 @@ export default function PaymentsPayoutsHeader() {
             <button
               key={item.id}
               type="button"
+              aria-current={isActive ? 'page' : undefined}
               onClick={() =>
                 navigate(`/dashboard/${item.screen}?tab=${encodeURIComponent(item.params.tab)}`)
               }

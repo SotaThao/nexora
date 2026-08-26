@@ -30,6 +30,10 @@ export interface BusinessApiDto {
   businessSlug?: string
   businessType?: string
   address?: string
+  city?: string
+  state?: string
+  zipCode?: string
+  country?: string
   phone?: string
   website?: string
   logoUrl?: string | null
@@ -220,6 +224,10 @@ export interface OrderListItemApiDto {
   orderNumber: string
   customerName: string
   customerPhone?: string | null
+  /** Dial code with a leading "+" when the backend resolved the number. */
+  customerPhoneCountryCode?: string | null
+  /** Full E.164 number when the backend resolved the number. */
+  customerPhoneE164?: string | null
   status: string
   checkedInAt: string
   elapsedMinutes: number
@@ -570,11 +578,49 @@ export interface OrderServiceLineApiDto {
   serviceName: string
   unitPrice: number
   quantity: number
+  /** Original price of the line, before any discount. Commission and tip weight use this. */
   lineTotal: number
+  /** 'Percent' | 'Amount' — see PosServiceDiscountType. Null when the line is not discounted. */
+  discountType?: string | null
+  discountValue?: number | null
+  discountAmount: number
+  /** 'Salon' | 'Staff' | 'Split' — see PosDiscountBearer. */
+  discountBearer?: string | null
+  /** The part of discountAmount deducted from the technician's pay. */
+  staffDiscountShare: number
+  discountNote?: string | null
+  /** What the customer pays for this line. */
+  lineTotalAfterDiscount: number
+  /** False when the assigned technician is on hourly/fixed pay, or nobody is assigned yet. */
+  canAssignDiscountToStaff: boolean
   assignedPosStaffProfileId?: string | null
   technicianName?: string | null
   note?: string | null
   completedAt?: string | null
+  /** Extras sold against this service, in the order they were rung up. */
+  addOns: OrderServiceAddOnLineApiDto[]
+}
+
+/**
+ * An extra sold against a service line. It carries no technician of its own — the technician is
+ * always the parent service's — and no quantity: two of the same add-on are two lines.
+ */
+export interface OrderServiceAddOnLineApiDto {
+  id: string
+  serviceAddOnId: string
+  addOnName: string
+  unitPrice: number
+  lineTotal: number
+  /** 'Percent' | 'Amount'. Null when the add-on is not discounted. */
+  discountType?: string | null
+  discountValue?: number | null
+  discountAmount: number
+  /** 'Salon' | 'Staff' | 'Split'. */
+  discountBearer?: string | null
+  staffDiscountShare: number
+  discountNote?: string | null
+  lineTotalAfterDiscount: number
+  canAssignDiscountToStaff: boolean
 }
 
 export interface OrderProductLineApiDto {
@@ -583,6 +629,15 @@ export interface OrderProductLineApiDto {
   unitPrice: number
   quantity: number
   lineTotal: number
+}
+
+export interface SetOrderServiceLineDiscountPayload {
+  /** 'Percent' | 'Amount'. Null clears the discount on the line. */
+  discountType: string | null
+  discountValue: number | null
+  /** 'Salon' | 'Staff' | 'Split'. Required whenever discountType is set. */
+  discountBearer: string | null
+  discountNote: string | null
 }
 
 export interface OrderStaffTipShareApiDto {
@@ -608,7 +663,10 @@ export interface OrderDetailApiDto {
   servicesSubtotal: number
   productsSubtotal: number
   tipAmount: number
+  /** Sum of every service-line discount on this order. */
   discountAmount: number
+  /** servicesSubtotal less discountAmount — the figure sales tax is charged on. */
+  servicesNet: number
   salesTaxAmount: number
   total: number
   staffTipShares: OrderStaffTipShareApiDto[]
@@ -616,6 +674,34 @@ export interface OrderDetailApiDto {
   receiptEmail?: string | null
   receiptPhone?: string | null
   completedAt?: string | null
+}
+
+/** One option in the "+ Add-On" picker, scoped to the service line it was opened from. */
+export interface ServiceLineAddOnOptionApiDto {
+  id: string
+  name: string
+  price: number
+}
+
+/** Settings view of a service's own add-on list — includes retired ones so they can be re-enabled. */
+export interface ServiceAddOnApiDto {
+  id: string
+  name: string
+  price: number
+  displayOrder: number
+  isActive: boolean
+  /** False once the add-on has been sold — it can then only be deactivated. */
+  canDelete: boolean
+}
+
+export interface ServiceAddOnInput {
+  name: string
+  price: number
+}
+
+export interface UpdateServiceAddOnInput extends ServiceAddOnInput {
+  displayOrder: number
+  isActive: boolean
 }
 
 export interface CatalogCategoryApiDto {
@@ -692,7 +778,21 @@ export interface ReceiptServiceLineApiDto {
   technicianName: string | null
   unitPrice: number
   quantity: number
+  /** Original price of the line, before any discount. */
   lineTotal: number
+  /** Zero when this line was not discounted. Who absorbed it is deliberately not on the receipt. */
+  discountAmount: number
+  /** What the customer paid for this line. */
+  lineTotalAfterDiscount: number
+  /** Extras performed as part of this service, each printed on its own indented line. */
+  addOns: ReceiptAddOnLineApiDto[]
+}
+
+export interface ReceiptAddOnLineApiDto {
+  addOnName: string
+  lineTotal: number
+  discountAmount: number
+  lineTotalAfterDiscount: number
 }
 
 export interface ReceiptProductLineApiDto {

@@ -5,6 +5,7 @@
  * may be linked to more than one business.
  */
 import httpClient from '../../lib/httpClient'
+import { unlessOptimisticId } from '../../utils/uuid'
 import type {
   AssignableStaffApiDto,
   CheckInOrderPayload,
@@ -96,9 +97,14 @@ export function createPosOrdersRepository(client: HttpClient = httpClient) {
       posStaffProfileId?: string,
       note?: string,
     ): Promise<boolean> {
-      return await client.post<boolean>(
-        `/api/v1/merchant/pos/${businessId}/orders/${orderId}/services/${serviceLineId}/assign`,
-        { posStaffProfileId, note },
+      return unlessOptimisticId(
+        serviceLineId,
+        () =>
+          client.post<boolean>(
+            `/api/v1/merchant/pos/${businessId}/orders/${orderId}/services/${serviceLineId}/assign`,
+            { posStaffProfileId, note },
+          ),
+        false,
       )
     },
 
@@ -113,8 +119,13 @@ export function createPosOrdersRepository(client: HttpClient = httpClient) {
     // Frees the assigned staff on this line immediately, independent of the rest of the
     // order (US-026) — callable by the staff member themselves or a manager/cashier.
     async markServiceLineDone(businessId: string, orderId: string, serviceLineId: string): Promise<boolean> {
-      return await client.post<boolean>(
-        `/api/v1/merchant/pos/${businessId}/orders/${orderId}/services/${serviceLineId}/complete`,
+      return unlessOptimisticId(
+        serviceLineId,
+        () =>
+          client.post<boolean>(
+            `/api/v1/merchant/pos/${businessId}/orders/${orderId}/services/${serviceLineId}/complete`,
+          ),
+        false,
       )
     },
 

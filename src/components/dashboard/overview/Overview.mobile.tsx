@@ -483,8 +483,10 @@ function Overview({
             icon={<CreditCard className="h-6 w-6 text-nexoraSuccess" />}
             qrImageSrc={paymentQrPreviewUrl}
             title={t('dashboard.master_gateway.payment_title')}
-            subtitle={k('payment_qr_short')}
-            actionLabel={t('dashboard.master_gateway.btn_open')}
+            subtitle={businessName
+              ? k('payment_qr_short', { businessName })
+              : t('components.settings.SettingsTipQrPanel.scanCaptionFallback')}
+            actionLabel={t('components.settings.SettingsTipQrPanel.viewQr')}
             onAction={() => {
               if (paymentPageUrl) {
                 setIsPaymentQrPreviewOpen(true)
@@ -622,7 +624,9 @@ function Overview({
       businessName={businessName}
       previewQrUrl={paymentQrModalUrl}
       paymentPageUrl={paymentPageUrl}
-      scanCaption={t('components.settings.SettingsTipQrPanel.scanCaption')}
+      scanCaption={businessName
+        ? t('components.settings.SettingsTipQrPanel.scanCaption', { businessName })
+        : t('components.settings.SettingsTipQrPanel.scanCaptionFallback')}
     />
     <ReferralQrModal open={isReferralQrOpen} onClose={() => setIsReferralQrOpen(false)} />
     </>

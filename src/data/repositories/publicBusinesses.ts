@@ -48,6 +48,7 @@ export function createPublicBusinessesRepository(client: HttpClient = httpClient
         businessPaymentMethodId: args.businessPaymentMethodId,
         tipItems: args.tipItems,
       }
+      if (Number.isFinite(args.minStaffCount)) body.minStaffCount = args.minStaffCount
       const symbol = toVlinkpayCryptoSymbolWire(args.cryptoSymbol)
       if (symbol) body.cryptoSymbol = symbol
       return client.post<LooseObject>(

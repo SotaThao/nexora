@@ -536,6 +536,12 @@ function normalizeAutoRenewResult(
   }
 }
 
+function resolveBrowserTimeZone(): string {
+  return typeof Intl !== 'undefined'
+    ? Intl.DateTimeFormat().resolvedOptions().timeZone || 'UTC'
+    : 'UTC'
+}
+
 function publicPackagesPath(packageType?: SubscriptionPackageType): string {
   if (!packageType) return '/api/v1/public/subscription-packages'
   return `/api/v1/public/subscription-packages?packageType=${encodeURIComponent(packageType)}`
@@ -584,7 +590,7 @@ export function createSubscriptionPaymentsRepository(client: HttpClient = httpCl
       return normalizePaymentMethods(res)
     },
 
-    /** Tip Platform / wallet: body `{ packageId, symbol, billingCycle? }`. */
+    /** Tip Platform / wallet: body `{ packageId, symbol, billingCycle?, timeZone }`. */
     async purchase(
       packageId: string,
       symbol: string,
@@ -592,12 +598,17 @@ export function createSubscriptionPaymentsRepository(client: HttpClient = httpCl
     ): Promise<PurchaseSubscriptionResult> {
       const res = await client.post<unknown>(
         '/api/v1/merchant/subscriptions/purchase',
-        { packageId, symbol, ...(billingCycle ? { billingCycle } : {}) },
+        {
+          packageId,
+          symbol,
+          ...(billingCycle ? { billingCycle } : {}),
+          timeZone: resolveBrowserTimeZone(),
+        },
       )
       return normalizePurchaseResult(res)
     },
 
-    /** VoiceAI MD: body `{ packageId, symbol, billingCycle? }`. */
+    /** VoiceAI MD: body `{ packageId, symbol, billingCycle?, timeZone }`. */
     async purchaseByPackageId(
       packageId: string,
       symbol: string,
@@ -605,7 +616,12 @@ export function createSubscriptionPaymentsRepository(client: HttpClient = httpCl
     ): Promise<PurchasePackageByIdResult> {
       const res = await client.post<unknown>(
         '/api/v1/merchant/subscriptions/purchase',
-        { packageId, symbol, ...(billingCycle ? { billingCycle } : {}) },
+        {
+          packageId,
+          symbol,
+          ...(billingCycle ? { billingCycle } : {}),
+          timeZone: resolveBrowserTimeZone(),
+        },
       )
       return normalizePurchaseResult(res)
     },
@@ -616,7 +632,11 @@ export function createSubscriptionPaymentsRepository(client: HttpClient = httpCl
     ): Promise<InitializeCardPaymentResult> {
       const res = await client.post<unknown>(
         '/api/v1/merchant/subscriptions/purchase/card/initialize',
-        { packageId, ...(billingCycle ? { billingCycle } : {}) },
+        {
+          packageId,
+          ...(billingCycle ? { billingCycle } : {}),
+          timeZone: resolveBrowserTimeZone(),
+        },
       )
       return normalizeInitializeCardPaymentResult(res)
     },

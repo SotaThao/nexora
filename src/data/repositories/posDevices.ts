@@ -20,9 +20,15 @@ export type PosDeviceStatusFilter = 'All' | 'Active' | 'Revoked' | 'Expired'
 
 export function createPosDevicesRepository(client: HttpClient = httpClient) {
   return {
-    async getPairingQr(businessId: string): Promise<PosDevicePairingQrApiDto | null> {
+    // `excludeTokens` is comma-separated: the codes the operator has already replaced, so the
+    // server hands out a spare it has not shown them yet.
+    async getPairingQr(
+      businessId: string,
+      excludeTokens?: string,
+    ): Promise<PosDevicePairingQrApiDto | null> {
       const res = await client.get<PosDevicePairingQrApiDto>(
         `/api/v1/merchant/pos/${businessId}/devices/pairing-qr`,
+        excludeTokens ? { params: { excludeTokens } } : undefined,
       )
       return res ?? null
     },

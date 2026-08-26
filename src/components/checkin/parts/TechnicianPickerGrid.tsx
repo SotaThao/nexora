@@ -1,10 +1,7 @@
 // The "who would you like?" grid, shared by the kiosk and the front desk.
 //
-// Both screens ask the same question of the same people, so they show the same cards: an avatar
-// over a name, with "First available" first and a busy/available badge underneath. The badge used
-// to be front-desk-only on the grounds that floor state is noise for a waiting customer; the
-// one-page spec reversed that, and the badge now lives in the grid itself rather than in a slot
-// each caller fills differently.
+// Both screens ask the same question of the same people. The kiosk keeps the visual avatar cards;
+// the front desk can request compact text-only cards to keep the working surface short.
 import { useMemo, useState } from 'react'
 import { Search } from 'lucide-react'
 import { SkeletonList } from '../../ui/skeleton'
@@ -18,6 +15,7 @@ export interface TechnicianOption {
 
 // Above this many people the grid becomes hard to scan, and a name is faster to type than to hunt.
 const SEARCH_THRESHOLD = 6
+const EMPTY_ROSTER_SKELETON_COUNT = 4
 
 function initialsOf(displayName: string) {
   return displayName
@@ -39,6 +37,7 @@ export default function TechnicianPickerGrid({
   emptyLabel,
   busyLabel,
   availableLabel,
+  compact = false,
 }: {
   technicians: TechnicianOption[]
   isLoading?: boolean
@@ -53,6 +52,7 @@ export default function TechnicianPickerGrid({
   // passes neither, so its cards stay exactly as they were).
   busyLabel?: string
   availableLabel?: string
+  compact?: boolean
 }) {
   const [searchQuery, setSearchQuery] = useState('')
 
@@ -64,7 +64,9 @@ export default function TechnicianPickerGrid({
   }, [technicians, searchQuery])
 
   const cardClass = (isSelected: boolean) =>
-    `flex flex-col items-center gap-1 rounded-xl border p-3 text-center ${
+    `${compact
+      ? 'flex min-h-11 flex-col items-start gap-0.5 rounded-lg border px-3 py-2 text-left'
+      : 'flex flex-col items-center gap-1 rounded-xl border p-3 text-center'} ${
       isSelected ? 'border-nexoraBrand bg-nexoraBrand/5' : 'border-nexoraBorder hover:border-nexoraBrand'
     }`
 
@@ -95,14 +97,18 @@ export default function TechnicianPickerGrid({
       <div className="grid grid-cols-2 gap-2 sm:grid-cols-3">
         {/* Outside the loading branch: "Anyone" needs no data, so it is tappable immediately. */}
         <button type="button" onClick={() => onSelect(null)} className={cardClass(selectedStaffId === null)}>
-          <span className="flex h-11 w-11 items-center justify-center rounded-full bg-nexoraCanvas text-base">⚡</span>
-          <span className="text-xs font-bold text-nexoraText">{anyoneLabel}</span>
+          {!compact ? (
+            <span className="flex h-11 w-11 items-center justify-center rounded-full bg-nexoraCanvas text-base">⚡</span>
+          ) : null}
+          <span className={`${compact ? 'w-full truncate' : ''} text-xs font-bold text-nexoraText`}>
+            {anyoneLabel}
+          </span>
           {anyoneHint ? <span className="text-[10px] text-nexoraMuted">{anyoneHint}</span> : null}
         </button>
 
-        {isLoading ? (
+        {isLoading && technicians.length === 0 ? (
           <div className="col-span-full">
-            <SkeletonList count={4} lines={1} />
+            <SkeletonList count={EMPTY_ROSTER_SKELETON_COUNT} lines={1} />
           </div>
         ) : (
           <>
@@ -113,13 +119,15 @@ export default function TechnicianPickerGrid({
                 onClick={() => onSelect(staff.posStaffProfileId)}
                 className={cardClass(selectedStaffId === staff.posStaffProfileId)}
               >
-                <span className="flex h-11 w-11 items-center justify-center rounded-full bg-nexoraCanvas text-xs font-bold text-nexoraText">
-                  {staff.photoUrl ? (
-                    <img src={staff.photoUrl} alt="" className="h-11 w-11 rounded-full object-cover" />
-                  ) : (
-                    initialsOf(staff.displayName)
-                  )}
-                </span>
+                {!compact ? (
+                  <span className="flex h-11 w-11 items-center justify-center rounded-full bg-nexoraCanvas text-xs font-bold text-nexoraText">
+                    {staff.photoUrl ? (
+                      <img src={staff.photoUrl} alt="" className="h-11 w-11 rounded-full object-cover" />
+                    ) : (
+                      initialsOf(staff.displayName)
+                    )}
+                  </span>
+                ) : null}
                 <span className="w-full truncate text-xs font-bold text-nexoraText">{staff.displayName}</span>
                 {renderBadge(staff)}
               </button>

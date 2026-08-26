@@ -69,6 +69,9 @@ export default function DashboardHeader({
   const headerDropdownRef = useRef(null)
   const [isSearchFocused, setIsSearchFocused] = useState(false)
   const [isHeaderDropdownOpen, setIsHeaderDropdownOpen] = useState(false)
+  const sidebarToggleLabel = t(
+    isSidebarOpen ? 'dashboard.header.collapse_menu' : 'dashboard.header.expand_menu',
+  )
 
   useEffect(() => {
     function handleClickOutside(event) {
@@ -210,10 +213,12 @@ export default function DashboardHeader({
       <button
         type="button"
         onClick={onToggleSidebar}
-        className="hidden h-10 w-10 shrink-0 items-center justify-center rounded-lg border border-nexoraBorder bg-white text-nexoraText shadow-nexora-soft transition hover:bg-nexoraSurfaceMuted lg:flex"
-        aria-label={isSidebarOpen ? 'Collapse sidebar' : 'Expand sidebar'}
+        className="hidden h-10 shrink-0 items-center justify-center gap-2 rounded-lg border border-nexoraBorder bg-white px-3 text-xs font-bold text-nexoraText shadow-nexora-soft transition hover:bg-nexoraSurfaceMuted lg:flex"
+        aria-label={sidebarToggleLabel}
+        title={sidebarToggleLabel}
       >
         {isSidebarOpen ? <PanelLeftClose className="h-5 w-5" /> : <PanelLeftOpen className="h-5 w-5" />}
+        <span>{sidebarToggleLabel}</span>
       </button>
 
       {/* Search Input with Suggestions Dropdown */}

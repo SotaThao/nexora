@@ -25,12 +25,15 @@ export type BookingCalendarSlotSelect = {
   date: string
   time: string
   staffName: string | null
+  posStaffProfileId: string | null
 }
 
 type BookingTeamCalendarProps = {
   bookings: ReadonlyArray<BookingCalendarSource>
   /** Active staff display names — locks column order so save/refetch does not reshuffle. */
   staffNames?: ReadonlyArray<string>
+  /** POS profile ids keyed by normalized display name when the POS roster exposes them. */
+  staffIdsByName?: Readonly<Record<string, string>>
   calendarDate: string
   onCalendarDateChange: (dateIso: string) => void
   onEventClick: (bookingId: string) => void
@@ -64,6 +67,7 @@ function dayPilotStartToLocalParts(start: DayPilot.Date): { date: string; time: 
 export default function BookingTeamCalendar({
   bookings,
   staffNames = [],
+  staffIdsByName = {},
   calendarDate,
   onCalendarDateChange,
   onEventClick,
@@ -145,12 +149,16 @@ export default function BookingTeamCalendar({
           <div className="booking-team-calendar-host" aria-label={title}>
             <DayPilotCalendar
               {...BOOKING_CALENDAR_DAYPILOT_OPTIONS}
-              timeRangeSelectedHandling="Enabled"
+              timeRangeSelectedHandling={onSlotSelect ? 'Enabled' : 'Disabled'}
               controlRef={handleCalendarControlRef}
               startDate={calendarDate}
               columns={columns}
               events={events}
               onBeforeCellRender={(args) => {
+                if (!onSlotSelect) {
+                  args.cell.properties.html = ''
+                  return
+                }
                 const { date, time } = dayPilotStartToLocalParts(args.cell.start)
                 const past = isClientLocalSlotPast(date, time)
                 if (past) {
@@ -174,7 +182,10 @@ export default function BookingTeamCalendar({
                     ? null
                     : resource
                 )
-                onSlotSelect?.({ date, time, staffName })
+                const posStaffProfileId = staffName
+                  ? staffIdsByName[staffName.trim().toLocaleLowerCase()] ?? null
+                  : null
+                onSlotSelect?.({ date, time, staffName, posStaffProfileId })
               }}
             />
           </div>

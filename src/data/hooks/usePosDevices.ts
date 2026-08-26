@@ -28,11 +28,11 @@ const QR_REFETCH_BUFFER_MS = 300
 // open: the answer is one boolean, no image.
 const QR_USED_POLL_MS = 15000
 
-export function usePosDevicePairingQr(businessId?: string, enabled = true) {
+export function usePosDevicePairingQr(businessId?: string, excludeTokens?: string, enabled = true) {
   const { isAuthenticated } = useSessionRole()
   return useQuery<PosDevicePairingQrApiDto | null>({
-    queryKey: qk.merchantPosDevicePairingQr(businessId),
-    queryFn: () => posDevicesRepository.getPairingQr(businessId as string),
+    queryKey: qk.merchantPosDevicePairingQr(businessId, excludeTokens),
+    queryFn: () => posDevicesRepository.getPairingQr(businessId as string, excludeTokens),
     enabled: enabled && isAuthenticated && Boolean(businessId),
     retry: false,
     // Driven by the token's own expiry rather than a fixed 29s tick.

@@ -1,11 +1,12 @@
 // Pairing QR for Check-In Devices. The image is rendered server-side and arrives as a data URI, so
 // there is no QR library on the client and no raw SVG injection.
 //
-// A code dies two ways, and the panel watches for both: its window runs out (the countdown below,
-// driven by the token's own expiresAt), or a tablet scans it (usePosDevicePairingQrUsed, polling
-// every 15s). Either way a fresh code takes its place without anyone reloading the page.
+// A code dies three ways, and the panel watches for all of them: its lifetime runs out (the
+// countdown below, driven by the token's own expiresAt), a tablet scans it
+// (usePosDevicePairingQrUsed, polling every 15s), or the operator asks for a replacement. Any of
+// them puts a fresh code on screen without anyone reloading the page.
 import { useEffect, useState } from 'react'
-import { QrCode } from 'lucide-react'
+import { QrCode, RefreshCw } from 'lucide-react'
 import { useTranslation } from '../../../../../contexts/LanguageContext'
 import {
   usePosDevicePairingQr,
@@ -15,13 +16,22 @@ import { Skeleton } from '../../../../ui/skeleton'
 
 const K = 'components.dashboard.views.pos.devices.PosDevicePairingQrPanel'
 
-function secondsUntil(expiresAt?: string | null): number {
-  if (!expiresAt) return 0
-  const remainingMs = new Date(expiresAt).getTime() - Date.now()
-  return Math.max(0, Math.ceil(remainingMs / 1000))
+function windowSeconds(token?: { issuedAt: string; expiresAt: string } | null): number {
+  if (!token) return 1
+  const spanMs = new Date(token.expiresAt).getTime() - new Date(token.issuedAt).getTime()
+  return Math.max(1, Math.round(spanMs / 1000))
 }
 
-// Minutes now that a window lasts five of them — a bare "273s" is not a duration anyone reads.
+// Bounded by the token's own window rather than trusting expiresAt against the browser clock
+// alone: a dashboard running behind the server would otherwise show a code as living longer than
+// the window it belongs to.
+function secondsLeftOf(token?: { issuedAt: string; expiresAt: string } | null): number {
+  if (!token) return 0
+  const remainingMs = new Date(token.expiresAt).getTime() - Date.now()
+  return Math.min(windowSeconds(token), Math.max(0, Math.ceil(remainingMs / 1000)))
+}
+
+// Minutes now that a code lives fifteen of them — a bare "873s" is not a duration anyone reads.
 function formatCountdown(totalSeconds: number): string {
   const minutes = Math.floor(totalSeconds / 60)
   const seconds = totalSeconds % 60
@@ -30,25 +40,26 @@ function formatCountdown(totalSeconds: number): string {
 
 export default function PosDevicePairingQrPanel({ businessId }: { businessId: string }) {
   const { t } = useTranslation()
-  const { data: token, isLoading } = usePosDevicePairingQr(businessId)
+  // Every code the operator has finished with. Naming them is what makes the next request come
+  // back with a different one — the token is derived server-side, so a plain refetch repeats it —
+  // and keeping the whole list is what stops a second request from handing back the first code.
+  const [replacedTokens, setReplacedTokens] = useState<string[]>([])
+  const { data: token, isLoading, isFetching } = usePosDevicePairingQr(
+    businessId,
+    replacedTokens.join(','),
+  )
   const [secondsLeft, setSecondsLeft] = useState(0)
 
   // Only asks about a code that actually exists; the poll dies with this component.
   usePosDevicePairingQrUsed(businessId, token?.token, Boolean(token))
 
   useEffect(() => {
-    setSecondsLeft(secondsUntil(token?.expiresAt))
-    const timer = window.setInterval(() => setSecondsLeft(secondsUntil(token?.expiresAt)), 1000)
+    setSecondsLeft(secondsLeftOf(token))
+    const timer = window.setInterval(() => setSecondsLeft(secondsLeftOf(token)), 1000)
     return () => window.clearInterval(timer)
-  }, [token?.expiresAt])
+  }, [token?.issuedAt, token?.expiresAt])
 
-  const totalWindowSeconds = token
-    ? Math.max(
-        1,
-        Math.round((new Date(token.expiresAt).getTime() - new Date(token.issuedAt).getTime()) / 1000),
-      )
-    : 1
-  const progressPercent = Math.min(100, Math.max(0, (secondsLeft / totalWindowSeconds) * 100))
+  const progressPercent = Math.min(100, Math.max(0, (secondsLeft / windowSeconds(token)) * 100))
 
   return (
     <section className="rounded-xl border border-nexoraBorder bg-nexoraSurface p-4">
@@ -80,9 +91,20 @@ export default function PosDevicePairingQrPanel({ businessId }: { businessId: st
                   style={{ width: `${progressPercent}%` }}
                 />
               </div>
-              <p className="text-sm font-bold text-nexoraText">
-                {t(`${K}.rotatesIn`, { time: formatCountdown(secondsLeft) })}
-              </p>
+              <div className="flex flex-wrap items-center gap-2">
+                <p className="text-sm font-bold text-nexoraText">
+                  {t(`${K}.rotatesIn`, { time: formatCountdown(secondsLeft) })}
+                </p>
+                <button
+                  type="button"
+                  onClick={() => setReplacedTokens((prev) => [...prev, token.token])}
+                  disabled={isFetching}
+                  className="inline-flex h-8 items-center gap-1.5 rounded-lg border border-nexoraBorder bg-transparent px-3 text-[11px] font-bold text-nexoraBrandDark hover:bg-nexoraCanvas disabled:opacity-60"
+                >
+                  <RefreshCw className={`h-3.5 w-3.5 ${isFetching ? 'animate-spin' : ''}`} aria-hidden="true" />
+                  {t(`${K}.newCodeButton`)}
+                </button>
+              </div>
             </>
           ) : (
             !isLoading && (

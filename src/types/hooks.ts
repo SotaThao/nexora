@@ -121,6 +121,8 @@ export interface CreateMultiStaffTipVars {
   touchPointId: string
   businessPaymentMethodId: string
   tipItems: Array<{ staffProfileId: string; amount: number }>
+  /** Sent as 1 when the customer tipped a single person, so BE relaxes TIP_MINIMUM_STAFF_COUNT. */
+  minStaffCount?: number
   /** Required when business payment method is VlinkPay — resolves CryptoAddresses by symbol. */
   cryptoSymbol?: string
 }

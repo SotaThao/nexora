@@ -34,6 +34,7 @@ import DateTimeStep from '../booking-public/DateTimeStep'
 import ConfirmationScreen from '../booking-public/ConfirmationScreen'
 import SmsConsentPanel from './booking/SmsConsentPanel'
 import { SMS_CONSENT_DISCLOSURE_VERSION } from '../../constants/smsConsent'
+import { randomUuid } from '../../utils/uuid'
 
 type WizardStep = 'discovery' | 'datetime' | 'contact' | 'confirmation'
 
@@ -481,7 +482,7 @@ export default function PublicBookingPage() {
     setSelectedLines((prev) => [
       ...prev,
       {
-        key: crypto.randomUUID(),
+        key: randomUuid(),
         posServiceId: service.id,
         serviceName: service.name,
         unitPrice: service.price,
@@ -530,7 +531,7 @@ export default function PublicBookingPage() {
     setSelectedLines((prev) => [
       ...prev,
       {
-        key: crypto.randomUUID(),
+        key: randomUuid(),
         posServiceId: service.id,
         serviceName: service.name,
         unitPrice: service.price,

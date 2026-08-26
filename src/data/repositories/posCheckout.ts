@@ -5,6 +5,7 @@
  * posTurnBoardRepository — a Staff caller may be linked to more than one business.
  */
 import httpClient from '../../lib/httpClient'
+import { unlessOptimisticId } from '../../utils/uuid'
 import type {
   CheckoutProductCatalogItemApiDto,
   CheckoutServiceCatalogItemApiDto,
@@ -12,6 +13,8 @@ import type {
   CompleteOrderResultApiDto,
   InServiceOrderApiDto,
   OrderDetailApiDto,
+  ServiceLineAddOnOptionApiDto,
+  SetOrderServiceLineDiscountPayload,
   SetOrderStaffTipSplitPayload,
 } from '../../types/repositories'
 
@@ -65,15 +68,62 @@ export function createPosCheckoutRepository(client: HttpClient = httpClient) {
       serviceLineId: string,
       posServiceId: string,
     ): Promise<boolean> {
-      return await client.put<boolean>(
-        `/api/v1/merchant/pos/${businessId}/checkout/${orderId}/services/${serviceLineId}`,
-        { posServiceId },
+      return unlessOptimisticId(
+        serviceLineId,
+        () =>
+          client.put<boolean>(
+            `/api/v1/merchant/pos/${businessId}/checkout/${orderId}/services/${serviceLineId}`,
+            { posServiceId },
+          ),
+        false,
       )
     },
 
     async removeOrderServiceLine(businessId: string, orderId: string, serviceLineId: string): Promise<boolean> {
+      return unlessOptimisticId(
+        serviceLineId,
+        () =>
+          client.del<boolean>(
+            `/api/v1/merchant/pos/${businessId}/checkout/${orderId}/services/${serviceLineId}`,
+          ),
+        false,
+      )
+    },
+
+    // Scoped to the line, not the service: the picker may only ever offer the add-ons of the
+    // service line it was opened from.
+    async getServiceLineAddOnOptions(
+      businessId: string,
+      orderId: string,
+      serviceLineId: string,
+    ): Promise<ServiceLineAddOnOptionApiDto[]> {
+      const res = await client.get<ServiceLineAddOnOptionApiDto[]>(
+        `/api/v1/merchant/pos/${businessId}/checkout/${orderId}/services/${serviceLineId}/add-on-options`,
+      )
+      return res ?? []
+    },
+
+    // One call adds one line — tapping the same add-on twice is two lines, not a quantity of two.
+    async addOrderServiceAddOnLine(
+      businessId: string,
+      orderId: string,
+      serviceLineId: string,
+      serviceAddOnId: string,
+    ): Promise<string> {
+      return await client.post<string>(
+        `/api/v1/merchant/pos/${businessId}/checkout/${orderId}/services/${serviceLineId}/add-ons`,
+        { serviceAddOnId },
+      )
+    },
+
+    // An add-on line is removed through the service-line route — it is a service item too.
+    async removeOrderServiceAddOnLine(
+      businessId: string,
+      orderId: string,
+      addOnLineId: string,
+    ): Promise<boolean> {
       return await client.del<boolean>(
-        `/api/v1/merchant/pos/${businessId}/checkout/${orderId}/services/${serviceLineId}`,
+        `/api/v1/merchant/pos/${businessId}/checkout/${orderId}/services/${addOnLineId}`,
       )
     },
 
@@ -90,8 +140,13 @@ export function createPosCheckoutRepository(client: HttpClient = httpClient) {
     },
 
     async removeOrderProductLine(businessId: string, orderId: string, productLineId: string): Promise<boolean> {
-      return await client.del<boolean>(
-        `/api/v1/merchant/pos/${businessId}/checkout/${orderId}/products/${productLineId}`,
+      return unlessOptimisticId(
+        productLineId,
+        () =>
+          client.del<boolean>(
+            `/api/v1/merchant/pos/${businessId}/checkout/${orderId}/products/${productLineId}`,
+          ),
+        false,
       )
     },
 
@@ -103,9 +158,32 @@ export function createPosCheckoutRepository(client: HttpClient = httpClient) {
       productLineId: string,
       quantity: number,
     ): Promise<boolean> {
-      return await client.put<boolean>(
-        `/api/v1/merchant/pos/${businessId}/checkout/${orderId}/products/${productLineId}/quantity`,
-        { quantity },
+      return unlessOptimisticId(
+        productLineId,
+        () =>
+          client.put<boolean>(
+            `/api/v1/merchant/pos/${businessId}/checkout/${orderId}/products/${productLineId}/quantity`,
+            { quantity },
+          ),
+        false,
+      )
+    },
+
+    // Sets or clears the discount on one service line. A null discountType clears it.
+    async setOrderServiceLineDiscount(
+      businessId: string,
+      orderId: string,
+      serviceLineId: string,
+      payload: SetOrderServiceLineDiscountPayload,
+    ): Promise<boolean> {
+      return unlessOptimisticId(
+        serviceLineId,
+        () =>
+          client.put<boolean>(
+            `/api/v1/merchant/pos/${businessId}/checkout/${orderId}/services/${serviceLineId}/discount`,
+            payload,
+          ),
+        false,
       )
     },
 

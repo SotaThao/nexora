@@ -9,14 +9,17 @@ import { useSessionRole } from '../../auth/useSessionRole'
 import posTurnBoardRepository from '../repositories/posTurnBoard'
 import type { TurnBoardStationApiDto } from '../../types/repositories'
 
-export function useTurnBoard(businessId?: string) {
+export function useTurnBoard(
+  businessId?: string,
+  options?: { enabled?: boolean; refetchInterval?: number | false },
+) {
   const { isAuthenticated } = useSessionRole()
   return useQuery<TurnBoardStationApiDto[]>({
     queryKey: qk.merchantPosTurnBoard(businessId),
     queryFn: () => posTurnBoardRepository.getTurnBoard(businessId as string),
-    enabled: isAuthenticated && Boolean(businessId),
+    enabled: isAuthenticated && Boolean(businessId) && (options?.enabled ?? true),
     retry: false,
     // Station status should stay fresh for the front desk without a manual refresh.
-    refetchInterval: 15000,
+    refetchInterval: options?.refetchInterval ?? 15000,
   })
 }
