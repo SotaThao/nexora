@@ -1041,6 +1041,11 @@ body:not(.homepage-active):not(.public-booking-active) a:focus-visible {
   font-weight: 400;
 }
 
+.pos-receipt-group-lines > div > span:first-child .pos-receipt-line-discount {
+  color: #f43f5e;
+  font-weight: 600;
+}
+
 .pos-receipt-group-lines > div > span:last-child {
   flex-shrink: 0;
   color: #000000;
@@ -1138,6 +1143,12 @@ body:not(.homepage-active):not(.public-booking-active) a:focus-visible {
   body.printing-pos-invoice .pos-receipt-ink-black,
   body.printing-pos-invoice .pos-receipt-ink-black * {
     color: #000000 !important;
+  }
+
+  body.printing-pos-invoice .pos-receipt-ink-black .pos-receipt-line-discount {
+    color: #f43f5e !important;
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
   }
 
   /* Keep the ticket number's high-contrast badge readable while all normal receipt copy uses

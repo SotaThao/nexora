@@ -1487,7 +1487,18 @@ export default function PosOrderWorkspace({
                         const name = line.itemType === 'Service' ? line.serviceName : line.productName
                         return (
                           <li key={line.key} aria-label={name} className="flex items-center justify-between gap-3">
-                            <span className="min-w-0 truncate">{name}</span>
+                            <span className="min-w-0 truncate">
+                              {name}
+                              {line.itemType === 'Service' && line.discountAmount > 0 ? (
+                                <span className="ml-1 font-semibold text-rose-500">
+                                  {formatDiscountPriceBadge(
+                                    line.discountType,
+                                    line.discountValue,
+                                    line.discountAmount,
+                                  )}
+                                </span>
+                              ) : null}
+                            </span>
                             <span className="shrink-0 font-semibold tabular-nums">
                               ${lineTotalAfterDiscount(line).toFixed(2)}
                             </span>
@@ -1630,7 +1641,18 @@ export default function PosOrderWorkspace({
                               {group.lines.map((line) => (
                                 <Fragment key={line.key}>
                                   <div>
-                                    <span>{line.serviceName}</span>
+                                    <span>
+                                      {line.serviceName}
+                                      {line.discountAmount > 0 ? (
+                                        <span className="pos-receipt-line-discount ml-1 text-rose-500">
+                                          {formatDiscountPriceBadge(
+                                            line.discountType,
+                                            line.discountValue,
+                                            line.discountAmount,
+                                          )}
+                                        </span>
+                                      ) : null}
+                                    </span>
                                     <span className="tabular-nums">{formatUsdAmount(lineTotal(line))}</span>
                                   </div>
                                   {/* Printed as its own line under the service — a customer must be
