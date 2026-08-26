@@ -1,4 +1,5 @@
-// BeepMessageModal — optional text sent along with a beep notification.
+// BeepMessageModal — optional text sent along with a beep notification. Shared by every beep entry
+// point (Time Clock roster and the Turn Board station cards) so both ask for the same message.
 //
 // Suggestion chips just fill the textarea; nothing is sent until Send is pressed, so front desk
 // can tap a suggestion and still edit it before it goes out.

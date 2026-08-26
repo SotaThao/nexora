@@ -38,6 +38,7 @@ export default function StaffBottomNav({ activeScreen, onNavigate }) {
 
   return (
     <nav
+      data-mobile-bottom-nav=""
       className="fixed bottom-0 left-0 right-0 z-30 border-t border-nexoraBorder bg-white/95 backdrop-blur-md lg:hidden"
       style={{
         paddingBottom: 'var(--app-safe-area-bottom, env(safe-area-inset-bottom, 0px))',

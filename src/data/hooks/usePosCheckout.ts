@@ -8,7 +8,7 @@ import { useQueries, useQuery, useMutation, useQueryClient, type QueryKey } from
 import { qk } from '../queryKeys'
 import { useSessionRole } from '../../auth/useSessionRole'
 import posCheckoutRepository from '../repositories/posCheckout'
-import { randomUuid } from '../../utils/uuid'
+import { isPersistedLineId, randomUuid, unlessOptimisticId } from '../../utils/uuid'
 import type {
   CheckoutProductCatalogItemApiDto,
   CheckoutServiceCatalogItemApiDto,
@@ -16,6 +16,7 @@ import type {
   CompleteOrderResultApiDto,
   InServiceOrderApiDto,
   OrderDetailApiDto,
+  ServiceLineAddOnOptionApiDto,
   SetOrderServiceLineDiscountPayload,
   SetOrderStaffTipSplitPayload,
 } from '../../types/repositories'
@@ -73,6 +74,17 @@ function rollbackOrderDetail(queryClient: ReturnType<typeof useQueryClient>, con
   if (context?.previousOrder) {
     queryClient.setQueryData(context.queryKey, context.previousOrder)
   }
+}
+
+function withPersistedLine<TLine extends { id: string }>(
+  lines: TLine[],
+  newLineId: string | undefined,
+  createLine: (id: string) => TLine,
+): TLine[] | null {
+  if (!isPersistedLineId(newLineId)) return null
+  const persistedLines = lines.filter((line) => isPersistedLineId(line.id))
+  if (persistedLines.some((line) => line.id === newLineId)) return persistedLines
+  return [...persistedLines, createLine(newLineId)]
 }
 
 export function useInServiceOrders(
@@ -157,38 +169,42 @@ export function useAddOrderServiceLine(businessId?: string) {
   >({
     mutationFn: ({ orderId, posServiceId, quantity }) =>
       posCheckoutRepository.addOrderServiceLine(businessId as string, orderId, posServiceId, quantity),
-    onMutate: async ({ orderId, posServiceId, quantity = 1, unitPrice, serviceName }) => {
+    onMutate: async ({ orderId, quantity = 1, unitPrice }) => {
       const context = await snapshotOrderDetail(queryClient, businessId, orderId)
       if (context.previousOrder) {
         const lineTotal = roundCurrency(unitPrice * quantity)
-        queryClient.setQueryData<OrderDetailApiDto>(context.queryKey, {
-          ...applyOrderTotalsPatch(context.previousOrder, {
-            servicesSubtotal: roundCurrency(context.previousOrder.servicesSubtotal + lineTotal),
-          }),
-          serviceLines: [
-            ...context.previousOrder.serviceLines,
-            {
-              id: `optimistic-${randomUuid()}`,
-              posServiceId,
-              serviceName,
-              unitPrice,
-              quantity,
-              lineTotal,
-              // A brand-new line is never discounted, and the bearer choice only unlocks once a
-              // technician is assigned — the server decides that, this is just the empty shape.
-              discountAmount: 0,
-              staffDiscountShare: 0,
-              lineTotalAfterDiscount: lineTotal,
-              canAssignDiscountToStaff: false,
-              completedAt: null,
-            },
-          ],
-        })
+        // Totals only — never insert a client-generated line id. Assign/Delete/Discount
+        // read ids off this cache, and `optimistic-*` is not a valid serviceLineId.
+        queryClient.setQueryData<OrderDetailApiDto>(context.queryKey, applyOrderTotalsPatch(context.previousOrder, {
+          servicesSubtotal: roundCurrency(context.previousOrder.servicesSubtotal + lineTotal),
+        }))
       }
       return context
     },
     onError: (_err, _vars, context) => rollbackOrderDetail(queryClient, context),
-    onSuccess: (_result, { orderId }) => {
+    onSuccess: (newServiceLineId, { orderId, posServiceId, quantity = 1, unitPrice, serviceName }) => {
+      const queryKey = qk.merchantPosOrderDetail(businessId, orderId)
+      const current = queryClient.getQueryData<OrderDetailApiDto>(queryKey)
+      const lineTotal = roundCurrency(unitPrice * quantity)
+      const serviceLines = current
+        ? withPersistedLine(current.serviceLines, newServiceLineId, (id) => ({
+            id,
+            posServiceId,
+            serviceName,
+            unitPrice,
+            quantity,
+            lineTotal,
+            discountAmount: 0,
+            staffDiscountShare: 0,
+            lineTotalAfterDiscount: lineTotal,
+            canAssignDiscountToStaff: false,
+            completedAt: null,
+            addOns: [],
+          }))
+        : null
+      if (current && serviceLines) {
+        queryClient.setQueryData<OrderDetailApiDto>(queryKey, { ...current, serviceLines })
+      }
       queryClient.invalidateQueries({ queryKey: qk.merchantPosOrderDetail(businessId, orderId) })
       queryClient.invalidateQueries({ queryKey: qk.merchantPosInServiceOrders(businessId) })
       queryClient.invalidateQueries({ queryKey: qk.merchantPosOrderList(businessId) })
@@ -208,7 +224,11 @@ export function useUpdateOrderServiceLine(businessId?: string) {
     OrderMutationContext
   >({
     mutationFn: ({ orderId, serviceLineId, posServiceId }) =>
-      posCheckoutRepository.updateOrderServiceLine(businessId as string, orderId, serviceLineId, posServiceId),
+      unlessOptimisticId(
+        serviceLineId,
+        () => posCheckoutRepository.updateOrderServiceLine(businessId as string, orderId, serviceLineId, posServiceId),
+        false,
+      ),
     onMutate: async ({ orderId, serviceLineId, posServiceId, unitPrice, serviceName }) => {
       const context = await snapshotOrderDetail(queryClient, businessId, orderId)
       const previousLine = context.previousOrder?.serviceLines.find((l) => l.id === serviceLineId)
@@ -241,7 +261,11 @@ export function useRemoveOrderServiceLine(businessId?: string) {
   const queryClient = useQueryClient()
   return useMutation<boolean, Error, { orderId: string; serviceLineId: string }, OrderMutationContext>({
     mutationFn: ({ orderId, serviceLineId }) =>
-      posCheckoutRepository.removeOrderServiceLine(businessId as string, orderId, serviceLineId),
+      unlessOptimisticId(
+        serviceLineId,
+        () => posCheckoutRepository.removeOrderServiceLine(businessId as string, orderId, serviceLineId),
+        false,
+      ),
     onMutate: async ({ orderId, serviceLineId }) => {
       const context = await snapshotOrderDetail(queryClient, businessId, orderId)
       const removedLine = context.previousOrder?.serviceLines.find((l) => l.id === serviceLineId)
@@ -260,6 +284,114 @@ export function useRemoveOrderServiceLine(businessId?: string) {
       queryClient.invalidateQueries({ queryKey: qk.merchantPosOrderDetail(businessId, orderId) })
       queryClient.invalidateQueries({ queryKey: qk.merchantPosInServiceOrders(businessId) })
       queryClient.invalidateQueries({ queryKey: qk.merchantPosOrderList(businessId) })
+      queryClient.invalidateQueries({ queryKey: qk.merchantPosTurnBoard(businessId) })
+    },
+  })
+}
+
+// Not cached across opens: the owner may have retired an add-on between two visits to the same
+// ticket, and a stale picker would offer something the command then rejects.
+export function useServiceLineAddOnOptions(businessId?: string, orderId?: string, serviceLineId?: string) {
+  const { isAuthenticated } = useSessionRole()
+  return useQuery<ServiceLineAddOnOptionApiDto[]>({
+    queryKey: qk.merchantPosServiceLineAddOnOptions(businessId, orderId, serviceLineId),
+    queryFn: () =>
+      posCheckoutRepository.getServiceLineAddOnOptions(
+        businessId as string,
+        orderId as string,
+        serviceLineId as string,
+      ),
+    enabled: isAuthenticated && Boolean(businessId) && Boolean(orderId) && Boolean(serviceLineId),
+    staleTime: 0,
+    gcTime: 0,
+    retry: false,
+  })
+}
+
+// Each call adds one line — the picker stays open so the front desk can tap again for a second
+// one, which is why the optimistic patch appends rather than merges.
+export function useAddOrderServiceAddOnLine(businessId?: string) {
+  const queryClient = useQueryClient()
+  return useMutation<
+    string,
+    Error,
+    { orderId: string; serviceLineId: string; serviceAddOnId: string; unitPrice: number; addOnName: string },
+    OrderMutationContext
+  >({
+    mutationFn: ({ orderId, serviceLineId, serviceAddOnId }) =>
+      posCheckoutRepository.addOrderServiceAddOnLine(
+        businessId as string,
+        orderId,
+        serviceLineId,
+        serviceAddOnId,
+      ),
+    onMutate: async ({ orderId, serviceLineId, serviceAddOnId, unitPrice, addOnName }) => {
+      const context = await snapshotOrderDetail(queryClient, businessId, orderId)
+      if (context.previousOrder) {
+        queryClient.setQueryData<OrderDetailApiDto>(context.queryKey, {
+          ...applyOrderTotalsPatch(context.previousOrder, {
+            servicesSubtotal: roundCurrency(context.previousOrder.servicesSubtotal + unitPrice),
+          }),
+          serviceLines: context.previousOrder.serviceLines.map((line) =>
+            line.id === serviceLineId
+              ? {
+                  ...line,
+                  addOns: [
+                    ...line.addOns,
+                    {
+                      id: `optimistic-${randomUuid()}`,
+                      serviceAddOnId,
+                      addOnName,
+                      unitPrice,
+                      lineTotal: unitPrice,
+                      discountAmount: 0,
+                      staffDiscountShare: 0,
+                      lineTotalAfterDiscount: unitPrice,
+                      canAssignDiscountToStaff: false,
+                    },
+                  ],
+                }
+              : line,
+          ),
+        })
+      }
+      return context
+    },
+    onError: (_err, _vars, context) => rollbackOrderDetail(queryClient, context),
+    onSuccess: (_result, { orderId }) => {
+      queryClient.invalidateQueries({ queryKey: qk.merchantPosOrderDetail(businessId, orderId) })
+      queryClient.invalidateQueries({ queryKey: qk.merchantPosTurnBoard(businessId) })
+    },
+  })
+}
+
+export function useRemoveOrderServiceAddOnLine(businessId?: string) {
+  const queryClient = useQueryClient()
+  return useMutation<boolean, Error, { orderId: string; addOnLineId: string }, OrderMutationContext>({
+    mutationFn: ({ orderId, addOnLineId }) =>
+      posCheckoutRepository.removeOrderServiceAddOnLine(businessId as string, orderId, addOnLineId),
+    onMutate: async ({ orderId, addOnLineId }) => {
+      const context = await snapshotOrderDetail(queryClient, businessId, orderId)
+      const removed = context.previousOrder?.serviceLines
+        .flatMap((line) => line.addOns)
+        .find((addOn) => addOn.id === addOnLineId)
+      if (context.previousOrder && removed) {
+        queryClient.setQueryData<OrderDetailApiDto>(context.queryKey, {
+          ...applyOrderTotalsPatch(context.previousOrder, {
+            servicesSubtotal: roundCurrency(context.previousOrder.servicesSubtotal - removed.lineTotal),
+            discountAmount: roundCurrency(context.previousOrder.discountAmount - removed.discountAmount),
+          }),
+          serviceLines: context.previousOrder.serviceLines.map((line) => ({
+            ...line,
+            addOns: line.addOns.filter((addOn) => addOn.id !== addOnLineId),
+          })),
+        })
+      }
+      return context
+    },
+    onError: (_err, _vars, context) => rollbackOrderDetail(queryClient, context),
+    onSuccess: (_result, { orderId }) => {
+      queryClient.invalidateQueries({ queryKey: qk.merchantPosOrderDetail(businessId, orderId) })
       queryClient.invalidateQueries({ queryKey: qk.merchantPosTurnBoard(businessId) })
     },
   })
@@ -290,16 +422,7 @@ export function useAddOrderProductLine(businessId?: string) {
                 ? { ...l, quantity: l.quantity + quantity, lineTotal: roundCurrency(l.lineTotal + deltaSubtotal) }
                 : l,
             )
-          : [
-              ...context.previousOrder.productLines,
-              {
-                id: `optimistic-${randomUuid()}`,
-                productName,
-                unitPrice,
-                quantity,
-                lineTotal: deltaSubtotal,
-              },
-            ]
+          : context.previousOrder.productLines
         queryClient.setQueryData<OrderDetailApiDto>(context.queryKey, {
           ...applyOrderTotalsPatch(context.previousOrder, {
             productsSubtotal: roundCurrency(context.previousOrder.productsSubtotal + deltaSubtotal),
@@ -310,7 +433,22 @@ export function useAddOrderProductLine(businessId?: string) {
       return context
     },
     onError: (_err, _vars, context) => rollbackOrderDetail(queryClient, context),
-    onSuccess: (_result, { orderId }) => {
+    onSuccess: (newProductLineId, { orderId, quantity = 1, unitPrice, productName }) => {
+      const queryKey = qk.merchantPosOrderDetail(businessId, orderId)
+      const current = queryClient.getQueryData<OrderDetailApiDto>(queryKey)
+      const lineTotal = roundCurrency(unitPrice * quantity)
+      const productLines = current
+        ? withPersistedLine(current.productLines, newProductLineId, (id) => ({
+            id,
+            productName,
+            unitPrice,
+            quantity,
+            lineTotal,
+          }))
+        : null
+      if (current && productLines) {
+        queryClient.setQueryData<OrderDetailApiDto>(queryKey, { ...current, productLines })
+      }
       queryClient.invalidateQueries({ queryKey: qk.merchantPosOrderDetail(businessId, orderId) })
       queryClient.invalidateQueries({ queryKey: qk.merchantPosOrderList(businessId) })
     },
@@ -322,7 +460,11 @@ export function useUpdateOrderProductLineQuantity(businessId?: string) {
   const queryClient = useQueryClient()
   return useMutation<boolean, Error, { orderId: string; productLineId: string; quantity: number }, OrderMutationContext>({
     mutationFn: ({ orderId, productLineId, quantity }) =>
-      posCheckoutRepository.updateOrderProductLineQuantity(businessId as string, orderId, productLineId, quantity),
+      unlessOptimisticId(
+        productLineId,
+        () => posCheckoutRepository.updateOrderProductLineQuantity(businessId as string, orderId, productLineId, quantity),
+        false,
+      ),
     onMutate: async ({ orderId, productLineId, quantity }) => {
       const context = await snapshotOrderDetail(queryClient, businessId, orderId)
       const line = context.previousOrder?.productLines.find((l) => l.id === productLineId)
@@ -352,7 +494,11 @@ export function useRemoveOrderProductLine(businessId?: string) {
   const queryClient = useQueryClient()
   return useMutation<boolean, Error, { orderId: string; productLineId: string }, OrderMutationContext>({
     mutationFn: ({ orderId, productLineId }) =>
-      posCheckoutRepository.removeOrderProductLine(businessId as string, orderId, productLineId),
+      unlessOptimisticId(
+        productLineId,
+        () => posCheckoutRepository.removeOrderProductLine(businessId as string, orderId, productLineId),
+        false,
+      ),
     onMutate: async ({ orderId, productLineId }) => {
       const context = await snapshotOrderDetail(queryClient, businessId, orderId)
       const removedLine = context.previousOrder?.productLines.find((l) => l.id === productLineId)
@@ -385,7 +531,11 @@ export function useSetOrderServiceLineDiscount(businessId?: string) {
     { orderId: string; serviceLineId: string; payload: SetOrderServiceLineDiscountPayload }
   >({
     mutationFn: ({ orderId, serviceLineId, payload }) =>
-      posCheckoutRepository.setOrderServiceLineDiscount(businessId as string, orderId, serviceLineId, payload),
+      unlessOptimisticId(
+        serviceLineId,
+        () => posCheckoutRepository.setOrderServiceLineDiscount(businessId as string, orderId, serviceLineId, payload),
+        false,
+      ),
     onSuccess: (_result, { orderId }) => {
       queryClient.invalidateQueries({ queryKey: qk.merchantPosOrderDetail(businessId, orderId) })
     },

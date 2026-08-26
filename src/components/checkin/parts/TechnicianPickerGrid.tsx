@@ -15,6 +15,7 @@ export interface TechnicianOption {
 
 // Above this many people the grid becomes hard to scan, and a name is faster to type than to hunt.
 const SEARCH_THRESHOLD = 6
+const EMPTY_ROSTER_SKELETON_COUNT = 4
 
 function initialsOf(displayName: string) {
   return displayName
@@ -115,9 +116,9 @@ export default function TechnicianPickerGrid({
           ) : null}
         </button>
 
-        {isLoading ? (
+        {isLoading && technicians.length === 0 ? (
           <div className={fullRowClass}>
-            <SkeletonList count={4} lines={1} />
+            <SkeletonList count={EMPTY_ROSTER_SKELETON_COUNT} lines={1} />
           </div>
         ) : (
           <>

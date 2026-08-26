@@ -20,6 +20,11 @@ import { sanitizeDecimalInput } from '../../../../../utils/currencyInput'
 
 const K = 'components.dashboard.views.pos.PosOrderWorkspace'
 
+const DISCOUNT_VALUE_PLACEHOLDER_KEY = {
+  [PosServiceDiscountType.Percent]: `${K}.discountPercentPlaceholder`,
+  [PosServiceDiscountType.Amount]: `${K}.discountAmountPlaceholder`,
+} as const
+
 export interface ServiceDiscountTarget {
   serviceLineId: string
   serviceName: string
@@ -125,12 +130,12 @@ export default function ServiceDiscountModal({
           <h2 className="min-w-0 truncate text-sm font-extrabold text-nexoraText">
             {t(`${K}.discountModalTitle`, { serviceName: target.serviceName })}
           </h2>
-          <IconButton label={t(`${K}.discountModalClose`)} onClick={onClose}>
+          <IconButton label={t(`${K}.discountModalClose`)} onClick={onClose} disabled={isSaving}>
             <X className="h-4 w-4" />
           </IconButton>
         </div>
 
-        <div className="flex-1 space-y-4 overflow-y-auto">
+        <div className="relative flex-1 space-y-4 overflow-y-auto">
           <p className="text-[11px] text-nexoraMuted">
             {t(`${K}.discountOriginalPrice`, { amount: target.lineTotal.toFixed(2) })}
           </p>
@@ -145,7 +150,8 @@ export default function ServiceDiscountModal({
                   key={option}
                   type="button"
                   onClick={() => setDiscountType(option)}
-                  className={`h-9 flex-1 rounded-lg border text-xs font-bold transition-colors ${
+                  disabled={isSaving}
+                  className={`h-9 flex-1 rounded-lg border text-xs font-bold transition-colors disabled:cursor-not-allowed disabled:opacity-60 ${
                     discountType === option
                       ? 'border-nexoraBrand bg-nexoraBrandSoft/60 text-nexoraBrandDark'
                       : 'border-nexoraBorder bg-white text-nexoraText hover:border-nexoraBrand/50'
@@ -174,10 +180,11 @@ export default function ServiceDiscountModal({
               autoComplete="off"
               value={valueInput}
               onChange={(event) => setValueInput(sanitizeDecimalInput(event.target.value))}
-              placeholder={discountType === PosServiceDiscountType.Percent ? '10' : '5.00'}
+              disabled={isSaving}
+              placeholder={t(DISCOUNT_VALUE_PLACEHOLDER_KEY[discountType])}
               aria-invalid={validationMessage !== null}
               aria-describedby={validationMessage ? 'service-discount-value-error' : undefined}
-              className={`h-10 w-full rounded-lg border px-3 text-sm font-semibold text-nexoraText focus:outline-none ${
+              className={`h-10 w-full rounded-lg border px-3 text-sm font-semibold text-nexoraText focus:outline-none disabled:cursor-not-allowed disabled:opacity-60 ${
                 validationMessage
                   ? 'border-nexoraDanger focus:border-nexoraDanger'
                   : 'border-nexoraBorder focus:border-nexoraBrand'
@@ -201,7 +208,7 @@ export default function ServiceDiscountModal({
                   <button
                     key={option}
                     type="button"
-                    disabled={isLocked}
+                    disabled={isLocked || isSaving}
                     title={isLocked ? t(`${K}.discountBearerLockedHint`) : undefined}
                     onClick={() => setBearer(option)}
                     className={`h-9 rounded-lg border text-[11px] font-bold transition-colors disabled:cursor-not-allowed disabled:opacity-40 ${
@@ -233,8 +240,9 @@ export default function ServiceDiscountModal({
               maxLength={200}
               value={note}
               onChange={(event) => setNote(event.target.value)}
+              disabled={isSaving}
               placeholder={t(`${K}.discountNotePlaceholder`)}
-              className="h-10 w-full rounded-lg border border-nexoraBorder px-3 text-sm text-nexoraText focus:border-nexoraBrand focus:outline-none"
+              className="h-10 w-full rounded-lg border border-nexoraBorder px-3 text-sm text-nexoraText focus:border-nexoraBrand focus:outline-none disabled:cursor-not-allowed disabled:opacity-60"
             />
           </div>
 

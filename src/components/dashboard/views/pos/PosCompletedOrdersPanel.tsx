@@ -343,6 +343,31 @@ export default function PosCompletedOrdersPanel({ businessId }: { businessId: st
                             {line.note ? (
                               <p className="mt-1 rounded bg-nexoraCanvas p-1.5 text-[11px] italic text-nexoraMuted">{line.note}</p>
                             ) : null}
+                            {/* Indented under the service: an add-on was performed by this same
+                                technician and counts toward their pay on it. */}
+                            {line.addOns?.length ? (
+                              <div className="mt-1.5 space-y-1 border-l-2 border-nexoraBorder pl-2.5">
+                                {line.addOns.map((addOn) => (
+                                  <div key={addOn.id} className="flex items-start justify-between gap-2">
+                                    <p className="min-w-0 text-[11px] font-bold text-nexoraText">
+                                      + {addOn.addOnName}
+                                    </p>
+                                    <p className="shrink-0 text-[11px] font-bold tabular-nums text-nexoraText">
+                                      {addOn.discountAmount > 0 ? (
+                                        <>
+                                          <span className="mr-1 font-normal text-nexoraMuted line-through">
+                                            ${addOn.lineTotal.toFixed(2)}
+                                          </span>
+                                          ${addOn.lineTotalAfterDiscount.toFixed(2)}
+                                        </>
+                                      ) : (
+                                        `$${addOn.lineTotal.toFixed(2)}`
+                                      )}
+                                    </p>
+                                  </div>
+                                ))}
+                              </div>
+                            ) : null}
                           </div>
                         ))}
                       </div>

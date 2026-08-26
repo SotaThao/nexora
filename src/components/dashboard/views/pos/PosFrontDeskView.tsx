@@ -62,6 +62,7 @@ import { formatBookingWallClockTime, resolveBookingWallClockParts } from './book
 import CustomerTab from './customer/CustomerTab'
 import { formatCustomerPhone } from './customer/customerFormatters'
 import TimeClockTab from './timeclock/TimeClockTab'
+import BeepMessageModal from './timeclock/BeepMessageModal'
 import { getLocalDayWindow } from './timeclock/timeClockDay'
 import { formatCurrency } from '../../utils'
 import {
@@ -440,7 +441,10 @@ export default function PosFrontDeskView({
     storage.setItem(ORDER_LIST_VIEW_MODE_STORAGE_KEY, mode)
   }
   const [updateWorkspace, setUpdateWorkspace] = useState<UpdateWorkspaceState | null>(null)
-  const [beepingStaffId, setBeepingStaffId] = useState<string | null>(null)
+  // Beep goes through the same message modal as the Time Clock roster — front desk picks or types
+  // what the tech should see before anything is sent, instead of firing a message-less beep on tap.
+  const [beepStation, setBeepStation] = useState<TurnBoardStationApiDto | null>(null)
+  const [beepMessage, setBeepMessage] = useState('')
   // Entry point for creating a booking (Ticket 3) — kept as the one global "+ New Booking"
   // action; Ticket 9 added the "Bookings" tab/management screen below for viewing, checking
   // in, cancelling, and rescheduling existing bookings.
@@ -659,10 +663,25 @@ export default function PosFrontDeskView({
     )
   }
 
-  const handleBeepStation = async (station: TurnBoardStationApiDto) => {
-    setBeepingStaffId(station.posStaffProfileId)
+  const openBeepModal = (station: TurnBoardStationApiDto) => {
+    setBeepStation(station)
+    setBeepMessage('')
+  }
+
+  const closeBeepModal = () => {
+    setBeepStation(null)
+    setBeepMessage('')
+  }
+
+  const handleSendBeep = async () => {
+    if (!beepStation || beepStaff.isPending) return
+    const station = beepStation
     try {
-      const result = await beepStaff.mutateAsync({ posStaffProfileId: station.posStaffProfileId })
+      const result = await beepStaff.mutateAsync({
+        posStaffProfileId: station.posStaffProfileId,
+        message: beepMessage.trim() || undefined,
+      })
+      closeBeepModal()
       showToast(
         result.delivered
           ? t(tk('beepSent'), { name: station.displayName })
@@ -671,13 +690,11 @@ export default function PosFrontDeskView({
       )
     } catch (err: unknown) {
       showToast(t(getErrorI18nKey(getApiErrorCode(err, 'ERROR'))), 'error')
-    } finally {
-      setBeepingStaffId(null)
     }
   }
 
   const renderStationCard = (station: TurnBoardStationApiDto) => {
-    const isBeeping = beepingStaffId === station.posStaffProfileId
+    const isBeeping = beepStaff.isPending && beepStation?.posStaffProfileId === station.posStaffProfileId
     return (
       <div
         key={station.posStaffProfileId}
@@ -704,8 +721,8 @@ export default function PosFrontDeskView({
           </div>
           <button
             type="button"
-            onClick={() => void handleBeepStation(station)}
-            disabled={beepingStaffId !== null}
+            onClick={() => openBeepModal(station)}
+            disabled={beepStaff.isPending}
             aria-label={t(tk('beepAria'), { name: station.displayName })}
             className="flex h-9 shrink-0 items-center gap-1 rounded-lg border border-amber-200 bg-amber-50 px-2.5 text-[11px] font-extrabold text-amber-700 transition-colors hover:border-amber-300 hover:bg-amber-100 disabled:opacity-60"
           >
@@ -1567,6 +1584,16 @@ export default function PosFrontDeskView({
       {activeTab === PosFrontDeskTab.Report && renderReportPanel()}
         </>
       )}
+
+      <BeepMessageModal
+        open={beepStation !== null}
+        staffName={beepStation?.displayName ?? ''}
+        message={beepMessage}
+        isPending={beepStaff.isPending}
+        onChangeMessage={setBeepMessage}
+        onSend={handleSendBeep}
+        onClose={closeBeepModal}
+      />
 
       <NewBookingForm
         open={isBookingModalOpen}
