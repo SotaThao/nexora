@@ -1,6 +1,7 @@
 import type { ApiError } from './api'
 import type { LooseObject } from './domain'
 import type { PosOrderStatus } from '../constants/posOrderStatus'
+import type { PosCheckoutPaymentMethodType } from '../constants/posCheckoutPaymentMethod'
 import type {
   MerchantSetup,
   NotificationRecord,
@@ -19,6 +20,7 @@ import type {
   UserProfile,
 } from './domain'
 export type { ApiError }
+export type { PosCheckoutPaymentMethodType } from '../constants/posCheckoutPaymentMethod'
 
 // --- API raw DTOs (Swagger-aligned, optional fields) ---
 
@@ -1014,8 +1016,6 @@ export interface ManageBookingApiDto {
 export interface ManageBookingReschedulePayload {
   scheduledAt: string
 }
-
-export type PosCheckoutPaymentMethodType = 'Card' | 'Cash' | 'GiftCard' | 'SplitPay'
 
 export interface CompleteOrderPayload {
   paymentMethodType: PosCheckoutPaymentMethodType

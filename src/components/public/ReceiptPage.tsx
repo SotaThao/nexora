@@ -17,6 +17,7 @@ import { parseApiUtcDateTime } from '../../utils/localDate'
 import { resolveTranslation } from '../../utils/translate'
 import type { TranslationVariables } from '../../types/contexts'
 import type { ReceiptApiDto } from '../../types/repositories'
+import { getPosCheckoutPaymentMethodLabel } from '../../constants/posCheckoutPaymentMethod'
 
 const K = 'public.receipt'
 
@@ -190,7 +191,12 @@ function ReceiptBody({ receipt }: { receipt: ReceiptApiDto }) {
       {receipt.paymentMethodType ? (
         <p className="border-t border-nexoraBorder pt-4 text-center text-xs text-nexoraMuted">
           {t(`${K}.paidWith`, {
-            method: t(`${K}.paymentMethod.${receipt.paymentMethodType}`),
+            method: getPosCheckoutPaymentMethodLabel(
+              receipt.paymentMethodType,
+              t,
+              '—',
+              `${K}.paymentMethod`,
+            ),
           })}
         </p>
       ) : null}

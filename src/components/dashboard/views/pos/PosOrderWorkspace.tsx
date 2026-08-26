@@ -59,11 +59,11 @@ import ServiceDiscountModal, {
 import ChangeTechnicianModal from './modals/ChangeTechnicianModal'
 import { formatPosDateTime } from './posDateTime'
 import { useTicketActionLock } from './useTicketActionLock'
+import PosPaymentMethodSelector from './PosPaymentMethodSelector'
+import { getPosCheckoutPaymentMethodLabel } from '../../../../constants/posCheckoutPaymentMethod'
 
 type TipMode = 'noTip' | 'fixed10' | 'fixed15' | 'pct10' | 'pct20' | 'custom'
 export type PosOrderWorkspaceMode = 'edit' | 'checkout'
-
-const PAYMENT_METHODS: PosCheckoutPaymentMethodType[] = ['Card', 'Cash', 'GiftCard', 'SplitPay']
 
 // Percentage-based tip modes are a live % of servicesSubtotal, not a one-time snapshot —
 // see the tip-percentage recompute effect below, which re-applies this whenever the
@@ -1381,22 +1381,11 @@ export default function PosOrderWorkspace({
                   <h3 className="text-[10px] font-bold uppercase tracking-wide text-nexoraMuted">
                     {t('components.dashboard.views.pos.PosOrderWorkspace.paymentMethodTitle')}
                   </h3>
-                  <div className="grid grid-cols-2 gap-1.5 sm:grid-cols-4">
-                    {PAYMENT_METHODS.map((method) => (
-                      <button
-                        key={method}
-                        type="button"
-                        onClick={() => setPaymentMethod(method)}
-                        className={`h-8 rounded-lg border text-[11px] font-semibold transition-colors ${
-                          paymentMethod === method
-                            ? 'border-nexoraBrand/50 bg-nexoraBrandSoft text-nexoraBrandDark'
-                            : 'border-nexoraBorder/70 bg-white text-nexoraText hover:border-nexoraBrand/50 hover:bg-nexoraBrandSoft/40'
-                        }`}
-                      >
-                        {t(`components.dashboard.views.pos.PosOrderWorkspace.paymentMethod.${method}`)}
-                      </button>
-                    ))}
-                  </div>
+                  <PosPaymentMethodSelector
+                    value={paymentMethod}
+                    onChange={setPaymentMethod}
+                    disabled={isBusy}
+                  />
                   <div>
                     <label className="mb-1 block text-[10px] font-semibold uppercase tracking-wide text-nexoraMuted">
                       {t('components.dashboard.views.pos.PosOrderWorkspace.receiptTitle')}
@@ -1651,7 +1640,8 @@ export default function PosOrderWorkspace({
 
                   {isPaid && order.paymentMethodType ? (
                     <p className="pos-receipt-payment">
-                      {t('components.dashboard.views.pos.PosOrderWorkspace.printPreviewPaidWith')} {order.paymentMethodType}
+                      {t('components.dashboard.views.pos.PosOrderWorkspace.printPreviewPaidWith')}{' '}
+                      {getPosCheckoutPaymentMethodLabel(order.paymentMethodType, t)}
                     </p>
                   ) : null}
 

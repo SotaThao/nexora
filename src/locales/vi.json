@@ -3677,7 +3677,13 @@
               "Card": "Thẻ",
               "Cash": "Tiền mặt",
               "GiftCard": "Thẻ quà tặng",
-              "SplitPay": "Chia thanh toán"
+              "SplitPay": "Chia thanh toán",
+              "Zelle": "Zelle",
+              "CashApp": "Cash App",
+              "Venmo": "Venmo",
+              "VlinkPay": "Ví VLINKPAY",
+              "AppleCash": "Apple Cash",
+              "PayPal": "PayPal"
             },
             "receiptTitle": "Hoá đơn",
             "receiptSendSms": "Gửi SMS",
@@ -6522,7 +6528,13 @@
         "Card": "Thẻ",
         "Cash": "Tiền mặt",
         "GiftCard": "Gift Card",
-        "SplitPay": "Chia nhiều hình thức"
+        "SplitPay": "Chia nhiều hình thức",
+        "Zelle": "Zelle",
+        "CashApp": "Cash App",
+        "Venmo": "Venmo",
+        "VlinkPay": "Ví VLINKPAY",
+        "AppleCash": "Apple Cash",
+        "PayPal": "PayPal"
       },
       "notFoundTitle": "Không tìm thấy hóa đơn",
       "notFoundBody": "Link có thể không đúng hoặc không còn hiệu lực. Vui lòng liên hệ salon nếu bạn cần bản sao."
