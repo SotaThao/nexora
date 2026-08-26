@@ -77,11 +77,9 @@ export default function RootRedirect() {
     setIsProcessingDeepLink(false)
   }, [searchParams, navigate, t])
 
-  // Community demo deploys land straight on the Supabase-backed Community app,
-  // bypassing the main-app home/login (which calls the prod REST API and is not
-  // part of the demo). Gated on the demo flag so real builds keep HomePage.
+  // Land straight on POS Services & Custom Menu demo
   if (import.meta.env.VITE_ENABLE_DEMO_TOOLS === 'true') {
-    return <Navigate to="/community" replace />
+    return <Navigate to="/dashboard/pos/services" replace />
   }
 
   if (isProcessingDeepLink || status === 'loading') {

@@ -170,6 +170,21 @@ export function CommunityPersonaSwitcher() {
           {isLoading ? 'Đang tạo phiên demo…' : isAnonymous ? 'Khách ẩn danh' : user?.email}
         </span>
         <div className="flex min-w-0 items-center justify-center gap-1 overflow-x-auto">
+          <a
+            href="/preview/menu"
+            className="h-9 shrink-0 flex items-center gap-1 rounded-full bg-emerald-600/90 hover:bg-emerald-500 text-white px-2.5 text-[10px] font-extrabold shadow-sm transition"
+          >
+            <span>🛒</span>
+            <span className="hidden sm:inline">Menu Khách</span>
+          </a>
+          <a
+            href="/dashboard/pos/services"
+            className="h-9 shrink-0 flex items-center gap-1 rounded-full bg-indigo-600/90 hover:bg-indigo-500 text-white px-2.5 text-[10px] font-extrabold shadow-sm transition"
+          >
+            <span>⚙️</span>
+            <span className="hidden sm:inline">POS Admin</span>
+          </a>
+          <span className="text-white/20 px-1 hidden sm:inline">|</span>
           {COMMUNITY_DEMO_PERSONAS.map((persona) => {
             const isActive = !isAnonymous && user?.email === persona.email
 
@@ -180,7 +195,7 @@ export function CommunityPersonaSwitcher() {
                 aria-pressed={isActive}
                 disabled={isLoading || isSigningIn}
                 onClick={() => void selectPersona(persona)}
-                className={`h-11 shrink-0 rounded-full px-2.5 text-[10px] font-extrabold text-white transition disabled:cursor-not-allowed disabled:opacity-50 ${
+                className={`h-9 shrink-0 rounded-full px-2.5 text-[10px] font-extrabold text-white transition disabled:cursor-not-allowed disabled:opacity-50 ${
                   isActive ? 'bg-nexoraBrand ring-2 ring-white/35' : 'bg-white/10 hover:bg-white/20'
                 }`}
               >
@@ -193,7 +208,7 @@ export function CommunityPersonaSwitcher() {
             aria-pressed={isAnonymous}
             disabled={isLoading || isSigningIn || isAnonymous}
             onClick={() => void signOutToAnonymous()}
-            className={`h-11 shrink-0 rounded-full px-2.5 text-[10px] font-extrabold transition disabled:cursor-not-allowed disabled:opacity-50 ${
+            className={`h-9 shrink-0 rounded-full px-2.5 text-[10px] font-extrabold transition disabled:cursor-not-allowed disabled:opacity-50 ${
               isAnonymous ? 'bg-nexoraBrand text-white ring-2 ring-white/35' : 'text-brandCyan hover:bg-white/10'
             }`}
           >

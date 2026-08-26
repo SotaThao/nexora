@@ -236,14 +236,21 @@ function DemoMerchantSidebar({ isOpen, onClose, onDemoNavigation }: DemoMerchant
 
   const renderNavigation = (isMobile: boolean) => (
     <nav className={(isMobile ? SIDEBAR_NAV_CLASS + ' mt-0 flex-1' : SIDEBAR_NAV_CLASS)} aria-label="Điều hướng merchant demo">
-      <button
-        type="button"
-        onClick={() => handleUnavailable(isMobile)}
+      <Link
+        to="/dashboard/pos/services"
         className={sidebarMenuItemClass(false) + ' border-0'}
       >
         <MenuIcon item={homepageMenuItem} active={false} />
-        <span className="truncate">{t('dashboard.menu.home')}</span>
-      </button>
+        <span className="truncate">⚙️ POS Services</span>
+      </Link>
+
+      <Link
+        to="/preview/menu"
+        className={sidebarMenuItemClass(false) + ' border-0 text-emerald-400 font-bold'}
+      >
+        <span className="text-base">🛒</span>
+        <span className="truncate">Menu Khách (Live)</span>
+      </Link>
 
       {overviewItem ? renderMenuItem(overviewItem, isMobile) : null}
 

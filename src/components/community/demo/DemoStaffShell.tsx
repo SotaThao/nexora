@@ -152,16 +152,21 @@ function DemoSidebar({ isOpen, onClose, onDemoNavigation }: DemoSidebarProps) {
       </div>
 
       <nav className={SIDEBAR_NAV_CLASS} aria-label="Điều hướng staff demo">
-        <button
-          type="button"
-          onClick={() => handleUnavailableItem(isMobile)}
+        <Link
+          to="/dashboard/pos/services"
           className={sidebarMenuItemClass(false) + ' border-0'}
         >
           <MenuIcon item={homepageMenuItem} active={false} />
-          <span className="truncate">{t('dashboard.menu.home')}</span>
-        </button>
+          <span className="truncate">⚙️ POS Services</span>
+        </Link>
 
-        {dashboardMenuItem ? renderRegularItem(dashboardMenuItem, isMobile) : null}
+        <Link
+          to="/preview/menu"
+          className={sidebarMenuItemClass(false) + ' border-0 text-emerald-400 font-bold'}
+        >
+          <span className="text-base">🛒</span>
+          <span className="truncate">Menu Khách (Live)</span>
+        </Link>
 
         <div>
           <button
