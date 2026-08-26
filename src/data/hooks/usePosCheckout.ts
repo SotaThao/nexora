@@ -16,6 +16,7 @@ import type {
   CompleteOrderResultApiDto,
   InServiceOrderApiDto,
   OrderDetailApiDto,
+  ServiceLineAddOnOptionApiDto,
   SetOrderServiceLineDiscountPayload,
   SetOrderStaffTipSplitPayload,
 } from '../../types/repositories'
@@ -181,6 +182,7 @@ export function useAddOrderServiceLine(businessId?: string) {
               lineTotalAfterDiscount: lineTotal,
               canAssignDiscountToStaff: false,
               completedAt: null,
+              addOns: [],
             },
           ],
         })
@@ -260,6 +262,114 @@ export function useRemoveOrderServiceLine(businessId?: string) {
       queryClient.invalidateQueries({ queryKey: qk.merchantPosOrderDetail(businessId, orderId) })
       queryClient.invalidateQueries({ queryKey: qk.merchantPosInServiceOrders(businessId) })
       queryClient.invalidateQueries({ queryKey: qk.merchantPosOrderList(businessId) })
+      queryClient.invalidateQueries({ queryKey: qk.merchantPosTurnBoard(businessId) })
+    },
+  })
+}
+
+// Not cached across opens: the owner may have retired an add-on between two visits to the same
+// ticket, and a stale picker would offer something the command then rejects.
+export function useServiceLineAddOnOptions(businessId?: string, orderId?: string, serviceLineId?: string) {
+  const { isAuthenticated } = useSessionRole()
+  return useQuery<ServiceLineAddOnOptionApiDto[]>({
+    queryKey: qk.merchantPosServiceLineAddOnOptions(businessId, orderId, serviceLineId),
+    queryFn: () =>
+      posCheckoutRepository.getServiceLineAddOnOptions(
+        businessId as string,
+        orderId as string,
+        serviceLineId as string,
+      ),
+    enabled: isAuthenticated && Boolean(businessId) && Boolean(orderId) && Boolean(serviceLineId),
+    staleTime: 0,
+    gcTime: 0,
+    retry: false,
+  })
+}
+
+// Each call adds one line — the picker stays open so the front desk can tap again for a second
+// one, which is why the optimistic patch appends rather than merges.
+export function useAddOrderServiceAddOnLine(businessId?: string) {
+  const queryClient = useQueryClient()
+  return useMutation<
+    string,
+    Error,
+    { orderId: string; serviceLineId: string; serviceAddOnId: string; unitPrice: number; addOnName: string },
+    OrderMutationContext
+  >({
+    mutationFn: ({ orderId, serviceLineId, serviceAddOnId }) =>
+      posCheckoutRepository.addOrderServiceAddOnLine(
+        businessId as string,
+        orderId,
+        serviceLineId,
+        serviceAddOnId,
+      ),
+    onMutate: async ({ orderId, serviceLineId, serviceAddOnId, unitPrice, addOnName }) => {
+      const context = await snapshotOrderDetail(queryClient, businessId, orderId)
+      if (context.previousOrder) {
+        queryClient.setQueryData<OrderDetailApiDto>(context.queryKey, {
+          ...applyOrderTotalsPatch(context.previousOrder, {
+            servicesSubtotal: roundCurrency(context.previousOrder.servicesSubtotal + unitPrice),
+          }),
+          serviceLines: context.previousOrder.serviceLines.map((line) =>
+            line.id === serviceLineId
+              ? {
+                  ...line,
+                  addOns: [
+                    ...line.addOns,
+                    {
+                      id: `optimistic-${randomUuid()}`,
+                      serviceAddOnId,
+                      addOnName,
+                      unitPrice,
+                      lineTotal: unitPrice,
+                      discountAmount: 0,
+                      staffDiscountShare: 0,
+                      lineTotalAfterDiscount: unitPrice,
+                      canAssignDiscountToStaff: false,
+                    },
+                  ],
+                }
+              : line,
+          ),
+        })
+      }
+      return context
+    },
+    onError: (_err, _vars, context) => rollbackOrderDetail(queryClient, context),
+    onSuccess: (_result, { orderId }) => {
+      queryClient.invalidateQueries({ queryKey: qk.merchantPosOrderDetail(businessId, orderId) })
+      queryClient.invalidateQueries({ queryKey: qk.merchantPosTurnBoard(businessId) })
+    },
+  })
+}
+
+export function useRemoveOrderServiceAddOnLine(businessId?: string) {
+  const queryClient = useQueryClient()
+  return useMutation<boolean, Error, { orderId: string; addOnLineId: string }, OrderMutationContext>({
+    mutationFn: ({ orderId, addOnLineId }) =>
+      posCheckoutRepository.removeOrderServiceAddOnLine(businessId as string, orderId, addOnLineId),
+    onMutate: async ({ orderId, addOnLineId }) => {
+      const context = await snapshotOrderDetail(queryClient, businessId, orderId)
+      const removed = context.previousOrder?.serviceLines
+        .flatMap((line) => line.addOns)
+        .find((addOn) => addOn.id === addOnLineId)
+      if (context.previousOrder && removed) {
+        queryClient.setQueryData<OrderDetailApiDto>(context.queryKey, {
+          ...applyOrderTotalsPatch(context.previousOrder, {
+            servicesSubtotal: roundCurrency(context.previousOrder.servicesSubtotal - removed.lineTotal),
+            discountAmount: roundCurrency(context.previousOrder.discountAmount - removed.discountAmount),
+          }),
+          serviceLines: context.previousOrder.serviceLines.map((line) => ({
+            ...line,
+            addOns: line.addOns.filter((addOn) => addOn.id !== addOnLineId),
+          })),
+        })
+      }
+      return context
+    },
+    onError: (_err, _vars, context) => rollbackOrderDetail(queryClient, context),
+    onSuccess: (_result, { orderId }) => {
+      queryClient.invalidateQueries({ queryKey: qk.merchantPosOrderDetail(businessId, orderId) })
       queryClient.invalidateQueries({ queryKey: qk.merchantPosTurnBoard(businessId) })
     },
   })

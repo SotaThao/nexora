@@ -22,6 +22,9 @@ import {
   useOrderDetail,
   useRemoveOrderProductLine,
   useRemoveOrderServiceLine,
+  useAddOrderServiceAddOnLine,
+  useRemoveOrderServiceAddOnLine,
+  useServiceLineAddOnOptions,
   useSetOrderServiceLineDiscount,
   useUpdateOrderServiceLine,
   useSetOrderStaffTipSplit,
@@ -36,12 +39,15 @@ import { useCheckInTechnicians } from '../../../../data/hooks/usePosCheckIn'
 import { PosOrderStatus } from '../../../../constants/posOrderStatus'
 import type {
   CheckoutServiceCatalogItemApiDto,
+  OrderServiceAddOnLineApiDto,
   PosCheckoutPaymentMethodType,
+  ServiceLineAddOnOptionApiDto,
 } from '../../../../types/repositories'
 import { SkeletonList } from '../../../ui/skeleton'
 import { formatCustomerPhone } from './customer/customerFormatters'
 import CategoryGroupedCatalogPicker from './CategoryGroupedCatalogPicker'
 import ChangeServiceModal from './modals/ChangeServiceModal'
+import ServiceAddOnPickerModal from './modals/ServiceAddOnPickerModal'
 import ServiceDiscountModal, {
   type ServiceDiscountSubmit,
   type ServiceDiscountTarget,
@@ -89,6 +95,9 @@ interface DisplayServiceLine {
   staffDiscountShare: number
   discountNote?: string | null
   canAssignDiscountToStaff: boolean
+  // Extras sold against this service. Rendered nested under it and never as their own ticket row:
+  // an add-on has no technician of its own and cannot exist without this line.
+  addOns: OrderServiceAddOnLineApiDto[]
 }
 
 interface DisplayProductLine {
@@ -110,6 +119,13 @@ function lineTotal(line: DisplayLine): number {
 // What the customer is charged for the line — the only figure that belongs in a total.
 function lineTotalAfterDiscount(line: DisplayLine): number {
   return line.itemType === 'Service' ? line.unitPrice - line.discountAmount : line.unitPrice * line.quantity
+}
+
+// Add-ons are charged on top of their service, so the ticket total has to pick them up here —
+// they are not rows of their own in visibleLines.
+function addOnsTotalAfterDiscount(line: DisplayLine): number {
+  if (line.itemType !== 'Service') return 0
+  return line.addOns.reduce((sum, addOn) => sum + addOn.lineTotalAfterDiscount, 0)
 }
 
 export default function PosOrderWorkspace({
@@ -156,6 +172,8 @@ export default function PosOrderWorkspace({
   const updateProductQuantity = useUpdateOrderProductLineQuantity(businessId)
   const assignStaffToServiceLine = useAssignStaffToServiceLine(businessId)
   const setServiceLineDiscount = useSetOrderServiceLineDiscount(businessId)
+  const addServiceAddOnLine = useAddOrderServiceAddOnLine(businessId)
+  const removeServiceAddOnLine = useRemoveOrderServiceAddOnLine(businessId)
   const startOrderService = useStartOrderService(businessId)
   const setTip = useSetOrderTip(businessId)
   const setStaffTipSplit = useSetOrderStaffTipSplit(businessId)
@@ -178,7 +196,13 @@ export default function PosOrderWorkspace({
     serviceLineId: string
     serviceName: string
     posServiceId: string
+    // Swapping the service removes its add-ons server-side (they belong to one service only), so
+    // the count travels with the target and the popup warns before anything is lost.
+    addOnCount: number
   } | null>(null)
+  // The line whose "+ Add-On" picker is open. Held as id + name so the picker can title itself and
+  // scope its own query without reaching back into the list.
+  const [addOnTarget, setAddOnTarget] = useState<{ serviceLineId: string; serviceName: string } | null>(null)
   // The line whose discount is being edited. Carries the figures the popup previews with, so it
   // never has to reach back into the list while the order refetches underneath it.
   const [discountTarget, setDiscountTarget] = useState<ServiceDiscountTarget | null>(null)
@@ -200,6 +224,7 @@ export default function PosOrderWorkspace({
   const [printPreviewOpen, setPrintPreviewOpen] = useState(false)
   const [tipSplitInputs, setTipSplitInputs] = useState<Record<string, string>>({})
   const initializedWorkspaceRef = useRef<string | null>(null)
+  const initializedOrderIdRef = useRef<string | null>(null)
   const printCleanupRef = useRef<(() => void) | null>(null)
 
   useEffect(() => {
@@ -232,6 +257,7 @@ export default function PosOrderWorkspace({
         staffDiscountShare: l.staffDiscountShare,
         discountNote: l.discountNote,
         canAssignDiscountToStaff: l.canAssignDiscountToStaff,
+        addOns: l.addOns ?? [],
       })),
       ...order.productLines.map((l): DisplayProductLine => ({
         key: l.id,
@@ -308,7 +334,10 @@ export default function PosOrderWorkspace({
   // Removing every line leaves the ticket in InService, so the server refuses to complete it.
   // Mirrored here so an emptied ticket cannot be checked out by tapping through.
   const hasNoLines = visibleLines.length === 0
-  const draftSubtotal = visibleLines.reduce((sum, l) => sum + lineTotalAfterDiscount(l), 0)
+  const draftSubtotal = visibleLines.reduce(
+    (sum, l) => sum + lineTotalAfterDiscount(l) + addOnsTotalAfterDiscount(l),
+    0,
+  )
 
   // AssignStaffToServiceLine only accepts a Waiting or InService order, so a closed ticket shows
   // its technicians as text instead of offering a picker every tap of which would fail.
@@ -461,6 +490,33 @@ export default function PosOrderWorkspace({
     setTechnicianTarget(null)
     if (!target || noteDraft.trim() === (target.note ?? '').trim()) return
     saveServiceLine(target.serviceLineId, target.posStaffProfileId, noteDraft)
+  }
+
+  const { data: addOnOptions = [], isLoading: areAddOnOptionsLoading } = useServiceLineAddOnOptions(
+    businessId,
+    orderId,
+    addOnTarget?.serviceLineId,
+  )
+
+  // The picker stays open: two taps on the same extra is two lines, and one "yes" at the chair
+  // often becomes two.
+  const handleAddAddOn = (option: ServiceLineAddOnOptionApiDto) => {
+    const target = addOnTarget
+    if (!target) return
+    addServiceAddOnLine.mutate(
+      {
+        orderId,
+        serviceLineId: target.serviceLineId,
+        serviceAddOnId: option.id,
+        unitPrice: option.price,
+        addOnName: option.name,
+      },
+      { onError: reportError },
+    )
+  }
+
+  const handleRemoveAddOn = (addOn: OrderServiceAddOnLineApiDto) => {
+    removeServiceAddOnLine.mutate({ orderId, addOnLineId: addOn.id }, { onError: reportError })
   }
 
   const handleDeleteLine = (line: DisplayLine) => {
@@ -685,6 +741,7 @@ export default function PosOrderWorkspace({
                                           serviceLineId: line.existingId as string,
                                           serviceName: line.serviceName,
                                           posServiceId: line.posServiceId,
+                                          addOnCount: line.addOns.length,
                                         })
                                       }
                                       className="h-6 shrink-0 rounded-lg border border-violet-200 bg-violet-50/50 px-2 text-[10px] font-bold text-violet-700 transition-colors hover:bg-violet-50"
@@ -716,6 +773,23 @@ export default function PosOrderWorkspace({
                                           isFirstAvailable ? 'assignTechnician' : 'changeTechnician'
                                         }`,
                                       )}
+                                    </button>
+                                  ) : null}
+                                  {/* Blocked once the service is marked done — the backend treats an
+                                      extra on finished work as a correction, not an upsell. */}
+                                  {canEditLines && line.existingId && !line.completedAt ? (
+                                    <button
+                                      type="button"
+                                      data-testid={`add-add-on-${line.key}`}
+                                      onClick={() =>
+                                        setAddOnTarget({
+                                          serviceLineId: line.existingId as string,
+                                          serviceName: line.serviceName,
+                                        })
+                                      }
+                                      className="h-6 shrink-0 rounded-lg border border-nexoraBorder bg-nexoraCanvas px-2 text-[10px] font-bold text-nexoraText transition-colors hover:border-nexoraBrand"
+                                    >
+                                      {t('components.dashboard.views.pos.PosOrderWorkspace.addAddOn')}
                                     </button>
                                   ) : null}
                                 </div>
@@ -781,6 +855,91 @@ export default function PosOrderWorkspace({
                                   </button>
                                 </div>
                               </div>
+
+                              {/* Indented under the service, spanning both columns: an add-on is a
+                                  charge of its own on the receipt but never a ticket row of its own. */}
+                              {line.addOns.length > 0 ? (
+                                <ul className="col-span-2 space-y-1 border-l-2 border-nexoraBorder pl-3">
+                                  {line.addOns.map((addOn) => (
+                                    <li
+                                      key={addOn.id}
+                                      data-testid={`ticket-add-on-${addOn.id}`}
+                                      className="flex items-start justify-between gap-2"
+                                    >
+                                      <div className="min-w-0">
+                                        <p className="min-w-0 truncate text-xs font-bold leading-tight text-nexoraText">
+                                          + {addOn.addOnName}
+                                        </p>
+                                        {addOn.discountAmount > 0 ? (
+                                          <p className="text-[11px] leading-tight text-amber-700">
+                                            {t(
+                                              'components.dashboard.views.pos.PosOrderWorkspace.discountLineSummary',
+                                              {
+                                                amount: addOn.discountAmount.toFixed(2),
+                                                bearer: t(
+                                                  `components.dashboard.views.pos.PosOrderWorkspace.discountBearer${addOn.discountBearer}`,
+                                                ),
+                                              },
+                                            )}
+                                            {addOn.discountNote ? ` — ${addOn.discountNote}` : ''}
+                                          </p>
+                                        ) : null}
+                                      </div>
+                                      <div className="flex shrink-0 items-center gap-1.5">
+                                        {addOn.discountAmount > 0 ? (
+                                          <span className="leading-tight">
+                                            <span className="text-[11px] text-nexoraMuted line-through">
+                                              ${addOn.lineTotal.toFixed(2)}
+                                            </span>
+                                            <span className="ml-1.5 text-xs font-bold text-nexoraText">
+                                              ${addOn.lineTotalAfterDiscount.toFixed(2)}
+                                            </span>
+                                          </span>
+                                        ) : (
+                                          <span className="text-xs font-bold text-nexoraText">
+                                            ${addOn.lineTotal.toFixed(2)}
+                                          </span>
+                                        )}
+                                        {canEditLines ? (
+                                          <>
+                                            <button
+                                              type="button"
+                                              onClick={() =>
+                                                setDiscountTarget({
+                                                  serviceLineId: addOn.id,
+                                                  serviceName: addOn.addOnName,
+                                                  lineTotal: addOn.lineTotal,
+                                                  technicianName: line.technicianName,
+                                                  canAssignDiscountToStaff: addOn.canAssignDiscountToStaff,
+                                                  discountType: addOn.discountType,
+                                                  discountValue: addOn.discountValue,
+                                                  discountBearer: addOn.discountBearer,
+                                                  discountNote: addOn.discountNote,
+                                                })
+                                              }
+                                              className="h-6 rounded-lg border border-amber-200 bg-amber-50/50 px-2 text-[10px] font-bold text-amber-700 hover:bg-amber-50"
+                                            >
+                                              {t(
+                                                `components.dashboard.views.pos.PosOrderWorkspace.${
+                                                  addOn.discountAmount > 0 ? 'editDiscount' : 'addDiscount'
+                                                }`,
+                                              )}
+                                            </button>
+                                            <button
+                                              type="button"
+                                              data-testid={`remove-add-on-${addOn.id}`}
+                                              onClick={() => handleRemoveAddOn(addOn)}
+                                              className="h-6 rounded-lg border border-rose-200 px-2 text-[10px] font-bold text-rose-500 hover:bg-rose-50/70"
+                                            >
+                                              {t('components.dashboard.views.pos.PosOrderWorkspace.deleteLine')}
+                                            </button>
+                                          </>
+                                        ) : null}
+                                      </div>
+                                    </li>
+                                  ))}
+                                </ul>
+                              ) : null}
                             </div>
                           )
                         })()
@@ -1259,10 +1418,20 @@ export default function PosOrderWorkspace({
                             <p className="pos-receipt-tech-heading">{group.technician.toUpperCase()}</p>
                             <div className="pos-receipt-group-lines">
                               {group.lines.map((line) => (
-                                <div key={line.key}>
-                                  <span>{line.serviceName}</span>
-                                  <span className="tabular-nums">${lineTotal(line).toFixed(2)}</span>
-                                </div>
+                                <Fragment key={line.key}>
+                                  <div>
+                                    <span>{line.serviceName}</span>
+                                    <span className="tabular-nums">${lineTotal(line).toFixed(2)}</span>
+                                  </div>
+                                  {/* Printed as its own line under the service — a customer must be
+                                      able to see where an extra charge came from. */}
+                                  {line.addOns.map((addOn) => (
+                                    <div key={addOn.id}>
+                                      <span>+ {addOn.addOnName}</span>
+                                      <span className="tabular-nums">${addOn.lineTotal.toFixed(2)}</span>
+                                    </div>
+                                  ))}
+                                </Fragment>
                               ))}
                             </div>
                           </div>
@@ -1378,7 +1547,7 @@ export default function PosOrderWorkspace({
         open={technicianTarget !== null}
         serviceName={technicianTarget?.serviceName ?? ''}
         technicians={techniciansForService(technicianTarget?.posServiceId ?? '')}
-        isLoading={isTechnicianRosterLoading}
+        isLoading={areTechniciansPending}
         selectedStaffId={technicianTarget?.posStaffProfileId ?? null}
         note={noteDraft}
         onChangeNote={setNoteDraft}
@@ -1386,9 +1555,19 @@ export default function PosOrderWorkspace({
         onClose={handleCloseTechnicianModal}
       />
 
+      <ServiceAddOnPickerModal
+        open={addOnTarget !== null}
+        serviceName={addOnTarget?.serviceName ?? ''}
+        options={addOnOptions}
+        isLoading={areAddOnOptionsLoading}
+        onAdd={handleAddAddOn}
+        onClose={() => setAddOnTarget(null)}
+      />
+
       <ChangeServiceModal
         open={changeServiceTarget !== null}
         serviceName={changeServiceTarget?.serviceName ?? ''}
+        addOnCount={changeServiceTarget?.addOnCount ?? 0}
         services={serviceCatalog}
         onSelect={handleChangeService}
         onClose={() => setChangeServiceTarget(null)}
