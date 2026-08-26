@@ -79,13 +79,22 @@ function round2(value: number) {
   return Math.round(value * 100) / 100
 }
 
+function formatCompactUsdAmount(value: number) {
+  return new Intl.NumberFormat('en-US', {
+    style: 'currency',
+    currency: 'USD',
+    minimumFractionDigits: 0,
+    maximumFractionDigits: 2,
+  }).format(value)
+}
+
 function formatEnteredDiscountValue(
   discountType: string | null | undefined,
   discountValue: number | null | undefined,
   discountAmount: number,
 ) {
   if (discountType === 'Percent' && discountValue != null) return `${discountValue}%`
-  return formatUsdAmount(discountValue ?? discountAmount)
+  return formatCompactUsdAmount(discountValue ?? discountAmount)
 }
 
 function formatDiscountPriceBadge(
@@ -963,7 +972,7 @@ export default function PosOrderWorkspace({
                                 {line.discountAmount > 0 ? (
                                   <div className="text-right leading-tight">
                                     <span className="text-sm font-bold text-nexoraText">
-                                      {formatUsdAmount(lineTotal(line))}
+                                      {formatCompactUsdAmount(lineTotal(line))}
                                     </span>
                                     <span className="ml-1 text-[11px] font-semibold text-rose-500">
                                       {formatDiscountPriceBadge(
@@ -975,7 +984,7 @@ export default function PosOrderWorkspace({
                                   </div>
                                 ) : (
                                   <span className="text-sm font-bold text-nexoraText">
-                                    ${lineTotal(line).toFixed(2)}
+                                    {formatCompactUsdAmount(lineTotal(line))}
                                   </span>
                                 )}
                                 <div className="flex items-center gap-1.5">
@@ -1039,7 +1048,7 @@ export default function PosOrderWorkspace({
                                         {addOn.discountAmount > 0 ? (
                                           <span className="leading-tight">
                                             <span className="text-xs font-bold text-nexoraText">
-                                              {formatUsdAmount(addOn.lineTotal)}
+                                              {formatCompactUsdAmount(addOn.lineTotal)}
                                             </span>
                                             <span className="ml-1 text-[11px] font-semibold text-rose-500">
                                               {formatDiscountPriceBadge(
@@ -1051,7 +1060,7 @@ export default function PosOrderWorkspace({
                                           </span>
                                         ) : (
                                           <span className="text-xs font-bold text-nexoraText">
-                                            ${addOn.lineTotal.toFixed(2)}
+                                            {formatCompactUsdAmount(addOn.lineTotal)}
                                           </span>
                                         )}
                                         {canEditLines ? (
@@ -1110,10 +1119,12 @@ export default function PosOrderWorkspace({
                             </div>
                             <div className="min-w-0 flex-1">
                               <p className="text-sm font-bold leading-tight text-nexoraText">{line.productName}</p>
-                              <p className="text-xs leading-tight text-nexoraMuted">${line.unitPrice.toFixed(2)} each</p>
+                              <p className="text-xs leading-tight text-nexoraMuted">
+                                {formatCompactUsdAmount(line.unitPrice)} each
+                              </p>
                             </div>
                             <span className="shrink-0 text-sm font-bold text-nexoraText">
-                              ${lineTotal(line).toFixed(2)}
+                              {formatCompactUsdAmount(lineTotal(line))}
                             </span>
                           </div>
                           <div className="flex items-center justify-between">
@@ -1523,7 +1534,12 @@ export default function PosOrderWorkspace({
                   {completeOrder.isPending ? (
                     <Loader2 className="mx-auto h-4 w-4 animate-spin" />
                   ) : (
-                    t('components.dashboard.views.pos.PosOrderWorkspace.completeButton', { amount: order.total.toFixed(2) })
+                    t('components.dashboard.views.pos.PosOrderWorkspace.completeButton', {
+                      amount: order.total.toLocaleString('en-US', {
+                        minimumFractionDigits: 2,
+                        maximumFractionDigits: 2,
+                      }),
+                    })
                   )}
                 </button>
               </>
