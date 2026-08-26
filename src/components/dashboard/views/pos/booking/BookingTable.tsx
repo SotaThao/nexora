@@ -10,7 +10,12 @@ import {
   formatBookingHubTimeDisplay,
 } from '../../bookingHubFormatters'
 import { resolveBookingWallClockParts, statusLabelKey } from './bookingFormatters'
-import { POS_TABLE_HEADER_CELL_CLASS, POS_TABLE_HEADER_ROW_CLASS } from '../posTableStyles'
+import {
+  POS_TABLE_HEADER_CELL_CLASS,
+  POS_TABLE_HEADER_ROW_CLASS,
+  POS_TABLE_STICKY_ACTION_CELL_CLASS,
+  POS_TABLE_STICKY_ACTION_HEADER_CLASS,
+} from '../posTableStyles'
 
 const STATUS_STYLES: Record<string, { row: string; badge: string }> = {
   [PosOrderStatus.Pending]: {
@@ -84,16 +89,7 @@ export default function BookingTable({
 
   return (
     <div className="overflow-x-auto rounded-xl border border-nexoraBorder bg-white">
-      <table className="w-full min-w-[980px] table-fixed text-left text-xs">
-        <colgroup>
-          <col className="w-[17%]" />
-          <col className="w-[11%]" />
-          <col className="w-[14%]" />
-          <col className="w-[15%]" />
-          <col className="w-[10%]" />
-          <col className="w-[8%]" />
-          <col className="w-[25%]" />
-        </colgroup>
+      <table className="w-full min-w-[980px] table-auto text-left text-xs">
         <thead>
           <tr className={POS_TABLE_HEADER_ROW_CLASS}>
             <th className={POS_TABLE_HEADER_CELL_CLASS}>{t(p + 'columnCustomer')}</th>
@@ -102,7 +98,7 @@ export default function BookingTable({
             <th className={POS_TABLE_HEADER_CELL_CLASS}>{t(p + 'columnServices')}</th>
             <th className={POS_TABLE_HEADER_CELL_CLASS}>{t(p + 'columnTechnician')}</th>
             <th className={POS_TABLE_HEADER_CELL_CLASS}>{t(p + 'columnStatus')}</th>
-            <th className={`${POS_TABLE_HEADER_CELL_CLASS} text-right`}>{t(p + 'columnActions')}</th>
+            <th className={`${POS_TABLE_HEADER_CELL_CLASS} ${POS_TABLE_STICKY_ACTION_HEADER_CLASS} text-right`}>{t(p + 'columnActions')}</th>
           </tr>
         </thead>
         <tbody>
@@ -128,7 +124,7 @@ export default function BookingTable({
                         </span>
                       ) : null}
                     </div>
-                    <span className="truncate text-[11px] font-semibold text-nexoraMuted">
+                    <span className="whitespace-nowrap text-[11px] font-semibold tabular-nums text-nexoraMuted">
                       {phone ?? '—'}
                     </span>
                   </div>
@@ -173,8 +169,8 @@ export default function BookingTable({
                     {t(p + statusLabelKey(booking.status))}
                   </span>
                 </td>
-                <td className="px-4 py-3 align-middle">
-                  <div className="flex flex-wrap justify-end gap-1.5">
+                <td className={`${POS_TABLE_STICKY_ACTION_CELL_CLASS} px-4 py-3 align-middle`}>
+                  <div className="inline-flex w-max justify-end gap-1.5">
                     {canAct ? (
                       <>
                         <button
@@ -210,7 +206,7 @@ export default function BookingTable({
                       className="inline-flex h-8 items-center gap-1.5 rounded-lg border border-violet-200 bg-violet-50 px-2.5 text-[10px] font-extrabold text-violet-700 transition-colors hover:border-violet-300 hover:bg-violet-100"
                     >
                       <Eye className="h-3.5 w-3.5" aria-hidden="true" />
-                      <span>{t(p + 'viewDetailAction')}</span>
+                      <span>{t('common.view')}</span>
                     </button>
                   </div>
                 </td>

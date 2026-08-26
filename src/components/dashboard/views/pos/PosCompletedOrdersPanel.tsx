@@ -15,7 +15,12 @@ import { SkeletonList } from '../../../ui/skeleton'
 import { formatPosDateTime } from './posDateTime'
 import { formatCustomerPhone } from './customer/customerFormatters'
 import { formatBookingHubDateTimeParts } from '../bookingHubFormatters'
-import { POS_TABLE_HEADER_CELL_CLASS, POS_TABLE_HEADER_ROW_CLASS } from './posTableStyles'
+import {
+  POS_TABLE_HEADER_CELL_CLASS,
+  POS_TABLE_HEADER_ROW_CLASS,
+  POS_TABLE_STICKY_ACTION_CELL_CLASS,
+  POS_TABLE_STICKY_ACTION_HEADER_CLASS,
+} from './posTableStyles'
 
 const PAGE_SIZE = 10
 
@@ -124,18 +129,7 @@ export default function PosCompletedOrdersPanel({ businessId }: { businessId: st
               a full page of completed orders scrolls in place; the pagination footer
               below stays outside this box, always visible. */}
           <div className="max-h-[560px] overflow-auto">
-            <table className="w-full min-w-[1100px] table-fixed text-left text-xs">
-              <colgroup>
-                <col className="w-[7%]" />
-                <col className="w-[12%]" />
-                <col className="w-[12%]" />
-                <col className="w-[11%]" />
-                <col className="w-[13%]" />
-                <col className="w-[17%]" />
-                <col className="w-[10%]" />
-                <col className="w-[8%]" />
-                <col className="w-[10%]" />
-              </colgroup>
+            <table className="w-full min-w-[1100px] table-auto text-left text-xs">
               <thead className="sticky top-0 z-[1] bg-nexoraCanvas/90">
                 <tr className={POS_TABLE_HEADER_ROW_CLASS}>
                   <th className={POS_TABLE_HEADER_CELL_CLASS}>{t('components.dashboard.views.pos.PosCompletedOrdersPanel.columnNumber')}</th>
@@ -146,7 +140,7 @@ export default function PosCompletedOrdersPanel({ businessId }: { businessId: st
                   <th className={POS_TABLE_HEADER_CELL_CLASS}>{t('components.dashboard.views.pos.PosCompletedOrdersPanel.columnServices')}</th>
                   <th className={POS_TABLE_HEADER_CELL_CLASS}>{t('components.dashboard.views.pos.PosCompletedOrdersPanel.columnPaymentMethod')}</th>
                   <th className={`${POS_TABLE_HEADER_CELL_CLASS} text-right`}>{t('components.dashboard.views.pos.PosCompletedOrdersPanel.columnTotal')}</th>
-                  <th className={`${POS_TABLE_HEADER_CELL_CLASS} text-right`}>{t('components.dashboard.views.pos.PosCompletedOrdersPanel.columnActions')}</th>
+                  <th className={`${POS_TABLE_HEADER_CELL_CLASS} ${POS_TABLE_STICKY_ACTION_HEADER_CLASS} text-right`}>{t('components.dashboard.views.pos.PosCompletedOrdersPanel.columnActions')}</th>
                 </tr>
               </thead>
               <tbody>
@@ -160,7 +154,7 @@ export default function PosCompletedOrdersPanel({ businessId }: { businessId: st
                         </span>
                       </td>
                       <td className="px-4 py-3 font-bold text-nexoraText">{order.customerName}</td>
-                      <td className="px-4 py-3 text-nexoraMuted">
+                      <td className="whitespace-nowrap px-4 py-3 tabular-nums text-nexoraMuted">
                         {formatCustomerPhone(order.customerPhone, order.customerPhoneE164) || '—'}
                       </td>
                       <td className="px-4 py-3 align-middle">
@@ -195,7 +189,7 @@ export default function PosCompletedOrdersPanel({ businessId }: { businessId: st
                           ${order.total.toFixed(2)}
                         </span>
                       </td>
-                      <td className="px-4 py-3 text-right">
+                      <td className={`${POS_TABLE_STICKY_ACTION_CELL_CLASS} px-4 py-3 text-right`}>
                         <button
                           type="button"
                           onClick={() => setViewDetailTargetId(order.id)}

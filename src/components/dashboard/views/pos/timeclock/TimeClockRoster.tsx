@@ -17,7 +17,12 @@ import { EMPTY_VALUE, getInitials } from '../posDisplay'
 import BeepMessageModal from './BeepMessageModal'
 import { formatHours } from './timeClockDay'
 import { tk } from './timeClockI18n'
-import { POS_TABLE_HEADER_CELL_CLASS, POS_TABLE_HEADER_ROW_CLASS } from '../posTableStyles'
+import {
+  POS_TABLE_HEADER_CELL_CLASS,
+  POS_TABLE_HEADER_ROW_CLASS,
+  POS_TABLE_STICKY_ACTION_CELL_CLASS,
+  POS_TABLE_STICKY_ACTION_HEADER_CLASS,
+} from '../posTableStyles'
 
 // Table/Card is a separate preference from the Order List's List/Card toggle — the two tabs are
 // remembered independently, so they keep their own storage keys.
@@ -156,7 +161,7 @@ export default function TimeClockRoster({
   )
 
   const renderActions = (row: TimeClockRosterRowApiDto) => (
-    <div className="flex justify-end gap-1.5">
+    <div className="inline-flex w-max justify-end gap-1.5">
       <button
         type="button"
         onClick={() => (row.isClockedIn ? handleClockOut(row) : handleClockIn(row))}
@@ -261,7 +266,7 @@ export default function TimeClockRoster({
         </div>
       ) : (
         <div className="max-h-[560px] overflow-x-auto overflow-y-auto rounded-xl border border-nexoraBorder bg-white">
-          <table className="w-full min-w-[900px] table-fixed text-left text-xs">
+          <table className="w-full min-w-[900px] table-auto text-left text-xs">
             <thead className="sticky top-0 z-[1] bg-nexoraCanvas/90">
               <tr className={POS_TABLE_HEADER_ROW_CLASS}>
                 <th className={POS_TABLE_HEADER_CELL_CLASS}>
@@ -279,7 +284,7 @@ export default function TimeClockRoster({
                 <th className={POS_TABLE_HEADER_CELL_CLASS}>
                   {t(tk('columnBeeper'))}
                 </th>
-                <th className={`${POS_TABLE_HEADER_CELL_CLASS} text-right`}>
+                <th className={`${POS_TABLE_HEADER_CELL_CLASS} ${POS_TABLE_STICKY_ACTION_HEADER_CLASS} text-right`}>
                   {t(tk('columnActions'))}
                 </th>
               </tr>
@@ -318,7 +323,7 @@ export default function TimeClockRoster({
                       </span>
                     ) : EMPTY_VALUE}
                   </td>
-                  <td className="px-4 py-3">{renderActions(row)}</td>
+                  <td className={`${POS_TABLE_STICKY_ACTION_CELL_CLASS} px-4 py-3`}>{renderActions(row)}</td>
                 </tr>
               ))}
             </tbody>

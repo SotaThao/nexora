@@ -20,7 +20,12 @@ import { SkeletonList } from '../../../../ui/skeleton'
 import PosDevicePairingQrPanel from './PosDevicePairingQrPanel'
 import EditPosDeviceModal from './EditPosDeviceModal'
 import { formatPosDateTime } from '../posDateTime'
-import { POS_TABLE_HEADER_CELL_CLASS, POS_TABLE_HEADER_ROW_CLASS } from '../posTableStyles'
+import {
+  POS_TABLE_HEADER_CELL_CLASS,
+  POS_TABLE_HEADER_ROW_CLASS,
+  POS_TABLE_STICKY_ACTION_CELL_CLASS,
+  POS_TABLE_STICKY_ACTION_HEADER_CLASS,
+} from '../posTableStyles'
 
 const K = 'components.dashboard.views.pos.devices.PosDevicesView'
 
@@ -124,7 +129,7 @@ export default function PosDevicesView({ businessId }: { businessId: string }) {
           <p className="py-6 text-center text-xs text-nexoraMuted">{t(`${K}.empty`)}</p>
         ) : (
           <div className="overflow-x-auto">
-            <table className="w-full min-w-[900px] table-fixed text-left">
+            <table className="w-full min-w-[900px] table-auto text-left">
               <thead>
                 <tr className={POS_TABLE_HEADER_ROW_CLASS}>
                   <th className={POS_TABLE_HEADER_CELL_CLASS}>{t(`${K}.colName`)}</th>
@@ -133,7 +138,7 @@ export default function PosDevicesView({ businessId }: { businessId: string }) {
                   <th className={POS_TABLE_HEADER_CELL_CLASS}>{t(`${K}.colPairedAt`)}</th>
                   <th className={POS_TABLE_HEADER_CELL_CLASS}>{t(`${K}.colLastSeen`)}</th>
                   <th className={POS_TABLE_HEADER_CELL_CLASS}>{t(`${K}.colDevice`)}</th>
-                  <th className={`${POS_TABLE_HEADER_CELL_CLASS} text-right`}>{t(`${K}.colActions`)}</th>
+                  <th className={`${POS_TABLE_HEADER_CELL_CLASS} ${POS_TABLE_STICKY_ACTION_HEADER_CLASS} text-right`}>{t(`${K}.colActions`)}</th>
                 </tr>
               </thead>
               <tbody>
@@ -173,11 +178,11 @@ export default function PosDevicesView({ businessId }: { businessId: string }) {
                       <td className="py-2.5 pr-3 text-xs text-nexoraMuted">
                         {shortenUserAgent(device.userAgent)}
                       </td>
-                      <td className="py-2.5 text-right">
+                      <td className={`${POS_TABLE_STICKY_ACTION_CELL_CLASS} py-2.5 text-right`}>
                         {/* Revoked and Expired are terminal — nothing left to act on, and the row
                             stays only as history of who authorised what. */}
                         {isActive ? (
-                          <div className="inline-flex gap-1.5">
+                          <div className="inline-flex w-max gap-1.5">
                             <button
                               type="button"
                               onClick={() => setEditing(device)}

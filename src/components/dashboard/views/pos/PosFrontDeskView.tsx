@@ -64,7 +64,12 @@ import { formatCustomerPhone } from './customer/customerFormatters'
 import TimeClockTab from './timeclock/TimeClockTab'
 import { getLocalDayWindow } from './timeclock/timeClockDay'
 import { formatCurrency } from '../../utils'
-import { POS_TABLE_HEADER_CELL_CLASS, POS_TABLE_HEADER_ROW_CLASS } from './posTableStyles'
+import {
+  POS_TABLE_HEADER_CELL_CLASS,
+  POS_TABLE_HEADER_ROW_CLASS,
+  POS_TABLE_STICKY_ACTION_CELL_CLASS,
+  POS_TABLE_STICKY_ACTION_HEADER_CLASS,
+} from './posTableStyles'
 
 // Every string this screen passes to t() lives under one namespace — building them through tk()
 // keeps the prefix in a single place instead of repeating it two dozen times inline.
@@ -192,9 +197,8 @@ const TAB_SCROLL_STEP_RATIO = 0.8
 // The Front Desk tabs are wider than a phone viewport, so the strip scrolls horizontally
 // (see index.css `.nexora-no-scrollbar` — the app's styled scrollbar would otherwise sit on
 // top of the active-tab underline). A silent scroll area reads as a cut-off list, so each
-// edge gets an arrow. The arrow slots only exist while the strip actually overflows; within
-// that, an arrow at its edge goes `invisible` rather than unmounting, so scrolling never
-// shifts the tabs sideways.
+// edge gets an arrow. Both arrows stay visible at every width and become disabled at their
+// respective edges, so users can discover the control and the tabs never shift sideways.
 function ScrollableTabStrip({ children }: { children: ReactNode }) {
   const { t } = useTranslation()
   const stripRef = useRef<HTMLDivElement>(null)
@@ -228,35 +232,32 @@ function ScrollableTabStrip({ children }: { children: ReactNode }) {
     strip.scrollBy({ left: direction * strip.clientWidth * TAB_SCROLL_STEP_RATIO, behavior: 'smooth' })
   }
 
-  const isOverflowing = canScrollLeft || canScrollRight
   const arrowClass =
-    'flex h-9 w-8 shrink-0 items-center justify-center self-stretch rounded-lg text-nexoraMuted transition-colors hover:bg-nexoraCanvas hover:text-nexoraText'
+    'flex h-9 w-8 shrink-0 items-center justify-center self-stretch rounded-lg text-nexoraMuted transition-colors hover:bg-nexoraCanvas hover:text-nexoraText disabled:cursor-not-allowed disabled:opacity-40 disabled:hover:bg-transparent disabled:hover:text-nexoraMuted'
 
   return (
     <div className="flex items-center gap-1">
-      {isOverflowing && (
-        <button
-          type="button"
-          aria-label={t(tk('scrollTabsLeft'))}
-          onClick={() => scrollByStep(-1)}
-          className={`${arrowClass} ${canScrollLeft ? '' : 'invisible'}`}
-        >
-          <ChevronLeft className="h-4 w-4" />
-        </button>
-      )}
+      <button
+        type="button"
+        aria-label={t(tk('scrollTabsLeft'))}
+        onClick={() => scrollByStep(-1)}
+        disabled={!canScrollLeft}
+        className={arrowClass}
+      >
+        <ChevronLeft className="h-4 w-4" />
+      </button>
       <div ref={stripRef} onScroll={syncArrows} className="nexora-no-scrollbar flex flex-1 gap-1 overflow-x-auto">
         {children}
       </div>
-      {isOverflowing && (
-        <button
-          type="button"
-          aria-label={t(tk('scrollTabsRight'))}
-          onClick={() => scrollByStep(1)}
-          className={`${arrowClass} ${canScrollRight ? '' : 'invisible'}`}
-        >
-          <ChevronRight className="h-4 w-4" />
-        </button>
-      )}
+      <button
+        type="button"
+        aria-label={t(tk('scrollTabsRight'))}
+        onClick={() => scrollByStep(1)}
+        disabled={!canScrollRight}
+        className={arrowClass}
+      >
+        <ChevronRight className="h-4 w-4" />
+      </button>
     </div>
   )
 }
@@ -589,8 +590,8 @@ export default function PosFrontDeskView({
       <td className="px-4 py-3">{renderTechnicianChip(booking.technicianNames)}</td>
       <td className="px-4 py-3">{renderServiceChips(booking.serviceNames)}</td>
       <td className="px-4 py-3 text-right tabular-nums text-nexoraMuted">—</td>
-      <td className="px-4 py-3 text-right">
-        <div className="flex justify-end">{renderNotArrivedCheckInButton(booking)}</div>
+      <td className={`${POS_TABLE_STICKY_ACTION_CELL_CLASS} px-4 py-3 text-right`}>
+        <div className="inline-flex w-max justify-end">{renderNotArrivedCheckInButton(booking)}</div>
       </td>
     </tr>
   )
@@ -628,14 +629,14 @@ export default function PosFrontDeskView({
       <div
         className={`${ORDER_LIST_FILL_MAIN_HEIGHT} overflow-auto rounded-xl border border-nexoraBorder bg-white`}
       >
-        <table className="w-full min-w-[720px] table-fixed text-left text-xs">
+        <table className="w-full min-w-[720px] table-auto text-left text-xs">
           <thead className="sticky top-0 z-[1] bg-nexoraCanvas/90">
             <tr className={POS_TABLE_HEADER_ROW_CLASS}>
               <th className={POS_TABLE_HEADER_CELL_CLASS}>{t(tk('orderListColumnTime'))}</th>
               <th className={POS_TABLE_HEADER_CELL_CLASS}>{t(tk('orderListColumnCustomer'))}</th>
               <th className={POS_TABLE_HEADER_CELL_CLASS}>{t(tk('orderListColumnTechnician'))}</th>
               <th className={POS_TABLE_HEADER_CELL_CLASS}>{t(tk('orderListColumnServices'))}</th>
-              <th className={`${POS_TABLE_HEADER_CELL_CLASS} text-right`}></th>
+              <th className={`${POS_TABLE_HEADER_CELL_CLASS} ${POS_TABLE_STICKY_ACTION_HEADER_CLASS} text-right`}></th>
             </tr>
           </thead>
           <tbody>
@@ -647,8 +648,8 @@ export default function PosFrontDeskView({
                 <td className="px-4 py-3 font-bold text-nexoraText">{booking.customerName}</td>
                 <td className="px-4 py-3">{renderTechnicianChip(booking.technicianNames)}</td>
                 <td className="px-4 py-3">{renderServiceChips(booking.serviceNames)}</td>
-                <td className="px-4 py-3 text-right">
-                  <div className="flex justify-end">{renderNotArrivedCheckInButton(booking)}</div>
+                <td className={`${POS_TABLE_STICKY_ACTION_CELL_CLASS} px-4 py-3 text-right`}>
+                  <div className="inline-flex w-max justify-end">{renderNotArrivedCheckInButton(booking)}</div>
                 </td>
               </tr>
             ))}
@@ -1456,7 +1457,7 @@ export default function PosFrontDeskView({
                 <div
                   className={`${ORDER_LIST_FILL_MAIN_HEIGHT} overflow-auto rounded-xl border border-nexoraBorder bg-white`}
                 >
-                  <table className="w-full min-w-[1100px] table-fixed text-left text-xs">
+                  <table className="w-full min-w-[1100px] table-auto text-left text-xs">
                     <thead className="sticky top-0 z-[1] bg-nexoraCanvas/90">
                       <tr className={POS_TABLE_HEADER_ROW_CLASS}>
                         <th className={POS_TABLE_HEADER_CELL_CLASS}>{t(tk('orderListColumnNumber'))}</th>
@@ -1466,7 +1467,7 @@ export default function PosFrontDeskView({
                         <th className={POS_TABLE_HEADER_CELL_CLASS}>{t(tk('orderListColumnTechnician'))}</th>
                         <th className={POS_TABLE_HEADER_CELL_CLASS}>{t(tk('orderListColumnServices'))}</th>
                         <th className={`${POS_TABLE_HEADER_CELL_CLASS} text-right`}>{t(tk('orderListColumnWaitTime'))}</th>
-                        <th className={`${POS_TABLE_HEADER_CELL_CLASS} text-right`}></th>
+                        <th className={`${POS_TABLE_HEADER_CELL_CLASS} ${POS_TABLE_STICKY_ACTION_HEADER_CLASS} text-right`}></th>
                       </tr>
                     </thead>
                     <tbody>
@@ -1496,8 +1497,8 @@ export default function PosFrontDeskView({
                           <td className="px-4 py-3 text-right tabular-nums text-nexoraMuted">
                             {t(tk('waitMinutes'), { minutes: order.elapsedMinutes })}
                           </td>
-                          <td className="px-4 py-3 text-right">
-                            <div className="flex flex-wrap justify-end gap-1.5">
+                          <td className={`${POS_TABLE_STICKY_ACTION_CELL_CLASS} px-4 py-3 text-right`}>
+                            <div className="inline-flex w-max justify-end gap-1.5">
                               {renderEditButton(order)}
                               {renderStartServiceButton(order)}
                               {renderCheckoutButton(order)}

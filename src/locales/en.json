@@ -423,6 +423,7 @@
     "update": "Update",
     "delete": "Delete",
     "edit": "Edit",
+    "view": "View",
     "view_detail": "View details",
     "copy": "Copy",
     "copied": "Copied!",
@@ -3408,7 +3409,7 @@
             "reportEmpty": "No payroll data for this week.",
             "reportColumnTechnician": "Tech",
             "reportColumnHours": "Hours",
-            "reportColumnService": "Service Sales",
+            "reportColumnService": "Service Amount",
             "reportColumnCommission": "Commission $",
             "reportColumnTip": "Tip",
             "reportColumnTechTakes": "Tech Takes",
@@ -6286,7 +6287,7 @@
         "doneCountdown": "Done ({{seconds}}s)"
       },
       "SinglePageCheckInLayout": {
-        "cancel": "Cancel",
+        "back": "Back",
         "bookingAt": "Appointment at {{time}}",
         "technicianTitle": "Technician",
         "technicianSubtitle": "Optional — \"Anyone\" is fastest.",
@@ -6299,7 +6300,7 @@
         "submit": "Check in"
       },
       "WizardCheckInLayout": {
-        "cancel": "Cancel"
+        "back": "Back"
       }
     }
   },

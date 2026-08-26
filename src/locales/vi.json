@@ -423,6 +423,7 @@
     "update": "Cập nhật",
     "delete": "Xóa",
     "edit": "Sửa",
+    "view": "Xem",
     "view_detail": "Xem chi tiết",
     "copy": "Sao chép",
     "copied": "Đã sao chép!",
@@ -3408,7 +3409,7 @@
             "reportEmpty": "Chưa có dữ liệu lương cho tuần này.",
             "reportColumnTechnician": "Thợ",
             "reportColumnHours": "Giờ",
-            "reportColumnService": "Doanh thu dịch vụ",
+            "reportColumnService": "Số tiền dịch vụ",
             "reportColumnCommission": "Hoa hồng $",
             "reportColumnTip": "Tip",
             "reportColumnTechTakes": "Thợ nhận",
@@ -6281,7 +6282,7 @@
         "doneCountdown": "Xong ({{seconds}}s)"
       },
       "SinglePageCheckInLayout": {
-        "cancel": "Huỷ",
+        "back": "Quay lại",
         "bookingAt": "Lịch hẹn lúc {{time}}",
         "technicianTitle": "Thợ",
         "technicianSubtitle": "Không bắt buộc — chọn \"Nhân viên bất kỳ\" là nhanh nhất.",
@@ -6294,7 +6295,7 @@
         "submit": "Check-in"
       },
       "WizardCheckInLayout": {
-        "cancel": "Huỷ"
+        "back": "Quay lại"
       }
     }
   },

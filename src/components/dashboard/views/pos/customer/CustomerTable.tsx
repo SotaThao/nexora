@@ -7,7 +7,12 @@ import { useTranslation } from '../../../../../contexts/LanguageContext'
 import { Eye } from 'lucide-react'
 import type { PosCustomerListItemApiDto } from '../../../../../types/repositories'
 import { formatBookingHubDateTimeParts } from '../../bookingHubFormatters'
-import { POS_TABLE_HEADER_CELL_CLASS, POS_TABLE_HEADER_ROW_CLASS } from '../posTableStyles'
+import {
+  POS_TABLE_HEADER_CELL_CLASS,
+  POS_TABLE_HEADER_ROW_CLASS,
+  POS_TABLE_STICKY_ACTION_CELL_CLASS,
+  POS_TABLE_STICKY_ACTION_HEADER_CLASS,
+} from '../posTableStyles'
 import { formatCustomerPhone } from './customerFormatters'
 
 const CUSTOMER_STATUS_LABEL_KEYS: Record<string, string> = {
@@ -47,7 +52,7 @@ export default function CustomerTable({
 
   return (
     <div className="max-h-[560px] overflow-auto">
-      <table className="w-full min-w-[720px] table-fixed text-left text-xs">
+      <table className="w-full min-w-[720px] table-auto text-left text-xs">
         <thead className="sticky top-0 z-[1] bg-nexoraCanvas/90">
           <tr className={POS_TABLE_HEADER_ROW_CLASS}>
             <th className={POS_TABLE_HEADER_CELL_CLASS}>{t(p + 'columnName')}</th>
@@ -56,7 +61,7 @@ export default function CustomerTable({
             <th className={`${POS_TABLE_HEADER_CELL_CLASS} text-right`}>{t(p + 'columnTotalVisits')}</th>
             <th className={POS_TABLE_HEADER_CELL_CLASS}>{t(p + 'columnLastVisit')}</th>
             <th className={`${POS_TABLE_HEADER_CELL_CLASS} hidden md:table-cell`}>{t(p + 'columnCreatedAt')}</th>
-            <th className={`${POS_TABLE_HEADER_CELL_CLASS} text-right`}>{t(p + 'columnActions')}</th>
+            <th className={`${POS_TABLE_HEADER_CELL_CLASS} ${POS_TABLE_STICKY_ACTION_HEADER_CLASS} text-right`}>{t(p + 'columnActions')}</th>
           </tr>
         </thead>
         <tbody>
@@ -77,7 +82,7 @@ export default function CustomerTable({
                     </span>
                   </div>
                 </td>
-                <td className="whitespace-nowrap px-4 py-3 font-semibold text-nexoraText">{formatCustomerPhone(customer.phone, customer.phoneE164)}</td>
+                <td className="whitespace-nowrap px-4 py-3 font-semibold tabular-nums text-nexoraText">{formatCustomerPhone(customer.phone, customer.phoneE164)}</td>
                 <td className="hidden px-4 py-3 md:table-cell">
                   <span className={`rounded-full border px-2.5 py-1 text-[10px] font-extrabold ${statusStyle.badge}`}>
                     {t(p + statusLabelKey(customer.status))}
@@ -100,7 +105,7 @@ export default function CustomerTable({
                     <span className="text-[11px] font-semibold text-nexoraText">{created?.time ?? '—'}</span>
                   </div>
                 </td>
-                <td className="px-4 py-3 text-right">
+                <td className={`${POS_TABLE_STICKY_ACTION_CELL_CLASS} px-4 py-3 text-right`}>
                   <button
                     type="button"
                     onClick={() => onView(customer.id)}

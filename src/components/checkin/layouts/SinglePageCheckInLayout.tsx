@@ -7,7 +7,7 @@
 //
 // Holds no state and no rules: everything comes off the session, so this file and the wizard
 // cannot disagree about what check-in does.
-import { Loader2, UsersRound, X } from 'lucide-react'
+import { ArrowLeft, Loader2, UsersRound } from 'lucide-react'
 import { useTranslation } from '../../../contexts/LanguageContext'
 import CustomerIdentityCard from '../parts/CustomerIdentityCard'
 import CheckInSectionCard from '../parts/CheckInSectionCard'
@@ -34,14 +34,14 @@ export default function SinglePageCheckInLayout({
 
   return (
     <div className="mx-auto w-full max-w-6xl space-y-4">
-      <div className="flex justify-end">
+      <div className="flex justify-start">
         <button
           type="button"
           onClick={onCancel}
           className="flex h-11 items-center gap-1.5 rounded-lg border border-nexoraBorder bg-nexoraSurface px-4 text-sm font-bold text-nexoraMuted hover:border-nexoraBrand"
         >
-          <X className="h-4 w-4" />
-          {t(`${K}.cancel`)}
+          <ArrowLeft className="h-4 w-4" />
+          {t(`${K}.back`)}
         </button>
       </div>
 
