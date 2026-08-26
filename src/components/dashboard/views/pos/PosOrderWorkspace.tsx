@@ -1540,7 +1540,7 @@ export default function PosOrderWorkspace({
   const printableReceipt =
     order && printPreviewOpen && typeof document !== 'undefined'
       ? createPortal(
-          <div className="pos-invoice-modal-backdrop">
+          <div className="pos-front-desk-action-surface pos-invoice-modal-backdrop">
             <div
               className="pos-invoice-modal"
               role="dialog"

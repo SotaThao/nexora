@@ -247,7 +247,7 @@ function ScrollableTabStrip({ children }: { children: ReactNode }) {
       >
         <ChevronLeft className="h-4 w-4" />
       </button>
-      <div ref={stripRef} onScroll={syncArrows} className="nexora-no-scrollbar flex flex-1 gap-1 overflow-x-auto">
+      <div ref={stripRef} onScroll={syncArrows} className="nexora-no-scrollbar flex flex-1 gap-1 overflow-x-auto py-2">
         {children}
       </div>
       <button
@@ -1126,7 +1126,7 @@ export default function PosFrontDeskView({
   }
 
   return (
-    <div className="flex h-full min-h-0 flex-col gap-4">
+    <div className="pos-front-desk-action-surface flex h-full min-h-0 flex-col gap-4">
       {/* Hidden while an Order Workspace is open (Check-in draft or editing an existing
           order) — iPad space optimization: this title/description block is
           "where am I" chrome that's redundant once the staff is heads-down on one
