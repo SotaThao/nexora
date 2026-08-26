@@ -79,6 +79,23 @@ function round2(value: number) {
   return Math.round(value * 100) / 100
 }
 
+function formatEnteredDiscountValue(
+  discountType: string | null | undefined,
+  discountValue: number | null | undefined,
+  discountAmount: number,
+) {
+  if (discountType === 'Percent' && discountValue != null) return `${discountValue}%`
+  return formatUsdAmount(discountValue ?? discountAmount)
+}
+
+function formatDiscountPriceBadge(
+  discountType: string | null | undefined,
+  discountValue: number | null | undefined,
+  discountAmount: number,
+) {
+  return `(-${formatEnteredDiscountValue(discountType, discountValue, discountAmount)})`
+}
+
 interface DisplayServiceLine {
   key: string
   // Set for a line that already exists server-side (always set in Update mode, never set
@@ -941,26 +958,19 @@ export default function PosOrderWorkspace({
                                     </button>
                                   ) : null}
                                 </div>
-                                {line.discountAmount > 0 ? (
-                                  <p className="mt-1 text-[11px] leading-tight text-amber-700">
-                                    {t('components.dashboard.views.pos.PosOrderWorkspace.discountLineSummary', {
-                                      amount: line.discountAmount.toFixed(2),
-                                      bearer: t(
-                                        `components.dashboard.views.pos.PosOrderWorkspace.discountBearer${line.discountBearer}`,
-                                      ),
-                                    })}
-                                    {line.discountNote ? ` — ${line.discountNote}` : ''}
-                                  </p>
-                                ) : null}
                               </div>
                               <div className="flex min-h-[3.25rem] flex-col items-end gap-2">
                                 {line.discountAmount > 0 ? (
                                   <div className="text-right leading-tight">
-                                    <span className="text-[11px] text-nexoraMuted line-through">
-                                      ${lineTotal(line).toFixed(2)}
+                                    <span className="text-sm font-bold text-nexoraText">
+                                      {formatUsdAmount(lineTotal(line))}
                                     </span>
-                                    <span className="ml-1.5 text-sm font-bold text-nexoraText">
-                                      ${lineTotalAfterDiscount(line).toFixed(2)}
+                                    <span className="ml-1 text-[11px] font-semibold text-rose-500">
+                                      {formatDiscountPriceBadge(
+                                        line.discountType,
+                                        line.discountValue,
+                                        line.discountAmount,
+                                      )}
                                     </span>
                                   </div>
                                 ) : (
@@ -1024,29 +1034,19 @@ export default function PosOrderWorkspace({
                                         <p className="min-w-0 truncate text-xs font-bold leading-tight text-nexoraText">
                                           + {addOn.addOnName}
                                         </p>
-                                        {addOn.discountAmount > 0 ? (
-                                          <p className="text-[11px] leading-tight text-amber-700">
-                                            {t(
-                                              'components.dashboard.views.pos.PosOrderWorkspace.discountLineSummary',
-                                              {
-                                                amount: addOn.discountAmount.toFixed(2),
-                                                bearer: t(
-                                                  `components.dashboard.views.pos.PosOrderWorkspace.discountBearer${addOn.discountBearer}`,
-                                                ),
-                                              },
-                                            )}
-                                            {addOn.discountNote ? ` — ${addOn.discountNote}` : ''}
-                                          </p>
-                                        ) : null}
                                       </div>
                                       <div className="flex shrink-0 items-center gap-1.5">
                                         {addOn.discountAmount > 0 ? (
                                           <span className="leading-tight">
-                                            <span className="text-[11px] text-nexoraMuted line-through">
-                                              ${addOn.lineTotal.toFixed(2)}
+                                            <span className="text-xs font-bold text-nexoraText">
+                                              {formatUsdAmount(addOn.lineTotal)}
                                             </span>
-                                            <span className="ml-1.5 text-xs font-bold text-nexoraText">
-                                              ${addOn.lineTotalAfterDiscount.toFixed(2)}
+                                            <span className="ml-1 text-[11px] font-semibold text-rose-500">
+                                              {formatDiscountPriceBadge(
+                                                addOn.discountType,
+                                                addOn.discountValue,
+                                                addOn.discountAmount,
+                                              )}
                                             </span>
                                           </span>
                                         ) : (
