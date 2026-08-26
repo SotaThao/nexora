@@ -804,7 +804,7 @@ export default function PosOrderWorkspace({
   // JSX block away from coming back. Nothing sells products anywhere while it is hidden: check-in
   // dropped them with the one-page redesign, and this was the last surface.
   const catalogPanel = (
-          <div className="nexora-card space-y-3 p-4 lg:col-span-3">
+          <div className="nexora-card space-y-3 p-4">
             <h3 className="border-b border-nexoraBorder pb-2 text-xs font-black uppercase tracking-wider text-nexoraMuted">
               {t('components.dashboard.views.pos.PosOrderWorkspace.tabServices')}
             </h3>
@@ -827,7 +827,7 @@ export default function PosOrderWorkspace({
   )
 
   const orderPanel = (
-          <div className="space-y-4 lg:col-span-2">
+          <div className="space-y-4">
             <div
               role="region"
               aria-label={t('components.dashboard.views.pos.PosOrderWorkspace.orderDetailTitle')}
@@ -893,6 +893,23 @@ export default function PosOrderWorkspace({
                                       {t('common.edit')}
                                     </button>
                                   ) : null}
+                                  {/* Blocked once the service is marked done — the backend treats an
+                                      extra on finished work as a correction, not an upsell. */}
+                                  {canEditLines && line.existingId && !line.completedAt ? (
+                                    <button
+                                      type="button"
+                                      data-testid={`add-add-on-${line.key}`}
+                                      onClick={() =>
+                                        setAddOnTarget({
+                                          serviceLineId: line.existingId as string,
+                                          serviceName: line.serviceName,
+                                        })
+                                      }
+                                      className="h-6 shrink-0 rounded-lg border border-nexoraBorder bg-nexoraCanvas px-2 text-[10px] font-bold text-nexoraText transition-colors hover:border-nexoraBrand"
+                                    >
+                                      {t('components.dashboard.views.pos.PosOrderWorkspace.addAddOn')}
+                                    </button>
+                                  ) : null}
                                 </div>
                                 <div className="mt-1 flex items-center gap-2">
                                   <span className="min-w-0 truncate text-xs font-semibold leading-tight text-nexoraText">
@@ -920,23 +937,6 @@ export default function PosOrderWorkspace({
                                       )}
                                     </button>
                                   ) : null}
-                                  {/* Blocked once the service is marked done — the backend treats an
-                                      extra on finished work as a correction, not an upsell. */}
-                                  {canEditLines && line.existingId && !line.completedAt ? (
-                                    <button
-                                      type="button"
-                                      data-testid={`add-add-on-${line.key}`}
-                                      onClick={() =>
-                                        setAddOnTarget({
-                                          serviceLineId: line.existingId as string,
-                                          serviceName: line.serviceName,
-                                        })
-                                      }
-                                      className="h-6 shrink-0 rounded-lg border border-nexoraBorder bg-nexoraCanvas px-2 text-[10px] font-bold text-nexoraText transition-colors hover:border-nexoraBrand"
-                                    >
-                                      {t('components.dashboard.views.pos.PosOrderWorkspace.addAddOn')}
-                                    </button>
-                                  ) : null}
                                 </div>
                                 {line.discountAmount > 0 ? (
                                   <p className="mt-1 text-[11px] leading-tight text-amber-700">
@@ -950,7 +950,7 @@ export default function PosOrderWorkspace({
                                   </p>
                                 ) : null}
                               </div>
-                              <div className="flex min-h-[3.25rem] flex-col items-end justify-between gap-2">
+                              <div className="flex min-h-[3.25rem] flex-col items-end gap-2">
                                 {line.discountAmount > 0 ? (
                                   <div className="text-right leading-tight">
                                     <span className="text-[11px] text-nexoraMuted line-through">
@@ -1704,7 +1704,10 @@ export default function PosOrderWorkspace({
           <SkeletonList count={4} lines={2} />
         </div>
       ) : (
-        <div className="grid grid-cols-1 gap-6 lg:grid-cols-5" aria-busy={isBusy}>
+        <div
+          className="grid grid-cols-1 gap-6 lg:grid-cols-[minmax(0,7fr)_minmax(0,5fr)]"
+          aria-busy={isBusy}
+        >
           {catalogPanel}
           {orderPanel}
         </div>

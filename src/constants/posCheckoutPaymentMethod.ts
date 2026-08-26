@@ -52,8 +52,8 @@ export const POS_CHECKOUT_PAYMENT_METHOD_ICON_SOURCES: Partial<
 }
 
 export const POS_CHECKOUT_PAYMENT_METHOD_OPTIONS = [
-  PosCheckoutPaymentMethod.Card,
   PosCheckoutPaymentMethod.Cash,
+  PosCheckoutPaymentMethod.Card,
   PosCheckoutPaymentMethod.GiftCard,
   PosCheckoutPaymentMethod.SplitPay,
   PosCheckoutPaymentMethod.Zelle,

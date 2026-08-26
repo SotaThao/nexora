@@ -28,7 +28,7 @@ export default function PosPaymentMethodSelector({
             aria-pressed={selected}
             disabled={disabled}
             onClick={() => onChange(method.value)}
-            className={`inline-flex min-h-11 w-auto flex-none items-center gap-2 whitespace-nowrap rounded-lg border px-3 text-[11px] font-semibold transition-colors disabled:cursor-not-allowed disabled:opacity-60 ${
+            className={`inline-flex min-h-8 w-auto flex-none items-center gap-1 whitespace-nowrap rounded-lg border px-2 text-[11px] font-semibold transition-colors disabled:cursor-not-allowed disabled:opacity-60 ${
               selected
                 ? 'border-nexoraBrand/50 bg-nexoraBrandSoft text-nexoraBrandDark'
                 : 'border-nexoraBorder/70 bg-white text-nexoraText hover:border-nexoraBrand/50 hover:bg-nexoraBrandSoft/40'
