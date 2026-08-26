@@ -474,19 +474,36 @@ export default function SiteEditorView() {
           {/* Modal Body: Device Sandbox Frame */}
           <div className="flex-1 overflow-y-auto p-4 sm:p-8 flex justify-center items-start bg-slate-950/90">
             {previewDevice === 'mobile' ? (
-              /* Realistic Smartphone Shell (390px) */
-              <div className="relative w-[390px] h-[820px] my-auto bg-slate-900 rounded-[54px] p-3 shadow-2xl border-4 border-slate-700 flex flex-col shrink-0 overflow-hidden">
-                {/* Dynamic Island / Notch */}
-                <div className="absolute top-5 left-1/2 -translate-x-1/2 w-28 h-5 bg-black rounded-full z-30 flex items-center justify-center pointer-events-none shadow-lg">
-                  <div className="w-2.5 h-2.5 rounded-full bg-slate-900 mr-4" />
-                  <div className="w-2.5 h-2.5 rounded-full bg-indigo-950/80" />
+              /* Realistic iPhone 15/16 Pro Shell (390px) with Apple HIG Safe Area */
+              <div className="relative w-[390px] h-[820px] my-auto bg-slate-900 rounded-[54px] p-2.5 shadow-2xl border-4 border-slate-700 flex flex-col shrink-0 overflow-hidden select-none">
+                {/* iOS Top Status Bar with Dynamic Island */}
+                <div className="absolute top-2.5 left-2.5 right-2.5 h-11 px-6 flex items-center justify-between z-40 pointer-events-none text-white">
+                  {/* Left: Clock */}
+                  <span className="text-[12px] font-bold tracking-tight">9:41</span>
+
+                  {/* Center: Dynamic Island */}
+                  <div className="w-28 h-6 bg-black rounded-full flex items-center justify-between px-3 shadow-md">
+                    <div className="w-2.5 h-2.5 rounded-full bg-slate-900 ring-1 ring-white/10" />
+                    <div className="w-2.5 h-2.5 rounded-full bg-indigo-950/80 ring-1 ring-indigo-500/20" />
+                  </div>
+
+                  {/* Right: iOS Icons (Signal, Wi-Fi, Battery) */}
+                  <div className="flex items-center gap-1.5 text-[11px] opacity-90 font-medium">
+                    <span>5G</span>
+                    <svg className="w-3.5 h-3.5 fill-current" viewBox="0 0 24 24"><path d="M12 4C7.31 4 3.07 5.9 0 8.98L12 21 24 8.98C20.93 5.9 16.69 4 12 4z"/></svg>
+                    <div className="w-5 h-2.5 border border-white rounded-xs p-0.5 flex items-center">
+                      <div className="h-full w-full bg-white rounded-2xs" />
+                    </div>
+                  </div>
                 </div>
-                {/* Screen Content (Edge to Edge with Hidden Scrollbar) */}
-                <div className="relative w-full h-full rounded-[44px] overflow-y-auto overflow-x-hidden shadow-inner pb-8 [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
+
+                {/* Screen Content Container (Respects Top Safe Area 44px + Bottom Safe Area 32px) */}
+                <div className="relative w-full h-full rounded-[44px] overflow-y-auto overflow-x-hidden shadow-inner pt-11 pb-10 bg-slate-950 [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
                   <SiteRenderer site={publicSiteData} isMobileView={true} />
                 </div>
+
                 {/* iOS Home Indicator */}
-                <div className="absolute bottom-2 left-1/2 -translate-x-1/2 w-32 h-1 bg-white/40 rounded-full pointer-events-none z-30" />
+                <div className="absolute bottom-2 left-1/2 -translate-x-1/2 w-32 h-1 bg-white/50 rounded-full pointer-events-none z-40" />
               </div>
             ) : (
               /* Desktop Browser Shell (1440px scaled) */

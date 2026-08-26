@@ -51,16 +51,16 @@ export const GoldenTrustStrip: React.FC<GoldenTrustStripProps> = ({
       }}
     >
       <div className="max-w-6xl mx-auto">
-        <div className={`grid gap-4 items-center ${
-          isMobileView ? 'grid-cols-1 divide-y divide-slate-700/20' : 'grid-cols-2 md:grid-cols-5 divide-x divide-slate-700/20'
+        <div className={`grid gap-3 items-center ${
+          isMobileView ? 'grid-cols-2 sm:grid-cols-3' : 'grid-cols-2 md:grid-cols-5 divide-x divide-slate-700/20'
         }`}>
           {pillars.map((p, idx) => {
             const Icon = p.icon
             return (
               <div
                 key={idx}
-                className={`flex items-center gap-3 ${
-                  isMobileView ? 'pt-2.5 first:pt-0' : 'px-4 first:pl-0'
+                className={`flex items-center gap-2.5 ${
+                  isMobileView ? 'p-2 rounded-xl bg-white/5 border border-white/10' : 'px-4 first:pl-0'
                 }`}
               >
                 <div

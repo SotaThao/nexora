@@ -16,7 +16,7 @@ export const MobileStickyBookingBar: React.FC<MobileStickyBookingBarProps> = ({
 }) => {
   return (
     <div
-      className="fixed bottom-0 left-0 right-0 z-40 p-3 bg-white/95 backdrop-blur-md border-t shadow-2xl flex items-center gap-2 sm:hidden"
+      className="fixed bottom-0 left-0 right-0 z-40 p-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] bg-white/95 backdrop-blur-md border-t shadow-2xl flex items-center gap-2 sm:hidden"
       style={{
         borderColor: palette.borderPrimary,
         backgroundColor: palette.bgSurface
@@ -25,14 +25,14 @@ export const MobileStickyBookingBar: React.FC<MobileStickyBookingBarProps> = ({
       {site.phone && (
         <a
           href={`tel:${site.phone}`}
-          className="flex-1 py-3 px-3 rounded-xl border text-xs font-bold flex items-center justify-center gap-1.5 transition-colors"
+          className="flex-1 py-3 px-3 rounded-xl border-2 text-xs font-bold flex items-center justify-center gap-1.5 transition-colors min-h-[48px]"
           style={{
             borderColor: palette.borderPrimary,
             color: palette.textPrimary,
             backgroundColor: palette.bgPrimary
           }}
         >
-          <Phone className="w-3.5 h-3.5" />
+          <Phone className="w-4 h-4" />
           <span>Gọi Điện</span>
         </a>
       )}
@@ -40,7 +40,7 @@ export const MobileStickyBookingBar: React.FC<MobileStickyBookingBarProps> = ({
       <button
         type="button"
         onClick={onBookClick}
-        className="flex-[2] py-3 px-4 rounded-xl text-xs font-black uppercase tracking-wider shadow-lg flex items-center justify-center gap-2 transition-transform active:scale-95"
+        className="flex-[2] py-3 px-4 rounded-xl text-xs font-black uppercase tracking-wider shadow-lg flex items-center justify-center gap-2 transition-transform active:scale-95 min-h-[48px]"
         style={{
           backgroundColor: palette.accentColor,
           color: palette.buttonText,

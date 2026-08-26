@@ -70,7 +70,11 @@ export const SiteBannersCarousel: React.FC<SiteBannersCarouselProps> = ({
     loop: true,
     align: 'start',
     slidesToScroll: 1,
-    skipSnaps: false
+    skipSnaps: false,
+    breakpoints: {
+      '(min-width: 768px)': { slidesToScroll: 2 },
+      '(min-width: 1280px)': { slidesToScroll: 2 }
+    }
   })
 
   const [selectedIndex, setSelectedIndex] = useState(0)
@@ -202,22 +206,22 @@ export const SiteBannersCarousel: React.FC<SiteBannersCarouselProps> = ({
             </div>
           </div>
 
-          {/* Left Arrow Button */}
+          {/* Left Arrow Button (Desktop only, mobile uses touch swipe) */}
           <button
             type="button"
             onClick={scrollPrev}
             aria-label="Previous banner slide"
-            className="absolute -left-2 sm:-left-3 top-1/2 -translate-y-1/2 w-8 h-8 sm:w-9 sm:h-9 rounded-full bg-black/60 hover:bg-black/90 text-white backdrop-blur-md border border-white/20 flex items-center justify-center opacity-0 group-hover:opacity-100 sm:opacity-80 sm:hover:opacity-100 transition-all duration-200 z-20 hover:scale-110 shadow-xl"
+            className="hidden sm:flex absolute -left-2 sm:-left-3 top-1/2 -translate-y-1/2 w-8 h-8 sm:w-9 sm:h-9 rounded-full bg-black/60 hover:bg-black/90 text-white backdrop-blur-md border border-white/20 items-center justify-center opacity-80 hover:opacity-100 transition-all duration-200 z-20 hover:scale-110 shadow-xl"
           >
             <ChevronLeft className="w-5 h-5" />
           </button>
 
-          {/* Right Arrow Button */}
+          {/* Right Arrow Button (Desktop only, mobile uses touch swipe) */}
           <button
             type="button"
             onClick={scrollNext}
             aria-label="Next banner slide"
-            className="absolute -right-2 sm:-right-3 top-1/2 -translate-y-1/2 w-8 h-8 sm:w-9 sm:h-9 rounded-full bg-black/60 hover:bg-black/90 text-white backdrop-blur-md border border-white/20 flex items-center justify-center opacity-0 group-hover:opacity-100 sm:opacity-80 sm:hover:opacity-100 transition-all duration-200 z-20 hover:scale-110 shadow-xl"
+            className="hidden sm:flex absolute -right-2 sm:-right-3 top-1/2 -translate-y-1/2 w-8 h-8 sm:w-9 sm:h-9 rounded-full bg-black/60 hover:bg-black/90 text-white backdrop-blur-md border border-white/20 items-center justify-center opacity-80 hover:opacity-100 transition-all duration-200 z-20 hover:scale-110 shadow-xl"
           >
             <ChevronRight className="w-5 h-5" />
           </button>

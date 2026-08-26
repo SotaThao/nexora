@@ -75,31 +75,38 @@ export const HeroSection: React.FC<HeroSectionProps> = ({ site, palette, onBookC
               {content.taglineVi || content.taglineEn || 'Không gian làm đẹp tối giản, sản phẩm thuần chay lành tính và nghệ thuật móng tinh tế.'}
             </p>
 
-            {/* 3-Pill Trust Guarantee */}
-            <div className={`flex items-center gap-3 pt-1 text-xs ${isMobileView ? 'flex-col justify-center' : 'flex-wrap justify-start'}`} style={{ color: palette.textSecondary }}>
-              <div className="flex items-center gap-1.5">
+            {/* 3-Pill Trust Guarantee (Apple HIG Responsive Grid) */}
+            <div
+              className={`pt-1 text-xs ${
+                isMobileView
+                  ? 'grid grid-cols-3 gap-1.5 w-full text-center'
+                  : 'flex items-center gap-3 flex-wrap justify-start'
+              }`}
+              style={{ color: palette.textSecondary }}
+            >
+              <div className={`flex items-center gap-1.5 ${isMobileView ? 'flex-col justify-center p-2 rounded-xl bg-black/5 border border-black/10' : ''}`}>
                 <ShieldCheck className="w-4 h-4 shrink-0" style={{ color: palette.accentColor }} />
-                <span className="font-medium">Chuẩn Y Tế 100%</span>
+                <span className="font-semibold text-[11px]">Chuẩn Y Tế 100%</span>
               </div>
-              <span className="hidden sm:inline opacity-40">•</span>
-              <div className="flex items-center gap-1.5">
+              {!isMobileView && <span className="opacity-40">•</span>}
+              <div className={`flex items-center gap-1.5 ${isMobileView ? 'flex-col justify-center p-2 rounded-xl bg-black/5 border border-black/10' : ''}`}>
                 <Award className="w-4 h-4 shrink-0" style={{ color: palette.accentColor }} />
-                <span className="font-medium">Master Nail Artists</span>
+                <span className="font-semibold text-[11px]">Master Artists</span>
               </div>
-              <span className="hidden sm:inline opacity-40">•</span>
-              <div className="flex items-center gap-1.5">
+              {!isMobileView && <span className="opacity-40">•</span>}
+              <div className={`flex items-center gap-1.5 ${isMobileView ? 'flex-col justify-center p-2 rounded-xl bg-black/5 border border-black/10' : ''}`}>
                 <Clock className="w-4 h-4 shrink-0" style={{ color: palette.accentColor }} />
-                <span className="font-medium">Giữ Chỗ Đảm Bảo</span>
+                <span className="font-semibold text-[11px]">Giữ Chỗ Đảm Bảo</span>
               </div>
             </div>
 
-            {/* CTA Buttons */}
-            <div className={`flex items-center gap-3.5 pt-1 ${isMobileView ? 'flex-col w-full' : 'flex-wrap justify-start'}`}>
+            {/* CTA Buttons (Apple HIG min 48px touch target) */}
+            <div className={`flex items-center gap-3 pt-1 ${isMobileView ? 'flex-col w-full' : 'flex-wrap justify-start'}`}>
               <button
                 type="button"
                 onClick={onBookClick}
-                className={`rounded-full font-bold shadow-lg hover:shadow-xl transition-all hover:scale-102 active:scale-95 flex items-center justify-center gap-2 ${
-                  isMobileView ? 'w-full py-3.5 text-xs' : 'px-8 py-3.5 text-sm'
+                className={`rounded-full font-bold shadow-lg hover:shadow-xl transition-all hover:scale-102 active:scale-95 flex items-center justify-center gap-2 min-h-[48px] ${
+                  isMobileView ? 'w-full py-3.5 text-sm' : 'px-8 py-3.5 text-sm'
                 }`}
                 style={{
                   backgroundColor: palette.accentColor,
@@ -114,7 +121,7 @@ export const HeroSection: React.FC<HeroSectionProps> = ({ site, palette, onBookC
               {site.phone && (
                 <a
                   href={`tel:${site.phone}`}
-                  className={`rounded-full font-semibold border transition-all hover:bg-slate-50 flex items-center justify-center gap-2 ${
+                  className={`rounded-full font-semibold border-2 transition-all hover:bg-slate-50 flex items-center justify-center gap-2 min-h-[48px] ${
                     isMobileView ? 'w-full py-3 text-xs' : 'px-6 py-3.5 text-sm'
                   }`}
                   style={{ borderColor: palette.borderPrimary, color: palette.textPrimary, backgroundColor: palette.bgSurface }}
@@ -222,30 +229,37 @@ export const HeroSection: React.FC<HeroSectionProps> = ({ site, palette, onBookC
               {content.taglineVi || content.taglineEn || 'Xu hướng thiết kế móng thời thượng, dịch vụ chăm sóc cao cấp theo phong cách hiện đại.'}
             </p>
 
-            {/* 3-Pill Trust Guarantee */}
-            <div className={`flex items-center gap-3 pt-1 text-xs ${isMobileView ? 'flex-col justify-center' : 'flex-wrap justify-start'}`} style={{ color: palette.heroTextSecondary }}>
-              <div className="flex items-center gap-1.5">
+            {/* 3-Pill Trust Guarantee (Apple HIG Responsive Grid) */}
+            <div
+              className={`pt-1 text-xs ${
+                isMobileView
+                  ? 'grid grid-cols-3 gap-1.5 w-full text-center'
+                  : 'flex items-center gap-3 flex-wrap justify-start'
+              }`}
+              style={{ color: palette.heroTextSecondary }}
+            >
+              <div className={`flex items-center gap-1.5 ${isMobileView ? 'flex-col justify-center p-2 rounded-xl bg-slate-900/5 border border-slate-900/10' : ''}`}>
                 <ShieldCheck className="w-4 h-4 shrink-0" style={{ color: palette.accentColor }} />
-                <span className="font-medium">Chuẩn Y Tế 100%</span>
+                <span className="font-semibold text-[11px]">Chuẩn Y Tế 100%</span>
               </div>
-              <span className="hidden sm:inline opacity-40">•</span>
-              <div className="flex items-center gap-1.5">
+              {!isMobileView && <span className="opacity-40">•</span>}
+              <div className={`flex items-center gap-1.5 ${isMobileView ? 'flex-col justify-center p-2 rounded-xl bg-slate-900/5 border border-slate-900/10' : ''}`}>
                 <Award className="w-4 h-4 shrink-0" style={{ color: palette.accentColor }} />
-                <span className="font-medium">Master Nail Artists</span>
+                <span className="font-semibold text-[11px]">Master Artists</span>
               </div>
-              <span className="hidden sm:inline opacity-40">•</span>
-              <div className="flex items-center gap-1.5">
+              {!isMobileView && <span className="opacity-40">•</span>}
+              <div className={`flex items-center gap-1.5 ${isMobileView ? 'flex-col justify-center p-2 rounded-xl bg-slate-900/5 border border-slate-900/10' : ''}`}>
                 <Clock className="w-4 h-4 shrink-0" style={{ color: palette.accentColor }} />
-                <span className="font-medium">Giữ Chỗ Đảm Bảo</span>
+                <span className="font-semibold text-[11px]">Giữ Chỗ Đảm Bảo</span>
               </div>
             </div>
 
-            {/* Action Bar */}
-            <div className={`flex items-center gap-3.5 pt-1 ${isMobileView ? 'flex-col w-full' : 'flex-wrap justify-start'}`}>
+            {/* Action Bar (Apple HIG min 48px touch target) */}
+            <div className={`flex items-center gap-3 pt-1 ${isMobileView ? 'flex-col w-full' : 'flex-wrap justify-start'}`}>
               <button
                 onClick={onBookClick}
                 type="button"
-                className={`rounded-2xl font-bold shadow-xl hover:shadow-2xl transition-all hover:scale-105 active:scale-95 flex items-center justify-center gap-2 ${
+                className={`rounded-2xl font-bold shadow-xl hover:shadow-2xl transition-all hover:scale-102 active:scale-95 flex items-center justify-center gap-2 min-h-[48px] ${
                   isMobileView ? 'w-full py-3.5 text-sm' : 'px-8 py-3.5 text-base'
                 }`}
                 style={{
@@ -262,7 +276,7 @@ export const HeroSection: React.FC<HeroSectionProps> = ({ site, palette, onBookC
               {site.phone && (
                 <a
                   href={`tel:${site.phone}`}
-                  className={`rounded-2xl font-semibold border backdrop-blur-md transition-all hover:bg-white/40 flex items-center justify-center gap-2 ${
+                  className={`rounded-2xl font-semibold border-2 backdrop-blur-md transition-all hover:bg-white/40 flex items-center justify-center gap-2 min-h-[48px] ${
                     isMobileView ? 'w-full py-3 text-xs' : 'px-6 py-3.5 text-sm'
                   }`}
                   style={{
@@ -380,30 +394,37 @@ export const HeroSection: React.FC<HeroSectionProps> = ({ site, palette, onBookC
               {content.taglineVi || content.taglineEn || 'Phong cách nghệ thuật phá cách, màu sắc rực rỡ và dịch vụ làm đẹp móng đỉnh cao.'}
             </p>
 
-            {/* 3-Pill Trust Guarantee */}
-            <div className={`flex items-center gap-3 pt-1 text-xs ${isMobileView ? 'flex-col justify-center' : 'flex-wrap justify-start'}`} style={{ color: palette.heroTextSecondary }}>
-              <div className="flex items-center gap-1.5">
+            {/* 3-Pill Trust Guarantee (Apple HIG Responsive Grid) */}
+            <div
+              className={`pt-1 text-xs ${
+                isMobileView
+                  ? 'grid grid-cols-3 gap-1.5 w-full text-center'
+                  : 'flex items-center gap-3 flex-wrap justify-start'
+              }`}
+              style={{ color: palette.heroTextSecondary }}
+            >
+              <div className={`flex items-center gap-1.5 ${isMobileView ? 'flex-col justify-center p-2 rounded-xl bg-white/5 border border-white/10' : ''}`}>
                 <ShieldCheck className="w-4 h-4 shrink-0" style={{ color: palette.accentColor }} />
-                <span className="font-medium text-white">Chuẩn Y Tế 100%</span>
+                <span className="font-semibold text-[11px] text-white">Chuẩn Y Tế 100%</span>
               </div>
-              <span className="hidden sm:inline opacity-40">•</span>
-              <div className="flex items-center gap-1.5">
+              {!isMobileView && <span className="opacity-40">•</span>}
+              <div className={`flex items-center gap-1.5 ${isMobileView ? 'flex-col justify-center p-2 rounded-xl bg-white/5 border border-white/10' : ''}`}>
                 <Award className="w-4 h-4 shrink-0" style={{ color: palette.accentColor }} />
-                <span className="font-medium text-white">Master Nail Artists</span>
+                <span className="font-semibold text-[11px] text-white">Master Artists</span>
               </div>
-              <span className="hidden sm:inline opacity-40">•</span>
-              <div className="flex items-center gap-1.5">
+              {!isMobileView && <span className="opacity-40">•</span>}
+              <div className={`flex items-center gap-1.5 ${isMobileView ? 'flex-col justify-center p-2 rounded-xl bg-white/5 border border-white/10' : ''}`}>
                 <Clock className="w-4 h-4 shrink-0" style={{ color: palette.accentColor }} />
-                <span className="font-medium text-white">Giữ Chỗ Đảm Bảo</span>
+                <span className="font-semibold text-[11px] text-white">Giữ Chỗ Đảm Bảo</span>
               </div>
             </div>
 
-            {/* High-Contrast CTAs */}
-            <div className={`flex items-center gap-3.5 pt-1 ${isMobileView ? 'flex-col w-full' : 'flex-wrap justify-start'}`}>
+            {/* High-Contrast CTAs (Apple HIG min 48px touch target) */}
+            <div className={`flex items-center gap-3 pt-1 ${isMobileView ? 'flex-col w-full' : 'flex-wrap justify-start'}`}>
               <button
                 onClick={onBookClick}
                 type="button"
-                className={`rounded-2xl font-black uppercase tracking-wider shadow-2xl transition-all hover:scale-105 active:scale-95 flex items-center justify-center gap-2 ${
+                className={`rounded-2xl font-black uppercase tracking-wider shadow-2xl transition-all hover:scale-102 active:scale-95 flex items-center justify-center gap-2 min-h-[48px] ${
                   isMobileView ? 'w-full py-3.5 text-sm' : 'px-8 py-3.5 text-base'
                 }`}
                 style={{
@@ -419,13 +440,13 @@ export const HeroSection: React.FC<HeroSectionProps> = ({ site, palette, onBookC
               {site.phone && (
                 <a
                   href={`tel:${site.phone}`}
-                  className={`rounded-2xl font-bold border-2 backdrop-blur-md transition-colors flex items-center justify-center gap-2 ${
+                  className={`rounded-2xl font-bold border-2 backdrop-blur-md transition-colors flex items-center justify-center gap-2 min-h-[48px] ${
                     isMobileView ? 'w-full py-3 text-xs' : 'px-6 py-3.5 text-sm'
                   }`}
                   style={{
                     borderColor: palette.accentColor,
                     color: palette.heroTextPrimary,
-                    backgroundColor: 'rgba(0,0,0,0.4)'
+                    backgroundColor: 'rgba(0,0,0,0.5)'
                   }}
                 >
                   <Phone className="w-4 h-4" />
@@ -513,7 +534,7 @@ export const HeroSection: React.FC<HeroSectionProps> = ({ site, palette, onBookC
             }}
           >
             <Sparkles className="w-3.5 h-3.5" />
-            <span>{content.highlights?.[0]?.titleVi || content.highlights?.[0]?.titleEn || 'Sản phẩm Organic & Tiệt trùng 100%'}</span>
+            <span>✨ LUXURY NAIL BAR & SPA LOUNGE</span>
           </div>
 
           {/* Salon Main Title with Editorial Serif Font */}
@@ -536,27 +557,34 @@ export const HeroSection: React.FC<HeroSectionProps> = ({ site, palette, onBookC
             {content.taglineVi || content.taglineEn || 'Nâng tầm vẻ đẹp móng nghệ thuật và trải nghiệm chăm sóc spa đẳng cấp'}
           </p>
 
-          {/* 3-Pill Trust Guarantee Bar */}
-          <div className={`flex items-center gap-3 pt-1 text-xs ${isMobileView ? 'flex-col justify-center' : 'flex-wrap justify-start'}`} style={{ color: palette.heroTextSecondary }}>
-            <div className="flex items-center gap-1.5">
+          {/* 3-Pill Trust Guarantee Bar (Apple HIG Responsive Grid) */}
+          <div
+            className={`pt-1 text-xs ${
+              isMobileView
+                ? 'grid grid-cols-3 gap-1.5 w-full text-center'
+                : 'flex items-center gap-3 flex-wrap justify-start'
+            }`}
+            style={{ color: palette.heroTextSecondary }}
+          >
+            <div className={`flex items-center gap-1.5 ${isMobileView ? 'flex-col justify-center p-2 rounded-xl bg-white/5 border border-white/10' : ''}`}>
               <ShieldCheck className="w-4 h-4 shrink-0" style={{ color: palette.accentColor }} />
-              <span className="font-medium">Chuẩn Y Tế 100%</span>
+              <span className="font-semibold text-[11px]">Chuẩn Y Tế 100%</span>
             </div>
-            <span className="hidden sm:inline opacity-40">•</span>
-            <div className="flex items-center gap-1.5">
+            {!isMobileView && <span className="opacity-40">•</span>}
+            <div className={`flex items-center gap-1.5 ${isMobileView ? 'flex-col justify-center p-2 rounded-xl bg-white/5 border border-white/10' : ''}`}>
               <Award className="w-4 h-4 shrink-0" style={{ color: palette.accentColor }} />
-              <span className="font-medium">Master Nail Artists</span>
+              <span className="font-semibold text-[11px]">Master Artists</span>
             </div>
-            <span className="hidden sm:inline opacity-40">•</span>
-            <div className="flex items-center gap-1.5">
+            {!isMobileView && <span className="opacity-40">•</span>}
+            <div className={`flex items-center gap-1.5 ${isMobileView ? 'flex-col justify-center p-2 rounded-xl bg-white/5 border border-white/10' : ''}`}>
               <Clock className="w-4 h-4 shrink-0" style={{ color: palette.accentColor }} />
-              <span className="font-medium">Giữ Chỗ Đảm Bảo</span>
+              <span className="font-semibold text-[11px]">Giữ Chỗ Đảm Bảo</span>
             </div>
           </div>
 
-          {/* Action CTAs */}
+          {/* Action CTAs (Apple HIG min 48px touch target) */}
           <div
-            className={`flex items-center gap-3.5 pt-1 ${
+            className={`flex items-center gap-3 pt-1 ${
               isMobileView
                 ? 'flex-col w-full'
                 : 'flex-wrap justify-start'
@@ -565,7 +593,7 @@ export const HeroSection: React.FC<HeroSectionProps> = ({ site, palette, onBookC
             <button
               onClick={onBookClick}
               type="button"
-              className={`inline-flex items-center justify-center gap-2.5 rounded-2xl font-bold shadow-xl hover:shadow-2xl transition-all hover:scale-105 active:scale-95 ${
+              className={`inline-flex items-center justify-center gap-2.5 rounded-2xl font-bold shadow-xl hover:shadow-2xl transition-all hover:scale-102 active:scale-95 min-h-[48px] ${
                 isMobileView ? 'w-full py-3.5 text-sm' : 'px-8 py-3.5 text-base'
               }`}
               style={{
@@ -581,7 +609,7 @@ export const HeroSection: React.FC<HeroSectionProps> = ({ site, palette, onBookC
             {site.phone && (
               <a
                 href={`tel:${site.phone}`}
-                className={`inline-flex items-center justify-center gap-2 rounded-2xl font-semibold border backdrop-blur-md transition-all hover:bg-white/20 ${
+                className={`inline-flex items-center justify-center gap-2 rounded-2xl font-semibold border-2 backdrop-blur-md transition-all hover:bg-white/20 min-h-[48px] ${
                   isMobileView ? 'w-full py-3 text-xs' : 'px-6 py-3.5 text-sm'
                 }`}
                 style={{
