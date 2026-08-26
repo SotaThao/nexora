@@ -3604,6 +3604,8 @@
             "discountTypeAmount": "Số tiền ($)",
             "discountTypePercent": "Phần trăm (%)",
             "discountValueLabel": "Giá trị",
+            "discountPercentPlaceholder": "vd. 10",
+            "discountAmountPlaceholder": "vd. 5.00",
             "discountBearerLabel": "Ai chịu chi phí",
             "discountBearerSalon": "Salon",
             "discountBearerStaff": "Thợ",

@@ -5,6 +5,7 @@
  * posTurnBoardRepository — a Staff caller may be linked to more than one business.
  */
 import httpClient from '../../lib/httpClient'
+import { unlessOptimisticId } from '../../utils/uuid'
 import type {
   CheckoutProductCatalogItemApiDto,
   CheckoutServiceCatalogItemApiDto,
@@ -67,15 +68,25 @@ export function createPosCheckoutRepository(client: HttpClient = httpClient) {
       serviceLineId: string,
       posServiceId: string,
     ): Promise<boolean> {
-      return await client.put<boolean>(
-        `/api/v1/merchant/pos/${businessId}/checkout/${orderId}/services/${serviceLineId}`,
-        { posServiceId },
+      return unlessOptimisticId(
+        serviceLineId,
+        () =>
+          client.put<boolean>(
+            `/api/v1/merchant/pos/${businessId}/checkout/${orderId}/services/${serviceLineId}`,
+            { posServiceId },
+          ),
+        false,
       )
     },
 
     async removeOrderServiceLine(businessId: string, orderId: string, serviceLineId: string): Promise<boolean> {
-      return await client.del<boolean>(
-        `/api/v1/merchant/pos/${businessId}/checkout/${orderId}/services/${serviceLineId}`,
+      return unlessOptimisticId(
+        serviceLineId,
+        () =>
+          client.del<boolean>(
+            `/api/v1/merchant/pos/${businessId}/checkout/${orderId}/services/${serviceLineId}`,
+          ),
+        false,
       )
     },
 
@@ -129,8 +140,13 @@ export function createPosCheckoutRepository(client: HttpClient = httpClient) {
     },
 
     async removeOrderProductLine(businessId: string, orderId: string, productLineId: string): Promise<boolean> {
-      return await client.del<boolean>(
-        `/api/v1/merchant/pos/${businessId}/checkout/${orderId}/products/${productLineId}`,
+      return unlessOptimisticId(
+        productLineId,
+        () =>
+          client.del<boolean>(
+            `/api/v1/merchant/pos/${businessId}/checkout/${orderId}/products/${productLineId}`,
+          ),
+        false,
       )
     },
 
@@ -142,9 +158,14 @@ export function createPosCheckoutRepository(client: HttpClient = httpClient) {
       productLineId: string,
       quantity: number,
     ): Promise<boolean> {
-      return await client.put<boolean>(
-        `/api/v1/merchant/pos/${businessId}/checkout/${orderId}/products/${productLineId}/quantity`,
-        { quantity },
+      return unlessOptimisticId(
+        productLineId,
+        () =>
+          client.put<boolean>(
+            `/api/v1/merchant/pos/${businessId}/checkout/${orderId}/products/${productLineId}/quantity`,
+            { quantity },
+          ),
+        false,
       )
     },
 
@@ -155,9 +176,14 @@ export function createPosCheckoutRepository(client: HttpClient = httpClient) {
       serviceLineId: string,
       payload: SetOrderServiceLineDiscountPayload,
     ): Promise<boolean> {
-      return await client.put<boolean>(
-        `/api/v1/merchant/pos/${businessId}/checkout/${orderId}/services/${serviceLineId}/discount`,
-        payload,
+      return unlessOptimisticId(
+        serviceLineId,
+        () =>
+          client.put<boolean>(
+            `/api/v1/merchant/pos/${businessId}/checkout/${orderId}/services/${serviceLineId}/discount`,
+            payload,
+          ),
+        false,
       )
     },
 

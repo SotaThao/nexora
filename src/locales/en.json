@@ -3604,6 +3604,8 @@
             "discountTypeAmount": "Amount ($)",
             "discountTypePercent": "Percent (%)",
             "discountValueLabel": "Value",
+            "discountPercentPlaceholder": "e.g. 10",
+            "discountAmountPlaceholder": "e.g. 5.00",
             "discountBearerLabel": "Who absorbs the cost",
             "discountBearerSalon": "Salon",
             "discountBearerStaff": "Technician",
