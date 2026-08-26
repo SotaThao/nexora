@@ -351,6 +351,16 @@ export function SubscriptionsRoute() {
   )
 }
 
+const PosServicesView = React.lazy(() => import('../views/pos/PosServicesView'))
+
+export function PosServicesRoute() {
+  return (
+    <React.Suspense fallback={<div className="p-8 text-center text-slate-400">Đang tải POS Services...</div>}>
+      <PosServicesView />
+    </React.Suspense>
+  )
+}
+
 export function FallbackRoute() {
   const navigate = useNavigate()
   const { '*': currentPath } = useParams()

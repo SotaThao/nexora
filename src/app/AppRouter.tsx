@@ -16,6 +16,7 @@ import {
   BookingHubRoute,
   FallbackRoute,
   OverviewRoute,
+  PosServicesRoute,
   ReportsRoute,
   ReviewsRoute,
   SettingsRoute,
@@ -256,6 +257,7 @@ export default function AppRouter() {
           <Route path="/help/qr/:code" element={<HelpQrPage />} />
           <Route path="/preview/menu" element={<PosMenuUpsellPreviewPage />} />
           <Route path="/booking/preview" element={<PosMenuUpsellPreviewPage />} />
+          <Route path="/pos/services" element={<PosServicesRoute />} />
           <Route path="/privacy-policy" element={<PrivacyPolicyPage />} />
           <Route path="/terms-of-service" element={<TermsOfServicePage />} />
           <Route path="/design-demo/community" element={<CommunityDesignDemo />} />
@@ -318,6 +320,8 @@ export default function AppRouter() {
             <Route path="reviews" element={<ReviewsRoute />} />
             <Route path="reports" element={<ReportsRoute />} />
             <Route path="booking-hub" element={<BookingHubRoute />} />
+            <Route path="pos/services" element={<PosServicesRoute />} />
+            <Route path="pos" element={<Navigate to="/dashboard/pos/services" replace />} />
             <Route path="touchpoints" element={<TouchpointsRoute />} />
             <Route path="analytics" element={<AnalyticsRoute />} />
             <Route path="settings" element={<SettingsRoute />} />

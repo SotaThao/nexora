@@ -69,6 +69,7 @@ export const MENU_ITEMS = [
   { id: 'reviews', label: 'Reviews', icon: Star },
   { id: 'reports', label: 'Transactions', icon: ReceiptText },
   { id: 'touchpoints', label: 'Touch Points', icon: QrCode },
+  { id: 'pos/services', label: 'POS Services & Menu', icon: Package },
   { id: 'booking-hub', label: 'AI Hub', icon: Calendar },
   { id: 'product-management', label: 'Gift Card Center', icon: Package },
   { id: 'analytics', label: 'Analytics', icon: BarChart3 },

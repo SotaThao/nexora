@@ -76,6 +76,46 @@ export interface CustomersSummaryApiDto {
   returningCustomerRateChangeVsLastWeek?: number
 }
 
+export interface PosCategoryApiDto {
+  id: string
+  name: string
+  description?: string | null
+  displayOrder: number
+}
+
+export type PosServiceStatus = 'Active' | 'Inactive'
+
+export interface PosServiceApiDto {
+  id: string
+  name: string
+  price: number
+  durationMinutes: number
+  description?: string | null
+  icon?: string | null
+  photoUrl?: string | null
+  status: PosServiceStatus
+  displayOrder: number
+  categoryIds: string[]
+  tags: string[]
+}
+
+export interface PosTagApiDto {
+  id: string
+  name: string
+}
+
+export interface PosProductApiDto {
+  id: string
+  name: string
+  price: number
+  description?: string | null
+  photoUrl?: string | null
+  status: PosServiceStatus
+  displayOrder: number
+  categoryIds: string[]
+  tags: string[]
+}
+
 export interface DashboardOverviewApiDto {
   tipsSummary?: TipsSummaryApiDto
   scansSummary?: ScansSummaryApiDto

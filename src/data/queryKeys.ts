@@ -71,6 +71,12 @@ export const qk = {
   publicMerchantInvite: (ref)    => ['publicMerchantInvite', ref],
   merchantInviteLink:  ()      => ['merchantSettings', 'inviteLink'],
 
+  // POS Owner Setup — Categories & Services
+  merchantPosCategories: ()    => ['merchantSettings', 'posCategories'],
+  merchantPosServices: ()      => ['merchantSettings', 'posServices'],
+  merchantPosTags: ()          => ['merchantSettings', 'posTags'],
+  merchantPosProducts: ()      => ['merchantSettings', 'posProducts'],
+
   // Merchant Touchpoints
   merchantTouchpoints: ()      => ['merchantTouchpoints'],
 

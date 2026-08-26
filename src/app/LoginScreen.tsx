@@ -247,6 +247,24 @@ export default function LoginScreen() {
                 )}
               </button>
 
+              <button
+                type="button"
+                disabled={isLoading}
+                onClick={async () => {
+                  setIsLoading(true);
+                  try {
+                    await login({ email: 'demo@nexoratouch.com', password: 'demo' });
+                    navigate('/dashboard/pos/services');
+                  } catch (e) {
+                    setIsLoading(false);
+                  }
+                }}
+                className="w-full min-h-11 py-2.5 bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700 transition-all text-white font-black text-xs uppercase tracking-wider rounded-lg flex items-center justify-center gap-2 shadow-[0_4px_16px_rgba(245,158,11,0.35)]"
+              >
+                <span>⚡</span>
+                <span>Vào nhanh tài khoản Demo (Owner / Salon POS)</span>
+              </button>
+
               <div className="relative hidden py-1 text-center sm:block">
                 <div className="absolute inset-0 flex items-center"><div className="w-full border-t border-nexoraBorder"></div></div>
                 <span className="relative bg-white px-3 text-[10px] text-nexoraSubtle font-bold uppercase tracking-wider">{t('login.social_auth_divider')}</span>
