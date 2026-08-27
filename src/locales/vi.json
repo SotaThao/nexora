@@ -3373,6 +3373,7 @@
             "addOnNamePlaceholder": "vd: Paraffin Wax Treatment",
             "addOnPricePlaceholder": "vd: 15",
             "addOnAddButton": "Thêm",
+            "addOnEditLabel": "Sửa dịch vụ kèm",
             "addOnDeleteBlocked": "Dịch vụ kèm này đã từng bán nên chỉ có thể tắt hoạt động.",
             "addOnCopyPlaceholder": "Sao chép dịch vụ kèm từ dịch vụ khác…",
             "addOnCopyOptionLabel": "{{name}} — {{count}} dịch vụ kèm",

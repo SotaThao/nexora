@@ -3373,6 +3373,7 @@
             "addOnNamePlaceholder": "e.g. Paraffin Wax Treatment",
             "addOnPricePlaceholder": "e.g. 15",
             "addOnAddButton": "Add",
+            "addOnEditLabel": "Edit add-on",
             "addOnDeleteBlocked": "This add-on has been sold, so it can only be set inactive.",
             "addOnCopyPlaceholder": "Copy add-ons from another service…",
             "addOnCopyOptionLabel": "{{name}} — {{count}} add-on(s)",
