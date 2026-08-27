@@ -66,3 +66,11 @@
     transform: translateY(-3px);
   }
 }
+
+@media (prefers-reduced-motion: reduce) {
+  .staff-chat-start-hint-target.is-active :is(button),
+  .staff-chat-start-hint-hand,
+  .staff-chat-start-hint-cluster.is-mobile .staff-chat-start-hint-hand {
+    animation: none;
+  }
+}

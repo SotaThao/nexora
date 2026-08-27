@@ -43,6 +43,22 @@ export function searchHasStaffChatStartHint(search: string): boolean {
   return new URLSearchParams(search).get(STAFF_CHAT_START_HINT_QUERY) === STAFF_CHAT_START_HINT_VALUE
 }
 
+export function isStaffChatStartHintOnlySearchChange(
+  previousSearch: string,
+  nextSearch: string,
+): boolean {
+  if (previousSearch === nextSearch) return false
+
+  const previous = new URLSearchParams(previousSearch)
+  const next = new URLSearchParams(nextSearch)
+  const previousHint = previous.get(STAFF_CHAT_START_HINT_QUERY)
+  const nextHint = next.get(STAFF_CHAT_START_HINT_QUERY)
+  previous.delete(STAFF_CHAT_START_HINT_QUERY)
+  next.delete(STAFF_CHAT_START_HINT_QUERY)
+
+  return previousHint !== nextHint && previous.toString() === next.toString()
+}
+
 export const STAFF_CHAT_I18N = {
   title: 'staff_detail.chat_title',
   subtitle: 'staff_detail.chat_subtitle',

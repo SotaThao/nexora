@@ -21,18 +21,23 @@ export const STAFF_CHAT_START_HINT_HAND_CLASS = 'staff-chat-start-hint-hand'
 export const STAFF_CHAT_START_HINT_ACTIVE_CLASS = 'is-active'
 export const STAFF_CHAT_START_HINT_MOBILE_CLASS = 'is-mobile'
 
+function clamp(value: number, min: number, max: number): number {
+  if (max <= min) return min
+  return Math.min(Math.max(value, min), max)
+}
+
 function clampHintAnchorX(centerX: number): number {
   const minX = HINT_VIEWPORT_PAD_PX + HINT_CAPTION_HALF_PX
   const maxX = window.innerWidth - HINT_VIEWPORT_PAD_PX - HINT_CAPTION_HALF_PX
-  if (maxX <= minX) return centerX
-  return Math.min(Math.max(centerX, minX), maxX)
+  return clamp(centerX, minX, maxX)
 }
 
 function getMobileHintClusterPosition(rect: DOMRect): { top: number; left: number } {
+  const minLeft = HINT_VIEWPORT_PAD_PX
   const maxLeft = window.innerWidth - HINT_VIEWPORT_PAD_PX - HINT_MOBILE_CLUSTER_WIDTH_PX
   return {
     top: rect.bottom + HINT_MOBILE_CLUSTER_GAP_PX,
-    left: Math.min(rect.left, Math.max(HINT_VIEWPORT_PAD_PX, maxLeft)),
+    left: clamp(rect.left, minLeft, maxLeft),
   }
 }
 
