@@ -1,8 +1,11 @@
 import { ArrowLeft, MessagesSquare, Search, Users, X } from 'lucide-react'
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { createPortal } from 'react-dom'
+import { useNavigate } from 'react-router-dom'
 import { useAuth } from '../../auth/useAuth'
 import { useSessionRole } from '../../auth/useSessionRole'
+import { useIsMobileUI } from '../../hooks/useIsMobileUI'
+import { buildMerchantStaffListPath, resolveStaffRouteFamily } from '../dashboard/routes/staffRoutePaths'
 import {
   CommunityChatType,
   isPendingCommunityChatSessionId,
@@ -31,9 +34,12 @@ import IconButton from '../ui/IconButton'
 import HeaderMessageChatWindow from './HeaderMessageChatWindow'
 import HeaderMessagesEmptyState from './HeaderMessagesEmptyState'
 import HeaderMessagesListSkeleton from './HeaderMessagesListSkeleton'
+import HeaderMessagesStaffChatCta from './HeaderMessagesStaffChatCta'
 import {
   formatHeaderMessagesUnreadCount,
+  getMerchantStaffCta,
   HEADER_MESSAGES_I18N,
+  HEADER_MESSAGES_STAFF_CTA_I18N,
   HEADER_MESSAGE_CHAT_ROOT_SELECTOR,
   HeaderMessageChatLayout,
   HeaderMessageListPreviewKey,
@@ -89,6 +95,7 @@ function getConversationPreview(
 export default function HeaderMessages({ variant }: HeaderMessagesProps) {
   const { t, currentLanguage } = useTranslation()
   const { showToast } = useNotification()
+  const navigate = useNavigate()
   const { session, status } = useAuth()
   const containerRef = useRef<HTMLDivElement>(null)
   const [open, setOpen] = useState(false)
@@ -102,8 +109,9 @@ export default function HeaderMessages({ variant }: HeaderMessagesProps) {
 
   const currentUserProfileId = session?.id ?? ''
   const isAuthenticated = status === 'authenticated'
-  const { isStaff } = useSessionRole()
+  const { isOwner, isStaff } = useSessionRole()
   const isDesktop = variant === HeaderMessagesVariant.Desktop
+  const isMobileUI = useIsMobileUI()
   const {
     sessions: desktopChatSessions,
     focusConversationId: desktopChatFocusId,
@@ -521,6 +529,36 @@ export default function HeaderMessages({ variant }: HeaderMessagesProps) {
       ? HeaderMessagesEmptyVariant.Groups
       : HeaderMessagesEmptyVariant.Messages
 
+  const goToMerchantStaffList = (startChatHint: boolean) => {
+    closePanel()
+    navigate(buildMerchantStaffListPath({
+      startChatHint,
+      family: resolveStaffRouteFamily(isMobileUI),
+    }))
+  }
+
+  const showMerchantEmptyStaffCta = isOwner
+    && emptyListVariant === HeaderMessagesEmptyVariant.Messages
+
+  const showMerchantStaffFooterCta = isOwner
+    && activeTab === HeaderMessagesTab.Messages
+    && !searchQuery.trim()
+    && !isSessionsLoading
+    && !isSessionsError
+    && (filteredConversations.length > 0 || !isDesktop)
+
+  const merchantStaffCta = getMerchantStaffCta(filteredConversations.length > 0)
+
+  const merchantStaffCtaFooter = showMerchantStaffFooterCta ? (
+    <div className="header-messages-staff-cta-footer">
+      <HeaderMessagesStaffChatCta
+        variant={merchantStaffCta.variant}
+        label={t(merchantStaffCta.labelKey)}
+        onClick={() => goToMerchantStaffList(merchantStaffCta.startChatHint)}
+      />
+    </div>
+  ) : null
+
   const conversationList = isSessionsLoading ? (
     <HeaderMessagesListSkeleton t={t} />
   ) : isSessionsError ? (
@@ -569,7 +607,13 @@ export default function HeaderMessages({ variant }: HeaderMessagesProps) {
       )
     })
   ) : (
-    <HeaderMessagesEmptyState variant={emptyListVariant} t={t} />
+    <HeaderMessagesEmptyState
+      variant={emptyListVariant}
+      t={t}
+      descriptionKey={showMerchantEmptyStaffCta ? HEADER_MESSAGES_STAFF_CTA_I18N.emptyMerchantDescription : undefined}
+      actionLabel={showMerchantEmptyStaffCta && isDesktop ? t(HEADER_MESSAGES_STAFF_CTA_I18N.startFirst) : undefined}
+      onAction={showMerchantEmptyStaffCta && isDesktop ? () => goToMerchantStaffList(true) : undefined}
+    />
   )
 
   const listIsEmpty = !isSessionsLoading && !isSessionsError && filteredConversations.length === 0
@@ -643,6 +687,7 @@ export default function HeaderMessages({ variant }: HeaderMessagesProps) {
       {searchField}
       {tabs}
       <div className={`header-messages-list${listIsEmpty ? ' header-messages-list--empty' : ''}`}>{conversationList}</div>
+      {merchantStaffCtaFooter}
     </div>
   ) : null
 
@@ -661,6 +706,7 @@ export default function HeaderMessages({ variant }: HeaderMessagesProps) {
       </div>
       {tabs}
       <div className={`header-messages-list header-messages-list--mobile${listIsEmpty ? ' header-messages-list--empty' : ''}`}>{conversationList}</div>
+      {merchantStaffCtaFooter}
     </div>
   )
 

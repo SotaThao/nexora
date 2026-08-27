@@ -6,6 +6,7 @@ import { useNotification } from '../../../contexts/NotificationContext'
 import { canStaffMemberUseCommunityChat } from '../../staff/staffCommunityChatUtils'
 import StaffCommunityChatActionButton from '../../staff/StaffCommunityChatActionButton'
 import { useStaffCommunityChatUnreadByPeerId } from '../../staff/useStaffCommunityChatUnreadByPeerId'
+import { useStaffListChatStartHint } from '../../staff/useStaffChatStartHint'
 import { buildPublicInviteLink } from '../../../utils/inviteRef'
 import { getWebUrlOrigin } from '../../../utils/webUrlBase'
 import { buildPublicQrImageUrl } from '../../../data/repositories/publicQr'
@@ -122,6 +123,8 @@ function StaffView({
       return 0
     })
   }, [staff, sortBy])
+
+  const { showStartHintForMember, dismissChatStartHint } = useStaffListChatStartHint(sortedStaff)
 
   const handleShare = () => {
     if (!publicInviteEnabled) {
@@ -595,6 +598,8 @@ function StaffView({
                             <StaffCommunityChatActionButton
                               member={member}
                               unreadCount={getStaffChatUnreadCount(member)}
+                              showStartHint={showStartHintForMember(member)}
+                              onStartHintDismiss={dismissChatStartHint}
                             />
                           )}
                           <IconButton label={t('components.dashboard.views.StaffView.manage_edit_profile')} onClick={() => onViewDetail(member)} className="hover:text-nexoraBrand">

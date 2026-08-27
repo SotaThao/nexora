@@ -6,6 +6,7 @@ import { useNotification } from '../../../contexts/NotificationContext'
 import { canStaffMemberUseCommunityChat } from '../../staff/staffCommunityChatUtils'
 import StaffCommunityChatActionButton from '../../staff/StaffCommunityChatActionButton'
 import { useStaffCommunityChatUnreadByPeerId } from '../../staff/useStaffCommunityChatUnreadByPeerId'
+import { useStaffListChatStartHint } from '../../staff/useStaffChatStartHint'
 import { StatusFilter } from '../../../data/hooks/useMerchantStaff'
 import { buildPublicInviteLink } from '../../../utils/inviteRef'
 import { getWebUrlOrigin } from '../../../utils/webUrlBase'
@@ -18,7 +19,6 @@ import IconButton from '../../ui/IconButton'
 import CustomSelect from '../../CustomSelect'
 import Pagination from '../../ui/Pagination'
 import ToggleSwitch from '../../ui/ToggleSwitch'
-import { SkeletonList } from '../../ui/skeleton'
 import QrImage from '../../ui/QrImage'
 
 function isPendingMember(member) {
@@ -79,6 +79,8 @@ function StaffMemberCard({
   onQr,
   onViewStaff,
   chatUnreadCount = 0,
+  showStartHint = false,
+  onStartHintDismiss,
 }) {
   const waitingStaffResponse = isWaitingStaffAcceptance(member)
   const isLocalStaffMember = Boolean(member.isLocalStaff)
@@ -304,6 +306,8 @@ function StaffMemberCard({
                 <StaffCommunityChatActionButton
                   member={member}
                   unreadCount={chatUnreadCount}
+                  showStartHint={showStartHint}
+                  onStartHintDismiss={onStartHintDismiss}
                 />
               )}
               <IconButton label={t('components.dashboard.views.StaffView.manage_edit_profile')} onClick={() => onViewDetail(member)} className="hover:text-nexoraBrand">
@@ -416,6 +420,8 @@ function StaffView({
       return 0
     })
   }, [staff, sortBy])
+
+  const { showStartHintForMember, dismissChatStartHint } = useStaffListChatStartHint(sortedStaff)
 
   const handleShare = () => {
     if (!publicInviteEnabled) {
@@ -726,8 +732,6 @@ function StaffView({
                 {t('components.dashboard.views.StaffView.noStaffProfileFound')}
               </p>
             </div>
-          ) : isFetching ? (
-            <SkeletonList count={pageSize} showAvatar lines={2} />
           ) : (
             <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-3">
               {sortedStaff.map((member) => {
@@ -762,6 +766,8 @@ function StaffView({
                     onQr={onQr}
                     onViewStaff={onViewStaff}
                     chatUnreadCount={getStaffChatUnreadCount(member)}
+                    showStartHint={showStartHintForMember(member)}
+                    onStartHintDismiss={dismissChatStartHint}
                   />
                 )
               })}

@@ -109,6 +109,22 @@ export function canStaffMemberUseCommunityChat(member: StaffChatMemberLike | nul
   return !STAFF_CHAT_BLOCKED_STATUSES.has(status)
 }
 
+/** First roster member the merchant can open a 1:1 community chat with. */
+export function getFirstCommunityChatEligibleStaff(
+  staff: StaffChatMemberLike[] | null | undefined,
+): StaffChatMemberLike | null {
+  if (!staff?.length) return null
+  return staff.find((member) => canStaffMemberUseCommunityChat(member)) ?? null
+}
+
+export function isStaffChatStartHintMember(
+  member: StaffChatMemberLike,
+  firstEligibleWindowKey: string,
+): boolean {
+  if (!firstEligibleWindowKey) return false
+  return getStaffChatWindowKey(member) === firstEligibleWindowKey
+}
+
 export function resolveStaffChatUnavailableReason(params: {
   chatAvailable: boolean
   participantUserProfileId: string | null

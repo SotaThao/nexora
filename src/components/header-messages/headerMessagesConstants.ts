@@ -16,6 +16,11 @@ export enum HeaderMessagesEmptyVariant {
   Search = 'search',
 }
 
+export enum HeaderMessagesStaffChatCtaVariant {
+  Empty = 'empty',
+  Footer = 'footer',
+}
+
 export enum HeaderMessageListPreviewKey {
   Desktop = 'openDirectChat',
   Mobile = 'openDirectChatMobile',
@@ -202,6 +207,33 @@ export const HEADER_MESSAGES_MOCK_THREADS: Record<string, HeaderChatThreadMessag
 
 export const HEADER_MESSAGES_I18N = 'dashboard.header.messages' as const
 export const HEADER_MESSAGES_CHAT_I18N = `${HEADER_MESSAGES_I18N}.chat` as const
+
+export const HEADER_MESSAGES_STAFF_CTA_I18N = {
+  startFirst: `${HEADER_MESSAGES_I18N}.startFirstStaffChat`,
+  browse: `${HEADER_MESSAGES_I18N}.browseStaffToChat`,
+  emptyMerchantDescription: `${HEADER_MESSAGES_I18N}.emptyMerchantDescription`,
+} as const
+
+const MERCHANT_STAFF_CTA = {
+  empty: {
+    variant: HeaderMessagesStaffChatCtaVariant.Empty,
+    labelKey: HEADER_MESSAGES_STAFF_CTA_I18N.startFirst,
+    startChatHint: true,
+  },
+  populated: {
+    variant: HeaderMessagesStaffChatCtaVariant.Footer,
+    labelKey: HEADER_MESSAGES_STAFF_CTA_I18N.browse,
+    startChatHint: false,
+  },
+} as const
+
+export function getMerchantStaffCta(hasConversations: boolean) {
+  return hasConversations ? MERCHANT_STAFF_CTA.populated : MERCHANT_STAFF_CTA.empty
+}
+
+export const MERCHANT_STAFF_EMPTY_CTA = MERCHANT_STAFF_CTA.empty
+
+export const HEADER_MESSAGES_MOBILE_OPEN_CLASS = 'header-messages-mobile-open' as const
 
 export const HEADER_MESSAGES_UNREAD_BADGE_MAX = 99
 export const HEADER_MESSAGES_UNREAD_BADGE_OVERFLOW_LABEL = '99+'
