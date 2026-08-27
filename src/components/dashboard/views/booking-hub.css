@@ -4434,7 +4434,9 @@ body.booking-appointment-panel-modal-open {
 }
 
 .booking-hub-view .settings-service-modal-categories {
-  display: grid;
+  display: flex;
+  flex-wrap: wrap;
+  align-content: flex-start;
   gap: 6px;
   max-height: 260px;
   overflow: auto;
@@ -4464,6 +4466,8 @@ body.booking-appointment-panel-modal-open {
 
 .booking-hub-view .settings-service-modal-category-option {
   display: flex;
+  max-width: 100%;
+  flex: 0 1 auto;
   align-items: center;
   gap: 8px;
   min-height: 36px;
