@@ -21,7 +21,7 @@ import {
   verticalListSortingStrategy,
 } from '@dnd-kit/sortable'
 import { CSS } from '@dnd-kit/utilities'
-import { Edit2, GripVertical, ImageOff, Loader2, Plus } from 'lucide-react'
+import { Edit2, GripVertical, ImageOff, Loader2, Plus, Trash2 } from 'lucide-react'
 import { useTranslation } from '../../../../contexts/LanguageContext'
 import { useNotification } from '../../../../contexts/NotificationContext'
 import { getApiErrorCode } from '../../../../types/domain'
@@ -30,6 +30,7 @@ import { usePosCategories } from '../../../../data/hooks/usePosCategories'
 import { usePosTags } from '../../../../data/hooks/usePosTags'
 import {
   useCreatePosService,
+  useDeletePosService,
   useReorderPosServices,
   usePosServices,
   useUpdatePosService,
@@ -53,12 +54,13 @@ function toServiceInput(service: PosServiceApiDto): PosServiceInput {
 
 export default function PosServicesView() {
   const { t } = useTranslation()
-  const { showToast } = useNotification()
+  const { showToast, showConfirm } = useNotification()
   const { data: services, isLoading } = usePosServices()
   const { data: categories } = usePosCategories()
   const { data: tags } = usePosTags()
   const createService = useCreatePosService()
   const updateService = useUpdatePosService()
+  const deleteService = useDeletePosService()
   const reorderServices = useReorderPosServices()
 
   const [items, setItems] = useState<PosServiceApiDto[]>([])
@@ -104,6 +106,20 @@ export default function PosServicesView() {
         input: { ...toServiceInput(service), status: service.status === 'Active' ? 'Inactive' : 'Active' },
       })
       showToast(t('components.dashboard.views.pos.PosServicesView.updatedSuccess'), 'success')
+    } catch (err) {
+      showToast(t(getErrorI18nKey(getApiErrorCode(err))), 'error')
+    }
+  }
+
+  const handleDelete = async (service: PosServiceApiDto) => {
+    const confirmed = await showConfirm(
+      t('components.dashboard.views.pos.PosServicesView.deleteConfirmBody', { name: service.name }),
+      t('components.dashboard.views.pos.PosServicesView.deleteConfirmTitle'),
+    )
+    if (!confirmed) return
+    try {
+      await deleteService.mutateAsync(service.id)
+      showToast(t('components.dashboard.views.pos.PosServicesView.deletedSuccess'), 'success')
     } catch (err) {
       showToast(t(getErrorI18nKey(getApiErrorCode(err))), 'error')
     }
@@ -171,7 +187,9 @@ export default function PosServicesView() {
                   categoryNameById={categoryNameById}
                   onEdit={() => setModalState({ open: true, service })}
                   onToggleStatus={() => handleToggleStatus(service)}
+                  onDelete={() => handleDelete(service)}
                   isToggling={updateService.isPending}
+                  isDeleting={deleteService.isPending}
                 />
               ))}
             </ul>
@@ -198,13 +216,17 @@ function SortableServiceRow({
   categoryNameById,
   onEdit,
   onToggleStatus,
+  onDelete,
   isToggling,
+  isDeleting,
 }: {
   service: PosServiceApiDto
   categoryNameById: Map<string, string>
   onEdit: () => void
   onToggleStatus: () => void
+  onDelete: () => void
   isToggling: boolean
+  isDeleting: boolean
 }) {
   const { t } = useTranslation()
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({
@@ -297,6 +319,16 @@ function SortableServiceRow({
         className="shrink-0 p-1.5 text-slate-400 transition hover:bg-slate-100 hover:text-nexoraBrand rounded"
       >
         <Edit2 className="h-3.5 w-3.5" />
+      </button>
+
+      <button
+        type="button"
+        onClick={onDelete}
+        disabled={isDeleting}
+        aria-label={t('components.dashboard.views.pos.PosServicesView.deleteService')}
+        className="shrink-0 p-1.5 text-slate-400 transition hover:bg-red-50 hover:text-nexoraDanger rounded disabled:opacity-50"
+      >
+        {isDeleting ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Trash2 className="h-3.5 w-3.5" />}
       </button>
     </li>
   )
