@@ -398,6 +398,13 @@ body:not(.homepage-active):not(.public-booking-active) input.vlinkpay-address-in
   }
 }
 
+/* POS New Booking keeps its phone layout compact without changing other app inputs. */
+@media screen and (max-width: 639px) {
+  body:not(.homepage-active):not(.public-booking-active) .pos-new-booking-customer-grid input:not([type="checkbox"]):not([type="radio"]):not([type="submit"]):not([type="button"]):not([type="file"]) {
+    font-size: 11px !important;
+  }
+}
+
 /* Keyboard focus visibility for buttons and links */
 body:not(.homepage-active):not(.public-booking-active) button:focus-visible,
 body:not(.homepage-active):not(.public-booking-active) a:focus-visible {
