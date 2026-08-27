@@ -82,6 +82,9 @@ export const qk = {
   // POS Owner Setup — Services (US-017)
   merchantPosServices: ()      => ['merchantSettings', 'posServices'],
   merchantPosTags: ()          => ['merchantSettings', 'posTags'],
+  // POS Owner Setup — Service Add-Ons (owned per service, never shared)
+  merchantPosServiceAddOns: (serviceId?: string) =>
+    ['merchantSettings', 'posServiceAddOns', serviceId ?? ''],
   // POS Owner Setup — Products (US-018)
   merchantPosProducts: ()      => ['merchantSettings', 'posProducts'],
   // POS Owner Setup — Staff Profile (US-019)
@@ -221,6 +224,10 @@ export const qk = {
     ['merchantSettings', 'posCheckoutProductCatalog', businessId ?? ''],
   merchantPosAssignableStaff: (businessId?: string, posServiceId?: string) =>
     ['merchantSettings', 'posAssignableStaff', businessId ?? '', posServiceId ?? ''],
+  // Add-on picker — keyed by the service LINE, not the service: the options are scoped to the
+  // line the picker was opened from.
+  merchantPosServiceLineAddOnOptions: (businessId?: string, orderId?: string, serviceLineId?: string) =>
+    ['merchantSettings', 'posServiceLineAddOnOptions', businessId ?? '', orderId ?? '', serviceLineId ?? ''],
   // POS Booking — Booking Management screen (Ticket 9)
   merchantPosBookingList: (businessId?: string, filters?: object) => {
     const key: unknown[] = ['merchantSettings', 'posBookingList', businessId ?? '']
@@ -528,6 +535,15 @@ export const qk = {
   merchantVoiceUsageActivity: (filters = EMPTY) => ['merchantVoice', 'usage', 'activity', filters],
   /** Prefix — invalidate all usage-activity filter variants. */
   merchantVoiceUsageActivityRoot: () => ['merchantVoice', 'usage', 'activity'] as const,
+
+  // Community Chat (US-101 → US-107)
+  communityChatSessions: () => ['communityChat', 'sessions'] as const,
+  communityChatSession: (sessionId?: string | null) => ['communityChat', 'session', sessionId ?? ''] as const,
+  communityChatMessagesRoot: (sessionId?: string | null) => ['communityChat', 'messages', sessionId ?? ''] as const,
+  communityChatMessages: (sessionId?: string | null, filters = EMPTY) =>
+    ['communityChat', 'messages', sessionId ?? '', filters] as const,
+  communityChatMessagesInfinite: (sessionId?: string | null, pageSize?: number) =>
+    ['communityChat', 'messages', sessionId ?? '', 'infinite', pageSize ?? 20] as const,
 
   // Nexora Voice trial (merchant)
   voiceTrialRequestMe: () => ['nexora-voice', 'trial-request', 'me'],

@@ -24,6 +24,11 @@ import IconButton from '../../ui/IconButton'
 import LanguageSwitcher from '../../ui/LanguageSwitcher'
 import { truncateTransactionId } from '../../ui/CopyableTransactionId'
 import HeaderEcosystem from './HeaderEcosystem'
+import { HeaderMessages, HeaderMessagesVariant } from '../../header-messages'
+import {
+  isCommunityChatNotificationLinkTab,
+  openCommunityChatFromNotification,
+} from '../../header-messages/openCommunityChatSession'
 import {
   buildDashboardReportsPath,
   DASHBOARD_REPORTS_TAB,
@@ -125,6 +130,8 @@ export default function DashboardHeader({
       }
       if (item.paymentId) params.paymentId = String(item.paymentId)
       navigate(buildDashboardReportsPath(params))
+    } else if (isCommunityChatNotificationLinkTab(item.linkTab)) {
+      openCommunityChatFromNotification(item)
     } else if (item.linkTab) {
       onNavigateMenu(item.linkTab)
     }
@@ -546,6 +553,8 @@ export default function DashboardHeader({
             </div>
           )}
         </div>
+
+        <HeaderMessages variant={HeaderMessagesVariant.Desktop} />
 
         <div className="order-4">
           <LanguageSwitcher variant="header-plain" />
