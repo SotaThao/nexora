@@ -4541,7 +4541,7 @@
             "serviceModalCategoryRequired": "Vui lòng chọn ít nhất một danh mục.",
             "serviceEditAria": "Sửa dịch vụ",
             "categoryModalTitle": "Quản lý danh mục",
-            "categoryModalSub": "Thêm, đổi tên hoặc xóa danh mục. Thay đổi được lưu ngay.",
+            "categoryModalSub": "Thêm hoặc đổi tên danh mục, sau đó lưu tất cả thay đổi một lần.",
             "categoryModalCategories": "Danh mục",
             "categoryModalCategoriesSub": "Xóa danh mục sẽ chuyển dịch vụ sang Other services. Nhóm Other services không thể chỉnh sửa.",
             "categoryModalAdd": "Thêm danh mục",

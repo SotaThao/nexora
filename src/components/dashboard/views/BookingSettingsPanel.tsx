@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useRef, useState } from "react";
+import React, { useEffect, useMemo, useReducer, useRef, useState } from "react";
 import { useTranslation } from "../../../contexts/LanguageContext";
 import { useNotification } from "../../../contexts/NotificationContext";
 import { getErrorI18nKey } from "../../../data/errorCodes";
@@ -81,7 +81,6 @@ import {
   ShopIcon,
   SpinnerIcon,
   StarsIcon,
-  Trash2Icon,
   XLgIcon,
 } from "./BookingHubIcons";
 import { BookingSettingsSkeleton } from "./BookingHubSkeletons";
@@ -89,6 +88,11 @@ import HolidayClosuresCard from "./HolidayClosuresCard";
 import BookingTeamPanel from "./BookingTeamPanel";
 import { useBookingHubVoiceEnabled } from "./BookingHubVoiceContext";
 import { applyAiHubProgressiveValidation } from "./bookingHubDialogValidation";
+import {
+  newServiceDraftReducer,
+  validateNewServiceDrafts,
+} from "./bookingSettingsNewServiceDrafts";
+import { planCategoryDraftChanges } from "./bookingSettingsCategoryDrafts";
 
 const TK = "components.dashboard.views.BookingHubView.settings";
 const TK_HUB = "components.dashboard.views.BookingHubView";
@@ -190,8 +194,6 @@ interface CategoryDraft {
   isSystem: boolean
   /** Unsaved row created via Add category. */
   isNew?: boolean
-  /** Existing row currently in rename mode. */
-  isEditing?: boolean
 }
 
 const DEFAULT_SERVICE_CATEGORY = "Other services"
@@ -259,22 +261,21 @@ function sameCategoryIds(left: string[], right: string[]): boolean {
   return a.every((id, index) => id === b[index])
 }
 
-/** Keep full category catalog across refreshes (API may omit empty groups). */
+/** Keep the API category order across refreshes while retaining local-only fallback groups. */
 function unionSettingsCategories(
   previous: SettingsCategory[],
   next: SettingsCategory[],
   removedIds: string[] = [],
 ): SettingsCategory[] {
   const removed = new Set(removedIds)
-  const byId = new Map<string, SettingsCategory>()
-  previous.forEach((category) => {
-    if (removed.has(category.id)) return
-    byId.set(category.id, category)
-  })
+  const previousById = new Map(previous.map((category) => [category.id, category]))
+  const seen = new Set<string>()
+  const ordered: SettingsCategory[] = []
+
   next.forEach((category) => {
-    if (!category.id || removed.has(category.id)) return
-    const existing = byId.get(category.id)
-    byId.set(category.id, {
+    if (!category.id || removed.has(category.id) || seen.has(category.id)) return
+    const existing = previousById.get(category.id)
+    ordered.push({
       id: category.id,
       name: category.name || existing?.name || DEFAULT_SERVICE_CATEGORY,
       isSystem:
@@ -282,11 +283,16 @@ function unionSettingsCategories(
         existing?.isSystem ||
         category.id === OTHER_SERVICES_CATEGORY_ID,
     })
+    seen.add(category.id)
   })
-  return [...byId.values()].sort((left, right) => {
-    if (left.isSystem !== right.isSystem) return left.isSystem ? -1 : 1
-    return left.name.localeCompare(right.name)
+
+  previous.forEach((category) => {
+    if (removed.has(category.id) || seen.has(category.id)) return
+    ordered.push(category)
+    seen.add(category.id)
   })
+
+  return ordered
 }
 
 const INITIAL_HOURS: Record<DayKey, HourRow> = {
@@ -1049,9 +1055,12 @@ export default function BookingSettingsPanel() {
   const [serviceModalCategoriesError, setServiceModalCategoriesError] = useState("");
   const [categoryDrafts, setCategoryDrafts] = useState<CategoryDraft[]>([]);
   const [categoryModalError, setCategoryModalError] = useState("");
+  const [categoryModalErrorIndex, setCategoryModalErrorIndex] = useState<
+    number | null
+  >(null);
   const [isSavingCategories, setIsSavingCategories] = useState(false);
   const [pendingCategoryFocus, setPendingCategoryFocus] = useState<
-    "new" | "edit" | null
+    "new" | null
   >(null);
   const categoryInputRef = useRef<HTMLInputElement | null>(null);
   const [highlightServiceId, setHighlightServiceId] = useState<string | null>(
@@ -1063,6 +1072,14 @@ export default function BookingSettingsPanel() {
   const [inlineServiceErrors, setInlineServiceErrors] = useState<
     Record<string, string>
   >({});
+  const [newServiceDrafts, dispatchNewServiceDraft] = useReducer(
+    newServiceDraftReducer,
+    [],
+  );
+  const [newServiceDraftErrors, setNewServiceDraftErrors] = useState<
+    Record<string, string>
+  >({});
+  const newServiceDraftIdRef = useRef(0);
   const inlineServiceDraftsRef = useRef(inlineServiceDrafts);
   const [openServiceCategoryIds, setOpenServiceCategoryIds] = useState(
     () => new Set<string>(),
@@ -1951,11 +1968,6 @@ export default function BookingSettingsPanel() {
     }
   };
 
-  const openServiceModalFromCategory = (categoryId: string) => {
-    setCategoryModalOpen(false);
-    openServiceModal(categoryId);
-  };
-
   const resolveInlineServiceDraft = (service: ServiceRow): InlineServiceDraft =>
     inlineServiceDraftsRef.current[service.id] ??
     buildInlineServiceDraft(service);
@@ -2096,7 +2108,6 @@ export default function BookingSettingsPanel() {
             name: category.name,
             isSystem: category.isSystem,
             isNew: false,
-            isEditing: false,
           }))
         : [
             {
@@ -2104,11 +2115,11 @@ export default function BookingSettingsPanel() {
               name: DEFAULT_SERVICE_CATEGORY,
               isSystem: true,
               isNew: false,
-              isEditing: false,
             },
           ],
     );
     setCategoryModalError("");
+    setCategoryModalErrorIndex(null);
     setPendingCategoryFocus(null);
     setCategoryModalOpen(true);
   };
@@ -2120,7 +2131,6 @@ export default function BookingSettingsPanel() {
         name: category.name,
         isSystem: category.isSystem,
         isNew: false,
-        isEditing: false,
       })),
     );
   };
@@ -2136,37 +2146,47 @@ export default function BookingSettingsPanel() {
       ? t(`${TK}.categoryServiceCountOne`)
       : t(`${TK}.categoryServiceCount`, { count });
 
-  const isDuplicateCategoryName = (name: string, ignoreIndex: number) => {
-    const normalized = name.trim().toLowerCase();
-    return categoryDrafts.some(
-      (draft, index) =>
-        index !== ignoreIndex &&
-        draft.name.trim().toLowerCase() === normalized,
-    );
-  };
+  const saveCategoryModal = async () => {
+    const plan = planCategoryDraftChanges(categoryDrafts, categories, {
+      nameRequired: t(`${TK}.categoryModalNameRequired`),
+      duplicateName: t(`${TK}.categoryModalDuplicate`),
+    });
 
-  const confirmCreateCategory = async (index: number) => {
-    const draft = categoryDrafts[index];
-    if (!draft?.isNew) return;
-    const name = draft.name.trim();
-    if (!name) {
-      setCategoryModalError(t(`${TK}.categoryModalNameRequired`));
-      categoryInputRef.current?.focus();
+    if (plan.error) {
+      setCategoryModalError(plan.error.message);
+      setCategoryModalErrorIndex(plan.error.draftIndex);
       return;
     }
-    if (isDuplicateCategoryName(name, index)) {
-      setCategoryModalError(t(`${TK}.categoryModalDuplicate`));
-      categoryInputRef.current?.focus();
+
+    if (plan.creates.length === 0 && plan.updates.length === 0) {
+      setCategoryModalOpen(false);
       return;
     }
 
     setIsSavingCategories(true);
     setCategoryModalError("");
+    setCategoryModalErrorIndex(null);
     try {
-      await createCategoryMutation.mutateAsync({ name });
-      setPendingCategoryFocus(null);
-      showToast(t(`${TK}.categoryCreated`), "success");
-      // Query invalidation refreshes categories; keep modal open with latest rows.
+      for (const category of plan.creates) {
+        const id = await createCategoryMutation.mutateAsync({
+          name: category.name,
+        });
+        setCategoryDrafts((prev) =>
+          prev.map((draft, index) =>
+            index === category.draftIndex
+              ? { ...draft, id, name: category.name, isNew: false }
+              : draft,
+          ),
+        );
+      }
+
+      for (const category of plan.updates) {
+        await updateCategoryMutation.mutateAsync({
+          id: category.id,
+          body: { name: category.name },
+        });
+      }
+
       const refreshed = await merchantVoiceRepository.getServiceCategories();
       const next = flattenCategoriesToUi(refreshed);
       const mergedCategories = unionSettingsCategories(
@@ -2185,6 +2205,8 @@ export default function BookingSettingsPanel() {
         );
       }
       syncCategoryDraftsFromApi(mergedCategories);
+      setCategoryModalOpen(false);
+      showToast(t(`${TK}.saveSuccess`), "success");
     } catch (error) {
       const message = t(getErrorI18nKey(getApiErrorCode(error)));
       setCategoryModalError(message);
@@ -2192,115 +2214,17 @@ export default function BookingSettingsPanel() {
     } finally {
       setIsSavingCategories(false);
     }
-  };
-
-  const confirmRenameCategory = async (index: number) => {
-    const draft = categoryDrafts[index];
-    if (!draft?.id || draft.isSystem || !draft.isEditing) return;
-    const name = draft.name.trim();
-    if (!name) {
-      setCategoryModalError(t(`${TK}.categoryModalNameRequired`));
-      categoryInputRef.current?.focus();
-      return;
-    }
-    if (isDuplicateCategoryName(name, index)) {
-      setCategoryModalError(t(`${TK}.categoryModalDuplicate`));
-      categoryInputRef.current?.focus();
-      return;
-    }
-    const previous = categories.find((item) => item.id === draft.id);
-    if (previous && previous.name === name) {
-      setCategoryDrafts((prev) =>
-        prev.map((row, rowIndex) =>
-          rowIndex === index
-            ? { ...row, name, isEditing: false }
-            : row,
-        ),
-      );
-      setPendingCategoryFocus(null);
-      return;
-    }
-
-    setIsSavingCategories(true);
-    setCategoryModalError("");
-    try {
-      await updateCategoryMutation.mutateAsync({
-        id: draft.id,
-        body: { name },
-      });
-      showToast(t(`${TK}.categoryUpdated`), "success");
-      const refreshed = await merchantVoiceRepository.getServiceCategories();
-      const next = flattenCategoriesToUi(refreshed);
-      const mergedCategories = unionSettingsCategories(
-        categories,
-        next.categories,
-      );
-      setCategories(mergedCategories);
-      if (!servicesDirtyRef.current) {
-        setServices(
-          next.services.length > 0
-            ? next.services
-            : mergeFlatServicesIntoCategories(
-                mergedCategories,
-                await merchantVoiceRepository.getServices(),
-              ),
-        );
-      }
-      syncCategoryDraftsFromApi(mergedCategories);
-      setPendingCategoryFocus(null);
-    } catch (error) {
-      const message = t(getErrorI18nKey(getApiErrorCode(error)));
-      setCategoryModalError(message);
-      showToast(message, "error");
-    } finally {
-      setIsSavingCategories(false);
-    }
-  };
-
-  const startEditCategory = (index: number) => {
-    const draft = categoryDrafts[index];
-    if (!draft || draft.isSystem || draft.isNew) return;
-    setCategoryModalError("");
-    setCategoryDrafts((prev) =>
-      prev.map((row, rowIndex) => ({
-        ...row,
-        isEditing: rowIndex === index,
-        // Drop unfinished new draft when starting edit.
-        ...(row.isNew ? { name: row.name } : null),
-      })).filter((row) => !(row.isNew && !row.name.trim())),
-    );
-    setPendingCategoryFocus("edit");
-  };
-
-  const cancelCategoryRow = (index: number) => {
-    const draft = categoryDrafts[index];
-    if (!draft) return;
-    setCategoryModalError("");
-    if (draft.isNew) {
-      setCategoryDrafts((prev) => prev.filter((_, rowIndex) => rowIndex !== index));
-      setPendingCategoryFocus(null);
-      return;
-    }
-    const original = categories.find((item) => item.id === draft.id);
-    setCategoryDrafts((prev) =>
-      prev.map((row, rowIndex) =>
-        rowIndex === index
-          ? {
-              ...row,
-              name: original?.name || row.name,
-              isEditing: false,
-            }
-          : row,
-      ),
-    );
-    setPendingCategoryFocus(null);
   };
 
   const deleteCategoryRow = async (index: number) => {
     const draft = categoryDrafts[index];
     if (!draft || draft.isSystem) return;
     if (draft.isNew) {
-      cancelCategoryRow(index);
+      setCategoryDrafts((prev) =>
+        prev.filter((_, rowIndex) => rowIndex !== index),
+      );
+      setCategoryModalError("");
+      setCategoryModalErrorIndex(null);
       return;
     }
     if (!draft.id) return;
@@ -2359,7 +2283,10 @@ export default function BookingSettingsPanel() {
           }),
         );
       }
-      syncCategoryDraftsFromApi(mergedCategories);
+      setCategoryDrafts((prev) =>
+        prev.filter((category) => category.id !== draft.id),
+      );
+      setCategoryModalErrorIndex(null);
     } catch (error) {
       const message = t(getErrorI18nKey(getApiErrorCode(error)));
       setCategoryModalError(message);
@@ -2375,18 +2302,17 @@ export default function BookingSettingsPanel() {
         draftIndex === index ? { ...draft, name: value } : draft,
       ),
     );
+    if (categoryModalErrorIndex === index) {
+      setCategoryModalError("");
+      setCategoryModalErrorIndex(null);
+    }
   };
 
   const addCategoryDraft = () => {
-    const existingNewIndex = categoryDrafts.findIndex((draft) => draft.isNew);
-    if (existingNewIndex >= 0) {
-      setPendingCategoryFocus("new");
-      return;
-    }
     setCategoryModalError("");
     setCategoryDrafts((prev) => [
-      ...prev.map((row) => ({ ...row, isEditing: false })),
-      { id: null, name: "", isSystem: false, isNew: true, isEditing: false },
+      ...prev,
+      { id: null, name: "", isSystem: false, isNew: true },
     ]);
     setPendingCategoryFocus("new");
   };
@@ -2485,6 +2411,50 @@ export default function BookingSettingsPanel() {
       const next = new Set(prev);
       if (next.has(categoryId)) next.delete(categoryId);
       else next.add(categoryId);
+      return next;
+    });
+  };
+
+  const addNewServiceDraft = (categoryId: string) => {
+    newServiceDraftIdRef.current += 1;
+    dispatchNewServiceDraft({
+      type: "add",
+      draft: {
+        id: `new-service-${newServiceDraftIdRef.current}`,
+        categoryId,
+        name: "",
+        price: "",
+        duration: "",
+      },
+    });
+    setOpenServiceCategoryIds((prev) => new Set(prev).add(categoryId));
+  };
+
+  const addNewServiceDraftFromCategoryModal = (categoryId: string) => {
+    setCategoryModalOpen(false);
+    addNewServiceDraft(categoryId);
+  };
+
+  const updateNewServiceDraft = (
+    id: string,
+    field: "name" | "price" | "duration",
+    value: string,
+  ) => {
+    dispatchNewServiceDraft({ type: "update", id, field, value });
+    setNewServiceDraftErrors((prev) => {
+      if (!prev[id]) return prev;
+      const next = { ...prev };
+      delete next[id];
+      return next;
+    });
+  };
+
+  const cancelNewServiceDraft = (id: string) => {
+    dispatchNewServiceDraft({ type: "remove", id });
+    setNewServiceDraftErrors((prev) => {
+      if (!prev[id]) return prev;
+      const next = { ...prev };
+      delete next[id];
       return next;
     });
   };
@@ -2639,6 +2609,28 @@ export default function BookingSettingsPanel() {
     const requiredMessage = t(
       "components.dashboard.views.BookingHubView.team.requiredField",
     );
+    const nextNewServiceDraftErrors = validateNewServiceDrafts(
+      newServiceDrafts,
+      {
+        nameRequired: t(`${TK}.serviceModalNameRequired`),
+        priceInvalid: t(`${TK}.serviceModalPriceInvalid`),
+        durationInvalid: t(`${TK}.serviceModalDurationInvalid`),
+      },
+    );
+    setNewServiceDraftErrors(nextNewServiceDraftErrors);
+    if (Object.keys(nextNewServiceDraftErrors).length > 0) {
+      const invalidCategoryIds = new Set(
+        newServiceDrafts
+          .filter((draft) => nextNewServiceDraftErrors[draft.id])
+          .map((draft) => draft.categoryId),
+      );
+      setOpenServiceCategoryIds((prev) =>
+        new Set([...prev, ...invalidCategoryIds]),
+      );
+      showToast(Object.values(nextNewServiceDraftErrors)[0], "error");
+      return;
+    }
+
     const nextErrors: typeof formErrors = {};
     if (!salonName.trim()) nextErrors.salonName = requiredMessage;
     // Salon phone + booking notify phone are optional; validate format only when entered.
@@ -2710,6 +2702,13 @@ export default function BookingSettingsPanel() {
     if (!validHours) {
       showToast(t(`${TK}.hourValidationSummary`), "error");
       return;
+    }
+
+    const newServiceDraftsToSave = [...newServiceDrafts];
+    const createdNewServiceDraftIds: string[] = [];
+    let activeNewServiceDraftId: string | null = null;
+    if (newServiceDraftsToSave.length > 0) {
+      setIsSavingService(true);
     }
 
     try {
@@ -2789,6 +2788,29 @@ export default function BookingSettingsPanel() {
 
       await Promise.all(savePromises);
 
+      for (const draft of newServiceDraftsToSave) {
+        activeNewServiceDraftId = draft.id;
+        await createServiceMutation.mutateAsync({
+          name: draft.name.trim(),
+          price: draft.price.trim() ? Number(draft.price) : 0,
+          durationMinutes: clampMerchantVoiceServiceDurationMinutes(
+            draft.duration.trim() ? Number(draft.duration) : 1,
+          ),
+          note: null,
+          icon: null,
+          isActive: true,
+          categoryIds: categoryIdsPayloadForApi([draft.categoryId]),
+        });
+        createdNewServiceDraftIds.push(draft.id);
+        dispatchNewServiceDraft({ type: "remove", id: draft.id });
+        activeNewServiceDraftId = null;
+      }
+
+      if (createdNewServiceDraftIds.length > 0) {
+        setNewServiceDraftErrors({});
+        await refreshServicesCatalog();
+      }
+
       await queryClient.invalidateQueries({ queryKey: qk.merchantSetup() });
 
       setStatus(t(`${TK}.saveSuccess`));
@@ -2796,8 +2818,22 @@ export default function BookingSettingsPanel() {
       showToast(t(`${TK}.saveSuccess`), "success");
     } catch (error) {
       const message = t(getErrorI18nKey(getApiErrorCode(error)));
+      if (createdNewServiceDraftIds.length > 0) {
+        void refreshServicesCatalog().catch(() => undefined);
+      }
+      if (activeNewServiceDraftId) {
+        const failedDraftId = activeNewServiceDraftId;
+        setNewServiceDraftErrors((prev) => ({
+          ...prev,
+          [failedDraftId]: message,
+        }));
+      }
       setStatus(message);
       showToast(message, "error");
+    } finally {
+      if (newServiceDraftsToSave.length > 0) {
+        setIsSavingService(false);
+      }
     }
   };
 
@@ -3907,14 +3943,6 @@ export default function BookingSettingsPanel() {
               <FolderTreeIcon />
               {t(`${TK}.manageCategories`)}
             </button>
-            <button
-              className="booking-primary-button"
-              type="button"
-              onClick={() => openServiceModal()}
-            >
-              <PlusLgIcon />
-              {t(`${TK}.enterManually`)}
-            </button>
           </div>
 
           <div className="settings-service-list settings-service-body">
@@ -3933,6 +3961,9 @@ export default function BookingSettingsPanel() {
             ) : (
               catalogSections.map((section) => {
                 const categoryServices = section.services;
+                const categoryNewServiceDrafts = newServiceDrafts.filter(
+                  (draft) => draft.categoryId === section.id,
+                );
                 const isOpen = openServiceCategoryIds.has(section.id);
                 const panelId = `settings-service-category-panel-${section.id}`;
                 return (
@@ -3958,7 +3989,8 @@ export default function BookingSettingsPanel() {
                       <button
                         type="button"
                         className="settings-service-category-add"
-                        onClick={() => openServiceModal(section.id)}
+                        disabled={isSavingService}
+                        onClick={() => addNewServiceDraft(section.id)}
                       >
                         <PlusLgIcon />
                         {t(`${TK}.addService`)}
@@ -4007,12 +4039,14 @@ export default function BookingSettingsPanel() {
                         <span>{t(`${TK}.durationColumn`)}</span>
                         <span />
                       </div>
-                      {categoryServices.length === 0 ? (
+                      {categoryServices.length === 0 &&
+                      categoryNewServiceDrafts.length === 0 ? (
                         <div className="settings-category-empty">
                           {t(`${TK}.categoryEmpty`)}
                         </div>
                       ) : (
-                        categoryServices.map((service) => {
+                        <>
+                        {categoryServices.map((service) => {
                           const isPending =
                             pendingServiceActionId === service.id;
                           const draft =
@@ -4164,7 +4198,7 @@ export default function BookingSettingsPanel() {
                                     {isPending ? (
                                       <SpinnerIcon className="booking-inline-spinner" />
                                     ) : (
-                                      "×"
+                                      <XLgIcon className="settings-row-remove-icon" />
                                     )}
                                   </button>
                                 </div>
@@ -4179,7 +4213,120 @@ export default function BookingSettingsPanel() {
                               ) : null}
                             </div>
                           );
-                        })
+                        })}
+                        {categoryNewServiceDrafts.map((draft) => {
+                          const draftError = newServiceDraftErrors[draft.id];
+                          return (
+                            <div
+                              className="settings-service-row is-compact is-editing is-new"
+                              data-new-service-draft-id={draft.id}
+                              key={draft.id}
+                            >
+                              <div className="settings-service-edit-grid">
+                                <span
+                                  className="settings-service-visual tone-violet"
+                                  aria-hidden="true"
+                                >
+                                  ✨
+                                </span>
+                                <input
+                                  autoFocus
+                                  className="settings-service-input"
+                                  type="text"
+                                  value={draft.name}
+                                  placeholder={t(
+                                    `${TK}.placeholderServiceName`,
+                                  )}
+                                  aria-label={t(`${TK}.serviceNameAria`)}
+                                  aria-invalid={draftError ? "true" : undefined}
+                                  disabled={isSavingService}
+                                  onChange={(event) => {
+                                    updateNewServiceDraft(
+                                      draft.id,
+                                      "name",
+                                      event.target.value,
+                                    );
+                                  }}
+                                />
+                                <div className="settings-service-input-wrap">
+                                  <span className="settings-service-prefix">
+                                    $
+                                  </span>
+                                  <input
+                                    className="settings-service-input price"
+                                    type="text"
+                                    inputMode="decimal"
+                                    value={draft.price}
+                                    placeholder={t(
+                                      `${TK}.placeholderServicePrice`,
+                                    )}
+                                    aria-label={t(`${TK}.servicePriceAria`)}
+                                    aria-invalid={draftError ? "true" : undefined}
+                                    disabled={isSavingService}
+                                    onChange={(event) => {
+                                      updateNewServiceDraft(
+                                        draft.id,
+                                        "price",
+                                        parseInlineServicePrice(
+                                          event.target.value,
+                                        ),
+                                      );
+                                    }}
+                                  />
+                                </div>
+                                <div className="settings-service-input-wrap">
+                                  <input
+                                    className="settings-service-input duration"
+                                    type="text"
+                                    inputMode="numeric"
+                                    pattern="[0-9]*"
+                                    value={draft.duration}
+                                    placeholder={t(
+                                      `${TK}.placeholderServiceDuration`,
+                                    )}
+                                    aria-label={t(
+                                      `${TK}.serviceDurationAria`,
+                                    )}
+                                    aria-invalid={draftError ? "true" : undefined}
+                                    disabled={isSavingService}
+                                    onChange={(event) => {
+                                      updateNewServiceDraft(
+                                        draft.id,
+                                        "duration",
+                                        event.target.value.replace(/\D/g, ""),
+                                      );
+                                    }}
+                                  />
+                                  <span className="settings-service-suffix">
+                                    {t(`${TK}.durationUnit`)}
+                                  </span>
+                                </div>
+                                <div className="settings-service-row-actions">
+                                  <button
+                                    className="settings-service-remove"
+                                    type="button"
+                                    aria-label={t(`${TK}.serviceModalCancel`)}
+                                    disabled={isSavingService}
+                                    onClick={() =>
+                                      cancelNewServiceDraft(draft.id)
+                                    }
+                                  >
+                                    <XLgIcon className="settings-row-remove-icon" />
+                                  </button>
+                                </div>
+                              </div>
+                              {draftError ? (
+                                <p
+                                  className="settings-service-row-error"
+                                  role="alert"
+                                >
+                                  {draftError}
+                                </p>
+                              ) : null}
+                            </div>
+                          );
+                        })}
+                        </>
                       )}
                     </div>
                       </div>
@@ -4210,7 +4357,7 @@ export default function BookingSettingsPanel() {
           }
           onClick={handleSave}
         >
-          {updateConfigMutation.isPending ? (
+          {updateConfigMutation.isPending || isSavingService ? (
             <SpinnerIcon className="booking-inline-spinner" />
           ) : null}
           {t(`${TK}.saveButton`)}
@@ -4451,7 +4598,7 @@ export default function BookingSettingsPanel() {
       {categoryModalOpen ? (
         <div className="settings-service-modal" role="presentation">
           <div
-            className="settings-service-dialog"
+            className="settings-service-dialog settings-category-dialog"
             role="dialog"
             aria-modal="true"
             aria-labelledby="settings-category-modal-title"
@@ -4477,7 +4624,7 @@ export default function BookingSettingsPanel() {
                 <XLgIcon />
               </button>
             </div>
-            <div className="settings-service-modal-body">
+            <div className="settings-service-modal-body settings-category-modal-body">
               <div className="settings-category-manager">
                 <div className="settings-category-manager-head">
                   <div>
@@ -4507,141 +4654,73 @@ export default function BookingSettingsPanel() {
                   ) : (
                     categoryDrafts.map((draft, index) => {
                       const serviceCount = countServicesForCategory(draft);
-                      const isActiveRow = Boolean(draft.isNew || draft.isEditing);
-                      const canEdit = !draft.isSystem && !draft.isNew;
                       return (
                         <div
-                          className={`settings-category-row${draft.isNew ? " is-new" : ""}${draft.isEditing ? " is-editing" : ""}`}
+                          className={`settings-category-row${draft.isNew ? " is-new" : ""}`}
                           key={`${draft.id || "new"}-${index}`}
                         >
                           <div className="settings-category-row-main">
                             <FolderTreeIcon className="settings-category-row-icon" />
                             <div className="settings-category-row-label">
                               <input
-                                ref={isActiveRow ? categoryInputRef : undefined}
+                                ref={draft.isNew ? categoryInputRef : undefined}
                                 className="settings-category-name-input"
                                 type="text"
                                 value={draft.name}
-                                size={
-                                  draft.isNew || draft.isEditing
-                                    ? undefined
-                                    : Math.max(draft.name.length, 1)
-                                }
-                                disabled={
-                                  draft.isSystem ||
-                                  (!draft.isNew && !draft.isEditing) ||
-                                  isSavingCategories
-                                }
+                                disabled={draft.isSystem || isSavingCategories}
                                 placeholder={
                                   draft.isNew
                                     ? t(`${TK}.categoryNamePlaceholder`)
                                     : undefined
                                 }
                                 aria-label={t(`${TK}.categoryModalCategories`)}
+                                aria-invalid={
+                                  categoryModalErrorIndex === index
+                                    ? "true"
+                                    : undefined
+                                }
                                 onChange={(event) =>
                                   updateCategoryDraft(index, event.target.value)
                                 }
-                                onKeyDown={(event) => {
-                                  if (event.key === "Enter") {
-                                    event.preventDefault();
-                                    if (draft.isNew) {
-                                      void confirmCreateCategory(index);
-                                    } else if (draft.isEditing) {
-                                      void confirmRenameCategory(index);
-                                    }
-                                  }
-                                  if (event.key === "Escape" && isActiveRow) {
-                                    event.preventDefault();
-                                    cancelCategoryRow(index);
-                                  }
-                                }}
                               />
-                              <span
-                                className="settings-category-count"
-                                title={formatCategoryServiceCount(serviceCount)}
-                              >
-                                {formatCategoryServiceCount(serviceCount)}
-                              </span>
+                              {!draft.isNew ? (
+                                <span
+                                  className="settings-category-count"
+                                  title={formatCategoryServiceCount(serviceCount)}
+                                >
+                                  {formatCategoryServiceCount(serviceCount)}
+                                </span>
+                              ) : null}
                             </div>
                           </div>
                           <div className="settings-category-row-actions">
-                            {draft.isNew || draft.isEditing ? (
-                              <>
-                                <button
-                                  className="settings-category-row-action is-confirm"
-                                  type="button"
-                                  aria-label={
-                                    draft.isNew
-                                      ? t(`${TK}.categoryConfirmAddAria`)
-                                      : t(`${TK}.categoryConfirmEditAria`)
-                                  }
-                                  disabled={isSavingCategories}
-                                  onClick={() => {
-                                    if (draft.isNew) {
-                                      void confirmCreateCategory(index);
-                                    } else {
-                                      void confirmRenameCategory(index);
-                                    }
-                                  }}
-                                >
-                                  {isSavingCategories ? (
-                                    <SpinnerIcon className="settings-category-row-action-icon" />
-                                  ) : (
-                                    <CheckCircleFillIcon className="settings-category-row-action-icon is-confirm-icon" />
-                                  )}
-                                </button>
-                                <button
-                                  className="settings-category-row-action"
-                                  type="button"
-                                  aria-label={t(`${TK}.categoryCancelAria`)}
-                                  disabled={isSavingCategories}
-                                  onClick={() => cancelCategoryRow(index)}
-                                >
-                                  <XLgIcon className="settings-category-row-action-icon" />
-                                </button>
-                              </>
-                            ) : (
-                              <>
-                                {draft.id ? (
-                                  <button
-                                    className="settings-category-row-add-service"
-                                    type="button"
-                                    disabled={isSavingCategories}
-                                    aria-label={t(`${TK}.addService`)}
-                                    onClick={() => {
-                                      openServiceModalFromCategory(draft.id);
-                                    }}
-                                  >
-                                    <PlusLgIcon />
-                                    {t(`${TK}.addService`)}
-                                  </button>
-                                ) : null}
-                                {canEdit ? (
-                                  <button
-                                    className="settings-category-row-action"
-                                    type="button"
-                                    aria-label={t(`${TK}.categoryEditAria`)}
-                                    disabled={isSavingCategories}
-                                    onClick={() => startEditCategory(index)}
-                                  >
-                                    <PencilIcon className="settings-category-row-action-icon" />
-                                  </button>
-                                ) : null}
-                                {!draft.isSystem ? (
-                                  <button
-                                    className="settings-category-row-action is-danger"
-                                    type="button"
-                                    aria-label={t(`${TK}.categoryModalRemoveAria`)}
-                                    disabled={isSavingCategories}
-                                    onClick={() => {
-                                      void deleteCategoryRow(index);
-                                    }}
-                                  >
-                                    <Trash2Icon className="settings-category-row-action-icon" />
-                                  </button>
-                                ) : null}
-                              </>
-                            )}
+                            {draft.id ? (
+                              <button
+                                className="settings-category-row-add-service"
+                                type="button"
+                                disabled={isSavingCategories}
+                                aria-label={t(`${TK}.addService`)}
+                                onClick={() => {
+                                  addNewServiceDraftFromCategoryModal(draft.id);
+                                }}
+                              >
+                                <PlusLgIcon />
+                                {t(`${TK}.addService`)}
+                              </button>
+                            ) : null}
+                            {!draft.isSystem ? (
+                              <button
+                                className="settings-category-row-action is-danger"
+                                type="button"
+                                aria-label={t(`${TK}.categoryModalRemoveAria`)}
+                                disabled={isSavingCategories}
+                                onClick={() => {
+                                  void deleteCategoryRow(index);
+                                }}
+                              >
+                                <XLgIcon className="settings-row-remove-icon" />
+                              </button>
+                            ) : null}
                           </div>
                         </div>
                       );
@@ -4657,12 +4736,27 @@ export default function BookingSettingsPanel() {
             </div>
             <div className="settings-service-modal-actions">
               <button
-                className="booking-primary-button"
+                className="booking-secondary-button"
                 type="button"
                 disabled={isSavingCategories}
                 onClick={() => setCategoryModalOpen(false)}
               >
-                {t(`${TK}.categoryModalClose`)}
+                {t(`${TK}.categoryCancelAria`)}
+              </button>
+              <button
+                className="booking-primary-button"
+                type="button"
+                disabled={isSavingCategories}
+                onClick={() => {
+                  void saveCategoryModal();
+                }}
+              >
+                {isSavingCategories ? (
+                  <SpinnerIcon className="booking-inline-spinner" />
+                ) : (
+                  <CheckCircleFillIcon className="settings-action-icon" />
+                )}{" "}
+                {t(`${TK}.categoryModalSave`)}
               </button>
             </div>
           </div>

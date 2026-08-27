@@ -4541,7 +4541,7 @@
             "serviceModalCategoryRequired": "Please select at least one category.",
             "serviceEditAria": "Edit service",
             "categoryModalTitle": "Manage Categories",
-            "categoryModalSub": "Add, rename, or remove categories. Changes save immediately.",
+            "categoryModalSub": "Add or rename categories, then save all changes at once.",
             "categoryModalCategories": "Categories",
             "categoryModalCategoriesSub": "Removing a category moves its services to Other services. The Other services group cannot be edited.",
             "categoryModalAdd": "Add category",
