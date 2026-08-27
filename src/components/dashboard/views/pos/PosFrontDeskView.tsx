@@ -38,6 +38,7 @@ import { useInServiceOrders, useOrderDetails } from '../../../../data/hooks/useP
 import { useBookingList, useCheckInBookingFromList } from '../../../../data/hooks/usePosBooking'
 import { useTurnBoard } from '../../../../data/hooks/usePosTurnBoard'
 import { useBeepStaff, useTimeClockRoster } from '../../../../data/hooks/usePosTimeClock'
+import { useMerchantBeepFeed } from '../../../../data/hooks/usePosBeep'
 import { formatDatePart, formatLocalDateIso } from '../../../../utils/localDate'
 import { PosOrderStatus } from '../../../../constants/posOrderStatus'
 import {
@@ -62,6 +63,7 @@ import { formatBookingWallClockTime, resolveBookingWallClockParts } from './book
 import CustomerTab from './customer/CustomerTab'
 import { formatCustomerPhone } from './customer/customerFormatters'
 import TimeClockTab from './timeclock/TimeClockTab'
+import BeepInteractions from './timeclock/BeepInteractions'
 import BeepMessageModal from './timeclock/BeepMessageModal'
 import { getLocalDayWindow } from './timeclock/timeClockDay'
 import { formatCurrency } from '../../utils'
@@ -348,6 +350,14 @@ export default function PosFrontDeskView({
     enabled: activeTab === PosFrontDeskTab.TurnBoard,
     refetchInterval: false,
   })
+  // The roster above deliberately does not poll, so a station card would never notice a reply.
+  // The beep feed is its own polled query, which is what keeps the station pill live here.
+  const { data: turnBoardBeeps = [] } = useMerchantBeepFeed(businessId, todayTurnWindow, {
+    enabled: activeTab === PosFrontDeskTab.TurnBoard,
+  })
+  const turnBoardBeepByStaffId = new Map(
+    [...turnBoardBeeps].reverse().map((beep) => [beep.posStaffProfileId, beep]),
+  )
   // Today’s Turns needs the services completed during the same local calendar day. The
   // completed-orders endpoint supplies the ticket IDs; each detail response supplies the
   // technician assigned to each individual service line.
@@ -728,6 +738,12 @@ export default function PosFrontDeskView({
             {isBeeping ? t(tk('beepPending')) : t(tk('beep'))}
           </button>
         </div>
+
+        <BeepInteractions
+          businessId={businessId}
+          beep={turnBoardBeepByStaffId.get(station.posStaffProfileId)}
+          staffName={station.displayName}
+        />
 
         {station.currentStatus === PosOrderStatus.InService && (
           <div className="space-y-2 rounded-xl bg-nexoraCanvas/70 p-3">

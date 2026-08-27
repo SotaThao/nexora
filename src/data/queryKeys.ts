@@ -212,6 +212,15 @@ export const qk = {
     if (dayKey) key.push(dayKey)
     return key
   },
+  // Two-way beep feed. Same optional-dayKey shape as the roster/log keys above so the shared
+  // businessId prefix invalidates whichever local day is on screen.
+  merchantPosBeepFeed: (businessId?: string, dayKey?: string) => {
+    const key: unknown[] = ['merchantSettings', 'posBeepFeed', businessId ?? '']
+    if (dayKey) key.push(dayKey)
+    return key
+  },
+  // Scoped by the caller's token, not by business — a tech linked to two salons polls one list.
+  staffActiveBeeps: () => ['staffBeeps', 'active'],
   staffClockScanPreview: (businessId?: string, token?: string) =>
     ['staffClockScanPreview', businessId ?? '', token ?? ''],
   // POS Merchant Ops — Checkout (US-14 / US-025, refactored to Order in US-026)
