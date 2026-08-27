@@ -155,7 +155,7 @@ export default function SubscriptionPaymentModal({
     showToast(
       t(`${BOOKING_HUB_PLANS_TK}.planPaymentSuccess`, {
         plan,
-        price: estimatedFinalDue,
+        price: estimatedFinalDue.toFixed(2),
         period: resolvePlanBillingPeriodSuffix(billingCycle, t, BOOKING_HUB_PLANS_TK),
         payment: paymentLabel,
       }),
