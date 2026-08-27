@@ -120,15 +120,15 @@ export const SiteNavbarHeader: React.FC<SiteNavbarHeaderProps> = ({
             </div>
           </a>
 
-          {/* 2. Desktop Navigation Menu (Single line, whitespace-nowrap, hidden on small screens) */}
+          {/* 2. Desktop Navigation Menu (Single line, whitespace-nowrap) */}
           {!isMobileView && (
-            <nav className="hidden xl:flex items-center gap-1 shrink-0 whitespace-nowrap">
+            <nav className="hidden md:flex items-center gap-1 lg:gap-2 shrink-0 whitespace-nowrap">
               {navItems.map((item) => (
                 <a
                   key={item.href}
                   href={item.href}
                   onClick={(e) => handleNavClick(e, item.href)}
-                  className="px-2.5 py-1.5 rounded-xl text-xs xl:text-sm font-semibold transition-all hover:bg-white/10 flex items-center gap-1.5 opacity-80 hover:opacity-100 whitespace-nowrap shrink-0"
+                  className="px-2.5 lg:px-3 py-1.5 rounded-xl text-xs lg:text-sm font-semibold transition-all hover:bg-white/10 flex items-center gap-1.5 opacity-80 hover:opacity-100 whitespace-nowrap shrink-0"
                   style={{ color: palette.textPrimary }}
                 >
                   <span className="whitespace-nowrap">{item.label}</span>
@@ -138,28 +138,13 @@ export const SiteNavbarHeader: React.FC<SiteNavbarHeaderProps> = ({
           )}
 
           {/* 3. Right Action Controls */}
-          <div className="flex items-center gap-1.5 sm:gap-2.5 shrink-0 whitespace-nowrap">
-            {/* Hotline Phone Link (Desktop & Tablet) */}
-            {site.phone && !isMobileView && (
-              <a
-                href={`tel:${site.phone}`}
-                className="hidden lg:inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold border transition-all hover:bg-white/10 whitespace-nowrap shrink-0"
-                style={{
-                  borderColor: `${palette.borderPrimary}80`,
-                  color: palette.textPrimary
-                }}
-              >
-                <Phone className="w-3.5 h-3.5 shrink-0" style={{ color: palette.accentColor }} />
-                <span className="whitespace-nowrap">{site.phone}</span>
-              </a>
-            )}
-
+          <div className="flex items-center gap-2 sm:gap-3 shrink-0 whitespace-nowrap">
             {/* Primary CTA Button: Đặt Lịch Hẹn */}
             <button
               type="button"
               onClick={onBookClick}
               className={`rounded-xl font-bold shadow-lg hover:shadow-xl transition-all hover:scale-102 active:scale-95 flex items-center justify-center gap-1.5 shrink-0 whitespace-nowrap ${
-                isMobileView ? 'px-3 py-2 text-xs min-h-[38px]' : 'px-3.5 sm:px-4 py-2 text-xs sm:text-sm min-h-[38px] sm:min-h-[40px]'
+                isMobileView ? 'px-3 py-2 text-xs min-h-[38px]' : 'px-4 sm:px-5 py-2 sm:py-2.5 text-xs sm:text-sm min-h-[38px] sm:min-h-[40px]'
               }`}
               style={{
                 backgroundColor: palette.accentColor,
@@ -176,7 +161,7 @@ export const SiteNavbarHeader: React.FC<SiteNavbarHeaderProps> = ({
               type="button"
               onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
               className={`p-2 rounded-xl border transition-colors flex items-center justify-center shrink-0 ${
-                isMobileView ? 'flex' : 'xl:hidden flex'
+                isMobileView ? 'flex' : 'md:hidden flex'
               }`}
               style={{
                 borderColor: `${palette.borderPrimary}80`,
