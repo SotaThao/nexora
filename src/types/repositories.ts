@@ -696,6 +696,14 @@ export interface ServiceAddOnApiDto {
   canDelete: boolean
 }
 
+/** A service that owns at least one add-on, offered as a copy source. */
+export interface ServiceAddOnCopySourceApiDto {
+  id: string
+  name: string
+  /** Includes inactive add-ons — the copy carries those over too. */
+  addOnCount: number
+}
+
 export interface ServiceAddOnInput {
   name: string
   price: number

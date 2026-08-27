@@ -6,6 +6,7 @@ import type {
   PosServiceApiDto,
   PosServiceStatus,
   ServiceAddOnApiDto,
+  ServiceAddOnCopySourceApiDto,
   ServiceAddOnInput,
   UpdateServiceAddOnInput,
 } from '../../types/repositories'
@@ -68,6 +69,14 @@ export function createPosServicesRepository(client: HttpClient = httpClient) {
     async getServiceAddOns(serviceId: string): Promise<ServiceAddOnApiDto[]> {
       const res = await client.get<ServiceAddOnApiDto[]>(
         `/api/v1/merchant/services/${serviceId}/add-ons`,
+      )
+      return res ?? []
+    },
+
+    // Only services that actually own add-ons — an empty one could never copy anything.
+    async getServiceAddOnCopySources(serviceId: string): Promise<ServiceAddOnCopySourceApiDto[]> {
+      const res = await client.get<ServiceAddOnCopySourceApiDto[]>(
+        `/api/v1/merchant/services/${serviceId}/add-ons/copy-sources`,
       )
       return res ?? []
     },
