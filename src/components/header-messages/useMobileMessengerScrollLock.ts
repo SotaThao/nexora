@@ -1,4 +1,5 @@
 import { useEffect } from 'react'
+import { HEADER_MESSAGES_MOBILE_OPEN_CLASS } from './headerMessagesConstants'
 
 /** Regions that may scroll while the mobile messenger overlay is open. */
 const MOBILE_MESSENGER_SCROLLABLE_SELECTOR = [
@@ -24,8 +25,8 @@ export function useMobileMessengerScrollLock(active: boolean) {
     const body = document.body
     const scrollY = window.scrollY
 
-    html.classList.add('header-messages-mobile-open')
-    body.classList.add('header-messages-mobile-open')
+    html.classList.add(HEADER_MESSAGES_MOBILE_OPEN_CLASS)
+    body.classList.add(HEADER_MESSAGES_MOBILE_OPEN_CLASS)
     body.style.position = 'fixed'
     body.style.top = `-${scrollY}px`
     body.style.left = '0'
@@ -53,8 +54,8 @@ export function useMobileMessengerScrollLock(active: boolean) {
 
     return () => {
       document.removeEventListener('touchmove', onTouchMove)
-      html.classList.remove('header-messages-mobile-open')
-      body.classList.remove('header-messages-mobile-open')
+      html.classList.remove(HEADER_MESSAGES_MOBILE_OPEN_CLASS)
+      body.classList.remove(HEADER_MESSAGES_MOBILE_OPEN_CLASS)
       body.style.position = ''
       body.style.top = ''
       body.style.left = ''

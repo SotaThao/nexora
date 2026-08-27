@@ -35,6 +35,14 @@ export enum StaffChatUnavailableReason {
 export const STAFF_CHAT_UNREAD_DOT_CLASS =
   'absolute -top-0.5 -right-0.5 h-2 w-2 rounded-full bg-red-500 ring-2 ring-white' as const
 
+/** Deep-link from Community Messenger empty state → staff list chat coachmark. */
+export const STAFF_CHAT_START_HINT_QUERY = 'chatHint' as const
+export const STAFF_CHAT_START_HINT_VALUE = 'start' as const
+
+export function searchHasStaffChatStartHint(search: string): boolean {
+  return new URLSearchParams(search).get(STAFF_CHAT_START_HINT_QUERY) === STAFF_CHAT_START_HINT_VALUE
+}
+
 export const STAFF_CHAT_I18N = {
   title: 'staff_detail.chat_title',
   subtitle: 'staff_detail.chat_subtitle',
@@ -50,6 +58,10 @@ export const STAFF_CHAT_I18N = {
   sendError: 'staff_detail.chat_send_error',
   startError: 'staff_detail.chat_start_error',
   imageAlt: 'staff_detail.chat_image_alt',
+  open: 'staff_detail.chat_open',
+  manage: 'components.dashboard.views.StaffView.manage_chat',
+  manageUnread: 'components.dashboard.views.StaffView.manage_chat_unread',
+  startHint: 'components.dashboard.views.StaffView.start_chat_hint',
 } as const
 
 /** Thrown when ensureSession lacks businessId / participantUserProfileId. */
