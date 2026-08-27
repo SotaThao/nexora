@@ -22,6 +22,7 @@ export const HeroSection: React.FC<HeroSectionProps> = ({ site, palette, onBookC
   if (templateId === MerchantSiteTemplateId.Minimal) {
     return (
       <section
+        id="hero"
         className={`relative overflow-hidden transition-colors border-b ${
           isMobileView ? 'py-8' : 'py-12 md:py-20'
         }`}
@@ -176,6 +177,7 @@ export const HeroSection: React.FC<HeroSectionProps> = ({ site, palette, onBookC
   if (templateId === MerchantSiteTemplateId.Modern) {
     return (
       <section
+        id="hero"
         className={`relative overflow-hidden transition-colors ${
           isMobileView ? 'py-8' : 'py-12 md:py-20'
         }`}
@@ -337,6 +339,7 @@ export const HeroSection: React.FC<HeroSectionProps> = ({ site, palette, onBookC
   if (templateId === MerchantSiteTemplateId.Bold) {
     return (
       <section
+        id="hero"
         className={`relative overflow-hidden transition-colors ${
           isMobileView ? 'py-8' : 'py-12 md:py-20'
         }`}
@@ -500,6 +503,7 @@ export const HeroSection: React.FC<HeroSectionProps> = ({ site, palette, onBookC
   // 4. CLASSIC LUXE (Imperial Split 50/50 Layout with Glassmorphism Showcase & Royal Serif Font)
   return (
     <section
+      id="hero"
       className={`relative overflow-hidden transition-colors ${
         isMobileView ? 'py-8' : 'py-12 md:py-20'
       }`}

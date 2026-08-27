@@ -53,7 +53,7 @@ export const ServiceMenuSection: React.FC<ServiceMenuSectionProps> = ({ site, pa
   if (templateId === MerchantSiteTemplateId.Minimal) {
     return (
       <section
-        id="service-menu"
+        id="services"
         className={`transition-colors border-b ${isMobileView ? 'py-8 px-4' : 'py-16 px-4 sm:px-6 lg:px-8'}`}
         style={{ backgroundColor: palette.bgPrimary, borderColor: palette.borderPrimary, color: palette.textPrimary }}
       >
@@ -169,7 +169,7 @@ export const ServiceMenuSection: React.FC<ServiceMenuSectionProps> = ({ site, pa
   // 2. MODERN CHIC & 3. BOLD VIBRANT & 4. CLASSIC LUXE
   return (
     <section
-      id="service-menu"
+      id="services"
       className={`transition-colors ${isMobileView ? 'py-8 px-4' : 'py-16 px-4 sm:px-6 lg:px-8'}`}
       style={{ backgroundColor: palette.bgSurface, color: palette.textPrimary }}
     >

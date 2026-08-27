@@ -2,6 +2,7 @@ import React from 'react'
 import { PublicSiteDto } from '../../../../constants/merchantSiteStatus'
 import { SitePalette } from '../palettes'
 import { TopAnnouncementBar } from '../sections/TopAnnouncementBar'
+import { SiteNavbarHeader } from '../sections/SiteNavbarHeader'
 import { SiteBannersCarousel } from '../sections/SiteBannersCarousel'
 import { HeroSection } from '../sections/HeroSection'
 import { GoldenTrustStrip } from '../sections/GoldenTrustStrip'
@@ -37,6 +38,7 @@ export const ClassicTemplate: React.FC<TemplateProps> = ({
   return (
     <div className="min-h-screen font-sans relative pb-16 sm:pb-0" style={{ backgroundColor: palette.bgPrimary }}>
       <TopAnnouncementBar site={site} palette={palette} onBookClick={onBookClick} isMobileView={isMobileView} />
+      <SiteNavbarHeader site={site} palette={palette} onBookClick={onBookClick} isMobileView={isMobileView} />
       <SiteBannersCarousel site={site} palette={palette} onBookClick={onBookClick} isMobileView={isMobileView} />
       <HeroSection site={site} palette={palette} onBookClick={onBookClick} isMobileView={isMobileView} />
       <GoldenTrustStrip palette={palette} isMobileView={isMobileView} />

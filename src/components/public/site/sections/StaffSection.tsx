@@ -34,6 +34,7 @@ export const StaffSection: React.FC<StaffSectionProps> = ({ site, palette, onSel
   if (templateId === MerchantSiteTemplateId.Minimal) {
     return (
       <section
+        id="staff"
         className={`border-t transition-colors ${isMobileView ? 'py-8 px-4' : 'py-16 px-4 sm:px-6 lg:px-8'}`}
         style={{ backgroundColor: palette.bgPrimary, borderColor: palette.borderPrimary }}
       >
@@ -91,6 +92,7 @@ export const StaffSection: React.FC<StaffSectionProps> = ({ site, palette, onSel
   // 2. MODERN CHIC & 3. BOLD VIBRANT & 4. CLASSIC LUXE
   return (
     <section
+      id="staff"
       className={`border-t transition-colors ${isMobileView ? 'py-8 px-4' : 'py-16 px-4 sm:px-6 lg:px-8'}`}
       style={{ backgroundColor: palette.bgPrimary, borderColor: palette.borderPrimary }}
     >

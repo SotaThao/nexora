@@ -19,6 +19,7 @@ export const ReviewsSection: React.FC<ReviewsSectionProps> = ({ site, palette, i
 
   return (
     <section
+      id="reviews"
       className={`border-t transition-colors ${isMobileView ? 'py-8 px-4' : 'py-16 px-4 sm:px-6 lg:px-8'}`}
       style={{ backgroundColor: palette.bgSurface, color: palette.textPrimary }}
     >

@@ -28,6 +28,7 @@ export const PromotionsSection: React.FC<PromotionsSectionProps> = ({ site, pale
 
   return (
     <section
+      id="promotions"
       className={`border-y transition-colors ${isMobileView ? 'py-8 px-4' : 'py-14 px-4 sm:px-6 lg:px-8'}`}
       style={{ backgroundColor: palette.bgPrimary, borderColor: palette.borderPrimary }}
     >

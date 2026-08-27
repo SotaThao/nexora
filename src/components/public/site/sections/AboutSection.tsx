@@ -19,6 +19,7 @@ export const AboutSection: React.FC<AboutSectionProps> = ({ site, palette, isMob
   if (templateId === MerchantSiteTemplateId.Minimal) {
     return (
       <section
+        id="about"
         className={`transition-colors border-b ${isMobileView ? 'py-8 px-4' : 'py-16 px-4 sm:px-6 lg:px-8'}`}
         style={{ backgroundColor: palette.bgPrimary, borderColor: palette.borderPrimary, color: palette.textPrimary }}
       >
@@ -63,6 +64,7 @@ export const AboutSection: React.FC<AboutSectionProps> = ({ site, palette, isMob
   if (templateId === MerchantSiteTemplateId.Modern) {
     return (
       <section
+        id="about"
         className={`transition-colors ${isMobileView ? 'py-8 px-4' : 'py-16 px-4 sm:px-6 lg:px-8'}`}
         style={{ backgroundColor: palette.bgSurface, color: palette.textPrimary }}
       >
@@ -121,6 +123,7 @@ export const AboutSection: React.FC<AboutSectionProps> = ({ site, palette, isMob
   if (templateId === MerchantSiteTemplateId.Bold) {
     return (
       <section
+        id="about"
         className={`transition-colors ${isMobileView ? 'py-8 px-4' : 'py-16 px-4 sm:px-6 lg:px-8'}`}
         style={{ backgroundColor: palette.bgSurface, color: palette.textPrimary }}
       >
@@ -180,6 +183,7 @@ export const AboutSection: React.FC<AboutSectionProps> = ({ site, palette, isMob
   // 4. CLASSIC LUXE (Symmetric Cards - Default)
   return (
     <section
+      id="about"
       className={`transition-colors ${isMobileView ? 'py-8 px-4' : 'py-16 px-4 sm:px-6 lg:px-8'}`}
       style={{ backgroundColor: palette.bgSurface, color: palette.textPrimary }}
     >
