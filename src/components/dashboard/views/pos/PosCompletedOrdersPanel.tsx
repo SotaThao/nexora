@@ -15,6 +15,7 @@ import { SkeletonList } from '../../../ui/skeleton'
 import { formatPosDateTime } from './posDateTime'
 import { formatCustomerPhone } from './customer/customerFormatters'
 import { formatBookingHubDateTimeParts } from '../bookingHubFormatters'
+import { getPosCheckoutPaymentMethodLabel } from '../../../../constants/posCheckoutPaymentMethod'
 import {
   POS_TABLE_HEADER_CELL_CLASS,
   POS_TABLE_HEADER_ROW_CLASS,
@@ -181,7 +182,7 @@ export default function PosCompletedOrdersPanel({ businessId }: { businessId: st
                       </td>
                       <td className="px-4 py-3">
                         <span className="rounded-full bg-sky-50 px-2.5 py-1 text-[10px] font-extrabold text-sky-700">
-                          {order.paymentMethodType || '—'}
+                          {getPosCheckoutPaymentMethodLabel(order.paymentMethodType, t)}
                         </span>
                       </td>
                       <td className="px-4 py-3 text-right font-bold tabular-nums text-nexoraText">
@@ -296,7 +297,11 @@ export default function PosCompletedOrdersPanel({ businessId }: { businessId: st
                         {t('components.dashboard.views.pos.PosCompletedOrdersPanel.viewDetailPaymentMethod')}
                       </p>
                       <p className="text-xs text-nexoraText">
-                        {viewDetail.data.paymentMethodType || t('components.dashboard.views.pos.PosCompletedOrdersPanel.viewDetailNotProvided')}
+                        {getPosCheckoutPaymentMethodLabel(
+                          viewDetail.data.paymentMethodType,
+                          t,
+                          t('components.dashboard.views.pos.PosCompletedOrdersPanel.viewDetailNotProvided'),
+                        )}
                       </p>
                     </div>
                   </div>

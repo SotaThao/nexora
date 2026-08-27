@@ -3677,7 +3677,13 @@
               "Card": "Card",
               "Cash": "Cash",
               "GiftCard": "Gift Card",
-              "SplitPay": "Split Pay"
+              "SplitPay": "Split Pay",
+              "Zelle": "Zelle",
+              "CashApp": "Cash App",
+              "Venmo": "Venmo",
+              "VlinkPay": "VLINKPAY Wallet",
+              "AppleCash": "Apple Cash",
+              "PayPal": "PayPal"
             },
             "receiptTitle": "Receipt",
             "receiptSendSms": "Send SMS",
@@ -6527,7 +6533,13 @@
         "Card": "Card",
         "Cash": "Cash",
         "GiftCard": "Gift Card",
-        "SplitPay": "Split Pay"
+        "SplitPay": "Split Pay",
+        "Zelle": "Zelle",
+        "CashApp": "Cash App",
+        "Venmo": "Venmo",
+        "VlinkPay": "VLINKPAY Wallet",
+        "AppleCash": "Apple Cash",
+        "PayPal": "PayPal"
       },
       "notFoundTitle": "Receipt not found",
       "notFoundBody": "This link may be incorrect or no longer valid. Please contact the salon if you need a copy."
