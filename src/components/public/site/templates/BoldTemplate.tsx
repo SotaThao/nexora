@@ -1,7 +1,6 @@
 import React from 'react'
 import { PublicSiteDto } from '../../../../constants/merchantSiteStatus'
 import { SitePalette } from '../palettes'
-import { TopAnnouncementBar } from '../sections/TopAnnouncementBar'
 import { SiteNavbarHeader } from '../sections/SiteNavbarHeader'
 import { SiteBannersCarousel } from '../sections/SiteBannersCarousel'
 import { HeroSection } from '../sections/HeroSection'
@@ -54,7 +53,6 @@ export const BoldTemplate: React.FC<TemplateProps> = ({
 
   return (
     <div className="min-h-screen font-sans relative pb-16 sm:pb-0" style={{ backgroundColor: boldPalette.bgPrimary, color: boldPalette.textPrimary }}>
-      <TopAnnouncementBar site={site} palette={boldPalette} onBookClick={onBookClick} isMobileView={isMobileView} />
       <SiteNavbarHeader site={site} palette={boldPalette} onBookClick={onBookClick} isMobileView={isMobileView} />
       <SiteBannersCarousel site={site} palette={boldPalette} onBookClick={onBookClick} isMobileView={isMobileView} />
       <HeroSection site={site} palette={boldPalette} onBookClick={onBookClick} isMobileView={isMobileView} />
