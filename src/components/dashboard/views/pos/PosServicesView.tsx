@@ -189,7 +189,7 @@ export default function PosServicesView() {
                   onToggleStatus={() => handleToggleStatus(service)}
                   onDelete={() => handleDelete(service)}
                   isToggling={updateService.isPending}
-                  isDeleting={deleteService.isPending}
+                  isDeleting={deleteService.isPending && deleteService.variables === service.id}
                 />
               ))}
             </ul>
