@@ -47,7 +47,7 @@ export const MinimalTemplate: React.FC<TemplateProps> = ({
       <StaffSection site={site} palette={palette} onSelectStaff={onSelectStaff} isMobileView={isMobileView} />
       <ReviewsSection site={site} palette={palette} isMobileView={isMobileView} />
       <HoursSection site={site} palette={palette} isMobileView={isMobileView} />
-      <FooterSection site={site} palette={palette} isMobileView={isMobileView} />
+      <FooterSection site={site} palette={palette} onBookClick={onBookClick} onSelectService={onSelectService} isMobileView={isMobileView} />
       {isMobileView && <MobileStickyBookingBar site={site} palette={palette} onBookClick={onBookClick} />}
     </div>
   )

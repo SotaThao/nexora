@@ -65,7 +65,7 @@ export const BoldTemplate: React.FC<TemplateProps> = ({
       <StaffSection site={site} palette={boldPalette} onSelectStaff={onSelectStaff} isMobileView={isMobileView} />
       <ReviewsSection site={site} palette={boldPalette} isMobileView={isMobileView} />
       <HoursSection site={site} palette={boldPalette} isMobileView={isMobileView} />
-      <FooterSection site={site} palette={boldPalette} isMobileView={isMobileView} />
+      <FooterSection site={site} palette={boldPalette} onBookClick={onBookClick} onSelectService={onSelectService} isMobileView={isMobileView} />
       {isMobileView && <MobileStickyBookingBar site={site} palette={boldPalette} onBookClick={onBookClick} />}
     </div>
   )
