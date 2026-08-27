@@ -455,7 +455,7 @@ export default function PlanPaymentModal({
                 </div>
                 {currentPlanLabel ? (
                   <p className="mt-3 text-xs font-semibold text-red-600">
-                    {t(`${SUBSCRIPTION_PAYMENT_MODAL_TK}.subscription_forfeit_warning`, { plan: currentPlanLabel })}
+                    {t(`${SUBSCRIPTION_PAYMENT_MODAL_TK}.subscription_forfeit_warning_no_credit`, { plan: currentPlanLabel })}
                   </p>
                 ) : null}
               </section>

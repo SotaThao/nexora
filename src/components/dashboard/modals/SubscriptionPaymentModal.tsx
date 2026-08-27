@@ -14,9 +14,11 @@ import {
 import { resolveTranslatedApiError } from '../../../utils/resolveTranslatedApiError'
 import { resolveSubscriptionBillingDefaults } from '../../../utils/subscriptionBillingDefaults'
 import { formatCurrentPlanLabel } from '../../../utils/subscriptionDisplay'
+import { estimateUpgradeCredit, resolveCurrentCyclePrice } from '../../../utils/subscriptionUpgradeCredit'
 import {
   SubscriptionBillingCycle,
   type PurchasableSubscriptionPlan,
+  type SubscriptionPackage,
   type SubscriptionPaymentMethod,
 } from '../../../data/repositories/subscriptionPayments'
 import type { UserSubscription } from '../../../types/domain'
@@ -42,13 +44,16 @@ import {
 } from '../views/BookingHubIcons'
 import { PlanPaymentMethodsSkeleton } from '../views/BookingHubSkeletons'
 import { BOOKING_HUB_EMPTY_CELL } from '../views/bookingHubFormatters'
+import { BOOKING_HUB_PLANS_TK } from '../views/packageManagement/constants'
 import { useCheckoutModalLock } from '../views/creditCheckout/useCheckoutModalLock'
 import {
   PLAN_CARD_PAYMENT_SYMBOL,
   formatPlanMonthlyTotal,
+  formatUsdAmount,
   formatWalletBalanceUsd,
   hasEnoughWalletBalance,
   isPlanCardPaymentSymbol,
+  resolvePlanBillingPeriodSuffix,
 } from '../views/plans/constants'
 import '../views/booking-hub.css'
 
@@ -62,6 +67,10 @@ type Props = {
   price: number
   billingCycle?: SubscriptionBillingCycle
   currentSubscription?: UserSubscription | null
+  /** Billing-cycle length (months) of the current subscription — from my-packages. */
+  currentPeriodInMonths?: number | null
+  /** Catalog rows, used to resolve the current plan's price for the credit estimate. */
+  catalogPackages?: SubscriptionPackage[]
   billingDefaults?: SubscriptionBillingDetails
   onClose: () => void
   onSuccess?: () => void
@@ -74,6 +83,8 @@ export default function SubscriptionPaymentModal({
   price,
   billingCycle,
   currentSubscription,
+  currentPeriodInMonths,
+  catalogPackages,
   billingDefaults,
   onClose,
   onSuccess,
@@ -90,16 +101,69 @@ export default function SubscriptionPaymentModal({
   const isCardPayment = isPlanCardPaymentSymbol(selectedSymbol)
   const planNameKey = tipPlatformPlanNameI18nKey(plan)
 
+  const {
+    data: methodsData,
+    isLoading: isMethodsLoading,
+    isError: isMethodsError,
+    error: methodsError,
+    refetch: refetchMethods,
+  } = useSubscriptionPaymentMethods({
+    enabled: isOpen && !isCardPayment,
+  })
+  const methods = methodsData ?? EMPTY_PAYMENT_METHODS
+
+  const selectedPayment = useMemo(
+    () => methods.find((method) => method.symbol === selectedSymbol) ?? null,
+    [methods, selectedSymbol],
+  )
+
+  const paymentLabel = resolveCheckoutPaymentLabel({
+    isCardPayment,
+    cardPaymentLabel,
+    selectedPayment,
+    emptyLabel: BOOKING_HUB_EMPTY_CELL,
+  })
+
+  const currentPlanLabel = formatCurrentPlanLabel(currentSubscription)
+  const estimatedCredit = useMemo(
+    () =>
+      estimateUpgradeCredit({
+        isCurrentActive: String(currentSubscription?.status ?? '').toLowerCase() === 'active',
+        currentExpiresAt: currentSubscription?.currentPeriodEnd ?? null,
+        currentPeriodInMonths,
+        currentCyclePrice: resolveCurrentCyclePrice(
+          currentSubscription?.packageCode ?? null,
+          currentPeriodInMonths,
+          catalogPackages,
+        ),
+      }),
+    [currentSubscription, currentPeriodInMonths, catalogPackages],
+  )
+  // Estimated actual charge after credit — the wallet-balance check must use this, not the
+  // full plan price, or a merchant with enough balance to cover only the discounted amount
+  // would be wrongly blocked from confirming.
+  const estimatedFinalDue = Math.max(0, price - estimatedCredit)
+
   const refreshSubscriptionCaches = useCallback(() => {
     invalidateSubscriptionPurchaseQueries(queryClient)
   }, [queryClient])
 
+  // Same message format as the AI Voice checkout's success toast (BookingPlansPanel.tsx's
+  // handlePlanPaymentSuccess) — kept in sync so both package types report success consistently.
   const finishCheckoutSuccess = useCallback(() => {
     refreshSubscriptionCaches()
-    showToast(t(subscriptionModalKey('paymentSuccess')), 'success')
+    showToast(
+      t(`${BOOKING_HUB_PLANS_TK}.planPaymentSuccess`, {
+        plan,
+        price: estimatedFinalDue,
+        period: resolvePlanBillingPeriodSuffix(billingCycle, t, BOOKING_HUB_PLANS_TK),
+        payment: paymentLabel,
+      }),
+      'success',
+    )
     onClose()
     onSuccess?.()
-  }, [onClose, onSuccess, refreshSubscriptionCaches, showToast, t])
+  }, [billingCycle, estimatedFinalDue, onClose, onSuccess, paymentLabel, plan, refreshSubscriptionCaches, showToast, t])
 
   const handleCardOrderTimeout = useCallback(() => {
     refreshSubscriptionCaches()
@@ -115,17 +179,6 @@ export default function SubscriptionPaymentModal({
     onPaid: finishCheckoutSuccess,
     onTimeout: handleCardOrderTimeout,
   })
-
-  const {
-    data: methodsData,
-    isLoading: isMethodsLoading,
-    isError: isMethodsError,
-    error: methodsError,
-    refetch: refetchMethods,
-  } = useSubscriptionPaymentMethods({
-    enabled: isOpen && !isCardPayment,
-  })
-  const methods = methodsData ?? EMPTY_PAYMENT_METHODS
 
   const purchaseMutation = usePurchaseSubscription()
   const initializeCardMutation = useInitializeCardPayment()
@@ -169,18 +222,6 @@ export default function SubscriptionPaymentModal({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isOpen, isCardPayment, packageId, billingCycle])
 
-  const selectedPayment = useMemo(
-    () => methods.find((method) => method.symbol === selectedSymbol) ?? null,
-    [methods, selectedSymbol],
-  )
-
-  const paymentLabel = resolveCheckoutPaymentLabel({
-    isCardPayment,
-    cardPaymentLabel,
-    selectedPayment,
-    emptyLabel: BOOKING_HUB_EMPTY_CELL,
-  })
-
   const methodsErrorMessage = resolveTranslatedApiError(
     t,
     methodsError,
@@ -194,14 +235,12 @@ export default function SubscriptionPaymentModal({
     }
   }
 
-  const currentPlanLabel = formatCurrentPlanLabel(currentSubscription)
-
   const handleWalletConfirm = () => {
     if (!selectedSymbol || isCardPayment) return
     const method = methods.find((item) => item.symbol === selectedSymbol)
     if (!method) return
 
-    if (!hasEnoughWalletBalance(method, price)) {
+    if (!hasEnoughWalletBalance(method, estimatedFinalDue)) {
       showToast(t(getErrorI18nKey('InsufficientBalance')), 'error')
       return
     }
@@ -406,7 +445,13 @@ export default function SubscriptionPaymentModal({
                       <PlanPaymentMethodsSkeleton />
                     ) : initializeCardMutation.isError ? (
                       <div className="booking-empty-cell plan-payment-methods-state">
-                        <div>{t(subscriptionModalKey('cardInitError'))}</div>
+                        <div>
+                          {resolveTranslatedApiError(
+                            t,
+                            initializeCardMutation.error,
+                            subscriptionModalKey('cardInitError'),
+                          )}
+                        </div>
                         <button
                           className="booking-mini-button"
                           type="button"
@@ -452,26 +497,49 @@ export default function SubscriptionPaymentModal({
               <span>{t(subscriptionModalKey('invoicePayment'))}</span>
               <strong>{paymentLabel}</strong>
             </div>
-            <div className="sms-credit-invoice-row sms-credit-invoice-total">
-              <span>{t(subscriptionModalKey('totalDue'))}</span>
-              <strong>
-                {formatPlanMonthlyTotal(
-                  price,
-                  ` / ${t(
-                    subscriptionModalKey(
-                      billingCycle === SubscriptionBillingCycle.Yearly
-                        ? 'priceNoteYear'
-                        : 'priceNoteMonth',
-                    ),
-                  )}`,
-                )}
-              </strong>
-            </div>
-            {currentPlanLabel ? (
-              <p className="mt-3 text-xs font-semibold text-red-600">
-                {t(subscriptionModalKey('forfeitWarning'), { plan: currentPlanLabel })}
-              </p>
-            ) : null}
+            {(() => {
+              const periodSuffix = ` / ${t(
+                subscriptionModalKey(
+                  billingCycle === SubscriptionBillingCycle.Yearly
+                    ? 'priceNoteYear'
+                    : 'priceNoteMonth',
+                ),
+              )}`
+              return (
+                <>
+                  {estimatedCredit > 0 ? (
+                    <>
+                      <div className="sms-credit-invoice-row">
+                        <span>{t(subscriptionModalKey('planPrice'))}</span>
+                        <strong>{formatPlanMonthlyTotal(price, periodSuffix)}</strong>
+                      </div>
+                      <div className="sms-credit-invoice-row">
+                        <span>{t(subscriptionModalKey('upgradeCreditEstimate'))}</span>
+                        <strong>-{formatUsdAmount(estimatedCredit)}</strong>
+                      </div>
+                    </>
+                  ) : null}
+                  <div className="sms-credit-invoice-row sms-credit-invoice-total">
+                    <span>{t(subscriptionModalKey('totalDue'))}</span>
+                    <strong>{formatPlanMonthlyTotal(estimatedFinalDue, periodSuffix)}</strong>
+                  </div>
+                </>
+              )
+            })()}
+            {currentPlanLabel
+              ? (() => {
+                  // Bold just the plan name inside the sentence — split on the raw
+                  // "{{plan}}" placeholder instead of interpolating it as plain text.
+                  const [before, after] = t(subscriptionModalKey('forfeitWarning')).split('{{plan}}')
+                  return (
+                    <p className="mt-3 text-xs font-semibold text-nexoraMuted">
+                      {before}
+                      <strong className="text-nexoraText">{currentPlanLabel}</strong>
+                      {after}
+                    </p>
+                  )
+                })()
+              : null}
           </section>
 
           <div className="sr-only" aria-live="polite">
