@@ -37,6 +37,29 @@ export const ServiceMenuSection: React.FC<ServiceMenuSectionProps> = ({ site, pa
 
   const [selectedCatId, setSelectedCatId] = React.useState<string>('all')
 
+  // Listen for category selection dispatched from header submenu
+  React.useEffect(() => {
+    const handleCategorySelect = (e: Event) => {
+      const customEvent = e as CustomEvent<{ categoryName?: string; catId?: string }>
+      if (customEvent.detail) {
+        if (customEvent.detail.catId) {
+          setSelectedCatId(customEvent.detail.catId)
+        } else if (customEvent.detail.categoryName) {
+          if (customEvent.detail.categoryName === 'all') {
+            setSelectedCatId('all')
+          } else {
+            const match = categories.find((c) => c.name === customEvent.detail.categoryName)
+            if (match) {
+              setSelectedCatId(match.id)
+            }
+          }
+        }
+      }
+    }
+    window.addEventListener('nexora-select-category', handleCategorySelect)
+    return () => window.removeEventListener('nexora-select-category', handleCategorySelect)
+  }, [categories])
+
   const visibleCategories = React.useMemo(() => {
     if (selectedCatId === 'all') return categories
     return categories.filter((c) => c.id === selectedCatId)

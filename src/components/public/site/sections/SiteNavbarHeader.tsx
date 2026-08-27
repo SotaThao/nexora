@@ -1,20 +1,38 @@
-// SiteNavbarHeader.tsx — Apple HIG Inspired Homepage Navigation Header for Merchant Site (US-107)
-import React, { useState } from 'react'
+﻿// SiteNavbarHeader.tsx — Apple HIG Inspired Homepage Navigation Header with Submenus (US-107)
+import React, { useState, useMemo, useRef, useEffect } from 'react'
 import {
   Menu,
   X,
   Calendar,
-  Phone,
   Sparkles,
   Star,
   Clock,
   MapPin,
   Gift,
   Users,
-  Scissors
+  Scissors,
+  ChevronDown,
+  ArrowRight,
+  Layers,
+  Phone
 } from 'lucide-react'
 import { PublicSiteDto } from '../../../../constants/merchantSiteStatus'
 import { SitePalette } from '../palettes'
+
+interface SubMenuItem {
+  label: string
+  href: string
+  categoryName?: string
+  badge?: string
+}
+
+interface NavItem {
+  id: string
+  label: string
+  href: string
+  icon: React.ElementType
+  subItems?: SubMenuItem[]
+}
 
 interface SiteNavbarHeaderProps {
   site: PublicSiteDto
@@ -30,29 +48,68 @@ export const SiteNavbarHeader: React.FC<SiteNavbarHeaderProps> = ({
   isMobileView
 }) => {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
+  const [openDropdown, setOpenDropdown] = useState<string | null>(null)
+  const [expandedMobileNav, setExpandedMobileNav] = useState<string | null>('services')
+  const dropdownTimeoutRef = useRef<NodeJS.Timeout | null>(null)
+
   const businessName = site.businessName || 'Nexora Salon'
   const logoUrl = site.content?.logoUrl
 
-  const navItems = [
-    { label: 'Dịch Vụ', href: '#services', icon: Scissors },
-    { label: 'Ưu Đãi', href: '#promotions', icon: Gift },
-    { label: 'Giới Thiệu', href: '#about', icon: Sparkles },
-    { label: 'Đội Ngũ', href: '#staff', icon: Users },
-    { label: 'Đánh Giá', href: '#reviews', icon: Star },
-    { label: 'Giờ Mở Cửa', href: '#hours', icon: Clock },
+  // Group service categories from real POS services or fallback mock list
+  const serviceSubmenu: SubMenuItem[] = useMemo(() => {
+    if (site.services && site.services.length > 0) {
+      const counts: Record<string, number> = {}
+      site.services.forEach((s) => {
+        const cat = s.categoryName || 'Dịch Vụ Salon'
+        counts[cat] = (counts[cat] || 0) + 1
+      })
+      const items = Object.entries(counts).map(([name, count]) => ({
+        label: name,
+        badge: `${count}`,
+        href: '#services',
+        categoryName: name
+      }))
+      return [
+        { label: 'Tất Cả Dịch Vụ', href: '#services', categoryName: 'all', badge: `${site.services.length}` },
+        ...items
+      ]
+    }
+    return [
+      { label: 'Tất Cả Dịch Vụ', href: '#services', categoryName: 'all', badge: '22' },
+      { label: 'Pedicure', href: '#services', categoryName: 'Pedicure', badge: '9' },
+      { label: 'Manicure', href: '#services', categoryName: 'Manicure', badge: '4' },
+      { label: 'Acrylic Nail Service', href: '#services', categoryName: 'Acrylic Nail Service', badge: '3' },
+      { label: 'Dipping Nail', href: '#services', categoryName: 'Dipping Nail', badge: '2' },
+      { label: 'Builder Gel Service', href: '#services', categoryName: 'Builder Gel Service', badge: '2' },
+      { label: 'Waxing Service', href: '#services', categoryName: 'Waxing Service', badge: '2' },
+    ]
+  }, [site.services])
+
+  const navItems: NavItem[] = [
+    {
+      id: 'services',
+      label: 'Dịch Vụ',
+      href: '#services',
+      icon: Scissors,
+      subItems: serviceSubmenu
+    },
+    { id: 'promotions', label: 'Ưu Đãi', href: '#promotions', icon: Gift },
+    { id: 'about', label: 'Giới Thiệu', href: '#about', icon: Sparkles },
+    { id: 'staff', label: 'Đội Ngũ', href: '#staff', icon: Users },
+    { id: 'reviews', label: 'Đánh Giá', href: '#reviews', icon: Star },
+    { id: 'hours', label: 'Giờ Mở Cửa', href: '#hours', icon: Clock },
   ]
 
-  const handleNavClick = (e: React.MouseEvent<HTMLAnchorElement>, href: string) => {
+  const handleNavClick = (e: React.MouseEvent<HTMLElement>, href: string) => {
     e.preventDefault()
+    setOpenDropdown(null)
     setIsMobileMenuOpen(false)
     const targetId = href.replace('#', '')
     const targetElement = document.getElementById(targetId) || document.querySelector(href)
     if (!targetElement) return
 
-    // 1. Try standard scrollIntoView with scroll-margin
     targetElement.scrollIntoView({ behavior: 'smooth', block: 'start' })
 
-    // 2. Also ensure nested scroll container (e.g. preview modal/phone frame) scrolls accurately
     let parent = targetElement.parentElement
     while (parent && parent !== document.body) {
       const style = window.getComputedStyle(parent)
@@ -71,6 +128,41 @@ export const SiteNavbarHeader: React.FC<SiteNavbarHeaderProps> = ({
       parent = parent.parentElement
     }
   }
+
+  const handleSubItemSelect = (e: React.MouseEvent<HTMLElement>, subItem: SubMenuItem) => {
+    e.preventDefault()
+    setOpenDropdown(null)
+    setIsMobileMenuOpen(false)
+
+    if (subItem.categoryName) {
+      window.dispatchEvent(
+        new CustomEvent('nexora-select-category', {
+          detail: { categoryName: subItem.categoryName }
+        })
+      )
+    }
+
+    handleNavClick(e, subItem.href)
+  }
+
+  const handleMouseEnter = (navId: string) => {
+    if (dropdownTimeoutRef.current) {
+      clearTimeout(dropdownTimeoutRef.current)
+    }
+    setOpenDropdown(navId)
+  }
+
+  const handleMouseLeave = () => {
+    dropdownTimeoutRef.current = setTimeout(() => {
+      setOpenDropdown(null)
+    }, 150)
+  }
+
+  useEffect(() => {
+    return () => {
+      if (dropdownTimeoutRef.current) clearTimeout(dropdownTimeoutRef.current)
+    }
+  }, [])
 
   return (
     <header
@@ -120,20 +212,110 @@ export const SiteNavbarHeader: React.FC<SiteNavbarHeaderProps> = ({
             </div>
           </a>
 
-          {/* 2. Desktop Navigation Menu (Single line, whitespace-nowrap) */}
+          {/* 2. Desktop Navigation Menu (With Interactive Submenu Dropdowns) */}
           {!isMobileView && (
-            <nav className="hidden md:flex items-center gap-1 lg:gap-2 shrink-0 whitespace-nowrap">
-              {navItems.map((item) => (
-                <a
-                  key={item.href}
-                  href={item.href}
-                  onClick={(e) => handleNavClick(e, item.href)}
-                  className="px-2.5 lg:px-3 py-1.5 rounded-xl text-xs lg:text-sm font-semibold transition-all hover:bg-white/10 flex items-center gap-1.5 opacity-80 hover:opacity-100 whitespace-nowrap shrink-0"
-                  style={{ color: palette.textPrimary }}
-                >
-                  <span className="whitespace-nowrap">{item.label}</span>
-                </a>
-              ))}
+            <nav className="hidden md:flex items-center gap-1 lg:gap-1.5 shrink-0 whitespace-nowrap">
+              {navItems.map((item) => {
+                const hasSubmenu = Boolean(item.subItems && item.subItems.length > 0)
+                const isDropdownOpen = openDropdown === item.id
+
+                return (
+                  <div
+                    key={item.id}
+                    className="relative"
+                    onMouseEnter={() => hasSubmenu && handleMouseEnter(item.id)}
+                    onMouseLeave={() => hasSubmenu && handleMouseLeave()}
+                  >
+                    <a
+                      href={item.href}
+                      onClick={(e) => {
+                        if (hasSubmenu) {
+                          setOpenDropdown(isDropdownOpen ? null : item.id)
+                        }
+                        handleNavClick(e, item.href)
+                      }}
+                      className={`px-2.5 lg:px-3 py-1.5 rounded-xl text-xs lg:text-sm font-semibold transition-all flex items-center gap-1.5 opacity-85 hover:opacity-100 whitespace-nowrap shrink-0 ${
+                        isDropdownOpen ? 'bg-white/10 opacity-100 shadow-xs' : 'hover:bg-white/5'
+                      }`}
+                      style={{ color: palette.textPrimary }}
+                    >
+                      <span className="whitespace-nowrap">{item.label}</span>
+                      {hasSubmenu && (
+                        <ChevronDown
+                          className={`w-3 h-3 opacity-60 transition-transform duration-200 ${
+                            isDropdownOpen ? 'rotate-180 opacity-100' : ''
+                          }`}
+                          style={{ color: isDropdownOpen ? palette.accentColor : undefined }}
+                        />
+                      )}
+                    </a>
+
+                    {/* Submenu Dropdown Popover */}
+                    {hasSubmenu && isDropdownOpen && (
+                      <div
+                        className="absolute left-0 top-full mt-1.5 w-72 sm:w-80 rounded-2xl border shadow-2xl backdrop-blur-2xl p-2 z-50 animate-fadeIn"
+                        style={{
+                          backgroundColor: `${palette.bgSurface}FC`,
+                          borderColor: `${palette.borderPrimary}90`,
+                          boxShadow: `0 20px 40px -10px ${palette.bgPrimary}CC, 0 0 0 1px ${palette.borderPrimary}30`
+                        }}
+                      >
+                        {/* Submenu Header Label */}
+                        <div className="px-3 py-2 flex items-center justify-between border-b text-[10px] font-extrabold uppercase tracking-wider mb-1" style={{ borderColor: `${palette.borderPrimary}40`, color: palette.accentColor }}>
+                          <span className="flex items-center gap-1.5">
+                            <Layers className="w-3 h-3" />
+                            <span>DANH MỤC DỊCH VỤ</span>
+                          </span>
+                          <span className="opacity-70 lowercase font-normal">chọn để xem</span>
+                        </div>
+
+                        {/* Category List */}
+                        <div className="grid grid-cols-1 gap-1 max-h-[320px] overflow-y-auto pr-1">
+                          {item.subItems?.map((sub, idx) => (
+                            <button
+                              key={sub.label + idx}
+                              type="button"
+                              onClick={(e) => handleSubItemSelect(e, sub)}
+                              className="w-full flex items-center justify-between px-3 py-2 rounded-xl text-xs font-semibold text-left transition-all hover:bg-white/10 group cursor-pointer"
+                              style={{ color: palette.textPrimary }}
+                            >
+                              <span className="flex items-center gap-2 truncate">
+                                <span className="w-1.5 h-1.5 rounded-full opacity-60 group-hover:opacity-100 group-hover:scale-125 transition-all shrink-0" style={{ backgroundColor: palette.accentColor }} />
+                                <span className="truncate group-hover:translate-x-0.5 transition-transform">{sub.label}</span>
+                              </span>
+                              {sub.badge && (
+                                <span
+                                  className="text-[10px] font-bold px-2 py-0.5 rounded-full border shrink-0 transition-colors"
+                                  style={{
+                                    backgroundColor: `${palette.badgeBg}`,
+                                    borderColor: `${palette.borderPrimary}40`,
+                                    color: palette.badgeText
+                                  }}
+                                >
+                                  {sub.badge}
+                                </span>
+                              )}
+                            </button>
+                          ))}
+                        </div>
+
+                        {/* Quick Action Footer */}
+                        <div className="mt-1 pt-1.5 border-t" style={{ borderColor: `${palette.borderPrimary}40` }}>
+                          <button
+                            type="button"
+                            onClick={(e) => handleNavClick(e, '#services')}
+                            className="w-full flex items-center justify-center gap-1.5 py-1.5 rounded-lg text-[11px] font-bold transition-opacity hover:opacity-80 cursor-pointer"
+                            style={{ color: palette.accentColor }}
+                          >
+                            <span>Xem toàn bộ menu bảng giá</span>
+                            <ArrowRight className="w-3 h-3" />
+                          </button>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                )
+              })}
             </nav>
           )}
 
@@ -176,7 +358,7 @@ export const SiteNavbarHeader: React.FC<SiteNavbarHeaderProps> = ({
         </div>
       </div>
 
-      {/* 4. Mobile Dropdown / Slide Navigation Drawer */}
+      {/* 4. Mobile Dropdown / Slide Navigation Drawer (With Expandable Submenu Accordion) */}
       {isMobileMenuOpen && (
         <div
           className="border-b shadow-2xl animate-fadeIn overflow-hidden"
@@ -187,23 +369,69 @@ export const SiteNavbarHeader: React.FC<SiteNavbarHeaderProps> = ({
         >
           <div className="max-w-7xl mx-auto px-4 py-4 space-y-3">
             {/* Quick Links List */}
-            <div className="grid grid-cols-2 gap-2">
+            <div className="flex flex-col gap-1.5">
               {navItems.map((item) => {
                 const Icon = item.icon
+                const hasSubmenu = Boolean(item.subItems && item.subItems.length > 0)
+                const isExpanded = expandedMobileNav === item.id
+
                 return (
-                  <a
-                    key={item.href}
-                    href={item.href}
-                    onClick={(e) => handleNavClick(e, item.href)}
-                    className="flex items-center gap-2 px-3 py-2.5 rounded-xl border transition-all text-xs font-bold bg-white/5 hover:bg-white/10"
-                    style={{
-                      borderColor: `${palette.borderPrimary}60`,
-                      color: palette.textPrimary
-                    }}
-                  >
-                    <Icon className="w-3.5 h-3.5 shrink-0" style={{ color: palette.accentColor }} />
-                    <span>{item.label}</span>
-                  </a>
+                  <div key={item.id} className="flex flex-col">
+                    <div className="flex items-center gap-1">
+                      <a
+                        href={item.href}
+                        onClick={(e) => handleNavClick(e, item.href)}
+                        className="flex-1 flex items-center gap-2 px-3 py-2.5 rounded-xl border transition-all text-xs font-bold bg-white/5 hover:bg-white/10"
+                        style={{
+                          borderColor: `${palette.borderPrimary}60`,
+                          color: palette.textPrimary
+                        }}
+                      >
+                        <Icon className="w-3.5 h-3.5 shrink-0" style={{ color: palette.accentColor }} />
+                        <span>{item.label}</span>
+                      </a>
+
+                      {hasSubmenu && (
+                        <button
+                          type="button"
+                          onClick={() => setExpandedMobileNav(isExpanded ? null : item.id)}
+                          className="px-3 py-2.5 rounded-xl border flex items-center justify-center transition-colors bg-white/5"
+                          style={{
+                            borderColor: `${palette.borderPrimary}60`,
+                            color: palette.textPrimary
+                          }}
+                          aria-label="Mở danh mục con"
+                        >
+                          <ChevronDown className={`w-3.5 h-3.5 transition-transform ${isExpanded ? 'rotate-180' : ''}`} style={{ color: palette.accentColor }} />
+                        </button>
+                      )}
+                    </div>
+
+                    {/* Mobile Nested Submenu Category Chips */}
+                    {hasSubmenu && isExpanded && (
+                      <div className="pt-2 pb-1 pl-4 pr-1 grid grid-cols-2 gap-1.5 animate-fadeIn">
+                        {item.subItems?.map((sub, idx) => (
+                          <button
+                            key={sub.label + idx}
+                            type="button"
+                            onClick={(e) => handleSubItemSelect(e, sub)}
+                            className="flex items-center justify-between gap-1.5 px-2.5 py-2 rounded-lg border text-[11px] font-semibold text-left transition-colors bg-white/5 hover:bg-white/15 truncate"
+                            style={{
+                              borderColor: `${palette.borderPrimary}40`,
+                              color: palette.textPrimary
+                            }}
+                          >
+                            <span className="truncate">{sub.label}</span>
+                            {sub.badge && (
+                              <span className="text-[9px] font-bold px-1.5 py-0.5 rounded-full bg-white/10 shrink-0">
+                                {sub.badge}
+                              </span>
+                            )}
+                          </button>
+                        ))}
+                      </div>
+                    )}
+                  </div>
                 )
               })}
             </div>
@@ -214,12 +442,6 @@ export const SiteNavbarHeader: React.FC<SiteNavbarHeaderProps> = ({
                 <div className="flex items-center gap-2">
                   <MapPin className="w-3.5 h-3.5 shrink-0" style={{ color: palette.accentColor }} />
                   <span className="truncate">{site.address}</span>
-                </div>
-              )}
-              {site.phone && (
-                <div className="flex items-center gap-2">
-                  <Phone className="w-3.5 h-3.5 shrink-0" style={{ color: palette.accentColor }} />
-                  <span>{site.phone}</span>
                 </div>
               )}
             </div>
