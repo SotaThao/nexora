@@ -161,6 +161,7 @@ export const errorCodeToI18nKey = {
 
   // Shared Catalog — Categories & Services (delete guards)
   [CatalogErrorCode.ServiceInUse]: 'errors.catalog_service_in_use',
+  [CatalogErrorCode.ServiceDeleted]: 'errors.catalog_service_deleted',
   [CatalogErrorCode.CategoryInUse]: 'errors.catalog_category_in_use',
 
   // Shared Catalog — Service Add-Ons
