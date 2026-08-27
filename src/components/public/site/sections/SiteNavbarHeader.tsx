@@ -1,4 +1,4 @@
-﻿// SiteNavbarHeader.tsx — Apple HIG Inspired Homepage Navigation Header with Submenus (US-107)
+// SiteNavbarHeader.tsx — Apple HIG Inspired Homepage Navigation Header with Submenus (US-107)
 import React, { useState, useMemo, useRef, useEffect } from 'react'
 import {
   Menu,
@@ -97,7 +97,7 @@ export const SiteNavbarHeader: React.FC<SiteNavbarHeaderProps> = ({
     { id: 'about', label: 'Giới Thiệu', href: '#about', icon: Sparkles },
     { id: 'staff', label: 'Đội Ngũ', href: '#staff', icon: Users },
     { id: 'reviews', label: 'Đánh Giá', href: '#reviews', icon: Star },
-    { id: 'hours', label: 'Giờ Mở Cửa', href: '#hours', icon: Clock },
+    { id: 'hours', label: 'Vị Trí', href: '#hours', icon: MapPin },
   ]
 
   const handleNavClick = (e: React.MouseEvent<HTMLElement>, href: string) => {

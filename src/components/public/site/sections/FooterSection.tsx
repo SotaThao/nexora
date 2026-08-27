@@ -1,4 +1,4 @@
-﻿// FooterSection.tsx — Apple HIG Inspired 4-Column Luxury Footer (US-107)
+// FooterSection.tsx — Apple HIG Inspired 4-Column Luxury Footer (US-107)
 import React from 'react'
 import {
   MapPin,
@@ -55,7 +55,7 @@ export const FooterSection: React.FC<FooterSectionProps> = ({
     { label: 'Giới Thiệu (About Us)', href: '#about' },
     { label: 'Đội Ngũ Nghệ Nhân (Staff)', href: '#staff' },
     { label: 'Đánh Giá Khách Hàng (Reviews)', href: '#reviews' },
-    { label: 'Giờ Mở Cửa (Opening Hours)', href: '#hours' },
+    { label: 'Vị Trí & Chỉ Đường (Location & Map)', href: '#hours' },
   ]
 
   const handleSmoothScroll = (e: React.MouseEvent<HTMLAnchorElement>, href: string, isBooking?: boolean) => {
