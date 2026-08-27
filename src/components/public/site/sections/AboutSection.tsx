@@ -20,7 +20,7 @@ export const AboutSection: React.FC<AboutSectionProps> = ({ site, palette, isMob
     return (
       <section
         id="about"
-        className={`transition-colors border-b ${isMobileView ? 'py-8 px-4' : 'py-16 px-4 sm:px-6 lg:px-8'}`}
+        className={`transition-colors border-b scroll-mt-16 sm:scroll-mt-20 ${isMobileView ? 'py-8 px-4' : 'py-16 px-4 sm:px-6 lg:px-8'}`}
         style={{ backgroundColor: palette.bgPrimary, borderColor: palette.borderPrimary, color: palette.textPrimary }}
       >
         <div className="max-w-4xl mx-auto space-y-8">
@@ -65,7 +65,7 @@ export const AboutSection: React.FC<AboutSectionProps> = ({ site, palette, isMob
     return (
       <section
         id="about"
-        className={`transition-colors ${isMobileView ? 'py-8 px-4' : 'py-16 px-4 sm:px-6 lg:px-8'}`}
+        className={`transition-colors scroll-mt-16 sm:scroll-mt-20 ${isMobileView ? 'py-8 px-4' : 'py-16 px-4 sm:px-6 lg:px-8'}`}
         style={{ backgroundColor: palette.bgSurface, color: palette.textPrimary }}
       >
         <div className="max-w-5xl mx-auto space-y-8">
@@ -124,7 +124,7 @@ export const AboutSection: React.FC<AboutSectionProps> = ({ site, palette, isMob
     return (
       <section
         id="about"
-        className={`transition-colors ${isMobileView ? 'py-8 px-4' : 'py-16 px-4 sm:px-6 lg:px-8'}`}
+        className={`transition-colors scroll-mt-16 sm:scroll-mt-20 ${isMobileView ? 'py-8 px-4' : 'py-16 px-4 sm:px-6 lg:px-8'}`}
         style={{ backgroundColor: palette.bgSurface, color: palette.textPrimary }}
       >
         <div className="max-w-6xl mx-auto space-y-6">
@@ -184,7 +184,7 @@ export const AboutSection: React.FC<AboutSectionProps> = ({ site, palette, isMob
   return (
     <section
       id="about"
-      className={`transition-colors ${isMobileView ? 'py-8 px-4' : 'py-16 px-4 sm:px-6 lg:px-8'}`}
+      className={`transition-colors scroll-mt-16 sm:scroll-mt-20 ${isMobileView ? 'py-8 px-4' : 'py-16 px-4 sm:px-6 lg:px-8'}`}
       style={{ backgroundColor: palette.bgSurface, color: palette.textPrimary }}
     >
       <div className="max-w-6xl mx-auto">

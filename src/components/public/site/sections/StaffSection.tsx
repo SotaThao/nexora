@@ -35,7 +35,7 @@ export const StaffSection: React.FC<StaffSectionProps> = ({ site, palette, onSel
     return (
       <section
         id="staff"
-        className={`border-t transition-colors ${isMobileView ? 'py-8 px-4' : 'py-16 px-4 sm:px-6 lg:px-8'}`}
+        className={`border-t transition-colors scroll-mt-16 sm:scroll-mt-20 ${isMobileView ? 'py-8 px-4' : 'py-16 px-4 sm:px-6 lg:px-8'}`}
         style={{ backgroundColor: palette.bgPrimary, borderColor: palette.borderPrimary }}
       >
         <div className="max-w-4xl mx-auto space-y-8">
@@ -93,7 +93,7 @@ export const StaffSection: React.FC<StaffSectionProps> = ({ site, palette, onSel
   return (
     <section
       id="staff"
-      className={`border-t transition-colors ${isMobileView ? 'py-8 px-4' : 'py-16 px-4 sm:px-6 lg:px-8'}`}
+      className={`border-t transition-colors scroll-mt-16 sm:scroll-mt-20 ${isMobileView ? 'py-8 px-4' : 'py-16 px-4 sm:px-6 lg:px-8'}`}
       style={{ backgroundColor: palette.bgPrimary, borderColor: palette.borderPrimary }}
     >
       <div className="max-w-6xl mx-auto">

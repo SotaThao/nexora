@@ -1,4 +1,4 @@
-﻿// SiteNavbarHeader.tsx — Apple HIG Inspired Homepage Navigation Header for Merchant Site (US-107)
+// SiteNavbarHeader.tsx — Apple HIG Inspired Homepage Navigation Header for Merchant Site (US-107)
 import React, { useState } from 'react'
 import {
   Menu,
@@ -36,6 +36,7 @@ export const SiteNavbarHeader: React.FC<SiteNavbarHeaderProps> = ({
   const navItems = [
     { label: 'Dịch Vụ', href: '#services', icon: Scissors },
     { label: 'Ưu Đãi', href: '#promotions', icon: Gift },
+    { label: 'Giới Thiệu', href: '#about', icon: Sparkles },
     { label: 'Đội Ngũ', href: '#staff', icon: Users },
     { label: 'Đánh Giá', href: '#reviews', icon: Star },
     { label: 'Giờ Mở Cửa', href: '#hours', icon: Clock },
@@ -44,9 +45,30 @@ export const SiteNavbarHeader: React.FC<SiteNavbarHeaderProps> = ({
   const handleNavClick = (e: React.MouseEvent<HTMLAnchorElement>, href: string) => {
     e.preventDefault()
     setIsMobileMenuOpen(false)
-    const targetElement = document.querySelector(href)
-    if (targetElement) {
-      targetElement.scrollIntoView({ behavior: 'smooth', block: 'start' })
+    const targetId = href.replace('#', '')
+    const targetElement = document.getElementById(targetId) || document.querySelector(href)
+    if (!targetElement) return
+
+    // 1. Try standard scrollIntoView with scroll-margin
+    targetElement.scrollIntoView({ behavior: 'smooth', block: 'start' })
+
+    // 2. Also ensure nested scroll container (e.g. preview modal/phone frame) scrolls accurately
+    let parent = targetElement.parentElement
+    while (parent && parent !== document.body) {
+      const style = window.getComputedStyle(parent)
+      const overflowY = style.overflowY
+      if ((overflowY === 'auto' || overflowY === 'scroll') && parent.scrollHeight > parent.clientHeight) {
+        const headerOffset = 64
+        const elementTop = targetElement.getBoundingClientRect().top
+        const parentTop = parent.getBoundingClientRect().top
+        const targetScrollTop = elementTop - parentTop + parent.scrollTop - headerOffset
+        parent.scrollTo({
+          top: Math.max(0, targetScrollTop),
+          behavior: 'smooth'
+        })
+        break
+      }
+      parent = parent.parentElement
     }
   }
 

@@ -23,7 +23,7 @@ export const HeroSection: React.FC<HeroSectionProps> = ({ site, palette, onBookC
     return (
       <section
         id="hero"
-        className={`relative overflow-hidden transition-colors border-b ${
+        className={`relative overflow-hidden transition-colors border-b scroll-mt-16 sm:scroll-mt-20 ${
           isMobileView ? 'py-8' : 'py-12 md:py-20'
         }`}
         style={{ backgroundColor: palette.bgPrimary, borderColor: palette.borderPrimary, color: palette.textPrimary }}
@@ -178,7 +178,7 @@ export const HeroSection: React.FC<HeroSectionProps> = ({ site, palette, onBookC
     return (
       <section
         id="hero"
-        className={`relative overflow-hidden transition-colors ${
+        className={`relative overflow-hidden transition-colors scroll-mt-16 sm:scroll-mt-20 ${
           isMobileView ? 'py-8' : 'py-12 md:py-20'
         }`}
         style={{ background: palette.heroGradient, color: palette.heroTextPrimary }}
@@ -340,7 +340,7 @@ export const HeroSection: React.FC<HeroSectionProps> = ({ site, palette, onBookC
     return (
       <section
         id="hero"
-        className={`relative overflow-hidden transition-colors ${
+        className={`relative overflow-hidden transition-colors scroll-mt-16 sm:scroll-mt-20 ${
           isMobileView ? 'py-8' : 'py-12 md:py-20'
         }`}
         style={{ background: palette.heroGradient, color: palette.heroTextPrimary }}
@@ -504,7 +504,7 @@ export const HeroSection: React.FC<HeroSectionProps> = ({ site, palette, onBookC
   return (
     <section
       id="hero"
-      className={`relative overflow-hidden transition-colors ${
+      className={`relative overflow-hidden transition-colors scroll-mt-16 sm:scroll-mt-20 ${
         isMobileView ? 'py-8' : 'py-12 md:py-20'
       }`}
       style={{ background: palette.heroGradient, color: palette.heroTextPrimary }}

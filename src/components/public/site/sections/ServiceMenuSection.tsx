@@ -54,7 +54,7 @@ export const ServiceMenuSection: React.FC<ServiceMenuSectionProps> = ({ site, pa
     return (
       <section
         id="services"
-        className={`transition-colors border-b ${isMobileView ? 'py-8 px-4' : 'py-16 px-4 sm:px-6 lg:px-8'}`}
+        className={`transition-colors border-b scroll-mt-16 sm:scroll-mt-20 ${isMobileView ? 'py-8 px-4' : 'py-16 px-4 sm:px-6 lg:px-8'}`}
         style={{ backgroundColor: palette.bgPrimary, borderColor: palette.borderPrimary, color: palette.textPrimary }}
       >
         <div className="max-w-4xl mx-auto space-y-8">
@@ -170,7 +170,7 @@ export const ServiceMenuSection: React.FC<ServiceMenuSectionProps> = ({ site, pa
   return (
     <section
       id="services"
-      className={`transition-colors ${isMobileView ? 'py-8 px-4' : 'py-16 px-4 sm:px-6 lg:px-8'}`}
+      className={`transition-colors scroll-mt-16 sm:scroll-mt-20 ${isMobileView ? 'py-8 px-4' : 'py-16 px-4 sm:px-6 lg:px-8'}`}
       style={{ backgroundColor: palette.bgSurface, color: palette.textPrimary }}
     >
       <div className="max-w-6xl mx-auto">

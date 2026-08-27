@@ -29,7 +29,7 @@ export const PromotionsSection: React.FC<PromotionsSectionProps> = ({ site, pale
   return (
     <section
       id="promotions"
-      className={`border-y transition-colors ${isMobileView ? 'py-8 px-4' : 'py-14 px-4 sm:px-6 lg:px-8'}`}
+      className={`border-y transition-colors scroll-mt-16 sm:scroll-mt-20 ${isMobileView ? 'py-8 px-4' : 'py-14 px-4 sm:px-6 lg:px-8'}`}
       style={{ backgroundColor: palette.bgPrimary, borderColor: palette.borderPrimary }}
     >
       <div className="max-w-6xl mx-auto">

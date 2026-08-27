@@ -57,7 +57,7 @@ export const HoursSection: React.FC<HoursSectionProps> = ({ site, palette, isMob
   return (
     <section
       id="hours"
-      className={`border-t transition-colors ${isMobileView ? 'py-8 px-4' : 'py-14 px-4 sm:px-6 lg:px-8'}`}
+      className={`border-t transition-colors scroll-mt-16 sm:scroll-mt-20 ${isMobileView ? 'py-8 px-4' : 'py-14 px-4 sm:px-6 lg:px-8'}`}
       style={{ backgroundColor: palette.bgPrimary, borderColor: palette.borderPrimary }}
     >
       <div
