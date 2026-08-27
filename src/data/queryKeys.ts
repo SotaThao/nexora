@@ -226,6 +226,12 @@ export const qk = {
   merchantPosInServiceOrders: (businessId?: string) => ['merchantSettings', 'posInServiceOrders', businessId ?? ''],
   merchantPosOrderDetail: (businessId?: string, orderId?: string) =>
     ['merchantSettings', 'posOrderDetail', businessId ?? '', orderId ?? ''],
+  // Promotion catalog (Owner settings) and the per-visit eligible list (counter) are separate:
+  // the eligible list depends on the order's check-in time, so it is keyed by orderId.
+  merchantPosPromotions: (businessId?: string) =>
+    ['merchantSettings', 'posPromotions', businessId ?? ''],
+  merchantPosEligiblePromotions: (businessId?: string, orderId?: string) =>
+    ['merchantSettings', 'posEligiblePromotions', businessId ?? '', orderId ?? ''],
   merchantPosCheckoutServiceCatalog: (businessId?: string) =>
     ['merchantSettings', 'posCheckoutServiceCatalog', businessId ?? ''],
   merchantPosCheckoutProductCatalog: (businessId?: string) =>

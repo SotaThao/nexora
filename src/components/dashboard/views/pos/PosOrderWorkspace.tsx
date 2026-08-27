@@ -27,6 +27,8 @@ import {
   useServiceLineAddOnOptions,
   useSetOrderServiceLineDiscount,
   useUpdateOrderServiceLine,
+  useEligiblePromotions,
+  useSetOrderDiscount,
   useSetOrderStaffTipSplit,
   useSetOrderTip,
   useUpdateOrderProductLineQuantity,
@@ -42,12 +44,14 @@ import type {
   OrderServiceAddOnLineApiDto,
   PosCheckoutPaymentMethodType,
   ServiceLineAddOnOptionApiDto,
+  SetOrderDiscountPayload,
 } from '../../../../types/repositories'
 import { SkeletonList } from '../../../ui/skeleton'
 import { formatCustomerPhone } from './customer/customerFormatters'
 import CategoryGroupedCatalogPicker from './CategoryGroupedCatalogPicker'
 import ChangeServiceModal from './modals/ChangeServiceModal'
 import ServiceAddOnPickerModal from './modals/ServiceAddOnPickerModal'
+import OrderDiscountSection from './OrderDiscountSection'
 import ServiceDiscountModal, {
   type ServiceDiscountSubmit,
   type ServiceDiscountTarget,
@@ -175,11 +179,16 @@ export default function PosOrderWorkspace({
   const addServiceAddOnLine = useAddOrderServiceAddOnLine(businessId)
   const removeServiceAddOnLine = useRemoveOrderServiceAddOnLine(businessId)
   const startOrderService = useStartOrderService(businessId)
+  const setOrderDiscount = useSetOrderDiscount(businessId)
   const setTip = useSetOrderTip(businessId)
   const setStaffTipSplit = useSetOrderStaffTipSplit(businessId)
   const completeOrder = useCompleteOrder(businessId)
 
   const [showPaymentSection, setShowPaymentSection] = useState(mode === 'checkout')
+
+  // Eligibility is decided by the visit's check-in time, so this list cannot change while the
+  // operator works — fetched once the payment section is on screen and then left alone.
+  const { data: eligiblePromotions = [] } = useEligiblePromotions(businessId, orderId, showPaymentSection)
   // The line whose technician is being picked. Carries the values the popup needs to open and the
   // ones the save has to send back unchanged, so it never reaches into the list again.
   const [technicianTarget, setTechnicianTarget] = useState<{
@@ -561,6 +570,10 @@ export default function PosOrderWorkspace({
     } else {
       setShowPaymentSection(true)
     }
+  }
+
+  const handleApplyOrderDiscount = (payload: SetOrderDiscountPayload) => {
+    setOrderDiscount.mutate({ orderId, payload }, { onError: reportError })
   }
 
   const applyTip = (mode: TipMode, amount: number) => {
@@ -1157,6 +1170,13 @@ export default function PosOrderWorkspace({
                   </div>
                 </div>
 
+                <OrderDiscountSection
+                  order={order}
+                  promotions={eligiblePromotions}
+                  isSaving={setOrderDiscount.isPending}
+                  onApply={handleApplyOrderDiscount}
+                />
+
                 {order.staffTipShares.length > 1 ? (
                   <div className="space-y-2 rounded-xl border border-nexoraBorder/70 bg-nexoraSurface p-3 shadow-sm">
                     <h3 className="text-[10px] font-bold uppercase tracking-wide text-nexoraMuted">
@@ -1304,6 +1324,17 @@ export default function PosOrderWorkspace({
                         {order.discountAmount === 0 ? '$0.00' : `-$${Math.abs(order.discountAmount).toFixed(2)}`}
                       </dd>
                     </div>
+                    {order.orderDiscountAmount > 0 ? (
+                      <div className="flex justify-between">
+                        <dt className="min-w-0 truncate text-nexoraMuted">
+                          {order.appliedPromotionName
+                            ?? t('components.dashboard.views.pos.PosOrderWorkspace.summaryOrderDiscount')}
+                        </dt>
+                        <dd className="shrink-0 font-semibold text-nexoraText">
+                          -${order.orderDiscountAmount.toFixed(2)}
+                        </dd>
+                      </div>
+                    ) : null}
                     <div className="flex justify-between border-t border-nexoraBorder pt-1.5">
                       <dt className="font-black uppercase text-nexoraText">
                         {t('components.dashboard.views.pos.PosOrderWorkspace.summaryTotal')}
@@ -1466,6 +1497,15 @@ export default function PosOrderWorkspace({
                       <dt>{t('components.dashboard.views.pos.PosOrderWorkspace.summaryDiscount')}</dt>
                       <dd>{order.discountAmount === 0 ? '$0.00' : `-$${Math.abs(order.discountAmount).toFixed(2)}`}</dd>
                     </div>
+                    {order.orderDiscountAmount > 0 ? (
+                      <div>
+                        <dt>
+                          {order.appliedPromotionName
+                            ?? t('components.dashboard.views.pos.PosOrderWorkspace.summaryOrderDiscount')}
+                        </dt>
+                        <dd>-${order.orderDiscountAmount.toFixed(2)}</dd>
+                      </div>
+                    ) : null}
                     <div className="pos-receipt-total">
                       <dt>{t('components.dashboard.views.pos.PosOrderWorkspace.summaryTotal')}</dt>
                       <dd>${order.total.toFixed(2)}</dd>

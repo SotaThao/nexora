@@ -721,7 +721,8 @@
       "scan": "Scan",
       "kyb": "Business Verification",
       "news_library": "News & Library",
-      "support": "Support"
+      "support": "Support",
+      "pos_promotions": "Promotions"
     },
     "header": {
       "search_placeholder": "Search staff, reviews, or tips...",
@@ -2653,7 +2654,18 @@
     "pos_staff_clock_qr_business_mismatch": "You are not an active staff member of this salon.",
     "pos_staff_clock_too_soon": "That was just recorded — wait a moment before changing shift status again.",
     "pos_staff_clock_beep_target_invalid": "This staff member cannot be beeped right now.",
-    "local_staff_has_active_work": "This staff member is still assigned to open orders or bookings. Close or reassign them first."
+    "local_staff_has_active_work": "This staff member is still assigned to open orders or bookings. Close or reassign them first.",
+    "pos_order_discount_invalid": "That discount amount is not valid.",
+    "pos_order_discount_note_too_long": "The discount note is too long.",
+    "pos_promotion_not_found": "Promotion not found.",
+    "pos_promotion_not_eligible": "This visit does not qualify for that promotion.",
+    "pos_promotion_inactive": "This promotion is no longer running.",
+    "pos_promotion_schedule_invalid": "Pick at least one day, and an end time later than the start time.",
+    "pos_promotion_name_required": "Enter a name for the promotion.",
+    "pos_promotion_name_too_long": "The promotion name is too long.",
+    "pos_promotion_badge_too_long": "The badge label is too long.",
+    "pos_promotion_value_invalid": "Enter a discount greater than 0 (and at most 100 for a percentage).",
+    "pos_promotion_in_use": "Customers have already used this promotion, so it cannot be deleted. Switch it off instead."
   },
   "components": {
     "common": {
@@ -3615,7 +3627,8 @@
             "addOnModalClose": "Close add-ons",
             "addOnModalDone": "Done",
             "noAddOnsForService": "This service has no add-ons set up yet.",
-            "changeServiceRemovesAddOns": "Changing this service will remove {{count}} add-on(s) already on this line."
+            "changeServiceRemovesAddOns": "Changing this service will remove {{count}} add-on(s) already on this line.",
+            "summaryOrderDiscount": "Discount all services"
           },
           "PhoneCheckInStep": {
             "welcomeTitleWithBusiness": "Welcome to {{businessName}}",
@@ -3665,7 +3678,8 @@
             "viewDetailTip": "Tip",
             "viewDetailTotal": "Total",
             "viewDetailClose": "Close",
-            "viewDetailLineDiscount": "Discount ${{amount}} · {{bearer}} absorbs"
+            "viewDetailLineDiscount": "Discount ${{amount}} · {{bearer}} absorbs",
+            "viewDetailOrderDiscount": "Discount all services"
           },
           "CustomerTab": {
             "searchLabel": "Search",
@@ -3968,6 +3982,58 @@
               "limitDays": "Up to {{count}} days per report.",
               "limitWeeks": "Up to {{count}} weeks per report."
             }
+          },
+          "OrderDiscountSection": {
+            "title": "Discount all services",
+            "formulaTooltip": "A percentage is calculated on the services total before any discount, and does not include retail products. The combined discount can never exceed the services total.",
+            "type": {
+              "Amount": "Amount",
+              "Percent": "Percent"
+            },
+            "customPlaceholder": "Custom",
+            "clearButton": "Remove",
+            "appliedAmount": "Taken off this visit: -${{amount}}",
+            "cappedNotice": "Capped at ${{cap}} — services total minus ${{lineDiscount}} of service discounts.",
+            "promotionsTitle": "Offers this visit qualifies for",
+            "promotionRate": "{{rate}} off",
+            "dayShort": {
+              "Sunday": "Sun",
+              "Monday": "Mon",
+              "Tuesday": "Tue",
+              "Wednesday": "Wed",
+              "Thursday": "Thu",
+              "Friday": "Fri",
+              "Saturday": "Sat"
+            }
+          },
+          "PosPromotionsView": {
+            "description": "Offers the front desk can apply to a whole visit at checkout, each running on the days and hours you choose.",
+            "addPromotion": "Add promotion",
+            "noPromotions": "No promotions yet. Add one and it appears at checkout for visits inside its window.",
+            "rateOff": "{{rate}} off",
+            "inactiveBadge": "Off",
+            "activate": "Switch on",
+            "deactivate": "Switch off",
+            "edit": "Edit promotion",
+            "delete": "Delete promotion",
+            "deleteBlocked": "Customers have already used this promotion, so it cannot be deleted. Switch it off instead.",
+            "deleteConfirmTitle": "Delete promotion",
+            "deleteConfirmMessage": "Delete \"{{name}}\"? This cannot be undone.",
+            "createTitle": "Add promotion",
+            "editTitle": "Edit promotion",
+            "nameLabel": "Name",
+            "namePlaceholder": "e.g. Weekday savings",
+            "badgeLabel": "Badge (optional)",
+            "badgePlaceholder": "e.g. Happy Hours",
+            "typeLabel": "Discount type",
+            "valueLabel": "Amount off",
+            "daysLabel": "Days it runs",
+            "startLabel": "Starts at",
+            "endLabel": "Ends at",
+            "windowInvalid": "The end time must be later than the start time.",
+            "activeLabel": "Offer this at checkout",
+            "save": "Save",
+            "cancel": "Cancel"
           }
         },
         "BookingHubView": {
@@ -6460,7 +6526,10 @@
         "SplitPay": "Split Pay"
       },
       "notFoundTitle": "Receipt not found",
-      "notFoundBody": "This link may be incorrect or no longer valid. Please contact the salon if you need a copy."
+      "notFoundBody": "This link may be incorrect or no longer valid. Please contact the salon if you need a copy.",
+      "serviceDiscounts": "Service discounts",
+      "orderDiscount": "Discount all services",
+      "promotionDiscount": "{{name}} ({{rate}})"
     },
     "qr": {
       "invalid_code_title": "Invalid QR Code",

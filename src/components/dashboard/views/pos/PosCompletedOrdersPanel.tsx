@@ -408,6 +408,17 @@ export default function PosCompletedOrdersPanel({ businessId }: { businessId: st
                         <span className="tabular-nums">-${viewDetail.data.discountAmount.toFixed(2)}</span>
                       </div>
                     ) : null}
+                    {viewDetail.data.orderDiscountAmount > 0 ? (
+                      <div className="flex justify-between text-nexoraMuted">
+                        <span className="min-w-0 truncate">
+                          {viewDetail.data.appliedPromotionName
+                            ?? t('components.dashboard.views.pos.PosCompletedOrdersPanel.viewDetailOrderDiscount')}
+                        </span>
+                        <span className="shrink-0 tabular-nums">
+                          -${viewDetail.data.orderDiscountAmount.toFixed(2)}
+                        </span>
+                      </div>
+                    ) : null}
                     <div className="flex justify-between text-nexoraMuted">
                       <span>{t('components.dashboard.views.pos.PosCompletedOrdersPanel.viewDetailSalesTax')}</span>
                       <span className="tabular-nums">${viewDetail.data.salesTaxAmount.toFixed(2)}</span>

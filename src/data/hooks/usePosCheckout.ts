@@ -9,14 +9,17 @@ import { qk } from '../queryKeys'
 import { useSessionRole } from '../../auth/useSessionRole'
 import posCheckoutRepository from '../repositories/posCheckout'
 import { randomUuid } from '../../utils/uuid'
+import { resolveOrderDiscountAmount, resolveOrderDiscountCap } from '../../utils/posOrderDiscount'
 import type {
   CheckoutProductCatalogItemApiDto,
   CheckoutServiceCatalogItemApiDto,
   CompleteOrderPayload,
   CompleteOrderResultApiDto,
+  EligiblePromotionApiDto,
   InServiceOrderApiDto,
   OrderDetailApiDto,
   ServiceLineAddOnOptionApiDto,
+  SetOrderDiscountPayload,
   SetOrderServiceLineDiscountPayload,
   SetOrderStaffTipSplitPayload,
 } from '../../types/repositories'
@@ -44,20 +47,47 @@ function applyOrderTotalsPatch(
     productsSubtotal?: number
     tipAmount?: number
     discountAmount?: number
+    orderDiscountType?: string | null
+    orderDiscountValue?: number | null
   },
 ): OrderDetailApiDto {
   const servicesSubtotal = patch.servicesSubtotal ?? order.servicesSubtotal
   const productsSubtotal = patch.productsSubtotal ?? order.productsSubtotal
   const tipAmount = patch.tipAmount ?? order.tipAmount
   const discountAmount = patch.discountAmount ?? order.discountAmount
-  const servicesNet = roundCurrency(servicesSubtotal - discountAmount)
+
+  // The order-level discount is re-resolved rather than carried over: a percentage follows the new
+  // services total, and a dollar amount has to be re-checked against a cap that just moved.
+  const orderDiscountType =
+    patch.orderDiscountType !== undefined ? patch.orderDiscountType : order.orderDiscountType
+  const orderDiscountValue =
+    patch.orderDiscountValue !== undefined ? patch.orderDiscountValue : order.orderDiscountValue
+  const orderDiscountCap = resolveOrderDiscountCap(servicesSubtotal, discountAmount)
+  const orderDiscountAmount = resolveOrderDiscountAmount(
+    orderDiscountType, orderDiscountValue, servicesSubtotal, orderDiscountCap,
+  )
+
+  const servicesNet = roundCurrency(servicesSubtotal - discountAmount - orderDiscountAmount)
   // Sales tax runs on the discounted figure (mirrors CompleteOrderCommand), so the rate has to be
   // inferred from the same net base the server used, not from the gross one.
   const previousTaxableBase = order.servicesNet + order.productsSubtotal
   const inferredTaxRate = previousTaxableBase > 0 ? order.salesTaxAmount / previousTaxableBase : 0
   const salesTaxAmount = roundCurrency((servicesNet + productsSubtotal) * inferredTaxRate)
   const total = roundCurrency(servicesNet + productsSubtotal + tipAmount + salesTaxAmount)
-  return { ...order, servicesSubtotal, productsSubtotal, tipAmount, discountAmount, servicesNet, salesTaxAmount, total }
+  return {
+    ...order,
+    servicesSubtotal,
+    productsSubtotal,
+    tipAmount,
+    discountAmount,
+    orderDiscountType,
+    orderDiscountValue,
+    orderDiscountAmount,
+    orderDiscountCap,
+    servicesNet,
+    salesTaxAmount,
+    total,
+  }
 }
 
 async function snapshotOrderDetail(
@@ -496,6 +526,46 @@ export function useSetOrderServiceLineDiscount(businessId?: string) {
   >({
     mutationFn: ({ orderId, serviceLineId, payload }) =>
       posCheckoutRepository.setOrderServiceLineDiscount(businessId as string, orderId, serviceLineId, payload),
+    onSuccess: (_result, { orderId }) => {
+      queryClient.invalidateQueries({ queryKey: qk.merchantPosOrderDetail(businessId, orderId) })
+    },
+  })
+}
+
+// The offers this visit qualifies for. Fetched when the discount panel opens and left alone
+// afterwards: eligibility is decided by the visit's check-in time, which cannot change, so nothing
+// the operator does at the counter can alter this list.
+export function useEligiblePromotions(businessId?: string, orderId?: string, enabled = true) {
+  return useQuery<EligiblePromotionApiDto[]>({
+    queryKey: qk.merchantPosEligiblePromotions(businessId, orderId),
+    queryFn: () => posCheckoutRepository.getEligiblePromotions(businessId as string, orderId as string),
+    enabled: Boolean(businessId) && Boolean(orderId) && enabled,
+  })
+}
+
+// Sets, replaces or clears the single order-level discount. The optimistic patch keeps the payment
+// summary responsive to a tap; the resolved figure, the cap and any promotion link come back from
+// the refetch, which is the only source that can be trusted.
+export function useSetOrderDiscount(businessId?: string) {
+  const queryClient = useQueryClient()
+  return useMutation<boolean, Error, { orderId: string; payload: SetOrderDiscountPayload }, OrderMutationContext>({
+    mutationFn: ({ orderId, payload }) =>
+      posCheckoutRepository.setOrderDiscount(businessId as string, orderId, payload),
+    onMutate: async ({ orderId, payload }) => {
+      const context = await snapshotOrderDetail(queryClient, businessId, orderId)
+      // A promotion carries its own rate, which only the server knows — no preview for that case.
+      if (context.previousOrder && !payload.promotionId) {
+        queryClient.setQueryData<OrderDetailApiDto>(
+          context.queryKey,
+          applyOrderTotalsPatch(context.previousOrder, {
+            orderDiscountType: payload.discountType,
+            orderDiscountValue: payload.discountValue,
+          }),
+        )
+      }
+      return context
+    },
+    onError: (_err, _vars, context) => rollbackOrderDetail(queryClient, context),
     onSuccess: (_result, { orderId }) => {
       queryClient.invalidateQueries({ queryKey: qk.merchantPosOrderDetail(businessId, orderId) })
     },

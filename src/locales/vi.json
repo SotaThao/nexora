@@ -721,7 +721,8 @@
       "scan": "Quét QR",
       "kyb": "Xác minh doanh nghiệp",
       "news_library": "Tin tức & Thư viện",
-      "support": "Hỗ Trợ"
+      "support": "Hỗ Trợ",
+      "pos_promotions": "Chương trình giảm giá"
     },
     "header": {
       "search_placeholder": "Tìm nhân viên, đánh giá hoặc tip...",
@@ -2653,7 +2654,18 @@
     "pos_staff_clock_qr_business_mismatch": "Bạn không phải nhân viên đang hoạt động của tiệm này.",
     "pos_staff_clock_too_soon": "Vừa ghi nhận xong — đợi một chút rồi hãy đổi trạng thái ca.",
     "pos_staff_clock_beep_target_invalid": "Không gọi được thợ này lúc này.",
-    "local_staff_has_active_work": "Nhân viên này vẫn đang được gán vào order hoặc booking chưa đóng. Hãy xử lý xong trước."
+    "local_staff_has_active_work": "Nhân viên này vẫn đang được gán vào order hoặc booking chưa đóng. Hãy xử lý xong trước.",
+    "pos_order_discount_invalid": "Mức giảm giá không hợp lệ.",
+    "pos_order_discount_note_too_long": "Ghi chú giảm giá quá dài.",
+    "pos_promotion_not_found": "Không tìm thấy chương trình giảm giá.",
+    "pos_promotion_not_eligible": "Lượt khách này không đủ điều kiện áp chương trình đó.",
+    "pos_promotion_inactive": "Chương trình này đã ngừng áp dụng.",
+    "pos_promotion_schedule_invalid": "Chọn ít nhất một ngày và giờ kết thúc phải sau giờ bắt đầu.",
+    "pos_promotion_name_required": "Nhập tên chương trình giảm giá.",
+    "pos_promotion_name_too_long": "Tên chương trình quá dài.",
+    "pos_promotion_badge_too_long": "Nhãn hiển thị quá dài.",
+    "pos_promotion_value_invalid": "Nhập mức giảm lớn hơn 0 (và tối đa 100 nếu là phần trăm).",
+    "pos_promotion_in_use": "Đã có khách dùng chương trình này nên không thể xoá. Hãy tắt chương trình thay vì xoá."
   },
   "components": {
     "common": {
@@ -3615,7 +3627,8 @@
             "addOnModalClose": "Đóng danh sách dịch vụ kèm",
             "addOnModalDone": "Xong",
             "noAddOnsForService": "Dịch vụ này chưa khai báo dịch vụ kèm nào.",
-            "changeServiceRemovesAddOns": "Đổi dịch vụ sẽ gỡ {{count}} dịch vụ kèm đang có trên dòng này."
+            "changeServiceRemovesAddOns": "Đổi dịch vụ sẽ gỡ {{count}} dịch vụ kèm đang có trên dòng này.",
+            "summaryOrderDiscount": "Giảm giá toàn bộ dịch vụ"
           },
           "PhoneCheckInStep": {
             "welcomeTitleWithBusiness": "Chào mừng đến {{businessName}}",
@@ -3665,7 +3678,8 @@
             "viewDetailTip": "Tip",
             "viewDetailTotal": "Tổng cộng",
             "viewDetailClose": "Đóng",
-            "viewDetailLineDiscount": "Giảm ${{amount}} · {{bearer}} chịu"
+            "viewDetailLineDiscount": "Giảm ${{amount}} · {{bearer}} chịu",
+            "viewDetailOrderDiscount": "Giảm giá toàn bộ dịch vụ"
           },
           "CustomerTab": {
             "searchLabel": "Tìm kiếm",
@@ -3968,6 +3982,58 @@
               "limitDays": "Tối đa {{count}} ngày mỗi báo cáo.",
               "limitWeeks": "Tối đa {{count}} tuần mỗi báo cáo."
             }
+          },
+          "OrderDiscountSection": {
+            "title": "Giảm giá toàn bộ dịch vụ",
+            "formulaTooltip": "Phần trăm được tính trên tổng dịch vụ trước khi giảm giá và không gồm hàng bán lẻ. Tổng giảm giá không bao giờ vượt quá tổng dịch vụ.",
+            "type": {
+              "Amount": "Số tiền",
+              "Percent": "Phần trăm"
+            },
+            "customPlaceholder": "Tùy chọn",
+            "clearButton": "Bỏ giảm giá",
+            "appliedAmount": "Đã giảm cho lượt này: -${{amount}}",
+            "cappedNotice": "Giới hạn ở ${{cap}} — tổng dịch vụ trừ ${{lineDiscount}} giảm giá theo dịch vụ.",
+            "promotionsTitle": "Chương trình lượt khách này đủ điều kiện",
+            "promotionRate": "giảm {{rate}}",
+            "dayShort": {
+              "Sunday": "CN",
+              "Monday": "T2",
+              "Tuesday": "T3",
+              "Wednesday": "T4",
+              "Thursday": "T5",
+              "Friday": "T6",
+              "Saturday": "T7"
+            }
+          },
+          "PosPromotionsView": {
+            "description": "Các chương trình quầy có thể áp cho cả lượt khách khi thanh toán, chạy theo ngày và giờ bạn chọn.",
+            "addPromotion": "Thêm chương trình",
+            "noPromotions": "Chưa có chương trình nào. Thêm một chương trình để nó hiện ở quầy cho các lượt khách trong khung giờ.",
+            "rateOff": "giảm {{rate}}",
+            "inactiveBadge": "Đã tắt",
+            "activate": "Bật",
+            "deactivate": "Tắt",
+            "edit": "Sửa chương trình",
+            "delete": "Xoá chương trình",
+            "deleteBlocked": "Đã có khách dùng chương trình này nên không thể xoá. Hãy tắt chương trình thay vì xoá.",
+            "deleteConfirmTitle": "Xoá chương trình",
+            "deleteConfirmMessage": "Xoá \"{{name}}\"? Hành động này không thể hoàn tác.",
+            "createTitle": "Thêm chương trình",
+            "editTitle": "Sửa chương trình",
+            "nameLabel": "Tên chương trình",
+            "namePlaceholder": "VD: Ưu đãi ngày thường",
+            "badgeLabel": "Nhãn (không bắt buộc)",
+            "badgePlaceholder": "VD: Happy Hours",
+            "typeLabel": "Kiểu giảm giá",
+            "valueLabel": "Mức giảm",
+            "daysLabel": "Ngày áp dụng",
+            "startLabel": "Bắt đầu",
+            "endLabel": "Kết thúc",
+            "windowInvalid": "Giờ kết thúc phải sau giờ bắt đầu.",
+            "activeLabel": "Áp dụng ở quầy thanh toán",
+            "save": "Lưu",
+            "cancel": "Huỷ"
           }
         },
         "BookingHubView": {
@@ -6455,7 +6521,10 @@
         "SplitPay": "Chia nhiều hình thức"
       },
       "notFoundTitle": "Không tìm thấy hóa đơn",
-      "notFoundBody": "Link có thể không đúng hoặc không còn hiệu lực. Vui lòng liên hệ salon nếu bạn cần bản sao."
+      "notFoundBody": "Link có thể không đúng hoặc không còn hiệu lực. Vui lòng liên hệ salon nếu bạn cần bản sao.",
+      "serviceDiscounts": "Giảm giá theo dịch vụ",
+      "orderDiscount": "Giảm giá toàn bộ dịch vụ",
+      "promotionDiscount": "{{name}} ({{rate}})"
     },
     "qr": {
       "invalid_code_title": "Mã QR không hợp lệ",
