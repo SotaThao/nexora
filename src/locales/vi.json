@@ -2437,6 +2437,13 @@
     "pos_category_in_use": "Danh mục này vẫn đang được gán cho một hoặc nhiều dịch vụ/sản phẩm.",
     "catalog_service_in_use": "Dịch vụ này đã có lịch sử đơn hàng hoặc gán nhân viên nên không thể xóa.",
     "catalog_category_in_use": "Danh mục này vẫn đang được gán cho một hoặc nhiều dịch vụ/sản phẩm.",
+    "catalog_service_addon_not_found": "Không tìm thấy add-on này.",
+    "catalog_service_addon_name_required": "Vui lòng nhập tên add-on.",
+    "catalog_service_addon_name_too_long": "Tên add-on tối đa 200 ký tự.",
+    "catalog_service_addon_name_duplicate": "Dịch vụ này đã có add-on cùng tên.",
+    "catalog_service_addon_price_invalid": "Giá add-on phải từ 0 trở lên.",
+    "catalog_service_addon_in_use": "Add-on này đã được bán nên chỉ có thể chuyển sang ngừng hoạt động.",
+    "catalog_service_addon_copy_source_invalid": "Không thể sao chép add-on từ dịch vụ đã chọn.",
     "pos_service_not_found": "Không tìm thấy dịch vụ này.",
     "pos_service_name_required": "Vui lòng nhập tên dịch vụ.",
     "pos_service_name_too_long": "Tên dịch vụ tối đa 200 ký tự.",
@@ -3366,9 +3373,12 @@
             "addOnNamePlaceholder": "vd: Paraffin Wax Treatment",
             "addOnPricePlaceholder": "vd: 15",
             "addOnAddButton": "Thêm",
+            "addOnEditLabel": "Sửa dịch vụ kèm",
             "addOnDeleteBlocked": "Dịch vụ kèm này đã từng bán nên chỉ có thể tắt hoạt động.",
             "addOnCopyPlaceholder": "Sao chép dịch vụ kèm từ dịch vụ khác…",
+            "addOnCopyOptionLabel": "{{name}} — {{count}} dịch vụ kèm",
             "addOnCopyButton": "Sao chép",
+            "addOnCopyAllDuplicates": "Không có gì để sao chép — dịch vụ này đã có toàn bộ dịch vụ kèm của {{name}}.",
             "addOnCopyResult": "Đã sao chép {{count}} dịch vụ kèm."
           },
           "PosProductsView": {
@@ -3803,6 +3813,7 @@
             "viewDetailTip": "Tip",
             "viewDetailTotal": "Tổng cộng",
             "viewDetailClose": "Đóng",
+            "viewDetailLineDiscountStaffShare": "(kỹ thuật viên ${{amount}})",
             "viewDetailLineDiscount": "Giảm ${{amount}} · {{bearer}} chịu"
           },
           "CustomerTab": {

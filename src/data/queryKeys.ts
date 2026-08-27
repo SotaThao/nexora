@@ -85,6 +85,14 @@ export const qk = {
   // POS Owner Setup — Service Add-Ons (owned per service, never shared)
   merchantPosServiceAddOns: (serviceId?: string) =>
     ['merchantSettings', 'posServiceAddOns', serviceId ?? ''],
+  merchantPosServiceAddOnCopySources: (serviceId?: string) =>
+    ['merchantSettings', 'posServiceAddOnCopySources', serviceId ?? ''],
+  /**
+   * Prefix — adding or removing an add-on on one service changes every OTHER service's copy-source
+   * list, so the whole set has to be invalidated, not just the edited service's own entry.
+   */
+  merchantPosServiceAddOnCopySourcesRoot: () =>
+    ['merchantSettings', 'posServiceAddOnCopySources'] as const,
   // POS Owner Setup — Products (US-018)
   merchantPosProducts: ()      => ['merchantSettings', 'posProducts'],
   // POS Owner Setup — Staff Profile (US-019)

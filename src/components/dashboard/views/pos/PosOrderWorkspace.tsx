@@ -1485,23 +1485,56 @@ export default function PosOrderWorkspace({
                     <ul className="space-y-1.5 text-xs text-nexoraText">
                       {visibleLines.map((line) => {
                         const name = line.itemType === 'Service' ? line.serviceName : line.productName
+                        const summaryAddOns = line.itemType === 'Service' ? line.addOns : []
                         return (
-                          <li key={line.key} aria-label={name} className="flex items-center justify-between gap-3">
-                            <span className="min-w-0 truncate">
-                              {name}
-                              {line.itemType === 'Service' && line.discountAmount > 0 ? (
-                                <span className="ml-1 font-semibold text-rose-500">
-                                  {formatDiscountPriceBadge(
-                                    line.discountType,
-                                    line.discountValue,
-                                    line.discountAmount,
-                                  )}
-                                </span>
-                              ) : null}
-                            </span>
-                            <span className="shrink-0 font-semibold tabular-nums">
-                              ${lineTotalAfterDiscount(line).toFixed(2)}
-                            </span>
+                          <li key={line.key} aria-label={name} className="space-y-1.5">
+                            <div className="flex items-center justify-between gap-3">
+                              <span className="min-w-0 truncate">
+                                {name}
+                                {line.itemType === 'Service' && line.discountAmount > 0 ? (
+                                  <span className="ml-1 font-semibold text-rose-500">
+                                    {formatDiscountPriceBadge(
+                                      line.discountType,
+                                      line.discountValue,
+                                      line.discountAmount,
+                                    )}
+                                  </span>
+                                ) : null}
+                              </span>
+                              <span className="shrink-0 font-semibold tabular-nums">
+                                ${lineTotalAfterDiscount(line).toFixed(2)}
+                              </span>
+                            </div>
+                            {/* Add-ons are charged on top of their service and are already inside
+                                Total — listing them keeps the breakdown adding up to it. */}
+                            {summaryAddOns.length > 0 ? (
+                              <ul className="space-y-1 border-l-2 border-nexoraBorder pl-3 text-nexoraMuted">
+                                {summaryAddOns.map((addOn) => (
+                                  <li
+                                    key={addOn.id}
+                                    aria-label={addOn.addOnName}
+                                    data-testid={`summary-add-on-${addOn.id}`}
+                                    className="flex items-center justify-between gap-3"
+                                  >
+                                    <span className="min-w-0 truncate">
+                                      + {addOn.addOnName}
+                                      {addOn.discountAmount > 0 ? (
+                                        <span className="ml-1 font-semibold text-rose-500">
+                                          {formatDiscountPriceBadge(
+                                            addOn.discountType,
+                                            addOn.discountValue,
+                                            addOn.discountAmount,
+                                          )}
+                                        </span>
+                                      ) : null}
+                                    </span>
+                                    <span className="shrink-0 font-semibold tabular-nums">
+                                      ${addOn.lineTotalAfterDiscount.toFixed(2)}
+                                    </span>
+                                  </li>
+                                ))}
+                              </ul>
+                            ) : null}
                           </li>
                         )
                       })}
@@ -1519,6 +1552,12 @@ export default function PosOrderWorkspace({
                       <dd className="font-semibold text-nexoraText">
                         {order.discountAmount === 0 ? '$0.00' : `-$${Math.abs(order.discountAmount).toFixed(2)}`}
                       </dd>
+                    </div>
+                    {/* Charged on the discounted service subtotal, so it belongs after Discount —
+                        without it the line prices above cannot be reconciled with Total. */}
+                    <div className="flex justify-between">
+                      <dt className="text-nexoraMuted">{t('components.dashboard.views.pos.PosOrderWorkspace.summarySalesTax')}</dt>
+                      <dd className="font-semibold text-nexoraText">${order.salesTaxAmount.toFixed(2)}</dd>
                     </div>
                     <div className="flex justify-between border-t border-nexoraBorder pt-1.5">
                       <dt className="font-black uppercase text-nexoraText">
@@ -1659,7 +1698,18 @@ export default function PosOrderWorkspace({
                                       able to see where an extra charge came from. */}
                                   {line.addOns.map((addOn) => (
                                     <div key={addOn.id}>
-                                      <span>+ {addOn.addOnName}</span>
+                                      <span>
+                                        + {addOn.addOnName}
+                                        {addOn.discountAmount > 0 ? (
+                                          <span className="pos-receipt-line-discount ml-1 text-rose-500">
+                                            {formatDiscountPriceBadge(
+                                              addOn.discountType,
+                                              addOn.discountValue,
+                                              addOn.discountAmount,
+                                            )}
+                                          </span>
+                                        ) : null}
+                                      </span>
                                       <span className="tabular-nums">{formatUsdAmount(addOn.lineTotal)}</span>
                                     </div>
                                   ))}
@@ -1697,6 +1747,10 @@ export default function PosOrderWorkspace({
                     <div>
                       <dt>{t('components.dashboard.views.pos.PosOrderWorkspace.summaryDiscount')}</dt>
                       <dd>{formatUsdAmount(order.discountAmount === 0 ? 0 : -Math.abs(order.discountAmount))}</dd>
+                    </div>
+                    <div>
+                      <dt>{t('components.dashboard.views.pos.PosOrderWorkspace.summarySalesTax')}</dt>
+                      <dd>{formatUsdAmount(order.salesTaxAmount)}</dd>
                     </div>
                     <div className="pos-receipt-total">
                       <dt>{t('components.dashboard.views.pos.PosOrderWorkspace.summaryTotal')}</dt>

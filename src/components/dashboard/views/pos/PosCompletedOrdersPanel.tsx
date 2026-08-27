@@ -16,6 +16,7 @@ import { formatPosDateTime } from './posDateTime'
 import { formatCustomerPhone } from './customer/customerFormatters'
 import { formatBookingHubDateTimeParts } from '../bookingHubFormatters'
 import { getPosCheckoutPaymentMethodLabel } from '../../../../constants/posCheckoutPaymentMethod'
+import { PosDiscountBearer } from '../../../../constants/posDiscount'
 import {
   POS_TABLE_HEADER_CELL_CLASS,
   POS_TABLE_HEADER_ROW_CLASS,
@@ -342,6 +343,13 @@ export default function PosCompletedOrdersPanel({ businessId }: { businessId: st
                                     `components.dashboard.views.pos.PosOrderWorkspace.discountBearer${line.discountBearer}`,
                                   ),
                                 })}
+                                {/* Only a split needs the figure spelled out: Salon/Technician
+                                    already imply the whole discount, a 50/50 does not. */}
+                                {line.discountBearer === PosDiscountBearer.Split
+                                  ? ` ${t('components.dashboard.views.pos.PosCompletedOrdersPanel.viewDetailLineDiscountStaffShare', {
+                                      amount: line.staffDiscountShare.toFixed(2),
+                                    })}`
+                                  : ''}
                                 {line.discountNote ? ` — ${line.discountNote}` : ''}
                               </p>
                             ) : null}
@@ -353,22 +361,42 @@ export default function PosCompletedOrdersPanel({ businessId }: { businessId: st
                             {line.addOns?.length ? (
                               <div className="mt-1.5 space-y-1 border-l-2 border-nexoraBorder pl-2.5">
                                 {line.addOns.map((addOn) => (
-                                  <div key={addOn.id} className="flex items-start justify-between gap-2">
-                                    <p className="min-w-0 text-[11px] font-bold text-nexoraText">
-                                      + {addOn.addOnName}
-                                    </p>
-                                    <p className="shrink-0 text-[11px] font-bold tabular-nums text-nexoraText">
-                                      {addOn.discountAmount > 0 ? (
-                                        <>
-                                          <span className="mr-1 font-normal text-nexoraMuted line-through">
-                                            ${addOn.lineTotal.toFixed(2)}
-                                          </span>
-                                          ${addOn.lineTotalAfterDiscount.toFixed(2)}
-                                        </>
-                                      ) : (
-                                        `$${addOn.lineTotal.toFixed(2)}`
-                                      )}
-                                    </p>
+                                  <div key={addOn.id}>
+                                    <div className="flex items-start justify-between gap-2">
+                                      <p className="min-w-0 text-[11px] font-bold text-nexoraText">
+                                        + {addOn.addOnName}
+                                      </p>
+                                      <p className="shrink-0 text-[11px] font-bold tabular-nums text-nexoraText">
+                                        {addOn.discountAmount > 0 ? (
+                                          <>
+                                            <span className="mr-1 font-normal text-nexoraMuted line-through">
+                                              ${addOn.lineTotal.toFixed(2)}
+                                            </span>
+                                            ${addOn.lineTotalAfterDiscount.toFixed(2)}
+                                          </>
+                                        ) : (
+                                          `$${addOn.lineTotal.toFixed(2)}`
+                                        )}
+                                      </p>
+                                    </div>
+                                    {/* An add-on discount is absorbed by the same parties as a
+                                        service one, so a pay dispute needs the bearer here too. */}
+                                    {addOn.discountAmount > 0 ? (
+                                      <p className="mt-0.5 text-[11px] text-amber-700">
+                                        {t('components.dashboard.views.pos.PosCompletedOrdersPanel.viewDetailLineDiscount', {
+                                          amount: addOn.discountAmount.toFixed(2),
+                                          bearer: t(
+                                            `components.dashboard.views.pos.PosOrderWorkspace.discountBearer${addOn.discountBearer}`,
+                                          ),
+                                        })}
+                                        {addOn.discountBearer === PosDiscountBearer.Split
+                                          ? ` ${t('components.dashboard.views.pos.PosCompletedOrdersPanel.viewDetailLineDiscountStaffShare', {
+                                              amount: addOn.staffDiscountShare.toFixed(2),
+                                            })}`
+                                          : ''}
+                                        {addOn.discountNote ? ` — ${addOn.discountNote}` : ''}
+                                      </p>
+                                    ) : null}
                                   </div>
                                 ))}
                               </div>

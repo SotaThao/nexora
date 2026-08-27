@@ -9,6 +9,7 @@ import { AuthContext } from '../../auth/AuthContext'
 import type {
   PosServiceApiDto,
   ServiceAddOnApiDto,
+  ServiceAddOnCopySourceApiDto,
   ServiceAddOnInput,
   UpdateServiceAddOnInput,
 } from '../../types/repositories'
@@ -89,12 +90,26 @@ export function useServiceAddOns(serviceId?: string) {
   })
 }
 
+// Lists only the services that own at least one add-on — the picker must never offer a service
+// whose copy could only ever report "0 copied".
+export function useServiceAddOnCopySources(serviceId?: string) {
+  const auth = useContext(AuthContext)
+  const isOwner = auth?.status === 'authenticated' && auth?.session?.role === 'owner'
+  return useQuery<ServiceAddOnCopySourceApiDto[]>({
+    queryKey: qk.merchantPosServiceAddOnCopySources(serviceId),
+    queryFn: () => posServicesRepository.getServiceAddOnCopySources(serviceId as string),
+    enabled: isOwner && Boolean(serviceId),
+    retry: false,
+  })
+}
+
 export function useCreateServiceAddOn() {
   const queryClient = useQueryClient()
   return useMutation<string, Error, { serviceId: string; input: ServiceAddOnInput }>({
     mutationFn: ({ serviceId, input }) => posServicesRepository.createServiceAddOn(serviceId, input),
     onSuccess: (_result, { serviceId }) => {
       queryClient.invalidateQueries({ queryKey: qk.merchantPosServiceAddOns(serviceId) })
+      queryClient.invalidateQueries({ queryKey: qk.merchantPosServiceAddOnCopySourcesRoot() })
     },
   })
 }
@@ -116,6 +131,7 @@ export function useDeleteServiceAddOn() {
     mutationFn: ({ serviceId, addOnId }) => posServicesRepository.deleteServiceAddOn(serviceId, addOnId),
     onSuccess: (_result, { serviceId }) => {
       queryClient.invalidateQueries({ queryKey: qk.merchantPosServiceAddOns(serviceId) })
+      queryClient.invalidateQueries({ queryKey: qk.merchantPosServiceAddOnCopySourcesRoot() })
     },
   })
 }
@@ -128,6 +144,7 @@ export function useCopyServiceAddOns() {
       posServicesRepository.copyServiceAddOns(serviceId, sourceServiceId),
     onSuccess: (_result, { serviceId }) => {
       queryClient.invalidateQueries({ queryKey: qk.merchantPosServiceAddOns(serviceId) })
+      queryClient.invalidateQueries({ queryKey: qk.merchantPosServiceAddOnCopySourcesRoot() })
     },
   })
 }

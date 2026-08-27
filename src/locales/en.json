@@ -2437,6 +2437,13 @@
     "pos_category_in_use": "This category is still assigned to one or more services or products.",
     "catalog_service_in_use": "This service has order or staff-assignment history and cannot be deleted.",
     "catalog_category_in_use": "This category is still assigned to one or more services or products.",
+    "catalog_service_addon_not_found": "This add-on could not be found.",
+    "catalog_service_addon_name_required": "Add-on name is required.",
+    "catalog_service_addon_name_too_long": "Add-on name must be 200 characters or fewer.",
+    "catalog_service_addon_name_duplicate": "This service already has an add-on with that name.",
+    "catalog_service_addon_price_invalid": "Add-on price must be 0 or greater.",
+    "catalog_service_addon_in_use": "This add-on has been sold, so it can only be set inactive.",
+    "catalog_service_addon_copy_source_invalid": "The service to copy add-ons from is not available.",
     "pos_service_not_found": "This service could not be found.",
     "pos_service_name_required": "Service name is required.",
     "pos_service_name_too_long": "Service name must be 200 characters or fewer.",
@@ -3366,9 +3373,12 @@
             "addOnNamePlaceholder": "e.g. Paraffin Wax Treatment",
             "addOnPricePlaceholder": "e.g. 15",
             "addOnAddButton": "Add",
+            "addOnEditLabel": "Edit add-on",
             "addOnDeleteBlocked": "This add-on has been sold, so it can only be set inactive.",
             "addOnCopyPlaceholder": "Copy add-ons from another service…",
+            "addOnCopyOptionLabel": "{{name}} — {{count}} add-on(s)",
             "addOnCopyButton": "Copy",
+            "addOnCopyAllDuplicates": "Nothing to copy — this service already has every add-on from {{name}}.",
             "addOnCopyResult": "{{count}} add-on(s) copied."
           },
           "PosProductsView": {
@@ -3803,6 +3813,7 @@
             "viewDetailTip": "Tip",
             "viewDetailTotal": "Total",
             "viewDetailClose": "Close",
+            "viewDetailLineDiscountStaffShare": "(technician ${{amount}})",
             "viewDetailLineDiscount": "Discount ${{amount}} · {{bearer}} absorbs"
           },
           "CustomerTab": {

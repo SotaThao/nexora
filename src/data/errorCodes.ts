@@ -163,6 +163,15 @@ export const errorCodeToI18nKey = {
   [CatalogErrorCode.ServiceInUse]: 'errors.catalog_service_in_use',
   [CatalogErrorCode.CategoryInUse]: 'errors.catalog_category_in_use',
 
+  // Shared Catalog — Service Add-Ons
+  [CatalogErrorCode.ServiceAddOnNotFound]: 'errors.catalog_service_addon_not_found',
+  [CatalogErrorCode.ServiceAddOnNameRequired]: 'errors.catalog_service_addon_name_required',
+  [CatalogErrorCode.ServiceAddOnNameTooLong]: 'errors.catalog_service_addon_name_too_long',
+  [CatalogErrorCode.ServiceAddOnNameDuplicate]: 'errors.catalog_service_addon_name_duplicate',
+  [CatalogErrorCode.ServiceAddOnPriceInvalid]: 'errors.catalog_service_addon_price_invalid',
+  [CatalogErrorCode.ServiceAddOnInUse]: 'errors.catalog_service_addon_in_use',
+  [CatalogErrorCode.ServiceAddOnCopySourceInvalid]: 'errors.catalog_service_addon_copy_source_invalid',
+
   // POS Owner Setup — Products (US-018)
   POS_PRODUCT_NOT_FOUND: 'errors.pos_product_not_found',
   POS_PRODUCT_NAME_REQUIRED: 'errors.pos_product_name_required',
