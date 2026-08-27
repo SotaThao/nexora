@@ -1043,7 +1043,6 @@ export default function BookingPlansPanel({ buyOnlyMode = false }: { buyOnlyMode
       <BookingTrialModal
         open={trialOpen}
         onClose={() => setTrialOpen(false)}
-        lockSubmitComingSoon
       />
       {/* Class (not id) — CreditsUsageView already owns `#nx-campaign-root` when mounted. */}
       <div className="nx-campaign-root">
