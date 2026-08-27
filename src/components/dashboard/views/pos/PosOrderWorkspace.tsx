@@ -1485,23 +1485,56 @@ export default function PosOrderWorkspace({
                     <ul className="space-y-1.5 text-xs text-nexoraText">
                       {visibleLines.map((line) => {
                         const name = line.itemType === 'Service' ? line.serviceName : line.productName
+                        const summaryAddOns = line.itemType === 'Service' ? line.addOns : []
                         return (
-                          <li key={line.key} aria-label={name} className="flex items-center justify-between gap-3">
-                            <span className="min-w-0 truncate">
-                              {name}
-                              {line.itemType === 'Service' && line.discountAmount > 0 ? (
-                                <span className="ml-1 font-semibold text-rose-500">
-                                  {formatDiscountPriceBadge(
-                                    line.discountType,
-                                    line.discountValue,
-                                    line.discountAmount,
-                                  )}
-                                </span>
-                              ) : null}
-                            </span>
-                            <span className="shrink-0 font-semibold tabular-nums">
-                              ${lineTotalAfterDiscount(line).toFixed(2)}
-                            </span>
+                          <li key={line.key} aria-label={name} className="space-y-1.5">
+                            <div className="flex items-center justify-between gap-3">
+                              <span className="min-w-0 truncate">
+                                {name}
+                                {line.itemType === 'Service' && line.discountAmount > 0 ? (
+                                  <span className="ml-1 font-semibold text-rose-500">
+                                    {formatDiscountPriceBadge(
+                                      line.discountType,
+                                      line.discountValue,
+                                      line.discountAmount,
+                                    )}
+                                  </span>
+                                ) : null}
+                              </span>
+                              <span className="shrink-0 font-semibold tabular-nums">
+                                ${lineTotalAfterDiscount(line).toFixed(2)}
+                              </span>
+                            </div>
+                            {/* Add-ons are charged on top of their service and are already inside
+                                Total — listing them keeps the breakdown adding up to it. */}
+                            {summaryAddOns.length > 0 ? (
+                              <ul className="space-y-1 border-l-2 border-nexoraBorder pl-3 text-nexoraMuted">
+                                {summaryAddOns.map((addOn) => (
+                                  <li
+                                    key={addOn.id}
+                                    aria-label={addOn.addOnName}
+                                    data-testid={`summary-add-on-${addOn.id}`}
+                                    className="flex items-center justify-between gap-3"
+                                  >
+                                    <span className="min-w-0 truncate">
+                                      + {addOn.addOnName}
+                                      {addOn.discountAmount > 0 ? (
+                                        <span className="ml-1 font-semibold text-rose-500">
+                                          {formatDiscountPriceBadge(
+                                            addOn.discountType,
+                                            addOn.discountValue,
+                                            addOn.discountAmount,
+                                          )}
+                                        </span>
+                                      ) : null}
+                                    </span>
+                                    <span className="shrink-0 font-semibold tabular-nums">
+                                      ${addOn.lineTotalAfterDiscount.toFixed(2)}
+                                    </span>
+                                  </li>
+                                ))}
+                              </ul>
+                            ) : null}
                           </li>
                         )
                       })}
