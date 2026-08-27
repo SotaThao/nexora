@@ -17,6 +17,7 @@ import { parseApiUtcDateTime } from '../../utils/localDate'
 import { resolveTranslation } from '../../utils/translate'
 import type { TranslationVariables } from '../../types/contexts'
 import type { ReceiptApiDto } from '../../types/repositories'
+import { getPosCheckoutPaymentMethodLabel } from '../../constants/posCheckoutPaymentMethod'
 
 const K = 'public.receipt'
 
@@ -97,28 +98,54 @@ function ReceiptBody({ receipt }: { receipt: ReceiptApiDto }) {
             {t(`${K}.servicesTitle`)}
           </h2>
           {receipt.serviceLines.map((line, index) => (
-            <div key={index} className="flex items-start justify-between gap-3">
-              <div className="min-w-0">
-                <p className="text-sm font-bold text-nexoraText">{line.serviceName}</p>
-                <p className="text-xs text-nexoraMuted">
-                  {line.technicianName ?? t(`${K}.firstAvailable`)}
-                  {line.quantity > 1 ? ` · ×${line.quantity}` : ''}
-                </p>
+            <div key={index} className="space-y-1">
+              <div className="flex items-start justify-between gap-3">
+                <div className="min-w-0">
+                  <p className="text-sm font-bold text-nexoraText">{line.serviceName}</p>
+                  <p className="text-xs text-nexoraMuted">
+                    {line.technicianName ?? t(`${K}.firstAvailable`)}
+                    {line.quantity > 1 ? ` · ×${line.quantity}` : ''}
+                  </p>
+                </div>
+                {/* Both figures, so the customer can see the reduction they were promised rather than
+                    just a net amount they have to trust. */}
+                <span className="shrink-0 text-sm font-bold tabular-nums text-nexoraText">
+                  {line.discountAmount > 0 ? (
+                    <>
+                      <span className="mr-1.5 font-normal text-nexoraMuted line-through">
+                        {money(line.lineTotal)}
+                      </span>
+                      {money(line.lineTotalAfterDiscount)}
+                    </>
+                  ) : (
+                    money(line.lineTotal)
+                  )}
+                </span>
               </div>
-              {/* Both figures, so the customer can see the reduction they were promised rather than
-                  just a net amount they have to trust. */}
-              <span className="shrink-0 text-sm font-bold tabular-nums text-nexoraText">
-                {line.discountAmount > 0 ? (
-                  <>
-                    <span className="mr-1.5 font-normal text-nexoraMuted line-through">
-                      {money(line.lineTotal)}
-                    </span>
-                    {money(line.lineTotalAfterDiscount)}
-                  </>
-                ) : (
-                  money(line.lineTotal)
-                )}
-              </span>
+
+              {/* Indented under the service it was performed with — the customer has to be able to
+                  see where an extra charge came from. */}
+              {line.addOns?.length ? (
+                <div className="space-y-1 border-l-2 border-nexoraBorder pl-3">
+                  {line.addOns.map((addOn, addOnIndex) => (
+                    <div key={addOnIndex} className="flex items-start justify-between gap-3">
+                      <p className="min-w-0 text-xs font-bold text-nexoraText">+ {addOn.addOnName}</p>
+                      <span className="shrink-0 text-xs font-bold tabular-nums text-nexoraText">
+                        {addOn.discountAmount > 0 ? (
+                          <>
+                            <span className="mr-1.5 font-normal text-nexoraMuted line-through">
+                              {money(addOn.lineTotal)}
+                            </span>
+                            {money(addOn.lineTotalAfterDiscount)}
+                          </>
+                        ) : (
+                          money(addOn.lineTotal)
+                        )}
+                      </span>
+                    </div>
+                  ))}
+                </div>
+              ) : null}
             </div>
           ))}
         </section>
@@ -164,7 +191,12 @@ function ReceiptBody({ receipt }: { receipt: ReceiptApiDto }) {
       {receipt.paymentMethodType ? (
         <p className="border-t border-nexoraBorder pt-4 text-center text-xs text-nexoraMuted">
           {t(`${K}.paidWith`, {
-            method: t(`${K}.paymentMethod.${receipt.paymentMethodType}`),
+            method: getPosCheckoutPaymentMethodLabel(
+              receipt.paymentMethodType,
+              t,
+              '—',
+              `${K}.paymentMethod`,
+            ),
           })}
         </p>
       ) : null}

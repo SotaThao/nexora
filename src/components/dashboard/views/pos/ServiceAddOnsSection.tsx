@@ -1,0 +1,214 @@
+// ServiceAddOnsSection — the add-on list of ONE service, inside the Edit Service modal.
+//
+// Add-ons are owned per service, never shared: two services that both offer paraffin hold two
+// independent rows with independent prices. "Copy from another service" is a one-time duplication
+// so a ~90-item menu is not typed out by hand — editing either copy afterwards leaves the other
+// untouched.
+//
+// Unlike the service fields around it, every action here persists immediately rather than waiting
+// for the modal's Save: each add-on has its own endpoint, and batching them into the service form
+// would mean holding a second draft state that can silently diverge from the server.
+import { useState } from 'react'
+import { Loader2, Plus, Trash2 } from 'lucide-react'
+import { useTranslation } from '../../../../contexts/LanguageContext'
+import { useNotification } from '../../../../contexts/NotificationContext'
+import {
+  useCopyServiceAddOns,
+  useCreateServiceAddOn,
+  useDeleteServiceAddOn,
+  useServiceAddOns,
+  useUpdateServiceAddOn,
+} from '../../../../data/hooks/usePosServices'
+import type { PosServiceApiDto, ServiceAddOnApiDto } from '../../../../types/repositories'
+
+const K = 'components.dashboard.views.pos.PosServicesView'
+
+export default function ServiceAddOnsSection({
+  serviceId,
+  services,
+}: {
+  serviceId: string
+  // Every other service of this business — the copy source list.
+  services: PosServiceApiDto[]
+}) {
+  const { t } = useTranslation()
+  const { showToast } = useNotification()
+
+  const { data: addOns = [], isLoading } = useServiceAddOns(serviceId)
+  const createAddOn = useCreateServiceAddOn()
+  const updateAddOn = useUpdateServiceAddOn()
+  const deleteAddOn = useDeleteServiceAddOn()
+  const copyAddOns = useCopyServiceAddOns()
+
+  const [nameDraft, setNameDraft] = useState('')
+  const [priceDraft, setPriceDraft] = useState('')
+  const [copySourceId, setCopySourceId] = useState('')
+
+  const reportError = (err: unknown) => {
+    showToast(err instanceof Error ? err.message : String(err), 'error')
+  }
+
+  // Price may be 0 — a comped extra still records the work the technician performed — so the guard
+  // is on the field being filled in, not on it being above zero.
+  const parsedPrice = Number(priceDraft)
+  const canAdd = nameDraft.trim().length > 0 && priceDraft.trim().length > 0 && parsedPrice >= 0
+
+  const handleAdd = () => {
+    if (!canAdd || createAddOn.isPending) return
+    createAddOn.mutate(
+      { serviceId, input: { name: nameDraft.trim(), price: parsedPrice } },
+      {
+        onSuccess: () => {
+          setNameDraft('')
+          setPriceDraft('')
+        },
+        onError: reportError,
+      },
+    )
+  }
+
+  const handleToggleActive = (addOn: ServiceAddOnApiDto) => {
+    updateAddOn.mutate(
+      {
+        serviceId,
+        addOnId: addOn.id,
+        input: {
+          name: addOn.name,
+          price: addOn.price,
+          displayOrder: addOn.displayOrder,
+          isActive: !addOn.isActive,
+        },
+      },
+      { onError: reportError },
+    )
+  }
+
+  const handleDelete = (addOn: ServiceAddOnApiDto) => {
+    deleteAddOn.mutate({ serviceId, addOnId: addOn.id }, { onError: reportError })
+  }
+
+  const handleCopy = () => {
+    if (!copySourceId || copyAddOns.isPending) return
+    copyAddOns.mutate(
+      { serviceId, sourceServiceId: copySourceId },
+      {
+        onSuccess: (copiedCount) => {
+          setCopySourceId('')
+          showToast(t(`${K}.addOnCopyResult`, { count: copiedCount }))
+        },
+        onError: reportError,
+      },
+    )
+  }
+
+  const copySources = services.filter((service) => service.id !== serviceId)
+
+  return (
+    <div className="space-y-2 rounded-xl border border-nexoraBorder bg-nexoraCanvas p-3">
+      <div>
+        <p className="text-xs font-bold text-nexoraText">{t(`${K}.addOnsSectionTitle`)}</p>
+        <p className="mt-0.5 text-[11px] leading-tight text-nexoraMuted">{t(`${K}.addOnsSectionHint`)}</p>
+      </div>
+
+      {isLoading ? (
+        <p className="py-3 text-center text-[11px] text-nexoraMuted">{t('common.loading')}</p>
+      ) : addOns.length === 0 ? (
+        <p className="py-3 text-center text-[11px] text-nexoraMuted">{t(`${K}.addOnsEmpty`)}</p>
+      ) : (
+        <ul className="space-y-1.5">
+          {addOns.map((addOn) => (
+            <li
+              key={addOn.id}
+              data-testid={`service-add-on-${addOn.id}`}
+              className="flex items-center gap-2 rounded-lg border border-nexoraBorder bg-white px-3 py-2"
+            >
+              <span
+                className={`min-w-0 flex-1 truncate text-xs font-bold ${
+                  addOn.isActive ? 'text-nexoraText' : 'text-nexoraMuted line-through'
+                }`}
+              >
+                {addOn.name}
+              </span>
+              <span className="shrink-0 text-xs font-bold text-nexoraText">${addOn.price.toFixed(2)}</span>
+              <label className="flex shrink-0 items-center gap-1 text-[10px] font-bold text-nexoraMuted">
+                <input
+                  type="checkbox"
+                  checked={addOn.isActive}
+                  onChange={() => handleToggleActive(addOn)}
+                  className="h-3.5 w-3.5 rounded border-nexoraBorder"
+                />
+                {t(`${K}.activeLabel`)}
+              </label>
+              {/* A sold add-on can only be deactivated — order history resolves its name here. */}
+              <button
+                type="button"
+                disabled={!addOn.canDelete}
+                title={addOn.canDelete ? undefined : t(`${K}.addOnDeleteBlocked`)}
+                onClick={() => handleDelete(addOn)}
+                className="shrink-0 rounded p-1 text-rose-500 hover:bg-rose-50 disabled:cursor-not-allowed disabled:opacity-40"
+              >
+                <Trash2 className="h-3.5 w-3.5" />
+              </button>
+            </li>
+          ))}
+        </ul>
+      )}
+
+      <div className="grid grid-cols-1 gap-2 sm:grid-cols-[minmax(0,1fr)_7rem_auto]">
+        <input
+          type="text"
+          value={nameDraft}
+          onChange={(e) => setNameDraft(e.target.value)}
+          maxLength={200}
+          placeholder={t(`${K}.addOnNamePlaceholder`)}
+          className="h-9 w-full rounded-lg border border-nexoraBorder bg-white px-3 text-xs text-nexoraText outline-none focus:border-nexoraBrand"
+        />
+        <input
+          type="number"
+          inputMode="decimal"
+          min={0}
+          step="0.01"
+          value={priceDraft}
+          onChange={(e) => setPriceDraft(e.target.value)}
+          placeholder={t(`${K}.addOnPricePlaceholder`)}
+          className="h-9 w-full rounded-lg border border-nexoraBorder bg-white px-3 text-xs text-nexoraText outline-none focus:border-nexoraBrand"
+        />
+        <button
+          type="button"
+          onClick={handleAdd}
+          disabled={!canAdd || createAddOn.isPending}
+          className="inline-flex h-9 items-center justify-center gap-1.5 rounded-lg bg-nexoraBrand px-4 text-[10px] font-bold text-white hover:bg-nexoraBrandDark disabled:opacity-60"
+        >
+          {createAddOn.isPending ? <Loader2 className="h-3 w-3 animate-spin" /> : <Plus className="h-3 w-3" />}
+          {t(`${K}.addOnAddButton`)}
+        </button>
+      </div>
+
+      {copySources.length > 0 ? (
+        <div className="grid grid-cols-1 gap-2 sm:grid-cols-[minmax(0,1fr)_auto]">
+          <select
+            value={copySourceId}
+            onChange={(e) => setCopySourceId(e.target.value)}
+            className="h-9 w-full rounded-lg border border-nexoraBorder bg-white px-3 text-xs text-nexoraText outline-none focus:border-nexoraBrand"
+          >
+            <option value="">{t(`${K}.addOnCopyPlaceholder`)}</option>
+            {copySources.map((service) => (
+              <option key={service.id} value={service.id}>
+                {service.name}
+              </option>
+            ))}
+          </select>
+          <button
+            type="button"
+            onClick={handleCopy}
+            disabled={!copySourceId || copyAddOns.isPending}
+            className="inline-flex h-9 items-center justify-center gap-1.5 rounded-lg border border-nexoraBorder bg-white px-4 text-[10px] font-bold text-nexoraText hover:border-nexoraBrand disabled:opacity-60"
+          >
+            {copyAddOns.isPending ? <Loader2 className="h-3 w-3 animate-spin" /> : null}
+            {t(`${K}.addOnCopyButton`)}
+          </button>
+        </div>
+      ) : null}
+    </div>
+  )
+}

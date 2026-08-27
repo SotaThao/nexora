@@ -1,0 +1,779 @@
+/* Offset below sticky dashboard/staff header (safe-area + min-h-16). */
+:root {
+  --header-messages-mobile-header-offset: calc(var(--app-safe-area-top, 0px) + 4rem);
+}
+
+.header-messages-panel {
+  @apply flex flex-col overflow-hidden bg-white;
+}
+
+.header-messages-panel--desktop {
+  @apply absolute right-0 top-full z-[80] mt-3 w-[min(100vw-2rem,400px)] rounded-2xl border border-nexoraBorder shadow-2xl animate-fadeIn;
+  max-height: min(520px, calc(100dvh - 6rem));
+}
+
+.header-messages-panel--mobile {
+  /* Above bottom nav (z-30); starts below sticky header so app header stays visible. */
+  @apply fixed inset-x-0 bottom-0 z-[100] flex flex-col overflow-hidden bg-nexoraCanvas;
+  top: var(--header-messages-mobile-header-offset, calc(var(--app-safe-area-top, 0px) + 4rem));
+  height: calc(100dvh - var(--header-messages-mobile-header-offset, calc(var(--app-safe-area-top, 0px) + 4rem)));
+  max-height: calc(100dvh - var(--header-messages-mobile-header-offset, calc(var(--app-safe-area-top, 0px) + 4rem)));
+  overscroll-behavior: none;
+  touch-action: manipulation;
+}
+
+.header-messages-list--mobile {
+  @apply min-h-0 flex-1 space-y-3 overflow-y-auto overscroll-contain bg-nexoraCanvas px-4 py-3;
+  -webkit-overflow-scrolling: touch;
+  overscroll-behavior: contain;
+  touch-action: pan-y;
+}
+
+.header-messages-list--empty {
+  @apply flex flex-1 items-center justify-center overflow-y-auto bg-white px-4 py-8;
+}
+
+.header-messages-panel--mobile .header-messages-list--empty {
+  @apply bg-nexoraCanvas py-4;
+}
+
+.header-messages-empty-state {
+  @apply flex w-full max-w-xs flex-col items-center px-4 py-8 text-center;
+}
+
+.header-messages-panel--mobile .header-messages-empty-state {
+  @apply py-4;
+}
+
+.header-messages-panel--mobile .header-messages-empty-icon {
+  @apply h-9 w-9;
+}
+
+.header-messages-empty-icon {
+  @apply h-12 w-12 text-nexoraSubtle;
+  stroke-width: 1.25;
+}
+
+.header-messages-empty-title {
+  @apply mt-4 text-sm font-bold text-nexoraText;
+}
+
+.header-messages-empty-desc {
+  @apply mt-2 text-xs font-medium leading-relaxed text-nexoraMuted;
+}
+
+.header-messages-staff-cta {
+  @apply inline-flex h-9 w-full items-center justify-center gap-1.5 whitespace-nowrap rounded-full bg-nexoraBrand px-3.5 text-xs font-bold text-white transition hover:bg-nexoraBrandDark;
+}
+
+.header-messages-empty-state .header-messages-staff-cta {
+  @apply mt-4 w-auto;
+}
+
+.header-messages-staff-cta-footer {
+  @apply shrink-0 flex justify-center border-t border-nexoraBorder bg-white px-4 py-2.5;
+}
+
+.header-messages-staff-cta--secondary {
+  @apply inline-flex h-9 w-full items-center justify-center gap-1.5 whitespace-nowrap rounded-lg border border-nexoraBorder bg-white px-3.5 text-xs font-bold text-nexoraText shadow-sm transition hover:border-nexoraBrand hover:bg-nexoraBrandSoft hover:text-nexoraBrand;
+}
+
+.header-messages-panel--mobile .header-messages-item {
+  @apply rounded-2xl border border-nexoraBorder bg-white p-4 shadow-sm hover:border-nexoraBorder hover:bg-white;
+}
+
+.header-messages-panel--mobile .header-messages-mobile-top {
+  @apply shrink-0 border-b border-t border-nexoraBorder bg-white px-3 py-3;
+}
+
+.header-messages-panel--mobile .header-messages-search {
+  @apply h-11 border-transparent bg-nexoraSurfaceMuted shadow-none focus:border-nexoraBrand;
+}
+
+.header-messages-panel--mobile .header-messages-tabs {
+  @apply shrink-0 border-b border-nexoraBorder bg-white px-2;
+}
+
+.header-messages-desktop-head {
+  @apply shrink-0 flex items-start justify-between gap-3 border-b border-nexoraBorder px-4 py-3;
+}
+
+.header-messages-brand-icon {
+  @apply flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-nexoraElectric to-nexoraViolet text-white;
+}
+
+.header-messages-title {
+  @apply text-base font-bold leading-tight text-nexoraText;
+}
+
+.header-messages-subtitle {
+  @apply mt-0.5 text-xs font-medium text-nexoraMuted;
+}
+
+.header-messages-close {
+  @apply inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-lg text-nexoraMuted transition hover:bg-nexoraSurfaceMuted hover:text-nexoraText;
+}
+
+.header-messages-mobile-top {
+  @apply flex items-center gap-2 px-3 py-3;
+}
+
+.header-messages-back {
+  @apply inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-xl text-nexoraText transition hover:bg-nexoraCanvas;
+}
+
+.header-messages-search-wrap {
+  @apply relative flex-1;
+}
+
+.header-messages-search-wrap--desktop {
+  @apply shrink-0 px-4 py-3;
+}
+
+.header-messages-search-icon {
+  @apply pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-nexoraSubtle;
+}
+
+.header-messages-search-wrap--desktop .header-messages-search-icon {
+  @apply left-7;
+}
+
+.header-messages-search {
+  @apply h-10 w-full rounded-full border border-nexoraBorder bg-white pl-9 pr-3 text-sm text-nexoraText outline-none placeholder:text-nexoraSubtle focus:border-nexoraBrand;
+}
+
+.header-messages-search-wrap--desktop .header-messages-search {
+  @apply bg-nexoraSurfaceMuted pl-10;
+}
+
+.header-messages-tabs {
+  @apply shrink-0 flex items-center gap-1 border-b border-nexoraBorder px-4;
+}
+
+.header-messages-tab {
+  @apply inline-flex items-center gap-1.5 border-b-2 border-transparent px-3 py-2.5 text-sm font-semibold text-nexoraMuted transition;
+}
+
+.header-messages-tab.is-active {
+  @apply border-nexoraBrand text-nexoraBrand;
+}
+
+.header-messages-tab-icon {
+  @apply h-4 w-4;
+}
+
+.header-messages-list {
+  @apply min-h-0 flex-1 overflow-y-auto overscroll-contain px-3 py-2;
+  -webkit-overflow-scrolling: touch;
+}
+
+.header-messages-list-skeleton {
+  @apply space-y-1;
+}
+
+.header-messages-skeleton-item {
+  @apply flex w-full items-start gap-3 rounded-xl p-3;
+}
+
+.header-messages-skeleton-avatar {
+  @apply h-10 w-10 shrink-0 rounded-full bg-nexoraSurfaceMuted;
+  animation: header-message-chat-skeleton-pulse 1.4s ease-in-out infinite;
+}
+
+.header-messages-skeleton-main {
+  @apply min-w-0 flex-1;
+}
+
+.header-messages-skeleton-row {
+  @apply flex items-start justify-between gap-2;
+}
+
+.header-messages-skeleton-name {
+  @apply h-3.5 w-[42%] rounded-md bg-nexoraSurfaceMuted;
+  animation: header-message-chat-skeleton-pulse 1.4s ease-in-out infinite;
+}
+
+.header-messages-skeleton-time {
+  @apply h-3 w-14 shrink-0 rounded-md bg-nexoraSurfaceMuted;
+  animation: header-message-chat-skeleton-pulse 1.4s ease-in-out infinite;
+  animation-delay: 0.12s;
+}
+
+.header-messages-skeleton-preview {
+  @apply mt-2 h-3 w-[72%] rounded-md bg-nexoraSurfaceMuted;
+  animation: header-message-chat-skeleton-pulse 1.4s ease-in-out infinite;
+  animation-delay: 0.2s;
+}
+
+.header-messages-panel--desktop .header-messages-list:not(.header-messages-list--empty) {
+  @apply min-h-0;
+}
+
+.header-messages-item {
+  @apply flex w-full items-start gap-3 rounded-xl border border-transparent p-3 text-left transition hover:border-nexoraBorder hover:bg-nexoraCanvas;
+}
+
+.header-messages-item.is-name-only {
+  @apply items-center;
+}
+
+.header-messages-item-avatar {
+  @apply flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-nexoraElectric to-nexoraViolet text-xs font-bold uppercase text-white;
+}
+
+.header-messages-item-main {
+  @apply min-w-0 flex-1;
+}
+
+.header-messages-item-row {
+  @apply flex items-start justify-between gap-2;
+}
+
+.header-messages-item-name {
+  @apply truncate text-sm font-bold text-nexoraText;
+}
+
+.header-messages-item-time {
+  @apply shrink-0 text-[11px] font-medium text-nexoraSubtle;
+}
+
+.header-messages-item-preview {
+  @apply mt-0.5 line-clamp-2 text-xs font-medium text-nexoraMuted;
+}
+
+.header-messages-item.is-unread .header-messages-item-name {
+  @apply font-black text-nexoraText;
+}
+
+.header-messages-item.is-unread .header-messages-item-preview {
+  @apply font-semibold text-nexoraText;
+}
+
+.header-messages-item.is-active {
+  @apply border-nexoraBrand/30 bg-nexoraBrandSoft/40;
+}
+
+.header-messages-item-unread-badge {
+  @apply mt-1 flex h-[18px] min-w-[18px] shrink-0 items-center justify-center self-start rounded-full bg-red-500 px-1 text-[10px] font-black text-white;
+}
+
+.header-message-chat {
+  @apply flex flex-col overflow-hidden bg-white;
+}
+
+.header-message-chat--floating {
+  @apply fixed bottom-4 z-[100] w-[360px] rounded-2xl border border-nexoraBorder shadow-2xl animate-fadeIn;
+  height: min(520px, calc(100dvh - 2rem));
+  max-height: calc(100dvh - 2rem);
+}
+
+.header-message-chat--fullscreen {
+  /* Under app header — used when opening from the header messenger icon. */
+  @apply fixed inset-x-0 bottom-0 z-[100] flex flex-col overflow-hidden bg-white;
+  top: var(--header-messages-mobile-header-offset, calc(var(--app-safe-area-top, 0px) + 4rem));
+  height: calc(100dvh - var(--header-messages-mobile-header-offset, calc(var(--app-safe-area-top, 0px) + 4rem)));
+  max-height: calc(100dvh - var(--header-messages-mobile-header-offset, calc(var(--app-safe-area-top, 0px) + 4rem)));
+  overscroll-behavior: none;
+  touch-action: manipulation;
+}
+
+/* Staff / non-header entry: edge-to-edge over the app chrome. */
+.header-message-chat--fullscreen.is-immersive {
+  top: 0;
+  height: 100dvh;
+  max-height: 100dvh;
+  z-index: 120;
+  padding-top: var(--app-safe-area-top, 0px);
+}
+
+.header-message-chat-head--mobile {
+  @apply shrink-0 items-center border-b border-nexoraBorder bg-white px-3 py-3;
+}
+
+.header-message-chat--fullscreen.is-immersive .header-message-chat-head--mobile {
+  @apply border-t-0;
+}
+
+.header-message-chat-back {
+  @apply inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-xl text-nexoraText transition hover:bg-nexoraCanvas;
+}
+
+.header-message-chat-head-copy {
+  @apply min-w-0;
+}
+
+.header-message-chat-head-subtitle {
+  @apply mt-0.5 flex items-center gap-1 text-xs font-medium text-nexoraMuted;
+}
+
+.header-message-chat-thread--mobile {
+  @apply min-h-0 flex-1 overflow-y-auto overscroll-contain bg-nexoraCanvas px-3 pt-2 pb-2;
+  -webkit-overflow-scrolling: touch;
+  overscroll-behavior: contain;
+  touch-action: pan-y;
+}
+
+.header-message-chat-date-sep {
+  @apply py-2 text-center text-xs font-medium text-nexoraSubtle;
+}
+
+.header-message-chat-date-sep-skeleton {
+  @apply mx-auto my-2 block h-3 w-40 rounded-full bg-nexoraBorder;
+  animation: header-message-chat-skeleton-pulse 1.4s ease-in-out infinite;
+}
+
+.header-message-chat-row--mobile.is-incoming {
+  @apply items-start;
+}
+
+.header-message-chat-row--mobile.is-outgoing {
+  @apply justify-end;
+}
+
+.header-message-chat-bubble--mobile {
+  @apply max-w-[88%] rounded-2xl border px-3 py-2.5;
+}
+
+.header-message-chat-bubble--mobile.is-incoming {
+  @apply rounded-tl-md border-nexoraBorder bg-white text-nexoraText shadow-sm;
+}
+
+.header-message-chat-bubble--mobile.is-outgoing {
+  @apply rounded-tr-md border-transparent bg-nexoraBrand text-white;
+}
+
+.header-message-chat-bubble-sender {
+  @apply mb-1 block text-sm font-bold text-nexoraBrand;
+}
+
+.header-message-chat-bubble-foot {
+  @apply mt-2 flex items-center justify-between gap-3;
+}
+
+.header-message-chat-bubble-actions {
+  @apply inline-flex items-center gap-2.5;
+}
+
+.header-message-chat-reply {
+  @apply inline-flex cursor-pointer items-center gap-1 text-xs font-semibold text-nexoraBrand;
+}
+
+.header-message-chat-menu {
+  @apply relative flex shrink-0 items-center self-center;
+}
+
+.header-message-chat-menu-trigger {
+  @apply inline-flex h-7 w-7 items-center justify-center rounded-full text-nexoraMuted transition hover:bg-black/5 hover:text-nexoraText disabled:cursor-wait disabled:opacity-50;
+}
+
+.header-message-chat-row.is-outgoing .header-message-chat-menu-trigger {
+  @apply hover:bg-black/5;
+}
+
+.header-message-chat-menu-panel {
+  @apply min-w-[9.5rem] overflow-hidden rounded-xl border border-nexoraBorder bg-white py-1 shadow-lg;
+}
+
+.header-message-chat-menu-panel:not(.is-portal) {
+  @apply absolute bottom-full z-20 mb-1;
+  left: 0;
+}
+
+.header-message-chat-menu.is-align-end .header-message-chat-menu-panel:not(.is-portal) {
+  left: auto;
+  right: 0;
+}
+
+.header-message-chat-menu-item {
+  @apply flex w-full items-center gap-2 px-3 py-2 text-left text-xs font-semibold text-nexoraText transition hover:bg-nexoraCanvas disabled:cursor-wait disabled:opacity-60;
+}
+
+.header-message-chat-menu-item.is-danger {
+  @apply text-nexoraDanger;
+}
+
+.header-message-chat-quote {
+  @apply mb-2 rounded-md border-l-2 border-white/90 bg-black/15 px-2.5 py-2;
+}
+
+.header-message-chat-bubble.is-incoming .header-message-chat-quote,
+.header-message-chat-bubble--mobile.is-incoming .header-message-chat-quote {
+  @apply border-nexoraBrand bg-nexoraBrand/10;
+}
+
+.header-message-chat-quote-name {
+  @apply block text-xs font-bold leading-tight;
+}
+
+.header-message-chat-bubble.is-incoming .header-message-chat-quote-name,
+.header-message-chat-bubble--mobile.is-incoming .header-message-chat-quote-name {
+  @apply text-nexoraBrand;
+}
+
+.header-message-chat-quote-text {
+  @apply mt-0.5 block text-xs leading-snug opacity-90;
+}
+
+.header-message-chat-composer-wrap {
+  @apply shrink-0 border-t border-nexoraBorder bg-white;
+}
+
+.header-message-chat-composer-wrap--mobile .header-message-chat-composer {
+  @apply border-t-0;
+}
+
+.header-message-chat-reply-banner {
+  @apply flex items-center gap-2 border-l-4 border-nexoraBrand bg-nexoraBrandSoft px-3 py-2.5;
+}
+
+.header-message-chat-reply-banner-icon {
+  @apply h-4 w-4 shrink-0 text-nexoraBrand;
+}
+
+.header-message-chat-reply-banner-text {
+  @apply min-w-0 flex-1 text-sm leading-snug;
+}
+
+.header-message-chat-reply-banner-label {
+  @apply font-bold text-nexoraBrand;
+}
+
+.header-message-chat-reply-banner-preview {
+  @apply text-nexoraMuted;
+}
+
+.header-message-chat-reply-banner-close {
+  @apply inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-lg text-nexoraMuted transition hover:bg-white/70 hover:text-nexoraText;
+}
+
+.header-message-chat-bubble.is-outgoing:not(.is-image) .header-message-chat-reply {
+  @apply text-white/90;
+}
+
+.header-message-chat-bubble.is-outgoing:not(.is-image) .header-message-chat-bubble-meta {
+  @apply text-white/85;
+}
+
+.header-message-chat-bubble--mobile.is-outgoing .header-message-chat-reply {
+  @apply text-white/90;
+}
+
+.header-message-chat-bubble--mobile.is-outgoing .header-message-chat-bubble-meta {
+  @apply text-white/85;
+}
+
+html.header-messages-mobile-open,
+html.header-messages-mobile-open body,
+body.header-messages-mobile-open {
+  overflow: hidden !important;
+  overscroll-behavior: none;
+  touch-action: none;
+}
+
+/* Keep only the sticky app header visible — hide bottom nav while messenger is open. */
+html.header-messages-mobile-open [data-mobile-bottom-nav] {
+  display: none !important;
+}
+
+/* App header stays above the messenger shell (clickable hamburger / icons). */
+html.header-messages-mobile-open header.sticky {
+  z-index: 110;
+}
+
+.header-message-chat-head {
+  @apply shrink-0 flex items-center justify-between gap-2 border-b border-nexoraBorder px-3 py-2.5;
+}
+
+.header-message-chat-head-main {
+  @apply flex min-w-0 items-center gap-2;
+}
+
+.header-message-chat-head-avatar {
+  @apply flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-nexoraElectric to-nexoraViolet text-xs font-bold uppercase text-white;
+}
+
+.header-message-chat-head-name {
+  @apply truncate text-sm font-bold text-nexoraText;
+}
+
+.header-message-chat-head-actions {
+  @apply flex shrink-0 items-center gap-0.5;
+}
+
+.header-message-chat-icon-btn {
+  @apply inline-flex h-8 w-8 items-center justify-center rounded-lg text-nexoraMuted transition hover:bg-nexoraSurfaceMuted hover:text-nexoraText disabled:cursor-not-allowed disabled:opacity-35 disabled:hover:bg-transparent disabled:hover:text-nexoraMuted;
+}
+
+.header-message-chat--fullscreen.is-immersive .header-message-chat-icon-btn--close {
+  @apply h-10 w-10 rounded-xl text-nexoraText;
+}
+
+.header-message-chat-thread {
+  @apply min-h-0 flex-1 overflow-y-auto px-3 pt-3 pb-2;
+}
+
+.header-message-chat-load-older {
+  @apply sticky top-0 z-[1] mb-2 rounded-lg bg-nexoraSurface/95 px-3 py-1.5 text-center text-[11px] font-semibold text-nexoraMuted shadow-sm backdrop-blur-sm;
+}
+
+.header-message-chat-thread--empty {
+  @apply flex flex-col items-center overflow-y-auto overscroll-contain px-3 pb-4 pt-3;
+  scroll-padding-top: 0.75rem;
+  scroll-padding-bottom: 1rem;
+  background:
+    radial-gradient(circle at 15% 20%, rgb(70 72 216 / 0.08), transparent 42%),
+    radial-gradient(circle at 85% 75%, rgb(168 169 243 / 0.22), transparent 45%),
+    linear-gradient(180deg, rgb(247 249 252) 0%, rgb(255 255 255) 100%);
+}
+
+.header-message-chat-thread--mobile.header-message-chat-thread--empty {
+  @apply px-3 pb-6 pt-3;
+  background:
+    radial-gradient(circle at 12% 18%, rgb(70 72 216 / 0.07), transparent 40%),
+    radial-gradient(circle at 88% 72%, rgb(168 169 243 / 0.18), transparent 42%),
+    linear-gradient(180deg, rgb(247 249 252) 0%, rgb(247 249 252) 100%);
+}
+
+.header-message-chat-new-welcome {
+  @apply relative my-auto flex w-full max-w-sm shrink-0 flex-col items-center text-center;
+}
+
+.header-message-chat-new-avatar {
+  @apply mb-3 flex h-14 w-14 items-center justify-center rounded-full bg-gradient-to-br from-nexoraElectric to-nexoraViolet text-base font-black uppercase text-white;
+}
+
+.header-message-chat-new-title {
+  @apply text-sm font-bold leading-snug text-nexoraText;
+}
+
+.header-message-chat-new-subtitle {
+  @apply mt-1 text-xs font-medium leading-snug text-nexoraMuted;
+}
+
+.header-message-chat-new-badge {
+  @apply mt-2 inline-flex items-center gap-1.5 rounded-full bg-nexoraBrandSoft px-2.5 py-0.5 text-[11px] font-bold text-nexoraBrand;
+}
+
+.header-message-chat-new-hint {
+  @apply mt-3 flex items-center justify-center gap-1.5 text-xs font-medium text-nexoraMuted;
+}
+
+.header-message-chat-starter-list {
+  @apply mt-2 flex w-full flex-col gap-1.5;
+}
+
+.header-message-chat-starter-chip {
+  @apply flex w-full items-center gap-2 rounded-lg border border-nexoraBorder bg-white/80 px-3 py-2 text-left text-xs font-semibold leading-snug text-nexoraText transition hover:border-nexoraBrand/40 hover:bg-white;
+}
+
+.header-message-chat-new-privacy {
+  @apply mt-3 flex items-center justify-center gap-1.5 text-[11px] font-medium text-nexoraSubtle;
+}
+
+.header-message-chat-thread-list {
+  @apply flex flex-col gap-3;
+}
+
+.header-message-chat-row {
+  @apply flex items-end gap-2;
+}
+
+.header-message-chat-row.is-outgoing {
+  @apply justify-end;
+}
+
+.header-message-chat-row-avatar {
+  @apply flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-nexoraElectric to-nexoraViolet text-[10px] font-bold uppercase text-white;
+}
+
+.header-message-chat-row-avatar.is-spacer {
+  @apply invisible;
+}
+
+.header-message-chat-bubble {
+  @apply max-w-[78%] rounded-2xl px-3 py-2;
+}
+
+.header-message-chat-bubble.is-incoming {
+  @apply rounded-bl-md bg-nexoraSurfaceMuted text-nexoraText;
+}
+
+.header-message-chat-bubble.is-outgoing {
+  @apply rounded-br-md bg-nexoraBrand text-white;
+}
+
+.header-message-chat-bubble.is-image {
+  @apply bg-transparent p-0 text-nexoraText shadow-none;
+}
+
+.header-message-chat-bubble.is-outgoing.is-image {
+  @apply bg-transparent text-nexoraText;
+}
+
+.header-message-chat-bubble--mobile.is-image {
+  @apply border-transparent bg-transparent shadow-none;
+}
+
+.header-message-chat-bubble.is-image .header-message-chat-bubble-meta {
+  @apply mt-1 justify-end text-[11px] text-nexoraSubtle opacity-100;
+}
+
+.header-message-chat-bubble-text {
+  @apply text-sm leading-snug;
+}
+
+.header-message-chat-bubble-text.is-deleted {
+  @apply italic text-gray-500;
+}
+
+.header-message-chat-bubble-meta {
+  @apply mt-1 flex items-center justify-end gap-1 text-[10px] font-medium opacity-80;
+}
+
+.header-message-chat-bubble.is-incoming .header-message-chat-bubble-meta {
+  @apply justify-start;
+}
+
+.header-message-chat-receipt {
+  @apply h-3.5 w-3.5 shrink-0;
+}
+
+.header-message-chat-bubble.is-outgoing .header-message-chat-receipt.is-sent {
+  @apply text-white/70;
+}
+
+.header-message-chat-bubble.is-outgoing .header-message-chat-receipt.is-read {
+  @apply text-sky-200;
+}
+
+.header-message-chat-bubble.is-image .header-message-chat-receipt.is-sent {
+  @apply text-nexoraSubtle;
+}
+
+.header-message-chat-bubble.is-image .header-message-chat-receipt.is-read {
+  @apply text-nexoraBrand;
+}
+
+.header-message-chat-composer {
+  @apply flex items-center gap-2 px-3 py-3;
+}
+
+.header-message-chat-composer--mobile {
+  @apply shrink-0 gap-2.5 bg-white px-3 py-3;
+  padding-bottom: calc(0.75rem + env(safe-area-inset-bottom, 0px));
+}
+
+.header-message-chat-composer--mobile .header-message-chat-input {
+  @apply border-transparent bg-nexoraSurfaceMuted focus:border-nexoraBrand;
+}
+
+.header-message-chat-attach {
+  @apply inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-full text-nexoraBrand transition hover:bg-nexoraSurfaceMuted disabled:cursor-not-allowed disabled:opacity-40;
+}
+
+.header-message-chat-input {
+  @apply h-11 min-w-0 flex-1 rounded-full border border-nexoraBrand/30 bg-white px-4 text-sm text-nexoraText outline-none placeholder:text-nexoraSubtle focus:border-nexoraBrand;
+}
+
+.header-message-chat-send {
+  @apply inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-nexoraElectric to-nexoraViolet text-white transition hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-40;
+}
+
+.header-message-chat-image {
+  @apply block max-h-48 w-full max-w-[220px] rounded-2xl object-cover;
+}
+
+.header-message-chat-image-btn {
+  @apply block cursor-pointer border-0 bg-transparent p-0;
+}
+
+.header-message-chat-bubble--mobile .header-message-chat-image {
+  @apply max-w-[240px];
+}
+
+.header-message-chat-preview {
+  @apply fixed inset-0 z-[120] flex items-center justify-center p-4;
+}
+
+.header-message-chat-preview-backdrop {
+  @apply absolute inset-0 border-0 bg-black/70;
+}
+
+.header-message-chat-preview-card {
+  @apply relative z-[1] flex max-h-[min(90dvh,900px)] max-w-[min(92vw,900px)] items-center justify-center;
+}
+
+.header-message-chat-preview-close {
+  @apply absolute -right-2 -top-2 inline-flex h-9 w-9 items-center justify-center rounded-full border border-white/20 bg-black/60 text-white transition hover:bg-black/80;
+}
+
+.header-message-chat-preview-image {
+  @apply max-h-[min(90dvh,900px)] max-w-full rounded-xl object-contain shadow-2xl;
+}
+
+.header-message-chat-fab-wrap {
+  @apply fixed bottom-4 h-14 w-14 shrink-0;
+}
+
+.header-message-chat-fab {
+  @apply relative inline-flex h-14 w-14 items-center justify-center rounded-full border-2 border-white bg-gradient-to-br from-nexoraElectric to-nexoraViolet shadow-2xl transition hover:scale-105 focus:outline-none focus-visible:ring-2 focus-visible:ring-nexoraBrand;
+}
+
+.header-message-chat-fab-close {
+  @apply absolute right-0.5 top-0.5 z-[1] inline-flex h-5 w-5 items-center justify-center rounded-full border-2 border-white bg-nexoraText text-white shadow-md transition hover:bg-nexoraDanger focus:outline-none focus-visible:ring-2 focus-visible:ring-nexoraBrand;
+}
+
+.header-message-chat-fab-avatar {
+  @apply text-sm font-bold uppercase text-white;
+}
+
+@keyframes header-message-chat-skeleton-pulse {
+  0%, 100% { opacity: 0.45; }
+  50% { opacity: 0.18; }
+}
+
+.header-message-chat-skeleton {
+  @apply flex flex-col gap-3 pb-1;
+}
+
+.header-message-chat-skeleton-row {
+  @apply flex items-end gap-2;
+}
+
+.header-message-chat-skeleton-row.is-outgoing {
+  @apply justify-end;
+}
+
+.header-message-chat-skeleton-avatar {
+  @apply h-7 w-7 shrink-0 rounded-full bg-nexoraBorder;
+  animation: header-message-chat-skeleton-pulse 1.4s ease-in-out infinite;
+}
+
+.header-message-chat-skeleton-bubble {
+  @apply block h-12 rounded-2xl bg-nexoraBorder;
+  animation: header-message-chat-skeleton-pulse 1.4s ease-in-out infinite;
+}
+
+.header-message-chat-skeleton-bubble.is-narrow {
+  @apply w-[46%];
+}
+
+.header-message-chat-skeleton-bubble.is-medium {
+  @apply w-[58%];
+}
+
+.header-message-chat-skeleton-bubble.is-wide {
+  @apply w-[72%];
+}
+
+.header-message-chat-skeleton-row.is-outgoing .header-message-chat-skeleton-bubble.is-narrow {
+  @apply w-[40%];
+}
+
+.header-message-chat-skeleton-row.is-outgoing .header-message-chat-skeleton-bubble.is-medium {
+  @apply w-[52%];
+}
+
+.header-message-chat-skeleton-row.is-outgoing .header-message-chat-skeleton-bubble.is-wide {
+  @apply w-[64%];
+}
