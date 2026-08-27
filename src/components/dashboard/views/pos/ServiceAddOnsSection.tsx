@@ -8,10 +8,11 @@
 // Unlike the service fields around it, every action here persists immediately rather than waiting
 // for the modal's Save: each add-on has its own endpoint, and batching them into the service form
 // would mean holding a second draft state that can silently diverge from the server.
-import { useState } from 'react'
+import { useState, type KeyboardEvent } from 'react'
 import { Loader2, Plus, Trash2 } from 'lucide-react'
 import { useTranslation } from '../../../../contexts/LanguageContext'
 import { useNotification } from '../../../../contexts/NotificationContext'
+import { getErrorMessage } from '../../../../data/errorCodes'
 import {
   useCopyServiceAddOns,
   useCreateServiceAddOn,
@@ -44,8 +45,10 @@ export default function ServiceAddOnsSection({
   const [priceDraft, setPriceDraft] = useState('')
   const [copySourceId, setCopySourceId] = useState('')
 
+  // httpClient rejects with a plain ApiError object, never an Error instance — stringifying it
+  // directly renders "[object Object]" instead of the rule that was actually broken.
   const reportError = (err: unknown) => {
-    showToast(err instanceof Error ? err.message : String(err), 'error')
+    showToast(getErrorMessage(err, t, 'ERROR'), 'error')
   }
 
   // Price may be 0 — a comped extra still records the work the technician performed — so the guard
@@ -99,6 +102,15 @@ export default function ServiceAddOnsSection({
         onError: reportError,
       },
     )
+  }
+
+  // Every field here sits inside the parent service <form>, so an unhandled Enter triggers that
+  // form's implicit submission — the service saves, the modal closes and the add-on being typed is
+  // lost. Enter must run this section's own action instead.
+  const submitOnEnter = (action: () => void) => (e: KeyboardEvent) => {
+    if (e.key !== 'Enter') return
+    e.preventDefault()
+    action()
   }
 
   const copySources = services.filter((service) => service.id !== serviceId)
@@ -159,6 +171,7 @@ export default function ServiceAddOnsSection({
           type="text"
           value={nameDraft}
           onChange={(e) => setNameDraft(e.target.value)}
+          onKeyDown={submitOnEnter(handleAdd)}
           maxLength={200}
           placeholder={t(`${K}.addOnNamePlaceholder`)}
           className="h-9 w-full rounded-lg border border-nexoraBorder bg-white px-3 text-xs text-nexoraText outline-none focus:border-nexoraBrand"
@@ -170,6 +183,7 @@ export default function ServiceAddOnsSection({
           step="0.01"
           value={priceDraft}
           onChange={(e) => setPriceDraft(e.target.value)}
+          onKeyDown={submitOnEnter(handleAdd)}
           placeholder={t(`${K}.addOnPricePlaceholder`)}
           className="h-9 w-full rounded-lg border border-nexoraBorder bg-white px-3 text-xs text-nexoraText outline-none focus:border-nexoraBrand"
         />
@@ -189,6 +203,7 @@ export default function ServiceAddOnsSection({
           <select
             value={copySourceId}
             onChange={(e) => setCopySourceId(e.target.value)}
+            onKeyDown={submitOnEnter(handleCopy)}
             className="h-9 w-full rounded-lg border border-nexoraBorder bg-white px-3 text-xs text-nexoraText outline-none focus:border-nexoraBrand"
           >
             <option value="">{t(`${K}.addOnCopyPlaceholder`)}</option>
