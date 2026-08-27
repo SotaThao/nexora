@@ -3375,7 +3375,9 @@
             "addOnAddButton": "Add",
             "addOnDeleteBlocked": "This add-on has been sold, so it can only be set inactive.",
             "addOnCopyPlaceholder": "Copy add-ons from another service…",
+            "addOnCopyOptionLabel": "{{name}} — {{count}} add-on(s)",
             "addOnCopyButton": "Copy",
+            "addOnCopyAllDuplicates": "Nothing to copy — this service already has every add-on from {{name}}.",
             "addOnCopyResult": "{{count}} add-on(s) copied."
           },
           "PosProductsView": {

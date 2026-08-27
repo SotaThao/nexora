@@ -19,7 +19,6 @@ export default function CreateEditPosServiceModal({
   categories,
   tagSuggestions,
   service,
-  services,
 }: {
   open: boolean
   onClose: () => void
@@ -28,8 +27,6 @@ export default function CreateEditPosServiceModal({
   categories: PosCategoryApiDto[]
   tagSuggestions: PosTagApiDto[]
   service?: PosServiceApiDto | null
-  // Every service of this business — the "copy add-ons from" source list.
-  services: PosServiceApiDto[]
 }) {
   const { t } = useTranslation()
   const isEditMode = Boolean(service)
@@ -296,7 +293,7 @@ export default function CreateEditPosServiceModal({
           {/* Edit mode only: an add-on needs a saved service to hang off, and each row here persists
               on its own endpoint rather than through this form's Save. */}
           {isEditMode && service ? (
-            <ServiceAddOnsSection serviceId={service.id} services={services} />
+            <ServiceAddOnsSection serviceId={service.id} />
           ) : null}
 
           <div className="flex justify-end gap-2 pt-2">

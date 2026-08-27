@@ -17,25 +17,20 @@ import {
   useCopyServiceAddOns,
   useCreateServiceAddOn,
   useDeleteServiceAddOn,
+  useServiceAddOnCopySources,
   useServiceAddOns,
   useUpdateServiceAddOn,
 } from '../../../../data/hooks/usePosServices'
-import type { PosServiceApiDto, ServiceAddOnApiDto } from '../../../../types/repositories'
+import type { ServiceAddOnApiDto } from '../../../../types/repositories'
 
 const K = 'components.dashboard.views.pos.PosServicesView'
 
-export default function ServiceAddOnsSection({
-  serviceId,
-  services,
-}: {
-  serviceId: string
-  // Every other service of this business — the copy source list.
-  services: PosServiceApiDto[]
-}) {
+export default function ServiceAddOnsSection({ serviceId }: { serviceId: string }) {
   const { t } = useTranslation()
   const { showToast } = useNotification()
 
   const { data: addOns = [], isLoading } = useServiceAddOns(serviceId)
+  const { data: copySources = [] } = useServiceAddOnCopySources(serviceId)
   const createAddOn = useCreateServiceAddOn()
   const updateAddOn = useUpdateServiceAddOn()
   const deleteAddOn = useDeleteServiceAddOn()
@@ -92,11 +87,19 @@ export default function ServiceAddOnsSection({
 
   const handleCopy = () => {
     if (!copySourceId || copyAddOns.isPending) return
+    // Read before the mutation clears the selection — the "nothing copied" message names the source.
+    const sourceName = copySources.find((source) => source.id === copySourceId)?.name ?? ''
     copyAddOns.mutate(
       { serviceId, sourceServiceId: copySourceId },
       {
         onSuccess: (copiedCount) => {
           setCopySourceId('')
+          // The picker only offers services that own add-ons, so nothing copied means every name
+          // was already here. "0 copied" reads like a failure the owner has to go diagnose.
+          if (copiedCount === 0) {
+            showToast(t(`${K}.addOnCopyAllDuplicates`, { name: sourceName }), 'info')
+            return
+          }
           showToast(t(`${K}.addOnCopyResult`, { count: copiedCount }))
         },
         onError: reportError,
@@ -112,8 +115,6 @@ export default function ServiceAddOnsSection({
     e.preventDefault()
     action()
   }
-
-  const copySources = services.filter((service) => service.id !== serviceId)
 
   return (
     <div className="space-y-2 rounded-xl border border-nexoraBorder bg-nexoraCanvas p-3">
@@ -207,9 +208,9 @@ export default function ServiceAddOnsSection({
             className="h-9 w-full rounded-lg border border-nexoraBorder bg-white px-3 text-xs text-nexoraText outline-none focus:border-nexoraBrand"
           >
             <option value="">{t(`${K}.addOnCopyPlaceholder`)}</option>
-            {copySources.map((service) => (
-              <option key={service.id} value={service.id}>
-                {service.name}
+            {copySources.map((source) => (
+              <option key={source.id} value={source.id}>
+                {t(`${K}.addOnCopyOptionLabel`, { name: source.name, count: source.addOnCount })}
               </option>
             ))}
           </select>

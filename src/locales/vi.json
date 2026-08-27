@@ -3375,7 +3375,9 @@
             "addOnAddButton": "Thêm",
             "addOnDeleteBlocked": "Dịch vụ kèm này đã từng bán nên chỉ có thể tắt hoạt động.",
             "addOnCopyPlaceholder": "Sao chép dịch vụ kèm từ dịch vụ khác…",
+            "addOnCopyOptionLabel": "{{name}} — {{count}} dịch vụ kèm",
             "addOnCopyButton": "Sao chép",
+            "addOnCopyAllDuplicates": "Không có gì để sao chép — dịch vụ này đã có toàn bộ dịch vụ kèm của {{name}}.",
             "addOnCopyResult": "Đã sao chép {{count}} dịch vụ kèm."
           },
           "PosProductsView": {
