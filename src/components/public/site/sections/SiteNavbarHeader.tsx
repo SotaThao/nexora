@@ -168,8 +168,8 @@ export const SiteNavbarHeader: React.FC<SiteNavbarHeaderProps> = ({
     <header
       className="sticky top-0 z-30 w-full backdrop-blur-xl border-b transition-colors select-none"
       style={{
-        backgroundColor: `${palette.bgSurface}F2`,
-        borderColor: `${palette.borderPrimary}80`,
+        backgroundColor: palette.bgSurface,
+        borderColor: palette.borderPrimary,
         color: palette.textPrimary
       }}
     >
@@ -194,7 +194,7 @@ export const SiteNavbarHeader: React.FC<SiteNavbarHeaderProps> = ({
                 style={{
                   backgroundColor: palette.accentColor,
                   color: palette.buttonText,
-                  borderColor: `${palette.accentColor}80`
+                  borderColor: palette.borderPrimary
                 }}
               >
                 {businessName.charAt(0).toUpperCase()}
@@ -255,13 +255,16 @@ export const SiteNavbarHeader: React.FC<SiteNavbarHeaderProps> = ({
                       <div
                         className="absolute left-0 top-full mt-1.5 w-72 sm:w-80 rounded-2xl border shadow-2xl backdrop-blur-2xl p-2 z-50 animate-fadeIn"
                         style={{
-                          backgroundColor: `${palette.bgSurface}FC`,
-                          borderColor: `${palette.borderPrimary}90`,
-                          boxShadow: `0 20px 40px -10px ${palette.bgPrimary}CC, 0 0 0 1px ${palette.borderPrimary}30`
+                          backgroundColor: palette.bgSurface,
+                          borderColor: palette.borderPrimary,
+                          boxShadow: '0 20px 40px -10px rgba(0, 0, 0, 0.6)'
                         }}
                       >
                         {/* Submenu Header Label */}
-                        <div className="px-3 py-2 flex items-center justify-between border-b text-[10px] font-extrabold uppercase tracking-wider mb-1" style={{ borderColor: `${palette.borderPrimary}40`, color: palette.accentColor }}>
+                        <div
+                          className="px-3 py-2 flex items-center justify-between border-b text-[10px] font-extrabold uppercase tracking-wider mb-1"
+                          style={{ borderColor: palette.borderPrimary, color: palette.accentColor }}
+                        >
                           <span className="flex items-center gap-1.5">
                             <Layers className="w-3 h-3" />
                             <span>DANH MỤC DỊCH VỤ</span>
@@ -285,10 +288,9 @@ export const SiteNavbarHeader: React.FC<SiteNavbarHeaderProps> = ({
                               </span>
                               {sub.badge && (
                                 <span
-                                  className="text-[10px] font-bold px-2 py-0.5 rounded-full border shrink-0 transition-colors"
+                                  className="text-[10px] font-bold px-2 py-0.5 rounded-full shrink-0 transition-colors"
                                   style={{
-                                    backgroundColor: `${palette.badgeBg}`,
-                                    borderColor: `${palette.borderPrimary}40`,
+                                    backgroundColor: palette.badgeBg,
                                     color: palette.badgeText
                                   }}
                                 >
@@ -300,7 +302,7 @@ export const SiteNavbarHeader: React.FC<SiteNavbarHeaderProps> = ({
                         </div>
 
                         {/* Quick Action Footer */}
-                        <div className="mt-1 pt-1.5 border-t" style={{ borderColor: `${palette.borderPrimary}40` }}>
+                        <div className="mt-1 pt-1.5 border-t" style={{ borderColor: palette.borderPrimary }}>
                           <button
                             type="button"
                             onClick={(e) => handleNavClick(e, '#services')}
@@ -346,7 +348,7 @@ export const SiteNavbarHeader: React.FC<SiteNavbarHeaderProps> = ({
                 isMobileView ? 'flex' : 'md:hidden flex'
               }`}
               style={{
-                borderColor: `${palette.borderPrimary}80`,
+                borderColor: palette.borderPrimary,
                 backgroundColor: 'rgba(255, 255, 255, 0.05)',
                 color: palette.textPrimary
               }}
@@ -383,7 +385,7 @@ export const SiteNavbarHeader: React.FC<SiteNavbarHeaderProps> = ({
                         onClick={(e) => handleNavClick(e, item.href)}
                         className="flex-1 flex items-center gap-2 px-3 py-2.5 rounded-xl border transition-all text-xs font-bold bg-white/5 hover:bg-white/10"
                         style={{
-                          borderColor: `${palette.borderPrimary}60`,
+                          borderColor: palette.borderPrimary,
                           color: palette.textPrimary
                         }}
                       >
@@ -397,7 +399,7 @@ export const SiteNavbarHeader: React.FC<SiteNavbarHeaderProps> = ({
                           onClick={() => setExpandedMobileNav(isExpanded ? null : item.id)}
                           className="px-3 py-2.5 rounded-xl border flex items-center justify-center transition-colors bg-white/5"
                           style={{
-                            borderColor: `${palette.borderPrimary}60`,
+                            borderColor: palette.borderPrimary,
                             color: palette.textPrimary
                           }}
                           aria-label="Mở danh mục con"
@@ -417,7 +419,7 @@ export const SiteNavbarHeader: React.FC<SiteNavbarHeaderProps> = ({
                             onClick={(e) => handleSubItemSelect(e, sub)}
                             className="flex items-center justify-between gap-1.5 px-2.5 py-2 rounded-lg border text-[11px] font-semibold text-left transition-colors bg-white/5 hover:bg-white/15 truncate"
                             style={{
-                              borderColor: `${palette.borderPrimary}40`,
+                              borderColor: palette.borderPrimary,
                               color: palette.textPrimary
                             }}
                           >
@@ -437,7 +439,7 @@ export const SiteNavbarHeader: React.FC<SiteNavbarHeaderProps> = ({
             </div>
 
             {/* Business Quick Contact & Location Info */}
-            <div className="pt-2 border-t flex flex-col gap-2 text-xs" style={{ borderColor: `${palette.borderPrimary}40`, color: palette.textSecondary }}>
+            <div className="pt-2 border-t flex flex-col gap-2 text-xs" style={{ borderColor: palette.borderPrimary, color: palette.textSecondary }}>
               {site.address && (
                 <div className="flex items-center gap-2">
                   <MapPin className="w-3.5 h-3.5 shrink-0" style={{ color: palette.accentColor }} />
