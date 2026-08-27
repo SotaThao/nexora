@@ -3813,6 +3813,7 @@
             "viewDetailTip": "Tip",
             "viewDetailTotal": "Tổng cộng",
             "viewDetailClose": "Đóng",
+            "viewDetailLineDiscountStaffShare": "(kỹ thuật viên ${{amount}})",
             "viewDetailLineDiscount": "Giảm ${{amount}} · {{bearer}} chịu"
           },
           "CustomerTab": {

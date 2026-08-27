@@ -3813,6 +3813,7 @@
             "viewDetailTip": "Tip",
             "viewDetailTotal": "Total",
             "viewDetailClose": "Close",
+            "viewDetailLineDiscountStaffShare": "(technician ${{amount}})",
             "viewDetailLineDiscount": "Discount ${{amount}} · {{bearer}} absorbs"
           },
           "CustomerTab": {

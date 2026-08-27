@@ -16,6 +16,7 @@ import { formatPosDateTime } from './posDateTime'
 import { formatCustomerPhone } from './customer/customerFormatters'
 import { formatBookingHubDateTimeParts } from '../bookingHubFormatters'
 import { getPosCheckoutPaymentMethodLabel } from '../../../../constants/posCheckoutPaymentMethod'
+import { PosDiscountBearer } from '../../../../constants/posDiscount'
 import {
   POS_TABLE_HEADER_CELL_CLASS,
   POS_TABLE_HEADER_ROW_CLASS,
@@ -342,6 +343,13 @@ export default function PosCompletedOrdersPanel({ businessId }: { businessId: st
                                     `components.dashboard.views.pos.PosOrderWorkspace.discountBearer${line.discountBearer}`,
                                   ),
                                 })}
+                                {/* Only a split needs the figure spelled out: Salon/Technician
+                                    already imply the whole discount, a 50/50 does not. */}
+                                {line.discountBearer === PosDiscountBearer.Split
+                                  ? ` ${t('components.dashboard.views.pos.PosCompletedOrdersPanel.viewDetailLineDiscountStaffShare', {
+                                      amount: line.staffDiscountShare.toFixed(2),
+                                    })}`
+                                  : ''}
                                 {line.discountNote ? ` — ${line.discountNote}` : ''}
                               </p>
                             ) : null}
@@ -381,6 +389,11 @@ export default function PosCompletedOrdersPanel({ businessId }: { businessId: st
                                             `components.dashboard.views.pos.PosOrderWorkspace.discountBearer${addOn.discountBearer}`,
                                           ),
                                         })}
+                                        {addOn.discountBearer === PosDiscountBearer.Split
+                                          ? ` ${t('components.dashboard.views.pos.PosCompletedOrdersPanel.viewDetailLineDiscountStaffShare', {
+                                              amount: addOn.staffDiscountShare.toFixed(2),
+                                            })}`
+                                          : ''}
                                         {addOn.discountNote ? ` — ${addOn.discountNote}` : ''}
                                       </p>
                                     ) : null}
