@@ -11,9 +11,10 @@ import { storage } from '../../../../../utils/storage'
 import { getApiErrorCode } from '../../../../../types/domain'
 import { getErrorI18nKey } from '../../../../../data/errorCodes'
 import { useBeepStaff, useClockInStaff, useClockOutStaff } from '../../../../../data/hooks/usePosTimeClock'
-import type { TimeClockRosterRowApiDto } from '../../../../../types/repositories'
+import type { PosBeepApiDto, TimeClockRosterRowApiDto } from '../../../../../types/repositories'
 import { formatPosDateTime, formatPosTime } from '../posDateTime'
 import { EMPTY_VALUE, getInitials } from '../posDisplay'
+import BeepInteractions from './BeepInteractions'
 import BeepMessageModal from './BeepMessageModal'
 import { formatHours } from './timeClockDay'
 import { tk } from './timeClockI18n'
@@ -30,10 +31,12 @@ export default function TimeClockRoster({
   businessId,
   rows,
   onShiftCount,
+  beepByStaffId,
 }: {
   businessId: string
   rows: TimeClockRosterRowApiDto[]
   onShiftCount: number
+  beepByStaffId?: Map<string, PosBeepApiDto>
 }) {
   const { t, currentLanguage } = useTranslation()
   const { showToast, showConfirm } = useNotification()
@@ -254,6 +257,11 @@ export default function TimeClockRoster({
                 <span className="truncate font-semibold text-nexoraText">{row.currentCustomerName ?? EMPTY_VALUE}</span>
                 {renderTurnsCell(row)}
               </div>
+              <BeepInteractions
+                businessId={businessId}
+                beep={beepByStaffId?.get(row.posStaffProfileId)}
+                staffName={row.displayName}
+              />
               {renderActions(row)}
             </div>
           ))}
@@ -316,6 +324,11 @@ export default function TimeClockRoster({
                         })}
                       </span>
                     ) : EMPTY_VALUE}
+                    <BeepInteractions
+                      businessId={businessId}
+                      beep={beepByStaffId?.get(row.posStaffProfileId)}
+                      staffName={row.displayName}
+                    />
                   </td>
                   <td className="px-4 py-3">{renderActions(row)}</td>
                 </tr>

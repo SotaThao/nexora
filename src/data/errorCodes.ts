@@ -208,6 +208,12 @@ export const errorCodeToI18nKey = {
   POS_STAFF_CLOCK_QR_BUSINESS_MISMATCH: 'errors.pos_staff_clock_qr_business_mismatch',
   POS_STAFF_CLOCK_TOO_SOON: 'errors.pos_staff_clock_too_soon',
   POS_STAFF_CLOCK_BEEP_TARGET_INVALID: 'errors.pos_staff_clock_beep_target_invalid',
+  POS_STAFF_CLOCK_BEEP_NOT_FOUND: 'errors.pos_staff_clock_beep_not_found',
+  POS_STAFF_CLOCK_BEEP_ALREADY_RESOLVED: 'errors.pos_staff_clock_beep_already_resolved',
+  POS_STAFF_CLOCK_BEEP_EXPIRED: 'errors.pos_staff_clock_beep_expired',
+  POS_STAFF_CLOCK_BEEP_NUDGE_TOO_SOON: 'errors.pos_staff_clock_beep_nudge_too_soon',
+  POS_STAFF_CLOCK_BEEP_RESPONSE_FORBIDDEN: 'errors.pos_staff_clock_beep_response_forbidden',
+  POS_STAFF_CLOCK_BEEP_DELAY_INVALID: 'errors.pos_staff_clock_beep_delay_invalid',
 
   // POS Merchant Ops — Check-in, Turn Board & Checkout (US-12..US-17)
   POS_ORDER_NOT_FOUND: 'errors.pos_order_not_found',

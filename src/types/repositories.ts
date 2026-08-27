@@ -545,6 +545,76 @@ export interface BeepStaffResultApiDto {
   delivered: boolean
 }
 
+// Two-way beep. The salon-side feed (GET .../time-clock/beeps) is the single source of truth for
+// beep state on the front desk: the roster is one row per staff member and cannot carry three
+// calls to the same tech, each with its own reply.
+export interface PosBeepApiDto {
+  beepId: string
+  posStaffProfileId: string
+  staffDisplayName: string
+  staffPhotoUrl?: string | null
+  // False for a tech added for payout only — explains a beep that will never be answered.
+  hasAppAccount: boolean
+  message?: string | null
+  beepedAt: string
+  // PosStaffBeepStatus. Effective value: Expired is computed server-side, never stored.
+  status: string
+  respondedAt?: string | null
+  delayMinutes?: number | null
+  responseNote?: string | null
+  resolvedAt?: string | null
+  resolvedByDisplayName?: string | null
+  nudgeCount: number
+  lastNudgedAt?: string | null
+  sentByDisplayName?: string | null
+  expiresAt: string
+  nextNudgeAllowedAt: string
+  // Server-computed so the front desk never re-implements the rules.
+  canNudge: boolean
+  canResolve: boolean
+}
+
+// The tech's own view. Spans every salon they are linked to, so businessName says which front desk
+// is calling.
+export interface ActiveStaffBeepApiDto {
+  beepId: string
+  businessId: string
+  businessName: string
+  businessStaffLinkId: string
+  posStaffProfileId: string
+  message?: string | null
+  beepedAt: string
+  expiresAt: string
+  status: string
+  respondedAt?: string | null
+  delayMinutes?: number | null
+  responseNote?: string | null
+  nudgeCount: number
+  lastNudgedAt?: string | null
+}
+
+export interface ActiveStaffBeepsApiDto {
+  // Owned by the server so the Busy chips cannot drift from the validator.
+  allowedDelayMinutes: number[]
+  beeps: ActiveStaffBeepApiDto[]
+}
+
+export interface RespondToBeepRequest {
+  // PosStaffBeepResponse
+  response: string
+  // Required for Busy, must be omitted otherwise.
+  delayMinutes?: number
+  note?: string
+}
+
+export interface StaffBeepResponseResultApiDto {
+  beepId: string
+  status: string
+  respondedAt?: string | null
+  delayMinutes?: number | null
+  responseNote?: string | null
+}
+
 export interface ClockScanPreviewApiDto {
   businessId: string
   businessName: string
