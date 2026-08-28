@@ -8,7 +8,6 @@ import { useQueries, useQuery, useMutation, useQueryClient, type QueryKey } from
 import { qk } from '../queryKeys'
 import { useSessionRole } from '../../auth/useSessionRole'
 import posCheckoutRepository from '../repositories/posCheckout'
-import { randomUuid } from '../../utils/uuid'
 import { resolveOrderDiscountAmount, resolveOrderDiscountCap } from '../../utils/posOrderDiscount'
 import { isPersistedLineId, randomUuid, unlessOptimisticId } from '../../utils/uuid'
 import type {
