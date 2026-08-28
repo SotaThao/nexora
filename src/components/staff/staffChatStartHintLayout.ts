@@ -2,8 +2,7 @@ import { HEADER_MESSAGES_MOBILE_OPEN_CLASS } from '../header-messages/headerMess
 
 const HINT_CAPTION_HALF_PX = 92
 const HINT_VIEWPORT_PAD_PX = 16
-const HINT_MOBILE_CLUSTER_GAP_PX = 6
-const HINT_MOBILE_CLUSTER_WIDTH_PX = 196
+const HINT_BELOW_CLUSTER_GAP_PX = 10
 const HINT_UNLOCK_WAIT_MS = 150
 const HINT_LOCK_POLL_MS = 50
 const HINT_SCROLL_MIN_MS = 420
@@ -19,7 +18,12 @@ export const STAFF_CHAT_START_HINT_CLUSTER_CLASS = 'staff-chat-start-hint-cluste
 export const STAFF_CHAT_START_HINT_CAPTION_CLASS = 'staff-chat-start-hint-caption'
 export const STAFF_CHAT_START_HINT_HAND_CLASS = 'staff-chat-start-hint-hand'
 export const STAFF_CHAT_START_HINT_ACTIVE_CLASS = 'is-active'
-export const STAFF_CHAT_START_HINT_MOBILE_CLASS = 'is-mobile'
+export const STAFF_CHAT_START_HINT_BELOW_CLASS = 'is-below'
+
+export enum StaffChatStartHintPlacement {
+  Above = 'above',
+  Below = 'below',
+}
 
 function clamp(value: number, min: number, max: number): number {
   if (max <= min) return min
@@ -32,24 +36,34 @@ function clampHintAnchorX(centerX: number): number {
   return clamp(centerX, minX, maxX)
 }
 
-function getMobileHintClusterPosition(rect: DOMRect): { top: number; left: number } {
-  const minLeft = HINT_VIEWPORT_PAD_PX
-  const maxLeft = window.innerWidth - HINT_VIEWPORT_PAD_PX - HINT_MOBILE_CLUSTER_WIDTH_PX
-  return {
-    top: rect.bottom + HINT_MOBILE_CLUSTER_GAP_PX,
-    left: clamp(rect.left, minLeft, maxLeft),
-  }
+export function resolveStaffChatStartHintPlacement(
+  placement: StaffChatStartHintPlacement | undefined,
+  isMobile: boolean,
+): StaffChatStartHintPlacement {
+  return placement ?? (
+    isMobile ? StaffChatStartHintPlacement.Below : StaffChatStartHintPlacement.Above
+  )
+}
+
+const HINT_CLUSTER_POSITION_BY_PLACEMENT: Record<
+  StaffChatStartHintPlacement,
+  (rect: DOMRect) => { top: number; left: number }
+> = {
+  [StaffChatStartHintPlacement.Below]: (rect) => ({
+    top: rect.bottom + HINT_BELOW_CLUSTER_GAP_PX,
+    left: rect.left + rect.width / 2,
+  }),
+  [StaffChatStartHintPlacement.Above]: (rect) => ({
+    top: rect.top,
+    left: clampHintAnchorX(rect.left + rect.width / 2),
+  }),
 }
 
 export function getHintClusterPosition(
   rect: DOMRect,
-  isMobile: boolean,
+  placement: StaffChatStartHintPlacement,
 ): { top: number; left: number } {
-  if (isMobile) return getMobileHintClusterPosition(rect)
-  return {
-    top: rect.top,
-    left: clampHintAnchorX(rect.left + rect.width / 2),
-  }
+  return HINT_CLUSTER_POSITION_BY_PLACEMENT[placement](rect)
 }
 
 function prefersReducedMotion(): boolean {
