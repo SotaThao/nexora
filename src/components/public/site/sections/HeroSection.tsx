@@ -1,5 +1,5 @@
 import React from 'react'
-import { Calendar, Phone, MapPin, Sparkles, Star, ChevronRight, ShieldCheck, Award, Clock } from 'lucide-react'
+import { Calendar, Phone, Sparkles, Star, ChevronRight, ShieldCheck, Award, Clock } from 'lucide-react'
 import { MerchantSiteTemplateId, PublicSiteDto } from '../../../../constants/merchantSiteStatus'
 import { SitePalette } from '../palettes'
 import { AcceptedPaymentsStrip } from './AcceptedPaymentsStrip'
@@ -134,13 +134,6 @@ export const HeroSection: React.FC<HeroSectionProps> = ({ site, palette, onBookC
             </div>
 
             <AcceptedPaymentsStrip palette={palette} isMobileView={isMobileView} />
-
-            {site.address && (
-              <div className={`flex items-center gap-1.5 text-xs pt-1 opacity-80 ${isMobileView ? 'justify-center' : 'justify-start'}`} style={{ color: palette.textSecondary }}>
-                <MapPin className="w-3.5 h-3.5 shrink-0" style={{ color: palette.accentColor }} />
-                <span>{site.address}</span>
-              </div>
-            )}
           </div>
 
           {/* Right Column: Zen Showcase Photo Frame (45%) */}
@@ -294,13 +287,6 @@ export const HeroSection: React.FC<HeroSectionProps> = ({ site, palette, onBookC
             </div>
 
             <AcceptedPaymentsStrip palette={palette} isMobileView={isMobileView} />
-
-            {site.address && (
-              <div className={`flex items-center gap-2 text-xs opacity-90 pt-1 ${isMobileView ? 'justify-center' : 'justify-start'}`} style={{ color: palette.heroTextSecondary }}>
-                <MapPin className="w-3.5 h-3.5 shrink-0" style={{ color: palette.accentColor }} />
-                <span>{site.address}</span>
-              </div>
-            )}
           </div>
 
           {/* Right Column: Modern Chic Showcase Photo Frame (45%) */}
@@ -459,13 +445,6 @@ export const HeroSection: React.FC<HeroSectionProps> = ({ site, palette, onBookC
             </div>
 
             <AcceptedPaymentsStrip palette={palette} isMobileView={isMobileView} />
-
-            {site.address && (
-              <div className={`flex items-center gap-2 text-xs font-semibold pt-1 ${isMobileView ? 'justify-center' : 'justify-start'}`} style={{ color: palette.heroTextSecondary }}>
-                <MapPin className="w-4 h-4 shrink-0" style={{ color: palette.accentColor }} />
-                <span>{site.address}</span>
-              </div>
-            )}
           </div>
 
           {/* Right Column: Cyber Bento Showcase Frame (45%) */}
@@ -630,18 +609,6 @@ export const HeroSection: React.FC<HeroSectionProps> = ({ site, palette, onBookC
 
           {/* Accepted Payments Strip */}
           <AcceptedPaymentsStrip palette={palette} isMobileView={isMobileView} />
-
-          {site.address && (
-            <div
-              className={`flex items-center gap-2 text-xs opacity-90 pt-1 ${
-                isMobileView ? 'justify-center' : 'justify-start'
-              }`}
-              style={{ color: palette.heroTextSecondary }}
-            >
-              <MapPin className="w-3.5 h-3.5 shrink-0" style={{ color: palette.accentColor }} />
-              <span>{site.address}</span>
-            </div>
-          )}
         </div>
 
         {/* Right Column: Layered Artistic Showcase Frame (45%) */}
