@@ -4191,6 +4191,12 @@
             "startLabel": "Bắt đầu",
             "endLabel": "Kết thúc",
             "windowInvalid": "Giờ kết thúc phải sau giờ bắt đầu.",
+            "errorNameRequired": "Vui lòng nhập tên chương trình.",
+            "errorValueRequired": "Vui lòng nhập mức giảm.",
+            "errorValueInvalid": "Mức giảm phải lớn hơn 0.",
+            "errorValuePercentMax": "Mức giảm theo phần trăm không được vượt quá {{max}}%.",
+            "errorDaysRequired": "Chọn ít nhất một ngày áp dụng.",
+            "errorWindowRequired": "Chọn cả giờ bắt đầu và giờ kết thúc.",
             "activeLabel": "Áp dụng ở quầy thanh toán",
             "save": "Lưu",
             "cancel": "Huỷ"

@@ -4191,6 +4191,12 @@
             "startLabel": "Starts at",
             "endLabel": "Ends at",
             "windowInvalid": "The end time must be later than the start time.",
+            "errorNameRequired": "Enter a name for this promotion.",
+            "errorValueRequired": "Enter how much this promotion takes off.",
+            "errorValueInvalid": "The amount off must be greater than 0.",
+            "errorValuePercentMax": "A percent discount cannot be more than {{max}}%.",
+            "errorDaysRequired": "Pick at least one day this promotion runs.",
+            "errorWindowRequired": "Pick both a start and an end time.",
             "activeLabel": "Offer this at checkout",
             "save": "Save",
             "cancel": "Cancel"
