@@ -1,6 +1,7 @@
 import httpClient from '../../lib/httpClient'
 import { BOOKING_HUB_PAGE_SIZE, BOOKING_HUB_STATUS_COLLECT_MAX_PAGES, BOOKING_HUB_STATUS_COLLECT_PAGE_SIZE } from '../../constants/pagination'
 import { HOLIDAY_TYPE, type HolidayType } from '../../constants/holiday'
+import type { PosServiceStatus } from '../../types/repositories'
 import {
   mapStaffStatusToActivityApi,
   MerchantVoiceBookingSearchField,
@@ -553,6 +554,50 @@ export interface UpdateMerchantVoiceServiceRequest {
   sortOrder?: number | null
   /** Omit = leave categories; null / [] = Other-only clear; array = replace */
   categoryIds?: string[] | null
+}
+
+/**
+ * Item for POST {SHARED_CATALOG_BASE}/services/batch — omit `id` to create, set it to update.
+ * `description`/`tags`/`status` are optional and, like `photoUrl`, left unspecified whenever
+ * the caller doesn't own that field's current value — this endpoint is the shared catalog
+ * POS also writes to, so omitting means "leave as-is" instead of clobbering POS-managed data.
+ */
+export interface SaveServiceBatchItem {
+  id?: string | null
+  name: string
+  price: number
+  durationMinutes: number
+  description?: string | null
+  icon?: string | null
+  photoUrl?: string | null
+  categoryIds: string[]
+  tags?: string[]
+  status?: PosServiceStatus
+}
+
+export interface SaveServiceBatchResultItem {
+  id: string
+  wasCreated: boolean
+}
+
+export interface SaveServicesBatchResult {
+  items: SaveServiceBatchResultItem[]
+}
+
+/** Item for POST {SHARED_CATALOG_BASE}/categories/batch — omit `id` to create, set it to update. */
+export interface SaveCategoryBatchItem {
+  id?: string | null
+  name: string
+  description?: string | null
+}
+
+export interface SaveCategoryBatchResultItem {
+  id: string
+  wasCreated: boolean
+}
+
+export interface SaveCategoriesBatchResult {
+  items: SaveCategoryBatchResultItem[]
 }
 
 export interface MerchantVoiceOperatingHourDto {
@@ -1658,6 +1703,16 @@ export function createMerchantVoiceRepository(client: HttpClient = httpClient) {
       )
     },
 
+    // JSON batch endpoint — used to save multiple category rows atomically in one request
+    // instead of one create/update request per row (see Booking Settings "Manage Categories").
+    async saveCategoriesBatch(items: SaveCategoryBatchItem[]): Promise<SaveCategoriesBatchResult> {
+      return await client.post<SaveCategoriesBatchResult>(
+        `${SHARED_CATALOG_BASE}/categories/batch`,
+        { items },
+        { headers: MERCHANT_VOICE_HEADERS },
+      )
+    },
+
     async getServices(): Promise<MerchantVoiceServiceDto[]> {
       const response = await client.get<unknown>(
         `${SHARED_CATALOG_BASE}/services`,
@@ -1685,6 +1740,16 @@ export function createMerchantVoiceRepository(client: HttpClient = httpClient) {
     async deleteService(id: string): Promise<void> {
       await client.del<void>(
         `${SHARED_CATALOG_BASE}/services/${encodeURIComponent(id)}`,
+        { headers: MERCHANT_VOICE_HEADERS },
+      )
+    },
+
+    // JSON batch endpoint — used to save multiple draft rows atomically in one request
+    // instead of one multipart request per row (see Booking Settings "Save settings").
+    async saveServicesBatch(items: SaveServiceBatchItem[]): Promise<SaveServicesBatchResult> {
+      return await client.post<SaveServicesBatchResult>(
+        `${SHARED_CATALOG_BASE}/services/batch`,
+        { items },
         { headers: MERCHANT_VOICE_HEADERS },
       )
     },
