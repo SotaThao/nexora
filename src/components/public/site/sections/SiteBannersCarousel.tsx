@@ -29,7 +29,7 @@ const DEFAULT_VIP_BANNERS: DisplayBanner[] = [
     imageUrl: 'https://bitcoinnailbar-test.vercel.app/assets/banners/vlinkpay_banner.jpg',
     linkUrl: '#',
     badgeText: '✨ NEXORA ADS',
-    description: 'Chấp nhận Bitcoin, USDT, Apple Pay & Đồng bộ Clover POS tức thì.'
+    description: 'Accept Bitcoin, USDT, Apple Pay & Instant Clover POS Sync.'
   },
   {
     id: 'banner-nailbar-promo',
@@ -37,7 +37,7 @@ const DEFAULT_VIP_BANNERS: DisplayBanner[] = [
     imageUrl: 'https://bitcoinnailbar-test.vercel.app/assets/banners/nailbar_banner.jpg',
     linkUrl: '#',
     badgeText: '🔥 HOT PROMOTION',
-    description: 'Ưu đãi 25% dịch vụ móng nghệ thuật & Thưởng thức cocktail miễn phí.'
+    description: 'Enjoy 25% off signature nail art & complimentary handcrafted cocktails.'
   },
   {
     id: 'banner-cryptomap360',
@@ -45,7 +45,7 @@ const DEFAULT_VIP_BANNERS: DisplayBanner[] = [
     imageUrl: 'https://bitcoinnailbar-test.vercel.app/assets/banners/cryptomap360_banner.jpg',
     linkUrl: '#',
     badgeText: '🌐 CRYPTOMAP360 PARTNER',
-    description: 'Khám phá và nhận ưu đãi độc quyền dành cho cộng đồng thanh toán Bitcoin.'
+    description: 'Explore exclusive rewards & perks for the Bitcoin & crypto payment community.'
   },
   {
     id: 'banner-vip-membership',
@@ -53,7 +53,7 @@ const DEFAULT_VIP_BANNERS: DisplayBanner[] = [
     imageUrl: 'https://bitcoinnailbar-test.vercel.app/assets/banners/membership_banner.jpg',
     linkUrl: '#',
     badgeText: '👑 VIP MEMBERSHIP',
-    description: 'Tích điểm hoàn tiền đến 15%, ưu tiên đặt chỗ và miễn phí đồ uống VIP Lounge.'
+    description: 'Earn up to 15% cashback, priority booking, and complimentary VIP lounge bar drinks.'
   }
 ]
 
@@ -130,11 +130,11 @@ export const SiteBannersCarousel: React.FC<SiteBannersCarouselProps> = ({
       if (activePromos.length > 0) {
         return activePromos.map((p) => ({
           id: p.id,
-          title: p.titleVi || p.titleEn,
+          title: p.titleEn || p.titleVi,
           imageUrl: p.imageUrl || '',
           linkUrl: '#',
-          badgeText: p.code ? `MÃ: ${p.code}` : (p.discountPercent ? `GIẢM ${p.discountPercent}%` : '🔥 ƯU ĐÃI'),
-          description: p.descriptionVi || p.descriptionEn,
+          badgeText: p.code ? `CODE: ${p.code}` : (p.discountPercent ? `${p.discountPercent}% OFF` : '🔥 SPECIAL OFFER'),
+          description: p.descriptionEn || p.descriptionVi,
         }))
       }
     }

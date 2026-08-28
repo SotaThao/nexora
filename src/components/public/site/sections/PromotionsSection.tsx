@@ -39,10 +39,10 @@ export const PromotionsSection: React.FC<PromotionsSectionProps> = ({ site, pale
             style={{ backgroundColor: palette.badgeBg, color: palette.badgeText }}
           >
             <Tag className="w-3.5 h-3.5" />
-            <span>Ưu Đãi Đặc Biệt</span>
+            <span>Exclusive Offers</span>
           </div>
           <h2 className={`font-bold ${isMobileView ? 'text-xl' : 'text-2xl'}`} style={{ color: palette.textPrimary }}>
-            Chương Trình Khuyến Mãi
+            Special Promotions & Deals
           </h2>
         </div>
 
@@ -68,10 +68,10 @@ export const PromotionsSection: React.FC<PromotionsSectionProps> = ({ site, pale
                       </div>
                     )}
                     <h3 className="font-bold text-sm sm:text-base leading-snug" style={{ color: palette.textPrimary }}>
-                      {promo.titleVi || promo.titleEn}
+                      {promo.titleEn || promo.titleVi}
                     </h3>
                     <p className="text-xs leading-relaxed" style={{ color: palette.textSecondary }}>
-                      {promo.descriptionVi || promo.descriptionEn}
+                      {promo.descriptionEn || promo.descriptionVi}
                     </p>
                   </div>
 
@@ -79,7 +79,7 @@ export const PromotionsSection: React.FC<PromotionsSectionProps> = ({ site, pale
                     {promo.endDate && (
                       <span className="text-[10px] flex items-center gap-1 opacity-75" style={{ color: palette.textSecondary }}>
                         <Calendar className="w-3 h-3" />
-                        HSD: {new Date(promo.endDate).toLocaleDateString()}
+                        Expires: {new Date(promo.endDate).toLocaleDateString()}
                       </span>
                     )}
                     <button
@@ -88,7 +88,7 @@ export const PromotionsSection: React.FC<PromotionsSectionProps> = ({ site, pale
                       className="text-xs font-bold underline ml-auto transition-opacity hover:opacity-80"
                       style={{ color: palette.accentColor }}
                     >
-                      Áp dụng ngay →
+                      Claim Offer →
                     </button>
                   </div>
                 </div>
@@ -109,7 +109,7 @@ export const PromotionsSection: React.FC<PromotionsSectionProps> = ({ site, pale
                   <div className="relative w-full h-36 overflow-hidden">
                     <img
                       src={promo.imageUrl}
-                      alt={promo.titleVi || promo.titleEn}
+                      alt={promo.titleEn || promo.titleVi}
                       className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
                     />
                     <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/10 to-transparent" />
@@ -119,7 +119,7 @@ export const PromotionsSection: React.FC<PromotionsSectionProps> = ({ site, pale
                           className="inline-block px-2.5 py-1 rounded-lg text-[11px] font-mono font-bold tracking-wider shadow-md"
                           style={{ backgroundColor: palette.badgeBg, color: palette.badgeText }}
                         >
-                          MÃ: {promo.code}
+                          CODE: {promo.code}
                         </span>
                       </div>
                     )}
@@ -133,7 +133,7 @@ export const PromotionsSection: React.FC<PromotionsSectionProps> = ({ site, pale
                         className="inline-block px-3 py-1 rounded-lg text-xs font-mono font-bold tracking-wider mb-3 shadow-xs"
                         style={{ backgroundColor: palette.badgeBg, color: palette.badgeText }}
                       >
-                        MÃ: {promo.code}
+                        CODE: {promo.code}
                       </span>
                     )}
                     <h3
@@ -142,10 +142,10 @@ export const PromotionsSection: React.FC<PromotionsSectionProps> = ({ site, pale
                       }`}
                       style={{ color: palette.textPrimary }}
                     >
-                      {promo.titleVi || promo.titleEn}
+                      {promo.titleEn || promo.titleVi}
                     </h3>
                     <p className="text-xs leading-relaxed mb-4" style={{ color: palette.textSecondary }}>
-                      {promo.descriptionVi || promo.descriptionEn}
+                      {promo.descriptionEn || promo.descriptionVi}
                     </p>
                   </div>
 
@@ -153,7 +153,7 @@ export const PromotionsSection: React.FC<PromotionsSectionProps> = ({ site, pale
                     {promo.endDate && (
                       <span className="text-[11px] flex items-center gap-1 opacity-75" style={{ color: palette.textSecondary }}>
                         <Calendar className="w-3 h-3" />
-                        HSD: {new Date(promo.endDate).toLocaleDateString()}
+                        Expires: {new Date(promo.endDate).toLocaleDateString()}
                       </span>
                     )}
                     <button
@@ -164,7 +164,7 @@ export const PromotionsSection: React.FC<PromotionsSectionProps> = ({ site, pale
                       }`}
                       style={{ color: palette.accentColor }}
                     >
-                      <span>Áp dụng ngay</span>
+                      <span>Claim Offer</span>
                       <span>→</span>
                     </button>
                   </div>

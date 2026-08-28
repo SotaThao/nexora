@@ -143,7 +143,7 @@ export const SITE_PALETTES: Record<MerchantSitePaletteId, SitePalette> = {
   },
   [MerchantSitePaletteId.Ruby]: {
     id: MerchantSitePaletteId.Ruby,
-    name: 'Ruby Wine Đỏ Quyến Rũ',
+    name: 'Ruby Wine (Luxe Crimson)',
     accentColor: '#BE123C',
     accentHoverColor: '#9F1239',
     buttonText: '#FFFFFF',
@@ -160,7 +160,7 @@ export const SITE_PALETTES: Record<MerchantSitePaletteId, SitePalette> = {
   },
   [MerchantSitePaletteId.Amethyst]: {
     id: MerchantSitePaletteId.Amethyst,
-    name: 'Royal Amethyst Tím Hoàng Gia',
+    name: 'Royal Amethyst (Deep Purple)',
     accentColor: '#7C3AED',
     accentHoverColor: '#6D28D9',
     buttonText: '#FFFFFF',
@@ -177,7 +177,7 @@ export const SITE_PALETTES: Record<MerchantSitePaletteId, SitePalette> = {
   },
   [MerchantSitePaletteId.Ocean]: {
     id: MerchantSitePaletteId.Ocean,
-    name: 'Sapphire Ocean Xanh Biển Sâu',
+    name: 'Sapphire Ocean (Deep Cobalt)',
     accentColor: '#0284C7',
     accentHoverColor: '#0369A1',
     buttonText: '#FFFFFF',
@@ -194,7 +194,7 @@ export const SITE_PALETTES: Record<MerchantSitePaletteId, SitePalette> = {
   },
   [MerchantSitePaletteId.Coral]: {
     id: MerchantSitePaletteId.Coral,
-    name: 'Pastel Coral Cam San Hô',
+    name: 'Pastel Coral (Warm Sunset)',
     accentColor: '#F43F5E',
     accentHoverColor: '#E11D48',
     buttonText: '#FFFFFF',
@@ -211,7 +211,7 @@ export const SITE_PALETTES: Record<MerchantSitePaletteId, SitePalette> = {
   },
   [MerchantSitePaletteId.Matcha]: {
     id: MerchantSitePaletteId.Matcha,
-    name: 'Sage Matcha Xanh Thuần Tự Nhiên',
+    name: 'Sage Matcha (Organic Green)',
     accentColor: '#10B981',
     accentHoverColor: '#059669',
     buttonText: '#FFFFFF',
@@ -228,7 +228,7 @@ export const SITE_PALETTES: Record<MerchantSitePaletteId, SitePalette> = {
   },
   [MerchantSitePaletteId.Mocha]: {
     id: MerchantSitePaletteId.Mocha,
-    name: 'Warm Mocha Nâu Cà Phê Cổ Điển',
+    name: 'Warm Mocha (Espresso Brown)',
     accentColor: '#92400E',
     accentHoverColor: '#78350F',
     buttonText: '#FFFFFF',
@@ -245,7 +245,7 @@ export const SITE_PALETTES: Record<MerchantSitePaletteId, SitePalette> = {
   },
   [MerchantSitePaletteId.Custom]: {
     id: MerchantSitePaletteId.Custom,
-    name: 'Tùy Chỉnh Màu Riêng (Custom Brand Color)',
+    name: 'Custom Brand Color (Bespoke)',
     accentColor: '#4F46E5',
     accentHoverColor: '#4338CA',
     buttonText: '#FFFFFF',

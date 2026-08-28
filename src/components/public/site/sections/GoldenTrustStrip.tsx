@@ -15,27 +15,27 @@ export const GoldenTrustStrip: React.FC<GoldenTrustStripProps> = ({
     {
       icon: Sparkles,
       title: 'LUXURY EXPERIENCE',
-      subtitle: 'Không gian riêng tư, chuẩn 5 sao'
+      subtitle: '5-Star Private Luxury Sanctuary'
     },
     {
       icon: ShieldCheck,
-      title: '100% VÔ TRÙNG Y TẾ',
-      subtitle: 'Dụng cụ tiệt trùng khép kín'
+      title: '100% HOSPITAL SANITIZED',
+      subtitle: 'Autoclave Sealed & Single-Use'
     },
     {
       icon: Award,
       title: 'MASTER NAIL ARTISTS',
-      subtitle: 'Đội ngũ thợ 8-10 năm tay nghề'
+      subtitle: 'Certified Master Technicians (8-10+ Yrs)'
     },
     {
       icon: CreditCard,
-      title: 'THANH TOÁN HIỆN ĐẠI',
+      title: 'MODERN SMART PAYMENTS',
       subtitle: 'Cards, Apple Pay, POS & Crypto'
     },
     {
       icon: CalendarCheck,
-      title: 'GIỮ CHỖ ĐẢM BẢO',
-      subtitle: 'Xác nhận tức thì qua POS'
+      title: 'INSTANT APPOINTMENT SYNC',
+      subtitle: 'Real-time confirmation via POS'
     },
   ]
 

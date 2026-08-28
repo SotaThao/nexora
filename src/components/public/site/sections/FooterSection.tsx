@@ -139,7 +139,7 @@ export const FooterSection: React.FC<FooterSectionProps> = ({
                 }}
               >
                 <Calendar className="w-3.5 h-3.5 shrink-0" />
-                <span>Đặt Lịch Hẹn Ngay</span>
+                <span>Book Appointment Online</span>
               </button>
             </div>
           </div>

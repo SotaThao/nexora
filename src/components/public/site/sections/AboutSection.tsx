@@ -26,10 +26,10 @@ export const AboutSection: React.FC<AboutSectionProps> = ({ site, palette, isMob
         <div className="max-w-4xl mx-auto space-y-8">
           <div className="text-center space-y-3">
             <span className="text-[11px] font-bold uppercase tracking-widest" style={{ color: palette.accentColor }}>
-              TRIẾT LÝ & KHÔNG GIAN
+              PHILOSOPHY & SANCTUARY
             </span>
             <h2 className={`font-bold ${isMobileView ? 'text-xl' : 'text-2xl sm:text-3xl'}`}>
-              Về Chúng Tôi
+              About Our Salon
             </h2>
             <div className="w-12 h-0.5 mx-auto rounded-full" style={{ backgroundColor: palette.accentColor }} />
             <p
@@ -46,9 +46,9 @@ export const AboutSection: React.FC<AboutSectionProps> = ({ site, palette, isMob
                 <div key={item.id || idx} className="flex items-start gap-3 p-3">
                   <CheckCircle2 className="w-4 h-4 shrink-0 mt-0.5" style={{ color: palette.accentColor }} />
                   <div>
-                    <h3 className="font-bold text-xs sm:text-sm mb-1">{item.titleVi || item.titleEn}</h3>
+                    <h3 className="font-bold text-xs sm:text-sm mb-1">{item.titleEn || item.titleVi}</h3>
                     <p className="text-[11px] leading-relaxed" style={{ color: palette.textSecondary }}>
-                      {item.descriptionVi || item.descriptionEn}
+                      {item.descriptionEn || item.descriptionVi}
                     </p>
                   </div>
                 </div>
@@ -80,7 +80,7 @@ export const AboutSection: React.FC<AboutSectionProps> = ({ site, palette, isMob
                 OUR STORY & PHILOSOPHY
               </span>
               <h2 className={`font-black ${isMobileView ? 'text-xl' : 'text-2xl sm:text-3xl'}`}>
-                Câu Chuyện Thương Hiệu
+                Our Brand Story
               </h2>
               <p className={`leading-relaxed italic font-serif ${isMobileView ? 'text-xs' : 'text-sm sm:text-base md:text-lg'}`} style={{ color: palette.textSecondary }}>
                 "{content.aboutEn || content.aboutVi || 'Founded with a dedication to timeless elegance, Nexora Luxury Nails & Spa Lounge redefines the self-care experience. We combine hospital-grade sanitation, master craftsmanship, and premium organic botanicals to ensure every visit is a restorative journey.'}"
@@ -104,9 +104,9 @@ export const AboutSection: React.FC<AboutSectionProps> = ({ site, palette, isMob
                       <IconComponent className="w-5 h-5" />
                     </div>
                     <div className="min-w-0">
-                      <h3 className="font-bold text-xs sm:text-sm truncate">{item.titleVi || item.titleEn}</h3>
+                      <h3 className="font-bold text-xs sm:text-sm truncate">{item.titleEn || item.titleVi}</h3>
                       <p className="text-[11px] line-clamp-2 mt-0.5" style={{ color: palette.textSecondary }}>
-                        {item.descriptionVi || item.descriptionEn}
+                        {item.descriptionEn || item.descriptionVi}
                       </p>
                     </div>
                   </div>
@@ -134,7 +134,7 @@ export const AboutSection: React.FC<AboutSectionProps> = ({ site, palette, isMob
                 // SIGNATURE EXPERIENCE
               </span>
               <h2 className={`font-black uppercase tracking-tight ${isMobileView ? 'text-2xl' : 'text-3xl sm:text-4xl'}`}>
-                Tại Sao Chọn Chúng Tôi?
+                Why Choose Us?
               </h2>
             </div>
             <p className="text-xs sm:text-sm max-w-md" style={{ color: palette.textSecondary }}>
@@ -165,9 +165,9 @@ export const AboutSection: React.FC<AboutSectionProps> = ({ site, palette, isMob
                       <IconComponent className="w-6 h-6" />
                     </div>
                     <div>
-                      <h3 className="font-black text-base sm:text-lg mb-1.5 text-white">{item.titleVi || item.titleEn}</h3>
+                      <h3 className="font-black text-base sm:text-lg mb-1.5 text-white">{item.titleEn || item.titleVi}</h3>
                       <p className="text-xs leading-relaxed opacity-85 text-slate-400">
-                        {item.descriptionVi || item.descriptionEn}
+                        {item.descriptionEn || item.descriptionVi}
                       </p>
                     </div>
                   </div>
@@ -194,10 +194,10 @@ export const AboutSection: React.FC<AboutSectionProps> = ({ site, palette, isMob
             style={{ backgroundColor: palette.badgeBg, color: palette.badgeText }}
           >
             <Sparkles className="w-3.5 h-3.5" />
-            <span>TRIẾT LÝ & ĐẲNG CẤP DỊCH VỤ</span>
+            <span>OUR PHILOSOPHY & SERVICE EXCELLENCE</span>
           </div>
           <h2 className={`font-black mb-3 ${isMobileView ? 'text-xl' : 'text-3xl sm:text-4xl'}`}>
-            Về Chúng Tôi
+            About Our Salon
           </h2>
           <p
             className={`leading-relaxed ${isMobileView ? 'text-xs' : 'text-sm sm:text-base md:text-lg'}`}
@@ -226,10 +226,10 @@ export const AboutSection: React.FC<AboutSectionProps> = ({ site, palette, isMob
                     <IconComponent className={isMobileView ? 'w-4 h-4' : 'w-6 h-6'} />
                   </div>
                   <h3 className={`font-bold mb-1.5 ${isMobileView ? 'text-sm' : 'text-base'}`}>
-                    {item.titleVi || item.titleEn}
+                    {item.titleEn || item.titleVi}
                   </h3>
                   <p className="text-xs leading-relaxed" style={{ color: palette.textSecondary }}>
-                    {item.descriptionVi || item.descriptionEn}
+                    {item.descriptionEn || item.descriptionVi}
                   </p>
                 </div>
               )

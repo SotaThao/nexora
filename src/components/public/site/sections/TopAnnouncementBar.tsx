@@ -20,7 +20,7 @@ export const TopAnnouncementBar: React.FC<TopAnnouncementBarProps> = ({
   const announcement =
     content.highlights?.[0]?.titleVi ||
     content.highlights?.[0]?.titleEn ||
-    '🎉 ƯU ĐÃI ĐẶT HẸN ONLINE: TẶNG 15% CHO KHÁCH LẦN ĐẦU · GIỮ CHỖ ĐẢM BẢO 100%'
+    '🎉 ONLINE BOOKING SPECIAL: ENJOY 15% OFF FIRST VISIT · 100% GUARANTEED APPOINTMENT'
 
   return (
     <div
@@ -45,7 +45,7 @@ export const TopAnnouncementBar: React.FC<TopAnnouncementBarProps> = ({
             className="hidden sm:inline-flex items-center gap-1 font-bold underline ml-1 hover:opacity-80 transition-opacity cursor-pointer"
             style={{ color: palette.accentColor }}
           >
-            <span>Đặt Ngay</span>
+            <span>Book Now</span>
             <ArrowRight className="w-3 h-3" />
           </button>
         )}

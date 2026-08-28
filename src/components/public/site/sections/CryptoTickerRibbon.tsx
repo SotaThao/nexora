@@ -21,10 +21,10 @@ const DEFAULT_TICKERS: TickerItem[] = [
   { id: 'btc', type: 'crypto', symbol: 'BTC/USD', price: '$74,510.00', change: '+6.60%', isPositive: true },
   { id: 'eth', type: 'crypto', symbol: 'ETH/USD', price: '$2,348.34', change: '+3.40%', isPositive: true },
   { id: 'usdt', type: 'crypto', symbol: 'USDT/USD', price: '$1.00', change: '0.00%', isPositive: true },
-  { id: 'p1', type: 'promo', text: '🎁 GROUP BOOKING (5+): TẶNG 01 CHAI CHAMPAGNE CAO CẤP' },
+  { id: 'p1', type: 'promo', text: '🎁 GROUP BOOKING (5+ GUESTS): COMPLIMENTARY BOTTLE OF CHAMPAGNE' },
   { id: 'sol', type: 'crypto', symbol: 'SOL/USD', price: '$89.21', change: '+4.60%', isPositive: true },
-  { id: 'vlink', type: 'promo', text: '⚡ VLINKPAY: CỔNG THANH TOÁN BITCOIN & THẺ 0% PHÍ GIAO DỊCH' },
-  { id: 'p2', type: 'promo', text: '✨ ƯU ĐÃI SINH NHẬT: GIẢM 15% TRONG SUỐT THÁNG SINH NHẬT' }
+  { id: 'vlink', type: 'promo', text: '⚡ VLINKPAY: BITCOIN & CONTACTLESS POS 0% TRANSACTION FEES' },
+  { id: 'p2', type: 'promo', text: '✨ BIRTHDAY PERK: ENJOY 15% OFF ALL SERVICES DURING YOUR BIRTHDAY MONTH' }
 ]
 
 export const CryptoTickerRibbon: React.FC<CryptoTickerRibbonProps> = ({

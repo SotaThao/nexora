@@ -61,7 +61,7 @@ const TemplateWireframe: React.FC<{ templateId: MerchantSiteTemplateId; accentCo
 
         {/* Promo Ribbon */}
         <div className="h-3 rounded-md px-1.5 flex items-center justify-between border" style={{ backgroundColor: `${accentColor}20`, borderColor: `${accentColor}40` }}>
-          <span className="text-[6px] font-bold truncate" style={{ color: accentColor }}>★ VOUCHER GIẢM 15%</span>
+          <span className="text-[6px] font-bold truncate" style={{ color: accentColor }}>★ 15% OFF VOUCHER</span>
           <span className="text-[5px] px-1 rounded bg-white/20">CODE</span>
         </div>
 

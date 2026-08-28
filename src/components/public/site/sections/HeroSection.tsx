@@ -208,7 +208,7 @@ export const HeroSection: React.FC<HeroSectionProps> = ({ site, palette, onBookC
               style={{ backgroundColor: palette.badgeBg, color: palette.badgeText }}
             >
               <Sparkles className="w-3.5 h-3.5" />
-              <span>ESTHÉTIQUE & MODERN NAIL COUTURE</span>
+              <span>AESTHETICS & MODERN NAIL COUTURE</span>
             </div>
 
             {/* Editorial Headline */}

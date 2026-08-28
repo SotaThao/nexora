@@ -25,38 +25,38 @@ const DEMO_BOOKING_DATA: PublicBookingPageApiDto = {
   businessPhone: '(832) 555-0198',
   services: [
     // Pedicure
-    { id: 'srv-pedi-1', name: 'Bitcoin 24K Gold Pedicure', price: 99, durationMinutes: 75, description: 'Dịch vụ Pedicure cao cấp với tinh chất vàng 24K, massage đá nóng 20p và đắp mặt nạ chân.', categories: [{ id: 'cat-pedi', name: 'Pedicure' }] },
-    { id: 'srv-pedi-2', name: 'Paris Pearl Pedicure', price: 75, durationMinutes: 60, description: 'Chăm sóc móng chân ngọc trai Paris, tẩy tế bào chết muối biển và massage thảo mộc.', categories: [{ id: 'cat-pedi', name: 'Pedicure' }] },
-    { id: 'srv-pedi-3', name: 'Botanical Spa Pedicure', price: 68, durationMinutes: 50, description: 'Thư giãn với tinh dầu thực vật hữu cơ, ngâm chân muối khoáng và dưỡng ẩm chuyên sâu.', categories: [{ id: 'cat-pedi', name: 'Pedicure' }] },
-    { id: 'srv-pedi-4', name: 'Organic Herbal Pedicure', price: 65, durationMinutes: 50, description: 'Trị liệu móng chân với thảo mộc tự nhiên, giảm căng thẳng và làm mềm da gót chân.', categories: [{ id: 'cat-pedi', name: 'Pedicure' }] },
-    { id: 'srv-pedi-5', name: 'Luxury Collagen Pedicure', price: 80, durationMinutes: 60, description: 'Bổ sung collagen tươi tái tạo làn da chân mịn màng, kèm vớ ủ ấm giữ ẩm.', categories: [{ id: 'cat-pedi', name: 'Pedicure' }] },
-    { id: 'srv-pedi-6', name: 'Detox Volcano Pedicure', price: 85, durationMinutes: 65, description: 'Thải độc với bột núi lửa sủi bọt cao cấp, thanh lọc tế bào chết và phục hồi năng lượng.', categories: [{ id: 'cat-pedi', name: 'Pedicure' }] },
-    { id: 'srv-pedi-7', name: 'Milk & Honey Deluxe Pedicure', price: 70, durationMinutes: 55, description: 'Ngâm chân sữa tươi và mật ong nguyên chất, làm sáng mịn da và nuôi dưỡng móng.', categories: [{ id: 'cat-pedi', name: 'Pedicure' }] },
-    { id: 'srv-pedi-8', name: 'Jelly Spa Relaxing Pedicure', price: 78, durationMinutes: 60, description: 'Ngâm chân gel thạch ấm thơm mát, giữ nhiệt lâu và massage xoa dịu mệt mỏi.', categories: [{ id: 'cat-pedi', name: 'Pedicure' }] },
-    { id: 'srv-pedi-9', name: 'Classic Refresh Pedicure', price: 45, durationMinutes: 40, description: 'Dịch vụ chăm sóc móng chân tiêu chuẩn, cắt tỉa da, dũa tạo form và sơn bóng cao cấp.', categories: [{ id: 'cat-pedi', name: 'Pedicure' }] },
+    { id: 'srv-pedi-1', name: 'Bitcoin 24K Gold Pedicure', price: 99, durationMinutes: 75, description: 'Ultra-luxurious pedicure featuring 24K gold foil soak, 20-min hot stone massage, and botanical foot mask.', categories: [{ id: 'cat-pedi', name: 'Pedicure' }] },
+    { id: 'srv-pedi-2', name: 'Paris Pearl Pedicure', price: 75, durationMinutes: 60, description: 'Parisian pearl foot spa, sea salt exfoliation, and aromatic herbal massage.', categories: [{ id: 'cat-pedi', name: 'Pedicure' }] },
+    { id: 'srv-pedi-3', name: 'Botanical Spa Pedicure', price: 68, durationMinutes: 50, description: 'Relaxing organic botanical essential oils, mineral foot soak, and intensive moisturizing therapy.', categories: [{ id: 'cat-pedi', name: 'Pedicure' }] },
+    { id: 'srv-pedi-4', name: 'Organic Herbal Pedicure', price: 65, durationMinutes: 50, description: 'Natural herbal foot therapy that relieves stress and restores cracked dry heels.', categories: [{ id: 'cat-pedi', name: 'Pedicure' }] },
+    { id: 'srv-pedi-5', name: 'Luxury Collagen Pedicure', price: 80, durationMinutes: 60, description: 'Infused with fresh collagen serum to rejuvenate skin elasticity, includes warm moisture booties.', categories: [{ id: 'cat-pedi', name: 'Pedicure' }] },
+    { id: 'srv-pedi-6', name: 'Detox Volcano Pedicure', price: 85, durationMinutes: 65, description: 'Detoxifying bubbling volcano crystals that purify dead skin cells and revitalize tired feet.', categories: [{ id: 'cat-pedi', name: 'Pedicure' }] },
+    { id: 'srv-pedi-7', name: 'Milk & Honey Deluxe Pedicure', price: 70, durationMinutes: 55, description: 'Fresh milk and raw organic honey soak that brightens, softens skin, and deeply nourishes nails.', categories: [{ id: 'cat-pedi', name: 'Pedicure' }] },
+    { id: 'srv-pedi-8', name: 'Jelly Spa Relaxing Pedicure', price: 78, durationMinutes: 60, description: 'Fragrant warm jelly foot soak retaining soothing heat with a therapeutic relaxing massage.', categories: [{ id: 'cat-pedi', name: 'Pedicure' }] },
+    { id: 'srv-pedi-9', name: 'Classic Refresh Pedicure', price: 45, durationMinutes: 40, description: 'Standard pedicure care including cuticle grooming, precision shaping, and high-shine polish.', categories: [{ id: 'cat-pedi', name: 'Pedicure' }] },
     
     // Manicure
-    { id: 'srv-mani-1', name: 'Signature Gel Manicure', price: 52, durationMinutes: 45, description: 'Sơn gel bền đẹp bóng sáng 3-4 tuần với kỹ thuật làm sạch da chuẩn Nga/Mỹ.', categories: [{ id: 'cat-mani', name: 'Manicure' }] },
-    { id: 'srv-mani-2', name: 'Paris Pearl Manicure', price: 60, durationMinutes: 50, description: 'Dưỡng móng tay ngọc trai, tẩy tế bào chết tay và massage tinh dầu ấm.', categories: [{ id: 'cat-mani', name: 'Manicure' }] },
-    { id: 'srv-mani-3', name: 'Collagen Glow Manicure', price: 58, durationMinutes: 50, description: 'Ủ găng tay collagen phục hồi da tay lão hóa, kết hợp sơn màu thời thượng.', categories: [{ id: 'cat-mani', name: 'Manicure' }] },
-    { id: 'srv-mani-4', name: 'Classic Express Manicure', price: 35, durationMinutes: 30, description: 'Chăm sóc móng tay cơ bản, làm sạch khóe, tạo form móng tự nhiên và sơn dưỡng.', categories: [{ id: 'cat-mani', name: 'Manicure' }] },
+    { id: 'srv-mani-1', name: 'Signature Gel Manicure', price: 52, durationMinutes: 45, description: 'Long-lasting high-gloss gel polish lasting 3-4 weeks with meticulous Russian/dry cuticle prep.', categories: [{ id: 'cat-mani', name: 'Manicure' }] },
+    { id: 'srv-mani-2', name: 'Paris Pearl Manicure', price: 60, durationMinutes: 50, description: 'Parisian pearl manicure treatment with hand scrub and warm botanical essential oil massage.', categories: [{ id: 'cat-mani', name: 'Manicure' }] },
+    { id: 'srv-mani-3', name: 'Collagen Glow Manicure', price: 58, durationMinutes: 50, description: 'Anti-aging collagen moisture gloves combined with trending designer nail lacquer.', categories: [{ id: 'cat-mani', name: 'Manicure' }] },
+    { id: 'srv-mani-4', name: 'Classic Express Manicure', price: 35, durationMinutes: 30, description: 'Essential manicure care with gentle cuticle trimming, natural shaping, and nourishing base coat.', categories: [{ id: 'cat-mani', name: 'Manicure' }] },
 
     // Acrylic Nail Service
-    { id: 'srv-acrylic-1', name: 'Full Set Acrylic with Gel Color', price: 70, durationMinutes: 65, description: 'Đắp móng bột mới nguyên bộ theo form dài ngắn tùy chọn và phủ sơn gel bền đẹp.', categories: [{ id: 'cat-acrylic', name: 'Acrylic Nail Service' }] },
-    { id: 'srv-acrylic-2', name: 'Acrylic Refill with Gel', price: 50, durationMinutes: 45, description: 'Dặm đầy móng bột mọc ra sau 2-3 tuần, dũa phom lại chuẩn chỉnh và đổi màu sơn.', categories: [{ id: 'cat-acrylic', name: 'Acrylic Nail Service' }] },
-    { id: 'srv-acrylic-3', name: 'Ombre French Acrylic Full Set', price: 85, durationMinutes: 75, description: 'Kỹ thuật đắp bột loang màu ombre hồng trắng hoặc nhũ kim tuyến thời thượng.', categories: [{ id: 'cat-acrylic', name: 'Acrylic Nail Service' }] },
+    { id: 'srv-acrylic-1', name: 'Full Set Acrylic with Gel Color', price: 70, durationMinutes: 65, description: 'Brand new full set acrylic extensions tailored to your custom length and long-wear gel color.', categories: [{ id: 'cat-acrylic', name: 'Acrylic Nail Service' }] },
+    { id: 'srv-acrylic-2', name: 'Acrylic Refill with Gel', price: 50, durationMinutes: 45, description: 'Acrylic refill for outgrowth after 2-3 weeks, reshaping, and fresh gel polish coat.', categories: [{ id: 'cat-acrylic', name: 'Acrylic Nail Service' }] },
+    { id: 'srv-acrylic-3', name: 'Ombre French Acrylic Full Set', price: 85, durationMinutes: 75, description: 'Master French baby boomer ombre fade or shimmering glitter blend full set extensions.', categories: [{ id: 'cat-acrylic', name: 'Acrylic Nail Service' }] },
 
     // Dipping Nail
-    { id: 'srv-dip-1', name: 'Dipping Powder on Natural Nails', price: 55, durationMinutes: 50, description: 'Nhúng bột hữu cơ không dùng đèn UV, bổ sung vitamin E & Canxi dưỡng móng chắc khỏe.', categories: [{ id: 'cat-dip', name: 'Dipping Nail' }] },
-    { id: 'srv-dip-2', name: 'Dipping Powder Full Set with Tips', price: 65, durationMinutes: 60, description: 'Nhúng bột nối dài móng với form móng almond, coffin hoặc square sang trọng.', categories: [{ id: 'cat-dip', name: 'Dipping Nail' }] },
+    { id: 'srv-dip-1', name: 'Dipping Powder on Natural Nails', price: 55, durationMinutes: 50, description: 'Organic dipping powder without UV lights, fortified with Vitamin E & Calcium for stronger nails.', categories: [{ id: 'cat-dip', name: 'Dipping Nail' }] },
+    { id: 'srv-dip-2', name: 'Dipping Powder Full Set with Tips', price: 65, durationMinutes: 60, description: 'Dipping powder full set extensions shaped in luxury almond, coffin, or tapered square.', categories: [{ id: 'cat-dip', name: 'Dipping Nail' }] },
 
     // Builder Gel Service
-    { id: 'srv-gel-1', name: 'Builder Gel Overlay (BIAB)', price: 65, durationMinutes: 55, description: 'Đắp gel cấu trúc tăng cường độ cứng cho móng thật, bảo vệ móng yếu gãy.', categories: [{ id: 'cat-gel', name: 'Builder Gel Service' }] },
-    { id: 'srv-gel-2', name: 'Builder Gel Full Set with Extension', price: 85, durationMinutes: 70, description: 'Nối móng đắp gel dẻo dai tự nhiên, nhẹ nhàng không gây nặng móng.', categories: [{ id: 'cat-gel', name: 'Builder Gel Service' }] },
+    { id: 'srv-gel-1', name: 'Builder Gel Overlay (BIAB)', price: 65, durationMinutes: 55, description: 'Builder in a Bottle (BIAB) overlay reinforcing natural nail strength and preventing breakage.', categories: [{ id: 'cat-gel', name: 'Builder Gel Service' }] },
+    { id: 'srv-gel-2', name: 'Builder Gel Full Set with Extension', price: 85, durationMinutes: 70, description: 'Lightweight flexible builder gel extensions with seamless natural finish.', categories: [{ id: 'cat-gel', name: 'Builder Gel Service' }] },
 
     // Waxing Service
-    { id: 'srv-wax-1', name: 'Eyebrows Design & Waxing', price: 20, durationMinutes: 20, description: 'Tỉa form và wax lông mày sắc sảo theo chuẩn tỉ lệ vàng gương mặt.', categories: [{ id: 'cat-wax', name: 'Waxing Service' }] },
-    { id: 'srv-wax-2', name: 'Full Face Smoothing Wax', price: 45, durationMinutes: 35, description: 'Wax sạch mịn vùng mặt với sáp hữu cơ dịu nhẹ không gây rát đỏ.', categories: [{ id: 'cat-wax', name: 'Waxing Service' }] },
+    { id: 'srv-wax-1', name: 'Eyebrows Design & Waxing', price: 20, durationMinutes: 20, description: 'Precision eyebrow mapping, sculpting, and gentle botanical waxing for golden ratio brows.', categories: [{ id: 'cat-wax', name: 'Waxing Service' }] },
+    { id: 'srv-wax-2', name: 'Full Face Smoothing Wax', price: 45, durationMinutes: 35, description: 'Silky smooth full face waxing using soothing hypoallergenic organic wax formulation.', categories: [{ id: 'cat-wax', name: 'Waxing Service' }] },
   ],
   technicians: [
     { id: 'tech-1', displayName: 'Sarah Nguyen', photoUrl: 'https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?w=400&auto=format&fit=crop&q=80', serviceIds: ['srv-pedi-1', 'srv-pedi-2', 'srv-pedi-3', 'srv-mani-1', 'srv-mani-2', 'srv-acrylic-1', 'srv-acrylic-2', 'srv-dip-1', 'srv-gel-1'] },

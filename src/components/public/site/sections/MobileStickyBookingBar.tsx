@@ -33,7 +33,7 @@ export const MobileStickyBookingBar: React.FC<MobileStickyBookingBarProps> = ({
           }}
         >
           <Phone className="w-4 h-4" />
-          <span>Gọi Điện</span>
+          <span>Call Us</span>
         </a>
       )}
 
@@ -48,7 +48,7 @@ export const MobileStickyBookingBar: React.FC<MobileStickyBookingBarProps> = ({
         }}
       >
         <Calendar className="w-4 h-4" />
-        <span>Đặt Lịch Hẹn Ngay</span>
+        <span>Book Appointment Online</span>
       </button>
     </div>
   )

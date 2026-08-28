@@ -60,7 +60,7 @@ export const SiteNavbarHeader: React.FC<SiteNavbarHeaderProps> = ({
     if (site.services && site.services.length > 0) {
       const counts: Record<string, number> = {}
       site.services.forEach((s) => {
-        const cat = s.categoryName || 'Dịch Vụ Salon'
+        const cat = s.categoryName || 'Salon Services'
         counts[cat] = (counts[cat] || 0) + 1
       })
       const items = Object.entries(counts).map(([name, count]) => ({

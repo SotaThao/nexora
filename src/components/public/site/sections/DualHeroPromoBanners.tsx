@@ -34,7 +34,7 @@ export const DualHeroPromoBanners: React.FC<DualHeroPromoBannersProps> = ({
                 ELEVATED CIRCLE
               </h3>
               <p className="text-xs text-slate-300 leading-relaxed max-w-xs">
-                Tích điểm hoàn tiền đến 15%, ưu tiên giữ chỗ VIP và miễn phí phục vụ đồ uống Lounge.
+                Earn up to 15% cashback, VIP priority reservations, and complimentary Lounge bar service.
               </p>
             </div>
 
@@ -51,7 +51,7 @@ export const DualHeroPromoBanners: React.FC<DualHeroPromoBannersProps> = ({
                 onClick={onBookClick}
                 className="inline-flex items-center gap-1 text-xs font-bold text-amber-400 hover:text-amber-300 transition-colors cursor-pointer group-hover:translate-x-0.5 duration-200"
               >
-                <span>Đăng Ký Thành Viên</span>
+                <span>Join VIP Club</span>
                 <ArrowRight className="w-3.5 h-3.5" />
               </button>
             )}
@@ -76,7 +76,7 @@ export const DualHeroPromoBanners: React.FC<DualHeroPromoBannersProps> = ({
                 VLINKPAY CRYPTO GATEWAY
               </h3>
               <p className="text-xs text-slate-300 leading-relaxed max-w-xs">
-                Chấp nhận Bitcoin, USDT, Apple Pay, Google Pay & Đồng bộ Clover POS tức thì.
+                Accept Bitcoin, USDT, Apple Pay, Google Pay & instant Clover POS sync.
               </p>
             </div>
 
@@ -89,7 +89,7 @@ export const DualHeroPromoBanners: React.FC<DualHeroPromoBannersProps> = ({
             <span className="text-[11px] text-emerald-300/80 font-mono font-bold">SECURE · SWIFT · GLOBAL</span>
             <div className="flex items-center gap-1 text-[10px] text-slate-400">
               <ShieldCheck className="w-3.5 h-3.5 text-emerald-400" />
-              <span>Bảo mật 100%</span>
+              <span>100% Encrypted & Secure</span>
             </div>
           </div>
         </div>

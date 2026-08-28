@@ -12,9 +12,9 @@ interface StaffSectionProps {
 
 export const StaffSection: React.FC<StaffSectionProps> = ({ site, palette, onSelectStaff, isMobileView }) => {
   const defaultStaffMembers = [
-    { name: 'Sarah Nguyen', role: 'Master Nail Artist', exp: '8 years kinh nghiệm', rating: 4.9, specialties: 'Ombre, Chrome, 3D Art', avatarUrl: null },
-    { name: 'Jessica Tran', role: 'Spa & Gel Specialist', exp: '6 years kinh nghiệm', rating: 5.0, specialties: 'Deluxe Pedicure, Dip Powder', avatarUrl: null },
-    { name: 'David Le', role: 'Acrylic & Extension Pro', exp: '10 years kinh nghiệm', rating: 4.8, specialties: 'Fullset Acrylic, Stiletto, Coffin', avatarUrl: null }
+    { name: 'Sarah Nguyen', role: 'Master Nail Artist', exp: '8 + yrs exp', rating: 4.9, specialties: 'Ombre, Chrome, 3D Art', avatarUrl: null },
+    { name: 'Jessica Tran', role: 'Spa & Gel Specialist', exp: '6 + yrs exp', rating: 5.0, specialties: 'Deluxe Pedicure, Dip Powder', avatarUrl: null },
+    { name: 'David Le', role: 'Acrylic & Extension Pro', exp: '10 + yrs exp', rating: 4.8, specialties: 'Fullset Acrylic, Stiletto, Coffin', avatarUrl: null }
   ]
 
   const staffMembers = (site.staffList && site.staffList.length > 0)

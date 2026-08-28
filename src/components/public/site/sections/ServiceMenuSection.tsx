@@ -17,7 +17,7 @@ export const ServiceMenuSection: React.FC<ServiceMenuSectionProps> = ({ site, pa
     if (site.services && site.services.length > 0) {
       const grouped: Record<string, typeof site.services> = {}
       site.services.forEach((s) => {
-        const cat = s.categoryName || 'Dịch Vụ Salon (Salon Services)'
+        const cat = s.categoryName || 'Salon Services'
         if (!grouped[cat]) grouped[cat] = []
         grouped[cat].push(s)
       })
@@ -28,7 +28,7 @@ export const ServiceMenuSection: React.FC<ServiceMenuSectionProps> = ({ site, pa
           name: item.name,
           dur: item.durationMinutes ? `${item.durationMinutes} mins` : '45 mins',
           price: typeof item.price === 'number' ? `$${item.price.toFixed(2)}` : (String(item.price).startsWith('$') ? String(item.price) : `$${item.price}`),
-          desc: item.description || 'Dịch vụ chăm sóc móng và spa cao cấp thực hiện bởi đội ngũ thợ chuyên nghiệp.'
+          desc: item.description || 'Premium nail care and luxury spa treatment delivered by certified master technicians.'
         }))
       }))
     }
@@ -268,7 +268,7 @@ export const ServiceMenuSection: React.FC<ServiceMenuSectionProps> = ({ site, pa
                   className="text-xs font-semibold hover:underline flex items-center gap-1 transition-opacity opacity-85 hover:opacity-100 cursor-pointer shrink-0 ml-2"
                   style={{ color: palette.accentColor }}
                 >
-                  <span>Xem Toàn Bộ Menu</span>
+                  <span>View Complete Menu</span>
                   <span aria-hidden="true">&rarr;</span>
                 </button>
               </div>
@@ -319,7 +319,7 @@ export const ServiceMenuSection: React.FC<ServiceMenuSectionProps> = ({ site, pa
               }}
             >
               <Sparkles className="w-4 h-4" />
-              <span>Đặt Lịch Hẹn Ngay — Nhận Ưu Đãi 25%</span>
+              <span>Book Appointment Online — Claim 25% OFF</span>
             </button>
           </div>
         </div>
