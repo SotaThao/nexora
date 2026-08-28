@@ -1,5 +1,5 @@
 import React, { useState } from 'react'
-import { Monitor, Smartphone, ExternalLink, RefreshCw } from 'lucide-react'
+import { Monitor, Smartphone, Tv, ExternalLink, RefreshCw } from 'lucide-react'
 import { MerchantSiteDto, PublicSiteDto } from '../../../../constants/merchantSiteStatus'
 import { buildPublicBookingFormUrl } from '../../../../utils/publicBookingUrl'
 import { SiteRenderer } from '../../../public/site/SiteRenderer'
@@ -29,7 +29,7 @@ export const SitePreviewFrame: React.FC<SitePreviewFrameProps> = ({
   businessHours,
   reviews,
 }) => {
-  const [deviceMode, setDeviceMode] = useState<'desktop' | 'mobile'>('desktop')
+  const [deviceMode, setDeviceMode] = useState<'fhd' | 'desktop' | 'mobile'>('fhd')
 
   const effectiveSlug = businessSlug || site.businessId || ''
   const publicBookingUrl = buildPublicBookingFormUrl(effectiveSlug)
@@ -55,12 +55,22 @@ export const SitePreviewFrame: React.FC<SitePreviewFrameProps> = ({
   return (
     <div className="space-y-4">
       {/* Device Toolbar */}
-      <div className="flex items-center justify-between p-3 rounded-2xl bg-white border border-slate-200 shadow-sm">
+      <div className="flex items-center justify-between p-3 rounded-2xl bg-white border border-slate-200 shadow-sm flex-wrap gap-3">
         <div className="flex items-center gap-2">
           <button
             type="button"
+            onClick={() => setDeviceMode('fhd')}
+            className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-semibold transition-all cursor-pointer ${
+              deviceMode === 'fhd' ? 'bg-indigo-600 text-white shadow' : 'text-slate-600 hover:bg-slate-100'
+            }`}
+          >
+            <Tv className="w-4 h-4" />
+            <span>Full HD (1920px)</span>
+          </button>
+          <button
+            type="button"
             onClick={() => setDeviceMode('desktop')}
-            className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-semibold transition-all ${
+            className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-semibold transition-all cursor-pointer ${
               deviceMode === 'desktop' ? 'bg-indigo-600 text-white shadow' : 'text-slate-600 hover:bg-slate-100'
             }`}
           >
@@ -70,7 +80,7 @@ export const SitePreviewFrame: React.FC<SitePreviewFrameProps> = ({
           <button
             type="button"
             onClick={() => setDeviceMode('mobile')}
-            className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-semibold transition-all ${
+            className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-semibold transition-all cursor-pointer ${
               deviceMode === 'mobile' ? 'bg-indigo-600 text-white shadow' : 'text-slate-600 hover:bg-slate-100'
             }`}
           >
@@ -85,10 +95,14 @@ export const SitePreviewFrame: React.FC<SitePreviewFrameProps> = ({
       </div>
 
       {/* Frame Container */}
-      <div className="w-full min-h-[600px] max-h-[750px] overflow-y-auto rounded-2xl border-2 border-slate-300 bg-slate-100 p-4 flex justify-center shadow-inner">
+      <div className="w-full min-h-[600px] max-h-[800px] overflow-y-auto rounded-2xl border-2 border-slate-300 bg-slate-100 p-4 flex justify-center shadow-inner">
         <div
           className={`transition-all duration-300 rounded-xl shadow-2xl overflow-y-auto ${
-            deviceMode === 'mobile' ? 'w-[375px] min-h-[667px]' : 'w-full'
+            deviceMode === 'mobile'
+              ? 'w-[375px] min-h-[667px]'
+              : deviceMode === 'fhd'
+              ? 'w-full max-w-[1920px]'
+              : 'w-full max-w-6xl'
           }`}
         >
           <SiteRenderer site={publicSiteData} />
