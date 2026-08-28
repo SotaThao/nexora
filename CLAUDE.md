@@ -14,7 +14,6 @@ Treat this as an engineering playbook, not a product brief.
 - Verify the path you changed with the smallest meaningful test first, then broaden when the blast radius is larger.
 - No `console.*` in app code. Use the project logger where runtime logging is needed.
 - Do not commit unless explicitly asked.
-- When committing, stage only the actual code changes. Never include spec/test documentation (`user-story/*.md`, `openspec/changes/**`, test plans/TC docs) in the same commit, even if such a doc was created or updated as part of the task — leave those files unstaged/uncommitted unless the user explicitly asks to commit them too.
 - **No hardcoded backend enum/status strings.** Any string literal that mirrors a backend enum (`PosOrderStatus`, `TipStatus`, etc. — e.g. `'Waiting'`, `'InService'`, `'Completed'`, `'Cancelled'`, `'Pending'`, `'Confirmed'`) must be compared/assigned via a shared TS `enum`/const object in `src/constants/`, never as an inline string literal in a component, hook, or repository. Check `src/constants/` for an existing constant (e.g. `posOrderStatus.ts`, `tipStatus.ts`) before adding a new comparison — add a new value to the existing enum rather than a parallel literal. When a repository maps a raw API string to a discriminated union type, that mapping is the one allowed place to reference the literal.
 
 ## Follow-Up Note (2026-08-05)
@@ -97,6 +96,7 @@ QueryClientProvider → LanguageProvider → AuthProvider → NotificationProvid
 ```
 
 Key rules:
+
 - `AuthProvider` requires `QueryClientProvider` above it (auth state is TanStack Query-backed).
 - `LanguageProvider` must wrap everything that uses `useTranslation()`.
 - `KybGateContext` sits inside `App`, so it has access to auth and routing.
@@ -160,31 +160,31 @@ When changing one of these flows:
 
 ## File Map
 
-| Area | Where to look |
-|------|---------------|
-| App shell/routing | `src/App.tsx`, `src/app/AppRouter.tsx` |
-| Route components | `src/components/dashboard/routes/index.tsx` |
-| Auth state | `src/auth/AuthProvider.tsx`, `src/auth/useAuth.ts` |
-| Auth adapters | `src/auth/adapters/` |
-| Token store | `src/auth/tokenStore.ts` |
-| Shared contexts | `src/contexts/` (LanguageContext, NotificationContext, KybGateContext, StaffAccountContext) |
-| Locales (i18n) | `src/locales/en.json`, `src/locales/vi.json` |
-| Data hooks | `src/data/hooks/` |
-| Repositories | `src/data/repositories/` |
-| Query keys | `src/data/queryKeys.ts` |
-| Query client | `src/lib/queryClient.ts` |
-| HTTP client | `src/lib/httpClient.js` |
-| Error codes | `src/data/errorCodes.ts` |
-| Storage (token persistence) | `src/utils/storage.ts` |
-| Logger | `src/utils/logger.ts` |
-| Dashboard sidebar menu config | `src/components/dashboard/constants.tsx` |
-| Shared UI primitives | `src/components/ui/` |
-| Type definitions | `src/types/` |
-| Tests (co-located) | `src/data/repositories/*.test.ts`, `src/components/**/*.test.tsx` |
-| Test setup | `src/setupTests.ts`, `vitest.config.ts`, `vitest.e2e.config.ts` |
-| OpenSpec work | `openspec/changes/` |
-| User stories (integration goals) | `user-story/` (template: `_TEMPLATE.md`) |
-| API contract snapshot | `API/update/<latest>/api-integration-guide-v4.md` (truth: live Swagger) |
+| Area                             | Where to look                                                                               |
+| -------------------------------- | ------------------------------------------------------------------------------------------- |
+| App shell/routing                | `src/App.tsx`, `src/app/AppRouter.tsx`                                                      |
+| Route components                 | `src/components/dashboard/routes/index.tsx`                                                 |
+| Auth state                       | `src/auth/AuthProvider.tsx`, `src/auth/useAuth.ts`                                          |
+| Auth adapters                    | `src/auth/adapters/`                                                                        |
+| Token store                      | `src/auth/tokenStore.ts`                                                                    |
+| Shared contexts                  | `src/contexts/` (LanguageContext, NotificationContext, KybGateContext, StaffAccountContext) |
+| Locales (i18n)                   | `src/locales/en.json`, `src/locales/vi.json`                                                |
+| Data hooks                       | `src/data/hooks/`                                                                           |
+| Repositories                     | `src/data/repositories/`                                                                    |
+| Query keys                       | `src/data/queryKeys.ts`                                                                     |
+| Query client                     | `src/lib/queryClient.ts`                                                                    |
+| HTTP client                      | `src/lib/httpClient.js`                                                                     |
+| Error codes                      | `src/data/errorCodes.ts`                                                                    |
+| Storage (token persistence)      | `src/utils/storage.ts`                                                                      |
+| Logger                           | `src/utils/logger.ts`                                                                       |
+| Dashboard sidebar menu config    | `src/components/dashboard/constants.tsx`                                                    |
+| Shared UI primitives             | `src/components/ui/`                                                                        |
+| Type definitions                 | `src/types/`                                                                                |
+| Tests (co-located)               | `src/data/repositories/*.test.ts`, `src/components/**/*.test.tsx`                           |
+| Test setup                       | `src/setupTests.ts`, `vitest.config.ts`, `vitest.e2e.config.ts`                             |
+| OpenSpec work                    | `openspec/changes/`                                                                         |
+| User stories (integration goals) | `user-story/` (template: `_TEMPLATE.md`)                                                    |
+| API contract snapshot            | `API/update/<latest>/api-integration-guide-v4.md` (truth: live Swagger)                     |
 
 ## Code Standards
 
@@ -200,7 +200,7 @@ When changing one of these flows:
 
 Any new modal, dialog, drawer, or wizard component must handle these two mobile failure modes from the first implementation pass — do not wait for a bug report:
 
-- **Height overflow with variable-length content** (e.g. a list that can grow to N items). A `fixed inset-0 flex items-center justify-center` overlay with an unbounded-height card pushes content off-screen with no way to scroll. Fix: the card gets `flex max-h-[90vh] flex-col`; the scrollable body gets `flex-1 overflow-y-auto`; header/footer stay outside that scrollable div so they stay pinned. Prefer `dvh` over `vh` for the max-height, declared as a fallback pair in the *same* CSS rule (`max-height: 90vh; max-height: 90dvh;`, e.g. in a `.nexora-modal-card` component class in `index.css`) rather than as two competing Tailwind utility classes on one element — class order in the generated stylesheet is not reliable. Real mobile Safari/Chrome compute `100vh` against the address-bar-collapsed viewport, so `vh`-only sizing can clip content on initial load in a way that desktop-browser viewport-resize testing will never reproduce.
+- **Height overflow with variable-length content** (e.g. a list that can grow to N items). A `fixed inset-0 flex items-center justify-center` overlay with an unbounded-height card pushes content off-screen with no way to scroll. Fix: the card gets `flex max-h-[90vh] flex-col`; the scrollable body gets `flex-1 overflow-y-auto`; header/footer stay outside that scrollable div so they stay pinned. Prefer `dvh` over `vh` for the max-height, declared as a fallback pair in the _same_ CSS rule (`max-height: 90vh; max-height: 90dvh;`, e.g. in a `.nexora-modal-card` component class in `index.css`) rather than as two competing Tailwind utility classes on one element — class order in the generated stylesheet is not reliable. Real mobile Safari/Chrome compute `100vh` against the address-bar-collapsed viewport, so `vh`-only sizing can clip content on initial load in a way that desktop-browser viewport-resize testing will never reproduce.
 - **Width truncation from fixed multi-column grids.** A `grid grid-cols-2` (or more) used to lay out form fields side-by-side (e.g. vendor/date, amount/category) truncates content at ~375px phone widths. Fix: default to `grid-cols-1` and only widen at `sm:` and up (`grid-cols-1 sm:grid-cols-2`).
 
 When testing such components, resize the browser (or Playwright viewport) to a phone width (e.g. 375×667) and take a screenshot as part of self-verification — `tsc`/`build` passing does not catch layout overflow.
@@ -219,17 +219,17 @@ Apply these on every new or refactored form field — do not wait for a bug repo
 
 Before deleting a loading/interstitial step (or otherwise keeping a form mounted while a request is in flight), work through both of these — neither is caught by `tsc`, `build`, or tests written after the fact:
 
-- **Ask what the removed screen was unmounting.** An interstitial that covered the form was also *disabling* every input on it, silently. Once the form stays mounted, every field on it is editable for the entire duration of the request. Give each one `disabled={isPending}` explicitly. Verified case (US-105): removing the full-screen "Processing" step from `/pay/:businessId` left the amount input live — and `DirectPaymentReview` auto-focuses it on mount, so on mobile the caret is already sitting in it. Typing there after tapping a wallet produced a QR screen instructing the customer to send **$2500** while the DB record said **$25**, with no reconciliation path.
+- **Ask what the removed screen was unmounting.** An interstitial that covered the form was also _disabling_ every input on it, silently. Once the form stays mounted, every field on it is editable for the entire duration of the request. Give each one `disabled={isPending}` explicitly. Verified case (US-105): removing the full-screen "Processing" step from `/pay/:businessId` left the amount input live — and `DirectPaymentReview` auto-focuses it on mount, so on mobile the caret is already sitting in it. Typing there after tapping a wallet produced a QR screen instructing the customer to send **$2500** while the DB record said **$25**, with no reconciliation path.
 - **After a mutation, display the value the server confirmed, not the live input state.** Passing a derived-from-input value (`activeAmount`) into the post-submit screen means any later edit rewrites history. Read the amount back out of the mutation response and prefer it. Mind the operator: repositories here normalize a missing numeric to `0` (`Number(readField(...) ?? 0)` in `publicDirectPayment.ts` / `publicStaffPayment.ts`), and `0 ?? fallback === 0`, so the fallback must be `confirmedAmount || activeAmount`. `DIRECT_PAYMENT_MIN_AMOUNT = 1` makes `0` provably invalid, so `||` is correct here rather than sloppy.
 - **Re-entrancy must be explicit.** Do not rely on an unrelated `setState` happening to flush before the mutation flag updates — that ordering is incidental and vanishes the moment someone moves the line. Guard the handler directly (`if (mutation.isPending) return`), matching `handleConfirmPayment` in the same hooks.
 
 ## POS iPad Design Standard
 
-The POS module (`src/components/dashboard/views/pos/`) is optimized for iPad touch use (nail salon front desk) but, as of 2026-08-10, **shares its color tokens with the rest of the dashboard** — there is no separate POS color identity anymore. History: POS originally had its own warm pink/coral/lavender palette under a `posFd*` token prefix; a 2026-08-10 pass first tried aligning `posFd*` to a teal `#00D5BE` belonging to a *different* Nexora Touch app in a separate repo (wrong — that app isn't this one), then corrected `posFd*` to alias this app's own `nexoraBrand` indigo `#4648D8` + neutral canvas/border/text, and finally — since the values were now identical to `nexora*` anyway — the `posFd*` token block was deleted entirely and every usage renamed back to the plain `nexora*` tokens. **Use `nexoraBrand`/`nexoraBrandDark`/`nexoraCanvas`/`nexoraSurface`/`nexoraBorder`/`nexoraText`/`nexoraMuted`/`nexoraDanger`/`nexoraWarning`/`nexoraLavender` directly in `pos/` — do not reintroduce a `posFd*` (or any other POS-only) token prefix for color.** The iPad-specific parts of this standard are the *non-color* conventions below (radius, touch targets, spacing, font scale, interaction patterns) — those remain POS-specific.
+The POS module (`src/components/dashboard/views/pos/`) is optimized for iPad touch use (nail salon front desk) but, as of 2026-08-10, **shares its color tokens with the rest of the dashboard** — there is no separate POS color identity anymore. History: POS originally had its own warm pink/coral/lavender palette under a `posFd*` token prefix; a 2026-08-10 pass first tried aligning `posFd*` to a teal `#00D5BE` belonging to a _different_ Nexora Touch app in a separate repo (wrong — that app isn't this one), then corrected `posFd*` to alias this app's own `nexoraBrand` indigo `#4648D8` + neutral canvas/border/text, and finally — since the values were now identical to `nexora*` anyway — the `posFd*` token block was deleted entirely and every usage renamed back to the plain `nexora*` tokens. **Use `nexoraBrand`/`nexoraBrandDark`/`nexoraCanvas`/`nexoraSurface`/`nexoraBorder`/`nexoraText`/`nexoraMuted`/`nexoraDanger`/`nexoraWarning`/`nexoraLavender` directly in `pos/` — do not reintroduce a `posFd*` (or any other POS-only) token prefix for color.** The iPad-specific parts of this standard are the _non-color_ conventions below (radius, touch targets, spacing, font scale, interaction patterns) — those remain POS-specific.
 
 - **Color tokens** (`tailwind.config.js`, "Nexora Touch Admin semantic tokens" block): `nexoraBrand` `#4648D8` (primary accent, filled buttons/active chips — dark enough to keep `text-white` on fills, never switch fill text to `nexoraText`), `nexoraBrandDark` `#393BC8` (hover/pressed), `nexoraCanvas` `#F7F9FC` (page background), `nexoraSurface` `#FFFFFF` (cards), `nexoraBorder` `#DDE5EF`, `nexoraText` `#0B1220`, `nexoraMuted` `#4D5870`, `nexoraDanger` `#EF4444`, `nexoraWarning` `#F59E0B` (secondary highlight), `nexoraLavender` `#A8A9F3` (tertiary accent). There is no `nexoraDangerBg` token — a light-red hover/tint background pairs with `nexoraDanger` via the plain Tailwind `bg-red-50` (which happens to equal the same hex, `#FEF2F2`), not a custom token. Destructive actions (delete line, remove staff, etc.) still fall back to plain `rose-50`/`rose-600` in some screens rather than `nexoraDanger`/`bg-red-50` — an accepted, pre-existing gap, out of scope for the palette unification.
 - **Radius scale**: `rounded-2xl` for primary containers and line-item rows, `rounded-xl` for card/list wrapper shells, `rounded-lg` for standalone buttons/inputs, `rounded-full` for pills (chips, avatars, toggle segments). Keep this 4-tier scale as-is across new POS work — don't introduce a 5th radius value or swap `rounded-lg` buttons to `rounded-xl` without checking with the team, since the 3 non-pill tiers are already load-bearing across 6 shipped tickets.
-- **Touch targets**: `h-11` is the default interactive control height (primary inputs, CTA buttons) and meets the 44pt touch-target guideline. `h-9` (36px) is used for icon buttons/steppers/avatars and is *below* the 44pt guideline — this is an accepted trade-off for dense, secondary actions with adequate spacing between them, not an oversight; don't "fix" it in isolation without confirming with the team, since widening it is a layout-affecting change across every row that uses it. `h-14`/`h-20` are reserved for the PIN pad's oversized digit buttons — don't reuse these sizes for regular controls.
+- **Touch targets**: `h-11` is the default interactive control height (primary inputs, CTA buttons) and meets the 44pt touch-target guideline. `h-9` (36px) is used for icon buttons/steppers/avatars and is _below_ the 44pt guideline — this is an accepted trade-off for dense, secondary actions with adequate spacing between them, not an oversight; don't "fix" it in isolation without confirming with the team, since widening it is a layout-affecting change across every row that uses it. `h-14`/`h-20` are reserved for the PIN pad's oversized digit buttons — don't reuse these sizes for regular controls.
 - **Spacing**: `p-3`/`p-4` for card padding, `gap-2`/`gap-3` between elements. Chips use two sizes by convention — larger touch-friendly (`px-3.5 py-2`) and compact (`px-2.5 py-1`) — pick based on whether the chip is a primary tap target or a secondary/meta tag, not arbitrarily.
 - **Font scale**: `text-sm font-bold` for row labels/prices, `text-xs` for secondary labels, `text-[10px]`/`text-[11px]` for uppercase micro-labels/meta, `text-2xl font-black` for PIN-pad digits. The bracket (arbitrary) values are a known inconsistency versus Tailwind's token philosophy — acceptable to keep matching them for now, but if `pnpm lint:tokens` gains support for a named micro-label scale, prefer that over adding more arbitrary bracket sizes.
 - **Page title/description** (2026-08-10, matched to `BookingHubView.tsx`'s AI Hub page, the app's heaviest-weight page-header treatment): every `pos/` view's `<h1>` is `text-2xl font-bold leading-tight text-nexoraText` (was `text-base font-semibold`) and its description `<p>` is `text-sm font-medium text-nexoraMuted` (was `text-xs` with no weight class). Applies to `PosFrontDeskView.tsx`, `PosCategoriesView.tsx`, `PosGeneralSettingsView.tsx`, `PosProductsView.tsx`, `PosRolesView.tsx`, `PosServicesView.tsx`, `PosStaffProfileView.tsx`, `PosOrderWorkspace.tsx`. `PhoneCheckInStep.tsx`'s `text-xl font-black` step-heading is a different, already-heavier pattern for a full-screen step flow — left as-is, not part of this alignment.
