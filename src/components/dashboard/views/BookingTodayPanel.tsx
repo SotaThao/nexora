@@ -23,6 +23,7 @@ import {
   MerchantVoiceErrorCode,
   MerchantVoiceLeadStatus,
   MerchantVoiceStaffStatus,
+  type BookingDisplayStatus,
   type MerchantVoiceBookingDto,
 } from '../../../data/repositories/merchantVoice'
 import { getApiErrorCode } from '../../../types/domain'
@@ -80,6 +81,9 @@ import {
   BookingAppointmentPanelState,
   BookingTodayLayout,
   BookingTodayViewMode,
+  bookingStatusLabelKey,
+  canMutateBookingStatus,
+  getBookingStatusMeta,
 } from './bookingTodayConstants'
 import { toUtcBookingSlot } from '../../../data/repositories/publicVoiceBooking'
 import {
@@ -109,7 +113,7 @@ const SOURCE_KEY_MAP = BOOKING_UI_SOURCE_I18N_KEY
 
 const STATUS_FILTER_ORDER = BOOKING_STATUS_FILTER_ORDER
 
-type BookingStatus = BookingUiStatus
+type BookingStatus = BookingDisplayStatus
 type BookingSource = BookingUiSource
 type SearchField = BookingUiSearchField
 type StatusFilter = BookingUiStatus | typeof BOOKING_HUB_STATUS_FILTER_ALL
@@ -319,11 +323,11 @@ function toBookingItem(
 }
 
 function rowClassForStatus(status: BookingStatus) {
-  return BOOKING_STATUS_META[status].rowClass
+  return getBookingStatusMeta(status).rowClass
 }
 
 function statusBadgeClass(status: BookingStatus) {
-  return BOOKING_STATUS_META[status].badgeClass
+  return getBookingStatusMeta(status).badgeClass
 }
 
 function getInitials(name: string) {
@@ -490,7 +494,7 @@ function BookingActions({
     </button>
   ) : null
 
-  if (booking.status === BookingUiStatus.Done || booking.status === BookingUiStatus.NoShow) {
+  if (!canMutateBookingStatus(booking.status)) {
     if (!viewBtn) return null
     return <div className="booking-actions">{viewBtn}</div>
   }
@@ -1021,8 +1025,10 @@ export default function BookingTodayPanel({
     setSearchField(nextField)
   }
 
-  const statusLabel = (status: BookingStatus) =>
-    t(`${TK}.today.${BOOKING_STATUS_META[status].labelKey}`)
+  const statusLabel = (status: BookingStatus) => {
+    const labelKey = bookingStatusLabelKey(status)
+    return labelKey ? t(`${TK}.today.${labelKey}`) : status
+  }
 
   const calendarBookings = useMemo(() => {
     const mapped = dateScopedBookings.map((booking) => ({
@@ -1031,7 +1037,7 @@ export default function BookingTodayPanel({
       tech: booking.tech,
       date: booking.date,
       services: booking.services,
-      statusLabel: t(`${TK}.today.${BOOKING_STATUS_META[booking.status].labelKey}`),
+      statusLabel: statusLabel(booking.status),
       startAtUtc: booking.startAtUtc,
       endAtUtc: booking.endAtUtc,
     }))
