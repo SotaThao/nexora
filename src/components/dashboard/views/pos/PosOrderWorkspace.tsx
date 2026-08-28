@@ -1708,12 +1708,6 @@ export default function PosOrderWorkspace({
                       <dt className="text-nexoraMuted">{t('components.dashboard.views.pos.PosOrderWorkspace.summarySalesTax')}</dt>
                       <dd className="font-semibold text-nexoraText">${order.salesTaxAmount.toFixed(2)}</dd>
                     </div>
-		    {/* Charged on the discounted service subtotal, so it belongs after Discount —
-                        without it the line prices above cannot be reconciled with Total. */}
-                    <div className="flex justify-between">
-                      <dt className="text-nexoraMuted">{t('components.dashboard.views.pos.PosOrderWorkspace.summarySalesTax')}</dt>
-                      <dd className="font-semibold text-nexoraText">${order.salesTaxAmount.toFixed(2)}</dd>
-                    </div>
                     <div className="flex justify-between border-t border-nexoraBorder pt-1.5">
                       <dt className="font-black uppercase text-nexoraText">
                         {t('components.dashboard.views.pos.PosOrderWorkspace.summaryTotal')}
