@@ -124,6 +124,9 @@ const StaffClockScan = lazyWithRetry(
 const StaffFrontDesk = lazyWithRetry(
   () => import("../components/staff-dashboard/views/StaffFrontDesk"),
 );
+const StaffWorkOrders = lazyWithRetry(
+  () => import("../components/staff-dashboard/work-orders/StaffWorkOrders"),
+);
 const ForgotPassword = lazyWithRetry(
   () => import("../components/ForgotPassword"),
 );
@@ -452,6 +455,7 @@ export default function AppRouter() {
             <Route path="salons" element={<StaffMySalons />} />
             <Route path="salons/report" element={<StaffSalonReport />} />
             <Route path="salons/:businessId/front-desk" element={<StaffFrontDesk />} />
+            <Route path="work-orders/:salonId?/:ticketId?" element={<StaffWorkOrders />} />
             {/* Landing page for the rotating clock-in QR — salon id and token arrive as ?b=&t= */}
             <Route path="clock-scan" element={<StaffClockScan />} />
             <Route path="profile" element={<StaffProfile />} />
