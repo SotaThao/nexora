@@ -39,6 +39,7 @@ import {
   useStartOrderService,
 } from '../../../../data/hooks/usePosOrders'
 import { useCheckInTechnicians } from '../../../../data/hooks/usePosCheckIn'
+import { SHOW_SERVICE_ADD_ONS } from '../../../../constants/posFeatureVisibility'
 import { PosOrderStatus } from '../../../../constants/posOrderStatus'
 import { isLineBusySurface, TicketBusySurface } from '../../../../constants/posTicketAction'
 import { formatUsdAmount } from '../../../../utils/currencyInput'
@@ -932,23 +933,10 @@ export default function PosOrderWorkspace({
   // dropped them with the one-page redesign, and this was the last surface.
   const catalogPanel = (
           <div className="nexora-card space-y-3 p-4">
-            {/* Deliberately outside CategoryGroupedCatalogPicker: that component is shared with the
-                Services/Products/Categories screens, none of which sell an off-menu service. */}
-            <div className="flex items-center justify-between gap-3 border-b border-nexoraBorder pb-2">
+            <div className="border-b border-nexoraBorder pb-2">
               <h3 className="text-xs font-black uppercase tracking-wider text-nexoraMuted">
                 {t('components.dashboard.views.pos.PosOrderWorkspace.tabServices')}
               </h3>
-              {canEditLines ? (
-                <button
-                  type="button"
-                  data-testid="add-custom-service"
-                  onClick={() => setCustomServiceTarget({})}
-                  disabled={isBusy}
-                  className="h-7 shrink-0 rounded-lg border border-nexoraBrand bg-nexoraBrandSoft/50 px-3 text-[11px] font-bold text-nexoraBrandDark transition-colors hover:bg-nexoraBrandSoft disabled:cursor-not-allowed disabled:opacity-60"
-                >
-                  {t('components.dashboard.views.pos.PosOrderWorkspace.addCustomServiceButton')}
-                </button>
-              ) : null}
             </div>
 
             <CategoryGroupedCatalogPicker
@@ -975,9 +963,22 @@ export default function PosOrderWorkspace({
               aria-label={t('components.dashboard.views.pos.PosOrderWorkspace.orderDetailTitle')}
               className="space-y-3 rounded-xl border border-nexoraBorder bg-nexoraSurface p-4"
             >
-              <h3 className="text-[10px] font-black uppercase tracking-wider text-nexoraMuted">
-                {t('components.dashboard.views.pos.PosOrderWorkspace.orderDetailTitle')}
-              </h3>
+              <div className="flex items-center justify-between gap-3">
+                <h3 className="text-[10px] font-black uppercase tracking-wider text-nexoraMuted">
+                  {t('components.dashboard.views.pos.PosOrderWorkspace.orderDetailTitle')}
+                </h3>
+                {canEditLines ? (
+                  <button
+                    type="button"
+                    data-testid="add-custom-service"
+                    onClick={() => setCustomServiceTarget({})}
+                    disabled={isBusy}
+                    className="h-7 shrink-0 rounded-lg border border-nexoraBrand bg-nexoraBrandSoft/50 px-3 text-[11px] font-bold text-nexoraBrandDark transition-colors hover:bg-nexoraBrandSoft disabled:cursor-not-allowed disabled:opacity-60"
+                  >
+                    {t('components.dashboard.views.pos.PosOrderWorkspace.addCustomServiceButton')}
+                  </button>
+                ) : null}
+              </div>
 
               {visibleLines.length === 0 && !showAddLinePlaceholder ? (
                 <p className="text-[11px] text-nexoraMuted">
@@ -1055,7 +1056,11 @@ export default function PosOrderWorkspace({
                                   ) : null}
                                   {/* Blocked once the service is marked done — the backend treats an
                                       extra on finished work as a correction, not an upsell. */}
-                                  {canEditLines && line.existingId && !line.completedAt && !isCustomLine ? (
+                                  {SHOW_SERVICE_ADD_ONS &&
+                                  canEditLines &&
+                                  line.existingId &&
+                                  !line.completedAt &&
+                                  !isCustomLine ? (
                                     <button
                                       type="button"
                                       data-testid={`add-add-on-${line.key}`}
