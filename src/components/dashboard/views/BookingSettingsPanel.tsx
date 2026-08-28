@@ -2789,18 +2789,16 @@ export default function BookingSettingsPanel() {
         clearInlineServiceDraft(service.id);
       }
 
+      // description/tags/status are intentionally omitted below (not sent as null/[]/"Active")
+      // — this endpoint is the shared catalog POS also writes to, and Booking Hub's UI has no
+      // fields for them, so explicit blank values would wipe POS-managed data on every save.
       const createBatchItems: SaveServiceBatchItem[] = newServiceDraftsToSave.map(
         (draft) => ({
           name: draft.name.trim(),
-          price: draft.price.trim() ? Number(draft.price) : 0,
-          durationMinutes: clampMerchantVoiceServiceDurationMinutes(
-            draft.duration.trim() ? Number(draft.duration) : 1,
-          ),
-          description: null,
+          price: Number(draft.price),
+          durationMinutes: clampMerchantVoiceServiceDurationMinutes(Number(draft.duration)),
           icon: null,
           categoryIds: categoryIdsPayloadForApi([draft.categoryId]),
-          tags: [],
-          status: "Active",
         }),
       );
       const updateBatchItems: SaveServiceBatchItem[] = persistedDirtyServices.map(
@@ -2809,11 +2807,8 @@ export default function BookingSettingsPanel() {
           name: draft.name.trim(),
           price: Number(draft.price),
           durationMinutes: clampMerchantVoiceServiceDurationMinutes(Number(draft.duration)),
-          description: null,
           icon: service.icon?.trim() || null,
           categoryIds: categoryIdsPayloadForApi(service.categoryIds),
-          tags: [],
-          status: "Active",
         }),
       );
       const batchItems = [...createBatchItems, ...updateBatchItems];

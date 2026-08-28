@@ -52,15 +52,9 @@ export function validateNewServiceDrafts(
 
     if (!draft.name.trim()) {
       errors[draft.id] = messages.nameRequired
-    } else if (
-      draft.price.trim() &&
-      (!Number.isFinite(price) || price < 0)
-    ) {
+    } else if (!draft.price.trim() || !Number.isFinite(price) || price < 0) {
       errors[draft.id] = messages.priceInvalid
-    } else if (
-      draft.duration.trim() &&
-      (!Number.isFinite(duration) || duration <= 0)
-    ) {
+    } else if (!draft.duration.trim() || !Number.isFinite(duration) || duration <= 0) {
       errors[draft.id] = messages.durationInvalid
     }
 

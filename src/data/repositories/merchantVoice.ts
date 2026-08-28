@@ -551,7 +551,12 @@ export interface UpdateMerchantVoiceServiceRequest {
   categoryIds?: string[] | null
 }
 
-/** Item for POST {SHARED_CATALOG_BASE}/services/batch — omit `id` to create, set it to update. */
+/**
+ * Item for POST {SHARED_CATALOG_BASE}/services/batch — omit `id` to create, set it to update.
+ * `description`/`tags`/`status` are optional and, like `photoUrl`, left unspecified whenever
+ * the caller doesn't own that field's current value — this endpoint is the shared catalog
+ * POS also writes to, so omitting means "leave as-is" instead of clobbering POS-managed data.
+ */
 export interface SaveServiceBatchItem {
   id?: string | null
   name: string
@@ -561,8 +566,8 @@ export interface SaveServiceBatchItem {
   icon?: string | null
   photoUrl?: string | null
   categoryIds: string[]
-  tags: string[]
-  status: 'Active' | 'Inactive'
+  tags?: string[]
+  status?: 'Active' | 'Inactive'
 }
 
 export interface SaveServiceBatchResultItem {
