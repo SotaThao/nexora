@@ -1,5 +1,6 @@
 // SiteEditorView — Single-Page Unified Merchant Site Studio (US-107)
 import React, { useEffect, useMemo, useState } from 'react'
+import { createPortal } from 'react-dom'
 import {
   Sparkles,
   Layout,
@@ -59,15 +60,23 @@ export default function SiteEditorView() {
   const [isPreviewOpen, setIsPreviewOpen] = useState(false)
   const [previewDevice, setPreviewDevice] = useState<'desktop' | 'mobile'>('desktop')
 
-  // Close preview modal on Escape key
+  // Body scroll lock and close preview modal on Escape key
   React.useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.key === 'Escape' && isPreviewOpen) {
         setIsPreviewOpen(false)
       }
     }
-    window.addEventListener('keydown', handleKeyDown)
-    return () => window.removeEventListener('keydown', handleKeyDown)
+    if (isPreviewOpen) {
+      document.body.style.overflow = 'hidden'
+      window.addEventListener('keydown', handleKeyDown)
+    } else {
+      document.body.style.overflow = ''
+    }
+    return () => {
+      document.body.style.overflow = ''
+      window.removeEventListener('keydown', handleKeyDown)
+    }
   }, [isPreviewOpen])
 
   const { data: merchantSetup, isLoading: isMerchantSetupLoading } = useMerchantSetup()
@@ -415,10 +424,10 @@ export default function SiteEditorView() {
       />
 
       {/* FULL-SCREEN LIVE PREVIEW MODAL */}
-      {isPreviewOpen && (
-        <div className="fixed inset-0 z-50 bg-black/85 backdrop-blur-md flex flex-col animate-in fade-in duration-200">
+      {isPreviewOpen && typeof document !== 'undefined' && createPortal(
+        <div className="fixed inset-0 top-0 left-0 right-0 bottom-0 w-screen h-screen z-[99999] bg-black/90 backdrop-blur-md flex flex-col animate-in fade-in duration-200 m-0 p-0">
           {/* Modal Header */}
-          <div className="p-4 bg-slate-900 border-b border-slate-800 flex items-center justify-between text-white shrink-0 shadow-lg">
+          <div className="p-4 bg-slate-900 border-b border-slate-800 flex items-center justify-between text-white shrink-0 shadow-lg z-10">
             <div className="flex items-center gap-4">
               <span className="text-sm font-bold text-amber-400 flex items-center gap-2">
                 <Eye className="w-4 h-4" />
@@ -430,7 +439,7 @@ export default function SiteEditorView() {
                 <button
                   type="button"
                   onClick={() => setPreviewDevice('desktop')}
-                  className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all ${
+                  className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all cursor-pointer ${
                     previewDevice === 'desktop' ? 'bg-indigo-600 text-white shadow' : 'text-slate-400 hover:text-white'
                   }`}
                 >
@@ -440,7 +449,7 @@ export default function SiteEditorView() {
                 <button
                   type="button"
                   onClick={() => setPreviewDevice('mobile')}
-                  className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all ${
+                  className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all cursor-pointer ${
                     previewDevice === 'mobile' ? 'bg-indigo-600 text-white shadow' : 'text-slate-400 hover:text-white'
                   }`}
                 >
@@ -455,7 +464,7 @@ export default function SiteEditorView() {
                 href={publicBookingUrl || undefined}
                 target="_blank"
                 rel="noreferrer"
-                className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-semibold border border-slate-700 transition-colors shadow-sm"
+                className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-semibold border border-slate-700 transition-colors shadow-sm cursor-pointer"
               >
                 <span>Mở Tab Mới</span>
                 <ExternalLink className="w-3.5 h-3.5" />
@@ -464,7 +473,7 @@ export default function SiteEditorView() {
               <button
                 type="button"
                 onClick={() => setIsPreviewOpen(false)}
-                className="p-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-400 hover:text-white transition-colors"
+                className="p-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-400 hover:text-white transition-colors cursor-pointer"
               >
                 <X className="w-5 h-5" />
               </button>
@@ -527,7 +536,8 @@ export default function SiteEditorView() {
               </div>
             )}
           </div>
-        </div>
+        </div>,
+        document.body
       )}
     </div>
   )

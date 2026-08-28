@@ -1,4 +1,4 @@
-﻿// TemplateBuilderPreviewPage — Direct Standalone Access for Vercel Demo (US-107)
+// TemplateBuilderPreviewPage — Direct Standalone Access for Vercel Demo (US-107)
 import React from 'react'
 import { Link } from 'react-router-dom'
 import {
@@ -15,7 +15,7 @@ export default function TemplateBuilderPreviewPage() {
   return (
     <div className="min-h-screen bg-slate-950 text-slate-100 flex flex-col font-sans">
       {/* Top Demo Navigation Bar */}
-      <header className="sticky top-0 z-50 bg-slate-900/90 backdrop-blur-md border-b border-slate-800 px-4 py-3">
+      <header className="sticky top-0 z-40 bg-slate-900/90 backdrop-blur-md border-b border-slate-800 px-4 py-3">
         <div className="max-w-7xl mx-auto flex flex-wrap items-center justify-between gap-3">
           {/* Logo & Badge */}
           <div className="flex items-center gap-3">
