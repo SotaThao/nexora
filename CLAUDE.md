@@ -14,6 +14,7 @@ Treat this as an engineering playbook, not a product brief.
 - Verify the path you changed with the smallest meaningful test first, then broaden when the blast radius is larger.
 - No `console.*` in app code. Use the project logger where runtime logging is needed.
 - Do not commit unless explicitly asked.
+- When committing, stage only the actual code changes. Never include spec/test documentation (`user-story/*.md`, `openspec/changes/**`, test plans/TC docs) in the same commit, even if such a doc was created or updated as part of the task — leave those files unstaged/uncommitted unless the user explicitly asks to commit them too.
 - **No hardcoded backend enum/status strings.** Any string literal that mirrors a backend enum (`PosOrderStatus`, `TipStatus`, etc. — e.g. `'Waiting'`, `'InService'`, `'Completed'`, `'Cancelled'`, `'Pending'`, `'Confirmed'`) must be compared/assigned via a shared TS `enum`/const object in `src/constants/`, never as an inline string literal in a component, hook, or repository. Check `src/constants/` for an existing constant (e.g. `posOrderStatus.ts`, `tipStatus.ts`) before adding a new comparison — add a new value to the existing enum rather than a parallel literal. When a repository maps a raw API string to a discriminated union type, that mapping is the one allowed place to reference the literal.
 
 ## Follow-Up Note (2026-08-05)

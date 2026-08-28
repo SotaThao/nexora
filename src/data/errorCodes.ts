@@ -163,6 +163,20 @@ export const errorCodeToI18nKey = {
   [CatalogErrorCode.ServiceInUse]: 'errors.catalog_service_in_use',
   [CatalogErrorCode.CategoryInUse]: 'errors.catalog_category_in_use',
 
+  // Shared Catalog — Services batch save (POST services/batch)
+  [CatalogErrorCode.ServiceBatchItemsRequired]: 'errors.catalog_service_batch_items_required',
+  [CatalogErrorCode.ServiceBatchTooManyItems]: 'errors.catalog_service_batch_too_many_items',
+  [CatalogErrorCode.ServiceBatchNameRequired]: 'errors.pos_service_name_required',
+  [CatalogErrorCode.ServiceBatchNameTooLong]: 'errors.pos_service_name_too_long',
+  [CatalogErrorCode.ServiceBatchPriceInvalid]: 'errors.pos_service_price_invalid',
+  [CatalogErrorCode.ServiceBatchDurationInvalid]: 'errors.pos_service_duration_invalid',
+  [CatalogErrorCode.ServiceBatchDescriptionTooLong]: 'errors.pos_service_description_too_long',
+  [CatalogErrorCode.ServiceBatchIconTooLong]: 'errors.catalog_service_icon_too_long',
+  [CatalogErrorCode.ServiceBatchTagTooLong]: 'errors.pos_service_tag_too_long',
+  [CatalogErrorCode.ServiceBatchCategoryInvalid]: 'errors.pos_service_category_invalid',
+  [CatalogErrorCode.ServiceBatchInvalidId]: 'errors.catalog_service_batch_invalid_id',
+  [CatalogErrorCode.ServiceBatchDuplicateId]: 'errors.catalog_service_batch_duplicate_id',
+
   // POS Owner Setup — Products (US-018)
   POS_PRODUCT_NOT_FOUND: 'errors.pos_product_not_found',
   POS_PRODUCT_NAME_REQUIRED: 'errors.pos_product_name_required',

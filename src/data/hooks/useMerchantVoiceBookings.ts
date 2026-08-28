@@ -17,6 +17,8 @@ import {
   type UpdateMerchantVoiceServiceCategoryRequest,
   type CreateMerchantVoiceServiceRequest,
   type UpdateMerchantVoiceServiceRequest,
+  type SaveServiceBatchItem,
+  type SaveServicesBatchResult,
   MerchantVoiceLeadStatus,
   MerchantVoiceStaffStatus,
   type CreateMerchantVoiceBookingRequest,
@@ -359,6 +361,17 @@ export function useUpdateMerchantVoiceService() {
       queryClient.invalidateQueries({ queryKey: qk.merchantVoiceServices() })
       queryClient.invalidateQueries({ queryKey: qk.merchantVoiceServiceCategories() })
     },
+  })
+}
+
+// Saves multiple services in one atomic JSON request instead of one multipart
+// request per item — used by the "Save settings" bulk-draft-rows flow. No onSuccess
+// invalidation here: the caller always calls refreshServicesCatalog() right after,
+// which already refetches + invalidates the same 2 query keys — invalidating here too
+// would just trigger a redundant extra services/categories GET round-trip.
+export function useSaveServicesBatch() {
+  return useMutation<SaveServicesBatchResult, Error, SaveServiceBatchItem[]>({
+    mutationFn: (items) => merchantVoiceRepository.saveServicesBatch(items),
   })
 }
 

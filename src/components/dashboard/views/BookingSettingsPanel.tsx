@@ -10,6 +10,7 @@ import {
   useMerchantVoiceConfig,
   useMerchantVoiceServiceCategories,
   useMerchantVoiceServices,
+  useSaveServicesBatch,
   useUpdateMerchantVoiceConfig,
   useUpdateMerchantVoiceService,
   useUpdateMerchantVoiceServiceCategory,
@@ -29,6 +30,7 @@ import {
   normalizeMerchantVoiceDayOfWeek,
   OTHER_SERVICES_CATEGORY_ID,
   type MerchantVoiceServiceCategoryDto,
+  type SaveServiceBatchItem,
 } from "../../../data/repositories/merchantVoice";
 import { merchantsRepository } from "../../../data/repositories/merchants";
 import { qk } from "../../../data/queryKeys";
@@ -1026,6 +1028,7 @@ export default function BookingSettingsPanel() {
   const createServiceMutation = useCreateMerchantVoiceService();
   const updateServiceMutation = useUpdateMerchantVoiceService();
   const deleteServiceMutation = useDeleteMerchantVoiceService();
+  const saveServicesBatchMutation = useSaveServicesBatch();
   const [collapsedCards, setCollapsedCards] = useState<Record<string, boolean>>(
     {},
   );
@@ -1551,24 +1554,37 @@ export default function BookingSettingsPanel() {
   const refreshServicesCatalog = async () => {
     const refreshed = await merchantVoiceRepository.getServiceCategories();
     const next = flattenCategoriesToUi(refreshed);
-    const mergedServices =
-      next.services.length > 0
-        ? next.services
-        : mergeFlatServicesIntoCategories(
-            next.categories,
-            await merchantVoiceRepository.getServices(),
-          );
+    // Flat DTO list matching what GET .../services returns — either read straight off
+    // the (already-fetched) nested categories response, or fetched separately below
+    // when this merchant's categories response doesn't nest services.
+    let flatServiceDtos;
+    let mergedServices;
+    if (next.services.length > 0) {
+      const byId = new Map(
+        refreshed
+          .flatMap((category) => category.services)
+          .filter((service) => service.id)
+          .map((service) => [service.id, service] as const),
+      );
+      flatServiceDtos = Array.from(byId.values());
+      mergedServices = next.services;
+    } else {
+      flatServiceDtos = await merchantVoiceRepository.getServices();
+      mergedServices = mergeFlatServicesIntoCategories(
+        next.categories,
+        flatServiceDtos,
+      );
+    }
     setCategories((prev) => unionSettingsCategories(prev, next.categories));
     setServices(mergedServices);
     servicesRef.current = mergedServices;
     rememberServiceSnapshot(mergedServices);
     servicesDirtyRef.current = false;
-    await Promise.all([
-      queryClient.invalidateQueries({ queryKey: qk.merchantVoiceServices() }),
-      queryClient.invalidateQueries({
-        queryKey: qk.merchantVoiceServiceCategories(),
-      }),
-    ]);
+    // Seed the query cache with the data already fetched above instead of invalidating —
+    // invalidating would trigger a second, redundant GET for the same categories/services,
+    // since these hooks' queryFn calls the exact same repository functions as above.
+    queryClient.setQueryData(qk.merchantVoiceServiceCategories(), refreshed);
+    queryClient.setQueryData(qk.merchantVoiceServices(), flatServiceDtos);
     return mergedServices;
   };
 
@@ -2010,9 +2026,6 @@ export default function BookingSettingsPanel() {
     return false;
   };
 
-  const isInlineServiceDirty = (service: ServiceRow): boolean =>
-    isInlineServiceDraftDirty(service, resolveInlineServiceDraft(service));
-
   const clearInlineServiceDraft = (serviceId: string) => {
     setInlineServiceDrafts((prev) => {
       if (!prev[serviceId]) return prev;
@@ -2020,84 +2033,6 @@ export default function BookingSettingsPanel() {
       delete next[serviceId];
       return next;
     });
-  };
-
-  const saveInlineService = async (serviceId: string) => {
-    const service = servicesRef.current.find((row) => row.id === serviceId);
-    if (!service || pendingServiceActionId === serviceId) return;
-
-    if (!isInlineServiceDirty(service)) {
-      clearInlineServiceDraft(serviceId);
-      return;
-    }
-
-    const draft = resolveInlineServiceDraft(service);
-    const name = draft.name.trim();
-    const price = Number(draft.price);
-    const duration = Number(draft.duration);
-
-    if (!name) {
-      setInlineServiceErrors((prev) => ({
-        ...prev,
-        [serviceId]: t(`${TK}.serviceModalNameRequired`),
-      }));
-      return;
-    }
-    if (!Number.isFinite(price) || price < 0) {
-      setInlineServiceErrors((prev) => ({
-        ...prev,
-        [serviceId]: t(`${TK}.serviceModalPriceInvalid`),
-      }));
-      return;
-    }
-    if (!Number.isFinite(duration) || duration <= 0) {
-      setInlineServiceErrors((prev) => ({
-        ...prev,
-        [serviceId]: t(`${TK}.serviceModalDurationInvalid`),
-      }));
-      return;
-    }
-
-    const nextRow: ServiceRow = {
-      ...service,
-      name,
-      price,
-      duration: clampMerchantVoiceServiceDurationMinutes(duration),
-    };
-
-    setPendingServiceActionId(serviceId);
-    setInlineServiceErrors((prev) => {
-      if (!prev[serviceId]) return prev;
-      const next = { ...prev };
-      delete next[serviceId];
-      return next;
-    });
-
-    try {
-      if (!isPersistedServiceId(serviceId)) {
-        setServices((prev) =>
-          prev.map((row) => (row.id === serviceId ? nextRow : row)),
-        );
-        servicesRef.current = servicesRef.current.map((row) =>
-          row.id === serviceId ? nextRow : row,
-        );
-        serviceSnapshotRef.current.set(serviceId, { ...nextRow });
-      } else {
-        await updateServiceMutation.mutateAsync({
-          id: serviceId,
-          body: buildServiceApiPayload(nextRow),
-        });
-        await refreshServicesCatalog();
-      }
-      clearInlineServiceDraft(serviceId);
-      showToast(t(`${TK}.serviceUpdated`, { name }), "success");
-    } catch (error) {
-      const message = t(getErrorI18nKey(getApiErrorCode(error)));
-      setInlineServiceErrors((prev) => ({ ...prev, [serviceId]: message }));
-      showToast(message, "error");
-    } finally {
-      setPendingServiceActionId(null);
-    }
   };
 
   const openCategoryModal = () => {
@@ -2617,20 +2552,6 @@ export default function BookingSettingsPanel() {
         durationInvalid: t(`${TK}.serviceModalDurationInvalid`),
       },
     );
-    setNewServiceDraftErrors(nextNewServiceDraftErrors);
-    if (Object.keys(nextNewServiceDraftErrors).length > 0) {
-      const invalidCategoryIds = new Set(
-        newServiceDrafts
-          .filter((draft) => nextNewServiceDraftErrors[draft.id])
-          .map((draft) => draft.categoryId),
-      );
-      setOpenServiceCategoryIds((prev) =>
-        new Set([...prev, ...invalidCategoryIds]),
-      );
-      showToast(Object.values(nextNewServiceDraftErrors)[0], "error");
-      return;
-    }
-
     const nextErrors: typeof formErrors = {};
     if (!salonName.trim()) nextErrors.salonName = requiredMessage;
     // Salon phone + booking notify phone are optional; validate format only when entered.
@@ -2704,10 +2625,71 @@ export default function BookingSettingsPanel() {
       return;
     }
 
-    const newServiceDraftsToSave = [...newServiceDrafts];
+    // Past this point the save is definitely going through — only now do we discard
+    // invalid/unfinished draft rows and validate inline-edited services. Doing this any
+    // earlier would delete draft rows even when an unrelated field above blocks the save.
+    for (const draft of newServiceDrafts) {
+      if (nextNewServiceDraftErrors[draft.id]) {
+        dispatchNewServiceDraft({ type: "remove", id: draft.id });
+      }
+    }
+    setNewServiceDraftErrors({});
+
+    // Existing services edited inline (no longer auto-saved on blur) are validated the
+    // same way — dirty rows that pass are saved in "Save settings"; invalid ones are
+    // skipped and keep showing their inline error.
+    const dirtyInlineServices = services
+      .map((service) => ({ service, draft: resolveInlineServiceDraft(service) }))
+      .filter(({ service, draft }) => isInlineServiceDraftDirty(service, draft));
+    const nextInlineServiceErrors: Record<string, string> = {};
+    const validDirtyInlineServices: Array<{
+      service: ServiceRow;
+      draft: InlineServiceDraft;
+    }> = [];
+    for (const entry of dirtyInlineServices) {
+      const name = entry.draft.name.trim();
+      const price = Number(entry.draft.price);
+      const duration = Number(entry.draft.duration);
+      if (!name) {
+        nextInlineServiceErrors[entry.service.id] = t(
+          `${TK}.serviceModalNameRequired`,
+        );
+        continue;
+      }
+      if (!Number.isFinite(price) || price < 0) {
+        nextInlineServiceErrors[entry.service.id] = t(
+          `${TK}.serviceModalPriceInvalid`,
+        );
+        continue;
+      }
+      if (!Number.isFinite(duration) || duration <= 0) {
+        nextInlineServiceErrors[entry.service.id] = t(
+          `${TK}.serviceModalDurationInvalid`,
+        );
+        continue;
+      }
+      validDirtyInlineServices.push(entry);
+    }
+    setInlineServiceErrors(nextInlineServiceErrors);
+    const persistedDirtyServices = validDirtyInlineServices.filter(({ service }) =>
+      isPersistedServiceId(service.id),
+    );
+    const localOnlyDirtyServices = validDirtyInlineServices.filter(
+      ({ service }) => !isPersistedServiceId(service.id),
+    );
+
+    // Only rows that pass validation are sent — an unfinished/invalid draft row is
+    // simply skipped, not required before "Save settings" can run.
+    const newServiceDraftsToSave = newServiceDrafts.filter(
+      (draft) => !nextNewServiceDraftErrors[draft.id],
+    );
     const createdNewServiceDraftIds: string[] = [];
-    let activeNewServiceDraftId: string | null = null;
-    if (newServiceDraftsToSave.length > 0) {
+    const updatedServiceIds: string[] = [];
+    if (
+      newServiceDraftsToSave.length > 0 ||
+      persistedDirtyServices.length > 0 ||
+      localOnlyDirtyServices.length > 0
+    ) {
       setIsSavingService(true);
     }
 
@@ -2788,27 +2770,77 @@ export default function BookingSettingsPanel() {
 
       await Promise.all(savePromises);
 
-      for (const draft of newServiceDraftsToSave) {
-        activeNewServiceDraftId = draft.id;
-        await createServiceMutation.mutateAsync({
+      // Local-only rows (not yet persisted) never went through the API — just commit
+      // their edits to local state, same as the old per-row inline save did.
+      for (const { service, draft } of localOnlyDirtyServices) {
+        const nextRow: ServiceRow = {
+          ...service,
+          name: draft.name.trim(),
+          price: Number(draft.price),
+          duration: clampMerchantVoiceServiceDurationMinutes(Number(draft.duration)),
+        };
+        setServices((prev) =>
+          prev.map((row) => (row.id === service.id ? nextRow : row)),
+        );
+        servicesRef.current = servicesRef.current.map((row) =>
+          row.id === service.id ? nextRow : row,
+        );
+        serviceSnapshotRef.current.set(service.id, { ...nextRow });
+        clearInlineServiceDraft(service.id);
+      }
+
+      const createBatchItems: SaveServiceBatchItem[] = newServiceDraftsToSave.map(
+        (draft) => ({
           name: draft.name.trim(),
           price: draft.price.trim() ? Number(draft.price) : 0,
           durationMinutes: clampMerchantVoiceServiceDurationMinutes(
             draft.duration.trim() ? Number(draft.duration) : 1,
           ),
-          note: null,
+          description: null,
           icon: null,
-          isActive: true,
           categoryIds: categoryIdsPayloadForApi([draft.categoryId]),
-        });
-        createdNewServiceDraftIds.push(draft.id);
-        dispatchNewServiceDraft({ type: "remove", id: draft.id });
-        activeNewServiceDraftId = null;
+          tags: [],
+          status: "Active",
+        }),
+      );
+      const updateBatchItems: SaveServiceBatchItem[] = persistedDirtyServices.map(
+        ({ service, draft }) => ({
+          id: service.id,
+          name: draft.name.trim(),
+          price: Number(draft.price),
+          durationMinutes: clampMerchantVoiceServiceDurationMinutes(Number(draft.duration)),
+          description: null,
+          icon: service.icon?.trim() || null,
+          categoryIds: categoryIdsPayloadForApi(service.categoryIds),
+          tags: [],
+          status: "Active",
+        }),
+      );
+      const batchItems = [...createBatchItems, ...updateBatchItems];
+
+      if (batchItems.length > 0) {
+        await saveServicesBatchMutation.mutateAsync(batchItems);
+
+        for (const draft of newServiceDraftsToSave) {
+          createdNewServiceDraftIds.push(draft.id);
+          dispatchNewServiceDraft({ type: "remove", id: draft.id });
+        }
+        for (const { service } of persistedDirtyServices) {
+          updatedServiceIds.push(service.id);
+        }
       }
 
-      if (createdNewServiceDraftIds.length > 0) {
-        setNewServiceDraftErrors({});
+      if (createdNewServiceDraftIds.length > 0 || updatedServiceIds.length > 0) {
+        // Don't reset draft/inline errors to {} here — rows that were skipped for
+        // being invalid (not part of the ids above) must keep showing their error.
         await refreshServicesCatalog();
+      }
+
+      // Clear updated services' drafts only after fresh server data has replaced the
+      // old snapshot — clearing before refetch would flash the pre-edit values for a
+      // render (the row falls back to the now-stale `service` while still refetching).
+      for (const serviceId of updatedServiceIds) {
+        clearInlineServiceDraft(serviceId);
       }
 
       await queryClient.invalidateQueries({ queryKey: qk.merchantSetup() });
@@ -2818,20 +2850,33 @@ export default function BookingSettingsPanel() {
       showToast(t(`${TK}.saveSuccess`), "success");
     } catch (error) {
       const message = t(getErrorI18nKey(getApiErrorCode(error)));
-      if (createdNewServiceDraftIds.length > 0) {
+      // createdNewServiceDraftIds/updatedServiceIds are only non-empty once the batch
+      // call itself has succeeded — a failure after that point (e.g. refreshServicesCatalog
+      // throwing) must retry the refresh and must NOT be reported as a save failure.
+      if (createdNewServiceDraftIds.length > 0 || updatedServiceIds.length > 0) {
         void refreshServicesCatalog().catch(() => undefined);
       }
-      if (activeNewServiceDraftId) {
-        const failedDraftId = activeNewServiceDraftId;
-        setNewServiceDraftErrors((prev) => ({
+      if (createdNewServiceDraftIds.length === 0 && newServiceDraftsToSave.length > 0) {
+        setNewServiceDraftErrors(
+          Object.fromEntries(newServiceDraftsToSave.map((draft) => [draft.id, message])),
+        );
+      }
+      if (updatedServiceIds.length === 0 && persistedDirtyServices.length > 0) {
+        setInlineServiceErrors((prev) => ({
           ...prev,
-          [failedDraftId]: message,
+          ...Object.fromEntries(
+            persistedDirtyServices.map(({ service }) => [service.id, message]),
+          ),
         }));
       }
       setStatus(message);
       showToast(message, "error");
     } finally {
-      if (newServiceDraftsToSave.length > 0) {
+      if (
+        newServiceDraftsToSave.length > 0 ||
+        persistedDirtyServices.length > 0 ||
+        localOnlyDirtyServices.length > 0
+      ) {
         setIsSavingService(false);
       }
     }
@@ -4063,20 +4108,7 @@ export default function BookingSettingsPanel() {
                               data-service-row-id={service.id}
                               key={`${section.id}-${service.id}`}
                             >
-                              <div
-                                className="settings-service-edit-grid"
-                                onBlur={(event) => {
-                                  const nextTarget =
-                                    event.relatedTarget as Node | null;
-                                  if (
-                                    nextTarget &&
-                                    event.currentTarget.contains(nextTarget)
-                                  ) {
-                                    return;
-                                  }
-                                  void saveInlineService(service.id);
-                                }}
-                              >
+                              <div className="settings-service-edit-grid">
                                 <span
                                   className={`settings-service-visual ${service.tone}`}
                                   aria-hidden="true"
@@ -4091,7 +4123,7 @@ export default function BookingSettingsPanel() {
                                     `${TK}.placeholderServiceName`,
                                   )}
                                   aria-label={t(`${TK}.serviceNameAria`)}
-                                  disabled={isPending}
+                                  disabled={isPending || isSavingService}
                                   onChange={(event) => {
                                     updateInlineServiceDraft(
                                       service,
@@ -4113,7 +4145,7 @@ export default function BookingSettingsPanel() {
                                       `${TK}.placeholderServicePrice`,
                                     )}
                                     aria-label={t(`${TK}.servicePriceAria`)}
-                                    disabled={isPending}
+                                    disabled={isPending || isSavingService}
                                     onChange={(event) => {
                                       updateInlineServiceDraft(
                                         service,
@@ -4138,7 +4170,7 @@ export default function BookingSettingsPanel() {
                                     aria-label={t(
                                       `${TK}.serviceDurationAria`,
                                     )}
-                                    disabled={isPending}
+                                    disabled={isPending || isSavingService}
                                     onChange={(event) => {
                                       updateInlineServiceDraft(
                                         service,
@@ -4152,28 +4184,6 @@ export default function BookingSettingsPanel() {
                                   </span>
                                 </div>
                                 <div className="settings-service-row-actions">
-                                  {isDirty ? (
-                                    <button
-                                      className="settings-service-confirm"
-                                      type="button"
-                                      aria-label={t(
-                                        `${TK}.serviceConfirmUpdateAria`,
-                                      )}
-                                      disabled={isPending || isSavingService}
-                                      onMouseDown={(event) => {
-                                        event.preventDefault();
-                                      }}
-                                      onClick={() => {
-                                        void saveInlineService(service.id);
-                                      }}
-                                    >
-                                      {isPending ? (
-                                        <SpinnerIcon className="booking-inline-spinner" />
-                                      ) : (
-                                        <CheckCircleFillIcon className="settings-service-confirm-icon" />
-                                      )}
-                                    </button>
-                                  ) : null}
                                   <button
                                     className="settings-service-edit"
                                     type="button"
