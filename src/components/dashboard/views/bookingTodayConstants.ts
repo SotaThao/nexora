@@ -1,4 +1,4 @@
-import { BookingUiSearchField, BookingUiStatus } from '../../../data/repositories/merchantVoice'
+import { BookingUiSearchField, BookingUiStatus, isBookingUiStatus } from '../../../data/repositories/merchantVoice'
 
 export enum BookingTodayViewMode {
   Table = 'table',
@@ -62,6 +62,33 @@ export const BOOKING_STATUS_META: Record<
     badgeClass: 'booking-status-noshow',
     rowClass: 'is-noshow',
   },
+  [BookingUiStatus.Cancelled]: {
+    labelKey: 'statusCancelled',
+    badgeClass: 'booking-status-cancelled',
+    rowClass: 'is-cancelled',
+  },
+}
+
+export const BOOKING_STATUS_FALLBACK_META = {
+  badgeClass: 'booking-status-unknown',
+  rowClass: 'is-unknown',
+} as const
+
+export function getBookingStatusMeta(status: string) {
+  return isBookingUiStatus(status) ? BOOKING_STATUS_META[status] : BOOKING_STATUS_FALLBACK_META
+}
+
+export function bookingStatusLabelKey(status: string): string | null {
+  return isBookingUiStatus(status) ? BOOKING_STATUS_META[status].labelKey : null
+}
+
+const BOOKING_MUTATION_STATUS = new Set<string>([
+  BookingUiStatus.New,
+  BookingUiStatus.SmsSent,
+])
+
+export function canMutateBookingStatus(status: string) {
+  return BOOKING_MUTATION_STATUS.has(status)
 }
 
 export const BOOKING_STATUS_FILTER_ORDER: BookingUiStatus[] = [
@@ -69,6 +96,7 @@ export const BOOKING_STATUS_FILTER_ORDER: BookingUiStatus[] = [
   BookingUiStatus.SmsSent,
   BookingUiStatus.Done,
   BookingUiStatus.NoShow,
+  BookingUiStatus.Cancelled,
 ]
 
 /** i18n key suffixes under `…BookingHubView.today` for keyword placeholders. */

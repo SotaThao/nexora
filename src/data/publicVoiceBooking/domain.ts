@@ -39,6 +39,7 @@ export enum VoiceLeadStatus {
   Done = 'Done',
   Confirmed = 'Confirmed',
   NoShow = 'NoShow',
+  Cancelled = 'Cancelled',
 }
 
 export const BOOKING_DAY_OF_WEEK = [
