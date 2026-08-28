@@ -2,6 +2,8 @@
 
 Tài liệu này hướng dẫn cách sử dụng, vận hành hệ thống kiểm thử tự động và bộ kiểm tra Design System (Tokens) tích hợp trong dự án **Nexora Touch**.
 
+> **Lưu ý:** Các file thực thi phía sau các lệnh dưới đây (`scripts/verify-tokens.cjs`, `scripts/run-e2e.cjs`, `.agents/skills/feature-focused-tester/scripts/detect-changes.cjs`, và toàn bộ thư mục `tests/`) đã bị chủ động untrack + thêm vào `.gitignore` từ commit `68d518ac` (2026-06-04, "ignore tests and scripts folders"). Đây là tooling cục bộ/theo máy, không nằm trong repo checkout mặc định — nếu chạy lệnh bên dưới mà báo lỗi "file not found", đó không phải lỗi checkout mà do bạn chưa có các file này cục bộ.
+
 ---
 
 ## 📌 Các Tính Năng Chính
@@ -20,7 +22,7 @@ Tài liệu này hướng dẫn cách sử dụng, vận hành hệ thống ki�
 * **Script thực thi:** `npm run test:impact`
 * **Nhiệm vụ:**
   * Dùng Git để lọc ra các tệp trong `src/` có thay đổi.
-  * Bản đồ hóa (Mapping) tệp code với tệp Unit Test tương ứng trong `tests/unit/`.
+  * Bản đồ hóa (Mapping) tệp code với tệp Unit Test tương ứng — quy ước hiện tại là test đặt cùng thư mục với source (co-located, VD: `src/components/**/*.test.tsx`, `src/data/**/*.test.ts`, xem `AGENTS.md`), cộng với `tests/unit/` nếu thư mục cục bộ (gitignored) đó tồn tại.
   * Đề xuất câu lệnh chạy test tối ưu hóa cho riêng phạm vi sửa đổi.
 
 ---
@@ -28,11 +30,11 @@ Tài liệu này hướng dẫn cách sử dụng, vận hành hệ thống ki�
 ## 🚀 Hướng Dẫn Chạy Kiểm Thử
 
 ### Cài đặt môi trường
-Trước khi chạy test, đảm bảo đã cài đặt đầy đủ các gói thư viện và trình duyệt Chromium cho E2E:
+Trước khi chạy test, đảm bảo đã cài đặt đầy đủ các gói thư viện:
 ```bash
 npm install
-npx playwright install chromium --with-deps
 ```
+E2E chạy qua `pnpm test:e2e` (`scripts/run-e2e.cjs`, cục bộ/gitignored — xem lưu ý ở đầu file); trình duyệt/công cụ cụ thể phụ thuộc vào cách script đó được cấu hình trên máy bạn.
 
 ### Lệnh chạy nhanh
 
@@ -40,9 +42,9 @@ npx playwright install chromium --with-deps
 | :--- | :--- | :--- |
 | `npm run lint:tokens` | Kiểm tra vi phạm màu/layout hardcode | Các file thay đổi trong `src/` |
 | `npm run test:impact` | Phân tích tác động và đề xuất lệnh chạy | Các file thay đổi trong `src/` |
-| `npm run test` | Chạy toàn bộ Unit Tests bằng Vitest | Thư mục `tests/unit/` |
-| `npm run test:watch` | Chạy Unit Tests ở chế độ tự động cập nhật | Thư mục `tests/unit/` |
-| `npm run test:e2e` | Khởi động server và chạy kiểm thử E2E | Thư mục `tests/e2e/` (mở browser ảo) |
+| `npm run test` | Chạy toàn bộ Unit Tests bằng Vitest | Test co-located trong `src/components/**`, `src/data/**` (+ `tests/unit/` cục bộ nếu có) |
+| `npm run test:watch` | Chạy Unit Tests ở chế độ tự động cập nhật | Test co-located trong `src/components/**`, `src/data/**` (+ `tests/unit/` cục bộ nếu có) |
+| `npm run test:e2e` | Chạy `scripts/run-e2e.cjs` (cục bộ, xem lưu ý ở đầu file) | Thư mục `tests/e2e/` cục bộ |
 
 ### Chạy test khoanh vùng (Targeted Testing)
 * **Unit Tests cho các file vừa sửa đổi:**
@@ -58,50 +60,57 @@ npx playwright install chromium --with-deps
 
 ## 🤖 Hướng dẫn dành cho AI Coding Agent
 
+Quy tắc kỹ thuật chính của repo này nằm ở [`AGENTS.md`](./AGENTS.md) — đọc file đó trước tiên, áp dụng cho mọi AI coding agent (Claude Code, Cursor, Codex, Copilot, Gemini, v.v.), không riêng gì agent nào. Phần dưới đây là hướng dẫn bổ sung riêng cho automation test & design lint, không thay thế `AGENTS.md`.
+
 Khi bạn (Agent) được yêu cầu phát triển tính năng mới hoặc thực hiện kiểm thử:
-1. **Kích hoạt Skill:** Gọi hoặc làm theo quy trình trong file [.agents/skills/feature-focused-tester/SKILL.md](file:///c:/Users/AD/Documents/GitHub/vlinknexora/.agents/skills/feature-focused-tester/SKILL.md).
+1. **Kích hoạt Skill:** Gọi hoặc làm theo quy trình trong file [.agents/skills/feature-focused-tester/SKILL.md](.agents/skills/feature-focused-tester/SKILL.md).
 2. **Trước khi bàn giao code:**
    * Bạn bắt buộc phải chạy `npm run lint:tokens` để đảm bảo code sạch, không chứa mã màu hay kích thước hardcode.
-   * Nếu có vi phạm, hãy sửa lại code để sử dụng đúng biến màu của dự án (được cấu hình trong [tailwind.config.js](file:///c:/Users/AD/Documents/GitHub/vlinknexora/tailwind.config.js)).
+   * Nếu có vi phạm, hãy sửa lại code để sử dụng đúng biến màu của dự án (được cấu hình trong [tailwind.config.js](./tailwind.config.js)).
 3. **Viết Test mới:**
-   * Viết Unit test trong `tests/unit/` và E2E test trong `tests/e2e/`.
-   * Sử dụng thư viện `CloakBrowser` cho E2E để giả lập thao tác thật của người dùng.
-   * Không hardcode ngôn ngữ trong test; hãy sử dụng các chuỗi đa ngôn ngữ (i18n) từ tệp `locales/` hoặc regex linh hoạt.
+   * Viết Unit test co-located cùng source (VD: `src/components/Foo.test.tsx` cạnh `Foo.tsx`) theo quy ước hiện tại của repo (xem `AGENTS.md`); `tests/unit/`/`tests/e2e/` chỉ tồn tại cục bộ nếu bạn có các file gitignored đó.
+   * Viết E2E test chạy qua `pnpm test:e2e` (`scripts/run-e2e.cjs`) — không có thư viện `CloakBrowser` nào trong dependencies của repo này, tham chiếu cũ đó đã lỗi thời.
+   * Không hardcode ngôn ngữ trong test; hãy sử dụng các chuỗi đa ngôn ngữ (i18n) từ `src/locales/en.json` / `src/locales/vi.json` hoặc regex linh hoạt.
 
 ---
 
 ## ⛓️ Tự động hóa qua GitHub Actions (CI)
-Quy trình CI trên GitHub (`.github/workflows/ci.yml`) đã được tích hợp bước **Lint Design Tokens**. 
+Quy trình CI trên GitHub (`.github/workflows/frontend.yaml`) đã được tích hợp bước **Lint Design Tokens**. 
 Nếu có bất kỳ dòng code nào vi phạm tiêu chuẩn Design System hoặc gây lỗi kiểm thử đơn vị/E2E, hệ thống CI sẽ tự động đánh dấu đỏ (Fail) trên Pull Request để đảm bảo chất lượng code và giao diện luôn ở mức cao nhất trước khi merge vào nhánh `main`.
 
 ---
 
 ## Multi-Environment CI/CD Configuration
 
-Workflow `/.github/workflows/frontend.yaml` validates all Vite modes and deploys only server-backed environments:
+Workflow `/.github/workflows/frontend.yaml` resolves exactly one build mode per branch (via a case statement, not a matrix over all Vite modes) and deploys only on push to the branches below — each build is a Docker image pushed to the DigitalOcean Container Registry, then rolled out via a "Deploy to ArgoCD" job that patches manifests in the separate `vlink-group/devops` repo:
 
 | Branch | GitHub Environment | Build Mode |
 | :--- | :--- | :--- |
 | `dev` | `TEST` | `test` |
 | `staging` | `STAGING` | `staging` |
 | `main`, `master` | `PRODUCTION` | `production` |
+| `feature/taxiq-pos` | `TEST2` | `test2` |
 
-`development` is local-only. Use `.env.development` and `pnpm run build:dev`; it does not deploy to ArgoCD.
+The `feature/taxiq-pos` row is an experimental, phase-specific branch (own `build:test2` script + ArgoCD devops path) — not a general-purpose environment.
+
+`development` is local-only. Use `.env.development` and `pnpm run build:dev`; it has no branch/environment entry in the workflow, so it cannot trigger CI/CD or deploy to ArgoCD.
 
 ### Required GitHub Environment Variables
 
 Create these variables in each GitHub Environment (`TEST`, `STAGING`, `PRODUCTION`):
 
-* `VITE_APP_ENV` (`test`, `staging`, `production`)
+* `VITE_APP_ENV` (`test`, `staging`, `production`) — wired into CI/Docker but not currently read anywhere in `src/`; reserved.
 * `VITE_API_BASE_URL` (canonical API endpoint, no trailing slash)
 * `VITE_DATA_SOURCE` (`api` for API runtime, `storage` for mock/storage runtime)
 * `VITE_ENABLE_DEMO_TOOLS` (`false` for deployed environments)
-* `VITE_GOOGLE_MAPS_API_KEY`
-* `VITE_MAPBOX_TOKEN`
-* `VITE_MAP_MARKER_ENGINE`
-* `VITE_GOOGLE_MAPS_MAP_ID`
+* `VITE_RECAPTCHA_KEY` — used in `src/` (`react-google-recaptcha-v3`) and present in all `.env.*` files, but **not currently passed as a Docker build-arg in the workflow** — a real CI gap, not just missing from this list.
+* `VITE_VLINKPAY_API_BASE_URL` — used in `src/lib/vlinkPayHttpClient.ts`, present in all `.env.*` files, same CI gap as above (not wired into the workflow's Docker build-args).
 * `VITE_VLINKPAY_WEB_URL_BASE`
-* `VITE_SENTRY_ENV` (optional)
+* `VITE_GOOGLE_MAPS_API_KEY`
+* `VITE_MAPBOX_TOKEN` — wired into CI/Docker but not currently read anywhere in `src/`; reserved.
+* `VITE_MAP_MARKER_ENGINE` — wired into CI/Docker but not currently read anywhere in `src/`; reserved.
+* `VITE_GOOGLE_MAPS_MAP_ID` — wired into CI/Docker but not currently read anywhere in `src/`; reserved.
+* `VITE_SENTRY_ENV` (optional) — wired into CI/Docker, but there is no Sentry SDK/usage anywhere in this codebase yet; reserved.
 
 Suggested values:
 
@@ -111,6 +120,8 @@ Suggested values:
 | `VITE_API_BASE_URL` | local/dev API URL | test API URL | staging API URL | production API URL |
 | `VITE_DATA_SOURCE` | `api` or `storage` | `api` | `api` | `api` |
 | `VITE_ENABLE_DEMO_TOOLS` | `true` if needed | `false` | `false` | `false` |
+| `VITE_RECAPTCHA_KEY` | dev key | test key | staging key | production key |
+| `VITE_VLINKPAY_API_BASE_URL` | dev URL | test URL | staging URL | production URL |
 | `VITE_SENTRY_ENV` | empty or `development` | `test` | `staging` | `production` |
 | `VITE_GOOGLE_MAPS_API_KEY` | dev key | test key | staging key | production key |
 | `VITE_MAPBOX_TOKEN` | dev token | test token | staging token | production token |
@@ -118,11 +129,9 @@ Suggested values:
 | `VITE_GOOGLE_MAPS_MAP_ID` | dev map id | test map id | staging map id | production map id |
 | `VITE_VLINKPAY_WEB_URL_BASE` | dev URL | test URL | staging URL | production URL |
 
-`VITE_API_BASE` is still supported as a legacy alias inside the Docker build, but new CI/CD configuration should use `VITE_API_BASE_URL`.
-
 ### Optional GitHub Environment Secrets
 
-* `VITE_SENTRY_DSN` (if Sentry is enabled)
+* `VITE_SENTRY_DSN` — wired into CI/Docker, but there is no Sentry SDK/usage anywhere in this codebase yet; reserved for when Sentry is actually added.
 * `DIGITALOCEAN_ACCESS_TOKEN`
 * `GH_PAT`
 
