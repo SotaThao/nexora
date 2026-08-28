@@ -6,9 +6,36 @@ Treat this as an engineering playbook, not a product brief.
 
 Also read [ARCHITECTURE.md](./ARCHITECTURE.md) — the codebase's structural map (folders, data boundary, domain modules) — and [CULTURE.md](./CULTURE.md) — the US product-culture rule. CULTURE.md applies to every role (design, engineering, QA, PM, support, content) on every task in this repo, not just this file's engineering rules.
 
-**Contents**: [Operating Principles](#operating-principles) · [Domain Principle: Module Independence & Shared Data](#domain-principle-module-independence--shared-data-tip-system--taxiq--pos) · [Repo Profile](#repo-profile) · [API Integration Workflow](#api-integration-workflow-goal-driven-mandatory) · [Principal Workflow](#principal-workflow) · [Provider Stack](#provider-stack) · [Architecture Rules](#architecture-rules) · [Domain Workflow Notes](#domain-workflow-notes) · [File Map](#file-map) · [Code Standards](#code-standards) · [Mobile-Responsive Modals & Dialogs](#mobile-responsive-modals--dialogs) · [Form Field Conventions](#form-field-conventions) · [Removing an Intermediate Step From an Async Flow](#removing-an-intermediate-step-from-an-async-flow) · [POS iPad Design Standard](#pos-ipad-design-standard) · [Security And Reliability](#security-and-reliability) · [Completion Checklist](#completion-checklist)
+**Contents**:
 
-**Content lifecycle**: the sections above are evergreen rules. If you add a dated note (e.g. "Follow-Up Note (YYYY-MM-DD)") to document a specific incident or one-time fix, that note belongs in this file only until its lesson is folded into a standing rule elsewhere — at that point, delete the dated note (git history keeps the incident) rather than leaving both to accumulate. Don't let this file become an append-only log.
+- [Content Lifecycle](#content-lifecycle)
+- [Operating Principles](#operating-principles)
+- [Domain Principle: Module Independence & Shared Data](#domain-principle-module-independence--shared-data)
+- [Repo Profile](#repo-profile)
+- [API Integration Workflow](#api-integration-workflow-goal-driven-mandatory)
+- [Principal Workflow](#principal-workflow)
+  - [Verification Guide](#verification-guide)
+- [Provider Stack](#provider-stack)
+  - [Key Rules](#key-rules)
+- [Architecture Rules](#architecture-rules)
+  - [Data Boundary](#data-boundary)
+  - [Query Ownership](#query-ownership)
+  - [Auth Boundary](#auth-boundary)
+  - [API Configuration](#api-configuration)
+- [Domain Workflow Notes](#domain-workflow-notes)
+- [File Map](#file-map)
+- [Code Standards](#code-standards)
+- [Mobile-Responsive Modals & Dialogs](#mobile-responsive-modals--dialogs)
+- [Form Field Conventions](#form-field-conventions)
+- [Image & Static Asset Optimization](#image--static-asset-optimization)
+- [Removing an Intermediate Step From an Async Flow](#removing-an-intermediate-step-from-an-async-flow)
+- [POS iPad Design Standard](#pos-ipad-design-standard)
+- [Security And Reliability](#security-and-reliability)
+- [Completion Checklist](#completion-checklist)
+
+## Content Lifecycle
+
+The sections below are evergreen rules. If you add a dated note (e.g. "Follow-Up Note (YYYY-MM-DD)") to document a specific incident or one-time fix, that note belongs in this file only until its lesson is folded into a standing rule elsewhere — at that point, delete the dated note (git history keeps the incident) rather than leaving both to accumulate. Don't let this file become an append-only log.
 
 ## Operating Principles
 
@@ -21,8 +48,9 @@ Also read [ARCHITECTURE.md](./ARCHITECTURE.md) — the codebase's structural map
 - No `console.*` in app code. Use the project logger where runtime logging is needed.
 - Do not commit unless explicitly asked.
 - **No hardcoded backend enum/status strings.** Any string literal that mirrors a backend enum (`PosOrderStatus`, `TipStatus`, etc. — e.g. `'Waiting'`, `'InService'`, `'Completed'`, `'Cancelled'`, `'Pending'`, `'Confirmed'`) must be compared/assigned via a shared TS `enum`/const object in `src/constants/`, never as an inline string literal in a component, hook, or repository. Check `src/constants/` for an existing constant (e.g. `posOrderStatus.ts`, `tipStatus.ts`) before adding a new comparison — add a new value to the existing enum rather than a parallel literal. When a repository maps a raw API string to a discriminated union type, that mapping is the one allowed place to reference the literal.
+- **No links/references to files that don't exist in the project.** Every file reference/citation/link written into anything committed — user stories, OpenSpec `design.md`/`proposal.md`, code comments, commit messages — must resolve to a path that actually exists inside this repo. Verify the path exists before citing it; never assume. The most common violation is a personal local absolute path (e.g. `C:\Users\<name>\...`, `/Users/<name>/...`, a personal Obsidian vault, `.claude/plans/...`, a Downloads folder) — these can never exist for another teammate or agent, so they must never be embedded as if they were a valid project reference. If a source doc (a plan, a PDF, a spec) genuinely needs citing, copy it into the repo first at a path every teammate/agent can resolve (e.g. `user-story/report/`, `docs/archive/`) and cite that repo-relative path instead. If asked to add such a reference and the file isn't in the repo, don't fabricate or embed a path that doesn't exist — ask the user to bring the file into the repo first, or flag it as unresolved.
 
-## Domain Principle: Module Independence & Shared Data (Tip system / TaxIQ / POS)
+## Domain Principle: Module Independence & Shared Data
 
 NEXORA TOUCH has three core modules built on the same Business/Staff foundation: the **Tip system** (QR/NFC tipping, reviews), **TaxIQ** (tax filing, payroll-adjacent data), and **POS** (point of sale, staff pay/role/tips-at-checkout). Follow this when designing or building any staff-related screen in either module:
 
@@ -81,7 +109,7 @@ For every task:
 5. Run verification proportional to risk.
 6. Report changed files, verification, and any residual risk.
 
-Verification guide:
+### Verification Guide
 
 - Docs-only change: run `npx openspec validate <change> --strict` when an OpenSpec change is involved.
 - Narrow logic change: run the targeted test file plus `pnpm build`.
@@ -97,7 +125,8 @@ QueryClientProvider → LanguageProvider → AuthProvider → NotificationProvid
   → BrowserRouter → SkeletonProvider → App (KybGateProvider wraps AppRouter)
 ```
 
-Key rules:
+### Key Rules
+
 - `AuthProvider` requires `QueryClientProvider` above it (auth state is TanStack Query-backed).
 - `LanguageProvider` must wrap everything that uses `useTranslation()`.
 - `KybGateContext` sits inside `App`, so it has access to auth and routing.
@@ -222,6 +251,15 @@ Apply these on every new or refactored form field — do not wait for a bug repo
 - **Never display a customer phone from the `phone` / `customerPhone` field alone** — since the same refactor it holds the national number with no country code. Format off the matching `*E164` field (see `formatCustomerPhone` in `views/pos/customer/customerFormatters.ts`), and send `*E164` back to any API that re-parses it (e.g. `receiptPhone` on Complete Order).
 - **Every text/tel/email input needs a `placeholder`.** Follow the existing "e.g. ..." convention (see `staff_phone_placeholder`, `staff_email_placeholder` in the locales) — add the key to both `en.json` and `vi.json`, never hardcode the string inline.
 - **When extracting an existing form into a new component** (e.g. pulling a form out of a parent into its own file), treat the original JSX as the spec: explicitly check it for formatters, placeholders, `inputMode`/`autoComplete` attributes, and validation before considering the extraction done. Moving the visual structure (labels, layout, styling) while silently dropping these is the most common way this kind of refactor regresses — it will not show up in `tsc`/`build`, only in manual testing.
+
+## Image & Static Asset Optimization
+
+New images and other binary static assets live in `public/` and are referenced by plain `<img src="/assets/...">` — there is no bundler-driven image pipeline (`vite.config.ts` has no image-optimization plugin, and nothing under `src/` imports a raster asset for Vite to process). Whatever gets committed ships byte-for-byte; nothing downstream shrinks it. Apply these on every new or replaced image:
+
+- **Compress before committing.** Run any new PNG/JPEG through a compressor (Squoosh, TinyPNG, `pnpm dlx @squoosh/cli`) before adding it under `public/`. Prefer WebP for photos/screenshots; reserve PNG for assets that genuinely need lossless transparency (icons, logos). Treat a single new raster asset over ~150KB as a signal to re-export smaller or switch format, not something to add as-is — check `public/assets/` for an existing near-duplicate first.
+- **Reuse `lucide-react` for icons/glyphs** instead of adding a one-off PNG/SVG file. The build already code-splits it into its own chunk (`manualChunks` in `vite.config.ts`); a new icon file bypasses that and ships an extra, uncached request.
+- **Lazy-load anything not on first paint.** `<img>` elements below the fold (gallery/list thumbnails, secondary sections) need `loading="lazy"` — see `NewsLibraryView.tsx` for the existing convention. Logos and above-the-fold hero images should stay eager (no `loading` attribute) so they aren't delayed.
+- **Set explicit dimensions.** Give every new `<img>` a `width`/`height` (or a Tailwind `aspect-[…]` class) so layout doesn't shift while it loads — most existing `<img>` tags in this repo omit this; don't propagate the gap into new ones.
 
 ## Removing an Intermediate Step From an Async Flow
 

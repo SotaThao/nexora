@@ -10,7 +10,7 @@ This rule applies to every role working on this product — design, engineering,
 - Design products to feel **natural and familiar to American users**, not merely translated from another market.
 - Use **US English** by default for UI, UX copy, documentation, error messages, notifications, and product terminology.
 - Follow common US conventions for:
-  - Date: `MM/DD/YYYY`
+  - Date: `MMM DD, YYYY`
   - Time: 12-hour format with AM/PM when appropriate
   - Timezone: when no business-specific or user-specific timezone is available, always fall back to **Central Time (`America/Chicago`) — Texas, US** — never to UTC, the server's timezone, or a non-US default
   - Currency: USD `$`
