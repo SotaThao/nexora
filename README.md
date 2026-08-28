@@ -2,8 +2,6 @@
 
 Tài liệu này hướng dẫn cách sử dụng, vận hành hệ thống kiểm thử tự động và bộ kiểm tra Design System (Tokens) tích hợp trong dự án **Nexora Touch**.
 
-> **Lưu ý:** Các file thực thi phía sau các lệnh dưới đây (`scripts/verify-tokens.cjs`, `scripts/run-e2e.cjs`, `.agents/skills/feature-focused-tester/scripts/detect-changes.cjs`, và toàn bộ thư mục `tests/`) đã bị chủ động untrack + thêm vào `.gitignore` từ commit `68d518ac` (2026-06-04, "ignore tests and scripts folders"). Đây là tooling cục bộ/theo máy, không nằm trong repo checkout mặc định — nếu chạy lệnh bên dưới mà báo lỗi "file not found", đó không phải lỗi checkout mà do bạn chưa có các file này cục bộ.
-
 ---
 
 ## 📌 Các Tính Năng Chính
@@ -22,7 +20,7 @@ Tài liệu này hướng dẫn cách sử dụng, vận hành hệ thống ki�
 * **Script thực thi:** `npm run test:impact`
 * **Nhiệm vụ:**
   * Dùng Git để lọc ra các tệp trong `src/` có thay đổi.
-  * Bản đồ hóa (Mapping) tệp code với tệp Unit Test tương ứng — quy ước hiện tại là test đặt cùng thư mục với source (co-located, VD: `src/components/**/*.test.tsx`, `src/data/**/*.test.ts`, xem `AGENTS.md`), cộng với `tests/unit/` nếu thư mục cục bộ (gitignored) đó tồn tại.
+  * Bản đồ hóa (Mapping) tệp code với tệp Unit Test tương ứng — quy ước hiện tại là test đặt cùng thư mục với source (co-located, VD: `src/components/**/*.test.tsx`, `src/data/**/*.test.ts`, xem `AGENTS.md`).
   * Đề xuất câu lệnh chạy test tối ưu hóa cho riêng phạm vi sửa đổi.
 
 ---
@@ -34,7 +32,7 @@ Trước khi chạy test, đảm bảo đã cài đặt đầy đủ các gói t
 ```bash
 npm install
 ```
-E2E chạy qua `pnpm test:e2e` (`scripts/run-e2e.cjs`, cục bộ/gitignored — xem lưu ý ở đầu file); trình duyệt/công cụ cụ thể phụ thuộc vào cách script đó được cấu hình trên máy bạn.
+E2E chạy qua `pnpm test:e2e`, cấu hình tại `vitest.e2e.config.ts`; trình duyệt/công cụ cụ thể phụ thuộc vào cách script đó được cấu hình trên máy bạn.
 
 ### Lệnh chạy nhanh
 
@@ -42,9 +40,9 @@ E2E chạy qua `pnpm test:e2e` (`scripts/run-e2e.cjs`, cục bộ/gitignored —
 | :--- | :--- | :--- |
 | `npm run lint:tokens` | Kiểm tra vi phạm màu/layout hardcode | Các file thay đổi trong `src/` |
 | `npm run test:impact` | Phân tích tác động và đề xuất lệnh chạy | Các file thay đổi trong `src/` |
-| `npm run test` | Chạy toàn bộ Unit Tests bằng Vitest | Test co-located trong `src/components/**`, `src/data/**` (+ `tests/unit/` cục bộ nếu có) |
-| `npm run test:watch` | Chạy Unit Tests ở chế độ tự động cập nhật | Test co-located trong `src/components/**`, `src/data/**` (+ `tests/unit/` cục bộ nếu có) |
-| `npm run test:e2e` | Chạy `scripts/run-e2e.cjs` (cục bộ, xem lưu ý ở đầu file) | Thư mục `tests/e2e/` cục bộ |
+| `npm run test` | Chạy toàn bộ Unit Tests bằng Vitest | Test co-located trong `src/components/**`, `src/data/**` |
+| `npm run test:watch` | Chạy Unit Tests ở chế độ tự động cập nhật | Test co-located trong `src/components/**`, `src/data/**` |
+| `npm run test:e2e` | Chạy bộ E2E test | Theo cấu hình `vitest.e2e.config.ts` |
 
 ### Chạy test khoanh vùng (Targeted Testing)
 * **Unit Tests cho các file vừa sửa đổi:**
@@ -63,13 +61,13 @@ E2E chạy qua `pnpm test:e2e` (`scripts/run-e2e.cjs`, cục bộ/gitignored —
 Quy tắc kỹ thuật chính của repo này nằm ở [`AGENTS.md`](./AGENTS.md) — đọc file đó trước tiên, áp dụng cho mọi AI coding agent (Claude Code, Cursor, Codex, Copilot, Gemini, v.v.), không riêng gì agent nào. Phần dưới đây là hướng dẫn bổ sung riêng cho automation test & design lint, không thay thế `AGENTS.md`.
 
 Khi bạn (Agent) được yêu cầu phát triển tính năng mới hoặc thực hiện kiểm thử:
-1. **Kích hoạt Skill:** Gọi hoặc làm theo quy trình trong file [.agents/skills/feature-focused-tester/SKILL.md](.agents/skills/feature-focused-tester/SKILL.md).
+1. **Áp dụng quy trình 3-layer test** (Layer 1 UI, Layer 2 API call, Layer 3 flow) theo mô tả trong `AGENTS.md`'s "Verify against the story" section.
 2. **Trước khi bàn giao code:**
    * Bạn bắt buộc phải chạy `npm run lint:tokens` để đảm bảo code sạch, không chứa mã màu hay kích thước hardcode.
    * Nếu có vi phạm, hãy sửa lại code để sử dụng đúng biến màu của dự án (được cấu hình trong [tailwind.config.js](./tailwind.config.js)).
 3. **Viết Test mới:**
-   * Viết Unit test co-located cùng source (VD: `src/components/Foo.test.tsx` cạnh `Foo.tsx`) theo quy ước hiện tại của repo (xem `AGENTS.md`); `tests/unit/`/`tests/e2e/` chỉ tồn tại cục bộ nếu bạn có các file gitignored đó.
-   * Viết E2E test chạy qua `pnpm test:e2e` (`scripts/run-e2e.cjs`) — không có thư viện `CloakBrowser` nào trong dependencies của repo này, tham chiếu cũ đó đã lỗi thời.
+   * Viết Unit test co-located cùng source (VD: `src/components/Foo.test.tsx` cạnh `Foo.tsx`) theo quy ước hiện tại của repo (xem `AGENTS.md`).
+   * Viết E2E test chạy qua `pnpm test:e2e` — không có thư viện `CloakBrowser` nào trong dependencies của repo này, tham chiếu cũ đó đã lỗi thời.
    * Không hardcode ngôn ngữ trong test; hãy sử dụng các chuỗi đa ngôn ngữ (i18n) từ `src/locales/en.json` / `src/locales/vi.json` hoặc regex linh hoạt.
 
 ---
@@ -142,6 +140,7 @@ Use these commands to verify each environment build locally:
 ```bash
 pnpm run build:dev
 pnpm run build:test
+pnpm run build:test2   # feature/taxiq-pos → TEST2 environment
 pnpm run build:staging
 pnpm run build:prod
 ```

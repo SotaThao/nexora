@@ -7,6 +7,17 @@ A structural map of this codebase — what actually exists, folder by folder. Th
 - [`DESIGN.md`](./DESIGN.md) — the visual design system (tokens, components).
 - [`docs/`](./docs/README.md) — deeper product/spec documentation and historical artifacts.
 
+## Top-Level Documentation Folders (Non-Code)
+
+Repo-root folders that hold documentation/spec artifacts, not application code — deliberately excludes `src/` (mapped below), `public/`, `resources/` (static build assets/app icons), `dist/`, `node_modules/`:
+
+| Folder | Purpose / Convention |
+|---|---|
+| `docs/` | Deeper product/spec docs and historical artifacts. Has its own [`docs/README.md`](./docs/README.md) breaking down `standard/` (module-specific design/eng standards, e.g. POS iPad), `uiux-feedback/` (dated screen-level UI/UX review docs), `archive/` (point-in-time historical snapshot, not live source of truth), `superpowers/` (plans/specs from past `superpowers` skill sessions). |
+| `user-story/` | One file per user story (`US-XXX-<slug>.md`, copied from `_TEMPLATE.md`). Per AGENTS.md's "User story first" rule, a story (Story + AC + API Mapping + FE Surface) is drafted and approved *before* implementation. Status lifecycle: Draft → Approved → Integrated → Tested → Done. |
+| `openspec/` | `changes/` — OpenSpec change proposals (each with a `design.md` mapping user story ↔ API endpoints ↔ FE files); required for any feature touching ≥3 files or a shared layer (auth adapter, `httpClient`, shared repository/context) per AGENTS.md. `specs/` — the resulting specs once a change lands. Validate with `npx openspec validate <change> --strict`. |
+| `API/` | API contract snapshots (PDFs, `API/update/<latest>/api-integration-guide-v4.md`). **Not** the source of truth — that's the live Swagger spec (`https://test-api.nexoratouch.com/api/specification.json`) per AGENTS.md's "Contract from live Swagger" rule; treat this folder as a point-in-time reference only. |
+
 ## Top-Level `src/` Map
 
 | Folder | Purpose |
@@ -20,8 +31,10 @@ A structural map of this codebase — what actually exists, folder by folder. Th
 | `hooks/` | Small generic UI hooks not tied to a domain (`useMediaQuery`, `usePagination`, `useIsMobileUI`, etc.) — distinct from `data/hooks/` |
 | `lib/` | Low-level clients: `httpClient.ts` (main REST client), `queryClient.ts` (TanStack Query instance), `posDeviceHttpClient.ts`, `vlinkPayHttpClient.ts`, `communityChatHub.ts` |
 | `locales/` | `en.json` / `vi.json` i18n string tables, consumed via `LanguageContext` |
-| `types/` | Shared TS types: `domain.ts`, `api.ts`, `auth.ts`, `contexts.ts`, `forms.ts`, `hooks.ts`, `repositories.ts` |
+| `types/` | Shared TS types: `domain.ts`, `api.ts`, `auth.ts`, `contexts.ts`, `forms.ts`, `hooks.ts`, `repositories.ts`, `communityChat.ts`, plus an `index.ts` barrel |
 | `utils/` | ~60 general-purpose helpers (formatters, `storage.ts`, `logger.ts`, phone/date/currency helpers, etc.) |
+
+`data/` also holds several narrow, single-domain folders outside the hooks/repositories pattern: `merchantVoice/`, `publicVoiceBooking/`, `voiceTrial/` — the AI-voice booking domain (`App.tsx` imports `VoiceCallPlanRoute` directly from `voiceTrial/domain.ts` to pick the per-path shell class) — plus `communityChatCache.ts`/`communityChatSessionUtils.ts`, `payoutConstants.ts`, `paymentMethodTypes.ts`, `storageEventBridge.ts`, and a small `data/utils/`.
 
 ## Provider Bootstrap
 
@@ -61,8 +74,10 @@ All of the above are `.ts`/`.tsx` — there is no `.js` left in this layer (AGEN
 - `AuthContext.ts` — plain context object.
 - `AuthProvider.tsx` — session lifecycle (`session`, `status: 'loading' | 'authenticated' | 'anonymous'`, `login`, `logout`, `refreshSession`), delegates to `authAdapter`, dedupes concurrent `getSession()` calls via a ref-held promise.
 - `useAuth.ts` — thin `useContext(AuthContext)` hook; throws if used outside the provider.
+- `useSessionRole.ts` — derives `{ status, session, isAuthenticated, isOwner, isStaff }` off `AuthContext` for guard/role checks, without going through the full `useAuth` hook.
 - `adapters/apiAuthAdapter.ts` — the only auth adapter (API-only mode; no mock/local adapter left).
 - `tokenStore.ts` — localStorage-backed (`nexora_auth_tokens` key via `utils/storage`), pub/sub `subscribe()` for token-change listeners.
+- `pendingRegistration.ts` / `signupOtp.ts` — sessionStorage-backed signup helpers (pending email/password/role before account creation completes; OTP/verification-token extraction from signup API responses) — the "signup/pending-registration helpers" called out in the top-level map.
 
 ## Routing
 
@@ -97,8 +112,8 @@ Per AGENTS.md's "Domain Principle: Module Independence & Shared Data" (read that
 - **POS** → `src/components/dashboard/views/pos/` (`booking/`, `modals/`, `timeclock/`, `hooks/`, `customer/`, `devices/`) + `src/data/repositories/pos*.ts` + `src/data/hooks/usePos*.ts`. Kiosk-facing pieces (device pairing, self-check-in) live separately in `src/components/posDevice/`, outside the auth gate.
 - **TaxIQ** → owner side `src/components/dashboard/views/taxiq/` (Deduction Center, Income Summary, Receipt Vault, Payroll, Tax Ledger, Exceptions, Jurisdictions, 1099/Forms); staff side `src/components/staff-dashboard/views/taxiq/` (parallel Staff* views); standalone public viewers in `src/components/taxiq/` (`CpaViewer/`, `ShareLinkViewer/`, `W4Invite/`).
 - **Tip system** → `src/components/tips/` (QR/NFC tipping tabs, payouts UI) + staff-side `StaffTips.tsx`/`StaffMyEarnings.tsx`, backed by `useTipsData` and `constants/tipStatus.ts`/`tipPresets.ts`.
-- **Booking** (not a named 4th core module in AGENTS.md, but a real domain) — two related but distinct surfaces: POS front-desk booking (`pos/booking/`) and the separate AI-voice-driven Booking Hub (`dashboard/views/BookingHubView.tsx` + `BookingTeamCalendar/Panel`, `BookingCallLogPanel`).
+- **Booking** (not a named 4th core module in AGENTS.md, but a real domain) — two related but distinct surfaces: POS front-desk booking (`pos/booking/`) and the separate AI-voice-driven Booking Hub (`dashboard/views/BookingHubView.tsx` + `BookingTeamCalendar/Panel`, `BookingCallLogPanel`), backed by `data/merchantVoice/` + `data/repositories/merchantVoice.ts`. The public-facing voice trial/plan pages (`components/public/VoiceCallPlanPage.tsx`, routed via `VoiceCallPlanRoute`) and public voice booking share the same pattern via `data/voiceTrial/` and `data/publicVoiceBooking/`.
 
 ## Testing
 
-Test files are co-located with source (`src/data/repositories/*.test.ts`, `src/components/**/*.test.tsx`), matching AGENTS.md's File Map. Test infra: `src/setupTests.ts` (mocks `NotificationContext`, wraps a `LanguageProvider` + `QueryClientProvider` test-render helper), `vitest.config.ts` (unit), `vitest.e2e.config.ts` + `scripts/run-e2e.cjs` (browser e2e, run separately from co-located tests).
+Test files are co-located with source, matching AGENTS.md's File Map — but coverage is thin overall (a handful of files under `src/components/`), and `src/data/repositories/` currently has none despite that being the documented convention. Test infra: `src/setupTests.ts` (mocks `NotificationContext`, wraps a `LanguageProvider` + `QueryClientProvider` test-render helper), `vitest.config.ts` (unit), `vitest.e2e.config.ts` + `scripts/run-e2e.cjs` (browser e2e, run separately from co-located tests). Note: `scripts/` and `tests/` are both gitignored (untracked since commit `68d518ac`) — they exist locally on dev machines but aren't in this checkout, so `test:e2e` won't run here without them.
