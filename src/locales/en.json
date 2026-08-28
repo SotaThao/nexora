@@ -4151,6 +4151,7 @@
               "Percent": "Percent"
             },
             "customPlaceholder": "Custom",
+            "customMustBePositive": "Enter a value greater than 0, or use Remove to take the discount off.",
             "clearButton": "Remove",
             "appliedAmount": "Taken off this visit: -${{amount}}",
             "cappedNotice": "Capped at ${{cap}} — services total minus ${{lineDiscount}} of service discounts.",

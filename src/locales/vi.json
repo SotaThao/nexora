@@ -4151,6 +4151,7 @@
               "Percent": "Phần trăm"
             },
             "customPlaceholder": "Tùy chọn",
+            "customMustBePositive": "Nhập giá trị lớn hơn 0, hoặc bấm Bỏ giảm giá để xoá giảm giá.",
             "clearButton": "Bỏ giảm giá",
             "appliedAmount": "Đã giảm cho lượt này: -${{amount}}",
             "cappedNotice": "Giới hạn ở ${{cap}} — tổng dịch vụ trừ ${{lineDiscount}} giảm giá theo dịch vụ.",

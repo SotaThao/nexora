@@ -37,6 +37,7 @@ export default function OrderDiscountSection({
   const { t, currentLanguage } = useTranslation()
   const [discountType, setDiscountType] = useState<PosServiceDiscountType>(PosServiceDiscountType.Amount)
   const [customInput, setCustomInput] = useState('')
+  const [customError, setCustomError] = useState<string | null>(null)
 
   // A different visit starts the panel over; anything else keeps whichever tab the operator is on.
   useEffect(() => {
@@ -46,6 +47,7 @@ export default function OrderDiscountSection({
         : PosServiceDiscountType.Amount,
     )
     setCustomInput('')
+    setCustomError(null)
   }, [order.id])
 
   // Adopt the server's answer only while a discount actually exists. Clearing must NOT drag the tab
@@ -66,6 +68,7 @@ export default function OrderDiscountSection({
         ? ORDER_DISCOUNT_PERCENT_CHIPS.some((chip) => chip === value)
         : ORDER_DISCOUNT_AMOUNT_CHIPS.some((chip) => chip === value))
     setCustomInput(value != null && !isChipValue ? String(value) : '')
+    setCustomError(null)
   }, [order.orderDiscountType, order.orderDiscountValue])
 
   const isPercent = discountType === PosServiceDiscountType.Percent
@@ -81,12 +84,14 @@ export default function OrderDiscountSection({
   )
 
   const applyValue = (value: number) => {
+    setCustomError(null)
     onApply({ discountType, discountValue: value, promotionId: null })
   }
 
   const handleTypeChange = (next: PosServiceDiscountType) => {
     setDiscountType(next)
     setCustomInput('')
+    setCustomError(null)
     // Switching Amount <-> Percent while a discount is applied would otherwise leave "$15" reading
     // as "15%" until the next tap, which is a real money difference on screen.
     if (order.orderDiscountType && order.orderDiscountType !== next) {
@@ -94,14 +99,26 @@ export default function OrderDiscountSection({
     }
   }
 
+  // 0 is not a discount the backend can store (SetOrderDiscount requires a value above 0) and it is
+  // not a request to remove one either — Remove is its own button. Saying so beats the old silent
+  // return, which left the previous discount applied with nothing on screen explaining why.
   const handleCustomCommit = () => {
+    if (!customInput) {
+      setCustomError(null)
+      return
+    }
     const parsed = Number(customInput)
-    if (!customInput || !Number.isFinite(parsed) || parsed <= 0) return
+    if (!Number.isFinite(parsed) || parsed <= 0) {
+      setCustomError(t(`${K}.customMustBePositive`))
+      return
+    }
+    setCustomError(null)
     applyValue(isPercent && parsed > MAX_DISCOUNT_PERCENT ? MAX_DISCOUNT_PERCENT : parsed)
   }
 
   const handleClear = () => {
     setCustomInput('')
+    setCustomError(null)
     onApply({ discountType: null, discountValue: null, promotionId: null })
   }
 
@@ -176,7 +193,10 @@ export default function OrderDiscountSection({
               type="text"
               inputMode="decimal"
               value={customInput}
-              onChange={(e) => setCustomInput(sanitizeDecimalInput(e.target.value))}
+              onChange={(e) => {
+                setCustomInput(sanitizeDecimalInput(e.target.value))
+                setCustomError(null)
+              }}
               onBlur={handleCustomCommit}
               onKeyDown={(e) => {
                 if (e.key === 'Enter') {
@@ -185,13 +205,24 @@ export default function OrderDiscountSection({
                 }
               }}
               placeholder={t(`${K}.customPlaceholder`)}
+              aria-invalid={customError !== null}
               className={`h-9 w-full min-w-0 rounded-lg border bg-nexoraCanvas/30 pl-7 pr-3 text-xs text-nexoraText outline-none transition-colors ${
-                customInput ? 'border-nexoraBrand/60 bg-nexoraBrandSoft/20' : 'border-nexoraBorder/70'
+                customError
+                  ? 'border-rose-400'
+                  : customInput
+                    ? 'border-nexoraBrand/60 bg-nexoraBrandSoft/20'
+                    : 'border-nexoraBorder/70'
               }`}
             />
           </div>
         </div>
       </div>
+
+      {customError ? (
+        <p role="alert" aria-live="polite" className="text-[10px] font-bold text-rose-600">
+          {customError}
+        </p>
+      ) : null}
 
       {hasDiscount ? (
         <p className="text-[10px] font-semibold text-nexoraMuted">
