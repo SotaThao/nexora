@@ -19,7 +19,7 @@ const SIGNATURE_DRINKS = [
     id: 'd1',
     name: 'Screwdriver Signature',
     tag: 'POPULAR COCKTAIL',
-    ingredients: 'Premium Vodka & nước cam tươi hữu cơ ép lạnh',
+    ingredients: 'Premium Vodka & freshly squeezed organic Florida orange juice',
     icon: Wine,
     gradient: 'from-amber-500/20 to-orange-500/20'
   },
@@ -27,7 +27,7 @@ const SIGNATURE_DRINKS = [
     id: 'd2',
     name: 'Tequila Sunrise',
     tag: 'HOUSE SPECIAL',
-    ingredients: 'Tequila thượng hạng hòa quyện siro lựu đỏ & cam vàng',
+    ingredients: 'Top-shelf Tequila blended with pomegranate grenadine & sweet orange',
     icon: GlassWater,
     gradient: 'from-rose-500/20 to-amber-500/20'
   },
@@ -35,19 +35,19 @@ const SIGNATURE_DRINKS = [
     id: 'd3',
     name: 'Complimentary Champagne',
     tag: 'CELEBRATION',
-    ingredients: 'Rượu vang nổ sủi bọt cao cấp ướp lạnh ly pha lê',
+    ingredients: 'Chilled imported sparkling champagne served in crystal flutes',
     icon: Sparkles,
     gradient: 'from-amber-400/20 to-yellow-600/20'
   }
 ]
 
 const FULL_BAR_MENU: DrinkItem[] = [
-  { id: 'm1', name: 'Pina Colada', recipe: 'Rượu rum trắng, kem dừa béo ngậy & dứa tươi nhiệt đới', tag: 'Cocktail' },
-  { id: 'm2', name: 'Cosmopolitan', recipe: 'Vodka, rượu mùi cam cao cấp, nước ép nam việt quất & chanh', tag: 'Cocktail' },
-  { id: 'm3', name: 'Pink Barbie', recipe: 'Malibu coconut rum, siro dâu tây, nước cốt chanh & soda', tag: 'Cocktail' },
-  { id: 'm4', name: 'Jack & Tennessee Coke', recipe: 'Rượu Tennessee Whiskey thượng hạng và nước ngọt có ga', tag: 'Cocktail' },
-  { id: 'm5', name: 'Trà Hoa Cúc Mật Ong', recipe: 'Trà thảo mộc hữu cơ thanh lọc, mật ong hoa nhãn (Non-alcohol)', tag: 'Mocktail' },
-  { id: 'm6', name: 'Cà Phê Ý & Cappuccino', recipe: 'Cà phê hạt Arabica nguyên chất pha máy, bọt sữa mịn', tag: 'Hot Drinks' }
+  { id: 'm1', name: 'Pina Colada', recipe: 'White rum, creamy coconut cream & sweet tropical pineapple', tag: 'Cocktail' },
+  { id: 'm2', name: 'Cosmopolitan', recipe: 'Vodka, premium triple sec, tart cranberry juice & fresh lime', tag: 'Cocktail' },
+  { id: 'm3', name: 'Pink Barbie', recipe: 'Malibu coconut rum, strawberry reduction, lime juice & sparkling soda', tag: 'Cocktail' },
+  { id: 'm4', name: 'Jack & Tennessee Coke', recipe: 'Premium Tennessee Whiskey with crisp chilled Coca-Cola', tag: 'Cocktail' },
+  { id: 'm5', name: 'Organic Honey Chamomile', recipe: 'Calming organic botanical herbal tea with wildflower honey (Non-alcoholic)', tag: 'Mocktail' },
+  { id: 'm6', name: 'Italian Espresso & Cappuccino', recipe: 'Freshly ground Arabica espresso beans with velvety steamed milk froth', tag: 'Hot Drinks' }
 ]
 
 export const VipAmenitiesSection: React.FC<VipAmenitiesSectionProps> = ({
@@ -83,7 +83,7 @@ export const VipAmenitiesSection: React.FC<VipAmenitiesSectionProps> = ({
             }}
           >
             <Wine className="w-3.5 h-3.5" />
-            <span>ĐẶC QUYỀN THƯ GIÃN HOÀNG GIA</span>
+            <span>VIP COMPLIMENTARY AMENITIES</span>
           </div>
 
           <h2 className={`font-black tracking-tight ${isMobileView ? 'text-2xl' : 'text-3xl sm:text-4xl'}`}>
@@ -91,7 +91,7 @@ export const VipAmenitiesSection: React.FC<VipAmenitiesSectionProps> = ({
           </h2>
 
           <p className="text-sm sm:text-base leading-relaxed" style={{ color: palette.textSecondary }}>
-            Nâng tầm trải nghiệm làm đẹp với menu cocktail, champagne, trà hữu cơ và đồ uống phục vụ hoàn toàn miễn phí trong suốt liệu trình chăm sóc của bạn.
+            Elevate your self-care journey with handcrafted cocktails, champagne, organic artisan teas, and specialty espresso served complimentary during your visit.
           </p>
         </div>
 
@@ -140,7 +140,7 @@ export const VipAmenitiesSection: React.FC<VipAmenitiesSectionProps> = ({
                 <div className="pt-4 mt-4 border-t flex items-center justify-between relative z-10 text-[11px] font-bold" style={{ borderColor: palette.borderPrimary }}>
                   <span className="text-emerald-500 inline-flex items-center gap-1">
                     <Check className="w-3.5 h-3.5" />
-                    Miễn Phí 100%
+                    100% Complimentary
                   </span>
                   <span style={{ color: palette.accentColor }}>VIP Service</span>
                 </div>
@@ -161,15 +161,15 @@ export const VipAmenitiesSection: React.FC<VipAmenitiesSectionProps> = ({
             <div>
               <h4 className="text-base font-bold flex items-center gap-2">
                 <Coffee className="w-4 h-4" style={{ color: palette.accentColor }} />
-                <span>Menu Đồ Uống Bar & Lounge Tuyển Chọn</span>
+                <span>Curated Bar & Lounge Menu</span>
               </h4>
               <p className="text-xs pt-0.5" style={{ color: palette.textSecondary }}>
-                Yêu cầu chuyên viên salon phục vụ bất kỳ lúc nào trong quá trình làm dịch vụ
+                Ask your artist anytime during your appointment for complimentary table-side drinks
               </p>
             </div>
             <div className="inline-flex items-center gap-1.5 text-xs font-semibold text-amber-500 bg-amber-500/10 px-3 py-1 rounded-full w-fit">
               <HeartHandshake className="w-3.5 h-3.5" />
-              <span>Phục Vụ Tận Bàn</span>
+              <span>Table-side Service</span>
             </div>
           </div>
 

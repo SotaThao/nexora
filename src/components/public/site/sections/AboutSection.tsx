@@ -36,7 +36,7 @@ export const AboutSection: React.FC<AboutSectionProps> = ({ site, palette, isMob
               className={`leading-relaxed max-w-2xl mx-auto pt-2 ${isMobileView ? 'text-xs' : 'text-sm sm:text-base'}`}
               style={{ color: palette.textSecondary }}
             >
-              {content.aboutVi || content.aboutEn || 'Chúng tôi mang đến dịch vụ chăm sóc móng chuẩn 5 sao với sản phẩm lành tính organic và đội ngũ thợ lành nghề.'}
+              {content.aboutEn || content.aboutVi || 'Founded with a dedication to timeless elegance, Nexora Luxury Nails & Spa Lounge redefines the self-care experience. We combine hospital-grade sanitation, master craftsmanship, and premium organic botanicals to ensure every visit is a restorative journey.'}
             </p>
           </div>
 
@@ -83,7 +83,7 @@ export const AboutSection: React.FC<AboutSectionProps> = ({ site, palette, isMob
                 Câu Chuyện Thương Hiệu
               </h2>
               <p className={`leading-relaxed italic font-serif ${isMobileView ? 'text-xs' : 'text-sm sm:text-base md:text-lg'}`} style={{ color: palette.textSecondary }}>
-                "{content.aboutVi || content.aboutEn || 'Chúng tôi mang đến dịch vụ chăm sóc móng chuẩn 5 sao với sản phẩm lành tính organic và đội ngũ thợ lành nghề.'}"
+                "{content.aboutEn || content.aboutVi || 'Founded with a dedication to timeless elegance, Nexora Luxury Nails & Spa Lounge redefines the self-care experience. We combine hospital-grade sanitation, master craftsmanship, and premium organic botanicals to ensure every visit is a restorative journey.'}"
               </p>
             </div>
           </div>
@@ -138,7 +138,7 @@ export const AboutSection: React.FC<AboutSectionProps> = ({ site, palette, isMob
               </h2>
             </div>
             <p className="text-xs sm:text-sm max-w-md" style={{ color: palette.textSecondary }}>
-              {content.aboutVi || content.aboutEn || 'Dịch vụ chăm sóc móng chuẩn 5 sao cùng kỹ thuật viên tay nghề cao.'}
+              {content.aboutEn || content.aboutVi || 'Founded with a dedication to timeless elegance, Nexora Luxury Nails & Spa Lounge redefines the self-care experience. We combine hospital-grade sanitation, master craftsmanship, and premium organic botanicals to ensure every visit is a restorative journey.'}
             </p>
           </div>
 
@@ -203,7 +203,7 @@ export const AboutSection: React.FC<AboutSectionProps> = ({ site, palette, isMob
             className={`leading-relaxed ${isMobileView ? 'text-xs' : 'text-sm sm:text-base md:text-lg'}`}
             style={{ color: palette.textSecondary }}
           >
-            {content.aboutVi || content.aboutEn || 'Chúng tôi mang đến dịch vụ chăm sóc móng chuẩn 5 sao với sản phẩm lành tính organic và đội ngũ thợ lành nghề.'}
+            {content.aboutEn || content.aboutVi || 'Founded with a dedication to timeless elegance, Nexora Luxury Nails & Spa Lounge redefines the self-care experience. We combine hospital-grade sanitation, master craftsmanship, and premium organic botanicals to ensure every visit is a restorative journey.'}
           </p>
         </div>
 

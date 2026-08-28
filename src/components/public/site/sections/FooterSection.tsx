@@ -49,13 +49,13 @@ export const FooterSection: React.FC<FooterSectionProps> = ({
   }, [site.services])
 
   const quickLinks = [
-    { label: 'Dịch Vụ (Services)', href: '#services' },
-    { label: 'Đặt Lịch Hẹn (Book Appointment)', href: '#book', isBooking: true },
-    { label: 'Ưu Đãi Đặc Biệt (Promotions)', href: '#promotions' },
-    { label: 'Giới Thiệu (About Us)', href: '#about' },
-    { label: 'Đội Ngũ Nghệ Nhân (Staff)', href: '#staff' },
-    { label: 'Đánh Giá Khách Hàng (Reviews)', href: '#reviews' },
-    { label: 'Vị Trí & Chỉ Đường (Location & Map)', href: '#hours' },
+    { label: 'Services & Catalog', href: '#services' },
+    { label: 'Book Appointment Online', href: '#book', isBooking: true },
+    { label: 'Special Offers & Promotions', href: '#promotions' },
+    { label: 'About Our Salon', href: '#about' },
+    { label: 'Our Master Artists', href: '#staff' },
+    { label: 'Verified Client Reviews', href: '#reviews' },
+    { label: 'Location & Directions', href: '#hours' },
   ]
 
   const handleSmoothScroll = (e: React.MouseEvent<HTMLAnchorElement>, href: string, isBooking?: boolean) => {

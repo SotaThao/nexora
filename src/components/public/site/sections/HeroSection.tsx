@@ -73,7 +73,7 @@ export const HeroSection: React.FC<HeroSectionProps> = ({ site, palette, onBookC
               }`}
               style={{ color: palette.textSecondary }}
             >
-              {content.taglineVi || content.taglineEn || 'Không gian làm đẹp tối giản, sản phẩm thuần chay lành tính và nghệ thuật móng tinh tế.'}
+              {content.taglineEn || content.taglineVi || 'Minimalist beauty haven, vegan non-toxic nail care, and exquisite bespoke artistry.'}
             </p>
 
             {/* 3-Pill Trust Guarantee (Apple HIG Responsive Grid) */}
@@ -87,7 +87,7 @@ export const HeroSection: React.FC<HeroSectionProps> = ({ site, palette, onBookC
             >
               <div className={`flex items-center gap-1.5 ${isMobileView ? 'flex-col justify-center p-2 rounded-xl bg-black/5 border border-black/10' : ''}`}>
                 <ShieldCheck className="w-4 h-4 shrink-0" style={{ color: palette.accentColor }} />
-                <span className="font-semibold text-[11px]">Chuẩn Y Tế 100%</span>
+                <span className="font-semibold text-[11px]">100% Medical Grade</span>
               </div>
               {!isMobileView && <span className="opacity-40">•</span>}
               <div className={`flex items-center gap-1.5 ${isMobileView ? 'flex-col justify-center p-2 rounded-xl bg-black/5 border border-black/10' : ''}`}>
@@ -97,7 +97,7 @@ export const HeroSection: React.FC<HeroSectionProps> = ({ site, palette, onBookC
               {!isMobileView && <span className="opacity-40">•</span>}
               <div className={`flex items-center gap-1.5 ${isMobileView ? 'flex-col justify-center p-2 rounded-xl bg-black/5 border border-black/10' : ''}`}>
                 <Clock className="w-4 h-4 shrink-0" style={{ color: palette.accentColor }} />
-                <span className="font-semibold text-[11px]">Giữ Chỗ Đảm Bảo</span>
+                <span className="font-semibold text-[11px]">Instant Booking</span>
               </div>
             </div>
 
@@ -116,7 +116,7 @@ export const HeroSection: React.FC<HeroSectionProps> = ({ site, palette, onBookC
                 }}
               >
                 <Calendar className="w-4 h-4" />
-                <span>Đặt Lịch Hẹn Trực Tuyến</span>
+                <span>Book Appointment Online</span>
               </button>
 
               {site.phone && (
@@ -164,7 +164,7 @@ export const HeroSection: React.FC<HeroSectionProps> = ({ site, palette, onBookC
               <div className="absolute -top-3 -right-3 px-3.5 py-1.5 rounded-full bg-white shadow-xl border border-slate-100 flex items-center gap-2 z-20">
                 <Star className="w-4 h-4 fill-amber-400 text-amber-400" />
                 <span className="text-xs font-bold text-slate-800">{ratingSummary.averageRating} / 5.0</span>
-                <span className="text-[10px] text-slate-400">({ratingSummary.totalReviews}+ Đánh giá)</span>
+                <span className="text-[10px] text-slate-400">({ratingSummary.totalReviews}+ Reviews)</span>
               </div>
             </div>
           </div>
@@ -228,7 +228,7 @@ export const HeroSection: React.FC<HeroSectionProps> = ({ site, palette, onBookC
               }`}
               style={{ color: palette.heroTextSecondary }}
             >
-              {content.taglineVi || content.taglineEn || 'Xu hướng thiết kế móng thời thượng, dịch vụ chăm sóc cao cấp theo phong cách hiện đại.'}
+              {content.taglineEn || content.taglineVi || 'Chic editorial nail trends, bespoke nail art, and modern wellness experiences.'}
             </p>
 
             {/* 3-Pill Trust Guarantee (Apple HIG Responsive Grid) */}
@@ -242,7 +242,7 @@ export const HeroSection: React.FC<HeroSectionProps> = ({ site, palette, onBookC
             >
               <div className={`flex items-center gap-1.5 ${isMobileView ? 'flex-col justify-center p-2 rounded-xl bg-slate-900/5 border border-slate-900/10' : ''}`}>
                 <ShieldCheck className="w-4 h-4 shrink-0" style={{ color: palette.accentColor }} />
-                <span className="font-semibold text-[11px]">Chuẩn Y Tế 100%</span>
+                <span className="font-semibold text-[11px]">100% Medical Grade</span>
               </div>
               {!isMobileView && <span className="opacity-40">•</span>}
               <div className={`flex items-center gap-1.5 ${isMobileView ? 'flex-col justify-center p-2 rounded-xl bg-slate-900/5 border border-slate-900/10' : ''}`}>
@@ -252,7 +252,7 @@ export const HeroSection: React.FC<HeroSectionProps> = ({ site, palette, onBookC
               {!isMobileView && <span className="opacity-40">•</span>}
               <div className={`flex items-center gap-1.5 ${isMobileView ? 'flex-col justify-center p-2 rounded-xl bg-slate-900/5 border border-slate-900/10' : ''}`}>
                 <Clock className="w-4 h-4 shrink-0" style={{ color: palette.accentColor }} />
-                <span className="font-semibold text-[11px]">Giữ Chỗ Đảm Bảo</span>
+                <span className="font-semibold text-[11px]">Instant Booking</span>
               </div>
             </div>
 
@@ -271,7 +271,7 @@ export const HeroSection: React.FC<HeroSectionProps> = ({ site, palette, onBookC
                 }}
               >
                 <Calendar className="w-4 h-4" />
-                <span>Đặt Lịch Hẹn Ngay</span>
+                <span>Book Appointment Online</span>
                 <ChevronRight className="w-4 h-4" />
               </button>
 
@@ -324,7 +324,7 @@ export const HeroSection: React.FC<HeroSectionProps> = ({ site, palette, onBookC
               <div className="absolute -top-3 -right-3 px-3.5 py-1.5 rounded-2xl bg-white/90 backdrop-blur-md shadow-xl border border-white/80 flex items-center gap-2 z-20">
                 <Star className="w-4 h-4 fill-amber-400 text-amber-400" />
                 <div className="text-left">
-                  <div className="text-xs font-bold text-slate-800">5.0 Xuất Sắc</div>
+                  <div className="text-xs font-bold text-slate-800">5.0 Excellent</div>
                   <div className="text-[10px] text-slate-500">Clover POS Verified</div>
                 </div>
               </div>
@@ -394,7 +394,7 @@ export const HeroSection: React.FC<HeroSectionProps> = ({ site, palette, onBookC
               }`}
               style={{ color: palette.heroTextSecondary }}
             >
-              {content.taglineVi || content.taglineEn || 'Phong cách nghệ thuật phá cách, màu sắc rực rỡ và dịch vụ làm đẹp móng đỉnh cao.'}
+              {content.taglineEn || content.taglineVi || 'High-energy VIP nail lounge with handcrafted cocktails, custom nail designs, and crypto payments.'}
             </p>
 
             {/* 3-Pill Trust Guarantee (Apple HIG Responsive Grid) */}
@@ -408,7 +408,7 @@ export const HeroSection: React.FC<HeroSectionProps> = ({ site, palette, onBookC
             >
               <div className={`flex items-center gap-1.5 ${isMobileView ? 'flex-col justify-center p-2 rounded-xl bg-white/5 border border-white/10' : ''}`}>
                 <ShieldCheck className="w-4 h-4 shrink-0" style={{ color: palette.accentColor }} />
-                <span className="font-semibold text-[11px] text-white">Chuẩn Y Tế 100%</span>
+                <span className="font-semibold text-[11px] text-white">100% Medical Grade</span>
               </div>
               {!isMobileView && <span className="opacity-40">•</span>}
               <div className={`flex items-center gap-1.5 ${isMobileView ? 'flex-col justify-center p-2 rounded-xl bg-white/5 border border-white/10' : ''}`}>
@@ -418,7 +418,7 @@ export const HeroSection: React.FC<HeroSectionProps> = ({ site, palette, onBookC
               {!isMobileView && <span className="opacity-40">•</span>}
               <div className={`flex items-center gap-1.5 ${isMobileView ? 'flex-col justify-center p-2 rounded-xl bg-white/5 border border-white/10' : ''}`}>
                 <Clock className="w-4 h-4 shrink-0" style={{ color: palette.accentColor }} />
-                <span className="font-semibold text-[11px] text-white">Giữ Chỗ Đảm Bảo</span>
+                <span className="font-semibold text-[11px] text-white">Instant Booking</span>
               </div>
             </div>
 
@@ -437,7 +437,7 @@ export const HeroSection: React.FC<HeroSectionProps> = ({ site, palette, onBookC
                 }}
               >
                 <Calendar className="w-5 h-5" />
-                <span>Đặt Lịch Hẹn Ngay</span>
+                <span>Book Appointment Online</span>
               </button>
 
               {site.phone && (
@@ -558,7 +558,7 @@ export const HeroSection: React.FC<HeroSectionProps> = ({ site, palette, onBookC
             }`}
             style={{ color: palette.heroTextSecondary }}
           >
-            {content.taglineVi || content.taglineEn || 'Nâng tầm vẻ đẹp móng nghệ thuật và trải nghiệm chăm sóc spa đẳng cấp'}
+            {content.taglineEn || content.taglineVi || 'The pinnacle of luxury nail artistry, master craftsmanship, and organic botanical care.'}
           </p>
 
           {/* 3-Pill Trust Guarantee Bar (Apple HIG Responsive Grid) */}
@@ -572,7 +572,7 @@ export const HeroSection: React.FC<HeroSectionProps> = ({ site, palette, onBookC
           >
             <div className={`flex items-center gap-1.5 ${isMobileView ? 'flex-col justify-center p-2 rounded-xl bg-white/5 border border-white/10' : ''}`}>
               <ShieldCheck className="w-4 h-4 shrink-0" style={{ color: palette.accentColor }} />
-              <span className="font-semibold text-[11px]">Chuẩn Y Tế 100%</span>
+              <span className="font-semibold text-[11px]">100% Medical Grade</span>
             </div>
             {!isMobileView && <span className="opacity-40">•</span>}
             <div className={`flex items-center gap-1.5 ${isMobileView ? 'flex-col justify-center p-2 rounded-xl bg-white/5 border border-white/10' : ''}`}>
@@ -582,7 +582,7 @@ export const HeroSection: React.FC<HeroSectionProps> = ({ site, palette, onBookC
             {!isMobileView && <span className="opacity-40">•</span>}
             <div className={`flex items-center gap-1.5 ${isMobileView ? 'flex-col justify-center p-2 rounded-xl bg-white/5 border border-white/10' : ''}`}>
               <Clock className="w-4 h-4 shrink-0" style={{ color: palette.accentColor }} />
-              <span className="font-semibold text-[11px]">Giữ Chỗ Đảm Bảo</span>
+              <span className="font-semibold text-[11px]">Instant Booking</span>
             </div>
           </div>
 
@@ -607,7 +607,7 @@ export const HeroSection: React.FC<HeroSectionProps> = ({ site, palette, onBookC
               }}
             >
               <Calendar className="w-4 h-4" />
-              <span>Đặt Lịch Hẹn Ngay</span>
+              <span>Book Appointment Online</span>
             </button>
 
             {site.phone && (
@@ -671,7 +671,7 @@ export const HeroSection: React.FC<HeroSectionProps> = ({ site, palette, onBookC
               <Star className="w-4 h-4 fill-amber-400 text-amber-400" />
               <div className="text-left">
                 <span className="text-xs font-black text-slate-800">{ratingSummary.averageRating} / 5.0</span>
-                <span className="text-[10px] text-slate-500 block leading-tight">({ratingSummary.totalReviews}+ Đánh Giá)</span>
+                <span className="text-[10px] text-slate-500 block leading-tight">({ratingSummary.totalReviews}+ Reviews)</span>
               </div>
             </div>
           </div>

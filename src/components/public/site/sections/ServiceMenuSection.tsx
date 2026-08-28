@@ -83,10 +83,10 @@ export const ServiceMenuSection: React.FC<ServiceMenuSectionProps> = ({ site, pa
         <div className="max-w-4xl mx-auto space-y-8">
           <div className="text-center space-y-2">
             <span className="text-[11px] font-bold uppercase tracking-widest" style={{ color: palette.accentColor }}>
-              MENU NIÊM YẾT
+              OFFICIAL PRICE MENU
             </span>
             <h2 className={`font-bold ${isMobileView ? 'text-xl' : 'text-2xl sm:text-3xl'}`}>
-              Bảng Giá Dịch Vụ
+              Signature Services & Pricing
             </h2>
             <div className="w-12 h-0.5 mx-auto rounded-full" style={{ backgroundColor: palette.accentColor }} />
           </div>
@@ -104,7 +104,7 @@ export const ServiceMenuSection: React.FC<ServiceMenuSectionProps> = ({ site, pa
                 }`}
                 style={selectedCatId === 'all' ? { backgroundColor: palette.accentColor, color: palette.buttonText } : {}}
               >
-                Tất Cả ({categories.reduce((acc, c) => acc + c.services.length, 0)})
+                All Services ({categories.reduce((acc, c) => acc + c.services.length, 0)})
               </button>
               {categories.map((c) => (
                 <button
@@ -137,7 +137,7 @@ export const ServiceMenuSection: React.FC<ServiceMenuSectionProps> = ({ site, pa
                     className="text-xs font-semibold hover:underline flex items-center gap-1 transition-opacity opacity-85 hover:opacity-100 cursor-pointer"
                     style={{ color: palette.accentColor }}
                   >
-                    <span>Xem Toàn Bộ Menu</span>
+                    <span>View Full Catalog</span>
                     <span aria-hidden="true">&rarr;</span>
                   </button>
                 </h3>
@@ -181,7 +181,7 @@ export const ServiceMenuSection: React.FC<ServiceMenuSectionProps> = ({ site, pa
               }}
             >
               <Sparkles className="w-4 h-4" />
-              <span>Đặt Lịch Hẹn Ngay — Nhận Ưu Đãi 25%</span>
+              <span>Book Appointment Online — Instant Confirmation</span>
             </button>
           </div>
         </div>
@@ -200,10 +200,10 @@ export const ServiceMenuSection: React.FC<ServiceMenuSectionProps> = ({ site, pa
         <div className={`text-center max-w-2xl mx-auto ${isMobileView ? 'mb-6' : 'mb-12'}`}>
           <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold mb-2" style={{ backgroundColor: palette.badgeBg, color: palette.badgeText }}>
             <Sparkles className="w-3.5 h-3.5" />
-            <span>Bảng Giá Niêm Yết Chính Thức</span>
+            <span>Official POS Price Menu</span>
           </div>
-          <h2 className={`font-bold mb-2 ${isMobileView ? 'text-xl' : 'text-2xl sm:text-3xl'}`}>Bảng Giá & Dịch Vụ</h2>
-          <p className="text-xs sm:text-sm" style={{ color: palette.textSecondary }}>Bảng giá niêm yết chính thức cập nhật tự động theo thời gian thực</p>
+          <h2 className={`font-bold mb-2 ${isMobileView ? 'text-xl' : 'text-2xl sm:text-3xl'}`}>Signature Services & Pricing</h2>
+          <p className="text-xs sm:text-sm" style={{ color: palette.textSecondary }}>Real-time official service menu synchronized with Clover POS</p>
 
           {/* Interactive Category Filter Pills */}
           {categories.length > 1 && (
@@ -222,7 +222,7 @@ export const ServiceMenuSection: React.FC<ServiceMenuSectionProps> = ({ site, pa
                   borderColor: palette.borderPrimary
                 }}
               >
-                Tất Cả ({categories.reduce((acc, c) => acc + c.services.length, 0)})
+                All Services ({categories.reduce((acc, c) => acc + c.services.length, 0)})
               </button>
               {categories.map((c) => (
                 <button
@@ -298,7 +298,7 @@ export const ServiceMenuSection: React.FC<ServiceMenuSectionProps> = ({ site, pa
                         <Clock className="w-3 h-3" />
                         {srv.dur}
                       </span>
-                      <span className="font-semibold" style={{ color: palette.accentColor }}>Chọn dịch vụ →</span>
+                      <span className="font-semibold" style={{ color: palette.accentColor }}>Book Service →</span>
                     </div>
                   </div>
                 ))}

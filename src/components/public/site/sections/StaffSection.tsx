@@ -12,18 +12,18 @@ interface StaffSectionProps {
 
 export const StaffSection: React.FC<StaffSectionProps> = ({ site, palette, onSelectStaff, isMobileView }) => {
   const defaultStaffMembers = [
-    { name: 'Sarah Nguyen', role: 'Master Nail Artist', exp: '8 năm kinh nghiệm', rating: 4.9, specialties: 'Ombre, Chrome, 3D Art', avatarUrl: null },
-    { name: 'Jessica Tran', role: 'Spa & Gel Specialist', exp: '6 năm kinh nghiệm', rating: 5.0, specialties: 'Deluxe Pedicure, Dip Powder', avatarUrl: null },
-    { name: 'David Le', role: 'Acrylic & Extension Pro', exp: '10 năm kinh nghiệm', rating: 4.8, specialties: 'Fullset Acrylic, Stiletto, Coffin', avatarUrl: null }
+    { name: 'Sarah Nguyen', role: 'Master Nail Artist', exp: '8 years kinh nghiệm', rating: 4.9, specialties: 'Ombre, Chrome, 3D Art', avatarUrl: null },
+    { name: 'Jessica Tran', role: 'Spa & Gel Specialist', exp: '6 years kinh nghiệm', rating: 5.0, specialties: 'Deluxe Pedicure, Dip Powder', avatarUrl: null },
+    { name: 'David Le', role: 'Acrylic & Extension Pro', exp: '10 years kinh nghiệm', rating: 4.8, specialties: 'Fullset Acrylic, Stiletto, Coffin', avatarUrl: null }
   ]
 
   const staffMembers = (site.staffList && site.staffList.length > 0)
     ? site.staffList.map((s) => ({
         name: s.name,
-        role: s.role || 'Kỹ Thuật Viên Nail & Spa',
-        exp: s.exp || 'Chuyên viên lành nghề',
+        role: s.role || 'Nail & Spa Technician',
+        exp: s.exp || 'Certified Master Technician',
         rating: s.rating ?? 5.0,
-        specialties: s.specialties || 'Chăm sóc móng & Nail Art',
+        specialties: s.specialties || 'Gel Manicure & Custom Nail Art',
         avatarUrl: s.avatarUrl || null
       }))
     : defaultStaffMembers
@@ -41,10 +41,10 @@ export const StaffSection: React.FC<StaffSectionProps> = ({ site, palette, onSel
         <div className="max-w-4xl mx-auto space-y-8">
           <div className="text-center space-y-2">
             <span className="text-[11px] font-bold uppercase tracking-widest" style={{ color: palette.accentColor }}>
-              NGHỆ NHÂN
+              MASTER ARTISTS
             </span>
             <h2 className={`font-bold ${isMobileView ? 'text-xl' : 'text-2xl sm:text-3xl'}`} style={{ color: palette.textPrimary }}>
-              Đội Ngũ Kỹ Thuật Viên
+              Meet Our Master Artists
             </h2>
             <div className="w-12 h-0.5 mx-auto rounded-full" style={{ backgroundColor: palette.accentColor }} />
           </div>
@@ -79,7 +79,7 @@ export const StaffSection: React.FC<StaffSectionProps> = ({ site, palette, onSel
                   className="w-full py-1.5 px-3 rounded-full text-xs font-semibold border transition-colors mt-auto"
                   style={{ borderColor: palette.borderPrimary, color: palette.textPrimary }}
                 >
-                  Chọn Thợ
+                  Select Artist
                 </button>
               </div>
             ))}
@@ -100,12 +100,12 @@ export const StaffSection: React.FC<StaffSectionProps> = ({ site, palette, onSel
         <div className={`text-center max-w-2xl mx-auto ${isMobileView ? 'mb-6' : 'mb-12'}`}>
           <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold mb-2" style={{ backgroundColor: palette.badgeBg, color: palette.badgeText }}>
             <Users className="w-3.5 h-3.5" />
-            <span>Nghệ Nhân Lành Nghề</span>
+            <span>Certified Master Technicians</span>
           </div>
           <h2 className={`font-bold mb-2 ${isMobileView ? 'text-xl' : 'text-2xl sm:text-3xl'}`} style={{ color: palette.textPrimary }}>
-            Đội Ngũ Kỹ Thuật Viên
+            Meet Our Master Artists
           </h2>
-          <p className="text-xs sm:text-sm" style={{ color: palette.textSecondary }}>Chọn thợ yêu thích để được phục vụ chu đáo và tận tâm nhất</p>
+          <p className="text-xs sm:text-sm" style={{ color: palette.textSecondary }}>Select your preferred artist for personalized bespoke salon care</p>
         </div>
 
         <div className={`grid gap-4 ${isMobileView ? 'grid-cols-1' : 'grid-cols-1 sm:grid-cols-2 md:grid-cols-3 md:gap-6'}`}>
@@ -155,7 +155,7 @@ export const StaffSection: React.FC<StaffSectionProps> = ({ site, palette, onSel
                   color: templateId === MerchantSiteTemplateId.Modern ? palette.buttonText : palette.accentColor
                 }}
               >
-                Đặt Lịch Với {staff.name.split(' ')[0]}
+                Book with {staff.name.split(' ')[0]}
               </button>
             </div>
           ))}

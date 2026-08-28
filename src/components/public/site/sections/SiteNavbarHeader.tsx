@@ -70,12 +70,12 @@ export const SiteNavbarHeader: React.FC<SiteNavbarHeaderProps> = ({
         categoryName: name
       }))
       return [
-        { label: 'Tất Cả Dịch Vụ', href: '#services', categoryName: 'all', badge: `${site.services.length}` },
+        { label: 'All Services', href: '#services', categoryName: 'all', badge: `${site.services.length}` },
         ...items
       ]
     }
     return [
-      { label: 'Tất Cả Dịch Vụ', href: '#services', categoryName: 'all', badge: '22' },
+      { label: 'All Services', href: '#services', categoryName: 'all', badge: '22' },
       { label: 'Pedicure', href: '#services', categoryName: 'Pedicure', badge: '9' },
       { label: 'Manicure', href: '#services', categoryName: 'Manicure', badge: '4' },
       { label: 'Acrylic Nail Service', href: '#services', categoryName: 'Acrylic Nail Service', badge: '3' },
@@ -88,16 +88,16 @@ export const SiteNavbarHeader: React.FC<SiteNavbarHeaderProps> = ({
   const navItems: NavItem[] = [
     {
       id: 'services',
-      label: 'Dịch Vụ',
+      label: 'Services',
       href: '#services',
       icon: Scissors,
       subItems: serviceSubmenu
     },
-    { id: 'promotions', label: 'Ưu Đãi', href: '#promotions', icon: Gift },
-    { id: 'about', label: 'Giới Thiệu', href: '#about', icon: Sparkles },
-    { id: 'staff', label: 'Đội Ngũ', href: '#staff', icon: Users },
-    { id: 'reviews', label: 'Đánh Giá', href: '#reviews', icon: Star },
-    { id: 'hours', label: 'Vị Trí', href: '#hours', icon: MapPin },
+    { id: 'promotions', label: 'Offers', href: '#promotions', icon: Gift },
+    { id: 'about', label: 'About', href: '#about', icon: Sparkles },
+    { id: 'staff', label: 'Artists', href: '#staff', icon: Users },
+    { id: 'reviews', label: 'Reviews', href: '#reviews', icon: Star },
+    { id: 'hours', label: 'Location', href: '#hours', icon: MapPin },
   ]
 
   const handleNavClick = (e: React.MouseEvent<HTMLElement>, href: string) => {
@@ -267,9 +267,9 @@ export const SiteNavbarHeader: React.FC<SiteNavbarHeaderProps> = ({
                         >
                           <span className="flex items-center gap-1.5">
                             <Layers className="w-3 h-3" />
-                            <span>DANH MỤC DỊCH VỤ</span>
+                            <span>SERVICE CATEGORIES</span>
                           </span>
-                          <span className="opacity-70 lowercase font-normal">chọn để xem</span>
+                          <span className="opacity-70 lowercase font-normal">select to view</span>
                         </div>
 
                         {/* Category List */}
@@ -309,7 +309,7 @@ export const SiteNavbarHeader: React.FC<SiteNavbarHeaderProps> = ({
                             className="w-full flex items-center justify-center gap-1.5 py-1.5 rounded-lg text-[11px] font-bold transition-opacity hover:opacity-80 cursor-pointer"
                             style={{ color: palette.accentColor }}
                           >
-                            <span>Xem toàn bộ menu bảng giá</span>
+                            <span>View Full Menu & Pricing</span>
                             <ArrowRight className="w-3 h-3" />
                           </button>
                         </div>
@@ -323,7 +323,7 @@ export const SiteNavbarHeader: React.FC<SiteNavbarHeaderProps> = ({
 
           {/* 3. Right Action Controls */}
           <div className="flex items-center gap-2 sm:gap-3 shrink-0 whitespace-nowrap">
-            {/* Primary CTA Button: Đặt Lịch Hẹn */}
+            {/* Primary CTA Button: Book Now */}
             <button
               type="button"
               onClick={onBookClick}
@@ -337,7 +337,7 @@ export const SiteNavbarHeader: React.FC<SiteNavbarHeaderProps> = ({
               }}
             >
               <Calendar className="w-3.5 h-3.5 shrink-0" />
-              <span className="whitespace-nowrap">Đặt Lịch Hẹn</span>
+              <span className="whitespace-nowrap">Book Now</span>
             </button>
 
             {/* Mobile / Tablet Hamburger Menu Toggle Button */}
@@ -352,7 +352,7 @@ export const SiteNavbarHeader: React.FC<SiteNavbarHeaderProps> = ({
                 backgroundColor: 'rgba(255, 255, 255, 0.05)',
                 color: palette.textPrimary
               }}
-              aria-label={isMobileMenuOpen ? 'Đóng menu' : 'Mở menu điều hướng'}
+              aria-label={isMobileMenuOpen ? 'Close menu' : 'Open navigation menu'}
             >
               {isMobileMenuOpen ? <X className="w-4 h-4" /> : <Menu className="w-4 h-4" />}
             </button>
@@ -402,7 +402,7 @@ export const SiteNavbarHeader: React.FC<SiteNavbarHeaderProps> = ({
                             borderColor: palette.borderPrimary,
                             color: palette.textPrimary
                           }}
-                          aria-label="Mở danh mục con"
+                          aria-label="Toggle category submenu"
                         >
                           <ChevronDown className={`w-3.5 h-3.5 transition-transform ${isExpanded ? 'rotate-180' : ''}`} style={{ color: palette.accentColor }} />
                         </button>
@@ -463,7 +463,7 @@ export const SiteNavbarHeader: React.FC<SiteNavbarHeaderProps> = ({
                 }}
               >
                 <Calendar className="w-4 h-4" />
-                <span>Đặt Lịch Hẹn Trực Tuyến</span>
+                <span>Book Appointment Online</span>
               </button>
 
               {site.phone && (

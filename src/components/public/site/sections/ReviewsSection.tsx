@@ -12,9 +12,9 @@ interface ReviewsSectionProps {
 export const ReviewsSection: React.FC<ReviewsSectionProps> = ({ site, palette, isMobileView }) => {
   const templateId = site.templateId || MerchantSiteTemplateId.Classic
   const reviews = [
-    { name: 'Emily Watson', rating: 5, date: '2 ngày trước', comment: 'Dịch vụ làm móng xuất sắc! Thợ làm rất kỹ, sạch sẽ và nhẹ nhàng. Mình sẽ quay lại thường xuyên.' },
-    { name: 'Michael Hernandez', rating: 5, date: '1 tuần trước', comment: 'Không gian sang trọng, bảng giá rõ ràng không chèo kéo. Đặt lịch online cực kỳ tiện lợi.' },
-    { name: 'Sophia Davis', rating: 5, date: '2 tuần trước', comment: 'Mẫu nail art vẽ tay rất đẹp và đúng mẫu mình đưa. Giữ được gần 4 tuần không bị bong tróc!' }
+    { name: 'Emily Watson', rating: 5, date: '2 days ago', comment: 'Outstanding nail service! The technicians are incredibly meticulous, clean, and gentle. I will definitely be back regularly.' },
+    { name: 'Michael Hernandez', rating: 5, date: '1 week ago', comment: 'Luxurious atmosphere, transparent pricing with no aggressive upselling. Online booking was fast and effortless.' },
+    { name: 'Sophia Davis', rating: 5, date: '2 weeks ago', comment: 'The hand-painted nail art was stunning and exact to my inspiration photo. Lasted almost 4 weeks without a single chip!' }
   ]
 
   return (
@@ -27,10 +27,10 @@ export const ReviewsSection: React.FC<ReviewsSectionProps> = ({ site, palette, i
         <div className={`text-center max-w-2xl mx-auto ${isMobileView ? 'mb-6' : 'mb-12'}`}>
           <div className="inline-flex items-center gap-1 px-3 py-1 rounded-full text-xs font-bold mb-2" style={{ backgroundColor: '#FEF3C7', color: '#B45309' }}>
             <Star className="w-3.5 h-3.5 fill-current" />
-            <span>4.9 / 5.0 (128 Đánh Giá)</span>
+            <span>4.9 / 5.0 (128+ Verified Reviews)</span>
           </div>
           <h2 className={`font-bold mb-2 ${isMobileView ? 'text-xl' : 'text-2xl sm:text-3xl'}`}>
-            Khách Hàng Nói Gì Về Chúng Tôi
+            What Our Guests Say
           </h2>
         </div>
 

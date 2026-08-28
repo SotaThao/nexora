@@ -78,7 +78,7 @@ export const HoursSection: React.FC<HoursSectionProps> = ({ site, palette, isMob
             onClick={handleScrollToReviews}
             className="w-full flex items-center justify-between gap-3 pb-2.5 mb-2.5 border-b text-left group/rev transition-colors cursor-pointer"
             style={{ borderColor: palette.borderPrimary }}
-            title="Nhấn để xem trực tiếp đánh giá của khách hàng"
+            title="Click to view client reviews directly"
           >
             <div className="flex items-center gap-2">
               <div className="flex items-center gap-1 px-2 py-0.5 rounded-full bg-amber-400/20 text-amber-500 border border-amber-400/30 text-xs font-black">
@@ -91,13 +91,13 @@ export const HoursSection: React.FC<HoursSectionProps> = ({ site, palette, isMob
                 ))}
               </div>
               <span className="text-xs font-semibold underline-offset-2 group-hover/rev:underline" style={{ color: palette.textSecondary }}>
-                (128 đánh giá)
+                (128 reviews)
               </span>
             </div>
 
             <div className="flex items-center gap-1 text-[11px] font-bold text-amber-500 group-hover/rev:translate-x-0.5 transition-transform shrink-0">
               <MessageSquareQuote className="w-3.5 h-3.5" />
-              <span className="hidden xs:inline sm:inline">Xem reviews</span>
+              <span className="hidden xs:inline sm:inline">View reviews</span>
               <ChevronRight className="w-3.5 h-3.5" />
             </div>
           </button>
@@ -108,7 +108,7 @@ export const HoursSection: React.FC<HoursSectionProps> = ({ site, palette, isMob
             target="_blank"
             rel="noopener noreferrer"
             className="flex items-start gap-2.5 group/addr transition-all"
-            title="Mở địa chỉ trên Google Maps"
+            title="Open address on Google Maps"
           >
             <div
               className="p-2 rounded-xl border shrink-0 mt-0.5 group-hover/addr:scale-105 transition-transform"
@@ -121,7 +121,7 @@ export const HoursSection: React.FC<HoursSectionProps> = ({ site, palette, isMob
                 {address}
               </span>
               <span className="text-[11px] opacity-70 flex items-center gap-1 leading-none mt-1" style={{ color: palette.textSecondary }}>
-                <span>Xem bản đồ chi tiết & chỉ đường</span>
+                <span>Open in Google Maps & Directions</span>
                 <ExternalLink className="w-2.5 h-2.5" />
               </span>
             </div>
