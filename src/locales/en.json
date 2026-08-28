@@ -4316,6 +4316,7 @@
             "statusSms": "SMS sent",
             "statusNew": "New",
             "statusNoShow": "No-show",
+            "statusCancelled": "Cancelled",
             "view": "View",
             "done": "Done",
             "noShow": "No-show",

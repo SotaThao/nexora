@@ -30,6 +30,7 @@ import {
   normalizeVoicePlanStatus,
   normalizeVoicePlanTier,
   type MerchantVoiceLeadStatusApiValue,
+  type MerchantVoiceLeadStatusValue,
   VoiceCreditType,
   type VoiceCreditActivityKind,
   type VoicePlanStatus,
@@ -49,6 +50,7 @@ export {
   BookingUiSearchField,
   BookingUiSource,
   BookingUiStatus,
+  isBookingUiStatus,
   BOOKING_UI_SEARCH_FIELD_TO_API,
   BOOKING_UI_SOURCE_I18N_KEY,
   CallUiStatus,
@@ -132,11 +134,13 @@ export {
 } from '../merchantVoice/domain'
 
 export type {
+  BookingDisplayStatus,
   MerchantVoiceBookingSearchFieldApiValue,
   MerchantVoiceCallStatusGroupApiValue,
   MerchantVoiceDayOfWeekApiValue,
   MerchantVoiceLeadSourceApiValue,
   MerchantVoiceLeadStatusApiValue,
+  MerchantVoiceLeadStatusValue,
   MerchantVoiceStaffActivityStatusApiValue,
 } from '../merchantVoice/domain'
 
@@ -169,7 +173,7 @@ export interface MerchantVoiceBookingDto {
   service: string | null
   preferredTime: string | null
   notes: string | null
-  status: MerchantVoiceLeadStatus
+  status: MerchantVoiceLeadStatusValue
   confirmationSmsSentAt: string | null
   assignedStaffId: string | null
   assignedStaffName: string | null
@@ -274,7 +278,7 @@ export interface CreateMerchantVoiceBookingResultDto {
   servicePrice: number | null
   staffName: string | null
   requestedTimeLocal: string | null
-  status: MerchantVoiceLeadStatus | string
+  status: MerchantVoiceLeadStatusValue
 }
 
 export interface MerchantVoiceStaffFilter {

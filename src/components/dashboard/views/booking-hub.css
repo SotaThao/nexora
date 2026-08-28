@@ -6931,6 +6931,16 @@ body.booking-appointment-panel-modal-open {
   color: #dc2626;
 }
 
+.booking-hub-view .booking-status-cancelled {
+  background: rgba(77, 88, 112, 0.12);
+  color: var(--nexora-muted);
+}
+
+.booking-hub-view .booking-status-unknown {
+  background: var(--nexora-canvas);
+  color: var(--nexora-text);
+}
+
 .booking-hub-view .booking-daybar-actions {
   display: flex;
   flex-wrap: wrap;
@@ -7973,6 +7983,11 @@ body.booking-appointment-panel-modal-open {
   background: rgba(239, 68, 68, 0.04);
 }
 
+.booking-hub-view .booking-table-mobile-row.is-cancelled,
+.booking-hub-view .booking-table-mobile-row.is-unknown {
+  background: rgba(77, 88, 112, 0.04);
+}
+
 .booking-hub-view .booking-table th {
   padding: 12px 16px;
   background: var(--nexora-canvas);
@@ -8117,6 +8132,11 @@ body.booking-appointment-panel-modal-open {
 
 .booking-hub-view .booking-table-row.is-noshow {
   background: rgba(239, 68, 68, 0.04);
+}
+
+.booking-hub-view .booking-table-row.is-cancelled,
+.booking-hub-view .booking-table-row.is-unknown {
+  background: rgba(77, 88, 112, 0.04);
 }
 
 .booking-hub-view .booking-customer,

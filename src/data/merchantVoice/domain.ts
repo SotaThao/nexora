@@ -353,13 +353,23 @@ export function isValidMerchantVoiceServiceDuration(duration: number): boolean {
   return Number.isFinite(duration) && duration >= MERCHANT_VOICE_SERVICE_MIN_DURATION_MINUTES
 }
 
-/** UI-only booking list status (derived from API lead status). */
+/** UI-only booking list status (derived from API `VoiceLeadStatus`). */
 export enum BookingUiStatus {
   New = 'new',
   SmsSent = 'sms-sent',
   Done = 'done',
   NoShow = 'noshow',
+  Cancelled = 'cancelled',
 }
+
+const BOOKING_UI_STATUS_VALUES = new Set<string>(Object.values(BookingUiStatus))
+
+export function isBookingUiStatus(status: string): status is BookingUiStatus {
+  return BOOKING_UI_STATUS_VALUES.has(status)
+}
+
+/** Known UI status, or the raw BE string when the API sends a value we have not mapped yet. */
+export type BookingDisplayStatus = BookingUiStatus | string
 
 /** UI display labels for booking source badges. */
 export enum BookingUiSource {
@@ -378,11 +388,13 @@ export enum BookingUiSearchField {
   Service = 'service',
 }
 
+/** Wire numeric `VoiceLeadStatus` (OpenAPI x-enumNames order). */
 export enum MerchantVoiceLeadStatus {
   New = 0,
   Done = 1,
   Confirmed = 2,
   NoShow = 3,
+  Cancelled = 4,
 }
 
 export const MerchantVoiceLeadStatusApi = {
@@ -390,10 +402,14 @@ export const MerchantVoiceLeadStatusApi = {
   Done: 'Done',
   Confirmed: 'Confirmed',
   NoShow: 'NoShow',
+  Cancelled: 'Cancelled',
 } as const
 
 export type MerchantVoiceLeadStatusApiValue =
   typeof MerchantVoiceLeadStatusApi[keyof typeof MerchantVoiceLeadStatusApi]
+
+/** Known lead status, or the raw BE value when it is not in `VoiceLeadStatus`. */
+export type MerchantVoiceLeadStatusValue = MerchantVoiceLeadStatus | string
 
 export enum MerchantVoiceLeadSource {
   Voice = 0,
@@ -671,6 +687,32 @@ const LEAD_STATUS_API_TO_ENUM: Record<string, MerchantVoiceLeadStatus> = {
   [MerchantVoiceLeadStatusApi.Done]: MerchantVoiceLeadStatus.Done,
   [MerchantVoiceLeadStatusApi.Confirmed]: MerchantVoiceLeadStatus.Confirmed,
   [MerchantVoiceLeadStatusApi.NoShow]: MerchantVoiceLeadStatus.NoShow,
+  [MerchantVoiceLeadStatusApi.Cancelled]: MerchantVoiceLeadStatus.Cancelled,
+  [String(MerchantVoiceLeadStatus.New)]: MerchantVoiceLeadStatus.New,
+  [String(MerchantVoiceLeadStatus.Done)]: MerchantVoiceLeadStatus.Done,
+  [String(MerchantVoiceLeadStatus.Confirmed)]: MerchantVoiceLeadStatus.Confirmed,
+  [String(MerchantVoiceLeadStatus.NoShow)]: MerchantVoiceLeadStatus.NoShow,
+  [String(MerchantVoiceLeadStatus.Cancelled)]: MerchantVoiceLeadStatus.Cancelled,
+  canceled: MerchantVoiceLeadStatus.Cancelled,
+}
+
+const LEAD_STATUS_API_LOOKUP: Record<string, MerchantVoiceLeadStatus> = Object.fromEntries(
+  Object.entries(LEAD_STATUS_API_TO_ENUM).flatMap(([key, status]) => [
+    [key, status],
+    [key.toLowerCase(), status],
+  ]),
+)
+
+const LEAD_STATUS_NUMERIC_TO_ENUM: Record<number, MerchantVoiceLeadStatus> = {
+  [MerchantVoiceLeadStatus.New]: MerchantVoiceLeadStatus.New,
+  [MerchantVoiceLeadStatus.Done]: MerchantVoiceLeadStatus.Done,
+  [MerchantVoiceLeadStatus.Confirmed]: MerchantVoiceLeadStatus.Confirmed,
+  [MerchantVoiceLeadStatus.NoShow]: MerchantVoiceLeadStatus.NoShow,
+  [MerchantVoiceLeadStatus.Cancelled]: MerchantVoiceLeadStatus.Cancelled,
+}
+
+function lookupMerchantVoiceLeadStatus(value: string): MerchantVoiceLeadStatus | undefined {
+  return LEAD_STATUS_API_LOOKUP[value] ?? LEAD_STATUS_API_LOOKUP[value.toLowerCase()]
 }
 
 const LEAD_SOURCE_API_TO_ENUM: Record<string, MerchantVoiceLeadSource> = {
@@ -707,18 +749,15 @@ const BOOKING_UI_SOURCE_CLASS: Record<BookingUiSource, string> = {
   [BookingUiSource.QR]: 'booking-source-qr',
 }
 
-export function normalizeMerchantVoiceLeadStatus(value: unknown): MerchantVoiceLeadStatus {
-  if (value === MerchantVoiceLeadStatus.New || value === '0') return MerchantVoiceLeadStatus.New
-  if (value === MerchantVoiceLeadStatus.Done || value === '1') return MerchantVoiceLeadStatus.Done
-  if (value === MerchantVoiceLeadStatus.Confirmed || value === '2') return MerchantVoiceLeadStatus.Confirmed
-  if (value === MerchantVoiceLeadStatus.NoShow || value === '3') return MerchantVoiceLeadStatus.NoShow
-
-  if (typeof value === 'string') {
-    const mapped = LEAD_STATUS_API_TO_ENUM[value]
-    if (mapped !== undefined) return mapped
+export function normalizeMerchantVoiceLeadStatus(value: unknown): MerchantVoiceLeadStatusValue {
+  if (typeof value === 'number' && Number.isFinite(value)) {
+    return LEAD_STATUS_NUMERIC_TO_ENUM[value] ?? String(value)
   }
 
-  return MerchantVoiceLeadStatus.New
+  const raw = String(value ?? '').trim()
+  if (!raw) return MerchantVoiceLeadStatus.New
+
+  return lookupMerchantVoiceLeadStatus(raw) ?? raw
 }
 
 export function normalizeMerchantVoiceLeadSource(value: unknown): MerchantVoiceLeadSource {
@@ -743,6 +782,7 @@ const LEAD_STATUS_TO_UI_STATUS: Record<MerchantVoiceLeadStatus, BookingUiStatus>
   [MerchantVoiceLeadStatus.Confirmed]: BookingUiStatus.SmsSent,
   [MerchantVoiceLeadStatus.Done]: BookingUiStatus.Done,
   [MerchantVoiceLeadStatus.NoShow]: BookingUiStatus.NoShow,
+  [MerchantVoiceLeadStatus.Cancelled]: BookingUiStatus.Cancelled,
 }
 
 const UI_STATUS_TO_LEAD_STATUS_API: Record<BookingUiStatus, MerchantVoiceLeadStatusApiValue> = {
@@ -750,10 +790,16 @@ const UI_STATUS_TO_LEAD_STATUS_API: Record<BookingUiStatus, MerchantVoiceLeadSta
   [BookingUiStatus.SmsSent]: MerchantVoiceLeadStatusApi.Confirmed,
   [BookingUiStatus.Done]: MerchantVoiceLeadStatusApi.Done,
   [BookingUiStatus.NoShow]: MerchantVoiceLeadStatusApi.NoShow,
+  [BookingUiStatus.Cancelled]: MerchantVoiceLeadStatusApi.Cancelled,
 }
 
-export function mapLeadStatusToUiStatus(status: MerchantVoiceLeadStatus): BookingUiStatus {
-  return LEAD_STATUS_TO_UI_STATUS[status] ?? BookingUiStatus.New
+export function mapLeadStatusToUiStatus(status: MerchantVoiceLeadStatusValue): BookingDisplayStatus {
+  if (typeof status === 'number') {
+    return LEAD_STATUS_TO_UI_STATUS[status] ?? String(status)
+  }
+  const known = lookupMerchantVoiceLeadStatus(status)
+  if (known !== undefined) return LEAD_STATUS_TO_UI_STATUS[known]
+  return status
 }
 
 /** UI status → OpenAPI `VoiceLeadStatus` string for create/update booking payloads. */

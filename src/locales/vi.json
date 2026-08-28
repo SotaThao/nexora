@@ -4316,6 +4316,7 @@
             "statusSms": "Đã gửi SMS",
             "statusNew": "Mới",
             "statusNoShow": "Không đến",
+            "statusCancelled": "Đã hủy",
             "view": "Xem",
             "done": "Xong",
             "noShow": "Không đến",
