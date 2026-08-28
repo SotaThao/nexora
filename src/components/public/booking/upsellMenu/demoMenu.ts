@@ -46,7 +46,7 @@ export const DEMO_SERVICES: DemoServiceSeed[] = [
     memberPrice: 85.0,
     durationMinutes: 75,
     tags: ['VIP', 'Bestseller'],
-    description: 'Dịch vụ Pedicure cao cấp với tinh chất vàng 24K, massage đá nóng 20p và đắp mặt nạ chân.',
+    description: 'Ultra-luxurious pedicure with 24K gold serum, 20-min hot stone massage & botanical foot mask.',
   },
   {
     name: 'Paris Pearl',
@@ -55,7 +55,7 @@ export const DEMO_SERVICES: DemoServiceSeed[] = [
     memberPrice: 65.0,
     durationMinutes: 60,
     tags: ['Best Value'],
-    description: 'Chăm sóc móng chân ngọc trai Paris, tẩy tế bào chết muối biển và massage thảo mộc.',
+    description: 'Parisian pearl foot spa, sea salt exfoliation & calming herbal massage.',
   },
   {
     name: 'Milk and Honey',
@@ -64,7 +64,7 @@ export const DEMO_SERVICES: DemoServiceSeed[] = [
     memberPrice: 48.0,
     durationMinutes: 45,
     tags: ['Organic'],
-    description: 'Ngâm chân sữa tươi & mật ong thiên nhiên, làm mềm gót chân.',
+    description: 'Fresh milk & organic honey foot soak, smoothing dry cracked heels.',
   },
   {
     name: 'Essential Pedicure',
@@ -73,7 +73,7 @@ export const DEMO_SERVICES: DemoServiceSeed[] = [
     memberPrice: 38.0,
     durationMinutes: 35,
     tags: ['Classic'],
-    description: 'Cắt da, tạo form móng, chà gót và sơn màu chuẩn salon.',
+    description: 'Cuticle grooming, precision nail shaping, heel buffing & salon regular polish.',
   },
   {
     name: 'Express Pedicure',
@@ -82,7 +82,7 @@ export const DEMO_SERVICES: DemoServiceSeed[] = [
     memberPrice: 30.0,
     durationMinutes: 30,
     tags: ['Classic'],
-    description: 'Chăm sóc móng chân nhanh gọn, cắt da, tạo form và thoa kem dưỡng.',
+    description: 'Quick refresh pedicure, cuticle clean, shaping & moisturizing lotion.',
   },
   {
     name: 'Callus Removal',
@@ -90,7 +90,7 @@ export const DEMO_SERVICES: DemoServiceSeed[] = [
     price: 10.0,
     durationMinutes: 10,
     tags: ['Add-on', 'Callus'],
-    description: 'Xử lý vết chai sần gót chân bằng serum đặc trị và chà nhám chuyên sâu.',
+    description: 'Intensive callus treatment serum with deep heel smoothing therapy.',
     isAddon: true,
   },
   {
@@ -99,7 +99,7 @@ export const DEMO_SERVICES: DemoServiceSeed[] = [
     price: 8.0,
     durationMinutes: 10,
     tags: ['Add-on', 'Scrub'],
-    description: 'Tẩy tế bào chết bằng đường nâu hữu cơ và tinh dầu dừa thiên nhiên.',
+    description: 'Organic brown sugar scrub exfoliation with natural coconut essential oils.',
     isAddon: true,
   },
   {
@@ -108,7 +108,7 @@ export const DEMO_SERVICES: DemoServiceSeed[] = [
     price: 15.0,
     durationMinutes: 15,
     tags: ['Add-on', 'Combo'],
-    description: 'Gói kết hợp tẩy tế bào chết và ủ sáp dưỡng ẩm làm mềm gót chân.',
+    description: 'Exfoliation scrub paired with warm paraffin moisture wax treatment.',
     isAddon: true,
   },
   {
@@ -117,7 +117,7 @@ export const DEMO_SERVICES: DemoServiceSeed[] = [
     price: 20.0,
     durationMinutes: 15,
     tags: ['Shellac', 'Add-on'],
-    description: 'Nâng cấp sơn Shellac bền màu bóng đẹp cho dịch vụ Pedicure.',
+    description: 'Shellac long-lasting high-gloss upgrade for any pedicure service.',
     isAddon: true,
   },
 
@@ -129,7 +129,7 @@ export const DEMO_SERVICES: DemoServiceSeed[] = [
     memberPrice: 48.0,
     durationMinutes: 50,
     tags: ['VIP', 'Russian Technique'],
-    description: 'Kỹ thuật nhặt da khô chuẩn Nga, phom móng chuẩn xác.',
+    description: 'Dry Russian e-file cuticle detailing with immaculate nail shaping.',
   },
   {
     name: 'Deluxe Collagen Manicure',
@@ -138,7 +138,7 @@ export const DEMO_SERVICES: DemoServiceSeed[] = [
     memberPrice: 39.0,
     durationMinutes: 45,
     tags: ['Collagen', 'Best Value'],
-    description: 'Găng tay collagen chống lão hóa, chăm sóc khóe móng và sơn gel cao cấp.',
+    description: 'Anti-aging collagen gloves, meticulous cuticle care & luxury gel polish.',
   },
   {
     name: 'Gel Manicure',
@@ -147,7 +147,7 @@ export const DEMO_SERVICES: DemoServiceSeed[] = [
     memberPrice: 32.0,
     durationMinutes: 40,
     tags: ['Gel', 'Bestseller'],
-    description: 'Sơn gel giữ màu 3-4 tuần với hơn 500 màu thịnh hành.',
+    description: 'Long-lasting gel lacquer staying flawless 3-4 weeks with 500+ trending shades.',
   },
   {
     name: 'Classic Manicure',
@@ -156,7 +156,7 @@ export const DEMO_SERVICES: DemoServiceSeed[] = [
     memberPrice: 22.0,
     durationMinutes: 25,
     tags: ['Classic'],
-    description: 'Cắt tỉa móng, dưỡng ẩm tinh dầu hoa hồng tự nhiên.',
+    description: 'Natural nail trimming, gentle cuticle tidy & organic rose oil hydration.',
   },
 
   // Acrylic Nail Service
@@ -167,7 +167,7 @@ export const DEMO_SERVICES: DemoServiceSeed[] = [
     memberPrice: 48.0,
     durationMinutes: 60,
     tags: ['Acrylic', 'Gel', 'Bestseller'],
-    description: 'Đắp móng bột Acrylic hoàn thiện sơn gel cao cấp.',
+    description: 'Full set acrylic extensions with durable high-shine gel finish.',
   },
   {
     name: 'Full Set Acrylic Regular',
@@ -176,7 +176,7 @@ export const DEMO_SERVICES: DemoServiceSeed[] = [
     memberPrice: 40.0,
     durationMinutes: 50,
     tags: ['Acrylic'],
-    description: 'Đắp móng bột Acrylic tiêu chuẩn kèm sơn thường.',
+    description: 'Standard full set acrylic extensions with classic salon polish.',
   },
   {
     name: 'Acrylic Refill',
@@ -185,7 +185,7 @@ export const DEMO_SERVICES: DemoServiceSeed[] = [
     memberPrice: 30.0,
     durationMinutes: 40,
     tags: ['Acrylic'],
-    description: 'Châm bột móng nối Acrylic.',
+    description: 'Acrylic refill maintenance for outgrowth with reshaping & fresh color.',
   },
 
   // Dipping Nail
@@ -196,7 +196,7 @@ export const DEMO_SERVICES: DemoServiceSeed[] = [
     memberPrice: 58.0,
     durationMinutes: 60,
     tags: ['Dipping', 'Ombre', 'Save $15'],
-    description: 'Nhúng bột hiệu ứng ombre chuyển màu tự nhiên.',
+    description: 'Organic dipping powder with soft seamless ombre color transition.',
   },
   {
     name: 'Dipping Powder Color',
@@ -205,7 +205,7 @@ export const DEMO_SERVICES: DemoServiceSeed[] = [
     memberPrice: 44.0,
     durationMinutes: 45,
     tags: ['Dipping', 'Organic'],
-    description: 'Nhúng bột màu dinh dưỡng hữu cơ không lưu huỳnh.',
+    description: 'Nutrient-rich organic dipping powder free of harsh chemicals and odor.',
   },
 
   // Builder Gel Service
@@ -216,7 +216,7 @@ export const DEMO_SERVICES: DemoServiceSeed[] = [
     memberPrice: 62.0,
     durationMinutes: 65,
     tags: ['Builder Gel', 'VIP'],
-    description: 'Nối móng gel định hình chuẩn form sang trọng.',
+    description: 'Structured builder gel extensions shaped to elegant bespoke forms.',
   },
   {
     name: 'Builder Gel Overlay',
@@ -225,7 +225,7 @@ export const DEMO_SERVICES: DemoServiceSeed[] = [
     memberPrice: 49.0,
     durationMinutes: 50,
     tags: ['Builder Gel'],
-    description: 'Tráng gel cứng bảo vệ móng tự nhiên không gãy.',
+    description: 'Reinforcing BIAB builder gel overlay to shield natural nails from chipping.',
   },
 
   // Waxing & Others
@@ -235,7 +235,7 @@ export const DEMO_SERVICES: DemoServiceSeed[] = [
     price: 15.0,
     durationMinutes: 15,
     tags: ['Waxing'],
-    description: 'Tỉa và wax định hình chân mày.',
+    description: 'Precision eyebrow mapping, sculpting & gentle botanical wax.',
   },
   {
     name: 'Upper Lip Waxing',
@@ -243,6 +243,6 @@ export const DEMO_SERVICES: DemoServiceSeed[] = [
     price: 10.0,
     durationMinutes: 10,
     tags: ['Waxing'],
-    description: 'Wax ria mép nhẹ nhàng.',
+    description: 'Gentle and soothing upper lip facial waxing.',
   },
 ]

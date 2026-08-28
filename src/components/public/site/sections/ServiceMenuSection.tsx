@@ -11,6 +11,76 @@ interface ServiceMenuSectionProps {
   isMobileView?: boolean
 }
 
+const LEGACY_VN_DESCRIPTIONS: Record<string, string> = {
+  'Dịch vụ Pedicure cao cấp với tinh chất vàng 24K, massage đá nóng 20p và đắp mặt nạ chân.':
+    'Ultra-luxurious pedicure with 24K gold serum, 20-min hot stone massage & botanical foot mask.',
+  'Chăm sóc móng chân ngọc trai Paris, tẩy tế bào chết muối biển và massage thảo mộc.':
+    'Parisian pearl foot spa, sea salt exfoliation & calming herbal massage.',
+  'Ngâm chân sữa tươi & mật ong thiên nhiên, làm mềm gót chân.':
+    'Fresh milk & organic honey foot soak, smoothing dry cracked heels.',
+  'Cắt da, tạo form móng, chà gót và sơn màu chuẩn salon.':
+    'Cuticle grooming, precision nail shaping, heel buffing & salon regular polish.',
+  'Chăm sóc móng chân nhanh gọn, cắt da, tạo form và thoa kem dưỡng.':
+    'Quick refresh pedicure, cuticle clean, shaping & moisturizing lotion.',
+  'Xử lý vết chai sần gót chân bằng serum đặc trị và chà nhám chuyên sâu.':
+    'Intensive callus treatment serum with deep heel smoothing therapy.',
+  'Tẩy tế bào chết bằng đường nâu hữu cơ và tinh dầu dừa thiên nhiên.':
+    'Organic brown sugar scrub exfoliation with natural coconut essential oils.',
+  'Gói kết hợp tẩy tế bào chết và ủ sáp dưỡng ẩm làm mềm gót chân.':
+    'Exfoliation scrub paired with warm paraffin moisture wax treatment.',
+  'Nâng cấp sơn Shellac bền màu bóng đẹp cho dịch vụ Pedicure.':
+    'Shellac long-lasting high-gloss upgrade for any pedicure service.',
+  'Kỹ thuật nhặt da khô chuẩn Nga, phom móng chuẩn xác.':
+    'Dry Russian e-file cuticle detailing with immaculate nail shaping.',
+  'Găng tay collagen chống lão hóa, chăm sóc khóe móng và sơn gel cao cấp.':
+    'Anti-aging collagen gloves, meticulous cuticle care & luxury gel polish.',
+  'Sơn gel giữ màu 3-4 tuần với hơn 500 màu thịnh hành.':
+    'Long-lasting gel lacquer staying flawless 3-4 weeks with 500+ trending shades.',
+  'Cắt tỉa móng, dưỡng ẩm tinh dầu hoa hồng tự nhiên.':
+    'Natural nail trimming, gentle cuticle tidy & organic rose oil hydration.',
+  'Đắp móng bột Acrylic hoàn thiện sơn gel cao cấp.':
+    'Full set acrylic extensions with durable high-shine gel finish.',
+  'Đắp móng bột Acrylic tiêu chuẩn kèm sơn thường.':
+    'Standard full set acrylic extensions with classic salon polish.',
+  'Châm bột móng nối Acrylic.':
+    'Acrylic refill maintenance for outgrowth with reshaping & fresh color.',
+  'Nhúng bột hiệu ứng ombre chuyển màu tự nhiên.':
+    'Organic dipping powder with soft seamless ombre color transition.',
+  'Nhúng bột màu dinh dưỡng hữu cơ không lưu huỳnh.':
+    'Nutrient-rich organic dipping powder free of harsh chemicals and odor.',
+  'Nối móng gel định hình chuẩn form sang trọng.':
+    'Structured builder gel extensions shaped to elegant bespoke forms.',
+  'Tráng gel cứng bảo vệ móng tự nhiên không gãy.':
+    'Reinforcing BIAB builder gel overlay to shield natural nails from chipping.',
+  'Tỉa và wax định hình chân mày.':
+    'Precision eyebrow mapping, sculpting & gentle botanical wax.',
+  'Wax ria mép nhẹ nhàng.':
+    'Gentle and soothing upper lip facial waxing.'
+}
+
+function formatServiceDescription(rawDesc?: string | null): string {
+  if (!rawDesc) {
+    return 'Premium nail care and luxury spa treatment delivered by certified master technicians.'
+  }
+  let cleaned = rawDesc.replace(/\[ADDONS:.*?\]/gi, '').trim()
+
+  const memberMatch = cleaned.match(/^(\[MEMBER:\s*\$?[\d.]+\])\s*(.*)$/i)
+  if (memberMatch) {
+    const memberTag = memberMatch[1]
+    let text = memberMatch[2].trim()
+    if (LEGACY_VN_DESCRIPTIONS[text]) {
+      text = LEGACY_VN_DESCRIPTIONS[text]
+    }
+    return `${memberTag} ${text}`
+  }
+
+  if (LEGACY_VN_DESCRIPTIONS[cleaned]) {
+    return LEGACY_VN_DESCRIPTIONS[cleaned]
+  }
+
+  return cleaned || 'Premium nail care and luxury spa treatment delivered by certified master technicians.'
+}
+
 export const ServiceMenuSection: React.FC<ServiceMenuSectionProps> = ({ site, palette, onSelectService, onBookClick, isMobileView }) => {
   // Group real POS services from admin setup if available
   const categories = React.useMemo(() => {
@@ -28,7 +98,7 @@ export const ServiceMenuSection: React.FC<ServiceMenuSectionProps> = ({ site, pa
           name: item.name,
           dur: item.durationMinutes ? `${item.durationMinutes} mins` : '45 mins',
           price: typeof item.price === 'number' ? `$${item.price.toFixed(2)}` : (String(item.price).startsWith('$') ? String(item.price) : `$${item.price}`),
-          desc: item.description || 'Premium nail care and luxury spa treatment delivered by certified master technicians.'
+          desc: formatServiceDescription(item.description)
         }))
       }))
     }
