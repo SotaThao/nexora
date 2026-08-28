@@ -1,26 +1,19 @@
-import type { SubscriptionMyPackage, SubscriptionPackage } from '../data/repositories/subscriptionPayments'
+import type { SubscriptionPackage } from '../data/repositories/subscriptionPayments'
 import { periodInMonthsFromBillingCycle } from './subscriptionDisplay'
 
-function startOfDay(date: Date): Date {
-  return new Date(date.getFullYear(), date.getMonth(), date.getDate())
-}
-
-function daysBetween(later: Date, earlier: Date): number {
-  const MS_PER_DAY = 24 * 60 * 60 * 1000
-  return Math.round((later.getTime() - earlier.getTime()) / MS_PER_DAY)
-}
+const MS_PER_DAY = 24 * 60 * 60 * 1000
 
 /**
  * Estimated unused-value credit for an upgrade/cycle-switch move, mirroring the backend
  * formula (`SubscriptionActivationService.EnsurePurchasableAndCalculateCredit`):
- * `oldCyclePrice × remainingDays / totalDaysInCycle`, where `remainingDays` excludes today
- * (the day of the move counts as already used) and `totalDaysInCycle` is derived from the
- * current subscription's `expiresAt` and `periodInMonths` (no `currentPeriodStart` field).
+ * `oldCyclePrice × remainingDays / totalDaysInCycle`, where a "day" is a full 24-hour block
+ * from the exact current moment (not the calendar date), and `totalDaysInCycle` is derived
+ * from the current subscription's `expiresAt` and `periodInMonths` (no `currentPeriodStart`
+ * field).
  *
  * This is a client-side ESTIMATE only — no preview API exists. The actual `creditApplied`
- * from the purchase response is the source of truth and may differ by a small rounding
- * amount (day-boundary timing between when this estimate renders and when the purchase
- * actually completes).
+ * from the purchase response is the source of truth and may differ by a small amount if
+ * time passes between when this estimate renders and when the purchase actually completes.
  */
 export function estimateUpgradeCredit(params: {
   /** False for Trialing/anything else — a trial hasn't been paid for, so there's nothing to credit. */
@@ -35,14 +28,13 @@ export function estimateUpgradeCredit(params: {
     return 0
   }
 
-  const end = startOfDay(new Date(params.currentExpiresAt))
+  const end = new Date(params.currentExpiresAt)
   if (Number.isNaN(end.getTime())) return 0
-  const today = startOfDay(new Date())
-  const remainingDays = Math.max(0, daysBetween(end, today) - 1)
+  const remainingDays = Math.floor(Math.max(0, (end.getTime() - Date.now()) / MS_PER_DAY))
 
   const cycleStart = new Date(end)
   cycleStart.setMonth(cycleStart.getMonth() - params.currentPeriodInMonths)
-  const totalDaysInCycle = daysBetween(end, startOfDay(cycleStart))
+  const totalDaysInCycle = (end.getTime() - cycleStart.getTime()) / MS_PER_DAY
   if (totalDaysInCycle <= 0) return 0
 
   return (params.currentCyclePrice * remainingDays) / totalDaysInCycle

@@ -769,7 +769,7 @@ export default function BookingPlansPanel({ buyOnlyMode = false }: { buyOnlyMode
     showToast(
       t(`${TK}.planPaymentSuccess`, {
         plan: selection.planId,
-        price: selection.price,
+        price: selection.price.toFixed(2),
         period: periodSuffix,
         payment: paymentLabel,
       }),
