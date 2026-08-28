@@ -1,4 +1,4 @@
-import { useState, useMemo } from 'react'
+import { useState, useMemo, useEffect } from 'react'
 import { Star, ExternalLink, Lock, ChevronLeft, ChevronRight } from 'lucide-react'
 import { useTranslation } from '../../../contexts/LanguageContext'
 import { renderTextWithGoldStars, formatTransactionDateTime } from '../utils'
@@ -6,6 +6,55 @@ import Panel from '../../ui/Panel'
 import CustomSelect from '../../CustomSelect'
 import Pagination from '../../ui/Pagination'
 import { SkeletonList } from '../../ui/skeleton'
+import { useDashboardReviewsCollected } from '../../../data/hooks/useReviews'
+
+function reviewCategory(review) {
+  return String(review?.category ?? '').toLowerCase()
+}
+
+function matchesGoogleSource(review) {
+  return Boolean(review?.googleClickedAt) || reviewCategory(review).includes('google')
+}
+
+function matchesYelpSource(review) {
+  return Boolean(review?.yelpClickedAt) || reviewCategory(review).includes('yelp')
+}
+
+function matchesLowStars(review) {
+  return (review?.rating || 0) <= 3
+}
+
+function matchesStaffFilter(review, filter, staff) {
+  if (filter === 'all') return true
+  if (!staff?.length) return true
+
+  const member = staff.find((s) => s.id === filter)
+  if (!member) {
+    return review.staffName?.toLowerCase() === String(filter).toLowerCase()
+  }
+
+  const staffName = review.staffName?.toLowerCase() ?? ''
+  return (
+    staffName === member.nickname?.toLowerCase() ||
+    staffName === member.fullName?.toLowerCase() ||
+    review.staffId === filter
+  )
+}
+
+function paginateList(items, pageNumber, pageSize) {
+  const totalCount = items.length
+  const totalPages = Math.max(1, Math.ceil(totalCount / Math.max(1, pageSize)) || 1)
+  const safePage = Math.min(Math.max(1, pageNumber), totalPages)
+  const start = (safePage - 1) * pageSize
+  return {
+    items: items.slice(start, start + pageSize),
+    pageNumber: safePage,
+    totalCount,
+    totalPages,
+    hasPreviousPage: safePage > 1,
+    hasNextPage: safePage < totalPages,
+  }
+}
 
 function ReviewsView({
   reviews,
@@ -27,6 +76,14 @@ function ReviewsView({
   const { t, currentLanguage } = useTranslation()
   const [sourceFilter, setSourceFilter] = useState('all')
   const [starFilter, setStarFilter] = useState('all')
+  const [filterPageNumber, setFilterPageNumber] = useState(1)
+
+  const clientFilterActive = sourceFilter !== 'all' || starFilter !== 'all' || filter !== 'all'
+  // Always load the full list so tab badges stay the same on All vs Google/Yelp/Low stars.
+  const collectedQuery = useDashboardReviewsCollected()
+  const collectedItems = collectedQuery.data?.items ?? []
+  const hasCollected = Boolean(collectedQuery.data)
+  const reviewPool = clientFilterActive ? collectedItems : reviews
 
   const staffFilterOptions = useMemo(() => {
     return (staff ?? []).map((member) => ({
@@ -40,24 +97,17 @@ function ReviewsView({
     }))
   }, [staff, t])
 
-  const reviewsByStaff = useMemo(() => {
-    return reviews.filter((review) => {
-      if (filter === 'all') return true
-      if (!staff?.length) return true
+  const reviewsByStaff = useMemo(
+    () => reviewPool.filter((review) => matchesStaffFilter(review, filter, staff)),
+    [reviewPool, filter, staff],
+  )
 
-      const member = staff.find((s) => s.id === filter)
-      if (!member) {
-        return review.staffName?.toLowerCase() === String(filter).toLowerCase()
-      }
-
-      const staffName = review.staffName?.toLowerCase() ?? ''
-      return (
-        staffName === member.nickname?.toLowerCase() ||
-        staffName === member.fullName?.toLowerCase() ||
-        review.staffId === filter
-      )
-    })
-  }, [reviews, filter, staff])
+  const countPool = useMemo(
+    () => (hasCollected ? collectedItems : reviews).filter((review) =>
+      matchesStaffFilter(review, filter, staff),
+    ),
+    [hasCollected, collectedItems, reviews, filter, staff],
+  )
 
   // For the unfiltered ("All staff") view, KPI cards reflect all-time stats
   // from the BE overview summary. When a specific staff is selected, the
@@ -93,42 +143,29 @@ function ReviewsView({
   }, [useSummary, summary, reviewsByStaff])
 
   const counts = useMemo(() => {
-    // Per-star counts come from the current page: the overview summary only
-    // exposes 4-5★ / 1-3★ buckets, not an exact per-star breakdown.
     const stars = { 5: 0, 4: 0, 3: 0, 2: 0, 1: 0 }
-    let pageGoogle = 0
-    let pageYelp = 0
-    let pageLowStars = 0
-    reviewsByStaff.forEach((r) => {
-      const cat = r.category?.toLowerCase() || ''
-      if (cat.includes('google')) pageGoogle++
-      else if (cat.includes('yelp')) pageYelp++
-      if ((r.rating || 0) <= 3) pageLowStars++
-      if (r.rating >= 1 && r.rating <= 5) stars[r.rating]++
+    let google = 0
+    let yelp = 0
+    let lowStars = 0
+    let starMatchedCount = 0
+    countPool.forEach((r) => {
+      const rating = r.rating || 0
+      if (rating >= 1 && rating <= 5) stars[rating]++
+      if (starFilter !== 'all' && rating !== Number(starFilter)) return
+      starMatchedCount += 1
+      if (matchesGoogleSource(r)) google++
+      if (matchesYelpSource(r)) yelp++
+      if (matchesLowStars(r)) lowStars++
     })
 
-    // "All" always uses the reviews list response totalCount (not overview
-    // summary.totalReviews), so the tab matches pagination / list size.
-    const allCount = filter === 'all' ? totalCount : reviewsByStaff.length
-
-    if (useSummary && summary) {
-      return {
-        all: allCount,
-        google: summary.googleClicks,
-        yelp: summary.yelpClicks,
-        lowStars: summary.count1To3Stars,
-        stars,
-      }
-    }
-
     return {
-      all: allCount,
-      google: pageGoogle,
-      yelp: pageYelp,
-      lowStars: pageLowStars,
+      all: filter === 'all' && starFilter === 'all' ? totalCount : starMatchedCount,
+      google,
+      yelp,
+      lowStars,
       stars,
     }
-  }, [useSummary, summary, filter, reviewsByStaff, totalCount])
+  }, [countPool, filter, starFilter, totalCount])
 
   const reviewLinks = useMemo(() => {
     const defaultLinks = {
@@ -141,25 +178,54 @@ function ReviewsView({
 
   const filtered = useMemo(() => {
     return reviewsByStaff.filter((review) => {
-      // 1. Source / Rating Filter
       let matchesSource = true
-      if (sourceFilter === 'google') {
-        matchesSource = Boolean(review.googleClickedAt) || review.category?.toLowerCase().includes('google')
-      } else if (sourceFilter === 'yelp') {
-        matchesSource = Boolean(review.yelpClickedAt) || review.category?.toLowerCase().includes('yelp')
-      } else if (sourceFilter === 'low_stars') {
-        matchesSource = (review.rating || 0) <= 3
-      }
+      if (sourceFilter === 'google') matchesSource = matchesGoogleSource(review)
+      else if (sourceFilter === 'yelp') matchesSource = matchesYelpSource(review)
+      else if (sourceFilter === 'low_stars') matchesSource = matchesLowStars(review)
 
-      // 2. Star Filter
-      let matchesStar = true
-      if (starFilter !== 'all') {
-        matchesStar = review.rating === Number(starFilter)
-      }
-
+      const matchesStar = starFilter === 'all' || review.rating === Number(starFilter)
       return matchesSource && matchesStar
     })
   }, [reviewsByStaff, sourceFilter, starFilter])
+
+  useEffect(() => {
+    setFilterPageNumber(1)
+  }, [sourceFilter, starFilter, filter])
+
+  const listPage = useMemo(
+    () => (clientFilterActive ? paginateList(filtered, filterPageNumber, pageSize) : null),
+    [clientFilterActive, filtered, filterPageNumber, pageSize],
+  )
+
+  useEffect(() => {
+    if (!listPage) return
+    if (filterPageNumber !== listPage.pageNumber) {
+      setFilterPageNumber(listPage.pageNumber)
+    }
+  }, [filterPageNumber, listPage])
+
+  const visibleReviews = listPage?.items ?? filtered
+  const listLoading = clientFilterActive
+    ? collectedQuery.isPending && !collectedQuery.data
+    : isLoading || isFetching
+  const listFetching = clientFilterActive ? collectedQuery.isFetching : isFetching
+  const paging = listPage
+    ? {
+        pageNumber: listPage.pageNumber,
+        totalPages: listPage.totalPages,
+        totalCount: listPage.totalCount,
+        hasNextPage: listPage.hasNextPage,
+        hasPreviousPage: listPage.hasPreviousPage,
+        onPageChange: setFilterPageNumber,
+      }
+    : {
+        pageNumber,
+        totalPages,
+        totalCount,
+        hasNextPage,
+        hasPreviousPage,
+        onPageChange,
+      }
 
   return (
     <div className="space-y-5">
@@ -280,14 +346,14 @@ function ReviewsView({
       </div>
 
       <div className="space-y-3">
-        {isLoading || isFetching ? (
+        {listLoading ? (
           <SkeletonList count={pageSize} lines={2} />
-        ) : filtered.length === 0 ? (
+        ) : visibleReviews.length === 0 ? (
           <Panel className="p-8 text-center text-nexoraMuted font-medium text-xs">
             {t('staff_detail.no_reviews_matching')}
           </Panel>
         ) : (
-          filtered.map((review) => {
+          visibleReviews.map((review) => {
             const isGoogle = Boolean(review.googleClickedAt) || review.category?.toLowerCase().includes('google')
             const isYelp = Boolean(review.yelpClickedAt) || review.category?.toLowerCase().includes('yelp')
             const isPrivate = review.routingType?.toLowerCase() === 'private' || review.category === 'private'
@@ -370,14 +436,14 @@ function ReviewsView({
       </div>
 
         <Pagination
-          pageNumber={pageNumber}
+          pageNumber={paging.pageNumber}
           pageSize={pageSize}
-          totalPages={totalPages}
-          totalCount={totalCount}
-          hasNextPage={hasNextPage}
-          hasPreviousPage={hasPreviousPage}
-          onPageChange={onPageChange}
-          isLoading={isFetching}
+          totalPages={paging.totalPages}
+          totalCount={paging.totalCount}
+          hasNextPage={paging.hasNextPage}
+          hasPreviousPage={paging.hasPreviousPage}
+          onPageChange={paging.onPageChange}
+          isLoading={listFetching}
           className="rounded-xl border border-nexoraBorder/60 bg-white shadow-sm"
         />
 
