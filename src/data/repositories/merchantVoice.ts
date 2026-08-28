@@ -580,6 +580,22 @@ export interface SaveServicesBatchResult {
   items: SaveServiceBatchResultItem[]
 }
 
+/** Item for POST {SHARED_CATALOG_BASE}/categories/batch — omit `id` to create, set it to update. */
+export interface SaveCategoryBatchItem {
+  id?: string | null
+  name: string
+  description?: string | null
+}
+
+export interface SaveCategoryBatchResultItem {
+  id: string
+  wasCreated: boolean
+}
+
+export interface SaveCategoriesBatchResult {
+  items: SaveCategoryBatchResultItem[]
+}
+
 export interface MerchantVoiceOperatingHourDto {
   dayOfWeek: string | number
   isOpen: boolean
@@ -1679,6 +1695,16 @@ export function createMerchantVoiceRepository(client: HttpClient = httpClient) {
     async deleteServiceCategory(id: string): Promise<void> {
       await client.del<void>(
         `${SHARED_CATALOG_BASE}/categories/${encodeURIComponent(id)}`,
+        { headers: MERCHANT_VOICE_HEADERS },
+      )
+    },
+
+    // JSON batch endpoint — used to save multiple category rows atomically in one request
+    // instead of one create/update request per row (see Booking Settings "Manage Categories").
+    async saveCategoriesBatch(items: SaveCategoryBatchItem[]): Promise<SaveCategoriesBatchResult> {
+      return await client.post<SaveCategoriesBatchResult>(
+        `${SHARED_CATALOG_BASE}/categories/batch`,
+        { items },
         { headers: MERCHANT_VOICE_HEADERS },
       )
     },

@@ -19,6 +19,8 @@ import {
   type UpdateMerchantVoiceServiceRequest,
   type SaveServiceBatchItem,
   type SaveServicesBatchResult,
+  type SaveCategoryBatchItem,
+  type SaveCategoriesBatchResult,
   MerchantVoiceLeadStatus,
   MerchantVoiceStaffStatus,
   type CreateMerchantVoiceBookingRequest,
@@ -372,6 +374,16 @@ export function useUpdateMerchantVoiceService() {
 export function useSaveServicesBatch() {
   return useMutation<SaveServicesBatchResult, Error, SaveServiceBatchItem[]>({
     mutationFn: (items) => merchantVoiceRepository.saveServicesBatch(items),
+  })
+}
+
+// Saves multiple categories (create + rename) in one atomic JSON request instead of
+// one create/update request per row. No onSuccess invalidation here: the caller
+// (saveCategoryModal in BookingSettingsPanel.tsx) always refetches categories right
+// after and rebuilds local state from the fresh response.
+export function useSaveCategoriesBatch() {
+  return useMutation<SaveCategoriesBatchResult, Error, SaveCategoryBatchItem[]>({
+    mutationFn: (items) => merchantVoiceRepository.saveCategoriesBatch(items),
   })
 }
 

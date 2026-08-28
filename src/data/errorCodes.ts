@@ -186,6 +186,18 @@ export const errorCodeToI18nKey = {
   [CatalogErrorCode.ServiceAddOnInUse]: 'errors.catalog_service_addon_in_use',
   [CatalogErrorCode.ServiceAddOnCopySourceInvalid]: 'errors.catalog_service_addon_copy_source_invalid',
 
+  // Shared Catalog — Categories batch save (POST categories/batch)
+  [CatalogErrorCode.CategoryBatchItemsRequired]: 'errors.catalog_category_batch_items_required',
+  [CatalogErrorCode.CategoryBatchTooManyItems]: 'errors.catalog_category_batch_too_many_items',
+  [CatalogErrorCode.CategoryBatchDuplicateId]: 'errors.catalog_category_batch_duplicate_id',
+  [CatalogErrorCode.CategoryBatchInvalidId]: 'errors.catalog_category_batch_invalid_id',
+  [CatalogErrorCode.CategoryBatchItemNotFound]: 'errors.catalog_category_batch_item_not_found',
+  [CatalogErrorCode.CategoryNameRequired]: 'errors.pos_category_name_required',
+  [CatalogErrorCode.CategoryNameTooLong]: 'errors.pos_category_name_too_long',
+  [CatalogErrorCode.CategoryNameDuplicate]: 'errors.catalog_category_name_duplicate',
+  [CatalogErrorCode.CategoryDescriptionTooLong]: 'errors.catalog_category_description_too_long',
+  [CatalogErrorCode.CategoryCannotModifyDefault]: 'errors.voice_service_category_cannot_modify_default',
+
   // POS Owner Setup — Products (US-018)
   POS_PRODUCT_NOT_FOUND: 'errors.pos_product_not_found',
   POS_PRODUCT_NAME_REQUIRED: 'errors.pos_product_name_required',

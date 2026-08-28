@@ -4,16 +4,15 @@ import { useNotification } from "../../../contexts/NotificationContext";
 import { getErrorI18nKey } from "../../../data/errorCodes";
 import {
   useCreateMerchantVoiceService,
-  useCreateMerchantVoiceServiceCategory,
   useDeleteMerchantVoiceService,
   useDeleteMerchantVoiceServiceCategory,
   useMerchantVoiceConfig,
   useMerchantVoiceServiceCategories,
   useMerchantVoiceServices,
+  useSaveCategoriesBatch,
   useSaveServicesBatch,
   useUpdateMerchantVoiceConfig,
   useUpdateMerchantVoiceService,
-  useUpdateMerchantVoiceServiceCategory,
 } from "../../../data/hooks/useMerchantVoiceBookings";
 import { useMerchantSetup } from "../../../data/hooks/useMerchantSetup";
 import {
@@ -30,6 +29,7 @@ import {
   normalizeMerchantVoiceDayOfWeek,
   OTHER_SERVICES_CATEGORY_ID,
   type MerchantVoiceServiceCategoryDto,
+  type SaveCategoryBatchItem,
   type SaveServiceBatchItem,
 } from "../../../data/repositories/merchantVoice";
 import { merchantsRepository } from "../../../data/repositories/merchants";
@@ -1022,8 +1022,7 @@ export default function BookingSettingsPanel() {
   const businessId = merchantSetupData?.businessInfo?.businessId;
   const { data: posBookingSettingsData } = useBookingSettings(businessId);
   const updateBookingSettingsMutation = useUpdateBookingSettings(businessId);
-  const createCategoryMutation = useCreateMerchantVoiceServiceCategory();
-  const updateCategoryMutation = useUpdateMerchantVoiceServiceCategory();
+  const saveCategoriesBatchMutation = useSaveCategoriesBatch();
   const deleteCategoryMutation = useDeleteMerchantVoiceServiceCategory();
   const createServiceMutation = useCreateMerchantVoiceService();
   const updateServiceMutation = useUpdateMerchantVoiceService();
@@ -2102,25 +2101,14 @@ export default function BookingSettingsPanel() {
     setCategoryModalError("");
     setCategoryModalErrorIndex(null);
     try {
-      for (const category of plan.creates) {
-        const id = await createCategoryMutation.mutateAsync({
-          name: category.name,
-        });
-        setCategoryDrafts((prev) =>
-          prev.map((draft, index) =>
-            index === category.draftIndex
-              ? { ...draft, id, name: category.name, isNew: false }
-              : draft,
-          ),
-        );
-      }
-
-      for (const category of plan.updates) {
-        await updateCategoryMutation.mutateAsync({
+      const batchItems: SaveCategoryBatchItem[] = [
+        ...plan.creates.map((category) => ({ name: category.name })),
+        ...plan.updates.map((category) => ({
           id: category.id,
-          body: { name: category.name },
-        });
-      }
+          name: category.name,
+        })),
+      ];
+      await saveCategoriesBatchMutation.mutateAsync(batchItems);
 
       const refreshed = await merchantVoiceRepository.getServiceCategories();
       const next = flattenCategoriesToUi(refreshed);
@@ -2140,7 +2128,6 @@ export default function BookingSettingsPanel() {
         );
       }
       syncCategoryDraftsFromApi(mergedCategories);
-      setCategoryModalOpen(false);
       showToast(t(`${TK}.saveSuccess`), "success");
     } catch (error) {
       const message = t(getErrorI18nKey(getApiErrorCode(error)));
@@ -2625,15 +2612,19 @@ export default function BookingSettingsPanel() {
       return;
     }
 
-    // Past this point the save is definitely going through — only now do we discard
-    // invalid/unfinished draft rows and validate inline-edited services. Doing this any
-    // earlier would delete draft rows even when an unrelated field above blocks the save.
-    for (const draft of newServiceDrafts) {
-      if (nextNewServiceDraftErrors[draft.id]) {
-        dispatchNewServiceDraft({ type: "remove", id: draft.id });
-      }
+    // Past this point the save is definitely going through — only now do we surface
+    // draft-row errors. Doing this any earlier would flag draft rows even when an
+    // unrelated field above blocks the save. Invalid/unfinished rows stay visible with
+    // their error instead of being removed — only rows that pass are sent below.
+    setNewServiceDraftErrors(nextNewServiceDraftErrors);
+    if (Object.keys(nextNewServiceDraftErrors).length > 0) {
+      const invalidCategoryIds = new Set(
+        newServiceDrafts
+          .filter((draft) => nextNewServiceDraftErrors[draft.id])
+          .map((draft) => draft.categoryId),
+      );
+      setOpenServiceCategoryIds((prev) => new Set([...prev, ...invalidCategoryIds]));
     }
-    setNewServiceDraftErrors({});
 
     // Existing services edited inline (no longer auto-saved on blur) are validated the
     // same way — dirty rows that pass are saved in "Save settings"; invalid ones are
@@ -2852,9 +2843,11 @@ export default function BookingSettingsPanel() {
         void refreshServicesCatalog().catch(() => undefined);
       }
       if (createdNewServiceDraftIds.length === 0 && newServiceDraftsToSave.length > 0) {
-        setNewServiceDraftErrors(
-          Object.fromEntries(newServiceDraftsToSave.map((draft) => [draft.id, message])),
-        );
+        // Merge, don't replace — invalid rows already have their own error showing.
+        setNewServiceDraftErrors((prev) => ({
+          ...prev,
+          ...Object.fromEntries(newServiceDraftsToSave.map((draft) => [draft.id, message])),
+        }));
       }
       if (updatedServiceIds.length === 0 && persistedDirtyServices.length > 0) {
         setInlineServiceErrors((prev) => ({

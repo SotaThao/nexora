@@ -22,4 +22,15 @@ export enum CatalogErrorCode {
   ServiceAddOnPriceInvalid = 'CATALOG_SERVICE_ADDON_PRICE_INVALID',
   ServiceAddOnInUse = 'CATALOG_SERVICE_ADDON_IN_USE',
   ServiceAddOnCopySourceInvalid = 'CATALOG_SERVICE_ADDON_COPY_SOURCE_INVALID',
+  // POST {SHARED_CATALOG_BASE}/categories/batch
+  CategoryBatchItemsRequired = 'CATALOG_CATEGORY_BATCH_ITEMS_REQUIRED',
+  CategoryBatchTooManyItems = 'CATALOG_CATEGORY_BATCH_TOO_MANY_ITEMS',
+  CategoryBatchDuplicateId = 'CATALOG_CATEGORY_BATCH_DUPLICATE_ID',
+  CategoryBatchInvalidId = 'CATALOG_CATEGORY_BATCH_INVALID_ID',
+  CategoryBatchItemNotFound = 'CATALOG_CATEGORY_BATCH_ITEM_NOT_FOUND',
+  CategoryNameRequired = 'CATALOG_CATEGORY_NAME_REQUIRED',
+  CategoryNameTooLong = 'CATALOG_CATEGORY_NAME_TOO_LONG',
+  CategoryNameDuplicate = 'CATALOG_CATEGORY_NAME_DUPLICATE',
+  CategoryDescriptionTooLong = 'CATALOG_CATEGORY_DESCRIPTION_TOO_LONG',
+  CategoryCannotModifyDefault = 'CATALOG_CATEGORY_CANNOT_MODIFY_DEFAULT',
 }
