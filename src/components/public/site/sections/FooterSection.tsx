@@ -89,11 +89,11 @@ export const FooterSection: React.FC<FooterSectionProps> = ({
       }}
     >
       {/* 1. Main 4-Column Footer Content */}
-      <div className={`max-w-7xl mx-auto ${isMobileView ? 'py-10 px-4 space-y-8' : 'py-14 px-4 sm:px-6 lg:px-8'}`}>
+      <div className={`max-w-7xl mx-auto ${isMobileView ? 'py-8 px-4 space-y-8' : 'py-14 px-4 sm:px-6 lg:px-8'}`}>
         <div className={`grid gap-8 ${isMobileView ? 'grid-cols-1' : 'grid-cols-1 md:grid-cols-2 lg:grid-cols-12 lg:gap-10'}`}>
           {/* Column 1: Brand Info & Description (4 cols on lg) */}
-          <div className="lg:col-span-4 space-y-4 text-left">
-            <div className="flex items-center gap-3">
+          <div className={isMobileView ? 'space-y-4 text-center flex flex-col items-center' : 'lg:col-span-4 space-y-4 text-left'}>
+            <div className={`flex items-center gap-3 ${isMobileView ? 'justify-center' : ''}`}>
               {logoUrl ? (
                 <img
                   src={logoUrl}
@@ -113,7 +113,7 @@ export const FooterSection: React.FC<FooterSectionProps> = ({
                   {businessName.charAt(0).toUpperCase()}
                 </div>
               )}
-              <div className="min-w-0">
+              <div className="min-w-0 text-left">
                 <span className="font-extrabold text-base tracking-tight truncate block text-white">
                   {businessName}
                 </span>
@@ -124,7 +124,7 @@ export const FooterSection: React.FC<FooterSectionProps> = ({
               </div>
             </div>
 
-            <p className="text-xs leading-relaxed text-slate-300/90 max-w-sm">
+            <p className={`text-xs leading-relaxed text-slate-300/90 ${isMobileView ? 'text-center max-w-sm' : 'max-w-sm'}`}>
               {site.slogan || site.content?.about?.description || 'Premium nail care services with a futuristic twist. The world\'s first crypto integrated luxury salon.'}
             </p>
 
@@ -145,8 +145,8 @@ export const FooterSection: React.FC<FooterSectionProps> = ({
           </div>
 
           {/* Column 2: Quick Links (2 cols on lg) */}
-          <div className="lg:col-span-3 space-y-3 text-left">
-            <h4 className="font-bold text-sm text-white tracking-wide uppercase flex items-center gap-2">
+          <div className={isMobileView ? 'space-y-3 text-center' : 'lg:col-span-3 space-y-3 text-left'}>
+            <h4 className={`font-bold text-sm text-white tracking-wide uppercase flex items-center gap-2 ${isMobileView ? 'justify-center' : ''}`}>
               <span className="w-1.5 h-3.5 rounded-full" style={{ backgroundColor: palette.accentColor }} />
               <span>Quick Links</span>
             </h4>
@@ -156,7 +156,7 @@ export const FooterSection: React.FC<FooterSectionProps> = ({
                   <a
                     href={link.href}
                     onClick={(e) => handleSmoothScroll(e, link.href, link.isBooking)}
-                    className="hover:text-white transition-colors flex items-center gap-1.5 group text-slate-300/90 cursor-pointer"
+                    className={`hover:text-white transition-colors flex items-center gap-1.5 group text-slate-300/90 cursor-pointer ${isMobileView ? 'justify-center' : ''}`}
                   >
                     <span className="w-1 h-1 rounded-full opacity-40 group-hover:opacity-100 group-hover:scale-150 transition-all shrink-0" style={{ backgroundColor: palette.accentColor }} />
                     <span className="group-hover:translate-x-0.5 transition-transform">{link.label}</span>
@@ -167,8 +167,8 @@ export const FooterSection: React.FC<FooterSectionProps> = ({
           </div>
 
           {/* Column 3: Popular Services (2 cols on lg) */}
-          <div className="lg:col-span-2 space-y-3 text-left">
-            <h4 className="font-bold text-sm text-white tracking-wide uppercase flex items-center gap-2">
+          <div className={isMobileView ? 'space-y-3 text-center' : 'lg:col-span-2 space-y-3 text-left'}>
+            <h4 className={`font-bold text-sm text-white tracking-wide uppercase flex items-center gap-2 ${isMobileView ? 'justify-center' : ''}`}>
               <span className="w-1.5 h-3.5 rounded-full" style={{ backgroundColor: palette.accentColor }} />
               <span>Popular Services</span>
             </h4>
@@ -178,7 +178,7 @@ export const FooterSection: React.FC<FooterSectionProps> = ({
                   <a
                     href="#services"
                     onClick={(e) => handleServiceClick(e, service)}
-                    className="hover:text-white transition-colors flex items-center gap-1.5 group text-slate-300/90 cursor-pointer"
+                    className={`hover:text-white transition-colors flex items-center gap-1.5 group text-slate-300/90 cursor-pointer ${isMobileView ? 'justify-center' : ''}`}
                   >
                     <span className="w-1 h-1 rounded-full opacity-40 group-hover:opacity-100 group-hover:scale-150 transition-all shrink-0" style={{ backgroundColor: palette.accentColor }} />
                     <span className="truncate group-hover:translate-x-0.5 transition-transform">{service}</span>
@@ -189,13 +189,13 @@ export const FooterSection: React.FC<FooterSectionProps> = ({
           </div>
 
           {/* Column 4: Contact Us & Location (3 cols on lg) */}
-          <div className="lg:col-span-3 space-y-3 text-left">
-            <h4 className="font-bold text-sm text-white tracking-wide uppercase flex items-center gap-2">
+          <div className={isMobileView ? 'space-y-3 text-center flex flex-col items-center' : 'lg:col-span-3 space-y-3 text-left'}>
+            <h4 className={`font-bold text-sm text-white tracking-wide uppercase flex items-center gap-2 ${isMobileView ? 'justify-center' : ''}`}>
               <span className="w-1.5 h-3.5 rounded-full" style={{ backgroundColor: palette.accentColor }} />
               <span>Contact Us</span>
             </h4>
 
-            <div className="space-y-2.5 text-xs text-slate-300/90">
+            <div className={`space-y-2.5 text-xs text-slate-300/90 ${isMobileView ? 'flex flex-col items-center' : ''}`}>
               <a
                 href={mapsUrl}
                 target="_blank"
@@ -209,7 +209,7 @@ export const FooterSection: React.FC<FooterSectionProps> = ({
               {phone && (
                 <div className="flex items-center gap-2">
                   <Phone className="w-4 h-4 shrink-0" style={{ color: palette.accentColor }} />
-                  <div className="flex flex-col">
+                  <div className={`flex flex-col ${isMobileView ? 'text-center' : ''}`}>
                     <span className="font-bold text-white">Store: {phone}</span>
                     <span className="text-[11px] opacity-70">Cell Phone: (832) 799-3990</span>
                   </div>
@@ -226,15 +226,15 @@ export const FooterSection: React.FC<FooterSectionProps> = ({
       </div>
 
       {/* 2. Bottom Copyright & Badges Bar */}
-      <div className="border-t py-6 px-4 sm:px-6 lg:px-8" style={{ borderColor: 'rgba(255, 255, 255, 0.08)', backgroundColor: '#050912' }}>
-        <div className="max-w-7xl mx-auto flex flex-col md:flex-row items-center justify-between gap-4 text-xs">
+      <div className={`border-t ${isMobileView ? 'py-5 px-4' : 'py-6 px-4 sm:px-6 lg:px-8'}`} style={{ borderColor: 'rgba(255, 255, 255, 0.08)', backgroundColor: '#050912' }}>
+        <div className={`max-w-7xl mx-auto flex flex-col items-center justify-between gap-4 text-xs ${isMobileView ? 'text-center' : 'md:flex-row'}`}>
           {/* Copyright */}
-          <div className="text-slate-400 text-center md:text-left">
+          <div className={`text-slate-400 ${isMobileView ? 'text-center w-full' : 'text-center md:text-left'}`}>
             <span className="font-bold text-white">{businessName}</span> — © {new Date().getFullYear()} All Rights Reserved.
           </div>
 
           {/* Payment Method Badges */}
-          <div className="flex items-center gap-1.5 flex-wrap justify-center">
+          <div className="flex items-center gap-1.5 flex-wrap justify-center w-full md:w-auto">
             <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-amber-500/10 text-amber-400 border border-amber-500/20">₿ Bitcoin</span>
             <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">₮ USDT</span>
             <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-indigo-500/10 text-indigo-400 border border-indigo-500/20">💳 VLINKPAY</span>
@@ -244,7 +244,7 @@ export const FooterSection: React.FC<FooterSectionProps> = ({
           </div>
 
           {/* POS & Technology Badges */}
-          <div className="flex items-center gap-4 text-slate-400">
+          <div className="flex items-center gap-4 text-slate-400 justify-center flex-wrap w-full md:w-auto">
             <div className="flex items-center gap-1.5 text-emerald-400 font-semibold">
               <ShieldCheck className="w-3.5 h-3.5 shrink-0" />
               <span>Clover POS Verified</span>
