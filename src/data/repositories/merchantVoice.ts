@@ -1,6 +1,7 @@
 import httpClient from '../../lib/httpClient'
 import { BOOKING_HUB_PAGE_SIZE, BOOKING_HUB_STATUS_COLLECT_MAX_PAGES, BOOKING_HUB_STATUS_COLLECT_PAGE_SIZE } from '../../constants/pagination'
 import { HOLIDAY_TYPE, type HolidayType } from '../../constants/holiday'
+import type { PosServiceStatus } from '../../types/repositories'
 import {
   mapStaffStatusToActivityApi,
   MerchantVoiceBookingSearchField,
@@ -567,7 +568,7 @@ export interface SaveServiceBatchItem {
   photoUrl?: string | null
   categoryIds: string[]
   tags?: string[]
-  status?: 'Active' | 'Inactive'
+  status?: PosServiceStatus
 }
 
 export interface SaveServiceBatchResultItem {
