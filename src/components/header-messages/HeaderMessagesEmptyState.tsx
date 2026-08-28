@@ -2,7 +2,7 @@ import { MessagesSquare, Users, type LucideIcon } from 'lucide-react'
 import {
   HEADER_MESSAGES_I18N,
   HeaderMessagesEmptyVariant,
-  MERCHANT_STAFF_EMPTY_CTA,
+  HeaderMessagesStaffChatCtaVariant,
 } from './headerMessagesConstants'
 import HeaderMessagesStaffChatCta from './HeaderMessagesStaffChatCta'
 
@@ -11,6 +11,7 @@ interface HeaderMessagesEmptyStateProps {
   t: (key: string) => string
   descriptionKey?: string
   actionLabel?: string
+  actionIcon?: LucideIcon
   onAction?: () => void
 }
 
@@ -38,6 +39,7 @@ export default function HeaderMessagesEmptyState({
   t,
   descriptionKey: descriptionKeyOverride,
   actionLabel,
+  actionIcon,
   onAction,
 }: HeaderMessagesEmptyStateProps) {
   const { Icon, titleKey, descriptionKey } = EMPTY_STATE_CONFIG[variant]
@@ -54,8 +56,9 @@ export default function HeaderMessagesEmptyState({
       </div>
       {actionLabel && onAction ? (
         <HeaderMessagesStaffChatCta
-          variant={MERCHANT_STAFF_EMPTY_CTA.variant}
+          variant={HeaderMessagesStaffChatCtaVariant.Empty}
           label={actionLabel}
+          Icon={actionIcon}
           onClick={onAction}
         />
       ) : null}
