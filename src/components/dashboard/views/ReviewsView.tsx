@@ -107,9 +107,13 @@ function ReviewsView({
       if (r.rating >= 1 && r.rating <= 5) stars[r.rating]++
     })
 
+    // "All" always uses the reviews list response totalCount (not overview
+    // summary.totalReviews), so the tab matches pagination / list size.
+    const allCount = filter === 'all' ? totalCount : reviewsByStaff.length
+
     if (useSummary && summary) {
       return {
-        all: summary.totalReviews,
+        all: allCount,
         google: summary.googleClicks,
         yelp: summary.yelpClicks,
         lowStars: summary.count1To3Stars,
@@ -118,7 +122,7 @@ function ReviewsView({
     }
 
     return {
-      all: filter === 'all' ? totalCount : reviewsByStaff.length,
+      all: allCount,
       google: pageGoogle,
       yelp: pageYelp,
       lowStars: pageLowStars,
