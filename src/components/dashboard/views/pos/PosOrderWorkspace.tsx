@@ -16,6 +16,7 @@ import { useTranslation } from '../../../../contexts/LanguageContext'
 import { useNotification } from '../../../../contexts/NotificationContext'
 import { getErrorMessage } from '../../../../data/errorCodes'
 import {
+  useAddOrderCustomServiceLine,
   useAddOrderServiceLine,
   useCheckoutServiceCatalog,
   useCompleteOrder,
@@ -55,6 +56,8 @@ import { formatCustomerPhone } from './customer/customerFormatters'
 import CategoryGroupedCatalogPicker from './CategoryGroupedCatalogPicker'
 import TicketActionSkeletonOverlay, { TICKET_SKELETON_ROW_COUNT } from './TicketActionSkeletonOverlay'
 import ChangeServiceModal from './modals/ChangeServiceModal'
+import CustomServiceModal from './modals/CustomServiceModal'
+import type { CustomServiceSubmit, CustomServiceTarget } from './modals/CustomServiceModal'
 import ServiceAddOnPickerModal from './modals/ServiceAddOnPickerModal'
 import OrderDiscountSection from './OrderDiscountSection'
 import ServiceDiscountModal, {
@@ -115,7 +118,9 @@ interface DisplayServiceLine {
   // for a not-yet-checked-in Create-mode draft line).
   existingId?: string
   itemType: 'Service'
-  posServiceId: string
+  // Null on a custom (off-menu) line: no catalog service backs it, so nothing qualifies a
+  // technician against it and it can never own an add-on.
+  posServiceId: string | null
   serviceName: string
   unitPrice: number
   posStaffProfileId?: string
@@ -228,6 +233,7 @@ export default function PosOrderWorkspace({
   } = useCheckInTechnicians(businessId)
 
   const addServiceLine = useAddOrderServiceLine(businessId)
+  const addCustomServiceLine = useAddOrderCustomServiceLine(businessId)
   const removeServiceLine = useRemoveOrderServiceLine(businessId)
   const updateServiceLine = useUpdateOrderServiceLine(businessId)
   const removeProductLine = useRemoveOrderProductLine(businessId)
@@ -247,6 +253,7 @@ export default function PosOrderWorkspace({
   // re-renders and the add-then-assign chain where one mutation ends before the next starts.
   const isMutationPending =
     addServiceLine.isPending ||
+    addCustomServiceLine.isPending ||
     removeServiceLine.isPending ||
     updateServiceLine.isPending ||
     removeProductLine.isPending ||
@@ -258,7 +265,8 @@ export default function PosOrderWorkspace({
     setStaffTipSplit.isPending ||
     completeOrder.isPending
   const { busySurface, isBusy, startTicketAction, endTicketAction } = useTicketActionLock(isMutationPending)
-  const isAddingLine = busySurface === TicketBusySurface.AddLine || addServiceLine.isPending
+  const isAddingLine =
+    busySurface === TicketBusySurface.AddLine || addServiceLine.isPending || addCustomServiceLine.isPending
   // Same window as the service catalog pending state: one placeholder row until add (and
   // the follow-up assign) both settle. The just-inserted line stays hidden so it cannot
   // appear while the catalog is still locked.
@@ -283,7 +291,7 @@ export default function PosOrderWorkspace({
   const [technicianTarget, setTechnicianTarget] = useState<{
     serviceLineId: string
     serviceName: string
-    posServiceId: string
+    posServiceId: string | null
     posStaffProfileId?: string
     note?: string
   } | null>(null)
@@ -300,11 +308,13 @@ export default function PosOrderWorkspace({
   const [changeServiceTarget, setChangeServiceTarget] = useState<{
     serviceLineId: string
     serviceName: string
-    posServiceId: string
+    posServiceId: string | null
     // Swapping the service removes its add-ons server-side (they belong to one service only), so
     // the count travels with the target and the popup warns before anything is lost.
     addOnCount: number
   } | null>(null)
+  // Open when a custom (off-menu) service is being added (no serviceLineId) or corrected.
+  const [customServiceTarget, setCustomServiceTarget] = useState<CustomServiceTarget | null>(null)
   // The line whose "+ Add-On" picker is open. Held as id + name so the picker can title itself and
   // scope its own query without reaching back into the list.
   const [addOnTarget, setAddOnTarget] = useState<{ serviceLineId: string; serviceName: string } | null>(null)
@@ -473,9 +483,11 @@ export default function PosOrderWorkspace({
   // Never offer someone the service is not assigned to — the rule the per-service endpoint applied
   // server-side, now applied to the one list this screen holds. Name order stays fixed so a busy
   // flag flipping on refetch cannot reshuffle the picker under the operator's finger.
-  const techniciansForService = (posServiceId: string) =>
+  // A custom service has no catalog entry to match qualifications against, so the whole active
+  // roster is offered — the same set the backend accepts, which only checks the staff is Active.
+  const techniciansForService = (posServiceId: string | null) =>
     allTechnicians
-      .filter((tech) => tech.serviceIds.includes(posServiceId))
+      .filter((tech) => posServiceId === null || tech.serviceIds.includes(posServiceId))
       .slice()
       .sort((a, b) => a.displayName.localeCompare(b.displayName))
 
@@ -517,6 +529,81 @@ export default function PosOrderWorkspace({
         onError: (err) => {
           reportError(err)
           endTicketAction()
+        },
+      },
+    )
+  }
+
+  const handleAddCustomService = (payload: CustomServiceSubmit) => {
+    if (assignedTechnicianIds.length === 1 && isTechnicianRosterLoading) return
+    if (!startTicketAction(TicketBusySurface.AddLine)) return
+    setCustomServiceTarget(null)
+    serviceLineIdsBeforeAddRef.current = new Set(order?.serviceLines.map((line) => line.id) ?? [])
+
+    addCustomServiceLine.mutate(
+      { orderId, ...payload },
+      {
+        onSuccess: (newServiceLineId) => {
+          if (!isPersistedLineId(newServiceLineId)) {
+            endTicketAction()
+            return
+          }
+
+          // No qualification check: an off-menu service has no skill list, so the ticket's sole
+          // technician is always a valid choice for it.
+          const assignment = resolveNewLineTechnicianAssignment(assignedTechnicianIds, () => true)
+          if (!assignment.shouldAssign) {
+            endTicketAction()
+            return
+          }
+          // The note travels back unchanged — AssignStaffToServiceLine overwrites Note, so passing
+          // an empty string here would wipe what was just typed on the form.
+          saveServiceLine(newServiceLineId, assignment.posStaffProfileId, payload.note ?? '', {
+            onSettled: endTicketAction,
+          })
+        },
+        onError: (err) => {
+          reportError(err)
+          endTicketAction()
+        },
+      },
+    )
+  }
+
+  // Corrects an existing custom line. Two calls only when the note changed as well: the name and
+  // price live on the line, the note is only writable through the assignment endpoint.
+  const handleSaveCustomService = (payload: CustomServiceSubmit) => {
+    const target = customServiceTarget
+    const serviceLineId = target?.serviceLineId
+    if (!serviceLineId) {
+      handleAddCustomService(payload)
+      return
+    }
+    if (!isPersistedLineId(serviceLineId) || !startTicketAction(TicketBusySurface.Lines)) return
+    const noteChanged = (payload.note ?? '') !== (target?.note ?? '')
+    const line = visibleLines.find(
+      (l): l is DisplayServiceLine => l.itemType === 'Service' && l.existingId === serviceLineId,
+    )
+    setCustomServiceTarget(null)
+
+    updateServiceLine.mutate(
+      {
+        orderId,
+        serviceLineId,
+        posServiceId: null,
+        unitPrice: payload.price,
+        serviceName: payload.customServiceName,
+      },
+      {
+        onError: reportError,
+        onSettled: () => {
+          if (!noteChanged) {
+            endTicketAction()
+            return
+          }
+          saveServiceLine(serviceLineId, line?.posStaffProfileId, payload.note ?? '', {
+            onSettled: endTicketAction,
+          })
         },
       },
     )
@@ -845,9 +932,24 @@ export default function PosOrderWorkspace({
   // dropped them with the one-page redesign, and this was the last surface.
   const catalogPanel = (
           <div className="nexora-card space-y-3 p-4">
-            <h3 className="border-b border-nexoraBorder pb-2 text-xs font-black uppercase tracking-wider text-nexoraMuted">
-              {t('components.dashboard.views.pos.PosOrderWorkspace.tabServices')}
-            </h3>
+            {/* Deliberately outside CategoryGroupedCatalogPicker: that component is shared with the
+                Services/Products/Categories screens, none of which sell an off-menu service. */}
+            <div className="flex items-center justify-between gap-3 border-b border-nexoraBorder pb-2">
+              <h3 className="text-xs font-black uppercase tracking-wider text-nexoraMuted">
+                {t('components.dashboard.views.pos.PosOrderWorkspace.tabServices')}
+              </h3>
+              {canEditLines ? (
+                <button
+                  type="button"
+                  data-testid="add-custom-service"
+                  onClick={() => setCustomServiceTarget({})}
+                  disabled={isBusy}
+                  className="h-7 shrink-0 rounded-lg border border-nexoraBrand bg-nexoraBrandSoft/50 px-3 text-[11px] font-bold text-nexoraBrandDark transition-colors hover:bg-nexoraBrandSoft disabled:cursor-not-allowed disabled:opacity-60"
+                >
+                  {t('components.dashboard.views.pos.PosOrderWorkspace.addCustomServiceButton')}
+                </button>
+              ) : null}
+            </div>
 
             <CategoryGroupedCatalogPicker
               variant="grid"
@@ -906,6 +1008,7 @@ export default function PosOrderWorkspace({
                           const canChangeService =
                             canEditLines && !line.completedAt && isPersistedLineId(line.existingId)
                           const canMutateLine = canEditLines && isPersistedLineId(line.existingId)
+                          const isCustomLine = line.posServiceId === null
                           return (
                             <div
                               data-testid={`ticket-detail-${line.key}`}
@@ -918,16 +1021,31 @@ export default function PosOrderWorkspace({
                                   <p className="min-w-0 truncate text-[13px] font-bold leading-tight text-nexoraText">
                                     {line.serviceName}
                                   </p>
+                                  {/* Staff-only marker: this price was typed by a person rather than
+                                      taken from the menu, so it is the line worth a second look. It
+                                      never reaches the receipt or the customer-facing screens. */}
+                                  {isCustomLine ? (
+                                    <span className="shrink-0 rounded-md bg-violet-100 px-1.5 py-0.5 text-[9px] font-black uppercase tracking-wider text-violet-700">
+                                      {t('components.dashboard.views.pos.PosOrderWorkspace.customServiceBadge')}
+                                    </span>
+                                  ) : null}
                                   {canChangeService ? (
                                     <button
                                       type="button"
                                       onClick={() =>
-                                        setChangeServiceTarget({
-                                          serviceLineId: line.existingId as string,
-                                          serviceName: line.serviceName,
-                                          posServiceId: line.posServiceId,
-                                          addOnCount: line.addOns.length,
-                                        })
+                                        isCustomLine
+                                          ? setCustomServiceTarget({
+                                              serviceLineId: line.existingId as string,
+                                              customServiceName: line.serviceName,
+                                              unitPrice: line.unitPrice,
+                                              note: line.note ?? null,
+                                            })
+                                          : setChangeServiceTarget({
+                                              serviceLineId: line.existingId as string,
+                                              serviceName: line.serviceName,
+                                              posServiceId: line.posServiceId,
+                                              addOnCount: line.addOns.length,
+                                            })
                                       }
                                       disabled={isBusy}
                                       className="h-6 shrink-0 rounded-lg border border-violet-200 bg-violet-50/50 px-2 text-[10px] font-bold text-violet-700 transition-colors hover:bg-violet-50 disabled:cursor-not-allowed disabled:opacity-60"
@@ -937,7 +1055,7 @@ export default function PosOrderWorkspace({
                                   ) : null}
                                   {/* Blocked once the service is marked done — the backend treats an
                                       extra on finished work as a correction, not an upsell. */}
-                                  {canEditLines && line.existingId && !line.completedAt ? (
+                                  {canEditLines && line.existingId && !line.completedAt && !isCustomLine ? (
                                     <button
                                       type="button"
                                       data-testid={`add-add-on-${line.key}`}
@@ -1882,7 +2000,7 @@ export default function PosOrderWorkspace({
       <ChangeTechnicianModal
         open={technicianTarget !== null}
         serviceName={technicianTarget?.serviceName ?? ''}
-        technicians={techniciansForService(technicianTarget?.posServiceId ?? '')}
+        technicians={technicianTarget ? techniciansForService(technicianTarget.posServiceId) : []}
         isLoading={areTechniciansPending && allTechnicians.length === 0}
         selectedStaffId={technicianTarget?.posStaffProfileId ?? null}
         note={noteDraft}
@@ -1900,6 +2018,30 @@ export default function PosOrderWorkspace({
         onClose={() => setAddOnTarget(null)}
       />
 
+      <CustomServiceModal
+        target={customServiceTarget}
+        isSaving={isBusy}
+        onSubmit={handleSaveCustomService}
+        onPickFromMenu={
+          customServiceTarget?.serviceLineId
+            ? () => {
+                const target = customServiceTarget
+                setCustomServiceTarget(null)
+                setChangeServiceTarget({
+                  serviceLineId: target.serviceLineId as string,
+                  serviceName: target.customServiceName ?? '',
+                  posServiceId: null,
+                  addOnCount: 0,
+                })
+              }
+            : undefined
+        }
+        onClose={() => {
+          if (isBusy) return
+          setCustomServiceTarget(null)
+        }}
+      />
+
       <ChangeServiceModal
         open={changeServiceTarget !== null}
         serviceName={changeServiceTarget?.serviceName ?? ''}
@@ -1907,6 +2049,12 @@ export default function PosOrderWorkspace({
         services={serviceCatalog}
         isPending={isBusy}
         onSelect={handleChangeService}
+        onPickCustom={() => {
+          const target = changeServiceTarget
+          if (!target) return
+          setChangeServiceTarget(null)
+          setCustomServiceTarget({ serviceLineId: target.serviceLineId })
+        }}
         onClose={() => {
           if (isBusy) return
           setChangeServiceTarget(null)

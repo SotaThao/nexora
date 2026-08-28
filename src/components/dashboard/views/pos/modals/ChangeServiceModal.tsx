@@ -21,6 +21,7 @@ export default function ChangeServiceModal({
   services,
   isPending = false,
   onSelect,
+  onPickCustom,
   onClose,
 }: {
   open: boolean
@@ -32,6 +33,8 @@ export default function ChangeServiceModal({
   services: CheckoutServiceCatalogItemApiDto[]
   isPending?: boolean
   onSelect: (posServiceId: string) => void
+  // Hands the line over to the custom-service form, for work the menu genuinely does not cover.
+  onPickCustom: () => void
   onClose: () => void
 }) {
   const { t } = useTranslation()
@@ -69,6 +72,17 @@ export default function ChangeServiceModal({
             uncategorizedLabel={t(`${K}.uncategorized`)}
             searchPlaceholder={t(`${K}.searchServicesPlaceholder`)}
           />
+        </div>
+
+        <div className="mt-3 shrink-0 border-t border-nexoraBorder pt-3">
+          <button
+            type="button"
+            onClick={onPickCustom}
+            disabled={isPending}
+            className="h-9 w-full rounded-lg border border-nexoraBorder text-xs font-bold text-nexoraText hover:border-nexoraBrand disabled:opacity-60"
+          >
+            {t(`${K}.changeServiceToCustom`)}
+          </button>
         </div>
       </div>
     </div>
