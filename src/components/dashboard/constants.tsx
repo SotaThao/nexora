@@ -327,6 +327,7 @@ export const MENU_ITEMS = [
       { id: 'categories', labelKey: 'dashboard.menu.pos_categories' },
       { id: 'services', labelKey: 'dashboard.menu.pos_services' },
       { id: 'products', labelKey: 'dashboard.menu.pos_products' },
+      { id: 'promotions', labelKey: 'dashboard.menu.pos_promotions' },
       { id: 'staff', labelKey: 'dashboard.menu.pos_staff' },
       { id: 'devices', labelKey: 'dashboard.menu.pos_devices' }
     ]

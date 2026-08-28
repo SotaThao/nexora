@@ -30,15 +30,23 @@
 }
 
 .header-messages-list--empty {
-  @apply flex flex-1 items-center justify-center overflow-hidden bg-white px-4 py-8;
+  @apply flex flex-1 items-center justify-center overflow-y-auto bg-white px-4 py-8;
 }
 
 .header-messages-panel--mobile .header-messages-list--empty {
-  @apply bg-nexoraCanvas;
+  @apply bg-nexoraCanvas py-4;
 }
 
 .header-messages-empty-state {
   @apply flex w-full max-w-xs flex-col items-center px-4 py-8 text-center;
+}
+
+.header-messages-panel--mobile .header-messages-empty-state {
+  @apply py-4;
+}
+
+.header-messages-panel--mobile .header-messages-empty-icon {
+  @apply h-9 w-9;
 }
 
 .header-messages-empty-icon {
@@ -52,6 +60,22 @@
 
 .header-messages-empty-desc {
   @apply mt-2 text-xs font-medium leading-relaxed text-nexoraMuted;
+}
+
+.header-messages-staff-cta {
+  @apply inline-flex h-9 w-full items-center justify-center gap-1.5 whitespace-nowrap rounded-full bg-nexoraBrand px-3.5 text-xs font-bold text-white transition hover:bg-nexoraBrandDark;
+}
+
+.header-messages-empty-state .header-messages-staff-cta {
+  @apply mt-4 w-auto;
+}
+
+.header-messages-staff-cta-footer {
+  @apply shrink-0 flex justify-center border-t border-nexoraBorder bg-white px-4 py-2.5;
+}
+
+.header-messages-staff-cta--secondary {
+  @apply inline-flex h-9 w-full items-center justify-center gap-1.5 whitespace-nowrap rounded-lg border border-nexoraBorder bg-white px-3.5 text-xs font-bold text-nexoraText shadow-sm transition hover:border-nexoraBrand hover:bg-nexoraBrandSoft hover:text-nexoraBrand;
 }
 
 .header-messages-panel--mobile .header-messages-item {

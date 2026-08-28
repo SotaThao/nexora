@@ -149,6 +149,7 @@ export default function CategoryGroupedCatalogPicker({
       return (
         <div
           key={item.id}
+          data-pos-hover-surface="card"
           className={`flex flex-col gap-1 rounded-xl border bg-white p-2.5 shadow-sm transition-all ${
             isDisabled ? 'opacity-40' : 'hover:-translate-y-0.5 hover:shadow-md'
           } ${isSelected ? 'border-nexoraBrand bg-nexoraBrand/5' : 'border-nexoraBorder hover:border-nexoraBrand/40'}`}

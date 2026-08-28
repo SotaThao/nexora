@@ -3,8 +3,9 @@
 // The phone number is shown rather than assumed: a mistyped digit is the most common way a
 // check-in goes wrong, and the guest cannot spot it if the number they entered is never displayed
 // back. Change number returns to the keypad with the digits still there.
-import { Phone } from 'lucide-react'
+import { Phone, UserRound } from 'lucide-react'
 import { useTranslation } from '../../../contexts/LanguageContext'
+import CheckInSectionCard from './CheckInSectionCard'
 
 const K = 'components.checkin.CustomerIdentityCard'
 
@@ -30,12 +31,12 @@ export default function CustomerIdentityCard({
   const { t } = useTranslation()
 
   return (
-    <section className="space-y-4 rounded-2xl border border-nexoraBorder bg-nexoraSurface p-4">
-      <div>
-        <h2 className="text-lg font-black text-nexoraText">{t(`${K}.title`)}</h2>
-        <p className="text-sm text-nexoraMuted">{t(`${K}.subtitle`)}</p>
-      </div>
-
+    <CheckInSectionCard
+      title={t(`${K}.title`)}
+      subtitle={t(`${K}.subtitle`)}
+      icon={UserRound}
+      relaxed
+    >
       <div className="flex items-center justify-between gap-3 rounded-xl bg-nexoraCanvas px-3 py-2.5">
         <span className="flex min-w-0 items-center gap-2">
           <Phone className="h-4 w-4 shrink-0 text-nexoraBrand" />
@@ -56,12 +57,17 @@ export default function CustomerIdentityCard({
           className="mb-1 block text-[11px] font-black uppercase tracking-wide text-nexoraMuted"
         >
           {t(`${K}.nameLabel`)}
+          {' '}
+          <span className="text-[10px] font-semibold normal-case tracking-normal text-nexoraMuted">
+            ({t(`${K}.requiredLabel`)})
+          </span>
         </label>
         <input
           id="checkin-customer-name"
           type="text"
           value={customerName}
           maxLength={NAME_MAX_LENGTH}
+          required
           autoComplete="off"
           onChange={(e) => onChangeName(e.target.value)}
           placeholder={t(`${K}.namePlaceholder`)}
@@ -83,6 +89,6 @@ export default function CustomerIdentityCard({
           {t(`${K}.smsConsent`, { businessName })}
         </span>
       </label>
-    </section>
+    </CheckInSectionCard>
   )
 }

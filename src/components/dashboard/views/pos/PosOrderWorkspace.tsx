@@ -27,6 +27,8 @@ import {
   useServiceLineAddOnOptions,
   useSetOrderServiceLineDiscount,
   useUpdateOrderServiceLine,
+  useEligiblePromotions,
+  useSetOrderDiscount,
   useSetOrderStaffTipSplit,
   useSetOrderTip,
   useUpdateOrderProductLineQuantity,
@@ -38,6 +40,7 @@ import {
 import { useCheckInTechnicians } from '../../../../data/hooks/usePosCheckIn'
 import { PosOrderStatus } from '../../../../constants/posOrderStatus'
 import { isLineBusySurface, TicketBusySurface } from '../../../../constants/posTicketAction'
+import { formatUsdAmount } from '../../../../utils/currencyInput'
 import { isPersistedLineId } from '../../../../utils/uuid'
 import type {
   CheckoutServiceCatalogItemApiDto,
@@ -45,6 +48,7 @@ import type {
   PosCheckoutPaymentMethodType,
   SetOrderServiceLineDiscountPayload,
   ServiceLineAddOnOptionApiDto,
+  SetOrderDiscountPayload,
 } from '../../../../types/repositories'
 import { Skeleton, SkeletonList, SkeletonListItem } from '../../../ui/skeleton'
 import { formatCustomerPhone } from './customer/customerFormatters'
@@ -52,6 +56,7 @@ import CategoryGroupedCatalogPicker from './CategoryGroupedCatalogPicker'
 import TicketActionSkeletonOverlay, { TICKET_SKELETON_ROW_COUNT } from './TicketActionSkeletonOverlay'
 import ChangeServiceModal from './modals/ChangeServiceModal'
 import ServiceAddOnPickerModal from './modals/ServiceAddOnPickerModal'
+import OrderDiscountSection from './OrderDiscountSection'
 import ServiceDiscountModal, {
   type ServiceDiscountSubmit,
   type ServiceDiscountTarget,
@@ -59,11 +64,11 @@ import ServiceDiscountModal, {
 import ChangeTechnicianModal from './modals/ChangeTechnicianModal'
 import { formatPosDateTime } from './posDateTime'
 import { useTicketActionLock } from './useTicketActionLock'
+import PosPaymentMethodSelector from './PosPaymentMethodSelector'
+import { getPosCheckoutPaymentMethodLabel } from '../../../../constants/posCheckoutPaymentMethod'
 
 type TipMode = 'noTip' | 'fixed10' | 'fixed15' | 'pct10' | 'pct20' | 'custom'
 export type PosOrderWorkspaceMode = 'edit' | 'checkout'
-
-const PAYMENT_METHODS: PosCheckoutPaymentMethodType[] = ['Card', 'Cash', 'GiftCard', 'SplitPay']
 
 // Percentage-based tip modes are a live % of servicesSubtotal, not a one-time snapshot —
 // see the tip-percentage recompute effect below, which re-applies this whenever the
@@ -76,6 +81,32 @@ const TIP_PERCENT_BY_MODE: Partial<Record<TipMode, number>> = {
 
 function round2(value: number) {
   return Math.round(value * 100) / 100
+}
+
+function formatCompactUsdAmount(value: number) {
+  return new Intl.NumberFormat('en-US', {
+    style: 'currency',
+    currency: 'USD',
+    minimumFractionDigits: 0,
+    maximumFractionDigits: 2,
+  }).format(value)
+}
+
+function formatEnteredDiscountValue(
+  discountType: string | null | undefined,
+  discountValue: number | null | undefined,
+  discountAmount: number,
+) {
+  if (discountType === 'Percent' && discountValue != null) return `${discountValue}%`
+  return formatCompactUsdAmount(discountValue ?? discountAmount)
+}
+
+function formatDiscountPriceBadge(
+  discountType: string | null | undefined,
+  discountValue: number | null | undefined,
+  discountAmount: number,
+) {
+  return `(-${formatEnteredDiscountValue(discountType, discountValue, discountAmount)})`
 }
 
 interface DisplayServiceLine {
@@ -206,6 +237,7 @@ export default function PosOrderWorkspace({
   const addServiceAddOnLine = useAddOrderServiceAddOnLine(businessId)
   const removeServiceAddOnLine = useRemoveOrderServiceAddOnLine(businessId)
   const startOrderService = useStartOrderService(businessId)
+  const setOrderDiscount = useSetOrderDiscount(businessId)
   const setTip = useSetOrderTip(businessId)
   const setStaffTipSplit = useSetOrderStaffTipSplit(businessId)
   const completeOrder = useCompleteOrder(businessId)
@@ -242,6 +274,10 @@ export default function PosOrderWorkspace({
   const isCompleteBusy = busySurface === TicketBusySurface.Complete || completeOrder.isPending
 
   const [showPaymentSection, setShowPaymentSection] = useState(mode === 'checkout')
+
+  // Eligibility is decided by the visit's check-in time, so this list cannot change while the
+  // operator works — fetched once the payment section is on screen and then left alone.
+  const { data: eligiblePromotions = [] } = useEligiblePromotions(businessId, orderId, showPaymentSection)
   // The line whose technician is being picked. Carries the values the popup needs to open and the
   // ones the save has to send back unchanged, so it never reaches into the list again.
   const [technicianTarget, setTechnicianTarget] = useState<{
@@ -284,12 +320,12 @@ export default function PosOrderWorkspace({
   // the device back (brainstorm decision: avoid stray taps landing on the next screen).
   const [customerFacingMode, setCustomerFacingMode] = useState(false)
   // POS iPad redesign, Ticket 6 — receipt delivery is a single choice: Send SMS (using the phone
-  // already on file — mandatory since Ticket 2, so always available) or No Receipt. Email option
-  // dropped from this screen entirely; physical Print opens the browser's print-ready receipt.
+  // already on file — mandatory since Ticket 2), Print, or No Receipt. Email is intentionally
+  // omitted; Print Preview remains a separate action so previewing never changes the selection.
   //
   // Defaults to No Receipt: a receipt costs an SMS and most walk-ins do not ask for one, so it is
   // opted into per checkout rather than sent unless someone remembers to turn it off.
-  const [receiptChoice, setReceiptChoice] = useState<'sms' | 'none'>('none')
+  const [receiptChoice, setReceiptChoice] = useState<'sms' | 'print' | 'none'>('none')
   const [printPreviewOpen, setPrintPreviewOpen] = useState(false)
   const [tipSplitInputs, setTipSplitInputs] = useState<Record<string, string>>({})
   const initializedWorkspaceRef = useRef<string | null>(null)
@@ -697,6 +733,10 @@ export default function PosOrderWorkspace({
     }
   }
 
+  const handleApplyOrderDiscount = (payload: SetOrderDiscountPayload) => {
+    setOrderDiscount.mutate({ orderId, payload }, { onError: reportError })
+  }
+
   const applyTip = (mode: TipMode, amount: number) => {
     if (amount < 0) return
     if (!startTicketAction(TicketBusySurface.Tip)) return
@@ -804,7 +844,7 @@ export default function PosOrderWorkspace({
   // JSX block away from coming back. Nothing sells products anywhere while it is hidden: check-in
   // dropped them with the one-page redesign, and this was the last surface.
   const catalogPanel = (
-          <div className="nexora-card space-y-3 p-4 lg:col-span-3">
+          <div className="nexora-card space-y-3 p-4">
             <h3 className="border-b border-nexoraBorder pb-2 text-xs font-black uppercase tracking-wider text-nexoraMuted">
               {t('components.dashboard.views.pos.PosOrderWorkspace.tabServices')}
             </h3>
@@ -827,7 +867,7 @@ export default function PosOrderWorkspace({
   )
 
   const orderPanel = (
-          <div className="space-y-4 lg:col-span-2">
+          <div className="space-y-4">
             <div
               role="region"
               aria-label={t('components.dashboard.views.pos.PosOrderWorkspace.orderDetailTitle')}
@@ -869,7 +909,9 @@ export default function PosOrderWorkspace({
                           return (
                             <div
                               data-testid={`ticket-detail-${line.key}`}
-                              className="grid grid-cols-[minmax(0,1fr)_auto] gap-x-3 gap-y-1"
+                              className={`grid grid-cols-[minmax(0,1fr)_auto] gap-x-3 gap-y-1 rounded-lg px-2 py-3 ${
+                                index % 2 === 0 ? 'bg-white' : 'bg-nexoraCanvas/70'
+                              }`}
                             >
                               <div className="min-w-0">
                                 <div className="flex items-center gap-2">
@@ -891,6 +933,23 @@ export default function PosOrderWorkspace({
                                       className="h-6 shrink-0 rounded-lg border border-violet-200 bg-violet-50/50 px-2 text-[10px] font-bold text-violet-700 transition-colors hover:bg-violet-50 disabled:cursor-not-allowed disabled:opacity-60"
                                     >
                                       {t('common.edit')}
+                                    </button>
+                                  ) : null}
+                                  {/* Blocked once the service is marked done — the backend treats an
+                                      extra on finished work as a correction, not an upsell. */}
+                                  {canEditLines && line.existingId && !line.completedAt ? (
+                                    <button
+                                      type="button"
+                                      data-testid={`add-add-on-${line.key}`}
+                                      onClick={() =>
+                                        setAddOnTarget({
+                                          serviceLineId: line.existingId as string,
+                                          serviceName: line.serviceName,
+                                        })
+                                      }
+                                      className="h-6 shrink-0 rounded-lg border border-nexoraBorder bg-nexoraCanvas px-2 text-[10px] font-bold text-nexoraText transition-colors hover:border-nexoraBrand"
+                                    >
+                                      {t('components.dashboard.views.pos.PosOrderWorkspace.addAddOn')}
                                     </button>
                                   ) : null}
                                 </div>
@@ -920,49 +979,25 @@ export default function PosOrderWorkspace({
                                       )}
                                     </button>
                                   ) : null}
-                                  {/* Blocked once the service is marked done — the backend treats an
-                                      extra on finished work as a correction, not an upsell. */}
-                                  {canEditLines && line.existingId && !line.completedAt ? (
-                                    <button
-                                      type="button"
-                                      data-testid={`add-add-on-${line.key}`}
-                                      onClick={() =>
-                                        setAddOnTarget({
-                                          serviceLineId: line.existingId as string,
-                                          serviceName: line.serviceName,
-                                        })
-                                      }
-                                      className="h-6 shrink-0 rounded-lg border border-nexoraBorder bg-nexoraCanvas px-2 text-[10px] font-bold text-nexoraText transition-colors hover:border-nexoraBrand"
-                                    >
-                                      {t('components.dashboard.views.pos.PosOrderWorkspace.addAddOn')}
-                                    </button>
-                                  ) : null}
                                 </div>
-                                {line.discountAmount > 0 ? (
-                                  <p className="mt-1 text-[11px] leading-tight text-amber-700">
-                                    {t('components.dashboard.views.pos.PosOrderWorkspace.discountLineSummary', {
-                                      amount: line.discountAmount.toFixed(2),
-                                      bearer: t(
-                                        `components.dashboard.views.pos.PosOrderWorkspace.discountBearer${line.discountBearer}`,
-                                      ),
-                                    })}
-                                    {line.discountNote ? ` — ${line.discountNote}` : ''}
-                                  </p>
-                                ) : null}
                               </div>
-                              <div className="flex min-h-[3.25rem] flex-col items-end justify-between gap-2">
+                              <div className="flex min-h-[3.25rem] flex-col items-end gap-2">
                                 {line.discountAmount > 0 ? (
                                   <div className="text-right leading-tight">
-                                    <span className="text-[11px] text-nexoraMuted line-through">
-                                      ${lineTotal(line).toFixed(2)}
+                                    <span className="text-sm font-bold text-nexoraText">
+                                      {formatCompactUsdAmount(lineTotal(line))}
                                     </span>
-                                    <span className="ml-1.5 text-sm font-bold text-nexoraText">
-                                      ${lineTotalAfterDiscount(line).toFixed(2)}
+                                    <span className="ml-1 text-[11px] font-semibold text-rose-500">
+                                      {formatDiscountPriceBadge(
+                                        line.discountType,
+                                        line.discountValue,
+                                        line.discountAmount,
+                                      )}
                                     </span>
                                   </div>
                                 ) : (
                                   <span className="text-sm font-bold text-nexoraText">
-                                    ${lineTotal(line).toFixed(2)}
+                                    {formatCompactUsdAmount(lineTotal(line))}
                                   </span>
                                 )}
                                 <div className="flex items-center gap-1.5">
@@ -1007,44 +1042,38 @@ export default function PosOrderWorkspace({
                                   charge of its own on the receipt but never a ticket row of its own. */}
                               {line.addOns.length > 0 ? (
                                 <ul className="col-span-2 space-y-1 border-l-2 border-nexoraBorder pl-3">
-                                  {line.addOns.map((addOn) => (
+                                  {line.addOns.map((addOn, addOnIndex) => (
                                     <li
                                       key={addOn.id}
                                       data-testid={`ticket-add-on-${addOn.id}`}
-                                      className="flex items-start justify-between gap-2"
+                                      className={`flex items-start justify-between gap-2 rounded-md px-2 py-1.5 ${
+                                        addOnIndex % 2 === 0
+                                          ? 'bg-nexoraCanvas/80'
+                                          : 'bg-nexoraBrandSoft/40'
+                                      }`}
                                     >
                                       <div className="min-w-0">
                                         <p className="min-w-0 truncate text-xs font-bold leading-tight text-nexoraText">
                                           + {addOn.addOnName}
                                         </p>
-                                        {addOn.discountAmount > 0 ? (
-                                          <p className="text-[11px] leading-tight text-amber-700">
-                                            {t(
-                                              'components.dashboard.views.pos.PosOrderWorkspace.discountLineSummary',
-                                              {
-                                                amount: addOn.discountAmount.toFixed(2),
-                                                bearer: t(
-                                                  `components.dashboard.views.pos.PosOrderWorkspace.discountBearer${addOn.discountBearer}`,
-                                                ),
-                                              },
-                                            )}
-                                            {addOn.discountNote ? ` — ${addOn.discountNote}` : ''}
-                                          </p>
-                                        ) : null}
                                       </div>
                                       <div className="flex shrink-0 items-center gap-1.5">
                                         {addOn.discountAmount > 0 ? (
                                           <span className="leading-tight">
-                                            <span className="text-[11px] text-nexoraMuted line-through">
-                                              ${addOn.lineTotal.toFixed(2)}
+                                            <span className="text-xs font-bold text-nexoraText">
+                                              {formatCompactUsdAmount(addOn.lineTotal)}
                                             </span>
-                                            <span className="ml-1.5 text-xs font-bold text-nexoraText">
-                                              ${addOn.lineTotalAfterDiscount.toFixed(2)}
+                                            <span className="ml-1 text-[11px] font-semibold text-rose-500">
+                                              {formatDiscountPriceBadge(
+                                                addOn.discountType,
+                                                addOn.discountValue,
+                                                addOn.discountAmount,
+                                              )}
                                             </span>
                                           </span>
                                         ) : (
                                           <span className="text-xs font-bold text-nexoraText">
-                                            ${addOn.lineTotal.toFixed(2)}
+                                            {formatCompactUsdAmount(addOn.lineTotal)}
                                           </span>
                                         )}
                                         {canEditLines ? (
@@ -1091,17 +1120,24 @@ export default function PosOrderWorkspace({
                           )
                         })()
                       ) : (
-                        <div data-testid={`ticket-detail-${line.key}`} className="space-y-2">
+                        <div
+                          data-testid={`ticket-detail-${line.key}`}
+                          className={`space-y-2 rounded-lg px-2 py-3 ${
+                            index % 2 === 0 ? 'bg-white' : 'bg-nexoraCanvas/70'
+                          }`}
+                        >
                           <div className="flex items-start gap-3">
                             <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-nexoraCanvas text-nexoraBrandDark">
                               <Package className="h-4 w-4" />
                             </div>
                             <div className="min-w-0 flex-1">
                               <p className="text-sm font-bold leading-tight text-nexoraText">{line.productName}</p>
-                              <p className="text-xs leading-tight text-nexoraMuted">${line.unitPrice.toFixed(2)} each</p>
+                              <p className="text-xs leading-tight text-nexoraMuted">
+                                {formatCompactUsdAmount(line.unitPrice)} each
+                              </p>
                             </div>
                             <span className="shrink-0 text-sm font-bold text-nexoraText">
-                              ${lineTotal(line).toFixed(2)}
+                              {formatCompactUsdAmount(lineTotal(line))}
                             </span>
                           </div>
                           <div className="flex items-center justify-between">
@@ -1324,6 +1360,13 @@ export default function PosOrderWorkspace({
                   </div>
                 </div>
 
+                <OrderDiscountSection
+                  order={order}
+                  promotions={eligiblePromotions}
+                  isSaving={setOrderDiscount.isPending}
+                  onApply={handleApplyOrderDiscount}
+                />
+
                 {order.staffTipShares.length > 1 ? (
                   <div className="relative space-y-2 rounded-xl border border-nexoraBorder/70 bg-nexoraSurface p-3 shadow-sm">
                     <TicketActionSkeletonOverlay
@@ -1381,22 +1424,11 @@ export default function PosOrderWorkspace({
                   <h3 className="text-[10px] font-bold uppercase tracking-wide text-nexoraMuted">
                     {t('components.dashboard.views.pos.PosOrderWorkspace.paymentMethodTitle')}
                   </h3>
-                  <div className="grid grid-cols-2 gap-1.5 sm:grid-cols-4">
-                    {PAYMENT_METHODS.map((method) => (
-                      <button
-                        key={method}
-                        type="button"
-                        onClick={() => setPaymentMethod(method)}
-                        className={`h-8 rounded-lg border text-[11px] font-semibold transition-colors ${
-                          paymentMethod === method
-                            ? 'border-nexoraBrand/50 bg-nexoraBrandSoft text-nexoraBrandDark'
-                            : 'border-nexoraBorder/70 bg-white text-nexoraText hover:border-nexoraBrand/50 hover:bg-nexoraBrandSoft/40'
-                        }`}
-                      >
-                        {t(`components.dashboard.views.pos.PosOrderWorkspace.paymentMethod.${method}`)}
-                      </button>
-                    ))}
-                  </div>
+                  <PosPaymentMethodSelector
+                    value={paymentMethod}
+                    onChange={setPaymentMethod}
+                    disabled={isBusy}
+                  />
                   <div>
                     <label className="mb-1 block text-[10px] font-semibold uppercase tracking-wide text-nexoraMuted">
                       {t('components.dashboard.views.pos.PosOrderWorkspace.receiptTitle')}
@@ -1405,6 +1437,7 @@ export default function PosOrderWorkspace({
                       <button
                         type="button"
                         onClick={() => setReceiptChoice('none')}
+                        aria-pressed={receiptChoice === 'none'}
                         className={`h-8 rounded-lg border text-[11px] font-semibold transition-colors ${
                           receiptChoice === 'none'
                             ? 'border-nexoraBrand/50 bg-nexoraBrandSoft text-nexoraBrandDark'
@@ -1416,6 +1449,7 @@ export default function PosOrderWorkspace({
                       <button
                         type="button"
                         onClick={() => setReceiptChoice('sms')}
+                        aria-pressed={receiptChoice === 'sms'}
                         disabled={!order?.customerPhoneE164}
                         className={`h-8 rounded-lg border text-[11px] font-semibold transition-colors disabled:cursor-not-allowed disabled:opacity-40 ${
                           receiptChoice === 'sms'
@@ -1427,10 +1461,24 @@ export default function PosOrderWorkspace({
                       </button>
                       <button
                         type="button"
-                        onClick={handleOpenPrintPreview}
-                        className="h-8 rounded-lg border border-nexoraBorder/70 bg-white text-[11px] font-semibold text-nexoraText transition-colors hover:border-nexoraBrand/50 hover:bg-nexoraBrandSoft/40"
+                        onClick={() => setReceiptChoice('print')}
+                        aria-pressed={receiptChoice === 'print'}
+                        className={`h-8 rounded-lg border text-[11px] font-semibold transition-colors ${
+                          receiptChoice === 'print'
+                            ? 'border-nexoraBrand/50 bg-nexoraBrandSoft text-nexoraBrandDark'
+                            : 'border-nexoraBorder/70 bg-white text-nexoraText hover:border-nexoraBrand/50 hover:bg-nexoraBrandSoft/40'
+                        }`}
                       >
                         {t('components.dashboard.views.pos.PosOrderWorkspace.receiptPrint')}
+                      </button>
+                    </div>
+                    <div className="mt-1 grid grid-cols-3 gap-1.5">
+                      <button
+                        type="button"
+                        onClick={handleOpenPrintPreview}
+                        className="col-start-3 justify-self-center text-[10px] font-semibold text-nexoraBrand underline underline-offset-2 hover:text-nexoraBrandDark"
+                      >
+                        {t('components.dashboard.views.pos.PosOrderWorkspace.printPreviewLabel')}
                       </button>
                     </div>
                   </div>
@@ -1457,12 +1505,56 @@ export default function PosOrderWorkspace({
                     <ul className="space-y-1.5 text-xs text-nexoraText">
                       {visibleLines.map((line) => {
                         const name = line.itemType === 'Service' ? line.serviceName : line.productName
+                        const summaryAddOns = line.itemType === 'Service' ? line.addOns : []
                         return (
-                          <li key={line.key} aria-label={name} className="flex items-center justify-between gap-3">
-                            <span className="min-w-0 truncate">{name}</span>
-                            <span className="shrink-0 font-semibold tabular-nums">
-                              ${lineTotalAfterDiscount(line).toFixed(2)}
-                            </span>
+                          <li key={line.key} aria-label={name} className="space-y-1.5">
+                            <div className="flex items-center justify-between gap-3">
+                              <span className="min-w-0 truncate">
+                                {name}
+                                {line.itemType === 'Service' && line.discountAmount > 0 ? (
+                                  <span className="ml-1 font-semibold text-rose-500">
+                                    {formatDiscountPriceBadge(
+                                      line.discountType,
+                                      line.discountValue,
+                                      line.discountAmount,
+                                    )}
+                                  </span>
+                                ) : null}
+                              </span>
+                              <span className="shrink-0 font-semibold tabular-nums">
+                                ${lineTotalAfterDiscount(line).toFixed(2)}
+                              </span>
+                            </div>
+                            {/* Add-ons are charged on top of their service and are already inside
+                                Total — listing them keeps the breakdown adding up to it. */}
+                            {summaryAddOns.length > 0 ? (
+                              <ul className="space-y-1 border-l-2 border-nexoraBorder pl-3 text-nexoraMuted">
+                                {summaryAddOns.map((addOn) => (
+                                  <li
+                                    key={addOn.id}
+                                    aria-label={addOn.addOnName}
+                                    data-testid={`summary-add-on-${addOn.id}`}
+                                    className="flex items-center justify-between gap-3"
+                                  >
+                                    <span className="min-w-0 truncate">
+                                      + {addOn.addOnName}
+                                      {addOn.discountAmount > 0 ? (
+                                        <span className="ml-1 font-semibold text-rose-500">
+                                          {formatDiscountPriceBadge(
+                                            addOn.discountType,
+                                            addOn.discountValue,
+                                            addOn.discountAmount,
+                                          )}
+                                        </span>
+                                      ) : null}
+                                    </span>
+                                    <span className="shrink-0 font-semibold tabular-nums">
+                                      ${addOn.lineTotalAfterDiscount.toFixed(2)}
+                                    </span>
+                                  </li>
+                                ))}
+                              </ul>
+                            ) : null}
                           </li>
                         )
                       })}
@@ -1481,11 +1573,34 @@ export default function PosOrderWorkspace({
                         {order.discountAmount === 0 ? '$0.00' : `-$${Math.abs(order.discountAmount).toFixed(2)}`}
                       </dd>
                     </div>
+		    {order.orderDiscountAmount > 0 ? (
+                      <div className="flex justify-between">
+                        <dt className="min-w-0 truncate text-nexoraMuted">
+                          {order.appliedPromotionName
+                            ?? t('components.dashboard.views.pos.PosOrderWorkspace.summaryOrderDiscount')}
+                        </dt>
+                        <dd className="shrink-0 font-semibold text-nexoraText">
+                          -${order.orderDiscountAmount.toFixed(2)}
+                        </dd>
+                      </div>
+                    ) : null}
+                    {/* Charged on the discounted service subtotal, so it belongs after Discount —
+                        without it the line prices above cannot be reconciled with Total. */}
+                    <div className="flex justify-between">
+                      <dt className="text-nexoraMuted">{t('components.dashboard.views.pos.PosOrderWorkspace.summarySalesTax')}</dt>
+                      <dd className="font-semibold text-nexoraText">${order.salesTaxAmount.toFixed(2)}</dd>
+                    </div>
+		    {/* Charged on the discounted service subtotal, so it belongs after Discount —
+                        without it the line prices above cannot be reconciled with Total. */}
+                    <div className="flex justify-between">
+                      <dt className="text-nexoraMuted">{t('components.dashboard.views.pos.PosOrderWorkspace.summarySalesTax')}</dt>
+                      <dd className="font-semibold text-nexoraText">${order.salesTaxAmount.toFixed(2)}</dd>
+                    </div>
                     <div className="flex justify-between border-t border-nexoraBorder pt-1.5">
                       <dt className="font-black uppercase text-nexoraText">
                         {t('components.dashboard.views.pos.PosOrderWorkspace.summaryTotal')}
                       </dt>
-                      <dd className="font-black text-nexoraText">${order.total.toFixed(2)}</dd>
+                      <dd className="font-black text-nexoraText">{formatUsdAmount(order.total)}</dd>
                     </div>
                   </dl>
                 </div>
@@ -1506,7 +1621,12 @@ export default function PosOrderWorkspace({
                   {completeOrder.isPending ? (
                     <Loader2 className="mx-auto h-4 w-4 animate-spin" />
                   ) : (
-                    t('components.dashboard.views.pos.PosOrderWorkspace.completeButton', { amount: order.total.toFixed(2) })
+                    t('components.dashboard.views.pos.PosOrderWorkspace.completeButton', {
+                      amount: order.total.toLocaleString('en-US', {
+                        minimumFractionDigits: 2,
+                        maximumFractionDigits: 2,
+                      }),
+                    })
                   )}
                 </button>
               </>
@@ -1540,7 +1660,7 @@ export default function PosOrderWorkspace({
   const printableReceipt =
     order && printPreviewOpen && typeof document !== 'undefined'
       ? createPortal(
-          <div className="pos-invoice-modal-backdrop">
+          <div className="pos-front-desk-action-surface pos-invoice-modal-backdrop">
             <div
               className="pos-invoice-modal"
               role="dialog"
@@ -1597,15 +1717,37 @@ export default function PosOrderWorkspace({
                               {group.lines.map((line) => (
                                 <Fragment key={line.key}>
                                   <div>
-                                    <span>{line.serviceName}</span>
-                                    <span className="tabular-nums">${lineTotal(line).toFixed(2)}</span>
+                                    <span>
+                                      {line.serviceName}
+                                      {line.discountAmount > 0 ? (
+                                        <span className="pos-receipt-line-discount ml-1 text-rose-500">
+                                          {formatDiscountPriceBadge(
+                                            line.discountType,
+                                            line.discountValue,
+                                            line.discountAmount,
+                                          )}
+                                        </span>
+                                      ) : null}
+                                    </span>
+                                    <span className="tabular-nums">{formatUsdAmount(lineTotal(line))}</span>
                                   </div>
                                   {/* Printed as its own line under the service — a customer must be
                                       able to see where an extra charge came from. */}
                                   {line.addOns.map((addOn) => (
                                     <div key={addOn.id}>
-                                      <span>+ {addOn.addOnName}</span>
-                                      <span className="tabular-nums">${addOn.lineTotal.toFixed(2)}</span>
+                                      <span>
+                                        + {addOn.addOnName}
+                                        {addOn.discountAmount > 0 ? (
+                                          <span className="pos-receipt-line-discount ml-1 text-rose-500">
+                                            {formatDiscountPriceBadge(
+                                              addOn.discountType,
+                                              addOn.discountValue,
+                                              addOn.discountAmount,
+                                            )}
+                                          </span>
+                                        ) : null}
+                                      </span>
+                                      <span className="tabular-nums">{formatUsdAmount(addOn.lineTotal)}</span>
                                     </div>
                                   ))}
                                 </Fragment>
@@ -1622,7 +1764,7 @@ export default function PosOrderWorkspace({
                               {printableProductLines.map((line) => (
                                 <div key={line.key}>
                                   <span>{line.productName}</span>
-                                  <span className="tabular-nums">${lineTotal(line).toFixed(2)}</span>
+                                  <span className="tabular-nums">{formatUsdAmount(lineTotal(line))}</span>
                                 </div>
                               ))}
                             </div>
@@ -1637,21 +1779,35 @@ export default function PosOrderWorkspace({
                   <dl className="pos-receipt-totals">
                     <div>
                       <dt>{t('components.dashboard.views.pos.PosOrderWorkspace.summaryTip')}</dt>
-                      <dd>${order.tipAmount.toFixed(2)}</dd>
+                      <dd>{formatUsdAmount(order.tipAmount)}</dd>
                     </div>
                     <div>
                       <dt>{t('components.dashboard.views.pos.PosOrderWorkspace.summaryDiscount')}</dt>
-                      <dd>{order.discountAmount === 0 ? '$0.00' : `-$${Math.abs(order.discountAmount).toFixed(2)}`}</dd>
+                      <dd>{formatUsdAmount(order.discountAmount === 0 ? 0 : -Math.abs(order.discountAmount))}</dd>
+                    </div>
+                    {order.orderDiscountAmount > 0 ? (
+                      <div>
+                        <dt>
+                          {order.appliedPromotionName
+                            ?? t('components.dashboard.views.pos.PosOrderWorkspace.summaryOrderDiscount')}
+                        </dt>
+                        <dd>-${order.orderDiscountAmount.toFixed(2)}</dd>
+                      </div>
+                    ) : null}
+                    <div>
+                      <dt>{t('components.dashboard.views.pos.PosOrderWorkspace.summarySalesTax')}</dt>
+                      <dd>{formatUsdAmount(order.salesTaxAmount)}</dd>
                     </div>
                     <div className="pos-receipt-total">
                       <dt>{t('components.dashboard.views.pos.PosOrderWorkspace.summaryTotal')}</dt>
-                      <dd>${order.total.toFixed(2)}</dd>
+                      <dd>{formatUsdAmount(order.total)}</dd>
                     </div>
                   </dl>
 
                   {isPaid && order.paymentMethodType ? (
                     <p className="pos-receipt-payment">
-                      {t('components.dashboard.views.pos.PosOrderWorkspace.printPreviewPaidWith')} {order.paymentMethodType}
+                      {t('components.dashboard.views.pos.PosOrderWorkspace.printPreviewPaidWith')}{' '}
+                      {getPosCheckoutPaymentMethodLabel(order.paymentMethodType, t)}
                     </p>
                   ) : null}
 
@@ -1714,7 +1870,10 @@ export default function PosOrderWorkspace({
           <SkeletonList count={4} lines={2} />
         </div>
       ) : (
-        <div className="grid grid-cols-1 gap-6 lg:grid-cols-5" aria-busy={isBusy}>
+        <div
+          className="grid grid-cols-1 gap-6 lg:grid-cols-[minmax(0,7fr)_minmax(0,5fr)]"
+          aria-busy={isBusy}
+        >
           {catalogPanel}
           {orderPanel}
         </div>

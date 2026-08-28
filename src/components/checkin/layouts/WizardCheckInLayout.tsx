@@ -10,7 +10,7 @@
 // The step cursor below is the one piece of state a layout legitimately owns: it is a way of
 // presenting the same answers, not a rule about them.
 import { useState } from 'react'
-import { X } from 'lucide-react'
+import { ArrowLeft } from 'lucide-react'
 import { useTranslation } from '../../../contexts/LanguageContext'
 import CustomerNameStep from '../../posDevice/steps/CustomerNameStep'
 import SelectTechnicianStep from '../../posDevice/steps/SelectTechnicianStep'
@@ -38,14 +38,14 @@ export default function WizardCheckInLayout({
 
   return (
     <div className="w-full space-y-4">
-      <div className="flex justify-end">
+      <div className="flex justify-start">
         <button
           type="button"
           onClick={onCancel}
           className="flex h-11 items-center gap-1.5 rounded-lg border border-nexoraBorder bg-nexoraSurface px-4 text-sm font-bold text-nexoraMuted hover:border-nexoraBrand"
         >
-          <X className="h-4 w-4" />
-          {t(`${K}.cancel`)}
+          <ArrowLeft className="h-4 w-4" />
+          {t(`${K}.back`)}
         </button>
       </div>
 

@@ -421,6 +421,8 @@ export interface StaffBusinessLink {
   qrImageUrl?: string | null
   /** True when BE returned touchPoints: [] and no touchpoint slug/URL is available yet. */
   touchPointsMissing?: boolean
+  /** Business owner userProfileId — peer for staff-initiated community chat. */
+  ownerUserProfileId?: string | null
 }
 
 export interface StaffBusinessTipQr {

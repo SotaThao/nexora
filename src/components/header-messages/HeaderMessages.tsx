@@ -1,8 +1,12 @@
-import { ArrowLeft, MessagesSquare, Search, Users, X } from 'lucide-react'
+import { ArrowLeft, MessagesSquare, Search, Store, Users, X } from 'lucide-react'
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { createPortal } from 'react-dom'
+import { useNavigate } from 'react-router-dom'
 import { useAuth } from '../../auth/useAuth'
 import { useSessionRole } from '../../auth/useSessionRole'
+import { useIsMobileUI } from '../../hooks/useIsMobileUI'
+import { buildMerchantStaffListPath, resolveStaffRouteFamily } from '../dashboard/routes/staffRoutePaths'
+import { buildStaffSalonsListPath } from '../staff-dashboard/staffSalonPaths'
 import {
   CommunityChatType,
   isPendingCommunityChatSessionId,
@@ -25,15 +29,22 @@ import { useNotification } from '../../contexts/NotificationContext'
 import {
   buildStaffChatConversation,
   findStaffCommunityChatSession,
+  getStaffChatWindowKey,
+  trimStaffChatId,
 } from '../staff/staffCommunityChatUtils'
 import { STAFF_CHAT_ENSURE_SESSION_PRECONDITION_ERROR } from '../staff/constants'
 import IconButton from '../ui/IconButton'
 import HeaderMessageChatWindow from './HeaderMessageChatWindow'
 import HeaderMessagesEmptyState from './HeaderMessagesEmptyState'
 import HeaderMessagesListSkeleton from './HeaderMessagesListSkeleton'
+import HeaderMessagesStaffChatCta from './HeaderMessagesStaffChatCta'
 import {
   formatHeaderMessagesUnreadCount,
+  getMessengerDirectoryCta,
   HEADER_MESSAGES_I18N,
+  MESSENGER_DIRECTORY_CTA_I18N,
+  MessengerDirectoryRole,
+  resolveMessengerDirectoryRole,
   HEADER_MESSAGE_CHAT_ROOT_SELECTOR,
   HeaderMessageChatLayout,
   HeaderMessageListPreviewKey,
@@ -50,6 +61,7 @@ import {
 import {
   OPEN_COMMUNITY_CHAT_SESSION_EVENT,
   OPEN_STAFF_COMMUNITY_CHAT_EVENT,
+  normalizeOpenStaffCommunityChatDetail,
   type OpenCommunityChatSessionDetail,
   type OpenStaffCommunityChatDetail,
 } from './openCommunityChatSession'
@@ -86,9 +98,30 @@ function getConversationPreview(
   return preview
 }
 
+const DIRECTORY_LIST_PATH: Record<
+  MessengerDirectoryRole,
+  (startChatHint: boolean, isMobile: boolean) => string
+> = {
+  [MessengerDirectoryRole.Owner]: (startChatHint, isMobile) => (
+    buildMerchantStaffListPath({
+      startChatHint,
+      family: resolveStaffRouteFamily(isMobile),
+    })
+  ),
+  [MessengerDirectoryRole.Staff]: (startChatHint) => (
+    buildStaffSalonsListPath({ startChatHint })
+  ),
+}
+
+const DIRECTORY_CTA_ICON = {
+  [MessengerDirectoryRole.Owner]: Users,
+  [MessengerDirectoryRole.Staff]: Store,
+} as const
+
 export default function HeaderMessages({ variant }: HeaderMessagesProps) {
   const { t, currentLanguage } = useTranslation()
   const { showToast } = useNotification()
+  const navigate = useNavigate()
   const { session, status } = useAuth()
   const containerRef = useRef<HTMLDivElement>(null)
   const [open, setOpen] = useState(false)
@@ -102,8 +135,10 @@ export default function HeaderMessages({ variant }: HeaderMessagesProps) {
 
   const currentUserProfileId = session?.id ?? ''
   const isAuthenticated = status === 'authenticated'
-  const { isStaff } = useSessionRole()
+  const { isOwner, isStaff } = useSessionRole()
+  const directoryRole = resolveMessengerDirectoryRole(isOwner, isStaff)
   const isDesktop = variant === HeaderMessagesVariant.Desktop
+  const isMobileUI = useIsMobileUI()
   const {
     sessions: desktopChatSessions,
     focusConversationId: desktopChatFocusId,
@@ -152,26 +187,30 @@ export default function HeaderMessages({ variant }: HeaderMessagesProps) {
     profile?.business?.businessId ?? profile?.business?.id ?? '',
   ).trim()
 
-  const businessNameById = useMemo(() => {
-    const map = new Map<string, string>()
+  const { businessNameById, salonOwnerIdByBusinessId } = useMemo(() => {
+    const businessNameById = new Map<string, string>()
+    const salonOwnerIdByBusinessId = new Map<string, string>()
 
     staffBusinesses.forEach((business) => {
-      const id = String(business.businessId ?? '').trim()
+      const id = trimStaffChatId(business.businessId)
+      if (!id) return
       const name = String(business.businessName ?? '').trim()
-      if (id && name) map.set(id, name)
+      if (name) businessNameById.set(id, name)
+      const ownerId = trimStaffChatId(business.ownerUserProfileId)
+      if (ownerId) salonOwnerIdByBusinessId.set(id, ownerId)
     })
 
-    const businessId = String(
+    const merchantId = String(
       profile?.business?.businessId ?? profile?.business?.id ?? '',
     ).trim()
     const merchantBusinessName = String(
       profile?.business?.businessName ?? profile?.business?.name ?? '',
     ).trim()
-    if (businessId && merchantBusinessName) {
-      map.set(businessId, merchantBusinessName)
+    if (merchantId && merchantBusinessName) {
+      businessNameById.set(merchantId, merchantBusinessName)
     }
 
-    return map
+    return { businessNameById, salonOwnerIdByBusinessId }
   }, [staffBusinesses, profile?.business])
 
   const titleMapOptions = useMemo(() => ({
@@ -240,16 +279,20 @@ export default function HeaderMessages({ variant }: HeaderMessagesProps) {
       // viewport-matching instance should open.
       if (isDesktop !== isDesktopViewport()) return
 
-      const detail = (event as CustomEvent<OpenStaffCommunityChatDetail>).detail
-      const peerUserProfileId = String(detail?.peerUserProfileId ?? '').trim()
-      if (!peerUserProfileId) return
-      const displayName = String(detail?.displayName ?? '').trim() || peerUserProfileId
+      const detail = normalizeOpenStaffCommunityChatDetail(
+        (event as CustomEvent<OpenStaffCommunityChatDetail>).detail,
+      )
+      if (!detail) return
 
       const optimistic = buildStaffChatConversation({
         chatSessionId: null,
-        windowKey: peerUserProfileId,
-        displayName,
-        peerUserProfileId,
+        windowKey: getStaffChatWindowKey({
+          userProfileId: detail.peerUserProfileId,
+          businessId: detail.businessId,
+        }),
+        displayName: detail.displayName,
+        peerUserProfileId: detail.peerUserProfileId,
+        businessId: detail.businessId,
       })
 
       if (isDesktop) {
@@ -262,7 +305,7 @@ export default function HeaderMessages({ variant }: HeaderMessagesProps) {
         setOpen(true)
         setActiveTab(HeaderMessagesTab.Messages)
       }
-      setPendingStaffChat({ peerUserProfileId, displayName })
+      setPendingStaffChat(detail)
     }
 
     window.addEventListener(OPEN_STAFF_COMMUNITY_CHAT_EVENT, handleOpenStaffCommunityChat)
@@ -279,6 +322,7 @@ export default function HeaderMessages({ variant }: HeaderMessagesProps) {
       {
         userProfileId: pendingStaffChat.peerUserProfileId,
         fullName: pendingStaffChat.displayName,
+        businessId: pendingStaffChat.businessId,
       },
       dedupedChatSessions,
       currentUserProfileId,
@@ -315,13 +359,27 @@ export default function HeaderMessages({ variant }: HeaderMessagesProps) {
 
   const ensureStaffPeerSession = useCallback(async (conversation: HeaderMessageConversation) => {
     if (!isPendingCommunityChatSessionId(conversation.id)) return conversation.id
-    const peerUserProfileId = String(conversation.peerUserProfileId ?? '').trim()
-    if (!peerUserProfileId || !merchantBusinessId) {
+    const businessId = trimStaffChatId(conversation.businessId) || merchantBusinessId
+    const existing = findStaffCommunityChatSession(
+      {
+        userProfileId: conversation.peerUserProfileId,
+        fullName: conversation.name,
+        businessId,
+      },
+      dedupedChatSessions,
+      currentUserProfileId,
+    )
+    if (existing?.id) return existing.id
+
+    const peerUserProfileId = trimStaffChatId(conversation.peerUserProfileId)
+      || salonOwnerIdByBusinessId.get(businessId)
+      || ''
+    if (!peerUserProfileId || !businessId) {
       throw new Error(STAFF_CHAT_ENSURE_SESSION_PRECONDITION_ERROR)
     }
 
     const session = await createSessionMutation.mutateAsync({
-      businessId: merchantBusinessId,
+      businessId,
       participantUserProfileIds: [peerUserProfileId],
     })
 
@@ -337,7 +395,15 @@ export default function HeaderMessages({ variant }: HeaderMessagesProps) {
       setMobileActiveConversation(nextConversation)
     }
     return session.id
-  }, [createSessionMutation, ensureDesktopConversationOpen, isDesktop, merchantBusinessId])
+  }, [
+    createSessionMutation,
+    currentUserProfileId,
+    dedupedChatSessions,
+    ensureDesktopConversationOpen,
+    isDesktop,
+    merchantBusinessId,
+    salonOwnerIdByBusinessId,
+  ])
 
   useEffect(() => {
     if (!pendingOpenSessionId) return
@@ -521,6 +587,41 @@ export default function HeaderMessages({ variant }: HeaderMessagesProps) {
       ? HeaderMessagesEmptyVariant.Groups
       : HeaderMessagesEmptyVariant.Messages
 
+  const goToDirectory = (startChatHint: boolean) => {
+    if (!directoryRole) return
+    closePanel()
+    navigate(DIRECTORY_LIST_PATH[directoryRole](startChatHint, isMobileUI))
+  }
+
+  const directoryUi = directoryRole
+    ? {
+        cta: getMessengerDirectoryCta(directoryRole, filteredConversations.length > 0),
+        Icon: DIRECTORY_CTA_ICON[directoryRole],
+        emptyDescriptionKey: MESSENGER_DIRECTORY_CTA_I18N[directoryRole].emptyDescription,
+      }
+    : null
+
+  const showDirectoryEmptyCta = Boolean(directoryUi)
+    && emptyListVariant === HeaderMessagesEmptyVariant.Messages
+
+  const showDirectoryFooterCta = Boolean(directoryUi)
+    && activeTab === HeaderMessagesTab.Messages
+    && !searchQuery.trim()
+    && !isSessionsLoading
+    && !isSessionsError
+    && (filteredConversations.length > 0 || !isDesktop)
+
+  const directoryCtaFooter = showDirectoryFooterCta && directoryUi ? (
+    <div className="header-messages-staff-cta-footer">
+      <HeaderMessagesStaffChatCta
+        variant={directoryUi.cta.variant}
+        label={t(directoryUi.cta.labelKey)}
+        Icon={directoryUi.Icon}
+        onClick={() => goToDirectory(directoryUi.cta.startChatHint)}
+      />
+    </div>
+  ) : null
+
   const conversationList = isSessionsLoading ? (
     <HeaderMessagesListSkeleton t={t} />
   ) : isSessionsError ? (
@@ -569,7 +670,14 @@ export default function HeaderMessages({ variant }: HeaderMessagesProps) {
       )
     })
   ) : (
-    <HeaderMessagesEmptyState variant={emptyListVariant} t={t} />
+    <HeaderMessagesEmptyState
+      variant={emptyListVariant}
+      t={t}
+      descriptionKey={showDirectoryEmptyCta ? directoryUi?.emptyDescriptionKey : undefined}
+      actionLabel={showDirectoryEmptyCta && isDesktop && directoryUi ? t(directoryUi.cta.labelKey) : undefined}
+      actionIcon={directoryUi?.Icon}
+      onAction={showDirectoryEmptyCta && isDesktop && directoryUi ? () => goToDirectory(true) : undefined}
+    />
   )
 
   const listIsEmpty = !isSessionsLoading && !isSessionsError && filteredConversations.length === 0
@@ -643,6 +751,7 @@ export default function HeaderMessages({ variant }: HeaderMessagesProps) {
       {searchField}
       {tabs}
       <div className={`header-messages-list${listIsEmpty ? ' header-messages-list--empty' : ''}`}>{conversationList}</div>
+      {directoryCtaFooter}
     </div>
   ) : null
 
@@ -661,6 +770,7 @@ export default function HeaderMessages({ variant }: HeaderMessagesProps) {
       </div>
       {tabs}
       <div className={`header-messages-list header-messages-list--mobile${listIsEmpty ? ' header-messages-list--empty' : ''}`}>{conversationList}</div>
+      {directoryCtaFooter}
     </div>
   )
 

@@ -89,6 +89,7 @@ export function mapCommunityChatSessionToConversation(
     lastMessageSenderId: session.lastMessageSenderId ?? null,
     updatedAt: session.lastMessageAt ?? '',
     unreadCount: session.unreadCount,
+    businessId: String(session.businessId ?? '').trim() || null,
   }
 }
 

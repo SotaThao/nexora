@@ -53,7 +53,7 @@ const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
 function FieldError({ message }: { message?: string }) {
   if (!message) return null
   return (
-    <p role="alert" aria-live="polite" className="mt-1 text-[10px] font-bold text-rose-500">
+    <p role="alert" aria-live="polite" className="mt-1 text-[9px] font-bold text-rose-500 sm:text-[10px]">
       {message}
     </p>
   )
@@ -244,7 +244,11 @@ export default function NewBookingForm({
   const handleSubmit = () => {
     const errors = validateFields()
     setFieldErrors(errors)
-    if (Object.keys(errors).length > 0) return
+    if (Object.keys(errors).length > 0) {
+      const serviceError = errors[NewBookingFormField.Services]
+      if (serviceError) showToast(serviceError, 'error')
+      return
+    }
 
     const name = customerName.trim()
     const phone = customerPhone.trim()
@@ -293,9 +297,9 @@ export default function NewBookingForm({
         </div>
 
         <div className="min-h-0 flex-1 space-y-5 overflow-y-auto p-5 sm:p-6">
-          <section className="grid grid-cols-1 gap-4 rounded-xl border border-nexoraBorder bg-white p-4 sm:grid-cols-2">
+          <section className="pos-new-booking-customer-grid grid grid-cols-1 gap-2 bg-white sm:grid-cols-2 sm:gap-4 lg:grid-cols-[0.8fr_1fr_1fr_1.2fr]">
             <div>
-              <label className="text-[10px] font-extrabold uppercase text-nexoraMuted">
+              <label className="text-[9px] font-extrabold uppercase text-nexoraMuted sm:text-[10px]">
                 {t('components.dashboard.views.pos.NewBookingForm.customerName')}
               </label>
               <input
@@ -306,15 +310,15 @@ export default function NewBookingForm({
                   clearFieldError(NewBookingFormField.Name)
                 }}
                 aria-invalid={Boolean(fieldErrors.name)}
-                className={`mt-1 h-10 w-full rounded-lg border bg-white px-3.5 text-xs text-nexoraText outline-none transition-all ${fieldErrors.name ? 'border-rose-400 focus:border-rose-400' : 'border-nexoraBorder focus:border-nexoraBrand'}`}
+                className={`mt-0.5 h-9 w-full rounded-lg border bg-white px-3.5 text-[11px] text-nexoraText outline-none transition-all sm:mt-1 sm:h-10 sm:text-xs ${fieldErrors.name ? 'border-rose-400 focus:border-rose-400' : 'border-nexoraBorder focus:border-nexoraBrand'}`}
               />
               <FieldError message={fieldErrors.name} />
             </div>
             <div>
-              <label className="text-[10px] font-extrabold uppercase text-nexoraMuted">
+              <label className="text-[9px] font-extrabold uppercase text-nexoraMuted sm:text-[10px]">
                 {t('components.dashboard.views.pos.NewBookingForm.customerPhone')}
               </label>
-              <div className={`mt-1 flex h-10 overflow-hidden rounded-lg border bg-white transition-colors ${fieldErrors.phone ? 'border-rose-400' : 'border-nexoraBorder focus-within:border-nexoraBrand'}`}>
+              <div className={`relative z-20 mt-0.5 flex h-9 overflow-visible rounded-lg border bg-white transition-colors [&_button]:text-[11px] [&_button_span]:text-[11px] sm:mt-1 sm:h-10 sm:[&_button]:text-xs sm:[&_button_span]:text-xs ${fieldErrors.phone ? 'border-rose-400' : 'border-nexoraBorder focus-within:border-nexoraBrand'}`}>
                 <CountryCodeSelect
                   embedded
                   showSearch={false}
@@ -336,14 +340,14 @@ export default function NewBookingForm({
                     inputMode="numeric"
                     autoComplete="tel-national"
                     aria-invalid={Boolean(fieldErrors.phone)}
-                    className="h-full w-full border-0 bg-transparent px-3.5 text-xs text-nexoraText outline-none"
+                    className="h-full w-full border-0 bg-transparent px-3.5 text-[11px] text-nexoraText outline-none sm:text-xs"
                   />
                 </div>
               </div>
               <FieldError message={fieldErrors.phone} />
             </div>
             <div>
-              <label className="text-[10px] font-extrabold uppercase text-nexoraMuted">
+              <label className="text-[9px] font-extrabold uppercase text-nexoraMuted sm:text-[10px]">
                 {t('components.dashboard.views.pos.NewBookingForm.customerEmail')}
               </label>
               <input
@@ -354,13 +358,13 @@ export default function NewBookingForm({
                   clearFieldError(NewBookingFormField.Email)
                 }}
                 aria-invalid={Boolean(fieldErrors.email)}
-                className={`mt-1 h-10 w-full rounded-lg border bg-white px-3.5 text-xs text-nexoraText outline-none transition-all ${fieldErrors.email ? 'border-rose-400 focus:border-rose-400' : 'border-nexoraBorder focus:border-nexoraBrand'}`}
+                className={`mt-0.5 h-9 w-full rounded-lg border bg-white px-3.5 text-[11px] text-nexoraText outline-none transition-all sm:mt-1 sm:h-10 sm:text-xs ${fieldErrors.email ? 'border-rose-400 focus:border-rose-400' : 'border-nexoraBorder focus:border-nexoraBrand'}`}
               />
               <FieldError message={fieldErrors.email} />
             </div>
             <div className="grid grid-cols-2 gap-2">
               <div>
-                <label className="text-[10px] font-extrabold uppercase text-nexoraMuted">
+                <label className="text-[9px] font-extrabold uppercase text-nexoraMuted sm:text-[10px]">
                   {t('components.dashboard.views.pos.NewBookingForm.date')}
                 </label>
                 <input
@@ -371,12 +375,12 @@ export default function NewBookingForm({
                     clearFieldError(NewBookingFormField.Date)
                   }}
                   aria-invalid={Boolean(fieldErrors.date)}
-                  className={`mt-1 h-10 w-full rounded-lg border bg-white px-3.5 text-xs text-nexoraText outline-none transition-all ${fieldErrors.date ? 'border-rose-400 focus:border-rose-400' : 'border-nexoraBorder focus:border-nexoraBrand'}`}
+                  className={`mt-0.5 h-9 w-full rounded-lg border bg-white px-3.5 text-[11px] text-nexoraText outline-none transition-all sm:mt-1 sm:h-10 sm:text-xs ${fieldErrors.date ? 'border-rose-400 focus:border-rose-400' : 'border-nexoraBorder focus:border-nexoraBrand'}`}
                 />
                 <FieldError message={fieldErrors.date} />
               </div>
               <div>
-                <label className="text-[10px] font-extrabold uppercase text-nexoraMuted">
+                <label className="text-[9px] font-extrabold uppercase text-nexoraMuted sm:text-[10px]">
                   {t('components.dashboard.views.pos.NewBookingForm.time')}
                 </label>
                 <input
@@ -388,7 +392,7 @@ export default function NewBookingForm({
                     clearFieldError(NewBookingFormField.Time)
                   }}
                   aria-invalid={Boolean(fieldErrors.time)}
-                  className={`mt-1 h-10 w-full rounded-lg border bg-white px-3.5 text-xs text-nexoraText outline-none transition-all ${fieldErrors.time ? 'border-rose-400 focus:border-rose-400' : 'border-nexoraBorder focus:border-nexoraBrand'}`}
+                  className={`mt-0.5 h-9 w-full rounded-lg border bg-white px-3.5 text-[11px] text-nexoraText outline-none transition-all sm:mt-1 sm:h-10 sm:text-xs ${fieldErrors.time ? 'border-rose-400 focus:border-rose-400' : 'border-nexoraBorder focus:border-nexoraBrand'}`}
                 />
                 <FieldError message={fieldErrors.time} />
               </div>

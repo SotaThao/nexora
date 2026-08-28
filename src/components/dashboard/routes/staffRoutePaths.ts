@@ -1,3 +1,5 @@
+import { withStaffChatStartHint } from '../../staff/constants'
+
 export const STAFF_ROUTE_FAMILY = {
   Legacy: 'legacy',
   Settings: 'settings',
@@ -5,6 +7,10 @@ export const STAFF_ROUTE_FAMILY = {
 
 export type StaffRouteFamily =
   (typeof STAFF_ROUTE_FAMILY)[keyof typeof STAFF_ROUTE_FAMILY]
+
+export function resolveStaffRouteFamily(isMobile: boolean): StaffRouteFamily {
+  return isMobile ? STAFF_ROUTE_FAMILY.Legacy : STAFF_ROUTE_FAMILY.Settings
+}
 
 const STAFF_ROUTE_BASE: Record<StaffRouteFamily, string> = {
   [STAFF_ROUTE_FAMILY.Legacy]: '/dashboard/staff',
@@ -21,6 +27,14 @@ export function buildStaffRoutePath(
   const base = STAFF_ROUTE_BASE[family]
   const id = String(staffId ?? '').trim()
   return id ? `${base}/${encodeURIComponent(id)}` : base
+}
+
+export function buildMerchantStaffListPath(options?: {
+  startChatHint?: boolean
+  family?: StaffRouteFamily
+}): string {
+  const path = buildStaffRoutePath(options?.family ?? STAFF_ROUTE_FAMILY.Settings)
+  return withStaffChatStartHint(path, options?.startChatHint)
 }
 
 export function isStaffManagementPath(pathname: string): boolean {
