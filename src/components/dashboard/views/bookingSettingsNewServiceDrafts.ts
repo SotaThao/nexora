@@ -39,6 +39,8 @@ export function newServiceDraftReducer(
       )
     case 'remove':
       return state.filter((draft) => draft.id !== action.id)
+    default:
+      return state
   }
 }
 
