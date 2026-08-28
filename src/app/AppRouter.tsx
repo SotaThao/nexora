@@ -9,6 +9,7 @@ import {
   useSearchParams,
 } from "react-router-dom";
 import { scrollToPageTop } from "../utils/scrollToPageTop";
+import { searchHasStaffChatStartHint, isStaffChatStartHintOnlySearchChange } from "../components/staff/constants";
 import { useAuth } from "../auth/useAuth";
 import {
   AnalyticsRoute,
@@ -274,8 +275,16 @@ function ScrollToTop() {
     if (
       previousLocation?.pathname === pathname &&
       previousLocation.hash === hash &&
-      isTabOnlySearchChange(previousLocation.search, search)
+      (
+        isTabOnlySearchChange(previousLocation.search, search)
+        || isStaffChatStartHintOnlySearchChange(previousLocation.search, search)
+      )
     ) {
+      return undefined;
+    }
+
+    if (searchHasStaffChatStartHint(search)) {
+      window.scrollTo(0, 0);
       return undefined;
     }
 

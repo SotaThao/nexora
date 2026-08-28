@@ -85,6 +85,14 @@ export const qk = {
   // POS Owner Setup — Service Add-Ons (owned per service, never shared)
   merchantPosServiceAddOns: (serviceId?: string) =>
     ['merchantSettings', 'posServiceAddOns', serviceId ?? ''],
+  merchantPosServiceAddOnCopySources: (serviceId?: string) =>
+    ['merchantSettings', 'posServiceAddOnCopySources', serviceId ?? ''],
+  /**
+   * Prefix — adding or removing an add-on on one service changes every OTHER service's copy-source
+   * list, so the whole set has to be invalidated, not just the edited service's own entry.
+   */
+  merchantPosServiceAddOnCopySourcesRoot: () =>
+    ['merchantSettings', 'posServiceAddOnCopySources'] as const,
   // POS Owner Setup — Products (US-018)
   merchantPosProducts: ()      => ['merchantSettings', 'posProducts'],
   // POS Owner Setup — Staff Profile (US-019)
@@ -549,6 +557,15 @@ export const qk = {
   merchantVoiceUsageActivity: (filters = EMPTY) => ['merchantVoice', 'usage', 'activity', filters],
   /** Prefix — invalidate all usage-activity filter variants. */
   merchantVoiceUsageActivityRoot: () => ['merchantVoice', 'usage', 'activity'] as const,
+
+  // Community Chat (US-101 → US-107)
+  communityChatSessions: () => ['communityChat', 'sessions'] as const,
+  communityChatSession: (sessionId?: string | null) => ['communityChat', 'session', sessionId ?? ''] as const,
+  communityChatMessagesRoot: (sessionId?: string | null) => ['communityChat', 'messages', sessionId ?? ''] as const,
+  communityChatMessages: (sessionId?: string | null, filters = EMPTY) =>
+    ['communityChat', 'messages', sessionId ?? '', filters] as const,
+  communityChatMessagesInfinite: (sessionId?: string | null, pageSize?: number) =>
+    ['communityChat', 'messages', sessionId ?? '', 'infinite', pageSize ?? 20] as const,
 
   // Nexora Voice trial (merchant)
   voiceTrialRequestMe: () => ['nexora-voice', 'trial-request', 'me'],

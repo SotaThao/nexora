@@ -161,7 +161,17 @@ export const errorCodeToI18nKey = {
 
   // Shared Catalog — Categories & Services (delete guards)
   [CatalogErrorCode.ServiceInUse]: 'errors.catalog_service_in_use',
+  [CatalogErrorCode.ServiceDeleted]: 'errors.catalog_service_deleted',
   [CatalogErrorCode.CategoryInUse]: 'errors.catalog_category_in_use',
+
+  // Shared Catalog — Service Add-Ons
+  [CatalogErrorCode.ServiceAddOnNotFound]: 'errors.catalog_service_addon_not_found',
+  [CatalogErrorCode.ServiceAddOnNameRequired]: 'errors.catalog_service_addon_name_required',
+  [CatalogErrorCode.ServiceAddOnNameTooLong]: 'errors.catalog_service_addon_name_too_long',
+  [CatalogErrorCode.ServiceAddOnNameDuplicate]: 'errors.catalog_service_addon_name_duplicate',
+  [CatalogErrorCode.ServiceAddOnPriceInvalid]: 'errors.catalog_service_addon_price_invalid',
+  [CatalogErrorCode.ServiceAddOnInUse]: 'errors.catalog_service_addon_in_use',
+  [CatalogErrorCode.ServiceAddOnCopySourceInvalid]: 'errors.catalog_service_addon_copy_source_invalid',
 
   // POS Owner Setup — Products (US-018)
   POS_PRODUCT_NOT_FOUND: 'errors.pos_product_not_found',
@@ -495,6 +505,18 @@ export const errorCodeToI18nKey = {
   SMS_CAMPAIGN_SCHEDULED_AT_REQUIRED: 'errors.sms_campaign_scheduled_at_required',
   SMS_CAMPAIGN_SCHEDULED_AT_IN_PAST: 'errors.sms_campaign_scheduled_at_in_past',
   SMS_CREDIT_INVALID_PACKAGE: 'errors.sms_credit_invalid_package',
+
+  // Community Chat (US-101 → US-107)
+  CHAT_SESSION_NOT_FOUND: 'errors.chat_session_not_found',
+  CHAT_NOT_A_PARTICIPANT: 'errors.chat_not_a_participant',
+  CHAT_NOT_ALLOWED_TO_MANAGE_GROUP: 'errors.chat_not_allowed_to_manage_group',
+  CHAT_PARTICIPANT_MUST_HAVE_ACCOUNT: 'errors.chat_participant_must_have_account',
+  CHAT_MESSAGE_NOT_FOUND: 'errors.chat_message_not_found',
+  CHAT_CANNOT_DELETE_OTHERS_MESSAGE: 'errors.chat_cannot_delete_others_message',
+  CHAT_IMAGE_INVALID_EXTENSION: 'errors.chat_image_invalid_extension',
+  CHAT_IMAGE_TOO_LARGE: 'errors.chat_image_too_large',
+  CHAT_CANNOT_REMOVE_SELF: 'errors.chat_cannot_remove_self',
+  CHAT_RENAME_ONLY_FOR_GROUP: 'errors.chat_rename_only_for_group',
 
   // Subscription wallet payment
   SUBSCRIPTION_ALREADY_ON_PAID_PLAN: 'errors.subscription_already_on_paid_plan',

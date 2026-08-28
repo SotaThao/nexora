@@ -15,6 +15,7 @@ export interface TechnicianOption {
 
 // Above this many people the grid becomes hard to scan, and a name is faster to type than to hunt.
 const SEARCH_THRESHOLD = 6
+const EMPTY_ROSTER_SKELETON_COUNT = 4
 
 function initialsOf(displayName: string) {
   return displayName
@@ -37,10 +38,11 @@ export default function TechnicianPickerGrid({
   busyLabel,
   availableLabel,
   compact = false,
+  autoWrap = false,
 }: {
   technicians: TechnicianOption[]
   isLoading?: boolean
-  // null = Anyone / First available.
+  // null = no technician preference.
   selectedStaffId: string | null
   onSelect: (posStaffProfileId: string | null) => void
   anyoneLabel: string
@@ -52,6 +54,8 @@ export default function TechnicianPickerGrid({
   busyLabel?: string
   availableLabel?: string
   compact?: boolean
+  // Check-in surfaces use content-width choices that wrap; other consumers keep the existing grid.
+  autoWrap?: boolean
 }) {
   const [searchQuery, setSearchQuery] = useState('')
 
@@ -63,11 +67,14 @@ export default function TechnicianPickerGrid({
   }, [technicians, searchQuery])
 
   const cardClass = (isSelected: boolean) =>
-    `${compact
+    `${autoWrap ? 'min-w-0 w-auto max-w-full flex-none ' : ''}${compact
       ? 'flex min-h-11 flex-col items-start gap-0.5 rounded-lg border px-3 py-2 text-left'
       : 'flex flex-col items-center gap-1 rounded-xl border p-3 text-center'} ${
       isSelected ? 'border-nexoraBrand bg-nexoraBrand/5' : 'border-nexoraBorder hover:border-nexoraBrand'
     }`
+
+  const optionLabelClass = `${autoWrap ? 'max-w-full' : 'w-full'} truncate text-xs font-bold text-nexoraText`
+  const fullRowClass = autoWrap ? 'w-full' : 'col-span-full'
 
   const renderBadge = (staff: TechnicianOption) => {
     if (!busyLabel || !availableLabel || staff.isBusy === undefined) return null
@@ -93,21 +100,25 @@ export default function TechnicianPickerGrid({
         </div>
       ) : null}
 
-      <div className="grid grid-cols-2 gap-2 sm:grid-cols-3">
+      <div
+        className={
+          autoWrap ? 'flex flex-wrap items-stretch gap-2' : 'grid grid-cols-2 gap-2 sm:grid-cols-3'
+        }
+      >
         {/* Outside the loading branch: "Anyone" needs no data, so it is tappable immediately. */}
         <button type="button" onClick={() => onSelect(null)} className={cardClass(selectedStaffId === null)}>
           {!compact ? (
             <span className="flex h-11 w-11 items-center justify-center rounded-full bg-nexoraCanvas text-base">⚡</span>
           ) : null}
-          <span className={`${compact ? 'w-full truncate' : ''} text-xs font-bold text-nexoraText`}>
-            {anyoneLabel}
-          </span>
-          {anyoneHint ? <span className="text-[10px] text-nexoraMuted">{anyoneHint}</span> : null}
+          <span className={optionLabelClass}>{anyoneLabel}</span>
+          {anyoneHint ? (
+            <span className="max-w-full truncate text-[10px] text-nexoraMuted">{anyoneHint}</span>
+          ) : null}
         </button>
 
-        {isLoading ? (
-          <div className="col-span-full">
-            <SkeletonList count={4} lines={1} />
+        {isLoading && technicians.length === 0 ? (
+          <div className={fullRowClass}>
+            <SkeletonList count={EMPTY_ROSTER_SKELETON_COUNT} lines={1} />
           </div>
         ) : (
           <>
@@ -127,13 +138,13 @@ export default function TechnicianPickerGrid({
                     )}
                   </span>
                 ) : null}
-                <span className="w-full truncate text-xs font-bold text-nexoraText">{staff.displayName}</span>
+                <span className={optionLabelClass}>{staff.displayName}</span>
                 {renderBadge(staff)}
               </button>
             ))}
 
             {filtered.length === 0 ? (
-              <p className="col-span-full text-xs text-nexoraMuted">{emptyLabel}</p>
+              <p className={`${fullRowClass} text-xs text-nexoraMuted`}>{emptyLabel}</p>
             ) : null}
           </>
         )}

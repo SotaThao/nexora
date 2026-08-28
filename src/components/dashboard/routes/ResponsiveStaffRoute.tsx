@@ -1,9 +1,9 @@
 import type { ReactNode } from 'react'
-import { Navigate } from 'react-router-dom'
+import { Navigate, useLocation } from 'react-router-dom'
 import { useIsMobileUI } from '../../../hooks/useIsMobileUI'
 import {
   buildStaffRoutePath,
-  STAFF_ROUTE_FAMILY,
+  resolveStaffRouteFamily,
   type StaffRouteFamily,
 } from './staffRoutePaths'
 
@@ -19,12 +19,16 @@ export default function ResponsiveStaffRoute({
   children,
 }: ResponsiveStaffRouteProps) {
   const isMobile = useIsMobileUI()
-  const targetFamily = isMobile
-    ? STAFF_ROUTE_FAMILY.Legacy
-    : STAFF_ROUTE_FAMILY.Settings
+  const location = useLocation()
+  const targetFamily = resolveStaffRouteFamily(isMobile)
 
   if (family !== targetFamily) {
-    return <Navigate to={buildStaffRoutePath(targetFamily, staffId)} replace />
+    return (
+      <Navigate
+        to={`${buildStaffRoutePath(targetFamily, staffId)}${location.search}`}
+        replace
+      />
+    )
   }
 
   return <>{children}</>

@@ -1,6 +1,7 @@
 import type { ApiError } from './api'
 import type { LooseObject } from './domain'
 import type { PosOrderStatus } from '../constants/posOrderStatus'
+import type { PosCheckoutPaymentMethodType } from '../constants/posCheckoutPaymentMethod'
 import type {
   MerchantSetup,
   NotificationRecord,
@@ -19,6 +20,7 @@ import type {
   UserProfile,
 } from './domain'
 export type { ApiError }
+export type { PosCheckoutPaymentMethodType } from '../constants/posCheckoutPaymentMethod'
 
 // --- API raw DTOs (Swagger-aligned, optional fields) ---
 
@@ -755,6 +757,14 @@ export interface ServiceAddOnApiDto {
   canDelete: boolean
 }
 
+/** A service that owns at least one add-on, offered as a copy source. */
+export interface ServiceAddOnCopySourceApiDto {
+  id: string
+  name: string
+  /** Includes inactive add-ons — the copy carries those over too. */
+  addOnCount: number
+}
+
 export interface ServiceAddOnInput {
   name: string
   price: number
@@ -1082,8 +1092,6 @@ export interface ManageBookingApiDto {
 export interface ManageBookingReschedulePayload {
   scheduledAt: string
 }
-
-export type PosCheckoutPaymentMethodType = 'Card' | 'Cash' | 'GiftCard' | 'SplitPay'
 
 export interface CompleteOrderPayload {
   paymentMethodType: PosCheckoutPaymentMethodType
@@ -1447,6 +1455,8 @@ export interface StaffListItemApiDto {
   inviteId?: string
   staffLinkId?: string
   staffProfileId?: string | null
+  userProfileId?: string | null
+  userId?: string | null
   staffCode?: string | null
   refCode?: string | null
   source?: string | null
@@ -1475,8 +1485,39 @@ export interface StaffListItemApiDto {
   paymentMethods?: StaffPaymentMethodApiDto[]
   invites?: StaffInviteSummaryApiDto[]
   isLocalStaff?: boolean
-  staffProfile?: { staffCode?: string | null; phoneNumber?: string; phone?: string; email?: string }
-  user?: { phoneNumber?: string; phone?: string; email?: string }
+  staffProfile?: { phoneNumber?: string; phone?: string; email?: string }
+  user?: { id?: string; userProfileId?: string; phoneNumber?: string; phone?: string; email?: string }
+}
+
+/**
+ * `GET /api/v1/merchant/staff/{staffCode}` — StaffDetailByCodeDto.
+ * Includes `userProfileId` and paymentMethods with optional VlinkPay `cryptoAddresses`.
+ */
+export interface StaffDetailByCodeApiDto extends StaffListItemApiDto {
+  linkId: string
+  itemType: string
+  staffProfileId: string
+  userProfileId: string | null
+  staffCode: string
+  displayName: string
+  nicknameAtBusiness: string | null
+  photoUrl: string | null
+  position: string | null
+  bio: string | null
+  roleAtBusiness: string | null
+  status: string
+  sortOrder: number
+  isProfileComplete: boolean
+  isLocalStaff: boolean
+  tipCount: number
+  averageRating: number
+  email: string | null
+  phoneNumber: string | null
+  firstName: string | null
+  lastName: string | null
+  joinDate: string | null
+  invites: StaffInviteSummaryApiDto[]
+  paymentMethods: StaffPaymentMethodApiDto[]
 }
 
 export interface LocalStaffApiDto {

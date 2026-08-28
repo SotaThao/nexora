@@ -19,6 +19,7 @@ export default function ChangeServiceModal({
   serviceName,
   addOnCount,
   services,
+  isPending = false,
   onSelect,
   onClose,
 }: {
@@ -29,6 +30,7 @@ export default function ChangeServiceModal({
   // than discovered afterwards on the ticket.
   addOnCount: number
   services: CheckoutServiceCatalogItemApiDto[]
+  isPending?: boolean
   onSelect: (posServiceId: string) => void
   onClose: () => void
 }) {
@@ -43,7 +45,7 @@ export default function ChangeServiceModal({
           <h2 className="min-w-0 truncate text-sm font-extrabold text-nexoraText">
             {t(`${K}.changeServiceModalTitle`, { serviceName })}
           </h2>
-          <IconButton label={t(`${K}.changeServiceModalClose`)} onClick={onClose}>
+          <IconButton label={t(`${K}.changeServiceModalClose`)} onClick={onClose} disabled={isPending}>
             <X className="h-4 w-4" />
           </IconButton>
         </div>
@@ -60,6 +62,7 @@ export default function ChangeServiceModal({
           <CategoryGroupedCatalogPicker
             items={services}
             onAdd={onSelect}
+            isPending={isPending}
             addLabel={t(`${K}.selectServiceButton`)}
             emptyLabel={t(`${K}.noServicesInCategory`)}
             allCategoryLabel={t(`${K}.allCategories`)}

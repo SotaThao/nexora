@@ -57,6 +57,7 @@ export default function SelectTechnicianStep({
         busyLabel={t(`${K}.technicianBusy`)}
         availableLabel={t(`${K}.technicianAvailable`)}
         compact={compact}
+        autoWrap
       />
     </CheckInStepFrame>
   )

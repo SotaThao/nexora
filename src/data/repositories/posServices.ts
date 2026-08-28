@@ -6,6 +6,7 @@ import type {
   PosServiceApiDto,
   PosServiceStatus,
   ServiceAddOnApiDto,
+  ServiceAddOnCopySourceApiDto,
   ServiceAddOnInput,
   UpdateServiceAddOnInput,
 } from '../../types/repositories'
@@ -64,10 +65,24 @@ export function createPosServicesRepository(client: HttpClient = httpClient) {
       await client.put<void>('/api/v1/merchant/services/reorder', { items })
     },
 
+    // BE decides hard vs soft delete based on order/staff-assignment history — this call
+    // always succeeds either way, the caller doesn't need to know which happened.
+    async deletePosService(serviceId: string): Promise<boolean> {
+      return await client.del<boolean>(`/api/v1/merchant/services/${serviceId}`)
+    },
+
     // Add-ons belong to one service — every route is nested under it.
     async getServiceAddOns(serviceId: string): Promise<ServiceAddOnApiDto[]> {
       const res = await client.get<ServiceAddOnApiDto[]>(
         `/api/v1/merchant/services/${serviceId}/add-ons`,
+      )
+      return res ?? []
+    },
+
+    // Only services that actually own add-ons — an empty one could never copy anything.
+    async getServiceAddOnCopySources(serviceId: string): Promise<ServiceAddOnCopySourceApiDto[]> {
+      const res = await client.get<ServiceAddOnCopySourceApiDto[]>(
+        `/api/v1/merchant/services/${serviceId}/add-ons/copy-sources`,
       )
       return res ?? []
     },
