@@ -62,7 +62,7 @@ export default function GlobalDemoQuickNav() {
             </Link>
 
             <Link
-              to="/dashboard/pos/services"
+              to="/pos/services"
               className={`flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-bold transition shadow-sm ${
                 path.includes('/pos')
                   ? 'bg-indigo-600 text-white ring-2 ring-indigo-400'

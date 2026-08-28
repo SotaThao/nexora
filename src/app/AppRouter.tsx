@@ -266,21 +266,32 @@ export default function AppRouter() {
           <Route path="/merchant/payments/:paymentId" element={<PaymentsRedirect />} />
           <Route path="/qr/:code" element={<QrRedirectPage />} />
           <Route path="/help/qr/:code" element={<HelpQrPage />} />
-          <Route path="/preview/menu" element={<PosMenuUpsellPreviewPage />} />
-          <Route path="/booking/preview" element={<PosMenuUpsellPreviewPage />} />
+          {/* Public Preview & Demo Routes (Anonymous Access) */}
           <Route path="/preview/builder" element={<TemplateBuilderPreviewPage />} />
           <Route path="/builder" element={<TemplateBuilderPreviewPage />} />
           <Route path="/templatebuilder" element={<TemplateBuilderPreviewPage />} />
-          <Route path="/upsell" element={<PosMenuUpsellPreviewPage />} />
-          <Route path="/manual-activity" element={<ManualActivityPrototypePage />} />
-          <Route path="/manual-payment" element={<ManualActivityPrototypePage />} />
-          <Route path="/preview/manual-activity" element={<ManualActivityPrototypePage />} />
-          <Route path="/activity" element={<ManualActivityPrototypePage />} />
+          <Route path="/template-builder" element={<TemplateBuilderPreviewPage />} />
+          <Route path="/site/builder" element={<TemplateBuilderPreviewPage />} />
+          <Route path="/site" element={<TemplateBuilderPreviewPage />} />
+          <Route path="/preview" element={<Navigate to="/preview/builder" replace />} />
           <Route path="/preview/site" element={<Navigate to="/b/nexora-luxury" replace />} />
+          <Route path="/website" element={<Navigate to="/b/nexora-luxury" replace />} />
+          <Route path="/salon" element={<Navigate to="/b/nexora-luxury" replace />} />
+          <Route path="/salon/:businessSlug" element={<PublicPosBookingPage />} />
           <Route path="/site/:businessSlug" element={<PublicPosBookingPage />} />
           <Route path="/b/:businessSlug" element={<PublicPosBookingPage />} />
           <Route path="/booking/:businessSlug" element={<PublicPosBookingPage />} />
+
+          {/* POS & Menu Preview Routes */}
+          <Route path="/pos" element={<PosServicesRoute />} />
           <Route path="/pos/services" element={<PosServicesRoute />} />
+          <Route path="/pos-services" element={<PosServicesRoute />} />
+          <Route path="/services" element={<PosServicesRoute />} />
+          <Route path="/preview/pos" element={<PosServicesRoute />} />
+          <Route path="/preview/menu" element={<PosMenuUpsellPreviewPage />} />
+          <Route path="/booking/preview" element={<PosMenuUpsellPreviewPage />} />
+          <Route path="/menu" element={<PosMenuUpsellPreviewPage />} />
+          <Route path="/upsell" element={<PosMenuUpsellPreviewPage />} />
           <Route path="/privacy-policy" element={<PrivacyPolicyPage />} />
           <Route path="/terms-of-service" element={<TermsOfServicePage />} />
           <Route path="/design-demo/community" element={<CommunityDesignDemo />} />

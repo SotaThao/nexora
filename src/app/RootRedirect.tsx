@@ -77,6 +77,6 @@ export default function RootRedirect() {
     setIsProcessingDeepLink(false)
   }, [searchParams, navigate, t])
 
-  // Always land straight on POS Services & Custom Menu demo
-  return <Navigate to="/dashboard/pos/services" replace />
+  // Always land straight on public Template Studio & Demo Hub
+  return <Navigate to="/preview/builder" replace />
 }
