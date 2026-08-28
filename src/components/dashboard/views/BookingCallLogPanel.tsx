@@ -447,7 +447,9 @@ export default function BookingCallLogPanel() {
                             </div>
                           </td>
                           <td data-label={t(`${TK}.colPhone`)}>
-                            {call.phoneDisplay}
+                            <span className="whitespace-nowrap tabular-nums">
+                              {call.phoneDisplay}
+                            </span>
                           </td>
                           <td data-label={t(`${TK}.colStatus`)}>
                             <span

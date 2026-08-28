@@ -15,6 +15,14 @@ import { SkeletonList } from '../../../ui/skeleton'
 import { formatPosDateTime } from './posDateTime'
 import { formatCustomerPhone } from './customer/customerFormatters'
 import { formatBookingHubDateTimeParts } from '../bookingHubFormatters'
+import { getPosCheckoutPaymentMethodLabel } from '../../../../constants/posCheckoutPaymentMethod'
+import { PosDiscountBearer } from '../../../../constants/posDiscount'
+import {
+  POS_TABLE_HEADER_CELL_CLASS,
+  POS_TABLE_HEADER_ROW_CLASS,
+  POS_TABLE_STICKY_ACTION_CELL_CLASS,
+  POS_TABLE_STICKY_ACTION_HEADER_CLASS,
+} from './posTableStyles'
 
 const PAGE_SIZE = 10
 
@@ -123,18 +131,18 @@ export default function PosCompletedOrdersPanel({ businessId }: { businessId: st
               a full page of completed orders scrolls in place; the pagination footer
               below stays outside this box, always visible. */}
           <div className="max-h-[560px] overflow-auto">
-            <table className="w-full text-left text-xs">
+            <table className="w-full min-w-[1100px] table-auto text-left text-xs">
               <thead className="sticky top-0 z-[1] bg-nexoraCanvas/90">
-                <tr className="text-[10px] font-black uppercase tracking-wider text-nexoraMuted">
-                  <th className="px-4 py-3 text-xs font-black">{t('components.dashboard.views.pos.PosCompletedOrdersPanel.columnNumber')}</th>
-                  <th className="px-4 py-3 text-xs font-black">{t('components.dashboard.views.pos.PosCompletedOrdersPanel.columnCustomer')}</th>
-                  <th className="px-4 py-3 text-xs font-black">{t('components.dashboard.views.pos.PosCompletedOrdersPanel.columnPhone')}</th>
-                  <th className="px-4 py-3 text-xs font-black">{t('components.dashboard.views.pos.PosCompletedOrdersPanel.columnCompletedAt')}</th>
-                  <th className="px-4 py-3 text-xs font-black">{t('components.dashboard.views.pos.PosCompletedOrdersPanel.columnTechnician')}</th>
-                  <th className="px-4 py-3 text-xs font-black">{t('components.dashboard.views.pos.PosCompletedOrdersPanel.columnServices')}</th>
-                  <th className="px-4 py-3 text-xs font-black">{t('components.dashboard.views.pos.PosCompletedOrdersPanel.columnPaymentMethod')}</th>
-                  <th className="px-4 py-3 text-right text-xs font-black">{t('components.dashboard.views.pos.PosCompletedOrdersPanel.columnTotal')}</th>
-                  <th className="px-4 py-3 text-right text-xs font-black">{t('components.dashboard.views.pos.PosCompletedOrdersPanel.columnActions')}</th>
+                <tr className={POS_TABLE_HEADER_ROW_CLASS}>
+                  <th className={POS_TABLE_HEADER_CELL_CLASS}>{t('components.dashboard.views.pos.PosCompletedOrdersPanel.columnNumber')}</th>
+                  <th className={POS_TABLE_HEADER_CELL_CLASS}>{t('components.dashboard.views.pos.PosCompletedOrdersPanel.columnCustomer')}</th>
+                  <th className={POS_TABLE_HEADER_CELL_CLASS}>{t('components.dashboard.views.pos.PosCompletedOrdersPanel.columnPhone')}</th>
+                  <th className={POS_TABLE_HEADER_CELL_CLASS}>{t('components.dashboard.views.pos.PosCompletedOrdersPanel.columnCompletedAt')}</th>
+                  <th className={POS_TABLE_HEADER_CELL_CLASS}>{t('components.dashboard.views.pos.PosCompletedOrdersPanel.columnTechnician')}</th>
+                  <th className={POS_TABLE_HEADER_CELL_CLASS}>{t('components.dashboard.views.pos.PosCompletedOrdersPanel.columnServices')}</th>
+                  <th className={POS_TABLE_HEADER_CELL_CLASS}>{t('components.dashboard.views.pos.PosCompletedOrdersPanel.columnPaymentMethod')}</th>
+                  <th className={`${POS_TABLE_HEADER_CELL_CLASS} text-right`}>{t('components.dashboard.views.pos.PosCompletedOrdersPanel.columnTotal')}</th>
+                  <th className={`${POS_TABLE_HEADER_CELL_CLASS} ${POS_TABLE_STICKY_ACTION_HEADER_CLASS} text-right`}>{t('components.dashboard.views.pos.PosCompletedOrdersPanel.columnActions')}</th>
                 </tr>
               </thead>
               <tbody>
@@ -148,7 +156,7 @@ export default function PosCompletedOrdersPanel({ businessId }: { businessId: st
                         </span>
                       </td>
                       <td className="px-4 py-3 font-bold text-nexoraText">{order.customerName}</td>
-                      <td className="px-4 py-3 text-nexoraMuted">
+                      <td className="whitespace-nowrap px-4 py-3 tabular-nums text-nexoraMuted">
                         {formatCustomerPhone(order.customerPhone, order.customerPhoneE164) || '—'}
                       </td>
                       <td className="px-4 py-3 align-middle">
@@ -175,7 +183,7 @@ export default function PosCompletedOrdersPanel({ businessId }: { businessId: st
                       </td>
                       <td className="px-4 py-3">
                         <span className="rounded-full bg-sky-50 px-2.5 py-1 text-[10px] font-extrabold text-sky-700">
-                          {order.paymentMethodType || '—'}
+                          {getPosCheckoutPaymentMethodLabel(order.paymentMethodType, t)}
                         </span>
                       </td>
                       <td className="px-4 py-3 text-right font-bold tabular-nums text-nexoraText">
@@ -183,7 +191,7 @@ export default function PosCompletedOrdersPanel({ businessId }: { businessId: st
                           ${order.total.toFixed(2)}
                         </span>
                       </td>
-                      <td className="px-4 py-3 text-right">
+                      <td className={`${POS_TABLE_STICKY_ACTION_CELL_CLASS} px-4 py-3 text-right`}>
                         <button
                           type="button"
                           onClick={() => setViewDetailTargetId(order.id)}
@@ -290,7 +298,11 @@ export default function PosCompletedOrdersPanel({ businessId }: { businessId: st
                         {t('components.dashboard.views.pos.PosCompletedOrdersPanel.viewDetailPaymentMethod')}
                       </p>
                       <p className="text-xs text-nexoraText">
-                        {viewDetail.data.paymentMethodType || t('components.dashboard.views.pos.PosCompletedOrdersPanel.viewDetailNotProvided')}
+                        {getPosCheckoutPaymentMethodLabel(
+                          viewDetail.data.paymentMethodType,
+                          t,
+                          t('components.dashboard.views.pos.PosCompletedOrdersPanel.viewDetailNotProvided'),
+                        )}
                       </p>
                     </div>
                   </div>
@@ -331,11 +343,63 @@ export default function PosCompletedOrdersPanel({ businessId }: { businessId: st
                                     `components.dashboard.views.pos.PosOrderWorkspace.discountBearer${line.discountBearer}`,
                                   ),
                                 })}
+                                {/* Only a split needs the figure spelled out: Salon/Technician
+                                    already imply the whole discount, a 50/50 does not. */}
+                                {line.discountBearer === PosDiscountBearer.Split
+                                  ? ` ${t('components.dashboard.views.pos.PosCompletedOrdersPanel.viewDetailLineDiscountStaffShare', {
+                                      amount: line.staffDiscountShare.toFixed(2),
+                                    })}`
+                                  : ''}
                                 {line.discountNote ? ` — ${line.discountNote}` : ''}
                               </p>
                             ) : null}
                             {line.note ? (
                               <p className="mt-1 rounded bg-nexoraCanvas p-1.5 text-[11px] italic text-nexoraMuted">{line.note}</p>
+                            ) : null}
+                            {/* Indented under the service: an add-on was performed by this same
+                                technician and counts toward their pay on it. */}
+                            {line.addOns?.length ? (
+                              <div className="mt-1.5 space-y-1 border-l-2 border-nexoraBorder pl-2.5">
+                                {line.addOns.map((addOn) => (
+                                  <div key={addOn.id}>
+                                    <div className="flex items-start justify-between gap-2">
+                                      <p className="min-w-0 text-[11px] font-bold text-nexoraText">
+                                        + {addOn.addOnName}
+                                      </p>
+                                      <p className="shrink-0 text-[11px] font-bold tabular-nums text-nexoraText">
+                                        {addOn.discountAmount > 0 ? (
+                                          <>
+                                            <span className="mr-1 font-normal text-nexoraMuted line-through">
+                                              ${addOn.lineTotal.toFixed(2)}
+                                            </span>
+                                            ${addOn.lineTotalAfterDiscount.toFixed(2)}
+                                          </>
+                                        ) : (
+                                          `$${addOn.lineTotal.toFixed(2)}`
+                                        )}
+                                      </p>
+                                    </div>
+                                    {/* An add-on discount is absorbed by the same parties as a
+                                        service one, so a pay dispute needs the bearer here too. */}
+                                    {addOn.discountAmount > 0 ? (
+                                      <p className="mt-0.5 text-[11px] text-amber-700">
+                                        {t('components.dashboard.views.pos.PosCompletedOrdersPanel.viewDetailLineDiscount', {
+                                          amount: addOn.discountAmount.toFixed(2),
+                                          bearer: t(
+                                            `components.dashboard.views.pos.PosOrderWorkspace.discountBearer${addOn.discountBearer}`,
+                                          ),
+                                        })}
+                                        {addOn.discountBearer === PosDiscountBearer.Split
+                                          ? ` ${t('components.dashboard.views.pos.PosCompletedOrdersPanel.viewDetailLineDiscountStaffShare', {
+                                              amount: addOn.staffDiscountShare.toFixed(2),
+                                            })}`
+                                          : ''}
+                                        {addOn.discountNote ? ` — ${addOn.discountNote}` : ''}
+                                      </p>
+                                    ) : null}
+                                  </div>
+                                ))}
+                              </div>
                             ) : null}
                           </div>
                         ))}

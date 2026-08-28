@@ -5,6 +5,12 @@
 import httpClient from '../../lib/httpClient'
 import type { NotificationRecord, NotificationsPage } from '../../types/domain'
 import type { NotificationApiDto } from '../../types/repositories'
+import {
+  COMMUNITY_CHAT_NOTIFICATION_LINK_TAB,
+  COMMUNITY_CHAT_NOTIFICATION_TYPE,
+  normalizeCommunityChatTypeKey,
+} from '../../constants/communityChat'
+import { extractCommunityChatSessionIdFromActionUrl } from '../communityChatNotificationUtils'
 
 type HttpClient = typeof httpClient
 
@@ -90,6 +96,7 @@ const TYPE_TO_LINK_TAB: Record<string, string> = {
   taxiqpayoutdisputed: 'taxiq/payroll', // TaxIqPayoutDisputed
   voicecreditlow: 'booking-hub', // VoiceCreditLow
   voicecreditexhausted: 'booking-hub', // VoiceCreditExhausted
+  [normalizeCommunityChatTypeKey(COMMUNITY_CHAT_NOTIFICATION_TYPE)]: COMMUNITY_CHAT_NOTIFICATION_LINK_TAB,
 }
 
 /**
@@ -126,7 +133,7 @@ function extractPaymentIdFromUrl(url: string | null | undefined): string | null 
 }
 
 function normalizeNotificationType(type: string): string {
-  return type.toLowerCase().replace(/[\s_-]+/g, '')
+  return normalizeCommunityChatTypeKey(type)
 }
 
 function normalizeNotification(item: NotificationApiDto): NotificationRecord {
@@ -135,6 +142,7 @@ function normalizeNotification(item: NotificationApiDto): NotificationRecord {
   const createdAt = item.createdAt ?? ''
   const type = item.type || 'info'
   const typeLower = normalizeNotificationType(type)
+  const communityChatTypeKey = normalizeCommunityChatTypeKey(COMMUNITY_CHAT_NOTIFICATION_TYPE)
 
   // Derive linkTab and staffId for navigation on click
   let linkTab: string | undefined
@@ -142,12 +150,17 @@ function normalizeNotification(item: NotificationApiDto): NotificationRecord {
   let paymentId: string | undefined
   let transactionId: string | undefined
   let reportsTab: string | undefined
+  let chatSessionId: string | undefined
 
   const paymentIdFromUrl = extractPaymentIdFromUrl(item.actionUrl)
+  const sessionIdFromUrl = extractCommunityChatSessionIdFromActionUrl(item.actionUrl)
 
   if (STAFF_NOTIFICATION_TYPES.has(typeLower)) {
     linkTab = 'staff'
     staffId = item.referenceId || extractStaffIdFromUrl(item.actionUrl) || undefined
+  } else if (typeLower === communityChatTypeKey) {
+    linkTab = COMMUNITY_CHAT_NOTIFICATION_LINK_TAB
+    chatSessionId = sessionIdFromUrl || item.referenceId || undefined
   } else if (TYPE_TO_LINK_TAB[typeLower]) {
     linkTab = TYPE_TO_LINK_TAB[typeLower]
     if (linkTab === 'reports') {
@@ -160,6 +173,10 @@ function normalizeNotification(item: NotificationApiDto): NotificationRecord {
     const urlMatch = item.actionUrl.match(/\/dashboard\/([^/?#]+)/i)
     if (urlMatch) linkTab = urlMatch[1]
     if (item.actionUrl.includes('/merchant/staff')) linkTab = 'staff'
+    if (sessionIdFromUrl) {
+      linkTab = COMMUNITY_CHAT_NOTIFICATION_LINK_TAB
+      chatSessionId = sessionIdFromUrl
+    }
   }
 
   if (linkTab === 'reports') {
@@ -184,11 +201,13 @@ function normalizeNotification(item: NotificationApiDto): NotificationRecord {
     read: isRead,
     createdAt: createdAt || undefined,
     time: createdAt,
+    referenceId: item.referenceId ?? null,
     ...(linkTab ? { linkTab } : {}),
     ...(reportsTab ? { reportsTab } : {}),
     ...(staffId ? { staffId } : {}),
     ...(paymentId ? { paymentId } : {}),
     ...(transactionId ? { transactionId } : {}),
+    ...(chatSessionId ? { chatSessionId } : {}),
   }
 }
 

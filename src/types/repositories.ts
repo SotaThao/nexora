@@ -1,6 +1,7 @@
 import type { ApiError } from './api'
 import type { LooseObject } from './domain'
 import type { PosOrderStatus } from '../constants/posOrderStatus'
+import type { PosCheckoutPaymentMethodType } from '../constants/posCheckoutPaymentMethod'
 import type {
   MerchantSetup,
   NotificationRecord,
@@ -19,6 +20,7 @@ import type {
   UserProfile,
 } from './domain'
 export type { ApiError }
+export type { PosCheckoutPaymentMethodType } from '../constants/posCheckoutPaymentMethod'
 
 // --- API raw DTOs (Swagger-aligned, optional fields) ---
 
@@ -597,6 +599,30 @@ export interface OrderServiceLineApiDto {
   technicianName?: string | null
   note?: string | null
   completedAt?: string | null
+  /** Extras sold against this service, in the order they were rung up. */
+  addOns: OrderServiceAddOnLineApiDto[]
+}
+
+/**
+ * An extra sold against a service line. It carries no technician of its own — the technician is
+ * always the parent service's — and no quantity: two of the same add-on are two lines.
+ */
+export interface OrderServiceAddOnLineApiDto {
+  id: string
+  serviceAddOnId: string
+  addOnName: string
+  unitPrice: number
+  lineTotal: number
+  /** 'Percent' | 'Amount'. Null when the add-on is not discounted. */
+  discountType?: string | null
+  discountValue?: number | null
+  discountAmount: number
+  /** 'Salon' | 'Staff' | 'Split'. */
+  discountBearer?: string | null
+  staffDiscountShare: number
+  discountNote?: string | null
+  lineTotalAfterDiscount: number
+  canAssignDiscountToStaff: boolean
 }
 
 export interface OrderProductLineApiDto {
@@ -650,6 +676,42 @@ export interface OrderDetailApiDto {
   receiptEmail?: string | null
   receiptPhone?: string | null
   completedAt?: string | null
+}
+
+/** One option in the "+ Add-On" picker, scoped to the service line it was opened from. */
+export interface ServiceLineAddOnOptionApiDto {
+  id: string
+  name: string
+  price: number
+}
+
+/** Settings view of a service's own add-on list — includes retired ones so they can be re-enabled. */
+export interface ServiceAddOnApiDto {
+  id: string
+  name: string
+  price: number
+  displayOrder: number
+  isActive: boolean
+  /** False once the add-on has been sold — it can then only be deactivated. */
+  canDelete: boolean
+}
+
+/** A service that owns at least one add-on, offered as a copy source. */
+export interface ServiceAddOnCopySourceApiDto {
+  id: string
+  name: string
+  /** Includes inactive add-ons — the copy carries those over too. */
+  addOnCount: number
+}
+
+export interface ServiceAddOnInput {
+  name: string
+  price: number
+}
+
+export interface UpdateServiceAddOnInput extends ServiceAddOnInput {
+  displayOrder: number
+  isActive: boolean
 }
 
 export interface CatalogCategoryApiDto {
@@ -731,6 +793,15 @@ export interface ReceiptServiceLineApiDto {
   /** Zero when this line was not discounted. Who absorbed it is deliberately not on the receipt. */
   discountAmount: number
   /** What the customer paid for this line. */
+  lineTotalAfterDiscount: number
+  /** Extras performed as part of this service, each printed on its own indented line. */
+  addOns: ReceiptAddOnLineApiDto[]
+}
+
+export interface ReceiptAddOnLineApiDto {
+  addOnName: string
+  lineTotal: number
+  discountAmount: number
   lineTotalAfterDiscount: number
 }
 
@@ -953,8 +1024,6 @@ export interface ManageBookingApiDto {
 export interface ManageBookingReschedulePayload {
   scheduledAt: string
 }
-
-export type PosCheckoutPaymentMethodType = 'Card' | 'Cash' | 'GiftCard' | 'SplitPay'
 
 export interface CompleteOrderPayload {
   paymentMethodType: PosCheckoutPaymentMethodType
@@ -1318,6 +1387,8 @@ export interface StaffListItemApiDto {
   inviteId?: string
   staffLinkId?: string
   staffProfileId?: string | null
+  userProfileId?: string | null
+  userId?: string | null
   staffCode?: string | null
   refCode?: string | null
   source?: string | null
@@ -1346,8 +1417,39 @@ export interface StaffListItemApiDto {
   paymentMethods?: StaffPaymentMethodApiDto[]
   invites?: StaffInviteSummaryApiDto[]
   isLocalStaff?: boolean
-  staffProfile?: { staffCode?: string | null; phoneNumber?: string; phone?: string; email?: string }
-  user?: { phoneNumber?: string; phone?: string; email?: string }
+  staffProfile?: { phoneNumber?: string; phone?: string; email?: string }
+  user?: { id?: string; userProfileId?: string; phoneNumber?: string; phone?: string; email?: string }
+}
+
+/**
+ * `GET /api/v1/merchant/staff/{staffCode}` — StaffDetailByCodeDto.
+ * Includes `userProfileId` and paymentMethods with optional VlinkPay `cryptoAddresses`.
+ */
+export interface StaffDetailByCodeApiDto extends StaffListItemApiDto {
+  linkId: string
+  itemType: string
+  staffProfileId: string
+  userProfileId: string | null
+  staffCode: string
+  displayName: string
+  nicknameAtBusiness: string | null
+  photoUrl: string | null
+  position: string | null
+  bio: string | null
+  roleAtBusiness: string | null
+  status: string
+  sortOrder: number
+  isProfileComplete: boolean
+  isLocalStaff: boolean
+  tipCount: number
+  averageRating: number
+  email: string | null
+  phoneNumber: string | null
+  firstName: string | null
+  lastName: string | null
+  joinDate: string | null
+  invites: StaffInviteSummaryApiDto[]
+  paymentMethods: StaffPaymentMethodApiDto[]
 }
 
 export interface LocalStaffApiDto {

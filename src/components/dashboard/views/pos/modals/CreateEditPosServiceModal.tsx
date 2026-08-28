@@ -9,6 +9,7 @@ import { useTranslation } from '../../../../../contexts/LanguageContext'
 import IconButton from '../../../../ui/IconButton'
 import type { PosCategoryApiDto, PosServiceApiDto, PosServiceStatus, PosTagApiDto } from '../../../../../types/repositories'
 import type { PosServiceInput } from '../../../../../data/repositories/posServices'
+import ServiceAddOnsSection from '../ServiceAddOnsSection'
 
 export default function CreateEditPosServiceModal({
   open,
@@ -288,6 +289,12 @@ export default function CreateEditPosServiceModal({
             />
             {t('components.dashboard.views.pos.PosServicesView.activeLabel')}
           </label>
+
+          {/* Edit mode only: an add-on needs a saved service to hang off, and each row here persists
+              on its own endpoint rather than through this form's Save. */}
+          {isEditMode && service ? (
+            <ServiceAddOnsSection serviceId={service.id} />
+          ) : null}
 
           <div className="flex justify-end gap-2 pt-2">
             <button
