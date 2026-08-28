@@ -1,5 +1,5 @@
 // PosStaffProfileView — POS > Staff Profiles (US-019). Searchable, paginated staff
-// table; "View detail" opens PosStaffProfileDetailModal for the actual POS profile form.
+// table; "View" opens PosStaffProfileDetailModal for the actual POS profile form.
 import { useEffect, useState } from 'react'
 import { useNavigate, useSearchParams } from 'react-router-dom'
 import { Loader2, Search, UserPlus, Users } from 'lucide-react'
@@ -9,6 +9,12 @@ import { usePagination } from '../../../../hooks/usePagination'
 import { SkeletonList } from '../../../ui/skeleton'
 import Pagination from '../../../ui/Pagination'
 import PosStaffProfileDetailModal from './modals/PosStaffProfileDetailModal'
+import {
+  POS_TABLE_HEADER_CELL_CLASS,
+  POS_TABLE_HEADER_ROW_CLASS,
+  POS_TABLE_STICKY_ACTION_CELL_CLASS,
+  POS_TABLE_STICKY_ACTION_HEADER_CLASS,
+} from './posTableStyles'
 
 const SEARCH_DEBOUNCE_MS = 350
 const STAFF_TABLE_PAGE_SIZE = 10
@@ -104,19 +110,19 @@ export default function PosStaffProfileView() {
               <SkeletonList count={pageSize} showAvatar lines={2} />
             </div>
           ) : (
-            <table className="w-full border-collapse text-left text-sm">
+            <table className="w-full min-w-[720px] table-auto border-collapse text-left text-sm">
               <thead>
-                <tr className="bg-slate-50 text-[10px] font-extrabold uppercase text-nexoraMuted border-b border-nexoraRule">
-                  <th className="px-5 py-3">
+                <tr className={POS_TABLE_HEADER_ROW_CLASS}>
+                  <th className={POS_TABLE_HEADER_CELL_CLASS}>
                     {t('components.dashboard.views.pos.PosStaffProfileView.tableColumnStaff')}
                   </th>
-                  <th className="px-5 py-3">
+                  <th className={POS_TABLE_HEADER_CELL_CLASS}>
                     {t('components.dashboard.views.pos.PosStaffProfileView.tableColumnPosition')}
                   </th>
-                  <th className="px-5 py-3">
+                  <th className={POS_TABLE_HEADER_CELL_CLASS}>
                     {t('components.dashboard.views.pos.PosStaffProfileView.tableColumnContact')}
                   </th>
-                  <th className="px-5 py-3 text-center">
+                  <th className={`${POS_TABLE_HEADER_CELL_CLASS} ${POS_TABLE_STICKY_ACTION_HEADER_CLASS} text-center`}>
                     {t('components.dashboard.views.pos.PosStaffProfileView.tableColumnActions')}
                   </th>
                 </tr>
@@ -167,18 +173,18 @@ export default function PosStaffProfileView() {
                         <td className="px-5 py-4 text-xs font-semibold text-nexoraMuted">
                           {member.position || '—'}
                         </td>
-                        <td className="px-5 py-4 text-xs font-semibold text-nexoraMuted">
+                        <td className={`px-5 py-4 text-xs font-semibold text-nexoraMuted ${member.phone ? 'whitespace-nowrap tabular-nums' : ''}`}>
                           {member.phone || member.email || '—'}
                         </td>
-                        <td className="px-5 py-4 text-center">
-                          <div className="flex justify-center">
+                        <td className={`${POS_TABLE_STICKY_ACTION_CELL_CLASS} px-5 py-4 text-center`}>
+                          <div className="inline-flex w-max justify-center">
                             <button
                               type="button"
                               onClick={() => linkId && handleViewDetail(linkId)}
                               disabled={!linkId}
                               className="rounded-lg border border-nexoraBorder px-2.5 py-1 text-[11px] font-bold text-nexoraText hover:border-nexoraBrand disabled:opacity-60"
                             >
-                              {t('common.view_detail')}
+                              {t('common.view')}
                             </button>
                           </div>
                         </td>

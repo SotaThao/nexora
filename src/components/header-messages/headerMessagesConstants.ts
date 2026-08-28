@@ -16,6 +16,11 @@ export enum HeaderMessagesEmptyVariant {
   Search = 'search',
 }
 
+export enum HeaderMessagesStaffChatCtaVariant {
+  Empty = 'empty',
+  Footer = 'footer',
+}
+
 export enum HeaderMessageListPreviewKey {
   Desktop = 'openDirectChat',
   Mobile = 'openDirectChatMobile',
@@ -57,8 +62,10 @@ export interface HeaderMessageConversation {
   lastMessageSenderId?: string | null
   updatedAt: string
   unreadCount?: number
-  /** Peer profile for lazy POST /community/chat/sessions (staff roster open, no thread yet). */
+  /** Peer profile for lazy POST /community/chat/sessions (staff roster / salon open, no thread yet). */
   peerUserProfileId?: string | null
+  /** Salon/business for staff-initiated create; merchant roster falls back to profile business. */
+  businessId?: string | null
 }
 
 export interface HeaderChatMessageReplyTo {
@@ -202,6 +209,62 @@ export const HEADER_MESSAGES_MOCK_THREADS: Record<string, HeaderChatThreadMessag
 
 export const HEADER_MESSAGES_I18N = 'dashboard.header.messages' as const
 export const HEADER_MESSAGES_CHAT_I18N = `${HEADER_MESSAGES_I18N}.chat` as const
+
+export enum MessengerDirectoryRole {
+  Owner = 'owner',
+  Staff = 'staff',
+}
+
+export const MESSENGER_DIRECTORY_CTA_I18N = {
+  [MessengerDirectoryRole.Owner]: {
+    startFirst: `${HEADER_MESSAGES_I18N}.startFirstStaffChat`,
+    browse: `${HEADER_MESSAGES_I18N}.browseStaffToChat`,
+    emptyDescription: `${HEADER_MESSAGES_I18N}.emptyMerchantDescription`,
+  },
+  [MessengerDirectoryRole.Staff]: {
+    startFirst: `${HEADER_MESSAGES_I18N}.startFirstSalonChat`,
+    browse: `${HEADER_MESSAGES_I18N}.browseSalonsToChat`,
+    emptyDescription: `${HEADER_MESSAGES_I18N}.emptyStaffDescription`,
+  },
+} as const
+
+const DIRECTORY_CTA_BY_STATE = {
+  empty: {
+    variant: HeaderMessagesStaffChatCtaVariant.Empty,
+    labelKey: 'startFirst',
+    startChatHint: true,
+  },
+  populated: {
+    variant: HeaderMessagesStaffChatCtaVariant.Footer,
+    labelKey: 'browse',
+    startChatHint: false,
+  },
+} as const
+
+export function resolveMessengerDirectoryRole(
+  isOwner: boolean,
+  isStaff: boolean,
+): MessengerDirectoryRole | null {
+  if (isOwner) return MessengerDirectoryRole.Owner
+  if (isStaff) return MessengerDirectoryRole.Staff
+  return null
+}
+
+export function getMessengerDirectoryCta(
+  role: MessengerDirectoryRole,
+  hasConversations: boolean,
+) {
+  const state = hasConversations
+    ? DIRECTORY_CTA_BY_STATE.populated
+    : DIRECTORY_CTA_BY_STATE.empty
+  return {
+    variant: state.variant,
+    labelKey: MESSENGER_DIRECTORY_CTA_I18N[role][state.labelKey],
+    startChatHint: state.startChatHint,
+  }
+}
+
+export const HEADER_MESSAGES_MOBILE_OPEN_CLASS = 'header-messages-mobile-open' as const
 
 export const HEADER_MESSAGES_UNREAD_BADGE_MAX = 99
 export const HEADER_MESSAGES_UNREAD_BADGE_OVERFLOW_LABEL = '99+'

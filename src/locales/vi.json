@@ -451,6 +451,7 @@
     "update": "Cập nhật",
     "delete": "Xóa",
     "edit": "Sửa",
+    "view": "Xem",
     "view_detail": "Xem chi tiết",
     "copy": "Sao chép",
     "copied": "Đã sao chép!",
@@ -755,7 +756,8 @@
       "scan": "Quét QR",
       "kyb": "Xác minh doanh nghiệp",
       "news_library": "Tin tức & Thư viện",
-      "support": "Hỗ Trợ"
+      "support": "Hỗ Trợ",
+      "pos_promotions": "Chương trình giảm giá"
     },
     "header": {
       "search_placeholder": "Tìm nhân viên, đánh giá hoặc tip...",
@@ -791,6 +793,12 @@
         "untitledGroupChat": "Nhóm chat",
         "emptyTitle": "Không có cuộc trò chuyện",
         "emptyDescription": "Mở ứng dụng Chat trên mobile để tìm người dùng mới.",
+        "emptyMerchantDescription": "Chọn nhân viên để bắt đầu chat.",
+        "startFirstStaffChat": "Chat với nhân viên",
+        "browseStaffToChat": "Xem nhân viên",
+        "emptyStaffDescription": "Chọn salon để bắt đầu chat.",
+        "startFirstSalonChat": "Chat với salon",
+        "browseSalonsToChat": "Xem salon",
         "emptySearch": "Không tìm thấy cuộc trò chuyện phù hợp.",
         "groupsEmptyTitle": "Không tìm thấy nhóm",
         "loading": "Đang tải cuộc trò chuyện…",
@@ -1970,6 +1978,8 @@
     "unlink_confirm_message": "Bạn sắp hủy liên kết với {{business}}. Bạn sẽ mất ngay mã QR nhận tip của salon này. Các khoản tip chưa nhận vẫn sẽ được xử lý theo chính sách chi trả của salon. Bạn có muốn tiếp tục?",
     "unlink_success": "Bạn đã hủy liên kết với {{business}}.",
     "unlink_error_title": "Không thể hủy liên kết",
+    "chat_manage": "Chat với salon",
+    "chat_manage_unread": "Chat với salon ({{count}} chưa đọc)",
     "edit_work_skill": "Sửa kỹ năng",
     "skill_select_all": "Chọn tất cả dịch vụ",
     "skill_save": "Lưu",
@@ -2470,7 +2480,15 @@
     "pos_category_name_too_long": "Tên danh mục tối đa 100 ký tự.",
     "pos_category_in_use": "Danh mục này vẫn đang được gán cho một hoặc nhiều dịch vụ/sản phẩm.",
     "catalog_service_in_use": "Dịch vụ này đã có lịch sử đơn hàng hoặc gán nhân viên nên không thể xóa.",
+    "catalog_service_deleted": "Dịch vụ này không còn khả dụng.",
     "catalog_category_in_use": "Danh mục này vẫn đang được gán cho một hoặc nhiều dịch vụ/sản phẩm.",
+    "catalog_service_addon_not_found": "Không tìm thấy add-on này.",
+    "catalog_service_addon_name_required": "Vui lòng nhập tên add-on.",
+    "catalog_service_addon_name_too_long": "Tên add-on tối đa 200 ký tự.",
+    "catalog_service_addon_name_duplicate": "Dịch vụ này đã có add-on cùng tên.",
+    "catalog_service_addon_price_invalid": "Giá add-on phải từ 0 trở lên.",
+    "catalog_service_addon_in_use": "Add-on này đã được bán nên chỉ có thể chuyển sang ngừng hoạt động.",
+    "catalog_service_addon_copy_source_invalid": "Không thể sao chép add-on từ dịch vụ đã chọn.",
     "pos_service_not_found": "Không tìm thấy dịch vụ này.",
     "pos_service_name_required": "Vui lòng nhập tên dịch vụ.",
     "pos_service_name_too_long": "Tên dịch vụ tối đa 200 ký tự.",
@@ -2803,7 +2821,18 @@
     "chat_image_invalid_extension": "Chỉ chấp nhận ảnh JPG và PNG.",
     "chat_image_too_large": "Ảnh phải nhỏ hơn hoặc bằng 10 MB.",
     "chat_cannot_remove_self": "Để rời nhóm, hãy dùng chức năng Rời thay vì xóa chính mình.",
-    "chat_rename_only_for_group": "Chỉ nhóm chat mới có thể đổi tên."
+    "chat_rename_only_for_group": "Chỉ nhóm chat mới có thể đổi tên.",
+    "pos_order_discount_invalid": "Mức giảm giá không hợp lệ.",
+    "pos_order_discount_note_too_long": "Ghi chú giảm giá quá dài.",
+    "pos_promotion_not_found": "Không tìm thấy chương trình giảm giá.",
+    "pos_promotion_not_eligible": "Lượt khách này không đủ điều kiện áp chương trình đó.",
+    "pos_promotion_inactive": "Chương trình này đã ngừng áp dụng.",
+    "pos_promotion_schedule_invalid": "Chọn ít nhất một ngày và giờ kết thúc phải sau giờ bắt đầu.",
+    "pos_promotion_name_required": "Nhập tên chương trình giảm giá.",
+    "pos_promotion_name_too_long": "Tên chương trình quá dài.",
+    "pos_promotion_badge_too_long": "Nhãn hiển thị quá dài.",
+    "pos_promotion_value_invalid": "Nhập mức giảm lớn hơn 0 (và tối đa 100 nếu là phần trăm).",
+    "pos_promotion_in_use": "Đã có khách dùng chương trình này nên không thể xoá. Hãy tắt chương trình thay vì xoá."
   },
   "components": {
     "common": {
@@ -3301,6 +3330,7 @@
           "manage_edit_profile": "Sửa hồ sơ",
           "manage_chat": "Chat với nhân viên",
           "manage_chat_unread": "Chat với nhân viên ({{count}} chưa đọc)",
+          "start_chat_hint": "Nhấn để trò chuyện",
           "chat_short": "Chat",
           "manage_view_qr": "Xem mã QR",
           "manage_preview_customer": "Xem trước góc nhìn khách hàng",
@@ -3391,6 +3421,10 @@
             "noServices": "Không tìm thấy dịch vụ nào.",
             "createdSuccess": "Đã tạo dịch vụ.",
             "updatedSuccess": "Đã cập nhật dịch vụ.",
+            "deletedSuccess": "Đã xóa dịch vụ.",
+            "deleteService": "Xóa dịch vụ",
+            "deleteConfirmTitle": "Xóa dịch vụ này?",
+            "deleteConfirmBody": "\"{{name}}\" sẽ bị xóa khỏi danh sách dịch vụ.",
             "reorderFailed": "Không thể lưu thứ tự mới. Vui lòng thử lại.",
             "revisitAssignmentNudge": "Bạn có thể cần cập nhật lại phân công thợ để bao gồm dịch vụ mới này.",
             "addOnsSectionTitle": "Dịch vụ kèm",
@@ -3399,9 +3433,12 @@
             "addOnNamePlaceholder": "vd: Paraffin Wax Treatment",
             "addOnPricePlaceholder": "vd: 15",
             "addOnAddButton": "Thêm",
+            "addOnEditLabel": "Sửa dịch vụ kèm",
             "addOnDeleteBlocked": "Dịch vụ kèm này đã từng bán nên chỉ có thể tắt hoạt động.",
             "addOnCopyPlaceholder": "Sao chép dịch vụ kèm từ dịch vụ khác…",
+            "addOnCopyOptionLabel": "{{name}} — {{count}} dịch vụ kèm",
             "addOnCopyButton": "Sao chép",
+            "addOnCopyAllDuplicates": "Không có gì để sao chép — dịch vụ này đã có toàn bộ dịch vụ kèm của {{name}}.",
             "addOnCopyResult": "Đã sao chép {{count}} dịch vụ kèm."
           },
           "PosProductsView": {
@@ -3571,7 +3608,7 @@
             "reportEmpty": "Chưa có dữ liệu lương cho tuần này.",
             "reportColumnTechnician": "Thợ",
             "reportColumnHours": "Giờ",
-            "reportColumnService": "Dịch vụ $",
+            "reportColumnService": "Số tiền dịch vụ",
             "reportColumnCommission": "Hoa hồng $",
             "reportColumnTip": "Tip",
             "reportColumnTechTakes": "Thợ nhận",
@@ -3714,7 +3751,13 @@
               "Card": "Thẻ",
               "Cash": "Tiền mặt",
               "GiftCard": "Thẻ quà tặng",
-              "SplitPay": "Chia thanh toán"
+              "SplitPay": "Chia thanh toán",
+              "Zelle": "Zelle",
+              "CashApp": "Cash App",
+              "Venmo": "Venmo",
+              "VlinkPay": "Ví VLINKPAY",
+              "AppleCash": "Apple Cash",
+              "PayPal": "PayPal"
             },
             "receiptTitle": "Hoá đơn",
             "receiptSendSms": "Gửi SMS",
@@ -3780,7 +3823,8 @@
             "addOnModalClose": "Đóng danh sách dịch vụ kèm",
             "addOnModalDone": "Xong",
             "noAddOnsForService": "Dịch vụ này chưa khai báo dịch vụ kèm nào.",
-            "changeServiceRemovesAddOns": "Đổi dịch vụ sẽ gỡ {{count}} dịch vụ kèm đang có trên dòng này."
+            "changeServiceRemovesAddOns": "Đổi dịch vụ sẽ gỡ {{count}} dịch vụ kèm đang có trên dòng này.",
+            "summaryOrderDiscount": "Giảm giá toàn bộ dịch vụ"
           },
           "PhoneCheckInStep": {
             "welcomeTitleWithBusiness": "Chào mừng đến {{businessName}}",
@@ -3830,7 +3874,10 @@
             "viewDetailTip": "Tip",
             "viewDetailTotal": "Tổng cộng",
             "viewDetailClose": "Đóng",
-            "viewDetailLineDiscount": "Giảm ${{amount}} · {{bearer}} chịu"
+            "viewDetailLineDiscountStaffShare": "(kỹ thuật viên ${{amount}})",
+            "viewDetailLineDiscount": "Giảm ${{amount}} · {{bearer}} chịu",
+            "viewDetailLineDiscount": "Giảm ${{amount}} · {{bearer}} chịu",
+            "viewDetailOrderDiscount": "Giảm giá toàn bộ dịch vụ"
           },
           "CustomerTab": {
             "searchLabel": "Tìm kiếm",
@@ -4098,6 +4145,117 @@
               "SinglePage": "Một trang",
               "Wizard": "Từng bước"
             }
+          },
+          "report": {
+            "title": "Thợ & thu nhập",
+            "subtitle": "Số lượt, giờ làm và thu nhập của từng thợ theo kỳ bạn chọn.",
+            "updatedAt": "Cập nhật {{time}}",
+            "refresh": "Làm mới",
+            "refreshing": "Đang làm mới…",
+            "exportCsv": "Xuất CSV",
+            "exporting": "Đang xuất…",
+            "exportError": "Không xuất được báo cáo. Vui lòng thử lại.",
+            "error": "Không tải được báo cáo.",
+            "retry": "Thử lại",
+            "empty": "Không có dữ liệu cho kỳ này.",
+            "inactive": "Đã nghỉ",
+            "kpi": {
+              "serviceAmount": "Tổng dịch vụ",
+              "tips": "Tổng tip",
+              "techTakes": "Tổng thợ nhận",
+              "turns": "Tổng lượt"
+            },
+            "columns": {
+              "tech": "Thợ",
+              "turns": "Lượt",
+              "hours": "Giờ",
+              "serviceAmount": "Dịch vụ $",
+              "commissionPercent": "HH %",
+              "commissionPercentHint": "Tỷ lệ hoa hồng đang cấu hình hiện tại — kỳ đã qua có thể đã trả theo tỷ lệ khác.",
+              "commission": "Hoa hồng",
+              "tip": "Tip",
+              "discount": "Giảm giá",
+              "discountHint": "Chỉ phần giảm giá dịch vụ mà thợ đồng ý tự gánh.",
+              "techTakes": "Thợ nhận",
+              "weeklyGuarantee": "Bảo đảm tuần"
+            },
+            "payStructure": {
+              "commission": "Hoa hồng",
+              "weeklysalary": "Lương tuần",
+              "agreedamount": "Khoán",
+              "hourly": "Theo giờ",
+              "hybrid": "Kết hợp",
+              "tiered": "Bậc thang"
+            },
+            "picker": {
+              "modeLabel": "Kỳ báo cáo",
+              "mode": {
+                "daily": "Ngày",
+                "weekly": "Tuần",
+                "monthly": "Tháng"
+              },
+              "choose": "Chọn kỳ",
+              "prev": "Trước",
+              "next": "Sau",
+              "thisWeek": "Tuần này",
+              "remove": "Bỏ {{period}}",
+              "dailyHint": "Chạm nhiều ngày để xem gộp lại.",
+              "weeklyHint": "Chạm nhiều tuần để xem gộp lại.",
+              "limitDays": "Tối đa {{count}} ngày mỗi báo cáo.",
+              "limitWeeks": "Tối đa {{count}} tuần mỗi báo cáo."
+            }
+          },
+          "OrderDiscountSection": {
+            "title": "Giảm giá toàn bộ dịch vụ",
+            "formulaTooltip": "Phần trăm được tính trên tổng dịch vụ trước khi giảm giá và không gồm hàng bán lẻ. Tổng giảm giá không bao giờ vượt quá tổng dịch vụ.",
+            "type": {
+              "Amount": "Số tiền",
+              "Percent": "Phần trăm"
+            },
+            "customPlaceholder": "Tùy chọn",
+            "clearButton": "Bỏ giảm giá",
+            "appliedAmount": "Đã giảm cho lượt này: -${{amount}}",
+            "cappedNotice": "Giới hạn ở ${{cap}} — tổng dịch vụ trừ ${{lineDiscount}} giảm giá theo dịch vụ.",
+            "promotionsTitle": "Chương trình lượt khách này đủ điều kiện",
+            "promotionRate": "giảm {{rate}}",
+            "dayShort": {
+              "Sunday": "CN",
+              "Monday": "T2",
+              "Tuesday": "T3",
+              "Wednesday": "T4",
+              "Thursday": "T5",
+              "Friday": "T6",
+              "Saturday": "T7"
+            }
+          },
+          "PosPromotionsView": {
+            "description": "Các chương trình quầy có thể áp cho cả lượt khách khi thanh toán, chạy theo ngày và giờ bạn chọn.",
+            "addPromotion": "Thêm chương trình",
+            "noPromotions": "Chưa có chương trình nào. Thêm một chương trình để nó hiện ở quầy cho các lượt khách trong khung giờ.",
+            "rateOff": "giảm {{rate}}",
+            "inactiveBadge": "Đã tắt",
+            "activate": "Bật",
+            "deactivate": "Tắt",
+            "edit": "Sửa chương trình",
+            "delete": "Xoá chương trình",
+            "deleteBlocked": "Đã có khách dùng chương trình này nên không thể xoá. Hãy tắt chương trình thay vì xoá.",
+            "deleteConfirmTitle": "Xoá chương trình",
+            "deleteConfirmMessage": "Xoá \"{{name}}\"? Hành động này không thể hoàn tác.",
+            "createTitle": "Thêm chương trình",
+            "editTitle": "Sửa chương trình",
+            "nameLabel": "Tên chương trình",
+            "namePlaceholder": "VD: Ưu đãi ngày thường",
+            "badgeLabel": "Nhãn (không bắt buộc)",
+            "badgePlaceholder": "VD: Happy Hours",
+            "typeLabel": "Kiểu giảm giá",
+            "valueLabel": "Mức giảm",
+            "daysLabel": "Ngày áp dụng",
+            "startLabel": "Bắt đầu",
+            "endLabel": "Kết thúc",
+            "windowInvalid": "Giờ kết thúc phải sau giờ bắt đầu.",
+            "activeLabel": "Áp dụng ở quầy thanh toán",
+            "save": "Lưu",
+            "cancel": "Huỷ"
           }
         },
         "BookingHubView": {
@@ -6396,11 +6554,11 @@
         "thankYouBody": "Mời bạn ngồi nghỉ — chúng tôi sẽ gọi ngay.",
         "thankYouNumberLabel": "Số thứ tự của bạn",
         "thankYouDone": "Xong ({{seconds}}s)",
-        "anyone": "Ai cũng được",
+        "anyone": "Nhân viên bất kỳ",
         "preferredTechnicianTitle": "Bạn muốn chọn thợ nào không?",
         "preferredTechnicianSubtitle": "Chọn thợ bạn muốn. Chúng tôi sẽ xếp thợ đó cho những dịch vụ họ làm được — phần còn lại lễ tân lo.",
         "technicianSearchPlaceholder": "Tìm theo tên",
-        "noTechnicians": "Hiện không có thợ nào — vẫn chọn được \"Ai cũng được\".",
+        "noTechnicians": "Hiện không có nhân viên nào — vẫn chọn được \"Nhân viên bất kỳ\".",
         "overviewTitle": "Thông tin đã đúng chưa?",
         "overviewSubtitle": "Chạm vào dịch vụ để đổi thợ, hoặc bấm Quay lại để sửa những gì bạn đã chọn.",
         "technicianForService": "Thợ cho {{serviceName}}",
@@ -6435,6 +6593,7 @@
         "subtitle": "Cho chúng tôi biết bạn là ai nhé.",
         "changePhone": "Đổi số",
         "nameLabel": "Tên",
+        "requiredLabel": "Bắt buộc",
         "namePlaceholder": "VD: Nguyễn Thị Mai",
         "smsConsent": "Nhận tin ưu đãi, nhắc lịch & quà tặng từ {{businessName}} qua SMS. Có thể phát sinh cước tin nhắn và dữ liệu."
       },
@@ -6475,20 +6634,20 @@
         "doneCountdown": "Xong ({{seconds}}s)"
       },
       "SinglePageCheckInLayout": {
-        "cancel": "Huỷ",
+        "back": "Quay lại",
         "bookingAt": "Lịch hẹn lúc {{time}}",
         "technicianTitle": "Thợ",
-        "technicianSubtitle": "Không bắt buộc — chọn \"Thợ trống trước\" là nhanh nhất.",
-        "firstAvailable": "Thợ trống trước",
+        "technicianSubtitle": "Không bắt buộc — chọn \"Nhân viên bất kỳ\" là nhanh nhất.",
+        "firstAvailable": "Nhân viên bất kỳ",
         "firstAvailableHint": "chờ ít nhất",
         "technicianSearchPlaceholder": "Tìm theo tên",
-        "noTechnicians": "Hiện chưa có thợ nào rảnh — vẫn chọn \"Thợ trống trước\" được.",
+        "noTechnicians": "Hiện chưa có nhân viên nào rảnh — vẫn chọn \"Nhân viên bất kỳ\" được.",
         "technicianBusy": "đang bận",
         "technicianAvailable": "đang rảnh",
         "submit": "Check-in"
       },
       "WizardCheckInLayout": {
-        "cancel": "Huỷ"
+        "back": "Quay lại"
       }
     }
   },
@@ -6582,10 +6741,19 @@
         "Card": "Thẻ",
         "Cash": "Tiền mặt",
         "GiftCard": "Gift Card",
-        "SplitPay": "Chia nhiều hình thức"
+        "SplitPay": "Chia nhiều hình thức",
+        "Zelle": "Zelle",
+        "CashApp": "Cash App",
+        "Venmo": "Venmo",
+        "VlinkPay": "Ví VLINKPAY",
+        "AppleCash": "Apple Cash",
+        "PayPal": "PayPal"
       },
       "notFoundTitle": "Không tìm thấy hóa đơn",
-      "notFoundBody": "Link có thể không đúng hoặc không còn hiệu lực. Vui lòng liên hệ salon nếu bạn cần bản sao."
+      "notFoundBody": "Link có thể không đúng hoặc không còn hiệu lực. Vui lòng liên hệ salon nếu bạn cần bản sao.",
+      "serviceDiscounts": "Giảm giá theo dịch vụ",
+      "orderDiscount": "Giảm giá toàn bộ dịch vụ",
+      "promotionDiscount": "{{name}} ({{rate}})"
     },
     "qr": {
       "invalid_code_title": "Mã QR không hợp lệ",

@@ -144,12 +144,12 @@ export default function PayoutList({
                   <button
                     type="button"
                     onClick={() => onSelectPayout(row.id)}
-                    title={t('common.view_detail')}
-                    aria-label={t('common.view_detail')}
+                    title={t('common.view')}
+                    aria-label={t('common.view')}
                     className="inline-flex h-9 items-center justify-center gap-1.5 whitespace-nowrap rounded-lg border border-nexoraBorder bg-white px-3 text-xs font-bold text-inkBlue transition hover:border-nexoraBrand/40 hover:bg-nexoraBrand/5"
                   >
                     <Eye className="h-4 w-4 shrink-0" />
-                    <span>{t('common.view_detail')}</span>
+                    <span>{t('common.view')}</span>
                   </button>
                 </td>
               </tr>

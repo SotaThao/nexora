@@ -31,3 +31,11 @@ export const POS_DISCOUNT_BEARERS_REQUIRING_COMMISSION = [
 ] as const
 
 export const MAX_DISCOUNT_PERCENT = 100
+
+/**
+ * Quick-pick values in the "Discount all services" panel. Fixed by the system rather than
+ * configurable: the Custom box covers anything else, and the promotion catalog is where a salon
+ * declares the figures it actually runs.
+ */
+export const ORDER_DISCOUNT_AMOUNT_CHIPS = [5, 10, 15, 20, 25] as const
+export const ORDER_DISCOUNT_PERCENT_CHIPS = [5, 10, 15, 20] as const

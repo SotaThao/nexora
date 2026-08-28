@@ -219,7 +219,7 @@ export default function BookingTab({
 
         <button
           type="button"
-          onClick={onNewBooking}
+          onClick={() => onNewBooking()}
           className="h-8 shrink-0 rounded-lg bg-nexoraBrand px-3 text-[11px] font-bold text-white transition-colors hover:bg-nexoraBrandDark"
         >
           {t('components.dashboard.views.pos.NewBookingForm.newBookingButton')}

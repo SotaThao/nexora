@@ -10,10 +10,11 @@ export interface OpenCommunityChatSessionDetail {
   sessionId: string
 }
 
-/** Open (or replace) the single desktop messenger window for a staff peer. */
+/** Open (or replace) the single desktop messenger window for a staff/salon peer. */
 export interface OpenStaffCommunityChatDetail {
-  peerUserProfileId: string
+  peerUserProfileId?: string
   displayName: string
+  businessId?: string
 }
 
 export type {
@@ -39,6 +40,23 @@ export function openCommunityChatSession(sessionId: string | null | undefined): 
   )
 }
 
+export function normalizeOpenStaffCommunityChatDetail(
+  detail: OpenStaffCommunityChatDetail | null | undefined,
+): OpenStaffCommunityChatDetail | null {
+  const peerUserProfileId = String(detail?.peerUserProfileId ?? '').trim() || undefined
+  const businessId = String(detail?.businessId ?? '').trim() || undefined
+  if (!peerUserProfileId && !businessId) return null
+
+  return {
+    peerUserProfileId,
+    businessId,
+    displayName: String(detail?.displayName ?? '').trim()
+      || peerUserProfileId
+      || businessId
+      || '',
+  }
+}
+
 /**
  * Ask the header messenger to open a 1:1 staff chat by peer profile id.
  * Mobile (non-header entry) → immersive fullscreen chat. Desktop → floating window.
@@ -47,13 +65,12 @@ export function openStaffCommunityChat(
   detail: OpenStaffCommunityChatDetail | null | undefined,
 ): void {
   if (typeof window === 'undefined') return
-  const peerUserProfileId = String(detail?.peerUserProfileId ?? '').trim()
-  if (!peerUserProfileId) return
-  const displayName = String(detail?.displayName ?? '').trim() || peerUserProfileId
+  const normalized = normalizeOpenStaffCommunityChatDetail(detail)
+  if (!normalized) return
 
   window.dispatchEvent(
     new CustomEvent<OpenStaffCommunityChatDetail>(OPEN_STAFF_COMMUNITY_CHAT_EVENT, {
-      detail: { peerUserProfileId, displayName },
+      detail: normalized,
     }),
   )
 }

@@ -17,6 +17,8 @@ import { parseApiUtcDateTime } from '../../utils/localDate'
 import { resolveTranslation } from '../../utils/translate'
 import type { TranslationVariables } from '../../types/contexts'
 import type { ReceiptApiDto } from '../../types/repositories'
+import { getPosCheckoutPaymentMethodLabel } from '../../constants/posCheckoutPaymentMethod'
+import { formatPromotionRate } from '../dashboard/views/pos/posPromotionDisplay'
 
 const K = 'public.receipt'
 
@@ -179,7 +181,22 @@ function ReceiptBody({ receipt }: { receipt: ReceiptApiDto }) {
         ) : null}
         <AmountRow label={t(`${K}.tip`)} value={money(receipt.tipAmount)} />
         {receipt.discountAmount !== 0 ? (
-          <AmountRow label={t(`${K}.discount`)} value={`-${money(Math.abs(receipt.discountAmount))}`} />
+          <AmountRow label={t(`${K}.serviceDiscounts`)} value={`-${money(Math.abs(receipt.discountAmount))}`} />
+        ) : null}
+        {/* Its own line, named after the promotion when one was used — that name is what the
+            customer remembers the offer by, and it is separate from any per-service reduction. */}
+        {receipt.orderDiscountAmount > 0 ? (
+          <AmountRow
+            label={
+              receipt.appliedPromotionName
+                ? t(`${K}.promotionDiscount`, {
+                    name: receipt.appliedPromotionName,
+                    rate: formatPromotionRate(receipt.orderDiscountType ?? '', receipt.orderDiscountValue ?? 0),
+                  })
+                : t(`${K}.orderDiscount`)
+            }
+            value={`-${money(receipt.orderDiscountAmount)}`}
+          />
         ) : null}
         <AmountRow label={t(`${K}.salesTax`)} value={money(receipt.salesTaxAmount)} />
         <div className="border-t border-nexoraBorder pt-2">
@@ -190,7 +207,12 @@ function ReceiptBody({ receipt }: { receipt: ReceiptApiDto }) {
       {receipt.paymentMethodType ? (
         <p className="border-t border-nexoraBorder pt-4 text-center text-xs text-nexoraMuted">
           {t(`${K}.paidWith`, {
-            method: t(`${K}.paymentMethod.${receipt.paymentMethodType}`),
+            method: getPosCheckoutPaymentMethodLabel(
+              receipt.paymentMethodType,
+              t,
+              '—',
+              `${K}.paymentMethod`,
+            ),
           })}
         </p>
       ) : null}

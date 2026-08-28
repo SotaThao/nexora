@@ -68,7 +68,7 @@ function emitHubMessageError(message: string) {
  */
 async function handleReconnected() {
   logger.info('Community chat hub reconnected, rejoining sessions...')
-  
+
   if (!hubConnection || hubConnection.state !== 'Connected') {
     logger.warn('Cannot rejoin sessions: hub not connected')
     return
@@ -80,14 +80,14 @@ async function handleReconnected() {
 
   // Rejoin all sessions that have active UI references
   const sessionsToRejoin = Array.from(joinedSessionRefCounts.keys())
-  
+
   if (sessionsToRejoin.length === 0) {
     logger.info('No sessions to rejoin')
     return
   }
 
   logger.info(`Rejoining ${sessionsToRejoin.length} active sessions`)
-  
+
   for (const sessionId of sessionsToRejoin) {
     try {
       await joinCommunityChatSession(hubConnection, sessionId)
@@ -206,7 +206,7 @@ export async function joinCommunityChatHubSession(sessionId: string): Promise<vo
 
   const previousCount = joinedSessionRefCounts.get(id) ?? 0
   joinedSessionRefCounts.set(id, previousCount + 1)
-  
+
   // If already joined (either from previous UI ref or temp join), just increment ref count
   if (previousCount > 0 || actuallyJoinedSessions.has(id)) return
 

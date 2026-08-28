@@ -526,7 +526,9 @@ export default function BookingCustomersPanel() {
                             </div>
                           </td>
                           <td data-label={t(`${TK}.colPhone`)}>
-                            {(formatVoicePhoneDisplay(customer.phoneNumber, BOOKING_HUB_EMPTY_CELL) ?? BOOKING_HUB_EMPTY_CELL)}
+                            <span className="whitespace-nowrap tabular-nums">
+                              {(formatVoicePhoneDisplay(customer.phoneNumber, BOOKING_HUB_EMPTY_CELL) ?? BOOKING_HUB_EMPTY_CELL)}
+                            </span>
                           </td>
                           <td data-label={t(`${TK}.colGroup`)}>
                             {segment ? (

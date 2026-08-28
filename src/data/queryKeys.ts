@@ -85,6 +85,14 @@ export const qk = {
   // POS Owner Setup — Service Add-Ons (owned per service, never shared)
   merchantPosServiceAddOns: (serviceId?: string) =>
     ['merchantSettings', 'posServiceAddOns', serviceId ?? ''],
+  merchantPosServiceAddOnCopySources: (serviceId?: string) =>
+    ['merchantSettings', 'posServiceAddOnCopySources', serviceId ?? ''],
+  /**
+   * Prefix — adding or removing an add-on on one service changes every OTHER service's copy-source
+   * list, so the whole set has to be invalidated, not just the edited service's own entry.
+   */
+  merchantPosServiceAddOnCopySourcesRoot: () =>
+    ['merchantSettings', 'posServiceAddOnCopySources'] as const,
   // POS Owner Setup — Products (US-018)
   merchantPosProducts: ()      => ['merchantSettings', 'posProducts'],
   // POS Owner Setup — Staff Profile (US-019)
@@ -111,6 +119,14 @@ export const qk = {
   merchantPosWeeklyPayroll: (businessId?: string, weekStart?: string) => {
     const key: unknown[] = ['merchantSettings', 'posWeeklyPayroll', businessId ?? '']
     if (weekStart) key.push(weekStart)
+    return key
+  },
+  // POS Front Desk -> Report. `selection` encodes mode + the exact periods chosen (sorted), so two
+  // different day sets are two different cache entries; omitting it yields a prefix that matches
+  // every selection for this business, same convention as merchantPosWeeklyPayroll above.
+  merchantPosReport: (businessId?: string, selection?: string) => {
+    const key: unknown[] = ['merchantSettings', 'posReport', businessId ?? '']
+    if (selection) key.push(selection)
     return key
   },
   merchantPosWeeklyPayrollDailyDetail: (businessStaffLinkId?: string, weekStart?: string) => {
@@ -227,6 +243,12 @@ export const qk = {
   merchantPosInServiceOrders: (businessId?: string) => ['merchantSettings', 'posInServiceOrders', businessId ?? ''],
   merchantPosOrderDetail: (businessId?: string, orderId?: string) =>
     ['merchantSettings', 'posOrderDetail', businessId ?? '', orderId ?? ''],
+  // Promotion catalog (Owner settings) and the per-visit eligible list (counter) are separate:
+  // the eligible list depends on the order's check-in time, so it is keyed by orderId.
+  merchantPosPromotions: (businessId?: string) =>
+    ['merchantSettings', 'posPromotions', businessId ?? ''],
+  merchantPosEligiblePromotions: (businessId?: string, orderId?: string) =>
+    ['merchantSettings', 'posEligiblePromotions', businessId ?? '', orderId ?? ''],
   merchantPosCheckoutServiceCatalog: (businessId?: string) =>
     ['merchantSettings', 'posCheckoutServiceCatalog', businessId ?? ''],
   merchantPosCheckoutProductCatalog: (businessId?: string) =>

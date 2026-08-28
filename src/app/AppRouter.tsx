@@ -9,6 +9,7 @@ import {
   useSearchParams,
 } from "react-router-dom";
 import { scrollToPageTop } from "../utils/scrollToPageTop";
+import { searchHasStaffChatStartHint, isStaffChatStartHintOnlySearchChange } from "../components/staff/constants";
 import { useAuth } from "../auth/useAuth";
 import {
   AnalyticsRoute,
@@ -35,6 +36,7 @@ import {
   TaxIqExceptionsRoute, TaxIqDataQualityRoute, TaxIqJurisdictionsRoute, TaxIqShareLinksRoute,
   TaxIqForm1099NecRoute, TaxIqTipLedgerRoute, TaxIqFormsReportsRoute, TaxIqTaxEstimateRoute,
   PosGeneralSettingsRoute, PosRolesRoute, PosCategoriesRoute, PosServicesRoute, PosProductsRoute,
+  PosPromotionsRoute,
   PosStaffProfileRoute, PosFrontDeskRoute, PosDevicesRoute
 } from "../components/dashboard/routes";
 import { DASHBOARD_MENU_ID, DASHBOARD_SETTINGS_TAB, BOOKING_HUB_PATH, BOOKING_HUB_LEGACY_PATH_SEGMENT, buildDashboardReportsPath, DASHBOARD_REPORTS_TAB } from "../components/dashboard/constants";
@@ -273,8 +275,16 @@ function ScrollToTop() {
     if (
       previousLocation?.pathname === pathname &&
       previousLocation.hash === hash &&
-      isTabOnlySearchChange(previousLocation.search, search)
+      (
+        isTabOnlySearchChange(previousLocation.search, search)
+        || isStaffChatStartHintOnlySearchChange(previousLocation.search, search)
+      )
     ) {
+      return undefined;
+    }
+
+    if (searchHasStaffChatStartHint(search)) {
+      window.scrollTo(0, 0);
       return undefined;
     }
 
@@ -403,6 +413,7 @@ export default function AppRouter() {
               <Route path={`${DASHBOARD_MENU_ID.pos}/categories`} element={<PosCategoriesRoute />} />
               <Route path={`${DASHBOARD_MENU_ID.pos}/services`} element={<PosServicesRoute />} />
               <Route path={`${DASHBOARD_MENU_ID.pos}/products`} element={<PosProductsRoute />} />
+              <Route path={`${DASHBOARD_MENU_ID.pos}/promotions`} element={<PosPromotionsRoute />} />
               <Route path={`${DASHBOARD_MENU_ID.pos}/staff`} element={<PosStaffProfileRoute />} />
               <Route path={`${DASHBOARD_MENU_ID.pos}/devices`} element={<PosDevicesRoute />} />
             </Route>
