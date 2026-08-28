@@ -17,6 +17,7 @@ import { getHeaderMessageContactInitials } from '../header-messages/headerMessag
 import {
   STAFF_CHAT_BLOCKED_STATUSES,
   STAFF_CHAT_FALLBACK_DISPLAY_NAME,
+  STAFF_CHAT_INELIGIBLE_ITEM_TYPE,
   STAFF_CHAT_WINDOW_KEY_FALLBACK,
   StaffChatUnavailableReason,
 } from './constants'
@@ -37,6 +38,7 @@ export interface StaffChatMemberLike {
   id?: string
   staffProfileId?: string | null
   userProfileId?: string | null
+  businessId?: string | null
   staffCode?: string | null
   fullName?: string
   nickname?: string
@@ -48,21 +50,26 @@ export interface StaffChatMemberLike {
   itemType?: string | null
 }
 
+export function trimStaffChatId(value: string | null | undefined): string {
+  return String(value ?? '').trim()
+}
+
+function firstTrimmedId(...values: Array<string | null | undefined>): string {
+  return values.map(trimStaffChatId).find(Boolean) ?? ''
+}
+
 export function getStaffChatDisplayName(member: StaffChatMemberLike): string {
-  return String(member.nickname || member.displayName || member.fullName || '').trim()
+  return firstTrimmedId(member.nickname, member.displayName, member.fullName)
     || STAFF_CHAT_FALLBACK_DISPLAY_NAME
 }
 
 /** Stable key for multi-window staff chat (dedupe open windows). */
 export function getStaffChatWindowKey(member: StaffChatMemberLike | null | undefined): string {
   if (!member) return ''
-  return String(
-    member.userProfileId
-      || member.staffCode
-      || member.staffProfileId
-      || member.id
-      || '',
-  ).trim()
+  const peerId = trimStaffChatId(member.userProfileId)
+  const businessId = trimStaffChatId(member.businessId)
+  if (peerId && businessId) return `${businessId}:${peerId}`
+  return firstTrimmedId(businessId, peerId, member.staffCode, member.staffProfileId, member.id)
 }
 
 export function resolveStaffChatWindowKey(
@@ -76,9 +83,11 @@ export function buildStaffChatConversation(params: {
   windowKey: string
   displayName: string
   peerUserProfileId?: string | null
+  businessId?: string | null
 }): HeaderMessageConversation {
   const displayName = params.displayName
-  const peerUserProfileId = String(params.peerUserProfileId ?? '').trim() || null
+  const peerUserProfileId = trimStaffChatId(params.peerUserProfileId) || null
+  const businessId = trimStaffChatId(params.businessId) || null
   return {
     id: params.chatSessionId || buildPendingCommunityChatSessionId(params.windowKey),
     name: displayName,
@@ -88,6 +97,7 @@ export function buildStaffChatConversation(params: {
     updatedAt: '',
     unreadCount: 0,
     peerUserProfileId,
+    businessId,
   }
 }
 
@@ -97,13 +107,16 @@ function normalizeStaffDisplayName(member: StaffChatMemberLike): string {
 
 /**
  * Soft gate for UI chat affordance.
- * Local staff (no Nexora account) and members without userProfileId cannot chat.
+ * Local staff (no Nexora account) and members without userProfileId cannot chat,
+ * unless this is a salon peer keyed by businessId.
  */
 export function canStaffMemberUseCommunityChat(member: StaffChatMemberLike | null | undefined): boolean {
-  if (!member) return false
-  if (member.itemType === 'invite') return false
-  if (member.isLocalStaff) return false
-  if (!String(member.userProfileId ?? '').trim()) return false
+  if (!member || member.isLocalStaff) return false
+  if (member.itemType === STAFF_CHAT_INELIGIBLE_ITEM_TYPE) return false
+
+  const hasPeer = Boolean(trimStaffChatId(member.userProfileId))
+  const hasSalon = Boolean(trimStaffChatId(member.businessId))
+  if (!hasPeer && !hasSalon) return false
 
   const status = String(member.status ?? member.apiStatus ?? '').trim()
   return !STAFF_CHAT_BLOCKED_STATUSES.has(status)
@@ -148,8 +161,8 @@ export function enrichStaffMemberChatIdentity<T extends StaffChatMemberLike>(
   if (!detail) return listItem ?? null
   if (!listItem) return detail
 
-  const detailUserProfileId = String(detail.userProfileId ?? '').trim()
-  const listUserProfileId = String(listItem.userProfileId ?? '').trim()
+  const detailUserProfileId = trimStaffChatId(detail.userProfileId)
+  const listUserProfileId = trimStaffChatId(listItem.userProfileId)
 
   return {
     ...listItem,
@@ -163,8 +176,7 @@ export function enrichStaffMemberChatIdentity<T extends StaffChatMemberLike>(
 export function resolveStaffChatParticipantUserProfileId(
   member: StaffChatMemberLike,
 ): string | null {
-  const userProfileId = String(member.userProfileId ?? '').trim()
-  return userProfileId || null
+  return trimStaffChatId(member.userProfileId) || null
 }
 
 /** @deprecated Use resolveStaffChatParticipantUserProfileId — sessions expect userProfileId, not staffProfileId. */
@@ -174,25 +186,44 @@ export function resolveStaffChatParticipantStaffProfileId(
   return resolveStaffChatParticipantUserProfileId(member)
 }
 
+function sessionMatchesStaffChatMember(
+  session: CommunityChatSession,
+  member: StaffChatMemberLike,
+  currentUserProfileId: string,
+): boolean {
+  if (session.chatType !== CommunityChatType.OneOnOne) return false
+
+  const memberBusinessId = trimStaffChatId(member.businessId)
+  if (memberBusinessId && trimStaffChatId(session.businessId) !== memberBusinessId) {
+    return false
+  }
+
+  const other = getOneOnOnePeerParticipant(session, currentUserProfileId)
+  if (!other) return false
+
+  const participantUserProfileId = resolveStaffChatParticipantUserProfileId(member)
+  if (participantUserProfileId) {
+    return isSameCommunityChatProfileId(other.userProfileId, participantUserProfileId)
+  }
+  if (memberBusinessId) return true
+  return normalizeStaffDisplayName({ fullName: other.fullName }) === normalizeStaffDisplayName(member)
+}
+
 export function findStaffCommunityChatSession(
   member: StaffChatMemberLike,
   sessions: CommunityChatSession[],
   currentUserProfileId: string,
 ): CommunityChatSession | null {
-  const participantUserProfileId = resolveStaffChatParticipantUserProfileId(member)
-  const staffName = normalizeStaffDisplayName(member)
-  if (!participantUserProfileId && !staffName) return null
+  const hasIdentity = Boolean(
+    resolveStaffChatParticipantUserProfileId(member)
+    || trimStaffChatId(member.businessId)
+    || normalizeStaffDisplayName(member),
+  )
+  if (!hasIdentity) return null
 
-  const matches = sessions.filter((session) => {
-    if (session.chatType !== CommunityChatType.OneOnOne) return false
-    const other = getOneOnOnePeerParticipant(session, currentUserProfileId)
-    if (!other) return false
-    if (participantUserProfileId) {
-      return isSameCommunityChatProfileId(other.userProfileId, participantUserProfileId)
-    }
-    return normalizeStaffDisplayName({ fullName: other.fullName }) === staffName
-  })
-
+  const matches = sessions.filter((session) => (
+    sessionMatchesStaffChatMember(session, member, currentUserProfileId)
+  ))
   if (matches.length === 0) return null
   return matches.reduce(preferCommunityChatSession)
 }
