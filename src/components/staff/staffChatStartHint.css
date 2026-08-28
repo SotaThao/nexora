@@ -10,13 +10,15 @@
 }
 
 .staff-chat-start-hint-cluster {
-  @apply pointer-events-none fixed z-[82] flex flex-col-reverse items-center gap-0.5;
-  transform: translate(-50%, calc(-100% - 2px));
+  @apply pointer-events-none fixed z-[82] flex flex-col-reverse items-center gap-1.5;
+  transform: translate(-50%, calc(-100% - 8px));
 }
 
-.staff-chat-start-hint-cluster.is-mobile {
-  @apply flex-row items-center gap-1;
-  transform: none;
+.staff-chat-start-hint-cluster.is-below {
+  @apply flex-col items-center gap-1;
+  width: max-content;
+  max-width: calc(100vw - 2rem);
+  transform: translateX(-50%);
 }
 
 .staff-chat-start-hint-caption {
@@ -31,7 +33,7 @@
   filter: drop-shadow(0 1px 1px rgb(255 255 255 / 0.9));
 }
 
-.staff-chat-start-hint-cluster.is-mobile .staff-chat-start-hint-hand {
+.staff-chat-start-hint-cluster.is-below .staff-chat-start-hint-hand {
   @apply h-4 w-4;
   animation: staff-chat-start-hint-nudge-up 0.85s ease-in-out infinite;
   filter: none;
@@ -63,14 +65,14 @@
     transform: translateY(0);
   }
   50% {
-    transform: translateY(-3px);
+    transform: translateY(-2px);
   }
 }
 
 @media (prefers-reduced-motion: reduce) {
   .staff-chat-start-hint-target.is-active :is(button),
   .staff-chat-start-hint-hand,
-  .staff-chat-start-hint-cluster.is-mobile .staff-chat-start-hint-hand {
+  .staff-chat-start-hint-cluster.is-below .staff-chat-start-hint-hand {
     animation: none;
   }
 }

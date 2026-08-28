@@ -6,27 +6,37 @@ import { useIsMobileUI } from '../../hooks/useIsMobileUI'
 import { STAFF_CHAT_I18N } from './constants'
 import {
   getHintClusterPosition,
+  resolveStaffChatStartHintPlacement,
   scrollStaffChatHintIntoView,
   STAFF_CHAT_START_HINT_ACTIVE_CLASS,
+  STAFF_CHAT_START_HINT_BELOW_CLASS,
   STAFF_CHAT_START_HINT_CAPTION_CLASS,
   STAFF_CHAT_START_HINT_CLUSTER_CLASS,
   STAFF_CHAT_START_HINT_HAND_CLASS,
-  STAFF_CHAT_START_HINT_MOBILE_CLASS,
   STAFF_CHAT_START_HINT_TARGET_CLASS,
+  StaffChatStartHintPlacement,
 } from './staffChatStartHintLayout'
 import './staffChatStartHint.css'
 
 interface StaffChatStartHintOverlayProps {
   active: boolean
   children: ReactNode
+  placement?: StaffChatStartHintPlacement
+}
+
+const CLUSTER_CLASS_BY_PLACEMENT: Record<StaffChatStartHintPlacement, string> = {
+  [StaffChatStartHintPlacement.Above]: STAFF_CHAT_START_HINT_CLUSTER_CLASS,
+  [StaffChatStartHintPlacement.Below]: `${STAFF_CHAT_START_HINT_CLUSTER_CLASS} ${STAFF_CHAT_START_HINT_BELOW_CLASS}`,
 }
 
 export default function StaffChatStartHintOverlay({
   active,
   children,
+  placement,
 }: StaffChatStartHintOverlayProps) {
   const { t } = useTranslation()
   const isMobile = useIsMobileUI()
+  const resolvedPlacement = resolveStaffChatStartHintPlacement(placement, isMobile)
   const targetRef = useRef<HTMLSpanElement>(null)
   const [rect, setRect] = useState<DOMRect | null>(null)
 
@@ -55,11 +65,6 @@ export default function StaffChatStartHintOverlay({
     }
   }, [active])
 
-  const clusterClassName = [
-    STAFF_CHAT_START_HINT_CLUSTER_CLASS,
-    isMobile ? STAFF_CHAT_START_HINT_MOBILE_CLASS : '',
-  ].filter(Boolean).join(' ')
-
   const targetClassName = [
     STAFF_CHAT_START_HINT_TARGET_CLASS,
     active ? STAFF_CHAT_START_HINT_ACTIVE_CLASS : '',
@@ -77,8 +82,8 @@ export default function StaffChatStartHintOverlay({
       {active && rect
         ? createPortal(
             <div
-              className={clusterClassName}
-              style={getHintClusterPosition(rect, isMobile)}
+              className={CLUSTER_CLASS_BY_PLACEMENT[resolvedPlacement]}
+              style={getHintClusterPosition(rect, resolvedPlacement)}
               role="status"
             >
               <Pointer className={STAFF_CHAT_START_HINT_HAND_CLASS} aria-hidden="true" />

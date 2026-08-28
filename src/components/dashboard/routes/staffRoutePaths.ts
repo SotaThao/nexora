@@ -1,7 +1,4 @@
-import {
-  STAFF_CHAT_START_HINT_QUERY,
-  STAFF_CHAT_START_HINT_VALUE,
-} from '../../staff/constants'
+import { withStaffChatStartHint } from '../../staff/constants'
 
 export const STAFF_ROUTE_FAMILY = {
   Legacy: 'legacy',
@@ -37,12 +34,7 @@ export function buildMerchantStaffListPath(options?: {
   family?: StaffRouteFamily
 }): string {
   const path = buildStaffRoutePath(options?.family ?? STAFF_ROUTE_FAMILY.Settings)
-  if (!options?.startChatHint) return path
-
-  const params = new URLSearchParams({
-    [STAFF_CHAT_START_HINT_QUERY]: STAFF_CHAT_START_HINT_VALUE,
-  })
-  return `${path}?${params.toString()}`
+  return withStaffChatStartHint(path, options?.startChatHint)
 }
 
 export function isStaffManagementPath(pathname: string): boolean {

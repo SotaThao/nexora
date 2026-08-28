@@ -17,6 +17,9 @@ export const STAFF_CHAT_WINDOW_KEY_FALLBACK = 'staff-chat' as const
 /** Tailwind `sm` breakpoint — floating vs fullscreen staff messenger. */
 export const STAFF_CHAT_DESKTOP_MESSENGER_MEDIA_QUERY = '(min-width: 640px)' as const
 
+/** Roster row type that cannot open community chat. */
+export const STAFF_CHAT_INELIGIBLE_ITEM_TYPE = 'invite' as const
+
 /** Staff statuses that cannot open community chat yet. */
 export const STAFF_CHAT_BLOCKED_STATUSES = new Set([
   'Pending',
@@ -41,6 +44,14 @@ export const STAFF_CHAT_START_HINT_VALUE = 'start' as const
 
 export function searchHasStaffChatStartHint(search: string): boolean {
   return new URLSearchParams(search).get(STAFF_CHAT_START_HINT_QUERY) === STAFF_CHAT_START_HINT_VALUE
+}
+
+export function withStaffChatStartHint(path: string, startChatHint?: boolean): string {
+  if (!startChatHint) return path
+  const params = new URLSearchParams({
+    [STAFF_CHAT_START_HINT_QUERY]: STAFF_CHAT_START_HINT_VALUE,
+  })
+  return `${path}?${params.toString()}`
 }
 
 export function isStaffChatStartHintOnlySearchChange(
@@ -77,6 +88,8 @@ export const STAFF_CHAT_I18N = {
   open: 'staff_detail.chat_open',
   manage: 'components.dashboard.views.StaffView.manage_chat',
   manageUnread: 'components.dashboard.views.StaffView.manage_chat_unread',
+  salonManage: 'staff_salons.chat_manage',
+  salonManageUnread: 'staff_salons.chat_manage_unread',
   startHint: 'components.dashboard.views.StaffView.start_chat_hint',
 } as const
 
