@@ -167,6 +167,9 @@ export interface PosStaffProfileApiDto {
 // POS Merchant Ops — Front Desk access self-check (US-12)
 export interface PosAccessApiDto {
   canManageOperations?: boolean
+  // Gated on its own `view_pos_report` permission, not on the Operations area — the report exposes
+  // every technician's earnings, so operating the front desk does not imply reading it.
+  canViewReport?: boolean
 }
 
 // POS Merchant Ops — Check-in & Waitlist (US-12, refactored to Order in US-026)
@@ -259,6 +262,9 @@ export interface CompletedOrderListItemApiDto {
   serviceNames: string[]
   technicianNames: string[]
   total: number
+  /** The order-level discount frozen at checkout — always absorbed by the salon. */
+  orderDiscountAmount?: number
+  appliedPromotionName?: string | null
   paymentMethodType?: string | null
 }
 
@@ -633,6 +639,50 @@ export interface OrderProductLineApiDto {
   lineTotal: number
 }
 
+/**
+ * One order-level discount slot. A promotionId wins: the backend then reads type/value from the
+ * promotion and ignores what is sent here. Both null clears the discount.
+ */
+export interface SetOrderDiscountPayload {
+  promotionId?: string | null
+  /** 'Percent' | 'Amount'. Null with no promotionId clears the order-level discount. */
+  discountType: string | null
+  discountValue: number | null
+  discountNote?: string | null
+}
+
+/** An offer this visit qualifies for, judged on its check-in time in salon-local time. */
+export interface EligiblePromotionApiDto {
+  id: string
+  name: string
+  badgeLabel?: string | null
+  /** 'Percent' | 'Amount'. */
+  discountType: string
+  discountValue: number
+  /** Day names, e.g. ['Monday', 'Tuesday']. */
+  daysOfWeek: string[]
+  /** 'HH:mm:ss' in salon-local time. */
+  startTime: string
+  endTime: string
+}
+
+export interface PosPromotionApiDto extends EligiblePromotionApiDto {
+  isActive: boolean
+  /** False once a visit has used the promotion — it can only be deactivated from then on. */
+  canDelete: boolean
+}
+
+export interface PosPromotionPayload {
+  name: string
+  badgeLabel: string | null
+  discountType: string
+  discountValue: number
+  daysOfWeek: string[]
+  startTime: string
+  endTime: string
+  isActive: boolean
+}
+
 export interface SetOrderServiceLineDiscountPayload {
   /** 'Percent' | 'Amount'. Null clears the discount on the line. */
   discountType: string | null
@@ -667,7 +717,18 @@ export interface OrderDetailApiDto {
   tipAmount: number
   /** Sum of every service-line discount on this order. */
   discountAmount: number
-  /** servicesSubtotal less discountAmount — the figure sales tax is charged on. */
+  /** 'Percent' | 'Amount'. Null when no order-level discount is applied. */
+  orderDiscountType?: string | null
+  orderDiscountValue?: number | null
+  /** Resolved live while the order is open; the frozen snapshot once Completed. */
+  orderDiscountAmount: number
+  /** The most an order-level discount can still take off: servicesSubtotal less discountAmount. */
+  orderDiscountCap: number
+  orderDiscountNote?: string | null
+  /** Null when the cashier typed the discount instead of picking a promotion. */
+  appliedPromotionId?: string | null
+  appliedPromotionName?: string | null
+  /** servicesSubtotal less both discounts — the figure sales tax is charged on. */
   servicesNet: number
   salesTaxAmount: number
   total: number
@@ -826,6 +887,13 @@ export interface ReceiptApiDto {
   productsSubtotal: number
   tipAmount: number
   discountAmount: number
+  /** The order-level discount ("Discount all services"), frozen at checkout. */
+  orderDiscountAmount: number
+  /** 'Percent' | 'Amount'. Null when no order-level discount was applied. */
+  orderDiscountType?: string | null
+  orderDiscountValue?: number | null
+  /** The promotion's name as it was when applied — a later rename never rewrites this receipt. */
+  appliedPromotionName?: string | null
   salesTaxAmount: number
   total: number
   paymentMethodType: string | null

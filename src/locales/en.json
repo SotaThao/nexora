@@ -722,7 +722,8 @@
       "scan": "Scan",
       "kyb": "Business Verification",
       "news_library": "News & Library",
-      "support": "Support"
+      "support": "Support",
+      "pos_promotions": "Promotions"
     },
     "header": {
       "search_placeholder": "Search staff, reviews, or tips...",
@@ -2782,7 +2783,18 @@
     "chat_image_invalid_extension": "Only JPG and PNG images are allowed.",
     "chat_image_too_large": "Image must be 10 MB or smaller.",
     "chat_cannot_remove_self": "To leave the chat, use Leave instead of removing yourself.",
-    "chat_rename_only_for_group": "Only group chats can be renamed."
+    "chat_rename_only_for_group": "Only group chats can be renamed.",
+    "pos_order_discount_invalid": "That discount amount is not valid.",
+    "pos_order_discount_note_too_long": "The discount note is too long.",
+    "pos_promotion_not_found": "Promotion not found.",
+    "pos_promotion_not_eligible": "This visit does not qualify for that promotion.",
+    "pos_promotion_inactive": "This promotion is no longer running.",
+    "pos_promotion_schedule_invalid": "Pick at least one day, and an end time later than the start time.",
+    "pos_promotion_name_required": "Enter a name for the promotion.",
+    "pos_promotion_name_too_long": "The promotion name is too long.",
+    "pos_promotion_badge_too_long": "The badge label is too long.",
+    "pos_promotion_value_invalid": "Enter a discount greater than 0 (and at most 100 for a percentage).",
+    "pos_promotion_in_use": "Customers have already used this promotion, so it cannot be deleted. Switch it off instead."
   },
   "components": {
     "common": {
@@ -3567,14 +3579,14 @@
             "orderListNoServiceBadge": "{{count}} with no services chosen",
             "orderListAwaitingTechnicianFlag": "Needs technician",
             "orderListNoServiceFlag": "No services",
-	    "orderListColumnCheckInAt": "Check-in At",
+            "orderListColumnCheckInAt": "Check-in At",
             "orderListColumnNumber": "Number",
             "orderListColumnCustomer": "Customer",
             "orderListColumnStatus": "Status",
             "orderListColumnTechnician": "Technician",
             "orderListColumnServices": "Services",
             "orderListColumnWaitTime": "Wait Time",
-	    "orderListColumnElapsed": "Elapsed",
+            "orderListColumnElapsed": "Elapsed",
             "assignTechnicianFirst": "Assign a technician to every service first.",
             "addServiceFirst": "Add at least one service first."
           },
@@ -3773,7 +3785,8 @@
             "addOnModalClose": "Close add-ons",
             "addOnModalDone": "Done",
             "noAddOnsForService": "This service has no add-ons set up yet.",
-            "changeServiceRemovesAddOns": "Changing this service will remove {{count}} add-on(s) already on this line."
+            "changeServiceRemovesAddOns": "Changing this service will remove {{count}} add-on(s) already on this line.",
+            "summaryOrderDiscount": "Discount all services"
           },
           "PhoneCheckInStep": {
             "welcomeTitleWithBusiness": "Welcome to {{businessName}}",
@@ -3824,7 +3837,9 @@
             "viewDetailTotal": "Total",
             "viewDetailClose": "Close",
             "viewDetailLineDiscountStaffShare": "(technician ${{amount}})",
-            "viewDetailLineDiscount": "Discount ${{amount}} · {{bearer}} absorbs"
+            "viewDetailLineDiscount": "Discount ${{amount}} · {{bearer}} absorbs",
+            "viewDetailLineDiscount": "Discount ${{amount}} · {{bearer}} absorbs",
+            "viewDetailOrderDiscount": "Discount all services"
           },
           "CustomerTab": {
             "searchLabel": "Search",
@@ -4068,6 +4083,117 @@
               "SinglePage": "One page",
               "Wizard": "Step by step"
             }
+          },
+          "report": {
+            "title": "Techs & pay",
+            "subtitle": "Turns, hours and earnings per technician for the period you pick.",
+            "updatedAt": "Updated {{time}}",
+            "refresh": "Refresh",
+            "refreshing": "Refreshing…",
+            "exportCsv": "Export CSV",
+            "exporting": "Exporting…",
+            "exportError": "Could not export the report. Try again.",
+            "error": "Could not load the report.",
+            "retry": "Try again",
+            "empty": "No data for this period.",
+            "inactive": "Inactive",
+            "kpi": {
+              "serviceAmount": "Total service",
+              "tips": "Total tips",
+              "techTakes": "Total tech takes",
+              "turns": "Total turns"
+            },
+            "columns": {
+              "tech": "Tech",
+              "turns": "Turns",
+              "hours": "Hours",
+              "serviceAmount": "Service $",
+              "commissionPercent": "Comm %",
+              "commissionPercentHint": "The technician's rate as configured today — a past period may have been paid at a different rate.",
+              "commission": "Commission",
+              "tip": "Tip",
+              "discount": "Discount",
+              "discountHint": "Only the share of a service discount this technician agreed to absorb.",
+              "techTakes": "Tech takes",
+              "weeklyGuarantee": "Weekly guarantee"
+            },
+            "payStructure": {
+              "commission": "Commission",
+              "weeklysalary": "Weekly salary",
+              "agreedamount": "Agreed amount",
+              "hourly": "Hourly",
+              "hybrid": "Hybrid",
+              "tiered": "Tiered"
+            },
+            "picker": {
+              "modeLabel": "Report period",
+              "mode": {
+                "daily": "Daily",
+                "weekly": "Weekly",
+                "monthly": "Monthly"
+              },
+              "choose": "Choose period",
+              "prev": "Previous",
+              "next": "Next",
+              "thisWeek": "This week",
+              "remove": "Remove {{period}}",
+              "dailyHint": "Tap several days to compare them together.",
+              "weeklyHint": "Tap several weeks to compare them together.",
+              "limitDays": "Up to {{count}} days per report.",
+              "limitWeeks": "Up to {{count}} weeks per report."
+            }
+          },
+          "OrderDiscountSection": {
+            "title": "Discount all services",
+            "formulaTooltip": "A percentage is calculated on the services total before any discount, and does not include retail products. The combined discount can never exceed the services total.",
+            "type": {
+              "Amount": "Amount",
+              "Percent": "Percent"
+            },
+            "customPlaceholder": "Custom",
+            "clearButton": "Remove",
+            "appliedAmount": "Taken off this visit: -${{amount}}",
+            "cappedNotice": "Capped at ${{cap}} — services total minus ${{lineDiscount}} of service discounts.",
+            "promotionsTitle": "Offers this visit qualifies for",
+            "promotionRate": "{{rate}} off",
+            "dayShort": {
+              "Sunday": "Sun",
+              "Monday": "Mon",
+              "Tuesday": "Tue",
+              "Wednesday": "Wed",
+              "Thursday": "Thu",
+              "Friday": "Fri",
+              "Saturday": "Sat"
+            }
+          },
+          "PosPromotionsView": {
+            "description": "Offers the front desk can apply to a whole visit at checkout, each running on the days and hours you choose.",
+            "addPromotion": "Add promotion",
+            "noPromotions": "No promotions yet. Add one and it appears at checkout for visits inside its window.",
+            "rateOff": "{{rate}} off",
+            "inactiveBadge": "Off",
+            "activate": "Switch on",
+            "deactivate": "Switch off",
+            "edit": "Edit promotion",
+            "delete": "Delete promotion",
+            "deleteBlocked": "Customers have already used this promotion, so it cannot be deleted. Switch it off instead.",
+            "deleteConfirmTitle": "Delete promotion",
+            "deleteConfirmMessage": "Delete \"{{name}}\"? This cannot be undone.",
+            "createTitle": "Add promotion",
+            "editTitle": "Edit promotion",
+            "nameLabel": "Name",
+            "namePlaceholder": "e.g. Weekday savings",
+            "badgeLabel": "Badge (optional)",
+            "badgePlaceholder": "e.g. Happy Hours",
+            "typeLabel": "Discount type",
+            "valueLabel": "Amount off",
+            "daysLabel": "Days it runs",
+            "startLabel": "Starts at",
+            "endLabel": "Ends at",
+            "windowInvalid": "The end time must be later than the start time.",
+            "activeLabel": "Offer this at checkout",
+            "save": "Save",
+            "cancel": "Cancel"
           }
         },
         "BookingHubView": {
@@ -4266,6 +4392,7 @@
             "recommended": "Recommended",
             "startTrial": "Start 14-Day Free Trial",
             "trialRequestSubmitted": "Trial request submitted",
+            "comingSoon": "Coming soon",
             "everythingInPro": "Everything in Pro",
             "selectElite": "Choose Elite",
             "planSelected": "{plan} selected",
@@ -6566,7 +6693,10 @@
         "PayPal": "PayPal"
       },
       "notFoundTitle": "Receipt not found",
-      "notFoundBody": "This link may be incorrect or no longer valid. Please contact the salon if you need a copy."
+      "notFoundBody": "This link may be incorrect or no longer valid. Please contact the salon if you need a copy.",
+      "serviceDiscounts": "Service discounts",
+      "orderDiscount": "Discount all services",
+      "promotionDiscount": "{{name}} ({{rate}})"
     },
     "qr": {
       "invalid_code_title": "Invalid QR Code",

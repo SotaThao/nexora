@@ -11,9 +11,11 @@ import type {
   CheckoutServiceCatalogItemApiDto,
   CompleteOrderPayload,
   CompleteOrderResultApiDto,
+  EligiblePromotionApiDto,
   InServiceOrderApiDto,
   OrderDetailApiDto,
   ServiceLineAddOnOptionApiDto,
+  SetOrderDiscountPayload,
   SetOrderServiceLineDiscountPayload,
   SetOrderStaffTipSplitPayload,
 } from '../../types/repositories'
@@ -185,6 +187,26 @@ export function createPosCheckoutRepository(client: HttpClient = httpClient) {
           ),
         false,
       )
+    },
+
+    // Sets, replaces or clears the one order-level discount on this visit.
+    async setOrderDiscount(
+      businessId: string,
+      orderId: string,
+      payload: SetOrderDiscountPayload,
+    ): Promise<boolean> {
+      return await client.put<boolean>(
+        `/api/v1/merchant/pos/${businessId}/checkout/${orderId}/discount`,
+        payload,
+      )
+    },
+
+    // Only the offers THIS visit qualifies for, judged on its check-in time.
+    async getEligiblePromotions(businessId: string, orderId: string): Promise<EligiblePromotionApiDto[]> {
+      const res = await client.get<EligiblePromotionApiDto[]>(
+        `/api/v1/merchant/pos/${businessId}/checkout/${orderId}/eligible-promotions`,
+      )
+      return res ?? []
     },
 
     async setOrderTip(businessId: string, orderId: string, tipAmount: number): Promise<boolean> {
