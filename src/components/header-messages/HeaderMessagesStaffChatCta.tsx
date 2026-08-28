@@ -1,10 +1,11 @@
-import { Users } from 'lucide-react'
+import { Users, type LucideIcon } from 'lucide-react'
 import { HeaderMessagesStaffChatCtaVariant } from './headerMessagesConstants'
 
 interface HeaderMessagesStaffChatCtaProps {
   variant: HeaderMessagesStaffChatCtaVariant
   label: string
   onClick: () => void
+  Icon?: LucideIcon
 }
 
 const CTA_CLASS: Record<HeaderMessagesStaffChatCtaVariant, string> = {
@@ -16,6 +17,7 @@ export default function HeaderMessagesStaffChatCta({
   variant,
   label,
   onClick,
+  Icon = Users,
 }: HeaderMessagesStaffChatCtaProps) {
   return (
     <button
@@ -23,7 +25,7 @@ export default function HeaderMessagesStaffChatCta({
       className={CTA_CLASS[variant]}
       onClick={onClick}
     >
-      <Users className="h-3.5 w-3.5" aria-hidden="true" />
+      <Icon className="h-3.5 w-3.5" aria-hidden="true" />
       <span>{label}</span>
     </button>
   )

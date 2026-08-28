@@ -33,6 +33,16 @@ import {
 import Tooltip from '../../ui/Tooltip'
 import NicknameEditor, { type NicknameEditorSaveResult } from '../../NicknameEditor'
 import StaffLinkRequestCard from './StaffLinkRequestCard'
+import StaffCommunityChatActionButton from '../../staff/StaffCommunityChatActionButton'
+import { STAFF_CHAT_I18N } from '../../staff/constants'
+import { useStaffListChatStartHint } from '../../staff/useStaffChatStartHint'
+import { useStaffCommunityChatUnreadByPeerId } from '../../staff/useStaffCommunityChatUnreadByPeerId'
+import type { StaffChatMemberLike } from '../../staff/staffCommunityChatUtils'
+import {
+  getSalonChatMemberByBusinessId,
+  SALON_CARD_PADDING_CLASS,
+  SALON_CHAT_START_HINT_PLACEMENT,
+} from '../utils/staffSalonChat'
 import type { WorkSkillCategory, WorkSkillService } from '../../../data/repositories/staffSelf'
 
 function getSalonStatusHelp(
@@ -401,6 +411,10 @@ function SalonCard({
   onSaveNickname,
   onUnlink,
   isUnlinking = false,
+  chatMember = null,
+  chatUnreadCount = 0,
+  showChatStartHint = false,
+  onChatStartHintDismiss,
 }: {
   business: StaffBusinessLink
   index: number
@@ -411,6 +425,10 @@ function SalonCard({
   onSaveNickname: (nickname: string | null) => Promise<NicknameEditorSaveResult>
   onUnlink?: () => void
   isUnlinking?: boolean
+  chatMember?: StaffChatMemberLike | null
+  chatUnreadCount?: number
+  showChatStartHint?: boolean
+  onChatStartHintDismiss?: () => void
 }) {
   const statusLabel = resolveStaffBusinessLinkStatusLabel(business)
   const status = getSalonDisplayStatus(business, t)
@@ -424,7 +442,7 @@ function SalonCard({
   const canUnlink = isActive && typeof onUnlink === 'function'
 
   return (
-    <div className="w-full rounded-2xl border border-nexoraBorder/80 bg-white p-4 text-left shadow-sm transition hover:border-nexoraBrand/20 hover:shadow-md">
+    <div className={`w-full rounded-2xl border border-nexoraBorder/80 bg-white text-left shadow-sm transition hover:border-nexoraBrand/20 hover:shadow-md ${showChatStartHint ? SALON_CARD_PADDING_CLASS.withChatStartHint : SALON_CARD_PADDING_CLASS.default}`}>
       <div className="flex w-full gap-3 text-left">
         {business.logoUrl ? (
           <img
@@ -494,18 +512,31 @@ function SalonCard({
               {nicknameDisplayValue}
             </span>
           </div>
-          <NicknameEditor
-            value={business.nicknameAtBusiness}
-            originalName={originalName}
-            triggerLabel={t('staff_salons.nickname_edit_action')}
-            fieldLabel={t('staff_salons.nickname_badge')}
-            helperText={t('staff_salons.nickname_helper_staff')}
-            onRefresh={onRefreshNickname}
-            onSave={onSaveNickname}
-            triggerVariant="icon"
-            containerClassName="shrink-0"
-            stopPropagation
-          />
+          <div className="flex shrink-0 items-center gap-1">
+            {chatMember ? (
+              <StaffCommunityChatActionButton
+                member={chatMember}
+                unreadCount={chatUnreadCount}
+                showStartHint={showChatStartHint}
+                onStartHintDismiss={onChatStartHintDismiss}
+                manageLabelKey={STAFF_CHAT_I18N.salonManage}
+                manageUnreadLabelKey={STAFF_CHAT_I18N.salonManageUnread}
+                hintPlacement={SALON_CHAT_START_HINT_PLACEMENT}
+              />
+            ) : null}
+            <NicknameEditor
+              value={business.nicknameAtBusiness}
+              originalName={originalName}
+              triggerLabel={t('staff_salons.nickname_edit_action')}
+              fieldLabel={t('staff_salons.nickname_badge')}
+              helperText={t('staff_salons.nickname_helper_staff')}
+              onRefresh={onRefreshNickname}
+              onSave={onSaveNickname}
+              triggerVariant="icon"
+              containerClassName="shrink-0"
+              stopPropagation
+            />
+          </div>
         </div>
       ) : null}
     </div>
@@ -535,6 +566,18 @@ export default function StaffMySalons() {
     })
     return sortSalonBusinesses(visibleBusinesses)
   }, [businesses])
+  const salonChatMemberById = useMemo(
+    () => getSalonChatMemberByBusinessId(salons),
+    [salons],
+  )
+  const chatPeers = useMemo(
+    () => Object.values(salonChatMemberById),
+    [salonChatMemberById],
+  )
+  const { showStartHintForMember, dismissChatStartHint } = useStaffListChatStartHint(chatPeers)
+  const { getUnreadCount: getSalonChatUnreadCount } = useStaffCommunityChatUnreadByPeerId({
+    enabled: chatPeers.length > 0,
+  })
   const isLoading = isPending && businesses.length === 0
   const originalName = staffProfile?.displayName?.trim()
     || `${staffProfile?.firstName ?? ''} ${staffProfile?.lastName ?? ''}`.trim()
@@ -604,7 +647,9 @@ export default function StaffMySalons() {
         </div>
       ) : (
         <div className="space-y-3">
-          {salons.map((business, index) => (
+          {salons.map((business, index) => {
+            const chatMember = salonChatMemberById[business.businessId] ?? null
+            return (
             <SalonCard
               key={business.businessId}
               business={business}
@@ -612,6 +657,10 @@ export default function StaffMySalons() {
               currentLanguage={currentLanguage}
               t={t}
               originalName={originalName}
+              chatMember={chatMember}
+              chatUnreadCount={chatMember ? getSalonChatUnreadCount(chatMember) : 0}
+              showChatStartHint={Boolean(chatMember && showStartHintForMember(chatMember))}
+              onChatStartHintDismiss={dismissChatStartHint}
               onRefreshNickname={async () => {
                 const result = await refetchBusinesses({ throwOnError: true })
                 return result.data?.find(
@@ -625,7 +674,8 @@ export default function StaffMySalons() {
               onUnlink={() => handleUnlink(business)}
               isUnlinking={unlinkBusiness.isPending}
             />
-          ))}
+            )
+          })}
         </div>
       )}
 

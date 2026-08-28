@@ -1,6 +1,8 @@
 # Nexora Touch Design System - Style Reference
 > Premium service-commerce dashboard with a light operational core, a dark navigation spine, and high-energy blue-violet brand actions.
 
+See also: [AGENTS.md](./AGENTS.md) (engineering rules), [ARCHITECTURE.md](./ARCHITECTURE.md) (codebase structure), [CULTURE.md](./CULTURE.md) (US product-culture rule).
+
 **Theme:** Hybrid. Admin, staff, onboarding, customer, and payment flows are light-first. Sidebars and selected marketing modules use dark surfaces. The public homepage owns a separate marketing token layer.
 
 Nexora Touch reads as a precise financial operations product for salon and local-service workflows. The main app uses a soft blue-gray canvas, white panels, compact typography, and crisp borders so repeated merchant tasks stay scannable. Brand energy comes from electric blue, violet, cyan, and small gold accents rather than broad decorative color fields. Depth is deliberately shallow: cards, dropdowns, drawers, and mobile nav use thin borders plus soft shadows, while sidebars use translucent white overlays on navy. The homepage is more expressive, using Plus Jakarta Sans, purple-blue gradients, animated button sweeps, and larger section rhythm. The signature break is the dark `nexoraSidebar` rail paired with vivid active gradients and neon menu icon glow.

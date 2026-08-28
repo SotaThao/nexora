@@ -61,6 +61,7 @@ import PosRolesView from '../views/pos/PosRolesView'
 import PosCategoriesView from '../views/pos/PosCategoriesView'
 import PosServicesView from '../views/pos/PosServicesView'
 import PosProductsView from '../views/pos/PosProductsView'
+import PosPromotionsView from '../views/pos/PosPromotionsView'
 import PosStaffProfileView from '../views/pos/PosStaffProfileView'
 import PosFrontDeskView from '../views/pos/PosFrontDeskView'
 import { formatBusinessAddress } from '../views/pos/posDisplay'
@@ -385,6 +386,22 @@ export function PosServicesRoute() {
 // catalog/menu data, not gated behind verificationStatus/KYB.
 export function PosProductsRoute() {
   return <PosProductsView />
+}
+
+// Promotions are catalog data like Services/Products — not gated behind verificationStatus/KYB.
+// businessId is explicit because the endpoints are per-business (a Staff caller with Operations
+// access may be linked to more than one salon).
+export function PosPromotionsRoute() {
+  const { data: merchantSetupData } = useMerchantSetup()
+  const businessId = merchantSetupData?.businessInfo?.businessId
+  if (!businessId) {
+    return (
+      <div className="nexora-card p-6">
+        <SkeletonList count={3} lines={1} />
+      </div>
+    )
+  }
+  return <PosPromotionsView businessId={businessId} />
 }
 
 // Staff profile (role/pay/tips/tax filing) is not salon identity data either —

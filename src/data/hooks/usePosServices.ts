@@ -47,6 +47,19 @@ export function useUpdatePosService() {
   })
 }
 
+export function useDeletePosService() {
+  const queryClient = useQueryClient()
+  return useMutation<boolean, Error, string>({
+    mutationFn: (serviceId) => posServicesRepository.deletePosService(serviceId),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: qk.merchantPosServices() })
+      // Soft-deleting a service that a staff member was assigned to must also drop out of
+      // their "services offered" display — the assignment row itself is kept server-side.
+      queryClient.invalidateQueries({ queryKey: ['merchantSettings', 'posStaffServiceAssignments'] })
+    },
+  })
+}
+
 export function useReorderPosServices() {
   const queryClient = useQueryClient()
   return useMutation<void, Error, ServiceOrderItem[], { previous?: PosServiceApiDto[] }>({
