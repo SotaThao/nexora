@@ -4853,6 +4853,7 @@
             "suggestHidden": "Industry suggestions hidden.",
             "languageSelected": "AI language set to {language}.",
             "saveSuccess": "Configuration saved. AI Voice, SMS, LP, Schema, and AI Hub are synced.",
+            "savePartialSuccess": "Settings saved, but some services were skipped — fix the rows marked in red and save again.",
             "saveValidationError": "Please complete all required fields.",
             "invalidPhone": "Please enter a valid phone number.",
             "hourRequired": "Open and close times are required.",

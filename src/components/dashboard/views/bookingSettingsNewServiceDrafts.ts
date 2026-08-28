@@ -6,7 +6,7 @@ export type NewServiceDraft = {
   duration: string
 }
 
-type EditableNewServiceDraftField = 'name' | 'price' | 'duration'
+export type EditableNewServiceDraftField = 'name' | 'price' | 'duration'
 
 export type NewServiceDraftAction =
   | { type: 'add'; draft: NewServiceDraft }
@@ -22,6 +22,18 @@ export type NewServiceDraftValidationMessages = {
   nameRequired: string
   priceInvalid: string
   durationInvalid: string
+}
+
+/**
+ * `fields` lists every input on the row that's currently invalid — a row with an
+ * empty price AND an empty duration marks both, not just the first one found.
+ * It's empty only when a row failed for a reason unrelated to a specific input
+ * (e.g. the save API call itself rejected the row) — in that case every field is
+ * marked invalid, since there's no single field to point at.
+ */
+export type NewServiceDraftError = {
+  fields: EditableNewServiceDraftField[]
+  message: string
 }
 
 export function newServiceDraftReducer(
@@ -47,17 +59,28 @@ export function newServiceDraftReducer(
 export function validateNewServiceDrafts(
   drafts: NewServiceDraft[],
   messages: NewServiceDraftValidationMessages,
-): Record<string, string> {
-  return drafts.reduce<Record<string, string>>((errors, draft) => {
+): Record<string, NewServiceDraftError> {
+  return drafts.reduce<Record<string, NewServiceDraftError>>((errors, draft) => {
     const price = Number(draft.price)
     const duration = Number(draft.duration)
+    const fields: EditableNewServiceDraftField[] = []
+    const rowMessages: string[] = []
 
     if (!draft.name.trim()) {
-      errors[draft.id] = messages.nameRequired
-    } else if (!draft.price.trim() || !Number.isFinite(price) || price < 0) {
-      errors[draft.id] = messages.priceInvalid
-    } else if (!draft.duration.trim() || !Number.isFinite(duration) || duration <= 0) {
-      errors[draft.id] = messages.durationInvalid
+      fields.push('name')
+      rowMessages.push(messages.nameRequired)
+    }
+    if (!draft.price.trim() || !Number.isFinite(price) || price < 0) {
+      fields.push('price')
+      rowMessages.push(messages.priceInvalid)
+    }
+    if (!draft.duration.trim() || !Number.isFinite(duration) || duration <= 0) {
+      fields.push('duration')
+      rowMessages.push(messages.durationInvalid)
+    }
+
+    if (fields.length > 0) {
+      errors[draft.id] = { fields, message: rowMessages.join(' ') }
     }
 
     return errors

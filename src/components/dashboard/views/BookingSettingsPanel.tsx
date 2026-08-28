@@ -93,6 +93,7 @@ import { applyAiHubProgressiveValidation } from "./bookingHubDialogValidation";
 import {
   newServiceDraftReducer,
   validateNewServiceDrafts,
+  type NewServiceDraftError,
 } from "./bookingSettingsNewServiceDrafts";
 import { planCategoryDraftChanges } from "./bookingSettingsCategoryDrafts";
 
@@ -1079,7 +1080,7 @@ export default function BookingSettingsPanel() {
     [],
   );
   const [newServiceDraftErrors, setNewServiceDraftErrors] = useState<
-    Record<string, string>
+    Record<string, NewServiceDraftError>
   >({});
   const newServiceDraftIdRef = useRef(0);
   const inlineServiceDraftsRef = useRef(inlineServiceDrafts);
@@ -2093,7 +2094,6 @@ export default function BookingSettingsPanel() {
     }
 
     if (plan.creates.length === 0 && plan.updates.length === 0) {
-      setCategoryModalOpen(false);
       return;
     }
 
@@ -2662,18 +2662,25 @@ export default function BookingSettingsPanel() {
       validDirtyInlineServices.push(entry);
     }
     setInlineServiceErrors(nextInlineServiceErrors);
-    const persistedDirtyServices = validDirtyInlineServices.filter(({ service }) =>
-      isPersistedServiceId(service.id),
-    );
-    const localOnlyDirtyServices = validDirtyInlineServices.filter(
-      ({ service }) => !isPersistedServiceId(service.id),
-    );
 
-    // Only rows that pass validation are sent — an unfinished/invalid draft row is
-    // simply skipped, not required before "Save settings" can run.
-    const newServiceDraftsToSave = newServiceDrafts.filter(
-      (draft) => !nextNewServiceDraftErrors[draft.id],
-    );
+    // If ANY service row — new draft or inline-edited — is invalid, no service save API
+    // call goes out at all (not even for the rows that do pass). The form just shows the
+    // red errors; the user must fix every row before "Save settings" saves any of them.
+    const hasInvalidServiceRows =
+      Object.keys(nextNewServiceDraftErrors).length > 0 ||
+      Object.keys(nextInlineServiceErrors).length > 0;
+
+    const persistedDirtyServices = hasInvalidServiceRows
+      ? []
+      : validDirtyInlineServices.filter(({ service }) =>
+          isPersistedServiceId(service.id),
+        );
+    const localOnlyDirtyServices = hasInvalidServiceRows
+      ? []
+      : validDirtyInlineServices.filter(
+          ({ service }) => !isPersistedServiceId(service.id),
+        );
+    const newServiceDraftsToSave = hasInvalidServiceRows ? [] : newServiceDrafts;
     const createdNewServiceDraftIds: string[] = [];
     const updatedServiceIds: string[] = [];
     if (
@@ -2783,6 +2790,9 @@ export default function BookingSettingsPanel() {
       // description/tags/status are intentionally omitted below (not sent as null/[]/"Active")
       // — this endpoint is the shared catalog POS also writes to, and Booking Hub's UI has no
       // fields for them, so explicit blank values would wipe POS-managed data on every save.
+      // icon is sent as null only on create (nothing to protect yet); on update it's omitted
+      // too — ServiceRow.icon is always backfilled with a display fallback (e.g. "✨"), so
+      // sending it back would silently overwrite a real POS-managed icon on every save.
       const createBatchItems: SaveServiceBatchItem[] = newServiceDraftsToSave.map(
         (draft) => ({
           name: draft.name.trim(),
@@ -2798,7 +2808,6 @@ export default function BookingSettingsPanel() {
           name: draft.name.trim(),
           price: Number(draft.price),
           durationMinutes: clampMerchantVoiceServiceDurationMinutes(Number(draft.duration)),
-          icon: service.icon?.trim() || null,
           categoryIds: categoryIdsPayloadForApi(service.categoryIds),
         }),
       );
@@ -2831,9 +2840,19 @@ export default function BookingSettingsPanel() {
 
       await queryClient.invalidateQueries({ queryKey: qk.merchantSetup() });
 
-      setStatus(t(`${TK}.saveSuccess`));
+      // Settings above always save when we get here — but a row skipped for failing
+      // validation (still shown in red) means the save was only partial. Surface that
+      // as a warning instead of a plain "saved" toast, so a skipped row can't look like
+      // a successful save.
+      const hasSkippedServiceRows =
+        Object.keys(nextNewServiceDraftErrors).length > 0 ||
+        Object.keys(nextInlineServiceErrors).length > 0;
+      const saveResultMessage = hasSkippedServiceRows
+        ? t(`${TK}.savePartialSuccess`)
+        : t(`${TK}.saveSuccess`);
+      setStatus(saveResultMessage);
       setFormErrors({});
-      showToast(t(`${TK}.saveSuccess`), "success");
+      showToast(saveResultMessage, hasSkippedServiceRows ? "warning" : "success");
     } catch (error) {
       const message = t(getErrorI18nKey(getApiErrorCode(error)));
       // createdNewServiceDraftIds/updatedServiceIds are only non-empty once the batch
@@ -2844,9 +2863,13 @@ export default function BookingSettingsPanel() {
       }
       if (createdNewServiceDraftIds.length === 0 && newServiceDraftsToSave.length > 0) {
         // Merge, don't replace — invalid rows already have their own error showing.
+        // Empty `fields` here — this is an API-level rejection, not a single bad input, so
+        // every field on the row is marked invalid.
         setNewServiceDraftErrors((prev) => ({
           ...prev,
-          ...Object.fromEntries(newServiceDraftsToSave.map((draft) => [draft.id, message])),
+          ...Object.fromEntries(
+            newServiceDraftsToSave.map((draft) => [draft.id, { fields: [], message }]),
+          ),
         }));
       }
       if (updatedServiceIds.length === 0 && persistedDirtyServices.length > 0) {
@@ -4236,7 +4259,11 @@ export default function BookingSettingsPanel() {
                                     `${TK}.placeholderServiceName`,
                                   )}
                                   aria-label={t(`${TK}.serviceNameAria`)}
-                                  aria-invalid={draftError ? "true" : undefined}
+                                  aria-invalid={
+                                    draftError && (draftError.fields.length === 0 || draftError.fields.includes("name"))
+                                      ? "true"
+                                      : undefined
+                                  }
                                   disabled={isSavingService}
                                   onChange={(event) => {
                                     updateNewServiceDraft(
@@ -4259,7 +4286,11 @@ export default function BookingSettingsPanel() {
                                       `${TK}.placeholderServicePrice`,
                                     )}
                                     aria-label={t(`${TK}.servicePriceAria`)}
-                                    aria-invalid={draftError ? "true" : undefined}
+                                    aria-invalid={
+                                      draftError && (draftError.fields.length === 0 || draftError.fields.includes("price"))
+                                        ? "true"
+                                        : undefined
+                                    }
                                     disabled={isSavingService}
                                     onChange={(event) => {
                                       updateNewServiceDraft(
@@ -4285,7 +4316,11 @@ export default function BookingSettingsPanel() {
                                     aria-label={t(
                                       `${TK}.serviceDurationAria`,
                                     )}
-                                    aria-invalid={draftError ? "true" : undefined}
+                                    aria-invalid={
+                                      draftError && (draftError.fields.length === 0 || draftError.fields.includes("duration"))
+                                        ? "true"
+                                        : undefined
+                                    }
                                     disabled={isSavingService}
                                     onChange={(event) => {
                                       updateNewServiceDraft(
@@ -4318,7 +4353,7 @@ export default function BookingSettingsPanel() {
                                   className="settings-service-row-error"
                                   role="alert"
                                 >
-                                  {draftError}
+                                  {draftError.message}
                                 </p>
                               ) : null}
                             </div>
