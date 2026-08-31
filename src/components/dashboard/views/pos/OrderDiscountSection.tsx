@@ -262,7 +262,7 @@ export default function OrderDiscountSection({
                       {promotion.badgeLabel}
                     </span>
                   ) : null}
-                  <span className="block truncate text-xs font-bold text-nexoraText">{promotion.name}</span>
+                  <span className="block break-words text-xs font-bold text-nexoraText">{promotion.name}</span>
                   <span className="block truncate text-[10px] text-nexoraMuted">
                     {formatPromotionDays(promotion.daysOfWeek, (day) => t(`${K}.dayShort.${day}`))} ·{' '}
                     {formatPromotionWindow(promotion.startTime, promotion.endTime, currentLanguage)}

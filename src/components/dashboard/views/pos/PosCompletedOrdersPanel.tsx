@@ -449,7 +449,7 @@ export default function PosCompletedOrdersPanel({ businessId }: { businessId: st
                     ) : null}
                     {viewDetail.data.orderDiscountAmount > 0 ? (
                       <div className="flex justify-between text-nexoraMuted">
-                        <span className="min-w-0 truncate">
+                        <span className="min-w-0 break-words">
                           {viewDetail.data.appliedPromotionName
                             ?? t('components.dashboard.views.pos.PosCompletedOrdersPanel.viewDetailOrderDiscount')}
                         </span>
