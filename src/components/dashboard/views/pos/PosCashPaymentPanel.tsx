@@ -11,7 +11,7 @@ export function cashAmountReceived(value: string): number {
 }
 
 export function isCashPaymentCovered(value: string, total: number): boolean {
-  return value.trim() !== '' && cashAmountReceived(value) >= total
+  return value.trim() === '' || cashAmountReceived(value) >= total
 }
 
 export default function PosCashPaymentPanel({
