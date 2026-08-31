@@ -491,8 +491,8 @@ export default function PosOrderWorkspace({
   const hasServiceLines = visibleLines.some((l) => l.itemType === 'Service')
   const serviceLineCount = visibleLines.filter((line) => line.itemType === 'Service').length
   // "First available" leaves a line unassigned on purpose — a person on the floor decides who
-  // takes it. StartOrderService and CompleteOrder both refuse an order in that state, so the two
-  // buttons are disabled rather than left to fail with a red toast at the worst moment.
+  // takes it. CompleteOrder refuses that state, so every completion path guards it before the API;
+  // QR's Mark as received stays clickable and explains what the operator must fix.
   const hasUnassignedServiceLine = visibleLines.some(
     (l) => l.itemType === 'Service' && !l.posStaffProfileId,
   )
@@ -846,6 +846,14 @@ export default function PosOrderWorkspace({
 
   const handleComplete = () => {
     if (!order || isPaid || !cashPaymentCovered || !isPaymentMethodEligible) return
+    if (hasNoLines) {
+      showToast(t('components.dashboard.views.pos.PosOrderWorkspace.addLineFirst'), 'error')
+      return
+    }
+    if (hasUnassignedServiceLine) {
+      showToast(t('components.dashboard.views.pos.PosOrderWorkspace.assignTechnicianFirst'), 'error')
+      return
+    }
     if (!startTicketAction(TicketBusySurface.Complete)) return
     completeOrder.mutate(
       {
@@ -1446,7 +1454,7 @@ export default function PosOrderWorkspace({
                       businessId={businessId}
                       businessName={businessName}
                       onMarkReceived={handleComplete}
-                      disabled={isBusy || hasUnassignedServiceLine || hasNoLines}
+                      disabled={isBusy}
                     />
                   ) : null}
                   <div>
@@ -1622,7 +1630,7 @@ export default function PosOrderWorkspace({
                 <button
                   type="button"
                   onClick={handleComplete}
-                  disabled={isBusy || hasUnassignedServiceLine || hasNoLines || !cashPaymentCovered || !isPaymentMethodEligible}
+                  disabled={isBusy || hasNoLines || !cashPaymentCovered || !isPaymentMethodEligible}
                   title={
                     hasNoLines
                       ? t('components.dashboard.views.pos.PosOrderWorkspace.addLineFirst')
