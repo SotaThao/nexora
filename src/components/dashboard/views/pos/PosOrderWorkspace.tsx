@@ -163,18 +163,18 @@ function lineTotalAfterDiscount(line: DisplayLine): number {
   return line.itemType === 'Service' ? line.unitPrice - line.discountAmount : line.unitPrice * line.quantity
 }
 
+// Who a service added to an open ticket goes to, before anyone picks. One rule for both the menu
+// and the off-menu path: a ticket with exactly one technician on it is unambiguous, so the new line
+// joins them; anything else is a guess. It used to assign the first of several technicians —
+// skipping the qualification check entirely, since `length > 1` short-circuited it — which handed
+// commission to whoever happened to be first on the ticket unless the front desk noticed.
 function resolveNewLineTechnicianAssignment(
   assignedTechnicianIds: string[],
   canPerform: (staffId: string) => boolean,
-): { shouldAssign: true; posStaffProfileId: string | undefined } | { shouldAssign: false } {
-  if (assignedTechnicianIds.length === 0) {
-    return { shouldAssign: true, posStaffProfileId: undefined }
-  }
-  const firstAssignedId = assignedTechnicianIds[0]
-  if (assignedTechnicianIds.length > 1 || canPerform(firstAssignedId)) {
-    return { shouldAssign: true, posStaffProfileId: firstAssignedId }
-  }
-  return { shouldAssign: false }
+): string | null {
+  if (assignedTechnicianIds.length !== 1) return null
+  const soleAssignedId = assignedTechnicianIds[0]
+  return canPerform(soleAssignedId) ? soleAssignedId : null
 }
 
 function lineTechnicianDisplay(
@@ -392,8 +392,9 @@ export default function PosOrderWorkspace({
     ]
   }, [order, showAddLinePlaceholder])
 
-  // Preserve service-line order while deduplicating staff. When several technicians are already
-  // involved, the first assigned technician becomes the deterministic default for a new service.
+  // Preserve service-line order while deduplicating staff. Exactly one entry means the ticket has
+  // one technician on it, which is the only case a new line can be assigned from (see
+  // resolveNewLineTechnicianAssignment).
   const assignedTechnicianIds = useMemo(() => {
     const uniqueIds = new Set(
       visibleLines
@@ -403,6 +404,16 @@ export default function PosOrderWorkspace({
     )
     return [...uniqueIds]
   }, [visibleLines])
+  // Pre-selection for the custom-service form. Read off the ticket, not the roster, so the form can
+  // open before that query lands — an off-menu service has no skill list to check anyone against.
+  const soleTicketTechnician = useMemo(() => {
+    if (assignedTechnicianIds.length !== 1) return null
+    const posStaffProfileId = assignedTechnicianIds[0]
+    const line = visibleLines.find(
+      (l): l is DisplayServiceLine => l.itemType === 'Service' && l.posStaffProfileId === posStaffProfileId,
+    )
+    return { posStaffProfileId, technicianName: line?.technicianName ?? null }
+  }, [assignedTechnicianIds, visibleLines])
   const isTechnicianRosterLoading = areTechniciansPending || areTechniciansFetching
   // Ticket Detail placeholder and catalog pending share `isAddingLine` so one panel cannot
   // finish while the other is still locked. Initial sole-technician skill load uses pending
@@ -517,15 +528,17 @@ export default function PosOrderWorkspace({
             return
           }
 
-          const assignment = resolveNewLineTechnicianAssignment(
+          const inheritedStaffId = resolveNewLineTechnicianAssignment(
             assignedTechnicianIds,
             (staffId) => techniciansForService(service.id).some((tech) => tech.posStaffProfileId === staffId),
           )
-          if (!assignment.shouldAssign) {
+          // Nothing to inherit means the line is already how it should be — an assign call here
+          // would only write an empty note over an empty note.
+          if (inheritedStaffId === null) {
             endTicketAction()
             return
           }
-          saveServiceLine(newServiceLineId, assignment.posStaffProfileId, '', { onSettled: endTicketAction })
+          saveServiceLine(newServiceLineId, inheritedStaffId, '', { onSettled: endTicketAction })
         },
         onError: (err) => {
           reportError(err)
@@ -535,33 +548,20 @@ export default function PosOrderWorkspace({
     )
   }
 
+  // The technician comes with the payload — the form picked it — so this is one call, and the line
+  // never exists for a moment with nobody on it. The modal stays open until the server confirms:
+  // the most likely failure is a technician who went off shift while the form was open, and losing
+  // the typed name, price and note to that would be a poor trade.
   const handleAddCustomService = (payload: CustomServiceSubmit) => {
-    if (assignedTechnicianIds.length === 1 && isTechnicianRosterLoading) return
     if (!startTicketAction(TicketBusySurface.AddLine)) return
-    setCustomServiceTarget(null)
     serviceLineIdsBeforeAddRef.current = new Set(order?.serviceLines.map((line) => line.id) ?? [])
 
     addCustomServiceLine.mutate(
       { orderId, ...payload },
       {
-        onSuccess: (newServiceLineId) => {
-          if (!isPersistedLineId(newServiceLineId)) {
-            endTicketAction()
-            return
-          }
-
-          // No qualification check: an off-menu service has no skill list, so the ticket's sole
-          // technician is always a valid choice for it.
-          const assignment = resolveNewLineTechnicianAssignment(assignedTechnicianIds, () => true)
-          if (!assignment.shouldAssign) {
-            endTicketAction()
-            return
-          }
-          // The note travels back unchanged — AssignStaffToServiceLine overwrites Note, so passing
-          // an empty string here would wipe what was just typed on the form.
-          saveServiceLine(newServiceLineId, assignment.posStaffProfileId, payload.note ?? '', {
-            onSettled: endTicketAction,
-          })
+        onSuccess: () => {
+          setCustomServiceTarget(null)
+          endTicketAction()
         },
         onError: (err) => {
           reportError(err)
@@ -971,7 +971,12 @@ export default function PosOrderWorkspace({
                   <button
                     type="button"
                     data-testid="add-custom-service"
-                    onClick={() => setCustomServiceTarget({})}
+                    onClick={() =>
+                      setCustomServiceTarget({
+                        posStaffProfileId: soleTicketTechnician?.posStaffProfileId ?? null,
+                        technicianName: soleTicketTechnician?.technicianName ?? null,
+                      })
+                    }
                     disabled={isBusy}
                     className="h-7 shrink-0 rounded-lg border border-nexoraBrand bg-nexoraBrandSoft/50 px-3 text-[11px] font-bold text-nexoraBrandDark transition-colors hover:bg-nexoraBrandSoft disabled:cursor-not-allowed disabled:opacity-60"
                   >
@@ -2020,6 +2025,8 @@ export default function PosOrderWorkspace({
       <CustomServiceModal
         target={customServiceTarget}
         isSaving={isBusy}
+        technicians={techniciansForService(null)}
+        isTechnicianRosterLoading={areTechniciansPending && allTechnicians.length === 0}
         onSubmit={handleSaveCustomService}
         onPickFromMenu={
           customServiceTarget?.serviceLineId

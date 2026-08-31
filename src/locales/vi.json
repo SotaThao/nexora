@@ -3813,6 +3813,8 @@
             "customServiceNamePlaceholder": "ví dụ: Sửa nail",
             "customServicePriceLabel": "Giá",
             "customServicePricePlaceholder": "0.00",
+            "customServiceTechnicianLabel": "Thợ",
+            "customServiceTechnicianPickerTitle": "Ai làm dịch vụ này?",
             "customServiceNoteLabel": "Ghi chú (không bắt buộc)",
             "customServiceNotePlaceholder": "ví dụ: dặm lại từ tiệm khác",
             "customServicePriceMustBePositive": "Giá phải lớn hơn $0. Nếu muốn miễn phí, hãy nhập giá thật rồi giảm giá 100%.",
