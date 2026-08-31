@@ -1,8 +1,8 @@
 import { ChevronRight, MapPin, Store } from 'lucide-react'
-import { WORK_ORDERS_LAYOUT_CLASS, type WorkOrderSalonMock } from './constants'
+import { WORK_ORDERS_LAYOUT_CLASS, type WorkOrderSalon } from './constants'
 
 interface WorkOrderSalonCardProps {
-  salon: WorkOrderSalonMock
+  salon: WorkOrderSalon
   onSelect: () => void
 }
 

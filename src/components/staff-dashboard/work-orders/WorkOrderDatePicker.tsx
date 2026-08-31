@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { CalendarDays, ChevronLeft, ChevronRight } from 'lucide-react'
 import { useTranslation } from '../../../contexts/LanguageContext'
-import { WORK_ORDER_KEYBOARD, WORK_ORDERS_I18N, WORK_ORDERS_LAYOUT_CLASS } from './constants'
+import { WORK_ORDER_DATE_STEP, WORK_ORDER_KEYBOARD, WORK_ORDERS_I18N, WORK_ORDERS_LAYOUT_CLASS } from './constants'
 import {
   addLocalDateIso,
   buildWorkOrderMonthCells,
@@ -64,7 +64,9 @@ export default function WorkOrderDatePicker({
     }
   }, [open])
 
-  const dateLabel = formatWorkOrderNavDate(value, language)
+  const dateLabel = value === todayIso
+    ? t(WORK_ORDERS_I18N.today)
+    : formatWorkOrderNavDate(value, language)
   const monthLabel = formatWorkOrderMonthLabel(viewYear, viewMonth, language)
   const weekdayLabels = useMemo(() => workOrderWeekdayLabels(language), [language])
   const cells = useMemo(
@@ -85,7 +87,7 @@ export default function WorkOrderDatePicker({
           type="button"
           className={WORK_ORDERS_LAYOUT_CLASS.dateNavButton}
           aria-label={t(WORK_ORDERS_I18N.prevDay)}
-          onClick={() => onChange(addLocalDateIso(value, -1))}
+          onClick={() => onChange(addLocalDateIso(value, -WORK_ORDER_DATE_STEP.day))}
         >
           <ChevronLeft className={WORK_ORDERS_LAYOUT_CLASS.iconMd} aria-hidden="true" />
         </button>
@@ -104,7 +106,7 @@ export default function WorkOrderDatePicker({
           type="button"
           className={WORK_ORDERS_LAYOUT_CLASS.dateNavButton}
           aria-label={t(WORK_ORDERS_I18N.nextDay)}
-          onClick={() => onChange(addLocalDateIso(value, 1))}
+          onClick={() => onChange(addLocalDateIso(value, WORK_ORDER_DATE_STEP.day))}
         >
           <ChevronRight className={WORK_ORDERS_LAYOUT_CLASS.iconMd} aria-hidden="true" />
         </button>
@@ -121,7 +123,7 @@ export default function WorkOrderDatePicker({
               type="button"
               className={WORK_ORDERS_LAYOUT_CLASS.dateNavButton}
               aria-label={t(WORK_ORDERS_I18N.prevMonth)}
-              onClick={() => shiftViewMonth(-1)}
+              onClick={() => shiftViewMonth(-WORK_ORDER_DATE_STEP.month)}
             >
               <ChevronLeft className={WORK_ORDERS_LAYOUT_CLASS.iconSm} aria-hidden="true" />
             </button>
@@ -130,7 +132,7 @@ export default function WorkOrderDatePicker({
               type="button"
               className={WORK_ORDERS_LAYOUT_CLASS.dateNavButton}
               aria-label={t(WORK_ORDERS_I18N.nextMonth)}
-              onClick={() => shiftViewMonth(1)}
+              onClick={() => shiftViewMonth(WORK_ORDER_DATE_STEP.month)}
             >
               <ChevronRight className={WORK_ORDERS_LAYOUT_CLASS.iconSm} aria-hidden="true" />
             </button>

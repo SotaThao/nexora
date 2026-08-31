@@ -1,17 +1,23 @@
 import { ChevronRight, MapPin, Radio, Store } from 'lucide-react'
 import { useTranslation } from '../../../contexts/LanguageContext'
 import {
-  WORK_ORDER_STATUS_BADGE_CLASS,
+  WORK_ORDER_STATUS_BADGE_VARIANT,
   WORK_ORDER_STATUS_I18N,
   WORK_ORDERS_I18N,
   WORK_ORDERS_LAYOUT_CLASS,
-  type WorkOrderTicketMock,
+  workOrderStatusClass,
+  type WorkOrderListItem,
 } from './constants'
-import { formatWorkOrderTime } from './workOrderTickets'
+import {
+  formatWorkOrderStationValue,
+  formatWorkOrderTicketTime,
+  joinWorkOrderServiceNames,
+  workOrderTextOrPlaceholder,
+} from './workOrderTickets'
 
 interface WorkOrderTicketCardProps {
   salonName: string
-  ticket: WorkOrderTicketMock
+  ticket: WorkOrderListItem
   onSelect: () => void
 }
 
@@ -21,28 +27,38 @@ export default function WorkOrderTicketCard({ salonName, ticket, onSelect }: Wor
   return (
     <button type="button" className={WORK_ORDERS_LAYOUT_CLASS.ticketCard} onClick={onSelect}>
       <span className={WORK_ORDERS_LAYOUT_CLASS.ticketTime}>
-        {formatWorkOrderTime(ticket.time, currentLanguage)}
+        {formatWorkOrderTicketTime(ticket, currentLanguage)}
       </span>
       <span className={WORK_ORDERS_LAYOUT_CLASS.grow}>
         <span className={WORK_ORDERS_LAYOUT_CLASS.ticketHeadRow}>
-          <span className={WORK_ORDERS_LAYOUT_CLASS.ticketCustomer}>{ticket.customerName}</span>
-          <span className={`${WORK_ORDERS_LAYOUT_CLASS.ticketBadge} ${WORK_ORDER_STATUS_BADGE_CLASS[ticket.status]}`}>
+          <span className={WORK_ORDERS_LAYOUT_CLASS.ticketCustomer}>
+            {workOrderTextOrPlaceholder(ticket.customerName)}
+          </span>
+          <span className={workOrderStatusClass(ticket.status, WORK_ORDER_STATUS_BADGE_VARIANT.ticket)}>
             {t(WORK_ORDER_STATUS_I18N[ticket.status])}
           </span>
         </span>
-        <span className={WORK_ORDERS_LAYOUT_CLASS.ticketService}>{ticket.serviceName}</span>
+        <span className={WORK_ORDERS_LAYOUT_CLASS.ticketService}>
+          {workOrderTextOrPlaceholder(joinWorkOrderServiceNames(ticket.serviceNames))}
+        </span>
         <span className={WORK_ORDERS_LAYOUT_CLASS.ticketMeta}>
           <span className={WORK_ORDERS_LAYOUT_CLASS.metaChip}>
             <Store className={WORK_ORDERS_LAYOUT_CLASS.ticketMetaIcon} aria-hidden="true" />
-            <span className={WORK_ORDERS_LAYOUT_CLASS.truncate}>{salonName}</span>
+            <span className={WORK_ORDERS_LAYOUT_CLASS.truncate}>
+              {workOrderTextOrPlaceholder(salonName)}
+            </span>
           </span>
           <span className={WORK_ORDERS_LAYOUT_CLASS.metaChip}>
             <MapPin className={WORK_ORDERS_LAYOUT_CLASS.ticketMetaIcon} aria-hidden="true" />
-            <span>{t(WORK_ORDERS_I18N.station, { number: ticket.station })}</span>
+            <span className={WORK_ORDERS_LAYOUT_CLASS.truncate}>
+              {t(WORK_ORDERS_I18N.station, { number: formatWorkOrderStationValue(ticket.stationNumber) })}
+            </span>
           </span>
           <span className={WORK_ORDERS_LAYOUT_CLASS.metaChip}>
             <Radio className={WORK_ORDERS_LAYOUT_CLASS.ticketMetaIcon} aria-hidden="true" />
-            <span>{t(WORK_ORDERS_I18N.beeper, { code: ticket.beeper })}</span>
+            <span className={WORK_ORDERS_LAYOUT_CLASS.truncate}>
+              {t(WORK_ORDERS_I18N.beeper, { code: workOrderTextOrPlaceholder(ticket.beeper) })}
+            </span>
           </span>
         </span>
       </span>

@@ -1,87 +1,108 @@
 import { Puzzle } from 'lucide-react'
 import { useTranslation } from '../../../contexts/LanguageContext'
-import { formatCurrency } from '../../dashboard/utils'
+import { WORK_ORDERS_I18N, WORK_ORDERS_LAYOUT_CLASS, type WorkOrderItem } from './constants'
 import {
-  WORK_ORDER_COLUMN_ALIGN_CLASS,
-  WORK_ORDER_SERVICE_COLUMNS,
-  WORK_ORDERS_I18N,
-  WORK_ORDERS_LAYOUT_CLASS,
-  type WorkOrderServiceLineMock,
-} from './constants'
+  formatWorkOrderDurationMinutes,
+  formatWorkOrderMoney,
+  workOrderTextOrPlaceholder,
+} from './workOrderTickets'
 
 interface WorkOrderServiceLinesProps {
-  services: WorkOrderServiceLineMock[]
-  total: number
+  items: WorkOrderItem[]
+  serviceTotal: number
 }
 
-export default function WorkOrderServiceLines({ services, total }: WorkOrderServiceLinesProps) {
+export default function WorkOrderServiceLines({ items, serviceTotal }: WorkOrderServiceLinesProps) {
   const { t } = useTranslation()
 
   return (
     <section className={WORK_ORDERS_LAYOUT_CLASS.servicesCard}>
-      <div className={WORK_ORDERS_LAYOUT_CLASS.servicesHead}>
+      <div className={WORK_ORDERS_LAYOUT_CLASS.servicesTitleRow}>
         <h3 className={WORK_ORDERS_LAYOUT_CLASS.servicesTitle}>
           {t(WORK_ORDERS_I18N.services)}
         </h3>
-        <button type="button" className={WORK_ORDERS_LAYOUT_CLASS.textLink}>
+        <span className={WORK_ORDERS_LAYOUT_CLASS.addServiceLink} aria-disabled="true">
           {t(WORK_ORDERS_I18N.addService)}
-        </button>
-      </div>
-
-      <div className={WORK_ORDERS_LAYOUT_CLASS.serviceCols}>
-        {WORK_ORDER_SERVICE_COLUMNS.map((column) => (
-          <span key={column.id} className={WORK_ORDER_COLUMN_ALIGN_CLASS[column.align]}>
-            {column.labelKey ? t(column.labelKey) : null}
-          </span>
-        ))}
-      </div>
-
-      <div className={WORK_ORDERS_LAYOUT_CLASS.serviceList}>
-        {services.map((line) => (
-          <WorkOrderServiceLineRow key={line.id} line={line} />
-        ))}
-      </div>
-
-      <div className={WORK_ORDERS_LAYOUT_CLASS.serviceTotalRow}>
-        <span className={WORK_ORDERS_LAYOUT_CLASS.serviceTotalLabel}>
-          {t(WORK_ORDERS_I18N.serviceTotal)}
         </span>
-        <span className={WORK_ORDERS_LAYOUT_CLASS.serviceTotalValue}>{formatCurrency(total)}</span>
       </div>
+
+      {items.length === 0 ? (
+        <p className={WORK_ORDERS_LAYOUT_CLASS.emptyInline}>{workOrderTextOrPlaceholder('')}</p>
+      ) : (
+        <>
+        <table className={WORK_ORDERS_LAYOUT_CLASS.serviceTable}>
+          <colgroup>
+            <col />
+            <col className={WORK_ORDERS_LAYOUT_CLASS.serviceColPrice} />
+            <col className={WORK_ORDERS_LAYOUT_CLASS.serviceColTime} />
+            <col className={WORK_ORDERS_LAYOUT_CLASS.serviceColAction} />
+          </colgroup>
+          <thead>
+            <tr>
+              <th scope="col" className={`${WORK_ORDERS_LAYOUT_CLASS.serviceHeadCell} ${WORK_ORDERS_LAYOUT_CLASS.textLeft}`}>
+                {t(WORK_ORDERS_I18N.colService)}
+              </th>
+              <th scope="col" className={WORK_ORDERS_LAYOUT_CLASS.serviceHeadCellEnd}>
+                {t(WORK_ORDERS_I18N.colPrice)}
+              </th>
+              <th scope="col" className={WORK_ORDERS_LAYOUT_CLASS.serviceHeadCellEnd}>
+                {t(WORK_ORDERS_I18N.colTime)}
+              </th>
+              <th scope="col" className={WORK_ORDERS_LAYOUT_CLASS.serviceHeadCell}>
+                <span className={WORK_ORDERS_LAYOUT_CLASS.srOnly}>{t(WORK_ORDERS_I18N.addOn)}</span>
+              </th>
+            </tr>
+          </thead>
+          <tbody>
+            {items.map((line, index) => (
+              <WorkOrderServiceLineRow key={line.id || `${line.serviceName}-${index}`} line={line} />
+            ))}
+          </tbody>
+        </table>
+        <div className={WORK_ORDERS_LAYOUT_CLASS.serviceTotalRow}>
+          <span className={WORK_ORDERS_LAYOUT_CLASS.serviceTotalLabel}>
+            {t(WORK_ORDERS_I18N.serviceTotal)}
+          </span>
+          <span className={WORK_ORDERS_LAYOUT_CLASS.serviceTotalValue}>
+            {formatWorkOrderMoney(serviceTotal)}
+          </span>
+        </div>
+        </>
+      )}
     </section>
   )
 }
 
-function WorkOrderServiceLineRow({ line }: { line: WorkOrderServiceLineMock }) {
+function WorkOrderServiceLineRow({ line }: { line: WorkOrderItem }) {
   const { t } = useTranslation()
 
   return (
-    <div className={WORK_ORDERS_LAYOUT_CLASS.serviceRow}>
-      <WorkOrderServiceLineName line={line} />
-      <span className={WORK_ORDERS_LAYOUT_CLASS.servicePrice}>{formatCurrency(line.price)}</span>
-      <span className={WORK_ORDERS_LAYOUT_CLASS.serviceTime}>
-        {t(WORK_ORDERS_I18N.durationMin, { count: line.durationMin })}
-      </span>
-      <span className={WORK_ORDERS_LAYOUT_CLASS.alignEnd}>
-        {line.isAddOn ? null : (
-          <button type="button" className={WORK_ORDERS_LAYOUT_CLASS.textLinkEnd}>
-            {t(WORK_ORDERS_I18N.addOn)}
-          </button>
+    <tr className={WORK_ORDERS_LAYOUT_CLASS.serviceRow}>
+      <td className={WORK_ORDERS_LAYOUT_CLASS.serviceNameCell}>
+        {line.isAddOn ? (
+          <p className={WORK_ORDERS_LAYOUT_CLASS.serviceAddOnName}>
+            <Puzzle className={WORK_ORDERS_LAYOUT_CLASS.serviceAddOnIcon} aria-hidden="true" />
+            <span className={WORK_ORDERS_LAYOUT_CLASS.truncate}>
+              {workOrderTextOrPlaceholder(line.serviceName)}
+            </span>
+          </p>
+        ) : (
+          <p className={WORK_ORDERS_LAYOUT_CLASS.serviceName}>
+            {workOrderTextOrPlaceholder(line.serviceName)}
+          </p>
         )}
-      </span>
-    </div>
-  )
-}
-
-function WorkOrderServiceLineName({ line }: { line: WorkOrderServiceLineMock }) {
-  if (!line.isAddOn) {
-    return <span className={WORK_ORDERS_LAYOUT_CLASS.serviceName}>{line.name}</span>
-  }
-
-  return (
-    <span className={WORK_ORDERS_LAYOUT_CLASS.addOnName}>
-      <Puzzle className={WORK_ORDERS_LAYOUT_CLASS.addOnIcon} aria-hidden="true" />
-      <span className={WORK_ORDERS_LAYOUT_CLASS.truncate}>{line.name}</span>
-    </span>
+      </td>
+      <td className={`${WORK_ORDERS_LAYOUT_CLASS.serviceNumCell} ${WORK_ORDERS_LAYOUT_CLASS.servicePrice}`}>
+        {formatWorkOrderMoney(line.lineTotal || line.unitPrice)}
+      </td>
+      <td className={`${WORK_ORDERS_LAYOUT_CLASS.serviceNumCell} ${WORK_ORDERS_LAYOUT_CLASS.serviceDuration}`}>
+        {formatWorkOrderDurationMinutes(line.durationMinutes, t)}
+      </td>
+      <td className={WORK_ORDERS_LAYOUT_CLASS.serviceNumCell}>
+        <span className={WORK_ORDERS_LAYOUT_CLASS.addOnLink} aria-disabled="true">
+          {t(line.isAddOn ? WORK_ORDERS_I18N.addOnNested : WORK_ORDERS_I18N.addOn)}
+        </span>
+      </td>
+    </tr>
   )
 }

@@ -277,6 +277,54 @@ export interface CompletedOrdersListQuery {
   customerPhone?: string
 }
 
+// Staff Work Orders (technician read-only view) — GET /api/v1/staff/pos/work-orders
+export interface StaffWorkOrderListItemApiDto {
+  id?: string
+  orderNumber?: string
+  customerName?: string
+  status?: string
+  checkedInAt?: string
+  scheduledAt?: string | null
+  serviceNames?: string[]
+  technicianNames?: string[]
+  stationNumber?: number | null
+  beeper?: string | null
+}
+
+export interface StaffWorkOrderItemApiDto {
+  id?: string
+  serviceName?: string
+  unitPrice?: number
+  lineTotal?: number
+  durationMinutes?: number
+  isAddOn?: boolean
+  note?: string | null
+  technicianName?: string | null
+  completedAt?: string | null
+}
+
+export interface StaffWorkOrderDetailApiDto {
+  id?: string
+  orderNumber?: string
+  customerName?: string
+  status?: string
+  checkedInAt?: string
+  scheduledAt?: string | null
+  stationNumber?: number | null
+  beeper?: string | null
+  customerNotes?: string | null
+  serviceTotal?: number
+  canStartService?: boolean
+  canCompleteService?: boolean
+  items?: StaffWorkOrderItemApiDto[]
+}
+
+export interface StaffWorkOrdersListQuery {
+  businessId: string
+  date: string
+  status?: PosOrderStatus[]
+}
+
 export interface CompletedOrdersPage {
   items: CompletedOrderListItemApiDto[]
   pageNumber: number
