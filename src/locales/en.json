@@ -1035,6 +1035,7 @@
       "subscription_price_note_year": "year",
       "subscription_forfeit_warning": "This will immediately replace your current plan ({{plan}}) — any unused time on it is credited toward this purchase.",
       "subscription_forfeit_warning_no_credit": "This will immediately replace your current plan ({{plan}}) — any time left on it will be lost.",
+      "subscription_downgrade_blocked": "You already have an active plan of the same or higher tier. Downgrading or repurchasing the same tier is not allowed.",
       "subscription_upgrade_credit_estimate": "Current plan discount:",
       "subscription_upgrade_credit_applied": "({{amount}} credit applied)",
       "subscription_payment_tab_wallet": "VlinkPay Wallet",

@@ -133,6 +133,8 @@ export function periodInMonthsFromBillingCycle(cycle) {
  * (`SubscriptionActivationService.EnsurePurchasableAndCalculateCredit`'s `isUpgrade` check):
  * any longer billing cycle outranks any shorter one regardless of tier; within the same
  * cycle only a strictly higher tier is allowed. False for the exact same (plan, cycle).
+ * A lower tier is never purchasable regardless of cycle — a longer (yearly) cycle can't
+ * compensate for a lower tier (e.g. Pro monthly -> Starter yearly is blocked).
  */
 export function isTipPlatformUpgradeMove(
   planId,
@@ -144,11 +146,12 @@ export function isTipPlatformUpgradeMove(
   if (!currentPlanId) return true // no current paid plan — plain purchase, not gated here
   const targetPeriod = targetPeriodInMonths ?? 1
   const currentPeriod = currentPeriodInMonths ?? 1
-  if (targetPeriod > currentPeriod) return true
-  if (targetPeriod < currentPeriod) return false
   const currentRank = TIP_PLATFORM_PLAN_ORDER.indexOf(currentPlanId)
   const targetRank = TIP_PLATFORM_PLAN_ORDER.indexOf(planId)
   if (currentRank < 0 || targetRank < 0) return false
+  if (targetRank < currentRank) return false
+  if (targetPeriod > currentPeriod) return true
+  if (targetPeriod < currentPeriod) return false
   return targetRank > currentRank
 }
 

@@ -38,6 +38,10 @@ export function isVoiceAiPlanBelowCurrent(
   return planRank < currentRank
 }
 
+/**
+ * A lower tier is never purchasable regardless of cycle — a longer (yearly) cycle can't
+ * compensate for a lower tier (e.g. Pro monthly -> Starter yearly is blocked).
+ */
 export function isVoiceAiUpgradeMove(
   planId: PaidServicePlanId,
   targetPeriodInMonths: number | null | undefined,
@@ -47,11 +51,12 @@ export function isVoiceAiUpgradeMove(
   if (!currentPlanId) return true
   const targetPeriod = targetPeriodInMonths ?? 1
   const currentPeriod = currentPeriodInMonths ?? 1
-  if (targetPeriod > currentPeriod) return true
-  if (targetPeriod < currentPeriod) return false
   const currentRank = getVoiceAiPlanRank(currentPlanId)
   const targetRank = getVoiceAiPlanRank(planId)
   if (currentRank < 0 || targetRank < 0) return false
+  if (targetRank < currentRank) return false
+  if (targetPeriod > currentPeriod) return true
+  if (targetPeriod < currentPeriod) return false
   return targetRank > currentRank
 }
 

@@ -1096,6 +1096,8 @@ export default function BookingPlansPanel({ buyOnlyMode = false }: { buyOnlyMode
         <PlanPaymentModal
           open={checkoutSelection != null}
           selection={checkoutSelection}
+          currentPlanId={currentVoicePlanId}
+          currentPeriodInMonths={currentVoicePeriodInMonths}
           onClose={() => setCheckoutSelection(null)}
           onSuccess={handlePlanPaymentSuccess}
         />
