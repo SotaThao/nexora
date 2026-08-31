@@ -3795,6 +3795,8 @@
             "customServiceNamePlaceholder": "e.g. Nail repair",
             "customServicePriceLabel": "Price",
             "customServicePricePlaceholder": "0.00",
+            "customServiceTechnicianLabel": "Technician",
+            "customServiceTechnicianPickerTitle": "Who is doing this?",
             "customServiceNoteLabel": "Note (optional)",
             "customServiceNotePlaceholder": "e.g. fix-up from another shop",
             "customServicePriceMustBePositive": "Price must be more than $0. For a free service, add it at its real price and apply a 100% discount.",

@@ -688,6 +688,8 @@ export interface AddOrderCustomServiceLinePayload {
   customServiceName: string
   price: number
   note: string | null
+  /** Null is "First available" — the line is left for someone on the floor to take. */
+  posStaffProfileId: string | null
 }
 
 /** Exactly one target: a catalog service, or a custom name + price. */
