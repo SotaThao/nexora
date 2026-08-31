@@ -16,7 +16,12 @@ import {
   ORDER_DISCOUNT_PERCENT_CHIPS,
   PosServiceDiscountType,
 } from '../../../../constants/posDiscount'
-import { sanitizeDecimalInput } from '../../../../utils/currencyInput'
+import {
+  formatUsdInputAmount,
+  parseDirectPaymentAmountInput,
+  sanitizeDecimalInput,
+  sanitizeDirectPaymentAmountInput,
+} from '../../../../utils/currencyInput'
 import { isOrderDiscountCapped } from '../../../../utils/posOrderDiscount'
 import type { EligiblePromotionApiDto, OrderDetailApiDto, SetOrderDiscountPayload } from '../../../../types/repositories'
 import { formatPromotionDays, formatPromotionRate, formatPromotionWindow } from './posPromotionDisplay'
@@ -67,7 +72,13 @@ export default function OrderDiscountSection({
       (order.orderDiscountType === PosServiceDiscountType.Percent
         ? ORDER_DISCOUNT_PERCENT_CHIPS.some((chip) => chip === value)
         : ORDER_DISCOUNT_AMOUNT_CHIPS.some((chip) => chip === value))
-    setCustomInput(value != null && !isChipValue ? String(value) : '')
+    setCustomInput(
+      value != null && !isChipValue
+        ? order.orderDiscountType === PosServiceDiscountType.Percent
+          ? String(value)
+          : formatUsdInputAmount(value)
+        : '',
+    )
     setCustomError(null)
   }, [order.orderDiscountType, order.orderDiscountValue])
 
@@ -107,7 +118,7 @@ export default function OrderDiscountSection({
       setCustomError(null)
       return
     }
-    const parsed = Number(customInput)
+    const parsed = parseDirectPaymentAmountInput(customInput)
     if (!Number.isFinite(parsed) || parsed <= 0) {
       setCustomError(t(`${K}.customMustBePositive`))
       return
@@ -168,14 +179,14 @@ export default function OrderDiscountSection({
         ))}
       </div>
 
-      <div className="flex flex-wrap items-center gap-2">
+      <div className="flex flex-nowrap items-center gap-1.5">
         {chips.map((chip) => (
           <button
             key={chip}
             type="button"
             onClick={() => applyValue(chip)}
             disabled={isSaving}
-            className={`inline-flex min-w-[64px] flex-[1_1_auto] items-center justify-center whitespace-nowrap h-8 rounded-lg border text-[11px] font-semibold transition-colors disabled:opacity-60 ${
+            className={`inline-flex h-8 min-w-0 flex-1 items-center justify-center whitespace-nowrap rounded-lg border px-1 text-[11px] font-semibold transition-colors disabled:opacity-60 ${
               activeValue === chip
                 ? 'border-nexoraBrand/50 bg-nexoraBrandSoft text-nexoraBrandDark'
                 : 'border-nexoraBorder/70 bg-white text-nexoraText hover:border-nexoraBrand/50 hover:bg-nexoraBrandSoft/40'
@@ -184,7 +195,7 @@ export default function OrderDiscountSection({
             {isPercent ? `${chip}%` : `$${chip}`}
           </button>
         ))}
-        <div className="min-w-[150px] flex-[2_1_150px]">
+        <div className="min-w-0 flex-[1.8_1_0%]">
           <div className="relative">
             <span className="pointer-events-none absolute inset-y-0 left-3 flex items-center text-xs font-medium text-nexoraMuted">
               {isPercent ? '%' : '$'}
@@ -194,7 +205,11 @@ export default function OrderDiscountSection({
               inputMode="decimal"
               value={customInput}
               onChange={(e) => {
-                setCustomInput(sanitizeDecimalInput(e.target.value))
+                setCustomInput(
+                  isPercent
+                    ? sanitizeDecimalInput(e.target.value)
+                    : sanitizeDirectPaymentAmountInput(e.target.value, Number.MAX_SAFE_INTEGER),
+                )
                 setCustomError(null)
               }}
               onBlur={handleCustomCommit}
@@ -206,7 +221,7 @@ export default function OrderDiscountSection({
               }}
               placeholder={t(`${K}.customPlaceholder`)}
               aria-invalid={customError !== null}
-              className={`h-9 w-full min-w-0 rounded-lg border bg-nexoraCanvas/30 pl-7 pr-3 text-xs text-nexoraText outline-none transition-colors ${
+              className={`h-8 w-full min-w-0 rounded-lg border bg-nexoraCanvas/30 pl-7 pr-2 text-xs text-nexoraText outline-none transition-colors ${
                 customError
                   ? 'border-rose-400'
                   : customInput

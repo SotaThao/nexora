@@ -16,9 +16,16 @@ import {
   PosDiscountBearer,
   PosServiceDiscountType,
 } from '../../../../../constants/posDiscount'
-import { sanitizeDecimalInput } from '../../../../../utils/currencyInput'
+import {
+  formatUsdInputAmount,
+  parseDirectPaymentAmountInput,
+  sanitizeDecimalInput,
+  sanitizeDirectPaymentAmountInput,
+} from '../../../../../utils/currencyInput'
 
 const K = 'components.dashboard.views.pos.PosOrderWorkspace'
+const AMOUNT_DISCOUNT_PRESETS = [5, 10, 15, 20, 25] as const
+const PERCENT_DISCOUNT_PRESETS = [5, 10, 15, 20] as const
 
 const DISCOUNT_VALUE_PLACEHOLDER_KEY = {
   [PosServiceDiscountType.Percent]: `${K}.discountPercentPlaceholder`,
@@ -78,7 +85,13 @@ export default function ServiceDiscountModal({
         ? PosServiceDiscountType.Percent
         : PosServiceDiscountType.Amount,
     )
-    setValueInput(target.discountValue != null ? String(target.discountValue) : '')
+    setValueInput(
+      target.discountValue == null
+        ? ''
+        : target.discountType === PosServiceDiscountType.Percent
+          ? String(target.discountValue)
+          : formatUsdInputAmount(target.discountValue),
+    )
     // A bearer the line can no longer carry (technician swapped for an hourly one) reads back as
     // Salon, which is also what the backend would have forced.
     const existingBearer = POS_DISCOUNT_BEARER_OPTIONS.find((b) => b === target.discountBearer)
@@ -92,8 +105,8 @@ export default function ServiceDiscountModal({
 
   if (!target) return null
 
-  const parsedValue = Number(valueInput)
-  const hasNumber = valueInput.trim() !== '' && Number.isFinite(parsedValue)
+  const parsedValue = parseDirectPaymentAmountInput(valueInput)
+  const hasNumber = valueInput.trim() !== '' && valueInput.trim() !== '.' && Number.isFinite(parsedValue)
   const isOverPercentLimit = discountType === PosServiceDiscountType.Percent && parsedValue > MAX_DISCOUNT_PERCENT
   // A discount larger than the line itself is a typo, not a giveaway — the backend clamps it to the
   // price, which would silently save a different number than the one that was typed.
@@ -149,8 +162,16 @@ export default function ServiceDiscountModal({
                 <button
                   key={option}
                   type="button"
-                  onClick={() => setDiscountType(option)}
+                  onClick={() => {
+                    setDiscountType(option)
+                    setValueInput((current) => (
+                      option === PosServiceDiscountType.Amount
+                        ? sanitizeDirectPaymentAmountInput(current, Number.MAX_SAFE_INTEGER)
+                        : sanitizeDecimalInput(current)
+                    ))
+                  }}
                   disabled={isSaving}
+                  aria-pressed={discountType === option}
                   className={`h-9 flex-1 rounded-lg border text-xs font-bold transition-colors disabled:cursor-not-allowed disabled:opacity-60 ${
                     discountType === option
                       ? 'border-nexoraBrand bg-nexoraBrandSoft/60 text-nexoraBrandDark'
@@ -170,26 +191,80 @@ export default function ServiceDiscountModal({
             >
               {t(`${K}.discountValueLabel`)}
             </label>
+            {discountType === PosServiceDiscountType.Amount ? (
+              <div className="flex flex-wrap gap-2">
+                {AMOUNT_DISCOUNT_PRESETS.map((preset) => {
+                  const selected = hasNumber && parsedValue === preset
+                  return (
+                    <button
+                      key={preset}
+                      type="button"
+                      onClick={() => setValueInput(String(preset))}
+                      disabled={isSaving}
+                      aria-pressed={selected}
+                      className={`h-9 rounded-lg border px-3 text-xs font-bold transition-colors disabled:cursor-not-allowed disabled:opacity-60 ${
+                        selected
+                          ? 'border-nexoraBrand bg-nexoraBrandSoft/60 text-nexoraBrandDark'
+                          : 'border-nexoraBorder bg-white text-nexoraText hover:border-nexoraBrand/50'
+                      }`}
+                    >
+                      ${preset}
+                    </button>
+                  )
+                })}
+              </div>
+            ) : (
+              <div className="flex flex-wrap gap-2">
+                {PERCENT_DISCOUNT_PRESETS.map((preset) => {
+                  const selected = hasNumber && parsedValue === preset
+                  return (
+                    <button
+                      key={preset}
+                      type="button"
+                      onClick={() => setValueInput(String(preset))}
+                      disabled={isSaving}
+                      aria-pressed={selected}
+                      className={`h-9 rounded-lg border px-3 text-xs font-bold transition-colors disabled:cursor-not-allowed disabled:opacity-60 ${
+                        selected
+                          ? 'border-nexoraBrand bg-nexoraBrandSoft/60 text-nexoraBrandDark'
+                          : 'border-nexoraBorder bg-white text-nexoraText hover:border-nexoraBrand/50'
+                      }`}
+                    >
+                      {preset}%
+                    </button>
+                  )
+                })}
+              </div>
+            )}
             {/* Deliberately a text input: type="number" accepts "e"/"E"/"+"/"-" as valid
                 keystrokes, so those characters reach the field regardless of min/max. inputMode
                 still brings up the numeric keypad on the iPad. */}
-            <input
-              id="service-discount-value"
-              type="text"
-              inputMode="decimal"
-              autoComplete="off"
-              value={valueInput}
-              onChange={(event) => setValueInput(sanitizeDecimalInput(event.target.value))}
-              disabled={isSaving}
-              placeholder={t(DISCOUNT_VALUE_PLACEHOLDER_KEY[discountType])}
-              aria-invalid={validationMessage !== null}
-              aria-describedby={validationMessage ? 'service-discount-value-error' : undefined}
-              className={`h-10 w-full rounded-lg border px-3 text-sm font-semibold text-nexoraText focus:outline-none disabled:cursor-not-allowed disabled:opacity-60 ${
-                validationMessage
-                  ? 'border-nexoraDanger focus:border-nexoraDanger'
-                  : 'border-nexoraBorder focus:border-nexoraBrand'
+            <div
+              className={`flex h-10 overflow-hidden rounded-lg border bg-white focus-within:border-nexoraBrand ${
+                validationMessage ? 'border-nexoraDanger' : 'border-nexoraBorder'
               }`}
-            />
+            >
+              <span className="flex w-9 shrink-0 items-center justify-center border-r border-nexoraBorder bg-nexoraCanvas text-sm font-bold text-nexoraMuted">
+                {discountType === PosServiceDiscountType.Amount ? '$' : '%'}
+              </span>
+              <input
+                id="service-discount-value"
+                type="text"
+                inputMode="decimal"
+                autoComplete="off"
+                value={valueInput}
+                onChange={(event) => setValueInput(
+                  discountType === PosServiceDiscountType.Amount
+                    ? sanitizeDirectPaymentAmountInput(event.target.value, Number.MAX_SAFE_INTEGER)
+                    : sanitizeDecimalInput(event.target.value),
+                )}
+                disabled={isSaving}
+                placeholder={t(DISCOUNT_VALUE_PLACEHOLDER_KEY[discountType])}
+                aria-invalid={validationMessage !== null}
+                aria-describedby={validationMessage ? 'service-discount-value-error' : undefined}
+                className="min-w-0 flex-1 border-0 px-3 text-sm font-semibold text-nexoraText outline-none disabled:cursor-not-allowed disabled:opacity-60"
+              />
+            </div>
             {validationMessage ? (
               <p id="service-discount-value-error" role="alert" className="text-[11px] font-bold text-nexoraDanger">
                 {validationMessage}
