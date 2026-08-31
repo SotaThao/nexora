@@ -2564,6 +2564,8 @@
     "local_staff_not_found": "Local staff member was not found.",
     "local_staff_not_owned": "You do not have permission to manage this local staff member.",
     "staff_link_has_outstanding_debt": "Cannot remove staff with unpaid tip balance. Pay out tips first.",
+    "staff_link_has_pos_profile": "Cannot remove staff with an existing POS profile. Remove their POS setup first.",
+    "staff_link_has_tax_data": "Cannot remove staff with existing Tax IQ data. Remove their tax records first.",
     "staff_unlink_has_outstanding_debt": "You cannot unlink while this salon still owes you tip payouts. Ask the salon to settle the balance, then try again.",
     "staff_unlink_failed": "Unable to unlink from this salon. Please try again or contact the salon.",
     "staff_payment_method_not_found": "Payment method was not found.",

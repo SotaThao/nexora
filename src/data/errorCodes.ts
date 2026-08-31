@@ -87,6 +87,8 @@ export const errorCodeToI18nKey = {
   // for any other caller that only shows a message.
   [LOCAL_STAFF_HAS_ACTIVE_WORK]: 'errors.local_staff_has_active_work',
   STAFF_LINK_HAS_OUTSTANDING_DEBT: 'errors.staff_link_has_outstanding_debt',
+  STAFF_LINK_HAS_POS_PROFILE: 'errors.staff_link_has_pos_profile',
+  STAFF_LINK_HAS_TAX_DATA: 'errors.staff_link_has_tax_data',
   STAFF_PAYMENT_METHOD_NOT_FOUND: 'errors.staff_payment_method_not_found',
   STAFF_PAYMENT_METHOD_ACCESS_DENIED: 'errors.staff_payment_method_access_denied',
   STAFF_PAYMENT_METHOD_CRYPTO_ADDRESSES_ONLY_FOR_VLINKPAY:

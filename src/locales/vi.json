@@ -2564,6 +2564,8 @@
     "local_staff_not_found": "Không tìm thấy nhân viên thủ công.",
     "local_staff_not_owned": "Bạn không có quyền quản lý nhân viên thủ công này.",
     "staff_link_has_outstanding_debt": "Không thể xóa thợ còn số dư tip chưa chi trả. Hãy chi trả tip trước.",
+    "staff_link_has_pos_profile": "Không thể xóa nhân viên đã có hồ sơ POS. Hãy gỡ thiết lập POS trước.",
+    "staff_link_has_tax_data": "Không thể xóa nhân viên đã có dữ liệu Tax IQ. Hãy xóa hồ sơ thuế trước.",
     "staff_unlink_has_outstanding_debt": "Bạn chưa thể hủy liên kết khi salon vẫn còn khoản tip chưa chi trả cho bạn. Hãy liên hệ salon để thanh toán số dư rồi thử lại.",
     "staff_unlink_failed": "Không thể hủy liên kết. Vui lòng thử lại hoặc liên hệ salon.",
     "staff_payment_method_not_found": "Không tìm thấy phương thức thanh toán.",
