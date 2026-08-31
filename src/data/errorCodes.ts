@@ -88,7 +88,11 @@ export const errorCodeToI18nKey = {
   [LOCAL_STAFF_HAS_ACTIVE_WORK]: 'errors.local_staff_has_active_work',
   STAFF_LINK_HAS_OUTSTANDING_DEBT: 'errors.staff_link_has_outstanding_debt',
   STAFF_LINK_HAS_POS_PROFILE: 'errors.staff_link_has_pos_profile',
+  STAFF_LINK_HAS_PAYOUT_DESTINATION: 'errors.staff_link_has_payout_destination',
   STAFF_LINK_HAS_TAX_DATA: 'errors.staff_link_has_tax_data',
+  STAFF_LINK_HAS_W4_INVITE_LINK: 'errors.staff_link_has_w4_invite_link',
+  STAFF_LINK_HAS_TAX_EXCEPTION_MEMBERSHIP: 'errors.staff_link_has_tax_exception_membership',
+  STAFF_LINK_HAS_DEPENDENT_DATA: 'errors.staff_link_has_dependent_data',
   STAFF_PAYMENT_METHOD_NOT_FOUND: 'errors.staff_payment_method_not_found',
   STAFF_PAYMENT_METHOD_ACCESS_DENIED: 'errors.staff_payment_method_access_denied',
   STAFF_PAYMENT_METHOD_CRYPTO_ADDRESSES_ONLY_FOR_VLINKPAY:
