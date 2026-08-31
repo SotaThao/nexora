@@ -37,7 +37,7 @@ import {
   type VoicePlanStatus,
   type VoicePlanTier,
 } from '../merchantVoice/domain'
-import { toUtcBookingSlot } from './publicVoiceBooking'
+import { toStartTimeApi } from './publicVoiceBooking'
 
 export {
   BookingHubMainTab,
@@ -255,17 +255,18 @@ export interface MerchantVoiceBookingsFilter {
 }
 
 /** POST `/api/v1/merchant/nexora-voice/bookings` — OpenAPI `CreateMerchantVoiceBookingCommand`.
- * `date` + `startTime` on the wire are UTC (same contract as public online booking).
- * Callers pass the user's local wall-clock selection; `createBooking` converts via browser TZ.
+ * `date` + `startTime` on the wire are the SALON's own wall clock, not UTC and not device-local.
+ * The backend converts them through the salon timezone itself (`BuildPlan` → `FromWallClock`), so
+ * converting here would shift the appointment twice.
  */
 export interface CreateMerchantVoiceBookingRequest {
   customerName: string
   customerPhone: string
   serviceIds: string[]
   staffId?: string | null
-  /** Local calendar date `YYYY-MM-DD` as shown in the UI. */
+  /** Salon calendar date `YYYY-MM-DD` as shown in the UI. */
   date: string
-  /** Local start time `HH:mm` or `HH:mm:ss` as shown in the UI. */
+  /** Salon start time `HH:mm` or `HH:mm:ss` as shown in the UI. */
   startTime: string
   notes?: string | null
   status: MerchantVoiceLeadStatusApiValue
@@ -1471,12 +1472,10 @@ export function createMerchantVoiceRepository(client: HttpClient = httpClient) {
     async createBooking(
       body: CreateMerchantVoiceBookingRequest,
     ): Promise<CreateMerchantVoiceBookingResultDto> {
-      // UI is client-local; BE stores requestedStartAtUtc — convert like public booking.
-      const utcSlot = toUtcBookingSlot(body.date, body.startTime)
+      // The picked slot travels unconverted: BE reads date + startTime as the salon's wall clock.
       const payload: CreateMerchantVoiceBookingRequest = {
         ...body,
-        date: utcSlot.date || body.date,
-        startTime: utcSlot.startTime || body.startTime,
+        startTime: toStartTimeApi(body.startTime) || body.startTime,
       }
       const response = await client.post<CreateMerchantVoiceBookingResultDto>(
         `${MERCHANT_VOICE_BASE}/bookings`,
