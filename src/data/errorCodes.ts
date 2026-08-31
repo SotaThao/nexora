@@ -87,6 +87,12 @@ export const errorCodeToI18nKey = {
   // for any other caller that only shows a message.
   [LOCAL_STAFF_HAS_ACTIVE_WORK]: 'errors.local_staff_has_active_work',
   STAFF_LINK_HAS_OUTSTANDING_DEBT: 'errors.staff_link_has_outstanding_debt',
+  STAFF_LINK_HAS_POS_PROFILE: 'errors.staff_link_has_pos_profile',
+  STAFF_LINK_HAS_PAYOUT_DESTINATION: 'errors.staff_link_has_payout_destination',
+  STAFF_LINK_HAS_TAX_DATA: 'errors.staff_link_has_tax_data',
+  STAFF_LINK_HAS_W4_INVITE_LINK: 'errors.staff_link_has_w4_invite_link',
+  STAFF_LINK_HAS_TAX_EXCEPTION_MEMBERSHIP: 'errors.staff_link_has_tax_exception_membership',
+  STAFF_LINK_HAS_DEPENDENT_DATA: 'errors.staff_link_has_dependent_data',
   STAFF_PAYMENT_METHOD_NOT_FOUND: 'errors.staff_payment_method_not_found',
   STAFF_PAYMENT_METHOD_ACCESS_DENIED: 'errors.staff_payment_method_access_denied',
   STAFF_PAYMENT_METHOD_CRYPTO_ADDRESSES_ONLY_FOR_VLINKPAY:
@@ -164,6 +170,20 @@ export const errorCodeToI18nKey = {
   [CatalogErrorCode.ServiceDeleted]: 'errors.catalog_service_deleted',
   [CatalogErrorCode.CategoryInUse]: 'errors.catalog_category_in_use',
 
+  // Shared Catalog — Services batch save (POST services/batch)
+  [CatalogErrorCode.ServiceBatchItemsRequired]: 'errors.catalog_service_batch_items_required',
+  [CatalogErrorCode.ServiceBatchTooManyItems]: 'errors.catalog_service_batch_too_many_items',
+  [CatalogErrorCode.ServiceBatchNameRequired]: 'errors.pos_service_name_required',
+  [CatalogErrorCode.ServiceBatchNameTooLong]: 'errors.pos_service_name_too_long',
+  [CatalogErrorCode.ServiceBatchPriceInvalid]: 'errors.pos_service_price_invalid',
+  [CatalogErrorCode.ServiceBatchDurationInvalid]: 'errors.pos_service_duration_invalid',
+  [CatalogErrorCode.ServiceBatchDescriptionTooLong]: 'errors.pos_service_description_too_long',
+  [CatalogErrorCode.ServiceBatchIconTooLong]: 'errors.catalog_service_icon_too_long',
+  [CatalogErrorCode.ServiceBatchTagTooLong]: 'errors.pos_service_tag_too_long',
+  [CatalogErrorCode.ServiceBatchCategoryInvalid]: 'errors.pos_service_category_invalid',
+  [CatalogErrorCode.ServiceBatchInvalidId]: 'errors.catalog_service_batch_invalid_id',
+  [CatalogErrorCode.ServiceBatchDuplicateId]: 'errors.catalog_service_batch_duplicate_id',
+
   // Shared Catalog — Service Add-Ons
   [CatalogErrorCode.ServiceAddOnNotFound]: 'errors.catalog_service_addon_not_found',
   [CatalogErrorCode.ServiceAddOnNameRequired]: 'errors.catalog_service_addon_name_required',
@@ -172,6 +192,18 @@ export const errorCodeToI18nKey = {
   [CatalogErrorCode.ServiceAddOnPriceInvalid]: 'errors.catalog_service_addon_price_invalid',
   [CatalogErrorCode.ServiceAddOnInUse]: 'errors.catalog_service_addon_in_use',
   [CatalogErrorCode.ServiceAddOnCopySourceInvalid]: 'errors.catalog_service_addon_copy_source_invalid',
+
+  // Shared Catalog — Categories batch save (POST categories/batch)
+  [CatalogErrorCode.CategoryBatchItemsRequired]: 'errors.catalog_category_batch_items_required',
+  [CatalogErrorCode.CategoryBatchTooManyItems]: 'errors.catalog_category_batch_too_many_items',
+  [CatalogErrorCode.CategoryBatchDuplicateId]: 'errors.catalog_category_batch_duplicate_id',
+  [CatalogErrorCode.CategoryBatchInvalidId]: 'errors.catalog_category_batch_invalid_id',
+  [CatalogErrorCode.CategoryBatchItemNotFound]: 'errors.catalog_category_batch_item_not_found',
+  [CatalogErrorCode.CategoryNameRequired]: 'errors.pos_category_name_required',
+  [CatalogErrorCode.CategoryNameTooLong]: 'errors.pos_category_name_too_long',
+  [CatalogErrorCode.CategoryNameDuplicate]: 'errors.catalog_category_name_duplicate',
+  [CatalogErrorCode.CategoryDescriptionTooLong]: 'errors.catalog_category_description_too_long',
+  [CatalogErrorCode.CategoryCannotModifyDefault]: 'errors.voice_service_category_cannot_modify_default',
 
   // POS Owner Setup — Products (US-018)
   POS_PRODUCT_NOT_FOUND: 'errors.pos_product_not_found',

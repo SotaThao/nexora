@@ -10,7 +10,7 @@ import {
   findOperatingHourForDate,
   isDateClosedByHoliday,
   isSlotWithinOperatingHours,
-  toUtcBookingSlot,
+  toStartTimeApi,
 } from '../../../data/repositories/publicVoiceBooking'
 import { HOLIDAY_TYPE } from '../../../constants/holiday'
 import {
@@ -210,7 +210,9 @@ export function validateBookingDraft(draft, catalog, minDate) {
 
 /**
  * Build POST body for `CreateOnlineBookingRequest` (OpenAPI: `serviceIds` array).
- * Slot conversion always uses the device timezone (ignores tenant timeZone).
+ * `date` + `startTime` go out as the salon's own wall clock — the same values validated above
+ * against the salon's operating hours. The backend converts them through the salon timezone
+ * itself, so converting here (device or tenant TZ) would shift the appointment twice.
  */
 export function buildCreateBookingBody(draft, consent = null) {
   const staffId = String(draft?.selectedStaffId || '').trim()
@@ -222,15 +224,17 @@ export function buildCreateBookingBody(draft, consent = null) {
     ? draft.selectedServiceIds.map((id) => String(id || '').trim()).filter(Boolean)
     : []
 
-  // UI keeps local selectedDate/selectedTime; API payload is UTC in device TZ.
-  const utcSlot = toUtcBookingSlot(draft?.selectedDate, draft?.selectedTime)
+  const selectedDate = String(draft?.selectedDate || '').trim()
+  const startTime = toStartTimeApi(draft?.selectedTime)
+  // Mirror the old all-or-nothing guard: an unparsable pair yields empty strings, never a half slot.
+  const slotValid = /^\d{4}-\d{2}-\d{2}$/.test(selectedDate) && Boolean(startTime)
 
   const body = {
     customerName: String(draft?.customer?.name || '').trim(),
     customerPhone: normalizePhoneE164(phoneRaw, dialCode),
     serviceIds,
-    date: utcSlot.date,
-    startTime: utcSlot.startTime,
+    date: slotValid ? selectedDate : '',
+    startTime: slotValid ? startTime : '',
   }
 
   if (staffId && staffId !== PUBLIC_BOOKING_ANY_STAFF_ID) body.staffId = staffId
