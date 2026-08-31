@@ -30,6 +30,7 @@ export const qk = {
   dashboardTipsChart:       () => ['dashboard', 'tipsChart'],
   dashboardAnalytics:       (filters = EMPTY) => ['dashboard', 'analytics', filters],
   dashboardReviews:         (filters = EMPTY) => ['dashboard', 'reviews', filters],
+  dashboardReviewsCollected: (filters = EMPTY) => ['dashboard', 'reviews', 'collected', filters],
   
   // Notifications
   notificationsUnreadCount: () => ['notifications', 'unreadCount'],

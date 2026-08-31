@@ -32,6 +32,19 @@ export function useDashboardReviews(
   })
 }
 
+/** Full reviews list for client-side source/star/staff filter paging. */
+export function useDashboardReviewsCollected({ enabled: callerEnabled = true } = {}) {
+  const { isOwner } = useSessionRole()
+
+  return useQuery<DashboardReviewsPage>({
+    queryKey: qk.dashboardReviewsCollected(),
+    queryFn: () => reviewsRepository.listCollected(),
+    enabled: isOwner && callerEnabled,
+    retry: false,
+    placeholderData: keepPreviousData,
+  })
+}
+
 export function useResolveReview() {
   const queryClient = useQueryClient()
   return useMutation<LooseObject, Error, ResolveReviewVars>({

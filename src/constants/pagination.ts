@@ -10,3 +10,6 @@ export const DIRECT_PAYMENTS_WATCH_PAGE_SIZE = 100
 export const STAFF_FILTER_LIST_PAGE_SIZE = 100
 /** Confirmed tips page size for overview “awaiting confirmation” banner count. */
 export const AWAITING_SHOP_CONFIRMATION_PAGE_SIZE = 100
+/** Page size when collecting reviews for client-side source/star/staff paging (BE has no those query params; max 50). */
+export const REVIEWS_COLLECT_PAGE_SIZE = 50
+export const REVIEWS_COLLECT_MAX_PAGES = 50

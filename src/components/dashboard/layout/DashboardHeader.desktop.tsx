@@ -150,21 +150,21 @@ export default function DashboardHeader({
     if (!query) return null
 
     const matchedStaff = (staff || []).filter(s =>
-      s.fullName.toLowerCase().includes(query) ||
-      s.nickname.toLowerCase().includes(query) ||
-      s.position.toLowerCase().includes(query)
+      String(s.fullName ?? '').toLowerCase().includes(query) ||
+      String(s.nickname ?? '').toLowerCase().includes(query) ||
+      String(s.position ?? '').toLowerCase().includes(query)
     ).slice(0, 3)
 
     const matchedTxs = (transactions || []).filter(tx =>
-      tx.id.toLowerCase().includes(query) ||
-      tx.staffName.toLowerCase().includes(query) ||
-      tx.touchpoint.toLowerCase().includes(query) ||
+      String(tx.id ?? '').toLowerCase().includes(query) ||
+      String(tx.staffName ?? '').toLowerCase().includes(query) ||
+      String(tx.touchpoint ?? '').toLowerCase().includes(query) ||
       String(tx.amount).includes(query)
     ).slice(0, 3)
 
     const matchedReviews = (reviews || []).filter(r =>
-      r.comment.toLowerCase().includes(query) ||
-      r.staffName.toLowerCase().includes(query) ||
+      String(r.comment ?? '').toLowerCase().includes(query) ||
+      String(r.staffName ?? '').toLowerCase().includes(query) ||
       String(r.rating).includes(query)
     ).slice(0, 3)
 
