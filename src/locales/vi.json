@@ -4168,7 +4168,7 @@
             }
           },
           "PosPromotionsView": {
-            "description": "Các chương trình quầy có thể áp cho cả lượt khách khi thanh toán, chạy theo ngày và giờ bạn chọn.",
+            "description": "Các chương trình khuyến mãi và ưu đãi đặc biệt hiện có tại salon của bạn.",
             "addPromotion": "Thêm chương trình",
             "noPromotions": "Chưa có chương trình nào. Thêm một chương trình để nó hiện ở quầy cho các lượt khách trong khung giờ.",
             "rateOff": "giảm {{rate}}",
