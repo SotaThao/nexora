@@ -35,6 +35,10 @@ export const errorCodeToI18nKey = {
   USER_NOT_MERCHANT: 'errors.user_not_merchant',
   TOUCHPOINT_STARTER_LIMIT_REACHED: 'errors.touchpoint_starter_limit_reached',
 
+  // OneQR — a module the platform admin deactivated cannot be saved into a
+  // landing page. The response also carries the offending keys.
+  ONEQR_MODULE_DISABLED: 'errors.oneqr_module_disabled',
+
   // Direct payment (US-60 / direct-payment-qr-flow)
   PAYMENT_NOT_FOUND: 'errors.payment_not_found',
   PAYMENT_INVALID_STATUS: 'errors.payment_invalid_status',

@@ -1,0 +1,7 @@
+# Single-package repo. `packages` omitted on purpose: pnpm includes only the root.
+# Hoist pdfjs-dist so Vite can resolve node_modules/pdfjs-dist (see vite.config.ts).
+publicHoistPattern:
+  - pdfjs-dist
+allowBuilds:
+  esbuild: true
+  sharp: false

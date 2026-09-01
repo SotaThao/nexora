@@ -29,6 +29,28 @@ function normalizeQrTouchPoint(dto: QrTouchPointApiDto | null | undefined) {
   }
 }
 
+/**
+ * OneQR destination block (`QrOneQrDto`), present when the card is linked to a
+ * master QR. `businessSlug` is the one field the redirect actually needs, so a
+ * payload without it is treated as "not a OneQR card".
+ */
+function normalizeQrOneQr(dto: unknown) {
+  if (!dto || typeof dto !== 'object') return null
+  const raw = dto as Record<string, unknown>
+  const businessSlug = readField<string>(raw, 'businessSlug', 'BusinessSlug') ?? ''
+  if (!businessSlug) return null
+
+  return {
+    id: readField<string>(raw, 'id', 'Id') ?? '',
+    name: readField<string>(raw, 'name', 'Name') ?? '',
+    // A paused OneQR still resolves — the landing page shows its own notice.
+    isActive: readField<boolean>(raw, 'isActive', 'IsActive') !== false,
+    businessId: readField<string>(raw, 'businessId', 'BusinessId') ?? '',
+    businessName: readField<string>(raw, 'businessName', 'BusinessName') ?? '',
+    businessSlug,
+  }
+}
+
 function normalizeResolveQrCodeResult(res: ResolveQrCodeResult | null | undefined): ResolveQrCodePayload {
   const raw = (res ?? {}) as ResolveQrCodeResult & Record<string, unknown>
   const status = readField<string>(raw, 'status', 'Status') ?? 'unknown'
@@ -36,6 +58,7 @@ function normalizeResolveQrCodeResult(res: ResolveQrCodeResult | null | undefine
   return {
     status,
     touchPoint: normalizeQrTouchPoint(touchPointSource as QrTouchPointApiDto | null | undefined),
+    oneQr: normalizeQrOneQr(raw.oneQr ?? raw.OneQr),
   }
 }
 

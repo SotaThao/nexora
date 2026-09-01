@@ -46,6 +46,7 @@ import AffiliateLinkPanel from './settings/AffiliateLinkPanel'
 import SettingsTipQrPanel from './settings/SettingsTipQrPanel'
 import TouchpointSectionTabs from './touchpoints/TouchpointSectionTabs'
 import { normalizeTouchpointSection } from './touchpoints/touchpointSections'
+import OneQrPanel from './touchpoints/oneqr/OneQrPanel'
 import QrImage from './ui/QrImage'
 
 function isLinkedTouchPointId(value: unknown): boolean {
@@ -326,6 +327,20 @@ export default function TouchpointsView({
             activeSection={activeStationsSection}
             onSectionChange={(section) => onStationsSectionChange?.(section)}
           />
+
+          {activeStationsSection === 'one-qr' && (
+            <section
+              id="touchpoint-section-panel-one-qr"
+              role="tabpanel"
+              aria-labelledby="touchpoint-section-tab-one-qr"
+              className="space-y-4"
+            >
+              <p className="text-xs leading-relaxed text-nexoraMuted">
+                {t('dashboard.touchpoints.stations_sections.one_qr_desc')}
+              </p>
+              <OneQrPanel businessName={businessName} />
+            </section>
+          )}
 
           {activeStationsSection === 'tip' && (
           <section

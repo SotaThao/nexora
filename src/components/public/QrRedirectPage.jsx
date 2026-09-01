@@ -3,6 +3,7 @@ import { useNavigate, useParams } from 'react-router-dom'
 import { AlertCircle } from 'lucide-react'
 import { useTranslation } from '../../contexts/LanguageContext'
 import { useResolveQrCode } from '../../data/hooks/usePublicQr'
+import { buildOneQrPath } from '../../constants/oneQr'
 import LoadingScreen from '../../app/LoadingScreen'
 
 function getStatusMessageKey(status) {
@@ -20,7 +21,13 @@ export default function QrRedirectPage() {
   const cardCode = code?.trim() ?? ''
   const { data, isLoading, isError } = useResolveQrCode(cardCode, { enabled: Boolean(cardCode) })
 
+  // A card links to exactly one destination — a TouchPoint or a OneQR — so
+  // these branches are mutually exclusive by construction.
   useEffect(() => {
+    if (data?.oneQr?.businessSlug) {
+      navigate(buildOneQrPath(data.oneQr.businessSlug), { replace: true })
+      return
+    }
     if (!data?.touchPoint?.businessSlug || !data?.touchPoint?.slug) return
     navigate(
       `/touch/${encodeURIComponent(data.touchPoint.businessSlug)}/${encodeURIComponent(data.touchPoint.slug)}`,
@@ -41,7 +48,7 @@ export default function QrRedirectPage() {
     return <LoadingScreen />
   }
 
-  if (isError || !data?.touchPoint) {
+  if (isError || (!data?.touchPoint && !data?.oneQr)) {
     const statusKey = getStatusMessageKey(data?.status)
     return (
       <PublicQrError
