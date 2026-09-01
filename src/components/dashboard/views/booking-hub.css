@@ -7431,6 +7431,7 @@ body.booking-appointment-panel-modal-open {
 
 .booking-hub-view.pos-booking-calendar {
   display: grid;
+  grid-template-columns: minmax(0, 1fr);
   align-content: start;
   gap: 10px;
 }
