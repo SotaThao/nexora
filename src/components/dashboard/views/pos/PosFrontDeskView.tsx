@@ -58,6 +58,11 @@ import type { BookingListItemApiDto, OrderListItemApiDto, TurnBoardStationApiDto
 import { SkeletonList } from '../../../ui/skeleton'
 import { getInitials, joinOrEmpty } from './posDisplay'
 import PosOrderWorkspace from './PosOrderWorkspace'
+import {
+  readPosWorkspaceFromParams,
+  writePosWorkspaceToParams,
+  type PosWorkspaceUrlState,
+} from './posWorkspaceUrl'
 import { PosReportMode } from '../../../../constants/posReportMode'
 import PosReportPanel from './report/PosReportPanel'
 import {
@@ -199,7 +204,7 @@ const ORDER_LIST_FILTER_STYLES: Record<OrderListFilter, { active: string; inacti
 // permanently-mounted PosOrderWorkspace instance rendered below (hidden via CSS, not
 // unmounted, whenever the Check-in tab isn't active) specifically so a staff member's
 // in-progress phone/name/services entry survives tapping over to another tab and back.
-type UpdateWorkspaceState = { orderId: string; mode: 'edit' | 'checkout' }
+type UpdateWorkspaceState = PosWorkspaceUrlState
 
 // Sub-pixel rounding makes scrollLeft land a fraction short of its true maximum, so an exact
 // comparison would leave the "scroll right" arrow enabled forever at the end of the strip.
@@ -492,7 +497,7 @@ export default function PosFrontDeskView({
     setActiveTabState(tab)
     setSearchParams(
       (prev) => {
-        const next = new URLSearchParams(prev)
+        const next = writePosWorkspaceToParams(prev, null)
         next.set(POS_FRONT_DESK_TAB_PARAM, tab)
         return next
       },
@@ -509,7 +514,27 @@ export default function PosFrontDeskView({
     setViewMode(mode)
     storage.setItem(ORDER_LIST_VIEW_MODE_STORAGE_KEY, mode)
   }
-  const [updateWorkspace, setUpdateWorkspace] = useState<UpdateWorkspaceState | null>(null)
+  const [updateWorkspace, setUpdateWorkspaceState] = useState<UpdateWorkspaceState | null>(
+    () => readPosWorkspaceFromParams(searchParams),
+  )
+  const setUpdateWorkspace = useCallback((workspace: UpdateWorkspaceState | null, nextTab?: PosFrontDeskTab) => {
+    setUpdateWorkspaceState(workspace)
+    if (nextTab) setActiveTabState(nextTab)
+    setSearchParams(
+      (previous) => writePosWorkspaceToParams(previous, workspace, nextTab),
+      { replace: true },
+    )
+  }, [setSearchParams])
+
+  useEffect(() => {
+    const workspaceFromUrl = readPosWorkspaceFromParams(searchParams)
+    setUpdateWorkspaceState((current) => {
+      if (current?.orderId === workspaceFromUrl?.orderId && current?.mode === workspaceFromUrl?.mode) {
+        return current
+      }
+      return workspaceFromUrl
+    })
+  }, [searchParams])
   // Beep goes through the same message modal as the Time Clock roster — front desk picks or types
   // what the tech should see before anything is sent, instead of firing a message-less beep on tap.
   const [beepStation, setBeepStation] = useState<TurnBoardStationApiDto | null>(null)
@@ -1272,7 +1297,7 @@ export default function PosFrontDeskView({
             refreshFrontDeskLists()
           }}
           onCompleted={() => {
-            setUpdateWorkspace(null)
+            setUpdateWorkspace(null, PosFrontDeskTab.CheckoutCustomer)
             refreshFrontDeskLists()
           }}
         />

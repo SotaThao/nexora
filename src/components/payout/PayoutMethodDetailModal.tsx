@@ -184,6 +184,49 @@ export default function PayoutMethodDetailModal({
   onClose,
 }: PayoutMethodDetailModalProps) {
   const { t } = useTranslation()
+  const dialogRef = useRef<HTMLDivElement>(null)
+  const closeButtonRef = useRef<HTMLButtonElement>(null)
+
+  useEffect(() => {
+    if (!method || typeof document === 'undefined') return undefined
+
+    const previouslyFocused = document.activeElement instanceof HTMLElement
+      ? document.activeElement
+      : null
+    closeButtonRef.current?.focus()
+
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') {
+        event.preventDefault()
+        onClose()
+        return
+      }
+      if (event.key !== 'Tab') return
+
+      const focusable = Array.from(
+        dialogRef.current?.querySelectorAll<HTMLElement>(
+          'button:not([disabled]), [href], input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])',
+        ) ?? [],
+      )
+      if (focusable.length === 0) return
+
+      const first = focusable[0]
+      const last = focusable[focusable.length - 1]
+      if (event.shiftKey && document.activeElement === first) {
+        event.preventDefault()
+        last.focus()
+      } else if (!event.shiftKey && document.activeElement === last) {
+        event.preventDefault()
+        first.focus()
+      }
+    }
+
+    document.addEventListener('keydown', handleKeyDown)
+    return () => {
+      document.removeEventListener('keydown', handleKeyDown)
+      if (previouslyFocused?.isConnected) previouslyFocused.focus()
+    }
+  }, [method, onClose])
 
   if (!method || typeof document === 'undefined') return null
 
@@ -224,6 +267,7 @@ export default function PayoutMethodDetailModal({
   return createPortal(
     <div className="fixed inset-0 z-[100] flex h-dvh items-center justify-center overflow-hidden bg-slate-950/70 p-2 backdrop-blur-sm sm:p-4">
       <div
+        ref={dialogRef}
         role="dialog"
         aria-modal="true"
         aria-labelledby={dialogTitleId}
@@ -233,6 +277,7 @@ export default function PayoutMethodDetailModal({
       >
         <div className={`relative ${isVlinkpay ? 'px-4 pb-5 pt-5 sm:px-5 sm:pb-6 sm:pt-6' : 'px-4 pb-4 pt-4'}`}>
           <button
+            ref={closeButtonRef}
             type="button"
             onClick={onClose}
             aria-label={t('common.close')}
