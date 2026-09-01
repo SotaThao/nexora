@@ -11,14 +11,14 @@ import { getErrorI18nKey } from '../../../../../data/errorCodes'
 import {
   useBookingDetail,
   useBookingList,
+  useAllBookingListPages,
   useCancelBooking,
   useCheckInBookingFromList,
   useRescheduleBooking,
 } from '../../../../../data/hooks/usePosBooking'
-import { useMerchantStaff } from '../../../../../data/hooks/useMerchantStaff'
 import { POS_BOOKING_STATUS_OPTIONS, PosOrderStatus } from '../../../../../constants/posOrderStatus'
 import { TWELVE_HOUR_INPUT_LANG } from '../../../../../constants/timeFormat'
-import type { TurnBoardStationApiDto } from '../../../../../types/repositories'
+import type { TimeClockRosterRowApiDto } from '../../../../../types/repositories'
 import { SkeletonList } from '../../../../ui/skeleton'
 import { formatCustomerPhone } from '../customer/customerFormatters'
 import BookingTable from './BookingTable'
@@ -27,10 +27,21 @@ import BookingCalendar from './BookingCalendar'
 import type { BookingCalendarSlotSelect } from '../../BookingTeamCalendar'
 import RescheduleServicesEditor, { type RescheduleLineDraft } from './RescheduleServicesEditor'
 import BookingLinkShare from './BookingLinkShare'
-import { formatBookingWallClock, resolveBookingWallClockParts, statusLabelKey } from './bookingFormatters'
+import {
+  bookingDateKey,
+  formatBookingWallClock,
+  resolveBookingWallClockParts,
+  statusLabelKey,
+} from './bookingFormatters'
 import { formatPosDateTime } from '../posDateTime'
 import { randomUuid } from '../../../../../utils/uuid'
 import { formatLocalDateIso } from '../../../../../utils/localDate'
+import { shiftLocalDateIso } from '../../bookingCalendarUtils'
+import {
+  buildBookingCalendarOverviewDays,
+  getBookingCalendarRange,
+  PosBookingCalendarViewMode,
+} from './bookingCalendarView'
 
 type ViewMode = 'table' | 'cards' | 'calendar'
 
@@ -41,12 +52,18 @@ function pad(value: number): string {
 export default function BookingTab({
   businessId,
   businessSlug,
-  turnBoardStaff,
+  rosterRows,
+  rosterLoading,
+  rosterError,
+  onRosterRetry,
   onNewBooking,
 }: {
   businessId: string
   businessSlug?: string
-  turnBoardStaff: TurnBoardStationApiDto[]
+  rosterRows: TimeClockRosterRowApiDto[]
+  rosterLoading: boolean
+  rosterError: boolean
+  onRosterRetry: () => void
   onNewBooking: (slot?: BookingCalendarSlotSelect) => void
 }) {
   const { t, currentLanguage } = useTranslation()
@@ -57,7 +74,8 @@ export default function BookingTab({
   const [posStaffProfileId, setPosStaffProfileId] = useState('')
   const [dateFrom, setDateFrom] = useState('')
   const [dateTo, setDateTo] = useState('')
-  const [calendarDate, setCalendarDate] = useState(() => formatLocalDateIso(new Date()))
+  const [calendarViewMode, setCalendarViewMode] = useState(PosBookingCalendarViewMode.Day)
+  const [calendarAnchorDate, setCalendarAnchorDate] = useState(() => formatLocalDateIso(new Date()))
   const [checkingInId, setCheckingInId] = useState<string | null>(null)
   const [cancelTargetId, setCancelTargetId] = useState<string | null>(null)
   const [cancelReason, setCancelReason] = useState('')
@@ -68,31 +86,51 @@ export default function BookingTab({
   const [rescheduleLines, setRescheduleLines] = useState<RescheduleLineDraft[]>([])
   const [viewDetailTargetId, setViewDetailTargetId] = useState<string | null>(null)
 
-  const effectiveDateFrom = viewMode === 'calendar' ? calendarDate : dateFrom || undefined
-  const effectiveDateTo = viewMode === 'calendar' ? calendarDate : dateTo || undefined
   const p = 'components.dashboard.views.pos.BookingTab.'
 
-  const { data, isLoading } = useBookingList(businessId, {
+  const listQuery = useBookingList(businessId, {
     status: status || undefined,
     posStaffProfileId: posStaffProfileId || undefined,
-    dateFrom: effectiveDateFrom,
-    dateTo: effectiveDateTo,
+    dateFrom: dateFrom || undefined,
+    dateTo: dateTo || undefined,
     pageSize: 200,
+  }, {
+    enabled: viewMode !== 'calendar',
   })
-  const { data: staffDirectory } = useMerchantStaff({ pageSize: 100 })
-  const bookings = data?.items ?? []
-  const calendarStaffNames = useMemo(() => {
-    const names = staffDirectory?.items
-      .map((staff) => staff.displayName || staff.fullName)
-      .filter((name): name is string => typeof name === 'string' && name.trim().length > 0)
-    return names?.length ? names : turnBoardStaff.map((station) => station.displayName)
-  }, [staffDirectory?.items, turnBoardStaff])
-  const calendarStaffIdsByName = useMemo(
-    () => Object.fromEntries(
-      turnBoardStaff.map((staff) => [staff.displayName.trim().toLocaleLowerCase(), staff.posStaffProfileId]),
-    ),
-    [turnBoardStaff],
+  const calendarRange = useMemo(
+    () => getBookingCalendarRange(calendarAnchorDate, calendarViewMode),
+    [calendarAnchorDate, calendarViewMode],
   )
+  const calendarRequestRange = useMemo(
+    () => ({
+      dateFrom: shiftLocalDateIso(calendarRange.dateFrom, -1),
+      dateTo: shiftLocalDateIso(calendarRange.dateTo, 1),
+    }),
+    [calendarRange],
+  )
+  const calendarQuery = useAllBookingListPages(
+    businessId,
+    calendarRequestRange,
+    { enabled: viewMode === 'calendar' },
+  )
+  const calendarBookings = useMemo(
+    () => (calendarQuery.data?.items ?? []).filter((booking) => {
+      const date = bookingDateKey(booking.scheduledAt, booking.source)
+      return date >= calendarRange.dateFrom && date <= calendarRange.dateTo
+    }),
+    [calendarQuery.data?.items, calendarRange],
+  )
+  const overviewDays = useMemo(
+    () => buildBookingCalendarOverviewDays(
+      calendarBookings,
+      calendarRange,
+      calendarViewMode === PosBookingCalendarViewMode.Month ? 0 : 2,
+    ),
+    [calendarBookings, calendarRange, calendarViewMode],
+  )
+  const data = viewMode === 'calendar' ? calendarQuery.data : listQuery.data
+  const isLoading = viewMode === 'calendar' ? calendarQuery.isLoading : listQuery.isLoading
+  const bookings = viewMode === 'calendar' ? calendarBookings : (listQuery.data?.items ?? [])
 
   const checkInMutation = useCheckInBookingFromList(businessId)
   const cancelMutation = useCancelBooking(businessId)
@@ -225,34 +263,33 @@ export default function BookingTab({
           {t('components.dashboard.views.pos.NewBookingForm.newBookingButton')}
         </button>
 
-        <select
-          value={status}
-          onChange={(e) => setStatus(e.target.value)}
-          className="h-8 rounded-lg border border-nexoraBorder bg-white px-2 text-[11px] text-nexoraText outline-none focus:border-nexoraBrand"
-        >
-          <option value="">{t(p + 'filterAllStatuses')}</option>
-          {POS_BOOKING_STATUS_OPTIONS.map((s) => (
-            <option key={s} value={s}>
-              {s}
-            </option>
-          ))}
-        </select>
-
-        <select
-          value={posStaffProfileId}
-          onChange={(e) => setPosStaffProfileId(e.target.value)}
-          className="h-8 rounded-lg border border-nexoraBorder bg-white px-2 text-[11px] text-nexoraText outline-none focus:border-nexoraBrand"
-        >
-          <option value="">{t(p + 'filterAllTechnicians')}</option>
-          {turnBoardStaff.map((station) => (
-            <option key={station.posStaffProfileId} value={station.posStaffProfileId}>
-              {station.displayName}
-            </option>
-          ))}
-        </select>
-
         {viewMode !== 'calendar' ? (
           <>
+            <select
+              value={status}
+              onChange={(e) => setStatus(e.target.value)}
+              className="h-8 rounded-lg border border-nexoraBorder bg-white px-2 text-[11px] text-nexoraText outline-none focus:border-nexoraBrand"
+            >
+              <option value="">{t(p + 'filterAllStatuses')}</option>
+              {POS_BOOKING_STATUS_OPTIONS.map((s) => (
+                <option key={s} value={s}>
+                  {s}
+                </option>
+              ))}
+            </select>
+            <select
+              value={posStaffProfileId}
+              onChange={(e) => setPosStaffProfileId(e.target.value)}
+              disabled={rosterLoading}
+              className="h-8 rounded-lg border border-nexoraBorder bg-white px-2 text-[11px] text-nexoraText outline-none focus:border-nexoraBrand"
+            >
+              <option value="">{t(p + 'filterAllTechnicians')}</option>
+              {rosterRows.map((staff) => (
+                <option key={staff.posStaffProfileId} value={staff.posStaffProfileId}>
+                  {staff.displayName}
+                </option>
+              ))}
+            </select>
             <input
               type="date"
               value={dateFrom}
@@ -285,8 +322,27 @@ export default function BookingTab({
           </button>
         ) : null}
 
-        {data ? <span className="ml-auto text-[11px] text-nexoraMuted">{t(p + 'totalCount', { count: data.totalCount })}</span> : null}
+        {data ? (
+          <span className="ml-auto text-[11px] text-nexoraMuted">
+            {t(p + 'totalCount', {
+              count: viewMode === 'calendar' ? calendarBookings.length : data.totalCount,
+            })}
+          </span>
+        ) : null}
       </div>
+
+      {rosterError ? (
+        <div className="flex items-center justify-between gap-3 rounded-xl border border-amber-200 bg-amber-50 px-3 py-2 text-xs text-amber-900">
+          <span>{t(p + 'rosterLoadError')}</span>
+          <button
+            type="button"
+            onClick={onRosterRetry}
+            className="rounded-lg border border-amber-300 bg-white px-2.5 py-1 font-bold hover:bg-amber-100"
+          >
+            {t(p + 'retry')}
+          </button>
+        </div>
+      ) : null}
 
       {isLoading ? (
         <div className="nexora-card p-6">
@@ -302,10 +358,16 @@ export default function BookingTab({
         <div className="min-w-0">
           <BookingCalendar
             bookings={bookings}
-            calendarDate={calendarDate}
-            onCalendarDateChange={setCalendarDate}
-            staffNames={calendarStaffNames}
-            staffIdsByName={calendarStaffIdsByName}
+            mode={calendarViewMode}
+            anchorDate={calendarAnchorDate}
+            range={calendarRange}
+            overviewDays={overviewDays}
+            loading={calendarQuery.isLoading}
+            error={calendarQuery.isError}
+            onRetry={() => { void calendarQuery.refetch() }}
+            onModeChange={setCalendarViewMode}
+            onAnchorDateChange={setCalendarAnchorDate}
+            rosterRows={rosterRows}
             onNewBooking={onNewBooking}
             onViewDetail={(id) => setViewDetailTargetId(id)}
           />
@@ -431,7 +493,11 @@ export default function BookingTab({
                   {t(p + 'viewDetailModalTitle')}
                 </p>
                 <h3 id="booking-detail-title" className="mt-1 text-lg font-extrabold tracking-tight text-nexoraText">
-                  {viewDetail.data?.customerName ?? t(p + 'viewDetailModalTitle')}
+                  {viewDetail.data?.customerName ? (
+                    <span className="pos-customer-name">{viewDetail.data.customerName}</span>
+                  ) : (
+                    t(p + 'viewDetailModalTitle')
+                  )}
                 </h3>
               </div>
               <button
@@ -454,7 +520,7 @@ export default function BookingTab({
                         {viewDetail.data.customerName.slice(0, 1).toUpperCase()}
                       </div>
                       <div className="min-w-0">
-                        <p className="text-sm font-extrabold text-nexoraText">{viewDetail.data.customerName}</p>
+                        <p className="pos-customer-name text-sm font-extrabold text-nexoraText">{viewDetail.data.customerName}</p>
                         <p className="mt-0.5 truncate text-xs text-nexoraMuted">
                           {formatCustomerPhone(viewDetail.data.customerPhone, viewDetail.data.customerPhoneE164)
                             || t(p + 'viewDetailNotProvided')}
