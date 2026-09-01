@@ -51,6 +51,13 @@ export default function PosPaymentMethodSelector({
     if (!CORE_METHODS.has(value)) setShowMore(true)
   }, [value])
 
+  const handleToggleMore = () => {
+    if (showMore && !CORE_METHODS.has(value)) {
+      onChange(PosCheckoutPaymentMethod.Cash)
+    }
+    setShowMore((current) => !current)
+  }
+
   const renderOption = (method: (typeof POS_CHECKOUT_PAYMENT_METHOD_OPTIONS)[number]) => {
     const selected = value === method.value
     return (
@@ -83,7 +90,7 @@ export default function PosPaymentMethodSelector({
             type="button"
             aria-expanded={showMore}
             disabled={disabled}
-            onClick={() => setShowMore((current) => !current)}
+            onClick={handleToggleMore}
             className="inline-flex min-h-8 w-auto flex-none items-center justify-center rounded-lg border border-nexoraBorder/70 bg-white px-2 text-[11px] font-semibold text-nexoraText transition-colors hover:border-nexoraBrand/50 hover:bg-nexoraBrandSoft/40 disabled:opacity-60"
           >
             ··· {t('components.dashboard.views.pos.PosOrderWorkspace.morePaymentMethods')}

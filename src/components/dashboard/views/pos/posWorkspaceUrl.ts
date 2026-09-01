@@ -16,11 +16,13 @@ export function readPosWorkspaceFromParams(params: URLSearchParams): PosWorkspac
 export function writePosWorkspaceToParams(
   params: URLSearchParams,
   workspace: PosWorkspaceUrlState | null,
+  nextTab?: string,
 ): URLSearchParams {
   const next = new URLSearchParams(params)
   if (!workspace) {
     next.delete(POS_WORKSPACE_ORDER_ID_PARAM)
     next.delete(POS_WORKSPACE_MODE_PARAM)
+    if (nextTab) next.set('tab', nextTab)
     return next
   }
   next.set(POS_WORKSPACE_ORDER_ID_PARAM, workspace.orderId)
