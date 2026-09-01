@@ -330,7 +330,8 @@ export const MENU_ITEMS = [
       { id: 'products', labelKey: 'dashboard.menu.pos_products' },
       { id: 'promotions', labelKey: 'dashboard.menu.pos_promotions' },
       { id: 'staff', labelKey: 'dashboard.menu.pos_staff' },
-      { id: 'devices', labelKey: 'dashboard.menu.pos_devices' }
+      { id: 'devices', labelKey: 'dashboard.menu.pos_devices' },
+      { id: 'public-checkin', labelKey: 'dashboard.menu.pos_public_checkin' },
     ]
   },
   {

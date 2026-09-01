@@ -716,6 +716,7 @@
       "pos_products": "Products",
       "pos_staff": "Staff Profiles",
       "pos_devices": "Check-In Devices",
+      "pos_public_checkin": "Public Check-In",
       "pos_board": "Front Desk",
       "settings": "Settings",
       "business_setting": "Setting",
@@ -1089,7 +1090,9 @@
         "payment_desc": "Use your direct payment QR and manage the payment methods customers can use.",
         "referral_desc": "Share your affiliate link and choose where new members are placed in your network.",
         "affiliate_copy_link": "Copy Link",
-        "staff_invite_desc": "Share this QR or join link to invite staff to your business."
+        "staff_invite_desc": "Share this QR or join link to invite staff to your business.",
+        "one_qr": "OneQR",
+        "one_qr_desc": "One QR code for the whole shop. Print it once — the modules behind it can change anytime."
       },
       "open_link": "Test station flow",
       "station_actions": {
@@ -1736,7 +1739,8 @@
     "tips_summary_title": "Tip Sent!",
     "tips_summary_via": "via",
     "tips_summary_review_cta": "Leave a Review",
-    "tips_summary_skip": "Skip"
+    "tips_summary_skip": "Skip",
+    "processing_payment": "Processing payment connection to {name}..."
   },
   "direct_payment": {
     "review_payment_title": "Review payment & choose method",
@@ -2812,7 +2816,10 @@
     "pos_promotion_name_too_long": "The promotion name is too long.",
     "pos_promotion_badge_too_long": "The badge label is too long.",
     "pos_promotion_value_invalid": "Enter a discount greater than 0 (and at most 100 for a percentage).",
-    "pos_promotion_in_use": "Customers have already used this promotion, so it cannot be deleted. Switch it off instead."
+    "pos_promotion_in_use": "Customers have already used this promotion, so it cannot be deleted. Switch it off instead.",
+    "pos_booking_check_in_too_early": "It is too early to check in for this appointment.",
+    "pos_booking_check_in_too_late": "This appointment is past its check-in window. Please see the front desk.",
+    "oneqr_module_disabled": "A module was switched off by the platform admin, so it can no longer be saved. Remove it from the list and save again."
   },
   "components": {
     "common": {
@@ -3606,7 +3613,9 @@
             "orderListColumnWaitTime": "Wait Time",
             "orderListColumnElapsed": "Elapsed",
             "assignTechnicianFirst": "Assign a technician to every service first.",
-            "addServiceFirst": "Add at least one service first."
+            "addServiceFirst": "Add at least one service first.",
+            "orderListColumnOrder": "Order",
+            "orderListColumnGuest": "Guest"
           },
           "BookingTab": {
             "metricBadge": "Bookings",
@@ -3826,7 +3835,7 @@
             "discountPercentTooHigh": "Percent cannot be higher than {{max}}%.",
             "discountAmountTooHigh": "Discount cannot be higher than the service price (${{max}}).",
             "discountValueMustBePositive": "Enter a value greater than 0.",
-	    "addAddOn": "+ Add-on",
+            "addAddOn": "+ Add-on",
             "addOnModalTitle": "Add-ons — {{serviceName}}",
             "addOnModalClose": "Close add-ons",
             "addOnModalDone": "Done",
@@ -3852,13 +3861,32 @@
             "customServicePickFromMenu": "Pick from menu",
             "customServiceBadge": "Custom",
             "changeServiceToCustom": "Not on the menu? Enter a custom service",
-            "summaryOrderDiscount": "Discount all services"
+            "summaryOrderDiscount": "Discount all services",
+            "bookingPrefilled": "Filled in from today's booking for {{name}}",
+            "cancelButton": "Cancel",
+            "chooseServicesTitle": "Choose services",
+            "chooseServicesHint": "Optional: tap a category chip, then tap a service card to select or remove it.",
+            "viewDetailsButton": "View details",
+            "closeDetailsButton": "Close",
+            "editLine": "Edit",
+            "technicianSectionTitle": "Technician",
+            "technicianSectionHint": "optional, \"First available\" is fastest",
+            "firstAvailableHint": "shortest wait",
+            "noteFieldLabel": "Note",
+            "smsConsentNotice": "By clicking Check Me In I agree to receive text messages from {{businessName}} (offers, reminders & rewards). Msg & data rates may apply. Reply STOP anytime to opt out.",
+            "smsConsentBusinessFallback": "this salon",
+            "checkInButton": "Check Me In",
+            "checkInSuccess": "Guest checked in."
           },
           "PhoneCheckInStep": {
             "welcomeTitleWithBusiness": "Welcome to {{businessName}}",
             "welcomeTitleGeneric": "Welcome",
+            "welcomeTitlePublic": "Welcome!",
             "subtitle": "Check in with your mobile number",
-            "clearButton": "Clear"
+            "clearButton": "Clear",
+            "backspaceButton": "Delete last digit",
+            "secureTitle": "Secure Check-in",
+            "secureDesc": "Your information is protected"
           },
           "PosCompletedOrdersPanel": {
             "dateFrom": "From",
@@ -3904,8 +3932,9 @@
             "viewDetailClose": "Close",
             "viewDetailLineDiscountStaffShare": "(technician ${{amount}})",
             "viewDetailLineDiscount": "Discount ${{amount}} · {{bearer}} absorbs",
-            "viewDetailLineDiscount": "Discount ${{amount}} · {{bearer}} absorbs",
-            "viewDetailOrderDiscount": "Discount all services"
+            "viewDetailOrderDiscount": "Discount all services",
+            "columnOrder": "Order",
+            "columnGuest": "Guest"
           },
           "CustomerTab": {
             "searchLabel": "Search",
@@ -4267,6 +4296,43 @@
             "activeLabel": "Offer this at checkout",
             "save": "Save",
             "cancel": "Cancel"
+          },
+          "CustomerHeaderBar": {
+            "namePlaceholder": "e.g. Amy Nguyen",
+            "emailPlaceholder": "e.g. amy@example.com",
+            "changeNumber": "Change",
+            "returningCustomer": "Returning customer: {{name}} — last visit: {{summary}}",
+            "noServicesLastVisit": "no services on file",
+            "useLastVisit": "Use last visit"
+          },
+          "SelectTechniciansModal": {
+            "title": "Select Technician · {{serviceName}}",
+            "close": "Close",
+            "searchPlaceholder": "Search technicians…",
+            "nextAvailable": "Next Available",
+            "busy": "Busy",
+            "noStaff": "No technician trained for this service yet.",
+            "noteLabel": "Note",
+            "notePlaceholder": "Add a note for this service…",
+            "cancel": "Cancel",
+            "ok": "OK"
+          },
+          "PosPublicCheckInView": {
+            "description": "Print a QR so customers can check in from their own phone."
+          },
+          "PublicCheckInQrPanel": {
+            "title": "Check-in QR — print and stick it at the door",
+            "description": "Customers scan this to check in from their own phone. The link never changes, so you print it once.",
+            "enableNotice": "Public check-in is off by default. Ask your admin to turn it on for this salon, or the QR will show \"Check-in is not available\".",
+            "copied": "Check-in link copied to clipboard.",
+            "downloadButton": "Download QR (PNG)",
+            "printButton": "Print poster",
+            "printHint": "The poster prints on A4 with the QR, your salon name and the link.",
+            "printBlocked": "Your browser blocked the print window. Allow pop-ups for this site and try again.",
+            "posterHeadline": "Scan to check in",
+            "posterInstruction": "Point your phone camera at the code, then enter your number.",
+            "qrAlt": "QR code for {{businessName}} check-in",
+            "fallbackBusinessName": "Your salon"
           }
         },
         "BookingHubView": {
@@ -6604,7 +6670,8 @@
     },
     "checkin": {
       "CheckInSurface": {
-        "submitError": "Check-in didn't go through. Please try again, or ask the front desk."
+        "submitError": "Check-in didn't go through. Please try again, or ask the front desk.",
+        "blockedBack": "Back"
       },
       "CustomerIdentityCard": {
         "title": "Nice to meet you!",
@@ -6888,6 +6955,27 @@
       "noSmsNotice": "You chose not to receive text messages, so save this link — it is how you manage this booking.",
       "copyLink": "Copy link",
       "copiedLink": "Link copied"
+    },
+    "checkIn": {
+      "notFoundTitle": "Check-in is not available",
+      "notFoundDesc": "This check-in link is not active. Please ask the front desk for help.",
+      "bookingTooEarlyBlocked": "Your appointment is at {{appointment}}. Check-in opens at {{opensAt}} — please come back then, or see the front desk.",
+      "viewQueueButton": "See my place in line",
+      "saveLinkHint": "Save this link — it is the only way back to your visit.",
+      "yourNumberLabel": "Your number",
+      "statusNotFoundTitle": "Visit not found",
+      "statusNotFoundDesc": "This status link is no longer valid. Please check in again or ask the front desk.",
+      "statusYoureNext": "You're next",
+      "statusPeopleAhead": "{{count}} ahead of you",
+      "statusWaitingDesc": "We will call your number when a technician is ready.",
+      "statusInServiceTitle": "Your service has started",
+      "statusInServiceDesc": "Enjoy your visit.",
+      "statusCompletedTitle": "Your visit is complete",
+      "statusCompletedDesc": "Thank you for coming in.",
+      "statusCancelledTitle": "This visit was cancelled",
+      "statusCancelledDesc": "Please check in again or ask the front desk.",
+      "refreshButton": "Refresh now",
+      "autoRefreshHint": "This page updates on its own every 15 seconds."
     }
   },
   "homepage": {
@@ -9745,6 +9833,130 @@
         "invalid": "Incorrect passcode. Please try again.",
         "submitButton": "Continue"
       }
+    }
+  },
+  "oneqr": {
+    "audience": {
+      "customer": "Customer",
+      "staff": "Staff",
+      "owner": "Owner"
+    },
+    "identity": {
+      "public_first": "Public first, verify when needed",
+      "always_sign_in": "Always sign in"
+    },
+    "status": {
+      "active": "Active",
+      "paused": "Paused"
+    },
+    "modules": {
+      "Booking": "Book Appointment",
+      "CheckIn": "Smart Check-in",
+      "Services": "Services & Prices",
+      "TipAndPay": "Tip & Pay",
+      "Payment": "Pay Now",
+      "Review": "Leave a Review",
+      "Rewards": "Rewards",
+      "Membership": "Membership",
+      "ClockIn": "Clock In / Out",
+      "TurnBoard": "Turn Board",
+      "MyTips": "My Tips",
+      "StaffPortal": "Staff Portal",
+      "ReceiveCustomer": "Receive Customer",
+      "CompleteService": "Complete Service",
+      "RequestApproval": "Request Approval",
+      "OwnerDashboard": "Owner Dashboard",
+      "ManageBookings": "Manage Bookings",
+      "ManageServices": "Manage Services",
+      "CustomLink": "Custom Link",
+      "AIAssistant": "AI Assistant"
+    },
+    "card": {
+      "untitled": "Untitled OneQR",
+      "qr_alt": "QR code for {{name}}",
+      "permanence_note": "This QR code never changes. The modules and permissions behind it can be updated anytime.",
+      "open_landing": "Open page",
+      "copy_url": "Copy URL",
+      "copy_failed": "Could not copy the link.",
+      "download": "Download QR",
+      "toggle_active": "Pause or resume this OneQR",
+      "single_code_note": "One code for all roles",
+      "preview_as": "Preview as",
+      "preview_needs_login": "Open this link while signed in as {{audience}} — that role is read from the account, not from the link."
+    },
+    "builder": {
+      "modules_title": "Modules",
+      "config_title": "Configuration",
+      "preview_title": "Live preview",
+      "drag_drop_pill": "Drag & drop",
+      "audience_tabs_label": "Choose which role you are configuring",
+      "modules_empty": "No modules for this role yet. Add one to get started.",
+      "add_module": "Add module",
+      "add_module_desc": "Modules added here appear only in the {{audience}} view.",
+      "edit_module_title": "Edit module",
+      "drag_handle": "Reorder {{module}}",
+      "edit_module": "Edit {{module}}",
+      "remove_module": "Remove {{module}}",
+      "toggle_module": "Show or hide {{module}}",
+      "module_unavailable": "Hidden - not available yet",
+      "name_label": "OneQR name",
+      "name_placeholder": "e.g. Bitcoin Nail Bar - Main",
+      "name_hint": "Internal name only. Customers never see it.",
+      "welcome_label": "Welcome message",
+      "welcome_placeholder": "e.g. Welcome to Bitcoin Nail Bar",
+      "role_specific_hint": "This message and the identity rule apply to the {{audience}} view only.",
+      "identity_label": "Identity",
+      "label_label": "Tile label",
+      "label_hint": "Leave blank to use the default label.",
+      "icon_label": "Icon",
+      "icon_default": "Default",
+      "custom_url_label": "Link address",
+      "custom_url_placeholder": "e.g. https://example.com/promotion",
+      "custom_url_invalid": "Enter a full address starting with https://",
+      "save": "Save settings",
+      "save_hint": "Saving goes live immediately for the next person who scans.",
+      "no_enabled_modules_warning": "Every module for this role is switched off. People who scan will see only the welcome message.",
+      "load_error_title": "Could not load your OneQR",
+      "load_error_desc": "Something went wrong reaching the server. Try again in a moment.",
+      "retry": "Try again",
+      "coming_soon": "Coming soon",
+      "needs_station": "Needs a station",
+      "needs_station_warning": "These modules need at least one active QR station to point at: {{modules}}. Until you create one they stay hidden from the landing page — every other module keeps working.",
+      "catalog_open_hint": "Every module can go in any role. You decide what each group sees.",
+      "unavailable": {
+        "MissingTouchPoint": "Hidden — needs an active QR station to point at",
+        "Disabled": "Hidden — switched off by the platform admin",
+        "MissingDefinition": "Hidden — no longer in the system catalog",
+        "MissingCustomUrl": "Hidden — no link address saved yet",
+        "InvalidTemplate": "Hidden — its destination could not be resolved"
+      },
+      "disabled_modules_warning": "These modules were switched off by the platform admin and will be dropped when you save: {{modules}}."
+    },
+    "preview": {
+      "business_fallback": "Your business",
+      "welcome_fallback": "Welcome!",
+      "sign_in_required": "Sign in required to continue",
+      "no_modules": "No modules are switched on for this role.",
+      "view_all": "View all",
+      "view_less": "View less"
+    },
+    "landing": {
+      "menu_label": "{{business}} quick links",
+      "welcome_named": "Welcome back, {{name}} 👋",
+      "no_modules": "Nothing is available here right now. Please ask our front desk.",
+      "view_as_customer": "View as customer",
+      "paused_title": "Temporarily paused",
+      "paused_desc": "{{business}} has paused this QR code for now. Please ask our front desk for help.",
+      "not_found_title": "QR code not found",
+      "not_found_desc": "This code is no longer active. Please ask the shop for an up-to-date one.",
+      "sign_in_title": "Sign in to continue",
+      "sign_in_desc": "This shop asks everyone to sign in before using these features.",
+      "sign_in_cta": "Sign in"
+    },
+    "toast": {
+      "saved": "OneQR updated. It is live now.",
+      "paused": "OneQR paused. People who scan will see a paused notice.",
+      "resumed": "OneQR is active again."
     }
   }
 }

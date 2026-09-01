@@ -1,5 +1,6 @@
 import type { ApiError } from './api'
 import type { LooseObject } from './domain'
+import type { PosCheckInLayout } from '../constants/posCheckInLayout'
 import type { PosOrderStatus } from '../constants/posOrderStatus'
 import type { PosCheckoutPaymentMethodType } from '../constants/posCheckoutPaymentMethod'
 import type {
@@ -20,6 +21,7 @@ import type {
   UserProfile,
 } from './domain'
 export type { ApiError }
+export type { PosCheckInLayout } from '../constants/posCheckInLayout'
 export type { PosCheckoutPaymentMethodType } from '../constants/posCheckoutPaymentMethod'
 
 // --- API raw DTOs (Swagger-aligned, optional fields) ---
@@ -419,8 +421,6 @@ export interface PosDeviceListItemApiDto {
 }
 
 // Self Check-In kiosk — everything below is served under the device token, never a user session.
-export type PosCheckInLayout = 'SinglePage' | 'Wizard'
-
 export interface SelfCheckInContextApiDto {
   businessName: string
   logoUrl: string | null
@@ -475,6 +475,8 @@ export interface CheckInActiveVisitApiDto {
 export interface PosCheckInSettingsApiDto {
   kioskCheckInLayout: PosCheckInLayout
   frontDeskCheckInLayout: PosCheckInLayout
+  publicCheckInEnabled?: boolean
+  publicCheckInLayout?: PosCheckInLayout
 }
 
 // Both front-desk check-in paths answer with this: a walk-in opening a new order and a booked
@@ -1105,6 +1107,112 @@ export interface ManageBookingApiDto {
 
 export interface ManageBookingReschedulePayload {
   scheduledAt: string
+}
+
+// ─── POS Public Check-In (customer's own phone, anonymous by businessSlug) ───────────────
+// Mirrors the kiosk `SelfCheckIn*` DTOs in the live Swagger — the public handlers are
+// documented as copies of them (POS-Public-Check-In-Technical.md §4/§10), so technicians
+// carry `posStaffProfileId` here, not the `id` the public *booking* page uses.
+
+export interface PublicCheckInCategoryApiDto {
+  id: string
+  name: string
+}
+
+export interface PublicCheckInServiceApiDto {
+  id: string
+  name: string
+  price: number
+  durationMinutes: number
+  description?: string | null
+  photoUrl?: string | null
+  categories: PublicCheckInCategoryApiDto[]
+}
+
+export interface PublicCheckInTechnicianApiDto {
+  posStaffProfileId: string
+  displayName: string
+  photoUrl?: string | null
+  serviceIds: string[]
+  /** Currently mid-service. Shown as a hint — it does not block picking the technician. */
+  isBusy: boolean
+}
+
+export interface PublicCheckInPageApiDto {
+  businessName: string
+  logoUrl?: string | null
+  businessAddress?: string | null
+  businessPhone?: string | null
+  /** Phase 1 renders SinglePage regardless of this value — Wizard is a deferred ticket. */
+  layout: PosCheckInLayout
+  services: PublicCheckInServiceApiDto[]
+  technicians: PublicCheckInTechnicianApiDto[]
+}
+
+export interface PublicCheckInCustomerApiDto {
+  displayName: string
+}
+
+/** Open `Waiting`/`InService` order already on file for this phone today, or null. */
+export interface PublicCheckInActiveVisitApiDto {
+  orderNumber: string
+  /** Handle for the status page. Safe to return: the caller proved they know the phone
+   *  number the visit was created with (POS-Public-Check-In-Technical.md §6). */
+  receiptToken: string
+}
+
+export interface PublicCheckInBookingItemApiDto {
+  posServiceId: string
+  posStaffProfileId?: string | null
+}
+
+export interface PublicCheckInBookingApiDto {
+  bookingId: string
+  /** ISO 8601 with offset — read via UTC getters (feedback_frontend_datetime_timezone_naive). */
+  scheduledAt: string
+  customerName: string
+  items: PublicCheckInBookingItemApiDto[]
+  /** Inside the server's [ScheduledAt − 60′, ScheduledAt + 120′] convert window. */
+  canCheckInNow: boolean
+  earliestCheckInAt: string
+}
+
+export interface PublicCheckInOrderItemPayload {
+  posServiceId: string
+  posStaffProfileId?: string
+  note?: string
+}
+
+export interface PublicCheckInOrderPayload {
+  customerName?: string
+  customerPhone: string
+  items: PublicCheckInOrderItemPayload[]
+  /**
+   * Set only when the customer answered "check in another guest" on the active-visit
+   * interstitial — bypasses the server's one-open-order-per-phone guard for the real
+   * case of a group sharing one number (§8.2).
+   */
+  allowDuplicatePhone?: boolean
+}
+
+export interface PublicCheckInBookingPayload {
+  bookingId: string
+  customerName?: string
+  items: PublicCheckInOrderItemPayload[]
+}
+
+export interface PublicCheckInOrderResultApiDto {
+  orderId: string
+  orderNumber: string
+  /** `PosOrder.ReceiptToken` — the handle for the anonymous status page. */
+  receiptToken: string
+}
+
+export interface PublicCheckInStatusApiDto {
+  orderNumber: string
+  status: PosOrderStatus
+  peopleAhead: number
+  businessName: string
 }
 
 export interface CompleteOrderPayload {

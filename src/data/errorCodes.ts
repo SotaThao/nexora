@@ -393,6 +393,10 @@ export const errorCodeToI18nKey = {
   POS_BOOKING_CUSTOMER_PHONE_REQUIRED: 'errors.pos_booking_customer_phone_required',
   POS_BOOKING_NOT_FOUND: 'errors.pos_booking_not_found',
 
+  // POS Public Check-In — booking convert window [ScheduledAt − 60′, ScheduledAt + 120′] (§6)
+  POS_BOOKING_CHECK_IN_TOO_EARLY: 'errors.pos_booking_check_in_too_early',
+  POS_BOOKING_CHECK_IN_TOO_LATE: 'errors.pos_booking_check_in_too_late',
+
   // Tax IQ / POS — Weekly Payroll (mục 14, backend US-25)
   POS_PAYROLL_NOT_READY: 'errors.pos_payroll_not_ready',
   POS_PAYROLL_ALREADY_PAID: 'errors.pos_payroll_already_paid',
