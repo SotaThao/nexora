@@ -395,7 +395,9 @@ export default function PosFrontDeskView({
   // per tab visit rather than maintaining a second 15s polling stream.
   const todayTurnWindow = getLocalDayWindow()
   const todayRosterQuery = useTimeClockRoster(businessId, todayTurnWindow, {
-    enabled: activeTab === PosFrontDeskTab.TurnBoard,
+    enabled:
+      activeTab === PosFrontDeskTab.TurnBoard
+      || activeTab === PosFrontDeskTab.Booking,
     refetchInterval: false,
   })
   // Today’s Turns needs the services completed during the same local calendar day. The
@@ -1665,7 +1667,10 @@ export default function PosFrontDeskView({
         <BookingTab
           businessId={businessId}
           businessSlug={businessSlug}
-          turnBoardStaff={turnBoard}
+          rosterRows={todayRosterQuery.data?.rows ?? []}
+          rosterLoading={todayRosterQuery.isLoading}
+          rosterError={todayRosterQuery.isError}
+          onRosterRetry={() => { void todayRosterQuery.refetch() }}
           onNewBooking={(slot) => {
             setBookingSlot(slot ? {
               date: slot.date,
