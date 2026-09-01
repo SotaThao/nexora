@@ -14,6 +14,9 @@ import { formatCurrency } from '../../../utils'
 import { formatDayLabel } from './posReportPeriod'
 
 const TK = 'components.dashboard.views.pos.report.detail'
+// There is no POS-report email endpoint yet. Keep the prepared UI behind one switch so it can be
+// restored when the backend send API is available without exposing a non-functional action now.
+const POS_REPORT_EMAIL_ENABLED: boolean = false
 
 type Props = {
   params: PosReportDetailParams
@@ -124,7 +127,7 @@ export default function PosReportDetailModal({
         </div>
 
         <div className="pos-report-detail-actions mt-4 shrink-0 border-t border-nexoraBorder pt-3">
-          <div className="grid grid-cols-2 gap-2">
+          <div className={`grid gap-2 ${POS_REPORT_EMAIL_ENABLED ? 'grid-cols-2' : 'grid-cols-1'}`}>
             <button
               type="button"
               onClick={handlePrint}
@@ -134,17 +137,19 @@ export default function PosReportDetailModal({
               <Printer className="h-4 w-4" aria-hidden="true" />
               {t(`${TK}.print`)}
             </button>
-            <button
-              type="button"
-              onClick={() => setShowEmailForm((visible) => !visible)}
-              disabled={!detail}
-              className="inline-flex h-10 items-center justify-center gap-1.5 rounded-lg bg-nexoraBrand px-3 text-xs font-bold text-white hover:bg-nexoraBrandDark disabled:opacity-50"
-            >
-              <Mail className="h-4 w-4" aria-hidden="true" />
-              {t(`${TK}.email`)}
-            </button>
+            {POS_REPORT_EMAIL_ENABLED ? (
+              <button
+                type="button"
+                onClick={() => setShowEmailForm((visible) => !visible)}
+                disabled={!detail}
+                className="inline-flex h-10 items-center justify-center gap-1.5 rounded-lg bg-nexoraBrand px-3 text-xs font-bold text-white hover:bg-nexoraBrandDark disabled:opacity-50"
+              >
+                <Mail className="h-4 w-4" aria-hidden="true" />
+                {t(`${TK}.email`)}
+              </button>
+            ) : null}
           </div>
-          {showEmailForm ? (
+          {POS_REPORT_EMAIL_ENABLED && showEmailForm ? (
             <div className="mt-3 flex flex-col gap-2">
               <label className="min-w-0 flex-1">
                 <span className="mb-1 block text-[10px] font-black uppercase tracking-wide text-nexoraMuted">
