@@ -9,10 +9,12 @@ import { useState } from 'react'
 import { AlertTriangle, Check, Copy, Download, Printer, QrCode } from 'lucide-react'
 import { useTranslation } from '../../../../contexts/LanguageContext'
 import { useNotification } from '../../../../contexts/NotificationContext'
+import { useBusinessHours } from '../../../../data/hooks/useMerchantSetup'
 import { useCheckInSettings } from '../../../../data/hooks/usePosCheckIn'
 import { copyTextToClipboard } from '../../../../utils/clipboard'
 import { buildPublicQrImageUrl, downloadQrCode, QR_IMAGE_SIZES } from '../../../../utils/qrUtils'
 import { getWebUrlOrigin } from '../../../../utils/webUrlBase'
+import { formatCheckInPosterHours } from './formatCheckInPosterHours'
 
 const TK = 'components.dashboard.views.pos.PublicCheckInQrPanel.'
 
@@ -26,34 +28,43 @@ function escapeHtml(value: string): string {
     .replace(/'/g, '&#39;')
 }
 
+const NEXORA_MARK_SRC = '/homepage/assets/images/icon-nexora.png'
+
 function buildCheckInPosterHtml({
   businessName,
-  headline,
-  instruction,
+  scanTo,
+  hoursCaption,
+  logoUrl,
   qrImageUrl,
   displayUrl,
 }: {
   businessName: string
-  headline: string
-  instruction: string
+  scanTo: string
+  hoursCaption: string | null
+  logoUrl: string
   qrImageUrl: string
   displayUrl: string
 }): string {
+  const hoursBlock = hoursCaption
+    ? `<div class="hours">${escapeHtml(hoursCaption)}</div>`
+    : ''
   return `<!DOCTYPE html><html><head><meta charset="utf-8"><title>${escapeHtml(businessName)}</title>
   <style>
     @page{size:A4;margin:0;}
     *{margin:0;padding:0;box-sizing:border-box;font-family:system-ui,-apple-system,"Segoe UI",sans-serif;}
-    body{width:210mm;min-height:297mm;padding:26mm 18mm;background:#fff;color:#0B1220;text-align:center;}
-    .biz{font-size:15px;letter-spacing:4px;color:#4648D8;font-weight:800;margin-bottom:14mm;text-transform:uppercase;}
-    h1{font-size:40px;font-weight:900;line-height:1.2;margin-bottom:12mm;}
+    body{width:210mm;min-height:297mm;padding:22mm 18mm;background:#fff;color:#0B1220;text-align:center;}
+    .mark{display:flex;align-items:center;justify-content:center;gap:10px;margin-bottom:12mm;}
+    .mark img{width:36px;height:36px;}
+    .mark span{font-size:22px;letter-spacing:6px;color:#4648D8;font-weight:800;}
     .qr img{width:330px;height:330px;border:1px solid #DDE5EF;border-radius:16px;padding:14px;}
-    .how{font-size:20px;font-weight:600;color:#4D5870;margin:12mm 0 8mm;}
-    .url{font-size:15px;color:#4D5870;font-family:ui-monospace,SFMono-Regular,Menlo,monospace;}
+    .scan{font-size:18px;font-weight:800;letter-spacing:1.2px;text-transform:uppercase;margin:10mm 18mm 4mm;}
+    .hours{font-size:15px;font-weight:700;letter-spacing:0.8px;color:#4D5870;text-transform:uppercase;}
+    .url{font-size:13px;color:#4D5870;font-family:ui-monospace,SFMono-Regular,Menlo,monospace;margin-top:10mm;}
   </style></head><body onload="window.print()">
-    <div class="biz">${escapeHtml(businessName)}</div>
-    <h1>${escapeHtml(headline)}</h1>
+    <div class="mark"><img src="${escapeHtml(logoUrl)}" width="36" height="36" alt="NEXORA"><span>NEXORA</span></div>
     <div class="qr"><img src="${escapeHtml(qrImageUrl)}" alt=""></div>
-    <div class="how">${escapeHtml(instruction)}</div>
+    <div class="scan">${escapeHtml(scanTo)}</div>
+    ${hoursBlock}
     <div class="url">${escapeHtml(displayUrl)}</div>
   </body></html>`
 }
@@ -70,6 +81,7 @@ export default function PublicCheckInQrPanel({
   const { t } = useTranslation()
   const { showToast } = useNotification()
   const { data: checkInSettings } = useCheckInSettings(businessId)
+  const hoursQuery = useBusinessHours()
   const [isCopied, setIsCopied] = useState(false)
   const [isDownloading, setIsDownloading] = useState(false)
   const showEnableNotice =
@@ -81,6 +93,14 @@ export default function PublicCheckInQrPanel({
   const displayUrl = url.replace(/^https?:\/\//, '')
   const previewQrUrl = buildPublicQrImageUrl(url, QR_IMAGE_SIZES.zoom)
   const salonName = businessName?.trim() || t(TK + 'fallbackBusinessName')
+  const scanTo = t(TK + 'posterScanTo', { businessName: salonName })
+  const hoursSummary = formatCheckInPosterHours(hoursQuery.data, (day) =>
+    t(TK + 'daysShort.' + day.toLowerCase()),
+  )
+  const hoursCaption =
+    hoursQuery.isPending || hoursQuery.isError
+      ? null
+      : t(TK + 'posterHours', { hours: hoursSummary ?? t(TK + 'hoursClosed') })
 
   const handleCopy = async () => {
     try {
@@ -117,8 +137,9 @@ export default function PublicCheckInQrPanel({
     posterWindow.document.write(
       buildCheckInPosterHtml({
         businessName: salonName,
-        headline: t(TK + 'posterHeadline'),
-        instruction: t(TK + 'posterInstruction'),
+        scanTo,
+        hoursCaption,
+        logoUrl: `${window.location.origin}${NEXORA_MARK_SRC}`,
         qrImageUrl: buildPublicQrImageUrl(url, QR_IMAGE_SIZES.print),
         displayUrl,
       }),
@@ -146,14 +167,26 @@ export default function PublicCheckInQrPanel({
       ) : null}
 
       <div className="flex min-h-0 flex-1 flex-col items-center justify-center gap-4 lg:flex-row lg:gap-10">
-        <div className="shrink-0 rounded-2xl border border-nexoraBorder bg-white p-3 lg:p-5">
+        <div className="shrink-0 rounded-2xl border border-nexoraBorder bg-white p-3 text-center lg:p-5">
+          <div className="mb-3 flex items-center justify-center gap-2">
+            <img src={NEXORA_MARK_SRC} alt="" width={22} height={22} className="h-[22px] w-[22px]" />
+            <span className="text-sm font-extrabold tracking-[0.22em] text-nexoraBrand">NEXORA</span>
+          </div>
           <img
             src={previewQrUrl}
             alt={t(TK + 'qrAlt', { businessName: salonName })}
             width={280}
             height={280}
-            className="h-[168px] w-[168px] lg:h-[280px] lg:w-[280px]"
+            className="mx-auto h-[168px] w-[168px] lg:h-[280px] lg:w-[280px]"
           />
+          <p className="mx-auto mt-3 max-w-[280px] text-[11px] font-extrabold uppercase tracking-wide text-nexoraText">
+            {scanTo}
+          </p>
+          {hoursCaption ? (
+            <p className="mx-auto mt-1 max-w-[280px] text-[11px] font-bold uppercase tracking-wide text-nexoraMuted">
+              {hoursCaption}
+            </p>
+          ) : null}
         </div>
 
         <div className="w-full min-w-0 max-w-md space-y-3 lg:max-w-lg">

@@ -4327,10 +4327,20 @@
             "copied": "Check-in link copied to clipboard.",
             "downloadButton": "Download QR (PNG)",
             "printButton": "Print poster",
-            "printHint": "The poster prints on A4 with the QR, your salon name and the link.",
+            "printHint": "The poster prints on A4 with the QR, your salon name, hours and the link.",
             "printBlocked": "Your browser blocked the print window. Allow pop-ups for this site and try again.",
-            "posterHeadline": "Scan to check in",
-            "posterInstruction": "Point your phone camera at the code, then enter your number.",
+            "posterScanTo": "Scan to check-in {{businessName}}",
+            "posterHours": "Hours: {{hours}}",
+            "hoursClosed": "Closed",
+            "daysShort": {
+              "monday": "Mon",
+              "tuesday": "Tue",
+              "wednesday": "Wed",
+              "thursday": "Thu",
+              "friday": "Fri",
+              "saturday": "Sat",
+              "sunday": "Sun"
+            },
             "qrAlt": "QR code for {{businessName}} check-in",
             "fallbackBusinessName": "Your salon"
           }

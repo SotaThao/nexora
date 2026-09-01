@@ -4327,10 +4327,20 @@
             "copied": "Đã sao chép liên kết check-in.",
             "downloadButton": "Tải QR (PNG)",
             "printButton": "In poster",
-            "printHint": "Poster in khổ A4 gồm mã QR, tên tiệm và liên kết.",
+            "printHint": "Poster in khổ A4 gồm mã QR, tên tiệm, giờ mở cửa và liên kết.",
             "printBlocked": "Trình duyệt đã chặn cửa sổ in. Hãy cho phép pop-up cho trang này rồi thử lại.",
-            "posterHeadline": "Quét để check-in",
-            "posterInstruction": "Đưa camera điện thoại vào mã, rồi nhập số điện thoại của bạn.",
+            "posterScanTo": "Scan to check-in {{businessName}}",
+            "posterHours": "Thời gian làm việc: {{hours}}",
+            "hoursClosed": "Đóng cửa",
+            "daysShort": {
+              "monday": "T2",
+              "tuesday": "T3",
+              "wednesday": "T4",
+              "thursday": "T5",
+              "friday": "T6",
+              "saturday": "T7",
+              "sunday": "CN"
+            },
             "qrAlt": "Mã QR check-in của {{businessName}}",
             "fallbackBusinessName": "Tiệm của bạn"
           }
