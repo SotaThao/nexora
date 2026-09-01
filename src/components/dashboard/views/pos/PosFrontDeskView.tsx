@@ -583,10 +583,7 @@ export default function PosFrontDeskView({
   }
 
   const handleCancel = async (orderId: string, name: string) => {
-    const confirmed = await showConfirm(
-      t(tk('confirmCancelBody'), { name: name.toLocaleUpperCase() }),
-      t(tk('confirmCancelTitle')),
-    )
+    const confirmed = await showConfirm(t(tk('confirmCancelBody'), { name }), t(tk('confirmCancelTitle')))
     if (!confirmed) return
     try {
       await cancelOrder.mutateAsync(orderId)

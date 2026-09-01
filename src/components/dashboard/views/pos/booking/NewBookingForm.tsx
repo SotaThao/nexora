@@ -403,7 +403,7 @@ export default function NewBookingForm({
             <div className="flex items-center justify-between gap-3 rounded-xl border border-nexoraBrand/15 bg-nexoraBrandSoft/50 px-3 py-2.5">
               <p className="min-w-0 truncate text-[11px] font-semibold text-nexoraText">
                 {t('components.dashboard.views.pos.NewBookingForm.returningCustomerHint', {
-                  name: lookup.customerName.toLocaleUpperCase(),
+                  name: lookup.customerName,
                 })}
               </p>
               <button
