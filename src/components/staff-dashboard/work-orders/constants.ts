@@ -10,6 +10,7 @@ export type WorkOrderSalon = {
   id: string
   name: string
   address: string
+  timeZone: string | null
 }
 export type WorkOrderListItem = StaffWorkOrderListItem
 export type WorkOrderDetail = StaffWorkOrderDetail
@@ -57,11 +58,28 @@ export const WORK_ORDERS_I18N = {
   serviceTotal: 'staff_dashboard.work_orders.service_total',
   startService: 'staff_dashboard.work_orders.start_service',
   completeService: 'staff_dashboard.work_orders.complete_service',
+  completeServiceTitle: 'staff_dashboard.work_orders.complete_service_title',
+  completeReadyTitle: 'staff_dashboard.work_orders.complete_ready_title',
+  completeReadyBody: 'staff_dashboard.work_orders.complete_ready_body',
+  suggestedNotes: 'staff_dashboard.work_orders.suggested_notes',
+  additionalNote: 'staff_dashboard.work_orders.additional_note',
+  optional: 'staff_dashboard.work_orders.optional',
+  additionalNotePlaceholder: 'staff_dashboard.work_orders.additional_note_placeholder',
+  confirmCompletion: 'staff_dashboard.work_orders.confirm_completion',
+  closeCompleteModal: 'staff_dashboard.work_orders.close_complete_modal',
+  cancel: 'common.cancel',
   startServiceSuccess: 'staff_dashboard.work_orders.start_service_success',
   completeServiceSuccess: 'staff_dashboard.work_orders.complete_service_success',
   notesImportant: 'staff_dashboard.work_orders.notes_important',
   customerNotes: 'staff_dashboard.work_orders.customer_notes',
 } as const
+
+export const WORK_ORDER_COMPLETION_SUGGESTION_I18N = [
+  'staff_dashboard.work_orders.suggestion_completed_as_requested',
+  'staff_dashboard.work_orders.suggestion_shorter_finish',
+  'staff_dashboard.work_orders.suggestion_follow_up',
+  'staff_dashboard.work_orders.suggestion_sensitive_skin',
+] as const
 
 export const WORK_ORDER_TICKET_FILTER = {
   All: 'All',
@@ -112,19 +130,12 @@ export const WORK_ORDER_FILTER_TABS: WorkOrderTicketFilter[] = [
 
 export const WORK_ORDER_STATUS_BADGE_CLASS: Record<PosOrderStatus, string> = {
   [PosOrderStatus.Waiting]: 'bg-nexoraBrandSoft text-nexoraBrand',
-  [PosOrderStatus.InService]: 'bg-cyan-50 text-cyan-700',
+  [PosOrderStatus.InService]: 'bg-[#FFF1E6] text-[#C45C26]',
   [PosOrderStatus.Completed]: 'bg-emerald-50 text-nexoraSuccess',
   [PosOrderStatus.Cancelled]: 'bg-rose-50 text-rose-600',
   [PosOrderStatus.Pending]: 'bg-nexoraBrandSoft text-nexoraBrand',
   [PosOrderStatus.Confirmed]: 'bg-nexoraBrandSoft text-nexoraBrand',
 }
-
-/** Start Service is shown for assigned tickets; enabled only once the appointment day has arrived. */
-export const WORK_ORDER_STARTABLE_STATUSES: PosOrderStatus[] = [
-  PosOrderStatus.Waiting,
-  PosOrderStatus.Pending,
-  PosOrderStatus.Confirmed,
-]
 
 /** Mobile-first type; `sm` tablets, `lg` staff desktop shell (1024px). */
 export const WORK_ORDERS_LAYOUT_CLASS = {
@@ -213,6 +224,37 @@ export const WORK_ORDERS_LAYOUT_CLASS = {
   serviceTotalValue: 'text-lg font-extrabold tabular-nums text-nexoraText sm:text-xl',
   primaryAction:
     'mx-4 mt-4 inline-flex h-14 w-[calc(100%-2rem)] items-center justify-center gap-2 rounded-2xl bg-gradient-to-r from-[#4F7CFF] to-[#7C5CFF] text-base font-extrabold text-white shadow-[0_10px_24px_rgba(79,124,255,0.35)] transition hover:brightness-110 disabled:cursor-not-allowed disabled:opacity-60 sm:mx-5 sm:w-[calc(100%-2.5rem)]',
+  primaryActionIcon: 'grid h-6 w-6 place-items-center rounded-full bg-white/20',
+  modalOverlay:
+    'fixed inset-0 z-[60] flex items-end justify-center bg-nexoraText/55 p-0 backdrop-blur-sm sm:items-center sm:p-4',
+  modalCard: 'nexora-modal-card w-full max-w-xl rounded-b-none p-0 sm:rounded-2xl',
+  modalHeader: 'flex shrink-0 items-start justify-between gap-3 border-b border-nexoraRule px-5 py-4',
+  modalKicker: 'text-xs font-semibold text-nexoraBrand',
+  modalTitle: 'mt-0.5 text-lg font-extrabold text-nexoraText sm:text-xl',
+  modalClose:
+    'grid h-9 w-9 shrink-0 place-items-center rounded-full text-nexoraMuted transition hover:bg-nexoraCanvas hover:text-nexoraText',
+  modalBody: 'flex-1 space-y-4 overflow-y-auto px-5 py-5',
+  modalHero: 'text-center',
+  modalHeroIcon: 'mx-auto grid h-14 w-14 place-items-center rounded-full bg-emerald-50 text-emerald-600',
+  modalHeroTitle: 'mt-3 text-base font-extrabold text-nexoraText sm:text-lg',
+  modalHeroBody: 'mt-1 text-sm leading-relaxed text-nexoraMuted',
+  modalSectionTitle: 'text-sm font-extrabold text-nexoraText',
+  modalChipRow: 'mt-2 grid grid-cols-2 gap-2',
+  modalChip:
+    'w-full min-w-0 rounded-2xl border px-3 py-2.5 text-left text-xs font-semibold leading-snug transition sm:px-3.5 sm:text-sm',
+  modalChipIdle: 'border-nexoraBorder bg-white text-nexoraText hover:border-nexoraBrand/40',
+  modalChipActive: 'border-nexoraBrand bg-nexoraBrandSoft text-nexoraBrand',
+  modalNoteHead: 'flex items-center justify-between gap-2',
+  modalOptional: 'text-xs font-medium text-nexoraSubtle',
+  modalTextarea:
+    'mt-2 min-h-[6.5rem] w-full resize-none rounded-xl border border-nexoraBorder bg-white px-3.5 py-3 text-sm text-nexoraText outline-none placeholder:text-nexoraSubtle focus:border-nexoraBrand',
+  modalFooter:
+    'flex shrink-0 gap-3 border-t border-nexoraRule px-5 py-4',
+  modalCancel:
+    'inline-flex h-12 flex-1 items-center justify-center rounded-xl border border-nexoraBorder bg-white px-4 text-sm font-bold text-nexoraText transition hover:bg-nexoraCanvas disabled:opacity-60',
+  modalConfirm:
+    'inline-flex h-12 flex-[1.4] items-center justify-center gap-2 rounded-xl bg-nexoraBrand px-4 text-sm font-extrabold text-white transition hover:bg-nexoraBrandDark disabled:opacity-60',
+  modalConfirmIcon: 'grid h-5 w-5 place-items-center rounded-full bg-white/20',
   notesCard: 'mx-4 mt-4 rounded-2xl border border-[#F3D7A8] bg-[#FFF6E8] px-4 py-3.5 sm:mx-5',
   notesKicker: 'text-sm font-bold text-[#C47B2B]',
   notesTitle: 'mt-0.5 text-base font-extrabold text-nexoraText',
@@ -258,6 +300,14 @@ export const WORK_ORDER_STATION_DIGITS = 2
 export const WORK_ORDER_NUMBER_PREFIX = 'WO-'
 export const WORK_ORDER_NUMBER_DIGITS = 4
 export const WORK_ORDER_EMPTY_PLACEHOLDER = '_'
+export const WORK_ORDER_COMPLETION_NOTE_MAX_LENGTH = 500
+export const WORK_ORDER_COMPLETION_NOTE_SEPARATOR = '. '
+export const WORK_ORDER_TOAST_DURATION_MS = 3200
+export const WORK_ORDER_COMPLETE_MODAL = {
+  titleId: 'work-order-complete-title',
+  textareaRows: 4,
+  cardMaxHeight: '100%',
+} as const
 export const WORK_ORDER_SKELETON_COUNT = {
   salons: 2,
   tickets: 3,
@@ -300,6 +350,11 @@ export const WORK_ORDER_FILTER_TAB_STATE_CLASS = {
   active: WORK_ORDERS_LAYOUT_CLASS.filterTabActive,
   inactive: WORK_ORDERS_LAYOUT_CLASS.filterTabInactive,
 } as const
+
+export function workOrderCompletionChipClass(isActive: boolean) {
+  const state = isActive ? WORK_ORDERS_LAYOUT_CLASS.modalChipActive : WORK_ORDERS_LAYOUT_CLASS.modalChipIdle
+  return `${WORK_ORDERS_LAYOUT_CLASS.modalChip} ${state}`
+}
 
 export function workOrderFilterTabClass(isActive: boolean) {
   const state = isActive ? 'active' : 'inactive'

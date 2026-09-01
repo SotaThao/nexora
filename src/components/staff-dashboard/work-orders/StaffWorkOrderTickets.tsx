@@ -2,7 +2,7 @@ import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useTranslation } from '../../../contexts/LanguageContext'
 import { useStaffWorkOrders } from '../../../data/hooks/useStaffWorkOrders'
-import { formatLocalDateIso } from '../../../utils/localDate'
+import { formatDateIsoInTimeZone } from '../../../utils/localDate'
 import {
   WORK_ORDER_FILTER_I18N,
   WORK_ORDER_FILTER_STATUSES,
@@ -31,7 +31,7 @@ export default function StaffWorkOrderTickets({
 }: StaffWorkOrderTicketsProps) {
   const { t, currentLanguage } = useTranslation()
   const navigate = useNavigate()
-  const todayIso = formatLocalDateIso(new Date())
+  const todayIso = formatDateIsoInTimeZone(new Date(), salon.timeZone)
   const [selectedDateIso, setSelectedDateIso] = useState(todayIso)
   const [filter, setFilter] = useState<WorkOrderTicketFilter>(WORK_ORDER_TICKET_FILTER.Assigned)
   const workOrdersQuery = useStaffWorkOrders(

@@ -1,5 +1,5 @@
 /**
- * Technician read-only Work Orders — GET /api/v1/staff/pos/work-orders.
+ * Technician Work Orders — GET /api/v1/staff/pos/work-orders plus start/complete.
  *
  * Salon picker reuses `useStaffBusinesses` (GET /api/v1/staff/businesses) instead of
  * a second businesses request. This module only loads the order list and detail.
@@ -7,6 +7,7 @@
 import httpClient from '../../lib/httpClient'
 import { PosOrderStatus } from '../../constants/posOrderStatus'
 import type {
+  CompleteStaffWorkOrderServicePayload,
   StaffWorkOrderDetailApiDto,
   StaffWorkOrderItemApiDto,
   StaffWorkOrderListItemApiDto,
@@ -204,8 +205,12 @@ function createStaffWorkOrdersRepository(client: HttpClient = httpClient) {
       return client.post<boolean>(`${workOrderDetailPath(orderId)}/${STAFF_WORK_ORDER_ACTION.startService}`)
     },
 
-    async completeWorkOrderService(orderId: string): Promise<boolean> {
-      return client.post<boolean>(`${workOrderDetailPath(orderId)}/${STAFF_WORK_ORDER_ACTION.completeService}`)
+    async completeWorkOrderService(orderId: string, note?: string | null): Promise<boolean> {
+      const body: CompleteStaffWorkOrderServicePayload = { note: note ?? null }
+      return client.post<boolean>(
+        `${workOrderDetailPath(orderId)}/${STAFF_WORK_ORDER_ACTION.completeService}`,
+        body,
+      )
     },
   }
 }

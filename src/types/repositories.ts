@@ -325,6 +325,10 @@ export interface StaffWorkOrdersListQuery {
   status?: PosOrderStatus[]
 }
 
+export interface CompleteStaffWorkOrderServicePayload {
+  note?: string | null
+}
+
 export interface CompletedOrdersPage {
   items: CompletedOrderListItemApiDto[]
   pageNumber: number

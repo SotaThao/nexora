@@ -9,6 +9,8 @@ import {
   StaffWorkOrdersViewKind,
   WORK_ORDERS_I18N,
   WORK_ORDER_CALENDAR_DAY_STATE,
+  WORK_ORDER_COMPLETION_NOTE_MAX_LENGTH,
+  WORK_ORDER_COMPLETION_NOTE_SEPARATOR,
   WORK_ORDER_DATE_LOCALE,
   WORK_ORDER_DEFAULT_LANGUAGE,
   WORK_ORDER_EMPTY_PLACEHOLDER,
@@ -20,16 +22,13 @@ import {
   WORK_ORDER_NUMBER_PREFIX,
   WORK_ORDER_PAD_CHAR,
   WORK_ORDER_SERVICE_NAME_SEPARATOR,
-  WORK_ORDER_STARTABLE_STATUSES,
   WORK_ORDER_STATION_DIGITS,
   WORK_ORDER_VIETNAMESE_PREFIX,
   WORK_ORDER_WEEKDAY_COUNT,
   WORK_ORDER_WEEKDAY_SUNDAY,
   staffWorkOrdersPath,
-  type WorkOrderDetail,
   type WorkOrderSalon,
 } from './constants'
-import type { PosOrderStatus } from '../../../constants/posOrderStatus'
 
 export function isWorkOrderVietnamese(language: string): boolean {
   return language.toLowerCase().startsWith(WORK_ORDER_VIETNAMESE_PREFIX)
@@ -68,6 +67,7 @@ export function toWorkOrderSalons(links: StaffBusinessLink[] | undefined): WorkO
       id,
       name: link.businessName?.trim() ?? '',
       address: formatSalonAddress(link),
+      timeZone: link.timeZone?.trim() || null,
     }]
   })
 }
@@ -146,23 +146,6 @@ export function workOrderTextOrPlaceholder(value: string | null | undefined): st
   return text || WORK_ORDER_EMPTY_PLACEHOLDER
 }
 
-const WORK_ORDER_DATE_ISO = /^(\d{4}-\d{2}-\d{2})/
-
-export function workOrderScheduledDateIso(scheduledAt: string | null | undefined): string | null {
-  const match = WORK_ORDER_DATE_ISO.exec(scheduledAt?.trim() ?? '')
-  return match?.[1] ?? null
-}
-
-/** Walk-ins (no scheduledAt) can start anytime; bookings wait until the salon appointment day. */
-export function isWorkOrderStartDateReached(
-  scheduledAt: string | null | undefined,
-  todayIso: string,
-): boolean {
-  const scheduledDate = workOrderScheduledDateIso(scheduledAt)
-  if (!scheduledDate) return true
-  return scheduledDate <= todayIso
-}
-
 const WORK_ORDER_MONEY_FORMATTER = new Intl.NumberFormat(WORK_ORDER_MONEY.locale, {
   style: 'currency',
   currency: WORK_ORDER_MONEY.currency,
@@ -178,15 +161,39 @@ export function formatWorkOrderDurationMinutes(minutes: number, translate: TFunc
   return translate(WORK_ORDERS_I18N.durationMinutes, { minutes })
 }
 
-export function isWorkOrderStartActionVisible(status: PosOrderStatus): boolean {
-  return WORK_ORDER_STARTABLE_STATUSES.includes(status)
+export function workOrderViewportOverlayStyle(
+  viewport: { height: number; offsetTop: number } | null,
+): { height: string; transform: string } | undefined {
+  if (!viewport) return undefined
+  return {
+    height: `${viewport.height}px`,
+    transform: `translateY(${viewport.offsetTop}px)`,
+  }
 }
 
-export function canStartWorkOrderNow(
-  ticket: Pick<WorkOrderDetail, 'canStartService' | 'scheduledAt'>,
-  todayIso: string,
+export function toggleWorkOrderSuggestion(selected: string[], suggestion: string): string[] {
+  return selected.includes(suggestion)
+    ? selected.filter((item) => item !== suggestion)
+    : [...selected, suggestion]
+}
+
+export function composeWorkOrderCompletionNote(
+  selectedSuggestions: string[],
+  additionalNote: string,
+): string | null {
+  const parts = [
+    ...selectedSuggestions.map((item) => item.trim()).filter(Boolean),
+    additionalNote.trim(),
+  ].filter(Boolean)
+  if (parts.length === 0) return null
+  return parts.join(WORK_ORDER_COMPLETION_NOTE_SEPARATOR).slice(0, WORK_ORDER_COMPLETION_NOTE_MAX_LENGTH)
+}
+
+export function hasWorkOrderCompletionInput(
+  selectedSuggestions: string[],
+  additionalNote: string,
 ): boolean {
-  return ticket.canStartService && isWorkOrderStartDateReached(ticket.scheduledAt, todayIso)
+  return composeWorkOrderCompletionNote(selectedSuggestions, additionalNote) != null
 }
 
 export function workOrderWeekdayLabels(language: string): string[] {

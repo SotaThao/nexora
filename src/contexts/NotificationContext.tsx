@@ -17,11 +17,59 @@ interface ToastItem {
   type: ToastType;
 }
 
+interface SnackItem extends ToastItem {
+  duration: number;
+}
+
 interface ConfirmState {
   message: string;
   title: string;
   resolve: (val: boolean) => void;
 }
+
+const NOTIFICATION_I18N = {
+  close: "common.close",
+  cancel: "common.cancel",
+  confirm: "common.confirm",
+} as const;
+
+const TOAST_ICONS = {
+  success: CheckCircle2,
+  error: XCircle,
+  warning: AlertTriangle,
+  info: Info,
+} as const;
+
+const SNACK_TYPE_CLASS: Record<ToastType, string> = {
+  success: "border-emerald-100 bg-emerald-50 text-emerald-800",
+  error: "border-rose-100 bg-rose-50 text-rose-800",
+  warning: "border-amber-100 bg-amber-50 text-amber-800",
+  info: "border-indigo-100 bg-indigo-50 text-indigo-800",
+};
+
+const SNACK_ICON_CLASS: Record<ToastType, string> = {
+  success: "text-emerald-600",
+  error: "text-rose-600",
+  warning: "text-amber-600",
+  info: "text-indigo-600",
+};
+
+const SNACK_LAYOUT_CLASS = {
+  stack:
+    "pointer-events-none fixed right-3 top-3 z-[99999] flex w-[min(22rem,calc(100%-1.5rem))] flex-col gap-2 sm:right-5 sm:top-5",
+  card: "pointer-events-auto flex items-start gap-2.5 rounded-xl border px-3.5 py-3 shadow-lg",
+  icon: "mt-0.5 h-4 w-4 shrink-0",
+  message: "min-w-0 flex-1 text-xs font-semibold leading-relaxed",
+  close:
+    "shrink-0 rounded-md px-1 text-[10px] font-extrabold uppercase tracking-wide opacity-70 hover:opacity-100",
+} as const;
+
+const TOAST_BADGE_CLASS: Record<ToastType, string> = {
+  success: "bg-emerald-50 border-emerald-100 text-emerald-600",
+  error: "bg-rose-50 border-rose-100 text-rose-600",
+  warning: "bg-amber-50 border-amber-100 text-amber-600",
+  info: "bg-indigo-50 border-indigo-100 text-indigo-600",
+};
 
 const NotificationContext = createContext<NotificationContextValue | null>(
   null,
@@ -34,7 +82,9 @@ interface NotificationProviderProps {
 export function NotificationProvider({ children }: NotificationProviderProps) {
   const [toastQueue, setToastQueue] = useState<ToastItem[]>([]);
   const [activeToast, setActiveToast] = useState<ToastItem | null>(null);
+  const [snacks, setSnacks] = useState<SnackItem[]>([]);
   const [confirmState, setConfirmState] = useState<ConfirmState | null>(null);
+  const snackTimersRef = useRef<Map<number, number>>(new Map());
   const { t } = useTranslation();
 
   // Toast messages are shown one at a time as a blocking popup; queue holds the rest.
@@ -44,12 +94,35 @@ export function NotificationProvider({ children }: NotificationProviderProps) {
     setToastQueue((prev) => prev.slice(1));
   }, [activeToast, toastQueue]);
 
+  useEffect(() => {
+    const timers = snackTimersRef.current;
+    return () => {
+      timers.forEach((timer) => window.clearTimeout(timer));
+      timers.clear();
+    };
+  }, []);
+
+  const dismissSnack = useCallback((id: number) => {
+    const timer = snackTimersRef.current.get(id);
+    if (timer != null) {
+      window.clearTimeout(timer);
+      snackTimersRef.current.delete(id);
+    }
+    setSnacks((prev) => prev.filter((item) => item.id !== id));
+  }, []);
+
   const showToast = useCallback<NotificationContextValue["showToast"]>(
-    (message, type = "success") => {
+    (message, type = "success", duration) => {
       const id = Date.now() + Math.random();
+      if (typeof duration === "number" && duration > 0) {
+        setSnacks((prev) => [...prev, { id, message, type, duration }]);
+        const timer = window.setTimeout(() => dismissSnack(id), duration);
+        snackTimersRef.current.set(id, timer);
+        return;
+      }
       setToastQueue((prev) => [...prev, { id, message, type }]);
     },
-    [],
+    [dismissSnack],
   );
 
   const dismissToast = useCallback(() => {
@@ -111,29 +184,42 @@ export function NotificationProvider({ children }: NotificationProviderProps) {
     [],
   );
 
-  const toastIcon =
-    {
-      success: CheckCircle2,
-      error: XCircle,
-      warning: AlertTriangle,
-      info: Info,
-    }[activeToast?.type ?? "info"] || Info;
-
-  // Circular tinted badge, matching the Nexora success/notice screen convention
-  // (DirectPaymentSuccess.tsx / StepSuccess.tsx) rather than a bare icon.
-  const toastBadgeColor =
-    {
-      success: "bg-emerald-50 border-emerald-100 text-emerald-600",
-      error: "bg-rose-50 border-rose-100 text-rose-600",
-      warning: "bg-amber-50 border-amber-100 text-amber-600",
-      info: "bg-indigo-50 border-indigo-100 text-indigo-600",
-    }[activeToast?.type ?? "info"] || "bg-slate-50 border-slate-100 text-slate-600";
-
-  const ToastIcon = toastIcon;
+  const ToastIcon = TOAST_ICONS[activeToast?.type ?? "info"];
+  const toastBadgeColor = TOAST_BADGE_CLASS[activeToast?.type ?? "info"];
 
   return (
     <NotificationContext.Provider value={{ showToast, showConfirm }}>
       {children}
+
+      {snacks.length > 0 ? (
+        <div className={SNACK_LAYOUT_CLASS.stack}>
+          {snacks.map((snack) => {
+            const SnackIcon = TOAST_ICONS[snack.type];
+            return (
+              <div
+                key={snack.id}
+                role="status"
+                className={`${SNACK_LAYOUT_CLASS.card} ${SNACK_TYPE_CLASS[snack.type]}`}
+              >
+                <SnackIcon
+                  className={`${SNACK_LAYOUT_CLASS.icon} ${SNACK_ICON_CLASS[snack.type]}`}
+                  aria-hidden="true"
+                />
+                <p className={SNACK_LAYOUT_CLASS.message}>
+                  {snack.message}
+                </p>
+                <button
+                  type="button"
+                  className={SNACK_LAYOUT_CLASS.close}
+                  onClick={() => dismissSnack(snack.id)}
+                >
+                  {t(NOTIFICATION_I18N.close)}
+                </button>
+              </div>
+            );
+          })}
+        </div>
+      ) : null}
 
       {/* Notification popup — blocks interaction until dismissed, one at a time via toastQueue */}
       {activeToast && (
@@ -167,7 +253,7 @@ export function NotificationProvider({ children }: NotificationProviderProps) {
               onClick={dismissToast}
               className="px-4.5 py-2.5 rounded-xl bg-nexoraBrand text-white text-[10px] font-extrabold uppercase tracking-wider hover:bg-nexoraBrand/90 transition-colors shadow-sm"
             >
-              {t("common.close") || "Đóng"}
+              {t(NOTIFICATION_I18N.close)}
             </button>
           </div>
         </div>
@@ -197,14 +283,14 @@ export function NotificationProvider({ children }: NotificationProviderProps) {
                 onClick={() => confirmState.resolve(false)}
                 className="px-4.5 py-2.5 rounded-xl border border-slate-200 text-[10px] font-extrabold uppercase tracking-wider text-slate-600 hover:bg-slate-50 transition-colors"
               >
-                {t("common.cancel") || "Hủy"}
+                {t(NOTIFICATION_I18N.cancel)}
               </button>
               <button
                 type="button"
                 onClick={() => confirmState.resolve(true)}
                 className="px-4.5 py-2.5 rounded-xl bg-nexoraBrand text-white text-[10px] font-extrabold uppercase tracking-wider hover:bg-nexoraBrand/90 transition-colors shadow-sm"
               >
-                {t("common.confirm") || "Xác nhận"}
+                {t(NOTIFICATION_I18N.confirm)}
               </button>
             </div>
           </div>

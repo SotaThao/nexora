@@ -237,10 +237,10 @@ export const qk = {
   },
   // Scoped by the caller's token, not by business — a tech linked to two salons polls one list.
   staffActiveBeeps: () => ['staffBeeps', 'active'],
-  // Staff Work Orders — read-only, no polling. Prefix `staffWorkOrdersRoot` invalidates
-  // every list/detail combination. `filter` is only appended when passed so
-  // invalidateQueries({ queryKey: qk.staffWorkOrders(businessId) }) still prefixes every
-  // date/status combination currently on screen.
+  // Staff Work Orders — list/detail plus start/complete. No polling. Prefix
+  // `staffWorkOrdersRoot` invalidates every list/detail combination. `filter` is
+  // only appended when passed so invalidateQueries({ queryKey: qk.staffWorkOrders(businessId) })
+  // still prefixes every date/status combination currently on screen.
   staffWorkOrdersRoot: () => ['staffWorkOrders'] as const,
   staffWorkOrders: (businessId?: string, date?: string, filter?: string) => {
     const key: unknown[] = ['staffWorkOrders', 'list', businessId ?? '']

@@ -1,4 +1,4 @@
-import type { ReactNode } from 'react'
+import { useState, type ReactNode } from 'react'
 import { Check, ChevronLeft, LayoutGrid, Play, Radio } from 'lucide-react'
 import { useTranslation } from '../../../contexts/LanguageContext'
 import { useNotification } from '../../../contexts/NotificationContext'
@@ -8,28 +8,28 @@ import {
   useStaffWorkOrderDetail,
   useStartStaffWorkOrderService,
 } from '../../../data/hooks/useStaffWorkOrders'
+import type { TFunction } from '../../../types/contexts'
 import { getApiErrorCode } from '../../../types/domain'
 import {
   WORK_ORDER_STATUS_BADGE_VARIANT,
   WORK_ORDER_STATUS_I18N,
+  WORK_ORDER_TOAST_DURATION_MS,
   WORK_ORDERS_I18N,
   WORK_ORDERS_LAYOUT_CLASS,
   workOrderStatusClass,
   type WorkOrderDetail,
 } from './constants'
+import WorkOrderCompleteServiceModal from './WorkOrderCompleteServiceModal'
 import WorkOrderServiceLines from './WorkOrderServiceLines'
 import { WorkOrderErrorCard } from './WorkOrderQueryFeedback'
 import { WorkOrderDetailSkeleton } from './WorkOrderSkeletons'
 import {
-  canStartWorkOrderNow,
   formatWorkOrderNumber,
   formatWorkOrderStationValue,
-  isWorkOrderStartActionVisible,
   workOrderCustomerInitials,
   workOrderTextOrPlaceholder,
 } from './workOrderTickets'
 import type { PosOrderStatus } from '../../../constants/posOrderStatus'
-import { formatLocalDateIso } from '../../../utils/localDate'
 
 interface StaffWorkOrderDetailProps {
   orderId: string
@@ -42,6 +42,7 @@ export default function StaffWorkOrderDetail({ orderId, onBack }: StaffWorkOrder
   const detailQuery = useStaffWorkOrderDetail(orderId)
   const startService = useStartStaffWorkOrderService(orderId)
   const completeService = useCompleteStaffWorkOrderService(orderId)
+  const [isCompleteModalOpen, setIsCompleteModalOpen] = useState(false)
   const ticket = detailQuery.data ?? null
   const isMutating = startService.isPending || completeService.isPending
 
@@ -53,10 +54,22 @@ export default function StaffWorkOrderDetail({ orderId, onBack }: StaffWorkOrder
   ) => {
     try {
       await mutate()
-      showToast(t(successKey), 'success')
+      showToast(t(successKey), 'success', WORK_ORDER_TOAST_DURATION_MS)
+      return true
     } catch (err) {
-      showToast(t(getErrorI18nKey(getApiErrorCode(err, 'ERROR'))), 'error')
+      showToast(t(getErrorI18nKey(getApiErrorCode(err, 'ERROR'))), 'error', WORK_ORDER_TOAST_DURATION_MS)
+      return false
     }
+  }
+
+  const handleConfirmCompletion = async (note: string | null) => {
+    const succeeded = note
+      ? await runAction(
+          () => completeService.mutateAsync(note),
+          WORK_ORDERS_I18N.completeServiceSuccess,
+        )
+      : false
+    if (succeeded) setIsCompleteModalOpen(false)
   }
 
   return (
@@ -74,8 +87,18 @@ export default function StaffWorkOrderDetail({ orderId, onBack }: StaffWorkOrder
         onRetry={() => void detailQuery.refetch()}
         onBack={onBack}
         onStart={() => void runAction(() => startService.mutateAsync(), WORK_ORDERS_I18N.startServiceSuccess)}
-        onComplete={() => void runAction(() => completeService.mutateAsync(), WORK_ORDERS_I18N.completeServiceSuccess)}
+        onComplete={() => setIsCompleteModalOpen(true)}
       />
+      {isCompleteModalOpen && ticket ? (
+        <WorkOrderCompleteServiceModal
+          customerName={workOrderTextOrPlaceholder(ticket.customerName)}
+          isPending={completeService.isPending}
+          onConfirm={(note) => void handleConfirmCompletion(note)}
+          onClose={() => {
+            if (!completeService.isPending) setIsCompleteModalOpen(false)
+          }}
+        />
+      ) : null}
     </div>
   )
 }
@@ -119,8 +142,6 @@ function WorkOrderDetailBody({
     )
   }
 
-  const todayIso = formatLocalDateIso(new Date())
-
   return (
     <>
       <div className={WORK_ORDERS_LAYOUT_CLASS.customerCard}>
@@ -155,24 +176,6 @@ function WorkOrderDetailBody({
 
       <WorkOrderServiceLines items={ticket.items} serviceTotal={ticket.serviceTotal} />
 
-      {isWorkOrderStartActionVisible(ticket.status) ? (
-        <WorkOrderPrimaryAction
-          disabled={isMutating || !canStartWorkOrderNow(ticket, todayIso)}
-          onClick={onStart}
-          icon={<Play className={`${WORK_ORDERS_LAYOUT_CLASS.iconSm} ${WORK_ORDERS_LAYOUT_CLASS.iconFill}`} aria-hidden="true" />}
-          label={t(WORK_ORDERS_I18N.startService)}
-        />
-      ) : null}
-
-      {ticket.canCompleteService ? (
-        <WorkOrderPrimaryAction
-          disabled={isMutating}
-          onClick={onComplete}
-          icon={<Check className={WORK_ORDERS_LAYOUT_CLASS.iconSm} aria-hidden="true" />}
-          label={t(WORK_ORDERS_I18N.completeService)}
-        />
-      ) : null}
-
       {ticket.customerNotes ? (
         <aside className={WORK_ORDERS_LAYOUT_CLASS.notesCard}>
           <p className={WORK_ORDERS_LAYOUT_CLASS.notesKicker}>{t(WORK_ORDERS_I18N.notesImportant)}</p>
@@ -180,8 +183,44 @@ function WorkOrderDetailBody({
           <p className={WORK_ORDERS_LAYOUT_CLASS.notesBody}>{ticket.customerNotes}</p>
         </aside>
       ) : null}
+
+      {workOrderPrimaryActions(ticket, t, onStart, onComplete).map((action) => (
+        <WorkOrderPrimaryAction
+          key={action.key}
+          disabled={isMutating}
+          onClick={action.onClick}
+          icon={action.icon}
+          label={action.label}
+        />
+      ))}
     </>
   )
+}
+
+function workOrderPrimaryActions(
+  ticket: WorkOrderDetail,
+  t: TFunction,
+  onStart: () => void,
+  onComplete: () => void,
+) {
+  return [
+    ticket.canStartService && {
+      key: 'start',
+      onClick: onStart,
+      icon: <Play className={`${WORK_ORDERS_LAYOUT_CLASS.iconSm} ${WORK_ORDERS_LAYOUT_CLASS.iconFill}`} aria-hidden="true" />,
+      label: t(WORK_ORDERS_I18N.startService),
+    },
+    ticket.canCompleteService && {
+      key: 'complete',
+      onClick: onComplete,
+      icon: (
+        <span className={WORK_ORDERS_LAYOUT_CLASS.primaryActionIcon}>
+          <Check className={WORK_ORDERS_LAYOUT_CLASS.iconSm} aria-hidden="true" />
+        </span>
+      ),
+      label: t(WORK_ORDERS_I18N.completeService),
+    },
+  ].filter((action): action is Exclude<typeof action, false> => Boolean(action))
 }
 
 function WorkOrderPrimaryAction({
