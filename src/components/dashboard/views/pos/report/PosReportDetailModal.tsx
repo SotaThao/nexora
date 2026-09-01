@@ -127,7 +127,7 @@ export default function PosReportDetailModal({
         </div>
 
         <div className="pos-report-detail-actions mt-4 shrink-0 border-t border-nexoraBorder pt-3">
-          <div className={`grid gap-2 ${POS_REPORT_EMAIL_ENABLED ? 'grid-cols-2' : 'grid-cols-1'}`}>
+          <div className="grid grid-cols-2 gap-2">
             <button
               type="button"
               onClick={handlePrint}
@@ -137,17 +137,15 @@ export default function PosReportDetailModal({
               <Printer className="h-4 w-4" aria-hidden="true" />
               {t(`${TK}.print`)}
             </button>
-            {POS_REPORT_EMAIL_ENABLED ? (
-              <button
-                type="button"
-                onClick={() => setShowEmailForm((visible) => !visible)}
-                disabled={!detail}
-                className="inline-flex h-10 items-center justify-center gap-1.5 rounded-lg bg-nexoraBrand px-3 text-xs font-bold text-white hover:bg-nexoraBrandDark disabled:opacity-50"
-              >
-                <Mail className="h-4 w-4" aria-hidden="true" />
-                {t(`${TK}.email`)}
-              </button>
-            ) : null}
+            <button
+              type="button"
+              onClick={() => setShowEmailForm((visible) => !visible)}
+              disabled={!POS_REPORT_EMAIL_ENABLED || !detail}
+              className="inline-flex h-10 items-center justify-center gap-1.5 rounded-lg bg-nexoraBrand px-3 text-xs font-bold text-white hover:bg-nexoraBrandDark disabled:cursor-not-allowed disabled:opacity-50"
+            >
+              <Mail className="h-4 w-4" aria-hidden="true" />
+              {t(`${TK}.email`)}
+            </button>
           </div>
           {POS_REPORT_EMAIL_ENABLED && showEmailForm ? (
             <div className="mt-3 flex flex-col gap-2">
