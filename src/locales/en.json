@@ -4282,7 +4282,7 @@
             }
           },
           "PosPromotionsView": {
-            "description": "Offers the front desk can apply to a whole visit at checkout, each running on the days and hours you choose.",
+            "description": "Promotions and special offers available at your salon.",
             "addPromotion": "Add promotion",
             "noPromotions": "No promotions yet. Add one and it appears at checkout for visits inside its window.",
             "rateOff": "{{rate}} off",
