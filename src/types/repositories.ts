@@ -38,6 +38,7 @@ export interface BusinessApiDto {
   country?: string
   phone?: string
   website?: string
+  timeZone?: string | null
   logoUrl?: string | null
   bookingNotificationPhone?: string
   salesTaxRatePercent?: number

@@ -4201,7 +4201,35 @@
               "discount": "Discount",
               "discountHint": "Only the share of a service discount this technician agreed to absorb.",
               "techTakes": "Tech takes",
-              "weeklyGuarantee": "Weekly guarantee"
+              "weeklyGuarantee": "Weekly guarantee",
+              "action": "Action"
+            },
+            "viewAction": "View",
+            "detail": {
+              "title": "Technician report",
+              "dailyTitle": "Daily details",
+              "weeklyTitle": "Weekly summary",
+              "close": "Close report",
+              "loadError": "Could not load the report details.",
+              "noTickets": "No completed tickets for this date.",
+              "ticket": "Ticket",
+              "day": "Day",
+              "amount": "Amount",
+              "tips": "Tips",
+              "time": "Time",
+              "services": "Services",
+              "ownerDiscount": "Owner discount",
+              "totalAmount": "Total amount",
+              "totalTips": "Total tips",
+              "totalDiscount": "Total discount",
+              "totalCommission": "Total commission",
+              "collected": "{{method}} collected",
+              "emailLabel": "Email",
+              "emailComingSoon": "Coming soon",
+              "emailPlaceholder": "Enter recipient email",
+              "print": "Print",
+              "email": "Send mail",
+              "send": "Send"
             },
             "payStructure": {
               "commission": "Commission",
@@ -4212,21 +4240,21 @@
               "tiered": "Tiered"
             },
             "picker": {
+              "controlsLabel": "Report period controls",
               "modeLabel": "Report period",
               "mode": {
                 "daily": "Daily",
                 "weekly": "Weekly",
                 "monthly": "Monthly"
               },
-              "choose": "Choose period",
               "prev": "Previous",
               "next": "Next",
-              "thisWeek": "This week",
-              "remove": "Remove {{period}}",
-              "dailyHint": "Tap several days to compare them together.",
-              "weeklyHint": "Tap several weeks to compare them together.",
-              "limitDays": "Up to {{count}} days per report.",
-              "limitWeeks": "Up to {{count}} weeks per report."
+              "selectDate": "Select date",
+              "selectWeekDate": "Select any date in the week",
+              "selectMonth": "Select month",
+              "dailyHint": "Pick one date or use the arrows for the previous/next day.",
+              "weeklyHint": "Pick any date; the report automatically uses its Monday-Sunday week.",
+              "monthlyHint": "Pick one month or use the arrows for the previous/next month."
             }
           },
           "OrderDiscountSection": {

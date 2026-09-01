@@ -37,9 +37,9 @@ export const DEFAULT_POS_FRONT_DESK_TAB = PosFrontDeskTab.OrderList
 export const POS_FRONT_DESK_TAB_PARAM = 'tab'
 
 /**
- * Report period deep-link params, e.g. `?tab=report&mode=Daily&dates=2026-08-21,2026-08-23`.
- * Multi-value params are comma-joined rather than repeated so the whole selection survives a
- * copy-pasted link.
+ * Report period deep-link params, e.g. `?tab=report&mode=Daily&dates=2026-08-21`.
+ * The plural query-key names are kept for backwards-compatible links, but the picker now keeps
+ * exactly one day, one ISO week, or one month.
  */
 export const REPORT_MODE_PARAM = 'mode'
 export const REPORT_DATES_PARAM = 'dates'

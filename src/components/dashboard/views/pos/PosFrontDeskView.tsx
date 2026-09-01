@@ -89,6 +89,10 @@ import {
   POS_TABLE_STICKY_ACTION_CELL_CLASS,
   POS_TABLE_STICKY_ACTION_HEADER_CLASS,
 } from './posTableStyles'
+import {
+  DEFAULT_SETTINGS_TIMEZONE,
+  detectTimeZoneFromAddressText,
+} from '../settingsLocationDetect'
 
 // Every string this screen passes to t() lives under one namespace — building them through tk()
 // keeps the prefix in a single place instead of repeating it two dozen times inline.
@@ -215,27 +219,30 @@ const TAB_SCROLL_STEP_RATIO = 0.8
 
 // A hand-edited or stale link must never crash the tab: anything unparseable falls back to that
 // mode's default period (today / this week / this month).
-function readReportSelectionFromParams(params: URLSearchParams): PosReportSelection {
+function readReportSelectionFromParams(
+  params: URLSearchParams,
+  businessTimeZone: string,
+): PosReportSelection {
   const rawMode = params.get(REPORT_MODE_PARAM)
   const mode = Object.values(PosReportMode).includes(rawMode as PosReportMode)
     ? (rawMode as PosReportMode)
     : PosReportMode.Daily
-  const fallback = defaultReportSelection(mode)
+  const fallback = defaultReportSelection(mode, businessTimeZone)
 
   if (mode === PosReportMode.Daily) {
-    const dates = (params.get(REPORT_DATES_PARAM) ?? '')
+    const date = (params.get(REPORT_DATES_PARAM) ?? '')
       .split(',')
       .map((value) => value.trim())
-      .filter((value) => /^\d{4}-\d{2}-\d{2}$/.test(value))
-    return dates.length > 0 ? { ...fallback, dates } : fallback
+      .find((value) => /^\d{4}-\d{2}-\d{2}$/.test(value))
+    return date ? { ...fallback, dates: [date] } : fallback
   }
 
   if (mode === PosReportMode.Weekly) {
-    const weeks = (params.get(REPORT_WEEKS_PARAM) ?? '')
+    const week = (params.get(REPORT_WEEKS_PARAM) ?? '')
       .split(',')
       .map((value) => value.trim())
-      .filter((value) => parseIsoWeekKey(value) !== null)
-    return weeks.length > 0 ? { ...fallback, weeks } : fallback
+      .find((value) => parseIsoWeekKey(value) !== null)
+    return week ? { ...fallback, weeks: [week] } : fallback
   }
 
   const month = (params.get(REPORT_MONTH_PARAM) ?? '').trim()
@@ -282,7 +289,7 @@ function ScrollableTabStrip({ children }: { children: ReactNode }) {
   }
 
   const arrowClass =
-    'flex h-9 w-8 shrink-0 items-center justify-center self-stretch rounded-lg text-nexoraMuted transition-colors hover:bg-nexoraCanvas hover:text-nexoraText disabled:cursor-not-allowed disabled:opacity-40 disabled:hover:bg-transparent disabled:hover:text-nexoraMuted'
+    'flex h-9 w-8 shrink-0 self-center items-center justify-center rounded-lg text-nexoraMuted transition-colors hover:bg-nexoraCanvas hover:text-nexoraText disabled:cursor-not-allowed disabled:opacity-40 disabled:hover:bg-transparent disabled:hover:text-nexoraMuted'
 
   return (
     <div className="flex items-center gap-1">
@@ -317,6 +324,7 @@ export default function PosFrontDeskView({
   businessAddress,
   businessPhone,
   businessSlug,
+  businessTimeZone,
 }: {
   businessId: string
   // Shown on Check-in Step 1's welcome message — optional since the Staff dashboard route
@@ -325,6 +333,7 @@ export default function PosFrontDeskView({
   businessAddress?: string
   businessPhone?: string
   businessSlug?: string
+  businessTimeZone?: string | null
 }) {
   const { t, currentLanguage } = useTranslation()
   const { showToast, showConfirm } = useNotification()
@@ -342,6 +351,14 @@ export default function PosFrontDeskView({
       .filter(Boolean)
       .join(', ') ||
     undefined
+  // Owner setup exposes the exact configured zone; a deliberate null must use the same
+  // America/Chicago fallback as the backend. Staff business links do not expose it yet, so their
+  // existing address data is the best available no-new-API fallback.
+  const reportBusinessTimeZone = businessTimeZone === null
+    ? DEFAULT_SETTINGS_TIMEZONE
+    : businessTimeZone?.trim()
+      || detectTimeZoneFromAddressText(receiptBusinessAddress ?? '')
+      || DEFAULT_SETTINGS_TIMEZONE
 
   // Deep-link support for the Owner Dashboard's "Total Bookings" KPI card (Ticket 10),
   // which navigates here with ?tab=booking to land straight on the Bookings tab. Also
@@ -466,10 +483,10 @@ export default function PosFrontDeskView({
     todayRosterQuery,
     turnBoardQuery,
   ])
-  // Report period lives in the URL so a manager can deep-link "these three days" and survive F5,
-  // same convention as the ?tab= param above.
+  // Report period lives in the URL so a manager can deep-link the selected day/week/month and
+  // survive F5, using the same convention as the ?tab= param above.
   const [reportSelection, setReportSelectionState] = useState<PosReportSelection>(
-    () => readReportSelectionFromParams(searchParams),
+    () => readReportSelectionFromParams(searchParams, reportBusinessTimeZone),
   )
   const setReportSelection = (next: PosReportSelection) => {
     setReportSelectionState(next)
@@ -482,10 +499,10 @@ export default function PosFrontDeskView({
         params.delete(REPORT_WEEKS_PARAM)
         params.delete(REPORT_MONTH_PARAM)
         if (next.mode === PosReportMode.Daily && next.dates.length > 0) {
-          params.set(REPORT_DATES_PARAM, [...next.dates].sort().join(','))
+          params.set(REPORT_DATES_PARAM, next.dates[0])
         }
         if (next.mode === PosReportMode.Weekly && next.weeks.length > 0) {
-          params.set(REPORT_WEEKS_PARAM, [...next.weeks].sort().join(','))
+          params.set(REPORT_WEEKS_PARAM, next.weeks[0])
         }
         if (next.mode === PosReportMode.Monthly && next.month) {
           params.set(REPORT_MONTH_PARAM, next.month)
@@ -1690,6 +1707,7 @@ export default function PosFrontDeskView({
       {activeTab === PosFrontDeskTab.Report && (
         <PosReportPanel
           businessId={businessId}
+          businessTimeZone={reportBusinessTimeZone}
           isActive={activeTab === PosFrontDeskTab.Report}
           selection={reportSelection}
           onSelectionChange={setReportSelection}

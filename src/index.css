@@ -1246,6 +1246,73 @@ body:not(.homepage-active):not(.public-booking-active) a:focus-visible {
     overflow: visible !important;
   }
 
+  @page pos-staff-report {
+    size: 80mm auto;
+    margin: 0;
+  }
+
+  body.printing-pos-report-detail > #root {
+    display: none !important;
+  }
+
+  body.printing-pos-report-detail .pos-report-detail-backdrop {
+    position: static !important;
+    display: block !important;
+    width: 80mm !important;
+    max-width: 80mm !important;
+    min-height: 0 !important;
+    padding: 0 !important;
+    overflow: visible !important;
+    background: #ffffff !important;
+  }
+
+  body.printing-pos-report-detail .pos-report-detail-modal {
+    display: block !important;
+    width: 80mm !important;
+    max-width: 80mm !important;
+    max-height: none !important;
+    margin: 0 auto !important;
+    overflow: visible !important;
+    border: 0 !important;
+    border-radius: 0 !important;
+    background: #ffffff !important;
+    box-shadow: none !important;
+    page: pos-staff-report;
+  }
+
+  body.printing-pos-report-detail .pos-report-detail-body,
+  body.printing-pos-report-detail .pos-report-detail-print {
+    display: block !important;
+    overflow: visible !important;
+    color: #000000 !important;
+  }
+
+  body.printing-pos-report-detail .pos-report-detail-header,
+  body.printing-pos-report-detail .pos-report-detail-print * {
+    color: #000000 !important;
+  }
+
+  body.printing-pos-report-detail .pos-report-detail-print .overflow-x-auto {
+    overflow: visible !important;
+  }
+
+  body.printing-pos-report-detail .pos-report-detail-print table {
+    width: 100% !important;
+    min-width: 0 !important;
+    table-layout: fixed !important;
+  }
+
+  body.printing-pos-report-detail .pos-report-detail-print th,
+  body.printing-pos-report-detail .pos-report-detail-print td {
+    white-space: normal !important;
+    overflow-wrap: anywhere !important;
+  }
+
+  body.printing-pos-report-detail .pos-report-detail-actions,
+  body.printing-pos-report-detail .pos-report-detail-close {
+    display: none !important;
+  }
+
   /* Reset body and html for print */
   html,
   body {
