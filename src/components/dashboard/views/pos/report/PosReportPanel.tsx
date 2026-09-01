@@ -3,14 +3,23 @@ import { useTranslation } from '../../../../../contexts/LanguageContext'
 import { SkeletonList } from '../../../../ui/skeleton'
 import { formatCurrency } from '../../../utils'
 import { usePosReport } from '../../../../../data/hooks/usePosReport'
-import posReportRepository, { type PosReportParams } from '../../../../../data/repositories/posReport'
+import { useMerchantStaff } from '../../../../../data/hooks/useMerchantStaff'
+import { useSessionRole } from '../../../../../auth/useSessionRole'
+import posReportRepository, {
+  type PosReportDetailParams,
+  type PosReportParams,
+  type PosReportRow,
+} from '../../../../../data/repositories/posReport'
 import { PosReportMode } from '../../../../../constants/posReportMode'
 import { formatPosTime } from '../posDateTime'
 import PosReportPeriodPicker from './PosReportPeriodPicker'
 import PosReportTable from './PosReportTable'
+import PosReportDetailModal from './PosReportDetailModal'
 import {
   defaultSelectionFor,
+  isoWeekBounds,
   isSelectionComplete,
+  parseIsoWeekKey,
   type PosReportSelection,
 } from './posReportPeriod'
 
@@ -18,14 +27,20 @@ const TK = 'components.dashboard.views.pos.report'
 
 type Props = {
   businessId?: string
+  businessTimeZone: string
   isActive: boolean
   selection: PosReportSelection
   onSelectionChange: (next: PosReportSelection) => void
 }
 
-function toParams(businessId: string, selection: PosReportSelection): PosReportParams {
+function toParams(
+  businessId: string,
+  selection: PosReportSelection,
+  businessTimeZone: string,
+): PosReportParams {
   return {
     businessId,
+    timeZone: businessTimeZone,
     mode: selection.mode,
     dates: selection.mode === PosReportMode.Daily ? selection.dates : undefined,
     weeks: selection.mode === PosReportMode.Weekly ? selection.weeks : undefined,
@@ -33,17 +48,37 @@ function toParams(businessId: string, selection: PosReportSelection): PosReportP
   }
 }
 
-export default function PosReportPanel({ businessId, isActive, selection, onSelectionChange }: Props) {
+export default function PosReportPanel({
+  businessId,
+  businessTimeZone,
+  isActive,
+  selection,
+  onSelectionChange,
+}: Props) {
   const { t, currentLanguage } = useTranslation()
   const [isExporting, setIsExporting] = useState(false)
   const [exportError, setExportError] = useState(false)
+  const [detailRow, setDetailRow] = useState<PosReportRow | null>(null)
+  const { isOwner, isStaff, session } = useSessionRole()
+  const staffListQuery = useMerchantStaff({
+    pageNumber: 1,
+    pageSize: 20,
+    keyword: detailRow?.displayName,
+    enabled: isOwner && detailRow !== null,
+  })
 
   const params = useMemo(
-    () => (businessId && isSelectionComplete(selection) ? toParams(businessId, selection) : null),
-    [businessId, selection],
+    () => (businessId && isSelectionComplete(selection)
+      ? toParams(businessId, selection, businessTimeZone)
+      : null),
+    [businessId, businessTimeZone, selection],
   )
 
   const reportQuery = usePosReport(params, { enabled: isActive })
+
+  useEffect(() => {
+    setDetailRow(null)
+  }, [selection])
 
   // The tab stays mounted while the user moves around Front Desk, so a return visit must refetch —
   // a checkout done on another tab changes these numbers.
@@ -57,6 +92,41 @@ export default function PosReportPanel({ businessId, isActive, selection, onSele
   const data = reportQuery.data
   const rows = data?.rows ?? []
   const totals = data?.totals
+  const detailPeriod = useMemo(() => {
+    if (selection.mode === PosReportMode.Daily) {
+      const date = selection.dates[0]
+      return date ? { key: date, start: date, end: date } : null
+    }
+    if (selection.mode === PosReportMode.Weekly) {
+      const weekKey = selection.weeks[0]
+      const parsed = parseIsoWeekKey(weekKey ?? '')
+      return parsed && weekKey ? { key: weekKey, ...isoWeekBounds(parsed.year, parsed.week) } : null
+    }
+    return null
+  }, [selection])
+  const detailDefaultEmail = useMemo(() => {
+    if (!detailRow) return ''
+    const staff = staffListQuery.data?.items.find((item) =>
+      String(item.linkId ?? item.staffLinkId ?? item.id ?? '') === detailRow.businessStaffLinkId,
+    )
+    if (typeof staff?.email === 'string' && staff.email.trim()) return staff.email
+
+    // Staff-role report access cannot read the owner-only Merchant Staff roster. When the chosen
+    // row unambiguously matches the signed-in staff member, their session email is a role-safe
+    // existing source. Coworker rows stay blank until an API exposes those emails to this role.
+    const normalizedName = detailRow.displayName.trim().toLocaleLowerCase()
+    const matchingRows = rows.filter(
+      (row) => row.displayName.trim().toLocaleLowerCase() === normalizedName,
+    )
+    const sessionName = session?.displayName?.trim().toLocaleLowerCase()
+    return isStaff
+      && matchingRows.length === 1
+      && Boolean(sessionName)
+      && sessionName === normalizedName
+      && typeof session?.email === 'string'
+      ? session.email
+      : ''
+  }, [detailRow, isStaff, rows, session?.displayName, session?.email, staffListQuery.data?.items])
 
   const handleExport = async () => {
     if (isExporting || !params) return
@@ -109,7 +179,11 @@ export default function PosReportPanel({ businessId, isActive, selection, onSele
         </div>
       </div>
 
-      <PosReportPeriodPicker selection={selection} onChange={onSelectionChange} />
+      <PosReportPeriodPicker
+        selection={selection}
+        businessTimeZone={businessTimeZone}
+        onChange={onSelectionChange}
+      />
 
       {exportError ? (
         <p className="text-xs font-semibold text-nexoraDanger" role="alert">{t(`${TK}.exportError`)}</p>
@@ -146,9 +220,27 @@ export default function PosReportPanel({ businessId, isActive, selection, onSele
               {t(`${TK}.empty`)}
             </div>
           ) : (
-            <PosReportTable rows={rows} />
+            <PosReportTable rows={rows} mode={selection.mode} onView={setDetailRow} />
           )}
         </>
+      ) : null}
+
+      {detailRow && businessId && detailPeriod && selection.mode !== PosReportMode.Monthly ? (
+        <PosReportDetailModal
+          params={{
+            businessId,
+            posStaffProfileId: detailRow.posStaffProfileId,
+            mode: selection.mode,
+            periodKey: detailPeriod.key,
+            displayName: detailRow.displayName,
+            periodStart: detailPeriod.start,
+            periodEnd: detailPeriod.end,
+            timeZone: businessTimeZone,
+          } satisfies PosReportDetailParams}
+          displayName={detailRow.displayName}
+          defaultEmail={detailDefaultEmail}
+          onClose={() => setDetailRow(null)}
+        />
       ) : null}
     </section>
   )

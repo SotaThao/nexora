@@ -130,6 +130,13 @@ export const qk = {
     if (selection) key.push(selection)
     return key
   },
+  merchantPosReportDetail: (businessId?: string, posStaffProfileId?: string, selection?: string) => [
+    'merchantSettings',
+    'posReportDetail',
+    businessId ?? '',
+    posStaffProfileId ?? '',
+    selection ?? '',
+  ],
   merchantPosWeeklyPayrollDailyDetail: (businessStaffLinkId?: string, weekStart?: string) => {
     const key: unknown[] = ['merchantSettings', 'posWeeklyPayrollDailyDetail', businessStaffLinkId ?? '']
     if (weekStart) key.push(weekStart)

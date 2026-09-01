@@ -5,9 +5,6 @@
  */
 import { PosReportMode } from '../../../../../constants/posReportMode'
 
-export const MAX_DAILY_DATES = 31
-export const MAX_WEEKLY_WEEKS = 13
-
 export type IsoDate = string // yyyy-MM-dd
 export type IsoWeekKey = string // yyyy-Www
 export type MonthKey = string // yyyy-MM
@@ -20,15 +17,29 @@ export function toIsoDate(year: number, month: number, day: number): IsoDate {
   return `${year}-${pad2(month)}-${pad2(day)}`
 }
 
-/** Today in the browser's own calendar — the closest a client can get to the salon's date. */
-export function todayIso(): IsoDate {
+/** Today in the salon calendar. Without a zone, preserve the browser-calendar fallback. */
+export function todayIso(timeZone?: string): IsoDate {
   const now = new Date()
+  if (timeZone) {
+    try {
+      const parts = new Intl.DateTimeFormat('en-US', {
+        timeZone,
+        year: 'numeric',
+        month: '2-digit',
+        day: '2-digit',
+      }).formatToParts(now)
+      const value = (type: Intl.DateTimeFormatPartTypes) =>
+        Number(parts.find((part) => part.type === type)?.value ?? 0)
+      return toIsoDate(value('year'), value('month'), value('day'))
+    } catch {
+      // An invalid/missing business zone must not break the report picker.
+    }
+  }
   return toIsoDate(now.getFullYear(), now.getMonth() + 1, now.getDate())
 }
 
-export function currentMonthKey(): MonthKey {
-  const now = new Date()
-  return `${now.getFullYear()}-${pad2(now.getMonth() + 1)}`
+export function currentMonthKey(timeZone?: string): MonthKey {
+  return todayIso(timeZone).slice(0, 7)
 }
 
 export function daysInMonth(year: number, month: number): number {
@@ -84,10 +95,10 @@ export function isoWeekBounds(year: number, week: number): { start: IsoDate; end
   return { start: asIso(monday), end: asIso(sunday) }
 }
 
-export function currentIsoWeekKey(): IsoWeekKey {
-  const now = new Date()
-  const { year, week } = isoWeekOf(now.getFullYear(), now.getMonth() + 1, now.getDate())
-  return isoWeekKey(year, week)
+export function currentIsoWeekKey(timeZone?: string): IsoWeekKey {
+  const [year, month, day] = todayIso(timeZone).split('-').map(Number)
+  const { year: isoYear, week } = isoWeekOf(year, month, day)
+  return isoWeekKey(isoYear, week)
 }
 
 export function parseMonthKey(key: MonthKey): { year: number; month: number } | null {
@@ -98,27 +109,24 @@ export function parseMonthKey(key: MonthKey): { year: number; month: number } | 
   return { year: Number(match[1]), month }
 }
 
-export function formatDayLabel(iso: IsoDate, language: string): string {
+export function formatDayLabel(iso: IsoDate, _language: string): string {
   const parsed = /^(\d{4})-(\d{2})-(\d{2})$/.exec(iso)
   if (!parsed) return iso
   const [, year, month, day] = parsed
-  return String(language || 'en').toLowerCase().startsWith('vi')
-    ? `${day}/${month}/${year}`
-    : `${month}/${day}/${year}`
+  return new Intl.DateTimeFormat('en-US', {
+    month: 'short',
+    day: 'numeric',
+    year: 'numeric',
+    timeZone: 'UTC',
+  }).format(new Date(Date.UTC(Number(year), Number(month) - 1, Number(day))))
 }
 
-/** "25/08 – 31/08" — both months spelled out when the week straddles two of them. */
+/** US report format, e.g. "Aug 24, 2026 – Aug 30, 2026". */
 export function formatWeekRangeLabel(key: IsoWeekKey, language: string): string {
   const parsed = parseIsoWeekKey(key)
   if (!parsed) return key
   const { start, end } = isoWeekBounds(parsed.year, parsed.week)
-  const short = (iso: IsoDate) => {
-    const [, month, day] = iso.split('-')
-    return String(language || 'en').toLowerCase().startsWith('vi')
-      ? `${day}/${month}`
-      : `${month}/${day}`
-  }
-  return `${short(start)} – ${short(end)}`
+  return `${formatDayLabel(start, language)} – ${formatDayLabel(end, language)}`
 }
 
 export function formatMonthLabel(key: MonthKey, language: string): string {
@@ -135,12 +143,12 @@ export type PosReportSelection = {
   month: MonthKey
 }
 
-export function defaultSelectionFor(mode: PosReportMode): PosReportSelection {
+export function defaultSelectionFor(mode: PosReportMode, timeZone?: string): PosReportSelection {
   return {
     mode,
-    dates: mode === PosReportMode.Daily ? [todayIso()] : [],
-    weeks: mode === PosReportMode.Weekly ? [currentIsoWeekKey()] : [],
-    month: mode === PosReportMode.Monthly ? currentMonthKey() : '',
+    dates: mode === PosReportMode.Daily ? [todayIso(timeZone)] : [],
+    weeks: mode === PosReportMode.Weekly ? [currentIsoWeekKey(timeZone)] : [],
+    month: mode === PosReportMode.Monthly ? currentMonthKey(timeZone) : '',
   }
 }
 
@@ -149,10 +157,4 @@ export function isSelectionComplete(selection: PosReportSelection): boolean {
   if (selection.mode === PosReportMode.Daily) return selection.dates.length > 0
   if (selection.mode === PosReportMode.Weekly) return selection.weeks.length > 0
   return Boolean(selection.month)
-}
-
-export function selectionLimitReached(selection: PosReportSelection): boolean {
-  if (selection.mode === PosReportMode.Daily) return selection.dates.length >= MAX_DAILY_DATES
-  if (selection.mode === PosReportMode.Weekly) return selection.weeks.length >= MAX_WEEKLY_WEEKS
-  return true
 }

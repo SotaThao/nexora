@@ -4201,7 +4201,35 @@
               "discount": "Giảm giá",
               "discountHint": "Chỉ phần giảm giá dịch vụ mà thợ đồng ý tự gánh.",
               "techTakes": "Thợ nhận",
-              "weeklyGuarantee": "Bảo đảm tuần"
+              "weeklyGuarantee": "Bảo đảm tuần",
+              "action": "Thao tác"
+            },
+            "viewAction": "Xem",
+            "detail": {
+              "title": "Báo cáo thợ",
+              "dailyTitle": "Chi tiết theo ngày",
+              "weeklyTitle": "Tổng hợp theo tuần",
+              "close": "Đóng báo cáo",
+              "loadError": "Không tải được chi tiết báo cáo.",
+              "noTickets": "Không có ticket đã hoàn tất trong ngày này.",
+              "ticket": "Ticket",
+              "day": "Ngày",
+              "amount": "Số tiền",
+              "tips": "Tip",
+              "time": "Giờ",
+              "services": "Dịch vụ",
+              "ownerDiscount": "Owner discount",
+              "totalAmount": "Tổng số tiền",
+              "totalTips": "Tổng tip",
+              "totalDiscount": "Tổng giảm giá",
+              "totalCommission": "Tổng hoa hồng",
+              "collected": "Đã thu qua {{method}}",
+              "emailLabel": "Email",
+              "emailComingSoon": "Sắp ra mắt",
+              "emailPlaceholder": "Nhập email người nhận",
+              "print": "In",
+              "email": "Email",
+              "send": "Gửi"
             },
             "payStructure": {
               "commission": "Hoa hồng",
@@ -4212,21 +4240,21 @@
               "tiered": "Bậc thang"
             },
             "picker": {
+              "controlsLabel": "Điều khiển kỳ báo cáo",
               "modeLabel": "Kỳ báo cáo",
               "mode": {
                 "daily": "Ngày",
                 "weekly": "Tuần",
                 "monthly": "Tháng"
               },
-              "choose": "Chọn kỳ",
               "prev": "Trước",
               "next": "Sau",
-              "thisWeek": "Tuần này",
-              "remove": "Bỏ {{period}}",
-              "dailyHint": "Chạm nhiều ngày để xem gộp lại.",
-              "weeklyHint": "Chạm nhiều tuần để xem gộp lại.",
-              "limitDays": "Tối đa {{count}} ngày mỗi báo cáo.",
-              "limitWeeks": "Tối đa {{count}} tuần mỗi báo cáo."
+              "selectDate": "Chọn ngày",
+              "selectWeekDate": "Chọn một ngày bất kỳ trong tuần",
+              "selectMonth": "Chọn tháng",
+              "dailyHint": "Chọn một ngày hoặc dùng mũi tên để chuyển ngày trước/sau.",
+              "weeklyHint": "Chọn một ngày bất kỳ; báo cáo tự lấy tuần từ Thứ Hai đến Chủ Nhật.",
+              "monthlyHint": "Chọn một tháng hoặc dùng mũi tên để chuyển tháng trước/sau."
             }
           },
           "OrderDiscountSection": {
