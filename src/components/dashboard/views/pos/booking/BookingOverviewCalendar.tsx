@@ -130,7 +130,7 @@ export default function BookingOverviewCalendar({
                               style={{ backgroundColor: POS_BOOKING_CALENDAR_STATUS_COLORS[statusGroup].border }}
                             />
                             <span>{formatBookingWallClockTime(booking.scheduledAt, booking.source)}</span>
-                            <strong>{booking.customerName}</strong>
+                            <strong className="pos-customer-name">{booking.customerName}</strong>
                           </button>
                         )
                       })}

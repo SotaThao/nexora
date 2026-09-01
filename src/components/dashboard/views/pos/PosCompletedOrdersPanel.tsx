@@ -155,7 +155,7 @@ export default function PosCompletedOrdersPanel({ businessId }: { businessId: st
                           #{order.orderNumber}
                         </span>
                       </td>
-                      <td className="px-4 py-3 font-bold text-nexoraText">{order.customerName}</td>
+                      <td className="pos-customer-name px-4 py-3 font-bold text-nexoraText">{order.customerName}</td>
                       <td className="whitespace-nowrap px-4 py-3 tabular-nums text-nexoraMuted">
                         {formatCustomerPhone(order.customerPhone, order.customerPhoneE164) || '—'}
                       </td>
@@ -254,7 +254,7 @@ export default function PosCompletedOrdersPanel({ businessId }: { businessId: st
                       <p className="text-[10px] font-extrabold uppercase text-nexoraMuted">
                         {t('components.dashboard.views.pos.PosCompletedOrdersPanel.viewDetailCustomer')}
                       </p>
-                      <p className="text-xs text-nexoraText">{viewDetail.data.customerName}</p>
+                      <p className="pos-customer-name text-xs text-nexoraText">{viewDetail.data.customerName}</p>
                     </div>
                     <div>
                       <p className="text-[10px] font-extrabold uppercase text-nexoraMuted">

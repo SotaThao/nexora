@@ -2062,7 +2062,7 @@ export default function PosOrderWorkspace({
         <h1 className="text-2xl font-bold leading-tight text-nexoraText">
           {t('components.dashboard.views.pos.PosOrderWorkspace.titleUpdate', {
             orderNumber: order?.orderNumber ?? '',
-            customerName: order?.customerName ?? '',
+            customerName: order?.customerName.toLocaleUpperCase() ?? '',
           })}
         </h1>
       </div>

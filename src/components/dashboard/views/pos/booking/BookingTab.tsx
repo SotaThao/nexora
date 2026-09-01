@@ -493,7 +493,11 @@ export default function BookingTab({
                   {t(p + 'viewDetailModalTitle')}
                 </p>
                 <h3 id="booking-detail-title" className="mt-1 text-lg font-extrabold tracking-tight text-nexoraText">
-                  {viewDetail.data?.customerName ?? t(p + 'viewDetailModalTitle')}
+                  {viewDetail.data?.customerName ? (
+                    <span className="pos-customer-name">{viewDetail.data.customerName}</span>
+                  ) : (
+                    t(p + 'viewDetailModalTitle')
+                  )}
                 </h3>
               </div>
               <button
@@ -516,7 +520,7 @@ export default function BookingTab({
                         {viewDetail.data.customerName.slice(0, 1).toUpperCase()}
                       </div>
                       <div className="min-w-0">
-                        <p className="text-sm font-extrabold text-nexoraText">{viewDetail.data.customerName}</p>
+                        <p className="pos-customer-name text-sm font-extrabold text-nexoraText">{viewDetail.data.customerName}</p>
                         <p className="mt-0.5 truncate text-xs text-nexoraMuted">
                           {formatCustomerPhone(viewDetail.data.customerPhone, viewDetail.data.customerPhoneE164)
                             || t(p + 'viewDetailNotProvided')}

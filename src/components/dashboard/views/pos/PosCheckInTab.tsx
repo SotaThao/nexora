@@ -12,6 +12,8 @@ import CheckInSurface from '../../../checkin/CheckInSurface'
 import createPosCheckInSource from '../../../checkin/sources/usePosCheckInSource'
 import { useCheckInSettings } from '../../../../data/hooks/usePosCheckIn'
 
+const uppercaseCustomerName = (name: string) => name.toLocaleUpperCase()
+
 export default function PosCheckInTab({
   businessId,
   businessName,
@@ -39,6 +41,7 @@ export default function PosCheckInTab({
       onCheckedIn={onCheckedIn}
       onFinished={onFinished}
       compactTechnicianCards
+      formatCustomerNameForDisplay={uppercaseCustomerName}
     />
   )
 }

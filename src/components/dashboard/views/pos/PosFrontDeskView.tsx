@@ -583,7 +583,10 @@ export default function PosFrontDeskView({
   }
 
   const handleCancel = async (orderId: string, name: string) => {
-    const confirmed = await showConfirm(t(tk('confirmCancelBody'), { name }), t(tk('confirmCancelTitle')))
+    const confirmed = await showConfirm(
+      t(tk('confirmCancelBody'), { name: name.toLocaleUpperCase() }),
+      t(tk('confirmCancelTitle')),
+    )
     if (!confirmed) return
     try {
       await cancelOrder.mutateAsync(orderId)
@@ -671,7 +674,7 @@ export default function PosFrontDeskView({
           </span>
         ) : null}
       </div>
-      <p className="truncate text-sm font-bold text-nexoraText">{booking.customerName}</p>
+      <p className="pos-customer-name truncate text-sm font-bold text-nexoraText">{booking.customerName}</p>
       {renderServiceChips(booking.serviceNames)}
       <div>{renderTechnicianChip(booking.technicianNames)}</div>
       <div className="flex justify-end border-t border-nexoraBorder pt-2">
@@ -685,7 +688,7 @@ export default function PosFrontDeskView({
   const renderNotArrivedOrderRow = (booking: BookingListItemApiDto) => (
     <tr key={booking.bookingId} className="border-t border-nexoraBorder/70 bg-sky-50/20 transition-colors hover:bg-sky-50/45">
       <td className="px-4 py-3 font-mono font-bold text-nexoraMuted">—</td>
-      <td className="px-4 py-3 font-bold text-nexoraText">{booking.customerName}</td>
+      <td className="pos-customer-name px-4 py-3 font-bold text-nexoraText">{booking.customerName}</td>
       <td className="whitespace-nowrap px-4 py-3 font-semibold tabular-nums text-nexoraText">
         {formatBookingWallClockTime(booking.scheduledAt, booking.source)}
       </td>
@@ -752,7 +755,7 @@ export default function PosFrontDeskView({
                 <td className="px-4 py-3 font-semibold tabular-nums text-nexoraText">
                   {formatBookingWallClockTime(booking.scheduledAt, booking.source)}
                 </td>
-                <td className="px-4 py-3 font-bold text-nexoraText">{booking.customerName}</td>
+                <td className="pos-customer-name px-4 py-3 font-bold text-nexoraText">{booking.customerName}</td>
                 <td className="px-4 py-3">{renderTechnicianChip(booking.technicianNames)}</td>
                 <td className="px-4 py-3">{renderServiceChips(booking.serviceNames)}</td>
                 <td className={`${POS_TABLE_STICKY_ACTION_CELL_CLASS} px-4 py-3 text-right`}>
@@ -837,7 +840,7 @@ export default function PosFrontDeskView({
         {station.currentStatus === PosOrderStatus.InService && (
           <div className="space-y-2 rounded-xl bg-nexoraCanvas/70 p-3">
             <div className="flex items-center justify-between gap-2">
-              <p className="truncate text-xs font-bold text-nexoraText">{station.currentCustomerName}</p>
+              <p className="pos-customer-name truncate text-xs font-bold text-nexoraText">{station.currentCustomerName}</p>
               {station.currentOrderNumber ? (
                 <span className="shrink-0 font-mono text-[11px] font-bold text-nexoraMuted">
                   #{station.currentOrderNumber}
@@ -906,7 +909,7 @@ export default function PosFrontDeskView({
               >
                 <div className="flex items-start justify-between gap-3">
                   <div className="min-w-0">
-                    <p className="truncate text-sm font-bold text-nexoraText">{order.customerName}</p>
+                    <p className="pos-customer-name truncate text-sm font-bold text-nexoraText">{order.customerName}</p>
                     {customerPhone ? <p className="mt-0.5 text-xs tabular-nums text-nexoraMuted">{customerPhone}</p> : null}
                     <p className="mt-1 font-mono text-[11px] font-bold text-nexoraMuted">#{order.orderNumber}</p>
                   </div>
@@ -1549,7 +1552,7 @@ export default function PosFrontDeskView({
                           </span>
                         </div>
                         <div className="flex flex-wrap gap-1.5">{renderRowFlags(order)}</div>
-                        <p className="truncate text-sm font-bold text-nexoraText">{order.customerName}</p>
+                        <p className="pos-customer-name truncate text-sm font-bold text-nexoraText">{order.customerName}</p>
                         {renderServiceChips(order.serviceNames)}
                         <div>{renderTechnicianChip(order.technicianNames)}</div>
                         <div className="flex flex-wrap items-center justify-between gap-2 border-t border-nexoraBorder pt-2">
@@ -1600,7 +1603,7 @@ export default function PosFrontDeskView({
                           }`}
                         >
                           <td className="px-4 py-3 font-mono font-bold text-nexoraMuted">#{order.orderNumber}</td>
-                          <td className="px-4 py-3 font-bold text-nexoraText">{order.customerName}</td>
+                          <td className="pos-customer-name px-4 py-3 font-bold text-nexoraText">{order.customerName}</td>
                           <td className="whitespace-nowrap px-4 py-3 font-semibold tabular-nums text-nexoraText">
                             {formatPosTime(order.checkedInAt, currentLanguage) || '—'}
                           </td>

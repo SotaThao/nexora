@@ -59,7 +59,7 @@ export default function PosCheckoutSuccessView({
         <span className="grid h-16 w-16 place-items-center rounded-full bg-emerald-50 text-emerald-600"><Check className="h-8 w-8" /></span>
         <p className="mt-4 text-[10px] font-black uppercase tracking-[0.2em] text-nexoraMuted">{t('components.dashboard.views.pos.PosOrderWorkspace.checkoutComplete')}</p>
         <h1 className="mt-2 text-2xl font-black text-nexoraText">{t('components.dashboard.views.pos.PosOrderWorkspace.paymentComplete')}</h1>
-        <p className="mt-2 text-sm text-nexoraMuted">{t('components.dashboard.views.pos.PosOrderWorkspace.ticketReadyToClose', { customer: customerName })}</p>
+        <p className="mt-2 text-sm text-nexoraMuted">{t('components.dashboard.views.pos.PosOrderWorkspace.ticketReadyToClose', { customer: customerName.toLocaleUpperCase() })}</p>
         <p className="my-5 text-4xl font-black tabular-nums text-nexoraText">{formatUsdAmount(total)}</p>
         <dl className="grid w-full grid-cols-3 gap-2 text-xs">
           {[

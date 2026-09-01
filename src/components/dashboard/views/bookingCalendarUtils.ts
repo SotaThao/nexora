@@ -180,7 +180,7 @@ export function buildBookingCalendarEvents(
         cssClass: 'booking-calendar-event',
         html: (
           `<div class="booking-calendar-event">`
-          + `<div class="booking-calendar-event-name">${escapeBookingCalendarHtml(name)}</div>`
+          + `<div class="booking-calendar-event-name pos-customer-name">${escapeBookingCalendarHtml(name)}</div>`
           + `<div class="booking-calendar-event-service">${escapeBookingCalendarHtml(service)}</div>`
           + `<div class="booking-calendar-event-meta">${minutes} min · ${escapeBookingCalendarHtml(booking.statusLabel)}</div>`
           + `</div>`

@@ -17,6 +17,10 @@ html.capacitor-native {
   --app-safe-area-left: var(--safe-area-inset-left, env(safe-area-inset-left, 0px));
 }
 
+.pos-front-desk-action-surface .pos-customer-name {
+  text-transform: uppercase;
+}
+
 /* POS Front Desk interaction contract. Keep every actionable control visibly
    discoverable without changing its existing semantic/status color. */
 body:has(.pos-front-desk-action-surface)

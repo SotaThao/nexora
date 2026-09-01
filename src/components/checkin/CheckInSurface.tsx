@@ -29,6 +29,7 @@ export default function CheckInSurface({
   onCancelled,
   idleSlot,
   compactTechnicianCards = false,
+  formatCustomerNameForDisplay,
 }: {
   useSource: CheckInSourceHook
   layout: PosCheckInLayout
@@ -51,6 +52,9 @@ export default function CheckInSurface({
   idleSlot?: React.ReactNode
   // Front-desk-only density option. Kiosk callers omit it and retain avatar cards.
   compactTechnicianCards?: boolean
+  // Lets an embedding surface change only the rendered completion name. Session state, inputs,
+  // and submitted payloads keep the customer's original spelling and casing.
+  formatCustomerNameForDisplay?: (name: string) => string
 }) {
   const { t } = useTranslation()
 
@@ -77,7 +81,7 @@ export default function CheckInSurface({
     return (
       <ThankYouScreen
         orderNumber={session.orderNumber}
-        customerName={session.customerName.trim()}
+        customerName={formatCustomerNameForDisplay?.(session.customerName.trim()) ?? session.customerName.trim()}
         onDone={finishAfterCheckIn}
         autoReturnSeconds={autoReturnSeconds}
       />
