@@ -90,7 +90,7 @@ export default function PosReceivePaymentPanel({
             type="button"
             onClick={onMarkReceived}
             disabled={disabled}
-            className="ml-auto flex h-8 min-w-[140px] items-center justify-center rounded-lg bg-nexoraBrand px-4 text-[11px] font-bold text-white hover:bg-nexoraBrandDark disabled:opacity-60"
+            className="inline-flex h-8 min-w-[140px] items-center justify-center rounded-lg bg-nexoraBrand px-4 text-[11px] font-bold text-white hover:bg-nexoraBrandDark disabled:opacity-60"
           >
             {t('components.dashboard.views.pos.PosOrderWorkspace.markAsReceived')}
           </button>

@@ -1075,6 +1075,10 @@ body:not(.homepage-active):not(.public-booking-active) a:focus-visible {
   font-weight: 600;
 }
 
+.pos-receipt-totals dd.pos-receipt-discount {
+  color: #e11d48;
+}
+
 .pos-receipt-totals .pos-receipt-total {
   margin-top: 5px;
   padding-top: 9px;
@@ -1105,6 +1109,31 @@ body:not(.homepage-active):not(.public-booking-active) a:focus-visible {
   font-size: 11px;
   font-weight: 500;
   text-align: center;
+}
+
+/* The checkout completion card is viewed at dashboard distance, so its receipt copy is one
+   step larger than the print-preview paper while keeping the shared receipt layout intact. */
+.pos-checkout-customer-receipt .pos-receipt-ticket,
+.pos-checkout-customer-receipt .pos-receipt-business h2 {
+  font-size: 16px;
+}
+
+.pos-checkout-customer-receipt .pos-receipt-business p {
+  font-size: 11px;
+}
+
+.pos-checkout-customer-receipt .pos-receipt-lines {
+  font-size: 13px;
+}
+
+.pos-checkout-customer-receipt .pos-receipt-tech-heading,
+.pos-checkout-customer-receipt .pos-receipt-totals,
+.pos-checkout-customer-receipt .pos-receipt-thank-you {
+  font-size: 12px;
+}
+
+.pos-checkout-customer-receipt .pos-receipt-totals .pos-receipt-total {
+  font-size: 14px;
 }
 
 /* Print styles for QR Code Stand
