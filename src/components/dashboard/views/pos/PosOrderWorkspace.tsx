@@ -1025,7 +1025,17 @@ export default function PosOrderWorkspace({
                               <div className="col-span-2 overflow-x-auto pt-1">
                                 <div className="flex min-w-max items-center gap-1.5">
                                   {canMutateLine ? (
-                                    <button type="button" data-testid={`assign-technician-${line.key}`} onClick={() => openTechnicianModal(line)} disabled={isBusy} className="h-7 shrink-0 rounded-lg border border-sky-200 bg-sky-50/50 px-2 text-[10px] font-bold text-sky-700 disabled:opacity-60">
+                                    <button
+                                      type="button"
+                                      data-testid={`assign-technician-${line.key}`}
+                                      onClick={() => openTechnicianModal(line)}
+                                      disabled={isBusy}
+                                      className={`h-7 shrink-0 rounded-lg border px-2 text-[10px] font-bold transition-colors disabled:opacity-60 ${
+                                        isFirstAvailable
+                                          ? 'border-nexoraBrand bg-nexoraBrand text-white shadow-sm hover:bg-nexoraBrand/90'
+                                          : 'border-sky-200 bg-sky-50/50 text-sky-700 hover:bg-sky-100/70'
+                                      }`}
+                                    >
                                       {t(`components.dashboard.views.pos.PosOrderWorkspace.${isFirstAvailable ? 'assignTechnician' : 'changeTechnician'}`)}
                                     </button>
                                   ) : null}
@@ -1597,7 +1607,7 @@ export default function PosOrderWorkspace({
                     </div>
                     <div className="flex justify-between">
                       <dt className="text-nexoraMuted">{t('components.dashboard.views.pos.PosOrderWorkspace.summaryDiscount')}</dt>
-                      <dd className="font-semibold text-nexoraText">
+                      <dd className="font-semibold text-rose-600">
                         {order.discountAmount === 0 ? '$0.00' : `-$${Math.abs(order.discountAmount).toFixed(2)}`}
                       </dd>
                     </div>
@@ -1607,17 +1617,11 @@ export default function PosOrderWorkspace({
                           {order.appliedPromotionName
                             ?? t('components.dashboard.views.pos.PosOrderWorkspace.summaryOrderDiscount')}
                         </dt>
-                        <dd className="shrink-0 font-semibold text-nexoraText">
+                        <dd className="shrink-0 font-semibold text-rose-600">
                           -${order.orderDiscountAmount.toFixed(2)}
                         </dd>
                       </div>
                     ) : null}
-                    {/* Charged on the discounted service subtotal, so it belongs after Discount —
-                        without it the line prices above cannot be reconciled with Total. */}
-                    <div className="flex justify-between">
-                      <dt className="text-nexoraMuted">{t('components.dashboard.views.pos.PosOrderWorkspace.summarySalesTax')}</dt>
-                      <dd className="font-semibold text-nexoraText">${order.salesTaxAmount.toFixed(2)}</dd>
-                    </div>
                     <div className="flex justify-between border-t border-nexoraBorder pt-1.5">
                       <dt className="font-black uppercase text-nexoraText">
                         {t('components.dashboard.views.pos.PosOrderWorkspace.summaryTotal')}
@@ -1661,7 +1665,7 @@ export default function PosOrderWorkspace({
       return [{
         id: line.key,
         name: line.productName,
-        detail: `Qty ${line.quantity}`,
+        groupName: t('components.dashboard.views.pos.PosOrderWorkspace.summaryProducts'),
         price: lineTotal(line),
       }]
     }
@@ -1669,17 +1673,15 @@ export default function PosOrderWorkspace({
       {
         id: line.key,
         name: line.serviceName,
-        detail: line.technicianName
-          ? `${t('components.dashboard.views.pos.PosOrderWorkspace.technicianPrefix')}: ${line.technicianName}`
-          : undefined,
+        groupName: line.technicianName
+          || t('components.dashboard.views.pos.PosOrderWorkspace.firstAvailableLabel'),
         price: lineTotal(line),
       },
       ...line.addOns.map((addOn) => ({
         id: addOn.id,
         name: `+ ${addOn.addOnName}`,
-        detail: line.technicianName
-          ? `${t('components.dashboard.views.pos.PosOrderWorkspace.technicianPrefix')}: ${line.technicianName}`
-          : undefined,
+        groupName: line.technicianName
+          || t('components.dashboard.views.pos.PosOrderWorkspace.firstAvailableLabel'),
         price: addOn.lineTotal,
       })),
     ]
@@ -1701,11 +1703,8 @@ export default function PosOrderWorkspace({
         paymentMethodLabel={getPosCheckoutPaymentMethodLabel(paymentMethod, t)}
         receiptLabel={receiptLabel}
         total={completedPayment.totalAmount}
-        servicesSubtotal={completedPayment.servicesSubtotal}
-        productsSubtotal={completedPayment.productsSubtotal}
         discountAmount={completedPayment.discountAmount + (order.orderDiscountAmount ?? 0)}
         tipAmount={completedPayment.tipAmount}
-        salesTaxAmount={completedPayment.salesTaxAmount}
         items={completedReceiptItems}
         onStartNext={() => (onCompleted ?? onClose)?.()}
       />
@@ -1871,10 +1870,6 @@ export default function PosOrderWorkspace({
                         <dd>-${order.orderDiscountAmount.toFixed(2)}</dd>
                       </div>
                     ) : null}
-                    <div>
-                      <dt>{t('components.dashboard.views.pos.PosOrderWorkspace.summarySalesTax')}</dt>
-                      <dd>{formatUsdAmount(order.salesTaxAmount)}</dd>
-                    </div>
                     <div className="pos-receipt-total">
                       <dt>{t('components.dashboard.views.pos.PosOrderWorkspace.summaryTotal')}</dt>
                       <dd>{formatUsdAmount(order.total)}</dd>

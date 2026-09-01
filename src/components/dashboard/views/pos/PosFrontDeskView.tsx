@@ -517,10 +517,11 @@ export default function PosFrontDeskView({
   const [updateWorkspace, setUpdateWorkspaceState] = useState<UpdateWorkspaceState | null>(
     () => readPosWorkspaceFromParams(searchParams),
   )
-  const setUpdateWorkspace = useCallback((workspace: UpdateWorkspaceState | null) => {
+  const setUpdateWorkspace = useCallback((workspace: UpdateWorkspaceState | null, nextTab?: PosFrontDeskTab) => {
     setUpdateWorkspaceState(workspace)
+    if (nextTab) setActiveTabState(nextTab)
     setSearchParams(
-      (previous) => writePosWorkspaceToParams(previous, workspace),
+      (previous) => writePosWorkspaceToParams(previous, workspace, nextTab),
       { replace: true },
     )
   }, [setSearchParams])
@@ -1296,7 +1297,7 @@ export default function PosFrontDeskView({
             refreshFrontDeskLists()
           }}
           onCompleted={() => {
-            setUpdateWorkspace(null)
+            setUpdateWorkspace(null, PosFrontDeskTab.CheckoutCustomer)
             refreshFrontDeskLists()
           }}
         />
