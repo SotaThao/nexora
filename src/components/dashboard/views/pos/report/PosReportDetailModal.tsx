@@ -16,7 +16,7 @@ import { formatDayLabel } from './posReportPeriod'
 const TK = 'components.dashboard.views.pos.report.detail'
 // There is no POS-report email endpoint yet. Keep the prepared UI behind one switch so it can be
 // restored when the backend send API is available without exposing a non-functional action now.
-const POS_REPORT_EMAIL_ENABLED: boolean = false
+export const POS_REPORT_EMAIL_ENABLED: boolean = false
 
 type Props = {
   params: PosReportDetailParams
@@ -84,7 +84,7 @@ export default function PosReportDetailModal({
   const modal = (
     <div className="pos-report-detail-backdrop fixed inset-0 z-50 flex items-center justify-center bg-black/45 p-3 sm:p-5">
       <div
-        className="pos-report-detail-modal nexora-modal-card flex max-h-[92vh] w-[80mm] max-w-[calc(100vw-1.5rem)] flex-col bg-white"
+        className="pos-report-detail-modal nexora-modal-card flex w-[80mm] max-w-[calc(100vw-1.5rem)] flex-col bg-white"
         role="dialog"
         aria-modal="true"
         aria-labelledby="pos-report-detail-title"

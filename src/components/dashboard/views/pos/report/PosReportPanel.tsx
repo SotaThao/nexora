@@ -14,7 +14,7 @@ import { PosReportMode } from '../../../../../constants/posReportMode'
 import { formatPosTime } from '../posDateTime'
 import PosReportPeriodPicker from './PosReportPeriodPicker'
 import PosReportTable from './PosReportTable'
-import PosReportDetailModal from './PosReportDetailModal'
+import PosReportDetailModal, { POS_REPORT_EMAIL_ENABLED } from './PosReportDetailModal'
 import {
   defaultSelectionFor,
   isoWeekBounds,
@@ -64,7 +64,7 @@ export default function PosReportPanel({
     pageNumber: 1,
     pageSize: 20,
     keyword: detailRow?.displayName,
-    enabled: isOwner && detailRow !== null,
+    enabled: POS_REPORT_EMAIL_ENABLED && isOwner && detailRow !== null,
   })
 
   const params = useMemo(
