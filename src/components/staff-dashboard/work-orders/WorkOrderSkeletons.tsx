@@ -89,7 +89,6 @@ export function WorkOrderDetailSkeleton() {
       <div className={WORK_ORDERS_LAYOUT_CLASS.servicesCard}>
         <div className={WORK_ORDERS_LAYOUT_CLASS.servicesTitleRow}>
           <Skeleton width={96} height={18} borderRadius={6} />
-          <Skeleton width={88} height={14} borderRadius={6} />
         </div>
         <div className={WORK_ORDERS_LAYOUT_CLASS.skeletonServiceList}>
           {Array.from({ length: WORK_ORDER_SKELETON_COUNT.services }, (_, index) => (

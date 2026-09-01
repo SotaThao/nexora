@@ -1,5 +1,6 @@
 import { useState, type ReactNode } from 'react'
 import { Check, ChevronLeft, LayoutGrid, Play, Radio } from 'lucide-react'
+import { useSearchParams } from 'react-router-dom'
 import { useTranslation } from '../../../contexts/LanguageContext'
 import { useNotification } from '../../../contexts/NotificationContext'
 import { getErrorI18nKey } from '../../../data/errorCodes'
@@ -11,13 +12,16 @@ import {
 import type { TFunction } from '../../../types/contexts'
 import { getApiErrorCode } from '../../../types/domain'
 import {
+  WORK_ORDER_LIST_QUERY,
   WORK_ORDER_STATUS_BADGE_VARIANT,
   WORK_ORDER_STATUS_I18N,
   WORK_ORDER_TOAST_DURATION_MS,
   WORK_ORDERS_I18N,
   WORK_ORDERS_LAYOUT_CLASS,
+  parseWorkOrderTicketFilter,
   workOrderStatusClass,
   type WorkOrderDetail,
+  type WorkOrderTicketFilter,
 } from './constants'
 import WorkOrderCompleteServiceModal from './WorkOrderCompleteServiceModal'
 import WorkOrderServiceLines from './WorkOrderServiceLines'
@@ -25,8 +29,11 @@ import { WorkOrderErrorCard } from './WorkOrderQueryFeedback'
 import { WorkOrderDetailSkeleton } from './WorkOrderSkeletons'
 import {
   formatWorkOrderNumber,
-  formatWorkOrderStationValue,
+  listFilterAfterWorkOrderComplete,
+  listFilterAfterWorkOrderStart,
+  workOrderBeeperChipText,
   workOrderCustomerInitials,
+  workOrderStationChipText,
   workOrderTextOrPlaceholder,
 } from './workOrderTickets'
 import type { PosOrderStatus } from '../../../constants/posOrderStatus'
@@ -39,12 +46,22 @@ interface StaffWorkOrderDetailProps {
 export default function StaffWorkOrderDetail({ orderId, onBack }: StaffWorkOrderDetailProps) {
   const { t } = useTranslation()
   const { showToast } = useNotification()
+  const [searchParams, setSearchParams] = useSearchParams()
   const detailQuery = useStaffWorkOrderDetail(orderId)
   const startService = useStartStaffWorkOrderService(orderId)
   const completeService = useCompleteStaffWorkOrderService(orderId)
   const [isCompleteModalOpen, setIsCompleteModalOpen] = useState(false)
   const ticket = detailQuery.data ?? null
   const isMutating = startService.isPending || completeService.isPending
+  const listFilter = parseWorkOrderTicketFilter(searchParams.get(WORK_ORDER_LIST_QUERY.filter))
+
+  const rememberListFilter = (nextFilter: WorkOrderTicketFilter) => {
+    setSearchParams((current) => {
+      const next = new URLSearchParams(current)
+      next.set(WORK_ORDER_LIST_QUERY.filter, nextFilter)
+      return next
+    }, { replace: true })
+  }
 
   if (detailQuery.isPending) return <WorkOrderDetailSkeleton />
 
@@ -63,13 +80,21 @@ export default function StaffWorkOrderDetail({ orderId, onBack }: StaffWorkOrder
   }
 
   const handleConfirmCompletion = async (note: string | null) => {
-    const succeeded = note
-      ? await runAction(
-          () => completeService.mutateAsync(note),
-          WORK_ORDERS_I18N.completeServiceSuccess,
-        )
-      : false
-    if (succeeded) setIsCompleteModalOpen(false)
+    const succeeded = await runAction(
+      () => completeService.mutateAsync(note),
+      WORK_ORDERS_I18N.completeServiceSuccess,
+    )
+    if (!succeeded) return
+    rememberListFilter(listFilterAfterWorkOrderComplete(listFilter))
+    setIsCompleteModalOpen(false)
+  }
+
+  const handleStart = async () => {
+    const succeeded = await runAction(
+      () => startService.mutateAsync(),
+      WORK_ORDERS_I18N.startServiceSuccess,
+    )
+    if (succeeded) rememberListFilter(listFilterAfterWorkOrderStart(listFilter))
   }
 
   return (
@@ -86,7 +111,7 @@ export default function StaffWorkOrderDetail({ orderId, onBack }: StaffWorkOrder
         isMutating={isMutating}
         onRetry={() => void detailQuery.refetch()}
         onBack={onBack}
-        onStart={() => void runAction(() => startService.mutateAsync(), WORK_ORDERS_I18N.startServiceSuccess)}
+        onStart={() => void handleStart()}
         onComplete={() => setIsCompleteModalOpen(true)}
       />
       {isCompleteModalOpen && ticket ? (
@@ -142,6 +167,9 @@ function WorkOrderDetailBody({
     )
   }
 
+  const station = workOrderStationChipText(ticket.stationNumber, t)
+  const beeper = workOrderBeeperChipText(ticket.beeper, t)
+
   return (
     <>
       <div className={WORK_ORDERS_LAYOUT_CLASS.customerCard}>
@@ -159,15 +187,11 @@ function WorkOrderDetailBody({
             <span className={WORK_ORDERS_LAYOUT_CLASS.ticketMeta}>
               <span className={WORK_ORDERS_LAYOUT_CLASS.metaChip}>
                 <LayoutGrid className={WORK_ORDERS_LAYOUT_CLASS.ticketMetaIcon} aria-hidden="true" />
-                <span>
-                  {t(WORK_ORDERS_I18N.station, {
-                    number: formatWorkOrderStationValue(ticket.stationNumber),
-                  })}
-                </span>
+                <span>{station}</span>
               </span>
               <span className={WORK_ORDERS_LAYOUT_CLASS.metaChip}>
                 <Radio className={WORK_ORDERS_LAYOUT_CLASS.ticketMetaIcon} aria-hidden="true" />
-                <span>{t(WORK_ORDERS_I18N.beeper, { code: workOrderTextOrPlaceholder(ticket.beeper) })}</span>
+                <span>{beeper}</span>
               </span>
             </span>
           </div>

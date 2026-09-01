@@ -14,7 +14,6 @@ import {
 } from './constants'
 import {
   composeWorkOrderCompletionNote,
-  hasWorkOrderCompletionInput,
   toggleWorkOrderSuggestion,
   workOrderViewportOverlayStyle,
 } from './workOrderTickets'
@@ -51,8 +50,7 @@ export default function WorkOrderCompleteServiceModal({
   const overlayStyle = workOrderViewportOverlayStyle(viewport)
   const cardStyle = viewport ? { maxHeight: WORK_ORDER_COMPLETE_MODAL.cardMaxHeight } : undefined
 
-  const hasCompletionInput = hasWorkOrderCompletionInput(selectedSuggestions, additionalNote)
-  const canConfirm = !isPending && hasCompletionInput
+  const canConfirm = !isPending
 
   const handleConfirm = () => {
     if (!canConfirm) return
@@ -96,6 +94,9 @@ export default function WorkOrderCompleteServiceModal({
             </p>
             <p className={WORK_ORDERS_LAYOUT_CLASS.modalHeroBody}>
               {t(WORK_ORDERS_I18N.completeReadyBody)}
+            </p>
+            <p className={WORK_ORDERS_LAYOUT_CLASS.modalHeroBody}>
+              {t(WORK_ORDERS_I18N.completeClosesTicket)}
             </p>
           </div>
 

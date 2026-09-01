@@ -26,8 +26,10 @@ import {
   WORK_ORDER_VIETNAMESE_PREFIX,
   WORK_ORDER_WEEKDAY_COUNT,
   WORK_ORDER_WEEKDAY_SUNDAY,
+  WORK_ORDER_TICKET_FILTER,
   staffWorkOrdersPath,
   type WorkOrderSalon,
+  type WorkOrderTicketFilter,
 } from './constants'
 
 export function isWorkOrderVietnamese(language: string): boolean {
@@ -125,10 +127,35 @@ export function formatWorkOrderStationNumber(stationNumber: number): string {
   return String(stationNumber).padStart(WORK_ORDER_STATION_DIGITS, WORK_ORDER_PAD_CHAR)
 }
 
-export function formatWorkOrderStationValue(stationNumber: number | null | undefined): string {
-  return stationNumber != null
-    ? formatWorkOrderStationNumber(stationNumber)
-    : WORK_ORDER_EMPTY_PLACEHOLDER
+export function workOrderStationLabel(stationNumber: number | null | undefined): string | null {
+  if (typeof stationNumber !== 'number' || !Number.isFinite(stationNumber) || stationNumber <= 0) {
+    return null
+  }
+  return formatWorkOrderStationNumber(stationNumber)
+}
+
+export function workOrderBeeperLabel(beeper: string | null | undefined): string | null {
+  const text = beeper?.trim() ?? ''
+  if (!text || text === WORK_ORDER_EMPTY_PLACEHOLDER) return null
+  return text
+}
+
+export function workOrderStationChipText(
+  stationNumber: number | null | undefined,
+  translate: TFunction,
+): string {
+  return translate(WORK_ORDERS_I18N.station, {
+    number: workOrderStationLabel(stationNumber) ?? WORK_ORDER_EMPTY_PLACEHOLDER,
+  })
+}
+
+export function workOrderBeeperChipText(
+  beeper: string | null | undefined,
+  translate: TFunction,
+): string {
+  return translate(WORK_ORDERS_I18N.beeper, {
+    code: workOrderBeeperLabel(beeper) ?? WORK_ORDER_EMPTY_PLACEHOLDER,
+  })
 }
 
 const WORK_ORDER_NUMERIC = /^\d+$/
@@ -187,13 +214,6 @@ export function composeWorkOrderCompletionNote(
   ].filter(Boolean)
   if (parts.length === 0) return null
   return parts.join(WORK_ORDER_COMPLETION_NOTE_SEPARATOR).slice(0, WORK_ORDER_COMPLETION_NOTE_MAX_LENGTH)
-}
-
-export function hasWorkOrderCompletionInput(
-  selectedSuggestions: string[],
-  additionalNote: string,
-): boolean {
-  return composeWorkOrderCompletionNote(selectedSuggestions, additionalNote) != null
 }
 
 export function workOrderWeekdayLabels(language: string): string[] {
@@ -269,8 +289,29 @@ export function joinWorkOrderServiceNames(names: string[]): string {
   return joinWorkOrderLabels(names, WORK_ORDER_SERVICE_NAME_SEPARATOR)
 }
 
-export function joinWorkOrderTechnicianNames(names: string[]): string {
-  return joinWorkOrderLabels(names, WORK_ORDER_INLINE_LIST_SEPARATOR)
+export function workOrderAssignedTechnicianLabel(
+  technicianName: string | null | undefined,
+  translate: TFunction,
+): string {
+  const name = technicianName?.trim()
+  return name
+    ? translate(WORK_ORDERS_I18N.technicianNamed, { name })
+    : translate(WORK_ORDERS_I18N.unassigned)
+}
+
+export function parseWorkOrderListDate(value: string | null | undefined, fallbackIso: string): string {
+  const iso = value?.trim() ?? ''
+  return /^\d{4}-\d{2}-\d{2}$/.test(iso) ? iso : fallbackIso
+}
+
+export function listFilterAfterWorkOrderStart(current: WorkOrderTicketFilter): WorkOrderTicketFilter {
+  if (current === WORK_ORDER_TICKET_FILTER.All) return current
+  return WORK_ORDER_TICKET_FILTER.InService
+}
+
+export function listFilterAfterWorkOrderComplete(current: WorkOrderTicketFilter): WorkOrderTicketFilter {
+  if (current === WORK_ORDER_TICKET_FILTER.All) return current
+  return WORK_ORDER_TICKET_FILTER.Completed
 }
 
 export type StaffWorkOrdersView =

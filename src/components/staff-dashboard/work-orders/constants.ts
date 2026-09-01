@@ -61,6 +61,7 @@ export const WORK_ORDERS_I18N = {
   completeServiceTitle: 'staff_dashboard.work_orders.complete_service_title',
   completeReadyTitle: 'staff_dashboard.work_orders.complete_ready_title',
   completeReadyBody: 'staff_dashboard.work_orders.complete_ready_body',
+  completeClosesTicket: 'staff_dashboard.work_orders.complete_closes_ticket',
   suggestedNotes: 'staff_dashboard.work_orders.suggested_notes',
   additionalNote: 'staff_dashboard.work_orders.additional_note',
   optional: 'staff_dashboard.work_orders.optional',
@@ -174,7 +175,7 @@ export const WORK_ORDERS_LAYOUT_CLASS = {
   calendarDaySelected: 'bg-nexoraBrand text-white',
   calendarDaySpacer: 'h-9 sm:h-10',
   filterBar: 'mt-3 flex gap-1 overflow-x-auto rounded-full border border-nexoraBorder bg-white p-1 shadow-sm nexora-no-scrollbar lg:mt-4',
-  filterTab: 'min-w-0 flex-1 whitespace-nowrap rounded-full px-2 py-2 text-center text-xs font-bold transition sm:px-3 sm:text-sm',
+  filterTab: 'shrink-0 whitespace-nowrap rounded-full px-3 py-2 text-center text-xs font-bold transition sm:min-w-0 sm:flex-1 sm:px-3 sm:text-sm',
   filterTabActive: 'bg-nexoraBrand text-white shadow-sm',
   filterTabInactive: 'bg-transparent text-nexoraSubtle hover:text-nexoraText',
   listMeta: 'mt-4 flex items-center justify-between text-xs font-medium text-nexoraSubtle lg:mt-5 sm:text-sm',
@@ -184,7 +185,7 @@ export const WORK_ORDERS_LAYOUT_CLASS = {
   ticketChevron: 'mt-1 h-4 w-4 shrink-0 text-nexoraSubtle sm:h-5 sm:w-5',
   ticketHeadRow: 'flex items-start justify-between gap-2',
   ticketCustomer: 'block truncate text-sm font-extrabold leading-5 text-nexoraText sm:text-base sm:leading-6',
-  ticketService: 'mt-0.5 block truncate text-xs text-nexoraMuted sm:text-sm',
+  ticketService: 'mt-0.5 block truncate text-xs font-semibold text-nexoraText sm:text-sm',
   ticketMeta: 'mt-1.5 flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-nexoraMuted sm:text-sm',
   ticketMetaIcon: 'h-3 w-3 shrink-0 text-nexoraBrand sm:h-3.5 sm:w-3.5',
   ticketBadge: 'inline-flex shrink-0 items-center rounded-full px-2 py-0.5 text-[11px] font-bold sm:text-xs',
@@ -204,12 +205,9 @@ export const WORK_ORDERS_LAYOUT_CLASS = {
   servicesCard: 'px-4 pt-5 sm:px-5',
   servicesTitleRow: 'flex items-center justify-between gap-3',
   servicesTitle: 'text-lg font-extrabold text-nexoraText',
-  addServiceLink: 'cursor-not-allowed select-none text-sm font-semibold text-nexoraBrand/40',
-  addOnLink: 'block cursor-not-allowed select-none text-right text-sm font-semibold whitespace-nowrap text-nexoraBrand/40',
   serviceTable: 'mt-4 w-full table-fixed border-collapse',
   serviceColPrice: 'w-[5.75rem] sm:w-[6.25rem]',
   serviceColTime: 'w-[4.75rem] sm:w-[5.25rem]',
-  serviceColAction: 'w-[5.25rem] sm:w-[5.75rem]',
   serviceHeadCell: 'pb-2 text-xs font-medium text-nexoraSubtle',
   serviceHeadCellEnd: 'pb-2 text-right text-xs font-medium text-nexoraSubtle',
   serviceRow: 'border-t border-nexoraRule',
@@ -371,8 +369,35 @@ export function workOrderStatusClass(
   return `${sizeClass} ${WORK_ORDER_STATUS_BADGE_CLASS[status]}`
 }
 
+export const WORK_ORDER_LIST_QUERY = {
+  date: 'date',
+  filter: 'filter',
+} as const
+
+export function parseWorkOrderTicketFilter(value: string | null | undefined): WorkOrderTicketFilter {
+  return WORK_ORDER_FILTER_TABS.find((tab) => tab === value) ?? WORK_ORDER_TICKET_FILTER.Assigned
+}
+
 export function staffWorkOrdersPath(salonId?: string, ticketId?: string) {
   return [STAFF_HOME_PATH, STAFF_WORK_ORDERS_SCREEN, salonId, ticketId]
     .filter((segment): segment is string => Boolean(segment))
     .join('/')
+}
+
+export function staffWorkOrdersListSearch(date: string, filter: WorkOrderTicketFilter): string {
+  const params = new URLSearchParams({
+    [WORK_ORDER_LIST_QUERY.date]: date,
+    [WORK_ORDER_LIST_QUERY.filter]: filter,
+  })
+  return `?${params.toString()}`
+}
+
+export function staffWorkOrdersHref(
+  salonId?: string,
+  ticketId?: string,
+  search?: string,
+) {
+  const path = staffWorkOrdersPath(salonId, ticketId)
+  if (!search) return path
+  return `${path}${search.startsWith('?') ? search : `?${search}`}`
 }

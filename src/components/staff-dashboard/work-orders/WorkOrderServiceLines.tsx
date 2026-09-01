@@ -4,6 +4,7 @@ import { WORK_ORDERS_I18N, WORK_ORDERS_LAYOUT_CLASS, type WorkOrderItem } from '
 import {
   formatWorkOrderDurationMinutes,
   formatWorkOrderMoney,
+  workOrderAssignedTechnicianLabel,
   workOrderTextOrPlaceholder,
 } from './workOrderTickets'
 
@@ -21,52 +22,45 @@ export default function WorkOrderServiceLines({ items, serviceTotal }: WorkOrder
         <h3 className={WORK_ORDERS_LAYOUT_CLASS.servicesTitle}>
           {t(WORK_ORDERS_I18N.services)}
         </h3>
-        <span className={WORK_ORDERS_LAYOUT_CLASS.addServiceLink} aria-disabled="true">
-          {t(WORK_ORDERS_I18N.addService)}
-        </span>
       </div>
 
       {items.length === 0 ? (
         <p className={WORK_ORDERS_LAYOUT_CLASS.emptyInline}>{workOrderTextOrPlaceholder('')}</p>
       ) : (
         <>
-        <table className={WORK_ORDERS_LAYOUT_CLASS.serviceTable}>
-          <colgroup>
-            <col />
-            <col className={WORK_ORDERS_LAYOUT_CLASS.serviceColPrice} />
-            <col className={WORK_ORDERS_LAYOUT_CLASS.serviceColTime} />
-            <col className={WORK_ORDERS_LAYOUT_CLASS.serviceColAction} />
-          </colgroup>
-          <thead>
-            <tr>
-              <th scope="col" className={`${WORK_ORDERS_LAYOUT_CLASS.serviceHeadCell} ${WORK_ORDERS_LAYOUT_CLASS.textLeft}`}>
-                {t(WORK_ORDERS_I18N.colService)}
-              </th>
-              <th scope="col" className={WORK_ORDERS_LAYOUT_CLASS.serviceHeadCellEnd}>
-                {t(WORK_ORDERS_I18N.colPrice)}
-              </th>
-              <th scope="col" className={WORK_ORDERS_LAYOUT_CLASS.serviceHeadCellEnd}>
-                {t(WORK_ORDERS_I18N.colTime)}
-              </th>
-              <th scope="col" className={WORK_ORDERS_LAYOUT_CLASS.serviceHeadCell}>
-                <span className={WORK_ORDERS_LAYOUT_CLASS.srOnly}>{t(WORK_ORDERS_I18N.addOn)}</span>
-              </th>
-            </tr>
-          </thead>
-          <tbody>
-            {items.map((line, index) => (
-              <WorkOrderServiceLineRow key={line.id || `${line.serviceName}-${index}`} line={line} />
-            ))}
-          </tbody>
-        </table>
-        <div className={WORK_ORDERS_LAYOUT_CLASS.serviceTotalRow}>
-          <span className={WORK_ORDERS_LAYOUT_CLASS.serviceTotalLabel}>
-            {t(WORK_ORDERS_I18N.serviceTotal)}
-          </span>
-          <span className={WORK_ORDERS_LAYOUT_CLASS.serviceTotalValue}>
-            {formatWorkOrderMoney(serviceTotal)}
-          </span>
-        </div>
+          <table className={WORK_ORDERS_LAYOUT_CLASS.serviceTable}>
+            <colgroup>
+              <col />
+              <col className={WORK_ORDERS_LAYOUT_CLASS.serviceColPrice} />
+              <col className={WORK_ORDERS_LAYOUT_CLASS.serviceColTime} />
+            </colgroup>
+            <thead>
+              <tr>
+                <th scope="col" className={`${WORK_ORDERS_LAYOUT_CLASS.serviceHeadCell} ${WORK_ORDERS_LAYOUT_CLASS.textLeft}`}>
+                  {t(WORK_ORDERS_I18N.colService)}
+                </th>
+                <th scope="col" className={WORK_ORDERS_LAYOUT_CLASS.serviceHeadCellEnd}>
+                  {t(WORK_ORDERS_I18N.colPrice)}
+                </th>
+                <th scope="col" className={WORK_ORDERS_LAYOUT_CLASS.serviceHeadCellEnd}>
+                  {t(WORK_ORDERS_I18N.colTime)}
+                </th>
+              </tr>
+            </thead>
+            <tbody>
+              {items.map((line, index) => (
+                <WorkOrderServiceLineRow key={line.id || `${line.serviceName}-${index}`} line={line} />
+              ))}
+            </tbody>
+          </table>
+          <div className={WORK_ORDERS_LAYOUT_CLASS.serviceTotalRow}>
+            <span className={WORK_ORDERS_LAYOUT_CLASS.serviceTotalLabel}>
+              {t(WORK_ORDERS_I18N.serviceTotal)}
+            </span>
+            <span className={WORK_ORDERS_LAYOUT_CLASS.serviceTotalValue}>
+              {formatWorkOrderMoney(serviceTotal)}
+            </span>
+          </div>
         </>
       )}
     </section>
@@ -75,6 +69,7 @@ export default function WorkOrderServiceLines({ items, serviceTotal }: WorkOrder
 
 function WorkOrderServiceLineRow({ line }: { line: WorkOrderItem }) {
   const { t } = useTranslation()
+  const lineNote = line.note?.trim()
 
   return (
     <tr className={WORK_ORDERS_LAYOUT_CLASS.serviceRow}>
@@ -91,17 +86,16 @@ function WorkOrderServiceLineRow({ line }: { line: WorkOrderItem }) {
             {workOrderTextOrPlaceholder(line.serviceName)}
           </p>
         )}
+        <p className={WORK_ORDERS_LAYOUT_CLASS.serviceTech}>
+          {workOrderAssignedTechnicianLabel(line.technicianName, t)}
+        </p>
+        {lineNote ? <p className={WORK_ORDERS_LAYOUT_CLASS.itemNote}>{lineNote}</p> : null}
       </td>
       <td className={`${WORK_ORDERS_LAYOUT_CLASS.serviceNumCell} ${WORK_ORDERS_LAYOUT_CLASS.servicePrice}`}>
         {formatWorkOrderMoney(line.lineTotal || line.unitPrice)}
       </td>
       <td className={`${WORK_ORDERS_LAYOUT_CLASS.serviceNumCell} ${WORK_ORDERS_LAYOUT_CLASS.serviceDuration}`}>
         {formatWorkOrderDurationMinutes(line.durationMinutes, t)}
-      </td>
-      <td className={WORK_ORDERS_LAYOUT_CLASS.serviceNumCell}>
-        <span className={WORK_ORDERS_LAYOUT_CLASS.addOnLink} aria-disabled="true">
-          {t(line.isAddOn ? WORK_ORDERS_I18N.addOnNested : WORK_ORDERS_I18N.addOn)}
-        </span>
       </td>
     </tr>
   )

@@ -3,15 +3,15 @@ import { useTranslation } from '../../../contexts/LanguageContext'
 import {
   WORK_ORDER_STATUS_BADGE_VARIANT,
   WORK_ORDER_STATUS_I18N,
-  WORK_ORDERS_I18N,
   WORK_ORDERS_LAYOUT_CLASS,
   workOrderStatusClass,
   type WorkOrderListItem,
 } from './constants'
 import {
-  formatWorkOrderStationValue,
   formatWorkOrderTicketTime,
   joinWorkOrderServiceNames,
+  workOrderBeeperChipText,
+  workOrderStationChipText,
   workOrderTextOrPlaceholder,
 } from './workOrderTickets'
 
@@ -51,13 +51,13 @@ export default function WorkOrderTicketCard({ salonName, ticket, onSelect }: Wor
           <span className={WORK_ORDERS_LAYOUT_CLASS.metaChip}>
             <MapPin className={WORK_ORDERS_LAYOUT_CLASS.ticketMetaIcon} aria-hidden="true" />
             <span className={WORK_ORDERS_LAYOUT_CLASS.truncate}>
-              {t(WORK_ORDERS_I18N.station, { number: formatWorkOrderStationValue(ticket.stationNumber) })}
+              {workOrderStationChipText(ticket.stationNumber, t)}
             </span>
           </span>
           <span className={WORK_ORDERS_LAYOUT_CLASS.metaChip}>
             <Radio className={WORK_ORDERS_LAYOUT_CLASS.ticketMetaIcon} aria-hidden="true" />
             <span className={WORK_ORDERS_LAYOUT_CLASS.truncate}>
-              {t(WORK_ORDERS_I18N.beeper, { code: workOrderTextOrPlaceholder(ticket.beeper) })}
+              {workOrderBeeperChipText(ticket.beeper, t)}
             </span>
           </span>
         </span>

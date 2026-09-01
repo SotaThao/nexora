@@ -1,6 +1,6 @@
-import { Navigate, useNavigate, useParams } from 'react-router-dom'
+import { Navigate, useNavigate, useParams, useSearchParams } from 'react-router-dom'
 import { useStaffBusinesses } from '../../../data/hooks/useStaffSelf'
-import { StaffWorkOrdersViewKind, staffWorkOrdersPath } from './constants'
+import { StaffWorkOrdersViewKind, staffWorkOrdersHref } from './constants'
 import StaffWorkOrderDetail from './StaffWorkOrderDetail'
 import StaffWorkOrderSalonPicker from './StaffWorkOrderSalonPicker'
 import StaffWorkOrderTickets from './StaffWorkOrderTickets'
@@ -14,6 +14,7 @@ import { resolveStaffWorkOrdersView, toWorkOrderSalons } from './workOrderTicket
 
 export default function StaffWorkOrders() {
   const { salonId, ticketId } = useParams<{ salonId: string; ticketId: string }>()
+  const [searchParams] = useSearchParams()
   const navigate = useNavigate()
   const businessesQuery = useStaffBusinesses()
 
@@ -38,7 +39,9 @@ export default function StaffWorkOrders() {
       return (
         <StaffWorkOrderDetail
           orderId={view.orderId}
-          onBack={() => navigate(staffWorkOrdersPath(view.salon.id))}
+          onBack={() =>
+            navigate(staffWorkOrdersHref(view.salon.id, undefined, searchParams.toString()))
+          }
         />
       )
   }
