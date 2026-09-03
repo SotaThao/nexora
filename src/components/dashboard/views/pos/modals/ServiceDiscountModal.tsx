@@ -25,6 +25,7 @@ import {
 
 const K = 'components.dashboard.views.pos.PosOrderWorkspace'
 const AMOUNT_DISCOUNT_PRESETS = [5, 10, 15, 20, 25] as const
+const ORDER_AMOUNT_DISCOUNT_PRESETS = [5, 10, 15, 20] as const
 const PERCENT_DISCOUNT_PRESETS = [5, 10, 15, 20] as const
 
 const DISCOUNT_VALUE_PLACEHOLDER_KEY = {
@@ -231,7 +232,9 @@ export default function ServiceDiscountModal({
             </label>
             <div className="flex flex-wrap items-center gap-2">
               {(discountType === PosServiceDiscountType.Amount
-                ? AMOUNT_DISCOUNT_PRESETS
+                ? isOrderDiscount
+                  ? ORDER_AMOUNT_DISCOUNT_PRESETS
+                  : AMOUNT_DISCOUNT_PRESETS
                 : PERCENT_DISCOUNT_PRESETS
               ).map((preset) => {
                 const selected = hasNumber && parsedValue === preset

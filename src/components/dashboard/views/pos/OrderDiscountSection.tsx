@@ -105,7 +105,7 @@ export default function OrderDiscountSection({
                             {promotion.badgeLabel}
                           </span>
                         ) : null}
-                        <span className="block truncate text-xs font-bold text-nexoraText">
+                        <span className="block whitespace-normal break-words text-xs font-bold text-nexoraText">
                           {promotion.name}
                         </span>
                         <span className="block truncate text-[10px] text-nexoraMuted">
