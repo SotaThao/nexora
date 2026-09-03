@@ -526,6 +526,7 @@ export default function CreatePayoutModal({
   }, [isOpen])
 
   const includesUnpaidTipsType = hasPayoutType(payoutTypesMask, PayoutType.TipDebt)
+  const isAmountLocked = includesUnpaidTipsType && (isEditing || hasNoTipDebt)
   const debtStaffProfileIds = useMemo(
     () => new Set(unpaidDebts.filter((debt) => debt.balance > 0).map((debt) => debt.staffProfileId)),
     [unpaidDebts],
@@ -682,7 +683,7 @@ export default function CreatePayoutModal({
   }
 
   const handleAmountBlur = () => {
-    if (!amountInputValue.trim()) return
+    if (isAmountLocked || !amountInputValue.trim()) return
     setAmountError(validatePayoutAmount(amountInputValue, t))
   }
 
@@ -709,7 +710,8 @@ export default function CreatePayoutModal({
     const nextStaffError = !staffProfileId
       ? t('dashboard.tips.payouts_manager.staff_required')
       : null
-    const nextAmountError = validatePayoutAmount(amountInputValue, t)
+    const shouldSendAmount = !(isEditing && includesUnpaidTipsType)
+    const nextAmountError = shouldSendAmount ? validatePayoutAmount(amountInputValue, t) : null
     const nextPeriodError = validatePayoutPeriod(periodStart, periodEnd, t)
     const nextOtherPayoutMethodError = payoutMethodType === PayoutMethodType.Other
       && !otherPayoutMethod.trim()
@@ -754,6 +756,7 @@ export default function CreatePayoutModal({
         const updatePayload = {
           payoutMethodType: payload.payoutMethodType,
           payoutMethodTypeName: payload.payoutMethodTypeName,
+          amount: includesUnpaidTipsType ? null : parsedAmount,
           payoutTypes: payload.payoutTypes,
           periodStart: payload.periodStart,
           periodEnd: payload.periodEnd,
@@ -915,7 +918,7 @@ export default function CreatePayoutModal({
                   <input
                     type="text"
                     inputMode="decimal"
-                    disabled={isEditing || (includesUnpaidTipsType && hasNoTipDebt)}
+                    disabled={isAmountLocked}
                     className={`h-10 w-full rounded-lg border bg-white pl-7 pr-3 text-sm font-semibold tabular-nums disabled:cursor-not-allowed disabled:bg-slate-50 disabled:text-mutedGrey ${
                       amountError
                         ? 'border-red-400 focus:border-red-500 focus:ring-1 focus:ring-red-200'
