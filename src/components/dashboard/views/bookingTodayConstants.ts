@@ -11,6 +11,13 @@ export enum BookingTodayLayout {
   Calendar = 'calendar',
 }
 
+export enum BookingCalendarStatusGroup {
+  Completed = 'completed',
+  Upcoming = 'upcoming',
+  Pending = 'pending',
+  Cancelled = 'cancelled',
+}
+
 export const BOOKING_TODAY_VIEW_MODE_ORDER = [
   BookingTodayViewMode.Table,
   BookingTodayViewMode.Card,
@@ -116,6 +123,29 @@ export const BOOKING_CALENDAR_COLORS = [
   { bg: '#fde7f0', border: '#c24182', text: '#5e203f' },
 ] as const
 
+export const POS_BOOKING_CALENDAR_STATUS_COLORS = {
+  [BookingCalendarStatusGroup.Completed]: {
+    bg: '#E8F7F1',
+    border: '#1F8F70',
+    text: '#155E4B',
+  },
+  [BookingCalendarStatusGroup.Upcoming]: {
+    bg: '#EAF2FF',
+    border: '#3978D4',
+    text: '#234F91',
+  },
+  [BookingCalendarStatusGroup.Pending]: {
+    bg: '#FFF4E5',
+    border: '#B8751E',
+    text: '#7A4A0E',
+  },
+  [BookingCalendarStatusGroup.Cancelled]: {
+    bg: '#F1F5F9',
+    border: '#94A3B8',
+    text: '#64748B',
+  },
+} as const
+
 export const BOOKING_CALENDAR_UNASSIGNED_TECH = 'unassigned' as const
 
 export const BOOKING_CALENDAR_DEFAULT_DURATION_MINUTES = 60
@@ -128,18 +158,23 @@ export const BOOKING_CALENDAR_CELL_DURATION_MINUTES = 15
  * - `BusinessHours` enables internal vertical scroll so staff column headers stay fixed.
  * - Non-business cells are hidden so Front Desk only sees schedulable hours.
  */
-export const BOOKING_CALENDAR_DEFAULT_SCROLL_HOUR = 9
+export const BOOKING_CALENDAR_BUSINESS_BEGINS_HOUR = 9
+export const BOOKING_CALENDAR_BUSINESS_ENDS_HOUR = 19
+export const BOOKING_CALENDAR_CELL_HEIGHT_PX = 28
+export const BOOKING_CALENDAR_HEADER_HEIGHT_PX = 44
+export const BOOKING_CALENDAR_HOUR_WIDTH_PX = 64
+export const BOOKING_CALENDAR_DEFAULT_SCROLL_HOUR = BOOKING_CALENDAR_BUSINESS_BEGINS_HOUR
 
 export const BOOKING_CALENDAR_DAYPILOT_OPTIONS = {
   viewType: 'Resources' as const,
-  businessBeginsHour: BOOKING_CALENDAR_DEFAULT_SCROLL_HOUR,
-  businessEndsHour: 19,
+  businessBeginsHour: BOOKING_CALENDAR_BUSINESS_BEGINS_HOUR,
+  businessEndsHour: BOOKING_CALENDAR_BUSINESS_ENDS_HOUR,
   showNonBusiness: false,
   heightSpec: 'BusinessHoursNoScroll' as const,
   cellDuration: BOOKING_CALENDAR_CELL_DURATION_MINUTES,
-  cellHeight: 28,
-  hourWidth: 64,
-  headerHeight: 44,
+  cellHeight: BOOKING_CALENDAR_CELL_HEIGHT_PX,
+  hourWidth: BOOKING_CALENDAR_HOUR_WIDTH_PX,
+  headerHeight: BOOKING_CALENDAR_HEADER_HEIGHT_PX,
   timeFormat: 'Clock12Hours' as const,
   eventMoveHandling: 'Disabled' as const,
   eventResizeHandling: 'Disabled' as const,

@@ -421,6 +421,7 @@ export function PosFrontDeskRoute() {
   const businessAddress = formatBusinessAddress(merchantSetupData?.businessInfo ?? {})
   const businessPhone = merchantSetupData?.businessInfo?.phone
   const businessSlug = merchantSetupData?.businessInfo?.slug
+  const businessTimeZone = merchantSetupData?.businessInfo?.timeZone
   if (!businessId) {
     return (
       <div className="nexora-card p-6">
@@ -436,6 +437,7 @@ export function PosFrontDeskRoute() {
       businessAddress={businessAddress}
       businessPhone={businessPhone}
       businessSlug={businessSlug}
+      businessTimeZone={businessTimeZone ?? null}
     />
   )
 }

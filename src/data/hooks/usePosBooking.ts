@@ -38,6 +38,18 @@ export function useBookingList(
   })
 }
 
+export function useAllBookingListPages(
+  businessId?: string,
+  filters: Omit<BookingListFilters, 'page' | 'pageSize'> = {},
+  { enabled = true }: { enabled?: boolean } = {},
+) {
+  return useQuery<BookingListResultApiDto>({
+    queryKey: qk.merchantPosBookingList(businessId, { ...filters, collection: 'all' }),
+    queryFn: () => posBookingRepository.getAllBookingListPages(businessId as string, filters),
+    enabled: enabled && Boolean(businessId),
+  })
+}
+
 export function useBookingDetail(
   businessId?: string,
   bookingId?: string,

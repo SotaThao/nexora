@@ -100,7 +100,7 @@ export default function BookingCards({
               <header className="flex items-start justify-between gap-3">
                 <div className="min-w-0">
                   <div className="flex min-w-0 flex-wrap items-center gap-2">
-                    <h3 className="truncate text-[15px] font-extrabold text-nexoraText">
+                    <h3 className="pos-customer-name truncate text-[15px] font-extrabold text-nexoraText">
                       {booking.customerName}
                     </h3>
                     {booking.orderNumber ? (

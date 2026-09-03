@@ -255,7 +255,7 @@ export default function TimeClockRoster({
               {renderAvatar(row)}
               {renderShiftCell(row)}
               <div className="flex items-center justify-between gap-2 text-xs">
-                <span className="truncate font-semibold text-nexoraText">{row.currentCustomerName ?? EMPTY_VALUE}</span>
+                <span className="pos-customer-name truncate font-semibold text-nexoraText">{row.currentCustomerName ?? EMPTY_VALUE}</span>
                 {renderTurnsCell(row)}
               </div>
               {renderActions(row)}
@@ -303,7 +303,7 @@ export default function TimeClockRoster({
                   <td className="px-4 py-3">{renderShiftCell(row)}</td>
                   <td className="px-4 py-3 font-semibold text-nexoraText">
                     {row.currentCustomerName ? (
-                      <span className="rounded-full bg-amber-100 px-2.5 py-1 font-bold text-amber-700">{row.currentCustomerName}</span>
+                      <span className="pos-customer-name rounded-full bg-amber-100 px-2.5 py-1 font-bold text-amber-700">{row.currentCustomerName}</span>
                     ) : (
                       EMPTY_VALUE
                     )}
