@@ -33,6 +33,7 @@ import { qk } from '../../../../data/queryKeys'
 import { usePosAccess } from '../../../../data/hooks/usePosAccess'
 import { useStaffBusinesses } from '../../../../data/hooks/useStaffSelf'
 import { useWeeklyPayroll } from '../../../../data/hooks/useWeeklyPayroll'
+import { usePosReport } from '../../../../data/hooks/usePosReport'
 import { formatPosTime } from './posDateTime'
 import { useCancelOrder, useCompletedOrders, useOrderList } from '../../../../data/hooks/usePosOrders'
 import { useInServiceOrders, useOrderDetails } from '../../../../data/hooks/usePosCheckout'
@@ -72,6 +73,7 @@ import {
   isSelectionComplete as isReportSelectionComplete,
   parseIsoWeekKey,
   parseMonthKey,
+  todayIso as reportTodayIso,
   type PosReportSelection,
 } from './report/posReportPeriod'
 import PosCheckInTab from './PosCheckInTab'
@@ -422,6 +424,18 @@ export default function PosFrontDeskView({
       || activeTab === PosFrontDeskTab.Booking,
     refetchInterval: false,
   })
+  const canReadNextTurnReport = activeTab === PosFrontDeskTab.TurnBoard && Boolean(access?.canViewReport)
+  const todayServiceAmountReportQuery = usePosReport(
+    canReadNextTurnReport
+      ? {
+          businessId,
+          timeZone: reportBusinessTimeZone,
+          mode: PosReportMode.Daily,
+          dates: [reportTodayIso(reportBusinessTimeZone)],
+        }
+      : null,
+    { enabled: canReadNextTurnReport },
+  )
   // Today’s Turns needs the services completed during the same local calendar day. The
   // completed-orders endpoint supplies the ticket IDs; each detail response supplies the
   // technician assigned to each individual service line.
@@ -474,10 +488,19 @@ export default function PosFrontDeskView({
       )
       .map((technician) => technician.posStaffProfileId),
   )
-  const nextTurnTechnician = selectNextTurnTechnician(
-    todayTurnRows,
-    nextTurnSkilledTechnicianIds,
+  const serviceAmountsTodayByStaffId = new Map(
+    (todayServiceAmountReportQuery.data?.rows ?? []).map((row) => [
+      row.posStaffProfileId,
+      row.serviceAmount,
+    ]),
   )
+  const nextTurnTechnician = todayServiceAmountReportQuery.data
+    ? selectNextTurnTechnician(
+        todayTurnRows,
+        nextTurnSkilledTechnicianIds,
+        serviceAmountsTodayByStaffId,
+      )
+    : undefined
   // A ticket with one technician is already unambiguous from the list response. Only fetch
   // details for multi-technician tickets, where the list's aggregated arrays cannot identify
   // which service line belongs to which technician.
@@ -873,7 +896,7 @@ export default function PosFrontDeskView({
             <div className="mt-1 flex flex-wrap items-center gap-1.5">
               <span className={`inline-flex rounded-full border px-2 py-0.5 text-[10px] font-extrabold ${
                 station.currentStatus === PosOrderStatus.InService
-                  ? 'border-cyan-200 bg-cyan-50 text-cyan-700'
+                  ? 'border-rose-200 bg-rose-50 text-rose-700'
                   : 'border-emerald-200 bg-emerald-50 text-emerald-700'
               }`}>
                 {t(tk(`stationStatus.${station.currentStatus}`))}
@@ -1229,16 +1252,18 @@ export default function PosFrontDeskView({
           </p>
         ) : (
           <div className="overflow-x-auto rounded-xl border border-nexoraBorder bg-white">
-            <table className="w-full min-w-[600px] table-fixed text-left text-xs">
+            <table className="w-full min-w-[720px] table-fixed text-left text-xs">
               <colgroup>
-                <col className="w-[35%]" />
-                <col className="w-[15%]" />
-                <col className="w-[50%]" />
+                <col className="w-[28%]" />
+                <col className="w-[12%]" />
+                <col className="w-[20%]" />
+                <col className="w-[40%]" />
               </colgroup>
               <thead>
                 <tr className={POS_TABLE_HEADER_ROW_CLASS}>
                   <th className={POS_TABLE_HEADER_CELL_CLASS}>{t(tk('todayTurnsColumnTechnician'))}</th>
                   <th className={`${POS_TABLE_HEADER_CELL_CLASS} text-right`}>{t(tk('todayTurnsColumnTurns'))}</th>
+                  <th className={`${POS_TABLE_HEADER_CELL_CLASS} text-right`}>{t(tk('todayTurnsColumnServiceAmount'))}</th>
                   <th className={POS_TABLE_HEADER_CELL_CLASS}>{t(tk('todayTurnsColumnServices'))}</th>
                 </tr>
               </thead>
@@ -1253,15 +1278,35 @@ export default function PosFrontDeskView({
                       className={`border-t border-nexoraBorder/70 transition-colors ${isNext ? 'bg-emerald-50/40 hover:bg-emerald-50/65' : 'hover:bg-violet-50/35'}`}
                     >
                       <td className="px-3 py-2.5 font-semibold text-nexoraText">
-                        <span className="inline-flex max-w-full rounded-full bg-cyan-100/70 px-2.5 py-1 text-cyan-800">
-                          <span className="truncate">{row.displayName}</span>
-                        </span>
-                        {row.turnRank != null ? (
-                          <span className="ml-2 text-[10px] font-bold text-nexoraMuted">#{row.turnRank}</span>
-                        ) : null}
+                        <div className="flex flex-wrap items-center gap-1.5">
+                          <span className="max-w-full truncate text-xs font-extrabold uppercase tracking-wide text-nexoraText">
+                            {row.displayName}
+                          </span>
+                          <span
+                            className={`inline-flex items-center gap-1 whitespace-nowrap text-[10px] font-bold ${
+                              row.isClockedIn
+                                ? 'text-emerald-700'
+                                : 'text-slate-500'
+                            }`}
+                          >
+                            <span
+                              aria-hidden="true"
+                              className={`h-1.5 w-1.5 shrink-0 rounded-full ${row.isClockedIn ? 'bg-emerald-500' : 'bg-slate-400'}`}
+                            />
+                            <span>{t(tk(row.isClockedIn ? 'todayTurnsClockedIn' : 'todayTurnsNotClockedIn'))}</span>
+                          </span>
+                          {row.turnRank != null ? (
+                            <span className="text-[10px] font-bold text-nexoraMuted">#{row.turnRank}</span>
+                          ) : null}
+                        </div>
                       </td>
                       <td className="px-3 py-2.5 text-right font-bold tabular-nums text-nexoraText">
                         {row.turnsToday}
+                      </td>
+                      <td className="whitespace-nowrap px-3 py-2.5 text-right font-bold tabular-nums text-nexoraText">
+                        {todayServiceAmountReportQuery.data
+                          ? formatCurrency(serviceAmountsTodayByStaffId.get(row.posStaffProfileId) ?? 0)
+                          : '—'}
                       </td>
                       <td className="max-w-[320px] px-3 py-2.5 font-semibold text-nexoraText">
                         {renderServiceChips(services)}
@@ -1345,6 +1390,8 @@ export default function PosFrontDeskView({
           businessLogoUrl={receiptBusinessLogoUrl}
           businessAddress={receiptBusinessAddress}
           businessPhone={businessPhone}
+          businessTimeZone={reportBusinessTimeZone}
+          canViewReport={Boolean(access?.canViewReport)}
           onPaymentCompleted={(completedOrderId, receiptMode) => {
             setUpdateWorkspace({ orderId: completedOrderId, mode: 'success', receiptMode })
           }}
