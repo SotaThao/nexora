@@ -183,6 +183,10 @@ function buildInlineServiceDraft(service: ServiceRow): InlineServiceDraft {
   };
 }
 
+// Matches backend Price range [0, 1,000,000] and Duration range [1, 720] minutes.
+const PRICE_INPUT_MAX_LENGTH = 10; // "1000000.00"
+const DURATION_INPUT_MAX_LENGTH = 3; // "720"
+
 function parseInlineServicePrice(raw: string): string {
   const cleaned = raw.replace(/[^\d.]/g, "");
   const parts = cleaned.split(".");
@@ -4290,6 +4294,7 @@ export default function BookingSettingsPanel() {
                                           className="settings-service-input price"
                                           type="text"
                                           inputMode="decimal"
+                                          maxLength={PRICE_INPUT_MAX_LENGTH}
                                           value={draft.price}
                                           placeholder={t(
                                             `${TK}.placeholderServicePrice`,
@@ -4317,6 +4322,7 @@ export default function BookingSettingsPanel() {
                                           type="text"
                                           inputMode="numeric"
                                           pattern="[0-9]*"
+                                          maxLength={DURATION_INPUT_MAX_LENGTH}
                                           value={draft.duration}
                                           placeholder={t(
                                             `${TK}.placeholderServiceDuration`,
@@ -4440,6 +4446,7 @@ export default function BookingSettingsPanel() {
                                           className="settings-service-input price"
                                           type="text"
                                           inputMode="decimal"
+                                          maxLength={PRICE_INPUT_MAX_LENGTH}
                                           value={draft.price}
                                           placeholder={t(
                                             `${TK}.placeholderServicePrice`,
@@ -4474,6 +4481,7 @@ export default function BookingSettingsPanel() {
                                           type="text"
                                           inputMode="numeric"
                                           pattern="[0-9]*"
+                                          maxLength={DURATION_INPUT_MAX_LENGTH}
                                           value={draft.duration}
                                           placeholder={t(
                                             `${TK}.placeholderServiceDuration`,
@@ -4720,6 +4728,7 @@ export default function BookingSettingsPanel() {
                       className="settings-input settings-service-modal-affix-input is-price"
                       type="text"
                       inputMode="decimal"
+                      maxLength={PRICE_INPUT_MAX_LENGTH}
                       value={serviceModalDraft.price}
                       placeholder={t(`${TK}.placeholderServicePrice`)}
                       aria-label={t(`${TK}.serviceModalPrice`)}
@@ -4748,6 +4757,7 @@ export default function BookingSettingsPanel() {
                       type="text"
                       inputMode="numeric"
                       pattern="[0-9]*"
+                      maxLength={DURATION_INPUT_MAX_LENGTH}
                       value={serviceModalDraft.duration}
                       placeholder={t(`${TK}.placeholderServiceDuration`)}
                       aria-label={t(`${TK}.serviceModalDuration`)}
