@@ -36,13 +36,24 @@ import {
 } from '../../../../data/hooks/usePosCheckout'
 import {
   useAssignStaffToServiceLine,
+  useMarkServiceLineDone,
   useStartOrderService,
+  useStartServiceLine,
 } from '../../../../data/hooks/usePosOrders'
+import { useOrderSettings } from '../../../../data/hooks/usePosOrderSettings'
+import ServiceLineMismatchWarningModal, {
+  type ServiceLineMismatchKind,
+} from './modals/ServiceLineMismatchWarningModal'
 import { useCheckInTechnicians } from '../../../../data/hooks/usePosCheckIn'
 import { useTimeClockRoster } from '../../../../data/hooks/usePosTimeClock'
 import { usePublicBusinessPaymentMethods } from '../../../../data/hooks/usePublicTouch'
 import { SHOW_SERVICE_ADD_ONS } from '../../../../constants/posFeatureVisibility'
 import { PosOrderStatus } from '../../../../constants/posOrderStatus'
+import {
+  PosOrderItemStatus,
+  isLineAtOrPast,
+  posOrderItemStatusLabelKey,
+} from '../../../../constants/posOrderItemStatus'
 import { isLineBusySurface, TicketBusySurface } from '../../../../constants/posTicketAction'
 import {
   formatUsdAmount,
@@ -140,6 +151,16 @@ function formatDiscountPriceBadge(
   return `(-${formatEnteredDiscountValue(discountType, discountValue, discountAmount)})`
 }
 
+// Badge palette per line status. Unassigned is deliberately the loudest of the "not done" states:
+// it is the only one the front desk must act on before the ticket can be paid.
+const LINE_STATUS_BADGE_CLASS: Record<string, string> = {
+  [PosOrderItemStatus.Unassigned]: 'bg-rose-100 text-rose-700',
+  [PosOrderItemStatus.PendingAcceptance]: 'bg-amber-100 text-amber-700',
+  [PosOrderItemStatus.Assigned]: 'bg-sky-100 text-sky-700',
+  [PosOrderItemStatus.Started]: 'bg-indigo-100 text-indigo-700',
+  [PosOrderItemStatus.Completed]: 'bg-emerald-100 text-emerald-700',
+}
+
 interface DisplayServiceLine {
   key: string
   // Set for a line that already exists server-side (always set in Update mode, never set
@@ -154,6 +175,9 @@ interface DisplayServiceLine {
   posStaffProfileId?: string
   technicianName?: string
   note?: string
+  // See PosOrderItemStatus. Only a parent service line carries one; add-ons follow this line.
+  lineStatus: string
+  startedAt?: string | null
   completedAt?: string | null
   // Discount stays alongside the original price rather than replacing it: unitPrice/lineTotal are
   // what commission and the tip split are measured on, discountAmount is what the customer saves.
@@ -280,6 +304,9 @@ export default function PosOrderWorkspace({
   const addServiceAddOnLine = useAddOrderServiceAddOnLine(businessId)
   const removeServiceAddOnLine = useRemoveOrderServiceAddOnLine(businessId)
   const startOrderService = useStartOrderService(businessId)
+  const startServiceLine = useStartServiceLine(businessId)
+  const markServiceLineDone = useMarkServiceLineDone(businessId)
+  const orderSettings = useOrderSettings(businessId)
   const setOrderDiscount = useSetOrderDiscount(businessId)
   const setTip = useSetOrderTip(businessId)
   const setStaffTipSplit = useSetOrderStaffTipSplit(businessId)
@@ -298,6 +325,8 @@ export default function PosOrderWorkspace({
     assignStaffToServiceLine.isPending ||
     setServiceLineDiscount.isPending ||
     startOrderService.isPending ||
+    startServiceLine.isPending ||
+    markServiceLineDone.isPending ||
     setTip.isPending ||
     setStaffTipSplit.isPending ||
     completeOrder.isPending
@@ -414,6 +443,8 @@ export default function PosOrderWorkspace({
           posStaffProfileId: l.assignedPosStaffProfileId ?? undefined,
           technicianName: l.technicianName ?? undefined,
           note: l.note ?? undefined,
+          lineStatus: l.lineStatus,
+          startedAt: l.startedAt,
           completedAt: l.completedAt,
           discountType: l.discountType,
           discountValue: l.discountValue,
@@ -883,17 +914,86 @@ export default function PosOrderWorkspace({
     )
   }
 
-  const handleStartService = () => {
-    if (hasUnassignedServiceLine) {
-      showToast(t('components.dashboard.views.pos.PosOrderWorkspace.assignTechnicianFirst'), 'error')
+  // The warning is advisory and switchable off per salon; the backend behaves identically either
+  // way (it force-syncs the lines), so this only decides whether the front desk is asked first.
+  const warnOnMismatch = orderSettings.data?.warnOnServiceLineStatusMismatch ?? true
+
+  const parentServiceLines = useMemo(
+    () => visibleLines.filter((l): l is DisplayServiceLine => l.itemType === 'Service'),
+    [visibleLines],
+  )
+
+  const describeLine = (line: DisplayServiceLine) =>
+    line.technicianName ? `${line.serviceName} — ${line.technicianName}` : line.serviceName
+
+  // Nobody has taken a service yet: every line is still unassigned or waiting to be accepted.
+  const noLineReadyToStart =
+    parentServiceLines.length > 0
+    && !parentServiceLines.some((l) => isLineAtOrPast(l.lineStatus, PosOrderItemStatus.Assigned))
+
+  const unfinishedLineLabels = parentServiceLines
+    .filter((l) => l.lineStatus !== PosOrderItemStatus.Completed)
+    .map(describeLine)
+
+  const [mismatchWarning, setMismatchWarning] = useState<{
+    kind: ServiceLineMismatchKind
+    lines: string[]
+    onConfirm: () => void
+  } | null>(null)
+
+  const confirmMismatch = (
+    kind: ServiceLineMismatchKind,
+    lines: string[],
+    shouldWarn: boolean,
+    run: () => void,
+  ) => {
+    if (!warnOnMismatch || !shouldWarn) {
+      run()
       return
     }
+    setMismatchWarning({ kind, lines, onConfirm: run })
+  }
+
+  const runStartService = () => {
     if (!startTicketAction(TicketBusySurface.Status)) return
     startOrderService.mutate(orderId, {
       onSuccess: () => showToast(t('components.dashboard.views.pos.PosOrderWorkspace.startServiceSuccess')),
       onError: reportError,
       onSettled: endTicketAction,
     })
+  }
+
+  const handleStartService = () => {
+    if (hasUnassignedServiceLine) {
+      showToast(t('components.dashboard.views.pos.PosOrderWorkspace.assignTechnicianFirst'), 'error')
+      return
+    }
+    confirmMismatch('start', [], noLineReadyToStart, runStartService)
+  }
+
+  // Per-line Start/Complete. Both are idempotent server-side, so a stale board that shows the
+  // button one tap too late costs nothing.
+  const handleStartLine = (line: DisplayServiceLine) => {
+    if (!isPersistedLineId(line.existingId)) return
+    if (!startTicketAction(TicketBusySurface.Lines)) return
+    startServiceLine.mutate(
+      { orderId, serviceLineId: line.existingId as string },
+      {
+        onSuccess: () =>
+          showToast(t('components.dashboard.views.pos.serviceLineStatus.startSuccess')),
+        onError: reportError,
+        onSettled: endTicketAction,
+      },
+    )
+  }
+
+  const handleCompleteLine = (line: DisplayServiceLine) => {
+    if (!isPersistedLineId(line.existingId)) return
+    if (!startTicketAction(TicketBusySurface.Lines)) return
+    markServiceLineDone.mutate(
+      { orderId, serviceLineId: line.existingId as string },
+      { onError: reportError, onSettled: endTicketAction },
+    )
   }
 
   const handleCheckoutFromUpdate = () => {
@@ -978,10 +1078,17 @@ export default function PosOrderWorkspace({
       showToast(t('components.dashboard.views.pos.PosOrderWorkspace.addLineFirst'), 'error')
       return
     }
+    // A line with no technician is a money problem (no commission, no tip split), so it stays a
+    // hard block rather than something the mismatch warning can be switched off for.
     if (hasUnassignedServiceLine) {
       showToast(t('components.dashboard.views.pos.PosOrderWorkspace.assignTechnicianFirst'), 'error')
       return
     }
+    confirmMismatch('checkout', unfinishedLineLabels, unfinishedLineLabels.length > 0, runComplete)
+  }
+
+  const runComplete = () => {
+    if (!order) return
     if (!startTicketAction(TicketBusySurface.Complete)) return
     completeOrder.mutate(
       {
@@ -1149,6 +1256,12 @@ export default function PosOrderWorkspace({
                                       {t('components.dashboard.views.pos.PosOrderWorkspace.customServiceBadge')}
                                     </span>
                                   ) : null}
+                                  <span
+                                    data-testid={`line-status-${line.key}`}
+                                    className={`shrink-0 rounded-md px-1.5 py-0.5 text-[9px] font-black uppercase tracking-wider ${LINE_STATUS_BADGE_CLASS[line.lineStatus] ?? LINE_STATUS_BADGE_CLASS[PosOrderItemStatus.Unassigned]}`}
+                                  >
+                                    {t(posOrderItemStatusLabelKey(line.lineStatus))}
+                                  </span>
                                 </div>
                                 <p className="mt-1 min-w-0 truncate text-xs font-semibold leading-tight text-nexoraText">
                                   <span className="text-[10px] font-normal text-nexoraMuted">
@@ -1180,6 +1293,33 @@ export default function PosOrderWorkspace({
 
                               <div className="col-span-2 overflow-x-auto pt-1">
                                 <div className="flex min-w-max items-center gap-1.5">
+                                  {/* Also offered on a line still awaiting the technician's acceptance:
+                                      starting on their behalf is the designed way out when nobody
+                                      answers, and it records the acceptance at the same instant. */}
+                                  {canMutateLine
+                                    && (line.lineStatus === PosOrderItemStatus.Assigned
+                                      || line.lineStatus === PosOrderItemStatus.PendingAcceptance) ? (
+                                    <button
+                                      type="button"
+                                      data-testid={`start-line-${line.key}`}
+                                      onClick={() => handleStartLine(line)}
+                                      disabled={isBusy}
+                                      className="h-7 shrink-0 rounded-lg border border-emerald-200 bg-emerald-50/60 px-2 text-[10px] font-bold text-emerald-700 disabled:opacity-60"
+                                    >
+                                      {t('components.dashboard.views.pos.serviceLineStatus.startAction')}
+                                    </button>
+                                  ) : null}
+                                  {canMutateLine && line.lineStatus === PosOrderItemStatus.Started ? (
+                                    <button
+                                      type="button"
+                                      data-testid={`complete-line-${line.key}`}
+                                      onClick={() => handleCompleteLine(line)}
+                                      disabled={isBusy}
+                                      className="h-7 shrink-0 rounded-lg border border-emerald-300 bg-emerald-500 px-2 text-[10px] font-bold text-white disabled:opacity-60"
+                                    >
+                                      {t('components.dashboard.views.pos.serviceLineStatus.completeAction')}
+                                    </button>
+                                  ) : null}
                                   {canMutateLine ? (
                                     <button
                                       type="button"
@@ -2336,6 +2476,19 @@ export default function PosOrderWorkspace({
         </div>
       ) : null}
     </div>
+    {mismatchWarning ? (
+      <ServiceLineMismatchWarningModal
+        kind={mismatchWarning.kind}
+        affectedLines={mismatchWarning.lines}
+        isBusy={isBusy}
+        onCancel={() => setMismatchWarning(null)}
+        onConfirm={() => {
+          const run = mismatchWarning.onConfirm
+          setMismatchWarning(null)
+          run()
+        }}
+      />
+    ) : null}
     {printableReceipt}
     </>
   )

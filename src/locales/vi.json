@@ -4039,7 +4039,6 @@
             "viewDetailClose": "Đóng",
             "viewDetailLineDiscountStaffShare": "(kỹ thuật viên ${{amount}})",
             "viewDetailLineDiscount": "Giảm ${{amount}} · {{bearer}} chịu",
-            "viewDetailLineDiscount": "Giảm ${{amount}} · {{bearer}} chịu",
             "viewDetailOrderDiscount": "Giảm giá toàn bộ dịch vụ"
           },
           "CustomerTab": {
@@ -4462,6 +4461,43 @@
             "activeLabel": "Áp dụng ở quầy thanh toán",
             "save": "Lưu",
             "cancel": "Huỷ"
+          },
+          "serviceLineStatus": {
+            "unassigned": "Chưa có thợ",
+            "pendingAcceptance": "Chờ thợ xác nhận",
+            "assigned": "Đã nhận",
+            "started": "Đang làm",
+            "completed": "Xong",
+            "waitingOn": "Chờ {{names}} xác nhận",
+            "progress": "Xong {{done}}/{{total}} dịch vụ",
+            "acceptAction": "Nhận",
+            "declineAction": "Từ chối",
+            "startAction": "Bắt đầu",
+            "completeAction": "Hoàn tất",
+            "acceptSuccess": "Bạn đã nhận dịch vụ này.",
+            "declineSuccess": "Đã trả dịch vụ về cho quầy.",
+            "startSuccess": "Đã bắt đầu dịch vụ.",
+            "declineConfirmTitle": "Từ chối dịch vụ này?",
+            "declineConfirmBody": "Dịch vụ sẽ được trả về quầy để giao cho người khác.",
+            "pendingBadge": "{{count}} dịch vụ chờ bạn xác nhận",
+            "warnStartTitle": "Chưa có dịch vụ nào sẵn sàng bắt đầu",
+            "warnStartBody": "Chưa thợ nào nhận dịch vụ trên phiếu này. Vẫn bắt đầu?",
+            "warnCheckoutTitle": "Còn dịch vụ chưa xong",
+            "warnCheckoutBody": "Các dịch vụ sau sẽ được đánh dấu hoàn tất khi thanh toán:",
+            "warnCancelTitle": "Đã có dịch vụ được làm",
+            "warnCancelBody": "Một số dịch vụ trên phiếu đã bắt đầu hoặc đã xong. Huỷ sẽ mất phần công này:",
+            "warnContinue": "Vẫn tiếp tục",
+            "warnGoBack": "Quay lại"
+          },
+          "PosOrderSettingsPanel": {
+            "title": "Dịch vụ trên phiếu",
+            "description": "Cách các dịch vụ trên một phiếu đi từ lúc giao thợ đến lúc hoàn tất.",
+            "requireStaffAcceptanceLabel": "Thợ phải xác nhận khi được giao khách",
+            "requireStaffAcceptanceDescription": "Khi bật, thợ nhận thông báo và bấm Nhận thì dịch vụ mới tính là của họ. Tắt đi sẽ tự xác nhận mọi dịch vụ đang chờ.",
+            "saveSuccess": "Đã lưu cấu hình dịch vụ trên phiếu.",
+            "saveFailed": "Không lưu được cấu hình dịch vụ trên phiếu.",
+            "warnOnServiceLineStatusMismatchLabel": "Cảnh báo khi phiếu chạy trước dịch vụ",
+            "warnOnServiceLineStatusMismatchDescription": "Hiện hộp xác nhận khi bắt đầu, thanh toán hoặc huỷ phiếu mà các dịch vụ chưa ở bước tương ứng. Dịch vụ chưa có thợ thì luôn bị chặn thanh toán, bật hay tắt cũng vậy."
           }
         },
         "BookingHubView": {

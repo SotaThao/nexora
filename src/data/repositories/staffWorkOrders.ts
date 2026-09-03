@@ -25,6 +25,11 @@ export type StaffWorkOrderItem = {
   isAddOn: boolean
   note: string | null
   technicianName: string | null
+  /** See PosOrderItemStatus. */
+  lineStatus: string
+  /** True when this line is the caller's own — the ticket shows every technician on it. */
+  isMine: boolean
+  startedAt: string | null
   completedAt: string | null
 }
 
@@ -43,6 +48,8 @@ export type StaffWorkOrderListItem = {
 
 export type StaffWorkOrderDetail = {
   id: string
+  /** Line-level actions are addressed per business, so the screen needs it. */
+  businessId: string
   orderNumber: string
   customerName: string
   status: PosOrderStatus
@@ -62,6 +69,8 @@ const STAFF_WORK_ORDER_ACTION = {
   startService: 'start-service',
   completeService: 'complete-service',
 } as const
+
+const PENDING_ACCEPTANCE_COUNT_PATH = `${STAFF_WORK_ORDERS_API_PATH}/pending-acceptance-count`
 
 const LIST_QUERY_PARAM = {
   businessId: 'businessId',
@@ -142,6 +151,9 @@ function normalizeItem(dto: StaffWorkOrderItemApiDto): StaffWorkOrderItem {
     isAddOn: readFlag(dto, 'isAddOn', 'IsAddOn'),
     note: readOptionalText(dto, 'note', 'Note'),
     technicianName: readOptionalText(dto, 'technicianName', 'TechnicianName'),
+    lineStatus: readText(dto, 'lineStatus', 'LineStatus'),
+    isMine: readFlag(dto, 'isMine', 'IsMine'),
+    startedAt: readOptionalText(dto, 'startedAt', 'StartedAt'),
     completedAt: readOptionalText(dto, 'completedAt', 'CompletedAt'),
   }
 }
@@ -153,6 +165,7 @@ function normalizeDetail(dto: StaffWorkOrderDetailApiDto | null): StaffWorkOrder
   const items = readValue<StaffWorkOrderItemApiDto[]>(dto, 'items', 'Items') ?? []
   return {
     id,
+    businessId: readText(dto, 'businessId', 'BusinessId'),
     orderNumber: readText(dto, 'orderNumber', 'OrderNumber'),
     customerName: readText(dto, 'customerName', 'CustomerName'),
     status: toPosOrderStatus(readText(dto, 'status', 'Status')),
@@ -194,6 +207,12 @@ function createStaffWorkOrdersRepository(client: HttpClient = httpClient) {
       return res
         .map(normalizeListItem)
         .filter((item): item is StaffWorkOrderListItem => item != null)
+    },
+
+    // Polled from the app shell, so a failure must read as "no badge" rather than break the shell.
+    async getPendingAcceptanceCount(): Promise<number> {
+      const res = await client.get<number>(PENDING_ACCEPTANCE_COUNT_PATH)
+      return typeof res === 'number' && Number.isFinite(res) ? res : 0
     },
 
     async getWorkOrderDetail(orderId: string): Promise<StaffWorkOrderDetail | null> {

@@ -16,9 +16,10 @@ import {
   WORK_ORDERS_LAYOUT_CLASS,
   workOrderStatusClass,
   type WorkOrderDetail,
+  type WorkOrderItem,
 } from './constants'
 import WorkOrderCompleteServiceModal from './WorkOrderCompleteServiceModal'
-import WorkOrderServiceLines from './WorkOrderServiceLines'
+import WorkOrderServiceLines, { type WorkOrderLineActions } from './WorkOrderServiceLines'
 import { WorkOrderErrorCard } from './WorkOrderQueryFeedback'
 import { WorkOrderDetailSkeleton } from './WorkOrderSkeletons'
 import {
@@ -29,12 +30,20 @@ import {
   workOrderTextOrPlaceholder,
 } from './workOrderTickets'
 import type { PosOrderStatus } from '../../../constants/posOrderStatus'
+import {
+  useAcceptServiceLine,
+  useMarkServiceLineDone,
+  useRejectServiceLine,
+  useStartServiceLine,
+} from '../../../data/hooks/usePosOrders'
 import { formatLocalDateIso } from '../../../utils/localDate'
 
 interface StaffWorkOrderDetailProps {
   orderId: string
   onBack: () => void
 }
+
+const LINE_STATUS_I18N = 'components.dashboard.views.pos.serviceLineStatus'
 
 export default function StaffWorkOrderDetail({ orderId, onBack }: StaffWorkOrderDetailProps) {
   const { t } = useTranslation()
@@ -44,7 +53,23 @@ export default function StaffWorkOrderDetail({ orderId, onBack }: StaffWorkOrder
   const completeService = useCompleteStaffWorkOrderService(orderId)
   const [isCompleteModalOpen, setIsCompleteModalOpen] = useState(false)
   const ticket = detailQuery.data ?? null
-  const isMutating = startService.isPending || completeService.isPending
+
+  // Line-level actions live on the merchant endpoints: the same handler serves the front desk and
+  // the technician, and decides which of the two is calling. Hence businessId from the ticket.
+  const businessId = ticket?.businessId
+  const acceptLine = useAcceptServiceLine(businessId)
+  const rejectLine = useRejectServiceLine(businessId)
+  const startLine = useStartServiceLine(businessId)
+  const completeLine = useMarkServiceLineDone(businessId)
+  const [declineTarget, setDeclineTarget] = useState<WorkOrderItem | null>(null)
+
+  const isMutating =
+    startService.isPending
+    || completeService.isPending
+    || acceptLine.isPending
+    || rejectLine.isPending
+    || startLine.isPending
+    || completeLine.isPending
 
   if (detailQuery.isPending) return <WorkOrderDetailSkeleton />
 
@@ -60,6 +85,15 @@ export default function StaffWorkOrderDetail({ orderId, onBack }: StaffWorkOrder
       showToast(t(getErrorI18nKey(getApiErrorCode(err, 'ERROR'))), 'error')
       return false
     }
+  }
+
+  const runLineAction = (
+    mutation: { mutateAsync: (vars: { orderId: string; serviceLineId: string }) => Promise<unknown> },
+    line: WorkOrderItem,
+    successKey: string,
+  ) => {
+    if (!line.id) return
+    void runAction(() => mutation.mutateAsync({ orderId, serviceLineId: line.id }), successKey)
   }
 
   const handleConfirmCompletion = async (note: string | null) => {
@@ -86,7 +120,51 @@ export default function StaffWorkOrderDetail({ orderId, onBack }: StaffWorkOrder
         onBack={onBack}
         onStart={() => void runAction(() => startService.mutateAsync(), WORK_ORDERS_I18N.startServiceSuccess)}
         onComplete={() => setIsCompleteModalOpen(true)}
+        lineActions={{
+          onAccept: (line) => runLineAction(acceptLine, line, `${LINE_STATUS_I18N}.acceptSuccess`),
+          onDecline: (line) => setDeclineTarget(line),
+          onStart: (line) => runLineAction(startLine, line, `${LINE_STATUS_I18N}.startSuccess`),
+          onComplete: (line) => runLineAction(completeLine, line, WORK_ORDERS_I18N.completeServiceSuccess),
+          isBusy: isMutating,
+        }}
       />
+      {declineTarget ? (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4">
+          <div
+            role="alertdialog"
+            aria-modal="true"
+            className="w-full max-w-xs rounded-2xl bg-white p-5 shadow-xl"
+          >
+            <h3 className="text-sm font-black text-nexoraText">
+              {t(`${LINE_STATUS_I18N}.declineConfirmTitle`)}
+            </h3>
+            <p className="mt-2 text-xs leading-relaxed text-nexoraMuted">
+              {t(`${LINE_STATUS_I18N}.declineConfirmBody`)}
+            </p>
+            <div className="mt-4 flex justify-end gap-2">
+              <button
+                type="button"
+                onClick={() => setDeclineTarget(null)}
+                className="h-10 rounded-lg border border-nexoraBorder px-3 text-[11px] font-extrabold text-nexoraText"
+              >
+                {t('common.cancel')}
+              </button>
+              <button
+                type="button"
+                disabled={isMutating}
+                onClick={() => {
+                  const target = declineTarget
+                  setDeclineTarget(null)
+                  runLineAction(rejectLine, target, `${LINE_STATUS_I18N}.declineSuccess`)
+                }}
+                className="h-10 rounded-lg bg-rose-500 px-3 text-[11px] font-extrabold text-white disabled:opacity-60"
+              >
+                {t(`${LINE_STATUS_I18N}.declineAction`)}
+              </button>
+            </div>
+          </div>
+        </div>
+      ) : null}
       {isCompleteModalOpen && ticket ? (
         <WorkOrderCompleteServiceModal
           customerName={workOrderTextOrPlaceholder(ticket.customerName)}
@@ -110,6 +188,7 @@ function WorkOrderDetailBody({
   onBack,
   onStart,
   onComplete,
+  lineActions,
 }: {
   isError: boolean
   errorMessage?: string
@@ -119,6 +198,7 @@ function WorkOrderDetailBody({
   onBack: () => void
   onStart: () => void
   onComplete: () => void
+  lineActions: WorkOrderLineActions
 }) {
   const { t } = useTranslation()
 
@@ -174,7 +254,11 @@ function WorkOrderDetailBody({
         </div>
       </div>
 
-      <WorkOrderServiceLines items={ticket.items} serviceTotal={ticket.serviceTotal} />
+      <WorkOrderServiceLines
+        items={ticket.items}
+        serviceTotal={ticket.serviceTotal}
+        actions={lineActions}
+      />
 
       {ticket.customerNotes ? (
         <aside className={WORK_ORDERS_LAYOUT_CLASS.notesCard}>

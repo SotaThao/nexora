@@ -61,6 +61,7 @@ import {
 import type {
   BookingListItemApiDto,
   OrderListItemApiDto,
+  PosServiceLineRollupApiDto,
   PosBeepApiDto,
   TurnBoardStationApiDto,
 } from '../../../../types/repositories'
@@ -135,6 +136,35 @@ const renderServiceChips = (serviceNames: string[]) =>
   ) : (
     <span className="text-[11px] text-nexoraMuted">—</span>
   )
+
+// Service progress of a ticket, read straight off the board. The front desk spends most of its
+// time on this list rather than inside a ticket, so "2/3 done · waiting on Anna" has to be here or
+// the line statuses may as well not exist.
+const ServiceProgressChips = ({ rollup }: { rollup?: PosServiceLineRollupApiDto }) => {
+  const { t } = useTranslation()
+  if (!rollup || rollup.serviceLineCount === 0) return null
+  return (
+    <>
+      <span className="shrink-0 rounded-full bg-slate-100 px-2 py-0.5 text-[10px] font-black uppercase text-slate-600">
+        {t('components.dashboard.views.pos.serviceLineStatus.progress', {
+          done: rollup.completedServiceLineCount,
+          total: rollup.serviceLineCount,
+        })}
+      </span>
+      {rollup.pendingAcceptanceCount > 0 ? (
+        <span className="shrink-0 rounded-full bg-amber-100 px-2 py-0.5 text-[10px] font-black uppercase text-amber-700">
+          {t('components.dashboard.views.pos.serviceLineStatus.waitingOn', {
+            names: rollup.pendingAcceptanceTechnicianNames.join(', '),
+          })}
+        </span>
+      ) : null}
+    </>
+  )
+}
+
+const renderServiceProgress = (rollup?: PosServiceLineRollupApiDto) => (
+  <ServiceProgressChips rollup={rollup} />
+)
 
 const renderTechnicianChip = (technicianNames: string[]) => (
   <span className="inline-flex max-w-full rounded-full bg-cyan-100/70 px-2.5 py-1 text-[11px] font-extrabold text-cyan-800">
@@ -1501,6 +1531,7 @@ export default function PosFrontDeskView({
                       {t(tk('orderListNoServiceFlag'))}
                     </span>
                   ) : null}
+                  {renderServiceProgress(order.serviceLines)}
                 </>
               )
 
