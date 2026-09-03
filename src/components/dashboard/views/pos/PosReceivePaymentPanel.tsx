@@ -100,6 +100,10 @@ export default function PosReceivePaymentPanel({
         <PayoutMethodDetailModal
           method={enlarged ? method : null}
           logo={methodLogo}
+          paymentAmount={{
+            label: t('components.dashboard.views.pos.PosOrderWorkspace.amountToPay'),
+            value: formatUsdAmount(amount),
+          }}
           onClose={() => setEnlarged(false)}
         />
       ) : (

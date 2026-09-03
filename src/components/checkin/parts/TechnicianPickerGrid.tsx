@@ -11,6 +11,8 @@ export interface TechnicianOption {
   displayName: string
   photoUrl?: string | null
   isBusy?: boolean
+  turnsToday?: number
+  isNextTurn?: boolean
 }
 
 // Above this many people the grid becomes hard to scan, and a name is faster to type than to hunt.
@@ -37,6 +39,8 @@ export default function TechnicianPickerGrid({
   emptyLabel,
   busyLabel,
   availableLabel,
+  turnsLabel,
+  nextTurnLabel,
   compact = false,
   autoWrap = false,
 }: {
@@ -53,6 +57,8 @@ export default function TechnicianPickerGrid({
   // passes neither, so its cards stay exactly as they were).
   busyLabel?: string
   availableLabel?: string
+  turnsLabel?: (count: number) => string
+  nextTurnLabel?: string
   compact?: boolean
   // Check-in surfaces use content-width choices that wrap; other consumers keep the existing grid.
   autoWrap?: boolean
@@ -139,6 +145,16 @@ export default function TechnicianPickerGrid({
                   </span>
                 ) : null}
                 <span className={optionLabelClass}>{staff.displayName}</span>
+                {staff.turnsToday !== undefined && turnsLabel ? (
+                  <span className="text-[10px] font-semibold tabular-nums text-nexoraMuted">
+                    {turnsLabel(staff.turnsToday)}
+                  </span>
+                ) : null}
+                {staff.isNextTurn && nextTurnLabel ? (
+                  <span className="rounded-full border border-violet-200 bg-violet-50 px-2 py-0.5 text-[10px] font-extrabold text-violet-700">
+                    {nextTurnLabel}
+                  </span>
+                ) : null}
                 {renderBadge(staff)}
               </button>
             ))}

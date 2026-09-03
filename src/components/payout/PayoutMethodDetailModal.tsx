@@ -33,6 +33,10 @@ const PROFILE_TK = 'components.settings.tabs.ProfileTab'
 interface PayoutMethodDetailModalProps {
   method: PaymentMethodDto | null
   logo?: ReactNode
+  paymentAmount?: {
+    label: string
+    value: string
+  }
   onClose: () => void
 }
 
@@ -181,6 +185,7 @@ function VlinkpayAddressCards({ addresses }: { addresses: VlinkpayAddresses }) {
 export default function PayoutMethodDetailModal({
   method,
   logo,
+  paymentAmount,
   onClose,
 }: PayoutMethodDetailModalProps) {
   const { t } = useTranslation()
@@ -327,6 +332,17 @@ export default function PayoutMethodDetailModal({
             )}
           </div>
           )}
+
+          {paymentAmount ? (
+            <div className="mx-auto mt-3 rounded-xl border border-nexoraBrand/20 bg-nexoraBrandSoft/50 px-4 py-2.5">
+              <p className="text-[10px] font-extrabold uppercase tracking-wide text-nexoraMuted">
+                {paymentAmount.label}
+              </p>
+              <p className="mt-0.5 text-2xl font-black tabular-nums text-nexoraBrandDark">
+                {paymentAmount.value}
+              </p>
+            </div>
+          ) : null}
 
           <div className={`mt-4 text-left ${isVlinkpay ? '' : 'divide-y divide-slate-100 border-y border-slate-100'}`}>
             {hasAccountName && (

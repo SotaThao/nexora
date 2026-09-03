@@ -38,6 +38,7 @@ import {
   useStartOrderService,
 } from '../../../../data/hooks/usePosOrders'
 import { useCheckInTechnicians } from '../../../../data/hooks/usePosCheckIn'
+import { useTimeClockRoster } from '../../../../data/hooks/usePosTimeClock'
 import { usePublicBusinessPaymentMethods } from '../../../../data/hooks/usePublicTouch'
 import { PosOrderStatus } from '../../../../constants/posOrderStatus'
 import { isLineBusySurface, TicketBusySurface } from '../../../../constants/posTicketAction'
@@ -80,9 +81,11 @@ import PosCashPaymentPanel, { isCashPaymentCovered } from './PosCashPaymentPanel
 import PosReceivePaymentPanel from './PosReceivePaymentPanel'
 import PosRemoveConfirmAction from './PosRemoveConfirmAction'
 import PosCheckoutSuccessView, { type PosCheckoutReceiptItem } from './PosCheckoutSuccessView'
+import { getLocalDayWindow } from './timeclock/timeClockDay'
+import { selectNextTurnTechnician } from './posNextTurn'
 
 type TipMode = 'noTip' | 'fixed10' | 'fixed15' | 'pct10' | 'pct20' | 'custom'
-export type PosOrderWorkspaceMode = 'edit' | 'checkout'
+export type PosOrderWorkspaceMode = 'edit' | 'checkout' | 'success'
 
 // Percentage-based tip modes are a live % of servicesSubtotal, not a one-time snapshot —
 // see the tip-percentage recompute effect below, which re-applies this whenever the
@@ -220,7 +223,9 @@ export default function PosOrderWorkspace({
   mode = 'edit',
   onClose,
   onCompleted,
+  onPaymentCompleted,
   businessName,
+  businessLogoUrl,
   businessAddress,
   businessPhone,
 }: {
@@ -232,7 +237,9 @@ export default function PosOrderWorkspace({
   // Renders a "Back" button next to the title.
   onClose?: () => void
   onCompleted?: () => void
+  onPaymentCompleted?: (orderId: string) => void
   businessName?: string
+  businessLogoUrl?: string | null
   businessAddress?: string
   businessPhone?: string
 }) {
@@ -316,6 +323,11 @@ export default function PosOrderWorkspace({
     posStaffProfileId?: string
     note?: string
   } | null>(null)
+  const technicianTurnWindow = getLocalDayWindow()
+  const technicianTurnRosterQuery = useTimeClockRoster(businessId, technicianTurnWindow, {
+    enabled: technicianTarget !== null,
+    refetchInterval: false,
+  })
   const [noteDraft, setNoteDraft] = useState('')
   // Chosen technician shown immediately so the row never flashes the previous name while
   // AssignStaffToServiceLine and the order-detail refetch catch up.
@@ -344,6 +356,7 @@ export default function PosOrderWorkspace({
   const [customTipInput, setCustomTipInput] = useState('')
   const [paymentMethod, setPaymentMethod] = useState<PosCheckoutPaymentMethodType>('Cash')
   const [cashReceived, setCashReceived] = useState('')
+  const cashReceivedWasEditedRef = useRef(false)
   const [completedPayment, setCompletedPayment] = useState<CompleteOrderResultApiDto | null>(null)
   // POS iPad redesign, Ticket 6 — "Turn to Customer": front desk flips the iPad around so
   // the customer picks their own tip in private. Deliberately does NOT auto-return after
@@ -456,10 +469,13 @@ export default function PosOrderWorkspace({
     // Status never reveals checkout information by itself. An InService order reached through
     // Edit still opens as an operational ticket; only an explicit Checkout entry reveals payment.
     setShowPaymentSection(mode === 'checkout' && !isPaid)
-    setReceiptChoice('none')
-    setPaymentMethod('Cash')
-    setCashReceived('')
-    setCompletedPayment(null)
+    if (mode !== 'success') {
+      setReceiptChoice('none')
+      setPaymentMethod('Cash')
+      cashReceivedWasEditedRef.current = false
+      setCashReceived(formatUsdInputAmount(order.total))
+      setCompletedPayment(null)
+    }
 
     if (order.tipAmount === 0) {
       setTipMode('noTip')
@@ -475,6 +491,14 @@ export default function PosOrderWorkspace({
       setCustomTipInput(formatUsdInputAmount(order.tipAmount))
     }
   }, [order, mode, isPaid])
+
+  // Keep the default equal to the live total while tip/discount edits are still changing it.
+  // Once the cashier types a received amount, that physical cash value belongs to them and must
+  // not be overwritten by a later order refetch.
+  useEffect(() => {
+    if (!order || paymentMethod !== PosCheckoutPaymentMethod.Cash || cashReceivedWasEditedRef.current) return
+    setCashReceived(formatUsdInputAmount(order.total))
+  }, [order?.total, paymentMethod])
 
   useEffect(() => {
     if (!order) return
@@ -524,11 +548,26 @@ export default function PosOrderWorkspace({
   // Never offer someone the service is not assigned to — the rule the per-service endpoint applied
   // server-side, now applied to the one list this screen holds. Name order stays fixed so a busy
   // flag flipping on refetch cannot reshuffle the picker under the operator's finger.
-  const techniciansForService = (posServiceId: string) =>
-    allTechnicians
+  const techniciansForService = (posServiceId: string) => {
+    const eligibleTechnicians = allTechnicians
       .filter((tech) => tech.serviceIds.includes(posServiceId))
       .slice()
       .sort((a, b) => a.displayName.localeCompare(b.displayName))
+    const eligibleTechnicianIds = new Set(
+      eligibleTechnicians.map((technician) => technician.posStaffProfileId),
+    )
+    const rosterRows = technicianTurnRosterQuery.data?.rows ?? []
+    const turnsByTechnicianId = new Map(
+      rosterRows.map((row) => [row.posStaffProfileId, row.turnsToday]),
+    )
+    const nextTurnTechnician = selectNextTurnTechnician(rosterRows, eligibleTechnicianIds)
+
+    return eligibleTechnicians.map((technician) => ({
+      ...technician,
+      turnsToday: turnsByTechnicianId.get(technician.posStaffProfileId),
+      isNextTurn: technician.posStaffProfileId === nextTurnTechnician?.posStaffProfileId,
+    }))
+  }
 
   const noteLines = visibleLines.filter(
     (l): l is DisplayServiceLine => l.itemType === 'Service' && Boolean(l.note?.trim()),
@@ -760,6 +799,10 @@ export default function PosOrderWorkspace({
   }
 
   const handleStartService = () => {
+    if (hasUnassignedServiceLine) {
+      showToast(t('components.dashboard.views.pos.PosOrderWorkspace.assignTechnicianFirst'), 'error')
+      return
+    }
     if (!startTicketAction(TicketBusySurface.Status)) return
     startOrderService.mutate(orderId, {
       onSuccess: () => showToast(t('components.dashboard.views.pos.PosOrderWorkspace.startServiceSuccess')),
@@ -869,6 +912,7 @@ export default function PosOrderWorkspace({
         onSuccess: (result) => {
           showToast(t('components.dashboard.views.pos.PosOrderWorkspace.completeSuccess'))
           setCompletedPayment(result)
+          onPaymentCompleted?.(result.orderId)
         },
         onError: reportError,
         onSettled: endTicketAction,
@@ -1232,7 +1276,7 @@ export default function PosOrderWorkspace({
                   <button
                     type="button"
                     onClick={handleStartService}
-                    disabled={isBusy || hasUnassignedServiceLine}
+                    disabled={isBusy}
                     title={
                       hasUnassignedServiceLine
                         ? t('components.dashboard.views.pos.PosOrderWorkspace.assignTechnicianFirst')
@@ -1374,13 +1418,6 @@ export default function PosOrderWorkspace({
                   </div>
                 </div>
 
-                <OrderDiscountSection
-                  order={order}
-                  promotions={eligiblePromotions}
-                  isSaving={setOrderDiscount.isPending}
-                  onApply={handleApplyOrderDiscount}
-                />
-
                 {order.staffTipShares.length > 1 ? (
                   <div className="relative space-y-2 rounded-xl border border-nexoraBorder/70 bg-nexoraSurface p-3 shadow-sm">
                     <TicketActionSkeletonOverlay
@@ -1453,7 +1490,10 @@ export default function PosOrderWorkspace({
                     <PosCashPaymentPanel
                       total={order.total}
                       value={cashReceived}
-                      onChange={setCashReceived}
+                      onChange={(value) => {
+                        cashReceivedWasEditedRef.current = true
+                        setCashReceived(value)
+                      }}
                       disabled={isBusy}
                     />
                   ) : null}
@@ -1532,9 +1572,17 @@ export default function PosOrderWorkspace({
                     label={mutationSkeletonLabel}
                     count={TICKET_SKELETON_ROW_COUNT.summary}
                   />
-                  <h3 className="text-[10px] font-black uppercase tracking-wider text-nexoraMuted">
-                    {t('components.dashboard.views.pos.PosOrderWorkspace.summaryTitle')}
-                  </h3>
+                  <div className="flex items-center justify-between gap-3">
+                    <h3 className="text-[10px] font-black uppercase tracking-wider text-nexoraMuted">
+                      {t('components.dashboard.views.pos.PosOrderWorkspace.summaryTitle')}
+                    </h3>
+                    <OrderDiscountSection
+                      order={order}
+                      promotions={eligiblePromotions}
+                      isSaving={setOrderDiscount.isPending}
+                      onApply={handleApplyOrderDiscount}
+                    />
+                  </div>
                   <div className="space-y-2">
                     <div className="flex items-center justify-between text-[10px] font-black uppercase tracking-wider text-nexoraMuted">
                       <span>{t('components.dashboard.views.pos.PosOrderWorkspace.summaryItem')}</span>
@@ -1687,30 +1735,6 @@ export default function PosOrderWorkspace({
     ]
   })
 
-  if (completedPayment && order) {
-    const receiptLabel = receiptChoice === 'sms'
-      ? t('components.dashboard.views.pos.PosOrderWorkspace.receiptSendSms')
-      : receiptChoice === 'print'
-        ? t('components.dashboard.views.pos.PosOrderWorkspace.receiptPrint')
-        : t('components.dashboard.views.pos.PosOrderWorkspace.receiptNone')
-    return (
-      <PosCheckoutSuccessView
-        businessName={businessName}
-        businessAddress={businessAddress}
-        businessPhone={businessPhone}
-        customerName={order.customerName}
-        orderNumber={order.orderNumber}
-        paymentMethodLabel={getPosCheckoutPaymentMethodLabel(paymentMethod, t)}
-        receiptLabel={receiptLabel}
-        total={completedPayment.totalAmount}
-        discountAmount={completedPayment.discountAmount + (order.orderDiscountAmount ?? 0)}
-        tipAmount={completedPayment.tipAmount}
-        items={completedReceiptItems}
-        onStartNext={() => (onCompleted ?? onClose)?.()}
-      />
-    )
-  }
-
   const printableServiceGroups = visibleLines.reduce<Array<{ technician: string; lines: DisplayServiceLine[] }>>(
     (groups, line) => {
       if (line.itemType !== 'Service') return groups
@@ -1733,6 +1757,7 @@ export default function PosOrderWorkspace({
   const printableBusinessName = businessName?.trim()
   const printableBusinessAddress = businessAddress?.trim()
   const printableBusinessPhone = businessPhone?.trim()
+  const isPaidReceiptPreview = isPaid || Boolean(completedPayment)
   const printableReceipt =
     order && printPreviewOpen && typeof document !== 'undefined'
       ? createPortal(
@@ -1741,15 +1766,15 @@ export default function PosOrderWorkspace({
               className="pos-invoice-modal"
               role="dialog"
               aria-modal="true"
-              aria-label={isPaid ? undefined : t('components.dashboard.views.pos.PosOrderWorkspace.printPreviewLabel')}
-              aria-labelledby={isPaid ? 'pos-print-preview-title' : undefined}
+              aria-label={isPaidReceiptPreview ? undefined : t('components.dashboard.views.pos.PosOrderWorkspace.printPreviewLabel')}
+              aria-labelledby={isPaidReceiptPreview ? 'pos-print-preview-title' : undefined}
             >
               <div className="pos-invoice-modal-header">
                 <div>
                   <p className="text-[10px] font-black uppercase tracking-wider text-nexoraMuted">
                     {t('components.dashboard.views.pos.PosOrderWorkspace.printPreviewLabel')}
                   </p>
-                  {isPaid ? (
+                  {isPaidReceiptPreview ? (
                     <h2 id="pos-print-preview-title" className="text-lg font-black text-nexoraText">
                       {t('components.dashboard.views.pos.PosOrderWorkspace.printReceiptTitle')}
                     </h2>
@@ -1904,7 +1929,7 @@ export default function PosOrderWorkspace({
                 >
                   {t(
                     `components.dashboard.views.pos.PosOrderWorkspace.${
-                      isPaid ? 'printReceiptAction' : 'printInvoiceAction'
+                      isPaidReceiptPreview ? 'printReceiptAction' : 'printInvoiceAction'
                     }`,
                   )}
                 </button>
@@ -1914,6 +1939,50 @@ export default function PosOrderWorkspace({
           document.body,
         )
       : null
+
+  const showCheckoutSuccess = Boolean(order && (
+    completedPayment || (mode === 'success' && isPaid)
+  ))
+
+  if (showCheckoutSuccess && order) {
+    const completedReceiptChoice = completedPayment
+      ? receiptChoice
+      : order.receiptPhone
+        ? 'sms'
+        : 'none'
+    const receiptLabel = completedReceiptChoice === 'sms'
+      ? t('components.dashboard.views.pos.PosOrderWorkspace.receiptSendSms')
+      : completedReceiptChoice === 'print'
+        ? t('components.dashboard.views.pos.PosOrderWorkspace.receiptPrint')
+        : t('components.dashboard.views.pos.PosOrderWorkspace.receiptNone')
+    return (
+      <>
+        <PosCheckoutSuccessView
+          businessName={businessName}
+          businessLogoUrl={businessLogoUrl}
+          businessAddress={businessAddress}
+          businessPhone={businessPhone}
+          customerName={order.customerName}
+          orderNumber={order.orderNumber}
+          paymentMethodLabel={getPosCheckoutPaymentMethodLabel(
+            completedPayment ? paymentMethod : order.paymentMethodType,
+            t,
+          )}
+          receiptLabel={receiptLabel}
+          total={completedPayment?.totalAmount ?? order.total}
+          discountAmount={
+            (completedPayment?.discountAmount ?? order.discountAmount)
+            + (order.orderDiscountAmount ?? 0)
+          }
+          tipAmount={completedPayment?.tipAmount ?? order.tipAmount}
+          items={completedReceiptItems}
+          onReprint={handleOpenPrintPreview}
+          onStartNext={() => (onCompleted ?? onClose)?.()}
+        />
+        {printableReceipt}
+      </>
+    )
+  }
 
   return (
     <>

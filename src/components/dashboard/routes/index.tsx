@@ -417,6 +417,7 @@ export function PosFrontDeskRoute() {
   const { data: merchantSetupData } = useMerchantSetup()
   const businessId = merchantSetupData?.businessInfo?.businessId
   const businessName = merchantSetupData?.businessInfo?.name
+  const businessLogoUrl = merchantSetupData?.businessInfo?.logo
   const businessAddress = formatBusinessAddress(merchantSetupData?.businessInfo ?? {})
   const businessPhone = merchantSetupData?.businessInfo?.phone
   const businessSlug = merchantSetupData?.businessInfo?.slug
@@ -431,6 +432,7 @@ export function PosFrontDeskRoute() {
     <PosFrontDeskView
       businessId={businessId}
       businessName={businessName}
+      businessLogoUrl={businessLogoUrl}
       businessAddress={businessAddress}
       businessPhone={businessPhone}
       businessSlug={businessSlug}
