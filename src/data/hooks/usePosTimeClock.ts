@@ -103,11 +103,18 @@ export function useClockOutStaff(businessId?: string) {
 }
 
 export function useBeepStaff(businessId?: string) {
+  const queryClient = useQueryClient()
   const invalidate = useTimeClockInvalidation(businessId)
   return useMutation<BeepStaffResultApiDto, unknown, { posStaffProfileId: string; message?: string }>({
     mutationFn: ({ posStaffProfileId, message }) =>
       posTimeClockRepository.beepStaff(businessId as string, posStaffProfileId, message),
-    onSuccess: invalidate,
+    onSuccess: () => {
+      invalidate()
+      // The cooldown shown on the Beep/Nudge buttons reads canNudge/nextNudgeAllowedAt off the beep
+      // feed, not the roster — without this, the just-sent beep's cooldown only appears once the
+      // feed's own 15s poll happens to land, so the button looks re-enabled for up to 15s.
+      queryClient.invalidateQueries({ queryKey: qk.merchantPosBeepFeed(businessId) })
+    },
   })
 }
 
