@@ -253,6 +253,9 @@ export const errorCodeToI18nKey = {
 
   // POS Merchant Ops — Check-in, Turn Board & Checkout (US-12..US-17)
   POS_ORDER_NOT_FOUND: 'errors.pos_order_not_found',
+  POS_WORK_ORDER_ACCESS_DENIED: 'errors.pos_work_order_access_denied',
+  POS_WORK_ORDER_NOTHING_TO_COMPLETE: 'errors.pos_work_order_nothing_to_complete',
+  POS_WORK_ORDER_START_DATE_NOT_REACHED: 'errors.pos_work_order_start_date_not_reached',
   POS_ORDER_NOT_WAITING: 'errors.pos_order_not_waiting',
   POS_ORDER_CUSTOMER_NAME_REQUIRED: 'errors.pos_order_customer_name_required',
   POS_ORDER_CUSTOMER_NAME_TOO_LONG: 'errors.pos_order_customer_name_too_long',

@@ -238,6 +238,18 @@ export const qk = {
   },
   // Scoped by the caller's token, not by business — a tech linked to two salons polls one list.
   staffActiveBeeps: () => ['staffBeeps', 'active'],
+  // Staff Work Orders — list/detail plus start/complete. No polling. Prefix
+  // `staffWorkOrdersRoot` invalidates every list/detail combination. `filter` is
+  // only appended when passed so invalidateQueries({ queryKey: qk.staffWorkOrders(businessId) })
+  // still prefixes every date/status combination currently on screen.
+  staffWorkOrdersRoot: () => ['staffWorkOrders'] as const,
+  staffWorkOrders: (businessId?: string, date?: string, filter?: string) => {
+    const key: unknown[] = ['staffWorkOrders', 'list', businessId ?? '']
+    if (date) key.push(date)
+    if (filter) key.push(filter)
+    return key
+  },
+  staffWorkOrderDetail: (orderId?: string) => ['staffWorkOrders', 'detail', orderId ?? ''],
   staffClockScanPreview: (businessId?: string, token?: string) =>
     ['staffClockScanPreview', businessId ?? '', token ?? ''],
   // POS Merchant Ops — Checkout (US-14 / US-025, refactored to Order in US-026)
