@@ -2,15 +2,21 @@ import { useCallback, useEffect, useMemo, useState } from 'react'
 import type { SetURLSearchParams } from 'react-router-dom'
 import {
   SubscriptionBillingCycle,
+  SubscriptionMyPackageStatus,
+  SubscriptionMyPackageType,
   SubscriptionPackageType,
 } from '../../../../data/repositories/subscriptionPayments'
 import type {
   PurchasableSubscriptionPlan,
   SubscriptionPackage,
 } from '../../../../data/repositories/subscriptionPayments'
-import { useSubscriptionPackages } from '../../../../data/hooks/useSubscriptionPayments'
+import {
+  useSubscriptionMyPackages,
+  useSubscriptionPackages,
+} from '../../../../data/hooks/useSubscriptionPayments'
 import {
   getTipPlatformSubscription,
+  periodInMonthsFromBillingCycle,
   resolveTipPlatformPlanId,
 } from '../../../../utils/subscriptionDisplay'
 import { PACKAGE_MANAGEMENT_TAB_QUERY, PACKAGE_QUERY_PARAM } from './constants'
@@ -63,6 +69,22 @@ export function useTipPlatformCheckout({
   )
   const comparePlanId = toComparePlanId(currentTipPlanId)
 
+  // `/userprofile/me`'s SubscriptionDto has no `periodInMonths` — my-packages does, so the
+  // upgrade-ordering gate (cycle-first-then-tier) reads the current billing cycle from there.
+  const { data: myPackages = [] } = useSubscriptionMyPackages({
+    enabled: Boolean(currentTipPlanId),
+  })
+  const currentPeriodInMonths = useMemo(() => {
+    if (!currentTipPlanId) return null
+    const row = myPackages.find(
+      (pkg) =>
+        pkg.packageType === SubscriptionMyPackageType.TipPlatform
+        && (pkg.status === SubscriptionMyPackageStatus.Active
+          || pkg.status === SubscriptionMyPackageStatus.Trialing),
+    )
+    return row?.periodInMonths ?? null
+  }, [myPackages, currentTipPlanId])
+
   const [paymentPlan, setPaymentPlan] = useState<PurchasableSubscriptionPlan | null>(null)
   /** Snapshot at open — keeps the payment modal mounted if the catalog briefly refetches empty. */
   const [checkoutPackage, setCheckoutPackage] = useState<SubscriptionPackage | null>(null)
@@ -113,21 +135,32 @@ export function useTipPlatformCheckout({
     )
     if (!deepLinkPlan) return
 
+    // Deep link never carries a billing cycle today — defaults to Monthly, same as openCheckout's default.
     const planId = purchasablePlanToPlanId(deepLinkPlan)
-    if (!canOpenTipPlatformCheckout(planId, currentTipPlanId)) {
+    if (!canOpenTipPlatformCheckout(planId, 1, currentTipPlanId, currentPeriodInMonths)) {
       const next = stripPlanQueryParam(searchParams)
       if (next) setSearchParams(next, { replace: true })
       return
     }
     openCheckout(deepLinkPlan)
-  }, [deepLinkEnabled, searchParams, currentTipPlanId, setSearchParams, openCheckout])
+  }, [
+    deepLinkEnabled,
+    searchParams,
+    currentTipPlanId,
+    currentPeriodInMonths,
+    setSearchParams,
+    openCheckout,
+  ])
 
   const trySelectPlan = useCallback(
     (
       planId: string,
       billingCycle: SubscriptionBillingCycle = SubscriptionBillingCycle.Monthly,
     ): TipPlatformCheckoutResultValue => {
-      if (!canOpenTipPlatformCheckout(planId, currentTipPlanId)) {
+      const targetPeriodInMonths = periodInMonthsFromBillingCycle(billingCycle)
+      if (
+        !canOpenTipPlatformCheckout(planId, targetPeriodInMonths, currentTipPlanId, currentPeriodInMonths)
+      ) {
         return TipPlatformCheckoutResult.Blocked
       }
       const purchasablePlan = planIdToPurchasablePlan(planId)
@@ -135,7 +168,7 @@ export function useTipPlatformCheckout({
       openCheckout(purchasablePlan, billingCycle)
       return TipPlatformCheckoutResult.Opened
     },
-    [currentTipPlanId, openCheckout],
+    [currentTipPlanId, currentPeriodInMonths, openCheckout],
   )
 
   const isYearlyCheckout = checkoutBillingCycle === SubscriptionBillingCycle.Yearly
@@ -143,6 +176,7 @@ export function useTipPlatformCheckout({
   return {
     tipPlatformSubscription,
     currentTipPlanId,
+    currentPeriodInMonths,
     comparePlanId,
     packages,
     paymentPlan,

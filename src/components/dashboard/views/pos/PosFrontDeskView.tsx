@@ -40,6 +40,8 @@ import { useBookingList, useCheckInBookingFromList } from '../../../../data/hook
 import { useCheckInTechnicians } from '../../../../data/hooks/usePosCheckIn'
 import { useTurnBoard } from '../../../../data/hooks/usePosTurnBoard'
 import { useBeepStaff, useTimeClockRoster } from '../../../../data/hooks/usePosTimeClock'
+import { useMerchantBeepFeed } from '../../../../data/hooks/usePosBeep'
+import { cannotReceiveBeep } from '../../../../constants/posStaffBeep'
 import { formatDatePart, formatLocalDateIso } from '../../../../utils/localDate'
 import { PosOrderStatus } from '../../../../constants/posOrderStatus'
 import {
@@ -56,7 +58,12 @@ import {
   POS_FRONT_DESK_TABS,
   PosFrontDeskTab,
 } from '../../../../constants/posFrontDesk'
-import type { BookingListItemApiDto, OrderListItemApiDto, TurnBoardStationApiDto } from '../../../../types/repositories'
+import type {
+  BookingListItemApiDto,
+  OrderListItemApiDto,
+  PosBeepApiDto,
+  TurnBoardStationApiDto,
+} from '../../../../types/repositories'
 import { SkeletonList } from '../../../ui/skeleton'
 import { getInitials, joinOrEmpty } from './posDisplay'
 import PosOrderWorkspace from './PosOrderWorkspace'
@@ -82,6 +89,8 @@ import { formatBookingWallClockTime, resolveBookingWallClockParts } from './book
 import CustomerTab from './customer/CustomerTab'
 import { formatCustomerPhone } from './customer/customerFormatters'
 import TimeClockTab from './timeclock/TimeClockTab'
+import { beepCooldownUntil, useCooldownSeconds } from './timeclock/beepCooldown'
+import BeepInteractions from './timeclock/BeepInteractions'
 import BeepMessageModal from './timeclock/BeepMessageModal'
 import { getLocalDayWindow } from './timeclock/timeClockDay'
 import { formatCurrency } from '../../utils'
@@ -422,6 +431,14 @@ export default function PosFrontDeskView({
       || activeTab === PosFrontDeskTab.Booking,
     refetchInterval: false,
   })
+  // The roster above deliberately does not poll, so a station card would never notice a reply.
+  // The beep feed is its own polled query, which is what keeps the station pill live here.
+  const { data: turnBoardBeeps = [] } = useMerchantBeepFeed(businessId, todayTurnWindow, {
+    enabled: activeTab === PosFrontDeskTab.TurnBoard,
+  })
+  const turnBoardBeepByStaffId = new Map(
+    [...turnBoardBeeps].reverse().map((beep) => [beep.posStaffProfileId, beep]),
+  )
   // Today’s Turns needs the services completed during the same local calendar day. The
   // completed-orders endpoint supplies the ticket IDs; each detail response supplies the
   // technician assigned to each individual service line.
@@ -884,17 +901,20 @@ export default function PosFrontDeskView({
               ) : null}
             </div>
           </div>
-          <button
-            type="button"
-            onClick={() => openBeepModal(station)}
-            disabled={beepStaff.isPending}
-            aria-label={t(tk('beepAria'), { name: station.displayName })}
-            className="flex h-9 shrink-0 items-center gap-1 rounded-lg border border-amber-200 bg-amber-50 px-2.5 text-[11px] font-extrabold text-amber-700 transition-colors hover:border-amber-300 hover:bg-amber-100 disabled:opacity-60"
-          >
-            {isBeeping ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Bell className="h-3.5 w-3.5" />}
-            {isBeeping ? t(tk('beepPending')) : t(tk('beep'))}
-          </button>
+          <StationBeepButton
+            station={station}
+            beep={turnBoardBeepByStaffId.get(station.posStaffProfileId)}
+            isPending={beepStaff.isPending}
+            isBeeping={isBeeping}
+            onOpen={openBeepModal}
+          />
         </div>
+
+        <BeepInteractions
+          businessId={businessId}
+          beep={turnBoardBeepByStaffId.get(station.posStaffProfileId)}
+          staffName={station.displayName}
+        />
 
         {station.currentStatus === PosOrderStatus.InService && (
           <div className="space-y-2 rounded-xl bg-nexoraCanvas/70 p-3">
@@ -1764,5 +1784,53 @@ export default function PosFrontDeskView({
         }}
       />
     </div>
+  )
+}
+
+// Split out from renderStationCard so `useCooldownSeconds` (a hook) is called once per actual
+// component instance instead of once per plain-function call inside `turnBoard.map(renderStationCard)`
+// — calling a hook from a function invoked a variable number of times per render breaks the Rules
+// of Hooks.
+function StationBeepButton({
+  station,
+  beep,
+  isPending,
+  isBeeping,
+  onOpen,
+}: {
+  station: TurnBoardStationApiDto
+  beep: PosBeepApiDto | undefined
+  isPending: boolean
+  isBeeping: boolean
+  onOpen: (station: TurnBoardStationApiDto) => void
+}) {
+  const { t } = useTranslation()
+  // A re-beep on a tech who already has an open call is a nudge on that same row server-side, so it
+  // shares the Nudge button's rate limit — same cooldown data, same countdown behaviour.
+  const cooldownUntil = beepCooldownUntil(beep)
+  const secondsLeft = useCooldownSeconds(cooldownUntil)
+  const onCooldown = secondsLeft > 0
+  // Local staff / no email on file — no app to ring, so sending would always be undelivered. The
+  // turn-board station carries its own isLocalStaff/email (unlike the roster, which has neither and
+  // falls back to the check-in technician list).
+  const blockedLocal = cannotReceiveBeep(station)
+
+  return (
+    <span title={blockedLocal ? t(tk('beepLocalStaffTooltip')) : undefined} className="inline-flex">
+      <button
+        type="button"
+        onClick={() => onOpen(station)}
+        disabled={isPending || onCooldown || blockedLocal}
+        aria-label={t(tk('beepAria'), { name: station.displayName })}
+        className="flex h-9 shrink-0 items-center gap-1 rounded-lg border border-amber-200 bg-amber-50 px-2.5 text-[11px] font-extrabold text-amber-700 transition-colors hover:border-amber-300 hover:bg-amber-100 disabled:opacity-60"
+      >
+        {isBeeping ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Bell className="h-3.5 w-3.5" />}
+        {isBeeping
+          ? t(tk('beepPending'))
+          : onCooldown
+            ? t(tk('beepCooldown'), { seconds: secondsLeft })
+            : t(tk('beep'))}
+      </button>
+    </span>
   )
 }

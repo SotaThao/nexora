@@ -6,7 +6,9 @@
 // overnight rolls onto the new day by itself.
 import { useTranslation } from '../../../../../contexts/LanguageContext'
 import { useTimeClockLog, useTimeClockRoster } from '../../../../../data/hooks/usePosTimeClock'
+import { useMerchantBeepFeed } from '../../../../../data/hooks/usePosBeep'
 import { SkeletonList } from '../../../../ui/skeleton'
+import BeepHistoryPanel from './BeepHistoryPanel'
 import ClockQrPanel from './ClockQrPanel'
 import PushedNotificationsPanel from './PushedNotificationsPanel'
 import TimeClockRoster from './TimeClockRoster'
@@ -19,6 +21,12 @@ export default function TimeClockTab({ businessId }: { businessId: string }) {
   const dayWindow = getLocalDayWindow()
   const { data: roster, isLoading: isRosterLoading } = useTimeClockRoster(businessId, dayWindow)
   const { data: log = [] } = useTimeClockLog(businessId, dayWindow)
+  // Beep state comes from its own polled feed, not the roster: the roster is one row per staff
+  // member and cannot carry several calls to the same tech, each with its own reply.
+  const { data: beeps = [] } = useMerchantBeepFeed(businessId, dayWindow)
+  const latestBeepByStaffId = new Map(
+    [...beeps].reverse().map((beep) => [beep.posStaffProfileId, beep]),
+  )
 
   return (
     <div className="space-y-4">
@@ -35,12 +43,14 @@ export default function TimeClockTab({ businessId }: { businessId: string }) {
               businessId={businessId}
               rows={roster?.rows ?? []}
               onShiftCount={roster?.onShiftCount ?? 0}
+              beepByStaffId={latestBeepByStaffId}
             />
           )}
         </div>
 
         <div className="space-y-4">
           <PushedNotificationsPanel rows={roster?.rows ?? []} />
+          <BeepHistoryPanel beeps={beeps} />
           <TodayLogPanel entries={log} />
         </div>
       </div>
