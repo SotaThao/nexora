@@ -17,6 +17,8 @@ export type BookingCalendarSource = {
   statusLabel: string
   startAtUtc: string | null
   endAtUtc: string | null
+  /** Pre-resolved local wall clock for APIs that encode salon-local time as a UTC-looking value. */
+  startAtWallClock?: string | null
 }
 
 export type BookingCalendarColumn = {
@@ -56,6 +58,23 @@ function formatLocalDateTime(date: Date) {
     `${date.getFullYear()}-${pad2(date.getMonth() + 1)}-${pad2(date.getDate())}`
     + `T${pad2(date.getHours())}:${pad2(date.getMinutes())}:00`
   )
+}
+
+function parseWallClockDateTime(value: string | null | undefined): Date | null {
+  const match = String(value || '').match(
+    /^(\d{4})-(\d{2})-(\d{2})T(\d{2}):(\d{2})(?::(\d{2}))?/,
+  )
+  if (!match) return null
+  const [, year, month, day, hours, minutes, seconds = '0'] = match
+  const date = new Date(
+    Number(year),
+    Number(month) - 1,
+    Number(day),
+    Number(hours),
+    Number(minutes),
+    Number(seconds),
+  )
+  return Number.isNaN(date.getTime()) ? null : date
 }
 
 function resolveTechId(tech: string) {
@@ -120,6 +139,19 @@ function colorForResource(resourceId: string, columns: BookingCalendarColumn[]):
 }
 
 function resolveEventWindow(booking: BookingCalendarSource, calendarDate: string) {
+  const wallClockStart = parseWallClockDateTime(booking.startAtWallClock)
+  if (wallClockStart) {
+    const utcStart = booking.startAtUtc ? parseApiDateTime(booking.startAtUtc) : null
+    const utcEnd = booking.endAtUtc ? parseApiDateTime(booking.endAtUtc) : null
+    const durationMs = utcStart && utcEnd && utcEnd > utcStart
+      ? utcEnd.getTime() - utcStart.getTime()
+      : BOOKING_CALENDAR_DEFAULT_DURATION_MINUTES * 60_000
+    return {
+      start: wallClockStart,
+      end: new Date(wallClockStart.getTime() + durationMs),
+    }
+  }
+
   // BE omits trailing Z on UTC fields — always parse as UTC then convert to local for DayPilot.
   // Calendar intentionally spans start→end (duration). List modes (table/card) show start only.
   const start = booking.startAtUtc ? parseApiDateTime(booking.startAtUtc) : null
