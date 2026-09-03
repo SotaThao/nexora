@@ -1,20 +1,8 @@
-const ISO_CALENDAR_LOCALE = 'en-CA'
-const ISO_DATE_PARTS: Intl.DateTimeFormatOptions = {
-  year: 'numeric',
-  month: '2-digit',
-  day: '2-digit',
-}
-const DATE_PAD_CHAR = '0'
-
-function readDatePart(parts: Intl.DateTimeFormatPart[], type: Intl.DateTimeFormatPartTypes): string {
-  return parts.find((part) => part.type === type)?.value ?? ''
-}
-
 /** Format a Date as YYYY-MM-DD in local timezone (avoids UTC day shift from toISOString). */
 export function formatLocalDateIso(date: Date): string {
   const year = date.getFullYear()
-  const month = String(date.getMonth() + 1).padStart(2, DATE_PAD_CHAR)
-  const day = String(date.getDate()).padStart(2, DATE_PAD_CHAR)
+  const month = String(date.getMonth() + 1).padStart(2, '0')
+  const day = String(date.getDate()).padStart(2, '0')
   return `${year}-${month}-${day}`
 }
 
@@ -23,13 +11,16 @@ export function formatDateIsoInTimeZone(date: Date, timeZone?: string | null): s
   const zone = timeZone?.trim()
   if (!zone) return formatLocalDateIso(date)
   try {
-    const parts = new Intl.DateTimeFormat(ISO_CALENDAR_LOCALE, {
+    const parts = new Intl.DateTimeFormat('en-CA', {
       timeZone: zone,
-      ...ISO_DATE_PARTS,
+      year: 'numeric',
+      month: '2-digit',
+      day: '2-digit',
     }).formatToParts(date)
-    const year = readDatePart(parts, 'year')
-    const month = readDatePart(parts, 'month')
-    const day = readDatePart(parts, 'day')
+    const get = (type: string) => parts.find((part) => part.type === type)?.value ?? ''
+    const year = get('year')
+    const month = get('month')
+    const day = get('day')
     if (!year || !month || !day) return formatLocalDateIso(date)
     return `${year}-${month}-${day}`
   } catch {
@@ -106,7 +97,7 @@ export function formatDatePart(
     ...(timeZone ? { timeZone } : {}),
   }).formatToParts(date)
 
-  const get = (type: Intl.DateTimeFormatPartTypes) => readDatePart(parts, type)
+  const get = (type: string) => parts.find((p) => p.type === type)?.value ?? ''
   const year = withYear ? `, ${get('year')}` : ''
   return isVietnamese
     ? `${get('day')} Tháng ${get('month')}${year}`
@@ -122,7 +113,7 @@ export function formatTimePart(date: Date, isVietnamese: boolean, timeZone?: str
     ...(timeZone ? { timeZone } : {}),
   }).formatToParts(date)
 
-  const get = (type: Intl.DateTimeFormatPartTypes) => readDatePart(parts, type)
+  const get = (type: string) => parts.find((p) => p.type === type)?.value ?? ''
   return `${get('hour')}:${get('minute')} ${getMeridiem(date, isVietnamese)}`
 }
 

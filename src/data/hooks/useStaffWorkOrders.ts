@@ -52,14 +52,14 @@ export function useStaffWorkOrderDetail(orderId: string | undefined) {
   })
 }
 
-function useStaffWorkOrderStatusMutation<TVariables = void>(
+function useStaffWorkOrderStatusMutation(
   orderId: string | undefined,
-  mutate: (id: string, variables: TVariables) => Promise<boolean>,
+  mutate: (id: string) => Promise<boolean>,
 ) {
   const queryClient = useQueryClient()
 
   return useMutation({
-    mutationFn: (variables: TVariables) => mutate(orderId ?? '', variables),
+    mutationFn: () => mutate(orderId ?? ''),
     onSuccess: () => {
       void queryClient.invalidateQueries({ queryKey: qk.staffWorkOrdersRoot() })
     },
@@ -73,8 +73,13 @@ export function useStartStaffWorkOrderService(orderId: string | undefined) {
 }
 
 export function useCompleteStaffWorkOrderService(orderId: string | undefined) {
-  return useStaffWorkOrderStatusMutation<string | null | undefined>(
-    orderId,
-    (id, note) => staffWorkOrdersRepository.completeWorkOrderService(id, note),
-  )
+  const queryClient = useQueryClient()
+
+  return useMutation({
+    mutationFn: (note?: string | null) =>
+      staffWorkOrdersRepository.completeWorkOrderService(orderId ?? '', note),
+    onSuccess: () => {
+      void queryClient.invalidateQueries({ queryKey: qk.staffWorkOrdersRoot() })
+    },
+  })
 }

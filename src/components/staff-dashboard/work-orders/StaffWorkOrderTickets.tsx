@@ -1,4 +1,5 @@
-import { useNavigate, useSearchParams } from 'react-router-dom'
+import { useState } from 'react'
+import { useNavigate } from 'react-router-dom'
 import { useTranslation } from '../../../contexts/LanguageContext'
 import { useStaffWorkOrders } from '../../../data/hooks/useStaffWorkOrders'
 import { formatDateIsoInTimeZone } from '../../../utils/localDate'
@@ -6,12 +7,9 @@ import {
   WORK_ORDER_FILTER_I18N,
   WORK_ORDER_FILTER_STATUSES,
   WORK_ORDER_FILTER_TABS,
-  WORK_ORDER_LIST_QUERY,
+  WORK_ORDER_TICKET_FILTER,
   WORK_ORDERS_I18N,
   WORK_ORDERS_LAYOUT_CLASS,
-  parseWorkOrderTicketFilter,
-  staffWorkOrdersHref,
-  staffWorkOrdersListSearch,
   staffWorkOrdersPath,
   workOrderFilterTabClass,
   type WorkOrderListItem,
@@ -23,7 +21,6 @@ import { WorkOrderErrorCard } from './WorkOrderQueryFeedback'
 import { WorkOrderTicketListSkeleton } from './WorkOrderSkeletons'
 import WorkOrderTicketCard from './WorkOrderTicketCard'
 import WorkOrderWorkspaceBack from './WorkOrderWorkspaceBack'
-import { parseWorkOrderListDate } from './workOrderTickets'
 
 interface StaffWorkOrderTicketsProps {
   salon: WorkOrderSalon
@@ -34,30 +31,15 @@ export default function StaffWorkOrderTickets({
 }: StaffWorkOrderTicketsProps) {
   const { t, currentLanguage } = useTranslation()
   const navigate = useNavigate()
-  const [searchParams, setSearchParams] = useSearchParams()
   const todayIso = formatDateIsoInTimeZone(new Date(), salon.timeZone)
-  const selectedDateIso = parseWorkOrderListDate(
-    searchParams.get(WORK_ORDER_LIST_QUERY.date),
-    todayIso,
-  )
-  const filter = parseWorkOrderTicketFilter(searchParams.get(WORK_ORDER_LIST_QUERY.filter))
+  const [selectedDateIso, setSelectedDateIso] = useState(todayIso)
+  const [filter, setFilter] = useState<WorkOrderTicketFilter>(WORK_ORDER_TICKET_FILTER.Assigned)
   const workOrdersQuery = useStaffWorkOrders(
     salon.id,
     selectedDateIso,
     WORK_ORDER_FILTER_STATUSES[filter],
   )
   const tickets = workOrdersQuery.data ?? []
-  const listSearch = staffWorkOrdersListSearch(selectedDateIso, filter)
-
-  const replaceListQuery = (patch: { date?: string; filter?: WorkOrderTicketFilter }) => {
-    setSearchParams(
-      {
-        [WORK_ORDER_LIST_QUERY.date]: patch.date ?? selectedDateIso,
-        [WORK_ORDER_LIST_QUERY.filter]: patch.filter ?? filter,
-      },
-      { replace: true },
-    )
-  }
 
   return (
     <div>
@@ -74,7 +56,7 @@ export default function StaffWorkOrderTickets({
         value={selectedDateIso}
         todayIso={todayIso}
         language={currentLanguage}
-        onChange={(date) => replaceListQuery({ date })}
+        onChange={setSelectedDateIso}
       />
 
       <div className={WORK_ORDERS_LAYOUT_CLASS.filterBar} role="tablist">
@@ -85,7 +67,7 @@ export default function StaffWorkOrderTickets({
             role="tab"
             aria-selected={tab === filter}
             className={workOrderFilterTabClass(tab === filter)}
-            onClick={() => replaceListQuery({ filter: tab })}
+            onClick={() => setFilter(tab)}
           >
             {t(WORK_ORDER_FILTER_I18N[tab])}
           </button>
@@ -103,7 +85,7 @@ export default function StaffWorkOrderTickets({
         tickets={tickets}
         salonName={salon.name}
         onRetry={() => void workOrdersQuery.refetch()}
-        onSelect={(ticketId) => navigate(staffWorkOrdersHref(salon.id, ticketId, listSearch))}
+        onSelect={(ticketId) => navigate(staffWorkOrdersPath(salon.id, ticketId))}
       />
     </div>
   )
