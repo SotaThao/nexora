@@ -3539,6 +3539,8 @@
             "editButton": "Edit",
             "viewButton": "View",
             "viewAssignButton": "View & Assign",
+            "addServicesButton": "Add services",
+            "reviewSendButton": "Review & Send",
             "startServiceButton": "Start Service",
             "startServiceSuccess": "Service started.",
             "confirmCancelTitle": "Remove from waitlist?",

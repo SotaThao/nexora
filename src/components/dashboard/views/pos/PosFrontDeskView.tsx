@@ -21,6 +21,7 @@ import {
   List as ListIcon,
   Loader2,
   PencilLine,
+  Plus,
   X,
 } from 'lucide-react'
 import { useTranslation } from '../../../../contexts/LanguageContext'
@@ -1477,11 +1478,20 @@ export default function PosFrontDeskView({
               const renderEditButton = (order: OrderListItemApiDto) => {
                 const isWaiting = order.status === PosOrderStatus.Waiting
                 const isInService = order.status === PosOrderStatus.InService
-                const labelKey = isWaiting
-                  ? 'viewAssignButton'
-                  : isInService
-                    ? 'viewButton'
-                    : 'editButton'
+                const canReviewAndSend =
+                  isWaiting &&
+                  !order.hasNoServiceLine &&
+                  !order.hasUnassignedService &&
+                  order.technicianNames.length > 0
+                const labelKey = order.hasNoServiceLine
+                  ? 'addServicesButton'
+                  : canReviewAndSend
+                    ? 'reviewSendButton'
+                    : isWaiting
+                      ? 'viewAssignButton'
+                      : isInService
+                        ? 'viewButton'
+                        : 'editButton'
                 return (
                   <button
                     type="button"
@@ -1491,7 +1501,9 @@ export default function PosFrontDeskView({
                     }}
                     className="inline-flex h-8 shrink-0 items-center gap-1 rounded-lg border border-nexoraLavender bg-violet-50 px-2.5 text-[10px] font-extrabold text-violet-700 transition-colors hover:bg-violet-100"
                   >
-                    {isWaiting || isInService ? (
+                    {order.hasNoServiceLine ? (
+                      <Plus className="h-3 w-3" aria-hidden="true" />
+                    ) : isWaiting || isInService ? (
                       <Eye className="h-3 w-3" aria-hidden="true" />
                     ) : (
                       <PencilLine className="h-3 w-3" aria-hidden="true" />
