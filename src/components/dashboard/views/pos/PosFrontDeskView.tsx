@@ -873,7 +873,7 @@ export default function PosFrontDeskView({
             <div className="mt-1 flex flex-wrap items-center gap-1.5">
               <span className={`inline-flex rounded-full border px-2 py-0.5 text-[10px] font-extrabold ${
                 station.currentStatus === PosOrderStatus.InService
-                  ? 'border-cyan-200 bg-cyan-50 text-cyan-700'
+                  ? 'border-rose-200 bg-rose-50 text-rose-700'
                   : 'border-emerald-200 bg-emerald-50 text-emerald-700'
               }`}>
                 {t(tk(`stationStatus.${station.currentStatus}`))}
@@ -1253,12 +1253,27 @@ export default function PosFrontDeskView({
                       className={`border-t border-nexoraBorder/70 transition-colors ${isNext ? 'bg-emerald-50/40 hover:bg-emerald-50/65' : 'hover:bg-violet-50/35'}`}
                     >
                       <td className="px-3 py-2.5 font-semibold text-nexoraText">
-                        <span className="inline-flex max-w-full rounded-full bg-cyan-100/70 px-2.5 py-1 text-cyan-800">
-                          <span className="truncate">{row.displayName}</span>
-                        </span>
-                        {row.turnRank != null ? (
-                          <span className="ml-2 text-[10px] font-bold text-nexoraMuted">#{row.turnRank}</span>
-                        ) : null}
+                        <div className="flex flex-wrap items-center gap-1.5">
+                          <span className="max-w-full truncate text-xs font-extrabold uppercase tracking-wide text-nexoraText">
+                            {row.displayName}
+                          </span>
+                          <span
+                            className={`inline-flex items-center gap-1 whitespace-nowrap text-[10px] font-bold ${
+                              row.isClockedIn
+                                ? 'text-emerald-700'
+                                : 'text-slate-500'
+                            }`}
+                          >
+                            <span
+                              aria-hidden="true"
+                              className={`h-1.5 w-1.5 shrink-0 rounded-full ${row.isClockedIn ? 'bg-emerald-500' : 'bg-slate-400'}`}
+                            />
+                            <span>{t(tk(row.isClockedIn ? 'todayTurnsClockedIn' : 'todayTurnsNotClockedIn'))}</span>
+                          </span>
+                          {row.turnRank != null ? (
+                            <span className="text-[10px] font-bold text-nexoraMuted">#{row.turnRank}</span>
+                          ) : null}
+                        </div>
                       </td>
                       <td className="px-3 py-2.5 text-right font-bold tabular-nums text-nexoraText">
                         {row.turnsToday}

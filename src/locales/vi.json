@@ -3563,6 +3563,8 @@
             "todayTurnsNext": "Thợ kế tiếp",
             "nextTurnBadge": "Lượt kế tiếp",
             "stationTurnsToday": "Lượt hôm nay: {{count}}",
+            "todayTurnsClockedIn": "Làm việc hôm nay",
+            "todayTurnsNotClockedIn": "Không làm việc hôm nay",
             "todayTurnsNoNext": "Chưa có lượt sắp tới",
             "todayTurnsColumnTechnician": "Thợ",
             "todayTurnsColumnTurns": "Lượt",
@@ -3570,8 +3572,8 @@
             "todayTurnsEmpty": "Hôm nay chưa có dữ liệu lượt.",
             "todayTurnsError": "Không thể tải lượt hôm nay.",
             "stationStatus": {
-              "Empty": "Đang trống",
-              "InService": "Đang phục vụ"
+              "Empty": "Đang rảnh",
+              "InService": "Đang bận"
             },
             "servingSince": "Bắt đầu phục vụ lúc {{time}}",
             "checkoutButton": "Checkout",

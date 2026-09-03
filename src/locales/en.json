@@ -3563,6 +3563,8 @@
             "todayTurnsNext": "Next technician",
             "nextTurnBadge": "Next turn",
             "stationTurnsToday": "Turns today: {{count}}",
+            "todayTurnsClockedIn": "Working today",
+            "todayTurnsNotClockedIn": "Not working today",
             "todayTurnsNoNext": "No upcoming turn",
             "todayTurnsColumnTechnician": "Tech",
             "todayTurnsColumnTurns": "Turns",
@@ -3570,8 +3572,8 @@
             "todayTurnsEmpty": "No turn data recorded today.",
             "todayTurnsError": "Could not load today's turns.",
             "stationStatus": {
-              "Empty": "Open",
-              "InService": "Serving"
+              "Empty": "Available",
+              "InService": "Busy"
             },
             "servingSince": "Serving since {{time}}",
             "checkoutButton": "Checkout",
