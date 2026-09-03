@@ -4263,7 +4263,7 @@ export default function BookingSettingsPanel() {
                                         className={`settings-service-visual ${service.tone}`}
                                         aria-hidden="true"
                                       >
-                                        {service.icon}
+                                        ✨
                                       </span>
                                       <input
                                         className="settings-service-input"
@@ -4282,7 +4282,7 @@ export default function BookingSettingsPanel() {
                                           );
                                         }}
                                       />
-                                      <div className="settings-service-input-wrap">
+                                      <div className="settings-service-input-wrap settings-service-price-wrap">
                                         <span className="settings-service-prefix">
                                           $
                                         </span>
@@ -4311,7 +4311,7 @@ export default function BookingSettingsPanel() {
                                           }}
                                         />
                                       </div>
-                                      <div className="settings-service-input-wrap">
+                                      <div className="settings-service-input-wrap settings-service-duration-wrap">
                                         <input
                                           className="settings-service-input duration"
                                           type="text"
@@ -4432,7 +4432,7 @@ export default function BookingSettingsPanel() {
                                           );
                                         }}
                                       />
-                                      <div className="settings-service-input-wrap">
+                                      <div className="settings-service-input-wrap settings-service-price-wrap">
                                         <span className="settings-service-prefix">
                                           $
                                         </span>
@@ -4468,7 +4468,7 @@ export default function BookingSettingsPanel() {
                                           }}
                                         />
                                       </div>
-                                      <div className="settings-service-input-wrap">
+                                      <div className="settings-service-input-wrap settings-service-duration-wrap">
                                         <input
                                           className="settings-service-input duration"
                                           type="text"

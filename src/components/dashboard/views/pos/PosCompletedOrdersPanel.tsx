@@ -182,7 +182,7 @@ export default function PosCompletedOrdersPanel({ businessId }: { businessId: st
                         </div>
                       </td>
                       <td className="px-4 py-3">
-                        <span className="rounded-full bg-sky-50 px-2.5 py-1 text-[10px] font-extrabold text-sky-700">
+                        <span className="whitespace-nowrap rounded-full bg-sky-50 px-2.5 py-1 text-[10px] font-extrabold text-sky-700">
                           {getPosCheckoutPaymentMethodLabel(order.paymentMethodType, t)}
                         </span>
                       </td>

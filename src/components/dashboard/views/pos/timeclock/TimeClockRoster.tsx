@@ -65,7 +65,6 @@ export default function TimeClockRoster({
   const handleClockIn = async (row: TimeClockRosterRowApiDto) => {
     try {
       await clockIn.mutateAsync(row.businessStaffLinkId)
-      showToast(t(tk('clockInSuccess'), { name: row.displayName }))
     } catch (err: unknown) {
       showToast(t(getErrorI18nKey(getApiErrorCode(err, 'ERROR'))), 'error')
     }
@@ -87,7 +86,6 @@ export default function TimeClockRoster({
 
     try {
       await clockOut.mutateAsync(row.businessStaffLinkId)
-      showToast(t(tk('clockOutSuccess'), { name: row.displayName }))
     } catch (err: unknown) {
       showToast(t(getErrorI18nKey(getApiErrorCode(err, 'ERROR'))), 'error')
     }

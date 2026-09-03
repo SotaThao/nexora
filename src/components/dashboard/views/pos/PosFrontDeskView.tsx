@@ -16,11 +16,11 @@ import {
   ChevronRight,
   Bell,
   DollarSign,
+  Eye,
   LayoutGrid,
   List as ListIcon,
   Loader2,
   PencilLine,
-  Play,
   X,
 } from 'lucide-react'
 import { useTranslation } from '../../../../contexts/LanguageContext'
@@ -33,9 +33,10 @@ import { usePosAccess } from '../../../../data/hooks/usePosAccess'
 import { useStaffBusinesses } from '../../../../data/hooks/useStaffSelf'
 import { useWeeklyPayroll } from '../../../../data/hooks/useWeeklyPayroll'
 import { formatPosTime } from './posDateTime'
-import { useCancelOrder, useCompletedOrders, useOrderList, useStartOrderService } from '../../../../data/hooks/usePosOrders'
+import { useCancelOrder, useCompletedOrders, useOrderList } from '../../../../data/hooks/usePosOrders'
 import { useInServiceOrders, useOrderDetails } from '../../../../data/hooks/usePosCheckout'
 import { useBookingList, useCheckInBookingFromList } from '../../../../data/hooks/usePosBooking'
+import { useCheckInTechnicians } from '../../../../data/hooks/usePosCheckIn'
 import { useTurnBoard } from '../../../../data/hooks/usePosTurnBoard'
 import { useBeepStaff, useTimeClockRoster } from '../../../../data/hooks/usePosTimeClock'
 import { formatDatePart, formatLocalDateIso } from '../../../../utils/localDate'
@@ -83,6 +84,7 @@ import TimeClockTab from './timeclock/TimeClockTab'
 import BeepMessageModal from './timeclock/BeepMessageModal'
 import { getLocalDayWindow } from './timeclock/timeClockDay'
 import { formatCurrency } from '../../utils'
+import { compareNextTurnRows, selectNextTurnTechnician } from './posNextTurn'
 import {
   POS_TABLE_HEADER_CELL_CLASS,
   POS_TABLE_HEADER_ROW_CLASS,
@@ -321,6 +323,7 @@ function ScrollableTabStrip({ children }: { children: ReactNode }) {
 export default function PosFrontDeskView({
   businessId,
   businessName,
+  businessLogoUrl,
   businessAddress,
   businessPhone,
   businessSlug,
@@ -330,6 +333,7 @@ export default function PosFrontDeskView({
   // Shown on Check-in Step 1's welcome message — optional since the Staff dashboard route
   // doesn't have it readily available; PhoneCheckInStep falls back to a generic greeting.
   businessName?: string
+  businessLogoUrl?: string | null
   businessAddress?: string
   businessPhone?: string
   businessSlug?: string
@@ -341,10 +345,10 @@ export default function PosFrontDeskView({
   const { data: access, isLoading: isAccessLoading } = usePosAccess(businessId)
   const { data: staffBusinesses = [] } = useStaffBusinesses()
   const cancelOrder = useCancelOrder(businessId)
-  const startOrderService = useStartOrderService(businessId)
   const beepStaff = useBeepStaff(businessId)
   const linkedStaffBusiness = staffBusinesses.find((business) => business.businessId === businessId)
   const receiptBusinessName = businessName || linkedStaffBusiness?.businessName || undefined
+  const receiptBusinessLogoUrl = businessLogoUrl || linkedStaffBusiness?.logoUrl || undefined
   const receiptBusinessAddress =
     businessAddress ||
     [linkedStaffBusiness?.address, linkedStaffBusiness?.city, linkedStaffBusiness?.state]
@@ -434,6 +438,45 @@ export default function PosFrontDeskView({
     },
   )
   const todayCompletedOrderItems = todayCompletedOrdersQuery.data?.items ?? []
+  // "Next turn" is a suggestion for the oldest Waiting ticket, not a fixed rotation leader.
+  // Load only that ticket's service ids so the recommendation can respect the skill matrix.
+  const nextWaitingOrder = useMemo(
+    () => orderList.find((order) => order.status === PosOrderStatus.Waiting),
+    [orderList],
+  )
+  const nextWaitingOrderDetails = useOrderDetails(
+    businessId,
+    nextWaitingOrder ? [nextWaitingOrder.id] : [],
+    { enabled: activeTab === PosFrontDeskTab.TurnBoard },
+  )
+  const nextWaitingOrderDetail = nextWaitingOrderDetails[0]?.data
+  const nextTurnTechniciansQuery = useCheckInTechnicians(businessId, {
+    enabled: activeTab === PosFrontDeskTab.TurnBoard && Boolean(nextWaitingOrder),
+  })
+  const todayTurnRows = [...(todayRosterQuery.data?.rows ?? [])].sort(compareNextTurnRows)
+  const turnsTodayByStaffId = new Map(
+    todayTurnRows.map((row) => [row.posStaffProfileId, row.turnsToday]),
+  )
+  const nextTurnRequiredServiceIds = Array.from(
+    new Set(
+      (nextWaitingOrderDetail?.serviceLines ?? [])
+        .map((line) => line.posServiceId)
+        .filter(Boolean),
+    ),
+  )
+  const nextTurnSkilledTechnicianIds = new Set(
+    (nextTurnTechniciansQuery.data ?? [])
+      .filter(
+        (technician) =>
+          nextTurnRequiredServiceIds.length > 0 &&
+          nextTurnRequiredServiceIds.every((serviceId) => technician.serviceIds.includes(serviceId)),
+      )
+      .map((technician) => technician.posStaffProfileId),
+  )
+  const nextTurnTechnician = selectNextTurnTechnician(
+    todayTurnRows,
+    nextTurnSkilledTechnicianIds,
+  )
   // A ticket with one technician is already unambiguous from the list response. Only fetch
   // details for multi-technician tickets, where the list's aggregated arrays cannot identify
   // which service line belongs to which technician.
@@ -604,17 +647,6 @@ export default function PosFrontDeskView({
     if (!confirmed) return
     try {
       await cancelOrder.mutateAsync(orderId)
-    } catch (err: unknown) {
-      showToast(t(getErrorI18nKey(getApiErrorCode(err, 'ERROR'))), 'error')
-    }
-  }
-
-  // Order List (manual Waiting -> InService trigger) — backend rejects this when a service
-  // line has no technician assigned yet (see StartOrderServiceCommand), surfaced as a toast.
-  const handleStartService = async (orderId: string) => {
-    try {
-      await startOrderService.mutateAsync(orderId)
-      showToast(t(tk('startServiceSuccess')))
     } catch (err: unknown) {
       showToast(t(getErrorI18nKey(getApiErrorCode(err, 'ERROR'))), 'error')
     }
@@ -815,6 +847,8 @@ export default function PosFrontDeskView({
 
   const renderStationCard = (station: TurnBoardStationApiDto) => {
     const isBeeping = beepStaff.isPending && beepStation?.posStaffProfileId === station.posStaffProfileId
+    const isNextTurn = station.posStaffProfileId === nextTurnTechnician?.posStaffProfileId
+    const turnsToday = turnsTodayByStaffId.get(station.posStaffProfileId) ?? 0
     return (
       <div
         key={station.posStaffProfileId}
@@ -831,13 +865,23 @@ export default function PosFrontDeskView({
           </div>
           <div className="min-w-0 flex-1">
             <p className="truncate text-sm font-bold text-nexoraText">{station.displayName}</p>
-            <span className={`mt-1 inline-flex rounded-full border px-2 py-0.5 text-[10px] font-extrabold ${
-              station.currentStatus === PosOrderStatus.InService
-                ? 'border-cyan-200 bg-cyan-50 text-cyan-700'
-                : 'border-emerald-200 bg-emerald-50 text-emerald-700'
-            }`}>
-              {t(tk(`stationStatus.${station.currentStatus}`))}
-            </span>
+            <div className="mt-1 flex flex-wrap items-center gap-1.5">
+              <span className={`inline-flex rounded-full border px-2 py-0.5 text-[10px] font-extrabold ${
+                station.currentStatus === PosOrderStatus.InService
+                  ? 'border-cyan-200 bg-cyan-50 text-cyan-700'
+                  : 'border-emerald-200 bg-emerald-50 text-emerald-700'
+              }`}>
+                {t(tk(`stationStatus.${station.currentStatus}`))}
+              </span>
+              <span className="inline-flex rounded-full border border-slate-200 bg-slate-50 px-2 py-0.5 text-[10px] font-extrabold tabular-nums text-slate-600">
+                {t(tk('stationTurnsToday'), { count: turnsToday })}
+              </span>
+              {isNextTurn ? (
+                <span className="inline-flex rounded-full border border-violet-200 bg-violet-50 px-2 py-0.5 text-[10px] font-extrabold text-violet-700">
+                  {t(tk('nextTurnBadge'))}
+                </span>
+              ) : null}
+            </div>
           </div>
           <button
             type="button"
@@ -1053,25 +1097,8 @@ export default function PosFrontDeskView({
   }
 
   const renderTodayTurnsPanel = () => {
-    const rosterRows = todayRosterQuery.data?.rows ?? []
-    const rows = [...rosterRows].sort((a, b) => {
-      const turnsDifference = (a.turnsToday ?? 0) - (b.turnsToday ?? 0)
-      if (turnsDifference !== 0) return turnsDifference
-      if (a.turnRank == null && b.turnRank == null) return a.displayName.localeCompare(b.displayName)
-      if (a.turnRank == null) return 1
-      if (b.turnRank == null) return -1
-      return a.turnRank - b.turnRank
-    })
+    const rows = todayTurnRows
     const totalTurnsToday = rows.reduce((total, row) => total + Math.max(0, row.turnsToday ?? 0), 0)
-    // Rows are sorted by today's turn count above, so the first available technician has the
-    // fairest next turn. Do not require turnRank here: older roster responses can omit
-    // that field even though the technician is clocked in. If every clocked-in technician is
-    // currently serving, keep showing the first one in turn order instead of a misleading
-    // "No upcoming turn" state.
-    const nextTechnician =
-      rows.find((row) => row.isClockedIn && !row.currentOrderId) ??
-      rows.find((row) => row.isClockedIn && row.turnRank != null) ??
-      rows.find((row) => row.isClockedIn)
     // The completed-order list has ticket-level technician/service aggregates. They cannot
     // tell us which technician performed which service when a ticket has multiple techs, so
     // build the table from each order detail's serviceLines instead. Keep both identifiers as
@@ -1179,7 +1206,7 @@ export default function PosFrontDeskView({
                 {t(tk('todayTurnsNext'))}
               </p>
               <p className="mt-0.5 max-w-[150px] truncate text-sm font-bold text-nexoraText" data-testid="today-turns-next">
-                {nextTechnician?.displayName ?? t(tk('todayTurnsNoNext'))}
+                {nextTurnTechnician?.displayName ?? t(tk('todayTurnsNoNext'))}
               </p>
             </div>
           </div>
@@ -1212,7 +1239,7 @@ export default function PosFrontDeskView({
               </thead>
               <tbody>
                 {rows.map((row) => {
-                  const isNext = row.posStaffProfileId === nextTechnician?.posStaffProfileId
+                  const isNext = row.posStaffProfileId === nextTurnTechnician?.posStaffProfileId
                   const services = getServicesForTechnician(row)
                   return (
                     <tr
@@ -1309,8 +1336,12 @@ export default function PosFrontDeskView({
           orderId={updateWorkspace.orderId}
           mode={updateWorkspace.mode}
           businessName={receiptBusinessName}
+          businessLogoUrl={receiptBusinessLogoUrl}
           businessAddress={receiptBusinessAddress}
           businessPhone={businessPhone}
+          onPaymentCompleted={(completedOrderId) => {
+            setUpdateWorkspace({ orderId: completedOrderId, mode: 'success' })
+          }}
           onClose={() => {
             setUpdateWorkspace(null)
             refreshFrontDeskLists()
@@ -1460,21 +1491,34 @@ export default function PosFrontDeskView({
                 )
               }
 
-              // The row is already tappable, but a tap target with no label is a rule staff have to
-              // be told. This states it, and is the only action every row has regardless of status.
-              const renderEditButton = (order: OrderListItemApiDto) => (
-                <button
-                  type="button"
-                  onClick={(e) => {
-                    e.stopPropagation()
-                    setUpdateWorkspace({ orderId: order.id, mode: 'edit' })
-                  }}
-                  className="inline-flex h-8 shrink-0 items-center gap-1 rounded-lg border border-nexoraLavender bg-violet-50 px-2.5 text-[10px] font-extrabold text-violet-700 transition-colors hover:bg-violet-100"
-                >
-                  <PencilLine className="h-3 w-3" aria-hidden="true" />
-                  {t(tk('editButton'))}
-                </button>
-              )
+              // Both statuses open the same live workspace; the label describes why the operator
+              // enters it instead of exposing the implementation detail that lines remain editable.
+              const renderEditButton = (order: OrderListItemApiDto) => {
+                const isWaiting = order.status === PosOrderStatus.Waiting
+                const isInService = order.status === PosOrderStatus.InService
+                const labelKey = isWaiting
+                  ? 'viewAssignButton'
+                  : isInService
+                    ? 'viewButton'
+                    : 'editButton'
+                return (
+                  <button
+                    type="button"
+                    onClick={(e) => {
+                      e.stopPropagation()
+                      setUpdateWorkspace({ orderId: order.id, mode: 'edit' })
+                    }}
+                    className="inline-flex h-8 shrink-0 items-center gap-1 rounded-lg border border-nexoraLavender bg-violet-50 px-2.5 text-[10px] font-extrabold text-violet-700 transition-colors hover:bg-violet-100"
+                  >
+                    {isWaiting || isInService ? (
+                      <Eye className="h-3 w-3" aria-hidden="true" />
+                    ) : (
+                      <PencilLine className="h-3 w-3" aria-hidden="true" />
+                    )}
+                    {t(tk(labelKey))}
+                  </button>
+                )
+              }
 
               const renderCancelButton = (order: OrderListItemApiDto) =>
                 order.status === PosOrderStatus.Waiting ? (
@@ -1492,37 +1536,7 @@ export default function PosFrontDeskView({
                   </button>
                 ) : null
 
-              // The two things StartOrderService refuses, spelled out on the button instead of
-              // waiting for a red toast: a line with no technician ("First available" leaves it
-              // that way on purpose until someone assigns) and an order with nothing to serve.
-              // Disabled rather than hidden — the row's own warning flag says which one it is.
-              const startServiceBlockedReason = (order: OrderListItemApiDto) => {
-                if (order.hasNoServiceLine) return t(tk('addServiceFirst'))
-                if (order.hasUnassignedService) return t(tk('assignTechnicianFirst'))
-                return undefined
-              }
-
-              const renderStartServiceButton = (order: OrderListItemApiDto) => {
-                if (order.status !== PosOrderStatus.Waiting) return null
-                const blockedReason = startServiceBlockedReason(order)
-                return (
-                  <button
-                    type="button"
-                    onClick={(e) => {
-                      e.stopPropagation()
-                      handleStartService(order.id)
-                    }}
-                    disabled={startOrderService.isPending || blockedReason !== undefined}
-                    title={blockedReason}
-                    className="inline-flex h-8 shrink-0 items-center gap-1 rounded-lg border border-emerald-200 bg-emerald-50 px-2.5 text-[10px] font-extrabold text-emerald-700 transition-colors hover:border-emerald-300 hover:bg-emerald-100 disabled:cursor-not-allowed disabled:opacity-60"
-                  >
-                    <Play className="h-3 w-3" aria-hidden="true" />
-                    {t(tk('startServiceButton'))}
-                  </button>
-                )
-              }
-
-              // Checkout is the explicit payment entry. A row tap or Edit stays in operational
+              // Checkout is the explicit payment entry. A row tap or View stays in operational
               // edit mode even when the ticket is already InService.
               const renderCheckoutButton = (order: OrderListItemApiDto) =>
                 order.status === PosOrderStatus.InService ? (
@@ -1575,7 +1589,6 @@ export default function PosFrontDeskView({
                           </span>
                           <div className="ml-auto flex flex-wrap items-center justify-end gap-1.5">
                             {renderEditButton(order)}
-                            {renderStartServiceButton(order)}
                             {renderCheckoutButton(order)}
                             {renderCancelButton(order)}
                           </div>
@@ -1637,7 +1650,6 @@ export default function PosFrontDeskView({
                           <td className={`${POS_TABLE_STICKY_ACTION_CELL_CLASS} px-4 py-3 text-right`}>
                             <div className="inline-flex w-max justify-end gap-1.5">
                               {renderEditButton(order)}
-                              {renderStartServiceButton(order)}
                               {renderCheckoutButton(order)}
                               {renderCancelButton(order)}
                             </div>

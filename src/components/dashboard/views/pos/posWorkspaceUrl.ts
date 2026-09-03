@@ -3,13 +3,13 @@ export const POS_WORKSPACE_MODE_PARAM = 'orderMode'
 
 export type PosWorkspaceUrlState = {
   orderId: string
-  mode: 'edit' | 'checkout'
+  mode: 'edit' | 'checkout' | 'success'
 }
 
 export function readPosWorkspaceFromParams(params: URLSearchParams): PosWorkspaceUrlState | null {
   const orderId = (params.get(POS_WORKSPACE_ORDER_ID_PARAM) ?? '').trim()
   const mode = params.get(POS_WORKSPACE_MODE_PARAM)
-  if (!orderId || (mode !== 'edit' && mode !== 'checkout')) return null
+  if (!orderId || (mode !== 'edit' && mode !== 'checkout' && mode !== 'success')) return null
   return { orderId, mode }
 }
 

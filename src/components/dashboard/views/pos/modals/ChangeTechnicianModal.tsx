@@ -65,6 +65,8 @@ export default function ChangeTechnicianModal({
             emptyLabel={t(`${K}.noTechnicians`)}
             busyLabel={t(`${K}.technicianBusy`)}
             availableLabel={t(`${K}.technicianAvailable`)}
+            turnsLabel={(count) => t(`${K}.technicianTurnsToday`, { count })}
+            nextTurnLabel={t(`${K}.technicianNextTurn`)}
           />
 
           <div>

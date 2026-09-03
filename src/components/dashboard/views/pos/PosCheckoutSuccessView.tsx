@@ -12,6 +12,7 @@ export interface PosCheckoutReceiptItem {
 
 export default function PosCheckoutSuccessView({
   businessName,
+  businessLogoUrl,
   businessAddress,
   businessPhone,
   customerName,
@@ -22,9 +23,11 @@ export default function PosCheckoutSuccessView({
   discountAmount,
   tipAmount,
   items,
+  onReprint,
   onStartNext,
 }: {
   businessName?: string
+  businessLogoUrl?: string | null
   businessAddress?: string
   businessPhone?: string
   customerName: string
@@ -35,23 +38,24 @@ export default function PosCheckoutSuccessView({
   discountAmount: number
   tipAmount: number
   items: PosCheckoutReceiptItem[]
+  onReprint: () => void
   onStartNext: () => void
 }) {
   const { t } = useTranslation()
-  const receiptGroups = items.reduce<Array<{ name: string; items: PosCheckoutReceiptItem[] }>>(
-    (groups, item) => {
-      const groupName = item.groupName?.trim()
-        || t('components.dashboard.views.pos.PosOrderWorkspace.summaryItem')
-      const group = groups.find((entry) => entry.name === groupName)
-      if (group) {
-        group.items.push(item)
-      } else {
-        groups.push({ name: groupName, items: [item] })
-      }
-      return groups
-    },
-    [],
-  )
+  const businessDisplayName = businessName?.trim() || 'VLINKPAY'
+  const businessLogo = businessLogoUrl?.trim()
+  const businessInitials = businessDisplayName
+    .split(/\s+/)
+    .filter(Boolean)
+    .slice(0, 2)
+    .map((word) => word[0])
+    .join('')
+    .toUpperCase()
+  const subtotal = items.reduce((sum, item) => sum + item.price, 0)
+  const salesTaxAmount = Math.round(
+    (total - subtotal + Math.abs(discountAmount) - tipAmount) * 100,
+  ) / 100
+  const productsLabel = t('components.dashboard.views.pos.PosOrderWorkspace.summaryProducts')
 
   return (
     <div className="grid min-h-[60vh] gap-4 lg:grid-cols-[minmax(300px,5fr)_minmax(0,7fr)]">
@@ -72,58 +76,116 @@ export default function PosCheckoutSuccessView({
           {t('components.dashboard.views.pos.PosOrderWorkspace.startNextCheckout')} <ArrowRight className="h-4 w-4" />
         </button>
       </section>
-      <section className="flex items-start justify-center rounded-2xl border border-nexoraBorder bg-nexoraCanvas/60 p-4 shadow-sm">
-        <article
-          aria-label={t('components.dashboard.views.pos.PosOrderWorkspace.customerReceipt')}
-          className="pos-receipt-print pos-receipt-ink-black pos-checkout-customer-receipt rounded-lg border border-nexoraBorder shadow-sm"
-        >
-          <div className="pos-receipt-print-header">
-            <p className="pos-receipt-ticket">Ticket #{orderNumber}</p>
-            <div className="pos-receipt-business">
-              <h2>{businessName || 'VLINKPAY'}</h2>
-              {businessAddress ? <p>{businessAddress}</p> : null}
-              {businessPhone ? <p>{businessPhone}</p> : null}
-            </div>
-          </div>
-
-          <section
-            className="pos-receipt-lines"
-            aria-label={t('components.dashboard.views.pos.PosOrderWorkspace.summaryItem')}
+      <section className="flex min-w-0 flex-col">
+        <div className="flex flex-1 items-start justify-center">
+          <article
+            aria-label={t('components.dashboard.views.pos.PosOrderWorkspace.customerReceipt')}
+            className="w-full rounded-2xl border border-nexoraBorder bg-white p-5 shadow-sm sm:p-6"
           >
-            {receiptGroups.map((group) => (
-              <div className="pos-receipt-tech-group" key={group.name}>
-                <p className="pos-receipt-tech-heading">{group.name.toUpperCase()}</p>
-                <div className="pos-receipt-group-lines">
-                  {group.items.map((item) => (
-                    <div key={item.id}>
-                      <span>{item.name}</span>
-                      <span className="tabular-nums">{formatUsdAmount(item.price)}</span>
-                    </div>
-                  ))}
+              <header className="flex items-start justify-between gap-4">
+                <div className="min-w-0">
+                  <p className="text-[10px] font-black uppercase tracking-[0.2em] text-nexoraMuted">
+                    {t('components.dashboard.views.pos.PosOrderWorkspace.customerReceipt')}
+                  </p>
+                  <h2 className="mt-2 truncate text-2xl font-black text-nexoraText">
+                    {businessDisplayName}
+                  </h2>
+                  {businessAddress ? <p className="mt-1 text-xs text-nexoraMuted">{businessAddress}</p> : null}
+                  {businessPhone ? <p className="text-xs text-nexoraMuted">{businessPhone}</p> : null}
                 </div>
-              </div>
-            ))}
-          </section>
+                {businessLogo ? (
+                  <img
+                    src={businessLogo}
+                    alt={businessDisplayName}
+                    className="h-14 w-14 shrink-0 rounded-2xl border border-nexoraBorder bg-white object-contain shadow-sm"
+                  />
+                ) : (
+                  <span className="grid h-14 w-14 shrink-0 place-items-center rounded-2xl bg-nexoraBrand text-base font-black text-white shadow-sm">
+                    {businessInitials}
+                  </span>
+                )}
+              </header>
 
-          <dl className="pos-receipt-totals">
-            <div>
-              <dt>{t('components.dashboard.views.pos.PosOrderWorkspace.summaryDiscount')}</dt>
-              <dd className="pos-receipt-discount">{formatUsdAmount(-Math.abs(discountAmount))}</dd>
-            </div>
-            <div>
-              <dt>{t('components.dashboard.views.pos.PosOrderWorkspace.summaryTip')}</dt>
-              <dd>{formatUsdAmount(tipAmount)}</dd>
-            </div>
-            <div className="pos-receipt-total">
-              <dt>{t('components.dashboard.views.pos.PosOrderWorkspace.totalPaid')}</dt>
-              <dd>{formatUsdAmount(total)}</dd>
-            </div>
-          </dl>
+              <dl className="my-5 grid grid-cols-2 gap-2 border-y border-dashed border-nexoraBorder py-4 text-xs sm:grid-cols-4">
+                {[
+                  [t('components.dashboard.views.pos.PosOrderWorkspace.printPreviewCustomer'), customerName],
+                  [t('components.dashboard.views.pos.PosOrderWorkspace.successTicket'), `#${orderNumber}`],
+                  [t('components.dashboard.views.pos.PosOrderWorkspace.successPayment'), paymentMethodLabel],
+                  [t('components.dashboard.views.pos.PosOrderWorkspace.successStatus'), t('components.dashboard.views.pos.PosOrderWorkspace.successPaid')],
+                ].map(([label, value]) => (
+                  <div key={label} className="rounded-xl bg-nexoraCanvas p-3">
+                    <dt className="text-[10px] font-bold uppercase tracking-wide text-nexoraMuted">{label}</dt>
+                    <dd className={`mt-1 font-black ${label === t('components.dashboard.views.pos.PosOrderWorkspace.successStatus') ? 'text-nexoraSuccess' : 'text-nexoraText'}`}>
+                      {value}
+                    </dd>
+                  </div>
+                ))}
+              </dl>
 
-          <p className="pos-receipt-thank-you">
-            {t('components.dashboard.views.pos.PosOrderWorkspace.printPreviewThankYou')}
-          </p>
-        </article>
+              <section aria-label={t('components.dashboard.views.pos.PosOrderWorkspace.summaryItem')}>
+                <div className="flex items-center justify-between gap-4 border-b border-nexoraBorder pb-2 text-[10px] font-black uppercase tracking-[0.16em] text-nexoraMuted">
+                  <span>{t('components.dashboard.views.pos.PosOrderWorkspace.summaryItem')}</span>
+                  <span>{t('components.dashboard.views.pos.PosOrderWorkspace.summaryPrice')}</span>
+                </div>
+                <div className="divide-y divide-nexoraBorder">
+                  {items.map((item) => {
+                    const itemDetail = item.detail || (
+                      item.groupName && item.groupName !== productsLabel
+                        ? `${t('components.dashboard.views.pos.PosOrderWorkspace.technicianPrefix')} ${item.groupName}`
+                        : undefined
+                    )
+                    return (
+                      <div key={item.id} className="flex items-start justify-between gap-4 py-4">
+                        <div className="min-w-0">
+                          <p className="font-bold text-nexoraText">{item.name}</p>
+                          {itemDetail ? <p className="mt-0.5 text-xs text-nexoraMuted">{itemDetail}</p> : null}
+                        </div>
+                        <span className="shrink-0 font-black tabular-nums text-nexoraText">
+                          {formatUsdAmount(item.price)}
+                        </span>
+                      </div>
+                    )
+                  })}
+                </div>
+              </section>
+
+              <dl className="ml-auto mt-5 max-w-sm space-y-2 border-t border-dashed border-nexoraBorder pt-4 text-sm">
+                <div className="flex justify-between gap-4">
+                  <dt className="text-nexoraMuted">{t('components.dashboard.views.pos.PosOrderWorkspace.summarySubtotal')}</dt>
+                  <dd className="font-semibold tabular-nums text-nexoraText">{formatUsdAmount(subtotal)}</dd>
+                </div>
+                <div className="flex justify-between gap-4">
+                  <dt className="text-nexoraMuted">{t('components.dashboard.views.pos.PosOrderWorkspace.summaryDiscount')}</dt>
+                  <dd className="font-semibold tabular-nums text-nexoraDanger">{formatUsdAmount(-Math.abs(discountAmount))}</dd>
+                </div>
+                <div className="flex justify-between gap-4">
+                  <dt className="text-nexoraMuted">{t('components.dashboard.views.pos.PosOrderWorkspace.summaryTip')}</dt>
+                  <dd className="font-semibold tabular-nums text-nexoraText">{formatUsdAmount(tipAmount)}</dd>
+                </div>
+                <div className="flex justify-between gap-4">
+                  <dt className="text-nexoraMuted">{t('components.dashboard.views.pos.PosOrderWorkspace.summarySalesTax')}</dt>
+                  <dd className="font-semibold tabular-nums text-nexoraText">{formatUsdAmount(salesTaxAmount)}</dd>
+                </div>
+                <div className="flex justify-between gap-4 border-t border-nexoraBorder pt-3 text-lg">
+                  <dt className="font-black text-nexoraText">{t('components.dashboard.views.pos.PosOrderWorkspace.totalPaid')}</dt>
+                  <dd className="font-black tabular-nums text-nexoraText">{formatUsdAmount(total)}</dd>
+                </div>
+              </dl>
+
+              <footer className="mt-5 border-t border-dashed border-nexoraBorder pt-4 text-center">
+                <p className="text-xs text-nexoraMuted">
+                  {t('components.dashboard.views.pos.PosOrderWorkspace.printPreviewThankYou')}
+                </p>
+                <button
+                  type="button"
+                  onClick={onReprint}
+                  className="mx-auto mt-1 block text-xs font-bold text-nexoraBrand transition-colors hover:text-nexoraBrandDark hover:underline"
+                >
+                  {t('components.dashboard.views.pos.PosOrderWorkspace.receiptReprint')}
+                </button>
+              </footer>
+          </article>
+        </div>
       </section>
     </div>
   )
