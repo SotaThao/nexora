@@ -377,6 +377,10 @@ export interface TurnBoardStationApiDto {
   currentCustomerPhone?: string | null
   currentServiceNames: string[]
   assignedAt?: string | null
+  // Not in the live contract yet (BE is adding it) — optional so today's response (neither field
+  // present) reads as "not local staff", not as a false positive block on every station's Beep.
+  isLocalStaff?: boolean
+  email?: string | null
 }
 
 // POS Front Desk — Time Clock tab
@@ -466,6 +470,10 @@ export interface CheckInTechnicianApiDto {
   photoUrl: string | null
   serviceIds: string[]
   isBusy: boolean
+  // Not in the live contract yet (BE is adding it) — optional so today's response (neither field
+  // present) reads as "not local staff", not as a false positive block on every technician's Beep.
+  isLocalStaff?: boolean
+  email?: string | null
 }
 
 export interface CheckInActiveVisitApiDto {
@@ -528,6 +536,10 @@ export interface TimeClockRosterRowApiDto {
   // Open shift started before today — forgot to clock out, nightly job has not run yet.
   hasForgottenEntry: boolean
   forgottenEntryClockInAt?: string | null
+  // Not in the live contract yet (BE is adding it) — optional so today's response (neither field
+  // present) reads as "not local staff", not as a false positive block on every row's Beep.
+  isLocalStaff?: boolean
+  email?: string | null
 }
 
 export interface TimeClockRosterApiDto {
