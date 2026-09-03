@@ -39,9 +39,11 @@ import {
 } from '../../../../data/hooks/usePosOrders'
 import { useCheckInTechnicians } from '../../../../data/hooks/usePosCheckIn'
 import { useTimeClockRoster } from '../../../../data/hooks/usePosTimeClock'
+import { usePosReport } from '../../../../data/hooks/usePosReport'
 import { usePublicBusinessPaymentMethods } from '../../../../data/hooks/usePublicTouch'
 import { SHOW_SERVICE_ADD_ONS } from '../../../../constants/posFeatureVisibility'
 import { PosOrderStatus } from '../../../../constants/posOrderStatus'
+import { PosReportMode } from '../../../../constants/posReportMode'
 import { isLineBusySurface, TicketBusySurface } from '../../../../constants/posTicketAction'
 import {
   formatUsdAmount,
@@ -86,6 +88,7 @@ import PosReceiptPrintPreview, { type PosReceiptPrintGroup } from './PosReceiptP
 import { getLocalDayWindow } from './timeclock/timeClockDay'
 import { selectNextTurnTechnician } from './posNextTurn'
 import type { PosReceiptMode } from './posWorkspaceUrl'
+import { todayIso as reportTodayIso } from './report/posReportPeriod'
 
 type TipMode = 'noTip' | 'fixed10' | 'fixed15' | 'pct10' | 'pct20' | 'custom'
 export type PosOrderWorkspaceMode = 'edit' | 'checkout' | 'success'
@@ -234,6 +237,8 @@ export default function PosOrderWorkspace({
   businessLogoUrl,
   businessAddress,
   businessPhone,
+  businessTimeZone,
+  canViewReport = false,
 }: {
   businessId: string
   orderId: string
@@ -249,6 +254,8 @@ export default function PosOrderWorkspace({
   businessLogoUrl?: string | null
   businessAddress?: string
   businessPhone?: string
+  businessTimeZone?: string
+  canViewReport?: boolean
 }) {
   const { t } = useTranslation()
   const { showToast } = useNotification()
@@ -338,6 +345,17 @@ export default function PosOrderWorkspace({
     enabled: technicianTarget !== null,
     refetchInterval: false,
   })
+  const technicianServiceAmountReportQuery = usePosReport(
+    technicianTarget !== null && canViewReport
+      ? {
+          businessId,
+          timeZone: businessTimeZone,
+          mode: PosReportMode.Daily,
+          dates: [reportTodayIso(businessTimeZone)],
+        }
+      : null,
+    { enabled: technicianTarget !== null && canViewReport },
+  )
   const [noteDraft, setNoteDraft] = useState('')
   // Chosen technician shown immediately so the row never flashes the previous name while
   // AssignStaffToServiceLine and the order-detail refetch catch up.
@@ -575,7 +593,19 @@ export default function PosOrderWorkspace({
     const turnsByTechnicianId = new Map(
       rosterRows.map((row) => [row.posStaffProfileId, row.turnsToday]),
     )
-    const nextTurnTechnician = selectNextTurnTechnician(rosterRows, eligibleTechnicianIds)
+    const serviceAmountsByTechnicianId = new Map(
+      (technicianServiceAmountReportQuery.data?.rows ?? []).map((row) => [
+        row.posStaffProfileId,
+        row.serviceAmount,
+      ]),
+    )
+    const nextTurnTechnician = technicianServiceAmountReportQuery.data
+      ? selectNextTurnTechnician(
+          rosterRows,
+          eligibleTechnicianIds,
+          serviceAmountsByTechnicianId,
+        )
+      : undefined
 
     return eligibleTechnicians.map((technician) => ({
       ...technician,
