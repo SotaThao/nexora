@@ -3932,6 +3932,7 @@
             "viewDetailTip": "Tip",
             "viewDetailTotal": "Total",
             "viewDetailClose": "Close",
+            "viewDetailReprintReceipt": "Re-print receipt",
             "viewDetailLineDiscountStaffShare": "(technician ${{amount}})",
             "viewDetailLineDiscount": "Discount ${{amount}} · {{bearer}} absorbs",
             "viewDetailLineDiscount": "Discount ${{amount}} · {{bearer}} absorbs",

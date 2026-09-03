@@ -10,8 +10,7 @@
 // Creating an order is no longer done here: the Check-in tab renders the shared check-in
 // page (PosCheckInTab / CheckInSurface), the same one the customer kiosk runs.
 import { Fragment, useEffect, useMemo, useRef, useState } from 'react'
-import { createPortal } from 'react-dom'
-import { ArrowLeft, Loader2, Package, X } from 'lucide-react'
+import { ArrowLeft, Loader2, Package } from 'lucide-react'
 import { useTranslation } from '../../../../contexts/LanguageContext'
 import { useNotification } from '../../../../contexts/NotificationContext'
 import { getErrorMessage } from '../../../../data/errorCodes'
@@ -61,7 +60,6 @@ import type {
   CompleteOrderResultApiDto,
 } from '../../../../types/repositories'
 import { Skeleton, SkeletonList, SkeletonListItem } from '../../../ui/skeleton'
-import { formatCustomerPhone } from './customer/customerFormatters'
 import CategoryGroupedCatalogPicker from './CategoryGroupedCatalogPicker'
 import TicketActionSkeletonOverlay, { TICKET_SKELETON_ROW_COUNT } from './TicketActionSkeletonOverlay'
 import ChangeServiceModal from './modals/ChangeServiceModal'
@@ -74,7 +72,6 @@ import ServiceDiscountModal, {
   type ServiceDiscountTarget,
 } from './modals/ServiceDiscountModal'
 import ChangeTechnicianModal from './modals/ChangeTechnicianModal'
-import { formatPosDateTime } from './posDateTime'
 import { useTicketActionLock } from './useTicketActionLock'
 import PosPaymentMethodSelector from './PosPaymentMethodSelector'
 import {
@@ -85,6 +82,7 @@ import PosCashPaymentPanel, { isCashPaymentCovered } from './PosCashPaymentPanel
 import PosReceivePaymentPanel from './PosReceivePaymentPanel'
 import PosRemoveConfirmAction from './PosRemoveConfirmAction'
 import PosCheckoutSuccessView, { type PosCheckoutReceiptItem } from './PosCheckoutSuccessView'
+import PosReceiptPrintPreview, { type PosReceiptPrintGroup } from './PosReceiptPrintPreview'
 import { getLocalDayWindow } from './timeclock/timeClockDay'
 import { selectNextTurnTechnician } from './posNextTurn'
 import type { PosReceiptMode } from './posWorkspaceUrl'
@@ -252,7 +250,7 @@ export default function PosOrderWorkspace({
   businessAddress?: string
   businessPhone?: string
 }) {
-  const { t, currentLanguage } = useTranslation()
+  const { t } = useTranslation()
   const { showToast } = useNotification()
 
   const { data: order, isLoading: isOrderLoading } = useOrderDetail(businessId, orderId)
@@ -388,14 +386,7 @@ export default function PosOrderWorkspace({
   const [tipSplitInputs, setTipSplitInputs] = useState<Record<string, string>>({})
   const initializedWorkspaceRef = useRef<string | null>(null)
   const initializedOrderIdRef = useRef<string | null>(null)
-  const printCleanupRef = useRef<(() => void) | null>(null)
   const serviceLineIdsBeforeAddRef = useRef<Set<string> | null>(null)
-
-  useEffect(() => {
-    return () => {
-      printCleanupRef.current?.()
-    }
-  }, [])
 
   // No local draft for the lines — the table is always a live reflection of the latest
   // GetOrderDetailQuery result, since every edit already calls its endpoint immediately
@@ -1009,27 +1000,6 @@ export default function PosOrderWorkspace({
 
   const handleOpenPrintPreview = () => {
     setPrintPreviewOpen(true)
-  }
-
-  const handlePrintDocument = () => {
-    if (typeof window !== 'undefined' && typeof window.print === 'function') {
-      printCleanupRef.current?.()
-      document.body.classList.add('printing-pos-invoice')
-
-      const cleanup = () => {
-        window.removeEventListener('afterprint', cleanup)
-        document.body.classList.remove('printing-pos-invoice')
-        if (printCleanupRef.current === cleanup) printCleanupRef.current = null
-      }
-
-      printCleanupRef.current = cleanup
-      window.addEventListener('afterprint', cleanup, { once: true })
-      try {
-        window.print()
-      } catch {
-        cleanup()
-      }
-    }
   }
 
   const mutationSkeletonLabel = t('common.loading')
@@ -1882,192 +1852,59 @@ export default function PosOrderWorkspace({
   const printableProductLines = visibleLines.filter(
     (line): line is DisplayProductLine => line.itemType === 'Product',
   )
-  const printableLineCount = printableServiceGroups.reduce((count, group) => count + group.lines.length, 0) + printableProductLines.length
-  const printableBusinessName = businessName?.trim()
-  const printableBusinessAddress = businessAddress?.trim()
-  const printableBusinessPhone = businessPhone?.trim()
   const isPaidReceiptPreview = isPaid || Boolean(completedPayment)
-  const printableReceipt =
-    order && printPreviewOpen && typeof document !== 'undefined'
-      ? createPortal(
-          <div className="pos-front-desk-action-surface pos-invoice-modal-backdrop">
-            <div
-              className="pos-invoice-modal"
-              role="dialog"
-              aria-modal="true"
-              aria-label={isPaidReceiptPreview ? undefined : t('components.dashboard.views.pos.PosOrderWorkspace.printPreviewLabel')}
-              aria-labelledby={isPaidReceiptPreview ? 'pos-print-preview-title' : undefined}
-            >
-              <div className="pos-invoice-modal-header">
-                <div>
-                  <p className="text-[10px] font-black uppercase tracking-wider text-nexoraMuted">
-                    {t('components.dashboard.views.pos.PosOrderWorkspace.printPreviewLabel')}
-                  </p>
-                  {isPaidReceiptPreview ? (
-                    <h2 id="pos-print-preview-title" className="text-lg font-black text-nexoraText">
-                      {t('components.dashboard.views.pos.PosOrderWorkspace.printReceiptTitle')}
-                    </h2>
-                  ) : null}
-                </div>
-                <button
-                  type="button"
-                  onClick={() => setPrintPreviewOpen(false)}
-                  className="pos-invoice-modal-close inline-flex h-9 w-9 items-center justify-center rounded-lg border border-nexoraBorder text-nexoraText hover:border-nexoraBrand"
-                  aria-label={t('components.dashboard.views.pos.PosOrderWorkspace.printPreviewClose')}
-                  title={t('components.dashboard.views.pos.PosOrderWorkspace.printPreviewClose')}
-                >
-                  <X className="h-4 w-4" aria-hidden="true" />
-                </button>
-              </div>
-
-              <div className="pos-invoice-modal-body">
-                <article
-                  className="pos-receipt-print pos-receipt-ink-black"
-                  data-testid="pos-receipt-print"
-                >
-                  <div className="pos-receipt-print-header">
-                    <p className="pos-receipt-ticket">Ticket #{order.orderNumber}</p>
-                    {printableBusinessName || printableBusinessAddress || printableBusinessPhone ? (
-                      <div className="pos-receipt-business">
-                        {printableBusinessName ? <h2>{printableBusinessName}</h2> : null}
-                        {printableBusinessAddress ? <p>{printableBusinessAddress}</p> : null}
-                        {printableBusinessPhone ? <p>{formatCustomerPhone(printableBusinessPhone, printableBusinessPhone)}</p> : null}
-                      </div>
-                    ) : null}
-                    <p>{formatPosDateTime(order.completedAt ?? new Date().toISOString(), currentLanguage)}</p>
-                  </div>
-
-                  <section className="pos-receipt-lines" aria-label={t('components.dashboard.views.pos.PosOrderWorkspace.summaryItem')}>
-                    {printableLineCount > 0 ? (
-                      <>
-                        {printableServiceGroups.map((group) => (
-                          <div className="pos-receipt-tech-group" key={group.technician}>
-                            <p className="pos-receipt-tech-heading">{group.technician.toUpperCase()}</p>
-                            <div className="pos-receipt-group-lines">
-                              {group.lines.map((line) => (
-                                <Fragment key={line.key}>
-                                  <div>
-                                    <span>
-                                      {line.serviceName}
-                                      {line.discountAmount > 0 ? (
-                                        <span className="pos-receipt-line-discount ml-1 text-rose-500">
-                                          {formatDiscountPriceBadge(
-                                            line.discountType,
-                                            line.discountValue,
-                                            line.discountAmount,
-                                          )}
-                                        </span>
-                                      ) : null}
-                                    </span>
-                                    <span className="tabular-nums">{formatUsdAmount(lineTotal(line))}</span>
-                                  </div>
-                                  {/* Printed as its own line under the service — a customer must be
-                                      able to see where an extra charge came from. */}
-                                  {line.addOns.map((addOn) => (
-                                    <div key={addOn.id}>
-                                      <span>
-                                        + {addOn.addOnName}
-                                        {addOn.discountAmount > 0 ? (
-                                          <span className="pos-receipt-line-discount ml-1 text-rose-500">
-                                            {formatDiscountPriceBadge(
-                                              addOn.discountType,
-                                              addOn.discountValue,
-                                              addOn.discountAmount,
-                                            )}
-                                          </span>
-                                        ) : null}
-                                      </span>
-                                      <span className="tabular-nums">{formatUsdAmount(addOn.lineTotal)}</span>
-                                    </div>
-                                  ))}
-                                </Fragment>
-                              ))}
-                            </div>
-                          </div>
-                        ))}
-                        {printableProductLines.length > 0 ? (
-                          <div className="pos-receipt-tech-group" key="products">
-                            <p className="pos-receipt-tech-heading">
-                              {t('components.dashboard.views.pos.PosOrderWorkspace.summaryProducts').toUpperCase()}
-                            </p>
-                            <div className="pos-receipt-group-lines">
-                              {printableProductLines.map((line) => (
-                                <div key={line.key}>
-                                  <span>{line.productName}</span>
-                                  <span className="tabular-nums">{formatUsdAmount(lineTotal(line))}</span>
-                                </div>
-                              ))}
-                            </div>
-                          </div>
-                        ) : null}
-                      </>
-                    ) : (
-                      <p>{t('components.dashboard.views.pos.PosOrderWorkspace.noLines')}</p>
-                    )}
-                  </section>
-
-                  <dl className="pos-receipt-totals">
-                    <div>
-                      <dt>{t('components.dashboard.views.pos.PosOrderWorkspace.summaryTip')}</dt>
-                      <dd>{formatUsdAmount(order.tipAmount)}</dd>
-                    </div>
-                    <div>
-                      <dt>{t('components.dashboard.views.pos.PosOrderWorkspace.summaryDiscount')}</dt>
-                      <dd>{formatUsdAmount(order.discountAmount === 0 ? 0 : -Math.abs(order.discountAmount))}</dd>
-                    </div>
-                    {order.orderDiscountAmount > 0 ? (
-                      <div>
-                        <dt>
-                          {order.appliedPromotionName
-                            ?? t('components.dashboard.views.pos.PosOrderWorkspace.summaryOrderDiscount')}
-                        </dt>
-                        <dd>-${order.orderDiscountAmount.toFixed(2)}</dd>
-                      </div>
-                    ) : null}
-                    <div className="pos-receipt-total">
-                      <dt>{t('components.dashboard.views.pos.PosOrderWorkspace.summaryTotal')}</dt>
-                      <dd>{formatUsdAmount(order.total)}</dd>
-                    </div>
-                  </dl>
-
-                  {isPaid && order.paymentMethodType ? (
-                    <p className="pos-receipt-payment">
-                      {t('components.dashboard.views.pos.PosOrderWorkspace.printPreviewPaidWith')}{' '}
-                      {getPosCheckoutPaymentMethodLabel(order.paymentMethodType, t)}
-                    </p>
-                  ) : null}
-
-                  <p className="pos-receipt-thank-you">
-                    {t('components.dashboard.views.pos.PosOrderWorkspace.printPreviewThankYou')}
-                  </p>
-                </article>
-              </div>
-
-              <div className="pos-invoice-modal-actions">
-                <button
-                  type="button"
-                  onClick={() => setPrintPreviewOpen(false)}
-                  className="h-10 flex-1 rounded-lg border border-nexoraBorder text-xs font-bold text-nexoraText hover:border-nexoraBrand"
-                >
-                  {t('components.dashboard.views.pos.PosOrderWorkspace.printPreviewClose')}
-                </button>
-                <button
-                  type="button"
-                  onClick={handlePrintDocument}
-                  className="h-10 flex-1 rounded-lg bg-nexoraBrand text-xs font-bold text-white hover:bg-nexoraBrandDark"
-                >
-                  {t(
-                    `components.dashboard.views.pos.PosOrderWorkspace.${
-                      isPaidReceiptPreview ? 'printReceiptAction' : 'printInvoiceAction'
-                    }`,
-                  )}
-                </button>
-              </div>
-            </div>
-          </div>,
-          document.body,
-        )
-      : null
+  const printableReceiptGroups: PosReceiptPrintGroup[] = [
+    ...printableServiceGroups.map((group) => ({
+      id: `technician-${group.technician}`,
+      label: group.technician,
+      lines: group.lines.map((line) => ({
+        id: line.key,
+        name: line.serviceName,
+        amount: lineTotal(line),
+        discountLabel: line.discountAmount > 0
+          ? formatDiscountPriceBadge(line.discountType, line.discountValue, line.discountAmount)
+          : undefined,
+        addOns: line.addOns.map((addOn) => ({
+          id: addOn.id,
+          name: addOn.addOnName,
+          amount: addOn.lineTotal,
+          discountLabel: addOn.discountAmount > 0
+            ? formatDiscountPriceBadge(addOn.discountType, addOn.discountValue, addOn.discountAmount)
+            : undefined,
+        })),
+      })),
+    })),
+    ...(printableProductLines.length > 0 ? [{
+      id: 'products',
+      label: t('components.dashboard.views.pos.PosOrderWorkspace.summaryProducts'),
+      lines: printableProductLines.map((line) => ({
+        id: line.key,
+        name: line.productName,
+        amount: lineTotal(line),
+      })),
+    }] : []),
+  ]
+  const printableReceipt = order ? (
+    <PosReceiptPrintPreview
+      open={printPreviewOpen}
+      onClose={() => setPrintPreviewOpen(false)}
+      orderNumber={order.orderNumber}
+      businessName={businessName}
+      businessAddress={businessAddress}
+      businessPhone={businessPhone}
+      completedAt={order.completedAt}
+      groups={printableReceiptGroups}
+      tipAmount={order.tipAmount}
+      discountAmount={order.discountAmount}
+      orderDiscountAmount={order.orderDiscountAmount}
+      orderDiscountLabel={order.appliedPromotionName ?? undefined}
+      total={order.total}
+      paymentMethodLabel={order.paymentMethodType
+        ? getPosCheckoutPaymentMethodLabel(order.paymentMethodType, t)
+        : undefined}
+      isPaid={isPaidReceiptPreview}
+    />
+  ) : null
 
   const showCheckoutSuccess = Boolean(order && (
     completedPayment || (mode === 'success' && isPaid)

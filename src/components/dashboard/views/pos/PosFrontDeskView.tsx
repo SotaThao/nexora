@@ -1708,7 +1708,14 @@ export default function PosFrontDeskView({
         </div>
       )}
 
-      {activeTab === PosFrontDeskTab.Completed && <PosCompletedOrdersPanel businessId={businessId} />}
+      {activeTab === PosFrontDeskTab.Completed && (
+        <PosCompletedOrdersPanel
+          businessId={businessId}
+          businessName={receiptBusinessName}
+          businessAddress={receiptBusinessAddress}
+          businessPhone={businessPhone}
+        />
+      )}
 
       {activeTab === PosFrontDeskTab.Booking && (
         <BookingTab

@@ -3932,6 +3932,7 @@
             "viewDetailTip": "Tip",
             "viewDetailTotal": "Tổng cộng",
             "viewDetailClose": "Đóng",
+            "viewDetailReprintReceipt": "In lại receipt",
             "viewDetailLineDiscountStaffShare": "(kỹ thuật viên ${{amount}})",
             "viewDetailLineDiscount": "Giảm ${{amount}} · {{bearer}} chịu",
             "viewDetailLineDiscount": "Giảm ${{amount}} · {{bearer}} chịu",
