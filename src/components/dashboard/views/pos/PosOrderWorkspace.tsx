@@ -83,6 +83,7 @@ import PosRemoveConfirmAction from './PosRemoveConfirmAction'
 import PosCheckoutSuccessView, { type PosCheckoutReceiptItem } from './PosCheckoutSuccessView'
 import { getLocalDayWindow } from './timeclock/timeClockDay'
 import { selectNextTurnTechnician } from './posNextTurn'
+import type { PosReceiptMode } from './posWorkspaceUrl'
 
 type TipMode = 'noTip' | 'fixed10' | 'fixed15' | 'pct10' | 'pct20' | 'custom'
 export type PosOrderWorkspaceMode = 'edit' | 'checkout' | 'success'
@@ -221,6 +222,7 @@ export default function PosOrderWorkspace({
   businessId,
   orderId,
   mode = 'edit',
+  successReceiptMode,
   onClose,
   onCompleted,
   onPaymentCompleted,
@@ -234,10 +236,11 @@ export default function PosOrderWorkspace({
   // Edit is operational order maintenance. Checkout is the only entry mode that reveals
   // tip, payment method, receipt and payment summary immediately.
   mode?: PosOrderWorkspaceMode
+  successReceiptMode?: PosReceiptMode
   // Renders a "Back" button next to the title.
   onClose?: () => void
   onCompleted?: () => void
-  onPaymentCompleted?: (orderId: string) => void
+  onPaymentCompleted?: (orderId: string, receiptMode: PosReceiptMode) => void
   businessName?: string
   businessLogoUrl?: string | null
   businessAddress?: string
@@ -369,7 +372,7 @@ export default function PosOrderWorkspace({
   //
   // Defaults to No Receipt: a receipt costs an SMS and most walk-ins do not ask for one, so it is
   // opted into per checkout rather than sent unless someone remembers to turn it off.
-  const [receiptChoice, setReceiptChoice] = useState<'sms' | 'print' | 'none'>('none')
+  const [receiptChoice, setReceiptChoice] = useState<PosReceiptMode>('none')
   const [printPreviewOpen, setPrintPreviewOpen] = useState(false)
   const [tipSplitInputs, setTipSplitInputs] = useState<Record<string, string>>({})
   const initializedWorkspaceRef = useRef<string | null>(null)
@@ -910,9 +913,8 @@ export default function PosOrderWorkspace({
       },
       {
         onSuccess: (result) => {
-          showToast(t('components.dashboard.views.pos.PosOrderWorkspace.completeSuccess'))
           setCompletedPayment(result)
-          onPaymentCompleted?.(result.orderId)
+          onPaymentCompleted?.(result.orderId, receiptChoice)
         },
         onError: reportError,
         onSettled: endTicketAction,
@@ -1947,9 +1949,7 @@ export default function PosOrderWorkspace({
   if (showCheckoutSuccess && order) {
     const completedReceiptChoice = completedPayment
       ? receiptChoice
-      : order.receiptPhone
-        ? 'sms'
-        : 'none'
+      : successReceiptMode ?? (order.receiptPhone ? 'sms' : 'none')
     const receiptLabel = completedReceiptChoice === 'sms'
       ? t('components.dashboard.views.pos.PosOrderWorkspace.receiptSendSms')
       : completedReceiptChoice === 'print'
@@ -1969,6 +1969,7 @@ export default function PosOrderWorkspace({
             t,
           )}
           receiptLabel={receiptLabel}
+          receiptWasPrinted={completedReceiptChoice === 'print'}
           total={completedPayment?.totalAmount ?? order.total}
           discountAmount={
             (completedPayment?.discountAmount ?? order.discountAmount)

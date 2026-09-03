@@ -548,7 +548,7 @@ export default function PosFrontDeskView({
       { replace: true },
     )
   }
-  const [orderListFilter, setOrderListFilter] = useState<OrderListFilter>(OrderListFilter.All)
+  const [orderListFilter, setOrderListFilter] = useState<OrderListFilter>(OrderListFilter.Waiting)
   const [viewMode, setViewMode] = useState<OrderListViewMode>(() =>
     storage.getItem(ORDER_LIST_VIEW_MODE_STORAGE_KEY) === OrderListViewMode.Card
       ? OrderListViewMode.Card
@@ -573,7 +573,11 @@ export default function PosFrontDeskView({
   useEffect(() => {
     const workspaceFromUrl = readPosWorkspaceFromParams(searchParams)
     setUpdateWorkspaceState((current) => {
-      if (current?.orderId === workspaceFromUrl?.orderId && current?.mode === workspaceFromUrl?.mode) {
+      if (
+        current?.orderId === workspaceFromUrl?.orderId
+        && current?.mode === workspaceFromUrl?.mode
+        && current?.receiptMode === workspaceFromUrl?.receiptMode
+      ) {
         return current
       }
       return workspaceFromUrl
@@ -1317,12 +1321,13 @@ export default function PosFrontDeskView({
           businessId={businessId}
           orderId={updateWorkspace.orderId}
           mode={updateWorkspace.mode}
+          successReceiptMode={updateWorkspace.receiptMode}
           businessName={receiptBusinessName}
           businessLogoUrl={receiptBusinessLogoUrl}
           businessAddress={receiptBusinessAddress}
           businessPhone={businessPhone}
-          onPaymentCompleted={(completedOrderId) => {
-            setUpdateWorkspace({ orderId: completedOrderId, mode: 'success' })
+          onPaymentCompleted={(completedOrderId, receiptMode) => {
+            setUpdateWorkspace({ orderId: completedOrderId, mode: 'success', receiptMode })
           }}
           onClose={() => {
             setUpdateWorkspace(null)
@@ -1371,6 +1376,7 @@ export default function PosFrontDeskView({
                     key={filter}
                     type="button"
                     onClick={() => setOrderListFilter(filter)}
+                    aria-pressed={orderListFilter === filter}
                     className={`rounded-lg border px-3 py-1.5 text-[11px] font-bold transition-all ${
                       orderListFilter === filter
                         ? ORDER_LIST_FILTER_STYLES[filter].active
