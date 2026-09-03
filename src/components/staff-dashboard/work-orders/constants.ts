@@ -10,6 +10,7 @@ export type WorkOrderSalon = {
   id: string
   name: string
   address: string
+  timeZone?: string | null
 }
 export type WorkOrderListItem = StaffWorkOrderListItem
 export type WorkOrderDetail = StaffWorkOrderDetail
@@ -375,4 +376,14 @@ export function staffWorkOrdersPath(salonId?: string, ticketId?: string) {
   return [STAFF_HOME_PATH, STAFF_WORK_ORDERS_SCREEN, salonId, ticketId]
     .filter((segment): segment is string => Boolean(segment))
     .join('/')
+}
+
+export function staffWorkOrdersHref(
+  salonId?: string,
+  ticketId?: string,
+  search?: string,
+): string {
+  const path = staffWorkOrdersPath(salonId, ticketId)
+  const query = search?.replace(/^\?/, '').trim()
+  return query ? `${path}?${query}` : path
 }

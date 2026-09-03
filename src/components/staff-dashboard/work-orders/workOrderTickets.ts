@@ -70,6 +70,7 @@ export function toWorkOrderSalons(links: StaffBusinessLink[] | undefined): WorkO
       id,
       name: link.businessName?.trim() ?? '',
       address: formatSalonAddress(link),
+      timeZone: link.timeZone,
     }]
   })
 }
@@ -131,6 +132,37 @@ export function formatWorkOrderStationValue(stationNumber: number | null | undef
   return stationNumber != null
     ? formatWorkOrderStationNumber(stationNumber)
     : WORK_ORDER_EMPTY_PLACEHOLDER
+}
+
+export function workOrderStationLabel(stationNumber: number | null | undefined): string | null {
+  if (typeof stationNumber !== 'number' || !Number.isFinite(stationNumber) || stationNumber <= 0) {
+    return null
+  }
+  return formatWorkOrderStationNumber(stationNumber)
+}
+
+export function workOrderBeeperLabel(beeper: string | null | undefined): string | null {
+  const text = beeper?.trim() ?? ''
+  if (!text || text === WORK_ORDER_EMPTY_PLACEHOLDER) return null
+  return text
+}
+
+export function workOrderStationChipText(
+  stationNumber: number | null | undefined,
+  translate: TFunction,
+): string {
+  return translate(WORK_ORDERS_I18N.station, {
+    number: workOrderStationLabel(stationNumber) ?? WORK_ORDER_EMPTY_PLACEHOLDER,
+  })
+}
+
+export function workOrderBeeperChipText(
+  beeper: string | null | undefined,
+  translate: TFunction,
+): string {
+  return translate(WORK_ORDERS_I18N.beeper, {
+    code: workOrderBeeperLabel(beeper) ?? WORK_ORDER_EMPTY_PLACEHOLDER,
+  })
 }
 
 const WORK_ORDER_NUMERIC = /^\d+$/
@@ -284,6 +316,15 @@ export function joinWorkOrderServiceNames(names: string[]): string {
 
 export function joinWorkOrderTechnicianNames(names: string[]): string {
   return joinWorkOrderLabels(names, WORK_ORDER_INLINE_LIST_SEPARATOR)
+}
+
+export function workOrderAssignedTechnicianLabel(
+  technicianName: string | null | undefined,
+  translate: TFunction,
+): string {
+  const name = technicianName?.trim()
+  if (!name) return translate(WORK_ORDERS_I18N.unassigned)
+  return translate(WORK_ORDERS_I18N.technicianNamed, { name })
 }
 
 export type StaffWorkOrdersView =
