@@ -2,6 +2,8 @@ import {
   BOOKING_CALENDAR_COLORS,
   BOOKING_CALENDAR_DEFAULT_DURATION_MINUTES,
   BOOKING_CALENDAR_UNASSIGNED_TECH,
+  POS_BOOKING_CALENDAR_STATUS_COLORS,
+  type BookingCalendarStatusGroup,
   type BookingCalendarColor,
 } from './bookingTodayConstants'
 import { BOOKING_HUB_EMPTY_CELL, isBookingHubVietnamese, pad2 } from './bookingHubFormatters'
@@ -15,6 +17,7 @@ export type BookingCalendarSource = {
   date: string
   services: string[]
   statusLabel: string
+  statusGroup?: BookingCalendarStatusGroup
   startAtUtc: string | null
   endAtUtc: string | null
 }
@@ -23,6 +26,7 @@ export type BookingCalendarColumn = {
   id: string
   name: string
   toolTip: string
+  html?: string
 }
 
 export type BookingCalendarEvent = {
@@ -42,7 +46,7 @@ export type BookingCalendarEvent = {
   toolTip: string
 }
 
-function escapeHtml(value: string) {
+export function escapeBookingCalendarHtml(value: string) {
   return value
     .replace(/&/g, '&amp;')
     .replace(/</g, '&lt;')
@@ -148,7 +152,9 @@ export function buildBookingCalendarEvents(
     .filter((booking) => booking.date === calendarDate)
     .map((booking) => {
       const resource = resolveTechId(booking.tech)
-      const color = colorForResource(resource, columns)
+      const color = booking.statusGroup
+        ? POS_BOOKING_CALENDAR_STATUS_COLORS[booking.statusGroup]
+        : colorForResource(resource, columns)
       const { start, end } = resolveEventWindow(booking, calendarDate)
       const minutes = Math.max(
         15,
@@ -174,9 +180,9 @@ export function buildBookingCalendarEvents(
         cssClass: 'booking-calendar-event',
         html: (
           `<div class="booking-calendar-event">`
-          + `<div class="booking-calendar-event-name">${escapeHtml(name)}</div>`
-          + `<div class="booking-calendar-event-service">${escapeHtml(service)}</div>`
-          + `<div class="booking-calendar-event-meta">${minutes} min · ${escapeHtml(booking.statusLabel)}</div>`
+          + `<div class="booking-calendar-event-name pos-customer-name">${escapeBookingCalendarHtml(name)}</div>`
+          + `<div class="booking-calendar-event-service">${escapeBookingCalendarHtml(service)}</div>`
+          + `<div class="booking-calendar-event-meta">${minutes} min · ${escapeBookingCalendarHtml(booking.statusLabel)}</div>`
           + `</div>`
         ),
         toolTip: `${name} · ${service}`,

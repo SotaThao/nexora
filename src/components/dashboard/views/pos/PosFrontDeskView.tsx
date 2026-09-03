@@ -89,6 +89,10 @@ import {
   POS_TABLE_STICKY_ACTION_CELL_CLASS,
   POS_TABLE_STICKY_ACTION_HEADER_CLASS,
 } from './posTableStyles'
+import {
+  DEFAULT_SETTINGS_TIMEZONE,
+  detectTimeZoneFromAddressText,
+} from '../settingsLocationDetect'
 
 // Every string this screen passes to t() lives under one namespace — building them through tk()
 // keeps the prefix in a single place instead of repeating it two dozen times inline.
@@ -215,27 +219,30 @@ const TAB_SCROLL_STEP_RATIO = 0.8
 
 // A hand-edited or stale link must never crash the tab: anything unparseable falls back to that
 // mode's default period (today / this week / this month).
-function readReportSelectionFromParams(params: URLSearchParams): PosReportSelection {
+function readReportSelectionFromParams(
+  params: URLSearchParams,
+  businessTimeZone: string,
+): PosReportSelection {
   const rawMode = params.get(REPORT_MODE_PARAM)
   const mode = Object.values(PosReportMode).includes(rawMode as PosReportMode)
     ? (rawMode as PosReportMode)
     : PosReportMode.Daily
-  const fallback = defaultReportSelection(mode)
+  const fallback = defaultReportSelection(mode, businessTimeZone)
 
   if (mode === PosReportMode.Daily) {
-    const dates = (params.get(REPORT_DATES_PARAM) ?? '')
+    const date = (params.get(REPORT_DATES_PARAM) ?? '')
       .split(',')
       .map((value) => value.trim())
-      .filter((value) => /^\d{4}-\d{2}-\d{2}$/.test(value))
-    return dates.length > 0 ? { ...fallback, dates } : fallback
+      .find((value) => /^\d{4}-\d{2}-\d{2}$/.test(value))
+    return date ? { ...fallback, dates: [date] } : fallback
   }
 
   if (mode === PosReportMode.Weekly) {
-    const weeks = (params.get(REPORT_WEEKS_PARAM) ?? '')
+    const week = (params.get(REPORT_WEEKS_PARAM) ?? '')
       .split(',')
       .map((value) => value.trim())
-      .filter((value) => parseIsoWeekKey(value) !== null)
-    return weeks.length > 0 ? { ...fallback, weeks } : fallback
+      .find((value) => parseIsoWeekKey(value) !== null)
+    return week ? { ...fallback, weeks: [week] } : fallback
   }
 
   const month = (params.get(REPORT_MONTH_PARAM) ?? '').trim()
@@ -282,7 +289,7 @@ function ScrollableTabStrip({ children }: { children: ReactNode }) {
   }
 
   const arrowClass =
-    'flex h-9 w-8 shrink-0 items-center justify-center self-stretch rounded-lg text-nexoraMuted transition-colors hover:bg-nexoraCanvas hover:text-nexoraText disabled:cursor-not-allowed disabled:opacity-40 disabled:hover:bg-transparent disabled:hover:text-nexoraMuted'
+    'flex h-9 w-8 shrink-0 self-center items-center justify-center rounded-lg text-nexoraMuted transition-colors hover:bg-nexoraCanvas hover:text-nexoraText disabled:cursor-not-allowed disabled:opacity-40 disabled:hover:bg-transparent disabled:hover:text-nexoraMuted'
 
   return (
     <div className="flex items-center gap-1">
@@ -317,6 +324,7 @@ export default function PosFrontDeskView({
   businessAddress,
   businessPhone,
   businessSlug,
+  businessTimeZone,
 }: {
   businessId: string
   // Shown on Check-in Step 1's welcome message — optional since the Staff dashboard route
@@ -325,6 +333,7 @@ export default function PosFrontDeskView({
   businessAddress?: string
   businessPhone?: string
   businessSlug?: string
+  businessTimeZone?: string | null
 }) {
   const { t, currentLanguage } = useTranslation()
   const { showToast, showConfirm } = useNotification()
@@ -342,6 +351,14 @@ export default function PosFrontDeskView({
       .filter(Boolean)
       .join(', ') ||
     undefined
+  // Owner setup exposes the exact configured zone; a deliberate null must use the same
+  // America/Chicago fallback as the backend. Staff business links do not expose it yet, so their
+  // existing address data is the best available no-new-API fallback.
+  const reportBusinessTimeZone = businessTimeZone === null
+    ? DEFAULT_SETTINGS_TIMEZONE
+    : businessTimeZone?.trim()
+      || detectTimeZoneFromAddressText(receiptBusinessAddress ?? '')
+      || DEFAULT_SETTINGS_TIMEZONE
 
   // Deep-link support for the Owner Dashboard's "Total Bookings" KPI card (Ticket 10),
   // which navigates here with ?tab=booking to land straight on the Bookings tab. Also
@@ -395,7 +412,9 @@ export default function PosFrontDeskView({
   // per tab visit rather than maintaining a second 15s polling stream.
   const todayTurnWindow = getLocalDayWindow()
   const todayRosterQuery = useTimeClockRoster(businessId, todayTurnWindow, {
-    enabled: activeTab === PosFrontDeskTab.TurnBoard,
+    enabled:
+      activeTab === PosFrontDeskTab.TurnBoard
+      || activeTab === PosFrontDeskTab.Booking,
     refetchInterval: false,
   })
   // Today’s Turns needs the services completed during the same local calendar day. The
@@ -464,10 +483,10 @@ export default function PosFrontDeskView({
     todayRosterQuery,
     turnBoardQuery,
   ])
-  // Report period lives in the URL so a manager can deep-link "these three days" and survive F5,
-  // same convention as the ?tab= param above.
+  // Report period lives in the URL so a manager can deep-link the selected day/week/month and
+  // survive F5, using the same convention as the ?tab= param above.
   const [reportSelection, setReportSelectionState] = useState<PosReportSelection>(
-    () => readReportSelectionFromParams(searchParams),
+    () => readReportSelectionFromParams(searchParams, reportBusinessTimeZone),
   )
   const setReportSelection = (next: PosReportSelection) => {
     setReportSelectionState(next)
@@ -480,10 +499,10 @@ export default function PosFrontDeskView({
         params.delete(REPORT_WEEKS_PARAM)
         params.delete(REPORT_MONTH_PARAM)
         if (next.mode === PosReportMode.Daily && next.dates.length > 0) {
-          params.set(REPORT_DATES_PARAM, [...next.dates].sort().join(','))
+          params.set(REPORT_DATES_PARAM, next.dates[0])
         }
         if (next.mode === PosReportMode.Weekly && next.weeks.length > 0) {
-          params.set(REPORT_WEEKS_PARAM, [...next.weeks].sort().join(','))
+          params.set(REPORT_WEEKS_PARAM, next.weeks[0])
         }
         if (next.mode === PosReportMode.Monthly && next.month) {
           params.set(REPORT_MONTH_PARAM, next.month)
@@ -669,7 +688,7 @@ export default function PosFrontDeskView({
           </span>
         ) : null}
       </div>
-      <p className="truncate text-sm font-bold text-nexoraText">{booking.customerName}</p>
+      <p className="pos-customer-name truncate text-sm font-bold text-nexoraText">{booking.customerName}</p>
       {renderServiceChips(booking.serviceNames)}
       <div>{renderTechnicianChip(booking.technicianNames)}</div>
       <div className="flex justify-end border-t border-nexoraBorder pt-2">
@@ -683,7 +702,7 @@ export default function PosFrontDeskView({
   const renderNotArrivedOrderRow = (booking: BookingListItemApiDto) => (
     <tr key={booking.bookingId} className="border-t border-nexoraBorder/70 bg-sky-50/20 transition-colors hover:bg-sky-50/45">
       <td className="px-4 py-3 font-mono font-bold text-nexoraMuted">—</td>
-      <td className="px-4 py-3 font-bold text-nexoraText">{booking.customerName}</td>
+      <td className="pos-customer-name px-4 py-3 font-bold text-nexoraText">{booking.customerName}</td>
       <td className="whitespace-nowrap px-4 py-3 font-semibold tabular-nums text-nexoraText">
         {formatBookingWallClockTime(booking.scheduledAt, booking.source)}
       </td>
@@ -750,7 +769,7 @@ export default function PosFrontDeskView({
                 <td className="px-4 py-3 font-semibold tabular-nums text-nexoraText">
                   {formatBookingWallClockTime(booking.scheduledAt, booking.source)}
                 </td>
-                <td className="px-4 py-3 font-bold text-nexoraText">{booking.customerName}</td>
+                <td className="pos-customer-name px-4 py-3 font-bold text-nexoraText">{booking.customerName}</td>
                 <td className="px-4 py-3">{renderTechnicianChip(booking.technicianNames)}</td>
                 <td className="px-4 py-3">{renderServiceChips(booking.serviceNames)}</td>
                 <td className={`${POS_TABLE_STICKY_ACTION_CELL_CLASS} px-4 py-3 text-right`}>
@@ -835,7 +854,7 @@ export default function PosFrontDeskView({
         {station.currentStatus === PosOrderStatus.InService && (
           <div className="space-y-2 rounded-xl bg-nexoraCanvas/70 p-3">
             <div className="flex items-center justify-between gap-2">
-              <p className="truncate text-xs font-bold text-nexoraText">{station.currentCustomerName}</p>
+              <p className="pos-customer-name truncate text-xs font-bold text-nexoraText">{station.currentCustomerName}</p>
               {station.currentOrderNumber ? (
                 <span className="shrink-0 font-mono text-[11px] font-bold text-nexoraMuted">
                   #{station.currentOrderNumber}
@@ -904,7 +923,7 @@ export default function PosFrontDeskView({
               >
                 <div className="flex items-start justify-between gap-3">
                   <div className="min-w-0">
-                    <p className="truncate text-sm font-bold text-nexoraText">{order.customerName}</p>
+                    <p className="pos-customer-name truncate text-sm font-bold text-nexoraText">{order.customerName}</p>
                     {customerPhone ? <p className="mt-0.5 text-xs tabular-nums text-nexoraMuted">{customerPhone}</p> : null}
                     <p className="mt-1 font-mono text-[11px] font-bold text-nexoraMuted">#{order.orderNumber}</p>
                   </div>
@@ -1547,7 +1566,7 @@ export default function PosFrontDeskView({
                           </span>
                         </div>
                         <div className="flex flex-wrap gap-1.5">{renderRowFlags(order)}</div>
-                        <p className="truncate text-sm font-bold text-nexoraText">{order.customerName}</p>
+                        <p className="pos-customer-name truncate text-sm font-bold text-nexoraText">{order.customerName}</p>
                         {renderServiceChips(order.serviceNames)}
                         <div>{renderTechnicianChip(order.technicianNames)}</div>
                         <div className="flex flex-wrap items-center justify-between gap-2 border-t border-nexoraBorder pt-2">
@@ -1598,7 +1617,7 @@ export default function PosFrontDeskView({
                           }`}
                         >
                           <td className="px-4 py-3 font-mono font-bold text-nexoraMuted">#{order.orderNumber}</td>
-                          <td className="px-4 py-3 font-bold text-nexoraText">{order.customerName}</td>
+                          <td className="pos-customer-name px-4 py-3 font-bold text-nexoraText">{order.customerName}</td>
                           <td className="whitespace-nowrap px-4 py-3 font-semibold tabular-nums text-nexoraText">
                             {formatPosTime(order.checkedInAt, currentLanguage) || '—'}
                           </td>
@@ -1665,7 +1684,10 @@ export default function PosFrontDeskView({
         <BookingTab
           businessId={businessId}
           businessSlug={businessSlug}
-          turnBoardStaff={turnBoard}
+          rosterRows={todayRosterQuery.data?.rows ?? []}
+          rosterLoading={todayRosterQuery.isLoading}
+          rosterError={todayRosterQuery.isError}
+          onRosterRetry={() => { void todayRosterQuery.refetch() }}
           onNewBooking={(slot) => {
             setBookingSlot(slot ? {
               date: slot.date,
@@ -1685,6 +1707,7 @@ export default function PosFrontDeskView({
       {activeTab === PosFrontDeskTab.Report && (
         <PosReportPanel
           businessId={businessId}
+          businessTimeZone={reportBusinessTimeZone}
           isActive={activeTab === PosFrontDeskTab.Report}
           selection={reportSelection}
           onSelectionChange={setReportSelection}

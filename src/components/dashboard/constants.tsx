@@ -24,6 +24,7 @@ import {
   BookingHubMainTab,
   isBookingHubMainTabVisible,
 } from '../../data/merchantVoice/domain'
+import { SHOW_POS_PRODUCTS_MENU } from '../../constants/posFeatureVisibility'
 import {
   PACKAGE_MANAGEMENT_TAB_I18N_KEY,
   PACKAGE_MANAGEMENT_TAB_ORDER,
@@ -568,10 +569,11 @@ export function resolveDashboardMobileMenuTitle(
 }
 
 // sub-items are added as later POS Owner Setup tickets ship their own screens).
-export const POS_SUBMENU: { id: string; labelKey: string }[] =
+export const POS_SUBMENU: { id: string; labelKey: string }[] = (
   MENU_ITEMS.find((item): item is typeof item & { children: { id: string; labelKey: string }[] } =>
     item.id === DASHBOARD_MENU_ID.pos && 'children' in item,
   )?.children ?? []
+).filter((sub) => SHOW_POS_PRODUCTS_MENU || sub.id !== 'products')
 
 
 export const MERCHANT_SIDEBAR_MENU_ITEMS = MENU_ITEMS.filter(

@@ -7,6 +7,7 @@
 import httpClient from '../../lib/httpClient'
 import { unlessOptimisticId } from '../../utils/uuid'
 import type {
+  AddOrderCustomServiceLinePayload,
   CheckoutProductCatalogItemApiDto,
   CheckoutServiceCatalogItemApiDto,
   CompleteOrderPayload,
@@ -18,6 +19,7 @@ import type {
   SetOrderDiscountPayload,
   SetOrderServiceLineDiscountPayload,
   SetOrderStaffTipSplitPayload,
+  UpdateOrderServiceLineTarget,
 } from '../../types/repositories'
 
 type HttpClient = typeof httpClient
@@ -63,19 +65,32 @@ export function createPosCheckoutRepository(client: HttpClient = httpClient) {
       )
     },
 
-    // Swaps which service a line is for, keeping the line's technician, note and position.
+    // A service the menu does not carry, typed at the counter. Never written back to the catalog.
+    async addOrderCustomServiceLine(
+      businessId: string,
+      orderId: string,
+      payload: AddOrderCustomServiceLinePayload,
+    ): Promise<string> {
+      return await client.post<string>(
+        `/api/v1/merchant/pos/${businessId}/checkout/${orderId}/custom-services`,
+        payload,
+      )
+    },
+
+    // Retargets a line, keeping its technician, note and position. Exactly one target: a catalog
+    // service id, or a custom name + price — the backend rejects both or neither.
     async updateOrderServiceLine(
       businessId: string,
       orderId: string,
       serviceLineId: string,
-      posServiceId: string,
+      target: UpdateOrderServiceLineTarget,
     ): Promise<boolean> {
       return unlessOptimisticId(
         serviceLineId,
         () =>
           client.put<boolean>(
             `/api/v1/merchant/pos/${businessId}/checkout/${orderId}/services/${serviceLineId}`,
-            { posServiceId },
+            target,
           ),
         false,
       )

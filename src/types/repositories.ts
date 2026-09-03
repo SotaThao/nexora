@@ -38,6 +38,7 @@ export interface BusinessApiDto {
   country?: string
   phone?: string
   website?: string
+  timeZone?: string | null
   logoUrl?: string | null
   bookingNotificationPhone?: string
   salesTaxRatePercent?: number
@@ -582,7 +583,8 @@ export interface InServiceOrderApiDto {
 
 export interface OrderServiceLineApiDto {
   id: string
-  posServiceId: string
+  /** Null on a custom (off-menu) line — nothing in the catalog to qualify a technician against. */
+  posServiceId: string | null
   serviceName: string
   unitPrice: number
   quantity: number
@@ -682,6 +684,19 @@ export interface PosPromotionPayload {
   endTime: string
   isActive: boolean
 }
+
+export interface AddOrderCustomServiceLinePayload {
+  customServiceName: string
+  price: number
+  note: string | null
+  /** Null is "First available" — the line is left for someone on the floor to take. */
+  posStaffProfileId: string | null
+}
+
+/** Exactly one target: a catalog service, or a custom name + price. */
+export type UpdateOrderServiceLineTarget =
+  | { posServiceId: string }
+  | { customServiceName: string; price: number }
 
 export interface SetOrderServiceLineDiscountPayload {
   /** 'Percent' | 'Amount'. Null clears the discount on the line. */
