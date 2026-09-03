@@ -1,4 +1,5 @@
 import type { SubscriptionPackage } from '../data/repositories/subscriptionPayments'
+import { parseApiUtcDateTime } from './localDate'
 import { periodInMonthsFromBillingCycle } from './subscriptionDisplay'
 
 const MS_PER_DAY = 24 * 60 * 60 * 1000
@@ -28,12 +29,12 @@ export function estimateUpgradeCredit(params: {
     return 0
   }
 
-  const end = new Date(params.currentExpiresAt)
-  if (Number.isNaN(end.getTime())) return 0
+  const end = parseApiUtcDateTime(params.currentExpiresAt)
+  if (!end) return 0
   const remainingDays = Math.floor(Math.max(0, (end.getTime() - Date.now()) / MS_PER_DAY))
 
   const cycleStart = new Date(end)
-  cycleStart.setMonth(cycleStart.getMonth() - params.currentPeriodInMonths)
+  cycleStart.setUTCMonth(cycleStart.getUTCMonth() - params.currentPeriodInMonths)
   const totalDaysInCycle = (end.getTime() - cycleStart.getTime()) / MS_PER_DAY
   if (totalDaysInCycle <= 0) return 0
 
