@@ -100,8 +100,8 @@ const CORE_CHECKOUT_PAYMENT_METHODS = new Set<PosCheckoutPaymentMethodType>([
   PosCheckoutPaymentMethod.SplitPay,
 ])
 
-// Temporarily hidden from Ticket Detail while preserving the existing change-service flow.
-const SHOW_CHANGE_SERVICE_ACTION = false
+// Keep the existing change-service flow available from Ticket Detail.
+const SHOW_CHANGE_SERVICE_ACTION = true
 
 function round2(value: number) {
   return Math.round(value * 100) / 100
