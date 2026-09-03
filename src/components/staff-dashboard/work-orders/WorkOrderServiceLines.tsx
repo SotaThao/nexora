@@ -69,7 +69,6 @@ export default function WorkOrderServiceLines({ items, serviceTotal }: WorkOrder
 
 function WorkOrderServiceLineRow({ line }: { line: WorkOrderItem }) {
   const { t } = useTranslation()
-  const lineNote = line.note?.trim()
 
   return (
     <tr className={WORK_ORDERS_LAYOUT_CLASS.serviceRow}>
@@ -89,7 +88,6 @@ function WorkOrderServiceLineRow({ line }: { line: WorkOrderItem }) {
         <p className={WORK_ORDERS_LAYOUT_CLASS.serviceTech}>
           {workOrderAssignedTechnicianLabel(line.technicianName, t)}
         </p>
-        {lineNote ? <p className={WORK_ORDERS_LAYOUT_CLASS.itemNote}>{lineNote}</p> : null}
       </td>
       <td className={`${WORK_ORDERS_LAYOUT_CLASS.serviceNumCell} ${WORK_ORDERS_LAYOUT_CLASS.servicePrice}`}>
         {formatWorkOrderMoney(line.lineTotal || line.unitPrice)}

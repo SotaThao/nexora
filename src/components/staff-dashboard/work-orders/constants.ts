@@ -268,7 +268,6 @@ export const WORK_ORDERS_LAYOUT_CLASS = {
   emptyInline: 'mt-3 text-sm text-nexoraMuted sm:text-base',
   serviceName: 'truncate text-sm font-extrabold text-nexoraText sm:text-base',
   serviceTech: 'mt-0.5 truncate text-xs text-nexoraMuted sm:text-sm',
-  itemNote: 'mt-1.5 rounded-xl bg-amber-50 px-3 py-2 text-xs leading-relaxed text-nexoraText sm:text-sm',
   errorCard: 'rounded-2xl border border-rose-200 bg-rose-50 px-4 py-10 text-center',
   errorText: 'text-sm font-bold text-nexoraDanger sm:text-base',
   retryButton: 'mt-3 inline-flex h-10 items-center justify-center rounded-lg bg-nexoraBrand px-4 text-sm font-bold text-white sm:h-11',

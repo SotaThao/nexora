@@ -80,6 +80,7 @@ export default function StaffWorkOrderDetail({ orderId, onBack }: StaffWorkOrder
   }
 
   const handleConfirmCompletion = async (note: string | null) => {
+    if (!note) return
     const succeeded = await runAction(
       () => completeService.mutateAsync(note),
       WORK_ORDERS_I18N.completeServiceSuccess,
