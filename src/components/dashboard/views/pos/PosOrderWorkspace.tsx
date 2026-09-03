@@ -976,6 +976,7 @@ export default function PosOrderWorkspace({
       showToast(t('components.dashboard.views.pos.PosOrderWorkspace.assignTechnicianFirst'), 'error')
       return
     }
+    const submittedReceiptMode = receiptChoice
     if (!startTicketAction(TicketBusySurface.Complete)) return
     completeOrder.mutate(
       {
@@ -984,13 +985,13 @@ export default function PosOrderWorkspace({
           paymentMethodType: paymentMethod,
           // E.164, not the bare national number: the backend re-parses this value and only a
           // full number tells it which country the receipt SMS is addressed to.
-          receiptPhone: receiptChoice === 'sms' ? order?.customerPhoneE164 ?? undefined : undefined,
+          receiptPhone: submittedReceiptMode === 'sms' ? order?.customerPhoneE164 ?? undefined : undefined,
         },
       },
       {
         onSuccess: (result) => {
           setCompletedPayment(result)
-          onPaymentCompleted?.(result.orderId, receiptChoice)
+          onPaymentCompleted?.(result.orderId, submittedReceiptMode)
         },
         onError: reportError,
         onSettled: endTicketAction,
@@ -1615,7 +1616,8 @@ export default function PosOrderWorkspace({
                         type="button"
                         onClick={() => setReceiptChoice('none')}
                         aria-pressed={receiptChoice === 'none'}
-                        className={`h-8 rounded-lg border text-[11px] font-semibold transition-colors ${
+                        disabled={isBusy}
+                        className={`h-8 rounded-lg border text-[11px] font-semibold transition-colors disabled:cursor-not-allowed disabled:opacity-40 ${
                           receiptChoice === 'none'
                             ? 'border-nexoraBrand/50 bg-nexoraBrandSoft text-nexoraBrandDark'
                             : 'border-nexoraBorder/70 bg-white text-nexoraText hover:border-nexoraBrand/50 hover:bg-nexoraBrandSoft/40'
@@ -1627,7 +1629,7 @@ export default function PosOrderWorkspace({
                         type="button"
                         onClick={() => setReceiptChoice('sms')}
                         aria-pressed={receiptChoice === 'sms'}
-                        disabled={!order?.customerPhoneE164}
+                        disabled={isBusy || !order?.customerPhoneE164}
                         className={`h-8 rounded-lg border text-[11px] font-semibold transition-colors disabled:cursor-not-allowed disabled:opacity-40 ${
                           receiptChoice === 'sms'
                             ? 'border-nexoraBrand/50 bg-nexoraBrandSoft text-nexoraBrandDark'
@@ -1640,7 +1642,8 @@ export default function PosOrderWorkspace({
                         type="button"
                         onClick={() => setReceiptChoice('print')}
                         aria-pressed={receiptChoice === 'print'}
-                        className={`h-8 rounded-lg border text-[11px] font-semibold transition-colors ${
+                        disabled={isBusy}
+                        className={`h-8 rounded-lg border text-[11px] font-semibold transition-colors disabled:cursor-not-allowed disabled:opacity-40 ${
                           receiptChoice === 'print'
                             ? 'border-nexoraBrand/50 bg-nexoraBrandSoft text-nexoraBrandDark'
                             : 'border-nexoraBorder/70 bg-white text-nexoraText hover:border-nexoraBrand/50 hover:bg-nexoraBrandSoft/40'
@@ -1653,7 +1656,8 @@ export default function PosOrderWorkspace({
                       <button
                         type="button"
                         onClick={handleOpenPrintPreview}
-                        className="col-start-3 justify-self-center text-[10px] font-semibold text-nexoraBrand underline underline-offset-2 hover:text-nexoraBrandDark"
+                        disabled={isBusy}
+                        className="col-start-3 justify-self-center text-[10px] font-semibold text-nexoraBrand underline underline-offset-2 hover:text-nexoraBrandDark disabled:cursor-not-allowed disabled:opacity-40"
                       >
                         {t('components.dashboard.views.pos.PosOrderWorkspace.printPreviewLabel')}
                       </button>
