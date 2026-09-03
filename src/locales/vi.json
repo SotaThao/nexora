@@ -3545,6 +3545,8 @@
             "editButton": "Chỉnh sửa",
             "viewButton": "Xem",
             "viewAssignButton": "Xem & phân công",
+            "addServicesButton": "Thêm dịch vụ",
+            "reviewSendButton": "Xem lại & gửi",
             "startServiceButton": "Bắt đầu phục vụ",
             "startServiceSuccess": "Đã bắt đầu phục vụ.",
             "confirmCancelTitle": "Gỡ khỏi hàng đợi?",

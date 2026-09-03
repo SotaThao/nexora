@@ -18,7 +18,7 @@ import {
 } from '../../bookingTodayConstants'
 import '../../booking-hub.css'
 import { formatLocalDateIso } from '../../../../../utils/localDate'
-import { bookingDateKey, statusLabelKey } from './bookingFormatters'
+import { bookingCalendarWallClock, bookingDateKey, statusLabelKey } from './bookingFormatters'
 import {
   getBookingCalendarStatusGroup,
   PosBookingCalendarStaffScope,
@@ -170,6 +170,7 @@ export default function BookingCalendar({
         statusLabel: t(p + statusLabelKey(booking.status)),
         statusGroup: getBookingCalendarStatusGroup(booking.status),
         startAtUtc: booking.scheduledAt,
+        startAtWallClock: bookingCalendarWallClock(booking.scheduledAt, booking.source),
         // The list DTO has no end time, so the shared calendar's standard 60-minute fallback
         // applies until the booking endpoint exposes service duration.
         endAtUtc: null,
