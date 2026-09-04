@@ -1,9 +1,5 @@
 import { PosOrderStatus } from '../../../constants/posOrderStatus'
-
-/** Staff calendar is personal; no salon zone is available, so fall back to Central Time. */
-export const STAFF_CALENDAR_TIME_ZONE = 'America/Chicago'
-
-export const STAFF_CALENDAR_LOAD_DELAY_MS = 450
+import type { StaffBookingCalendarItem } from '../../../data/repositories/staffWorkOrders'
 
 export const STAFF_CALENDAR_SKELETON_COUNT = 4
 
@@ -25,56 +21,16 @@ export const STAFF_CALENDAR_I18N = {
   durationHours: 'staff_dashboard.calendar.duration_hours',
   durationMinutes: 'staff_dashboard.calendar.duration_minutes',
   durationHoursMinutes: 'staff_dashboard.calendar.duration_hours_minutes',
+  salonLabel: 'staff_dashboard.calendar.salon_label',
+  noSalonTitle: 'staff_dashboard.calendar.no_salon_title',
+  noSalonBody: 'staff_dashboard.calendar.no_salon_body',
   statusAssigned: 'staff_dashboard.work_orders.status_assigned',
   statusInService: 'staff_dashboard.work_orders.status_in_service',
   statusCompleted: 'staff_dashboard.work_orders.status_completed',
 } as const
 
-export type StaffCalendarAppointment = {
-  ticket: string
-  time: string
-  duration: number
-  customer: string
-  service: string
-  status: PosOrderStatus
-}
-
-export const STAFF_CALENDAR_MOCK_APPOINTMENTS: StaffCalendarAppointment[] = [
-  {
-    ticket: 'WO-1039',
-    time: '08:00',
-    duration: 60,
-    customer: 'Ava Johnson',
-    service: 'Classic Manicure',
-    status: PosOrderStatus.Completed,
-  },
-  {
-    ticket: 'WO-1042',
-    time: '08:45',
-    duration: 45,
-    customer: 'Olivia Brown',
-    service: 'Gel Manicure',
-    status: PosOrderStatus.InService,
-  },
-  {
-    ticket: 'WO-1048',
-    time: '09:30',
-    duration: 75,
-    customer: 'Emma Williams',
-    service: 'Deluxe Pedicure',
-    status: PosOrderStatus.Waiting,
-  },
-  {
-    ticket: 'WO-1051',
-    time: '10:15',
-    duration: 45,
-    customer: 'Sophia Martinez',
-    service: 'Full Set Gel X',
-    status: PosOrderStatus.Waiting,
-  },
-]
-
-export const STAFF_CALENDAR_TODAY_COUNT = STAFF_CALENDAR_MOCK_APPOINTMENTS.length
+/** The screen renders exactly what the API returns — see GetMyBookingCalendarQuery. */
+export type StaffCalendarAppointment = StaffBookingCalendarItem
 
 export const STAFF_CALENDAR_STATUS_I18N: Partial<Record<PosOrderStatus, string>> = {
   [PosOrderStatus.Waiting]: STAFF_CALENDAR_I18N.statusAssigned,
@@ -127,6 +83,9 @@ export const STAFF_CALENDAR_LAYOUT_CLASS = {
   emptyIcon: 'mx-auto mb-2 h-[25px] w-[25px] text-nexoraSubtle',
   emptyTitle: 'block text-[13px] font-extrabold text-nexoraText',
   emptyBody: 'mt-1 block text-[11px]',
+  salonSelect:
+    'min-h-10 shrink-0 rounded-[13px] border border-nexoraBorder bg-white px-3 text-xs font-extrabold text-nexoraText shadow-[0_5px_14px_rgba(15,23,42,0.04)] outline-none transition hover:border-nexoraBrand focus:border-nexoraBrand',
+  headerActions: 'flex shrink-0 items-center gap-2',
   back: 'inline-flex items-center gap-1.5 self-start text-xs font-extrabold text-nexoraBrand',
   backIcon: 'h-[15px] w-[15px]',
   navCount:

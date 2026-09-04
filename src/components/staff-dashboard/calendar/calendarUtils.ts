@@ -2,13 +2,12 @@ import { formatLocalDateIso, formatTimePart } from '../../../utils/localDate'
 import type { TFunction } from '../../../types/contexts'
 import {
   STAFF_CALENDAR_I18N,
-  STAFF_CALENDAR_MOCK_APPOINTMENTS,
   STAFF_CALENDAR_WEEK_LENGTH,
-  type StaffCalendarAppointment,
 } from './constants'
 
 const DATE_KEY_PATTERN = /^\d{4}-\d{2}-\d{2}$/
-const TIME_PATTERN = /^(\d{1,2}):(\d{2})$/
+/** Wall clock inside an ISO timestamp — read as written, never shifted to the browser zone. */
+const ISO_TIME_PATTERN = /T(\d{2}):(\d{2})/
 
 export function parseCalendarDateKey(value: string | null | undefined): Date | null {
   if (!DATE_KEY_PATTERN.test(value || '')) return null
@@ -34,28 +33,20 @@ export function calendarWeekDays(selectedDateKey: string): { key: string; date: 
   })
 }
 
-export function appointmentsForDate(
-  dateKey: string,
-  todayKey: string,
-): StaffCalendarAppointment[] {
-  return dateKey === todayKey ? STAFF_CALENDAR_MOCK_APPOINTMENTS : []
-}
-
-export function totalAppointmentDuration(appointments: StaffCalendarAppointment[]): number {
-  return appointments.reduce((sum, item) => sum + item.duration, 0)
-}
-
 export function formatCalendarWeekday(date: Date, language: string, weekday: 'short' | 'long') {
   const locale = language.toLowerCase().startsWith('vi') ? 'vi-VN' : 'en-US'
   return date.toLocaleDateString(locale, { weekday })
 }
 
-export function formatCalendarTime(time: string, language: string): string {
-  const match = TIME_PATTERN.exec(time)
-  if (!match) return time
+// The API sends the salon's own offset (e.g. 2026-09-04T08:00:00-05:00). Parsing the hours
+// out of the string keeps "8:00 AM" as the salon reads it; `new Date(...)` would re-render it
+// in the technician's browser zone and shift the whole day.
+export function formatCalendarTime(scheduledAt: string, language: string): string {
+  const match = ISO_TIME_PATTERN.exec(scheduledAt)
+  if (!match) return scheduledAt
   const hours = Number(match[1])
   const minutes = Number(match[2])
-  if (!Number.isFinite(hours) || !Number.isFinite(minutes)) return time
+  if (!Number.isFinite(hours) || !Number.isFinite(minutes)) return scheduledAt
   return formatTimePart(
     new Date(2000, 0, 1, hours, minutes),
     language.toLowerCase().startsWith('vi'),

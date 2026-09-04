@@ -3,8 +3,9 @@ import { Link, useSearchParams } from 'react-router-dom'
 import { ArrowLeft, CalendarCheck } from 'lucide-react'
 import { useTranslation } from '../../../contexts/LanguageContext'
 import type { TFunction } from '../../../types/contexts'
-import { formatDateIsoInTimeZone } from '../../../utils/localDate'
-import { staffWorkOrdersPath } from '../work-orders/constants'
+import { useStaffBookingCalendar } from '../../../data/hooks/useStaffWorkOrders'
+import { staffWorkOrdersPath, type WorkOrderSalon } from '../work-orders/constants'
+import { WorkOrderErrorCard } from '../work-orders/WorkOrderQueryFeedback'
 import {
   calendarAppointmentBarClass,
   calendarAppointmentCardClass,
@@ -13,7 +14,6 @@ import {
   STAFF_CALENDAR_I18N,
   STAFF_CALENDAR_LAYOUT_CLASS,
   STAFF_CALENDAR_STATUS_I18N,
-  STAFF_CALENDAR_TIME_ZONE,
   type StaffCalendarAppointment,
 } from './constants'
 import {
@@ -23,24 +23,29 @@ import {
   formatCalendarWeekday,
   parseCalendarDateKey,
   toCalendarDateKey,
-  totalAppointmentDuration,
 } from './calendarUtils'
 import StaffMyCalendarSkeleton from './StaffMyCalendarSkeleton'
-import { useStaffCalendarAppointments } from './useStaffCalendarAppointments'
+import { useStaffCalendarSalon } from './useStaffCalendarSalon'
+
+const SALON_PARAM = 'salon'
 
 export default function StaffMyCalendar() {
   const { t, currentLanguage } = useTranslation()
-  const [searchParams] = useSearchParams()
-  const todayKey = useMemo(
-    () => formatDateIsoInTimeZone(new Date(), STAFF_CALENDAR_TIME_ZONE),
-    [],
-  )
-  const [selectedDate, setSelectedDate] = useState(() => {
-    const requested = parseCalendarDateKey(searchParams.get('date'))
-    return requested ? toCalendarDateKey(requested) : todayKey
-  })
-  const salonId = searchParams.get('salon')?.trim() || undefined
-  const { isPending, appointments } = useStaffCalendarAppointments(selectedDate, todayKey)
+  const [searchParams, setSearchParams] = useSearchParams()
+  const { salons, salon, todayKey, isPending: isSalonPending, isError: isSalonError, refetch } =
+    useStaffCalendarSalon(searchParams.get(SALON_PARAM)?.trim() || undefined)
+
+  const requestedDate = useMemo(() => {
+    const parsed = parseCalendarDateKey(searchParams.get('date'))
+    return parsed ? toCalendarDateKey(parsed) : null
+  }, [searchParams])
+  // The salon's today only arrives with the businesses query, so the picked day stays null
+  // until the technician actually chooses one.
+  const [pickedDate, setPickedDate] = useState<string | null>(requestedDate)
+  const selectedDate = pickedDate ?? todayKey
+
+  const calendarQuery = useStaffBookingCalendar(salon?.id, selectedDate)
+  const appointments = calendarQuery.data?.items ?? []
   const weekDays = calendarWeekDays(selectedDate)
   const selectedDateValue = parseCalendarDateKey(selectedDate)
   const headingWeekday = selectedDateValue
@@ -48,8 +53,24 @@ export default function StaffMyCalendar() {
     : ''
   const headingKey =
     appointments.length === 1 ? STAFF_CALENDAR_I18N.headingOne : STAFF_CALENDAR_I18N.heading
-  const totalDuration = totalAppointmentDuration(appointments)
-  const workOrdersHref = staffWorkOrdersPath(salonId)
+  const isPending = isSalonPending || calendarQuery.isPending
+  const totalDuration = calendarQuery.data?.totalDurationMinutes ?? 0
+
+  if (isSalonError) {
+    return (
+      <div className={STAFF_CALENDAR_LAYOUT_CLASS.page}>
+        <WorkOrderErrorCard onAction={() => void refetch()} />
+      </div>
+    )
+  }
+
+  if (!isSalonPending && !salon) {
+    return (
+      <div className={STAFF_CALENDAR_LAYOUT_CLASS.page}>
+        <NoSalonState t={t} />
+      </div>
+    )
+  }
 
   return (
     <div className={STAFF_CALENDAR_LAYOUT_CLASS.page} data-selected-date={selectedDate}>
@@ -59,13 +80,27 @@ export default function StaffMyCalendar() {
             <div className={STAFF_CALENDAR_LAYOUT_CLASS.kicker}>{t(STAFF_CALENDAR_I18N.kicker)}</div>
             <h1 className={STAFF_CALENDAR_LAYOUT_CLASS.title}>{t(STAFF_CALENDAR_I18N.title)}</h1>
           </div>
-          <button
-            className={STAFF_CALENDAR_LAYOUT_CLASS.todayButton}
-            type="button"
-            onClick={() => setSelectedDate(todayKey)}
-          >
-            {t(STAFF_CALENDAR_I18N.today)}
-          </button>
+          <div className={STAFF_CALENDAR_LAYOUT_CLASS.headerActions}>
+            {salons.length > 1 ? (
+              <SalonSelect
+                salons={salons}
+                selectedId={salon?.id ?? ''}
+                label={t(STAFF_CALENDAR_I18N.salonLabel)}
+                onChange={(salonId) => {
+                  const next = new URLSearchParams(searchParams)
+                  next.set(SALON_PARAM, salonId)
+                  setSearchParams(next, { replace: true })
+                }}
+              />
+            ) : null}
+            <button
+              className={STAFF_CALENDAR_LAYOUT_CLASS.todayButton}
+              type="button"
+              onClick={() => setPickedDate(todayKey)}
+            >
+              {t(STAFF_CALENDAR_I18N.today)}
+            </button>
+          </div>
         </div>
 
         <div className={STAFF_CALENDAR_LAYOUT_CLASS.weekShell}>
@@ -83,7 +118,7 @@ export default function StaffMyCalendar() {
                   className={calendarDayClass(isSelected)}
                   type="button"
                   aria-pressed={isSelected}
-                  onClick={() => setSelectedDate(day.key)}
+                  onClick={() => setPickedDate(day.key)}
                 >
                   <span className={STAFF_CALENDAR_LAYOUT_CLASS.weekday}>
                     {formatCalendarWeekday(day.date, currentLanguage, 'short')}
@@ -115,16 +150,18 @@ export default function StaffMyCalendar() {
 
           {isPending ? (
             <StaffMyCalendarSkeleton />
+          ) : calendarQuery.isError ? (
+            <WorkOrderErrorCard onAction={() => void calendarQuery.refetch()} />
           ) : appointments.length === 0 ? (
             <CalendarEmptyState t={t} />
           ) : (
             <div className={STAFF_CALENDAR_LAYOUT_CLASS.list}>
               {appointments.map((appointment) => (
                 <CalendarAppointmentRow
-                  key={appointment.ticket}
+                  key={appointment.id}
                   appointment={appointment}
                   language={currentLanguage}
-                  salonId={salonId}
+                  salonId={salon?.id}
                   t={t}
                 />
               ))}
@@ -132,11 +169,55 @@ export default function StaffMyCalendar() {
           )}
         </section>
 
-        <Link to={workOrdersHref} className={STAFF_CALENDAR_LAYOUT_CLASS.back}>
+        <Link
+          to={staffWorkOrdersPath(salon?.id)}
+          className={STAFF_CALENDAR_LAYOUT_CLASS.back}
+        >
           <ArrowLeft className={STAFF_CALENDAR_LAYOUT_CLASS.backIcon} aria-hidden="true" />
           {t(STAFF_CALENDAR_I18N.back)}
         </Link>
       </section>
+    </div>
+  )
+}
+
+function SalonSelect({
+  salons,
+  selectedId,
+  label,
+  onChange,
+}: {
+  salons: WorkOrderSalon[]
+  selectedId: string
+  label: string
+  onChange: (salonId: string) => void
+}) {
+  return (
+    <select
+      className={STAFF_CALENDAR_LAYOUT_CLASS.salonSelect}
+      aria-label={label}
+      value={selectedId}
+      onChange={(event) => onChange(event.target.value)}
+    >
+      {salons.map((item) => (
+        <option key={item.id} value={item.id}>
+          {item.name}
+        </option>
+      ))}
+    </select>
+  )
+}
+
+function NoSalonState({ t }: { t: TFunction }) {
+  return (
+    <div className={STAFF_CALENDAR_LAYOUT_CLASS.empty}>
+      <CalendarCheck className={STAFF_CALENDAR_LAYOUT_CLASS.emptyIcon} aria-hidden="true" />
+      <strong className={STAFF_CALENDAR_LAYOUT_CLASS.emptyTitle}>
+        {t(STAFF_CALENDAR_I18N.noSalonTitle)}
+      </strong>
+      <span className={STAFF_CALENDAR_LAYOUT_CLASS.emptyBody}>
+        {t(STAFF_CALENDAR_I18N.noSalonBody)}
+      </span>
     </div>
   )
 }
@@ -166,10 +247,11 @@ function CalendarAppointmentRow({
   salonId?: string
   t: TFunction
 }) {
-  const timeLabel = formatCalendarTime(appointment.time, language)
+  const timeLabel = formatCalendarTime(appointment.scheduledAt, language)
   const statusKey = STAFF_CALENDAR_STATUS_I18N[appointment.status]
+  // The detail screen is addressed by order id; the WO number is only what the card shows.
   const href = salonId
-    ? staffWorkOrdersPath(salonId, appointment.ticket)
+    ? staffWorkOrdersPath(salonId, appointment.id)
     : staffWorkOrdersPath()
 
   return (
@@ -182,15 +264,15 @@ function CalendarAppointmentRow({
         <span className={STAFF_CALENDAR_LAYOUT_CLASS.copy}>
           <span className={STAFF_CALENDAR_LAYOUT_CLASS.cardTitle}>
             {t(STAFF_CALENDAR_I18N.appointmentTitle, {
-              customer: appointment.customer,
-              service: appointment.service,
+              customer: appointment.customerName,
+              service: appointment.serviceNames.join(', '),
             })}
           </span>
           <span className={STAFF_CALENDAR_LAYOUT_CLASS.meta}>
             {t(STAFF_CALENDAR_I18N.appointmentMeta, {
               time: timeLabel,
-              minutes: appointment.duration,
-              ticket: appointment.ticket,
+              minutes: appointment.durationMinutes,
+              ticket: appointment.orderNumber,
             })}
           </span>
         </span>

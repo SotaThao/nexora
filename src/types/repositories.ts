@@ -344,6 +344,31 @@ export interface StaffWorkOrderDetailApiDto {
   items?: StaffWorkOrderItemApiDto[]
 }
 
+export interface StaffBookingCalendarItemApiDto {
+  id?: string
+  orderNumber?: string
+  customerName?: string
+  status?: string
+  /** See PosOrderItemStatus — the caller's own lines, least advanced one. */
+  myLineStatus?: string | null
+  /** ISO with the salon's own offset — render the offset, never convert to browser local. */
+  scheduledAt?: string
+  myServiceNames?: string[]
+  myDurationMinutes?: number
+}
+
+export interface StaffBookingCalendarApiDto {
+  date?: string
+  appointmentCount?: number
+  totalDurationMinutes?: number
+  items?: StaffBookingCalendarItemApiDto[]
+}
+
+export interface StaffBookingCalendarQuery {
+  businessId: string
+  date: string
+}
+
 export interface StaffWorkOrdersListQuery {
   businessId: string
   date: string

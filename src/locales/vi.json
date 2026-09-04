@@ -367,7 +367,10 @@
       "appointment_meta": "{{time}} · {{minutes}} phút · {{ticket}}",
       "duration_hours": "{{hours}} giờ",
       "duration_minutes": "{{minutes}} phút",
-      "duration_hours_minutes": "{{hours}} giờ {{minutes}} phút"
+      "duration_hours_minutes": "{{hours}} giờ {{minutes}} phút",
+      "salon_label": "Tiệm",
+      "no_salon_title": "Chưa liên kết tiệm nào",
+      "no_salon_body": "Liên kết với một tiệm để xem lịch hẹn của bạn tại đây."
     },
     "status": {
       "active": "Đang hoạt động",

@@ -8,6 +8,7 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { qk } from '../queryKeys'
 import { useSessionRole } from '../../auth/useSessionRole'
 import staffWorkOrdersRepository, {
+  type StaffBookingCalendar,
   type StaffWorkOrderCatalogItem,
   type StaffWorkOrderDetail,
   type StaffWorkOrderListItem,
@@ -37,6 +38,21 @@ export function useStaffWorkOrders(
       status,
     }),
     enabled: canLoad,
+    retry: false,
+  })
+}
+
+// "My Calendar" — one day of the technician's own appointments at one salon.
+export function useStaffBookingCalendar(businessId: string | undefined, date: string) {
+  const { isStaff } = useSessionRole()
+
+  return useQuery<StaffBookingCalendar>({
+    queryKey: qk.staffBookingCalendar(businessId, date),
+    queryFn: () => staffWorkOrdersRepository.getBookingCalendar({
+      businessId: businessId ?? '',
+      date,
+    }),
+    enabled: isStaff && Boolean(businessId) && Boolean(date),
     retry: false,
   })
 }

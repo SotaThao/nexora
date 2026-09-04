@@ -259,6 +259,9 @@ export const qk = {
     return key
   },
   staffWorkOrderDetail: (orderId?: string) => ['staffWorkOrders', 'detail', orderId ?? ''],
+  // Under the same root so starting/completing a service also refreshes My Calendar.
+  staffBookingCalendar: (businessId?: string, date?: string) =>
+    ['staffWorkOrders', 'calendar', businessId ?? '', date ?? ''],
   // Under the same root so one invalidation after a save refreshes the picker too — a service the
   // owner just retired must stop being offered.
   staffWorkOrderServiceCatalog: (orderId?: string) =>

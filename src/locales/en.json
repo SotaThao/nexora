@@ -357,7 +357,10 @@
       "appointment_meta": "{{time}} · {{minutes}} min · {{ticket}}",
       "duration_hours": "{{hours}}h",
       "duration_minutes": "{{minutes}}m",
-      "duration_hours_minutes": "{{hours}}h {{minutes}}m"
+      "duration_hours_minutes": "{{hours}}h {{minutes}}m",
+      "salon_label": "Salon",
+      "no_salon_title": "No salon linked",
+      "no_salon_body": "Link to a salon to see your appointments here."
     },
     "missing_payout_toast": "Please set up your payout method to receive TIPS.",
     "missing_payout_title": "Action Required",

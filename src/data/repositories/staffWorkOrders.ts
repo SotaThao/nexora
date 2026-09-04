@@ -8,6 +8,9 @@ import httpClient from '../../lib/httpClient'
 import { PosOrderStatus } from '../../constants/posOrderStatus'
 import type {
   CompleteStaffWorkOrderServicePayload,
+  StaffBookingCalendarApiDto,
+  StaffBookingCalendarItemApiDto,
+  StaffBookingCalendarQuery,
   SaveStaffWorkOrderServiceLinesPayload,
   StaffWorkOrderCatalogItemApiDto,
   StaffWorkOrderDetailApiDto,
@@ -58,6 +61,26 @@ export type StaffWorkOrderListItem = {
   beeper: string | null
 }
 
+/** One appointment on "My Calendar" — figures already narrowed to the caller's own lines. */
+export type StaffBookingCalendarItem = {
+  id: string
+  orderNumber: string
+  customerName: string
+  status: PosOrderStatus
+  lineStatus: string
+  /** Carries the salon's UTC offset; parse the offset, do not shift to browser local. */
+  scheduledAt: string
+  serviceNames: string[]
+  durationMinutes: number
+}
+
+export type StaffBookingCalendar = {
+  date: string
+  appointmentCount: number
+  totalDurationMinutes: number
+  items: StaffBookingCalendarItem[]
+}
+
 export type StaffWorkOrderDetail = {
   id: string
   /** Line-level actions are addressed per business, so the screen needs it. */
@@ -87,6 +110,7 @@ const STAFF_WORK_ORDER_SERVICE_CATALOG = 'service-catalog'
 const STAFF_WORK_ORDER_MY_SERVICE_LINES = 'my-service-lines'
 
 const PENDING_ACCEPTANCE_COUNT_PATH = `${STAFF_WORK_ORDERS_API_PATH}/pending-acceptance-count`
+const BOOKING_CALENDAR_PATH = `${STAFF_WORK_ORDERS_API_PATH}/calendar`
 
 const LIST_QUERY_PARAM = {
   businessId: 'businessId',
@@ -230,6 +254,43 @@ function buildListParams(query: StaffWorkOrdersListQuery): Record<string, string
   return params
 }
 
+function normalizeCalendarItem(
+  dto: StaffBookingCalendarItemApiDto,
+): StaffBookingCalendarItem | null {
+  const id = readText(dto, 'id', 'Id')
+  const scheduledAt = readText(dto, 'scheduledAt', 'ScheduledAt')
+  // A calendar row without a schedule cannot be placed on the day — drop it rather than
+  // render it at an invented time.
+  if (!id || !scheduledAt) return null
+  return {
+    id,
+    orderNumber: readText(dto, 'orderNumber', 'OrderNumber'),
+    customerName: readText(dto, 'customerName', 'CustomerName'),
+    status: toPosOrderStatus(readText(dto, 'status', 'Status')),
+    lineStatus: readText(dto, 'myLineStatus', 'MyLineStatus'),
+    scheduledAt,
+    serviceNames: readTextList(dto, 'myServiceNames', 'MyServiceNames'),
+    durationMinutes: readNumber(dto, 'myDurationMinutes', 'MyDurationMinutes'),
+  }
+}
+
+function normalizeCalendar(
+  dto: StaffBookingCalendarApiDto | null,
+  fallbackDate: string,
+): StaffBookingCalendar {
+  const rawItems = readValue<StaffBookingCalendarItemApiDto[]>(dto ?? {}, 'items', 'Items') ?? []
+  const items = (Array.isArray(rawItems) ? rawItems : [])
+    .map(normalizeCalendarItem)
+    .filter((item): item is StaffBookingCalendarItem => item != null)
+  return {
+    date: readText(dto ?? {}, 'date', 'Date') || fallbackDate,
+    // Recount locally: a row dropped above must not leave the header claiming it.
+    appointmentCount: items.length,
+    totalDurationMinutes: items.reduce((sum, item) => sum + item.durationMinutes, 0),
+    items,
+  }
+}
+
 function workOrderDetailPath(orderId: string): string {
   return `${STAFF_WORK_ORDERS_API_PATH}/${encodeURIComponent(orderId)}`
 }
@@ -245,6 +306,17 @@ function createStaffWorkOrdersRepository(client: HttpClient = httpClient) {
       return res
         .map(normalizeListItem)
         .filter((item): item is StaffWorkOrderListItem => item != null)
+    },
+
+    // "My Calendar" — appointments only, already narrowed server-side to this technician's lines.
+    async getBookingCalendar(query: StaffBookingCalendarQuery): Promise<StaffBookingCalendar> {
+      const res = await client.get<StaffBookingCalendarApiDto>(BOOKING_CALENDAR_PATH, {
+        params: {
+          [LIST_QUERY_PARAM.businessId]: query.businessId,
+          [LIST_QUERY_PARAM.date]: query.date,
+        },
+      })
+      return normalizeCalendar(res, query.date)
     },
 
     // Polled from the app shell, so a failure must read as "no badge" rather than break the shell.
