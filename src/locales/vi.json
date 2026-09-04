@@ -1225,7 +1225,7 @@
       "subscription_forfeit_warning": "Việc này sẽ thay thế ngay gói hiện tại của bạn ({{plan}}) — thời gian chưa dùng sẽ được quy đổi thành credit trừ vào lần mua này.",
       "subscription_forfeit_warning_no_credit": "Việc này sẽ thay thế ngay gói hiện tại của bạn ({{plan}}) — thời hạn còn lại sẽ bị mất.",
       "subscription_downgrade_blocked": "Bạn đã có gói đang hoạt động cùng cấp hoặc cao hơn. Không thể hạ cấp hoặc mua lại cùng cấp gói.",
-      "subscription_upgrade_credit_estimate": "Giảm giá từ gói hiện tại:",
+      "subscription_upgrade_credit_estimate": "Khoản hoàn gói chưa dùng:",
       "subscription_upgrade_credit_applied": "(đã áp dụng {{amount}} credit)",
       "subscription_payment_tab_wallet": "Ví VlinkPay",
       "subscription_payment_tab_card": "Thẻ tín dụng/ghi nợ",
