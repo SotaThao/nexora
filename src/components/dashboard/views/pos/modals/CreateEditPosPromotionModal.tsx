@@ -227,6 +227,7 @@ export default function CreateEditPosPromotionModal({
           <div className="flex items-center gap-3">
             <button
               type="button"
+              aria-label={t(`${K}.photoLabel`)}
               onClick={() => fileInputRef.current?.click()}
               className="flex h-16 w-16 shrink-0 items-center justify-center overflow-hidden rounded-lg border border-dashed border-nexoraBorder bg-nexoraCanvas text-slate-400 hover:border-nexoraBrand hover:text-nexoraBrand"
             >
@@ -284,6 +285,7 @@ export default function CreateEditPosPromotionModal({
                     clearFieldError(PromotionField.Value)
                   }}
                   placeholder={isPercent ? '15' : '10'}
+                  aria-label={t(`${K}.valueLabel`)}
                   aria-invalid={Boolean(fieldErrors.value)}
                   className={`${fieldClass(PromotionField.Value)} pl-7`}
                 />
