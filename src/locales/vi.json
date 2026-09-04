@@ -3775,6 +3775,7 @@
             "saveTipSplitButton": "Lưu chia tip",
             "paymentMethodTitle": "Phương thức thanh toán",
             "morePaymentMethods": "Thêm",
+            "lessPaymentMethods": "Thu gọn",
             "cashReceived": "Tiền mặt đã nhận",
             "changeDue": "Tiền thối lại",
             "amountRemaining": "Số tiền còn thiếu",
