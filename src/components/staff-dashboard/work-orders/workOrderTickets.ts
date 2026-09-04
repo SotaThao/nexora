@@ -27,7 +27,6 @@ import {
   WORK_ORDER_WEEKDAY_COUNT,
   WORK_ORDER_WEEKDAY_SUNDAY,
   WORK_ORDER_TICKET_FILTER,
-  staffWorkOrdersPath,
   type WorkOrderSalon,
   type WorkOrderTicketFilter,
 } from './constants'
@@ -69,7 +68,6 @@ export function toWorkOrderSalons(links: StaffBusinessLink[] | undefined): WorkO
       id,
       name: link.businessName?.trim() ?? '',
       address: formatSalonAddress(link),
-      timeZone: link.timeZone?.trim() || null,
     }]
   })
 }
@@ -327,8 +325,11 @@ export function resolveStaffWorkOrdersView(
 ): StaffWorkOrdersView {
   if (!salonId) return { kind: StaffWorkOrdersViewKind.Picker }
 
-  const salon = getWorkOrderSalonById(salons, salonId)
-  if (!salon) return { kind: StaffWorkOrdersViewKind.Redirect, to: staffWorkOrdersPath() }
+  const salon = getWorkOrderSalonById(salons, salonId) ?? {
+    id: salonId,
+    name: '',
+    address: '',
+  }
   if (!ticketId) return { kind: StaffWorkOrdersViewKind.Tickets, salon }
 
   return { kind: StaffWorkOrdersViewKind.Detail, salon, orderId: ticketId }

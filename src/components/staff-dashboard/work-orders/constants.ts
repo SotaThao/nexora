@@ -10,7 +10,6 @@ export type WorkOrderSalon = {
   id: string
   name: string
   address: string
-  timeZone: string | null
 }
 export type WorkOrderListItem = StaffWorkOrderListItem
 export type WorkOrderDetail = StaffWorkOrderDetail

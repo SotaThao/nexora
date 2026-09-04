@@ -2018,9 +2018,12 @@
     "empty_title": "No salons linked yet",
     "link_salon_cta": "Link a salon",
     "nickname_edit_action": "Edit nickname",
+    "edit_nickname": "Edit Nickname",
     "nickname_helper_staff": "Used only at this business. You and the business owner can both change it. Leave empty to use the original name.",
     "nickname_not_set": "Not set — using original name",
     "nickname_badge": "Nickname",
+    "nickname_value": "Nickname: {{name}}",
+    "open_work_orders": "Open Work Orders",
     "status_previous": "Previous",
     "status_help_aria": "What this salon status means",
     "status_help": {

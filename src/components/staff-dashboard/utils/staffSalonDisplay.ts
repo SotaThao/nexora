@@ -7,9 +7,9 @@ import {
 import { formatDateOnly } from '../../../utils/localDate'
 
 const AVATAR_CLASSES = [
-  'bg-gradient-to-br from-[#1e2a5e] to-[#4648D8] text-amber-300',
-  'bg-rose-50 text-rose-600',
-  'bg-white text-rose-600 ring-1 ring-rose-200',
+  'bg-orange-100 text-orange-700',
+  'bg-pink-100 text-pink-700',
+  'bg-sky-100 text-sky-700',
 ] as const
 
 const STATUS_SORT_ORDER: Record<string, number> = {

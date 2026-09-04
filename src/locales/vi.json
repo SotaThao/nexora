@@ -2018,9 +2018,12 @@
     "empty_title": "Chưa liên kết salon nào",
     "link_salon_cta": "Liên kết salon",
     "nickname_edit_action": "Sửa nickname",
+    "edit_nickname": "Sửa nickname",
     "nickname_helper_staff": "Chỉ dùng tại business này. Bạn và chủ tiệm đều sửa được. Để trống để dùng tên gốc.",
     "nickname_not_set": "Chưa đặt — dùng tên gốc",
     "nickname_badge": "Nickname",
+    "nickname_value": "Nickname: {{name}}",
+    "open_work_orders": "Mở đơn công việc",
     "status_previous": "Trước đây",
     "status_help_aria": "Giải thích trạng thái salon",
     "status_help": {
