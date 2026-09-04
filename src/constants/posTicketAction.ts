@@ -8,6 +8,7 @@ export enum TicketBusySurface {
   Lines = 'lines',
   Status = 'status',
   Tip = 'tip',
+  Note = 'note',
   Complete = 'complete',
 }
 

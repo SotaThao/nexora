@@ -352,6 +352,7 @@ export interface PosCustomerOrderHistoryItemApiDto {
   serviceNames: string[]
   technicianNames: string[]
   total: number
+  note?: string | null
 }
 
 export interface PosCustomerOrderHistoryQuery {
@@ -754,6 +755,7 @@ export interface OrderDetailApiDto {
   receiptEmail?: string | null
   receiptPhone?: string | null
   completedAt?: string | null
+  note?: string | null
 }
 
 /** One option in the "+ Add-On" picker, scoped to the service line it was opened from. */
