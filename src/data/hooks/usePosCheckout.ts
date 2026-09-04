@@ -723,6 +723,25 @@ export function useSetOrderTip(businessId?: string) {
   })
 }
 
+export function useSetOrderNote(businessId?: string) {
+  const queryClient = useQueryClient()
+  return useMutation<boolean, Error, { orderId: string; note: string | null }, OrderMutationContext>({
+    mutationFn: ({ orderId, note }) =>
+      posCheckoutRepository.setOrderNote(businessId as string, orderId, note),
+    onMutate: async ({ orderId, note }) => {
+      const context = await snapshotOrderDetail(queryClient, businessId, orderId)
+      if (context.previousOrder) {
+        queryClient.setQueryData<OrderDetailApiDto>(context.queryKey, { ...context.previousOrder, note })
+      }
+      return context
+    },
+    onError: (_err, _vars, context) => rollbackOrderDetail(queryClient, context),
+    onSuccess: (_result, { orderId }) => {
+      queryClient.invalidateQueries({ queryKey: qk.merchantPosOrderDetail(businessId, orderId) })
+    },
+  })
+}
+
 // US-026 — cashier override of the default proportional tip split shown in
 // OrderDetailApiDto.staffTipShares.
 export function useSetOrderStaffTipSplit(businessId?: string) {
