@@ -294,11 +294,6 @@ function ModuleTile({
       {...(isExternal ? { target: '_blank', rel: 'noopener noreferrer' } : {})}
       className="flex min-h-[92px] flex-col items-center justify-center gap-2.5 rounded-2xl border border-nexoraBorder bg-white px-2.5 py-3.5 text-center transition hover:border-nexoraLavender hover:shadow-nexora-card"
     >
-      {...(isExternal
-        ? { target: '_blank', rel: 'noopener noreferrer' }
-        : {})}
-      className="flex min-h-[92px] flex-col items-center justify-center gap-2.5 rounded-2xl border border-nexoraBorder bg-white px-2.5 py-3.5 text-center transition hover:border-nexoraLavender hover:shadow-nexora-card"
-    >
       <span className="grid h-9 w-9 shrink-0 place-items-center rounded-xl bg-nexoraSurfaceMuted text-nexoraBrand">
         <OneQrModuleIcon name={module.icon} className="h-4 w-4" />
       </span>
