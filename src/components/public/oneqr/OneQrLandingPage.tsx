@@ -279,12 +279,21 @@ function ModuleTile({
   // Destinations come from the backend registry and may be either an in-app
   // path or an external CustomLink, so this is a plain anchor rather than a
   // react-router <Link>; external targets additionally get noopener.
-  const isExternal = /^https?:\/\//i.test(module.url)
+  const url = module.url.trim()
+  const isExternal = /^https?:\/\//i.test(url)
+  const isInternal = url.startsWith('/')
+  const safeHref = isExternal || isInternal ? url : '#'
 
   return (
     <a
-      href={module.url}
-      onClick={onClick}
+      href={safeHref}
+      onClick={(event) => {
+        if (safeHref === '#') event.preventDefault()
+        onClick()
+      }}
+      {...(isExternal ? { target: '_blank', rel: 'noopener noreferrer' } : {})}
+      className="flex min-h-[92px] flex-col items-center justify-center gap-2.5 rounded-2xl border border-nexoraBorder bg-white px-2.5 py-3.5 text-center transition hover:border-nexoraLavender hover:shadow-nexora-card"
+    >
       {...(isExternal
         ? { target: '_blank', rel: 'noopener noreferrer' }
         : {})}
