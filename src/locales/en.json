@@ -3857,7 +3857,7 @@
             "noteLabel": "Note",
             "notePlaceholder": "Add a note for this service…",
             "checkoutButton": "Checkout",
-            "startServiceButton": "Assign Services",
+            "startServiceButton": "Start Service",
             "startServiceSuccess": "Service started.",
             "completeSuccess": "Payment recorded — staff released.",
             "tipTitle": "Tip",
