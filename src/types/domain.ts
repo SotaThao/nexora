@@ -332,9 +332,23 @@ export interface QrTouchPointRef {
   businessSlug: string
 }
 
+/**
+ * A physical card points at exactly one destination: a TouchPoint or a OneQR.
+ * Mirrors `QrOneQrDto`.
+ */
+export interface QrOneQrRef {
+  id: string
+  name: string
+  isActive: boolean
+  businessId: string
+  businessName: string
+  businessSlug: string
+}
+
 export interface ResolveQrCodePayload {
   status: string
   touchPoint: QrTouchPointRef | null
+  oneQr: QrOneQrRef | null
 }
 
 export type PhysicalCardPage = PaginatedResponse<PhysicalCardRecord>

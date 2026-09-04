@@ -306,6 +306,30 @@ export const qk = {
   // Merchant Touchpoints
   merchantTouchpoints: ()      => ['merchantTouchpoints'],
 
+  // Merchant OneQR (one master QR per business)
+  merchantOneQr: ()            => ['merchantOneQr'],
+  // Deliberately NOT nested under `merchantOneQr`: the module catalog is static
+  // registry data, not part of the business's OneQR record. Nesting it would
+  // make every save/toggle invalidation refetch it for no reason.
+  merchantOneQrModuleCatalog: () => ['merchantOneQrModuleCatalog'],
+
+  // Public OneQR landing. `authMode` sits in the key because the same slug
+  // renders a different audience once a session exists — signing in/out must
+  // refetch rather than reuse the anonymous Customer view.
+  publicOneQrLanding: (
+    businessSlug?: string | null,
+    sessionId?: string | null,
+    authMode?: string | null,
+    // Raw `?as=` value — each requested view is a distinct server response.
+    viewAs?: string | null,
+  ) => [
+    'publicOneQrLanding',
+    businessSlug ?? '',
+    sessionId ?? '',
+    authMode ?? '',
+    viewAs ?? '',
+  ],
+
   // Merchant Physical Cards (QR/NFC hardware)
   merchantPhysicalCards: (filters = EMPTY) => ['merchantPhysicalCards', filters],
   merchantPhysicalCardDetail: (helpCode?: string | null) => ['merchantPhysicalCards', 'detail', helpCode ?? ''],
