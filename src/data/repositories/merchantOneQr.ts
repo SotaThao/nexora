@@ -51,6 +51,19 @@ function nullableStr(value: unknown): string | null {
 }
 
 /**
+ * Use the server's boolean whenever it sent one; fall back only when the field
+ * is genuinely absent.
+ *
+ * The obvious-looking `raw.flag === true || bundledDefault` is wrong: a bundled
+ * `true` then overrides an explicit `false` from the API, so a module the admin
+ * un-flagged in the portal keeps showing its badge forever. A fallback must
+ * cover a *missing* value, never contradict a present one.
+ */
+function boolOrFallback(value: unknown, fallback: boolean): boolean {
+  return typeof value === 'boolean' ? value : fallback
+}
+
+/**
  * Swagger declares every OneQR enum as a JSON string, but tolerate an ordinal
  * too: a `JsonStringEnumConverter` regression on the BE side would otherwise
  * silently blank the builder instead of failing loudly.
@@ -189,15 +202,21 @@ function normalizeCatalogItem(raw: Raw): OneQrModuleCatalogItem {
     defaultIcon: nullableStr(raw.defaultIcon) ?? bundled?.defaultIcon ?? null,
     urlTemplate: nullableStr(raw.urlTemplate),
     allowedAudiences: allowed,
-    requiresTouchPoint:
-      raw.requiresTouchPoint === true || Boolean(bundled?.requiresTouchPoint),
+    requiresTouchPoint: boolOrFallback(
+      raw.requiresTouchPoint,
+      Boolean(bundled?.requiresTouchPoint),
+    ),
     // Both flags are derived server-side from `moduleKey === CustomLink` and
     // deliberately never became columns, so the same rule applies as a fallback.
-    requiresCustomUrl:
-      raw.requiresCustomUrl === true || moduleKey === OneQrModuleKey.CustomLink,
-    allowsMultiple:
-      raw.allowsMultiple === true || moduleKey === OneQrModuleKey.CustomLink,
-    isComingSoon: raw.isComingSoon === true || Boolean(bundled?.comingSoon),
+    requiresCustomUrl: boolOrFallback(
+      raw.requiresCustomUrl,
+      moduleKey === OneQrModuleKey.CustomLink,
+    ),
+    allowsMultiple: boolOrFallback(
+      raw.allowsMultiple,
+      moduleKey === OneQrModuleKey.CustomLink,
+    ),
+    isComingSoon: boolOrFallback(raw.isComingSoon, Boolean(bundled?.comingSoon)),
   }
 }
 

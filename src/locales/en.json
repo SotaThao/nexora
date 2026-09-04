@@ -37,16 +37,16 @@
       },
       "card": {
         "untitled": "Untitled OneQR",
-        "qr_alt": "QR code for {{name}}",
+        "qr_alt": "QR code for {{name}} — {{audience}} view",
         "permanence_note": "This QR code never changes. The modules and permissions behind it can be updated anytime.",
         "open_landing": "Open page",
         "copy_url": "Copy URL",
         "copy_failed": "Could not copy the link.",
         "download": "Download QR",
         "toggle_active": "Pause or resume this OneQR",
-        "single_code_note": "One code for all roles",
-        "preview_as": "Preview as",
-        "preview_needs_login": "Open this link while signed in as {{audience}} — that role is read from the account, not from the link."
+        "preview_as": "Code for",
+        "code_for_role": "{{audience}} code",
+        "role_code_note": "Anyone scanning this still sees the customer screen unless they are signed in as {{audience}} — the role comes from the account, the link only asks for it."
       },
       "builder": {
         "modules_title": "Modules",
@@ -94,7 +94,9 @@
           "MissingCustomUrl": "Hidden — no link address saved yet",
           "InvalidTemplate": "Hidden — its destination could not be resolved"
         },
-        "disabled_modules_warning": "These modules were switched off by the platform admin and will be dropped when you save: {{modules}}."
+        "disabled_modules_warning": "These modules were switched off by the platform admin and will be dropped when you save: {{modules}}.",
+        "remove_module_confirm_title": "Remove module?",
+        "remove_module_confirm": "Remove \"{{module}}\" from the {{audience}} view? This saves the {{audience}} module list right away, including any other unsaved changes to that role."
       },
       "preview": {
         "business_fallback": "Your business",

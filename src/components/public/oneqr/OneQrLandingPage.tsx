@@ -51,13 +51,14 @@ export default function OneQrLandingPage() {
   const [searchParams] = useSearchParams()
   const businessSlug = params[ONEQR_ROUTE.param] ?? ''
   const sessionId = useScanSessionId()
-  const asCustomer =
-    searchParams.get(ONEQR_ROUTE.asQuery) === ONEQR_ROUTE.asCustomerValue
+  // Forwarded verbatim: a printed code may carry `?as=staff`, and only the
+  // backend can say whether this scanner is entitled to that view.
+  const viewAs = searchParams.get(ONEQR_ROUTE.asQuery)
 
   const { data, isLoading, isError } = usePublicOneQrLanding({
     businessSlug,
     sessionId,
-    asCustomer,
+    viewAs,
   })
   const trackClick = useTrackOneQrModuleClick()
 
@@ -156,9 +157,10 @@ export default function OneQrLandingPage() {
     )
   }
 
-  // The backend decides who may switch views; `asCustomer` only hides the
+  // The backend decides who may switch views; the query value only hides the
   // button once the switch has already been taken.
-  const showViewAsCustomer = !asCustomer && data.canViewAsCustomer
+  const showViewAsCustomer =
+    viewAs !== ONEQR_ROUTE.asCustomerValue && data.canViewAsCustomer
 
   return (
     <Shell business={data.business}>

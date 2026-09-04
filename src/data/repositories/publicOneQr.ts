@@ -102,17 +102,23 @@ export function createPublicOneQrRepository(client: HttpClient = httpClient) {
     async getLanding({
       businessSlug,
       sessionId,
-      asCustomer = false,
+      viewAs,
       anonymous = true,
     }: {
       businessSlug: string
       sessionId: string
-      /** Backs the "View as customer" button — forces the Customer view. */
-      asCustomer?: boolean
+      /**
+       * Raw `?as=` value, forwarded verbatim. The backend decides what it is
+       * worth — it never grants a role above the caller's real one — so the
+       * client must not filter the value down to "customer or nothing", or a
+       * printed `?as=staff` code could never reach a signed-in staff view.
+       */
+      viewAs?: string | null
       anonymous?: boolean
     }): Promise<OneQrLanding | null> {
       const params: Record<string, string> = { sessionId }
-      if (asCustomer) params[ONEQR_ROUTE.asQuery] = ONEQR_ROUTE.asCustomerValue
+      const trimmedViewAs = viewAs?.trim()
+      if (trimmedViewAs) params[ONEQR_ROUTE.asQuery] = trimmedViewAs
 
       const raw = await client.get<Raw>(
         `${BASE}/${encodeURIComponent(businessSlug)}`,

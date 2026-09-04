@@ -129,10 +129,33 @@ export const ONEQR_ROUTE = {
   /** `?as=customer` renders the customer view for a signed-in staff/owner. */
   asQuery: 'as',
   asCustomerValue: 'customer',
+  asStaffValue: 'staff',
+  asOwnerValue: 'owner',
 } as const
 
 export function buildOneQrPath(businessSlug: string): string {
   return `/o/${encodeURIComponent(businessSlug)}`
+}
+
+/**
+ * The `?as=` value that asks the landing page for a given role's view.
+ *
+ * This is a *request*, never an entitlement: the backend resolves the real role
+ * from the JWT and only honours `as` when it does not grant more than the
+ * caller already has. A scanner with no session asking for `as=staff` still
+ * gets the Customer grid — which is what makes it safe to print a role-specific
+ * code (e.g. an `as=staff` sticker in the back room).
+ */
+export function toOneQrViewAs(audience: OneQrAudience): string {
+  return audience.toLowerCase()
+}
+
+/** Builds `/o/{slug}` with the role hint attached. */
+export function buildOneQrPathFor(
+  businessSlug: string,
+  audience: OneQrAudience,
+): string {
+  return `${buildOneQrPath(businessSlug)}?${ONEQR_ROUTE.asQuery}=${toOneQrViewAs(audience)}`
 }
 
 export type OneQrModuleCatalogEntry = {
@@ -294,14 +317,16 @@ export function isOneQrModuleRepeatable(moduleKey: string): boolean {
   return Boolean(ONEQR_MODULE_CATALOG_BY_KEY[moduleKey]?.repeatable)
 }
 
-/**
- * `Rewards` / `Membership` / `AIAssistant` have a key and a URL convention but
- * no destination page in NEXORA TOUCH yet. Flagged so the builder can badge
- * them, rather than the merchant finding out through customer complaints.
+/*
+ * There is deliberately no `isOneQrModuleComingSoon(moduleKey)` helper.
+ *
+ * "Coming soon" is admin-editable state on `OneQrModuleDefinition`, and every
+ * response that shows a module also carries its `isComingSoon`. A key-based
+ * lookup against the bundled table can only ever contradict the server — which
+ * is exactly what happened: the badge stayed pinned on Rewards / Membership /
+ * AIAssistant after the admin cleared the flag. The seed values below are for
+ * `buildOneQrFallbackCatalog()` only.
  */
-export function isOneQrModuleComingSoon(moduleKey: string): boolean {
-  return Boolean(ONEQR_MODULE_CATALOG_BY_KEY[moduleKey]?.comingSoon)
-}
 
 /**
  * A CustomLink destination is merchant-typed free text — only absolute https

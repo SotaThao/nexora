@@ -37,16 +37,16 @@
       },
       "card": {
         "untitled": "Mã QR Tổng chưa đặt tên",
-        "qr_alt": "Mã QR của {{name}}",
+        "qr_alt": "Mã QR của {{name}} — màn hình {{audience}}",
         "permanence_note": "Mã QR này không bao giờ thay đổi. Danh sách chức năng và quyền phía sau chỉnh lúc nào cũng được.",
         "open_landing": "Mở trang đích",
         "copy_url": "Sao chép liên kết",
         "copy_failed": "Không sao chép được liên kết.",
         "download": "Tải mã QR",
         "toggle_active": "Tạm ngưng hoặc bật lại Mã QR Tổng",
-        "single_code_note": "Một mã cho cả ba vai trò",
-        "preview_as": "Xem trước với vai trò",
-        "preview_needs_login": "Mở liên kết này khi đang đăng nhập bằng tài khoản {{audience}} — vai trò lấy từ tài khoản, không lấy từ liên kết."
+        "preview_as": "Mã dành cho",
+        "code_for_role": "Mã cho {{audience}}",
+        "role_code_note": "Người quét mã này vẫn thấy màn hình khách nếu chưa đăng nhập bằng tài khoản {{audience}} — vai trò lấy từ tài khoản, liên kết chỉ là yêu cầu."
       },
       "builder": {
         "modules_title": "Mô-đun",
@@ -94,7 +94,9 @@
           "MissingCustomUrl": "Đang ẩn — chưa nhập địa chỉ liên kết",
           "InvalidTemplate": "Đang ẩn — không xác định được trang đích"
         },
-        "disabled_modules_warning": "Các mô-đun sau đã bị quản trị hệ thống tắt và sẽ bị loại khi bạn lưu: {{modules}}."
+        "disabled_modules_warning": "Các mô-đun sau đã bị quản trị hệ thống tắt và sẽ bị loại khi bạn lưu: {{modules}}.",
+        "remove_module_confirm_title": "Xóa mô-đun?",
+        "remove_module_confirm": "Xóa ô \"{{module}}\" khỏi màn hình {{audience}}? Thao tác này lưu ngay danh sách mô-đun của {{audience}}, kể cả các thay đổi khác của vai trò đó chưa lưu."
       },
       "preview": {
         "business_fallback": "Cửa hàng của bạn",

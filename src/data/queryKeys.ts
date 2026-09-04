@@ -235,13 +235,14 @@ export const qk = {
     businessSlug?: string | null,
     sessionId?: string | null,
     authMode?: string | null,
-    asCustomer?: boolean,
+    // Raw `?as=` value — each requested view is a distinct server response.
+    viewAs?: string | null,
   ) => [
     'publicOneQrLanding',
     businessSlug ?? '',
     sessionId ?? '',
     authMode ?? '',
-    asCustomer ? 'as-customer' : 'self',
+    viewAs ?? '',
   ],
 
   // Merchant Physical Cards (QR/NFC hardware)

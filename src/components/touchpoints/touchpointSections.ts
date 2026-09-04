@@ -17,15 +17,31 @@ const KNOWN_SECTIONS: TouchpointSection[] = [
   TOUCHPOINT_SECTION.staffInvite,
 ]
 
+export const DEFAULT_TOUCHPOINT_SECTION = TOUCHPOINT_SECTION.oneQr
+
 /**
- * `tip` stays the default: existing links, bookmarks and the sidebar entry all
- * land on the tip-station list, and OneQR is opted into explicitly via
- * `?section=one-qr`.
+ * Missing / unknown `?section=` values land on OneQR: clicking Stations & QR
+ * Codes in the sidebar opens the OneQR builder. Other sections are opted into
+ * via `?section=tip` (etc.).
  */
 export function normalizeTouchpointSection(
   value: string | null | undefined,
 ): TouchpointSection {
   return KNOWN_SECTIONS.includes(value as TouchpointSection)
     ? (value as TouchpointSection)
-    : TOUCHPOINT_SECTION.tip
+    : DEFAULT_TOUCHPOINT_SECTION
+}
+
+/** Query string for `/dashboard/touchpoints` — defaults the stations tab to OneQR. */
+export function buildTouchpointsSearch(options?: {
+  tab?: string
+  section?: string
+}): string {
+  const tab = options?.tab || 'stations'
+  const params = new URLSearchParams()
+  params.set('tab', tab)
+  if (tab === 'stations') {
+    params.set('section', normalizeTouchpointSection(options?.section))
+  }
+  return params.toString()
 }

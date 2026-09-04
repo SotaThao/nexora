@@ -28,6 +28,7 @@ import {
   getTouchpointApiType,
   isMasterTouchpoint,
 } from '../constants/touchpoints'
+import { TOUCHPOINT_SECTION } from './touchpoints/touchpointSections'
 import { slugify } from './dashboard/utils'
 import { useDashboardNavigation } from './dashboard/hooks/useDashboardNavigation'
 import { useDevices } from './dashboard/hooks/useDevices'
@@ -999,7 +1000,7 @@ export default function Dashboard({
         onClose={() => setIsAddTouchpointModalOpen(false)}
         onAdd={async (name, type, deviceId, assignedStaffProfileId) => {
           await addTouchpoint(name, type, deviceId, assignedStaffProfileId)
-          handleNavigateMenu('touchpoints', 'stations')
+          handleNavigateMenu('touchpoints', 'stations', TOUCHPOINT_SECTION.tip)
         }}
       />
 

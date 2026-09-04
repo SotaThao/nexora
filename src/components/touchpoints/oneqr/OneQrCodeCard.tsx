@@ -13,6 +13,7 @@ import {
   ONEQR_AUDIENCE_ORDER,
   ONEQR_ROUTE,
   buildOneQrPath,
+  toOneQrViewAs,
 } from '../../../constants/oneQr'
 import type { OneQr } from '../../../types/oneQr'
 
@@ -74,30 +75,27 @@ export default function OneQrCodeCard({
   const shareUrl = useMemo(() => buildShareUrl(oneQr), [oneQr])
 
   /**
-   * The QR itself never varies by audience — one business, one code, and the
-   * backend resolves the role at scan time. Only the *preview link* below
-   * changes, so the merchant can check each role's screen.
+   * Each role gets its own `?as=` link, and the QR below encodes whichever one
+   * is selected — so a merchant can print a staff-only sticker for the back
+   * room while the counter keeps the plain customer code.
    *
-   * `?as=customer` is the one value the role-resolution table honours (it is a
-   * deliberate downgrade). Staff and Owner are derived from the JWT and cannot
-   * be forced from a query string, so their preview is the plain URL, opened
-   * with an account of that role.
+   * `as` is a *request*, not an entitlement: the backend resolves the real role
+   * from the session and never grants more than the scanner already has, so a
+   * customer scanning the `as=staff` sticker still lands on the customer grid.
    */
-  const previewUrl =
-    previewAudience === OneQrAudience.Customer
-      ? `${shareUrl}?${ONEQR_ROUTE.asQuery}=${ONEQR_ROUTE.asCustomerValue}`
-      : shareUrl
+  const previewUrl = `${shareUrl}?${ONEQR_ROUTE.asQuery}=${toOneQrViewAs(previewAudience)}`
 
-  // The backend's S3 render encodes `oneQr.url`. When the share URL differs
-  // from it, that image would send scanners to the wrong origin, so generate
-  // one from the URL actually being shared instead.
-  const usesServerImage = Boolean(oneQr.qrImageUrl) && shareUrl === oneQr.url
-  const previewSrc = usesServerImage
+  // The backend's S3 render encodes the plain `oneQr.url`, so it is only
+  // correct for the unqualified code on this app's own origin. Any role link —
+  // or a share URL rebuilt on a different origin — has to be rendered here, or
+  // the printed code would point somewhere else entirely.
+  const canUseServerImage = Boolean(oneQr.qrImageUrl) && previewUrl === oneQr.url
+  const previewSrc = canUseServerImage
     ? (oneQr.qrImageUrl as string)
-    : buildPublicQrImageUrl(shareUrl, QR_IMAGE_SIZES.panel)
-  const downloadSrc = usesServerImage
+    : buildPublicQrImageUrl(previewUrl, QR_IMAGE_SIZES.panel)
+  const downloadSrc = canUseServerImage
     ? (oneQr.qrImageUrl as string)
-    : buildPublicQrImageUrl(shareUrl, QR_IMAGE_SIZES.print)
+    : buildPublicQrImageUrl(previewUrl, QR_IMAGE_SIZES.print)
 
   const handleCopy = async () => {
     try {
@@ -113,9 +111,11 @@ export default function OneQrCodeCard({
   const handleDownload = async () => {
     setIsDownloading(true)
     try {
+      // Filename carries the role, so three downloaded codes stay tellable
+      // apart in the merchant's downloads folder before they go to the printer.
       await downloadQrCode(
         downloadSrc,
-        `oneqr-${slugFromUrl(oneQr.url) || 'code'}.png`,
+        `oneqr-${slugFromUrl(oneQr.url) || 'code'}-${toOneQrViewAs(previewAudience)}.png`,
       )
     } catch (err) {
       logger.error('OneQR download failed', err)
@@ -129,12 +129,20 @@ export default function OneQrCodeCard({
     <section className="nexora-card flex flex-col gap-4 p-4 sm:flex-row sm:items-start sm:p-6">
       <div className="mx-auto shrink-0 sm:mx-0">
         <QrImage
+          // Keyed by role so the swap is a fresh load with its own spinner
+          // rather than the previous role's code lingering underneath.
+          key={previewUrl}
           src={previewSrc}
-          alt={t('oneqr.card.qr_alt', { name: oneQr.name })}
+          alt={t('oneqr.card.qr_alt', {
+            name: oneQr.name,
+            audience: t(AUDIENCE_LABEL_KEY[previewAudience]),
+          })}
           className="h-[168px] w-[168px] rounded-2xl border border-nexoraBorder bg-white p-2"
         />
         <p className="mt-2 max-w-[168px] text-center text-[10px] font-bold uppercase tracking-wide text-nexoraMuted">
-          {t('oneqr.card.single_code_note')}
+          {t('oneqr.card.code_for_role', {
+            audience: t(AUDIENCE_LABEL_KEY[previewAudience]),
+          })}
         </p>
       </div>
 
@@ -213,7 +221,7 @@ export default function OneQrCodeCard({
             <p className="flex items-start gap-1.5 text-[11px] font-medium leading-snug text-nexoraMuted">
               <Info className="mt-px h-3.5 w-3.5 shrink-0" aria-hidden />
               <span>
-                {t('oneqr.card.preview_needs_login', {
+                {t('oneqr.card.role_code_note', {
                   audience: t(AUDIENCE_LABEL_KEY[previewAudience]),
                 })}
               </span>

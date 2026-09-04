@@ -24,12 +24,13 @@ function hasStoredAccessToken(): boolean {
 export function usePublicOneQrLanding({
   businessSlug,
   sessionId,
-  asCustomer = false,
+  viewAs,
   enabled = true,
 }: {
   businessSlug?: string | null
   sessionId: string
-  asCustomer?: boolean
+  /** Raw `?as=` value from the URL; the backend validates it. */
+  viewAs?: string | null
   enabled?: boolean
 }) {
   const auth = useContext(AuthContext)
@@ -38,12 +39,12 @@ export function usePublicOneQrLanding({
   const slug = businessSlug?.trim() ?? ''
 
   return useQuery<OneQrLanding | null>({
-    queryKey: qk.publicOneQrLanding(slug, sessionId, authStatus, asCustomer),
+    queryKey: qk.publicOneQrLanding(slug, sessionId, authStatus, viewAs),
     queryFn: () =>
       publicOneQrRepository.getLanding({
         businessSlug: slug,
         sessionId,
-        asCustomer,
+        viewAs,
         anonymous: !hasStoredAccessToken(),
       }),
     enabled: enabled && Boolean(slug) && Boolean(sessionId) && authReady,

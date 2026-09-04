@@ -45,7 +45,10 @@ import StaffInviteQrPanel from './staff/StaffInviteQrPanel'
 import AffiliateLinkPanel from './settings/AffiliateLinkPanel'
 import SettingsTipQrPanel from './settings/SettingsTipQrPanel'
 import TouchpointSectionTabs from './touchpoints/TouchpointSectionTabs'
-import { normalizeTouchpointSection } from './touchpoints/touchpointSections'
+import {
+  DEFAULT_TOUCHPOINT_SECTION,
+  normalizeTouchpointSection,
+} from './touchpoints/touchpointSections'
 import OneQrPanel from './touchpoints/oneqr/OneQrPanel'
 import QrImage from './ui/QrImage'
 
@@ -102,7 +105,7 @@ export default function TouchpointsView({
   onToggleDeviceStatus,
   activeSubTab: propActiveSubTab,
   onTabChange,
-  stationsSection = 'tip',
+  stationsSection = DEFAULT_TOUCHPOINT_SECTION,
   onStationsSectionChange,
 }) {
   const { t, currentLanguage } = useTranslation()

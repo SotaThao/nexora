@@ -17,10 +17,7 @@ import { AlertTriangle, GripVertical, Pencil, Plus, Trash2 } from 'lucide-react'
 import { useTranslation } from '../../../contexts/LanguageContext'
 import ToggleSwitch from '../../ui/ToggleSwitch'
 import OneQrModuleIcon from '../../oneqr/OneQrModuleIcon'
-import {
-  OneQrModuleKey,
-  isOneQrModuleComingSoon,
-} from '../../../constants/oneQr'
+import { OneQrModuleKey } from '../../../constants/oneQr'
 import type { OneQrModuleCatalogItem } from '../../../types/oneQr'
 import {
   resolveModuleIcon,
@@ -125,12 +122,11 @@ function SortableModuleRow({
   const label = resolveModuleLabel(module, catalog, t)
   const icon = resolveModuleIcon(module, catalog)
   const isCustomLink = module.moduleKey === OneQrModuleKey.CustomLink
-  // The module DTO carries the definition's own flag; the catalog and the
-  // bundled table are progressively weaker fallbacks.
-  const comingSoon =
-    module.isComingSoon ||
-    (catalog.find((item) => item.moduleKey === module.moduleKey)?.isComingSoon ??
-      isOneQrModuleComingSoon(module.moduleKey))
+  // `OneQrModuleConfigDto.isComingSoon` is non-nullable and comes from the same
+  // response as the catalog, so it is the whole answer. Previously this OR-ed in
+  // the bundled table, which pinned the badge on for Rewards / Membership /
+  // AIAssistant even after the admin cleared the flag.
+  const comingSoon = module.isComingSoon
   // Each reason has a different fix and a different owner (merchant vs platform
   // admin), so name it rather than saying "unavailable".
   const unavailableText = !module.isAvailable

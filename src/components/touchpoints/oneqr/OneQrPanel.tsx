@@ -52,7 +52,7 @@ export default function OneQrPanel({
   businessLogoUrl?: string | null
 }) {
   const { t } = useTranslation()
-  const { showToast } = useNotification()
+  const { showToast, showConfirm } = useNotification()
 
   const {
     data: oneQr,
@@ -129,11 +129,44 @@ export default function OneQrPanel({
     }))
   }
 
-  const handleRemoveModule = (localId: string) => {
-    updateAudienceDraft((current) => ({
-      ...current,
-      modules: current.modules.filter((module) => module.localId !== localId),
-    }))
+  /**
+   * Removing a tile is the one destructive edit in the builder, so it asks
+   * first and then commits immediately instead of waiting for Save — a row that
+   * silently reappears after a refresh (because the merchant never pressed
+   * Save) reads as a broken delete.
+   *
+   * `PUT /modules` replaces the audience's whole list, so this necessarily
+   * commits the rest of that role's pending edits too; the confirm text says so.
+   */
+  const handleRemoveModule = async (localId: string) => {
+    const target = audienceDraft.modules.find(
+      (module) => module.localId === localId,
+    )
+    if (!target) return
+
+    const confirmed = await showConfirm(
+      t('oneqr.builder.remove_module_confirm', {
+        module: resolveModuleLabel(target, catalog, t),
+        audience: t(`oneqr.audience.${audience.toLowerCase()}`),
+      }),
+      t('oneqr.builder.remove_module_confirm_title'),
+    )
+    if (!confirmed) return
+
+    const nextDraft: OneQrDraft = {
+      ...draft,
+      byAudience: {
+        ...draft.byAudience,
+        [audience]: {
+          ...audienceDraft,
+          modules: audienceDraft.modules.filter(
+            (module) => module.localId !== localId,
+          ),
+        },
+      },
+    }
+    setDraft(nextDraft)
+    await persistDraft(nextDraft)
   }
 
   const handleAddModule = (moduleKey: string, customUrl: string | null) => {
@@ -159,29 +192,41 @@ export default function OneQrPanel({
     setEditingModule(null)
   }
 
-  const handleSave = async () => {
-    if (!oneQr) return
+  /**
+   * Commits the active audience of an explicit draft.
+   *
+   * Takes the draft as an argument rather than reading state so a caller that
+   * has just computed the next draft (delete) commits *that* value — React has
+   * not re-rendered yet, so `audienceDraft` would still be the pre-edit list.
+   */
+  const persistDraft = async (next: OneQrDraft): Promise<boolean> => {
+    if (!oneQr) return false
+    const nextAudience = next.byAudience[audience]
     try {
-      if (isNameDirty) {
-        await updateName.mutateAsync(draft.name.trim())
+      if (next.name !== baseline.name) {
+        await updateName.mutateAsync(next.name.trim())
       }
       await saveRoleConfig.mutateAsync({
         audience,
-        welcomeMessage: audienceDraft.welcomeMessage.trim() || null,
-        identityPolicy: audienceDraft.identityPolicy,
+        welcomeMessage: nextAudience.welcomeMessage.trim() || null,
+        identityPolicy: nextAudience.identityPolicy,
       })
       await saveModules.mutateAsync(
-        toSaveModulesVars(audience, audienceDraft.modules),
+        toSaveModulesVars(audience, nextAudience.modules),
       )
       // Clear the guard before the invalidation-driven refetch lands, so the
       // effect above re-seeds from the freshly saved server state.
       isDirtyRef.current = false
-      setBaseline(draft)
+      setBaseline(next)
       showToast(t('oneqr.toast.saved'), 'success')
+      return true
     } catch {
       // Each mutation already surfaces its own error toast.
+      return false
     }
   }
+
+  const handleSave = () => persistDraft(draft)
 
   const isSaving =
     updateName.isPending || saveRoleConfig.isPending || saveModules.isPending
