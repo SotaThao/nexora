@@ -58,6 +58,7 @@ export type StaffWorkOrderDetail = {
   stationNumber: number | null
   beeper: string | null
   customerNotes: string | null
+  completionNote: string | null
   serviceTotal: number
   canStartService: boolean
   canCompleteService: boolean
@@ -174,6 +175,9 @@ function normalizeDetail(dto: StaffWorkOrderDetailApiDto | null): StaffWorkOrder
     stationNumber: readOptionalNumber(dto, 'stationNumber', 'StationNumber'),
     beeper: readOptionalText(dto, 'beeper', 'Beeper'),
     customerNotes: readOptionalText(dto, 'customerNotes', 'CustomerNotes'),
+    completionNote:
+      readOptionalText(dto, 'completionNote', 'CompletionNote')
+      ?? readOptionalText(dto, 'completeNote', 'CompleteNote'),
     serviceTotal: readNumber(dto, 'serviceTotal', 'ServiceTotal'),
     canStartService: readFlag(dto, 'canStartService', 'CanStartService'),
     canCompleteService: readFlag(dto, 'canCompleteService', 'CanCompleteService'),

@@ -32,12 +32,11 @@ export default function StaffDashboard({ staffId = null, onLogout }) {
   useRefetchStaffMenuQueries(activeScreen)
   const isVerificationSection =
     activeScreen === 'profile' && new URLSearchParams(location.search).get('section') === 'verification'
-  const { headerScreen, isWideContent } = resolveStaffDashboardPresentation(
+  const { headerScreen, mainWidthClass } = resolveStaffDashboardPresentation(
     location.pathname,
     activeScreen,
     isVerificationSection,
   )
-  const mainWidthClass = isWideContent ? 'w-full max-w-6xl xl:max-w-7xl' : 'max-w-3xl'
   const isKYCVerified =
     userProfile?.isKYCVerified === true || userProfile?.isKycVerified === true
   const hasConfiguredPayout = Boolean(

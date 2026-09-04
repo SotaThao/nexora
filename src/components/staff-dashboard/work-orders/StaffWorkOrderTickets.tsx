@@ -1,8 +1,9 @@
 import { useState } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { useLocation, useNavigate } from 'react-router-dom'
 import { useTranslation } from '../../../contexts/LanguageContext'
 import { useStaffWorkOrders } from '../../../data/hooks/useStaffWorkOrders'
-import { formatDateIsoInTimeZone } from '../../../utils/localDate'
+import { formatLocalDateIso } from '../../../utils/localDate'
+import { STAFF_SALONS_PATH } from '../staffSalonPaths'
 import {
   WORK_ORDER_FILTER_I18N,
   WORK_ORDER_FILTER_STATUSES,
@@ -31,7 +32,9 @@ export default function StaffWorkOrderTickets({
 }: StaffWorkOrderTicketsProps) {
   const { t, currentLanguage } = useTranslation()
   const navigate = useNavigate()
-  const todayIso = formatDateIsoInTimeZone(new Date(), salon.timeZone)
+  const location = useLocation()
+  const fromSalons = (location.state as { from?: string } | null)?.from === STAFF_SALONS_PATH
+  const todayIso = formatLocalDateIso(new Date())
   const [selectedDateIso, setSelectedDateIso] = useState(todayIso)
   const [filter, setFilter] = useState<WorkOrderTicketFilter>(WORK_ORDER_TICKET_FILTER.Assigned)
   const workOrdersQuery = useStaffWorkOrders(
@@ -43,7 +46,9 @@ export default function StaffWorkOrderTickets({
 
   return (
     <div>
-      <WorkOrderWorkspaceBack onBack={() => navigate(staffWorkOrdersPath())} />
+      <WorkOrderWorkspaceBack
+        onBack={() => navigate(fromSalons ? STAFF_SALONS_PATH : staffWorkOrdersPath())}
+      />
       <div className={WORK_ORDERS_LAYOUT_CLASS.ticketsTitleRow}>
         <h2 className={WORK_ORDERS_LAYOUT_CLASS.ticketsTitle}>
           {t(WORK_ORDERS_I18N.pageTitle)}

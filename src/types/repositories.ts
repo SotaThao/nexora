@@ -335,6 +335,7 @@ export interface StaffWorkOrderDetailApiDto {
   stationNumber?: number | null
   beeper?: string | null
   customerNotes?: string | null
+  completionNote?: string | null
   serviceTotal?: number
   canStartService?: boolean
   canCompleteService?: boolean

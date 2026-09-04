@@ -1,0 +1,88 @@
+import { useState } from 'react'
+import { Clock3, ShieldCheck } from 'lucide-react'
+import { useTranslation } from '../../../contexts/LanguageContext'
+import { WORK_ORDERS_I18N, WORK_ORDERS_LAYOUT_CLASS } from './constants'
+import {
+  WORK_ORDER_MOCK_APPROVAL_LAST4,
+  parseWorkOrderLast4,
+  type WorkOrderEditableLine,
+} from './workOrderServiceCatalog'
+import { formatWorkOrderMoney, workOrderTextOrPlaceholder } from './workOrderTickets'
+
+interface WorkOrderCustomerApprovalProps {
+  services: WorkOrderEditableLine[]
+  onApprove: () => void
+  onCancel: () => void
+}
+
+export default function WorkOrderCustomerApproval({
+  services,
+  onApprove,
+  onCancel,
+}: WorkOrderCustomerApprovalProps) {
+  const { t } = useTranslation()
+  const [code, setCode] = useState('')
+  const [showError, setShowError] = useState(false)
+
+  if (services.length === 0) return null
+
+  const handleApprove = () => {
+    if (code !== WORK_ORDER_MOCK_APPROVAL_LAST4) {
+      setShowError(true)
+      return
+    }
+    onApprove()
+  }
+
+  return (
+    <section className={WORK_ORDERS_LAYOUT_CLASS.approvalCard}>
+      <div className={WORK_ORDERS_LAYOUT_CLASS.approvalHead}>
+        <strong className={WORK_ORDERS_LAYOUT_CLASS.approvalTitle}>
+          <Clock3 className={WORK_ORDERS_LAYOUT_CLASS.iconSm} aria-hidden="true" />
+          {t(WORK_ORDERS_I18N.approvalTitle)}
+        </strong>
+        <button type="button" className={WORK_ORDERS_LAYOUT_CLASS.approvalCancel} onClick={onCancel}>
+          {t(WORK_ORDERS_I18N.approvalCancel)}
+        </button>
+      </div>
+      <p className={WORK_ORDERS_LAYOUT_CLASS.approvalCopy}>{t(WORK_ORDERS_I18N.approvalCopy)}</p>
+      <div className={WORK_ORDERS_LAYOUT_CLASS.approvalServices}>
+        {services.map((service) => (
+          <span key={service.key} className={WORK_ORDERS_LAYOUT_CLASS.approvalChip}>
+            <span className={WORK_ORDERS_LAYOUT_CLASS.truncate}>
+              {workOrderTextOrPlaceholder(service.serviceName)}
+            </span>
+            <span>{formatWorkOrderMoney(service.unitPrice)}</span>
+          </span>
+        ))}
+      </div>
+      <div className={WORK_ORDERS_LAYOUT_CLASS.approvalDemo}>
+        {t(WORK_ORDERS_I18N.approvalDemo, { code: WORK_ORDER_MOCK_APPROVAL_LAST4 })}
+      </div>
+      <p className={WORK_ORDERS_LAYOUT_CLASS.approvalHelp}>{t(WORK_ORDERS_I18N.approvalHelp)}</p>
+      <div className={WORK_ORDERS_LAYOUT_CLASS.approvalForm}>
+        <input
+          type="text"
+          inputMode="numeric"
+          autoComplete="off"
+          maxLength={4}
+          value={code}
+          aria-label={t(WORK_ORDERS_I18N.approvalCodeAria)}
+          placeholder={t(WORK_ORDERS_I18N.approvalCodePlaceholder)}
+          className={WORK_ORDERS_LAYOUT_CLASS.approvalInput}
+          onChange={(event) => {
+            setCode(parseWorkOrderLast4(event.target.value))
+            setShowError(false)
+          }}
+        />
+        <button type="button" className={WORK_ORDERS_LAYOUT_CLASS.approvalSubmit} onClick={handleApprove}>
+          <ShieldCheck className={WORK_ORDERS_LAYOUT_CLASS.iconSm} aria-hidden="true" />
+          {t(WORK_ORDERS_I18N.approvalSubmit)}
+        </button>
+      </div>
+      {showError ? (
+        <p className={WORK_ORDERS_LAYOUT_CLASS.fieldError}>{t(WORK_ORDERS_I18N.approvalError)}</p>
+      ) : null}
+    </section>
+  )
+}

@@ -76,11 +76,6 @@ export const STAFF_WORKSPACE_SUBMENU = [
     labelKey: 'staff_dashboard.nav.my_salons',
   },
   {
-    id: 'work_orders',
-    screen: STAFF_WORK_ORDERS_SCREEN,
-    labelKey: 'staff_dashboard.nav.work_orders',
-  },
-  {
     id: 'report',
     screen: 'salons/report',
     labelKey: 'staff_dashboard.nav.report',
@@ -100,7 +95,8 @@ export function isStaffWorkspaceSubActive(
 
   if (item.id === 'report') return isSalonReportRoute
   if (item.id === 'my_salons') {
-    return activeScreen === 'salons' && !isSalonReportRoute
+    return (activeScreen === 'salons' && !isSalonReportRoute)
+      || activeScreen === STAFF_WORK_ORDERS_SCREEN
   }
 
   if (activeScreen !== item.screen) return false

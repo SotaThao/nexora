@@ -31,7 +31,7 @@ import {
   type WorkOrderDetail,
   type WorkOrderSalon,
 } from './constants'
-import type { PosOrderStatus } from '../../../constants/posOrderStatus'
+import { PosOrderStatus } from '../../../constants/posOrderStatus'
 
 export function isWorkOrderVietnamese(language: string): boolean {
   return language.toLowerCase().startsWith(WORK_ORDER_VIETNAMESE_PREFIX)
@@ -241,6 +241,28 @@ export function composeWorkOrderCompletionNote(
   return parts.join(WORK_ORDER_COMPLETION_NOTE_SEPARATOR).slice(0, WORK_ORDER_COMPLETION_NOTE_MAX_LENGTH)
 }
 
+export function isWorkOrderCompletedStatus(status: PosOrderStatus): boolean {
+  return status === PosOrderStatus.Completed
+}
+
+export function workOrderCompletionNoteText(
+  ticket: Pick<WorkOrderDetail, 'completionNote' | 'items'>,
+  fallback: string,
+  localNote?: string | null,
+): string {
+  const fromLocal = localNote?.trim()
+  if (fromLocal) return fromLocal
+  const fromTicket = ticket.completionNote?.trim()
+  if (fromTicket) return fromTicket
+  const itemNotes = (ticket.items ?? [])
+    .map((item) => item?.note?.trim())
+    .filter((note): note is string => Boolean(note))
+  if (itemNotes.length) {
+    return itemNotes.join(WORK_ORDER_COMPLETION_NOTE_SEPARATOR)
+  }
+  return fallback
+}
+
 export function workOrderWeekdayLabels(language: string): string[] {
   const formatter = new Intl.DateTimeFormat(workOrderDateLocale(language), { weekday: 'narrow' })
   return Array.from({ length: WORK_ORDER_WEEKDAY_COUNT }, (_, index) => (
@@ -340,8 +362,11 @@ export function resolveStaffWorkOrdersView(
 ): StaffWorkOrdersView {
   if (!salonId) return { kind: StaffWorkOrdersViewKind.Picker }
 
-  const salon = getWorkOrderSalonById(salons, salonId)
-  if (!salon) return { kind: StaffWorkOrdersViewKind.Redirect, to: staffWorkOrdersPath() }
+  const salon = getWorkOrderSalonById(salons, salonId) ?? {
+    id: salonId,
+    name: '',
+    address: '',
+  }
   if (!ticketId) return { kind: StaffWorkOrdersViewKind.Tickets, salon }
 
   return { kind: StaffWorkOrdersViewKind.Detail, salon, orderId: ticketId }
