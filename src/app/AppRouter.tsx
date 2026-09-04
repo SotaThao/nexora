@@ -35,7 +35,7 @@ import {
   TaxIqPayEngineRoute, TaxIqWeeklyPayrollRoute, TaxIqPayrollRunsRoute, TaxIqTaxLedgerRoute,
   TaxIqExceptionsRoute, TaxIqDataQualityRoute, TaxIqJurisdictionsRoute, TaxIqShareLinksRoute,
   TaxIqForm1099NecRoute, TaxIqTipLedgerRoute, TaxIqFormsReportsRoute, TaxIqTaxEstimateRoute,
-  PosGeneralSettingsRoute, PosRolesRoute, PosCategoriesRoute, PosServicesRoute, PosProductsRoute,
+  PosSalonSettingsRoute, PosRolesRoute, PosCategoriesRoute, PosServicesRoute, PosProductsRoute,
   PosPromotionsRoute,
   PosStaffProfileRoute, PosFrontDeskRoute, PosReportsRoute, PosDevicesRoute, PosPublicCheckInRoute
 } from "../components/dashboard/routes";
@@ -417,7 +417,7 @@ export default function AppRouter() {
             <Route path={DASHBOARD_MENU_ID.productManagement} element={<ProductManagementRoute />} />
             <Route element={<PosOnboardingLayout />}>
               <Route path={DASHBOARD_MENU_ID.pos} element={<PosFrontDeskRoute />} />
-              <Route path={`${DASHBOARD_MENU_ID.pos}/settings`} element={<PosGeneralSettingsRoute />} />
+              <Route path={`${DASHBOARD_MENU_ID.pos}/settings/:settingsTab?`} element={<PosSalonSettingsRoute />} />
               <Route path={`${DASHBOARD_MENU_ID.pos}/report/:reportTab?`} element={<PosReportsRoute />} />
               <Route path={`${DASHBOARD_MENU_ID.pos}/roles`} element={<PosRolesRoute />} />
               <Route path={`${DASHBOARD_MENU_ID.pos}/categories`} element={<PosCategoriesRoute />} />

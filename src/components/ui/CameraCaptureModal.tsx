@@ -10,9 +10,17 @@ interface CameraCaptureModalProps {
   onCapture: (file: File) => void
   title?: string
   hint?: string
+  accept?: string
 }
 
-export default function CameraCaptureModal({ open, onClose, onCapture, title, hint }: CameraCaptureModalProps) {
+export default function CameraCaptureModal({
+  open,
+  onClose,
+  onCapture,
+  title,
+  hint,
+  accept = 'image/*',
+}: CameraCaptureModalProps) {
   const { t } = useTranslation()
   const videoRef = useRef<HTMLVideoElement | null>(null)
   const streamRef = useRef<MediaStream | null>(null)
@@ -207,7 +215,7 @@ export default function CameraCaptureModal({ open, onClose, onCapture, title, hi
               <input
                 ref={fileInputRef}
                 type="file"
-                accept="image/*"
+                accept={accept}
                 className="sr-only"
                 onChange={handleFileFallback}
               />
