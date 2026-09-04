@@ -15,6 +15,8 @@ import ToggleSwitch from '../../../../ui/ToggleSwitch'
 import {
   ServicesPricingFieldLabel,
   ServicesPricingServiceModal,
+  SERVICE_PRICE_INPUT_MAX_LENGTH,
+  normalizeServicesPricingPrice,
   type ServicesPricingServiceModalField,
   type ServicesPricingServiceModalFieldErrors,
 } from '../../services/ServicesPricingServiceEditor'
@@ -46,6 +48,7 @@ export default function CreateEditPosServiceModal({
   const isEditMode = Boolean(service)
   const [name, setName] = useState('')
   const [price, setPrice] = useState('')
+  const [supplyFee, setSupplyFee] = useState('0')
   const [durationMinutes, setDurationMinutes] = useState('')
   const [description, setDescription] = useState('')
   const [categoryIds, setCategoryIds] = useState<Set<string>>(new Set())
@@ -56,11 +59,13 @@ export default function CreateEditPosServiceModal({
   const [photoPreviewUrl, setPhotoPreviewUrl] = useState<string | null>(null)
   const [fieldErrors, setFieldErrors] = useState<ServicesPricingServiceModalFieldErrors>({})
   const [categoriesError, setCategoriesError] = useState('')
+  const [supplyFeeError, setSupplyFeeError] = useState('')
 
   useEffect(() => {
     if (!open) return
     setName(service?.name ?? '')
     setPrice(service ? String(service.price) : '')
+    setSupplyFee(service ? String(service.supplyFee) : '0')
     setDurationMinutes(service ? String(service.durationMinutes) : '')
     setDescription(service?.description ?? '')
     const assignedCategoryIds = service?.categoryIds.length
@@ -76,6 +81,7 @@ export default function CreateEditPosServiceModal({
     setPhotoPreviewUrl(service?.photoUrl ?? null)
     setFieldErrors({})
     setCategoriesError('')
+    setSupplyFeeError('')
   }, [defaultCategoryId, open, service])
 
   useEffect(() => {
@@ -122,6 +128,7 @@ export default function CreateEditPosServiceModal({
   const submit = () => {
     const trimmedName = name.trim()
     const priceValue = Number(price)
+    const supplyFeeValue = supplyFee.trim() === '' ? 0 : Number(supplyFee)
     const durationValue = Number(durationMinutes)
     const selectedCategoryIds = Array.from(categoryIds)
 
@@ -140,18 +147,26 @@ export default function CreateEditPosServiceModal({
     ) {
       nextFieldErrors.price = t(`${AI_TK}.serviceModalPriceInvalid`)
     }
+    const nextSupplyFeeError =
+      !Number.isFinite(supplyFeeValue) ||
+      supplyFeeValue < 0 ||
+      supplyFeeValue > priceValue
+        ? t(`${POS_TK}.supplyFeeInvalid`)
+        : ''
     if (!Number.isFinite(durationValue) || durationValue <= 0 || durationValue > 720) {
       nextFieldErrors.duration = t(`${AI_TK}.serviceModalDurationInvalid`)
     }
     setFieldErrors(nextFieldErrors)
     setCategoriesError(nextCategoriesError)
-    if (nextCategoriesError || Object.keys(nextFieldErrors).length > 0) {
+    setSupplyFeeError(nextSupplyFeeError)
+    if (nextCategoriesError || nextSupplyFeeError || Object.keys(nextFieldErrors).length > 0) {
       return
     }
 
     onSubmit({
       name: trimmedName,
       price: priceValue,
+      supplyFee: supplyFeeValue,
       durationMinutes: durationValue,
       description: description.trim() || undefined,
       categoryIds: selectedCategoryIds,
@@ -235,7 +250,38 @@ export default function CreateEditPosServiceModal({
         </div>
       }
       beforeImageExtension={
-        <div>
+        <div className="grid gap-3">
+          <label className={`settings-field${supplyFeeError ? ' has-error' : ''}`}>
+            <ServicesPricingFieldLabel
+              label={t(`${POS_TK}.supplyFeeLabel`)}
+              requirement={t(`${AI_TK}.serviceModalOptional`)}
+              optional
+            />
+            <div className="settings-service-input-wrap settings-service-modal-input-wrap">
+              <span className="settings-service-prefix" aria-hidden="true">$</span>
+              <input
+                className="settings-input settings-service-modal-affix-input is-price"
+                type="text"
+                inputMode="decimal"
+                maxLength={SERVICE_PRICE_INPUT_MAX_LENGTH}
+                value={supplyFee}
+                placeholder={t(`${POS_TK}.supplyFeePlaceholder`)}
+                aria-label={t(`${POS_TK}.supplyFeeLabel`)}
+                aria-invalid={supplyFeeError ? 'true' : undefined}
+                aria-describedby={supplyFeeError ? 'pos-service-supply-fee-error' : undefined}
+                disabled={isSubmitting}
+                onChange={(event) => {
+                  setSupplyFee(normalizeServicesPricingPrice(event.target.value))
+                  setSupplyFeeError('')
+                }}
+              />
+            </div>
+            {supplyFeeError ? (
+              <small id="pos-service-supply-fee-error" className="settings-field-error" role="alert">
+                {supplyFeeError}
+              </small>
+            ) : null}
+          </label>
           <label className="settings-label" htmlFor="pos-service-tags">
             <ServicesPricingFieldLabel
               label={t(`${POS_TK}.tagsLabel`)}

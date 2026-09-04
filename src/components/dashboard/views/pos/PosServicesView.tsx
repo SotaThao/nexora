@@ -77,6 +77,7 @@ function toServiceInput(service: PosServiceApiDto): PosServiceInput {
   return {
     name: service.name,
     price: service.price,
+    supplyFee: service.supplyFee,
     durationMinutes: service.durationMinutes,
     description: service.description ?? undefined,
     categoryIds: service.categoryIds,
@@ -364,6 +365,7 @@ export default function PosServicesView({ embedded = false }: { embedded?: boole
           await createService.mutateAsync({
             name: draft.name.trim(),
             price: Number(draft.price),
+            supplyFee: 0,
             durationMinutes: Number(draft.duration),
             categoryIds:
               draft.categoryId === OTHER_SERVICES_SECTION_ID ? [] : [draft.categoryId],

@@ -21,6 +21,7 @@ export interface ServiceOrderItem {
 export interface PosServiceInput {
   name: string
   price: number
+  supplyFee: number
   durationMinutes: number
   description?: string
   categoryIds: string[]
@@ -33,6 +34,7 @@ function buildFormData(input: PosServiceInput): FormData {
   const formData = new FormData()
   formData.append('name', input.name)
   formData.append('price', String(input.price))
+  formData.append('supplyFee', String(input.supplyFee))
   formData.append('durationMinutes', String(input.durationMinutes))
   if (input.description) formData.append('description', input.description)
   input.categoryIds.forEach((categoryId) => formData.append('categoryIds', categoryId))
