@@ -798,7 +798,9 @@ export default function Dashboard({
   const [searchParams] = useSearchParams()
   const tabParam = searchParams.get('tab')
   const sectionParam = searchParams.get('section')
-  const isPosFrontDeskRoute = location.pathname === '/dashboard/pos'
+  const isPosFillViewportRoute =
+    location.pathname === '/dashboard/pos' ||
+    location.pathname === '/dashboard/pos/public-checkin'
   const footerVisibilityClass = resolveDashboardFooterVisibility(location.pathname)
   const posMobileSpacerClass = resolveDashboardPosMobileSpacer(location.pathname)
   const activeMenuTitle = resolveDashboardMobileMenuTitle(
@@ -829,7 +831,7 @@ export default function Dashboard({
         userRole={userRole}
       />
 
-      <div className={`flex w-full min-w-0 flex-col transition-[padding-left] duration-200 ${isPosFrontDeskRoute ? 'h-dvh min-h-0' : 'min-h-dvh'} ${isDesktopSidebarOpen ? 'lg:pl-72' : ''}`}>
+      <div className={`flex w-full min-w-0 flex-col transition-[padding-left] duration-200 ${isPosFillViewportRoute ? 'h-dvh min-h-0' : 'min-h-dvh'} ${isDesktopSidebarOpen ? 'lg:pl-72' : ''}`}>
         <DashboardHeader
           isSidebarOpen={isDesktopSidebarOpen}
           onToggleSidebar={() => setIsDesktopSidebarOpen((prev) => !prev)}
@@ -865,7 +867,7 @@ export default function Dashboard({
           onOpenMobileMenu={() => setIsMobileMenuOpen(true)}
         />
 
-        <main className={`w-full min-w-0 flex-1 overflow-x-hidden p-4 pb-6 sm:p-6 sm:pb-8 lg:p-7 lg:pb-7 ${isPosFrontDeskRoute ? 'flex min-h-0 flex-col overflow-y-auto' : ''}`}>
+        <main className={`w-full min-w-0 flex-1 overflow-x-hidden p-4 pb-6 sm:p-6 sm:pb-8 lg:p-7 lg:pb-7 ${isPosFillViewportRoute ? 'flex min-h-0 flex-col overflow-y-auto' : ''}`}>
           {activeMenu !== 'overview' && activeMenuTitle ? (
             <div className="mb-3 flex min-w-0 items-center gap-3 sm:hidden">
               <h1 className="min-w-0 truncate text-lg font-extrabold text-nexoraText">

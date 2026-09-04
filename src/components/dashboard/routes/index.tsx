@@ -66,6 +66,7 @@ import PosStaffProfileView from '../views/pos/PosStaffProfileView'
 import PosFrontDeskView from '../views/pos/PosFrontDeskView'
 import { formatBusinessAddress } from '../views/pos/posDisplay'
 import PosDevicesView from '../views/pos/devices/PosDevicesView'
+import PosPublicCheckInView from '../views/pos/PosPublicCheckInView'
 import ResponsiveStaffRoute from './ResponsiveStaffRoute'
 import {
   StaffDetailRouteContent,
@@ -455,6 +456,25 @@ export function PosDevicesRoute() {
     )
   }
   return <PosDevicesView businessId={businessId} />
+}
+
+export function PosPublicCheckInRoute() {
+  const { data: merchantSetupData } = useMerchantSetup()
+  const businessId = merchantSetupData?.businessInfo?.businessId
+  if (!businessId) {
+    return (
+      <div className="nexora-card p-6">
+        <SkeletonList count={3} lines={1} />
+      </div>
+    )
+  }
+  return (
+    <PosPublicCheckInView
+      businessId={businessId}
+      businessSlug={merchantSetupData?.businessInfo?.slug}
+      businessName={merchantSetupData?.businessInfo?.name}
+    />
+  )
 }
 
 export function TaxIqOverviewRoute() {
