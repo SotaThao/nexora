@@ -164,7 +164,9 @@
       "start_service_success": "Đã bắt đầu phục vụ.",
       "complete_service_success": "Đã đánh dấu hoàn thành.",
       "notes_important": "Quan trọng",
-      "customer_notes": "Ghi chú khách"
+      "customer_notes": "Ghi chú khách",
+      "not_assigned_to_you": "Bạn không còn được giao việc trên ticket này.",
+      "detail_unavailable": "Không mở được ticket này."
     },
     "status": {
       "active": "Đang hoạt động",

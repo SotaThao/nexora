@@ -1,6 +1,6 @@
 // StaffNotifications — notification feed + push preferences.
 import { useNavigate } from 'react-router-dom'
-import { AlertTriangle, Bell, BellRing, Calendar, CreditCard, Star, Users, Wallet } from 'lucide-react'
+import { AlertTriangle, Bell, BellRing, Calendar, CreditCard, Star, UserCheck, UserMinus, Users, Wallet } from 'lucide-react'
 import { useTranslation } from '../../../contexts/LanguageContext'
 import { useStaffAccount } from '../../../contexts/StaffAccountContext'
 import {
@@ -47,6 +47,10 @@ const TYPE_ICON: Record<string, typeof Bell> = {
   // are the history of it.
   PosStaffBeep: BellRing,
   PosStaffBeepResponse: BellRing,
+  // Work-order assignment lands on the ticket itself via actionUrl, so these rows are tappable.
+  PosServiceLineAssigned: UserCheck,
+  PosBookingAssigned: Calendar,
+  PosServiceLineUnassigned: UserMinus,
 };
 
 function notificationIcon(type: string) {

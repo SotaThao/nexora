@@ -247,10 +247,25 @@ function WorkOrderDetailBody({
       </div>
     )
   }
+  // Reached from a notification the technician may be tapping days later: the ticket can be gone,
+  // or still there with their line handed to someone else. Both are answered here rather than by
+  // vetting every row in the bell, which cannot be right at the moment of the tap anyway.
   if (!ticket) {
     return (
       <div className={WORK_ORDERS_LAYOUT_CLASS.paddedBlock}>
         <WorkOrderErrorCard
+          message={t(WORK_ORDERS_I18N.detailUnavailable)}
+          actionLabel={t(WORK_ORDERS_I18N.back)}
+          onAction={onBack}
+        />
+      </div>
+    )
+  }
+  if (ticket.items.every((item) => !item.isMine)) {
+    return (
+      <div className={WORK_ORDERS_LAYOUT_CLASS.paddedBlock}>
+        <WorkOrderErrorCard
+          message={t(WORK_ORDERS_I18N.notAssignedToYou)}
           actionLabel={t(WORK_ORDERS_I18N.back)}
           onAction={onBack}
         />
