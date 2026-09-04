@@ -216,6 +216,7 @@ export interface MerchantVoiceStaffScheduleDto {
 
 export interface MerchantVoiceStaffDto {
   id: string
+  staffProfileId?: string | null
   tenantId: string
   fullName: string
   phoneNumber: string
@@ -1538,8 +1539,8 @@ export function createMerchantVoiceRepository(client: HttpClient = httpClient) {
       )
     },
 
-    async updateStaff(body: UpdateMerchantVoiceStaffRequest): Promise<MerchantVoiceStaffDto> {
-      return await client.put<MerchantVoiceStaffDto>(
+    async updateStaff(body: UpdateMerchantVoiceStaffRequest): Promise<void> {
+      await client.put<void>(
         `${MERCHANT_VOICE_BASE}/staff/${encodeURIComponent(body.id)}`,
         body,
         { headers: MERCHANT_VOICE_HEADERS },
@@ -1901,4 +1902,3 @@ export function createMerchantVoiceRepository(client: HttpClient = httpClient) {
 }
 
 export const merchantVoiceRepository = createMerchantVoiceRepository()
-

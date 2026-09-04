@@ -2080,64 +2080,346 @@ body.booking-appointment-panel-modal-open {
   line-height: 1.4;
 }
 
-.booking-hub-view .tech-services-field-head {
+.booking-hub-view .tech-services-section > .tech-modal-section-title {
+  flex-wrap: wrap;
+  margin-bottom: 8px;
+}
+
+.booking-hub-view .tech-services-title-error {
+  color: #dc2626;
+  font-size: 10px;
+  font-weight: 700;
+  line-height: 1.3;
+}
+
+.booking-hub-view .tech-required-hint {
+  margin-left: 4px;
+  color: var(--nexora-muted);
+  font-size: 10px;
+  font-weight: 500;
+  letter-spacing: normal;
+  text-transform: none;
+}
+
+.booking-hub-view .tech-services-control {
+  display: grid;
+  gap: 7px;
+}
+
+.booking-hub-view .tech-services-all-row,
+.booking-hub-view .tech-service-category-head {
   display: flex;
+  min-height: 38px;
   align-items: center;
   justify-content: space-between;
-  gap: 14px;
-  margin-bottom: 4px;
+  gap: 8px;
+  box-sizing: border-box;
+  border: 1px solid var(--nexora-border);
+  border-radius: 9px;
+  background: #f8faff;
+  padding: 6px 8px;
+  color: var(--nexora-text);
+  transition:
+    border-color 0.15s ease,
+    background 0.15s ease;
 }
 
-.booking-hub-view .tech-services-field-head .settings-label {
-  margin: 0;
+.booking-hub-view .tech-services-all-row {
+  border-color: color-mix(in srgb, var(--nexora-brand) 30%, white);
+  background: color-mix(in srgb, var(--nexora-brand) 5%, white);
 }
 
-.booking-hub-view .tech-service-check-all-toggle {
+.booking-hub-view .tech-services-all-row.has-selection,
+.booking-hub-view .tech-service-category.has-selection .tech-service-category-head {
+  border-color: color-mix(in srgb, var(--nexora-brand) 38%, white);
+  background: color-mix(in srgb, var(--nexora-brand) 7%, white);
+}
+
+.booking-hub-view .tech-services-check-label {
   display: inline-flex;
+  min-width: 0;
+  flex: 1 1 auto;
   align-items: center;
   gap: 8px;
-  flex-shrink: 0;
-  margin-left: 12px;
-  border: 1px solid rgba(70, 72, 216, 0.34);
-  border-radius: 999px;
-  background: color-mix(in srgb, var(--nexora-brand) 9%, white);
-  padding: 7px 14px;
+  color: var(--nexora-muted);
+  font-size: 11px;
+  font-weight: 700;
+  line-height: 1.3;
+  cursor: pointer;
+}
+
+.booking-hub-view .tech-services-check-label strong {
+  overflow: hidden;
+  color: var(--nexora-text);
+  font-size: 11px;
+  font-weight: 900;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.booking-hub-view .tech-services-all-row .tech-services-check-label {
+  color: var(--nexora-text);
+  font-weight: 900;
+}
+
+.booking-hub-view .tech-services-check-label input,
+.booking-hub-view .tech-service-option input {
+  width: 14px;
+  height: 14px;
+  flex: 0 0 auto;
+  margin: 0;
+  accent-color: var(--nexora-brand);
+  cursor: pointer;
+}
+
+.booking-hub-view .tech-services-expand-button {
+  display: inline-flex;
+  min-width: 44px;
+  height: 26px;
+  flex: 0 0 auto;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 7px;
+  border: 0;
+  border-radius: 7px;
+  background: transparent;
+  padding: 3px 2px 3px 7px;
   color: var(--nexora-brand);
-  font-size: 12px;
-  font-weight: 800;
-  line-height: 1.2;
+  cursor: pointer;
+}
+
+.booking-hub-view .tech-services-expand-button:hover {
+  background: color-mix(in srgb, var(--nexora-brand) 8%, white);
+}
+
+.booking-hub-view .tech-services-expand-button svg {
+  transition: transform 0.18s ease;
+}
+
+.booking-hub-view .is-open > .tech-services-expand-button svg,
+.booking-hub-view .is-open > .tech-service-category-head .tech-services-expand-button svg {
+  transform: rotate(180deg);
+}
+
+.booking-hub-view .tech-services-count {
+  display: inline-flex;
+  min-width: 22px;
+  height: 18px;
+  align-items: center;
+  justify-content: center;
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--nexora-brand) 8%, white);
+  padding: 0 6px;
+  color: var(--nexora-brand);
+  font-size: 10px;
+  font-weight: 900;
+  line-height: 1;
+}
+
+.booking-hub-view .tech-services-catalog-panel,
+.booking-hub-view .tech-service-category-panel {
+  display: grid;
+  grid-template-rows: 0fr;
+  min-height: 0;
+  transition: grid-template-rows 0.18s ease;
+}
+
+.booking-hub-view .tech-services-catalog-panel.is-open,
+.booking-hub-view .tech-service-category-panel.is-open {
+  grid-template-rows: 1fr;
+}
+
+.booking-hub-view .tech-services-catalog-panel-inner,
+.booking-hub-view .tech-service-category-panel-inner {
+  min-height: 0;
+  overflow: hidden;
+}
+
+.booking-hub-view .tech-service-categories {
+  display: grid;
+  gap: 7px;
+}
+
+.booking-hub-view .tech-service-category {
+  overflow: hidden;
+  border: 1px solid var(--nexora-border);
+  border-radius: 9px;
+  background: #fff;
+}
+
+.booking-hub-view .tech-service-category-head {
+  border: 0;
+  border-radius: 0;
+  background: #f8faff;
+}
+
+.booking-hub-view .tech-service-category-panel.is-open {
+  border-top: 1px solid var(--nexora-border);
+}
+
+.booking-hub-view .tech-service-option-grid {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: 6px;
+  padding: 8px;
+}
+
+.booking-hub-view .tech-service-option {
+  display: flex;
+  min-width: 0;
+  min-height: 36px;
+  align-items: flex-start;
+  gap: 8px;
+  box-sizing: border-box;
+  border: 1px solid var(--nexora-border);
+  border-radius: 9px;
+  background: #fff;
+  padding: 8px;
+  color: var(--nexora-muted);
+  font-size: 11px;
+  font-weight: 750;
+  line-height: 1.25;
   cursor: pointer;
   transition:
-    background 0.15s ease,
     border-color 0.15s ease,
-    color 0.15s ease,
-    box-shadow 0.15s ease;
+    background 0.15s ease,
+    color 0.15s ease;
 }
 
-.booking-hub-view .tech-service-check-all-toggle:hover {
-  border-color: rgba(70, 72, 216, 0.5);
-  background: color-mix(in srgb, var(--nexora-brand) 14%, white);
-  box-shadow: 0 4px 12px rgba(70, 72, 216, 0.12);
+.booking-hub-view .tech-service-option:hover {
+  border-color: color-mix(in srgb, var(--nexora-brand) 34%, white);
 }
 
-.booking-hub-view .tech-service-check-all-toggle:has(input:checked) {
-  border-color: var(--nexora-brand);
-  background: var(--nexora-brand);
-  color: #fff;
+.booking-hub-view .tech-service-option:has(input:checked) {
+  border-color: color-mix(in srgb, var(--nexora-brand) 55%, white);
+  background: color-mix(in srgb, var(--nexora-brand) 7%, white);
+  color: var(--nexora-text);
 }
 
-.booking-hub-view .tech-service-check-all-toggle:has(input:indeterminate) {
-  border-color: var(--nexora-brand);
-  background: color-mix(in srgb, var(--nexora-brand) 16%, white);
-  color: var(--nexora-brand);
-  box-shadow: 0 4px 12px rgba(70, 72, 216, 0.1);
+.booking-hub-view .tech-service-option input {
+  margin-top: 1px;
 }
 
-.booking-hub-view .tech-service-check-all-toggle input {
-  width: 16px;
-  height: 16px;
-  margin: 0;
-  accent-color: currentColor;
+.booking-hub-view .tech-service-option span {
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+.booking-hub-view .tech-pos-pay-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.booking-hub-view .tech-pos-pay-grid .settings-input {
+  height: 38px;
+  min-height: 38px;
+  border-radius: 9px;
+  padding: 0 11px;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.booking-hub-view .tech-pos-tips-row {
+  position: relative;
+  display: flex;
+  min-height: 42px;
+  align-items: center;
+  gap: 9px;
+  margin-top: 10px;
+  border: 1px solid var(--nexora-border);
+  border-radius: 9px;
+  padding: 7px 12px;
+  color: var(--nexora-text);
+  font-size: 12px;
+  font-weight: 750;
+  cursor: pointer;
+}
+
+.booking-hub-view .tech-pos-tips-input {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  opacity: 0;
+}
+
+.booking-hub-view .tech-pos-tips-switch {
+  position: relative;
+  width: 41px;
+  height: 24px;
+  flex: 0 0 41px;
+  border-radius: 999px;
+  background: #cbd5e1;
+  transition: background 0.16s ease;
+}
+
+.booking-hub-view .tech-pos-tips-switch > span {
+  position: absolute;
+  top: 3px;
+  left: 3px;
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background: #fff;
+  box-shadow: 0 1px 4px rgba(15, 23, 42, 0.2);
+  transition: transform 0.16s ease;
+}
+
+.booking-hub-view
+  .tech-pos-tips-input:checked
+  + .tech-pos-tips-switch {
+  background: #10b981;
+}
+
+.booking-hub-view
+  .tech-pos-tips-input:checked
+  + .tech-pos-tips-switch
+  > span {
+  transform: translateX(17px);
+}
+
+.booking-hub-view
+  .tech-pos-tips-input:focus-visible
+  + .tech-pos-tips-switch {
+  outline: 3px solid rgba(70, 72, 216, 0.18);
+  outline-offset: 2px;
+}
+
+.booking-hub-view .tech-pos-pay-field-error {
+  display: block;
+  color: #dc2626;
+  font-size: 10px;
+  font-weight: 700;
+  line-height: 1.3;
+}
+
+@container tech-dialog (max-width: 560px) {
+  .tech-pos-pay-grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+@container tech-dialog (max-width: 720px) {
+  .tech-service-option-grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+
+@container tech-dialog (max-width: 480px) {
+  .tech-service-option-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+/* Viewport fallback for browsers/build pipelines that do not apply named container queries. */
+@media (max-width: 600px) {
+  .booking-hub-view .tech-pos-pay-grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .booking-hub-view .tech-service-option-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
 }
 
 .booking-hub-view .tech-service-checks {
@@ -2146,40 +2428,6 @@ body.booking-appointment-panel-modal-open {
   align-items: flex-start;
   gap: 6px;
   margin-top: 8px;
-}
-
-.booking-hub-view .tech-service-check {
-  display: inline-flex;
-  min-height: 34px;
-  align-items: flex-start;
-  gap: 6px;
-  flex: 0 1 auto;
-  width: max-content;
-  max-width: 100%;
-  border: 1px solid var(--nexora-border);
-  border-radius: 9px;
-  background: #fff;
-  padding: 7px 8px;
-  color: var(--nexora-muted);
-  font-size: 11px;
-  font-weight: 700;
-  line-height: 1.35;
-  white-space: nowrap;
-  cursor: pointer;
-}
-
-.booking-hub-view .tech-service-check input {
-  width: 14px;
-  height: 14px;
-  flex: 0 0 auto;
-  margin-top: 1px;
-  accent-color: var(--nexora-brand);
-}
-
-.booking-hub-view .tech-service-check:has(input:checked) {
-  border-color: rgba(70, 72, 216, 0.42);
-  background: color-mix(in srgb, var(--nexora-brand) 7%, white);
-  color: var(--nexora-text);
 }
 
 .booking-hub-view .tech-modal-actions {
@@ -15269,5 +15517,59 @@ body.booking-appointment-panel-modal-open {
 
   .booking-hub-view .panel-qr-codes .verify-row {
     flex-direction: column;
+  }
+}
+
+/* Keep technician schedule controls compact inside the shared modal. */
+.booking-hub-view .tech-schedule-time {
+  width: min(100%, 300px);
+  max-width: 300px;
+  justify-self: end;
+  grid-template-columns: minmax(112px, 1fr) auto minmax(112px, 1fr);
+}
+
+.booking-hub-view .tech-schedule-time .settings-time-box {
+  min-width: 0;
+}
+
+.booking-hub-view .tech-schedule-time .settings-hour-input {
+  height: 34px;
+  min-height: 34px;
+  padding: 0 36px 0 9px;
+  font-size: 12px;
+}
+
+@media (max-width: 767px) {
+  .booking-hub-view .tech-schedule-time {
+    width: min(100%, 286px);
+    max-width: 286px;
+    grid-template-columns: minmax(104px, 1fr) auto minmax(104px, 1fr);
+  }
+
+  .booking-hub-view .tech-schedule-time .settings-time-box {
+    min-height: 36px;
+    grid-template-columns: minmax(0, 1fr) 18px;
+    gap: 6px;
+    padding: 0 5px;
+  }
+
+  .booking-hub-view .tech-schedule-time .settings-hour-input {
+    height: 32px;
+    min-height: 32px;
+    padding: 0;
+    font-size: 13px;
+  }
+
+  .booking-hub-view .tech-schedule-time .settings-time-box svg {
+    width: 16px;
+    height: 16px;
+  }
+}
+
+@media (max-width: 1023px) and (pointer: coarse) {
+  .booking-hub-view
+    .tech-schedule-time
+    .settings-hour-input[type="time"] {
+    font-size: 16px;
   }
 }

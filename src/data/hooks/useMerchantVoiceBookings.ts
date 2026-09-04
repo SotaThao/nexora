@@ -191,6 +191,7 @@ export function useCreateMerchantVoiceStaff() {
     mutationFn: (body: CreateMerchantVoiceStaffRequest) => merchantVoiceRepository.createStaff(body),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['merchantVoice', 'staff'] })
+      queryClient.invalidateQueries({ queryKey: qk.merchantStaff() })
     },
   })
 }
@@ -512,4 +513,3 @@ export function useMerchantVoiceUsageActivity(
     enabled,
   })
 }
-
