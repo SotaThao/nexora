@@ -7065,6 +7065,7 @@
       "statusCancelledTitle": "This visit was cancelled",
       "statusCancelledDesc": "Please check in again or ask the front desk.",
       "refreshButton": "Refresh now",
+      "checkInAgainButton": "Check in again",
       "autoRefreshHint": "This page updates on its own every 15 seconds."
     }
   },

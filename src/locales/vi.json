@@ -7060,6 +7060,7 @@
       "statusCancelledTitle": "Lượt này đã bị huỷ",
       "statusCancelledDesc": "Vui lòng check-in lại hoặc hỏi quầy lễ tân.",
       "refreshButton": "Làm mới",
+      "checkInAgainButton": "Check-in lại",
       "autoRefreshHint": "Trang này tự cập nhật mỗi 15 giây."
     }
   },

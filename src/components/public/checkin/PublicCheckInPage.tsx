@@ -10,7 +10,7 @@
 // What is genuinely public-only lives here, not in the shared module: the dark landing chrome
 // (logo + salon name sit on the keypad card), and the "see my place in line" link, which exists
 // only because this guest is not standing in the salon and cannot simply ask.
-import { useMemo, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { Link, useNavigate, useParams } from 'react-router-dom'
 import { ListOrdered, Loader2 } from 'lucide-react'
 import { useTranslation } from '../../../contexts/LanguageContext'
@@ -19,14 +19,22 @@ import createPublicCheckInSource from '../../checkin/sources/usePublicCheckInSou
 import { PosCheckInLayout } from '../../../constants/posCheckInLayout'
 import { usePublicCheckInPage } from '../../../data/hooks/usePublicCheckIn'
 import PublicCheckInShell from './PublicCheckInShell'
+import { rememberPublicCheckInSlug } from './publicCheckInUtils'
 
 /** The one thing a guest away from the salon needs and a guest inside it does not. */
-function QueuePositionLink({ receiptToken }: { receiptToken: string }) {
+function QueuePositionLink({
+  receiptToken,
+  businessSlug,
+}: {
+  receiptToken: string
+  businessSlug: string
+}) {
   const { t } = useTranslation()
   return (
     <div className="mx-auto w-full max-w-md space-y-2 text-center">
       <Link
         to={`/checkin/status/${receiptToken}`}
+        state={{ businessSlug }}
         className="flex h-14 w-full items-center justify-center gap-2 rounded-lg bg-gradient-to-r from-[#4d6fff] to-[#7c5cff] text-base font-bold text-white hover:opacity-90"
       >
         <ListOrdered className="h-4 w-4" />
@@ -44,6 +52,12 @@ export default function PublicCheckInPage() {
 
   const { data, isLoading, isError } = usePublicCheckInPage(businessSlug)
   const useSource = useMemo(() => createPublicCheckInSource(businessSlug as string), [businessSlug])
+
+  // The status page has no slug in its URL (token alone identifies the visit). Remember this
+  // one so "Check in again" can still find the keypad after a refresh of that page.
+  useEffect(() => {
+    if (businessSlug && data) rememberPublicCheckInSlug(businessSlug)
+  }, [businessSlug, data])
 
   // Captured off the submit result so the thank-you screen can offer the status page. Cleared on
   // Done, which drops the guest back on the keypad for the next person on the same phone.
@@ -85,9 +99,17 @@ export default function PublicCheckInPage() {
         // useful thing left to show them is where in it — the answer the front desk would give a
         // guest standing at the counter.
         onCancelled={(activeVisitReceiptToken) => {
-          if (activeVisitReceiptToken) navigate(`/checkin/status/${activeVisitReceiptToken}`)
+          if (activeVisitReceiptToken) {
+            navigate(`/checkin/status/${activeVisitReceiptToken}`, {
+              state: { businessSlug },
+            })
+          }
         }}
-        doneSlot={receiptToken ? <QueuePositionLink receiptToken={receiptToken} /> : null}
+        doneSlot={
+          receiptToken ? (
+            <QueuePositionLink receiptToken={receiptToken} businessSlug={businessSlug as string} />
+          ) : null
+        }
       />
     </PublicCheckInShell>
   )

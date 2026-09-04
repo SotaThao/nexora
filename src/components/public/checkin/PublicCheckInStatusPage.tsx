@@ -1,16 +1,40 @@
 // PublicCheckInStatusPage — "where am I in line?", addressed by the order's ReceiptToken.
 // No slug in the route: the token identifies the order on its own (§6). Polls on the same
 // 15s cadence the front desk already uses — there is no realtime channel in this pass (§8.4).
-import { useParams } from 'react-router-dom'
-import { CheckCircle2, Loader2, RefreshCw, Scissors, Users, XCircle } from 'lucide-react'
+import { Link, useLocation, useParams } from 'react-router-dom'
+import { CheckCircle2, Loader2, RefreshCw, Scissors, UserPlus, Users, XCircle } from 'lucide-react'
 import { useTranslation } from '../../../contexts/LanguageContext'
 import { PosOrderStatus } from '../../../constants/posOrderStatus'
 import { usePublicCheckInStatus } from '../../../data/hooks/usePublicCheckIn'
 import PublicCheckInShell from './PublicCheckInShell'
+import { publicCheckInPagePath, readPublicCheckInSlug } from './publicCheckInUtils'
+
+type StatusLocationState = { businessSlug?: string }
+
+function useCheckInAgainPath(): string | null {
+  const location = useLocation()
+  const slugFromState = (location.state as StatusLocationState | null)?.businessSlug
+  const slug = slugFromState || readPublicCheckInSlug()
+  return slug ? publicCheckInPagePath(slug) : null
+}
+
+function CheckInAgainLink({ to }: { to: string }) {
+  const { t } = useTranslation()
+  return (
+    <Link
+      to={to}
+      className="flex h-11 w-full items-center justify-center gap-2 rounded-lg border border-white/20 text-sm font-bold text-white hover:border-white/50"
+    >
+      <UserPlus className="h-4 w-4" />
+      {t('public.checkIn.checkInAgainButton')}
+    </Link>
+  )
+}
 
 export default function PublicCheckInStatusPage() {
   const { receiptToken } = useParams<{ receiptToken: string }>()
   const { t } = useTranslation()
+  const checkInAgainPath = useCheckInAgainPath()
   const { data, isLoading, isError, isFetching, refetch } = usePublicCheckInStatus(receiptToken)
 
   if (isLoading) {
@@ -27,6 +51,11 @@ export default function PublicCheckInStatusPage() {
         <div className="public-checkin-card">
           <p className="text-sm font-bold text-white">{t('public.checkIn.statusNotFoundTitle')}</p>
           <p className="mt-2 text-xs text-white/60">{t('public.checkIn.statusNotFoundDesc')}</p>
+          {checkInAgainPath ? (
+            <div className="mt-4">
+              <CheckInAgainLink to={checkInAgainPath} />
+            </div>
+          ) : null}
         </div>
       </PublicCheckInShell>
     )
@@ -100,6 +129,7 @@ export default function PublicCheckInStatusPage() {
           <RefreshCw className={`h-4 w-4 ${isFetching ? 'animate-spin' : ''}`} />
           {t('public.checkIn.refreshButton')}
         </button>
+        {checkInAgainPath ? <CheckInAgainLink to={checkInAgainPath} /> : null}
         <p className="text-[11px] text-white/45">{t('public.checkIn.autoRefreshHint')}</p>
       </div>
     </PublicCheckInShell>
