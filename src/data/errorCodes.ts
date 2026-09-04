@@ -180,6 +180,7 @@ export const errorCodeToI18nKey = {
   [CatalogErrorCode.ServiceBatchNameRequired]: 'errors.pos_service_name_required',
   [CatalogErrorCode.ServiceBatchNameTooLong]: 'errors.pos_service_name_too_long',
   [CatalogErrorCode.ServiceBatchPriceInvalid]: 'errors.pos_service_price_invalid',
+  [CatalogErrorCode.ServiceSupplyFeeInvalid]: 'errors.catalog_service_supply_fee_invalid',
   [CatalogErrorCode.ServiceBatchDurationInvalid]: 'errors.pos_service_duration_invalid',
   [CatalogErrorCode.ServiceBatchDescriptionTooLong]: 'errors.pos_service_description_too_long',
   [CatalogErrorCode.ServiceBatchIconTooLong]: 'errors.catalog_service_icon_too_long',
@@ -405,6 +406,10 @@ export const errorCodeToI18nKey = {
   POS_BOOKING_PHONE_ALREADY_ACTIVE: 'errors.pos_booking_phone_already_active',
   POS_BOOKING_CUSTOMER_PHONE_REQUIRED: 'errors.pos_booking_customer_phone_required',
   POS_BOOKING_NOT_FOUND: 'errors.pos_booking_not_found',
+
+  // POS Public Check-In — booking convert window [ScheduledAt − 60′, ScheduledAt + 120′] (§6)
+  POS_BOOKING_CHECK_IN_TOO_EARLY: 'errors.pos_booking_check_in_too_early',
+  POS_BOOKING_CHECK_IN_TOO_LATE: 'errors.pos_booking_check_in_too_late',
 
   // Tax IQ / POS — Weekly Payroll (mục 14, backend US-25)
   POS_PAYROLL_NOT_READY: 'errors.pos_payroll_not_ready',

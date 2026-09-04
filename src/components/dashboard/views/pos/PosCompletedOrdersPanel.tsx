@@ -5,7 +5,7 @@
 // since name/phone are meant to be independent filters, not scoped to whatever date range
 // happens to be selected. The date pickers are opt-in for narrowing the range.
 import { useState } from 'react'
-import { Eye } from 'lucide-react'
+import { Eye, Printer } from 'lucide-react'
 import { useQueryClient } from '@tanstack/react-query'
 import { useTranslation } from '../../../../contexts/LanguageContext'
 import { useCompletedOrders } from '../../../../data/hooks/usePosOrders'
@@ -17,6 +17,7 @@ import { formatCustomerPhone } from './customer/customerFormatters'
 import { formatBookingHubDateTimeParts } from '../bookingHubFormatters'
 import { getPosCheckoutPaymentMethodLabel } from '../../../../constants/posCheckoutPaymentMethod'
 import { PosDiscountBearer } from '../../../../constants/posDiscount'
+import PosReceiptPrintPreview, { type PosReceiptPrintGroup } from './PosReceiptPrintPreview'
 import {
   POS_TABLE_HEADER_CELL_CLASS,
   POS_TABLE_HEADER_ROW_CLASS,
@@ -26,7 +27,33 @@ import {
 
 const PAGE_SIZE = 10
 
-export default function PosCompletedOrdersPanel({ businessId }: { businessId: string }) {
+function formatReceiptDiscountLabel(
+  discountType: string | null | undefined,
+  discountValue: number | null | undefined,
+  discountAmount: number,
+) {
+  const value = discountType === 'Percent' && discountValue != null
+    ? `${discountValue}%`
+    : new Intl.NumberFormat('en-US', {
+        style: 'currency',
+        currency: 'USD',
+        minimumFractionDigits: 0,
+        maximumFractionDigits: 2,
+      }).format(discountValue ?? discountAmount)
+  return `(-${value})`
+}
+
+export default function PosCompletedOrdersPanel({
+  businessId,
+  businessName,
+  businessAddress,
+  businessPhone,
+}: {
+  businessId: string
+  businessName?: string
+  businessAddress?: string
+  businessPhone?: string
+}) {
   const { t, currentLanguage } = useTranslation()
   const formatDateTime = (iso: string | null | undefined) =>
     formatPosDateTime(iso, currentLanguage)
@@ -43,6 +70,7 @@ export default function PosCompletedOrdersPanel({ businessId }: { businessId: st
   })
   const [pageNumber, setPageNumber] = useState(1)
   const [viewDetailTargetId, setViewDetailTargetId] = useState<string | null>(null)
+  const [printPreviewOpen, setPrintPreviewOpen] = useState(false)
 
   const { data, isLoading, isFetching } = useCompletedOrders(businessId, {
     pageNumber,
@@ -56,6 +84,51 @@ export default function PosCompletedOrdersPanel({ businessId }: { businessId: st
   const items = data?.items ?? []
 
   const viewDetail = useOrderDetail(businessId, viewDetailTargetId ?? undefined)
+
+  const printableGroups: PosReceiptPrintGroup[] = viewDetail.data
+    ? [
+        ...viewDetail.data.serviceLines.reduce<PosReceiptPrintGroup[]>((groups, line) => {
+          const technician = line.technicianName?.trim()
+            || t('components.dashboard.views.pos.PosCompletedOrdersPanel.viewDetailUnassigned')
+          let group = groups.find((entry) => entry.label === technician)
+          if (!group) {
+            group = { id: `technician-${technician}`, label: technician, lines: [] }
+            groups.push(group)
+          }
+          group.lines.push({
+            id: line.id,
+            name: line.serviceName,
+            amount: line.lineTotal,
+            discountLabel: line.discountAmount > 0
+              ? formatReceiptDiscountLabel(line.discountType, line.discountValue, line.discountAmount)
+              : undefined,
+            addOns: (line.addOns ?? []).map((addOn) => ({
+              id: addOn.id,
+              name: addOn.addOnName,
+              amount: addOn.lineTotal,
+              discountLabel: addOn.discountAmount > 0
+                ? formatReceiptDiscountLabel(addOn.discountType, addOn.discountValue, addOn.discountAmount)
+                : undefined,
+            })),
+          })
+          return groups
+        }, []),
+        ...(viewDetail.data.productLines.length > 0 ? [{
+          id: 'products',
+          label: t('components.dashboard.views.pos.PosCompletedOrdersPanel.viewDetailProductsTitle'),
+          lines: viewDetail.data.productLines.map((line) => ({
+            id: line.id,
+            name: line.productName,
+            amount: line.lineTotal,
+          })),
+        }] : []),
+      ]
+    : []
+
+  const closeViewDetail = () => {
+    setPrintPreviewOpen(false)
+    setViewDetailTargetId(null)
+  }
 
   const handleApplyFilters = () => {
     setAppliedFilters({
@@ -477,14 +550,46 @@ export default function PosCompletedOrdersPanel({ businessId }: { businessId: st
             <div className="mt-4 flex shrink-0 gap-2">
               <button
                 type="button"
-                onClick={() => setViewDetailTargetId(null)}
+                onClick={closeViewDetail}
                 className="h-10 flex-1 rounded-lg border border-nexoraBorder text-xs font-bold text-nexoraText hover:border-nexoraBrand"
               >
                 {t('components.dashboard.views.pos.PosCompletedOrdersPanel.viewDetailClose')}
               </button>
+              {viewDetail.data ? (
+                <button
+                  type="button"
+                  onClick={() => setPrintPreviewOpen(true)}
+                  className="inline-flex h-10 flex-1 items-center justify-center gap-1.5 rounded-lg bg-nexoraBrand text-xs font-bold text-white hover:bg-nexoraBrandDark"
+                >
+                  <Printer className="h-4 w-4" aria-hidden="true" />
+                  {t('components.dashboard.views.pos.PosCompletedOrdersPanel.viewDetailReprintReceipt')}
+                </button>
+              ) : null}
             </div>
           </div>
         </div>
+      ) : null}
+
+      {viewDetail.data ? (
+        <PosReceiptPrintPreview
+          open={printPreviewOpen}
+          onClose={() => setPrintPreviewOpen(false)}
+          orderNumber={viewDetail.data.orderNumber}
+          businessName={businessName}
+          businessAddress={businessAddress}
+          businessPhone={businessPhone}
+          completedAt={viewDetail.data.completedAt}
+          groups={printableGroups}
+          tipAmount={viewDetail.data.tipAmount}
+          discountAmount={viewDetail.data.discountAmount}
+          orderDiscountAmount={viewDetail.data.orderDiscountAmount}
+          orderDiscountLabel={viewDetail.data.appliedPromotionName ?? undefined}
+          total={viewDetail.data.total}
+          paymentMethodLabel={viewDetail.data.paymentMethodType
+            ? getPosCheckoutPaymentMethodLabel(viewDetail.data.paymentMethodType, t)
+            : undefined}
+          isPaid
+        />
       ) : null}
     </div>
   )

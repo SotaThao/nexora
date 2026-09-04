@@ -324,13 +324,11 @@ export const MENU_ITEMS = [
     children: [
       { id: 'board', labelKey: 'dashboard.menu.pos_board' },
       { id: 'settings', labelKey: 'dashboard.menu.pos_settings' },
-      { id: 'roles', labelKey: 'dashboard.menu.pos_roles' },
-      { id: 'categories', labelKey: 'dashboard.menu.pos_categories' },
-      { id: 'services', labelKey: 'dashboard.menu.pos_services' },
+      { id: 'report', labelKey: 'dashboard.menu.pos_report' },
       { id: 'products', labelKey: 'dashboard.menu.pos_products' },
       { id: 'promotions', labelKey: 'dashboard.menu.pos_promotions' },
-      { id: 'staff', labelKey: 'dashboard.menu.pos_staff' },
-      { id: 'devices', labelKey: 'dashboard.menu.pos_devices' }
+      { id: 'devices', labelKey: 'dashboard.menu.pos_devices' },
+      { id: 'public-checkin', labelKey: 'dashboard.menu.pos_public_checkin' },
     ]
   },
   {

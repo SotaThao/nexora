@@ -130,6 +130,11 @@ export const qk = {
     if (selection) key.push(selection)
     return key
   },
+  merchantPosStoreIncomeReport: (businessId?: string, selection?: string) => {
+    const key: unknown[] = ['merchantSettings', 'posStoreIncomeReport', businessId ?? '']
+    if (selection) key.push(selection)
+    return key
+  },
   merchantPosReportDetail: (businessId?: string, posStaffProfileId?: string, selection?: string) => [
     'merchantSettings',
     'posReportDetail',
@@ -636,6 +641,15 @@ export const qk = {
   // Customer entity unification — public contact-step "returning customer" lookup by phone.
   publicBookingCustomerLookup: (businessSlug?: string, phone?: string) =>
     ['publicBookingPage', 'customerLookup', businessSlug ?? '', phone ?? ''],
+  // POS Public Check-In — customer's own phone, anonymous by businessSlug (POS-Public-Check-In-Technical.md)
+  publicCheckInPage: (businessSlug?: string) => ['publicCheckInPage', businessSlug ?? ''],
+  publicCheckInCustomerLookup: (businessSlug?: string, phone?: string) =>
+    ['publicCheckInPage', 'customerLookup', businessSlug ?? '', phone ?? ''],
+  publicCheckInActiveVisit: (businessSlug?: string, phone?: string) =>
+    ['publicCheckInPage', 'activeVisit', businessSlug ?? '', phone ?? ''],
+  publicCheckInBooking: (businessSlug?: string, phone?: string) =>
+    ['publicCheckInPage', 'booking', businessSlug ?? '', phone ?? ''],
+  publicCheckInStatus: (receiptToken?: string) => ['publicCheckInStatus', receiptToken ?? ''],
   // POS Booking — customer self-service Manage Booking page (Ticket 8)
   manageBooking: (manageToken?: string) => ['manageBooking', manageToken ?? ''],
   // Nested under the manageBooking prefix so invalidating the booking also refreshes consent.

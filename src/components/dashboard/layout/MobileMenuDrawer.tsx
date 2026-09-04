@@ -474,7 +474,13 @@ export default function MobileMenuDrawer({
                         <button
                           key={sub.id}
                           type="button"
-                          onClick={() => navigateMenu(sub.id === 'board' ? DASHBOARD_MENU.Pos : `${DASHBOARD_MENU.Pos}/${sub.id}`)}
+                          onClick={() => navigateMenu(
+                            sub.id === 'board'
+                              ? DASHBOARD_MENU.Pos
+                              : sub.id === 'report'
+                                ? `${DASHBOARD_MENU.Pos}/report/technician`
+                                : `${DASHBOARD_MENU.Pos}/${sub.id}`,
+                          )}
                           className={sidebarSubmenuItemClass(isSubActive)}
                         >
                           <div className={`h-1.5 w-1.5 rounded-full ${isSubActive ? 'bg-brandCyan shadow-sm' : 'bg-white/30'}`} />

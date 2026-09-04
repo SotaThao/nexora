@@ -28,7 +28,6 @@ export const POS_FRONT_DESK_TABS: PosFrontDeskTab[] = [
   PosFrontDeskTab.Booking,
   PosFrontDeskTab.TimeClock,
   PosFrontDeskTab.Customer,
-  PosFrontDeskTab.Report,
 ]
 
 export const DEFAULT_POS_FRONT_DESK_TAB = PosFrontDeskTab.OrderList

@@ -35,9 +35,9 @@ import {
   TaxIqPayEngineRoute, TaxIqWeeklyPayrollRoute, TaxIqPayrollRunsRoute, TaxIqTaxLedgerRoute,
   TaxIqExceptionsRoute, TaxIqDataQualityRoute, TaxIqJurisdictionsRoute, TaxIqShareLinksRoute,
   TaxIqForm1099NecRoute, TaxIqTipLedgerRoute, TaxIqFormsReportsRoute, TaxIqTaxEstimateRoute,
-  PosGeneralSettingsRoute, PosRolesRoute, PosCategoriesRoute, PosServicesRoute, PosProductsRoute,
+  PosSalonSettingsRoute, PosRolesRoute, PosCategoriesRoute, PosServicesRoute, PosProductsRoute,
   PosPromotionsRoute,
-  PosStaffProfileRoute, PosFrontDeskRoute, PosDevicesRoute
+  PosStaffProfileRoute, PosFrontDeskRoute, PosReportsRoute, PosDevicesRoute, PosPublicCheckInRoute
 } from "../components/dashboard/routes";
 import { DASHBOARD_MENU_ID, DASHBOARD_SETTINGS_TAB, BOOKING_HUB_PATH, BOOKING_HUB_LEGACY_PATH_SEGMENT, buildDashboardReportsPath, DASHBOARD_REPORTS_TAB } from "../components/dashboard/constants";
 import ErrorBoundary from "../components/ui/ErrorBoundary";
@@ -163,6 +163,12 @@ const ReceiptPage = lazyWithRetry(
 );
 const PublicBookingPage = lazyWithRetry(
   () => import("../components/public/booking/PublicBookingPage"),
+);
+const PublicCheckInPage = lazyWithRetry(
+  () => import("../components/public/checkin/PublicCheckInPage"),
+);
+const PublicCheckInStatusPage = lazyWithRetry(
+  () => import("../components/public/checkin/PublicCheckInStatusPage"),
 );
 const VoiceCallPlanPage = lazyWithRetry(
   () => import("../components/public/VoiceCallPlanPage"),
@@ -331,6 +337,9 @@ export default function AppRouter() {
           <Route path="/booking/:businessSlug" element={<PublicPosBookingPage />} />
           <Route path="/booking/manage/:manageToken" element={<ManageBookingPage />} />
           <Route path="/receipt/:receiptToken" element={<ReceiptPage />} />
+          {/* POS Public Check-In — customer checks in from their own phone (POS-Public-Check-In-Technical.md §9). */}
+          <Route path="/checkin/status/:receiptToken" element={<PublicCheckInStatusPage />} />
+          <Route path="/checkin/:businessSlug" element={<PublicCheckInPage />} />
           <Route path="/cpa/access" element={<CpaViewerPage />} />
           <Route path="/share/access" element={<ShareLinkViewerPage />} />
           <Route path="/w4-invite" element={<StaffW4InvitePage />} />
@@ -416,7 +425,8 @@ export default function AppRouter() {
             <Route path={DASHBOARD_MENU_ID.productManagement} element={<ProductManagementRoute />} />
             <Route element={<PosOnboardingLayout />}>
               <Route path={DASHBOARD_MENU_ID.pos} element={<PosFrontDeskRoute />} />
-              <Route path={`${DASHBOARD_MENU_ID.pos}/settings`} element={<PosGeneralSettingsRoute />} />
+              <Route path={`${DASHBOARD_MENU_ID.pos}/settings/:settingsTab?`} element={<PosSalonSettingsRoute />} />
+              <Route path={`${DASHBOARD_MENU_ID.pos}/report/:reportTab?`} element={<PosReportsRoute />} />
               <Route path={`${DASHBOARD_MENU_ID.pos}/roles`} element={<PosRolesRoute />} />
               <Route path={`${DASHBOARD_MENU_ID.pos}/categories`} element={<PosCategoriesRoute />} />
               <Route path={`${DASHBOARD_MENU_ID.pos}/services`} element={<PosServicesRoute />} />
@@ -424,6 +434,7 @@ export default function AppRouter() {
               <Route path={`${DASHBOARD_MENU_ID.pos}/promotions`} element={<PosPromotionsRoute />} />
               <Route path={`${DASHBOARD_MENU_ID.pos}/staff`} element={<PosStaffProfileRoute />} />
               <Route path={`${DASHBOARD_MENU_ID.pos}/devices`} element={<PosDevicesRoute />} />
+              <Route path={`${DASHBOARD_MENU_ID.pos}/public-checkin`} element={<PosPublicCheckInRoute />} />
             </Route>
             <Route path={DASHBOARD_MENU_ID.touchpoints} element={<TouchpointsRoute />} />
             <Route path={DASHBOARD_MENU_ID.analytics} element={<AnalyticsRoute />} />

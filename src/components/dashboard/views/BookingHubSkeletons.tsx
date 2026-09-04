@@ -247,7 +247,7 @@ export function BookingTechServicesSkeleton({ count = 4 }: { count?: number }) {
 export function BookingTechModalProfileSkeleton() {
   return (
     <div className="tech-modal-grid booking-skeleton-modal-grid" aria-hidden="true">
-      {Array.from({ length: 4 }).map((_, index) => (
+      {Array.from({ length: 3 }).map((_, index) => (
         <div className="settings-field" key={index}>
           <Skeleton width="42%" height={10} borderRadius={6} />
           <Skeleton width="100%" height={38} borderRadius={8} />

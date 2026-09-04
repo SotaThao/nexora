@@ -1,13 +1,19 @@
-export function readImageFileAsDataUrl(file) {
-  return new Promise((resolve, reject) => {
+export function readImageFileAsDataUrl(file: Blob): Promise<string> {
+  return new Promise<string>((resolve, reject) => {
     const reader = new FileReader()
-    reader.onload = () => resolve(reader.result)
+    reader.onload = () => {
+      if (typeof reader.result === 'string') {
+        resolve(reader.result)
+        return
+      }
+      reject(new Error('Unable to read the selected image.'))
+    }
     reader.onerror = () => reject(reader.error)
     reader.readAsDataURL(file)
   })
 }
 
-export function dataUrlToFile(dataUrl, fileName = 'photo.jpg') {
+export function dataUrlToFile(dataUrl: string, fileName = 'photo.jpg'): File {
   const [header, base64] = dataUrl.split(',')
   const mime = header.match(/:(.*?);/)?.[1] || 'image/jpeg'
   const binary = atob(base64)

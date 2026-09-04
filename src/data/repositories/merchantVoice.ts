@@ -216,6 +216,7 @@ export interface MerchantVoiceStaffScheduleDto {
 
 export interface MerchantVoiceStaffDto {
   id: string
+  staffProfileId?: string | null
   tenantId: string
   fullName: string
   phoneNumber: string
@@ -505,6 +506,7 @@ export interface MerchantVoiceServiceDto {
   durationMinutes: number | null
   note: string | null
   icon: string | null
+  photoUrl: string | null
   sortOrder: number
   isActive: boolean
   categoryIds: string[]
@@ -540,6 +542,7 @@ export interface CreateMerchantVoiceServiceRequest {
   durationMinutes?: number | null
   note?: string | null
   icon?: string | null
+  photo?: File | null
   isActive?: boolean
   /** Real category ids; Other-only / uncategorised → `null` */
   categoryIds?: string[] | null
@@ -551,6 +554,7 @@ export interface UpdateMerchantVoiceServiceRequest {
   durationMinutes?: number | null
   note?: string | null
   icon?: string | null
+  photo?: File | null
   isActive?: boolean
   sortOrder?: number | null
   /** Omit = leave categories; null / [] = Other-only clear; array = replace */
@@ -583,6 +587,11 @@ export interface SaveServiceBatchResultItem {
 
 export interface SaveServicesBatchResult {
   items: SaveServiceBatchResultItem[]
+}
+
+export interface ReorderMerchantVoiceServiceItem {
+  serviceId: string
+  sortOrder: number
 }
 
 /** Item for POST {SHARED_CATALOG_BASE}/categories/batch — omit `id` to create, set it to update. */
@@ -956,6 +965,7 @@ function normalizeServiceDto(item: unknown, index = 0): MerchantVoiceServiceDto 
       ? String(row.note ?? row.Note ?? row.description ?? row.Description)
       : null,
     icon: (row.icon ?? row.Icon) ? String(row.icon ?? row.Icon) : null,
+    photoUrl: (row.photoUrl ?? row.PhotoUrl) ? String(row.photoUrl ?? row.PhotoUrl) : null,
     sortOrder: typeof row.sortOrder === 'number'
       ? row.sortOrder
       : typeof row.SortOrder === 'number'
@@ -1045,6 +1055,7 @@ function buildSharedServiceFormData(
   if (description) formData.append('description', description)
   const icon = body.icon?.trim()
   if (icon) formData.append('icon', icon)
+  if (body.photo) formData.append('photo', body.photo)
   ;(body.categoryIds ?? []).forEach((categoryId) => formData.append('categoryIds', categoryId))
   formData.append('status', body.isActive === false ? 'Inactive' : 'Active')
   return formData
@@ -1538,8 +1549,8 @@ export function createMerchantVoiceRepository(client: HttpClient = httpClient) {
       )
     },
 
-    async updateStaff(body: UpdateMerchantVoiceStaffRequest): Promise<MerchantVoiceStaffDto> {
-      return await client.put<MerchantVoiceStaffDto>(
+    async updateStaff(body: UpdateMerchantVoiceStaffRequest): Promise<void> {
+      await client.put<void>(
         `${MERCHANT_VOICE_BASE}/staff/${encodeURIComponent(body.id)}`,
         body,
         { headers: MERCHANT_VOICE_HEADERS },
@@ -1720,8 +1731,7 @@ export function createMerchantVoiceRepository(client: HttpClient = httpClient) {
       return normalizeServicesResponse(response)
     },
 
-    // The shared endpoint accepts multipart form data (it also handles POS's photo upload),
-    // even though Booking Hub's own service form has no photo field yet.
+    // The shared endpoint accepts multipart form data, including an optional service photo.
     async createService(body: CreateMerchantVoiceServiceRequest): Promise<string> {
       const formData = buildSharedServiceFormData(body)
       return await client.upload<string>(`${SHARED_CATALOG_BASE}/services`, formData, 'POST')
@@ -1748,6 +1758,14 @@ export function createMerchantVoiceRepository(client: HttpClient = httpClient) {
     async saveServicesBatch(items: SaveServiceBatchItem[]): Promise<SaveServicesBatchResult> {
       return await client.post<SaveServicesBatchResult>(
         `${SHARED_CATALOG_BASE}/services/batch`,
+        { items },
+        { headers: MERCHANT_VOICE_HEADERS },
+      )
+    },
+
+    async reorderServices(items: ReorderMerchantVoiceServiceItem[]): Promise<void> {
+      await client.put<void>(
+        `${SHARED_CATALOG_BASE}/services/reorder`,
         { items },
         { headers: MERCHANT_VOICE_HEADERS },
       )
@@ -1901,4 +1919,3 @@ export function createMerchantVoiceRepository(client: HttpClient = httpClient) {
 }
 
 export const merchantVoiceRepository = createMerchantVoiceRepository()
-

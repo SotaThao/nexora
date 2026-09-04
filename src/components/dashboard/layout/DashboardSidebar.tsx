@@ -50,6 +50,7 @@ import {
 import useAuth from '../../../auth/useAuth'
 import { useMerchantSetup } from '../../../data/hooks/useMerchantSetup'
 import { useOwnerTaxYearByBusiness } from '../../../data/hooks/useTaxiqOwnerTaxYear'
+import { posReportPath, PosReportTab } from '../../../constants/posReports'
 
 export default function DashboardSidebar({
   isOpen = true,
@@ -489,7 +490,13 @@ export default function DashboardSidebar({
                         key={sub.id}
                         type="button"
                         onClick={() => {
-                          navigate(sub.id === 'board' ? `/dashboard/${DASHBOARD_MENU.Pos}` : `/dashboard/${DASHBOARD_MENU.Pos}/${sub.id}`)
+                          navigate(
+                            sub.id === 'board'
+                              ? `/dashboard/${DASHBOARD_MENU.Pos}`
+                              : sub.id === 'report'
+                                ? posReportPath(PosReportTab.Technician)
+                                : `/dashboard/${DASHBOARD_MENU.Pos}/${sub.id}`,
+                          )
                         }}
                         className={sidebarSubmenuItemClass(isSubActive)}
                       >

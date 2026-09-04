@@ -15,6 +15,45 @@ export type CategoryDraftChangePlan = {
   updates: Array<{ draftIndex: number; id: string; name: string }>
 }
 
+export function moveCategoryDrafts<TCategory extends { sortKey: string }>(
+  categories: readonly TCategory[],
+  activeKey: string,
+  overKey: string,
+): TCategory[] {
+  const activeIndex = categories.findIndex((category) => category.sortKey === activeKey)
+  const overIndex = categories.findIndex((category) => category.sortKey === overKey)
+  if (activeIndex < 0 || overIndex < 0 || activeIndex === overIndex) return [...categories]
+
+  const next = [...categories]
+  const [activeCategory] = next.splice(activeIndex, 1)
+  next.splice(overIndex, 0, activeCategory)
+  return next
+}
+
+export function buildCategoryOrderItems<
+  TDraft extends { id: string | null; name: string },
+  TPersisted extends { id: string; name: string },
+>(drafts: readonly TDraft[], persisted: readonly TPersisted[]) {
+  const persistedIdByName = new Map(
+    persisted.map((category) => [category.name.trim().toLowerCase(), category.id]),
+  )
+  const desiredIds = drafts
+    .map(
+      (draft) =>
+        draft.id ?? persistedIdByName.get(draft.name.trim().toLowerCase()) ?? null,
+    )
+    .filter((id): id is string => Boolean(id))
+  const desiredIdSet = new Set(desiredIds)
+
+  persisted.forEach((category) => {
+    if (desiredIdSet.has(category.id)) return
+    desiredIds.push(category.id)
+    desiredIdSet.add(category.id)
+  })
+
+  return desiredIds.map((categoryId, sortOrder) => ({ categoryId, sortOrder }))
+}
+
 export function planCategoryDraftChanges(
   drafts: EditableCategoryDraft[],
   originals: EditableCategoryDraft[],
