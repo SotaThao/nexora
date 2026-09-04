@@ -1,5 +1,5 @@
 import React, { useCallback, useEffect, useRef, useState } from 'react'
-import { useOutletContext, useNavigate, useParams, useSearchParams } from 'react-router-dom'
+import { Navigate, useOutletContext, useNavigate, useParams, useSearchParams } from 'react-router-dom'
 import { useTranslation } from '../../../contexts/LanguageContext'
 import { SHOW_HARDWARE_DEVICES } from '../constants'
 
@@ -64,6 +64,7 @@ import PosProductsView from '../views/pos/PosProductsView'
 import PosPromotionsView from '../views/pos/PosPromotionsView'
 import PosStaffProfileView from '../views/pos/PosStaffProfileView'
 import PosFrontDeskView from '../views/pos/PosFrontDeskView'
+import PosReportsView from '../views/pos/report/PosReportsView'
 import { formatBusinessAddress } from '../views/pos/posDisplay'
 import PosDevicesView from '../views/pos/devices/PosDevicesView'
 import PosPublicCheckInView from '../views/pos/PosPublicCheckInView'
@@ -73,6 +74,8 @@ import {
   StaffListRouteContent,
 } from './StaffManagementRouteContent'
 import { STAFF_ROUTE_FAMILY } from './staffRoutePaths'
+import { POS_FRONT_DESK_TAB_PARAM, PosFrontDeskTab } from '../../../constants/posFrontDesk'
+import { posReportPath, PosReportTab } from '../../../constants/posReports'
 
 export function OverviewRoute() {
   const ctx = useOutletContext<LooseObject>()
@@ -416,6 +419,18 @@ export function PosStaffProfileRoute() {
 // For the Owner, businessId always comes from their own merchant setup data.
 export function PosFrontDeskRoute() {
   const { data: merchantSetupData } = useMerchantSetup()
+  const [searchParams] = useSearchParams()
+  if (searchParams.get(POS_FRONT_DESK_TAB_PARAM) === PosFrontDeskTab.Report) {
+    const reportParams = new URLSearchParams(searchParams)
+    reportParams.delete(POS_FRONT_DESK_TAB_PARAM)
+    const query = reportParams.toString()
+    return (
+      <Navigate
+        to={`${posReportPath(PosReportTab.Technician)}${query ? `?${query}` : ''}`}
+        replace
+      />
+    )
+  }
   const businessId = merchantSetupData?.businessInfo?.businessId
   const businessName = merchantSetupData?.businessInfo?.name
   const businessLogoUrl = merchantSetupData?.businessInfo?.logo
@@ -441,6 +456,20 @@ export function PosFrontDeskRoute() {
       businessTimeZone={businessTimeZone ?? null}
     />
   )
+}
+
+export function PosReportsRoute() {
+  const { data: merchantSetupData } = useMerchantSetup()
+  const businessId = merchantSetupData?.businessInfo?.businessId
+  const businessTimeZone = merchantSetupData?.businessInfo?.timeZone?.trim() || 'UTC'
+  if (!businessId) {
+    return (
+      <div className="nexora-card p-6">
+        <SkeletonList count={3} lines={1} />
+      </div>
+    )
+  }
+  return <PosReportsView businessId={businessId} businessTimeZone={businessTimeZone} />
 }
 
 // Check-In Devices (POS Self Check-In) — pairing and managing the tablets customers use to check

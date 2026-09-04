@@ -324,6 +324,7 @@ export const MENU_ITEMS = [
     children: [
       { id: 'board', labelKey: 'dashboard.menu.pos_board' },
       { id: 'settings', labelKey: 'dashboard.menu.pos_settings' },
+      { id: 'report', labelKey: 'dashboard.menu.pos_report' },
       { id: 'roles', labelKey: 'dashboard.menu.pos_roles' },
       { id: 'categories', labelKey: 'dashboard.menu.pos_categories' },
       { id: 'services', labelKey: 'dashboard.menu.pos_services' },

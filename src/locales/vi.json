@@ -718,6 +718,7 @@
       "pos_devices": "Thiết Bị Check-In",
       "pos_public_checkin": "Check-in công khai",
       "pos_board": "Lễ Tân",
+      "pos_report": "Báo Cáo",
       "settings": "Cài Đặt",
       "business_setting": "Cài đặt",
       "scan": "Quét QR",
@@ -3357,6 +3358,7 @@
               "Staff": "Nhân Viên",
               "RolesPermissions": "Vai Trò & Quyền",
               "Devices": "Thiết Bị Check-In",
+              "Reports": "Báo Cáo",
               "Operations": "Vận Hành"
             }
           },
@@ -4299,6 +4301,93 @@
               "dailyHint": "Chọn một ngày hoặc dùng mũi tên để chuyển ngày trước/sau.",
               "weeklyHint": "Chọn một ngày bất kỳ; báo cáo tự lấy tuần từ Thứ Hai đến Chủ Nhật.",
               "monthlyHint": "Chọn một tháng hoặc dùng mũi tên để chuyển tháng trước/sau."
+            }
+          },
+          "reports": {
+            "title": "Báo Cáo",
+            "description": "Theo dõi hiệu suất thợ và thu nhập cửa hàng.",
+            "tabs": {
+              "ariaLabel": "Báo cáo POS",
+              "technician": "Báo cáo thợ",
+              "storeIncome": "Báo cáo thu nhập cửa hàng"
+            },
+            "storeIncome": {
+              "title": "Thu Nhập Cửa Hàng",
+              "actionsLabel": "Thao tác báo cáo",
+              "print": "In / PDF",
+              "day": "Ngày",
+              "week": "Tuần",
+              "year": "Năm",
+              "range": "Khoảng ngày",
+              "dateRangeSeparator": "đến",
+              "today": "Hôm Nay",
+              "thisWeek": "Tuần Này",
+              "thisYear": "Năm Nay",
+              "dayReport": "Báo cáo ngày",
+              "reportDate": "Ngày báo cáo",
+              "reportWeek": "Tuần báo cáo",
+              "reportYear": "Năm báo cáo",
+              "previousPeriod": "Kỳ trước",
+              "nextPeriod": "Kỳ sau",
+              "fromDate": "Từ ngày",
+              "toDate": "Đến ngày",
+              "applyRange": "Áp dụng",
+              "rangeError": "Ngày bắt đầu phải trước hoặc trùng ngày kết thúc.",
+              "rangeTooLong": "Khoảng ngày đã chọn không được vượt quá 366 ngày.",
+              "loadError": "Không thể tải báo cáo thu nhập cửa hàng.",
+              "retry": "Thử lại",
+              "exportError": "Không thể tải tệp PDF. Vui lòng thử lại.",
+              "periods": {
+                "ariaLabel": "Chọn kỳ báo cáo"
+              },
+              "paymentBreakdown": "Phân bổ thanh toán",
+              "payment": {
+                "card": "Thẻ",
+                "cash": "Tiền mặt",
+                "giftCard": "Thẻ quà tặng",
+                "zelle": "Zelle",
+                "cashApp": "Cash App",
+                "venmo": "Venmo",
+                "vlinkPay": "Ví VLINKPAY",
+                "appleCash": "Apple Cash",
+                "payPal": "PayPal",
+                "splitPay": "Thanh toán kết hợp"
+              },
+              "details": "Chi tiết",
+              "servicesSubtotal": "Tạm tính dịch vụ",
+              "serviceDiscounts": "Giảm giá dịch vụ",
+              "productsSubtotal": "Tạm tính sản phẩm",
+              "salesTax": "Thuế bán hàng",
+              "tips": "Tiền tip",
+              "supplyFee": "Phí vật tư",
+              "merchantFee": "Phí thanh toán",
+              "returnTransactions": "Giao dịch hoàn tiền",
+              "totalCollected": "Tổng đã thu",
+              "dailyCollection": "Doanh thu theo ngày",
+              "monthlyCollection": "Doanh thu theo tháng",
+              "table": {
+                "ariaLabel": "Bảng báo cáo thu nhập",
+                "date": "Ngày",
+                "month": "Tháng",
+                "tipsIncluded": "Tip (đã gồm)",
+                "totalCollected": "Tổng Đã Thu",
+                "futureMonth": "Tháng sắp tới",
+                "transactions": "{{count}} giao dịch",
+                "periodTotal": "Tổng kỳ"
+              },
+              "email": {
+                "action": "Email",
+                "title": "Gửi báo cáo qua email",
+                "description": "Gửi bản PDF của báo cáo đang hiển thị.",
+                "close": "Đóng hộp thoại email",
+                "recipient": "Email người nhận",
+                "invalid": "Nhập địa chỉ email hợp lệ.",
+                "attachment": "Tệp PDF đính kèm",
+                "cancel": "Hủy",
+                "send": "Gửi báo cáo",
+                "sent": "Đã gửi báo cáo đến {{email}}.",
+                "error": "Không thể gửi báo cáo qua email. Vui lòng thử lại."
+              }
             }
           },
           "OrderDiscountSection": {
